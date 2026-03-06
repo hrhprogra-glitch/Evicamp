@@ -6,7 +6,7 @@ import { SideBar } from './layout/SideBar';
 
 // Importación de Módulos (Secciones)
 import { Inventario } from './sections/Inventario';
-
+import { Mermas } from './sections/Mermas';
 export const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,6 +48,8 @@ export const App: React.FC = () => {
     switch (currentView) {
       case 'inventario':
         return <Inventario onNavigate={setCurrentView} />;
+      case 'mermas': // <--- AGREGAMOS ESTA LÍNEA AQUÍ
+        return <Mermas />;
       case 'dashboard':
         return (
           <div className="border border-[#E2E8F0] bg-[#FFFFFF] p-6 shadow-none">

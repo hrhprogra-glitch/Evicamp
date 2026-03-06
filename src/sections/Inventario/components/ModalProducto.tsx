@@ -566,24 +566,24 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
             >
               Cancelar
             </button>
-            <div className="flex gap-3 translate-x-30">
+            <div className="flex flex-wrap items-center justify-end gap-3">
               <button 
                 onClick={() => handleSave(false)}
                 disabled={!formData.name}
-                className="ml-auto bg-white text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-[#F8FAFC] hover:border-[#10B981] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none"
+                className="bg-white text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center justify-center whitespace-nowrap gap-2 hover:bg-[#F8FAFC] hover:border-[#10B981] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none"
               >
                 <Save size={16} /> Guardar
               </button>
               {/* Solo mostramos "Ir a Lotes" si NO es Consumo y NO estamos editando (!initialData) */}
-              {nature !== 'CONSUMO' && !initialData && (
-                <button 
-                  onClick={() => handleSave(true)}
-                  disabled={!formData.name}
-                  className="bg-[#10B981] text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-[#1E293B] hover:text-[#10B981] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none"
-                >
-                  <Database size={16} /> Guardar e Ir a Lotes
-                </button>
-              )}
+              {nature !== 'CONSUMO' && !initialData && (
+                <button 
+                  onClick={() => handleSave(true)}
+                  disabled={!formData.name}
+                  className="bg-[#10B981] text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center justify-center whitespace-nowrap gap-2 hover:bg-[#1E293B] hover:text-[#10B981] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none"
+                >
+                  <Database size={16} /> Guardar e Ir a Lotes
+                </button>
+              )}
             </div>
           </div>
         )}
