@@ -1,175 +1,592 @@
-// src/sections/Inventario/components/ModalProducto.tsx
-import React from 'react';
-import { X, Save, Box } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Package, Scale, Coffee, ArrowLeft, Save, ImagePlus, Search, Loader2, Database } from 'lucide-react';
 
-interface ModalProductoProps {
+interface Props {
   isOpen: boolean;
   onClose: () => void;
+  onGoToLotes?: (producto: any) => void; // <-- AHORA PUEDE ENVIAR EL PRODUCTO
+  onProductSaved?: (newProduct: any) => void;
+  initialData?: any; 
 }
 
-export const ModalProducto: React.FC<ModalProductoProps> = ({ isOpen, onClose }) => {
+// Los 3 tipos de comportamiento en el sistema
+type ProductNature = 'UNIDAD' | 'PESO' | 'CONSUMO' | null;
+
+export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, onProductSaved, initialData }) => {
+  const [step, setStep] = useState<1 | 2>(1);
+  const [nature, setNature] = useState<ProductNature>(null);
+
+  // ESTADOS PARA EL AUTOCOMPLETADO DE CATEGORÍAS
+  const [categoriasLista, setCategoriasLista] = useState(['ABARROTES', 'BEBIDAS', 'CARNE', 'LACTEOS', 'VERDURAS', 'FRUTAS']);
+  const [showCatDropdown, setShowCatDropdown] = useState(false);
+
+  // ESTADOS PARA BÚSQUEDA DE IMÁGENES
+  const [imageQuery, setImageQuery] = useState('');
+  const [isSearchingImage, setIsSearchingImage] = useState(false);
+  const [imageResults, setImageResults] = useState<string[]>([]);
+  const [showImageResults, setShowImageResults] = useState(false); // <-- Controla si la galería está abierta o cerrada
+
+  // 1. LIMPIEZA DE MEMORIA AL ABRIR EL MODAL
+  // 1. CONTROL DE MEMORIA AL ABRIR (MODO CREACIÓN vs MODO EDICIÓN)
+  useEffect(() => {
+    if (isOpen) {
+      setImageQuery('');
+      setImageResults([]);
+      setShowImageResults(false);
+
+      if (initialData) {
+        // MODO EDICIÓN: Cargamos datos y saltamos al Paso 2
+        setFormData({
+          name: initialData.name || '',
+          category: initialData.category || '',
+          code: initialData.code || '',
+          barcode: initialData.barcode || '',
+          price: initialData.price?.toString() || '',
+          minStock: initialData.minStock?.toString() || '5',
+          weightUnit: ['KG', 'GR', 'LT', 'ML'].includes(initialData.unit) ? initialData.unit : 'KG',
+          image: initialData.image || ''
+        });
+        
+        if (initialData.unit === 'UND') setNature('UNIDAD');
+        else if (['KG', 'GR', 'LT', 'ML'].includes(initialData.unit)) setNature('PESO');
+        else setNature('CONSUMO');
+        
+        setStep(2);
+      } else {
+        // MODO CREACIÓN: Limpiamos todo
+        setStep(1);
+        setNature(null);
+        setFormData({ name: '', category: '', code: '', barcode: '', price: '', minStock: '5', weightUnit: 'KG', image: '' });
+      }
+    }
+  }, [isOpen, initialData]);
+
+  // CONTROLADOR PARA CANCELAR PETICIONES OBSOLETAS
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // 2. OPTIMIZACIÓN: DEBOUNCE REDUCIDO A 300ms
+  useEffect(() => {
+    if (!imageQuery || imageQuery.length < 2 || imageQuery.startsWith('http')) {
+      setImageResults([]);
+      setShowImageResults(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      ejecutarBusquedaAPI(imageQuery);
+    }, 300); // Reducido para mayor sensación de velocidad
+
+    return () => clearTimeout(timer);
+  }, [imageQuery]);
+
+  // 3. MOTOR DE BÚSQUEDA HÍBRIDO (RENDERIZADO PROGRESIVO ULTRA-RÁPIDO)
+  const ejecutarBusquedaAPI = async (query: string) => {
+    if (abortControllerRef.current) abortControllerRef.current.abort();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
+    setIsSearchingImage(true);
+    setShowImageResults(true);
+    setImageResults([]); // Limpiamos la pantalla al instante para la nueva búsqueda
+
+    try {
+      const q = encodeURIComponent(query.trim());
+      
+      // Función inyectora: Coloca las fotos en pantalla APENAS llegan, sin esperar al otro
+      const inyectarResultados = (nuevasFotos: string[]) => {
+        if (abortController.signal.aborted || nuevasFotos.length === 0) return;
+        
+        setImageResults(prevFotos => {
+          // Unimos las fotos anteriores con las nuevas, borramos duplicados y cortamos en 4
+          const combinadas = Array.from(new Set([...prevFotos, ...nuevasFotos])).slice(0, 4);
+          return combinadas;
+        });
+        
+        // Si ya nos llegó al menos 1 resultado, matamos la animación de carga dando sensación de inmediatez
+        setIsSearchingImage(false); 
+      };
+
+      // MOTOR 1: OpenFoodFacts -> Promesa suelta (No la esperamos con await)
+      const fetchFood = fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${q}&search_simple=1&action=process&json=1&page_size=4&fields=image_front_small_url,image_url`, { 
+        signal: abortController.signal 
+      })
+      .then(res => res.json())
+      .then(data => data.products?.map((p: any) => p.image_front_small_url || p.image_url).filter(Boolean) || [])
+      .then(inyectarResultados)
+      .catch(() => {}); // Ignoramos errores silenciosamente para no romper el otro motor
+
+      // MOTOR 2: Wikipedia API -> Promesa suelta
+      const fetchWiki = fetch(`https://es.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${q}&prop=pageimages&pithumbsize=400&format=json&origin=*`, { 
+        signal: abortController.signal 
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.query || !data.query.pages) return [];
+        return Object.values(data.query.pages).map((p: any) => p.thumbnail?.source).filter(Boolean);
+      })
+      .then(inyectarResultados)
+      .catch(() => {});
+
+      // El código maestro solo espera en el fondo a que ambos terminen su trabajo para apagar el loader
+      // en caso de que NINGUNO haya encontrado absolutamente nada.
+      await Promise.all([fetchFood, fetchWiki]);
+
+    } catch (e: any) {
+      if (e.name === 'AbortError') return;
+    } finally {
+      if (!abortController.signal.aborted) {
+        setIsSearchingImage(false);
+      }
+    }
+  };
+
+  // Estado del formulario
+  const [formData, setFormData] = useState({
+    name: '',
+    category: '',
+    code: '',
+    barcode: '',
+    price: '',
+    minStock: '5',
+    weightUnit: 'KG', // Solo importa si nature === 'PESO'
+    image: '' // <-- NUEVO ESTADO PARA LA IMAGEN
+  });
+
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center font-mono">
-      {/* Fondo oscuro desenfocado */}
-      <div 
-        className="absolute inset-0 bg-[#1E293B]/70 backdrop-blur-sm"
-        onClick={onClose}
-      ></div>
+  const resetAndClose = () => {
+    setStep(1);
+    setNature(null);
+    setFormData({ name: '', category: '', code: '', barcode: '', price: '', minStock: '5', weightUnit: 'KG', image: '' });
+    setImageQuery('');
+    setImageResults([]);
+    setShowImageResults(false);
+    onClose();
+  };
 
-      {/* Contenedor del Formulario (Panel Técnico) */}
-      <div className="relative w-full max-w-3xl bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#10B981] flex flex-col max-h-[90vh]">
+  const handleNatureSelect = (selectedNature: ProductNature) => {
+    setNature(selectedNature);
+    setStep(2);
+  };
+
+  const handleSave = (goToLotes: boolean) => {
+    console.log("PREPARADO PARA GUARDAR SKU:", { ...formData, nature });
+    
+    // 1. EMPAQUETAMOS EL PRODUCTO EN UNA VARIABLE
+    const nuevoProducto = {
+      id: Date.now().toString(), // ID Temporal de simulación
+      name: formData.name.toUpperCase(),
+      category: formData.category || 'GENERAL',
+      code: formData.code || `SKU-${Math.floor(Math.random() * 10000)}`,
+      barcode: formData.barcode,
+      price: Number(formData.price) || 0,
+      cost: 0,
+      quantity: 0,
+      minStock: Number(formData.minStock) || 5,
+      unit: nature === 'PESO' ? formData.weightUnit : (nature === 'CONSUMO' ? 'CONSUMO' : 'UND'),
+      imageUrl: formData.image // <-- AHORA SÍ ENVÍA LA IMAGEN A LA TABLA
+    };
+
+    // 2. LO ENVIAMOS A LA TABLA
+    if (onProductSaved) {
+      onProductSaved(nuevoProducto);
+    }
+
+    alert(`PRODUCTO GUARDADO CORRECTAMENTE.\n\nProducto: ${formData.name}`);
+    resetAndClose();
+
+    // 3. SI ELIGIÓ IR A LOTES, LE ENVIAMOS EL PAQUETE AL OTRO MODAL
+    if (goToLotes && onGoToLotes) {
+      onGoToLotes(nuevoProducto);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 font-mono">
+      <div className={`bg-white w-full border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[75vh] mt-10 transition-all duration-300 ${step === 1 ? 'max-w-3xl' : 'max-w-2xl'}`}>
         
-        {/* CABECERA */}
-        <div className="flex items-center justify-between p-6 border-b border-[#E2E8F0] bg-[#F8FAFC]">
+        {/* HEADER */}
+        <div className="bg-[#1E293B] text-white px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#1E293B] text-[#10B981]">
-              <Box size={20} />
-            </div>
+            {step === 2 && (
+              <button 
+                onClick={() => setStep(1)} 
+                className="hover:text-[#10B981] transition-colors mr-2 cursor-pointer"
+                title="Volver a seleccionar tipo"
+              >
+                <ArrowLeft size={20} />
+              </button>
+            )}
             <div>
-              <h2 className="text-lg font-black text-[#1E293B] uppercase tracking-tighter">
-                Registrar Nuevo SKU
+              <h2 className="text-sm font-black uppercase tracking-widest text-[#10B981]">
+                {step === 1 ? 'Paso 1: Naturaleza del Producto' : 'Paso 2: Detalles del Producto'}
               </h2>
-              <p className="text-[9px] font-bold text-[#64748B] uppercase tracking-widest mt-1">
-                Ficha Técnica de Mercancía
+              <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">
+                {step === 1 ? 'Selecciona cómo se controlará el stock' : `Configurando producto por ${nature}`}
               </p>
             </div>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-2 text-[#94A3B8] hover:text-red-500 hover:bg-red-50 transition-colors border border-transparent hover:border-red-200"
-          >
+          <button onClick={resetAndClose} className="hover:text-[#EF4444] transition-colors cursor-pointer">
             <X size={20} />
           </button>
         </div>
 
-        {/* CUERPO DEL FORMULARIO */}
-        <div className="p-8 overflow-y-auto custom-scrollbar flex flex-col gap-6">
+        {/* CUERPO DEL MODAL */}
+        <div className="p-8 overflow-y-auto custom-scrollbar bg-[#F8FAFC] flex-1">
           
-          {/* Bloque 1: Identidad */}
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">
-              Descripción del Producto <span className="text-red-500">*</span>
-            </label>
-            <input 
-              type="text" 
-              placeholder="EJ: POLLO X KILO, VINO TABERNERO..."
-              className="w-full p-3 bg-white border border-[#E2E8F0] text-xs font-bold uppercase focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] outline-none text-[#1E293B] placeholder:text-[#CBD5E1]"
-            />
-          </div>
+          {/* VISTA 1: SELECCIÓN DE NATURALEZA */}
+          {step === 1 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              
+              {/* Opción: UNIDAD */}
+              <button 
+                onClick={() => handleNatureSelect('UNIDAD')}
+                className="bg-white border-2 border-[#E2E8F0] p-6 flex flex-col items-center text-center gap-4 hover:border-[#10B981] hover:shadow-[4px_4px_0_0_#10B981] hover:-translate-y-1 transition-all cursor-pointer group rounded-none"
+              >
+                <div className="w-16 h-16 bg-[#F8FAFC] rounded-full flex items-center justify-center group-hover:bg-[#ECFDF5] transition-colors border border-[#E2E8F0] group-hover:border-[#A7F3D0]">
+                  <Package size={32} className="text-[#64748B] group-hover:text-[#10B981] transition-colors" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-[#1E293B] uppercase tracking-widest mb-2">Por Unidad</h3>
+                  <p className="text-[9px] font-bold text-[#64748B] uppercase">Productos que se cuentan por piezas enteras (botellas, cajas, latas).</p>
+                </div>
+              </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Bloque 2: Clasificación */}
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">
-                Categoría Familia
-              </label>
-              <select className="w-full p-3 bg-white border border-[#E2E8F0] text-xs font-bold uppercase focus:border-[#10B981] outline-none text-[#1E293B] cursor-pointer appearance-none">
-                <option value="GENERAL">GENERAL</option>
-                <option value="ABARROTES">ABARROTES</option>
-                <option value="BEBIDAS">BEBIDAS</option>
-                <option value="CARNE">CARNE</option>
-                <option value="LACTEOS">LACTEOS</option>
-              </select>
-            </div>
+              {/* Opción: PESO */}
+              <button 
+                onClick={() => handleNatureSelect('PESO')}
+                className="bg-white border-2 border-[#E2E8F0] p-6 flex flex-col items-center text-center gap-4 hover:border-[#3B82F6] hover:shadow-[4px_4px_0_0_#3B82F6] hover:-translate-y-1 transition-all cursor-pointer group rounded-none"
+              >
+                <div className="w-16 h-16 bg-[#F8FAFC] rounded-full flex items-center justify-center group-hover:bg-[#EFF6FF] transition-colors border border-[#E2E8F0] group-hover:border-[#BFDBFE]">
+                  <Scale size={32} className="text-[#64748B] group-hover:text-[#3B82F6] transition-colors" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-[#1E293B] uppercase tracking-widest mb-2">Por Peso / Granel</h3>
+                  <p className="text-[9px] font-bold text-[#64748B] uppercase">Productos que requieren balanza o medida fraccionada (KG, GR, Litros).</p>
+                </div>
+              </button>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">
-                Tipo de Control (Venta)
-              </label>
-              <select className="w-full p-3 bg-white border border-[#E2E8F0] text-xs font-bold uppercase focus:border-[#10B981] outline-none text-[#1E293B] cursor-pointer appearance-none">
-                <option value="UND">POR UNIDAD (UND)</option>
-                <option value="WEIGHT">POR PESO (KG / GR)</option>
-              </select>
-            </div>
+              {/* Opción: CONSUMO */}
+              <button 
+                onClick={() => handleNatureSelect('CONSUMO')}
+                className="bg-white border-2 border-[#E2E8F0] p-6 flex flex-col items-center text-center gap-4 hover:border-[#F59E0B] hover:shadow-[4px_4px_0_0_#F59E0B] hover:-translate-y-1 transition-all cursor-pointer group rounded-none"
+              >
+                <div className="w-16 h-16 bg-[#F8FAFC] rounded-full flex items-center justify-center group-hover:bg-[#FFFBEB] transition-colors border border-[#E2E8F0] group-hover:border-[#FDE68A]">
+                  <Coffee size={32} className="text-[#64748B] group-hover:text-[#F59E0B] transition-colors" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-[#1E293B] uppercase tracking-widest mb-2">Uso Interno / Servicio</h3>
+                  <p className="text-[9px] font-bold text-[#64748B] uppercase">Insumos de consumo propio o servicios que no requieren stock estricto.</p>
+                </div>
+              </button>
 
-            {/* Bloque 3: Códigos */}
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">
-                Código Interno (SKU)
-              </label>
-              <input 
-                type="text" 
-                placeholder="EJ: COD-001"
-                className="w-full p-3 bg-white border border-[#E2E8F0] text-xs font-bold uppercase focus:border-[#10B981] outline-none text-[#1E293B]"
-              />
             </div>
+          )}
 
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">
-                Código de Barras (Escaner)
-              </label>
-              <input 
-                type="text" 
-                placeholder="ESCANEAR O ESCRIBIR..."
-                className="w-full p-3 bg-[#F8FAFC] border border-[#E2E8F0] text-xs font-bold uppercase focus:border-[#10B981] outline-none text-[#10B981] tracking-widest"
-              />
-            </div>
+          {/* VISTA 2: FORMULARIO DINÁMICO */}
+          {step === 2 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              
+              <div className="md:col-span-2 space-y-2">
+                <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">Nombre / Descripción del Producto</label>
+                <input 
+                  type="text"
+                  placeholder="Ej: COCA COLA 3 LITROS RETORNABLE..."
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="w-full bg-white border-2 border-[#E2E8F0] p-3 text-xs font-black text-[#1E293B] uppercase outline-none focus:border-[#10B981] transition-colors"
+                />
+              </div>
 
-            {/* Bloque 4: Finanzas */}
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">
-                Costo Base (S/)
-              </label>
-              <input 
-                type="number" step="0.01"
-                placeholder="0.00"
-                className="w-full p-3 bg-white border border-[#E2E8F0] text-xs font-bold uppercase focus:border-[#10B981] outline-none text-[#1E293B]"
-              />
-            </div>
+              <div className="space-y-2 relative">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">Categoría</label>
+                  
+                  {/* CONTROLES SUPERIORES: AGREGAR Y CERRAR */}
+                  {showCatDropdown && (
+                    <div className="flex items-center gap-4">
+                      {formData.category && !categoriasLista.includes(formData.category) && (
+                        <button 
+                          onMouseDown={(e) => {
+                            // Usamos onMouseDown en vez de onClick para ganarle al onBlur del input
+                            e.preventDefault();
+                            setCategoriasLista([...categoriasLista, formData.category]);
+                            setShowCatDropdown(false);
+                          }}
+                          className="text-[10px] font-black text-[#10B981] uppercase hover:underline cursor-pointer flex items-center gap-1"
+                        >
+                          + AGREGAR "{formData.category}"
+                        </button>
+                      )}
+                      <button onClick={() => setShowCatDropdown(false)} className="text-[9px] font-bold text-[#EF4444] uppercase hover:underline cursor-pointer">
+                        Cerrar Lista
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="relative">
+                  <input 
+                    type="text"
+                    placeholder="BUSCAR O ESCRIBIR NUEVA..."
+                    value={formData.category}
+                    onChange={(e) => {
+                      setFormData({...formData, category: e.target.value.toUpperCase()});
+                      setShowCatDropdown(true);
+                    }}
+                    onFocus={() => setShowCatDropdown(true)}
+                    onBlur={() => setShowCatDropdown(false)} // <-- CIERRE AUTOMÁTICO AL SALIR
+                    className="w-full bg-white border-2 border-[#E2E8F0] p-3 text-xs font-black text-[#1E293B] uppercase outline-none focus:border-[#10B981] transition-colors"
+                  />
+                  
+                  {/* DROPDOWN INTELIGENTE DE CATEGORÍAS */}
+                  {showCatDropdown && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[#1E293B] shadow-[4px_4px_0_0_#1E293B] z-50 max-h-48 overflow-y-auto custom-scrollbar">
+                      {categoriasLista.filter(c => c.includes(formData.category)).length > 0 ? (
+                        categoriasLista.filter(c => c.includes(formData.category)).map(cat => (
+                          <div key={cat} className="flex items-center justify-between p-3 hover:bg-[#F8FAFC] border-b border-[#E2E8F0] last:border-0 cursor-pointer group">
+                            <span 
+                              className="flex-1 text-xs font-black text-[#1E293B]"
+                              onMouseDown={(e) => { 
+                                e.preventDefault();
+                                setFormData({...formData, category: cat}); 
+                                setShowCatDropdown(false); 
+                              }}
+                            >
+                              {cat}
+                            </span>
+                            <button 
+                              onMouseDown={(e) => { 
+                                e.preventDefault();
+                                e.stopPropagation(); 
+                                // <-- ADVERTENCIA ANTES DE BORRAR
+                                if (window.confirm(`¿Estás seguro de que deseas eliminar la categoría "${cat}"?`)) {
+                                  setCategoriasLista(categoriasLista.filter(c => c !== cat)); 
+                                }
+                              }}
+                              className="text-[#94A3B8] hover:text-[#EF4444] transition-colors cursor-pointer"
+                              title="Eliminar Categoría"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-4 flex flex-col items-center justify-center gap-2 bg-[#F8FAFC] text-center">
+                          <span className="text-[10px] font-bold text-[#64748B] uppercase">Categoría no encontrada.</span>
+                          <span className="text-[9px] font-bold text-[#1E293B] uppercase">Usa el botón "+ Agregar" arriba para crearla.</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">
-                Precio de Venta (S/)
-              </label>
-              <input 
-                type="number" step="0.01"
-                placeholder="0.00"
-                className="w-full p-3 bg-[#ECFDF5] border border-[#A7F3D0] text-xs font-black uppercase focus:border-[#10B981] outline-none text-[#059669]"
-              />
-            </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">Escáner (Cód. Barras)</label>
+                <input 
+                  type="text"
+                  placeholder="ESCANEAR..."
+                  value={formData.barcode}
+                  onChange={(e) => setFormData({...formData, barcode: e.target.value})}
+                  className="w-full bg-white border-2 border-[#E2E8F0] p-3 text-xs font-black text-[#1E293B] uppercase outline-none focus:border-[#10B981] transition-colors"
+                />
+              </div>
 
-            {/* Bloque 5: Inventario Crítico */}
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">
-                Stock Inicial
-              </label>
-              <input 
-                type="number" step="0.01"
-                placeholder="0"
-                className="w-full p-3 bg-white border border-[#E2E8F0] text-xs font-bold uppercase focus:border-[#10B981] outline-none text-[#1E293B]"
-              />
-            </div>
+              {/* === SECCIÓN DE BÚSQUEDA DE IMAGEN === */}
+              <div className="md:col-span-2 space-y-2 relative">
+                <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">
+                  Buscar Imagen en Internet o Pegar URL
+                </label>
+                <div className="flex flex-col sm:flex-row gap-3 relative">
+                  <div className="flex-1 flex border-2 border-[#E2E8F0] bg-white focus-within:border-[#10B981] transition-colors relative">
+                    <div className="w-12 flex items-center justify-center bg-[#F8FAFC] border-r-2 border-[#E2E8F0] shrink-0">
+                      {isSearchingImage ? (
+                        <Loader2 size={16} className="text-[#10B981] animate-spin" />
+                      ) : (
+                        <Search size={16} className="text-[#64748B]" />
+                      )}
+                    </div>
+                    <input 
+                      type="text"
+                      placeholder="EJ: PERA, COCA COLA, TALADRO O PEGAR URL..."
+                      value={imageQuery || formData.image}
+                      onFocus={() => {
+                        if (imageResults.length > 0) setShowImageResults(true);
+                      }}
+                      onBlur={() => setTimeout(() => setShowImageResults(false), 200)} 
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val.startsWith('http')) {
+                          setFormData({...formData, image: val});
+                          setImageQuery('');
+                          setImageResults([]);
+                          setShowImageResults(false);
+                        } else {
+                          setImageQuery(val);
+                          setFormData({...formData, image: ''});
+                        }
+                      }}
+                      className="w-full p-3 text-xs font-black text-[#1E293B] outline-none rounded-none bg-white border-0 focus:ring-0"
+                    />
+                  </div>
+                  
+                  <label className="bg-[#1E293B] text-white px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white hover:text-[#1E293B] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] shrink-0">
+                    <ImagePlus size={16} /> Subir Local
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={(e) => {
+                        if(e.target.files && e.target.files[0]) {
+                          // Lector de archivos local (Convierte la foto a Base64 para mostrarla al instante)
+                          const file = e.target.files[0];
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setFormData({...formData, image: reader.result as string});
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">
-                Alerta de Stock Mínimo
-              </label>
-              <input 
-                type="number" step="0.01"
-                placeholder="5"
-                className="w-full p-3 bg-red-50 border border-red-200 text-xs font-bold uppercase focus:border-red-500 outline-none text-red-600"
-              />
+                  {/* GALERÍA DE RESULTADOS (DISEÑO FLOTANTE QUE NO ESTORBA) */}
+                  {showImageResults && imageResults.length > 0 && !formData.image && (
+                    <div className="absolute top-full left-0 w-full sm:w-[calc(100%-140px)] mt-1 p-2 border-2 border-[#1E293B] bg-[#F8FAFC] shadow-[4px_4px_0_0_#1E293B] z-50">
+                      <div className="grid grid-cols-4 gap-2">
+                        {imageResults.map((imgUrl, idx) => (
+                          <div 
+                            key={idx} 
+                            onMouseDown={(e) => {
+                              // onMouseDown evita que el onBlur del input se dispare antes
+                              e.preventDefault();
+                              setFormData({...formData, image: imgUrl});
+                              setImageResults([]);
+                              setImageQuery('');
+                              setShowImageResults(false);
+                            }}
+                            className="aspect-square border-2 border-[#E2E8F0] bg-white hover:border-[#10B981] cursor-pointer overflow-hidden transition-all hover:scale-105 flex items-center justify-center"
+                          >
+                            <img 
+                              src={imgUrl} 
+                              alt="Resultado" 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                // Si la imagen original se rompe, ponemos una de respaldo limpia sin letras raras
+                                (e.target as HTMLImageElement).src = `https://placehold.co/200x200/F8FAFC/94A3B8?text=NO+IMAGEN`;
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="text-center mt-2 text-[9px] font-bold text-[#94A3B8] uppercase tracking-widest">
+                        Selecciona una imagen para aplicarla
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* VISTA PREVIA DE LA IMAGEN SELECCIONADA */}
+                {formData.image && (
+                  <div className="mt-2 flex items-center gap-4 p-2 border-2 border-[#E2E8F0] bg-[#F8FAFC]">
+                    <div className="w-16 h-16 border border-[#E2E8F0] overflow-hidden bg-white shrink-0 flex items-center justify-center">
+                      <img 
+                        src={formData.image} 
+                        alt="Vista previa" 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => { (e.target as HTMLImageElement).src = `https://placehold.co/200x200/F8FAFC/94A3B8?text=ERROR`; }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-black text-[#10B981] uppercase tracking-widest">Imagen Seleccionada</p>
+                      <p className="text-[9px] text-[#64748B] truncate mt-1">{formData.image}</p>
+                    </div>
+                    <button 
+                      onClick={() => setFormData({...formData, image: ''})}
+                      className="text-[#EF4444] hover:bg-[#FEF2F2] p-2 transition-colors border-2 border-transparent hover:border-[#EF4444] cursor-pointer"
+                      title="Quitar imagen"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">Precio de Venta Sugerido</label>
+                <input 
+                  type="number"
+                  placeholder="0.00"
+                  value={formData.price}
+                  onChange={(e) => setFormData({...formData, price: e.target.value})}
+                  className="w-full bg-white border-2 border-[#E2E8F0] p-3 text-xs font-black text-[#1E293B] uppercase outline-none focus:border-[#10B981] transition-colors"
+                />
+              </div>
+
+              {nature !== 'CONSUMO' && (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">Stock Mínimo (Alerta)</label>
+                  <input 
+                    type="number"
+                    value={formData.minStock}
+                    onChange={(e) => setFormData({...formData, minStock: e.target.value})}
+                    className="w-full bg-white border-2 border-[#E2E8F0] p-3 text-xs font-black text-[#1E293B] uppercase outline-none focus:border-[#10B981] transition-colors"
+                  />
+                </div>
+              )}
+
+              {/* CAMPOS CONDICIONALES BASADOS EN LA NATURALEZA */}
+              {nature === 'PESO' && (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">Unidad de Medida</label>
+                  <select 
+                    value={formData.weightUnit}
+                    onChange={(e) => setFormData({...formData, weightUnit: e.target.value})}
+                    className="w-full bg-white border-2 border-[#E2E8F0] p-3 text-xs font-black text-[#1E293B] uppercase outline-none focus:border-[#10B981] transition-colors cursor-pointer"
+                  >
+                    <option value="KG">Kilogramos (KG)</option>
+                    <option value="GR">Gramos (GR)</option>
+                    <option value="LT">Litros (LT)</option>
+                    <option value="ML">Mililitros (ML)</option>
+                  </select>
+                </div>
+              )}
+
             </div>
-          </div>
+          )}
         </div>
 
-        {/* PIE DEL MODAL (BOTONES) */}
-        <div className="p-6 border-t border-[#E2E8F0] bg-[#F8FAFC] flex items-center justify-end gap-4 shrink-0">
-          <button 
-            onClick={onClose}
-            className="px-6 py-3 border border-[#E2E8F0] bg-white text-[10px] font-black uppercase tracking-widest text-[#64748B] hover:text-[#1E293B] hover:border-[#1E293B] transition-colors"
-          >
-            Cancelar
-          </button>
-          
-          <button 
-            className="px-6 py-3 border-2 border-[#1E293B] bg-[#10B981] text-[10px] font-black uppercase tracking-widest text-[#1E293B] hover:bg-[#1E293B] hover:text-[#10B981] transition-colors flex items-center gap-2 shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
-          >
-            <Save size={16} /> Guardar Registro
-          </button>
-        </div>
+        {/* FOOTER - Solo visible en el paso 2 */}
+        {step === 2 && (
+          <div className="w-full p-6 bg-white border-t-2 border-[#E2E8F0] flex justify-between items-center shrink-0">
+            <button 
+              onClick={resetAndClose}
+              className="px-6 py-3 border-2 border-[#E2E8F0] text-[#64748B] font-black text-[10px] uppercase tracking-widest hover:bg-[#F8FAFC] hover:border-[#1E293B] hover:text-[#1E293B] transition-all cursor-pointer rounded-none"
+            >
+              Cancelar
+            </button>
+            <div className="flex gap-3 translate-x-30">
+              <button 
+                onClick={() => handleSave(false)}
+                disabled={!formData.name}
+                className="ml-auto bg-white text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-[#F8FAFC] hover:border-[#10B981] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none"
+              >
+                <Save size={16} /> Guardar
+              </button>
+              {/* Solo mostramos "Ir a Lotes" si NO es Consumo y NO estamos editando (!initialData) */}
+              {nature !== 'CONSUMO' && !initialData && (
+                <button 
+                  onClick={() => handleSave(true)}
+                  disabled={!formData.name}
+                  className="bg-[#10B981] text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-[#1E293B] hover:text-[#10B981] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none"
+                >
+                  <Database size={16} /> Guardar e Ir a Lotes
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

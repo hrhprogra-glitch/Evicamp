@@ -9,4 +9,5 @@ export interface Product {
   barcode: string;
   category: string;
   unit: string;
+  imageUrl?: string | null;
 }

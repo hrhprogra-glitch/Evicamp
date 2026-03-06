@@ -47,7 +47,7 @@ export const App: React.FC = () => {
   const renderCurrentView = () => {
     switch (currentView) {
       case 'inventario':
-        return <Inventario />;
+        return <Inventario onNavigate={setCurrentView} />;
       case 'dashboard':
         return (
           <div className="border border-[#E2E8F0] bg-[#FFFFFF] p-6 shadow-none">
