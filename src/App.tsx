@@ -7,6 +7,10 @@ import { SideBar } from './layout/SideBar';
 // Importación de Módulos (Secciones)
 import { Inventario } from './sections/Inventario';
 import { Mermas } from './sections/Mermas';
+import { Proveedores } from './sections/Proveedores'; 
+import { POS } from './sections/Punto-de-venta'; 
+import { Fiados } from './sections/Fiados'; // <--- IMPORTAMOS FIADOS
+import { Reportes } from './sections/Reportes';
 export const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,8 +52,16 @@ export const App: React.FC = () => {
     switch (currentView) {
       case 'inventario':
         return <Inventario onNavigate={setCurrentView} />;
-      case 'mermas': // <--- AGREGAMOS ESTA LÍNEA AQUÍ
+      case 'mermas': 
         return <Mermas />;
+      case 'proveedores': 
+        return <Proveedores />;
+      case 'pos': 
+        return <POS />;
+      case 'fiados': // <--- CONECTAMOS LA PANTALLA DE FIADOS
+        return <Fiados />;
+      case 'reportes': 
+        return <Reportes />;  
       case 'dashboard':
         return (
           <div className="border border-[#E2E8F0] bg-[#FFFFFF] p-6 shadow-none">
@@ -83,6 +95,7 @@ export const App: React.FC = () => {
         <TopBar 
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
           userEmail={session.user?.email || 'USUARIO_AUTENTICADO'} 
+          onNavigate={setCurrentView} // <--- AÑADIDO
         />
         
         <section className="p-8 flex-1 overflow-y-auto">

@@ -233,10 +233,11 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
       <ModalProducto 
         isOpen={isModalOpen} 
         initialData={productToEdit}
+        productosExistentes={products}
         onClose={() => {
           setIsModalOpen(false);
           setProductToEdit(null);
-        }} 
+        }}
         onGoToLotes={(productoRecienCreado) => {
           setIsModalOpen(false);
           setProductToEdit(null);

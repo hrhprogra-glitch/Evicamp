@@ -4,15 +4,16 @@ import { X, Package, Scale, Coffee, ArrowLeft, Save, ImagePlus, Search, Loader2,
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onGoToLotes?: (producto: any) => void; // <-- AHORA PUEDE ENVIAR EL PRODUCTO
+  onGoToLotes?: (producto: any) => void;
   onProductSaved?: (newProduct: any) => void;
   initialData?: any; 
+  productosExistentes?: any[];
 }
 
 // Los 3 tipos de comportamiento en el sistema
 type ProductNature = 'UNIDAD' | 'PESO' | 'CONSUMO' | null;
 
-export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, onProductSaved, initialData }) => {
+export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, onProductSaved, initialData, productosExistentes = [] }) => {
   const [step, setStep] = useState<1 | 2>(1);
   const [nature, setNature] = useState<ProductNature>(null);
 
@@ -170,12 +171,30 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   };
 
   const handleSave = (goToLotes: boolean) => {
+    const nombreLimpio = formData.name.trim().toUpperCase();
+    const codigoBarrasLimpio = formData.barcode?.trim() || '';
+
+    // === VALIDACIÓN DE INTEGRIDAD CONTRA DUPLICADOS ===
+    const isDuplicate = productosExistentes.some((p: any) => {
+      // Ignoramos el producto actual si estamos en modo Edición
+      if (initialData && p.id === initialData.id) return false;
+
+      const mismoNombre = p.name.toUpperCase() === nombreLimpio;
+      const mismoCodigoBarras = codigoBarrasLimpio !== '' && p.barcode === codigoBarrasLimpio;
+
+      return mismoNombre || mismoCodigoBarras;
+    });
+
+    if (isDuplicate) {
+      return alert('⚠️ ERROR DE INTEGRIDAD: Ya existe un producto registrado en el inventario con ese mismo Nombre o Código de Barras.');
+    }
+
     console.log("PREPARADO PARA GUARDAR SKU:", { ...formData, nature });
     
     // 1. EMPAQUETAMOS EL PRODUCTO EN UNA VARIABLE
     const nuevoProducto = {
       id: Date.now().toString(), // ID Temporal de simulación
-      name: formData.name.toUpperCase(),
+      name: nombreLimpio,
       category: formData.category || 'GENERAL',
       code: formData.code || `SKU-${Math.floor(Math.random() * 10000)}`,
       barcode: formData.barcode,
@@ -183,16 +202,16 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
       cost: 0,
       quantity: 0,
       minStock: Number(formData.minStock) || 5,
-      unit: nature === 'PESO' ? formData.weightUnit : (nature === 'CONSUMO' ? 'CONSUMO' : 'UND'),
-      imageUrl: formData.image // <-- AHORA SÍ ENVÍA LA IMAGEN A LA TABLA
-    };
+      unit: nature === 'PESO' ? formData.weightUnit : (nature === 'CONSUMO' ? 'CONSUMO' : 'UND'),
+      imageUrl: formData.image 
+    };
 
     // 2. LO ENVIAMOS A LA TABLA
     if (onProductSaved) {
       onProductSaved(nuevoProducto);
     }
 
-    alert(`PRODUCTO GUARDADO CORRECTAMENTE.\n\nProducto: ${formData.name}`);
+    alert(`PRODUCTO GUARDADO CORRECTAMENTE.\n\nProducto: ${nombreLimpio}`);
     resetAndClose();
 
     // 3. SI ELIGIÓ IR A LOTES, LE ENVIAMOS EL PAQUETE AL OTRO MODAL

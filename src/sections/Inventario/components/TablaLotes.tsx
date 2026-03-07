@@ -16,6 +16,7 @@ interface Lote {
   mermas_count?: number; // Cantidad de veces que se registró merma
   mermas_total?: number; // Suma total de unidades perdidas
   unit?: string; // <-- AÑADIDO PARA LA UNIDAD
+  supplier?: string; // <-- AÑADIDO PARA EL PROVEEDOR
 }
 
 interface Props {
@@ -58,6 +59,7 @@ export const TablaLotes: React.FC<Props> = ({ searchQuery, filtroCategoria, filt
             cost_unit: Number(b.cost_unit) || 0,
             product_name: b.products?.name || 'PRODUCTO DESCONOCIDO',
             document_ref: b.document_ref || 'INT-S/R',
+            supplier: b.supplier || '', // <-- EXTRAEMOS EL PROVEEDOR
             category: b.products?.category || 'GENERAL',
             unit: b.products?.unit === 'CONSUMO' || b.products?.control_type === 'CONSUMO' || b.products?.control_type === 'SERVICE' ? 'CONSUMO' : (b.products?.unit || b.products?.weight_unit || (b.products?.control_type === 'WEIGHT' ? 'KG' : 'UND'))
           }));
@@ -183,7 +185,7 @@ export const TablaLotes: React.FC<Props> = ({ searchQuery, filtroCategoria, filt
 
       {/* Cabecera de la Tabla (TEXTO AGRANDADO a text-xs) */}
       <div className="grid grid-cols-12 bg-[#1E293B] text-white p-4 text-xs font-black uppercase tracking-[0.1em] shrink-0">
-        <div className="col-span-2">Ingreso / Doc</div>
+        <div className="col-span-2">Fecha / Doc / Prov.</div>
         <div className="col-span-3">Producto</div>
         <div className="col-span-2 text-center">Estado / Vence</div>
         <div className="col-span-1 text-right">Costo U.</div>
@@ -211,12 +213,21 @@ export const TablaLotes: React.FC<Props> = ({ searchQuery, filtroCategoria, filt
     // SE AGRANDÓ LA LETRA BASE DE LA FILA (text-sm)
     <div key={lote.id} className="grid grid-cols-12 items-center p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors group text-sm">
       
-      {/* 1. INGRESO Y REFERENCIA / SUSTENTO */}
-      <div className="col-span-2 flex flex-col gap-1">
+      {/* 1. INGRESO Y REFERENCIA / SUSTENTO / PROVEEDOR */}
+      <div className="col-span-2 flex flex-col gap-1 pr-2">
         <span className="text-[#1E293B] font-black">{lote.created_at}</span>
+        
+        {/* Documento o Sustento Guardado */}
         <span className="text-[10px] font-bold text-[#64748B] uppercase truncate" title={lote.document_ref}>
           {lote.document_ref}
         </span>
+        
+        {/* Proveedor en color azul para resaltarlo */}
+        {lote.supplier && (
+          <span className="text-[9px] font-black text-[#3B82F6] uppercase truncate" title={lote.supplier}>
+            PROV: {lote.supplier}
+          </span>
+        )}
       </div>
 
       {/* 2. PRODUCTO Y CATEGORÍA */}

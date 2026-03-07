@@ -77,7 +77,7 @@ export const FiltrosMermas: React.FC<Props> = ({
         </div>
 
         {/* SELECTOR DE FECHA (NUEVO) */}
-        <div className="md:col-span-3 lg:col-span-2 relative flex border-2 border-[#E2E8F0] bg-white focus-within:border-[#1E293B] transition-colors rounded-none">
+        <div className="md:col-span-2 lg:col-span-2 relative flex border-2 border-[#E2E8F0] bg-white focus-within:border-[#1E293B] transition-colors rounded-none">
           <div className="w-10 flex items-center justify-center bg-[#F8FAFC] border-r-2 border-[#E2E8F0] shrink-0 text-[#64748B]">
             <Calendar size={16} />
           </div>
@@ -90,14 +90,14 @@ export const FiltrosMermas: React.FC<Props> = ({
         </div>
 
         {/* BOTÓN LIMPIAR FILTROS */}
-        <div className="md:col-span-1 lg:col-span-1 flex items-center justify-end">
+        <div className="md:col-span-2 lg:col-span-1 flex items-center justify-end">
           {hasActiveFilters && (
             <button 
               onClick={onClearFilters}
-              className="h-full w-full bg-white border-2 border-[#EF4444] text-[#EF4444] flex items-center justify-center hover:bg-[#EF4444] hover:text-white transition-colors cursor-pointer rounded-none"
+              className="h-full w-full min-h-[46px] bg-white border-2 border-[#EF4444] text-[#EF4444] flex items-center justify-center hover:bg-[#EF4444] hover:text-white transition-colors cursor-pointer rounded-none font-bold text-[10px] xl:text-xs uppercase"
               title="Limpiar Filtros"
             >
-              <X size={18} />
+              <X size={16} className="mr-1" /> Limpiar
             </button>
           )}
         </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Database, Search, Calculator, FileText, Check, Calendar } from 'lucide-react';
 import type { Product } from '../types';
-
+import { supabase } from '../../../db/supabase';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -14,6 +14,7 @@ interface Props {
 export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initialProduct, initialLote, onLoteSaved }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showProviderDropdown, setShowProviderDropdown] = useState(false); // <-- NUEVO ESTADO
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const [cantidad, setCantidad] = useState('');
@@ -58,6 +59,24 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
       }
     }
   }, [isOpen, initialProduct, initialLote, productos]);
+
+  // --- NUEVO: CARGAR PROVEEDORES DESDE LA BASE DE DATOS ---
+  const [proveedoresActivos, setProveedoresActivos] = useState<any[]>([]);
+  
+  useEffect(() => {
+    if (isOpen) {
+      const fetchProveedores = async () => {
+        const { data } = await supabase
+          .from('providers')
+          .select('id, razon_social')
+          .eq('estado', 'ACTIVO')
+          .order('razon_social');
+        if (data) setProveedoresActivos(data);
+      };
+      fetchProveedores();
+    }
+  }, [isOpen]);
+  // --------------------------------------------------------
 
   if (!isOpen) return null;
 
@@ -243,15 +262,45 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
               <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest flex items-center gap-2">
                 <FileText size={14} /> 4. Sustento (Doc. Proveedor)
               </label>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 relative">
                 <input 
                   type="text"
-                  placeholder={omitirSustento ? "OMITIDO / SIN SUSTENTO..." : "EJ: FACTURA F001-000452..."}
+                  placeholder={omitirSustento ? "OMITIDO / SIN SUSTENTO..." : "BUSCAR PROVEEDOR O DOC..."}
                   value={omitirSustento ? '' : sustento}
-                  onChange={(e) => setSustento(e.target.value.toUpperCase())}
+                  onChange={(e) => {
+                    setSustento(e.target.value.toUpperCase());
+                    setShowProviderDropdown(true);
+                  }}
+                  onFocus={() => setShowProviderDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowProviderDropdown(false), 200)}
                   disabled={omitirSustento || !selectedProduct}
                   className="w-full bg-white border-2 border-[#E2E8F0] p-3 text-xs font-black text-[#1E293B] uppercase outline-none focus:border-[#10B981] transition-colors disabled:bg-[#F1F5F9] disabled:text-[#94A3B8]"
                 />
+
+                {/* BUSCADOR DESPLEGABLE DE PROVEEDORES */}
+                {showProviderDropdown && !omitirSustento && selectedProduct && (
+                  <div className="absolute top-[48px] left-0 right-0 bg-white border-2 border-[#1E293B] shadow-[4px_4px_0_0_#1E293B] z-50 max-h-40 overflow-y-auto custom-scrollbar">
+                    {proveedoresActivos.filter(p => p.razon_social.includes(sustento)).length > 0 ? (
+                      proveedoresActivos.filter(p => p.razon_social.includes(sustento)).map(prov => (
+                        <div 
+                          key={prov.id}
+                          onMouseDown={(e) => {
+                            e.preventDefault(); // Evita que el onBlur cierre la ventana antes del click
+                            setSustento(prov.razon_social);
+                            setShowProviderDropdown(false);
+                          }}
+                          className="p-3 hover:bg-[#F8FAFC] border-b border-[#E2E8F0] cursor-pointer"
+                        >
+                          <span className="text-xs font-black text-[#1E293B] uppercase">{prov.razon_social}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-3 text-[10px] font-bold text-[#64748B] uppercase text-center bg-[#F8FAFC]">
+                        ESCRIBE LIBREMENTE SI NO ESTÁ EN LA LISTA
+                      </div>
+                    )}
+                  </div>
+                )}
                 <label className="flex items-center gap-2 cursor-pointer w-max group">
                   <div className={`w-4 h-4 border-2 flex items-center justify-center transition-colors ${omitirSustento ? 'bg-[#EF4444] border-[#EF4444]' : 'border-[#94A3B8] bg-white group-hover:border-[#EF4444]'}`}>
                     {omitirSustento && <Check size={12} className="text-white" />}
