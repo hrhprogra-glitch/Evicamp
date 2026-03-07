@@ -3,6 +3,7 @@ import { supabase } from '../../db/supabase';
 import type { CartItem } from './types';
 import type { Product } from '../Inventario/types';
 import { useRef } from 'react';
+import { Wallet } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 // Componentes modulares
 import { TerminalBusqueda } from './components/TerminalBusqueda';
@@ -12,7 +13,8 @@ import { ModalBalanza } from './components/ModalBalanza';
 import { ModalPrecioConsumo } from './components/ModalPrecioConsumo';
 import { TicketImprimible } from './components/TicketImprimible';
 export const POS: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [hasOpenSession, setHasOpenSession] = useState<boolean | null>(null);
+const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [productos, setProductos] = useState<Product[]>([]);
   // NUEVO: Estados para la impresión de la última boleta
@@ -34,6 +36,9 @@ export const POS: React.FC = () => {
   // 1. CARGAR PRODUCTOS AL ABRIR LA VENTANA
   useEffect(() => {
     const fetchProducts = async () => {
+      // Bloqueo de Seguridad: Verificar Caja
+      const { data: session } = await supabase.from('cash_sessions').select('id').eq('status', 'OPEN').maybeSingle();
+      setHasOpenSession(!!session);
       const { data } = await supabase.from('products').select('*');
       if (data) {
         const mapeados: Product[] = data.map((p: any) => ({
@@ -58,6 +63,12 @@ export const POS: React.FC = () => {
 
   // 2. FUNCIÓN PARA DISPARAR PRODUCTOS AL CARRITO (CON BALANZA Y CONSUMO)
   const handleAddToCart = (producto: Product) => {
+    // BLOQUEO DE SEGURIDAD: Solo consultar, no vender si está cerrado
+    if (hasOpenSession === false) {
+      alert("🔒 CAJA CERRADA: Modo Consulta activado. Ve a la pestaña de Finanzas y apertura la caja para poder vender.");
+      return;
+    }
+
     // Si el producto se vende por Kilo, abrir balanza
     if (producto.unit === 'KG') {
       setSelectedWeightProduct(producto);
@@ -175,11 +186,11 @@ const handleConfirmPrecio = (precio: number, cantidad: number) => {
     setHeldCarts(newHeld);
     setCart(restored);
   };
-  // 6. PROCESAR EL PAGO FINAL (ACTUALIZADO CON SOPORTE PARA FIADOS)
+  // 6. PROCESAR PAGO (GUARDA VENTA, REDUCE STOCK Y REGISTRA FIADOS)
   const handleConfirmPayment = async (
     pagos: { efectivo: number, yape: number, tarjeta: number },
     imprimirBoleta: boolean,
-    fiadoData?: any // <-- RECIBE LOS DATOS DEL FIADO
+    fiadoData?: any 
   ) => {
     const totalVenta = cart.reduce((a, b) => a + b.subtotal, 0);
     const totalIngresado = pagos.efectivo + pagos.yape + pagos.tarjeta;
@@ -189,57 +200,136 @@ const handleConfirmPrecio = (precio: number, cantidad: number) => {
       vuelto = totalIngresado - totalVenta;
     }
 
-    // === GUARDADO REAL DE FIADO EN SUPABASE ===
+    // === 1. GUARDADO DE FIADO EN SUPABASE ===
     if (fiadoData) {
-      const nuevoFiadoId = Date.now().toString();
-      const fechaHoy = new Date().toISOString();
-
-      const { error } = await supabase.from('fiados').insert([{
-        id: nuevoFiadoId,
-        customer_id: fiadoData.clienteId || null, // Se enlaza al cliente real
+      const { error: fiadoError } = await supabase.from('fiados').insert([{
+        id: Date.now().toString(),
+        customer_id: fiadoData.clienteId || null,
         customer_name: fiadoData.clienteNombre,
         amount: fiadoData.montoDeuda,
         paid_amount: 0,
-        date_given: fechaHoy,
+        date_given: new Date().toISOString(),
         expected_pay_date: fiadoData.fechaVencimiento,
         status: 'PENDIENTE',
         is_synced: '1'
       }]);
-
-      if (error) {
-        alert("Error de base de datos al guardar la deuda: " + error.message);
-        return;
-      }
-      
-      alert(`CRÉDITO REGISTRADO EN EL SISTEMA\n\nCliente: ${fiadoData.clienteNombre}\nDeuda: S/ ${fiadoData.montoDeuda.toFixed(2)}`);
+      if (fiadoError) { alert("Error al guardar deuda: " + fiadoError.message); return; }
     }
 
-    // Si se exige imprimir, guardamos el snapshot del carrito
+    // === 2. GUARDADO EN HISTORIAL DE VENTAS (sales) CON ID MANUAL ===
+    let saleId = Date.now().toString(); // ID de emergencia a prueba de fallos
+
+    // Buscamos la última venta para generar el siguiente número en orden (ej: si es 2789, será 2790)
+    const { data: backupData } = await supabase
+      .from('sales')
+      .select('id')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    
+    if (backupData && backupData.length > 0 && backupData[0].id) {
+      // Extraemos solo el número por si tiene letras
+      const match = String(backupData[0].id).match(/\d+/);
+      if (match) {
+        saleId = (Number(match[0]) + 1).toString();
+      }
+    }
+
+    const { error: saleError } = await supabase
+      .from('sales')
+      .insert([{
+        id: saleId, // <-- LA MAGIA ESTÁ AQUÍ: Inyectamos el ID nosotros mismos
+        total: totalVenta,
+        payment_type: pagos.yape > 0 ? 'yape' : (pagos.tarjeta > 0 ? 'tarjeta' : 'efectivo'),
+        amount_cash: Math.max(0, pagos.efectivo - vuelto),
+        amount_yape: pagos.yape,
+        amount_card: pagos.tarjeta,
+        sunat_status: 'ACEPTADO',
+        created_at: new Date().toISOString(), 
+        is_synced: '1'
+      }]);
+
+    if (saleError) {
+      alert("Error crítico al registrar la venta principal: " + saleError.message);
+      return;
+    }
+
+    // === 3. GUARDADO DE DETALLES Y REDUCCIÓN DE INVENTARIO ===
+    for (const item of cart) {
+      // A. Registrar en el ticket (sale_details) con blindaje de Errores
+      const { error: detailError } = await supabase.from('sale_details').insert([{
+        sale_id: saleId,
+        product_id: item.id,
+        product_name: item.name,
+        quantity: item.cartQuantity,
+        price_at_moment: item.price,
+        subtotal: item.subtotal,
+        cost_at_moment: Number(item.cost) || 0,
+        is_synced: '1'
+      }]);
+
+      if (detailError) {
+        alert(`Alerta de Base de Datos: No se pudo guardar el detalle de ${item.name} en el ticket. Detalle del Error: ${detailError.message}`);
+      }
+
+      // B. Reducir Stock Físico (products) protegiendo el "Consumo"
+      if (item.unit !== 'CONSUMO') {
+        const { data: prodData } = await supabase.from('products').select('quantity').eq('id', item.id).single();
+        if (prodData) {
+          const stockAnterior = Number(prodData.quantity);
+          const nuevoStock = stockAnterior - item.cartQuantity;
+          
+          await supabase.from('products').update({ quantity: nuevoStock }).eq('id', item.id);
+          
+          // C. Registrar en Kardex de Inventario (inventory_movements)
+          await supabase.from('inventory_movements').insert([{
+            product_id: item.id,
+            product_name: item.name,
+            change_amount: -item.cartQuantity,
+            previous_quantity: stockAnterior,
+            new_quantity: nuevoStock,
+            operation_type: 'VENTA',
+            reason: `Venta POS #${saleId}`,
+            user: 'Sistema',
+            created_at: new Date().toISOString(),
+            is_synced: '1'
+          }]);
+
+          // D. INYECCIÓN REACTIVA: Actualiza la pantalla (Terminal) al instante sin tener que presionar F5
+          setProductos(prevProductos => 
+            prevProductos.map(p => p.id === item.id ? { ...p, quantity: nuevoStock } : p)
+          );
+        }
+      }
+    }
+
+    // === 4. PROCESAR IMPRESIÓN Y LIMPIAR CAJA ===
     if (imprimirBoleta) {
       setUltimaVenta({
         cart: [...cart],
         total: totalVenta,
         pagos: { efectivo: pagos.efectivo, yape: pagos.yape, tarjeta: pagos.tarjeta },
         vuelto: vuelto,
-        nroBoleta: `B001-${Math.floor(Math.random() * 1000000).toString().padStart(8, '0')}`,
-        fiadoData: fiadoData // <-- PASAMOS LA INFO DEL FIADO AL TICKET
+        // Usamos String() que es a prueba de errores, en lugar de .toString() que colapsa con nulos
+        nroBoleta: `B001-${String(saleId).padStart(8, '0')}`,
+        fiadoData: fiadoData 
       });
-
-      setTimeout(() => {
-        handlePrint();
-      }, 100); 
+      setTimeout(() => handlePrint(), 100); 
     } else {
-      if (!fiadoData) {
-        alert(`Venta registrada.\nVuelto: S/ ${vuelto.toFixed(2)}`);
-      }
+      alert(`✅ Venta completada.\nEl inventario se ha reducido automáticamente.\nVuelto: S/ ${vuelto.toFixed(2)}`);
     }
 
-    // Limpiamos la caja
     setCart([]);
     setIsCobroModalOpen(false);
   };
   return (
-    <div className="flex h-full w-full bg-transparent font-mono gap-6 relative z-0">
+    <div className={`flex h-full w-full bg-transparent font-mono gap-6 relative z-0 ${hasOpenSession === false ? 'pt-16' : ''}`}>
+      
+      {/* BARRA DE ADVERTENCIA - MODO CONSULTA */}
+      {hasOpenSession === false && (
+        <div className="absolute top-0 left-0 w-full bg-[#EF4444] text-white p-3 flex justify-center items-center gap-2 font-black text-xs uppercase tracking-[0.2em] z-50 shadow-[0_4px_0_0_#1E293B] border-b-2 border-[#1E293B]">
+          <Wallet size={16} /> Caja Cerrada: Modo de solo consulta. Ve a Finanzas para aperturar la caja.
+        </div>
+      )}
       <TerminalBusqueda 
         searchQuery={searchQuery} 
         setSearchQuery={setSearchQuery} 

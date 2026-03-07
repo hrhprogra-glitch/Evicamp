@@ -10,6 +10,7 @@ import { Mermas } from './sections/Mermas';
 import { Proveedores } from './sections/Proveedores'; 
 import { POS } from './sections/Punto-de-venta'; 
 import { Fiados } from './sections/Fiados'; // <--- IMPORTAMOS FIADOS
+import { Finanzas } from './sections/Finanzas'; // <--- IMPORTAMOS FINANZAS
 import { Reportes } from './sections/Reportes';
 export const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
@@ -60,6 +61,8 @@ export const App: React.FC = () => {
         return <POS />;
       case 'fiados': // <--- CONECTAMOS LA PANTALLA DE FIADOS
         return <Fiados />;
+      case 'finanzas': // <--- CONECTAMOS LA PANTALLA DE FINANZAS
+        return <Finanzas />;
       case 'reportes': 
         return <Reportes />;  
       case 'dashboard':

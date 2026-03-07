@@ -32,26 +32,29 @@ export const Reportes: React.FC = () => {
     autoLimpiarAntiguos();
   }, []); // El array vacío asegura que solo se ejecute 1 vez al entrar a la ventana
 
-  // 2. CARGAR TICKETS POR RANGO DE FECHAS
+  // 2. CARGAR TICKETS POR RANGO DE FECHAS (Protección de Zona Horaria)
   useEffect(() => {
     const fetchTickets = async () => {
-      // Ajustamos las horas para abarcar todo el día (00:00:00 a 23:59:59)
-      const start = `${fechaInicio}T00:00:00.000Z`;
-      const end = `${fechaFin}T23:59:59.999Z`;
+      // Inyección: Forzamos la consulta ignorando el desplazamiento horario del navegador
+      // Expandimos artificialmente el end en 1 día extra para atrapar registros que entraron como UTC+0 en Supabase
+      const fechaFinExpandida = new Date(fechaFin);
+      fechaFinExpandida.setDate(fechaFinExpandida.getDate() + 1);
+      const finAjustado = fechaFinExpandida.toISOString().split('T')[0];
 
       const { data, error } = await supabase
         .from('sales')
         .select('*')
-        .gte('created_at', start)
-        .lte('created_at', end)
+        .gte('created_at', `${fechaInicio}T00:00:00`)
+        .lt('created_at', `${finAjustado}T00:00:00`) // Usamos estrictamente "menor que el día siguiente"
         .order('created_at', { ascending: false });
 
       if (data) {
         // Mapeamos los datos reales de la BD al formato que entiende la tabla
         const ticketsFormateados: TicketVenta[] = data.map(t => ({
-          id: t.id.toString(),
-          created_at: t.created_at,
-          total: Number(t.total),
+          // Inyección: Usamos String() que soporta nulos sin crashear la aplicación
+          id: t.id ? String(t.id) : `ERR-${Math.floor(Math.random() * 10000)}`,
+          created_at: t.created_at || new Date().toISOString(),
+          total: Number(t.total) || 0,
           metodo_pago: t.payment_type || 'MIXTO',
           estado: t.status === 'ANULADO' || t.sunat_status === 'ANULADO' ? 'ANULADO' : 'COMPLETADO'
         }));
@@ -65,14 +68,49 @@ export const Reportes: React.FC = () => {
 
   // 3. ANULAR TICKET (Devolución)
   const handleAnularTicket = async (id: string) => {
-    if (window.confirm('⚠️ ¿Seguro que deseas ANULAR este ticket? Esta acción marca el ticket como devuelto.')) {
-      // Usamos el campo status en Supabase (asegúrate de que exista en tu tabla sales)
-      const { error } = await supabase.from('sales').update({ status: 'ANULADO' }).eq('id', id);
+    // Intercepción de Seguridad
+    if (id.startsWith('ERR-')) {
+      alert('⚠️ PROTECCIÓN DEL SISTEMA: Este es un registro corrupto (No tiene ID válido en la base de datos). No contiene productos para devolver al inventario. Te recomendamos usar el tacho de basura rojo para eliminarlo y limpiar tu pantalla.');
+      return;
+    }
+
+    if (window.confirm('⚠️ ¿Seguro que deseas ANULAR este ticket? El stock de los productos regresará a tu inventario automáticamente.')) {
+      // 1. Marcamos la venta como ANULADA (Usamos sunat_status para compatibilidad con tu BD)
+      const { error } = await supabase.from('sales').update({ sunat_status: 'ANULADO' }).eq('id', id);
       
       if (error) {
-        alert("Error al anular en BD: " + error.message);
+        alert("Error de integridad al anular en BD: " + error.message);
       } else {
+        
+        // 2. OBTENER DETALLES DE LA VENTA PARA DEVOLVER AL STOCK
+        const { data: detalles } = await supabase.from('sale_details').select('product_id, quantity, product_name').eq('sale_id', id);
+        
+        if (detalles) {
+          for (const item of detalles) {
+            // Buscamos el stock actual del producto en tiempo real
+            const { data: producto } = await supabase.from('products').select('quantity, control_type').eq('id', item.product_id).single();
+            
+            // Si el producto existe y NO es un "consumo/servicio", procedemos a devolver la física
+            if (producto && producto.control_type !== 'CONSUMPTION') {
+              // Sumamos la cantidad devuelta al stock
+              const stockDevuelto = Number(producto.quantity) + Number(item.quantity);
+              await supabase.from('products').update({ quantity: stockDevuelto }).eq('id', item.product_id);
+              
+              // Registro estricto de auditoría de ingreso (Kardex)
+              await supabase.from('inventory_movements').insert([{
+                product_id: item.product_id,
+                change_amount: Number(item.quantity),
+                operation_type: 'DEVOLUCION',
+                reason: `Anulación de Ticket #${id}`,
+                user: 'Sistema'
+              }]);
+            }
+          }
+        }
+        
+        // Actualizamos la interfaz gráfica (UI) al instante aplicando el estilo de alto contraste
         setTickets(tickets.map(t => t.id === id ? { ...t, estado: 'ANULADO' } : t));
+        alert("✅ OPERACIÓN CONFIRMADA: Ticket anulado y stock reingresado exitosamente a la base de datos.");
       }
     }
   };
@@ -80,6 +118,15 @@ export const Reportes: React.FC = () => {
   // 4. ELIMINAR TICKET INDIVIDUAL
   const handleDeleteTicket = async (id: string) => {
     if (window.confirm('🗑️ ¿Estás seguro de ELIMINAR este ticket permanentemente?')) {
+      
+      // Si es un ticket corrupto (sin ID), forzamos su limpieza buscando los nulos en la BD
+      if (id.startsWith('ERR-')) {
+        await supabase.from('sales').delete().is('id', null);
+        setTickets(tickets.filter(t => t.id !== id));
+        alert("✅ Registro corrupto eliminado y limpiado de la base de datos.");
+        return;
+      }
+
       const { error } = await supabase.from('sales').delete().eq('id', id);
       
       if (!error) {
