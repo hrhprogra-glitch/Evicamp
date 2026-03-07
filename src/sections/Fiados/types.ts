@@ -29,9 +29,11 @@ export interface Fiado {
   clienteTelefono?: string;
   montoOriginal: number;
   saldoPendiente: number;
+  montoPagado?: number; // <-- AÑADIDO: Para evitar el error de TypeScript
   fechaEmision: string;
   fechaVencimiento: string;
-  estado: 'PENDIENTE' | 'PAGADO' | 'VENCIDO';
+  // CORREGIDO: Ampliamos los estados para que acepte los de la base de datos
+  estado: 'PENDIENTE' | 'PAGADO' | 'VENCIDO' | 'CANCELADO' | 'ANULADO'; 
   detalles: FiadoDetalle[];
-  pagos?: PagoAbono[]; // <-- NUEVO: Arreglo de pagos
+  pagos?: PagoAbono[]; 
 }

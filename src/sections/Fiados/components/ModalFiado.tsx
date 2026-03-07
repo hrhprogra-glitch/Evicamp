@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, UserPlus, Package, Search, Plus, Trash2, ChevronDown } from 'lucide-react';
+import { supabase } from '../../../db/supabase';
 import type { Fiado, FiadoDetalle, Cliente } from '../types';
 import type { Product } from '../../Inventario/types';
 
@@ -69,31 +70,91 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
 
   const totalCalculado = detalles.reduce((acc, d) => acc + d.subtotal, 0);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!clienteSeleccionado) return alert('Selecciona un cliente.');
     if (detalles.length === 0) return alert('Agrega al menos un producto.');
     if (!fechaVencimiento) return alert('Selecciona una fecha de vencimiento.');
 
     const cli = clientes.find(c => c.nombre === clienteSeleccionado);
-
-    // Si estamos editando, calculamos la diferencia para el saldo pendiente
     let nuevoSaldo = totalCalculado;
-    if (fiadoAEditar) {
-      const diferencia = totalCalculado - fiadoAEditar.montoOriginal;
-      nuevoSaldo = fiadoAEditar.saldoPendiente + diferencia;
-    }
+    
+    try {
+      if (fiadoAEditar) {
+        // MODO EDICIÓN DE DEUDA
+        const diferencia = totalCalculado - fiadoAEditar.montoOriginal;
+        nuevoSaldo = fiadoAEditar.saldoPendiente + diferencia;
+        
+        const { error } = await supabase.from('fiados').update({
+          amount: totalCalculado,
+          saldoPendiente: nuevoSaldo,
+          expected_pay_date: fechaVencimiento
+        }).eq('id', fiadoAEditar.id);
+        
+        if (error) throw error;
+        alert('✅ Deuda actualizada en base de datos.');
+      } else {
+        // MODO NUEVO FIADO
+        // 1. Crear Venta de respaldo para cuadrar las finanzas
+        const { data: venta, error: ventaError } = await supabase.from('sales').insert([{
+          total: totalCalculado,
+          payment_type: 'credito',
+          amount_credit: totalCalculado,
+          taxable_amount: 0,
+          igv_amount: 0,
+          total_exempt: totalCalculado,
+          is_synced: '1'
+        }]).select().single();
+        if (ventaError) throw ventaError;
 
-    onSave({
-      id: fiadoAEditar?.id,
-      clienteId: cli?.id,
-      clienteNombre: clienteSeleccionado,
-      clienteDni: cli?.dni,
-      clienteTelefono: cli?.telefono,
-      montoOriginal: totalCalculado,
-      saldoPendiente: nuevoSaldo,
-      fechaVencimiento: fechaVencimiento,
-      detalles: detalles
-    });
+        // 2. Insertar los productos en los detalles de la venta
+        const saleDetails = detalles.map(d => ({
+          sale_id: venta.id,
+          product_id: d.productoId,
+          product_name: d.name,
+          quantity: d.qty,
+          price_at_moment: d.price,
+          subtotal: d.subtotal,
+          is_synced: '1'
+        }));
+        await supabase.from('sale_details').insert(saleDetails);
+
+        // 3. Crear el Documento de Deuda (Fiado)
+        const { error: fiadoError } = await supabase.from('fiados').insert([{
+          sale_id: venta.id,
+          customer_id: cli?.id || null,
+          customer_name: clienteSeleccionado,
+          amount: totalCalculado,
+          date_given: new Date().toISOString(),
+          expected_pay_date: fechaVencimiento,
+          status: 'PENDIENTE',
+          paid_amount: 0,
+          is_synced: '1'
+        }]);
+        if (fiadoError) throw fiadoError;
+
+        // 4. Descontar Inventario automáticamente
+        for (const det of detalles) {
+          const prod = productos.find(p => p.id === det.productoId);
+          if (prod) {
+            await supabase.from('products').update({ quantity: prod.quantity - det.qty }).eq('id', prod.id);
+            await supabase.from('inventory_movements').insert([{
+              product_id: prod.id,
+              product_name: prod.name,
+              change_amount: -det.qty,
+              operation_type: 'VENTA',
+              reason: 'Venta a Crédito (Fiado)',
+              is_synced: '1',
+              user: 'Sistema'
+            }]);
+          }
+        }
+        alert('✅ Fiado guardado, venta registrada e inventario descontado.');
+      }
+      
+      onSave({}); // Refrescar la interfaz
+    } catch (e: any) {
+      alert('Error técnico en BD: ' + e.message);
+    }
   };
 
   const isEdit = !!fiadoAEditar;

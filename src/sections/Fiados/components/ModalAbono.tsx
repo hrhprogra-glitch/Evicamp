@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Banknote, CreditCard, Smartphone, Calculator } from 'lucide-react';
+import { supabase } from '../../../db/supabase';
 import type { Fiado } from '../types';
 
 interface Props {
@@ -32,14 +33,53 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
   const totalAbono = valEfectivo + valYape + valTarjeta;
   const nuevoSaldo = fiado.saldoPendiente - totalAbono;
 
-  const handleConfirm = () => {
-    if (totalAbono <= 0) {
-      return alert('El monto total a abonar debe ser mayor a S/ 0.');
+  const handleConfirm = async () => {
+    if (totalAbono <= 0) return alert('El monto debe ser mayor a 0.');
+    if (totalAbono > fiado.saldoPendiente) return alert('El abono supera la deuda.');
+
+    try {
+      // 1. Insertar el Pago en el historial
+      const { error: pagoError } = await supabase.from('debt_payments').insert([{
+        fiado_id: fiado.id,
+        customer_id: fiado.clienteId || null,
+        amount: totalAbono,
+        amount_cash: valEfectivo,
+        amount_yape: valYape,
+        amount_card: valTarjeta,
+        payment_type: valEfectivo > 0 ? 'efectivo' : (valYape > 0 ? 'yape' : 'tarjeta'),
+        is_synced: '1'
+      }]);
+      if (pagoError) throw pagoError;
+
+      // 2. Actualizar Fiado (Restar deuda y cambiar a CANCELADO si llega a 0)
+      const nuevoMontoPagado = Number(fiado.montoPagado || 0) + totalAbono;
+      const nuevoEstado = nuevoSaldo <= 0 ? 'CANCELADO' : 'PENDIENTE';
+      
+      const { error: updateError } = await supabase.from('fiados').update({
+        paid_amount: nuevoMontoPagado,
+        status: nuevoEstado,
+        date_paid: nuevoEstado === 'CANCELADO' ? new Date().toISOString() : null
+      }).eq('id', fiado.id);
+      if (updateError) throw updateError;
+
+      // 3. Registrar Ingreso en Caja Abierta automáticamente
+      const { data: session } = await supabase.from('cash_sessions').select('id').eq('status', 'OPEN').single();
+      if (session) {
+        await supabase.from('cash_movements').insert([{
+          session_id: session.id,
+          type: 'INGRESO',
+          amount: totalAbono,
+          description: `Abono Deuda - Cliente: ${fiado.clienteNombre}`,
+          payment_type: valEfectivo > 0 ? 'EFECTIVO' : (valYape > 0 ? 'YAPE' : 'TARJETA'),
+          is_synced: '1'
+        }]);
+      }
+
+      alert('✅ Abono registrado en la base de datos y sumado a la caja actual.');
+      onConfirm({ efectivo: valEfectivo, yape: valYape, tarjeta: valTarjeta });
+    } catch (e: any) {
+      alert('Error al registrar abono en BD: ' + e.message);
     }
-    if (totalAbono > fiado.saldoPendiente) {
-      return alert('El abono total no puede ser mayor a la deuda pendiente.');
-    }
-    onConfirm({ efectivo: valEfectivo, yape: valYape, tarjeta: valTarjeta });
   };
 
   return (
