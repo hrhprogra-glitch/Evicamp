@@ -109,7 +109,7 @@ export const TablaProductos: React.FC<Props> = ({
           productos.map((item) => {
             
             // CÁLCULO DE TOTAL DE COMPRA
-            const totalCompra = (item.cost * item.quantity).toFixed(2);
+            const totalCompra = ((item.cost || 0) * (item.quantity || 0)).toFixed(2);
 
             // === MODO EDICIÓN EN LÍNEA ===
             if (editingId === item.id) {
@@ -250,7 +250,7 @@ export const TablaProductos: React.FC<Props> = ({
                 {/* 3. INVERSIÓN (COSTO Y TOTAL CLAROS) */}
                 <div className="col-span-2 flex flex-col gap-1 justify-center">
                   <span className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">
-                    Costo U: <strong className="text-[#1E293B] text-xs">S/ {item.cost.toFixed(2)}</strong>
+                    Costo U: <strong className="text-[#1E293B] text-xs">S/ {(item.cost || 0).toFixed(2)}</strong>
                   </span>
                   <span className="text-[11px] font-bold text-[#10B981] uppercase tracking-wider">
                     Total: <strong className="text-[#1E293B] text-xs">S/ {totalCompra}</strong>
@@ -259,7 +259,7 @@ export const TablaProductos: React.FC<Props> = ({
 
                 {/* 4. PRECIO DE VENTA */}
                 <div className="col-span-1 font-black text-sm text-[#10B981] text-right pr-2">
-                  S/ {item.price.toFixed(2)}
+                  S/ {(item.price || 0).toFixed(2)}
                 </div>
 
                 {/* 5. STOCK */}

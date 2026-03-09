@@ -92,14 +92,20 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, onConfirm 
             return;
         }
         
-        finalClienteId = Date.now().toString(); // Generar ID para Fiados
-        await supabase.from('customers').insert([{
-          id: finalClienteId,
+        // RETORNO TÉCNICO: Delegamos la creación del ID a PostgreSQL para evitar colisiones o desbordamientos.
+        const { data, error } = await supabase.from('customers').insert([{
           name: clienteNombre.toUpperCase(), // Tu BD usa 'name'
           dni: clienteDni || null,
           created_at: new Date().toISOString(),
           is_synced: '1'
-        }]);
+        }]).select('id').single();
+
+        if (error) {
+            console.error("Error al crear cliente:", error);
+            alert("⚠️ Error interno al registrar el cliente en la base de datos.");
+            return;
+        }
+        if (data) finalClienteId = data.id.toString();
       }
 
       const fiadoData: FiadoData | undefined = faltante > 0 ? {

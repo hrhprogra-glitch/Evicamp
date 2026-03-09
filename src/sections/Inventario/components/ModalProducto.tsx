@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Package, Scale, Coffee, ArrowLeft, Save, ImagePlus, Search, Loader2, Database } from 'lucide-react';
+import { supabase } from '../../../db/supabase'; // RETORNO TÉCNICO: Conexión a la DB
 
 interface Props {
   isOpen: boolean;
@@ -16,11 +17,10 @@ type ProductNature = 'UNIDAD' | 'PESO' | 'CONSUMO' | null;
 export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, onProductSaved, initialData, productosExistentes = [] }) => {
   const [step, setStep] = useState<1 | 2>(1);
   const [nature, setNature] = useState<ProductNature>(null);
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   // ESTADOS PARA EL AUTOCOMPLETADO DE CATEGORÍAS
   const [categoriasLista, setCategoriasLista] = useState(['ABARROTES', 'BEBIDAS', 'CARNE', 'LACTEOS', 'VERDURAS', 'FRUTAS']);
   const [showCatDropdown, setShowCatDropdown] = useState(false);
-
   // ESTADOS PARA BÚSQUEDA DE IMÁGENES
   const [imageQuery, setImageQuery] = useState('');
   const [isSearchingImage, setIsSearchingImage] = useState(false);
@@ -170,53 +170,96 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     setStep(2);
   };
 
-  const handleSave = (goToLotes: boolean) => {
+  const handleSave = async (goToLotes: boolean) => {
+    if (!formData.name || isSubmitting) return;
+    setIsSubmitting(true);
     const nombreLimpio = formData.name.trim().toUpperCase();
     const codigoBarrasLimpio = formData.barcode?.trim() || '';
 
-    // === VALIDACIÓN DE INTEGRIDAD CONTRA DUPLICADOS ===
+    // === VALIDACIÓN DE INTEGRIDAD ===
     const isDuplicate = productosExistentes.some((p: any) => {
-      // Ignoramos el producto actual si estamos en modo Edición
       if (initialData && p.id === initialData.id) return false;
-
       const mismoNombre = p.name.toUpperCase() === nombreLimpio;
       const mismoCodigoBarras = codigoBarrasLimpio !== '' && p.barcode === codigoBarrasLimpio;
-
       return mismoNombre || mismoCodigoBarras;
     });
 
-    if (isDuplicate) {
-      return alert('⚠️ ERROR DE INTEGRIDAD: Ya existe un producto registrado en el inventario con ese mismo Nombre o Código de Barras.');
-    }
+    if (isDuplicate) return alert('⚠️ ERROR DE INTEGRIDAD: Ya existe un producto con ese Nombre o Código de Barras.');
 
-    console.log("PREPARADO PARA GUARDAR SKU:", { ...formData, nature });
-    
-    // 1. EMPAQUETAMOS EL PRODUCTO EN UNA VARIABLE
-    const nuevoProducto = {
-      id: Date.now().toString(), // ID Temporal de simulación
-      name: nombreLimpio,
-      category: formData.category || 'GENERAL',
-      code: formData.code || `SKU-${Math.floor(Math.random() * 10000)}`,
-      barcode: formData.barcode,
-      price: Number(formData.price) || 0,
-      cost: 0,
-      quantity: 0,
-      minStock: Number(formData.minStock) || 5,
-      unit: nature === 'PESO' ? formData.weightUnit : (nature === 'CONSUMO' ? 'CONSUMO' : 'UND'),
-      imageUrl: formData.image 
-    };
+    try {
+      const unidadAsignada = nature === 'PESO' ? formData.weightUnit : (nature === 'CONSUMO' ? 'CONSUMO' : 'UND');
+      let productoGuardado;
 
-    // 2. LO ENVIAMOS A LA TABLA
-    if (onProductSaved) {
-      onProductSaved(nuevoProducto);
-    }
+      if (initialData) {
+        // [ RETORNO ]: MODO EDICIÓN
+        const { data, error } = await supabase.from('products').update({
+          name: nombreLimpio,
+          category: formData.category || 'GENERAL',
+          code: formData.code,
+          barcode: formData.barcode,
+          price: Number(formData.price) || 0,
+          min_stock: Number(formData.minStock) || 5,
+          control_type: nature === 'PESO' ? 'WEIGHT' : 'UND',
+          weight_unit: nature === 'PESO' ? formData.weightUnit : null,
+          unit: unidadAsignada,
+          image_url: formData.image
+        }).eq('id', initialData.id).select().single();
 
-    alert(`PRODUCTO GUARDADO CORRECTAMENTE.\n\nProducto: ${nombreLimpio}`);
-    resetAndClose();
+        if (error) throw error;
+        productoGuardado = data;
+        
+        // [ SALIDA ]: Notificamos al inventario el éxito de la edición
+        if (onProductSaved) {
+          onProductSaved(productoGuardado);
+        }
+        
+        alert(`PRODUCTO ACTUALIZADO CORRECTAMENTE.\nNombre: ${nombreLimpio}`);
+      } else {
+        // [ SALIDA ]: MODO CREACIÓN
+        // RETORNO TÉCNICO: Autogenerador de código SKU de 6 dígitos si el campo está vacío
+        const codigoGenerado = formData.code?.trim() || `SKU-${Math.floor(100000 + Math.random() * 900000)}`;
 
-    // 3. SI ELIGIÓ IR A LOTES, LE ENVIAMOS EL PAQUETE AL OTRO MODAL
-    if (goToLotes && onGoToLotes) {
-      onGoToLotes(nuevoProducto);
+        const { data, error } = await supabase.from('products').insert([{
+          name: nombreLimpio,
+          category: formData.category || 'GENERAL',
+          code: codigoGenerado,
+          barcode: formData.barcode,
+          price: Number(formData.price) || 0,
+          quantity: 0,
+          min_stock: Number(formData.minStock) || 5,
+          control_type: nature === 'PESO' ? 'WEIGHT' : 'UND',
+          weight_unit: nature === 'PESO' ? formData.weightUnit : null,
+          unit: unidadAsignada,
+          image_url: formData.image, // Agregado para que guarde la imagen en creación
+          is_synced: '1'
+        }]).select().single();
+
+        if (error) throw error;
+        productoGuardado = data;
+        alert(`PRODUCTO CREADO CORRECTAMENTE.\nNombre: ${nombreLimpio}`);
+      }
+
+      // Sincronizamos con la pantalla
+      if (onProductSaved) {
+        onProductSaved({
+          ...productoGuardado, 
+          imageUrl: productoGuardado.image_url, 
+          minStock: productoGuardado.min_stock,
+          unit: unidadAsignada
+        });
+      }
+
+      resetAndClose();
+
+      // Pasamos el producto real al Lote
+      if (goToLotes && onGoToLotes) {
+        onGoToLotes({ ...productoGuardado, imageUrl: productoGuardado.image_url, unit: unidadAsignada });
+      }
+
+    } catch (error) {
+      console.error("Error al guardar:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -262,7 +305,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 onClick={() => handleNatureSelect('UNIDAD')}
                 className="bg-white border-2 border-[#E2E8F0] p-6 flex flex-col items-center text-center gap-4 hover:border-[#10B981] hover:shadow-[4px_4px_0_0_#10B981] hover:-translate-y-1 transition-all cursor-pointer group rounded-none"
               >
-                <div className="w-16 h-16 bg-[#F8FAFC] rounded-full flex items-center justify-center group-hover:bg-[#ECFDF5] transition-colors border border-[#E2E8F0] group-hover:border-[#A7F3D0]">
+                <div className="w-16 h-16 bg-[#F8FAFC] rounded-none flex items-center justify-center group-hover:bg-[#ECFDF5] transition-colors border-2 border-[#E2E8F0] group-hover:border-[#10B981]">
                   <Package size={32} className="text-[#64748B] group-hover:text-[#10B981] transition-colors" />
                 </div>
                 <div>
@@ -276,7 +319,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 onClick={() => handleNatureSelect('PESO')}
                 className="bg-white border-2 border-[#E2E8F0] p-6 flex flex-col items-center text-center gap-4 hover:border-[#3B82F6] hover:shadow-[4px_4px_0_0_#3B82F6] hover:-translate-y-1 transition-all cursor-pointer group rounded-none"
               >
-                <div className="w-16 h-16 bg-[#F8FAFC] rounded-full flex items-center justify-center group-hover:bg-[#EFF6FF] transition-colors border border-[#E2E8F0] group-hover:border-[#BFDBFE]">
+                <div className="w-16 h-16 bg-[#F8FAFC] rounded-none flex items-center justify-center group-hover:bg-[#EFF6FF] transition-colors border-2 border-[#E2E8F0] group-hover:border-[#3B82F6]">
                   <Scale size={32} className="text-[#64748B] group-hover:text-[#3B82F6] transition-colors" />
                 </div>
                 <div>
@@ -290,7 +333,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 onClick={() => handleNatureSelect('CONSUMO')}
                 className="bg-white border-2 border-[#E2E8F0] p-6 flex flex-col items-center text-center gap-4 hover:border-[#F59E0B] hover:shadow-[4px_4px_0_0_#F59E0B] hover:-translate-y-1 transition-all cursor-pointer group rounded-none"
               >
-                <div className="w-16 h-16 bg-[#F8FAFC] rounded-full flex items-center justify-center group-hover:bg-[#FFFBEB] transition-colors border border-[#E2E8F0] group-hover:border-[#FDE68A]">
+                <div className="w-16 h-16 bg-[#F8FAFC] rounded-none flex items-center justify-center group-hover:bg-[#FFFBEB] transition-colors border-2 border-[#E2E8F0] group-hover:border-[#F59E0B]">
                   <Coffee size={32} className="text-[#64748B] group-hover:text-[#F59E0B] transition-colors" />
                 </div>
                 <div>
@@ -363,15 +406,17 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                     <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[#1E293B] shadow-[4px_4px_0_0_#1E293B] z-50 max-h-48 overflow-y-auto custom-scrollbar">
                       {categoriasLista.filter(c => c.includes(formData.category)).length > 0 ? (
                         categoriasLista.filter(c => c.includes(formData.category)).map(cat => (
-                          <div key={cat} className="flex items-center justify-between p-3 hover:bg-[#F8FAFC] border-b border-[#E2E8F0] last:border-0 cursor-pointer group">
-                            <span 
-                              className="flex-1 text-xs font-black text-[#1E293B]"
-                              onMouseDown={(e) => { 
-                                e.preventDefault();
-                                setFormData({...formData, category: cat}); 
-                                setShowCatDropdown(false); 
-                              }}
-                            >
+                          <div 
+                            key={cat} 
+                            onMouseDown={(e) => { 
+                              // Mover el evento al contenedor maestro hace que TODA la fila sea un área de clic válida
+                              e.preventDefault();
+                              setFormData({...formData, category: cat}); 
+                              setShowCatDropdown(false); 
+                            }}
+                            className="flex items-center justify-between p-3 hover:bg-[#F8FAFC] border-b border-[#E2E8F0] last:border-0 cursor-pointer group"
+                          >
+                            <span className="flex-1 text-xs font-black text-[#1E293B]">
                               {cat}
                             </span>
                             <button 
@@ -578,33 +623,27 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
         {/* FOOTER - Solo visible en el paso 2 */}
         {step === 2 && (
-          <div className="w-full p-6 bg-white border-t-2 border-[#E2E8F0] flex justify-between items-center shrink-0">
-            <button 
-              onClick={resetAndClose}
-              className="px-6 py-3 border-2 border-[#E2E8F0] text-[#64748B] font-black text-[10px] uppercase tracking-widest hover:bg-[#F8FAFC] hover:border-[#1E293B] hover:text-[#1E293B] transition-all cursor-pointer rounded-none"
-            >
-              Cancelar
-            </button>
-            <div className="flex flex-wrap items-center justify-end gap-3">
+          <div className="flex justify-end items-center gap-4 mt-5 w-full">
               <button 
                 onClick={() => handleSave(false)}
-                disabled={!formData.name}
-                className="bg-white text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center justify-center whitespace-nowrap gap-2 hover:bg-[#F8FAFC] hover:border-[#10B981] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none"
+                disabled={!formData.name || isSubmitting}
+                className="relative -top-8 -left-8 bg-white text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#F8FAFC] hover:border-[#10B981] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none min-w-[140px]"
               >
-                <Save size={16} /> Guardar
+                {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />} 
+                <span>{isSubmitting ? 'Procesando...' : 'Guardar'}</span>
               </button>
-              {/* Solo mostramos "Ir a Lotes" si NO es Consumo y NO estamos editando (!initialData) */}
+
               {nature !== 'CONSUMO' && !initialData && (
                 <button 
                   onClick={() => handleSave(true)}
-                  disabled={!formData.name}
-                  className="bg-[#10B981] text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center justify-center whitespace-nowrap gap-2 hover:bg-[#1E293B] hover:text-[#10B981] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none"
+                  disabled={!formData.name || isSubmitting}
+                  className="relative -top-8 -left-8 bg-[#10B981] text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#1E293B] hover:text-[#10B981] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_#10B981] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none min-w-[220px]"
                 >
-                  <Database size={16} /> Guardar e Ir a Lotes
+                  {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
+                  <span>{isSubmitting ? 'Procesando...' : 'Guardar e ir a Lotes'}</span>
                 </button>
               )}
             </div>
-          </div>
         )}
 
       </div>

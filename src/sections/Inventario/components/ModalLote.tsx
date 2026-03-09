@@ -92,30 +92,84 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
     ? (Number(costoTotal) / Number(cantidad)).toFixed(2) 
     : '0.00';
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const documento = omitirSustento ? 'OMITIDO / SIN SUSTENTO' : (sustento || 'SIN SUSTENTO');
-    
-    // 1. EMPAQUETAMOS EL LOTE (Manteniendo el ID original si es edición)
-    if (onLoteSaved && selectedProduct) {
-      onLoteSaved({
-        id: initialLote ? initialLote.id : Date.now().toString(), // Mantiene el ID si es edición
-        product_id: selectedProduct.id,
-        quantity: initialLote ? initialLote.quantity : Number(cantidad), // Conservamos el stock actual si ya se había consumido
-        initial_quantity: Number(cantidad),
-        expiration_date: expiration || null,
-        created_at: initialLote ? initialLote.created_at : new Date().toLocaleDateString(),
-        cost_unit: Number(costoUnitario),
-        product_name: selectedProduct.name,
-        document_ref: documento,
-        category: selectedProduct.category || 'GENERAL',
-        unit: selectedProduct.unit
-      });
-    }
 
-    alert(initialLote 
-      ? `LOTE ACTUALIZADO CORRECTAMENTE.\n\nProducto: ${selectedProduct?.name}\nNuevo Costo U: S/ ${costoUnitario}`
-      : `LOTE REGISTRADO CORRECTAMENTE.\n\nProducto: ${selectedProduct?.name}\nCantidad: ${cantidad} ${selectedProduct?.unit}\nCosto Unitario Calculado: S/ ${costoUnitario}`);
-    onClose();
+    try {
+      if (initialLote) {
+        // === MODO EDICIÓN ===
+        const { error } = await supabase
+          .from('batches')
+          .update({
+            expiration_date: expiration || null,
+            cost_unit: Number(costoUnitario),
+            document_ref: documento,
+          })
+          .eq('id', initialLote.id);
+
+        if (error) throw error;
+
+        if (onLoteSaved && selectedProduct) {
+          onLoteSaved({ ...initialLote, expiration_date: expiration, cost_unit: Number(costoUnitario), document_ref: documento });
+        }
+        alert(`LOTE ACTUALIZADO.\nProducto: ${selectedProduct?.name}`);
+
+      } else {
+        // === MODO CREACIÓN (DELEGACIÓN DE IDs A POSTGRESQL) ===
+        // RETORNO TÉCNICO: Generación de ID manual ya que la DB no tiene Auto-Increment activo en batches
+        const generatedId = Date.now().toString();
+
+        const { data: newBatch, error: batchError } = await supabase
+          .from('batches')
+          .insert([{
+            id: generatedId, // <-- INYECCIÓN FORZADA DEL ID
+            product_id: selectedProduct?.id,
+            quantity: Number(cantidad), 
+            initial_quantity: Number(cantidad),
+            expiration_date: expiration || null,
+            cost_unit: Number(costoUnitario),
+            document_ref: documento,
+            is_synced: '1'
+          }])
+          .select()
+          .single();
+
+        if (batchError) throw batchError;
+
+        // === REGISTRO DE MOVIMIENTO USANDO EL ID REAL CREADO POR LA BASE DE DATOS ===
+        const { error: movError } = await supabase
+          .from('inventory_movements')
+          .insert([{
+            batch_id: newBatch.id, // ID Oficial generado por Supabase
+            product_id: selectedProduct?.id,
+            product_name: selectedProduct?.name,
+            change_amount: Number(cantidad), // <-- ¡CLAVE! Enviar como número, no texto
+            previous_quantity: 0,            // <-- Número, sin comillas
+            new_quantity: Number(cantidad),  // <-- Número, sin comillas
+            operation_type: 'COMPRA',
+            reason: 'Ingreso Lote',
+            notes: 'Doc: ' + documento,
+            user: 'Sistema',
+            is_synced: '1'
+          }]);
+
+        if (movError) throw movError;
+
+        if (onLoteSaved && selectedProduct) {
+          onLoteSaved({
+            ...newBatch,
+            product_name: selectedProduct.name,
+            category: selectedProduct.category || 'GENERAL',
+            unit: selectedProduct.unit
+          });
+        }
+        alert(`LOTE REGISTRADO CORRECTAMENTE.\nCantidad sumada al stock global: ${cantidad}`);
+      }
+      onClose();
+    } catch (err: any) {
+      console.error("Error técnico al guardar lote:", err);
+      alert("⚠️ Error de base de datos: " + (err.message || "Rechazado por estructura."));
+    }
   };
 
   return (

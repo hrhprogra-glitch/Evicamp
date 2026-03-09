@@ -24,12 +24,15 @@ interface Props {
   filtroCategoria: string;
   filtroEstado: string;
   filtroOrden: string;
-  nuevoLoteInyectado?: Lote | null;
-  onViewMermas?: (lote: Lote) => void;
-  onEditLote?: (lote: Lote) => void; // <-- NUEVO EVENTO
+  nuevoLoteInyectado?: any;
+  onViewMermas?: (lote: any) => void;
+  onEditLote?: (lote: any) => void;
+  onLoteDeleted?: (productId: string, quantityRemoved: number) => void; // <-- AÑADIR ESTA LÍNEA
 }
 
-export const TablaLotes: React.FC<Props> = ({ searchQuery, filtroCategoria, filtroEstado, filtroOrden, nuevoLoteInyectado, onViewMermas, onEditLote }) => {
+export const TablaLotes: React.FC<Props> = ({ 
+  searchQuery, filtroCategoria, filtroEstado, filtroOrden, nuevoLoteInyectado, onViewMermas, onEditLote, onLoteDeleted // <-- AÑADIR AQUÍ
+}) => {
   const [lotes, setLotes] = useState<Lote[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -42,7 +45,7 @@ export const TablaLotes: React.FC<Props> = ({ searchQuery, filtroCategoria, filt
           .from('batches')
           .select(`
             *,
-            products (*)
+            products!batches_product_id_fkey (*)
           `)
           .order('created_at', { ascending: false });
 
@@ -65,8 +68,9 @@ export const TablaLotes: React.FC<Props> = ({ searchQuery, filtroCategoria, filt
           }));
           setLotes(mapeados);
         }
-      } catch (error) {
-        console.error("Error cargando lotes:", error);
+      } catch (error: any) {
+        // Desestructuramos el error para leer el mensaje interno de Supabase
+        console.error("Error cargando lotes:", error.message || error.details || JSON.stringify(error));
       } finally {
         setLoading(false);
       }
@@ -281,7 +285,7 @@ export const TablaLotes: React.FC<Props> = ({ searchQuery, filtroCategoria, filt
           }`} 
           title={`Stock exacto en DB: ${lote.quantity} ${lote.unit || 'UND'}`}
         >
-          <span className="leading-none">{Number(lote.quantity.toFixed(3))}</span>
+          <span className="leading-none">{Number(Number(lote.quantity || 0).toFixed(3))}</span>
           <span className="text-[8px] opacity-70 leading-tight mt-0.5">{lote.unit || 'UND'}</span>
         </div>
       </div>
@@ -292,7 +296,7 @@ export const TablaLotes: React.FC<Props> = ({ searchQuery, filtroCategoria, filt
         <button 
           onClick={() => {
             if (onViewMermas) {
-              onViewMermas(lote as any); // Salta a la pestaña Mermas
+              onViewMermas(lote); // <-- Ahora TypeScript aceptará el argumento
             }
           }}
           className="text-[#94A3B8] hover:text-[#F59E0B] transition-colors cursor-pointer"
@@ -310,12 +314,25 @@ export const TablaLotes: React.FC<Props> = ({ searchQuery, filtroCategoria, filt
         </button>
 
         <button 
-          onClick={() => {
-            if (window.confirm(`⚠️ ADVERTENCIA\n\n¿Seguro de eliminar el lote "${lote.document_ref}"?`)) {
-              alert("Lote eliminado (Simulación)");
+          onClick={async () => {
+            if (window.confirm(`⚠️ ADVERTENCIA TÉCNICA\n\n¿Seguro de eliminar definitivamente el lote de "${lote.product_name}" (Doc: ${lote.document_ref})?\n\nNota: Si este lote ya tiene historial de ventas, el sistema bloqueará la eliminación para proteger la contabilidad.`)) {
+              try {
+                const { error } = await supabase.from('batches').delete().eq('id', lote.id);
+                if (error) throw error;
+                
+                // [ SALIDA ]: Avisar al inventario para que reste el stock y recalcule
+                if (onLoteDeleted) {
+                  onLoteDeleted(lote.product_id, Number(lote.quantity));
+                }
+
+                setLotes(prev => prev.filter(l => l.id !== lote.id));
+              } catch (err: any) {
+                console.error("[ DB ERROR ]:", err);
+                alert("⚠️ RECHAZADO: PostgreSQL protegió tus datos. No puedes eliminar un lote que ya tiene movimientos (ventas o mermas) amarrados a él.");
+              }
             }
           }}
-          className="text-[#94A3B8] hover:text-red-500 transition-colors cursor-pointer"
+          className="text-[#94A3B8] hover:text-[#EF4444] transition-colors cursor-pointer"
           title="Eliminar Lote"
         >
           <Trash2 size={18} />

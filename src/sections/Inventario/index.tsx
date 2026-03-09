@@ -47,11 +47,18 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     const fetchInventory = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase.from('products').select('*');
-        if (error) throw error;
+        // [ RETORNO TÉCNICO ]: Consultas paralelas independientes para blindar la carga de datos y evitar colisiones SQL
+        const [ { data: productsData, error: productsError }, { data: batchesData, error: batchesError } ] = await Promise.all([
+          supabase.from('products').select('*'),
+          // [ RETORNO TÉCNICO ]: Agregamos id y cost_unit para que la lógica de "lote más reciente" funcione
+          supabase.from('batches').select('id, product_id, quantity, cost_unit')
+        ]);
+
+        if (productsError) throw productsError;
+        if (batchesError) throw batchesError;
         
-        if (data) {
-          const mapeados: Product[] = data.map((p: any) => {
+        if (productsData) {
+          const mapeados: Product[] = productsData.map((p: any) => {
             // RADAR ABSOLUTO: Convierte TODA la fila del producto (todas sus columnas) a texto mayúscula
             const registroCompleto = JSON.stringify(p).toUpperCase();
             
@@ -61,12 +68,28 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                               registroCompleto.includes('"USO INTERNO"') ||
                               registroCompleto.includes('"CONSUMPTION"');
 
+            // [ SUMA GLOBAL ]: Filtramos los lotes de este producto
+            const lotesDelProducto = batchesData?.filter(b => b.product_id === p.id) || [];
+            
+            // [ COSTO RECIENTE ]: Ordenamos por ID (o podrías usar created_at si lo incluyes en el select)
+            // para obtener el costo del lote más nuevo.
+            // [ RETORNO TÉCNICO ]: Forzamos String() para evitar que IDs numéricos rompan localeCompare
+            const loteMasReciente = lotesDelProducto.length > 0 
+              ? [...lotesDelProducto].sort((a, b) => String(b.id || '').localeCompare(String(a.id || '')))[0] 
+              : null;
+            // [ RETORNO TÉCNICO ]: Si el producto tiene seguimiento por lotes, la suma debe ser 0 si no hay lotes.
+            // Solo mostramos p.quantity si el producto es de "Consumo" o no usa lotes.
+            const stockRealGlobal = lotesDelProducto.length > 0
+              ? lotesDelProducto.reduce((total: number, lote: any) => total + (Number(lote.quantity) || 0), 0)
+              : 0; // <--- Cambiamos el fallback a 0
+
             return {
               id: p.id,
               name: p.name || 'SIN NOMBRE',
               price: Number(p.price) || 0,
-              cost: Number(p.cost_price) || 0,
-              quantity: Number(p.quantity) || 0,
+              // Usamos el costo del lote reciente, si no hay, usamos el del producto
+              cost: loteMasReciente ? Number(loteMasReciente.cost_unit) : (Number(p.cost_price) || 0),
+              quantity: stockRealGlobal,
               minStock: Number(p.min_stock) || 0,
               code: p.code || 'NO-SKU',
               barcode: p.barcode || '',
@@ -201,7 +224,20 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     setProductToEdit(p);
     setIsModalOpen(true);
   }}
-  onDeleteProduct={(productToDelete) => {
+  onDeleteProduct={async (productToDelete) => {
+    // 1. ENVIAMOS LA ORDEN DE BORRADO A SUPABASE
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', productToDelete.id);
+
+    if (error) {
+      console.error("Error eliminando en DB:", error);
+      alert("⚠️ Error: No se pudo eliminar de la base de datos.");
+      return;
+    }
+
+    // 2. SI EL BORRADO EN DB FUE EXITOSO, LO QUITAMOS DE LA PANTALLA
     setProducts(prevProducts => prevProducts.filter(p => p.id !== productToDelete.id));
   }}
   // === NUEVA CONEXIÓN AQUÍ ===
@@ -219,12 +255,28 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             filtroEstado={filtroEstado}
             filtroOrden={filtroOrden}
             nuevoLoteInyectado={nuevoLoteRealtime}
-            onViewMermas={() => {
-              if (onNavigate) onNavigate('mermas'); // VIAJA AL MÓDULO MERMAS
+            onViewMermas={(_lote) => {
+              // Aquí podrías filtrar las mermas por ese lote específico si lo deseas
+              if (onNavigate) onNavigate('mermas');
             }}
             onEditLote={(lote) => {
               setLoteToEdit(lote);
               setIsModalLoteOpen(true);
+            }}
+            // [ RETORNO TÉCNICO ]: Si se borra un lote, actualizamos la memoria de productos
+            onLoteDeleted={(productId, quantityRemoved) => {
+              setProducts(prev => prev.map(p => {
+                if (p.id === productId) {
+                  const nuevoStock = Math.max(0, p.quantity - quantityRemoved);
+                  return {
+                    ...p,
+                    quantity: nuevoStock,
+                    // Si el stock llega a 0, reseteamos el costo visual para que no confunda
+                    cost: nuevoStock === 0 ? 0 : p.cost 
+                  };
+                }
+                return p;
+              }));
             }}
           />
         </div>
@@ -250,20 +302,52 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           }
         }}
         onProductSaved={(nuevoProducto: any) => {
-          // RADAR DE IMAGEN: Forzamos a que el frontend reciba la URL correcta al instante
-          const imagenAlInstante = nuevoProducto.imageUrl || nuevoProducto.image_url || nuevoProducto.image_path || null;
+          // [ RETORNO TÉCNICO ]: Mapeo de integridad. Si es edición, preservamos el stock calculado actual.
+          const stockActual = products.find(p => p.id === nuevoProducto.id)?.quantity;
+
+          const productoFormateado: Product = {
+            ...nuevoProducto,
+            id: nuevoProducto.id,
+            name: nuevoProducto.name,
+            cost: Number(nuevoProducto.cost_price || nuevoProducto.cost || 0),
+            price: Number(nuevoProducto.price || 0),
+            quantity: stockActual !== undefined ? stockActual : Number(nuevoProducto.quantity || 0),
+            minStock: Number(nuevoProducto.min_stock || nuevoProducto.minStock || 0),
+            category: nuevoProducto.category,
+            code: nuevoProducto.code,
+            unit: nuevoProducto.unit,
+            imageUrl: nuevoProducto.image_url || nuevoProducto.image_path || null
+          };
 
           if (productToEdit) {
-            // MODO EDICIÓN
-            setProducts(prev => prev.map(p => p.id === productToEdit.id ? { ...p, ...nuevoProducto, imageUrl: imagenAlInstante } : p));
+            setProducts(prev => prev.map(p => p.id === productToEdit.id ? productoFormateado : p));
           } else {
-            // MODO CREACIÓN
-            setProducts(prev => [{ ...nuevoProducto, imageUrl: imagenAlInstante }, ...prev]);
+            setProducts(prev => [productoFormateado, ...prev]);
             setCurrentPage(1);
           }
         }}
       />
-      <ModalMerma isOpen={isModalMermaOpen} onClose={() => setIsModalMermaOpen(false)} productos={products} />
+      <ModalMerma 
+        isOpen={isModalMermaOpen} 
+        onClose={() => setIsModalMermaOpen(false)} 
+        productos={products} 
+        onProductSaved={(productoActualizado: any, loteId?: string, nuevaCantLote?: number) => {
+          // 1. Actualización en Inventario General (TablaProductos)
+          setProducts(prev => prev.map(p => 
+            p.id === productoActualizado.id 
+              ? { ...p, quantity: productoActualizado.quantity } 
+              : p
+          ));
+
+          // 2. [ NUEVO ]: Actualización en Control de Lotes (TablaLotes)
+          if (loteId && nuevaCantLote !== undefined) {
+            setNuevoLoteRealtime({
+              id: loteId,
+              quantity: nuevaCantLote
+            });
+          }
+        }}
+      />
       {/* INVOCACIÓN DEL NUEVO MODAL DE LOTES */}
       <ModalLote 
         isOpen={isModalLoteOpen} 
@@ -276,10 +360,22 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         initialProduct={preselectedLoteProduct}
         initialLote={loteToEdit} // <-- PASAMOS EL LOTE A EDITAR
         onLoteSaved={(lote) => {
-          setNuevoLoteRealtime(lote); // Guardamos el lote para inyectarlo/actualizarlo
-          setLoteToEdit(null); // Limpiar memoria tras guardar
-          // Si fue una edición, no borramos la búsqueda para que no se pierda el contexto
+          setNuevoLoteRealtime(lote);
+          setLoteToEdit(null);
           if (!loteToEdit) setSearchQuery(''); 
+
+          // [ RETORNO TÉCNICO ]: Actualizamos Stock Y Costo al mismo tiempo para reflejar la inversión real
+          if (!loteToEdit) {
+            setProducts(prevProducts => prevProducts.map(p => 
+              p.id === lote.product_id 
+                ? { 
+                    ...p, 
+                    quantity: p.quantity + Number(lote.initial_quantity),
+                    cost: Number(lote.cost_unit) // <-- ACTUALIZA EL COSTO UNITARIO CON EL DEL NUEVO LOTE
+                  } 
+                : p
+            ));
+          }
         }}
       />
     </div>

@@ -7,9 +7,10 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   productos: Product[];
+  onProductSaved?: (product: any, loteId?: string, nuevaCantLote?: number) => void;
 }
 
-export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos }) => {
+export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProductSaved }) => {
   // Búsqueda de Producto
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -30,14 +31,21 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos }) => {
     if (selectedProduct) {
       const fetchLotes = async () => {
         setLoadingLotes(true);
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('batches')
           .select('*')
           .eq('product_id', selectedProduct.id)
-          .gt('quantity', 0) // Solo lotes con stock
           .order('created_at', { ascending: true });
         
-        setLotes(data || []);
+        // MANEJO DE ERROR: Leemos la variable para que TypeScript no reclame
+        if (error) {
+          console.error("Error cargando lotes para merma:", error.message);
+          return;
+        }
+
+        // RETORNO TÉCNICO: Filtrado numérico estricto
+        const lotesConStock = (data || []).filter(lote => Number(lote.quantity) > 0);
+        setLotes(lotesConStock);
         setSelectedLote(null);
         setLoadingLotes(false);
       };
@@ -119,28 +127,53 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos }) => {
       }]);
       if (wasteError) throw wasteError;
 
-      // B. Descontar del Lote
-      await supabase.from('batches').update({ quantity: selectedLote.quantity - cantNum }).eq('id', selectedLote.id);
+      // B. Descontar del Lote (Con control de error)
+      const { error: batchUpdateError } = await supabase
+        .from('batches')
+        .update({ quantity: selectedLote.quantity - cantNum })
+        .eq('id', selectedLote.id);
+      
+      if (batchUpdateError) throw batchUpdateError;
 
-      // C. Descontar del Producto General
-      await supabase.from('products').update({ quantity: selectedProduct.quantity - cantNum }).eq('id', selectedProduct.id);
+      // C. Descontar del Producto General (Con control de error)
+      const { error: productUpdateError } = await supabase
+        .from('products')
+        .update({ quantity: selectedProduct.quantity - cantNum })
+        .eq('id', selectedProduct.id);
+      
+      if (productUpdateError) throw productUpdateError;
 
-      // D. Registrar Movimiento en el Kardex
-      await supabase.from('inventory_movements').insert([{
-        batch_id: selectedLote.id,
-        product_id: selectedProduct.id,
-        product_name: selectedProduct.name,
-        change_amount: -cantNum,
-        previous_quantity: selectedLote.quantity,
-        new_quantity: selectedLote.quantity - cantNum,
-        operation_type: 'MERMA',
-        reason: motivo,
-        notes: detalle || 'Merma manual',
-        user: 'Sistema',
-        is_synced: 0
-      }]);
+      // D. Registrar Movimiento en el Kardex (Con control de error)
+      const { error: movementError } = await supabase
+        .from('inventory_movements')
+        .insert([{
+          batch_id: selectedLote.id,
+          product_id: selectedProduct.id,
+          product_name: selectedProduct.name,
+          change_amount: -cantNum,
+          previous_quantity: selectedLote.quantity,
+          new_quantity: selectedLote.quantity - cantNum,
+          operation_type: 'MERMA',
+          reason: motivo,
+          notes: detalle || 'Merma manual',
+          user: 'Sistema',
+          is_synced: 0
+        }]);
+
+      if (movementError) throw movementError;
 
       alert(`✅ REGISTRO EXITOSO\n\nSe han descontado ${cantNum.toFixed(3)} unidades (S/ ${totalLoss.toFixed(2)}) de ${selectedProduct.name}.`);
+      
+      // [ SALIDA ]: Notificamos el cambio al Inventario General y al Control de Lotes
+      if (onProductSaved && selectedProduct && selectedLote) {
+        const nuevaCantLote = selectedLote.quantity - cantNum;
+        onProductSaved(
+          { ...selectedProduct, quantity: selectedProduct.quantity - cantNum },
+          selectedLote.id,
+          nuevaCantLote
+        );
+      }
+
       onClose();
     } catch (e: any) {
       alert('Error al registrar merma: ' + e.message);
