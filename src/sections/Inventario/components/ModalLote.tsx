@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Database, Search, Calculator, FileText, Check, Calendar } from 'lucide-react';
+import { X, Save, Database, Search, Calculator, FileText, Check, Calendar, Loader2 } from 'lucide-react';
 import type { Product } from '../types';
 import { supabase } from '../../../db/supabase';
 interface Props {
@@ -16,6 +16,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
   const [showDropdown, setShowDropdown] = useState(false);
   const [showProviderDropdown, setShowProviderDropdown] = useState(false); // <-- NUEVO ESTADO
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [cantidad, setCantidad] = useState('');
   const [costoTotal, setCostoTotal] = useState('');
@@ -93,6 +94,8 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
     : '0.00';
 
   const handleSave = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     const documento = omitirSustento ? 'OMITIDO / SIN SUSTENTO' : (sustento || 'SIN SUSTENTO');
 
     try {
@@ -166,9 +169,10 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         alert(`LOTE REGISTRADO CORRECTAMENTE.\nCantidad sumada al stock global: ${cantidad}`);
       }
       onClose();
-    } catch (err: any) {
-      console.error("Error técnico al guardar lote:", err);
-      alert("⚠️ Error de base de datos: " + (err.message || "Rechazado por estructura."));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -400,11 +404,11 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
           </button>
           <button 
             onClick={handleSave}
-            // Bloquea el botón si no hay producto, o si la cantidad es 0 o está vacía
-            disabled={!selectedProduct || !cantidad || Number(cantidad) <= 0}
-            className="bg-[#10B981] text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-[#1E293B] hover:text-[#10B981] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none"
+            disabled={!selectedProduct || !cantidad || Number(cantidad) <= 0 || isSubmitting}
+            className="bg-[#10B981] text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-[#1E293B] hover:text-[#10B981] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] disabled:opacity-50"
           >
-            <Save size={16} /> Confirmar Lote
+            {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+            {isSubmitting ? 'PROCESANDO...' : 'Guardar Lote'}
           </button>
         </div>
 

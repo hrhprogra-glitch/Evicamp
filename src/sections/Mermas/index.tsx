@@ -6,8 +6,6 @@ import type { Product } from '../Inventario/types';
 import { ModalMerma } from '../Inventario/components/ModalMerma';
 
 // Componentes
-
-// Componentes
 import { HeaderMermas } from './components/HeaderMermas';
 import { FiltrosMermas } from './components/FiltrosMermas';
 import { TarjetaMetrica } from './components/TarjetaMetrica';
@@ -18,12 +16,13 @@ export const Mermas: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [isModalMermaOpen, setIsModalMermaOpen] = useState(false);
+  const [mermaAEditar, setMermaAEditar] = useState<any>(null);
 
   // Estados de Filtros
   const [searchQuery, setSearchQuery] = useState('');
   const [filtroMotivo, setFiltroMotivo] = useState('');
   const [filtroOrden, setFiltroOrden] = useState('FECHA_DESC');
-  const [filtroFecha, setFiltroFecha] = useState(''); // <-- NUEVO ESTADO DE FECHA
+  const [filtroFecha, setFiltroFecha] = useState('');
 
   const fetchMermas = async () => {
     setLoading(true);
@@ -37,9 +36,7 @@ export const Mermas: React.FC = () => {
 
       if (data) {
         const mapeados = data.map((w: any) => ({
-          id: w.id,
-          batch_id: w.batch_id,
-          product_id: w.product_id,
+          ...w,
           product_name: w.product_name || 'DESCONOCIDO',
           quantity: Math.abs(Number(w.quantity) || 0),
           cost_unit: Number(w.cost_unit) || 0,
@@ -47,15 +44,13 @@ export const Mermas: React.FC = () => {
           reason: w.reason || 'SIN MOTIVO',
           notes: w.notes,
           user_name: w.user || 'Sistema',
-          created_at: new Date(w.created_at).toLocaleString(),
-          raw_date: w.created_at, /* <-- FECHA OCULTA PARA ORDENAR BIEN */
-          previous_quantity: Number(w.previous_quantity) || 0,
-          new_quantity: Number(w.new_quantity) || 0,
+          created_at: w.created_at ? new Date(w.created_at).toLocaleString() : 'SIN FECHA',
+          raw_date: w.created_at,
         })) as any[];
         setMermas(mapeados);
       }
     } catch (error) {
-      console.error("Error cargando mermas:", error);
+      console.error("DEBUG TÉCNICO - Error cargando mermas:", error);
     } finally {
       setLoading(false);
     }
@@ -67,10 +62,7 @@ export const Mermas: React.FC = () => {
       if (error) throw error;
       if (data) {
         const mapeados: Product[] = data.map((p: any) => {
-          // RADAR ABSOLUTO: Convierte TODA la fila del producto a texto en mayúscula
           const registroCompleto = JSON.stringify(p).toUpperCase();
-          
-          // Si en cualquier rincón del producto dice alguna de estas palabras, es Consumo.
           const esConsumo = registroCompleto.includes('"CONSUMO"') || 
                             registroCompleto.includes('"SERVICE"') || 
                             registroCompleto.includes('"USO INTERNO"') ||
@@ -86,7 +78,6 @@ export const Mermas: React.FC = () => {
             code: p.code || 'NO-SKU',
             barcode: p.barcode || '',
             category: p.category || 'GENERAL',
-            // Si el radar detectó consumo, fuerza la etiqueta, sino usa la de BD
             unit: esConsumo ? 'CONSUMO' : (p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND')),
             imageUrl: p.image_url || p.image_path || null
           };
@@ -94,7 +85,7 @@ export const Mermas: React.FC = () => {
         setProducts(mapeados);
       }
     } catch (error) {
-      console.error("Error cargando productos:", error);
+      console.error("DEBUG TÉCNICO - Error cargando productos:", error);
     }
   };
 
@@ -112,16 +103,13 @@ export const Mermas: React.FC = () => {
   const filteredMermas = useMemo(() => {
     let result = [...mermas];
 
-    // Filtro Exacto por Día (Corrección Matemática)
     if (filtroFecha) {
       result = result.filter(m => {
-        // Extraemos la fecha local exacta del registro original
         const dateObj = new Date(m.raw_date);
         const yyyy = dateObj.getFullYear();
         const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
         const dd = String(dateObj.getDate()).padStart(2, '0');
         const fechaRegistro = `${yyyy}-${mm}-${dd}`;
-        
         return fechaRegistro === filtroFecha;
       });
     }
@@ -149,19 +137,75 @@ export const Mermas: React.FC = () => {
     return result;
   }, [mermas, searchQuery, filtroMotivo, filtroOrden, filtroFecha]);
 
-  // Cálculos para las métricas (solo de lo que está filtrado)
   const totalPerdidaEconómica = filteredMermas.reduce((acc, m) => acc + m.total_loss, 0);
   const totalUnidadesPerdidas = filteredMermas.reduce((acc, m) => acc + m.quantity, 0);
 
+  // CONTROLADOR DE ELIMINACIÓN INTELIGENTE (Delega la restauración al Trigger de Supabase)
+  const handleDeleteMerma = async (merma: Merma) => {
+    const esConsumo = merma.reason === 'USO INTERNO' || Number(merma.quantity) === 0;
+
+    const mensajeConfirmacion = esConsumo 
+      ? `OPERACIÓN FINANCIERA: ¿Eliminar el registro de gasto de S/ ${merma.total_loss.toFixed(2)} en ${merma.product_name}?`
+      : `OPERACIÓN CRÍTICA: ¿Eliminar merma de ${merma.product_name}? El servidor restaurará automáticamente ${Math.abs(Number(merma.quantity))} unidades al inventario.`;
+
+    const confirmar = window.confirm(mensajeConfirmacion);
+    if (!confirmar) return;
+
+    try {
+      setLoading(true);
+
+      // BORRADO SEGURO MULTICAPA CON PROTECCIÓN SQL (Solo ordenamos borrar, la BD hace el resto)
+      let deleteQuery = supabase.from('waste').delete();
+      
+      if (merma.id) {
+        deleteQuery = deleteQuery.eq('id', merma.id);
+      } else {
+        // Protección contra mermas sin ID
+        deleteQuery = deleteQuery.eq('product_id', merma.product_id);
+        if (merma.batch_id) {
+          // 🛡️ Forzamos la conversión a número para que coincida con el tipo bigint de la BD
+          deleteQuery = deleteQuery.eq('batch_id', Number(merma.batch_id));
+        }
+        
+        if (merma.raw_date) {
+          deleteQuery = deleteQuery.eq('created_at', merma.raw_date);
+        } else {
+          // 🚨 PARCHE MATEMÁTICO: Usamos un rango (+- 0.01) para evadir los decimales invisibles de PostgreSQL
+          deleteQuery = deleteQuery
+            .eq('reason', merma.reason)
+            .gte('total_loss', merma.total_loss - 0.01)
+            .lte('total_loss', merma.total_loss + 0.01);
+        }
+      }
+
+      const { error: deleteError } = await deleteQuery;
+      if (deleteError) throw new Error(`Fallo al borrar el registro en BD: ${deleteError.message}`);
+
+      if (esConsumo) {
+        alert('✅ REGISTRO FINANCIERO DE GASTO ELIMINADO CON ÉXITO.');
+      } else {
+        alert('✅ MERMA ELIMINADA. EL INVENTARIO FUE RESTAURADO POR EL SERVIDOR.');
+      }
+      
+      await Promise.all([fetchMermas(), fetchProducts()]);
+
+    } catch (error: any) {
+      console.error('ERROR DB TRANSACCIÓN:', error);
+      alert(`ERROR: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-10 text-[#1E293B] font-mono min-h-full bg-white relative z-0">
+    <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-10 text-[#1E293B] font-mono min-h-full bg-[#FFFFFF] relative z-0 rounded-none">
       
       <HeaderMermas 
         onNuevaMerma={() => setIsModalMermaOpen(true)} 
       />
 
       {/* MÉTRICAS */}
-      <div className="px-8 flex gap-4 overflow-x-auto w-full pb-2 custom-scrollbar shrink-0">
+      <div className="px-8 flex gap-4 overflow-x-auto w-full pb-2 custom-scrollbar shrink-0 rounded-none">
         <TarjetaMetrica 
           label="Eventos Registrados" 
           value={filteredMermas.length} 
@@ -195,53 +239,41 @@ export const Mermas: React.FC = () => {
           setSearchQuery('');
           setFiltroMotivo('');
           setFiltroOrden('FECHA_DESC');
-          setFiltroFecha(''); // <-- Limpia el calendario también
+          setFiltroFecha('');
         }}
       />
 
-      <div className="px-8 flex-1 flex flex-col min-h-[60vh] relative pb-8">
+      <div className="px-8 flex-1 flex flex-col min-h-[60vh] relative pb-8 rounded-none">
         {loading ? (
-          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center border-2 border-[#E2E8F0]">
+          <div className="absolute inset-0 bg-[#FFFFFF]/90 backdrop-blur-sm z-10 flex items-center justify-center border border-[#E2E8F0] rounded-none shadow-none">
             <div className="flex flex-col items-center gap-3">
-              <Database size={24} className="text-[#EF4444] animate-bounce" />
-              <span className="text-[10px] font-black text-[#1E293B] uppercase tracking-[0.2em]">Cargando Registros...</span>
+              <Database size={24} className="text-[#1E293B] animate-pulse" />
+              <span className="text-[10px] font-black text-[#1E293B] uppercase tracking-[0.2em]">Consultando Base de Datos...</span>
             </div>
           </div>
         ) : (
           <TablaMermas 
             mermas={filteredMermas} 
             onEdit={(merma) => {
-              alert(`Has seleccionado editar: ${merma.product_name}.\n\nPara que la edición funcione 100%, en el siguiente paso modificaremos el ModalMerma para que acepte "Modo Edición" (tal como lo hicimos con los productos). ¡Avísame si lo hacemos ahora!`);
+              setMermaAEditar(merma);
+              setIsModalMermaOpen(true);
             }}
-            onDelete={async (merma) => {
-              const confirmar = window.confirm(
-                `⚠️ ALERTA: ¿Estás seguro de ELIMINAR el registro de merma de ${merma.product_name} por ${merma.quantity} unidades?\n\nNOTA: Esto borrará el registro del historial. Si deseas devolver esas unidades al stock, debes hacerlo mediante un ingreso manual en inventario.`
-              );
-              
-              if (confirmar) {
-                const { error } = await supabase.from('waste').delete().eq('id', merma.id);
-                if (error) {
-                  alert('Error al eliminar: ' + error.message);
-                } else {
-                  // Si borró exitosamente, recargamos la tabla en vivo
-                  fetchMermas(); 
-                }
-              }
-            }}
+            onDelete={handleDeleteMerma}
           />
         )}
       </div>
 
-      {/* VENTANA FLOTANTE DE MERMAS REUTILIZADA */}
+      {/* MODAL */}
       <ModalMerma 
         isOpen={isModalMermaOpen} 
+        initialData={mermaAEditar} 
         onClose={() => {
           setIsModalMermaOpen(false);
-          // MAGIA: Al cerrar el modal, recargamos la tabla en 2do plano automáticamente
+          setMermaAEditar(null);
           fetchMermas(); 
           fetchProducts();
-        }} 
-        productos={products} 
+        }}
+        productos={products}
       />
 
     </div>

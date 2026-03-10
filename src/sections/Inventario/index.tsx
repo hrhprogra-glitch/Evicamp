@@ -20,6 +20,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const [vistaActiva, setVistaActiva] = useState<'PRODUCTOS' | 'LOTES'>('PRODUCTOS');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalMermaOpen, setIsModalMermaOpen] = useState(false);
+  const [mermaAEditar, setMermaAEditar] = useState<any>(null);
   const [isModalLoteOpen, setIsModalLoteOpen] = useState(false); // <-- ESTADO DEL NUEVO MODAL
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
   const [preselectedLoteProduct, setPreselectedLoteProduct] = useState<Product | null>(null);
@@ -329,17 +330,19 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
       />
       <ModalMerma 
         isOpen={isModalMermaOpen} 
-        onClose={() => setIsModalMermaOpen(false)} 
+        initialData={mermaAEditar} // <--- AHORA EL MODAL RECIBE LOS DATOS
+        onClose={() => {
+          setIsModalMermaOpen(false);
+          setMermaAEditar(null); // <--- LIMPIEZA PARA QUE NO QUEDE PEGADO
+        }} 
         productos={products} 
         onProductSaved={(productoActualizado: any, loteId?: string, nuevaCantLote?: number) => {
-          // 1. Actualización en Inventario General (TablaProductos)
           setProducts(prev => prev.map(p => 
             p.id === productoActualizado.id 
               ? { ...p, quantity: productoActualizado.quantity } 
               : p
           ));
 
-          // 2. [ NUEVO ]: Actualización en Control de Lotes (TablaLotes)
           if (loteId && nuevaCantLote !== undefined) {
             setNuevoLoteRealtime({
               id: loteId,
