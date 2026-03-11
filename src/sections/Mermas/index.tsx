@@ -140,58 +140,50 @@ export const Mermas: React.FC = () => {
   const totalPerdidaEconómica = filteredMermas.reduce((acc, m) => acc + m.total_loss, 0);
   const totalUnidadesPerdidas = filteredMermas.reduce((acc, m) => acc + m.quantity, 0);
 
-  // CONTROLADOR DE ELIMINACIÓN INTELIGENTE (Delega la restauración al Trigger de Supabase)
+  // CONTROLADOR DE ELIMINACIÓN INTELIGENTE - EVICAMP STANDARD (V2 Resiliente)
   const handleDeleteMerma = async (merma: Merma) => {
     const esConsumo = merma.reason === 'USO INTERNO' || Number(merma.quantity) === 0;
 
     const mensajeConfirmacion = esConsumo 
-      ? `OPERACIÓN FINANCIERA: ¿Eliminar el registro de gasto de S/ ${merma.total_loss.toFixed(2)} en ${merma.product_name}?`
-      : `OPERACIÓN CRÍTICA: ¿Eliminar merma de ${merma.product_name}? El servidor restaurará automáticamente ${Math.abs(Number(merma.quantity))} unidades al inventario.`;
+      ? `OPERACIÓN FINANCIERA: ¿Anular el registro de gasto de S/ ${merma.total_loss.toFixed(2)} en ${merma.product_name}?`
+      : `OPERACIÓN CRÍTICA: ¿Eliminar merma de ${merma.product_name}? Se restaurarán ${Math.abs(Number(merma.quantity))} unidades al inventario.`;
 
-    const confirmar = window.confirm(mensajeConfirmacion);
-    if (!confirmar) return;
+    if (!window.confirm(mensajeConfirmacion)) return;
 
     try {
       setLoading(true);
 
-      // BORRADO SEGURO MULTICAPA CON PROTECCIÓN SQL (Solo ordenamos borrar, la BD hace el resto)
+      // 🛡️ Ciberseguridad & Arquitectura Resiliente: Constructor de consultas dinámico
       let deleteQuery = supabase.from('waste').delete();
-      
+
       if (merma.id) {
+        // Vía Primaria: Borrado por ID único absoluto
         deleteQuery = deleteQuery.eq('id', merma.id);
+      } else if (merma.raw_date && merma.product_id) {
+        // Vía Secundaria (Fallback): Si la BD omite el ID (por RLS o datos heredados), 
+        // usamos la "Huella Temporal Exacta" (timestamp + producto) para identificar la fila.
+        deleteQuery = deleteQuery
+          .eq('created_at', merma.raw_date)
+          .eq('product_id', merma.product_id);
       } else {
-        // Protección contra mermas sin ID
-        deleteQuery = deleteQuery.eq('product_id', merma.product_id);
-        if (merma.batch_id) {
-          // 🛡️ Forzamos la conversión a número para que coincida con el tipo bigint de la BD
-          deleteQuery = deleteQuery.eq('batch_id', Number(merma.batch_id));
-        }
-        
-        if (merma.raw_date) {
-          deleteQuery = deleteQuery.eq('created_at', merma.raw_date);
-        } else {
-          // 🚨 PARCHE MATEMÁTICO: Usamos un rango (+- 0.01) para evadir los decimales invisibles de PostgreSQL
-          deleteQuery = deleteQuery
-            .eq('reason', merma.reason)
-            .gte('total_loss', merma.total_loss - 0.01)
-            .lte('total_loss', merma.total_loss + 0.01);
-        }
+        // Bloqueo estricto solo si el registro es totalmente fantasma
+        throw new Error("Violación estructural: El registro carece de ID y de Marca de Tiempo. Imposible operar de forma segura en la base de datos.");
       }
 
       const { error: deleteError } = await deleteQuery;
-      if (deleteError) throw new Error(`Fallo al borrar el registro en BD: ${deleteError.message}`);
 
-      if (esConsumo) {
-        alert('✅ REGISTRO FINANCIERO DE GASTO ELIMINADO CON ÉXITO.');
-      } else {
-        alert('✅ MERMA ELIMINADA. EL INVENTARIO FUE RESTAURADO POR EL SERVIDOR.');
-      }
+      if (deleteError) throw new Error(`Fallo en motor SQL: ${deleteError.message}`);
+
+      alert(esConsumo 
+        ? '✅ REGISTRO FINANCIERO DE GASTO ELIMINADO CON ÉXITO.' 
+        : '✅ MERMA ELIMINADA. EL INVENTARIO FUE RESTAURADO.');
       
+      // Sincronización del Plano de Datos
       await Promise.all([fetchMermas(), fetchProducts()]);
 
     } catch (error: any) {
-      console.error('ERROR DB TRANSACCIÓN:', error);
-      alert(`ERROR: ${error.message}`);
+      console.error('DEBUG TÉCNICO - FALLO EN TRANSACCIÓN DELETE:', error);
+      alert(`ERROR DEL SISTEMA: ${error.message}`);
     } finally {
       setLoading(false);
     }
