@@ -76,6 +76,7 @@ export const Fiados: React.FC = () => {
 
           return {
             id: f.id.toString(),
+            sale_id: f.sale_id?.toString(), // 🛡️ ENLACE NUEVO: Traemos el ID de la boleta de venta
             clienteId: f.customer_id?.toString(),
             clienteNombre: f.customer_name,
             montoOriginal: Number(f.amount),
@@ -83,9 +84,9 @@ export const Fiados: React.FC = () => {
             fechaEmision: f.date_given,
             fechaVencimiento: f.expected_pay_date || f.date_given,
             estado: f.status === 'CANCELADO' ? 'PAGADO' : f.status,
-            detalles: [], // Temporalmente vacío hasta que conectemos la venta
+            detalles: [], // Nace vacío, pero se llenará al hacer clic
             pagos: historialPagos
-          };
+          } as any;
         });
         
         // Ordenar del más reciente al más antiguo
@@ -266,9 +267,32 @@ export const Fiados: React.FC = () => {
     }
   };
 
-  const handleView = (fiado: Fiado) => {
-    setFiadoAVer(fiado);
+  const handleView = async (fiado: any) => {
+    // 1. Abrimos el modal inmediatamente con los datos vacíos para no congelar la pantalla
+    setFiadoAVer({ ...fiado, detalles: [] });
     setIsModalDetalleOpen(true);
+
+    // 2. Si el fiado tiene una boleta asociada, vamos a Supabase a buscar los productos
+    if (fiado.sale_id) {
+      const { data, error } = await supabase
+        .from('sale_details')
+        .select('product_id, product_name, quantity, price_at_moment, subtotal')
+        .eq('sale_id', fiado.sale_id);
+
+      if (!error && data && data.length > 0) {
+        // Formateamos los productos para que la tabla del Modal los entienda
+        const detallesCompletos = data.map((d: any) => ({
+          productoId: d.product_id,
+          name: d.product_name,
+          qty: Number(d.quantity),
+          price: Number(d.price_at_moment),
+          subtotal: Number(d.subtotal)
+        }));
+        
+        // 3. Inyectamos los productos encontrados directamente en el modal abierto
+        setFiadoAVer({ ...fiado, detalles: detallesCompletos });
+      }
+    }
   };
 
   // --- FUNCIONES DE CLIENTES CON SUPABASE ---

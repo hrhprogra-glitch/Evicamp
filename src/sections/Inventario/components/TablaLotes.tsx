@@ -317,15 +317,26 @@ export const TablaLotes: React.FC<Props> = ({
           onClick={async () => {
             if (window.confirm(`⚠️ ADVERTENCIA TÉCNICA\n\n¿Seguro de eliminar definitivamente el lote de "${lote.product_name}" (Doc: ${lote.document_ref})?\n\nNota: Si este lote ya tiene historial de ventas, el sistema bloqueará la eliminación para proteger la contabilidad.`)) {
               try {
+                // 1. Intentamos borrar el lote primero (Si tiene ventas, Supabase lo bloqueará y lanzará error)
                 const { error } = await supabase.from('batches').delete().eq('id', lote.id);
                 if (error) throw error;
                 
-                // [ SALIDA ]: Avisar al inventario para que reste el stock y recalcule
+                // 2. 🛡️ SOLUCIÓN: Si se borró el lote con éxito, sincronizamos la tabla maestra 'products'
+                const { data: prodData } = await supabase.from('products').select('quantity').eq('id', lote.product_id).single();
+                if (prodData) {
+                  // Calculamos el nuevo stock restando lo que tenía este lote
+                  const nuevoStock = Math.max(0, Number(prodData.quantity) - Number(lote.quantity));
+                  await supabase.from('products').update({ quantity: nuevoStock }).eq('id', lote.product_id);
+                }
+
+                // 3. Avisar a la memoria visual de React
                 if (onLoteDeleted) {
                   onLoteDeleted(lote.product_id, Number(lote.quantity));
                 }
 
+                // 4. Quitarlo de la pantalla de lotes
                 setLotes(prev => prev.filter(l => l.id !== lote.id));
+                
               } catch (err: any) {
                 console.error("[ DB ERROR ]:", err);
                 alert("⚠️ RECHAZADO: PostgreSQL protegió tus datos. No puedes eliminar un lote que ya tiene movimientos (ventas o mermas) amarrados a él.");

@@ -81,10 +81,12 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, onConfirm 
   const puedeConfirmar = esPagoCompleto || esFiadoValido;
 
   const handleCobrar = async () => {
-    if (puedeConfirmar) {
+    if (!puedeConfirmar) return;
+
+    try {
       let finalClienteId = clienteId;
 
-      // AUTOGUARDADO DE NUEVO CLIENTE (Compatible con tu BD)
+      // AUTOGUARDADO DE NUEVO CLIENTE (Blindado)
       if (faltante > 0 && isCreatingNew && clienteNombre.trim() !== '') {
         const exists = clientesDb.some(c => (c.nombre || c.name || '').toUpperCase() === clienteNombre.toUpperCase() || (clienteDni && c.dni === clienteDni));
         if (exists) {
@@ -92,32 +94,39 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, onConfirm 
             return;
         }
         
-        // RETORNO TÉCNICO: Delegamos la creación del ID a PostgreSQL para evitar colisiones o desbordamientos.
         const { data, error } = await supabase.from('customers').insert([{
-          name: clienteNombre.toUpperCase(), // Tu BD usa 'name'
+          name: clienteNombre.toUpperCase(),
           dni: clienteDni || null,
           created_at: new Date().toISOString(),
-          is_synced: '1'
+          is_synced: 1 // 🛡️ Corregido a número matemático puro
         }]).select('id').single();
 
-        if (error) {
-            console.error("Error al crear cliente:", error);
-            alert("⚠️ Error interno al registrar el cliente en la base de datos.");
-            return;
+        if (error) throw new Error(`Fallo SQL al crear cliente: ${error.message}`);
+        
+        // 🛡️ CIBERSEGURIDAD: Verificamos que la BD realmente nos dio un ID válido antes de continuar
+        if (!data || data.id === null || data.id === undefined) {
+           throw new Error("Violación estructural: La BD guardó al cliente pero no generó un ID. Avisar a soporte técnico.");
         }
-        if (data) finalClienteId = data.id.toString();
+        
+        finalClienteId = data.id.toString();
       }
 
       const fiadoData: FiadoData | undefined = faltante > 0 ? {
         montoDeuda: faltante,
         fechaVencimiento,
-        clienteId: finalClienteId, // <-- PASAMOS EL ID DEL CLIENTE
+        clienteId: finalClienteId,
         clienteNombre: clienteNombre.toUpperCase(),
         clienteDni: clienteDni || undefined,
         clienteTelefono: clienteTelefono || undefined
       } : undefined;
 
+      // Disparo de la transacción
       onConfirm({ efectivo: numEfectivo, yape: numYape, tarjeta: numTarjeta }, imprimirBoleta, fiadoData);
+      
+    } catch (error: any) {
+      // 🛡️ MANEJO DE ERRORES VISUAL: Ya no colapsará en silencio
+      console.error("DEBUG TÉCNICO - FALLO EN COBRO:", error);
+      alert(`❌ ERROR DEL SISTEMA: ${error.message}`);
     }
   };
 
