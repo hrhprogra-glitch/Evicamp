@@ -21,6 +21,7 @@ const [searchQuery, setSearchQuery] = useState('');
   const [isVistaPreviaOpen, setIsVistaPreviaOpen] = useState(false);
   // NUEVO: Estados para la impresión de la última boleta
   const [ultimaVenta, setUltimaVenta] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false); // 🛡️ CANDADO MAESTRO ANTI-DUPLICADOS
   // NUEVO: SISTEMA DE TICKETS EN ESPERA (Múltiples Cajas)
   const [heldCarts, setHeldCarts] = useState<CartItem[][]>([]);
   const [isCobroModalOpen, setIsCobroModalOpen] = useState(false);
@@ -194,7 +195,11 @@ const handleConfirmPrecio = (precio: number, cantidad: number) => {
     imprimirBoleta: boolean,
     fiadoData?: any 
   ) => {
-    const totalVenta = cart.reduce((a, b) => a + b.subtotal, 0);
+    if (isSubmitting) return; // 🛡️ BLOQUEO: Si ya se está procesando, ignora el clic
+    setIsSubmitting(true);
+    
+    try {
+      const totalVenta = cart.reduce((a, b) => a + b.subtotal, 0);
     const totalIngresado = pagos.efectivo + pagos.yape + pagos.tarjeta;
     
     let vuelto = 0;
@@ -304,8 +309,12 @@ const handleConfirmPrecio = (precio: number, cantidad: number) => {
       alert(`✅ Venta completada con éxito.\nInventario descontado correctamente.\nVuelto: S/ ${vuelto.toFixed(2)}`);
     }
 
-    setCart([]);
+    // 🚀 Optimización: Limpiamos la interfaz antes de liberar el candado
     setIsCobroModalOpen(false);
+    setCart([]);
+    } finally {
+      setIsSubmitting(false); // 🛡️ LIBERAR CANDADO AL TERMINAR
+    }
   };
   return (
     <div className={`flex h-full w-full bg-transparent font-mono gap-6 relative z-0 ${hasOpenSession === false ? 'pt-16' : ''}`}>

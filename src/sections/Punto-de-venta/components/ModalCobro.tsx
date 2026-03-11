@@ -18,17 +18,18 @@ interface Props {
   onClose: () => void;
   cart: CartItem[];
   total: number;
-  // Actualizamos el onConfirm para que acepte los datos del fiado opcionalmente
-  onConfirm: (pagos: { efectivo: number, yape: number, tarjeta: number }, imprimirBoleta: boolean, fiadoData?: FiadoData) => void;
-}
+  // 🛡️ Actualizamos a Promesa para que el botón sepa cuándo terminó
+      onConfirm: (pagos: { efectivo: number, yape: number, tarjeta: number }, imprimirBoleta: boolean, fiadoData?: FiadoData) => Promise<void> | void;
+    }
 
-export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, onConfirm }) => {
-  const [montoEfectivo, setMontoEfectivo] = useState<string>('');
-  const [montoYape, setMontoYape] = useState<string>('');
-  const [montoTarjeta, setMontoTarjeta] = useState<string>('');
-  const [imprimirBoleta, setImprimirBoleta] = useState<boolean>(true);
+    export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, onConfirm }) => {
+      const [montoEfectivo, setMontoEfectivo] = useState<string>('');
+      const [montoYape, setMontoYape] = useState<string>('');
+      const [montoTarjeta, setMontoTarjeta] = useState<string>('');
+      const [imprimirBoleta, setImprimirBoleta] = useState<boolean>(true);
+      const [isProcessing, setIsProcessing] = useState<boolean>(false); // 🛡️ ESTADO DE CARGA
 
-  // === NUEVOS ESTADOS PARA EL FIADO Y BUSCADOR ===
+      // === NUEVOS ESTADOS PARA EL FIADO Y BUSCADOR ===
   const [clientesDb, setClientesDb] = useState<any[]>([]);
   const [searchCliente, setSearchCliente] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -46,6 +47,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, onConfirm 
       setMontoYape('');
       setMontoTarjeta('');
       setImprimirBoleta(true);
+      setIsProcessing(false); // 🛡️ REINICIAR CARGA AL ABRIR
       // Limpiar datos de fiado
       setClienteId(''); // <-- AÑADIDO
       setClienteNombre('');
@@ -81,7 +83,9 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, onConfirm 
   const puedeConfirmar = esPagoCompleto || esFiadoValido;
 
   const handleCobrar = async () => {
-    if (!puedeConfirmar) return;
+    // 🛡️ BLOQUEO: Ignorar múltiples clics
+    if (!puedeConfirmar || isProcessing) return;
+    setIsProcessing(true);
 
     try {
       let finalClienteId = clienteId;
@@ -120,13 +124,14 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, onConfirm 
         clienteTelefono: clienteTelefono || undefined
       } : undefined;
 
-      // Disparo de la transacción
-      onConfirm({ efectivo: numEfectivo, yape: numYape, tarjeta: numTarjeta }, imprimirBoleta, fiadoData);
+      // 🛡️ Disparo de la transacción (AWAIT obliga a esperar)
+      await onConfirm({ efectivo: numEfectivo, yape: numYape, tarjeta: numTarjeta }, imprimirBoleta, fiadoData);
       
     } catch (error: any) {
-      // 🛡️ MANEJO DE ERRORES VISUAL: Ya no colapsará en silencio
       console.error("DEBUG TÉCNICO - FALLO EN COBRO:", error);
       alert(`❌ ERROR DEL SISTEMA: ${error.message}`);
+    } finally {
+      setIsProcessing(false); // 🛡️ ABRIR CANDADO AL TERMINAR
     }
   };
 
@@ -380,14 +385,15 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, onConfirm 
         <div className="p-4 bg-white border-t-2 border-[#1E293B] shrink-0">
           <button 
             onClick={handleCobrar}
-            disabled={!puedeConfirmar}
-            className={`w-full py-3 border-2 border-[#1E293B] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] ${
-              !puedeConfirmar ? 'bg-gray-100 text-gray-400 cursor-not-allowed' :
+            disabled={!puedeConfirmar || isProcessing}
+            className={`w-full py-3 border-2 border-[#1E293B] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all shadow-[4px_4px_0_0_#1E293B] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] ${
+              (!puedeConfirmar || isProcessing) ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-70' :
               faltante > 0 ? 'bg-[#F59E0B] text-[#1E293B] cursor-pointer' : 'bg-[#1E293B] text-white hover:bg-[#10B981] hover:text-[#1E293B] cursor-pointer'
             }`}
           >
-            <CheckCircle2 size={20} /> 
-            {faltante > 0 ? `FIAR S/ ${faltante.toFixed(2)} Y COBRAR` : 'Confirmar Pago'}
+            {/* ⚡ Respuesta inmediata: Solo cambia el ícono mientras procesa */}
+            {isProcessing ? <CheckCircle2 size={20} className="animate-ping" /> : <CheckCircle2 size={20} />}
+            <span>{isProcessing ? 'GUARDANDO...' : (faltante > 0 ? `FIAR S/ ${faltante.toFixed(2)}` : 'CONFIRMAR PAGO')}</span>
           </button>
         </div>
 
