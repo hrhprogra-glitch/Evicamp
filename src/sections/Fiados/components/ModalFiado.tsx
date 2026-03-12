@@ -76,22 +76,16 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
     if (!fechaVencimiento) return alert('Selecciona una fecha de vencimiento.');
 
     const cli = clientes.find(c => c.nombre === clienteSeleccionado);
-    let nuevoSaldo = totalCalculado;
     
     try {
       if (fiadoAEditar) {
-        // MODO EDICIÓN DE DEUDA
-        const diferencia = totalCalculado - fiadoAEditar.montoOriginal;
-        nuevoSaldo = fiadoAEditar.saldoPendiente + diferencia;
-        
+        // MODO EDICIÓN: Solo permite modificar la fecha de vencimiento
         const { error } = await supabase.from('fiados').update({
-          amount: totalCalculado,
-          saldoPendiente: nuevoSaldo,
           expected_pay_date: fechaVencimiento
         }).eq('id', fiadoAEditar.id);
         
         if (error) throw error;
-        alert('✅ Deuda actualizada en base de datos.');
+        alert('✅ Fecha de vencimiento actualizada correctamente.');
       } else {
         // MODO NUEVO FIADO
         // 1. Crear Venta de respaldo para cuadrar las finanzas
@@ -167,7 +161,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
           <div className="flex items-center gap-3">
             <UserPlus className="text-[#F59E0B]" size={20} />
             <h2 className="text-sm font-black uppercase tracking-widest text-white">
-              {isEdit ? 'Editar Cantidades de Deuda' : 'Nueva Deuda desde Inventario'}
+              {isEdit ? 'Renegociar Fecha de Vencimiento' : 'Nueva Deuda desde Inventario'}
             </h2>
           </div>
           <button onClick={onClose} className="hover:text-[#EF4444] transition-colors"><X size={20} /></button>
@@ -270,9 +264,12 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
 
           {/* PANEL DERECHO: CARRITO / DETALLE DE LA DEUDA */}
           <div className="w-1/2 p-6 bg-white flex flex-col">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1E293B] mb-4 border-b-2 border-[#E2E8F0] pb-2">
-              {isEdit ? 'Editar cantidades de la deuda' : 'Productos a fiar'}
-            </h3>
+            <div className="flex flex-col mb-4 border-b-2 border-[#E2E8F0] pb-2">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1E293B]">
+                {isEdit ? 'Detalle de la deuda (Solo Lectura)' : 'Productos a fiar'}
+              </h3>
+              {isEdit && <span className="text-[9px] font-black tracking-widest text-[#EF4444] uppercase mt-1">⚠️ En modo edición solo se puede modificar la fecha. Los productos están bloqueados por seguridad contable.</span>}
+            </div>
             
             <div className="flex-1 overflow-y-auto flex flex-col gap-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {detalles.length === 0 ? (
@@ -287,8 +284,11 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                     
                     <div className="flex items-center gap-3">
                       <div className="flex items-center border-2 border-[#E2E8F0]">
-                        {/* En edición o creación siempre se puede editar cantidad */}
-                        <input type="number" value={d.qty} onChange={e => updateQty(d.productoId, Number(e.target.value))} className="w-12 p-1 text-center text-xs font-black outline-none" min={1} />
+                        {isEdit ? (
+                          <span className="w-12 p-1 text-center text-xs font-black bg-[#F8FAFC] text-[#94A3B8]">{d.qty}</span>
+                        ) : (
+                          <input type="number" value={d.qty} onChange={e => updateQty(d.productoId, Number(e.target.value))} className="w-12 p-1 text-center text-xs font-black outline-none" min={1} />
+                        )}
                       </div>
                       <span className="text-xs font-black text-[#1E293B] w-16 text-right">S/ {d.subtotal.toFixed(2)}</span>
                       {!isEdit && (
@@ -307,7 +307,9 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
               </div>
               <div className="flex justify-end gap-3">
                 <button onClick={onClose} className="px-4 py-3 border-2 border-[#E2E8F0] text-[#64748B] text-[10px] font-black uppercase hover:border-[#1E293B]">Cancelar</button>
-                <button onClick={handleSave} className="flex-1 py-3 bg-[#F59E0B] text-[#1E293B] border-2 border-[#1E293B] text-xs font-black uppercase flex items-center justify-center gap-2 shadow-[2px_2px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"><Save size={16}/> Confirmar y Restar Inventario</button>
+                <button onClick={handleSave} className="flex-1 py-3 bg-[#F59E0B] text-[#1E293B] border-2 border-[#1E293B] text-xs font-black uppercase flex items-center justify-center gap-2 shadow-[2px_2px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
+                  <Save size={16}/> {isEdit ? 'Guardar Nueva Fecha' : 'Confirmar y Restar Inventario'}
+                </button>
               </div>
             </div>
           </div>

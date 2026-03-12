@@ -32,8 +32,7 @@ export const Fiados: React.FC = () => {
   const [fiadoAAnular, setFiadoAAnular] = useState<Fiado | null>(null);
 
   // Cargar datos desde Supabase al iniciar
-  useEffect(() => {
-    const cargarDatos = async () => {
+  const cargarDatos = async () => {
       // 🔥 OPTIMIZACIÓN: Lanzamos todas las consultas al mismo tiempo (Paralelo)
       const [
         { data: prods },
@@ -93,10 +92,10 @@ export const Fiados: React.FC = () => {
         setFiados(fiadosMapeados.sort((a, b) => new Date(b.fechaEmision).getTime() - new Date(a.fechaEmision).getTime()));
       }
     };
-    
+
+  useEffect(() => {
     cargarDatos();
   }, []);
-
   const handleDelete = async (id: string) => {
     if (window.confirm('⚠️ ¿Estás seguro de ELIMINAR esta deuda permanentemente?')) {
       // 1. Borrar pagos asociados primero
@@ -112,54 +111,11 @@ export const Fiados: React.FC = () => {
     }
   };
 
-  const handleSaveFiado = async (fiadoData: Partial<Fiado>) => {
-    if (fiadoData.id) {
-      // EDITAR
-      const { error } = await supabase.from('fiados').update({
-        amount: fiadoData.montoOriginal,
-        expected_pay_date: fiadoData.fechaVencimiento
-      }).eq('id', fiadoData.id);
-      
-      if (error) return alert('Error al actualizar: ' + error.message);
-      setFiados(fiados.map(f => f.id === fiadoData.id ? { ...f, ...fiadoData } as Fiado : f));
-    } else {
-      // NUEVA DEUDA
-      const nuevoId = Date.now().toString();
-      const fechaHoy = new Date().toISOString();
-      
-      const { error } = await supabase.from('fiados').insert([{
-        id: nuevoId,
-        customer_id: fiadoData.clienteId || null,
-        customer_name: fiadoData.clienteNombre,
-        amount: fiadoData.montoOriginal,
-        paid_amount: 0,
-        date_given: fechaHoy,
-        expected_pay_date: fiadoData.fechaVencimiento,
-        status: 'PENDIENTE',
-        is_synced: '1'
-      }]);
-
-      if (error) return alert('Error al guardar: ' + error.message);
-
-      // Descontar inventario real en Supabase
-      if (fiadoData.detalles) {
-        const inventarioActualizado = [...productosInventario];
-        for (const det of fiadoData.detalles) {
-          const prodIndex = inventarioActualizado.findIndex(p => p.id === det.productoId);
-          if (prodIndex !== -1) {
-            inventarioActualizado[prodIndex].quantity -= det.qty;
-            await supabase.from('products').update({ quantity: inventarioActualizado[prodIndex].quantity }).eq('id', det.productoId);
-          }
-        }
-        setProductosInventario(inventarioActualizado);
-      }
-
-      const nuevoFiado: Fiado = {
-        ...fiadoData, id: nuevoId, estado: 'PENDIENTE', fechaEmision: fechaHoy, saldoPendiente: fiadoData.montoOriginal || 0, pagos: []
-      } as Fiado;
-      setFiados([nuevoFiado, ...fiados]);
-    }
+  const handleSaveFiado = async () => {
     setIsModalFiadoOpen(false);
+    // Como el Modal ya hizo todos los cálculos y grabó en la Base de Datos,
+    // solo recargamos la tabla limpiamente para mostrar los cambios reales.
+    await cargarDatos(); 
   };
 
   const handleConfirmAbono = async (pagos: { efectivo: number; yape: number; tarjeta: number }) => {
@@ -268,11 +224,9 @@ export const Fiados: React.FC = () => {
   };
 
   const handleView = async (fiado: any) => {
-    // 1. Abrimos el modal inmediatamente con los datos vacíos para no congelar la pantalla
     setFiadoAVer({ ...fiado, detalles: [] });
     setIsModalDetalleOpen(true);
 
-    // 2. Si el fiado tiene una boleta asociada, vamos a Supabase a buscar los productos
     if (fiado.sale_id) {
       const { data, error } = await supabase
         .from('sale_details')
@@ -280,7 +234,32 @@ export const Fiados: React.FC = () => {
         .eq('sale_id', fiado.sale_id);
 
       if (!error && data && data.length > 0) {
-        // Formateamos los productos para que la tabla del Modal los entienda
+        const detallesCompletos = data.map((d: any) => ({
+          productoId: d.product_id,
+          name: d.product_name,
+          qty: Number(d.quantity),
+          price: Number(d.price_at_moment),
+          subtotal: Number(d.subtotal)
+        }));
+        setFiadoAVer({ ...fiado, detalles: detallesCompletos });
+      }
+    }
+  };
+
+  // NUEVA FUNCIÓN: Descarga los productos de la BD antes de abrir el modal de Edición
+  const handleEditFiado = async (fiado: any) => {
+    // 1. Abrimos el modal con la información base de la deuda
+    setFiadoAEditar({ ...fiado, detalles: [] });
+    setIsModalFiadoOpen(true);
+
+    // 2. Si existe un registro de venta (sale_id), descargamos sus productos
+    if (fiado.sale_id) {
+      const { data, error } = await supabase
+        .from('sale_details')
+        .select('product_id, product_name, quantity, price_at_moment, subtotal')
+        .eq('sale_id', fiado.sale_id);
+
+      if (!error && data && data.length > 0) {
         const detallesCompletos = data.map((d: any) => ({
           productoId: d.product_id,
           name: d.product_name,
@@ -289,8 +268,8 @@ export const Fiados: React.FC = () => {
           subtotal: Number(d.subtotal)
         }));
         
-        // 3. Inyectamos los productos encontrados directamente en el modal abierto
-        setFiadoAVer({ ...fiado, detalles: detallesCompletos });
+        // 3. Inyectamos los productos en el estado de edición
+        setFiadoAEditar({ ...fiado, detalles: detallesCompletos });
       }
     }
   };
@@ -380,7 +359,7 @@ export const Fiados: React.FC = () => {
         <TablaFiados 
           fiados={fiados} 
           onView={handleView}
-          onEdit={(f) => { setFiadoAEditar(f); setIsModalFiadoOpen(true); }}
+          onEdit={handleEditFiado}
           onDelete={handleDelete}
           onPay={(f) => { setFiadoAAbonar(f); setIsModalAbonoOpen(true); }}
           onRevertir={(f) => { setFiadoAAnular(f); setIsModalAnularOpen(true); }} // Ahora abre el modal

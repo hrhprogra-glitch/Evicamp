@@ -34,7 +34,9 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onDelete,
 
   // 1. Filtrado
   let fiadosProcesados = fiados.filter(f => {
-    const matchBusqueda = f.clienteNombre.toLowerCase().includes(searchTerm.toLowerCase());
+    // PROTECCIÓN: Si el nombre del cliente viene nulo o vacío por un error, no crashea
+    const nombreCliente = f.clienteNombre || ''; 
+    const matchBusqueda = nombreCliente.toLowerCase().includes(searchTerm.toLowerCase());
     const matchEstado = filtroEstado === 'TODOS' || f.estado === filtroEstado;
     return matchBusqueda && matchEstado;
   });
@@ -150,10 +152,11 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onDelete,
                     {fiado.clienteTelefono && <p className="text-[10px] text-[#64748B] font-bold">Cel: {fiado.clienteTelefono}</p>}
                   </td>
                   <td className="p-4 text-xs font-bold text-[#64748B]">
-                    {new Date(fiado.fechaEmision).toLocaleDateString()}
+                    {new Date(fiado.fechaEmision).toLocaleDateString('es-PE')}
                   </td>
-                  <td className="p-4 text-xs font-bold text-[#64748B]">
-                    {new Date(fiado.fechaVencimiento).toLocaleDateString()}
+                  <td className="p-4 text-xs font-bold text-[#1E293B]">
+                    {/* Inyección Técnica: Agregamos T12:00:00 para anular el desfase de zona horaria de UTC-5 */}
+                    {new Date(fiado.fechaVencimiento.includes('T') ? fiado.fechaVencimiento : `${fiado.fechaVencimiento}T12:00:00`).toLocaleDateString('es-PE')}
                   </td>
                   <td className="p-4">
                     <span className={`px-2 py-1 text-[10px] font-black tracking-wider border rounded-none ${
