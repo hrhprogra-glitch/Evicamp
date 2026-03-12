@@ -10,4 +10,5 @@ export interface Product {
   category: string;
   unit: string;
   imageUrl?: string | null;
+  control_type?: string;
 }

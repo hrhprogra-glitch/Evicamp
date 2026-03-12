@@ -96,20 +96,6 @@ export const Fiados: React.FC = () => {
   useEffect(() => {
     cargarDatos();
   }, []);
-  const handleDelete = async (id: string) => {
-    if (window.confirm('⚠️ ¿Estás seguro de ELIMINAR esta deuda permanentemente?')) {
-      // 1. Borrar pagos asociados primero
-      await supabase.from('debt_payments').delete().eq('fiado_id', id);
-      
-      // 2. Borrar la deuda
-      const { error } = await supabase.from('fiados').delete().eq('id', id);
-      if (error) return alert('Error al eliminar: ' + error.message);
-      
-      // CORRECCIÓN ARQUITECTÓNICA: Usamos el parámetro 'id' directamente, 
-      // evitando la dependencia del estado fiadoAAbonar que puede ser null.
-      setFiados(fiados.filter(f => f.id !== id));
-    }
-  };
 
   const handleSaveFiado = async () => {
     setIsModalFiadoOpen(false);
@@ -360,7 +346,6 @@ export const Fiados: React.FC = () => {
           fiados={fiados} 
           onView={handleView}
           onEdit={handleEditFiado}
-          onDelete={handleDelete}
           onPay={(f) => { setFiadoAAbonar(f); setIsModalAbonoOpen(true); }}
           onRevertir={(f) => { setFiadoAAnular(f); setIsModalAnularOpen(true); }} // Ahora abre el modal
         />

@@ -21,6 +21,7 @@ export interface CashMovement {
   description: string;
   created_at: string;
   payment_type: string;
+  flujo?: 'INTERNO' | 'EXTERNO'; // <-- NUEVO: Define si entra a la caja del negocio o personal
 }
 
 // Interfaz para las métricas rápidas de la pantalla principal

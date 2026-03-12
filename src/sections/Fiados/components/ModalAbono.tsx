@@ -15,6 +15,7 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
   const [efectivo, setEfectivo] = useState<string>('');
   const [yape, setYape] = useState<string>('');
   const [tarjeta, setTarjeta] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false); // Escudo contra doble clic
 
   useEffect(() => {
     if (isOpen && fiado) {
@@ -34,9 +35,11 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
   const nuevoSaldo = fiado.saldoPendiente - totalAbono;
 
   const handleConfirm = async () => {
+    if (isSaving) return; // Si ya está guardando, bloquea cualquier otro clic
     if (totalAbono <= 0) return alert('El monto debe ser mayor a 0.');
     if (totalAbono > fiado.saldoPendiente) return alert('El abono supera la deuda.');
 
+    setIsSaving(true); // Activa el escudo inmediatamente
     try {
       // 1. Insertar el Pago en el historial
       const { error: pagoError } = await supabase.from('debt_payments').insert([{
@@ -77,8 +80,10 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
 
       alert('✅ Abono registrado en la base de datos y sumado a la caja actual.');
       onConfirm({ efectivo: valEfectivo, yape: valYape, tarjeta: valTarjeta });
+      setIsSaving(false);
     } catch (e: any) {
       alert('Error al registrar abono en BD: ' + e.message);
+      setIsSaving(false); // Desbloqueamos si hubo error de internet
     }
   };
 
@@ -170,7 +175,17 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
         {/* FOOTER */}
         <div className="p-4 bg-white border-t-2 border-[#E2E8F0] flex justify-end gap-3">
           <button onClick={onClose} className="px-4 py-2 bg-white border-2 border-[#E2E8F0] text-[#64748B] text-[10px] font-black uppercase hover:border-[#1E293B] hover:text-[#1E293B] transition-colors cursor-pointer">Cancelar</button>
-          <button onClick={handleConfirm} className="px-6 py-2 bg-[#10B981] text-[#1E293B] border-2 border-[#1E293B] text-[10px] font-black uppercase hover:bg-[#1E293B] hover:text-[#10B981] transition-colors cursor-pointer shadow-[2px_2px_0_0_#1E293B] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]">Confirmar Abono</button>
+          <button 
+            onClick={handleConfirm} 
+            disabled={isSaving}
+            className={`px-6 py-2 border-2 border-[#1E293B] text-[10px] font-black uppercase transition-all shadow-[2px_2px_0_0_#1E293B] ${
+              isSaving 
+                ? 'bg-[#E2E8F0] text-[#94A3B8] cursor-not-allowed shadow-none translate-x-[2px] translate-y-[2px]' 
+                : 'bg-[#10B981] text-[#1E293B] hover:bg-[#1E293B] hover:text-[#10B981] cursor-pointer hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]'
+            }`}
+          >
+            {isSaving ? 'Procesando...' : 'Confirmar Abono'}
+          </button>
         </div>
 
       </div>

@@ -15,6 +15,30 @@ export const Reportes: React.FC = () => {
   const [fechaInicio, setFechaInicio] = useState<string>(primerDiaMes);
   const [fechaFin, setFechaFin] = useState<string>(hoyStr);
 
+  // --- FUNCIONES DE FILTRADO RÁPIDO ---
+  const filtrarHoy = () => {
+    setFechaInicio(hoyStr);
+    setFechaFin(hoyStr);
+  };
+
+  const filtrarSemana = () => {
+    const haceUnaSemana = new Date();
+    haceUnaSemana.setDate(hoy.getDate() - 7);
+    setFechaInicio(haceUnaSemana.toISOString().split('T')[0]);
+    setFechaFin(hoyStr);
+  };
+
+  const filtrarMes = () => {
+    setFechaInicio(primerDiaMes);
+    setFechaFin(hoyStr);
+  };
+
+  const limpiarFiltros = () => {
+    setFechaInicio('');
+    setFechaFin('');
+  };
+  // ------------------------------------
+
   useEffect(() => {
     const autoLimpiarAntiguos = async () => {
       const fechaLimite = new Date();
@@ -33,13 +57,17 @@ export const Reportes: React.FC = () => {
       fechaFinExpandida.setDate(fechaFinExpandida.getDate() + 1);
       const finAjustado = fechaFinExpandida.toISOString().split('T')[0];
 
-      // PASO 1: Consulta original segura
-      const { data, error } = await supabase
-        .from('sales')
-        .select('*')
-        .gte('created_at', `${fechaInicio}T00:00:00`)
-        .lt('created_at', `${finAjustado}T00:00:00`)
-        .order('created_at', { ascending: false });
+      // PASO 1: Consulta dinámica (Con o sin fechas)
+      let query = supabase.from('sales').select('*');
+      
+      if (fechaInicio && fechaFin) {
+        query = query.gte('created_at', `${fechaInicio}T00:00:00`)
+                     .lt('created_at', `${finAjustado}T00:00:00`);
+      } else {
+        query = query.limit(100); // Si limpian filtros, traemos los últimos 100 por seguridad
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (data) {
         // PASO 2: Buscamos fiados
@@ -130,12 +158,20 @@ export const Reportes: React.FC = () => {
   };
 
   const handleDeleteTicket = async (id: string) => {
-    if (window.confirm('🗑️ ¿Estás seguro de ELIMINAR este ticket permanentemente?')) {
+    const ticket = tickets.find(t => t.id === id);
+
+    // BLOQUEO TÉCNICO: Exige anulación previa
+    if (ticket && ticket.estado !== 'ANULADO') {
+      alert('⚠️ OPERACIÓN DENEGADA: No puedes borrar una venta activa. Primero debes usar el botón ANULAR para que el stock y la deuda se reviertan correctamente.');
+      return;
+    }
+
+    if (window.confirm('🗑️ ADVERTENCIA FINAL: ¿Seguro de borrar el registro? Esta acción es irreversible.')) {
       if (id.startsWith('ERR-')) {
-        await supabase.from('sales').delete().is('id', null);
         setTickets(tickets.filter(t => t.id !== id));
         return;
       }
+      
       const { error } = await supabase.from('sales').delete().eq('id', id);
       if (!error) {
         setTickets(tickets.filter(t => t.id !== id));
@@ -148,9 +184,10 @@ export const Reportes: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col gap-6 p-6 max-w-7xl mx-auto font-mono">
-      <div className="flex justify-between items-end shrink-0">
-        <div className="flex gap-4 w-2/3">
-          <div className="flex-1 bg-white border-2 border-[#E2E8F0] shadow-[4px_4px_0_0_#E2E8F0] p-4 flex gap-4 items-center">
+      
+      {/* TARJETAS DE MÉTRICAS */}
+      <div className="flex gap-4 shrink-0">
+        <div className="flex-1 bg-white border-2 border-[#E2E8F0] shadow-[4px_4px_0_0_#E2E8F0] p-4 flex gap-4 items-center">
             <div className="w-12 h-12 bg-[#F8FAFC] rounded-none border-2 border-[#E2E8F0] flex items-center justify-center">
               <FileText className="text-[#3B82F6]" />
             </div>
@@ -169,9 +206,26 @@ export const Reportes: React.FC = () => {
               <p className="text-2xl font-black text-[#EF4444]">{totalAnulados} tickets</p>
             </div>
           </div>
+      </div>
+
+      {/* BARRA DE CONTROLES TÉCNICOS */}
+      <div className="flex flex-wrap lg:flex-nowrap justify-between items-end gap-4 shrink-0">
+        
+        {/* BOTONES RÁPIDOS */}
+        <div className="flex gap-2">
+          <button onClick={filtrarHoy} className="bg-white border-2 border-[#1E293B] px-4 py-2 text-[10px] font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[2px_2px_0_0_#1E293B] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]">
+            Hoy
+          </button>
+          <button onClick={filtrarSemana} className="bg-white border-2 border-[#1E293B] px-4 py-2 text-[10px] font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[2px_2px_0_0_#1E293B] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]">
+            7 Días
+          </button>
+          <button onClick={filtrarMes} className="bg-white border-2 border-[#1E293B] px-4 py-2 text-[10px] font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[2px_2px_0_0_#1E293B] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]">
+            Mes
+          </button>
         </div>
 
-        <div className="flex items-center gap-4 bg-white border-2 border-[#E2E8F0] p-3 shadow-[4px_4px_0_0_#E2E8F0]">
+        {/* SELECTOR DE FECHAS PERSONALIZADO */}
+        <div className="flex items-center gap-4 bg-white border-2 border-[#E2E8F0] p-3 shadow-[4px_4px_0_0_#E2E8F0] rounded-none">
           <div className="flex flex-col">
             <label className="text-[9px] font-black text-[#64748B] uppercase tracking-widest mb-1">Desde</label>
             <div className="flex items-center gap-2">
@@ -187,6 +241,15 @@ export const Reportes: React.FC = () => {
               <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="text-xs font-black text-[#1E293B] outline-none bg-transparent uppercase cursor-pointer" />
             </div>
           </div>
+          
+          {/* BOTÓN LIMPIAR */}
+          {(fechaInicio || fechaFin) && (
+             <div className="pl-4 ml-2 border-l-2 border-[#E2E8F0]">
+               <button onClick={limpiarFiltros} className="text-[#EF4444] hover:bg-[#FEF2F2] p-2 transition-colors cursor-pointer rounded-none" title="Limpiar Filtros">
+                 <RotateCcw size={16} />
+               </button>
+             </div>
+          )}
         </div>
       </div>
 

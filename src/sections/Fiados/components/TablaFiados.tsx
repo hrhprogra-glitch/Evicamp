@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, Edit, Trash2, Banknote, RotateCcw, FilterX, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, Edit,  Banknote, RotateCcw, FilterX, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Fiado } from '../types';
 
 interface Props {
   fiados: Fiado[];
   onView: (fiado: Fiado) => void;
   onEdit: (fiado: Fiado) => void;
-  onDelete: (id: string) => void;
   onPay: (fiado: Fiado) => void;
   onRevertir: (fiado: Fiado) => void;
 }
 
-export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onDelete, onPay, onRevertir }) => {
+export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, onRevertir }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<'TODOS' | 'PENDIENTE' | 'VENCIDO' | 'PAGADO'>('TODOS');
   const [ordenPor, setOrdenPor] = useState<'RECIENTES' | 'ANTIGUOS' | 'MAYOR_DEUDA' | 'MENOR_DEUDA' | 'PROXIMO_VENCER'>('RECIENTES');
@@ -187,10 +186,6 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onDelete,
                           </button>
                         </>
                       )}
-
-                      <button onClick={() => onDelete(fiado.id)} className="p-2 bg-white text-[#94A3B8] border-2 border-[#E2E8F0] hover:border-[#EF4444] hover:text-[#EF4444] transition-colors cursor-pointer rounded-none" title="Eliminar Deuda">
-                        <Trash2 size={16} />
-                      </button>
 
                       {fiado.pagos && fiado.pagos.length > 0 && (
                         <button 

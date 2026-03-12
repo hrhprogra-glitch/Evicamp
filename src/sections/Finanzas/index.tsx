@@ -38,6 +38,7 @@ export const Finanzas: React.FC = () => {
 
   // NUEVO: Estados y funciones para el Historial y Limpieza
   const [vistaActual, setVistaActual] = useState<'ACTUAL' | 'HISTORIAL'>('ACTUAL');
+  const [pestañaFlujo, setPestañaFlujo] = useState<'INTERNO' | 'EXTERNO'>('INTERNO'); // <-- Control de Pestañas
   const [historialCajas, setHistorialCajas] = useState<CashSession[]>([]);
   
   const [paginaActual, setPaginaActual] = useState(1);
@@ -115,6 +116,9 @@ export const Finanzas: React.FC = () => {
         let dEfectivo = 0, dYape = 0;
 
         movData?.forEach(m => {
+          // BLOQUEO MATEMÁTICO: Ignoramos la caja personal (EXTERNO) para que no descuadre el negocio
+          if (m.flujo === 'EXTERNO') return;
+
           if (m.type === 'INGRESO') ingresosExtra += Number(m.amount);
           if (m.type === 'EGRESO') gastos += Number(m.amount);
         });
@@ -158,6 +162,18 @@ export const Finanzas: React.FC = () => {
       console.error(error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // FUNCIÓN PARA ELIMINAR MOVIMIENTO MANUAL
+  const handleDeleteMovimiento = async (idMov: string) => {
+    if (window.confirm('⚠️ ¿Seguro que deseas ELIMINAR este movimiento? Esta acción recalculará la caja.')) {
+      const { error } = await supabase.from('cash_movements').delete().eq('id', idMov);
+      if (error) {
+        alert('Error al eliminar: ' + error.message);
+      } else {
+        cargarDatosCaja(); // Recargamos todo para recalcular la boveda
+      }
     }
   };
 
@@ -257,7 +273,28 @@ export const Finanzas: React.FC = () => {
           </div>
 
           <div className="flex-1 bg-white border-2 border-[#E2E8F0] shadow-[8px_8px_0_0_#E2E8F0] flex flex-col overflow-hidden">
-             <TablaMovimientos movimientos={movimientos} />
+             
+             {/* PESTAÑAS TÉCNICAS */}
+             <div className="flex border-b-2 border-[#E2E8F0] bg-[#F8FAFC] shrink-0">
+               <button 
+                 onClick={() => setPestañaFlujo('INTERNO')}
+                 className={`flex-1 py-3 text-xs font-black uppercase tracking-widest border-b-4 transition-colors cursor-pointer rounded-none ${pestañaFlujo === 'INTERNO' ? 'border-[#1E293B] text-[#1E293B] bg-white' : 'border-transparent text-[#94A3B8] hover:text-[#1E293B] hover:bg-white'}`}
+               >
+                 Movimientos Internos (Negocio)
+               </button>
+               <button 
+                 onClick={() => setPestañaFlujo('EXTERNO')}
+                 className={`flex-1 py-3 text-xs font-black uppercase tracking-widest border-b-4 transition-colors cursor-pointer rounded-none ${pestañaFlujo === 'EXTERNO' ? 'border-[#1E293B] text-[#1E293B] bg-white' : 'border-transparent text-[#94A3B8] hover:text-[#1E293B] hover:bg-white'}`}
+               >
+                 Movimientos Externos (Personal)
+               </button>
+             </div>
+             
+             {/* TABLA FILTRADA CON FUNCIÓN ONDELTE */}
+             <TablaMovimientos 
+               movimientos={movimientos.filter(m => (pestañaFlujo === 'INTERNO' ? (m.flujo === 'INTERNO' || !m.flujo) : m.flujo === 'EXTERNO'))} 
+               onDelete={handleDeleteMovimiento}
+             />
           </div>
         </div>
       ) : (

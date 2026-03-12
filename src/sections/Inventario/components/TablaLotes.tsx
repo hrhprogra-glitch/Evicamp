@@ -81,14 +81,23 @@ export const TablaLotes: React.FC<Props> = ({
   // === INYECCIÓN OPTIMISTA (AGREGA O EDITA EL LOTE SIN RECARGAR LA PANTALLA) ===
   useEffect(() => {
     if (nuevoLoteInyectado) {
+      
+      // INTERCEPCIÓN TÉCNICA: Formateamos la fecha si viene cruda desde Supabase (ISO 8601)
+      const loteFormateado = {
+        ...nuevoLoteInyectado,
+        created_at: nuevoLoteInyectado.created_at && nuevoLoteInyectado.created_at.includes('T') 
+          ? new Date(nuevoLoteInyectado.created_at).toLocaleDateString() 
+          : nuevoLoteInyectado.created_at
+      };
+
       setLotes(prev => {
-        const existe = prev.some(l => l.id === nuevoLoteInyectado.id);
+        const existe = prev.some(l => l.id === loteFormateado.id);
         if (existe) {
           // Si el lote ya existe, lo ACTUALIZAMOS (Modo Edición)
-          return prev.map(l => l.id === nuevoLoteInyectado.id ? { ...l, ...nuevoLoteInyectado } : l);
+          return prev.map(l => l.id === loteFormateado.id ? { ...l, ...loteFormateado } : l);
         }
         // Si no existe, lo AGREGAMOS al inicio (Modo Creación)
-        return [nuevoLoteInyectado, ...prev];
+        return [loteFormateado, ...prev];
       });
     }
   }, [nuevoLoteInyectado]);

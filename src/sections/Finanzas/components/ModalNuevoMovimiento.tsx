@@ -15,6 +15,7 @@ export const ModalNuevoMovimiento: React.FC<Props> = ({ isOpen, onClose, onSucce
   const [monto, setMonto] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
+  const [flujo, setFlujo] = useState<'INTERNO' | 'EXTERNO'>('INTERNO'); // <-- Nuevo estado para controlar la caja
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
@@ -32,6 +33,7 @@ export const ModalNuevoMovimiento: React.FC<Props> = ({ isOpen, onClose, onSucce
       amount: Number(monto),
       description: descripcion.toUpperCase(),
       payment_type: metodoPago,
+      flujo: flujo, // <-- Guardamos si es INTERNO o EXTERNO
       created_at: new Date().toISOString(),
       is_synced: '1'
     }]);
@@ -62,6 +64,17 @@ export const ModalNuevoMovimiento: React.FC<Props> = ({ isOpen, onClose, onSucce
         </div>
 
         <div className="p-6 flex flex-col gap-4">
+          
+          {/* NUEVO SELECTOR DE FLUJO (INTERNO / EXTERNO) */}
+          <div className="flex bg-[#F8FAFC] border-2 border-[#1E293B] p-1 rounded-none">
+            <button onClick={() => setFlujo('INTERNO')} className={`flex-1 py-2 text-[10px] font-black uppercase transition-colors rounded-none cursor-pointer ${flujo === 'INTERNO' ? 'bg-[#1E293B] text-white shadow-sm' : 'text-[#64748B] hover:bg-[#E2E8F0]'}`}>
+              Caja Interna (Negocio)
+            </button>
+            <button onClick={() => setFlujo('EXTERNO')} className={`flex-1 py-2 text-[10px] font-black uppercase transition-colors rounded-none cursor-pointer ${flujo === 'EXTERNO' ? 'bg-[#1E293B] text-white shadow-sm' : 'text-[#64748B] hover:bg-[#E2E8F0]'}`}>
+              Caja Externa (Personal)
+            </button>
+          </div>
+
           <div className="flex gap-2">
             <button onClick={() => setTipo('INGRESO')} className={`flex-1 py-2 text-xs font-black uppercase border-2 transition-colors rounded-none cursor-pointer ${tipo === 'INGRESO' ? 'bg-[#10B981] border-[#10B981] text-white' : 'bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#10B981]'}`}>
               Ingreso Extra

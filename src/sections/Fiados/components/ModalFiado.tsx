@@ -51,24 +51,82 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
   const agregarProducto = (prod: Product) => {
     const existe = detalles.find(d => d.productoId === prod.id);
     if (existe) {
-      setDetalles(detalles.map(d => d.productoId === prod.id ? { ...d, qty: d.qty + 1, subtotal: (d.qty + 1) * d.price } : d));
+      setDetalles(detalles.map(d => d.productoId === prod.id ? { ...d, qty: Number(d.qty) + 1, subtotal: (Number(d.qty) + 1) * d.price } : d));
     } else {
-      setDetalles([...detalles, { productoId: prod.id, name: prod.name, qty: 1, price: prod.price, subtotal: prod.price }]);
+      
+      // INTERCEPCIÓN TÉCNICA: Motor de detección profunda de medida
+      // Atrapa variantes de base de datos y las unifica para la Interfaz (UI)
+      const esConsumo = prod.control_type === 'CONSUMO' || 
+                        prod.control_type === 'SERVICE' || 
+                        (prod as any).unit === 'CONSUMO' ||
+                        prod.category?.toUpperCase() === 'SERVICIOS';
+
+      setDetalles([...detalles, { 
+        productoId: prod.id, 
+        name: prod.name, 
+        qty: 1, 
+        price: prod.price, 
+        subtotal: prod.price,
+        // Asignación inteligente y segura:
+        control_type: esConsumo ? 'CONSUMO' : prod.control_type 
+      }]);
     }
     setSearchProd('');
   };
 
-  // LÓGICA DE EDICIÓN: Cambiar solo cantidades
-  const updateQty = (idProd: string, newQty: number) => {
-    if (newQty < 0) return;
-    setDetalles(detalles.map(d => d.productoId === idProd ? { ...d, qty: newQty, subtotal: newQty * d.price } : d));
+  // LÓGICA 1: Digitar Cantidad/Kilos -> Calcula Precio
+  const updateQty = (idProd: string, newQty: any) => {
+    setDetalles(detalles.map(d => {
+      if (d.productoId === idProd) {
+        let numericQty = Number(newQty);
+        if (numericQty < 0) return d;
+
+        // BARRERA DE SEGURIDAD: Si es UNIDAD, bloqueamos el ingreso de puntos decimales
+        if (d.control_type !== 'WEIGHT' && newQty.toString().includes('.')) {
+          return d; 
+        }
+
+        return { ...d, qty: newQty, subtotal: numericQty * d.price };
+      }
+      return d;
+    }));
+  };
+
+  // LÓGICA 2: Digitar Precio Directo -> Calcula Kilos (O acepta el total si es CONSUMO)
+  const updateSubtotalDirecto = (idProd: string, newSubtotal: any) => {
+    setDetalles(detalles.map(d => {
+      if (d.productoId === idProd) {
+        const numericSub = Number(newSubtotal);
+        if (numericSub < 0) return d;
+        
+        // REGLA PARA CONSUMO: La cantidad siempre es 1, solo cambia el dinero
+        if (d.control_type === 'CONSUMO' || d.control_type === 'SERVICE') {
+          return { 
+            ...d, 
+            qty: 1, 
+            subtotal: newSubtotal 
+          };
+        }
+
+        // Fórmula de mercado para KILOS: Peso = Dinero Pagado / Precio por Kilo
+        const calculatedQty = numericSub / d.price;
+        
+        return { 
+          ...d, 
+          qty: newSubtotal === '' ? '' : Number(calculatedQty.toFixed(3)), 
+          subtotal: newSubtotal 
+        };
+      }
+      return d;
+    }));
   };
 
   const removeProd = (idProd: string) => {
     setDetalles(detalles.filter(d => d.productoId !== idProd));
   };
 
-  const totalCalculado = detalles.reduce((acc, d) => acc + d.subtotal, 0);
+  // CÁLCULO BLINDADO: Fuerza la conversión a número antes de sumar
+  const totalCalculado = detalles.reduce((acc, d) => acc + Number(d.subtotal || 0), 0);
 
   const handleSave = async () => {
     if (!clienteSeleccionado) return alert('Selecciona un cliente.');
@@ -105,9 +163,9 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
           sale_id: venta.id,
           product_id: d.productoId,
           product_name: d.name,
-          quantity: d.qty,
+          quantity: Number(d.qty), // <-- Forzamos el tipo numérico técnico
           price_at_moment: d.price,
-          subtotal: d.subtotal,
+          subtotal: Number(d.subtotal), // <-- Forzamos el tipo numérico técnico
           is_synced: '1'
         }));
         await supabase.from('sale_details').insert(saleDetails);
@@ -130,11 +188,11 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
         for (const det of detalles) {
           const prod = productos.find(p => p.id === det.productoId);
           if (prod) {
-            await supabase.from('products').update({ quantity: prod.quantity - det.qty }).eq('id', prod.id);
+            await supabase.from('products').update({ quantity: prod.quantity - Number(det.qty) }).eq('id', prod.id);
             await supabase.from('inventory_movements').insert([{
               product_id: prod.id,
               product_name: prod.name,
-              change_amount: -det.qty,
+              change_amount: -Number(det.qty),
               operation_type: 'VENTA',
               reason: 'Venta a Crédito (Fiado)',
               is_synced: '1',
@@ -283,16 +341,59 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                     </div>
                     
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center border-2 border-[#E2E8F0]">
+                      
+                      {/* CAJA DE CANTIDAD / KILOS / CONSUMO */}
+                      <div className="flex flex-col items-center border-2 border-[#E2E8F0] overflow-hidden">
                         {isEdit ? (
-                          <span className="w-12 p-1 text-center text-xs font-black bg-[#F8FAFC] text-[#94A3B8]">{d.qty}</span>
+                          <span className="w-16 p-1 text-center text-xs font-black bg-[#F8FAFC] text-[#94A3B8]">{d.qty}</span>
+                        ) : d.control_type === 'CONSUMO' || d.control_type === 'SERVICE' ? (
+                          <span className="w-16 p-1 text-center text-xs font-black bg-[#F8FAFC] text-[#94A3B8] cursor-not-allowed">1</span>
                         ) : (
-                          <input type="number" value={d.qty} onChange={e => updateQty(d.productoId, Number(e.target.value))} className="w-12 p-1 text-center text-xs font-black outline-none" min={1} />
+                          <input 
+                            type="number" 
+                            step={d.control_type === 'WEIGHT' ? "any" : "1"}
+                            value={d.qty} 
+                            onChange={e => updateQty(d.productoId, e.target.value)} 
+                            className="w-16 p-1 text-center text-xs font-black outline-none bg-transparent placeholder:text-[#CBD5E1]" 
+                            min={0} 
+                            placeholder="0"
+                            title={d.control_type === 'WEIGHT' ? "Ingresar Kilos" : "Ingresar Unidades"}
+                          />
+                        )}
+                        {/* Indicador visual técnico de medida */}
+                        {d.control_type === 'WEIGHT' ? (
+                          <div className="bg-[#1E293B] text-white text-[8px] font-black w-full text-center tracking-widest py-0.5 uppercase">Kilo</div>
+                        ) : d.control_type === 'CONSUMO' || d.control_type === 'SERVICE' ? (
+                          <div className="bg-[#F59E0B] text-[#1E293B] text-[8px] font-black w-full text-center tracking-widest py-0.5 uppercase">Serv</div>
+                        ) : (
+                          <div className="bg-[#E2E8F0] text-[#64748B] text-[8px] font-black w-full text-center tracking-widest py-0.5 uppercase">Und</div>
                         )}
                       </div>
-                      <span className="text-xs font-black text-[#1E293B] w-16 text-right">S/ {d.subtotal.toFixed(2)}</span>
+                      
+                      {/* CAJA DE SUBTOTAL (Texto Fijo para UND, Input Editable para KILOS y CONSUMOS) */}
+                      {!isEdit && (d.control_type === 'WEIGHT' || d.control_type === 'CONSUMO' || d.control_type === 'SERVICE') ? (
+                        <div className="flex items-center border-b-2 border-[#1E293B] w-20 justify-end focus-within:border-[#F59E0B] transition-colors group">
+                          <span className="text-[10px] font-black text-[#1E293B] mr-1">S/</span>
+                          <input 
+                            type="number"
+                            step="any"
+                            value={d.subtotal}
+                            onChange={e => updateSubtotalDirecto(d.productoId, e.target.value)}
+                            className="w-full text-right text-xs font-black text-[#F59E0B] outline-none bg-transparent placeholder:text-[#CBD5E1]"
+                            placeholder="0.00"
+                            title={d.control_type === 'WEIGHT' ? "Ingresar precio directo (Calcula Kilos)" : "Ingresar precio del servicio"}
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-xs font-black text-[#1E293B] w-20 text-right">
+                          S/ {Number(d.subtotal).toFixed(2)}
+                        </span>
+                      )}
+
                       {!isEdit && (
-                        <button onClick={() => removeProd(d.productoId)} className="text-[#EF4444] hover:text-[#B91C1C]"><Trash2 size={16}/></button>
+                        <button onClick={() => removeProd(d.productoId)} className="text-[#EF4444] hover:bg-[#FEF2F2] p-1.5 transition-colors rounded-none border border-transparent hover:border-[#FEF2F2]">
+                          <Trash2 size={16}/>
+                        </button>
                       )}
                     </div>
                   </div>

@@ -8,9 +8,10 @@ export interface Cliente {
 export interface FiadoDetalle {
   productoId: string;
   name: string;
-  qty: number;
+  qty: number | string; // <-- CORREGIDO: Soporta el string vacío o puntos decimales en tránsito
   price: number;
-  subtotal: number;
+  subtotal: number | string; // <-- CORREGIDO: Soporta el string vacío en ingeniería inversa
+  control_type?: string; 
 }
 
 // NUEVO: Interfaz para guardar cada pago individual
