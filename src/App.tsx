@@ -12,6 +12,7 @@ import { POS } from './sections/Punto-de-venta';
 import { Fiados } from './sections/Fiados'; // <--- IMPORTAMOS FIADOS
 import { Finanzas } from './sections/Finanzas'; // <--- IMPORTAMOS FINANZAS
 import { Reportes } from './sections/Reportes';
+import { Utilidades } from './sections/Utilidades';
 export const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,6 +64,8 @@ export const App: React.FC = () => {
         return <Fiados />;
       case 'finanzas': // <--- CONECTAMOS LA PANTALLA DE FINANZAS
         return <Finanzas />;
+      case 'utilidades': 
+        return <Utilidades />;
       case 'reportes': 
         return <Reportes />;  
       case 'dashboard':

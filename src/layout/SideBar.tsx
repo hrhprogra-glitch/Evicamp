@@ -2,8 +2,8 @@
 import React from 'react';
 import { 
   LayoutDashboard, ShoppingCart, Users, Package, 
-  Truck, Trash2, Wallet, TrendingUp, 
-  FileText, Settings 
+  Truck, Trash2, Wallet, 
+  FileText, Settings, BarChart3 
 } from 'lucide-react';
 
 // IMPORTAMOS EL LOGO
@@ -39,7 +39,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
       category: 'Administración',
       items: [
         { id: 'finanzas', name: 'Finanzas', icon: Wallet },
-        { id: 'utilidades', name: 'Utilidades', icon: TrendingUp },
+        { id: 'utilidades', name: 'Utilidades', icon: BarChart3 },
         { id: 'reportes', name: 'Reportes', icon: FileText },
         { id: 'configuracion', name: 'Configuración', icon: Settings },
       ]
