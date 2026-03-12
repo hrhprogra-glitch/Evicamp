@@ -113,7 +113,11 @@ export const TopBar: React.FC<TopBarProps> = ({ toggleSidebar, userEmail, onNavi
         </div>
         
         <button 
-          onClick={() => supabase.auth.signOut()}
+          onClick={async () => {
+            await supabase.auth.signOut(); // Cierra sesión de Admin si la hay
+            localStorage.removeItem('empleado_session'); // Borra la memoria del empleado
+            window.location.reload();      // Limpia la memoria de React
+          }}
           className="px-4 py-1.5 border border-[#1E293B] bg-[#1E293B] text-[9px] font-black uppercase tracking-[0.2em] text-white hover:bg-transparent hover:text-red-600 hover:border-red-600 transition-colors rounded-none cursor-pointer flex items-center gap-2"
         >
           <LogOut size={12} />

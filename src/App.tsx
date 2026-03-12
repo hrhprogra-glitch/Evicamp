@@ -13,15 +13,35 @@ import { Fiados } from './sections/Fiados'; // <--- IMPORTAMOS FIADOS
 import { Finanzas } from './sections/Finanzas'; // <--- IMPORTAMOS FINANZAS
 import { Reportes } from './sections/Reportes';
 import { Utilidades } from './sections/Utilidades';
+import Configuraciones from './sections/Configuraciones';
+import Resumen from './sections/Resumen'; // <--- IMPORTAMOS EL NUEVO RESUMEN
 export const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
+  
+  // --- NUEVOS ESTADOS PARA EMPLEADOS Y PERMISOS ---
+  const [empleadoLogueado, setEmpleadoLogueado] = useState(false);
+  const [permisos, setPermisos] = useState<any>(null);
+  const [emailEmpleado, setEmailEmpleado] = useState<string>(''); // Para mostrar en el TopBar
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
   // Estado para el Enrutador Interno
-  const [currentView, setCurrentView] = useState<string>('dashboard');
+  const [currentView, setCurrentView] = useState<string>('resumen');
 
   useEffect(() => {
+    // 1. Revisar si hay un empleado guardado en la memoria del navegador (localStorage)
+    const empleadoGuardado = localStorage.getItem('empleado_session');
+    if (empleadoGuardado) {
+      const datos = JSON.parse(empleadoGuardado);
+      setPermisos(datos.permisos);
+      setEmailEmpleado(datos.email || 'EMPLEADO');
+      setEmpleadoLogueado(true);
+      setIsLoading(false);
+      return; // Si ya hay un empleado logueado, cortamos aquí
+    }
+
+    // 2. Si no hay empleado, verificamos si es el Admin Maestro (Supabase Auth)
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setIsLoading(false);
@@ -45,8 +65,23 @@ export const App: React.FC = () => {
     );
   }
 
-  if (!session) {
-    return <Login onLoginSuccess={() => {}} />;
+  // Función para cuando el login es exitoso (sea Admin Maestro o Empleado)
+  const handleLoginSuccess = (permisosObtenidos?: any, emailObtenido?: string) => {
+    if (permisosObtenidos) {
+      setPermisos(permisosObtenidos);
+      // Guardar en la memoria del navegador para que no se borre al recargar (F5)
+      localStorage.setItem('empleado_session', JSON.stringify({
+        permisos: permisosObtenidos,
+        email: emailObtenido || 'EMPLEADO'
+      }));
+      if (emailObtenido) setEmailEmpleado(emailObtenido);
+    }
+    setEmpleadoLogueado(true);
+  };
+
+  // Validamos: Si NO hay sesión oficial Y TAMPOCO hay un empleado logueado, mostramos el Login
+  if (!session && !empleadoLogueado) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
   // Motor de Renderizado Condicional
@@ -68,7 +103,10 @@ export const App: React.FC = () => {
         return <Utilidades />;
       case 'reportes': 
         return <Reportes />;  
-      case 'dashboard':
+      case 'configuracion': // <--- AÑADE ESTO
+      return <Configuraciones />;  
+      case 'resumen':
+        return <Resumen />;
         return (
           <div className="border border-[#E2E8F0] bg-[#FFFFFF] p-6 shadow-none">
             <h2 className="text-[#1E293B] font-mono text-lg uppercase font-bold border-b border-[#E2E8F0] pb-2 mb-4 flex items-center">
@@ -95,13 +133,15 @@ export const App: React.FC = () => {
         isOpen={isSidebarOpen} 
         currentView={currentView}
         onNavigate={setCurrentView}
+        // @ts-ignore: Ignoramos el error de TypeScript temporalmente hasta actualizar el SideBar
+        permisos={permisos} 
       />
       
       <main className="flex-1 flex flex-col overflow-auto bg-[#F8FAFC]">
         <TopBar 
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
-          userEmail={session.user?.email || 'USUARIO_AUTENTICADO'} 
-          onNavigate={setCurrentView} // <--- AÑADIDO
+          userEmail={session?.user?.email || emailEmpleado || 'EMPLEADO_AUTENTICADO'} 
+          onNavigate={setCurrentView} 
         />
         
         <section className="p-8 flex-1 overflow-y-auto">

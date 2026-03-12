@@ -1,24 +1,64 @@
 // src/layout/SideBar.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, ShoppingCart, Users, Package, 
   Truck, Trash2, Wallet, 
   FileText, Settings, BarChart3 
 } from 'lucide-react';
 
-// IMPORTAMOS EL LOGO
+// IMPORTAMOS EL LOGO Y SUPABASE
 import logoEvicamp from '../assets/logo.png';
+import { supabase } from '../db/supabase';
 
 interface SideBarProps {
   isOpen: boolean;
   currentView: string;
   onNavigate: (view: string) => void;
+  permisos?: any; // <--- AÑADIMOS LOS PERMISOS
 }
 
-export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigate }) => {
+export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigate, permisos }) => {
+  const [empresaData, setEmpresaData] = useState({ nombre: 'EVICAMP', logo: logoEvicamp });
+
+  useEffect(() => {
+    const fetchEmpresa = async () => {
+      try {
+        const { data, error } = await supabase.from('empresa_config').select('nombre_empresa, logo_url').limit(1).single();
+        if (data && !error) {
+          setEmpresaData({
+            nombre: data.nombre_empresa || 'EVICAMP',
+            logo: data.logo_url || logoEvicamp
+          });
+        }
+      } catch (error) {
+        console.error("Error cargando logo en sidebar", error);
+      }
+    };
+    fetchEmpresa();
+  }, []);
+
+  // Función para verificar si el empleado tiene acceso a un módulo
+  const tieneAcceso = (modulo: string) => {
+    // Si no se pasaron permisos (ej. es el Admin Maestro) o tiene acceso total, ve todo
+    if (!permisos || permisos.sistema_acceso_total) return true;
+
+    switch (modulo) {
+      case 'resumen': return true; // El dashboard inicial siempre se ve
+      case 'pos': return permisos.caja_realizar_ventas;
+      case 'fiados': return permisos.caja_ver_fiados;
+      case 'inventario': return permisos.almacen_ver_stock;
+      case 'proveedores': return permisos.almacen_gestionar_proveedores;
+      case 'mermas': return permisos.almacen_registrar_mermas;
+      case 'finanzas': return (permisos.caja_abrir_cerrar_turno || permisos.caja_ingresos_egresos);
+      case 'utilidades': return permisos.gerencia_ver_utilidades;
+      case 'reportes': return (permisos.reportes_ver_historial_ventas || permisos.reportes_ver_globales);
+      case 'configuracion': return permisos.gerencia_configuracion_sistema;
+      default: return false;
+    }
+  };
 
   // Modulos divididos por Categorías Lógicas con sus Iconos asignados
-  const menuGroups = [
+  const menuGroupsRaw = [
     {
       category: 'Operaciones',
       items: [
@@ -46,6 +86,14 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
     }
   ];
 
+  // Filtramos los items según los permisos. Si una categoría entera (ej. Administración) se queda sin items, se oculta.
+  const menuGroups = menuGroupsRaw
+    .map(group => ({
+      ...group,
+      items: group.items.filter(item => tieneAcceso(item.id))
+    }))
+    .filter(group => group.items.length > 0);
+
   return (
     <aside className={`${isOpen ? 'w-64' : 'w-20'} border-r border-[#E2E8F0] bg-white flex flex-col h-full shrink-0 transition-[width] duration-150 ease-out font-mono relative z-20 overflow-hidden`}>
       
@@ -58,16 +106,16 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
           <div className="flex items-center gap-3 overflow-hidden">
             {/* Logo en bloque técnico */}
             <div className="w-8 h-8 bg-white border border-[#10B981] flex items-center justify-center p-0.5 shrink-0">
-              <img src={logoEvicamp} alt="Logo Evicamp" className="w-full h-full object-contain" />
+              <img src={empresaData.logo} alt="Logo Empresa" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-white font-black tracking-[0.2em] text-lg uppercase whitespace-nowrap">
-              EVICAMP<span className="text-[#10B981]">.</span>
+              {empresaData.nombre}<span className="text-[#10B981]">.</span>
             </h1>
           </div>
         ) : (
           /* Logo centrado cuando la barra está colapsada */
           <div className="w-10 h-10 bg-white border border-[#10B981] flex items-center justify-center p-1 shrink-0">
-            <img src={logoEvicamp} alt="Logo Evicamp" className="w-full h-full object-contain" />
+            <img src={empresaData.logo} alt="Logo Empresa" className="w-full h-full object-contain" />
           </div>
         )}
         

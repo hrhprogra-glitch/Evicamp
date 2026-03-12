@@ -7,7 +7,7 @@ import imgProyectos from '../assets/proyectos.jpg';
 import imgInventario from '../assets/inventario.jpg';
 import imgFinanzas from '../assets/finanzas.jpg';
 interface LoginProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (permisos?: any, email?: string) => void;
 }
 
 // 1. AQUI AGREGAS LAS IMAGENES Y TEXTOS QUE ROTARÁN
@@ -37,7 +37,25 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [empresaData, setEmpresaData] = useState({ nombre: 'EVICAMP', logo: logoEvicamp });
   
+  useEffect(() => {
+    const fetchEmpresa = async () => {
+      try {
+        const { data, error } = await supabase.from('empresa_config').select('nombre_empresa, logo_url').limit(1).single();
+        if (data && !error) {
+          setEmpresaData({
+            nombre: data.nombre_empresa || 'EVICAMP',
+            logo: data.logo_url || logoEvicamp
+          });
+        }
+      } catch (error) {
+        console.error("Error cargando logo en login", error);
+      }
+    };
+    fetchEmpresa();
+  }, []);
+
   // Estado para controlar el carrusel de imágenes
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -59,16 +77,34 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       identificador = `${identificador}@evicamp.com`; 
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
+    // 1. Intentar entrar como Administrador Maestro (Auth oficial de Supabase)
+    const { error: authError } = await supabase.auth.signInWithPassword({
       email: identificador,
       password: password,
     });
 
-    if (error) {
-      setError('ERROR: CREDENCIALES INVÁLIDAS. ACCESO DENEGADO.');
-      setLoading(false);
+    if (!authError) {
+      // Si entra aquí, eres tú (el Admin Maestro). Te damos acceso total.
+      onLoginSuccess({ sistema_acceso_total: true });
+      return;
+    }
+
+    // 2. Si falla el Auth oficial, buscamos en tu tabla personalizada de 'empleados'
+    const { data: empleado } = await supabase
+      .from('empleados')
+      .select('*')
+      .eq('email', identificador)
+      .eq('password', password) // Validamos la clave que escribiste en el modal
+      .eq('estado', 'ACTIVO')    // Solo si el empleado no está bloqueado
+      .single();
+
+    if (empleado) {
+      // ¡Éxito! Es un empleado. Pasamos sus permisos y su email para guardarlos
+      onLoginSuccess(empleado.permisos, empleado.email);
     } else {
-      onLoginSuccess();
+      // Si no existe en ningún lado o la clave está mal
+      setError('ERROR: CREDENCIALES INVÁLIDAS O CUENTA INACTIVA.');
+      setLoading(false);
     }
   };
 
@@ -89,14 +125,11 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           <div className="mb-12">
             {/* LOGO + NOMBRE */}
             <div className="flex items-center gap-4">
-              {/* Descomenta la línea de abajo si ya importaste tu logo */}
-              <img src={logoEvicamp} alt="Logo" className="w-12 h-12 object-contain" /> 
-              
-              {/* Placeholder cuadrado por si aún no tienes el logo conectado */}
-              
+              {/* Logo Dinámico o por Defecto */}
+              <img src={empresaData.logo} alt="Logo Empresa" className="w-12 h-12 object-contain" /> 
               
               <h1 className="text-5xl font-black text-[#1E293B] uppercase tracking-tighter">
-                EVICAMP<span className="text-[#10B981]">.</span>
+                {empresaData.nombre}<span className="text-[#10B981]">.</span>
               </h1>
             </div>
 
