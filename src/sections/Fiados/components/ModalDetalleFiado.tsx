@@ -47,7 +47,7 @@ export const ModalDetalleFiado: React.FC<Props> = ({ isOpen, onClose, fiado }) =
                     <p className="text-xs font-black text-[#1E293B] uppercase">{d.name}</p>
                     <p className="text-[10px] font-bold text-[#64748B]">{d.qty} unid. x S/ {d.price.toFixed(2)}</p>
                   </div>
-                  <span className="text-sm font-black text-[#1E293B]">S/ {d.subtotal.toFixed(2)}</span>
+                  <span className="text-sm font-black text-[#1E293B]">S/ {Number(d.subtotal || 0).toFixed(2)}</span>
                 </div>
               ))
             )}

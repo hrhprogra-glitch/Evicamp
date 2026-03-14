@@ -252,8 +252,8 @@ export const DashboardResumen: React.FC = () => {
                  <CreditCard size={18} className="text-[#10B981]"/> Flujo por Método de Pago
                </h3>
             </div>
-            <div className="p-8 flex-1 h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="p-8 flex-1 w-full" style={{ minHeight: '350px' }}>
+              <ResponsiveContainer width="99%" height={350} minWidth={1}>
                 <BarChart data={flujoNeto} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
                   <XAxis dataKey="metodo" axisLine={{ stroke: '#1E293B', strokeWidth: 2 }} tick={{ fill: '#1E293B', fontSize: 11, fontWeight: 'bold', fontFamily: 'monospace' }} tickLine={false} />
