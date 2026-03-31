@@ -7,7 +7,7 @@ import type { TicketVenta } from './types';
 
 export const Reportes: React.FC = () => {
   const [tickets, setTickets] = useState<TicketVenta[]>([]);
-  const [totalAbonosHoy, setTotalAbonosHoy] = useState(0); // 🛡️ EVICAMP: Estado para guardar deudas cobradas
+  const [totalAbonos, setTotalAbonos] = useState(0);
   
   const hoy = new Date();
   const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
@@ -66,17 +66,43 @@ export const Reportes: React.FC = () => {
       let query = supabase.from('sales').select('*');
       
       if (fechaInicio && fechaFin) {
-        // 🛡️ PARCHE EVICAMP: Forzar Zona Horaria a Perú (UTC-5) para no desfasar ventas
-        const inicioUTC = new Date(`${fechaInicio}T00:00:00-05:00`).toISOString();
+        // 🛡️ PARCHE EVICAMP: Forzar Zona Horaria a Perú (UTC-5)
+        let inicioUTC = new Date(`${fechaInicio}T00:00:00-05:00`).toISOString();
         const finUTC = new Date(`${finAjustado}T00:00:00-05:00`).toISOString();
+
+        // 🔥 INGENIERÍA EVICAMP: Si el usuario busca "HOY", anclamos la hora al milisegundo en que se abrió la caja.
+        if (fechaInicio === hoyStr && fechaFin === hoyStr) {
+           const { data: caja } = await supabase.from('cash_sessions').select('opened_at').eq('status', 'OPEN').maybeSingle();
+           if (caja && caja.opened_at) {
+             inicioUTC = caja.opened_at;
+           }
+        }
         
-        query = query.gte('created_at', inicioUTC)
-                     .lt('created_at', finUTC);
+        query = query.gte('created_at', inicioUTC).lt('created_at', finUTC);
       } else {
         query = query.limit(100); // Si limpian filtros, traemos los últimos 100 por seguridad
       }
       
       const { data, error } = await query.order('created_at', { ascending: false });
+
+      // 🔥 INGENIERÍA EVICAMP: Buscar abonos de fiados EXACTAMENTE en el mismo rango de tiempo para igualar a Finanzas
+      let sumaAbonos = 0;
+      if (fechaInicio && fechaFin) {
+        let inicioUTC_abonos = new Date(`${fechaInicio}T00:00:00-05:00`).toISOString();
+        const finUTC_abonos = new Date(`${finAjustado}T00:00:00-05:00`).toISOString();
+        
+        // Sincronizar con el milisegundo exacto de la caja abierta
+        if (fechaInicio === hoyStr && fechaFin === hoyStr) {
+           const { data: caja } = await supabase.from('cash_sessions').select('opened_at').eq('status', 'OPEN').maybeSingle();
+           if (caja && caja.opened_at) inicioUTC_abonos = caja.opened_at;
+        }
+        
+        const { data: abonos } = await supabase.from('debt_payments').select('amount').gte('created_at', inicioUTC_abonos).lt('created_at', finUTC_abonos);
+        if (abonos) {
+          sumaAbonos = abonos.reduce((acc, a) => acc + Number(a.amount || 0), 0);
+        }
+      }
+      setTotalAbonos(sumaAbonos);
 
       if (data) {
         // PASO 2: Buscamos fiados (Optimizado por rango de fechas para no destruir el servidor)
@@ -205,31 +231,10 @@ export const Reportes: React.FC = () => {
     }
   };
 
-  // 🛡️ PARCHE EVICAMP: Inyectar lógica asíncrona para buscar pagos de fiados antiguos hechos en estas fechas
-  useEffect(() => {
-    const buscarPagosAntiguos = async () => {
-      const fechaFinExpandida = new Date(fechaFin);
-      fechaFinExpandida.setDate(fechaFinExpandida.getDate() + 1);
-      const finAjustado = fechaFinExpandida.toISOString().split('T')[0];
-
-      if (fechaInicio && fechaFin) {
-        const { data } = await supabase.from('debt_payments').select('amount')
-          .gte('created_at', `${fechaInicio}T00:00:00`)
-          .lt('created_at', `${finAjustado}T00:00:00`);
-        
-        if (data) {
-          const sumAbonos = data.reduce((acc, p) => acc + Number(p.amount || 0), 0);
-          setTotalAbonosHoy(sumAbonos);
-        }
-      }
-    };
-    buscarPagosAntiguos();
-  }, [fechaInicio, fechaFin]);
-
-  // Sumar ventas pagadas HOY + abonos de deudas pagados HOY
+  // 🔥 ARQUITECTURA UNIFICADA: Reportes suma las ventas del rango + los abonos de fiados cobrados en este mismo rango
   const ventasRango = tickets.filter(t => t.estado !== 'ANULADO').reduce((acc, t) => acc + Number(t.monto_pagado || 0), 0);
   const totalAnulados = tickets.filter(t => t.estado === 'ANULADO').length;
-  const granTotalIngresos = ventasRango + totalAbonosHoy;
+  const granTotalIngresos = ventasRango + totalAbonos;
 
   return (
     <div className="h-full flex flex-col gap-6 p-6 max-w-7xl mx-auto font-mono">
@@ -241,7 +246,7 @@ export const Reportes: React.FC = () => {
               <FileText className="text-[#3B82F6]" />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#64748B]">Ingresos Reales (Ventas + Deudas Cobradas)</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#64748B]">Ingresos Reales (Tickets + Fiados Cobrados)</p>
               <p className="text-2xl font-black text-[#1E293B]">S/ {granTotalIngresos.toFixed(2)}</p>
             </div>
           </div>
