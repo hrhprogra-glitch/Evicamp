@@ -146,7 +146,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         const { data: newBatch, error: batchError } = await supabase
           .from('batches')
           .insert([{
-            id: generatedId, // <-- INYECCIÓN FORZADA DEL ID
+            id: generatedId, 
             product_id: selectedProduct?.id,
             quantity: Number(cantidad), 
             initial_quantity: Number(cantidad),
@@ -154,7 +154,8 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
             cost_total: Number(costoTotal),
             cost_unit: Number(costoUnitario),
             document_ref: documento,
-            is_synced: '1'
+            is_synced: '1',
+            is_active: 1 // <--- 🔥 ¡ESTA ES LA LÍNEA MÁGICA QUE FALTABA!
           }])
           .select()
           .single();

@@ -39,23 +39,13 @@ export const TopBar: React.FC<TopBarProps> = ({ toggleSidebar, userEmail, onNavi
     // Ejecutamos la primera vez que carga la página
     fetchFiadosCount();
 
-    // 3. SUSCRIPCIÓN EN TIEMPO REAL
-    // Esto "escucha" a la base de datos y se actualiza al instante sin recargar la página
-    const channel = supabase
-      .channel('topbar-alertas')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'fiados' },
-        () => {
-          fetchFiadosCount(); // Vuelve a contar si alguien agrega, edita o elimina un fiado
-        }
-      )
-      .subscribe();
+    // NOTA DE INGENIERÍA: Se ha eliminado el bloque de "SUSCRIPCIÓN EN TIEMPO REAL"
+    // para adaptar el código a nuestra arquitectura de PostgreSQL Puro.
 
     // Limpieza al salir
     return () => {
       clearInterval(timer);
-      supabase.removeChannel(channel);
+      // También eliminamos el supabase.removeChannel(channel) de aquí
     };
   }, []);
 
@@ -113,16 +103,15 @@ export const TopBar: React.FC<TopBarProps> = ({ toggleSidebar, userEmail, onNavi
         </div>
         
         <button 
-          onClick={async () => {
-            await supabase.auth.signOut(); // Cierra sesión de Admin si la hay
-            localStorage.removeItem('empleado_session'); // Borra la memoria del empleado
-            window.location.reload();      // Limpia la memoria de React
-          }}
-          className="px-5 py-2 border border-[#1E293B] bg-[#1E293B] text-xs font-black uppercase tracking-[0.2em] text-white hover:bg-transparent hover:text-red-600 hover:border-red-600 transition-colors rounded-none cursor-pointer flex items-center gap-2"
-        >
-          <LogOut size={12} />
-          <span className="hidden md:inline">SALIDA</span>
-        </button>
+  onClick={() => {
+    localStorage.removeItem('empleado_session'); // Borramos la memoria local
+    window.location.reload();                    // Recargamos la página
+  }}
+  className="px-5 py-2 border border-[#1E293B] bg-[#1E293B] text-xs font-black uppercase tracking-[0.2em] text-white hover:bg-transparent hover:text-red-600 hover:border-red-600 transition-colors rounded-none cursor-pointer flex items-center gap-2"
+>
+  <LogOut size={12} />
+  <span className="hidden md:inline">SALIDA</span>
+</button>
 
       </div>
     </header>

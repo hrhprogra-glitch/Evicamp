@@ -93,11 +93,14 @@ const [searchQuery, setSearchQuery] = useState('');
       const { data: session } = await supabase.from('cash_sessions').select('id').eq('status', 'OPEN').maybeSingle();
       setHasOpenSession(!!session);
       // 🛡️ PARCHE DE ARQUITECTURA: Romper el límite de 1000 filas de Supabase
-      const { data } = await supabase.from('products').select('*').limit(15000).order('name', { ascending: true });
+      const { data } = await supabase.from('products')
+        .select('*')
+        .limit(15000)
+        .order('name', { ascending: true });
+        
       if (data) {
-        // 🛡️ ESCUDO EVICAMP: Filtramos los productos eliminados o "fantasmas"
-        const productosActivos = data.filter((p: any) => p.is_active !== 0);
-        const mapeados: Product[] = productosActivos.map((p: any) => ({
+        // 🛡️ ESCUDO REMOVIDO: Ahora cargamos todos los productos, incluso los inactivos o agotados
+        const mapeados: Product[] = data.map((p: any) => ({
           id: p.id,
           name: p.name || 'SIN NOMBRE',
           price: Number(p.price) || 0,

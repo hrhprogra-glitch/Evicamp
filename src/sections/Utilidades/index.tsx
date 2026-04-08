@@ -47,127 +47,162 @@ export const Utilidades: React.FC = () => {
   useEffect(() => {
     const procesarEstadisticas = async () => {
       setIsLoading(true);
+      
+      const fechaInicioISO = new Date(`${fechaInicio}T00:00:00.000Z`).toISOString();
       const fechaFinExpandida = new Date(fechaFin);
       fechaFinExpandida.setDate(fechaFinExpandida.getDate() + 1);
-      const finAjustado = fechaFinExpandida.toISOString().split('T')[0];
+      const finAjustadoISO = new Date(`${fechaFinExpandida.toISOString().split('T')[0]}T00:00:00.000Z`).toISOString();
 
-      // EVITAMOS EL JOIN Y EVITAMOS LA URL LARGA PROCESANDO EN LOTES DE 150
-      const [ { data: sales }, { data: products }, { data: waste }, { data: movements } ] = await Promise.all([
-        supabase.from('sales').select('id, total, created_at, sunat_status').gte('created_at', `${fechaInicio}T00:00:00`).lt('created_at', `${finAjustado}T00:00:00`).neq('sunat_status', 'ANULADO'),
-        supabase.from('products').select('*'),
-        supabase.from('waste').select('*').gte('created_at', `${fechaInicio}T00:00:00`).lt('created_at', `${finAjustado}T00:00:00`),
-        supabase.from('cash_movements').select('*').gte('created_at', `${fechaInicio}T00:00:00`).lt('created_at', `${finAjustado}T00:00:00`)
-      ]);
-
-      const facturas = sales || [];
-      let detalles: any[] = [];
-      
-      // Procesamiento por Lotes (Chunking): Seguro, rápido y no colapsa el servidor
-      if (facturas.length > 0) {
-        const saleIds = facturas.map(s => s.id);
-        const chunkSize = 150; // Límite de seguridad estricto para la URL
-        for (let i = 0; i < saleIds.length; i += chunkSize) {
-          const chunk = saleIds.slice(i, i + chunkSize);
-          const { data: chunkDetails } = await supabase
-            .from('sale_details')
+      try {
+        // 1. Traemos todo menos los detalles
+        const [ 
+          { data: sales, error: errSales }, 
+          { data: products, error: errProd }, 
+          { data: waste, error: errWaste }, 
+          { data: movements, error: errMov } 
+        ] = await Promise.all([
+          supabase.from('sales')
+            .select('id, total, created_at, sunat_status')
+            .gte('created_at', fechaInicioISO)
+            .lt('created_at', finAjustadoISO)
+            .neq('sunat_status', 'ANULADO'),
+          supabase.from('products').select('*'),
+          supabase.from('waste')
             .select('*')
-            .in('sale_id', chunk);
-          if (chunkDetails) detalles = [...detalles, ...chunkDetails];
+            .gte('created_at', fechaInicioISO)
+            .lt('created_at', finAjustadoISO),
+          supabase.from('cash_movements')
+            .select('*')
+            .gte('created_at', fechaInicioISO)
+            .lt('created_at', finAjustadoISO)
+        ]);
+
+        if (errSales || errProd || errWaste || errMov) {
+          console.error("Error cargando base utilidades:", { errSales, errProd, errWaste, errMov });
+          setIsLoading(false);
+          return;
         }
+
+        const facturas = sales || [];
+        const catalogo = products || [];
+        const mermas = waste || [];
+        const movsCaja = movements || [];
+
+        // 2. Chunking Micro-Lotes (Súper Seguro para Nginx)
+        let detalles: any[] = [];
+        if (facturas.length > 0) {
+          // 🛡️ CORRECCIÓN: Dejamos el ID en su formato original (número)
+          const saleIds = facturas.map(f => f.id); 
+          const chunkSize = 30; // Lotes pequeños de 30 en 30
+          
+          for (let i = 0; i < saleIds.length; i += chunkSize) {
+            const chunk = saleIds.slice(i, i + chunkSize);
+            if (chunk.length > 0) {
+              const { data: chunkDetails, error: errChunk } = await supabase
+                .from('sale_details')
+                .select('*')
+                .in('sale_id', chunk);
+              
+              if (errChunk) {
+                console.error("❌ Error descargando detalles (Chunk):", errChunk);
+              }
+              if (chunkDetails && chunkDetails.length > 0) {
+                detalles = [...detalles, ...chunkDetails];
+              }
+            }
+          }
+        }
+
+        // 3. Cruce estricto respetando el tipo original
+        const idsFacturasValidas = new Set(facturas.map(f => f.id));
+        const detallesValidos = detalles.filter(d => idsFacturasValidas.has(d.sale_id));
+
+        // Calcular gastos operativos de Finanzas (Solo EGRESOS de la caja INTERNA)
+        let totalGastos = 0;
+        movsCaja.forEach(m => {
+          if (m.type === 'EGRESO' && (m.flujo === 'INTERNO' || !m.flujo)) {
+            totalGastos += Number(m.amount);
+          }
+        });
+        setGastosCaja(totalGastos);
+
+        const mapDias: Record<string, MetricaDia> = {};
+        facturas.forEach(sale => {
+          const fechaLocal = new Date(sale.created_at).toLocaleDateString('es-PE');
+          if (!mapDias[fechaLocal]) mapDias[fechaLocal] = { fecha: fechaLocal, total: 0, tickets: 0 };
+          mapDias[fechaLocal].total += Number(sale.total);
+          mapDias[fechaLocal].tickets += 1;
+        });
+        setMetricasDia(Object.values(mapDias).sort((a, b) => b.total - a.total));
+
+        const mapaAnalisis: Record<string, AnalisisProducto> = {};
+        catalogo.forEach(p => {
+          const infoBusqueda = `${p.control_type} ${p.unit} ${p.category} ${p.name}`.toLowerCase();
+          const esConsumo = infoBusqueda.includes('consumo');
+
+          mapaAnalisis[p.id] = {
+            id: p.id, nombre: p.name, categoria: p.category || 'SIN CATEGORÍA', estado: '',
+            stockActual: Number(p.quantity) || 0, 
+            tipoControl: esConsumo ? 'CONSUMO' : 'STOCK', 
+            unidadesVendidas: 0, ingresosTotales: 0, costoTotalVentas: 0, unidadesMerma: 0, perdidaMerma: 0, utilidadReal: 0, margen: 0
+          };
+        });
+
+        // Aplicamos los cálculos sobre los detalles válidos
+        detallesValidos.forEach(d => {
+          if (!mapaAnalisis[d.product_id]) return;
+          const prod = mapaAnalisis[d.product_id];
+          prod.unidadesVendidas += Number(d.quantity);
+          prod.ingresosTotales += Number(d.subtotal);
+          const costoUsar = d.cost_at_moment ? Number(d.cost_at_moment) : Number(catalogo.find(c => c.id === d.product_id)?.cost_price || 0);
+          prod.costoTotalVentas += (Number(d.quantity) * costoUsar);
+        });
+
+        mermas.forEach(w => {
+          if (!mapaAnalisis[w.product_id]) return;
+          const prod = mapaAnalisis[w.product_id];
+          prod.unidadesMerma += Number(w.quantity);
+          prod.perdidaMerma += Number(w.total_loss);
+        });
+
+        const resultadoAnalisis: AnalisisProducto[] = [];
+        Object.values(mapaAnalisis).forEach(prod => {
+          prod.utilidadReal = prod.ingresosTotales - prod.costoTotalVentas - prod.perdidaMerma;
+          prod.margen = prod.ingresosTotales > 0 ? (prod.utilidadReal / prod.ingresosTotales) * 100 : (prod.utilidadReal < 0 ? -100 : 0);
+          resultadoAnalisis.push(prod);
+        });
+
+        const maxVentas = Math.max(...resultadoAnalisis.map(p => p.unidadesVendidas), 1);
+        
+        resultadoAnalisis.forEach(prod => {
+          if (prod.unidadesVendidas === 0) {
+            prod.estado = 'SIN VENTAS';
+          } else if (prod.unidadesVendidas >= maxVentas * 0.4) {
+            prod.estado = 'BUENO';
+          } else if (prod.unidadesVendidas >= maxVentas * 0.1) {
+            prod.estado = 'REGULAR';
+          } else {
+            prod.estado = 'BAJO';
+          }
+        });
+
+        setAnalisisCompleto(resultadoAnalisis.sort((a, b) => b.utilidadReal - a.utilidadReal));
+
+        const topCat: Record<string, MetricaCategoria> = {};
+        resultadoAnalisis.forEach(r => {
+          if (!topCat[r.categoria]) topCat[r.categoria] = { categoria: r.categoria, cantidadVendida: 0, totalRecaudado: 0 };
+          topCat[r.categoria].cantidadVendida += r.unidadesVendidas;
+          topCat[r.categoria].totalRecaudado += r.ingresosTotales;
+        });
+        
+        setMetricasCat(Object.values(topCat).filter(c => c.cantidadVendida > 0).sort((a, b) => b.totalRecaudado - a.totalRecaudado));
+        setMetricasProd(resultadoAnalisis.filter(r => r.unidadesVendidas > 0).map(r => ({ id: r.id, nombre: r.nombre, cantidadVendida: r.unidadesVendidas, totalRecaudado: r.ingresosTotales })).sort((a, b) => b.totalRecaudado - a.totalRecaudado).slice(0, 50));
+
+      } catch (err) {
+        console.error("Error crítico en utilidades:", err);
+      } finally {
+        setIsLoading(false);
       }
-      const catalogo = products || [];
-      const mermas = waste || [];
-      const movsCaja = movements || [];
-
-      // Calcular gastos operativos de Finanzas (Solo EGRESOS de la caja INTERNA)
-      let totalGastos = 0;
-      movsCaja.forEach(m => {
-        if (m.type === 'EGRESO' && (m.flujo === 'INTERNO' || !m.flujo)) {
-          totalGastos += Number(m.amount);
-        }
-      });
-      setGastosCaja(totalGastos);
-
-      const mapDias: Record<string, MetricaDia> = {};
-      facturas.forEach(sale => {
-        const fechaLocal = new Date(sale.created_at).toLocaleDateString('es-PE');
-        if (!mapDias[fechaLocal]) mapDias[fechaLocal] = { fecha: fechaLocal, total: 0, tickets: 0 };
-        mapDias[fechaLocal].total += Number(sale.total);
-        mapDias[fechaLocal].tickets += 1;
-      });
-      setMetricasDia(Object.values(mapDias).sort((a, b) => b.total - a.total));
-
-      const mapaAnalisis: Record<string, AnalisisProducto> = {};
-      catalogo.forEach(p => {
-        // Creamos un texto largo con toda la info del producto para buscar "consumo" ahí
-        const infoBusqueda = `${p.control_type} ${p.unit} ${p.category} ${p.name}`.toLowerCase();
-        const esConsumo = infoBusqueda.includes('consumo');
-
-        mapaAnalisis[p.id] = {
-          id: p.id, nombre: p.name, categoria: p.category || 'SIN CATEGORÍA', estado: '',
-          stockActual: Number(p.quantity) || 0, 
-          tipoControl: esConsumo ? 'CONSUMO' : 'STOCK', // Si encuentra la palabra, lo marca como CONSUMO
-          unidadesVendidas: 0, ingresosTotales: 0, costoTotalVentas: 0, unidadesMerma: 0, perdidaMerma: 0, utilidadReal: 0, margen: 0
-        };
-      });
-
-      detalles.forEach(d => {
-        if (!mapaAnalisis[d.product_id]) return;
-        const prod = mapaAnalisis[d.product_id];
-        prod.unidadesVendidas += Number(d.quantity);
-        prod.ingresosTotales += Number(d.subtotal);
-        const costoUsar = d.cost_at_moment ? Number(d.cost_at_moment) : Number(catalogo.find(c => c.id === d.product_id)?.cost_price || 0);
-        prod.costoTotalVentas += (Number(d.quantity) * costoUsar);
-      });
-
-      mermas.forEach(w => {
-        if (!mapaAnalisis[w.product_id]) return;
-        const prod = mapaAnalisis[w.product_id];
-        prod.unidadesMerma += Number(w.quantity);
-        prod.perdidaMerma += Number(w.total_loss);
-      });
-
-      const resultadoAnalisis: AnalisisProducto[] = [];
-      Object.values(mapaAnalisis).forEach(prod => {
-        // Mostramos SIEMPRE todos los productos del inventario para poder analizarlos
-        prod.utilidadReal = prod.ingresosTotales - prod.costoTotalVentas - prod.perdidaMerma;
-        prod.margen = prod.ingresosTotales > 0 ? (prod.utilidadReal / prod.ingresosTotales) * 100 : (prod.utilidadReal < 0 ? -100 : 0);
-        resultadoAnalisis.push(prod);
-      });
-
-      // --- NUEVA LÓGICA: CÁLCULO DE ESTADO POR ROTACIÓN DE VENTAS ---
-      // Buscamos cuál es el producto que más se vendió para comparar a los demás con él
-      const maxVentas = Math.max(...resultadoAnalisis.map(p => p.unidadesVendidas), 1);
-      
-      resultadoAnalisis.forEach(prod => {
-        if (prod.unidadesVendidas === 0) {
-          prod.estado = 'SIN VENTAS'; // Tuvo merma pero no se vendió nada
-        } else if (prod.unidadesVendidas >= maxVentas * 0.4) {
-          // Si vende al menos el 40% de lo que vende tu producto estrella
-          prod.estado = 'BUENO';
-        } else if (prod.unidadesVendidas >= maxVentas * 0.1) {
-          // Si vende entre el 10% y el 40%
-          prod.estado = 'REGULAR';
-        } else {
-          // Si vende menos del 10% de lo que vende tu producto estrella
-          prod.estado = 'BAJO';
-        }
-      });
-      // -------------------------------------------------------------
-
-      setAnalisisCompleto(resultadoAnalisis.sort((a, b) => b.utilidadReal - a.utilidadReal));
-
-      const topCat: Record<string, MetricaCategoria> = {};
-      resultadoAnalisis.forEach(r => {
-        if (!topCat[r.categoria]) topCat[r.categoria] = { categoria: r.categoria, cantidadVendida: 0, totalRecaudado: 0 };
-        topCat[r.categoria].cantidadVendida += r.unidadesVendidas;
-        topCat[r.categoria].totalRecaudado += r.ingresosTotales;
-      });
-      // Filtramos para que los "Top Rankings" de arriba solo muestren los que sí tuvieron ventas reales (>0)
-      setMetricasCat(Object.values(topCat).filter(c => c.cantidadVendida > 0).sort((a, b) => b.totalRecaudado - a.totalRecaudado));
-      setMetricasProd(resultadoAnalisis.filter(r => r.unidadesVendidas > 0).map(r => ({ id: r.id, nombre: r.nombre, cantidadVendida: r.unidadesVendidas, totalRecaudado: r.ingresosTotales })).sort((a, b) => b.totalRecaudado - a.totalRecaudado).slice(0, 50));
-
-      setIsLoading(false);
     };
 
     procesarEstadisticas();

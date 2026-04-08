@@ -42,7 +42,7 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
     setIsSaving(true); // Activa el escudo inmediatamente
     try {
       // 1. Obtener la sesión activa PRIMERO para que el Reporte lo reconozca
-      const { data: session } = await supabase.from('cash_sessions').select('id').eq('status', 'OPEN').single();
+      const { data: session } = await supabase.from('cash_sessions').select('id').eq('status', 'OPEN').maybeSingle()
 
       // 2. Insertar el Pago en el historial (Atando el session_id para los Reportes)
       const { error: pagoError } = await supabase.from('debt_payments').insert([{

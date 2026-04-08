@@ -40,14 +40,14 @@ export const TablaLotes: React.FC<Props> = ({
     const fetchLotes = async () => {
       setLoading(true);
       try {
-        // 🛡️ OPTIMIZACIÓN: JOIN con products + Filtro Geométrico (> 0)
+        // 🛡️ OPTIMIZACIÓN: Ocultamos los lotes que fueron eliminados (is_active: 0)
         const { data, error } = await supabase
           .from('batches')
           .select(`
             *,
             products!batches_product_id_fkey (*)
           `)
-          .gt('quantity', 0) // <-- ESTE ES EL FILTRO ESTRICTO QUE OCULTA LOS LOTES VACÍOS
+          .neq('is_active', 0) // 🔥 EL ESCUDO: Ya no descarga los eliminados
           .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -103,12 +103,26 @@ export const TablaLotes: React.FC<Props> = ({
   }, [nuevoLoteInyectado]);
 
   // === MOTOR DE FILTRADO Y ORDENAMIENTO PARA LOS LOTES ===
+  // 🔥 INTELIGENCIA DE BÚSQUEDA: Detectar si hay un producto que se llame EXACTAMENTE igual a lo que se busca
+  const qLimpio = searchQuery.toLowerCase().trim();
+  const existeCoincidenciaExacta = lotes.some(l => l.product_name.toLowerCase().trim() === qLimpio);
+
   const filteredLotes = lotes.filter(lote => {
     // 1. Filtro de Búsqueda de Texto
     if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      if (!lote.product_name.toLowerCase().includes(q) && !lote.document_ref.toLowerCase().includes(q)) {
-        return false;
+      const nombreLote = lote.product_name.toLowerCase().trim();
+      const refLote = (lote.document_ref || '').toLowerCase().trim();
+
+      if (existeCoincidenciaExacta) {
+        // MODO ESTRICTO: Si escribiste el nombre completo (o usaste el botón Ver Historial), aísla solo ese producto.
+        if (nombreLote !== qLimpio && !refLote.includes(qLimpio)) {
+          return false;
+        }
+      } else {
+        // MODO PARCIAL: Si estás escribiendo a medias, busca todas las posibles coincidencias.
+        if (!nombreLote.includes(qLimpio) && !refLote.includes(qLimpio)) {
+          return false;
+        }
       }
     }
     
@@ -326,25 +340,56 @@ export const TablaLotes: React.FC<Props> = ({
           onClick={async () => {
             if (window.confirm(`MANTENIMIENTO DE INTEGRIDAD\n\n¿Confirma el retiro del lote de "${lote.product_name}"?\n\nEsta acción descargará el stock actual pero mantendrá intacto el historial de ventas, utilidades y contabilidad.`)) {
               try {
-                // 1. EJECUCIÓN TÉCNICA: Borrado Lógico mediante Supabase RPC
-                const { error } = await supabase.rpc('soft_delete_batch', {
-                  p_batch_id: lote.id,
-                  p_user_name: 'Admin'
-                });
-                
-                if (error) throw error;
+                // PASO 1: Desactivar el lote (Borrado lógico)
+                const { error: errLote } = await supabase
+                  .from('batches')
+                  .update({ is_active: 0, quantity: 0 })
+                  .eq('id', lote.id);
+                if (errLote) throw errLote;
 
-                // 2. Sincronizar memoria visual (TablaProductos)
+                // PASO 2: Recalcular y actualizar el stock global del producto
+                const { data: lotesActivos } = await supabase
+                  .from('batches')
+                  .select('quantity')
+                  .eq('product_id', lote.product_id)
+                  .eq('is_active', 1);
+
+                const nuevoStock = lotesActivos ? lotesActivos.reduce((sum, l) => sum + Number(l.quantity || 0), 0) : 0;
+
+                const { error: errProd } = await supabase
+                  .from('products')
+                  .update({ quantity: nuevoStock })
+                  .eq('id', lote.product_id);
+                if (errProd) throw errProd;
+
+                // PASO 3: Registrar el movimiento en el historial
+                const { error: errMov } = await supabase
+                  .from('inventory_movements')
+                  .insert([{
+                    batch_id: String(lote.id),
+                    product_id: lote.product_id,
+                    product_name: lote.product_name,
+                    change_amount: -Number(lote.quantity),
+                    previous_quantity: Number(lote.quantity),
+                    new_quantity: 0,
+                    operation_type: 'AJUSTE',
+                    reason: 'Eliminación de Lote',
+                    user: 'Admin',
+                    is_synced: '1'
+                  }]);
+                if (errMov) throw errMov;
+
+                // 4. Sincronizar memoria visual
                 if (onLoteDeleted) {
                   onLoteDeleted(lote.product_id, Number(lote.quantity));
                 }
 
-                // 3. Remover el lote oculto de la pantalla actual
+                // 5. Remover el lote de la pantalla actual
                 setLotes(prev => prev.filter(l => l.id !== lote.id));
                 
               } catch (err: any) {
                 console.error("[ DB ERROR ]:", err);
-                alert("⚠️ ERROR DE RED: No se pudo procesar la solicitud de retiro técnico.");
+                alert("⚠️ ERROR: No se pudo procesar la solicitud de retiro técnico.");
               }
             }
           }}

@@ -249,8 +249,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           control_type: nature === 'PESO' ? 'WEIGHT' : 'UND',
           weight_unit: nature === 'PESO' ? formData.weightUnit : null,
           unit: unidadAsignada,
-          image_url: formData.image, // Agregado para que guarde la imagen en creación
-          is_synced: '1'
+          image_url: formData.image, 
+          is_synced: '1',
+          is_active: 1 // <--- 🔥 ¡SEGUNDA LÍNEA MÁGICA PARA LOS PRODUCTOS!
         }]).select().single();
 
         if (error) throw error;

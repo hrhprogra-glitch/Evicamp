@@ -131,11 +131,26 @@ if (fiaData) {
     
     if (window.confirm(`⚠️ ANULACIÓN TÉCNICA: ¿Seguro que deseas anular este pago de S/ ${montoRestaurar.toFixed(2)}?`)) {
       try {
-        // 1. ELIMINACIÓN MAESTRA: Al borrar el pago, el nuevo Trigger SQL de la Base de Datos recalcula y restaura la deuda automáticamente.
+        // 1. ELIMINACIÓN MAESTRA: Borra el pago de la deuda
         await supabase.from('debt_payments').delete().eq('id', pagoId);
 
-        // 2. RECARGAR DATOS: Al descargar de nuevo, Finanzas ya no verá el pago y Fiados mostrará la deuda de vuelta.
-        alert("✅ Anulación completada: La deuda se restauró y el ingreso desapareció de Finanzas automáticamente.");
+        // 2. LIMPIEZA DE CAJA: Destruimos el "movimiento fantasma" comparando numéricamente para evitar fallos de Base de Datos
+        const { data: movs } = await supabase.from('cash_movements').select('id, amount').eq('flujo', 'INGRESO_FIADO');
+        const exactMov = movs?.find(m => Math.abs(Number(m.amount) - Number(montoRestaurar)) < 0.01);
+        if (exactMov) {
+          await supabase.from('cash_movements').delete().eq('id', exactMov.id);
+        }
+
+        // 3. ACTUALIZAR TABLA FIADOS: Restamos el dinero del "paid_amount" para arreglar Reportes
+        const { data: fiadoReal } = await supabase.from('fiados').select('paid_amount, amount').eq('id', fiadoAAnular.id).maybeSingle();
+        if (fiadoReal) {
+          const nuevoPagado = Math.max(0, Number(fiadoReal.paid_amount || 0) - montoRestaurar);
+          const nuevoEstado = (Number(fiadoReal.amount || 0) - nuevoPagado) <= 0.05 ? 'CANCELADO' : 'PENDIENTE';
+          await supabase.from('fiados').update({ paid_amount: nuevoPagado, status: nuevoEstado }).eq('id', fiadoAAnular.id);
+        }
+
+        // 4. RECARGAR DATOS
+        alert("✅ Anulación completada: La deuda se restauró y el ingreso desapareció de Finanzas, Caja y Reportes automáticamente.");
         setIsModalAnularOpen(false);
         await cargarDatos(); 
       } catch (error) {
@@ -236,7 +251,17 @@ if (fiaData) {
   // ------------------------------------
 
   const totalPorCobrar = fiados.reduce((acc, f) => acc + f.saldoPendiente, 0);
-  const totalRecuperado = fiados.reduce((acc, f) => acc + (f.montoOriginal - f.saldoPendiente), 0);
+  
+  // 🔥 NUEVO: Filtrar los pagos para sumar solo lo recuperado en el día de HOY (Con protección TypeScript)
+  const fechaHoyStr = new Date().toLocaleDateString('es-PE');
+  const totalRecuperadoHoy = fiados.reduce((totalGlobal, fiado) => {
+    // Agregamos (fiado.pagos || []) para evitar el error de 'undefined'
+    const pagadoHoy = (fiado.pagos || []).reduce((totalFiado, pago) => {
+      const fechaPagoStr = new Date(pago.fecha).toLocaleDateString('es-PE');
+      return fechaPagoStr === fechaHoyStr ? totalFiado + pago.monto : totalFiado;
+    }, 0);
+    return totalGlobal + pagadoHoy;
+  }, 0);
 
   return (
     <div className="h-full flex flex-col gap-6 p-6 max-w-7xl mx-auto font-mono">
@@ -254,8 +279,8 @@ if (fiaData) {
           <div className="flex-1 bg-white border-2 border-[#E2E8F0] shadow-[4px_4px_0_0_#E2E8F0] p-4 flex gap-4 items-center rounded-none">
             <div className="w-12 h-12 bg-[#ECFDF5] border-2 border-[#10B981] flex items-center justify-center rounded-none"><Coins className="text-[#10B981]" /></div>
             <div>
-              <p className="text-xs font-black uppercase tracking-widest text-[#64748B]">Recuperado</p>
-              <p className="text-4xl font-black text-[#10B981] tracking-tight">S/ {totalRecuperado.toFixed(2)}</p>
+              <p className="text-xs font-black uppercase tracking-widest text-[#64748B]">Recuperado Hoy</p>
+              <p className="text-4xl font-black text-[#10B981] tracking-tight">S/ {totalRecuperadoHoy.toFixed(2)}</p>
             </div>
           </div>
         </div>

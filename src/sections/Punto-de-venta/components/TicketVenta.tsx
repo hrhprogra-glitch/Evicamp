@@ -248,22 +248,22 @@ export const TicketVenta: React.FC<Props> = ({
         )}
       </div>
 
-      {/* ZONA DE COBRO CON MATEMÁTICAS REALES */}
-      <div className="bg-[#F8FAFC] shrink-0 p-6 flex flex-col gap-4">
+      {/* ZONA DE COBRO CON MATEMÁTICAS REALES (MODIFICADA) */}
+      <div className="bg-[#F8FAFC] shrink-0 p-4 flex flex-col gap-2">
 
-        <div className="flex justify-between items-end mt-1">
-          <span className="text-sm font-black uppercase tracking-[0.2em] text-[#1E293B]">TOTAL A COBRAR</span>
-          <span className="text-5xl font-black text-[#10B981] tracking-tighter">
-            <span className="text-2xl">S/</span> {total.toFixed(2)}
+        <div className="flex justify-between items-end mt-0">
+          <span className="text-xs font-black uppercase tracking-[0.1em] text-[#1E293B]">TOTAL A COBRAR</span>
+          <span className="text-4xl font-black text-[#10B981] tracking-tighter leading-none">
+            <span className="text-xl">S/</span> {total.toFixed(2)}
           </span>
         </div>
         
         <button 
           onClick={onPagar} // <--- ONCLICK CONECTADO AQUÍ
           disabled={cart.length === 0}
-          className="w-full mt-2 bg-[#10B981] text-[#1E293B] py-5 border-2 border-[#1E293B] font-black text-base uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-[#1E293B] hover:text-[#10B981] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+          className="w-full mt-1 bg-[#10B981] text-[#1E293B] py-3 border-2 border-[#1E293B] font-black text-sm uppercase tracking-[0.1em] flex items-center justify-center gap-2 hover:bg-[#1E293B] hover:text-[#10B981] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shadow-[3px_3px_0_0_#1E293B] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px]"
         >
-          <Banknote size={20} /> Proceder al Pago (F4)
+          <Banknote size={18} /> Proceder al Pago (F4)
         </button>
       </div>
     </div>

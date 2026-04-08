@@ -46,16 +46,29 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
 
   // LÓGICA DE INVENTARIO: Buscar y Agregar
   // Añadimos p.name ? para asegurarnos de que el producto tiene nombre antes de buscar
-  const prodFiltrados = searchProd.trim() === '' ? [] : productos.filter(p => p.name && p.name.toLowerCase().includes(searchProd.toLowerCase())).slice(0, 5);
+  // 🔥 FILTRO DE SEGURIDAD: Solo mostramos productos que tengan stock físico
+  const prodFiltrados = searchProd.trim() === '' ? [] : productos.filter(p => 
+    p.name && 
+    p.name.toLowerCase().includes(searchProd.toLowerCase()) &&
+    p.quantity > 0 // <--- Solo productos con stock
+  ).slice(0, 5);
 
   const agregarProducto = (prod: Product) => {
+    // 🚫 BLOQUEO DE SEGURIDAD: Evitar agregar si no hay stock
+    if (prod.quantity <= 0) {
+      alert(`⚠️ PRODUCTO AGOTADO\n\nNo puedes fiar "${prod.name}" porque no hay existencias en el inventario.`);
+      return;
+    }
+
     const existe = detalles.find(d => d.productoId === prod.id);
     if (existe) {
+      // Validar si al sumar 1 excedemos el stock
+      if (Number(existe.qty) + 1 > prod.quantity) {
+        alert(`⚠️ LÍMITE DE STOCK\n\nSolo tienes ${prod.quantity} unidades de "${prod.name}".`);
+        return;
+      }
       setDetalles(detalles.map(d => d.productoId === prod.id ? { ...d, qty: Number(d.qty) + 1, subtotal: (Number(d.qty) + 1) * d.price } : d));
     } else {
-      
-      // INTERCEPCIÓN TÉCNICA: Motor de detección profunda de medida
-      // Atrapa variantes de base de datos y las unifica para la Interfaz (UI)
       const esConsumo = prod.control_type === 'CONSUMO' || 
                         prod.control_type === 'SERVICE' || 
                         (prod as any).unit === 'CONSUMO' ||
@@ -67,7 +80,6 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
         qty: 1, 
         price: prod.price, 
         subtotal: prod.price,
-        // Asignación inteligente y segura:
         control_type: esConsumo ? 'CONSUMO' : prod.control_type 
       }]);
     }
@@ -76,12 +88,19 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
 
   // LÓGICA 1: Digitar Cantidad/Kilos -> Calcula Precio
   const updateQty = (idProd: string, newQty: any) => {
+    const prodOriginal = productos.find(p => p.id === idProd); // Buscamos el stock real
+
     setDetalles(detalles.map(d => {
       if (d.productoId === idProd) {
         let numericQty = Number(newQty);
         if (numericQty < 0) return d;
 
-        // BARRERA DE SEGURIDAD: Si es UNIDAD, bloqueamos el ingreso de puntos decimales
+        // 🚫 BLOQUEO DE SEGURIDAD: Validar contra el stock real
+        if (prodOriginal && numericQty > prodOriginal.quantity) {
+          alert(`⚠️ STOCK INSUFICIENTE\n\nSolo tienes ${prodOriginal.quantity} disponibles.`);
+          return d; // No actualiza si se pasa
+        }
+
         if (d.control_type !== 'WEIGHT' && newQty.toString().includes('.')) {
           return d; 
         }

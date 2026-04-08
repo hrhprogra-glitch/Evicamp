@@ -55,8 +55,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           { data: batchesData, error: batchesError },
           { data: catData, error: catError } // 🔥 NUEVO: Traemos tu tabla
         ] = await Promise.all([
-          supabase.from('products').select('*').neq('is_active', 0).limit(15000),
-          supabase.from('batches').select('id, product_id, quantity, cost_unit').gt('quantity', 0).limit(15000),
+          supabase.from('products').select('*').limit(15000),
+          supabase.from('batches').select('id, product_id, quantity, cost_unit').limit(15000),
           supabase.from('categories').select('name') // 🔥 CONEXIÓN A TU TABLA
         ]);
 
@@ -127,18 +127,29 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     return Array.from(new Set([...cats, ...dbCategories])).sort();
   }, [products, dbCategories]);
 
-  // LÓGICA MAESTRA DE FILTRADO Y ORDENAMIENTO
+  // LÓGICA MAESTRA DE FILTRADO Y ORDENAMIENTOñ
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase().trim(); // <-- Limpiamos espacios basura
+      
+      // 🔥 INTELIGENCIA DE BÚSQUEDA: Detectar si existe una coincidencia EXACTA
+      const existeCoincidenciaExacta = result.some(p => String(p.name || '').toLowerCase().trim() === query);
+
       result = result.filter(p => {
         if (!p) return false;
-        const name = String(p.name || '').toLowerCase();
-        const code = String(p.code || '').toLowerCase();
-        const barcode = String(p.barcode || '').toLowerCase(); // 🔥 EXTRAEMOS EL CÓDIGO DE BARRAS
-        return name.includes(query) || code.includes(query) || barcode.includes(query); // 🔥 AGREGAMOS SOPORTE PARA ESCÁNER
+        const name = String(p.name || '').toLowerCase().trim();
+        const code = String(p.code || '').toLowerCase().trim();
+        const barcode = String(p.barcode || '').toLowerCase().trim();
+
+        if (existeCoincidenciaExacta) {
+           // MODO ESTRICTO: Si escribiste el nombre completo, aísla SOLO ese producto.
+           return name === query || code === query || barcode === query;
+        } else {
+           // MODO PARCIAL: Si estás escribiendo a medias, busca coincidencias parciales.
+           return name.includes(query) || code.includes(query) || barcode.includes(query);
+        }
       });
     }
 

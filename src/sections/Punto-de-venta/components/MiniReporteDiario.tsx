@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom'; // 🛡️ EVICAMP: Portal para Centrado Absoluto a prueba de fallos
+import { createPortal } from 'react-dom';
 import { supabase } from '../../../db/supabase';
-import { Eye, EyeOff, BarChart3, X, Clock, Receipt, Coins, Smartphone, CreditCard, BookOpen } from 'lucide-react';
+import { Eye, EyeOff, BarChart3, X, Clock, Receipt, Coins, Smartphone, CreditCard, BookOpen, HandCoins } from 'lucide-react';
 
 interface Props {
   refreshTrigger: number;
@@ -17,53 +17,93 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
 
   useEffect(() => {
     const fetchHoy = async () => {
-      // 🛡️ PARCHE EVICAMP: 1. Consultar a qué hora exacta se abrió la caja actual
       const { data: sesionActiva } = await supabase
         .from('cash_sessions')
         .select('opened_at')
-        .eq('status', 'ABIERTA')
+        .eq('status', 'OPEN')
         .order('opened_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      // Si no hay ninguna caja abierta, la pantalla se queda en cero
       if (!sesionActiva) {
         setTotales({ efectivo: 0, yape: 0, tarjeta: 0, transferencia: 0, fiado: 0, totalReal: 0 });
         setVentasHoy([]);
         return;
       }
 
-      // 🛡️ PARCHE EVICAMP: 2. Traer SOLO las ventas ocurridas DESDE que se abrió esta caja
-      const { data } = await supabase
+      // 1. VENTAS DIRECTAS
+      const { data: ventas } = await supabase
         .from('sales')
         .select('id, payment_type, amount_cash, amount_yape, amount_card, amount_transfer, amount_credit, total, created_at')
         .gte('created_at', sesionActiva.opened_at)
-        .neq('sunat_status', 'ANULADO')
-        .order('created_at', { ascending: false });
+        .neq('sunat_status', 'ANULADO');
 
-      if (data) {
-        let ef = 0, ya = 0, ta = 0, tr = 0, fi = 0;
-        data.forEach(s => {
-          ef += Number(s.amount_cash || 0);
-          ya += Number(s.amount_yape || 0);
-          ta += Number(s.amount_card || 0);
-          tr += Number(s.amount_transfer || 0);
+      // 🔥 2. ABONOS DE DEUDAS EN TIEMPO REAL (INTEGRACIÓN)
+      const { data: abonos } = await supabase
+        .from('cash_movements')
+        .select('id, payment_type, amount, created_at')
+        .eq('flujo', 'INGRESO_FIADO')
+        .gte('created_at', sesionActiva.opened_at);
+
+      let ef = 0, ya = 0, ta = 0, tr = 0, fi = 0;
+      let ticketsUnificados: any[] = [];
+
+      if (ventas) {
+        ventas.forEach(s => {
+          if (s.payment_type !== 'FIADO') {
+            ef += Number(s.amount_cash || 0);
+            ya += Number(s.amount_yape || 0);
+            ta += Number(s.amount_card || 0);
+            tr += Number(s.amount_transfer || 0);
+          }
           fi += Number(s.amount_credit || 0);
+          
+          ticketsUnificados.push({
+            id: s.id,
+            tipo: 'VENTA',
+            metodo: s.payment_type,
+            total: Number(s.total || 0),
+            hora: s.created_at
+          });
         });
-        const real = ef + ya + ta + tr;
-        setTotales({ efectivo: ef, yape: ya, tarjeta: ta, transferencia: tr, fiado: fi, totalReal: real });
-        setVentasHoy(data);
       }
+
+      if (abonos) {
+        abonos.forEach(a => {
+          const tipoPago = (a.payment_type || '').toLowerCase();
+          const monto = Number(a.amount || 0);
+          
+          if (tipoPago === 'yape' || tipoPago === 'transferencia' || tipoPago === 'plin') {
+            ya += monto;
+          } else if (tipoPago === 'tarjeta') {
+            ta += monto;
+          } else {
+            ef += monto; // Por defecto efectivo
+          }
+
+          ticketsUnificados.push({
+            id: a.id,
+            tipo: 'ABONO',
+            metodo: `ABONO ${a.payment_type || 'EFECTIVO'}`,
+            total: monto,
+            hora: a.created_at
+          });
+        });
+      }
+
+      ticketsUnificados.sort((a, b) => new Date(b.hora).getTime() - new Date(a.hora).getTime());
+
+      const real = ef + ya + ta + tr;
+      setTotales({ efectivo: ef, yape: ya, tarjeta: ta, transferencia: tr, fiado: fi, totalReal: real });
+      setVentasHoy(ticketsUnificados);
     };
     fetchHoy();
   }, [refreshTrigger]);
 
-  // 🛡️ EL PORTAL EVICAMP: Este código arranca el modal de la caja y lo pega en la capa más alta del navegador (Centrado Perfecto)
   const modalContent = isModalOpen ? createPortal(
     <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-md z-[999999] flex items-center justify-center p-4 sm:p-8 animate-fade-in font-mono">
       <div className="bg-white border-4 border-[#1E293B] shadow-[16px_16px_0_0_#1E293B] w-full max-w-6xl flex flex-col h-[90vh] rounded-none">
         
-        {/* HEADER DEL MODAL MÁS GRANDE */}
         <div className="bg-[#1E293B] text-white p-6 flex justify-between items-center shrink-0">
           <h2 className="font-black uppercase tracking-widest text-xl flex items-center gap-3">
             <Receipt size={28} className="text-[#10B981]" /> Rendimiento de Caja Actual
@@ -74,13 +114,11 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
         </div>
 
         <div className="p-6 sm:p-8 bg-[#F8FAFC] flex-1 overflow-hidden">
-          {/* EL min-h-0 ES EL SECRETO PARA QUE EL SCROLL DE LOS TICKETS FUNCIONE */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full min-h-0">
             
-            {/* COLUMNA IZQUIERDA: TOTALES Y DESGLOSE GIGANTE */}
             <div className="flex flex-col gap-6 overflow-y-auto custom-scrollbar pr-4 min-h-0">
               <div className="bg-[#1E293B] p-8 text-center border-4 border-[#1E293B] shrink-0 shadow-[8px_8px_0_0_#CBD5E1]">
-                <p className="text-[#94A3B8] text-xs font-black uppercase tracking-widest mb-2">Total Ingresado a Caja (Físico + Digital)</p>
+                <p className="text-[#94A3B8] text-xs font-black uppercase tracking-widest mb-2">Total Ingresado a Caja (Ventas + Abonos)</p>
                 <p className="text-6xl sm:text-7xl font-black text-white mt-2 drop-shadow-lg">S/ {totales.totalReal.toFixed(2)}</p>
               </div>
               
@@ -102,30 +140,30 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
                 </div>
                 <div className="bg-white border-4 border-[#E2E8F0] p-5 flex flex-col items-center text-center shadow-[6px_6px_0_0_#E2E8F0]">
                   <BookOpen size={32} className="text-[#EF4444] mb-2" />
-                  <span className="text-[10px] font-black text-[#64748B] uppercase tracking-widest">Deuda (Fiados)</span>
+                  <span className="text-[10px] font-black text-[#64748B] uppercase tracking-widest">Deuda (Fiados Emitidos)</span>
                   <span className="text-2xl sm:text-3xl font-black text-[#1E293B] mt-1">S/ {totales.fiado.toFixed(2)}</span>
                 </div>
               </div>
             </div>
 
-            {/* COLUMNA DERECHA: ÚLTIMOS TICKETS (CON SCROLL BLINDADO) */}
             <div className="border-4 border-[#E2E8F0] bg-white flex flex-col h-full min-h-0 shadow-[8px_8px_0_0_#E2E8F0]">
               <div className="bg-[#F8FAFC] border-b-4 border-[#E2E8F0] p-5 shrink-0 flex justify-between items-center">
-                <h3 className="text-base font-black text-[#1E293B] uppercase tracking-widest">Desglose de Tickets ({ventasHoy.length})</h3>
+                <h3 className="text-base font-black text-[#1E293B] uppercase tracking-widest">Desglose Movimientos ({ventasHoy.length})</h3>
               </div>
-              {/* 🛡️ min-h-0 es clave aquí para que el scroll lea todos tus tickets infinitamente */}
               <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 min-h-0">
                 {ventasHoy.length > 0 ? ventasHoy.map((v) => (
                   <div key={v.id} className="flex justify-between items-center p-5 border-2 border-[#E2E8F0] hover:border-[#1E293B] bg-white hover:bg-[#F8FAFC] transition-all">
                     <div className="flex flex-col">
                       <span className="text-sm font-black text-[#64748B] flex items-center gap-2">
-                        <Clock size={16}/> {new Date(v.created_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}
+                        <Clock size={16}/> {new Date(v.hora).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}
                       </span>
-                      <span className={`text-base font-black uppercase mt-2 tracking-widest ${v.payment_type === 'FIADO' ? 'text-[#EF4444]' : 'text-[#1E293B]'}`}>
-                        {v.payment_type}
+                      <span className={`text-base font-black uppercase mt-2 tracking-widest flex items-center gap-2 ${v.tipo === 'ABONO' ? 'text-[#3B82F6]' : v.metodo === 'FIADO' ? 'text-[#EF4444]' : 'text-[#1E293B]'}`}>
+                        {v.tipo === 'ABONO' && <HandCoins size={18} />} {v.metodo}
                       </span>
                     </div>
-                    <span className="text-2xl font-black text-[#10B981]">S/ {v.total.toFixed(2)}</span>
+                    <span className={`text-2xl font-black ${v.metodo === 'FIADO' ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
+                       S/ {v.total.toFixed(2)}
+                    </span>
                   </div>
                 )) : (
                   <div className="text-center p-12 text-lg font-bold text-[#94A3B8]">Caja vacía. Aún no hay ventas.</div>
@@ -142,10 +180,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
 
   return (
     <>
-      {/* 🛡️ BARRA PRINCIPAL ESTILO EVICAMP (FUERA DEL MODAL) */}
       <div className="bg-white border-2 border-[#1E293B] shadow-[4px_4px_0_0_#E2E8F0] shrink-0 font-mono flex flex-col">
-        
-        {/* HEADER CON TOTAL Y OJO CENSOR */}
         <div className="bg-[#1E293B] text-white p-3 flex justify-between items-center">
           <button 
             onClick={() => setIsModalOpen(true)}
@@ -166,7 +201,6 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
           </button>
         </div>
 
-        {/* SUB-BARRA DE DESGLOSE (Siempre a la vista) */}
         <div className="grid grid-cols-4 divide-x-2 divide-[#E2E8F0] bg-[#F8FAFC]">
           <div className="p-2 flex flex-col items-center justify-center text-center">
             <span className="text-[9px] font-black text-[#64748B] uppercase mb-1">Efectivo</span>
@@ -186,7 +220,6 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
           </div>
         </div>
       </div>
-
       {modalContent}
     </>
   );

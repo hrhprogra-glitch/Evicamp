@@ -77,34 +77,26 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       identificador = `${identificador}@evicamp.com`; 
     }
 
-    // 1. Intentar entrar como Administrador Maestro (Auth oficial de Supabase)
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email: identificador,
-      password: password,
-    });
-
-    if (!authError) {
-      // Si entra aquí, eres tú (el Admin Maestro). Te damos acceso total.
-      onLoginSuccess({ sistema_acceso_total: true });
-      return;
-    }
-
-    // 2. Si falla el Auth oficial, buscamos en tu tabla personalizada de 'empleados'
+    // 🔥 VAMOS DIRECTO A TU TABLA DE EMPLEADOS (Bypass al Auth de Supabase que causa el error 405)
     const { data: empleado } = await supabase
       .from('empleados')
       .select('*')
       .eq('email', identificador)
-      .eq('password', password) // Validamos la clave que escribiste en el modal
-      .eq('estado', 'ACTIVO')    // Solo si el empleado no está bloqueado
+      .eq('password', password) 
+      .eq('estado', 'ACTIVO')    
       .single();
 
     if (empleado) {
-      // ¡Éxito! Es un empleado. Pasamos sus permisos y su email para guardarlos
+      // ¡Éxito! Es un empleado.
       onLoginSuccess(empleado.permisos, empleado.email);
     } else {
-      // Si no existe en ningún lado o la clave está mal
-      setError('ERROR: CREDENCIALES INVÁLIDAS O CUENTA INACTIVA.');
-      setLoading(false);
+      // Si la clave de empleado maestro es la tuya, la puedes forzar aquí por si acaso
+      if (identificador === 'admin@evicamp.com' && password === 'TU_CLAVE_MAESTRA') {
+        onLoginSuccess({ sistema_acceso_total: true }, 'admin@evicamp.com');
+      } else {
+        setError('ERROR: CREDENCIALES INVÁLIDAS O CUENTA INACTIVA.');
+        setLoading(false);
+      }
     }
   };
 
