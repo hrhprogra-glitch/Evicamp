@@ -29,6 +29,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbCategories, setDbCategories] = useState<string[]>([]); // 🔥 NUEVO: Memoria para tu tabla categories
+  const [refreshLotesKey, setRefreshLotesKey] = useState(0); // 🛡️ EVICAMP: Llave maestra para forzar actualización de Lotes
 
   // ESTADOS DE LOS FILTROS
   const [searchQuery, setSearchQuery] = useState('');
@@ -250,20 +251,24 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     setIsModalOpen(true);
   }}
   onDeleteProduct={async (productToDelete) => {
-    // 🛡️ EVICAMP: Llamada blindada (Convertimos a String para evadir el Bug PGRST202)
+    // 1. EJECUCIÓN DEL PROCEDIMIENTO ALMACENADO EN POSTGRESQL (RPC)
+    // Conectamos con el nombre exacto de tu función SQL y blindamos el ID
     const { error } = await supabase.rpc('fn_soft_delete_product', {
       p_product_id: String(productToDelete.id),
       p_user_name: 'Admin'
     });
 
     if (error) {
-      console.error("Error técnico de BD:", error);
+      console.error("Error técnico de BD (Evicamp):", error);
       alert("⚠️ Fallo crítico: No se pudo retirar el producto.");
       return;
     }
 
-    // 2. ACTUALIZACIÓN VISUAL INMEDIATA
+    // 2. ACTUALIZACIÓN VISUAL INMEDIATA (Latencia 0ms)
     setProducts(prevProducts => prevProducts.filter(p => p.id !== productToDelete.id));
+    
+    // 3. 🛡️ EVICAMP: Recarga táctica de TablaLotes para eliminar los lotes del producto
+    setRefreshLotesKey(prev => prev + 1);
   }}
   // === NUEVA CONEXIÓN AQUÍ ===
   onViewHistory={(producto) => {
@@ -275,6 +280,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         </div>
         <div className={`flex-1 min-h-0 ${vistaActiva === 'LOTES' ? 'flex flex-col' : 'hidden'}`}>
           <TablaLotes 
+            key={refreshLotesKey} // 🛡️ EVICAMP: Al cambiar esta variable, React destruye y vuelve a crear la tabla fresca
             searchQuery={searchQuery}
             filtroCategoria={filtroCategoria}
             filtroEstado={filtroEstado}
@@ -346,10 +352,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
           if (productToEdit) {
             setProducts(prev => prev.map(p => p.id === productToEdit.id ? productoFormateado : p));
-            // 🛡️ PARCHE EVICAMP: Sincronización instantánea en la UI para la vista de Lotes
-            if (searchQuery === productToEdit.name) {
-               setSearchQuery(productoFormateado.name);
-            }
+            // 🛡️ EVICAMP: Si editamos el producto, forzamos recarga de Lotes para que muestre el nuevo nombre/datos
+            setRefreshLotesKey(prev => prev + 1);
           } else {
             setProducts(prev => [productoFormateado, ...prev]);
             setCurrentPage(1);
