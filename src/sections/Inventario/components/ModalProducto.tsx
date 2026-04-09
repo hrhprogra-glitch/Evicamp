@@ -277,8 +277,14 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         onGoToLotes({ ...productoGuardado, imageUrl: productoGuardado.image_url, unit: unidadAsignada });
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al guardar:", error);
+      // 🛡️ EVICAMP: Escudo contra Error de Duplicidad en PostgreSQL (Violación Unique Constraint)
+      if (error.code === '23505') {
+        alert("⚠️ ALERTA DE INTEGRIDAD GEOMÉTRICA\n\nEl Código Interno o Código de Barras que intenta guardar YA EXISTE en otro producto.\n\nPor favor, asigne un código único o deje el campo en blanco.");
+      } else {
+        alert(`⚠️ ERROR DE SISTEMA:\n${error.message || 'No se pudo comunicar con el servidor VPS.'}`);
+      }
     } finally {
       setIsSubmitting(false);
     }

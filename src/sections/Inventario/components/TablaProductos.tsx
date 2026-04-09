@@ -295,7 +295,7 @@ export const TablaProductos: React.FC<Props> = ({
                   </button>
                   <button 
                     onClick={() => {
-                      if (window.confirm(`⚠️ ADVERTENCIA DE SEGURIDAD\n\n¿Estás absolutamente seguro de eliminar el producto:\n"${item.name}"?\n\nEsta acción es irreversible.`)) {
+                      if (window.confirm(`⚠️ ALERTA DE INTEGRIDAD GEOMÉTRICA\n\nEstá a punto de eliminar el producto:\n"${item.name}"\n\n🚨 ATENCIÓN: Al borrar este producto, TODOS LOS LOTES asociados a él serán eliminados automáticamente para no romper la contabilidad del sistema.\n\n¿Confirma la eliminación del producto y de todos sus lotes?`)) {
                         if (onDeleteProduct) onDeleteProduct(item);
                       }
                     }}

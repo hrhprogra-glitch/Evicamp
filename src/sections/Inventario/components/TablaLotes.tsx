@@ -340,44 +340,13 @@ export const TablaLotes: React.FC<Props> = ({
           onClick={async () => {
             if (window.confirm(`MANTENIMIENTO DE INTEGRIDAD\n\n¿Confirma el retiro del lote de "${lote.product_name}"?\n\nEsta acción descargará el stock actual pero mantendrá intacto el historial de ventas, utilidades y contabilidad.`)) {
               try {
-                // PASO 1: Desactivar el lote (Borrado lógico)
-                const { error: errLote } = await supabase
-                  .from('batches')
-                  .update({ is_active: 0, quantity: 0 })
-                  .eq('id', lote.id);
-                if (errLote) throw errLote;
+                // 🛡️ EVICAMP: Ejecución Transaccional Segura desde la Base de Datos
+                const { error: dbError } = await supabase.rpc('fn_soft_delete_batch', {
+                  p_batch_id: String(lote.id),
+                  p_user_name: 'Admin'
+                });
 
-                // PASO 2: Recalcular y actualizar el stock global del producto
-                const { data: lotesActivos } = await supabase
-                  .from('batches')
-                  .select('quantity')
-                  .eq('product_id', lote.product_id)
-                  .eq('is_active', 1);
-
-                const nuevoStock = lotesActivos ? lotesActivos.reduce((sum, l) => sum + Number(l.quantity || 0), 0) : 0;
-
-                const { error: errProd } = await supabase
-                  .from('products')
-                  .update({ quantity: nuevoStock })
-                  .eq('id', lote.product_id);
-                if (errProd) throw errProd;
-
-                // PASO 3: Registrar el movimiento en el historial
-                const { error: errMov } = await supabase
-                  .from('inventory_movements')
-                  .insert([{
-                    batch_id: String(lote.id),
-                    product_id: lote.product_id,
-                    product_name: lote.product_name,
-                    change_amount: -Number(lote.quantity),
-                    previous_quantity: Number(lote.quantity),
-                    new_quantity: 0,
-                    operation_type: 'AJUSTE',
-                    reason: 'Eliminación de Lote',
-                    user: 'Admin',
-                    is_synced: '1'
-                  }]);
-                if (errMov) throw errMov;
+                if (dbError) throw dbError;
 
                 // 4. Sincronizar memoria visual
                 if (onLoteDeleted) {

@@ -95,11 +95,11 @@ const [searchQuery, setSearchQuery] = useState('');
       // 🛡️ PARCHE DE ARQUITECTURA: Romper el límite de 1000 filas de Supabase
       const { data } = await supabase.from('products')
         .select('*')
+        .eq('is_active', 1) // 🛡️ EVICAMP: Bloqueo de productos fantasma directo en el motor de BD
         .limit(15000)
         .order('name', { ascending: true });
         
       if (data) {
-        // 🛡️ ESCUDO REMOVIDO: Ahora cargamos todos los productos, incluso los inactivos o agotados
         const mapeados: Product[] = data.map((p: any) => ({
           id: p.id,
           name: p.name || 'SIN NOMBRE',

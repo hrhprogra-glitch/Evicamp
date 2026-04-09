@@ -55,7 +55,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           { data: batchesData, error: batchesError },
           { data: catData, error: catError } // 🔥 NUEVO: Traemos tu tabla
         ] = await Promise.all([
-          supabase.from('products').select('*').limit(15000),
+          // 🛡️ EVICAMP: Solo descargar productos activos para evitar productos fantasma
+          supabase.from('products').select('*').eq('is_active', 1).limit(15000),
           supabase.from('batches').select('id, product_id, quantity, cost_unit').limit(15000),
           supabase.from('categories').select('name') // 🔥 CONEXIÓN A TU TABLA
         ]);
@@ -249,10 +250,10 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     setIsModalOpen(true);
   }}
   onDeleteProduct={async (productToDelete) => {
-    // 1. BORRADO LÓGICO Y CUADRE DE STOCK VÍA RPC
-    const { error } = await supabase.rpc('soft_delete_product', {
-      p_product_id: productToDelete.id,
-      p_user_name: 'Admin' // O el nombre del usuario logueado
+    // 🛡️ EVICAMP: Llamada blindada (Convertimos a String para evadir el Bug PGRST202)
+    const { error } = await supabase.rpc('fn_soft_delete_product', {
+      p_product_id: String(productToDelete.id),
+      p_user_name: 'Admin'
     });
 
     if (error) {
@@ -345,6 +346,10 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
           if (productToEdit) {
             setProducts(prev => prev.map(p => p.id === productToEdit.id ? productoFormateado : p));
+            // 🛡️ PARCHE EVICAMP: Sincronización instantánea en la UI para la vista de Lotes
+            if (searchQuery === productToEdit.name) {
+               setSearchQuery(productoFormateado.name);
+            }
           } else {
             setProducts(prev => [productoFormateado, ...prev]);
             setCurrentPage(1);

@@ -103,27 +103,29 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         // === MODO EDICIÓN EVICAMP ===
         const cantidadNueva = Number(cantidad) || 0;
 
-        const { error } = await supabase
+        // 1. Guardar los campos secundarios (vencimiento, sustento tributario)
+        const { error: metaError } = await supabase
           .from('batches')
           .update({
-            quantity: cantidadNueva,
             initial_quantity: cantidadNueva,
             expiration_date: expiration || null,
-            cost_unit: Number(costoUnitario) || 0,
             cost_total: Number(costoTotal) || 0,
             document_ref: documento,
             is_active: 1
           })
           .eq('id', initialLote.id);
 
-        if (error) throw error;
+        if (metaError) throw metaError;
 
-        // 🛡️ SINCRONIZACIÓN MAESTRA: Recalcula el stock real sumando los lotes para curar el error "Agotado"
-        if (selectedProduct) {
-          const { data: lotesActivos } = await supabase.from('batches').select('quantity').eq('product_id', selectedProduct.id).eq('is_active', 1);
-          const stockReal = lotesActivos ? lotesActivos.reduce((sum, lote) => sum + Number(lote.quantity || 0), 0) : cantidadNueva;
-          await supabase.from('products').update({ quantity: stockReal }).eq('id', selectedProduct.id);
-        }
+        // 🛡️ 2. RPC BLINDADO: El VPS hace toda la matemática, actualiza cantidad y stock en 0.001ms
+        const { error: rpcError } = await supabase.rpc('fn_edit_batch', {
+          p_batch_id: String(initialLote.id),
+          p_new_qty: cantidadNueva,
+          p_new_cost: Number(costoUnitario) || 0,
+          p_user_name: 'Admin'
+        });
+
+        if (rpcError) throw rpcError;
 
         if (onLoteSaved && selectedProduct) {
           onLoteSaved({ 
