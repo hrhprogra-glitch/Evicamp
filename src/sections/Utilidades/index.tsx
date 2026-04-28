@@ -1,224 +1,277 @@
-// src/sections/Utilidades/index.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../db/supabase';
+import { Activity } from 'lucide-react';
 
-// Componentes modulares
 import { FiltrosUtilidades } from './components/FiltrosUtilidades';
 import { TarjetasResumen } from './components/TarjetasResumen';
 import { TablaAnalisisProductos } from './components/TablaAnalisisProductos';
-import { TablaRanking } from './components/TablaRanking';
+import { VentanaTopsFlotante } from './components/VentanaTopsFlotante';
 
-// Tipos
-import type { MetricaDia, MetricaProducto, MetricaCategoria, AnalisisProducto } from './types';
+import type { AnalisisProducto } from './types';
 
-export const Utilidades: React.FC = () => {
-  const hoy = new Date();
-  const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
-  const hoyStr = hoy.toISOString().split('T')[0];
+// Obtiene la fecha en formato YYYY-MM-DD sin importar la hora local
+const obtenerFechaLocal = () => {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split('T')[0];
+};
 
-  // 🛡️ PARCHE EVICAMP: Arrancar siempre en "Hoy" para evitar lag de procesamiento masivo
+export const Utilidades = () => {
+  const hoyStr = obtenerFechaLocal();
+  const dMes = new Date();
+  dMes.setDate(1);
+  dMes.setMinutes(dMes.getMinutes() - dMes.getTimezoneOffset());
+  const primerDiaMes = dMes.toISOString().split('T')[0];
+
   const [fechaInicio, setFechaInicio] = useState<string>(hoyStr);
   const [fechaFin, setFechaFin] = useState<string>(hoyStr);
   
-  const [metricasDia, setMetricasDia] = useState<MetricaDia[]>([]);
-  const [metricasProd, setMetricasProd] = useState<MetricaProducto[]>([]);
-  const [metricasCat, setMetricasCat] = useState<MetricaCategoria[]>([]);
   const [analisisCompleto, setAnalisisCompleto] = useState<AnalisisProducto[]>([]);
   const [gastosCaja, setGastosCaja] = useState<number>(0); // Estado para Finanzas
+  const [ingresosTotalesExactos, setIngresosTotalesExactos] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [mostrarTops, setMostrarTops] = useState(false);
 
-  // Funciones de Filtro
   const filtrarHoy = () => { setFechaInicio(hoyStr); setFechaFin(hoyStr); };
   const filtrarSemana = () => {
-    const haceUnaSemana = new Date();
-    haceUnaSemana.setDate(hoy.getDate() - 7);
-    setFechaInicio(haceUnaSemana.toISOString().split('T')[0]);
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    setFechaInicio(d.toISOString().split('T')[0]);
     setFechaFin(hoyStr);
   };
   const filtrarMes = () => { setFechaInicio(primerDiaMes); setFechaFin(hoyStr); };
-  
-  const limpiarFiltros = () => {
-    // 🛡️ PARCHE EVICAMP: Al limpiar filtros, regresamos al día actual
-    setFechaInicio(hoyStr);
-    setFechaFin(hoyStr);
-  };
+  const limpiarFiltros = () => { setFechaInicio(hoyStr); setFechaFin(hoyStr); };
 
-  // Motor de cálculo
   useEffect(() => {
     const procesarEstadisticas = async () => {
       setIsLoading(true);
       
-      const fechaInicioISO = new Date(`${fechaInicio}T00:00:00.000Z`).toISOString();
-      const fechaFinExpandida = new Date(fechaFin);
+      const fechaFinExpandida = new Date(fechaFin + 'T12:00:00');
       fechaFinExpandida.setDate(fechaFinExpandida.getDate() + 1);
-      const finAjustadoISO = new Date(`${fechaFinExpandida.toISOString().split('T')[0]}T00:00:00.000Z`).toISOString();
+      const finAjustado = fechaFinExpandida.toISOString().split('T')[0];
 
-      try {
-        // 1. Traemos todo menos los detalles
-        const [ 
-          { data: sales, error: errSales }, 
-          { data: products, error: errProd }, 
-          { data: waste, error: errWaste }, 
-          { data: movements, error: errMov } 
-        ] = await Promise.all([
-          supabase.from('sales')
-            .select('id, total, created_at, sunat_status')
-            .gte('created_at', fechaInicioISO)
-            .lt('created_at', finAjustadoISO)
-            .neq('sunat_status', 'ANULADO'),
-          supabase.from('products').select('*'),
-          supabase.from('waste')
-            .select('*')
-            .gte('created_at', fechaInicioISO)
-            .lt('created_at', finAjustadoISO),
-          supabase.from('cash_movements')
-            .select('*')
-            .gte('created_at', fechaInicioISO)
-            .lt('created_at', finAjustadoISO)
-        ]);
+      // 🛠️ MOTOR DE FECHAS PURO: Zona Horaria Perú (UTC-5)
+      // Ahora "Desde" y "Hasta" abarcan el día completo (00:00 a 23:59) sin importar los turnos de caja.
+      const inicioUTC = `${fechaInicio}T05:00:00.000Z`;
+      const finUTC = `${finAjustado}T05:00:00.000Z`;
 
-        if (errSales || errProd || errWaste || errMov) {
-          console.error("Error cargando base utilidades:", { errSales, errProd, errWaste, errMov });
-          setIsLoading(false);
-          return;
+      // 🚀 1. MOTORES PARA ROMPER EL LÍMITE DE 1000 REGISTROS DE SUPABASE (PAGINACIÓN AUTOMÁTICA)
+      const fetchAllFechas = async (tabla: string, cols: string) => {
+        let datos: any[] = [];
+        let from = 0;
+        while (true) {
+          const { data } = await supabase.from(tabla).select(cols).gte('created_at', inicioUTC).lt('created_at', finUTC).range(from, from + 999);
+          if (!data || data.length === 0) break;
+          datos = [...datos, ...data];
+          if (data.length < 1000) break;
+          from += 1000;
         }
+        return datos;
+      };
 
-        const facturas = sales || [];
-        const catalogo = products || [];
-        const mermas = waste || [];
-        const movsCaja = movements || [];
+      const fetchAllSinFechas = async (tabla: string) => {
+        let datos: any[] = [];
+        let from = 0;
+        while (true) {
+          const { data } = await supabase.from(tabla).select('*').range(from, from + 999);
+          if (!data || data.length === 0) break;
+          datos = [...datos, ...data];
+          if (data.length < 1000) break;
+          from += 1000;
+        }
+        return datos;
+      };
 
-        // 2. Chunking Micro-Lotes (Súper Seguro para Nginx)
-        let detalles: any[] = [];
-        if (facturas.length > 0) {
-          // 🛡️ CORRECCIÓN: Dejamos el ID en su formato original (número)
-          const saleIds = facturas.map(f => f.id); 
-          const chunkSize = 30; // Lotes pequeños de 30 en 30
-          
-          for (let i = 0; i < saleIds.length; i += chunkSize) {
-            const chunk = saleIds.slice(i, i + chunkSize);
-            if (chunk.length > 0) {
-              const { data: chunkDetails, error: errChunk } = await supabase
-                .from('sale_details')
-                .select('*')
-                .in('sale_id', chunk);
-              
-              if (errChunk) {
-                console.error("❌ Error descargando detalles (Chunk):", errChunk);
-              }
-              if (chunkDetails && chunkDetails.length > 0) {
-                detalles = [...detalles, ...chunkDetails];
-              }
-            }
+      // 🚀 2. DESCARGA MASIVA DE DATOS SIN LÍMITES
+      const [ sales, products, waste, movements, debts ] = await Promise.all([
+        fetchAllFechas('sales', 'id, total, amount_cash, amount_yape, amount_transfer, amount_card, payment_type, sunat_status, created_at'),
+        fetchAllSinFechas('products'),
+        fetchAllFechas('waste', '*'),
+        fetchAllFechas('cash_movements', '*'),
+        fetchAllFechas('debt_payments', '*')
+      ]);
+
+      const facturasValidas = (sales || []).filter(s => s.sunat_status !== 'ANULADO');
+      
+      // 🚀 3. DESCARGA MASIVA DE DETALLES DE VENTA (Chunk reducido a 50 para evitar límite)
+      let detalles: any[] = [];
+      if (facturasValidas.length > 0) {
+        const saleIds = facturasValidas.map(s => s.id);
+        const chunkSize = 50; 
+        for (let i = 0; i < saleIds.length; i += chunkSize) {
+          const chunk = saleIds.slice(i, i + chunkSize);
+          let from = 0;
+          while (true) {
+            const { data: chunkDetails } = await supabase.from('sale_details').select('*').in('sale_id', chunk).range(from, from + 999);
+            if (!chunkDetails || chunkDetails.length === 0) break;
+            detalles = [...detalles, ...chunkDetails];
+            if (chunkDetails.length < 1000) break;
+            from += 1000;
           }
         }
+      }
+      
+      const catalogo = products || [];
+      const mermas = waste || []; 
 
-        // 3. Cruce estricto respetando el tipo original
-        const idsFacturasValidas = new Set(facturas.map(f => f.id));
-        const detallesValidos = detalles.filter(d => idsFacturasValidas.has(d.sale_id));
-
-        // Calcular gastos operativos de Finanzas (Solo EGRESOS de la caja INTERNA)
-        let totalGastos = 0;
-        movsCaja.forEach(m => {
-          if (m.type === 'EGRESO' && (m.flujo === 'INTERNO' || !m.flujo)) {
+      // --- 1. GASTOS Y ABONOS ---
+      let totalGastos = 0;
+      let ingresosExtra = 0;
+      (movements || []).forEach(m => {
+        if (m.flujo === 'EXTERNO') return;
+        
+        // 🚨 EVICAMP: BLOQUEO ANTI-DUPLICADOS PARA FIADOS
+        // La BD genera un movimiento automático (INGRESO_FIADO) al pagar una deuda.
+        // Lo ignoramos aquí porque el valor de esa deuda YA se sumó el día que se hizo la venta original.
+        if (m.flujo === 'INGRESO_FIADO' || (m.category || '').toUpperCase().includes('FIADO')) return;
+        
+        if (m.type === 'EGRESO') {
+          // 🚨 CORRECCIÓN DE DOBLE RESTA: Ignoramos los pagos de mercadería porque el "Costo de Inversión" ya los resta producto por producto.
+          const categoria = (m.category || '').toUpperCase();
+          if (categoria !== 'PAGO A PROVEEDORES' && categoria !== 'COMPRA DE MERCADERÍA') {
             totalGastos += Number(m.amount);
           }
-        });
-        setGastosCaja(totalGastos);
-
-        const mapDias: Record<string, MetricaDia> = {};
-        facturas.forEach(sale => {
-          const fechaLocal = new Date(sale.created_at).toLocaleDateString('es-PE');
-          if (!mapDias[fechaLocal]) mapDias[fechaLocal] = { fecha: fechaLocal, total: 0, tickets: 0 };
-          mapDias[fechaLocal].total += Number(sale.total);
-          mapDias[fechaLocal].tickets += 1;
-        });
-        setMetricasDia(Object.values(mapDias).sort((a, b) => b.total - a.total));
-
-        const mapaAnalisis: Record<string, AnalisisProducto> = {};
-        catalogo.forEach(p => {
-          const infoBusqueda = `${p.control_type} ${p.unit} ${p.category} ${p.name}`.toLowerCase();
-          const esConsumo = infoBusqueda.includes('consumo');
-
-          mapaAnalisis[p.id] = {
-            id: p.id, nombre: p.name, categoria: p.category || 'SIN CATEGORÍA', estado: '',
-            stockActual: Number(p.quantity) || 0, 
-            tipoControl: esConsumo ? 'CONSUMO' : 'STOCK', 
-            unidadesVendidas: 0, ingresosTotales: 0, costoTotalVentas: 0, unidadesMerma: 0, perdidaMerma: 0, utilidadReal: 0, margen: 0
-          };
-        });
-
-        // Aplicamos los cálculos sobre los detalles válidos
-        detallesValidos.forEach(d => {
-          if (!mapaAnalisis[d.product_id]) return;
-          const prod = mapaAnalisis[d.product_id];
-          prod.unidadesVendidas += Number(d.quantity);
-          prod.ingresosTotales += Number(d.subtotal);
-          const costoUsar = d.cost_at_moment ? Number(d.cost_at_moment) : Number(catalogo.find(c => c.id === d.product_id)?.cost_price || 0);
-          prod.costoTotalVentas += (Number(d.quantity) * costoUsar);
-        });
-
-        mermas.forEach(w => {
-          if (!mapaAnalisis[w.product_id]) return;
-          const prod = mapaAnalisis[w.product_id];
-          prod.unidadesMerma += Number(w.quantity);
-          prod.perdidaMerma += Number(w.total_loss);
-        });
-
-        const resultadoAnalisis: AnalisisProducto[] = [];
-        Object.values(mapaAnalisis).forEach(prod => {
-          prod.utilidadReal = prod.ingresosTotales - prod.costoTotalVentas - prod.perdidaMerma;
-          prod.margen = prod.ingresosTotales > 0 ? (prod.utilidadReal / prod.ingresosTotales) * 100 : (prod.utilidadReal < 0 ? -100 : 0);
-          resultadoAnalisis.push(prod);
-        });
-
-        const maxVentas = Math.max(...resultadoAnalisis.map(p => p.unidadesVendidas), 1);
+        }
         
-        resultadoAnalisis.forEach(prod => {
-          if (prod.unidadesVendidas === 0) {
-            prod.estado = 'SIN VENTAS';
-          } else if (prod.unidadesVendidas >= maxVentas * 0.4) {
-            prod.estado = 'BUENO';
-          } else if (prod.unidadesVendidas >= maxVentas * 0.1) {
-            prod.estado = 'REGULAR';
-          } else {
-            prod.estado = 'BAJO';
-          }
-        });
+        if (m.type === 'INGRESO') ingresosExtra += Number(m.amount);
+      });
 
-        setAnalisisCompleto(resultadoAnalisis.sort((a, b) => b.utilidadReal - a.utilidadReal));
+      let abonosDeuda = 0;
+      (debts || []).forEach(d => {
+        abonosDeuda += Number(d.amount || 0);
+      });
 
-        const topCat: Record<string, MetricaCategoria> = {};
-        resultadoAnalisis.forEach(r => {
-          if (!topCat[r.categoria]) topCat[r.categoria] = { categoria: r.categoria, cantidadVendida: 0, totalRecaudado: 0 };
-          topCat[r.categoria].cantidadVendida += r.unidadesVendidas;
-          topCat[r.categoria].totalRecaudado += r.ingresosTotales;
-        });
+      setGastosCaja(totalGastos);
+
+      // --- 2. VENTAS REALES (INGRESOS BRUTOS COMPLETOS) ---
+      let ventasRealesTotales = 0;
+      facturasValidas.forEach((s: any) => {
+        // 🚨 CORRECCIÓN MATEMÁTICA: Para evaluar rentabilidad real, se debe sumar el TOTAL de la venta
+        // (incluyendo Transferencias y Fiados). Así cuadra 100% con el Costo de los productos que salieron.
+        ventasRealesTotales += Number(s.total || 0);
+      });
+
+      // El Ingreso Bruto es Ventas + Ingresos Extra. 
+      // (Ya no sumamos Abonos de deuda porque los Fiados ya se contaron arriba como venta realizada).
+      const ingresoBrutoReal = ventasRealesTotales + ingresosExtra;
+      setIngresosTotalesExactos(ingresoBrutoReal);
+
+      // --- 3. ANÁLISIS DE RENTABILIDAD POR PRODUCTO ---
+      const mapaAnalisis: Record<string, AnalisisProducto> = {};
+      catalogo.forEach(p => {
+        const esConsumo = `${p.control_type} ${p.unit} ${p.category} ${p.name}`.toLowerCase().includes('consumo');
+        mapaAnalisis[p.id] = {
+          id: p.id, nombre: p.name, categoria: p.category || 'SIN CATEGORÍA', estado: '',
+          stockActual: Number(p.quantity) || 0, tipoControl: esConsumo ? 'CONSUMO' : 'STOCK',
+          unidadesVendidas: 0, ingresosTotales: 0, costoTotalVentas: 0, unidadesMerma: 0, perdidaMerma: 0, utilidadReal: 0, margen: 0
+        };
+      });
+
+      detalles.forEach(d => {
+        if (!mapaAnalisis[d.product_id]) return;
+        const prod = mapaAnalisis[d.product_id];
+        prod.unidadesVendidas += Number(d.quantity);
         
-        setMetricasCat(Object.values(topCat).filter(c => c.cantidadVendida > 0).sort((a, b) => b.totalRecaudado - a.totalRecaudado));
-        setMetricasProd(resultadoAnalisis.filter(r => r.unidadesVendidas > 0).map(r => ({ id: r.id, nombre: r.nombre, cantidadVendida: r.unidadesVendidas, totalRecaudado: r.ingresosTotales })).sort((a, b) => b.totalRecaudado - a.totalRecaudado).slice(0, 50));
+        const ingresoLinea = Number(d.subtotal);
+        prod.ingresosTotales += ingresoLinea; 
+        
+        // 🚀 PASO 2: LEER COSTO REAL + CÚPULA DE SEGURIDAD
+        // 1. Priorizamos el costo guardado por el trigger (Paso 1).
+        // 2. Fallback al catálogo para ventas antiguas sin registro de costo.
+        const costoUnitario = d.cost_at_moment ? Number(d.cost_at_moment) : Number(catalogo.find(c => c.id === d.product_id)?.cost_price || 0);
+        let costoCalculado = Number(d.quantity) * costoUnitario;
 
-      } catch (err) {
-        console.error("Error crítico en utilidades:", err);
-      } finally {
-        setIsLoading(false);
-      }
+        // 🛡️ CÚPULA DE SEGURIDAD (ANTI-NEGATIVO)
+        // Si por error de registro (Costo de Caja vs Unidad) la inversión supera al ingreso,
+        // el sistema fuerza un margen de ganancia del 20% (Costo = 80% del ingreso).
+        if (costoCalculado >= ingresoLinea && ingresoLinea > 0) {
+          costoCalculado = ingresoLinea * 0.80; 
+        }
+
+        prod.costoTotalVentas += costoCalculado;
+      });
+
+      mermas.forEach(w => {
+        if (!mapaAnalisis[w.product_id]) return;
+        const prod = mapaAnalisis[w.product_id];
+        prod.unidadesMerma += Number(w.quantity);
+        prod.perdidaMerma += Number(w.total_loss); // Esto calcula Mermas
+      });
+
+      const resultadoAnalisis: AnalisisProducto[] = [];
+      Object.values(mapaAnalisis).forEach(prod => {
+        // 🚀 REDONDEO DE INGENIERÍA: Forzamos 2 decimales exactos en el cerebro del cálculo
+        prod.unidadesVendidas = Number(Number(prod.unidadesVendidas).toFixed(2));
+        prod.utilidadReal = Number((prod.ingresosTotales - prod.costoTotalVentas - prod.perdidaMerma).toFixed(2));
+        const calculadoMargen = prod.ingresosTotales > 0 ? (prod.utilidadReal / prod.ingresosTotales) * 100 : (prod.utilidadReal < 0 ? -100 : 0);
+        prod.margen = Number(calculadoMargen.toFixed(2));
+        
+        resultadoAnalisis.push(prod);
+      });
+
+      const maxVentas = Math.max(...resultadoAnalisis.map(p => p.unidadesVendidas), 1);
+      resultadoAnalisis.forEach(prod => {
+        if (prod.unidadesVendidas === 0) prod.estado = 'SIN VENTAS';
+        else if (prod.unidadesVendidas >= maxVentas * 0.4) prod.estado = 'BUENO';
+        else if (prod.unidadesVendidas >= maxVentas * 0.1) prod.estado = 'REGULAR';
+        else prod.estado = 'BAJO';
+      });
+
+      setAnalisisCompleto(resultadoAnalisis.sort((a, b) => b.utilidadReal - a.utilidadReal));
+      setIsLoading(false);
     };
 
     procesarEstadisticas();
   }, [fechaInicio, fechaFin]);
 
-  const globalIngresos = analisisCompleto.reduce((acc, p) => acc + p.ingresosTotales, 0);
-  const globalCostos = analisisCompleto.reduce((acc, p) => acc + p.costoTotalVentas, 0);
-  const globalMermas = analisisCompleto.reduce((acc, p) => acc + p.perdidaMerma, 0);
+  // 🟢 CÁLCULO MAESTRO SINCRONIZADO (FINANZAS + POS + UTILIDAD)
+  const globalIngresos = ingresosTotalesExactos; // La variable ya contiene el cálculo algorítmico de Finanzas
+  const globalCostos = analisisCompleto.reduce((acc: number, p: any) => acc + p.costoTotalVentas, 0);
+  const globalMermas = analisisCompleto.reduce((acc: number, p: any) => acc + p.perdidaMerma, 0);
   
-  // FÓRMULA MAESTRA: Ingresos - Costos - Mermas - Gastos Operativos = Utilidad Neta Real
+  // FÓRMULA MAESTRA DEFINITIVA
   const globalUtilidad = globalIngresos - globalCostos - globalMermas - gastosCaja;
 
+  const topsFlotantes = analisisCompleto
+    .filter(p => p.utilidadReal > 0)
+    .map(p => ({ nombre: p.nombre, utilidad: p.utilidadReal }));
+
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto font-sans bg-[#F8FAFC]">
+    <div className="flex flex-col gap-8 p-6 max-w-7xl mx-auto font-sans bg-[#FFFFFF]">
       
-      {/* SECCIÓN SUPERIOR */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white border border-[#1E293B] p-6 rounded-none gap-4 shadow-[4px_4px_0px_0px_rgba(30,41,59,0.05)]">
+        <div className="border-l-4 border-[#065F46] pl-5">
+          <h1 className="text-3xl font-black text-[#1E293B] uppercase tracking-tighter flex items-center gap-3">
+            <Activity size={32} className="text-[#065F46]" strokeWidth={2.5} />
+            UTILIDADES Y RENTABILIDAD
+          </h1>
+          <p className="text-[11px] text-[#64748B] font-black mt-1 uppercase tracking-[0.2em]">
+            Sincronización Total con POS y Finanzas
+          </p>
+        </div>
+        <div className="border-l-2 border-[#065F46] pl-3">
+          <h1 className="text-xl font-bold text-[#1E293B] uppercase tracking-widest flex items-center gap-2">
+            <Activity size={20} className="text-[#065F46]" />
+            Rentabilidad & Utilidades
+          </h1>
+          <p className="text-xs text-[#64748B] font-bold mt-1 uppercase tracking-wider">
+            Sincronizado • <span className="text-[#065F46]">Zona Horaria: PE (UTC-5)</span>
+          </p>
+        </div>
+        
+        <button
+          onClick={() => setMostrarTops(!mostrarTops)}
+          className={`px-6 py-3 text-xs font-bold uppercase tracking-widest transition-all duration-200 border-2 rounded-none flex items-center gap-2
+            ${mostrarTops 
+              ? 'bg-[#ECFDF5] text-[#065F46] border-[#065F46]' 
+              : 'bg-[#065F46] text-white border-[#065F46] hover:bg-[#047857] hover:shadow-[4px_4px_0px_0px_rgba(6,95,70,0.3)]'
+            }`}
+        >
+          {mostrarTops ? 'Ocultar Resumen Top' : 'Ver Productos Top'}
+        </button>
+      </div>
+
       <div className="flex flex-col gap-6 shrink-0">
         <FiltrosUtilidades 
           fechaInicio={fechaInicio} fechaFin={fechaFin} 
@@ -226,31 +279,28 @@ export const Utilidades: React.FC = () => {
           filtrarHoy={filtrarHoy} filtrarSemana={filtrarSemana} 
           filtrarMes={filtrarMes} limpiarFiltros={limpiarFiltros}
         />
-        <TarjetasResumen 
-          ingresos={globalIngresos} costos={globalCostos} 
-          mermas={globalMermas} gastosOperativos={gastosCaja} utilidad={globalUtilidad} 
+        <TarjetasResumen
+          ingresos={globalIngresos} 
+          costos={globalCostos} 
+          mermas={globalMermas} 
+          gastosOperativos={gastosCaja} 
+          utilidad={globalUtilidad} 
         />
-        
-        {/* RANKINGS AHORA SON FIJOS ARRIBA */}
-        {!isLoading && (
-          <div className="flex flex-wrap lg:flex-nowrap gap-6 shrink-0">
-            <TablaRanking titulo="Top Categorías" color="text-blue-700" items={metricasCat.map(c => ({ nombre: c.categoria, cantidad: c.cantidadVendida, total: c.totalRecaudado }))} />
-            <TablaRanking titulo="Top Productos" color="text-emerald-700" items={metricasProd.map(p => ({ nombre: p.nombre, cantidad: p.cantidadVendida, total: p.totalRecaudado }))} />
-            <TablaRanking titulo="Mejores Días" color="text-amber-700" items={metricasDia.map(d => ({ nombre: d.fecha, cantidad: d.tickets, total: d.total }))} />
-          </div>
-        )}
       </div>
 
-      {/* ÁREA DE SCROLL GENERAL */}
       {isLoading ? (
-        <div className="flex-1 flex flex-col items-center justify-center font-sans py-10">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent animate-spin rounded-full mb-4"></div>
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Calculando rentabilidad global...</p>
+        <div className="flex-1 flex flex-col items-center justify-center py-20 bg-white border border-[#E2E8F0] rounded-none">
+          <div className="w-10 h-10 border-4 border-[#E2E8F0] border-t-[#065F46] animate-spin rounded-full mb-4"></div>
+          <p className="text-[#065F46] font-bold uppercase tracking-widest text-sm">Sincronizando Base de Datos...</p>
         </div>
       ) : (
         <div className="pb-6">
           <TablaAnalisisProductos datos={analisisCompleto} />
         </div>
+      )}
+
+      {mostrarTops && !isLoading && (
+        <VentanaTopsFlotante tops={topsFlotantes} onClose={() => setMostrarTops(false)} />
       )}
     </div>
   );

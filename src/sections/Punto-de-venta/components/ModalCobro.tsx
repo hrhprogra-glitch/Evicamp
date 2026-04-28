@@ -184,16 +184,17 @@ interface Props {
                 <input 
                   id="pago-efectivo"
                   autoFocus 
-                  type="number" 
+                  type="text" 
+                  inputMode="decimal"
                   value={montoEfectivo} 
-                  onChange={(e) => setMontoEfectivo(e.target.value)} 
+                  onChange={(e) => setMontoEfectivo(e.target.value.replace(/[^0-9.]/g, ''))} 
                   onFocus={(e) => e.target.select()}
                   onClick={(e) => (e.target as HTMLInputElement).select()}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && puedeConfirmar) handleCobrar();
                     if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('pago-yape')?.focus(); }
                   }} 
-                  className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[#1E293B]" 
+                  className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[#1E293B] focus:bg-[#ECFDF5]" 
                   placeholder="0.00" 
                 />
               </div>
@@ -206,9 +207,10 @@ interface Props {
                 <span className="absolute left-2 top-1/2 -translate-y-1/2 font-black text-[#64748B] text-sm">S/</span>
                 <input 
                   id="pago-yape"
-                  type="number" 
+                  type="text" 
+                  inputMode="decimal"
                   value={montoYape} 
-                  onChange={(e) => setMontoYape(e.target.value)} 
+                  onChange={(e) => setMontoYape(e.target.value.replace(/[^0-9.]/g, ''))} 
                   onFocus={(e) => e.target.select()}
                   onClick={(e) => (e.target as HTMLInputElement).select()}
                   onKeyDown={(e) => {
@@ -216,7 +218,7 @@ interface Props {
                     if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('pago-efectivo')?.focus(); }
                     if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('pago-tarjeta')?.focus(); }
                   }} 
-                  className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[#1E293B]" 
+                  className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[#1E293B] focus:bg-[#F3E8FF]" 
                   placeholder="0.00" 
                 />
               </div>
@@ -229,16 +231,17 @@ interface Props {
                 <span className="absolute left-2 top-1/2 -translate-y-1/2 font-black text-[#64748B] text-sm">S/</span>
                 <input 
                   id="pago-tarjeta"
-                  type="number" 
+                  type="text" 
+                  inputMode="decimal"
                   value={montoTarjeta} 
-                  onChange={(e) => setMontoTarjeta(e.target.value)} 
+                  onChange={(e) => setMontoTarjeta(e.target.value.replace(/[^0-9.]/g, ''))} 
                   onFocus={(e) => e.target.select()}
                   onClick={(e) => (e.target as HTMLInputElement).select()}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && puedeConfirmar) handleCobrar();
                     if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('pago-yape')?.focus(); }
                   }} 
-                  className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[#1E293B]" 
+                  className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[#1E293B] focus:bg-[#DBEAFE]" 
                   placeholder="0.00" 
                 />
               </div>

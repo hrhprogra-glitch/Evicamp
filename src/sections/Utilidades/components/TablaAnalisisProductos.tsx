@@ -12,28 +12,37 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos }) => {
   const [filtroCat, setFiltroCat] = useState('TODAS');
   const [filtroEstado, setFiltroEstado] = useState('TODOS');
   
-  // NUEVO: Estado para controlar en qué página estamos
   const [paginaActual, setPaginaActual] = useState(1);
-
   const categoriasUnicas = Array.from(new Set(datos.map(d => d.categoria))).sort();
 
+  // ⚙️ MOTOR DE BÚSQUEDA OMNIDIRECCIONAL (EVICAMP V3)
+  const normalizarTexto = (texto: string) => {
+    return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  };
+
   const datosFiltrados = datos.filter(prod => {
-    // Blindaje contra valores null o undefined
-    const nombreSeguro = prod.nombre || '';
-    const busquedaSegura = busqueda || '';
+    // 1. Construimos un índice global concatenando todos los datos útiles del producto
+    const indiceOmni = normalizarTexto(`${prod.nombre || ''} ${prod.categoria || ''} ${prod.estado || ''} ${prod.tipoControl || ''}`);
+    const busquedaNormalizada = normalizarTexto(busqueda || '');
     
-    const coincideBusqueda = nombreSeguro.toLowerCase().includes(busquedaSegura.toLowerCase());
+    // 2. Fragmentamos la búsqueda
+    const terminosBusqueda = busquedaNormalizada.split(/\s+/).filter(Boolean);
+    
+    // 3. Verificamos que CADA palabra tipeada exista en el índice global
+    const coincideBusqueda = terminosBusqueda.length === 0 || terminosBusqueda.every(termino => 
+      indiceOmni.includes(termino)
+    );
+
     const coincideCat = filtroCat === 'TODAS' || prod.categoria === filtroCat;
     const coincideEstado = filtroEstado === 'TODOS' || prod.estado === filtroEstado;
+    
     return coincideBusqueda && coincideCat && coincideEstado;
   });
 
-  // NUEVO: Si el usuario busca algo, lo regresamos a la página 1 automáticamente
   useEffect(() => {
     setPaginaActual(1);
   }, [busqueda, filtroCat, filtroEstado]);
 
-  // NUEVO: Lógica de recortes (Paginación)
   const itemsPorPagina = 10;
   const totalPaginas = Math.ceil(datosFiltrados.length / itemsPorPagina) || 1;
   const startIndex = (paginaActual - 1) * itemsPorPagina;
@@ -46,142 +55,145 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos }) => {
   };
 
   return (
-    <div className="bg-white border-2 border-slate-200 rounded-xl shadow-sm flex flex-col font-sans">
-      
-      <div className="p-4 bg-slate-50 border-b-2 border-slate-200 flex flex-wrap gap-4 items-center justify-between shrink-0">
-        <h2 className="text-slate-700 font-bold uppercase tracking-wider flex items-center gap-2 text-sm">
-          <Filter size={18} className="text-emerald-500" /> Rentabilidad Detallada de Productos
+    <div className="bg-[#FFFFFF] border border-[#1E293B] rounded-none shadow-[4px_4px_0px_0px_rgba(30,41,59,0.05)] flex flex-col font-sans mt-4">
+
+      {/* HEADER Y FILTROS */}
+      <div className="p-4 bg-[#FFFFFF] border-b border-[#1E293B] flex flex-wrap gap-4 items-center justify-between shrink-0">
+        <h2 className="text-[#1E293B] font-black uppercase tracking-widest flex items-center gap-3 text-sm">
+          <Filter size={18} className="text-[#065F46]" strokeWidth={2.5} />
+          RENTABILIDAD DETALLADA DE PRODUCTOS
         </h2>
 
-        <div className="flex flex-wrap gap-2 w-full lg:w-auto">
-          <div className="flex bg-white border-2 border-slate-200 rounded-lg overflow-hidden focus-within:border-emerald-500 flex-1 lg:w-64 transition-all">
-            <div className="p-2 flex items-center justify-center text-slate-400"><Search size={16}/></div>
-            <input 
-              type="text" placeholder="Buscar producto..." 
+        <div className="flex flex-wrap gap-3 w-full lg:w-auto">
+          <div className="flex bg-[#FFFFFF] border border-[#1E293B] rounded-none focus-within:border-[#065F46] flex-1 lg:w-64 transition-all">
+            <div className="p-2 flex items-center justify-center text-[#1E293B] bg-[#F8FAFC] border-r border-[#1E293B]">
+              <Search size={16} strokeWidth={2}/>
+            </div>
+            <input
+              type="text" placeholder="BUSCAR PRODUCTO..."
               value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full text-xs font-bold text-slate-700 outline-none p-2 bg-transparent"
+              className="w-full text-xs font-bold text-[#1E293B] outline-none p-2 bg-transparent uppercase placeholder:text-[#94A3B8]"
             />
           </div>
-          <select 
+          <select
             value={filtroCat} onChange={(e) => setFiltroCat(e.target.value)}
-            className="bg-white text-xs font-bold text-slate-600 outline-none p-2 border-2 border-slate-200 rounded-lg focus:border-emerald-500 cursor-pointer transition-all"
+            className="bg-[#FFFFFF] text-xs font-bold text-[#1E293B] outline-none p-2 border border-[#1E293B] rounded-none focus:border-[#065F46] cursor-pointer transition-all uppercase"
           >
-            <option value="TODAS">Categoría: TODAS</option>
+            <option value="TODAS">CATEGORÍA: TODAS</option>
             {categoriasUnicas.map(cat => <option key={cat} value={cat}>{cat}</option>)}
           </select>
-          <select 
+          <select
             value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}
-            className="bg-white text-xs font-bold text-slate-600 outline-none p-2 border-2 border-slate-200 rounded-lg focus:border-emerald-500 cursor-pointer transition-all"
+            className="bg-[#FFFFFF] text-xs font-bold text-[#1E293B] outline-none p-2 border border-[#1E293B] rounded-none focus:border-[#065F46] cursor-pointer transition-all uppercase"
           >
-            <option value="TODOS">Rotación: TODAS</option>
-            <option value="BUENO">Venta: BUENO</option>
-            <option value="REGULAR">Venta: REGULAR</option>
-            <option value="BAJO">Venta: BAJO</option>
+            <option value="TODOS">ROTACIÓN: TODAS</option>
+            <option value="BUENO">VENTA: BUENO</option>
+            <option value="REGULAR">VENTA: REGULAR</option>
+            <option value="BAJO">VENTA: BAJO</option>
             <option value="SIN VENTAS">SIN VENTAS</option>
           </select>
-          
-          <button 
-            onClick={limpiarFiltrosTabla} 
-            className="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-lg transition-colors cursor-pointer border-2 border-slate-200 flex items-center justify-center"
-            title="Limpiar Filtros de la Tabla"
+
+          <button
+            onClick={limpiarFiltrosTabla}
+            className="bg-[#1E293B] hover:bg-[#065F46] text-[#FFFFFF] px-3 py-2 rounded-none transition-colors cursor-pointer border border-[#1E293B] hover:border-[#065F46] flex items-center justify-center"
+            title="Limpiar Filtros"
           >
-            <RotateCcw size={16} />
+            <RotateCcw size={16} strokeWidth={2} />
           </button>
         </div>
       </div>
 
-      {/* --- CONTROLES DE PAGINACIÓN (ARRIBA) --- */}
-      <div className="flex flex-wrap items-center justify-between px-4 py-3 bg-white border-b-2 border-slate-200 gap-4">
-        <span className="text-xs font-bold text-slate-500">
-          Mostrando {datosFiltrados.length === 0 ? 0 : startIndex + 1} a {Math.min(startIndex + itemsPorPagina, datosFiltrados.length)} de {datosFiltrados.length} productos
+      {/* CONTROLES PAGINACIÓN SUPERIOR */}
+      <div className="flex flex-wrap items-center justify-between px-4 py-2 bg-[#F8FAFC] border-b border-[#E2E8F0] gap-4">
+        <span className="text-[10px] font-black text-[#64748B] uppercase tracking-widest">
+          MOSTRANDO {datosFiltrados.length === 0 ? 0 : startIndex + 1} A {Math.min(startIndex + itemsPorPagina, datosFiltrados.length)} DE {datosFiltrados.length} REGISTROS
         </span>
         <div className="flex items-center gap-2">
-          <button onClick={() => setPaginaActual(p => Math.max(1, p - 1))} disabled={paginaActual === 1} className="px-3 py-1.5 border-2 border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-colors">
-            <ChevronLeft size={14}/> Anterior
+          <button onClick={() => setPaginaActual(p => Math.max(1, p - 1))} disabled={paginaActual === 1} className="px-3 py-1.5 border border-[#1E293B] rounded-none text-[10px] font-bold text-[#1E293B] bg-white hover:bg-[#065F46] hover:text-white hover:border-[#065F46] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-all uppercase">
+            <ChevronLeft size={14} strokeWidth={2}/> ANT
           </button>
-          <span className="px-3 py-1 text-xs font-black text-slate-700 bg-slate-100 rounded-lg">
-            Página {paginaActual} de {totalPaginas}
+          <span className="px-3 py-1.5 text-[10px] font-black text-[#FFFFFF] bg-[#1E293B] rounded-none uppercase tracking-widest">
+            {paginaActual} / {totalPaginas}
           </span>
-          <button onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))} disabled={paginaActual === totalPaginas} className="px-3 py-1.5 border-2 border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-colors">
-            Siguiente <ChevronRight size={14}/>
+          <button onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))} disabled={paginaActual === totalPaginas} className="px-3 py-1.5 border border-[#1E293B] rounded-none text-[10px] font-bold text-[#1E293B] bg-white hover:bg-[#065F46] hover:text-white hover:border-[#065F46] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-all uppercase">
+            SIG <ChevronRight size={14} strokeWidth={2}/>
           </button>
         </div>
       </div>
 
+      {/* TABLA PRINCIPAL - DISEÑO TÉCNICO ESMERALDA LIGERO */}
       <div className="w-full overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[1000px]">
-          <thead className="bg-white text-slate-400 sticky top-0 shadow-md z-10">
+          <thead className="bg-[#1E293B] text-[#FFFFFF] sticky top-0 z-10">
             <tr>
-              <th className="p-4 text-[10px] font-bold tracking-wider uppercase border-b-2 border-slate-200">Producto</th>
-              <th className="p-4 text-[10px] font-bold tracking-wider uppercase border-b-2 border-slate-200 text-center">Stock Actual</th>
-              <th className="p-4 text-[10px] font-bold tracking-wider uppercase border-b-2 border-slate-200 text-center">Vendidos</th>
-              <th className="p-4 text-[10px] font-bold tracking-wider uppercase border-b-2 border-slate-200 text-right">Ingreso Bruto</th>
-              <th className="p-4 text-[10px] font-bold tracking-wider uppercase border-b-2 border-slate-200 text-right">Costo Ventas</th>
-              <th className="p-4 text-[10px] font-bold tracking-wider uppercase border-b-2 border-slate-200 text-right text-red-400">Mermas</th>
-              <th className="p-4 text-[10px] font-bold tracking-wider uppercase border-b-2 border-slate-200 text-right bg-emerald-50 text-emerald-600">Utilidad Neta</th>
-              <th className="p-4 text-[10px] font-bold tracking-wider uppercase border-b-2 border-slate-200 text-center w-24">Margen</th>
+              <th className="p-3 text-[10px] font-black tracking-widest uppercase border-b-2 border-[#065F46]">Producto / Ref</th>
+              <th className="p-3 text-[10px] font-black tracking-widest uppercase text-center border-b-2 border-[#065F46]">Stock Actual</th>
+              <th className="p-3 text-[10px] font-black tracking-widest uppercase text-center border-b-2 border-[#065F46]">U. Vendidas</th>
+              <th className="p-3 text-[10px] font-black tracking-widest uppercase text-right border-b-2 border-[#065F46]">Ingreso Bruto</th>
+              <th className="p-3 text-[10px] font-black tracking-widest uppercase text-right border-b-2 border-[#065F46]">Costo Ventas</th>
+              <th className="p-3 text-[10px] font-black tracking-widest uppercase text-right border-b-2 border-[#065F46]">Mermas</th>
+              <th className="p-3 text-[10px] font-black tracking-widest uppercase text-right bg-[#065F46] text-[#FFFFFF] border-b-2 border-[#047857]">Utilidad Neta</th>
+              <th className="p-3 text-[10px] font-black tracking-widest uppercase text-center border-b-2 border-[#065F46] w-24">Margen</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-[#FFFFFF]">
             {datosPaginados.length === 0 ? (
-              <tr><td colSpan={8} className="p-8 text-center text-slate-400 font-bold text-xs uppercase">No se encontraron productos.</td></tr>
+              <tr><td colSpan={8} className="p-8 text-center text-[#64748B] font-bold text-xs uppercase border-b border-[#E2E8F0]">NO SE ENCONTRARON REGISTROS.</td></tr>
             ) : (
               datosPaginados.map((prod) => (
-                <tr key={prod.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                  <td className="p-4">
-                    <p className="text-xs font-bold text-slate-700 uppercase">{prod.nombre}</p>
-                    <div className="flex gap-2 mt-1">
-                      <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{prod.categoria}</span>
-                      
-                      {/* ETIQUETA DINÁMICA DE ESTADO */}
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                        prod.estado === 'BUENO' ? 'text-emerald-700 bg-emerald-100' : 
-                        prod.estado === 'REGULAR' ? 'text-amber-700 bg-amber-100' : 
-                        prod.estado === 'BAJO' ? 'text-orange-700 bg-orange-100' : 
-                        'text-red-700 bg-red-100'
+                <tr key={prod.id} className="border-b border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors">
+                  <td className="p-3">
+                    <p className="text-xs font-black text-[#1E293B] uppercase mb-1">{prod.nombre}</p>
+                    <div className="flex gap-2">
+                      <span className="text-[9px] font-bold text-[#64748B] border border-[#CBD5E1] bg-[#F1F5F9] px-2 py-0.5 rounded-none uppercase tracking-widest">{prod.categoria}</span>
+
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-none uppercase tracking-widest border ${
+                        prod.estado === 'BUENO' ? 'border-[#065F46] text-[#065F46] bg-[#ECFDF5]' :
+                        prod.estado === 'REGULAR' ? 'border-[#1E293B] text-[#1E293B]' :
+                        prod.estado === 'BAJO' ? 'border-[#94A3B8] text-[#94A3B8]' :
+                        'border-[#CBD5E1] text-[#64748B] bg-[#F1F5F9]'
                       }`}>
                         {prod.estado}
                       </span>
                     </div>
                   </td>
-                  
-                  {/* NUEVA CELDA: ALERTA DE REABASTECIMIENTO */}
-                  <td className="p-4 text-center">
+
+                  <td className="p-3 text-center">
                     {prod.tipoControl === 'CONSUMO' ? (
-                      <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-blue-100 text-blue-700 shadow-sm">
-                        🍽️ Consumo
+                      <span className="text-[9px] font-black px-2 py-1 rounded-none border border-[#1E293B] text-[#1E293B] uppercase tracking-widest">
+                        INTERNO
                       </span>
                     ) : (
-                      <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${
-                        (prod.stockActual || 0) <= 5 ? 'bg-red-100 text-red-700' : 
-                        (prod.stockActual || 0) <= 15 ? 'bg-orange-100 text-orange-700' : 
-                        'bg-slate-100 text-slate-700'
+                      <span className={`text-[9px] font-black px-2 py-1 rounded-none border uppercase tracking-widest ${
+                        (prod.stockActual || 0) <= 5 ? 'border-[#EF4444] text-[#FFFFFF] bg-[#EF4444]' :
+                        (prod.stockActual || 0) <= 15 ? 'border-[#F59E0B] text-[#FFFFFF] bg-[#F59E0B]' :
+                        'border-[#E2E8F0] text-[#1E293B] bg-[#F8FAFC]'
                       }`}>
-                        {(prod.stockActual || 0) <= 5 ? `⚠️ Crítico (${prod.stockActual})` : 
-                         (prod.stockActual || 0) <= 15 ? `📦 Bajo (${prod.stockActual})` : 
-                         `🔥 OK (${prod.stockActual})`}
+                        {(prod.stockActual || 0) <= 5 ? `CRÍTICO (${Number(prod.stockActual).toFixed(2)})` :
+                         (prod.stockActual || 0) <= 15 ? `BAJO (${Number(prod.stockActual).toFixed(2)})` :
+                         `OK (${Number(prod.stockActual).toFixed(2)})`}
                       </span>
                     )}
                   </td>
 
-                  <td className="p-4 text-center text-sm font-bold text-slate-600">{prod.unidadesVendidas}</td>
-                  <td className="p-4 text-right text-xs font-bold text-slate-600">S/ {prod.ingresosTotales.toFixed(2)}</td>
-                  <td className="p-4 text-right text-xs font-bold text-slate-600">S/ {prod.costoTotalVentas.toFixed(2)}</td>
-                  <td className="p-4 text-right text-xs font-bold text-red-500">
+                  <td className="p-3 text-center text-sm font-black text-[#1E293B] font-mono">{Number(prod.unidadesVendidas).toFixed(2)}</td>
+                  <td className="p-3 text-right text-xs font-bold text-[#64748B] font-mono">S/ {prod.ingresosTotales.toFixed(2)}</td>
+                  <td className="p-3 text-right text-xs font-bold text-[#64748B] font-mono">S/ {prod.costoTotalVentas.toFixed(2)}</td>
+                  <td className="p-3 text-right text-xs font-bold text-[#EF4444] font-mono">
                     {prod.perdidaMerma > 0 ? `- S/ ${prod.perdidaMerma.toFixed(2)}` : 'S/ 0.00'}
                   </td>
-                  <td className="p-4 text-right text-sm font-bold bg-emerald-50/30">
-                    <span className={prod.utilidadReal >= 0 ? 'text-emerald-600' : 'text-red-500'}>
+                  <td className="p-3 text-right text-sm font-black border-x border-[#065F46]/20 bg-[#ECFDF5]">
+                    <span className={`font-mono ${prod.utilidadReal >= 0 ? 'text-[#065F46]' : 'text-[#EF4444]'}`}>
                       S/ {prod.utilidadReal.toFixed(2)}
                     </span>
                   </td>
-                  <td className="p-4 text-center">
-                    <span className={`flex items-center justify-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg ${
-                      prod.margen >= 30 ? 'text-emerald-700 bg-emerald-100' : 
-                      prod.margen > 0 ? 'text-amber-700 bg-amber-100' : 
-                      'text-red-700 bg-red-100'
+                  <td className="p-3 text-center">
+                    <span className={`flex items-center justify-center gap-1 text-[9px] font-black px-1.5 py-1 rounded-none border tracking-widest ${
+                      prod.margen >= 30 ? 'border-[#065F46] text-[#065F46] bg-[#ECFDF5]' :
+                      prod.margen > 0 ? 'border-[#1E293B] text-[#1E293B]' :
+                      'border-[#EF4444] text-[#EF4444] bg-[#FEF2F2]'
                     }`}>
-                      {prod.margen >= 0 ? <TrendingUp size={12}/> : <TrendingDown size={12}/>}
+                      {prod.margen >= 0 ? <TrendingUp size={12} strokeWidth={3}/> : <TrendingDown size={12} strokeWidth={3}/>}
                       {prod.margen.toFixed(0)}%
                     </span>
                   </td>
@@ -191,25 +203,6 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos }) => {
           </tbody>
         </table>
       </div>
-
-      {/* --- CONTROLES DE PAGINACIÓN (ABAJO) --- */}
-      <div className="flex flex-wrap items-center justify-between px-4 py-3 bg-white border-t-2 border-slate-200 gap-4">
-        <span className="text-xs font-bold text-slate-500">
-          Mostrando {datosFiltrados.length === 0 ? 0 : startIndex + 1} a {Math.min(startIndex + itemsPorPagina, datosFiltrados.length)} de {datosFiltrados.length} productos
-        </span>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setPaginaActual(p => Math.max(1, p - 1))} disabled={paginaActual === 1} className="px-3 py-1.5 border-2 border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-colors">
-            <ChevronLeft size={14}/> Anterior
-          </button>
-          <span className="px-3 py-1 text-xs font-black text-slate-700 bg-slate-100 rounded-lg">
-            Página {paginaActual} de {totalPaginas}
-          </span>
-          <button onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))} disabled={paginaActual === totalPaginas} className="px-3 py-1.5 border-2 border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-colors">
-            Siguiente <ChevronRight size={14}/>
-          </button>
-        </div>
-      </div>
-
     </div>
   );
 };

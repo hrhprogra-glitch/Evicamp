@@ -5,43 +5,42 @@ import { Trophy } from 'lucide-react';
 interface Props {
   titulo: string;
   items: { nombre: string; cantidad: number; total: number }[];
-  color: string;
+  color?: string; // Se mantiene por compatibilidad pero el render usará nuestro estándar visual
 }
 
-export const TablaRanking: React.FC<Props> = ({ titulo, items, color }) => {
+export const TablaRanking: React.FC<Props> = ({ titulo, items }) => {
   const maxTotal = Math.max(...items.map(i => i.total), 1);
 
   return (
-    <div className="flex-1 bg-white border-2 border-slate-200 shadow-sm flex flex-col min-w-[300px] max-h-[220px] overflow-hidden rounded-xl font-sans">
-      <div className={`p-4 border-b-2 border-slate-200 flex items-center gap-2 bg-slate-50 ${color}`}>
-        <Trophy size={18} />
-        <h3 className="font-bold uppercase tracking-wider text-xs">{titulo}</h3>
+    <div className="flex-1 bg-[#FFFFFF] border border-[#E2E8F0] flex flex-col min-w-[300px] max-h-[220px] overflow-hidden rounded-none font-sans">
+      <div className="p-4 border-b border-[#E2E8F0] flex items-center gap-2 bg-[#F8FAFC] text-[#1E293B]">
+        <Trophy size={16} strokeWidth={1.5} />
+        <h3 className="font-bold uppercase tracking-widest text-[11px]">{titulo}</h3>
       </div>
       
       <div className="p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar flex-1">
         {items.length === 0 ? (
-          <p className="text-center text-slate-400 font-medium text-xs uppercase py-8">No hay datos</p>
+          <p className="text-center text-[#64748B] font-bold text-[10px] uppercase tracking-widest py-8">NO HAY DATOS</p>
         ) : (
           items.map((item, index) => {
             const porcentaje = (item.total / maxTotal) * 100;
-            const barColorClass = color.includes('blue') ? 'bg-blue-500' : color.includes('emerald') ? 'bg-emerald-500' : 'bg-amber-500';
 
             return (
               <div key={index} className="flex flex-col gap-1">
                 <div className="flex justify-between items-end">
-                  <span className="text-xs font-semibold text-slate-700 uppercase truncate pr-2">
+                  <span className="text-[10px] font-bold text-[#1E293B] uppercase tracking-wider truncate pr-2">
                     {index + 1}. {item.nombre}
                   </span>
-                  <span className="text-xs font-bold text-slate-800">
+                  <span className="text-[11px] font-bold text-[#1E293B] font-mono">
                     S/ {item.total.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${barColorClass}`} style={{ width: `${porcentaje}%` }}></div>
+                  <div className="flex-1 h-1.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-none overflow-hidden">
+                    <div className="h-full bg-[#1E293B] rounded-none" style={{ width: `${porcentaje}%` }}></div>
                   </div>
-                  <span className="text-[10px] font-medium text-slate-500 w-12 text-right">
-                    {item.cantidad} unds
+                  <span className="text-[9px] font-bold text-[#64748B] w-12 text-right uppercase tracking-wider">
+                    {item.cantidad} U.
                   </span>
                 </div>
               </div>

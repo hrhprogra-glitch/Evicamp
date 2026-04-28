@@ -2,6 +2,25 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Package, Scale, Coffee, ArrowLeft, Save, ImagePlus, Search, Loader2, Database } from 'lucide-react';
 import { supabase } from '../../../db/supabase'; // RETORNO TÉCNICO: Conexión a la DB
 
+// Componente de Notificación de Errores (Diseño Geométrico y Alto Contraste)
+const TechnicalAlert = ({ message }: { message: string }) => {
+  return (
+    <div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-none p-4 w-full shadow-none mb-2">
+      <div className="flex items-center justify-between">
+        <h4 className="text-[#1E293B] font-bold text-sm tracking-widest uppercase">
+          ERROR DE INTEGRIDAD GEOMÉTRICA
+        </h4>
+        <span className="text-[#1E293B] font-bold text-sm">409</span>
+      </div>
+      <div className="mt-2 pt-2 border-t border-[#E2E8F0]">
+        <p className="text-[#64748B] text-xs font-mono leading-relaxed">
+          {message || "El código interno o código de barras ya existe en el sistema. Asigne un código único o deje el campo en blanco."}
+        </p>
+      </div>
+    </div>
+  );
+};
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -153,6 +172,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     }
   };
 
+  // Estado de errores técnicos
+  const [integrityError, setIntegrityError] = useState<string | null>(null);
+
   // Estado del formulario
   const [formData, setFormData] = useState({
     name: '',
@@ -168,6 +190,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   if (!isOpen) return null;
 
   const resetAndClose = () => {
+    setIntegrityError(null);
     setStep(1);
     setNature(null);
     setFormData({ name: '', category: '', code: '', barcode: '', price: '', minStock: '5', weightUnit: 'KG', image: '' });
@@ -198,23 +221,29 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
     // 🔥 SALIMOS ANTES DE BLOQUEAR LA PANTALLA SI HAY ERROR
     if (isDuplicate) {
-       alert('⚠️ ERROR DE INTEGRIDAD: Ya existe un producto con ese Nombre o Código de Barras.');
+       setIntegrityError('El código interno, código de barras o nombre ya existe en otro producto. Por favor asigne uno único o deje el código en blanco.');
        return; 
     }
 
+    setIntegrityError(null);
     setIsSubmitting(true); // 🔥 AHORA SÍ, ACTIVAMOS EL "PROCESANDO..." DE FORMA SEGURA
 
     try {
       const unidadAsignada = nature === 'PESO' ? formData.weightUnit : (nature === 'CONSUMO' ? 'CONSUMO' : 'UND');
       let productoGuardado;
 
+      // === SANEAMIENTO ESTRICTO DE PAYLOAD ===
+      // Si el usuario deja los campos en blanco, los forzamos a NULL
+      const safeCode = formData.code?.trim() || null;
+      const safeBarcode = formData.barcode?.trim() || null;
+
       if (initialData) {
         // [ RETORNO ]: MODO EDICIÓN
         const { data, error } = await supabase.from('products').update({
           name: nombreLimpio,
           category: formData.category || 'GENERAL',
-          code: formData.code,
-          barcode: formData.barcode,
+          code: safeCode,
+          barcode: safeBarcode,
           price: Number(formData.price) || 0,
           min_stock: Number(formData.minStock) || 5,
           control_type: nature === 'PESO' ? 'WEIGHT' : 'UND',
@@ -236,13 +265,13 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
       } else {
         // [ SALIDA ]: MODO CREACIÓN
         // RETORNO TÉCNICO: Autogenerador de código SKU de 6 dígitos si el campo está vacío
-        const codigoGenerado = formData.code?.trim() || `SKU-${Math.floor(100000 + Math.random() * 900000)}`;
+        const codigoGenerado = safeCode || `SKU-${Math.floor(100000 + Math.random() * 900000)}`;
 
         const { data, error } = await supabase.from('products').insert([{
           name: nombreLimpio,
           category: formData.category || 'GENERAL',
           code: codigoGenerado,
-          barcode: formData.barcode,
+          barcode: safeBarcode,
           price: Number(formData.price) || 0,
           quantity: 0,
           min_stock: Number(formData.minStock) || 5,
@@ -279,11 +308,11 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
     } catch (error: any) {
       console.error("Error al guardar:", error);
-      // 🛡️ EVICAMP: Escudo contra Error de Duplicidad en PostgreSQL (Violación Unique Constraint)
-      if (error.code === '23505') {
-        alert("⚠️ ALERTA DE INTEGRIDAD GEOMÉTRICA\n\nEl Código Interno o Código de Barras que intenta guardar YA EXISTE en otro producto.\n\nPor favor, asigne un código único o deje el campo en blanco.");
+      // 🛡️ EVICAMP: Enrutamiento a UI Geométrica
+      if (error?.code === '23505' || error?.message?.includes('duplicate')) {
+        setIntegrityError("El Código Interno o Código de Barras que intenta guardar YA EXISTE en otro producto. Por favor, asigne un código único o deje el campo en blanco.");
       } else {
-        alert(`⚠️ ERROR DE SISTEMA:\n${error.message || 'No se pudo comunicar con el servidor VPS.'}`);
+        setIntegrityError(`ERROR DE SISTEMA: ${error?.message || 'Fallo de comunicación con la base de datos.'}`);
       }
     } finally {
       setIsSubmitting(false);
@@ -376,6 +405,11 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           {step === 2 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               
+              {/* === INYECCIÓN: ALERTA DE ERROR TÉCNICO === */}
+              <div className="md:col-span-2">
+                {integrityError && <TechnicalAlert message={integrityError} />}
+              </div>
+
               <div className="md:col-span-2 space-y-2">
                 <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">Nombre / Descripción del Producto</label>
                 <input 

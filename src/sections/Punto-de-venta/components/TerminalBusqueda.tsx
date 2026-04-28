@@ -31,19 +31,49 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
     setSelectedIndex(0);
   }, [searchQuery]);
 
+  // 🛡️ ESCUDO DE ESCÁNER GLOBAL (Captura códigos de barras siempre)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // 1. Evitar robar el foco si estás escribiendo en modales (Cobro, Balanza, Clientes)
+      const activeTag = document.activeElement?.tagName;
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return; 
+      
+      // 2. Ignorar teclas de sistema (Shift, Ctrl, F5, etc.)
+      if (e.key.length > 1 && e.key !== 'Enter' && e.key !== 'Backspace') return;
+
+      // 🛡️ PARCHE EVICAMP: Si hay un producto seleccionado en la caja (fondo gris), NO robamos los números.
+      // Esto permite que el componente TicketVenta capture el número para editar la cantidad o precio.
+      const isCartSelected = document.querySelector('.bg-\\[\\#64748B\\]') !== null;
+      if (isCartSelected && /^[0-9]$/.test(e.key)) return;
+
+      // 3. Forzar el imán hacia el buscador
+      const searchInput = document.getElementById('buscador-global-pos') as HTMLInputElement;
+      if (searchInput) searchInput.focus();
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
+
   // SOPORTE PARA FLECHAS, ESCÁNER Y ENTER
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Si no hay resultados o presionamos Derecha/Abajo al final, dejamos que index.tsx haga el salto
     if (filteredProducts.length === 0) return;
 
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    if (e.key === 'ArrowDown') {
+      if (selectedIndex === filteredProducts.length - 1) return; // Permite que burbujee a index.tsx
       e.preventDefault();
-      setSelectedIndex(prev => Math.min(prev + 1, filteredProducts.length - 1));
-    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      setSelectedIndex(prev => prev + 1);
+    } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setSelectedIndex(prev => Math.max(prev - 1, 0));
+    } else if (e.key === 'ArrowRight') {
+      return; // Deja que index.tsx capture el salto al carrito
     } else if (e.key === 'Enter') {
       e.preventDefault();
       const selectedProd = filteredProducts[selectedIndex];
+      if (!selectedProd) return;
+
       const esConsumo = selectedProd.unit === 'CONSUMO' || (selectedProd as any).control_type === 'CONSUMPTION';
       const estaAgotado = !esConsumo && selectedProd.quantity <= 0;
       
@@ -77,6 +107,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
             </div>
             <div className="flex flex-col flex-1 px-4 relative">
               <input 
+                id="buscador-global-pos"
                 type="text" 
                 autoFocus
                 placeholder="ESCANEAS AQUÍ, O ESCRIBES NOMBRE/CÓDIGO (Presiona Enter)" 
