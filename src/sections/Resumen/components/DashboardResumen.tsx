@@ -28,11 +28,11 @@ export const DashboardResumen: React.FC = () => {
   const [topProductos, setTopProductos] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = async (silencioso = false) => {
       try {
-        setLoading(true);
+        if (!silencioso) setLoading(true);
         setError(null);
-        
+
         // MODIFICACIÓN TÉCNICA: Agregamos la tabla 'batches' y quitamos los filtros estrictos
         const [
           { data: sales, error: errSales },
@@ -62,11 +62,24 @@ export const DashboardResumen: React.FC = () => {
       } catch (err: any) {
         setError(err.message);
       } finally {
-        setLoading(false);
+        if (!silencioso) setLoading(false);
       }
     };
 
     fetchDashboardData();
+
+    // 🛡️ EVICAMP: Si la pestaña estuvo inactiva (u otra caja/dispositivo registró ventas),
+    // al volver a mirarla se refrescan los totales en silencio, sin tapar la pantalla con el loader.
+    const refrescarSilencioso = () => fetchDashboardData(true);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') refrescarSilencioso();
+    };
+    window.addEventListener('focus', refrescarSilencioso);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('focus', refrescarSilencioso);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   // 2do Efecto: Cálculos filtrados

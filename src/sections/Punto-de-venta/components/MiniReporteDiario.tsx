@@ -98,6 +98,18 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
       setVentasHoy(ticketsUnificados);
     };
     fetchHoy();
+
+    // 🛡️ EVICAMP: Si la pestaña estuvo inactiva (u otra caja/dispositivo registró ventas),
+    // al volver a mirarla se refrescan los totales para no quedar con datos viejos.
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchHoy();
+    };
+    window.addEventListener('focus', fetchHoy);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('focus', fetchHoy);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [refreshTrigger]);
 
   const modalContent = isModalOpen ? createPortal(

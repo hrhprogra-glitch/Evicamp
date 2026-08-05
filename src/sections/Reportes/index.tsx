@@ -126,6 +126,18 @@ export const Reportes: React.FC = () => {
     };
 
     fetchTickets();
+
+    // 🛡️ EVICAMP: Si la pestaña estuvo inactiva (u otra caja/dispositivo registró ventas),
+    // al volver a mirarla se refrescan los totales para no quedar con datos viejos.
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchTickets();
+    };
+    window.addEventListener('focus', fetchTickets);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('focus', fetchTickets);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [fechaInicio, fechaFin]);
 
   const handleAnularTicket = async (id: string) => {

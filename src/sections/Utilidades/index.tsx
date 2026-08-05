@@ -45,9 +45,10 @@ export const Utilidades = () => {
   const limpiarFiltros = () => { setFechaInicio(hoyStr); setFechaFin(hoyStr); };
 
   useEffect(() => {
-    const procesarEstadisticas = async () => {
-      setIsLoading(true);
-      
+    const procesarEstadisticas = async (silencioso = false) => {
+      if (!silencioso) setIsLoading(true);
+
+
       const fechaFinExpandida = new Date(fechaFin + 'T12:00:00');
       fechaFinExpandida.setDate(fechaFinExpandida.getDate() + 1);
       const finAjustado = fechaFinExpandida.toISOString().split('T')[0];
@@ -85,13 +86,27 @@ export const Utilidades = () => {
       };
 
       // 🚀 2. DESCARGA MASIVA DE DATOS SIN LÍMITES
-      const [ sales, products, waste, movements, debts ] = await Promise.all([
+      const [ sales, products, waste, movements, debts, batches ] = await Promise.all([
         fetchAllFechas('sales', 'id, total, amount_cash, amount_yape, amount_transfer, amount_card, payment_type, sunat_status, created_at'),
         fetchAllSinFechas('products'),
         fetchAllFechas('waste', '*'),
         fetchAllFechas('cash_movements', '*'),
-        fetchAllFechas('debt_payments', '*')
+        fetchAllFechas('debt_payments', '*'),
+        fetchAllSinFechas('batches')
       ]);
+
+      // 🚨 CORRECCIÓN: Costo de respaldo por LOTE MÁS RECIENTE (id numérico más alto), no el campo
+      // "cost_price" del producto, que no se actualiza al comprar mercadería nueva y queda desactualizado.
+      // Esto solo se usa cuando la venta no tiene guardado su propio costo exacto (cost_at_moment).
+      const idLoteMasRecientePorProducto: Record<string, number> = {};
+      const costoLoteMasReciente: Record<string, number> = {};
+      (batches || []).forEach((b: any) => {
+        const idLote = Number(b.id || 0);
+        if (idLoteMasRecientePorProducto[b.product_id] === undefined || idLote > idLoteMasRecientePorProducto[b.product_id]) {
+          idLoteMasRecientePorProducto[b.product_id] = idLote;
+          costoLoteMasReciente[b.product_id] = Number(b.cost_unit) || 0;
+        }
+      });
 
       const facturasValidas = (sales || []).filter(s => s.sunat_status !== 'ANULADO');
       
@@ -178,9 +193,12 @@ export const Utilidades = () => {
         prod.ingresosTotales += ingresoLinea; 
         
         // 🚀 PASO 2: LEER COSTO REAL + CÚPULA DE SEGURIDAD
-        // 1. Priorizamos el costo guardado por el trigger (Paso 1).
-        // 2. Fallback al catálogo para ventas antiguas sin registro de costo.
-        const costoUnitario = d.cost_at_moment ? Number(d.cost_at_moment) : Number(catalogo.find(c => c.id === d.product_id)?.cost_price || 0);
+        // 1. Priorizamos el costo guardado por el trigger al momento de la venta.
+        // 2. Si no existe (venta sin ese registro), usamos el costo del LOTE MÁS RECIENTE del producto.
+        // 3. Como último recurso, el "cost_price" del catálogo (puede estar desactualizado).
+        const costoUnitario = d.cost_at_moment
+          ? Number(d.cost_at_moment)
+          : (costoLoteMasReciente[d.product_id] ?? Number(catalogo.find(c => c.id === d.product_id)?.cost_price || 0));
         let costoCalculado = Number(d.quantity) * costoUnitario;
 
         // 🛡️ CÚPULA DE SEGURIDAD (ANTI-NEGATIVO)
@@ -220,10 +238,23 @@ export const Utilidades = () => {
       });
 
       setAnalisisCompleto(resultadoAnalisis.sort((a, b) => b.utilidadReal - a.utilidadReal));
-      setIsLoading(false);
+      if (!silencioso) setIsLoading(false);
     };
 
     procesarEstadisticas();
+
+    // 🛡️ EVICAMP: Si la pestaña estuvo inactiva (u otra caja/dispositivo registró ventas),
+    // al volver a mirarla se refrescan los totales en silencio, sin tapar la tabla con el loader.
+    const refrescarSilencioso = () => procesarEstadisticas(true);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') refrescarSilencioso();
+    };
+    window.addEventListener('focus', refrescarSilencioso);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('focus', refrescarSilencioso);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [fechaInicio, fechaFin]);
 
   // 🟢 CÁLCULO MAESTRO SINCRONIZADO (FINANZAS + POS + UTILIDAD)
