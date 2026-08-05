@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { Layers, ChevronLeft, ChevronRight, Package, Edit, Trash2 } from 'lucide-react';
+import { formatearCantidad } from '../../../utils/formato';
 import type { Merma } from '../types';
+import type { Product } from '../../Inventario/types';
 
 interface Props {
   mermas: Merma[];
+  products: Product[];
   onEdit?: (merma: Merma) => void;
   onDelete?: (merma: Merma) => void;
 }
 
-export const TablaMermas: React.FC<Props> = ({ mermas, onEdit, onDelete }) => {
+export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelete }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 50;
 
@@ -113,7 +116,7 @@ export const TablaMermas: React.FC<Props> = ({ mermas, onEdit, onDelete }) => {
               {/* UNIDADES */}
               <div className="col-span-1 min-w-0 flex justify-center">
                 <div className="inline-flex items-center justify-center px-2 py-1 border-2 border-[#1E293B] bg-[#FFFFFF] font-black text-[#1E293B] text-xs w-full max-w-[50px] truncate rounded-none">
-                  {merma.quantity}
+                  {formatearCantidad(merma.quantity, products.find(p => p.id === merma.product_id)?.unit)}
                 </div>
               </div>
 

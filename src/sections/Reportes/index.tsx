@@ -5,19 +5,24 @@ import { supabase } from '../../db/supabase';
 import { TablaTickets } from './components/TablaTickets';
 import type { TicketVenta } from './types';
 
+// Obtiene la fecha (YYYY-MM-DD) en hora local sin importar la zona horaria del dispositivo
+// (mismo motor ya verificado en la sección Utilidades)
+const obtenerFechaLocal = (fecha: Date) => {
+  const d = new Date(fecha);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split('T')[0];
+};
+
 export const Reportes: React.FC = () => {
   const [tickets, setTickets] = useState<TicketVenta[]>([]);
-  
-  const hoy = new Date();
-  const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
-  const hoyStr = hoy.toISOString().split('T')[0];
 
-  // INYECCIÓN: Calculamos la fecha local exacta (evita desfasajes por zona horaria UTC)
-  const hoyLocal = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+  const hoy = new Date();
+  const hoyStr = obtenerFechaLocal(hoy);
+  const primerDiaMes = obtenerFechaLocal(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
 
   // Seteamos "HOY" como fecha predeterminada al cargar el módulo
-  const [fechaInicio, setFechaInicio] = useState<string>(hoyLocal);
-  const [fechaFin, setFechaFin] = useState<string>(hoyLocal);
+  const [fechaInicio, setFechaInicio] = useState<string>(hoyStr);
+  const [fechaFin, setFechaFin] = useState<string>(hoyStr);
 
   // --- FUNCIONES DE FILTRADO RÁPIDO ---
   const filtrarHoy = () => {
@@ -27,8 +32,8 @@ export const Reportes: React.FC = () => {
 
   const filtrarSemana = () => {
     const haceUnaSemana = new Date();
-    haceUnaSemana.setDate(hoy.getDate() - 7);
-    setFechaInicio(haceUnaSemana.toISOString().split('T')[0]);
+    haceUnaSemana.setDate(haceUnaSemana.getDate() - 7);
+    setFechaInicio(obtenerFechaLocal(haceUnaSemana));
     setFechaFin(hoyStr);
   };
 
@@ -61,13 +66,15 @@ export const Reportes: React.FC = () => {
       fechaFinExpandida.setDate(fechaFinExpandida.getDate() + 1);
       const finAjustado = fechaFinExpandida.toISOString().split('T')[0];
 
+      // 🛠️ ZONA HORARIA PERÚ (UTC-5): "00:00" de un día en Perú equivale a "05:00" UTC.
+      // Sin este ajuste, el rango se corría 5 horas y mezclaba ventas de la noche del día anterior.
       let query = supabase.from('sales').select('*');
-      
+
       if (fechaInicio && fechaFin) {
-        query = query.gte('created_at', `${fechaInicio}T00:00:00`)
-                     .lt('created_at', `${finAjustado}T00:00:00`);
+        query = query.gte('created_at', `${fechaInicio}T05:00:00.000Z`)
+                     .lt('created_at', `${finAjustado}T05:00:00.000Z`);
       } else {
-        query = query.limit(100); 
+        query = query.limit(100);
       }
       
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -79,8 +86,8 @@ export const Reportes: React.FC = () => {
           let queryFiados = supabase.from('fiados').select('sale_id, customer_name, amount, paid_amount');
           
           if (fechaInicio && fechaFin) {
-            queryFiados = queryFiados.gte('date_given', `${fechaInicio}T00:00:00`)
-                                     .lt('date_given', `${finAjustado}T00:00:00`);
+            queryFiados = queryFiados.gte('date_given', `${fechaInicio}T05:00:00.000Z`)
+                                     .lt('date_given', `${finAjustado}T05:00:00.000Z`);
           } else {
             queryFiados = queryFiados.limit(1000); 
           }

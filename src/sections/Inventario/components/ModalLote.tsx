@@ -82,11 +82,24 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
   if (!isOpen) return null;
 
   // Motor de filtrado ultra-rápido (EXCLUYE LOS PRODUCTOS DE CONSUMO INTERNO)
-  const filteredProducts = productos.filter(p => 
-    p.unit !== 'CONSUMO' && // <-- BLOQUEO ESTRICTO: NO MOSTRAR CONSUMO AQUÍ
-    (p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-     p.code.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredProducts = productos.filter(p => {
+    if (p.unit === 'CONSUMO') return false; // <-- BLOQUEO ESTRICTO: NO MOSTRAR CONSUMO AQUÍ
+    const q = searchQuery.toLowerCase();
+    return p.name.toLowerCase().includes(q) ||
+      p.code.toLowerCase().includes(q) ||
+      (p.barcode || '').toLowerCase().includes(q);
+  });
+
+  // 📡 SOPORTE DE ESCÁNER: el lector escribe el código y envía "Enter" automáticamente.
+  // Si hay una coincidencia, la seleccionamos al instante sin necesidad de hacer click.
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && filteredProducts.length > 0) {
+      e.preventDefault();
+      setSelectedProduct(filteredProducts[0]);
+      setShowDropdown(false);
+      setSearchQuery('');
+    }
+  };
 
   // FÓRMULA MATEMÁTICA AUTOMÁTICA (Costo Unitario)
   const costoUnitario = (Number(costoTotal) > 0 && Number(cantidad) > 0) 
@@ -251,15 +264,17 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
               </div>
             ) : (
               <div className="relative">
-                <input 
+                <input
                   type="text"
-                  placeholder="ESCRIBE CÓDIGO O NOMBRE DEL PRODUCTO..."
+                  autoFocus
+                  placeholder="ESCANEA O ESCRIBE CÓDIGO / NOMBRE DEL PRODUCTO..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
                     setShowDropdown(true);
                   }}
                   onFocus={() => setShowDropdown(true)}
+                  onKeyDown={handleSearchKeyDown}
                   className="w-full bg-white border-2 border-[#E2E8F0] p-3 text-xs font-black text-[#1E293B] uppercase outline-none focus:border-[#10B981] transition-colors"
                 />
                 {showDropdown && searchQuery && (

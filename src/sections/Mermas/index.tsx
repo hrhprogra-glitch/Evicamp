@@ -244,8 +244,9 @@ export const Mermas: React.FC = () => {
             </div>
           </div>
         ) : (
-          <TablaMermas 
-            mermas={filteredMermas} 
+          <TablaMermas
+            mermas={filteredMermas}
+            products={products}
             onEdit={(merma) => {
               setMermaAEditar(merma);
               setIsModalMermaOpen(true);

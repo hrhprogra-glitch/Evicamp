@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Database,Layers, Edit, Trash2, History, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
+import { formatearCantidad } from '../../../utils/formato';
 
 interface Lote {
   id: string;
@@ -308,7 +309,7 @@ export const TablaLotes: React.FC<Props> = ({
           }`} 
           title={`Stock exacto en DB: ${lote.quantity} ${lote.unit || 'UND'}`}
         >
-          <span className="leading-none">{Number(Number(lote.quantity || 0).toFixed(3))}</span>
+          <span className="leading-none">{formatearCantidad(lote.quantity, lote.unit)}</span>
           <span className="text-[8px] opacity-70 leading-tight mt-0.5">{lote.unit || 'UND'}</span>
         </div>
       </div>

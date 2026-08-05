@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, UserPlus, Package, Search, Plus, Trash2, ChevronDown } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
+import { formatearCantidad } from '../../../utils/formato';
 import type { Fiado, FiadoDetalle, Cliente } from '../types';
 import type { Product } from '../../Inventario/types';
 
@@ -47,11 +48,13 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
   // LÓGICA DE INVENTARIO: Buscar y Agregar
   // Añadimos p.name ? para asegurarnos de que el producto tiene nombre antes de buscar
   // 🔥 FILTRO DE SEGURIDAD: Solo mostramos productos que tengan stock físico
-  const prodFiltrados = searchProd.trim() === '' ? [] : productos.filter(p => 
-    p.name && 
-    p.name.toLowerCase().includes(searchProd.toLowerCase()) &&
-    p.quantity > 0 // <--- Solo productos con stock
-  ).slice(0, 5);
+  const prodFiltrados = searchProd.trim() === '' ? [] : productos.filter(p => {
+    if (!p.name || p.quantity <= 0) return false; // <--- Solo productos con stock
+    const q = searchProd.toLowerCase();
+    return p.name.toLowerCase().includes(q) ||
+      (p.code || '').toLowerCase().includes(q) ||
+      (p.barcode || '').toLowerCase().includes(q);
+  }).slice(0, 5);
 
   const agregarProducto = (prod: Product) => {
     // 🚫 BLOQUEO DE SEGURIDAD: Evitar agregar si no hay stock
@@ -322,7 +325,21 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                 <label className="text-[10px] font-black uppercase text-[#64748B] flex items-center gap-2 mb-2"><Package size={14}/> Buscar en Inventario</label>
                 <div className="relative">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
-                  <input type="text" value={searchProd} onChange={e => setSearchProd(e.target.value)} placeholder="ESCRIBE UN PRODUCTO..." className="w-full bg-white border-2 border-[#E2E8F0] p-2 pl-9 text-xs font-black uppercase outline-none focus:border-[#3B82F6]" />
+                  <input
+                    type="text"
+                    value={searchProd}
+                    onChange={e => setSearchProd(e.target.value)}
+                    onKeyDown={e => {
+                      // 📡 SOPORTE DE ESCÁNER: el lector escribe el código y envía "Enter" automáticamente.
+                      if (e.key === 'Enter' && prodFiltrados.length > 0) {
+                        e.preventDefault();
+                        agregarProducto(prodFiltrados[0]);
+                        setSearchProd('');
+                      }
+                    }}
+                    placeholder="ESCANEA O ESCRIBE UN PRODUCTO..."
+                    className="w-full bg-white border-2 border-[#E2E8F0] p-2 pl-9 text-xs font-black uppercase outline-none focus:border-[#3B82F6]"
+                  />
                 </div>
                 {prodFiltrados.length > 0 && (
                   <div className="mt-1 bg-white border-2 border-[#E2E8F0] max-h-40 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -334,7 +351,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                       >
                         <div>
                           <p className="text-xs font-black text-[#1E293B] uppercase">{p.name}</p>
-                          <p className="text-[9px] font-bold text-[#64748B]">Stock: {p.quantity} | S/ {p.price}</p>
+                          <p className="text-[9px] font-bold text-[#64748B]">Stock: {formatearCantidad(p.quantity, p.unit)} | S/ {p.price}</p>
                         </div>
                         <div className="p-1 bg-[#1E293B] text-white group-hover:bg-[#3B82F6] transition-colors"><Plus size={14}/></div>
                       </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, AlertTriangle, Database, Loader2 } from 'lucide-react';
 import { supabase } from '../../../db/supabase.ts';
+import { formatearCantidad } from '../../../utils/formato';
 import type { Product } from '../types';
 
 interface Props {
@@ -130,10 +131,23 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
   if (!isOpen) return null;
 
   // Filtro inteligente
-  const filteredProducts = productos.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    p.code.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProducts = productos.filter(p => {
+    const q = searchQuery.toLowerCase();
+    return p.name.toLowerCase().includes(q) ||
+      p.code.toLowerCase().includes(q) ||
+      (p.barcode || '').toLowerCase().includes(q);
+  });
+
+  // 📡 SOPORTE DE ESCÁNER: el lector escribe el código y envía "Enter" automáticamente.
+  // Si hay una coincidencia, la seleccionamos al instante sin necesidad de hacer click.
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && filteredProducts.length > 0) {
+      e.preventDefault();
+      setSelectedProduct(filteredProducts[0]);
+      setShowDropdown(false);
+      setSearchQuery('');
+    }
+  };
 
   // 3. Lógica de Guardado (INSERT vs UPDATE)
   const handleSave = async () => {
@@ -326,14 +340,16 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
               <div className="relative">
                 <input
                   type="text"
+                  autoFocus
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
                     setShowDropdown(true);
                   }}
                   onFocus={() => setShowDropdown(true)}
+                  onKeyDown={handleSearchKeyDown}
                   className="w-full bg-[#F8FAFC] border-2 border-[#E2E8F0] p-3 text-xs font-bold text-[#1E293B] outline-none focus:border-[#EF4444] transition-colors"
-                  placeholder="Escribe nombre o código del producto..."
+                  placeholder="Escanea o escribe nombre / código del producto..."
                 />
                 {showDropdown && searchQuery && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[#1E293B] shadow-[4px_4px_0_0_#1E293B] z-50 max-h-48 overflow-y-auto custom-scrollbar">
@@ -349,7 +365,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
                           }}
                           className="flex flex-col p-3 hover:bg-[#F8FAFC] border-b border-[#E2E8F0] cursor-pointer group"
                         >
-                          <span className="text-[9px] font-bold text-[#64748B] group-hover:text-[#EF4444]">{p.code} | Stock: {p.quantity}</span>
+                          <span className="text-[9px] font-bold text-[#64748B] group-hover:text-[#EF4444]">{p.code} | Stock: {formatearCantidad(p.quantity, p.unit)}</span>
                           <span className="text-xs font-black text-[#1E293B] uppercase">{p.name}</span>
                         </div>
                       ))
@@ -380,7 +396,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
                 <option value="">{loadingLotes ? 'CARGANDO LOTES...' : lotes.length === 0 ? 'SIN LOTES CON STOCK' : '-- SELECCIONAR LOTE --'}</option>
                 {lotes.map(l => (
                   <option key={l.id} value={l.id}>
-                    F. Ingreso: {new Date(l.created_at).toLocaleDateString()} | Stock Actual: {l.quantity} | Costo: S/{Number(l.cost_unit).toFixed(2)}
+                    F. Ingreso: {new Date(l.created_at).toLocaleDateString()} | Stock Actual: {formatearCantidad(l.quantity, selectedProduct?.unit)} | Costo: S/{Number(l.cost_unit).toFixed(2)}
                   </option>
                 ))}
               </select>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ScanLine, Package, Plus } from 'lucide-react';
+import { formatearCantidad } from '../../../utils/formato';
 import type { Product } from '../../Inventario/types';
 
 interface Props {
@@ -185,8 +186,8 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                             ? 'text-[#0284C7] bg-[#F0F9FF] border border-[#0284C7]' 
                             : 'text-[#1E293B] bg-[#F8FAFC] border border-[#1E293B]'
                       }`}>
-                        {prod.quantity > 0 
-                          ? `STK: ${prod.quantity} ${prod.unit === 'KG' ? 'KG' : 'UN'}` 
+                        {prod.quantity > 0
+                          ? `STK: ${formatearCantidad(prod.quantity, prod.unit)} ${prod.unit === 'KG' ? 'KG' : 'UN'}`
                           : 'AGOTADO'
                         }
                       </span>
