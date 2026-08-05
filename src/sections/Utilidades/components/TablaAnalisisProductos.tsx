@@ -1,17 +1,36 @@
 // src/sections/Utilidades/components/TablaAnalisisProductos.tsx
-import React, { useState, useEffect } from 'react';
-import { Search, Filter, TrendingDown, TrendingUp, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { AnalisisProducto } from '../types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Search, Filter, TrendingDown, TrendingUp, RotateCcw, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+import type { AnalisisProducto, StatsFiltro } from '../types';
 
 interface Props {
   datos: AnalisisProducto[];
+  fechaInicio: string;
+  fechaFin: string;
+  setFechaInicio: (val: string) => void;
+  setFechaFin: (val: string) => void;
+  limpiarFechas: () => void;
+  onStatsFiltradasChange: (stats: StatsFiltro) => void;
 }
 
-export const TablaAnalisisProductos: React.FC<Props> = ({ datos }) => {
+export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fechaFin, setFechaInicio, setFechaFin, limpiarFechas, onStatsFiltradasChange }) => {
   const [busqueda, setBusqueda] = useState('');
   const [filtroCat, setFiltroCat] = useState('TODAS');
   const [filtroEstado, setFiltroEstado] = useState('TODOS');
-  
+
+  const [localInicio, setLocalInicio] = useState(fechaInicio);
+  const [localFin, setLocalFin] = useState(fechaFin);
+
+  useEffect(() => {
+    setLocalInicio(fechaInicio);
+    setLocalFin(fechaFin);
+  }, [fechaInicio, fechaFin]);
+
+  const handleBuscarFecha = () => {
+    setFechaInicio(localInicio);
+    setFechaFin(localFin);
+  };
+
   const [paginaActual, setPaginaActual] = useState(1);
   const categoriasUnicas = Array.from(new Set(datos.map(d => d.categoria))).sort();
 
@@ -20,24 +39,39 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos }) => {
     return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
   };
 
-  const datosFiltrados = datos.filter(prod => {
+  const datosFiltrados = useMemo(() => datos.filter(prod => {
     // 1. Construimos un índice global concatenando todos los datos útiles del producto
     const indiceOmni = normalizarTexto(`${prod.nombre || ''} ${prod.categoria || ''} ${prod.estado || ''} ${prod.tipoControl || ''}`);
     const busquedaNormalizada = normalizarTexto(busqueda || '');
-    
+
     // 2. Fragmentamos la búsqueda
     const terminosBusqueda = busquedaNormalizada.split(/\s+/).filter(Boolean);
-    
+
     // 3. Verificamos que CADA palabra tipeada exista en el índice global
-    const coincideBusqueda = terminosBusqueda.length === 0 || terminosBusqueda.every(termino => 
+    const coincideBusqueda = terminosBusqueda.length === 0 || terminosBusqueda.every(termino =>
       indiceOmni.includes(termino)
     );
 
     const coincideCat = filtroCat === 'TODAS' || prod.categoria === filtroCat;
     const coincideEstado = filtroEstado === 'TODOS' || prod.estado === filtroEstado;
-    
+
     return coincideBusqueda && coincideCat && coincideEstado;
-  });
+  }), [datos, busqueda, filtroCat, filtroEstado]);
+
+  const hayFiltrosActivos = busqueda.trim() !== '' || filtroCat !== 'TODAS' || filtroEstado !== 'TODOS';
+
+  // 🟢 TOTALES DEL SUBCONJUNTO VISIBLE: para que las tarjetas de resumen reflejen
+  // exactamente lo que la tabla está mostrando cuando hay un filtro de categoría/rotación/búsqueda activo.
+  const statsFiltradas = useMemo((): StatsFiltro => ({
+    ingresos: datosFiltrados.reduce((acc, p) => acc + p.ingresosTotales, 0),
+    costos: datosFiltrados.reduce((acc, p) => acc + p.costoTotalVentas, 0),
+    mermas: datosFiltrados.reduce((acc, p) => acc + p.perdidaMerma, 0),
+    hayFiltros: hayFiltrosActivos,
+  }), [datosFiltrados, hayFiltrosActivos]);
+
+  useEffect(() => {
+    onStatsFiltradasChange(statsFiltradas);
+  }, [statsFiltradas, onStatsFiltradasChange]);
 
   useEffect(() => {
     setPaginaActual(1);
@@ -52,6 +86,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos }) => {
     setBusqueda('');
     setFiltroCat('TODAS');
     setFiltroEstado('TODOS');
+    limpiarFechas();
   };
 
   return (
@@ -93,10 +128,31 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos }) => {
             <option value="SIN VENTAS">SIN VENTAS</option>
           </select>
 
+          <div className="flex items-center gap-2 bg-[#FFFFFF] border border-[#1E293B] p-1.5 rounded-none">
+            <div className="flex flex-col px-1.5">
+              <label className="text-[8px] font-bold text-[#64748B] uppercase tracking-wider">Desde</label>
+              <div className="flex items-center gap-1.5">
+                <CalendarDays size={12} className="text-[#1E293B]" />
+                <input type="date" value={localInicio} onChange={(e) => setLocalInicio(e.target.value)} className="text-[11px] font-bold text-[#1E293B] outline-none bg-transparent cursor-pointer font-mono" />
+              </div>
+            </div>
+            <div className="w-[1px] h-7 bg-[#E2E8F0]"></div>
+            <div className="flex flex-col px-1.5">
+              <label className="text-[8px] font-bold text-[#64748B] uppercase tracking-wider">Hasta</label>
+              <div className="flex items-center gap-1.5">
+                <CalendarDays size={12} className="text-[#1E293B]" />
+                <input type="date" value={localFin} onChange={(e) => setLocalFin(e.target.value)} className="text-[11px] font-bold text-[#1E293B] outline-none bg-transparent cursor-pointer font-mono" />
+              </div>
+            </div>
+            <button onClick={handleBuscarFecha} className="bg-[#1E293B] hover:bg-[#065F46] text-[#FFFFFF] p-1.5 rounded-none transition-colors cursor-pointer flex items-center justify-center border border-[#1E293B] hover:border-[#065F46]" title="Buscar por Fecha">
+              <Search size={14} strokeWidth={2} />
+            </button>
+          </div>
+
           <button
             onClick={limpiarFiltrosTabla}
             className="bg-[#1E293B] hover:bg-[#065F46] text-[#FFFFFF] px-3 py-2 rounded-none transition-colors cursor-pointer border border-[#1E293B] hover:border-[#065F46] flex items-center justify-center"
-            title="Limpiar Filtros"
+            title="Limpiar Todos los Filtros"
           >
             <RotateCcw size={16} strokeWidth={2} />
           </button>

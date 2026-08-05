@@ -18,6 +18,14 @@ export interface MetricaCategoria {
   totalRecaudado: number;
 }
 
+// TOTALES DEL SUBCONJUNTO ACTUALMENTE FILTRADO EN LA TABLA (búsqueda / categoría / rotación)
+export interface StatsFiltro {
+  ingresos: number;
+  costos: number;
+  mermas: number;
+  hayFiltros: boolean;
+}
+
 // NUEVA INTERFAZ PARA EL ANÁLISIS DE RENTABILIDAD
 export interface AnalisisProducto {
   id: string;

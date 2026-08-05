@@ -27,7 +27,8 @@ export const TopBar: React.FC<TopBarProps> = ({ toggleSidebar, userEmail, onNavi
       const { data, error } = await supabase
         .from('fiados')
         .select('id') // Traemos solo el ID para que sea súper rápido
-        .neq('status', 'CANCELADO'); 
+        .neq('status', 'CANCELADO') // CANCELADO = ya pagado
+        .neq('status', 'ANULADO'); // ANULADO = deuda/venta anulada, no cuenta como pendiente
       
       if (error) {
         console.error("Error al buscar fiados:", error);

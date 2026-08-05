@@ -7,7 +7,7 @@ import { TarjetasResumen } from './components/TarjetasResumen';
 import { TablaAnalisisProductos } from './components/TablaAnalisisProductos';
 import { VentanaTopsFlotante } from './components/VentanaTopsFlotante';
 
-import type { AnalisisProducto } from './types';
+import type { AnalisisProducto, StatsFiltro } from './types';
 
 // Obtiene la fecha en formato YYYY-MM-DD sin importar la hora local
 const obtenerFechaLocal = () => {
@@ -31,6 +31,7 @@ export const Utilidades = () => {
   const [ingresosTotalesExactos, setIngresosTotalesExactos] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [mostrarTops, setMostrarTops] = useState(false);
+  const [statsFiltro, setStatsFiltro] = useState<StatsFiltro>({ ingresos: 0, costos: 0, mermas: 0, hayFiltros: false });
 
   const filtrarHoy = () => { setFechaInicio(hoyStr); setFechaFin(hoyStr); };
   const filtrarSemana = () => {
@@ -226,11 +227,14 @@ export const Utilidades = () => {
   }, [fechaInicio, fechaFin]);
 
   // 🟢 CÁLCULO MAESTRO SINCRONIZADO (FINANZAS + POS + UTILIDAD)
-  const globalIngresos = ingresosTotalesExactos; // La variable ya contiene el cálculo algorítmico de Finanzas
-  const globalCostos = analisisCompleto.reduce((acc: number, p: any) => acc + p.costoTotalVentas, 0);
-  const globalMermas = analisisCompleto.reduce((acc: number, p: any) => acc + p.perdidaMerma, 0);
-  
-  // FÓRMULA MAESTRA DEFINITIVA
+  // Sin filtros en la tabla: se usa el total exacto del período (Finanzas).
+  // Con un filtro de categoría/rotación/búsqueda activo: las tarjetas muestran
+  // solo lo que la tabla está mostrando en ese momento.
+  const globalIngresos = statsFiltro.hayFiltros ? statsFiltro.ingresos : ingresosTotalesExactos;
+  const globalCostos = statsFiltro.hayFiltros ? statsFiltro.costos : analisisCompleto.reduce((acc: number, p: any) => acc + p.costoTotalVentas, 0);
+  const globalMermas = statsFiltro.hayFiltros ? statsFiltro.mermas : analisisCompleto.reduce((acc: number, p: any) => acc + p.perdidaMerma, 0);
+
+  // FÓRMULA MAESTRA DEFINITIVA (Gastos Operativos no es un dato por producto, así que se mantiene fijo al período)
   const globalUtilidad = globalIngresos - globalCostos - globalMermas - gastosCaja;
 
   const topsFlotantes = analisisCompleto
@@ -273,31 +277,37 @@ export const Utilidades = () => {
       </div>
 
       <div className="flex flex-col gap-6 shrink-0">
-        <FiltrosUtilidades 
-          fechaInicio={fechaInicio} fechaFin={fechaFin} 
-          setFechaInicio={setFechaInicio} setFechaFin={setFechaFin}
-          filtrarHoy={filtrarHoy} filtrarSemana={filtrarSemana} 
-          filtrarMes={filtrarMes} limpiarFiltros={limpiarFiltros}
+        <FiltrosUtilidades
+          filtrarHoy={filtrarHoy} filtrarSemana={filtrarSemana}
+          filtrarMes={filtrarMes}
         />
         <TarjetasResumen
-          ingresos={globalIngresos} 
-          costos={globalCostos} 
-          mermas={globalMermas} 
-          gastosOperativos={gastosCaja} 
-          utilidad={globalUtilidad} 
+          ingresos={globalIngresos}
+          costos={globalCostos}
+          mermas={globalMermas}
+          gastosOperativos={gastosCaja}
+          utilidad={globalUtilidad}
+          filtrado={statsFiltro.hayFiltros}
         />
       </div>
 
-      {isLoading ? (
-        <div className="flex-1 flex flex-col items-center justify-center py-20 bg-white border border-[#E2E8F0] rounded-none">
-          <div className="w-10 h-10 border-4 border-[#E2E8F0] border-t-[#065F46] animate-spin rounded-full mb-4"></div>
-          <p className="text-[#065F46] font-bold uppercase tracking-widest text-sm">Sincronizando Base de Datos...</p>
-        </div>
-      ) : (
-        <div className="pb-6">
-          <TablaAnalisisProductos datos={analisisCompleto} />
-        </div>
-      )}
+      {/* La tabla permanece siempre montada (aunque esté cargando) para no perder
+          la categoría, rotación, búsqueda y página que el usuario ya eligió. */}
+      <div className="relative pb-6">
+        {isLoading && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center py-20 bg-white/85 backdrop-blur-[1px]">
+            <div className="w-10 h-10 border-4 border-[#E2E8F0] border-t-[#065F46] animate-spin rounded-full mb-4"></div>
+            <p className="text-[#065F46] font-bold uppercase tracking-widest text-sm">Sincronizando Base de Datos...</p>
+          </div>
+        )}
+        <TablaAnalisisProductos
+          datos={analisisCompleto}
+          fechaInicio={fechaInicio} fechaFin={fechaFin}
+          setFechaInicio={setFechaInicio} setFechaFin={setFechaFin}
+          limpiarFechas={limpiarFiltros}
+          onStatsFiltradasChange={setStatsFiltro}
+        />
+      </div>
 
       {mostrarTops && !isLoading && (
         <VentanaTopsFlotante tops={topsFlotantes} onClose={() => setMostrarTops(false)} />
