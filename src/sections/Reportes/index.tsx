@@ -15,6 +15,9 @@ const obtenerFechaLocal = (fecha: Date) => {
 
 export const Reportes: React.FC = () => {
   const [tickets, setTickets] = useState<TicketVenta[]>([]);
+  // 💰 Abonos de deudas (fiados) pagados dentro del rango filtrado. Igual que Resumen/Utilidades/
+  // Finanzas, estos pagos son ingreso real aunque no correspondan a un ticket de venta nuevo.
+  const [totalAbonosRango, setTotalAbonosRango] = useState<number>(0);
 
   const hoy = new Date();
   const hoyStr = obtenerFechaLocal(hoy);
@@ -79,21 +82,30 @@ export const Reportes: React.FC = () => {
       
       const { data, error } = await query.order('created_at', { ascending: false });
 
+      // 💰 ABONOS DE FIADOS EN EL RANGO (igual que Resumen/Utilidades/Finanzas)
+      let queryAbonos = supabase.from('debt_payments').select('amount, created_at');
+      if (fechaInicio && fechaFin) {
+        queryAbonos = queryAbonos.gte('created_at', `${fechaInicio}T05:00:00.000Z`)
+                                  .lt('created_at', `${finAjustado}T05:00:00.000Z`);
+      } else {
+        queryAbonos = queryAbonos.limit(1000);
+      }
+      const { data: abonosData } = await queryAbonos;
+      setTotalAbonosRango((abonosData || []).reduce((acc, a: any) => acc + Number(a.amount || 0), 0));
+
       if (data) {
         const fiadosMap: Record<string, any> = {};
 
-        if (data.length > 0) {
-          let queryFiados = supabase.from('fiados').select('sale_id, customer_name, amount, paid_amount');
-          
-          if (fechaInicio && fechaFin) {
-            queryFiados = queryFiados.gte('date_given', `${fechaInicio}T05:00:00.000Z`)
-                                     .lt('date_given', `${finAjustado}T05:00:00.000Z`);
-          } else {
-            queryFiados = queryFiados.limit(1000); 
-          }
+        // 🛡️ Buscamos el fiado por sale_id exacto (no por rango de fecha) para no perder
+        // el match si "date_given" quedó unos milisegundos fuera del rango filtrado.
+        const idsConCredito = data.filter(t => Number(t.amount_credit || 0) > 0).map(t => t.id);
 
-          const { data: fiadosData } = await queryFiados;
-            
+        if (idsConCredito.length > 0) {
+          const { data: fiadosData } = await supabase
+            .from('fiados')
+            .select('sale_id, customer_name, amount, paid_amount')
+            .in('sale_id', idsConCredito);
+
           if (fiadosData) {
             fiadosData.forEach(f => {
               fiadosMap[f.sale_id] = f;
@@ -103,10 +115,18 @@ export const Reportes: React.FC = () => {
 
         const ticketsFormateados: TicketVenta[] = data.map(t => {
           const fiado = t.id ? fiadosMap[String(t.id)] : null;
-          const esFiado = !!fiado;
+          const creditoOriginal = Number(t.amount_credit || 0);
+          const esFiado = creditoOriginal > 0;
           const totalTicket = Number(t.total) || 0;
-          const deudaActual = esFiado ? (Number(fiado.amount || 0) - Number(fiado.paid_amount || 0)) : 0;
-          const montoPagado = esFiado ? (totalTicket - deudaActual) : totalTicket;
+          // 💰 INGRESO REAL: igual que Punto de Venta, Finanzas, Resumen y Utilidades — se cuenta
+          // solo lo cobrado AL MOMENTO de la venta. No usamos el saldo "en vivo" de fiados aquí
+          // porque cambia con el tiempo (a medida que se abona) y descuadraba este total contra
+          // las demás secciones, que solo reconocen el abono como ingreso el día que realmente entra.
+          const montoPagado = Number(t.amount_cash || 0) + Number(t.amount_yape || 0) + Number(t.amount_card || 0) + Number(t.amount_transfer || 0);
+          // Deuda actual (para mostrar "cuánto debe todavía"): usamos el saldo vivo de fiados
+          // (baja con los abonos); si el registro no existe por algún fallo, caemos al crédito
+          // original de la venta para no mostrar deuda en cero por error.
+          const deudaActual = esFiado ? (fiado ? Math.max(0, Number(fiado.amount || 0) - Number(fiado.paid_amount || 0)) : creditoOriginal) : 0;
 
           return {
             id: t.id ? String(t.id) : `ERR-${Math.floor(Math.random() * 10000)}`,
@@ -236,7 +256,9 @@ export const Reportes: React.FC = () => {
     }
   };
 
-  const totalRango = tickets.filter(t => t.estado !== 'ANULADO').reduce((acc, t) => acc + Number(t.total), 0);
+  // 💰 INGRESO REAL: igual que Punto de Venta, Finanzas, Resumen y Utilidades — lo cobrado en
+  // cada venta ("monto_pagado") más los abonos de fiados pagados dentro del rango.
+  const totalRango = tickets.filter(t => t.estado !== 'ANULADO').reduce((acc, t) => acc + Number(t.monto_pagado), 0) + totalAbonosRango;
   const totalAnulados = tickets.filter(t => t.estado === 'ANULADO').length;
 
   return (

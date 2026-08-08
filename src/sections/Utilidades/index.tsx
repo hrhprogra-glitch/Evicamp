@@ -87,7 +87,7 @@ export const Utilidades = () => {
 
       // 🚀 2. DESCARGA MASIVA DE DATOS SIN LÍMITES
       const [ sales, products, waste, movements, debts, batches ] = await Promise.all([
-        fetchAllFechas('sales', 'id, total, amount_cash, amount_yape, amount_transfer, amount_card, payment_type, sunat_status, created_at'),
+        fetchAllFechas('sales', 'id, total, amount_cash, amount_yape, amount_transfer, amount_card, amount_credit, payment_type, sunat_status, created_at'),
         fetchAllSinFechas('products'),
         fetchAllFechas('waste', '*'),
         fetchAllFechas('cash_movements', '*'),
@@ -109,12 +109,13 @@ export const Utilidades = () => {
       });
 
       const facturasValidas = (sales || []).filter(s => s.sunat_status !== 'ANULADO');
-      
+      const salesById = new Map(facturasValidas.map((s: any) => [s.id, s]));
+
       // 🚀 3. DESCARGA MASIVA DE DETALLES DE VENTA (Chunk reducido a 50 para evitar límite)
       let detalles: any[] = [];
       if (facturasValidas.length > 0) {
         const saleIds = facturasValidas.map(s => s.id);
-        const chunkSize = 50; 
+        const chunkSize = 50;
         for (let i = 0; i < saleIds.length; i += chunkSize) {
           const chunk = saleIds.slice(i, i + chunkSize);
           let from = 0;
@@ -127,9 +128,26 @@ export const Utilidades = () => {
           }
         }
       }
-      
+
+      // 🧾 FIADOS DE LAS VENTAS DEL RANGO: para poder mostrar, por producto, si la venta se pagó
+      // o quedó fiada, y cuánto se abonó / cuánto falta. Buscamos por sale_id exacto (no por fecha)
+      // para no perder el match si el fiado se registró unos milisegundos fuera de rango.
+      const idsConCredito = facturasValidas.filter((s: any) => Number(s.amount_credit || 0) > 0).map((s: any) => s.id);
+      const fiadosMap: Record<string, any> = {};
+      if (idsConCredito.length > 0) {
+        const chunkSize = 50;
+        for (let i = 0; i < idsConCredito.length; i += chunkSize) {
+          const chunk = idsConCredito.slice(i, i + chunkSize);
+          const { data: fiadosChunk } = await supabase
+            .from('fiados')
+            .select('sale_id, customer_name, amount, paid_amount')
+            .in('sale_id', chunk);
+          (fiadosChunk || []).forEach((f: any) => { fiadosMap[f.sale_id] = f; });
+        }
+      }
+
       const catalogo = products || [];
-      const mermas = waste || []; 
+      const mermas = waste || [];
 
       // --- 1. GASTOS Y ABONOS ---
       let totalGastos = 0;
@@ -138,8 +156,9 @@ export const Utilidades = () => {
         if (m.flujo === 'EXTERNO') return;
         
         // 🚨 EVICAMP: BLOQUEO ANTI-DUPLICADOS PARA FIADOS
-        // La BD genera un movimiento automático (INGRESO_FIADO) al pagar una deuda.
-        // Lo ignoramos aquí porque el valor de esa deuda YA se sumó el día que se hizo la venta original.
+        // La BD genera un movimiento automático (INGRESO_FIADO) al pagar una deuda, pero ese mismo
+        // abono ya se cuenta abajo vía "abonosDeuda" (tabla debt_payments). Lo ignoramos aquí para
+        // no sumarlo dos veces.
         if (m.flujo === 'INGRESO_FIADO' || (m.category || '').toUpperCase().includes('FIADO')) return;
         
         if (m.type === 'EGRESO') {
@@ -160,38 +179,57 @@ export const Utilidades = () => {
 
       setGastosCaja(totalGastos);
 
-      // --- 2. VENTAS REALES (INGRESOS BRUTOS COMPLETOS) ---
+      // --- 2. VENTAS REALES (INGRESO DE CAJA, IGUAL QUE POS Y FINANZAS) ---
+      // Solo se cuenta el dinero efectivamente cobrado en cada venta (efectivo/yape/tarjeta/transferencia).
+      // La parte fiada (amount_credit) NO suma aquí hasta que el cliente la paga.
       let ventasRealesTotales = 0;
       facturasValidas.forEach((s: any) => {
-        // 🚨 CORRECCIÓN MATEMÁTICA: Para evaluar rentabilidad real, se debe sumar el TOTAL de la venta
-        // (incluyendo Transferencias y Fiados). Así cuadra 100% con el Costo de los productos que salieron.
-        ventasRealesTotales += Number(s.total || 0);
+        ventasRealesTotales += Number(s.amount_cash || 0) + Number(s.amount_yape || 0) + Number(s.amount_card || 0) + Number(s.amount_transfer || 0);
       });
 
-      // El Ingreso Bruto es Ventas + Ingresos Extra. 
-      // (Ya no sumamos Abonos de deuda porque los Fiados ya se contaron arriba como venta realizada).
-      const ingresoBrutoReal = ventasRealesTotales + ingresosExtra;
+      // El Ingreso Bruto es Ventas cobradas + Ingresos Extra + Abonos de fiados pagados en el rango
+      // (el abono es el momento exacto en que ese dinero realmente entra a caja).
+      const ingresoBrutoReal = ventasRealesTotales + ingresosExtra + abonosDeuda;
       setIngresosTotalesExactos(ingresoBrutoReal);
 
       // --- 3. ANÁLISIS DE RENTABILIDAD POR PRODUCTO ---
       const mapaAnalisis: Record<string, AnalisisProducto> = {};
       catalogo.forEach(p => {
         const esConsumo = `${p.control_type} ${p.unit} ${p.category} ${p.name}`.toLowerCase().includes('consumo');
+        const esPeso = String(p.unit || '').toUpperCase() === 'KG' || p.control_type === 'WEIGHT';
         mapaAnalisis[p.id] = {
           id: p.id, nombre: p.name, categoria: p.category || 'SIN CATEGORÍA', estado: '',
           stockActual: Number(p.quantity) || 0, tipoControl: esConsumo ? 'CONSUMO' : 'STOCK',
-          unidadesVendidas: 0, ingresosTotales: 0, costoTotalVentas: 0, unidadesMerma: 0, perdidaMerma: 0, utilidadReal: 0, margen: 0
+          unidadesVendidas: 0, ingresosTotales: 0, costoTotalVentas: 0, unidadesMerma: 0, perdidaMerma: 0, utilidadReal: 0, margen: 0,
+          unidadMedida: esConsumo ? 'CONSUMO' : (esPeso ? 'KG' : 'UND'),
+          ventasDetalle: []
         };
       });
 
       detalles.forEach(d => {
         if (!mapaAnalisis[d.product_id]) return;
         const prod = mapaAnalisis[d.product_id];
-        prod.unidadesVendidas += Number(d.quantity);
-        
-        const ingresoLinea = Number(d.subtotal);
-        prod.ingresosTotales += ingresoLinea; 
-        
+
+        const cantidadLinea = Number(d.quantity) || 0;
+        const ingresoLinea = Number(d.subtotal) || 0;
+
+        // 🧾 ESTADO DE PAGO DE LA VENTA (igual que Reportes/Resumen/Finanzas): una venta fiada
+        // no se marca a nivel de producto, sino a nivel de venta completa (así se guarda el crédito).
+        const ventaOrigen: any = salesById.get(d.sale_id);
+        const creditoOriginal = Number(ventaOrigen?.amount_credit || 0);
+        const esFiado = creditoOriginal > 0;
+        const fiado = fiadosMap[d.sale_id];
+        // Si el fiado ya no tiene registro (dato huérfano), usamos el crédito original como deuda de respaldo.
+        const deudaTotal = fiado ? Number(fiado.amount || 0) : creditoOriginal;
+        const restante = esFiado ? Math.max(0, deudaTotal - (fiado ? Number(fiado.paid_amount || 0) : 0)) : 0;
+        const abonado = esFiado ? Math.max(0, deudaTotal - restante) : 0;
+
+        // 💰 SOLO LO PAGADO: si la venta no es fiada, la línea entra al 100%. Si es fiada,
+        // prorrateamos kilos/unidades, ingreso Y costo por la fracción de ESA venta ya abonada
+        // (no hay forma de saber qué producto específico del carrito quedó fiado cuando la
+        // venta mezcla pagado + fiado, así que repartimos el abono proporcionalmente).
+        const fraccionPagada = esFiado ? (deudaTotal > 0 ? abonado / deudaTotal : 1) : 1;
+
         // 🚀 PASO 2: LEER COSTO REAL + CÚPULA DE SEGURIDAD
         // 1. Priorizamos el costo guardado por el trigger al momento de la venta.
         // 2. Si no existe (venta sin ese registro), usamos el costo del LOTE MÁS RECIENTE del producto.
@@ -199,16 +237,33 @@ export const Utilidades = () => {
         const costoUnitario = d.cost_at_moment
           ? Number(d.cost_at_moment)
           : (costoLoteMasReciente[d.product_id] ?? Number(catalogo.find(c => c.id === d.product_id)?.cost_price || 0));
-        let costoCalculado = Number(d.quantity) * costoUnitario;
+        let costoLineaTotal = cantidadLinea * costoUnitario;
 
         // 🛡️ CÚPULA DE SEGURIDAD (ANTI-NEGATIVO)
-        // Si por error de registro (Costo de Caja vs Unidad) la inversión supera al ingreso,
-        // el sistema fuerza un margen de ganancia del 20% (Costo = 80% del ingreso).
-        if (costoCalculado >= ingresoLinea && ingresoLinea > 0) {
-          costoCalculado = ingresoLinea * 0.80; 
+        // Si por error de registro (Costo de Caja vs Unidad) la inversión supera al ingreso facturado,
+        // el sistema fuerza un margen de ganancia del 20% (Costo = 80% del ingreso). Se compara contra
+        // el ingreso FACTURADO (no el cobrado) porque es la relación real costo-vs-precio de venta.
+        if (costoLineaTotal >= ingresoLinea && ingresoLinea > 0) {
+          costoLineaTotal = ingresoLinea * 0.80;
         }
 
-        prod.costoTotalVentas += costoCalculado;
+        prod.unidadesVendidas += cantidadLinea * fraccionPagada;
+        prod.ingresosTotales += ingresoLinea * fraccionPagada;
+        prod.costoTotalVentas += costoLineaTotal * fraccionPagada;
+
+        // 🧾 DETALLE POR VENTA: para el modal "Ver ventas" del producto. Aquí sí mostramos la
+        // cantidad y el monto COMPLETOS del ticket (no prorrateados), junto con su estado de pago.
+        prod.ventasDetalle!.push({
+          saleId: String(d.sale_id),
+          fecha: ventaOrigen?.created_at || '',
+          cantidad: cantidadLinea,
+          monto: ingresoLinea,
+          esFiado,
+          clienteNombre: fiado?.customer_name || null,
+          montoAbonado: esFiado ? abonado : undefined,
+          montoRestante: esFiado ? restante : undefined,
+          fiadoCompleto: esFiado ? restante <= 0.009 : undefined
+        });
       });
 
       mermas.forEach(w => {
@@ -225,7 +280,8 @@ export const Utilidades = () => {
         prod.utilidadReal = Number((prod.ingresosTotales - prod.costoTotalVentas - prod.perdidaMerma).toFixed(2));
         const calculadoMargen = prod.ingresosTotales > 0 ? (prod.utilidadReal / prod.ingresosTotales) * 100 : (prod.utilidadReal < 0 ? -100 : 0);
         prod.margen = Number(calculadoMargen.toFixed(2));
-        
+        prod.ventasDetalle?.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+
         resultadoAnalisis.push(prod);
       });
 

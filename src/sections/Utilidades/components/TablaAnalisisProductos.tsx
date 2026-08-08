@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Filter, TrendingDown, TrendingUp, RotateCcw, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import type { AnalisisProducto, StatsFiltro } from '../types';
+import { ModalDetalleProducto } from './ModalDetalleProducto';
 
 interface Props {
   datos: AnalisisProducto[];
@@ -32,6 +33,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
   };
 
   const [paginaActual, setPaginaActual] = useState(1);
+  const [productoSeleccionado, setProductoSeleccionado] = useState<AnalisisProducto | null>(null);
   const categoriasUnicas = Array.from(new Set(datos.map(d => d.categoria))).sort();
 
   // ⚙️ MOTOR DE BÚSQUEDA OMNIDIRECCIONAL (EVICAMP V3)
@@ -185,7 +187,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               <th className="p-3 text-[10px] font-black tracking-widest uppercase border-b-2 border-[#065F46]">Producto / Ref</th>
               <th className="p-3 text-[10px] font-black tracking-widest uppercase text-center border-b-2 border-[#065F46]">Stock Actual</th>
               <th className="p-3 text-[10px] font-black tracking-widest uppercase text-center border-b-2 border-[#065F46]">U. Vendidas</th>
-              <th className="p-3 text-[10px] font-black tracking-widest uppercase text-right border-b-2 border-[#065F46]">Ingreso Bruto</th>
+              <th className="p-3 text-[10px] font-black tracking-widest uppercase text-right border-b-2 border-[#065F46]">Ingreso Cobrado</th>
               <th className="p-3 text-[10px] font-black tracking-widest uppercase text-right border-b-2 border-[#065F46]">Costo Ventas</th>
               <th className="p-3 text-[10px] font-black tracking-widest uppercase text-right border-b-2 border-[#065F46]">Mermas</th>
               <th className="p-3 text-[10px] font-black tracking-widest uppercase text-right bg-[#065F46] text-[#FFFFFF] border-b-2 border-[#047857]">Utilidad Neta</th>
@@ -197,7 +199,12 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               <tr><td colSpan={8} className="p-8 text-center text-[#64748B] font-bold text-xs uppercase border-b border-[#E2E8F0]">NO SE ENCONTRARON REGISTROS.</td></tr>
             ) : (
               datosPaginados.map((prod) => (
-                <tr key={prod.id} className="border-b border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors">
+                <tr
+                  key={prod.id}
+                  onClick={() => setProductoSeleccionado(prod)}
+                  className="border-b border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+                  title="Ver ventas de este producto"
+                >
                   <td className="p-3">
                     <p className="text-xs font-black text-[#1E293B] uppercase mb-1">{prod.nombre}</p>
                     <div className="flex gap-2">
@@ -232,7 +239,9 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                     )}
                   </td>
 
-                  <td className="p-3 text-center text-sm font-black text-[#1E293B] font-mono">{Number(prod.unidadesVendidas).toFixed(2)}</td>
+                  <td className="p-3 text-center text-sm font-black text-[#1E293B] font-mono">
+                    {Number(prod.unidadesVendidas).toFixed(2)} <span className="text-[9px] font-bold text-[#64748B]">{prod.unidadMedida}</span>
+                  </td>
                   <td className="p-3 text-right text-xs font-bold text-[#64748B] font-mono">S/ {prod.ingresosTotales.toFixed(2)}</td>
                   <td className="p-3 text-right text-xs font-bold text-[#64748B] font-mono">S/ {prod.costoTotalVentas.toFixed(2)}</td>
                   <td className="p-3 text-right text-xs font-bold text-[#EF4444] font-mono">
@@ -259,6 +268,13 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
           </tbody>
         </table>
       </div>
+
+      {productoSeleccionado && (
+        <ModalDetalleProducto
+          producto={productoSeleccionado}
+          onClose={() => setProductoSeleccionado(null)}
+        />
+      )}
     </div>
   );
 };

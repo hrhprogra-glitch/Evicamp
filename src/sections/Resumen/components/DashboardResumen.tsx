@@ -110,7 +110,11 @@ export const DashboardResumen: React.FC = () => {
     const fiadosFiltered = (fiados || []).filter((f: any) => isWithinRange(f.date_given));
 
         // --- CÁLCULOS TÉCNICOS ---
-        const ventasBrutas = salesFiltered.reduce((acc: number, s: any) => acc + Number(s.total || 0), 0);
+        // 💰 INGRESO REAL DE CAJA: igual que Punto de Venta y Finanzas, solo se cuenta el dinero
+        // efectivamente cobrado (efectivo/yape/tarjeta/transferencia) más los abonos de fiados
+        // pagados en el rango. Un fiado sin pagar NO suma aquí hasta que se cobra.
+        const ventasBrutas = salesFiltered.reduce((acc: number, s: any) => acc + Number(s.amount_cash || 0) + Number(s.amount_yape || 0) + Number(s.amount_card || 0) + Number(s.amount_transfer || 0), 0)
+          + debtPaymentsFiltered.reduce((acc: number, dp: any) => acc + Number(dp.amount_cash || 0) + Number(dp.amount_yape || 0) + Number(dp.amount_card || 0) + Number(dp.amount_transfer || 0), 0);
         const costoVenta = saleDetailsFiltered.reduce((acc: number, d: any) => acc + (Number(d.cost_at_moment || 0) * Number(d.quantity || 0)), 0);
         const mermasValor = wastesFiltered.reduce((acc: number, w: any) => acc + Number(w.total_loss || 0), 0);
         const utilidadReal = ventasBrutas - costoVenta - mermasValor;
