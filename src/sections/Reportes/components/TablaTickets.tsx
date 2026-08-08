@@ -100,7 +100,12 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete }) =
                 </tr>
               ) : (
                 currentTickets.map((t) => (
-                  <tr key={t.id} className="border-b border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors">
+                  <tr
+                    key={t.id}
+                    onClick={() => verDetalles(t.id)}
+                    className="border-b border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+                    title="Click para ver detalle del ticket"
+                  >
                     <td className="p-4 text-xs font-bold text-[#64748B]">
                       {new Date(t.created_at).toLocaleString('es-PE')}
                     </td>
@@ -136,15 +141,15 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete }) =
                     </td>
                     <td className="p-4">
                       <div className="flex items-center justify-center gap-2">
-                        <button onClick={() => verDetalles(t.id)} className="p-2 bg-[#FFFFFF] text-[#1E293B] border border-[#E2E8F0] hover:border-[#1E293B] transition-colors cursor-pointer rounded-none" title="Ver Productos">
+                        <button onClick={(e) => { e.stopPropagation(); verDetalles(t.id); }} className="p-2 bg-[#FFFFFF] text-[#1E293B] border border-[#E2E8F0] hover:border-[#1E293B] transition-colors cursor-pointer rounded-none" title="Ver Productos">
                           <Eye size={16} />
                         </button>
                         {t.estado !== 'ANULADO' && (
-                          <button onClick={() => onAnular(t.id)} className="p-2 bg-[#FFFFFF] text-[#64748B] border border-[#E2E8F0] hover:border-[#F59E0B] hover:text-[#F59E0B] transition-colors cursor-pointer rounded-none" title="Anular / Devolver">
+                          <button onClick={(e) => { e.stopPropagation(); onAnular(t.id); }} className="p-2 bg-[#FFFFFF] text-[#64748B] border border-[#E2E8F0] hover:border-[#F59E0B] hover:text-[#F59E0B] transition-colors cursor-pointer rounded-none" title="Anular / Devolver">
                             <RotateCcw size={16} />
                           </button>
                         )}
-                        <button onClick={() => onDelete(t.id)} className="p-2 bg-[#FFFFFF] text-[#64748B] border border-[#E2E8F0] hover:border-[#EF4444] hover:text-[#EF4444] transition-colors cursor-pointer rounded-none" title="Eliminar Permanente">
+                        <button onClick={(e) => { e.stopPropagation(); onDelete(t.id); }} className="p-2 bg-[#FFFFFF] text-[#64748B] border border-[#E2E8F0] hover:border-[#EF4444] hover:text-[#EF4444] transition-colors cursor-pointer rounded-none" title="Eliminar Permanente">
                           <Trash2 size={16} />
                         </button>
                       </div>

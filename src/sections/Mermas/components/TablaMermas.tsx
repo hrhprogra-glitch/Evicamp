@@ -74,7 +74,12 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
           </div>
         ) : (
           paginatedData.map((merma, index) => (
-            <div key={merma.id || `merma-${index}`} className="grid grid-cols-12 gap-3 items-center p-4 border-b border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors text-sm rounded-none">
+            <div
+              key={merma.id || `merma-${index}`}
+              onClick={() => onEdit?.(merma)}
+              className="grid grid-cols-12 gap-3 items-center p-4 border-b border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors text-sm rounded-none cursor-pointer"
+              title="Click para editar"
+            >
               
               {/* FECHA Y USUARIO */}
               <div className="col-span-2 min-w-0 flex flex-col gap-1">
@@ -136,15 +141,15 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
 
               {/* ACCIONES */}
               <div className="col-span-1 min-w-0 flex items-center justify-center gap-2">
-                <button 
-                  onClick={() => onEdit?.(merma)}
+                <button
+                  onClick={(e) => { e.stopPropagation(); onEdit?.(merma); }}
                   className="p-2 border border-[#E2E8F0] text-[#64748B] hover:text-[#FFFFFF] hover:bg-[#1E293B] transition-colors rounded-none bg-[#FFFFFF]"
                   title="Editar Merma"
                 >
                   <Edit size={14} />
                 </button>
-                <button 
-                  onClick={() => onDelete?.(merma)}
+                <button
+                  onClick={(e) => { e.stopPropagation(); onDelete?.(merma); }}
                   className="p-2 border border-[#E2E8F0] text-[#64748B] hover:text-[#FFFFFF] hover:bg-[#EF4444] hover:border-[#EF4444] transition-colors rounded-none bg-[#FFFFFF]"
                   title="Eliminar Merma"
                 >

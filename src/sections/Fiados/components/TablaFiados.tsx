@@ -151,7 +151,12 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, on
               </tr>
             ) : (
               currentFiados.map(fiado => (
-                <tr key={fiado.id} className="border-b border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors">
+                <tr
+                  key={fiado.id}
+                  onClick={() => onView(fiado)}
+                  className="border-b border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+                  title="Click para ver detalle"
+                >
                   <td className="p-4">
                     <p className="text-base font-black text-[#1E293B] uppercase">{fiado.clienteNombre}</p>
                     {fiado.clienteTelefono && <p className="text-xs text-[#64748B] font-bold">Cel: {fiado.clienteTelefono}</p>}
@@ -177,25 +182,25 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, on
                   {/* ACCIONES */}
                   <td className="p-4">
                     <div className="flex items-center justify-center gap-2">
-                      <button onClick={() => onView(fiado)} className="p-2 bg-white text-[#94A3B8] border-2 border-[#E2E8F0] hover:border-[#3B82F6] hover:text-[#3B82F6] transition-colors cursor-pointer rounded-none" title="Ver Detalles">
+                      <button onClick={(e) => { e.stopPropagation(); onView(fiado); }} className="p-2 bg-white text-[#94A3B8] border-2 border-[#E2E8F0] hover:border-[#3B82F6] hover:text-[#3B82F6] transition-colors cursor-pointer rounded-none" title="Ver Detalles">
                         <Eye size={16} />
                       </button>
-                      
+
                       {fiado.estado !== 'PAGADO' && (
                         <>
-                          <button onClick={() => onEdit(fiado)} className="p-2 bg-white text-[#94A3B8] border-2 border-[#E2E8F0] hover:border-[#F59E0B] hover:text-[#F59E0B] transition-colors cursor-pointer rounded-none" title="Editar Deuda">
+                          <button onClick={(e) => { e.stopPropagation(); onEdit(fiado); }} className="p-2 bg-white text-[#94A3B8] border-2 border-[#E2E8F0] hover:border-[#F59E0B] hover:text-[#F59E0B] transition-colors cursor-pointer rounded-none" title="Editar Deuda">
                             <Edit size={16} />
                           </button>
-                          <button onClick={() => onPay(fiado)} className="p-2 bg-white text-[#94A3B8] border-2 border-[#E2E8F0] hover:border-[#10B981] hover:text-[#10B981] transition-colors cursor-pointer rounded-none" title="Registrar Abono">
+                          <button onClick={(e) => { e.stopPropagation(); onPay(fiado); }} className="p-2 bg-white text-[#94A3B8] border-2 border-[#E2E8F0] hover:border-[#10B981] hover:text-[#10B981] transition-colors cursor-pointer rounded-none" title="Registrar Abono">
                             <Banknote size={16} />
                           </button>
                         </>
                       )}
 
                       {fiado.pagos && fiado.pagos.length > 0 && (
-                        <button 
-                          onClick={() => onRevertir(fiado)} 
-                          className="p-2 bg-white text-[#94A3B8] border-2 border-[#E2E8F0] hover:border-[#F59E0B] hover:text-[#F59E0B] transition-colors cursor-pointer rounded-none" 
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onRevertir(fiado); }}
+                          className="p-2 bg-white text-[#94A3B8] border-2 border-[#E2E8F0] hover:border-[#F59E0B] hover:text-[#F59E0B] transition-colors cursor-pointer rounded-none"
                           title="Ver Historial de Pagos / Anular Pago"
                         >
                           <RotateCcw size={16} />

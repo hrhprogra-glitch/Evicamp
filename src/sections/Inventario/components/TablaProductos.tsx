@@ -216,7 +216,12 @@ export const TablaProductos: React.FC<Props> = ({
 
             // === MODO VISTA NORMAL ===
             return (
-              <div key={item.id} className="grid grid-cols-12 items-center p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors group">
+              <div
+                key={item.id}
+                onClick={() => onEditProduct ? onEditProduct(item) : startEditing(item)}
+                className="grid grid-cols-12 items-center p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors group cursor-pointer"
+                title="Click para editar"
+              >
                 
                 {/* 0. IMAGEN (BLINDADA CONTRA MEDIA://) */}
                 <div className="col-span-1 flex items-center justify-center pr-2">
@@ -279,27 +284,28 @@ export const TablaProductos: React.FC<Props> = ({
 
                 {/* 6. ACCIONES + BOTÓN HISTORIAL LOTE */}
                 <div className="col-span-2 text-center flex items-center justify-center gap-3">
-                  <button 
-                    className="text-[#94A3B8] hover:text-[#3B82F6] transition-colors cursor-pointer" 
+                  <button
+                    className="text-[#94A3B8] hover:text-[#3B82F6] transition-colors cursor-pointer"
                     title="Historial de Lotes / Movimientos"
-                    onClick={() => onViewHistory ? onViewHistory(item) : alert(`ABRIENDO HISTORIAL DE LOTES PARA: ${item.code}`)}
+                    onClick={(e) => { e.stopPropagation(); onViewHistory ? onViewHistory(item) : alert(`ABRIENDO HISTORIAL DE LOTES PARA: ${item.code}`); }}
                   >
                     <History size={16} />
                   </button>
-                  <button 
-                    onClick={() => onEditProduct ? onEditProduct(item) : startEditing(item)} 
-                    className="text-[#94A3B8] hover:text-[#10B981] transition-colors cursor-pointer" 
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onEditProduct ? onEditProduct(item) : startEditing(item); }}
+                    className="text-[#94A3B8] hover:text-[#10B981] transition-colors cursor-pointer"
                     title="Editar Producto"
                   >
                     <Edit size={16} />
                   </button>
-                  <button 
-                    onClick={() => {
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (window.confirm(`⚠️ ALERTA DE INTEGRIDAD GEOMÉTRICA\n\nEstá a punto de eliminar el producto:\n"${item.name}"\n\n🚨 ATENCIÓN: Al borrar este producto, TODOS LOS LOTES asociados a él serán eliminados automáticamente para no romper la contabilidad del sistema.\n\n¿Confirma la eliminación del producto y de todos sus lotes?`)) {
                         if (onDeleteProduct) onDeleteProduct(item);
                       }
                     }}
-                    className="text-[#94A3B8] hover:text-red-500 transition-colors cursor-pointer" 
+                    className="text-[#94A3B8] hover:text-red-500 transition-colors cursor-pointer"
                     title="Eliminar del Sistema"
                   >
                     <Trash2 size={16} />
