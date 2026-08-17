@@ -106,7 +106,10 @@ export const DashboardResumen: React.FC = () => {
     const validSaleIds = new Set(salesFiltered.map((s: any) => s.id));
     const saleDetailsFiltered = (saleDetails || []).filter((d: any) => validSaleIds.has(d.sale_id));
     const wastesFiltered = (wastes || []).filter((w: any) => isWithinRange(w.created_at));
-    const debtPaymentsFiltered = (debtPayments || []).filter((dp: any) => isWithinRange(dp.created_at));
+    // 🛡️ Si el ticket de un fiado fue ANULADO después de un abono, ese abono ya se revirtió en
+    // caja (ver Reportes -> Anular Ticket) y no debe seguir sumando ingreso para siempre.
+    const fiadoIdsAnulados = new Set((fiados || []).filter((f: any) => f.status === 'ANULADO').map((f: any) => f.id));
+    const debtPaymentsFiltered = (debtPayments || []).filter((dp: any) => isWithinRange(dp.created_at) && !fiadoIdsAnulados.has(dp.fiado_id));
     const fiadosFiltered = (fiados || []).filter((f: any) => isWithinRange(f.date_given));
 
         // --- CÁLCULOS TÉCNICOS ---

@@ -83,7 +83,7 @@ export const Reportes: React.FC = () => {
       const { data, error } = await query.order('created_at', { ascending: false });
 
       // 💰 ABONOS DE FIADOS EN EL RANGO (igual que Resumen/Utilidades/Finanzas)
-      let queryAbonos = supabase.from('debt_payments').select('amount, created_at');
+      let queryAbonos = supabase.from('debt_payments').select('amount, fiado_id, created_at');
       if (fechaInicio && fechaFin) {
         queryAbonos = queryAbonos.gte('created_at', `${fechaInicio}T05:00:00.000Z`)
                                   .lt('created_at', `${finAjustado}T05:00:00.000Z`);
@@ -91,7 +91,16 @@ export const Reportes: React.FC = () => {
         queryAbonos = queryAbonos.limit(1000);
       }
       const { data: abonosData } = await queryAbonos;
-      setTotalAbonosRango((abonosData || []).reduce((acc, a: any) => acc + Number(a.amount || 0), 0));
+
+      // 🛡️ Si el ticket de un fiado fue ANULADO después de un abono, ese abono ya se revirtió en
+      // caja y no debe seguir sumando ingreso para siempre.
+      const fiadoIdsDeAbonos = Array.from(new Set((abonosData || []).map((a: any) => a.fiado_id).filter(Boolean)));
+      let fiadoIdsAnulados = new Set<number>();
+      if (fiadoIdsDeAbonos.length > 0) {
+        const { data: fiadosDeAbonos } = await supabase.from('fiados').select('id, status').in('id', fiadoIdsDeAbonos);
+        fiadoIdsAnulados = new Set((fiadosDeAbonos || []).filter((f: any) => f.status === 'ANULADO').map((f: any) => f.id));
+      }
+      setTotalAbonosRango((abonosData || []).reduce((acc, a: any) => fiadoIdsAnulados.has(a.fiado_id) ? acc : acc + Number(a.amount || 0), 0));
 
       if (data) {
         const fiadosMap: Record<string, any> = {};

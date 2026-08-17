@@ -111,10 +111,50 @@ export const Utilidades = () => {
       const facturasValidas = (sales || []).filter(s => s.sunat_status !== 'ANULADO');
       const salesById = new Map(facturasValidas.map((s: any) => [s.id, s]));
 
+      // 🔄 FIADOS DE OTRO DÍA PAGADOS DENTRO DE ESTE RANGO: si hoy cobras una deuda de una
+      // venta de OTRO día, esa venta no está en "facturasValidas" (quedó fuera por fecha) y su
+      // producto nunca reflejaría el abono. La traemos aparte SOLO para el análisis por producto
+      // (nunca para "ventasRealesTotales" de abajo, porque el dinero pagado AL MOMENTO de esa
+      // venta ya se contó en el período en que ocurrió; aquí solo interesa el abono de hoy).
+      const ventasParaProductos = [...facturasValidas];
+      // Fiados cuyo ticket original fue ANULADO: sus abonos viejos no deben seguir sumando
+      // utilidad para siempre (ver uso más abajo, en el cálculo de "abonosDeuda").
+      const fiadoIdsAnulados = new Set<number>();
+      const fiadoIdsConAbonoEnRango = Array.from(new Set((debts || []).map((d: any) => d.fiado_id).filter(Boolean)));
+      if (fiadoIdsConAbonoEnRango.length > 0) {
+        const { data: fiadosDeAbonos } = await supabase
+          .from('fiados')
+          .select('id, sale_id, status')
+          .in('id', fiadoIdsConAbonoEnRango);
+
+        (fiadosDeAbonos || []).forEach((f: any) => {
+          if (f.status === 'ANULADO') fiadoIdsAnulados.add(f.id);
+        });
+
+        const saleIdsFaltantes = Array.from(new Set(
+          (fiadosDeAbonos || [])
+            .map((f: any) => f.sale_id)
+            .filter((sid: any) => sid && !salesById.has(sid))
+        ));
+
+        if (saleIdsFaltantes.length > 0) {
+          const { data: ventasExtra } = await supabase
+            .from('sales')
+            .select('id, total, amount_cash, amount_yape, amount_transfer, amount_card, amount_credit, payment_type, sunat_status, created_at')
+            .in('id', saleIdsFaltantes);
+
+          (ventasExtra || []).forEach((s: any) => {
+            if (s.sunat_status === 'ANULADO') return;
+            ventasParaProductos.push(s);
+            salesById.set(s.id, s);
+          });
+        }
+      }
+
       // 🚀 3. DESCARGA MASIVA DE DETALLES DE VENTA (Chunk reducido a 50 para evitar límite)
       let detalles: any[] = [];
-      if (facturasValidas.length > 0) {
-        const saleIds = facturasValidas.map(s => s.id);
+      if (ventasParaProductos.length > 0) {
+        const saleIds = ventasParaProductos.map(s => s.id);
         const chunkSize = 50;
         for (let i = 0; i < saleIds.length; i += chunkSize) {
           const chunk = saleIds.slice(i, i + chunkSize);
@@ -132,7 +172,7 @@ export const Utilidades = () => {
       // 🧾 FIADOS DE LAS VENTAS DEL RANGO: para poder mostrar, por producto, si la venta se pagó
       // o quedó fiada, y cuánto se abonó / cuánto falta. Buscamos por sale_id exacto (no por fecha)
       // para no perder el match si el fiado se registró unos milisegundos fuera de rango.
-      const idsConCredito = facturasValidas.filter((s: any) => Number(s.amount_credit || 0) > 0).map((s: any) => s.id);
+      const idsConCredito = ventasParaProductos.filter((s: any) => Number(s.amount_credit || 0) > 0).map((s: any) => s.id);
       const fiadosMap: Record<string, any> = {};
       if (idsConCredito.length > 0) {
         const chunkSize = 50;
@@ -173,7 +213,10 @@ export const Utilidades = () => {
       });
 
       let abonosDeuda = 0;
-      (debts || []).forEach(d => {
+      (debts || []).forEach((d: any) => {
+        // 🛡️ Si el ticket de esta deuda fue ANULADO después del abono, ese dinero ya se revirtió
+        // en caja (ver Reportes -> Anular Ticket) y no debe seguir sumando utilidad para siempre.
+        if (fiadoIdsAnulados.has(d.fiado_id)) return;
         abonosDeuda += Number(d.amount || 0);
       });
 
@@ -321,8 +364,14 @@ export const Utilidades = () => {
   const globalCostos = statsFiltro.hayFiltros ? statsFiltro.costos : analisisCompleto.reduce((acc: number, p: any) => acc + p.costoTotalVentas, 0);
   const globalMermas = statsFiltro.hayFiltros ? statsFiltro.mermas : analisisCompleto.reduce((acc: number, p: any) => acc + p.perdidaMerma, 0);
 
-  // FÓRMULA MAESTRA DEFINITIVA (Gastos Operativos no es un dato por producto, así que se mantiene fijo al período)
-  const globalUtilidad = globalIngresos - globalCostos - globalMermas - gastosCaja;
+  // FÓRMULA MAESTRA DEFINITIVA
+  // Sin filtro: se resta Gastos Operativos del período completo (utilidad real del negocio).
+  // Con filtro (ej. una categoría): los Gastos Operativos NO son un dato por producto/categoría,
+  // así que no se pueden repartir — se omiten para que la tarjeta cuadre exacto con la suma de
+  // "Utilidad Neta" que se ve en la tabla filtrada.
+  const globalUtilidad = statsFiltro.hayFiltros
+    ? (globalIngresos - globalCostos - globalMermas)
+    : (globalIngresos - globalCostos - globalMermas - gastosCaja);
 
   const topsFlotantes = analisisCompleto
     .filter(p => p.utilidadReal > 0)
