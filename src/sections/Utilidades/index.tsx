@@ -199,12 +199,16 @@ export const Utilidades = () => {
         // La BD genera un movimiento automático (INGRESO_FIADO) al pagar una deuda, pero ese mismo
         // abono ya se cuenta abajo vía "abonosDeuda" (tabla debt_payments). Lo ignoramos aquí para
         // no sumarlo dos veces.
-        if (m.flujo === 'INGRESO_FIADO' || (m.category || '').toUpperCase().includes('FIADO')) return;
-        
+        if (m.flujo === 'INGRESO_FIADO') return;
+
         if (m.type === 'EGRESO') {
-          // 🚨 CORRECCIÓN DE DOBLE RESTA: Ignoramos los pagos de mercadería porque el "Costo de Inversión" ya los resta producto por producto.
-          const categoria = (m.category || '').toUpperCase();
-          if (categoria !== 'PAGO A PROVEEDORES' && categoria !== 'COMPRA DE MERCADERÍA') {
+          // 🚨 CORRECCIÓN DE DOBLE RESTA: Ignoramos los pagos de mercadería/proveedores porque el
+          // "Costo de Inversión" ya los resta producto por producto. "cash_movements" no tiene una
+          // columna de categoría propia, así que lo detectamos por texto en la descripción (el campo
+          // que sí existe y donde se escribe el motivo del movimiento).
+          const descripcion = (m.description || '').toUpperCase();
+          const esCompraMercaderia = descripcion.includes('PROVEEDOR') || descripcion.includes('MERCADER');
+          if (!esCompraMercaderia) {
             totalGastos += Number(m.amount);
           }
         }
