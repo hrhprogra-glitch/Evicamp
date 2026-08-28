@@ -133,7 +133,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
                 <p className="text-[#94A3B8] text-xs font-black uppercase tracking-widest mb-2">Total Ingresado a Caja (Ventas + Abonos)</p>
                 <p className="text-6xl sm:text-7xl font-black text-white mt-2 drop-shadow-lg">S/ {totales.totalReal.toFixed(2)}</p>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-5 shrink-0">
                 <div className="bg-white border-4 border-[#E2E8F0] p-5 flex flex-col items-center text-center shadow-[6px_6px_0_0_#E2E8F0]">
                   <Coins size={32} className="text-[#10B981] mb-2" />

@@ -4,24 +4,20 @@ import { FileText, Calendar, RotateCcw, CalendarDays } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import { TablaTickets } from './components/TablaTickets';
 import type { TicketVenta } from './types';
-
-// Obtiene la fecha (YYYY-MM-DD) en hora local sin importar la zona horaria del dispositivo
-// (mismo motor ya verificado en la sección Utilidades)
-const obtenerFechaLocal = (fecha: Date) => {
-  const d = new Date(fecha);
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().split('T')[0];
-};
+// 🎯 MOTOR ÚNICO DE INGRESO TOTAL: misma fórmula y mismas fechas (Perú, UTC-5 fijo) que
+// Resumen, Utilidades, Finanzas y Punto de Venta, para que el monto SIEMPRE coincida.
+import { calcularIngresoTotal, fechaLocalPeru, primerDiaMesPeru, haceNDiasPeru } from '../../utils/ingresos';
 
 export const Reportes: React.FC = () => {
   const [tickets, setTickets] = useState<TicketVenta[]>([]);
   // 💰 Abonos de deudas (fiados) pagados dentro del rango filtrado. Igual que Resumen/Utilidades/
   // Finanzas, estos pagos son ingreso real aunque no correspondan a un ticket de venta nuevo.
   const [totalAbonosRango, setTotalAbonosRango] = useState<number>(0);
+  // 🎯 Total del motor único (null mientras carga, o cuando no hay rango de fechas definido).
+  const [ingresoCanonico, setIngresoCanonico] = useState<number | null>(null);
 
-  const hoy = new Date();
-  const hoyStr = obtenerFechaLocal(hoy);
-  const primerDiaMes = obtenerFechaLocal(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+  const hoyStr = fechaLocalPeru();
+  const primerDiaMes = primerDiaMesPeru();
 
   // Seteamos "HOY" como fecha predeterminada al cargar el módulo
   const [fechaInicio, setFechaInicio] = useState<string>(hoyStr);
@@ -34,9 +30,7 @@ export const Reportes: React.FC = () => {
   };
 
   const filtrarSemana = () => {
-    const haceUnaSemana = new Date();
-    haceUnaSemana.setDate(haceUnaSemana.getDate() - 7);
-    setFechaInicio(obtenerFechaLocal(haceUnaSemana));
+    setFechaInicio(haceNDiasPeru(7));
     setFechaFin(hoyStr);
   };
 
@@ -169,6 +163,23 @@ export const Reportes: React.FC = () => {
     };
   }, [fechaInicio, fechaFin]);
 
+  // 🎯 MOTOR ÚNICO DE INGRESO TOTAL: mismo cálculo que Resumen, Utilidades, Finanzas y Punto
+  // de Venta para este mismo rango, así "Ventas del Rango" SIEMPRE coincide con las demás
+  // pantallas (antes esta tarjeta no sumaba los ingresos manuales de caja, por ejemplo).
+  useEffect(() => {
+    let cancelado = false;
+    const cargarIngresoCanonico = async () => {
+      if (!fechaInicio || !fechaFin) {
+        if (!cancelado) setIngresoCanonico(null);
+        return;
+      }
+      const r = await calcularIngresoTotal(fechaInicio, fechaFin);
+      if (!cancelado) setIngresoCanonico(r.ingresoTotal);
+    };
+    cargarIngresoCanonico();
+    return () => { cancelado = true; };
+  }, [fechaInicio, fechaFin]);
+
   const handleAnularTicket = async (id: string) => {
     if (id.startsWith('ERR-')) {
       alert('⚠️ PROTECCIÓN DEL SISTEMA: Registro corrupto.');
@@ -267,7 +278,10 @@ export const Reportes: React.FC = () => {
 
   // 💰 INGRESO REAL: igual que Punto de Venta, Finanzas, Resumen y Utilidades — lo cobrado en
   // cada venta ("monto_pagado") más los abonos de fiados pagados dentro del rango.
-  const totalRango = tickets.filter(t => t.estado !== 'ANULADO').reduce((acc, t) => acc + Number(t.monto_pagado), 0) + totalAbonosRango;
+  // Mientras el motor único (ingresoCanonico) no esté listo, o cuando no hay rango de fechas
+  // definido (vista "sin filtro"), se usa el cálculo local como respaldo.
+  const totalRangoLocal = tickets.filter(t => t.estado !== 'ANULADO').reduce((acc, t) => acc + Number(t.monto_pagado), 0) + totalAbonosRango;
+  const totalRango = ingresoCanonico !== null ? ingresoCanonico : totalRangoLocal;
   const totalAnulados = tickets.filter(t => t.estado === 'ANULADO').length;
 
   return (

@@ -229,11 +229,10 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
 
                 <div className="col-span-5 flex flex-col min-w-0 pr-1 pl-1">
                   <span className={`truncate uppercase font-black text-sm ${index === selectedIndex ? 'text-[#FFFFFF]' : 'text-[#1E293B]'}`} title={item.name}>{item.name}</span>
-                  {item.unit === 'CONSUMO' ? (
-                <InputPrecio item={item} updatePrice={updatePrice} index={index} setSelectedIndex={setSelectedIndex} setColIndex={setColIndex} isSelected={index === selectedIndex && colIndex === 0} />
-              ) : (
-                    <span className={`text-xs font-black ${index === selectedIndex ? 'text-[#E2E8F0]' : 'text-[#64748B]'}`}>S/ {item.price.toFixed(2)} c/u</span>
-                  )}
+                  {/* 🏷️ PRECIO EDITABLE POR LÍNEA: para bajarle el precio a un cliente puntual
+                      (ej. negocio/mayorista) sin tocar el precio general del catálogo. Solo
+                      cambia esta venta — updatePrice nunca escribe en la tabla de productos. */}
+                  <InputPrecio item={item} updatePrice={updatePrice} index={index} setSelectedIndex={setSelectedIndex} setColIndex={setColIndex} isSelected={index === selectedIndex && colIndex === 0} />
                 </div>
                 
                 <div className={`col-span-3 text-right text-sm font-black ${index === selectedIndex ? 'text-[#FFFFFF]' : 'text-[#1E293B]'}`}>

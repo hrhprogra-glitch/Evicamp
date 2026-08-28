@@ -6,7 +6,10 @@ import {
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { TarjetaMetrica } from './TarjetaMetrica';
-import { supabase } from '../../../db/supabase'; 
+import { supabase } from '../../../db/supabase';
+// 🎯 MOTOR ÚNICO DE INGRESO TOTAL: misma fórmula y mismas fechas (Perú, UTC-5 fijo) que
+// Reportes, Utilidades, Finanzas y Punto de Venta, para que "Ventas Netas" SIEMPRE coincida.
+import { calcularIngresoTotal, fechaLocalPeru, primerDiaMesPeru, haceNDiasPeru, rangoUTCPeru } from '../../../utils/ingresos';
 
 export const DashboardResumen: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -85,24 +88,32 @@ export const DashboardResumen: React.FC = () => {
   // 2do Efecto: Cálculos filtrados
   useEffect(() => {
     if (!rawData) return;
+
+    const procesarMetricas = async () => {
     const { sales, saleDetails, wastes, products, fiados, debtPayments, batches } = rawData;
 
-    const getRange = () => {
-      const now = new Date();
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-      if (periodo === 'SEMANA') start.setDate(start.getDate() - (start.getDay() || 7) + 1);
-      if (periodo === 'MES') start.setDate(1);
-      return { start, end };
-    };
-    const range = getRange();
+    // 🛠️ MOTOR DE FECHAS PURO: rango de fechas FIJO en hora Perú (UTC-5), sin depender de la
+    // zona horaria configurada en el dispositivo/navegador — así "HOY" es el mismo día para
+    // cualquier equipo (antes se calculaba con new Date().getFullYear()/getMonth() del propio
+    // dispositivo, que podía correrse si el reloj/zona horaria del equipo no era Perú).
+    const hoy = fechaLocalPeru();
+    let fechaInicioRango = hoy;
+    if (periodo === 'SEMANA') fechaInicioRango = haceNDiasPeru(7); // últimos 7 días, igual que Reportes/Utilidades
+    if (periodo === 'MES') fechaInicioRango = primerDiaMesPeru();
+    const { inicioUTC, finUTC } = rangoUTCPeru(fechaInicioRango, hoy);
+    const inicioMs = new Date(inicioUTC).getTime();
+    const finMs = new Date(finUTC).getTime();
     const isWithinRange = (dateStr: string) => {
       if (!dateStr) return true;
-      const d = new Date(dateStr);
-      return d >= range.start && d <= range.end;
+      const t = new Date(dateStr).getTime();
+      return t >= inicioMs && t < finMs;
     };
 
-    const salesFiltered = (sales || []).filter((s: any) => isWithinRange(s.created_at));
+    // 🚨 CORRECCIÓN: excluir tickets ANULADOS del período, igual que Punto de Venta, Finanzas,
+    // Reportes y Utilidades. Antes esta pantalla sumaba TODAS las ventas del rango sin filtrar
+    // por estado, así que un ticket anulado seguía inflando "Ventas Netas" aquí aunque ya no
+    // contara en el resto del sistema — eso descuadraba el ingreso total entre pantallas.
+    const salesFiltered = (sales || []).filter((s: any) => isWithinRange(s.created_at) && s.sunat_status !== 'ANULADO');
     const validSaleIds = new Set(salesFiltered.map((s: any) => s.id));
     const saleDetailsFiltered = (saleDetails || []).filter((d: any) => validSaleIds.has(d.sale_id));
     const wastesFiltered = (wastes || []).filter((w: any) => isWithinRange(w.created_at));
@@ -110,18 +121,19 @@ export const DashboardResumen: React.FC = () => {
     // caja (ver Reportes -> Anular Ticket) y no debe seguir sumando ingreso para siempre.
     const fiadoIdsAnulados = new Set((fiados || []).filter((f: any) => f.status === 'ANULADO').map((f: any) => f.id));
     const debtPaymentsFiltered = (debtPayments || []).filter((dp: any) => isWithinRange(dp.created_at) && !fiadoIdsAnulados.has(dp.fiado_id));
-    const fiadosFiltered = (fiados || []).filter((f: any) => isWithinRange(f.date_given));
+    // 🚨 CORRECCIÓN: un fiado ANULADO no debe seguir contando como deuda pendiente por cobrar.
+    const fiadosFiltered = (fiados || []).filter((f: any) => isWithinRange(f.date_given) && f.status !== 'ANULADO');
 
         // --- CÁLCULOS TÉCNICOS ---
-        // 💰 INGRESO REAL DE CAJA: igual que Punto de Venta y Finanzas, solo se cuenta el dinero
-        // efectivamente cobrado (efectivo/yape/tarjeta/transferencia) más los abonos de fiados
-        // pagados en el rango. Un fiado sin pagar NO suma aquí hasta que se cobra.
-        const ventasBrutas = salesFiltered.reduce((acc: number, s: any) => acc + Number(s.amount_cash || 0) + Number(s.amount_yape || 0) + Number(s.amount_card || 0) + Number(s.amount_transfer || 0), 0)
-          + debtPaymentsFiltered.reduce((acc: number, dp: any) => acc + Number(dp.amount_cash || 0) + Number(dp.amount_yape || 0) + Number(dp.amount_card || 0) + Number(dp.amount_transfer || 0), 0);
+        // 🎯 MOTOR ÚNICO DE INGRESO TOTAL: se pide el mismo cálculo que usan Reportes,
+        // Utilidades, Finanzas y Punto de Venta para este mismo rango de fechas, así
+        // "Ventas Netas" SIEMPRE es el mismo monto en las 5 pantallas.
+        const ingresoCanonico = await calcularIngresoTotal(fechaInicioRango, hoy);
+        const ventasBrutas = ingresoCanonico.ingresoTotal;
         const costoVenta = saleDetailsFiltered.reduce((acc: number, d: any) => acc + (Number(d.cost_at_moment || 0) * Number(d.quantity || 0)), 0);
         const mermasValor = wastesFiltered.reduce((acc: number, w: any) => acc + Number(w.total_loss || 0), 0);
         const utilidadReal = ventasBrutas - costoVenta - mermasValor;
-        
+
         const fiadosPendientes = fiadosFiltered.filter((f: any) => String(f.status).toUpperCase() !== 'CANCELADO');
         const cuentasPorCobrar = fiadosPendientes.reduce((acc: number, f: any) => acc + (Number(f.amount || 0) - Number(f.paid_amount || 0)), 0);
 
@@ -188,7 +200,9 @@ export const DashboardResumen: React.FC = () => {
           productAggr[d.product_id].total += Number(d.subtotal);
         });
         setTopProductos(Object.values(productAggr).sort((a, b) => b.total - a.total).slice(0, 5));
+    };
 
+    procesarMetricas();
   }, [rawData, periodo]);
 
   const fSoles = (v: number) => `S/ ${v.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`;

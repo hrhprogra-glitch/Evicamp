@@ -8,24 +8,17 @@ import { TablaAnalisisProductos } from './components/TablaAnalisisProductos';
 import { VentanaTopsFlotante } from './components/VentanaTopsFlotante';
 
 import type { AnalisisProducto, StatsFiltro } from './types';
-
-// Obtiene la fecha en formato YYYY-MM-DD sin importar la hora local
-const obtenerFechaLocal = () => {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().split('T')[0];
-};
+// 🎯 MOTOR ÚNICO DE INGRESO TOTAL: misma fórmula y mismas fechas que Resumen,
+// Reportes, Finanzas y Punto de Venta, para que el monto SIEMPRE coincida entre pantallas.
+import { calcularIngresoTotal, fechaLocalPeru, primerDiaMesPeru, haceNDiasPeru, rangoUTCPeru, fetchAllRango, fetchAllTabla } from '../../utils/ingresos';
 
 export const Utilidades = () => {
-  const hoyStr = obtenerFechaLocal();
-  const dMes = new Date();
-  dMes.setDate(1);
-  dMes.setMinutes(dMes.getMinutes() - dMes.getTimezoneOffset());
-  const primerDiaMes = dMes.toISOString().split('T')[0];
+  const hoyStr = fechaLocalPeru();
+  const primerDiaMes = primerDiaMesPeru();
 
   const [fechaInicio, setFechaInicio] = useState<string>(hoyStr);
   const [fechaFin, setFechaFin] = useState<string>(hoyStr);
-  
+
   const [analisisCompleto, setAnalisisCompleto] = useState<AnalisisProducto[]>([]);
   const [gastosCaja, setGastosCaja] = useState<number>(0); // Estado para Finanzas
   const [ingresosTotalesExactos, setIngresosTotalesExactos] = useState<number>(0);
@@ -34,13 +27,7 @@ export const Utilidades = () => {
   const [statsFiltro, setStatsFiltro] = useState<StatsFiltro>({ ingresos: 0, costos: 0, mermas: 0, hayFiltros: false });
 
   const filtrarHoy = () => { setFechaInicio(hoyStr); setFechaFin(hoyStr); };
-  const filtrarSemana = () => {
-    const d = new Date();
-    d.setDate(d.getDate() - 7);
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    setFechaInicio(d.toISOString().split('T')[0]);
-    setFechaFin(hoyStr);
-  };
+  const filtrarSemana = () => { setFechaInicio(haceNDiasPeru(7)); setFechaFin(hoyStr); };
   const filtrarMes = () => { setFechaInicio(primerDiaMes); setFechaFin(hoyStr); };
   const limpiarFiltros = () => { setFechaInicio(hoyStr); setFechaFin(hoyStr); };
 
@@ -49,50 +36,21 @@ export const Utilidades = () => {
       if (!silencioso) setIsLoading(true);
 
 
-      const fechaFinExpandida = new Date(fechaFin + 'T12:00:00');
-      fechaFinExpandida.setDate(fechaFinExpandida.getDate() + 1);
-      const finAjustado = fechaFinExpandida.toISOString().split('T')[0];
-
-      // 🛠️ MOTOR DE FECHAS PURO: Zona Horaria Perú (UTC-5)
+      // 🛠️ MOTOR DE FECHAS PURO: Zona Horaria Perú (UTC-5), fijo sin importar el dispositivo.
       // Ahora "Desde" y "Hasta" abarcan el día completo (00:00 a 23:59) sin importar los turnos de caja.
-      const inicioUTC = `${fechaInicio}T05:00:00.000Z`;
-      const finUTC = `${finAjustado}T05:00:00.000Z`;
+      const { inicioUTC, finUTC } = rangoUTCPeru(fechaInicio, fechaFin);
 
-      // 🚀 1. MOTORES PARA ROMPER EL LÍMITE DE 1000 REGISTROS DE SUPABASE (PAGINACIÓN AUTOMÁTICA)
-      const fetchAllFechas = async (tabla: string, cols: string) => {
-        let datos: any[] = [];
-        let from = 0;
-        while (true) {
-          const { data } = await supabase.from(tabla).select(cols).gte('created_at', inicioUTC).lt('created_at', finUTC).range(from, from + 999);
-          if (!data || data.length === 0) break;
-          datos = [...datos, ...data];
-          if (data.length < 1000) break;
-          from += 1000;
-        }
-        return datos;
-      };
-
-      const fetchAllSinFechas = async (tabla: string) => {
-        let datos: any[] = [];
-        let from = 0;
-        while (true) {
-          const { data } = await supabase.from(tabla).select('*').range(from, from + 999);
-          if (!data || data.length === 0) break;
-          datos = [...datos, ...data];
-          if (data.length < 1000) break;
-          from += 1000;
-        }
-        return datos;
-      };
-
-      // 🚀 2. DESCARGA MASIVA DE DATOS SIN LÍMITES
-      const [ sales, products, waste, movements, debts, batches ] = await Promise.all([
-        fetchAllFechas('sales', 'id, total, amount_cash, amount_yape, amount_transfer, amount_card, amount_credit, payment_type, sunat_status, created_at'),
-        fetchAllSinFechas('products'),
-        fetchAllFechas('waste', '*'),
-        fetchAllFechas('cash_movements', '*'),
-        fetchAllFechas('debt_payments', '*'),
-        fetchAllSinFechas('batches')
+      // 🚀 DESCARGA MASIVA DE DATOS SIN LÍMITES (paginación automática, ver utils/ingresos.ts)
+      // 🎯 El Ingreso Total / Gastos ya NO se calculan aquí: se pide al motor único
+      // (calcularIngresoTotal) para que este monto SIEMPRE coincida con Resumen, Reportes,
+      // Finanzas y Punto de Venta.
+      const [ sales, products, waste, debts, batches, ingresoTotalRango ] = await Promise.all([
+        fetchAllRango('sales', 'id, total, amount_cash, amount_yape, amount_transfer, amount_card, amount_credit, payment_type, sunat_status, created_at', inicioUTC, finUTC),
+        fetchAllTabla('products', '*'),
+        fetchAllRango('waste', '*', inicioUTC, finUTC),
+        fetchAllRango('debt_payments', '*', inicioUTC, finUTC),
+        fetchAllTabla('batches', '*'),
+        calcularIngresoTotal(fechaInicio, fechaFin)
       ]);
 
       // 🚨 CORRECCIÓN: Costo de respaldo por LOTE MÁS RECIENTE (id numérico más alto), no el campo
@@ -117,19 +75,12 @@ export const Utilidades = () => {
       // (nunca para "ventasRealesTotales" de abajo, porque el dinero pagado AL MOMENTO de esa
       // venta ya se contó en el período en que ocurrió; aquí solo interesa el abono de hoy).
       const ventasParaProductos = [...facturasValidas];
-      // Fiados cuyo ticket original fue ANULADO: sus abonos viejos no deben seguir sumando
-      // utilidad para siempre (ver uso más abajo, en el cálculo de "abonosDeuda").
-      const fiadoIdsAnulados = new Set<number>();
       const fiadoIdsConAbonoEnRango = Array.from(new Set((debts || []).map((d: any) => d.fiado_id).filter(Boolean)));
       if (fiadoIdsConAbonoEnRango.length > 0) {
         const { data: fiadosDeAbonos } = await supabase
           .from('fiados')
           .select('id, sale_id, status')
           .in('id', fiadoIdsConAbonoEnRango);
-
-        (fiadosDeAbonos || []).forEach((f: any) => {
-          if (f.status === 'ANULADO') fiadoIdsAnulados.add(f.id);
-        });
 
         const saleIdsFaltantes = Array.from(new Set(
           (fiadosDeAbonos || [])
@@ -189,55 +140,12 @@ export const Utilidades = () => {
       const catalogo = products || [];
       const mermas = waste || [];
 
-      // --- 1. GASTOS Y ABONOS ---
-      let totalGastos = 0;
-      let ingresosExtra = 0;
-      (movements || []).forEach(m => {
-        if (m.flujo === 'EXTERNO') return;
-        
-        // 🚨 EVICAMP: BLOQUEO ANTI-DUPLICADOS PARA FIADOS
-        // La BD genera un movimiento automático (INGRESO_FIADO) al pagar una deuda, pero ese mismo
-        // abono ya se cuenta abajo vía "abonosDeuda" (tabla debt_payments). Lo ignoramos aquí para
-        // no sumarlo dos veces.
-        if (m.flujo === 'INGRESO_FIADO') return;
-
-        if (m.type === 'EGRESO') {
-          // 🚨 CORRECCIÓN DE DOBLE RESTA: Ignoramos los pagos de mercadería/proveedores porque el
-          // "Costo de Inversión" ya los resta producto por producto. "cash_movements" no tiene una
-          // columna de categoría propia, así que lo detectamos por texto en la descripción (el campo
-          // que sí existe y donde se escribe el motivo del movimiento).
-          const descripcion = (m.description || '').toUpperCase();
-          const esCompraMercaderia = descripcion.includes('PROVEEDOR') || descripcion.includes('MERCADER');
-          if (!esCompraMercaderia) {
-            totalGastos += Number(m.amount);
-          }
-        }
-        
-        if (m.type === 'INGRESO') ingresosExtra += Number(m.amount);
-      });
-
-      let abonosDeuda = 0;
-      (debts || []).forEach((d: any) => {
-        // 🛡️ Si el ticket de esta deuda fue ANULADO después del abono, ese dinero ya se revirtió
-        // en caja (ver Reportes -> Anular Ticket) y no debe seguir sumando utilidad para siempre.
-        if (fiadoIdsAnulados.has(d.fiado_id)) return;
-        abonosDeuda += Number(d.amount || 0);
-      });
-
-      setGastosCaja(totalGastos);
-
-      // --- 2. VENTAS REALES (INGRESO DE CAJA, IGUAL QUE POS Y FINANZAS) ---
-      // Solo se cuenta el dinero efectivamente cobrado en cada venta (efectivo/yape/tarjeta/transferencia).
-      // La parte fiada (amount_credit) NO suma aquí hasta que el cliente la paga.
-      let ventasRealesTotales = 0;
-      facturasValidas.forEach((s: any) => {
-        ventasRealesTotales += Number(s.amount_cash || 0) + Number(s.amount_yape || 0) + Number(s.amount_card || 0) + Number(s.amount_transfer || 0);
-      });
-
-      // El Ingreso Bruto es Ventas cobradas + Ingresos Extra + Abonos de fiados pagados en el rango
-      // (el abono es el momento exacto en que ese dinero realmente entra a caja).
-      const ingresoBrutoReal = ventasRealesTotales + ingresosExtra + abonosDeuda;
-      setIngresosTotalesExactos(ingresoBrutoReal);
+      // --- 1 y 2. GASTOS, ABONOS Y VENTAS REALES (MOTOR ÚNICO) ---
+      // 🎯 Ya no se recalcula aquí: usamos el mismo resultado que Resumen, Reportes, Finanzas
+      // y Punto de Venta piden al motor único (utils/ingresos.ts) para este mismo rango de
+      // fechas, así el monto de "Ingreso Total" nunca se puede desincronizar entre pantallas.
+      setGastosCaja(ingresoTotalRango.gastos);
+      setIngresosTotalesExactos(ingresoTotalRango.ingresoTotal);
 
       // --- 3. ANÁLISIS DE RENTABILIDAD POR PRODUCTO ---
       const mapaAnalisis: Record<string, AnalisisProducto> = {};

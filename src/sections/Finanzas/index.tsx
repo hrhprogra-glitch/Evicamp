@@ -10,6 +10,12 @@ import { ModalNuevoMovimiento } from './components/ModalNuevoMovimiento';
 import { ModalCierre } from './components/ModalCierre';
 import { TablaHistorial } from './components/TablaHistorial';
 import { FiltroFechas } from './components/FiltroFechas';
+// 🎯 MOTOR ÚNICO DE INGRESO TOTAL: misma fórmula y mismas fechas que Resumen, Reportes,
+// Utilidades y Punto de Venta. Se usa SOLO para el número mostrado en "Gran Total en Caja"
+// (decisión explícita del dueño: que coincida con las demás pantallas aunque ya no reste
+// gastos/retiros). El arqueo real de "Cerrar Caja" (ModalCierre) NO usa esto — sigue su
+// propio cálculo con metricas.totalIngresos/totalEgresos, sin cambios.
+import { calcularIngresoTotal, fechaLocalPeru } from '../../utils/ingresos';
 interface SuperMetricas {
   fondoInicial: number;
   ingresosExtra: number;
@@ -31,6 +37,9 @@ export const Finanzas: React.FC = () => {
   // Estados Clásicos y Nuevos
   const [metricas, setMetricas] = useState<MetricasCaja>({ totalIngresos: 0, totalEgresos: 0, saldoActual: 0 });
   const [superMetricas, setSuperMetricas] = useState<SuperMetricas | null>(null);
+  // 🎯 Ingreso bruto de HOY (motor único) — mismo monto que Resumen/Reportes/Utilidades/POS,
+  // usado solo para el número grande de "Gran Total en Caja".
+  const [ventasNetasHoy, setVentasNetasHoy] = useState<number | null>(null);
 
   const [isAperturaModalOpen, setIsAperturaModalOpen] = useState(false);
   const [isMovimientoModalOpen, setIsMovimientoModalOpen] = useState(false);
@@ -100,6 +109,19 @@ export const Finanzas: React.FC = () => {
       window.removeEventListener('focus', refrescarSilencioso);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
+  }, []);
+
+  // 🎯 MOTOR ÚNICO DE INGRESO TOTAL: mismo cálculo que Resumen/Reportes/Utilidades/POS para
+  // HOY (día calendario Perú), usado solo en la tarjeta "Gran Total en Caja".
+  useEffect(() => {
+    const cargarVentasNetasHoy = async () => {
+      const hoy = fechaLocalPeru();
+      const r = await calcularIngresoTotal(hoy, hoy);
+      setVentasNetasHoy(r.ingresoTotal);
+    };
+    cargarVentasNetasHoy();
+    window.addEventListener('focus', cargarVentasNetasHoy);
+    return () => window.removeEventListener('focus', cargarVentasNetasHoy);
   }, []);
 
   const cargarDatosCaja = async (silencioso = false) => {
@@ -265,12 +287,12 @@ export const Finanzas: React.FC = () => {
         </div>
       ) : sessionActiva && superMetricas ? (
         <div className="flex flex-col gap-6 flex-1 overflow-y-auto custom-scrollbar pb-8 pr-2">
-          
+
           {/* PANEL MAESTRO DE RECAUDACIÓN (ESTILO EVICAMP) */}
           <div className="mb-0 bg-[#1E293B] border border-[#1E293B] rounded-none p-6 text-center shadow-none shrink-0">
             <span className="text-[#64748B] text-sm uppercase tracking-widest font-bold">Gran Total en Caja (Todo Incluido)</span>
             <h1 className="text-[#FFFFFF] text-5xl font-mono font-black mt-2">
-              S/ { (superMetricas.efectivoEsperadoCaja + superMetricas.ventasYape + superMetricas.cobroDeudasYape + superMetricas.ventasTarjeta).toFixed(2) }
+              {ventasNetasHoy === null ? 'Calculando...' : `S/ ${ventasNetasHoy.toFixed(2)}`}
             </h1>
             <p className="text-[#94A3B8] text-xs mt-2 uppercase">Incluye Efectivo, Yape, Transferencias y Tarjetas</p>
           </div>
