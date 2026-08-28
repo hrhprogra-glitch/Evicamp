@@ -86,10 +86,24 @@ export const Finanzas: React.FC = () => {
 
   useEffect(() => {
     cargarDatosCaja();
+
+    // 🛡️ EVICAMP: Si la pestaña estuvo inactiva (u otra caja/dispositivo registró ventas),
+    // al volver a mirarla se refrescan los totales para no quedar con datos viejos.
+    // Se hace en modo silencioso para no tapar la pantalla con el loader cada vez que se regresa.
+    const refrescarSilencioso = () => cargarDatosCaja(true);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') refrescarSilencioso();
+    };
+    window.addEventListener('focus', refrescarSilencioso);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('focus', refrescarSilencioso);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
-  const cargarDatosCaja = async () => {
-    setIsLoading(true);
+  const cargarDatosCaja = async (silencioso = false) => {
+    if (!silencioso) setIsLoading(true);
     try {
       const { data: sessionData } = await supabase
         .from('cash_sessions')
@@ -171,7 +185,7 @@ export const Finanzas: React.FC = () => {
     } catch (error) {
       console.error(error);
     } finally {
-      setIsLoading(false);
+      if (!silencioso) setIsLoading(false);
     }
   };
 

@@ -1,6 +1,7 @@
 // src/sections/Inventario/components/EtiquetaStock.tsx
 import React from 'react';
 import { AlertTriangle, Coffee } from 'lucide-react';
+import { formatearCantidad } from '../../../utils/formato';
 
 interface Props {
   qty: number;
@@ -33,7 +34,7 @@ export const EtiquetaStock: React.FC<Props> = ({ qty, minStock, unit }) => {
   return (
     <div className={`inline-flex items-center gap-1.5 px-3 py-1 border font-black text-xs uppercase tracking-widest rounded-none ${colorClass}`}>
       {alertIcon && <AlertTriangle size={12} />}
-      {qty} <span className="opacity-70 text-[10px]">{unit}</span>
+      {formatearCantidad(qty, unit)} <span className="opacity-70 text-[10px]">{unit}</span>
     </div>
   );
 };

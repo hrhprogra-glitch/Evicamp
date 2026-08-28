@@ -84,11 +84,12 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             // [ SUMA GLOBAL ]: Filtramos los lotes de este producto
             const lotesDelProducto = batchesData?.filter(b => b.product_id === p.id) || [];
             
-            // [ COSTO RECIENTE ]: Ordenamos por ID (o podrías usar created_at si lo incluyes en el select)
-            // para obtener el costo del lote más nuevo.
-            // [ RETORNO TÉCNICO ]: Forzamos String() para evitar que IDs numéricos rompan localeCompare
-            const loteMasReciente = lotesDelProducto.length > 0 
-              ? [...lotesDelProducto].sort((a, b) => String(b.id || '').localeCompare(String(a.id || '')))[0] 
+            // [ COSTO RECIENTE ]: Ordenamos por ID de forma NUMÉRICA para obtener el costo del lote más nuevo.
+            // 🚨 CORRECCIÓN: Antes se comparaban los IDs como texto (localeCompare), lo que hacía que
+            // lotes antiguos con ID corto (ej. "947") se leyeran como "mayores" que lotes nuevos con
+            // ID largo tipo timestamp (ej. "1785512128146"), tomando costos viejos e incorrectos.
+            const loteMasReciente = lotesDelProducto.length > 0
+              ? [...lotesDelProducto].sort((a, b) => Number(b.id || 0) - Number(a.id || 0))[0]
               : null;
             // [ RETORNO TÉCNICO ]: Si el producto tiene seguimiento por lotes, la suma debe ser 0 si no hay lotes.
             // Solo mostramos p.quantity si el producto es de "Consumo" o no usa lotes.

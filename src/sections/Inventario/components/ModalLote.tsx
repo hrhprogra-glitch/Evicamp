@@ -79,33 +79,27 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
   }, [isOpen]);
   // --------------------------------------------------------
 
-  // 🛡️ DETECCIÓN DE ESCÁNER EN TIEMPO REAL: Reubicado para cumplir Reglas de Hooks
-  useEffect(() => {
-    const cleanQuery = searchQuery.trim();
-    if (cleanQuery.length > 0) {
-      // Si el texto ingresado coincide exactamente con un código o código de barras
-      const exactMatch = productos.find(
-        p => p.unit !== 'CONSUMO' && (p.barcode === cleanQuery || p.code === cleanQuery)
-      );
-      
-      if (exactMatch) {
-        setSelectedProduct(exactMatch);
-        setSearchQuery('');
-        setShowDropdown(false);
-      }
-    }
-  }, [searchQuery, productos]);
-
-  // 🔥 EARLY RETURN: AHORA SÍ ESTÁ DEBAJO DE TODOS LOS HOOKS
   if (!isOpen) return null;
 
-  // Motor de filtrado ultra-rápido (Añadido soporte para Barcode)
-  const filteredProducts = productos.filter(p => 
-    p.unit !== 'CONSUMO' && 
-    (p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-     p.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     (p.barcode && p.barcode.includes(searchQuery)))
-  );
+  // Motor de filtrado ultra-rápido (EXCLUYE LOS PRODUCTOS DE CONSUMO INTERNO)
+  const filteredProducts = productos.filter(p => {
+    if (p.unit === 'CONSUMO') return false; // <-- BLOQUEO ESTRICTO: NO MOSTRAR CONSUMO AQUÍ
+    const q = searchQuery.toLowerCase();
+    return p.name.toLowerCase().includes(q) ||
+      p.code.toLowerCase().includes(q) ||
+      (p.barcode || '').toLowerCase().includes(q);
+  });
+
+  // 📡 SOPORTE DE ESCÁNER: el lector escribe el código y envía "Enter" automáticamente.
+  // Si hay una coincidencia, la seleccionamos al instante sin necesidad de hacer click.
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && filteredProducts.length > 0) {
+      e.preventDefault();
+      setSelectedProduct(filteredProducts[0]);
+      setShowDropdown(false);
+      setSearchQuery('');
+    }
+  };
 
   // FÓRMULA MATEMÁTICA AUTOMÁTICA (Costo Unitario)
   const costoUnitario = (Number(costoTotal) > 0 && Number(cantidad) > 0) 
@@ -270,28 +264,18 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
               </div>
             ) : (
               <div className="relative">
-                <input 
+                <input
                   type="text"
-                  autoFocus // <-- Foco automático para escanear sin tener que usar el mouse
-                  placeholder="ESCANEA EL CÓDIGO O ESCRIBE EL NOMBRE..."
+                  autoFocus
+                  placeholder="ESCANEA O ESCRIBE CÓDIGO / NOMBRE DEL PRODUCTO..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
                     setShowDropdown(true);
                   }}
-                  onKeyDown={(e) => {
-                    // Prevenir envío accidental del formulario si el escáner emite "Enter"
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      if (filteredProducts.length === 1) {
-                         setSelectedProduct(filteredProducts[0]);
-                         setSearchQuery('');
-                         setShowDropdown(false);
-                      }
-                    }
-                  }}
                   onFocus={() => setShowDropdown(true)}
-                  className="w-full bg-[#FFFFFF] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[#1E293B] uppercase outline-none focus:border-[#10B981] transition-colors rounded-none"
+                  onKeyDown={handleSearchKeyDown}
+                  className="w-full bg-white border-2 border-[#E2E8F0] p-3 text-xs font-black text-[#1E293B] uppercase outline-none focus:border-[#10B981] transition-colors"
                 />
                 {showDropdown && searchQuery && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[#1E293B] shadow-[4px_4px_0_0_#1E293B] z-50 max-h-48 overflow-y-auto custom-scrollbar">

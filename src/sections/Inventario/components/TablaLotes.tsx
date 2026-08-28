@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Database,Layers, Edit, Trash2, History, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
+import { formatearCantidad } from '../../../utils/formato';
 
 interface Lote {
   id: string;
@@ -238,7 +239,12 @@ export const TablaLotes: React.FC<Props> = ({
 
   return (
     // SE AGRANDÓ LA LETRA BASE DE LA FILA (text-base)
-    <div key={lote.id} className="grid grid-cols-12 items-center p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors group text-base">
+    <div
+      key={lote.id}
+      onClick={() => onEditLote && onEditLote(lote)}
+      className="grid grid-cols-12 items-center p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors group text-base cursor-pointer"
+      title="Click para editar"
+    >
       
       {/* 1. INGRESO Y REFERENCIA / SUSTENTO / PROVEEDOR */}
       <div className="col-span-2 flex flex-col gap-1 pr-2">
@@ -308,7 +314,7 @@ export const TablaLotes: React.FC<Props> = ({
           }`} 
           title={`Stock exacto en DB: ${lote.quantity} ${lote.unit || 'UND'}`}
         >
-          <span className="leading-none">{Number(Number(lote.quantity || 0).toFixed(3))}</span>
+          <span className="leading-none">{formatearCantidad(lote.quantity, lote.unit)}</span>
           <span className="text-[8px] opacity-70 leading-tight mt-0.5">{lote.unit || 'UND'}</span>
         </div>
       </div>
@@ -316,8 +322,9 @@ export const TablaLotes: React.FC<Props> = ({
       {/* 8. ACCIONES: HISTORIAL, EDITAR Y ELIMINAR (Íconos más grandes) */}
       <div className="col-span-1 text-center flex items-center justify-center gap-3">
         {/* BOTÓN HISTORIAL DE MERMA */}
-        <button 
-          onClick={() => {
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
             if (onViewMermas) {
               onViewMermas(lote); // <-- Ahora TypeScript aceptará el argumento
             }
@@ -328,16 +335,17 @@ export const TablaLotes: React.FC<Props> = ({
           <History size={18} />
         </button>
 
-        <button 
-          onClick={() => onEditLote && onEditLote(lote)}
+        <button
+          onClick={(e) => { e.stopPropagation(); onEditLote && onEditLote(lote); }}
           className="text-[#94A3B8] hover:text-[#10B981] transition-colors cursor-pointer"
           title="Editar datos del Lote"
         >
           <Edit size={18} />
         </button>
 
-        <button 
-          onClick={async () => {
+        <button
+          onClick={async (e) => {
+            e.stopPropagation();
             if (window.confirm(`MANTENIMIENTO DE INTEGRIDAD\n\n¿Confirma el retiro del lote de "${lote.product_name}"?\n\nEsta acción descargará el stock actual pero mantendrá intacto el historial de ventas, utilidades y contabilidad.`)) {
               try {
                 // 🛡️ EVICAMP: Ejecución Transaccional Segura desde la Base de Datos

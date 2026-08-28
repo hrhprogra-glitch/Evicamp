@@ -23,7 +23,132 @@ const [searchQuery, setSearchQuery] = useState('');
     const guardado = localStorage.getItem('evicamp_cart');
     return guardado ? JSON.parse(guardado) : [];
   });
-  
+  // --- INICIO EVICAMP: MOTOR DE NAVEGACIÓN PRO v4 (Salto de Panel) ---
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
+  const [colIndex, setColIndex] = useState<number>(0); 
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInputActive = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+      const isSearchFocused = target.id === 'buscador-global-pos';
+
+      // 1. Salto de Panel: De Buscador a Carrito (Derecha o Abajo)
+      // 🛡️ PARCHE: Permitir saltar con la flecha derecha incluso si el buscador perdió el foco (ej. al cerrar modales o hacer clic)
+      const canJumpRight = e.key === 'ArrowRight' && (isSearchFocused || !isInputActive) && selectedIndex === -1;
+      const canJumpDown = e.key === 'ArrowDown' && isSearchFocused;
+
+      if (canJumpRight || canJumpDown) {
+        if (cart.length > 0) {
+          target.blur();
+          setSelectedIndex(0);
+          setColIndex(0);
+          e.preventDefault();
+          // 🛡️ PARCHE EVICAMP: Forzar foco directo en el input del producto (Cantidad o Precio)
+          setTimeout(() => document.getElementById('edit-input-0')?.focus(), 10);
+        }
+        return;
+      }
+
+      // 2. Salto de Panel: De Carrito a Buscador (Izquierda cuando colIndex es 0)
+      if (!isInputActive && selectedIndex >= 0 && e.key === 'ArrowLeft' && colIndex === 0) {
+        setSelectedIndex(-1);
+        const searchInput = document.getElementById('buscador-global-pos');
+        searchInput?.focus();
+        e.preventDefault();
+        return;
+      }
+
+      if (selectedIndex >= 0) {
+        const input = target as HTMLInputElement;
+
+        // 🛡️ LÓGICA INTELIGENTE DE FLECHAS EN EDICIÓN
+        if (isInputActive) {
+          // Flechas verticales siempre saltan al siguiente producto
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            input.blur(); 
+          } 
+          // Flecha derecha solo salta a 'Borrar' si el cursor está al final del número
+          else if (e.key === 'ArrowRight' && input.selectionStart === input.value.length) {
+            input.blur();
+            setColIndex(1);
+            e.preventDefault();
+            return;
+          }
+          // Si no es ninguna de esas, dejamos que la flecha mueva el cursor adentro del número
+          else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            return; 
+          }
+        }
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setSelectedIndex((prev) => {
+            const next = Math.min(prev + 1, cart.length - 1);
+            setTimeout(() => document.getElementById(`edit-input-${next}`)?.focus(), 10);
+            return next;
+          });
+          setColIndex(0);
+          return;
+        }
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (selectedIndex === 0) {
+            setSelectedIndex(-1);
+            document.getElementById('buscador-global-pos')?.focus();
+          } else {
+            setSelectedIndex((prev) => {
+              const next = prev - 1;
+              setTimeout(() => document.getElementById(`edit-input-${next}`)?.focus(), 10);
+              return next;
+            });
+            setColIndex(0);
+          }
+          return;
+        }
+        if (e.key === 'ArrowRight' && colIndex === 0) {
+          e.preventDefault();
+          setColIndex(1); // Mover al botón Borrar
+          return;
+        }
+        if (e.key === 'ArrowLeft' && colIndex === 1) {
+          e.preventDefault();
+          setColIndex(0); // Volver a Cantidad
+          return;
+        }
+        
+        // Acción de Borrar con Enter
+        if (e.key === 'Enter' && colIndex === 1) {
+          e.preventDefault();
+          updateQuantity(cart[selectedIndex].id, 0);
+          setSelectedIndex((prev) => Math.max(-1, prev - 1));
+          if (cart.length <= 1) document.getElementById('buscador-global-pos')?.focus();
+          return;
+        }
+
+        // 🚀 ESCRITURA DIRECTA: Enfocar el input del producto seleccionado (selectedIndex)
+        if (/^[0-9]$/.test(e.key) && !isInputActive && selectedIndex >= 0) {
+          e.preventDefault(); // Evitamos que el primer número se pierda
+          setTimeout(() => {
+            const input = document.getElementById(`edit-input-${selectedIndex}`) as HTMLInputElement;
+            if (input) {
+              input.focus();
+              // Asignación directa
+              input.value = e.key; 
+              // 🛡️ PARCHE EVICAMP: Forzar a React a leer el evento para liberar el cursor ("palito")
+              input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+          }, 10);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cart, selectedIndex, colIndex]);
+
+  // Modificamos el envío al TicketVenta para incluir el colIndex
+  // --- FIN EVICAMP ---
   const [productos, setProductos] = useState<Product[]>([]);
   const [isVistaPreviaOpen, setIsVistaPreviaOpen] = useState(false);
   // NUEVO: Estados para la impresión de la última boleta
@@ -390,7 +515,15 @@ const [searchQuery, setSearchQuery] = useState('');
     }
   };
   return (
-    <div className={`flex h-full w-full bg-transparent font-mono gap-6 relative z-0 ${hasOpenSession === false ? 'pt-16' : ''}`}>
+    <div 
+      onMouseDown={(e) => {
+        // 🛡️ Si haces clic en cualquier zona vacía, limpiamos la selección del carrito
+        if ((e.target as HTMLElement).tagName === 'DIV' && (e.target as HTMLElement).classList.contains('bg-transparent')) {
+          setSelectedIndex(-1);
+        }
+      }}
+      className={`flex h-full w-full bg-transparent font-mono gap-6 relative z-0 ${hasOpenSession === false ? 'pt-16' : ''}`}
+    >
       
       {/* BARRA DE ADVERTENCIA - MODO CONSULTA */}
       {hasOpenSession === false && (
@@ -412,6 +545,10 @@ const [searchQuery, setSearchQuery] = useState('');
         {/* 🛡️ GEOMETRÍA PERFECTA: Flex-1 y min-h-0 hacen que se estire exactamente al ras del panel izquierdo */}
         <div className="flex-1 min-h-0 flex flex-col">
           <TicketVenta
+            selectedIndex={selectedIndex}
+            colIndex={colIndex}
+            setSelectedIndex={setSelectedIndex} // 🛡️ NUEVO
+            setColIndex={setColIndex}           // 🛡️ NUEVO
             cart={cart} 
             setCart={setCart} 
             updateQuantity={updateQuantity}

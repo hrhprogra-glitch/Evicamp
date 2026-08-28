@@ -20,6 +20,7 @@ export const DashboardResumen: React.FC = () => {
     cuentasPorCobrar: 0,
     valorizacionInventario: 0,
     unidadesTotales: 0,
+    kilosTotales: 0,
     catalogoActivo: 0,
     mermasValor: 0,
   });
@@ -27,11 +28,11 @@ export const DashboardResumen: React.FC = () => {
   const [topProductos, setTopProductos] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = async (silencioso = false) => {
       try {
-        setLoading(true);
+        if (!silencioso) setLoading(true);
         setError(null);
-        
+
         // MODIFICACIÓN TÉCNICA: Agregamos la tabla 'batches' y quitamos los filtros estrictos
         const [
           { data: sales, error: errSales },
@@ -48,7 +49,7 @@ export const DashboardResumen: React.FC = () => {
           supabase.from('products').select('*'), 
           supabase.from('fiados').select('*'),
           supabase.from('debt_payments').select('*'),
-          supabase.from('batches').select('product_id, quantity, cost_unit') // <-- AÑADIDO
+          supabase.from('batches').select('id, product_id, quantity, cost_unit') // <-- AÑADIDO
         ]);
 
         if (errSales || errDetails || errWaste || errProducts || errFiados || errPayments || errBatches) {
@@ -61,11 +62,24 @@ export const DashboardResumen: React.FC = () => {
       } catch (err: any) {
         setError(err.message);
       } finally {
-        setLoading(false);
+        if (!silencioso) setLoading(false);
       }
     };
 
     fetchDashboardData();
+
+    // 🛡️ EVICAMP: Si la pestaña estuvo inactiva (u otra caja/dispositivo registró ventas),
+    // al volver a mirarla se refrescan los totales en silencio, sin tapar la pantalla con el loader.
+    const refrescarSilencioso = () => fetchDashboardData(true);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') refrescarSilencioso();
+    };
+    window.addEventListener('focus', refrescarSilencioso);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('focus', refrescarSilencioso);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   // 2do Efecto: Cálculos filtrados
@@ -92,11 +106,18 @@ export const DashboardResumen: React.FC = () => {
     const validSaleIds = new Set(salesFiltered.map((s: any) => s.id));
     const saleDetailsFiltered = (saleDetails || []).filter((d: any) => validSaleIds.has(d.sale_id));
     const wastesFiltered = (wastes || []).filter((w: any) => isWithinRange(w.created_at));
-    const debtPaymentsFiltered = (debtPayments || []).filter((dp: any) => isWithinRange(dp.created_at));
+    // 🛡️ Si el ticket de un fiado fue ANULADO después de un abono, ese abono ya se revirtió en
+    // caja (ver Reportes -> Anular Ticket) y no debe seguir sumando ingreso para siempre.
+    const fiadoIdsAnulados = new Set((fiados || []).filter((f: any) => f.status === 'ANULADO').map((f: any) => f.id));
+    const debtPaymentsFiltered = (debtPayments || []).filter((dp: any) => isWithinRange(dp.created_at) && !fiadoIdsAnulados.has(dp.fiado_id));
     const fiadosFiltered = (fiados || []).filter((f: any) => isWithinRange(f.date_given));
 
         // --- CÁLCULOS TÉCNICOS ---
-        const ventasBrutas = salesFiltered.reduce((acc: number, s: any) => acc + Number(s.total || 0), 0);
+        // 💰 INGRESO REAL DE CAJA: igual que Punto de Venta y Finanzas, solo se cuenta el dinero
+        // efectivamente cobrado (efectivo/yape/tarjeta/transferencia) más los abonos de fiados
+        // pagados en el rango. Un fiado sin pagar NO suma aquí hasta que se cobra.
+        const ventasBrutas = salesFiltered.reduce((acc: number, s: any) => acc + Number(s.amount_cash || 0) + Number(s.amount_yape || 0) + Number(s.amount_card || 0) + Number(s.amount_transfer || 0), 0)
+          + debtPaymentsFiltered.reduce((acc: number, dp: any) => acc + Number(dp.amount_cash || 0) + Number(dp.amount_yape || 0) + Number(dp.amount_card || 0) + Number(dp.amount_transfer || 0), 0);
         const costoVenta = saleDetailsFiltered.reduce((acc: number, d: any) => acc + (Number(d.cost_at_moment || 0) * Number(d.quantity || 0)), 0);
         const mermasValor = wastesFiltered.reduce((acc: number, w: any) => acc + Number(w.total_loss || 0), 0);
         const utilidadReal = ventasBrutas - costoVenta - mermasValor;
@@ -106,28 +127,37 @@ export const DashboardResumen: React.FC = () => {
 
         // --- LÓGICA COPIADA DE INVENTARIO (Cálculo real de stock por lotes) ---
         let valorizacionInventario = 0;
-        let unidadesTotales = 0;
+        let unidadesTotales = 0; // Solo productos por UNIDAD (enteros)
+        let kilosTotales = 0; // Solo productos por PESO (KG, con decimales)
         const catalogoActivo = (products || []).length;
 
         (products || []).forEach((p: any) => {
           // Buscamos todos los lotes de este producto
           const lotesDelProducto = (batches || []).filter((b: any) => b.product_id === p.id);
-          
+
           // Sumamos la cantidad de todos sus lotes
           const stockRealGlobal = lotesDelProducto.length > 0
             ? lotesDelProducto.reduce((total: number, lote: any) => total + (Number(lote.quantity) || 0), 0)
             : 0;
-          
-          // Tomamos el costo del lote (o del producto si no hay lote)
-          const costReal = lotesDelProducto.length > 0 ? Number(lotesDelProducto[0].cost_unit) : (Number(p.cost_price) || 0);
+
+          // 🚨 CORRECCIÓN: Tomamos el costo del lote MÁS RECIENTE (por ID numérico), no el primero
+          // que devuelva la base de datos. Antes esto podía tomar un lote viejo con costo desactualizado.
+          const loteMasReciente = lotesDelProducto.length > 0
+            ? [...lotesDelProducto].sort((a: any, b: any) => Number(b.id || 0) - Number(a.id || 0))[0]
+            : null;
+          const costReal = loteMasReciente ? Number(loteMasReciente.cost_unit) : (Number(p.cost_price) || 0);
 
           valorizacionInventario += (stockRealGlobal * costReal);
-          unidadesTotales += stockRealGlobal;
+
+          const esConsumo = String(p.unit || '').toUpperCase().includes('CONSUMO') || String(p.control_type || '').toUpperCase().includes('CONSUM');
+          const esPeso = String(p.unit || p.weight_unit || '').toUpperCase() === 'KG' || p.control_type === 'WEIGHT';
+          if (esPeso) kilosTotales += stockRealGlobal;
+          else if (!esConsumo) unidadesTotales += stockRealGlobal;
         });
 
         setMetricas({
           ventasBrutas, utilidadReal, costoVenta, cuentasPorCobrar,
-          valorizacionInventario, unidadesTotales, catalogoActivo, mermasValor
+          valorizacionInventario, unidadesTotales, kilosTotales, catalogoActivo, mermasValor
         });
 
         // --- FLUJO POR MÉTODO ---
@@ -234,9 +264,10 @@ export const DashboardResumen: React.FC = () => {
           <h2 className="text-[12px] font-black text-[#1E293B] uppercase tracking-[0.3em] mb-5 flex items-center gap-4">
             <div className="w-3 h-5 bg-[#1E293B]"></div> Inventario y Mermas
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <TarjetaMetrica titulo="Valorización Total" valor={fSoles(metricas.valorizacionInventario)} icono={Package} colorIcono="text-[#1E293B]" bgIcono="bg-[#F1F5F9]" />
-            <TarjetaMetrica titulo="Stock Unidades" valor={metricas.unidadesTotales.toFixed(2)} icono={Hash} colorIcono="text-[#1E293B]" bgIcono="bg-[#F1F5F9]" />
+            <TarjetaMetrica titulo="Stock Unidades" valor={String(Math.round(metricas.unidadesTotales))} icono={Hash} colorIcono="text-[#1E293B]" bgIcono="bg-[#F1F5F9]" />
+            <TarjetaMetrica titulo="Stock Kilos" valor={`${metricas.kilosTotales.toFixed(2)} KG`} icono={Hash} colorIcono="text-[#1E293B]" bgIcono="bg-[#F1F5F9]" />
             <TarjetaMetrica titulo="Items Activos" valor={metricas.catalogoActivo} icono={Tags} colorIcono="text-[#10B981]" bgIcono="bg-[#D1FAE5]" />
             <TarjetaMetrica titulo="Mermas Registradas" valor={fSoles(metricas.mermasValor)} icono={Trash2} colorIcono="text-red-600" bgIcono="bg-red-50" />
           </div>
