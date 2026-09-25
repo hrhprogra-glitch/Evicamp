@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Banknote, Smartphone, CreditCard, CheckCircle2, Calculator, UserPlus, Calendar, ChevronDown, Plus } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import type { CartItem } from '../types';
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 
 // NUEVA INTERFAZ PARA LOS DATOS DEL FIADO
 export interface FiadoData {
@@ -66,6 +67,8 @@ interface Props {
       fetchClientes();
     }
   }, [isOpen, total]);
+
+  useEscapeClose(isOpen, onClose);
 
   if (!isOpen) return null;
 

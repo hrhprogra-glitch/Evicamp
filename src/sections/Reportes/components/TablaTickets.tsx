@@ -1,8 +1,9 @@
 // src/sections/Reportes/components/TablaTickets.tsx
 import React, { useState, useEffect } from 'react';
 import { RotateCcw, Trash2, Receipt, ChevronLeft, ChevronRight, Eye, X } from 'lucide-react';
-import { supabase } from '../../../db/supabase'; 
+import { supabase } from '../../../db/supabase';
 import type { TicketVenta } from '../types';
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 
 interface Props {
   tickets: TicketVenta[];
@@ -17,6 +18,8 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete }) =
   const [isLoadingDetalles, setIsLoadingDetalles] = useState(false);
   
   const ITEMS_PER_PAGE = 50;
+
+  useEscapeClose(ticketSeleccionado !== null, () => setTicketSeleccionado(null));
 
   useEffect(() => {
     setCurrentPage(1);
@@ -167,8 +170,8 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete }) =
 
       {/* VENTANA FLOTANTE (MODAL PLATO TÉCNICO) */}
       {ticketSeleccionado && (
-        <div className="fixed inset-0 bg-[#1E293B]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#FFFFFF] border-2 border-[#1E293B] shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] rounded-none w-full max-w-lg flex flex-col max-h-[80vh]">
+        <div className="fixed inset-0 bg-[#1E293B]/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-[#FFFFFF] border-2 border-[#1E293B] shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] rounded-none w-full max-w-lg flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(80dvh/var(--ui-zoom))]">
             <div className="flex justify-between items-center border-b-2 border-[#1E293B] bg-[#F8FAFC] p-4 shrink-0">
               <div>
                 <p className="text-[#64748B] text-[10px] font-mono tracking-widest uppercase mb-1">Inspección Operativa</p>

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { X, Lock, Calculator, AlertTriangle, Banknote, Smartphone, CreditCard } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import type { CashSession, SuperMetricas } from '../types';
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 
 interface Props {
   isOpen: boolean;
@@ -61,6 +62,8 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
   const [justificacion, setJustificacion] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEscapeClose(isOpen, onClose);
+
   if (!isOpen) return null;
 
   // Lo que el sistema espera encontrar en cada método, según las ventas/cobros de la sesión.
@@ -117,8 +120,8 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-md flex items-center justify-center z-[9999] p-4 font-mono">
-      <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-lg flex flex-col rounded-none animate-fade-in max-h-[90vh]">
+    <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-md flex items-center justify-center z-[9999] p-2 sm:p-4 font-mono">
+      <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-lg flex flex-col rounded-none animate-fade-in max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(90dvh/var(--ui-zoom))]">
 
         <div className="bg-[#EF4444] p-4 border-b-2 border-[#1E293B] flex justify-between items-center text-white shrink-0">
           <h2 className="font-black uppercase tracking-widest flex items-center gap-2 text-sm">
@@ -129,7 +132,7 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
           </button>
         </div>
 
-        <div className="p-6 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
+        <div className="p-4 sm:p-6 flex flex-col gap-4 overflow-y-auto custom-scrollbar flex-1 min-h-0">
 
           <div className="bg-[#F8FAFC] border-2 border-[#E2E8F0] p-3 flex items-center gap-2 text-[#64748B]">
             <Calculator size={16} />

@@ -1,5 +1,6 @@
 import { X, Package, Receipt, TrendingUp, TrendingDown } from 'lucide-react';
 import type { AnalisisProducto } from '../types';
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 
 interface Props {
   producto: AnalisisProducto;
@@ -18,10 +19,11 @@ const formatearFecha = (fecha: string) => {
 
 export const ModalDetalleProducto: React.FC<Props> = ({ producto, onClose }) => {
   const ventas = producto.ventasDetalle || [];
+  useEscapeClose(true, onClose);
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-mono">
-      <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-3xl max-h-[85vh] flex flex-col rounded-none">
+    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 font-mono">
+      <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-3xl max-h-[calc(85dvh/var(--ui-zoom))] flex flex-col rounded-none">
 
         {/* CABECERA */}
         <div className="flex justify-between items-center border-b-2 border-[#1E293B] p-4 bg-[#F8FAFC] shrink-0">
@@ -81,7 +83,7 @@ export const ModalDetalleProducto: React.FC<Props> = ({ producto, onClose }) => 
           </h4>
         </div>
 
-        <div className="overflow-y-auto p-4 pt-2 flex-1">
+        <div className="overflow-y-auto p-4 pt-2 flex-1 min-h-0">
           {ventas.length === 0 ? (
             <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-6 text-center">
               <p className="text-xs font-bold text-[#64748B] uppercase tracking-widest">Sin ventas en este período</p>

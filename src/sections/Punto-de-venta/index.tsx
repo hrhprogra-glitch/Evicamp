@@ -17,6 +17,8 @@ import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ E
 export const POS: React.FC = () => {
   const [hasOpenSession, setHasOpenSession] = useState<boolean | null>(null);
 const [searchQuery, setSearchQuery] = useState('');
+  // 📱 RESPONSIVE: en móvil/tablet solo se ve un panel a la vez (Productos o Ticket)
+  const [mobileTab, setMobileTab] = useState<'productos' | 'ticket'>('productos');
   
   // 🚀 MEMORIA PERSISTENTE: Cargar carrito desde el navegador
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -522,26 +524,60 @@ const [searchQuery, setSearchQuery] = useState('');
           setSelectedIndex(-1);
         }
       }}
-      className={`flex h-full w-full bg-transparent font-mono gap-6 relative z-0 ${hasOpenSession === false ? 'pt-16' : ''}`}
+      className={`flex flex-col lg:flex-row h-full w-full bg-transparent font-mono gap-3 lg:gap-6 relative ${hasOpenSession === false ? 'pt-12 lg:pt-16' : ''}`}
     >
-      
+
       {/* BARRA DE ADVERTENCIA - MODO CONSULTA */}
       {hasOpenSession === false && (
-        <div className="absolute top-0 left-0 w-full bg-[#EF4444] text-white p-3 flex justify-center items-center gap-2 font-black text-xs uppercase tracking-[0.2em] z-50 shadow-[0_4px_0_0_#1E293B] border-b-2 border-[#1E293B]">
-          <Wallet size={16} /> Caja Cerrada: Modo de solo consulta. Ve a Finanzas para aperturar la caja.
+        <div className="absolute top-0 left-0 w-full bg-[#EF4444] text-white p-2 sm:p-3 flex justify-center items-center gap-2 font-black text-[10px] sm:text-xs uppercase tracking-widest sm:tracking-[0.2em] z-10 shadow-[0_4px_0_0_#1E293B] border-b-2 border-[#1E293B]">
+          <Wallet size={16} className="shrink-0" /> <span className="text-center">Caja Cerrada: Modo de solo consulta. Ve a Finanzas para aperturar la caja.</span>
         </div>
       )}
-      <TerminalBusqueda 
-        searchQuery={searchQuery} 
-        setSearchQuery={setSearchQuery} 
-        productos={productos}
-        onAddToCart={handleAddToCart}
-      />
-      
+
+      {/* 📱 SELECTOR DE PANEL: solo visible en móvil/tablet (<lg) */}
+      <div className="grid grid-cols-2 gap-2 lg:hidden shrink-0">
+        <button
+          type="button"
+          onClick={() => setMobileTab('productos')}
+          className={`py-3 text-xs font-black uppercase tracking-widest border-2 transition-all cursor-pointer ${
+            mobileTab === 'productos'
+              ? 'border-[#1E293B] bg-[#1E293B] text-white'
+              : 'border-[#E2E8F0] bg-white text-[#64748B]'
+          }`}
+        >
+          Productos
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab('ticket')}
+          className={`py-3 text-xs font-black uppercase tracking-widest border-2 transition-all cursor-pointer flex items-center justify-center gap-2 ${
+            mobileTab === 'ticket'
+              ? 'border-[#1E293B] bg-[#1E293B] text-white'
+              : 'border-[#E2E8F0] bg-white text-[#64748B]'
+          }`}
+        >
+          Ticket
+          {cart.length > 0 && (
+            <span className="bg-[#10B981] text-[#1E293B] px-1.5 py-0.5 text-[10px]">
+              {cart.reduce((a, b) => a + b.cartQuantity, 0)} · S/{cart.reduce((acc, item) => acc + item.subtotal, 0).toFixed(2)}
+            </span>
+          )}
+        </button>
+      </div>
+
+      <div className={`${mobileTab === 'productos' ? 'flex' : 'hidden'} lg:flex flex-1 min-w-0 min-h-0`}>
+        <TerminalBusqueda
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          productos={productos}
+          onAddToCart={handleAddToCart}
+        />
+      </div>
+
       {/* 🛡️ CONTENEDOR DERECHO EVICAMP: MINI REPORTE + CAJA ALINEADA */}
-      <div className="flex flex-col h-full gap-4 shrink-0 z-10 relative w-full lg:w-[420px] min-h-0">
+      <div className={`${mobileTab === 'ticket' ? 'flex' : 'hidden'} lg:flex flex-col h-full gap-4 shrink-0 z-10 relative w-full lg:w-[380px] xl:w-[420px] min-h-0`}>
         <MiniReporteDiario refreshTrigger={refreshReport} />
-        
+
         {/* 🛡️ GEOMETRÍA PERFECTA: Flex-1 y min-h-0 hacen que se estire exactamente al ras del panel izquierdo */}
         <div className="flex-1 min-h-0 flex flex-col">
           <TicketVenta
@@ -549,8 +585,8 @@ const [searchQuery, setSearchQuery] = useState('');
             colIndex={colIndex}
             setSelectedIndex={setSelectedIndex} // 🛡️ NUEVO
             setColIndex={setColIndex}           // 🛡️ NUEVO
-            cart={cart} 
-            setCart={setCart} 
+            cart={cart}
+            setCart={setCart}
             updateQuantity={updateQuantity}
             updatePrice={updatePrice}
             heldCarts={heldCarts}
@@ -588,8 +624,8 @@ const [searchQuery, setSearchQuery] = useState('');
       />
       {/* VISTA PREVIA DEL TICKET (NUEVO MODAL) */}
       {isVistaPreviaOpen && ultimaVenta && (
-        <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
-          <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[95vh] w-full max-w-md animate-fade-in">
+        <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4">
+          <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(95dvh/var(--ui-zoom))] w-full max-w-md animate-fade-in">
             
             {/* CABECERA */}
             <div className="bg-[#3B82F6] text-white p-4 flex justify-between items-center border-b-2 border-[#1E293B] shrink-0">

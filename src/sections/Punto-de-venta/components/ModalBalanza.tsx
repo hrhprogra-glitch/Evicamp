@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Scale, Banknote, Calculator, ShoppingCart } from 'lucide-react';
 import type { Product } from '../../Inventario/types';
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 
 interface Props {
   isOpen: boolean;
@@ -19,6 +20,8 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
       setPesoKg('');
     }
   }, [isOpen]);
+
+  useEscapeClose(isOpen, onClose);
 
   if (!isOpen || !product) return null;
 
@@ -55,8 +58,8 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 font-mono">
-      <div className="bg-white w-full max-w-md border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4 font-mono">
+      <div className="bg-white w-full max-w-md border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] overflow-y-auto">
         
         {/* Cabecera */}
         <div className="bg-[#3B82F6] text-white px-4 py-3 flex items-center justify-between border-b-2 border-[#1E293B]">

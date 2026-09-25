@@ -5,6 +5,7 @@ import { X, Printer, Receipt } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 
 import { useReactToPrint } from 'react-to-print';
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 
 
 
@@ -78,15 +79,17 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
 
 
 
+  useEscapeClose(isOpen, onClose);
+
   if (!isOpen || !caja) return null;
 
 
 
   return (
 
-    <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-sm flex items-center justify-center z-[100] p-4 font-mono">
+    <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4 font-mono">
 
-      <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-2xl h-[90vh] flex flex-col">
+      <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-2xl h-[calc(90dvh/var(--ui-zoom))] flex flex-col">
 
        
 

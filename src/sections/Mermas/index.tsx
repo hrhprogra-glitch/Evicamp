@@ -190,14 +190,14 @@ export const Mermas: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-10 text-[#1E293B] font-mono min-h-full bg-[#FFFFFF] relative z-0 rounded-none">
+    <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-10 text-[#1E293B] font-mono min-h-full bg-[#FFFFFF] relative rounded-none">
       
       <HeaderMermas 
         onNuevaMerma={() => setIsModalMermaOpen(true)} 
       />
 
       {/* MÉTRICAS */}
-      <div className="px-8 flex gap-4 overflow-x-auto w-full pb-2 custom-scrollbar shrink-0 rounded-none">
+      <div className="px-3 sm:px-6 lg:px-8 flex gap-4 overflow-x-auto w-full pb-2 custom-scrollbar shrink-0 rounded-none">
         <TarjetaMetrica 
           label="Eventos Registrados" 
           value={filteredMermas.length} 
@@ -235,7 +235,7 @@ export const Mermas: React.FC = () => {
         }}
       />
 
-      <div className="px-8 flex-1 flex flex-col min-h-[60vh] relative pb-8 rounded-none">
+      <div className="px-3 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-[60vh] relative pb-3 sm:pb-6 lg:pb-8 rounded-none">
         {loading ? (
           <div className="absolute inset-0 bg-[#FFFFFF]/90 backdrop-blur-sm z-10 flex items-center justify-center border border-[#E2E8F0] rounded-none shadow-none">
             <div className="flex flex-col items-center gap-3">

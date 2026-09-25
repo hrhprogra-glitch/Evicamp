@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../../db/supabase';
 import { Eye, EyeOff, BarChart3, X, Clock, Receipt, Coins, Smartphone, CreditCard, BookOpen, HandCoins } from 'lucide-react';
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 
 interface Props {
   refreshTrigger: number;
@@ -14,6 +15,8 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
     efectivo: 0, yape: 0, tarjeta: 0, transferencia: 0, fiado: 0, totalReal: 0
   });
   const [ventasHoy, setVentasHoy] = useState<any[]>([]);
+
+  useEscapeClose(isModalOpen, () => setIsModalOpen(false));
 
   useEffect(() => {
     const fetchHoy = async () => {
@@ -113,58 +116,58 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
   }, [refreshTrigger]);
 
   const modalContent = isModalOpen ? createPortal(
-    <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-md z-[999999] flex items-center justify-center p-4 sm:p-8 animate-fade-in font-mono">
-      <div className="bg-white border-4 border-[#1E293B] shadow-[16px_16px_0_0_#1E293B] w-full max-w-6xl flex flex-col h-[90vh] rounded-none">
-        
-        <div className="bg-[#1E293B] text-white p-6 flex justify-between items-center shrink-0">
-          <h2 className="font-black uppercase tracking-widest text-xl flex items-center gap-3">
-            <Receipt size={28} className="text-[#10B981]" /> Rendimiento de Caja Actual
+    <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-md z-[999999] flex items-center justify-center p-2 sm:p-4 lg:p-8 animate-fade-in font-mono">
+      <div className="bg-white border-4 border-[#1E293B] shadow-[16px_16px_0_0_#1E293B] w-full max-w-6xl flex flex-col h-[calc(94dvh/var(--ui-zoom))] sm:h-[calc(90dvh/var(--ui-zoom))] rounded-none">
+
+        <div className="bg-[#1E293B] text-white p-4 sm:p-6 flex justify-between items-center shrink-0">
+          <h2 className="font-black uppercase tracking-widest text-sm sm:text-xl flex items-center gap-3">
+            <Receipt size={28} className="text-[#10B981] hidden sm:block" /> Rendimiento de Caja Actual
           </h2>
           <button onClick={() => setIsModalOpen(false)} className="hover:text-[#EF4444] transition-colors cursor-pointer bg-white/10 p-2 hover:bg-white/20">
             <X size={32} strokeWidth={3} />
           </button>
         </div>
 
-        <div className="p-6 sm:p-8 bg-[#F8FAFC] flex-1 overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full min-h-0">
-            
-            <div className="flex flex-col gap-6 overflow-y-auto custom-scrollbar pr-4 min-h-0">
-              <div className="bg-[#1E293B] p-8 text-center border-4 border-[#1E293B] shrink-0 shadow-[8px_8px_0_0_#CBD5E1]">
+        <div className="p-3 sm:p-6 lg:p-8 bg-[#F8FAFC] flex-1 overflow-y-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 h-full min-h-0">
+
+            <div className="flex flex-col gap-4 sm:gap-6 lg:overflow-y-auto custom-scrollbar lg:pr-4 min-h-0">
+              <div className="bg-[#1E293B] p-4 sm:p-8 text-center border-4 border-[#1E293B] shrink-0 shadow-[8px_8px_0_0_#CBD5E1]">
                 <p className="text-[#94A3B8] text-xs font-black uppercase tracking-widest mb-2">Total Ingresado a Caja (Ventas + Abonos)</p>
-                <p className="text-6xl sm:text-7xl font-black text-white mt-2 drop-shadow-lg">S/ {totales.totalReal.toFixed(2)}</p>
+                <p className="text-3xl sm:text-6xl lg:text-7xl font-black text-white mt-2 drop-shadow-lg">S/ {totales.totalReal.toFixed(2)}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-5 shrink-0">
-                <div className="bg-white border-4 border-[#E2E8F0] p-5 flex flex-col items-center text-center shadow-[6px_6px_0_0_#E2E8F0]">
+              <div className="grid grid-cols-2 gap-3 sm:gap-5 shrink-0">
+                <div className="bg-white border-4 border-[#E2E8F0] p-3 sm:p-5 flex flex-col items-center text-center shadow-[6px_6px_0_0_#E2E8F0]">
                   <Coins size={32} className="text-[#10B981] mb-2" />
                   <span className="text-[10px] font-black text-[#64748B] uppercase tracking-widest">Efectivo Físico</span>
-                  <span className="text-2xl sm:text-3xl font-black text-[#1E293B] mt-1">S/ {totales.efectivo.toFixed(2)}</span>
+                  <span className="text-lg sm:text-3xl font-black text-[#1E293B] mt-1">S/ {totales.efectivo.toFixed(2)}</span>
                 </div>
-                <div className="bg-white border-4 border-[#E2E8F0] p-5 flex flex-col items-center text-center shadow-[6px_6px_0_0_#E2E8F0]">
+                <div className="bg-white border-4 border-[#E2E8F0] p-3 sm:p-5 flex flex-col items-center text-center shadow-[6px_6px_0_0_#E2E8F0]">
                   <Smartphone size={32} className="text-[#8B5CF6] mb-2" />
                   <span className="text-[10px] font-black text-[#64748B] uppercase tracking-widest">Yape / Plin / Transf.</span>
-                  <span className="text-2xl sm:text-3xl font-black text-[#1E293B] mt-1">S/ {(totales.yape + totales.transferencia).toFixed(2)}</span>
+                  <span className="text-lg sm:text-3xl font-black text-[#1E293B] mt-1">S/ {(totales.yape + totales.transferencia).toFixed(2)}</span>
                 </div>
-                <div className="bg-white border-4 border-[#E2E8F0] p-5 flex flex-col items-center text-center shadow-[6px_6px_0_0_#E2E8F0]">
+                <div className="bg-white border-4 border-[#E2E8F0] p-3 sm:p-5 flex flex-col items-center text-center shadow-[6px_6px_0_0_#E2E8F0]">
                   <CreditCard size={32} className="text-[#3B82F6] mb-2" />
                   <span className="text-[10px] font-black text-[#64748B] uppercase tracking-widest">Tarjeta (POS)</span>
-                  <span className="text-2xl sm:text-3xl font-black text-[#1E293B] mt-1">S/ {totales.tarjeta.toFixed(2)}</span>
+                  <span className="text-lg sm:text-3xl font-black text-[#1E293B] mt-1">S/ {totales.tarjeta.toFixed(2)}</span>
                 </div>
-                <div className="bg-white border-4 border-[#E2E8F0] p-5 flex flex-col items-center text-center shadow-[6px_6px_0_0_#E2E8F0]">
+                <div className="bg-white border-4 border-[#E2E8F0] p-3 sm:p-5 flex flex-col items-center text-center shadow-[6px_6px_0_0_#E2E8F0]">
                   <BookOpen size={32} className="text-[#EF4444] mb-2" />
                   <span className="text-[10px] font-black text-[#64748B] uppercase tracking-widest">Deuda (Fiados Emitidos)</span>
-                  <span className="text-2xl sm:text-3xl font-black text-[#1E293B] mt-1">S/ {totales.fiado.toFixed(2)}</span>
+                  <span className="text-lg sm:text-3xl font-black text-[#1E293B] mt-1">S/ {totales.fiado.toFixed(2)}</span>
                 </div>
               </div>
             </div>
 
             <div className="border-4 border-[#E2E8F0] bg-white flex flex-col h-full min-h-0 shadow-[8px_8px_0_0_#E2E8F0]">
-              <div className="bg-[#F8FAFC] border-b-4 border-[#E2E8F0] p-5 shrink-0 flex justify-between items-center">
-                <h3 className="text-base font-black text-[#1E293B] uppercase tracking-widest">Desglose Movimientos ({ventasHoy.length})</h3>
+              <div className="bg-[#F8FAFC] border-b-4 border-[#E2E8F0] p-3 sm:p-5 shrink-0 flex justify-between items-center">
+                <h3 className="text-sm sm:text-base font-black text-[#1E293B] uppercase tracking-widest">Desglose Movimientos ({ventasHoy.length})</h3>
               </div>
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 min-h-0">
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-4 space-y-2 sm:space-y-3 min-h-0">
                 {ventasHoy.length > 0 ? ventasHoy.map((v) => (
-                  <div key={v.id} className="flex justify-between items-center p-5 border-2 border-[#E2E8F0] hover:border-[#1E293B] bg-white hover:bg-[#F8FAFC] transition-all">
+                  <div key={v.id} className="flex justify-between items-center p-3 sm:p-5 border-2 border-[#E2E8F0] hover:border-[#1E293B] bg-white hover:bg-[#F8FAFC] transition-all">
                     <div className="flex flex-col">
                       <span className="text-sm font-black text-[#64748B] flex items-center gap-2">
                         <Clock size={16}/> {new Date(v.hora).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}

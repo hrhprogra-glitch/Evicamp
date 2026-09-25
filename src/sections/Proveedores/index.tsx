@@ -108,10 +108,10 @@ export const Proveedores: React.FC = () => {
   }, [proveedores, searchQuery, filtroEstado]);
 
   return (
-    <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-10 text-[#1E293B] font-mono min-h-full bg-white relative z-0">
+    <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-10 text-[#1E293B] font-mono min-h-full bg-white relative">
       
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-8 bg-white border-b-2 border-[#1E293B] shrink-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-6 lg:p-8 bg-white border-b-2 border-[#1E293B] shrink-0">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-[#EFF6FF] border-2 border-[#3B82F6] flex items-center justify-center shadow-[4px_4px_0_0_#3B82F6] rounded-none">
             <Users size={24} className="text-[#3B82F6]" />
@@ -145,7 +145,7 @@ export const Proveedores: React.FC = () => {
         matchCount={filteredProveedores.length}
       />
 
-      <div className="px-8 flex-1 flex flex-col min-h-[50vh] relative pb-8">
+      <div className="px-3 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-[50vh] relative pb-3 sm:pb-6 lg:pb-8">
         {loading ? (
           <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center border-2 border-[#E2E8F0]">
             <div className="flex flex-col items-center gap-3">

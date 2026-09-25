@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Banknote, CreditCard, Smartphone, Calculator } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import type { Fiado } from '../types';
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 
 interface Props {
   isOpen: boolean;
@@ -23,6 +24,8 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
       setTarjeta('');
     }
   }, [isOpen, fiado]);
+
+  useEscapeClose(isOpen, onClose);
 
   if (!isOpen || !fiado) return null;
 
@@ -76,11 +79,11 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 font-mono">
-      <div className="bg-white w-full max-w-md border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col rounded-none">
-        
+    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
+      <div className="bg-white w-full max-w-md border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] rounded-none">
+
         {/* HEADER */}
-        <div className="bg-[#10B981] text-[#1E293B] px-6 py-4 flex justify-between items-center shrink-0 border-b-2 border-[#1E293B]">
+        <div className="bg-[#10B981] text-[#1E293B] px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center shrink-0 border-b-2 border-[#1E293B]">
           <h2 className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
             <Calculator size={20} /> Abono Mixto
           </h2>
@@ -88,7 +91,7 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
         </div>
 
         {/* BODY */}
-        <div className="p-6 bg-[#F8FAFC] flex flex-col gap-4">
+        <div className="p-4 sm:p-6 bg-[#F8FAFC] flex flex-col gap-4 overflow-y-auto">
           <div className="bg-[#1E293B] text-white p-4 text-center border-2 border-[#1E293B] rounded-none">
             <p className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest">Saldo Actual de la Deuda</p>
             <p className="text-3xl font-black text-[#EF4444]">S/ {saldoPendiente.toFixed(2)}</p>

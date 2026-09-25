@@ -208,20 +208,20 @@ export const Finanzas: React.FC = () => {
   if (isLoading) return <div className="flex h-full items-center justify-center font-mono">Calculando Bóveda...</div>;
 
   return (
-    <div className="h-full flex flex-col gap-6 p-6 max-w-7xl mx-auto font-mono">
-      
-      <div className="flex justify-between items-end shrink-0">
+    <div className="h-full flex flex-col gap-4 lg:gap-6 p-3 sm:p-6 max-w-7xl mx-auto font-mono">
+
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-3 shrink-0">
         <div>
-          <h1 className="text-3xl font-black text-[#1E293B] uppercase tracking-tighter flex items-center gap-3">
-            <Wallet size={32} className="text-[#10B981]" /> Control de Caja
+          <h1 className="text-xl sm:text-3xl font-black text-[#1E293B] uppercase tracking-tighter flex items-center gap-3">
+            <Wallet size={28} className="text-[#10B981]" /> Control de Caja
           </h1>
           <p className="text-[#64748B] text-xs font-bold tracking-widest uppercase mt-1">
             Arqueo de Yape, Efectivo y Deudas en tiempo real
           </p>
         </div>
 
-        <div className="flex gap-3">
-          <button 
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          <button
             onClick={() => {
               if (vistaActual === 'ACTUAL') {
                 setVistaActual('HISTORIAL');
@@ -230,22 +230,22 @@ export const Finanzas: React.FC = () => {
                 setVistaActual('ACTUAL');
               }
             }}
-            className="bg-[#F8FAFC] text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-xs uppercase tracking-[0.2em] shadow-[4px_4px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#1E293B] transition-all cursor-pointer mr-2 flex items-center gap-2"
+            className="bg-[#F8FAFC] text-[#1E293B] px-4 sm:px-6 py-2.5 sm:py-3 border-2 border-[#1E293B] font-black text-[10px] sm:text-xs uppercase tracking-widest sm:tracking-[0.2em] shadow-[4px_4px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#1E293B] transition-all cursor-pointer flex items-center gap-2"
           >
             <ReceiptText size={16} /> {vistaActual === 'ACTUAL' ? 'Ver Historial' : 'Volver a Caja'}
           </button>
 
           {vistaActual === 'ACTUAL' && (
             !sessionActiva ? (
-              <button onClick={() => setIsAperturaModalOpen(true)} className="bg-[#10B981] text-white px-6 py-3 border-2 border-[#1E293B] font-black text-xs uppercase tracking-[0.2em] shadow-[4px_4px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#1E293B] transition-all cursor-pointer">
+              <button onClick={() => setIsAperturaModalOpen(true)} className="bg-[#10B981] text-white px-4 sm:px-6 py-2.5 sm:py-3 border-2 border-[#1E293B] font-black text-[10px] sm:text-xs uppercase tracking-widest sm:tracking-[0.2em] shadow-[4px_4px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#1E293B] transition-all cursor-pointer">
                 Aperturar Caja
               </button>
             ) : (
               <>
-                <button onClick={() => setIsMovimientoModalOpen(true)} className="bg-white text-[#1E293B] px-4 py-3 border-2 border-[#1E293B] font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-[4px_4px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#1E293B] transition-all cursor-pointer">
+                <button onClick={() => setIsMovimientoModalOpen(true)} className="bg-white text-[#1E293B] px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-[#1E293B] font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center gap-2 shadow-[4px_4px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#1E293B] transition-all cursor-pointer">
                   + Nuevo Movimiento
                 </button>
-                <button onClick={() => setIsCierreModalOpen(true)} className="bg-[#EF4444] text-white px-6 py-3 border-2 border-[#1E293B] font-black text-xs uppercase tracking-[0.2em] flex items-center gap-2 shadow-[4px_4px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#1E293B] transition-all cursor-pointer">
+                <button onClick={() => setIsCierreModalOpen(true)} className="bg-[#EF4444] text-white px-4 sm:px-6 py-2.5 sm:py-3 border-2 border-[#1E293B] font-black text-[10px] sm:text-xs uppercase tracking-widest sm:tracking-[0.2em] flex items-center gap-2 shadow-[4px_4px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#1E293B] transition-all cursor-pointer">
                   <Lock size={16} /> Cerrar Caja
                 </button>
               </>
@@ -271,16 +271,16 @@ export const Finanzas: React.FC = () => {
         <div className="flex flex-col gap-6 flex-1 overflow-y-auto custom-scrollbar pb-8 pr-2">
 
           {/* PANEL MAESTRO DE RECAUDACIÓN (ESTILO EVICAMP) */}
-          <div className="mb-0 bg-[#1E293B] border border-[#1E293B] rounded-none p-6 text-center shadow-none shrink-0">
-            <span className="text-[#64748B] text-sm uppercase tracking-widest font-bold">Gran Total en Caja (Todo Incluido)</span>
-            <h1 className="text-[#FFFFFF] text-5xl font-mono font-black mt-2">
+          <div className="mb-0 bg-[#1E293B] border border-[#1E293B] rounded-none p-4 sm:p-6 text-center shadow-none shrink-0">
+            <span className="text-[#64748B] text-xs sm:text-sm uppercase tracking-widest font-bold">Gran Total en Caja (Todo Incluido)</span>
+            <h1 className="text-[#FFFFFF] text-3xl sm:text-5xl font-mono font-black mt-2">
               {ventasNetasHoy === null ? 'Calculando...' : `S/ ${ventasNetasHoy.toFixed(2)}`}
             </h1>
             <p className="text-[#94A3B8] text-xs mt-2 uppercase">Incluye Efectivo, Yape, Transferencias y Tarjetas</p>
           </div>
 
           {/* SÚPER PANEL DE MÉTRICAS */}
-          <div className="grid grid-cols-4 gap-4 shrink-0">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 shrink-0">
             <div className="bg-white border-2 border-[#1E293B] p-4 flex flex-col justify-between">
                <p className="text-[10px] font-black text-[#64748B] uppercase tracking-widest flex items-center gap-2"><Banknote size={14}/> Efectivo Esperado Físico</p>
                <p className="text-3xl font-black text-[#10B981] mt-2">S/ {superMetricas.efectivoEsperadoCaja.toFixed(2)}</p>

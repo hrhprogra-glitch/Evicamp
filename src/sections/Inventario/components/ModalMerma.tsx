@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, AlertTriangle, Database, Loader2 } from 'lucide-react';
 import { supabase } from '../../../db/supabase.ts';
 import { formatearCantidad } from '../../../utils/formato';
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 import type { Product } from '../types';
 
 interface Props {
@@ -127,6 +128,8 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
   // Bandera de seguridad adaptada a la diferencia: Solo avisa si el "extra" que sacamos excede el lote
   const excedeStockLote = (selectedLote && !esConsumoActivo && diffCant > 0) ? diffCant > selectedLote.quantity : false;
   // ----------------------------------------------
+
+  useEscapeClose(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -292,8 +295,8 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 font-mono">
-      <div className="bg-white w-full max-w-lg border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] relative flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
+      <div className="bg-white w-full max-w-lg border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] relative flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(90dvh/var(--ui-zoom))]">
         
         {/* HEADER */}
         <div className={`${isEdit ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'} text-white px-6 py-4 flex items-center justify-between border-b-2 border-[#1E293B] shrink-0`}>
@@ -310,7 +313,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
         </div>
 
         {/* CUERPO DEL MODAL (Scrolleable si es muy largo) */}
-        <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
+        <div className="p-4 sm:p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1 min-h-0">
           
           {/* 1. BUSCADOR DE PRODUCTO DESPLEGABLE */}
           <div className="space-y-2 relative">

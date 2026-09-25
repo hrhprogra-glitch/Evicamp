@@ -53,6 +53,10 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
       
       {renderPagination('top')}
 
+      {/* CONTENEDOR CON SCROLL HORIZONTAL SINCRONIZADO (CABECERA + FILAS) */}
+      <div className="flex-1 overflow-x-auto custom-scrollbar">
+        <div className="min-w-[960px]">
+
       {/* CABECERA */}
       <div className="grid grid-cols-12 gap-3 bg-[#1E293B] text-[#FFFFFF] p-4 text-xs md:text-sm font-black uppercase tracking-[0.1em] shrink-0 rounded-none">
         <div className="col-span-2 min-w-0 truncate">Fecha / Usu.</div>
@@ -66,7 +70,7 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
       </div>
 
       {/* CUERPO */}
-      <div className="w-full flex-1 bg-[#FFFFFF]">
+      <div className="w-full bg-[#FFFFFF]">
         {paginatedData.length === 0 ? (
           <div className="p-12 text-center text-[#64748B] font-bold uppercase text-[10px] tracking-widest flex flex-col items-center justify-center h-full gap-2 bg-[#FFFFFF]">
             <Layers size={32} className="text-[#E2E8F0] mb-2" />
@@ -160,6 +164,9 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
             </div>
           ))
         )}
+      </div>
+
+        </div>
       </div>
 
       {renderPagination('bottom')}

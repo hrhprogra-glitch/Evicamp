@@ -83,7 +83,7 @@ export const TablaUsuarios: React.FC = () => {
             No hay empleados registrados todavía.
           </div>
         ) : (
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse min-w-[600px]">
             <thead>
               <tr className="bg-[#F1F5F9] border-b border-[#E2E8F0] text-xs uppercase tracking-wider text-[#64748B] font-bold">
                 <th className="p-4">Nombre / Email</th>

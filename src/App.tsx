@@ -24,10 +24,20 @@ export const App: React.FC = () => {
   const [emailEmpleado, setEmailEmpleado] = useState<string>(''); // Para mostrar en el TopBar
 
   const [isLoading, setIsLoading] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => (
+    typeof window === 'undefined' ? true : window.innerWidth >= 1280
+  ));
+
   // Estado para el Enrutador Interno
   const [currentView, setCurrentView] = useState<string>('resumen');
+
+  // En móvil/tablet, navegar cierra el panel lateral automáticamente
+  const handleNavigate = (view: string) => {
+    setCurrentView(view);
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
+  };
 
   useEffect(() => {
     // 1. Revisar si hay un empleado guardado en la memoria del navegador (localStorage)
@@ -128,23 +138,24 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-[#FFFFFF] overflow-hidden">
-      <SideBar 
-        isOpen={isSidebarOpen} 
+    <div className="flex h-[calc(100dvh/var(--ui-zoom))] w-full bg-[#FFFFFF] overflow-hidden">
+      <SideBar
+        isOpen={isSidebarOpen}
         currentView={currentView}
-        onNavigate={setCurrentView}
+        onNavigate={handleNavigate}
+        onClose={() => setIsSidebarOpen(false)}
         // @ts-ignore: Ignoramos el error de TypeScript temporalmente hasta actualizar el SideBar
-        permisos={permisos} 
+        permisos={permisos}
       />
-      
-      <main className="flex-1 flex flex-col overflow-auto bg-[#F8FAFC]">
-        <TopBar 
-          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
-          userEmail={session?.user?.email || emailEmpleado || 'EMPLEADO_AUTENTICADO'} 
-          onNavigate={setCurrentView} 
+
+      <main className="flex-1 min-w-0 flex flex-col overflow-hidden bg-[#F8FAFC]">
+        <TopBar
+          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          userEmail={session?.user?.email || emailEmpleado || 'EMPLEADO_AUTENTICADO'}
+          onNavigate={handleNavigate}
         />
-        
-        <section className="p-8 flex-1 overflow-y-auto">
+
+        <section className="p-3 sm:p-5 lg:p-8 flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
           {renderCurrentView()}
         </section>
       </main>

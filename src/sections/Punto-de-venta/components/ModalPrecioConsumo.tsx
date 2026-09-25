@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Product } from '../types';
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 
 interface Props {
   isOpen: boolean;
@@ -12,6 +13,8 @@ interface Props {
 export const ModalPrecioConsumo: React.FC<Props> = ({ isOpen, producto, onClose, onConfirm }) => {
   // Inicializamos vacío para forzar al cajero a teclear el valor y evitar clics accidentales en "0"
   const [precioAjustado, setPrecioAjustado] = useState<string>('');
+
+  useEscapeClose(isOpen, onClose);
 
   if (!isOpen || !producto) return null;
 
@@ -26,9 +29,9 @@ export const ModalPrecioConsumo: React.FC<Props> = ({ isOpen, producto, onClose,
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity">
+    <div className="fixed inset-0 bg-[#1E293B]/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 transition-opacity">
       {/* Geometría estricta: rounded-none, border oscuro, fondo puro */}
-      <div className="bg-[#FFFFFF] border-2 border-[#1E293B] shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] rounded-none w-full max-w-sm p-6">
+      <div className="bg-[#FFFFFF] border-2 border-[#1E293B] shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] rounded-none w-full max-w-sm max-h-[calc(94dvh/var(--ui-zoom))] overflow-y-auto p-4 sm:p-6">
         
         <div className="border-b border-[#E2E8F0] pb-3 mb-5">
           <span className="text-[#64748B] text-[10px] font-mono tracking-widest uppercase block mb-1">

@@ -101,7 +101,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-[#1E293B] font-mono selection:bg-[#10B981] selection:text-white">
+    <div className="min-h-[calc(100dvh/var(--ui-zoom))] w-full flex flex-col md:flex-row bg-[#1E293B] font-mono selection:bg-[#10B981] selection:text-white">
       
       {/* =========================================
           LADO IZQUIERDO: TERMINAL DE ACCESO
@@ -112,20 +112,20 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         <div className="absolute top-0 left-0 w-full h-4 bg-[#10B981]"></div>
 
         {/* CONTENEDOR CENTRAL DEL FORMULARIO */}
-        <div className="flex-1 flex flex-col justify-center px-8 md:px-16 lg:px-24">
-          
-          <div className="mb-12">
+        <div className="flex-1 flex flex-col justify-center px-6 py-6 sm:px-8 md:px-16 lg:px-24 overflow-y-auto">
+
+          <div className="mb-5 sm:mb-8 md:mb-12">
             {/* LOGO + NOMBRE */}
             <div className="flex items-center gap-4">
               {/* Logo Dinámico o por Defecto */}
-              <img src={empresaData.logo} alt="Logo Empresa" className="w-12 h-12 object-contain" /> 
-              
-              <h1 className="text-5xl font-black text-[#1E293B] uppercase tracking-tighter">
+              <img src={empresaData.logo} alt="Logo Empresa" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
+
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#1E293B] uppercase tracking-tighter">
                 {empresaData.nombre}<span className="text-[#10B981]">.</span>
               </h1>
             </div>
 
-            <div className="flex items-center gap-4 mt-6">
+            <div className="flex items-center gap-4 mt-3 sm:mt-6">
               <div className="h-[2px] flex-1 bg-[#10B981]"></div>
               <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-[0.3em]">
                 Terminal de Acceso
@@ -134,7 +134,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-3 sm:space-y-6">
             {error && (
               <div className="border-2 border-red-500 bg-red-50 text-red-600 px-4 py-3 text-[10px] font-black uppercase tracking-widest animate-pulse">
                 {error}
@@ -151,7 +151,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full border-2 border-[#E2E8F0] bg-white px-4 py-4 text-sm font-bold text-[#1E293B] focus:border-[#10B981] focus:outline-none transition-colors rounded-none placeholder:text-[#CBD5E1]"
+                className="w-full border-2 border-[#E2E8F0] bg-white px-4 py-2.5 sm:py-4 text-sm font-bold text-[#1E293B] focus:border-[#10B981] focus:outline-none transition-colors rounded-none placeholder:text-[#CBD5E1]"
                 placeholder="INGRESE SU ID..."
               />
             </div>
@@ -166,7 +166,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full border-2 border-[#E2E8F0] bg-white px-4 py-4 text-sm font-bold text-[#1E293B] focus:border-[#10B981] focus:outline-none transition-colors rounded-none placeholder:text-[#CBD5E1]"
+                className="w-full border-2 border-[#E2E8F0] bg-white px-4 py-2.5 sm:py-4 text-sm font-bold text-[#1E293B] focus:border-[#10B981] focus:outline-none transition-colors rounded-none placeholder:text-[#CBD5E1]"
                 placeholder="••••••••"
               />
             </div>
@@ -175,7 +175,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#10B981] text-[#1E293B] border-2 border-[#1E293B] px-4 py-5 text-sm font-black uppercase tracking-[0.2em] hover:bg-[#1E293B] hover:text-[#10B981] hover:border-[#10B981] transition-all disabled:opacity-50 mt-8 rounded-none cursor-pointer shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+              className="w-full bg-[#10B981] text-[#1E293B] border-2 border-[#1E293B] px-4 py-3 sm:py-5 text-sm font-black uppercase tracking-[0.2em] hover:bg-[#1E293B] hover:text-[#10B981] hover:border-[#10B981] transition-all disabled:opacity-50 mt-4 sm:mt-8 rounded-none cursor-pointer shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
             >
               {loading ? 'AUTENTICANDO...' : 'EJECUTAR INGRESO'}
             </button>
@@ -183,7 +183,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         </div>
 
         {/* FOOTER IZQUIERDO */}
-        <div className="p-8 border-t-2 border-[#E2E8F0] flex justify-between items-center">
+        <div className="p-4 sm:p-8 border-t-2 border-[#E2E8F0] flex justify-between items-center shrink-0">
           <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest">
             v2.0.4_oxide_engine
           </span>

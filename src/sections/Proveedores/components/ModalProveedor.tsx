@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save,  Building2 } from 'lucide-react';
 import type { Proveedor } from '../types';
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 
 interface Props {
   isOpen: boolean;
@@ -41,6 +42,8 @@ export const ModalProveedor: React.FC<Props> = ({ isOpen, onClose, onSave, prove
     }
   }, [isOpen, proveedorAEditar]);
 
+  useEscapeClose(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const handleSubmit = () => {
@@ -76,8 +79,8 @@ export const ModalProveedor: React.FC<Props> = ({ isOpen, onClose, onSave, prove
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 font-mono">
-      <div className="bg-white w-full max-w-2xl border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
+      <div className="bg-white w-full max-w-2xl border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(90dvh/var(--ui-zoom))]">
         
         {/* HEADER */}
         <div className="bg-[#1E293B] text-white px-6 py-4 flex items-center justify-between shrink-0">
@@ -98,7 +101,7 @@ export const ModalProveedor: React.FC<Props> = ({ isOpen, onClose, onSave, prove
         </div>
 
         {/* FORMULARIO */}
-        <div className="p-6 overflow-y-auto custom-scrollbar bg-[#F8FAFC] flex-1">
+        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar bg-[#F8FAFC] flex-1 min-h-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             
             <div className="space-y-2">

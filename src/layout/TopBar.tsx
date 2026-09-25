@@ -59,14 +59,16 @@ export const TopBar: React.FC<TopBarProps> = ({ toggleSidebar, userEmail, onNavi
       <div className="flex items-center space-x-4">
         <button
           onClick={toggleSidebar}
+          data-menu-toggle="true"
+          aria-label="Abrir/cerrar menú"
           className="p-2.5 border border-[#E2E8F0] bg-[#F8FAFC] text-[#1E293B] hover:border-[#10B981] hover:text-[#10B981] hover:bg-white transition-all rounded-none cursor-pointer group"
         >
           <svg className="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="1.5" d="M4 6h16M4 12h16M4 18h7" />
           </svg>
         </button>
-        
-        <div className="hidden md:flex items-center text-xs font-black text-[#94A3B8] uppercase tracking-[0.2em] bg-[#F8FAFC] px-3 py-1.5 border border-[#E2E8F0]">
+
+        <div className="hidden xl:flex items-center text-xs font-black text-[#94A3B8] uppercase tracking-[0.2em] bg-[#F8FAFC] px-3 py-1.5 border border-[#E2E8F0]">
           <span className="text-[#10B981] mr-2">root@evicamp:~#</span>
           <span>SYSTEM_ACTIVE</span>
           <span className="w-1.5 h-3 bg-[#10B981] animate-pulse ml-2 inline-block"></span>
@@ -92,11 +94,11 @@ export const TopBar: React.FC<TopBarProps> = ({ toggleSidebar, userEmail, onNavi
           NET: <span className="text-[#10B981] ml-1">SECURE</span>
         </div>
 
-        <div className="flex items-center border border-[#E2E8F0] px-4 py-2 bg-[#F8FAFC] text-xs font-black uppercase tracking-widest text-[#1E293B]">
+        <div className="hidden sm:flex items-center border border-[#E2E8F0] px-4 py-2 bg-[#F8FAFC] text-xs font-black uppercase tracking-widest text-[#1E293B]">
           [ {time} ]
         </div>
 
-        <div className="flex items-center border border-[#E2E8F0] pl-4 pr-5 py-2 bg-white">
+        <div className="hidden md:flex items-center border border-[#E2E8F0] pl-4 pr-5 py-2 bg-white">
           <div className="h-2 w-2 bg-[#10B981] animate-pulse mr-2"></div>
           <span className="text-xs font-black text-[#1E293B] uppercase tracking-[0.1em]">
             ID: <span className="text-[#64748B]">{userEmail.split('@')[0]}</span>

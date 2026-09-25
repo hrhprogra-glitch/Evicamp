@@ -1,12 +1,27 @@
 @import "tailwindcss";
 
-/* BYPASS TÉCNICO: Usamos :root en lugar de @theme para evitar que 
+/* Variante para portátiles con poca altura vertical (comunes por escalado DPI de Windows) */
+@custom-variant short (@media (min-width: 1024px) and (max-height: 820px));
+
+/* BYPASS TÉCNICO: Usamos :root en lugar de @theme para evitar que
    el compilador v4 colapse al generar el diccionario de variables. */
 :root {
-  --color-brand-primary: #1E293B; 
-  --color-brand-accent: #10B981;  
-  --color-brand-border: #E2E8F0;  
-  --color-brand-bg: #FFFFFF;      
+  --color-brand-primary: #1E293B;
+  --color-brand-accent: #10B981;
+  --color-brand-border: #E2E8F0;
+  --color-brand-bg: #FFFFFF;
+  --ui-zoom: 1;
+}
+
+/* Escalado proporcional para pantallas grandes (Smart TV / monitores 4K).
+   Arranca en 2560px: 1920x1080 (el monitor más común, y también una resolución típica
+   de TV Full HD) se queda siempre en zoom 1 y se ve idéntico a hoy. Se exige además
+   suficiente altura para no afectar laptops anchas pero bajas. */
+@media (min-width: 2560px) and (min-height: 1000px) {
+  :root { --ui-zoom: 1.5; }
+}
+@media (min-width: 3840px) and (min-height: 1000px) {
+  :root { --ui-zoom: 2; }
 }
 
 * {
@@ -14,13 +29,31 @@
 }
 
 html, body {
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
   background-color: var(--color-brand-bg);
   color: var(--color-brand-primary);
   font-family: ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  zoom: var(--ui-zoom);
+}
+
+/* Colchón de "overscan" para TV a partir de 2560px de ancho: el padding vive en <body>,
+   fuera del árbol con zoom, para no ser escalado dos veces. */
+@media (min-width: 2560px) and (min-height: 1000px) {
+  body {
+    padding: 3vh 2vw;
+    box-sizing: border-box;
+  }
+}
+
+:focus-visible {
+  outline: 3px solid #10B981;
+  outline-offset: 2px;
 }
 
 .custom-scrollbar::-webkit-scrollbar {

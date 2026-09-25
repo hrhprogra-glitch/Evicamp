@@ -91,11 +91,11 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
       <div className="h-2 w-full bg-[#10B981] shrink-0 rounded-none"></div>
 
       {/* HEADER DE BÚSQUEDA TIPO TERMINAL */}
-      <div className="bg-[#FFFFFF] p-6 border-b border-[#E2E8F0] shrink-0 rounded-none">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-[#FFFFFF] p-3 sm:p-6 border-b border-[#E2E8F0] shrink-0 rounded-none short:p-4">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
           <div>
-            <h1 className="text-xl font-black text-[#1E293B] uppercase tracking-widest flex items-center gap-3">
-              <ScanLine className="text-[#1E293B]" size={24} /> Terminal de Operaciones
+            <h1 className="text-base sm:text-xl font-black text-[#1E293B] uppercase tracking-widest flex items-center gap-3">
+              <ScanLine className="text-[#1E293B]" size={24} /> <span className="hidden sm:inline">Terminal de Operaciones</span><span className="sm:hidden">Terminal</span>
             </h1>
           </div>
         </div>
@@ -103,19 +103,19 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
         <div className="flex gap-3">
           {/* Estricto diseño monocrático, sin sombras difuminadas ni redondeos */}
           <div className="flex-1 relative flex items-center border-2 border-[#1E293B] bg-[#FFFFFF] focus-within:ring-2 focus-within:ring-[#64748B] transition-all shadow-[4px_4px_0_0_#1E293B] rounded-none">
-            <div className="w-12 h-12 flex items-center justify-center bg-[#1E293B] text-[#FFFFFF] shrink-0 rounded-none">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-[#1E293B] text-[#FFFFFF] shrink-0 rounded-none">
               <Search size={20} />
             </div>
             <div className="flex flex-col flex-1 px-4 relative">
-              <input 
+              <input
                 id="buscador-global-pos"
-                type="text" 
+                type="text"
                 autoFocus
-                placeholder="ESCANEAS AQUÍ, O ESCRIBES NOMBRE/CÓDIGO (Presiona Enter)" 
+                placeholder="ESCANEAS AQUÍ, O ESCRIBES NOMBRE/CÓDIGO (Presiona Enter)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-full h-14 bg-transparent text-base font-black text-[#1E293B] uppercase outline-none placeholder:text-[#64748B]/50 rounded-none"
+                className="w-full h-11 sm:h-14 bg-transparent text-sm sm:text-base font-black text-[#1E293B] uppercase outline-none placeholder:text-[#64748B]/50 rounded-none short:h-11"
               />
             </div>
           </div>
@@ -123,7 +123,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
       </div>
 
       {/* ÁREA DE RESULTADOS */}
-      <div className="flex-1 p-6 overflow-y-auto custom-scrollbar flex flex-col bg-[#F8FAFC]">
+      <div className="flex-1 p-3 sm:p-6 overflow-y-auto custom-scrollbar flex flex-col bg-[#F8FAFC]">
         {searchQuery.trim() === '' ? (
           // ESTADO 1: ESPERANDO BÚSQUEDA
           <div className="border border-dashed border-[#64748B] flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#FFFFFF] rounded-none">
@@ -144,7 +144,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
           </div>
         ) : (
           // ESTADO 3: MOSTRAR RESULTADOS
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4">
             {filteredProducts.map((prod, index) => {
               // LÓGICA CORE: Interceptamos la BD para validar Consumo real
               const esConsumo = prod.unit === 'CONSUMO' || (prod as any).control_type === 'CONSUMPTION';
@@ -156,7 +156,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                   key={prod.id}
                   onClick={() => !estaAgotado && onAddToCart({ ...prod, unit: esConsumo ? 'CONSUMO' : prod.unit })}
                   disabled={estaAgotado} 
-                  className={`p-4 text-left flex flex-col transition-all rounded-none border-2
+                  className={`p-2.5 sm:p-4 text-left flex flex-col transition-all rounded-none border-2
                     ${isSelected ? 'ring-4 ring-[#10B981] border-[#10B981] scale-[1.02] shadow-xl z-10' : ''}
                     ${estaAgotado 
                       ? 'bg-[#FFFFFF] border-[#E2E8F0] opacity-50 cursor-not-allowed' 

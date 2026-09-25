@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Users, Search, Plus, UserCircle, Save, Edit, Trash2, ArrowLeft, ChevronLeft, ChevronRight, Filter, FilterX } from 'lucide-react';
 import type { Cliente, Fiado } from '../types';
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 
 interface Props {
   isOpen: boolean;
@@ -42,6 +43,8 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, filtroDeuda, ordenAlfabetico, clientes.length]);
+
+  useEscapeClose(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -114,11 +117,11 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
   const fiadosDelCliente = clienteActivo ? fiados.filter(f => f.clienteNombre === clienteActivo.nombre) : [];
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 font-mono">
-      <div className="bg-white w-full max-w-4xl border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col h-[85vh]">
-        
+    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
+      <div className="bg-white w-full max-w-4xl border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:h-[calc(85dvh/var(--ui-zoom))]">
+
         {/* HEADER */}
-        <div className="bg-[#1E293B] text-white px-6 py-4 flex justify-between items-center shrink-0">
+        <div className="bg-[#1E293B] text-white px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
             <Users className="text-[#3B82F6]" size={20} />
             <h2 className="text-sm font-black uppercase tracking-widest">
@@ -129,7 +132,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
         </div>
 
         {/* CONTENIDO DINÁMICO */}
-        <div className="flex-1 bg-[#F8FAFC] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-6 flex flex-col">
+        <div className="flex-1 min-h-0 bg-[#F8FAFC] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-3 sm:p-6 flex flex-col">
           
           {view === 'LISTA' && (
             <div className="flex flex-col gap-4 h-full">
@@ -138,14 +141,14 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
               <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-[#FFFFFF] p-4 border-2 border-[#E2E8F0] shrink-0 rounded-none">
                 <div className="flex gap-4 flex-1 w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                   {/* Buscador */}
-                  <div className="relative w-72">
+                  <div className="relative w-72 shrink-0">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Buscar por nombre o DNI..." 
-                      className="w-full bg-white border-2 border-[#E2E8F0] px-3 py-2 pl-9 text-xs font-black uppercase outline-none focus:border-[#3B82F6] transition-colors" 
+                      placeholder="Buscar por nombre o DNI..."
+                      className="w-full bg-white border-2 border-[#E2E8F0] px-3 py-2 pl-9 text-xs font-black uppercase outline-none focus:border-[#3B82F6] transition-colors"
                     />
                   </div>
                   {/* Filtro de Deudas */}
@@ -205,16 +208,16 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                       const deudaActiva = fiados.filter(f => f.clienteNombre === cli.nombre && f.saldoPendiente > 0).reduce((acc, f) => acc + f.saldoPendiente, 0);
 
                       return (
-                        <div key={cli.id} className="p-4 flex justify-between items-center hover:bg-[#F8FAFC] transition-colors group">
-                          <div className="flex items-center gap-4 w-1/3">
-                            <UserCircle size={32} className="text-[#94A3B8]" />
-                            <div>
+                        <div key={cli.id} className="p-3 sm:p-4 flex flex-col sm:flex-row sm:justify-between gap-3 sm:gap-0 sm:items-center hover:bg-[#F8FAFC] transition-colors group">
+                          <div className="flex items-center gap-4 w-full sm:w-1/3">
+                            <UserCircle size={32} className="text-[#94A3B8] shrink-0" />
+                            <div className="min-w-0">
                               <p className="font-black text-[#1E293B] uppercase truncate" title={cli.nombre}>{cli.nombre}</p>
                               <p className="text-[10px] font-bold text-[#64748B]">DNI: {cli.dni || '---'} | Cel: {cli.telefono || '---'}</p>
                             </div>
                           </div>
-                          
-                          <div className="w-1/3 text-center">
+
+                          <div className="w-full sm:w-1/3 text-left sm:text-center">
                             {deudaActiva > 0 ? (
                               <span className="inline-block px-3 py-1 bg-[#FEF2F2] text-[#EF4444] text-[10px] font-black uppercase border border-[#EF4444]">
                                 Debe: S/ {deudaActiva.toFixed(2)}
@@ -226,7 +229,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                             )}
                           </div>
 
-                          <div className="flex items-center justify-end gap-2 w-1/3">
+                          <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-1/3">
                             <button onClick={() => openEditar(cli)} className="p-2 bg-white text-[#94A3B8] border-2 border-[#E2E8F0] hover:border-[#F59E0B] hover:text-[#F59E0B] transition-colors cursor-pointer" title="Editar Cliente">
                               <Edit size={16} />
                             </button>

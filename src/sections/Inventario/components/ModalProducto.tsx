@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Package, Scale, Coffee, ArrowLeft, Save, ImagePlus, Search, Loader2, Database } from 'lucide-react';
 import { supabase } from '../../../db/supabase'; // RETORNO TÉCNICO: Conexión a la DB
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 
 // Componente de Notificación de Errores (Diseño Geométrico y Alto Contraste)
 const TechnicalAlert = ({ message }: { message: string }) => {
@@ -187,6 +188,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     image: '' // <-- NUEVO ESTADO PARA LA IMAGEN
   });
 
+  useEscapeClose(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const resetAndClose = () => {
@@ -320,8 +323,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 font-mono">
-      <div className={`bg-white w-full border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[75vh] mt-10 transition-all duration-300 ${step === 1 ? 'max-w-3xl' : 'max-w-2xl'}`}>
+    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
+      <div className={`bg-white w-full border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(75dvh/var(--ui-zoom))] sm:mt-10 transition-all duration-300 ${step === 1 ? 'max-w-3xl' : 'max-w-2xl'}`}>
         
         {/* HEADER */}
         <div className="bg-[#1E293B] text-white px-6 py-4 flex items-center justify-between shrink-0">
@@ -350,7 +353,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         </div>
 
         {/* CUERPO DEL MODAL */}
-        <div className="p-8 overflow-y-auto custom-scrollbar bg-[#F8FAFC] flex-1">
+        <div className="p-4 sm:p-8 overflow-y-auto custom-scrollbar bg-[#F8FAFC] flex-1 min-h-0">
           
           {/* VISTA 1: SELECCIÓN DE NATURALEZA */}
           {step === 1 && (

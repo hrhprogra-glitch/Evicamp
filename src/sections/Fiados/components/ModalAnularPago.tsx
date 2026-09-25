@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, RotateCcw, Trash2 } from 'lucide-react';
 import type { Fiado } from '../types';
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 
 interface Props {
   isOpen: boolean;
@@ -10,14 +11,16 @@ interface Props {
 }
 
 export const ModalAnularPago: React.FC<Props> = ({ isOpen, onClose, fiado, onAnularPago }) => {
+  useEscapeClose(isOpen, onClose);
+
   if (!isOpen || !fiado) return null;
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 font-mono">
-      <div className="bg-white w-full max-w-md border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[80vh]">
-        
+    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4 font-mono">
+      <div className="bg-white w-full max-w-md border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(80dvh/var(--ui-zoom))]">
+
         {/* HEADER */}
-        <div className="bg-[#1E293B] text-white px-6 py-4 flex justify-between items-center shrink-0">
+        <div className="bg-[#1E293B] text-white px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
             <RotateCcw className="text-[#F59E0B]" size={20} />
             <h2 className="text-sm font-black uppercase tracking-widest text-white">
@@ -28,13 +31,13 @@ export const ModalAnularPago: React.FC<Props> = ({ isOpen, onClose, fiado, onAnu
         </div>
 
         {/* BODY */}
-        <div className="p-6 flex flex-col gap-4 overflow-hidden flex-1">
+        <div className="p-4 sm:p-6 flex flex-col gap-4 overflow-hidden flex-1 min-h-0">
           <div className="shrink-0 border-b-2 border-[#E2E8F0] pb-4 text-center">
             <p className="text-xs font-black text-[#64748B] uppercase">Cliente</p>
             <p className="text-lg font-black text-[#1E293B] uppercase leading-tight">{fiado.clienteNombre}</p>
           </div>
 
-          <div className="flex-1 overflow-y-auto flex flex-col gap-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {!fiado.pagos || fiado.pagos.length === 0 ? (
               <p className="text-center text-[#94A3B8] font-bold text-xs py-4 uppercase">No hay pagos registrados.</p>
             ) : (

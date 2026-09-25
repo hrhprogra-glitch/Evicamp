@@ -285,49 +285,49 @@ export const Reportes: React.FC = () => {
   const totalAnulados = tickets.filter(t => t.estado === 'ANULADO').length;
 
   return (
-    <div className="h-full flex flex-col gap-6 p-6 max-w-7xl mx-auto font-mono">
-      
+    <div className="h-full flex flex-col gap-4 lg:gap-6 p-3 sm:p-6 max-w-7xl mx-auto font-mono">
+
       {/* TARJETAS DE MÉTRICAS */}
-      <div className="flex gap-4 shrink-0">
-        <div className="flex-1 bg-white border-2 border-[#E2E8F0] shadow-[4px_4px_0_0_#E2E8F0] p-4 flex gap-4 items-center rounded-none">
-            <div className="w-12 h-12 bg-[#F8FAFC] rounded-none border-2 border-[#E2E8F0] flex items-center justify-center">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 shrink-0">
+        <div className="bg-white border-2 border-[#E2E8F0] shadow-[4px_4px_0_0_#E2E8F0] p-3 sm:p-4 flex gap-3 sm:gap-4 items-center rounded-none">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 bg-[#F8FAFC] rounded-none border-2 border-[#E2E8F0] flex items-center justify-center">
               <FileText className="text-[#3B82F6]" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-widest text-[#64748B]">Ventas del Rango</p>
-              <p className="text-2xl font-black text-[#1E293B]">S/ {totalRango.toFixed(2)}</p>
+              <p className="text-lg sm:text-2xl font-black text-[#1E293B] truncate">S/ {totalRango.toFixed(2)}</p>
             </div>
           </div>
-          
-          <div className="flex-1 bg-white border-2 border-[#E2E8F0] shadow-[4px_4px_0_0_#E2E8F0] p-4 flex gap-4 items-center rounded-none">
-            <div className="w-12 h-12 bg-[#FEF2F2] rounded-none border-2 border-[#EF4444] flex items-center justify-center">
+
+          <div className="bg-white border-2 border-[#E2E8F0] shadow-[4px_4px_0_0_#E2E8F0] p-3 sm:p-4 flex gap-3 sm:gap-4 items-center rounded-none">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 bg-[#FEF2F2] rounded-none border-2 border-[#EF4444] flex items-center justify-center">
               <RotateCcw className="text-[#EF4444]" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-widest text-[#64748B]">Devoluciones</p>
-              <p className="text-2xl font-black text-[#EF4444]">{totalAnulados} tickets</p>
+              <p className="text-lg sm:text-2xl font-black text-[#EF4444] truncate">{totalAnulados} tickets</p>
             </div>
           </div>
       </div>
 
       {/* BARRA DE CONTROLES TÉCNICOS */}
-      <div className="flex flex-wrap lg:flex-nowrap justify-between items-end gap-4 shrink-0">
-        
+      <div className="flex flex-wrap lg:flex-nowrap justify-between items-end gap-3 sm:gap-4 shrink-0">
+
         {/* BOTONES RÁPIDOS */}
-        <div className="flex gap-3">
-          <button onClick={filtrarHoy} className="bg-white border-2 border-[#1E293B] px-6 py-3 text-sm font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          <button onClick={filtrarHoy} className="bg-white border-2 border-[#1E293B] px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
             Hoy
           </button>
-          <button onClick={filtrarSemana} className="bg-white border-2 border-[#1E293B] px-6 py-3 text-sm font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
+          <button onClick={filtrarSemana} className="bg-white border-2 border-[#1E293B] px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
             7 Días
           </button>
-          <button onClick={filtrarMes} className="bg-white border-2 border-[#1E293B] px-6 py-3 text-sm font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
+          <button onClick={filtrarMes} className="bg-white border-2 border-[#1E293B] px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
             Mes
           </button>
         </div>
 
         {/* SELECTOR DE FECHAS PERSONALIZADO */}
-        <div className="flex items-center gap-6 bg-white border-2 border-[#E2E8F0] p-4 shadow-[4px_4px_0_0_#E2E8F0] rounded-none">
+        <div className="flex items-center gap-3 sm:gap-6 bg-white border-2 border-[#E2E8F0] p-3 sm:p-4 shadow-[4px_4px_0_0_#E2E8F0] rounded-none w-full lg:w-auto overflow-x-auto">
           <div className="flex flex-col">
             <label className="text-xs font-black text-[#64748B] uppercase tracking-widest mb-1">Desde</label>
             <div className="flex items-center gap-2">

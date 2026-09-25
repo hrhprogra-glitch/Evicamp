@@ -226,23 +226,22 @@ export const DashboardResumen: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-white rounded-none border-l border-[#E2E8F0]">
       {/* HEADER TÉCNICO - CONTRASTE MEDIO */}
-      <div className="bg-white border-b-2 border-[#1E293B] p-6 shrink-0 flex justify-between items-center z-10 rounded-none">
+      <div className="bg-white border-b-2 border-[#1E293B] p-4 sm:p-6 shrink-0 flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center z-10 rounded-none">
         <div>
-          <h1 className="text-3xl font-black text-[#1E293B] tracking-tight flex items-center gap-4 uppercase">
-            <LayoutDashboard className="text-[#10B981]" size={32} />
+          <h1 className="text-xl sm:text-3xl font-black text-[#1E293B] tracking-tight flex items-center gap-3 sm:gap-4 uppercase">
+            <LayoutDashboard className="text-[#10B981]" size={28} />
             Resumen <span className="text-[#10B981]">Operativo</span>
           </h1>
-          <p className="text-[#64748B] text-[10px] mt-1 font-mono uppercase tracking-[0.4em] font-bold">Consolidado Real de Mermas y Finanzas</p>
+          <p className="text-[#64748B] text-[10px] mt-1 font-mono uppercase tracking-widest sm:tracking-[0.4em] font-bold">Consolidado Real de Mermas y Finanzas</p>
         </div>
-        
-        <div className="hidden md:flex flex-col items-end gap-3">
-            <div className="hidden md:flex flex-col items-end gap-3">
-            <div className="flex border border-[#1E293B] bg-white rounded-none shadow-[2px_2px_0px_0px_#1E293B]">
+
+        <div className="flex flex-col sm:items-end gap-3">
+            <div className="flex border border-[#1E293B] bg-white rounded-none shadow-[2px_2px_0px_0px_#1E293B] w-full sm:w-auto">
               {(['HOY', 'SEMANA', 'MES'] as const).map((p) => (
                 <button
                   key={p}
                   onClick={() => setPeriodo(p)}
-                  className={`px-4 py-1.5 font-mono text-[10px] font-black uppercase tracking-widest transition-colors ${
+                  className={`flex-1 sm:flex-initial px-4 py-1.5 font-mono text-[10px] font-black uppercase tracking-widest transition-colors ${
                     periodo === p ? 'bg-[#1E293B] text-[#10B981]' : 'text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#1E293B]'
                   } ${p !== 'MES' ? 'border-r border-[#1E293B]' : ''}`}
                 >
@@ -250,22 +249,21 @@ export const DashboardResumen: React.FC = () => {
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-3 border border-[#1E293B] bg-white px-5 py-2 font-mono text-[11px] font-black uppercase tracking-widest text-[#10B981] rounded-none shadow-[2px_2px_0px_0px_#10B981]">
+            <div className="hidden sm:flex items-center gap-3 border border-[#1E293B] bg-white px-5 py-2 font-mono text-[11px] font-black uppercase tracking-widest text-[#10B981] rounded-none shadow-[2px_2px_0px_0px_#10B981]">
                 <div className="w-2.5 h-2.5 bg-[#10B981] animate-pulse"></div>
                 Conexión Estable
             </div>
         </div>
-        </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-8 space-y-10 custom-scrollbar">
+      <div className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-10 custom-scrollbar">
 
         {/* MÉTRICAS DE ALTO IMPACTO */}
         <section>
           <h2 className="text-[12px] font-black text-[#1E293B] uppercase tracking-[0.3em] mb-5 flex items-center gap-4">
             <div className="w-3 h-5 bg-[#10B981]"></div> Balance Financiero
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             <TarjetaMetrica titulo="Ventas Netas" valor={fSoles(metricas.ventasBrutas)} icono={DollarSign} colorIcono="text-[#10B981]" bgIcono="bg-[#D1FAE5]" esPositivo={true} />
             <TarjetaMetrica titulo="Ganancia Real" valor={fSoles(metricas.utilidadReal)} icono={TrendingUp} colorIcono="text-[#10B981]" bgIcono="bg-[#D1FAE5]" esPositivo={metricas.utilidadReal > 0} />
             <TarjetaMetrica titulo="Inversión en Costo" valor={fSoles(metricas.costoVenta)} icono={ShoppingCart} colorIcono="text-[#1E293B]" bgIcono="bg-[#F1F5F9]" />
@@ -278,7 +276,7 @@ export const DashboardResumen: React.FC = () => {
           <h2 className="text-[12px] font-black text-[#1E293B] uppercase tracking-[0.3em] mb-5 flex items-center gap-4">
             <div className="w-3 h-5 bg-[#1E293B]"></div> Inventario y Mermas
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-6">
             <TarjetaMetrica titulo="Valorización Total" valor={fSoles(metricas.valorizacionInventario)} icono={Package} colorIcono="text-[#1E293B]" bgIcono="bg-[#F1F5F9]" />
             <TarjetaMetrica titulo="Stock Unidades" valor={String(Math.round(metricas.unidadesTotales))} icono={Hash} colorIcono="text-[#1E293B]" bgIcono="bg-[#F1F5F9]" />
             <TarjetaMetrica titulo="Stock Kilos" valor={`${metricas.kilosTotales.toFixed(2)} KG`} icono={Hash} colorIcono="text-[#1E293B]" bgIcono="bg-[#F1F5F9]" />
@@ -288,7 +286,7 @@ export const DashboardResumen: React.FC = () => {
         </section>
 
         {/* ÁREA ANALÍTICA */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8 pb-6 lg:pb-12">
           
           {/* GRÁFICA DE FLUJO MANTENIDA CON BORDES SUAVIZADOS */}
           <div className="lg:col-span-2 bg-white border-2 border-[#1E293B] flex flex-col rounded-none shadow-[4px_4px_0px_0px_#10B981] transition-shadow hover:shadow-[6px_6px_0px_0px_#10B981]">

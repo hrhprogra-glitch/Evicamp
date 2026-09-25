@@ -83,7 +83,7 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, on
     <div className="bg-white border-2 border-[#E2E8F0] shadow-[8px_8px_0_0_#E2E8F0] flex flex-col font-mono rounded-none">
       
       {/* BARRA DE FILTROS AUMENTADA */}
-      <div className="p-6 border-b-2 border-[#E2E8F0] flex flex-wrap lg:flex-nowrap gap-4 shrink-0 bg-[#F8FAFC]">
+      <div className="p-3 sm:p-6 border-b-2 border-[#E2E8F0] flex flex-wrap lg:flex-nowrap gap-3 sm:gap-4 shrink-0 bg-[#F8FAFC]">
         <input 
           type="text" 
           placeholder="BUSCAR CLIENTE..." 

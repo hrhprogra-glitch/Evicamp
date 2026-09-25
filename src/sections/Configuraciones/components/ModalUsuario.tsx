@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, Shield, User, Lock, CheckSquare, Loader2 } from 'lucide-react';
 import type { Empleado, PermisosUsuario } from '../types';
 import { supabase } from '../../../db/supabase';
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 
 interface ModalUsuarioProps {
   usuario: Empleado | null;
@@ -19,6 +20,7 @@ const PERMISOS_DEFAULT: PermisosUsuario = {
 export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) => {
   const isEditing = !!usuario;
   const [guardando, setGuardando] = useState(false);
+  useEscapeClose(true, () => onClose(false));
 
   const [formData, setFormData] = useState({
     nombre: '',
@@ -121,8 +123,8 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white border-2 border-[#1E293B] w-full max-w-5xl max-h-[90vh] flex flex-col shadow-[8px_8px_0_0_#1E293B]">
+    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white border-2 border-[#1E293B] w-full max-w-5xl max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(90dvh/var(--ui-zoom))] flex flex-col shadow-[8px_8px_0_0_#1E293B]">
         
         {/* HEADER */}
         <div className="bg-[#1E293B] p-4 flex justify-between items-center shrink-0">

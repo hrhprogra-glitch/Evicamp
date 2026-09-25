@@ -56,7 +56,7 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
       
       {/* TABLA SIN SCROLL INTERNO (Se eliminó overflow-auto custom-scrollbar) */}
       <div className="w-full bg-[#FFFFFF] overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse min-w-[900px]">
           <thead className="bg-[#FFFFFF] text-[#1E293B] border-b-2 border-[#1E293B]">
             <tr>
               <th className="p-4 text-[10px] font-black tracking-widest uppercase border-r-2 border-[#E2E8F0] bg-[#FFFFFF]">Apertura</th>

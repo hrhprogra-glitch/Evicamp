@@ -14,8 +14,8 @@ export const FiltrosUtilidades: React.FC<Props> = ({
   return (
     <div className="flex flex-wrap lg:flex-nowrap justify-between items-end gap-4 shrink-0 font-sans">
       <div>
-        <h1 className="text-2xl font-bold text-[#1E293B] flex items-center gap-3 uppercase tracking-wider">
-          <BarChart3 size={28} className="text-[#1E293B]" strokeWidth={1.5} /> Inteligencia de Negocio
+        <h1 className="text-lg sm:text-2xl font-bold text-[#1E293B] flex items-center gap-3 uppercase tracking-wider">
+          <BarChart3 size={24} className="text-[#1E293B]" strokeWidth={1.5} /> Inteligencia de Negocio
         </h1>
         <p className="text-[#64748B] text-xs font-bold mt-1 uppercase tracking-widest">Análisis de Utilidad y Rendimiento</p>
       </div>

@@ -199,7 +199,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const totalValue = products.reduce((acc, p) => acc + (p.cost * p.quantity), 0);
 
   return (
-    <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-10 text-[#1E293B] font-mono h-full bg-white relative z-0">
+    <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-10 text-[#1E293B] font-mono h-full bg-white relative">
       
       <HeaderInventario 
         onIngresoStock={() => setIsModalLoteOpen(true)} 
@@ -207,7 +207,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         onRegistrarMerma={() => setIsModalMermaOpen(true)}
       />
 
-      <div className="px-8 shrink-0 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6">
+      <div className="px-3 sm:px-6 lg:px-8 shrink-0 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 lg:gap-6">
         <div className="flex border-2 border-[#1E293B] p-0.5 bg-[#F8FAFC]">
           <button onClick={() => setVistaActiva('PRODUCTOS')} className={`flex items-center gap-2 px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all rounded-none cursor-pointer ${vistaActiva === 'PRODUCTOS' ? 'bg-[#1E293B] text-white' : 'text-[#64748B] hover:text-[#1E293B] hover:bg-white'}`}>
             <Package size={14} /> Inventario General
@@ -238,7 +238,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         onClearFilters={handleClearFilters}
       />
 
-      <div className="flex-1 px-8 min-h-0 flex flex-col relative pb-8">
+      <div className="flex-1 px-3 sm:px-6 lg:px-8 min-h-0 flex flex-col relative pb-3 sm:pb-6 lg:pb-8">
         <div className={`flex-1 min-h-0 ${vistaActiva === 'PRODUCTOS' ? 'flex flex-col' : 'hidden'}`}>
           {/* PASAMOS LOS DATOS PAGINADOS A LA TABLA */}
           <TablaProductos 

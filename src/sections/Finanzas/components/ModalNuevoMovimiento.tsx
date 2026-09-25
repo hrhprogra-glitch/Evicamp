@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { X, ArrowRightLeft, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 
 interface Props {
   isOpen: boolean;
@@ -17,6 +18,8 @@ export const ModalNuevoMovimiento: React.FC<Props> = ({ isOpen, onClose, onSucce
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
   const [flujo, setFlujo] = useState<'INTERNO' | 'EXTERNO'>('INTERNO'); // <-- Nuevo estado para controlar la caja
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEscapeClose(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -51,8 +54,8 @@ export const ModalNuevoMovimiento: React.FC<Props> = ({ isOpen, onClose, onSucce
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-mono">
-      <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-md flex flex-col rounded-none animate-fade-in">
+    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 font-mono">
+      <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-md max-h-[calc(94dvh/var(--ui-zoom))] overflow-y-auto flex flex-col rounded-none animate-fade-in">
         
         <div className="bg-[#3B82F6] p-4 border-b-2 border-[#1E293B] flex justify-between items-center text-white">
           <h2 className="font-black uppercase tracking-widest flex items-center gap-2 text-sm">

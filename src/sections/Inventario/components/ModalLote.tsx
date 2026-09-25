@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, Database, Search, Calculator, FileText, Check, Calendar, Loader2 } from 'lucide-react';
 import type { Product } from '../types';
 import { supabase } from '../../../db/supabase';
+import { useEscapeClose } from '../../../utils/useEscapeClose';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -78,6 +79,8 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
     }
   }, [isOpen]);
   // --------------------------------------------------------
+
+  useEscapeClose(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -222,8 +225,8 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 font-mono">
-      <div className="bg-white w-full max-w-2xl border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[75vh] mt-10">
+    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
+      <div className="bg-white w-full max-w-2xl border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(75dvh/var(--ui-zoom))] sm:mt-10">
         
         {/* CABECERA */}
         <div className="bg-[#1E293B] text-white px-6 py-4 flex items-center justify-between shrink-0">
@@ -240,7 +243,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         </div>
 
         {/* CUERPO DEL FORMULARIO */}
-        <div className="p-6 overflow-y-auto custom-scrollbar bg-[#F8FAFC] flex-1 space-y-6">
+        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar bg-[#F8FAFC] flex-1 min-h-0 space-y-6">
           
           {/* 1. BUSCADOR DE PRODUCTO DESPLEGABLE */}
           <div className="space-y-2 relative">

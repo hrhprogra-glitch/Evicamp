@@ -1,9 +1,9 @@
 // src/layout/SideBar.tsx
 import React, { useState, useEffect } from 'react';
-import { 
-  LayoutDashboard, ShoppingCart, Users, Package, 
-  Truck, Trash2, Wallet, 
-  FileText, Settings, BarChart3 
+import {
+  LayoutDashboard, ShoppingCart, Users, Package,
+  Truck, Trash2, Wallet,
+  FileText, Settings, BarChart3, X
 } from 'lucide-react';
 
 // IMPORTAMOS EL LOGO Y SUPABASE
@@ -14,10 +14,11 @@ interface SideBarProps {
   isOpen: boolean;
   currentView: string;
   onNavigate: (view: string) => void;
+  onClose?: () => void;
   permisos?: any; // <--- AÑADIMOS LOS PERMISOS
 }
 
-export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigate, permisos }) => {
+export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigate, onClose, permisos }) => {
   const [empresaData, setEmpresaData] = useState({ nombre: 'EVICAMP', logo: logoEvicamp });
 
   useEffect(() => {
@@ -95,8 +96,18 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
     .filter(group => group.items.length > 0);
 
   return (
-    <aside className={`${isOpen ? 'w-64' : 'w-20'} border-r border-[#E2E8F0] bg-white flex flex-col h-full shrink-0 transition-[width] duration-150 ease-out font-mono relative z-20 overflow-hidden`}>
-      
+    <>
+      {/* BACKDROP MÓVIL: cierra el panel al tocar fuera de él (solo <lg) */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside className={`fixed inset-y-0 left-0 z-40 w-72 max-w-[85vw] ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:relative lg:z-20 ${isOpen ? 'lg:w-64' : 'lg:w-20'} border-r border-[#E2E8F0] bg-white flex flex-col h-full shrink-0 transition-all duration-150 ease-out font-mono overflow-hidden`}>
+
       {/* LÍNEA DE TENSIÓN LATERAL VERDE ESTÁTICA */}
       <div className="absolute top-0 left-0 w-1 h-full bg-[#10B981]"></div>
 
@@ -118,8 +129,19 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
             <img src={empresaData.logo} alt="Logo Empresa" className="w-full h-full object-contain" />
           </div>
         )}
-        
-        {isOpen && <div className="w-2 h-2 bg-[#10B981] animate-pulse shrink-0 ml-2"></div>}
+
+        <div className="flex items-center gap-2 shrink-0 ml-2">
+          {isOpen && <div className="w-2 h-2 bg-[#10B981] animate-pulse"></div>}
+          {/* BOTÓN CERRAR: solo visible en móvil/tablet (<lg) */}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar menú"
+            className="lg:hidden p-1 text-white hover:text-[#10B981] transition-colors cursor-pointer"
+          >
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
       {/* NAVIGATION MENU */}
@@ -183,6 +205,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
            <div className="w-1 h-3 bg-[#10B981]"></div>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 };
