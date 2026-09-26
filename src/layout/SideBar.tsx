@@ -106,7 +106,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
         />
       )}
 
-      <aside className={`fixed inset-y-0 left-0 z-40 w-72 max-w-[85vw] ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:relative lg:z-20 ${isOpen ? 'lg:w-64' : 'lg:w-20'} border-r border-[#E2E8F0] bg-white flex flex-col h-full shrink-0 transition-all duration-150 ease-out font-mono overflow-hidden`}>
+      <div id="evicamp-nav-panel" className={`fixed inset-y-0 left-0 z-40 w-72 max-w-[85vw] ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:relative lg:z-20 ${isOpen ? 'lg:w-64' : 'lg:w-20'} border-r border-[#E2E8F0] bg-white flex flex-col h-full shrink-0 transition-all duration-150 ease-out font-mono overflow-hidden`}>
 
       {/* LÍNEA DE TENSIÓN LATERAL VERDE ESTÁTICA */}
       <div className="absolute top-0 left-0 w-1 h-full bg-[#10B981]"></div>
@@ -205,7 +205,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
            <div className="w-1 h-3 bg-[#10B981]"></div>
         </div>
       </div>
-      </aside>
+      </div>
     </>
   );
 };
