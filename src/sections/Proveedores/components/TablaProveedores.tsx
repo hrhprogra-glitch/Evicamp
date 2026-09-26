@@ -19,11 +19,11 @@ export const TablaProveedores: React.FC<Props> = ({ proveedores, onEdit, onDelet
   );
 
   return (
-    <div className="border border-[#E2E8F0] flex-1 min-h-0 flex flex-col bg-white relative w-full">
+    <div className="border border-[#E2E8F0] flex-1 min-h-[240px] flex flex-col bg-white relative w-full">
 
       {/* CONTENEDOR CON SCROLL HORIZONTAL SINCRONIZADO (CABECERA + FILAS) */}
-      <div className="flex-1 min-h-0 flex flex-col overflow-x-auto custom-scrollbar">
-        <div className="min-w-[760px] flex-1 min-h-0 flex flex-col">
+      <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden custom-scrollbar">
+        <div className="min-w-[760px] h-full flex flex-col">
 
       {/* CABECERA */}
       <div className="grid grid-cols-12 gap-3 bg-[#1E293B] text-white p-4 text-[10px] md:text-xs font-black uppercase tracking-[0.1em] shrink-0">
