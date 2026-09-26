@@ -108,7 +108,7 @@ export const Proveedores: React.FC = () => {
   }, [proveedores, searchQuery, filtroEstado]);
 
   return (
-    <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-10 text-[#1E293B] font-mono min-h-full bg-white relative">
+    <div className="flex flex-col gap-6 pb-10 text-[#1E293B] font-mono min-h-full bg-white relative">
       
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-6 lg:p-8 bg-white border-b-2 border-[#1E293B] shrink-0">

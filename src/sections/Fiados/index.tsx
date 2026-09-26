@@ -285,7 +285,7 @@ if (fiaData) {
   }, 0);
 
   return (
-    <div className="h-full flex flex-col gap-4 lg:gap-6 p-3 sm:p-6 max-w-7xl mx-auto font-mono">
+    <div className="h-full flex flex-col gap-4 lg:gap-6 p-3 sm:p-6 font-mono">
 
       {/* TARJETAS Y CONTROLES */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4 shrink-0">

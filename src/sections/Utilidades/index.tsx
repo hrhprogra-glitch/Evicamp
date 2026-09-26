@@ -290,7 +290,7 @@ export const Utilidades = () => {
     .map(p => ({ nombre: p.nombre, utilidad: p.utilidadReal }));
 
   return (
-    <div className="flex flex-col gap-4 lg:gap-8 p-3 sm:p-6 max-w-7xl mx-auto font-sans bg-[#FFFFFF]">
+    <div className="flex flex-col gap-4 lg:gap-8 p-3 sm:p-6 font-sans bg-[#FFFFFF]">
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white border border-[#1E293B] p-4 sm:p-6 rounded-none gap-4 shadow-[4px_4px_0px_0px_rgba(30,41,59,0.05)]">
         <div className="border-l-4 border-[#065F46] pl-5">

@@ -199,7 +199,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const totalValue = products.reduce((acc, p) => acc + (p.cost * p.quantity), 0);
 
   return (
-    <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-10 text-[#1E293B] font-mono h-full bg-white relative">
+    <div className="flex flex-col gap-6 pb-10 text-[#1E293B] font-mono h-full bg-white relative">
       
       <HeaderInventario 
         onIngresoStock={() => setIsModalLoteOpen(true)} 

@@ -190,7 +190,7 @@ export const Mermas: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-10 text-[#1E293B] font-mono min-h-full bg-[#FFFFFF] relative rounded-none">
+    <div className="flex flex-col gap-6 pb-10 text-[#1E293B] font-mono min-h-full bg-[#FFFFFF] relative rounded-none">
       
       <HeaderMermas 
         onNuevaMerma={() => setIsModalMermaOpen(true)} 

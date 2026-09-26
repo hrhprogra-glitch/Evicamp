@@ -208,7 +208,7 @@ export const Finanzas: React.FC = () => {
   if (isLoading) return <div className="flex h-full items-center justify-center font-mono">Calculando Bóveda...</div>;
 
   return (
-    <div className="h-full flex flex-col gap-4 lg:gap-6 p-3 sm:p-6 max-w-7xl mx-auto font-mono">
+    <div className="h-full flex flex-col gap-4 lg:gap-6 p-3 sm:p-6 font-mono">
 
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-3 shrink-0">
         <div>

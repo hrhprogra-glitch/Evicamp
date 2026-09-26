@@ -285,7 +285,7 @@ export const Reportes: React.FC = () => {
   const totalAnulados = tickets.filter(t => t.estado === 'ANULADO').length;
 
   return (
-    <div className="h-full flex flex-col gap-4 lg:gap-6 p-3 sm:p-6 max-w-7xl mx-auto font-mono">
+    <div className="h-full flex flex-col gap-4 lg:gap-6 p-3 sm:p-6 font-mono">
 
       {/* TARJETAS DE MÉTRICAS */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 shrink-0">
