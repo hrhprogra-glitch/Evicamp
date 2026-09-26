@@ -198,7 +198,7 @@ export const TablaLotes: React.FC<Props> = ({
   };
 
   return (
-    <div className="border border-[#E2E8F0] flex-1 min-h-[240px] flex flex-col bg-white relative">
+    <div className="border border-[#E2E8F0] flex flex-col bg-white relative min-h-[200px]">
       {loading && (
         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
@@ -211,12 +211,12 @@ export const TablaLotes: React.FC<Props> = ({
       {/* Paginación Superior */}
       {renderPagination('top')}
 
-      {/* CONTENEDOR CON SCROLL HORIZONTAL SINCRONIZADO (CABECERA + FILAS) */}
-      <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden custom-scrollbar">
-        <div className="min-w-[960px] h-full flex flex-col">
+      {/* CONTENEDOR CON SCROLL HORIZONTAL (CABECERA + FILAS) — SIN SCROLL VERTICAL INTERNO: baja con el scroll de la página */}
+      <div className="w-full overflow-x-auto custom-scrollbar">
+        <div className="min-w-[960px]">
 
       {/* Cabecera de la Tabla (TEXTO AGRANDADO a text-sm) */}
-      <div className="grid grid-cols-12 bg-[#1E293B] text-white p-4 text-sm font-black uppercase tracking-[0.1em] shrink-0">
+      <div className="grid grid-cols-12 bg-[#1E293B] text-white p-4 text-sm font-black uppercase tracking-[0.1em]">
         <div className="col-span-2">Fecha / Doc / Prov.</div>
         <div className="col-span-3">Producto</div>
         <div className="col-span-2 text-center">Estado / Vence</div>
@@ -227,10 +227,10 @@ export const TablaLotes: React.FC<Props> = ({
         <div className="col-span-1 text-center">Acción</div>
       </div>
 
-      {/* Cuerpo Scrolleable */}
-      <div className="overflow-y-auto flex-1 min-h-0 custom-scrollbar">
+      {/* Cuerpo de la Tabla */}
+      <div>
         {!loading && paginatedLotes.length === 0 ? (
-          <div className="p-12 text-center text-[#94A3B8] font-bold uppercase text-[10px] tracking-widest flex flex-col items-center justify-center h-full gap-2">
+          <div className="p-12 text-center text-[#94A3B8] font-bold uppercase text-[10px] tracking-widest flex flex-col items-center justify-center gap-2">
             <Layers size={32} className="text-[#E2E8F0] mb-2" />
             No hay lotes que coincidan con la búsqueda.
           </div>

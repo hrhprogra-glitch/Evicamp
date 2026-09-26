@@ -19,14 +19,14 @@ export const TablaProveedores: React.FC<Props> = ({ proveedores, onEdit, onDelet
   );
 
   return (
-    <div className="border border-[#E2E8F0] flex-1 min-h-[240px] flex flex-col bg-white relative w-full">
+    <div className="border border-[#E2E8F0] flex flex-col bg-white relative w-full min-h-[200px]">
 
-      {/* CONTENEDOR CON SCROLL HORIZONTAL SINCRONIZADO (CABECERA + FILAS) */}
-      <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden custom-scrollbar">
-        <div className="min-w-[760px] h-full flex flex-col">
+      {/* CONTENEDOR CON SCROLL HORIZONTAL (CABECERA + FILAS) — SIN SCROLL VERTICAL INTERNO: baja con el scroll de la página */}
+      <div className="w-full overflow-x-auto custom-scrollbar">
+        <div className="min-w-[760px]">
 
       {/* CABECERA */}
-      <div className="grid grid-cols-12 gap-3 bg-[#1E293B] text-white p-4 text-[10px] md:text-xs font-black uppercase tracking-[0.1em] shrink-0">
+      <div className="grid grid-cols-12 gap-3 bg-[#1E293B] text-white p-4 text-[10px] md:text-xs font-black uppercase tracking-[0.1em]">
         <div className="col-span-2 min-w-0 truncate">RUC</div>
         <div className="col-span-4 min-w-0 truncate">Razón Social / Comercial</div>
         <div className="col-span-3 min-w-0 truncate">Contacto</div>
@@ -35,9 +35,9 @@ export const TablaProveedores: React.FC<Props> = ({ proveedores, onEdit, onDelet
       </div>
 
       {/* CUERPO */}
-      <div className="w-full flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+      <div className="w-full">
         {paginatedData.length === 0 ? (
-          <div className="p-12 text-center text-[#94A3B8] font-bold uppercase text-[10px] tracking-widest flex flex-col items-center justify-center h-full gap-2">
+          <div className="p-12 text-center text-[#94A3B8] font-bold uppercase text-[10px] tracking-widest flex flex-col items-center justify-center gap-2">
             <Truck size={32} className="text-[#E2E8F0] mb-2" />
             <p>No se encontraron proveedores.</p>
           </div>

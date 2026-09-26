@@ -238,8 +238,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         onClearFilters={handleClearFilters}
       />
 
-      <div className="flex-1 px-3 sm:px-6 lg:px-8 min-h-0 flex flex-col relative pb-3 sm:pb-6 lg:pb-8">
-        <div className={`flex-1 min-h-0 ${vistaActiva === 'PRODUCTOS' ? 'flex flex-col' : 'hidden'}`}>
+      <div className="px-3 sm:px-6 lg:px-8 flex flex-col relative pb-3 sm:pb-6 lg:pb-8">
+        <div className={`${vistaActiva === 'PRODUCTOS' ? 'flex flex-col' : 'hidden'}`}>
           {/* PASAMOS LOS DATOS PAGINADOS A LA TABLA */}
           <TablaProductos 
   loading={loading} 
@@ -279,7 +279,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   // ===========================
 />
         </div>
-        <div className={`flex-1 min-h-0 ${vistaActiva === 'LOTES' ? 'flex flex-col' : 'hidden'}`}>
+        <div className={`${vistaActiva === 'LOTES' ? 'flex flex-col' : 'hidden'}`}>
           <TablaLotes 
             key={refreshLotesKey} // 🛡️ EVICAMP: Al cambiar esta variable, React destruye y vuelve a crear la tabla fresca
             searchQuery={searchQuery}

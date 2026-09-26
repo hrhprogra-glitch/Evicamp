@@ -145,7 +145,7 @@ export const Proveedores: React.FC = () => {
         matchCount={filteredProveedores.length}
       />
 
-      <div className="px-3 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-[50vh] relative pb-3 sm:pb-6 lg:pb-8">
+      <div className="px-3 sm:px-6 lg:px-8 flex flex-col min-h-[50vh] relative pb-3 sm:pb-6 lg:pb-8">
         {loading ? (
           <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center border-2 border-[#E2E8F0]">
             <div className="flex flex-col items-center gap-3">
