@@ -294,14 +294,14 @@ if (fiaData) {
             <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 bg-[#F8FAFC] border-2 border-[#E2E8F0] flex items-center justify-center rounded-none"><Coins className="text-[#1E293B]" /></div>
             <div className="min-w-0">
               <p className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#64748B]">Por Cobrar</p>
-              <p className="text-xl sm:text-4xl font-black text-[#1E293B] tracking-tight truncate">S/ {totalPorCobrar.toFixed(2)}</p>
+              <p className="text-lg sm:text-4xl font-black text-[#1E293B] tracking-tight break-words">S/ {totalPorCobrar.toFixed(2)}</p>
             </div>
           </div>
           <div className="bg-white border-2 border-[#E2E8F0] shadow-[4px_4px_0_0_#E2E8F0] p-3 sm:p-4 flex gap-3 sm:gap-4 items-center rounded-none">
             <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 bg-[#ECFDF5] border-2 border-[#10B981] flex items-center justify-center rounded-none"><Coins className="text-[#10B981]" /></div>
             <div className="min-w-0">
               <p className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#64748B]">Recuperado Hoy</p>
-              <p className="text-xl sm:text-4xl font-black text-[#10B981] tracking-tight truncate">S/ {totalRecuperadoHoy.toFixed(2)}</p>
+              <p className="text-lg sm:text-4xl font-black text-[#10B981] tracking-tight break-words">S/ {totalRecuperadoHoy.toFixed(2)}</p>
             </div>
           </div>
         </div>

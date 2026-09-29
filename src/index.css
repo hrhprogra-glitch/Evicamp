@@ -10,15 +10,18 @@
   --color-brand-accent: #10B981;
   --color-brand-border: #E2E8F0;
   --color-brand-bg: #FFFFFF;
-  --ui-zoom: 1;
+  /* Zoom base subido para accesibilidad: todo el texto y los elementos técnicos
+     (muchos escritos en px fijos, ej. text-[9px]/[10px]) se veían demasiado
+     pequeños para gente con baja visión. 1.2 = +20% en toda la interfaz, en
+     cualquier tamaño de pantalla (celular, tablet, laptop, PC, TV). */
+  --ui-zoom: 1.2;
 }
 
-/* Escalado proporcional para pantallas grandes (Smart TV / monitores 4K).
-   Arranca en 2560px: 1920x1080 (el monitor más común, y también una resolución típica
-   de TV Full HD) se queda siempre en zoom 1 y se ve idéntico a hoy. Se exige además
-   suficiente altura para no afectar laptops anchas pero bajas. */
+/* Escalado adicional en pantallas muy grandes (Smart TV / monitores 4K), sumado
+   al +20% base de accesibilidad. Se exige además suficiente altura para no
+   afectar laptops anchas pero bajas. */
 @media (min-width: 2560px) and (min-height: 1000px) {
-  :root { --ui-zoom: 1.5; }
+  :root { --ui-zoom: 1.6; }
 }
 @media (min-width: 3840px) and (min-height: 1000px) {
   :root { --ui-zoom: 2; }
