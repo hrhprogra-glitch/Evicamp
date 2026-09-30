@@ -290,25 +290,25 @@ export const Utilidades = () => {
     .map(p => ({ nombre: p.nombre, utilidad: p.utilidadReal }));
 
   return (
-    <div className="flex flex-col gap-4 lg:gap-8 p-3 sm:p-6 font-sans bg-[#FFFFFF]">
-
+    <div className="flex flex-col gap-3 lg:gap-4 p-0 w-full font-sans bg-[#FFFFFF]">
+      
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white border border-[#1E293B] p-4 sm:p-6 rounded-none gap-4 shadow-[4px_4px_0px_0px_rgba(30,41,59,0.05)]">
-        <div className="border-l-4 border-[#065F46] pl-5">
+        <div className="border-l-4 border-[#065F46] pl-3 sm:pl-5 min-w-0">
           <h1 className="text-xl sm:text-3xl font-black text-[#1E293B] uppercase tracking-tighter flex items-center gap-3">
-            <Activity size={28} className="text-[#065F46]" strokeWidth={2.5} />
-            UTILIDADES Y RENTABILIDAD
+            <Activity className="text-[#065F46] w-6 h-6 sm:w-8 sm:h-8 shrink-0" strokeWidth={2.5} />
+            Análisis de Rentabilidad
           </h1>
-          <p className="text-[11px] text-[#64748B] font-black mt-1 uppercase tracking-[0.2em]">
+          <p className="text-[12px] sm:text-[13px] text-[#64748B] font-black mt-1 uppercase tracking-widest sm:tracking-[0.2em]">
             Sincronización Total con POS y Finanzas
           </p>
         </div>
         <div className="border-l-2 border-[#065F46] pl-3">
           <h1 className="text-xl font-bold text-[#1E293B] uppercase tracking-widest flex items-center gap-2">
             <Activity size={20} className="text-[#065F46]" />
-            Rentabilidad & Utilidades
+            Márgenes por Producto
           </h1>
           <p className="text-xs text-[#64748B] font-bold mt-1 uppercase tracking-wider">
-            Sincronizado • <span className="text-[#065F46]">Zona Horaria: PE (UTC-5)</span>
+            Sincronizado • <span className="text-[#065F46] whitespace-nowrap">Zona Horaria: PE (UTC-5)</span>
           </p>
         </div>
         
@@ -324,7 +324,7 @@ export const Utilidades = () => {
         </button>
       </div>
 
-      <div className="flex flex-col gap-6 shrink-0">
+      <div className="flex flex-col gap-4 sm:gap-6 shrink-0">
         <FiltrosUtilidades
           filtrarHoy={filtrarHoy} filtrarSemana={filtrarSemana}
           filtrarMes={filtrarMes}

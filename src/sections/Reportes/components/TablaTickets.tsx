@@ -1,9 +1,11 @@
 // src/sections/Reportes/components/TablaTickets.tsx
 import React, { useState, useEffect } from 'react';
 import { RotateCcw, Trash2, Receipt, ChevronLeft, ChevronRight, Eye, X } from 'lucide-react';
-import { supabase } from '../../../db/supabase';
+import { supabase } from '../../../db/supabase'; 
 import type { TicketVenta } from '../types';
-import { useEscapeClose } from '../../../utils/useEscapeClose';
+import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
+import { clicConTeclado } from '../../../utils/clicConTeclado';
+import { usePermiso } from '../../../utils/permisos';
 
 interface Props {
   tickets: TicketVenta[];
@@ -12,14 +14,15 @@ interface Props {
 }
 
 export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete }) => {
+  // Anular o eliminar ventas requiere el permiso de anular ventas
+  const puedeAnular = usePermiso('reportes_anular_ventas');
   const [currentPage, setCurrentPage] = useState(1);
   const [ticketSeleccionado, setTicketSeleccionado] = useState<string | null>(null);
+  useCerrarConEscape(ticketSeleccionado !== null, () => setTicketSeleccionado(null)); // Escape (o "Atrás" del control de TV) cierra la ventana
   const [detallesTicket, setDetallesTicket] = useState<any[]>([]);
   const [isLoadingDetalles, setIsLoadingDetalles] = useState(false);
   
   const ITEMS_PER_PAGE = 50;
-
-  useEscapeClose(ticketSeleccionado !== null, () => setTicketSeleccionado(null));
 
   useEffect(() => {
     setCurrentPage(1);
@@ -56,7 +59,7 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete }) =
     if (totalPages <= 1) return null;
     return (
       <div className="p-3 border-y-2 border-[#E2E8F0] bg-[#F8FAFC] flex justify-between items-center shrink-0">
-        <p className="text-[10px] font-black text-[#64748B] uppercase">
+        <p className="text-[12px] font-black text-[#64748B] uppercase">
           Mostrando {startIndex + 1} - {Math.min(startIndex + ITEMS_PER_PAGE, tickets.length)} de {tickets.length}
         </p>
         <div className="flex gap-2">
@@ -97,7 +100,7 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete }) =
             <tbody>
               {tickets.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-[#64748B] font-bold text-xs uppercase bg-[#FFFFFF]">
+                  <td colSpan={8} className="p-3 lg:p-4 text-center text-[#64748B] font-bold text-xs uppercase bg-[#FFFFFF]">
                     No hay tickets registrados en este mes.
                   </td>
                 </tr>
@@ -105,7 +108,7 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete }) =
                 currentTickets.map((t) => (
                   <tr
                     key={t.id}
-                    onClick={() => verDetalles(t.id)}
+                    {...clicConTeclado(() => verDetalles(t.id))}
                     className="border-b border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
                     title="Click para ver detalle del ticket"
                   >
@@ -119,13 +122,13 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete }) =
                           #{t.id.slice(-6)}
                         </div>
                         {t.es_fiado && t.cliente_nombre && (
-                          <span className="text-[10px] text-[#64748B] font-bold tracking-widest">[{t.cliente_nombre}]</span>
+                          <span className="text-[12px] text-[#64748B] font-bold tracking-widest">[{t.cliente_nombre}]</span>
                         )}
                       </div>
                     </td>
                     <td className="p-4 text-xs font-bold text-[#64748B] uppercase">{t.metodo_pago}</td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 text-[10px] font-black tracking-wider border rounded-none ${
+                      <span className={`px-2 py-1 text-[12px] font-black tracking-wider border rounded-none ${
                         t.estado === 'ANULADO' ? 'bg-[#FFFFFF] text-[#EF4444] border-[#EF4444]' : 'bg-[#FFFFFF] text-[#1E293B] border-[#1E293B]'
                       }`}>
                         {t.estado}
@@ -147,14 +150,16 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete }) =
                         <button onClick={(e) => { e.stopPropagation(); verDetalles(t.id); }} className="p-2 bg-[#FFFFFF] text-[#1E293B] border border-[#E2E8F0] hover:border-[#1E293B] transition-colors cursor-pointer rounded-none" title="Ver Productos">
                           <Eye size={16} />
                         </button>
-                        {t.estado !== 'ANULADO' && (
+                        {t.estado !== 'ANULADO' && puedeAnular && (
                           <button onClick={(e) => { e.stopPropagation(); onAnular(t.id); }} className="p-2 bg-[#FFFFFF] text-[#64748B] border border-[#E2E8F0] hover:border-[#F59E0B] hover:text-[#F59E0B] transition-colors cursor-pointer rounded-none" title="Anular / Devolver">
                             <RotateCcw size={16} />
                           </button>
                         )}
+                        {puedeAnular && (
                         <button onClick={(e) => { e.stopPropagation(); onDelete(t.id); }} className="p-2 bg-[#FFFFFF] text-[#64748B] border border-[#E2E8F0] hover:border-[#EF4444] hover:text-[#EF4444] transition-colors cursor-pointer rounded-none" title="Eliminar Permanente">
                           <Trash2 size={16} />
                         </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -171,10 +176,10 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete }) =
       {/* VENTANA FLOTANTE (MODAL PLATO TÉCNICO) */}
       {ticketSeleccionado && (
         <div className="fixed inset-0 bg-[#1E293B]/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-[#FFFFFF] border-2 border-[#1E293B] shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] rounded-none w-full max-w-lg flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(80dvh/var(--ui-zoom))]">
+          <div className="bg-[#FFFFFF] border-2 border-[#1E293B] shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] rounded-none w-full max-w-lg flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.8)]">
             <div className="flex justify-between items-center border-b-2 border-[#1E293B] bg-[#F8FAFC] p-4 shrink-0">
               <div>
-                <p className="text-[#64748B] text-[10px] font-mono tracking-widest uppercase mb-1">Inspección Operativa</p>
+                <p className="text-[#64748B] text-[12px] font-mono tracking-widest uppercase mb-1">Inspección Operativa</p>
                 <h2 className="text-[#1E293B] font-black text-lg uppercase tracking-widest">TICKET #{ticketSeleccionado.slice(-6)}</h2>
               </div>
               <button onClick={() => setTicketSeleccionado(null)} className="p-2 bg-[#FFFFFF] border border-[#1E293B] text-[#1E293B] hover:bg-[#1E293B] hover:text-[#FFFFFF] transition-colors rounded-none">
@@ -195,10 +200,10 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete }) =
                 <table className="w-full text-left border-collapse">
                   <thead className="bg-[#1E293B] text-[#FFFFFF]">
                     <tr>
-                      <th className="p-2 text-[9px] font-black tracking-widest uppercase">Cant/Kg</th>
-                      <th className="p-2 text-[9px] font-black tracking-widest uppercase">Producto</th>
-                      <th className="p-2 text-[9px] font-black tracking-widest uppercase text-right">P. Unit</th>
-                      <th className="p-2 text-[9px] font-black tracking-widest uppercase text-right">Subtotal</th>
+                      <th className="p-2 text-[12px] font-black tracking-widest uppercase">Cant/Kg</th>
+                      <th className="p-2 text-[12px] font-black tracking-widest uppercase">Producto</th>
+                      <th className="p-2 text-[12px] font-black tracking-widest uppercase text-right">P. Unit</th>
+                      <th className="p-2 text-[12px] font-black tracking-widest uppercase text-right">Subtotal</th>
                     </tr>
                   </thead>
                   <tbody>

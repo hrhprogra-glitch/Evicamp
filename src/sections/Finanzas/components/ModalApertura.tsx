@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { X, Wallet, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
-import { useEscapeClose } from '../../../utils/useEscapeClose';
+import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 
 interface Props {
   isOpen: boolean;
@@ -11,10 +11,9 @@ interface Props {
 }
 
 export const ModalApertura: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
+  useCerrarConEscape(isOpen, onClose); // Escape (o "Atrás" del control de TV) cierra la ventana
   const [monto, setMonto] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEscapeClose(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -45,7 +44,7 @@ export const ModalApertura: React.FC<Props> = ({ isOpen, onClose, onSuccess }) =
 
   return (
     <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 font-mono">
-      <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-sm max-h-[calc(94dvh/var(--ui-zoom))] overflow-y-auto flex flex-col rounded-none animate-fade-in">
+      <div className="max-h-[calc(var(--alto-pantalla)*0.94)] overflow-y-auto bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-sm flex flex-col rounded-none animate-fade-in">
         
         <div className="bg-[#10B981] p-4 border-b-2 border-[#1E293B] flex justify-between items-center text-[#1E293B]">
           <h2 className="font-black uppercase tracking-widest flex items-center gap-2 text-sm">
@@ -62,7 +61,7 @@ export const ModalApertura: React.FC<Props> = ({ isOpen, onClose, onSuccess }) =
           </p>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">Monto Inicial (S/)</label>
+            <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest">Monto Inicial (S/)</label>
             <input 
               type="number" 
               value={monto}

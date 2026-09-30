@@ -12,6 +12,7 @@ import { TablaLotes } from './components/TablaLotes';
 import { ModalMerma } from './components/ModalMerma';
 import { TarjetaMetrica } from './components/TarjetaMetrica';
 import { ModalLote } from './components/ModalLote';
+import { traerTodo } from '../../utils/traerTodo';
 
 interface InventarioProps {
   onNavigate?: (view: string) => void;
@@ -57,8 +58,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           { data: catData, error: catError } // 🔥 NUEVO: Traemos tu tabla
         ] = await Promise.all([
           // 🛡️ EVICAMP: Solo descargar productos activos para evitar productos fantasma
-          supabase.from('products').select('*').eq('is_active', 1).limit(15000),
-          supabase.from('batches').select('id, product_id, quantity, cost_unit').limit(15000),
+          traerTodo(() => supabase.from('products').select('*').eq('is_active', 1).order('id')),
+          traerTodo(() => supabase.from('batches').select('id, product_id, quantity, cost_unit').order('id')),
           supabase.from('categories').select('name') // 🔥 CONEXIÓN A TU TABLA
         ]);
 
@@ -72,14 +73,11 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         
         if (productsData) {
           const mapeados: Product[] = productsData.map((p: any) => {
-            // RADAR ABSOLUTO: Convierte TODA la fila del producto (todas sus columnas) a texto mayúscula
-            const registroCompleto = JSON.stringify(p).toUpperCase();
-            
-            // Si en cualquier rincón del producto dice alguna de estas palabras, es Consumo.
-            const esConsumo = registroCompleto.includes('"CONSUMO"') || 
-                              registroCompleto.includes('"SERVICE"') || 
-                              registroCompleto.includes('"USO INTERNO"') ||
-                              registroCompleto.includes('"CONSUMPTION"');
+            // Es Consumo solo si sus campos de TIPO/UNIDAD lo dicen exactamente
+            // (antes se buscaba en toda la fila: una categoría o nombre "CONSUMO" lo marcaba por error).
+            const TIPOS_CONSUMO = ['CONSUMO', 'SERVICE', 'USO INTERNO', 'CONSUMPTION'];
+            const esConsumo = [p.unit, p.control_type, p.weight_unit]
+              .some(v => TIPOS_CONSUMO.includes(String(v ?? '').trim().toUpperCase()));
 
             // [ SUMA GLOBAL ]: Filtramos los lotes de este producto
             const lotesDelProducto = batchesData?.filter(b => b.product_id === p.id) || [];
@@ -199,7 +197,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const totalValue = products.reduce((acc, p) => acc + (p.cost * p.quantity), 0);
 
   return (
-    <div className="flex flex-col gap-6 pb-10 text-[#1E293B] font-mono h-full bg-white relative">
+    <div className="flex flex-col gap-6 short:gap-3 w-full pb-10 text-[#1E293B] font-mono h-full bg-white relative">
       
       <HeaderInventario 
         onIngresoStock={() => setIsModalLoteOpen(true)} 
@@ -207,17 +205,17 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         onRegistrarMerma={() => setIsModalMermaOpen(true)}
       />
 
-      <div className="px-3 sm:px-6 lg:px-8 shrink-0 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 lg:gap-6">
-        <div className="flex border-2 border-[#1E293B] p-0.5 bg-[#F8FAFC]">
-          <button onClick={() => setVistaActiva('PRODUCTOS')} className={`flex items-center gap-2 px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all rounded-none cursor-pointer ${vistaActiva === 'PRODUCTOS' ? 'bg-[#1E293B] text-white' : 'text-[#64748B] hover:text-[#1E293B] hover:bg-white'}`}>
+      <div className="px-3 lg:px-4 shrink-0 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6">
+        <div className="grid grid-cols-2 sm:flex w-full sm:w-auto border-2 border-[#1E293B] p-0.5 bg-[#F8FAFC]">
+          <button onClick={() => setVistaActiva('PRODUCTOS')} className={`flex items-center justify-center gap-2 px-3 sm:px-6 py-2 text-[12px] font-black uppercase tracking-[0.2em] transition-all rounded-none cursor-pointer ${vistaActiva === 'PRODUCTOS' ? 'bg-[#1E293B] text-white' : 'text-[#64748B] hover:text-[#1E293B] hover:bg-white'}`}>
             <Package size={14} /> Inventario General
           </button>
-          <button onClick={() => setVistaActiva('LOTES')} className={`flex items-center gap-2 px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all rounded-none cursor-pointer ${vistaActiva === 'LOTES' ? 'bg-[#1E293B] text-[#10B981]' : 'text-[#64748B] hover:text-[#1E293B] hover:bg-white'}`}>
+          <button onClick={() => setVistaActiva('LOTES')} className={`flex items-center justify-center gap-2 px-3 sm:px-6 py-2 text-[12px] font-black uppercase tracking-[0.2em] transition-all rounded-none cursor-pointer ${vistaActiva === 'LOTES' ? 'bg-[#1E293B] text-[#10B981]' : 'text-[#64748B] hover:text-[#1E293B] hover:bg-white'}`}>
             <Layers size={14} /> Control de Lotes
           </button>
         </div>
 
-        <div className="flex gap-4 overflow-x-auto w-full xl:w-auto pb-2 xl:pb-0 custom-scrollbar">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:flex gap-3 sm:gap-4 w-full xl:w-auto">
           <TarjetaMetrica label="Total SKUs" value={products.length} icon={<Box size={14}/>} />
           <TarjetaMetrica label="Nivel Crítico" value={lowStockCount} icon={<AlertTriangle size={14}/>} isAlert={lowStockCount > 0} />
           <TarjetaMetrica label="Valor Total" value={`S/ ${totalValue.toFixed(2)}`} icon={<LayoutGrid size={14}/>} isGreen />
@@ -238,8 +236,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         onClearFilters={handleClearFilters}
       />
 
-      <div className="px-3 sm:px-6 lg:px-8 flex flex-col relative pb-3 sm:pb-6 lg:pb-8">
-        <div className={`${vistaActiva === 'PRODUCTOS' ? 'flex flex-col' : 'hidden'}`}>
+      <div className="flex-1 px-3 lg:px-4 min-h-0 flex flex-col relative pb-8">
+        <div className={`flex-1 min-h-0 ${vistaActiva === 'PRODUCTOS' ? 'flex flex-col' : 'hidden'}`}>
           {/* PASAMOS LOS DATOS PAGINADOS A LA TABLA */}
           <TablaProductos 
   loading={loading} 
@@ -279,7 +277,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   // ===========================
 />
         </div>
-        <div className={`${vistaActiva === 'LOTES' ? 'flex flex-col' : 'hidden'}`}>
+        <div className={`flex-1 min-h-0 ${vistaActiva === 'LOTES' ? 'flex flex-col' : 'hidden'}`}>
           <TablaLotes 
             key={refreshLotesKey} // 🛡️ EVICAMP: Al cambiar esta variable, React destruye y vuelve a crear la tabla fresca
             searchQuery={searchQuery}

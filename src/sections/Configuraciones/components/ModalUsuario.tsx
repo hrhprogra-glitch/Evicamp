@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, Shield, User, Lock, CheckSquare, Loader2 } from 'lucide-react';
 import type { Empleado, PermisosUsuario } from '../types';
 import { supabase } from '../../../db/supabase';
-import { useEscapeClose } from '../../../utils/useEscapeClose';
+import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
+import { clicConTeclado } from '../../../utils/clicConTeclado';
+import { useEmpleado } from '../../../utils/permisos';
+import { normalizarEmail } from '../../../utils/sesion';
 
 interface ModalUsuarioProps {
   usuario: Empleado | null;
@@ -18,9 +21,10 @@ const PERMISOS_DEFAULT: PermisosUsuario = {
 };
 
 export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) => {
+  useCerrarConEscape(true, () => onClose()); // Escape (o "Atrás" del control de TV) cierra la ventana
   const isEditing = !!usuario;
+  const yo = useEmpleado();
   const [guardando, setGuardando] = useState(false);
-  useEscapeClose(true, () => onClose(false));
 
   const [formData, setFormData] = useState({
     nombre: '',
@@ -70,12 +74,16 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
       return;
     }
 
+    if (isEditing && usuario?.id === yo?.id && formData.estado !== 'ACTIVO') {
+      alert('⚠️ No puedes desactivar tu propia cuenta: te quedarías sin acceso.');
+      return;
+    }
     setGuardando(true);
     try {
       // Preparamos los datos
       const datosGuardar = {
         nombre: formData.nombre,
-        email: formData.email,
+        email: normalizarEmail(formData.email), // minúsculas; "juan" → juan@gestorpro.com
         rol: formData.rol,
         estado: formData.estado,
         permisos: permisos,
@@ -102,7 +110,10 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
       onClose(true); // Cerrar modal y avisar que SÍ hubo cambios
     } catch (error: any) {
       console.error('Error al guardar:', error);
-      alert('❌ Error al guardar usuario: ' + error.message);
+      // 23505 = correo repetido (la columna email es única)
+      alert(error?.code === '23505'
+        ? '⚠️ Ya existe un usuario con ese correo. Usa otro correo.'
+        : '❌ Error al guardar usuario: ' + error.message);
     } finally {
       setGuardando(false);
     }
@@ -112,10 +123,10 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
     const isChecked = permisos[labelKey];
     return (
       <label className="flex items-center gap-2 cursor-pointer group mb-2">
-        <div className={`flex items-center justify-center w-4 h-4 rounded-sm border ${isChecked ? 'bg-[#10B981] border-[#10B981]' : 'border-[#CBD5E1] group-hover:border-[#10B981]'} transition-colors`}>
+        <div className={`flex items-center justify-center w-4 h-4 shrink-0 rounded-sm border ${isChecked ? 'bg-[#10B981] border-[#10B981]' : 'border-[#CBD5E1] group-hover:border-[#10B981]'} transition-colors`}>
           {isChecked && <CheckSquare size={14} className="text-white absolute" />}
         </div>
-        <span className={`text-xs font-mono ${isChecked ? 'text-[#1E293B] font-bold' : 'text-[#64748B]'}`}>
+        <span className={`text-xs font-mono break-words min-w-0 ${isChecked ? 'text-[#1E293B] font-bold' : 'text-[#64748B]'}`}>
           {label}
         </span>
       </label>
@@ -124,7 +135,7 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
 
   return (
     <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-      <div className="bg-white border-2 border-[#1E293B] w-full max-w-5xl max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(90dvh/var(--ui-zoom))] flex flex-col shadow-[8px_8px_0_0_#1E293B]">
+      <div className="bg-white border-2 border-[#1E293B] w-full max-w-5xl max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)] flex flex-col shadow-[8px_8px_0_0_#1E293B]">
         
         {/* HEADER */}
         <div className="bg-[#1E293B] p-4 flex justify-between items-center shrink-0">
@@ -138,30 +149,30 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
         </div>
 
         {/* BODY */}
-        <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+        <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
           {/* IZQUIERDA: DATOS */}
-          <div className="w-full md:w-1/3 border-r border-[#E2E8F0] p-6 bg-[#F8FAFC] overflow-y-auto shrink-0">
+          <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-[#E2E8F0] p-4 sm:p-6 bg-[#F8FAFC] md:overflow-y-auto shrink-0">
             <h3 className="text-[#1E293B] font-bold uppercase text-xs mb-4 border-b border-[#E2E8F0] pb-2 flex items-center gap-2">
               <User size={14} /> Datos de Acceso
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-1">Nombre Completo</label>
+                <label className="block text-[12px] font-bold text-[#64748B] uppercase tracking-wider mb-1">Nombre Completo</label>
                 <input type="text" name="nombre" value={formData.nombre} onChange={handleTextChange} placeholder="Ej. Juan Pérez" className="w-full border border-[#E2E8F0] p-2 text-sm focus:border-[#10B981] outline-none" />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-1">Correo Electrónico</label>
+                <label className="block text-[12px] font-bold text-[#64748B] uppercase tracking-wider mb-1">Correo Electrónico</label>
                 <input type="email" name="email" value={formData.email} onChange={handleTextChange} placeholder="usuario@evicamp.com" className="w-full border border-[#E2E8F0] p-2 text-sm focus:border-[#10B981] outline-none font-mono" />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-1 flex items-center gap-1">
+                <label className="block text-[12px] font-bold text-[#64748B] uppercase tracking-wider mb-1 flex items-center gap-1">
                   <Lock size={10} /> {isEditing ? 'Nueva Contraseña (Opcional)' : 'Contraseña Temporal'}
                 </label>
                 <input type="password" name="password" value={formData.password} onChange={handleTextChange} placeholder="******" className="w-full border border-[#E2E8F0] p-2 text-sm focus:border-[#10B981] outline-none font-mono" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-1">Rol</label>
+                  <label className="block text-[12px] font-bold text-[#64748B] uppercase tracking-wider mb-1">Rol</label>
                   <select name="rol" value={formData.rol} onChange={handleTextChange} className="w-full border border-[#E2E8F0] p-2 text-sm focus:border-[#10B981] outline-none bg-white font-bold">
                     <option value="Administrador">Administrador</option>
                     <option value="Cajero">Cajero</option>
@@ -169,7 +180,7 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-1">Estado</label>
+                  <label className="block text-[12px] font-bold text-[#64748B] uppercase tracking-wider mb-1">Estado</label>
                   <select name="estado" value={formData.estado} onChange={handleTextChange} className={`w-full border border-[#E2E8F0] p-2 text-sm outline-none font-bold ${formData.estado === 'ACTIVO' ? 'text-[#059669]' : 'text-red-500'}`}>
                     <option value="ACTIVO">ACTIVO</option>
                     <option value="INACTIVO">INACTIVO</option>
@@ -180,44 +191,44 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
           </div>
 
           {/* DERECHA: PERMISOS */}
-          <div className="w-full md:w-2/3 p-6 overflow-y-auto bg-white">
+          <div className="w-full md:w-2/3 p-4 sm:p-6 md:overflow-y-auto bg-white">
             <div className="flex justify-between items-center mb-4 border-b border-[#E2E8F0] pb-2">
               <h3 className="text-[#1E293B] font-bold uppercase text-xs">Asignación de Permisos</h3>
-              <button onClick={() => togglePermiso('sistema_acceso_total')} className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 border transition-colors ${permisos.sistema_acceso_total ? 'bg-[#1E293B] text-[#10B981] border-[#1E293B]' : 'bg-white text-[#64748B] border-[#CBD5E1] hover:border-[#10B981]'}`}>
+              <button onClick={() => togglePermiso('sistema_acceso_total')} className={`text-[12px] font-bold uppercase tracking-wider px-3 py-1 border transition-colors ${permisos.sistema_acceso_total ? 'bg-[#1E293B] text-[#10B981] border-[#1E293B]' : 'bg-white text-[#64748B] border-[#CBD5E1] hover:border-[#10B981]'}`}>
                 {permisos.sistema_acceso_total ? 'DESMARCAR TODO' : 'OTORGAR ACCESO TOTAL'}
               </button>
             </div>
             
-            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 transition-opacity ${permisos.sistema_acceso_total ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 transition-opacity ${permisos.sistema_acceso_total ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
               <div className="bg-[#F8FAFC] p-3 border border-[#E2E8F0]">
-                <h4 className="text-[10px] font-black text-[#10B981] uppercase tracking-widest mb-3">Caja / POS</h4>
-                <div className="space-y-1" onClick={() => togglePermiso('caja_realizar_ventas')}><CheckboxItem label="Realizar Ventas (POS)" labelKey="caja_realizar_ventas" /></div>
-                <div className="space-y-1" onClick={() => togglePermiso('caja_abrir_cerrar_turno')}><CheckboxItem label="Abrir/Cerrar Turno" labelKey="caja_abrir_cerrar_turno" /></div>
-                <div className="space-y-1" onClick={() => togglePermiso('caja_ingresos_egresos')}><CheckboxItem label="Ingresos/Egresos Manuales" labelKey="caja_ingresos_egresos" /></div>
-                <div className="space-y-1" onClick={() => togglePermiso('caja_ver_fiados')}><CheckboxItem label="Ver Fiados" labelKey="caja_ver_fiados" /></div>
-                <div className="space-y-1" onClick={() => togglePermiso('caja_cobrar_deudas')}><CheckboxItem label="Cobrar/Amortizar Deudas" labelKey="caja_cobrar_deudas" /></div>
+                <h4 className="text-[12px] font-black text-[#10B981] uppercase tracking-widest mb-3">Caja / POS</h4>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('caja_realizar_ventas'))}><CheckboxItem label="Realizar Ventas (POS)" labelKey="caja_realizar_ventas" /></div>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('caja_abrir_cerrar_turno'))}><CheckboxItem label="Abrir/Cerrar Turno" labelKey="caja_abrir_cerrar_turno" /></div>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('caja_ingresos_egresos'))}><CheckboxItem label="Ingresos/Egresos Manuales" labelKey="caja_ingresos_egresos" /></div>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('caja_ver_fiados'))}><CheckboxItem label="Ver Fiados" labelKey="caja_ver_fiados" /></div>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('caja_cobrar_deudas'))}><CheckboxItem label="Cobrar/Amortizar Deudas" labelKey="caja_cobrar_deudas" /></div>
               </div>
               <div className="bg-[#F8FAFC] p-3 border border-[#E2E8F0]">
-                <h4 className="text-[10px] font-black text-[#10B981] uppercase tracking-widest mb-3">Almacén</h4>
-                <div className="space-y-1" onClick={() => togglePermiso('almacen_ver_stock')}><CheckboxItem label="Ver Stock Productos" labelKey="almacen_ver_stock" /></div>
-                <div className="space-y-1" onClick={() => togglePermiso('almacen_ingresar_lotes')}><CheckboxItem label="Ingresar Lotes (Compras)" labelKey="almacen_ingresar_lotes" /></div>
-                <div className="space-y-1" onClick={() => togglePermiso('almacen_crear_editar_productos')}><CheckboxItem label="Crear/Editar Productos" labelKey="almacen_crear_editar_productos" /></div>
-                <div className="space-y-1" onClick={() => togglePermiso('almacen_eliminar_productos')}><CheckboxItem label="Eliminar Productos" labelKey="almacen_eliminar_productos" /></div>
-                <div className="space-y-1" onClick={() => togglePermiso('almacen_modificar_precios')}><CheckboxItem label="Modificar Precios" labelKey="almacen_modificar_precios" /></div>
-                <div className="space-y-1" onClick={() => togglePermiso('almacen_gestionar_proveedores')}><CheckboxItem label="Gestionar Proveedores" labelKey="almacen_gestionar_proveedores" /></div>
-                <div className="space-y-1" onClick={() => togglePermiso('almacen_registrar_mermas')}><CheckboxItem label="Registrar Mermas" labelKey="almacen_registrar_mermas" /></div>
+                <h4 className="text-[12px] font-black text-[#10B981] uppercase tracking-widest mb-3">Almacén</h4>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('almacen_ver_stock'))}><CheckboxItem label="Ver Stock Productos" labelKey="almacen_ver_stock" /></div>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('almacen_ingresar_lotes'))}><CheckboxItem label="Ingresar Lotes (Compras)" labelKey="almacen_ingresar_lotes" /></div>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('almacen_crear_editar_productos'))}><CheckboxItem label="Crear/Editar Productos" labelKey="almacen_crear_editar_productos" /></div>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('almacen_eliminar_productos'))}><CheckboxItem label="Eliminar Productos" labelKey="almacen_eliminar_productos" /></div>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('almacen_modificar_precios'))}><CheckboxItem label="Modificar Precios" labelKey="almacen_modificar_precios" /></div>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('almacen_gestionar_proveedores'))}><CheckboxItem label="Gestionar Proveedores" labelKey="almacen_gestionar_proveedores" /></div>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('almacen_registrar_mermas'))}><CheckboxItem label="Registrar Mermas" labelKey="almacen_registrar_mermas" /></div>
               </div>
               <div className="bg-[#F8FAFC] p-3 border border-[#E2E8F0]">
-                <h4 className="text-[10px] font-black text-[#10B981] uppercase tracking-widest mb-3">Reportes</h4>
-                <div className="space-y-1" onClick={() => togglePermiso('reportes_ver_historial_ventas')}><CheckboxItem label="Ver Historial de Ventas" labelKey="reportes_ver_historial_ventas" /></div>
-                <div className="space-y-1" onClick={() => togglePermiso('reportes_anular_ventas')}><CheckboxItem label="Anular Ventas (Extornos)" labelKey="reportes_anular_ventas" /></div>
-                <div className="space-y-1" onClick={() => togglePermiso('reportes_ver_globales')}><CheckboxItem label="Ver Reportes Globales" labelKey="reportes_ver_globales" /></div>
+                <h4 className="text-[12px] font-black text-[#10B981] uppercase tracking-widest mb-3">Reportes</h4>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('reportes_ver_historial_ventas'))}><CheckboxItem label="Ver Historial de Ventas" labelKey="reportes_ver_historial_ventas" /></div>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('reportes_anular_ventas'))}><CheckboxItem label="Anular Ventas (Extornos)" labelKey="reportes_anular_ventas" /></div>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('reportes_ver_globales'))}><CheckboxItem label="Ver Reportes Globales" labelKey="reportes_ver_globales" /></div>
               </div>
               <div className="bg-[#F8FAFC] p-3 border border-[#E2E8F0]">
-                <h4 className="text-[10px] font-black text-[#10B981] uppercase tracking-widest mb-3">Gerencia</h4>
-                <div className="space-y-1" onClick={() => togglePermiso('gerencia_ver_utilidades')}><CheckboxItem label="Ver Utilidades" labelKey="gerencia_ver_utilidades" /></div>
-                <div className="space-y-1" onClick={() => togglePermiso('gerencia_gestionar_usuarios')}><CheckboxItem label="Gestionar Usuarios" labelKey="gerencia_gestionar_usuarios" /></div>
-                <div className="space-y-1" onClick={() => togglePermiso('gerencia_configuracion_sistema')}><CheckboxItem label="Configuración Sistema" labelKey="gerencia_configuracion_sistema" /></div>
+                <h4 className="text-[12px] font-black text-[#10B981] uppercase tracking-widest mb-3">Gerencia</h4>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('gerencia_ver_utilidades'))}><CheckboxItem label="Ver Utilidades" labelKey="gerencia_ver_utilidades" /></div>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('gerencia_gestionar_usuarios'))}><CheckboxItem label="Gestionar Usuarios" labelKey="gerencia_gestionar_usuarios" /></div>
+                <div className="space-y-1" {...clicConTeclado(() => togglePermiso('gerencia_configuracion_sistema'))}><CheckboxItem label="Configuración Sistema" labelKey="gerencia_configuracion_sistema" /></div>
               </div>
             </div>
           </div>

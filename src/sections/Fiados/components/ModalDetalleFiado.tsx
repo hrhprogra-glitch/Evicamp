@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, ShoppingCart } from 'lucide-react';
 import type { Fiado } from '../types';
-import { useEscapeClose } from '../../../utils/useEscapeClose';
+import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 
 interface Props {
   isOpen: boolean;
@@ -10,16 +10,15 @@ interface Props {
 }
 
 export const ModalDetalleFiado: React.FC<Props> = ({ isOpen, onClose, fiado }) => {
-  useEscapeClose(isOpen, onClose);
-
+  useCerrarConEscape(isOpen, onClose); // Escape (o "Atrás" del control de TV) cierra la ventana
   if (!isOpen || !fiado) return null;
 
   return (
     <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="bg-white w-full max-w-md border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(80dvh/var(--ui-zoom))]">
-
+      <div className="bg-white w-full max-w-md border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.8)]">
+        
         {/* HEADER */}
-        <div className="bg-[#1E293B] text-white px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center shrink-0">
+        <div className="bg-[#1E293B] text-white px-6 py-4 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
             <ShoppingCart className="text-[#3B82F6]" size={20} />
             <h2 className="text-sm font-black uppercase tracking-widest text-white">
@@ -30,17 +29,17 @@ export const ModalDetalleFiado: React.FC<Props> = ({ isOpen, onClose, fiado }) =
         </div>
 
         {/* BODY */}
-        <div className="p-4 sm:p-6 flex flex-col gap-4 overflow-hidden flex-1 min-h-0">
+        <div className="p-6 flex flex-col gap-4 overflow-hidden flex-1">
           <div className="shrink-0 border-b-2 border-[#E2E8F0] pb-4">
             <p className="text-xs font-black text-[#64748B] uppercase">Cliente</p>
             <p className="text-lg font-black text-[#1E293B] uppercase leading-tight">{fiado.clienteNombre}</p>
-            <p className="text-[10px] font-bold text-[#64748B] mt-1">
+            <p className="text-[12px] font-bold text-[#64748B] mt-1">
               Fecha Emisión: {new Date(fiado.fechaEmision).toLocaleDateString()}
             </p>
           </div>
 
           {/* LISTA DE PRODUCTOS (Sin barra de scroll visible) */}
-          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex-1 overflow-y-auto flex flex-col gap-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {!fiado.detalles || fiado.detalles.length === 0 ? (
               <p className="text-center text-[#94A3B8] font-bold text-xs py-4 uppercase">No hay detalles registrados.</p>
             ) : (
@@ -48,7 +47,7 @@ export const ModalDetalleFiado: React.FC<Props> = ({ isOpen, onClose, fiado }) =
                 <div key={d.productoId} className="flex justify-between items-center border-2 border-[#E2E8F0] p-3 hover:border-[#3B82F6] transition-colors bg-[#F8FAFC]">
                   <div className="flex-1">
                     <p className="text-xs font-black text-[#1E293B] uppercase">{d.name}</p>
-                    <p className="text-[10px] font-bold text-[#64748B]">{d.qty} unid. x S/ {d.price.toFixed(2)}</p>
+                    <p className="text-[12px] font-bold text-[#64748B]">{d.qty} unid. x S/ {d.price.toFixed(2)}</p>
                   </div>
                   <span className="text-sm font-black text-[#1E293B]">S/ {Number(d.subtotal || 0).toFixed(2)}</span>
                 </div>

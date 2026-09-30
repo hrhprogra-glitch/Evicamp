@@ -91,11 +91,11 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
       <div className="h-2 w-full bg-[#10B981] shrink-0 rounded-none"></div>
 
       {/* HEADER DE BÚSQUEDA TIPO TERMINAL */}
-      <div className="bg-[#FFFFFF] p-3 sm:p-6 border-b border-[#E2E8F0] shrink-0 rounded-none short:p-4">
-        <div className="flex items-center justify-between mb-3 sm:mb-4">
+      <div className="bg-[#FFFFFF] px-3 py-2 sm:px-4 border-b border-[#E2E8F0] shrink-0 rounded-none">
+        <div className="flex items-center justify-between mb-2">
           <div>
-            <h1 className="text-base sm:text-xl font-black text-[#1E293B] uppercase tracking-widest flex items-center gap-3">
-              <ScanLine className="text-[#1E293B]" size={24} /> <span className="hidden sm:inline">Terminal de Operaciones</span><span className="sm:hidden">Terminal</span>
+            <h1 className="text-sm sm:text-base font-black text-[#1E293B] uppercase tracking-widest flex items-center gap-2">
+              <ScanLine className="text-[#1E293B]" size={18} /> Punto de Venta
             </h1>
           </div>
         </div>
@@ -103,19 +103,19 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
         <div className="flex gap-3">
           {/* Estricto diseño monocrático, sin sombras difuminadas ni redondeos */}
           <div className="flex-1 relative flex items-center border-2 border-[#1E293B] bg-[#FFFFFF] focus-within:ring-2 focus-within:ring-[#64748B] transition-all shadow-[4px_4px_0_0_#1E293B] rounded-none">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-[#1E293B] text-[#FFFFFF] shrink-0 rounded-none">
+            <div className="w-10 h-10 flex items-center justify-center bg-[#1E293B] text-[#FFFFFF] shrink-0 rounded-none">
               <Search size={20} />
             </div>
             <div className="flex flex-col flex-1 px-4 relative">
-              <input
+              <input 
                 id="buscador-global-pos"
-                type="text"
+                type="text" 
                 autoFocus
-                placeholder="ESCANEAS AQUÍ, O ESCRIBES NOMBRE/CÓDIGO (Presiona Enter)"
+                placeholder="ESCANEAS AQUÍ, O ESCRIBES NOMBRE/CÓDIGO (Presiona Enter)" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-full h-11 sm:h-14 bg-transparent text-sm sm:text-base font-black text-[#1E293B] uppercase outline-none placeholder:text-[#64748B]/50 rounded-none short:h-11"
+                className="w-full h-10 bg-transparent text-base font-black text-[#1E293B] uppercase outline-none placeholder:text-[#64748B]/50 rounded-none"
               />
             </div>
           </div>
@@ -123,28 +123,28 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
       </div>
 
       {/* ÁREA DE RESULTADOS */}
-      <div className="flex-1 p-3 sm:p-6 overflow-y-auto custom-scrollbar flex flex-col bg-[#F8FAFC]">
+      <div className="flex-1 p-2 sm:p-3 overflow-y-auto custom-scrollbar flex flex-col bg-[#F8FAFC]">
         {searchQuery.trim() === '' ? (
           // ESTADO 1: ESPERANDO BÚSQUEDA
-          <div className="border border-dashed border-[#64748B] flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#FFFFFF] rounded-none">
+          <div className="border border-dashed border-[#64748B] flex-1 flex flex-col items-center justify-center text-center p-3 lg:p-4 bg-[#FFFFFF] rounded-none">
             <Package size={48} className="text-[#64748B] mb-4" />
             <h2 className="text-sm font-black text-[#1E293B] uppercase tracking-widest mb-2">Área de Trabajo</h2>
-            <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-widest max-w-sm">
+            <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-widest max-w-sm">
               Sistema a la espera de identificador (SKU, EAN-13 o Texto).
             </p>
           </div>
         ) : filteredProducts.length === 0 ? (
           // ESTADO 2: SIN RESULTADOS
-          <div className="border border-dashed border-[#1E293B] flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#FFFFFF] rounded-none">
+          <div className="border border-dashed border-[#1E293B] flex-1 flex flex-col items-center justify-center text-center p-3 lg:p-4 bg-[#FFFFFF] rounded-none">
             <Package size={48} className="text-[#1E293B] opacity-50 mb-4" />
             <h2 className="text-sm font-black text-[#1E293B] uppercase tracking-widest mb-2">Registro Inexistente</h2>
-            <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-widest max-w-sm">
+            <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-widest max-w-sm">
               Verifique la integridad del código en la base de datos.
             </p>
           </div>
         ) : (
           // ESTADO 3: MOSTRAR RESULTADOS
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-2 sm:gap-4">
             {filteredProducts.map((prod, index) => {
               // LÓGICA CORE: Interceptamos la BD para validar Consumo real
               const esConsumo = prod.unit === 'CONSUMO' || (prod as any).control_type === 'CONSUMPTION';
@@ -156,7 +156,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                   key={prod.id}
                   onClick={() => !estaAgotado && onAddToCart({ ...prod, unit: esConsumo ? 'CONSUMO' : prod.unit })}
                   disabled={estaAgotado} 
-                  className={`p-2.5 sm:p-4 text-left flex flex-col transition-all rounded-none border-2
+                  className={`p-3 sm:p-4 text-left flex flex-col min-w-0 transition-all rounded-none border-2
                     ${isSelected ? 'ring-4 ring-[#10B981] border-[#10B981] scale-[1.02] shadow-xl z-10' : ''}
                     ${estaAgotado 
                       ? 'bg-[#FFFFFF] border-[#E2E8F0] opacity-50 cursor-not-allowed' 
@@ -168,18 +168,18 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                     }
                   `}
                 >
-                  <div className="flex justify-between items-start mb-3 w-full">
-                    <span className="text-xs font-black text-[#64748B] truncate bg-[#F8FAFC] border border-[#E2E8F0] px-2 py-1 rounded-none">
+                  <div className="flex flex-wrap justify-between items-start gap-1 mb-2 w-full">
+                    <span className="text-xs font-black text-[#64748B] whitespace-nowrap bg-[#F8FAFC] border border-[#E2E8F0] px-2 py-1 rounded-none">
                       {prod.code}
                     </span>
                     
                     {/* Estricto etiquetado de Alto Contraste por Color */}
                     {esConsumo ? (
-                      <span className="text-xs font-black text-[#FFFFFF] bg-[#D97706] px-2 py-1 uppercase tracking-widest rounded-none">
+                      <span className="text-xs font-black text-[#FFFFFF] bg-[#D97706] px-2 py-1 uppercase tracking-widest whitespace-nowrap rounded-none">
                         CONSUMO
                       </span>
                     ) : (
-                      <span className={`text-xs font-black px-2 py-1 rounded-none uppercase tracking-widest ${
+                      <span className={`text-xs font-black px-2 py-1 rounded-none uppercase tracking-wide whitespace-nowrap ${
                         estaAgotado 
                           ? 'text-[#FFFFFF] bg-[#1E293B]' 
                           : prod.unit === 'KG' 
@@ -194,12 +194,33 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                     )}
                   </div>
                   
-                  <span className="text-sm font-black text-[#1E293B] uppercase leading-tight line-clamp-2 mb-4">
+                  {/* IMAGEN PARA IDENTIFICAR EL PRODUCTO (o un ícono si no tiene) */}
+                  {(() => {
+                    const img = (prod as any).image_url || (prod as any).image_path || '';
+                    const valida = img.startsWith('http') || img.startsWith('data:');
+                    return (
+                      <div className={`w-full aspect-[4/3] mb-2 sm:mb-3 flex items-center justify-center border border-[#E2E8F0] bg-[#FFFFFF] overflow-hidden ${estaAgotado ? 'grayscale' : ''}`}>
+                        {valida ? (
+                          <img
+                            src={img}
+                            alt={prod.name}
+                            loading="lazy"
+                            className="max-w-full max-h-full object-contain"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                          />
+                        ) : (
+                          <Package size={36} className="text-[#CBD5E1]" aria-hidden="true" />
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  <span className="text-xs sm:text-sm font-black text-[#1E293B] uppercase leading-tight line-clamp-2 mb-3 sm:mb-4 break-words">
                     {prod.name}
                   </span>
                   
                   <div className="mt-auto flex items-center justify-between pt-3 border-t border-dashed border-[#E2E8F0] w-full">
-                    <span className="text-lg font-black text-[#1E293B] font-mono">
+                    <span className="text-base sm:text-lg font-black text-[#1E293B] font-mono">
                       S/ {prod.price.toFixed(2)}
                     </span>
                     <div className={`w-7 h-7 flex items-center justify-center transition-colors rounded-none border text-[#FFFFFF]

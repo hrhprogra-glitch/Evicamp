@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Database,Layers, Edit, Trash2, History, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { formatearCantidad } from '../../../utils/formato';
+import { clicConTeclado } from '../../../utils/clicConTeclado';
+import { usePermiso } from '../../../utils/permisos';
+import { traerTodo } from '../../../utils/traerTodo';
 
 interface Lote {
   id: string;
@@ -34,6 +37,8 @@ interface Props {
 export const TablaLotes: React.FC<Props> = ({ 
   searchQuery, filtroCategoria, filtroEstado, filtroOrden, nuevoLoteInyectado, onViewMermas, onEditLote, onLoteDeleted // <-- AÑADIR AQUÍ
 }) => {
+  // Editar o retirar lotes requiere el permiso de ingresar lotes (compras)
+  const puedeGestionarLotes = usePermiso('almacen_ingresar_lotes');
   const [lotes, setLotes] = useState<Lote[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -42,14 +47,15 @@ export const TablaLotes: React.FC<Props> = ({
       setLoading(true);
       try {
         // 🛡️ OPTIMIZACIÓN: Ocultamos los lotes que fueron eliminados (is_active: 0)
-        const { data, error } = await supabase
+        const { data, error } = await traerTodo(() => supabase
           .from('batches')
           .select(`
             *,
             products!batches_product_id_fkey (*)
           `)
           .neq('is_active', 0) // 🔥 EL ESCUDO: Ya no descarga los eliminados
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .order('id'));
 
         if (error) throw error;
 
@@ -174,7 +180,7 @@ export const TablaLotes: React.FC<Props> = ({
     if (loading || totalPages <= 0) return null;
     return (
       <div className={`${position === 'top' ? 'border-b' : 'border-t'} border-[#E2E8F0] bg-[#F8FAFC] p-3 flex items-center justify-between shrink-0`}>
-        <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-widest">
+        <span className="text-[12px] font-bold text-[#64748B] uppercase tracking-widest">
           Página {currentPage} de {totalPages}
         </span>
         <div className="flex gap-2">
@@ -198,12 +204,12 @@ export const TablaLotes: React.FC<Props> = ({
   };
 
   return (
-    <div className="border border-[#E2E8F0] flex flex-col bg-white relative min-h-[200px]">
+    <div className="border border-[#E2E8F0] flex-1 flex flex-col bg-white relative">
       {loading && (
         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <Database size={24} className="text-[#10B981] animate-bounce" />
-            <span className="text-[10px] font-black text-[#1E293B] uppercase tracking-[0.2em]">Cargando Lotes...</span>
+            <span className="text-[12px] font-black text-[#1E293B] uppercase tracking-[0.2em]">Cargando Lotes...</span>
           </div>
         </div>
       )}
@@ -211,12 +217,11 @@ export const TablaLotes: React.FC<Props> = ({
       {/* Paginación Superior */}
       {renderPagination('top')}
 
-      {/* CONTENEDOR CON SCROLL HORIZONTAL (CABECERA + FILAS) — SIN SCROLL VERTICAL INTERNO: baja con el scroll de la página */}
-      <div className="w-full overflow-x-auto custom-scrollbar">
-        <div className="min-w-[960px]">
-
+      {/* En pantallas angostas la tabla conserva su ancho mínimo y se desliza horizontalmente */}
+      <div className="flex-1 min-h-0 flex flex-col overflow-x-auto custom-scrollbar">
+      <div className="flex-1 min-h-0 flex flex-col min-w-[960px]">
       {/* Cabecera de la Tabla (TEXTO AGRANDADO a text-sm) */}
-      <div className="grid grid-cols-12 bg-[#1E293B] text-white p-4 text-sm font-black uppercase tracking-[0.1em]">
+      <div className="grid grid-cols-12 gap-x-3 bg-[#1E293B] text-white p-4 text-sm font-black uppercase tracking-wide shrink-0">
         <div className="col-span-2">Fecha / Doc / Prov.</div>
         <div className="col-span-3">Producto</div>
         <div className="col-span-2 text-center">Estado / Vence</div>
@@ -227,10 +232,10 @@ export const TablaLotes: React.FC<Props> = ({
         <div className="col-span-1 text-center">Acción</div>
       </div>
 
-      {/* Cuerpo de la Tabla */}
-      <div>
+      {/* Cuerpo Scrolleable */}
+      <div className="overflow-y-auto flex-1 custom-scrollbar">
         {!loading && paginatedLotes.length === 0 ? (
-          <div className="p-12 text-center text-[#94A3B8] font-bold uppercase text-[10px] tracking-widest flex flex-col items-center justify-center gap-2">
+          <div className="p-6 sm:p-12 text-center text-[#94A3B8] font-bold uppercase text-[12px] tracking-widest flex flex-col items-center justify-center h-full gap-2">
             <Layers size={32} className="text-[#E2E8F0] mb-2" />
             No hay lotes que coincidan con la búsqueda.
           </div>
@@ -245,9 +250,9 @@ export const TablaLotes: React.FC<Props> = ({
     // SE AGRANDÓ LA LETRA BASE DE LA FILA (text-base)
     <div
       key={lote.id}
-      onClick={() => onEditLote && onEditLote(lote)}
-      className="grid grid-cols-12 items-center p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors group text-base cursor-pointer"
-      title="Click para editar"
+      {...(puedeGestionarLotes ? clicConTeclado(() => onEditLote && onEditLote(lote)) : {})}
+      className={`grid grid-cols-12 gap-x-3 items-center p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors group text-base ${puedeGestionarLotes ? 'cursor-pointer' : ''}`}
+      title={puedeGestionarLotes ? 'Click para editar' : undefined}
     >
       
       {/* 1. INGRESO Y REFERENCIA / SUSTENTO / PROVEEDOR */}
@@ -261,7 +266,7 @@ export const TablaLotes: React.FC<Props> = ({
         
         {/* Proveedor en color azul para resaltarlo */}
         {lote.supplier && (
-          <span className="text-[10px] font-black text-[#3B82F6] uppercase truncate" title={lote.supplier}>
+          <span className="text-[12px] font-black text-[#3B82F6] uppercase truncate" title={lote.supplier}>
             PROV: {lote.supplier}
           </span>
         )}
@@ -302,7 +307,7 @@ export const TablaLotes: React.FC<Props> = ({
       {/* 6. TRAZABILIDAD DE MERMAS */}
       <div className="col-span-1 text-center">
         {lote.mermas_total && lote.mermas_total > 0 ? (
-          <div className="bg-red-50 text-red-600 border border-red-200 px-2 py-0.5 text-[11px] font-black inline-block mx-auto rounded-none" title={`Eventos: ${lote.mermas_count}`}>
+          <div className="bg-red-50 text-red-600 border border-red-200 px-2 py-0.5 text-[13px] font-black inline-block mx-auto rounded-none" title={`Eventos: ${lote.mermas_count}`}>
             -{lote.mermas_total}
           </div>
         ) : (
@@ -319,7 +324,7 @@ export const TablaLotes: React.FC<Props> = ({
           title={`Stock exacto en DB: ${lote.quantity} ${lote.unit || 'UND'}`}
         >
           <span className="leading-none">{formatearCantidad(lote.quantity, lote.unit)}</span>
-          <span className="text-[8px] opacity-70 leading-tight mt-0.5">{lote.unit || 'UND'}</span>
+          <span className="text-[11px] opacity-70 leading-tight mt-0.5">{lote.unit || 'UND'}</span>
         </div>
       </div>
 
@@ -339,6 +344,7 @@ export const TablaLotes: React.FC<Props> = ({
           <History size={18} />
         </button>
 
+        {puedeGestionarLotes && (<>
         <button
           onClick={(e) => { e.stopPropagation(); onEditLote && onEditLote(lote); }}
           className="text-[#94A3B8] hover:text-[#10B981] transition-colors cursor-pointer"
@@ -379,6 +385,7 @@ export const TablaLotes: React.FC<Props> = ({
         >
           <Trash2 size={18} />
         </button>
+        </>)}
       </div>
 
     </div>
@@ -386,10 +393,9 @@ export const TablaLotes: React.FC<Props> = ({
 })
         )}
       </div>
-
-        </div>
       </div>
-
+      </div>
+      
       {/* Paginación Inferior */}
       {renderPagination('bottom')}
     </div>

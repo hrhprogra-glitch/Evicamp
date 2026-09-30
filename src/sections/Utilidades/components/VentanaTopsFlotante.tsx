@@ -12,7 +12,7 @@ interface Props {
 
 export const VentanaTopsFlotante = ({ tops, onClose }: Props) => {
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-80 bg-white border-2 border-[#065F46] rounded-none shadow-[8px_8px_0px_0px_rgba(6,95,70,1)] p-5 transition-all duration-300">
+    <div className="fixed bottom-3 left-3 right-3 sm:left-auto sm:bottom-6 sm:right-6 z-50 sm:w-80 max-h-[calc(var(--alto-pantalla)*0.8)] overflow-y-auto bg-white border-2 border-[#065F46] rounded-none shadow-[8px_8px_0px_0px_rgba(6,95,70,1)] p-5 transition-all duration-300">
       
       {/* Cabecera Técnica */}
       <div className="flex justify-between items-center border-b-2 border-[#065F46] pb-3 mb-4">
@@ -54,7 +54,7 @@ export const VentanaTopsFlotante = ({ tops, onClose }: Props) => {
       </div>
       
       <div className="mt-4 pt-2 border-t border-[#E2E8F0]">
-        <p className="text-[9px] text-[#64748B] uppercase font-bold text-center tracking-widest">
+        <p className="text-[12px] text-[#64748B] uppercase font-bold text-center tracking-widest">
           Cálculo: Ingresos - (Costo + Merma)
         </p>
       </div>

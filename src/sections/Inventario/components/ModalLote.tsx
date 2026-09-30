@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, Database, Search, Calculator, FileText, Check, Calendar, Loader2 } from 'lucide-react';
 import type { Product } from '../types';
 import { supabase } from '../../../db/supabase';
-import { useEscapeClose } from '../../../utils/useEscapeClose';
+import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -13,6 +13,7 @@ interface Props {
 }
 
 export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initialProduct, initialLote, onLoteSaved }) => {
+  useCerrarConEscape(isOpen, onClose); // Escape (o "Atrás" del control de TV) cierra la ventana
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [showProviderDropdown, setShowProviderDropdown] = useState(false); // <-- NUEVO ESTADO
@@ -35,11 +36,16 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         // === MODO EDICIÓN ===
         const prod = productos.find(p => p.id === initialLote.product_id) || null;
         setSelectedProduct(prod);
+        // El campo "Cantidad" es la cantidad COMPRADA (initial_quantity): con ella se calcula el costo unitario.
+        // El stock actual (quantity) NO se reemplaza: al guardar solo se le suma/resta la diferencia.
         setCantidad(initialLote.initial_quantity?.toString() || '');
-        
-        // Calculamos el costo total reverso (costo_unitario * cantidad_inicial)
-        const cTotal = (Number(initialLote.cost_unit) * Number(initialLote.initial_quantity)).toFixed(2);
-        setCostoTotal(cTotal);
+
+        // Costo total: usamos el guardado; si no existe, lo reconstruimos (costo_unitario * cantidad_inicial)
+        const cTotalGuardado = Number(initialLote.cost_total);
+        const cTotal = cTotalGuardado > 0
+          ? cTotalGuardado
+          : Number(initialLote.cost_unit) * Number(initialLote.initial_quantity);
+        setCostoTotal(cTotal ? String(Math.round(cTotal * 100) / 100) : '');
         
         if (initialLote.document_ref === 'OMITIDO / SIN SUSTENTO') {
           setOmitirSustento(true);
@@ -80,8 +86,6 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
   }, [isOpen]);
   // --------------------------------------------------------
 
-  useEscapeClose(isOpen, onClose);
-
   if (!isOpen) return null;
 
   // Motor de filtrado ultra-rápido (EXCLUYE LOS PRODUCTOS DE CONSUMO INTERNO)
@@ -105,9 +109,17 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
   };
 
   // FÓRMULA MATEMÁTICA AUTOMÁTICA (Costo Unitario)
-  const costoUnitario = (Number(costoTotal) > 0 && Number(cantidad) > 0) 
-    ? (Number(costoTotal) / Number(cantidad)).toFixed(2) 
-    : '0.00';
+  // Se guarda con 6 decimales (ej. 10.00 / 3 = 3.333333) para no perder costo; solo se redondea al mostrar.
+  const costoUnitarioRaw = (Number(costoTotal) > 0 && Number(cantidad) > 0)
+    ? Math.round((Number(costoTotal) / Number(cantidad)) * 1e6) / 1e6
+    : 0;
+  const costoUnitario = costoUnitarioRaw.toFixed(2); // solo para mostrar
+
+  // En edición: stock que quedará en el lote tras cambiar la cantidad comprada
+  const stockActualLote = initialLote ? Number(initialLote.quantity || 0) : 0;
+  const stockResultanteLote = initialLote
+    ? stockActualLote + ((Number(cantidad) || 0) - Number(initialLote.initial_quantity || 0))
+    : 0;
 
   const handleSave = async () => {
     if (isSubmitting) return;
@@ -117,7 +129,25 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
     try {
       if (initialLote) {
         // === MODO EDICIÓN EVICAMP ===
-        const cantidadNueva = Number(cantidad) || 0;
+        const cantidadNueva = Number(cantidad) || 0; // nueva cantidad comprada (initial_quantity)
+        // Releer el lote justo antes de guardar: el stock pudo cambiar (ventas/mermas) desde que se abrió la lista
+        const { data: loteFresco, error: freshError } = await supabase
+          .from('batches')
+          .select('quantity, initial_quantity')
+          .eq('id', initialLote.id)
+          .single();
+        if (freshError) throw freshError;
+        if (!loteFresco) throw new Error('No se encontró el lote para actualizarlo.');
+
+        // stock actual (fresco) + diferencia de la cantidad comprada (no se reinicia)
+        const nuevaActual = Number(loteFresco.quantity || 0)
+          + (cantidadNueva - Number(loteFresco.initial_quantity || 0));
+
+        if (nuevaActual < 0) {
+          alert('Error: La nueva cantidad es menor a lo que ya se vendió/mermó de este lote.');
+          setIsSubmitting(false);
+          return;
+        }
 
         // 1. Guardar los campos secundarios (vencimiento, sustento tributario)
         const { error: metaError } = await supabase
@@ -136,8 +166,8 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         // 🛡️ 2. RPC BLINDADO: El VPS hace toda la matemática, actualiza cantidad y stock en 0.001ms
         const { error: rpcError } = await supabase.rpc('fn_edit_batch', {
           p_batch_id: String(initialLote.id),
-          p_new_qty: cantidadNueva,
-          p_new_cost: Number(costoUnitario) || 0,
+          p_new_qty: nuevaActual,
+          p_new_cost: costoUnitarioRaw,
           p_user_name: 'Admin'
         });
 
@@ -146,10 +176,10 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         if (onLoteSaved && selectedProduct) {
           onLoteSaved({ 
             ...initialLote, 
-            quantity: cantidadNueva,
+            quantity: nuevaActual,
             initial_quantity: cantidadNueva,
-            expiration_date: expiration, 
-            cost_unit: Number(costoUnitario),
+            expiration_date: expiration,
+            cost_unit: costoUnitarioRaw,
             cost_total: Number(costoTotal),
             document_ref: documento 
           });
@@ -170,7 +200,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
             initial_quantity: Number(cantidad),
             expiration_date: expiration || null,
             cost_total: Number(costoTotal),
-            cost_unit: Number(costoUnitario),
+            cost_unit: costoUnitarioRaw,
             document_ref: documento,
             is_synced: '1',
             is_active: 1 // <--- 🔥 ¡ESTA ES LA LÍNEA MÁGICA QUE FALTABA!
@@ -226,7 +256,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
 
   return (
     <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="bg-white w-full max-w-2xl border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(75dvh/var(--ui-zoom))] sm:mt-10">
+      <div className="bg-white w-full max-w-2xl border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.75)] sm:mt-10">
         
         {/* CABECERA */}
         <div className="bg-[#1E293B] text-white px-6 py-4 flex items-center justify-between shrink-0">
@@ -234,7 +264,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
             <Database size={24} className="text-[#10B981]" />
             <div>
               <h2 className="text-sm font-black uppercase tracking-widest text-[#10B981]">Ingresar Lote de Stock</h2>
-              <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">Añadir existencias al inventario</p>
+              <p className="text-[12px] font-bold opacity-80 uppercase tracking-widest">Añadir existencias al inventario</p>
             </div>
           </div>
           <button onClick={onClose} className="hover:text-[#EF4444] transition-colors cursor-pointer">
@@ -243,18 +273,18 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         </div>
 
         {/* CUERPO DEL FORMULARIO */}
-        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar bg-[#F8FAFC] flex-1 min-h-0 space-y-6">
+        <div className="p-6 overflow-y-auto custom-scrollbar bg-[#F8FAFC] flex-1 space-y-6">
           
           {/* 1. BUSCADOR DE PRODUCTO DESPLEGABLE */}
           <div className="space-y-2 relative">
-            <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest flex items-center gap-2">
+            <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest flex items-center gap-2">
               <Search size={14} className="text-[#10B981]"/> 1. Buscar Producto *
             </label>
             
             {selectedProduct ? (
               <div className="flex items-center justify-between border-2 border-[#10B981] bg-[#ECFDF5] p-3 rounded-none">
                 <div className="flex flex-col">
-                  <span className="text-[9px] font-bold text-[#10B981] uppercase tracking-wider">Producto Seleccionado:</span>
+                  <span className="text-[12px] font-bold text-[#10B981] uppercase tracking-wider">Producto Seleccionado:</span>
                   <span className="text-xs font-black text-[#1E293B] uppercase mt-1">{selectedProduct.code} - {selectedProduct.name}</span>
                 </div>
                 <button 
@@ -294,12 +324,12 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                           }}
                           className="flex flex-col p-3 hover:bg-[#F8FAFC] border-b border-[#E2E8F0] cursor-pointer group"
                         >
-                          <span className="text-[9px] font-bold text-[#64748B] group-hover:text-[#10B981]">{p.code} | {p.category}</span>
+                          <span className="text-[12px] font-bold text-[#64748B] group-hover:text-[#10B981]">{p.code} | {p.category}</span>
                           <span className="text-xs font-black text-[#1E293B] uppercase">{p.name}</span>
                         </div>
                       ))
                     ) : (
-                      <div className="p-4 text-center text-[10px] font-bold text-[#64748B] uppercase">No se encontraron productos</div>
+                      <div className="p-4 text-center text-[12px] font-bold text-[#64748B] uppercase">No se encontraron productos</div>
                     )}
                   </div>
                 )}
@@ -308,10 +338,10 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
           </div>
 
           {/* 2. CANTIDAD Y COSTO TOTAL */}
-          <div className="grid grid-cols-2 gap-4 border-t-2 border-[#E2E8F0] pt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t-2 border-[#E2E8F0] pt-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest flex justify-between">
-                <span>2. Cantidad *</span>
+              <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest flex justify-between">
+                <span>{initialLote ? '2. Cantidad comprada *' : '2. Cantidad *'}</span>
                 <span className="text-[#10B981]">{selectedProduct ? `(${selectedProduct.unit})` : ''}</span>
               </label>
               <div className="flex border-2 border-[#E2E8F0] bg-white focus-within:border-[#10B981] transition-colors">
@@ -325,18 +355,23 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                   disabled={!selectedProduct}
                   className="w-full p-3 text-sm font-black text-[#1E293B] outline-none disabled:bg-[#F1F5F9] disabled:cursor-not-allowed text-right"
                 />
-                <div className="bg-[#F8FAFC] px-4 border-l-2 border-[#E2E8F0] flex items-center justify-center text-[10px] font-black text-[#64748B] w-16 shrink-0">
+                <div className="bg-[#F8FAFC] px-4 border-l-2 border-[#E2E8F0] flex items-center justify-center text-[12px] font-black text-[#64748B] w-16 shrink-0">
                   {selectedProduct ? selectedProduct.unit : '---'}
                 </div>
               </div>
+              {initialLote && (
+                <p className={`text-[12px] font-bold uppercase tracking-wider ${stockResultanteLote < 0 ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>
+                  Stock actual del lote: {stockActualLote} → quedará: {Math.round(stockResultanteLote * 1000) / 1000}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">
+              <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest">
                 3. Costo Compra (Total)
               </label>
               <div className="flex border-2 border-[#E2E8F0] bg-white focus-within:border-[#10B981] transition-colors">
-                <div className="bg-[#F8FAFC] px-4 border-r-2 border-[#E2E8F0] flex items-center justify-center text-[10px] font-black text-[#64748B] shrink-0">
+                <div className="bg-[#F8FAFC] px-4 border-r-2 border-[#E2E8F0] flex items-center justify-center text-[12px] font-black text-[#64748B] shrink-0">
                   S/
                 </div>
                 <input 
@@ -355,7 +390,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
 
           {/* 3. FÓRMULA MATEMÁTICA: COSTO UNITARIO AUTOMÁTICO */}
           <div className="bg-[#1E293B] p-4 flex items-center justify-between shadow-inner">
-            <span className="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
+            <span className="text-[12px] font-black text-white uppercase tracking-widest flex items-center gap-2">
               <Calculator size={14} className="text-[#10B981]" /> Costo Unitario Automático
             </span>
             <span className="text-xl font-black text-[#10B981]">
@@ -367,7 +402,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t-2 border-[#E2E8F0] pt-6">
             
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest flex items-center gap-2">
+              <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest flex items-center gap-2">
                 <FileText size={14} /> 4. Sustento (Doc. Proveedor)
               </label>
               <div className="flex flex-col gap-3 relative">
@@ -403,7 +438,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                         </div>
                       ))
                     ) : (
-                      <div className="p-3 text-[10px] font-bold text-[#64748B] uppercase text-center bg-[#F8FAFC]">
+                      <div className="p-3 text-[12px] font-bold text-[#64748B] uppercase text-center bg-[#F8FAFC]">
                         ESCRIBE LIBREMENTE SI NO ESTÁ EN LA LISTA
                       </div>
                     )}
@@ -420,7 +455,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                     onChange={() => setOmitirSustento(!omitirSustento)} 
                     disabled={!selectedProduct} 
                   />
-                  <span className="text-[9px] font-bold text-[#64748B] uppercase select-none group-hover:text-[#EF4444]">
+                  <span className="text-[12px] font-bold text-[#64748B] uppercase select-none group-hover:text-[#EF4444]">
                     Ingresar sin sustento tributario
                   </span>
                 </label>
@@ -428,7 +463,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest flex items-center gap-2">
+              <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest flex items-center gap-2">
                 <Calendar size={14} /> Fecha Vencimiento (Opcional)
               </label>
               <input 
@@ -448,14 +483,14 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         <div className="p-6 bg-white border-t-2 border-[#E2E8F0] flex justify-end gap-3 shrink-0">
           <button 
             onClick={onClose}
-            className="px-6 py-3 border-2 border-[#E2E8F0] text-[#64748B] font-black text-[10px] uppercase tracking-widest hover:bg-[#F8FAFC] hover:border-[#1E293B] hover:text-[#1E293B] transition-all cursor-pointer rounded-none"
+            className="px-6 py-3 border-2 border-[#E2E8F0] text-[#64748B] font-black text-[12px] uppercase tracking-widest hover:bg-[#F8FAFC] hover:border-[#1E293B] hover:text-[#1E293B] transition-all cursor-pointer rounded-none"
           >
             Cancelar
           </button>
           <button 
             onClick={handleSave}
             disabled={!selectedProduct || !cantidad || Number(cantidad) <= 0 || isSubmitting}
-            className="bg-[#10B981] text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-[#1E293B] hover:text-[#10B981] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] disabled:opacity-50"
+            className="bg-[#10B981] text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[12px] uppercase tracking-widest flex items-center gap-2 hover:bg-[#1E293B] hover:text-[#10B981] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] disabled:opacity-50"
           >
             {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
             {isSubmitting ? 'PROCESANDO...' : 'Guardar Lote'}

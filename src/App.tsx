@@ -1,72 +1,72 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from './db/supabase';
 import { Login } from './sections/Login';
 import { TopBar } from './layout/TopBar';
 import { SideBar } from './layout/SideBar';
+import { validarSesion, type EmpleadoSesion } from './utils/sesion';
+import { puedeVerModulo } from './utils/permisos';
+import { SesionProvider } from './utils/SesionProvider';
 
 // Importación de Módulos (Secciones)
 import { Inventario } from './sections/Inventario';
 import { Mermas } from './sections/Mermas';
-import { Proveedores } from './sections/Proveedores'; 
-import { POS } from './sections/Punto-de-venta'; 
+import { Proveedores } from './sections/Proveedores';
+import { POS } from './sections/Punto-de-venta';
 import { Fiados } from './sections/Fiados'; // <--- IMPORTAMOS FIADOS
 import { Finanzas } from './sections/Finanzas'; // <--- IMPORTAMOS FINANZAS
 import { Reportes } from './sections/Reportes';
 import { Utilidades } from './sections/Utilidades';
 import Configuraciones from './sections/Configuraciones';
 import Resumen from './sections/Resumen'; // <--- IMPORTAMOS EL NUEVO RESUMEN
+import { aplicarTamanoInterfaz, leerTamanoInterfaz } from './utils/tamanoInterfaz';
+
+// Cada cuánto se vuelve a leer el estado y los permisos del empleado desde la base
+const REVALIDAR_CADA_MS = 60_000;
+
 export const App: React.FC = () => {
-  const [session, setSession] = useState<any>(null);
-  
-  // --- NUEVOS ESTADOS PARA EMPLEADOS Y PERMISOS ---
-  const [empleadoLogueado, setEmpleadoLogueado] = useState(false);
-  const [permisos, setPermisos] = useState<any>(null);
-  const [emailEmpleado, setEmailEmpleado] = useState<string>(''); // Para mostrar en el TopBar
+  // Empleado de la sesión actual (con permisos leídos de la base, nunca del navegador)
+  const [empleado, setEmpleado] = useState<EmpleadoSesion | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(() => (
-    typeof window === 'undefined' ? true : window.innerWidth >= 1280
-  ));
+  // El menú lateral arranca contraído: en PC/laptop muestra solo íconos y se despliega tocando
+  // el logo (que brilla para indicarlo); en tablet vertical/celular es un panel deslizable (botón ☰).
+  // Una vez abierto se contrae solo tras unos segundos sin usarlo (temporizador en SideBar).
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => setIsSidebarOpen((abierto) => !abierto);
 
   // Estado para el Enrutador Interno
   const [currentView, setCurrentView] = useState<string>('resumen');
 
-  // En móvil/tablet, navegar cierra el panel lateral automáticamente
-  const handleNavigate = (view: string) => {
-    setCurrentView(view);
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      setIsSidebarOpen(false);
-    }
-  };
-
+  // Valida la sesión al abrir la app, cada minuto y al volver a la pestaña.
+  // Si el empleado fue desactivado o borrado, o le cambiaron los permisos, se aplica enseguida.
   useEffect(() => {
-    // 1. Revisar si hay un empleado guardado en la memoria del navegador (localStorage)
-    const empleadoGuardado = localStorage.getItem('empleado_session');
-    if (empleadoGuardado) {
-      const datos = JSON.parse(empleadoGuardado);
-      setPermisos(datos.permisos);
-      setEmailEmpleado(datos.email || 'EMPLEADO');
-      setEmpleadoLogueado(true);
-      setIsLoading(false);
-      return; // Si ya hay un empleado logueado, cortamos aquí
+    // Aplicar tema guardado al cargar
+    if (localStorage.getItem('gestorpro_theme') === 'monochrome') {
+      document.documentElement.classList.add('theme-monochrome');
     }
+    aplicarTamanoInterfaz(leerTamanoInterfaz()); // tamaño elegido en Ajustes > Apariencia
 
-    // 2. Si no hay empleado, verificamos si es el Admin Maestro (Supabase Auth)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    let activo = true;
+    const revisar = async () => {
+      const resultado = await validarSesion();
+      if (!activo || resultado === 'sin-conexion') return; // un corte de internet no cierra la sesión
+      setEmpleado(resultado);
       setIsLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
+    };
+    revisar();
+    const intervalo = setInterval(revisar, REVALIDAR_CADA_MS);
+    const alVolver = () => { if (document.visibilityState === 'visible') revisar(); };
+    document.addEventListener('visibilitychange', alVolver);
+    return () => {
+      activo = false;
+      clearInterval(intervalo);
+      document.removeEventListener('visibilitychange', alVolver);
+    };
   }, []);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#FFFFFF] flex items-center justify-center">
+      <div className="min-h-[var(--alto-pantalla)] bg-[#FFFFFF] flex items-center justify-center">
         <span className="font-mono text-sm text-[#1E293B] uppercase animate-pulse flex items-center space-x-2">
           <div className="w-2 h-2 bg-[#059669]"></div>
           <span>Inicializando Sistema...</span>
@@ -75,59 +75,36 @@ export const App: React.FC = () => {
     );
   }
 
-  // Función para cuando el login es exitoso (sea Admin Maestro o Empleado)
-  const handleLoginSuccess = (permisosObtenidos?: any, emailObtenido?: string) => {
-    if (permisosObtenidos) {
-      setPermisos(permisosObtenidos);
-      // Guardar en la memoria del navegador para que no se borre al recargar (F5)
-      localStorage.setItem('empleado_session', JSON.stringify({
-        permisos: permisosObtenidos,
-        email: emailObtenido || 'EMPLEADO'
-      }));
-      if (emailObtenido) setEmailEmpleado(emailObtenido);
-    }
-    setEmpleadoLogueado(true);
-  };
-
-  // Validamos: Si NO hay sesión oficial Y TAMPOCO hay un empleado logueado, mostramos el Login
-  if (!session && !empleadoLogueado) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
+  if (!empleado) {
+    return <Login onLoginSuccess={(nuevo) => { setCurrentView('resumen'); setEmpleado(nuevo); }} />;
   }
+
+  // Si le quitaron el permiso del módulo que tenía abierto, se muestra el Resumen
+  const vista = puedeVerModulo(empleado.permisos, currentView) ? currentView : 'resumen';
 
   // Motor de Renderizado Condicional
   const renderCurrentView = () => {
-    switch (currentView) {
+    switch (vista) {
       case 'inventario':
-        return <Inventario onNavigate={setCurrentView} />;
-      case 'mermas': 
+        return <Inventario onNavigate={handleNavigate} />;
+      case 'mermas':
         return <Mermas />;
-      case 'proveedores': 
+      case 'proveedores':
         return <Proveedores />;
-      case 'pos': 
+      case 'pos':
         return <POS />;
       case 'fiados': // <--- CONECTAMOS LA PANTALLA DE FIADOS
         return <Fiados />;
       case 'finanzas': // <--- CONECTAMOS LA PANTALLA DE FINANZAS
         return <Finanzas />;
-      case 'utilidades': 
+      case 'utilidades':
         return <Utilidades />;
-      case 'reportes': 
-        return <Reportes />;  
+      case 'reportes':
+        return <Reportes />;
       case 'configuracion': // <--- AÑADE ESTO
-      return <Configuraciones />;  
+      return <Configuraciones />;
       case 'resumen':
         return <Resumen />;
-        return (
-          <div className="border border-[#E2E8F0] bg-[#FFFFFF] p-6 shadow-none">
-            <h2 className="text-[#1E293B] font-mono text-lg uppercase font-bold border-b border-[#E2E8F0] pb-2 mb-4 flex items-center">
-              Dashboard Principal
-              <span className="ml-3 w-2 h-2 bg-[#059669] animate-pulse"></span>
-            </h2>
-            <p className="text-[#64748B] text-sm font-mono mb-6">
-              Métricas globales en construcción. Navega al módulo de Inventario en la barra lateral.
-            </p>
-          </div>
-        );
       default:
         return (
           <div className="border border-dashed border-[#E2E8F0] p-12 text-center">
@@ -137,29 +114,39 @@ export const App: React.FC = () => {
     }
   };
 
+  // En pantallas menores a 1024px (tablet/celular), al elegir un módulo se cierra el menú deslizable
+  function handleNavigate(view: string) {
+    if (!puedeVerModulo(empleado?.permisos, view)) return;
+    setCurrentView(view);
+    if (window.innerWidth < 1024) setIsSidebarOpen(false);
+  }
+
   return (
-    <div className="flex h-[calc(100dvh/var(--ui-zoom))] w-full bg-[#FFFFFF] overflow-hidden">
+    <SesionProvider empleado={empleado}>
+    <div className="flex h-[var(--alto-pantalla)] w-full bg-[#FFFFFF] overflow-hidden">
       <SideBar
         isOpen={isSidebarOpen}
-        currentView={currentView}
+        currentView={vista}
         onNavigate={handleNavigate}
         onClose={() => setIsSidebarOpen(false)}
-        // @ts-ignore: Ignoramos el error de TypeScript temporalmente hasta actualizar el SideBar
-        permisos={permisos}
+        onToggle={toggleSidebar}
+        permisos={empleado.permisos}
       />
 
       <main className="flex-1 min-w-0 flex flex-col overflow-hidden bg-[#F8FAFC]">
         <TopBar
-          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-          userEmail={session?.user?.email || emailEmpleado || 'EMPLEADO_AUTENTICADO'}
+          toggleSidebar={toggleSidebar}
+          ocultoEnEscritorio={!isSidebarOpen}
+          userEmail={empleado.email}
           onNavigate={handleNavigate}
         />
 
-        <section className="p-3 sm:p-5 lg:p-8 flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
+        <section className="p-2 flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
           {renderCurrentView()}
         </section>
       </main>
     </div>
+    </SesionProvider>
   );
 };
 

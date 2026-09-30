@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, AlertTriangle, Database, Loader2 } from 'lucide-react';
 import { supabase } from '../../../db/supabase.ts';
 import { formatearCantidad } from '../../../utils/formato';
-import { useEscapeClose } from '../../../utils/useEscapeClose';
 import type { Product } from '../types';
+import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 
 interface Props {
   isOpen: boolean;
@@ -14,6 +14,7 @@ interface Props {
 }
 
 export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProductSaved, initialData }) => {
+  useCerrarConEscape(isOpen, onClose); // Escape (o "Atrás" del control de TV) cierra la ventana
   // Búsqueda de Producto
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -32,6 +33,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
 
   // 🚨 Variable de control PARCHADA: Garantiza que reconozca la edición aunque Supabase no devuelva un ID
   const isEdit = !!initialData && Object.keys(initialData).length > 0;
+  const esConsumoInicial = isEdit ? (initialData.reason === 'USO INTERNO' || Number(initialData.quantity) === 0) : false;
 
   // 1. Cargar Lotes cuando se selecciona un producto
   useEffect(() => {
@@ -88,7 +90,6 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
         setSearchQuery(initialData.product_name || '');
         
         // Corrección: Mostrar Soles si fue consumo, o Cantidad si fue físico
-        const esConsumoInicial = initialData.reason === 'USO INTERNO' || Number(initialData.quantity) === 0;
         setCantidad(esConsumoInicial ? initialData.total_loss.toString() : Math.abs(initialData.quantity).toString());
         
         setMotivo(initialData.reason || 'DAÑADO');
@@ -108,9 +109,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
 
   // --- MOTOR DE VALIDACIÓN Y CÁLCULO DE DIFERENCIAL (REACTIVO) ---
   const inputNumVal = Number(cantidad) || 0;
-  const esConsumoActivo = selectedProduct?.unit?.toUpperCase().includes('CONS') || 
-                          selectedProduct?.category?.toUpperCase().includes('CONS') || 
-                          motivo === 'USO INTERNO';
+  const esConsumoActivo = selectedProduct?.unit === 'CONSUMO' || motivo === 'USO INTERNO';
   const costoUnitLote = Number(selectedLote?.cost_unit) || 0;
   
   let cantNumCalculada = 0;
@@ -128,8 +127,6 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
   // Bandera de seguridad adaptada a la diferencia: Solo avisa si el "extra" que sacamos excede el lote
   const excedeStockLote = (selectedLote && !esConsumoActivo && diffCant > 0) ? diffCant > selectedLote.quantity : false;
   // ----------------------------------------------
-
-  useEscapeClose(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -182,9 +179,25 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
 
     try {
       // 1. Detectamos de forma segura si es consumo/uso interno
-      const esConsumo = selectedProduct?.unit?.toUpperCase().includes('CONS') || 
-                        selectedProduct?.category?.toUpperCase().includes('CONS') || 
-                        motivo === 'USO INTERNO';
+      const esConsumo = selectedProduct?.unit === 'CONSUMO' || motivo === 'USO INTERNO';
+
+      // Stock FRESCO del lote: si hubo una venta mientras el modal estaba abierto, no la pisamos
+      let stockLoteFresco = Number(selectedLote?.quantity) || 0;
+      if (!esConsumo && diffCant !== 0 && selectedLote) {
+        const { data: loteFresco, error: loteFrescoError } = await supabase
+          .from('batches')
+          .select('quantity')
+          .eq('id', selectedLote.id)
+          .single();
+        if (loteFrescoError) throw loteFrescoError;
+        stockLoteFresco = Number(loteFresco?.quantity) || 0;
+        if (diffCant > 0 && diffCant > stockLoteFresco) {
+          alert(`⚠️ ERROR: El lote ahora solo tiene ${stockLoteFresco} (hubo ventas mientras registrabas). Ajusta la cantidad.`);
+          return;
+        }
+      }
+      const nuevaCantLote = stockLoteFresco - diffCant;
+      let nuevoStockProducto = Number(selectedProduct.quantity) - diffCant;
 
       // A. ACTUALIZAR o REGISTRAR en Waste (Merma / Gasto)
       if (isEdit) {
@@ -237,13 +250,22 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
       if (!esConsumo && diffCant !== 0) {
         const { error: batchUpdateError } = await supabase
           .from('batches')
-          .update({ quantity: selectedLote.quantity - diffCant })
+          .update({ quantity: nuevaCantLote })
           .eq('id', selectedLote.id);
         if (batchUpdateError) throw batchUpdateError;
 
+        // Stock global FRESCO: suma de los lotes activos recién leída (misma regla que fn_edit_batch)
+        const { data: lotesActivos, error: lotesActivosError } = await supabase
+          .from('batches')
+          .select('quantity')
+          .eq('product_id', selectedProduct.id)
+          .eq('is_active', 1);
+        if (lotesActivosError) throw lotesActivosError;
+        nuevoStockProducto = (lotesActivos || []).reduce((s, l) => s + (Number(l.quantity) || 0), 0);
+
         const { error: productUpdateError } = await supabase
           .from('products')
-          .update({ quantity: selectedProduct.quantity - diffCant })
+          .update({ quantity: nuevoStockProducto })
           .eq('id', selectedProduct.id);
         if (productUpdateError) throw productUpdateError;
 
@@ -257,8 +279,8 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
             product_id: selectedProduct.id,
             product_name: selectedProduct.name,
             change_amount: -diffCant, // Negativo si sacamos más, Positivo si devolvemos
-            previous_quantity: selectedLote.quantity,
-            new_quantity: selectedLote.quantity - diffCant,
+            previous_quantity: stockLoteFresco,
+            new_quantity: nuevaCantLote,
             operation_type: tipoOperacion,
             reason: razonOperacion,
             notes: isEdit ? `Corrección de merma [Ref: ${initialData.id || initialData.batch_id || 'Virtual'}]` : detalle || 'Merma manual',
@@ -277,11 +299,10 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
       
       // [ SALIDA ]: Notificamos el cambio al Inventario General y al Control de Lotes
       if (onProductSaved && selectedProduct && selectedLote && diffCant !== 0) {
-        const cantFinalLote = selectedLote.quantity - diffCant;
         onProductSaved(
-          { ...selectedProduct, quantity: selectedProduct.quantity - diffCant },
+          { ...selectedProduct, quantity: nuevoStockProducto },
           selectedLote.id,
-          cantFinalLote
+          nuevaCantLote
         );
       }
 
@@ -296,7 +317,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
 
   return (
     <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="bg-white w-full max-w-lg border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] relative flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(90dvh/var(--ui-zoom))]">
+      <div className="bg-white w-full max-w-lg border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] relative flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
         
         {/* HEADER */}
         <div className={`${isEdit ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'} text-white px-6 py-4 flex items-center justify-between border-b-2 border-[#1E293B] shrink-0`}>
@@ -304,7 +325,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
             <AlertTriangle size={24} className="text-white" />
             <div>
               <h2 className="text-sm font-black uppercase tracking-widest">{isEdit ? 'Editar Registro' : 'Registrar Merma'}</h2>
-              <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">{isEdit ? 'Corrección de cantidad o motivo' : 'Salida por daño o pérdida'}</p>
+              <p className="text-[12px] font-bold opacity-80 uppercase tracking-widest">{isEdit ? 'Corrección de cantidad o motivo' : 'Salida por daño o pérdida'}</p>
             </div>
           </div>
           <button onClick={onClose} className={`hover:bg-white ${isEdit ? 'hover:text-[#F59E0B]' : 'hover:text-[#EF4444]'} p-1 transition-colors border-2 border-transparent hover:border-[#1E293B]`}>
@@ -313,12 +334,12 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
         </div>
 
         {/* CUERPO DEL MODAL (Scrolleable si es muy largo) */}
-        <div className="p-4 sm:p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1 min-h-0">
+        <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
           
           {/* 1. BUSCADOR DE PRODUCTO DESPLEGABLE */}
           <div className="space-y-2 relative">
-            <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">
-              { (selectedProduct?.unit?.toUpperCase().includes('CONS') || selectedProduct?.category?.toUpperCase().includes('CONS') || motivo === 'USO INTERNO') 
+            <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest">
+              { (selectedProduct?.unit === 'CONSUMO' || motivo === 'USO INTERNO') 
               ? 'PRECIO / COSTO RETIRADO (S/)' 
               : (selectedProduct?.unit?.toUpperCase() === 'KG' ? 'CANTIDAD PERDIDA (KILOGRAMOS / GRAMOS)' : 'CANTIDAD PERDIDA (UNIDADES)') }
             </label>
@@ -326,7 +347,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
             {selectedProduct ? (
               <div className={`flex items-center justify-between border-2 border-[#1E293B] ${isEdit ? 'bg-[#F8FAFC]' : 'bg-[#FEF2F2]'} p-3 rounded-none`}>
                 <div className="flex flex-col">
-                  <span className={`text-[9px] font-bold uppercase tracking-wider ${isEdit ? 'text-[#1E293B]' : 'text-[#EF4444]'}`}>Producto Seleccionado:</span>
+                  <span className={`text-[12px] font-bold uppercase tracking-wider ${isEdit ? 'text-[#1E293B]' : 'text-[#EF4444]'}`}>Producto Seleccionado:</span>
                   <span className="text-xs font-black text-[#1E293B] uppercase mt-1">{selectedProduct.code} - {selectedProduct.name}</span>
                 </div>
                 {/* 🚨 Evitamos que el usuario cambie el producto en modo edición para no cruzar inventarios */}
@@ -368,12 +389,12 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
                           }}
                           className="flex flex-col p-3 hover:bg-[#F8FAFC] border-b border-[#E2E8F0] cursor-pointer group"
                         >
-                          <span className="text-[9px] font-bold text-[#64748B] group-hover:text-[#EF4444]">{p.code} | Stock: {formatearCantidad(p.quantity, p.unit)}</span>
+                          <span className="text-[12px] font-bold text-[#64748B] group-hover:text-[#EF4444]">{p.code} | Stock: {formatearCantidad(p.quantity, p.unit)}</span>
                           <span className="text-xs font-black text-[#1E293B] uppercase">{p.name}</span>
                         </div>
                       ))
                     ) : (
-                      <div className="p-4 text-center text-[10px] font-bold text-[#64748B] uppercase">No encontrado</div>
+                      <div className="p-4 text-center text-[12px] font-bold text-[#64748B] uppercase">No encontrado</div>
                     )}
                   </div>
                 )}
@@ -384,7 +405,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
           {/* 2. SELECTOR DE LOTE (Oculto si es Consumo, Bloqueado si es Edición para no desfasar otro lote) */}
           {selectedProduct && !esConsumoActivo && (
             <div className="space-y-2 border-l-4 border-[#1E293B] pl-3 py-1">
-              <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest flex items-center gap-2">
+              <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest flex items-center gap-2">
                 <Database size={14} className="text-[#1E293B]" /> 2. Seleccionar Lote Afectado *
               </label>
               <select 
@@ -406,10 +427,10 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">
-                {(selectedProduct?.unit?.toUpperCase().includes('CONS') || selectedProduct?.category?.toUpperCase().includes('CONS') || motivo === 'USO INTERNO') 
+              <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest">
+                {(selectedProduct?.unit === 'CONSUMO' || motivo === 'USO INTERNO') 
                 ? 'Costo Total (S/)' 
                 : (selectedProduct?.unit?.toUpperCase() === 'KG' ? 'Cantidad (Kilos / Gramos)' : 'Cantidad (Unidades)')}
               </label>
@@ -432,7 +453,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
             </div>
             
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">
+              <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest">
                 Motivo
               </label>
               <select 
@@ -440,17 +461,17 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
                 onChange={(e) => setMotivo(e.target.value)}
                 className="w-full bg-[#F8FAFC] border-2 border-[#E2E8F0] p-3 text-xs font-bold text-[#1E293B] uppercase outline-none focus:border-[#1E293B] transition-colors"
               >
-                <option value="DAÑADO">Producto Dañado</option>
-                <option value="VENCIDO">Fecha Vencida</option>
-                <option value="ROBO">Pérdida / Robo</option>
-                <option value="USO INTERNO">Uso Interno</option>
-                <option value="OTRO">Otro</option>
+                <option value="DAÑADO" disabled={isEdit && esConsumoInicial}>Producto Dañado</option>
+                <option value="VENCIDO" disabled={isEdit && esConsumoInicial}>Fecha Vencida</option>
+                <option value="ROBO" disabled={isEdit && esConsumoInicial}>Pérdida / Robo</option>
+                <option value="USO INTERNO" disabled={isEdit && !esConsumoInicial}>Uso Interno</option>
+                <option value="OTRO" disabled={isEdit && esConsumoInicial}>Otro</option>
               </select>
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">
+            <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest">
               Detalle / Observación
             </label>
             <textarea 
@@ -469,7 +490,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
           <button 
             type="button"
             onClick={onClose}
-            className="px-6 py-3 border-2 border-[#E2E8F0] text-[#64748B] font-black text-[10px] uppercase tracking-widest hover:bg-white hover:border-[#1E293B] hover:text-[#1E293B] transition-all rounded-none"
+            className="px-6 py-3 border-2 border-[#E2E8F0] text-[#64748B] font-black text-[12px] uppercase tracking-widest hover:bg-white hover:border-[#1E293B] hover:text-[#1E293B] transition-all rounded-none"
           >
             Cancelar
           </button>
@@ -486,7 +507,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
               excedeStockLote || 
               (((selectedProduct as any)?.control_type === 'UND' || selectedProduct?.unit === 'UND') && !esConsumoActivo && !Number.isInteger(Number(cantidad)))
             }
-            className={`px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 transition-all shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] rounded-none ${excedeStockLote ? 'bg-[#94A3B8] text-white cursor-not-allowed' : 'bg-[#1E293B] text-white hover:bg-[#EF4444] disabled:opacity-50'}`}
+            className={`px-6 py-3 border-2 border-[#1E293B] font-black text-[12px] uppercase tracking-widest flex items-center gap-2 transition-all shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] rounded-none ${excedeStockLote ? 'bg-[#94A3B8] text-white cursor-not-allowed' : 'bg-[#1E293B] text-white hover:bg-[#EF4444] disabled:opacity-50'}`}
           >
             {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : (excedeStockLote ? <AlertTriangle size={16} /> : <Save size={16} />)}
             <span>

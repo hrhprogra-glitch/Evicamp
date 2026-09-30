@@ -1,62 +1,151 @@
 @import "tailwindcss";
 
-/* Variante para portátiles con poca altura vertical (comunes por escalado DPI de Windows) */
-@custom-variant short (@media (min-width: 1024px) and (max-height: 820px));
-
-/* BYPASS TÉCNICO: Usamos :root en lugar de @theme para evitar que
+/* BYPASS TÉCNICO: Usamos :root en lugar de @theme para evitar que 
    el compilador v4 colapse al generar el diccionario de variables. */
 :root {
+  /* La app está diseñada solo en tema claro. "only light" le indica al navegador
+     (Chrome, Samsung Internet, Edge) que no la oscurezca con su modo oscuro automático. */
+  color-scheme: only light;
   --color-brand-primary: #1E293B;
-  --color-brand-accent: #10B981;
-  --color-brand-border: #E2E8F0;
+  --color-brand-accent: #10B981;  
+  --color-brand-border: #E2E8F0;  
   --color-brand-bg: #FFFFFF;
-  /* Zoom base subido para accesibilidad: todo el texto y los elementos técnicos
-     (muchos escritos en px fijos, ej. text-[9px]/[10px]) se veían demasiado
-     pequeños para gente con baja visión. 1.2 = +20% en toda la interfaz, en
-     cualquier tamaño de pantalla (celular, tablet, laptop, PC, TV). */
-  --ui-zoom: 1.2;
-}
 
-/* Escalado adicional en pantallas muy grandes (Smart TV / monitores 4K), sumado
-   al +20% base de accesibilidad. Se exige además suficiente altura para no
-   afectar laptops anchas pero bajas. */
-@media (min-width: 2560px) and (min-height: 1000px) {
-  :root { --ui-zoom: 1.6; }
-}
-@media (min-width: 3840px) and (min-height: 1000px) {
-  :root { --ui-zoom: 2; }
+  /* Letra más grande para leer mejor (accesibilidad). Reemplaza la escala base de Tailwind:
+     xs 12→14px, sm 14→15px, base 16→17px, lg 18→19px. Los títulos grandes quedan igual. */
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.35;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.4;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.5;
+  --text-lg: 1.1875rem;
+  --text-lg--line-height: 1.5;
 }
 
 * {
   border-radius: 0px !important;
 }
 
+/* Samsung Internet ignora "color-scheme: only light" y oscurece la página por su cuenta,
+   salvo que el sitio tenga su propio tema oscuro. Este "tema oscuro" usa los mismos
+   colores claros, así el navegador no invierte nada y la app se ve igual en todos lados. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: only light;
+  }
+  html,
+  body {
+    background-color: #FFFFFF;
+    color: #1E293B;
+  }
+}
+
+/* ==========================================================================
+   PANTALLAS: LAPTOP Y TELEVISOR
+   ========================================================================== */
+
+/* Laptop: ancho de escritorio pero poca altura (1280x720, 1366x768, 1536x864...).
+   Uso: short:py-2, short:h-11... Solo compacta lo vertical; en monitores altos no cambia nada. */
+@custom-variant short (@media (min-width: 1024px) and (max-height: 820px));
+
+/* Televisor: toda la interfaz se agranda en proporción para leerse a 2-3 metros.
+   Se exige también altura grande para no agrandar monitores de PC (cuya ventana del
+   navegador no llega a 1000px de alto por las barras del sistema) ni laptops anchas. */
+:root {
+  --ui-zoom: 1;
+  --tv-margen-x: 0px;
+  --tv-margen-y: 0px;
+  /* Alto visible real. Con zoom, 100dvh mediría más que la pantalla, por eso se divide.
+     Usar h-[var(--alto-pantalla)] en lugar de h-dvh / h-screen / h-[90vh]. */
+  --alto-pantalla: calc((100dvh - 2 * var(--tv-margen-y)) / var(--ui-zoom));
+}
+/* Solo sin mouse (TV con control remoto): un monitor de PC en pantalla completa también
+   mide 1920x1080 y no debe agrandarse. Si una TV no se agranda sola, se elige
+   "Grande (TV)" en Ajustes > Apariencia (clase ui-grande más abajo). */
+@media (min-width: 1900px) and (min-height: 1000px) {
+  @media not all and (pointer: fine) {
+    :root { --ui-zoom: 1.25; }
+  }
+}
+/* Margen contra el overscan solo en proporción 16:9 exacta (TV en pantalla completa).
+   La ventana del navegador en un monitor nunca queda exacta por las barras del sistema. */
+@media (min-width: 1900px) and (min-height: 1000px) and (aspect-ratio: 16/9) {
+  @media not all and (pointer: fine) {
+    :root { --tv-margen-x: 1.5vw; --tv-margen-y: 2vh; }
+  }
+}
+@media (min-width: 2500px) and (min-height: 1350px) {
+  @media not all and (pointer: fine) {
+    :root { --ui-zoom: 1.5; }
+  }
+}
+@media (min-width: 3800px) and (min-height: 2000px) {
+  @media not all and (pointer: fine) {
+    :root { --ui-zoom: 2; }
+  }
+}
+
+/* Tamaño elegido a mano en Ajustes > Apariencia (anula el automático) */
+html.ui-normal { --ui-zoom: 1; --tv-margen-x: 0px; --tv-margen-y: 0px; }
+html.ui-grande { --ui-zoom: 1.25; }
+@media (min-width: 2500px) and (min-height: 1350px) { html.ui-grande { --ui-zoom: 1.5; } }
+@media (min-width: 3800px) and (min-height: 2000px) { html.ui-grande { --ui-zoom: 2; } }
+@media (min-width: 1900px) and (min-height: 1000px) and (aspect-ratio: 16/9) { html.ui-grande { --tv-margen-x: 1.5vw; --tv-margen-y: 2vh; } }
+#root {
+  zoom: var(--ui-zoom);
+  /* Margen de seguridad: algunos televisores recortan los bordes de la imagen (overscan) */
+  padding: calc(var(--tv-margen-y) / var(--ui-zoom)) calc(var(--tv-margen-x) / var(--ui-zoom));
+  background-color: #1E293B;
+}
+
+/* Aparición suave del bloque de fiado dentro de la ventana de pago (celular) */
+@keyframes aparecer-fiado {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.aparecer-fiado {
+  animation: aparecer-fiado 0.3s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .aparecer-fiado { animation: none; }
+}
+
+/* Brillo pulsante del logo del menú lateral: indica que se toca ahí para desplegar el menú */
+@keyframes logo-brillo {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.75), 0 0 6px 1px rgba(16, 185, 129, 0.45); }
+  50%      { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0), 0 0 16px 5px rgba(16, 185, 129, 0.85); }
+}
+.logo-brillo {
+  animation: logo-brillo 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo-brillo { animation: none; box-shadow: 0 0 10px 3px rgba(16, 185, 129, 0.7); }
+}
+
+/* Foco visible para navegar con teclado o control remoto (flechas + OK).
+   Los campos de texto ya marcan su foco con el borde, por eso no se incluyen. */
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--color-brand-accent);
+  outline-offset: 2px;
+}
+/* Filas y tarjetas enfocables: el contorno va por dentro, porque las tablas recortan lo que sale del borde */
+[role="button"]:focus-visible {
+  outline-offset: -3px;
+  background-color: #ECFDF5;
+}
+
 html, body {
   height: 100%;
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: hidden; /* el panel principal ya controla su propio scroll; el login puede desplazarse en pantallas bajas */
   background-color: var(--color-brand-bg);
   color: var(--color-brand-primary);
   font-family: ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-}
-
-#root {
-  zoom: var(--ui-zoom);
-}
-
-/* Colchón de "overscan" para TV a partir de 2560px de ancho: el padding vive en <body>,
-   fuera del árbol con zoom, para no ser escalado dos veces. */
-@media (min-width: 2560px) and (min-height: 1000px) {
-  body {
-    padding: 3vh 2vw;
-    box-sizing: border-box;
-  }
-}
-
-:focus-visible {
-  outline: 3px solid #10B981;
-  outline-offset: 2px;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -117,4 +206,12 @@ html, body {
 }
 .input-technical:focus {
   border-color: var(--color-brand-accent);
+}
+
+/* TEMA MONOCROMÁTICO (blanco, negro y grises)
+ Se aplica con un filtro sobre toda la página: así cubre cada color de la app, también
+ las ventanas flotantes, sin tener que listar clase por clase. Va en <html> para no
+ alterar las posiciones fijas (fixed) de los modales. */
+html.theme-monochrome {
+  filter: grayscale(1) contrast(1.15);
 }

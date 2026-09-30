@@ -4,7 +4,8 @@ import { supabase } from '../../../db/supabase';
 import { formatearCantidad } from '../../../utils/formato';
 import type { Fiado, FiadoDetalle, Cliente } from '../types';
 import type { Product } from '../../Inventario/types';
-import { useEscapeClose } from '../../../utils/useEscapeClose';
+import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
+import { clicConTeclado } from '../../../utils/clicConTeclado';
 
 interface Props {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEditar, clientes, productos }) => {
+  useCerrarConEscape(isOpen, onClose); // Escape (o "Atrás" del control de TV) cierra la ventana
   const [clienteSeleccionado, setClienteSeleccionado] = useState<string>('');
   const [fechaVencimiento, setFechaVencimiento] = useState('');
   const [detalles, setDetalles] = useState<FiadoDetalle[]>([]);
@@ -43,8 +45,6 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
       setIsDropdownOpen(false); // Asegurar que el menú inicie cerrado
     }
   }, [isOpen, fiadoAEditar]);
-
-  useEscapeClose(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -174,36 +174,36 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
         const idVenta = Date.now(); // 🔥 Generamos ID único para Reportes
         const idFiado = idVenta + 1; // 🔥 Generamos ID único para el Fiado
 
-        // 1. Crear Venta de respaldo para cuadrar las finanzas
-        const { error: ventaError } = await supabase.from('sales').insert([{
+        // === TRANSACCIÓN ATÓMICA DE VENTA Y FIADO ===
+        const p_sale = {
           id: idVenta,
           total: totalCalculado,
-          payment_type: 'credito',
+          // 'FIADO' (igual que el Punto de Venta): Finanzas y el Mini Reporte excluyen de la caja
+          // las ventas con este tipo, porque no entró dinero al momento de la venta.
+          payment_type: 'FIADO',
+          amount_cash: 0,
+          amount_yape: 0,
+          amount_card: 0,
           amount_credit: totalCalculado,
           taxable_amount: 0,
           igv_amount: 0,
           total_exempt: totalCalculado,
+          sunat_status: 'ACEPTADO',
           is_synced: 1,
-          created_at: new Date().toISOString() // 🔥 LA PIEZA FALTANTE: Ahora Reportes sabrá de qué día es
-        }]).select().single();
-        if (ventaError) throw ventaError;
+          created_at: new Date().toISOString()
+        };
 
-        // 2. Insertar los productos en los detalles de la venta
-        const saleDetails = detalles.map(d => ({
-          sale_id: idVenta,
+        const p_details = detalles.map(d => ({
           product_id: d.productoId,
           product_name: d.name,
-          quantity: Number(d.qty), // <-- Forzamos el tipo numérico técnico
+          quantity: Number(d.qty),
           price_at_moment: d.price,
-          subtotal: Number(d.subtotal), // <-- Forzamos el tipo numérico técnico
-          is_synced: '1'
+          subtotal: Number(d.subtotal),
+          is_synced: 1
         }));
-        await supabase.from('sale_details').insert(saleDetails);
 
-        // 3. Crear el Documento de Deuda (Fiado)
-        const { error: fiadoError } = await supabase.from('fiados').insert([{
+        const p_fiado = {
           id: idFiado,
-          sale_id: idVenta,
           customer_id: cli?.id ? Number(cli.id) : null,
           customer_name: clienteSeleccionado,
           amount: totalCalculado,
@@ -211,26 +211,17 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
           expected_pay_date: fechaVencimiento,
           status: 'PENDIENTE',
           paid_amount: 0,
-          is_synced: '1'
-        }]);
-        if (fiadoError) throw fiadoError;
+          is_synced: 1
+        };
 
-        // 4. Descontar Inventario automáticamente
-        for (const det of detalles) {
-          const prod = productos.find(p => p.id === det.productoId);
-          if (prod) {
-            await supabase.from('products').update({ quantity: prod.quantity - Number(det.qty) }).eq('id', prod.id);
-            await supabase.from('inventory_movements').insert([{
-              product_id: prod.id,
-              product_name: prod.name,
-              change_amount: -Number(det.qty),
-              operation_type: 'VENTA',
-              reason: 'Venta a Crédito (Fiado)',
-              is_synced: '1',
-              user: 'Sistema'
-            }]);
-          }
-        }
+        const { error: rpcError } = await supabase.rpc('fn_register_sale', {
+          p_sale: p_sale,
+          p_details: p_details,
+          p_fiado: p_fiado
+        });
+
+        if (rpcError) throw new Error('Error al registrar fiado atómicamente: ' + rpcError.message);
+
         alert('✅ Fiado guardado, venta registrada e inventario descontado.');
       }
       
@@ -244,12 +235,12 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
 
   return (
     <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="bg-white w-full max-w-4xl border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] md:h-[calc(85dvh/var(--ui-zoom))]">
-
-        <div className="bg-[#1E293B] text-white px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center shrink-0">
+      <div className="bg-white w-full max-w-4xl border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.85)]">
+        
+        <div className="bg-[#1E293B] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
           <div className="flex items-center gap-3">
             <UserPlus className="text-[#F59E0B]" size={20} />
-            <h2 className="text-xs sm:text-sm font-black uppercase tracking-widest text-white">
+            <h2 className="text-sm font-black uppercase tracking-widest text-white">
               {isEdit ? 'Renegociar Fecha de Vencimiento' : 'Nueva Deuda desde Inventario'}
             </h2>
           </div>
@@ -258,14 +249,14 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
 
         <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-visible">
           {/* PANEL IZQUIERDO: CLIENTE Y PRODUCTOS */}
-          <div className="w-full md:w-1/2 p-4 sm:p-6 bg-[#F8FAFC] border-b-2 md:border-b-0 md:border-r-2 border-[#E2E8F0] flex flex-col gap-4 md:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="w-full md:w-1/2 p-4 sm:p-6 bg-[#F8FAFC] border-b-2 md:border-b-0 md:border-r-2 border-[#E2E8F0] flex flex-col gap-4 shrink-0 md:shrink md:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             
             <div className="space-y-1 relative">
-              <label className="text-[10px] font-black uppercase text-[#64748B]">Seleccionar Cliente *</label>
+              <label className="text-[12px] font-black uppercase text-[#64748B]">Seleccionar Cliente *</label>
               
               <div 
                 className={`flex items-center justify-between border-2 border-[#E2E8F0] bg-white p-2 cursor-text transition-colors rounded-none ${isEdit ? 'bg-[#F8FAFC] cursor-not-allowed opacity-70' : 'focus-within:border-[#F59E0B]'}`}
-                onClick={() => !isEdit && setIsDropdownOpen(true)}
+                {...clicConTeclado(() => !isEdit && setIsDropdownOpen(true))}
               >
                 <input
                   type="text"
@@ -303,13 +294,13 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                         <div
                           key={c.id}
                           className="p-3 text-xs font-black uppercase text-[#1E293B] hover:bg-[#F59E0B] hover:text-white cursor-pointer border-b border-[#E2E8F0] last:border-0 transition-colors"
-                          onClick={() => {
+                          {...clicConTeclado(() => {
                             setClienteSeleccionado(c.nombre);
                             setSearchCliente('');
                             setIsDropdownOpen(false);
-                          }}
+                          })}
                         >
-                          {c.nombre} <span className="text-[10px] font-bold text-inherit opacity-70 ml-2">{c.dni ? `(DNI: ${c.dni})` : ''}</span>
+                          {c.nombre} <span className="text-[12px] font-bold text-inherit opacity-70 ml-2">{c.dni ? `(DNI: ${c.dni})` : ''}</span>
                         </div>
                       ))
                   )}
@@ -318,14 +309,14 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase text-[#F59E0B]">Fecha Límite Pago *</label>
+              <label className="text-[12px] font-black uppercase text-[#F59E0B]">Fecha Límite Pago *</label>
               <input type="date" value={fechaVencimiento} onChange={e => setFechaVencimiento(e.target.value)} className="w-full border-2 border-[#E2E8F0] p-2 text-xs font-black focus:border-[#F59E0B] outline-none" />
             </div>
 
             {/* BUSCADOR DE INVENTARIO (OCULTO EN EDICIÓN) */}
             {!isEdit && (
               <div className="mt-4 border-t-2 border-dashed border-[#E2E8F0] pt-4">
-                <label className="text-[10px] font-black uppercase text-[#64748B] flex items-center gap-2 mb-2"><Package size={14}/> Buscar en Inventario</label>
+                <label className="text-[12px] font-black uppercase text-[#64748B] flex items-center gap-2 mb-2"><Package size={14}/> Buscar en Inventario</label>
                 <div className="relative">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
                   <input
@@ -349,12 +340,12 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                     {prodFiltrados.map(p => (
                       <div 
                         key={p.id} 
-                        onClick={() => agregarProducto(p)}
+                        {...clicConTeclado(() => agregarProducto(p))}
                         className="flex justify-between items-center p-2 border-b border-[#E2E8F0] hover:bg-[#F8FAFC] cursor-pointer group"
                       >
                         <div>
                           <p className="text-xs font-black text-[#1E293B] uppercase">{p.name}</p>
-                          <p className="text-[9px] font-bold text-[#64748B]">Stock: {formatearCantidad(p.quantity, p.unit)} | S/ {p.price}</p>
+                          <p className="text-[12px] font-bold text-[#64748B]">Stock: {formatearCantidad(p.quantity, p.unit)} | S/ {p.price}</p>
                         </div>
                         <div className="p-1 bg-[#1E293B] text-white group-hover:bg-[#3B82F6] transition-colors"><Plus size={14}/></div>
                       </div>
@@ -366,12 +357,12 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
           </div>
 
           {/* PANEL DERECHO: CARRITO / DETALLE DE LA DEUDA */}
-          <div className="w-full md:w-1/2 p-4 sm:p-6 bg-white flex flex-col min-h-[300px] md:min-h-0">
+          <div className="w-full md:w-1/2 p-4 sm:p-6 bg-white flex flex-col min-h-[360px] md:min-h-0">
             <div className="flex flex-col mb-4 border-b-2 border-[#E2E8F0] pb-2">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1E293B]">
+              <h3 className="text-[12px] font-black uppercase tracking-widest text-[#1E293B]">
                 {isEdit ? 'Detalle de la deuda (Solo Lectura)' : 'Productos a fiar'}
               </h3>
-              {isEdit && <span className="text-[9px] font-black tracking-widest text-[#EF4444] uppercase mt-1">⚠️ En modo edición solo se puede modificar la fecha. Los productos están bloqueados por seguridad contable.</span>}
+              {isEdit && <span className="text-[12px] font-black tracking-widest text-[#EF4444] uppercase mt-1">⚠️ En modo edición solo se puede modificar la fecha. Los productos están bloqueados por seguridad contable.</span>}
             </div>
             
             <div className="flex-1 overflow-y-auto flex flex-col gap-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -382,7 +373,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                   <div key={d.productoId} className="flex justify-between items-center border-2 border-[#E2E8F0] p-2">
                     <div className="flex-1">
                       <p className="text-xs font-black text-[#1E293B] uppercase leading-tight line-clamp-1">{d.name}</p>
-                      <p className="text-[10px] font-bold text-[#64748B]">S/ {d.price.toFixed(2)} c/u</p>
+                      <p className="text-[12px] font-bold text-[#64748B]">S/ {d.price.toFixed(2)} c/u</p>
                     </div>
                     
                     <div className="flex items-center gap-3">
@@ -407,18 +398,18 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                         )}
                         {/* Indicador visual técnico de medida */}
                         {d.control_type === 'WEIGHT' ? (
-                          <div className="bg-[#1E293B] text-white text-[8px] font-black w-full text-center tracking-widest py-0.5 uppercase">Kilo</div>
+                          <div className="bg-[#1E293B] text-white text-[11px] font-black w-full text-center tracking-widest py-0.5 uppercase">Kilo</div>
                         ) : d.control_type === 'CONSUMO' || d.control_type === 'SERVICE' ? (
-                          <div className="bg-[#F59E0B] text-[#1E293B] text-[8px] font-black w-full text-center tracking-widest py-0.5 uppercase">Serv</div>
+                          <div className="bg-[#F59E0B] text-[#1E293B] text-[11px] font-black w-full text-center tracking-widest py-0.5 uppercase">Serv</div>
                         ) : (
-                          <div className="bg-[#E2E8F0] text-[#64748B] text-[8px] font-black w-full text-center tracking-widest py-0.5 uppercase">Und</div>
+                          <div className="bg-[#E2E8F0] text-[#64748B] text-[11px] font-black w-full text-center tracking-widest py-0.5 uppercase">Und</div>
                         )}
                       </div>
                       
                       {/* CAJA DE SUBTOTAL (Texto Fijo para UND, Input Editable para KILOS y CONSUMOS) */}
                       {!isEdit && (d.control_type === 'WEIGHT' || d.control_type === 'CONSUMO' || d.control_type === 'SERVICE') ? (
                         <div className="flex items-center border-b-2 border-[#1E293B] w-20 justify-end focus-within:border-[#F59E0B] transition-colors group">
-                          <span className="text-[10px] font-black text-[#1E293B] mr-1">S/</span>
+                          <span className="text-[12px] font-black text-[#1E293B] mr-1">S/</span>
                           <input 
                             type="number"
                             step="any"
@@ -452,7 +443,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                 <span className="text-2xl font-black text-[#F59E0B]">S/ {totalCalculado.toFixed(2)}</span>
               </div>
               <div className="flex justify-end gap-3">
-                <button onClick={onClose} className="px-4 py-3 border-2 border-[#E2E8F0] text-[#64748B] text-[10px] font-black uppercase hover:border-[#1E293B]">Cancelar</button>
+                <button onClick={onClose} className="px-4 py-3 border-2 border-[#E2E8F0] text-[#64748B] text-[12px] font-black uppercase hover:border-[#1E293B]">Cancelar</button>
                 <button onClick={handleSave} className="flex-1 py-3 bg-[#F59E0B] text-[#1E293B] border-2 border-[#1E293B] text-xs font-black uppercase flex items-center justify-center gap-2 shadow-[2px_2px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
                   <Save size={16}/> {isEdit ? 'Guardar Nueva Fecha' : 'Confirmar y Restar Inventario'}
                 </button>

@@ -10,6 +10,7 @@ import { HeaderMermas } from './components/HeaderMermas';
 import { FiltrosMermas } from './components/FiltrosMermas';
 import { TarjetaMetrica } from './components/TarjetaMetrica';
 import { TablaMermas } from './components/TablaMermas';
+import { traerTodo } from '../../utils/traerTodo';
 
 export const Mermas: React.FC = () => {
   const [mermas, setMermas] = useState<Merma[]>([]);
@@ -27,10 +28,11 @@ export const Mermas: React.FC = () => {
   const fetchMermas = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await traerTodo(() => supabase
         .from('waste')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .order('id'));
 
       if (error) throw error;
 
@@ -58,15 +60,15 @@ export const Mermas: React.FC = () => {
 
   const fetchProducts = async () => {
     try {
-      const { data, error } = await supabase.from('products').select('*');
+      const { data, error } = await traerTodo(() => supabase.from('products').select('*').order('id'));
       if (error) throw error;
       if (data) {
         const mapeados: Product[] = data.map((p: any) => {
-          const registroCompleto = JSON.stringify(p).toUpperCase();
-          const esConsumo = registroCompleto.includes('"CONSUMO"') || 
-                            registroCompleto.includes('"SERVICE"') || 
-                            registroCompleto.includes('"USO INTERNO"') ||
-                            registroCompleto.includes('"CONSUMPTION"');
+          // Es Consumo solo si sus campos de TIPO/UNIDAD lo dicen exactamente
+          // (antes se buscaba en toda la fila: una categoría o nombre "CONSUMO" lo marcaba por error).
+          const TIPOS_CONSUMO = ['CONSUMO', 'SERVICE', 'USO INTERNO', 'CONSUMPTION'];
+          const esConsumo = [p.unit, p.control_type, p.weight_unit]
+            .some(v => TIPOS_CONSUMO.includes(String(v ?? '').trim().toUpperCase()));
 
           return {
             id: p.id,
@@ -190,14 +192,14 @@ export const Mermas: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-10 text-[#1E293B] font-mono min-h-full bg-[#FFFFFF] relative rounded-none">
+    <div className="flex flex-col gap-6 short:gap-3 w-full pb-10 text-[#1E293B] font-mono min-h-full bg-[#FFFFFF] relative rounded-none">
       
       <HeaderMermas 
         onNuevaMerma={() => setIsModalMermaOpen(true)} 
       />
 
       {/* MÉTRICAS */}
-      <div className="px-3 sm:px-6 lg:px-8 flex gap-4 overflow-x-auto w-full pb-2 custom-scrollbar shrink-0 rounded-none">
+      <div className="px-3 lg:px-4 grid grid-cols-1 sm:grid-cols-2 xl:flex gap-3 sm:gap-4 w-full pb-2 shrink-0 rounded-none">
         <TarjetaMetrica 
           label="Eventos Registrados" 
           value={filteredMermas.length} 
@@ -235,12 +237,12 @@ export const Mermas: React.FC = () => {
         }}
       />
 
-      <div className="px-3 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-[60vh] relative pb-3 sm:pb-6 lg:pb-8 rounded-none">
+      <div className="px-3 lg:px-4 flex-1 flex flex-col min-h-[calc(var(--alto-pantalla)*0.6)] relative pb-8 rounded-none">
         {loading ? (
           <div className="absolute inset-0 bg-[#FFFFFF]/90 backdrop-blur-sm z-10 flex items-center justify-center border border-[#E2E8F0] rounded-none shadow-none">
             <div className="flex flex-col items-center gap-3">
               <Database size={24} className="text-[#1E293B] animate-pulse" />
-              <span className="text-[10px] font-black text-[#1E293B] uppercase tracking-[0.2em]">Consultando Base de Datos...</span>
+              <span className="text-[12px] font-black text-[#1E293B] uppercase tracking-[0.2em]">Consultando Base de Datos...</span>
             </div>
           </div>
         ) : (

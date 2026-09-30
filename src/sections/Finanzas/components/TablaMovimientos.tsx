@@ -26,7 +26,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete }) => 
           <tbody>
             {movimientos.length === 0 ? (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-[#64748B] font-bold text-xs uppercase">
+                <td colSpan={5} className="p-3 lg:p-4 text-center text-[#64748B] font-bold text-xs uppercase">
                   No hay movimientos registrados en esta sesión.
                 </td>
               </tr>
@@ -50,8 +50,8 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete }) => 
                     {mov.type === 'INGRESO' ? '+' : '-'} S/ {Number(mov.amount).toFixed(2)}
                   </td>
                   <td className="p-4 text-center">
-                    {/* Solo muestra el botón si el texto NO incluye "Abono Deuda" */}
-                    {!mov.description.includes('Abono Deuda') && (
+                    {/* Los abonos de créditos no se borran aquí: se anulan desde Créditos */}
+                    {String(mov.flujo) !== 'INGRESO_FIADO' && !mov.description.includes('Abono Deuda') && (
                       <button 
                         onClick={() => onDelete(mov.id)} 
                         className="p-2 text-[#94A3B8] border-2 border-transparent hover:border-[#EF4444] hover:bg-[#FEF2F2] hover:text-[#EF4444] transition-colors cursor-pointer rounded-none"

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { X, Lock, Calculator, AlertTriangle, Banknote, Smartphone, CreditCard } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import type { CashSession, SuperMetricas } from '../types';
-import { useEscapeClose } from '../../../utils/useEscapeClose';
+import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 
 interface Props {
   isOpen: boolean;
@@ -30,10 +30,10 @@ const BloqueArqueo: React.FC<BloqueArqueoProps> = ({ icono, color, titulo, esper
   return (
     <div className="border-2 border-[#E2E8F0] p-4 flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2" style={{ color }}>
+        <span className="text-[12px] font-black uppercase tracking-widest flex items-center gap-2" style={{ color }}>
           {icono} {titulo}
         </span>
-        <span className="text-xs font-bold text-[#64748B]">Espera: S/ {esperado.toFixed(2)}</span>
+        <span className="text-xs font-bold text-[#64748B] whitespace-nowrap">Espera: S/ {esperado.toFixed(2)}</span>
       </div>
       <input
         type="number"
@@ -46,7 +46,7 @@ const BloqueArqueo: React.FC<BloqueArqueoProps> = ({ icono, color, titulo, esper
         }`}
       />
       {hayDescuadre && (
-        <p className="text-[10px] font-black uppercase text-[#D97706] flex items-center gap-1">
+        <p className="text-[12px] font-black uppercase text-[#D97706] flex items-center gap-1">
           <AlertTriangle size={12} />
           {diferencia > 0 ? `Sobra S/ ${Math.abs(diferencia).toFixed(2)}` : `Falta S/ ${Math.abs(diferencia).toFixed(2)}`}
         </p>
@@ -56,20 +56,20 @@ const BloqueArqueo: React.FC<BloqueArqueoProps> = ({ icono, color, titulo, esper
 };
 
 export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessionActiva, superMetricas }) => {
+  useCerrarConEscape(isOpen, onClose); // Escape (o "Atrás" del control de TV) cierra la ventana
   const [montoEfectivo, setMontoEfectivo] = useState('');
   const [montoYape, setMontoYape] = useState('');
   const [montoTarjeta, setMontoTarjeta] = useState('');
   const [justificacion, setJustificacion] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEscapeClose(isOpen, onClose);
-
   if (!isOpen) return null;
 
   // Lo que el sistema espera encontrar en cada método, según las ventas/cobros de la sesión.
   const esperadoEfectivo = superMetricas.efectivoEsperadoCaja;
-  const esperadoYape = superMetricas.ventasYape + superMetricas.cobroDeudasYape;
-  const esperadoTarjeta = superMetricas.ventasTarjeta;
+  // Cada egreso/ingreso manual ya se sumó o restó en la bolsa de su propio método de pago.
+  const esperadoYape = superMetricas.yapeEsperado;
+  const esperadoTarjeta = superMetricas.tarjetaEsperada;
 
   const diferenciaEfectivo = (Number(montoEfectivo) || 0) - esperadoEfectivo;
   const diferenciaYape = (Number(montoYape) || 0) - esperadoYape;
@@ -121,7 +121,7 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
 
   return (
     <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-md flex items-center justify-center z-[9999] p-2 sm:p-4 font-mono">
-      <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-lg flex flex-col rounded-none animate-fade-in max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(90dvh/var(--ui-zoom))]">
+      <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-lg flex flex-col rounded-none animate-fade-in max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
 
         <div className="bg-[#EF4444] p-4 border-b-2 border-[#1E293B] flex justify-between items-center text-white shrink-0">
           <h2 className="font-black uppercase tracking-widest flex items-center gap-2 text-sm">
@@ -132,11 +132,11 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
           </button>
         </div>
 
-        <div className="p-4 sm:p-6 flex flex-col gap-4 overflow-y-auto custom-scrollbar flex-1 min-h-0">
+        <div className="p-6 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
 
           <div className="bg-[#F8FAFC] border-2 border-[#E2E8F0] p-3 flex items-center gap-2 text-[#64748B]">
             <Calculator size={16} />
-            <span className="text-[10px] font-bold uppercase tracking-widest">
+            <span className="text-[12px] font-bold uppercase tracking-widest">
               Cuenta lo que hay físicamente en caja y confirma tu Yape/Tarjeta contra lo que el sistema calculó.
             </span>
           </div>
@@ -158,7 +158,7 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
             <div className="bg-[#FFFBEB] border-2 border-[#F59E0B] p-4 animate-fade-in space-y-2">
               <div className="flex items-center gap-2 text-[#D97706]">
                 <AlertTriangle size={16} />
-                <span className="text-[10px] font-black uppercase tracking-widest">Hay una diferencia, explica el motivo</span>
+                <span className="text-[12px] font-black uppercase tracking-widest">Hay una diferencia, explica el motivo</span>
               </div>
               <input
                 type="text"

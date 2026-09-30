@@ -16,7 +16,7 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
 
   // EXTRAEMOS LA PAGINACIÓN PARA USARLA ARRIBA Y ABAJO SIN REPETIR CÓDIGO
   const ControlesPaginacion = () => (
-    <div className="bg-[#FFFFFF] border-b-2 border-[#1E293B] p-4 flex justify-between items-center shrink-0 rounded-none">
+    <div className="bg-[#FFFFFF] border-b-2 border-[#1E293B] p-3 sm:p-4 flex justify-between items-center gap-2 shrink-0 rounded-none">
       <button
         disabled={paginaActual === 1}
         onClick={() => onPageChange(paginaActual - 1)}
@@ -42,11 +42,11 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
     <div className="bg-[#FFFFFF] border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col animate-fade-in rounded-none mb-8">
       
       {/* HEADER */}
-      <div className="bg-[#1E293B] text-[#FFFFFF] p-4 flex justify-between items-center shrink-0 rounded-none">
+      <div className="bg-[#1E293B] text-[#FFFFFF] p-3 sm:p-4 flex flex-wrap justify-between items-center gap-2 shrink-0 rounded-none">
         <h2 className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
           <ReceiptText size={18} /> Historial de Cajas Cerradas
         </h2>
-        <span className="text-[#64748B] text-[10px] font-bold uppercase tracking-widest">
+        <span className="text-[#64748B] text-[12px] font-bold uppercase tracking-widest">
           Mostrando {historialCajas.length} registros
         </span>
       </div>
@@ -56,21 +56,21 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
       
       {/* TABLA SIN SCROLL INTERNO (Se eliminó overflow-auto custom-scrollbar) */}
       <div className="w-full bg-[#FFFFFF] overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[900px]">
+        <table className="w-full text-left border-collapse">
           <thead className="bg-[#FFFFFF] text-[#1E293B] border-b-2 border-[#1E293B]">
             <tr>
-              <th className="p-4 text-[10px] font-black tracking-widest uppercase border-r-2 border-[#E2E8F0] bg-[#FFFFFF]">Apertura</th>
-              <th className="p-4 text-[10px] font-black tracking-widest uppercase border-r-2 border-[#E2E8F0] bg-[#FFFFFF]">Cierre</th>
-              <th className="p-4 text-[10px] font-black tracking-widest uppercase border-r-2 border-[#E2E8F0] text-center bg-[#FFFFFF]">Fondo Inicial</th>
-              <th className="p-4 text-[10px] font-black tracking-widest uppercase border-r-2 border-[#E2E8F0] text-center bg-[#FFFFFF]">Efectivo / Yape / Tarjeta</th>
-              <th className="p-4 text-[10px] font-black tracking-widest uppercase border-r-2 border-[#E2E8F0] text-center bg-[#FFFFFF]">Diferencia Total</th>
-              <th className="p-4 text-[10px] font-black tracking-widest uppercase text-center bg-[#FFFFFF]">Acciones</th>
+              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[#E2E8F0] bg-[#FFFFFF]">Apertura</th>
+              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[#E2E8F0] bg-[#FFFFFF]">Cierre</th>
+              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[#E2E8F0] text-center bg-[#FFFFFF]">Fondo Inicial</th>
+              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[#E2E8F0] text-center bg-[#FFFFFF]">Efectivo / Yape / Tarjeta</th>
+              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[#E2E8F0] text-center bg-[#FFFFFF]">Diferencia Total</th>
+              <th className="p-4 text-[12px] font-black tracking-widest uppercase text-center bg-[#FFFFFF]">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {historialCajas.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-[#64748B] text-xs font-bold uppercase tracking-widest border-b-2 border-[#E2E8F0]">
+                <td colSpan={6} className="p-3 lg:p-4 text-center text-[#64748B] text-xs font-bold uppercase tracking-widest border-b-2 border-[#E2E8F0]">
                   No se encontraron registros para estas fechas.
                 </td>
               </tr>

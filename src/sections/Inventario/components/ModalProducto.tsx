@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Package, Scale, Coffee, ArrowLeft, Save, ImagePlus, Search, Loader2, Database } from 'lucide-react';
 import { supabase } from '../../../db/supabase'; // RETORNO TÉCNICO: Conexión a la DB
-import { useEscapeClose } from '../../../utils/useEscapeClose';
+import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
+import { usePermiso } from '../../../utils/permisos';
+import { buscarImagenes, imagenPorCodigoBarras, type FotoEncontrada } from '../../../utils/buscarImagenes';
 
 // Componente de Notificación de Errores (Diseño Geométrico y Alto Contraste)
 const TechnicalAlert = ({ message }: { message: string }) => {
@@ -35,6 +37,10 @@ interface Props {
 type ProductNature = 'UNIDAD' | 'PESO' | 'CONSUMO' | null;
 
 export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, onProductSaved, initialData, productosExistentes = [] }) => {
+  useCerrarConEscape(isOpen, onClose); // Escape (o "Atrás" del control de TV) cierra la ventana
+  // Permisos: "Crear/Editar productos" cambia los datos; "Modificar precios" cambia el precio de un producto existente
+  const puedeEditarDatos = usePermiso('almacen_crear_editar_productos');
+  const puedeCambiarPrecio = usePermiso('almacen_modificar_precios');
   const [step, setStep] = useState<1 | 2>(1);
   const [nature, setNature] = useState<ProductNature>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,8 +62,11 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   // ESTADOS PARA BÚSQUEDA DE IMÁGENES
   const [imageQuery, setImageQuery] = useState('');
   const [isSearchingImage, setIsSearchingImage] = useState(false);
-  const [imageResults, setImageResults] = useState<string[]>([]);
+  const [imageResults, setImageResults] = useState<FotoEncontrada[]>([]);
   const [showImageResults, setShowImageResults] = useState(false); // <-- Controla si la galería está abierta o cerrada
+  const [sinResultados, setSinResultados] = useState(false); // la búsqueda terminó sin ninguna foto
+  // true solo cuando el usuario pulsa "Quitar imagen": así una búsqueda abandonada no borra la foto guardada
+  const [imagenQuitada, setImagenQuitada] = useState(false);
 
   // 1. LIMPIEZA DE MEMORIA AL ABRIR EL MODAL
   // 1. CONTROL DE MEMORIA AL ABRIR (MODO CREACIÓN vs MODO EDICIÓN)
@@ -66,6 +75,10 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
       setImageQuery('');
       setImageResults([]);
       setShowImageResults(false);
+      setImagenQuitada(false);
+      setSinResultados(false);
+      setImagenAutoAviso(null);
+      imagenAutoRef.current = null;
 
       if (initialData) {
         // MODO EDICIÓN: Cargamos datos y saltamos al Paso 2
@@ -77,7 +90,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           price: initialData.price?.toString() || '',
           minStock: initialData.minStock?.toString() || '5',
           weightUnit: ['KG', 'GR', 'LT', 'ML'].includes(initialData.unit) ? initialData.unit : 'KG',
-          image: initialData.image || ''
+          image: initialData.imageUrl || initialData.image_url || initialData.image || ''
         });
         
         if (initialData.unit === 'UND') setNature('UNIDAD');
@@ -96,6 +109,11 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
   // CONTROLADOR PARA CANCELAR PETICIONES OBSOLETAS
   const abortControllerRef = useRef<AbortController | null>(null);
+  // Galería de fotos: al aparecer se desplaza a la vista (la ventana tiene su propio scroll)
+  const galeriaRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (showImageResults && imageResults.length > 0) galeriaRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [showImageResults, imageResults.length]);
 
   // 2. OPTIMIZACIÓN: DEBOUNCE REDUCIDO A 300ms
   useEffect(() => {
@@ -112,70 +130,6 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     return () => clearTimeout(timer);
   }, [imageQuery]);
 
-  // 3. MOTOR DE BÚSQUEDA HÍBRIDO (RENDERIZADO PROGRESIVO ULTRA-RÁPIDO)
-  const ejecutarBusquedaAPI = async (query: string) => {
-    if (abortControllerRef.current) abortControllerRef.current.abort();
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
-
-    setIsSearchingImage(true);
-    setShowImageResults(true);
-    setImageResults([]); // Limpiamos la pantalla al instante para la nueva búsqueda
-
-    try {
-      const q = encodeURIComponent(query.trim());
-      
-      // Función inyectora: Coloca las fotos en pantalla APENAS llegan, sin esperar al otro
-      const inyectarResultados = (nuevasFotos: string[]) => {
-        if (abortController.signal.aborted || nuevasFotos.length === 0) return;
-        
-        setImageResults(prevFotos => {
-          // Unimos las fotos anteriores con las nuevas, borramos duplicados y cortamos en 4
-          const combinadas = Array.from(new Set([...prevFotos, ...nuevasFotos])).slice(0, 4);
-          return combinadas;
-        });
-        
-        // Si ya nos llegó al menos 1 resultado, matamos la animación de carga dando sensación de inmediatez
-        setIsSearchingImage(false); 
-      };
-
-      // MOTOR 1: OpenFoodFacts -> Promesa suelta (No la esperamos con await)
-      const fetchFood = fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${q}&search_simple=1&action=process&json=1&page_size=4&fields=image_front_small_url,image_url`, { 
-        signal: abortController.signal 
-      })
-      .then(res => res.json())
-      .then(data => data.products?.map((p: any) => p.image_front_small_url || p.image_url).filter(Boolean) || [])
-      .then(inyectarResultados)
-      .catch(() => {}); // Ignoramos errores silenciosamente para no romper el otro motor
-
-      // MOTOR 2: Wikipedia API -> Promesa suelta
-      const fetchWiki = fetch(`https://es.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${q}&prop=pageimages&pithumbsize=400&format=json&origin=*`, { 
-        signal: abortController.signal 
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (!data.query || !data.query.pages) return [];
-        return Object.values(data.query.pages).map((p: any) => p.thumbnail?.source).filter(Boolean);
-      })
-      .then(inyectarResultados)
-      .catch(() => {});
-
-      // El código maestro solo espera en el fondo a que ambos terminen su trabajo para apagar el loader
-      // en caso de que NINGUNO haya encontrado absolutamente nada.
-      await Promise.all([fetchFood, fetchWiki]);
-
-    } catch (e: any) {
-      if (e.name === 'AbortError') return;
-    } finally {
-      if (!abortController.signal.aborted) {
-        setIsSearchingImage(false);
-      }
-    }
-  };
-
-  // Estado de errores técnicos
-  const [integrityError, setIntegrityError] = useState<string | null>(null);
-
   // Estado del formulario
   const [formData, setFormData] = useState({
     name: '',
@@ -188,7 +142,70 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     image: '' // <-- NUEVO ESTADO PARA LA IMAGEN
   });
 
-  useEscapeClose(isOpen, onClose);
+  // 3. MOTOR DE BÚSQUEDA DE IMÁGENES (ver src/utils/buscarImagenes.ts)
+  // Tolera errores de escritura ("inka cola" → Inca Kola) y descarta fotos que no corresponden.
+  const ejecutarBusquedaAPI = async (query: string) => {
+    if (abortControllerRef.current) abortControllerRef.current.abort();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
+    setIsSearchingImage(true);
+    setShowImageResults(true);
+    setImageResults([]); // Limpiamos la pantalla al instante para la nueva búsqueda
+    setSinResultados(false);
+
+    const fotos = await buscarImagenes(query, formData.barcode || '', abortController.signal, setImageResults);
+    if (!abortController.signal.aborted) {
+      setIsSearchingImage(false);
+      setSinResultados(fotos.length === 0);
+    }
+  };
+
+  // 4. CÓDIGO DE BARRAS → IMAGEN AUTOMÁTICA
+  // Al escribir o escanear el código de barras, si el producto aún no tiene imagen,
+  // se busca en Open Food Facts y se coloca sola.
+  const [imagenAutoAviso, setImagenAutoAviso] = useState<string | null>(null);
+  // Última imagen puesta automáticamente: si cambia el código de barras, esa se puede reemplazar o quitar.
+  // Una imagen elegida o subida por el usuario nunca se toca.
+  const imagenAutoRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isOpen) return;
+    const codigo = formData.barcode || '';
+    const imagenEsAuto = !!formData.image && formData.image === imagenAutoRef.current;
+    if (formData.image && !imagenEsAuto) return;
+    const quitarImagenAuto = () => {
+      if (!imagenEsAuto) return;
+      const auto = imagenAutoRef.current; // se guarda antes: el updater de React corre después
+      setFormData(prev => (prev.image === auto ? { ...prev, image: '' } : prev));
+      imagenAutoRef.current = null;
+    };
+    if (codigo.replace(/\D/g, '').length < 8) {
+      setImagenAutoAviso(null);
+      quitarImagenAuto();
+      return;
+    }
+    const controlador = new AbortController();
+    const timer = setTimeout(async () => {
+      setImagenAutoAviso('Buscando imagen por código de barras...');
+      const url = await imagenPorCodigoBarras(codigo, controlador.signal);
+      if (controlador.signal.aborted) return;
+      if (url) {
+        const anterior = imagenAutoRef.current; // se guarda antes: el updater de React corre después
+        setFormData(prev => (prev.image && prev.image !== anterior ? prev : { ...prev, image: url }));
+        imagenAutoRef.current = url;
+        setImagenAutoAviso('Imagen encontrada por código de barras');
+      } else {
+        quitarImagenAuto();
+        setImagenAutoAviso('Sin imagen para ese código de barras: búscala por nombre');
+      }
+    }, 500);
+    return () => { clearTimeout(timer); controlador.abort(); };
+  }, [formData.barcode, isOpen]);
+
+  // Estado de errores técnicos
+  const [integrityError, setIntegrityError] = useState<string | null>(null);
+
+
 
   if (!isOpen) return null;
 
@@ -200,6 +217,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     setImageQuery('');
     setImageResults([]);
     setShowImageResults(false);
+    setSinResultados(false);
+    setImagenAutoAviso(null);
     onClose();
   };
 
@@ -242,27 +261,29 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
       if (initialData) {
         // [ RETORNO ]: MODO EDICIÓN
-        const { data, error } = await supabase.from('products').update({
+        // Sin permiso de precios se conserva el precio actual; con solo permiso de precios, se guarda únicamente el precio
+        const precioFinal = puedeCambiarPrecio ? (Number(formData.price) || 0) : (initialData.price || 0);
+        // Imagen: se conserva la existente salvo que el usuario la reemplace o la quite a propósito
+        const imagenOriginal = initialData.imageUrl || initialData.image_url || initialData.image || '';
+        const imagenFinal = formData.image || (imagenQuitada ? '' : imagenOriginal);
+        const cambioImagen = imagenFinal !== imagenOriginal ? { image_url: imagenFinal || null } : {};
+        const { data, error } = await supabase.from('products').update(!puedeEditarDatos ? { price: precioFinal } : {
           name: nombreLimpio,
           category: formData.category || 'GENERAL',
           code: safeCode,
           barcode: safeBarcode,
-          price: Number(formData.price) || 0,
+          price: precioFinal,
           min_stock: Number(formData.minStock) || 5,
           control_type: nature === 'PESO' ? 'WEIGHT' : 'UND',
           weight_unit: nature === 'PESO' ? formData.weightUnit : null,
           unit: unidadAsignada,
-          image_url: formData.image,
+          ...cambioImagen,
           is_active: 1
         }).eq('id', initialData.id).select().single();
 
         if (error) throw error;
         productoGuardado = data;
         
-        // [ SALIDA ]: Notificamos al inventario el éxito de la edición
-        if (onProductSaved) {
-          onProductSaved(productoGuardado);
-        }
         
         alert(`PRODUCTO ACTUALIZADO CORRECTAMENTE.\nNombre: ${nombreLimpio}`);
       } else {
@@ -281,7 +302,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           control_type: nature === 'PESO' ? 'WEIGHT' : 'UND',
           weight_unit: nature === 'PESO' ? formData.weightUnit : null,
           unit: unidadAsignada,
-          image_url: formData.image, 
+          image_url: formData.image || null, 
           is_synced: '1',
           is_active: 1 // <--- 🔥 ¡SEGUNDA LÍNEA MÁGICA PARA LOS PRODUCTOS!
         }]).select().single();
@@ -324,7 +345,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
   return (
     <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className={`bg-white w-full border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(75dvh/var(--ui-zoom))] sm:mt-10 transition-all duration-300 ${step === 1 ? 'max-w-3xl' : 'max-w-2xl'}`}>
+      <div className={`bg-white w-full border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.75)] sm:mt-10 transition-all duration-300 ${step === 1 ? 'max-w-3xl' : 'max-w-2xl'}`}>
         
         {/* HEADER */}
         <div className="bg-[#1E293B] text-white px-6 py-4 flex items-center justify-between shrink-0">
@@ -342,7 +363,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               <h2 className="text-sm font-black uppercase tracking-widest text-[#10B981]">
                 {step === 1 ? 'Paso 1: Naturaleza del Producto' : 'Paso 2: Detalles del Producto'}
               </h2>
-              <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">
+              <p className="text-[12px] font-bold opacity-80 uppercase tracking-widest">
                 {step === 1 ? 'Selecciona cómo se controlará el stock' : `Configurando producto por ${nature}`}
               </p>
             </div>
@@ -353,7 +374,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         </div>
 
         {/* CUERPO DEL MODAL */}
-        <div className="p-4 sm:p-8 overflow-y-auto custom-scrollbar bg-[#F8FAFC] flex-1 min-h-0">
+        <div className="p-3 lg:p-4 overflow-y-auto custom-scrollbar bg-[#F8FAFC] flex-1">
           
           {/* VISTA 1: SELECCIÓN DE NATURALEZA */}
           {step === 1 && (
@@ -369,7 +390,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 </div>
                 <div>
                   <h3 className="text-xs font-black text-[#1E293B] uppercase tracking-widest mb-2">Por Unidad</h3>
-                  <p className="text-[9px] font-bold text-[#64748B] uppercase">Productos que se cuentan por piezas enteras (botellas, cajas, latas).</p>
+                  <p className="text-[12px] font-bold text-[#64748B] uppercase">Productos que se cuentan por piezas enteras (botellas, cajas, latas).</p>
                 </div>
               </button>
 
@@ -383,7 +404,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 </div>
                 <div>
                   <h3 className="text-xs font-black text-[#1E293B] uppercase tracking-widest mb-2">Por Peso / Granel</h3>
-                  <p className="text-[9px] font-bold text-[#64748B] uppercase">Productos que requieren balanza o medida fraccionada (KG, GR, Litros).</p>
+                  <p className="text-[12px] font-bold text-[#64748B] uppercase">Productos que requieren balanza o medida fraccionada (KG, GR, Litros).</p>
                 </div>
               </button>
 
@@ -397,7 +418,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 </div>
                 <div>
                   <h3 className="text-xs font-black text-[#1E293B] uppercase tracking-widest mb-2">Uso Interno / Servicio</h3>
-                  <p className="text-[9px] font-bold text-[#64748B] uppercase">Insumos de consumo propio o servicios que no requieren stock estricto.</p>
+                  <p className="text-[12px] font-bold text-[#64748B] uppercase">Insumos de consumo propio o servicios que no requieren stock estricto.</p>
                 </div>
               </button>
 
@@ -414,7 +435,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               </div>
 
               <div className="md:col-span-2 space-y-2">
-                <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">Nombre / Descripción del Producto</label>
+                <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest">Nombre / Descripción del Producto</label>
                 <input 
                   type="text"
                   placeholder="Ej: COCA COLA 3 LITROS RETORNABLE..."
@@ -426,7 +447,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
               <div className="space-y-2 relative">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">Categoría</label>
+                  <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest">Categoría</label>
                   
                   {/* CONTROLES SUPERIORES: AGREGAR Y CERRAR */}
                   {showCatDropdown && (
@@ -441,12 +462,12 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                             // 🔥 NUEVO: Guarda en la DB cuando haces clic en Agregar
                             await supabase.from('categories').insert([{ id: Date.now(), name: nuevaCat, is_synced: 1 }]);
                           }}
-                          className="text-[10px] font-black text-[#10B981] uppercase hover:underline cursor-pointer flex items-center gap-1"
+                          className="text-[12px] font-black text-[#10B981] uppercase hover:underline cursor-pointer flex items-center gap-1"
                         >
                           + AGREGAR "{formData.category}"
                         </button>
                       )}
-                      <button onClick={() => setShowCatDropdown(false)} className="text-[9px] font-bold text-[#EF4444] uppercase hover:underline cursor-pointer">
+                      <button onClick={() => setShowCatDropdown(false)} className="text-[12px] font-bold text-[#EF4444] uppercase hover:underline cursor-pointer">
                         Cerrar Lista
                       </button>
                     </div>
@@ -503,8 +524,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                         ))
                       ) : (
                         <div className="p-4 flex flex-col items-center justify-center gap-2 bg-[#F8FAFC] text-center">
-                          <span className="text-[10px] font-bold text-[#64748B] uppercase">Categoría no encontrada.</span>
-                          <span className="text-[9px] font-bold text-[#1E293B] uppercase">Usa el botón "+ Agregar" arriba para crearla.</span>
+                          <span className="text-[12px] font-bold text-[#64748B] uppercase">Categoría no encontrada.</span>
+                          <span className="text-[12px] font-bold text-[#1E293B] uppercase">Usa el botón "+ Agregar" arriba para crearla.</span>
                         </div>
                       )}
                     </div>
@@ -513,7 +534,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">Escáner (Cód. Barras)</label>
+                <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest">Escáner (Cód. Barras)</label>
                 <input 
                   type="text"
                   placeholder="ESCANEAR..."
@@ -525,10 +546,10 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
               {/* === SECCIÓN DE BÚSQUEDA DE IMAGEN === */}
               <div className="md:col-span-2 space-y-2 relative">
-                <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">
+                <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest">
                   Buscar Imagen en Internet o Pegar URL
                 </label>
-                <div className="flex flex-col sm:flex-row gap-3 relative">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 relative">
                   <div className="flex-1 flex border-2 border-[#E2E8F0] bg-white focus-within:border-[#10B981] transition-colors relative">
                     <div className="w-12 flex items-center justify-center bg-[#F8FAFC] border-r-2 border-[#E2E8F0] shrink-0">
                       {isSearchingImage ? (
@@ -561,7 +582,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                     />
                   </div>
                   
-                  <label className="bg-[#1E293B] text-white px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white hover:text-[#1E293B] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] shrink-0">
+                  <label className="bg-[#1E293B] text-white px-6 py-3 border-2 border-[#1E293B] font-black text-[12px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white hover:text-[#1E293B] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] shrink-0">
                     <ImagePlus size={16} /> Subir Local
                     <input 
                       type="file" 
@@ -583,39 +604,56 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
                   {/* GALERÍA DE RESULTADOS (DISEÑO FLOTANTE QUE NO ESTORBA) */}
                   {showImageResults && imageResults.length > 0 && !formData.image && (
-                    <div className="absolute top-full left-0 w-full sm:w-[calc(100%-140px)] mt-1 p-2 border-2 border-[#1E293B] bg-[#F8FAFC] shadow-[4px_4px_0_0_#1E293B] z-50">
+                    <div ref={galeriaRef} className="w-full sm:basis-full p-2 border-2 border-[#1E293B] bg-[#F8FAFC] shadow-[4px_4px_0_0_#1E293B]">
                       <div className="grid grid-cols-4 gap-2">
-                        {imageResults.map((imgUrl, idx) => (
+                        {imageResults.map((foto, idx) => (
                           <div 
-                            key={idx} 
+                            key={foto.url} 
+                            title={foto.titulo}
                             onMouseDown={(e) => {
                               // onMouseDown evita que el onBlur del input se dispare antes
                               e.preventDefault();
-                              setFormData({...formData, image: imgUrl});
+                              // Open Food Facts: se guarda la versión de 400px (más nítida que la miniatura de 200px)
+                              setFormData({...formData, image: foto.url.replace(/\.200\.jpg$/, '.400.jpg')});
                               setImageResults([]);
                               setImageQuery('');
                               setShowImageResults(false);
                             }}
-                            className="aspect-square border-2 border-[#E2E8F0] bg-white hover:border-[#10B981] cursor-pointer overflow-hidden transition-all hover:scale-105 flex items-center justify-center"
+                            className="relative aspect-square border-2 border-[#E2E8F0] bg-white hover:border-[#10B981] cursor-pointer overflow-hidden transition-all hover:scale-105 flex items-center justify-center"
                           >
                             <img 
-                              src={imgUrl} 
-                              alt="Resultado" 
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                // Si la imagen original se rompe, ponemos una de respaldo limpia sin letras raras
-                                (e.target as HTMLImageElement).src = `https://placehold.co/200x200/F8FAFC/94A3B8?text=NO+IMAGEN`;
+                              src={foto.url} 
+                              alt={foto.titulo || `Resultado ${idx + 1}`}
+                              className="w-full h-full object-contain p-1"
+                              onError={() => {
+                                // Foto rota en el servidor de origen: se quita de la galería
+                                setImageResults(prev => prev.filter(f => f.url !== foto.url));
                               }}
                             />
+                            {foto.aproximada && (
+                              <span className="absolute bottom-0 inset-x-0 bg-[#F59E0B] text-[#1E293B] text-[12px] font-black uppercase text-center leading-5">Parecida</span>
+                            )}
                           </div>
                         ))}
                       </div>
-                      <div className="text-center mt-2 text-[9px] font-bold text-[#94A3B8] uppercase tracking-widest">
+                      <div className="text-center mt-2 text-[12px] font-bold text-[#94A3B8] uppercase tracking-widest">
                         Selecciona una imagen para aplicarla
                       </div>
                     </div>
                   )}
+
+                  {showImageResults && sinResultados && !isSearchingImage && !formData.image && (
+                    <div className="w-full sm:basis-full p-3 border-2 border-[#1E293B] bg-[#F8FAFC] shadow-[4px_4px_0_0_#1E293B] z-50 text-center text-[12px] font-black text-[#64748B] uppercase tracking-widest">
+                      Sin imágenes para esa búsqueda. Prueba con otras palabras o sube una foto.
+                    </div>
+                  )}
                 </div>
+
+                {imagenAutoAviso && (
+                  <p className={`text-[12px] font-black uppercase tracking-widest ${imagenAutoAviso.startsWith('Imagen encontrada') ? 'text-[#10B981]' : 'text-[#64748B]'}`}>
+                    {imagenAutoAviso}
+                  </p>
+                )}
 
                 {/* VISTA PREVIA DE LA IMAGEN SELECCIONADA */}
                 {formData.image && (
@@ -629,11 +667,11 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-black text-[#10B981] uppercase tracking-widest">Imagen Seleccionada</p>
-                      <p className="text-[9px] text-[#64748B] truncate mt-1">{formData.image}</p>
+                      <p className="text-[12px] font-black text-[#10B981] uppercase tracking-widest">Imagen Seleccionada</p>
+                      <p className="text-[12px] text-[#64748B] truncate mt-1">{formData.image}</p>
                     </div>
                     <button 
-                      onClick={() => setFormData({...formData, image: ''})}
+                      onClick={() => { setFormData({...formData, image: ''}); setImagenQuitada(true); }}
                       className="text-[#EF4444] hover:bg-[#FEF2F2] p-2 transition-colors border-2 border-transparent hover:border-[#EF4444] cursor-pointer"
                       title="Quitar imagen"
                     >
@@ -644,19 +682,21 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">Precio de Venta Sugerido</label>
+                <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest">Precio de Venta Sugerido</label>
                 <input 
                   type="number"
                   placeholder="0.00"
                   value={formData.price}
                   onChange={(e) => setFormData({...formData, price: e.target.value})}
-                  className="w-full bg-white border-2 border-[#E2E8F0] p-3 text-xs font-black text-[#1E293B] uppercase outline-none focus:border-[#10B981] transition-colors"
+                  disabled={!!initialData && !puedeCambiarPrecio}
+                  title={!!initialData && !puedeCambiarPrecio ? 'No tienes permiso para modificar precios' : undefined}
+                  className="w-full bg-white disabled:bg-[#F1F5F9] disabled:text-[#94A3B8] disabled:cursor-not-allowed border-2 border-[#E2E8F0] p-3 text-xs font-black text-[#1E293B] uppercase outline-none focus:border-[#10B981] transition-colors"
                 />
               </div>
 
               {nature !== 'CONSUMO' && (
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">Stock Mínimo (Alerta)</label>
+                  <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest">Stock Mínimo (Alerta)</label>
                   <input 
                     type="number"
                     value={formData.minStock}
@@ -669,7 +709,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               {/* CAMPOS CONDICIONALES BASADOS EN LA NATURALEZA */}
               {nature === 'PESO' && (
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-[#1E293B] uppercase tracking-widest">Unidad de Medida</label>
+                  <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest">Unidad de Medida</label>
                   <select 
                     value={formData.weightUnit}
                     onChange={(e) => setFormData({...formData, weightUnit: e.target.value})}
@@ -689,11 +729,11 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
         {/* FOOTER - Solo visible en el paso 2 */}
         {step === 2 && (
-          <div className="flex justify-end items-center gap-4 mt-5 w-full">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end items-stretch sm:items-center gap-3 px-4 py-3 border-t-2 border-[#E2E8F0] bg-white shrink-0 w-full">
               <button 
                 onClick={() => handleSave(false)}
                 disabled={!formData.name || isSubmitting}
-                className="relative -top-8 -left-8 bg-white text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#F8FAFC] hover:border-[#10B981] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none min-w-[140px]"
+                className="w-full sm:w-auto bg-white text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[12px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#F8FAFC] hover:border-[#10B981] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none sm:min-w-[140px]"
               >
                 {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />} 
                 <span>{isSubmitting ? 'Procesando...' : 'Guardar'}</span>
@@ -703,7 +743,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 <button 
                   onClick={() => handleSave(true)}
                   disabled={!formData.name || isSubmitting}
-                  className="relative -top-8 -left-8 bg-[#10B981] text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#1E293B] hover:text-[#10B981] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_#10B981] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none min-w-[220px]"
+                  className="w-full sm:w-auto bg-[#10B981] text-[#1E293B] px-6 py-3 border-2 border-[#1E293B] font-black text-[12px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#1E293B] hover:text-[#10B981] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_#10B981] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none sm:min-w-[220px]"
                 >
                   {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
                   <span>{isSubmitting ? 'Procesando...' : 'Guardar e ir a Lotes'}</span>

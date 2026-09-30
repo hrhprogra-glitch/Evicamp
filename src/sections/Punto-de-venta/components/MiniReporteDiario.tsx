@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../../db/supabase';
 import { Eye, EyeOff, BarChart3, X, Clock, Receipt, Coins, Smartphone, CreditCard, BookOpen, HandCoins } from 'lucide-react';
-import { useEscapeClose } from '../../../utils/useEscapeClose';
+import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
+import { traerTodo } from '../../../utils/traerTodo';
 
 interface Props {
   refreshTrigger: number;
@@ -11,12 +12,11 @@ interface Props {
 export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  useCerrarConEscape(isModalOpen, () => setIsModalOpen(false)); // Escape (o "Atrás" del control de TV) cierra la ventana
   const [totales, setTotales] = useState({
     efectivo: 0, yape: 0, tarjeta: 0, transferencia: 0, fiado: 0, totalReal: 0
   });
   const [ventasHoy, setVentasHoy] = useState<any[]>([]);
-
-  useEscapeClose(isModalOpen, () => setIsModalOpen(false));
 
   useEffect(() => {
     const fetchHoy = async () => {
@@ -35,18 +35,29 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
       }
 
       // 1. VENTAS DIRECTAS
-      const { data: ventas } = await supabase
+      // Igual que Finanzas: se traen todas (por bloques) y las anuladas se descartan aquí.
+      // Un .neq('sunat_status','ANULADO') en SQL también descartaría las filas con sunat_status NULL.
+      const { data: ventasTodas } = await traerTodo<any>(() => supabase
         .from('sales')
-        .select('id, payment_type, amount_cash, amount_yape, amount_card, amount_transfer, amount_credit, total, created_at')
+        .select('*')
         .gte('created_at', sesionActiva.opened_at)
-        .neq('sunat_status', 'ANULADO');
+        .order('id'));
+      const esAnulada = (s: any) => s.status === 'ANULADO' || s.sunat_status === 'ANULADO';
+      const ventas = ventasTodas ? ventasTodas.filter(s => !esAnulada(s)) : null;
 
       // 🔥 2. ABONOS DE DEUDAS EN TIEMPO REAL (INTEGRACIÓN)
-      const { data: abonos } = await supabase
+      // También trae las devoluciones de abonos (al anular un ticket fiado): restan como un abono negativo.
+      // Las devoluciones del cobro de la venta no se traen: esa venta ya se descarta por estar anulada.
+      const { data: movsAbonos } = await supabase
         .from('cash_movements')
-        .select('id, payment_type, amount, created_at')
-        .eq('flujo', 'INGRESO_FIADO')
+        .select('id, payment_type, amount, created_at, flujo, description')
+        .in('flujo', ['INGRESO_FIADO', 'DEVOLUCION'])
         .gte('created_at', sesionActiva.opened_at);
+      const abonos = movsAbonos
+        ? movsAbonos
+            .filter(m => m.flujo === 'INGRESO_FIADO' || (m.description || '').startsWith('DEVOLUCIÓN ABONO'))
+            .map(m => m.flujo === 'DEVOLUCION' ? { ...m, amount: -Number(m.amount || 0) } : m)
+        : null;
 
       let ef = 0, ya = 0, ta = 0, tr = 0, fi = 0;
       let ticketsUnificados: any[] = [];
@@ -87,7 +98,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
           ticketsUnificados.push({
             id: a.id,
             tipo: 'ABONO',
-            metodo: `ABONO ${a.payment_type || 'EFECTIVO'}`,
+            metodo: `${monto < 0 ? 'DEVOLUCIÓN ABONO' : 'ABONO'} ${a.payment_type || 'EFECTIVO'}`,
             total: monto,
             hora: a.created_at
           });
@@ -116,58 +127,58 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
   }, [refreshTrigger]);
 
   const modalContent = isModalOpen ? createPortal(
-    <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-md z-[999999] flex items-center justify-center p-2 sm:p-4 lg:p-8 animate-fade-in font-mono">
-      <div className="bg-white border-4 border-[#1E293B] shadow-[16px_16px_0_0_#1E293B] w-full max-w-6xl flex flex-col h-[calc(94dvh/var(--ui-zoom))] sm:h-[calc(90dvh/var(--ui-zoom))] rounded-none">
-
-        <div className="bg-[#1E293B] text-white p-4 sm:p-6 flex justify-between items-center shrink-0">
+    <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-md z-[999999] flex items-center justify-center p-2 sm:p-8 animate-fade-in font-mono">
+      <div className="bg-white border-4 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] sm:shadow-[16px_16px_0_0_#1E293B] w-full max-w-6xl flex flex-col h-[calc(var(--alto-pantalla)*0.9)] rounded-none">
+        
+        <div className="bg-[#1E293B] text-white p-4 sm:p-6 flex justify-between items-center gap-3 shrink-0">
           <h2 className="font-black uppercase tracking-widest text-sm sm:text-xl flex items-center gap-3">
-            <Receipt size={28} className="text-[#10B981] hidden sm:block" /> Rendimiento de Caja Actual
+            <Receipt size={28} className="text-[#10B981]" /> Rendimiento de Caja Actual
           </h2>
           <button onClick={() => setIsModalOpen(false)} className="hover:text-[#EF4444] transition-colors cursor-pointer bg-white/10 p-2 hover:bg-white/20">
             <X size={32} strokeWidth={3} />
           </button>
         </div>
 
-        <div className="p-3 sm:p-6 lg:p-8 bg-[#F8FAFC] flex-1 overflow-y-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 h-full min-h-0">
-
+        <div className="p-3 sm:p-8 bg-[#F8FAFC] flex-1 overflow-y-auto lg:overflow-hidden custom-scrollbar">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 lg:h-full min-h-0">
+            
             <div className="flex flex-col gap-4 sm:gap-6 lg:overflow-y-auto custom-scrollbar lg:pr-4 min-h-0">
-              <div className="bg-[#1E293B] p-4 sm:p-8 text-center border-4 border-[#1E293B] shrink-0 shadow-[8px_8px_0_0_#CBD5E1]">
+              <div className="bg-[#1E293B] p-5 sm:p-8 text-center border-4 border-[#1E293B] shrink-0 shadow-[8px_8px_0_0_#CBD5E1]">
                 <p className="text-[#94A3B8] text-xs font-black uppercase tracking-widest mb-2">Total Ingresado a Caja (Ventas + Abonos)</p>
-                <p className="text-3xl sm:text-6xl lg:text-7xl font-black text-white mt-2 drop-shadow-lg">S/ {totales.totalReal.toFixed(2)}</p>
+                <p className="text-2xl sm:text-4xl sm:text-6xl lg:text-7xl font-black text-white mt-2 drop-shadow-lg break-all">S/ {totales.totalReal.toFixed(2)}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 sm:gap-5 shrink-0">
-                <div className="bg-white border-4 border-[#E2E8F0] p-3 sm:p-5 flex flex-col items-center text-center shadow-[6px_6px_0_0_#E2E8F0]">
+                <div className="bg-white border-4 border-[#E2E8F0] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_#E2E8F0]">
                   <Coins size={32} className="text-[#10B981] mb-2" />
-                  <span className="text-[10px] font-black text-[#64748B] uppercase tracking-widest">Efectivo Físico</span>
-                  <span className="text-lg sm:text-3xl font-black text-[#1E293B] mt-1">S/ {totales.efectivo.toFixed(2)}</span>
+                  <span className="text-[12px] font-black text-[#64748B] uppercase tracking-widest">Efectivo Físico</span>
+                  <span className="text-lg sm:text-3xl font-black text-[#1E293B] mt-1 break-all">S/ {totales.efectivo.toFixed(2)}</span>
                 </div>
-                <div className="bg-white border-4 border-[#E2E8F0] p-3 sm:p-5 flex flex-col items-center text-center shadow-[6px_6px_0_0_#E2E8F0]">
+                <div className="bg-white border-4 border-[#E2E8F0] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_#E2E8F0]">
                   <Smartphone size={32} className="text-[#8B5CF6] mb-2" />
-                  <span className="text-[10px] font-black text-[#64748B] uppercase tracking-widest">Yape / Plin / Transf.</span>
-                  <span className="text-lg sm:text-3xl font-black text-[#1E293B] mt-1">S/ {(totales.yape + totales.transferencia).toFixed(2)}</span>
+                  <span className="text-[12px] font-black text-[#64748B] uppercase tracking-widest">Yape / Plin / Transf.</span>
+                  <span className="text-lg sm:text-3xl font-black text-[#1E293B] mt-1 break-all">S/ {(totales.yape + totales.transferencia).toFixed(2)}</span>
                 </div>
-                <div className="bg-white border-4 border-[#E2E8F0] p-3 sm:p-5 flex flex-col items-center text-center shadow-[6px_6px_0_0_#E2E8F0]">
+                <div className="bg-white border-4 border-[#E2E8F0] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_#E2E8F0]">
                   <CreditCard size={32} className="text-[#3B82F6] mb-2" />
-                  <span className="text-[10px] font-black text-[#64748B] uppercase tracking-widest">Tarjeta (POS)</span>
-                  <span className="text-lg sm:text-3xl font-black text-[#1E293B] mt-1">S/ {totales.tarjeta.toFixed(2)}</span>
+                  <span className="text-[12px] font-black text-[#64748B] uppercase tracking-widest">Tarjeta (POS)</span>
+                  <span className="text-lg sm:text-3xl font-black text-[#1E293B] mt-1 break-all">S/ {totales.tarjeta.toFixed(2)}</span>
                 </div>
-                <div className="bg-white border-4 border-[#E2E8F0] p-3 sm:p-5 flex flex-col items-center text-center shadow-[6px_6px_0_0_#E2E8F0]">
+                <div className="bg-white border-4 border-[#E2E8F0] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_#E2E8F0]">
                   <BookOpen size={32} className="text-[#EF4444] mb-2" />
-                  <span className="text-[10px] font-black text-[#64748B] uppercase tracking-widest">Deuda (Fiados Emitidos)</span>
-                  <span className="text-lg sm:text-3xl font-black text-[#1E293B] mt-1">S/ {totales.fiado.toFixed(2)}</span>
+                  <span className="text-[12px] font-black text-[#64748B] uppercase tracking-widest">Deuda (Fiados Emitidos)</span>
+                  <span className="text-lg sm:text-3xl font-black text-[#1E293B] mt-1 break-all">S/ {totales.fiado.toFixed(2)}</span>
                 </div>
               </div>
             </div>
 
-            <div className="border-4 border-[#E2E8F0] bg-white flex flex-col h-full min-h-0 shadow-[8px_8px_0_0_#E2E8F0]">
-              <div className="bg-[#F8FAFC] border-b-4 border-[#E2E8F0] p-3 sm:p-5 shrink-0 flex justify-between items-center">
-                <h3 className="text-sm sm:text-base font-black text-[#1E293B] uppercase tracking-widest">Desglose Movimientos ({ventasHoy.length})</h3>
+            <div className="border-4 border-[#E2E8F0] bg-white flex flex-col min-h-[300px] lg:h-full lg:min-h-0 shadow-[8px_8px_0_0_#E2E8F0]">
+              <div className="bg-[#F8FAFC] border-b-4 border-[#E2E8F0] p-5 shrink-0 flex justify-between items-center">
+                <h3 className="text-base font-black text-[#1E293B] uppercase tracking-widest">Desglose Movimientos ({ventasHoy.length})</h3>
               </div>
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-4 space-y-2 sm:space-y-3 min-h-0">
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 min-h-0">
                 {ventasHoy.length > 0 ? ventasHoy.map((v) => (
-                  <div key={v.id} className="flex justify-between items-center p-3 sm:p-5 border-2 border-[#E2E8F0] hover:border-[#1E293B] bg-white hover:bg-[#F8FAFC] transition-all">
+                  <div key={v.id} className="flex justify-between items-center gap-3 p-3 sm:p-5 border-2 border-[#E2E8F0] hover:border-[#1E293B] bg-white hover:bg-[#F8FAFC] transition-all">
                     <div className="flex flex-col">
                       <span className="text-sm font-black text-[#64748B] flex items-center gap-2">
                         <Clock size={16}/> {new Date(v.hora).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}
@@ -176,12 +187,12 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
                         {v.tipo === 'ABONO' && <HandCoins size={18} />} {v.metodo}
                       </span>
                     </div>
-                    <span className={`text-2xl font-black ${v.metodo === 'FIADO' ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
+                    <span className={`text-lg sm:text-2xl font-black shrink-0 ${v.metodo === 'FIADO' ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
                        S/ {v.total.toFixed(2)}
                     </span>
                   </div>
                 )) : (
-                  <div className="text-center p-12 text-lg font-bold text-[#94A3B8]">Caja vacía. Aún no hay ventas.</div>
+                  <div className="text-center p-6 sm:p-12 text-lg font-bold text-[#94A3B8]">Caja vacía. Aún no hay ventas.</div>
                 )}
               </div>
             </div>
@@ -191,20 +202,20 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
 
       </div>
     </div>
-  , document.body) : null;
+  , document.getElementById('root') ?? document.body) : null; // dentro de #root para heredar el zoom de TV
 
   return (
     <>
-      <div className="bg-white border-2 border-[#1E293B] shadow-[4px_4px_0_0_#E2E8F0] shrink-0 font-mono flex flex-col">
-        <div className="bg-[#1E293B] text-white p-3 flex justify-between items-center">
+      <div className="bg-white border-2 border-[#1E293B] shrink-0 font-mono flex flex-col">
+        <div className="bg-[#1E293B] text-white px-3 py-1.5 flex justify-between items-center">
           <button 
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-2 hover:text-[#10B981] transition-colors cursor-pointer"
             title="Ver Historial del Día"
           >
             <BarChart3 size={18} />
-            <span className="text-[11px] font-black uppercase tracking-widest hidden sm:inline">Caja Actual:</span>
-            <span className="text-lg font-black text-[#10B981] ml-1">
+            <span className="text-[13px] font-black uppercase tracking-widest hidden sm:inline">Caja Actual:</span>
+            <span className="text-base font-black text-[#10B981] ml-1">
               {isVisible ? `S/ ${totales.totalReal.toFixed(2)}` : 'S/ ***.**'}
             </span>
           </button>
@@ -216,21 +227,21 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
           </button>
         </div>
 
-        <div className="grid grid-cols-4 divide-x-2 divide-[#E2E8F0] bg-[#F8FAFC]">
-          <div className="p-2 flex flex-col items-center justify-center text-center">
-            <span className="text-[9px] font-black text-[#64748B] uppercase mb-1">Efectivo</span>
+        <div className="grid grid-cols-4 divide-x-2 divide-[#E2E8F0] bg-[#F8FAFC] min-w-0">
+          <div className="px-1 py-1 flex flex-col items-center justify-center text-center min-w-0">
+            <span className="text-[12px] font-black text-[#64748B] uppercase leading-tight">Efectivo</span>
             <span className="text-xs font-black text-[#1E293B]">{isVisible ? `S/ ${totales.efectivo.toFixed(1)}` : '***'}</span>
           </div>
-          <div className="p-2 flex flex-col items-center justify-center text-center">
-            <span className="text-[9px] font-black text-[#8B5CF6] uppercase mb-1">Yape/Plin</span>
+          <div className="px-1 py-1 flex flex-col items-center justify-center text-center min-w-0">
+            <span className="text-[12px] font-black text-[#8B5CF6] uppercase leading-tight">Yape/Plin</span>
             <span className="text-xs font-black text-[#1E293B]">{isVisible ? `S/ ${(totales.yape + totales.transferencia).toFixed(1)}` : '***'}</span>
           </div>
-          <div className="p-2 flex flex-col items-center justify-center text-center">
-            <span className="text-[9px] font-black text-[#3B82F6] uppercase mb-1">Tarjeta</span>
+          <div className="px-1 py-1 flex flex-col items-center justify-center text-center min-w-0">
+            <span className="text-[12px] font-black text-[#3B82F6] uppercase leading-tight">Tarjeta</span>
             <span className="text-xs font-black text-[#1E293B]">{isVisible ? `S/ ${totales.tarjeta.toFixed(1)}` : '***'}</span>
           </div>
-          <div className="p-2 flex flex-col items-center justify-center text-center">
-            <span className="text-[9px] font-black text-[#EF4444] uppercase mb-1">Fiados</span>
+          <div className="px-1 py-1 flex flex-col items-center justify-center text-center min-w-0">
+            <span className="text-[12px] font-black text-[#EF4444] uppercase leading-tight">Fiados</span>
             <span className="text-xs font-black text-[#1E293B]">{isVisible ? `S/ ${totales.fiado.toFixed(1)}` : '***'}</span>
           </div>
         </div>

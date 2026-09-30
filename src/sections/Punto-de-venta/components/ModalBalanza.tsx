@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Scale, Banknote, Calculator, ShoppingCart } from 'lucide-react';
 import type { Product } from '../../Inventario/types';
-import { useEscapeClose } from '../../../utils/useEscapeClose';
 
 interface Props {
   isOpen: boolean;
@@ -20,8 +19,6 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
       setPesoKg('');
     }
   }, [isOpen]);
-
-  useEscapeClose(isOpen, onClose);
 
   if (!isOpen || !product) return null;
 
@@ -59,7 +56,7 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
 
   return (
     <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="bg-white w-full max-w-md border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] overflow-y-auto">
+      <div className="max-h-[calc(var(--alto-pantalla)*0.94)] overflow-y-auto bg-white w-full max-w-md border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col overflow-hidden">
         
         {/* Cabecera */}
         <div className="bg-[#3B82F6] text-white px-4 py-3 flex items-center justify-between border-b-2 border-[#1E293B]">
@@ -73,7 +70,7 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
 
         <div className="p-6 space-y-6">
           <div className="bg-[#F8FAFC] border-2 border-[#E2E8F0] p-4">
-            <p className="text-[10px] font-black text-[#64748B] uppercase tracking-widest mb-1">Cálculo de Peso</p>
+            <p className="text-[12px] font-black text-[#64748B] uppercase tracking-widest mb-1">Cálculo de Peso</p>
             <h3 className="text-lg font-black text-[#1E293B] uppercase mb-2 leading-tight">{product.name}</h3>
             <div className="flex justify-between items-center pt-2 border-t border-dashed border-[#E2E8F0]">
               <span className="text-xs font-bold text-[#64748B] uppercase">Precio x KG:</span>

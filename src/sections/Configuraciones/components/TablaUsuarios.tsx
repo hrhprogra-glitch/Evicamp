@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Edit2, ShieldAlert, Loader2 } from 'lucide-react';
+import { Users, Plus, Edit2, ShieldAlert, Loader2, Trash2 } from 'lucide-react';
 import type { Empleado } from '../types';
 import { ModalUsuario } from './ModalUsuario';
 import { supabase } from '../../../db/supabase'; // Asegúrate de la ruta correcta
+import { useEmpleado } from '../../../utils/permisos';
 
 export const TablaUsuarios: React.FC = () => {
   const [usuarios, setUsuarios] = useState<Empleado[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState<Empleado | null>(null);
+  const yo = useEmpleado(); // el empleado con la sesión abierta (no puede borrarse a sí mismo)
 
   // Función para traer los usuarios desde la base de datos
   const cargarUsuarios = async () => {
@@ -16,7 +18,7 @@ export const TablaUsuarios: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('empleados')
-        .select('*')
+        .select('id, nombre, email, rol, estado, permisos, created_at') // sin contraseñas
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -40,6 +42,16 @@ export const TablaUsuarios: React.FC = () => {
   const handleEditar = (usuario: Empleado) => {
     setUsuarioEditando(usuario);
     setModalAbierto(true);
+  };
+
+  const handleEliminar = async (usuario: Empleado) => {
+    if (!window.confirm(`¿Eliminar la cuenta de ${usuario.nombre} (${usuario.email})?\n\nSe cerrarán sus sesiones abiertas y ya no podrá entrar. Esta acción no se puede deshacer.`)) return;
+    const { error } = await supabase.from('empleados').delete().eq('id', usuario.id);
+    if (error) {
+      alert('❌ No se pudo eliminar la cuenta: ' + error.message);
+      return;
+    }
+    cargarUsuarios();
   };
 
   // Cuando el modal se cierra, verificamos si hay que recargar la tabla
@@ -75,15 +87,15 @@ export const TablaUsuarios: React.FC = () => {
       {/* TABLA */}
       <div className="overflow-x-auto min-h-[200px]">
         {loading ? (
-          <div className="flex justify-center items-center h-full p-8 text-[#64748B] font-mono gap-2">
+          <div className="flex justify-center items-center h-full p-3 lg:p-4 text-[#64748B] font-mono gap-2">
             <Loader2 className="animate-spin" size={18} /> Cargando empleados...
           </div>
         ) : usuarios.length === 0 ? (
-          <div className="flex justify-center items-center h-full p-8 text-[#64748B] font-mono">
+          <div className="flex justify-center items-center h-full p-3 lg:p-4 text-[#64748B] font-mono">
             No hay empleados registrados todavía.
           </div>
         ) : (
-          <table className="w-full text-left border-collapse min-w-[600px]">
+          <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#F1F5F9] border-b border-[#E2E8F0] text-xs uppercase tracking-wider text-[#64748B] font-bold">
                 <th className="p-4">Nombre / Email</th>
@@ -100,13 +112,13 @@ export const TablaUsuarios: React.FC = () => {
                     <div className="text-xs text-[#64748B] font-mono">{usuario.email}</div>
                   </td>
                   <td className="p-4">
-                    <span className="bg-[#E2E8F0] text-[#475569] text-[10px] px-2 py-1 font-bold uppercase tracking-wider rounded-sm flex w-fit items-center gap-1">
+                    <span className="bg-[#E2E8F0] text-[#475569] text-[12px] px-2 py-1 font-bold uppercase tracking-wider rounded-sm flex w-fit items-center gap-1">
                       {usuario.rol === 'Administrador' && <ShieldAlert size={12} className="text-red-500" />}
                       {usuario.rol}
                     </span>
                   </td>
                   <td className="p-4 text-center">
-                    <span className={`text-[10px] px-2 py-1 font-bold uppercase tracking-wider rounded-sm ${
+                    <span className={`text-[12px] px-2 py-1 font-bold uppercase tracking-wider rounded-sm ${
                       usuario.estado === 'ACTIVO' ? 'bg-[#D1FAE5] text-[#059669]' : 'bg-[#FEE2E2] text-[#DC2626]'
                     }`}>
                       {usuario.estado}
@@ -120,6 +132,15 @@ export const TablaUsuarios: React.FC = () => {
                     >
                       <Edit2 size={16} />
                     </button>
+                    {usuario.id !== yo?.id && (
+                      <button
+                        onClick={() => handleEliminar(usuario)}
+                        className="p-2 text-[#64748B] hover:text-[#EF4444] hover:bg-[#EF4444]/10 transition-colors rounded"
+                        title="Eliminar Usuario"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

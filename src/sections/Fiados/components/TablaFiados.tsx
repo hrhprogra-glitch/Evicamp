@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, Edit,  Banknote, RotateCcw, FilterX, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Fiado } from '../types';
+import { clicConTeclado } from '../../../utils/clicConTeclado';
+import { usePermiso } from '../../../utils/permisos';
 
 interface Props {
   fiados: Fiado[];
@@ -11,6 +13,9 @@ interface Props {
 }
 
 export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, onRevertir }) => {
+  // Editar deudas requiere vender; abonar y anular pagos requiere cobrar deudas
+  const puedeEditarDeuda = usePermiso('caja_realizar_ventas');
+  const puedeCobrar = usePermiso('caja_cobrar_deudas');
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<'ACTIVOS' | 'TODOS' | 'PENDIENTE' | 'PAGADO'>('ACTIVOS');
   const [ordenPor, setOrdenPor] = useState<'RECIENTES' | 'ANTIGUOS' | 'MAYOR_DEUDA' | 'MENOR_DEUDA' | 'PROXIMO_VENCER'>('RECIENTES');
@@ -67,7 +72,7 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, on
     if (totalPages <= 1) return null;
     return (
       <div className="p-3 border-y-2 border-[#E2E8F0] bg-[#F8FAFC] flex justify-between items-center shrink-0">
-        <p className="text-[10px] font-black text-[#64748B] uppercase">
+        <p className="text-[12px] font-black text-[#64748B] uppercase">
           Mostrando {startIndex + 1} - {Math.min(startIndex + ITEMS_PER_PAGE, fiadosProcesados.length)} de {fiadosProcesados.length}
         </p>
         <div className="flex gap-2">
@@ -83,7 +88,7 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, on
     <div className="bg-white border-2 border-[#E2E8F0] shadow-[8px_8px_0_0_#E2E8F0] flex flex-col font-mono rounded-none">
       
       {/* BARRA DE FILTROS AUMENTADA */}
-      <div className="p-3 sm:p-6 border-b-2 border-[#E2E8F0] flex flex-wrap lg:flex-nowrap gap-3 sm:gap-4 shrink-0 bg-[#F8FAFC]">
+      <div className="p-6 border-b-2 border-[#E2E8F0] flex flex-wrap lg:flex-nowrap gap-4 shrink-0 bg-[#F8FAFC]">
         <input 
           type="text" 
           placeholder="BUSCAR CLIENTE..." 
@@ -145,7 +150,7 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, on
           <tbody>
             {currentFiados.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-[#94A3B8] font-bold text-xs uppercase bg-white">
+                <td colSpan={7} className="p-3 lg:p-4 text-center text-[#94A3B8] font-bold text-xs uppercase bg-white">
                   No se encontraron deudas
                 </td>
               </tr>
@@ -153,7 +158,7 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, on
               currentFiados.map(fiado => (
                 <tr
                   key={fiado.id}
-                  onClick={() => onView(fiado)}
+                  {...clicConTeclado(() => onView(fiado))}
                   className="border-b border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
                   title="Click para ver detalle"
                 >
@@ -188,12 +193,16 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, on
 
                       {fiado.estado !== 'PAGADO' && (
                         <>
+                          {puedeEditarDeuda && (
                           <button onClick={(e) => { e.stopPropagation(); onEdit(fiado); }} className="p-2 bg-white text-[#94A3B8] border-2 border-[#E2E8F0] hover:border-[#F59E0B] hover:text-[#F59E0B] transition-colors cursor-pointer rounded-none" title="Editar Deuda">
                             <Edit size={16} />
                           </button>
+                          )}
+                          {puedeCobrar && (
                           <button onClick={(e) => { e.stopPropagation(); onPay(fiado); }} className="p-2 bg-white text-[#94A3B8] border-2 border-[#E2E8F0] hover:border-[#10B981] hover:text-[#10B981] transition-colors cursor-pointer rounded-none" title="Registrar Abono">
                             <Banknote size={16} />
                           </button>
+                          )}
                         </>
                       )}
 

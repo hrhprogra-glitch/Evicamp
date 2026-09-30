@@ -37,10 +37,10 @@ export const FiltrosInventario: React.FC<Props> = ({
     return () => clearTimeout(timer);
   }, [localQuery, setSearchQuery]);
   return (
-    <div className="flex flex-col xl:flex-row gap-4 px-8 shrink-0 items-center justify-between">
+    <div className="flex flex-col xl:flex-row gap-4 px-3 lg:px-4 shrink-0 items-center justify-between">
       
       {/* BARRA DE BÚSQUEDA (Toma el espacio restante) */}
-      <div className="w-full flex-1 h-14 flex border border-[#E2E8F0] bg-white focus-within:border-[#1E293B] focus-within:ring-1 focus-within:ring-[#1E293B] transition-all group shadow-sm">
+      <div className="w-full xl:flex-1 h-14 shrink-0 flex border border-[#E2E8F0] bg-white focus-within:border-[#1E293B] focus-within:ring-1 focus-within:ring-[#1E293B] transition-all group shadow-sm">
         <div className="w-14 h-full flex items-center justify-center bg-[#F8FAFC] border-r border-[#E2E8F0] text-[#94A3B8] group-focus-within:bg-[#1E293B] group-focus-within:text-[#10B981] group-focus-within:border-[#1E293B] transition-colors shrink-0">
           <div className="mt-[-6px]"><Search size={18} /></div>
         </div>
@@ -56,7 +56,7 @@ export const FiltrosInventario: React.FC<Props> = ({
             <div className="absolute right-2 flex items-center gap-2">
               <div className="flex items-center border border-[#10B981] bg-[#1E293B] px-2 h-8">
                 <div className="w-1.5 h-1.5 bg-[#10B981] animate-pulse mr-2"></div>
-                <span className="text-[9px] font-black text-[#10B981] tracking-widest leading-none">
+                <span className="text-[12px] font-black text-[#10B981] tracking-widest leading-none">
                   {matchCount} MATCH
                 </span>
               </div>
@@ -75,13 +75,13 @@ export const FiltrosInventario: React.FC<Props> = ({
       </div>
 
       {/* BLOQUE DE FILTROS Y ORDENAMIENTO (A la derecha) */}
-      <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full xl:w-auto">
         
         {/* SELECT CATEGORÍA */}
         <select 
           value={filtroCategoria}
           onChange={(e) => setFiltroCategoria(e.target.value)}
-          className="h-14 bg-white border border-[#E2E8F0] text-[10px] font-bold text-[#1E293B] uppercase px-3 outline-none focus:border-[#10B981] transition-colors cursor-pointer"
+          className="h-14 w-full sm:w-auto min-w-0 bg-white border border-[#E2E8F0] text-[12px] font-bold text-[#1E293B] uppercase px-3 outline-none focus:border-[#10B981] transition-colors cursor-pointer"
         >
           <option value="">Todas las Categorías</option>
           {categorias.map(cat => (
@@ -93,7 +93,7 @@ export const FiltrosInventario: React.FC<Props> = ({
         <select 
           value={filtroEstado}
           onChange={(e) => setFiltroEstado(e.target.value)}
-          className="h-14 bg-white border border-[#E2E8F0] text-[10px] font-bold text-[#1E293B] uppercase px-3 outline-none focus:border-[#10B981] transition-colors cursor-pointer"
+          className="h-14 w-full sm:w-auto min-w-0 bg-white border border-[#E2E8F0] text-[12px] font-bold text-[#1E293B] uppercase px-3 outline-none focus:border-[#10B981] transition-colors cursor-pointer"
         >
           <option value="">Todos los Estados</option>
           <option value="CON_STOCK">Con Stock General</option>
@@ -105,7 +105,7 @@ export const FiltrosInventario: React.FC<Props> = ({
         <select 
           value={filtroOrden}
           onChange={(e) => setFiltroOrden(e.target.value)}
-          className="h-14 bg-white border border-[#E2E8F0] text-[10px] font-bold text-[#1E293B] uppercase px-3 outline-none focus:border-[#10B981] transition-colors cursor-pointer"
+          className="h-14 w-full sm:w-auto min-w-0 bg-white border border-[#E2E8F0] text-[12px] font-bold text-[#1E293B] uppercase px-3 outline-none focus:border-[#10B981] transition-colors cursor-pointer"
         >
           <option value="NOMBRE_ASC">Nombre (A - Z)</option>
           <option value="NOMBRE_DESC">Nombre (Z - A)</option>

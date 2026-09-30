@@ -5,7 +5,7 @@ import { X, Printer, Receipt } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 
 import { useReactToPrint } from 'react-to-print';
-import { useEscapeClose } from '../../../utils/useEscapeClose';
+import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 
 
 
@@ -22,6 +22,7 @@ interface Props {
 
 
 export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => {
+  useCerrarConEscape(isOpen, onClose); // Escape (o "Atrás" del control de TV) cierra la ventana
 
   const [tickets, setTickets] = useState<any[]>([]);
 
@@ -79,8 +80,6 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
 
 
 
-  useEscapeClose(isOpen, onClose);
-
   if (!isOpen || !caja) return null;
 
 
@@ -89,7 +88,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
 
     <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4 font-mono">
 
-      <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-2xl h-[calc(90dvh/var(--ui-zoom))] flex flex-col">
+      <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-2xl h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.9)] flex flex-col">
 
        
 
@@ -125,17 +124,17 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
 
                 <h3 className="font-black text-lg uppercase">Resumen de Caja</h3>
 
-                <p className="text-[10px] font-bold">ID: {caja.id}</p>
+                <p className="text-[12px] font-bold">ID: {caja.id}</p>
 
-                <p className="text-[9px]">Desde: {new Date(caja.opened_at).toLocaleString()}</p>
+                <p className="text-[12px]">Desde: {new Date(caja.opened_at).toLocaleString()}</p>
 
-                <p className="text-[9px]">Hasta: {new Date(caja.closed_at).toLocaleString()}</p>
+                <p className="text-[12px]">Hasta: {new Date(caja.closed_at).toLocaleString()}</p>
 
               </div>
 
 
 
-              <table className="w-full text-[10px] mb-4">
+              <table className="w-full text-[12px] mb-4">
 
                 <thead>
 

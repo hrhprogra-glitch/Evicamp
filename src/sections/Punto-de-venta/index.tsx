@@ -12,13 +12,14 @@ import { ModalCobro } from './components/ModalCobro';
 import { ModalBalanza } from './components/ModalBalanza';
 import { ModalPrecioConsumo } from './components/ModalPrecioConsumo';
 import { TicketImprimible } from './components/TicketImprimible';
+import { traerTodo } from '../../utils/traerTodo';
 import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ EVICAMP: Mini Reporte en Tiempo Real
 
 export const POS: React.FC = () => {
   const [hasOpenSession, setHasOpenSession] = useState<boolean | null>(null);
+  // En tablet/celular se muestra un panel a la vez: catálogo de productos o ticket de venta
+  const [vistaMovil, setVistaMovil] = useState<'productos' | 'ticket'>('productos');
 const [searchQuery, setSearchQuery] = useState('');
-  // 📱 RESPONSIVE: en móvil/tablet solo se ve un panel a la vez (Productos o Ticket)
-  const [mobileTab, setMobileTab] = useState<'productos' | 'ticket'>('productos');
   
   // 🚀 MEMORIA PERSISTENTE: Cargar carrito desde el navegador
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -199,7 +200,16 @@ const [searchQuery, setSearchQuery] = useState('');
         setSelectedConsumoProduct(null);
       }
 
-      // 2. F2 o F4: Proceder al Pago Inmediato desde cualquier parte de la pantalla
+      // 2. ENTER con la vista previa del ticket abierta = "Nueva Venta": cierra y deja el buscador listo.
+      // preventDefault evita que Enter también active el botón que tenga el foco (p. ej. Imprimir).
+      if (e.key === 'Enter' && isVistaPreviaOpen && !e.repeat) {
+        e.preventDefault();
+        setIsVistaPreviaOpen(false);
+        setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
+        return;
+      }
+
+      // 3. F2 o F4: Proceder al Pago Inmediato desde cualquier parte de la pantalla
       if (e.key === 'F2' || e.key === 'F4') {
         e.preventDefault(); // Evita el comportamiento por defecto del navegador web
         // Solo abrimos la ventana de pago si hay algo en el carrito y no hay otros modales encima
@@ -219,12 +229,12 @@ const [searchQuery, setSearchQuery] = useState('');
       // Bloqueo de Seguridad: Verificar Caja
       const { data: session } = await supabase.from('cash_sessions').select('id').eq('status', 'OPEN').maybeSingle();
       setHasOpenSession(!!session);
-      // 🛡️ PARCHE DE ARQUITECTURA: Romper el límite de 1000 filas de Supabase
-      const { data } = await supabase.from('products')
+      // Supabase devuelve máximo 1000 filas por consulta: traerTodo las pide por bloques
+      const { data } = await traerTodo(() => supabase.from('products')
         .select('*')
         .eq('is_active', 1) // 🛡️ EVICAMP: Bloqueo de productos fantasma directo en el motor de BD
-        .limit(15000)
-        .order('name', { ascending: true });
+        .order('name', { ascending: true })
+        .order('id'));
         
       if (data) {
         const mapeados: Product[] = data.map((p: any) => ({
@@ -239,8 +249,9 @@ const [searchQuery, setSearchQuery] = useState('');
           category: p.category || 'GENERAL',
           // CORRECCIÓN ESTRATÉGICA: Interceptar 'CONSUMPTION' desde la BD
           unit: p.control_type === 'CONSUMPTION' ? 'CONSUMO' : (p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND')),
-          control_type: p.control_type // Añadimos esto para validaciones estrictas
-        }));
+          control_type: p.control_type, // Añadimos esto para validaciones estrictas
+          image_url: p.image_url || p.image_path || null // imagen para identificar el producto en las tarjetas
+        } as Product));
         setProductos(mapeados);
       }
     };
@@ -407,87 +418,95 @@ const [searchQuery, setSearchQuery] = useState('');
       const totalIngresadoCents = Math.round((pagos.efectivo + pagos.yape + pagos.tarjeta) * 100);
       
       const totalVenta = totalVentaCents / 100;
-      const totalIngresado = totalIngresadoCents / 100;
       
       let vuelto = 0;
       if (totalIngresadoCents > totalVentaCents) {
         vuelto = (totalIngresadoCents - totalVentaCents) / 100;
       }
 
-      // 🛡️ DETECCIÓN INTELIGENTE DEL MÉTODO DE PAGO
+      // 🛡️ VUELTO: físicamente solo sale del cajón en efectivo. ModalCobro no deja que
+      // Yape + tarjeta superen el total, así que esos montos se guardan tal cual se pagaron
+      // y el vuelto se descuenta únicamente del efectivo (lo cobrado nunca supera el total).
+      const cobradoEfectivo = Math.max(0, Math.round(pagos.efectivo * 100) - Math.round(vuelto * 100)) / 100;
+      const cobradoYape = Math.round(pagos.yape * 100) / 100;
+      const cobradoTarjeta = Math.round(pagos.tarjeta * 100) / 100;
+      const montoCredito = fiadoData ? Number(fiadoData.montoDeuda) || 0 : 0;
+
+      // 🛡️ DETECCIÓN DEL MÉTODO DE PAGO: un solo método usado => ese método;
+      // 2 o más (contando la parte fiada) => MIXTO. 'FIADO' solo cuando no se cobró nada al
+      // momento: Finanzas y el Mini Reporte ignoran los montos de ventas 'FIADO', así que una
+      // venta con parte cobrada nunca debe llevar esa etiqueta.
+      const metodosUsados = [
+        cobradoEfectivo > 0 ? 'EFECTIVO' : null,
+        cobradoYape > 0 ? 'YAPE' : null,
+        cobradoTarjeta > 0 ? 'TARJETA' : null,
+        montoCredito > 0 ? 'FIADO' : null,
+      ].filter((m): m is string => m !== null);
       let tipoPago = 'EFECTIVO';
-      if (totalIngresado === 0 && fiadoData) tipoPago = 'FIADO';
-      else if (pagos.yape > 0 && pagos.efectivo === 0 && pagos.tarjeta === 0) tipoPago = 'YAPE';
-      else if (pagos.tarjeta > 0 && pagos.efectivo === 0 && pagos.yape === 0) tipoPago = 'TARJETA';
-      else if (totalIngresado > 0 && (pagos.efectivo > 0 || pagos.yape > 0 || pagos.tarjeta > 0)) tipoPago = 'MIXTO';
+      if (metodosUsados.length === 1) tipoPago = metodosUsados[0];
+      else if (metodosUsados.length > 1) tipoPago = 'MIXTO';
 
-      // === PASO 1: CREAR LA VENTA ===
-      const trueSaleId = Date.now(); // 🛡️ CORRECCIÓN: TIENE QUE SER NÚMERO, NO TEXTO
+      // === TRANSACCIÓN ATÓMICA DE VENTA ===
+      const trueSaleId = Date.now();
 
-      const { error: saleError } = await supabase
-        .from('sales')
-        .insert([{
-          id: trueSaleId,
-          total: totalVenta,
-          payment_type: tipoPago,
-          amount_cash: Math.max(0, pagos.efectivo - vuelto),
-          amount_yape: pagos.yape,
-          amount_card: pagos.tarjeta,
-          amount_credit: fiadoData ? Number(fiadoData.montoDeuda) : 0,
-          sunat_status: 'ACEPTADO',
-          created_at: new Date().toISOString(), 
-          is_synced: 1 
-        }]);
+      const p_sale = {
+        id: trueSaleId,
+        total: totalVenta,
+        payment_type: tipoPago,
+        amount_cash: cobradoEfectivo,
+        amount_yape: cobradoYape,
+        amount_card: cobradoTarjeta,
+        amount_credit: montoCredito,
+        sunat_status: 'ACEPTADO',
+        created_at: new Date().toISOString(),
+        is_synced: 1
+      };
 
-      if (saleError) {
-        alert(`Error crítico al registrar la venta: ${saleError.message}`);
-        return;
-      }
+      const p_fiado = fiadoData ? {
+        id: trueSaleId + 1,
+        customer_id: fiadoData.clienteId ? Number(fiadoData.clienteId) : null,
+        customer_name: fiadoData.clienteNombre,
+        amount: montoCredito,
+        paid_amount: 0,
+        date_given: new Date().toISOString(),
+        expected_pay_date: fiadoData.fechaVencimiento,
+        status: 'PENDIENTE',
+        is_synced: 1
+      } : null;
 
-      // === PASO 2: GUARDAR FIADO ===
-      if (fiadoData) {
-        const { error: fiadoError } = await supabase.from('fiados').insert([{
-          id: trueSaleId + 1, // 🛡️ CRÍTICO: SE AGREGÓ EL ID MATEMÁTICO. SI FALTA ESTO, EL FIADO DESAPARECE.
-          sale_id: trueSaleId,
-          customer_id: fiadoData.clienteId ? Number(fiadoData.clienteId) : null, 
-          customer_name: fiadoData.clienteNombre,
-          amount: Number(fiadoData.montoDeuda),
-          paid_amount: 0,
-          date_given: new Date().toISOString(),
-          expected_pay_date: fiadoData.fechaVencimiento,
-          status: 'PENDIENTE',
-          is_synced: 1
-        }]);
-        if (fiadoError) alert(`Error al guardar deuda: ${fiadoError.message}`); 
-      }
-
-      // === PASO 3: GUARDAR DETALLES Y DESCONTAR INVENTARIO ===
-      const saleDetails = cart.map(item => ({
-        sale_id: trueSaleId,
+      const p_details = cart.map(item => ({
         product_id: item.id,
         product_name: item.name,
-        quantity: Number(item.cartQuantity), 
-        price_at_moment: Number(item.price), 
+        quantity: Number(item.cartQuantity),
+        price_at_moment: Number(item.price),
         subtotal: Number(item.subtotal),
         is_synced: 1
       }));
-      
-      const { error: detailError } = await supabase.from('sale_details').insert(saleDetails);
 
-      if (detailError) {
-        console.error(`Fallo al guardar productos: ${detailError.message}`);
-      } else {
-        // Solo descontamos el stock visual si no hubo error
-        setProductos(prevProductos => 
-          prevProductos.map(p => {
-            const itemComprado = cart.find(i => i.id === p.id);
-            if (itemComprado && itemComprado.unit !== 'CONSUMO') {
-              return { ...p, quantity: p.quantity - Number(itemComprado.cartQuantity) };
-            }
-            return p;
-          })
-        );
+      const { error: rpcError } = await supabase.rpc('fn_register_sale', { p_sale, p_details, p_fiado });
+
+      // fn_register_sale inserta cabecera, detalle, fiado y stock en UNA sola transacción de la BD:
+      // si algo falla, la BD deshace todo y no queda ninguna venta a medias.
+      if (rpcError) {
+        // 🛡️ Caso borde: la BD confirmó la venta pero la respuesta se perdió (corte de red).
+        // Comprobamos por su ID antes de reportar error, para que un reintento no la duplique.
+        const { data: yaGuardada } = await supabase.from('sales').select('id').eq('id', trueSaleId).maybeSingle();
+        if (!yaGuardada) {
+          alert('❌ No se pudo registrar la venta. No se guardó nada; el ticket sigue en caja para reintentar.\n\nDetalle: ' + rpcError.message);
+          return;
+        }
       }
+
+      // Solo descontamos el stock visual si no hubo error
+      setProductos(prevProductos => 
+        prevProductos.map(p => {
+          const itemComprado = cart.find(i => i.id === p.id);
+          if (itemComprado && itemComprado.unit !== 'CONSUMO') {
+            return { ...p, quantity: p.quantity - Number(itemComprado.cartQuantity) };
+          }
+          return p;
+        })
+      );
 
       // === PASO 4: TICKET Y LIMPIEZA ===
       if (imprimirBoleta) {
@@ -524,60 +543,48 @@ const [searchQuery, setSearchQuery] = useState('');
           setSelectedIndex(-1);
         }
       }}
-      className={`flex flex-col lg:flex-row h-full w-full bg-transparent font-mono gap-3 lg:gap-6 relative ${hasOpenSession === false ? 'pt-12 lg:pt-16' : ''}`}
+      className={`flex flex-col lg:flex-row h-full w-full bg-transparent font-mono gap-2 lg:gap-0 lg:shadow-[6px_6px_0_0_#1E293B] relative ${hasOpenSession === false ? 'pt-20 sm:pt-16' : ''}`}
     >
-
+      
       {/* BARRA DE ADVERTENCIA - MODO CONSULTA */}
       {hasOpenSession === false && (
-        <div className="absolute top-0 left-0 w-full bg-[#EF4444] text-white p-2 sm:p-3 flex justify-center items-center gap-2 font-black text-[10px] sm:text-xs uppercase tracking-widest sm:tracking-[0.2em] z-10 shadow-[0_4px_0_0_#1E293B] border-b-2 border-[#1E293B]">
-          <Wallet size={16} className="shrink-0" /> <span className="text-center">Caja Cerrada: Modo de solo consulta. Ve a Finanzas para aperturar la caja.</span>
+        <div className="absolute top-0 left-0 w-full bg-[#EF4444] text-white p-3 flex justify-center items-center text-center gap-2 font-black text-[12px] sm:text-xs uppercase tracking-widest sm:tracking-[0.2em] z-10 shadow-[0_4px_0_0_#1E293B] border-b-2 border-[#1E293B]">
+          <Wallet size={16} /> Caja Cerrada: Modo de solo consulta. Ve a Finanzas para aperturar la caja.
         </div>
       )}
-
-      {/* 📱 SELECTOR DE PANEL: solo visible en móvil/tablet (<lg) */}
-      <div className="grid grid-cols-2 gap-2 lg:hidden shrink-0">
+      {/* SELECTOR DE PANEL (solo tablet/celular) */}
+      <div className="lg:hidden grid grid-cols-2 border-2 border-[#1E293B] bg-white shrink-0">
         <button
-          type="button"
-          onClick={() => setMobileTab('productos')}
-          className={`py-3 text-xs font-black uppercase tracking-widest border-2 transition-all cursor-pointer ${
-            mobileTab === 'productos'
-              ? 'border-[#1E293B] bg-[#1E293B] text-white'
-              : 'border-[#E2E8F0] bg-white text-[#64748B]'
-          }`}
+          onClick={() => setVistaMovil('productos')}
+          className={`py-3 text-xs font-black uppercase tracking-widest cursor-pointer transition-colors ${vistaMovil === 'productos' ? 'bg-[#1E293B] text-white' : 'text-[#64748B]'}`}
         >
           Productos
         </button>
         <button
-          type="button"
-          onClick={() => setMobileTab('ticket')}
-          className={`py-3 text-xs font-black uppercase tracking-widest border-2 transition-all cursor-pointer flex items-center justify-center gap-2 ${
-            mobileTab === 'ticket'
-              ? 'border-[#1E293B] bg-[#1E293B] text-white'
-              : 'border-[#E2E8F0] bg-white text-[#64748B]'
-          }`}
+          onClick={() => setVistaMovil('ticket')}
+          className={`py-3 text-xs font-black uppercase tracking-widest cursor-pointer transition-colors flex items-center justify-center gap-2 ${vistaMovil === 'ticket' ? 'bg-[#1E293B] text-white' : 'text-[#64748B]'}`}
         >
           Ticket
-          {cart.length > 0 && (
-            <span className="bg-[#10B981] text-[#1E293B] px-1.5 py-0.5 text-[10px]">
-              {cart.reduce((a, b) => a + b.cartQuantity, 0)} · S/{cart.reduce((acc, item) => acc + item.subtotal, 0).toFixed(2)}
-            </span>
-          )}
+          <span className={`min-w-6 px-1.5 py-0.5 text-[12px] ${cart.length > 0 ? 'bg-[#10B981] text-[#1E293B]' : 'bg-[#E2E8F0] text-[#64748B]'}`}>
+            {cart.length}
+          </span>
+          <span className="text-[#10B981]">S/ {cart.reduce((acc, item) => acc + item.subtotal, 0).toFixed(2)}</span>
         </button>
       </div>
 
-      <div className={`${mobileTab === 'productos' ? 'flex' : 'hidden'} lg:flex flex-1 min-w-0 min-h-0`}>
-        <TerminalBusqueda
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
+      <div className={`${vistaMovil === 'productos' ? 'flex' : 'hidden'} lg:flex flex-1 min-w-0 min-h-0`}>
+        <TerminalBusqueda 
+          searchQuery={searchQuery} 
+          setSearchQuery={setSearchQuery} 
           productos={productos}
           onAddToCart={handleAddToCart}
         />
       </div>
-
+      
       {/* 🛡️ CONTENEDOR DERECHO EVICAMP: MINI REPORTE + CAJA ALINEADA */}
-      <div className={`${mobileTab === 'ticket' ? 'flex' : 'hidden'} lg:flex flex-col h-full gap-4 shrink-0 z-10 relative w-full lg:w-[380px] xl:w-[420px] min-h-0`}>
+      <div className={`${vistaMovil === 'ticket' ? 'flex' : 'hidden'} lg:flex flex-col flex-1 lg:flex-none lg:h-full gap-2 lg:gap-0 shrink-0 z-10 relative w-full lg:w-[420px] xl:w-[480px] 2xl:w-[560px] min-h-0`}>
         <MiniReporteDiario refreshTrigger={refreshReport} />
-
+        
         {/* 🛡️ GEOMETRÍA PERFECTA: Flex-1 y min-h-0 hacen que se estire exactamente al ras del panel izquierdo */}
         <div className="flex-1 min-h-0 flex flex-col">
           <TicketVenta
@@ -585,8 +592,8 @@ const [searchQuery, setSearchQuery] = useState('');
             colIndex={colIndex}
             setSelectedIndex={setSelectedIndex} // 🛡️ NUEVO
             setColIndex={setColIndex}           // 🛡️ NUEVO
-            cart={cart}
-            setCart={setCart}
+            cart={cart} 
+            setCart={setCart} 
             updateQuantity={updateQuantity}
             updatePrice={updatePrice}
             heldCarts={heldCarts}
@@ -625,7 +632,7 @@ const [searchQuery, setSearchQuery] = useState('');
       {/* VISTA PREVIA DEL TICKET (NUEVO MODAL) */}
       {isVistaPreviaOpen && ultimaVenta && (
         <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4">
-          <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(95dvh/var(--ui-zoom))] w-full max-w-md animate-fade-in">
+          <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.95)] w-full max-w-md animate-fade-in">
             
             {/* CABECERA */}
             <div className="bg-[#3B82F6] text-white p-4 flex justify-between items-center border-b-2 border-[#1E293B] shrink-0">
@@ -640,7 +647,7 @@ const [searchQuery, setSearchQuery] = useState('');
             {/* CONTENEDOR DEL TICKET (Fondo gris y zoom automático) */}
             <div className="flex-1 overflow-y-auto p-6 bg-[#F8FAFC] flex justify-center custom-scrollbar">
               {/* Le aplicamos un scale-110 para que en la PC se vea un poco más grande y nítido */}
-              <div className="transform scale-110 origin-top pb-10">
+              <div className="transform sm:scale-110 origin-top pb-10">
                 <TicketImprimible
                   ref={componentRef}
                   cart={ultimaVenta.cart}
@@ -659,7 +666,7 @@ const [searchQuery, setSearchQuery] = useState('');
                 onClick={() => setIsVistaPreviaOpen(false)} 
                 className="flex-1 border-2 border-[#1E293B] bg-white text-[#1E293B] py-3 font-black text-xs uppercase tracking-widest hover:bg-gray-100 transition-colors cursor-pointer shadow-[4px_4px_0_0_#1E293B] active:translate-y-[4px] active:shadow-none"
               >
-                Nueva Venta
+                Nueva Venta <span className="opacity-60">(Enter)</span>
               </button>
               <button 
                 onClick={() => handlePrint()} 

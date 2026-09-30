@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Banknote, CreditCard, Smartphone, Calculator } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import type { Fiado } from '../types';
-import { useEscapeClose } from '../../../utils/useEscapeClose';
+import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 
 interface Props {
   isOpen: boolean;
@@ -12,6 +12,7 @@ interface Props {
 }
 
 export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado }) => {
+  useCerrarConEscape(isOpen, onClose); // Escape (o "Atrás" del control de TV) cierra la ventana
   const [efectivo, setEfectivo] = useState<string>('');
   const [yape, setYape] = useState<string>('');
   const [tarjeta, setTarjeta] = useState<string>('');
@@ -25,13 +26,14 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
     }
   }, [isOpen, fiado]);
 
-  useEscapeClose(isOpen, onClose);
-
   if (!isOpen || !fiado) return null;
 
-  const valEfectivo = Number(efectivo) || 0;
-  const valYape = Number(yape) || 0;
-  const valTarjeta = Number(tarjeta) || 0;
+  // Cada porción se redondea a céntimos para que efectivo + yape + tarjeta sume EXACTO el total
+  // grabado en debt_payments.amount (la caja registra una fila por cada porción).
+  const aCentimos = (v: string) => Math.max(0, Number((Number(v) || 0).toFixed(2)));
+  const valEfectivo = aCentimos(efectivo);
+  const valYape = aCentimos(yape);
+  const valTarjeta = aCentimos(tarjeta);
   
   // Destrucción de la distorsión de coma flotante de JavaScript
   const totalAbono = Number((valEfectivo + valYape + valTarjeta).toFixed(2));
@@ -61,7 +63,13 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
         amount_cash: valEfectivo,
         amount_yape: valYape,
         amount_card: valTarjeta,
-        payment_type: valEfectivo > 0 ? 'efectivo' : (valYape > 0 ? 'yape' : 'tarjeta'),
+        amount_transfer: 0,
+        // Un solo registro por abono con el desglose por método en amount_cash/yape/card.
+        // El trigger fn_register_fiado_payment_in_cash crea un movimiento de caja por cada
+        // porción > 0, así que aquí solo se marca el tipo: 'mixto' si hay más de un método.
+        payment_type: [valEfectivo, valYape, valTarjeta].filter(v => v > 0).length > 1
+          ? 'mixto'
+          : (valEfectivo > 0 ? 'efectivo' : (valYape > 0 ? 'yape' : 'tarjeta')),
         session_id: session ? session.id : null,
         created_at: new Date().toISOString(),
         is_synced: 1
@@ -80,10 +88,10 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
 
   return (
     <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="bg-white w-full max-w-md border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] rounded-none">
-
+      <div className="max-h-[calc(var(--alto-pantalla)*0.94)] overflow-y-auto bg-white w-full max-w-md border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col rounded-none">
+        
         {/* HEADER */}
-        <div className="bg-[#10B981] text-[#1E293B] px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center shrink-0 border-b-2 border-[#1E293B]">
+        <div className="bg-[#10B981] text-[#1E293B] px-6 py-4 flex justify-between items-center shrink-0 border-b-2 border-[#1E293B]">
           <h2 className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
             <Calculator size={20} /> Abono Mixto
           </h2>
@@ -91,15 +99,15 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
         </div>
 
         {/* BODY */}
-        <div className="p-4 sm:p-6 bg-[#F8FAFC] flex flex-col gap-4 overflow-y-auto">
+        <div className="p-6 bg-[#F8FAFC] flex flex-col gap-4">
           <div className="bg-[#1E293B] text-white p-4 text-center border-2 border-[#1E293B] rounded-none">
-            <p className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest">Saldo Actual de la Deuda</p>
-            <p className="text-3xl font-black text-[#EF4444]">S/ {saldoPendiente.toFixed(2)}</p>
-            <p className="text-[10px] font-bold uppercase mt-1">Cliente: {fiado.clienteNombre}</p>
+            <p className="text-[12px] font-bold text-[#94A3B8] uppercase tracking-widest">Saldo Actual de la Deuda</p>
+            <p className="text-xl sm:text-3xl font-black text-[#EF4444]">S/ {saldoPendiente.toFixed(2)}</p>
+            <p className="text-[12px] font-bold uppercase mt-1">Cliente: {fiado.clienteNombre}</p>
           </div>
 
           <div className="space-y-3 mt-2">
-            <p className="text-[10px] font-black uppercase text-[#64748B] mb-2">Ingresa los montos por método de pago:</p>
+            <p className="text-[12px] font-black uppercase text-[#64748B] mb-2">Ingresa los montos por método de pago:</p>
             
             {/* EFECTIVO */}
             <div className="flex items-center gap-3 bg-white p-2 border-2 border-[#E2E8F0] focus-within:border-[#10B981] transition-colors rounded-none">
@@ -153,11 +161,11 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
           {/* RESUMEN DEL ABONO */}
           <div className="mt-2 bg-[#FEF2F2] border-2 border-[#EF4444] p-3 flex justify-between items-center rounded-none">
             <div>
-              <p className="text-[10px] font-black uppercase text-[#EF4444]">Total a Abonar</p>
+              <p className="text-[12px] font-black uppercase text-[#EF4444]">Total a Abonar</p>
               <p className="text-sm font-black text-[#1E293B]">S/ {totalAbono.toFixed(2)}</p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] font-black uppercase text-[#EF4444]">Deuda Restante</p>
+              <p className="text-[12px] font-black uppercase text-[#EF4444]">Deuda Restante</p>
               <p className="text-lg font-black text-[#EF4444] leading-none">S/ {Math.max(0, nuevoSaldo).toFixed(2)}</p>
             </div>
           </div>
@@ -165,11 +173,11 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
 
         {/* FOOTER */}
         <div className="p-4 bg-white border-t-2 border-[#E2E8F0] flex justify-end gap-3 rounded-none">
-          <button onClick={onClose} className="px-4 py-2 bg-white border-2 border-[#E2E8F0] text-[#64748B] text-[10px] font-black uppercase hover:border-[#1E293B] hover:text-[#1E293B] transition-colors cursor-pointer rounded-none">Cancelar</button>
+          <button onClick={onClose} className="px-4 py-2 bg-white border-2 border-[#E2E8F0] text-[#64748B] text-[12px] font-black uppercase hover:border-[#1E293B] hover:text-[#1E293B] transition-colors cursor-pointer rounded-none">Cancelar</button>
           <button 
             onClick={handleConfirm} 
             disabled={isSaving}
-            className={`px-6 py-2 border-2 border-[#1E293B] text-[10px] font-black uppercase transition-all shadow-[2px_2px_0_0_#1E293B] rounded-none ${
+            className={`px-6 py-2 border-2 border-[#1E293B] text-[12px] font-black uppercase transition-all shadow-[2px_2px_0_0_#1E293B] rounded-none ${
               isSaving 
                 ? 'bg-[#E2E8F0] text-[#94A3B8] cursor-not-allowed shadow-none translate-x-[2px] translate-y-[2px]' 
                 : 'bg-[#10B981] text-[#1E293B] hover:bg-[#1E293B] hover:text-[#10B981] cursor-pointer hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]'
