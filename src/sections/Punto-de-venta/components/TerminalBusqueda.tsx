@@ -199,7 +199,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                     const img = (prod as any).image_url || (prod as any).image_path || '';
                     const valida = img.startsWith('http') || img.startsWith('data:');
                     return (
-                      <div className={`w-full aspect-[4/3] mb-2 sm:mb-3 flex items-center justify-center border border-[#E2E8F0] bg-[#FFFFFF] overflow-hidden ${estaAgotado ? 'grayscale' : ''}`}>
+                      <div className={`w-full h-12 sm:h-14 mb-2 sm:mb-3 flex items-center justify-center border border-[#E2E8F0] bg-[#FFFFFF] overflow-hidden shrink-0 ${estaAgotado ? 'grayscale' : ''}`}>
                         {valida ? (
                           <img
                             src={img}
@@ -209,7 +209,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                             onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                           />
                         ) : (
-                          <Package size={36} className="text-[#CBD5E1]" aria-hidden="true" />
+                          <Package size={20} className="text-[#CBD5E1]" aria-hidden="true" />
                         )}
                       </div>
                     );
