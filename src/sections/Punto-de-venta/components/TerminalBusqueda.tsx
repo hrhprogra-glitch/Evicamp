@@ -199,7 +199,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                     const img = (prod as any).image_url || (prod as any).image_path || '';
                     const valida = img.startsWith('http') || img.startsWith('data:');
                     return (
-                      <div className={`w-full h-12 sm:h-14 mb-2 sm:mb-3 flex items-center justify-center border border-[#E2E8F0] bg-[#FFFFFF] overflow-hidden shrink-0 ${estaAgotado ? 'grayscale' : ''}`}>
+                      <div className={`w-12 h-12 sm:w-14 sm:h-14 mb-2 sm:mb-3 flex items-center justify-center border border-[#E2E8F0] bg-[#FFFFFF] overflow-hidden shrink-0 ${estaAgotado ? 'grayscale' : ''}`}>
                         {valida ? (
                           <img
                             src={img}
