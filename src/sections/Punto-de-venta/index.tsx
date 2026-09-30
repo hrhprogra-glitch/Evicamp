@@ -446,10 +446,15 @@ const [searchQuery, setSearchQuery] = useState('');
       if (metodosUsados.length === 1) tipoPago = metodosUsados[0];
       else if (metodosUsados.length > 1) tipoPago = 'MIXTO';
 
-      // === TRANSACCIÓN ATÓMICA DE VENTA ===
+      // === REGISTRO DE VENTA (inserciones directas) ===
+      // Nota técnica: esto reemplaza una llamada a supabase.rpc('fn_register_sale', ...) que
+      // impedía confirmar CUALQUIER pago porque esa función no existe en la base de datos
+      // (se agregó al código sin crearla en el servidor). El detalle de productos sigue
+      // descontando el stock y el lote correspondiente automáticamente: existe un trigger en
+      // la BD (fn_reduce_stock_from_sales) que se dispara al insertar en sale_details.
       const trueSaleId = Date.now();
 
-      const p_sale = {
+      const { error: saleError } = await supabase.from('sales').insert([{
         id: trueSaleId,
         total: totalVenta,
         payment_type: tipoPago,
@@ -460,21 +465,34 @@ const [searchQuery, setSearchQuery] = useState('');
         sunat_status: 'ACEPTADO',
         created_at: new Date().toISOString(),
         is_synced: 1
-      };
+      }]);
 
-      const p_fiado = fiadoData ? {
-        id: trueSaleId + 1,
-        customer_id: fiadoData.clienteId ? Number(fiadoData.clienteId) : null,
-        customer_name: fiadoData.clienteNombre,
-        amount: montoCredito,
-        paid_amount: 0,
-        date_given: new Date().toISOString(),
-        expected_pay_date: fiadoData.fechaVencimiento,
-        status: 'PENDIENTE',
-        is_synced: 1
-      } : null;
+      if (saleError) {
+        alert('❌ No se pudo registrar la venta. No se guardó nada; el ticket sigue en caja para reintentar.\n\nDetalle: ' + saleError.message);
+        return;
+      }
 
-      const p_details = cart.map(item => ({
+      // Fiado (solo si quedó parte o todo al crédito)
+      if (fiadoData) {
+        const { error: fiadoError } = await supabase.from('fiados').insert([{
+          id: trueSaleId + 1,
+          sale_id: trueSaleId,
+          customer_id: fiadoData.clienteId ? Number(fiadoData.clienteId) : null,
+          customer_name: fiadoData.clienteNombre,
+          amount: montoCredito,
+          paid_amount: 0,
+          date_given: new Date().toISOString(),
+          expected_pay_date: fiadoData.fechaVencimiento,
+          status: 'PENDIENTE',
+          is_synced: 1
+        }]);
+        if (fiadoError) {
+          alert('⚠️ La venta se guardó, pero no se pudo registrar la deuda (fiado). Avisa a soporte técnico.\n\nDetalle: ' + fiadoError.message);
+        }
+      }
+
+      const saleDetails = cart.map(item => ({
+        sale_id: trueSaleId,
         product_id: item.id,
         product_name: item.name,
         quantity: Number(item.cartQuantity),
@@ -483,18 +501,10 @@ const [searchQuery, setSearchQuery] = useState('');
         is_synced: 1
       }));
 
-      const { error: rpcError } = await supabase.rpc('fn_register_sale', { p_sale, p_details, p_fiado });
-
-      // fn_register_sale inserta cabecera, detalle, fiado y stock en UNA sola transacción de la BD:
-      // si algo falla, la BD deshace todo y no queda ninguna venta a medias.
-      if (rpcError) {
-        // 🛡️ Caso borde: la BD confirmó la venta pero la respuesta se perdió (corte de red).
-        // Comprobamos por su ID antes de reportar error, para que un reintento no la duplique.
-        const { data: yaGuardada } = await supabase.from('sales').select('id').eq('id', trueSaleId).maybeSingle();
-        if (!yaGuardada) {
-          alert('❌ No se pudo registrar la venta. No se guardó nada; el ticket sigue en caja para reintentar.\n\nDetalle: ' + rpcError.message);
-          return;
-        }
+      const { error: detailError } = await supabase.from('sale_details').insert(saleDetails);
+      if (detailError) {
+        console.error('Fallo al guardar el detalle de productos:', detailError.message);
+        alert('⚠️ La venta se guardó, pero no se pudo registrar el detalle de productos (el stock no se descontó). Avisa a soporte técnico.\n\nDetalle: ' + detailError.message);
       }
 
       // Solo descontamos el stock visual si no hubo error

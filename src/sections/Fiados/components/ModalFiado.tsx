@@ -174,8 +174,13 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
         const idVenta = Date.now(); // 🔥 Generamos ID único para Reportes
         const idFiado = idVenta + 1; // 🔥 Generamos ID único para el Fiado
 
-        // === TRANSACCIÓN ATÓMICA DE VENTA Y FIADO ===
-        const p_sale = {
+        // === REGISTRO DE VENTA Y FIADO (inserciones directas) ===
+        // Nota técnica: esto reemplaza una llamada a supabase.rpc('fn_register_sale', ...) que
+        // impedía guardar CUALQUIER fiado nuevo porque esa función no existe en la base de
+        // datos. El detalle de productos sigue descontando el stock y el lote correspondiente
+        // automáticamente: existe un trigger en la BD (fn_reduce_stock_from_sales) que se
+        // dispara al insertar en sale_details.
+        const { error: saleError } = await supabase.from('sales').insert([{
           id: idVenta,
           total: totalCalculado,
           // 'FIADO' (igual que el Punto de Venta): Finanzas y el Mini Reporte excluyen de la caja
@@ -191,19 +196,13 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
           sunat_status: 'ACEPTADO',
           is_synced: 1,
           created_at: new Date().toISOString()
-        };
+        }]);
 
-        const p_details = detalles.map(d => ({
-          product_id: d.productoId,
-          product_name: d.name,
-          quantity: Number(d.qty),
-          price_at_moment: d.price,
-          subtotal: Number(d.subtotal),
-          is_synced: 1
-        }));
+        if (saleError) throw new Error('Error al registrar la venta: ' + saleError.message);
 
-        const p_fiado = {
+        const { error: fiadoError } = await supabase.from('fiados').insert([{
           id: idFiado,
+          sale_id: idVenta,
           customer_id: cli?.id ? Number(cli.id) : null,
           customer_name: clienteSeleccionado,
           amount: totalCalculado,
@@ -212,15 +211,22 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
           status: 'PENDIENTE',
           paid_amount: 0,
           is_synced: 1
-        };
+        }]);
 
-        const { error: rpcError } = await supabase.rpc('fn_register_sale', {
-          p_sale: p_sale,
-          p_details: p_details,
-          p_fiado: p_fiado
-        });
+        if (fiadoError) throw new Error('La venta se registró, pero no se pudo registrar la deuda (fiado): ' + fiadoError.message);
 
-        if (rpcError) throw new Error('Error al registrar fiado atómicamente: ' + rpcError.message);
+        const p_details = detalles.map(d => ({
+          sale_id: idVenta,
+          product_id: d.productoId,
+          product_name: d.name,
+          quantity: Number(d.qty),
+          price_at_moment: d.price,
+          subtotal: Number(d.subtotal),
+          is_synced: 1
+        }));
+
+        const { error: detailError } = await supabase.from('sale_details').insert(p_details);
+        if (detailError) throw new Error('La venta y la deuda se registraron, pero no se pudo guardar el detalle de productos (el stock no se descontó): ' + detailError.message);
 
         alert('✅ Fiado guardado, venta registrada e inventario descontado.');
       }
