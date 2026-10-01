@@ -401,6 +401,51 @@ export const Reportes: React.FC = () => {
           </div>
       </div>
 
+      {/* BARRA DE CONTROLES TÉCNICOS */}
+      <div className={`flex flex-wrap lg:flex-nowrap justify-between items-end gap-4 shrink-0 ${busquedaDebounced ? 'opacity-40 pointer-events-none' : ''}`}>
+        
+        {/* BOTONES RÁPIDOS */}
+        <div className="grid grid-cols-3 sm:flex gap-2 sm:gap-3 w-full lg:w-auto">
+          <button onClick={filtrarHoy} className="bg-white border-2 border-[#1E293B] px-2 sm:px-6 py-3 text-xs sm:text-sm font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
+            Hoy
+          </button>
+          <button onClick={filtrarSemana} className="bg-white border-2 border-[#1E293B] px-2 sm:px-6 py-3 text-xs sm:text-sm font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
+            7 Días
+          </button>
+          <button onClick={filtrarMes} className="bg-white border-2 border-[#1E293B] px-2 sm:px-6 py-3 text-xs sm:text-sm font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
+            Mes
+          </button>
+        </div>
+
+        {/* SELECTOR DE FECHAS PERSONALIZADO */}
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-6 bg-white border-2 border-[#E2E8F0] p-3 sm:p-4 shadow-[4px_4px_0_0_#E2E8F0] rounded-none w-full lg:w-auto">
+          <div className="flex flex-col flex-1 min-w-[130px]">
+            <label className="text-xs font-black text-[#64748B] uppercase tracking-widest mb-1">Desde</label>
+            <div className="flex items-center gap-2">
+              <CalendarDays size={18} className="text-[#94A3B8]" />
+              <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} className="w-full min-w-0 text-sm sm:text-base font-black text-[#1E293B] outline-none bg-transparent uppercase cursor-pointer" />
+            </div>
+          </div>
+          <div className="hidden sm:block w-[2px] h-10 bg-[#E2E8F0]"></div>
+          <div className="flex flex-col flex-1 min-w-[130px]">
+            <label className="text-xs font-black text-[#64748B] uppercase tracking-widest mb-1">Hasta</label>
+            <div className="flex items-center gap-2">
+              <Calendar size={18} className="text-[#94A3B8]" />
+              <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="w-full min-w-0 text-sm sm:text-base font-black text-[#1E293B] outline-none bg-transparent uppercase cursor-pointer" />
+            </div>
+          </div>
+          
+          {/* BOTÓN LIMPIAR */}
+          {(fechaInicio || fechaFin) && (
+             <div className="sm:pl-4 sm:ml-2 sm:border-l-2 border-[#E2E8F0]">
+               <button onClick={limpiarFiltros} className="text-[#EF4444] hover:bg-[#FEF2F2] p-2 transition-colors cursor-pointer rounded-none" title="Limpiar Filtros">
+                 <RotateCcw size={16} />
+               </button>
+             </div>
+          )}
+        </div>
+      </div>
+
       {/* 🔎 BÚSQUEDA POR CLIENTE O N° DE TICKET: encuentra un ticket sin importar la fecha,
           para no depender de que el dueño recuerde el día exacto de la venta. */}
       <div className="shrink-0 flex items-center border-2 border-[#1E293B] bg-white shadow-[4px_4px_0_0_#1E293B] rounded-none">
@@ -451,51 +496,6 @@ export const Reportes: React.FC = () => {
             Quitar filtros
           </button>
         )}
-      </div>
-
-      {/* BARRA DE CONTROLES TÉCNICOS */}
-      <div className={`flex flex-wrap lg:flex-nowrap justify-between items-end gap-4 shrink-0 ${busquedaDebounced ? 'opacity-40 pointer-events-none' : ''}`}>
-        
-        {/* BOTONES RÁPIDOS */}
-        <div className="grid grid-cols-3 sm:flex gap-2 sm:gap-3 w-full lg:w-auto">
-          <button onClick={filtrarHoy} className="bg-white border-2 border-[#1E293B] px-2 sm:px-6 py-3 text-xs sm:text-sm font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
-            Hoy
-          </button>
-          <button onClick={filtrarSemana} className="bg-white border-2 border-[#1E293B] px-2 sm:px-6 py-3 text-xs sm:text-sm font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
-            7 Días
-          </button>
-          <button onClick={filtrarMes} className="bg-white border-2 border-[#1E293B] px-2 sm:px-6 py-3 text-xs sm:text-sm font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
-            Mes
-          </button>
-        </div>
-
-        {/* SELECTOR DE FECHAS PERSONALIZADO */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-6 bg-white border-2 border-[#E2E8F0] p-3 sm:p-4 shadow-[4px_4px_0_0_#E2E8F0] rounded-none w-full lg:w-auto">
-          <div className="flex flex-col flex-1 min-w-[130px]">
-            <label className="text-xs font-black text-[#64748B] uppercase tracking-widest mb-1">Desde</label>
-            <div className="flex items-center gap-2">
-              <CalendarDays size={18} className="text-[#94A3B8]" />
-              <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} className="w-full min-w-0 text-sm sm:text-base font-black text-[#1E293B] outline-none bg-transparent uppercase cursor-pointer" />
-            </div>
-          </div>
-          <div className="hidden sm:block w-[2px] h-10 bg-[#E2E8F0]"></div>
-          <div className="flex flex-col flex-1 min-w-[130px]">
-            <label className="text-xs font-black text-[#64748B] uppercase tracking-widest mb-1">Hasta</label>
-            <div className="flex items-center gap-2">
-              <Calendar size={18} className="text-[#94A3B8]" />
-              <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="w-full min-w-0 text-sm sm:text-base font-black text-[#1E293B] outline-none bg-transparent uppercase cursor-pointer" />
-            </div>
-          </div>
-          
-          {/* BOTÓN LIMPIAR */}
-          {(fechaInicio || fechaFin) && (
-             <div className="sm:pl-4 sm:ml-2 sm:border-l-2 border-[#E2E8F0]">
-               <button onClick={limpiarFiltros} className="text-[#EF4444] hover:bg-[#FEF2F2] p-2 transition-colors cursor-pointer rounded-none" title="Limpiar Filtros">
-                 <RotateCcw size={16} />
-               </button>
-             </div>
-          )}
-        </div>
       </div>
 
       <div className="flex-1 min-h-0">
