@@ -124,13 +124,15 @@ html.ui-grande { --ui-zoom: 1.25; }
 }
 
 /* Foco visible para navegar con teclado o control remoto (flechas + OK).
-   Los campos de texto ya marcan su foco con el borde, por eso no se incluyen. */
+   Los campos de texto ya marcan su foco con el borde, por eso no se incluyen.
+   Sutil a propósito (pedido explícito): apenas se nota con mouse/táctil, pero
+   sigue ahí para quien navega solo con teclado o control remoto de TV. */
 button:focus-visible,
 a:focus-visible,
 select:focus-visible,
 [tabindex]:focus-visible {
-  outline: 3px solid var(--color-brand-accent);
-  outline-offset: 2px;
+  outline: 1px solid rgba(16, 185, 129, 0.35);
+  outline-offset: 1px;
 }
 /* Filas y tarjetas enfocables: el contorno va por dentro, porque las tablas recortan lo que sale del borde */
 [role="button"]:focus-visible {

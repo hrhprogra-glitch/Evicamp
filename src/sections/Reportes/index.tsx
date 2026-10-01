@@ -446,32 +446,31 @@ export const Reportes: React.FC = () => {
         </div>
       </div>
 
-      {/* 🔎 BÚSQUEDA POR CLIENTE O N° DE TICKET: encuentra un ticket sin importar la fecha,
-          para no depender de que el dueño recuerde el día exacto de la venta. */}
-      <div className="shrink-0 flex items-center border-2 border-[#1E293B] bg-white shadow-[4px_4px_0_0_#1E293B] rounded-none">
-        <div className="w-11 h-11 flex items-center justify-center bg-[#1E293B] text-white shrink-0">
-          <Search size={18} />
+      {/* 🔎 BÚSQUEDA + FILTROS en una sola fila: busca por cliente/ticket/monto sin importar
+          la fecha, y a su lado los filtros de Estado/Deuda sobre lo ya cargado. */}
+      <div className="flex flex-wrap items-stretch gap-3 shrink-0">
+        <div className="flex-1 min-w-[220px] flex items-center border-2 border-[#1E293B] bg-white shadow-[4px_4px_0_0_#1E293B] rounded-none">
+          <div className="w-11 h-11 flex items-center justify-center bg-[#1E293B] text-white shrink-0">
+            <Search size={18} />
+          </div>
+          <input
+            type="text"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder="BUSCAR POR CLIENTE, N° DE TICKET O MONTO"
+            className="flex-1 min-w-0 h-11 px-3 bg-transparent text-sm font-black text-[#1E293B] uppercase outline-none placeholder:text-[#64748B]/60"
+          />
+          {busqueda && (
+            <button onClick={() => setBusqueda('')} className="px-3 h-11 text-[#EF4444] hover:bg-[#FEF2F2] font-black text-xs uppercase cursor-pointer shrink-0" title="Limpiar búsqueda">
+              Limpiar
+            </button>
+          )}
         </div>
-        <input
-          type="text"
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-          placeholder="BUSCAR POR CLIENTE, N° DE TICKET O MONTO (busca en todas las fechas)"
-          className="flex-1 min-w-0 h-11 px-3 bg-transparent text-sm font-black text-[#1E293B] uppercase outline-none placeholder:text-[#64748B]/60"
-        />
-        {busqueda && (
-          <button onClick={() => setBusqueda('')} className="px-3 h-11 text-[#EF4444] hover:bg-[#FEF2F2] font-black text-xs uppercase cursor-pointer shrink-0" title="Limpiar búsqueda">
-            Limpiar
-          </button>
-        )}
-      </div>
 
-      {/* FILTROS: estado del ticket y estado de la deuda (se aplican sobre lo ya cargado) */}
-      <div className="flex flex-wrap gap-3 shrink-0">
         <select
           value={filtroEstado}
           onChange={(e) => setFiltroEstado(e.target.value as typeof filtroEstado)}
-          className="h-10 px-3 bg-white border-2 border-[#1E293B] text-xs font-black uppercase text-[#1E293B] outline-none cursor-pointer rounded-none"
+          className="h-11 px-3 bg-white border-2 border-[#1E293B] text-xs font-black uppercase text-[#1E293B] outline-none cursor-pointer rounded-none shrink-0"
         >
           <option value="TODOS">Estado: Todos</option>
           <option value="COMPLETADO">Estado: Completado</option>
@@ -481,7 +480,7 @@ export const Reportes: React.FC = () => {
         <select
           value={filtroDeuda}
           onChange={(e) => setFiltroDeuda(e.target.value as typeof filtroDeuda)}
-          className="h-10 px-3 bg-white border-2 border-[#1E293B] text-xs font-black uppercase text-[#1E293B] outline-none cursor-pointer rounded-none"
+          className="h-11 px-3 bg-white border-2 border-[#1E293B] text-xs font-black uppercase text-[#1E293B] outline-none cursor-pointer rounded-none shrink-0"
         >
           <option value="TODOS">Deuda: Todos</option>
           <option value="PENDIENTE">Deuda: Pendiente</option>
@@ -491,7 +490,7 @@ export const Reportes: React.FC = () => {
         {(filtroEstado !== 'TODOS' || filtroDeuda !== 'TODOS') && (
           <button
             onClick={() => { setFiltroEstado('TODOS'); setFiltroDeuda('TODOS'); }}
-            className="h-10 px-3 text-[#EF4444] hover:bg-[#FEF2F2] font-black text-xs uppercase cursor-pointer rounded-none border-2 border-[#EF4444]"
+            className="h-11 px-3 text-[#EF4444] hover:bg-[#FEF2F2] font-black text-xs uppercase cursor-pointer rounded-none border-2 border-[#EF4444] shrink-0"
           >
             Quitar filtros
           </button>
