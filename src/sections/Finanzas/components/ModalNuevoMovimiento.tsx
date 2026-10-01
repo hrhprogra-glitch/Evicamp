@@ -61,16 +61,22 @@ export const ModalNuevoMovimiento: React.FC<Props> = ({ isOpen, onClose, onSucce
     <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 font-mono">
       <div className="max-h-[calc(var(--alto-pantalla)*0.94)] overflow-y-auto bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-md flex flex-col rounded-none animate-fade-in">
 
-        <div className="bg-[#3B82F6] p-4 border-b-2 border-[#1E293B] flex justify-between items-center text-white">
-          <h2 className="font-black uppercase tracking-widest flex items-center gap-2 text-sm">
+        <div className="bg-[#3B82F6] p-4 border-b-2 border-[#1E293B] flex justify-between items-center text-white gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             {flujo !== null && (
-              <button onClick={() => setFlujo(null)} className="hover:text-[#1E293B] transition-colors cursor-pointer -ml-1" title="Cambiar Caja Interna/Externa">
-                <ChevronLeft size={18} strokeWidth={3} />
+              <button
+                onClick={() => setFlujo(null)}
+                className="flex items-center gap-1 bg-white text-[#1E293B] px-2.5 py-1.5 border-2 border-[#1E293B] font-black text-[11px] uppercase tracking-widest shadow-[2px_2px_0_0_#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer shrink-0 rounded-none"
+                title="Cambiar Caja Interna/Externa"
+              >
+                <ChevronLeft size={16} strokeWidth={3} /> Volver
               </button>
             )}
-            <ArrowRightLeft size={18} /> Registrar Movimiento
-          </h2>
-          <button onClick={cerrarYReiniciar} className="hover:text-[#1E293B] transition-colors cursor-pointer">
+            <h2 className="font-black uppercase tracking-widest flex items-center gap-2 text-sm truncate">
+              <ArrowRightLeft size={18} className="shrink-0" /> <span className="truncate">Registrar Movimiento</span>
+            </h2>
+          </div>
+          <button onClick={cerrarYReiniciar} className="hover:text-[#1E293B] transition-colors cursor-pointer shrink-0">
             <X size={20} strokeWidth={3} />
           </button>
         </div>
