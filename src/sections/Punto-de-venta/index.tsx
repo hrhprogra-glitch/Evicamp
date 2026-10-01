@@ -531,6 +531,8 @@ const [searchQuery, setSearchQuery] = useState('');
         setIsVistaPreviaOpen(true);
       } else {
         alert(`✅ Venta completada con éxito.\nVuelto: S/ ${vuelto.toFixed(2)}`);
+        // El buscador queda listo para escanear el siguiente producto: ventas corridas sin pausas.
+        setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
       }
 
       // Limpiar Caja Rápido
@@ -649,7 +651,7 @@ const [searchQuery, setSearchQuery] = useState('');
               <h2 className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
                 <Printer size={18} /> Vista Previa del Ticket
               </h2>
-              <button onClick={() => setIsVistaPreviaOpen(false)} className="hover:rotate-90 transition-transform cursor-pointer">
+              <button onClick={() => { setIsVistaPreviaOpen(false); setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50); }} className="hover:rotate-90 transition-transform cursor-pointer">
                 <X size={20} strokeWidth={3} />
               </button>
             </div>
@@ -672,8 +674,8 @@ const [searchQuery, setSearchQuery] = useState('');
 
             {/* BOTONES */}
             <div className="p-4 bg-white border-t-2 border-[#1E293B] flex gap-3 shrink-0">
-              <button 
-                onClick={() => setIsVistaPreviaOpen(false)} 
+              <button
+                onClick={() => { setIsVistaPreviaOpen(false); setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50); }}
                 className="flex-1 border-2 border-[#1E293B] bg-white text-[#1E293B] py-3 font-black text-xs uppercase tracking-widest hover:bg-gray-100 transition-colors cursor-pointer shadow-[4px_4px_0_0_#1E293B] active:translate-y-[4px] active:shadow-none"
               >
                 Nueva Venta <span className="opacity-60">(Enter)</span>

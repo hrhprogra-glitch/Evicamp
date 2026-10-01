@@ -156,7 +156,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                   key={prod.id}
                   onClick={() => !estaAgotado && onAddToCart({ ...prod, unit: esConsumo ? 'CONSUMO' : prod.unit })}
                   disabled={estaAgotado} 
-                  className={`p-2.5 sm:p-3 text-left flex flex-col min-w-0 transition-all rounded-none border-2
+                  className={`p-2 sm:p-2.5 text-left flex flex-col min-w-0 transition-all rounded-none border-2
                     ${isSelected ? 'ring-4 ring-[#10B981] border-[#10B981] scale-[1.02] shadow-xl z-10' : ''}
                     ${estaAgotado 
                       ? 'bg-[#FFFFFF] border-[#E2E8F0] opacity-50 cursor-not-allowed' 
@@ -168,7 +168,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                     }
                   `}
                 >
-                  <div className="flex flex-wrap justify-between items-start gap-1 mb-1.5 w-full">
+                  <div className="flex flex-wrap justify-between items-start gap-1 mb-1 w-full">
                     <span className="text-xs font-black text-[#64748B] whitespace-nowrap bg-[#F8FAFC] border border-[#E2E8F0] px-2 py-1 rounded-none">
                       {prod.code}
                     </span>
@@ -199,7 +199,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                     const img = (prod as any).image_url || (prod as any).image_path || '';
                     const valida = img.startsWith('http') || img.startsWith('data:');
                     return (
-                      <div className={`w-16 h-16 sm:w-20 sm:h-20 mb-1.5 sm:mb-2 flex items-center justify-center border border-[#E2E8F0] bg-[#FFFFFF] overflow-hidden shrink-0 ${estaAgotado ? 'grayscale' : ''}`}>
+                      <div className={`w-full h-20 sm:h-24 mb-1 sm:mb-1.5 flex items-center justify-center border border-[#E2E8F0] bg-[#FFFFFF] overflow-hidden shrink-0 ${estaAgotado ? 'grayscale' : ''}`}>
                         {valida ? (
                           <img
                             src={img}
@@ -209,17 +209,17 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                             onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                           />
                         ) : (
-                          <Package size={28} className="text-[#CBD5E1]" aria-hidden="true" />
+                          <Package size={32} className="text-[#CBD5E1]" aria-hidden="true" />
                         )}
                       </div>
                     );
                   })()}
 
-                  <span className="text-xs sm:text-sm font-black text-[#1E293B] uppercase leading-tight line-clamp-2 mb-2 sm:mb-2.5 break-words">
+                  <span className="text-xs sm:text-sm font-black text-[#1E293B] uppercase leading-tight line-clamp-2 mb-1.5 sm:mb-2 break-words">
                     {prod.name}
                   </span>
 
-                  <div className="mt-auto flex items-center justify-between pt-2 border-t border-dashed border-[#E2E8F0] w-full">
+                  <div className="mt-auto flex items-center justify-between pt-1.5 border-t border-dashed border-[#E2E8F0] w-full">
                     <span className="text-base sm:text-lg font-black text-[#1E293B] font-mono">
                       S/ {prod.price.toFixed(2)}
                     </span>
