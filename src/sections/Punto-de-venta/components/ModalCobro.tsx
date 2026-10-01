@@ -325,23 +325,25 @@ interface Props {
 
   return (
     <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="flex items-start justify-center w-full">
-        {/* Ventana de fiado (tablet/PC): sale deslizándose desde detrás de la de pago. El ancho se anima
-            de 0 a su tamaño, así la ventana de pago se corre suave y el par queda siempre centrado.
-            El +8px deja lugar a la sombra; inert evita llegar con Tab a los campos cuando está oculta. */}
+      <div className="relative bg-white w-full max-w-md border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
+        {/* Ventana de fiado (tablet/PC): pegada al lado derecho de la ventana de pago, en
+            posición absoluta (relativa a esta misma ventana) para que NUNCA la mueva ni la
+            recentre al aparecer/desaparecer — antes las dos se centraban juntas como grupo,
+            así que la de pago se corría cada vez que esta se abría. Sale deslizándose desde
+            detrás. El +8px deja lugar a la sombra; inert evita llegar con Tab a los campos
+            cuando está oculta. */}
         {esPantallaMedia && (
           <div
             inert={faltante <= 0}
             aria-hidden={faltante <= 0}
             onTransitionEnd={(e) => { if (e.target === e.currentTarget && e.propertyName === 'width') setFiadoAbierto(faltante > 0); }}
-            className={`shrink-0 pb-2 transition-[width,margin,opacity] duration-300 ease-out motion-reduce:transition-none ${faltante > 0 && (fiadoAbierto || window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'overflow-visible' : 'overflow-hidden'} ${faltante > 0 ? 'w-[calc(23rem+8px)] mr-2 opacity-100' : 'w-0 mr-0 opacity-0'}`}
+            className={`absolute top-0 left-full ml-2 pb-2 transition-[width,opacity] duration-300 ease-out motion-reduce:transition-none ${faltante > 0 && (fiadoAbierto || window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'overflow-visible' : 'overflow-hidden'} ${faltante > 0 ? 'w-[calc(23rem+8px)] opacity-100' : 'w-0 opacity-0'}`}
           >
-            <div className={`bg-white w-[23rem] border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] p-3 transition-transform duration-300 ease-out motion-reduce:transition-none ${faltante > 0 ? 'translate-x-0' : 'translate-x-16'}`}>
+            <div className={`bg-white w-[23rem] border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] p-3 transition-transform duration-300 ease-out motion-reduce:transition-none ${faltante > 0 ? 'translate-x-0' : '-translate-x-16'}`}>
               {panelFiado}
             </div>
           </div>
         )}
-      <div className="bg-white w-full max-w-md border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
 
         <div className="bg-[#10B981] text-[#1E293B] px-4 py-2 flex items-center justify-between border-b-2 border-[#1E293B] shrink-0">
           <h2 className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
@@ -503,7 +505,6 @@ interface Props {
           </button>
         </div>
 
-      </div>
       </div>
       </div>
   );
