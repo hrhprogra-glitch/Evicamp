@@ -26,6 +26,10 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
 
   const [tickets, setTickets] = useState<any[]>([]);
 
+  // 🧾 Movimientos manuales de Caja Interna (Ingreso Extra / Gasto-Retiro, registrados desde
+  // "Nuevo Movimiento"). Antes el reporte solo mostraba las ventas y estos quedaban afuera.
+  const [movimientos, setMovimientos] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(true);
 
   const printRef = useRef<HTMLDivElement>(null);
@@ -70,9 +74,19 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
 
       .lte('created_at', caja.closed_at || new Date().toISOString());
 
-   
-
     setTickets(sales || []);
+
+    // Movimientos manuales de Caja Interna de ESTA sesión (Ingreso Extra / Gasto-Retiro).
+    // Los de Caja Externa (personal) no entran: no son plata del negocio, no van en su reporte.
+    // Los abonos de fiados (INGRESO_FIADO) tampoco: ya se cuentan en "Final" vía closing_balance.
+    const { data: movs } = await supabase
+      .from('cash_movements')
+      .select('*')
+      .eq('session_id', String(caja.id))
+      .eq('flujo', 'INTERNO')
+      .order('created_at');
+
+    setMovimientos(movs || []);
 
     setLoading(false);
 
@@ -152,7 +166,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
 
                 <tbody>
 
-                  {tickets.map(t => (
+                  {tickets.filter(t => t.sunat_status !== 'ANULADO').map(t => (
 
                     <tr key={t.id}>
 
@@ -172,15 +186,66 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
 
 
 
+              {/* 🧾 MOVIMIENTOS MANUALES DE CAJA INTERNA (Ingreso Extra / Gasto-Retiro) */}
+
+              {movimientos.length > 0 && (
+
+              <table className="w-full text-[12px] mb-4">
+
+                <thead>
+
+                  <tr className="border-b border-black text-left">
+
+                    <th colSpan={2}>MOVIMIENTOS DE CAJA</th>
+
+                    <th className="text-right">MONTO</th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  {movimientos.map(m => (
+
+                    <tr key={m.id}>
+
+                      <td className="py-1" colSpan={2}>
+                        {new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - {m.description}
+                      </td>
+
+                      <td className={`text-right ${m.type === 'INGRESO' ? 'text-green-700' : 'text-red-700'}`}>
+                        {m.type === 'INGRESO' ? '+' : '-'} S/ {Number(m.amount).toFixed(2)}
+                      </td>
+
+                    </tr>
+
+                  ))}
+
+                </tbody>
+
+              </table>
+
+              )}
+
+
+
               <div className="border-t-2 border-black pt-2 space-y-1 font-black text-xs uppercase">
 
                 <div className="flex justify-between"><span>Base:</span><span>S/ {Number(caja.opening_balance).toFixed(2)}</span></div>
 
-                <div className="flex justify-between text-green-600"><span>Efectivo:</span><span>S/ {tickets.reduce((a,b) => a + Number(b.amount_cash || 0), 0).toFixed(2)}</span></div>
+                <div className="flex justify-between text-green-600"><span>Efectivo:</span><span>S/ {tickets.filter(t => t.sunat_status !== 'ANULADO').reduce((a,b) => a + Number(b.amount_cash || 0), 0).toFixed(2)}</span></div>
 
-                <div className="flex justify-between text-blue-600"><span>Yape:</span><span>S/ {tickets.reduce((a,b) => a + Number(b.amount_yape || 0), 0).toFixed(2)}</span></div>
+                <div className="flex justify-between text-blue-600"><span>Yape:</span><span>S/ {tickets.filter(t => t.sunat_status !== 'ANULADO').reduce((a,b) => a + Number(b.amount_yape || 0), 0).toFixed(2)}</span></div>
 
-                <div className="flex justify-between text-purple-600"><span>Tarjeta:</span><span>S/ {tickets.reduce((a,b) => a + Number(b.amount_card || 0), 0).toFixed(2)}</span></div>
+                <div className="flex justify-between text-purple-600"><span>Tarjeta:</span><span>S/ {tickets.filter(t => t.sunat_status !== 'ANULADO').reduce((a,b) => a + Number(b.amount_card || 0), 0).toFixed(2)}</span></div>
+
+                {movimientos.length > 0 && (
+                  <div className="flex justify-between text-[#1E293B]">
+                    <span>Movimientos (Ingresos - Gastos):</span>
+                    <span>S/ {movimientos.reduce((a, m) => a + (m.type === 'INGRESO' ? Number(m.amount) : -Number(m.amount)), 0).toFixed(2)}</span>
+                  </div>
+                )}
 
                 <div className="flex justify-between border-t border-black pt-1 text-lg">
 

@@ -88,7 +88,12 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
                 const diferencia = Math.round(((realEfectivo - esperadoEfectivo) + (realYape - esperadoYape) + (realTarjeta - esperadoTarjeta)) * 100) / 100;
 
                 return (
-                  <tr key={caja.id} className="border-b-2 border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors">
+                  <tr
+                    key={caja.id}
+                    onClick={() => setSelectedCaja(caja)}
+                    className="border-b-2 border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+                    title="Click para ver el detalle de esta caja"
+                  >
                     <td className="p-4 text-xs font-bold text-[#64748B] border-r-2 border-[#E2E8F0]">
                       {new Date(caja.opened_at).toLocaleString('es-PE')}
                     </td>
