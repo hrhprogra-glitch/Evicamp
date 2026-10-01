@@ -3,9 +3,9 @@ import { X, Save, Shield, User, Lock, CheckSquare, Loader2 } from 'lucide-react'
 import type { Empleado, PermisosUsuario } from '../types';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
-import { clicConTeclado } from '../../../utils/clicConTeclado';
+import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { useEmpleado } from '../../../utils/permisos';
-import { normalizarEmail } from '../../../utils/sesion';
+import { normalizarEmail, leerToken } from '../../../utils/sesion';
 
 interface ModalUsuarioProps {
   usuario: Empleado | null;
@@ -80,30 +80,34 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
     }
     setGuardando(true);
     try {
-      // Preparamos los datos
-      const datosGuardar = {
-        nombre: formData.nombre,
-        email: normalizarEmail(formData.email), // minúsculas; "juan" → juan@gestorpro.com
-        rol: formData.rol,
-        estado: formData.estado,
-        permisos: permisos,
-        ...(formData.password ? { password: formData.password } : {}) // Solo actualizamos password si se escribió una
-      };
+      // 🔐 Crear/editar un empleado pasa por funciones seguras del servidor
+      // (fn_crear_empleado/fn_editar_empleado): la contraseña se cifra (bcrypt)
+      // adentro de la base de datos, nunca se guarda en texto plano.
+      const token = leerToken();
+      if (!token) throw new Error('Tu sesión expiró. Vuelve a iniciar sesión.');
+      const emailNormalizado = normalizarEmail(formData.email);
 
       if (isEditing && usuario?.id) {
-        // Actualizar
-        const { error } = await supabase
-          .from('empleados')
-          .update(datosGuardar)
-          .eq('id', usuario.id);
-        
+        const { error } = await supabase.rpc('fn_editar_empleado', {
+          p_token: token,
+          p_empleado_id: usuario.id,
+          p_nombre: formData.nombre,
+          p_email: emailNormalizado,
+          p_rol: formData.rol,
+          p_estado: formData.estado,
+          p_permisos: permisos,
+          p_nuevo_password: formData.password || null,
+        });
         if (error) throw error;
       } else {
-        // Crear nuevo
-        const { error } = await supabase
-          .from('empleados')
-          .insert([datosGuardar]);
-          
+        const { error } = await supabase.rpc('fn_crear_empleado', {
+          p_token: token,
+          p_nombre: formData.nombre,
+          p_email: emailNormalizado,
+          p_password: formData.password,
+          p_rol: formData.rol,
+          p_permisos: permisos,
+        });
         if (error) throw error;
       }
 

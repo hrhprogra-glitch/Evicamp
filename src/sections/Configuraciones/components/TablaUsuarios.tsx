@@ -4,6 +4,7 @@ import type { Empleado } from '../types';
 import { ModalUsuario } from './ModalUsuario';
 import { supabase } from '../../../db/supabase'; // Asegúrate de la ruta correcta
 import { useEmpleado } from '../../../utils/permisos';
+import { leerToken } from '../../../utils/sesion';
 
 export const TablaUsuarios: React.FC = () => {
   const [usuarios, setUsuarios] = useState<Empleado[]>([]);
@@ -16,9 +17,11 @@ export const TablaUsuarios: React.FC = () => {
   const cargarUsuarios = async () => {
     setLoading(true);
     try {
+      // empleados_publico es una vista sin password/password_hash: aunque alguien
+      // intente leer la tabla real directamente, la base de datos ya no lo permite.
       const { data, error } = await supabase
-        .from('empleados')
-        .select('id, nombre, email, rol, estado, permisos, created_at') // sin contraseñas
+        .from('empleados_publico')
+        .select('id, nombre, email, rol, estado, permisos, created_at')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -46,7 +49,9 @@ export const TablaUsuarios: React.FC = () => {
 
   const handleEliminar = async (usuario: Empleado) => {
     if (!window.confirm(`¿Eliminar la cuenta de ${usuario.nombre} (${usuario.email})?\n\nSe cerrarán sus sesiones abiertas y ya no podrá entrar. Esta acción no se puede deshacer.`)) return;
-    const { error } = await supabase.from('empleados').delete().eq('id', usuario.id);
+    const token = leerToken();
+    if (!token) { alert('Tu sesión expiró. Vuelve a iniciar sesión.'); return; }
+    const { error } = await supabase.rpc('fn_eliminar_empleado', { p_token: token, p_empleado_id: usuario.id });
     if (error) {
       alert('❌ No se pudo eliminar la cuenta: ' + error.message);
       return;

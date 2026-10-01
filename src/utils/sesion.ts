@@ -20,7 +20,9 @@ export const normalizarEmail = (texto: string) => {
   return limpio.includes('@') ? limpio : `${limpio}@gestorpro.com`;
 };
 
-const leerToken = () => {
+// Exportado: ModalUsuario.tsx lo necesita para mandar el token a las funciones
+// seguras de creación/edición/borrado de empleados (fn_crear_empleado, etc).
+export const leerToken = () => {
   try { return localStorage.getItem(CLAVE_TOKEN); } catch { return null; }
 };
 
@@ -32,27 +34,23 @@ const guardarToken = (token: string | null) => {
   } catch { /* sin acceso a localStorage */ }
 };
 
+// 🔐 Login, validación y cierre de sesión pasan por funciones seguras del servidor
+// (fn_login/fn_validar_sesion/fn_cerrar_sesion) en vez de leer/escribir las tablas
+// empleados/sesiones directamente. La contraseña se compara con hash (bcrypt) adentro
+// de la base de datos: el navegador nunca ve el hash ni la contraseña de nadie más.
+interface RespuestaLogin { token: string; id: string; nombre: string; email: string; rol: string; permisos: Partial<PermisosUsuario> }
+interface RespuestaSesion { id: string; nombre: string; email: string; rol: string; permisos: Partial<PermisosUsuario> }
+
 export const iniciarSesion = async (usuario: string, password: string): Promise<EmpleadoSesion | null> => {
-  const { data: empleado } = await supabase
-    .from('empleados')
-    .select('id, nombre, email, rol, permisos')
-    .eq('email', normalizarEmail(usuario))
-    .eq('password', password)
-    .eq('estado', 'ACTIVO')
-    .maybeSingle();
+  const { data, error } = await supabase
+    .rpc('fn_login', { p_email: normalizarEmail(usuario), p_password: password })
+    .maybeSingle<RespuestaLogin>();
 
-  if (!empleado) return null;
+  if (error) throw new Error('No se pudo iniciar la sesión. Intenta de nuevo.');
+  if (!data || !data.token) return null;
 
-  const { data: sesion, error } = await supabase
-    .from('sesiones')
-    .insert({ empleado_id: empleado.id })
-    .select('token')
-    .single();
-
-  if (error || !sesion) throw new Error('No se pudo iniciar la sesión. Intenta de nuevo.');
-
-  guardarToken(sesion.token);
-  return { ...empleado, permisos: empleado.permisos || {} };
+  guardarToken(data.token);
+  return { id: data.id, nombre: data.nombre, email: data.email, rol: data.rol, permisos: data.permisos || {} };
 };
 
 // Devuelve el empleado de la sesión guardada, o null si la sesión no existe,
@@ -65,26 +63,20 @@ export const validarSesion = async (): Promise<EmpleadoSesion | null | 'sin-cone
     return null;
   }
 
-  const { data, error } = await supabase
-    .from('sesiones')
-    .select('token, empleado:empleados(id, nombre, email, rol, estado, permisos)')
-    .eq('token', token)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc('fn_validar_sesion', { p_token: token }).maybeSingle<RespuestaSesion>();
 
   if (error) return error.code ? null : 'sin-conexion';
 
-  const empleado = (data?.empleado ?? null) as (EmpleadoSesion & { estado: string }) | null;
-  if (!empleado || empleado.estado !== 'ACTIVO') {
-    await cerrarSesion();
+  if (!data || !data.id) {
+    guardarToken(null);
     return null;
   }
 
-  supabase.from('sesiones').update({ ultimo_uso: new Date().toISOString() }).eq('token', token).then(() => {});
-  return { id: empleado.id, nombre: empleado.nombre, email: empleado.email, rol: empleado.rol, permisos: empleado.permisos || {} };
+  return { id: data.id, nombre: data.nombre, email: data.email, rol: data.rol, permisos: data.permisos || {} };
 };
 
 export const cerrarSesion = async () => {
   const token = leerToken();
   guardarToken(null);
-  if (token) await supabase.from('sesiones').delete().eq('token', token);
+  if (token) await supabase.rpc('fn_cerrar_sesion', { p_token: token });
 };
