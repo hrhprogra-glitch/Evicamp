@@ -40,10 +40,24 @@ const InputPeso = ({ item, updateQuantity, index, setSelectedIndex, setColIndex 
   const { seleccionar, onMouseUp } = useSeleccionarTodo();
   const [val, setVal] = React.useState(item.cartQuantity.toString());
   React.useEffect(() => { setVal(item.cartQuantity.toString()); }, [item.cartQuantity]);
+  // Siempre apunta a la cantidad real más reciente, se actualiza en cada render — a
+  // diferencia de un closure normal, no queda "congelado" en el valor de cuando se
+  // disparó el cambio.
+  const cartQuantityRef = React.useRef(item.cartQuantity);
+  cartQuantityRef.current = item.cartQuantity;
   const aplicarCambio = () => {
     const num = parseFloat(val);
-    if (!isNaN(num) && num > 0) updateQuantity(item.id, redondearPeso(num));
-    else setVal(item.cartQuantity.toString()); 
+    if (!isNaN(num) && num > 0) {
+      updateQuantity(item.id, redondearPeso(num));
+      // 🛠️ Si updateQuantity recorta la cantidad por falta de stock y el resultado queda
+      // igual al que ya había en el carrito, el useEffect de arriba no se dispara (la
+      // dependencia no cambió) y el cuadro se queda mostrando el número inválido que
+      // escribió el cajero. Forzamos el resync un tick después con el valor real (vía ref,
+      // no el "item" de este closure, que ya quedó desactualizado).
+      setTimeout(() => setVal(cartQuantityRef.current.toString()), 0);
+    } else {
+      setVal(item.cartQuantity.toString());
+    }
   };
   return (
     <input 
@@ -101,10 +115,18 @@ const InputUnidades = ({ item, updateQuantity, index, setSelectedIndex, setColIn
   const { seleccionar, onMouseUp } = useSeleccionarTodo();
   const [val, setVal] = React.useState(item.cartQuantity.toString());
   React.useEffect(() => { setVal(item.cartQuantity.toString()); }, [item.cartQuantity]);
+  const cartQuantityRef = React.useRef(item.cartQuantity);
+  cartQuantityRef.current = item.cartQuantity;
   const aplicarCambio = () => {
     const num = parseInt(val, 10);
-    if (!isNaN(num) && num > 0) updateQuantity(item.id, num);
-    else setVal(item.cartQuantity.toString());
+    if (!isNaN(num) && num > 0) {
+      updateQuantity(item.id, num);
+      // Ver comentario equivalente en InputPeso: resync por si el valor quedó recortado
+      // igual al que ya había (el useEffect no se dispara cuando la dependencia no cambia).
+      setTimeout(() => setVal(cartQuantityRef.current.toString()), 0);
+    } else {
+      setVal(item.cartQuantity.toString());
+    }
   };
   return (
     <input 
@@ -129,7 +151,11 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
 }) => {
 
   // CÁLCULO DE TOTALES AUTOMÁTICO
-  const total = cart.reduce((acc, item) => acc + (Number(item.price) * Number(item.cartQuantity) || 0), 0);
+  // 🛠️ Usa item.subtotal (ya redondeado a centavos al agregar/editar cada línea), no
+  // price*cantidad recalculado aquí: ese cálculo crudo no estaba redondeado y por errores de
+  // punto flotante (ej. ventas por peso) podía mostrar un total distinto al que realmente se
+  // cobraba y se guardaba (ej. S/38.88 en pantalla vs S/38.89 cobrado de verdad).
+  const total = Math.round(cart.reduce((acc, item) => acc + (Number(item.subtotal) || 0), 0) * 100) / 100;
 
   return (
     <div 

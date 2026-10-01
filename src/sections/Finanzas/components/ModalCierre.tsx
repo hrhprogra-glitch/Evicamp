@@ -5,6 +5,13 @@ import { supabase } from '../../../db/supabase';
 import type { CashSession, SuperMetricas } from '../types';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 
+// `esperado` se arma sumando varios montos decimales (fondo + ventas + cobros - gastos),
+// lo que en JS casi nunca da un número binario exacto (ej. 130.70000000000002 en vez de
+// 130.70). Comparar esa diferencia contra 0 con "!==" marcaba descuadre aunque el cajero
+// contara exactamente lo que la pantalla mostraba (redondeado a 2 decimales). Redondeamos
+// a centavos antes de decidir si hay descuadre.
+const redondearCentavos = (n: number) => Math.round(n * 100) / 100;
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -24,7 +31,7 @@ interface BloqueArqueoProps {
 }
 const BloqueArqueo: React.FC<BloqueArqueoProps> = ({ icono, color, titulo, esperado, valor, onChange }) => {
   const numReal = Number(valor) || 0;
-  const diferencia = numReal - esperado;
+  const diferencia = redondearCentavos(numReal - esperado);
   const hayDescuadre = valor !== '' && diferencia !== 0;
 
   return (
@@ -71,9 +78,9 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
   const esperadoYape = superMetricas.yapeEsperado;
   const esperadoTarjeta = superMetricas.tarjetaEsperada;
 
-  const diferenciaEfectivo = (Number(montoEfectivo) || 0) - esperadoEfectivo;
-  const diferenciaYape = (Number(montoYape) || 0) - esperadoYape;
-  const diferenciaTarjeta = (Number(montoTarjeta) || 0) - esperadoTarjeta;
+  const diferenciaEfectivo = redondearCentavos((Number(montoEfectivo) || 0) - esperadoEfectivo);
+  const diferenciaYape = redondearCentavos((Number(montoYape) || 0) - esperadoYape);
+  const diferenciaTarjeta = redondearCentavos((Number(montoTarjeta) || 0) - esperadoTarjeta);
 
   const hayDescuadre =
     (montoEfectivo !== '' && diferenciaEfectivo !== 0) ||

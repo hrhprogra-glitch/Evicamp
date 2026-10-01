@@ -1,5 +1,5 @@
 // src/sections/Reportes/index.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FileText, Calendar, RotateCcw, CalendarDays, Search } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import { TablaTickets } from './components/TablaTickets';
@@ -12,6 +12,12 @@ import { eliminarAbonoYRevertirCaja } from '../../utils/revertirAbono';
 
 export const Reportes: React.FC = () => {
   const [tickets, setTickets] = useState<TicketVenta[]>([]);
+  // 🛡️ Candado contra doble clic en "Anular": un ref (no useState) porque el chequeo debe
+  // ser síncrono. Con useState, dos clics casi simultáneos pueden leer el estado viejo
+  // antes de que React re-renderice, y ambos pasan el candado (se vio en vivo: dos
+  // "ANULADO" procesados para el mismo ticket, duplicando la devolución de stock y caja).
+  const idsAnulandoRef = useRef<Set<string>>(new Set());
+  const [idsAnulando, setIdsAnulando] = useState<Set<string>>(new Set());
   // 💰 Abonos de deudas (fiados) pagados dentro del rango filtrado. Igual que Resumen/Utilidades/
   // Finanzas, estos pagos son ingreso real aunque no correspondan a un ticket de venta nuevo.
   const [totalAbonosRango, setTotalAbonosRango] = useState<number>(0);
@@ -222,12 +228,21 @@ export const Reportes: React.FC = () => {
   }, [fechaInicio, fechaFin]);
 
   const handleAnularTicket = async (id: string) => {
+    // 🛡️ Candado síncrono: si ya hay una anulación en curso para este ticket (doble clic,
+    // doble toque en pantalla táctil), no arrancamos una segunda.
+    if (idsAnulandoRef.current.has(id)) return;
+
     if (id.startsWith('ERR-')) {
       alert('⚠️ PROTECCIÓN DEL SISTEMA: Registro corrupto.');
       return;
     }
 
     if (!window.confirm('⚠️ ¿Seguro que deseas ANULAR este ticket? El stock regresará y el dinero se descontará de la caja actual.')) return;
+
+    // Recién acá cerramos el candado: window.confirm ya bloqueó la pestaña, así que ningún
+    // segundo clic real pudo colarse antes de esta línea. Lo liberamos siempre en el finally.
+    idsAnulandoRef.current.add(id);
+    setIdsAnulando(new Set(idsAnulandoRef.current));
 
     // 🔧 fn_annul_sale nunca existió en la BD (ver commits previos): esta operación se hace
     // aquí, en el frontend, con los mismos pasos directos que ya usa el resto del sistema
@@ -330,6 +345,9 @@ export const Reportes: React.FC = () => {
       console.error('Error al anular ticket:', error);
       const detalle = error instanceof Error ? error.message : (error as any)?.message;
       alert('❌ Error al anular el ticket: ' + (detalle || 'error desconocido'));
+    } finally {
+      idsAnulandoRef.current.delete(id);
+      setIdsAnulando(new Set(idsAnulandoRef.current));
     }
   };
 
@@ -498,7 +516,7 @@ export const Reportes: React.FC = () => {
       </div>
 
       <div className="flex-1 min-h-0">
-        <TablaTickets tickets={ticketsFiltrados} onAnular={handleAnularTicket} onDelete={handleDeleteTicket} />
+        <TablaTickets tickets={ticketsFiltrados} onAnular={handleAnularTicket} onDelete={handleDeleteTicket} idsAnulando={idsAnulando} />
       </div>
     </div>
   );

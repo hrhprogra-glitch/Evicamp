@@ -584,7 +584,7 @@ const [searchQuery, setSearchQuery] = useState('');
           <span className={`min-w-6 px-1.5 py-0.5 text-[12px] ${cart.length > 0 ? 'bg-[#10B981] text-[#1E293B]' : 'bg-[#E2E8F0] text-[#64748B]'}`}>
             {cart.length}
           </span>
-          <span className="text-[#10B981]">S/ {cart.reduce((acc, item) => acc + item.subtotal, 0).toFixed(2)}</span>
+          <span className="text-[#10B981]">S/ {(Math.round(cart.reduce((acc, item) => acc + item.subtotal, 0) * 100) / 100).toFixed(2)}</span>
         </button>
       </div>
 

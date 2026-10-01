@@ -138,7 +138,11 @@ export const DashboardResumen: React.FC = () => {
         const ventasBrutas = ingresoCanonico.ingresoTotal;
         const costoVenta = saleDetailsFiltered.reduce((acc: number, d: any) => acc + (Number(d.cost_at_moment || 0) * Number(d.quantity || 0)), 0);
         const mermasValor = wastesFiltered.reduce((acc: number, w: any) => acc + Number(w.total_loss || 0), 0);
-        const utilidadReal = ventasBrutas - costoVenta - mermasValor;
+        // 🎯 Mismo "gastos" que ya calcula calcularIngresoTotal (egresos de caja, sin compras a
+        // proveedores) y que usa Utilidades para su "Utilidad Neta" — antes esta tarjeta no los
+        // restaba, así que "Ganancia Real" (Resumen) y "Utilidad Neta" (Utilidades) podían
+        // mostrar números muy distintos para el mismo día.
+        const utilidadReal = ventasBrutas - costoVenta - mermasValor - ingresoCanonico.gastos;
 
         const fiadosPendientes = fiadosFiltered.filter((f: any) => String(f.status).toUpperCase() !== 'CANCELADO');
         const cuentasPorCobrar = fiadosPendientes.reduce((acc: number, f: any) => acc + (Number(f.amount || 0) - Number(f.paid_amount || 0)), 0);
@@ -211,7 +215,7 @@ export const DashboardResumen: React.FC = () => {
     procesarMetricas();
   }, [rawData, periodo]);
 
-  const fSoles = (v: number) => `S/ ${v.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`;
+  const fSoles = (v: number) => `S/ ${v.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center h-full bg-white">

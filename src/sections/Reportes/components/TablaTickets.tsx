@@ -4,16 +4,17 @@ import { RotateCcw, Trash2, Receipt, ChevronLeft, ChevronRight, Eye, X } from 'l
 import { supabase } from '../../../db/supabase'; 
 import type { TicketVenta } from '../types';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
-import { clicConTeclado } from '../../../utils/clicConTeclado';
+import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { usePermiso } from '../../../utils/permisos';
 
 interface Props {
   tickets: TicketVenta[];
   onAnular: (id: string) => void;
   onDelete: (id: string) => void;
+  idsAnulando?: Set<string>;
 }
 
-export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete }) => {
+export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete, idsAnulando }) => {
   // Anular o eliminar ventas requiere el permiso de anular ventas
   const puedeAnular = usePermiso('reportes_anular_ventas');
   const [currentPage, setCurrentPage] = useState(1);
@@ -151,7 +152,12 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete }) =
                           <Eye size={16} />
                         </button>
                         {t.estado !== 'ANULADO' && puedeAnular && (
-                          <button onClick={(e) => { e.stopPropagation(); onAnular(t.id); }} className="p-2 bg-[#FFFFFF] text-[#64748B] border border-[#E2E8F0] hover:border-[#F59E0B] hover:text-[#F59E0B] transition-colors cursor-pointer rounded-none" title="Anular / Devolver">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onAnular(t.id); }}
+                            disabled={idsAnulando?.has(t.id)}
+                            className="p-2 bg-[#FFFFFF] text-[#64748B] border border-[#E2E8F0] hover:border-[#F59E0B] hover:text-[#F59E0B] transition-colors cursor-pointer rounded-none disabled:opacity-40 disabled:pointer-events-none"
+                            title="Anular / Devolver"
+                          >
                             <RotateCcw size={16} />
                           </button>
                         )}

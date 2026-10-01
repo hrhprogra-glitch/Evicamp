@@ -82,7 +82,10 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
                 const realYape = Number(caja.closing_yape || 0);
                 const esperadoTarjeta = Number(caja.expected_card || 0);
                 const realTarjeta = Number(caja.closing_card || 0);
-                const diferencia = (realEfectivo - esperadoEfectivo) + (realYape - esperadoYape) + (realTarjeta - esperadoTarjeta);
+                // Redondeado a centavos: sumar varios decimales en JS casi nunca da un
+                // número binario exacto, y sin esto una caja cuadrada mostraba "+S/ 0.00"
+                // en vez de "CUADRE EXACTO".
+                const diferencia = Math.round(((realEfectivo - esperadoEfectivo) + (realYape - esperadoYape) + (realTarjeta - esperadoTarjeta)) * 100) / 100;
 
                 return (
                   <tr key={caja.id} className="border-b-2 border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors">

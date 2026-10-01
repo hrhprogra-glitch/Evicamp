@@ -185,22 +185,20 @@ export const Utilidades = () => {
         // venta mezcla pagado + fiado, así que repartimos el abono proporcionalmente).
         const fraccionPagada = esFiado ? (deudaTotal > 0 ? abonado / deudaTotal : 1) : 1;
 
-        // 🚀 PASO 2: LEER COSTO REAL + CÚPULA DE SEGURIDAD
-        // 1. Priorizamos el costo guardado por el trigger al momento de la venta.
+        // 🚀 PASO 2: LEER COSTO REAL
+        // 1. Priorizamos el costo guardado por el trigger al momento de la venta (incluso si
+        //    es exactamente 0: un costo real de 0 no es lo mismo que "no hay dato", por eso
+        //    comparamos contra null/undefined y no con un simple if truthy).
         // 2. Si no existe (venta sin ese registro), usamos el costo del LOTE MÁS RECIENTE del producto.
         // 3. Como último recurso, el "cost_price" del catálogo (puede estar desactualizado).
-        const costoUnitario = d.cost_at_moment
+        const costoUnitario = d.cost_at_moment != null
           ? Number(d.cost_at_moment)
           : (costoLoteMasReciente[d.product_id] ?? Number(catalogo.find(c => c.id === d.product_id)?.cost_price || 0));
-        let costoLineaTotal = cantidadLinea * costoUnitario;
-
-        // 🛡️ CÚPULA DE SEGURIDAD (ANTI-NEGATIVO)
-        // Si por error de registro (Costo de Caja vs Unidad) la inversión supera al ingreso facturado,
-        // el sistema fuerza un margen de ganancia del 20% (Costo = 80% del ingreso). Se compara contra
-        // el ingreso FACTURADO (no el cobrado) porque es la relación real costo-vs-precio de venta.
-        if (costoLineaTotal >= ingresoLinea && ingresoLinea > 0) {
-          costoLineaTotal = ingresoLinea * 0.80;
-        }
+        // 🔍 Mostramos el costo/margen REAL siempre, incluso si da pérdida (costo > ingreso):
+        // antes se "maquillaba" ese caso forzando un 20% de ganancia falsa, lo que ocultaba
+        // ventas con pérdida real además de errores de registro de costo. Mejor ver la
+        // pérdida real y poder investigarla, que no verla.
+        const costoLineaTotal = cantidadLinea * costoUnitario;
 
         prod.unidadesVendidas += cantidadLinea * fraccionPagada;
         prod.ingresosTotales += ingresoLinea * fraccionPagada;

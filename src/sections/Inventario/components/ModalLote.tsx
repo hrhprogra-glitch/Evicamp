@@ -23,6 +23,10 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
   const [cantidad, setCantidad] = useState('');
   const [costoTotal, setCostoTotal] = useState('');
   const [sustento, setSustento] = useState('');
+  // Distingue "el cajero escribió texto libre" de "eligió un proveedor real del desplegable":
+  // solo en el segundo caso guardamos `supplier` (antes nunca se guardaba, así que la
+  // etiqueta azul "PROV:" de TablaLotes nunca aparecía en lotes nuevos).
+  const [proveedorConfirmado, setProveedorConfirmado] = useState(false);
   const [omitirSustento, setOmitirSustento] = useState(false);
   const [expiration, setExpiration] = useState('');
 
@@ -202,6 +206,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
             cost_total: Number(costoTotal),
             cost_unit: costoUnitarioRaw,
             document_ref: documento,
+            supplier: proveedorConfirmado ? sustento : null,
             is_synced: '1',
             is_active: 1 // <--- 🔥 ¡ESTA ES LA LÍNEA MÁGICA QUE FALTABA!
           }])
@@ -412,6 +417,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                   value={omitirSustento ? '' : sustento}
                   onChange={(e) => {
                     setSustento(e.target.value.toUpperCase());
+                    setProveedorConfirmado(false);
                     setShowProviderDropdown(true);
                   }}
                   onFocus={() => setShowProviderDropdown(true)}
@@ -430,6 +436,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                           onMouseDown={(e) => {
                             e.preventDefault(); // Evita que el onBlur cierre la ventana antes del click
                             setSustento(prov.razon_social);
+                            setProveedorConfirmado(true);
                             setShowProviderDropdown(false);
                           }}
                           className="p-3 hover:bg-[#F8FAFC] border-b border-[#E2E8F0] cursor-pointer"

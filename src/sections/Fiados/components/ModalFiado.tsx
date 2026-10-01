@@ -26,6 +26,9 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
   // Nuevos estados para el buscador de clientes
   const [searchCliente, setSearchCliente] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  // Evita que un doble clic (o doble toque) en "Confirmar" dispare handleSave dos veces
+  // y cree dos fiados/ventas duplicadas con doble descuento de stock.
+  const [isSaving, setIsSaving] = useState(false);
 
   // Sincronizar datos al abrir
   useEffect(() => {
@@ -154,12 +157,14 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
   const totalCalculado = detalles.reduce((acc, d) => acc + Number(d.subtotal || 0), 0);
 
   const handleSave = async () => {
+    if (isSaving) return;
     if (!clienteSeleccionado) return alert('Selecciona un cliente.');
     if (detalles.length === 0) return alert('Agrega al menos un producto.');
     if (!fechaVencimiento) return alert('Selecciona una fecha de vencimiento.');
 
     const cli = clientes.find(c => c.nombre === clienteSeleccionado);
-    
+
+    setIsSaving(true);
     try {
       if (fiadoAEditar) {
         // MODO EDICIÓN: Solo permite modificar la fecha de vencimiento
@@ -234,6 +239,8 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
       onSave({}); // Refrescar la interfaz
     } catch (e: any) {
       alert('Error técnico en BD: ' + e.message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -449,9 +456,9 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                 <span className="text-2xl font-black text-[#F59E0B]">S/ {totalCalculado.toFixed(2)}</span>
               </div>
               <div className="flex justify-end gap-3">
-                <button onClick={onClose} className="px-4 py-3 border-2 border-[#E2E8F0] text-[#64748B] text-[12px] font-black uppercase hover:border-[#1E293B]">Cancelar</button>
-                <button onClick={handleSave} className="flex-1 py-3 bg-[#F59E0B] text-[#1E293B] border-2 border-[#1E293B] text-xs font-black uppercase flex items-center justify-center gap-2 shadow-[2px_2px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
-                  <Save size={16}/> {isEdit ? 'Guardar Nueva Fecha' : 'Confirmar y Restar Inventario'}
+                <button onClick={onClose} disabled={isSaving} className="px-4 py-3 border-2 border-[#E2E8F0] text-[#64748B] text-[12px] font-black uppercase hover:border-[#1E293B] disabled:opacity-50">Cancelar</button>
+                <button onClick={handleSave} disabled={isSaving} className="flex-1 py-3 bg-[#F59E0B] text-[#1E293B] border-2 border-[#1E293B] text-xs font-black uppercase flex items-center justify-center gap-2 shadow-[2px_2px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all disabled:opacity-50 disabled:pointer-events-none">
+                  <Save size={16}/> {isSaving ? 'Guardando...' : (isEdit ? 'Guardar Nueva Fecha' : 'Confirmar y Restar Inventario')}
                 </button>
               </div>
             </div>
