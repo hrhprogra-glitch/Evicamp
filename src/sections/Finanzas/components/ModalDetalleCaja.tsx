@@ -110,7 +110,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
 
           <h2 className="font-black uppercase tracking-widest flex items-center gap-2">
 
-            <Receipt size={20} /> Reporte de Tickets - Caja #{caja.id}
+            <Receipt size={20} /> Reporte de Caja #{caja.id}
 
           </h2>
 
