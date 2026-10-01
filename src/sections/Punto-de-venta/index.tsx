@@ -507,16 +507,20 @@ const [searchQuery, setSearchQuery] = useState('');
         alert('⚠️ La venta se guardó, pero no se pudo registrar el detalle de productos (el stock no se descontó). Avisa a soporte técnico.\n\nDetalle: ' + detailError.message);
       }
 
-      // Solo descontamos el stock visual si no hubo error
-      setProductos(prevProductos => 
-        prevProductos.map(p => {
-          const itemComprado = cart.find(i => i.id === p.id);
-          if (itemComprado && itemComprado.unit !== 'CONSUMO') {
-            return { ...p, quantity: p.quantity - Number(itemComprado.cartQuantity) };
-          }
-          return p;
-        })
-      );
+      // Solo descontamos el stock visual si no hubo error (si sale_details falló, el trigger
+      // fn_reduce_stock_from_sales nunca corrió en la BD: mostrar el descuento igual aquí
+      // dejaría la pantalla "sin stock" de un producto que en realidad no se movió).
+      if (!detailError) {
+        setProductos(prevProductos =>
+          prevProductos.map(p => {
+            const itemComprado = cart.find(i => i.id === p.id);
+            if (itemComprado && itemComprado.unit !== 'CONSUMO') {
+              return { ...p, quantity: p.quantity - Number(itemComprado.cartQuantity) };
+            }
+            return p;
+          })
+        );
+      }
 
       // === PASO 4: TICKET Y LIMPIEZA ===
       if (imprimirBoleta) {

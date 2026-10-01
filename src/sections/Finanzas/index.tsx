@@ -17,7 +17,7 @@ import { FiltroFechas } from './components/FiltroFechas';
 // propio cálculo con superMetricas, sin cambios.
 // (SuperMetricas ahora vive en ./types porque ModalCierre tambien lo necesita para el arqueo
 // de Efectivo/Yape/Tarjeta al cerrar caja.)
-import { calcularIngresoTotal, fechaLocalPeru } from '../../utils/ingresos';
+import { calcularIngresoTotal, fechaLocalPeru, rangoUTCPeru } from '../../utils/ingresos';
 import { usePermiso } from '../../utils/permisos';
 import { traerTodo } from '../../utils/traerTodo';
 
@@ -57,9 +57,14 @@ export const Finanzas: React.FC = () => {
       .eq('status', 'CLOSED');
 
     if (desde && hasta) {
+      // 🛠️ ZONA HORARIA PERÚ (UTC-5): igual que Reportes/Resumen/Utilidades (ver
+      // utils/ingresos.ts). Antes se usaba el límite UTC "pelado" (T00:00/T23:59 UTC), que
+      // corre el día 5 horas en Perú: una caja abierta de noche podía aparecer en el día
+      // equivocado, o desaparecer del historial al filtrar por un solo día.
+      const { inicioUTC, finUTC } = rangoUTCPeru(desde, hasta);
       query = query
-        .gte('opened_at', `${desde}T00:00:00.000Z`)
-        .lte('opened_at', `${hasta}T23:59:59.999Z`);
+        .gte('opened_at', inicioUTC)
+        .lt('opened_at', finUTC);
     }
 
     const from = (page - 1) * ITEMS_POR_PAGINA;
