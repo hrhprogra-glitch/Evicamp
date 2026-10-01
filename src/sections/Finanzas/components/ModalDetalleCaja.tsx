@@ -3,7 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Printer, Receipt, Download, FileText, ChevronLeft } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { useReactToPrint } from 'react-to-print';
-import html2canvas from 'html2canvas';
+// html2canvas-pro (no el html2canvas normal): Tailwind v4 usa colores oklch() en su CSS, y la
+// librería original no sabe interpretarlos (falla al generar la imagen). Este fork sí los soporta.
+import html2canvas from 'html2canvas-pro';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 
 interface Props {
