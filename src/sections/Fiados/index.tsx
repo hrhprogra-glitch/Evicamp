@@ -11,6 +11,7 @@ import type { Fiado, Cliente, PagoAbono } from './types'; // <-- Importamos Pago
 import type { Product } from '../Inventario/types';
 import { usePermiso } from '../../utils/permisos';
 import { traerTodo } from '../../utils/traerTodo';
+import { eliminarAbonoYRevertirCaja } from '../../utils/revertirAbono';
 
 export const Fiados: React.FC = () => {
   // Crear deudas es como vender a crédito
@@ -135,25 +136,23 @@ if (fiaData) {
     
     if (window.confirm(`⚠️ ANULACIÓN TÉCNICA: ¿Seguro que deseas anular este pago de S/ ${montoRestaurar.toFixed(2)}?`)) {
       try {
-        // 1. ELIMINACIÓN MAESTRA: Borra el pago de la deuda.
+        // 1. Releemos el pago completo: necesitamos session_id/amount/created_at exactos
+        // para poder encontrar y borrar su movimiento de caja gemelo (ver revertirAbono.ts).
+        const { data: pago, error: errFetch } = await supabase
+          .from('debt_payments')
+          .select('id, session_id, amount, created_at')
+          .eq('id', pagoId)
+          .single();
+        if (errFetch || !pago) {
+          throw errFetch || new Error('El pago no existe o ya fue anulado.');
+        }
+
+        // 2. ELIMINACIÓN MAESTRA: borra el pago Y su movimiento INGRESO_FIADO en caja.
         // El trigger update_fiado_status (AFTER DELETE en debt_payments) recalcula solo
         // fiados.paid_amount = SUMA de los abonos que quedan, y el estado PENDIENTE/CANCELADO.
         // Por eso aquí NO se toca la tabla fiados: antes también se restaba desde la app
         // y el monto anulado quedaba descontado dos veces.
-        const { data: borrados, error: errDelete } = await supabase
-          .from('debt_payments')
-          .delete()
-          .eq('id', pagoId)
-          .select('id');
-        if (errDelete) throw errDelete;
-        // Si RLS bloquea el borrado, Supabase no da error pero no borra nada: lo detectamos aquí.
-        if (!borrados || borrados.length === 0) {
-          throw new Error('El pago no se eliminó (no existe o no tienes permiso para anularlo).');
-        }
-
-        // 2. LIMPIEZA DE CAJA: la hace la base de datos. El trigger tr_fiado_payment_cash_delete
-        // borra todos los movimientos INGRESO_FIADO de este pago (uno por método si fue mixto).
-        // No se borra nada desde aquí: se eliminaría otro movimiento del mismo cliente.
+        await eliminarAbonoYRevertirCaja(pago);
 
         // 3. RECARGAR DATOS
         alert("✅ Anulación completada: La deuda se restauró y el ingreso desapareció de Finanzas, Caja y Reportes automáticamente.");
