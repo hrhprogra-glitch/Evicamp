@@ -369,8 +369,9 @@ export const Reportes: React.FC = () => {
   // mostrando el total real del rango/búsqueda, sin importar qué filas se estén mirando).
   const ticketsFiltrados = tickets.filter(t => {
     if (filtroEstado !== 'TODOS' && t.estado !== filtroEstado) return false;
-    if (filtroDeuda === 'PENDIENTE' && !(t.es_fiado && t.monto_deuda > 0)) return false;
-    if (filtroDeuda === 'PAGADO' && (t.es_fiado && t.monto_deuda > 0)) return false;
+    const deuda = Number(t.monto_deuda || 0);
+    if (filtroDeuda === 'PENDIENTE' && !(t.es_fiado && deuda > 0)) return false;
+    if (filtroDeuda === 'PAGADO' && (t.es_fiado && deuda > 0)) return false;
     return true;
   });
 
