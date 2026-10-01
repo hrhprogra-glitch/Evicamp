@@ -78,10 +78,16 @@ export const Reportes: React.FC = () => {
           supabase.from('fiados').select('sale_id').ilike('customer_name', `%${busquedaDebounced}%`)
         ]);
         const idsPorNombre = new Set((fiadosPorNombre || []).map((f: any) => String(f.sale_id)));
+        // También se busca por MONTO exacto (ej. el dueño se acuerda que fue "42.2" o "42.20",
+        // no del nombre del cliente ni del número de ticket). Tolerancia de un centavo por
+        // redondeo de punto flotante.
+        const terminoNumerico = parseFloat(busquedaDebounced.replace(',', '.'));
+        const buscaPorMonto = /^[0-9]+([.,][0-9]{1,2})?$/.test(busquedaDebounced) && !isNaN(terminoNumerico);
         data = (ventasAmplias || []).filter((s: any) =>
           idsPorNombre.has(String(s.id)) ||
           String(s.id).includes(busquedaDebounced) ||
-          String(s.id).slice(-6).includes(busquedaDebounced)
+          String(s.id).slice(-6).includes(busquedaDebounced) ||
+          (buscaPorMonto && Math.abs(Number(s.total) - terminoNumerico) < 0.01)
         );
         error = errVentas;
         // Los totales de "Ventas del Rango" no tienen sentido mezclados con resultados de
@@ -304,7 +310,7 @@ export const Reportes: React.FC = () => {
           type="text"
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
-          placeholder="BUSCAR POR CLIENTE O N° DE TICKET (busca en todas las fechas)"
+          placeholder="BUSCAR POR CLIENTE, N° DE TICKET O MONTO (busca en todas las fechas)"
           className="flex-1 min-w-0 h-11 px-3 bg-transparent text-sm font-black text-[#1E293B] uppercase outline-none placeholder:text-[#64748B]/60"
         />
         {busqueda && (
