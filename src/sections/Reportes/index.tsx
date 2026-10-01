@@ -34,6 +34,11 @@ export const Reportes: React.FC = () => {
     return () => clearTimeout(t);
   }, [busqueda]);
 
+  // 🔎 FILTROS ADICIONALES: estado del ticket y estado de la deuda. Se aplican sobre lo ya
+  // cargado (por fecha o por búsqueda), sin disparar una consulta nueva.
+  const [filtroEstado, setFiltroEstado] = useState<'TODOS' | 'COMPLETADO' | 'ANULADO'>('TODOS');
+  const [filtroDeuda, setFiltroDeuda] = useState<'TODOS' | 'PENDIENTE' | 'PAGADO'>('TODOS');
+
   // --- FUNCIONES DE FILTRADO RÁPIDO ---
   const filtrarHoy = () => {
     setFechaInicio(hoyStr);
@@ -274,6 +279,15 @@ export const Reportes: React.FC = () => {
   const totalRango = ingresoCanonico !== null ? ingresoCanonico : totalRangoLocal;
   const totalAnulados = tickets.filter(t => t.estado === 'ANULADO').length;
 
+  // Filtros de Estado/Deuda se aplican solo a la TABLA (las tarjetas de arriba siguen
+  // mostrando el total real del rango/búsqueda, sin importar qué filas se estén mirando).
+  const ticketsFiltrados = tickets.filter(t => {
+    if (filtroEstado !== 'TODOS' && t.estado !== filtroEstado) return false;
+    if (filtroDeuda === 'PENDIENTE' && !(t.es_fiado && t.monto_deuda > 0)) return false;
+    if (filtroDeuda === 'PAGADO' && (t.es_fiado && t.monto_deuda > 0)) return false;
+    return true;
+  });
+
   return (
     <div className="h-full flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono">
       
@@ -316,6 +330,38 @@ export const Reportes: React.FC = () => {
         {busqueda && (
           <button onClick={() => setBusqueda('')} className="px-3 h-11 text-[#EF4444] hover:bg-[#FEF2F2] font-black text-xs uppercase cursor-pointer shrink-0" title="Limpiar búsqueda">
             Limpiar
+          </button>
+        )}
+      </div>
+
+      {/* FILTROS: estado del ticket y estado de la deuda (se aplican sobre lo ya cargado) */}
+      <div className="flex flex-wrap gap-3 shrink-0">
+        <select
+          value={filtroEstado}
+          onChange={(e) => setFiltroEstado(e.target.value as typeof filtroEstado)}
+          className="h-10 px-3 bg-white border-2 border-[#1E293B] text-xs font-black uppercase text-[#1E293B] outline-none cursor-pointer rounded-none"
+        >
+          <option value="TODOS">Estado: Todos</option>
+          <option value="COMPLETADO">Estado: Completado</option>
+          <option value="ANULADO">Estado: Anulado</option>
+        </select>
+
+        <select
+          value={filtroDeuda}
+          onChange={(e) => setFiltroDeuda(e.target.value as typeof filtroDeuda)}
+          className="h-10 px-3 bg-white border-2 border-[#1E293B] text-xs font-black uppercase text-[#1E293B] outline-none cursor-pointer rounded-none"
+        >
+          <option value="TODOS">Deuda: Todos</option>
+          <option value="PENDIENTE">Deuda: Pendiente</option>
+          <option value="PAGADO">Deuda: Pagado / Sin deuda</option>
+        </select>
+
+        {(filtroEstado !== 'TODOS' || filtroDeuda !== 'TODOS') && (
+          <button
+            onClick={() => { setFiltroEstado('TODOS'); setFiltroDeuda('TODOS'); }}
+            className="h-10 px-3 text-[#EF4444] hover:bg-[#FEF2F2] font-black text-xs uppercase cursor-pointer rounded-none border-2 border-[#EF4444]"
+          >
+            Quitar filtros
           </button>
         )}
       </div>
@@ -366,7 +412,7 @@ export const Reportes: React.FC = () => {
       </div>
 
       <div className="flex-1 min-h-0">
-        <TablaTickets tickets={tickets} onAnular={handleAnularTicket} onDelete={handleDeleteTicket} />
+        <TablaTickets tickets={ticketsFiltrados} onAnular={handleAnularTicket} onDelete={handleDeleteTicket} />
       </div>
     </div>
   );
