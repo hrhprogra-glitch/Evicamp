@@ -1,6 +1,6 @@
 // src/sections/Reportes/index.tsx
 import React, { useState, useEffect } from 'react';
-import { FileText, Calendar, RotateCcw, CalendarDays } from 'lucide-react';
+import { FileText, Calendar, RotateCcw, CalendarDays, Search } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import { TablaTickets } from './components/TablaTickets';
 import type { TicketVenta } from './types';
@@ -23,6 +23,16 @@ export const Reportes: React.FC = () => {
   // Seteamos "HOY" como fecha predeterminada al cargar el módulo
   const [fechaInicio, setFechaInicio] = useState<string>(hoyStr);
   const [fechaFin, setFechaFin] = useState<string>(hoyStr);
+
+  // 🔎 BÚSQUEDA POR CLIENTE O N° DE TICKET: resuelve el caso típico de "no encuentro mi ticket"
+  // cuando el dueño no se acuerda de qué día fue la venta. Mientras hay texto, ignora el filtro
+  // de fechas y busca en el último año (no solo en el rango visible).
+  const [busqueda, setBusqueda] = useState('');
+  const [busquedaDebounced, setBusquedaDebounced] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setBusquedaDebounced(busqueda.trim()), 350);
+    return () => clearTimeout(t);
+  }, [busqueda]);
 
   // --- FUNCIONES DE FILTRADO RÁPIDO ---
   const filtrarHoy = () => {
@@ -52,39 +62,68 @@ export const Reportes: React.FC = () => {
 
   useEffect(() => {
     const fetchTickets = async () => {
-      const fechaFinExpandida = new Date(fechaFin);
-      fechaFinExpandida.setDate(fechaFinExpandida.getDate() + 1);
-      const finAjustado = fechaFinExpandida.toISOString().split('T')[0];
+      const buscando = busquedaDebounced !== '';
+      let data: any[] | null;
+      let error: any;
 
-      // 🛠️ ZONA HORARIA PERÚ (UTC-5): "00:00" de un día en Perú equivale a "05:00" UTC.
-      // Sin este ajuste, el rango se corría 5 horas y mezclaba ventas de la noche del día anterior.
-      const hayRango = !!(fechaInicio && fechaFin);
-      const inicioUTC = `${fechaInicio}T05:00:00.000Z`;
-      const finUTC = `${finAjustado}T05:00:00.000Z`;
+      if (buscando) {
+        // 🔎 MODO BÚSQUEDA: ignora el filtro de fechas por completo. Busca en el último año
+        // por nombre de cliente (fiados) o por N° de ticket (id completo o los últimos 6
+        // dígitos, que es lo que se ve en pantalla como "#XXXXXX").
+        const desdeUTC = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
+        const [{ data: ventasAmplias, error: errVentas }, { data: fiadosPorNombre }] = await Promise.all([
+          traerTodo(() => supabase.from('sales').select('*')
+            .gte('created_at', desdeUTC)
+            .order('created_at', { ascending: false }).order('id')),
+          supabase.from('fiados').select('sale_id').ilike('customer_name', `%${busquedaDebounced}%`)
+        ]);
+        const idsPorNombre = new Set((fiadosPorNombre || []).map((f: any) => String(f.sale_id)));
+        data = (ventasAmplias || []).filter((s: any) =>
+          idsPorNombre.has(String(s.id)) ||
+          String(s.id).includes(busquedaDebounced) ||
+          String(s.id).slice(-6).includes(busquedaDebounced)
+        );
+        error = errVentas;
+        // Los totales de "Ventas del Rango" no tienen sentido mezclados con resultados de
+        // búsqueda de cualquier fecha: se dejan en 0 mientras se está buscando.
+        setTotalAbonosRango(0);
+      } else {
+        const fechaFinExpandida = new Date(fechaFin);
+        fechaFinExpandida.setDate(fechaFinExpandida.getDate() + 1);
+        const finAjustado = fechaFinExpandida.toISOString().split('T')[0];
 
-      // Con rango se traen TODAS las ventas por bloques (Supabase corta en 1000 filas); sin rango, las 100 últimas
-      const consultaVentas = () => supabase.from('sales').select('*')
-        .gte('created_at', inicioUTC).lt('created_at', finUTC)
-        .order('created_at', { ascending: false }).order('id');
-      const { data, error } = hayRango
-        ? await traerTodo(consultaVentas)
-        : await supabase.from('sales').select('*').order('created_at', { ascending: false }).limit(100);
+        // 🛠️ ZONA HORARIA PERÚ (UTC-5): "00:00" de un día en Perú equivale a "05:00" UTC.
+        // Sin este ajuste, el rango se corría 5 horas y mezclaba ventas de la noche del día anterior.
+        const hayRango = !!(fechaInicio && fechaFin);
+        const inicioUTC = `${fechaInicio}T05:00:00.000Z`;
+        const finUTC = `${finAjustado}T05:00:00.000Z`;
 
-      // 💰 ABONOS DE FIADOS EN EL RANGO (igual que Resumen/Utilidades/Finanzas)
-      const { data: abonosData } = hayRango
-        ? await traerTodo(() => supabase.from('debt_payments').select('amount, fiado_id, created_at')
-            .gte('created_at', inicioUTC).lt('created_at', finUTC).order('id'))
-        : await supabase.from('debt_payments').select('amount, fiado_id, created_at').limit(1000);
+        // Con rango se traen TODAS las ventas por bloques (Supabase corta en 1000 filas); sin rango, las 100 últimas
+        const consultaVentas = () => supabase.from('sales').select('*')
+          .gte('created_at', inicioUTC).lt('created_at', finUTC)
+          .order('created_at', { ascending: false }).order('id');
+        const resultado = hayRango
+          ? await traerTodo(consultaVentas)
+          : await supabase.from('sales').select('*').order('created_at', { ascending: false }).limit(100);
+        data = resultado.data;
+        error = resultado.error;
 
-      // 🛡️ Si el ticket de un fiado fue ANULADO después de un abono, ese abono ya se revirtió en
-      // caja y no debe seguir sumando ingreso para siempre.
-      const fiadoIdsDeAbonos = Array.from(new Set((abonosData || []).map((a: any) => a.fiado_id).filter(Boolean)));
-      let fiadoIdsAnulados = new Set<number>();
-      if (fiadoIdsDeAbonos.length > 0) {
-        const { data: fiadosDeAbonos } = await supabase.from('fiados').select('id, status').in('id', fiadoIdsDeAbonos);
-        fiadoIdsAnulados = new Set((fiadosDeAbonos || []).filter((f: any) => f.status === 'ANULADO').map((f: any) => f.id));
+        // 💰 ABONOS DE FIADOS EN EL RANGO (igual que Resumen/Utilidades/Finanzas)
+        const { data: abonosData } = hayRango
+          ? await traerTodo(() => supabase.from('debt_payments').select('amount, fiado_id, created_at')
+              .gte('created_at', inicioUTC).lt('created_at', finUTC).order('id'))
+          : await supabase.from('debt_payments').select('amount, fiado_id, created_at').limit(1000);
+
+        // 🛡️ Si el ticket de un fiado fue ANULADO después de un abono, ese abono ya se revirtió en
+        // caja y no debe seguir sumando ingreso para siempre.
+        const fiadoIdsDeAbonos = Array.from(new Set((abonosData || []).map((a: any) => a.fiado_id).filter(Boolean)));
+        let fiadoIdsAnulados = new Set<number>();
+        if (fiadoIdsDeAbonos.length > 0) {
+          const { data: fiadosDeAbonos } = await supabase.from('fiados').select('id, status').in('id', fiadoIdsDeAbonos);
+          fiadoIdsAnulados = new Set((fiadosDeAbonos || []).filter((f: any) => f.status === 'ANULADO').map((f: any) => f.id));
+        }
+        setTotalAbonosRango((abonosData || []).reduce((acc, a: any) => fiadoIdsAnulados.has(a.fiado_id) ? acc : acc + Number(a.amount || 0), 0));
       }
-      setTotalAbonosRango((abonosData || []).reduce((acc, a: any) => fiadoIdsAnulados.has(a.fiado_id) ? acc : acc + Number(a.amount || 0), 0));
 
       if (data) {
         const fiadosMap: Record<string, any> = {};
@@ -151,7 +190,7 @@ export const Reportes: React.FC = () => {
       window.removeEventListener('focus', fetchTickets);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [fechaInicio, fechaFin]);
+  }, [fechaInicio, fechaFin, busquedaDebounced]);
 
   // 🎯 MOTOR ÚNICO DE INGRESO TOTAL: mismo cálculo que Resumen, Utilidades, Finanzas y Punto
   // de Venta para este mismo rango, así "Ventas del Rango" SIEMPRE coincide con las demás
@@ -255,8 +294,28 @@ export const Reportes: React.FC = () => {
           </div>
       </div>
 
+      {/* 🔎 BÚSQUEDA POR CLIENTE O N° DE TICKET: encuentra un ticket sin importar la fecha,
+          para no depender de que el dueño recuerde el día exacto de la venta. */}
+      <div className="shrink-0 flex items-center border-2 border-[#1E293B] bg-white shadow-[4px_4px_0_0_#1E293B] rounded-none">
+        <div className="w-11 h-11 flex items-center justify-center bg-[#1E293B] text-white shrink-0">
+          <Search size={18} />
+        </div>
+        <input
+          type="text"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          placeholder="BUSCAR POR CLIENTE O N° DE TICKET (busca en todas las fechas)"
+          className="flex-1 min-w-0 h-11 px-3 bg-transparent text-sm font-black text-[#1E293B] uppercase outline-none placeholder:text-[#64748B]/60"
+        />
+        {busqueda && (
+          <button onClick={() => setBusqueda('')} className="px-3 h-11 text-[#EF4444] hover:bg-[#FEF2F2] font-black text-xs uppercase cursor-pointer shrink-0" title="Limpiar búsqueda">
+            Limpiar
+          </button>
+        )}
+      </div>
+
       {/* BARRA DE CONTROLES TÉCNICOS */}
-      <div className="flex flex-wrap lg:flex-nowrap justify-between items-end gap-4 shrink-0">
+      <div className={`flex flex-wrap lg:flex-nowrap justify-between items-end gap-4 shrink-0 ${busquedaDebounced ? 'opacity-40 pointer-events-none' : ''}`}>
         
         {/* BOTONES RÁPIDOS */}
         <div className="grid grid-cols-3 sm:flex gap-2 sm:gap-3 w-full lg:w-auto">
