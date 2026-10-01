@@ -168,22 +168,21 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                     }
                   `}
                 >
-                  <div className="flex flex-wrap justify-between items-start gap-1 mb-1 w-full">
-                    <span className="text-xs font-black text-[#64748B] whitespace-nowrap bg-[#F8FAFC] border border-[#E2E8F0] px-2 py-1 rounded-none">
-                      {prod.code}
-                    </span>
-                    
+                  {/* Fila de arriba: solo el stock (el código/SKU no importa para vender).
+                      Siempre de una sola línea, para que la imagen quede en la misma posición
+                      en todas las tarjetas. */}
+                  <div className="w-full mb-1">
                     {/* Estricto etiquetado de Alto Contraste por Color */}
                     {esConsumo ? (
-                      <span className="text-xs font-black text-[#FFFFFF] bg-[#D97706] px-2 py-1 uppercase tracking-widest whitespace-nowrap rounded-none">
+                      <span className="block w-full text-center text-sm sm:text-base font-black text-[#FFFFFF] bg-[#D97706] px-2 py-1.5 uppercase tracking-widest whitespace-nowrap rounded-none">
                         CONSUMO
                       </span>
                     ) : (
-                      <span className={`text-xs font-black px-2 py-1 rounded-none uppercase tracking-wide whitespace-nowrap ${
-                        estaAgotado 
-                          ? 'text-[#FFFFFF] bg-[#1E293B]' 
-                          : prod.unit === 'KG' 
-                            ? 'text-[#0284C7] bg-[#F0F9FF] border border-[#0284C7]' 
+                      <span className={`block w-full text-center text-sm sm:text-base font-black px-2 py-1.5 rounded-none uppercase tracking-wide whitespace-nowrap ${
+                        estaAgotado
+                          ? 'text-[#FFFFFF] bg-[#1E293B]'
+                          : prod.unit === 'KG'
+                            ? 'text-[#0284C7] bg-[#F0F9FF] border border-[#0284C7]'
                             : 'text-[#1E293B] bg-[#F8FAFC] border border-[#1E293B]'
                       }`}>
                         {prod.quantity > 0
@@ -194,33 +193,38 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                     )}
                   </div>
                   
-                  {/* IMAGEN PARA IDENTIFICAR EL PRODUCTO (o un ícono si no tiene) */}
-                  {(() => {
-                    const img = (prod as any).image_url || (prod as any).image_path || '';
-                    const valida = img.startsWith('http') || img.startsWith('data:');
-                    return (
-                      <div className={`w-full h-20 sm:h-24 mb-1 sm:mb-1.5 flex items-center justify-center border border-[#E2E8F0] bg-[#FFFFFF] overflow-hidden shrink-0 ${estaAgotado ? 'grayscale' : ''}`}>
-                        {valida ? (
-                          <img
-                            src={img}
-                            alt={prod.name}
-                            loading="lazy"
-                            className="max-w-full max-h-full object-contain"
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                          />
-                        ) : (
-                          <Package size={32} className="text-[#CBD5E1]" aria-hidden="true" />
-                        )}
-                      </div>
-                    );
-                  })()}
+                  {/* BLOQUE IMAGEN + NOMBRE: alto total fijo (el mismo que antes con nombre de 2
+                      líneas). El nombre solo ocupa lo que necesita (1 o 2 líneas) y la imagen
+                      crece con flex-1 para aprovechar el espacio libre cuando el nombre es corto,
+                      sin mover ni afectar el precio/botón de abajo. */}
+                  <div className="w-full flex flex-col gap-1 sm:gap-1.5 h-[122px] sm:h-[146px] mb-1.5 sm:mb-2">
+                    {(() => {
+                      const img = (prod as any).image_url || (prod as any).image_path || '';
+                      const valida = img.startsWith('http') || img.startsWith('data:');
+                      return (
+                        <div className={`flex-1 min-h-0 flex items-center justify-center border border-[#E2E8F0] bg-[#FFFFFF] overflow-hidden ${estaAgotado ? 'grayscale' : ''}`}>
+                          {valida ? (
+                            <img
+                              src={img}
+                              alt={prod.name}
+                              loading="lazy"
+                              className="max-w-full max-h-full object-contain"
+                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                            />
+                          ) : (
+                            <Package size={32} className="text-[#CBD5E1]" aria-hidden="true" />
+                          )}
+                        </div>
+                      );
+                    })()}
 
-                  <span className="text-xs sm:text-sm font-black text-[#1E293B] uppercase leading-tight line-clamp-2 mb-1.5 sm:mb-2 break-words">
-                    {prod.name}
-                  </span>
+                    <span className="text-sm sm:text-base font-black text-[#1E293B] uppercase leading-tight line-clamp-2 break-words shrink-0">
+                      {prod.name}
+                    </span>
+                  </div>
 
                   <div className="mt-auto flex items-center justify-between pt-1.5 border-t border-dashed border-[#E2E8F0] w-full">
-                    <span className="text-base sm:text-lg font-black text-[#1E293B] font-mono">
+                    <span className="text-lg sm:text-xl font-black text-[#1E293B] font-mono">
                       S/ {prod.price.toFixed(2)}
                     </span>
                     <div className={`w-7 h-7 flex items-center justify-center transition-colors rounded-none border text-[#FFFFFF]
