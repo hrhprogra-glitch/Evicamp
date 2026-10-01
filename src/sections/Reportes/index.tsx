@@ -8,6 +8,7 @@ import type { TicketVenta } from './types';
 // Resumen, Utilidades, Finanzas y Punto de Venta, para que el monto SIEMPRE coincida.
 import { calcularIngresoTotal, fechaLocalPeru, primerDiaMesPeru, haceNDiasPeru } from '../../utils/ingresos';
 import { traerTodo } from '../../utils/traerTodo';
+import { eliminarAbonoYRevertirCaja } from '../../utils/revertirAbono';
 
 export const Reportes: React.FC = () => {
   const [tickets, setTickets] = useState<TicketVenta[]>([]);
@@ -176,24 +177,109 @@ export const Reportes: React.FC = () => {
       return;
     }
 
-    if (window.confirm('⚠️ ¿Seguro que deseas ANULAR este ticket? El stock regresará y el dinero se descontará de la caja actual.')) {
-      
-      // Todo en UNA transacción de la BD (fn_annul_sale, ver supabase/2026-09-30_anulacion.sql):
-      // venta y fiado ANULADO, stock devuelto a los mismos lotes que consumió la venta,
-      // contraasientos DEVOLUCION en la caja abierta (venta + abonos ya pagados del fiado).
-      const { data: resultado, error } = await supabase.rpc('fn_annul_sale', { p_sale_id: id });
+    if (!window.confirm('⚠️ ¿Seguro que deseas ANULAR este ticket? El stock regresará y el dinero se descontará de la caja actual.')) return;
 
-      if (error) {
-        alert("Error de integridad al anular en BD: " + error.message);
-      } else {
-        setTickets(tickets.map(t => t.id === id ? { ...t, estado: 'ANULADO' } : t));
-        const r = (resultado || {}) as { caja_abierta?: boolean; abonos_devueltos?: number };
-        const abonos = Number(r.abonos_devueltos || 0);
-        const avisoAbonos = abonos > 0 ? `\nSe devolvieron S/ ${abonos.toFixed(2)} de abonos ya pagados del fiado.` : '';
-        alert(r.caja_abierta === false
-          ? `✅ Ticket anulado y stock restaurado.\n⚠️ No hay caja abierta: el dinero NO se descontó de ninguna caja.${abonos > 0 ? `\n(Hay S/ ${abonos.toFixed(2)} de abonos que devolver al cliente.)` : ''}`
-          : `✅ OPERACIÓN COMPLETADA: Ticket anulado, stock restaurado y dinero retirado de la caja actual.${avisoAbonos}`);
+    // 🔧 fn_annul_sale nunca existió en la BD (ver commits previos): esta operación se hace
+    // aquí, en el frontend, con los mismos pasos directos que ya usa el resto del sistema
+    // (confirmar venta, registrar abono) desde que se quitaron las funciones RPC rotas.
+    try {
+      // 1. Releer la venta fresca: evita anular dos veces con un doble clic.
+      const { data: venta, error: errVenta } = await supabase.from('sales').select('*').eq('id', id).single();
+      if (errVenta || !venta) throw errVenta || new Error('No se encontró la venta.');
+      if (venta.sunat_status === 'ANULADO') {
+        alert('Este ticket ya estaba anulado.');
+        return;
       }
+
+      // 2. DEVOLVER STOCK: reversa exacta de los movimientos que la venta generó (mismos
+      // lotes y cantidades que consumió fn_reduce_stock_from_sales al vender).
+      const ticketTag = `Ticket #${id}`;
+      const { data: movimientos } = await supabase
+        .from('inventory_movements')
+        .select('*')
+        .eq('operation_type', 'VENTA')
+        .eq('notes', ticketTag);
+
+      for (const mov of movimientos || []) {
+        const cantidad = Math.abs(Number(mov.change_amount) || 0);
+        if (cantidad <= 0) continue;
+
+        if (mov.batch_id) {
+          const { data: lote } = await supabase.from('batches').select('quantity').eq('id', mov.batch_id).single();
+          await supabase.from('batches').update({ quantity: Number(lote?.quantity || 0) + cantidad }).eq('id', mov.batch_id);
+        }
+
+        const { data: producto } = await supabase.from('products').select('quantity').eq('id', mov.product_id).single();
+        const prevProducto = Number(producto?.quantity || 0);
+        const nuevoProducto = prevProducto + cantidad;
+        await supabase.from('products').update({ quantity: nuevoProducto }).eq('id', mov.product_id);
+
+        await supabase.from('inventory_movements').insert([{
+          batch_id: mov.batch_id, product_id: mov.product_id, product_name: mov.product_name,
+          change_amount: cantidad, previous_quantity: prevProducto, new_quantity: nuevoProducto,
+          operation_type: 'ANULACION', reason: 'Anulación de venta', notes: `Anulación ${ticketTag}`,
+          created_at: new Date().toISOString(), user: 'Sistema', is_synced: 1
+        }]);
+      }
+
+      // 3. MARCAR LA VENTA COMO ANULADA
+      const { error: errUpdateVenta } = await supabase.from('sales').update({ sunat_status: 'ANULADO' }).eq('id', id);
+      if (errUpdateVenta) throw errUpdateVenta;
+
+      // 4. SI ERA FIADO: anular la deuda y revertir (borrar) los abonos ya pagados, cada uno
+      // con su movimiento de caja gemelo, para que no sigan contando como ingreso.
+      const { data: fiado } = await supabase.from('fiados').select('*').eq('sale_id', id).maybeSingle();
+      let abonosDevueltos = 0;
+      if (fiado) {
+        const { data: pagos } = await supabase.from('debt_payments').select('id, session_id, amount, created_at').eq('fiado_id', fiado.id);
+        for (const pago of pagos || []) {
+          abonosDevueltos += Number(pago.amount || 0);
+          await eliminarAbonoYRevertirCaja(pago);
+        }
+        await supabase.from('fiados').update({ status: 'ANULADO' }).eq('id', fiado.id);
+      }
+
+      // 5. SI HAY CAJA ABIERTA: sacar de la caja actual el dinero EFECTIVAMENTE cobrado al
+      // vender (el crédito/fiado nunca entró como efectivo, así que no se descuenta aquí).
+      // Usamos el mismo formato "(Ticket #xxxxxx)" que Finanzas ya sabe reconocer para no
+      // restar dos veces si la venta fue de la caja que sigue abierta ahora mismo.
+      const { data: sesion } = await supabase.from('cash_sessions').select('id').eq('status', 'OPEN').order('opened_at', { ascending: false }).limit(1).maybeSingle();
+      const cajaAbierta = !!sesion;
+
+      if (cajaAbierta) {
+        const ticketCorto = String(id).slice(-6);
+        const bolsas = [
+          { monto: Number(venta.amount_cash || 0), metodo: 'EFECTIVO' },
+          { monto: Number(venta.amount_yape || 0) + Number(venta.amount_transfer || 0), metodo: 'YAPE' },
+          { monto: Number(venta.amount_card || 0), metodo: 'TARJETA' },
+        ];
+        const movimientosCaja = bolsas
+          .filter(b => b.monto > 0)
+          .map(b => ({
+            session_id: String(sesion!.id),
+            type: 'EGRESO',
+            amount: b.monto,
+            description: `DEVOLUCION POR ANULACION (Ticket #${ticketCorto})`,
+            payment_type: b.metodo,
+            flujo: 'DEVOLUCION',
+            created_at: new Date().toISOString(),
+            is_synced: 1
+          }));
+        if (movimientosCaja.length > 0) {
+          await supabase.from('cash_movements').insert(movimientosCaja);
+        }
+      }
+
+      // 6. Reflejar el cambio en pantalla
+      setTickets(tickets.map(t => t.id === id ? { ...t, estado: 'ANULADO' } : t));
+      const avisoAbonos = abonosDevueltos > 0 ? `\nSe devolvieron S/ ${abonosDevueltos.toFixed(2)} de abonos ya pagados del fiado.` : '';
+      alert(cajaAbierta
+        ? `✅ OPERACIÓN COMPLETADA: Ticket anulado, stock restaurado y dinero retirado de la caja actual.${avisoAbonos}`
+        : `✅ Ticket anulado y stock restaurado.\n⚠️ No hay caja abierta: el dinero NO se descontó de ninguna caja.${abonosDevueltos > 0 ? `\n(Hay S/ ${abonosDevueltos.toFixed(2)} de abonos que devolver al cliente.)` : ''}`);
+    } catch (error) {
+      console.error('Error al anular ticket:', error);
+      const detalle = error instanceof Error ? error.message : (error as any)?.message;
+      alert('❌ Error al anular el ticket: ' + (detalle || 'error desconocido'));
     }
   };
 
