@@ -35,12 +35,12 @@ const BloqueArqueo: React.FC<BloqueArqueoProps> = ({ icono, color, titulo, esper
   const hayDescuadre = valor !== '' && diferencia !== 0;
 
   return (
-    <div className="border-2 border-[#E2E8F0] p-4 flex flex-col gap-2">
+    <div className="border-2 border-[var(--color-border)] p-4 flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <span className="text-[12px] font-black uppercase tracking-widest flex items-center gap-2" style={{ color }}>
           {icono} {titulo}
         </span>
-        <span className="text-xs font-bold text-[#64748B] whitespace-nowrap">Espera: S/ {esperado.toFixed(2)}</span>
+        <span className="text-xs font-bold text-[var(--color-muted)] whitespace-nowrap">Espera: S/ {esperado.toFixed(2)}</span>
       </div>
       <input
         type="number"
@@ -48,12 +48,12 @@ const BloqueArqueo: React.FC<BloqueArqueoProps> = ({ icono, color, titulo, esper
         onChange={(e) => onChange(e.target.value)}
         placeholder="¿Cuánto hay realmente?"
         className={`w-full p-3 text-xl font-black text-center outline-none transition-colors border-2 rounded-none ${
-          valor === '' ? 'bg-[#F8FAFC] border-[#1E293B] focus:border-[#EF4444]' :
-          diferencia === 0 ? 'bg-[#ECFDF5] border-[#10B981] text-[#10B981]' : 'bg-[#FEF2F2] border-[#EF4444] text-[#EF4444]'
+          valor === '' ? 'bg-[var(--color-bg)] border-[var(--color-ink)] focus:border-[var(--color-danger)]' :
+          diferencia === 0 ? 'bg-[var(--color-accent-bg)] border-[var(--color-accent)] text-[var(--color-accent)]' : 'bg-[var(--color-danger-bg)] border-[var(--color-danger)] text-[var(--color-danger)]'
         }`}
       />
       {hayDescuadre && (
-        <p className="text-[12px] font-black uppercase text-[#D97706] flex items-center gap-1">
+        <p className="text-[12px] font-black uppercase text-[var(--color-warning-dark)] flex items-center gap-1">
           <AlertTriangle size={12} />
           {diferencia > 0 ? `Sobra S/ ${Math.abs(diferencia).toFixed(2)}` : `Falta S/ ${Math.abs(diferencia).toFixed(2)}`}
         </p>
@@ -127,21 +127,21 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-md flex items-center justify-center z-[9999] p-2 sm:p-4 font-mono">
-      <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-lg flex flex-col rounded-none animate-fade-in max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
+    <div className="fixed inset-0 bg-[var(--color-ink)]/90 backdrop-blur-md flex items-center justify-center z-[9999] p-2 sm:p-4 font-mono">
+      <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-lg flex flex-col rounded-none animate-fade-in max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
 
-        <div className="bg-[#EF4444] p-4 border-b-2 border-[#1E293B] flex justify-between items-center text-white shrink-0">
+        <div className="bg-[var(--color-danger)] p-4 border-b-2 border-[var(--color-ink)] flex justify-between items-center text-white shrink-0">
           <h2 className="font-black uppercase tracking-widest flex items-center gap-2 text-sm">
             <Lock size={18} /> Arqueo y Cierre de Caja
           </h2>
-          <button onClick={onClose} className="hover:text-[#1E293B] transition-colors cursor-pointer">
+          <button onClick={onClose} className="hover:text-[var(--color-ink)] transition-colors cursor-pointer">
             <X size={20} strokeWidth={3} />
           </button>
         </div>
 
         <div className="p-6 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
 
-          <div className="bg-[#F8FAFC] border-2 border-[#E2E8F0] p-3 flex items-center gap-2 text-[#64748B]">
+          <div className="bg-[var(--color-bg)] border-2 border-[var(--color-border)] p-3 flex items-center gap-2 text-[var(--color-muted)]">
             <Calculator size={16} />
             <span className="text-[12px] font-bold uppercase tracking-widest">
               Cuenta lo que hay físicamente en caja y confirma tu Yape/Tarjeta contra lo que el sistema calculó.
@@ -149,21 +149,21 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
           </div>
 
           <BloqueArqueo
-            icono={<Banknote size={14} />} color="#10B981" titulo="Efectivo"
+            icono={<Banknote size={14} />} color="var(--color-accent)" titulo="Efectivo"
             esperado={esperadoEfectivo} valor={montoEfectivo} onChange={setMontoEfectivo}
           />
           <BloqueArqueo
-            icono={<Smartphone size={14} />} color="#3B82F6" titulo="Yape / Transferencias"
+            icono={<Smartphone size={14} />} color="var(--color-info)" titulo="Yape / Transferencias"
             esperado={esperadoYape} valor={montoYape} onChange={setMontoYape}
           />
           <BloqueArqueo
-            icono={<CreditCard size={14} />} color="#8B5CF6" titulo="Tarjeta"
+            icono={<CreditCard size={14} />} color="var(--color-purple)" titulo="Tarjeta"
             esperado={esperadoTarjeta} valor={montoTarjeta} onChange={setMontoTarjeta}
           />
 
           {hayDescuadre && (
-            <div className="bg-[#FFFBEB] border-2 border-[#F59E0B] p-4 animate-fade-in space-y-2">
-              <div className="flex items-center gap-2 text-[#D97706]">
+            <div className="bg-[var(--color-warning-bg)] border-2 border-[var(--color-warning)] p-4 animate-fade-in space-y-2">
+              <div className="flex items-center gap-2 text-[var(--color-warning-dark)]">
                 <AlertTriangle size={16} />
                 <span className="text-[12px] font-black uppercase tracking-widest">Hay una diferencia, explica el motivo</span>
               </div>
@@ -172,18 +172,18 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
                 value={justificacion}
                 onChange={(e) => setJustificacion(e.target.value)}
                 placeholder="Explica el motivo de la diferencia..."
-                className="w-full bg-white border border-[#FCD34D] p-2 text-xs font-black uppercase outline-none focus:border-[#F59E0B] rounded-none"
+                className="w-full bg-white border border-[var(--color-warning-border)] p-2 text-xs font-black uppercase outline-none focus:border-[var(--color-warning)] rounded-none"
               />
             </div>
           )}
 
         </div>
 
-        <div className="p-4 bg-[#F8FAFC] border-t-2 border-[#1E293B] shrink-0">
+        <div className="p-4 bg-[var(--color-bg)] border-t-2 border-[var(--color-ink)] shrink-0">
           <button
             onClick={handleCierre}
             disabled={faltaCompletar || isSubmitting}
-            className="w-full bg-[#1E293B] text-white p-3 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[#EF4444] transition-colors disabled:opacity-50 border-2 border-[#1E293B] shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none"
+            className="w-full bg-[var(--color-ink)] text-white p-3 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[var(--color-danger)] transition-colors disabled:opacity-50 border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none"
           >
             {isSubmitting ? 'Cerrando Bóveda...' : <><Lock size={18} /> Finalizar Día y Cerrar</>}
           </button>

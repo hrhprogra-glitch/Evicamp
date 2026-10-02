@@ -13,40 +13,40 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete }) => 
     <div className="w-full bg-white flex flex-col font-mono h-full overflow-hidden">
       <div className="overflow-x-auto flex-1 custom-scrollbar">
         <table className="w-full text-left border-collapse min-w-[600px]">
-          <thead className="bg-[#1E293B] text-white sticky top-0">
+          <thead className="bg-[var(--color-ink)] text-white sticky top-0">
             <tr>
-              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[#1E293B]">Hora</th>
-              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[#1E293B]">Tipo</th>
-              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[#1E293B]">Descripción</th>
-              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[#1E293B]">Método</th>
-              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[#1E293B] text-right">Monto</th>
-              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[#1E293B] text-center w-16">Acción</th>
+              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Hora</th>
+              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Tipo</th>
+              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Descripción</th>
+              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Método</th>
+              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-right">Monto</th>
+              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-center w-16">Acción</th>
             </tr>
           </thead>
           <tbody>
             {movimientos.length === 0 ? (
               <tr>
-                <td colSpan={5} className="p-3 lg:p-4 text-center text-[#64748B] font-bold text-xs uppercase">
+                <td colSpan={5} className="p-3 lg:p-4 text-center text-[var(--color-muted)] font-bold text-xs uppercase">
                   No hay movimientos registrados en esta sesión.
                 </td>
               </tr>
             ) : (
               movimientos.map((mov) => (
-                <tr key={mov.id} className="border-b border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors">
-                  <td className="p-4 text-sm font-black text-[#64748B]">
+                <tr key={mov.id} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] transition-colors">
+                  <td className="p-4 text-sm font-black text-[var(--color-muted)]">
                     {new Date(mov.created_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}
                   </td>
                   <td className="p-4">
                     <span className={`flex items-center gap-2 text-xs font-black tracking-wider px-3 py-1.5 w-max border-2 rounded-none ${
-                      mov.type === 'INGRESO' ? 'bg-[#ECFDF5] text-[#10B981] border-[#10B981]' : 'bg-[#FEF2F2] text-[#EF4444] border-[#EF4444]'
+                      mov.type === 'INGRESO' ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent)] border-[var(--color-accent)]' : 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger)]'
                     }`}>
                       {mov.type === 'INGRESO' ? <ArrowUpFromLine size={14} /> : <ArrowDownToLine size={14} />}
                       {mov.type}
                     </span>
                   </td>
-                  <td className="p-4 text-sm font-black text-[#1E293B] uppercase">{mov.description}</td>
-                  <td className="p-4 text-sm font-black text-[#64748B] uppercase">{mov.payment_type}</td>
-                  <td className={`p-4 text-right text-base font-black tracking-tight ${mov.type === 'INGRESO' ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
+                  <td className="p-4 text-sm font-black text-[var(--color-ink)] uppercase">{mov.description}</td>
+                  <td className="p-4 text-sm font-black text-[var(--color-muted)] uppercase">{mov.payment_type}</td>
+                  <td className={`p-4 text-right text-base font-black tracking-tight ${mov.type === 'INGRESO' ? 'text-[var(--color-accent)]' : 'text-[var(--color-danger)]'}`}>
                     {mov.type === 'INGRESO' ? '+' : '-'} S/ {Number(mov.amount).toFixed(2)}
                   </td>
                   <td className="p-4 text-center">
@@ -54,7 +54,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete }) => 
                     {String(mov.flujo) !== 'INGRESO_FIADO' && !mov.description.includes('Abono Deuda') && (
                       <button 
                         onClick={() => onDelete(mov.id)} 
-                        className="p-2 text-[#94A3B8] border-2 border-transparent hover:border-[#EF4444] hover:bg-[#FEF2F2] hover:text-[#EF4444] transition-colors cursor-pointer rounded-none"
+                        className="p-2 text-[var(--color-subtle)] border-2 border-transparent hover:border-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] hover:text-[var(--color-danger)] transition-colors cursor-pointer rounded-none"
                         title="Eliminar Movimiento Manual"
                       >
                         <Trash2 size={16} />

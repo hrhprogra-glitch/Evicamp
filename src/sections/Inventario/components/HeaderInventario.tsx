@@ -14,12 +14,12 @@ export const HeaderInventario: React.FC<Props> = ({ onIngresoStock, onNuevoSKU, 
   const puedeIngresarLotes = usePermiso('almacen_ingresar_lotes');
   const puedeRegistrarMermas = usePermiso('almacen_registrar_mermas');
   return (
-    <div className="bg-white border-b border-[#E2E8F0] p-3 lg:p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 rounded-none relative shrink-0">
+    <div className="bg-white border-b border-[var(--color-border)] p-3 lg:p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 rounded-none relative shrink-0">
       <div>
-        <h1 className="text-2xl font-black uppercase tracking-tighter text-[#1E293B] flex items-center gap-3">
-          <Package size={24} className="text-[#10B981]"/> Control de Stock
+        <h1 className="text-2xl font-black uppercase tracking-tighter text-[var(--color-ink)] flex items-center gap-3">
+          <Package size={24} className="text-[var(--color-accent)]"/> Control de Stock
         </h1>
-        <p className="text-[12px] font-bold text-[#64748B] mt-2 tracking-widest uppercase">
+        <p className="text-[12px] font-bold text-[var(--color-muted)] mt-2 tracking-widest uppercase">
           Gestión de Almacén, Precios y Valorización
         </p>
       </div>
@@ -31,7 +31,7 @@ export const HeaderInventario: React.FC<Props> = ({ onIngresoStock, onNuevoSKU, 
         {puedeCrearProductos && (
         <button 
           onClick={onNuevoSKU}
-          className="bg-[#10B981] text-[#1E293B] px-6 py-4 short:py-2.5 border-2 border-[#1E293B] font-black text-xs uppercase tracking-widest flex items-center gap-3 hover:bg-[#1E293B] hover:text-[#10B981] hover:border-[#10B981] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+          className="bg-[var(--color-accent)] text-[var(--color-ink)] px-6 py-4 short:py-2.5 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-3 hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
         >
           <Plus size={18} /> Nuevo Producto
         </button>
@@ -41,7 +41,7 @@ export const HeaderInventario: React.FC<Props> = ({ onIngresoStock, onNuevoSKU, 
         {puedeIngresarLotes && (
         <button 
           onClick={onIngresoStock}
-          className="bg-[#1E293B] text-[#10B981] px-6 py-4 short:py-2.5 border-2 border-[#1E293B] font-black text-xs uppercase tracking-widest flex items-center gap-3 hover:bg-white hover:text-[#1E293B] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_#10B981] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+          className="bg-[var(--color-ink)] text-[var(--color-accent)] px-6 py-4 short:py-2.5 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-3 hover:bg-white hover:text-[var(--color-ink)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-accent)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
         >
           <Database size={18} /> Ingresar Lote
         </button>
@@ -51,7 +51,7 @@ export const HeaderInventario: React.FC<Props> = ({ onIngresoStock, onNuevoSKU, 
         {puedeRegistrarMermas && (
         <button 
           onClick={onRegistrarMerma}
-          className="bg-white text-[#EF4444] px-6 py-4 short:py-2.5 border-2 border-[#EF4444] font-black text-xs uppercase tracking-widest flex items-center gap-3 hover:bg-[#EF4444] hover:text-white transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_#EF4444] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+          className="bg-white text-[var(--color-danger)] px-6 py-4 short:py-2.5 border-2 border-[var(--color-danger)] font-black text-xs uppercase tracking-widest flex items-center gap-3 hover:bg-[var(--color-danger)] hover:text-white transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-danger)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
         >
           <AlertTriangle size={18} /> Registrar Merma
         </button>

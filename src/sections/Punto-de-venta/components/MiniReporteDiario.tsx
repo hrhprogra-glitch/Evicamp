@@ -127,72 +127,72 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
   }, [refreshTrigger]);
 
   const modalContent = isModalOpen ? createPortal(
-    <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-md z-[999999] flex items-center justify-center p-2 sm:p-8 animate-fade-in font-mono">
-      <div className="bg-white border-4 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] sm:shadow-[16px_16px_0_0_#1E293B] w-full max-w-6xl flex flex-col h-[calc(var(--alto-pantalla)*0.9)] rounded-none">
+    <div className="fixed inset-0 bg-[var(--color-ink)]/90 backdrop-blur-md z-[999999] flex items-center justify-center p-2 sm:p-8 animate-fade-in font-mono">
+      <div className="bg-white border-4 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] sm:shadow-[16px_16px_0_0_var(--color-ink)] w-full max-w-6xl flex flex-col h-[calc(var(--alto-pantalla)*0.9)] rounded-none">
         
-        <div className="bg-[#1E293B] text-white p-4 sm:p-6 flex justify-between items-center gap-3 shrink-0">
+        <div className="bg-[var(--color-ink)] text-white p-4 sm:p-6 flex justify-between items-center gap-3 shrink-0">
           <h2 className="font-black uppercase tracking-widest text-sm sm:text-xl flex items-center gap-3">
-            <Receipt size={28} className="text-[#10B981]" /> Rendimiento de Caja Actual
+            <Receipt size={28} className="text-[var(--color-accent)]" /> Rendimiento de Caja Actual
           </h2>
-          <button onClick={() => setIsModalOpen(false)} className="hover:text-[#EF4444] transition-colors cursor-pointer bg-white/10 p-2 hover:bg-white/20">
+          <button onClick={() => setIsModalOpen(false)} className="hover:text-[var(--color-danger)] transition-colors cursor-pointer bg-white/10 p-2 hover:bg-white/20">
             <X size={32} strokeWidth={3} />
           </button>
         </div>
 
-        <div className="p-3 sm:p-8 bg-[#F8FAFC] flex-1 overflow-y-auto lg:overflow-hidden custom-scrollbar">
+        <div className="p-3 sm:p-8 bg-[var(--color-bg)] flex-1 overflow-y-auto lg:overflow-hidden custom-scrollbar">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 lg:h-full min-h-0">
             
             <div className="flex flex-col gap-4 sm:gap-6 lg:overflow-y-auto custom-scrollbar lg:pr-4 min-h-0">
-              <div className="bg-[#1E293B] p-5 sm:p-8 text-center border-4 border-[#1E293B] shrink-0 shadow-[8px_8px_0_0_#CBD5E1]">
-                <p className="text-[#94A3B8] text-xs font-black uppercase tracking-widest mb-2">Total Ingresado a Caja (Ventas + Abonos)</p>
+              <div className="bg-[var(--color-ink)] p-5 sm:p-8 text-center border-4 border-[var(--color-ink)] shrink-0 shadow-[8px_8px_0_0_var(--color-line-light)]">
+                <p className="text-[var(--color-subtle)] text-xs font-black uppercase tracking-widest mb-2">Total Ingresado a Caja (Ventas + Abonos)</p>
                 <p className="text-2xl sm:text-4xl sm:text-6xl lg:text-7xl font-black text-white mt-2 drop-shadow-lg break-all">S/ {totales.totalReal.toFixed(2)}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 sm:gap-5 shrink-0">
-                <div className="bg-white border-4 border-[#E2E8F0] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_#E2E8F0]">
-                  <Coins size={32} className="text-[#10B981] mb-2" />
-                  <span className="text-[12px] font-black text-[#64748B] uppercase tracking-widest">Efectivo Físico</span>
-                  <span className="text-lg sm:text-3xl font-black text-[#1E293B] mt-1 break-all">S/ {totales.efectivo.toFixed(2)}</span>
+                <div className="bg-white border-4 border-[var(--color-border)] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_var(--color-border)]">
+                  <Coins size={32} className="text-[var(--color-accent)] mb-2" />
+                  <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">Efectivo Físico</span>
+                  <span className="text-lg sm:text-3xl font-black text-[var(--color-ink)] mt-1 break-all">S/ {totales.efectivo.toFixed(2)}</span>
                 </div>
-                <div className="bg-white border-4 border-[#E2E8F0] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_#E2E8F0]">
-                  <Smartphone size={32} className="text-[#8B5CF6] mb-2" />
-                  <span className="text-[12px] font-black text-[#64748B] uppercase tracking-widest">Yape / Plin / Transf.</span>
-                  <span className="text-lg sm:text-3xl font-black text-[#1E293B] mt-1 break-all">S/ {(totales.yape + totales.transferencia).toFixed(2)}</span>
+                <div className="bg-white border-4 border-[var(--color-border)] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_var(--color-border)]">
+                  <Smartphone size={32} className="text-[var(--color-purple)] mb-2" />
+                  <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">Yape / Plin / Transf.</span>
+                  <span className="text-lg sm:text-3xl font-black text-[var(--color-ink)] mt-1 break-all">S/ {(totales.yape + totales.transferencia).toFixed(2)}</span>
                 </div>
-                <div className="bg-white border-4 border-[#E2E8F0] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_#E2E8F0]">
-                  <CreditCard size={32} className="text-[#3B82F6] mb-2" />
-                  <span className="text-[12px] font-black text-[#64748B] uppercase tracking-widest">Tarjeta (POS)</span>
-                  <span className="text-lg sm:text-3xl font-black text-[#1E293B] mt-1 break-all">S/ {totales.tarjeta.toFixed(2)}</span>
+                <div className="bg-white border-4 border-[var(--color-border)] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_var(--color-border)]">
+                  <CreditCard size={32} className="text-[var(--color-info)] mb-2" />
+                  <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">Tarjeta (POS)</span>
+                  <span className="text-lg sm:text-3xl font-black text-[var(--color-ink)] mt-1 break-all">S/ {totales.tarjeta.toFixed(2)}</span>
                 </div>
-                <div className="bg-white border-4 border-[#E2E8F0] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_#E2E8F0]">
-                  <BookOpen size={32} className="text-[#EF4444] mb-2" />
-                  <span className="text-[12px] font-black text-[#64748B] uppercase tracking-widest">Deuda (Fiados Emitidos)</span>
-                  <span className="text-lg sm:text-3xl font-black text-[#1E293B] mt-1 break-all">S/ {totales.fiado.toFixed(2)}</span>
+                <div className="bg-white border-4 border-[var(--color-border)] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_var(--color-border)]">
+                  <BookOpen size={32} className="text-[var(--color-danger)] mb-2" />
+                  <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">Deuda (Fiados Emitidos)</span>
+                  <span className="text-lg sm:text-3xl font-black text-[var(--color-ink)] mt-1 break-all">S/ {totales.fiado.toFixed(2)}</span>
                 </div>
               </div>
             </div>
 
-            <div className="border-4 border-[#E2E8F0] bg-white flex flex-col min-h-[300px] lg:h-full lg:min-h-0 shadow-[8px_8px_0_0_#E2E8F0]">
-              <div className="bg-[#F8FAFC] border-b-4 border-[#E2E8F0] p-5 shrink-0 flex justify-between items-center">
-                <h3 className="text-base font-black text-[#1E293B] uppercase tracking-widest">Desglose Movimientos ({ventasHoy.length})</h3>
+            <div className="border-4 border-[var(--color-border)] bg-white flex flex-col min-h-[300px] lg:h-full lg:min-h-0 shadow-[8px_8px_0_0_var(--color-border)]">
+              <div className="bg-[var(--color-bg)] border-b-4 border-[var(--color-border)] p-5 shrink-0 flex justify-between items-center">
+                <h3 className="text-base font-black text-[var(--color-ink)] uppercase tracking-widest">Desglose Movimientos ({ventasHoy.length})</h3>
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 min-h-0">
                 {ventasHoy.length > 0 ? ventasHoy.map((v) => (
-                  <div key={v.id} className="flex justify-between items-center gap-3 p-3 sm:p-5 border-2 border-[#E2E8F0] hover:border-[#1E293B] bg-white hover:bg-[#F8FAFC] transition-all">
+                  <div key={v.id} className="flex justify-between items-center gap-3 p-3 sm:p-5 border-2 border-[var(--color-border)] hover:border-[var(--color-ink)] bg-white hover:bg-[var(--color-bg)] transition-all">
                     <div className="flex flex-col">
-                      <span className="text-sm font-black text-[#64748B] flex items-center gap-2">
+                      <span className="text-sm font-black text-[var(--color-muted)] flex items-center gap-2">
                         <Clock size={16}/> {new Date(v.hora).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}
                       </span>
-                      <span className={`text-base font-black uppercase mt-2 tracking-widest flex items-center gap-2 ${v.tipo === 'ABONO' ? 'text-[#3B82F6]' : v.metodo === 'FIADO' ? 'text-[#EF4444]' : 'text-[#1E293B]'}`}>
+                      <span className={`text-base font-black uppercase mt-2 tracking-widest flex items-center gap-2 ${v.tipo === 'ABONO' ? 'text-[var(--color-info)]' : v.metodo === 'FIADO' ? 'text-[var(--color-danger)]' : 'text-[var(--color-ink)]'}`}>
                         {v.tipo === 'ABONO' && <HandCoins size={18} />} {v.metodo}
                       </span>
                     </div>
-                    <span className={`text-lg sm:text-2xl font-black shrink-0 ${v.metodo === 'FIADO' ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
+                    <span className={`text-lg sm:text-2xl font-black shrink-0 ${v.metodo === 'FIADO' ? 'text-[var(--color-danger)]' : 'text-[var(--color-accent)]'}`}>
                        S/ {v.total.toFixed(2)}
                     </span>
                   </div>
                 )) : (
-                  <div className="text-center p-6 sm:p-12 text-lg font-bold text-[#94A3B8]">Caja vacía. Aún no hay ventas.</div>
+                  <div className="text-center p-6 sm:p-12 text-lg font-bold text-[var(--color-subtle)]">Caja vacía. Aún no hay ventas.</div>
                 )}
               </div>
             </div>
@@ -206,43 +206,43 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
 
   return (
     <>
-      <div className="bg-white border-2 border-[#1E293B] shrink-0 font-mono flex flex-col">
-        <div className="bg-[#1E293B] text-white px-3 py-1.5 flex justify-between items-center">
+      <div className="bg-white border-2 border-[var(--color-ink)] shrink-0 font-mono flex flex-col">
+        <div className="bg-[var(--color-ink)] text-white px-3 py-1.5 flex justify-between items-center">
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 hover:text-[#10B981] transition-colors cursor-pointer"
+            className="flex items-center gap-2 hover:text-[var(--color-accent)] transition-colors cursor-pointer"
             title="Ver Historial del Día"
           >
             <BarChart3 size={18} />
             <span className="text-[13px] font-black uppercase tracking-widest hidden sm:inline">Caja Actual:</span>
-            <span className="text-base font-black text-[#10B981] ml-1">
+            <span className="text-base font-black text-[var(--color-accent)] ml-1">
               {isVisible ? `S/ ${totales.totalReal.toFixed(2)}` : 'S/ ***.**'}
             </span>
           </button>
           <button 
             onClick={() => setIsVisible(!isVisible)}
-            className="text-[#94A3B8] hover:text-white transition-colors cursor-pointer px-2"
+            className="text-[var(--color-subtle)] hover:text-white transition-colors cursor-pointer px-2"
           >
             {isVisible ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         </div>
 
-        <div className="grid grid-cols-4 divide-x-2 divide-[#E2E8F0] bg-[#F8FAFC] min-w-0">
+        <div className="grid grid-cols-4 divide-x-2 divide-[var(--color-border)] bg-[var(--color-bg)] min-w-0">
           <div className="px-1 py-1 flex flex-col items-center justify-center text-center min-w-0">
-            <span className="text-[12px] font-black text-[#64748B] uppercase leading-tight">Efectivo</span>
-            <span className="text-xs font-black text-[#1E293B]">{isVisible ? `S/ ${totales.efectivo.toFixed(1)}` : '***'}</span>
+            <span className="text-[12px] font-black text-[var(--color-muted)] uppercase leading-tight">Efectivo</span>
+            <span className="text-xs font-black text-[var(--color-ink)]">{isVisible ? `S/ ${totales.efectivo.toFixed(1)}` : '***'}</span>
           </div>
           <div className="px-1 py-1 flex flex-col items-center justify-center text-center min-w-0">
-            <span className="text-[12px] font-black text-[#8B5CF6] uppercase leading-tight">Yape/Plin</span>
-            <span className="text-xs font-black text-[#1E293B]">{isVisible ? `S/ ${(totales.yape + totales.transferencia).toFixed(1)}` : '***'}</span>
+            <span className="text-[12px] font-black text-[var(--color-purple)] uppercase leading-tight">Yape/Plin</span>
+            <span className="text-xs font-black text-[var(--color-ink)]">{isVisible ? `S/ ${(totales.yape + totales.transferencia).toFixed(1)}` : '***'}</span>
           </div>
           <div className="px-1 py-1 flex flex-col items-center justify-center text-center min-w-0">
-            <span className="text-[12px] font-black text-[#3B82F6] uppercase leading-tight">Tarjeta</span>
-            <span className="text-xs font-black text-[#1E293B]">{isVisible ? `S/ ${totales.tarjeta.toFixed(1)}` : '***'}</span>
+            <span className="text-[12px] font-black text-[var(--color-info)] uppercase leading-tight">Tarjeta</span>
+            <span className="text-xs font-black text-[var(--color-ink)]">{isVisible ? `S/ ${totales.tarjeta.toFixed(1)}` : '***'}</span>
           </div>
           <div className="px-1 py-1 flex flex-col items-center justify-center text-center min-w-0">
-            <span className="text-[12px] font-black text-[#EF4444] uppercase leading-tight">Fiados</span>
-            <span className="text-xs font-black text-[#1E293B]">{isVisible ? `S/ ${totales.fiado.toFixed(1)}` : '***'}</span>
+            <span className="text-[12px] font-black text-[var(--color-danger)] uppercase leading-tight">Fiados</span>
+            <span className="text-xs font-black text-[var(--color-ink)]">{isVisible ? `S/ ${totales.fiado.toFixed(1)}` : '***'}</span>
           </div>
         </div>
       </div>

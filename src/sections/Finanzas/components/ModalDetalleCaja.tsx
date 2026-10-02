@@ -38,7 +38,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
     if (!printRef.current) return;
     setDescargando(true);
     try {
-      const canvas = await html2canvas(printRef.current, { backgroundColor: '#ffffff', scale: 2 });
+      const canvas = await html2canvas(printRef.current, { backgroundColor: 'var(--color-surface)', scale: 2 });
       const link = document.createElement('a');
       link.download = `Ticket_Caja_${caja.id}.png`;
       link.href = canvas.toDataURL('image/png');
@@ -88,15 +88,15 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
   const totalMovimientos = movimientos.reduce((a, m) => a + (m.type === 'INGRESO' ? Number(m.amount) : -Number(m.amount)), 0);
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4 font-mono">
-      <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-2xl h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.9)] flex flex-col">
+    <div className="fixed inset-0 bg-[var(--color-ink)]/90 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4 font-mono">
+      <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-2xl h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.9)] flex flex-col">
 
-        <div className="bg-[#3B82F6] p-4 border-b-2 border-[#1E293B] flex justify-between items-center text-white gap-3">
+        <div className="bg-[var(--color-info)] p-4 border-b-2 border-[var(--color-ink)] flex justify-between items-center text-white gap-3">
           <div className="flex items-center gap-3 min-w-0">
             {vista === 'TICKET' && (
               <button
                 onClick={() => setVista('DETALLE')}
-                className="flex items-center gap-1 bg-white text-[#1E293B] px-2.5 py-1.5 border-2 border-[#1E293B] font-black text-[11px] uppercase tracking-widest shadow-[2px_2px_0_0_#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer shrink-0 rounded-none"
+                className="flex items-center gap-1 bg-white text-[var(--color-ink)] px-2.5 py-1.5 border-2 border-[var(--color-ink)] font-black text-[11px] uppercase tracking-widest shadow-[2px_2px_0_0_var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer shrink-0 rounded-none"
                 title="Volver al detalle"
               >
                 <ChevronLeft size={16} strokeWidth={3} /> Volver
@@ -119,44 +119,44 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
             <div className="flex-1 overflow-auto p-4 sm:p-6 custom-scrollbar flex flex-col gap-4">
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="border-2 border-[#E2E8F0] p-3">
-                  <p className="text-xs font-black text-[#64748B] uppercase">Apertura</p>
-                  <p className="text-base font-black text-[#1E293B]">{new Date(caja.opened_at).toLocaleString('es-PE')}</p>
+                <div className="border-2 border-[var(--color-border)] p-3">
+                  <p className="text-xs font-black text-[var(--color-muted)] uppercase">Apertura</p>
+                  <p className="text-base font-black text-[var(--color-ink)]">{new Date(caja.opened_at).toLocaleString('es-PE')}</p>
                 </div>
-                <div className="border-2 border-[#E2E8F0] p-3">
-                  <p className="text-xs font-black text-[#64748B] uppercase">Cierre</p>
-                  <p className="text-base font-black text-[#1E293B]">{caja.closed_at ? new Date(caja.closed_at).toLocaleString('es-PE') : '---'}</p>
+                <div className="border-2 border-[var(--color-border)] p-3">
+                  <p className="text-xs font-black text-[var(--color-muted)] uppercase">Cierre</p>
+                  <p className="text-base font-black text-[var(--color-ink)]">{caja.closed_at ? new Date(caja.closed_at).toLocaleString('es-PE') : '---'}</p>
                 </div>
-                <div className="border-2 border-[#E2E8F0] p-3">
-                  <p className="text-xs font-black text-[#64748B] uppercase">Fondo Inicial</p>
-                  <p className="text-base font-black text-[#1E293B]">S/ {Number(caja.opening_balance).toFixed(2)}</p>
+                <div className="border-2 border-[var(--color-border)] p-3">
+                  <p className="text-xs font-black text-[var(--color-muted)] uppercase">Fondo Inicial</p>
+                  <p className="text-base font-black text-[var(--color-ink)]">S/ {Number(caja.opening_balance).toFixed(2)}</p>
                 </div>
-                <div className="border-2 border-[#E2E8F0] p-3">
-                  <p className="text-xs font-black text-[#64748B] uppercase">Saldo Final Contado</p>
-                  <p className="text-base font-black text-[#1E293B]">S/ {Number(caja.closing_balance).toFixed(2)}</p>
+                <div className="border-2 border-[var(--color-border)] p-3">
+                  <p className="text-xs font-black text-[var(--color-muted)] uppercase">Saldo Final Contado</p>
+                  <p className="text-base font-black text-[var(--color-ink)]">S/ {Number(caja.closing_balance).toFixed(2)}</p>
                 </div>
               </div>
 
               {caja.justification && (
-                <div className="border-2 border-[#F59E0B] bg-[#FFFBEB] p-3">
-                  <p className="text-xs font-black text-[#D97706] uppercase mb-1">Justificación de la diferencia</p>
-                  <p className="text-sm font-bold text-[#1E293B]">{caja.justification}</p>
+                <div className="border-2 border-[var(--color-warning)] bg-[var(--color-warning-bg)] p-3">
+                  <p className="text-xs font-black text-[var(--color-warning-dark)] uppercase mb-1">Justificación de la diferencia</p>
+                  <p className="text-sm font-bold text-[var(--color-ink)]">{caja.justification}</p>
                 </div>
               )}
 
               <div>
-                <h3 className="text-sm font-black text-[#1E293B] uppercase tracking-widest mb-2 border-b-2 border-[#1E293B] pb-1">
+                <h3 className="text-sm font-black text-[var(--color-ink)] uppercase tracking-widest mb-2 border-b-2 border-[var(--color-ink)] pb-1">
                   Ventas ({ventasValidas.length})
                 </h3>
                 {ventasValidas.length === 0 ? (
-                  <p className="text-sm font-bold text-[#64748B] uppercase">No hubo ventas en esta caja.</p>
+                  <p className="text-sm font-bold text-[var(--color-muted)] uppercase">No hubo ventas en esta caja.</p>
                 ) : (
-                  <div className="border-2 border-[#E2E8F0]">
+                  <div className="border-2 border-[var(--color-border)]">
                     {ventasValidas.map(t => (
-                      <div key={t.id} className="flex justify-between items-center p-2.5 border-b border-[#E2E8F0] last:border-b-0 text-sm">
-                        <span className="font-bold text-[#64748B]">{new Date(t.created_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}</span>
-                        <span className="font-black uppercase text-[#1E293B]">{t.payment_type}</span>
-                        <span className="font-black text-[#10B981]">S/ {Number(t.total).toFixed(2)}</span>
+                      <div key={t.id} className="flex justify-between items-center p-2.5 border-b border-[var(--color-border)] last:border-b-0 text-sm">
+                        <span className="font-bold text-[var(--color-muted)]">{new Date(t.created_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className="font-black uppercase text-[var(--color-ink)]">{t.payment_type}</span>
+                        <span className="font-black text-[var(--color-accent)]">S/ {Number(t.total).toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
@@ -164,27 +164,27 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
               </div>
 
               <div>
-                <h3 className="text-sm font-black text-[#1E293B] uppercase tracking-widest mb-2 border-b-2 border-[#1E293B] pb-1">
+                <h3 className="text-sm font-black text-[var(--color-ink)] uppercase tracking-widest mb-2 border-b-2 border-[var(--color-ink)] pb-1">
                   Movimientos de Caja Interna ({movimientos.length})
                 </h3>
                 {movimientos.length === 0 ? (
-                  <p className="text-sm font-bold text-[#64748B] uppercase">No hubo ingresos/gastos manuales en esta caja.</p>
+                  <p className="text-sm font-bold text-[var(--color-muted)] uppercase">No hubo ingresos/gastos manuales en esta caja.</p>
                 ) : (
                   <>
-                    <div className="border-2 border-[#E2E8F0]">
+                    <div className="border-2 border-[var(--color-border)]">
                       {movimientos.map(m => (
-                        <div key={m.id} className="flex justify-between items-center gap-2 p-2.5 border-b border-[#E2E8F0] last:border-b-0 text-sm">
-                          <span className="font-bold text-[#64748B] shrink-0">{new Date(m.created_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}</span>
-                          <span className="font-black uppercase text-[#1E293B] flex-1">{m.description}</span>
-                          <span className={`font-black shrink-0 ${m.type === 'INGRESO' ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
+                        <div key={m.id} className="flex justify-between items-center gap-2 p-2.5 border-b border-[var(--color-border)] last:border-b-0 text-sm">
+                          <span className="font-bold text-[var(--color-muted)] shrink-0">{new Date(m.created_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="font-black uppercase text-[var(--color-ink)] flex-1">{m.description}</span>
+                          <span className={`font-black shrink-0 ${m.type === 'INGRESO' ? 'text-[var(--color-accent)]' : 'text-[var(--color-danger)]'}`}>
                             {m.type === 'INGRESO' ? '+' : '-'} S/ {Number(m.amount).toFixed(2)}
                           </span>
                         </div>
                       ))}
                     </div>
-                    <div className="flex justify-between p-2.5 bg-[#F8FAFC] border-2 border-t-0 border-[#E2E8F0] text-sm font-black uppercase">
+                    <div className="flex justify-between p-2.5 bg-[var(--color-bg)] border-2 border-t-0 border-[var(--color-border)] text-sm font-black uppercase">
                       <span>Total Movimientos</span>
-                      <span className={totalMovimientos >= 0 ? 'text-[#10B981]' : 'text-[#EF4444]'}>S/ {totalMovimientos.toFixed(2)}</span>
+                      <span className={totalMovimientos >= 0 ? 'text-[var(--color-accent)]' : 'text-[var(--color-danger)]'}>S/ {totalMovimientos.toFixed(2)}</span>
                     </div>
                   </>
                 )}
@@ -192,10 +192,10 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
 
             </div>
 
-            <div className="p-4 bg-[#F8FAFC] border-t-2 border-[#1E293B]">
+            <div className="p-4 bg-[var(--color-bg)] border-t-2 border-[var(--color-ink)]">
               <button
                 onClick={() => setVista('TICKET')}
-                className="w-full bg-[#1E293B] text-white p-4 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[#3B82F6] transition-colors border-2 border-[#1E293B] shadow-[4px_4px_0_0_#1E293B] active:translate-y-1 cursor-pointer"
+                className="w-full bg-[var(--color-ink)] text-white p-4 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[var(--color-info)] transition-colors border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-1 cursor-pointer"
               >
                 <FileText size={20} /> Ver Ticket para Imprimir / Descargar
               </button>
@@ -204,8 +204,8 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
         ) : (
           <>
             {/* VISTA TICKET: formato angosto 80mm, vista previa antes de imprimir o descargar */}
-            <div className="flex-1 overflow-auto p-6 custom-scrollbar bg-[#F1F5F9]">
-              <div ref={printRef} className="bg-white p-4 text-[#1E293B] w-[80mm] mx-auto border border-dashed border-gray-300 shadow-md print:border-0 print:p-0 print:shadow-none">
+            <div className="flex-1 overflow-auto p-6 custom-scrollbar bg-[var(--color-bg-2)]">
+              <div ref={printRef} className="bg-white p-4 text-[var(--color-ink)] w-[80mm] mx-auto border border-dashed border-gray-300 shadow-md print:border-0 print:p-0 print:shadow-none">
                 <div className="text-center border-b-2 border-black pb-2 mb-4">
                   <h3 className="font-black text-lg uppercase">Resumen de Caja</h3>
                   <p className="text-[12px] font-bold">ID: {caja.id}</p>
@@ -261,7 +261,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
                   <div className="flex justify-between text-blue-600"><span>Yape:</span><span>S/ {ventasValidas.reduce((a, b) => a + Number(b.amount_yape || 0), 0).toFixed(2)}</span></div>
                   <div className="flex justify-between text-purple-600"><span>Tarjeta:</span><span>S/ {ventasValidas.reduce((a, b) => a + Number(b.amount_card || 0), 0).toFixed(2)}</span></div>
                   {movimientos.length > 0 && (
-                    <div className="flex justify-between text-[#1E293B]">
+                    <div className="flex justify-between text-[var(--color-ink)]">
                       <span>Movimientos (Ingresos - Gastos):</span>
                       <span>S/ {totalMovimientos.toFixed(2)}</span>
                     </div>
@@ -274,17 +274,17 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
               </div>
             </div>
 
-            <div className="p-4 bg-[#F8FAFC] border-t-2 border-[#1E293B] flex gap-2">
+            <div className="p-4 bg-[var(--color-bg)] border-t-2 border-[var(--color-ink)] flex gap-2">
               <button
                 onClick={handleDescargar}
                 disabled={descargando}
-                className="flex-1 bg-white text-[#1E293B] p-4 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[#E2E8F0] transition-colors border-2 border-[#1E293B] shadow-[4px_4px_0_0_#1E293B] active:translate-y-1 disabled:opacity-50 cursor-pointer"
+                className="flex-1 bg-white text-[var(--color-ink)] p-4 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[var(--color-border)] transition-colors border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-1 disabled:opacity-50 cursor-pointer"
               >
                 <Download size={20} /> {descargando ? 'Descargando...' : 'Descargar'}
               </button>
               <button
                 onClick={() => handlePrint()}
-                className="flex-1 bg-[#1E293B] text-white p-4 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[#10B981] transition-colors border-2 border-[#1E293B] shadow-[4px_4px_0_0_#1E293B] active:translate-y-1 cursor-pointer"
+                className="flex-1 bg-[var(--color-ink)] text-white p-4 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[var(--color-accent)] transition-colors border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-1 cursor-pointer"
               >
                 <Printer size={20} /> Imprimir
               </button>

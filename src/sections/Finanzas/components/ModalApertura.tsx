@@ -43,10 +43,10 @@ export const ModalApertura: React.FC<Props> = ({ isOpen, onClose, onSuccess }) =
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 font-mono">
-      <div className="max-h-[calc(var(--alto-pantalla)*0.94)] overflow-y-auto bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] w-full max-w-sm flex flex-col rounded-none animate-fade-in">
+    <div className="fixed inset-0 bg-[var(--color-ink)]/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 font-mono">
+      <div className="max-h-[calc(var(--alto-pantalla)*0.94)] overflow-y-auto bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-sm flex flex-col rounded-none animate-fade-in">
         
-        <div className="bg-[#10B981] p-4 border-b-2 border-[#1E293B] flex justify-between items-center text-[#1E293B]">
+        <div className="bg-[var(--color-accent)] p-4 border-b-2 border-[var(--color-ink)] flex justify-between items-center text-[var(--color-ink)]">
           <h2 className="font-black uppercase tracking-widest flex items-center gap-2 text-sm">
             <Wallet size={18} /> Aperturar Caja
           </h2>
@@ -56,28 +56,28 @@ export const ModalApertura: React.FC<Props> = ({ isOpen, onClose, onSuccess }) =
         </div>
 
         <div className="p-6 flex flex-col gap-4">
-          <p className="text-xs font-bold text-[#64748B] uppercase tracking-widest text-center">
+          <p className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-widest text-center">
             Ingresa el dinero físico (sencillo) con el que inicia la caja hoy.
           </p>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest">Monto Inicial (S/)</label>
+            <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest">Monto Inicial (S/)</label>
             <input 
               type="number" 
               value={monto}
               onChange={(e) => setMonto(e.target.value)}
               placeholder="Ej. 100.00"
-              className="w-full bg-[#F8FAFC] border-2 border-[#1E293B] p-3 text-2xl font-black text-center outline-none focus:border-[#10B981] focus:bg-white transition-colors rounded-none"
+              className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-ink)] p-3 text-2xl font-black text-center outline-none focus:border-[var(--color-accent)] focus:bg-white transition-colors rounded-none"
               autoFocus
             />
           </div>
         </div>
 
-        <div className="p-4 bg-[#F8FAFC] border-t-2 border-[#1E293B]">
+        <div className="p-4 bg-[var(--color-bg)] border-t-2 border-[var(--color-ink)]">
           <button 
             onClick={handleApertura}
             disabled={!monto || isSubmitting}
-            className="w-full bg-[#1E293B] text-white p-3 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[#10B981] hover:text-[#1E293B] transition-colors disabled:opacity-50 border-2 border-[#1E293B] shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer"
+            className="w-full bg-[var(--color-ink)] text-white p-3 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] transition-colors disabled:opacity-50 border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer"
           >
             {isSubmitting ? 'Abriendo...' : <><CheckCircle2 size={18} /> Confirmar Apertura</>}
           </button>

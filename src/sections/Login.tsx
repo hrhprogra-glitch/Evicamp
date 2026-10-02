@@ -89,15 +89,15 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-[var(--alto-pantalla)] w-full flex bg-[#1E293B] font-mono selection:bg-[#10B981] selection:text-white">
+    <div className="min-h-[var(--alto-pantalla)] w-full flex bg-[var(--color-ink)] font-mono selection:bg-[var(--color-accent)] selection:text-white">
       
       {/* =========================================
           LADO IZQUIERDO: TERMINAL DE ACCESO
       ========================================= */}
-      <div className="w-full md:w-1/2 bg-white flex flex-col justify-between relative z-10 border-r-[8px] border-[#10B981] shadow-[20px_0_50px_rgba(0,0,0,0.5)]">
+      <div className="w-full md:w-1/2 bg-white flex flex-col justify-between relative z-10 border-r-[8px] border-[var(--color-accent)] shadow-[20px_0_50px_rgba(0,0,0,0.5)]">
         
         {/* Barra gruesa esmeralda superior */}
-        <div className="absolute top-0 left-0 w-full h-4 bg-[#10B981]"></div>
+        <div className="absolute top-0 left-0 w-full h-4 bg-[var(--color-accent)]"></div>
 
         {/* CONTENEDOR CENTRAL DEL FORMULARIO */}
         <div className="flex-1 flex flex-col justify-center px-8 md:px-16 lg:px-24">
@@ -108,17 +108,17 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               {/* Logo Dinámico o por Defecto */}
               <img src={empresaData.logo} alt="Logo Empresa" className="w-12 h-12 object-contain" /> 
               
-              <h1 className="text-5xl font-black text-[#1E293B] uppercase tracking-tighter">
-                {empresaData.nombre}<span className="text-[#10B981]">.</span>
+              <h1 className="text-5xl font-black text-[var(--color-ink)] uppercase tracking-tighter">
+                {empresaData.nombre}<span className="text-[var(--color-accent)]">.</span>
               </h1>
             </div>
 
             <div className="flex items-center gap-4 mt-6">
-              <div className="h-[2px] flex-1 bg-[#10B981]"></div>
-              <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-[0.3em]">
+              <div className="h-[2px] flex-1 bg-[var(--color-accent)]"></div>
+              <p className="text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-[0.3em]">
                 Terminal de Acceso
               </p>
-              <div className="h-[2px] flex-1 bg-[#10B981]"></div>
+              <div className="h-[2px] flex-1 bg-[var(--color-accent)]"></div>
             </div>
           </div>
 
@@ -130,8 +130,8 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             )}
 
             <div className="space-y-2">
-              <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-[#10B981]"></div>
+              <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-[var(--color-accent)]"></div>
                 Identificador_Usuario
               </label>
               <input
@@ -139,14 +139,14 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full border-2 border-[#E2E8F0] bg-white px-4 py-4 text-sm font-bold text-[#1E293B] focus:border-[#10B981] focus:outline-none transition-colors rounded-none placeholder:text-[#CBD5E1]"
+                className="w-full border-2 border-[var(--color-border)] bg-white px-4 py-4 text-sm font-bold text-[var(--color-ink)] focus:border-[var(--color-accent)] focus:outline-none transition-colors rounded-none placeholder:text-[var(--color-line-light)]"
                 placeholder="INGRESE SU ID..."
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-[12px] font-black text-[#1E293B] uppercase tracking-widest flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-[#10B981]"></div>
+              <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-[var(--color-accent)]"></div>
                 Clave_Seguridad
               </label>
               <input
@@ -154,7 +154,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full border-2 border-[#E2E8F0] bg-white px-4 py-4 text-sm font-bold text-[#1E293B] focus:border-[#10B981] focus:outline-none transition-colors rounded-none placeholder:text-[#CBD5E1]"
+                className="w-full border-2 border-[var(--color-border)] bg-white px-4 py-4 text-sm font-bold text-[var(--color-ink)] focus:border-[var(--color-accent)] focus:outline-none transition-colors rounded-none placeholder:text-[var(--color-line-light)]"
                 placeholder="••••••••"
               />
             </div>
@@ -163,7 +163,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#10B981] text-[#1E293B] border-2 border-[#1E293B] px-4 py-5 text-sm font-black uppercase tracking-[0.2em] hover:bg-[#1E293B] hover:text-[#10B981] hover:border-[#10B981] transition-all disabled:opacity-50 mt-8 rounded-none cursor-pointer shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+              className="w-full bg-[var(--color-accent)] text-[var(--color-ink)] border-2 border-[var(--color-ink)] px-4 py-5 text-sm font-black uppercase tracking-[0.2em] hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-all disabled:opacity-50 mt-8 rounded-none cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
             >
               {loading ? 'AUTENTICANDO...' : 'EJECUTAR INGRESO'}
             </button>
@@ -171,15 +171,15 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         </div>
 
         {/* FOOTER IZQUIERDO */}
-        <div className="p-8 border-t-2 border-[#E2E8F0] flex justify-between items-center">
-          <span className="text-[12px] font-bold text-[#94A3B8] uppercase tracking-widest">
+        <div className="p-8 border-t-2 border-[var(--color-border)] flex justify-between items-center">
+          <span className="text-[12px] font-bold text-[var(--color-subtle)] uppercase tracking-widest">
             v2.0.4_oxide_engine
           </span>
           <div className="flex gap-2">
-            <div className="w-2 h-2 bg-[#E2E8F0] rounded-none"></div>
-            <div className="w-2 h-2 bg-[#E2E8F0] rounded-none"></div>
-            <div className="w-2 h-2 bg-[#E2E8F0] rounded-none"></div>
-            <div className="w-2 h-2 bg-[#10B981] rounded-none animate-pulse"></div>
+            <div className="w-2 h-2 bg-[var(--color-border)] rounded-none"></div>
+            <div className="w-2 h-2 bg-[var(--color-border)] rounded-none"></div>
+            <div className="w-2 h-2 bg-[var(--color-border)] rounded-none"></div>
+            <div className="w-2 h-2 bg-[var(--color-accent)] rounded-none animate-pulse"></div>
           </div>
         </div>
       </div>
@@ -187,7 +187,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       {/* =========================================
           LADO DERECHO: VISOR DINÁMICO (IMÁGENES)
       ========================================= */}
-      <div className="hidden md:flex md:w-1/2 relative flex-col justify-end p-12 overflow-hidden bg-[#1E293B]">
+      <div className="hidden md:flex md:w-1/2 relative flex-col justify-end p-12 overflow-hidden bg-[var(--color-ink)]">
         
         {/* IMAGEN DE FONDO DINÁMICA */}
         {carouselSlides.map((slide, index) => (
@@ -201,18 +201,18 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         ))}
 
         {/* OVERLAY TÉCNICO (HUD) */}
-        <div className="absolute inset-0 border-[24px] border-[#10B981]/10 pointer-events-none z-10"></div>
+        <div className="absolute inset-0 border-[24px] border-[var(--color-accent)]/10 pointer-events-none z-10"></div>
         
-        <div className="absolute top-12 right-12 border border-[#10B981] bg-[#1E293B]/80 px-3 py-1 text-[11px] font-black text-[#10B981] tracking-[0.2em] uppercase backdrop-blur-sm z-20 transition-all duration-500">
-          {carouselSlides[currentSlide].tag} <span className="inline-block w-1.5 h-1.5 bg-[#10B981] ml-2 animate-pulse"></span>
+        <div className="absolute top-12 right-12 border border-[var(--color-accent)] bg-[var(--color-ink)]/80 px-3 py-1 text-[11px] font-black text-[var(--color-accent)] tracking-[0.2em] uppercase backdrop-blur-sm z-20 transition-all duration-500">
+          {carouselSlides[currentSlide].tag} <span className="inline-block w-1.5 h-1.5 bg-[var(--color-accent)] ml-2 animate-pulse"></span>
         </div>
 
         {/* TEXTO DEL MÓDULO ACTUAL DINÁMICO */}
-        <div className="relative z-20 border-l-[6px] border-[#10B981] pl-6 mb-8 transition-all duration-500">
+        <div className="relative z-20 border-l-[6px] border-[var(--color-accent)] pl-6 mb-8 transition-all duration-500">
           <h2 className="text-5xl font-black text-white uppercase tracking-tighter mb-2 shadow-black drop-shadow-lg">
             {carouselSlides[currentSlide].title}
           </h2>
-          <p className="text-[#10B981] font-bold text-xs tracking-[0.3em] uppercase bg-[#1E293B]/80 inline-block px-2 py-1">
+          <p className="text-[var(--color-accent)] font-bold text-xs tracking-[0.3em] uppercase bg-[var(--color-ink)]/80 inline-block px-2 py-1">
             {carouselSlides[currentSlide].subtitle}
           </p>
         </div>
@@ -224,7 +224,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 key={index}
                 onClick={() => setCurrentSlide(index)}
                 className={`h-1.5 transition-all cursor-pointer ${
-                  index === currentSlide ? 'w-16 bg-[#10B981]' : 'w-8 bg-white/20 hover:bg-white/40'
+                  index === currentSlide ? 'w-16 bg-[var(--color-accent)]' : 'w-8 bg-white/20 hover:bg-white/40'
                 }`}
              ></button>
            ))}

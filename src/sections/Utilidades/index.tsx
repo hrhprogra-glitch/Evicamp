@@ -288,25 +288,25 @@ export const Utilidades = () => {
     .map(p => ({ nombre: p.nombre, utilidad: p.utilidadReal }));
 
   return (
-    <div className="flex flex-col gap-3 lg:gap-4 p-0 w-full font-sans bg-[#FFFFFF]">
+    <div className="flex flex-col gap-3 lg:gap-4 p-0 w-full font-sans bg-[var(--color-surface)]">
       
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white border border-[#1E293B] p-4 sm:p-6 rounded-none gap-4 shadow-[4px_4px_0px_0px_rgba(30,41,59,0.05)]">
-        <div className="border-l-4 border-[#065F46] pl-3 sm:pl-5 min-w-0">
-          <h1 className="text-xl sm:text-3xl font-black text-[#1E293B] uppercase tracking-tighter flex items-center gap-3">
-            <Activity className="text-[#065F46] w-6 h-6 sm:w-8 sm:h-8 shrink-0" strokeWidth={2.5} />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white border border-[var(--color-ink)] p-4 sm:p-6 rounded-none gap-4 shadow-[4px_4px_0px_0px_rgba(30,41,59,0.05)]">
+        <div className="border-l-4 border-[var(--color-accent-shadow)] pl-3 sm:pl-5 min-w-0">
+          <h1 className="text-xl sm:text-3xl font-black text-[var(--color-ink)] uppercase tracking-tighter flex items-center gap-3">
+            <Activity className="text-[var(--color-accent-shadow)] w-6 h-6 sm:w-8 sm:h-8 shrink-0" strokeWidth={2.5} />
             Análisis de Rentabilidad
           </h1>
-          <p className="text-[12px] sm:text-[13px] text-[#64748B] font-black mt-1 uppercase tracking-widest sm:tracking-[0.2em]">
+          <p className="text-[12px] sm:text-[13px] text-[var(--color-muted)] font-black mt-1 uppercase tracking-widest sm:tracking-[0.2em]">
             Sincronización Total con POS y Finanzas
           </p>
         </div>
-        <div className="border-l-2 border-[#065F46] pl-3">
-          <h1 className="text-xl font-bold text-[#1E293B] uppercase tracking-widest flex items-center gap-2">
-            <Activity size={20} className="text-[#065F46]" />
+        <div className="border-l-2 border-[var(--color-accent-shadow)] pl-3">
+          <h1 className="text-xl font-bold text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2">
+            <Activity size={20} className="text-[var(--color-accent-shadow)]" />
             Márgenes por Producto
           </h1>
-          <p className="text-xs text-[#64748B] font-bold mt-1 uppercase tracking-wider">
-            Sincronizado • <span className="text-[#065F46] whitespace-nowrap">Zona Horaria: PE (UTC-5)</span>
+          <p className="text-xs text-[var(--color-muted)] font-bold mt-1 uppercase tracking-wider">
+            Sincronizado • <span className="text-[var(--color-accent-shadow)] whitespace-nowrap">Zona Horaria: PE (UTC-5)</span>
           </p>
         </div>
         
@@ -314,8 +314,8 @@ export const Utilidades = () => {
           onClick={() => setMostrarTops(!mostrarTops)}
           className={`px-6 py-3 text-xs font-bold uppercase tracking-widest transition-all duration-200 border-2 rounded-none flex items-center gap-2
             ${mostrarTops 
-              ? 'bg-[#ECFDF5] text-[#065F46] border-[#065F46]' 
-              : 'bg-[#065F46] text-white border-[#065F46] hover:bg-[#047857] hover:shadow-[4px_4px_0px_0px_rgba(6,95,70,0.3)]'
+              ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent-shadow)] border-[var(--color-accent-shadow)]' 
+              : 'bg-[var(--color-accent-shadow)] text-white border-[var(--color-accent-shadow)] hover:bg-[var(--color-accent-dark-2)] hover:shadow-[4px_4px_0px_0px_rgba(6,95,70,0.3)]'
             }`}
         >
           {mostrarTops ? 'Ocultar Resumen Top' : 'Ver Productos Top'}
@@ -342,8 +342,8 @@ export const Utilidades = () => {
       <div className="relative pb-6">
         {isLoading && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center py-20 bg-white/85 backdrop-blur-[1px]">
-            <div className="w-10 h-10 border-4 border-[#E2E8F0] border-t-[#065F46] animate-spin rounded-full mb-4"></div>
-            <p className="text-[#065F46] font-bold uppercase tracking-widest text-sm">Sincronizando Base de Datos...</p>
+            <div className="w-10 h-10 border-4 border-[var(--color-border)] border-t-[var(--color-accent-shadow)] animate-spin rounded-full mb-4"></div>
+            <p className="text-[var(--color-accent-shadow)] font-bold uppercase tracking-widest text-sm">Sincronizando Base de Datos...</p>
           </div>
         )}
         <TablaAnalisisProductos

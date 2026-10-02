@@ -179,22 +179,22 @@ export const TablaLotes: React.FC<Props> = ({
   const renderPagination = (position: 'top' | 'bottom') => {
     if (loading || totalPages <= 0) return null;
     return (
-      <div className={`${position === 'top' ? 'border-b' : 'border-t'} border-[#E2E8F0] bg-[#F8FAFC] p-3 flex items-center justify-between shrink-0`}>
-        <span className="text-[12px] font-bold text-[#64748B] uppercase tracking-widest">
+      <div className={`${position === 'top' ? 'border-b' : 'border-t'} border-[var(--color-border)] bg-[var(--color-bg)] p-3 flex items-center justify-between shrink-0`}>
+        <span className="text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-widest">
           Página {currentPage} de {totalPages}
         </span>
         <div className="flex gap-2">
           <button 
             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="w-8 h-8 flex items-center justify-center bg-white border border-[#E2E8F0] text-[#1E293B] hover:bg-[#1E293B] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center bg-white border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
           >
             <ChevronLeft size={16} />
           </button>
           <button 
             onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
-            className="w-8 h-8 flex items-center justify-center bg-white border border-[#E2E8F0] text-[#1E293B] hover:bg-[#1E293B] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center bg-white border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
           >
             <ChevronRight size={16} />
           </button>
@@ -204,12 +204,12 @@ export const TablaLotes: React.FC<Props> = ({
   };
 
   return (
-    <div className="border border-[#E2E8F0] flex-1 flex flex-col bg-white relative">
+    <div className="border border-[var(--color-border)] flex-1 flex flex-col bg-white relative">
       {loading && (
         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
-            <Database size={24} className="text-[#10B981] animate-bounce" />
-            <span className="text-[12px] font-black text-[#1E293B] uppercase tracking-[0.2em]">Cargando Lotes...</span>
+            <Database size={24} className="text-[var(--color-accent)] animate-bounce" />
+            <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-[0.2em]">Cargando Lotes...</span>
           </div>
         </div>
       )}
@@ -221,7 +221,7 @@ export const TablaLotes: React.FC<Props> = ({
       <div className="flex-1 min-h-0 flex flex-col overflow-x-auto custom-scrollbar">
       <div className="flex-1 min-h-0 flex flex-col min-w-[960px]">
       {/* Cabecera de la Tabla (TEXTO AGRANDADO a text-sm) */}
-      <div className="grid grid-cols-12 gap-x-3 bg-[#1E293B] text-white p-4 text-sm font-black uppercase tracking-wide shrink-0">
+      <div className="grid grid-cols-12 gap-x-3 bg-[var(--color-ink)] text-white p-4 text-sm font-black uppercase tracking-wide shrink-0">
         <div className="col-span-2">Fecha / Doc / Prov.</div>
         <div className="col-span-3">Producto</div>
         <div className="col-span-2 text-center">Estado / Vence</div>
@@ -235,8 +235,8 @@ export const TablaLotes: React.FC<Props> = ({
       {/* Cuerpo Scrolleable */}
       <div className="overflow-y-auto flex-1 custom-scrollbar">
         {!loading && paginatedLotes.length === 0 ? (
-          <div className="p-6 sm:p-12 text-center text-[#94A3B8] font-bold uppercase text-[12px] tracking-widest flex flex-col items-center justify-center h-full gap-2">
-            <Layers size={32} className="text-[#E2E8F0] mb-2" />
+          <div className="p-6 sm:p-12 text-center text-[var(--color-subtle)] font-bold uppercase text-[12px] tracking-widest flex flex-col items-center justify-center h-full gap-2">
+            <Layers size={32} className="text-[var(--color-border)] mb-2" />
             No hay lotes que coincidan con la búsqueda.
           </div>
         ) : (
@@ -251,22 +251,22 @@ export const TablaLotes: React.FC<Props> = ({
     <div
       key={lote.id}
       {...(puedeGestionarLotes ? clicConTeclado(() => onEditLote && onEditLote(lote)) : {})}
-      className={`grid grid-cols-12 gap-x-3 items-center p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors group text-base ${puedeGestionarLotes ? 'cursor-pointer' : ''}`}
+      className={`grid grid-cols-12 gap-x-3 items-center p-4 border-b border-[var(--color-bg-2)] hover:bg-[var(--color-bg)] transition-colors group text-base ${puedeGestionarLotes ? 'cursor-pointer' : ''}`}
       title={puedeGestionarLotes ? 'Click para editar' : undefined}
     >
       
       {/* 1. INGRESO Y REFERENCIA / SUSTENTO / PROVEEDOR */}
       <div className="col-span-2 flex flex-col gap-1 pr-2">
-        <span className="text-[#1E293B] font-black">{lote.created_at}</span>
+        <span className="text-[var(--color-ink)] font-black">{lote.created_at}</span>
         
         {/* Documento o Sustento Guardado */}
-        <span className="text-xs font-black text-[#64748B] uppercase truncate" title={lote.document_ref}>
+        <span className="text-xs font-black text-[var(--color-muted)] uppercase truncate" title={lote.document_ref}>
           {lote.document_ref}
         </span>
         
         {/* Proveedor en color azul para resaltarlo */}
         {lote.supplier && (
-          <span className="text-[12px] font-black text-[#3B82F6] uppercase truncate" title={lote.supplier}>
+          <span className="text-[12px] font-black text-[var(--color-info)] uppercase truncate" title={lote.supplier}>
             PROV: {lote.supplier}
           </span>
         )}
@@ -274,10 +274,10 @@ export const TablaLotes: React.FC<Props> = ({
 
       {/* 2. PRODUCTO Y CATEGORÍA */}
       <div className="col-span-3 pr-4">
-        <p className="font-black uppercase text-[#1E293B] truncate" title={lote.product_name}>
+        <p className="font-black uppercase text-[var(--color-ink)] truncate" title={lote.product_name}>
           {lote.product_name}
         </p>
-        <span className="text-xs font-black bg-[#E2E8F0] px-2 py-1 text-[#64748B] uppercase mt-1 inline-block w-max">
+        <span className="text-xs font-black bg-[var(--color-border)] px-2 py-1 text-[var(--color-muted)] uppercase mt-1 inline-block w-max">
           {lote.category}
         </span>
       </div>
@@ -285,23 +285,23 @@ export const TablaLotes: React.FC<Props> = ({
       {/* 3. ESTADO DINÁMICO Y VENCIMIENTO */}
       <div className="col-span-2 flex flex-col items-center gap-1">
         <div className={`px-3 py-1 text-xs font-black uppercase border-2 ${
-          isVigente ? 'bg-[#ECFDF5] text-[#10B981] border-[#10B981]' : 'bg-[#FEF2F2] text-[#EF4444] border-[#EF4444]'
+          isVigente ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent)] border-[var(--color-accent)]' : 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger)]'
         }`}>
           {isVigente ? 'VIGENTE' : isExpired ? 'CADUCADO' : 'AGOTADO'}
         </div>
-        <span className="text-xs font-black text-[#64748B]">
+        <span className="text-xs font-black text-[var(--color-muted)]">
           {lote.expiration_date || 'SIN VENC.'}
         </span>
       </div>
 
       {/* 4. COSTO UNITARIO */}
       <div className="col-span-1 text-right">
-        <p className="font-black text-[#64748B]">S/ {lote.cost_unit.toFixed(2)}</p>
+        <p className="font-black text-[var(--color-muted)]">S/ {lote.cost_unit.toFixed(2)}</p>
       </div>
 
       {/* 5. TOTAL COMPRA */}
       <div className="col-span-1 text-right">
-        <p className="font-black text-[#1E293B]">S/ {totalCompra}</p>
+        <p className="font-black text-[var(--color-ink)]">S/ {totalCompra}</p>
       </div>
 
       {/* 6. TRAZABILIDAD DE MERMAS */}
@@ -311,7 +311,7 @@ export const TablaLotes: React.FC<Props> = ({
             -{lote.mermas_total}
           </div>
         ) : (
-          <span className="text-[#CBD5E1] font-bold text-xs">-</span>
+          <span className="text-[var(--color-line-light)] font-bold text-xs">-</span>
         )}
       </div>
 
@@ -319,7 +319,7 @@ export const TablaLotes: React.FC<Props> = ({
       <div className="col-span-1 text-center flex flex-col items-center px-1">
         <div 
           className={`flex flex-col items-center justify-center px-1 py-0.5 text-sm font-black border-2 w-full max-w-[60px] overflow-hidden text-ellipsis ${
-            isVigente ? 'border-[#1E293B] bg-white text-[#1E293B]' : 'border-[#CBD5E1] bg-[#F1F5F9] text-[#94A3B8]'
+            isVigente ? 'border-[var(--color-ink)] bg-white text-[var(--color-ink)]' : 'border-[var(--color-line-light)] bg-[var(--color-bg-2)] text-[var(--color-subtle)]'
           }`} 
           title={`Stock exacto en DB: ${lote.quantity} ${lote.unit || 'UND'}`}
         >
@@ -338,7 +338,7 @@ export const TablaLotes: React.FC<Props> = ({
               onViewMermas(lote); // <-- Ahora TypeScript aceptará el argumento
             }
           }}
-          className="text-[#94A3B8] hover:text-[#F59E0B] transition-colors cursor-pointer"
+          className="text-[var(--color-subtle)] hover:text-[var(--color-warning)] transition-colors cursor-pointer"
           title="Ver Historial de Mermas"
         >
           <History size={18} />
@@ -347,7 +347,7 @@ export const TablaLotes: React.FC<Props> = ({
         {puedeGestionarLotes && (<>
         <button
           onClick={(e) => { e.stopPropagation(); onEditLote && onEditLote(lote); }}
-          className="text-[#94A3B8] hover:text-[#10B981] transition-colors cursor-pointer"
+          className="text-[var(--color-subtle)] hover:text-[var(--color-accent)] transition-colors cursor-pointer"
           title="Editar datos del Lote"
         >
           <Edit size={18} />
@@ -380,7 +380,7 @@ export const TablaLotes: React.FC<Props> = ({
               }
             }
           }}
-          className="text-[#1E293B] hover:bg-[#1E293B] hover:text-[#FFFFFF] border border-transparent hover:border-[#E2E8F0] p-1 rounded-none transition-colors cursor-pointer"
+          className="text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] border border-transparent hover:border-[var(--color-border)] p-1 rounded-none transition-colors cursor-pointer"
           title="Eliminar Lote"
         >
           <Trash2 size={18} />

@@ -56,10 +56,10 @@ export const TopBar: React.FC<TopBarProps> = ({ toggleSidebar, userEmail, onNavi
 
   return (
     <header
-      className={`h-12 border-b border-[#E2E8F0] bg-white flex items-center justify-between gap-2 px-3 sm:px-4 lg:px-6 shrink-0 font-mono relative z-10 overflow-hidden lg:transition-[height,border-color] lg:duration-200 lg:ease-out ${ocultoEnEscritorio ? 'lg:h-0 lg:border-b-0 lg:invisible' : ''}`}
+      className={`h-12 border-b border-[var(--color-border)] bg-white flex items-center justify-between gap-2 px-3 sm:px-4 lg:px-6 shrink-0 font-mono relative z-10 overflow-hidden lg:transition-[height,border-color] lg:duration-200 lg:ease-out ${ocultoEnEscritorio ? 'lg:h-0 lg:border-b-0 lg:invisible' : ''}`}
     >
       
-      <div className="absolute top-0 left-0 w-full h-[1px] bg-[#10B981]"></div>
+      <div className="absolute top-0 left-0 w-full h-[1px] bg-[var(--color-accent)]"></div>
 
       {/* LADO IZQUIERDO: Control y Consola */}
       <div className="flex items-center space-x-4 min-w-0">
@@ -67,17 +67,17 @@ export const TopBar: React.FC<TopBarProps> = ({ toggleSidebar, userEmail, onNavi
           onClick={toggleSidebar}
           data-menu-toggle
           aria-label="Abrir o cerrar menú"
-          className="lg:hidden p-2 border border-[#E2E8F0] bg-[#F8FAFC] text-[#1E293B] hover:border-[#10B981] hover:text-[#10B981] hover:bg-white transition-all rounded-none cursor-pointer group"
+          className="lg:hidden p-2 border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-ink)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] hover:bg-white transition-all rounded-none cursor-pointer group"
         >
           <svg className="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="1.5" d="M4 6h16M4 12h16M4 18h7" />
           </svg>
         </button>
         
-        <div className="hidden 2xl:flex items-center text-xs font-black text-[#94A3B8] uppercase tracking-[0.2em] bg-[#F8FAFC] px-3 py-1 border border-[#E2E8F0]">
-          <span className="text-[#10B981] mr-2">root@evicamp:~#</span>
+        <div className="hidden 2xl:flex items-center text-xs font-black text-[var(--color-subtle)] uppercase tracking-[0.2em] bg-[var(--color-bg)] px-3 py-1 border border-[var(--color-border)]">
+          <span className="text-[var(--color-accent)] mr-2">root@evicamp:~#</span>
           <span>SYSTEM_ACTIVE</span>
-          <span className="w-1.5 h-3 bg-[#10B981] animate-pulse ml-2 inline-block"></span>
+          <span className="w-1.5 h-3 bg-[var(--color-accent)] animate-pulse ml-2 inline-block"></span>
         </div>
       </div>
 
@@ -92,8 +92,8 @@ export const TopBar: React.FC<TopBarProps> = ({ toggleSidebar, userEmail, onNavi
             title={fiadosCount > 0 ? 'Hay deudas pendientes por cobrar' : 'Nadie tiene deudas pendientes'}
             className={`flex items-center shrink-0 whitespace-nowrap border-2 px-2 sm:px-3 py-1 text-[12px] font-black uppercase tracking-widest transition-all cursor-pointer hover:shadow-none active:translate-x-[2px] active:translate-y-[2px] ${
               fiadosCount > 0
-                ? 'border-[#F59E0B] bg-[#FFFBEB] text-[#D97706] hover:bg-[#F59E0B] hover:text-white animate-pulse shadow-[2px_2px_0_0_#D97706]'
-                : 'border-[#10B981] bg-[#ECFDF5] text-[#059669] hover:bg-[#10B981] hover:text-white shadow-[2px_2px_0_0_#059669]'
+                ? 'border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] hover:bg-[var(--color-warning)] hover:text-white animate-pulse shadow-[2px_2px_0_0_var(--color-warning-dark)]'
+                : 'border-[var(--color-accent)] bg-[var(--color-accent-bg)] text-[var(--color-accent-dark)] hover:bg-[var(--color-accent)] hover:text-white shadow-[2px_2px_0_0_var(--color-accent-dark)]'
             }`}
           >
             {fiadosCount > 0 ? <AlertTriangle size={12} className="mr-2" /> : <CheckCircle2 size={12} className="mr-2" />}
@@ -101,19 +101,19 @@ export const TopBar: React.FC<TopBarProps> = ({ toggleSidebar, userEmail, onNavi
           </button>
         )}
 
-        <div className="hidden lg:flex items-center border border-[#E2E8F0] px-3 py-1 bg-white text-xs font-black uppercase tracking-widest text-[#64748B]">
-          <Activity size={14} className="text-[#10B981] mr-2" />
-          NET: <span className="text-[#10B981] ml-1">SECURE</span>
+        <div className="hidden lg:flex items-center border border-[var(--color-border)] px-3 py-1 bg-white text-xs font-black uppercase tracking-widest text-[var(--color-muted)]">
+          <Activity size={14} className="text-[var(--color-accent)] mr-2" />
+          NET: <span className="text-[var(--color-accent)] ml-1">SECURE</span>
         </div>
 
-        <div className="hidden sm:flex items-center whitespace-nowrap border border-[#E2E8F0] px-3 py-1 bg-[#F8FAFC] text-xs font-black uppercase tracking-widest text-[#1E293B]">
+        <div className="hidden sm:flex items-center whitespace-nowrap border border-[var(--color-border)] px-3 py-1 bg-[var(--color-bg)] text-xs font-black uppercase tracking-widest text-[var(--color-ink)]">
           [ {time} ]
         </div>
 
-        <div className="hidden md:flex items-center min-w-0 border border-[#E2E8F0] pl-3 pr-4 py-1 bg-white">
-          <div className="h-2 w-2 bg-[#10B981] animate-pulse mr-2"></div>
-          <span className="text-xs font-black text-[#1E293B] uppercase tracking-[0.1em] truncate">
-            ID: <span className="text-[#64748B]">{userEmail.split('@')[0]}</span>
+        <div className="hidden md:flex items-center min-w-0 border border-[var(--color-border)] pl-3 pr-4 py-1 bg-white">
+          <div className="h-2 w-2 bg-[var(--color-accent)] animate-pulse mr-2"></div>
+          <span className="text-xs font-black text-[var(--color-ink)] uppercase tracking-[0.1em] truncate">
+            ID: <span className="text-[var(--color-muted)]">{userEmail.split('@')[0]}</span>
           </span>
         </div>
         
@@ -123,7 +123,7 @@ export const TopBar: React.FC<TopBarProps> = ({ toggleSidebar, userEmail, onNavi
     window.location.reload();   // Vuelve al login
   }}
   aria-label="Cerrar sesión"
-  className="shrink-0 px-3 md:px-4 py-1 border border-[#1E293B] bg-[#1E293B] text-xs font-black uppercase tracking-[0.2em] text-white hover:bg-transparent hover:text-red-600 hover:border-red-600 transition-colors rounded-none cursor-pointer flex items-center gap-2"
+  className="shrink-0 px-3 md:px-4 py-1 border border-[var(--color-ink)] bg-[var(--color-ink)] text-xs font-black uppercase tracking-[0.2em] text-white hover:bg-transparent hover:text-red-600 hover:border-red-600 transition-colors rounded-none cursor-pointer flex items-center gap-2"
 >
   <LogOut size={12} />
   <span className="hidden md:inline">SALIDA</span>

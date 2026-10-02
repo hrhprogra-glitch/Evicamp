@@ -197,7 +197,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const totalValue = products.reduce((acc, p) => acc + (p.cost * p.quantity), 0);
 
   return (
-    <div className="flex flex-col gap-6 short:gap-3 w-full pb-10 text-[#1E293B] font-mono h-full bg-white relative">
+    <div className="flex flex-col gap-6 short:gap-3 w-full pb-10 text-[var(--color-ink)] font-mono h-full bg-white relative">
       
       <HeaderInventario 
         onIngresoStock={() => setIsModalLoteOpen(true)} 
@@ -206,11 +206,11 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
       />
 
       <div className="px-3 lg:px-4 shrink-0 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6">
-        <div className="grid grid-cols-2 sm:flex w-full sm:w-auto border-2 border-[#1E293B] p-0.5 bg-[#F8FAFC]">
-          <button onClick={() => setVistaActiva('PRODUCTOS')} className={`flex items-center justify-center gap-2 px-3 sm:px-6 py-2 text-[12px] font-black uppercase tracking-[0.2em] transition-all rounded-none cursor-pointer ${vistaActiva === 'PRODUCTOS' ? 'bg-[#1E293B] text-white' : 'text-[#64748B] hover:text-[#1E293B] hover:bg-white'}`}>
+        <div className="grid grid-cols-2 sm:flex w-full sm:w-auto border-2 border-[var(--color-ink)] p-0.5 bg-[var(--color-bg)]">
+          <button onClick={() => setVistaActiva('PRODUCTOS')} className={`flex items-center justify-center gap-2 px-3 sm:px-6 py-2 text-[12px] font-black uppercase tracking-[0.2em] transition-all rounded-none cursor-pointer ${vistaActiva === 'PRODUCTOS' ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-white'}`}>
             <Package size={14} /> Inventario General
           </button>
-          <button onClick={() => setVistaActiva('LOTES')} className={`flex items-center justify-center gap-2 px-3 sm:px-6 py-2 text-[12px] font-black uppercase tracking-[0.2em] transition-all rounded-none cursor-pointer ${vistaActiva === 'LOTES' ? 'bg-[#1E293B] text-[#10B981]' : 'text-[#64748B] hover:text-[#1E293B] hover:bg-white'}`}>
+          <button onClick={() => setVistaActiva('LOTES')} className={`flex items-center justify-center gap-2 px-3 sm:px-6 py-2 text-[12px] font-black uppercase tracking-[0.2em] transition-all rounded-none cursor-pointer ${vistaActiva === 'LOTES' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-white'}`}>
             <Layers size={14} /> Control de Lotes
           </button>
         </div>

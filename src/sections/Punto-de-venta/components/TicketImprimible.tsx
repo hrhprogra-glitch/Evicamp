@@ -33,7 +33,7 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
       <div 
         ref={ref} 
         // 🚀 AHORA ES VISIBLE: Le damos diseño de papel real con sombra
-        className="bg-white p-4 text-[#1E293B] w-[80mm] mx-auto border-2 border-dashed border-gray-400 font-mono shadow-2xl print:shadow-none print:border-0 print:p-0 print:m-0"
+        className="bg-white p-4 text-[var(--color-ink)] w-[80mm] mx-auto border-2 border-dashed border-gray-400 font-mono shadow-2xl print:shadow-none print:border-0 print:p-0 print:m-0"
       >
         {/* REGLAS ESTRICTAS SOLO PARA LA IMPRESORA FÍSICA */}
         <style type="text/css" media="print">

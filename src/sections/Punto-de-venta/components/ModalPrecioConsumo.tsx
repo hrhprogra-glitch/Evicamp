@@ -26,27 +26,27 @@ export const ModalPrecioConsumo: React.FC<Props> = ({ isOpen, producto, onClose,
   };
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 transition-opacity">
+    <div className="fixed inset-0 bg-[var(--color-ink)]/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 transition-opacity">
       {/* Geometría estricta: rounded-none, border oscuro, fondo puro */}
-      <div className="max-h-[calc(var(--alto-pantalla)*0.94)] overflow-y-auto bg-[#FFFFFF] border-2 border-[#1E293B] shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] rounded-none w-full max-w-sm p-6">
+      <div className="max-h-[calc(var(--alto-pantalla)*0.94)] overflow-y-auto bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] rounded-none w-full max-w-sm p-6">
         
-        <div className="border-b border-[#E2E8F0] pb-3 mb-5">
-          <span className="text-[#64748B] text-[12px] font-mono tracking-widest uppercase block mb-1">
+        <div className="border-b border-[var(--color-border)] pb-3 mb-5">
+          <span className="text-[var(--color-muted)] text-[12px] font-mono tracking-widest uppercase block mb-1">
             Registro Operativo
           </span>
-          <h2 className="text-[#1E293B] font-bold text-lg uppercase tracking-wide">
+          <h2 className="text-[var(--color-ink)] font-bold text-lg uppercase tracking-wide">
             Asignar Consumo
           </h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-[#1E293B] text-xs font-bold mb-2 uppercase tracking-wider">
+            <label className="block text-[var(--color-ink)] text-xs font-bold mb-2 uppercase tracking-wider">
               Producto Seleccionado
             </label>
-            <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-3 text-[#1E293B] text-sm font-mono rounded-none">
+            <div className="bg-[var(--color-bg)] border border-[var(--color-border)] p-3 text-[var(--color-ink)] text-sm font-mono rounded-none">
               {producto.name}
-              <div className="text-[#64748B] text-xs mt-1">
+              <div className="text-[var(--color-muted)] text-xs mt-1">
                 Costo Base Ref: S/ {producto.cost || 0}
               </div>
             </div>
@@ -54,7 +54,7 @@ export const ModalPrecioConsumo: React.FC<Props> = ({ isOpen, producto, onClose,
 
           {/* Campo único a pantalla completa (Full Width) */}
           <div>
-            <label className="block text-[#1E293B] text-xs font-bold mb-2 uppercase tracking-wider">
+            <label className="block text-[var(--color-ink)] text-xs font-bold mb-2 uppercase tracking-wider">
               Precio a Cobrar (S/)
             </label>
             <input
@@ -64,26 +64,26 @@ export const ModalPrecioConsumo: React.FC<Props> = ({ isOpen, producto, onClose,
               value={precioAjustado}
               onChange={(e) => setPrecioAjustado(e.target.value)}
               placeholder="0.00"
-              className="w-full bg-[#FFFFFF] border border-[#1E293B] text-[#1E293B] p-3 focus:outline-none focus:ring-1 focus:ring-[#1E293B] rounded-none font-mono text-xl transition-all"
+              className="w-full bg-[var(--color-surface)] border border-[var(--color-ink)] text-[var(--color-ink)] p-3 focus:outline-none focus:ring-1 focus:ring-[var(--color-ink)] rounded-none font-mono text-xl transition-all"
               autoFocus
               required
             />
           </div>
 
-          <div className="flex gap-3 pt-4 border-t border-[#E2E8F0] mt-6">
+          <div className="flex gap-3 pt-4 border-t border-[var(--color-border)] mt-6">
             <button
               type="button"
               onClick={() => {
                 setPrecioAjustado('');
                 onClose();
               }}
-              className="flex-1 bg-[#FFFFFF] border border-[#E2E8F0] text-[#64748B] hover:text-[#1E293B] hover:border-[#1E293B] px-4 py-3 text-sm font-bold uppercase tracking-wider transition-colors rounded-none"
+              className="flex-1 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:border-[var(--color-ink)] px-4 py-3 text-sm font-bold uppercase tracking-wider transition-colors rounded-none"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 bg-[#1E293B] border border-[#1E293B] text-[#FFFFFF] hover:bg-[#FFFFFF] hover:text-[#1E293B] px-4 py-3 text-sm font-bold uppercase tracking-wider transition-colors rounded-none"
+              className="flex-1 bg-[var(--color-ink)] border border-[var(--color-ink)] text-[var(--color-surface)] hover:bg-[var(--color-surface)] hover:text-[var(--color-ink)] px-4 py-3 text-sm font-bold uppercase tracking-wider transition-colors rounded-none"
             >
               Registrar
             </button>

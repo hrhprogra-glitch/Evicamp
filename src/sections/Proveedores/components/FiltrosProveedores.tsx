@@ -21,8 +21,8 @@ export const FiltrosProveedores: React.FC<Props> = ({
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         
         {/* BUSCADOR */}
-        <div className="md:col-span-8 lg:col-span-6 relative flex border-2 border-[#E2E8F0] bg-white focus-within:border-[#3B82F6] transition-colors rounded-none">
-          <div className="w-12 flex items-center justify-center bg-[#F8FAFC] border-r-2 border-[#E2E8F0] shrink-0 text-[#64748B]">
+        <div className="md:col-span-8 lg:col-span-6 relative flex border-2 border-[var(--color-border)] bg-white focus-within:border-[var(--color-info)] transition-colors rounded-none">
+          <div className="w-12 flex items-center justify-center bg-[var(--color-bg)] border-r-2 border-[var(--color-border)] shrink-0 text-[var(--color-muted)]">
             <Search size={18} />
           </div>
           <input 
@@ -30,19 +30,19 @@ export const FiltrosProveedores: React.FC<Props> = ({
             placeholder="BUSCAR POR RUC O RAZÓN SOCIAL..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full p-3 text-xs font-black text-[#1E293B] uppercase outline-none bg-transparent placeholder:text-[#94A3B8]"
+            className="w-full p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none bg-transparent placeholder:text-[var(--color-subtle)]"
           />
         </div>
 
         {/* SELECTOR DE ESTADO */}
-        <div className="md:col-span-3 lg:col-span-4 relative flex border-2 border-[#E2E8F0] bg-white focus-within:border-[#3B82F6] transition-colors rounded-none">
-          <div className="w-10 flex items-center justify-center bg-[#F8FAFC] border-r-2 border-[#E2E8F0] shrink-0 text-[#64748B]">
+        <div className="md:col-span-3 lg:col-span-4 relative flex border-2 border-[var(--color-border)] bg-white focus-within:border-[var(--color-info)] transition-colors rounded-none">
+          <div className="w-10 flex items-center justify-center bg-[var(--color-bg)] border-r-2 border-[var(--color-border)] shrink-0 text-[var(--color-muted)]">
             <Filter size={16} />
           </div>
           <select 
             value={filtroEstado}
             onChange={(e) => setFiltroEstado(e.target.value)}
-            className="w-full p-3 text-xs font-black text-[#1E293B] uppercase outline-none bg-transparent cursor-pointer appearance-none"
+            className="w-full p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none bg-transparent cursor-pointer appearance-none"
           >
             <option value="">TODOS LOS ESTADOS</option>
             <option value="ACTIVO">SOLO ACTIVOS</option>
@@ -58,7 +58,7 @@ export const FiltrosProveedores: React.FC<Props> = ({
                 setSearchQuery('');
                 setFiltroEstado('');
               }}
-              className="h-full w-full bg-white border-2 border-[#EF4444] text-[#EF4444] flex items-center justify-center hover:bg-[#EF4444] hover:text-white transition-colors cursor-pointer rounded-none font-bold text-xs"
+              className="h-full w-full bg-white border-2 border-[var(--color-danger)] text-[var(--color-danger)] flex items-center justify-center hover:bg-[var(--color-danger)] hover:text-white transition-colors cursor-pointer rounded-none font-bold text-xs"
               title="Limpiar Filtros"
             >
               <X size={18} className="mr-1" /> Limpiar
@@ -67,8 +67,8 @@ export const FiltrosProveedores: React.FC<Props> = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-[12px] font-bold text-[#64748B] uppercase tracking-widest border-l-2 border-[#1E293B] pl-2">
-        <span>Resultados: <strong className="text-[#1E293B]">{matchCount}</strong> proveedores</span>
+      <div className="flex items-center gap-2 text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-widest border-l-2 border-[var(--color-ink)] pl-2">
+        <span>Resultados: <strong className="text-[var(--color-ink)]">{matchCount}</strong> proveedores</span>
       </div>
     </div>
   );

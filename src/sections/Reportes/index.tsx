@@ -398,23 +398,23 @@ export const Reportes: React.FC = () => {
       
       {/* TARJETAS DE MÉTRICAS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 shrink-0">
-        <div className="min-w-0 bg-white border-2 border-[#E2E8F0] shadow-[4px_4px_0_0_#E2E8F0] p-3 sm:p-4 flex gap-3 sm:gap-4 items-center rounded-none">
-            <div className="w-12 h-12 bg-[#F8FAFC] rounded-none border-2 border-[#E2E8F0] flex items-center justify-center">
-              <FileText className="text-[#3B82F6]" />
+        <div className="min-w-0 bg-white border-2 border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-border)] p-3 sm:p-4 flex gap-3 sm:gap-4 items-center rounded-none">
+            <div className="w-12 h-12 bg-[var(--color-bg)] rounded-none border-2 border-[var(--color-border)] flex items-center justify-center">
+              <FileText className="text-[var(--color-info)]" />
             </div>
             <div>
-              <p className="text-[12px] font-black uppercase tracking-widest text-[#64748B]">Ventas del Rango</p>
-              <p className="text-2xl font-black text-[#1E293B]">S/ {totalRango.toFixed(2)}</p>
+              <p className="text-[12px] font-black uppercase tracking-widest text-[var(--color-muted)]">Ventas del Rango</p>
+              <p className="text-2xl font-black text-[var(--color-ink)]">S/ {totalRango.toFixed(2)}</p>
             </div>
           </div>
           
-          <div className="min-w-0 bg-white border-2 border-[#E2E8F0] shadow-[4px_4px_0_0_#E2E8F0] p-3 sm:p-4 flex gap-3 sm:gap-4 items-center rounded-none">
-            <div className="w-12 h-12 bg-[#FEF2F2] rounded-none border-2 border-[#EF4444] flex items-center justify-center">
-              <RotateCcw className="text-[#EF4444]" />
+          <div className="min-w-0 bg-white border-2 border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-border)] p-3 sm:p-4 flex gap-3 sm:gap-4 items-center rounded-none">
+            <div className="w-12 h-12 bg-[var(--color-danger-bg)] rounded-none border-2 border-[var(--color-danger)] flex items-center justify-center">
+              <RotateCcw className="text-[var(--color-danger)]" />
             </div>
             <div>
-              <p className="text-[12px] font-black uppercase tracking-widest text-[#64748B]">Devoluciones</p>
-              <p className="text-2xl font-black text-[#EF4444]">{totalAnulados} tickets</p>
+              <p className="text-[12px] font-black uppercase tracking-widest text-[var(--color-muted)]">Devoluciones</p>
+              <p className="text-2xl font-black text-[var(--color-danger)]">{totalAnulados} tickets</p>
             </div>
           </div>
       </div>
@@ -424,39 +424,39 @@ export const Reportes: React.FC = () => {
         
         {/* BOTONES RÁPIDOS */}
         <div className="grid grid-cols-3 sm:flex gap-2 sm:gap-3 w-full lg:w-auto">
-          <button onClick={filtrarHoy} className="bg-white border-2 border-[#1E293B] px-2 sm:px-6 py-3 text-xs sm:text-sm font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
+          <button onClick={filtrarHoy} className="bg-white border-2 border-[var(--color-ink)] px-2 sm:px-6 py-3 text-xs sm:text-sm font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
             Hoy
           </button>
-          <button onClick={filtrarSemana} className="bg-white border-2 border-[#1E293B] px-2 sm:px-6 py-3 text-xs sm:text-sm font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
+          <button onClick={filtrarSemana} className="bg-white border-2 border-[var(--color-ink)] px-2 sm:px-6 py-3 text-xs sm:text-sm font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
             7 Días
           </button>
-          <button onClick={filtrarMes} className="bg-white border-2 border-[#1E293B] px-2 sm:px-6 py-3 text-xs sm:text-sm font-black uppercase text-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_#1E293B] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
+          <button onClick={filtrarMes} className="bg-white border-2 border-[var(--color-ink)] px-2 sm:px-6 py-3 text-xs sm:text-sm font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
             Mes
           </button>
         </div>
 
         {/* SELECTOR DE FECHAS PERSONALIZADO */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-6 bg-white border-2 border-[#E2E8F0] p-3 sm:p-4 shadow-[4px_4px_0_0_#E2E8F0] rounded-none w-full lg:w-auto">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-6 bg-white border-2 border-[var(--color-border)] p-3 sm:p-4 shadow-[4px_4px_0_0_var(--color-border)] rounded-none w-full lg:w-auto">
           <div className="flex flex-col flex-1 min-w-[130px]">
-            <label className="text-xs font-black text-[#64748B] uppercase tracking-widest mb-1">Desde</label>
+            <label className="text-xs font-black text-[var(--color-muted)] uppercase tracking-widest mb-1">Desde</label>
             <div className="flex items-center gap-2">
-              <CalendarDays size={18} className="text-[#94A3B8]" />
-              <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} className="w-full min-w-0 text-sm sm:text-base font-black text-[#1E293B] outline-none bg-transparent uppercase cursor-pointer" />
+              <CalendarDays size={18} className="text-[var(--color-subtle)]" />
+              <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} className="w-full min-w-0 text-sm sm:text-base font-black text-[var(--color-ink)] outline-none bg-transparent uppercase cursor-pointer" />
             </div>
           </div>
-          <div className="hidden sm:block w-[2px] h-10 bg-[#E2E8F0]"></div>
+          <div className="hidden sm:block w-[2px] h-10 bg-[var(--color-border)]"></div>
           <div className="flex flex-col flex-1 min-w-[130px]">
-            <label className="text-xs font-black text-[#64748B] uppercase tracking-widest mb-1">Hasta</label>
+            <label className="text-xs font-black text-[var(--color-muted)] uppercase tracking-widest mb-1">Hasta</label>
             <div className="flex items-center gap-2">
-              <Calendar size={18} className="text-[#94A3B8]" />
-              <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="w-full min-w-0 text-sm sm:text-base font-black text-[#1E293B] outline-none bg-transparent uppercase cursor-pointer" />
+              <Calendar size={18} className="text-[var(--color-subtle)]" />
+              <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="w-full min-w-0 text-sm sm:text-base font-black text-[var(--color-ink)] outline-none bg-transparent uppercase cursor-pointer" />
             </div>
           </div>
           
           {/* BOTÓN LIMPIAR */}
           {(fechaInicio || fechaFin) && (
-             <div className="sm:pl-4 sm:ml-2 sm:border-l-2 border-[#E2E8F0]">
-               <button onClick={limpiarFiltros} className="text-[#EF4444] hover:bg-[#FEF2F2] p-2 transition-colors cursor-pointer rounded-none" title="Limpiar Filtros">
+             <div className="sm:pl-4 sm:ml-2 sm:border-l-2 border-[var(--color-border)]">
+               <button onClick={limpiarFiltros} className="text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] p-2 transition-colors cursor-pointer rounded-none" title="Limpiar Filtros">
                  <RotateCcw size={16} />
                </button>
              </div>
@@ -467,8 +467,8 @@ export const Reportes: React.FC = () => {
       {/* 🔎 BÚSQUEDA + FILTROS en una sola fila: busca por cliente/ticket/monto sin importar
           la fecha, y a su lado los filtros de Estado/Deuda sobre lo ya cargado. */}
       <div className="flex flex-wrap items-stretch gap-3 shrink-0">
-        <div className="flex-1 min-w-[220px] flex items-center border-2 border-[#1E293B] bg-white shadow-[4px_4px_0_0_#1E293B] rounded-none">
-          <div className="w-11 h-11 flex items-center justify-center bg-[#1E293B] text-white shrink-0">
+        <div className="flex-1 min-w-[220px] flex items-center border-2 border-[var(--color-ink)] bg-white shadow-[4px_4px_0_0_var(--color-ink)] rounded-none">
+          <div className="w-11 h-11 flex items-center justify-center bg-[var(--color-ink)] text-white shrink-0">
             <Search size={18} />
           </div>
           <input
@@ -476,10 +476,10 @@ export const Reportes: React.FC = () => {
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             placeholder="BUSCAR POR CLIENTE, N° DE TICKET O MONTO"
-            className="flex-1 min-w-0 h-11 px-3 bg-transparent text-sm font-black text-[#1E293B] uppercase outline-none placeholder:text-[#64748B]/60"
+            className="flex-1 min-w-0 h-11 px-3 bg-transparent text-sm font-black text-[var(--color-ink)] uppercase outline-none placeholder:text-[var(--color-muted)]/60"
           />
           {busqueda && (
-            <button onClick={() => setBusqueda('')} className="px-3 h-11 text-[#EF4444] hover:bg-[#FEF2F2] font-black text-xs uppercase cursor-pointer shrink-0" title="Limpiar búsqueda">
+            <button onClick={() => setBusqueda('')} className="px-3 h-11 text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] font-black text-xs uppercase cursor-pointer shrink-0" title="Limpiar búsqueda">
               Limpiar
             </button>
           )}
@@ -488,7 +488,7 @@ export const Reportes: React.FC = () => {
         <select
           value={filtroEstado}
           onChange={(e) => setFiltroEstado(e.target.value as typeof filtroEstado)}
-          className="h-11 px-3 bg-white border-2 border-[#1E293B] text-xs font-black uppercase text-[#1E293B] outline-none cursor-pointer rounded-none shrink-0"
+          className="h-11 px-3 bg-white border-2 border-[var(--color-ink)] text-xs font-black uppercase text-[var(--color-ink)] outline-none cursor-pointer rounded-none shrink-0"
         >
           <option value="TODOS">Estado: Todos</option>
           <option value="COMPLETADO">Estado: Completado</option>
@@ -498,7 +498,7 @@ export const Reportes: React.FC = () => {
         <select
           value={filtroDeuda}
           onChange={(e) => setFiltroDeuda(e.target.value as typeof filtroDeuda)}
-          className="h-11 px-3 bg-white border-2 border-[#1E293B] text-xs font-black uppercase text-[#1E293B] outline-none cursor-pointer rounded-none shrink-0"
+          className="h-11 px-3 bg-white border-2 border-[var(--color-ink)] text-xs font-black uppercase text-[var(--color-ink)] outline-none cursor-pointer rounded-none shrink-0"
         >
           <option value="TODOS">Deuda: Todos</option>
           <option value="PENDIENTE">Deuda: Pendiente</option>
@@ -508,7 +508,7 @@ export const Reportes: React.FC = () => {
         {(filtroEstado !== 'TODOS' || filtroDeuda !== 'TODOS') && (
           <button
             onClick={() => { setFiltroEstado('TODOS'); setFiltroDeuda('TODOS'); }}
-            className="h-11 px-3 text-[#EF4444] hover:bg-[#FEF2F2] font-black text-xs uppercase cursor-pointer rounded-none border-2 border-[#EF4444] shrink-0"
+            className="h-11 px-3 text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] font-black text-xs uppercase cursor-pointer rounded-none border-2 border-[var(--color-danger)] shrink-0"
           >
             Quitar filtros
           </button>

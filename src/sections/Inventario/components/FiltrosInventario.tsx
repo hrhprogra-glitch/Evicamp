@@ -40,8 +40,8 @@ export const FiltrosInventario: React.FC<Props> = ({
     <div className="flex flex-col xl:flex-row gap-4 px-3 lg:px-4 shrink-0 items-center justify-between">
       
       {/* BARRA DE BÚSQUEDA (Toma el espacio restante) */}
-      <div className="w-full xl:flex-1 h-14 shrink-0 flex border border-[#E2E8F0] bg-white focus-within:border-[#1E293B] focus-within:ring-1 focus-within:ring-[#1E293B] transition-all group shadow-sm">
-        <div className="w-14 h-full flex items-center justify-center bg-[#F8FAFC] border-r border-[#E2E8F0] text-[#94A3B8] group-focus-within:bg-[#1E293B] group-focus-within:text-[#10B981] group-focus-within:border-[#1E293B] transition-colors shrink-0">
+      <div className="w-full xl:flex-1 h-14 shrink-0 flex border border-[var(--color-border)] bg-white focus-within:border-[var(--color-ink)] focus-within:ring-1 focus-within:ring-[var(--color-ink)] transition-all group shadow-sm">
+        <div className="w-14 h-full flex items-center justify-center bg-[var(--color-bg)] border-r border-[var(--color-border)] text-[var(--color-subtle)] group-focus-within:bg-[var(--color-ink)] group-focus-within:text-[var(--color-accent)] group-focus-within:border-[var(--color-ink)] transition-colors shrink-0">
           <div className="mt-[-6px]"><Search size={18} /></div>
         </div>
         <div className="flex-1 relative h-full flex items-center">
@@ -50,13 +50,13 @@ export const FiltrosInventario: React.FC<Props> = ({
             placeholder="ESCANEAR BARCODE O BUSCAR POR NOMBRE / CÓDIGO..."
             value={localQuery}
             onChange={(e) => setLocalQuery(e.target.value)}
-            className="w-full h-full pl-4 pr-32 bg-transparent font-black text-xs uppercase outline-none text-[#1E293B] placeholder:text-[#CBD5E1]"
+            className="w-full h-full pl-4 pr-32 bg-transparent font-black text-xs uppercase outline-none text-[var(--color-ink)] placeholder:text-[var(--color-line-light)]"
           />
           {localQuery && (
             <div className="absolute right-2 flex items-center gap-2">
-              <div className="flex items-center border border-[#10B981] bg-[#1E293B] px-2 h-8">
-                <div className="w-1.5 h-1.5 bg-[#10B981] animate-pulse mr-2"></div>
-                <span className="text-[12px] font-black text-[#10B981] tracking-widest leading-none">
+              <div className="flex items-center border border-[var(--color-accent)] bg-[var(--color-ink)] px-2 h-8">
+                <div className="w-1.5 h-1.5 bg-[var(--color-accent)] animate-pulse mr-2"></div>
+                <span className="text-[12px] font-black text-[var(--color-accent)] tracking-widest leading-none">
                   {matchCount} MATCH
                 </span>
               </div>
@@ -65,7 +65,7 @@ export const FiltrosInventario: React.FC<Props> = ({
                   setLocalQuery('');
                   setSearchQuery('');
                 }}
-                className="w-8 h-8 flex items-center justify-center border border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors cursor-pointer rounded-none"
+                className="w-8 h-8 flex items-center justify-center border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-muted)] hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors cursor-pointer rounded-none"
               >
                 <X size={14} />
               </button>
@@ -81,7 +81,7 @@ export const FiltrosInventario: React.FC<Props> = ({
         <select 
           value={filtroCategoria}
           onChange={(e) => setFiltroCategoria(e.target.value)}
-          className="h-14 w-full sm:w-auto min-w-0 bg-white border border-[#E2E8F0] text-[12px] font-bold text-[#1E293B] uppercase px-3 outline-none focus:border-[#10B981] transition-colors cursor-pointer"
+          className="h-14 w-full sm:w-auto min-w-0 bg-white border border-[var(--color-border)] text-[12px] font-bold text-[var(--color-ink)] uppercase px-3 outline-none focus:border-[var(--color-accent)] transition-colors cursor-pointer"
         >
           <option value="">Todas las Categorías</option>
           {categorias.map(cat => (
@@ -93,7 +93,7 @@ export const FiltrosInventario: React.FC<Props> = ({
         <select 
           value={filtroEstado}
           onChange={(e) => setFiltroEstado(e.target.value)}
-          className="h-14 w-full sm:w-auto min-w-0 bg-white border border-[#E2E8F0] text-[12px] font-bold text-[#1E293B] uppercase px-3 outline-none focus:border-[#10B981] transition-colors cursor-pointer"
+          className="h-14 w-full sm:w-auto min-w-0 bg-white border border-[var(--color-border)] text-[12px] font-bold text-[var(--color-ink)] uppercase px-3 outline-none focus:border-[var(--color-accent)] transition-colors cursor-pointer"
         >
           <option value="">Todos los Estados</option>
           <option value="CON_STOCK">Con Stock General</option>
@@ -105,7 +105,7 @@ export const FiltrosInventario: React.FC<Props> = ({
         <select 
           value={filtroOrden}
           onChange={(e) => setFiltroOrden(e.target.value)}
-          className="h-14 w-full sm:w-auto min-w-0 bg-white border border-[#E2E8F0] text-[12px] font-bold text-[#1E293B] uppercase px-3 outline-none focus:border-[#10B981] transition-colors cursor-pointer"
+          className="h-14 w-full sm:w-auto min-w-0 bg-white border border-[var(--color-border)] text-[12px] font-bold text-[var(--color-ink)] uppercase px-3 outline-none focus:border-[var(--color-accent)] transition-colors cursor-pointer"
         >
           <option value="NOMBRE_ASC">Nombre (A - Z)</option>
           <option value="NOMBRE_DESC">Nombre (Z - A)</option>
@@ -119,7 +119,7 @@ export const FiltrosInventario: React.FC<Props> = ({
         <button 
           onClick={onClearFilters}
           title="Limpiar todos los filtros"
-          className="h-14 px-4 flex items-center justify-center border border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] hover:bg-[#1E293B] hover:text-white hover:border-[#1E293B] transition-all cursor-pointer"
+          className="h-14 px-4 flex items-center justify-center border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-muted)] hover:bg-[var(--color-ink)] hover:text-white hover:border-[var(--color-ink)] transition-all cursor-pointer"
         >
           <FilterX size={16} />
         </button>

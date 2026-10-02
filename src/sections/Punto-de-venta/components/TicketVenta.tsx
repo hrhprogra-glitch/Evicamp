@@ -72,7 +72,7 @@ const InputPeso = ({ item, updateQuantity, index, setSelectedIndex, setColIndex 
        onMouseUp={onMouseUp}
        onBlur={aplicarCambio}
        onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-       className="w-full h-full text-center text-sm font-black text-[#3B82F6] outline-none bg-transparent cursor-text focus:bg-[#DBEAFE] rounded-none transition-colors"
+       className="w-full h-full text-center text-sm font-black text-[var(--color-info)] outline-none bg-transparent cursor-text focus:bg-[var(--color-info-bg-2)] rounded-none transition-colors"
     />
   );
 };
@@ -88,7 +88,7 @@ const InputPrecio = ({ item, updatePrice, index, setSelectedIndex, setColIndex, 
   };
   return (
     <div className="flex items-center gap-1 mt-0.5">
-      <span className="text-[12px] text-[#10B981] font-black">S/</span>
+      <span className="text-[12px] text-[var(--color-accent)] font-black">S/</span>
       <input 
          id={`edit-price-${index}`}
          type="text" inputMode="decimal" value={val}
@@ -103,8 +103,8 @@ const InputPrecio = ({ item, updatePrice, index, setSelectedIndex, setColIndex, 
          onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
          className={`w-16 h-5 text-[13px] font-black outline-none px-1 cursor-text rounded-none transition-all ${
            isSelected 
-             ? 'bg-[#ECFDF5] border-2 border-[#10B981] text-[#10B981] shadow-[0_0_0_2px_#10B981]' 
-             : 'bg-[#F8FAFC] border border-[#CBD5E1] text-[#1E293B] focus:bg-white focus:border-[#10B981]'
+             ? 'bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] text-[var(--color-accent)] shadow-[0_0_0_2px_var(--color-accent)]' 
+             : 'bg-[var(--color-bg)] border border-[var(--color-line-light)] text-[var(--color-ink)] focus:bg-white focus:border-[var(--color-accent)]'
          }`}
       />
     </div>
@@ -141,7 +141,7 @@ const InputUnidades = ({ item, updateQuantity, index, setSelectedIndex, setColIn
        onMouseUp={onMouseUp}
        onBlur={aplicarCambio}
        onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-       className="w-full h-full text-center text-sm font-black text-[#1E293B] outline-none bg-transparent cursor-text focus:bg-[#E2E8F0] rounded-none transition-colors"
+       className="w-full h-full text-center text-sm font-black text-[var(--color-ink)] outline-none bg-transparent cursor-text focus:bg-[var(--color-border)] rounded-none transition-colors"
     />
   );
 };
@@ -166,13 +166,13 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
           setSelectedIndex(-1); // 🛡️ DESELECCIÓN AL CLIC EN EL FONDO
         }
       }}
-      className="w-full h-full flex flex-col bg-white border-2 border-[#1E293B] shrink-0 relative overflow-hidden"
+      className="w-full h-full flex flex-col bg-white border-2 border-[var(--color-ink)] shrink-0 relative overflow-hidden"
     >
       
       {/* ENCABEZADO TICKET CON BOTÓN DE PAUSAR */}
-      <div className="bg-[#1E293B] text-white px-3 py-1.5 sm:px-4 flex items-center justify-between shrink-0 border-b-2 border-[#1E293B]">
+      <div className="bg-[var(--color-ink)] text-white px-3 py-1.5 sm:px-4 flex items-center justify-between shrink-0 border-b-2 border-[var(--color-ink)]">
         <div className="flex flex-col">
-          <h2 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 text-[#10B981]">
+          <h2 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 text-[var(--color-accent)]">
             <ShoppingCart size={18} /> Caja Actual
           </h2>
         </div>
@@ -180,14 +180,14 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
           <button 
             onClick={holdCurrentCart}
             disabled={cart.length === 0}
-            className="h-7 flex items-center justify-center px-3 gap-1 bg-[#F59E0B] text-[#1E293B] border-2 border-[#F59E0B] hover:bg-white hover:border-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-[2px_2px_0_0_#0F172A] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]" 
+            className="h-7 flex items-center justify-center px-3 gap-1 bg-[var(--color-warning)] text-[var(--color-ink)] border-2 border-[var(--color-warning)] hover:bg-white hover:border-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-[2px_2px_0_0_var(--color-ink-dark)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]" 
             title="Pausar y Guardar Ticket"
           >
             <Pause size={14} fill="currentColor" /> <span className="text-[12px] font-black uppercase">Espera</span>
           </button>
           <button 
             onClick={() => setCart([])}
-            className="w-7 h-7 flex items-center justify-center bg-[#EF4444] text-white border-2 border-[#EF4444] hover:bg-white hover:text-[#EF4444] transition-colors cursor-pointer shadow-[2px_2px_0_0_#0F172A] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]" 
+            className="w-7 h-7 flex items-center justify-center bg-[var(--color-danger)] text-white border-2 border-[var(--color-danger)] hover:bg-white hover:text-[var(--color-danger)] transition-colors cursor-pointer shadow-[2px_2px_0_0_var(--color-ink-dark)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]" 
             title="Vaciar Ticket"
           >
             <Trash2 size={14} />
@@ -197,12 +197,12 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
 
       {/* NUEVA BARRA: TICKETS EN ESPERA (Aparece solo si hay tickets guardados) */}
       {heldCarts.length > 0 && (
-        <div className="bg-[#F8FAFC] p-3 flex gap-2 overflow-x-auto border-b-2 border-[#1E293B] shrink-0 custom-scrollbar">
+        <div className="bg-[var(--color-bg)] p-3 flex gap-2 overflow-x-auto border-b-2 border-[var(--color-ink)] shrink-0 custom-scrollbar">
           {heldCarts.map((_, i) => (
             <button 
               key={i} 
               onClick={() => restoreCart(i)}
-              className="bg-[#3B82F6] text-white border-2 border-[#1E293B] px-3 py-1.5 text-[12px] font-black uppercase flex items-center gap-1.5 shadow-[2px_2px_0_0_#1E293B] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-none transition-all whitespace-nowrap cursor-pointer"
+              className="bg-[var(--color-info)] text-white border-2 border-[var(--color-ink)] px-3 py-1.5 text-[12px] font-black uppercase flex items-center gap-1.5 shadow-[2px_2px_0_0_var(--color-ink)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-none transition-all whitespace-nowrap cursor-pointer"
               title="Recuperar Ticket"
             >
               <Play size={10} fill="currentColor" /> RECUPERAR T-{i + 1}
@@ -212,8 +212,8 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
       )}
 
       {/* LISTA DE ITEMS DEL TICKET */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-white px-2 pb-2 pt-1 flex flex-col relative border-b-2 border-[#1E293B]">
-        <div className="grid grid-cols-12 gap-2 text-xs font-black text-[#64748B] uppercase tracking-widest border-b-2 border-[#E2E8F0] pb-1 mb-1">
+      <div className="flex-1 overflow-y-auto custom-scrollbar bg-white px-2 pb-2 pt-1 flex flex-col relative border-b-2 border-[var(--color-ink)]">
+        <div className="grid grid-cols-12 gap-2 text-xs font-black text-[var(--color-muted)] uppercase tracking-widest border-b-2 border-[var(--color-border)] pb-1 mb-1">
           <div className="col-span-3 text-center">Cant.</div>
           <div className="col-span-5">Descripción</div>
           <div className="col-span-3 text-right">Subtotal</div>
@@ -221,7 +221,7 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
         </div>
 
         {cart.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-[#94A3B8] opacity-50">
+          <div className="flex-1 flex flex-col items-center justify-center text-[var(--color-subtle)] opacity-50">
             <ShoppingCart size={32} className="mb-2" />
             <span className="text-[12px] font-black uppercase tracking-widest">Caja libre</span>
           </div>
@@ -234,9 +234,9 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
                   setSelectedIndex(index); // 🛡️ SELECCIÓN AL CLIC EN LA FILA
                   setColIndex(0);
                 })}
-                className={`grid grid-cols-12 gap-2 text-xs font-bold border-b border-dashed border-[#CBD5E1] pb-2 pt-2 items-center px-1 rounded-none transition-colors cursor-pointer ${
+                className={`grid grid-cols-12 gap-2 text-xs font-bold border-b border-dashed border-[var(--color-line-light)] pb-2 pt-2 items-center px-1 rounded-none transition-colors cursor-pointer ${
                   index === selectedIndex 
-                    ? 'bg-[#64748B] shadow-[inset_0_0_8px_rgba(0,0,0,0.2)]' 
+                    ? 'bg-[var(--color-muted)] shadow-[inset_0_0_8px_rgba(0,0,0,0.2)]' 
                     : 'bg-transparent'
                 }`}
               >
@@ -246,26 +246,26 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
                 {/* CONTROLES DE CANTIDAD EDITABLES - RESALTE TÉCNICO (Corregido) */}
                 <div className={`col-span-3 flex items-center justify-between border-2 h-9 overflow-hidden transition-all ${
                   index === selectedIndex && colIndex === 0 && item.unit !== 'CONSUMO'
-                    ? 'border-[#10B981] shadow-[inset_0_0_0_2px_#10B981] bg-[#ECFDF5]' 
-                    : 'border-[#1E293B] bg-[#FFFFFF]'
+                    ? 'border-[var(--color-accent)] shadow-[inset_0_0_0_2px_var(--color-accent)] bg-[var(--color-accent-bg)]' 
+                    : 'border-[var(--color-ink)] bg-[var(--color-surface)]'
                 }`}>
                   {item.unit === 'KG' ? (
-                    <div className="flex-1 flex items-center justify-center h-full bg-[#EFF6FF] hover:bg-[#DBEAFE] transition-colors">
+                    <div className="flex-1 flex items-center justify-center h-full bg-[var(--color-info-bg)] hover:bg-[var(--color-info-bg-2)] transition-colors">
                       <InputPeso item={item} updateQuantity={updateQuantity} index={index} setSelectedIndex={setSelectedIndex} setColIndex={setColIndex} />
                     </div>
                   ) : item.unit === 'CONSUMO' ? (
-                    <div className="flex-1 flex items-center justify-center h-full bg-[#F8FAFC]">
-                      <span className="text-xs font-black text-[#94A3B8] tracking-widest">---</span>
+                    <div className="flex-1 flex items-center justify-center h-full bg-[var(--color-bg)]">
+                      <span className="text-xs font-black text-[var(--color-subtle)] tracking-widest">---</span>
                     </div>
                   ) : (
                     <>
-                      <button onClick={(e) => { e.stopPropagation(); updateQuantity(item.id, item.cartQuantity - 1); }} className="w-7 h-full flex items-center justify-center hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer border-r-2 border-[#1E293B]">
+                      <button onClick={(e) => { e.stopPropagation(); updateQuantity(item.id, item.cartQuantity - 1); }} className="w-7 h-full flex items-center justify-center hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer border-r-2 border-[var(--color-ink)]">
                         <Minus size={14} strokeWidth={4} />
                       </button>
-                      <div className="flex-1 flex items-center justify-center h-full bg-[#EFF6FF] hover:bg-[#DBEAFE] transition-colors">
+                      <div className="flex-1 flex items-center justify-center h-full bg-[var(--color-info-bg)] hover:bg-[var(--color-info-bg-2)] transition-colors">
                         <InputUnidades item={item} updateQuantity={updateQuantity} index={index} setSelectedIndex={setSelectedIndex} setColIndex={setColIndex} />
                       </div>
-                      <button onClick={(e) => { e.stopPropagation(); updateQuantity(item.id, item.cartQuantity + 1); }} className="w-7 h-full flex items-center justify-center hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer border-l-2 border-[#1E293B]">
+                      <button onClick={(e) => { e.stopPropagation(); updateQuantity(item.id, item.cartQuantity + 1); }} className="w-7 h-full flex items-center justify-center hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer border-l-2 border-[var(--color-ink)]">
                         <Plus size={14} strokeWidth={4} />
                       </button>
                     </>
@@ -273,14 +273,14 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
                 </div>
 
                 <div className="col-span-5 flex flex-col min-w-0 pr-1 pl-1">
-                  <span className={`truncate uppercase font-black text-sm ${index === selectedIndex ? 'text-[#FFFFFF]' : 'text-[#1E293B]'}`} title={item.name}>{item.name}</span>
+                  <span className={`truncate uppercase font-black text-sm ${index === selectedIndex ? 'text-[var(--color-surface)]' : 'text-[var(--color-ink)]'}`} title={item.name}>{item.name}</span>
                   {/* 🏷️ PRECIO EDITABLE POR LÍNEA: para bajarle el precio a un cliente puntual
                       (ej. negocio/mayorista) sin tocar el precio general del catálogo. Solo
                       cambia esta venta — updatePrice nunca escribe en la tabla de productos. */}
                   <InputPrecio item={item} updatePrice={updatePrice} index={index} setSelectedIndex={setSelectedIndex} setColIndex={setColIndex} isSelected={index === selectedIndex && colIndex === 0} />
                 </div>
                 
-                <div className={`col-span-3 text-right text-sm font-black ${index === selectedIndex ? 'text-[#FFFFFF]' : 'text-[#1E293B]'}`}>
+                <div className={`col-span-3 text-right text-sm font-black ${index === selectedIndex ? 'text-[var(--color-surface)]' : 'text-[var(--color-ink)]'}`}>
                   {item.subtotal.toFixed(2)}
                 </div>
 
@@ -288,10 +288,10 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
                 <div className="col-span-1 flex justify-end">
                   <button
                     onClick={(e) => { e.stopPropagation(); updateQuantity(item.id, 0); }}
-                    className={`w-7 h-7 flex items-center justify-center border-2 border-[#1E293B] transition-all cursor-pointer rounded-none ${
+                    className={`w-7 h-7 flex items-center justify-center border-2 border-[var(--color-ink)] transition-all cursor-pointer rounded-none ${
                       index === selectedIndex && colIndex === 1
-                        ? 'bg-[#EF4444] text-white ring-2 ring-[#EF4444] ring-offset-1 shadow-none scale-125 z-20' 
-                        : 'bg-[#FFFFFF] text-[#1E293B] shadow-[2px_2px_0_0_#1E293B] hover:bg-[#1E293B] hover:text-[#FFFFFF]'
+                        ? 'bg-[var(--color-danger)] text-white ring-2 ring-[var(--color-danger)] ring-offset-1 shadow-none scale-125 z-20' 
+                        : 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)]'
                     }`}
                     title="Eliminar producto"
                   >
@@ -305,11 +305,11 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
       </div>
 
       {/* ZONA DE COBRO CON MATEMÁTICAS REALES (MODIFICADA) */}
-      <div className="bg-[#F8FAFC] shrink-0 px-3 py-2 flex flex-col gap-1.5">
+      <div className="bg-[var(--color-bg)] shrink-0 px-3 py-2 flex flex-col gap-1.5">
 
         <div className="flex justify-between items-end mt-0">
-          <span className="text-xs font-black uppercase tracking-[0.1em] text-[#1E293B]">TOTAL A COBRAR</span>
-          <span className="text-2xl sm:text-3xl font-black text-[#10B981] tracking-tighter leading-none">
+          <span className="text-xs font-black uppercase tracking-[0.1em] text-[var(--color-ink)]">TOTAL A COBRAR</span>
+          <span className="text-2xl sm:text-3xl font-black text-[var(--color-accent)] tracking-tighter leading-none">
             <span className="text-xl">S/</span> {total.toFixed(2)}
           </span>
         </div>
@@ -317,7 +317,7 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
         <button 
           onClick={onPagar} // <--- ONCLICK CONECTADO AQUÍ
           disabled={cart.length === 0}
-          className="w-full bg-[#10B981] text-[#1E293B] py-2 border-2 border-[#1E293B] font-black text-sm uppercase tracking-[0.1em] flex items-center justify-center gap-2 hover:bg-[#1E293B] hover:text-[#10B981] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shadow-[3px_3px_0_0_#1E293B] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px]"
+          className="w-full bg-[var(--color-accent)] text-[var(--color-ink)] py-2 border-2 border-[var(--color-ink)] font-black text-sm uppercase tracking-[0.1em] flex items-center justify-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shadow-[3px_3px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px]"
         >
           <Banknote size={18} /> Proceder al Pago (F4)
         </button>

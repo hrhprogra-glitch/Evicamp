@@ -41,9 +41,12 @@ export const App: React.FC = () => {
   // Valida la sesión al abrir la app, cada minuto y al volver a la pestaña.
   // Si el empleado fue desactivado o borrado, o le cambiaron los permisos, se aplica enseguida.
   useEffect(() => {
-    // Aplicar tema guardado al cargar
-    if (localStorage.getItem('gestorpro_theme') === 'monochrome') {
+    // Aplicar tema guardado al cargar (monocromático = filtro/clase, los demás = paleta/atributo)
+    const temaGuardado = localStorage.getItem('gestorpro_theme');
+    if (temaGuardado === 'monochrome') {
       document.documentElement.classList.add('theme-monochrome');
+    } else if (temaGuardado && temaGuardado !== 'classic') {
+      document.documentElement.setAttribute('data-theme', temaGuardado);
     }
     aplicarTamanoInterfaz(leerTamanoInterfaz()); // tamaño elegido en Ajustes > Apariencia
 
@@ -67,9 +70,9 @@ export const App: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-[var(--alto-pantalla)] bg-[#FFFFFF] flex items-center justify-center">
-        <span className="font-mono text-sm text-[#1E293B] uppercase animate-pulse flex items-center space-x-2">
-          <div className="w-2 h-2 bg-[#059669]"></div>
+      <div className="min-h-[var(--alto-pantalla)] bg-[var(--color-surface)] flex items-center justify-center">
+        <span className="font-mono text-sm text-[var(--color-ink)] uppercase animate-pulse flex items-center space-x-2">
+          <div className="w-2 h-2 bg-[var(--color-accent-dark)]"></div>
           <span>Inicializando Sistema...</span>
         </span>
       </div>
@@ -108,8 +111,8 @@ export const App: React.FC = () => {
         return <Resumen />;
       default:
         return (
-          <div className="border border-dashed border-[#E2E8F0] p-12 text-center">
-            <span className="text-[#64748B] font-mono uppercase text-xs">Módulo [{currentView}] en desarrollo</span>
+          <div className="border border-dashed border-[var(--color-border)] p-12 text-center">
+            <span className="text-[var(--color-muted)] font-mono uppercase text-xs">Módulo [{currentView}] en desarrollo</span>
           </div>
         );
     }
@@ -125,7 +128,7 @@ export const App: React.FC = () => {
   return (
     <SesionProvider empleado={empleado}>
     <AlertaYape />
-    <div className="flex h-[var(--alto-pantalla)] w-full bg-[#FFFFFF] overflow-hidden">
+    <div className="flex h-[var(--alto-pantalla)] w-full bg-[var(--color-surface)] overflow-hidden">
       <SideBar
         isOpen={isSidebarOpen}
         currentView={vista}
@@ -135,7 +138,7 @@ export const App: React.FC = () => {
         permisos={empleado.permisos}
       />
 
-      <main className="flex-1 min-w-0 flex flex-col overflow-hidden bg-[#F8FAFC]">
+      <main className="flex-1 min-w-0 flex flex-col overflow-hidden bg-[var(--color-bg)]">
         <TopBar
           toggleSidebar={toggleSidebar}
           ocultoEnEscritorio={!isSidebarOpen}

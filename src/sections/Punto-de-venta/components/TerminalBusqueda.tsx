@@ -44,7 +44,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
 
       // 🛡️ PARCHE EVICAMP: Si hay un producto seleccionado en la caja (fondo gris), NO robamos los números.
       // Esto permite que el componente TicketVenta capture el número para editar la cantidad o precio.
-      const isCartSelected = document.querySelector('.bg-\\[\\#64748B\\]') !== null;
+      const isCartSelected = document.querySelector('.bg-\\[\\var(--color-muted)\\]') !== null;
       if (isCartSelected && /^[0-9]$/.test(e.key)) return;
 
       // 3. Forzar el imán hacia el buscador
@@ -86,24 +86,24 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-[#FFFFFF] border-2 border-[#1E293B] relative rounded-none">
+    <div className="flex-1 flex flex-col min-w-0 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] relative rounded-none">
       {/* Barra superior de acento (Plano Técnico) */}
-      <div className="h-2 w-full bg-[#10B981] shrink-0 rounded-none"></div>
+      <div className="h-2 w-full bg-[var(--color-accent)] shrink-0 rounded-none"></div>
 
       {/* HEADER DE BÚSQUEDA TIPO TERMINAL */}
-      <div className="bg-[#FFFFFF] px-3 py-2 sm:px-4 border-b border-[#E2E8F0] shrink-0 rounded-none">
+      <div className="bg-[var(--color-surface)] px-3 py-2 sm:px-4 border-b border-[var(--color-border)] shrink-0 rounded-none">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h1 className="text-sm sm:text-base font-black text-[#1E293B] uppercase tracking-widest flex items-center gap-2">
-              <ScanLine className="text-[#1E293B]" size={18} /> Punto de Venta
+            <h1 className="text-sm sm:text-base font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2">
+              <ScanLine className="text-[var(--color-ink)]" size={18} /> Punto de Venta
             </h1>
           </div>
         </div>
 
         <div className="flex gap-3">
           {/* Estricto diseño monocrático, sin sombras difuminadas ni redondeos */}
-          <div className="flex-1 relative flex items-center border-2 border-[#1E293B] bg-[#FFFFFF] focus-within:ring-2 focus-within:ring-[#64748B] transition-all shadow-[4px_4px_0_0_#1E293B] rounded-none">
-            <div className="w-10 h-10 flex items-center justify-center bg-[#1E293B] text-[#FFFFFF] shrink-0 rounded-none">
+          <div className="flex-1 relative flex items-center border-2 border-[var(--color-ink)] bg-[var(--color-surface)] focus-within:ring-2 focus-within:ring-[var(--color-muted)] transition-all shadow-[4px_4px_0_0_var(--color-ink)] rounded-none">
+            <div className="w-10 h-10 flex items-center justify-center bg-[var(--color-ink)] text-[var(--color-surface)] shrink-0 rounded-none">
               <Search size={20} />
             </div>
             <div className="flex flex-col flex-1 px-4 relative">
@@ -115,7 +115,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-full h-10 bg-transparent text-base font-black text-[#1E293B] uppercase outline-none placeholder:text-[#64748B]/50 rounded-none"
+                className="w-full h-10 bg-transparent text-base font-black text-[var(--color-ink)] uppercase outline-none placeholder:text-[var(--color-muted)]/50 rounded-none"
               />
             </div>
           </div>
@@ -123,22 +123,22 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
       </div>
 
       {/* ÁREA DE RESULTADOS */}
-      <div className="flex-1 p-2 sm:p-3 overflow-y-auto custom-scrollbar flex flex-col bg-[#F8FAFC]">
+      <div className="flex-1 p-2 sm:p-3 overflow-y-auto custom-scrollbar flex flex-col bg-[var(--color-bg)]">
         {searchQuery.trim() === '' ? (
           // ESTADO 1: ESPERANDO BÚSQUEDA
-          <div className="border border-dashed border-[#64748B] flex-1 flex flex-col items-center justify-center text-center p-3 lg:p-4 bg-[#FFFFFF] rounded-none">
-            <Package size={48} className="text-[#64748B] mb-4" />
-            <h2 className="text-sm font-black text-[#1E293B] uppercase tracking-widest mb-2">Área de Trabajo</h2>
-            <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-widest max-w-sm">
+          <div className="border border-dashed border-[var(--color-muted)] flex-1 flex flex-col items-center justify-center text-center p-3 lg:p-4 bg-[var(--color-surface)] rounded-none">
+            <Package size={48} className="text-[var(--color-muted)] mb-4" />
+            <h2 className="text-sm font-black text-[var(--color-ink)] uppercase tracking-widest mb-2">Área de Trabajo</h2>
+            <p className="text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-widest max-w-sm">
               Sistema a la espera de identificador (SKU, EAN-13 o Texto).
             </p>
           </div>
         ) : filteredProducts.length === 0 ? (
           // ESTADO 2: SIN RESULTADOS
-          <div className="border border-dashed border-[#1E293B] flex-1 flex flex-col items-center justify-center text-center p-3 lg:p-4 bg-[#FFFFFF] rounded-none">
-            <Package size={48} className="text-[#1E293B] opacity-50 mb-4" />
-            <h2 className="text-sm font-black text-[#1E293B] uppercase tracking-widest mb-2">Registro Inexistente</h2>
-            <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-widest max-w-sm">
+          <div className="border border-dashed border-[var(--color-ink)] flex-1 flex flex-col items-center justify-center text-center p-3 lg:p-4 bg-[var(--color-surface)] rounded-none">
+            <Package size={48} className="text-[var(--color-ink)] opacity-50 mb-4" />
+            <h2 className="text-sm font-black text-[var(--color-ink)] uppercase tracking-widest mb-2">Registro Inexistente</h2>
+            <p className="text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-widest max-w-sm">
               Verifique la integridad del código en la base de datos.
             </p>
           </div>
@@ -157,14 +157,14 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                   onClick={() => !estaAgotado && onAddToCart({ ...prod, unit: esConsumo ? 'CONSUMO' : prod.unit })}
                   disabled={estaAgotado} 
                   className={`p-2 sm:p-2.5 text-left flex flex-col min-w-0 transition-all rounded-none border-2
-                    ${isSelected ? 'ring-4 ring-[#10B981] border-[#10B981] scale-[1.02] shadow-xl z-10' : ''}
+                    ${isSelected ? 'ring-4 ring-[var(--color-accent)] border-[var(--color-accent)] scale-[1.02] shadow-xl z-10' : ''}
                     ${estaAgotado 
-                      ? 'bg-[#FFFFFF] border-[#E2E8F0] opacity-50 cursor-not-allowed' 
+                      ? 'bg-[var(--color-surface)] border-[var(--color-border)] opacity-50 cursor-not-allowed' 
                       : esConsumo
-                        ? 'bg-[#FFFBEB] border-[#D97706] cursor-pointer hover:shadow-[4px_4px_0_0_#D97706] hover:-translate-y-1'
+                        ? 'bg-[var(--color-warning-bg)] border-[var(--color-warning-dark)] cursor-pointer hover:shadow-[4px_4px_0_0_var(--color-warning-dark)] hover:-translate-y-1'
                         : prod.unit === 'KG'
-                          ? 'bg-[#F0F9FF] border-[#0284C7] cursor-pointer hover:shadow-[4px_4px_0_0_#0284C7] hover:-translate-y-1'
-                          : 'bg-[#FFFFFF] border-[#1E293B] cursor-pointer hover:shadow-[4px_4px_0_0_#1E293B] hover:-translate-y-1'
+                          ? 'bg-[#F0F9FF] border-[var(--color-info-dark)] cursor-pointer hover:shadow-[4px_4px_0_0_var(--color-info-dark)] hover:-translate-y-1'
+                          : 'bg-[var(--color-surface)] border-[var(--color-ink)] cursor-pointer hover:shadow-[4px_4px_0_0_var(--color-ink)] hover:-translate-y-1'
                     }
                   `}
                 >
@@ -174,16 +174,16 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                   <div className="w-full mb-1">
                     {/* Estricto etiquetado de Alto Contraste por Color */}
                     {esConsumo ? (
-                      <span className="block w-full text-center text-sm sm:text-base font-black text-[#FFFFFF] bg-[#D97706] px-2 py-1.5 uppercase tracking-widest whitespace-nowrap rounded-none">
+                      <span className="block w-full text-center text-sm sm:text-base font-black text-[var(--color-surface)] bg-[var(--color-warning-dark)] px-2 py-1.5 uppercase tracking-widest whitespace-nowrap rounded-none">
                         CONSUMO
                       </span>
                     ) : (
                       <span className={`block w-full text-center text-sm sm:text-base font-black px-2 py-1.5 rounded-none uppercase tracking-wide whitespace-nowrap ${
                         estaAgotado
-                          ? 'text-[#FFFFFF] bg-[#1E293B]'
+                          ? 'text-[var(--color-surface)] bg-[var(--color-ink)]'
                           : prod.unit === 'KG'
-                            ? 'text-[#0284C7] bg-[#F0F9FF] border border-[#0284C7]'
-                            : 'text-[#1E293B] bg-[#F8FAFC] border border-[#1E293B]'
+                            ? 'text-[var(--color-info-dark)] bg-[#F0F9FF] border border-[var(--color-info-dark)]'
+                            : 'text-[var(--color-ink)] bg-[var(--color-bg)] border border-[var(--color-ink)]'
                       }`}>
                         {prod.quantity > 0
                           ? `STK: ${formatearCantidad(prod.quantity, prod.unit)} ${prod.unit === 'KG' ? 'KG' : 'UN'}`
@@ -202,7 +202,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                       const img = (prod as any).image_url || (prod as any).image_path || '';
                       const valida = img.startsWith('http') || img.startsWith('data:');
                       return (
-                        <div className={`flex-1 min-h-0 flex items-center justify-center border border-[#E2E8F0] bg-[#FFFFFF] overflow-hidden ${estaAgotado ? 'grayscale' : ''}`}>
+                        <div className={`flex-1 min-h-0 flex items-center justify-center border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden ${estaAgotado ? 'grayscale' : ''}`}>
                           {valida ? (
                             <img
                               src={img}
@@ -212,29 +212,29 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                             />
                           ) : (
-                            <Package size={32} className="text-[#CBD5E1]" aria-hidden="true" />
+                            <Package size={32} className="text-[var(--color-line-light)]" aria-hidden="true" />
                           )}
                         </div>
                       );
                     })()}
 
-                    <span className="text-sm sm:text-base font-black text-[#1E293B] uppercase leading-tight line-clamp-2 break-words shrink-0">
+                    <span className="text-sm sm:text-base font-black text-[var(--color-ink)] uppercase leading-tight line-clamp-2 break-words shrink-0">
                       {prod.name}
                     </span>
                   </div>
 
-                  <div className="mt-auto flex items-center justify-between pt-1.5 border-t border-dashed border-[#E2E8F0] w-full">
-                    <span className="text-lg sm:text-xl font-black text-[#1E293B] font-mono">
+                  <div className="mt-auto flex items-center justify-between pt-1.5 border-t border-dashed border-[var(--color-border)] w-full">
+                    <span className="text-lg sm:text-xl font-black text-[var(--color-ink)] font-mono">
                       S/ {prod.price.toFixed(2)}
                     </span>
-                    <div className={`w-7 h-7 flex items-center justify-center transition-colors rounded-none border text-[#FFFFFF]
+                    <div className={`w-7 h-7 flex items-center justify-center transition-colors rounded-none border text-[var(--color-surface)]
                       ${estaAgotado 
-                        ? 'bg-[#F8FAFC] border-[#E2E8F0] text-[#CBD5E1]' 
+                        ? 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-line-light)]' 
                         : esConsumo
-                          ? 'bg-[#D97706] border-[#D97706]'
+                          ? 'bg-[var(--color-warning-dark)] border-[var(--color-warning-dark)]'
                           : prod.unit === 'KG'
-                            ? 'bg-[#0284C7] border-[#0284C7]'
-                            : 'bg-[#1E293B] border-[#1E293B]'
+                            ? 'bg-[var(--color-info-dark)] border-[var(--color-info-dark)]'
+                            : 'bg-[var(--color-ink)] border-[var(--color-ink)]'
                       }`}
                     >
                       <Plus size={16} />

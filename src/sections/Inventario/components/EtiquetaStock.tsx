@@ -13,7 +13,7 @@ export const EtiquetaStock: React.FC<Props> = ({ qty, minStock, unit }) => {
   // 1. CASO EXCEPCIONAL: CONSUMO INTERNO (Sin alertas, bloque estático)
   if (String(unit).toUpperCase().includes('CONSUMO')) {
     return (
-      <div className="inline-flex items-center gap-1.5 px-3 py-1 border border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] font-black text-[12px] uppercase tracking-widest rounded-none" title="Producto de Uso Interno o Servicio">
+      <div className="inline-flex items-center gap-1.5 px-3 py-1 border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-muted)] font-black text-[12px] uppercase tracking-widest rounded-none" title="Producto de Uso Interno o Servicio">
         <Coffee size={12} />
         CONSUMO
       </div>
@@ -21,14 +21,14 @@ export const EtiquetaStock: React.FC<Props> = ({ qty, minStock, unit }) => {
   }
 
   // 2. LÓGICA NORMAL PARA PRODUCTOS DE VENTA (Unidad / Peso)
-  let colorClass = 'bg-[#ECFDF5] text-[#10B981] border-[#A7F3D0]';
+  let colorClass = 'bg-[var(--color-accent-bg)] text-[var(--color-accent)] border-[#A7F3D0]';
   let alertIcon = false;
   
   if (qty <= minStock) {
     colorClass = 'bg-red-50 text-red-600 border-red-200';
     alertIcon = true;
   } else if (qty <= (minStock * 2)) {
-    colorClass = 'bg-[#F8FAFC] text-[#1E293B] border-[#1E293B]';
+    colorClass = 'bg-[var(--color-bg)] text-[var(--color-ink)] border-[var(--color-ink)]';
   }
 
   return (

@@ -559,32 +559,32 @@ const [searchQuery, setSearchQuery] = useState('');
           setSelectedIndex(-1);
         }
       }}
-      className={`flex flex-col lg:flex-row h-full w-full bg-transparent font-mono gap-2 lg:gap-0 lg:shadow-[6px_6px_0_0_#1E293B] relative ${hasOpenSession === false ? 'pt-20 sm:pt-16' : ''}`}
+      className={`flex flex-col lg:flex-row h-full w-full bg-transparent font-mono gap-2 lg:gap-0 lg:shadow-[6px_6px_0_0_var(--color-ink)] relative ${hasOpenSession === false ? 'pt-20 sm:pt-16' : ''}`}
     >
       
       {/* BARRA DE ADVERTENCIA - MODO CONSULTA */}
       {hasOpenSession === false && (
-        <div className="absolute top-0 left-0 w-full bg-[#EF4444] text-white p-3 flex justify-center items-center text-center gap-2 font-black text-[12px] sm:text-xs uppercase tracking-widest sm:tracking-[0.2em] z-10 shadow-[0_4px_0_0_#1E293B] border-b-2 border-[#1E293B]">
+        <div className="absolute top-0 left-0 w-full bg-[var(--color-danger)] text-white p-3 flex justify-center items-center text-center gap-2 font-black text-[12px] sm:text-xs uppercase tracking-widest sm:tracking-[0.2em] z-10 shadow-[0_4px_0_0_var(--color-ink)] border-b-2 border-[var(--color-ink)]">
           <Wallet size={16} /> Caja Cerrada: Modo de solo consulta. Ve a Finanzas para aperturar la caja.
         </div>
       )}
       {/* SELECTOR DE PANEL (solo tablet/celular) */}
-      <div className="lg:hidden grid grid-cols-2 border-2 border-[#1E293B] bg-white shrink-0">
+      <div className="lg:hidden grid grid-cols-2 border-2 border-[var(--color-ink)] bg-white shrink-0">
         <button
           onClick={() => setVistaMovil('productos')}
-          className={`py-3 text-xs font-black uppercase tracking-widest cursor-pointer transition-colors ${vistaMovil === 'productos' ? 'bg-[#1E293B] text-white' : 'text-[#64748B]'}`}
+          className={`py-3 text-xs font-black uppercase tracking-widest cursor-pointer transition-colors ${vistaMovil === 'productos' ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-muted)]'}`}
         >
           Productos
         </button>
         <button
           onClick={() => setVistaMovil('ticket')}
-          className={`py-3 text-xs font-black uppercase tracking-widest cursor-pointer transition-colors flex items-center justify-center gap-2 ${vistaMovil === 'ticket' ? 'bg-[#1E293B] text-white' : 'text-[#64748B]'}`}
+          className={`py-3 text-xs font-black uppercase tracking-widest cursor-pointer transition-colors flex items-center justify-center gap-2 ${vistaMovil === 'ticket' ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-muted)]'}`}
         >
           Ticket
-          <span className={`min-w-6 px-1.5 py-0.5 text-[12px] ${cart.length > 0 ? 'bg-[#10B981] text-[#1E293B]' : 'bg-[#E2E8F0] text-[#64748B]'}`}>
+          <span className={`min-w-6 px-1.5 py-0.5 text-[12px] ${cart.length > 0 ? 'bg-[var(--color-accent)] text-[var(--color-ink)]' : 'bg-[var(--color-border)] text-[var(--color-muted)]'}`}>
             {cart.length}
           </span>
-          <span className="text-[#10B981]">S/ {(Math.round(cart.reduce((acc, item) => acc + item.subtotal, 0) * 100) / 100).toFixed(2)}</span>
+          <span className="text-[var(--color-accent)]">S/ {(Math.round(cart.reduce((acc, item) => acc + item.subtotal, 0) * 100) / 100).toFixed(2)}</span>
         </button>
       </div>
 
@@ -647,11 +647,11 @@ const [searchQuery, setSearchQuery] = useState('');
       />
       {/* VISTA PREVIA DEL TICKET (NUEVO MODAL) */}
       {isVistaPreviaOpen && ultimaVenta && (
-        <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4">
-          <div className="bg-white border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.95)] w-full max-w-md animate-fade-in">
+        <div className="fixed inset-0 bg-[var(--color-ink)]/90 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4">
+          <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.95)] w-full max-w-md animate-fade-in">
             
             {/* CABECERA */}
-            <div className="bg-[#3B82F6] text-white p-4 flex justify-between items-center border-b-2 border-[#1E293B] shrink-0">
+            <div className="bg-[var(--color-info)] text-white p-4 flex justify-between items-center border-b-2 border-[var(--color-ink)] shrink-0">
               <h2 className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
                 <Printer size={18} /> Vista Previa del Ticket
               </h2>
@@ -661,7 +661,7 @@ const [searchQuery, setSearchQuery] = useState('');
             </div>
             
             {/* CONTENEDOR DEL TICKET (Fondo gris y zoom automático) */}
-            <div className="flex-1 overflow-y-auto p-6 bg-[#F8FAFC] flex justify-center custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 bg-[var(--color-bg)] flex justify-center custom-scrollbar">
               {/* Le aplicamos un scale-110 para que en la PC se vea un poco más grande y nítido */}
               <div className="transform sm:scale-110 origin-top pb-10">
                 <TicketImprimible
@@ -677,16 +677,16 @@ const [searchQuery, setSearchQuery] = useState('');
             </div>
 
             {/* BOTONES */}
-            <div className="p-4 bg-white border-t-2 border-[#1E293B] flex gap-3 shrink-0">
+            <div className="p-4 bg-white border-t-2 border-[var(--color-ink)] flex gap-3 shrink-0">
               <button
                 onClick={() => { setIsVistaPreviaOpen(false); setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50); }}
-                className="flex-1 border-2 border-[#1E293B] bg-white text-[#1E293B] py-3 font-black text-xs uppercase tracking-widest hover:bg-gray-100 transition-colors cursor-pointer shadow-[4px_4px_0_0_#1E293B] active:translate-y-[4px] active:shadow-none"
+                className="flex-1 border-2 border-[var(--color-ink)] bg-white text-[var(--color-ink)] py-3 font-black text-xs uppercase tracking-widest hover:bg-gray-100 transition-colors cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-[4px] active:shadow-none"
               >
                 Nueva Venta <span className="opacity-60">(Enter)</span>
               </button>
               <button 
                 onClick={() => handlePrint()} 
-                className="flex-1 border-2 border-[#1E293B] bg-[#10B981] text-[#1E293B] py-3 font-black text-xs uppercase tracking-widest hover:bg-[#059669] hover:text-white transition-colors flex items-center justify-center gap-2 shadow-[4px_4px_0_0_#1E293B] active:translate-y-[4px] active:shadow-none cursor-pointer"
+                className="flex-1 border-2 border-[var(--color-ink)] bg-[var(--color-accent)] text-[var(--color-ink)] py-3 font-black text-xs uppercase tracking-widest hover:bg-[var(--color-accent-dark)] hover:text-white transition-colors flex items-center justify-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-[4px] active:shadow-none cursor-pointer"
               >
                 <Printer size={18} /> Imprimir
               </button>

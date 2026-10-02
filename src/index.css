@@ -7,9 +7,43 @@
      (Chrome, Samsung Internet, Edge) que no la oscurezca con su modo oscuro automático. */
   color-scheme: only light;
   --color-brand-primary: #1E293B;
-  --color-brand-accent: #10B981;  
-  --color-brand-border: #E2E8F0;  
+  --color-brand-accent: #10B981;
+  --color-brand-border: #E2E8F0;
   --color-brand-bg: #FFFFFF;
+
+  /* === TOKENS DE COLOR (tema "Clásico", valores por defecto) ===
+     Cada color que antes estaba escrito directo en cada componente (ej. bg-[#1E293B])
+     ahora apunta a una de estas variables (bg-[var(--color-ink)]). Así, para crear un
+     tema nuevo solo hay que redefinir estas variables bajo un selector de tema — no hay
+     que tocar los más de 60 archivos que las usan. */
+  --color-ink: #1E293B;
+  --color-ink-dark: #0F172A;
+  --color-border: #E2E8F0;
+  --color-line-light: #CBD5E1;
+  --color-muted: #64748B;
+  --color-subtle: #94A3B8;
+  --color-bg: #F8FAFC;
+  --color-bg-2: #F1F5F9;
+  --color-surface: #FFFFFF;
+  --color-accent: #10B981;
+  --color-accent-dark: #059669;
+  --color-accent-dark-2: #047857;
+  --color-accent-shadow: #065F46;
+  --color-accent-bg: #ECFDF5;
+  --color-accent-bg-2: #D1FAE5;
+  --color-danger: #EF4444;
+  --color-danger-dark: #DC2626;
+  --color-danger-bg: #FEF2F2;
+  --color-info: #3B82F6;
+  --color-info-dark: #0284C7;
+  --color-info-bg: #EFF6FF;
+  --color-info-bg-2: #DBEAFE;
+  --color-warning: #F59E0B;
+  --color-warning-dark: #D97706;
+  --color-warning-bg: #FFFBEB;
+  --color-warning-border: #FCD34D;
+  --color-warning-text: #92400E;
+  --color-purple: #8B5CF6;
 
   /* Letra más grande para leer mejor (accesibilidad). Reemplaza la escala base de Tailwind:
      xs 12→14px, sm 14→15px, base 16→17px, lg 18→19px. Los títulos grandes quedan igual. */
@@ -226,4 +260,65 @@ html.theme-monochrome {
 html.theme-monochrome img,
 html.theme-monochrome video {
   filter: invert(1);
+}
+
+/* === TEMAS DE COLOR (paletas propias, no filtros) ===
+   A diferencia del Monocromático (un filtro sobre toda la pantalla), estos temas
+   redefinen directamente los tokens de color de arriba. Como cada componente usa
+   var(--color-xxx) en vez de un hex fijo, con esto alcanza para repintar todo el
+   sistema sin tocar un solo componente. Van en <html data-theme="..."> para que
+   convivan con el tamaño de interfaz y no choquen con los modales fijos. */
+
+html[data-theme="oceano"] {
+  --color-ink: #0F2942;
+  --color-ink-dark: #081D30;
+  --color-border: #DCE8F0;
+  --color-line-light: #C3D9E8;
+  --color-muted: #5B7A94;
+  --color-subtle: #8FADC4;
+  --color-bg: #F3F8FB;
+  --color-bg-2: #E8F1F6;
+  --color-surface: #FFFFFF;
+  --color-accent: #0EA5E9;
+  --color-accent-dark: #0284C7;
+  --color-accent-dark-2: #0369A1;
+  --color-accent-shadow: #075985;
+  --color-accent-bg: #E0F2FE;
+  --color-accent-bg-2: #BAE6FD;
+}
+
+html[data-theme="atardecer"] {
+  --color-ink: #3B2317;
+  --color-ink-dark: #2A1710;
+  --color-border: #F0DCCE;
+  --color-line-light: #E8CCB8;
+  --color-muted: #92705A;
+  --color-subtle: #C4A186;
+  --color-bg: #FDF8F3;
+  --color-bg-2: #FBF0E6;
+  --color-surface: #FFFFFF;
+  --color-accent: #F97316;
+  --color-accent-dark: #EA580C;
+  --color-accent-dark-2: #9A3412;
+  --color-accent-shadow: #7C2D12;
+  --color-accent-bg: #FFEDD5;
+  --color-accent-bg-2: #FED7AA;
+}
+
+html[data-theme="bosque"] {
+  --color-ink: #1A2E1F;
+  --color-ink-dark: #0F1F13;
+  --color-border: #D7E8DA;
+  --color-line-light: #C8E0CD;
+  --color-muted: #5C7A63;
+  --color-subtle: #8FAE97;
+  --color-bg: #F4FAF5;
+  --color-bg-2: #E8F3EA;
+  --color-surface: #FFFFFF;
+  --color-accent: #16A34A;
+  --color-accent-dark: #15803D;
+  --color-accent-dark-2: #166534;
+  --color-accent-shadow: #14532D;
+  --color-accent-bg: #DCFCE7;
+  --color-accent-bg-2: #BBF7D0;
 }

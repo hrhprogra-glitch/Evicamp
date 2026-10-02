@@ -265,10 +265,10 @@ export const Finanzas: React.FC = () => {
       
       <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-end gap-4 shrink-0">
         <div>
-          <h1 className="text-xl sm:text-3xl font-black text-[#1E293B] uppercase tracking-tighter flex items-center gap-3">
-            <Wallet className="text-[#10B981] w-6 h-6 sm:w-8 sm:h-8" /> Tesorería
+          <h1 className="text-xl sm:text-3xl font-black text-[var(--color-ink)] uppercase tracking-tighter flex items-center gap-3">
+            <Wallet className="text-[var(--color-accent)] w-6 h-6 sm:w-8 sm:h-8" /> Tesorería
           </h1>
-          <p className="text-[#64748B] text-xs font-bold tracking-widest uppercase mt-1">
+          <p className="text-[var(--color-muted)] text-xs font-bold tracking-widest uppercase mt-1">
             Arqueo de Yape, Efectivo y Deudas en tiempo real
           </p>
         </div>
@@ -283,25 +283,25 @@ export const Finanzas: React.FC = () => {
                 setVistaActual('ACTUAL');
               }
             }}
-            className="flex-1 sm:flex-none justify-center bg-[#F8FAFC] text-[#1E293B] px-4 sm:px-6 py-3 border-2 border-[#1E293B] font-black text-xs uppercase tracking-widest sm:tracking-[0.2em] shadow-[4px_4px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#1E293B] transition-all cursor-pointer mr-2 flex items-center gap-2"
+            className="flex-1 sm:flex-none justify-center bg-[var(--color-bg)] text-[var(--color-ink)] px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest sm:tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] transition-all cursor-pointer mr-2 flex items-center gap-2"
           >
             <ReceiptText size={16} /> {vistaActual === 'ACTUAL' ? 'Ver Historial' : 'Volver a Caja'}
           </button>
 
           {vistaActual === 'ACTUAL' && (
             !sessionActiva ? (puedeTurno && (
-              <button onClick={() => setIsAperturaModalOpen(true)} className="flex-1 sm:flex-none bg-[#10B981] text-white px-4 sm:px-6 py-3 border-2 border-[#1E293B] font-black text-xs uppercase tracking-[0.2em] shadow-[4px_4px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#1E293B] transition-all cursor-pointer">
+              <button onClick={() => setIsAperturaModalOpen(true)} className="flex-1 sm:flex-none bg-[var(--color-accent)] text-white px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] transition-all cursor-pointer">
                 Aperturar Caja
               </button>)
             ) : (
               <>
                 {puedeMovimientos && (
-                <button onClick={() => setIsMovimientoModalOpen(true)} className="flex-1 sm:flex-none justify-center bg-white text-[#1E293B] px-4 py-3 border-2 border-[#1E293B] font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-[4px_4px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#1E293B] transition-all cursor-pointer">
+                <button onClick={() => setIsMovimientoModalOpen(true)} className="flex-1 sm:flex-none justify-center bg-white text-[var(--color-ink)] px-4 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] transition-all cursor-pointer">
                   + Nuevo Movimiento
                 </button>
                 )}
                 {puedeTurno && (
-                <button onClick={() => setIsCierreModalOpen(true)} className="flex-1 sm:flex-none justify-center bg-[#EF4444] text-white px-4 sm:px-6 py-3 border-2 border-[#1E293B] font-black text-xs uppercase tracking-[0.2em] flex items-center gap-2 shadow-[4px_4px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#1E293B] transition-all cursor-pointer">
+                <button onClick={() => setIsCierreModalOpen(true)} className="flex-1 sm:flex-none justify-center bg-[var(--color-danger)] text-white px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-[0.2em] flex items-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] transition-all cursor-pointer">
                   <Lock size={16} /> Cerrar Caja
                 </button>
                 )}
@@ -328,63 +328,63 @@ export const Finanzas: React.FC = () => {
         <div className="flex flex-col gap-4 sm:gap-6 flex-1 overflow-y-auto custom-scrollbar pb-8 lg:pr-2">
 
           {/* PANEL MAESTRO DE RECAUDACIÓN (ESTILO EVICAMP) */}
-          <div className="mb-0 bg-[#1E293B] border border-[#1E293B] rounded-none p-4 sm:p-6 text-center shadow-none shrink-0">
-            <span className="text-[#64748B] text-xs sm:text-sm uppercase tracking-widest font-bold">Gran Total en Caja (Todo Incluido)</span>
-            <h1 className="text-[#FFFFFF] text-3xl sm:text-5xl font-mono font-black mt-2">
+          <div className="mb-0 bg-[var(--color-ink)] border border-[var(--color-ink)] rounded-none p-4 sm:p-6 text-center shadow-none shrink-0">
+            <span className="text-[var(--color-muted)] text-xs sm:text-sm uppercase tracking-widest font-bold">Gran Total en Caja (Todo Incluido)</span>
+            <h1 className="text-[var(--color-surface)] text-3xl sm:text-5xl font-mono font-black mt-2">
               {ventasNetasHoy === null ? 'Calculando...' : `S/ ${ventasNetasHoy.toFixed(2)}`}
             </h1>
-            <p className="text-[#94A3B8] text-xs mt-2 uppercase">Incluye Efectivo, Yape, Transferencias y Tarjetas</p>
+            <p className="text-[var(--color-subtle)] text-xs mt-2 uppercase">Incluye Efectivo, Yape, Transferencias y Tarjetas</p>
           </div>
 
           {/* SÚPER PANEL DE MÉTRICAS */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 shrink-0">
-            <div className="bg-white border-2 border-[#1E293B] p-4 flex flex-col justify-between">
-               <p className="text-[12px] font-black text-[#64748B] uppercase tracking-widest flex items-center gap-2"><Banknote size={14}/> Efectivo Esperado Físico</p>
-               <p className="text-xl sm:text-3xl font-black text-[#10B981] mt-2">S/ {superMetricas.efectivoEsperadoCaja.toFixed(2)}</p>
-               <p className="text-[12px] font-bold text-[#64748B] uppercase mt-2 border-t pt-2">(Fondo + Ventas Físicas + Cobros - Gastos)</p>
+            <div className="bg-white border-2 border-[var(--color-ink)] p-4 flex flex-col justify-between">
+               <p className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest flex items-center gap-2"><Banknote size={14}/> Efectivo Esperado Físico</p>
+               <p className="text-xl sm:text-3xl font-black text-[var(--color-accent)] mt-2">S/ {superMetricas.efectivoEsperadoCaja.toFixed(2)}</p>
+               <p className="text-[12px] font-bold text-[var(--color-muted)] uppercase mt-2 border-t pt-2">(Fondo + Ventas Físicas + Cobros - Gastos)</p>
             </div>
             
-            <div className="bg-[#F8FAFC] border-2 border-[#E2E8F0] p-4">
-               <p className="text-[12px] font-black text-[#3B82F6] uppercase tracking-widest flex items-center gap-2"><Smartphone size={14}/> Yape / Transferencias</p>
-               <p className="text-xl font-black text-[#1E293B] mt-1">S/ {superMetricas.yapeEsperado.toFixed(2)}</p>
-               <div className="text-[12px] font-bold text-[#64748B] uppercase mt-2 space-y-1 border-t pt-2">
+            <div className="bg-[var(--color-bg)] border-2 border-[var(--color-border)] p-4">
+               <p className="text-[12px] font-black text-[var(--color-info)] uppercase tracking-widest flex items-center gap-2"><Smartphone size={14}/> Yape / Transferencias</p>
+               <p className="text-xl font-black text-[var(--color-ink)] mt-1">S/ {superMetricas.yapeEsperado.toFixed(2)}</p>
+               <div className="text-[12px] font-bold text-[var(--color-muted)] uppercase mt-2 space-y-1 border-t pt-2">
                  <p>Ventas: S/ {superMetricas.ventasYape.toFixed(2)}</p>
                  <p>Cobros: S/ {superMetricas.cobroDeudasYape.toFixed(2)}</p>
                  {superMetricas.ingresosExtraYape > 0 && <p>Ingresos: S/ {superMetricas.ingresosExtraYape.toFixed(2)}</p>}
-                 {superMetricas.gastosYape > 0 && <p className="text-[#EF4444]">Egresos: -S/ {superMetricas.gastosYape.toFixed(2)}</p>}
+                 {superMetricas.gastosYape > 0 && <p className="text-[var(--color-danger)]">Egresos: -S/ {superMetricas.gastosYape.toFixed(2)}</p>}
                </div>
             </div>
 
-            <div className="bg-[#F8FAFC] border-2 border-[#E2E8F0] p-4">
-               <p className="text-[12px] font-black text-[#8B5CF6] uppercase tracking-widest flex items-center gap-2"><CreditCard size={14}/> Pagos Tarjeta</p>
-               <p className="text-xl font-black text-[#1E293B] mt-1">S/ {superMetricas.tarjetaEsperada.toFixed(2)}</p>
-               <div className="text-[12px] font-bold text-[#64748B] uppercase mt-2 space-y-1 border-t pt-2">
+            <div className="bg-[var(--color-bg)] border-2 border-[var(--color-border)] p-4">
+               <p className="text-[12px] font-black text-[var(--color-purple)] uppercase tracking-widest flex items-center gap-2"><CreditCard size={14}/> Pagos Tarjeta</p>
+               <p className="text-xl font-black text-[var(--color-ink)] mt-1">S/ {superMetricas.tarjetaEsperada.toFixed(2)}</p>
+               <div className="text-[12px] font-bold text-[var(--color-muted)] uppercase mt-2 space-y-1 border-t pt-2">
                  <p>Ventas: S/ {superMetricas.ventasTarjeta.toFixed(2)}</p>
                  {superMetricas.cobroDeudasTarjeta > 0 && <p>Cobros: S/ {superMetricas.cobroDeudasTarjeta.toFixed(2)}</p>}
                  {superMetricas.ingresosExtraTarjeta > 0 && <p>Ingresos: S/ {superMetricas.ingresosExtraTarjeta.toFixed(2)}</p>}
-                 {superMetricas.gastosTarjeta > 0 && <p className="text-[#EF4444]">Egresos: -S/ {superMetricas.gastosTarjeta.toFixed(2)}</p>}
+                 {superMetricas.gastosTarjeta > 0 && <p className="text-[var(--color-danger)]">Egresos: -S/ {superMetricas.gastosTarjeta.toFixed(2)}</p>}
                </div>
             </div>
 
-            <div className="bg-[#FEF2F2] border-2 border-[#EF4444] p-4">
-               <p className="text-[12px] font-black text-[#EF4444] uppercase tracking-widest flex items-center gap-2"><ArrowDownToLine size={14}/> Gastos y Retiros</p>
-               <p className="text-xl font-black text-[#EF4444] mt-1">S/ {superMetricas.gastos.toFixed(2)}</p>
-               <p className="text-[12px] font-bold text-[#EF4444] uppercase mt-2 border-t border-[#EF4444]/20 pt-2">Salió del cajón</p>
+            <div className="bg-[var(--color-danger-bg)] border-2 border-[var(--color-danger)] p-4">
+               <p className="text-[12px] font-black text-[var(--color-danger)] uppercase tracking-widest flex items-center gap-2"><ArrowDownToLine size={14}/> Gastos y Retiros</p>
+               <p className="text-xl font-black text-[var(--color-danger)] mt-1">S/ {superMetricas.gastos.toFixed(2)}</p>
+               <p className="text-[12px] font-bold text-[var(--color-danger)] uppercase mt-2 border-t border-[var(--color-danger)]/20 pt-2">Salió del cajón</p>
             </div>
           </div>
 
-          <div className="flex-1 min-h-[420px] sm:min-h-[500px] short:min-h-[380px] shrink-0 bg-white border-2 border-[#E2E8F0] shadow-[4px_4px_0_0_#E2E8F0] sm:shadow-[8px_8px_0_0_#E2E8F0] flex flex-col overflow-hidden">
+          <div className="flex-1 min-h-[420px] sm:min-h-[500px] short:min-h-[380px] shrink-0 bg-white border-2 border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-border)] sm:shadow-[8px_8px_0_0_var(--color-border)] flex flex-col overflow-hidden">
              
-             <div className="flex border-b-2 border-[#E2E8F0] bg-[#F8FAFC] shrink-0">
+             <div className="flex border-b-2 border-[var(--color-border)] bg-[var(--color-bg)] shrink-0">
                <button 
                  onClick={() => setPestañaFlujo('INTERNO')}
-                 className={`flex-1 px-2 py-3 text-xs font-black uppercase tracking-normal sm:tracking-widest border-b-4 transition-colors cursor-pointer rounded-none ${pestañaFlujo === 'INTERNO' ? 'border-[#1E293B] text-[#1E293B] bg-white' : 'border-transparent text-[#94A3B8] hover:text-[#1E293B] hover:bg-white'}`}
+                 className={`flex-1 px-2 py-3 text-xs font-black uppercase tracking-normal sm:tracking-widest border-b-4 transition-colors cursor-pointer rounded-none ${pestañaFlujo === 'INTERNO' ? 'border-[var(--color-ink)] text-[var(--color-ink)] bg-white' : 'border-transparent text-[var(--color-subtle)] hover:text-[var(--color-ink)] hover:bg-white'}`}
                >
                  Movimientos Internos (Negocio)
                </button>
                <button 
                  onClick={() => setPestañaFlujo('EXTERNO')}
-                 className={`flex-1 px-2 py-3 text-xs font-black uppercase tracking-normal sm:tracking-widest border-b-4 transition-colors cursor-pointer rounded-none ${pestañaFlujo === 'EXTERNO' ? 'border-[#1E293B] text-[#1E293B] bg-white' : 'border-transparent text-[#94A3B8] hover:text-[#1E293B] hover:bg-white'}`}
+                 className={`flex-1 px-2 py-3 text-xs font-black uppercase tracking-normal sm:tracking-widest border-b-4 transition-colors cursor-pointer rounded-none ${pestañaFlujo === 'EXTERNO' ? 'border-[var(--color-ink)] text-[var(--color-ink)] bg-white' : 'border-transparent text-[var(--color-subtle)] hover:text-[var(--color-ink)] hover:bg-white'}`}
                >
                  Movimientos Externos (Personal)
                </button>
@@ -404,9 +404,9 @@ export const Finanzas: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="flex-1 border-4 border-dashed border-[#E2E8F0] flex flex-col items-center justify-center p-6">
-           <Wallet size={64} className="text-[#CBD5E1] mb-4" />
-           <h2 className="text-[#1E293B] font-black text-xl uppercase tracking-widest mb-2">Caja Cerrada</h2>
+        <div className="flex-1 border-4 border-dashed border-[var(--color-border)] flex flex-col items-center justify-center p-6">
+           <Wallet size={64} className="text-[var(--color-line-light)] mb-4" />
+           <h2 className="text-[var(--color-ink)] font-black text-xl uppercase tracking-widest mb-2">Caja Cerrada</h2>
         </div>
       )}
 

@@ -247,28 +247,28 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
   const isEdit = !!fiadoAEditar;
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="bg-white w-full max-w-4xl border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.85)]">
+    <div className="fixed inset-0 bg-[var(--color-ink)]/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4 font-mono">
+      <div className="bg-white w-full max-w-4xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.85)]">
         
-        <div className="bg-[#1E293B] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
+        <div className="bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
           <div className="flex items-center gap-3">
-            <UserPlus className="text-[#F59E0B]" size={20} />
+            <UserPlus className="text-[var(--color-warning)]" size={20} />
             <h2 className="text-sm font-black uppercase tracking-widest text-white">
               {isEdit ? 'Renegociar Fecha de Vencimiento' : 'Nueva Deuda desde Inventario'}
             </h2>
           </div>
-          <button onClick={onClose} className="hover:text-[#EF4444] transition-colors"><X size={20} /></button>
+          <button onClick={onClose} className="hover:text-[var(--color-danger)] transition-colors"><X size={20} /></button>
         </div>
 
         <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-visible">
           {/* PANEL IZQUIERDO: CLIENTE Y PRODUCTOS */}
-          <div className="w-full md:w-1/2 p-4 sm:p-6 bg-[#F8FAFC] border-b-2 md:border-b-0 md:border-r-2 border-[#E2E8F0] flex flex-col gap-4 shrink-0 md:shrink md:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="w-full md:w-1/2 p-4 sm:p-6 bg-[var(--color-bg)] border-b-2 md:border-b-0 md:border-r-2 border-[var(--color-border)] flex flex-col gap-4 shrink-0 md:shrink md:overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             
             <div className="space-y-1 relative">
-              <label className="text-[12px] font-black uppercase text-[#64748B]">Seleccionar Cliente *</label>
+              <label className="text-[12px] font-black uppercase text-[var(--color-muted)]">Seleccionar Cliente *</label>
               
               <div 
-                className={`flex items-center justify-between border-2 border-[#E2E8F0] bg-white p-2 cursor-text transition-colors rounded-none ${isEdit ? 'bg-[#F8FAFC] cursor-not-allowed opacity-70' : 'focus-within:border-[#F59E0B]'}`}
+                className={`flex items-center justify-between border-2 border-[var(--color-border)] bg-white p-2 cursor-text transition-colors rounded-none ${isEdit ? 'bg-[var(--color-bg)] cursor-not-allowed opacity-70' : 'focus-within:border-[var(--color-warning)]'}`}
                 {...clicConTeclado(() => !isEdit && setIsDropdownOpen(true))}
               >
                 <input
@@ -281,13 +281,13 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                     setIsDropdownOpen(true);
                   }}
                   disabled={isEdit}
-                  className="w-full text-xs font-black uppercase outline-none bg-transparent disabled:text-[#94A3B8]"
+                  className="w-full text-xs font-black uppercase outline-none bg-transparent disabled:text-[var(--color-subtle)]"
                 />
                 <button 
                   type="button"
                   disabled={isEdit}
                   onClick={(e) => { e.stopPropagation(); if (!isEdit) setIsDropdownOpen(!isDropdownOpen); }}
-                  className="ml-2 text-[#64748B] hover:text-[#1E293B] cursor-pointer disabled:cursor-not-allowed"
+                  className="ml-2 text-[var(--color-muted)] hover:text-[var(--color-ink)] cursor-pointer disabled:cursor-not-allowed"
                 >
                   {isDropdownOpen ? <X size={16} /> : <ChevronDown size={16} />}
                 </button>
@@ -295,9 +295,9 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
 
               {/* LISTA DESPLEGABLE CON FILTRO */}
               {isDropdownOpen && !isEdit && (
-                <div className="absolute z-50 top-[100%] left-0 w-full mt-1 bg-white border-2 border-[#1E293B] shadow-[4px_4px_0_0_#1E293B] max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-none">
+                <div className="absolute z-50 top-[100%] left-0 w-full mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-none">
                   {clientes.filter(c => c.nombre.toLowerCase().includes(searchCliente.toLowerCase())).length === 0 ? (
-                    <div className="p-3 text-xs font-bold text-[#64748B] uppercase text-center bg-[#F8FAFC]">
+                    <div className="p-3 text-xs font-bold text-[var(--color-muted)] uppercase text-center bg-[var(--color-bg)]">
                       NO SE ENCONTRARON CLIENTES
                     </div>
                   ) : (
@@ -306,7 +306,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                       .map(c => (
                         <div
                           key={c.id}
-                          className="p-3 text-xs font-black uppercase text-[#1E293B] hover:bg-[#F59E0B] hover:text-white cursor-pointer border-b border-[#E2E8F0] last:border-0 transition-colors"
+                          className="p-3 text-xs font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-warning)] hover:text-white cursor-pointer border-b border-[var(--color-border)] last:border-0 transition-colors"
                           {...clicConTeclado(() => {
                             setClienteSeleccionado(c.nombre);
                             setSearchCliente('');
@@ -322,16 +322,16 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
             </div>
 
             <div className="space-y-1">
-              <label className="text-[12px] font-black uppercase text-[#F59E0B]">Fecha Límite Pago *</label>
-              <input type="date" value={fechaVencimiento} onChange={e => setFechaVencimiento(e.target.value)} className="w-full border-2 border-[#E2E8F0] p-2 text-xs font-black focus:border-[#F59E0B] outline-none" />
+              <label className="text-[12px] font-black uppercase text-[var(--color-warning)]">Fecha Límite Pago *</label>
+              <input type="date" value={fechaVencimiento} onChange={e => setFechaVencimiento(e.target.value)} className="w-full border-2 border-[var(--color-border)] p-2 text-xs font-black focus:border-[var(--color-warning)] outline-none" />
             </div>
 
             {/* BUSCADOR DE INVENTARIO (OCULTO EN EDICIÓN) */}
             {!isEdit && (
-              <div className="mt-4 border-t-2 border-dashed border-[#E2E8F0] pt-4">
-                <label className="text-[12px] font-black uppercase text-[#64748B] flex items-center gap-2 mb-2"><Package size={14}/> Buscar en Inventario</label>
+              <div className="mt-4 border-t-2 border-dashed border-[var(--color-border)] pt-4">
+                <label className="text-[12px] font-black uppercase text-[var(--color-muted)] flex items-center gap-2 mb-2"><Package size={14}/> Buscar en Inventario</label>
                 <div className="relative">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-subtle)]" />
                   <input
                     type="text"
                     value={searchProd}
@@ -345,22 +345,22 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                       }
                     }}
                     placeholder="ESCANEA O ESCRIBE UN PRODUCTO..."
-                    className="w-full bg-white border-2 border-[#E2E8F0] p-2 pl-9 text-xs font-black uppercase outline-none focus:border-[#3B82F6]"
+                    className="w-full bg-white border-2 border-[var(--color-border)] p-2 pl-9 text-xs font-black uppercase outline-none focus:border-[var(--color-info)]"
                   />
                 </div>
                 {prodFiltrados.length > 0 && (
-                  <div className="mt-1 bg-white border-2 border-[#E2E8F0] max-h-40 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  <div className="mt-1 bg-white border-2 border-[var(--color-border)] max-h-40 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     {prodFiltrados.map(p => (
                       <div 
                         key={p.id} 
                         {...clicConTeclado(() => agregarProducto(p))}
-                        className="flex justify-between items-center p-2 border-b border-[#E2E8F0] hover:bg-[#F8FAFC] cursor-pointer group"
+                        className="flex justify-between items-center p-2 border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] cursor-pointer group"
                       >
                         <div>
-                          <p className="text-xs font-black text-[#1E293B] uppercase">{p.name}</p>
-                          <p className="text-[12px] font-bold text-[#64748B]">Stock: {formatearCantidad(p.quantity, p.unit)} | S/ {p.price}</p>
+                          <p className="text-xs font-black text-[var(--color-ink)] uppercase">{p.name}</p>
+                          <p className="text-[12px] font-bold text-[var(--color-muted)]">Stock: {formatearCantidad(p.quantity, p.unit)} | S/ {p.price}</p>
                         </div>
-                        <div className="p-1 bg-[#1E293B] text-white group-hover:bg-[#3B82F6] transition-colors"><Plus size={14}/></div>
+                        <div className="p-1 bg-[var(--color-ink)] text-white group-hover:bg-[var(--color-info)] transition-colors"><Plus size={14}/></div>
                       </div>
                     ))}
                   </div>
@@ -371,39 +371,39 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
 
           {/* PANEL DERECHO: CARRITO / DETALLE DE LA DEUDA */}
           <div className="w-full md:w-1/2 p-4 sm:p-6 bg-white flex flex-col min-h-[360px] md:min-h-0">
-            <div className="flex flex-col mb-4 border-b-2 border-[#E2E8F0] pb-2">
-              <h3 className="text-[12px] font-black uppercase tracking-widest text-[#1E293B]">
+            <div className="flex flex-col mb-4 border-b-2 border-[var(--color-border)] pb-2">
+              <h3 className="text-[12px] font-black uppercase tracking-widest text-[var(--color-ink)]">
                 {isEdit ? 'Detalle de la deuda (Solo Lectura)' : 'Productos a fiar'}
               </h3>
-              {isEdit && <span className="text-[12px] font-black tracking-widest text-[#EF4444] uppercase mt-1">⚠️ En modo edición solo se puede modificar la fecha. Los productos están bloqueados por seguridad contable.</span>}
+              {isEdit && <span className="text-[12px] font-black tracking-widest text-[var(--color-danger)] uppercase mt-1">⚠️ En modo edición solo se puede modificar la fecha. Los productos están bloqueados por seguridad contable.</span>}
             </div>
             
             <div className="flex-1 overflow-y-auto flex flex-col gap-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {detalles.length === 0 ? (
-                <p className="text-center text-[#94A3B8] font-bold text-xs mt-10">No hay productos agregados.</p>
+                <p className="text-center text-[var(--color-subtle)] font-bold text-xs mt-10">No hay productos agregados.</p>
               ) : (
                 detalles.map(d => (
-                  <div key={d.productoId} className="flex justify-between items-center border-2 border-[#E2E8F0] p-2">
+                  <div key={d.productoId} className="flex justify-between items-center border-2 border-[var(--color-border)] p-2">
                     <div className="flex-1">
-                      <p className="text-xs font-black text-[#1E293B] uppercase leading-tight line-clamp-1">{d.name}</p>
-                      <p className="text-[12px] font-bold text-[#64748B]">S/ {d.price.toFixed(2)} c/u</p>
+                      <p className="text-xs font-black text-[var(--color-ink)] uppercase leading-tight line-clamp-1">{d.name}</p>
+                      <p className="text-[12px] font-bold text-[var(--color-muted)]">S/ {d.price.toFixed(2)} c/u</p>
                     </div>
                     
                     <div className="flex items-center gap-3">
                       
                       {/* CAJA DE CANTIDAD / KILOS / CONSUMO */}
-                      <div className="flex flex-col items-center border-2 border-[#E2E8F0] overflow-hidden">
+                      <div className="flex flex-col items-center border-2 border-[var(--color-border)] overflow-hidden">
                         {isEdit ? (
-                          <span className="w-16 p-1 text-center text-xs font-black bg-[#F8FAFC] text-[#94A3B8]">{d.qty}</span>
+                          <span className="w-16 p-1 text-center text-xs font-black bg-[var(--color-bg)] text-[var(--color-subtle)]">{d.qty}</span>
                         ) : d.control_type === 'CONSUMO' || d.control_type === 'SERVICE' ? (
-                          <span className="w-16 p-1 text-center text-xs font-black bg-[#F8FAFC] text-[#94A3B8] cursor-not-allowed">1</span>
+                          <span className="w-16 p-1 text-center text-xs font-black bg-[var(--color-bg)] text-[var(--color-subtle)] cursor-not-allowed">1</span>
                         ) : (
                           <input 
                             type="number" 
                             step={d.control_type === 'WEIGHT' ? "any" : "1"}
                             value={d.qty} 
                             onChange={e => updateQty(d.productoId, e.target.value)} 
-                            className="w-16 p-1 text-center text-xs font-black outline-none bg-transparent placeholder:text-[#CBD5E1]" 
+                            className="w-16 p-1 text-center text-xs font-black outline-none bg-transparent placeholder:text-[var(--color-line-light)]" 
                             min={0} 
                             placeholder="0"
                             title={d.control_type === 'WEIGHT' ? "Ingresar Kilos" : "Ingresar Unidades"}
@@ -411,36 +411,36 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                         )}
                         {/* Indicador visual técnico de medida */}
                         {d.control_type === 'WEIGHT' ? (
-                          <div className="bg-[#1E293B] text-white text-[11px] font-black w-full text-center tracking-widest py-0.5 uppercase">Kilo</div>
+                          <div className="bg-[var(--color-ink)] text-white text-[11px] font-black w-full text-center tracking-widest py-0.5 uppercase">Kilo</div>
                         ) : d.control_type === 'CONSUMO' || d.control_type === 'SERVICE' ? (
-                          <div className="bg-[#F59E0B] text-[#1E293B] text-[11px] font-black w-full text-center tracking-widest py-0.5 uppercase">Serv</div>
+                          <div className="bg-[var(--color-warning)] text-[var(--color-ink)] text-[11px] font-black w-full text-center tracking-widest py-0.5 uppercase">Serv</div>
                         ) : (
-                          <div className="bg-[#E2E8F0] text-[#64748B] text-[11px] font-black w-full text-center tracking-widest py-0.5 uppercase">Und</div>
+                          <div className="bg-[var(--color-border)] text-[var(--color-muted)] text-[11px] font-black w-full text-center tracking-widest py-0.5 uppercase">Und</div>
                         )}
                       </div>
                       
                       {/* CAJA DE SUBTOTAL (Texto Fijo para UND, Input Editable para KILOS y CONSUMOS) */}
                       {!isEdit && (d.control_type === 'WEIGHT' || d.control_type === 'CONSUMO' || d.control_type === 'SERVICE') ? (
-                        <div className="flex items-center border-b-2 border-[#1E293B] w-20 justify-end focus-within:border-[#F59E0B] transition-colors group">
-                          <span className="text-[12px] font-black text-[#1E293B] mr-1">S/</span>
+                        <div className="flex items-center border-b-2 border-[var(--color-ink)] w-20 justify-end focus-within:border-[var(--color-warning)] transition-colors group">
+                          <span className="text-[12px] font-black text-[var(--color-ink)] mr-1">S/</span>
                           <input 
                             type="number"
                             step="any"
                             value={d.subtotal}
                             onChange={e => updateSubtotalDirecto(d.productoId, e.target.value)}
-                            className="w-full text-right text-xs font-black text-[#F59E0B] outline-none bg-transparent placeholder:text-[#CBD5E1]"
+                            className="w-full text-right text-xs font-black text-[var(--color-warning)] outline-none bg-transparent placeholder:text-[var(--color-line-light)]"
                             placeholder="0.00"
                             title={d.control_type === 'WEIGHT' ? "Ingresar precio directo (Calcula Kilos)" : "Ingresar precio del servicio"}
                           />
                         </div>
                       ) : (
-                        <span className="text-xs font-black text-[#1E293B] w-20 text-right">
+                        <span className="text-xs font-black text-[var(--color-ink)] w-20 text-right">
                           S/ {Number(d.subtotal).toFixed(2)}
                         </span>
                       )}
 
                       {!isEdit && (
-                        <button onClick={() => removeProd(d.productoId)} className="text-[#EF4444] hover:bg-[#FEF2F2] p-1.5 transition-colors rounded-none border border-transparent hover:border-[#FEF2F2]">
+                        <button onClick={() => removeProd(d.productoId)} className="text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] p-1.5 transition-colors rounded-none border border-transparent hover:border-[var(--color-danger-bg)]">
                           <Trash2 size={16}/>
                         </button>
                       )}
@@ -450,14 +450,14 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
               )}
             </div>
 
-            <div className="mt-4 pt-4 border-t-2 border-[#E2E8F0]">
+            <div className="mt-4 pt-4 border-t-2 border-[var(--color-border)]">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-sm font-black uppercase">Total Deuda:</span>
-                <span className="text-2xl font-black text-[#F59E0B]">S/ {totalCalculado.toFixed(2)}</span>
+                <span className="text-2xl font-black text-[var(--color-warning)]">S/ {totalCalculado.toFixed(2)}</span>
               </div>
               <div className="flex justify-end gap-3">
-                <button onClick={onClose} disabled={isSaving} className="px-4 py-3 border-2 border-[#E2E8F0] text-[#64748B] text-[12px] font-black uppercase hover:border-[#1E293B] disabled:opacity-50">Cancelar</button>
-                <button onClick={handleSave} disabled={isSaving} className="flex-1 py-3 bg-[#F59E0B] text-[#1E293B] border-2 border-[#1E293B] text-xs font-black uppercase flex items-center justify-center gap-2 shadow-[2px_2px_0_0_#1E293B] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all disabled:opacity-50 disabled:pointer-events-none">
+                <button onClick={onClose} disabled={isSaving} className="px-4 py-3 border-2 border-[var(--color-border)] text-[var(--color-muted)] text-[12px] font-black uppercase hover:border-[var(--color-ink)] disabled:opacity-50">Cancelar</button>
+                <button onClick={handleSave} disabled={isSaving} className="flex-1 py-3 bg-[var(--color-warning)] text-[var(--color-ink)] border-2 border-[var(--color-ink)] text-xs font-black uppercase flex items-center justify-center gap-2 shadow-[2px_2px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all disabled:opacity-50 disabled:pointer-events-none">
                   <Save size={16}/> {isSaving ? 'Guardando...' : (isEdit ? 'Guardar Nueva Fecha' : 'Confirmar y Restar Inventario')}
                 </button>
               </div>

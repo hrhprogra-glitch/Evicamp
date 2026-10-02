@@ -192,7 +192,7 @@ export const Mermas: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 short:gap-3 w-full pb-10 text-[#1E293B] font-mono min-h-full bg-[#FFFFFF] relative rounded-none">
+    <div className="flex flex-col gap-6 short:gap-3 w-full pb-10 text-[var(--color-ink)] font-mono min-h-full bg-[var(--color-surface)] relative rounded-none">
       
       <HeaderMermas 
         onNuevaMerma={() => setIsModalMermaOpen(true)} 
@@ -239,10 +239,10 @@ export const Mermas: React.FC = () => {
 
       <div className="px-3 lg:px-4 flex-1 flex flex-col min-h-[calc(var(--alto-pantalla)*0.6)] relative pb-8 rounded-none">
         {loading ? (
-          <div className="absolute inset-0 bg-[#FFFFFF]/90 backdrop-blur-sm z-10 flex items-center justify-center border border-[#E2E8F0] rounded-none shadow-none">
+          <div className="absolute inset-0 bg-[var(--color-surface)]/90 backdrop-blur-sm z-10 flex items-center justify-center border border-[var(--color-border)] rounded-none shadow-none">
             <div className="flex flex-col items-center gap-3">
-              <Database size={24} className="text-[#1E293B] animate-pulse" />
-              <span className="text-[12px] font-black text-[#1E293B] uppercase tracking-[0.2em]">Consultando Base de Datos...</span>
+              <Database size={24} className="text-[var(--color-ink)] animate-pulse" />
+              <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-[0.2em]">Consultando Base de Datos...</span>
             </div>
           </div>
         ) : (

@@ -59,18 +59,18 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete, ids
   const PaginacionControles = () => {
     if (totalPages <= 1) return null;
     return (
-      <div className="p-3 border-y-2 border-[#E2E8F0] bg-[#F8FAFC] flex justify-between items-center shrink-0">
-        <p className="text-[12px] font-black text-[#64748B] uppercase">
+      <div className="p-3 border-y-2 border-[var(--color-border)] bg-[var(--color-bg)] flex justify-between items-center shrink-0">
+        <p className="text-[12px] font-black text-[var(--color-muted)] uppercase">
           Mostrando {startIndex + 1} - {Math.min(startIndex + ITEMS_PER_PAGE, tickets.length)} de {tickets.length}
         </p>
         <div className="flex gap-2">
-          <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 border-2 border-[#E2E8F0] bg-[#FFFFFF] text-[#1E293B] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F8FAFC] cursor-pointer rounded-none">
+          <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 border-2 border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-bg)] cursor-pointer rounded-none">
             <ChevronLeft size={16} />
           </button>
-          <span className="flex items-center justify-center px-4 border-2 border-[#E2E8F0] bg-[#FFFFFF] text-xs font-black text-[#1E293B] rounded-none">
+          <span className="flex items-center justify-center px-4 border-2 border-[var(--color-border)] bg-[var(--color-surface)] text-xs font-black text-[var(--color-ink)] rounded-none">
             Pág {currentPage} / {totalPages}
           </span>
-          <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2 border-2 border-[#E2E8F0] bg-[#FFFFFF] text-[#1E293B] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F8FAFC] cursor-pointer rounded-none">
+          <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2 border-2 border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-bg)] cursor-pointer rounded-none">
             <ChevronRight size={16} />
           </button>
         </div>
@@ -80,28 +80,28 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete, ids
 
   return (
     <>
-      <div className="bg-[#FFFFFF] border-2 border-[#E2E8F0] shadow-[8px_8px_0_0_#E2E8F0] flex flex-col font-mono rounded-none">
+      <div className="bg-[var(--color-surface)] border-2 border-[var(--color-border)] shadow-[8px_8px_0_0_var(--color-border)] flex flex-col font-mono rounded-none">
         
         <PaginacionControles />
 
         <div className="w-full overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[900px]">
-            <thead className="bg-[#1E293B] text-[#FFFFFF]">
+            <thead className="bg-[var(--color-ink)] text-[var(--color-surface)]">
               <tr>
-                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[#1E293B]">Fecha y Hora</th>
-                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[#1E293B]">Nro. Ticket</th>
-                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[#1E293B]">Pago</th>
-                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[#1E293B]">Estado</th>
-                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[#1E293B] text-right">Pagado</th>
-                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[#1E293B] text-right">Deuda</th>
-                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[#1E293B] text-right">Total</th>
-                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[#1E293B] text-center">Acciones</th>
+                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Fecha y Hora</th>
+                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Nro. Ticket</th>
+                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Pago</th>
+                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Estado</th>
+                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-right">Pagado</th>
+                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-right">Deuda</th>
+                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-right">Total</th>
+                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-center">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {tickets.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-3 lg:p-4 text-center text-[#64748B] font-bold text-xs uppercase bg-[#FFFFFF]">
+                  <td colSpan={8} className="p-3 lg:p-4 text-center text-[var(--color-muted)] font-bold text-xs uppercase bg-[var(--color-surface)]">
                     No hay tickets registrados en este mes.
                   </td>
                 </tr>
@@ -110,59 +110,59 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete, ids
                   <tr
                     key={t.id}
                     {...clicConTeclado(() => verDetalles(t.id))}
-                    className="border-b border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+                    className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] transition-colors cursor-pointer"
                     title="Click para ver detalle del ticket"
                   >
-                    <td className="p-4 text-xs font-bold text-[#64748B]">
+                    <td className="p-4 text-xs font-bold text-[var(--color-muted)]">
                       {new Date(t.created_at).toLocaleString('es-PE')}
                     </td>
-                    <td className="p-4 text-sm font-black text-[#1E293B] uppercase">
+                    <td className="p-4 text-sm font-black text-[var(--color-ink)] uppercase">
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                          <Receipt size={14} className="text-[#64748B]" />
+                          <Receipt size={14} className="text-[var(--color-muted)]" />
                           #{t.id.slice(-6)}
                         </div>
                         {t.es_fiado && t.cliente_nombre && (
-                          <span className="text-[12px] text-[#64748B] font-bold tracking-widest">[{t.cliente_nombre}]</span>
+                          <span className="text-[12px] text-[var(--color-muted)] font-bold tracking-widest">[{t.cliente_nombre}]</span>
                         )}
                       </div>
                     </td>
-                    <td className="p-4 text-xs font-bold text-[#64748B] uppercase">{t.metodo_pago}</td>
+                    <td className="p-4 text-xs font-bold text-[var(--color-muted)] uppercase">{t.metodo_pago}</td>
                     <td className="p-4">
                       <span className={`px-2 py-1 text-[12px] font-black tracking-wider border rounded-none ${
-                        t.estado === 'ANULADO' ? 'bg-[#FFFFFF] text-[#EF4444] border-[#EF4444]' : 'bg-[#FFFFFF] text-[#1E293B] border-[#1E293B]'
+                        t.estado === 'ANULADO' ? 'bg-[var(--color-surface)] text-[var(--color-danger)] border-[var(--color-danger)]' : 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-ink)]'
                       }`}>
                         {t.estado}
                       </span>
                     </td>
                     {/* COLUMNA PAGADO */}
-                    <td className="p-4 text-right text-base font-bold text-[#64748B]">
+                    <td className="p-4 text-right text-base font-bold text-[var(--color-muted)]">
                       S/ {Number(t.monto_pagado || 0).toFixed(2)}
                     </td>
                     {/* COLUMNA DEUDA */}
-                    <td className="p-4 text-right text-lg font-black text-[#EF4444]">
+                    <td className="p-4 text-right text-lg font-black text-[var(--color-danger)]">
                       {(t.monto_deuda && t.monto_deuda > 0) ? `S/ ${Number(t.monto_deuda).toFixed(2)}` : '-'}
                     </td>
-                    <td className="p-4 text-right text-lg font-black text-[#1E293B]">
+                    <td className="p-4 text-right text-lg font-black text-[var(--color-ink)]">
                       S/ {Number(t.total).toFixed(2)}
                     </td>
                     <td className="p-4">
                       <div className="flex items-center justify-center gap-2">
-                        <button onClick={(e) => { e.stopPropagation(); verDetalles(t.id); }} className="p-2 bg-[#FFFFFF] text-[#1E293B] border border-[#E2E8F0] hover:border-[#1E293B] transition-colors cursor-pointer rounded-none" title="Ver Productos">
+                        <button onClick={(e) => { e.stopPropagation(); verDetalles(t.id); }} className="p-2 bg-[var(--color-surface)] text-[var(--color-ink)] border border-[var(--color-border)] hover:border-[var(--color-ink)] transition-colors cursor-pointer rounded-none" title="Ver Productos">
                           <Eye size={16} />
                         </button>
                         {t.estado !== 'ANULADO' && puedeAnular && (
                           <button
                             onClick={(e) => { e.stopPropagation(); onAnular(t.id); }}
                             disabled={idsAnulando?.has(t.id)}
-                            className="p-2 bg-[#FFFFFF] text-[#64748B] border border-[#E2E8F0] hover:border-[#F59E0B] hover:text-[#F59E0B] transition-colors cursor-pointer rounded-none disabled:opacity-40 disabled:pointer-events-none"
+                            className="p-2 bg-[var(--color-surface)] text-[var(--color-muted)] border border-[var(--color-border)] hover:border-[var(--color-warning)] hover:text-[var(--color-warning)] transition-colors cursor-pointer rounded-none disabled:opacity-40 disabled:pointer-events-none"
                             title="Anular / Devolver"
                           >
                             <RotateCcw size={16} />
                           </button>
                         )}
                         {puedeAnular && (
-                        <button onClick={(e) => { e.stopPropagation(); onDelete(t.id); }} className="p-2 bg-[#FFFFFF] text-[#64748B] border border-[#E2E8F0] hover:border-[#EF4444] hover:text-[#EF4444] transition-colors cursor-pointer rounded-none" title="Eliminar Permanente">
+                        <button onClick={(e) => { e.stopPropagation(); onDelete(t.id); }} className="p-2 bg-[var(--color-surface)] text-[var(--color-muted)] border border-[var(--color-border)] hover:border-[var(--color-danger)] hover:text-[var(--color-danger)] transition-colors cursor-pointer rounded-none" title="Eliminar Permanente">
                           <Trash2 size={16} />
                         </button>
                         )}
@@ -181,30 +181,30 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete, ids
 
       {/* VENTANA FLOTANTE (MODAL PLATO TÉCNICO) */}
       {ticketSeleccionado && (
-        <div className="fixed inset-0 bg-[#1E293B]/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-[#FFFFFF] border-2 border-[#1E293B] shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] rounded-none w-full max-w-lg flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.8)]">
-            <div className="flex justify-between items-center border-b-2 border-[#1E293B] bg-[#F8FAFC] p-4 shrink-0">
+        <div className="fixed inset-0 bg-[var(--color-ink)]/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] rounded-none w-full max-w-lg flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.8)]">
+            <div className="flex justify-between items-center border-b-2 border-[var(--color-ink)] bg-[var(--color-bg)] p-4 shrink-0">
               <div>
-                <p className="text-[#64748B] text-[12px] font-mono tracking-widest uppercase mb-1">Inspección Operativa</p>
-                <h2 className="text-[#1E293B] font-black text-lg uppercase tracking-widest">TICKET #{ticketSeleccionado.slice(-6)}</h2>
+                <p className="text-[var(--color-muted)] text-[12px] font-mono tracking-widest uppercase mb-1">Inspección Operativa</p>
+                <h2 className="text-[var(--color-ink)] font-black text-lg uppercase tracking-widest">TICKET #{ticketSeleccionado.slice(-6)}</h2>
               </div>
-              <button onClick={() => setTicketSeleccionado(null)} className="p-2 bg-[#FFFFFF] border border-[#1E293B] text-[#1E293B] hover:bg-[#1E293B] hover:text-[#FFFFFF] transition-colors rounded-none">
+              <button onClick={() => setTicketSeleccionado(null)} className="p-2 bg-[var(--color-surface)] border border-[var(--color-ink)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors rounded-none">
                 <X size={20} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 bg-[#FFFFFF]">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 bg-[var(--color-surface)]">
               {isLoadingDetalles ? (
                 <div className="flex flex-col items-center justify-center py-10">
-                  <div className="w-6 h-6 border-2 border-[#1E293B] border-t-transparent animate-spin rounded-full mb-3"></div>
-                  <p className="text-[#64748B] text-xs font-black uppercase tracking-widest">Descargando registros...</p>
+                  <div className="w-6 h-6 border-2 border-[var(--color-ink)] border-t-transparent animate-spin rounded-full mb-3"></div>
+                  <p className="text-[var(--color-muted)] text-xs font-black uppercase tracking-widest">Descargando registros...</p>
                 </div>
               ) : detallesTicket.length === 0 ? (
-                <div className="text-center py-10 border-2 border-dashed border-[#E2E8F0]">
-                  <p className="text-[#EF4444] text-xs font-black uppercase tracking-widest">No hay productos registrados para este ticket.</p>
+                <div className="text-center py-10 border-2 border-dashed border-[var(--color-border)]">
+                  <p className="text-[var(--color-danger)] text-xs font-black uppercase tracking-widest">No hay productos registrados para este ticket.</p>
                 </div>
               ) : (
                 <table className="w-full text-left border-collapse">
-                  <thead className="bg-[#1E293B] text-[#FFFFFF]">
+                  <thead className="bg-[var(--color-ink)] text-[var(--color-surface)]">
                     <tr>
                       <th className="p-2 text-[12px] font-black tracking-widest uppercase">Cant/Kg</th>
                       <th className="p-2 text-[12px] font-black tracking-widest uppercase">Producto</th>
@@ -214,20 +214,20 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete, ids
                   </thead>
                   <tbody>
                     {detallesTicket.map((item, index) => (
-                      <tr key={index} className="border-b border-[#E2E8F0] hover:bg-[#F8FAFC]">
-                        <td className="p-2 text-xs font-black text-[#1E293B]">{Number(item.quantity).toString()}</td>
-                        <td className="p-2 text-xs font-bold text-[#64748B] uppercase">{item.product_name}</td>
-                        <td className="p-2 text-xs font-mono text-[#64748B] text-right">S/ {Number(item.price_at_moment).toFixed(2)}</td>
-                        <td className="p-2 text-sm font-black font-mono text-[#1E293B] text-right">S/ {Number(item.subtotal).toFixed(2)}</td>
+                      <tr key={index} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]">
+                        <td className="p-2 text-xs font-black text-[var(--color-ink)]">{Number(item.quantity).toString()}</td>
+                        <td className="p-2 text-xs font-bold text-[var(--color-muted)] uppercase">{item.product_name}</td>
+                        <td className="p-2 text-xs font-mono text-[var(--color-muted)] text-right">S/ {Number(item.price_at_moment).toFixed(2)}</td>
+                        <td className="p-2 text-sm font-black font-mono text-[var(--color-ink)] text-right">S/ {Number(item.subtotal).toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               )}
             </div>
-            <div className="border-t-2 border-[#1E293B] p-4 bg-[#F8FAFC] flex justify-between items-center shrink-0">
-               <span className="text-[#64748B] text-xs font-black uppercase tracking-widest">Total Facturado</span>
-               <span className="text-[#1E293B] text-xl font-black font-mono">
+            <div className="border-t-2 border-[var(--color-ink)] p-4 bg-[var(--color-bg)] flex justify-between items-center shrink-0">
+               <span className="text-[var(--color-muted)] text-xs font-black uppercase tracking-widest">Total Facturado</span>
+               <span className="text-[var(--color-ink)] text-xl font-black font-mono">
                  S/ {detallesTicket.reduce((acc, item) => acc + Number(item.subtotal), 0).toFixed(2)}
                </span>
             </div>

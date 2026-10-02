@@ -16,21 +16,21 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
 
   // EXTRAEMOS LA PAGINACIÓN PARA USARLA ARRIBA Y ABAJO SIN REPETIR CÓDIGO
   const ControlesPaginacion = () => (
-    <div className="bg-[#FFFFFF] border-b-2 border-[#1E293B] p-3 sm:p-4 flex justify-between items-center gap-2 shrink-0 rounded-none">
+    <div className="bg-[var(--color-surface)] border-b-2 border-[var(--color-ink)] p-3 sm:p-4 flex justify-between items-center gap-2 shrink-0 rounded-none">
       <button
         disabled={paginaActual === 1}
         onClick={() => onPageChange(paginaActual - 1)}
-        className="flex items-center gap-2 bg-[#FFFFFF] border-2 border-[#1E293B] text-[#1E293B] px-4 py-2 text-xs font-black uppercase tracking-widest hover:bg-[#1E293B] hover:text-[#FFFFFF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-none"
+        className="flex items-center gap-2 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] text-[var(--color-ink)] px-4 py-2 text-xs font-black uppercase tracking-widest hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-none"
       >
         <ChevronLeft size={16} /> Anterior
       </button>
-      <div className="text-xs font-black text-[#1E293B] tracking-widest uppercase">
-        Página <span className="text-[#3B82F6]">{paginaActual}</span> de {totalPaginas || 1}
+      <div className="text-xs font-black text-[var(--color-ink)] tracking-widest uppercase">
+        Página <span className="text-[var(--color-info)]">{paginaActual}</span> de {totalPaginas || 1}
       </div>
       <button
         disabled={paginaActual >= totalPaginas}
         onClick={() => onPageChange(paginaActual + 1)}
-        className="flex items-center gap-2 bg-[#FFFFFF] border-2 border-[#1E293B] text-[#1E293B] px-4 py-2 text-xs font-black uppercase tracking-widest hover:bg-[#1E293B] hover:text-[#FFFFFF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-none"
+        className="flex items-center gap-2 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] text-[var(--color-ink)] px-4 py-2 text-xs font-black uppercase tracking-widest hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-none"
       >
         Siguiente <ChevronRight size={16} />
       </button>
@@ -39,14 +39,14 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
 
   return (
     // ELIMINADO: flex-1, overflow-hidden, h-full para permitir que crezca completo sin scroll interno
-    <div className="bg-[#FFFFFF] border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col animate-fade-in rounded-none mb-8">
+    <div className="bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col animate-fade-in rounded-none mb-8">
       
       {/* HEADER */}
-      <div className="bg-[#1E293B] text-[#FFFFFF] p-3 sm:p-4 flex flex-wrap justify-between items-center gap-2 shrink-0 rounded-none">
+      <div className="bg-[var(--color-ink)] text-[var(--color-surface)] p-3 sm:p-4 flex flex-wrap justify-between items-center gap-2 shrink-0 rounded-none">
         <h2 className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
           <ReceiptText size={18} /> Historial de Cajas Cerradas
         </h2>
-        <span className="text-[#64748B] text-[12px] font-bold uppercase tracking-widest">
+        <span className="text-[var(--color-muted)] text-[12px] font-bold uppercase tracking-widest">
           Mostrando {historialCajas.length} registros
         </span>
       </div>
@@ -55,22 +55,22 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
       <ControlesPaginacion />
       
       {/* TABLA SIN SCROLL INTERNO (Se eliminó overflow-auto custom-scrollbar) */}
-      <div className="w-full bg-[#FFFFFF] overflow-x-auto">
+      <div className="w-full bg-[var(--color-surface)] overflow-x-auto">
         <table className="w-full text-left border-collapse">
-          <thead className="bg-[#FFFFFF] text-[#1E293B] border-b-2 border-[#1E293B]">
+          <thead className="bg-[var(--color-surface)] text-[var(--color-ink)] border-b-2 border-[var(--color-ink)]">
             <tr>
-              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[#E2E8F0] bg-[#FFFFFF]">Apertura</th>
-              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[#E2E8F0] bg-[#FFFFFF]">Cierre</th>
-              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[#E2E8F0] text-center bg-[#FFFFFF]">Fondo Inicial</th>
-              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[#E2E8F0] text-center bg-[#FFFFFF]">Efectivo / Yape / Tarjeta</th>
-              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[#E2E8F0] text-center bg-[#FFFFFF]">Diferencia Total</th>
-              <th className="p-4 text-[12px] font-black tracking-widest uppercase text-center bg-[#FFFFFF]">Acciones</th>
+              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[var(--color-border)] bg-[var(--color-surface)]">Apertura</th>
+              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[var(--color-border)] bg-[var(--color-surface)]">Cierre</th>
+              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[var(--color-border)] text-center bg-[var(--color-surface)]">Fondo Inicial</th>
+              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[var(--color-border)] text-center bg-[var(--color-surface)]">Efectivo / Yape / Tarjeta</th>
+              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[var(--color-border)] text-center bg-[var(--color-surface)]">Diferencia Total</th>
+              <th className="p-4 text-[12px] font-black tracking-widest uppercase text-center bg-[var(--color-surface)]">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {historialCajas.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-3 lg:p-4 text-center text-[#64748B] text-xs font-bold uppercase tracking-widest border-b-2 border-[#E2E8F0]">
+                <td colSpan={6} className="p-3 lg:p-4 text-center text-[var(--color-muted)] text-xs font-bold uppercase tracking-widest border-b-2 border-[var(--color-border)]">
                   No se encontraron registros para estas fechas.
                 </td>
               </tr>
@@ -91,30 +91,30 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
                   <tr
                     key={caja.id}
                     onClick={() => setSelectedCaja(caja)}
-                    className="border-b-2 border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+                    className="border-b-2 border-[var(--color-border)] hover:bg-[var(--color-bg)] transition-colors cursor-pointer"
                     title="Click para ver el detalle de esta caja"
                   >
-                    <td className="p-4 text-xs font-bold text-[#64748B] border-r-2 border-[#E2E8F0]">
+                    <td className="p-4 text-xs font-bold text-[var(--color-muted)] border-r-2 border-[var(--color-border)]">
                       {new Date(caja.opened_at).toLocaleString('es-PE')}
                     </td>
-                    <td className="p-4 text-xs font-bold text-[#64748B] border-r-2 border-[#E2E8F0]">
+                    <td className="p-4 text-xs font-bold text-[var(--color-muted)] border-r-2 border-[var(--color-border)]">
                       {caja.closed_at ? new Date(caja.closed_at).toLocaleString('es-PE') : '---'}
                     </td>
-                    <td className="p-4 text-sm font-black text-[#1E293B] text-center border-r-2 border-[#E2E8F0]">
+                    <td className="p-4 text-sm font-black text-[var(--color-ink)] text-center border-r-2 border-[var(--color-border)]">
                       S/ {Number(caja.opening_balance).toFixed(2)}
                     </td>
-                    <td className="p-4 text-xs font-black text-[#10B981] text-center border-r-2 border-[#E2E8F0] space-y-0.5">
+                    <td className="p-4 text-xs font-black text-[var(--color-accent)] text-center border-r-2 border-[var(--color-border)] space-y-0.5">
                       <p>S/ {realEfectivo.toFixed(2)}</p>
-                      <p className="text-[#3B82F6]">S/ {realYape.toFixed(2)}</p>
-                      <p className="text-[#8B5CF6]">S/ {realTarjeta.toFixed(2)}</p>
+                      <p className="text-[var(--color-info)]">S/ {realYape.toFixed(2)}</p>
+                      <p className="text-[var(--color-purple)]">S/ {realTarjeta.toFixed(2)}</p>
                     </td>
-                    <td className={`p-4 text-sm font-black text-center border-r-2 border-[#E2E8F0] ${diferencia < 0 ? 'text-[#EF4444]' : (diferencia > 0 ? 'text-[#3B82F6]' : 'text-[#64748B]')}`}>
+                    <td className={`p-4 text-sm font-black text-center border-r-2 border-[var(--color-border)] ${diferencia < 0 ? 'text-[var(--color-danger)]' : (diferencia > 0 ? 'text-[var(--color-info)]' : 'text-[var(--color-muted)]')}`}>
                       {diferencia !== 0 ? (diferencia > 0 ? `+ S/ ${diferencia.toFixed(2)}` : `- S/ ${Math.abs(diferencia).toFixed(2)}`) : 'CUADRE EXACTO'}
                     </td>
                     <td className="p-4 text-center flex items-center justify-center gap-2">
                       <button 
                         onClick={() => setSelectedCaja(caja)}
-                        className="bg-[#FFFFFF] border-2 border-[#1E293B] p-2 text-[#1E293B] hover:bg-[#1E293B] hover:text-[#FFFFFF] transition-colors cursor-pointer shadow-[2px_2px_0_0_#1E293B] active:translate-y-[2px] active:shadow-none rounded-none"
+                        className="bg-[var(--color-surface)] border-2 border-[var(--color-ink)] p-2 text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors cursor-pointer shadow-[2px_2px_0_0_var(--color-ink)] active:translate-y-[2px] active:shadow-none rounded-none"
                         title="Ver Detalles de la Caja"
                       >
                         <Eye size={14} />
@@ -129,7 +129,7 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
       </div>
 
       {/* PAGINACIÓN INFERIOR (Reutilizamos la misma función de arriba, cambiando borde) */}
-      <div className="border-t-2 border-[#1E293B]">
+      <div className="border-t-2 border-[var(--color-ink)]">
         <ControlesPaginacion />
       </div>
 

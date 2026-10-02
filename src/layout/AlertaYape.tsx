@@ -82,14 +82,14 @@ export const AlertaYape: React.FC = () => {
       {notificaciones.map(n => (
         <div
           key={n.id}
-          className="bg-[#10B981] border-2 border-[#1E293B] shadow-[6px_6px_0_0_#1E293B] p-4 font-mono animate-fade-in"
+          className="bg-[var(--color-accent)] border-2 border-[var(--color-ink)] shadow-[6px_6px_0_0_var(--color-ink)] p-4 font-mono animate-fade-in"
         >
           <div className="flex items-start gap-3">
-            <div className="bg-white p-2 border-2 border-[#1E293B] shrink-0">
-              <Smartphone size={20} className="text-[#10B981]" />
+            <div className="bg-white p-2 border-2 border-[var(--color-ink)] shrink-0">
+              <Smartphone size={20} className="text-[var(--color-accent)]" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-black uppercase tracking-widest text-[#ECFDF5]">Yape recibido</p>
+              <p className="text-[11px] font-black uppercase tracking-widest text-[var(--color-accent-bg)]">Yape recibido</p>
               {n.monto != null ? (
                 <p className="text-2xl font-black text-white leading-tight">S/ {Number(n.monto).toFixed(2)}</p>
               ) : (
@@ -97,12 +97,12 @@ export const AlertaYape: React.FC = () => {
                 // texto tal cual para que igual se sepa que llegó un pago.
                 <p className="text-sm font-black text-white leading-tight break-words">{n.texto_raw || 'Monto no detectado'}</p>
               )}
-              {n.remitente && <p className="text-xs font-bold text-[#ECFDF5] truncate">De: {n.remitente}</p>}
+              {n.remitente && <p className="text-xs font-bold text-[var(--color-accent-bg)] truncate">De: {n.remitente}</p>}
             </div>
           </div>
           <button
             onClick={() => marcarVisto(n.id)}
-            className="mt-3 w-full flex items-center justify-center gap-2 bg-white text-[#1E293B] py-2 font-black text-[11px] uppercase tracking-widest border-2 border-[#1E293B] hover:bg-[#1E293B] hover:text-white transition-colors cursor-pointer"
+            className="mt-3 w-full flex items-center justify-center gap-2 bg-white text-[var(--color-ink)] py-2 font-black text-[11px] uppercase tracking-widest border-2 border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer"
           >
             <CheckCircle2 size={16} /> Visto
           </button>

@@ -13,34 +13,34 @@ const Configuraciones: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'empresa' | 'usuarios' | 'apariencia'>(puedeEmpresa ? 'empresa' : 'usuarios');
 
   return (
-    <div className="flex flex-col h-full bg-[#F8FAFC]">
+    <div className="flex flex-col h-full bg-[var(--color-bg)]">
       {/* HEADER */}
-      <div className="bg-white border-b border-[#E2E8F0] p-3 lg:p-4 shrink-0">
-        <h1 className="text-2xl font-black text-[#1E293B] tracking-tight flex items-center gap-3 uppercase">
-          <Settings className="text-[#10B981]" size={28} />
+      <div className="bg-white border-b border-[var(--color-border)] p-3 lg:p-4 shrink-0">
+        <h1 className="text-2xl font-black text-[var(--color-ink)] tracking-tight flex items-center gap-3 uppercase">
+          <Settings className="text-[var(--color-accent)]" size={28} />
           Parámetros del Sistema
         </h1>
-        <p className="text-[#64748B] text-sm mt-1 font-mono">
+        <p className="text-[var(--color-muted)] text-sm mt-1 font-mono">
           Gestiona los datos de tu empresa, los accesos y la apariencia visual.
         </p>
       </div>
 
       {/* TABS */}
-      <div className="px-3 lg:px-4 pt-3 border-b border-[#E2E8F0] bg-white shrink-0 overflow-x-auto custom-scrollbar">
+      <div className="px-3 lg:px-4 pt-3 border-b border-[var(--color-border)] bg-white shrink-0 overflow-x-auto custom-scrollbar">
         <div className="flex gap-6 min-w-max">
           {puedeEmpresa && (
           <button
             onClick={() => setActiveTab('empresa')}
             className={`pb-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-colors relative ${
               activeTab === 'empresa'
-                ? 'text-[#10B981]'
-                : 'text-[#64748B] hover:text-[#1E293B]'
+                ? 'text-[var(--color-accent)]'
+                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
             }`}
           >
             <Building2 size={18} />
             Datos de la Empresa
             {activeTab === 'empresa' && (
-              <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[#10B981]"></div>
+              <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[var(--color-accent)]"></div>
             )}
           </button>
           )}
@@ -50,14 +50,14 @@ const Configuraciones: React.FC = () => {
             onClick={() => setActiveTab('usuarios')}
             className={`pb-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-colors relative ${
               activeTab === 'usuarios'
-                ? 'text-[#10B981]'
-                : 'text-[#64748B] hover:text-[#1E293B]'
+                ? 'text-[var(--color-accent)]'
+                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
             }`}
           >
             <Users size={18} />
             Gestión de Usuarios
             {activeTab === 'usuarios' && (
-              <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[#10B981]"></div>
+              <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[var(--color-accent)]"></div>
             )}
           </button>
           )}
@@ -66,14 +66,14 @@ const Configuraciones: React.FC = () => {
             onClick={() => setActiveTab('apariencia')}
             className={`pb-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-colors relative ${
               activeTab === 'apariencia'
-                ? 'text-[#10B981]'
-                : 'text-[#64748B] hover:text-[#1E293B]'
+                ? 'text-[var(--color-accent)]'
+                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
             }`}
           >
             <Palette size={18} />
             Apariencia
             {activeTab === 'apariencia' && (
-              <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[#10B981]"></div>
+              <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[var(--color-accent)]"></div>
             )}
           </button>
         </div>

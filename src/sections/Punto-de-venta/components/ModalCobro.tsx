@@ -175,13 +175,13 @@ interface Props {
   // Panel de crédito/fiado: en celular va dentro de la ventana de pago, debajo;
   // desde tablet es una ventana aparte que sale al lado izquierdo de la de pago.
   const panelFiado = (
-        <div className="border-2 border-[#F59E0B] bg-[#FFFBEB] p-3 flex flex-col gap-3 shrink-0 min-w-0 rounded-none">
+        <div className="border-2 border-[var(--color-warning)] bg-[var(--color-warning-bg)] p-3 flex flex-col gap-3 shrink-0 min-w-0 rounded-none">
           
           {/* CABECERA DE FIADOS CON BOTÓN DE SWITCH TÉCNICO */}
-          <div className="flex items-center justify-between border-b-2 border-[#FCD34D] pb-2">
+          <div className="flex items-center justify-between border-b-2 border-[var(--color-warning-border)] pb-2">
             <div className="flex items-center gap-2">
-              <UserPlus size={18} className="text-[#F59E0B]" />
-              <span className="text-xs font-black text-[#D97706] uppercase tracking-widest">Crédito / Fiado</span>
+              <UserPlus size={18} className="text-[var(--color-warning)]" />
+              <span className="text-xs font-black text-[var(--color-warning-dark)] uppercase tracking-widest">Crédito / Fiado</span>
             </div>
 
             {!isCreatingNew ? (
@@ -193,7 +193,7 @@ interface Props {
                   setClienteTelefono('');
                   setSearchCliente('');
                 }}
-                className="flex items-center gap-1 bg-[#10B981] text-white px-3 py-1.5 text-[12px] font-black uppercase border-2 border-[#10B981] hover:bg-[#059669] hover:border-[#059669] transition-colors rounded-none shadow-[2px_2px_0_0_#065F46] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] cursor-pointer"
+                className="flex items-center gap-1 bg-[var(--color-accent)] text-white px-3 py-1.5 text-[12px] font-black uppercase border-2 border-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] hover:border-[var(--color-accent-dark)] transition-colors rounded-none shadow-[2px_2px_0_0_var(--color-accent-shadow)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] cursor-pointer"
               >
                 <Plus size={14}/> Nuevo Cliente
               </button>
@@ -205,7 +205,7 @@ interface Props {
                   setClienteDni('');
                   setClienteTelefono('');
                 }}
-                className="flex items-center gap-1 bg-[#EF4444] text-white px-3 py-1.5 text-[12px] font-black uppercase border-2 border-[#EF4444] hover:bg-[#DC2626] hover:border-[#DC2626] transition-colors rounded-none shadow-[2px_2px_0_0_#991B1B] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] cursor-pointer"
+                className="flex items-center gap-1 bg-[var(--color-danger)] text-white px-3 py-1.5 text-[12px] font-black uppercase border-2 border-[var(--color-danger)] hover:bg-[var(--color-danger-dark)] hover:border-[var(--color-danger-dark)] transition-colors rounded-none shadow-[2px_2px_0_0_#991B1B] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] cursor-pointer"
               >
                 <X size={14}/> Cancelar Nuevo
               </button>
@@ -216,9 +216,9 @@ interface Props {
           {!isCreatingNew ? (
             // MODO 1: BUSCADOR DESPLEGABLE DE CLIENTES EXISTENTES
             <div className="space-y-1 relative">
-              <label className="text-[12px] font-black text-[#92400E] uppercase">Buscar Cliente Existente *</label>
+              <label className="text-[12px] font-black text-[var(--color-warning-text)] uppercase">Buscar Cliente Existente *</label>
               <div 
-                className="flex items-center justify-between border-2 border-[#FCD34D] bg-white p-2 cursor-text transition-colors rounded-none focus-within:border-[#F59E0B]"
+                className="flex items-center justify-between border-2 border-[var(--color-warning-border)] bg-white p-2 cursor-text transition-colors rounded-none focus-within:border-[var(--color-warning)]"
                 {...clicConTeclado(() => setIsDropdownOpen(true))}
               >
                 <input
@@ -229,18 +229,18 @@ interface Props {
                     setSearchCliente(e.target.value.toUpperCase());
                     setIsDropdownOpen(true);
                   }}
-                  className="w-full text-xs font-black uppercase outline-none bg-transparent text-[#1E293B] placeholder-[#94A3B8]"
+                  className="w-full text-xs font-black uppercase outline-none bg-transparent text-[var(--color-ink)] placeholder-[var(--color-subtle)]"
                 />
-                <button type="button" onClick={(e) => { e.stopPropagation(); setIsDropdownOpen(!isDropdownOpen); }} className="text-[#D97706] hover:text-[#92400E] px-1 cursor-pointer">
+                <button type="button" onClick={(e) => { e.stopPropagation(); setIsDropdownOpen(!isDropdownOpen); }} className="text-[var(--color-warning-dark)] hover:text-[var(--color-warning-text)] px-1 cursor-pointer">
                   {isDropdownOpen ? <X size={16} /> : <ChevronDown size={16} />}
                 </button>
               </div>
 
               {/* LISTA DESPLEGABLE CONECTADA A LA BASE DE DATOS */}
               {isDropdownOpen && (
-                <div className="absolute z-50 top-[100%] left-0 w-full mt-1 bg-white border-2 border-[#1E293B] shadow-[4px_4px_0_0_#1E293B] max-h-48 overflow-y-auto custom-scrollbar rounded-none">
+                <div className="absolute z-50 top-[100%] left-0 w-full mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-48 overflow-y-auto custom-scrollbar rounded-none">
                   {clientesDb.filter(c => (c.nombre || c.name || '').toUpperCase().includes(searchCliente)).length === 0 ? (
-                    <div className="p-4 text-xs font-black uppercase text-[#64748B] text-center bg-[#F8FAFC]">
+                    <div className="p-4 text-xs font-black uppercase text-[var(--color-muted)] text-center bg-[var(--color-bg)]">
                       NO SE ENCONTRARON CLIENTES
                     </div>
                   ) : (
@@ -249,7 +249,7 @@ interface Props {
                       .map(c => (
                         <div
                           key={c.id}
-                          className="p-3 text-[13px] font-black uppercase text-[#1E293B] hover:bg-[#F59E0B] hover:text-white cursor-pointer border-b border-[#E2E8F0] last:border-0 transition-colors flex justify-between items-center rounded-none"
+                          className="p-3 text-[13px] font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-warning)] hover:text-white cursor-pointer border-b border-[var(--color-border)] last:border-0 transition-colors flex justify-between items-center rounded-none"
                           {...clicConTeclado(() => {
                             setClienteId(c.id?.toString() || ''); // <-- GUARDAMOS EL ID AL SELECCIONAR
                             setClienteNombre(c.nombre || c.name || '');
@@ -269,38 +269,38 @@ interface Props {
             </div>
           ) : (
             // MODO 2: CREACIÓN MANUAL DE CLIENTE (CUADROS PUROS)
-            <div className="space-y-3 bg-[#FEF3C7] p-3 border-2 border-[#FCD34D] rounded-none">
+            <div className="space-y-3 bg-[#FEF3C7] p-3 border-2 border-[var(--color-warning-border)] rounded-none">
               <div className="space-y-1">
-                <label className="text-[12px] font-black text-[#92400E] uppercase">Nombre del Nuevo Cliente *</label>
+                <label className="text-[12px] font-black text-[var(--color-warning-text)] uppercase">Nombre del Nuevo Cliente *</label>
                 <input 
                   type="text" 
                   placeholder="EJ: JUAN PEREZ..."
                   value={clienteNombre}
                   onChange={(e) => setClienteNombre(e.target.value.toUpperCase())}
-                  className="w-full bg-white border-2 border-[#FCD34D] p-2 text-xs font-black text-[#1E293B] uppercase outline-none focus:border-[#F59E0B] rounded-none"
+                  className="w-full bg-white border-2 border-[var(--color-warning-border)] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-warning)] rounded-none"
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-[12px] font-bold text-[#92400E] uppercase">DNI (Opcional)</label>
+                  <label className="text-[12px] font-bold text-[var(--color-warning-text)] uppercase">DNI (Opcional)</label>
                   <input 
                     type="text" 
                     placeholder="8 DÍGITOS"
                     maxLength={8}
                     value={clienteDni}
                     onChange={(e) => setClienteDni(e.target.value.replace(/\D/g, ''))}
-                    className="w-full bg-white border-2 border-[#FCD34D] p-2 text-xs font-bold text-[#1E293B] outline-none focus:border-[#F59E0B] rounded-none"
+                    className="w-full bg-white border-2 border-[var(--color-warning-border)] p-2 text-xs font-bold text-[var(--color-ink)] outline-none focus:border-[var(--color-warning)] rounded-none"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[12px] font-bold text-[#92400E] uppercase">Celular (Opcional)</label>
+                  <label className="text-[12px] font-bold text-[var(--color-warning-text)] uppercase">Celular (Opcional)</label>
                   <input 
                     type="text" 
                     placeholder="NÚMERO"
                     maxLength={9}
                     value={clienteTelefono}
                     onChange={(e) => setClienteTelefono(e.target.value.replace(/\D/g, ''))}
-                    className="w-full bg-white border-2 border-[#FCD34D] p-2 text-xs font-bold text-[#1E293B] outline-none focus:border-[#F59E0B] rounded-none"
+                    className="w-full bg-white border-2 border-[var(--color-warning-border)] p-2 text-xs font-bold text-[var(--color-ink)] outline-none focus:border-[var(--color-warning)] rounded-none"
                   />
                 </div>
               </div>
@@ -308,15 +308,15 @@ interface Props {
           )}
 
           {/* FECHA VENCIMIENTO (APLICA PARA AMBOS MODOS) */}
-          <div className="space-y-1 mt-1 pt-2 border-t-2 border-[#FCD34D]">
-            <label className="text-[12px] font-black text-[#92400E] uppercase flex items-center gap-1">
+          <div className="space-y-1 mt-1 pt-2 border-t-2 border-[var(--color-warning-border)]">
+            <label className="text-[12px] font-black text-[var(--color-warning-text)] uppercase flex items-center gap-1">
               <Calendar size={14}/> Fecha Límite de Pago *
             </label>
             <input 
               type="date" 
               value={fechaVencimiento}
               onChange={(e) => setFechaVencimiento(e.target.value)}
-              className="w-full bg-white border-2 border-[#FCD34D] p-2 text-xs font-black text-[#1E293B] uppercase outline-none focus:border-[#F59E0B] rounded-none cursor-pointer"
+              className="w-full bg-white border-2 border-[var(--color-warning-border)] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-warning)] rounded-none cursor-pointer"
             />
           </div>
 
@@ -324,8 +324,8 @@ interface Props {
   );
 
   return (
-    <div className="fixed inset-0 bg-[#1E293B]/90 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="relative bg-white w-full max-w-md border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
+    <div className="fixed inset-0 bg-[var(--color-ink)]/90 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4 font-mono">
+      <div className="relative bg-white w-full max-w-md border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
         {/* Ventana de fiado (tablet/PC): pegada al lado derecho de la ventana de pago, en
             posición absoluta (relativa a esta misma ventana) para que NUNCA la mueva ni la
             recentre al aparecer/desaparecer — antes las dos se centraban juntas como grupo,
@@ -339,13 +339,13 @@ interface Props {
             onTransitionEnd={(e) => { if (e.target === e.currentTarget && e.propertyName === 'width') setFiadoAbierto(faltante > 0); }}
             className={`absolute top-0 left-full ml-2 pb-2 transition-[width,opacity] duration-300 ease-out motion-reduce:transition-none ${faltante > 0 && (fiadoAbierto || window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'overflow-visible' : 'overflow-hidden'} ${faltante > 0 ? 'w-[calc(23rem+8px)] opacity-100' : 'w-0 opacity-0'}`}
           >
-            <div className={`bg-white w-[23rem] border-2 border-[#1E293B] shadow-[8px_8px_0_0_#1E293B] p-3 transition-transform duration-300 ease-out motion-reduce:transition-none ${faltante > 0 ? 'translate-x-0' : '-translate-x-16'}`}>
+            <div className={`bg-white w-[23rem] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] p-3 transition-transform duration-300 ease-out motion-reduce:transition-none ${faltante > 0 ? 'translate-x-0' : '-translate-x-16'}`}>
               {panelFiado}
             </div>
           </div>
         )}
 
-        <div className="bg-[#10B981] text-[#1E293B] px-4 py-2 flex items-center justify-between border-b-2 border-[#1E293B] shrink-0">
+        <div className="bg-[var(--color-accent)] text-[var(--color-ink)] px-4 py-2 flex items-center justify-between border-b-2 border-[var(--color-ink)] shrink-0">
           <h2 className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
             <Calculator size={20} /> Pago Mixto
           </h2>
@@ -354,27 +354,27 @@ interface Props {
           </button>
         </div>
 
-        <div className="p-3 bg-[#F8FAFC] flex flex-col gap-2 overflow-y-auto custom-scrollbar">
+        <div className="p-3 bg-[var(--color-bg)] flex flex-col gap-2 overflow-y-auto custom-scrollbar">
           {/* COLUMNA DE PAGO */}
           <div className="flex flex-col gap-2 w-full">
-          <div className="bg-[#1E293B] text-white p-3 [@media(max-height:700px)]:py-1.5 text-center border-2 border-[#1E293B] shadow-inner relative shrink-0">
-            <p className="text-[12px] font-bold text-[#94A3B8] uppercase tracking-[0.2em] mb-1">Total a Pagar</p>
-            <p className="text-2xl sm:text-4xl [@media(max-height:700px)]:text-2xl font-black text-[#10B981]">S/ {total.toFixed(2)}</p>
+          <div className="bg-[var(--color-ink)] text-white p-3 [@media(max-height:700px)]:py-1.5 text-center border-2 border-[var(--color-ink)] shadow-inner relative shrink-0">
+            <p className="text-[12px] font-bold text-[var(--color-subtle)] uppercase tracking-[0.2em] mb-1">Total a Pagar</p>
+            <p className="text-2xl sm:text-4xl [@media(max-height:700px)]:text-2xl font-black text-[var(--color-accent)]">S/ {total.toFixed(2)}</p>
           </div>
 
           <div className="flex gap-2 shrink-0">
-            <button onClick={() => pagoExacto('EFECTIVO')} className="flex-1 bg-white border-2 border-[#10B981] text-[#10B981] font-black text-[12px] uppercase py-2 [@media(max-height:700px)]:py-1 hover:bg-[#10B981] hover:text-white transition-colors cursor-pointer">Exacto Efectivo</button>
-            <button onClick={() => pagoExacto('YAPE')} className="flex-1 bg-white border-2 border-[#8B5CF6] text-[#8B5CF6] font-black text-[12px] uppercase py-2 [@media(max-height:700px)]:py-1 hover:bg-[#8B5CF6] hover:text-white transition-colors cursor-pointer">Exacto Yape</button>
-            <button onClick={() => pagoExacto('TARJETA')} className="flex-1 bg-white border-2 border-[#3B82F6] text-[#3B82F6] font-black text-[12px] uppercase py-2 [@media(max-height:700px)]:py-1 hover:bg-[#3B82F6] hover:text-white transition-colors cursor-pointer">Exacto Tarjeta</button>
+            <button onClick={() => pagoExacto('EFECTIVO')} className="flex-1 bg-white border-2 border-[var(--color-accent)] text-[var(--color-accent)] font-black text-[12px] uppercase py-2 [@media(max-height:700px)]:py-1 hover:bg-[var(--color-accent)] hover:text-white transition-colors cursor-pointer">Exacto Efectivo</button>
+            <button onClick={() => pagoExacto('YAPE')} className="flex-1 bg-white border-2 border-[var(--color-purple)] text-[var(--color-purple)] font-black text-[12px] uppercase py-2 [@media(max-height:700px)]:py-1 hover:bg-[var(--color-purple)] hover:text-white transition-colors cursor-pointer">Exacto Yape</button>
+            <button onClick={() => pagoExacto('TARJETA')} className="flex-1 bg-white border-2 border-[var(--color-info)] text-[var(--color-info)] font-black text-[12px] uppercase py-2 [@media(max-height:700px)]:py-1 hover:bg-[var(--color-info)] hover:text-white transition-colors cursor-pointer">Exacto Tarjeta</button>
           </div>
 
           <div className="flex flex-col gap-2 shrink-0">
-            <div className="flex items-center justify-between bg-white border-2 border-[#E2E8F0] p-2 [@media(max-height:700px)]:py-0.5 focus-within:border-[#10B981] transition-colors">
-              <div className="flex items-center gap-2 font-black text-[#1E293B] uppercase text-[12px]">
-                <Banknote size={16} className="text-[#10B981]"/> Efectivo
+            <div className="flex items-center justify-between bg-white border-2 border-[var(--color-border)] p-2 [@media(max-height:700px)]:py-0.5 focus-within:border-[var(--color-accent)] transition-colors">
+              <div className="flex items-center gap-2 font-black text-[var(--color-ink)] uppercase text-[12px]">
+                <Banknote size={16} className="text-[var(--color-accent)]"/> Efectivo
               </div>
               <div className="relative w-28">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 font-black text-[#64748B] text-sm">S/</span>
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 font-black text-[var(--color-muted)] text-sm">S/</span>
                 <input 
                   id="pago-efectivo"
                   autoFocus 
@@ -388,17 +388,17 @@ interface Props {
                     if (e.key === 'Enter' && puedeConfirmar) handleCobrar();
                     if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('pago-yape')?.focus(); }
                   }} 
-                  className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[#1E293B] focus:bg-[#ECFDF5]" 
+                  className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[var(--color-ink)] focus:bg-[var(--color-accent-bg)]" 
                   placeholder="0.00" 
                 />
               </div>
             </div>
-            <div className="flex items-center justify-between bg-white border-2 border-[#E2E8F0] p-2 [@media(max-height:700px)]:py-0.5 focus-within:border-[#8B5CF6] transition-colors">
-              <div className="flex items-center gap-2 font-black text-[#1E293B] uppercase text-[12px]">
-                <Smartphone size={16} className="text-[#8B5CF6]"/> Yape
+            <div className="flex items-center justify-between bg-white border-2 border-[var(--color-border)] p-2 [@media(max-height:700px)]:py-0.5 focus-within:border-[var(--color-purple)] transition-colors">
+              <div className="flex items-center gap-2 font-black text-[var(--color-ink)] uppercase text-[12px]">
+                <Smartphone size={16} className="text-[var(--color-purple)]"/> Yape
               </div>
               <div className="relative w-28">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 font-black text-[#64748B] text-sm">S/</span>
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 font-black text-[var(--color-muted)] text-sm">S/</span>
                 <input 
                   id="pago-yape"
                   type="text" 
@@ -412,17 +412,17 @@ interface Props {
                     if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('pago-efectivo')?.focus(); }
                     if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('pago-tarjeta')?.focus(); }
                   }} 
-                  className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[#1E293B] focus:bg-[#F3E8FF]" 
+                  className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[var(--color-ink)] focus:bg-[#F3E8FF]" 
                   placeholder="0.00" 
                 />
               </div>
             </div>
-            <div className="flex items-center justify-between bg-white border-2 border-[#E2E8F0] p-2 [@media(max-height:700px)]:py-0.5 focus-within:border-[#3B82F6] transition-colors">
-              <div className="flex items-center gap-2 font-black text-[#1E293B] uppercase text-[12px]">
-                <CreditCard size={16} className="text-[#3B82F6]"/> Tarjeta
+            <div className="flex items-center justify-between bg-white border-2 border-[var(--color-border)] p-2 [@media(max-height:700px)]:py-0.5 focus-within:border-[var(--color-info)] transition-colors">
+              <div className="flex items-center gap-2 font-black text-[var(--color-ink)] uppercase text-[12px]">
+                <CreditCard size={16} className="text-[var(--color-info)]"/> Tarjeta
               </div>
               <div className="relative w-28">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 font-black text-[#64748B] text-sm">S/</span>
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 font-black text-[var(--color-muted)] text-sm">S/</span>
                 <input 
                   id="pago-tarjeta"
                   type="text" 
@@ -435,7 +435,7 @@ interface Props {
                     if (e.key === 'Enter' && puedeConfirmar) handleCobrar();
                     if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('pago-yape')?.focus(); }
                   }} 
-                  className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[#1E293B] focus:bg-[#DBEAFE]" 
+                  className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[var(--color-ink)] focus:bg-[var(--color-info-bg-2)]" 
                   placeholder="0.00" 
                 />
               </div>
@@ -449,54 +449,54 @@ interface Props {
         </div>
 
         {/* RESUMEN FIJO: siempre visible (en la TV la zona de arriba se desplaza) */}
-        <div className="px-3 py-2 bg-[#F8FAFC] border-t-2 border-[#E2E8F0] flex flex-col gap-2 shrink-0">
-        <div className="bg-white border-2 border-[#E2E8F0] px-3 py-2 flex flex-col gap-1 [@media(max-height:700px)]:flex-row [@media(max-height:700px)]:items-center [@media(max-height:700px)]:justify-between [@media(max-height:700px)]:gap-4 shrink-0">
-          <div className="flex justify-between items-center gap-2 text-[12px] font-black uppercase text-[#64748B]">
+        <div className="px-3 py-2 bg-[var(--color-bg)] border-t-2 border-[var(--color-border)] flex flex-col gap-2 shrink-0">
+        <div className="bg-white border-2 border-[var(--color-border)] px-3 py-2 flex flex-col gap-1 [@media(max-height:700px)]:flex-row [@media(max-height:700px)]:items-center [@media(max-height:700px)]:justify-between [@media(max-height:700px)]:gap-4 shrink-0">
+          <div className="flex justify-between items-center gap-2 text-[12px] font-black uppercase text-[var(--color-muted)]">
             <span>Ingresado:</span>
             <span>S/ {totalIngresado.toFixed(2)}</span>
           </div>
           {faltante > 0 ? (
-            <div className="flex justify-between items-center border-t-2 border-dashed border-[#E2E8F0] pt-1 [@media(max-height:700px)]:border-t-0 [@media(max-height:700px)]:pt-0 [@media(max-height:700px)]:gap-3">
-              <span className="text-[12px] font-black uppercase text-[#F59E0B]">Falta cobrar:</span>
-              <span className="text-lg font-black text-[#F59E0B]">S/ {faltante.toFixed(2)}</span>
+            <div className="flex justify-between items-center border-t-2 border-dashed border-[var(--color-border)] pt-1 [@media(max-height:700px)]:border-t-0 [@media(max-height:700px)]:pt-0 [@media(max-height:700px)]:gap-3">
+              <span className="text-[12px] font-black uppercase text-[var(--color-warning)]">Falta cobrar:</span>
+              <span className="text-lg font-black text-[var(--color-warning)]">S/ {faltante.toFixed(2)}</span>
             </div>
           ) : (
-            <div className="flex justify-between items-center border-t-2 border-dashed border-[#E2E8F0] pt-1 [@media(max-height:700px)]:border-t-0 [@media(max-height:700px)]:pt-0 [@media(max-height:700px)]:gap-3">
-              <span className="text-[12px] font-black uppercase text-[#3B82F6]">Vuelto:</span>
-              <span className="text-xl font-black text-[#3B82F6]">S/ {vuelto.toFixed(2)}</span>
+            <div className="flex justify-between items-center border-t-2 border-dashed border-[var(--color-border)] pt-1 [@media(max-height:700px)]:border-t-0 [@media(max-height:700px)]:pt-0 [@media(max-height:700px)]:gap-3">
+              <span className="text-[12px] font-black uppercase text-[var(--color-info)]">Vuelto:</span>
+              <span className="text-xl font-black text-[var(--color-info)]">S/ {vuelto.toFixed(2)}</span>
             </div>
           )}
         </div>
 
         {digitalExcedeTotal && (
-          <div role="alert" className="border-2 border-[#EF4444] bg-[#FEF2F2] text-[#B91C1C] p-2 text-[12px] font-black uppercase shrink-0">
+          <div role="alert" className="border-2 border-[var(--color-danger)] bg-[var(--color-danger-bg)] text-[#B91C1C] p-2 text-[12px] font-black uppercase shrink-0">
             Yape y tarjeta no pueden superar el total; el vuelto solo sale del efectivo.
           </div>
         )}
         </div>
 
-        <div className="flex items-center justify-between px-4 py-2 [@media(max-height:700px)]:py-1 bg-[#FFFFFF] border-t-2 border-[#E2E8F0] shrink-0">
-          <span className="text-[#1E293B] font-black text-[12px] uppercase tracking-widest">
+        <div className="flex items-center justify-between px-4 py-2 [@media(max-height:700px)]:py-1 bg-[var(--color-surface)] border-t-2 border-[var(--color-border)] shrink-0">
+          <span className="text-[var(--color-ink)] font-black text-[12px] uppercase tracking-widest">
             Imprimir Boleta Física
           </span>
           <button
             type="button"
             onClick={() => setImprimirBoleta(!imprimirBoleta)}
-            className={`w-12 h-6 flex items-center border-2 border-[#1E293B] rounded-none p-1 transition-colors cursor-pointer ${
-              imprimirBoleta ? 'bg-[#1E293B]' : 'bg-[#FFFFFF]'
+            className={`w-12 h-6 flex items-center border-2 border-[var(--color-ink)] rounded-none p-1 transition-colors cursor-pointer ${
+              imprimirBoleta ? 'bg-[var(--color-ink)]' : 'bg-[var(--color-surface)]'
             }`}
           >
-            <div className={`w-3 h-3 rounded-none transition-transform duration-200 ${imprimirBoleta ? 'bg-[#FFFFFF] translate-x-6' : 'bg-[#1E293B] translate-x-0'}`} />
+            <div className={`w-3 h-3 rounded-none transition-transform duration-200 ${imprimirBoleta ? 'bg-[var(--color-surface)] translate-x-6' : 'bg-[var(--color-ink)] translate-x-0'}`} />
           </button>
         </div>
 
-        <div className="px-4 py-3 [@media(max-height:700px)]:py-2 bg-white border-t-2 border-[#1E293B] shrink-0">
+        <div className="px-4 py-3 [@media(max-height:700px)]:py-2 bg-white border-t-2 border-[var(--color-ink)] shrink-0">
           <button 
             onClick={handleCobrar}
             disabled={!puedeConfirmar || isProcessing}
-            className={`w-full py-3 [@media(max-height:700px)]:py-2 border-2 border-[#1E293B] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all shadow-[4px_4px_0_0_#1E293B] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] ${
+            className={`w-full py-3 [@media(max-height:700px)]:py-2 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all shadow-[4px_4px_0_0_var(--color-ink)] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] ${
               (!puedeConfirmar || isProcessing) ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-70' :
-              faltante > 0 ? 'bg-[#F59E0B] text-[#1E293B] cursor-pointer' : 'bg-[#1E293B] text-white hover:bg-[#10B981] hover:text-[#1E293B] cursor-pointer'
+              faltante > 0 ? 'bg-[var(--color-warning)] text-[var(--color-ink)] cursor-pointer' : 'bg-[var(--color-ink)] text-white hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] cursor-pointer'
             }`}
           >
             {/* ⚡ Respuesta inmediata: Solo cambia el ícono mientras procesa */}

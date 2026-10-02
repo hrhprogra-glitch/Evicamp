@@ -44,36 +44,36 @@ export const FiltroFechas: React.FC<Props> = ({ onFilter }) => {
   };
 
   return (
-    <div className="bg-[#FFFFFF] border-2 border-[#1E293B] shadow-[4px_4px_0_0_#1E293B] p-4 flex flex-col items-stretch md:flex-row md:flex-wrap md:items-end gap-4 mb-6 rounded-none">
+    <div className="bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-4 flex flex-col items-stretch md:flex-row md:flex-wrap md:items-end gap-4 mb-6 rounded-none">
       <div className="flex flex-col gap-1">
-        <label className="text-[12px] font-black text-[#64748B] uppercase tracking-widest">Desde</label>
+        <label className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">Desde</label>
         <input 
           type="date" 
           value={desde}
           onChange={(e) => setDesde(e.target.value)}
-          className="bg-[#F8FAFC] text-[#1E293B] border-2 border-[#E2E8F0] focus:border-[#1E293B] rounded-none px-3 py-2 text-xs font-bold outline-none transition-colors"
+          className="bg-[var(--color-bg)] text-[var(--color-ink)] border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] rounded-none px-3 py-2 text-xs font-bold outline-none transition-colors"
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-[12px] font-black text-[#64748B] uppercase tracking-widest">Hasta</label>
+        <label className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">Hasta</label>
         <input 
           type="date" 
           value={hasta}
           onChange={(e) => setHasta(e.target.value)}
-          className="bg-[#F8FAFC] text-[#1E293B] border-2 border-[#E2E8F0] focus:border-[#1E293B] rounded-none px-3 py-2 text-xs font-bold outline-none transition-colors"
+          className="bg-[var(--color-bg)] text-[var(--color-ink)] border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] rounded-none px-3 py-2 text-xs font-bold outline-none transition-colors"
         />
       </div>
       
       <div className="flex gap-2">
         <button 
           onClick={manejarBusquedaManual}
-          className="bg-[#1E293B] text-[#FFFFFF] px-4 py-2 text-xs font-black uppercase tracking-widest border-2 border-[#1E293B] hover:bg-[#FFFFFF] hover:text-[#1E293B] transition-colors rounded-none cursor-pointer"
+          className="bg-[var(--color-ink)] text-[var(--color-surface)] px-4 py-2 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] hover:bg-[var(--color-surface)] hover:text-[var(--color-ink)] transition-colors rounded-none cursor-pointer"
         >
           Buscar
         </button>
         <button 
           onClick={limpiarFiltros}
-          className="bg-[#FFFFFF] text-[#64748B] px-4 py-2 text-xs font-black uppercase tracking-widest border-2 border-[#64748B] hover:bg-[#64748B] hover:text-[#FFFFFF] transition-colors rounded-none cursor-pointer"
+          className="bg-[var(--color-surface)] text-[var(--color-muted)] px-4 py-2 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-muted)] hover:bg-[var(--color-muted)] hover:text-[var(--color-surface)] transition-colors rounded-none cursor-pointer"
         >
           Limpiar
         </button>
@@ -82,19 +82,19 @@ export const FiltroFechas: React.FC<Props> = ({ onFilter }) => {
       <div className="flex flex-wrap gap-2 md:ml-auto">
         <button 
           onClick={() => aplicarFiltroRapido('HOY')}
-          className="bg-[#FFFFFF] text-[#1E293B] px-4 py-2 border-2 border-[#E2E8F0] hover:border-[#1E293B] text-[12px] font-black uppercase tracking-widest transition-colors rounded-none cursor-pointer"
+          className="bg-[var(--color-surface)] text-[var(--color-ink)] px-4 py-2 border-2 border-[var(--color-border)] hover:border-[var(--color-ink)] text-[12px] font-black uppercase tracking-widest transition-colors rounded-none cursor-pointer"
         >
           Hoy
         </button>
         <button 
           onClick={() => aplicarFiltroRapido('SEMANA')}
-          className="bg-[#FFFFFF] text-[#1E293B] px-4 py-2 border-2 border-[#E2E8F0] hover:border-[#1E293B] text-[12px] font-black uppercase tracking-widest transition-colors rounded-none cursor-pointer"
+          className="bg-[var(--color-surface)] text-[var(--color-ink)] px-4 py-2 border-2 border-[var(--color-border)] hover:border-[var(--color-ink)] text-[12px] font-black uppercase tracking-widest transition-colors rounded-none cursor-pointer"
         >
           Semana
         </button>
         <button 
           onClick={() => aplicarFiltroRapido('MES')}
-          className="bg-[#FFFFFF] text-[#1E293B] px-4 py-2 border-2 border-[#E2E8F0] hover:border-[#1E293B] text-[12px] font-black uppercase tracking-widest transition-colors rounded-none cursor-pointer"
+          className="bg-[var(--color-surface)] text-[var(--color-ink)] px-4 py-2 border-2 border-[var(--color-border)] hover:border-[var(--color-ink)] text-[12px] font-black uppercase tracking-widest transition-colors rounded-none cursor-pointer"
         >
           Mes
         </button>

@@ -29,8 +29,8 @@ export const FiltrosMermas: React.FC<Props> = ({
       <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-4">
         
         {/* BUSCADOR */}
-        <div className="md:col-span-12 lg:col-span-3 relative flex border-2 border-[#E2E8F0] bg-white focus-within:border-[#1E293B] transition-colors rounded-none">
-          <div className="w-12 flex items-center justify-center bg-[#F8FAFC] border-r-2 border-[#E2E8F0] shrink-0 text-[#64748B]">
+        <div className="md:col-span-12 lg:col-span-3 relative flex border-2 border-[var(--color-border)] bg-white focus-within:border-[var(--color-ink)] transition-colors rounded-none">
+          <div className="w-12 flex items-center justify-center bg-[var(--color-bg)] border-r-2 border-[var(--color-border)] shrink-0 text-[var(--color-muted)]">
             <Search size={18} />
           </div>
           <input 
@@ -38,19 +38,19 @@ export const FiltrosMermas: React.FC<Props> = ({
             placeholder="BUSCAR PRODUCTO..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full p-3 text-xs font-black text-[#1E293B] uppercase outline-none bg-transparent placeholder:text-[#94A3B8]"
+            className="w-full p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none bg-transparent placeholder:text-[var(--color-subtle)]"
           />
         </div>
 
         {/* SELECTOR DE MOTIVO */}
-        <div className="md:col-span-4 lg:col-span-3 relative flex border-2 border-[#E2E8F0] bg-white focus-within:border-[#1E293B] transition-colors rounded-none">
-          <div className="w-10 flex items-center justify-center bg-[#F8FAFC] border-r-2 border-[#E2E8F0] shrink-0 text-[#64748B]">
+        <div className="md:col-span-4 lg:col-span-3 relative flex border-2 border-[var(--color-border)] bg-white focus-within:border-[var(--color-ink)] transition-colors rounded-none">
+          <div className="w-10 flex items-center justify-center bg-[var(--color-bg)] border-r-2 border-[var(--color-border)] shrink-0 text-[var(--color-muted)]">
             <Filter size={16} />
           </div>
           <select 
             value={filtroMotivo}
             onChange={(e) => setFiltroMotivo(e.target.value)}
-            className="w-full p-3 text-xs font-black text-[#1E293B] uppercase outline-none bg-transparent cursor-pointer appearance-none"
+            className="w-full p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none bg-transparent cursor-pointer appearance-none"
           >
             <option value="">TODOS LOS MOTIVOS</option>
             {motivosUnicos.map(m => (
@@ -60,14 +60,14 @@ export const FiltrosMermas: React.FC<Props> = ({
         </div>
 
         {/* SELECTOR DE ORDEN */}
-        <div className="md:col-span-4 lg:col-span-3 relative flex border-2 border-[#E2E8F0] bg-white focus-within:border-[#1E293B] transition-colors rounded-none">
-          <div className="w-10 flex items-center justify-center bg-[#F8FAFC] border-r-2 border-[#E2E8F0] shrink-0 text-[#64748B]">
+        <div className="md:col-span-4 lg:col-span-3 relative flex border-2 border-[var(--color-border)] bg-white focus-within:border-[var(--color-ink)] transition-colors rounded-none">
+          <div className="w-10 flex items-center justify-center bg-[var(--color-bg)] border-r-2 border-[var(--color-border)] shrink-0 text-[var(--color-muted)]">
             <ArrowUpDown size={16} />
           </div>
           <select 
             value={filtroOrden}
             onChange={(e) => setFiltroOrden(e.target.value)}
-            className="w-full p-3 text-xs font-black text-[#1E293B] uppercase outline-none bg-transparent cursor-pointer appearance-none"
+            className="w-full p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none bg-transparent cursor-pointer appearance-none"
           >
             <option value="FECHA_DESC">MÁS RECIENTES</option>
             <option value="FECHA_ASC">MÁS ANTIGUOS</option>
@@ -77,15 +77,15 @@ export const FiltrosMermas: React.FC<Props> = ({
         </div>
 
         {/* SELECTOR DE FECHA (NUEVO) */}
-        <div className="md:col-span-2 lg:col-span-2 relative flex border-2 border-[#E2E8F0] bg-white focus-within:border-[#1E293B] transition-colors rounded-none">
-          <div className="w-10 flex items-center justify-center bg-[#F8FAFC] border-r-2 border-[#E2E8F0] shrink-0 text-[#64748B]">
+        <div className="md:col-span-2 lg:col-span-2 relative flex border-2 border-[var(--color-border)] bg-white focus-within:border-[var(--color-ink)] transition-colors rounded-none">
+          <div className="w-10 flex items-center justify-center bg-[var(--color-bg)] border-r-2 border-[var(--color-border)] shrink-0 text-[var(--color-muted)]">
             <Calendar size={16} />
           </div>
           <input 
             type="date"
             value={filtroFecha}
             onChange={(e) => setFiltroFecha(e.target.value)}
-            className="w-full p-3 text-xs font-black text-[#1E293B] uppercase outline-none bg-transparent cursor-pointer"
+            className="w-full p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none bg-transparent cursor-pointer"
           />
         </div>
 
@@ -94,7 +94,7 @@ export const FiltrosMermas: React.FC<Props> = ({
           {hasActiveFilters && (
             <button 
               onClick={onClearFilters}
-              className="h-full w-full min-h-[46px] bg-white border-2 border-[#EF4444] text-[#EF4444] flex items-center justify-center hover:bg-[#EF4444] hover:text-white transition-colors cursor-pointer rounded-none font-bold text-[12px] xl:text-xs uppercase"
+              className="h-full w-full min-h-[46px] bg-white border-2 border-[var(--color-danger)] text-[var(--color-danger)] flex items-center justify-center hover:bg-[var(--color-danger)] hover:text-white transition-colors cursor-pointer rounded-none font-bold text-[12px] xl:text-xs uppercase"
               title="Limpiar Filtros"
             >
               <X size={16} className="mr-1" /> Limpiar
@@ -103,8 +103,8 @@ export const FiltrosMermas: React.FC<Props> = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-[12px] font-bold text-[#64748B] uppercase tracking-widest border-l-2 border-[#1E293B] pl-2">
-        <span>Resultados: <strong className="text-[#1E293B]">{matchCount}</strong></span>
+      <div className="flex items-center gap-2 text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-widest border-l-2 border-[var(--color-ink)] pl-2">
+        <span>Resultados: <strong className="text-[var(--color-ink)]">{matchCount}</strong></span>
       </div>
     </div>
   );
