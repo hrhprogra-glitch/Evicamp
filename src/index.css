@@ -314,6 +314,27 @@ html[data-theme="atardecer"] {
   --color-accent-bg-2: #FED7AA;
 }
 
+html[data-theme="rosa"] {
+  --color-ink: #4A1942;
+  --color-ink-rgb: 74, 25, 66;
+  --color-ink-dark: #350E30;
+  --color-border: #F5DCE8;
+  --color-line-light: #EDC6DC;
+  --color-muted: #946080;
+  --color-subtle: #C593AC;
+  --color-bg: #FDF5F9;
+  --color-bg-2: #FBEAF2;
+  --color-surface: #FFFFFF;
+  --color-accent: #EC4899;
+  --color-accent-rgb: 236, 72, 153;
+  --color-accent-dark: #DB2777;
+  --color-accent-dark-2: #9D174D;
+  --color-accent-shadow: #831843;
+  --color-accent-shadow-rgb: 131, 24, 67;
+  --color-accent-bg: #FCE7F3;
+  --color-accent-bg-2: #FBCFE8;
+}
+
 html[data-theme="bosque"] {
   --color-ink: #1A2E1F;
   --color-ink-rgb: 26, 46, 31;

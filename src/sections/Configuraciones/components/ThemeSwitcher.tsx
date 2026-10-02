@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Palette, CheckCircle2, Monitor } from 'lucide-react';
 import { leerTamanoInterfaz, guardarTamanoInterfaz, type TamanoInterfaz } from '../../../utils/tamanoInterfaz';
 
-type Tema = 'classic' | 'monochrome' | 'oceano' | 'atardecer' | 'bosque';
+type Tema = 'classic' | 'monochrome' | 'oceano' | 'atardecer' | 'bosque' | 'rosa';
 
 // Cada tema (salvo Clásico y Monocromático, que son casos especiales) solo necesita
 // decir qué 4 colores mostrar en su muestra y qué atributo data-theme aplicar.
@@ -12,6 +12,7 @@ const TEMAS: { id: Tema; nombre: string; descripcion: string; swatches: string[]
   { id: 'oceano', nombre: 'Océano', descripcion: 'Azules fríos y relajados, ideal para jornadas largas.', swatches: ['#0F2942', '#0EA5E9', '#F59E0B', '#EF4444'] },
   { id: 'atardecer', nombre: 'Atardecer', descripcion: 'Naranjas y tonos cálidos, cálido y energético.', swatches: ['#3B2317', '#F97316', '#F59E0B', '#EF4444'] },
   { id: 'bosque', nombre: 'Bosque', descripcion: 'Verdes profundos, natural y descansado para la vista.', swatches: ['#1A2E1F', '#16A34A', '#F59E0B', '#EF4444'] },
+  { id: 'rosa', nombre: 'Rosa', descripcion: 'Tonos rosa suaves, delicado y elegante.', swatches: ['#4A1942', '#EC4899', '#F59E0B', '#EF4444'] },
 ];
 
 export const ThemeSwitcher: React.FC = () => {
