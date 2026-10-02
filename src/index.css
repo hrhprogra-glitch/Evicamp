@@ -210,10 +210,20 @@ html, body {
   border-color: var(--color-brand-accent);
 }
 
-/* TEMA MONOCROMÁTICO (blanco, negro y grises)
+/* TEMA MONOCROMÁTICO (blanco, negro y grises, con fondo oscuro)
  Se aplica con un filtro sobre toda la página: así cubre cada color de la app, también
  las ventanas flotantes, sin tener que listar clase por clase. Va en <html> para no
- alterar las posiciones fijas (fixed) de los modales. */
+ alterar las posiciones fijas (fixed) de los modales.
+ El invert(1) es lo que convierte los fondos blancos en negro/gris oscuro (y el texto
+ oscuro en claro) sin tener que tocar cada componente; grayscale(1) quita el color.
+ contrast(0.85) y brightness(0.9) suavizan los extremos (negro puro / blanco puro)
+ para que no se sienta tan intenso a la vista. Las fotos (img/video) se contra-invierten
+ más abajo para que no se vean como negativos. */
 html.theme-monochrome {
-  filter: grayscale(1) contrast(1.15);
+  filter: grayscale(1) invert(1) brightness(0.82) contrast(0.72);
+}
+
+html.theme-monochrome img,
+html.theme-monochrome video {
+  filter: invert(1);
 }
