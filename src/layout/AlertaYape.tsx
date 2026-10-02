@@ -9,7 +9,7 @@ import { supabase } from '../db/supabase';
 
 interface NotificacionYape {
   id: number;
-  monto: number;
+  monto: number | null;
   texto_raw: string | null;
   remitente: string | null;
   created_at: string;
@@ -90,7 +90,13 @@ export const AlertaYape: React.FC = () => {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-black uppercase tracking-widest text-[#ECFDF5]">Yape recibido</p>
-              <p className="text-2xl font-black text-white leading-tight">S/ {Number(n.monto).toFixed(2)}</p>
+              {n.monto != null ? (
+                <p className="text-2xl font-black text-white leading-tight">S/ {Number(n.monto).toFixed(2)}</p>
+              ) : (
+                // No se pudo detectar el monto del texto de la notificación: mostramos el
+                // texto tal cual para que igual se sepa que llegó un pago.
+                <p className="text-sm font-black text-white leading-tight break-words">{n.texto_raw || 'Monto no detectado'}</p>
+              )}
               {n.remitente && <p className="text-xs font-bold text-[#ECFDF5] truncate">De: {n.remitente}</p>}
             </div>
           </div>
