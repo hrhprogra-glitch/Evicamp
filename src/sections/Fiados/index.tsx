@@ -246,11 +246,23 @@ if (fiaData) {
   };
 
   const handleDeleteCliente = async (id: string) => {
+    // 🛡️ Blindaje en el propio app: no confiamos solo en que la base de datos rechace el
+    // borrado (puede no tener la restricción de integridad activa). Si el cliente tiene
+    // saldo pendiente en cualquier fiado, bloqueamos antes de siquiera pedir confirmación.
+    const cliente = clientes.find(c => c.id === id);
+    const deudaActiva = fiados
+      .filter(f => (f.clienteId ? f.clienteId === id : f.clienteNombre === cliente?.nombre) && f.saldoPendiente > 0)
+      .reduce((acc, f) => acc + f.saldoPendiente, 0);
+
+    if (deudaActiva > 0) {
+      return alert(`⚠️ No se puede eliminar: este cliente tiene una deuda activa de S/ ${deudaActiva.toFixed(2)}. Primero debe saldarla o anular el fiado correspondiente.`);
+    }
+
     if (window.confirm('⚠️ ¿Estás seguro de ELIMINAR a este cliente del directorio?')) {
       // Borrar en Supabase
       const { error } = await supabase.from('customers').delete().eq('id', id);
-      
-      if (error) return alert('No se puede eliminar porque tiene deudas activas registradas.');
+
+      if (error) return alert('No se pudo eliminar al cliente: ' + error.message);
       setClientes(clientes.filter(c => c.id !== id));
     }
   };
