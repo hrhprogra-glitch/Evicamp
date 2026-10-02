@@ -93,7 +93,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
   };
 
   return (
-    <div className="bg-[var(--color-surface)] border border-[var(--color-ink)] rounded-none shadow-[4px_4px_0px_0px_rgba(30,41,59,0.05)] flex flex-col font-sans mt-4">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-ink)] rounded-none shadow-[4px_4px_0px_0px_rgba(var(--color-ink-rgb),0.05)] flex flex-col font-sans mt-4">
 
       {/* HEADER Y FILTROS */}
       <div className="p-4 bg-[var(--color-surface)] border-b border-[var(--color-ink)] flex flex-wrap gap-4 items-center justify-between shrink-0">

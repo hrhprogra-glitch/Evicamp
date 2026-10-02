@@ -28,7 +28,7 @@ export const ModalPrecioConsumo: React.FC<Props> = ({ isOpen, producto, onClose,
   return (
     <div className="fixed inset-0 bg-[var(--color-ink)]/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 transition-opacity">
       {/* Geometría estricta: rounded-none, border oscuro, fondo puro */}
-      <div className="max-h-[calc(var(--alto-pantalla)*0.94)] overflow-y-auto bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] rounded-none w-full max-w-sm p-6">
+      <div className="max-h-[calc(var(--alto-pantalla)*0.94)] overflow-y-auto bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0px_0px_rgba(var(--color-ink-rgb),1)] rounded-none w-full max-w-sm p-6">
         
         <div className="border-b border-[var(--color-border)] pb-3 mb-5">
           <span className="text-[var(--color-muted)] text-[12px] font-mono tracking-widest uppercase block mb-1">

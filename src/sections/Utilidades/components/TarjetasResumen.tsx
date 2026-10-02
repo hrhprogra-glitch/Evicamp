@@ -21,7 +21,7 @@ export const TarjetasResumen: React.FC<Props> = ({ ingresos, costos, mermas, gas
         </div>
       )}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-        <div className="bg-white border border-[var(--color-accent-shadow)] p-3 sm:p-5 flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center min-w-0 rounded-none shadow-[2px_2px_0px_0px_rgba(6,95,70,0.1)]">
+        <div className="bg-white border border-[var(--color-accent-shadow)] p-3 sm:p-5 flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center min-w-0 rounded-none shadow-[2px_2px_0px_0px_rgba(var(--color-accent-shadow-rgb),0.1)]">
           <div className="w-12 h-12 bg-[var(--color-accent-bg)] border border-[var(--color-accent-dark)] flex items-center justify-center text-[var(--color-accent-dark)] rounded-none shrink-0">
             <ArrowUpFromLine size={24} strokeWidth={2} />
           </div>
@@ -61,7 +61,7 @@ export const TarjetasResumen: React.FC<Props> = ({ ingresos, costos, mermas, gas
           </div>
         </div>
 
-        <div className="bg-[var(--color-accent-shadow)] border-2 border-[var(--color-accent-shadow)] p-3 sm:p-5 flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center min-w-0 rounded-none shadow-[4px_4px_0px_0px_rgba(6,95,70,0.2)] text-white col-span-2 lg:col-span-1">
+        <div className="bg-[var(--color-accent-shadow)] border-2 border-[var(--color-accent-shadow)] p-3 sm:p-5 flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center min-w-0 rounded-none shadow-[4px_4px_0px_0px_rgba(var(--color-accent-shadow-rgb),0.2)] text-white col-span-2 lg:col-span-1">
           <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white flex items-center justify-center text-[var(--color-accent-shadow)] rounded-none shrink-0">
             <DollarSign size={28} strokeWidth={2.5} />
           </div>

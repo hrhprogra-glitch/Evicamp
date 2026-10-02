@@ -290,7 +290,7 @@ export const Utilidades = () => {
   return (
     <div className="flex flex-col gap-3 lg:gap-4 p-0 w-full font-sans bg-[var(--color-surface)]">
       
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white border border-[var(--color-ink)] p-4 sm:p-6 rounded-none gap-4 shadow-[4px_4px_0px_0px_rgba(30,41,59,0.05)]">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white border border-[var(--color-ink)] p-4 sm:p-6 rounded-none gap-4 shadow-[4px_4px_0px_0px_rgba(var(--color-ink-rgb),0.05)]">
         <div className="border-l-4 border-[var(--color-accent-shadow)] pl-3 sm:pl-5 min-w-0">
           <h1 className="text-xl sm:text-3xl font-black text-[var(--color-ink)] uppercase tracking-tighter flex items-center gap-3">
             <Activity className="text-[var(--color-accent-shadow)] w-6 h-6 sm:w-8 sm:h-8 shrink-0" strokeWidth={2.5} />
@@ -315,7 +315,7 @@ export const Utilidades = () => {
           className={`px-6 py-3 text-xs font-bold uppercase tracking-widest transition-all duration-200 border-2 rounded-none flex items-center gap-2
             ${mostrarTops 
               ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent-shadow)] border-[var(--color-accent-shadow)]' 
-              : 'bg-[var(--color-accent-shadow)] text-white border-[var(--color-accent-shadow)] hover:bg-[var(--color-accent-dark-2)] hover:shadow-[4px_4px_0px_0px_rgba(6,95,70,0.3)]'
+              : 'bg-[var(--color-accent-shadow)] text-white border-[var(--color-accent-shadow)] hover:bg-[var(--color-accent-dark-2)] hover:shadow-[4px_4px_0px_0px_rgba(var(--color-accent-shadow-rgb),0.3)]'
             }`}
         >
           {mostrarTops ? 'Ocultar Resumen Top' : 'Ver Productos Top'}
