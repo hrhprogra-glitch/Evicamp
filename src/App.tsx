@@ -18,6 +18,7 @@ import { Utilidades } from './sections/Utilidades';
 import Configuraciones from './sections/Configuraciones';
 import Resumen from './sections/Resumen'; // <--- IMPORTAMOS EL NUEVO RESUMEN
 import { aplicarTamanoInterfaz, leerTamanoInterfaz } from './utils/tamanoInterfaz';
+import { AlertaYape } from './layout/AlertaYape';
 
 // Cada cuánto se vuelve a leer el estado y los permisos del empleado desde la base
 const REVALIDAR_CADA_MS = 60_000;
@@ -123,6 +124,7 @@ export const App: React.FC = () => {
 
   return (
     <SesionProvider empleado={empleado}>
+    <AlertaYape />
     <div className="flex h-[var(--alto-pantalla)] w-full bg-[#FFFFFF] overflow-hidden">
       <SideBar
         isOpen={isSidebarOpen}
