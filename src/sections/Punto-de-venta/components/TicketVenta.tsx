@@ -12,6 +12,7 @@ interface Props {
   setCart: (cart: CartItem[]) => void;
   updateQuantity: (id: string, qty: number) => void;
   updatePrice: (id: string, price: number) => void;
+  activeTabIndex: number;
   heldCarts: CartItem[][];
   holdCurrentCart: () => void;
   restoreCart: (index: number) => void;
@@ -21,7 +22,7 @@ interface Props {
 // 🔥 1. SACAMOS LOS COMPONENTES AFUERA PARA QUE NO SE REINICIEN (Evita que se cierre o pierda el foco)
 // 🛡️ EVICAMP: Redondeo estándar para evitar saltos como el de 1 a 1.8
 const redondearPeso = (peso: number) => {
-  return Math.round(peso * 100) / 100;
+  return Math.round(peso * 10000) / 10000;
 };
 
 // Al tocar un campo se selecciona todo su valor para reemplazarlo al escribir. Con el mouse,
@@ -96,7 +97,7 @@ const InputPrecio = ({ item, updatePrice, index, setSelectedIndex, setColIndex, 
          onFocus={(e) => {
            seleccionar(e); // 🛡️ EVICAMP: Selecciona todo para sobrescribir al instante
            setSelectedIndex(index); 
-           setColIndex(0);
+           setColIndex(1); // 🛡️ AHORA EL PRECIO ES LA COLUMNA 1
          }}
          onMouseUp={onMouseUp}
        onBlur={aplicarCambio}
@@ -147,7 +148,7 @@ const InputUnidades = ({ item, updateQuantity, index, setSelectedIndex, setColIn
 };
 
 // 🔥 2. COMPONENTE PRINCIPAL (Receptor)
-export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0, setSelectedIndex, setColIndex, cart, setCart, updateQuantity, updatePrice, heldCarts, holdCurrentCart, restoreCart, onPagar
+export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0, setSelectedIndex, setColIndex, cart, setCart, updateQuantity, updatePrice, activeTabIndex, heldCarts, holdCurrentCart, restoreCart, onPagar
 }) => {
 
   // CÁLCULO DE TOTALES AUTOMÁTICO
@@ -159,6 +160,7 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
 
   return (
     <div 
+      id="ticket-container"
       onClick={(e) => {
         // 🛡️ Si haces clic en el fondo blanco de la caja, se quita la selección
         if (e.target === e.currentTarget) {
@@ -197,12 +199,17 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
 
       {/* NUEVA BARRA: TICKETS EN ESPERA (Aparece solo si hay tickets guardados) */}
       {heldCarts.length > 0 && (
-        <div className="bg-[var(--color-bg)] p-3 flex gap-2 overflow-x-auto border-b-2 border-[var(--color-ink)] shrink-0 custom-scrollbar">
+        <div id="held-carts-container" className="bg-[var(--color-bg)] p-3 flex gap-2 overflow-x-auto border-b-2 border-[var(--color-ink)] shrink-0 custom-scrollbar">
           {heldCarts.map((_, i) => (
             <button 
               key={i} 
+              id={`btn-held-${i}`}
               onClick={() => restoreCart(i)}
-              className="bg-[var(--color-info)] text-white border-2 border-[var(--color-ink)] px-3 py-1.5 text-[12px] font-black uppercase flex items-center gap-1.5 shadow-[2px_2px_0_0_var(--color-ink)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-none transition-all whitespace-nowrap cursor-pointer"
+              className={`border-2 px-3 py-1.5 text-[12px] font-black uppercase flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
+                activeTabIndex === i 
+                  ? 'bg-[var(--color-accent)] text-[var(--color-ink)] border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] scale-105 animate-pulse-fast'
+                  : 'bg-[var(--color-info)] text-white border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-none'
+              }`}
               title="Recuperar Ticket"
             >
               <Play size={10} fill="currentColor" /> RECUPERAR T-{i + 1}
@@ -236,7 +243,7 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
                 })}
                 className={`grid grid-cols-12 gap-2 text-xs font-bold border-b border-dashed border-[var(--color-line-light)] pb-2 pt-2 items-center px-1 rounded-none transition-colors cursor-pointer ${
                   index === selectedIndex 
-                    ? 'bg-[var(--color-muted)] shadow-[inset_0_0_8px_rgba(0,0,0,0.2)]' 
+                    ? 'bg-[var(--color-surface)]' 
                     : 'bg-transparent'
                 }`}
               >
@@ -273,14 +280,14 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
                 </div>
 
                 <div className="col-span-5 flex flex-col min-w-0 pr-1 pl-1">
-                  <span className={`truncate uppercase font-black text-sm ${index === selectedIndex ? 'text-[var(--color-surface)]' : 'text-[var(--color-ink)]'}`} title={item.name}>{item.name}</span>
+                  <span className="truncate uppercase font-black text-sm text-[var(--color-ink)]" title={item.name}>{item.name}</span>
                   {/* 🏷️ PRECIO EDITABLE POR LÍNEA: para bajarle el precio a un cliente puntual
                       (ej. negocio/mayorista) sin tocar el precio general del catálogo. Solo
                       cambia esta venta — updatePrice nunca escribe en la tabla de productos. */}
-                  <InputPrecio item={item} updatePrice={updatePrice} index={index} setSelectedIndex={setSelectedIndex} setColIndex={setColIndex} isSelected={index === selectedIndex && colIndex === 0} />
+                  <InputPrecio item={item} updatePrice={updatePrice} index={index} setSelectedIndex={setSelectedIndex} setColIndex={setColIndex} isSelected={index === selectedIndex && colIndex === 1} />
                 </div>
                 
-                <div className={`col-span-3 text-right text-sm font-black ${index === selectedIndex ? 'text-[var(--color-surface)]' : 'text-[var(--color-ink)]'}`}>
+                <div className="col-span-3 text-right text-sm font-black text-[var(--color-ink)]">
                   {item.subtotal.toFixed(2)}
                 </div>
 
@@ -289,7 +296,7 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
                   <button
                     onClick={(e) => { e.stopPropagation(); updateQuantity(item.id, 0); }}
                     className={`w-7 h-7 flex items-center justify-center border-2 border-[var(--color-ink)] transition-all cursor-pointer rounded-none ${
-                      index === selectedIndex && colIndex === 1
+                      index === selectedIndex && colIndex === 2
                         ? 'bg-[var(--color-danger)] text-white ring-2 ring-[var(--color-danger)] ring-offset-1 shadow-none scale-125 z-20' 
                         : 'bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)]'
                     }`}
@@ -315,9 +322,19 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
         </div>
         
         <button 
-          onClick={onPagar} // <--- ONCLICK CONECTADO AQUÍ
+          id="btn-proceder-pago"
+          onClick={onPagar}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.stopPropagation(); // Evita que index.tsx lo confunda con borrar fila
+            }
+          }}
           disabled={cart.length === 0}
-          className="w-full bg-[var(--color-accent)] text-[var(--color-ink)] py-2 border-2 border-[var(--color-ink)] font-black text-sm uppercase tracking-[0.1em] flex items-center justify-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shadow-[3px_3px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px]"
+          className={`w-full py-2 border-2 border-[var(--color-ink)] font-black text-sm uppercase tracking-[0.1em] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer ${
+            selectedIndex === cart.length 
+              ? 'bg-[var(--color-ink)] text-[var(--color-accent)] shadow-none translate-x-[3px] translate-y-[3px] ring-2 ring-offset-2 ring-[var(--color-ink)]' 
+              : 'bg-[var(--color-accent)] text-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px]'
+          }`}
         >
           <Banknote size={18} /> Proceder al Pago (F4)
         </button>

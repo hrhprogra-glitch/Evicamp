@@ -63,7 +63,29 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
           <h2 className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
             <Scale size={20} /> Balanza Digital
           </h2>
-          <button onClick={onClose} className="hover:text-[var(--color-ink)] transition-colors cursor-pointer">
+          <button 
+            id="balanza-btn-close"
+            onClick={onClose} 
+            onKeyDown={(e) => {
+              if (e.key === 'Tab') {
+                e.preventDefault();
+                if (e.shiftKey) {
+                  document.getElementById('balanza-btn-confirm')?.focus();
+                } else {
+                  document.getElementById('balanza-input-monto')?.focus();
+                }
+              }
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                document.getElementById('balanza-input-monto')?.focus();
+              }
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                document.getElementById('balanza-btn-confirm')?.focus();
+              }
+            }}
+            className="hover:text-[var(--color-ink)] focus:text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-white transition-all cursor-pointer p-1"
+          >
             <X size={20} strokeWidth={3} />
           </button>
         </div>
@@ -85,11 +107,38 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
               </label>
               <div className="relative">
                 <input 
+                  id="balanza-input-monto"
                   type="number" 
                   autoFocus
                   value={montoSoles}
                   onChange={(e) => handleMontoChange(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && parseFloat(pesoKg) > 0 && handleConfirm()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && parseFloat(pesoKg) > 0) handleConfirm();
+                    if (e.key === 'Tab') {
+                      e.preventDefault();
+                      if (e.shiftKey) {
+                        document.getElementById('balanza-btn-close')?.focus();
+                      } else {
+                        document.getElementById('balanza-input-peso')?.focus();
+                      }
+                    }
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      document.getElementById('balanza-input-peso')?.focus();
+                    }
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      document.getElementById('balanza-btn-close')?.focus();
+                    }
+                    if (e.key === 'Delete') {
+                      e.preventDefault();
+                      if (montoSoles === '' && pesoKg === '') {
+                        onClose();
+                      } else {
+                        handleMontoChange('');
+                      }
+                    }
+                  }}
                   className="w-full h-14 bg-white border-2 border-[var(--color-ink)] px-4 text-2xl font-black text-[var(--color-ink)] outline-none focus:bg-[var(--color-accent-bg)]"
                   placeholder="0.00"
                 />
@@ -109,10 +158,37 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
               </label>
               <div className="relative">
                 <input 
+                  id="balanza-input-peso"
                   type="number" 
                   value={pesoKg}
                   onChange={(e) => handlePesoChange(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && parseFloat(pesoKg) > 0 && handleConfirm()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && parseFloat(pesoKg) > 0) handleConfirm();
+                    if (e.key === 'Tab') {
+                      e.preventDefault();
+                      if (e.shiftKey) {
+                        document.getElementById('balanza-input-monto')?.focus();
+                      } else {
+                        document.getElementById('balanza-btn-confirm')?.focus();
+                      }
+                    }
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      document.getElementById('balanza-btn-confirm')?.focus();
+                    }
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      document.getElementById('balanza-input-monto')?.focus();
+                    }
+                    if (e.key === 'Delete') {
+                      e.preventDefault();
+                      if (montoSoles === '' && pesoKg === '') {
+                        onClose();
+                      } else {
+                        handlePesoChange(''); // Se puede usar handleMontoChange también, ambas vacían todo
+                      }
+                    }
+                  }}
                   className="w-full h-14 bg-white border-2 border-[var(--color-ink)] px-4 text-2xl font-black text-[var(--color-info)] outline-none focus:bg-[var(--color-info-bg)]"
                   placeholder="0.000"
                 />
@@ -121,9 +197,36 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
           </div>
 
           <button 
+            id="balanza-btn-confirm"
             onClick={handleConfirm}
+            onKeyDown={(e) => {
+              if (e.key === 'Tab') {
+                e.preventDefault();
+                if (e.shiftKey) {
+                  document.getElementById('balanza-input-peso')?.focus();
+                } else {
+                  document.getElementById('balanza-btn-close')?.focus();
+                }
+              }
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                document.getElementById('balanza-btn-close')?.focus();
+              }
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                document.getElementById('balanza-input-peso')?.focus();
+              }
+              if (e.key === 'Delete') {
+                e.preventDefault();
+                if (montoSoles === '' && pesoKg === '') {
+                  onClose();
+                } else {
+                  handleMontoChange('');
+                }
+              }
+            }}
             disabled={!pesoKg || parseFloat(pesoKg) <= 0}
-            className="w-full h-16 bg-[var(--color-ink)] text-white flex items-center justify-center gap-3 font-black uppercase tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-accent)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all disabled:opacity-50 cursor-pointer"
+            className="w-full h-16 bg-[var(--color-ink)] text-white flex items-center justify-center gap-3 font-black uppercase tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-accent)] focus:ring-4 focus:ring-[var(--color-accent)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all disabled:opacity-50 cursor-pointer"
           >
             <ShoppingCart size={24} /> Agregar al Carrito
           </button>

@@ -118,11 +118,18 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') fetchHoy();
     };
+    
+    // 🛡️ LÓGICA DE ATAJO DE TECLADO (Tecla 'E')
+    const handleToggleEye = () => setIsVisible(prev => !prev);
+    
     window.addEventListener('focus', fetchHoy);
     document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('toggle-pos-eye', handleToggleEye);
+    
     return () => {
       window.removeEventListener('focus', fetchHoy);
       document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('toggle-pos-eye', handleToggleEye);
     };
   }, [refreshTrigger]);
 
@@ -208,17 +215,23 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
     <>
       <div className="bg-white border-2 border-[var(--color-ink)] shrink-0 font-mono flex flex-col">
         <div className="bg-[var(--color-ink)] text-white px-3 py-1.5 flex justify-between items-center">
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 hover:text-[var(--color-accent)] transition-colors cursor-pointer"
-            title="Ver Historial del Día"
-          >
-            <BarChart3 size={18} />
-            <span className="text-[13px] font-black uppercase tracking-widest hidden sm:inline">Caja Actual:</span>
-            <span className="text-base font-black text-[var(--color-accent)] ml-1">
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 hover:text-[var(--color-accent)] transition-colors cursor-pointer"
+              title="Ver Historial del Día"
+            >
+              <BarChart3 size={18} />
+              <span className="text-[13px] font-black uppercase tracking-widest hidden sm:inline">Caja Actual:</span>
+            </button>
+            <button
+              onClick={() => setIsVisible(!isVisible)}
+              className="text-base font-black text-[var(--color-accent)] ml-1 hover:brightness-125 transition-all cursor-pointer"
+              title="Mostrar/Ocultar Montos"
+            >
               {isVisible ? `S/ ${totales.totalReal.toFixed(2)}` : 'S/ ***.**'}
-            </span>
-          </button>
+            </button>
+          </div>
           <button 
             onClick={() => setIsVisible(!isVisible)}
             className="text-[var(--color-subtle)] hover:text-white transition-colors cursor-pointer px-2"
@@ -227,7 +240,11 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
           </button>
         </div>
 
-        <div className="grid grid-cols-4 divide-x-2 divide-[var(--color-border)] bg-[var(--color-bg)] min-w-0">
+        <button 
+          onClick={() => setIsVisible(!isVisible)}
+          className="grid grid-cols-4 divide-x-2 divide-[var(--color-border)] bg-[var(--color-bg)] min-w-0 w-full hover:bg-[var(--color-surface)] transition-colors cursor-pointer"
+          title="Mostrar/Ocultar Montos"
+        >
           <div className="px-1 py-1 flex flex-col items-center justify-center text-center min-w-0">
             <span className="text-[12px] font-black text-[var(--color-muted)] uppercase leading-tight">Efectivo</span>
             <span className="text-xs font-black text-[var(--color-ink)]">{isVisible ? `S/ ${totales.efectivo.toFixed(1)}` : '***'}</span>
@@ -244,7 +261,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
             <span className="text-[12px] font-black text-[var(--color-danger)] uppercase leading-tight">Fiados</span>
             <span className="text-xs font-black text-[var(--color-ink)]">{isVisible ? `S/ ${totales.fiado.toFixed(1)}` : '***'}</span>
           </div>
-        </div>
+        </button>
       </div>
       {modalContent}
     </>

@@ -32,13 +32,43 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
     setSelectedIndex(0);
   }, [searchQuery]);
 
+  // 🔥 NUEVO: Auto-scroll para que el selector siempre esté a la vista y no perdamos foco visual
+  useEffect(() => {
+    const selectedBtn = document.getElementById(`producto-pos-${selectedIndex}`);
+    if (selectedBtn) {
+      selectedBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [selectedIndex]);
+
   // 🛡️ ESCUDO DE ESCÁNER GLOBAL (Captura códigos de barras siempre)
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      // 1. Evitar robar el foco si estás escribiendo en modales (Cobro, Balanza, Clientes)
       const activeTag = document.activeElement?.tagName;
-      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return; 
+      const isInput = activeTag === 'INPUT' || activeTag === 'TEXTAREA';
+      const activeId = document.activeElement?.id || '';
       
+      const isCartInput = activeId.startsWith('edit-input-') || activeId.startsWith('edit-price-');
+
+      // 🛡️ Ignorar global listener si hay un modal (ventana flotante) abierto
+      if (document.querySelector('[role="dialog"]')) {
+        return;
+      }
+
+      // 🔥 ESCUDO ANTIESCAPE DEL TABULADOR
+      if (e.key === 'Tab') {
+        // Si NO es un input, O si es un input del carrito, bloqueamos el Tab y volvemos al buscador.
+        // (Dejamos libre el Tab solo en modales de cobro/clientes para poder llenar formularios).
+        if (!isInput || isCartInput) {
+          e.preventDefault();
+          const searchInput = document.getElementById('buscador-global-pos') as HTMLInputElement;
+          if (searchInput) searchInput.focus();
+          return;
+        }
+      }
+
+      // 1. Evitar robar el foco (para letras y números) si estás escribiendo en otros inputs/modales
+      if (isInput) return; 
+
       // 2. Ignorar teclas de sistema (Shift, Ctrl, F5, etc.)
       if (e.key.length > 1 && e.key !== 'Enter' && e.key !== 'Backspace') return;
 
@@ -58,18 +88,72 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
 
   // SOPORTE PARA FLECHAS, ESCÁNER Y ENTER
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Si no hay resultados o presionamos Derecha/Abajo al final, dejamos que index.tsx haga el salto
+    // 🔥 CORRECCIÓN: Interceptar Tab SIEMPRE, incluso si no hay productos, para evitar que el foco escape
+    if (e.key === 'Tab') {
+      e.preventDefault(); // NUNCA dejar que el foco se vaya al navegador
+      
+      // Si Shift está presionado, subimos (ArrowUp)
+      if (e.shiftKey) {
+        if (filteredProducts.length > 0) {
+          setSelectedIndex(prev => Math.max(prev - 1, 0));
+        }
+      } else {
+        // Tab normal, bajamos (ArrowDown)
+        if (filteredProducts.length > 0 && selectedIndex < filteredProducts.length - 1) {
+          setSelectedIndex(prev => prev + 1);
+        }
+      }
+      return; // Detener ejecución aquí
+    }
+
+    // Si no hay resultados, dejamos que index.tsx maneje otros atajos, pero 'Delete' igual debe limpiar
+    if (e.key === 'Delete') {
+      e.preventDefault();
+      setSearchQuery('');
+      return;
+    }
+
     if (filteredProducts.length === 0) return;
 
+    const getColumnsCount = () => {
+      const grid = document.getElementById('productos-grid-pos');
+      if (grid) {
+        const columnsStr = window.getComputedStyle(grid).getPropertyValue('grid-template-columns');
+        return columnsStr.split(' ').filter(c => c.trim() !== '').length || 1;
+      }
+      return 1;
+    };
+
     if (e.key === 'ArrowDown') {
-      if (selectedIndex === filteredProducts.length - 1) return; // Permite que burbujee a index.tsx
       e.preventDefault();
-      setSelectedIndex(prev => prev + 1);
+      e.nativeEvent.stopImmediatePropagation();
+      const cols = getColumnsCount();
+      if (selectedIndex + cols < filteredProducts.length) {
+        setSelectedIndex(prev => prev + cols);
+      } else {
+        setSelectedIndex(filteredProducts.length - 1);
+      }
+    } else if (e.key === 'ArrowRight') {
+      // Si presiona derecha estando en el último producto, dejamos que salte al carrito
+      if (selectedIndex === filteredProducts.length - 1) return; 
+      
+      e.preventDefault();
+      e.stopPropagation(); 
+      e.nativeEvent.stopImmediatePropagation(); // 🛡️ EVICAMP: Bloqueo absoluto al listener nativo de index.tsx
+      if (selectedIndex < filteredProducts.length - 1) {
+        setSelectedIndex(prev => prev + 1);
+      }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
+      e.stopPropagation();
+      e.nativeEvent.stopImmediatePropagation();
+      const cols = getColumnsCount();
+      setSelectedIndex(prev => Math.max(prev - cols, 0));
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      e.stopPropagation(); 
+      e.nativeEvent.stopImmediatePropagation();
       setSelectedIndex(prev => Math.max(prev - 1, 0));
-    } else if (e.key === 'ArrowRight') {
-      return; // Deja que index.tsx capture el salto al carrito
     } else if (e.key === 'Enter') {
       e.preventDefault();
       const selectedProd = filteredProducts[selectedIndex];
@@ -102,8 +186,8 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
 
         <div className="flex gap-3">
           {/* Estricto diseño monocrático, sin sombras difuminadas ni redondeos */}
-          <div className="flex-1 relative flex items-center border-2 border-[var(--color-ink)] bg-[var(--color-surface)] focus-within:ring-2 focus-within:ring-[var(--color-muted)] transition-all shadow-[4px_4px_0_0_var(--color-ink)] rounded-none">
-            <div className="w-10 h-10 flex items-center justify-center bg-[var(--color-ink)] text-[var(--color-surface)] shrink-0 rounded-none">
+          <div className={`flex-1 relative flex items-center border-2 border-[var(--color-ink)] bg-white transition-all shadow-[4px_4px_0_0_var(--color-ink)] rounded-none z-10 ${searchQuery.length === 0 ? 'focus-within:border-[var(--color-ink)] focus-within:ring-4 focus-within:ring-[var(--color-accent)]' : 'focus-within:ring-2 focus-within:ring-[var(--color-muted)]'}`}>
+            <div className="w-10 h-10 flex items-center justify-center bg-[var(--color-ink)] text-white shrink-0 rounded-none">
               <Search size={20} />
             </div>
             <div className="flex flex-col flex-1 px-4 relative">
@@ -115,6 +199,9 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
+                autoComplete="off"
+                spellCheck={false}
+                autoCorrect="off"
                 className="w-full h-10 bg-transparent text-base font-black text-[var(--color-ink)] uppercase outline-none placeholder:text-[var(--color-muted)]/50 rounded-none"
               />
             </div>
@@ -144,7 +231,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
           </div>
         ) : (
           // ESTADO 3: MOSTRAR RESULTADOS
-          <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-2 sm:gap-4">
+          <div id="productos-grid-pos" className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-2 sm:gap-4">
             {filteredProducts.map((prod, index) => {
               // LÓGICA CORE: Interceptamos la BD para validar Consumo real
               const esConsumo = prod.unit === 'CONSUMO' || (prod as any).control_type === 'CONSUMPTION';
@@ -154,9 +241,11 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
               return (
                 <button
                   key={prod.id}
+                  id={`producto-pos-${index}`}
+                  tabIndex={-1} // Evita que reciba el foco nativo con el Tab
                   onClick={() => !estaAgotado && onAddToCart({ ...prod, unit: esConsumo ? 'CONSUMO' : prod.unit })}
                   disabled={estaAgotado} 
-                  className={`p-2 sm:p-2.5 text-left flex flex-col min-w-0 transition-all rounded-none border-2
+                  className={`p-2 sm:p-2.5 text-left flex flex-col min-w-0 transition-all rounded-none border-2 focus:outline-none focus:ring-0
                     ${isSelected ? 'ring-4 ring-[var(--color-accent)] border-[var(--color-accent)] scale-[1.02] shadow-xl z-10' : ''}
                     ${estaAgotado 
                       ? 'bg-[var(--color-surface)] border-[var(--color-border)] opacity-50 cursor-not-allowed' 

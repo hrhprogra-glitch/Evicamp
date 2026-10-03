@@ -26,19 +26,78 @@ const [searchQuery, setSearchQuery] = useState('');
     const guardado = localStorage.getItem('evicamp_cart');
     return guardado ? JSON.parse(guardado) : [];
   });
+  
+  // 🚀 MEMORIA PERSISTENTE: Cargar tickets en espera desde el navegador
+  const [heldCarts, setHeldCarts] = useState<CartItem[][]>(() => {
+    const guardado = localStorage.getItem('evicamp_held_carts');
+    return guardado ? JSON.parse(guardado) : [];
+  });
   // --- INICIO EVICAMP: MOTOR DE NAVEGACIÓN PRO v4 (Salto de Panel) ---
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [colIndex, setColIndex] = useState<number>(0); 
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // 🛡️ EVICAMP: Ignorar todos los atajos globales si hay alguna ventana flotante (modal) abierta
+      if (document.querySelector('[role="dialog"]')) return;
+
       const target = e.target as HTMLElement;
       const isInputActive = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
       const isSearchFocused = target.id === 'buscador-global-pos';
 
+      // 🛡️ ATAJO GLOBAL: Shift + A para rotar tickets en espera (funciona incluso desde el buscador)
+      if (e.key.toLowerCase() === 'a' && e.shiftKey) {
+        e.preventDefault();
+        if (heldCarts.length > 0) {
+          let nextIndex = activeTabIndex + 1;
+          if (nextIndex >= heldCarts.length) nextIndex = 0; // Volver al inicio si llegamos al final
+          
+          restoreCart(nextIndex); // restoreCart ya se encarga del in-place swap y de setear activeTabIndex
+          
+          // 🛡️ Mantenemos el foco en el carrito (primer producto) para seguir rotando sin salir
+          setSelectedIndex(0);
+          setColIndex(0);
+          setTimeout(() => document.getElementById('edit-input-0')?.focus(), 10);
+        }
+        return;
+      }
+
+      // 🛡️ ATAJOS GLOBALES RÁPIDOS (CON SHIFT/MAYÚS)
+      if (e.key.toLowerCase() === 'q' && e.shiftKey) {
+        e.preventDefault();
+        if (cart.length > 0) {
+          setHeldCarts(prev => {
+            if (prev.length >= 5) {
+              alert("Límite máximo: Tienes 5 tickets en espera.");
+              return prev;
+            }
+            return [...prev, cart];
+          });
+          setCart([]);
+          setSelectedIndex(-1);
+          document.getElementById('buscador-global-pos')?.focus();
+        }
+        return;
+      }
+      if (e.key.toLowerCase() === 'w' && e.shiftKey) {
+        e.preventDefault();
+        if (cart.length > 0) {
+          setCart([]);
+          setSelectedIndex(-1);
+          document.getElementById('buscador-global-pos')?.focus();
+        }
+        return;
+      }
+      if (e.key.toLowerCase() === 'e' && e.shiftKey) {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('toggle-pos-eye'));
+        return;
+      }
+
       // 1. Salto de Panel: De Buscador a Carrito (Derecha o Abajo)
-      // 🛡️ PARCHE: Permitir saltar con la flecha derecha incluso si el buscador perdió el foco (ej. al cerrar modales o hacer clic)
-      const canJumpRight = e.key === 'ArrowRight' && (isSearchFocused || !isInputActive) && selectedIndex === -1;
+      // 🛡️ PARCHE: Permitir saltar con la flecha derecha si el buscador perdió el foco o si estamos al final del texto buscado
+      const isAtEnd = isSearchFocused && (target as HTMLInputElement).selectionStart === (target as HTMLInputElement).value.length;
+      const canJumpRight = e.key === 'ArrowRight' && (isAtEnd || !isInputActive) && selectedIndex === -1;
       const canJumpDown = e.key === 'ArrowDown' && isSearchFocused;
 
       if (canJumpRight || canJumpDown) {
@@ -71,10 +130,48 @@ const [searchQuery, setSearchQuery] = useState('');
           if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
             input.blur(); 
           } 
-          // Flecha derecha solo salta a 'Borrar' si el cursor está al final del número
+          // Lógica de SUPRIMIR (Delete)
+          else if (e.key === 'Delete') {
+            if (input.value === '' || input.value === '0' || input.value === '0.00') {
+              // Si ya está vacío o es 0, eliminamos el producto por completo
+              updateQuantity(cart[selectedIndex].id, 0);
+              
+              // 🛡️ LÓGICA DE FOCO: Pasar al siguiente producto (el que ocupará este índice) 
+              // a menos que sea el último de la lista, en cuyo caso retrocedemos 1.
+              setSelectedIndex((prev) => prev >= cart.length - 1 ? Math.max(-1, prev - 1) : prev);
+              
+              setColIndex(0);
+              if (cart.length <= 1) document.getElementById('buscador-global-pos')?.focus();
+            } else {
+              // Si tiene texto, vaciamos el contenido
+              input.value = '';
+              input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            e.preventDefault();
+            return;
+          }
+          // Flecha derecha salta a la SIGUIENTE columna
           else if (e.key === 'ArrowRight' && input.selectionStart === input.value.length) {
             input.blur();
-            setColIndex(1);
+            if (colIndex === 0) {
+              setColIndex(1);
+              setTimeout(() => document.getElementById(`edit-price-${selectedIndex}`)?.focus(), 10);
+            } else if (colIndex === 1) {
+              setColIndex(2); // ir a borrar
+            }
+            e.preventDefault();
+            return;
+          }
+          // Flecha izquierda salta a la ANTERIOR columna
+          else if (e.key === 'ArrowLeft' && input.selectionStart === 0) {
+            input.blur();
+            if (colIndex === 1) {
+              setColIndex(0);
+              setTimeout(() => document.getElementById(`edit-input-${selectedIndex}`)?.focus(), 10);
+            } else if (colIndex === 0) {
+              setSelectedIndex(-1);
+              document.getElementById('buscador-global-pos')?.focus();
+            }
             e.preventDefault();
             return;
           }
@@ -87,11 +184,17 @@ const [searchQuery, setSearchQuery] = useState('');
         if (e.key === 'ArrowDown') {
           e.preventDefault();
           setSelectedIndex((prev) => {
-            const next = Math.min(prev + 1, cart.length - 1);
-            setTimeout(() => document.getElementById(`edit-input-${next}`)?.focus(), 10);
+            const next = Math.min(prev + 1, cart.length); // 🛡️ Permite bajar hasta el botón de Pagar (cart.length)
+            setTimeout(() => {
+              if (next === cart.length) {
+                document.getElementById('btn-proceder-pago')?.focus();
+              } else {
+                if (colIndex === 0) document.getElementById(`edit-input-${next}`)?.focus();
+                else if (colIndex === 1) document.getElementById(`edit-price-${next}`)?.focus();
+              }
+            }, 10);
             return next;
           });
-          setColIndex(0);
           return;
         }
         if (e.key === 'ArrowUp') {
@@ -102,29 +205,49 @@ const [searchQuery, setSearchQuery] = useState('');
           } else {
             setSelectedIndex((prev) => {
               const next = prev - 1;
-              setTimeout(() => document.getElementById(`edit-input-${next}`)?.focus(), 10);
+              setTimeout(() => {
+                if (colIndex === 0) document.getElementById(`edit-input-${next}`)?.focus();
+                else if (colIndex === 1) document.getElementById(`edit-price-${next}`)?.focus();
+                else if (colIndex === 2) document.getElementById(`btn-del-${next}`)?.focus(); // (Opcional, en caso de estar en la columna 2)
+              }, 10);
               return next;
             });
-            setColIndex(0);
           }
           return;
         }
-        if (e.key === 'ArrowRight' && colIndex === 0) {
+        
+        // Navegación manual cuando no hay input activo (ej. colIndex = 2 Borrar)
+        if (e.key === 'ArrowRight') {
           e.preventDefault();
-          setColIndex(1); // Mover al botón Borrar
+          if (colIndex === 0) {
+            setColIndex(1);
+            setTimeout(() => document.getElementById(`edit-price-${selectedIndex}`)?.focus(), 10);
+          } else if (colIndex === 1) {
+            setColIndex(2);
+          }
           return;
         }
-        if (e.key === 'ArrowLeft' && colIndex === 1) {
+        if (e.key === 'ArrowLeft') {
           e.preventDefault();
-          setColIndex(0); // Volver a Cantidad
+          if (colIndex === 2) {
+            setColIndex(1);
+            setTimeout(() => document.getElementById(`edit-price-${selectedIndex}`)?.focus(), 10);
+          } else if (colIndex === 1) {
+            setColIndex(0);
+            setTimeout(() => document.getElementById(`edit-input-${selectedIndex}`)?.focus(), 10);
+          }
           return;
         }
         
-        // Acción de Borrar con Enter
-        if (e.key === 'Enter' && colIndex === 1) {
+        // Acción de Borrar (con Enter sobre el tacho, o con Suprimir en cualquier parte de la fila que no sea input)
+        if ((e.key === 'Enter' && colIndex === 2) || (e.key === 'Delete' && !isInputActive)) {
           e.preventDefault();
           updateQuantity(cart[selectedIndex].id, 0);
-          setSelectedIndex((prev) => Math.max(-1, prev - 1));
+          
+          // 🛡️ LÓGICA DE FOCO: Pasar al siguiente producto, o al anterior si era el último
+          setSelectedIndex((prev) => prev >= cart.length - 1 ? Math.max(-1, prev - 1) : prev);
+          
+          setColIndex(0); // Forzamos el regreso a la columna de Cantidad
           if (cart.length <= 1) document.getElementById('buscador-global-pos')?.focus();
           return;
         }
@@ -148,7 +271,7 @@ const [searchQuery, setSearchQuery] = useState('');
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [cart, selectedIndex, colIndex]);
+  }, [cart, selectedIndex, colIndex, heldCarts]);
 
   // Modificamos el envío al TicketVenta para incluir el colIndex
   // --- FIN EVICAMP ---
@@ -159,11 +282,9 @@ const [searchQuery, setSearchQuery] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false); // 🛡️ CANDADO MAESTRO ANTI-DUPLICADOS
   const [refreshReport, setRefreshReport] = useState(0); // 🛡️ EVICAMP: Disparador del mini reporte
   
-  // 🚀 MEMORIA PERSISTENTE: Cargar tickets en espera desde el navegador
-  const [heldCarts, setHeldCarts] = useState<CartItem[][]>(() => {
-    const guardado = localStorage.getItem('evicamp_held_carts');
-    return guardado ? JSON.parse(guardado) : [];
-  });
+
+  
+  const [activeTabIndex, setActiveTabIndex] = useState(-1); // 🛡️ EVICAMP: Índice del ticket en espera que está activo actualmente
   
   const [isCobroModalOpen, setIsCobroModalOpen] = useState(false);
 
@@ -282,27 +403,25 @@ const [searchQuery, setSearchQuery] = useState('');
       return;
     }
 
+    // 🛡️ Extraemos la verificación fuera del setCart
+    const existe = cart.find(item => item.id === producto.id);
+    const nuevaQty = existe ? existe.cartQuantity + 1 : 1;
+    
+    if (nuevaQty > producto.quantity && producto.unit !== 'CONSUMO') {
+      alert(`🚫 STOCK INSUFICIENTE: Solo tienes ${producto.quantity} en stock de ${producto.name}.`);
+      return;
+    }
+
     // Flujo normal para unidades
     setCart(prevCart => {
-      const existe = prevCart.find(item => item.id === producto.id);
-      if (existe) {
-        const nuevaQty = existe.cartQuantity + 1;
-        // 🛡️ CANDADO 1: Bloquear si un clic más supera el stock
-        if (nuevaQty > producto.quantity && producto.unit !== 'CONSUMO') {
-          alert(`🚫 STOCK INSUFICIENTE: Solo tienes ${producto.quantity} en stock de ${producto.name}.`);
-          return prevCart;
-        }
+      const existePrev = prevCart.find(item => item.id === producto.id);
+      if (existePrev) {
         return prevCart.map(item => 
           item.id === producto.id 
             ? { ...item, cartQuantity: nuevaQty, subtotal: Math.round((nuevaQty * item.price) * 100) / 100 }
             : item
         );
       } else {
-        // 🛡️ CANDADO 1.1: Bloquear si desde el primer producto no hay stock
-        if (1 > producto.quantity && producto.unit !== 'CONSUMO') {
-          alert(`🚫 STOCK INSUFICIENTE: No hay stock de ${producto.name}.`);
-          return prevCart;
-        }
         return [{ ...producto, cartQuantity: 1, subtotal: Math.round(producto.price * 100) / 100 }, ...prevCart];
       }
     });
@@ -312,17 +431,20 @@ const [searchQuery, setSearchQuery] = useState('');
   // 2.1 CONFIRMAR PESO DESDE LA BALANZA
   const handleConfirmWeight = (weight: number) => {
     if (!selectedWeightProduct) return;
-    setCart(prevCart => {
-      const existe = prevCart.find(item => item.id === selectedWeightProduct.id);
-      const nuevaQty = existe ? existe.cartQuantity + weight : weight;
-      
-      // 🛡️ CANDADO 2: Bloquear si el peso que pidió supera los kilos en inventario
-      if (nuevaQty > selectedWeightProduct.quantity && selectedWeightProduct.unit !== 'CONSUMO') {
-        alert(`🚫 STOCK INSUFICIENTE: Solo tienes ${selectedWeightProduct.quantity} KG de ${selectedWeightProduct.name}.`);
-        return prevCart; // Cancela la acción y lo deja como estaba
-      }
+    
+    // 🛡️ Extraemos la verificación de la balanza fuera del setCart
+    const existe = cart.find(item => item.id === selectedWeightProduct.id);
+    const nuevaQty = existe ? existe.cartQuantity + weight : weight;
+    
+    // 🛡️ CANDADO 2: Bloquear si el peso que pidió supera los kilos en inventario
+    if (nuevaQty > selectedWeightProduct.quantity && selectedWeightProduct.unit !== 'CONSUMO') {
+      alert(`🚫 STOCK INSUFICIENTE: Solo tienes ${selectedWeightProduct.quantity} KG de ${selectedWeightProduct.name}.`);
+      return; // Cancela la acción por completo
+    }
 
-      if (existe) {
+    setCart(prevCart => {
+      const existePrev = prevCart.find(item => item.id === selectedWeightProduct.id);
+      if (existePrev) {
         return prevCart.map(item => item.id === selectedWeightProduct.id ? { ...item, cartQuantity: nuevaQty, subtotal: Math.round((nuevaQty * item.price) * 100) / 100 } : item);
       } else {
         return [{ ...selectedWeightProduct, cartQuantity: weight, subtotal: Math.round((weight * selectedWeightProduct.price) * 100) / 100 }, ...prevCart];
@@ -330,6 +452,7 @@ const [searchQuery, setSearchQuery] = useState('');
     });
     setSelectedWeightProduct(null);
     setIsBalanzaModalOpen(false);
+    setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 100);
   };
 
   // 2.2 CONFIRMAR PRECIO MANUAL (CONSUMO)
@@ -352,31 +475,38 @@ const [searchQuery, setSearchQuery] = useState('');
     
     setSelectedConsumoProduct(null);
     setIsPrecioModalOpen(false); 
+    setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 100);
   };
 
   // 2.3 EDITAR PRECIO MANUALMENTE DESDE EL TICKET
   const updatePrice = (id: string, newPrice: number) => {
-    setCart(cart.map(item => 
+    setCart(prevCart => prevCart.map(item => 
       item.id === id ? { ...item, price: newPrice, subtotal: Math.round((newPrice * item.cartQuantity) * 100) / 100 } : item
     ));
   };
 
   // 3. EDITAR CANTIDAD MANUALMENTE (+ / - o PESO)
   const updateQuantity = (id: string, newQty: number) => {
-    if (newQty <= 0) {
-      setCart(cart.filter(item => item.id !== id));
-      return;
+    // 🛡️ Extraemos la alerta fuera del setCart para evitar que React la dispare 2 veces en su ciclo de renderizado
+    const itemInCart = cart.find(i => i.id === id);
+    let finalQty = newQty;
+    
+    if (itemInCart && finalQty > itemInCart.quantity && itemInCart.unit !== 'CONSUMO') {
+      alert(`🚫 STOCK INSUFICIENTE: Solo tienes ${itemInCart.quantity} disponible(s) de ${itemInCart.name}.`);
+      finalQty = itemInCart.quantity;
     }
-    setCart(cart.map(item => {
-      if (item.id === id) {
-        if (newQty > item.quantity && item.unit !== 'CONSUMO') {
-          alert(`🚫 STOCK INSUFICIENTE: Solo tienes ${item.quantity} disponible(s) de ${item.name}.`);
-          return { ...item, cartQuantity: item.quantity, subtotal: Math.round((item.quantity * item.price) * 100) / 100 };
-        }
-        return { ...item, cartQuantity: newQty, subtotal: Math.round((newQty * item.price) * 100) / 100 };
+
+    setCart(prevCart => {
+      if (finalQty <= 0) {
+        return prevCart.filter(item => item.id !== id);
       }
-      return item;
-    }));
+      return prevCart.map(item => {
+        if (item.id === id) {
+          return { ...item, cartQuantity: finalQty, subtotal: Math.round((finalQty * item.price) * 100) / 100 };
+        }
+        return item;
+      });
+    });
   };
   // 4. NUEVO: PONER TICKET EN ESPERA (Guardar Caja)
   const holdCurrentCart = () => {
@@ -387,21 +517,25 @@ const [searchQuery, setSearchQuery] = useState('');
       }
       setHeldCarts([...heldCarts, cart]); // Guarda el carrito actual en la lista de espera
       setCart([]); // Deja la caja vacía y lista para el siguiente cliente
+      setActiveTabIndex(-1); // 🛡️ Resetea el foco visual, ya que estamos en una caja nueva
     }
   };
 
-  // 5. NUEVO: RECUPERAR TICKET EN ESPERA
+  // 5. NUEVO: RECUPERAR TICKET EN ESPERA (Swap In-Place)
   const restoreCart = (index: number) => {
     const restored = heldCarts[index];
-    const newHeld = heldCarts.filter((_, i) => i !== index);
+    const newHeld = [...heldCarts];
     
-    // Si la caja actual tenía cosas, la mandamos a espera para no perderla (Intercambio)
+    // Intercambio en la misma posición (in-place) para que los botones no salten
     if (cart.length > 0) {
-      newHeld.push(cart);
+      newHeld[index] = cart;
+    } else {
+      newHeld.splice(index, 1);
     }
     
     setHeldCarts(newHeld);
     setCart(restored);
+    setActiveTabIndex(index); // Actualizar el índice para que brille permanente
   };
   // 6. PROCESAR PAGO (GUARDA VENTA, REDUCE STOCK Y REGISTRA FIADOS)
   const handleConfirmPayment = async (
@@ -612,10 +746,14 @@ const [searchQuery, setSearchQuery] = useState('');
             setCart={setCart} 
             updateQuantity={updateQuantity}
             updatePrice={updatePrice}
+            activeTabIndex={activeTabIndex}
             heldCarts={heldCarts}
             holdCurrentCart={holdCurrentCart}
             restoreCart={restoreCart}
-            onPagar={() => setIsCobroModalOpen(true)}
+            onPagar={() => {
+              (document.activeElement as HTMLElement)?.blur();
+              setIsCobroModalOpen(true);
+            }}
           />
         </div>
       </div>
@@ -623,7 +761,10 @@ const [searchQuery, setSearchQuery] = useState('');
       {/* MODAL BALANZA */}
       <ModalBalanza 
         isOpen={isBalanzaModalOpen}
-        onClose={() => setIsBalanzaModalOpen(false)}
+        onClose={() => {
+          setIsBalanzaModalOpen(false);
+          setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 100);
+        }}
         product={selectedWeightProduct}
         onConfirm={handleConfirmWeight}
       />
@@ -633,6 +774,7 @@ const [searchQuery, setSearchQuery] = useState('');
   onClose={() => {
     setIsPrecioModalOpen(false);
     setSelectedConsumoProduct(null);
+    setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 100);
   }}
   producto={selectedConsumoProduct}
   onConfirm={handleConfirmPrecio}
@@ -640,7 +782,10 @@ const [searchQuery, setSearchQuery] = useState('');
       {/* MODAL DE COBRO */}
       <ModalCobro 
         isOpen={isCobroModalOpen}
-        onClose={() => setIsCobroModalOpen(false)}
+        onClose={() => {
+          setIsCobroModalOpen(false);
+          setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 100);
+        }}
         cart={cart}
         total={Math.round(cart.reduce((acc, item) => acc + item.subtotal, 0) * 100) / 100}
         onConfirm={handleConfirmPayment}

@@ -43,31 +43,59 @@ interface Props {
   const [clienteTelefono, setClienteTelefono] = useState('');
   const [fechaVencimiento, setFechaVencimiento] = useState('');
 
-  useEffect(() => {
-    if (isOpen) {
-      setMontoEfectivo(total.toFixed(2));
-      setMontoYape('');
-      setMontoTarjeta('');
-      setImprimirBoleta(true);
-      setIsProcessing(false); // 🛡️ REINICIAR CARGA AL ABRIR
-      // Limpiar datos de fiado
-      setClienteId(''); // <-- AÑADIDO
-      setClienteNombre('');
-      setSearchCliente('');
-      setClienteDni('');
-      setClienteTelefono('');
-      setFechaVencimiento('');
-      setIsDropdownOpen(false);
-      setIsCreatingNew(false);
+  const [lastOpen, setLastOpen] = useState(false);
 
-      // Cargar directorio de clientes en segundo plano
-      const fetchClientes = async () => {
-        const { data } = await traerTodo(() => supabase.from('customers').select('*').order('id'));
-        if (data) setClientesDb(data);
-      };
-      fetchClientes();
-    }
-  }, [isOpen, total]);
+  // 🛡️ RESETEO SÍNCRONO: Evita que el panel de fiado parpadee al abrir la ventana
+  if (isOpen !== lastOpen) {
+    setLastOpen(isOpen);
+    if (isOpen) {
+      setMontoEfectivo(total.toFixed(2));
+      setMontoYape('');
+      setMontoTarjeta('');
+      setImprimirBoleta(true);
+      setIsProcessing(false);
+      setClienteId('');
+      setClienteNombre('');
+      setSearchCliente('');
+      setClienteDni('');
+      setClienteTelefono('');
+      const manana = new Date();
+      manana.setDate(manana.getDate() + 1);
+      const year = manana.getFullYear();
+      const month = String(manana.getMonth() + 1).padStart(2, '0');
+      const day = String(manana.getDate()).padStart(2, '0');
+      setFechaVencimiento(`${year}-${month}-${day}`);
+      setIsDropdownOpen(false);
+      setIsCreatingNew(false);
+    }
+  }
+
+  useEffect(() => {
+    if (isOpen) {
+      // 🛡️ AUTO-FOCO AGRESIVO: Evita que el navegador o eventos nativos de teclado roben el foco
+      let intentos = 0;
+      const intervaloFoco = setInterval(() => {
+        const input = document.getElementById('pago-efectivo') as HTMLInputElement;
+        if (input && document.activeElement !== input) {
+          input.focus();
+          input.select();
+        }
+        intentos++;
+        if (intentos >= 15) { // Medio segundo completo forzando el foco sin importar nada
+          clearInterval(intervaloFoco);
+        }
+      }, 30);
+
+      // Cargar directorio de clientes en segundo plano
+      const fetchClientes = async () => {
+        const { data } = await traerTodo(() => supabase.from('customers').select('*').order('id'));
+        if (data) setClientesDb(data);
+      };
+      fetchClientes();
+
+      return () => clearInterval(intervaloFoco);
+    }
+  }, [isOpen]);
 
   // Desde 900px (tablet horizontal/PC) hay ancho para poner el fiado en su propia ventana a la izquierda
   const [esPantallaMedia, setEsPantallaMedia] = useState(() => window.matchMedia('(min-width: 900px)').matches);
@@ -126,6 +154,7 @@ interface Props {
         const { data, error } = await supabase.from('customers').insert([{
           name: clienteNombre.toUpperCase(),
           dni: clienteDni || null,
+          telefono: clienteTelefono || null,
           created_at: new Date().toISOString(),
           is_synced: 1 // 🛡️ Corregido a número matemático puro
         }]).select('id').single();
@@ -186,6 +215,7 @@ interface Props {
 
             {!isCreatingNew ? (
               <button 
+                id="fiado-btn-toggle"
                 onClick={() => {
                   setIsCreatingNew(true);
                   setClienteNombre('');
@@ -193,19 +223,30 @@ interface Props {
                   setClienteTelefono('');
                   setSearchCliente('');
                 }}
-                className="flex items-center gap-1 bg-[var(--color-accent)] text-white px-3 py-1.5 text-[12px] font-black uppercase border-2 border-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] hover:border-[var(--color-accent-dark)] transition-colors rounded-none shadow-[2px_2px_0_0_var(--color-accent-shadow)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] cursor-pointer"
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('fiado-search')?.focus(); }
+                  if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
+                  if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
+                }}
+                className="flex items-center gap-1 bg-[var(--color-accent)] text-white px-3 py-1.5 text-[12px] font-black uppercase border-2 border-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] hover:border-[var(--color-accent-dark)] transition-colors rounded-none shadow-[2px_2px_0_0_var(--color-accent-shadow)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] cursor-pointer focus:ring-2 focus:ring-black focus:outline-none"
               >
                 <Plus size={14}/> Nuevo Cliente
               </button>
             ) : (
               <button 
+                id="fiado-btn-toggle"
                 onClick={() => {
                   setIsCreatingNew(false);
                   setClienteNombre('');
                   setClienteDni('');
                   setClienteTelefono('');
                 }}
-                className="flex items-center gap-1 bg-[var(--color-danger)] text-white px-3 py-1.5 text-[12px] font-black uppercase border-2 border-[var(--color-danger)] hover:bg-[var(--color-danger-dark)] hover:border-[var(--color-danger-dark)] transition-colors rounded-none shadow-[2px_2px_0_0_#991B1B] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] cursor-pointer"
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('fiado-nombre')?.focus(); }
+                  if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
+                  if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
+                }}
+                className="flex items-center gap-1 bg-[var(--color-danger)] text-white px-3 py-1.5 text-[12px] font-black uppercase border-2 border-[var(--color-danger)] hover:bg-[var(--color-danger-dark)] hover:border-[var(--color-danger-dark)] transition-colors rounded-none shadow-[2px_2px_0_0_#991B1B] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] cursor-pointer focus:ring-2 focus:ring-black focus:outline-none"
               >
                 <X size={14}/> Cancelar Nuevo
               </button>
@@ -222,12 +263,28 @@ interface Props {
                 {...clicConTeclado(() => setIsDropdownOpen(true))}
               >
                 <input
+                  id="fiado-search"
                   type="text"
+                  autoComplete="off"
                   placeholder="BUSCAR CLIENTE EN EL DIRECTORIO..."
                   value={isDropdownOpen ? searchCliente : clienteNombre}
                   onChange={(e) => {
                     setSearchCliente(e.target.value.toUpperCase());
                     setIsDropdownOpen(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('fiado-btn-toggle')?.focus(); }
+                    if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('pago-efectivo')?.focus(); }
+                    if (e.key === 'ArrowDown') { 
+                       e.preventDefault(); 
+                       const firstItem = document.getElementById('fiado-list-item-0');
+                       if (isDropdownOpen && firstItem) {
+                         firstItem.focus();
+                       } else {
+                         document.getElementById('fiado-fecha')?.focus(); 
+                       }
+                    }
+                    if (e.key === 'Delete') { e.preventDefault(); if ((e.target as HTMLInputElement).value === '') onClose(); else { setSearchCliente(''); setClienteNombre(''); setClienteId(''); } }
                   }}
                   className="w-full text-xs font-black uppercase outline-none bg-transparent text-[var(--color-ink)] placeholder-[var(--color-subtle)]"
                 />
@@ -237,7 +294,7 @@ interface Props {
               </div>
 
               {/* LISTA DESPLEGABLE CONECTADA A LA BASE DE DATOS */}
-              {isDropdownOpen && (
+              {isDropdownOpen && searchCliente.trim() !== '' && (
                 <div className="absolute z-50 top-[100%] left-0 w-full mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-48 overflow-y-auto custom-scrollbar rounded-none">
                   {clientesDb.filter(c => (c.nombre || c.name || '').toUpperCase().includes(searchCliente)).length === 0 ? (
                     <div className="p-4 text-xs font-black uppercase text-[var(--color-muted)] text-center bg-[var(--color-bg)]">
@@ -246,18 +303,48 @@ interface Props {
                   ) : (
                     clientesDb
                       .filter(c => (c.nombre || c.name || '').toUpperCase().includes(searchCliente))
-                      .map(c => (
+                      .map((c, index, arr) => (
                         <div
                           key={c.id}
-                          className="p-3 text-[13px] font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-warning)] hover:text-white cursor-pointer border-b border-[var(--color-border)] last:border-0 transition-colors flex justify-between items-center rounded-none"
-                          {...clicConTeclado(() => {
-                            setClienteId(c.id?.toString() || ''); // <-- GUARDAMOS EL ID AL SELECCIONAR
+                          id={`fiado-list-item-${index}`}
+                          tabIndex={0}
+                          className="p-3 text-[13px] font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-warning)] hover:text-white focus:bg-[var(--color-warning)] focus:text-white focus:outline-none cursor-pointer border-b border-[var(--color-border)] last:border-0 transition-colors flex justify-between items-center rounded-none"
+                          onKeyDown={(e) => {
+                             if (e.key === 'ArrowDown') {
+                               e.preventDefault();
+                               if (index < arr.length - 1) {
+                                 document.getElementById(`fiado-list-item-${index + 1}`)?.focus();
+                               } else {
+                                 document.getElementById('fiado-fecha')?.focus();
+                               }
+                             }
+                             if (e.key === 'ArrowUp') {
+                               e.preventDefault();
+                               if (index > 0) {
+                                 document.getElementById(`fiado-list-item-${index - 1}`)?.focus();
+                               } else {
+                                 document.getElementById('fiado-search')?.focus();
+                               }
+                             }
+                             if (e.key === 'Enter' || e.key === ' ') {
+                               e.preventDefault();
+                               setClienteId(c.id?.toString() || '');
+                               setClienteNombre(c.nombre || c.name || '');
+                               setClienteDni(c.dni || '');
+                               setClienteTelefono(c.telefono || '');
+                               setSearchCliente('');
+                               setIsDropdownOpen(false);
+                               setTimeout(() => document.getElementById('fiado-fecha')?.focus(), 50);
+                             }
+                          }}
+                          onClick={() => {
+                            setClienteId(c.id?.toString() || '');
                             setClienteNombre(c.nombre || c.name || '');
                             setClienteDni(c.dni || '');
                             setClienteTelefono(c.telefono || '');
                             setSearchCliente('');
                             setIsDropdownOpen(false);
-                          })}
+                          }}
                         >
                           <span>{c.nombre || c.name || 'SIN NOMBRE'}</span>
                           {c.dni && <span className="text-[12px] opacity-70">DNI:{c.dni}</span>}
@@ -273,10 +360,18 @@ interface Props {
               <div className="space-y-1">
                 <label className="text-[12px] font-black text-[var(--color-warning-text)] uppercase">Nombre del Nuevo Cliente *</label>
                 <input 
+                  id="fiado-nombre"
                   type="text" 
+                  autoComplete="off"
                   placeholder="EJ: JUAN PEREZ..."
                   value={clienteNombre}
                   onChange={(e) => setClienteNombre(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('fiado-btn-toggle')?.focus(); }
+                    if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
+                    if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('fiado-dni')?.focus(); }
+                    if (e.key === 'Delete') { e.preventDefault(); if ((e.target as HTMLInputElement).value === '') onClose(); else setClienteNombre(''); }
+                  }}
                   className="w-full bg-white border-2 border-[var(--color-warning-border)] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-warning)] rounded-none"
                 />
               </div>
@@ -284,22 +379,38 @@ interface Props {
                 <div className="space-y-1">
                   <label className="text-[12px] font-bold text-[var(--color-warning-text)] uppercase">DNI (Opcional)</label>
                   <input 
+                    id="fiado-dni"
                     type="text" 
+                    autoComplete="off"
                     placeholder="8 DÍGITOS"
                     maxLength={8}
                     value={clienteDni}
                     onChange={(e) => setClienteDni(e.target.value.replace(/\D/g, ''))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('fiado-nombre')?.focus(); }
+                      if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('fiado-celular')?.focus(); }
+                      if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('fiado-celular')?.focus(); }
+                      if (e.key === 'Delete') { e.preventDefault(); if ((e.target as HTMLInputElement).value === '') onClose(); else setClienteDni(''); }
+                    }}
                     className="w-full bg-white border-2 border-[var(--color-warning-border)] p-2 text-xs font-bold text-[var(--color-ink)] outline-none focus:border-[var(--color-warning)] rounded-none"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[12px] font-bold text-[var(--color-warning-text)] uppercase">Celular (Opcional)</label>
                   <input 
+                    id="fiado-celular"
                     type="text" 
+                    autoComplete="off"
                     placeholder="NÚMERO"
                     maxLength={9}
                     value={clienteTelefono}
                     onChange={(e) => setClienteTelefono(e.target.value.replace(/\D/g, ''))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('fiado-nombre')?.focus(); }
+                      if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('fiado-fecha')?.focus(); }
+                      if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('fiado-dni')?.focus(); }
+                      if (e.key === 'Delete') { e.preventDefault(); if ((e.target as HTMLInputElement).value === '') onClose(); else setClienteTelefono(''); }
+                    }}
                     className="w-full bg-white border-2 border-[var(--color-warning-border)] p-2 text-xs font-bold text-[var(--color-ink)] outline-none focus:border-[var(--color-warning)] rounded-none"
                   />
                 </div>
@@ -309,13 +420,34 @@ interface Props {
 
           {/* FECHA VENCIMIENTO (APLICA PARA AMBOS MODOS) */}
           <div className="space-y-1 mt-1 pt-2 border-t-2 border-[var(--color-warning-border)]">
-            <label className="text-[12px] font-black text-[var(--color-warning-text)] uppercase flex items-center gap-1">
+            <label 
+              htmlFor="fiado-fecha" 
+              className="text-[12px] font-black text-[var(--color-warning-text)] uppercase flex items-center gap-1 cursor-pointer"
+              onClick={(e) => {
+                 e.preventDefault();
+                 document.getElementById('fiado-fecha')?.focus();
+                 if ('showPicker' in HTMLInputElement.prototype) {
+                   try { (document.getElementById('fiado-fecha') as HTMLInputElement).showPicker(); } catch (err) {}
+                 }
+              }}
+            >
               <Calendar size={14}/> Fecha Límite de Pago *
             </label>
             <input 
+              id="fiado-fecha"
               type="date" 
               value={fechaVencimiento}
               onChange={(e) => setFechaVencimiento(e.target.value)}
+              onKeyDown={(e) => {
+                 if (e.key === 'Enter') {
+                   e.preventDefault();
+                   document.getElementById('cobro-btn-confirm')?.focus();
+                 }
+                 if (e.key === 'ArrowUp') { e.preventDefault(); const target = document.getElementById('fiado-celular') || document.getElementById('fiado-search'); target?.focus(); }
+                 if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('cobro-btn-confirm')?.focus(); }
+                 if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('cobro-btn-confirm')?.focus(); }
+                 if (e.key === 'Delete') { e.preventDefault(); if ((e.target as HTMLInputElement).value === '') onClose(); else setFechaVencimiento(''); }
+              }}
               className="w-full bg-white border-2 border-[var(--color-warning-border)] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-warning)] rounded-none cursor-pointer"
             />
           </div>
@@ -324,7 +456,7 @@ interface Props {
   );
 
   return (
-    <div className="fixed inset-0 bg-[var(--color-ink)]/90 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4 font-mono">
+    <div role="dialog" className="fixed inset-0 bg-[var(--color-ink)]/90 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4 font-mono">
       <div className="relative bg-white w-full max-w-md border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
         {/* Ventana de fiado (tablet/PC): pegada al lado derecho de la ventana de pago, en
             posición absoluta (relativa a esta misma ventana) para que NUNCA la mueva ni la
@@ -349,7 +481,22 @@ interface Props {
           <h2 className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
             <Calculator size={20} /> Pago Mixto
           </h2>
-          <button onClick={onClose} className="hover:text-white transition-colors cursor-pointer">
+          <button 
+            id="cobro-btn-close"
+            onClick={onClose} 
+            onKeyDown={(e) => {
+              if (e.key === 'Tab') {
+                e.preventDefault();
+                if (e.shiftKey) document.getElementById('cobro-btn-confirm')?.focus();
+                else document.getElementById('pago-efectivo')?.focus();
+              }
+              if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('pago-efectivo')?.focus(); }
+              if (e.key === 'ArrowRight') { e.preventDefault(); if (faltante > 0) document.getElementById('fiado-btn-toggle')?.focus(); }
+              if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-confirm')?.focus(); }
+              if (e.key === 'Delete') { e.preventDefault(); onClose(); }
+            }}
+            className="hover:text-white focus:text-white focus:bg-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer p-1"
+          >
             <X size={20} strokeWidth={3} />
           </button>
         </div>
@@ -377,8 +524,8 @@ interface Props {
                 <span className="absolute left-2 top-1/2 -translate-y-1/2 font-black text-[var(--color-muted)] text-sm">S/</span>
                 <input 
                   id="pago-efectivo"
-                  autoFocus 
                   type="text" 
+                  autoComplete="off"
                   inputMode="decimal"
                   value={montoEfectivo} 
                   onChange={(e) => setMontoEfectivo(e.target.value.replace(/[^0-9.]/g, ''))} 
@@ -387,6 +534,18 @@ interface Props {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && puedeConfirmar) handleCobrar();
                     if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('pago-yape')?.focus(); }
+                    if (e.key === 'ArrowRight') { e.preventDefault(); if (faltante > 0) { (document.getElementById('fiado-nombre') || document.getElementById('fiado-search'))?.focus(); } }
+                    if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
+                    if (e.key === 'Tab') {
+                       e.preventDefault();
+                       if (e.shiftKey) document.getElementById('cobro-btn-close')?.focus();
+                       else document.getElementById('pago-yape')?.focus();
+                    }
+                    if (e.key === 'Delete') {
+                       e.preventDefault();
+                       if (montoEfectivo === '') onClose();
+                       else setMontoEfectivo('');
+                    }
                   }} 
                   className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[var(--color-ink)] focus:bg-[var(--color-accent-bg)]" 
                   placeholder="0.00" 
@@ -402,6 +561,7 @@ interface Props {
                 <input 
                   id="pago-yape"
                   type="text" 
+                  autoComplete="off"
                   inputMode="decimal"
                   value={montoYape} 
                   onChange={(e) => setMontoYape(e.target.value.replace(/[^0-9.]/g, ''))} 
@@ -410,7 +570,18 @@ interface Props {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && puedeConfirmar) handleCobrar();
                     if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('pago-efectivo')?.focus(); }
+                    if (e.key === 'ArrowRight') { e.preventDefault(); if (faltante > 0) { (document.getElementById('fiado-nombre') || document.getElementById('fiado-search'))?.focus(); } }
                     if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('pago-tarjeta')?.focus(); }
+                    if (e.key === 'Tab') {
+                       e.preventDefault();
+                       if (e.shiftKey) document.getElementById('pago-efectivo')?.focus();
+                       else document.getElementById('pago-tarjeta')?.focus();
+                    }
+                    if (e.key === 'Delete') {
+                       e.preventDefault();
+                       if (montoYape === '') onClose();
+                       else setMontoYape('');
+                    }
                   }} 
                   className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[var(--color-ink)] focus:bg-[#F3E8FF]" 
                   placeholder="0.00" 
@@ -426,6 +597,7 @@ interface Props {
                 <input 
                   id="pago-tarjeta"
                   type="text" 
+                  autoComplete="off"
                   inputMode="decimal"
                   value={montoTarjeta} 
                   onChange={(e) => setMontoTarjeta(e.target.value.replace(/[^0-9.]/g, ''))} 
@@ -434,6 +606,18 @@ interface Props {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && puedeConfirmar) handleCobrar();
                     if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('pago-yape')?.focus(); }
+                    if (e.key === 'ArrowRight') { e.preventDefault(); if (faltante > 0) { (document.getElementById('fiado-nombre') || document.getElementById('fiado-search'))?.focus(); } }
+                    if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('cobro-btn-confirm')?.focus(); }
+                    if (e.key === 'Tab') {
+                       e.preventDefault();
+                       if (e.shiftKey) document.getElementById('pago-yape')?.focus();
+                       else document.getElementById('cobro-btn-confirm')?.focus();
+                    }
+                    if (e.key === 'Delete') {
+                       e.preventDefault();
+                       if (montoTarjeta === '') onClose();
+                       else setMontoTarjeta('');
+                    }
                   }} 
                   className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[var(--color-ink)] focus:bg-[var(--color-info-bg-2)]" 
                   placeholder="0.00" 
@@ -492,9 +676,21 @@ interface Props {
 
         <div className="px-4 py-3 [@media(max-height:700px)]:py-2 bg-white border-t-2 border-[var(--color-ink)] shrink-0">
           <button 
+            id="cobro-btn-confirm"
             onClick={handleCobrar}
+            onKeyDown={(e) => {
+              if (e.key === 'Tab') {
+                 e.preventDefault();
+                 if (e.shiftKey) document.getElementById('pago-tarjeta')?.focus();
+                 else document.getElementById('cobro-btn-close')?.focus();
+              }
+              if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
+              if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('pago-tarjeta')?.focus(); }
+              if (e.key === 'ArrowRight') { e.preventDefault(); if (faltante > 0) document.getElementById('fiado-fecha')?.focus(); }
+              if (e.key === 'Delete') { e.preventDefault(); onClose(); }
+            }}
             disabled={!puedeConfirmar || isProcessing}
-            className={`w-full py-3 [@media(max-height:700px)]:py-2 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all shadow-[4px_4px_0_0_var(--color-ink)] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] ${
+            className={`w-full py-3 [@media(max-height:700px)]:py-2 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all shadow-[4px_4px_0_0_var(--color-ink)] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] focus:outline-none focus:ring-4 focus:ring-[var(--color-ink)] ${
               (!puedeConfirmar || isProcessing) ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-70' :
               faltante > 0 ? 'bg-[var(--color-warning)] text-[var(--color-ink)] cursor-pointer' : 'bg-[var(--color-ink)] text-white hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] cursor-pointer'
             }`}
