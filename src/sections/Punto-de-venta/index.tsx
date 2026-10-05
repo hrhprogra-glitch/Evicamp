@@ -784,6 +784,11 @@ const [searchQuery, setSearchQuery] = useState('');
         isOpen={isCobroModalOpen}
         onClose={() => {
           setIsCobroModalOpen(false);
+          setSelectedIndex(-1); // 🛡️ AÑADIDO: Resetear estado del carrito para soltar el botón F4
+          if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+          }
+          document.getElementById('buscador-global-pos')?.focus();
           setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 100);
         }}
         cart={cart}

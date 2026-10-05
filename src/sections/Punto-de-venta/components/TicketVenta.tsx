@@ -323,7 +323,10 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
         
         <button 
           id="btn-proceder-pago"
-          onClick={onPagar}
+          onClick={(e) => {
+            e.currentTarget.blur();
+            onPagar();
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.stopPropagation(); // Evita que index.tsx lo confunda con borrar fila
