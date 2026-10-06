@@ -8,10 +8,7 @@ import { HeaderInventario } from './components/HeaderInventario';
 import { FiltrosInventario } from './components/FiltrosInventario';
 import { TablaProductos } from './components/TablaProductos';
 import { ModalProducto } from './components/ModalProducto';
-import { TablaLotes } from './components/TablaLotes';
-import { ModalMerma } from './components/ModalMerma';
 import { TarjetaMetrica } from './components/TarjetaMetrica';
-import { ModalLote } from './components/ModalLote';
 import { traerTodo } from '../../utils/traerTodo';
 
 interface InventarioProps {
@@ -20,13 +17,7 @@ interface InventarioProps {
 export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const [vistaActiva, setVistaActiva] = useState<'PRODUCTOS' | 'LOTES'>('PRODUCTOS');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isModalMermaOpen, setIsModalMermaOpen] = useState(false);
-  const [mermaAEditar, setMermaAEditar] = useState<any>(null);
-  const [isModalLoteOpen, setIsModalLoteOpen] = useState(false); // <-- ESTADO DEL NUEVO MODAL
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
-  const [preselectedLoteProduct, setPreselectedLoteProduct] = useState<Product | null>(null);
-  const [nuevoLoteRealtime, setNuevoLoteRealtime] = useState<any>(null);
-  const [loteToEdit, setLoteToEdit] = useState<any>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbCategories, setDbCategories] = useState<string[]>([]); // 🔥 NUEVO: Memoria para tu tabla categories
@@ -200,27 +191,14 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     <div className="flex flex-col gap-6 short:gap-3 w-full pb-10 text-[var(--color-ink)] font-mono h-full bg-white relative">
       
       <HeaderInventario 
-        onIngresoStock={() => setIsModalLoteOpen(true)} 
         onNuevoSKU={() => setIsModalOpen(true)}
-        onRegistrarMerma={() => setIsModalMermaOpen(true)}
-      />
-
-      <div className="px-3 lg:px-4 shrink-0 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6">
-        <div className="grid grid-cols-2 sm:flex w-full sm:w-auto border-2 border-[var(--color-ink)] p-0.5 bg-[var(--color-bg)]">
-          <button onClick={() => setVistaActiva('PRODUCTOS')} className={`flex items-center justify-center gap-2 px-3 sm:px-6 py-2 text-[12px] font-black uppercase tracking-[0.2em] transition-all rounded-none cursor-pointer ${vistaActiva === 'PRODUCTOS' ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-white'}`}>
-            <Package size={14} /> Inventario General
-          </button>
-          <button onClick={() => setVistaActiva('LOTES')} className={`flex items-center justify-center gap-2 px-3 sm:px-6 py-2 text-[12px] font-black uppercase tracking-[0.2em] transition-all rounded-none cursor-pointer ${vistaActiva === 'LOTES' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-white'}`}>
-            <Layers size={14} /> Control de Lotes
-          </button>
-        </div>
-
+      >
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:flex gap-3 sm:gap-4 w-full xl:w-auto">
           <TarjetaMetrica label="Total SKUs" value={products.length} icon={<Box size={14}/>} />
           <TarjetaMetrica label="Nivel Crítico" value={lowStockCount} icon={<AlertTriangle size={14}/>} isAlert={lowStockCount > 0} />
           <TarjetaMetrica label="Valor Total" value={`S/ ${totalValue.toFixed(2)}`} icon={<LayoutGrid size={14}/>} isGreen />
         </div>
-      </div>
+      </HeaderInventario>
 
       <FiltrosInventario 
         searchQuery={searchQuery}
@@ -237,7 +215,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
       />
 
       <div className="flex-1 px-3 lg:px-4 min-h-0 flex flex-col relative pb-8">
-        <div className={`flex-1 min-h-0 ${vistaActiva === 'PRODUCTOS' ? 'flex flex-col' : 'hidden'}`}>
+        <div className={`flex-1 min-h-0 flex flex-col`}>
           {/* PASAMOS LOS DATOS PAGINADOS A LA TABLA */}
           <TablaProductos 
   loading={loading} 
@@ -269,46 +247,10 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     // 3. 🛡️ EVICAMP: Recarga táctica de TablaLotes para eliminar los lotes del producto
     setRefreshLotesKey(prev => prev + 1);
   }}
-  // === NUEVA CONEXIÓN AQUÍ ===
-  onViewHistory={(producto) => {
-    setVistaActiva('LOTES'); // Cambia a la pestaña de Lotes
-    setSearchQuery(producto.name); // Busca automáticamente el nombre del producto
+  onViewHistory={() => {
+    if (onNavigate) onNavigate('proveedores');
   }}
-  // ===========================
 />
-        </div>
-        <div className={`flex-1 min-h-0 ${vistaActiva === 'LOTES' ? 'flex flex-col' : 'hidden'}`}>
-          <TablaLotes 
-            key={refreshLotesKey} // 🛡️ EVICAMP: Al cambiar esta variable, React destruye y vuelve a crear la tabla fresca
-            searchQuery={searchQuery}
-            filtroCategoria={filtroCategoria}
-            filtroEstado={filtroEstado}
-            filtroOrden={filtroOrden}
-            nuevoLoteInyectado={nuevoLoteRealtime}
-            onViewMermas={(_lote) => {
-              // Aquí podrías filtrar las mermas por ese lote específico si lo deseas
-              if (onNavigate) onNavigate('mermas');
-            }}
-            onEditLote={(lote) => {
-              setLoteToEdit(lote);
-              setIsModalLoteOpen(true);
-            }}
-            // [ RETORNO TÉCNICO ]: Si se borra un lote, actualizamos la memoria de productos
-            onLoteDeleted={(productId, quantityRemoved) => {
-              setProducts(prev => prev.map(p => {
-                if (p.id === productId) {
-                  const nuevoStock = Math.max(0, p.quantity - quantityRemoved);
-                  return {
-                    ...p,
-                    quantity: nuevoStock,
-                    // Si el stock llega a 0, reseteamos el costo visual para que no confunda
-                    cost: nuevoStock === 0 ? 0 : p.cost 
-                  };
-                }
-                return p;
-              }));
-            }}
-          />
         </div>
       </div>
 
@@ -317,22 +259,10 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         initialData={productToEdit}
         productosExistentes={products}
         onClose={() => {
-      setIsModalOpen(false);
-      setTimeout(() => setProductToEdit(null), 200);
-    }}
-        onGoToLotes={(productoRecienCreado) => {
           setIsModalOpen(false);
-          setProductToEdit(null);
-          setVistaActiva('LOTES');
-          
-          // Si nos llega un producto, lo metemos en memoria y abrimos el modal de Lotes
-          if (productoRecienCreado) {
-            setPreselectedLoteProduct(productoRecienCreado);
-            setIsModalLoteOpen(true);
-          }
+          setTimeout(() => setProductToEdit(null), 200);
         }}
         onProductSaved={(nuevoProducto: any) => {
-          // [ RETORNO TÉCNICO ]: Mapeo de integridad. Si es edición, preservamos el stock calculado actual.
           const stockActual = products.find(p => p.id === nuevoProducto.id)?.quantity;
 
           const productoFormateado: Product = {
@@ -351,67 +281,10 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
           if (productToEdit) {
             setProducts(prev => prev.map(p => p.id === productToEdit.id ? productoFormateado : p));
-            // 🛡️ EVICAMP: Si editamos el producto, forzamos recarga de Lotes para que muestre el nuevo nombre/datos
-            setRefreshLotesKey(prev => prev + 1);
           } else {
             setProducts(prev => [productoFormateado, ...prev]);
             setCurrentPage(1);
           }
-        }}
-      />
-      <ModalMerma 
-        isOpen={isModalMermaOpen} 
-        initialData={mermaAEditar} // <--- AHORA EL MODAL RECIBE LOS DATOS
-        onClose={() => {
-          setIsModalMermaOpen(false);
-          setMermaAEditar(null); // <--- LIMPIEZA PARA QUE NO QUEDE PEGADO
-        }} 
-        productos={products} 
-        onProductSaved={(productoActualizado: any, loteId?: string, nuevaCantLote?: number) => {
-          setProducts(prev => prev.map(p => 
-            p.id === productoActualizado.id 
-              ? { ...p, quantity: productoActualizado.quantity } 
-              : p
-          ));
-
-          if (loteId && nuevaCantLote !== undefined) {
-            setNuevoLoteRealtime({
-              id: loteId,
-              quantity: nuevaCantLote
-            });
-          }
-        }}
-      />
-      {/* INVOCACIÓN DEL NUEVO MODAL DE LOTES */}
-      <ModalLote 
-        isOpen={isModalLoteOpen} 
-        onClose={() => {
-          setIsModalLoteOpen(false);
-          setPreselectedLoteProduct(null);
-          setLoteToEdit(null); // <-- LIMPIAR MEMORIA
-        }} 
-        productos={products} 
-        initialProduct={preselectedLoteProduct}
-        initialLote={loteToEdit} // <-- PASAMOS EL LOTE A EDITAR
-        onLoteSaved={(lote) => {
-          setNuevoLoteRealtime(lote);
-          setLoteToEdit(null);
-          if (!loteToEdit) setSearchQuery(''); 
-
-          // 🛡️ PARCHE EVICAMP: Actualizamos la pantalla al instante tanto para LOTES NUEVOS como para EDICIONES
-          const cantidadDiferencia = loteToEdit 
-            ? Number(lote.quantity) - Number(loteToEdit.quantity || 0) 
-            : Number(lote.initial_quantity || lote.quantity);
-
-          setProducts(prevProducts => prevProducts.map(p => 
-            p.id === lote.product_id 
-              ? { 
-                  ...p, 
-                  quantity: Math.max(0, p.quantity + cantidadDiferencia),
-                  cost: Number(lote.cost_unit) // <-- ACTUALIZA EL COSTO UNITARIO CON EL DEL NUEVO LOTE
-                } 
-              : p
-          ));
         }}
       />
     </div>

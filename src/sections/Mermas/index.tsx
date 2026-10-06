@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { Database, TrendingDown, PackageMinus } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import type { Merma } from './types';
@@ -196,27 +196,26 @@ export const Mermas: React.FC = () => {
       
       <HeaderMermas 
         onNuevaMerma={() => setIsModalMermaOpen(true)} 
-      />
-
-      {/* MÉTRICAS */}
-      <div className="px-3 lg:px-4 grid grid-cols-1 sm:grid-cols-2 xl:flex gap-3 sm:gap-4 w-full pb-2 shrink-0 rounded-none">
-        <TarjetaMetrica 
-          label="Eventos Registrados" 
-          value={filteredMermas.length} 
-          icon={<Database size={16}/>} 
-        />
-        <TarjetaMetrica 
-          label="Unidades Afectadas" 
-          value={totalUnidadesPerdidas} 
-          icon={<PackageMinus size={16}/>} 
-        />
-        <TarjetaMetrica 
-          label="Pérdida Económica" 
-          value={`S/ ${totalPerdidaEconómica.toFixed(2)}`} 
-          icon={<TrendingDown size={16}/>} 
-          isAlert={totalPerdidaEconómica > 0} 
-        />
-      </div>
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:flex gap-3 sm:gap-4 w-full xl:w-auto">
+          <TarjetaMetrica 
+            label="Eventos Registrados" 
+            value={filteredMermas.length} 
+            icon={<Database size={16}/>} 
+          />
+          <TarjetaMetrica 
+            label="Unidades Afectadas" 
+            value={totalUnidadesPerdidas} 
+            icon={<PackageMinus size={16}/>} 
+          />
+          <TarjetaMetrica 
+            label="Pérdida Económica" 
+            value={`S/ ${totalPerdidaEconómica.toFixed(2)}`} 
+            icon={<TrendingDown size={16}/>} 
+            isAlert={totalPerdidaEconómica > 0} 
+          />
+        </div>
+      </HeaderMermas>
 
       <FiltrosMermas 
         searchQuery={searchQuery}
@@ -239,12 +238,12 @@ export const Mermas: React.FC = () => {
 
       <div className="px-3 lg:px-4 flex-1 flex flex-col min-h-[calc(var(--alto-pantalla)*0.6)] relative pb-8 rounded-none">
         {loading ? (
-          <div className="absolute inset-0 bg-[var(--color-surface)]/90 backdrop-blur-sm z-10 flex items-center justify-center border border-[var(--color-border)] rounded-none shadow-none">
-            <div className="flex flex-col items-center gap-3">
-              <Database size={24} className="text-[var(--color-ink)] animate-pulse" />
-              <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-[0.2em]">Consultando Base de Datos...</span>
-            </div>
-          </div>
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
+  <div className="flex flex-col items-center gap-4">
+    <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
+    <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest font-mono">Cargando...</span>
+  </div>
+</div>
         ) : (
           <TablaMermas
             mermas={filteredMermas}
@@ -274,3 +273,4 @@ export const Mermas: React.FC = () => {
     </div>
   );
 };
+

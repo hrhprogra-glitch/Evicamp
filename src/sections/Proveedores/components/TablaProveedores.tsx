@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Edit, Trash2, Truck, Phone, Mail, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Proveedor } from '../types';
 
@@ -10,7 +10,7 @@ interface Props {
 
 export const TablaProveedores: React.FC<Props> = ({ proveedores, onEdit, onDelete }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
+  const ITEMS_PER_PAGE = 50;
 
   const totalPages = Math.ceil(proveedores.length / ITEMS_PER_PAGE);
   const paginatedData = proveedores.slice(
@@ -18,9 +18,27 @@ export const TablaProveedores: React.FC<Props> = ({ proveedores, onEdit, onDelet
     currentPage * ITEMS_PER_PAGE
   );
 
+  const renderPagination = (position: 'top' | 'bottom') => {
+    if (totalPages <= 0) return null;
+    return (
+      <div className={`p-3 border-[var(--color-border)] bg-[var(--color-bg)] flex justify-between items-center shrink-0 ${position === 'top' ? 'border-b-2' : 'border-t-2'}`}>
+        <p className="text-[12px] font-black text-[var(--color-muted)] uppercase">
+          Mostrando {(currentPage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, proveedores.length)} de {proveedores.length}
+        </p>
+        <div className="flex gap-2">
+          <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 border-2 border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-bg)] cursor-pointer rounded-none"><ChevronLeft size={16} /></button>
+          <span className="flex items-center justify-center px-4 border-2 border-[var(--color-border)] bg-[var(--color-surface)] text-xs font-black text-[var(--color-ink)] rounded-none">Pág {currentPage} / {totalPages}</span>
+          <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2 border-2 border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-bg)] cursor-pointer rounded-none"><ChevronRight size={16} /></button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="border border-[var(--color-border)] flex-1 flex flex-col bg-white relative w-full">
       
+      {renderPagination('top')}
+
       {/* En pantallas angostas la tabla conserva su ancho mínimo y se desliza horizontalmente */}
       <div className="flex-1 min-h-0 flex flex-col overflow-x-auto custom-scrollbar">
       <div className="flex-1 min-h-0 flex flex-col min-w-[760px]">
@@ -120,29 +138,8 @@ export const TablaProveedores: React.FC<Props> = ({ proveedores, onEdit, onDelet
       </div>
 
       {/* PAGINACIÓN */}
-      {totalPages > 0 && (
-        <div className="border-t border-[var(--color-border)] bg-[var(--color-bg)] p-3 flex items-center justify-between shrink-0">
-          <span className="text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-widest">
-            Página {currentPage} de {totalPages}
-          </span>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="w-8 h-8 flex items-center justify-center bg-white border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white disabled:opacity-50 transition-colors rounded-none cursor-pointer"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <button 
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="w-8 h-8 flex items-center justify-center bg-white border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white disabled:opacity-50 transition-colors rounded-none cursor-pointer"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      )}
+      {renderPagination('bottom')}
     </div>
   );
 };
+

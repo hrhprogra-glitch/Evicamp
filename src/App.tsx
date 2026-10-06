@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { Login } from './sections/Login';
-import { TopBar } from './layout/TopBar';
 import { SideBar } from './layout/SideBar';
 import { validarSesion, type EmpleadoSesion } from './utils/sesion';
 import { puedeVerModulo } from './utils/permisos';
@@ -16,7 +15,6 @@ import { Finanzas } from './sections/Finanzas'; // <--- IMPORTAMOS FINANZAS
 import { Reportes } from './sections/Reportes';
 import { Utilidades } from './sections/Utilidades';
 import Configuraciones from './sections/Configuraciones';
-import Resumen from './sections/Resumen'; // <--- IMPORTAMOS EL NUEVO RESUMEN
 import { aplicarTamanoInterfaz, leerTamanoInterfaz } from './utils/tamanoInterfaz';
 import { AlertaYape } from './layout/AlertaYape';
 
@@ -28,26 +26,50 @@ export const App: React.FC = () => {
   const [empleado, setEmpleado] = useState<EmpleadoSesion | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
-  // El menú lateral arranca contraído: en PC/laptop muestra solo íconos y se despliega tocando
-  // el logo (que brilla para indicarlo); en tablet vertical/celular es un panel deslizable (botón ☰).
-  // Una vez abierto se contrae solo tras unos segundos sin usarlo (temporizador en SideBar).
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  // El menú lateral guarda su estado en localStorage.
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    const guardado = localStorage.getItem('evicamp_sidebar_open');
+    return guardado === 'true';
+  });
 
-  const toggleSidebar = () => setIsSidebarOpen((abierto) => !abierto);
+  const toggleSidebar = () => {
+    setIsSidebarOpen((abierto) => {
+      const nuevo = !abierto;
+      localStorage.setItem('evicamp_sidebar_open', String(nuevo));
+      return nuevo;
+    });
+  };
+
+  const handleCloseSidebar = () => {
+    setIsSidebarOpen(false);
+    localStorage.setItem('evicamp_sidebar_open', 'false');
+  };
+
+  // Atajo global: Tab para alternar el menú lateral
+  useEffect(() => {
+    const handleGlobalTab = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        toggleSidebar();
+      }
+    };
+    window.addEventListener('keydown', handleGlobalTab);
+    return () => window.removeEventListener('keydown', handleGlobalTab);
+  }, []);
 
   // Estado para el Enrutador Interno
-  const [currentView, setCurrentView] = useState<string>('resumen');
+  const [currentView, setCurrentView] = useState<string>('pos');
 
   // Valida la sesión al abrir la app, cada minuto y al volver a la pestaña.
   // Si el empleado fue desactivado o borrado, o le cambiaron los permisos, se aplica enseguida.
   useEffect(() => {
-    // Aplicar tema guardado al cargar (monocromático = filtro/clase, los demás = paleta/atributo)
-    const temaGuardado = localStorage.getItem('gestorpro_theme');
-    if (temaGuardado === 'monochrome') {
-      document.documentElement.classList.add('theme-monochrome');
-    } else if (temaGuardado && temaGuardado !== 'classic') {
-      document.documentElement.setAttribute('data-theme', temaGuardado);
-    }
+    // Aplicar tema guardado al cargar
+      const temaGuardado = localStorage.getItem('gestorpro_theme');
+      if (temaGuardado === 'monochrome') {
+        document.documentElement.classList.add('theme-monochrome');
+      } else if (temaGuardado && temaGuardado !== 'classic') {
+        document.documentElement.setAttribute('data-theme', temaGuardado);
+      }
     aplicarTamanoInterfaz(leerTamanoInterfaz()); // tamaño elegido en Ajustes > Apariencia
 
     let activo = true;
@@ -80,11 +102,11 @@ export const App: React.FC = () => {
   }
 
   if (!empleado) {
-    return <Login onLoginSuccess={(nuevo) => { setCurrentView('resumen'); setEmpleado(nuevo); }} />;
+    return <Login onLoginSuccess={(nuevo) => { setCurrentView('pos'); setEmpleado(nuevo); }} />;
   }
 
-  // Si le quitaron el permiso del módulo que tenía abierto, se muestra el Resumen
-  const vista = puedeVerModulo(empleado.permisos, currentView) ? currentView : 'resumen';
+  // Si le quitaron el permiso del módulo que tenía abierto, se muestra el POS
+  const vista = puedeVerModulo(empleado.permisos, currentView) ? currentView : 'pos';
 
   // Motor de Renderizado Condicional
   const renderCurrentView = () => {
@@ -96,7 +118,7 @@ export const App: React.FC = () => {
       case 'proveedores':
         return <Proveedores />;
       case 'pos':
-        return <POS />;
+        return <POS onNavigate={handleNavigate} />;
       case 'fiados': // <--- CONECTAMOS LA PANTALLA DE FIADOS
         return <Fiados />;
       case 'finanzas': // <--- CONECTAMOS LA PANTALLA DE FINANZAS
@@ -107,8 +129,6 @@ export const App: React.FC = () => {
         return <Reportes />;
       case 'configuracion': // <--- AÑADE ESTO
       return <Configuraciones />;
-      case 'resumen':
-        return <Resumen />;
       default:
         return (
           <div className="border border-dashed border-[var(--color-border)] p-12 text-center">
@@ -133,18 +153,12 @@ export const App: React.FC = () => {
         isOpen={isSidebarOpen}
         currentView={vista}
         onNavigate={handleNavigate}
-        onClose={() => setIsSidebarOpen(false)}
+        onClose={handleCloseSidebar}
         onToggle={toggleSidebar}
         permisos={empleado.permisos}
       />
 
       <main className="flex-1 min-w-0 flex flex-col overflow-hidden bg-[var(--color-bg)]">
-        <TopBar
-          toggleSidebar={toggleSidebar}
-          ocultoEnEscritorio={!isSidebarOpen}
-          userEmail={empleado.email}
-          onNavigate={handleNavigate}
-        />
 
         <section className="p-2 flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
           {renderCurrentView()}
@@ -156,3 +170,7 @@ export const App: React.FC = () => {
 };
 
 export default App;
+
+
+
+

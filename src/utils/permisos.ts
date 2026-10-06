@@ -9,7 +9,6 @@ export const tienePermiso = (permisos: Partial<PermisosUsuario> | null | undefin
 
 // Qué permiso abre cada módulo del menú (uno basta)
 const PERMISOS_POR_MODULO: Record<string, ClavePermiso[]> = {
-  resumen: [], // siempre visible; las cifras de dinero se ocultan sin "Ver utilidades"
   pos: ['caja_realizar_ventas'],
   fiados: ['caja_ver_fiados'],
   inventario: ['almacen_ver_stock'],

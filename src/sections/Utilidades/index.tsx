@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { supabase } from '../../db/supabase';
 import { Activity } from 'lucide-react';
 
@@ -288,39 +288,8 @@ export const Utilidades = () => {
     .map(p => ({ nombre: p.nombre, utilidad: p.utilidadReal }));
 
   return (
-    <div className="flex flex-col gap-3 lg:gap-4 p-0 w-full font-sans bg-[var(--color-surface)]">
-      
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white border border-[var(--color-ink)] p-4 sm:p-6 rounded-none gap-4 shadow-[4px_4px_0px_0px_rgba(var(--color-ink-rgb),0.05)]">
-        <div className="border-l-4 border-[var(--color-accent-shadow)] pl-3 sm:pl-5 min-w-0">
-          <h1 className="text-xl sm:text-3xl font-black text-[var(--color-ink)] uppercase tracking-tighter flex items-center gap-3">
-            <Activity className="text-[var(--color-accent-shadow)] w-6 h-6 sm:w-8 sm:h-8 shrink-0" strokeWidth={2.5} />
-            Análisis de Rentabilidad
-          </h1>
-          <p className="text-[12px] sm:text-[13px] text-[var(--color-muted)] font-black mt-1 uppercase tracking-widest sm:tracking-[0.2em]">
-            Sincronización Total con POS y Finanzas
-          </p>
-        </div>
-        <div className="border-l-2 border-[var(--color-accent-shadow)] pl-3">
-          <h1 className="text-xl font-bold text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2">
-            <Activity size={20} className="text-[var(--color-accent-shadow)]" />
-            Márgenes por Producto
-          </h1>
-          <p className="text-xs text-[var(--color-muted)] font-bold mt-1 uppercase tracking-wider">
-            Sincronizado • <span className="text-[var(--color-accent-shadow)] whitespace-nowrap">Zona Horaria: PE (UTC-5)</span>
-          </p>
-        </div>
-        
-        <button
-          onClick={() => setMostrarTops(!mostrarTops)}
-          className={`px-6 py-3 text-xs font-bold uppercase tracking-widest transition-all duration-200 border-2 rounded-none flex items-center gap-2
-            ${mostrarTops 
-              ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent-shadow)] border-[var(--color-accent-shadow)]' 
-              : 'bg-[var(--color-accent-shadow)] text-white border-[var(--color-accent-shadow)] hover:bg-[var(--color-accent-dark-2)] hover:shadow-[4px_4px_0px_0px_rgba(var(--color-accent-shadow-rgb),0.3)]'
-            }`}
-        >
-          {mostrarTops ? 'Ocultar Resumen Top' : 'Ver Productos Top'}
-        </button>
-      </div>
+    <div className="flex flex-col gap-3 lg:gap-4 p-0 w-full font-mono bg-[var(--color-surface)]">
+
 
       <div className="flex flex-col gap-4 sm:gap-6 shrink-0">
         <FiltrosUtilidades
@@ -341,9 +310,11 @@ export const Utilidades = () => {
           la categoría, rotación, búsqueda y página que el usuario ya eligió. */}
       <div className="relative pb-6">
         {isLoading && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center py-20 bg-white/85 backdrop-blur-[1px]">
-            <div className="w-10 h-10 border-4 border-[var(--color-border)] border-t-[var(--color-accent-shadow)] animate-spin rounded-full mb-4"></div>
-            <p className="text-[var(--color-accent-shadow)] font-bold uppercase tracking-widest text-sm">Sincronizando Base de Datos...</p>
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
+              <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest font-mono">Cargando...</span>
+            </div>
           </div>
         )}
         <TablaAnalisisProductos
@@ -361,3 +332,7 @@ export const Utilidades = () => {
     </div>
   );
 };
+
+
+
+

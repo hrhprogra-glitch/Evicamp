@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es" translate="no">
   <head>
     <meta charset="UTF-8" />
@@ -8,6 +8,18 @@
     <meta name="google" content="notranslate" />
     
     <title>Evicamp</title>
+    <script>
+      (function() {
+        try {
+          var tema = localStorage.getItem('gestorpro_theme');
+          if (tema === 'monochrome') {
+            document.documentElement.classList.add('theme-monochrome');
+          } else if (tema && tema !== 'classic') {
+            document.documentElement.setAttribute('data-theme', tema);
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

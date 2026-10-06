@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '../../db/supabase';
 import type { CartItem } from './types';
 import type { Product } from '../Inventario/types';
@@ -15,7 +15,7 @@ import { TicketImprimible } from './components/TicketImprimible';
 import { traerTodo } from '../../utils/traerTodo';
 import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ EVICAMP: Mini Reporte en Tiempo Real
 
-export const POS: React.FC = () => {
+export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
   const [hasOpenSession, setHasOpenSession] = useState<boolean | null>(null);
   // En tablet/celular se muestra un panel a la vez: catálogo de productos o ticket de venta
   const [vistaMovil, setVistaMovil] = useState<'productos' | 'ticket'>('productos');
@@ -723,8 +723,7 @@ const [searchQuery, setSearchQuery] = useState('');
       </div>
 
       <div className={`${vistaMovil === 'productos' ? 'flex' : 'hidden'} lg:flex flex-1 min-w-0 min-h-0`}>
-        <TerminalBusqueda 
-          searchQuery={searchQuery} 
+        <TerminalBusqueda onNavigate={onNavigate}           searchQuery={searchQuery} 
           setSearchQuery={setSearchQuery} 
           productos={productos}
           onAddToCart={handleAddToCart}

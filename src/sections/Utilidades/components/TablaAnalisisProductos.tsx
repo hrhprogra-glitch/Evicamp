@@ -1,4 +1,4 @@
-// src/sections/Utilidades/components/TablaAnalisisProductos.tsx
+﻿// src/sections/Utilidades/components/TablaAnalisisProductos.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Filter, TrendingDown, TrendingUp, RotateCcw, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import type { AnalisisProducto, StatsFiltro } from '../types';
@@ -80,7 +80,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
     setPaginaActual(1);
   }, [busqueda, filtroCat, filtroEstado]);
 
-  const itemsPorPagina = 10;
+  const itemsPorPagina = 50;
   const totalPaginas = Math.ceil(datosFiltrados.length / itemsPorPagina) || 1;
   const startIndex = (paginaActual - 1) * itemsPorPagina;
   const datosPaginados = datosFiltrados.slice(startIndex, startIndex + itemsPorPagina);
@@ -93,36 +93,36 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
   };
 
   return (
-    <div className="bg-[var(--color-surface)] border border-[var(--color-ink)] rounded-none shadow-[4px_4px_0px_0px_rgba(var(--color-ink-rgb),0.05)] flex flex-col font-sans mt-4">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-none flex flex-col mt-4">
 
       {/* HEADER Y FILTROS */}
-      <div className="p-4 bg-[var(--color-surface)] border-b border-[var(--color-ink)] flex flex-wrap gap-4 items-center justify-between shrink-0">
+      <div className="p-4 bg-[var(--color-surface)] border-b border-[var(--color-border)] flex flex-wrap gap-4 items-center justify-between shrink-0">
         <h2 className="text-[var(--color-ink)] font-black uppercase tracking-widest flex items-center gap-3 text-sm">
           <Filter size={18} className="text-[var(--color-accent-shadow)]" strokeWidth={2.5} />
           RENTABILIDAD DETALLADA DE PRODUCTOS
         </h2>
 
         <div className="flex flex-wrap gap-3 w-full lg:w-auto">
-          <div className="flex bg-[var(--color-surface)] border border-[var(--color-ink)] rounded-none focus-within:border-[var(--color-accent-shadow)] flex-1 lg:w-64 transition-all">
-            <div className="p-2 flex items-center justify-center text-[var(--color-ink)] bg-[var(--color-bg)] border-r border-[var(--color-ink)]">
+          <div className="flex bg-[var(--color-surface)] border border-[var(--color-border)] rounded-none focus-within:border-[var(--color-accent-shadow)] flex-1 lg:w-64 transition-all">
+            <div className="p-2 flex items-center justify-center text-[var(--color-ink)] bg-[var(--color-bg)] border-r border-[var(--color-border)]">
               <Search size={16} strokeWidth={2}/>
             </div>
             <input
               type="text" placeholder="BUSCAR PRODUCTO..."
               value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full text-xs font-bold text-[var(--color-ink)] outline-none p-2 bg-transparent uppercase placeholder:text-[var(--color-subtle)]"
+              className="w-full text-xs font-black text-[var(--color-ink)] outline-none p-2 bg-transparent uppercase placeholder:text-[var(--color-subtle)]"
             />
           </div>
           <select
             value={filtroCat} onChange={(e) => setFiltroCat(e.target.value)}
-            className="bg-[var(--color-surface)] text-xs font-bold text-[var(--color-ink)] outline-none p-2 border border-[var(--color-ink)] rounded-none focus:border-[var(--color-accent-shadow)] cursor-pointer transition-all uppercase"
+            className="bg-[var(--color-surface)] text-xs font-black text-[var(--color-ink)] outline-none p-2 border border-[var(--color-border)] rounded-none focus:border-[var(--color-accent-shadow)] cursor-pointer transition-all uppercase"
           >
             <option value="TODAS">CATEGORÍA: TODAS</option>
             {categoriasUnicas.map(cat => <option key={cat} value={cat}>{cat}</option>)}
           </select>
           <select
             value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}
-            className="bg-[var(--color-surface)] text-xs font-bold text-[var(--color-ink)] outline-none p-2 border border-[var(--color-ink)] rounded-none focus:border-[var(--color-accent-shadow)] cursor-pointer transition-all uppercase"
+            className="bg-[var(--color-surface)] text-xs font-black text-[var(--color-ink)] outline-none p-2 border border-[var(--color-border)] rounded-none focus:border-[var(--color-accent-shadow)] cursor-pointer transition-all uppercase"
           >
             <option value="TODOS">ROTACIÓN: TODAS</option>
             <option value="BUENO">VENTA: BUENO</option>
@@ -131,30 +131,30 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
             <option value="SIN VENTAS">SIN VENTAS</option>
           </select>
 
-          <div className="flex flex-wrap items-center gap-2 bg-[var(--color-surface)] border border-[var(--color-ink)] p-1.5 rounded-none w-full sm:w-auto min-w-0">
+          <div className="flex flex-wrap items-center gap-2 bg-[var(--color-surface)] border border-[var(--color-border)] p-1.5 rounded-none w-full sm:w-auto min-w-0">
             <div className="flex flex-col px-1.5">
-              <label className="text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider">Desde</label>
+              <label className="text-[11px] font-black text-[var(--color-muted)] uppercase tracking-wider">Desde</label>
               <div className="flex items-center gap-1.5">
                 <CalendarDays size={12} className="text-[var(--color-ink)]" />
-                <input type="date" value={localInicio} onChange={(e) => setLocalInicio(e.target.value)} className="text-[13px] font-bold text-[var(--color-ink)] outline-none bg-transparent cursor-pointer font-mono" />
+                <input type="date" value={localInicio} onChange={(e) => setLocalInicio(e.target.value)} className="text-[13px] font-black text-[var(--color-ink)] outline-none bg-transparent cursor-pointer" />
               </div>
             </div>
             <div className="w-[1px] h-7 bg-[var(--color-border)]"></div>
             <div className="flex flex-col px-1.5">
-              <label className="text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider">Hasta</label>
+              <label className="text-[11px] font-black text-[var(--color-muted)] uppercase tracking-wider">Hasta</label>
               <div className="flex items-center gap-1.5">
                 <CalendarDays size={12} className="text-[var(--color-ink)]" />
-                <input type="date" value={localFin} onChange={(e) => setLocalFin(e.target.value)} className="text-[13px] font-bold text-[var(--color-ink)] outline-none bg-transparent cursor-pointer font-mono" />
+                <input type="date" value={localFin} onChange={(e) => setLocalFin(e.target.value)} className="text-[13px] font-black text-[var(--color-ink)] outline-none bg-transparent cursor-pointer" />
               </div>
             </div>
-            <button onClick={handleBuscarFecha} className="bg-[var(--color-ink)] hover:bg-[var(--color-accent-shadow)] text-[var(--color-surface)] p-1.5 rounded-none transition-colors cursor-pointer flex items-center justify-center border border-[var(--color-ink)] hover:border-[var(--color-accent-shadow)]" title="Buscar por Fecha">
+            <button onClick={handleBuscarFecha} className="bg-[var(--color-ink)] hover:bg-[var(--color-accent-shadow)] text-[var(--color-surface)] p-1.5 rounded-none transition-colors cursor-pointer flex items-center justify-center border border-[var(--color-border)] hover:border-[var(--color-accent-shadow)]" title="Buscar por Fecha">
               <Search size={14} strokeWidth={2} />
             </button>
           </div>
 
           <button
             onClick={limpiarFiltrosTabla}
-            className="bg-[var(--color-ink)] hover:bg-[var(--color-accent-shadow)] text-[var(--color-surface)] px-3 py-2 rounded-none transition-colors cursor-pointer border border-[var(--color-ink)] hover:border-[var(--color-accent-shadow)] flex items-center justify-center"
+            className="bg-[var(--color-ink)] hover:bg-[var(--color-accent-shadow)] text-[var(--color-surface)] px-3 py-2 rounded-none transition-colors cursor-pointer border border-[var(--color-border)] hover:border-[var(--color-accent-shadow)] flex items-center justify-center"
             title="Limpiar Todos los Filtros"
           >
             <RotateCcw size={16} strokeWidth={2} />
@@ -163,41 +163,46 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
       </div>
 
       {/* CONTROLES PAGINACIÓN SUPERIOR */}
-      <div className="flex flex-wrap items-center justify-between px-4 py-2 bg-[var(--color-bg)] border-b border-[var(--color-border)] gap-4">
-        <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">
-          MOSTRANDO {datosFiltrados.length === 0 ? 0 : startIndex + 1} A {Math.min(startIndex + itemsPorPagina, datosFiltrados.length)} DE {datosFiltrados.length} REGISTROS
-        </span>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setPaginaActual(p => Math.max(1, p - 1))} disabled={paginaActual === 1} className="px-3 py-1.5 border border-[var(--color-ink)] rounded-none text-[12px] font-bold text-[var(--color-ink)] bg-white hover:bg-[var(--color-accent-shadow)] hover:text-white hover:border-[var(--color-accent-shadow)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-all uppercase">
-            <ChevronLeft size={14} strokeWidth={2}/> ANT
-          </button>
-          <span className="px-3 py-1.5 text-[12px] font-black text-[var(--color-surface)] bg-[var(--color-ink)] rounded-none uppercase tracking-widest">
-            {paginaActual} / {totalPaginas}
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-surface)] p-4 flex items-center justify-between shrink-0 rounded-none">
+          <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">
+            Página {paginaActual} de {totalPaginas}
           </span>
-          <button onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))} disabled={paginaActual === totalPaginas} className="px-3 py-1.5 border border-[var(--color-ink)] rounded-none text-[12px] font-bold text-[var(--color-ink)] bg-white hover:bg-[var(--color-accent-shadow)] hover:text-white hover:border-[var(--color-accent-shadow)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 transition-all uppercase">
-            SIG <ChevronRight size={14} strokeWidth={2}/>
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => setPaginaActual(p => Math.max(1, p - 1))}
+              disabled={paginaActual === 1}
+              className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button 
+              onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))}
+              disabled={paginaActual === totalPaginas}
+              className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* TABLA PRINCIPAL - DISEÑO TÉCNICO ESMERALDA LIGERO */}
+        {/* TABLA PRINCIPAL - DISEÑO TÉCNICO ESMERALDA LIGERO */}
       <div className="w-full overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[1000px]">
-          <thead className="bg-[var(--color-ink)] text-[var(--color-surface)] sticky top-0 z-10">
+          <thead className="bg-[var(--color-ink)] text-[var(--color-surface)] sticky top-0 z-10 p-4 text-xs md:text-sm font-black uppercase tracking-[0.1em]">
             <tr>
-              <th className="p-3 text-[12px] font-black tracking-widest uppercase border-b-2 border-[var(--color-accent-shadow)]">Producto / Ref</th>
-              <th className="p-3 text-[12px] font-black tracking-widest uppercase text-center border-b-2 border-[var(--color-accent-shadow)]">Stock Actual</th>
-              <th className="p-3 text-[12px] font-black tracking-widest uppercase text-center border-b-2 border-[var(--color-accent-shadow)]">U. Vendidas</th>
-              <th className="p-3 text-[12px] font-black tracking-widest uppercase text-right border-b-2 border-[var(--color-accent-shadow)]">Ingreso Cobrado</th>
-              <th className="p-3 text-[12px] font-black tracking-widest uppercase text-right border-b-2 border-[var(--color-accent-shadow)]">Costo Ventas</th>
-              <th className="p-3 text-[12px] font-black tracking-widest uppercase text-right border-b-2 border-[var(--color-accent-shadow)]">Mermas</th>
-              <th className="p-3 text-[12px] font-black tracking-widest uppercase text-right bg-[var(--color-accent-shadow)] text-[var(--color-surface)] border-b-2 border-[var(--color-accent-dark-2)]">Utilidad Neta</th>
-              <th className="p-3 text-[12px] font-black tracking-widest uppercase text-center border-b-2 border-[var(--color-accent-shadow)] w-24">Margen</th>
+              <th className="p-4">Producto / Ref</th>
+              <th className="p-4 text-center">Stock Actual</th>
+              <th className="p-4 text-center">U. Vendidas</th>
+              <th className="p-4 text-right">Ingreso Cobrado</th>
+              <th className="p-4 text-right">Costo Ventas</th>
+              <th className="p-4 text-right">Mermas</th>
+              <th className="p-4 text-right">Utilidad Neta</th>
+              <th className="p-4 text-center w-24">Margen</th>
             </tr>
           </thead>
           <tbody className="bg-[var(--color-surface)]">
             {datosPaginados.length === 0 ? (
-              <tr><td colSpan={8} className="p-3 lg:p-4 text-center text-[var(--color-muted)] font-bold text-xs uppercase border-b border-[var(--color-border)]">NO SE ENCONTRARON REGISTROS.</td></tr>
+              <tr><td colSpan={8} className="p-3 lg:p-4 text-center text-[var(--color-muted)] font-black text-xs uppercase border-b border-[var(--color-border)]">NO SE ENCONTRARON REGISTROS.</td></tr>
             ) : (
               datosPaginados.map((prod) => (
                 <tr
@@ -209,11 +214,11 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                   <td className="p-3">
                     <p className="text-xs font-black text-[var(--color-ink)] uppercase mb-1">{prod.nombre}</p>
                     <div className="flex gap-2">
-                      <span className="text-[12px] font-bold text-[var(--color-muted)] border border-[var(--color-line-light)] bg-[var(--color-bg-2)] px-2 py-0.5 rounded-none uppercase tracking-widest">{prod.categoria}</span>
+                      <span className="text-[12px] font-black text-[var(--color-muted)] border border-[var(--color-line-light)] bg-[var(--color-bg-2)] px-2 py-0.5 rounded-none uppercase tracking-widest">{prod.categoria}</span>
 
-                      <span className={`text-[12px] font-bold px-2 py-0.5 rounded-none uppercase tracking-widest border ${
+                      <span className={`text-[12px] font-black px-2 py-0.5 rounded-none uppercase tracking-widest border ${
                         prod.estado === 'BUENO' ? 'border-[var(--color-accent-shadow)] text-[var(--color-accent-shadow)] bg-[var(--color-accent-bg)]' :
-                        prod.estado === 'REGULAR' ? 'border-[var(--color-ink)] text-[var(--color-ink)]' :
+                        prod.estado === 'REGULAR' ? 'border-[var(--color-border)] text-[var(--color-ink)]' :
                         prod.estado === 'BAJO' ? 'border-[var(--color-subtle)] text-[var(--color-subtle)]' :
                         'border-[var(--color-line-light)] text-[var(--color-muted)] bg-[var(--color-bg-2)]'
                       }`}>
@@ -224,7 +229,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
 
                   <td className="p-3 text-center">
                     {prod.tipoControl === 'CONSUMO' ? (
-                      <span className="text-[12px] font-black px-2 py-1 rounded-none border border-[var(--color-ink)] text-[var(--color-ink)] uppercase tracking-widest">
+                      <span className="text-[12px] font-black px-2 py-1 rounded-none border border-[var(--color-border)] text-[var(--color-ink)] uppercase tracking-widest">
                         INTERNO
                       </span>
                     ) : (
@@ -240,23 +245,25 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                     )}
                   </td>
 
-                  <td className="p-3 text-center text-sm font-black text-[var(--color-ink)] font-mono">
-                    {Number(prod.unidadesVendidas).toFixed(2)} <span className="text-[12px] font-bold text-[var(--color-muted)]">{prod.unidadMedida}</span>
+                  <td className="p-3 text-center">
+                    <div className="inline-flex items-center justify-center px-2 py-1 border-2 border-[var(--color-border)] bg-[var(--color-surface)] font-black text-[var(--color-ink)] text-xs min-w-[50px] truncate rounded-none">
+                      {Number(prod.unidadesVendidas).toFixed(2)}
+                    </div>
                   </td>
-                  <td className="p-3 text-right text-xs font-bold text-[var(--color-muted)] font-mono">S/ {prod.ingresosTotales.toFixed(2)}</td>
-                  <td className="p-3 text-right text-xs font-bold text-[var(--color-muted)] font-mono">S/ {prod.costoTotalVentas.toFixed(2)}</td>
-                  <td className="p-3 text-right text-xs font-bold text-[var(--color-danger)] font-mono">
+                  <td className="p-3 text-right text-xs font-black text-[var(--color-muted)]">S/ {prod.ingresosTotales.toFixed(2)}</td>
+                  <td className="p-3 text-right text-xs font-black text-[var(--color-muted)]">S/ {prod.costoTotalVentas.toFixed(2)}</td>
+                  <td className="p-3 text-right text-xs font-black text-[var(--color-danger)]">
                     {prod.perdidaMerma > 0 ? `- S/ ${prod.perdidaMerma.toFixed(2)}` : 'S/ 0.00'}
                   </td>
-                  <td className="p-3 text-right text-sm font-black border-x border-[var(--color-accent-shadow)]/20 bg-[var(--color-accent-bg)]">
-                    <span className={`font-mono ${prod.utilidadReal >= 0 ? 'text-[var(--color-accent-shadow)]' : 'text-[var(--color-danger)]'}`}>
+                  <td className="p-3 text-right text-sm font-black bg-[var(--color-accent-bg)]">
+                    <span className={`${prod.utilidadReal >= 0 ? 'text-[var(--color-accent-shadow)]' : 'text-[var(--color-danger)]'}`}>
                       S/ {prod.utilidadReal.toFixed(2)}
                     </span>
                   </td>
                   <td className="p-3 text-center">
                     <span className={`flex items-center justify-center gap-1 text-[12px] font-black px-1.5 py-1 rounded-none border tracking-widest ${
                       prod.margen >= 30 ? 'border-[var(--color-accent-shadow)] text-[var(--color-accent-shadow)] bg-[var(--color-accent-bg)]' :
-                      prod.margen > 0 ? 'border-[var(--color-ink)] text-[var(--color-ink)]' :
+                      prod.margen > 0 ? 'border-[var(--color-border)] text-[var(--color-ink)]' :
                       'border-[var(--color-danger)] text-[var(--color-danger)] bg-[var(--color-danger-bg)]'
                     }`}>
                       {prod.margen >= 0 ? <TrendingUp size={12} strokeWidth={3}/> : <TrendingDown size={12} strokeWidth={3}/>}
@@ -270,6 +277,29 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
         </table>
       </div>
 
+      {/* CONTROLES PAGINACIÓN INFERIOR */}
+      <div className="border-t border-[var(--color-border)] bg-[var(--color-surface)] p-4 flex items-center justify-between shrink-0 rounded-none">
+        <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">
+          Página {paginaActual} de {totalPaginas}
+        </span>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => setPaginaActual(p => Math.max(1, p - 1))}
+            disabled={paginaActual === 1}
+            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button 
+            onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))}
+            disabled={paginaActual === totalPaginas}
+            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+
       {productoSeleccionado && (
         <ModalDetalleProducto
           producto={productoSeleccionado}
@@ -279,3 +309,4 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
     </div>
   );
 };
+

@@ -1,4 +1,4 @@
-// src/sections/Finanzas/components/ModalDetalleCaja.tsx
+﻿// src/sections/Finanzas/components/ModalDetalleCaja.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Printer, Receipt, Download, FileText, ChevronLeft } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
@@ -112,8 +112,11 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
         </div>
 
         {loading ? (
-          <p className="text-center font-black animate-pulse p-8">GENERANDO REPORTE...</p>
-        ) : vista === 'DETALLE' ? (
+            <div className="flex flex-col items-center justify-center p-12 gap-4">
+              <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
+              <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest font-mono">Cargando...</span>
+            </div>
+          ) : vista === 'DETALLE' ? (
           <>
             {/* VISTA CLARA: todo lo que hubo, sin el formato angosto de ticket */}
             <div className="flex-1 overflow-auto p-4 sm:p-6 custom-scrollbar flex flex-col gap-4">
@@ -296,3 +299,6 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
     </div>
   );
 };
+
+
+

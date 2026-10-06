@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Building2, FileText, MapPin, Phone, Upload, Save, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 
@@ -109,7 +109,12 @@ export const FormularioEmpresa: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="p-3 lg:p-4 text-center text-[var(--color-muted)] font-mono animate-pulse">Cargando datos...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center p-12 gap-4">
+        <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
+        <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest font-mono">Cargando...</span>
+      </div>
+    );
   }
 
   return (
@@ -235,3 +240,5 @@ export const FormularioEmpresa: React.FC = () => {
     </div>
   );
 };
+
+

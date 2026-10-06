@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Database,Layers, Edit, Trash2, History, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { formatearCantidad } from '../../../utils/formato';
@@ -206,12 +206,12 @@ export const TablaLotes: React.FC<Props> = ({
   return (
     <div className="border border-[var(--color-border)] flex-1 flex flex-col bg-white relative">
       {loading && (
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <Database size={24} className="text-[var(--color-accent)] animate-bounce" />
-            <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-[0.2em]">Cargando Lotes...</span>
-          </div>
-        </div>
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
+  <div className="flex flex-col items-center gap-4">
+    <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
+    <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest font-mono">Cargando...</span>
+  </div>
+</div>
       )}
 
       {/* Paginación Superior */}
@@ -401,3 +401,5 @@ export const TablaLotes: React.FC<Props> = ({
     </div>
   );
 };
+
+

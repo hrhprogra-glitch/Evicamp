@@ -47,20 +47,6 @@ export const Reportes: React.FC = () => {
   const [filtroDeuda, setFiltroDeuda] = useState<'TODOS' | 'PENDIENTE' | 'PAGADO'>('TODOS');
 
   // --- FUNCIONES DE FILTRADO RÁPIDO ---
-  const filtrarHoy = () => {
-    setFechaInicio(hoyStr);
-    setFechaFin(hoyStr);
-  };
-
-  const filtrarSemana = () => {
-    setFechaInicio(haceNDiasPeru(7));
-    setFechaFin(hoyStr);
-  };
-
-  const filtrarMes = () => {
-    setFechaInicio(primerDiaMes);
-    setFechaFin(hoyStr);
-  };
 
   const limpiarFiltros = () => {
     setFechaInicio('');
@@ -398,22 +384,22 @@ export const Reportes: React.FC = () => {
       
       {/* TARJETAS DE MÉTRICAS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 shrink-0">
-        <div className="min-w-0 bg-white border-2 border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-border)] p-3 sm:p-4 flex gap-3 sm:gap-4 items-center rounded-none">
-            <div className="w-12 h-12 bg-[var(--color-bg)] rounded-none border-2 border-[var(--color-border)] flex items-center justify-center">
+        <div className="min-w-0 bg-white border-2 border-[var(--color-info)] shadow-[4px_4px_0_0_var(--color-info)] p-3 sm:p-4 flex gap-3 sm:gap-4 items-center rounded-none transition-transform hover:-translate-y-1">
+            <div className="w-12 h-12 bg-blue-50 rounded-none border border-[var(--color-info)] flex items-center justify-center">
               <FileText className="text-[var(--color-info)]" />
             </div>
             <div>
-              <p className="text-[12px] font-black uppercase tracking-widest text-[var(--color-muted)]">Ventas del Rango</p>
-              <p className="text-2xl font-black text-[var(--color-ink)]">S/ {totalRango.toFixed(2)}</p>
+              <p className="text-[12px] font-black uppercase tracking-widest text-[var(--color-info)]">Ventas del Rango</p>
+              <p className="text-2xl font-black text-[var(--color-info)]">S/ {totalRango.toFixed(2)}</p>
             </div>
           </div>
           
-          <div className="min-w-0 bg-white border-2 border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-border)] p-3 sm:p-4 flex gap-3 sm:gap-4 items-center rounded-none">
-            <div className="w-12 h-12 bg-[var(--color-danger-bg)] rounded-none border-2 border-[var(--color-danger)] flex items-center justify-center">
+          <div className="min-w-0 bg-white border-2 border-[var(--color-danger)] shadow-[4px_4px_0_0_var(--color-danger)] p-3 sm:p-4 flex gap-3 sm:gap-4 items-center rounded-none transition-transform hover:-translate-y-1">
+            <div className="w-12 h-12 bg-[var(--color-danger-bg)] rounded-none border border-[var(--color-danger)] flex items-center justify-center">
               <RotateCcw className="text-[var(--color-danger)]" />
             </div>
             <div>
-              <p className="text-[12px] font-black uppercase tracking-widest text-[var(--color-muted)]">Devoluciones</p>
+              <p className="text-[12px] font-black uppercase tracking-widest text-[var(--color-danger)]">Devoluciones</p>
               <p className="text-2xl font-black text-[var(--color-danger)]">{totalAnulados} tickets</p>
             </div>
           </div>
@@ -423,18 +409,6 @@ export const Reportes: React.FC = () => {
       <div className={`flex flex-wrap lg:flex-nowrap justify-between items-end gap-4 shrink-0 ${busquedaDebounced ? 'opacity-40 pointer-events-none' : ''}`}>
         
         {/* BOTONES RÁPIDOS */}
-        <div className="grid grid-cols-3 sm:flex gap-2 sm:gap-3 w-full lg:w-auto">
-          <button onClick={filtrarHoy} className="bg-white border-2 border-[var(--color-ink)] px-2 sm:px-6 py-3 text-xs sm:text-sm font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
-            Hoy
-          </button>
-          <button onClick={filtrarSemana} className="bg-white border-2 border-[var(--color-ink)] px-2 sm:px-6 py-3 text-xs sm:text-sm font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
-            7 Días
-          </button>
-          <button onClick={filtrarMes} className="bg-white border-2 border-[var(--color-ink)] px-2 sm:px-6 py-3 text-xs sm:text-sm font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
-            Mes
-          </button>
-        </div>
-
         {/* SELECTOR DE FECHAS PERSONALIZADO */}
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-6 bg-white border-2 border-[var(--color-border)] p-3 sm:p-4 shadow-[4px_4px_0_0_var(--color-border)] rounded-none w-full lg:w-auto">
           <div className="flex flex-col flex-1 min-w-[130px]">

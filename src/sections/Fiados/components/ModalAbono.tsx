@@ -23,8 +23,105 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
       setEfectivo(fiado.saldoPendiente.toString());
       setYape('');
       setTarjeta('');
+      
+      // AUTO-FOCUS Magnético
+      setTimeout(() => {
+        const input = document.getElementById('input-abono-efectivo') as HTMLInputElement;
+        if (input) {
+          input.focus();
+          input.select(); // Selecciona el texto para que pueda sobreescribirlo rápido
+        }
+      }, 50);
     }
   }, [isOpen, fiado]);
+
+  // 🔥 FOCUS TRAP PARA MODAL ABONO
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // 🔥 AUTO-FOCUS MAGNÉTICO AL HACER CLIC EN EL FONDO
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('button, input, select, textarea, a, [role="button"]')) return;
+
+      setTimeout(() => {
+        const input = document.getElementById('input-abono-efectivo') as HTMLInputElement;
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      }, 50);
+    };
+    document.addEventListener('click', handleGlobalClick);
+
+    const handleFormKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement as HTMLElement;
+
+      const allFocusables = Array.from(document.querySelectorAll('input:not([type="file"]), select, button:not([disabled])')) as HTMLElement[];
+      const modalFocusables = allFocusables.filter(el => 
+        el.closest('div[role="dialog"]') && 
+        el.tabIndex !== -1 && 
+        !el.classList.contains('hidden') &&
+        el.offsetParent !== null
+      );
+
+      // ================= FOCUS TRAP PARA TAB =================
+      if (e.key === 'Tab') {
+        e.stopPropagation(); 
+        if (modalFocusables.length > 0) {
+          const first = modalFocusables[0];
+          const last = modalFocusables[modalFocusables.length - 1];
+          if (e.shiftKey && active === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && active === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+
+      // ================= NAVEGACIÓN CON FLECHAS =================
+      if (['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp'].includes(e.key)) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        if (e.key === 'ArrowUp') {
+          if (active.id === 'btn-cancelar-abono' || active.id === 'btn-guardar-abono') {
+            document.getElementById('input-abono-tarjeta')?.focus();
+            return;
+          }
+          if (active.id === 'input-abono-efectivo') {
+            document.getElementById('btn-cerrar-modal-abono')?.focus();
+            return;
+          }
+        }
+
+        if (e.key === 'ArrowDown') {
+          if (active.id === 'btn-cerrar-modal-abono') {
+            document.getElementById('input-abono-efectivo')?.focus();
+            return;
+          }
+        }
+
+        const currentIndex = modalFocusables.indexOf(active);
+        if (currentIndex !== -1) {
+          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            if (currentIndex < modalFocusables.length - 1) modalFocusables[currentIndex + 1].focus();
+          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            if (currentIndex > 0) modalFocusables[currentIndex - 1].focus();
+          }
+        }
+      }
+      // =======================================================
+    };
+
+    window.addEventListener('keydown', handleFormKeyDown, { capture: true });
+    return () => {
+      window.removeEventListener('keydown', handleFormKeyDown, { capture: true });
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, [isOpen]);
 
   if (!isOpen || !fiado) return null;
 
@@ -87,7 +184,7 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
   };
 
   return (
-    <div className="fixed inset-0 bg-[var(--color-ink)]/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 bg-[var(--color-ink)]/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
       <div className="max-h-[calc(var(--alto-pantalla)*0.94)] overflow-y-auto bg-white w-full max-w-md border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col rounded-none">
         
         {/* HEADER */}
@@ -95,7 +192,7 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
           <h2 className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
             <Calculator size={20} /> Abono Mixto
           </h2>
-          <button onClick={onClose} className="hover:text-white transition-colors cursor-pointer"><X size={20} /></button>
+          <button id="btn-cerrar-modal-abono" onClick={onClose} className="hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-white"><X size={20} /></button>
         </div>
 
         {/* BODY */}
@@ -116,6 +213,7 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
               <div className="flex items-center gap-1">
                 <span className="text-[var(--color-subtle)] font-bold text-xs">S/</span>
                 <input 
+                  id="input-abono-efectivo"
                   type="number" 
                   value={efectivo} 
                   onChange={(e) => setEfectivo(e.target.value)}
@@ -132,6 +230,7 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
               <div className="flex items-center gap-1">
                 <span className="text-[var(--color-subtle)] font-bold text-xs">S/</span>
                 <input 
+                  id="input-abono-yape"
                   type="number" 
                   value={yape} 
                   onChange={(e) => setYape(e.target.value)}
@@ -148,6 +247,7 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
               <div className="flex items-center gap-1">
                 <span className="text-[var(--color-subtle)] font-bold text-xs">S/</span>
                 <input 
+                  id="input-abono-tarjeta"
                   type="number" 
                   value={tarjeta} 
                   onChange={(e) => setTarjeta(e.target.value)}

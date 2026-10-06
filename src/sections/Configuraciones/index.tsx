@@ -16,13 +16,19 @@ const Configuraciones: React.FC = () => {
     <div className="flex flex-col h-full bg-[var(--color-bg)]">
       {/* HEADER */}
       <div className="bg-white border-b border-[var(--color-border)] p-3 lg:p-4 shrink-0">
-        <h1 className="text-2xl font-black text-[var(--color-ink)] tracking-tight flex items-center gap-3 uppercase">
-          <Settings className="text-[var(--color-accent)]" size={28} />
-          Parámetros del Sistema
-        </h1>
-        <p className="text-[var(--color-muted)] text-sm mt-1 font-mono">
-          Gestiona los datos de tu empresa, los accesos y la apariencia visual.
-        </p>
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white border-2 border-[var(--color-accent-shadow)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent-shadow)] rounded-none shrink-0">
+            <Settings size={24} className="text-[var(--color-accent-shadow)]" strokeWidth={2.5} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-[var(--color-ink)] uppercase tracking-wider font-mono">
+              Parámetros del Sistema
+            </h1>
+            <p className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest font-mono mt-1">
+              Gestiona los datos de tu empresa, los accesos y la apariencia visual.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* TABS */}

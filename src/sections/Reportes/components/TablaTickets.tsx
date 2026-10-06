@@ -1,4 +1,4 @@
-// src/sections/Reportes/components/TablaTickets.tsx
+﻿// src/sections/Reportes/components/TablaTickets.tsx
 import React, { useState, useEffect } from 'react';
 import { RotateCcw, Trash2, Receipt, ChevronLeft, ChevronRight, Eye, X } from 'lucide-react';
 import { supabase } from '../../../db/supabase'; 
@@ -194,9 +194,11 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete, ids
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 bg-[var(--color-surface)]">
               {isLoadingDetalles ? (
-                <div className="flex flex-col items-center justify-center py-10">
-                  <div className="w-6 h-6 border-2 border-[var(--color-ink)] border-t-transparent animate-spin rounded-full mb-3"></div>
-                  <p className="text-[var(--color-muted)] text-xs font-black uppercase tracking-widest">Descargando registros...</p>
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
+                    <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest font-mono">Cargando...</span>
+                  </div>
                 </div>
               ) : detallesTicket.length === 0 ? (
                 <div className="text-center py-10 border-2 border-dashed border-[var(--color-border)]">
@@ -237,3 +239,6 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete, ids
     </>
   );
 };
+
+
+

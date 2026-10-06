@@ -46,7 +46,116 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
       }
       setSearchProd('');
       setIsDropdownOpen(false); // Asegurar que el menú inicie cerrado
+      
+      // AUTO-FOCUS MAGNÉTICO
+      setTimeout(() => {
+        if (fiadoAEditar) {
+          document.getElementById('input-fecha-fiado')?.focus();
+        } else {
+          document.getElementById('input-cliente-fiado')?.focus();
+        }
+      }, 100);
     }
+  }, [isOpen, fiadoAEditar]);
+
+  // 🔥 FOCUS TRAP PARA MODAL FIADO
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // 🔥 AUTO-FOCUS MAGNÉTICO AL HACER CLIC EN EL FONDO
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('button, input, select, textarea, a, [role="button"]')) return;
+
+      setTimeout(() => {
+        if (fiadoAEditar) {
+          document.getElementById('input-fecha-fiado')?.focus();
+        } else {
+          document.getElementById('input-cliente-fiado')?.focus();
+        }
+      }, 50);
+    };
+    document.addEventListener('click', handleGlobalClick);
+
+    const handleFormKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement as HTMLElement;
+
+      const allFocusables = Array.from(document.querySelectorAll('input:not([type="file"]), select, button:not([disabled])')) as HTMLElement[];
+      const modalFocusables = allFocusables.filter(el => 
+        el.closest('div[role="dialog"]') && // Filtro estricto al contenedor del modal
+        el.tabIndex !== -1 && 
+        !el.classList.contains('hidden') &&
+        el.offsetParent !== null
+      );
+
+      // ================= FOCUS TRAP PARA TAB =================
+      if (e.key === 'Tab') {
+        e.stopPropagation(); 
+        if (modalFocusables.length > 0) {
+          const first = modalFocusables[0];
+          const last = modalFocusables[modalFocusables.length - 1];
+          if (e.shiftKey && active === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && active === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+      
+      // ================= ABRIR CALENDARIO CON ENTER =================
+      if (e.key === 'Enter' && active.tagName === 'INPUT' && (active as HTMLInputElement).type === 'date') {
+        e.preventDefault();
+        try { (active as HTMLInputElement).showPicker(); } catch (err) {}
+        return;
+      }
+      
+      // ================= NAVEGACIÓN CON FLECHAS =================
+      if (['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp'].includes(e.key)) {
+        // Permitir navegación nativa dentro de inputs de texto (ej. buscadores)
+        const isTextInput = active.tagName === 'INPUT' && (active as HTMLInputElement).type === 'text';
+        if (isTextInput && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) return;
+
+        e.stopPropagation();
+        e.preventDefault();
+
+        if (e.key === 'ArrowUp') {
+          if (active.id === 'btn-cancelar-fiado' || active.id === 'btn-guardar-fiado') {
+            document.getElementById('input-fecha-fiado')?.focus();
+            return;
+          }
+          if (active.id === 'input-fecha-fiado') {
+            document.getElementById('btn-cerrar-modal-fiado')?.focus();
+            return;
+          }
+        }
+
+        if (e.key === 'ArrowDown') {
+          if (active.id === 'btn-cerrar-modal-fiado') {
+            if (fiadoAEditar) document.getElementById('input-fecha-fiado')?.focus();
+            else document.getElementById('input-cliente-fiado')?.focus();
+            return;
+          }
+        }
+
+        const currentIndex = modalFocusables.indexOf(active);
+        if (currentIndex !== -1) {
+          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            if (currentIndex < modalFocusables.length - 1) modalFocusables[currentIndex + 1].focus();
+          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            if (currentIndex > 0) modalFocusables[currentIndex - 1].focus();
+          }
+        }
+      }
+      // =======================================================
+    };
+
+    window.addEventListener('keydown', handleFormKeyDown, { capture: true });
+    return () => {
+      window.removeEventListener('keydown', handleFormKeyDown, { capture: true });
+      document.removeEventListener('click', handleGlobalClick);
+    };
   }, [isOpen, fiadoAEditar]);
 
   if (!isOpen) return null;
@@ -247,7 +356,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
   const isEdit = !!fiadoAEditar;
 
   return (
-    <div className="fixed inset-0 bg-[var(--color-ink)]/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4 font-mono">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 bg-[var(--color-ink)]/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4 font-mono">
       <div className="bg-white w-full max-w-4xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.85)]">
         
         <div className="bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
@@ -257,7 +366,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
               {isEdit ? 'Renegociar Fecha de Vencimiento' : 'Nueva Deuda desde Inventario'}
             </h2>
           </div>
-          <button onClick={onClose} className="hover:text-[var(--color-danger)] transition-colors"><X size={20} /></button>
+          <button id="btn-cerrar-modal-fiado" onClick={onClose} className="hover:text-[var(--color-danger)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-warning)]"><X size={20} /></button>
         </div>
 
         <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-visible">
@@ -272,6 +381,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                 {...clicConTeclado(() => !isEdit && setIsDropdownOpen(true))}
               >
                 <input
+                  id="input-cliente-fiado"
                   type="text"
                   placeholder="-- BUSCAR / ELEGIR CLIENTE --"
                   value={isDropdownOpen ? searchCliente : clienteSeleccionado}
@@ -323,7 +433,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
 
             <div className="space-y-1">
               <label className="text-[12px] font-black uppercase text-[var(--color-warning)]">Fecha Límite Pago *</label>
-              <input type="date" value={fechaVencimiento} onChange={e => setFechaVencimiento(e.target.value)} className="w-full border-2 border-[var(--color-border)] p-2 text-xs font-black focus:border-[var(--color-warning)] outline-none" />
+              <input id="input-fecha-fiado" type="date" value={fechaVencimiento} onChange={e => setFechaVencimiento(e.target.value)} className="w-full border-2 border-[var(--color-border)] p-2 text-xs font-black focus:border-[var(--color-warning)] outline-none" />
             </div>
 
             {/* BUSCADOR DE INVENTARIO (OCULTO EN EDICIÓN) */}
@@ -456,8 +566,8 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                 <span className="text-2xl font-black text-[var(--color-warning)]">S/ {totalCalculado.toFixed(2)}</span>
               </div>
               <div className="flex justify-end gap-3">
-                <button onClick={onClose} disabled={isSaving} className="px-4 py-3 border-2 border-[var(--color-border)] text-[var(--color-muted)] text-[12px] font-black uppercase hover:border-[var(--color-ink)] disabled:opacity-50">Cancelar</button>
-                <button onClick={handleSave} disabled={isSaving} className="flex-1 py-3 bg-[var(--color-warning)] text-[var(--color-ink)] border-2 border-[var(--color-ink)] text-xs font-black uppercase flex items-center justify-center gap-2 shadow-[2px_2px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all disabled:opacity-50 disabled:pointer-events-none">
+                <button id="btn-cancelar-fiado" onClick={onClose} disabled={isSaving} className="px-4 py-3 border-2 border-[var(--color-border)] text-[var(--color-muted)] text-[12px] font-black uppercase hover:border-[var(--color-ink)] disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--color-warning)]">Cancelar</button>
+                <button id="btn-guardar-fiado" onClick={handleSave} disabled={isSaving} className="flex-1 py-3 bg-[var(--color-warning)] text-[var(--color-ink)] border-2 border-[var(--color-ink)] text-xs font-black uppercase flex items-center justify-center gap-2 shadow-[2px_2px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]">
                   <Save size={16}/> {isSaving ? 'Guardando...' : (isEdit ? 'Guardar Nueva Fecha' : 'Confirmar y Restar Inventario')}
                 </button>
               </div>

@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 /* BYPASS TÉCNICO: Usamos :root en lugar de @theme para evitar que 
    el compilador v4 colapse al generar el diccionario de variables. */
@@ -247,30 +247,86 @@ html, body {
   border-color: var(--color-brand-accent);
 }
 
-/* TEMA MONOCROMÁTICO (blanco, negro y grises, con fondo oscuro)
- Se aplica con un filtro sobre toda la página: así cubre cada color de la app, también
- las ventanas flotantes, sin tener que listar clase por clase. Va en <html> para no
- alterar las posiciones fijas (fixed) de los modales.
- El invert(1) es lo que convierte los fondos blancos en negro/gris oscuro (y el texto
- oscuro en claro) sin tener que tocar cada componente; grayscale(1) quita el color.
- contrast(0.85) y brightness(0.9) suavizan los extremos (negro puro / blanco puro)
- para que no se sienta tan intenso a la vista. Las fotos (img/video) se contra-invierten
- más abajo para que no se vean como negativos. */
-html.theme-monochrome {
-  filter: grayscale(1) invert(1) brightness(0.82) contrast(0.72);
-}
-
-html.theme-monochrome img,
-html.theme-monochrome video {
-  filter: invert(1);
-}
-
+/* TEMA MONOCROMÁTICO AHORA ES UN TEMA NATIVO DE VARIABLES */
 /* === TEMAS DE COLOR (paletas propias, no filtros) ===
    A diferencia del Monocromático (un filtro sobre toda la pantalla), estos temas
    redefinen directamente los tokens de color de arriba. Como cada componente usa
    var(--color-xxx) en vez de un hex fijo, con esto alcanza para repintar todo el
    sistema sin tocar un solo componente. Van en <html data-theme="..."> para que
    convivan con el tamaño de interfaz y no choquen con los modales fijos. */
+
+html.theme-monochrome {
+  --color-brand-primary: #E5E5E5;
+  --color-brand-bg: #121212;
+  --color-ink: #E5E5E5;
+  --color-ink-rgb: 229, 229, 229;
+  --color-ink-dark: #FFFFFF;
+  --color-border: #000000;
+  --color-line-light: #404040;
+  --color-muted: #A3A3A3;
+  --color-subtle: #737373;
+  --color-bg: #121212;
+  --color-bg-2: #1A1A1A;
+  --color-surface: #262626;
+  --color-accent: #737373;
+  --color-accent-rgb: 115, 115, 115;
+  --color-accent-dark: #A3A3A3;
+  --color-accent-dark-2: #D4D4D4;
+  --color-accent-shadow: #000000;
+  --color-accent-bg: #404040;
+  --color-accent-hover: #525252;
+  --color-danger: #737373;
+  --color-danger-rgb: 115, 115, 115;
+  --color-danger-bg: #404040;
+  --color-success: #737373;
+  --color-success-bg: #404040;
+  --color-info: #737373;
+  --color-info-bg: #404040;
+  --color-warning: #737373;
+  --color-warning-bg: #404040;
+}
+
+html.theme-monochrome body {
+  background-color: var(--color-bg);
+}
+
+/* REGLAS MAESTRAS PARA SOBRESCRIBIR EL MODO CLARO NEOBRUTALISTA */
+html.theme-monochrome .bg-white {
+  background-color: var(--color-surface) !important;
+}
+html.theme-monochrome .text-white {
+  color: var(--color-bg) !important;
+}
+html.theme-monochrome .bg-black {
+  background-color: var(--color-ink) !important;
+}
+html.theme-monochrome .text-black {
+  color: var(--color-ink) !important;
+}
+
+/* Forzar estilo de inputs para modo oscuro (evita texto azul o fondos blancos rotos) */
+html.theme-monochrome input,
+html.theme-monochrome select,
+html.theme-monochrome textarea {
+  color: var(--color-ink) !important;
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+}
+html.theme-monochrome input::placeholder,
+html.theme-monochrome textarea::placeholder {
+  color: var(--color-muted) !important;
+}
+
+/* Forzar que todas las sombras gruesas sean negro absoluto */
+html.theme-monochrome [class*="shadow-["] {
+  box-shadow: 6px 6px 0 0 #000000 !important;
+}
+
+/* Invertir imágenes para que no desentonen, pero suavemente */
+html.theme-monochrome img,
+html.theme-monochrome video {
+  filter: grayscale(1) brightness(0.8);
+}
 
 html[data-theme="oceano"] {
   --color-ink: #0F2942;
@@ -355,3 +411,8 @@ html[data-theme="bosque"] {
   --color-accent-bg: #DCFCE7;
   --color-accent-bg-2: #BBF7D0;
 }
+
+
+
+
+

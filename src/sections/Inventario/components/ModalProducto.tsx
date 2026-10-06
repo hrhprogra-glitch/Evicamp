@@ -48,6 +48,125 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   const [categoriasLista, setCategoriasLista] = useState<string[]>([]);
   const [showCatDropdown, setShowCatDropdown] = useState(false);
 
+  // --- INICIO DE GESTIÃ“N DE FOCO Y TECLADO ---
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Auto-Focus al cargar el paso
+    setTimeout(() => {
+      if (step === 1) {
+        // Encontrar el botón de 'UNIDAD' y enfocarlo
+        const btns = document.querySelectorAll('button');
+        for (let i = 0; i < btns.length; i++) {
+          if (btns[i].textContent?.includes('Por Unidad')) {
+            btns[i].focus();
+            break;
+          }
+        }
+      } else if (step === 2) {
+        // Encontrar el primer input de texto (Nombre)
+        const inputs = document.querySelectorAll('.fixed.inset-0.z-50 input[type="text"]');
+        if (inputs.length > 0) (inputs[0] as HTMLElement).focus();
+      }
+    }, 100);
+
+    const handleFormKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement as HTMLElement;
+      // No secuestrar las flechas si están en el buscador de imágenes o dropdown de categoría
+      const placeholder = active?.getAttribute('placeholder') || '';
+      if (placeholder.includes("PEGAR URL") && e.key === "Enter") return;
+      if (placeholder.includes("BUSCAR O ESCRIBIR NUEVA") && (e.key === "Enter" || e.key === "ArrowDown")) return;
+
+      const isButton = active?.tagName === 'BUTTON';
+      const isHorizontalKey = e.key === 'ArrowRight' || e.key === 'ArrowLeft';
+      const isVerticalKey = e.key === 'ArrowUp' || e.key === 'ArrowDown';
+
+      // ================= FOCUS TRAP PARA TAB =================
+      if (e.key === 'Tab') {
+        e.stopPropagation(); // Evitar que App.tsx abra el sidebar
+        const allFocusables = Array.from(document.querySelectorAll('input:not([type="file"]), select, button:not([disabled])')) as HTMLElement[];
+        const modalFocusables = allFocusables.filter(el => 
+          el.closest('.fixed.inset-0.z-50') && 
+          el.tabIndex !== -1 && 
+          !el.classList.contains('hidden') &&
+          el.offsetParent !== null
+        );
+        if (modalFocusables.length > 0) {
+          const first = modalFocusables[0];
+          const last = modalFocusables[modalFocusables.length - 1];
+          if (e.shiftKey && active === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && active === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+        return;
+      }
+      // =======================================================
+
+      // En el Paso 1 (botones horizontales), ignoramos las flechas verticales SALVO para interactuar con la X
+      if (step === 1 && isVerticalKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.key === 'ArrowUp') {
+          document.getElementById('btn-cerrar-modal-producto')?.focus();
+        } else if (e.key === 'ArrowDown' && active.id === 'btn-cerrar-modal-producto') {
+          // Bajar de la X a la primera tarjeta
+          const cards = document.querySelectorAll('.fixed.inset-0.z-50 button:not([id])') as NodeListOf<HTMLElement>;
+          if (cards.length > 0) cards[0].focus();
+        }
+        return;
+      }
+      // En el Paso 2, ignoramos las flechas horizontales si estamos escribiendo texto
+      if (step === 2 && isHorizontalKey && !isButton) return;
+
+      if (isVerticalKey || e.key === 'Enter' || isHorizontalKey) {
+        const allFocusables = Array.from(document.querySelectorAll('input:not([type="file"]), select, button:not([disabled])')) as HTMLElement[];
+        const focusables = allFocusables.filter(el => 
+          el.closest('.fixed.inset-0.z-50') && 
+          el.tabIndex !== -1 && 
+          !el.classList.contains('hidden') &&
+          el.offsetParent !== null &&
+          el.id !== 'btn-cerrar-modal-producto' &&
+          el.id !== 'btn-volver-modal-producto'
+        );
+
+        const currentIndex = focusables.indexOf(active);
+        
+        if (currentIndex !== -1) {
+          if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === 'ArrowRight') {
+            if (e.key === 'Enter' && isButton) return; // Dejar que el botÃ³n haga click nativo
+            e.preventDefault();
+            e.stopPropagation();
+            if (currentIndex < focusables.length - 1) focusables[currentIndex + 1].focus();
+          } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+            e.preventDefault();
+            e.stopPropagation();
+            if (currentIndex > 0) {
+              focusables[currentIndex - 1].focus();
+            } else if (e.key === 'ArrowUp') {
+              // Si estamos en el primer input del paso 2, subir al botÃ³n Volver
+              document.getElementById('btn-volver-modal-producto')?.focus();
+            }
+          }
+        } else {
+          // Si estamos fuera de los focusables principales (ej. en la X o Volver)
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            e.stopPropagation();
+            if (focusables.length > 0) focusables[0].focus();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleFormKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', handleFormKeyDown, { capture: true });
+  }, [isOpen, step]);
+  // --- FIN DE GESTIÃ“N DE FOCO Y TECLADO ---
+
   // 🔥 NUEVO: Cargar tu tabla categories directamente desde Supabase
   useEffect(() => {
     const fetchCategorias = async () => {
@@ -354,6 +473,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               <button 
                 onClick={() => setStep(1)} 
                 className="hover:text-[var(--color-accent)] transition-colors mr-2 cursor-pointer"
+                id="btn-volver-modal-producto"
                 title="Volver a seleccionar tipo"
               >
                 <ArrowLeft size={20} />
@@ -368,7 +488,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               </p>
             </div>
           </div>
-          <button onClick={resetAndClose} className="hover:text-[var(--color-danger)] transition-colors cursor-pointer">
+          <button id="btn-cerrar-modal-producto" onClick={resetAndClose} className="hover:text-[var(--color-danger)] transition-colors cursor-pointer">
             <X size={20} />
           </button>
         </div>

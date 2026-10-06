@@ -12,10 +12,11 @@ import type { Product } from '../Inventario/types';
 import { usePermiso } from '../../utils/permisos';
 import { traerTodo } from '../../utils/traerTodo';
 import { eliminarAbonoYRevertirCaja } from '../../utils/revertirAbono';
+import { TarjetaMetrica } from '../Inventario/components/TarjetaMetrica';
 
 export const Fiados: React.FC = () => {
   // Crear deudas es como vender a crédito
-  const puedeVender = usePermiso('caja_realizar_ventas');
+  const [loading, setLoading] = useState(true);
   const [fiados, setFiados] = useState<Fiado[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [productosInventario, setProductosInventario] = useState<Product[]>([]);
@@ -38,6 +39,7 @@ export const Fiados: React.FC = () => {
 
   // Cargar datos desde Supabase al iniciar
   const cargarDatos = async () => {
+    setLoading(true);
       // 🔥 OPTIMIZACIÓN: Lanzamos todas las consultas al mismo tiempo (Paralelo)
       const [
         { data: prods },
@@ -106,16 +108,26 @@ if (fiaData) {
   
   // <-- PROTECCIÓN EN EL SORT (Asegura que fechaEmision exista)
   setFiados(fiadosMapeados.sort((a, b) => {
-    const timeA = a.fechaEmision ? new Date(a.fechaEmision).getTime() : 0;
-    const timeB = b.fechaEmision ? new Date(b.fechaEmision).getTime() : 0;
-    return timeB - timeA;
-  }));
-}
+      const timeA = a.fechaEmision ? new Date(a.fechaEmision).getTime() : 0;
+      const timeB = b.fechaEmision ? new Date(b.fechaEmision).getTime() : 0;
+      return timeB - timeA;
+    }));
+  }
+  setLoading(false);
     };
 
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  // 🔥 RESTAURAR FOCO AL CERRAR MODALES (Ej: con Escape)
+  useEffect(() => {
+    if (!isModalFiadoOpen && !isModalAbonoOpen && !isModalClientesOpen && !isModalDetalleOpen && !isModalAnularOpen) {
+      setTimeout(() => {
+        document.getElementById('buscador-global-fiados')?.focus();
+      }, 100);
+    }
+  }, [isModalFiadoOpen, isModalAbonoOpen, isModalClientesOpen, isModalDetalleOpen, isModalAnularOpen]);
 
   const handleSaveFiado = async () => {
     setIsModalFiadoOpen(false);
@@ -282,43 +294,40 @@ if (fiaData) {
   }, 0);
 
   return (
-    <div className="h-full flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono">
+    <div className="h-full flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono relative">
+      {loading && (
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
+            <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest font-mono">Cargando...</span>
+          </div>
+        </div>
+      )}
       
       {/* TARJETAS Y CONTROLES */}
       <div className="flex flex-col xl:flex-row justify-between items-stretch xl:items-end gap-4 shrink-0">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full xl:w-1/2">
-          <div className="min-w-0 bg-white border-2 border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-border)] p-3 sm:p-4 flex gap-3 sm:gap-4 items-center rounded-none">
-            <div className="w-12 h-12 bg-[var(--color-bg)] border-2 border-[var(--color-border)] flex items-center justify-center rounded-none"><Coins className="text-[var(--color-ink)]" /></div>
-            <div>
-              <p className="text-xs font-black uppercase tracking-widest text-[var(--color-muted)]">Por Cobrar</p>
-              <p className="text-2xl sm:text-4xl font-black text-[var(--color-ink)] tracking-tight">S/ {totalPorCobrar.toFixed(2)}</p>
-            </div>
-          </div>
-          <div className="min-w-0 bg-white border-2 border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-border)] p-3 sm:p-4 flex gap-3 sm:gap-4 items-center rounded-none">
-            <div className="w-12 h-12 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center rounded-none"><Coins className="text-[var(--color-accent)]" /></div>
-            <div>
-              <p className="text-xs font-black uppercase tracking-widest text-[var(--color-muted)]">Recuperado Hoy</p>
-              <p className="text-2xl sm:text-4xl font-black text-[var(--color-accent)] tracking-tight">S/ {totalRecuperadoHoy.toFixed(2)}</p>
-            </div>
-          </div>
+          <TarjetaMetrica 
+            label="Por Cobrar" 
+            value={`S/ ${totalPorCobrar.toFixed(2)}`} 
+            icon={<Coins size={16} />} 
+          />
+          <TarjetaMetrica 
+            label="Recuperado Hoy" 
+            value={`S/ ${totalRecuperadoHoy.toFixed(2)}`} 
+            icon={<Coins size={16} />} 
+            isGreen={true} 
+          />
         </div>
 
         {/* BOTONES PRINCIPALES */}
         <div className="grid grid-cols-2 sm:flex gap-3">
-          <button 
-            onClick={() => setIsModalClientesOpen(true)}
-            className="h-12 bg-white text-[var(--color-ink)] px-3 sm:px-6 justify-center border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-[var(--color-bg)] transition-colors shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer"
+          <button id="btn-directorio-clientes" onClick={() => setIsModalClientesOpen(true)}
+            className="h-12 bg-white text-[var(--color-ink)] px-3 sm:px-6 justify-center border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-[var(--color-bg)] focus:outline-none focus:bg-[var(--color-ink)] focus:text-white transition-colors shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer"
           >
             <BookOpen size={16} /> Directorio Clientes
           </button>
-          {puedeVender && (
-          <button 
-            onClick={() => { setFiadoAEditar(null); setIsModalFiadoOpen(true); }}
-            className="h-12 bg-[var(--color-ink)] text-white px-3 sm:px-6 justify-center border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-[var(--color-warning)] hover:text-[var(--color-ink)] transition-colors shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer"
-          >
-            <Plus size={16} /> Nueva Deuda
-          </button>
-          )}
+          
         </div>
       </div>
 
@@ -363,3 +372,7 @@ if (fiaData) {
     </div>
   );
 };
+
+
+
+

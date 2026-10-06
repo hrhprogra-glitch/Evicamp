@@ -1,16 +1,51 @@
-import React, { useState, useEffect } from 'react';
-import { Search, ScanLine, Package, Plus } from 'lucide-react';
+﻿import React, { useState, useEffect } from 'react';
+import { Search, ScanLine, Package, Plus, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { formatearCantidad } from '../../../utils/formato';
 import type { Product } from '../../Inventario/types';
+import { supabase } from '../../../db/supabase';
+import { useEmpleado, usePermiso } from '../../../utils/permisos';
 
 interface Props {
   searchQuery: string;
   setSearchQuery: (val: string) => void;
   productos: Product[];
   onAddToCart: (producto: Product) => void;
+  onNavigate?: (view: string) => void;
 }
 
-export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery, productos, onAddToCart }) => {
+export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery, productos, onAddToCart, onNavigate }) => {
+  const empleado = useEmpleado();
+  const userEmail = empleado?.email || '';
+  const puedeVerFiados = usePermiso('caja_ver_fiados');
+  const [time, setTime] = useState<string>('');
+  const [fiadosCount, setFiadosCount] = useState<number>(0);
+
+  useEffect(() => {
+    // 1. Reloj
+    const updateTime = () => {
+      const now = new Date();
+      setTime(now.toLocaleTimeString('es-PE', { hour12: false }));
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    
+    // 2. Función SEGURA para contar fiados
+    const fetchFiadosCount = async () => {
+      const { count, error } = await supabase
+        .from('fiados')
+        .select('id', { count: 'exact', head: true })
+        .neq('status', 'CANCELADO')
+        .neq('status', 'ANULADO');
+      
+      if (!error) {
+        setFiadosCount(count ?? 0);
+      }
+    };
+    
+    if (puedeVerFiados) fetchFiadosCount();
+
+    return () => clearInterval(timer);
+  }, [puedeVerFiados]);
   // 🔥 NUEVO: Estado para saber qué producto está seleccionado con las flechas
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -44,7 +79,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       const activeTag = document.activeElement?.tagName;
-      const isInput = activeTag === 'INPUT' || activeTag === 'TEXTAREA';
+      const isInput = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'BUTTON' || activeTag === 'A';
       const activeId = document.activeElement?.id || '';
       
       const isCartInput = activeId.startsWith('edit-input-') || activeId.startsWith('edit-price-');
@@ -52,18 +87,6 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
       // 🛡️ Ignorar global listener si hay un modal (ventana flotante) abierto
       if (document.querySelector('[role="dialog"]')) {
         return;
-      }
-
-      // 🔥 ESCUDO ANTIESCAPE DEL TABULADOR
-      if (e.key === 'Tab') {
-        // Si NO es un input, O si es un input del carrito, bloqueamos el Tab y volvemos al buscador.
-        // (Dejamos libre el Tab solo en modales de cobro/clientes para poder llenar formularios).
-        if (!isInput || isCartInput) {
-          e.preventDefault();
-          const searchInput = document.getElementById('buscador-global-pos') as HTMLInputElement;
-          if (searchInput) searchInput.focus();
-          return;
-        }
       }
 
       // 1. Evitar robar el foco (para letras y números) si estás escribiendo en otros inputs/modales
@@ -82,29 +105,34 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
       if (searchInput) searchInput.focus();
     };
 
+    const enforceFocus = () => {
+      // Ignorar si hay modales abiertos
+      if (document.querySelector('[role="dialog"]')) return;
+      
+      const activeTag = document.activeElement?.tagName;
+      // Si estamos en otro input (ej. cantidad/precio), no robamos el foco
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'BUTTON' || activeTag === 'A') return;
+      
+      const searchInput = document.getElementById('buscador-global-pos') as HTMLInputElement;
+      if (searchInput) searchInput.focus();
+    };
+
+    const handleGlobalClick = () => setTimeout(enforceFocus, 50);
+    const handleWindowFocus = () => setTimeout(enforceFocus, 50);
+
     window.addEventListener('keydown', handleGlobalKeyDown);
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('click', handleGlobalClick);
+
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('click', handleGlobalClick);
+    };
   }, []);
 
   // SOPORTE PARA FLECHAS, ESCÁNER Y ENTER
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // 🔥 CORRECCIÓN: Interceptar Tab SIEMPRE, incluso si no hay productos, para evitar que el foco escape
-    if (e.key === 'Tab') {
-      e.preventDefault(); // NUNCA dejar que el foco se vaya al navegador
-      
-      // Si Shift está presionado, subimos (ArrowUp)
-      if (e.shiftKey) {
-        if (filteredProducts.length > 0) {
-          setSelectedIndex(prev => Math.max(prev - 1, 0));
-        }
-      } else {
-        // Tab normal, bajamos (ArrowDown)
-        if (filteredProducts.length > 0 && selectedIndex < filteredProducts.length - 1) {
-          setSelectedIndex(prev => prev + 1);
-        }
-      }
-      return; // Detener ejecución aquí
-    }
 
     // Si no hay resultados, dejamos que index.tsx maneje otros atajos, pero 'Delete' igual debe limpiar
     if (e.key === 'Delete') {
@@ -181,6 +209,34 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
             <h1 className="text-sm sm:text-base font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2">
               <ScanLine className="text-[var(--color-ink)]" size={18} /> Punto de Venta
             </h1>
+          </div>
+          
+          <div className="flex items-center gap-2 lg:gap-3">
+            <div className="hidden md:flex items-center min-w-0 border border-[var(--color-border)] pl-2 pr-3 py-1 bg-white">
+              <div className="h-2 w-2 bg-[var(--color-accent)] animate-pulse mr-2"></div>
+              <span className="text-xs font-black text-[var(--color-ink)] uppercase tracking-[0.1em] truncate">
+                ID: <span className="text-[var(--color-muted)]">{userEmail.split('@')[0]}</span>
+              </span>
+            </div>
+
+            <div className="hidden sm:flex items-center whitespace-nowrap border border-[var(--color-border)] px-3 py-1 bg-[var(--color-bg)] text-xs font-black uppercase tracking-widest text-[var(--color-ink)]">
+              [ {time} ]
+            </div>
+
+            {puedeVerFiados && (
+              <button
+                onClick={() => onNavigate && onNavigate('fiados')}
+                title={fiadosCount > 0 ? 'Hay deudas pendientes por cobrar' : 'Nadie tiene deudas pendientes'}
+                className={`flex items-center shrink-0 whitespace-nowrap border-2 px-2 sm:px-3 py-1 text-[12px] font-black uppercase tracking-widest transition-all cursor-pointer hover:shadow-none active:translate-x-[2px] active:translate-y-[2px] ${
+                  fiadosCount > 0
+                    ? 'border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] hover:bg-[var(--color-warning)] hover:text-white animate-pulse shadow-[2px_2px_0_0_var(--color-warning-dark)]'
+                    : 'border-[var(--color-accent)] bg-[var(--color-accent-bg)] text-[var(--color-accent-dark)] hover:bg-[var(--color-accent)] hover:text-white shadow-[2px_2px_0_0_var(--color-accent-dark)]'
+                }`}
+              >
+                {fiadosCount > 0 ? <AlertTriangle size={12} className="mr-2" /> : <CheckCircle2 size={12} className="mr-2" />}
+                Por cobrar: {fiadosCount}
+              </button>
+            )}
           </div>
         </div>
 
@@ -338,3 +394,9 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
     </div>
   );
 };
+
+
+
+
+
+

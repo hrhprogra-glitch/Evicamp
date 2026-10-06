@@ -9,26 +9,30 @@ interface Props {
   isGreen?: boolean;
 }
 
-export const TarjetaMetrica: React.FC<Props> = ({ label, value, icon, isAlert, isGreen }) => (
-  <div className="flex items-center gap-3 p-3 sm:p-4 border border-[var(--color-border)] bg-white rounded-none min-w-0 xl:min-w-[170px] shadow-sm last:col-span-2 sm:last:col-span-1">
-    <div className={`p-2 border border-[var(--color-border)] rounded-none ${
-      isAlert ? 'text-red-500 bg-red-50' : 
-      isGreen ? 'text-[var(--color-accent)] bg-[var(--color-accent-bg)]' : 
-      'text-[var(--color-muted)] bg-[var(--color-bg)]'
+export const TarjetaMetrica: React.FC<Props> = ({ label, value, icon, isAlert, isGreen }) => {
+  return (
+    <div className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 border-2 bg-white min-w-0 xl:min-w-[200px] shrink-0 transition-transform hover:-translate-y-1 cursor-default rounded-none ${
+      isAlert ? 'border-[var(--color-danger)] shadow-[4px_4px_0_0_var(--color-danger)]' : 
+      isGreen ? 'border-[var(--color-accent)] shadow-[4px_4px_0_0_var(--color-accent)]' : 
+      'border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)]'
     }`}>
-      {icon}
-    </div>
-    <div>
-      <p className="text-[11px] font-black uppercase tracking-wider text-[var(--color-muted)] mb-1">
-        {label}
-      </p>
-      <p className={`text-lg font-bold tracking-tighter ${
-        isAlert ? 'text-red-500' : 
-        isGreen ? 'text-[var(--color-accent)]' : 
-        'text-[var(--color-ink)]'
+      <div className={`w-10 h-10 flex items-center justify-center border-2 rounded-none shrink-0 ${
+        isAlert ? 'bg-[var(--color-danger-bg)] border-[var(--color-danger)] text-[var(--color-danger)]' : 
+        isGreen ? 'bg-[var(--color-accent-bg)] border-[var(--color-accent)] text-[var(--color-accent)]' : 
+        'bg-[var(--color-bg)] border-[var(--color-ink)] text-[var(--color-ink)]'
       }`}>
-        {value}
-      </p>
+        {icon}
+      </div>
+      <div className="flex flex-col min-w-0">
+        <p className="text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-widest truncate">{label}</p>
+        <p className={`text-lg font-black uppercase tracking-wider truncate ${
+          isAlert ? 'text-[var(--color-danger)]' : 
+          isGreen ? 'text-[var(--color-accent)]' : 
+          'text-[var(--color-ink)]'
+        }`}>
+          {value}
+        </p>
+      </div>
     </div>
-  </div>
-);
+  );
+};

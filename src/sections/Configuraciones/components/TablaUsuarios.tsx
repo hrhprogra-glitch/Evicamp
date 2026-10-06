@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Users, Plus, Edit2, ShieldAlert, Loader2, Trash2 } from 'lucide-react';
 import type { Empleado } from '../types';
 import { ModalUsuario } from './ModalUsuario';
@@ -92,9 +92,10 @@ export const TablaUsuarios: React.FC = () => {
       {/* TABLA */}
       <div className="overflow-x-auto min-h-[200px]">
         {loading ? (
-          <div className="flex justify-center items-center h-full p-3 lg:p-4 text-[var(--color-muted)] font-mono gap-2">
-            <Loader2 className="animate-spin" size={18} /> Cargando empleados...
-          </div>
+          <div className="flex flex-col items-center justify-center p-12 gap-4">
+              <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
+              <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest font-mono">Cargando...</span>
+            </div>
         ) : usuarios.length === 0 ? (
           <div className="flex justify-center items-center h-full p-3 lg:p-4 text-[var(--color-muted)] font-mono">
             No hay empleados registrados todavía.
@@ -164,3 +165,5 @@ export const TablaUsuarios: React.FC = () => {
     </div>
   );
 };
+
+

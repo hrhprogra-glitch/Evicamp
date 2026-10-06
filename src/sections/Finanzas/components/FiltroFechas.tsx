@@ -1,5 +1,4 @@
-// src/sections/Finanzas/components/FiltroFechas.tsx
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 
 interface Props {
   onFilter: (desde: string, hasta: string) => void;
@@ -9,34 +8,10 @@ export const FiltroFechas: React.FC<Props> = ({ onFilter }) => {
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
 
-  const aplicarFiltroRapido = (tipo: 'HOY' | 'SEMANA' | 'MES') => {
-    const hoy = new Date();
-    let inicio = new Date(hoy);
-    let fin = new Date(hoy);
-
-    if (tipo === 'HOY') {
-      // Mismo día
-    } else if (tipo === 'SEMANA') {
-      const dia = hoy.getDay() || 7; // Lunes como primer día
-      inicio.setDate(hoy.getDate() - dia + 1);
-    } else if (tipo === 'MES') {
-      inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-      fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
-    }
-
-    const startStr = inicio.toISOString().split('T')[0];
-    const endStr = fin.toISOString().split('T')[0];
-
-    setDesde(startStr);
-    setHasta(endStr);
-    onFilter(startStr, endStr);
-  };
-
   const manejarBusquedaManual = () => {
     onFilter(desde, hasta);
   };
 
-  // NUEVA FUNCIÓN: Resetea los estados locales y notifica al padre
   const limpiarFiltros = () => {
     setDesde('');
     setHasta('');
@@ -76,27 +51,6 @@ export const FiltroFechas: React.FC<Props> = ({ onFilter }) => {
           className="bg-[var(--color-surface)] text-[var(--color-muted)] px-4 py-2 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-muted)] hover:bg-[var(--color-muted)] hover:text-[var(--color-surface)] transition-colors rounded-none cursor-pointer"
         >
           Limpiar
-        </button>
-      </div>
-
-      <div className="flex flex-wrap gap-2 md:ml-auto">
-        <button 
-          onClick={() => aplicarFiltroRapido('HOY')}
-          className="bg-[var(--color-surface)] text-[var(--color-ink)] px-4 py-2 border-2 border-[var(--color-border)] hover:border-[var(--color-ink)] text-[12px] font-black uppercase tracking-widest transition-colors rounded-none cursor-pointer"
-        >
-          Hoy
-        </button>
-        <button 
-          onClick={() => aplicarFiltroRapido('SEMANA')}
-          className="bg-[var(--color-surface)] text-[var(--color-ink)] px-4 py-2 border-2 border-[var(--color-border)] hover:border-[var(--color-ink)] text-[12px] font-black uppercase tracking-widest transition-colors rounded-none cursor-pointer"
-        >
-          Semana
-        </button>
-        <button 
-          onClick={() => aplicarFiltroRapido('MES')}
-          className="bg-[var(--color-surface)] text-[var(--color-ink)] px-4 py-2 border-2 border-[var(--color-border)] hover:border-[var(--color-ink)] text-[12px] font-black uppercase tracking-widest transition-colors rounded-none cursor-pointer"
-        >
-          Mes
         </button>
       </div>
     </div>

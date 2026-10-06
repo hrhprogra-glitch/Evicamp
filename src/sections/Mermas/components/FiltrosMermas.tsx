@@ -103,9 +103,6 @@ export const FiltrosMermas: React.FC<Props> = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-widest border-l-2 border-[var(--color-ink)] pl-2">
-        <span>Resultados: <strong className="text-[var(--color-ink)]">{matchCount}</strong></span>
-      </div>
     </div>
   );
 };

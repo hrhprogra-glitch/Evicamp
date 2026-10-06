@@ -3,11 +3,12 @@ import { AlertTriangle, Plus } from 'lucide-react';
 
 interface Props {
   onNuevaMerma: () => void;
+  children?: React.ReactNode;
 }
 
-export const HeaderMermas: React.FC<Props> = ({ onNuevaMerma }) => {
+export const HeaderMermas: React.FC<Props> = ({ onNuevaMerma, children }) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-3 lg:p-4 bg-white border-b-2 border-[var(--color-ink)] shrink-0">
+    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 p-3 lg:p-4 bg-white border-b-2 border-[var(--color-ink)] shrink-0">
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 bg-[var(--color-danger-bg)] border-2 border-[var(--color-danger)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-danger)] rounded-none">
           <AlertTriangle size={24} className="text-[var(--color-danger)]" />
@@ -22,12 +23,15 @@ export const HeaderMermas: React.FC<Props> = ({ onNuevaMerma }) => {
         </div>
       </div>
 
-      <button 
-        onClick={onNuevaMerma}
-        className="bg-[var(--color-danger)] text-white px-6 py-3 border-2 border-[var(--color-ink)] font-black text-[12px] uppercase tracking-widest flex items-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-danger)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
-      >
-        <Plus size={16} /> Registrar Merma
-      </button>
+      <div className="flex flex-col md:flex-row items-end md:items-center gap-3 sm:gap-4 w-full xl:w-auto justify-end">
+        {children}
+        <button 
+          onClick={onNuevaMerma}
+          className="bg-[var(--color-danger)] text-white px-6 py-3 border-2 border-[var(--color-ink)] font-black text-[12px] uppercase tracking-widest flex items-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-danger)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] w-full md:w-auto justify-center"
+        >
+          <Plus size={16} /> Registrar Merma
+        </button>
+      </div>
     </div>
   );
 };

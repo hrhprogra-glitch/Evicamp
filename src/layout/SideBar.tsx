@@ -1,15 +1,15 @@
-// src/layout/SideBar.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  LayoutDashboard, ShoppingCart, Users, Package, 
+  ShoppingCart, Users, Package, 
   Truck, Trash2, Wallet, 
-  FileText, Settings, BarChart3, X
+  FileText, Settings, BarChart3, X, LogOut
 } from 'lucide-react';
 
 // IMPORTAMOS EL LOGO Y SUPABASE
 import logoEvicamp from '../assets/logo.png';
 import { supabase } from '../db/supabase';
 import { puedeVerModulo } from '../utils/permisos';
+import { cerrarSesion } from '../utils/sesion';
 
 interface SideBarProps {
   isOpen: boolean;
@@ -40,6 +40,36 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
     setRestante(AUTO_OCULTAR_MS);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    marcarActividad();
+    if (!isOpen) return;
+
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault(); // Evita scroll natural de la página
+      
+      // Obtener todos los botones clickeables de la barra lateral (logo, cerrar, items, salida)
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (!sidebar) return;
+      
+      const allButtons = Array.from(sidebar.querySelectorAll('button:not([disabled])')) as HTMLButtonElement[];
+      const buttons = allButtons.filter(btn => btn.offsetParent !== null); // Solo botones visibles
+      if (buttons.length === 0) return;
+
+      const currentIndex = buttons.indexOf(document.activeElement as HTMLButtonElement);
+      
+      let nextIndex = 0;
+      if (currentIndex !== -1) {
+        if (e.key === 'ArrowDown') {
+          nextIndex = currentIndex + 1 >= buttons.length ? currentIndex : currentIndex + 1;
+        } else {
+          nextIndex = currentIndex - 1 < 0 ? currentIndex : currentIndex - 1;
+        }
+      }
+      
+      buttons[nextIndex].focus();
+    }
+  };
+
   useEffect(() => {
     if (!isOpen) return;
     ultimaActividad.current = Date.now();
@@ -60,6 +90,32 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
     marcarActividad();
     onToggle();
   };
+
+  // 🔥 NUEVO: Gestión inteligente del foco entre el Sidebar y el POS
+  useEffect(() => {
+    if (isOpen) {
+      // Cuando se abre el sidebar, enviar el foco directo al botón de la vista actual
+      const activeBtn = document.getElementById(`sidebar-btn-${currentView}`);
+      if (activeBtn) {
+        activeBtn.focus();
+      } else {
+        const sidebar = document.getElementById('evicamp-sidebar');
+        if (sidebar) sidebar.focus();
+      }
+    } else {
+      // Cuando se oculta, devolver el foco al buscador principal de la sesión actual
+      if (currentView === 'pos') {
+        const searchInput = document.getElementById('buscador-global-pos') as HTMLInputElement;
+        if (searchInput) searchInput.focus();
+      } else if (currentView === 'fiados') {
+        const searchInputFiados = document.getElementById('buscador-global-fiados') as HTMLInputElement;
+        if (searchInputFiados) searchInputFiados.focus();
+      } else if (currentView === 'inventario') {
+        const searchInputInventario = document.getElementById('buscador-global-inventario') as HTMLInputElement;
+        if (searchInputInventario) searchInputInventario.focus();
+      }
+    }
+  }, [isOpen, currentView]);
 
   useEffect(() => {
     const fetchEmpresa = async () => {
@@ -86,7 +142,6 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
     {
       category: 'Operaciones',
       items: [
-        { id: 'resumen', name: 'Resumen', icon: LayoutDashboard },
         { id: 'pos', name: 'Caja', icon: ShoppingCart },
         { id: 'fiados', name: 'Créditos', icon: Users },
       ]
@@ -127,10 +182,12 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
 
     {/* En tablet/celular el menú es un panel deslizable sobre el contenido; en escritorio es una columna fija que se expande o contrae */}
     <aside
+      id="evicamp-sidebar"
+      tabIndex={-1}
       onMouseEnter={() => { encima.current = true; setEnPausa(true); }}
       onMouseLeave={() => { encima.current = false; setEnPausa(false); marcarActividad(); }}
       onPointerDown={marcarActividad}
-      onKeyDown={marcarActividad}
+      onKeyDown={handleKeyDown}
       onFocus={marcarActividad}
       className={`fixed inset-y-0 left-0 z-40 w-max min-w-[13rem] max-w-[85vw] ${isOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-out lg:relative lg:max-w-none lg:translate-x-0 lg:z-20 ${isOpen ? 'lg:w-max lg:min-w-0' : 'lg:w-16 lg:min-w-0'} border-r border-[var(--color-border)] bg-white flex flex-col h-full shrink-0 font-mono overflow-hidden`}
     >
@@ -146,7 +203,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
             title="Contraer menú"
             aria-label="Contraer menú"
             aria-expanded={true}
-            className="flex items-center gap-2 overflow-hidden cursor-pointer group text-left"
+            className="flex items-center gap-2 overflow-hidden cursor-pointer group text-left focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
           >
             {/* Logo en bloque técnico */}
             <div className="w-8 h-8 bg-white border border-[var(--color-accent)] flex items-center justify-center p-0.5 shrink-0 transition-transform group-hover:scale-110">
@@ -210,14 +267,18 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
                 return (
                   <button
                     key={item.id}
-                    onClick={() => onNavigate(item.id)}
+                      id={`sidebar-btn-${item.id}`}
+                    onClick={() => {
+                        onNavigate(item.id);
+                        onClose();
+                      }}
                     title={!isOpen ? item.name : undefined}
                     className={`w-full text-left py-3 short:py-2 text-xs font-black uppercase tracking-wider transition-all border rounded-none flex items-center cursor-pointer ${
                       isOpen ? 'pl-3 pr-2 gap-3 justify-between' : 'justify-center px-0'
                     } ${
                       isActive 
                         ? 'border-[var(--color-ink)] bg-[var(--color-accent)] text-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)] translate-x-[-2px] translate-y-[-2px]' 
-                        : 'border-transparent text-[var(--color-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/5'
+                        : 'border-transparent text-[var(--color-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/5 focus:outline-none focus:border-[var(--color-ink)] focus:bg-[var(--color-accent)] focus:text-[var(--color-ink)] focus:shadow-[3px_3px_0_0_var(--color-ink)] focus:translate-x-[-2px] focus:translate-y-[-2px]'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -232,6 +293,25 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
           </div>
         ))}
       </nav>
+
+            <div className="px-1.5 py-1.5 border-t border-[var(--color-border)] mt-auto">
+        <button 
+          onClick={async () => {
+            await cerrarSesion();
+            window.location.reload();
+          }}
+          title={!isOpen ? "Salida" : undefined}
+          aria-label="Cerrar sesión"
+          className={`w-full text-left py-2 short:py-1.5 text-xs font-black uppercase tracking-wider transition-all border-2 rounded-none flex items-center cursor-pointer border-transparent text-[var(--color-muted)] hover:border-red-600 hover:text-red-600 hover:bg-red-50 hover:shadow-[3px_3px_0_0_#dc2626] hover:translate-x-[-2px] hover:translate-y-[-2px] focus:outline-none focus:border-red-600 focus:text-red-600 focus:bg-red-50 focus:shadow-[3px_3px_0_0_#dc2626] focus:translate-x-[-2px] focus:translate-y-[-2px] ${
+            isOpen ? 'pl-3 pr-2 gap-3 justify-between' : 'justify-center px-0'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <LogOut size={18} className="shrink-0" />
+            {isOpen && <span className="whitespace-nowrap">SALIDA</span>}
+          </div>
+        </button>
+      </div>
 
       {/* FOOTER TÉCNICO: con el menú abierto muestra el temporizador de auto-ocultado */}
       <div className={`px-3 py-3 border-t border-[var(--color-border)] bg-[var(--color-ink)] ml-1 flex ${isOpen ? 'flex-col gap-2' : 'justify-center'}`}>
@@ -261,3 +341,14 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
     </>
   );
 };
+
+
+
+
+
+
+
+
+
+
+

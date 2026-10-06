@@ -264,13 +264,18 @@ export const Finanzas: React.FC = () => {
     <div className="h-full flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono">
       
       <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-end gap-4 shrink-0">
-        <div>
-          <h1 className="text-xl sm:text-3xl font-black text-[var(--color-ink)] uppercase tracking-tighter flex items-center gap-3">
-            <Wallet className="text-[var(--color-accent)] w-6 h-6 sm:w-8 sm:h-8" /> Tesorería
-          </h1>
-          <p className="text-[var(--color-muted)] text-xs font-bold tracking-widest uppercase mt-1">
-            Arqueo de Yape, Efectivo y Deudas en tiempo real
-          </p>
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] rounded-none shrink-0">
+            <Wallet size={24} className="text-[var(--color-accent)]" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-3xl font-black text-[var(--color-ink)] uppercase tracking-tighter">
+              Tesorería
+            </h1>
+            <p className="text-[var(--color-muted)] text-xs font-bold tracking-widest uppercase mt-1">
+              Arqueo de Yape, Efectivo y Deudas en tiempo real
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-3">
@@ -338,16 +343,22 @@ export const Finanzas: React.FC = () => {
 
           {/* SÚPER PANEL DE MÉTRICAS */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 shrink-0">
-            <div className="bg-white border-2 border-[var(--color-ink)] p-4 flex flex-col justify-between">
-               <p className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest flex items-center gap-2"><Banknote size={14}/> Efectivo Esperado Físico</p>
+            <div className="bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-4 flex flex-col justify-between transition-transform hover:-translate-y-1">
+               <p className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest flex items-center gap-2">
+                 <span className="w-6 h-6 flex items-center justify-center bg-[var(--color-bg)] border-2 border-[var(--color-ink)]"><Banknote size={12} className="text-[var(--color-ink)]"/></span> 
+                 Efectivo Esperado
+               </p>
                <p className="text-xl sm:text-3xl font-black text-[var(--color-accent)] mt-2">S/ {superMetricas.efectivoEsperadoCaja.toFixed(2)}</p>
-               <p className="text-[12px] font-bold text-[var(--color-muted)] uppercase mt-2 border-t pt-2">(Fondo + Ventas Físicas + Cobros - Gastos)</p>
+               <p className="text-[11px] font-bold text-[var(--color-muted)] uppercase mt-2 border-t border-[var(--color-border)] pt-2">(Fondo + Ventas Físicas + Cobros - Gastos)</p>
             </div>
             
-            <div className="bg-[var(--color-bg)] border-2 border-[var(--color-border)] p-4">
-               <p className="text-[12px] font-black text-[var(--color-info)] uppercase tracking-widest flex items-center gap-2"><Smartphone size={14}/> Yape / Transferencias</p>
-               <p className="text-xl font-black text-[var(--color-ink)] mt-1">S/ {superMetricas.yapeEsperado.toFixed(2)}</p>
-               <div className="text-[12px] font-bold text-[var(--color-muted)] uppercase mt-2 space-y-1 border-t pt-2">
+            <div className="bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-4 transition-transform hover:-translate-y-1">
+               <p className="text-[12px] font-black text-[var(--color-info)] uppercase tracking-widest flex items-center gap-2">
+                 <span className="w-6 h-6 flex items-center justify-center bg-blue-50 border-2 border-[var(--color-info)]"><Smartphone size={12} className="text-[var(--color-info)]"/></span> 
+                 Yape / Transf
+               </p>
+               <p className="text-xl sm:text-2xl font-black text-[var(--color-ink)] mt-1">S/ {superMetricas.yapeEsperado.toFixed(2)}</p>
+               <div className="text-[11px] font-bold text-[var(--color-muted)] uppercase mt-2 space-y-1 border-t border-[var(--color-border)] pt-2">
                  <p>Ventas: S/ {superMetricas.ventasYape.toFixed(2)}</p>
                  <p>Cobros: S/ {superMetricas.cobroDeudasYape.toFixed(2)}</p>
                  {superMetricas.ingresosExtraYape > 0 && <p>Ingresos: S/ {superMetricas.ingresosExtraYape.toFixed(2)}</p>}
@@ -355,10 +366,13 @@ export const Finanzas: React.FC = () => {
                </div>
             </div>
 
-            <div className="bg-[var(--color-bg)] border-2 border-[var(--color-border)] p-4">
-               <p className="text-[12px] font-black text-[var(--color-purple)] uppercase tracking-widest flex items-center gap-2"><CreditCard size={14}/> Pagos Tarjeta</p>
-               <p className="text-xl font-black text-[var(--color-ink)] mt-1">S/ {superMetricas.tarjetaEsperada.toFixed(2)}</p>
-               <div className="text-[12px] font-bold text-[var(--color-muted)] uppercase mt-2 space-y-1 border-t pt-2">
+            <div className="bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-4 transition-transform hover:-translate-y-1">
+               <p className="text-[12px] font-black text-[var(--color-purple)] uppercase tracking-widest flex items-center gap-2">
+                 <span className="w-6 h-6 flex items-center justify-center bg-purple-50 border-2 border-[var(--color-purple)]"><CreditCard size={12} className="text-[var(--color-purple)]"/></span> 
+                 Pagos Tarjeta
+               </p>
+               <p className="text-xl sm:text-2xl font-black text-[var(--color-ink)] mt-1">S/ {superMetricas.tarjetaEsperada.toFixed(2)}</p>
+               <div className="text-[11px] font-bold text-[var(--color-muted)] uppercase mt-2 space-y-1 border-t border-[var(--color-border)] pt-2">
                  <p>Ventas: S/ {superMetricas.ventasTarjeta.toFixed(2)}</p>
                  {superMetricas.cobroDeudasTarjeta > 0 && <p>Cobros: S/ {superMetricas.cobroDeudasTarjeta.toFixed(2)}</p>}
                  {superMetricas.ingresosExtraTarjeta > 0 && <p>Ingresos: S/ {superMetricas.ingresosExtraTarjeta.toFixed(2)}</p>}
@@ -366,10 +380,13 @@ export const Finanzas: React.FC = () => {
                </div>
             </div>
 
-            <div className="bg-[var(--color-danger-bg)] border-2 border-[var(--color-danger)] p-4">
-               <p className="text-[12px] font-black text-[var(--color-danger)] uppercase tracking-widest flex items-center gap-2"><ArrowDownToLine size={14}/> Gastos y Retiros</p>
-               <p className="text-xl font-black text-[var(--color-danger)] mt-1">S/ {superMetricas.gastos.toFixed(2)}</p>
-               <p className="text-[12px] font-bold text-[var(--color-danger)] uppercase mt-2 border-t border-[var(--color-danger)]/20 pt-2">Salió del cajón</p>
+            <div className="bg-[var(--color-danger-bg)] border-2 border-[var(--color-danger)] shadow-[4px_4px_0_0_var(--color-danger)] p-4 transition-transform hover:-translate-y-1">
+               <p className="text-[12px] font-black text-[var(--color-danger)] uppercase tracking-widest flex items-center gap-2">
+                 <span className="w-6 h-6 flex items-center justify-center bg-white border-2 border-[var(--color-danger)]"><ArrowDownToLine size={12} className="text-[var(--color-danger)]"/></span> 
+                 Gastos y Retiros
+               </p>
+               <p className="text-xl sm:text-2xl font-black text-[var(--color-danger)] mt-1">S/ {superMetricas.gastos.toFixed(2)}</p>
+               <p className="text-[11px] font-bold text-[var(--color-danger)] uppercase mt-2 border-t border-[var(--color-danger)]/20 pt-2">Salió del cajón</p>
             </div>
           </div>
 

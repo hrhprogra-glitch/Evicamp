@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Database, ArrowUpDown, Search, Edit, Trash2, ChevronLeft, ChevronRight, Check, X, History, Barcode, Image as ImageIcon } from 'lucide-react';
 import { EtiquetaStock } from './EtiquetaStock';
 import type { Product } from '../types';
@@ -29,6 +29,82 @@ export const TablaProductos: React.FC<Props> = ({
   // ESTADOS PARA LA EDICIÓN EN LÍNEA
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Product>>({});
+
+  // === SELECTOR DE GRILLA E IMÁN DE FOCO ===
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement as HTMLElement;
+      
+      if (document.querySelector('[role="dialog"]')) return;
+
+      if (active?.closest('div[role="button"]')) {
+        const rowSelector = 'div[role="button"]';
+        
+        if (["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft"].includes(e.key)) {
+          e.preventDefault();
+          const currentRow = active.closest(rowSelector) as HTMLElement;
+          const rows = Array.from(document.querySelectorAll(rowSelector)) as HTMLElement[];
+          const rowIndex = rows.indexOf(currentRow);
+          
+          if (e.key === "ArrowDown") {
+            const nextRow = rows[rowIndex + 1];
+            if (nextRow) nextRow.focus();
+          } 
+          else if (e.key === "ArrowUp") {
+            const prevRow = rows[rowIndex - 1];
+            if (prevRow) {
+              prevRow.focus();
+            } else {
+              document.getElementById("buscador-global-inventario")?.focus();
+            }
+          } 
+          else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+            const focusables = [currentRow, ...Array.from(currentRow.querySelectorAll('button:not([disabled])'))] as HTMLElement[];
+            const focusIndex = focusables.indexOf(active as HTMLElement);
+            
+            if (e.key === "ArrowRight") {
+              const nextTarget = focusables[focusIndex + 1];
+              if (nextTarget) nextTarget.focus();
+            } else if (e.key === "ArrowLeft") {
+              const prevTarget = focusables[focusIndex - 1];
+              if (prevTarget) prevTarget.focus();
+            }
+          }
+        }
+      }
+    };
+
+    const enforceFocus = () => {
+      if (document.querySelector('[role="dialog"]')) return;
+      const activeTag = document.activeElement?.tagName;
+      // Si el usuario estÃ¡ enfocado en algo interactivo, no lo secuestramos (excepto el body/void)
+      if (activeTag === "INPUT" || activeTag === "TEXTAREA" || activeTag === "BUTTON" || activeTag === "A" || activeTag === "SELECT") return;
+
+      document.getElementById("buscador-global-inventario")?.focus();
+    };
+    
+    const forceMountFocus = () => {
+      if (!document.querySelector('[role="dialog"]')) {
+         document.getElementById("buscador-global-inventario")?.focus();
+      }
+    };
+
+    const handleGlobalClick = () => setTimeout(enforceFocus, 50);
+    const handleWindowFocus = () => setTimeout(enforceFocus, 50);
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    window.addEventListener("focus", handleWindowFocus);
+    document.addEventListener("click", handleGlobalClick);
+    
+    // Forzar el foco cuando la vista se monta por primera vez
+    setTimeout(forceMountFocus, 100);
+
+    return () => {
+      window.removeEventListener("keydown", handleGlobalKeyDown);
+      window.removeEventListener("focus", handleWindowFocus);
+      document.removeEventListener("click", handleGlobalClick);
+    };
+  }, []);
 
   const startEditing = (product: Product) => {
     setEditingId(product.id);
@@ -82,12 +158,12 @@ export const TablaProductos: React.FC<Props> = ({
   return (
     <div className="border border-[var(--color-border)] flex-1 flex flex-col bg-white relative">
       {loading && (
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <Database size={24} className="text-[var(--color-accent)] animate-bounce" />
-            <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-[0.2em]">Sincronizando con DB...</span>
-          </div>
-        </div>
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
+  <div className="flex flex-col items-center gap-4">
+    <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
+    <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest font-mono">Cargando...</span>
+  </div>
+</div>
       )}
 
       {/* === CONTROLES DE PAGINACIÓN ARRIBA === */}
@@ -341,3 +417,7 @@ export const TablaProductos: React.FC<Props> = ({
     </div>
   );
 };
+
+
+
+
