@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Calendar, Edit, Banknote, ShoppingCart, CheckCircle } from 'lucide-react';
+import { supabase } from '../../../db/supabase';
+import { X, Calendar, Edit, Banknote, ShoppingCart, CheckCircle, Calculator, CheckSquare, Square } from 'lucide-react';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import type { ClienteFiadoAgrupado } from '../types';
 
@@ -13,9 +14,143 @@ interface Props {
 
 export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, onRefetch }) => {
   useCerrarConEscape(isOpen, onClose);
-  const [tab, setTab] = useState<'DEUDAS' | 'PAGOS'>('DEUDAS');
+  
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [efectivo, setEfectivo] = useState<string>('');
+  const [yape, setYape] = useState<string>('');
+  const [tarjeta, setTarjeta] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // Editar Fecha
+  const [fechaEditId, setFechaEditId] = useState<string | null>(null);
+  const [nuevaFecha, setNuevaFecha] = useState<string>('');
+
+  useEffect(() => {
+    if (isOpen && cliente) {
+      const pendingIds = cliente.fiados.filter(f => f.saldoPendiente > 0).map(f => f.id);
+      setSelectedIds(new Set(pendingIds));
+      
+      const total = cliente.fiados.filter(f => f.saldoPendiente > 0).reduce((acc, f) => acc + f.saldoPendiente, 0);
+      setEfectivo(total.toFixed(2));
+      setYape('');
+      setTarjeta('');
+    } else {
+      setSelectedIds(new Set());
+      setFechaEditId(null);
+    }
+  }, [isOpen, cliente]);
 
   if (!isOpen || !cliente) return null;
+
+  const handleToggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+    
+    // Auto-update efectivo
+    const total = cliente.fiados.filter(f => next.has(f.id)).reduce((acc, f) => acc + f.saldoPendiente, 0);
+    setEfectivo(total.toFixed(2));
+    setYape('');
+    setTarjeta('');
+  };
+
+  const handleToggleAll = () => {
+    const pendingIds = cliente.fiados.filter(f => f.saldoPendiente > 0).map(f => f.id);
+    if (selectedIds.size === pendingIds.length) {
+      setSelectedIds(new Set());
+      setEfectivo('');
+      setYape('');
+      setTarjeta('');
+    } else {
+      setSelectedIds(new Set(pendingIds));
+      const total = cliente.fiados.filter(f => f.saldoPendiente > 0).reduce((acc, f) => acc + f.saldoPendiente, 0);
+      setEfectivo(total.toFixed(2));
+      setYape('');
+      setTarjeta('');
+    }
+  };
+
+  const aCentimos = (v: string) => Math.max(0, Number((Number(v) || 0).toFixed(2)));
+  const valEfectivo = aCentimos(efectivo);
+  const valYape = aCentimos(yape);
+  const valTarjeta = aCentimos(tarjeta);
+  const totalAbono = Number((valEfectivo + valYape + valTarjeta).toFixed(2));
+  
+  const selectedFiados = cliente.fiados.filter(f => selectedIds.has(f.id)).sort((a,b) => new Date(a.fechaEmision).getTime() - new Date(b.fechaEmision).getTime());
+  const totalSeleccionado = Number(selectedFiados.reduce((acc, f) => acc + f.saldoPendiente, 0).toFixed(2));
+
+  const handlePagar = async () => {
+    if (isSaving) return;
+    if (selectedFiados.length === 0) return alert('Selecciona al menos una deuda para pagar.');
+    if (totalAbono <= 0) return alert('El monto a abonar debe ser mayor a 0.');
+    if (totalAbono > Number((totalSeleccionado + 0.05).toFixed(2))) {
+      return alert('El abono supera la deuda seleccionada.');
+    }
+
+    setIsSaving(true);
+    try {
+      const { data: session } = await supabase.from('cash_sessions').select('id').eq('status', 'OPEN').single();
+      
+      let restanteEf = valEfectivo;
+      let restanteYa = valYape;
+      let restanteTa = valTarjeta;
+
+      for (const fiado of selectedFiados) {
+        if (restanteEf === 0 && restanteYa === 0 && restanteTa === 0) break;
+
+        const porCobrar = fiado.saldoPendiente;
+        let pagoEf = Math.min(restanteEf, porCobrar);
+        let pagoYa = Math.min(restanteYa, porCobrar - pagoEf);
+        let pagoTa = Math.min(restanteTa, porCobrar - pagoEf - pagoYa);
+        
+        const pagoFiado = Number((pagoEf + pagoYa + pagoTa).toFixed(2));
+        if (pagoFiado === 0) continue;
+
+        const { error } = await supabase.from('debt_payments').insert([{
+          fiado_id: Number(fiado.id),
+          customer_id: fiado.clienteId ? Number(fiado.clienteId) : null,
+          amount: pagoFiado,
+          amount_cash: pagoEf,
+          amount_yape: pagoYa,
+          amount_card: pagoTa,
+          amount_transfer: 0,
+          payment_type: [pagoEf, pagoYa, pagoTa].filter(v => v > 0).length > 1
+            ? 'mixto'
+            : (pagoEf > 0 ? 'efectivo' : (pagoYa > 0 ? 'yape' : 'tarjeta')),
+          session_id: session ? session.id : null,
+          created_at: new Date().toISOString(),
+          is_synced: 1
+        }]);
+
+        if (error) throw error;
+
+        restanteEf = Number((restanteEf - pagoEf).toFixed(2));
+        restanteYa = Number((restanteYa - pagoYa).toFixed(2));
+        restanteTa = Number((restanteTa - pagoTa).toFixed(2));
+      }
+
+      alert('✅ Abonos registrados correctamente.');
+      onRefetch();
+      onClose();
+    } catch (e: any) {
+      alert('Error al registrar abono: ' + e.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleUpdateFecha = async (id: string) => {
+    if (!nuevaFecha) return;
+    try {
+      const { error } = await supabase.from('fiados').update({ date_given: new Date(nuevaFecha).toISOString(), expected_pay_date: new Date(nuevaFecha).toISOString() }).eq('id', id);
+      if (error) throw error;
+      setFechaEditId(null);
+      onRefetch();
+    } catch (e: any) {
+      alert('Error al actualizar fecha: ' + e.message);
+    }
+  };
 
   return createPortal(
     <div className="fixed inset-0 bg-[var(--color-ink)]/90 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in font-mono">
@@ -38,21 +173,45 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
             <div className="p-4 border-b-4 border-[var(--color-ink)] bg-white flex justify-between items-center shrink-0">
               <h3 className="font-black text-lg tracking-widest uppercase flex items-center gap-2">
                 <ShoppingCart size={24} className="text-[var(--color-accent)]" /> 
-                Historial de Consumos
+                Historial de Deudas
               </h3>
+              <button onClick={handleToggleAll} className="px-4 py-2 bg-[var(--color-ink)] text-white font-black text-xs uppercase tracking-widest hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] transition-colors cursor-pointer shadow-[4px_4px_0_0_var(--color-border)]">
+                Seleccionar Todas
+              </button>
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-4">
-              {cliente.fiados.map((fiado) => (
-                <div key={fiado.id} className="bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-4 flex flex-col gap-2 relative">
+              {cliente.fiados.sort((a,b) => new Date(b.fechaEmision).getTime() - new Date(a.fechaEmision).getTime()).map((fiado) => (
+                <div key={fiado.id} 
+                  className={`bg-white border-2 p-4 flex flex-col gap-2 relative transition-all ${selectedIds.has(fiado.id) ? 'border-[var(--color-accent)] shadow-[4px_4px_0_0_var(--color-accent)] bg-[var(--color-accent-bg)]' : 'border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] opacity-70'}`}
+                >
                   <div className="flex justify-between items-start border-b-2 border-dashed border-[var(--color-line-light)] pb-2 mb-2">
-                    <div className="flex flex-col">
-                      <span className="font-black text-lg text-[var(--color-ink)]">S/ {fiado.saldoPendiente.toFixed(2)}</span>
-                      <span className="text-xs font-bold text-[var(--color-muted)] flex items-center gap-1">
-                        <Calendar size={12} /> {new Date(fiado.fechaEmision).toLocaleString('es-PE')}
-                        <button className="ml-2 bg-[var(--color-surface)] px-2 py-0.5 border border-[var(--color-border)] hover:bg-[var(--color-accent)] hover:text-white transition-colors flex items-center gap-1 cursor-pointer">
-                          <Edit size={10} /> EDITAR FECHA
+                    <div className="flex gap-3 items-center">
+                      {fiado.saldoPendiente > 0 && (
+                        <button onClick={() => handleToggleSelect(fiado.id)} className="cursor-pointer hover:text-[var(--color-accent)]">
+                          {selectedIds.has(fiado.id) ? <CheckSquare size={24} className="text-[var(--color-accent)]" /> : <Square size={24} />}
                         </button>
-                      </span>
+                      )}
+                      <div className="flex flex-col">
+                        <span className={`font-black text-lg ${selectedIds.has(fiado.id) ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)]'}`}>S/ {fiado.saldoPendiente.toFixed(2)}</span>
+                        
+                        <div className="text-xs font-bold text-[var(--color-muted)] flex flex-wrap items-center gap-2 mt-1">
+                          {fechaEditId === fiado.id ? (
+                            <div className="flex items-center gap-1">
+                              <input type="datetime-local" value={nuevaFecha} onChange={e => setNuevaFecha(e.target.value)} className="border border-[var(--color-ink)] px-1 py-0.5 text-black" />
+                              <button onClick={() => handleUpdateFecha(fiado.id)} className="bg-[var(--color-success)] text-white px-2 py-0.5">OK</button>
+                              <button onClick={() => setFechaEditId(null)} className="bg-[var(--color-danger)] text-white px-2 py-0.5">X</button>
+                            </div>
+                          ) : (
+                            <>
+                              <Calendar size={12} /> {new Date(fiado.fechaEmision).toLocaleString('es-PE')}
+                              <button onClick={() => { setFechaEditId(fiado.id); setNuevaFecha(fiado.fechaEmision.slice(0, 16)); }} className="ml-2 bg-[var(--color-surface)] px-2 py-0.5 border border-[var(--color-border)] hover:bg-[var(--color-accent)] hover:text-white transition-colors flex items-center gap-1 cursor-pointer">
+                                <Edit size={10} /> EDITAR
+                              </button>
+                            </>
+                          )}
+                        </div>
+
+                      </div>
                     </div>
                     {fiado.saldoPendiente === 0 ? (
                       <span className="bg-[var(--color-success)] text-white text-[10px] font-black uppercase px-2 py-1 flex items-center gap-1"><CheckCircle size={12}/> PAGADO</span>
@@ -60,7 +219,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                       <span className="bg-[var(--color-danger)] text-white text-[10px] font-black uppercase px-2 py-1">PENDIENTE</span>
                     )}
                   </div>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1 pl-9">
                     {fiado.detalles.map((det, i) => (
                       <div key={i} className="flex justify-between text-xs font-bold text-[var(--color-subtle)]">
                         <span>{det.qty} x {det.name}</span>
@@ -80,14 +239,47 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
               <h1 className="text-6xl font-black text-[var(--color-danger)] drop-shadow-md">S/ {cliente.totalPendiente.toFixed(2)}</h1>
             </div>
             
-            <div className="p-6 flex flex-col gap-6 flex-1">
-              <div className="bg-[var(--color-surface)] border-2 border-[var(--color-border)] p-4 flex flex-col gap-2">
-                 <h3 className="font-black text-sm uppercase tracking-widest flex items-center gap-2 mb-2">
-                   <Banknote size={18} className="text-[var(--color-success)]" /> Registrar Abono
+            <div className="p-6 flex flex-col gap-6 flex-1 bg-[var(--color-bg)]">
+              <div className="bg-white border-4 border-[var(--color-ink)] p-5 shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col gap-4">
+                 <h3 className="font-black text-lg uppercase tracking-widest flex items-center gap-2 border-b-2 border-dashed border-[var(--color-line-light)] pb-3">
+                   <Calculator size={24} className="text-[var(--color-accent)]" /> Registrar Abono
                  </h3>
-                 <p className="text-xs font-bold text-[var(--color-muted)]">
-                   Esta sección se implementará a continuación para permitir pagos parciales o totales.
-                 </p>
+                 
+                 <div className="flex justify-between items-center bg-[var(--color-surface)] p-3 border-2 border-[var(--color-ink)]">
+                    <span className="font-black text-xs uppercase text-[var(--color-subtle)] tracking-widest">Total Seleccionado</span>
+                    <span className="font-black text-xl text-[var(--color-ink)]">S/ {totalSeleccionado.toFixed(2)}</span>
+                 </div>
+
+                 <div className="flex flex-col gap-3">
+                    <div>
+                      <label className="text-xs font-black uppercase tracking-widest text-[var(--color-muted)] block mb-1">Efectivo</label>
+                      <input type="number" min="0" step="0.01" value={efectivo} onChange={(e) => setEfectivo(e.target.value)}
+                        className="w-full border-2 border-[var(--color-ink)] px-4 py-3 font-black text-lg focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)] transition-all outline-none" placeholder="0.00" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-black uppercase tracking-widest text-[var(--color-purple)] block mb-1">Yape / Plin / Transferencia</label>
+                      <input type="number" min="0" step="0.01" value={yape} onChange={(e) => setYape(e.target.value)}
+                        className="w-full border-2 border-[var(--color-purple)] px-4 py-3 font-black text-lg focus:border-[var(--color-purple)] focus:ring-2 focus:ring-[var(--color-purple)] transition-all outline-none" placeholder="0.00" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-black uppercase tracking-widest text-[var(--color-info)] block mb-1">Tarjeta de Crédito / POS</label>
+                      <input type="number" min="0" step="0.01" value={tarjeta} onChange={(e) => setTarjeta(e.target.value)}
+                        className="w-full border-2 border-[var(--color-info)] px-4 py-3 font-black text-lg focus:border-[var(--color-info)] focus:ring-2 focus:ring-[var(--color-info)] transition-all outline-none" placeholder="0.00" />
+                    </div>
+                 </div>
+
+                 <div className="flex justify-between items-center pt-3 border-t-2 border-dashed border-[var(--color-line-light)]">
+                    <span className="font-black text-xs uppercase text-[var(--color-subtle)] tracking-widest">Total a Abonar</span>
+                    <span className={`font-black text-2xl ${totalAbono > totalSeleccionado ? 'text-[var(--color-danger)]' : 'text-[var(--color-success)]'}`}>S/ {totalAbono.toFixed(2)}</span>
+                 </div>
+
+                 <button 
+                  onClick={handlePagar}
+                  disabled={isSaving || totalAbono <= 0 || totalAbono > totalSeleccionado}
+                  className="w-full bg-[var(--color-accent)] text-[var(--color-ink)] border-4 border-[var(--color-ink)] py-4 text-lg font-black uppercase tracking-widest hover:bg-[var(--color-success)] hover:text-white transition-colors cursor-pointer shadow-[6px_6px_0_0_var(--color-ink)] active:translate-y-[6px] active:translate-x-[6px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                 >
+                   {isSaving ? 'Procesando...' : 'CONFIRMAR PAGO'}
+                 </button>
               </div>
             </div>
           </div>
