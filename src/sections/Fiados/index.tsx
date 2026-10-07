@@ -49,13 +49,15 @@ export const Fiados: React.FC = () => {
         { data: prods },
         { data: clis },
         { data: fiaData },
-        { data: pagosData }
+        { data: pagosData },
+        { data: detailsData }
       ] = await Promise.all([
         traerTodo(() => supabase.from('products').select('*').order('id')),
         traerTodo(() => supabase.from('customers').select('*').order('id')),
         // Filtro Ampliado: Descarga también los CANCELADOS para poder visualizarlos en la tabla como 'PAGADOS'
         traerTodo(() => supabase.from('fiados').select('*').in('status', ['PENDIENTE', 'VENCIDO', 'CANCELADO']).order('id')),
-        traerTodo(() => supabase.from('debt_payments').select('*').order('id'))
+        traerTodo(() => supabase.from('debt_payments').select('*').order('id')),
+        traerTodo(() => supabase.from('sale_details').select('sale_id, product_id, product_name, quantity, price_at_moment, subtotal').order('id'))
       ]);
 
       // 1. Asignar Inventario
@@ -87,6 +89,14 @@ if (fiaData) {
       fecha: p.created_at
     }));
 
+    const susDetalles = (detailsData || []).filter(d => d.sale_id?.toString() === f.sale_id?.toString()).map(d => ({
+      productoId: d.product_id,
+      name: d.product_name,
+      qty: Number(d.quantity),
+      price: Number(d.price_at_moment),
+      subtotal: Number(d.subtotal)
+    }));
+
     // 🛡️ CÁLCULO MATEMÁTICO BLINDADO (Ignora errores o retrasos de Base de Datos)
     const montoOriginal = Number(f.amount) || 0;
     const montoPagadoReal = historialPagos.reduce((sum, p) => sum + p.monto, 0);
@@ -105,7 +115,7 @@ if (fiaData) {
       fechaEmision: f.date_given,
       fechaVencimiento: f.expected_pay_date || f.date_given,
       estado: estadoFinal,
-      detalles: [], 
+      detalles: susDetalles, 
       pagos: historialPagos
     } as any;
   });
