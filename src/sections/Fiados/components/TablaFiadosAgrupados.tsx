@@ -157,6 +157,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
               currentItems.map((cli, i) => (
                 <tr key={i}
                   {...clicConTeclado(() => onView(cli))}
+                  onClick={() => onView(cli)}
                   className="hover:bg-[var(--color-surface)] transition-colors focus:outline-none focus:bg-[var(--color-accent-bg)] cursor-pointer"
                 >
                   <td className="py-4 px-4 pl-6">
@@ -172,7 +173,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
                     </span>
                   </td>
                   <td className="py-4 px-4 pr-6 text-center">
-                    <button className="p-2 border-2 border-[var(--color-ink)] bg-[var(--color-bg)] hover:bg-[var(--color-ink)] hover:text-white transition-all cursor-pointer inline-flex shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-1 hover:translate-y-1">
+                    <button onClick={(e) => { e.stopPropagation(); onView(cli); }} className="p-2 border-2 border-[var(--color-ink)] bg-[var(--color-bg)] hover:bg-[var(--color-ink)] hover:text-white transition-all cursor-pointer inline-flex shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-1 hover:translate-y-1">
                       <Eye size={20} strokeWidth={3} />
                     </button>
                   </td>

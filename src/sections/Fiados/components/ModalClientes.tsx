@@ -590,7 +590,8 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                     </div>
                   ) : (
                     fiadosDelCliente.map(f => (
-                      <div key={f.id} role="button" tabIndex={0} className="bg-white border-2 border-[var(--color-ink)] p-4 flex focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] justify-between items-center shadow-[4px_4px_0_0_var(--color-border)]">
+                      <div key={f.id} role="button" tabIndex={0} className="bg-white border-2 border-[var(--color-ink)] p-4 flex flex-col gap-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] justify-between items-center shadow-[4px_4px_0_0_var(--color-border)]">
+                        <div className="flex justify-between items-center w-full">
                         <div>
                           <p className="text-sm font-black text-[var(--color-ink)] uppercase">Fecha: {new Date(f.fechaEmision).toLocaleDateString()}</p>
                           <p className="text-xs font-bold mt-1">
@@ -601,8 +602,22 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                         </div>
                         <div className="text-right flex flex-col gap-1">
                           <p className="text-sm font-black text-[var(--color-muted)]">Deuda Total: <span className="text-[var(--color-ink)]">S/ {f.montoOriginal.toFixed(2)}</span></p>
+                        </div>
                           <p className="text-lg font-black text-[var(--color-danger)]">Debe: S/ {f.saldoPendiente.toFixed(2)}</p>
                         </div>
+
+                        {/* PRODUCTOS */}
+                        {f.detalles && f.detalles.length > 0 && (
+                          <div className="flex flex-col gap-1 border-t-2 border-dashed border-[var(--color-border)] pt-2 mt-2">
+                            <p className="text-xs font-black uppercase text-[var(--color-muted)] mb-1">Productos Sacados:</p>
+                            {f.detalles.map((det, i) => (
+                              <div key={i} className="flex justify-between text-xs font-bold text-[var(--color-subtle)]">
+                                <span>{det.qty} x {det.name}</span>
+                                <span>S/ {Number(det.subtotal).toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))
                   )}
