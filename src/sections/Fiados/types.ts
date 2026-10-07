@@ -38,3 +38,13 @@ export interface Fiado {
   detalles: FiadoDetalle[];
   pagos?: PagoAbono[]; 
 }
+export interface ClienteFiadoAgrupado {
+  clienteNombre: string;
+  clienteId?: string;
+  clienteDni?: string;
+  clienteTelefono?: string;
+  totalOriginal: number;
+  totalPendiente: number;
+  totalPagado: number;
+  fiados: Fiado[];
+}

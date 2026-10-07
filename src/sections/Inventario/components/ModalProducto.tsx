@@ -556,8 +556,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
               <div className="md:col-span-2 space-y-2">
                 <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest">Nombre / Descripción del Producto</label>
-                <input 
-                  type="text"
+                <input autoComplete="off" type="text"
                   placeholder="Ej: COCA COLA 3 LITROS RETORNABLE..."
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -595,8 +594,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 </div>
                 
                 <div className="relative">
-                  <input 
-                    type="text"
+                  <input autoComplete="off" type="text"
                     placeholder="BUSCAR O ESCRIBIR NUEVA..."
                     value={formData.category}
                     onChange={(e) => {
@@ -655,8 +653,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
               <div className="space-y-2">
                 <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest">Escáner (Cód. Barras)</label>
-                <input 
-                  type="text"
+                <input autoComplete="off" type="text"
                   placeholder="ESCANEAR..."
                   value={formData.barcode}
                   onChange={(e) => setFormData({...formData, barcode: e.target.value})}
@@ -678,8 +675,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                         <Search size={16} className="text-[var(--color-muted)]" />
                       )}
                     </div>
-                    <input 
-                      type="text"
+                    <input autoComplete="off" type="text"
                       placeholder="EJ: PERA, COCA COLA, TALADRO O PEGAR URL..."
                       value={imageQuery || formData.image}
                       onFocus={() => {
@@ -704,8 +700,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                   
                   <label className="bg-[var(--color-ink)] text-white px-6 py-3 border-2 border-[var(--color-ink)] font-black text-[12px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white hover:text-[var(--color-ink)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] shrink-0">
                     <ImagePlus size={16} /> Subir Local
-                    <input 
-                      type="file" 
+                    <input autoComplete="off" type="file" 
                       accept="image/*" 
                       className="hidden" 
                       onChange={(e) => {
@@ -803,8 +798,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
               <div className="space-y-2">
                 <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest">Precio de Venta Sugerido</label>
-                <input 
-                  type="number"
+                <input autoComplete="off" type="number"
                   placeholder="0.00"
                   value={formData.price}
                   onChange={(e) => setFormData({...formData, price: e.target.value})}
@@ -817,8 +811,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               {nature !== 'CONSUMO' && (
                 <div className="space-y-2">
                   <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest">Stock Mínimo (Alerta)</label>
-                  <input 
-                    type="number"
+                  <input autoComplete="off" type="number"
                     value={formData.minStock}
                     onChange={(e) => setFormData({...formData, minStock: e.target.value})}
                     className="w-full bg-white border-2 border-[var(--color-border)] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-accent)] transition-colors"

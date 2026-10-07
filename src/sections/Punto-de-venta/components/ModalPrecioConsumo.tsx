@@ -89,8 +89,7 @@ export const ModalPrecioConsumo: React.FC<Props> = ({ isOpen, producto, onClose,
               <Banknote size={16} className="text-[var(--color-warning-dark)]" /> Precio a Cobrar (S/)
             </label>
             <div className="relative">
-              <input 
-                id="consumo-input-precio"
+              <input autoComplete="off" id="consumo-input-precio"
                 type="number"
                 step="0.01"
                 min="0"

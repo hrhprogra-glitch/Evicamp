@@ -45,8 +45,7 @@ export const FiltrosInventario: React.FC<Props> = ({
           <div className="mt-[-6px]"><Search size={18} /></div>
         </div>
         <div className="flex-1 relative h-full flex items-center">
-          <input 
-            id="buscador-global-inventario"
+          <input autoComplete="off" id="buscador-global-inventario"
             type="text"
             placeholder="ESCANEAR BARCODE O BUSCAR POR NOMBRE / CÓDIGO..."
             value={localQuery}

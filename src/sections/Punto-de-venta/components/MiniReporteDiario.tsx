@@ -217,7 +217,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
         <div className="bg-[var(--color-ink)] text-white px-3 py-1.5 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <button 
-              onClick={() => setIsModalOpen(true)}
+              onMouseDown={(e) => e.preventDefault()} onClick={() => setIsModalOpen(true)}
               className="flex items-center gap-2 hover:text-[var(--color-accent)] transition-colors cursor-pointer"
               title="Ver Historial del Día"
             >
@@ -225,7 +225,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
               <span className="text-[13px] font-black uppercase tracking-widest hidden sm:inline">Caja Actual:</span>
             </button>
             <button
-              onClick={() => setIsVisible(!isVisible)}
+              onMouseDown={(e) => e.preventDefault()} onClick={() => setIsVisible(!isVisible)}
               className="text-base font-black text-[var(--color-accent)] ml-1 hover:brightness-125 transition-all cursor-pointer"
               title="Mostrar/Ocultar Montos"
             >
@@ -233,7 +233,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
             </button>
           </div>
           <button 
-            onClick={() => setIsVisible(!isVisible)}
+            onMouseDown={(e) => e.preventDefault()} onClick={() => setIsVisible(!isVisible)}
             className="text-[var(--color-subtle)] hover:text-white transition-colors cursor-pointer px-2"
           >
             {isVisible ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -241,7 +241,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
         </div>
 
         <button 
-          onClick={() => setIsVisible(!isVisible)}
+          onMouseDown={(e) => e.preventDefault()} onClick={() => setIsVisible(!isVisible)}
           className="grid grid-cols-4 divide-x-2 divide-[var(--color-border)] bg-[var(--color-bg)] min-w-0 w-full hover:bg-[var(--color-surface)] transition-colors cursor-pointer"
           title="Mostrar/Ocultar Montos"
         >

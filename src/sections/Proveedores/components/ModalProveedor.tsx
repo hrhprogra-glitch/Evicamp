@@ -105,8 +105,7 @@ export const ModalProveedor: React.FC<Props> = ({ isOpen, onClose, onSave, prove
             
             <div className="space-y-2">
               <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest">RUC / DNI *</label>
-              <input 
-                type="text"
+              <input autoComplete="off" type="text"
                 maxLength={11}
                 placeholder="Ej: 20123456789"
                 value={formData.ruc}
@@ -129,8 +128,7 @@ export const ModalProveedor: React.FC<Props> = ({ isOpen, onClose, onSave, prove
 
             <div className="md:col-span-2 space-y-2">
               <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest">Razón Social *</label>
-              <input 
-                type="text"
+              <input autoComplete="off" type="text"
                 placeholder="Ej: DISTRIBUIDORA DE ALIMENTOS S.A.C."
                 value={formData.razon_social}
                 onChange={(e) => setFormData({...formData, razon_social: e.target.value.toUpperCase()})}
@@ -140,8 +138,7 @@ export const ModalProveedor: React.FC<Props> = ({ isOpen, onClose, onSave, prove
 
             <div className="md:col-span-2 space-y-2">
               <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest">Nombre Comercial (Opcional)</label>
-              <input 
-                type="text"
+              <input autoComplete="off" type="text"
                 placeholder="Ej: DISTRIBUCIONES PERÚ"
                 value={formData.nombre_comercial}
                 onChange={(e) => setFormData({...formData, nombre_comercial: e.target.value.toUpperCase()})}
@@ -151,8 +148,7 @@ export const ModalProveedor: React.FC<Props> = ({ isOpen, onClose, onSave, prove
 
             <div className="space-y-2">
               <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest">Teléfono / Celular</label>
-              <input 
-                type="text"
+              <input autoComplete="off" type="text"
                 placeholder="Ej: 987654321"
                 value={formData.telefono}
                 onChange={(e) => setFormData({...formData, telefono: e.target.value})}
@@ -162,8 +158,7 @@ export const ModalProveedor: React.FC<Props> = ({ isOpen, onClose, onSave, prove
 
             <div className="space-y-2">
               <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest">Correo Electrónico</label>
-              <input 
-                type="email"
+              <input autoComplete="off" type="email"
                 placeholder="contacto@empresa.com"
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value.toLowerCase()})}
@@ -173,8 +168,7 @@ export const ModalProveedor: React.FC<Props> = ({ isOpen, onClose, onSave, prove
 
             <div className="md:col-span-2 space-y-2">
               <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest">Dirección de la empresa</label>
-              <input 
-                type="text"
+              <input autoComplete="off" type="text"
                 placeholder="Av. Principal 123, Distrito..."
                 value={formData.direccion}
                 onChange={(e) => setFormData({...formData, direccion: e.target.value.toUpperCase()})}

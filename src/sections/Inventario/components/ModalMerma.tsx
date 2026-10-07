@@ -362,8 +362,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
               </div>
             ) : (
               <div className="relative">
-                <input
-                  type="text"
+                <input autoComplete="off" type="text"
                   autoFocus
                   value={searchQuery}
                   onChange={(e) => {
@@ -434,8 +433,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
                 ? 'Costo Total (S/)' 
                 : (selectedProduct?.unit?.toUpperCase() === 'KG' ? 'Cantidad (Kilos / Gramos)' : 'Cantidad (Unidades)')}
               </label>
-              <input
-                type="number"
+              <input autoComplete="off" type="number"
                 value={cantidad}
                 step={(selectedProduct as any)?.control_type === 'WEIGHT' || selectedProduct?.unit === 'KG' ? "0.001" : "1"}
                 onChange={(e) => {

@@ -130,12 +130,12 @@ export const ModalNuevoMovimiento: React.FC<Props> = ({ isOpen, onClose, onSucce
 
           <div className="space-y-1">
             <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest">Monto (S/)</label>
-            <input type="number" value={monto} onChange={(e) => setMonto(e.target.value)} placeholder="0.00" className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-ink)] p-2 text-lg font-black outline-none focus:border-[var(--color-info)] rounded-none"/>
+            <input autoComplete="off" type="number" value={monto} onChange={(e) => setMonto(e.target.value)} placeholder="0.00" className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-ink)] p-2 text-lg font-black outline-none focus:border-[var(--color-info)] rounded-none"/>
           </div>
 
           <div className="space-y-1">
             <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest">Motivo / Descripción</label>
-            <input type="text" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} placeholder="Ej. Pago a proveedor, Pasajes..." className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-ink)] p-2 text-xs font-black uppercase outline-none focus:border-[var(--color-info)] rounded-none"/>
+            <input autoComplete="off" type="text" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} placeholder="Ej. Pago a proveedor, Pasajes..." className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-ink)] p-2 text-xs font-black uppercase outline-none focus:border-[var(--color-info)] rounded-none"/>
           </div>
 
           <div className="space-y-1">

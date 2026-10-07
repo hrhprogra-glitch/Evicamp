@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, ScanLine, Package, Plus, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { formatearCantidad } from '../../../utils/formato';
 import type { Product } from '../../Inventario/types';
@@ -247,8 +247,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
               <Search size={20} />
             </div>
             <div className="flex flex-col flex-1 px-4 relative">
-              <input 
-                id="buscador-global-pos"
+              <input id="buscador-global-pos"
                 type="text" 
                 autoFocus
                 placeholder="ESCANEAS AQUÍ, O ESCRIBES NOMBRE/CÓDIGO (Presiona Enter)" 

@@ -433,8 +433,7 @@ interface Props {
             >
               <Calendar size={14}/> Fecha Límite de Pago *
             </label>
-            <input 
-              id="fiado-fecha"
+            <input autoComplete="off" id="fiado-fecha"
               type="date" 
               value={fechaVencimiento}
               onChange={(e) => setFechaVencimiento(e.target.value)}
@@ -488,9 +487,9 @@ interface Props {
               if (e.key === 'Tab') {
                 e.preventDefault();
                 if (e.shiftKey) document.getElementById('cobro-btn-confirm')?.focus();
-                else document.getElementById('pago-efectivo')?.focus();
+                else document.getElementById('btn-exacto-efectivo')?.focus();
               }
-              if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('pago-efectivo')?.focus(); }
+              if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('btn-exacto-efectivo')?.focus(); }
               if (e.key === 'ArrowRight') { e.preventDefault(); if (faltante > 0) document.getElementById('fiado-btn-toggle')?.focus(); }
               if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-confirm')?.focus(); }
               if (e.key === 'Delete') { e.preventDefault(); onClose(); }
@@ -510,9 +509,22 @@ interface Props {
           </div>
 
           <div className="flex gap-2 shrink-0">
-            <button onClick={() => pagoExacto('EFECTIVO')} className="flex-1 bg-white border-2 border-[var(--color-accent)] text-[var(--color-accent)] font-black text-[12px] uppercase py-2 [@media(max-height:700px)]:py-1 hover:bg-[var(--color-accent)] hover:text-white transition-colors cursor-pointer">Exacto Efectivo</button>
-            <button onClick={() => pagoExacto('YAPE')} className="flex-1 bg-white border-2 border-[var(--color-purple)] text-[var(--color-purple)] font-black text-[12px] uppercase py-2 [@media(max-height:700px)]:py-1 hover:bg-[var(--color-purple)] hover:text-white transition-colors cursor-pointer">Exacto Yape</button>
-            <button onClick={() => pagoExacto('TARJETA')} className="flex-1 bg-white border-2 border-[var(--color-info)] text-[var(--color-info)] font-black text-[12px] uppercase py-2 [@media(max-height:700px)]:py-1 hover:bg-[var(--color-info)] hover:text-white transition-colors cursor-pointer">Exacto Tarjeta</button>
+            <button id="btn-exacto-efectivo" onClick={() => pagoExacto('EFECTIVO')} onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
+              if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('btn-exacto-yape')?.focus(); }
+              if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('pago-efectivo')?.focus(); }
+            }} className="flex-1 bg-white border-2 border-[var(--color-accent)] text-[var(--color-accent)] font-black text-[12px] uppercase py-2 [@media(max-height:700px)]:py-1 hover:bg-[var(--color-accent)] hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]">Exacto Efectivo</button>
+            <button id="btn-exacto-yape" onClick={() => pagoExacto('YAPE')} onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
+              if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('btn-exacto-efectivo')?.focus(); }
+              if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('btn-exacto-tarjeta')?.focus(); }
+              if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('pago-yape')?.focus(); }
+            }} className="flex-1 bg-white border-2 border-[var(--color-purple)] text-[var(--color-purple)] font-black text-[12px] uppercase py-2 [@media(max-height:700px)]:py-1 hover:bg-[var(--color-purple)] hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]">Exacto Yape</button>
+            <button id="btn-exacto-tarjeta" onClick={() => pagoExacto('TARJETA')} onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
+              if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('btn-exacto-yape')?.focus(); }
+              if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('pago-tarjeta')?.focus(); }
+            }} className="flex-1 bg-white border-2 border-[var(--color-info)] text-[var(--color-info)] font-black text-[12px] uppercase py-2 [@media(max-height:700px)]:py-1 hover:bg-[var(--color-info)] hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]">Exacto Tarjeta</button>
           </div>
 
           <div className="flex flex-col gap-2 shrink-0">
@@ -535,7 +547,7 @@ interface Props {
                     if (e.key === 'Enter' && puedeConfirmar) handleCobrar();
                     if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('pago-yape')?.focus(); }
                     if (e.key === 'ArrowRight') { e.preventDefault(); if (faltante > 0) { (document.getElementById('fiado-nombre') || document.getElementById('fiado-search'))?.focus(); } }
-                    if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
+                    if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-exacto-efectivo')?.focus(); }
                     if (e.key === 'Tab') {
                        e.preventDefault();
                        if (e.shiftKey) document.getElementById('cobro-btn-close')?.focus();
@@ -607,7 +619,7 @@ interface Props {
                     if (e.key === 'Enter' && puedeConfirmar) handleCobrar();
                     if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('pago-yape')?.focus(); }
                     if (e.key === 'ArrowRight') { e.preventDefault(); if (faltante > 0) { (document.getElementById('fiado-nombre') || document.getElementById('fiado-search'))?.focus(); } }
-                    if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('cobro-btn-confirm')?.focus(); }
+                    if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('cobro-btn-imprimir')?.focus(); }
                     if (e.key === 'Tab') {
                        e.preventDefault();
                        if (e.shiftKey) document.getElementById('pago-yape')?.focus();
@@ -664,9 +676,15 @@ interface Props {
             Imprimir Boleta Física
           </span>
           <button
+            id="cobro-btn-imprimir"
             type="button"
             onClick={() => setImprimirBoleta(!imprimirBoleta)}
-            className={`w-12 h-6 flex items-center border-2 border-[var(--color-ink)] rounded-none p-1 transition-colors cursor-pointer ${
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('pago-tarjeta')?.focus(); }
+              if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('cobro-btn-confirm')?.focus(); }
+              if (e.key === 'Enter') { e.preventDefault(); setImprimirBoleta(!imprimirBoleta); }
+            }}
+            className={`w-12 h-6 flex items-center border-2 border-[var(--color-ink)] rounded-none p-1 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:ring-offset-1 ${
               imprimirBoleta ? 'bg-[var(--color-ink)]' : 'bg-[var(--color-surface)]'
             }`}
           >
@@ -685,7 +703,7 @@ interface Props {
                  else document.getElementById('cobro-btn-close')?.focus();
               }
               if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
-              if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('pago-tarjeta')?.focus(); }
+              if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-imprimir')?.focus(); }
               if (e.key === 'ArrowRight') { e.preventDefault(); if (faltante > 0) document.getElementById('fiado-fecha')?.focus(); }
               if (e.key === 'Delete') { e.preventDefault(); onClose(); }
             }}

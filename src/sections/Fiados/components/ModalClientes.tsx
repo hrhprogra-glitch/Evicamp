@@ -442,8 +442,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                 <div className="p-3 sm:p-4 border-b-2 sm:border-2 border-[var(--color-border)] flex flex-wrap xl:flex-nowrap gap-4 shrink-0 bg-[var(--color-surface)]">
                   <div className="relative flex-1 min-w-[200px]">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-subtle)]" />
-                    <input 
-                      id="buscador-modal-clientes" type="text" value={searchTerm}
+                    <input autoComplete="off" id="buscador-modal-clientes" type="text" value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="Buscar por nombre o DNI..." 
                       className="w-full bg-white border-2 border-[var(--color-border)] pl-9 pr-4 py-3 text-xs font-black uppercase outline-none focus:border-[var(--color-info)] transition-colors rounded-none" 
@@ -553,15 +552,15 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                 </h3>
                 <div className="space-y-2">
                   <label className="text-[12px] font-black uppercase text-[var(--color-muted)]">Nombre Completo *</label>
-                  <input id="input-nombre-cliente" type="text" value={nombre} onChange={e=>setNombre(e.target.value)} className="w-full border-2 border-[var(--color-border)] p-3 text-xs font-black uppercase focus:border-[var(--color-info)] outline-none transition-colors" />
+                  <input autoComplete="off" id="input-nombre-cliente" type="text" value={nombre} onChange={e=>setNombre(e.target.value)} className="w-full border-2 border-[var(--color-border)] p-3 text-xs font-black uppercase focus:border-[var(--color-info)] outline-none transition-colors" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[12px] font-black uppercase text-[var(--color-muted)]">DNI (Opcional)</label>
-                  <input id="input-dni-cliente" type="text" value={dni} onChange={e=>setDni(e.target.value.replace(/\D/g, ''))} maxLength={8} className="w-full border-2 border-[var(--color-border)] p-3 text-xs font-black focus:border-[var(--color-info)] outline-none transition-colors" />
+                  <input autoComplete="off" id="input-dni-cliente" type="text" value={dni} onChange={e=>setDni(e.target.value.replace(/\D/g, ''))} maxLength={8} className="w-full border-2 border-[var(--color-border)] p-3 text-xs font-black focus:border-[var(--color-info)] outline-none transition-colors" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[12px] font-black uppercase text-[var(--color-muted)]">Celular (Opcional)</label>
-                  <input id="input-telefono-cliente" type="text" value={telefono} onChange={e=>setTelefono(e.target.value.replace(/\D/g, ''))} maxLength={9} className="w-full border-2 border-[var(--color-border)] p-3 text-xs font-black focus:border-[var(--color-info)] outline-none transition-colors" />
+                  <input autoComplete="off" id="input-telefono-cliente" type="text" value={telefono} onChange={e=>setTelefono(e.target.value.replace(/\D/g, ''))} maxLength={9} className="w-full border-2 border-[var(--color-border)] p-3 text-xs font-black focus:border-[var(--color-info)] outline-none transition-colors" />
                 </div>
                 <div className="flex justify-end gap-3 mt-4">
                   <button id="btn-cancelar-cliente" onClick={() => setView('LISTA')} className="px-6 py-3 border-2 border-[var(--color-border)] text-[var(--color-muted)] text-[12px] font-black uppercase hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] transition-colors cursor-pointer rounded-none">Cancelar</button>

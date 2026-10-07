@@ -106,8 +106,7 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
                 <Banknote size={16} className="text-[var(--color-accent)]" /> ¿Cuánto dinero quiere llevar? (S/)
               </label>
               <div className="relative">
-                <input 
-                  id="balanza-input-monto"
+                <input autoComplete="off" id="balanza-input-monto"
                   type="number" 
                   autoFocus
                   value={montoSoles}
@@ -157,8 +156,7 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
                 <Scale size={16} className="text-[var(--color-info)]" /> ¿Cuántos Kilos va a pesar? (KG)
               </label>
               <div className="relative">
-                <input 
-                  id="balanza-input-peso"
+                <input autoComplete="off" id="balanza-input-peso"
                   type="number" 
                   value={pesoKg}
                   onChange={(e) => handlePesoChange(e.target.value)}

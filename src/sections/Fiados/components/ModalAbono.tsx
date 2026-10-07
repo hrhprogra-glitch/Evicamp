@@ -212,8 +212,7 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
               <span className="text-xs font-black uppercase flex-1 text-[var(--color-ink)]">Efectivo</span>
               <div className="flex items-center gap-1">
                 <span className="text-[var(--color-subtle)] font-bold text-xs">S/</span>
-                <input 
-                  id="input-abono-efectivo"
+                <input autoComplete="off" id="input-abono-efectivo"
                   type="number" 
                   value={efectivo} 
                   onChange={(e) => setEfectivo(e.target.value)}
@@ -229,8 +228,7 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
               <span className="text-xs font-black uppercase flex-1 text-[var(--color-ink)]">Yape</span>
               <div className="flex items-center gap-1">
                 <span className="text-[var(--color-subtle)] font-bold text-xs">S/</span>
-                <input 
-                  id="input-abono-yape"
+                <input autoComplete="off" id="input-abono-yape"
                   type="number" 
                   value={yape} 
                   onChange={(e) => setYape(e.target.value)}
@@ -246,8 +244,7 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
               <span className="text-xs font-black uppercase flex-1 text-[var(--color-ink)]">Tarjeta</span>
               <div className="flex items-center gap-1">
                 <span className="text-[var(--color-subtle)] font-bold text-xs">S/</span>
-                <input 
-                  id="input-abono-tarjeta"
+                <input autoComplete="off" id="input-abono-tarjeta"
                   type="number" 
                   value={tarjeta} 
                   onChange={(e) => setTarjeta(e.target.value)}

@@ -230,8 +230,7 @@ export const TablaProductos: React.FC<Props> = ({
                   </div>
                   
                   <div className="col-span-3 pr-2 flex flex-col gap-2">
-                    <input 
-                      type="text" 
+                    <input autoComplete="off" type="text" 
                       value={editForm.name || ''} 
                       onChange={e => setEditForm({...editForm, name: e.target.value.toUpperCase()})}
                       placeholder="NOMBRE PRODUCTO"
@@ -240,8 +239,7 @@ export const TablaProductos: React.FC<Props> = ({
                   </div>
 
                   <div className="col-span-1 pr-2 flex flex-col gap-2">
-                    <input 
-                      type="number" 
+                    <input autoComplete="off" type="number" 
                       value={editForm.cost || 0} 
                       onChange={e => setEditForm({...editForm, cost: Number(e.target.value)})}
                       className="w-full bg-white border-2 border-[var(--color-border)] p-1 text-[12px] font-bold text-[var(--color-ink)] outline-none focus:border-[var(--color-accent)] transition-colors rounded-none"
@@ -250,8 +248,7 @@ export const TablaProductos: React.FC<Props> = ({
                   </div>
 
                   <div className="col-span-1 flex items-center justify-end pr-2">
-                    <input 
-                      type="number" 
+                    <input autoComplete="off" type="number" 
                       value={editForm.price || 0} 
                       onChange={e => setEditForm({...editForm, price: Number(e.target.value)})}
                       className="w-full bg-white border-2 border-[var(--color-border)] p-1 text-[12px] font-black text-[var(--color-accent)] outline-none focus:border-[var(--color-accent)] transition-colors rounded-none text-right"
@@ -260,8 +257,7 @@ export const TablaProductos: React.FC<Props> = ({
                   </div>
 
                   <div className="col-span-2 text-center flex items-center gap-1 justify-center pr-2">
-                    <input 
-                      type="number" 
+                    <input autoComplete="off" type="number" 
                       value={editForm.minStock || 0} 
                       onChange={e => setEditForm({...editForm, minStock: Number(e.target.value)})}
                       className="w-10 bg-white border-2 border-[var(--color-border)] p-1 text-[12px] font-bold text-[var(--color-ink)] outline-none focus:border-[var(--color-danger)] transition-colors rounded-none text-center"

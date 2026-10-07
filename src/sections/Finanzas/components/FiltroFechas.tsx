@@ -22,8 +22,7 @@ export const FiltroFechas: React.FC<Props> = ({ onFilter }) => {
     <div className="bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-4 flex flex-col items-stretch md:flex-row md:flex-wrap md:items-end gap-4 mb-6 rounded-none">
       <div className="flex flex-col gap-1">
         <label className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">Desde</label>
-        <input 
-          type="date" 
+        <input autoComplete="off" type="date" 
           value={desde}
           onChange={(e) => setDesde(e.target.value)}
           className="bg-[var(--color-bg)] text-[var(--color-ink)] border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] rounded-none px-3 py-2 text-xs font-bold outline-none transition-colors"
@@ -31,8 +30,7 @@ export const FiltroFechas: React.FC<Props> = ({ onFilter }) => {
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">Hasta</label>
-        <input 
-          type="date" 
+        <input autoComplete="off" type="date" 
           value={hasta}
           onChange={(e) => setHasta(e.target.value)}
           className="bg-[var(--color-bg)] text-[var(--color-ink)] border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] rounded-none px-3 py-2 text-xs font-bold outline-none transition-colors"

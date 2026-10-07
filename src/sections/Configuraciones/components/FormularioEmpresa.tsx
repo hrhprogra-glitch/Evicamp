@@ -156,8 +156,7 @@ export const FormularioEmpresa: React.FC = () => {
             <label className="absolute inset-0 bg-[var(--color-ink)]/80 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white">
               <Upload size={24} className="mb-2 text-[var(--color-accent)]" />
               <span className="text-xs font-bold uppercase tracking-wider">Subir Logo</span>
-              <input 
-                type="file" 
+              <input autoComplete="off" type="file" 
                 accept="image/*" 
                 onChange={handleLogoChange} 
                 className="hidden" 
@@ -177,8 +176,7 @@ export const FormularioEmpresa: React.FC = () => {
               <Building2 size={14} className="text-[var(--color-muted)]" />
               Razón Social / Nombre Comercial
             </label>
-            <input
-              type="text"
+            <input autoComplete="off" type="text"
               name="nombre_empresa"
               value={empresa.nombre_empresa}
               onChange={handleChange}
@@ -193,8 +191,7 @@ export const FormularioEmpresa: React.FC = () => {
               <FileText size={14} className="text-[var(--color-muted)]" />
               RUC
             </label>
-            <input
-              type="text"
+            <input autoComplete="off" type="text"
               name="ruc"
               value={empresa.ruc}
               onChange={handleChange}
@@ -210,8 +207,7 @@ export const FormularioEmpresa: React.FC = () => {
               <Phone size={14} className="text-[var(--color-muted)]" />
               Teléfono de Contacto
             </label>
-            <input
-              type="text"
+            <input autoComplete="off" type="text"
               name="telefono"
               value={empresa.telefono}
               onChange={handleChange}
@@ -226,8 +222,7 @@ export const FormularioEmpresa: React.FC = () => {
               <MapPin size={14} className="text-[var(--color-muted)]" />
               Dirección Fiscal
             </label>
-            <input
-              type="text"
+            <input autoComplete="off" type="text"
               name="direccion"
               value={empresa.direccion}
               onChange={handleChange}

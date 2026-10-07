@@ -380,8 +380,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                 className={`flex items-center justify-between border-2 border-[var(--color-border)] bg-white p-2 cursor-text transition-colors rounded-none ${isEdit ? 'bg-[var(--color-bg)] cursor-not-allowed opacity-70' : 'focus-within:border-[var(--color-warning)]'}`}
                 {...clicConTeclado(() => !isEdit && setIsDropdownOpen(true))}
               >
-                <input
-                  id="input-cliente-fiado"
+                <input autoComplete="off" id="input-cliente-fiado"
                   type="text"
                   placeholder="-- BUSCAR / ELEGIR CLIENTE --"
                   value={isDropdownOpen ? searchCliente : clienteSeleccionado}
@@ -433,7 +432,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
 
             <div className="space-y-1">
               <label className="text-[12px] font-black uppercase text-[var(--color-warning)]">Fecha Límite Pago *</label>
-              <input id="input-fecha-fiado" type="date" value={fechaVencimiento} onChange={e => setFechaVencimiento(e.target.value)} className="w-full border-2 border-[var(--color-border)] p-2 text-xs font-black focus:border-[var(--color-warning)] outline-none" />
+              <input autoComplete="off" id="input-fecha-fiado" type="date" value={fechaVencimiento} onChange={e => setFechaVencimiento(e.target.value)} className="w-full border-2 border-[var(--color-border)] p-2 text-xs font-black focus:border-[var(--color-warning)] outline-none" />
             </div>
 
             {/* BUSCADOR DE INVENTARIO (OCULTO EN EDICIÓN) */}
@@ -442,8 +441,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                 <label className="text-[12px] font-black uppercase text-[var(--color-muted)] flex items-center gap-2 mb-2"><Package size={14}/> Buscar en Inventario</label>
                 <div className="relative">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-subtle)]" />
-                  <input
-                    type="text"
+                  <input autoComplete="off" type="text"
                     value={searchProd}
                     onChange={e => setSearchProd(e.target.value)}
                     onKeyDown={e => {
@@ -508,8 +506,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                         ) : d.control_type === 'CONSUMO' || d.control_type === 'SERVICE' ? (
                           <span className="w-16 p-1 text-center text-xs font-black bg-[var(--color-bg)] text-[var(--color-subtle)] cursor-not-allowed">1</span>
                         ) : (
-                          <input 
-                            type="number" 
+                          <input autoComplete="off" type="number" 
                             step={d.control_type === 'WEIGHT' ? "any" : "1"}
                             value={d.qty} 
                             onChange={e => updateQty(d.productoId, e.target.value)} 
@@ -533,8 +530,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                       {!isEdit && (d.control_type === 'WEIGHT' || d.control_type === 'CONSUMO' || d.control_type === 'SERVICE') ? (
                         <div className="flex items-center border-b-2 border-[var(--color-ink)] w-20 justify-end focus-within:border-[var(--color-warning)] transition-colors group">
                           <span className="text-[12px] font-black text-[var(--color-ink)] mr-1">S/</span>
-                          <input 
-                            type="number"
+                          <input autoComplete="off" type="number"
                             step="any"
                             value={d.subtotal}
                             onChange={e => updateSubtotalDirecto(d.productoId, e.target.value)}

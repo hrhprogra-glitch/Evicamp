@@ -33,8 +33,7 @@ export const FiltrosMermas: React.FC<Props> = ({
           <div className="w-12 flex items-center justify-center bg-[var(--color-bg)] border-r-2 border-[var(--color-border)] shrink-0 text-[var(--color-muted)]">
             <Search size={18} />
           </div>
-          <input 
-            type="text" 
+          <input autoComplete="off" type="text" 
             placeholder="BUSCAR PRODUCTO..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -81,8 +80,7 @@ export const FiltrosMermas: React.FC<Props> = ({
           <div className="w-10 flex items-center justify-center bg-[var(--color-bg)] border-r-2 border-[var(--color-border)] shrink-0 text-[var(--color-muted)]">
             <Calendar size={16} />
           </div>
-          <input 
-            type="date"
+          <input autoComplete="off" type="date"
             value={filtroFecha}
             onChange={(e) => setFiltroFecha(e.target.value)}
             className="w-full p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none bg-transparent cursor-pointer"

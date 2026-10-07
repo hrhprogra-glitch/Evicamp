@@ -266,8 +266,7 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, on
 
       {/* BARRA DE FILTROS AUMENTADA */}
       <div className="p-6 border-b-2 border-[var(--color-border)] flex flex-wrap lg:flex-nowrap gap-4 shrink-0 bg-[var(--color-bg)]">
-        <input
-          type="text"
+        <input autoComplete="off" type="text"
           id="buscador-global-fiados"
           placeholder="BUSCAR CLIENTE..."
           value={searchTerm}

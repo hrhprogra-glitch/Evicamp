@@ -62,8 +62,7 @@ export const ModalApertura: React.FC<Props> = ({ isOpen, onClose, onSuccess }) =
 
           <div className="flex flex-col gap-2">
             <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest">Monto Inicial (S/)</label>
-            <input 
-              type="number" 
+            <input autoComplete="off" type="number" 
               value={monto}
               onChange={(e) => setMonto(e.target.value)}
               placeholder="Ej. 100.00"

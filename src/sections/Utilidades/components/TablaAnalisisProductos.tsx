@@ -107,8 +107,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
             <div className="p-2 flex items-center justify-center text-[var(--color-ink)] bg-[var(--color-bg)] border-r border-[var(--color-border)]">
               <Search size={16} strokeWidth={2}/>
             </div>
-            <input
-              type="text" placeholder="BUSCAR PRODUCTO..."
+            <input autoComplete="off" type="text" placeholder="BUSCAR PRODUCTO..."
               value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
               className="w-full text-xs font-black text-[var(--color-ink)] outline-none p-2 bg-transparent uppercase placeholder:text-[var(--color-subtle)]"
             />
@@ -136,7 +135,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               <label className="text-[11px] font-black text-[var(--color-muted)] uppercase tracking-wider">Desde</label>
               <div className="flex items-center gap-1.5">
                 <CalendarDays size={12} className="text-[var(--color-ink)]" />
-                <input type="date" value={localInicio} onChange={(e) => setLocalInicio(e.target.value)} className="text-[13px] font-black text-[var(--color-ink)] outline-none bg-transparent cursor-pointer" />
+                <input autoComplete="off" type="date" value={localInicio} onChange={(e) => setLocalInicio(e.target.value)} className="text-[13px] font-black text-[var(--color-ink)] outline-none bg-transparent cursor-pointer" />
               </div>
             </div>
             <div className="w-[1px] h-7 bg-[var(--color-border)]"></div>
@@ -144,7 +143,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               <label className="text-[11px] font-black text-[var(--color-muted)] uppercase tracking-wider">Hasta</label>
               <div className="flex items-center gap-1.5">
                 <CalendarDays size={12} className="text-[var(--color-ink)]" />
-                <input type="date" value={localFin} onChange={(e) => setLocalFin(e.target.value)} className="text-[13px] font-black text-[var(--color-ink)] outline-none bg-transparent cursor-pointer" />
+                <input autoComplete="off" type="date" value={localFin} onChange={(e) => setLocalFin(e.target.value)} className="text-[13px] font-black text-[var(--color-ink)] outline-none bg-transparent cursor-pointer" />
               </div>
             </div>
             <button onClick={handleBuscarFecha} className="bg-[var(--color-ink)] hover:bg-[var(--color-accent-shadow)] text-[var(--color-surface)] p-1.5 rounded-none transition-colors cursor-pointer flex items-center justify-center border border-[var(--color-border)] hover:border-[var(--color-accent-shadow)]" title="Buscar por Fecha">

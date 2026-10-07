@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {  Coins, Plus, BookOpen } from 'lucide-react';
 import { supabase } from '../../db/supabase';
-import { TablaFiados } from './components/TablaFiados';
+import { TablaFiadosAgrupados } from './components/TablaFiadosAgrupados';
 import { ModalFiado } from './components/ModalFiado';
 import { ModalAbono } from './components/ModalAbono';
 import { ModalClientes } from './components/ModalClientes';
 import { ModalDetalleFiado } from './components/ModalDetalleFiado';
-import { ModalAnularPago } from './components/ModalAnularPago'; // <-- Nuevo modal
+import { ModalAnularPago } from './components/ModalAnularPago';
+import { ModalEstadoCuenta } from './components/ModalEstadoCuenta';
+import type { ClienteFiadoAgrupado } from './types'; // <-- Nuevo modal
 import type { Fiado, Cliente, PagoAbono } from './types'; // <-- Importamos PagoAbono
 import type { Product } from '../Inventario/types';
 import { usePermiso } from '../../utils/permisos';
@@ -28,6 +30,8 @@ export const Fiados: React.FC = () => {
   const [fiadoAAbonar, setFiadoAAbonar] = useState<Fiado | null>(null);
 
   const [isModalClientesOpen, setIsModalClientesOpen] = useState(false);
+  const [isModalEstadoCuentaOpen, setIsModalEstadoCuentaOpen] = useState(false);
+  const [clienteEstadoCuenta, setClienteEstadoCuenta] = useState<ClienteFiadoAgrupado | null>(null);
 
   // Estados para el Modal de Ver Detalles
   const [isModalDetalleOpen, setIsModalDetalleOpen] = useState(false);
@@ -128,6 +132,31 @@ if (fiaData) {
       }, 100);
     }
   }, [isModalFiadoOpen, isModalAbonoOpen, isModalClientesOpen, isModalDetalleOpen, isModalAnularOpen]);
+
+  const clientesAgrupados = React.useMemo(() => {
+    const mapa = new Map<string, ClienteFiadoAgrupado>();
+    fiados.forEach(f => {
+      const nombre = f.clienteNombre || 'CLIENTE DESCONOCIDO';
+      if (!mapa.has(nombre)) {
+        mapa.set(nombre, {
+          clienteNombre: nombre,
+          clienteId: f.clienteId,
+          clienteDni: f.clienteDni,
+          clienteTelefono: f.clienteTelefono,
+          totalOriginal: 0,
+          totalPendiente: 0,
+          totalPagado: 0,
+          fiados: []
+        });
+      }
+      const agrupado = mapa.get(nombre)!;
+      agrupado.fiados.push(f);
+      agrupado.totalOriginal += Number(f.montoOriginal) || 0;
+      agrupado.totalPendiente += Number(f.saldoPendiente) || 0;
+      agrupado.totalPagado += Number(f.montoPagado) || 0;
+    });
+    return Array.from(mapa.values()).sort((a, b) => b.totalPendiente - a.totalPendiente);
+  }, [fiados]);
 
   const handleSaveFiado = async () => {
     setIsModalFiadoOpen(false);
@@ -332,13 +361,7 @@ if (fiaData) {
       </div>
 
       <div className="flex-1 min-h-0">
-        <TablaFiados 
-          fiados={fiados} 
-          onView={handleView}
-          onEdit={handleEditFiado}
-          onPay={(f) => { setFiadoAAbonar(f); setIsModalAbonoOpen(true); }}
-          onRevertir={(f) => { setFiadoAAnular(f); setIsModalAnularOpen(true); }} // Ahora abre el modal
-        />
+        <TablaFiadosAgrupados clientes={clientesAgrupados} onView={(cli) => { setClienteEstadoCuenta(cli); setIsModalEstadoCuentaOpen(true); }} />
       </div>
 
       {/* MODALES */}

@@ -61,8 +61,7 @@ const InputPeso = ({ item, updateQuantity, index, setSelectedIndex, setColIndex 
     }
   };
   return (
-    <input 
-       id={`edit-input-${index}`}
+    <input autoComplete="off" id={`edit-input-${index}`}
        type="text" inputMode="decimal" value={val}
        onChange={(e) => setVal(e.target.value.replace(/[^0-9.]/g, ''))}
        onFocus={(e) => {
@@ -90,8 +89,7 @@ const InputPrecio = ({ item, updatePrice, index, setSelectedIndex, setColIndex, 
   return (
     <div className="flex items-center gap-1 mt-0.5">
       <span className="text-[12px] text-[var(--color-accent)] font-black">S/</span>
-      <input 
-         id={`edit-price-${index}`}
+      <input autoComplete="off" id={`edit-price-${index}`}
          type="text" inputMode="decimal" value={val}
          onChange={(e) => setVal(e.target.value.replace(/[^0-9.]/g, ''))}
          onFocus={(e) => {
@@ -130,8 +128,7 @@ const InputUnidades = ({ item, updateQuantity, index, setSelectedIndex, setColIn
     }
   };
   return (
-    <input 
-       id={`edit-input-${index}`}
+    <input autoComplete="off" id={`edit-input-${index}`}
        type="text" inputMode="numeric" pattern="[0-9]*" value={val}
        onChange={(e) => setVal(e.target.value.replace(/\D/g, ''))}
        onFocus={(e) => {
@@ -162,10 +159,10 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
     <div 
       id="ticket-container"
       onClick={(e) => {
-        // 🛡️ Si haces clic en el fondo blanco de la caja, se quita la selección
+        // Restaurar el foco al buscador si se hace clic en áreas vacías, para no perder el teclado
         if (e.target === e.currentTarget) {
-          (document.activeElement as HTMLElement)?.blur();
-          setSelectedIndex(-1); // 🛡️ DESELECCIÓN AL CLIC EN EL FONDO
+          const buscador = document.getElementById('buscador-global-pos');
+          if (buscador) buscador.focus();
         }
       }}
       className="w-full h-full flex flex-col bg-white border-2 border-[var(--color-ink)] shrink-0 relative overflow-hidden"
@@ -280,11 +277,18 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
                 </div>
 
                 <div className="col-span-5 flex flex-col min-w-0 pr-1 pl-1">
-                  <span className="truncate uppercase font-black text-sm text-[var(--color-ink)]" title={item.name}>{item.name}</span>
-                  {/* 🏷️ PRECIO EDITABLE POR LÍNEA: para bajarle el precio a un cliente puntual
-                      (ej. negocio/mayorista) sin tocar el precio general del catálogo. Solo
-                      cambia esta venta — updatePrice nunca escribe en la tabla de productos. */}
-                  <InputPrecio item={item} updatePrice={updatePrice} index={index} setSelectedIndex={setSelectedIndex} setColIndex={setColIndex} isSelected={index === selectedIndex && colIndex === 1} />
+                  <span className="truncate uppercase font-black text-[13px] leading-tight text-[var(--color-ink)]" title={item.name}>{item.name}</span>
+                  <div className="flex items-center justify-between gap-1">
+                    {/* 🏷️ PRECIO EDITABLE POR LÍNEA: para bajarle el precio a un cliente puntual
+                        (ej. negocio/mayorista) sin tocar el precio general del catálogo. Solo
+                        cambia esta venta — updatePrice nunca escribe en la tabla de productos. */}
+                    <InputPrecio item={item} updatePrice={updatePrice} index={index} setSelectedIndex={setSelectedIndex} setColIndex={setColIndex} isSelected={index === selectedIndex && colIndex === 1} />
+                    
+                    {/* 🛡️ EVICAMP: STOCK VISIBLE EN LA CAJA ACTUAL */}
+                    <span className="text-[12px] font-black text-[var(--color-ink)] whitespace-nowrap bg-[var(--color-surface)] px-2 py-0.5 rounded-sm border-2 border-[var(--color-border)]" title="Stock actual del producto">
+                      {item.unit === 'CONSUMO' ? '-' : `STK: ${item.quantity} ${item.unit === 'UNIDAD' ? 'UN' : item.unit}`}
+                    </span>
+                  </div>
                 </div>
                 
                 <div className="col-span-3 text-right text-sm font-black text-[var(--color-ink)]">

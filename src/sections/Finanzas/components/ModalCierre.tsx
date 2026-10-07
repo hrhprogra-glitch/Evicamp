@@ -42,8 +42,7 @@ const BloqueArqueo: React.FC<BloqueArqueoProps> = ({ icono, color, titulo, esper
         </span>
         <span className="text-xs font-bold text-[var(--color-muted)] whitespace-nowrap">Espera: S/ {esperado.toFixed(2)}</span>
       </div>
-      <input
-        type="number"
+      <input autoComplete="off" type="number"
         value={valor}
         onChange={(e) => onChange(e.target.value)}
         placeholder="¿Cuánto hay realmente?"
@@ -167,8 +166,7 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
                 <AlertTriangle size={16} />
                 <span className="text-[12px] font-black uppercase tracking-widest">Hay una diferencia, explica el motivo</span>
               </div>
-              <input
-                type="text"
+              <input autoComplete="off" type="text"
                 value={justificacion}
                 onChange={(e) => setJustificacion(e.target.value)}
                 placeholder="Explica el motivo de la diferencia..."

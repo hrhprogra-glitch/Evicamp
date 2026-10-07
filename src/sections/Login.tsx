@@ -134,8 +134,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 <div className="w-1.5 h-1.5 bg-[var(--color-accent)]"></div>
                 Identificador_Usuario
               </label>
-              <input
-                type="text" 
+              <input autoComplete="off" type="text" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -149,8 +148,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 <div className="w-1.5 h-1.5 bg-[var(--color-accent)]"></div>
                 Clave_Seguridad
               </label>
-              <input
-                type="password"
+              <input autoComplete="off" type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required

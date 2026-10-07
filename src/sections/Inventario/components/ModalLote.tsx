@@ -302,8 +302,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
               </div>
             ) : (
               <div className="relative">
-                <input
-                  type="text"
+                <input autoComplete="off" type="text"
                   autoFocus
                   placeholder="ESCANEA O ESCRIBE CÓDIGO / NOMBRE DEL PRODUCTO..."
                   value={searchQuery}
@@ -350,8 +349,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                 <span className="text-[var(--color-accent)]">{selectedProduct ? `(${selectedProduct.unit})` : ''}</span>
               </label>
               <div className="flex border-2 border-[var(--color-border)] bg-white focus-within:border-[var(--color-accent)] transition-colors">
-                <input 
-                  type="number"
+                <input autoComplete="off" type="number"
                   min="0"
                   step="0.01"
                   placeholder="0"
@@ -379,8 +377,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                 <div className="bg-[var(--color-bg)] px-4 border-r-2 border-[var(--color-border)] flex items-center justify-center text-[12px] font-black text-[var(--color-muted)] shrink-0">
                   S/
                 </div>
-                <input 
-                  type="number"
+                <input autoComplete="off" type="number"
                   min="0"
                   step="0.01"
                   placeholder="0.00"
@@ -411,8 +408,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                 <FileText size={14} /> 4. Sustento (Doc. Proveedor)
               </label>
               <div className="flex flex-col gap-3 relative">
-                <input 
-                  type="text"
+                <input autoComplete="off" type="text"
                   placeholder={omitirSustento ? "OMITIDO / SIN SUSTENTO..." : "BUSCAR PROVEEDOR O DOC..."}
                   value={omitirSustento ? '' : sustento}
                   onChange={(e) => {
@@ -455,8 +451,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                   <div className={`w-4 h-4 border-2 flex items-center justify-center transition-colors ${omitirSustento ? 'bg-[var(--color-danger)] border-[var(--color-danger)]' : 'border-[var(--color-subtle)] bg-white group-hover:border-[var(--color-danger)]'}`}>
                     {omitirSustento && <Check size={12} className="text-white" />}
                   </div>
-                  <input 
-                    type="checkbox" 
+                  <input autoComplete="off" type="checkbox" 
                     className="hidden" 
                     checked={omitirSustento} 
                     onChange={() => setOmitirSustento(!omitirSustento)} 
@@ -473,8 +468,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
               <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2">
                 <Calendar size={14} /> Fecha Vencimiento (Opcional)
               </label>
-              <input 
-                type="date"
+              <input autoComplete="off" type="date"
                 value={expiration}
                 onChange={(e) => setExpiration(e.target.value)}
                 disabled={!selectedProduct}

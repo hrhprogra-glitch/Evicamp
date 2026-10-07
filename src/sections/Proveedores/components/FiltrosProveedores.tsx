@@ -25,8 +25,7 @@ export const FiltrosProveedores: React.FC<Props> = ({
           <div className="w-12 flex items-center justify-center bg-[var(--color-bg)] border-r-2 border-[var(--color-border)] shrink-0 text-[var(--color-muted)]">
             <Search size={18} />
           </div>
-          <input 
-            type="text" 
+          <input autoComplete="off" type="text" 
             placeholder="BUSCAR POR RUC O RAZÓN SOCIAL..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

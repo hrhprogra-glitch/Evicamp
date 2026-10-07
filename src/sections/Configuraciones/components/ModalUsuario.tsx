@@ -162,17 +162,17 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
             <div className="space-y-4">
               <div>
                 <label className="block text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">Nombre Completo</label>
-                <input type="text" name="nombre" value={formData.nombre} onChange={handleTextChange} placeholder="Ej. Juan Pérez" className="w-full border border-[var(--color-border)] p-2 text-sm focus:border-[var(--color-accent)] outline-none" />
+                <input autoComplete="off" type="text" name="nombre" value={formData.nombre} onChange={handleTextChange} placeholder="Ej. Juan Pérez" className="w-full border border-[var(--color-border)] p-2 text-sm focus:border-[var(--color-accent)] outline-none" />
               </div>
               <div>
                 <label className="block text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">Correo Electrónico</label>
-                <input type="email" name="email" value={formData.email} onChange={handleTextChange} placeholder="usuario@evicamp.com" className="w-full border border-[var(--color-border)] p-2 text-sm focus:border-[var(--color-accent)] outline-none font-mono" />
+                <input autoComplete="off" type="email" name="email" value={formData.email} onChange={handleTextChange} placeholder="usuario@evicamp.com" className="w-full border border-[var(--color-border)] p-2 text-sm focus:border-[var(--color-accent)] outline-none font-mono" />
               </div>
               <div>
                 <label className="block text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1 flex items-center gap-1">
                   <Lock size={10} /> {isEditing ? 'Nueva Contraseña (Opcional)' : 'Contraseña Temporal'}
                 </label>
-                <input type="password" name="password" value={formData.password} onChange={handleTextChange} placeholder="******" className="w-full border border-[var(--color-border)] p-2 text-sm focus:border-[var(--color-accent)] outline-none font-mono" />
+                <input autoComplete="off" type="password" name="password" value={formData.password} onChange={handleTextChange} placeholder="******" className="w-full border border-[var(--color-border)] p-2 text-sm focus:border-[var(--color-accent)] outline-none font-mono" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

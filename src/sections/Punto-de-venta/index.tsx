@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../../db/supabase';
 import type { CartItem } from './types';
 import type { Product } from '../Inventario/types';
@@ -292,6 +292,36 @@ const [searchQuery, setSearchQuery] = useState('');
   useEffect(() => {
     localStorage.setItem('evicamp_cart', JSON.stringify(cart));
   }, [cart]);
+
+  // 🛡️ EVICAMP: Foco magnético global al hacer clic.
+  // Si el usuario hace clic en el aire (no en un input o botón), el buscador recupera el foco automáticamente.
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      // Ignorar si hay una ventana modal abierta
+      if (document.querySelector('[role="dialog"]')) return;
+      
+      const target = e.target as HTMLElement;
+      // Verificamos si hizo clic en un elemento interactivo nativo
+      const isInteractive = 
+        target.tagName === 'INPUT' || 
+        target.tagName === 'TEXTAREA' || 
+        target.tagName === 'SELECT' || 
+        target.tagName === 'BUTTON' || 
+        target.closest('button');
+
+      // Solo si hizo clic en el "aire" o en texto estático (como el título de la CAJA ACTUAL)
+      if (!isInteractive) {
+        // Evitamos robar el foco si el usuario está seleccionando texto para copiarlo
+        if (window.getSelection()?.toString().length === 0) {
+          const buscador = document.getElementById('buscador-global-pos');
+          if (buscador) buscador.focus();
+        }
+      }
+    };
+    
+    document.addEventListener('mouseup', handleGlobalClick);
+    return () => document.removeEventListener('mouseup', handleGlobalClick);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('evicamp_held_carts', JSON.stringify(heldCarts));

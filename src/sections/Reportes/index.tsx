@@ -415,7 +415,7 @@ export const Reportes: React.FC = () => {
             <label className="text-xs font-black text-[var(--color-muted)] uppercase tracking-widest mb-1">Desde</label>
             <div className="flex items-center gap-2">
               <CalendarDays size={18} className="text-[var(--color-subtle)]" />
-              <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} className="w-full min-w-0 text-sm sm:text-base font-black text-[var(--color-ink)] outline-none bg-transparent uppercase cursor-pointer" />
+              <input autoComplete="off" type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} className="w-full min-w-0 text-sm sm:text-base font-black text-[var(--color-ink)] outline-none bg-transparent uppercase cursor-pointer" />
             </div>
           </div>
           <div className="hidden sm:block w-[2px] h-10 bg-[var(--color-border)]"></div>
@@ -423,7 +423,7 @@ export const Reportes: React.FC = () => {
             <label className="text-xs font-black text-[var(--color-muted)] uppercase tracking-widest mb-1">Hasta</label>
             <div className="flex items-center gap-2">
               <Calendar size={18} className="text-[var(--color-subtle)]" />
-              <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="w-full min-w-0 text-sm sm:text-base font-black text-[var(--color-ink)] outline-none bg-transparent uppercase cursor-pointer" />
+              <input autoComplete="off" type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="w-full min-w-0 text-sm sm:text-base font-black text-[var(--color-ink)] outline-none bg-transparent uppercase cursor-pointer" />
             </div>
           </div>
           
@@ -445,8 +445,7 @@ export const Reportes: React.FC = () => {
           <div className="w-11 h-11 flex items-center justify-center bg-[var(--color-ink)] text-white shrink-0">
             <Search size={18} />
           </div>
-          <input
-            type="text"
+          <input autoComplete="off" type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             placeholder="BUSCAR POR CLIENTE, N° DE TICKET O MONTO"
