@@ -116,7 +116,7 @@ if (fiaData) {
 
     // 🛡️ CÁLCULO MATEMÁTICO BLINDADO (Ignora errores o retrasos de Base de Datos)
     const sumaDetalles = susDetalles.reduce((acc, det) => acc + (Number(det.subtotal) || 0), 0);
-      const montoOriginal = sumaDetalles > 0 ? sumaDetalles : (Number(f.amount) || 0);
+      const montoOriginal = Number(f.amount) || 0;
 
       let montoPagadoReal = historialPagos.reduce((sum, p) => sum + p.monto, 0);
 
