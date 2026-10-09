@@ -121,7 +121,7 @@ if (fiaData) {
       let montoPagadoReal = historialPagos.reduce((sum, p) => sum + p.monto, 0);
 
       // Si la base de datos dice que se pagó más de lo que tenemos registrado en debt_payments:
-      const totalPagadoEnBD = Math.max(0, montoOriginal - (Number(f.amount) || 0));
+      const totalPagadoEnBD = Number(f.paid_amount) || 0;
       const abonoAntiguoFaltante = Math.max(0, totalPagadoEnBD - montoPagadoReal);
       
       if (abonoAntiguoFaltante > 0.05) {
