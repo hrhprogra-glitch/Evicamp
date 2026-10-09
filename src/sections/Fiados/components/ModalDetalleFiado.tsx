@@ -76,7 +76,7 @@ export const ModalDetalleFiado: React.FC<Props> = ({ isOpen, onClose, fiado }) =
   if (!isOpen || !fiado) return null;
 
   return (
-    <div role="dialog" aria-modal="true" className="fixed inset-0 bg-[var(--color-ink)]/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4 font-mono">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4 font-mono">
       <div className="bg-white w-full max-w-md border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.8)]">
         
         {/* HEADER */}

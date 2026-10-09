@@ -88,7 +88,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
   const totalMovimientos = movimientos.reduce((a, m) => a + (m.type === 'INGRESO' ? Number(m.amount) : -Number(m.amount)), 0);
 
   return (
-    <div className="fixed inset-0 bg-[var(--color-ink)]/90 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4 font-mono">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4 font-mono">
       <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-2xl h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.9)] flex flex-col">
 
         <div className="bg-[var(--color-info)] p-4 border-b-2 border-[var(--color-ink)] flex justify-between items-center text-white gap-3">

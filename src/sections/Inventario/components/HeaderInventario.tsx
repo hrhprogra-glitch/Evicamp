@@ -1,60 +1,51 @@
 import React from 'react';
-import { Package, Plus } from 'lucide-react';
-import { usePermiso } from '../../../utils/permisos';
+import { Package, Database, Plus, AlertTriangle } from 'lucide-react';
 
 interface Props {
+  onIngresoStock: () => void;
   onNuevoSKU: () => void;
-  children?: React.ReactNode;
+  onRegistrarMerma: () => void; // <-- AGREGA ESTA LÍNEA
 }
 
-export const HeaderInventario: React.FC<Props> = ({ onNuevoSKU, children }) => {
-  // Cada acción aparece solo si el empleado tiene el permiso correspondiente
-  const puedeCrearProductos = usePermiso('almacen_crear_editar_productos');
+export const HeaderInventario: React.FC<Props> = ({ onIngresoStock, onNuevoSKU, onRegistrarMerma }) => {
   return (
-    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 p-3 lg:p-4 bg-white border-b-2 border-[var(--color-ink)] shrink-0">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] rounded-none">
-          <Package size={24} className="text-[var(--color-accent)]" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-black text-[var(--color-ink)] uppercase tracking-widest">
-            Control de Stock
-          </h1>
-          <p className="text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-[0.2em] mt-1">
-            Gestión de Almacén, Precios y Valorización
-          </p>
-        </div>
+    <div className="bg-[var(--color-surface)] border-b border-[#E2E8F0] p-4 sm:p-6 lg:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 lg:gap-6 rounded-none relative shrink-0">
+      <div>
+        <h1 className="text-lg sm:text-2xl font-black uppercase tracking-tighter text-[var(--color-ink)] flex items-center gap-3">
+          <Package size={22} className="text-[var(--color-success)]"/> Catálogo de Existencias
+        </h1>
+        <p className="text-[10px] font-bold text-[#64748B] mt-2 tracking-widest uppercase">
+          Gestión de Almacén, Precios y Valorización
+        </p>
       </div>
-      
+
       {/* PANEL DE ACCIONES RÁPIDAS */}
-      <div className="flex flex-col md:flex-row items-end md:items-center gap-3 sm:gap-4 w-full xl:w-auto justify-end">
-        
-        {/* METRICS (CHILDREN) */}
-        {children}
-        
+      <div className="grid grid-cols-1 sm:grid-cols-3 md:flex md:flex-wrap gap-2 sm:gap-3 lg:gap-4 w-full md:w-auto">
+
         {/* 1. NUEVO PRODUCTO */}
-        {puedeCrearProductos && (
-        <button 
-          id="btn-nuevo-producto"
+        <button
           onClick={onNuevoSKU}
-          onKeyDown={(e) => {
-            if (e.key === "ArrowLeft") {
-              e.preventDefault(); e.stopPropagation();
-              const btnLimpiar = document.getElementById("btn-limpiar-filtros-inventario");
-              if (btnLimpiar) btnLimpiar.focus(); else document.getElementById("filtro-orden-inventario")?.focus();
-            }
-            if (e.key === "ArrowDown") {
-              e.preventDefault(); e.stopPropagation();
-              (document.querySelector('div[role="button"]') as HTMLElement)?.focus();
-            }
-          }}
-          className="bg-[var(--color-accent)] text-[var(--color-ink)] px-6 py-4 short:py-2.5 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-3 hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+          className="bg-[var(--color-success)] text-[var(--color-ink)] px-3 sm:px-5 lg:px-6 py-2.5 sm:py-3 lg:py-4 border-2 border-[var(--color-ink)] font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center justify-center gap-2 lg:gap-3 hover:bg-[var(--color-ink)] hover:text-[var(--color-success)] hover:border-[var(--color-success)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
         >
-          <Plus size={18} /> Nuevo Producto
+          <Plus size={18} /> <span className="whitespace-nowrap">Nuevo Producto</span>
         </button>
-        )}
+
+        {/* 2. INGRESAR LOTE */}
+        <button
+          onClick={onIngresoStock}
+          className="bg-[var(--color-ink)] text-[var(--color-success)] px-3 sm:px-5 lg:px-6 py-2.5 sm:py-3 lg:py-4 border-2 border-[var(--color-ink)] font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center justify-center gap-2 lg:gap-3 hover:bg-[var(--color-surface)] hover:text-[var(--color-ink)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-success)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+        >
+          <Database size={18} /> <span className="whitespace-nowrap">Ingresar Lote</span>
+        </button>
+
+        {/* 3. REGISTRAR MERMA */}
+        <button
+          onClick={onRegistrarMerma}
+          className="bg-[var(--color-surface)] text-[var(--color-danger)] px-3 sm:px-5 lg:px-6 py-2.5 sm:py-3 lg:py-4 border-2 border-[var(--color-danger)] font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center justify-center gap-2 lg:gap-3 hover:bg-[var(--color-danger)] hover:text-white transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-danger)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+        >
+          <AlertTriangle size={18} /> <span className="whitespace-nowrap">Registrar Merma</span>
+        </button>
       </div>
     </div>
   );
 };
-

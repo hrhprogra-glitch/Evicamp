@@ -8,7 +8,7 @@ type Tema = 'classic' | 'monochrome' | 'oceano' | 'atardecer' | 'bosque' | 'rosa
 // decir qué 4 colores mostrar en su muestra y qué atributo data-theme aplicar.
 const TEMAS: { id: Tema; nombre: string; descripcion: string; swatches: string[] }[] = [
   { id: 'classic', nombre: 'Tema Clásico', descripcion: 'Colores vibrantes e indicadores visuales dinámicos (Por defecto).', swatches: ['#1E293B', '#10B981', '#F59E0B', '#EF4444'] },
-  { id: 'monochrome', nombre: 'Monocromático', descripcion: 'Modo Oscuro elegante con fondo negro y grises suaves para cero fatiga visual.', swatches: ['#0A0A0A', '#1C1C1C', '#666666', '#C8C8C8'] },
+  { id: 'monochrome', nombre: 'Plata / Gris', descripcion: 'Estilo profesional en escala de grises y blanco, súper limpio y minimalista.', swatches: ['#171717', '#525252', '#E5E5E5', '#FFFFFF'] },
   { id: 'oceano', nombre: 'Océano', descripcion: 'Azules fríos y relajados, ideal para jornadas largas.', swatches: ['#0F2942', '#0EA5E9', '#F59E0B', '#EF4444'] },
   { id: 'atardecer', nombre: 'Atardecer', descripcion: 'Naranjas y tonos cálidos, cálido y energético.', swatches: ['#3B2317', '#F97316', '#F59E0B', '#EF4444'] },
   { id: 'bosque', nombre: 'Bosque', descripcion: 'Verdes profundos, natural y descansado para la vista.', swatches: ['#1A2E1F', '#16A34A', '#F59E0B', '#EF4444'] },

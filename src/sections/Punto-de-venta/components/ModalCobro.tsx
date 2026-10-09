@@ -154,7 +154,6 @@ interface Props {
         const { data, error } = await supabase.from('customers').insert([{
           name: clienteNombre.toUpperCase(),
           dni: clienteDni || null,
-          telefono: clienteTelefono || null,
           created_at: new Date().toISOString(),
           is_synced: 1 // 🛡️ Corregido a número matemático puro
         }]).select('id').single();
@@ -455,7 +454,7 @@ interface Props {
   );
 
   return (
-    <div role="dialog" className="fixed inset-0 bg-[var(--color-ink)]/90 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4 font-mono">
+    <div role="dialog" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4 font-mono">
       <div className="relative bg-white w-full max-w-md border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
         {/* Ventana de fiado (tablet/PC): pegada al lado derecho de la ventana de pago, en
             posición absoluta (relativa a esta misma ventana) para que NUNCA la mueva ni la

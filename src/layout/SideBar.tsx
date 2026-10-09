@@ -150,7 +150,6 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
       category: 'Almacén',
       items: [
         { id: 'inventario', name: 'Inventario', icon: Package },
-        { id: 'proveedores', name: 'Compras', icon: Truck },
         { id: 'mermas', name: 'Mermas', icon: Trash2 },
       ]
     },
@@ -177,7 +176,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
     <>
     {/* FONDO OSCURO: solo en tablet/celular cuando el menú está abierto; al tocarlo se cierra */}
     {isOpen && (
-      <div className="fixed inset-0 bg-[var(--color-ink)]/60 z-30 lg:hidden" onClick={onClose} aria-hidden="true"></div>
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden" onClick={onClose} aria-hidden="true"></div>
     )}
 
     {/* En tablet/celular el menú es un panel deslizable sobre el contenido; en escritorio es una columna fija que se expande o contrae */}

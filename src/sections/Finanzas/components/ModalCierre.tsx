@@ -126,7 +126,7 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
   };
 
   return (
-    <div className="fixed inset-0 bg-[var(--color-ink)]/90 backdrop-blur-md flex items-center justify-center z-[9999] p-2 sm:p-4 font-mono">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-2 sm:p-4 font-mono">
       <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-lg flex flex-col rounded-none animate-fade-in max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
 
         <div className="bg-[var(--color-danger)] p-4 border-b-2 border-[var(--color-ink)] flex justify-between items-center text-white shrink-0">

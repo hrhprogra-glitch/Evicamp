@@ -138,7 +138,7 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
   };
 
   return (
-    <div className="fixed inset-0 bg-[var(--color-ink)]/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
       <div className="bg-white border-2 border-[var(--color-ink)] w-full max-w-5xl max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)] flex flex-col shadow-[8px_8px_0_0_var(--color-ink)]">
         
         {/* HEADER */}

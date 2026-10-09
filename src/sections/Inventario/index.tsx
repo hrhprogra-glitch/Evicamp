@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Package, Layers, Box, AlertTriangle, LayoutGrid } from 'lucide-react';
+import { Package, Layers, Box, AlertTriangle, LayoutGrid, Plus, Database, Activity, Users } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import type { Product } from './types';
 
 // Componentes importados
-import { HeaderInventario } from './components/HeaderInventario';
 import { FiltrosInventario } from './components/FiltrosInventario';
 import { TablaProductos } from './components/TablaProductos';
 import { ModalProducto } from './components/ModalProducto';
-import { TarjetaMetrica } from './components/TarjetaMetrica';
-import { traerTodo } from '../../utils/traerTodo';
+import { TablaLotes } from './components/TablaLotes';
+import { ModalGestionProveedores } from './components/ModalGestionProveedores';
+import { ModalLote } from './components/ModalLote';
 
 interface InventarioProps {
   onNavigate?: (view: string) => void;
@@ -17,7 +17,13 @@ interface InventarioProps {
 export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const [vistaActiva, setVistaActiva] = useState<'PRODUCTOS' | 'LOTES'>('PRODUCTOS');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalProveedoresOpen, setIsModalProveedoresOpen] = useState(false);
+  const [mermaAEditar, setMermaAEditar] = useState<any>(null);
+  const [isModalLoteOpen, setIsModalLoteOpen] = useState(false); // <-- ESTADO DEL NUEVO MODAL
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
+  const [preselectedLoteProduct, setPreselectedLoteProduct] = useState<Product | null>(null);
+  const [nuevoLoteRealtime, setNuevoLoteRealtime] = useState<any>(null);
+  const [loteToEdit, setLoteToEdit] = useState<any>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbCategories, setDbCategories] = useState<string[]>([]); // 🔥 NUEVO: Memoria para tu tabla categories
@@ -49,8 +55,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           { data: catData, error: catError } // 🔥 NUEVO: Traemos tu tabla
         ] = await Promise.all([
           // 🛡️ EVICAMP: Solo descargar productos activos para evitar productos fantasma
-          traerTodo(() => supabase.from('products').select('*').eq('is_active', 1).order('id')),
-          traerTodo(() => supabase.from('batches').select('id, product_id, quantity, cost_unit').order('id')),
+          supabase.from('products').select('*').eq('is_active', 1).limit(15000),
+          supabase.from('batches').select('id, product_id, quantity, cost_unit').limit(15000),
           supabase.from('categories').select('name') // 🔥 CONEXIÓN A TU TABLA
         ]);
 
@@ -64,11 +70,14 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         
         if (productsData) {
           const mapeados: Product[] = productsData.map((p: any) => {
-            // Es Consumo solo si sus campos de TIPO/UNIDAD lo dicen exactamente
-            // (antes se buscaba en toda la fila: una categoría o nombre "CONSUMO" lo marcaba por error).
-            const TIPOS_CONSUMO = ['CONSUMO', 'SERVICE', 'USO INTERNO', 'CONSUMPTION'];
-            const esConsumo = [p.unit, p.control_type, p.weight_unit]
-              .some(v => TIPOS_CONSUMO.includes(String(v ?? '').trim().toUpperCase()));
+            // RADAR ABSOLUTO: Convierte TODA la fila del producto (todas sus columnas) a texto mayúscula
+            const registroCompleto = JSON.stringify(p).toUpperCase();
+            
+            // Si en cualquier rincón del producto dice alguna de estas palabras, es Consumo.
+            const esConsumo = registroCompleto.includes('"CONSUMO"') || 
+                              registroCompleto.includes('"SERVICE"') || 
+                              registroCompleto.includes('"USO INTERNO"') ||
+                              registroCompleto.includes('"CONSUMPTION"');
 
             // [ SUMA GLOBAL ]: Filtramos los lotes de este producto
             const lotesDelProducto = batchesData?.filter(b => b.product_id === p.id) || [];
@@ -188,17 +197,70 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const totalValue = products.reduce((acc, p) => acc + (p.cost * p.quantity), 0);
 
   return (
-    <div className="flex flex-col gap-6 short:gap-3 w-full pb-10 text-[var(--color-ink)] font-mono h-full bg-white relative">
+    <div className="flex flex-col gap-6 pb-10 text-[var(--color-ink)] font-mono h-full bg-[var(--color-bg)] relative">
       
-      <HeaderInventario 
-        onNuevoSKU={() => setIsModalOpen(true)}
-      >
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:flex gap-3 sm:gap-4 w-full xl:w-auto">
-          <TarjetaMetrica label="Total SKUs" value={products.length} icon={<Box size={14}/>} />
-          <TarjetaMetrica label="Nivel Crítico" value={lowStockCount} icon={<AlertTriangle size={14}/>} isAlert={lowStockCount > 0} />
-          <TarjetaMetrica label="Valor Total" value={`S/ ${totalValue.toFixed(2)}`} icon={<LayoutGrid size={14}/>} isGreen />
+      
+        {/* ENCABEZADO UNIFICADO NEOBRUTALISTA */}
+        <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] p-4 sm:p-6 lg:p-8 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 shrink-0">
+          
+          {/* LADO IZQUIERDO: TITULO Y SWITCH */}
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 lg:gap-8 w-full xl:w-auto">
+            {/* Título */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] rounded-none shrink-0">
+                <Package size={20} className="text-[var(--color-accent)]" />
+              </div>
+              <div>
+                <h1 className="text-xl lg:text-2xl font-black text-[var(--color-ink)] uppercase tracking-widest whitespace-nowrap">
+                  Inventario
+                </h1>
+              </div>
+            </div>
+
+            {/* Switch de Vista */}
+            <div className="flex border-2 border-[var(--color-ink)] bg-[var(--color-bg)] shadow-[4px_4px_0_0_var(--color-ink)] shrink-0 w-full md:w-auto">
+              <button 
+                onClick={() => setVistaActiva('PRODUCTOS')} 
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer ${vistaActiva === 'PRODUCTOS' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'}`}
+              >
+                <Package size={14} /> Productos
+              </button>
+              <button 
+                onClick={() => setVistaActiva('LOTES')} 
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer border-l-2 border-[var(--color-ink)] ${vistaActiva === 'LOTES' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'}`}
+              >
+                <Layers size={14} /> Lotes
+              </button>
+            </div>
+          </div>
+
+          {/* LADO DERECHO: METRICAS Y BOTONES DE ACCIÓN */}
+          <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-4 lg:gap-6 w-full xl:w-auto pb-1 pr-1">
+            
+
+            {/* Botones de Acción */}
+            <div className="flex gap-3 shrink-0">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-[var(--color-accent)] text-[var(--color-ink)] px-4 lg:px-6 py-3 lg:py-4 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+              >
+                <Plus size={16} /> <span className="hidden sm:inline">Nuevo</span> Producto
+              </button>
+              <button
+                onClick={() => setIsModalLoteOpen(true)}
+                className="bg-[var(--color-ink)] text-[var(--color-accent)] px-4 lg:px-6 py-3 lg:py-4 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--color-bg)] hover:text-[var(--color-ink)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-accent)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+              >
+                <Database size={16} /> <span className="hidden sm:inline">Ingresar</span> Lote
+              </button>
+              <button
+                onClick={() => setIsModalProveedoresOpen(true)}
+                className="bg-[var(--color-bg)] text-[var(--color-info)] px-4 lg:px-6 py-3 lg:py-4 border-2 border-[var(--color-info)] font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--color-info)] hover:text-white transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-info)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+              >
+                <Users size={16} /> Proveedores
+              </button>
+            </div>
+          </div>
         </div>
-      </HeaderInventario>
 
       <FiltrosInventario 
         searchQuery={searchQuery}
@@ -214,8 +276,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         onClearFilters={handleClearFilters}
       />
 
-      <div className="flex-1 px-3 lg:px-4 min-h-0 flex flex-col relative pb-8">
-        <div className={`flex-1 min-h-0 flex flex-col`}>
+      <div className="px-3 sm:px-6 lg:px-8 flex flex-col relative pb-3 sm:pb-6 lg:pb-8">
+        <div className={`${vistaActiva === 'PRODUCTOS' ? 'flex flex-col' : 'hidden'}`}>
           {/* PASAMOS LOS DATOS PAGINADOS A LA TABLA */}
           <TablaProductos 
   loading={loading} 
@@ -247,10 +309,46 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     // 3. 🛡️ EVICAMP: Recarga táctica de TablaLotes para eliminar los lotes del producto
     setRefreshLotesKey(prev => prev + 1);
   }}
-  onViewHistory={() => {
-    if (onNavigate) onNavigate('proveedores');
+  // === NUEVA CONEXIÓN AQUÍ ===
+  onViewHistory={(producto) => {
+    setVistaActiva('LOTES'); // Cambia a la pestaña de Lotes
+    setSearchQuery(producto.name); // Busca automáticamente el nombre del producto
   }}
+  // ===========================
 />
+        </div>
+        <div className={`${vistaActiva === 'LOTES' ? 'flex flex-col' : 'hidden'}`}>
+          <TablaLotes 
+            key={refreshLotesKey} // 🛡️ EVICAMP: Al cambiar esta variable, React destruye y vuelve a crear la tabla fresca
+            searchQuery={searchQuery}
+            filtroCategoria={filtroCategoria}
+            filtroEstado={filtroEstado}
+            filtroOrden={filtroOrden}
+            nuevoLoteInyectado={nuevoLoteRealtime}
+            onViewMermas={(_lote) => {
+              // Aquí podrías filtrar las mermas por ese lote específico si lo deseas
+              if (onNavigate) onNavigate('mermas');
+            }}
+            onEditLote={(lote) => {
+              setLoteToEdit(lote);
+              setIsModalLoteOpen(true);
+            }}
+            // [ RETORNO TÉCNICO ]: Si se borra un lote, actualizamos la memoria de productos
+            onLoteDeleted={(productId, quantityRemoved) => {
+              setProducts(prev => prev.map(p => {
+                if (p.id === productId) {
+                  const nuevoStock = Math.max(0, p.quantity - quantityRemoved);
+                  return {
+                    ...p,
+                    quantity: nuevoStock,
+                    // Si el stock llega a 0, reseteamos el costo visual para que no confunda
+                    cost: nuevoStock === 0 ? 0 : p.cost 
+                  };
+                }
+                return p;
+              }));
+            }}
+          />
         </div>
       </div>
 
@@ -259,10 +357,22 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         initialData={productToEdit}
         productosExistentes={products}
         onClose={() => {
+      setIsModalOpen(false);
+      setTimeout(() => setProductToEdit(null), 200);
+    }}
+        onGoToLotes={(productoRecienCreado) => {
           setIsModalOpen(false);
-          setTimeout(() => setProductToEdit(null), 200);
+          setProductToEdit(null);
+          setVistaActiva('LOTES');
+          
+          // Si nos llega un producto, lo metemos en memoria y abrimos el modal de Lotes
+          if (productoRecienCreado) {
+            setPreselectedLoteProduct(productoRecienCreado);
+            setIsModalLoteOpen(true);
+          }
         }}
         onProductSaved={(nuevoProducto: any) => {
+          // [ RETORNO TÉCNICO ]: Mapeo de integridad. Si es edición, preservamos el stock calculado actual.
           const stockActual = products.find(p => p.id === nuevoProducto.id)?.quantity;
 
           const productoFormateado: Product = {
@@ -281,10 +391,45 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
           if (productToEdit) {
             setProducts(prev => prev.map(p => p.id === productToEdit.id ? productoFormateado : p));
+            // 🛡️ EVICAMP: Si editamos el producto, forzamos recarga de Lotes para que muestre el nuevo nombre/datos
+            setRefreshLotesKey(prev => prev + 1);
           } else {
             setProducts(prev => [productoFormateado, ...prev]);
             setCurrentPage(1);
           }
+        }}
+      />
+      <ModalGestionProveedores isOpen={isModalProveedoresOpen} onClose={() => setIsModalProveedoresOpen(false)} />
+      {/* INVOCACIÓN DEL NUEVO MODAL DE LOTES */}
+      <ModalLote 
+        isOpen={isModalLoteOpen} 
+        onClose={() => {
+          setIsModalLoteOpen(false);
+          setPreselectedLoteProduct(null);
+          setLoteToEdit(null); // <-- LIMPIAR MEMORIA
+        }} 
+        productos={products} 
+        initialProduct={preselectedLoteProduct}
+        initialLote={loteToEdit} // <-- PASAMOS EL LOTE A EDITAR
+        onLoteSaved={(lote) => {
+          setNuevoLoteRealtime(lote);
+          setLoteToEdit(null);
+          if (!loteToEdit) setSearchQuery(''); 
+
+          // 🛡️ PARCHE EVICAMP: Actualizamos la pantalla al instante tanto para LOTES NUEVOS como para EDICIONES
+          const cantidadDiferencia = loteToEdit 
+            ? Number(lote.quantity) - Number(loteToEdit.quantity || 0) 
+            : Number(lote.initial_quantity || lote.quantity);
+
+          setProducts(prevProducts => prevProducts.map(p => 
+            p.id === lote.product_id 
+              ? { 
+                  ...p, 
+                  quantity: Math.max(0, p.quantity + cantidadDiferencia),
+                  cost: Number(lote.cost_unit) // <-- ACTUALIZA EL COSTO UNITARIO CON EL DEL NUEVO LOTE
+                } 
+              : p
+          ));
         }}
       />
     </div>

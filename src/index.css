@@ -256,79 +256,28 @@ html, body {
    convivan con el tamaño de interfaz y no choquen con los modales fijos. */
 
 html.theme-monochrome {
-  --color-brand-primary: #E5E5E5;
-  --color-brand-bg: #121212;
-  --color-ink: #E5E5E5;
-  --color-ink-rgb: 229, 229, 229;
-  --color-ink-dark: #FFFFFF;
-  --color-border: #000000;
-  --color-line-light: #404040;
-  --color-muted: #A3A3A3;
-  --color-subtle: #737373;
-  --color-bg: #121212;
-  --color-bg-2: #1A1A1A;
-  --color-surface: #262626;
-  --color-accent: #737373;
-  --color-accent-rgb: 115, 115, 115;
-  --color-accent-dark: #A3A3A3;
-  --color-accent-dark-2: #D4D4D4;
-  --color-accent-shadow: #000000;
-  --color-accent-bg: #404040;
-  --color-accent-hover: #525252;
-  --color-danger: #737373;
-  --color-danger-rgb: 115, 115, 115;
-  --color-danger-bg: #404040;
-  --color-success: #737373;
-  --color-success-bg: #404040;
-  --color-info: #737373;
-  --color-info-bg: #404040;
-  --color-warning: #737373;
-  --color-warning-bg: #404040;
+  /* TEMA MONOCROMÁTICO (Estilo Claro, idéntico a Océano/Rosa pero en escala de grises) */
+  --color-ink: #171717; /* Gris muy oscuro, casi negro */
+  --color-ink-rgb: 23, 23, 23;
+  --color-ink-dark: #000000;
+  --color-border: #E5E5E5;
+  --color-line-light: #D4D4D4;
+  --color-muted: #737373;
+  --color-subtle: #A3A3A3;
+  --color-bg: #F5F5F5; /* Fondo gris súper claro */
+  --color-bg-2: #E5E5E5;
+  --color-surface: #FFFFFF; /* Cajas blancas, igual que los demás temas */
+  --color-accent: #525252; /* Acento gris medio */
+  --color-accent-rgb: 82, 82, 82;
+  --color-accent-dark: #404040;
+  --color-accent-dark-2: #262626;
+  --color-accent-shadow: #171717;
+  --color-accent-shadow-rgb: 23, 23, 23;
+  --color-accent-bg: #E5E5E5;
+  --color-accent-bg-2: #D4D4D4;
 }
 
-html.theme-monochrome body {
-  background-color: var(--color-bg);
-}
-
-/* REGLAS MAESTRAS PARA SOBRESCRIBIR EL MODO CLARO NEOBRUTALISTA */
-html.theme-monochrome .bg-white {
-  background-color: var(--color-surface) !important;
-}
-html.theme-monochrome .text-white {
-  color: var(--color-bg) !important;
-}
-html.theme-monochrome .bg-black {
-  background-color: var(--color-ink) !important;
-}
-html.theme-monochrome .text-black {
-  color: var(--color-ink) !important;
-}
-
-/* Forzar estilo de inputs para modo oscuro (evita texto azul o fondos blancos rotos) */
-html.theme-monochrome input,
-html.theme-monochrome select,
-html.theme-monochrome textarea {
-  color: var(--color-ink) !important;
-  background-color: var(--color-surface) !important;
-  border-color: var(--color-border) !important;
-}
-html.theme-monochrome input::placeholder,
-html.theme-monochrome textarea::placeholder {
-  color: var(--color-muted) !important;
-}
-
-/* Forzar que todas las sombras gruesas sean negro absoluto */
-html.theme-monochrome [class*="shadow-["] {
-  box-shadow: 6px 6px 0 0 #000000 !important;
-}
-
-/* Invertir imágenes para que no desentonen, pero suavemente */
-html.theme-monochrome img,
-html.theme-monochrome video {
-  filter: grayscale(1) brightness(0.8);
-}
-
-html[data-theme="oceano"] {
+  html[data-theme="oceano"] {
   --color-ink: #0F2942;
   --color-ink-rgb: 15, 41, 66;
   --color-ink-dark: #081D30;
@@ -414,5 +363,57 @@ html[data-theme="bosque"] {
 
 
 
+
+
+
+/* AGY_ANIMACIONES_GLOBALES */
+/* ==========================================================================
+   ANIMACIONES DE ENTRADA GLOBALES (EFECTO PREMIUM / DINÁMICO)
+   Solicitado: Ventanas flotantes, tablas, y botones de secciones.
+   ========================================================================== */
+
+/* 1. Ventanas Flotantes (Backdrop y Contenedor) */
+div[role="dialog"] {
+  animation: agy-fade-in 0.2s ease-out forwards;
+}
+div[role="dialog"] > div {
+  animation: agy-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 2. Tablas y Listas de datos */
+table, 
+.grid-cols-1.divide-y-2,
+.overflow-x-auto > table,
+.overflow-y-auto > div.grid {
+  animation: agy-fade-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 3. Botones de todas las secciones (excluyendo ventanas flotantes) */
+/* La clase .fixed de Tailwind se usa para los modales, por lo que aplicamos solo a botones que no sean descendientes de .fixed */
+body *:not(.fixed) > button,
+section button,
+nav button {
+  animation: agy-fade-in 0.5s ease-out forwards;
+}
+/* Evitar que botones dentro del modal vuelvan a animarse si el selector de arriba los pesca por accidente */
+.fixed button {
+  animation: none !important;
+}
+
+/* Definición de Keyframes */
+@keyframes agy-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes agy-slide-up {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes agy-fade-slide-up {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 

@@ -27,11 +27,8 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
 
   useEffect(() => {
     if (isOpen && cliente) {
-      const pendingIds = cliente.fiados.filter(f => f.saldoPendiente > 0).map(f => f.id);
-      setSelectedIds(new Set(pendingIds));
-      
-      const total = cliente.fiados.filter(f => f.saldoPendiente > 0).reduce((acc, f) => acc + f.saldoPendiente, 0);
-      setEfectivo(total.toFixed(2));
+      setSelectedIds(new Set());
+        setEfectivo('');
       setYape('');
       setTarjeta('');
     } else {
@@ -56,7 +53,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
   };
 
   const handleToggleAll = () => {
-    const pendingIds = cliente.fiados.filter(f => f.saldoPendiente > 0).map(f => f.id);
+    const pendingIds = cliente.fiados.filter(f => f.estado !== 'PAGADO').map(f => f.id);
     if (selectedIds.size === pendingIds.length) {
       setSelectedIds(new Set());
       setEfectivo('');
@@ -64,7 +61,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
       setTarjeta('');
     } else {
       setSelectedIds(new Set(pendingIds));
-      const total = cliente.fiados.filter(f => f.saldoPendiente > 0).reduce((acc, f) => acc + f.saldoPendiente, 0);
+      const total = cliente.fiados.filter(f => f.estado !== 'PAGADO').reduce((acc, f) => acc + f.saldoPendiente, 0);
       setEfectivo(total.toFixed(2));
       setYape('');
       setTarjeta('');
@@ -153,8 +150,8 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
   };
 
   return createPortal(
-    <div className="fixed inset-0 bg-[var(--color-ink)]/90 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in font-mono">
-      <div className="bg-white border-4 border-[var(--color-ink)] shadow-[16px_16px_0_0_var(--color-ink)] w-full max-w-6xl h-[90vh] flex flex-col rounded-none relative">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in font-mono">
+      <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-6xl h-[90vh] flex flex-col rounded-none relative">
         
         {/* HEADER */}
         <div className="bg-[var(--color-ink)] text-white p-4 sm:p-6 flex justify-between items-center shrink-0">
@@ -180,9 +177,9 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
               </button>
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-4">
-              {cliente.fiados.sort((a,b) => new Date(b.fechaEmision).getTime() - new Date(a.fechaEmision).getTime()).map((fiado) => (
+              {cliente.fiados.filter(f => f.estado !== 'PAGADO').sort((a,b) => new Date(b.fechaEmision).getTime() - new Date(a.fechaEmision).getTime()).map((fiado) => (
                 <div key={fiado.id} 
-                  className={`bg-white border-2 p-4 flex flex-col gap-2 relative transition-all ${selectedIds.has(fiado.id) ? 'border-[var(--color-accent)] shadow-[4px_4px_0_0_var(--color-accent)] bg-[var(--color-accent-bg)]' : 'border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] opacity-70'}`}
+                  onClick={() => handleToggleSelect(fiado.id)} className={`cursor-pointer bg-white border-2 p-4 flex flex-col gap-2 relative transition-all ${selectedIds.has(fiado.id) ? 'border-[var(--color-accent)] shadow-[4px_4px_0_0_var(--color-accent)] bg-[var(--color-accent-bg)]' : 'border-[var(--color-border)] hover:border-[var(--color-ink)]'}`}
                 >
                   <div className="flex justify-between items-start border-b-2 border-dashed border-[var(--color-line-light)] pb-2 mb-2">
                     <div className="flex gap-3 items-center">
@@ -196,7 +193,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                         
                         <div className="text-xs font-bold text-[var(--color-muted)] flex flex-wrap items-center gap-2 mt-1">
                           {fechaEditId === fiado.id ? (
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                               <input type="datetime-local" value={nuevaFecha} onChange={e => setNuevaFecha(e.target.value)} className="border border-[var(--color-ink)] px-1 py-0.5 text-black" />
                               <button onClick={() => handleUpdateFecha(fiado.id)} className="bg-[var(--color-success)] text-white px-2 py-0.5">OK</button>
                               <button onClick={() => setFechaEditId(null)} className="bg-[var(--color-danger)] text-white px-2 py-0.5">X</button>
@@ -204,24 +201,30 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                           ) : (
                             <>
                               <Calendar size={12} /> {new Date(fiado.fechaEmision).toLocaleString('es-PE')}
-                              <button onClick={() => { setFechaEditId(fiado.id); setNuevaFecha(fiado.fechaEmision.slice(0, 16)); }} className="ml-2 bg-[var(--color-surface)] px-2 py-0.5 border border-[var(--color-border)] hover:bg-[var(--color-accent)] hover:text-white transition-colors flex items-center gap-1 cursor-pointer">
-                                <Edit size={10} /> EDITAR
-                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); setFechaEditId(fiado.id); setNuevaFecha(fiado.fechaEmision.slice(0, 16)); }} className="ml-2 bg-[var(--color-surface)] px-2 py-0.5 border border-[var(--color-border)] hover:bg-[var(--color-accent)] hover:text-white transition-colors flex items-center gap-1 cursor-pointer">
+                                  <Edit size={10} /> EDITAR
+                                </button>
+                                {(fiado.montoPagado || 0) > 0 && (
+  <span style={{ marginLeft: '8px', backgroundColor: '#22c55e', color: 'white', border: '1px solid #16a34a', padding: '3px 10px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '900', fontSize: '11px', borderRadius: '4px' }}>
+    ABONOS: S/ {Number(fiado.montoPagado).toFixed(2)}
+  </span>
+)}
                             </>
                           )}
                         </div>
 
                       </div>
                     </div>
-                    {fiado.saldoPendiente === 0 ? (
+                    {fiado.estado === 'PAGADO' ? (
                       <span className="bg-[var(--color-success)] text-white text-[10px] font-black uppercase px-2 py-1 flex items-center gap-1"><CheckCircle size={12}/> PAGADO</span>
                     ) : (
-                      <span className="bg-[var(--color-danger)] text-white text-[10px] font-black uppercase px-2 py-1">PENDIENTE</span>
+                      <span className="bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger)] text-[10px] font-black uppercase px-2 py-1">PENDIENTE</span>
                     )}
                   </div>
-                  <div className="flex flex-col gap-1 pl-9">
-                    {fiado.detalles.map((det, i) => (
-                      <div key={i} className="flex justify-between text-xs font-bold text-[var(--color-subtle)]">
+                  
+                    <div className="flex flex-col gap-1 pl-9">
+                      {fiado.detalles.map((det, i) => (
+                      <div key={i} className="flex justify-between text-sm font-black text-[var(--color-muted)]">
                         <span>{det.qty} x {det.name}</span>
                         <span>S/ {Number(det.subtotal).toFixed(2)}</span>
                       </div>
@@ -234,13 +237,28 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
 
           {/* LADO DERECHO: REGISTRO DE ABONO Y TOTALES */}
           <div className="w-full lg:w-[450px] flex flex-col shrink-0 overflow-y-auto custom-scrollbar bg-white">
-            <div className="p-6 bg-[var(--color-ink)] text-white border-b-4 border-[var(--color-ink)]">
-              <p className="text-[var(--color-subtle)] font-black uppercase text-xs mb-2">Deuda Total Pendiente</p>
-              <h1 className="text-6xl font-black text-[var(--color-danger)] drop-shadow-md">S/ {cliente.totalPendiente.toFixed(2)}</h1>
-            </div>
+            <div className="p-6 bg-[var(--color-danger-bg)] border-b-4 border-[var(--color-danger)]">
+                
+                <p className="text-[var(--color-danger)] font-black uppercase tracking-widest text-xs mb-1">Deuda Total Pendiente</p>
+                <h1 className="text-5xl font-black text-[var(--color-danger)] drop-shadow-md">S/ {cliente.totalPendiente.toFixed(2)}</h1>
+  <button 
+  onClick={() => {
+      onClose();
+      setTimeout(() => {
+        document.getElementById('btn-directorio-clientes')?.click();
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('abrirHistorialDirecto', { detail: cliente.clienteNombre }));
+        }, 100);
+      }, 100);
+    }}
+  className="mt-4 w-full bg-white border-2 border-[var(--color-ink)] text-[var(--color-ink)] px-4 py-2 font-black uppercase tracking-widest text-xs hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)]"
+>
+  Ver Historial del Cliente
+</button>
+              </div>
             
             <div className="p-6 flex flex-col gap-6 flex-1 bg-[var(--color-bg)]">
-              <div className="bg-white border-4 border-[var(--color-ink)] p-5 shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col gap-4">
+              <div className="bg-white border-2 border-[var(--color-ink)] p-5 shadow-[4px_4px_0_0_var(--color-ink)] flex flex-col gap-4">
                  <h3 className="font-black text-lg uppercase tracking-widest flex items-center gap-2 border-b-2 border-dashed border-[var(--color-line-light)] pb-3">
                    <Calculator size={24} className="text-[var(--color-accent)]" /> Registrar Abono
                  </h3>
@@ -276,7 +294,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                  <button 
                   onClick={handlePagar}
                   disabled={isSaving || totalAbono <= 0 || totalAbono > totalSeleccionado}
-                  className="w-full bg-[var(--color-accent)] text-[var(--color-ink)] border-4 border-[var(--color-ink)] py-4 text-lg font-black uppercase tracking-widest hover:bg-[var(--color-success)] hover:text-white transition-colors cursor-pointer shadow-[6px_6px_0_0_var(--color-ink)] active:translate-y-[6px] active:translate-x-[6px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                  className="w-full bg-[var(--color-accent)] text-[var(--color-ink)] border-2 border-[var(--color-ink)] py-3 text-lg font-black uppercase tracking-widest hover:bg-[var(--color-success)] hover:text-white transition-colors cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                  >
                    {isSaving ? 'Procesando...' : 'CONFIRMAR PAGO'}
                  </button>

@@ -134,7 +134,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
   }, [refreshTrigger]);
 
   const modalContent = isModalOpen ? createPortal(
-    <div className="fixed inset-0 bg-[var(--color-ink)]/90 backdrop-blur-md z-[999999] flex items-center justify-center p-2 sm:p-8 animate-fade-in font-mono">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-2 sm:p-8 animate-fade-in font-mono">
       <div className="bg-white border-4 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] sm:shadow-[16px_16px_0_0_var(--color-ink)] w-full max-w-6xl flex flex-col h-[calc(var(--alto-pantalla)*0.9)] rounded-none">
         
         <div className="bg-[var(--color-ink)] text-white p-4 sm:p-6 flex justify-between items-center gap-3 shrink-0">

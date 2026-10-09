@@ -30,6 +30,7 @@ export const Fiados: React.FC = () => {
   const [fiadoAAbonar, setFiadoAAbonar] = useState<Fiado | null>(null);
 
   const [isModalClientesOpen, setIsModalClientesOpen] = useState(false);
+    const [forceHistorialCliente, setForceHistorialCliente] = useState<string | null>(null);
   const [isModalEstadoCuentaOpen, setIsModalEstadoCuentaOpen] = useState(false);
   const [clienteEstadoCuenta, setClienteEstadoCuenta] = useState<ClienteFiadoAgrupado | null>(null);
 
@@ -49,16 +50,32 @@ export const Fiados: React.FC = () => {
         { data: prods },
         { data: clis },
         { data: fiaData },
-        { data: pagosData },
-        { data: detailsData }
+        { data: pagosData }
       ] = await Promise.all([
         traerTodo(() => supabase.from('products').select('*').order('id')),
         traerTodo(() => supabase.from('customers').select('*').order('id')),
         // Filtro Ampliado: Descarga también los CANCELADOS para poder visualizarlos en la tabla como 'PAGADOS'
         traerTodo(() => supabase.from('fiados').select('*').in('status', ['PENDIENTE', 'VENCIDO', 'CANCELADO']).order('id')),
-        traerTodo(() => supabase.from('debt_payments').select('*').order('id')),
-        traerTodo(() => supabase.from('sale_details').select('sale_id, product_id, product_name, quantity, price_at_moment, subtotal').order('id'))
+        traerTodo(() => supabase.from('debt_payments').select('*').order('id'))
       ]);
+
+      // OPTIMIZACIÓN: Solo descargar detalles de las ventas que corresponden a fiados
+      let detailsData: any[] = [];
+      if (fiaData && fiaData.length > 0) {
+        const saleIds = Array.from(new Set(fiaData.map(f => f.sale_id).filter(id => id != null)));
+        
+        if (saleIds.length > 0) {
+          // Dividir en lotes de 200 para no exceder los límites
+          const CHUNK_SIZE = 200;
+          for (let i = 0; i < saleIds.length; i += CHUNK_SIZE) {
+            const chunk = saleIds.slice(i, i + CHUNK_SIZE);
+            const { data } = await supabase.from('sale_details')
+              .select('sale_id, product_id, product_name, quantity, price_at_moment, subtotal')
+              .in('sale_id', chunk);
+            if (data) detailsData.push(...data);
+          }
+        }
+      }
 
       // 1. Asignar Inventario
       if (prods) setProductosInventario(prods as Product[]);
@@ -98,8 +115,24 @@ if (fiaData) {
     }));
 
     // 🛡️ CÁLCULO MATEMÁTICO BLINDADO (Ignora errores o retrasos de Base de Datos)
-    const montoOriginal = Number(f.amount) || 0;
-    const montoPagadoReal = historialPagos.reduce((sum, p) => sum + p.monto, 0);
+    const sumaDetalles = susDetalles.reduce((acc, det) => acc + (Number(det.subtotal) || 0), 0);
+      const montoOriginal = sumaDetalles > 0 ? sumaDetalles : (Number(f.amount) || 0);
+
+      let montoPagadoReal = historialPagos.reduce((sum, p) => sum + p.monto, 0);
+
+      // Si la base de datos dice que se pagó más de lo que tenemos registrado en debt_payments:
+      const totalPagadoEnBD = Math.max(0, montoOriginal - (Number(f.amount) || 0));
+      const abonoAntiguoFaltante = Math.max(0, totalPagadoEnBD - montoPagadoReal);
+      
+      if (abonoAntiguoFaltante > 0.05) {
+        historialPagos.push({
+          id: `antiguo-${f.id}`,
+          monto: abonoAntiguoFaltante,
+          metodo: 'PAGO ANTIGUO O DESCUENTO',
+          fecha: f.date_given
+        });
+        montoPagadoReal += abonoAntiguoFaltante;
+      }
     const saldoPendienteReal = Math.max(0, montoOriginal - montoPagadoReal);
     
     // 🛡️ ESTADO TÉCNICO: Solo existe PENDIENTE o PAGADO (Tolerancia estricta de 0.05)
@@ -111,7 +144,8 @@ if (fiaData) {
       clienteId: f.customer_id?.toString(),
       clienteNombre: f.customer_name || 'Desconocido',
       montoOriginal: montoOriginal,
-      saldoPendiente: saldoPendienteReal,
+        montoPagado: montoPagadoReal,
+        saldoPendiente: saldoPendienteReal,
       fechaEmision: f.date_given,
       fechaVencimiento: f.expected_pay_date || f.date_given,
       estado: estadoFinal,
@@ -270,20 +304,19 @@ if (fiaData) {
 
   // --- FUNCIONES DE CLIENTES CON SUPABASE ---
   const handleSaveCliente = async (cli: Omit<Cliente, 'id'>) => {
-    const nuevoId = Date.now().toString(); 
-    
-    // Guardar en Supabase
-    const { error } = await supabase.from('customers').insert([{
-      id: nuevoId,
-      name: cli.nombre,
-      dni: cli.dni,
-      created_at: new Date().toISOString(),
-      is_synced: '1'
-    }]);
-
-    if (error) return alert('Error al guardar cliente: ' + error.message);
-    setClientes([...clientes, { ...cli, id: nuevoId }]);
-  };
+      // Dejamos que Supabase asigne el ID (generalmente autoincremental)
+      const { data, error } = await supabase.from('customers').insert([{
+        name: cli.nombre,
+        dni: cli.dni,
+        created_at: new Date().toISOString(),
+        is_synced: '1'
+      }]).select().single();
+  
+      if (error) return alert('Error al guardar cliente: ' + error.message);
+      
+      // Actualizamos el estado con el ID real que nos dio la base de datos
+      setClientes([...clientes, { ...cli, id: data.id.toString() }]);
+    };
 
   const handleEditCliente = async (cliModificado: Cliente) => {
     // Actualizar en Supabase
@@ -332,8 +365,22 @@ if (fiaData) {
     return totalGlobal + pagadoHoy;
   }, 0);
 
+  useEffect(() => {
+    const handleAbrir = (e: any) => {
+      const nombre = e.detail;
+      const cliAgrupado = clientesAgrupados.find(c => c.clienteNombre === nombre);
+      if (cliAgrupado) {
+        setClienteEstadoCuenta(cliAgrupado);
+        setIsModalEstadoCuentaOpen(true);
+        setIsModalClientesOpen(false);
+      }
+    };
+    window.addEventListener('abrirEstadoCuentaGlobal', handleAbrir);
+    return () => window.removeEventListener('abrirEstadoCuentaGlobal', handleAbrir);
+  }, [clientesAgrupados]);
+
   return (
-    <div className="h-full flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono relative">
+      <div className="h-full flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono relative">
       {loading && (
         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
@@ -401,6 +448,17 @@ if (fiaData) {
         onClose={() => setIsModalAnularOpen(false)}
         fiado={fiadoAAnular ? (fiados.find(f => f.id === fiadoAAnular.id) || fiadoAAnular) : null}
         onAnularPago={handleAnularPagoEspecifico}
+      />
+
+      {/* Modal Unificado de Estado de Cuenta */}
+      <ModalEstadoCuenta 
+        isOpen={isModalEstadoCuentaOpen}
+        onClose={() => setIsModalEstadoCuentaOpen(false)}
+        cliente={clienteEstadoCuenta}
+        onRefetch={async () => {
+          setIsModalEstadoCuentaOpen(false);
+          await cargarDatos();
+        }}
       />
     </div>
   );

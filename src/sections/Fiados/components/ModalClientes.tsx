@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { X, Users, Search, Plus, UserCircle, Save, Edit, Trash2, ArrowLeft, ChevronLeft, ChevronRight, Filter, FilterX } from 'lucide-react';
 import type { Cliente, Fiado } from '../types';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
@@ -12,10 +12,13 @@ interface Props {
   onEditCliente: (cliente: Cliente) => void;
   onDeleteCliente: (id: string) => void;
   fiados: Fiado[];
+    forceHistorialCliente?: string | null;
+    onClearForce?: () => void;
 }
 
-export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSaveCliente, onEditCliente, onDeleteCliente, fiados }) => {
-  useCerrarConEscape(isOpen, onClose); // Escape (o "Atrás" del control de TV) cierra la ventana
+export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSaveCliente, onEditCliente, onDeleteCliente, fiados, forceHistorialCliente, onClearForce }) => {
+  useCerrarConEscape(isOpen, onClose);
+ // Escape (o "Atrás" del control de TV) cierra la ventana
   const [view, setView] = useState<'LISTA' | 'NUEVO' | 'HISTORIAL'>('LISTA');
   const [clienteActivo, setClienteActivo] = useState<Cliente | null>(null);
   const [clienteAEditar, setClienteAEditar] = useState<Cliente | null>(null);
@@ -24,6 +27,19 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
   const [nombre, setNombre] = useState('');
   const [dni, setDni] = useState('');
   const [telefono, setTelefono] = useState('');
+  useLayoutEffect(() => {
+    if (isOpen && forceHistorialCliente && clientes.length > 0) {
+      const cli = clientes.find(c => c.nombre === forceHistorialCliente);
+      if (cli) {
+        setClienteActivo(cli);
+        setView('HISTORIAL');
+        if (onClearForce) onClearForce();
+      }
+    }
+  }, [isOpen, forceHistorialCliente, clientes]);
+
+
+
 
   // Estados Filtros y Búsqueda
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,6 +48,19 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
   
   // Estados Paginación
   const [currentPage, setCurrentPage] = useState(1);
+  const [historialSearchProd, setHistorialSearchProd] = useState('');
+  const [historialSearchDate, setHistorialSearchDate] = useState('');
+  const [expandedHistorialIds, setExpandedHistorialIds] = useState<Set<string>>(new Set());
+  const [historialTab, setHistorialTab] = useState<'PENDIENTES' | 'PAGADAS'>('PENDIENTES');
+
+  const toggleHistorial = (id: string) => {
+    setExpandedHistorialIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
   const ITEMS_PER_PAGE = 50;
 
   const limpiarFiltros = () => {
@@ -43,8 +72,21 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
 
   // Resetear la página si cambian los filtros
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, filtroDeuda, ordenAlfabetico, clientes.length]);
+      setCurrentPage(1);
+    }, [searchTerm, filtroDeuda, ordenAlfabetico, clientes.length]);
+
+    useEffect(() => {
+      const handleAbrirHistorial = (e: any) => {
+        const nombreCli = e.detail;
+        const cli = clientes.find(c => c.nombre === nombreCli);
+        if (cli) {
+          setClienteActivo(cli);
+          setView('HISTORIAL');
+        }
+      };
+      window.addEventListener('abrirHistorialDirecto', handleAbrirHistorial);
+      return () => window.removeEventListener('abrirHistorialDirecto', handleAbrirHistorial);
+    }, [clientes]);
 
   // 🔥 AUTO-FOCUS MAGNET PARA EL MODAL DE CLIENTES
   useEffect(() => {
@@ -282,7 +324,12 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
               if (bSearch) bSearch.focus();
               else if (bVolver) bVolver.focus();
             }
-          } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+          } else if (e.key === "Enter" && view === 'HISTORIAL') {
+              if (currentRow.dataset && currentRow.dataset.id) {
+                toggleHistorial(currentRow.dataset.id);
+                return;
+              }
+            } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
             const focusables = [currentRow, ...Array.from(currentRow.querySelectorAll("button:not([disabled])"))] as HTMLElement[];
             if (focusables.length > 1) {
               const focusIndex = focusables.indexOf(active);
@@ -417,9 +464,24 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
 
   const fiadosDelCliente = clienteActivo ? fiados.filter(f => f.clienteNombre === clienteActivo.nombre) : [];
 
+  let fiadosHistorial = fiadosDelCliente
+    .filter(f => historialTab === 'PENDIENTES' ? f.estado !== 'PAGADO' : f.estado === 'PAGADO')
+    .sort((a, b) => new Date(b.fechaEmision).getTime() - new Date(a.fechaEmision).getTime());
+  if (historialSearchDate) {
+    fiadosHistorial = fiadosHistorial.filter(f => f.fechaEmision.startsWith(historialSearchDate));
+  }
+  if (historialSearchProd) {
+    const q = historialSearchProd.toLowerCase();
+    fiadosHistorial = fiadosHistorial.filter(f => {
+      if (f.montoOriginal.toString().includes(q) || f.saldoPendiente.toString().includes(q)) return true;
+      if (f.estado.toLowerCase().includes(q)) return true;
+      return f.detalles && f.detalles.some(d => d.name.toLowerCase().includes(q) || d.subtotal.toString().includes(q));
+    });
+  }
+
   return (
-    <div role="dialog" aria-modal="true" className="fixed inset-0 bg-[var(--color-ink)]/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="bg-white w-full max-w-6xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.85)]">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-fade-in flex items-center justify-center p-2 sm:p-4 font-mono">
+      <div className="bg-[var(--color-surface)] animate-slide-up w-full max-w-6xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.85)]">
         
         {/* HEADER */}
         <div className="bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
@@ -433,7 +495,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
         </div>
 
         {/* CONTENIDO DINÁMICO */}
-        <div className="flex-1 bg-[var(--color-bg)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-3 sm:p-6 flex flex-col">
+        <div className="flex-1 min-h-0 bg-[var(--color-bg)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-3 sm:p-6 flex flex-col">
           
           {view === 'LISTA' && (
             <div className="flex flex-col gap-4 h-full">
@@ -574,49 +636,100 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
           {view === 'HISTORIAL' && (
             <div className="flex flex-col gap-6 h-full">
               {/* BOTÓN VOLVER PROMINENTE */}
-              <div className="shrink-0 border-b-2 border-[var(--color-border)] pb-4">
-                <button id="btn-volver-directorio" onClick={() => setView('LISTA')} 
-                  className="px-5 py-3 bg-white text-[var(--color-ink)] border-2 border-[var(--color-ink)] text-xs font-black uppercase flex items-center gap-2 hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] w-fit"
-                >
-                  <ArrowLeft size={18} /> Volver al Directorio
+              <div className="shrink-0 border-b-2 border-[var(--color-border)] pb-4 flex justify-between items-center">
+                <button onClick={() => setView('LISTA')} className="flex items-center gap-2 text-xs font-black uppercase text-[var(--color-subtle)] hover:text-[var(--color-info)] transition-colors">
+                  <ArrowLeft size={16} /> Volver al Directorio
                 </button>
+                <button onClick={() => {
+                  window.dispatchEvent(new CustomEvent('abrirEstadoCuentaGlobal', { detail: clienteActivo?.nombre }));
+                }} className="flex items-center gap-2 text-xs font-black uppercase bg-[var(--color-info)] text-white px-4 py-1.5 hover:bg-[var(--color-ink)] hover:text-white transition-colors ml-4 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5">
+                  Ver Estado de Cuenta
+                </button>
+                <div className="flex bg-[var(--color-surface)] border-2 border-[var(--color-ink)] p-1">
+                  <button onClick={() => setHistorialTab('PENDIENTES')} className={`px-4 py-1 text-xs font-black uppercase tracking-widest transition-colors ${historialTab === 'PENDIENTES' ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-subtle)] hover:text-[var(--color-ink)]'}`}>PENDIENTES</button>
+                  <button onClick={() => setHistorialTab('PAGADAS')} className={`px-4 py-1 text-xs font-black uppercase tracking-widest transition-colors ${historialTab === 'PAGADAS' ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-subtle)] hover:text-[var(--color-ink)]'}`}>PAGADAS</button>
+                </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {/* BUSCADOR DE HISTORIAL */}
+              <div className="flex flex-wrap gap-4 bg-[var(--color-surface)] p-3 border-2 border-[var(--color-border)] shrink-0">
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-subtle)]" />
+                  <input autoComplete="off" id="buscador-historial-clientes" type="text" value={historialSearchProd}
+                    onChange={(e) => setHistorialSearchProd(e.target.value)}
+                    placeholder="Buscar producto o monto..." 
+                    className="w-full bg-white border-2 border-[var(--color-border)] pl-9 pr-4 py-2 text-xs font-black uppercase outline-none focus:border-[var(--color-info)] transition-colors rounded-none" 
+                  />
+                </div>
+                <input autoComplete="off" type="date" value={historialSearchDate}
+                  onChange={(e) => setHistorialSearchDate(e.target.value)}
+                  className="w-full sm:w-auto border-2 border-[var(--color-border)] px-4 py-2 text-xs font-black uppercase text-[var(--color-ink)] outline-none cursor-pointer bg-white rounded-none"
+                />
+              </div>
+
+              <div className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <div className="grid grid-cols-1 gap-3">
-                  {fiadosDelCliente.length === 0 ? (
+                  {fiadosHistorial.length === 0 ? (
                     <div className="bg-white border-2 border-[var(--color-border)] p-3 lg:p-4 text-center">
-                      <p className="text-[var(--color-subtle)] font-black text-sm uppercase">No tiene deudas ni historial registrado.</p>
+                      <p className="text-[var(--color-subtle)] font-black text-sm uppercase">No se encontraron registros.</p>
                     </div>
                   ) : (
-                    fiadosDelCliente.map(f => (
-                      <div key={f.id} role="button" tabIndex={0} className="bg-white border-2 border-[var(--color-ink)] p-4 flex flex-col gap-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] justify-between items-center shadow-[4px_4px_0_0_var(--color-border)]">
+                    fiadosHistorial.map(f => (
+                      <div key={f.id} data-id={f.id} role="button" tabIndex={0} onClick={() => toggleHistorial(f.id.toString())} className="bg-white border-2 border-[var(--color-ink)] p-4 flex flex-col gap-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] shadow-[4px_4px_0_0_var(--color-border)] cursor-pointer hover:bg-[var(--color-bg)] transition-colors">
                         <div className="flex justify-between items-center w-full">
-                        <div>
-                          <p className="text-sm font-black text-[var(--color-ink)] uppercase">Fecha: {new Date(f.fechaEmision).toLocaleDateString()}</p>
-                          <p className="text-xs font-bold mt-1">
-                            Estado: <span className={`px-2 py-1 ml-1 ${f.estado === 'PAGADO' ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent)] border border-[var(--color-accent)]' : 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger)]'}`}>
-                              {f.estado}
-                            </span>
-                          </p>
-                        </div>
-                        <div className="text-right flex flex-col gap-1">
-                          <p className="text-sm font-black text-[var(--color-muted)]">Deuda Total: <span className="text-[var(--color-ink)]">S/ {f.montoOriginal.toFixed(2)}</span></p>
-                        </div>
-                          <p className="text-lg font-black text-[var(--color-danger)]">Debe: S/ {f.saldoPendiente.toFixed(2)}</p>
+                          <div>
+                            <p className="text-sm font-black text-[var(--color-ink)] uppercase">Fecha: {new Date(f.fechaEmision).toLocaleDateString()}</p>
+                            <p className="text-xs font-bold mt-1">
+                              Estado: <span className={`px-2 py-1 ml-1 ${f.estado === 'PAGADO' ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent)] border border-[var(--color-accent)]' : 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger)]'}`}>
+                                {f.estado}
+                              </span>
+                            </p>
+                          </div>
+                          <div className="text-right flex flex-col gap-1">
+                            <p className="text-xs font-black uppercase text-[var(--color-muted)] tracking-widest">Monto Original: <span className="text-[var(--color-ink)] ml-1">S/ {f.montoOriginal.toFixed(2)}</span></p>
+                            <p className="text-xs font-black uppercase text-[var(--color-success)] tracking-widest mt-1">Total Abonado: <span className="ml-1">S/ {(f.montoPagado || 0).toFixed(2)}</span></p>
+                            <p className="text-sm font-black uppercase text-[var(--color-danger)] tracking-widest mt-1 border-t border-[var(--color-border)] pt-1">Debe: <span className="ml-1">S/ {f.saldoPendiente.toFixed(2)}</span></p>
+                          </div>
                         </div>
 
-                        {/* PRODUCTOS */}
-                        {f.detalles && f.detalles.length > 0 && (
-                          <div className="flex flex-col gap-1 border-t-2 border-dashed border-[var(--color-border)] pt-2 mt-2">
-                            <p className="text-xs font-black uppercase text-[var(--color-muted)] mb-1">Productos Sacados:</p>
-                            {f.detalles.map((det, i) => (
-                              <div key={i} className="flex justify-between text-xs font-bold text-[var(--color-subtle)]">
-                                <span>{det.qty} x {det.name}</span>
-                                <span>S/ {Number(det.subtotal).toFixed(2)}</span>
+                        {/* PRODUCTOS Y PAGOS (COLAPSABLE) */}
+                        {expandedHistorialIds.has(f.id.toString()) && (
+                          <div className="flex flex-col gap-4 border-t-2 border-dashed border-[var(--color-border)] pt-4 mt-2 w-full">
+                            {f.detalles && f.detalles.length > 0 && (
+                              <div className="flex flex-col gap-1">
+                                <p className="text-xs font-black uppercase text-[var(--color-muted)] mb-1">Productos Sacados:</p>
+                                {f.detalles.map((det, i) => (
+                                  <div key={i} className="flex justify-between text-sm font-black text-[var(--color-muted)]">
+                                    <span>{det.qty} x {det.name}</span>
+                                    <span>S/ {Number(det.subtotal).toFixed(2)}</span>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
+                            )}
+                            
+                            {f.pagos && f.pagos.length > 0 && (
+                              <div className="flex flex-col gap-1 border-t border-[var(--color-line-light)] pt-2 mt-2">
+                                <p className="text-xs font-black uppercase text-[var(--color-success)] mb-1">Historial de Abonos a esta deuda:</p>
+                                {f.pagos.map((pago, i) => (
+                                  <div key={i} className="flex justify-between items-center text-xs font-black text-[var(--color-muted)]">
+                                    <div className="flex items-center gap-2">
+                                      <span className="bg-[var(--color-surface)] px-2 py-0.5 border border-[var(--color-border)]">{new Date(pago.fecha).toLocaleString('es-PE')}</span>
+                                      <span className="uppercase">{pago.metodo}</span>
+                                    </div>
+                                    <span className="text-[var(--color-success)] font-black">+ S/ {Number(pago.monto).toFixed(2)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {(!f.pagos || f.pagos.length === 0) && (
+                              <div className="flex flex-col gap-1 border-t border-[var(--color-line-light)] pt-2 mt-2">
+                                <p className="text-[10px] font-bold uppercase text-[var(--color-muted)] italic">No se han registrado abonos para esta deuda.</p>
+                              </div>
+                            )}
                           </div>
+                        )}
+                        {!expandedHistorialIds.has(f.id.toString()) && f.detalles && f.detalles.length > 0 && (
+                          <div className="text-[10px] text-center text-[var(--color-muted)] font-bold mt-1 tracking-widest uppercase">Click para ver detalles y abonos</div>
                         )}
                       </div>
                     ))
@@ -631,36 +744,4 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
     </div>
   );
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
