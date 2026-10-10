@@ -34,6 +34,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
         if (cli) {
           setClienteActivo(cli);
           setView('HISTORIAL');
+          setHistorialTab('PENDIENTES');
           if (onClearForce) onClearForce();
         }
       }
@@ -567,7 +568,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                       const deudaActiva = fiados.filter(f => f.clienteNombre.trim().toLowerCase() === cli.nombre.trim().toLowerCase() && f.saldoPendiente > 0).reduce((acc, f) => acc + f.saldoPendiente, 0);
 
                       return (
-                        <div key={cli.id} {...clicConTeclado(() => { setClienteActivo(cli); setView('HISTORIAL'); })} className="p-3 sm:p-4 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 sm:gap-0 hover:bg-[var(--color-bg)] focus:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors group">
+                        <div key={cli.id} {...clicConTeclado(() => { setClienteActivo(cli); setView('HISTORIAL'); setHistorialTab('PAGADAS'); })} className="p-3 sm:p-4 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 sm:gap-0 hover:bg-[var(--color-bg)] focus:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors group">
                           <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-1/3 min-w-0">
                             <UserCircle size={32} className="text-[var(--color-subtle)] shrink-0" />
                             <div className="min-w-0">
@@ -595,7 +596,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                             <button onClick={(e) => { e.stopPropagation(); onDeleteCliente(cli.id); }} className="p-2 bg-white text-[var(--color-subtle)] border-2 border-[var(--color-border)] hover:border-[var(--color-danger)] hover:text-[var(--color-danger)] transition-colors cursor-pointer" title="Eliminar Cliente">
                               <Trash2 size={16} />
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); setClienteActivo(cli); setView('HISTORIAL'); }} className="px-4 py-2 bg-[var(--color-bg)] text-[var(--color-info)] border-2 border-[var(--color-info)] text-[12px] font-black uppercase hover:bg-[var(--color-info)] hover:text-white transition-colors cursor-pointer ml-2">
+                            <button onClick={(e) => { e.stopPropagation(); setClienteActivo(cli); setView('HISTORIAL'); setHistorialTab('PAGADAS'); }} className="px-4 py-2 bg-[var(--color-bg)] text-[var(--color-info)] border-2 border-[var(--color-info)] text-[12px] font-black uppercase hover:bg-[var(--color-info)] hover:text-white transition-colors cursor-pointer ml-2">
                               Ver Historial
                             </button>
                           </div>
