@@ -43,8 +43,14 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
               movimientos.map((item) => (
                 <tr 
                   key={item.id} 
-                  onClick={() => item.isTicket && onVerTicket(item.id)}
-                  className={`border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] transition-colors ${item.isTicket ? 'cursor-pointer' : ''}`}
+                  onClick={() => {
+                    if (item.isTicket) {
+                      onVerTicket(item.id);
+                    } else if (item.descripcion?.includes('ABONO DE FIADO')) {
+                      alert('ℹ️ DETALLE DE ABONO\n\nEste registro es solo el PAGO de una deuda.\n\nPara ver los productos exactos que se llevó el cliente, ve a la sección de CRÉDITOS, busca al cliente y haz clic en VER HISTORIAL.\nAllí tendrás el detalle de cada ticket fiado.');
+                    }
+                  }}
+                  className={`border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] transition-colors ${item.isTicket || item.descripcion?.includes('ABONO DE FIADO') ? 'cursor-pointer' : ''}`}
                 >
                   <td className="p-4 text-xs font-bold text-[var(--color-muted)]">
                     {new Date(item.created_at).toLocaleString('es-PE')}
