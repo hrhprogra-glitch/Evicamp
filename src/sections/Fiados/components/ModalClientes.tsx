@@ -28,13 +28,19 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
   const [dni, setDni] = useState('');
   const [telefono, setTelefono] = useState('');
   useLayoutEffect(() => {
-    if (isOpen && forceHistorialCliente && clientes.length > 0) {
-      const cli = clientes.find(c => c.nombre === forceHistorialCliente);
-      if (cli) {
-        setClienteActivo(cli);
-        setView('HISTORIAL');
-        if (onClearForce) onClearForce();
+    if (isOpen) {
+      if (forceHistorialCliente && clientes.length > 0) {
+        const cli = clientes.find(c => c.nombre === forceHistorialCliente);
+        if (cli) {
+          setClienteActivo(cli);
+          setView('HISTORIAL');
+          if (onClearForce) onClearForce();
+        }
       }
+    } else {
+      setView('LISTA');
+      setClienteActivo(null);
+      setClienteAEditar(null);
     }
   }, [isOpen, forceHistorialCliente, clientes]);
 
