@@ -9,9 +9,11 @@ interface Props {
   paginaActual: number;
   totalPaginas: number;
   onPageChange: (page: number) => void;
+  onAnular?: (id: string, isTicket?: boolean) => Promise<void>;
+  onDelete?: (id: string, isTicket?: boolean) => Promise<void>;
 }
 
-export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, totalPaginas, onPageChange }) => {
+export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, totalPaginas, onPageChange, onAnular, onDelete }) => {
   const [selectedCaja, setSelectedCaja] = React.useState<CashSession | null>(null);
 
   // EXTRAEMOS LA PAGINACIÓN PARA USARLA ARRIBA Y ABAJO SIN REPETIR CÓDIGO
@@ -137,6 +139,8 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
         isOpen={!!selectedCaja}
         onClose={() => setSelectedCaja(null)}
         caja={selectedCaja}
+        onAnular={onAnular}
+        onDelete={onDelete}
       />
     </div>
   );

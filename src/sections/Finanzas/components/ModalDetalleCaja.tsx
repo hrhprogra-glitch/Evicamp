@@ -1,23 +1,36 @@
-﻿// src/sections/Finanzas/components/ModalDetalleCaja.tsx
+// src/sections/Finanzas/components/ModalDetalleCaja.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Printer, Receipt, Download, FileText, ChevronLeft } from 'lucide-react';
+import { X, Printer, Receipt, Download, FileText, ChevronLeft, Eye, RotateCcw, Trash2, Search } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
+import { TablaMovimientos } from './TablaMovimientos';
+import type { UnifiedItem } from '../types';
 import { useReactToPrint } from 'react-to-print';
 // html2canvas-pro (no el html2canvas normal): Tailwind v4 usa colores oklch() en su CSS, y la
 // librería original no sabe interpretarlos (falla al generar la imagen). Este fork sí los soporta.
 import html2canvas from 'html2canvas-pro';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
+import { ModalDetalleTicket } from '../../../components/ModalDetalleTicket';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   caja: any;
+  onAnular?: (id: string, isTicket?: boolean) => Promise<void>;
+  onDelete?: (id: string, isTicket?: boolean) => Promise<void>;
 }
 
-export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => {
+export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnular, onDelete }) => {
+  const [ticketSeleccionado, setTicketSeleccionado] = useState<string | null>(null);
+  const [idsProcesando, setIdsProcesando] = useState<Set<string>>(new Set());
+  
   useCerrarConEscape(isOpen, onClose); // Escape (o "Atrás" del control de TV) cierra la ventana
 
   const [tickets, setTickets] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filtroCategoria, setFiltroCategoria] = useState('TODOS');
+  const [filtroEstado, setFiltroEstado] = useState('TODOS');
+  const [filtroDeuda, setFiltroDeuda] = useState('TODOS');
+  
   // 🧾 Movimientos manuales de Caja Interna (Ingreso Extra / Gasto-Retiro, registrados desde
   // "Nuevo Movimiento"). Antes el reporte solo mostraba las ventas y estos quedaban afuera.
   const [movimientos, setMovimientos] = useState<any[]>([]);
@@ -28,6 +41,40 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
   const [vista, setVista] = useState<'DETALLE' | 'TICKET'>('DETALLE');
   const [descargando, setDescargando] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+
+  const esAnulada = (t: any) => t.status === 'ANULADO' || t.sunat_status === 'ANULADO';
+
+  const handleAnularInterno = async (id: string) => {
+    if (!onAnular) return;
+    if (!window.confirm('¿Estás seguro de anular/devolver este ticket?')) return;
+    try {
+      setIdsProcesando(prev => new Set(prev).add(id));
+      await onAnular(id, true);
+      await cargarResumenTicket();
+    } finally {
+      setIdsProcesando(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  };
+
+  const handleDeleteInterno = async (id: string) => {
+    if (!onDelete) return;
+    if (!window.confirm('¿Eliminar este ticket permanentemente?')) return;
+    try {
+      setIdsProcesando(prev => new Set(prev).add(id));
+      await onDelete(id, true);
+      await cargarResumenTicket();
+    } finally {
+      setIdsProcesando(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  };
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -61,12 +108,72 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
     setLoading(true);
 
     // Buscamos ventas en el rango de la caja
-    const { data: sales } = await supabase
+        const { data: sales } = await supabase
       .from('sales')
       .select('*')
       .gte('created_at', caja.opened_at)
-      .lte('created_at', caja.closed_at || new Date().toISOString());
-    setTickets(sales || []);
+      .lte('created_at', caja.closed_at || new Date().toISOString())
+      .order('id', { ascending: false });
+
+    if (sales) {
+      const salesIds = sales.map(s => s.id);
+      const detailsBySale: Record<string, string[]> = {};
+      
+      if (salesIds.length > 0) {
+        const chunkSize = 200;
+        const allDetails: any[] = [];
+        for (let i = 0; i < salesIds.length; i += chunkSize) {
+          const chunk = salesIds.slice(i, i + chunkSize);
+          const { data } = await supabase.from('sale_details').select('sale_id, product_name').in('sale_id', chunk);
+          if (data) {
+            allDetails.push(...data);
+          }
+        }
+        allDetails.forEach(d => {
+          if (!detailsBySale[d.sale_id]) detailsBySale[d.sale_id] = [];
+          detailsBySale[d.sale_id].push(d.product_name);
+        });
+      }
+      
+      sales.forEach(s => {
+        s.productosStr = detailsBySale[s.id]?.join(' ') || '';
+      });
+
+      const fiadosMap: any = {};
+      const idsConCredito = sales.filter(t => Number(t.amount_credit || 0) > 0).map(t => t.id);
+
+      if (idsConCredito.length > 0) {
+        const { data: fiadosData } = await supabase
+          .from('fiados')
+          .select('sale_id, customer_name, amount, paid_amount')
+          .in('sale_id', idsConCredito);
+        if (fiadosData) {
+          fiadosData.forEach(f => {
+            fiadosMap[f.sale_id] = f;
+          });
+        }
+      }
+
+      const ticketsFormateados = sales.map(t => {
+        const fiado = t.id ? fiadosMap[String(t.id)] : null;
+        const creditoOriginal = Number(t.amount_credit || 0);
+        const esFiado = creditoOriginal > 0;
+        const montoPagado = Number(t.amount_cash || 0) + Number(t.amount_yape || 0) + Number(t.amount_card || 0) + Number(t.amount_transfer || 0);
+        const deudaActual = esFiado ? (fiado ? Math.max(0, Number(fiado.amount || 0) - Number(fiado.paid_amount || 0)) : creditoOriginal) : 0;
+
+        return {
+          ...t,
+          payment_type: esFiado ? 'FIADO' : (t.payment_type || 'MIXTO'),
+          es_fiado: esFiado,
+          cliente_nombre: fiado ? fiado.customer_name : null,
+          monto_pagado: montoPagado,
+          monto_deuda: deudaActual
+        };
+      });
+      setTickets(ticketsFormateados);
+    } else {
+      setTickets([]);
+    }
 
     // Movimientos manuales de Caja Interna de ESTA sesión (Ingreso Extra / Gasto-Retiro).
     // Los de Caja Externa (personal) no entran: no son plata del negocio, no van en su reporte.
@@ -75,9 +182,35 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
       .from('cash_movements')
       .select('*')
       .eq('session_id', String(caja.id))
-      .eq('flujo', 'INTERNO')
       .order('created_at');
-    setMovimientos(movs || []);
+
+    const custIds = new Set();
+    (movs || []).forEach((m: any) => {
+      if (m.description) {
+        const match = m.description.match(/Cliente ID: (\d+)/);
+        if (match) custIds.add(match[1]);
+      }
+    });
+    const customersMap: Record<string, string> = {};
+    if (custIds.size > 0) {
+      const { data: custData } = await supabase.from('customers').select('id, name').in('id', Array.from(custIds));
+      if (custData) {
+        custData.forEach(c => customersMap[c.id] = c.name);
+      }
+    }
+    
+    const movsConNombre = (movs || []).map(m => {
+      let desc = m.description;
+      if (desc) {
+        const match = desc.match(/Cliente ID: (\d+)/);
+        if (match && customersMap[match[1]]) {
+          desc = desc.replace(`Cliente ID: ${match[1]}`, `Cliente: ${customersMap[match[1]]}`);
+        }
+      }
+      return { ...m, description: desc };
+    });
+    
+    setMovimientos(movsConNombre);
 
     setLoading(false);
   };
@@ -85,11 +218,59 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
   if (!isOpen || !caja) return null;
 
   const ventasValidas = tickets.filter(t => t.sunat_status !== 'ANULADO');
+  const movsInternos = movimientos.filter(m => m.flujo === 'INTERNO' || !m.flujo || String(m.flujo) === 'INGRESO_FIADO');
+  const movsExternos = movimientos.filter(m => m.flujo === 'EXTERNO');
+  const totalInternos = movsInternos.reduce((a, m) => a + (m.type === 'INGRESO' ? Number(m.amount) : -Number(m.amount)), 0);
+  const totalExternos = movsExternos.reduce((a, m) => a + (m.type === 'INGRESO' ? Number(m.amount) : -Number(m.amount)), 0);
   const totalMovimientos = movimientos.reduce((a, m) => a + (m.type === 'INGRESO' ? Number(m.amount) : -Number(m.amount)), 0);
 
+  const unificados: UnifiedItem[] = [];
+
+  tickets.forEach((t: any) => {
+    unificados.push({
+      id: String(t.id),
+      created_at: t.created_at,
+      isTicket: true,
+      tipo: 'VENTA',
+      descripcion: `Ticket #${String(t.id).slice(-6)}`,
+      metodo_pago: t.payment_type,
+      monto: Number(t.total) || 0,
+      estado: esAnulada(t) ? 'ANULADO' : 'COMPLETADO',
+      es_fiado: t.es_fiado,
+      productosStr: t.productosStr,
+      cliente_nombre: t.cliente_nombre,
+      flujo: 'INTERNO',
+      monto_pagado: t.monto_pagado,
+      monto_deuda: t.monto_deuda,
+      total: t.total
+    });
+  });
+
+  const anuladasDeEstaCaja = new Set(tickets.filter((t: any) => t.sunat_status === 'ANULADO' || t.status === 'ANULADO').map((t: any) => String(t.id).slice(-6)));
+
+  movimientos.forEach((m: any) => {
+    if (m.flujo === 'DEVOLUCION') {
+      const match = /#(\w{1,6})\)?\s*$/.exec(String(m.description || ''));
+      if (match && anuladasDeEstaCaja.has(match[1])) return; // Ocultar para evitar "duplicado" visual
+    }
+    unificados.push({
+      id: String(m.id),
+      created_at: m.created_at,
+      isTicket: false,
+      tipo: m.type,
+      descripcion: m.description,
+      metodo_pago: m.payment_type,
+      monto: Number(m.amount) || 0,
+      flujo: m.flujo
+    });
+  });
+
+  unificados.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
   return (
+    <>
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4 font-mono">
-      <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-2xl h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.9)] flex flex-col">
+      <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-5xl h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.9)] flex flex-col">
 
         <div className="bg-[var(--color-info)] p-4 border-b-2 border-[var(--color-ink)] flex justify-between items-center text-white gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -119,7 +300,8 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
           ) : vista === 'DETALLE' ? (
           <>
             {/* VISTA CLARA: todo lo que hubo, sin el formato angosto de ticket */}
-            <div className="flex-1 overflow-auto p-4 sm:p-6 custom-scrollbar flex flex-col gap-4">
+            <div className="flex-1 overflow-hidden flex flex-col">
+<div className="p-4 sm:p-6 pb-4 flex flex-col gap-4 shrink-0 overflow-y-auto max-h-[40vh] custom-scrollbar">
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="border-2 border-[var(--color-border)] p-3">
@@ -136,7 +318,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
                 </div>
                 <div className="border-2 border-[var(--color-border)] p-3">
                   <p className="text-xs font-black text-[var(--color-muted)] uppercase">Saldo Final Contado</p>
-                  <p className="text-base font-black text-[var(--color-ink)]">S/ {Number(caja.closing_balance).toFixed(2)}</p>
+                  <p className="text-base font-black text-[var(--color-ink)]">S/ {(Number(caja.closing_balance || 0) + Number(caja.closing_yape || 0) + Number(caja.closing_card || 0)).toFixed(2)}</p>
                 </div>
               </div>
 
@@ -147,52 +329,88 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
                 </div>
               )}
 
-              <div>
-                <h3 className="text-sm font-black text-[var(--color-ink)] uppercase tracking-widest mb-2 border-b-2 border-[var(--color-ink)] pb-1">
-                  Ventas ({ventasValidas.length})
-                </h3>
-                {ventasValidas.length === 0 ? (
-                  <p className="text-sm font-bold text-[var(--color-muted)] uppercase">No hubo ventas en esta caja.</p>
-                ) : (
-                  <div className="border-2 border-[var(--color-border)]">
-                    {ventasValidas.map(t => (
-                      <div key={t.id} className="flex justify-between items-center p-2.5 border-b border-[var(--color-border)] last:border-b-0 text-sm">
-                        <span className="font-bold text-[var(--color-muted)]">{new Date(t.created_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}</span>
-                        <span className="font-black uppercase text-[var(--color-ink)]">{t.payment_type}</span>
-                        <span className="font-black text-[var(--color-accent)]">S/ {Number(t.total).toFixed(2)}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              
+                            </div>
+<div className="px-4 sm:px-6 pb-4 shrink-0">
+<div className="p-3 sm:p-4 bg-[var(--color-bg)] border-2 border-[var(--color-ink)] flex flex-wrap gap-3">
+               <div className="relative flex-1 min-w-[200px]">
+                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none bg-[var(--color-ink)] text-white w-10 justify-center">
+                   <Search size={16} />
+                 </div>
+                 <input
+                   type="text"
+                   placeholder="BUSCAR POR CLIENTE, N° TICKET O DETALLE"
+                   value={searchTerm}
+                   onChange={(e) => setSearchTerm(e.target.value)}
+                   className="w-full pl-12 pr-3 py-2.5 text-xs font-bold uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none"
+                 />
+               </div>
+               <select
+                 value={filtroCategoria}
+                 onChange={(e) => setFiltroCategoria(e.target.value)}
+                 className="px-3 py-2.5 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none cursor-pointer bg-white flex-1 min-w-[140px]"
+               >
+                 <option value="TODOS">Categoría: TODAS</option>
+                 <option value="VENTAS">Solo Ventas</option>
+                 <option value="PAGOS_DEUDAS">Pagos de Deudas</option>
+                 <option value="MOV_INTERNOS">Mov. Internos</option>
+                 <option value="MOV_EXTERNOS">Mov. Externos</option>
+               </select>
+               <select
+                 value={filtroEstado}
+                 onChange={(e) => setFiltroEstado(e.target.value)}
+                 className="px-3 py-2.5 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none cursor-pointer bg-white flex-1 min-w-[140px]"
+               >
+                 <option value="TODOS">Estado: TODOS</option>
+                 <option value="COMPLETADO">COMPLETADOS</option>
+                 <option value="ANULADO">ANULADOS</option>
+               </select>
+               <select
+                 value={filtroDeuda}
+                 onChange={(e) => setFiltroDeuda(e.target.value)}
+                 className="px-3 py-2.5 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none cursor-pointer bg-white flex-1 min-w-[140px]"
+               >
+                 <option value="TODOS">Deuda: TODAS</option>
+                 <option value="CON_DEUDA">CON DEUDA</option>
+                 <option value="SIN_DEUDA">SIN DEUDA</option>
+               </select>
+             </div>
+             </div>
+              <div className="flex-1 overflow-auto bg-[var(--color-bg-2)] min-h-0 custom-scrollbar border-t-2 border-[var(--color-ink)]">
+                <TablaMovimientos 
+                  movimientos={unificados.filter(m => {
+                  // SEARCH
+                  if (searchTerm) {
+                     const st = searchTerm.toLowerCase();
+                     const matchDesc = m.descripcion?.toLowerCase().includes(st);
+                     const matchCli = m.cliente_nombre?.toLowerCase().includes(st);
+                     const matchTicket = m.isTicket && ('#' + String(m.id).slice(-6)).includes(st);
+                     const matchMonto = String(m.monto).includes(st);
+                     const matchProd = m.productosStr?.toLowerCase().includes(st);
+                     if (!matchDesc && !matchCli && !matchTicket && !matchMonto && !matchProd) return false;
+                  }
+                  // ESTADO (Por defecto completado si no tiene estado)
+                  const st = m.estado || 'COMPLETADO';
+                  if (filtroEstado !== 'TODOS' && st !== filtroEstado) return false;
+                  // DEUDA
+                  if (filtroDeuda === 'CON_DEUDA' && !(Number(m.monto_deuda) > 0)) return false;
+                  if (filtroDeuda === 'SIN_DEUDA' && Number(m.monto_deuda) > 0) return false;
+                  // CATEGORIA
+                  if (filtroCategoria !== 'TODOS') {
+                    const isAbono = m.descripcion?.includes('ABONO DE FIADO');
+                    if (filtroCategoria === 'VENTAS' && !m.isTicket) return false;
+                    if (filtroCategoria === 'PAGOS_DEUDAS' && !isAbono) return false;
+                    if (filtroCategoria === 'MOV_INTERNOS' && (m.isTicket || isAbono || m.flujo === 'EXTERNO')) return false;
+                    if (filtroCategoria === 'MOV_EXTERNOS' && m.flujo !== 'EXTERNO') return false;
+                  }
+                  return true;
+                })} 
+                  onDelete={onDelete ? handleDeleteInterno : undefined as any}
+                  onAnularTicket={onAnular ? handleAnularInterno : undefined as any}
+                  onVerTicket={(id) => setTicketSeleccionado(id)}
+                  idsAnulando={idsProcesando}
+                />
               </div>
-
-              <div>
-                <h3 className="text-sm font-black text-[var(--color-ink)] uppercase tracking-widest mb-2 border-b-2 border-[var(--color-ink)] pb-1">
-                  Movimientos de Caja Interna ({movimientos.length})
-                </h3>
-                {movimientos.length === 0 ? (
-                  <p className="text-sm font-bold text-[var(--color-muted)] uppercase">No hubo ingresos/gastos manuales en esta caja.</p>
-                ) : (
-                  <>
-                    <div className="border-2 border-[var(--color-border)]">
-                      {movimientos.map(m => (
-                        <div key={m.id} className="flex justify-between items-center gap-2 p-2.5 border-b border-[var(--color-border)] last:border-b-0 text-sm">
-                          <span className="font-bold text-[var(--color-muted)] shrink-0">{new Date(m.created_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}</span>
-                          <span className="font-black uppercase text-[var(--color-ink)] flex-1">{m.description}</span>
-                          <span className={`font-black shrink-0 ${m.type === 'INGRESO' ? 'text-[var(--color-accent)]' : 'text-[var(--color-danger)]'}`}>
-                            {m.type === 'INGRESO' ? '+' : '-'} S/ {Number(m.amount).toFixed(2)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex justify-between p-2.5 bg-[var(--color-bg)] border-2 border-t-0 border-[var(--color-border)] text-sm font-black uppercase">
-                      <span>Total Movimientos</span>
-                      <span className={totalMovimientos >= 0 ? 'text-[var(--color-accent)]' : 'text-[var(--color-danger)]'}>S/ {totalMovimientos.toFixed(2)}</span>
-                    </div>
-                  </>
-                )}
-              </div>
-
             </div>
 
             <div className="p-4 bg-[var(--color-bg)] border-t-2 border-[var(--color-ink)]">
@@ -295,8 +513,15 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja }) => 
           </>
         )}
 
-      </div>
+            </div>
     </div>
+    {ticketSeleccionado && (
+      <ModalDetalleTicket
+        ticketId={ticketSeleccionado}
+        onClose={() => setTicketSeleccionado(null)}
+      />
+    )}
+    </>
   );
 };
 

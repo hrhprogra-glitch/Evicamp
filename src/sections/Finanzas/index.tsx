@@ -1,8 +1,8 @@
 // src/sections/Finanzas/index.tsx
-import React, { useState, useEffect } from 'react';
-import { Wallet, ArrowDownToLine, Lock, CreditCard, Smartphone, Banknote, ReceiptText } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Wallet, ArrowDownToLine, Lock, CreditCard, Smartphone, Banknote, ReceiptText, Search } from 'lucide-react';
 import { supabase } from '../../db/supabase';
-import type { CashSession, CashMovement, SuperMetricas } from './types';
+import type { CashSession, CashMovement, SuperMetricas, UnifiedItem } from './types';
 
 import { ModalApertura } from './components/ModalApertura';
 import { TablaMovimientos } from './components/TablaMovimientos';
@@ -10,14 +10,9 @@ import { ModalNuevoMovimiento } from './components/ModalNuevoMovimiento';
 import { ModalCierre } from './components/ModalCierre';
 import { TablaHistorial } from './components/TablaHistorial';
 import { FiltroFechas } from './components/FiltroFechas';
-// 🎯 MOTOR ÚNICO DE INGRESO TOTAL: misma fórmula y mismas fechas que Resumen, Reportes,
-// Utilidades y Punto de Venta. Se usa SOLO para el número mostrado en "Gran Total en Caja"
-// (decisión explícita del dueño: que coincida con las demás pantallas aunque ya no reste
-// gastos/retiros). El arqueo real de "Cerrar Caja" (ModalCierre) NO usa esto — sigue su
-// propio cálculo con superMetricas, sin cambios.
-// (SuperMetricas ahora vive en ./types porque ModalCierre tambien lo necesita para el arqueo
+import { ModalDetalleTicket } from '../../components/ModalDetalleTicket';
 // de Efectivo/Yape/Tarjeta al cerrar caja.)
-import { calcularIngresoTotal, fechaLocalPeru, rangoUTCPeru } from '../../utils/ingresos';
+import { rangoUTCPeru } from '../../utils/ingresos';
 import { usePermiso } from '../../utils/permisos';
 import { traerTodo } from '../../utils/traerTodo';
 
@@ -26,14 +21,11 @@ export const Finanzas: React.FC = () => {
   const puedeTurno = usePermiso('caja_abrir_cerrar_turno');
   const puedeMovimientos = usePermiso('caja_ingresos_egresos');
   const [sessionActiva, setSessionActiva] = useState<CashSession | null>(null);
-  const [movimientos, setMovimientos] = useState<CashMovement[]>([]);
+  const [movimientos, setMovimientos] = useState<UnifiedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Estados Clásicos y Nuevos
   const [superMetricas, setSuperMetricas] = useState<SuperMetricas | null>(null);
-  // 🎯 Ingreso bruto de HOY (motor único) — mismo monto que Resumen/Reportes/Utilidades/POS,
-  // usado solo para el número grande de "Gran Total en Caja".
-  const [ventasNetasHoy, setVentasNetasHoy] = useState<number | null>(null);
 
   const [isAperturaModalOpen, setIsAperturaModalOpen] = useState(false);
   const [isMovimientoModalOpen, setIsMovimientoModalOpen] = useState(false);
@@ -42,6 +34,10 @@ export const Finanzas: React.FC = () => {
   // NUEVO: Estados y funciones para el Historial y Limpieza
   const [vistaActual, setVistaActual] = useState<'ACTUAL' | 'HISTORIAL'>('ACTUAL');
   const [pestañaFlujo, setPestañaFlujo] = useState<'INTERNO' | 'EXTERNO'>('INTERNO'); // <-- Control de Pestañas
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('TODOS');
+  const [filtroDeuda, setFiltroDeuda] = useState('TODOS');
+  const [filtroCategoria, setFiltroCategoria] = useState('TODOS');
   const [historialCajas, setHistorialCajas] = useState<CashSession[]>([]);
   
   const [paginaActual, setPaginaActual] = useState(1);
@@ -110,19 +106,6 @@ export const Finanzas: React.FC = () => {
     };
   }, []);
 
-  // 🎯 MOTOR ÚNICO DE INGRESO TOTAL: mismo cálculo que Resumen/Reportes/Utilidades/POS para
-  // HOY (día calendario Perú), usado solo en la tarjeta "Gran Total en Caja".
-  useEffect(() => {
-    const cargarVentasNetasHoy = async () => {
-      const hoy = fechaLocalPeru();
-      const r = await calcularIngresoTotal(hoy, hoy);
-      setVentasNetasHoy(r.ingresoTotal);
-    };
-    cargarVentasNetasHoy();
-    window.addEventListener('focus', cargarVentasNetasHoy);
-    return () => window.removeEventListener('focus', cargarVentasNetasHoy);
-  }, []);
-
   const cargarDatosCaja = async (silencioso = false) => {
     if (!silencioso) setIsLoading(true);
     try {
@@ -144,6 +127,26 @@ export const Finanzas: React.FC = () => {
         // .neq('sunat_status','ANULADO') en Supabase descarta también las filas con sunat_status
         // NULL, y además necesitamos saber qué tickets anulados son de esta caja (ver DEVOLUCION).
         const { data: salesData } = await traerTodo<any>(() => supabase.from('sales').select('*').gte('created_at', sessionData.opened_at).order('id'));
+        const salesIds = (salesData || []).map((s: any) => s.id);
+        let saleDetailsData: any[] = [];
+        if (salesIds.length > 0) {
+          const chunkSize = 200;
+          for (let i = 0; i < salesIds.length; i += chunkSize) {
+            const chunk = salesIds.slice(i, i + chunkSize);
+            const { data } = await supabase.from('sale_details').select('sale_id, product_name').in('sale_id', chunk);
+            if (data) {
+              saleDetailsData.push(...data);
+            }
+          }
+        }
+        const detailsBySale: Record<string, string[]> = {};
+        saleDetailsData.forEach((d: any) => {
+          if (!detailsBySale[d.sale_id]) detailsBySale[d.sale_id] = [];
+          detailsBySale[d.sale_id].push(d.product_name);
+        });
+        salesData?.forEach((s: any) => {
+          s.productosStr = detailsBySale[s.id]?.join(' ') || '';
+        });
 
         // Cada movimiento cuenta en la bolsa de SU método de pago (no todo es efectivo).
         const bolsaDe = (tipo: string | null | undefined): 'efectivo' | 'yape' | 'tarjeta' => {
@@ -225,11 +228,86 @@ export const Finanzas: React.FC = () => {
         });
 
         // 🔥 ARQUITECTURA TÉCNICA: Ya no necesitamos inyectar datos falsos.
-        // El Trigger de la BD nos trajo los abonos reales en 'movData'. Solo los ordenamos.
-        const todosLosMovimientos = [...(movData as CashMovement[] || [])];
-        todosLosMovimientos.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        // El Trigger de la BD nos trajo los abonos reales en 'movData'.
+        
+        // UNIFICACIÓN DE TICKETS Y MOVIMIENTOS PARA LA TABLA
+        const fiadosMap: Record<string, any> = {};
+        const idsConCredito = salesData?.filter((t: any) => Number(t.amount_credit || 0) > 0).map((t: any) => t.id) || [];
+        if (idsConCredito.length > 0) {
+          const { data: fiadosData } = await supabase.from('fiados').select('sale_id, customer_name, amount, paid_amount').in('sale_id', idsConCredito);
+          if (fiadosData) {
+            fiadosData.forEach(f => fiadosMap[f.sale_id] = f);
+          }
+        }
 
-        setMovimientos(todosLosMovimientos);
+        const ticketsUnificados: UnifiedItem[] = (salesData || []).map((t: any) => {
+          const fiado = t.id ? fiadosMap[String(t.id)] : null;
+          const creditoOriginal = Number(t.amount_credit || 0);
+          const esFiado = creditoOriginal > 0;
+          return {
+            id: String(t.id),
+            created_at: t.created_at,
+            isTicket: true,
+            tipo: 'VENTA',
+            descripcion: `Ticket #${String(t.id).slice(-6)}`,
+            metodo_pago: esFiado ? 'FIADO' : (t.payment_type || 'MIXTO'),
+            monto: Number(t.total) || 0,
+            estado: esAnulada(t) ? 'ANULADO' : 'COMPLETADO',
+            es_fiado: esFiado,
+            cliente_nombre: fiado?.customer_name,
+            flujo: 'INTERNO', // Ventas siempre son del negocio
+            monto_pagado: Number(t.amount_cash || 0) + Number(t.amount_yape || 0) + Number(t.amount_card || 0) + Number(t.amount_transfer || 0),
+            monto_deuda: esFiado && fiado ? Number(fiado.amount) - Number(fiado.paid_amount) : 0,
+            total: Number(t.total) || 0,
+            productosStr: t.productosStr
+          };
+        });
+
+        const custIds = new Set();
+        (movData || []).forEach((m: any) => {
+          if (m.description) {
+            const match = m.description.match(/Cliente ID: (\d+)/);
+            if (match) custIds.add(match[1]);
+          }
+        });
+        const customersMap: Record<string, string> = {};
+        if (custIds.size > 0) {
+          const { data: custData } = await supabase.from('customers').select('id, name').in('id', Array.from(custIds));
+          if (custData) {
+            custData.forEach(c => customersMap[c.id] = c.name);
+          }
+        }
+
+        const movsUnificados: UnifiedItem[] = (movData || []).filter((m: any) => {
+          if (m.flujo === 'DEVOLUCION') {
+            const match = /#(\w{1,6})\)?\s*$/.exec(String(m.description || ''));
+            if (match && anuladasDeEstaCaja.has(match[1])) return false;
+          }
+          return true;
+        }).map((m: any) => {
+          let desc = m.description;
+          if (desc) {
+            const match = desc.match(/Cliente ID: (\d+)/);
+            if (match && customersMap[match[1]]) {
+              desc = desc.replace(`Cliente ID: ${match[1]}`, `Cliente: ${customersMap[match[1]]}`);
+            }
+          }
+          return {
+          id: String(m.id),
+          created_at: m.created_at,
+          isTicket: false,
+          tipo: m.type,
+          descripcion: desc,
+          metodo_pago: m.payment_type,
+          monto: Number(m.amount) || 0,
+          flujo: m.flujo
+        };
+      });
+
+        const unificados = [...movsUnificados, ...ticketsUnificados];
+        unificados.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        setMovimientos(unificados);
       } else {
         setSessionActiva(null);
       }
@@ -240,28 +318,116 @@ export const Finanzas: React.FC = () => {
     }
   };
 
-  // FUNCIÓN PARA ELIMINAR MOVIMIENTO MANUAL
-  const handleDeleteMovimiento = async (idMov: string) => {
+  // FUNCIÓN PARA ELIMINAR O ANULAR UNIFICADO
+  const idsAnulandoRef = useRef<Set<string>>(new Set());
+  const [idsAnulando, setIdsAnulando] = useState<Set<string>>(new Set());
+  const [ticketSeleccionadoParaVer, setTicketSeleccionadoParaVer] = useState<string | null>(null);
+
+  const handleDeleteMovimiento = async (idMov: string, isTicket?: boolean) => {
+    if (isTicket) {
+      if (!window.confirm('⚠️ ¿Seguro que deseas ELIMINAR permanentemente esta venta de la base de datos?\n(ESTO NO DEVUELVE EL STOCK. SI QUIERES DEVOLVER STOCK, USA "ANULAR/DEVOLVER" EN VEZ DE ESTE BOTÓN).')) return;
+      const { error } = await supabase.from('sales').delete().eq('id', idMov);
+      if (error) {
+        alert('No se pudo eliminar la venta: ' + error.message);
+      } else {
+        cargarDatosCaja(true);
+      }
+      return;
+    }
+
     // Los abonos de fiado los crea la base de datos: borrarlos aquí dejaría la deuda y la caja descuadradas.
     const mov = movimientos.find(m => String(m.id) === String(idMov));
     if (mov && String(mov.flujo) === 'INGRESO_FIADO') {
       alert('Este ingreso es un abono de crédito. Anúlalo desde Créditos.');
       return;
     }
+
     if (window.confirm('⚠️ ¿Seguro que deseas ELIMINAR este movimiento? Esta acción recalculará la caja.')) {
       const { error } = await supabase.from('cash_movements').delete().eq('id', idMov);
       if (error) {
         alert('Error al eliminar: ' + error.message);
       } else {
-        cargarDatosCaja(); // Recargamos todo para recalcular la boveda
+        cargarDatosCaja(true);
       }
+    }
+  };
+
+  const handleAnularTicket = async (id: string) => {
+    if (idsAnulandoRef.current.has(id)) return;
+    if (id.startsWith('ERR-')) return;
+    if (!window.confirm('⚠️ ¿Seguro que deseas ANULAR este ticket? El stock regresará y el dinero se descontará de la caja actual.')) return;
+
+    idsAnulandoRef.current.add(id);
+    setIdsAnulando(new Set(idsAnulandoRef.current));
+
+    try {
+      const { data: venta, error: errVenta } = await supabase.from('sales').select('*').eq('id', id).single();
+      if (errVenta || !venta) throw errVenta || new Error('No se encontró la venta.');
+      if (venta.sunat_status === 'ANULADO') {
+        alert('Este ticket ya estaba anulado.');
+        return;
+      }
+
+      const ticketTag = `Ticket #${id}`;
+      const { data: movsInv } = await supabase.from('inventory_movements').select('*').eq('operation_type', 'VENTA').eq('notes', ticketTag);
+
+      for (const mov of movsInv || []) {
+        const cantidad = Math.abs(Number(mov.change_amount) || 0);
+        if (cantidad <= 0) continue;
+
+        if (mov.batch_id) {
+          const { data: lote } = await supabase.from('batches').select('quantity').eq('id', mov.batch_id).single();
+          await supabase.from('batches').update({ quantity: Number(lote?.quantity || 0) + cantidad }).eq('id', mov.batch_id);
+        }
+
+        const { data: producto } = await supabase.from('products').select('quantity').eq('id', mov.product_id).single();
+        const prevProducto = Number(producto?.quantity || 0);
+        const nuevoProducto = prevProducto + cantidad;
+        await supabase.from('products').update({ quantity: nuevoProducto }).eq('id', mov.product_id);
+
+        await supabase.from('inventory_movements').insert([{
+          batch_id: mov.batch_id, product_id: mov.product_id, product_name: mov.product_name,
+          change_amount: cantidad, previous_quantity: prevProducto, new_quantity: nuevoProducto,
+          operation_type: 'ANULACION', reason: 'Anulación de venta', notes: `Anulación ${ticketTag}`,
+          created_at: new Date().toISOString(), user: 'Sistema', is_synced: 1
+        }]);
+      }
+
+      await supabase.from('sales').update({ sunat_status: 'ANULADO' }).eq('id', id);
+
+      const { data: fiado } = await supabase.from('fiados').select('*').eq('sale_id', id).maybeSingle();
+      if (fiado) {
+        await supabase.from('fiados').update({ status: 'ANULADO' }).eq('id', fiado.id);
+      }
+
+      if (sessionActiva && !fiado) {
+        await supabase.from('cash_movements').insert([{
+          session_id: sessionActiva.id,
+          type: 'EGRESO',
+          amount: Number(venta.amount_cash || 0) + Number(venta.amount_yape || 0) + Number(venta.amount_card || 0),
+          description: `Devolución (Anulación Ticket #${String(id).slice(-6)})`,
+          payment_type: 'EFECTIVO',
+          flujo: 'DEVOLUCION',
+          created_at: new Date().toISOString(),
+          is_synced: 1
+        }]);
+      }
+
+      alert('✅ Ticket anulado. Stock devuelto y caja actualizada.');
+      cargarDatosCaja(true);
+
+    } catch (err: any) {
+      alert('❌ Error al anular: ' + err.message);
+    } finally {
+      idsAnulandoRef.current.delete(id);
+      setIdsAnulando(new Set(idsAnulandoRef.current));
     }
   };
 
   if (isLoading) return <div className="flex h-full items-center justify-center font-mono">Calculando Bóveda...</div>;
 
   return (
-    <div className="h-full flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono">
+    <div className="flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono">
       
       <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-end gap-4 shrink-0">
         <div className="flex items-center gap-4">
@@ -317,7 +483,7 @@ export const Finanzas: React.FC = () => {
       </div>
 
       {vistaActual === 'HISTORIAL' ? (
-        <div className="flex flex-col flex-1 h-full min-h-0">
+        <div className="flex flex-col h-full min-h-0">
           <FiltroFechas onFilter={handleFilterChange} />
           <TablaHistorial 
             historialCajas={historialCajas} 
@@ -327,22 +493,35 @@ export const Finanzas: React.FC = () => {
               setPaginaActual(nuevaPagina);
               cargarHistorial(nuevaPagina);
             }}
+            onAnular={handleAnularTicket}
+            onDelete={handleDeleteMovimiento}
           />
         </div>
       ) : sessionActiva && superMetricas ? (
-        <div className="flex flex-col gap-4 sm:gap-6 flex-1 overflow-y-auto custom-scrollbar pb-8 lg:pr-2">
+        <div className="flex flex-col gap-4 sm:gap-6 pb-8 lg:pr-2">
 
-          {/* PANEL MAESTRO DE RECAUDACIÓN (ESTILO EVICAMP) */}
-          <div className="mb-0 bg-[var(--color-ink)] border border-[var(--color-ink)] rounded-none p-4 sm:p-6 text-center shadow-none shrink-0">
-            <span className="text-[var(--color-muted)] text-xs sm:text-sm uppercase tracking-widest font-bold">Gran Total en Caja (Todo Incluido)</span>
-            <h1 className="text-[var(--color-surface)] text-3xl sm:text-5xl font-mono font-black mt-2">
-              {ventasNetasHoy === null ? 'Calculando...' : `S/ ${ventasNetasHoy.toFixed(2)}`}
-            </h1>
-            <p className="text-[var(--color-subtle)] text-xs mt-2 uppercase">Incluye Efectivo, Yape, Transferencias y Tarjetas</p>
-          </div>
+          <div className="flex flex-col xl:flex-row gap-4 sm:gap-6 shrink-0">
 
-          {/* SÚPER PANEL DE MÉTRICAS */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 shrink-0">
+            {/* PANEL MAESTRO DE RECAUDACIÓN (ESTILO EVICAMP) */}
+
+            <div className="xl:w-[25%] flex flex-col justify-center items-center bg-[var(--color-ink)] border border-[var(--color-ink)] rounded-none p-4 sm:p-6 text-center shadow-none">
+
+              <span className="text-[var(--color-muted)] text-xs sm:text-[10px] 2xl:text-xs uppercase tracking-widest font-bold">Gran Total de ESTA Caja</span>
+
+              <h1 className="text-[var(--color-surface)] text-3xl sm:text-4xl 2xl:text-5xl font-mono font-black mt-2">
+
+                S/ {(superMetricas.efectivoEsperadoCaja + superMetricas.yapeEsperado + superMetricas.tarjetaEsperada).toFixed(2)}
+
+              </h1>
+
+              <p className="text-[var(--color-subtle)] text-[10px] mt-2 uppercase max-w-[200px] xl:max-w-full">Incluye Efectivo (con fondo inicial), Yape, Transferencias y Tarjetas de ESTE turno</p>
+
+            </div>
+
+
+            {/* SÚPER PANEL DE MÉTRICAS */}
+
+            <div className="xl:w-[75%] grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div className="bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-4 flex flex-col justify-between transition-transform hover:-translate-y-1">
                <p className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest flex items-center gap-2">
                  <span className="w-6 h-6 flex items-center justify-center bg-[var(--color-bg)] border-2 border-[var(--color-ink)]"><Banknote size={12} className="text-[var(--color-ink)]"/></span> 
@@ -387,36 +566,88 @@ export const Finanzas: React.FC = () => {
                </p>
                <p className="text-xl sm:text-2xl font-black text-[var(--color-danger)] mt-1">S/ {superMetricas.gastos.toFixed(2)}</p>
                <p className="text-[11px] font-bold text-[var(--color-danger)] uppercase mt-2 border-t border-[var(--color-danger)]/20 pt-2">Salió del cajón</p>
-            </div>
-          </div>
+                 </div>
+               </div>
+               </div>
 
-          <div className="flex-1 min-h-[420px] sm:min-h-[500px] short:min-h-[380px] shrink-0 bg-white border-2 border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-border)] sm:shadow-[8px_8px_0_0_var(--color-border)] flex flex-col overflow-hidden">
+          <div className="bg-white border-2 border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-border)] sm:shadow-[8px_8px_0_0_var(--color-border)] flex flex-col">
              
-             <div className="flex border-b-2 border-[var(--color-border)] bg-[var(--color-bg)] shrink-0">
-               <button 
-                 onClick={() => setPestañaFlujo('INTERNO')}
-                 className={`flex-1 px-2 py-3 text-xs font-black uppercase tracking-normal sm:tracking-widest border-b-4 transition-colors cursor-pointer rounded-none ${pestañaFlujo === 'INTERNO' ? 'border-[var(--color-ink)] text-[var(--color-ink)] bg-white' : 'border-transparent text-[var(--color-subtle)] hover:text-[var(--color-ink)] hover:bg-white'}`}
+             <div className="p-3 sm:p-4 bg-[var(--color-bg)] border-b border-[var(--color-border)] flex flex-col sm:flex-row gap-3">
+               <div className="relative flex-1">
+                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none bg-[var(--color-ink)] text-white w-10 justify-center">
+                   <Search size={16} />
+                 </div>
+                 <input
+                   type="text"
+                   placeholder="BUSCAR POR CLIENTE, N° TICKET O DETALLE"
+                   value={searchTerm}
+                   onChange={(e) => setSearchTerm(e.target.value)}
+                   className="w-full pl-12 pr-3 py-2.5 text-xs font-bold uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none"
+                 />
+               </div>
+               <select
+                 value={filtroCategoria}
+                 onChange={(e) => setFiltroCategoria(e.target.value)}
+                 className="px-3 py-2.5 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none cursor-pointer bg-white min-w-[140px]"
                >
-                 Movimientos Internos (Negocio)
-               </button>
-               <button 
-                 onClick={() => setPestañaFlujo('EXTERNO')}
-                 className={`flex-1 px-2 py-3 text-xs font-black uppercase tracking-normal sm:tracking-widest border-b-4 transition-colors cursor-pointer rounded-none ${pestañaFlujo === 'EXTERNO' ? 'border-[var(--color-ink)] text-[var(--color-ink)] bg-white' : 'border-transparent text-[var(--color-subtle)] hover:text-[var(--color-ink)] hover:bg-white'}`}
+                 <option value="TODOS">Tipo: TODOS</option>
+                 <option value="VENTA">Solo Ventas</option>
+                 <option value="INGRESO">Solo Ingresos</option>
+                 <option value="EGRESO">Solo Egresos</option>
+               </select>
+               <select
+                 value={filtroEstado}
+                 onChange={(e) => setFiltroEstado(e.target.value)}
+                 className="px-3 py-2.5 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none cursor-pointer bg-white min-w-[140px]"
                >
-                 Movimientos Externos (Personal)
-               </button>
+                 <option value="TODOS">Estado: TODOS</option>
+                 <option value="COMPLETADO">COMPLETADOS</option>
+                 <option value="ANULADO">ANULADOS</option>
+               </select>
+               <select
+                 value={filtroDeuda}
+                 onChange={(e) => setFiltroDeuda(e.target.value)}
+                 className="px-3 py-2.5 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none cursor-pointer bg-white min-w-[140px]"
+               >
+                 <option value="TODOS">Deuda: TODAS</option>
+                 <option value="CON_DEUDA">CON DEUDA</option>
+                 <option value="SIN_DEUDA">SIN DEUDA</option>
+               </select>
              </div>
              
              {/* TABLA FILTRADA CON FUNCIÓN ONDELTE */}
              <TablaMovimientos 
                movimientos={movimientos.filter(m => {
-                 if (pestañaFlujo === 'INTERNO') {
-                   // 🔥 BYPASS TYPESCRIPT: String() rompe el bloqueo estricto del compilador
-                   return m.flujo === 'INTERNO' || !m.flujo || String(m.flujo) === 'INGRESO_FIADO';
+                 // SEARCH
+                 if (searchTerm) {
+                    const st = searchTerm.toLowerCase();
+                    const matchDesc = m.descripcion?.toLowerCase().includes(st);
+                    const matchCli = m.cliente_nombre?.toLowerCase().includes(st);
+                    const matchTicket = m.isTicket && ('#' + String(m.id).slice(-6)).includes(st);
+                    const matchMonto = String(m.monto).includes(st);
+                    const matchProd = m.productosStr?.toLowerCase().includes(st);
+                    if (!matchDesc && !matchCli && !matchTicket && !matchMonto && !matchProd) return false;
                  }
-                 return m.flujo === 'EXTERNO';
+                 // ESTADO (Por defecto completado si no tiene estado)
+                 const st = m.estado || 'COMPLETADO';
+                 if (filtroEstado !== 'TODOS' && st !== filtroEstado) return false;
+                 // DEUDA
+                 if (filtroDeuda === 'CON_DEUDA' && !(Number(m.monto_deuda) > 0)) return false;
+                 if (filtroDeuda === 'SIN_DEUDA' && Number(m.monto_deuda) > 0) return false;
+                 // CATEGORIA
+                 if (filtroCategoria !== 'TODOS') {
+                   const isAbono = m.descripcion?.includes('ABONO DE FIADO');
+                   if (filtroCategoria === 'VENTAS' && !m.isTicket) return false;
+                   if (filtroCategoria === 'PAGOS_DEUDAS' && !isAbono) return false;
+                   if (filtroCategoria === 'MOV_INTERNOS' && (m.isTicket || isAbono || m.flujo === 'EXTERNO')) return false;
+                   if (filtroCategoria === 'MOV_EXTERNOS' && m.flujo !== 'EXTERNO') return false;
+                 }
+                 return true;
                })} 
                onDelete={handleDeleteMovimiento}
+               onVerTicket={(id) => setTicketSeleccionadoParaVer(id)}
+               onAnularTicket={handleAnularTicket}
+               idsAnulando={idsAnulando}
              />
           </div>
         </div>
@@ -436,6 +667,11 @@ export const Finanzas: React.FC = () => {
           )}
         </>
       )}
+
+      <ModalDetalleTicket 
+        ticketId={ticketSeleccionadoParaVer} 
+        onClose={() => setTicketSeleccionadoParaVer(null)} 
+      />
     </div>
   );
 };

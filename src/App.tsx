@@ -12,7 +12,6 @@ import { Proveedores } from './sections/Proveedores';
 import { POS } from './sections/Punto-de-venta';
 import { Fiados } from './sections/Fiados'; // <--- IMPORTAMOS FIADOS
 import { Finanzas } from './sections/Finanzas'; // <--- IMPORTAMOS FINANZAS
-import { Reportes } from './sections/Reportes';
 import { Utilidades } from './sections/Utilidades';
 import Configuraciones from './sections/Configuraciones';
 import { aplicarTamanoInterfaz, leerTamanoInterfaz } from './utils/tamanoInterfaz';
@@ -125,8 +124,6 @@ export const App: React.FC = () => {
         return <Finanzas />;
       case 'utilidades':
         return <Utilidades />;
-      case 'reportes':
-        return <Reportes />;
       case 'configuracion': // <--- AÑADE ESTO
       return <Configuraciones />;
       default:

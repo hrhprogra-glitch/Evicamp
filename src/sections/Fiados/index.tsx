@@ -145,7 +145,7 @@ if (fiaData) {
       clienteNombre: f.customer_name || 'Desconocido',
       montoOriginal: montoOriginal,
         montoPagado: montoPagadoReal,
-        saldoPendiente: saldoPendienteReal,
+        saldoPendiente: estadoFinal === 'PAGADO' ? 0 : saldoPendienteReal,
       fechaEmision: f.date_given,
       fechaVencimiento: f.expected_pay_date || f.date_given,
       estado: estadoFinal,
@@ -430,6 +430,8 @@ if (fiaData) {
         onEditCliente={handleEditCliente} // <-- Nueva propiedad enviada
         onDeleteCliente={handleDeleteCliente} // <-- Nueva propiedad enviada
         fiados={fiados} 
+        forceHistorialCliente={forceHistorialCliente}
+        onClearForce={() => setForceHistorialCliente(null)}
       />
       
       <ModalFiado isOpen={isModalFiadoOpen} onClose={() => setIsModalFiadoOpen(false)} onSave={handleSaveFiado} fiadoAEditar={fiadoAEditar} clientes={clientes} productos={productosInventario} />
@@ -455,9 +457,14 @@ if (fiaData) {
         isOpen={isModalEstadoCuentaOpen}
         onClose={() => setIsModalEstadoCuentaOpen(false)}
         cliente={clienteEstadoCuenta}
-        onRefetch={async () => {
+                onRefetch={async () => {
           setIsModalEstadoCuentaOpen(false);
           await cargarDatos();
+        }}
+        onVerHistorial={(nombre) => {
+          setForceHistorialCliente(nombre);
+          setIsModalClientesOpen(true);
+          setIsModalEstadoCuentaOpen(false);
         }}
       />
     </div>

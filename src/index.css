@@ -34,6 +34,9 @@
   --color-accent-shadow-rgb: 6, 95, 70;
   --color-accent-bg: #ECFDF5;
   --color-accent-bg-2: #D1FAE5;
+  --color-success: #10B981;
+  --color-success-dark: #059669;
+  --color-success-bg: #ECFDF5;
   --color-danger: #EF4444;
   --color-danger-dark: #DC2626;
   --color-danger-bg: #FEF2F2;

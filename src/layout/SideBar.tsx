@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   ShoppingCart, Users, Package, 
   Truck, Trash2, Wallet, 
-  FileText, Settings, BarChart3, X, LogOut
+  Settings, BarChart3, X, LogOut
 } from 'lucide-react';
 
 // IMPORTAMOS EL LOGO Y SUPABASE
@@ -158,7 +158,6 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
       items: [
         { id: 'finanzas', name: 'Finanzas', icon: Wallet },
         { id: 'utilidades', name: 'Utilidades', icon: BarChart3 },
-        { id: 'reportes', name: 'Reportes', icon: FileText },
         { id: 'configuracion', name: 'Ajustes', icon: Settings },
       ]
     }

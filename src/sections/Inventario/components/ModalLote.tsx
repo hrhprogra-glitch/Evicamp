@@ -368,7 +368,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
             
             <div className="space-y-3">
               <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2">
-                <FileText size={14} /> 4. Sustento (Doc. Proveedor)
+                <FileText size={14} /> 4. Sustento (Doc. Proveedor) (Opcional)
               </label>
               <div className="flex flex-col gap-3 relative">
                 <input 

@@ -462,7 +462,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
     setView('LISTA');
   };
 
-  const fiadosDelCliente = clienteActivo ? fiados.filter(f => f.clienteNombre === clienteActivo.nombre) : [];
+  const fiadosDelCliente = clienteActivo ? fiados.filter(f => f.clienteNombre.trim().toLowerCase() === clienteActivo.nombre.trim().toLowerCase()) : [];
 
   let fiadosHistorial = fiadosDelCliente
     .filter(f => historialTab === 'PENDIENTES' ? f.estado !== 'PAGADO' : f.estado === 'PAGADO')
@@ -558,7 +558,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                 ) : (
                   <div className="grid grid-cols-1 divide-y-2 divide-[var(--color-border)]">
                     {currentClientes.map(cli => {
-                      const deudaActiva = fiados.filter(f => f.clienteNombre === cli.nombre && f.saldoPendiente > 0).reduce((acc, f) => acc + f.saldoPendiente, 0);
+                      const deudaActiva = fiados.filter(f => f.clienteNombre.trim().toLowerCase() === cli.nombre.trim().toLowerCase() && f.saldoPendiente > 0).reduce((acc, f) => acc + f.saldoPendiente, 0);
 
                       return (
                         <div key={cli.id} {...clicConTeclado(() => { setClienteActivo(cli); setView('HISTORIAL'); })} className="p-3 sm:p-4 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 sm:gap-0 hover:bg-[var(--color-bg)] focus:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors group">

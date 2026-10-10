@@ -85,8 +85,8 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
       const matchSearch = c.clienteNombre.toLowerCase().includes(term) || (c.clienteDni && c.clienteDni.includes(term));
 
       let matchEstado = true;
-      if (filtroEstado === 'ACTIVOS') matchEstado = c.totalPendiente > 0;
-      else if (filtroEstado === 'PAGADO') matchEstado = c.totalPendiente <= 0;
+      if (filtroEstado === 'ACTIVOS') matchEstado = c.totalPendiente > 0.05;
+      else if (filtroEstado === 'PAGADO') matchEstado = c.totalPendiente <= 0.05;
 
       return matchSearch && matchEstado;
     });

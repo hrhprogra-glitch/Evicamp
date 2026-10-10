@@ -10,9 +10,10 @@ interface Props {
   onClose: () => void;
   cliente: ClienteFiadoAgrupado | null;
   onRefetch: () => void;
+  onVerHistorial?: (nombre: string) => void;
 }
 
-export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, onRefetch }) => {
+export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, onRefetch, onVerHistorial }) => {
   useCerrarConEscape(isOpen, onClose);
   
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -38,6 +39,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
   }, [isOpen, cliente]);
 
   if (!isOpen || !cliente) return null;
+  console.log('fiados in modal', cliente.fiados);
 
   const handleToggleSelect = (id: string) => {
     const next = new Set(selectedIds);
@@ -86,55 +88,64 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
     }
 
     setIsSaving(true);
-    try {
-      const { data: session } = await supabase.from('cash_sessions').select('id').eq('status', 'OPEN').single();
-      
-      let restanteEf = valEfectivo;
-      let restanteYa = valYape;
-      let restanteTa = valTarjeta;
+    
+    // âœ… ACTUALIZACIÃ“N OPTIMISTA: Cerramos y refrescamos de inmediato
+    onRefetch();
+    onClose();
 
-      for (const fiado of selectedFiados) {
-        if (restanteEf === 0 && restanteYa === 0 && restanteTa === 0) break;
-
-        const porCobrar = fiado.saldoPendiente;
-        let pagoEf = Math.min(restanteEf, porCobrar);
-        let pagoYa = Math.min(restanteYa, porCobrar - pagoEf);
-        let pagoTa = Math.min(restanteTa, porCobrar - pagoEf - pagoYa);
+    // El proceso fuerte va a background
+    (async () => {
+      try {
+        const { data: session } = await supabase.from('cash_sessions').select('id').eq('status', 'OPEN').single();
         
-        const pagoFiado = Number((pagoEf + pagoYa + pagoTa).toFixed(2));
-        if (pagoFiado === 0) continue;
+        let restanteEf = valEfectivo;
+        let restanteYa = valYape;
+        let restanteTa = valTarjeta;
+        
+        const inserciones = [];
 
-        const { error } = await supabase.from('debt_payments').insert([{
-          fiado_id: Number(fiado.id),
-          customer_id: fiado.clienteId ? Number(fiado.clienteId) : null,
-          amount: pagoFiado,
-          amount_cash: pagoEf,
-          amount_yape: pagoYa,
-          amount_card: pagoTa,
-          amount_transfer: 0,
-          payment_type: [pagoEf, pagoYa, pagoTa].filter(v => v > 0).length > 1
-            ? 'mixto'
-            : (pagoEf > 0 ? 'efectivo' : (pagoYa > 0 ? 'yape' : 'tarjeta')),
-          session_id: session ? session.id : null,
-          created_at: new Date().toISOString(),
-          is_synced: 1
-        }]);
+        for (const fiado of selectedFiados) {
+          if (restanteEf === 0 && restanteYa === 0 && restanteTa === 0) break;
 
-        if (error) throw error;
+          const porCobrar = fiado.saldoPendiente;
+          let pagoEf = Math.min(restanteEf, porCobrar);
+          let pagoYa = Math.min(restanteYa, porCobrar - pagoEf);
+          let pagoTa = Math.min(restanteTa, porCobrar - pagoEf - pagoYa);
+          
+          const pagoFiado = Number((pagoEf + pagoYa + pagoTa).toFixed(2));
+          if (pagoFiado === 0) continue;
 
-        restanteEf = Number((restanteEf - pagoEf).toFixed(2));
-        restanteYa = Number((restanteYa - pagoYa).toFixed(2));
-        restanteTa = Number((restanteTa - pagoTa).toFixed(2));
+          inserciones.push({
+            fiado_id: Number(fiado.id),
+            customer_id: fiado.clienteId ? Number(fiado.clienteId) : null,
+            amount: pagoFiado,
+            amount_cash: pagoEf,
+            amount_yape: pagoYa,
+            amount_card: pagoTa,
+            amount_transfer: 0,
+            payment_type: [pagoEf, pagoYa, pagoTa].filter(v => v > 0).length > 1
+              ? 'mixto'
+              : (pagoEf > 0 ? 'efectivo' : (pagoYa > 0 ? 'yape' : 'tarjeta')),
+            session_id: session ? session.id : null,
+            created_at: new Date().toISOString(),
+            is_synced: 1
+          });
+
+          restanteEf = Number((restanteEf - pagoEf).toFixed(2));
+          restanteYa = Number((restanteYa - pagoYa).toFixed(2));
+          restanteTa = Number((restanteTa - pagoTa).toFixed(2));
+        }
+
+        if (inserciones.length > 0) {
+          const { error } = await supabase.from('debt_payments').insert(inserciones);
+          if (error) console.error('Error al insertar abonos en lote:', error);
+        }
+      } catch (e: any) {
+        console.error('Error al registrar abono en background: ' + e.message);
+      } finally {
+        setIsSaving(false);
       }
-
-      alert('✅ Abonos registrados correctamente.');
-      onRefetch();
-      onClose();
-    } catch (e: any) {
-      alert('Error al registrar abono: ' + e.message);
-    } finally {
-      setIsSaving(false);
-    }
+    })();
   };
 
   const handleUpdateFecha = async (id: string) => {
@@ -154,18 +165,19 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
       <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-6xl h-[90vh] flex flex-col rounded-none relative">
         
         {/* HEADER */}
-        <div className="bg-[var(--color-ink)] text-white p-4 sm:p-6 flex justify-between items-center shrink-0">
+        <div className="bg-[var(--color-ink)] text-white p-3 sm:p-4 flex justify-between items-center shrink-0">
           <div>
-            <h2 className="font-black uppercase tracking-widest text-xl sm:text-3xl">ESTADO DE CUENTA</h2>
-            <p className="text-[var(--color-accent)] font-bold tracking-widest uppercase mt-1">CLIENTE: {cliente.clienteNombre}</p>
+            <h2 className="font-black uppercase tracking-widest text-lg sm:text-2xl">ESTADO DE CUENTA</h2>
+            <p className="text-[var(--color-accent)] font-bold tracking-widest uppercase text-sm">CLIENTE: {cliente.clienteNombre}</p>
           </div>
-          <button onClick={onClose} className="hover:text-[var(--color-danger)] transition-colors cursor-pointer bg-white/10 p-2">
-            <X size={32} strokeWidth={3} />
+          <button onClick={onClose} className="hover:text-[var(--color-danger)] transition-colors cursor-pointer bg-white/10 p-1.5">
+            <X size={24} strokeWidth={3} />
           </button>
         </div>
 
         <div className="flex flex-col lg:flex-row flex-1 min-h-0 bg-[var(--color-bg)]">
           {/* LADO IZQUIERDO: DETALLE DE DEUDAS */}
+
           <div className="flex-1 flex flex-col border-r-4 border-[var(--color-ink)] overflow-hidden">
             <div className="p-4 border-b-4 border-[var(--color-ink)] bg-white flex justify-between items-center shrink-0">
               <h3 className="font-black text-lg tracking-widest uppercase flex items-center gap-2">
@@ -204,11 +216,20 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                               <button onClick={(e) => { e.stopPropagation(); setFechaEditId(fiado.id); setNuevaFecha(fiado.fechaEmision.slice(0, 16)); }} className="ml-2 bg-[var(--color-surface)] px-2 py-0.5 border border-[var(--color-border)] hover:bg-[var(--color-accent)] hover:text-white transition-colors flex items-center gap-1 cursor-pointer">
                                   <Edit size={10} /> EDITAR
                                 </button>
-                                {(fiado.montoPagado || 0) > 0 && (
-  <span style={{ marginLeft: '8px', backgroundColor: '#22c55e', color: 'white', border: '1px solid #16a34a', padding: '3px 10px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '900', fontSize: '11px', borderRadius: '4px' }}>
-    ABONOS: S/ {Number(fiado.montoPagado).toFixed(2)}
-  </span>
-)}
+                                {(() => {
+                                  const sumaDet = (fiado.detalles || []).reduce((acc, det) => acc + (Number(det.subtotal) || 0), 0);
+                                  const abonoInicial = Math.max(0, sumaDet - fiado.montoOriginal);
+                                  const abonosPost = fiado.montoPagado || 0;
+                                  const totalAbonosHistorico = abonoInicial + abonosPost;
+                                  if (totalAbonosHistorico > 0) {
+                                    return (
+                                      <span style={{ marginLeft: '8px', backgroundColor: '#22c55e', color: 'white', border: '1px solid #16a34a', padding: '3px 10px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '900', fontSize: '11px', borderRadius: '4px' }}>
+                                        ABONOS: S/ {totalAbonosHistorico.toFixed(2)}
+                                      </span>
+                                    );
+                                  }
+                                  return null;
+                                })()}
                             </>
                           )}
                         </div>
@@ -237,27 +258,26 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
 
           {/* LADO DERECHO: REGISTRO DE ABONO Y TOTALES */}
           <div className="w-full lg:w-[450px] flex flex-col shrink-0 overflow-y-auto custom-scrollbar bg-white">
-            <div className="p-6 bg-[var(--color-danger-bg)] border-b-4 border-[var(--color-danger)]">
-                
-                <p className="text-[var(--color-danger)] font-black uppercase tracking-widest text-xs mb-1">Deuda Total Pendiente</p>
-                <h1 className="text-5xl font-black text-[var(--color-danger)] drop-shadow-md">S/ {cliente.totalPendiente.toFixed(2)}</h1>
-  <button 
-  onClick={() => {
-      onClose();
-      setTimeout(() => {
-        document.getElementById('btn-directorio-clientes')?.click();
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('abrirHistorialDirecto', { detail: cliente.clienteNombre }));
-        }, 100);
-      }, 100);
-    }}
-  className="mt-4 w-full bg-white border-2 border-[var(--color-ink)] text-[var(--color-ink)] px-4 py-2 font-black uppercase tracking-widest text-xs hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)]"
->
-  Ver Historial del Cliente
-</button>
+            <div className="p-4 bg-[var(--color-danger-bg)] border-b-4 border-[var(--color-danger)]">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-[var(--color-danger)] font-black uppercase tracking-widest text-xs">Deuda Total Pendiente</p>
+                    <h1 className="text-3xl sm:text-4xl font-black text-[var(--color-danger)] drop-shadow-md leading-none mt-1">S/ {cliente.totalPendiente.toFixed(2)}</h1>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      if (onVerHistorial) {
+                        onVerHistorial(cliente.clienteNombre);
+                      }
+                    }}
+                    className="bg-white border-2 border-[var(--color-ink)] text-[var(--color-ink)] px-3 py-1.5 font-black uppercase tracking-widest text-[10px] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer shadow-[3px_3px_0_0_var(--color-ink)]"
+                  >
+                    Ver Historial
+                  </button>
+                </div>
               </div>
             
-            <div className="p-6 flex flex-col gap-6 flex-1 bg-[var(--color-bg)]">
+            <div className="p-4 sm:p-6 flex flex-col gap-6 flex-1 bg-[var(--color-bg)]">
               <div className="bg-white border-2 border-[var(--color-ink)] p-5 shadow-[4px_4px_0_0_var(--color-ink)] flex flex-col gap-4">
                  <h3 className="font-black text-lg uppercase tracking-widest flex items-center gap-2 border-b-2 border-dashed border-[var(--color-line-light)] pb-3">
                    <Calculator size={24} className="text-[var(--color-accent)]" /> Registrar Abono

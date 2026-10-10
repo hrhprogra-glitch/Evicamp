@@ -12,7 +12,7 @@ async function deploy() {
     });
     console.log('Connected!');
 
-    const localDir = path.join(__dirname, 'dist');
+    const localDir = path.join(__dirname, '..', 'dist');
     const remoteDir = '/var/www/evicamp.duckdns.org/html';
 
     console.log(`Uploading from ${localDir} to ${remoteDir}...`);

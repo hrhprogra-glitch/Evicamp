@@ -17,6 +17,7 @@ import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ E
 
 export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
   const [hasOpenSession, setHasOpenSession] = useState<boolean | null>(null);
+  const [isSessionOld, setIsSessionOld] = useState<boolean>(false);
   // En tablet/celular se muestra un panel a la vez: catálogo de productos o ticket de venta
   const [vistaMovil, setVistaMovil] = useState<'productos' | 'ticket'>('productos');
 const [searchQuery, setSearchQuery] = useState('');
@@ -378,8 +379,16 @@ const [searchQuery, setSearchQuery] = useState('');
   useEffect(() => {
     const fetchProducts = async () => {
       // Bloqueo de Seguridad: Verificar Caja
-      const { data: session } = await supabase.from('cash_sessions').select('id').eq('status', 'OPEN').maybeSingle();
-      setHasOpenSession(!!session);
+      const { data: session } = await supabase.from('cash_sessions').select('id, opened_at').eq('status', 'OPEN').maybeSingle();
+      if (session) {
+        const hoyStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
+        const sessionDate = new Date(session.opened_at).toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
+        setIsSessionOld(sessionDate < hoyStr);
+        setHasOpenSession(true);
+      } else {
+        setIsSessionOld(false);
+        setHasOpenSession(false);
+      }
       // Supabase devuelve máximo 1000 filas por consulta: traerTodo las pide por bloques
       const { data } = await traerTodo(() => supabase.from('products')
         .select('*')
@@ -414,6 +423,11 @@ const [searchQuery, setSearchQuery] = useState('');
     // BLOQUEO DE SEGURIDAD: Solo consultar, no vender si está cerrado
     if (hasOpenSession === false) {
       alert("🔒 CAJA CERRADA: Modo Consulta activado. Ve a la pestaña de Finanzas y apertura la caja para poder vender.");
+      return;
+    }
+
+    if (isSessionOld) {
+      alert("⚠️ CAJA DEL DÍA ANTERIOR: Olvidaste cerrar la caja de ayer. Por favor, ve a Finanzas, cierra la caja anterior y abre una nueva para hoy.");
       return;
     }
 
@@ -574,6 +588,12 @@ const [searchQuery, setSearchQuery] = useState('');
     fiadoData?: any 
   ) => {
     if (isSubmitting) return; // 🛡️ BLOQUEO ANTI-DUPLICADOS
+    
+    if (isSessionOld) {
+      alert("⚠️ CAJA DEL DÍA ANTERIOR: Olvidaste cerrar la caja de ayer. Por favor, ve a Finanzas, cierra la caja anterior y abre una nueva para hoy.");
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -723,13 +743,20 @@ const [searchQuery, setSearchQuery] = useState('');
           setSelectedIndex(-1);
         }
       }}
-      className={`flex flex-col lg:flex-row h-full w-full bg-transparent font-mono gap-2 lg:gap-0 lg:shadow-[6px_6px_0_0_var(--color-ink)] relative ${hasOpenSession === false ? 'pt-20 sm:pt-16' : ''}`}
+      className={`flex flex-col lg:flex-row h-full w-full bg-transparent font-mono gap-2 lg:gap-0 lg:shadow-[6px_6px_0_0_var(--color-ink)] relative ${hasOpenSession === false || isSessionOld ? 'pt-20 sm:pt-16' : ''}`}
     >
       
       {/* BARRA DE ADVERTENCIA - MODO CONSULTA */}
       {hasOpenSession === false && (
         <div className="absolute top-0 left-0 w-full bg-[var(--color-danger)] text-white p-3 flex justify-center items-center text-center gap-2 font-black text-[12px] sm:text-xs uppercase tracking-widest sm:tracking-[0.2em] z-10 shadow-[0_4px_0_0_var(--color-ink)] border-b-2 border-[var(--color-ink)]">
           <Wallet size={16} /> Caja Cerrada: Modo de solo consulta. Ve a Finanzas para aperturar la caja.
+        </div>
+      )}
+      
+      {/* BARRA DE ADVERTENCIA - CAJA VIEJA */}
+      {hasOpenSession === true && isSessionOld && (
+        <div className="absolute top-0 left-0 w-full bg-[var(--color-warning)] text-[var(--color-ink)] p-3 flex justify-center items-center text-center gap-2 font-black text-[12px] sm:text-xs uppercase tracking-widest sm:tracking-[0.2em] z-10 shadow-[0_4px_0_0_var(--color-ink)] border-b-2 border-[var(--color-ink)]">
+          <Wallet size={16} /> CAJA DEL DÍA ANTERIOR ABIERTA. Ciérrala en finanzas para poder vender hoy.
         </div>
       )}
       {/* SELECTOR DE PANEL (solo tablet/celular) */}

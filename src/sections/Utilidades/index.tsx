@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../db/supabase';
 import { Activity } from 'lucide-react';
 
@@ -183,7 +183,14 @@ export const Utilidades = () => {
         // prorrateamos kilos/unidades, ingreso Y costo por la fracción de ESA venta ya abonada
         // (no hay forma de saber qué producto específico del carrito quedó fiado cuando la
         // venta mezcla pagado + fiado, así que repartimos el abono proporcionalmente).
-        const fraccionPagada = esFiado ? (deudaTotal > 0 ? abonado / deudaTotal : 1) : 1;
+        const totalVenta = Number(ventaOrigen?.total || 1);
+        const pagadoAlContado = Number(ventaOrigen?.amount_cash || 0) + 
+                                Number(ventaOrigen?.amount_yape || 0) + 
+                                Number(ventaOrigen?.amount_transfer || 0) + 
+                                Number(ventaOrigen?.amount_card || 0);
+        
+        const totalPagado = pagadoAlContado + abonado;
+        const fraccionPagada = esFiado ? Math.min(1, Math.max(0, totalPagado / totalVenta)) : 1;
 
         // 🚀 PASO 2: LEER COSTO REAL
         // 1. Priorizamos el costo guardado por el trigger al momento de la venta (incluso si

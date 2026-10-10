@@ -28,7 +28,28 @@ export interface CashMovement {
   flujo?: 'INTERNO' | 'EXTERNO'; // <-- NUEVO: Define si entra a la caja del negocio o personal
 }
 
-// Métricas detalladas por método de pago (para el panel principal y el cierre de caja)
+export interface UnifiedItem {
+  id: string; // mov.id or t.id
+  created_at: string;
+  isTicket: boolean;
+  // Common fields:
+  tipo: string; 
+  descripcion: string; 
+  metodo_pago: string; 
+  monto: number; 
+  productosStr?: string;
+  
+  // Exclusivo de Movimiento (flujo interno/externo):
+  flujo?: 'INTERNO' | 'EXTERNO' | string;
+  
+  // Exclusivos de Ticket (Venta):
+  estado?: string;
+  es_fiado?: boolean;
+  cliente_nombre?: string | null;
+  monto_deuda?: number;
+  monto_pagado?: number;
+  total?: number;
+}
 export interface SuperMetricas {
   fondoInicial: number;
   ingresosExtra: number;        // ingresos manuales en EFECTIVO
