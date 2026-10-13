@@ -1,3 +1,4 @@
+import { traerTodo } from '../../utils/traerTodo';
 import { coincideBusqueda } from '../../utils/busqueda';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Package, Layers, Box, AlertTriangle, LayoutGrid, Plus, Database, Activity, Users } from 'lucide-react';
@@ -56,8 +57,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           { data: catData, error: catError } // 🔥 NUEVO: Traemos tu tabla
         ] = await Promise.all([
           // 🛡️ EVICAMP: Solo descargar productos activos para evitar productos fantasma
-          supabase.from('products').select('*').eq('is_active', 1).limit(15000),
-          supabase.from('batches').select('id, product_id, quantity, cost_unit').limit(15000),
+          traerTodo(() => supabase.from('products').select('*').eq('is_active', 1).order('id')),
+          traerTodo(() => supabase.from('batches').select('id, product_id, quantity, cost_unit').order('id')),
           supabase.from('categories').select('name') // 🔥 CONEXIÓN A TU TABLA
         ]);
 
@@ -184,9 +185,15 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
   return (
     <div className="flex flex-col gap-6 pb-10 text-[var(--color-ink)] font-mono h-full bg-[var(--color-bg)] relative">
-      
-      
-        {/* ENCABEZADO UNIFICADO NEOBRUTALISTA */}
+      {loading && (
+        <div className="absolute inset-0 bg-white/80 dark:bg-[var(--color-surface)]/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
+            <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest font-mono">Cargando...</span>
+          </div>
+        </div>
+      )}
+{/* ENCABEZADO UNIFICADO NEOBRUTALISTA */}
         <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] p-4 sm:p-6 lg:p-8 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 shrink-0">
           
           {/* LADO IZQUIERDO: TITULO Y SWITCH */}
