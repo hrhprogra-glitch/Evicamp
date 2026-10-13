@@ -147,14 +147,16 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
       return 1;
     };
 
+    const cols = getColumnsCount();
+    const currentRow = Math.floor(selectedIndex / cols);
+    const totalRows = Math.ceil(filteredProducts.length / cols);
+
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       e.nativeEvent.stopImmediatePropagation();
-      const cols = getColumnsCount();
-      if (selectedIndex + cols < filteredProducts.length) {
-        setSelectedIndex(prev => prev + cols);
-      } else {
-        setSelectedIndex(filteredProducts.length - 1);
+      if (currentRow < totalRows - 1) {
+        const nextIndex = selectedIndex + cols;
+        setSelectedIndex(nextIndex < filteredProducts.length ? nextIndex : filteredProducts.length - 1);
       }
     } else if (e.key === 'ArrowRight') {
       // Si presiona derecha estando en el último producto, dejamos que salte al carrito
@@ -170,13 +172,16 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
       e.preventDefault();
       e.stopPropagation();
       e.nativeEvent.stopImmediatePropagation();
-      const cols = getColumnsCount();
-      setSelectedIndex(prev => Math.max(prev - cols, 0));
+      if (currentRow > 0) {
+        setSelectedIndex(selectedIndex - cols);
+      }
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
       e.stopPropagation(); 
       e.nativeEvent.stopImmediatePropagation();
-      setSelectedIndex(prev => Math.max(prev - 1, 0));
+      if (selectedIndex > 0) {
+        setSelectedIndex(prev => prev - 1);
+      }
     } else if (e.key === 'Enter') {
       e.preventDefault();
       const selectedProd = filteredProducts[selectedIndex];
