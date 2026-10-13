@@ -1,3 +1,4 @@
+import { coincideBusqueda } from '../../utils/busqueda';
 ﻿import React, { useState, useEffect, useMemo } from 'react';
 import { Database, TrendingDown, PackageMinus } from 'lucide-react';
 import { supabase } from '../../db/supabase';
@@ -116,12 +117,8 @@ export const Mermas: React.FC = () => {
       });
     }
 
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(m => 
-        m.product_name.toLowerCase().includes(q) || 
-        (m.notes && m.notes.toLowerCase().includes(q))
-      );
+    if (searchQuery && searchQuery.trim()) {
+      result = result.filter(m => coincideBusqueda([m.product_name, m.notes], searchQuery));
     }
 
     if (filtroMotivo) {

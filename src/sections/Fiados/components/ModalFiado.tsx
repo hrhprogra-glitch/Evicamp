@@ -1,3 +1,4 @@
+import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
 import { X, Save, UserPlus, Package, Search, Plus, Trash2, ChevronDown } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
@@ -165,10 +166,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
   // 🔥 FILTRO DE SEGURIDAD: Solo mostramos productos que tengan stock físico
   const prodFiltrados = searchProd.trim() === '' ? [] : productos.filter(p => {
     if (!p.name || p.quantity <= 0) return false; // <--- Solo productos con stock
-    const q = searchProd.toLowerCase();
-    return p.name.toLowerCase().includes(q) ||
-      (p.code || '').toLowerCase().includes(q) ||
-      (p.barcode || '').toLowerCase().includes(q);
+    return coincideBusqueda([p.name, p.code, p.barcode], searchProd);
   }).slice(0, 5);
 
   const agregarProducto = (prod: Product) => {
@@ -405,7 +403,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
               {/* LISTA DESPLEGABLE CON FILTRO */}
               {isDropdownOpen && !isEdit && (
                 <div className="absolute z-50 top-[100%] left-0 w-full mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-none">
-                  {clientes.filter(c => c.nombre.toLowerCase().includes(searchCliente.toLowerCase())).length === 0 ? (
+                  {clientes.filter(c => coincideBusqueda([c.nombre, c.dni, c.telefono], searchCliente)).length === 0 ? (
                     <div className="p-3 text-xs font-bold text-[var(--color-muted)] uppercase text-center bg-[var(--color-bg)]">
                       NO SE ENCONTRARON CLIENTES
                     </div>

@@ -1,3 +1,4 @@
+import { coincideBusqueda } from '../../utils/busqueda';
 // src/sections/Finanzas/index.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Wallet, ArrowDownToLine, Lock, CreditCard, Smartphone, Banknote, ReceiptText, Search } from 'lucide-react';
@@ -634,16 +635,15 @@ export const Finanzas: React.FC = () => {
              {/* TABLA FILTRADA CON FUNCIÓN ONDELTE */}
              <TablaMovimientos 
                movimientos={movimientos.filter(m => {
-                 // SEARCH
-                 if (searchTerm) {
-                    const st = searchTerm.toLowerCase();
-                    const matchDesc = m.descripcion?.toLowerCase().includes(st);
-                    const matchCli = m.cliente_nombre?.toLowerCase().includes(st);
-                    const matchTicket = m.isTicket && ('#' + String(m.id).slice(-6)).includes(st);
-                    const matchMonto = String(m.monto).includes(st);
-                    const matchProd = m.productosStr?.toLowerCase().includes(st);
-                    if (!matchDesc && !matchCli && !matchTicket && !matchMonto && !matchProd) return false;
-                 }
+                  // SEARCH
+                  if (searchTerm && searchTerm.trim()) {
+                     const ticketId = m.isTicket ? ('#' + String(m.id).slice(-6)) : '';
+                     const match = coincideBusqueda(
+                       [m.descripcion, m.cliente_nombre, m.productosStr, ticketId, String(m.monto)],
+                       searchTerm
+                     );
+                     if (!match) return false;
+                  }
                  // ESTADO (Por defecto completado si no tiene estado)
                  const st = m.estado || 'COMPLETADO';
                  if (filtroEstado !== 'TODOS' && st !== filtroEstado) return false;

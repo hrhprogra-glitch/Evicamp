@@ -1,3 +1,4 @@
+import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
 import { X, Save, AlertTriangle, Database, Loader2 } from 'lucide-react';
 import { supabase } from '../../../db/supabase.ts';
@@ -135,10 +136,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
 
   // Filtro inteligente
   const filteredProducts = productos.filter(p => {
-    const q = searchQuery.toLowerCase();
-    return p.name.toLowerCase().includes(q) ||
-      p.code.toLowerCase().includes(q) ||
-      (p.barcode || '').toLowerCase().includes(q);
+    return coincideBusqueda([p.name, p.code, p.barcode], searchQuery);
   });
 
   // 📡 SOPORTE DE ESCÁNER: el lector escribe el código y envía "Enter" automáticamente.

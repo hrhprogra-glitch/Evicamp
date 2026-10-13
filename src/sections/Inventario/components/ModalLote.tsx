@@ -1,3 +1,4 @@
+import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
 import { X, Save, Database, Search, Calculator, FileText, Check, Calendar, Loader2 } from 'lucide-react';
 import type { Product } from '../types';
@@ -87,10 +88,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
   // Motor de filtrado ultra-rápido (EXCLUYE LOS PRODUCTOS DE CONSUMO INTERNO)
   const filteredProducts = productos.filter(p => {
     if (p.unit === 'CONSUMO') return false; // <-- BLOQUEO ESTRICTO: NO MOSTRAR CONSUMO AQUÍ
-    const q = searchQuery.toLowerCase();
-    return p.name.toLowerCase().includes(q) ||
-      p.code.toLowerCase().includes(q) ||
-      (p.barcode || '').toLowerCase().includes(q);
+    return coincideBusqueda([p.name, p.code, p.barcode], searchQuery);
   });
 
   // 📡 SOPORTE DE ESCÁNER: el lector escribe el código y envía "Enter" automáticamente.

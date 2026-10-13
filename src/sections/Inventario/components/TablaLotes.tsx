@@ -1,3 +1,4 @@
+import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
 import { Database,Layers, Edit, Trash2, History, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
@@ -105,25 +106,11 @@ export const TablaLotes: React.FC<Props> = ({
 
   // === MOTOR DE FILTRADO Y ORDENAMIENTO PARA LOS LOTES ===
   // 🔥 INTELIGENCIA DE BÚSQUEDA: Detectar si hay un producto que se llame EXACTAMENTE igual a lo que se busca
-  const qLimpio = searchQuery.toLowerCase().trim();
-  const existeCoincidenciaExacta = lotes.some(l => l.product_name.toLowerCase().trim() === qLimpio);
-
   const filteredLotes = lotes.filter(lote => {
-    // 1. Filtro de Búsqueda de Texto
-    if (searchQuery) {
-      const nombreLote = lote.product_name.toLowerCase().trim();
-      const refLote = (lote.document_ref || '').toLowerCase().trim();
-
-      if (existeCoincidenciaExacta) {
-        // MODO ESTRICTO: Si escribiste el nombre completo (o usaste el botón Ver Historial), aísla solo ese producto.
-        if (nombreLote !== qLimpio && !refLote.includes(qLimpio)) {
-          return false;
-        }
-      } else {
-        // MODO PARCIAL: Si estás escribiendo a medias, busca todas las posibles coincidencias.
-        if (!nombreLote.includes(qLimpio) && !refLote.includes(qLimpio)) {
-          return false;
-        }
+    // 1. Filtro de Búsqueda de Texto Inteligente (coincidencia flexible)
+    if (searchQuery && searchQuery.trim()) {
+      if (!coincideBusqueda([lote.product_name, lote.document_ref], searchQuery)) {
+        return false;
       }
     }
     

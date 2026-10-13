@@ -1,3 +1,4 @@
+import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
 import { Search, ScanLine, Package, Plus, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { formatearCantidad } from '../../../utils/formato';
@@ -53,13 +54,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
   const filteredProducts = searchQuery.trim() === '' 
     ? [] 
     : productos.filter(p => {
-        const q = searchQuery.toLowerCase();
-        // 🛡️ CIBERSEGURIDAD: Evitar crasheos por datos nulos
-        const nombreSeguro = (p.name || '').toLowerCase();
-        const codigoSeguro = (p.code || '').toLowerCase();
-        const barrasSeguro = p.barcode || '';
-        
-        return nombreSeguro.includes(q) || codigoSeguro.includes(q) || barrasSeguro.includes(q);
+        return coincideBusqueda([p.name, p.code, p.barcode], searchQuery);
       }).slice(0, 48);
 
   // 🔥 NUEVO: Resetear el selector cuando se busca algo nuevo

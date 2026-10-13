@@ -1,3 +1,4 @@
+import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
 import { X, Banknote, Smartphone, CreditCard, CheckCircle2, Calculator, UserPlus, Calendar, ChevronDown, Plus } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
@@ -295,7 +296,7 @@ interface Props {
               {/* LISTA DESPLEGABLE CONECTADA A LA BASE DE DATOS */}
               {isDropdownOpen && searchCliente.trim() !== '' && (
                 <div className="absolute z-50 top-[100%] left-0 w-full mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-48 overflow-y-auto custom-scrollbar rounded-none">
-                  {clientesDb.filter(c => (c.nombre || c.name || '').toUpperCase().includes(searchCliente)).length === 0 ? (
+                  {clientesDb.filter(c => coincideBusqueda([c.nombre, c.name, c.dni, c.telefono], searchCliente)).length === 0 ? (
                     <div className="p-4 text-xs font-black uppercase text-[var(--color-muted)] text-center bg-[var(--color-bg)]">
                       NO SE ENCONTRARON CLIENTES
                     </div>

@@ -1,3 +1,4 @@
+import { coincideBusqueda } from '../../utils/busqueda';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Package, Layers, Box, AlertTriangle, LayoutGrid, Plus, Database, Activity, Users } from 'lucide-react';
 import { supabase } from '../../db/supabase';
@@ -132,25 +133,10 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase().trim(); // <-- Limpiamos espacios basura
-      
-      // 🔥 INTELIGENCIA DE BÚSQUEDA: Detectar si existe una coincidencia EXACTA
-      const existeCoincidenciaExacta = result.some(p => String(p.name || '').toLowerCase().trim() === query);
-
+    if (searchQuery && searchQuery.trim()) {
       result = result.filter(p => {
         if (!p) return false;
-        const name = String(p.name || '').toLowerCase().trim();
-        const code = String(p.code || '').toLowerCase().trim();
-        const barcode = String(p.barcode || '').toLowerCase().trim();
-
-        if (existeCoincidenciaExacta) {
-           // MODO ESTRICTO: Si escribiste el nombre completo, aísla SOLO ese producto.
-           return name === query || code === query || barcode === query;
-        } else {
-           // MODO PARCIAL: Si estás escribiendo a medias, busca coincidencias parciales.
-           return name.includes(query) || code.includes(query) || barcode.includes(query);
-        }
+        return coincideBusqueda([p.name, p.code, p.barcode], searchQuery);
       });
     }
 

@@ -1,3 +1,4 @@
+import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
 import { Eye, ChevronLeft, ChevronRight, FilterX } from 'lucide-react';
 import type { ClienteFiadoAgrupado } from '../types';
@@ -81,8 +82,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
 
   const procesarFiados = () => {
     let filtrados = clientes.filter(c => {
-      const term = searchTerm.toLowerCase();
-      const matchSearch = c.clienteNombre.toLowerCase().includes(term) || (c.clienteDni && c.clienteDni.includes(term));
+      const matchSearch = coincideBusqueda([c.clienteNombre, c.clienteDni], searchTerm);
 
       let matchEstado = true;
       if (filtroEstado === 'ACTIVOS') matchEstado = c.totalPendiente > 0.05;

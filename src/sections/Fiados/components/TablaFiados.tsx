@@ -1,3 +1,4 @@
+import { coincideBusqueda } from '../../../utils/busqueda';
 ﻿import React, { useState, useEffect } from 'react';
 import { Eye, Edit, Banknote, RotateCcw, FilterX, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Fiado } from '../types';
@@ -216,8 +217,7 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, on
   // 1. Filtrado
   let fiadosProcesados = fiados.filter(f => {
     // PROTECCIÓN: Si el nombre del cliente viene nulo o vacío por un error, no crashea
-    const nombreCliente = f.clienteNombre || '';
-    const matchBusqueda = nombreCliente.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchBusqueda = coincideBusqueda([f.clienteNombre, f.clienteDni, f.clienteTelefono], searchTerm);
 
     // Lógica de estado técnica simplificada
     let matchEstado = false;
