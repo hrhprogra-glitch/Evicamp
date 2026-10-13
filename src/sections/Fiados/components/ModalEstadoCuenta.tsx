@@ -38,10 +38,10 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
     }
   }, [isOpen, cliente]);
 
-  if (!isOpen || !cliente) return null;
-  console.log('fiados in modal', cliente.fiados);
+  // Early return moved below hooks
 
   const handleToggleSelect = (id: string) => {
+    if (!cliente) return;
     const next = new Set(selectedIds);
     if (next.has(id)) next.delete(id);
     else next.add(id);
@@ -55,6 +55,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
   };
 
   const handleToggleAll = () => {
+    if (!cliente) return;
     const pendingIds = cliente.fiados.filter(f => f.estado !== 'PAGADO').map(f => f.id);
     if (selectedIds.size === pendingIds.length) {
       setSelectedIds(new Set());
@@ -76,7 +77,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
   const valTarjeta = aCentimos(tarjeta);
   const totalAbono = Number((valEfectivo + valYape + valTarjeta).toFixed(2));
   
-  const selectedFiados = cliente.fiados.filter(f => selectedIds.has(f.id)).sort((a,b) => new Date(a.fechaEmision).getTime() - new Date(b.fechaEmision).getTime());
+  const selectedFiados = (cliente?.fiados || []).filter(f => selectedIds.has(f.id)).sort((a,b) => new Date(a.fechaEmision).getTime() - new Date(b.fechaEmision).getTime());
   const totalSeleccionado = Number(selectedFiados.reduce((acc, f) => acc + f.saldoPendiente, 0).toFixed(2));
 
   const handlePagar = async () => {
@@ -160,6 +161,196 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
     }
   };
 
+    // ================= FOCUS TRAP Y NAVEGACIÓN TECLADO =================
+  useEffect(() => {
+    if (!isOpen || !cliente) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement as HTMLElement;
+
+      // 1. FOCUS TRAP PARA TAB
+      if (e.key === 'Tab') {
+        e.stopPropagation();
+        const allFocusables = Array.from(document.querySelectorAll('input:not([type="file"]), select, button:not([disabled]), [data-fiado-card]')) as HTMLElement[];
+        const modalFocusables = allFocusables.filter(el =>
+          el.closest('.fixed.inset-0') &&
+          el.tabIndex !== -1 &&
+          !el.classList.contains('hidden') &&
+          el.offsetParent !== null
+        );
+
+        if (modalFocusables.length > 0) {
+          const first = modalFocusables[0];
+          const last = modalFocusables[modalFocusables.length - 1];
+          if (e.shiftKey && active === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && active === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+        return;
+      }
+
+      // 2. NAVEGACIÓN CON FLECHAS
+      if (active?.closest('[data-fiado-card]')) {
+        const currentCard = active.closest('[data-fiado-card]') as HTMLElement;
+        const allCards = Array.from(document.querySelectorAll('[data-fiado-card]')) as HTMLElement[];
+        const cardIndex = allCards.indexOf(currentCard);
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const nextCard = allCards[cardIndex + 1];
+          if (nextCard) {
+            nextCard.focus();
+            nextCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          const prevCard = allCards[cardIndex - 1];
+          if (prevCard) {
+            prevCard.focus();
+            prevCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          } else {
+            document.getElementById('btn-seleccionar-todas-modal')?.focus();
+          }
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          document.getElementById('input-abono-efectivo-modal')?.focus();
+        } else if (e.key === ' ' || e.key === 'Enter') {
+          const fiadoId = currentCard.getAttribute('data-fiado-card');
+          if (fiadoId && !active.closest('input')) {
+            e.preventDefault();
+            handleToggleSelect(fiadoId);
+          }
+        }
+        return;
+      }
+
+      if (active?.id === 'btn-seleccionar-todas-modal') {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const firstCard = document.querySelector('[data-fiado-card]') as HTMLElement;
+          if (firstCard) firstCard.focus();
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          document.getElementById('btn-ver-historial-modal')?.focus();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          document.getElementById('btn-cerrar-modal-estado')?.focus();
+        }
+        return;
+      }
+
+      if (active?.id === 'btn-ver-historial-modal') {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          document.getElementById('btn-seleccionar-todas-modal')?.focus();
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          document.getElementById('input-abono-efectivo-modal')?.focus();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          document.getElementById('btn-cerrar-modal-estado')?.focus();
+        }
+        return;
+      }
+
+      if (active?.id === 'input-abono-efectivo-modal') {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          document.getElementById('input-abono-yape-modal')?.focus();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          document.getElementById('btn-ver-historial-modal')?.focus();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          const firstCard = document.querySelector('[data-fiado-card]') as HTMLElement;
+          if (firstCard) firstCard.focus();
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          document.getElementById('btn-confirmar-pago-modal')?.focus();
+        }
+        return;
+      }
+
+      if (active?.id === 'input-abono-yape-modal') {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          document.getElementById('input-abono-tarjeta-modal')?.focus();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          document.getElementById('input-abono-efectivo-modal')?.focus();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          const firstCard = document.querySelector('[data-fiado-card]') as HTMLElement;
+          if (firstCard) firstCard.focus();
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          document.getElementById('btn-confirmar-pago-modal')?.focus();
+        }
+        return;
+      }
+
+      if (active?.id === 'input-abono-tarjeta-modal') {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          document.getElementById('btn-confirmar-pago-modal')?.focus();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          document.getElementById('input-abono-yape-modal')?.focus();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          const firstCard = document.querySelector('[data-fiado-card]') as HTMLElement;
+          if (firstCard) firstCard.focus();
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          document.getElementById('btn-confirmar-pago-modal')?.focus();
+        }
+        return;
+      }
+
+      if (active?.id === 'btn-confirmar-pago-modal') {
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          document.getElementById('input-abono-tarjeta-modal')?.focus();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          const firstCard = document.querySelector('[data-fiado-card]') as HTMLElement;
+          if (firstCard) firstCard.focus();
+        }
+        return;
+      }
+
+      if (active?.id === 'btn-cerrar-modal-estado') {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          document.getElementById('btn-seleccionar-todas-modal')?.focus();
+        }
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
+  }, [isOpen, cliente, selectedIds, isSaving, totalAbono, totalSeleccionado]);
+
+  useEffect(() => {
+    if (isOpen && cliente) {
+      setTimeout(() => {
+        const firstCard = document.querySelector('[data-fiado-card]') as HTMLElement;
+        if (firstCard) {
+          firstCard.focus();
+        } else {
+          document.getElementById('input-abono-efectivo-modal')?.focus();
+        }
+      }, 100);
+    }
+  }, [isOpen, cliente]);
+
+  if (!isOpen || !cliente) return null;
+
   return createPortal(
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in font-mono">
       <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-6xl h-[90vh] flex flex-col rounded-none relative">
@@ -170,7 +361,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
             <h2 className="font-black uppercase tracking-widest text-lg sm:text-2xl">ESTADO DE CUENTA</h2>
             <p className="text-[var(--color-accent)] font-bold tracking-widest uppercase text-sm">CLIENTE: {cliente.clienteNombre}</p>
           </div>
-          <button onClick={onClose} className="hover:text-[var(--color-danger)] transition-colors cursor-pointer bg-white/10 p-1.5">
+          <button id="btn-cerrar-modal-estado" onClick={onClose} className="hover:text-[var(--color-danger)] transition-colors cursor-pointer bg-white/10 p-1.5 focus:outline-none focus:ring-2 focus:ring-white">
             <X size={24} strokeWidth={3} />
           </button>
         </div>
@@ -184,7 +375,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                 <ShoppingCart size={24} className="text-[var(--color-accent)]" /> 
                 Historial de Deudas
               </h3>
-              <button onClick={handleToggleAll} className="px-4 py-2 bg-[var(--color-ink)] text-white font-black text-xs uppercase tracking-widest hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] transition-colors cursor-pointer shadow-[4px_4px_0_0_var(--color-border)]">
+              <button id="btn-seleccionar-todas-modal" onClick={handleToggleAll} className="px-4 py-2 bg-[var(--color-ink)] text-white font-black text-xs uppercase tracking-widest hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] transition-colors cursor-pointer shadow-[4px_4px_0_0_var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]">
                 Seleccionar Todas
               </button>
             </div>
@@ -270,7 +461,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                         onVerHistorial(cliente.clienteNombre);
                       }
                     }}
-                    className="bg-white border-2 border-[var(--color-ink)] text-[var(--color-ink)] px-3 py-1.5 font-black uppercase tracking-widest text-[10px] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer shadow-[3px_3px_0_0_var(--color-ink)]"
+                    id="btn-ver-historial-modal" className="bg-white border-2 border-[var(--color-ink)] text-[var(--color-ink)] px-3 py-1.5 font-black uppercase tracking-widest text-[10px] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer shadow-[3px_3px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
                   >
                     Ver Historial
                   </button>
@@ -291,17 +482,17 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                  <div className="flex flex-col gap-3">
                     <div>
                       <label className="text-xs font-black uppercase tracking-widest text-[var(--color-muted)] block mb-1">Efectivo</label>
-                      <input type="number" min="0" step="0.01" value={efectivo} onChange={(e) => setEfectivo(e.target.value)}
+                      <input id="input-abono-efectivo-modal" type="number" min="0" step="0.01" value={efectivo} onChange={(e) => setEfectivo(e.target.value)}
                         className="w-full border-2 border-[var(--color-ink)] px-4 py-3 font-black text-lg focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)] transition-all outline-none" placeholder="0.00" />
                     </div>
                     <div>
                       <label className="text-xs font-black uppercase tracking-widest text-[var(--color-purple)] block mb-1">Yape / Plin / Transferencia</label>
-                      <input type="number" min="0" step="0.01" value={yape} onChange={(e) => setYape(e.target.value)}
+                      <input id="input-abono-yape-modal" type="number" min="0" step="0.01" value={yape} onChange={(e) => setYape(e.target.value)}
                         className="w-full border-2 border-[var(--color-purple)] px-4 py-3 font-black text-lg focus:border-[var(--color-purple)] focus:ring-2 focus:ring-[var(--color-purple)] transition-all outline-none" placeholder="0.00" />
                     </div>
                     <div>
                       <label className="text-xs font-black uppercase tracking-widest text-[var(--color-info)] block mb-1">Tarjeta de Crédito / POS</label>
-                      <input type="number" min="0" step="0.01" value={tarjeta} onChange={(e) => setTarjeta(e.target.value)}
+                      <input id="input-abono-tarjeta-modal" type="number" min="0" step="0.01" value={tarjeta} onChange={(e) => setTarjeta(e.target.value)}
                         className="w-full border-2 border-[var(--color-info)] px-4 py-3 font-black text-lg focus:border-[var(--color-info)] focus:ring-2 focus:ring-[var(--color-info)] transition-all outline-none" placeholder="0.00" />
                     </div>
                  </div>
@@ -312,6 +503,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                  </div>
 
                  <button 
+                  id="btn-confirmar-pago-modal"
                   onClick={handlePagar}
                   disabled={isSaving || totalAbono <= 0 || totalAbono > totalSeleccionado}
                   className="w-full bg-[var(--color-accent)] text-[var(--color-ink)] border-2 border-[var(--color-ink)] py-3 text-lg font-black uppercase tracking-widest hover:bg-[var(--color-success)] hover:text-white transition-colors cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed mt-2"

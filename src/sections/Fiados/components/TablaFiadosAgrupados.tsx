@@ -20,10 +20,11 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       const activeTag = document.activeElement?.tagName;
-      if (document.querySelector('[role="dialog"]')) return;
-      if (['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft'].includes(e.key)) {
+      if (document.querySelector('[role="dialog"]') || document.querySelector('.fixed.inset-0.z-\\[999999\\]')) return;
+
+      if (['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft', 'PageDown', 'PageUp'].includes(e.key)) {
         const active = document.activeElement as HTMLElement;
-        const searchInput = document.getElementById('buscador-global-fiados');
+        const searchInput = document.getElementById('buscador-global-fiados') as HTMLInputElement;
         
         if (active === searchInput) {
           if (e.key === 'ArrowUp') {
@@ -37,6 +38,15 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
             if (firstRow) firstRow.focus();
             return;
           }
+          if (e.key === 'ArrowRight') {
+            const cursorStart = searchInput.selectionStart;
+            const valLen = searchInput.value.length;
+            if (cursorStart === valLen) {
+              e.preventDefault();
+              document.getElementById('filtro-estado-fiados')?.focus();
+              return;
+            }
+          }
         }
 
         if (active?.closest('tr[role="button"]')) {
@@ -47,19 +57,36 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
           
           if (e.key === 'ArrowDown') {
             const nextRow = rows[rowIndex + 1];
-            if (nextRow) nextRow.focus();
+            if (nextRow) {
+              nextRow.focus();
+              nextRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
           } else if (e.key === 'ArrowUp') {
             const prevRow = rows[rowIndex - 1];
-            if (prevRow) prevRow.focus();
-            else searchInput?.focus();
+            if (prevRow) {
+              prevRow.focus();
+              prevRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+              searchInput?.focus();
+            }
+          } else if (e.key === 'ArrowRight') {
+            const btn = currentRow.querySelector('button') as HTMLElement;
+            if (btn) btn.focus();
+          } else if (e.key === 'ArrowLeft') {
+            currentRow.focus();
           } else if (e.key === 'Enter' || e.key === ' ') {
             currentRow.click();
+          } else if (e.key === 'PageDown') {
+            setCurrentPage(p => p + 1);
+          } else if (e.key === 'PageUp') {
+            setCurrentPage(p => Math.max(1, p - 1));
           }
+          return;
         }
       }
       
       if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
+        if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA' && activeTag !== 'SELECT') {
           const searchInput = document.getElementById('buscador-global-fiados') as HTMLInputElement;
           if (searchInput) {
             searchInput.focus();
@@ -68,8 +95,27 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
       }
     };
 
+    const enforceFocus = () => {
+      if (document.querySelector('[role="dialog"]') || document.querySelector('.fixed.inset-0')) return;
+      const activeTag = document.activeElement?.tagName;
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'BUTTON' || activeTag === 'SELECT' || activeTag === 'A' || document.activeElement?.closest('tr[role="button"]')) return;
+      document.getElementById('buscador-global-fiados')?.focus();
+    };
+
+    const handleGlobalClick = () => setTimeout(enforceFocus, 50);
+    const handleWindowFocus = () => setTimeout(enforceFocus, 50);
+
+    setTimeout(enforceFocus, 100);
+
     window.addEventListener('keydown', handleGlobalKeyDown);
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('click', handleGlobalClick);
+
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('click', handleGlobalClick);
+    };
   }, []);
 
   const limpiarFiltros = () => {
@@ -120,7 +166,29 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
           className="flex-1 min-w-[200px] border-2 border-[var(--color-border)] px-4 py-3 text-sm font-black uppercase outline-none focus:border-[var(--color-info)] transition-colors rounded-none"
         />
 
-        <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value as any)}
+        <select 
+          id="filtro-estado-fiados"
+          value={filtroEstado} 
+          onChange={(e) => setFiltroEstado(e.target.value as any)}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              e.stopPropagation();
+              document.getElementById('btn-directorio-clientes')?.focus();
+            } else if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              e.stopPropagation();
+              (document.querySelector('tr[role="button"]') as HTMLElement)?.focus();
+            } else if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              e.stopPropagation();
+              document.getElementById('buscador-global-fiados')?.focus();
+            } else if (e.key === 'ArrowRight') {
+              e.preventDefault();
+              e.stopPropagation();
+              document.getElementById('filtro-orden-fiados')?.focus();
+            }
+          }}
           className="w-full lg:w-48 border-2 border-[var(--color-border)] px-4 py-3 text-sm font-black uppercase outline-none focus:border-[var(--color-info)] bg-white cursor-pointer rounded-none"
         >
           <option value="ACTIVOS">DEUDORES</option>
@@ -128,7 +196,32 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
           <option value="PAGADO">SIN DEUDA</option>
         </select>
 
-        <select value={ordenPor} onChange={(e) => setOrdenPor(e.target.value as any)}
+        <select 
+          id="filtro-orden-fiados"
+          value={ordenPor} 
+          onChange={(e) => setOrdenPor(e.target.value as any)}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              e.stopPropagation();
+              document.getElementById('btn-directorio-clientes')?.focus();
+            } else if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              e.stopPropagation();
+              (document.querySelector('tr[role="button"]') as HTMLElement)?.focus();
+            } else if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              e.stopPropagation();
+              document.getElementById('filtro-estado-fiados')?.focus();
+            } else if (e.key === 'ArrowRight') {
+              const btn = document.getElementById('btn-limpiar-filtros-fiados');
+              if (btn) {
+                e.preventDefault();
+                e.stopPropagation();
+                btn.focus();
+              }
+            }
+          }}
           className="w-full lg:w-48 border-2 border-[var(--color-border)] px-4 py-3 text-sm font-black uppercase outline-none focus:border-[var(--color-info)] bg-white cursor-pointer rounded-none"
         >
           <option value="MAYOR_DEUDA">MAYOR DEUDA</option>
@@ -136,7 +229,24 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
         </select>
 
         {hayFiltrosActivos && (
-          <button onClick={limpiarFiltros} className="p-3 bg-[var(--color-danger)] text-white font-black uppercase tracking-widest text-xs hover:brightness-110 transition-all flex items-center justify-center cursor-pointer border-2 border-[var(--color-danger)] rounded-none shrink-0" title="Limpiar Filtros">
+          <button 
+            id="btn-limpiar-filtros-fiados"
+            onClick={limpiarFiltros} 
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                document.getElementById('filtro-orden-fiados')?.focus();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                (document.querySelector('tr[role="button"]') as HTMLElement)?.focus();
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                document.getElementById('btn-directorio-clientes')?.focus();
+              }
+            }}
+            className="p-3 bg-[var(--color-danger)] text-white font-black uppercase tracking-widest text-xs hover:brightness-110 transition-all flex items-center justify-center cursor-pointer border-2 border-[var(--color-danger)] rounded-none shrink-0" 
+            title="Limpiar Filtros"
+          >
             <FilterX size={20} strokeWidth={3} />
           </button>
         )}
@@ -173,7 +283,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
                     </span>
                   </td>
                   <td className="py-4 px-4 pr-6 text-center">
-                    <button onClick={(e) => { e.stopPropagation(); onView(cli); }} className="p-2 border-2 border-[var(--color-ink)] bg-[var(--color-bg)] hover:bg-[var(--color-ink)] hover:text-white transition-all cursor-pointer inline-flex shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-1 hover:translate-y-1">
+                    <button data-btn-detalle tabIndex={-1} onClick={(e) => { e.stopPropagation(); onView(cli); }} className="p-2 border-2 border-[var(--color-ink)] bg-[var(--color-bg)] hover:bg-[var(--color-ink)] hover:text-white transition-all cursor-pointer inline-flex shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-1 hover:translate-y-1">
                       <Eye size={20} strokeWidth={3} />
                     </button>
                   </td>

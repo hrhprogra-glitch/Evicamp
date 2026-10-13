@@ -408,7 +408,15 @@ if (fiaData) {
 
         {/* BOTONES PRINCIPALES */}
         <div className="grid grid-cols-2 sm:flex gap-3">
-          <button id="btn-directorio-clientes" onClick={() => setIsModalClientesOpen(true)}
+          <button 
+            id="btn-directorio-clientes" 
+            onClick={() => setIsModalClientesOpen(true)}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                document.getElementById('buscador-global-fiados')?.focus();
+              }
+            }}
             className="h-12 bg-white text-[var(--color-ink)] px-3 sm:px-6 justify-center border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-[var(--color-bg)] focus:outline-none focus:bg-[var(--color-ink)] focus:text-white transition-colors shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer"
           >
             <BookOpen size={16} /> Directorio Clientes
