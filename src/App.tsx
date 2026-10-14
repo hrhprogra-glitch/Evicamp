@@ -73,39 +73,64 @@ export const App: React.FC = () => {
           localStorage.setItem('evicamp_sidebar_open', 'false');
 
           const activeView = currentViewRef.current || 'pos';
-          setTimeout(() => {
+          const devolverFocoASesion = () => {
+            const activeView = currentViewRef.current || 'pos';
             if (activeView === 'pos') {
               const b = document.getElementById('buscador-global-pos') as HTMLInputElement | null;
-              b?.focus();
-              b?.select();
+              if (b) { b.focus(); b.select(); return true; }
             } else if (activeView === 'fiados') {
               const b = document.getElementById('buscador-global-fiados') as HTMLInputElement | null;
-              b?.focus();
-              b?.select();
+              if (b) { b.focus(); b.select(); return true; }
             } else if (activeView === 'inventario') {
               const b = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
-              b?.focus();
-              b?.select();
+              if (b) { b.focus(); b.select(); return true; }
             } else if (activeView === 'mermas') {
               const b = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
-              b?.focus();
-              b?.select();
+              if (b) { b.focus(); b.select(); return true; }
             } else if (activeView === 'finanzas') {
-              const enfocarFinanzas = () => {
-                const b = document.getElementById('buscador-finanzas') as HTMLInputElement | null;
-                if (b) {
-                  b.focus();
-                  b.select();
-                  return true;
-                }
-                return false;
-              };
-              if (!enfocarFinanzas()) {
-                setTimeout(enfocarFinanzas, 80);
-                setTimeout(enfocarFinanzas, 200);
-              }
+              const b = document.getElementById('buscador-finanzas') as HTMLInputElement | null;
+              if (b) { b.focus(); b.select(); return true; }
+              const btnAperturar = document.getElementById('btn-aperturar-caja');
+              if (btnAperturar) { btnAperturar.focus(); return true; }
+              const btnHistorial = document.getElementById('btn-ver-historial');
+              if (btnHistorial) { btnHistorial.focus(); return true; }
+              const filtroFecha = document.getElementById('filtro-fecha-desde-finanzas') as HTMLInputElement | null;
+              if (filtroFecha) { filtroFecha.focus(); filtroFecha.select(); return true; }
+            } else if (activeView === 'utilidades') {
+              const b = document.getElementById('buscador-utilidades') as HTMLInputElement | null;
+              if (b) { b.focus(); b.select(); return true; }
+              const f = document.getElementById('filtro-periodo-utilidades');
+              if (f) { f.focus(); return true; }
+            } else if (activeView === 'proveedores') {
+              const b = document.getElementById('buscador-proveedores') as HTMLInputElement | null;
+              if (b) { b.focus(); b.select(); return true; }
+              const btn = document.getElementById('btn-nuevo-proveedor');
+              if (btn) { btn.focus(); return true; }
+            } else if (activeView === 'configuraciones') {
+              const b = document.getElementById('input-empresa-nombre') as HTMLInputElement | null;
+              if (b) { b.focus(); b.select(); return true; }
+              const bUser = document.getElementById('buscador-usuarios-ajustes') as HTMLInputElement | null;
+              if (bUser) { bUser.focus(); bUser.select(); return true; }
+              const btnTab = document.getElementById('btn-tab-empresa') || document.getElementById('btn-tab-usuarios') || document.getElementById('btn-tab-apariencia');
+              if (btnTab) { btnTab.focus(); return true; }
             }
-          }, 30);
+
+            // Fallback general: enfocar el primer elemento interactivo fuera del sidebar
+            const primerInteractivo = document.querySelector<HTMLElement>(
+              '#main-content input:not([disabled]), #main-content button:not([disabled]), main input:not([disabled]), main button:not([disabled])'
+            );
+            if (primerInteractivo) {
+              primerInteractivo.focus();
+              if (primerInteractivo instanceof HTMLInputElement) primerInteractivo.select();
+              return true;
+            }
+            return false;
+          };
+
+          devolverFocoASesion();
+          setTimeout(devolverFocoASesion, 30);
+          setTimeout(devolverFocoASesion, 80);
+          setTimeout(devolverFocoASesion, 200);
         } else {
           // Si está cerrado, Tab lo ABRE y enfoca de inmediato el botón activo en el sidebar
           sidebar?.setAttribute('data-sidebar-open', 'true');

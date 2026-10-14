@@ -654,7 +654,12 @@ export const Finanzas: React.FC = () => {
           searchInput.focus();
           searchInput.select();
         } else {
-          document.getElementById('btn-ver-historial')?.focus();
+          const btnAperturar = document.getElementById('btn-aperturar-caja');
+          if (btnAperturar) {
+            btnAperturar.focus();
+          } else {
+            document.getElementById('btn-ver-historial')?.focus();
+          }
         }
       } else {
         const dateInput = document.getElementById('filtro-fecha-desde-finanzas') as HTMLInputElement | null;
@@ -749,7 +754,12 @@ export const Finanzas: React.FC = () => {
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 if (vistaActual === 'ACTUAL') {
-                  document.getElementById('buscador-finanzas')?.focus();
+                  const b = document.getElementById('buscador-finanzas');
+                  if (b) {
+                    b.focus();
+                  } else {
+                    document.getElementById('btn-aperturar-caja')?.focus();
+                  }
                 } else {
                   document.getElementById('filtro-fecha-desde-finanzas')?.focus();
                 }
@@ -766,15 +776,16 @@ export const Finanzas: React.FC = () => {
                 id="btn-aperturar-caja"
                 onClick={() => setIsAperturaModalOpen(true)} 
                 onKeyDown={(e) => {
-                  if (e.key === 'ArrowUp') {
+                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                     e.preventDefault();
                     e.stopPropagation();
+                    document.getElementById('btn-ver-historial')?.focus();
                   } else if (e.key === 'ArrowLeft') {
                     e.preventDefault();
                     document.getElementById('btn-ver-historial')?.focus();
-                  } else if (e.key === 'ArrowDown') {
+                  } else if (e.key === 'ArrowRight') {
                     e.preventDefault();
-                    document.getElementById('buscador-finanzas')?.focus();
+                    document.getElementById('btn-ver-historial')?.focus();
                   }
                 }}
                 className="flex-1 sm:flex-none bg-[var(--color-accent)] text-white px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"

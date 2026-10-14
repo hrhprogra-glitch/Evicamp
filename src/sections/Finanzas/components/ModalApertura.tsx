@@ -50,12 +50,11 @@ export const ModalApertura: React.FC<Props> = ({ isOpen, onClose, onSuccess }) =
         e.preventDefault();
         e.stopPropagation();
 
-        const modalEl = document.getElementById('modal-apertura-caja');
-        if (!modalEl) return;
-
-        const focusables = Array.from(
-          modalEl.querySelectorAll('input:not([disabled]), button:not([disabled])')
-        ) as HTMLElement[];
+        const focusables = [
+          btnCloseRef.current,
+          inputRef.current,
+          btnSubmitRef.current
+        ].filter(Boolean) as HTMLElement[];
 
         if (focusables.length === 0) return;
 
@@ -83,7 +82,11 @@ export const ModalApertura: React.FC<Props> = ({ isOpen, onClose, onSuccess }) =
   if (!isOpen) return null;
 
   const handleApertura = async () => {
-    if (!monto || Number(monto) < 0) return;
+    if (!monto || Number(monto) < 0) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+      return;
+    }
     setIsSubmitting(true);
 
     const sessionId = Date.now().toString();
@@ -126,9 +129,22 @@ export const ModalApertura: React.FC<Props> = ({ isOpen, onClose, onSuccess }) =
           </h2>
           <button 
             ref={btnCloseRef}
+            id="btn-cerrar-modal-apertura"
             onClick={onClose} 
             title="Cerrar (Esc)"
             aria-label="Cerrar modal"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                inputRef.current?.focus();
+                inputRef.current?.select();
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                btnSubmitRef.current?.focus();
+              }
+            }}
             className="p-1 hover:text-white focus:outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white transition-all cursor-pointer rounded-none"
           >
             <X size={20} strokeWidth={3} />
@@ -155,9 +171,11 @@ export const ModalApertura: React.FC<Props> = ({ isOpen, onClose, onSuccess }) =
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === 'ArrowDown') {
                   e.preventDefault();
+                  e.stopPropagation();
                   btnSubmitRef.current?.focus();
                 } else if (e.key === 'ArrowUp') {
                   e.preventDefault();
+                  e.stopPropagation();
                   btnCloseRef.current?.focus();
                 }
               }}
@@ -173,15 +191,20 @@ export const ModalApertura: React.FC<Props> = ({ isOpen, onClose, onSuccess }) =
             ref={btnSubmitRef}
             id="btn-confirmar-apertura"
             onClick={handleApertura}
-            disabled={!monto || isSubmitting}
+            disabled={isSubmitting}
             onKeyDown={(e) => {
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
+                e.stopPropagation();
                 inputRef.current?.focus();
                 inputRef.current?.select();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                btnCloseRef.current?.focus();
               }
             }}
-            className="w-full bg-[var(--color-ink)] text-white p-3 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] focus:ring-offset-2 transition-all disabled:opacity-50 border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer"
+            className={`w-full bg-[var(--color-ink)] text-white p-3 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] focus:ring-offset-2 transition-all ${!monto ? 'opacity-50' : 'opacity-100'} border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer`}
           >
             {isSubmitting ? 'Abriendo...' : <><CheckCircle2 size={18} /> Confirmar Apertura</>}
           </button>
