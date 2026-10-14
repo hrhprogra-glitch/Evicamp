@@ -520,7 +520,7 @@
       "file_type": "code",
       "norm_label": "loginprops",
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L10"
+      "source_location": "L9"
     },
     {
       "id": "src_utils_permisos_clavepermiso",
@@ -1871,7 +1871,7 @@
       "file_type": "code",
       "norm_label": "login()",
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L36"
+      "source_location": "L35"
     },
     {
       "id": "src_utils_navegacionsesion_programarrestauracionfoco",
@@ -5383,7 +5383,7 @@
       "file_type": "code",
       "norm_label": "carouselslides",
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L15"
+      "source_location": "L14"
     },
     {
       "id": "src_utils_navegacionsesion",
@@ -11428,7 +11428,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L78",
+      "source_location": "L105",
       "weight": 1.0
     },
     {
@@ -12485,7 +12485,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L11",
+      "source_location": "L10",
       "weight": 1.0
     },
     {
@@ -14957,7 +14957,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L3",
+      "source_location": "L2",
       "weight": 1.0
     },
     {
@@ -14969,7 +14969,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L9",
+      "source_location": "L8",
       "weight": 1.0
     },
     {
@@ -14981,7 +14981,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L9",
+      "source_location": "L8",
       "weight": 1.0
     },
     {
@@ -20512,7 +20512,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L2",
+      "source_location": "L1",
       "weight": 1.0
     },
     {
@@ -20524,7 +20524,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L3",
+      "source_location": "L2",
       "weight": 1.0
     },
     {
@@ -20536,7 +20536,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L5",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -20548,7 +20548,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -20560,7 +20560,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L7",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -20572,7 +20572,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L8",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -20584,7 +20584,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L9",
+      "source_location": "L8",
       "weight": 1.0
     },
     {
@@ -27164,24 +27164,13 @@
     },
     {
       "source": "src_sections_login",
-      "target": "src_sections_login_loginprops",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/sections/Login.tsx",
-      "source_location": "L10",
-      "weight": 1.0
-    },
-    {
-      "source": "src_sections_login",
       "target": "src_sections_login_carouselslides",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L15",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -27192,7 +27181,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/sections/Login.tsx",
-      "source_location": "L36",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "src_sections_login",
+      "target": "src_sections_login_loginprops",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/sections/Login.tsx",
+      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -29812,5 +29812,5 @@
       "source_file": ".claude/skills/graphify/SKILL.md"
     }
   ],
-  "built_at_commit": "10e42ca4336ca3e4f5b562a7d18b05b6e808495c"
+  "built_at_commit": "4bca41d70d5f18569ed5f7fa90d63e829b8f0b9a"
 }

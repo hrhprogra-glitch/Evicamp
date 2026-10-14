@@ -1,5 +1,4 @@
-// src/sections/Login.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../db/supabase';
 // IMPORTA TU LOGO AQUÍ. Asegúrate de tener esta imagen en tu carpeta de assets.
 import logoEvicamp from '../assets/logo.png'; 
@@ -39,6 +38,34 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [empresaData, setEmpresaData] = useState({ nombre: 'EVICAMP', logo: logoEvicamp });
+
+  const inputUsuarioRef = useRef<HTMLInputElement>(null);
+  const inputPasswordRef = useRef<HTMLInputElement>(null);
+  const btnSubmitRef = useRef<HTMLButtonElement>(null);
+
+  // Auto-focus en el identificador al montar
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      inputUsuarioRef.current?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Navegación con flechas cuando el foco no está en un input
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement;
+      const isEnForm = active === inputUsuarioRef.current || active === inputPasswordRef.current || active === btnSubmitRef.current;
+      if (!isEnForm) {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          inputUsuarioRef.current?.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
   
   useEffect(() => {
     const fetchEmpresa = async () => {
@@ -134,11 +161,24 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 <div className="w-1.5 h-1.5 bg-[var(--color-accent)]"></div>
                 Identificador_Usuario
               </label>
-              <input autoComplete="off" type="text" 
+              <input 
+                ref={inputUsuarioRef}
+                id="input-login-usuario"
+                autoComplete="off" 
+                type="text" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                    e.preventDefault();
+                    inputPasswordRef.current?.focus();
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    btnSubmitRef.current?.focus();
+                  }
+                }}
                 required
-                className="w-full border-2 border-[var(--color-border)] bg-white px-4 py-4 text-sm font-bold text-[var(--color-ink)] focus:border-[var(--color-accent)] focus:outline-none transition-colors rounded-none placeholder:text-[var(--color-line-light)]"
+                className="w-full border-2 border-[var(--color-border)] bg-white px-4 py-4 text-sm font-bold text-[var(--color-ink)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-0 transition-colors rounded-none placeholder:text-[var(--color-line-light)]"
                 placeholder="INGRESE SU ID..."
               />
             </div>
@@ -148,20 +188,44 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 <div className="w-1.5 h-1.5 bg-[var(--color-accent)]"></div>
                 Clave_Seguridad
               </label>
-              <input autoComplete="off" type="password"
+              <input 
+                ref={inputPasswordRef}
+                id="input-login-password"
+                autoComplete="off" 
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    inputUsuarioRef.current?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    btnSubmitRef.current?.focus();
+                  }
+                }}
                 required
-                className="w-full border-2 border-[var(--color-border)] bg-white px-4 py-4 text-sm font-bold text-[var(--color-ink)] focus:border-[var(--color-accent)] focus:outline-none transition-colors rounded-none placeholder:text-[var(--color-line-light)]"
+                className="w-full border-2 border-[var(--color-border)] bg-white px-4 py-4 text-sm font-bold text-[var(--color-ink)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-0 transition-colors rounded-none placeholder:text-[var(--color-line-light)]"
                 placeholder="••••••••"
               />
             </div>
 
             {/* BOTÓN PRIMORDIAL ESMERALDA */}
             <button
+              ref={btnSubmitRef}
+              id="btn-login-submit"
               type="submit"
               disabled={loading}
-              className="w-full bg-[var(--color-accent)] text-[var(--color-ink)] border-2 border-[var(--color-ink)] px-4 py-5 text-sm font-black uppercase tracking-[0.2em] hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-all disabled:opacity-50 mt-8 rounded-none cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  inputPasswordRef.current?.focus();
+                } else if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  inputUsuarioRef.current?.focus();
+                }
+              }}
+              className="w-full bg-[var(--color-accent)] text-[var(--color-ink)] border-2 border-[var(--color-ink)] px-4 py-5 text-sm font-black uppercase tracking-[0.2em] hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] focus:outline-none focus:ring-0 transition-all disabled:opacity-50 mt-8 rounded-none cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
             >
               {loading ? 'AUTENTICANDO...' : 'EJECUTAR INGRESO'}
             </button>
@@ -220,6 +284,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
            {carouselSlides.map((_, index) => (
              <button 
                 key={index}
+                tabIndex={-1}
                 onClick={() => setCurrentSlide(index)}
                 className={`h-1.5 transition-all cursor-pointer ${
                   index === currentSlide ? 'w-16 bg-[var(--color-accent)]' : 'w-8 bg-white/20 hover:bg-white/40'
