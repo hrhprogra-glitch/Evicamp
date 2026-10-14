@@ -77,6 +77,13 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
     setCurrentPage(1);
   };
 
+  const limpiarFiltrosHistorial = () => {
+    setHistorialSearchProd('');
+    setHistorialSearchDate('');
+    // El botón desaparece al limpiar: devolver el foco al selector de fecha
+    setTimeout(() => document.getElementById('fecha-historial-clientes')?.focus(), 50);
+  };
+
   // Resetear la página si cambian los filtros
   useEffect(() => {
       setCurrentPage(1);
@@ -425,6 +432,36 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
           if (e.key === "ArrowLeft") {
             e.preventDefault();
             document.getElementById("buscador-historial-clientes")?.focus();
+            return;
+          }
+          if (e.key === "ArrowRight") {
+            const btnLimpiar = document.getElementById("btn-limpiar-filtros-historial");
+            if (btnLimpiar) {
+              e.preventDefault();
+              btnLimpiar.focus();
+              return;
+            }
+          }
+          if (e.key === "ArrowUp") {
+            e.preventDefault();
+            document.getElementById("tab-historial-pagadas")?.focus();
+            return;
+          }
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            const firstCard = document.querySelector('div[role="button"][data-id]') as HTMLElement;
+            if (firstCard) firstCard.focus();
+            return;
+          }
+        } else if (active?.id === "btn-limpiar-filtros-historial") {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            limpiarFiltrosHistorial();
+            return;
+          }
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            document.getElementById("fecha-historial-clientes")?.focus();
             return;
           }
           if (e.key === "ArrowUp") {
@@ -844,6 +881,18 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                   }}
                   className="w-full sm:w-auto border-2 border-[var(--color-border)] px-4 py-2 text-xs font-black uppercase text-[var(--color-ink)] outline-none focus:border-[var(--color-info)] cursor-pointer bg-white rounded-none"
                 />
+
+                {/* Botón de Limpiar Filtros del Historial */}
+                {(historialSearchProd !== "" || historialSearchDate !== "") && (
+                  <button
+                    id="btn-limpiar-filtros-historial"
+                    onClick={limpiarFiltrosHistorial}
+                    className="p-2.5 border-2 border-[var(--color-border)] bg-[var(--color-danger-bg)] text-[var(--color-danger)] hover:bg-[var(--color-danger)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors cursor-pointer rounded-none shrink-0"
+                    title="Limpiar Filtros"
+                  >
+                    <FilterX size={16} />
+                  </button>
+                )}
               </div>
 
               <div className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
