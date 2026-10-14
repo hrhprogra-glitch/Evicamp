@@ -218,19 +218,19 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
             } else {
               // Fila 0: Subir a paginación superior antes de ir al buscador o filtros
               const btnPrev = document.getElementById('btn-pag-prev-utilidades');
-              if (btnPrev && !btnPrev.hasAttribute('disabled')) {
+              const btnNext = document.getElementById('btn-pag-next-utilidades');
+              if (btnPrev && btnPrev.getAttribute('aria-disabled') !== 'true') {
+                btnPrev.focus();
+              } else if (btnNext) {
+                btnNext.focus();
+              } else if (btnPrev) {
                 btnPrev.focus();
               } else {
-                const btnNext = document.getElementById('btn-pag-next-utilidades');
-                if (btnNext && !btnNext.hasAttribute('disabled')) {
-                  btnNext.focus();
-                } else {
-                  const searchInput = searchInputRef.current;
-                  if (searchInput) {
-                    searchInput.focus();
-                    searchInput.select();
-                    searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                  }
+                const searchInput = searchInputRef.current;
+                if (searchInput) {
+                  searchInput.focus();
+                  searchInput.select();
+                  searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
               }
             }
@@ -259,6 +259,20 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, [productoSeleccionado, datosPaginados]);
 
+  const focusPaginacionUtilidades = () => {
+    const btnPrev = document.getElementById('btn-pag-prev-utilidades');
+    const btnNext = document.getElementById('btn-pag-next-utilidades');
+    if (btnPrev && btnPrev.getAttribute('aria-disabled') !== 'true') {
+      btnPrev.focus();
+    } else if (btnNext) {
+      btnNext.focus();
+    } else if (btnPrev) {
+      btnPrev.focus();
+    } else {
+      focusPrimerRegistro();
+    }
+  };
+
   return (
     <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-none flex flex-col mt-4 font-mono">
 
@@ -286,7 +300,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                 if (e.key === 'ArrowDown') {
                   e.preventDefault();
                   e.stopPropagation();
-                  focusPrimerRegistro();
+                  focusPaginacionUtilidades();
                 } else if (e.key === 'ArrowUp') {
                   e.preventDefault();
                   e.stopPropagation();
@@ -316,7 +330,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
-                focusPrimerRegistro();
+                focusPaginacionUtilidades();
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -343,7 +357,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
-                focusPrimerRegistro();
+                focusPaginacionUtilidades();
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -384,7 +398,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                     } else if (e.key === 'ArrowDown') {
                       e.preventDefault();
                       e.stopPropagation();
-                      focusPrimerRegistro();
+                      focusPaginacionUtilidades();
                     } else if (e.key === 'ArrowLeft') {
                       e.preventDefault();
                       e.stopPropagation();
@@ -430,7 +444,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                     } else if (e.key === 'ArrowDown') {
                       e.preventDefault();
                       e.stopPropagation();
-                      focusPrimerRegistro();
+                      focusPaginacionUtilidades();
                     } else if (e.key === 'ArrowLeft') {
                       e.preventDefault();
                       e.stopPropagation();
@@ -465,7 +479,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                 } else if (e.key === 'ArrowDown') {
                   e.preventDefault();
                   e.stopPropagation();
-                  focusPrimerRegistro();
+                  focusPaginacionUtilidades();
                 } else if (e.key === 'ArrowLeft') {
                   e.preventDefault();
                   e.stopPropagation();
@@ -493,7 +507,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
-                focusPrimerRegistro();
+                focusPaginacionUtilidades();
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -501,12 +515,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 e.stopPropagation();
-                const btnPrev = document.getElementById('btn-pag-prev-utilidades');
-                if (btnPrev && !btnPrev.hasAttribute('disabled')) {
-                  btnPrev.focus();
-                } else {
-                  document.getElementById('btn-pag-next-utilidades')?.focus();
-                }
+                focusPaginacionUtilidades();
               }
             }}
             className="bg-[var(--color-ink)] hover:bg-[var(--color-accent-shadow)] text-[var(--color-surface)] px-3 py-2 rounded-none transition-colors cursor-pointer border border-[var(--color-border)] hover:border-[var(--color-accent-shadow)] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-shadow)]"
@@ -525,13 +534,19 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
         <div className="flex gap-2">
           <button 
             id="btn-pag-prev-utilidades"
-            onClick={() => setPaginaActual(p => Math.max(1, p - 1))}
-            disabled={paginaActual === 1}
+            aria-disabled={paginaActual <= 1}
+            tabIndex={0}
+            onClick={() => {
+              if (paginaActual <= 1) return;
+              setPaginaActual(p => Math.max(1, p - 1));
+            }}
             onKeyDown={(e) => {
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('btn-limpiar-filtros-utilidades')?.focus();
+                const search = searchInputRef.current;
+                if (search) search.focus();
+                else document.getElementById('btn-limpiar-filtros-utilidades')?.focus();
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -543,25 +558,30 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 e.stopPropagation();
-                const btnNext = document.getElementById('btn-pag-next-utilidades');
-                if (btnNext && !btnNext.hasAttribute('disabled')) {
-                  btnNext.focus();
-                }
+                document.getElementById('btn-pag-next-utilidades')?.focus();
               }
             }}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white"
+            className={`w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white ${
+              paginaActual <= 1 ? 'opacity-40 cursor-not-allowed' : ''
+            }`}
           >
             <ChevronLeft size={16} />
           </button>
           <button 
             id="btn-pag-next-utilidades"
-            onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))}
-            disabled={paginaActual === totalPaginas}
+            aria-disabled={paginaActual >= totalPaginas}
+            tabIndex={0}
+            onClick={() => {
+              if (paginaActual >= totalPaginas) return;
+              setPaginaActual(p => Math.min(totalPaginas, p + 1));
+            }}
             onKeyDown={(e) => {
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('btn-limpiar-filtros-utilidades')?.focus();
+                const search = searchInputRef.current;
+                if (search) search.focus();
+                else document.getElementById('btn-limpiar-filtros-utilidades')?.focus();
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -569,18 +589,15 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
-                const btnPrev = document.getElementById('btn-pag-prev-utilidades');
-                if (btnPrev && !btnPrev.hasAttribute('disabled')) {
-                  btnPrev.focus();
-                } else {
-                  document.getElementById('btn-limpiar-filtros-utilidades')?.focus();
-                }
+                document.getElementById('btn-pag-prev-utilidades')?.focus();
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 e.stopPropagation();
               }
             }}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white"
+            className={`w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white ${
+              paginaActual >= totalPaginas ? 'opacity-40 cursor-not-allowed' : ''
+            }`}
           >
             <ChevronRight size={16} />
           </button>
@@ -689,8 +706,12 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
         <div className="flex gap-2">
           <button 
             id="btn-pag-bottom-prev-utilidades"
-            onClick={() => setPaginaActual(p => Math.max(1, p - 1))}
-            disabled={paginaActual === 1}
+            aria-disabled={paginaActual <= 1}
+            tabIndex={0}
+            onClick={() => {
+              if (paginaActual <= 1) return;
+              setPaginaActual(p => Math.max(1, p - 1));
+            }}
             onKeyDown={(e) => {
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
@@ -703,20 +724,23 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 e.stopPropagation();
-                const btnBottomNext = document.getElementById('btn-pag-bottom-next-utilidades');
-                if (btnBottomNext && !btnBottomNext.hasAttribute('disabled')) {
-                  btnBottomNext.focus();
-                }
+                document.getElementById('btn-pag-bottom-next-utilidades')?.focus();
               }
             }}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white"
+            className={`w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white ${
+              paginaActual <= 1 ? 'opacity-40 cursor-not-allowed' : ''
+            }`}
           >
             <ChevronLeft size={16} />
           </button>
           <button 
             id="btn-pag-bottom-next-utilidades"
-            onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))}
-            disabled={paginaActual === totalPaginas}
+            aria-disabled={paginaActual >= totalPaginas}
+            tabIndex={0}
+            onClick={() => {
+              if (paginaActual >= totalPaginas) return;
+              setPaginaActual(p => Math.min(totalPaginas, p + 1));
+            }}
             onKeyDown={(e) => {
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
@@ -729,16 +753,12 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
-                const btnBottomPrev = document.getElementById('btn-pag-bottom-prev-utilidades');
-                if (btnBottomPrev && !btnBottomPrev.hasAttribute('disabled')) {
-                  btnBottomPrev.focus();
-                } else {
-                  const rows = Array.from(document.querySelectorAll('#tabla-analisis-productos tr[data-row="true"]')) as HTMLElement[];
-                  if (rows.length > 0) rows[rows.length - 1].focus();
-                }
+                document.getElementById('btn-pag-bottom-prev-utilidades')?.focus();
               }
             }}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white"
+            className={`w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white ${
+              paginaActual >= totalPaginas ? 'opacity-40 cursor-not-allowed' : ''
+            }`}
           >
             <ChevronRight size={16} />
           </button>

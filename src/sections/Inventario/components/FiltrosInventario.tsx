@@ -50,6 +50,20 @@ export const FiltrosInventario: React.FC<Props> = ({
     }
   };
 
+  const focusPaginacionInventario = () => {
+    const btnPrev = document.getElementById('btn-pag-prev-inventario');
+    const btnNext = document.getElementById('btn-pag-next-inventario');
+    if (btnPrev && btnPrev.getAttribute('aria-disabled') !== 'true') {
+      btnPrev.focus();
+    } else if (btnNext) {
+      btnNext.focus();
+    } else if (btnPrev) {
+      btnPrev.focus();
+    } else {
+      focusPrimerRegistro();
+    }
+  };
+
   return (
     <div className="flex flex-col xl:flex-row gap-4 px-8 shrink-0 items-center justify-between">
       
@@ -76,7 +90,7 @@ export const FiltrosInventario: React.FC<Props> = ({
               if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
-                focusPrimerRegistro();
+                focusPaginacionInventario();
               } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -142,7 +156,7 @@ export const FiltrosInventario: React.FC<Props> = ({
             } else if (e.key === 'ArrowDown') {
               e.preventDefault();
               e.stopPropagation();
-              focusPrimerRegistro();
+              focusPaginacionInventario();
             } else if (e.key === 'ArrowLeft') {
               e.preventDefault();
               e.stopPropagation();
@@ -174,7 +188,7 @@ export const FiltrosInventario: React.FC<Props> = ({
             } else if (e.key === 'ArrowDown') {
               e.preventDefault();
               e.stopPropagation();
-              focusPrimerRegistro();
+              focusPaginacionInventario();
             } else if (e.key === 'ArrowLeft') {
               e.preventDefault();
               e.stopPropagation();
@@ -206,7 +220,7 @@ export const FiltrosInventario: React.FC<Props> = ({
             } else if (e.key === 'ArrowDown') {
               e.preventDefault();
               e.stopPropagation();
-              focusPrimerRegistro();
+              focusPaginacionInventario();
             } else if (e.key === 'ArrowLeft') {
               e.preventDefault();
               e.stopPropagation();
@@ -237,20 +251,13 @@ export const FiltrosInventario: React.FC<Props> = ({
               document.getElementById('btn-proveedores')?.focus();
             } else if (e.key === 'ArrowDown') {
               e.preventDefault();
-              const btnPrev = document.getElementById('btn-pag-prev-inventario');
-              const btnNext = document.getElementById('btn-pag-next-inventario');
-              if (btnPrev && !btnPrev.hasAttribute('disabled')) btnPrev.focus();
-              else if (btnNext && !btnNext.hasAttribute('disabled')) btnNext.focus();
-              else focusPrimerRegistro();
+              focusPaginacionInventario();
             } else if (e.key === 'ArrowLeft') {
               e.preventDefault();
               document.getElementById('filtro-orden-inventario')?.focus();
             } else if (e.key === 'ArrowRight') {
               e.preventDefault();
-              const btnPrev = document.getElementById('btn-pag-prev-inventario');
-              const btnNext = document.getElementById('btn-pag-next-inventario');
-              if (btnPrev && !btnPrev.hasAttribute('disabled')) btnPrev.focus();
-              else if (btnNext && !btnNext.hasAttribute('disabled')) btnNext.focus();
+              focusPaginacionInventario();
             }
           }}
           title="Limpiar todos los filtros"

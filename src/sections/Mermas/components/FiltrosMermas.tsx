@@ -38,6 +38,20 @@ export const FiltrosMermas: React.FC<Props> = ({
     }
   };
 
+  const focusPaginacionMermas = () => {
+    const btnPrev = document.getElementById('btn-pag-prev-mermas');
+    const btnNext = document.getElementById('btn-pag-next-mermas');
+    if (btnPrev && btnPrev.getAttribute('aria-disabled') !== 'true') {
+      btnPrev.focus();
+    } else if (btnNext) {
+      btnNext.focus();
+    } else if (btnPrev) {
+      btnPrev.focus();
+    } else {
+      focusPrimerRegistro();
+    }
+  };
+
   return (
     <div className="px-3 lg:px-4 shrink-0 flex flex-col gap-4">
       <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-4">
@@ -58,7 +72,7 @@ export const FiltrosMermas: React.FC<Props> = ({
               if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
-                focusPrimerRegistro();
+                focusPaginacionMermas();
               } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -96,7 +110,7 @@ export const FiltrosMermas: React.FC<Props> = ({
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
-                focusPrimerRegistro();
+                focusPaginacionMermas();
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -135,7 +149,7 @@ export const FiltrosMermas: React.FC<Props> = ({
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
-                focusPrimerRegistro();
+                focusPaginacionMermas();
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -208,7 +222,7 @@ export const FiltrosMermas: React.FC<Props> = ({
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
-                focusPrimerRegistro();
+                focusPaginacionMermas();
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -220,10 +234,7 @@ export const FiltrosMermas: React.FC<Props> = ({
                 if (btnLimpiar) {
                   btnLimpiar.focus();
                 } else {
-                  const btnPrev = document.getElementById('btn-pag-prev-mermas');
-                  const btnNext = document.getElementById('btn-pag-next-mermas');
-                  if (btnPrev && !btnPrev.hasAttribute('disabled')) btnPrev.focus();
-                  else if (btnNext && !btnNext.hasAttribute('disabled')) btnNext.focus();
+                  focusPaginacionMermas();
                 }
               }
             }}
@@ -245,11 +256,7 @@ export const FiltrosMermas: React.FC<Props> = ({
                 } else if (e.key === 'ArrowDown') {
                   e.preventDefault();
                   e.stopPropagation();
-                  const btnPrev = document.getElementById('btn-pag-prev-mermas');
-                  const btnNext = document.getElementById('btn-pag-next-mermas');
-                  if (btnPrev && !btnPrev.hasAttribute('disabled')) btnPrev.focus();
-                  else if (btnNext && !btnNext.hasAttribute('disabled')) btnNext.focus();
-                  else focusPrimerRegistro();
+                  focusPaginacionMermas();
                 } else if (e.key === 'ArrowLeft') {
                   e.preventDefault();
                   e.stopPropagation();
@@ -257,10 +264,7 @@ export const FiltrosMermas: React.FC<Props> = ({
                 } else if (e.key === 'ArrowRight') {
                   e.preventDefault();
                   e.stopPropagation();
-                  const btnPrev = document.getElementById('btn-pag-prev-mermas');
-                  const btnNext = document.getElementById('btn-pag-next-mermas');
-                  if (btnPrev && !btnPrev.hasAttribute('disabled')) btnPrev.focus();
-                  else if (btnNext && !btnNext.hasAttribute('disabled')) btnNext.focus();
+                  focusPaginacionMermas();
                 }
               }}
               className="h-full w-full min-h-[46px] bg-white border-2 border-[var(--color-danger)] text-[var(--color-danger)] flex items-center justify-center hover:bg-[var(--color-danger)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-danger)] transition-colors cursor-pointer rounded-none font-bold text-[12px] xl:text-xs uppercase"

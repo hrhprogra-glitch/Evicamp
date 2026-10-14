@@ -11440,7 +11440,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/sections/Mermas/components/TablaMermas.tsx",
-      "source_location": "L209",
+      "source_location": "L224",
       "weight": 1.0
     },
     {
@@ -11812,7 +11812,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/sections/Utilidades/components/TablaAnalisisProductos.tsx",
-      "source_location": "L614",
+      "source_location": "L631",
       "weight": 1.0
     },
     {
@@ -29812,5 +29812,5 @@
       "source_file": ".claude/skills/graphify/SKILL.md"
     }
   ],
-  "built_at_commit": "83a3189d70ccdd55234689e07d05bce6e3f94711"
+  "built_at_commit": "9dd0814bb0f0cfdfe04fdf5469f6d14edf5ba6fd"
 }

@@ -84,9 +84,9 @@
     "semantic_hash": "22ecc8730912f6b22a5e32710bfe31b1"
   },
   "src/sections/Fiados/components/ModalClientes.tsx": {
-    "mtime": 1791955603.1233406,
-    "seen": 1791956920.568988,
-    "ast_hash": "ea4ff5ac6e205697665c07977b8e1862",
+    "mtime": 1791993218.9827285,
+    "seen": 1791993233.2402272,
+    "ast_hash": "351d3e19b32e6fb0ad6c403be6492a22",
     "semantic_hash": ""
   },
   "src/sections/Fiados/components/ModalDetalleFiado.tsx": {

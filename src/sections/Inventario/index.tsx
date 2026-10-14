@@ -313,10 +313,12 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               // Fila 0 (primera fila): SUBIR A LA PAGINACIÓN SUPERIOR
               const btnPrev = document.getElementById('btn-pag-prev-inventario');
               const btnNext = document.getElementById('btn-pag-next-inventario');
-              if (btnPrev && !btnPrev.hasAttribute('disabled')) {
+              if (btnPrev && btnPrev.getAttribute('aria-disabled') !== 'true') {
                 btnPrev.focus();
-              } else if (btnNext && !btnNext.hasAttribute('disabled')) {
+              } else if (btnNext) {
                 btnNext.focus();
+              } else if (btnPrev) {
+                btnPrev.focus();
               } else {
                 const searchInput = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
                 if (searchInput) {

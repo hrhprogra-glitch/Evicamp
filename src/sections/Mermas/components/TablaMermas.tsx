@@ -27,6 +27,9 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
     const prevId = position === 'top' ? 'btn-pag-prev-mermas' : 'btn-pag-bottom-prev-mermas';
     const nextId = position === 'top' ? 'btn-pag-next-mermas' : 'btn-pag-bottom-next-mermas';
 
+    const isPrevDisabled = currentPage <= 1;
+    const isNextDisabled = currentPage >= totalPages;
+
     return (
       <div className={`${position === 'top' ? 'border-b' : 'border-t'} border-[var(--color-border)] bg-[var(--color-surface)] p-4 flex items-center justify-between shrink-0 rounded-none`}>
         <span className="text-xs font-black text-[var(--color-muted)] uppercase tracking-widest">
@@ -35,14 +38,17 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
         <div className="flex gap-2">
           <button 
             id={prevId}
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
+            aria-disabled={isPrevDisabled}
+            tabIndex={0}
+            onClick={() => {
+              if (isPrevDisabled) return;
+              setCurrentPage(prev => Math.max(prev - 1, 1));
+            }}
             onKeyDown={(e) => {
               if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 e.stopPropagation();
-                const btnNext = document.getElementById(nextId);
-                if (btnNext && !btnNext.hasAttribute('disabled')) btnNext.focus();
+                document.getElementById(nextId)?.focus();
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -53,9 +59,13 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
                 e.preventDefault();
                 e.stopPropagation();
                 if (position === 'top') {
-                  const btnLimpiar = document.getElementById('btn-limpiar-filtros-mermas');
-                  if (btnLimpiar) btnLimpiar.focus();
-                  else document.getElementById('filtro-fecha-mermas')?.focus();
+                  const search = document.getElementById('buscador-global-mermas');
+                  if (search) search.focus();
+                  else {
+                    const btnLimpiar = document.getElementById('btn-limpiar-filtros-mermas');
+                    if (btnLimpiar) btnLimpiar.focus();
+                    else document.getElementById('filtro-fecha-mermas')?.focus();
+                  }
                 } else {
                   const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
                   if (rows.length > 0) rows[rows.length - 1].focus();
@@ -69,26 +79,25 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
                 }
               }
             }}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-[var(--color-surface)]"
+            className={`w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-[var(--color-surface)] ${
+              isPrevDisabled ? 'opacity-40 cursor-not-allowed' : ''
+            }`}
           >
             <ChevronLeft size={16} />
           </button>
           <button 
             id={nextId}
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
+            aria-disabled={isNextDisabled}
+            tabIndex={0}
+            onClick={() => {
+              if (isNextDisabled) return;
+              setCurrentPage(prev => Math.min(prev + 1, totalPages));
+            }}
             onKeyDown={(e) => {
               if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
-                const btnPrev = document.getElementById(prevId);
-                if (btnPrev && !btnPrev.hasAttribute('disabled')) {
-                  btnPrev.focus();
-                } else {
-                  const btnLimpiar = document.getElementById('btn-limpiar-filtros-mermas');
-                  if (btnLimpiar) btnLimpiar.focus();
-                  else document.getElementById('filtro-fecha-mermas')?.focus();
-                }
+                document.getElementById(prevId)?.focus();
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -96,9 +105,13 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
                 e.preventDefault();
                 e.stopPropagation();
                 if (position === 'top') {
-                  const btnLimpiar = document.getElementById('btn-limpiar-filtros-mermas');
-                  if (btnLimpiar) btnLimpiar.focus();
-                  else document.getElementById('filtro-fecha-mermas')?.focus();
+                  const search = document.getElementById('buscador-global-mermas');
+                  if (search) search.focus();
+                  else {
+                    const btnLimpiar = document.getElementById('btn-limpiar-filtros-mermas');
+                    if (btnLimpiar) btnLimpiar.focus();
+                    else document.getElementById('filtro-fecha-mermas')?.focus();
+                  }
                 } else {
                   const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
                   if (rows.length > 0) rows[rows.length - 1].focus();
@@ -112,7 +125,9 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
                 }
               }
             }}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-[var(--color-surface)]"
+            className={`w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-[var(--color-surface)] ${
+              isNextDisabled ? 'opacity-40 cursor-not-allowed' : ''
+            }`}
           >
             <ChevronRight size={16} />
           </button>

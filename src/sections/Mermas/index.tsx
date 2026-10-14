@@ -283,9 +283,9 @@ export const Mermas: React.FC = () => {
               // Última fila: bajar a la paginación
               const btnNext = document.getElementById('btn-pag-bottom-next-mermas') || document.getElementById('btn-pag-next-mermas');
               const btnPrev = document.getElementById('btn-pag-bottom-prev-mermas') || document.getElementById('btn-pag-prev-mermas');
-              if (btnNext && !btnNext.hasAttribute('disabled')) {
+              if (btnNext) {
                 btnNext.focus();
-              } else if (btnPrev && !btnPrev.hasAttribute('disabled')) {
+              } else if (btnPrev) {
                 btnPrev.focus();
               }
             }
@@ -300,10 +300,12 @@ export const Mermas: React.FC = () => {
               // Fila 0: Subir a la paginación superior
               const btnPrev = document.getElementById('btn-pag-prev-mermas');
               const btnNext = document.getElementById('btn-pag-next-mermas');
-              if (btnPrev && !btnPrev.hasAttribute('disabled')) {
+              if (btnPrev && btnPrev.getAttribute('aria-disabled') !== 'true') {
                 btnPrev.focus();
-              } else if (btnNext && !btnNext.hasAttribute('disabled')) {
+              } else if (btnNext) {
                 btnNext.focus();
+              } else if (btnPrev) {
+                btnPrev.focus();
               } else {
                 const searchInput = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
                 if (searchInput) {
