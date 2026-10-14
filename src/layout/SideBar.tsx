@@ -10,6 +10,7 @@ import logoEvicamp from '../assets/logo.png';
 import { supabase } from '../db/supabase';
 import { puedeVerModulo } from '../utils/permisos';
 import { cerrarSesion } from '../utils/sesion';
+import { programarRestauracionFoco } from '../utils/navegacionSesion';
 
 interface SideBarProps {
   isOpen: boolean;
@@ -48,6 +49,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
       e.preventDefault();
       e.stopPropagation();
       onClose();
+      programarRestauracionFoco(currentView);
       return;
     }
 
@@ -87,27 +89,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
       e.preventDefault();
       e.stopPropagation();
       onClose();
-      if (currentView === 'inventario') {
-        const b = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
-        b?.focus();
-        b?.select();
-      } else if (currentView === 'fiados') {
-        const b = document.getElementById('buscador-global-fiados') as HTMLInputElement | null;
-        b?.focus();
-        b?.select();
-      } else if (currentView === 'pos') {
-        const b = document.getElementById('buscador-global-pos') as HTMLInputElement | null;
-        b?.focus();
-        b?.select();
-      } else if (currentView === 'mermas') {
-        const b = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
-        b?.focus();
-        b?.select();
-      } else if (currentView === 'finanzas') {
-        const b = document.getElementById('buscador-finanzas') as HTMLInputElement | null;
-        b?.focus();
-        b?.select();
-      }
+      programarRestauracionFoco(currentView);
       return;
     }
   };
@@ -182,6 +164,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
           e.preventDefault();
           e.stopPropagation();
           onClose();
+          programarRestauracionFoco(currentView);
           return;
         }
 
@@ -209,6 +192,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
           e.preventDefault();
           e.stopPropagation();
           onClose();
+          programarRestauracionFoco(currentView);
           return;
         }
       };
@@ -222,50 +206,8 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
         window.removeEventListener('keydown', handleGlobalKeyDown, { capture: true });
       };
     } else {
-      // Cuando se oculta, devolver el foco al buscador principal de la sesión actual
-      const timer = setTimeout(() => {
-        if (currentView === 'pos') {
-          const searchInput = document.getElementById('buscador-global-pos') as HTMLInputElement;
-          if (searchInput) {
-            searchInput.focus();
-            searchInput.select();
-          }
-        } else if (currentView === 'fiados') {
-          const searchInputFiados = document.getElementById('buscador-global-fiados') as HTMLInputElement;
-          if (searchInputFiados) {
-            searchInputFiados.focus();
-            searchInputFiados.select();
-          }
-        } else if (currentView === 'inventario') {
-          const searchInputInventario = document.getElementById('buscador-global-inventario') as HTMLInputElement;
-          if (searchInputInventario) {
-            searchInputInventario.focus();
-            searchInputInventario.select();
-          }
-        } else if (currentView === 'mermas') {
-          const searchInputMermas = document.getElementById('buscador-global-mermas') as HTMLInputElement;
-          if (searchInputMermas) {
-            searchInputMermas.focus();
-            searchInputMermas.select();
-          }
-        } else if (currentView === 'finanzas') {
-          const enfocarFinanzas = () => {
-            const searchInputFinanzas = document.getElementById('buscador-finanzas') as HTMLInputElement;
-            if (searchInputFinanzas) {
-              searchInputFinanzas.focus();
-              searchInputFinanzas.select();
-              return true;
-            }
-            return false;
-          };
-          if (!enfocarFinanzas()) {
-            setTimeout(enfocarFinanzas, 100);
-            setTimeout(enfocarFinanzas, 250);
-            setTimeout(enfocarFinanzas, 500);
-          }
-        }
-      }, 50);
-      return () => clearTimeout(timer);
+      // Cuando se oculta, devolver el foco al elemento principal de la sesión actual
+      programarRestauracionFoco(currentView);
     }
   }, [isOpen, currentView]);
 
@@ -327,7 +269,14 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
     <>
     {/* FONDO OSCURO: solo en tablet/celular cuando el menú está abierto; al tocarlo se cierra */}
     {isOpen && (
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden" onClick={onClose} aria-hidden="true"></div>
+      <div 
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden" 
+        onClick={() => {
+          onClose();
+          programarRestauracionFoco(currentView);
+        }} 
+        aria-hidden="true"
+      ></div>
     )}
 
     {/* En tablet/celular el menú es un panel deslizable sobre el contenido; en escritorio es una columna fija que se expande o contrae */}

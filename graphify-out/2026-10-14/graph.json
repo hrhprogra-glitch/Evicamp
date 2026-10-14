@@ -1871,7 +1871,7 @@
       "file_type": "code",
       "norm_label": "handlenavigate()",
       "source_file": "src/App.tsx",
-      "source_location": "L217"
+      "source_location": "L242"
     },
     {
       "id": "src_layout_alertayape_alertayape",
@@ -10649,7 +10649,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.tsx",
-      "source_location": "L150",
+      "source_location": "L175",
       "weight": 1.0
     },
     {
@@ -10661,7 +10661,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.tsx",
-      "source_location": "L150",
+      "source_location": "L175",
       "weight": 1.0
     },
     {
@@ -10673,7 +10673,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.tsx",
-      "source_location": "L154",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -10685,7 +10685,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.tsx",
-      "source_location": "L186",
+      "source_location": "L211",
       "weight": 1.0
     },
     {
@@ -10697,7 +10697,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.tsx",
-      "source_location": "L218",
+      "source_location": "L243",
       "weight": 1.0
     },
     {
@@ -11177,7 +11177,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/sections/Finanzas/index.tsx",
-      "source_location": "L1066",
+      "source_location": "L1077",
       "weight": 1.0
     },
     {
@@ -26017,7 +26017,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.tsx",
-      "source_location": "L217",
+      "source_location": "L242",
       "weight": 1.0
     },
     {
@@ -29671,5 +29671,5 @@
       "source_file": ".claude/skills/graphify/SKILL.md"
     }
   ],
-  "built_at_commit": "2f56f30ba0c37882a462ce79ef8e64fbcc6216e9"
+  "built_at_commit": "eb590b9d18ff58a9567642f3539df35efe7bea51"
 }

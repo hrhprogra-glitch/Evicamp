@@ -18,9 +18,9 @@
     "semantic_hash": "010de1bfb4f2c6a2a1fcb3d67915ec8f"
   },
   "src/App.tsx": {
-    "mtime": 1791956761.0237277,
-    "seen": 1791956920.5689762,
-    "ast_hash": "7a8548107b51ab84e1bce174770d0b46",
+    "mtime": 1791990124.9899762,
+    "seen": 1791990306.9173434,
+    "ast_hash": "899e42642c92712f0c400b45867ab7c5",
     "semantic_hash": ""
   },
   "src/db/supabase.ts": {
@@ -30,9 +30,9 @@
     "semantic_hash": "4bd6d4148302b242d97873595cc455bc"
   },
   "src/layout/SideBar.tsx": {
-    "mtime": 1791955603.1212897,
-    "seen": 1791956920.5689802,
-    "ast_hash": "6d622ca8fa4159ef4a46d6fa7355b094",
+    "mtime": 1791990237.603642,
+    "seen": 1791990306.917351,
+    "ast_hash": "911e2cdbfc0e1b942b4f66fc5480bab8",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -1419,6 +1419,12 @@
     "mtime": 1791642480.4481716,
     "seen": 1791935213.204261,
     "ast_hash": "68ab99f602666f0512db4f62bb13bab7",
+    "semantic_hash": ""
+  },
+  "src/utils/navegacionSesion.ts": {
+    "mtime": 1791990027.5059233,
+    "seen": 1791990306.9174707,
+    "ast_hash": "29111697358f1f55be5ff805c646e508",
     "semantic_hash": ""
   }
 }
