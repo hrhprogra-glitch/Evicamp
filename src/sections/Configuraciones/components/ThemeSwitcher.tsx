@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Palette, CheckCircle2, Monitor } from 'lucide-react';
 import { leerTamanoInterfaz, guardarTamanoInterfaz, type TamanoInterfaz } from '../../../utils/tamanoInterfaz';
 
@@ -38,6 +38,56 @@ export const ThemeSwitcher: React.FC = () => {
       }
   };
 
+  // 🧲 Autofoco inicial en el tema activo
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const activeBtn = document.getElementById(`btn-tema-${theme}`) || document.getElementById('btn-tema-classic');
+      activeBtn?.focus();
+    }, 60);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 🔒 Navegación con Tab dentro del selector de temas y tamaños sin abrir el sidebar
+  useEffect(() => {
+    const handleTabTrap = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        const order = [
+          'btn-tema-classic',
+          'btn-tema-monochrome',
+          'btn-tema-oceano',
+          'btn-tema-atardecer',
+          'btn-tema-bosque',
+          'btn-tema-rosa',
+          'btn-tamano-auto',
+          'btn-tamano-normal',
+          'btn-tamano-grande',
+        ];
+
+        const activeId = document.activeElement?.id;
+        const currentIndex = order.indexOf(activeId || '');
+
+        if (currentIndex !== -1) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          if (e.shiftKey && currentIndex === 0) {
+            document.getElementById('btn-tab-apariencia')?.focus();
+            return;
+          }
+
+          let nextIndex = e.shiftKey ? currentIndex - 1 : currentIndex + 1;
+          if (nextIndex < 0) nextIndex = order.length - 1;
+          if (nextIndex >= order.length) nextIndex = 0;
+
+          document.getElementById(order[nextIndex])?.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleTabTrap, { capture: true });
+    return () => window.removeEventListener('keydown', handleTabTrap, { capture: true });
+  }, []);
+
   return (
     <div className="bg-white border-2 border-[var(--color-border)] p-4 lg:p-6 w-full max-w-4xl font-mono">
       <div className="flex items-center gap-3 border-b-2 border-[var(--color-ink)] pb-4 mb-6">
@@ -47,12 +97,57 @@ export const ThemeSwitcher: React.FC = () => {
 
       <p className="text-sm text-[var(--color-muted)] mb-6 font-bold">Selecciona el tema visual para el sistema. Este ajuste se aplicará en todas las ventanas, paneles flotantes y subsesiones del programa.</p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-        {TEMAS.map((t) => (
+      <div id="panel-temas-ajustes" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+        {TEMAS.map((t, index) => (
           <button
             key={t.id}
+            id={`btn-tema-${t.id}`}
             onClick={() => changeTheme(t.id)}
-            className={`relative flex flex-col text-left border-2 p-4 transition-all cursor-pointer ${theme === t.id ? 'border-[var(--color-accent)] shadow-[4px_4px_0_0_var(--color-ink)] bg-[var(--color-accent-bg)]' : 'border-[var(--color-border)] hover:border-[var(--color-ink)] hover:shadow-[4px_4px_0_0_var(--color-ink)] hover:-translate-y-1'}`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                changeTheme(t.id);
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (index % 3 < 2) {
+                  document.getElementById(`btn-tema-${TEMAS[index + 1].id}`)?.focus();
+                } else if (index === 2) {
+                  document.getElementById(`btn-tema-${TEMAS[3].id}`)?.focus();
+                } else if (index === 5) {
+                  document.getElementById('btn-tamano-auto')?.focus();
+                }
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (index % 3 > 0) {
+                  document.getElementById(`btn-tema-${TEMAS[index - 1].id}`)?.focus();
+                } else if (index === 3) {
+                  document.getElementById(`btn-tema-${TEMAS[2].id}`)?.focus();
+                } else if (index === 0) {
+                  document.getElementById('btn-tab-apariencia')?.focus();
+                }
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (index < 3) {
+                  document.getElementById(`btn-tema-${TEMAS[index + 3].id}`)?.focus();
+                } else {
+                  const sizeIds = ['btn-tamano-auto', 'btn-tamano-normal', 'btn-tamano-grande'];
+                  document.getElementById(sizeIds[index - 3])?.focus();
+                }
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (index >= 3) {
+                  document.getElementById(`btn-tema-${TEMAS[index - 3].id}`)?.focus();
+                } else {
+                  document.getElementById('btn-tab-apariencia')?.focus();
+                }
+              }
+            }}
+            className={`relative flex flex-col text-left border-2 p-4 transition-all cursor-pointer focus:outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:bg-amber-100/50 focus:scale-[1.02] focus:shadow-[4px_4px_0_0_var(--color-ink)] ${theme === t.id ? 'border-[var(--color-accent)] shadow-[4px_4px_0_0_var(--color-ink)] bg-[var(--color-accent-bg)]' : 'border-[var(--color-border)] hover:border-[var(--color-ink)] hover:shadow-[4px_4px_0_0_var(--color-ink)] hover:-translate-y-1'}`}
           >
             <div className="flex justify-between items-start mb-4">
               <h3 className="font-black text-[var(--color-ink)] uppercase tracking-widest">{t.nombre}</h3>
@@ -74,16 +169,50 @@ export const ThemeSwitcher: React.FC = () => {
         <h2 className="text-lg font-black uppercase text-[var(--color-ink)]">Tamaño de la interfaz</h2>
       </div>
       <p className="text-sm text-[var(--color-muted)] mb-4 font-bold">Se guarda solo en este dispositivo. Usa "Grande" en el televisor y "Normal" en la PC si se ve demasiado grande.</p>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div id="panel-tamanos-ajustes" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {([
           ['auto', 'Automático', 'Se agranda solo en televisores sin mouse.'],
           ['normal', 'Normal', 'Tamaño de PC y laptop, aunque la pantalla sea grande.'],
           ['grande', 'Grande (TV)', 'Letras y botones más grandes para leer de lejos.'],
-        ] as [TamanoInterfaz, string, string][]).map(([valor, titulo, texto]) => (
+        ] as [TamanoInterfaz, string, string][]).map(([valor, titulo, texto], sizeIndex) => (
           <button
             key={valor}
+            id={`btn-tamano-${valor}`}
             onClick={() => cambiarTamano(valor)}
-            className={`flex flex-col text-left border-2 p-3 transition-all cursor-pointer ${tamano === valor ? 'border-[var(--color-accent)] shadow-[4px_4px_0_0_var(--color-ink)] bg-[var(--color-accent-bg)]' : 'border-[var(--color-border)] hover:border-[var(--color-ink)]'}`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                cambiarTamano(valor);
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (sizeIndex < 2) {
+                  const nextSizes = ['auto', 'normal', 'grande'];
+                  document.getElementById(`btn-tamano-${nextSizes[sizeIndex + 1]}`)?.focus();
+                } else {
+                  document.getElementById('btn-tamano-auto')?.focus();
+                }
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (sizeIndex > 0) {
+                  const prevSizes = ['auto', 'normal', 'grande'];
+                  document.getElementById(`btn-tamano-${prevSizes[sizeIndex - 1]}`)?.focus();
+                } else {
+                  document.getElementById('btn-tema-rosa')?.focus();
+                }
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                const targetThemes = ['btn-tema-atardecer', 'btn-tema-bosque', 'btn-tema-rosa'];
+                document.getElementById(targetThemes[sizeIndex])?.focus();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
+            className={`flex flex-col text-left border-2 p-3 transition-all cursor-pointer focus:outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:bg-amber-100/50 focus:scale-[1.02] focus:shadow-[4px_4px_0_0_var(--color-ink)] ${tamano === valor ? 'border-[var(--color-accent)] shadow-[4px_4px_0_0_var(--color-ink)] bg-[var(--color-accent-bg)]' : 'border-[var(--color-border)] hover:border-[var(--color-ink)]'}`}
           >
             <span className="flex justify-between items-center font-black text-[var(--color-ink)] uppercase tracking-widest text-sm">
               {titulo}

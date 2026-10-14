@@ -147,11 +147,33 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
       }
       // =======================================================
 
-      // NAVEGACIÓN CON FLECHAS
-      if (["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft"].includes(e.key)) {
+      // Escape para volver de HISTORIAL o NUEVO hacia LISTA
+      if (e.key === 'Escape') {
+        if (view === 'HISTORIAL' || view === 'NUEVO') {
+          e.preventDefault();
+          e.stopPropagation();
+          setView('LISTA');
+          setTimeout(() => {
+            document.getElementById('buscador-modal-clientes')?.focus();
+          }, 50);
+          return;
+        }
+      }
+
+      // NAVEGACIÓN CON FLECHAS, ENTER Y ESPACIO
+      if (["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft", "Enter", " "].includes(e.key)) {
         
         // Flecha Arriba en controles superiores va a la "X" (Cerrar)
-        if (e.key === "ArrowUp" && (active === searchInput || active?.id === "btn-limpiar-filtros-clientes" || active?.id === "btn-nuevo-cliente" || active?.id === "btn-volver-directorio" || active?.id === "input-nombre-cliente")) {
+        if (e.key === "ArrowUp" && (
+          active === searchInput || 
+          active?.id === "btn-limpiar-filtros-clientes" || 
+          active?.id === "btn-nuevo-cliente" || 
+          active?.id === "btn-volver-directorio" || 
+          active?.id === "btn-ver-estado-cuenta-historial" || 
+          active?.id === "tab-historial-pendientes" || 
+          active?.id === "tab-historial-pagadas" || 
+          active?.id === "input-nombre-cliente"
+        )) {
           e.preventDefault();
           document.getElementById("btn-cerrar-modal-clientes")?.focus();
           return;
@@ -160,9 +182,13 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
         // Flecha Abajo desde "X" regresa a los controles
         if (active?.id === "btn-cerrar-modal-clientes" && e.key === "ArrowDown") {
           e.preventDefault();
-          if (document.getElementById("buscador-modal-clientes")) document.getElementById("buscador-modal-clientes")?.focus();
-          else if (document.getElementById("btn-volver-directorio")) document.getElementById("btn-volver-directorio")?.focus();
-          else if (document.getElementById("input-nombre-cliente")) document.getElementById("input-nombre-cliente")?.focus();
+          if (view === "HISTORIAL") {
+            document.getElementById("btn-volver-directorio")?.focus();
+          } else if (document.getElementById("buscador-modal-clientes")) {
+            document.getElementById("buscador-modal-clientes")?.focus();
+          } else if (document.getElementById("input-nombre-cliente")) {
+            document.getElementById("input-nombre-cliente")?.focus();
+          }
           return;
         }
         
@@ -304,39 +330,157 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
             return;
           }
         } else if (active?.id === "btn-volver-directorio") {
+          if (e.key === "ArrowRight") {
+            e.preventDefault();
+            document.getElementById("btn-ver-estado-cuenta-historial")?.focus();
+            return;
+          }
           if (e.key === "ArrowDown") {
             e.preventDefault();
-            const firstRow = document.querySelector('div[role="button"]') as HTMLElement;
-            if (firstRow) firstRow.focus();
+            document.getElementById("buscador-historial-clientes")?.focus();
+            return;
+          }
+        } else if (active?.id === "btn-ver-estado-cuenta-historial") {
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            document.getElementById("btn-volver-directorio")?.focus();
+            return;
+          }
+          if (e.key === "ArrowRight") {
+            e.preventDefault();
+            document.getElementById("tab-historial-pendientes")?.focus();
+            return;
+          }
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            document.getElementById("buscador-historial-clientes")?.focus();
+            return;
+          }
+        } else if (active?.id === "tab-historial-pendientes") {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setHistorialTab('PENDIENTES');
+            return;
+          }
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            document.getElementById("btn-ver-estado-cuenta-historial")?.focus();
+            return;
+          }
+          if (e.key === "ArrowRight") {
+            e.preventDefault();
+            document.getElementById("tab-historial-pagadas")?.focus();
+            return;
+          }
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            document.getElementById("buscador-historial-clientes")?.focus();
+            return;
+          }
+        } else if (active?.id === "tab-historial-pagadas") {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setHistorialTab('PAGADAS');
+            return;
+          }
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            document.getElementById("tab-historial-pendientes")?.focus();
+            return;
+          }
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            document.getElementById("fecha-historial-clientes")?.focus();
+            return;
+          }
+        } else if (active?.id === "buscador-historial-clientes") {
+          if (e.key === "ArrowUp") {
+            e.preventDefault();
+            document.getElementById("tab-historial-pendientes")?.focus();
+            return;
+          }
+          if (e.key === "ArrowRight") {
+            const cursorStart = (active as HTMLInputElement).selectionStart;
+            const valLen = (active as HTMLInputElement).value.length;
+            if (cursorStart === valLen) {
+              e.preventDefault();
+              document.getElementById("fecha-historial-clientes")?.focus();
+              return;
+            }
+          }
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            const firstCard = document.querySelector('div[role="button"][data-id]') as HTMLElement;
+            if (firstCard) firstCard.focus();
+            return;
+          }
+        } else if (active?.id === "fecha-historial-clientes") {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            try {
+              (active as HTMLInputElement).showPicker();
+            } catch (err) {}
+            return;
+          }
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            document.getElementById("buscador-historial-clientes")?.focus();
+            return;
+          }
+          if (e.key === "ArrowUp") {
+            e.preventDefault();
+            document.getElementById("tab-historial-pagadas")?.focus();
+            return;
+          }
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            const firstCard = document.querySelector('div[role="button"][data-id]') as HTMLElement;
+            if (firstCard) firstCard.focus();
             return;
           }
         }
 
         if (active?.closest('div[role="button"]')) {
-          e.preventDefault();
           const currentRow = active.closest('div[role="button"]') as HTMLElement;
           const rows = Array.from(document.querySelectorAll('div[role="button"]')) as HTMLElement[];
           const rowIndex = rows.indexOf(currentRow);
           
+          if (e.key === "Enter" || e.key === " ") {
+            if (view === 'HISTORIAL') {
+              if (currentRow.dataset && currentRow.dataset.id) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleHistorial(currentRow.dataset.id);
+                return;
+              }
+            } else if (view === 'LISTA') {
+              e.preventDefault();
+              currentRow.click();
+              return;
+            }
+          }
+
           if (e.key === "ArrowDown") {
+            e.preventDefault();
             const nextRow = rows[rowIndex + 1];
             if (nextRow) nextRow.focus();
           } else if (e.key === "ArrowUp") {
+            e.preventDefault();
             const prevRow = rows[rowIndex - 1];
             if (prevRow) {
               prevRow.focus();
             } else {
-              const bSearch = document.getElementById("buscador-modal-clientes");
-              const bVolver = document.getElementById("btn-volver-directorio");
-              if (bSearch) bSearch.focus();
-              else if (bVolver) bVolver.focus();
-            }
-          } else if (e.key === "Enter" && view === 'HISTORIAL') {
-              if (currentRow.dataset && currentRow.dataset.id) {
-                toggleHistorial(currentRow.dataset.id);
-                return;
+              if (view === 'HISTORIAL') {
+                const bSearch = document.getElementById("buscador-historial-clientes");
+                if (bSearch) bSearch.focus();
+                else document.getElementById("btn-volver-directorio")?.focus();
+              } else {
+                const bSearch = document.getElementById("buscador-modal-clientes");
+                if (bSearch) bSearch.focus();
               }
-            } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+            }
+          } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+            e.preventDefault();
             const focusables = [currentRow, ...Array.from(currentRow.querySelectorAll("button:not([disabled])"))] as HTMLElement[];
             if (focusables.length > 1) {
               const focusIndex = focusables.indexOf(active);
@@ -568,7 +712,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                       const deudaActiva = fiados.filter(f => f.clienteNombre.trim().toLowerCase() === cli.nombre.trim().toLowerCase() && f.saldoPendiente > 0).reduce((acc, f) => acc + f.saldoPendiente, 0);
 
                       return (
-                        <div key={cli.id} {...clicConTeclado(() => { setClienteActivo(cli); setView('HISTORIAL'); setHistorialTab('PAGADAS'); })} className="p-3 sm:p-4 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 sm:gap-0 hover:bg-[var(--color-bg)] focus:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors group">
+                        <div key={cli.id} {...clicConTeclado(() => { setClienteActivo(cli); setView('HISTORIAL'); setHistorialTab(deudaActiva > 0 ? 'PENDIENTES' : 'PAGADAS'); })} className="p-3 sm:p-4 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 sm:gap-0 hover:bg-[var(--color-bg)] focus:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors group">
                           <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-1/3 min-w-0">
                             <UserCircle size={32} className="text-[var(--color-subtle)] shrink-0" />
                             <div className="min-w-0">
@@ -596,7 +740,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                             <button onClick={(e) => { e.stopPropagation(); onDeleteCliente(cli.id); }} className="p-2 bg-white text-[var(--color-subtle)] border-2 border-[var(--color-border)] hover:border-[var(--color-danger)] hover:text-[var(--color-danger)] transition-colors cursor-pointer" title="Eliminar Cliente">
                               <Trash2 size={16} />
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); setClienteActivo(cli); setView('HISTORIAL'); setHistorialTab('PAGADAS'); }} className="px-4 py-2 bg-[var(--color-bg)] text-[var(--color-info)] border-2 border-[var(--color-info)] text-[12px] font-black uppercase hover:bg-[var(--color-info)] hover:text-white transition-colors cursor-pointer ml-2">
+                            <button onClick={(e) => { e.stopPropagation(); setClienteActivo(cli); setView('HISTORIAL'); setHistorialTab(deudaActiva > 0 ? 'PENDIENTES' : 'PAGADAS'); }} className="px-4 py-2 bg-[var(--color-bg)] text-[var(--color-info)] border-2 border-[var(--color-info)] text-[12px] font-black uppercase hover:bg-[var(--color-info)] hover:text-white transition-colors cursor-pointer ml-2">
                               Ver Historial
                             </button>
                           </div>
@@ -644,17 +788,37 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
             <div className="flex flex-col gap-6 h-full">
               {/* BOTÓN VOLVER PROMINENTE */}
               <div className="shrink-0 border-b-2 border-[var(--color-border)] pb-4 flex justify-between items-center">
-                <button onClick={() => setView('LISTA')} className="flex items-center gap-2 text-xs font-black uppercase text-[var(--color-subtle)] hover:text-[var(--color-info)] transition-colors">
+                <button 
+                  id="btn-volver-directorio"
+                  onClick={() => setView('LISTA')} 
+                  className="flex items-center gap-2 text-xs font-black uppercase text-[var(--color-subtle)] hover:text-[var(--color-info)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] px-2 py-1 transition-colors cursor-pointer"
+                >
                   <ArrowLeft size={16} /> Volver al Directorio
                 </button>
-                <button onClick={() => {
-                  window.dispatchEvent(new CustomEvent('abrirEstadoCuentaGlobal', { detail: clienteActivo?.nombre }));
-                }} className="flex items-center gap-2 text-xs font-black uppercase bg-[var(--color-info)] text-white px-4 py-1.5 hover:bg-[var(--color-ink)] hover:text-white transition-colors ml-4 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5">
+                <button 
+                  id="btn-ver-estado-cuenta-historial"
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('abrirEstadoCuentaGlobal', { detail: clienteActivo?.nombre }));
+                  }} 
+                  className="flex items-center gap-2 text-xs font-black uppercase bg-[var(--color-info)] text-white px-4 py-1.5 hover:bg-[var(--color-ink)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors ml-4 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
+                >
                   Ver Estado de Cuenta
                 </button>
                 <div className="flex bg-[var(--color-surface)] border-2 border-[var(--color-ink)] p-1">
-                  <button onClick={() => setHistorialTab('PENDIENTES')} className={`px-4 py-1 text-xs font-black uppercase tracking-widest transition-colors ${historialTab === 'PENDIENTES' ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-subtle)] hover:text-[var(--color-ink)]'}`}>PENDIENTES</button>
-                  <button onClick={() => setHistorialTab('PAGADAS')} className={`px-4 py-1 text-xs font-black uppercase tracking-widest transition-colors ${historialTab === 'PAGADAS' ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-subtle)] hover:text-[var(--color-ink)]'}`}>PAGADAS</button>
+                  <button 
+                    id="tab-historial-pendientes"
+                    onClick={() => setHistorialTab('PENDIENTES')} 
+                    className={`px-4 py-1 text-xs font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors cursor-pointer ${historialTab === 'PENDIENTES' ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-subtle)] hover:text-[var(--color-ink)]'}`}
+                  >
+                    PENDIENTES
+                  </button>
+                  <button 
+                    id="tab-historial-pagadas"
+                    onClick={() => setHistorialTab('PAGADAS')} 
+                    className={`px-4 py-1 text-xs font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors cursor-pointer ${historialTab === 'PAGADAS' ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-subtle)] hover:text-[var(--color-ink)]'}`}
+                  >
+                    PAGADAS
+                  </button>
                 </div>
               </div>
 
@@ -668,9 +832,17 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                     className="w-full bg-white border-2 border-[var(--color-border)] pl-9 pr-4 py-2 text-xs font-black uppercase outline-none focus:border-[var(--color-info)] transition-colors rounded-none" 
                   />
                 </div>
-                <input autoComplete="off" type="date" value={historialSearchDate}
+                <input autoComplete="off" id="fecha-historial-clientes" type="date" value={historialSearchDate}
                   onChange={(e) => setHistorialSearchDate(e.target.value)}
-                  className="w-full sm:w-auto border-2 border-[var(--color-border)] px-4 py-2 text-xs font-black uppercase text-[var(--color-ink)] outline-none cursor-pointer bg-white rounded-none"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      try {
+                        (e.currentTarget as HTMLInputElement).showPicker();
+                      } catch (err) {}
+                    }
+                  }}
+                  className="w-full sm:w-auto border-2 border-[var(--color-border)] px-4 py-2 text-xs font-black uppercase text-[var(--color-ink)] outline-none focus:border-[var(--color-info)] cursor-pointer bg-white rounded-none"
                 />
               </div>
 
@@ -682,7 +854,17 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                     </div>
                   ) : (
                     fiadosHistorial.map(f => (
-                      <div key={f.id} data-id={f.id} role="button" tabIndex={0} onClick={() => toggleHistorial(f.id.toString())} className="bg-white border-2 border-[var(--color-ink)] p-4 flex flex-col gap-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] shadow-[4px_4px_0_0_var(--color-border)] cursor-pointer hover:bg-[var(--color-bg)] transition-colors">
+                      <div key={f.id} data-id={f.id} role="button" tabIndex={0} 
+                        onClick={() => toggleHistorial(f.id.toString())} 
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleHistorial(f.id.toString());
+                          }
+                        }}
+                        className="bg-white border-2 border-[var(--color-ink)] p-4 flex flex-col gap-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] shadow-[4px_4px_0_0_var(--color-border)] cursor-pointer hover:bg-[var(--color-bg)] transition-colors"
+                      >
                         <div className="flex justify-between items-center w-full">
                           <div>
                             <p className="text-sm font-black text-[var(--color-ink)] uppercase">Fecha: {new Date(f.fechaEmision).toLocaleDateString()}</p>
@@ -735,8 +917,8 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                             )}
                           </div>
                         )}
-                        {!expandedHistorialIds.has(f.id.toString()) && f.detalles && f.detalles.length > 0 && (
-                          <div className="text-[10px] text-center text-[var(--color-muted)] font-bold mt-1 tracking-widest uppercase">Click para ver detalles y abonos</div>
+                        {!expandedHistorialIds.has(f.id.toString()) && ((f.detalles && f.detalles.length > 0) || (f.pagos && f.pagos.length > 0)) && (
+                          <div className="text-[10px] text-center text-[var(--color-muted)] font-bold mt-1 tracking-widest uppercase">Click o Enter para ver detalles y abonos</div>
                         )}
                       </div>
                     ))

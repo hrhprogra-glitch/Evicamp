@@ -1,5 +1,4 @@
-// src/sections/Configuraciones/index.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings, Building2, Users, Palette } from 'lucide-react';
 import { FormularioEmpresa } from './components/FormularioEmpresa';
 import { TablaUsuarios } from './components/TablaUsuarios';
@@ -11,6 +10,73 @@ const Configuraciones: React.FC = () => {
   const puedeEmpresa = usePermiso('gerencia_configuracion_sistema');
   const puedeUsuarios = usePermiso('gerencia_gestionar_usuarios');
   const [activeTab, setActiveTab] = useState<'empresa' | 'usuarios' | 'apariencia'>(puedeEmpresa ? 'empresa' : 'usuarios');
+
+  const switchTab = (tab: 'empresa' | 'usuarios' | 'apariencia') => {
+    setActiveTab(tab);
+    setTimeout(() => {
+      document.getElementById(`btn-tab-${tab}`)?.focus();
+    }, 20);
+  };
+
+  // 🧲 Auto-Focus Magnet para la sesión Ajustes / Configuraciones
+  useEffect(() => {
+    const enforceFocus = () => {
+      if (
+        document.querySelector('[role="dialog"]') ||
+        document.querySelector('.fixed.inset-0.z-50')
+      ) return;
+
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+
+      const active = document.activeElement as HTMLElement | null;
+      if (active && active !== document.body && !active.closest('#evicamp-sidebar')) {
+        const tag = active.tagName;
+        if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'].includes(tag)) return;
+        if (active.closest('tr[data-row="true"]')) return;
+        if (active.getAttribute('role') === 'button') return;
+      }
+
+      if (activeTab === 'empresa') {
+        const input = document.getElementById('input-empresa-nombre') as HTMLInputElement | null;
+        if (input) {
+          input.focus();
+          input.select();
+          return;
+        }
+        document.getElementById('btn-tab-empresa')?.focus();
+      } else if (activeTab === 'usuarios') {
+        const input = document.getElementById('buscador-usuarios-ajustes') as HTMLInputElement | null;
+        if (input) {
+          input.focus();
+          input.select();
+          return;
+        }
+        document.getElementById('btn-tab-usuarios')?.focus();
+      } else if (activeTab === 'apariencia') {
+        const themeBtn = document.querySelector('#panel-temas-ajustes button') as HTMLElement | null;
+        if (themeBtn) {
+          themeBtn.focus();
+          return;
+        }
+        document.getElementById('btn-tab-apariencia')?.focus();
+      }
+    };
+
+    const handleWindowFocus = () => setTimeout(enforceFocus, 50);
+    const handleGlobalClick = () => setTimeout(enforceFocus, 50);
+
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('click', handleGlobalClick);
+
+    const timer = setTimeout(enforceFocus, 80);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, [activeTab]);
 
   return (
     <div className="flex flex-col h-full bg-[var(--color-bg)]">
@@ -36,8 +102,31 @@ const Configuraciones: React.FC = () => {
         <div className="flex gap-6 min-w-max">
           {puedeEmpresa && (
           <button
-            onClick={() => setActiveTab('empresa')}
-            className={`pb-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-colors relative ${
+            id="btn-tab-empresa"
+            onClick={() => switchTab('empresa')}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (puedeUsuarios) {
+                  switchTab('usuarios');
+                } else {
+                  switchTab('apariencia');
+                }
+              } else if (e.key === 'ArrowDown' || (!e.shiftKey && e.key === 'Tab')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const primerInput = document.getElementById('input-empresa-nombre') as HTMLInputElement | null;
+                if (primerInput) {
+                  primerInput.focus();
+                  primerInput.select();
+                }
+              } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
+            className={`pb-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-colors relative focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer ${
               activeTab === 'empresa'
                 ? 'text-[var(--color-accent)]'
                 : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
@@ -53,8 +142,33 @@ const Configuraciones: React.FC = () => {
           
           {puedeUsuarios && (
           <button
-            onClick={() => setActiveTab('usuarios')}
-            className={`pb-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-colors relative ${
+            id="btn-tab-usuarios"
+            onClick={() => switchTab('usuarios')}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (puedeEmpresa) {
+                  switchTab('empresa');
+                }
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                switchTab('apariencia');
+              } else if (e.key === 'ArrowDown' || (!e.shiftKey && e.key === 'Tab')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const buscador = document.getElementById('buscador-usuarios-ajustes') as HTMLInputElement | null;
+                if (buscador) {
+                  buscador.focus();
+                  buscador.select();
+                }
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
+            className={`pb-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-colors relative focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer ${
               activeTab === 'usuarios'
                 ? 'text-[var(--color-accent)]'
                 : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
@@ -69,8 +183,29 @@ const Configuraciones: React.FC = () => {
           )}
 
           <button
-            onClick={() => setActiveTab('apariencia')}
-            className={`pb-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-colors relative ${
+            id="btn-tab-apariencia"
+            onClick={() => switchTab('apariencia')}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (puedeUsuarios) {
+                  switchTab('usuarios');
+                } else if (puedeEmpresa) {
+                  switchTab('empresa');
+                }
+              } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+              } else if (e.key === 'ArrowDown' || (!e.shiftKey && e.key === 'Tab')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const activeTheme = localStorage.getItem('gestorpro_theme') || 'classic';
+                const themeBtn = document.getElementById(`btn-tema-${activeTheme}`) || (document.querySelector('#panel-temas-ajustes button') as HTMLElement | null);
+                themeBtn?.focus();
+              }
+            }}
+            className={`pb-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-colors relative focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer ${
               activeTab === 'apariencia'
                 ? 'text-[var(--color-accent)]'
                 : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'

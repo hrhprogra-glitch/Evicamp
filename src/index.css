@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 
 /* BYPASS TÉCNICO: Usamos :root en lugar de @theme para evitar que 
    el compilador v4 colapse al generar el diccionario de variables. */
@@ -175,7 +175,7 @@ select:focus-visible,
   outline-offset: 1px;
 }
 /* Filas y tarjetas enfocables: el contorno va por dentro, porque las tablas recortan lo que sale del borde */
-[role="button"]:focus-visible {
+[role="button"]:not([role="option"]):not([data-cat-item]):not([data-lote-prod-item]):not([data-lote-prov-item]):focus-visible {
   outline-offset: -3px;
   background-color: #ECFDF5;
 }

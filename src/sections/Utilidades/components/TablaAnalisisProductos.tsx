@@ -1,5 +1,5 @@
-﻿// src/sections/Utilidades/components/TablaAnalisisProductos.tsx
-import React, { useState, useEffect, useMemo } from 'react';
+// src/sections/Utilidades/components/TablaAnalisisProductos.tsx
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Search, Filter, TrendingDown, TrendingUp, RotateCcw, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import type { AnalisisProducto, StatsFiltro } from '../types';
 import { ModalDetalleProducto } from './ModalDetalleProducto';
@@ -23,6 +23,10 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
   const [localInicio, setLocalInicio] = useState(fechaInicio);
   const [localFin, setLocalFin] = useState(fechaFin);
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const lastDateChangeRef = useRef<number>(0);
+  const ultimoProductoIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     setLocalInicio(fechaInicio);
     setLocalFin(fechaFin);
@@ -43,14 +47,11 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
   };
 
   const datosFiltrados = useMemo(() => datos.filter(prod => {
-    // 1. Construimos un índice global concatenando todos los datos útiles del producto
     const indiceOmni = normalizarTexto(`${prod.nombre || ''} ${prod.categoria || ''} ${prod.estado || ''} ${prod.tipoControl || ''}`);
     const busquedaNormalizada = normalizarTexto(busqueda || '');
 
-    // 2. Fragmentamos la búsqueda
     const terminosBusqueda = busquedaNormalizada.split(/\s+/).filter(Boolean);
 
-    // 3. Verificamos que CADA palabra tipeada exista en el índice global
     const coincideBusqueda = terminosBusqueda.length === 0 || terminosBusqueda.every(termino =>
       indiceOmni.includes(termino)
     );
@@ -63,8 +64,6 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
 
   const hayFiltrosActivos = busqueda.trim() !== '' || filtroCat !== 'TODAS' || filtroEstado !== 'TODOS';
 
-  // 🟢 TOTALES DEL SUBCONJUNTO VISIBLE: para que las tarjetas de resumen reflejen
-  // exactamente lo que la tabla está mostrando cuando hay un filtro de categoría/rotación/búsqueda activo.
   const statsFiltradas = useMemo((): StatsFiltro => ({
     ingresos: datosFiltrados.reduce((acc, p) => acc + p.ingresosTotales, 0),
     costos: datosFiltrados.reduce((acc, p) => acc + p.costoTotalVentas, 0),
@@ -85,6 +84,32 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
   const startIndex = (paginaActual - 1) * itemsPorPagina;
   const datosPaginados = datosFiltrados.slice(startIndex, startIndex + itemsPorPagina);
 
+  const focusPrimerRegistro = () => {
+    const rows = Array.from(document.querySelectorAll('#tabla-analisis-productos tr[data-row="true"]')) as HTMLElement[];
+    if (rows[0]) {
+      rows[0].focus();
+      rows[0].scrollIntoView({ block: 'nearest' });
+    }
+  };
+
+  const abrirModalProducto = (prod: AnalisisProducto) => {
+    ultimoProductoIdRef.current = prod.id;
+    setProductoSeleccionado(prod);
+  };
+
+  const cerrarModalProducto = () => {
+    setProductoSeleccionado(null);
+    setTimeout(() => {
+      if (ultimoProductoIdRef.current) {
+        const row = document.querySelector(`#tabla-analisis-productos tr[data-prod-id="${ultimoProductoIdRef.current}"]`) as HTMLElement;
+        if (row) {
+          row.focus();
+          row.scrollIntoView({ block: 'nearest' });
+        }
+      }
+    }, 50);
+  };
+
   const limpiarFiltrosTabla = () => {
     setBusqueda('');
     setFiltroCat('TODAS');
@@ -92,8 +117,140 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
     limpiarFechas();
   };
 
+  // 🧲 Auto-Focus Magnet para Utilidades (Foco inicial en buscador)
+  useEffect(() => {
+    const enforceFocus = () => {
+      if (
+        productoSeleccionado ||
+        document.querySelector('[role="dialog"]') ||
+        document.querySelector('.fixed.inset-0.z-50')
+      ) return;
+
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+
+      const active = document.activeElement as HTMLElement | null;
+      if (active && active !== document.body && !active.closest('#evicamp-sidebar')) {
+        const tag = active.tagName;
+        if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'].includes(tag)) return;
+        if (active.closest('tr[data-row="true"]')) return;
+        if (active.getAttribute('role') === 'button') return;
+      }
+
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    };
+
+    const handleWindowFocus = () => setTimeout(enforceFocus, 50);
+    const handleGlobalClick = () => setTimeout(enforceFocus, 50);
+
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('click', handleGlobalClick);
+
+    const timer = setTimeout(enforceFocus, 100);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, [productoSeleccionado]);
+
+  // ⌨️ Navegación de Grilla con Teclado (Patrón Selector Evicamp)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (
+        productoSeleccionado ||
+        document.querySelector('[role="dialog"]') ||
+        document.querySelector('.fixed.inset-0.z-50')
+      ) {
+        return;
+      }
+
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+
+      const active = document.activeElement as HTMLElement | null;
+
+      // Si el foco está en un input/select nativo, ellos manejan sus flechas
+      if (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) return;
+      if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) return;
+
+      // Si el foco está en un botón superior o de paginación, cada botón maneja sus flechas
+      if (active && active.tagName === 'BUTTON' && !active.closest('tr[data-row="true"]')) return;
+
+      const rowSelector = '#tabla-analisis-productos tr[data-row="true"]';
+      const currentRow = active?.closest(rowSelector) as HTMLElement | null;
+
+      const getRows = () => {
+        return Array.from(document.querySelectorAll(rowSelector)) as HTMLElement[];
+      };
+
+      if (currentRow) {
+        if (['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft'].includes(e.key)) {
+          e.preventDefault();
+          const rows = getRows();
+          const rowIndex = rows.indexOf(currentRow);
+
+          if (e.key === 'ArrowDown') {
+            if (rowIndex < rows.length - 1) {
+              const nextRow = rows[rowIndex + 1];
+              if (nextRow) {
+                nextRow.focus();
+                nextRow.scrollIntoView({ block: 'nearest' });
+              }
+            } else {
+              const btnBottom = document.getElementById('btn-pag-bottom-prev-utilidades');
+              if (btnBottom && !btnBottom.hasAttribute('disabled')) {
+                btnBottom.focus();
+              } else {
+                document.getElementById('btn-pag-bottom-next-utilidades')?.focus();
+              }
+            }
+          } else if (e.key === 'ArrowUp') {
+            if (rowIndex > 0) {
+              const prevRow = rows[rowIndex - 1];
+              if (prevRow) {
+                prevRow.focus();
+                prevRow.scrollIntoView({ block: 'nearest' });
+              }
+            } else {
+              // Fila 0: Subir al buscador y seleccionarlo (salida fluida de la tabla)
+              const searchInput = searchInputRef.current;
+              if (searchInput) {
+                searchInput.focus();
+                searchInput.select();
+                searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }
+            }
+          }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          const searchInput = searchInputRef.current;
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+          }
+        }
+      } else {
+        // Rescate de foco si el usuario está en un contenedor vacío
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          focusPrimerRegistro();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          searchInputRef.current?.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [productoSeleccionado, datosPaginados]);
+
   return (
-    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-none flex flex-col mt-4">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-none flex flex-col mt-4 font-mono">
 
       {/* HEADER Y FILTROS */}
       <div className="p-4 bg-[var(--color-surface)] border-b border-[var(--color-border)] flex flex-wrap gap-4 items-center justify-between shrink-0">
@@ -107,21 +264,87 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
             <div className="p-2 flex items-center justify-center text-[var(--color-ink)] bg-[var(--color-bg)] border-r border-[var(--color-border)]">
               <Search size={16} strokeWidth={2}/>
             </div>
-            <input autoComplete="off" type="text" placeholder="BUSCAR PRODUCTO..."
-              value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full text-xs font-black text-[var(--color-ink)] outline-none p-2 bg-transparent uppercase placeholder:text-[var(--color-subtle)]"
+            <input 
+              id="buscador-global-utilidades"
+              ref={searchInputRef}
+              autoComplete="off" 
+              type="text" 
+              placeholder="BUSCAR PRODUCTO..."
+              value={busqueda} 
+              onChange={(e) => setBusqueda(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  focusPrimerRegistro();
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                } else if (e.key === 'ArrowRight') {
+                  const input = e.currentTarget;
+                  if (input.selectionStart === input.value.length) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('filtro-categoria-utilidades')?.focus();
+                  }
+                } else if (e.key === 'Escape') {
+                  e.preventDefault();
+                  setBusqueda('');
+                }
+              }}
+              className="w-full text-xs font-black text-[var(--color-ink)] outline-none p-2 bg-transparent uppercase placeholder:text-[var(--color-subtle)] focus:ring-2 focus:ring-[var(--color-accent-shadow)]"
             />
           </div>
           <select
-            value={filtroCat} onChange={(e) => setFiltroCat(e.target.value)}
-            className="bg-[var(--color-surface)] text-xs font-black text-[var(--color-ink)] outline-none p-2 border border-[var(--color-border)] rounded-none focus:border-[var(--color-accent-shadow)] cursor-pointer transition-all uppercase"
+            id="filtro-categoria-utilidades"
+            value={filtroCat} 
+            onChange={(e) => setFiltroCat(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                focusPrimerRegistro();
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                searchInputRef.current?.focus();
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('filtro-rotacion-utilidades')?.focus();
+              }
+            }}
+            className="bg-[var(--color-surface)] text-xs font-black text-[var(--color-ink)] outline-none p-2 border border-[var(--color-border)] rounded-none focus:border-[var(--color-accent-shadow)] focus:ring-2 focus:ring-[var(--color-accent-shadow)] cursor-pointer transition-all uppercase"
           >
             <option value="TODAS">CATEGORÍA: TODAS</option>
             {categoriasUnicas.map(cat => <option key={cat} value={cat}>{cat}</option>)}
           </select>
           <select
-            value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}
-            className="bg-[var(--color-surface)] text-xs font-black text-[var(--color-ink)] outline-none p-2 border border-[var(--color-border)] rounded-none focus:border-[var(--color-accent-shadow)] cursor-pointer transition-all uppercase"
+            id="filtro-rotacion-utilidades"
+            value={filtroEstado} 
+            onChange={(e) => setFiltroEstado(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                focusPrimerRegistro();
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('filtro-categoria-utilidades')?.focus();
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('filtro-fecha-desde-utilidades')?.focus();
+              }
+            }}
+            className="bg-[var(--color-surface)] text-xs font-black text-[var(--color-ink)] outline-none p-2 border border-[var(--color-border)] rounded-none focus:border-[var(--color-accent-shadow)] focus:ring-2 focus:ring-[var(--color-accent-shadow)] cursor-pointer transition-all uppercase"
           >
             <option value="TODOS">ROTACIÓN: TODAS</option>
             <option value="BUENO">VENTA: BUENO</option>
@@ -135,7 +358,45 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               <label className="text-[11px] font-black text-[var(--color-muted)] uppercase tracking-wider">Desde</label>
               <div className="flex items-center gap-1.5">
                 <CalendarDays size={12} className="text-[var(--color-ink)]" />
-                <input autoComplete="off" type="date" value={localInicio} onChange={(e) => setLocalInicio(e.target.value)} className="text-[13px] font-black text-[var(--color-ink)] outline-none bg-transparent cursor-pointer" />
+                <input 
+                  id="filtro-fecha-desde-utilidades"
+                  autoComplete="off" 
+                  type="date" 
+                  value={localInicio} 
+                  onChange={(e) => {
+                    lastDateChangeRef.current = Date.now();
+                    setLocalInicio(e.target.value);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    } else if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      focusPrimerRegistro();
+                    } else if (e.key === 'ArrowLeft') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      document.getElementById('filtro-rotacion-utilidades')?.focus();
+                    } else if (e.key === 'ArrowRight') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      document.getElementById('filtro-fecha-hasta-utilidades')?.focus();
+                    } else if (e.key === 'Enter' || e.key === ' ') {
+                      if (Date.now() - lastDateChangeRef.current < 500) {
+                        e.preventDefault();
+                        return;
+                      }
+                      if ('showPicker' in e.currentTarget) {
+                        try {
+                          (e.currentTarget as any).showPicker();
+                        } catch {}
+                      }
+                    }
+                  }}
+                  className="text-[13px] font-black text-[var(--color-ink)] outline-none bg-transparent cursor-pointer focus:ring-2 focus:ring-[var(--color-accent-shadow)]" 
+                />
               </div>
             </div>
             <div className="w-[1px] h-7 bg-[var(--color-border)]"></div>
@@ -143,17 +404,93 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               <label className="text-[11px] font-black text-[var(--color-muted)] uppercase tracking-wider">Hasta</label>
               <div className="flex items-center gap-1.5">
                 <CalendarDays size={12} className="text-[var(--color-ink)]" />
-                <input autoComplete="off" type="date" value={localFin} onChange={(e) => setLocalFin(e.target.value)} className="text-[13px] font-black text-[var(--color-ink)] outline-none bg-transparent cursor-pointer" />
+                <input 
+                  id="filtro-fecha-hasta-utilidades"
+                  autoComplete="off" 
+                  type="date" 
+                  value={localFin} 
+                  onChange={(e) => {
+                    lastDateChangeRef.current = Date.now();
+                    setLocalFin(e.target.value);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    } else if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      focusPrimerRegistro();
+                    } else if (e.key === 'ArrowLeft') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      document.getElementById('filtro-fecha-desde-utilidades')?.focus();
+                    } else if (e.key === 'ArrowRight') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      document.getElementById('btn-buscar-fechas-utilidades')?.focus();
+                    } else if (e.key === 'Enter' || e.key === ' ') {
+                      if (Date.now() - lastDateChangeRef.current < 500) {
+                        e.preventDefault();
+                        return;
+                      }
+                      if ('showPicker' in e.currentTarget) {
+                        try {
+                          (e.currentTarget as any).showPicker();
+                        } catch {}
+                      }
+                    }
+                  }}
+                  className="text-[13px] font-black text-[var(--color-ink)] outline-none bg-transparent cursor-pointer focus:ring-2 focus:ring-[var(--color-accent-shadow)]" 
+                />
               </div>
             </div>
-            <button onClick={handleBuscarFecha} className="bg-[var(--color-ink)] hover:bg-[var(--color-accent-shadow)] text-[var(--color-surface)] p-1.5 rounded-none transition-colors cursor-pointer flex items-center justify-center border border-[var(--color-border)] hover:border-[var(--color-accent-shadow)]" title="Buscar por Fecha">
+            <button 
+              id="btn-buscar-fechas-utilidades"
+              onClick={handleBuscarFecha} 
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                } else if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  focusPrimerRegistro();
+                } else if (e.key === 'ArrowLeft') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  document.getElementById('filtro-fecha-hasta-utilidades')?.focus();
+                } else if (e.key === 'ArrowRight') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  document.getElementById('btn-limpiar-filtros-utilidades')?.focus();
+                }
+              }}
+              className="bg-[var(--color-ink)] hover:bg-[var(--color-accent-shadow)] text-[var(--color-surface)] p-1.5 rounded-none transition-colors cursor-pointer flex items-center justify-center border border-[var(--color-border)] hover:border-[var(--color-accent-shadow)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-shadow)]" 
+              title="Buscar por Fecha"
+            >
               <Search size={14} strokeWidth={2} />
             </button>
           </div>
 
           <button
+            id="btn-limpiar-filtros-utilidades"
             onClick={limpiarFiltrosTabla}
-            className="bg-[var(--color-ink)] hover:bg-[var(--color-accent-shadow)] text-[var(--color-surface)] px-3 py-2 rounded-none transition-colors cursor-pointer border border-[var(--color-border)] hover:border-[var(--color-accent-shadow)] flex items-center justify-center"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                focusPrimerRegistro();
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-buscar-fechas-utilidades')?.focus();
+              }
+            }}
+            className="bg-[var(--color-ink)] hover:bg-[var(--color-accent-shadow)] text-[var(--color-surface)] px-3 py-2 rounded-none transition-colors cursor-pointer border border-[var(--color-border)] hover:border-[var(--color-accent-shadow)] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-shadow)]"
             title="Limpiar Todos los Filtros"
           >
             <RotateCcw size={16} strokeWidth={2} />
@@ -162,31 +499,63 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
       </div>
 
       {/* CONTROLES PAGINACIÓN SUPERIOR */}
-        <div className="border-b border-[var(--color-border)] bg-[var(--color-surface)] p-4 flex items-center justify-between shrink-0 rounded-none">
-          <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">
-            Página {paginaActual} de {totalPaginas}
-          </span>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setPaginaActual(p => Math.max(1, p - 1))}
-              disabled={paginaActual === 1}
-              className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <button 
-              onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))}
-              disabled={paginaActual === totalPaginas}
-              className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
+      <div className="border-b border-[var(--color-border)] bg-[var(--color-surface)] p-4 flex items-center justify-between shrink-0 rounded-none">
+        <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">
+          Página {paginaActual} de {totalPaginas}
+        </span>
+        <div className="flex gap-2">
+          <button 
+            id="btn-pag-prev-utilidades"
+            onClick={() => setPaginaActual(p => Math.max(1, p - 1))}
+            disabled={paginaActual === 1}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                searchInputRef.current?.focus();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                focusPrimerRegistro();
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-pag-next-utilidades')?.focus();
+              }
+            }}
+            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button 
+            id="btn-pag-next-utilidades"
+            onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))}
+            disabled={paginaActual === totalPaginas}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                searchInputRef.current?.focus();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                focusPrimerRegistro();
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-pag-prev-utilidades')?.focus();
+              }
+            }}
+            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+          >
+            <ChevronRight size={16} />
+          </button>
         </div>
+      </div>
 
-        {/* TABLA PRINCIPAL - DISEÑO TÉCNICO ESMERALDA LIGERO */}
+      {/* TABLA PRINCIPAL - DISEÑO TÉCNICO ESMERALDA LIGERO */}
       <div className="w-full overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[1000px]">
+        <table id="tabla-analisis-productos" className="w-full text-left border-collapse min-w-[1000px]">
           <thead className="bg-[var(--color-ink)] text-[var(--color-surface)] sticky top-0 z-10 p-4 text-xs md:text-sm font-black uppercase tracking-[0.1em]">
             <tr>
               <th className="p-4">Producto / Ref</th>
@@ -206,9 +575,11 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               datosPaginados.map((prod) => (
                 <tr
                   key={prod.id}
-                  {...clicConTeclado(() => setProductoSeleccionado(prod))}
-                  className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] transition-colors cursor-pointer"
-                  title="Ver ventas de este producto"
+                  data-row="true"
+                  data-prod-id={prod.id}
+                  {...clicConTeclado(() => abrirModalProducto(prod))}
+                  className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors cursor-pointer group"
+                  title="Ver ventas de este producto (Enter o Clic)"
                 >
                   <td className="p-3">
                     <p className="text-xs font-black text-[var(--color-ink)] uppercase mb-1">{prod.nombre}</p>
@@ -283,16 +654,48 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
         </span>
         <div className="flex gap-2">
           <button 
+            id="btn-pag-bottom-prev-utilidades"
             onClick={() => setPaginaActual(p => Math.max(1, p - 1))}
             disabled={paginaActual === 1}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                const rows = Array.from(document.querySelectorAll('#tabla-analisis-productos tr[data-row="true"]')) as HTMLElement[];
+                if (rows.length > 0) rows[rows.length - 1].focus();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-pag-bottom-next-utilidades')?.focus();
+              }
+            }}
+            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
           >
             <ChevronLeft size={16} />
           </button>
           <button 
+            id="btn-pag-bottom-next-utilidades"
             onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))}
             disabled={paginaActual === totalPaginas}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                const rows = Array.from(document.querySelectorAll('#tabla-analisis-productos tr[data-row="true"]')) as HTMLElement[];
+                if (rows.length > 0) rows[rows.length - 1].focus();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-pag-bottom-prev-utilidades')?.focus();
+              }
+            }}
+            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
           >
             <ChevronRight size={16} />
           </button>
@@ -302,10 +705,9 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
       {productoSeleccionado && (
         <ModalDetalleProducto
           producto={productoSeleccionado}
-          onClose={() => setProductoSeleccionado(null)}
+          onClose={cerrarModalProducto}
         />
       )}
     </div>
   );
 };
-

@@ -43,8 +43,8 @@ export const Fiados: React.FC = () => {
   const [fiadoAAnular, setFiadoAAnular] = useState<Fiado | null>(null);
 
   // Cargar datos desde Supabase al iniciar
-  const cargarDatos = async () => {
-    setLoading(true);
+  const cargarDatos = async (silencioso = false) => {
+    if (!silencioso) setLoading(true);
       // 🔥 OPTIMIZACIÓN: Lanzamos todas las consultas al mismo tiempo (Paralelo)
       const [
         { data: prods },
@@ -168,14 +168,16 @@ if (fiaData) {
     cargarDatos();
   }, []);
 
-  // 🔥 RESTAURAR FOCO AL CERRAR MODALES (Ej: con Escape)
+  // 🔥 RESTAURAR FOCO AL CERRAR MODALES O TERMINAR DE CARGAR
   useEffect(() => {
-    if (!isModalFiadoOpen && !isModalAbonoOpen && !isModalClientesOpen && !isModalDetalleOpen && !isModalAnularOpen) {
+    if (!loading && !isModalFiadoOpen && !isModalAbonoOpen && !isModalClientesOpen && !isModalDetalleOpen && !isModalAnularOpen && !isModalEstadoCuentaOpen) {
       setTimeout(() => {
-        document.getElementById('buscador-global-fiados')?.focus();
+        if (!document.querySelector('[role="dialog"]')) {
+          document.getElementById('buscador-global-fiados')?.focus();
+        }
       }, 100);
     }
-  }, [isModalFiadoOpen, isModalAbonoOpen, isModalClientesOpen, isModalDetalleOpen, isModalAnularOpen]);
+  }, [loading, isModalFiadoOpen, isModalAbonoOpen, isModalClientesOpen, isModalDetalleOpen, isModalAnularOpen, isModalEstadoCuentaOpen]);
 
   const clientesAgrupados = React.useMemo(() => {
     const mapa = new Map<string, ClienteFiadoAgrupado>();
@@ -201,6 +203,11 @@ if (fiaData) {
     });
     return Array.from(mapa.values()).sort((a, b) => b.totalPendiente - a.totalPendiente);
   }, [fiados]);
+
+  const clienteActualEstadoCuenta = React.useMemo(() => {
+    if (!clienteEstadoCuenta) return null;
+    return clientesAgrupados.find(c => c.clienteNombre === clienteEstadoCuenta.clienteNombre) || clienteEstadoCuenta;
+  }, [clienteEstadoCuenta, clientesAgrupados]);
 
   const handleSaveFiado = async () => {
     setIsModalFiadoOpen(false);
@@ -414,6 +421,7 @@ if (fiaData) {
             onKeyDown={(e) => {
               if (e.key === 'ArrowDown') {
                 e.preventDefault();
+                e.stopPropagation();
                 document.getElementById('buscador-global-fiados')?.focus();
               }
             }}
@@ -464,10 +472,9 @@ if (fiaData) {
       <ModalEstadoCuenta 
         isOpen={isModalEstadoCuentaOpen}
         onClose={() => setIsModalEstadoCuentaOpen(false)}
-        cliente={clienteEstadoCuenta}
-                onRefetch={async () => {
-          setIsModalEstadoCuentaOpen(false);
-          await cargarDatos();
+        cliente={clienteActualEstadoCuenta}
+        onRefetch={async () => {
+          await cargarDatos(true);
         }}
         onVerHistorial={(nombre) => {
           setForceHistorialCliente(nombre);

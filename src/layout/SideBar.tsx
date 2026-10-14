@@ -44,15 +44,22 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
     marcarActividad();
     if (!isOpen) return;
 
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      e.stopPropagation();
+      onClose();
+      return;
+    }
+
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      e.preventDefault(); // Evita scroll natural de la página
+      e.preventDefault();
+      e.stopPropagation();
       
-      // Obtener todos los botones clickeables de la barra lateral (logo, cerrar, items, salida)
-      const sidebar = document.getElementById('evicamp-sidebar');
-      if (!sidebar) return;
+      const sidebarEl = document.getElementById('evicamp-sidebar');
+      if (!sidebarEl) return;
       
-      const allButtons = Array.from(sidebar.querySelectorAll('button:not([disabled])')) as HTMLButtonElement[];
-      const buttons = allButtons.filter(btn => btn.offsetParent !== null); // Solo botones visibles
+      const allButtons = Array.from(sidebarEl.querySelectorAll('button:not([disabled])')) as HTMLButtonElement[];
+      const buttons = allButtons.filter(btn => btn.offsetParent !== null);
       if (buttons.length === 0) return;
 
       const currentIndex = buttons.indexOf(document.activeElement as HTMLButtonElement);
@@ -60,13 +67,48 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
       let nextIndex = 0;
       if (currentIndex !== -1) {
         if (e.key === 'ArrowDown') {
-          nextIndex = currentIndex + 1 >= buttons.length ? currentIndex : currentIndex + 1;
+          nextIndex = Math.min(buttons.length - 1, currentIndex + 1);
         } else {
-          nextIndex = currentIndex - 1 < 0 ? currentIndex : currentIndex - 1;
+          nextIndex = Math.max(0, currentIndex - 1);
         }
       }
       
-      buttons[nextIndex].focus();
+      buttons[nextIndex]?.focus();
+      return;
+    }
+
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      onClose();
+      if (currentView === 'inventario') {
+        const b = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+        b?.focus();
+        b?.select();
+      } else if (currentView === 'fiados') {
+        const b = document.getElementById('buscador-global-fiados') as HTMLInputElement | null;
+        b?.focus();
+        b?.select();
+      } else if (currentView === 'pos') {
+        const b = document.getElementById('buscador-global-pos') as HTMLInputElement | null;
+        b?.focus();
+        b?.select();
+      } else if (currentView === 'mermas') {
+        const b = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+        b?.focus();
+        b?.select();
+      } else if (currentView === 'finanzas') {
+        const b = document.getElementById('buscador-finanzas') as HTMLInputElement | null;
+        b?.focus();
+        b?.select();
+      }
+      return;
     }
   };
 
@@ -91,29 +133,139 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
     onToggle();
   };
 
-  // 🔥 NUEVO: Gestión inteligente del foco entre el Sidebar y el POS
+  // 🔥 FOCUS TRAP Y GESTIÓN DE FOCO PRIORITARIA ENTRE SIDEBAR Y SESIONES
   useEffect(() => {
     if (isOpen) {
-      // Cuando se abre el sidebar, enviar el foco directo al botón de la vista actual
-      const activeBtn = document.getElementById(`sidebar-btn-${currentView}`);
-      if (activeBtn) {
-        activeBtn.focus();
-      } else {
-        const sidebar = document.getElementById('evicamp-sidebar');
-        if (sidebar) sidebar.focus();
-      }
+      // 1. Cuando se abre el sidebar, enviar el foco directo con prioridad al botón de la vista actual
+      const enfocarActivo = () => {
+        const activeBtn = document.getElementById(`sidebar-btn-${currentView}`);
+        if (activeBtn) {
+          activeBtn.focus();
+        } else {
+          const first = document.querySelector('#evicamp-sidebar button:not([disabled])') as HTMLElement;
+          if (first) first.focus();
+          else document.getElementById('evicamp-sidebar')?.focus();
+        }
+      };
+
+      enfocarActivo();
+      const timer = setTimeout(enfocarActivo, 30);
+
+      // 2. Focus Trap de Captura: si cualquier elemento de la sesión intenta robar el foco mientras el sidebar está abierto, regresarlo de inmediato al sidebar
+      const handleFocusTrap = (e: FocusEvent) => {
+        if (document.querySelector('[role="dialog"]') || document.querySelector('.fixed.inset-0.z-50')) return;
+        const sidebarEl = document.getElementById('evicamp-sidebar');
+        if (!sidebarEl) return;
+        if (e.target && !sidebarEl.contains(e.target as Node)) {
+          e.preventDefault();
+          e.stopPropagation();
+          enfocarActivo();
+        }
+      };
+
+      // 3. Listener global de teclado en fase de captura mientras el sidebar está abierto
+      const handleGlobalKeyDown = (e: KeyboardEvent) => {
+        marcarActividad();
+        if (document.querySelector('[role="dialog"]') || document.querySelector('.fixed.inset-0.z-50')) return;
+
+        // 🛡️ Las flechas laterales (izquierda / derecha) NUNCA deben salir del sidebar ni saltar a la sesión
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+
+        const sidebarEl = document.getElementById('evicamp-sidebar');
+        if (!sidebarEl) return;
+
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+          return;
+        }
+
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          e.stopPropagation();
+          const allButtons = Array.from(sidebarEl.querySelectorAll('button:not([disabled])')) as HTMLButtonElement[];
+          const buttons = allButtons.filter(btn => btn.offsetParent !== null);
+          if (buttons.length === 0) return;
+
+          const currentIndex = buttons.indexOf(document.activeElement as HTMLButtonElement);
+          let nextIndex = 0;
+          if (currentIndex !== -1) {
+            if (e.key === 'ArrowDown') {
+              nextIndex = Math.min(buttons.length - 1, currentIndex + 1);
+            } else {
+              nextIndex = Math.max(0, currentIndex - 1);
+            }
+          }
+          buttons[nextIndex]?.focus();
+          return;
+        }
+
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+          return;
+        }
+      };
+
+      document.addEventListener('focusin', handleFocusTrap, { capture: true });
+      window.addEventListener('keydown', handleGlobalKeyDown, { capture: true });
+
+      return () => {
+        clearTimeout(timer);
+        document.removeEventListener('focusin', handleFocusTrap, { capture: true });
+        window.removeEventListener('keydown', handleGlobalKeyDown, { capture: true });
+      };
     } else {
       // Cuando se oculta, devolver el foco al buscador principal de la sesión actual
-      if (currentView === 'pos') {
-        const searchInput = document.getElementById('buscador-global-pos') as HTMLInputElement;
-        if (searchInput) searchInput.focus();
-      } else if (currentView === 'fiados') {
-        const searchInputFiados = document.getElementById('buscador-global-fiados') as HTMLInputElement;
-        if (searchInputFiados) searchInputFiados.focus();
-      } else if (currentView === 'inventario') {
-        const searchInputInventario = document.getElementById('buscador-global-inventario') as HTMLInputElement;
-        if (searchInputInventario) searchInputInventario.focus();
-      }
+      const timer = setTimeout(() => {
+        if (currentView === 'pos') {
+          const searchInput = document.getElementById('buscador-global-pos') as HTMLInputElement;
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+          }
+        } else if (currentView === 'fiados') {
+          const searchInputFiados = document.getElementById('buscador-global-fiados') as HTMLInputElement;
+          if (searchInputFiados) {
+            searchInputFiados.focus();
+            searchInputFiados.select();
+          }
+        } else if (currentView === 'inventario') {
+          const searchInputInventario = document.getElementById('buscador-global-inventario') as HTMLInputElement;
+          if (searchInputInventario) {
+            searchInputInventario.focus();
+            searchInputInventario.select();
+          }
+        } else if (currentView === 'mermas') {
+          const searchInputMermas = document.getElementById('buscador-global-mermas') as HTMLInputElement;
+          if (searchInputMermas) {
+            searchInputMermas.focus();
+            searchInputMermas.select();
+          }
+        } else if (currentView === 'finanzas') {
+          const enfocarFinanzas = () => {
+            const searchInputFinanzas = document.getElementById('buscador-finanzas') as HTMLInputElement;
+            if (searchInputFinanzas) {
+              searchInputFinanzas.focus();
+              searchInputFinanzas.select();
+              return true;
+            }
+            return false;
+          };
+          if (!enfocarFinanzas()) {
+            setTimeout(enfocarFinanzas, 100);
+            setTimeout(enfocarFinanzas, 250);
+            setTimeout(enfocarFinanzas, 500);
+          }
+        }
+      }, 50);
+      return () => clearTimeout(timer);
     }
   }, [isOpen, currentView]);
 
@@ -181,6 +333,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
     {/* En tablet/celular el menú es un panel deslizable sobre el contenido; en escritorio es una columna fija que se expande o contrae */}
     <aside
       id="evicamp-sidebar"
+      data-sidebar-open={isOpen ? "true" : "false"}
       tabIndex={-1}
       onMouseEnter={() => { encima.current = true; setEnPausa(true); }}
       onMouseLeave={() => { encima.current = false; setEnPausa(false); marcarActividad(); }}
@@ -275,8 +428,8 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
                       isOpen ? 'pl-3 pr-2 gap-3 justify-between' : 'justify-center px-0'
                     } ${
                       isActive 
-                        ? 'border-[var(--color-ink)] bg-[var(--color-accent)] text-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)] translate-x-[-2px] translate-y-[-2px]' 
-                        : 'border-transparent text-[var(--color-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/5 focus:outline-none focus:border-[var(--color-ink)] focus:bg-[var(--color-accent)] focus:text-[var(--color-ink)] focus:shadow-[3px_3px_0_0_var(--color-ink)] focus:translate-x-[-2px] focus:translate-y-[-2px]'
+                        ? 'border-[var(--color-ink)] bg-[var(--color-accent)] text-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)] translate-x-[-2px] translate-y-[-2px] focus:outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:ring-offset-2' 
+                        : 'border-transparent text-[var(--color-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/5 focus:outline-none focus:border-[var(--color-ink)] focus:bg-[var(--color-accent)] focus:text-[var(--color-ink)] focus:shadow-[3px_3px_0_0_var(--color-ink)] focus:translate-x-[-2px] focus:translate-y-[-2px] focus:ring-4 focus:ring-[var(--color-ink)] focus:ring-offset-2'
                     }`}
                   >
                     <div className="flex items-center gap-3">

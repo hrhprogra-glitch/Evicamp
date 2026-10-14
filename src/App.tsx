@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Login } from './sections/Login';
 import { SideBar } from './layout/SideBar';
 import { validarSesion, type EmpleadoSesion } from './utils/sesion';
@@ -25,6 +25,11 @@ export const App: React.FC = () => {
   const [empleado, setEmpleado] = useState<EmpleadoSesion | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [currentView, setCurrentView] = useState<string>('pos');
+  const currentViewRef = useRef(currentView);
+  useEffect(() => {
+    currentViewRef.current = currentView;
+  }, [currentView]);
   // El menú lateral guarda su estado en localStorage.
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
     const guardado = localStorage.getItem('evicamp_sidebar_open');
@@ -40,24 +45,97 @@ export const App: React.FC = () => {
   };
 
   const handleCloseSidebar = () => {
+    const sidebar = document.getElementById('evicamp-sidebar');
+    sidebar?.setAttribute('data-sidebar-open', 'false');
     setIsSidebarOpen(false);
     localStorage.setItem('evicamp_sidebar_open', 'false');
   };
 
-  // Atajo global: Tab para alternar el menú lateral
+  // Atajo global: Tab para alternar el menú lateral con prioridad absoluta
   useEffect(() => {
     const handleGlobalTab = (e: KeyboardEvent) => {
       if (e.key === 'Tab') {
+        // Respetar focus-trap si hay modal abierto
+        if (document.querySelector('[role="dialog"]') || document.querySelector('.fixed.inset-0.z-50')) {
+          return;
+        }
+
         e.preventDefault();
-        toggleSidebar();
+        e.stopPropagation();
+
+        const sidebar = document.getElementById('evicamp-sidebar');
+        const estaAbierto = isSidebarOpen || sidebar?.getAttribute('data-sidebar-open') === 'true';
+
+        if (estaAbierto) {
+          // Si está abierto, Tab lo CIERRA y devuelve el foco al buscador de la sesión
+          sidebar?.setAttribute('data-sidebar-open', 'false');
+          setIsSidebarOpen(false);
+          localStorage.setItem('evicamp_sidebar_open', 'false');
+
+          const activeView = currentViewRef.current || 'pos';
+          setTimeout(() => {
+            if (activeView === 'pos') {
+              const b = document.getElementById('buscador-global-pos') as HTMLInputElement | null;
+              b?.focus();
+              b?.select();
+            } else if (activeView === 'fiados') {
+              const b = document.getElementById('buscador-global-fiados') as HTMLInputElement | null;
+              b?.focus();
+              b?.select();
+            } else if (activeView === 'inventario') {
+              const b = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+              b?.focus();
+              b?.select();
+            } else if (activeView === 'mermas') {
+              const b = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+              b?.focus();
+              b?.select();
+            } else if (activeView === 'finanzas') {
+              const enfocarFinanzas = () => {
+                const b = document.getElementById('buscador-finanzas') as HTMLInputElement | null;
+                if (b) {
+                  b.focus();
+                  b.select();
+                  return true;
+                }
+                return false;
+              };
+              if (!enfocarFinanzas()) {
+                setTimeout(enfocarFinanzas, 80);
+                setTimeout(enfocarFinanzas, 200);
+              }
+            }
+          }, 30);
+        } else {
+          // Si está cerrado, Tab lo ABRE y enfoca de inmediato el botón activo en el sidebar
+          sidebar?.setAttribute('data-sidebar-open', 'true');
+          setIsSidebarOpen(true);
+          localStorage.setItem('evicamp_sidebar_open', 'true');
+
+          const activeView = currentViewRef.current || 'pos';
+          const enfocar = () => {
+            const activeBtn = document.getElementById(`sidebar-btn-${activeView}`) as HTMLElement | null;
+            if (activeBtn) {
+              activeBtn.focus();
+            } else {
+              const first = sidebar?.querySelector('button:not([disabled])') as HTMLElement | null;
+              if (first) first.focus();
+              else sidebar?.focus();
+            }
+          };
+
+          enfocar();
+          setTimeout(enfocar, 25);
+          setTimeout(enfocar, 70);
+        }
       }
     };
-    window.addEventListener('keydown', handleGlobalTab);
-    return () => window.removeEventListener('keydown', handleGlobalTab);
-  }, []);
+    window.addEventListener('keydown', handleGlobalTab, { capture: true });
+    return () => window.removeEventListener('keydown', handleGlobalTab, { capture: true });
+  }, [isSidebarOpen]);
 
   // Estado para el Enrutador Interno
-  const [currentView, setCurrentView] = useState<string>('pos');
+
 
   // Valida la sesión al abrir la app, cada minuto y al volver a la pestaña.
   // Si el empleado fue desactivado o borrado, o le cambiaron los permisos, se aplica enseguida.

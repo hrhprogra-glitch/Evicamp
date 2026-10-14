@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Package, Scale, Coffee, ArrowLeft, Save, ImagePlus, Search, Loader2, Database } from 'lucide-react';
+import { X, Package, Scale, Coffee, ArrowLeft, Save, ImagePlus, Search, Loader2, Database, Plus } from 'lucide-react';
 import { supabase } from '../../../db/supabase'; // RETORNO TÉCNICO: Conexión a la DB
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 
@@ -41,8 +41,24 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   // ESTADOS PARA EL AUTOCOMPLETADO DE CATEGORÍAS
   const [categoriasLista, setCategoriasLista] = useState<string[]>([]);
   const [showCatDropdown, setShowCatDropdown] = useState(false);
+  const catContainerRef = useRef<HTMLDivElement>(null);
 
-  // 🔥 NUEVO: Cargar tu tabla categories directamente desde Supabase
+  // Cerrar dropdown al hacer clic fuera del contenedor de categoría
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (catContainerRef.current && !catContainerRef.current.contains(e.target as Node)) {
+        setShowCatDropdown(false);
+      }
+    };
+    if (showCatDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showCatDropdown]);
+
+  // Cargar tabla categories directamente desde Supabase
   useEffect(() => {
     const fetchCategorias = async () => {
       const { data } = await supabase.from('categories').select('name');
@@ -53,6 +69,41 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     };
     if (isOpen) fetchCategorias();
   }, [isOpen]);
+
+  const handleCrearCategoria = async (nombreCat: string) => {
+    const nuevaCat = nombreCat?.trim().toUpperCase();
+    if (!nuevaCat) return;
+
+    if (!categoriasLista.includes(nuevaCat)) {
+      setCategoriasLista(prev => [...prev, nuevaCat].sort());
+      try {
+        await supabase.from('categories').insert([{ id: Date.now(), name: nuevaCat, is_synced: 1 }]);
+      } catch (err) {
+        console.error('Error insertando categoría en db:', err);
+      }
+    }
+
+    setFormData(prev => ({ ...prev, category: nuevaCat }));
+    setShowCatDropdown(false);
+    setTimeout(() => {
+      document.getElementById('input-barcode-producto')?.focus();
+    }, 50);
+  };
+
+  const handleEliminarCategoria = async (cat: string) => {
+    if (window.confirm(`¿Estás seguro de que deseas eliminar la categoría "${cat}" DEFINITIVAMENTE de tu base de datos?`)) {
+      setCategoriasLista(prev => prev.filter(c => c !== cat));
+      if (formData.category === cat) {
+        setFormData(prev => ({ ...prev, category: '' }));
+      }
+      try {
+        await supabase.from('categories').delete().eq('name', cat);
+      } catch (err) {
+        console.error('Error eliminando categoría en db:', err);
+      }
+      document.getElementById('input-categoria-producto')?.focus();
+    }
+  };
   // ESTADOS PARA BÚSQUEDA DE IMÁGENES
   const [imageQuery, setImageQuery] = useState('');
   const [isSearchingImage, setIsSearchingImage] = useState(false);
@@ -188,10 +239,6 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     image: '' // <-- NUEVO ESTADO PARA LA IMAGEN
   });
 
-  useCerrarConEscape(isOpen, onClose);
-
-  if (!isOpen) return null;
-
   const resetAndClose = () => {
     setIntegrityError(null);
     setStep(1);
@@ -203,13 +250,596 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     onClose();
   };
 
+  useCerrarConEscape(isOpen, resetAndClose);
+
+  // Auto-Focus al abrir el modal o cambiar de paso
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const enforceFocus = () => {
+      if (step === 2) {
+        const nameInput = document.getElementById('input-nombre-producto');
+        if (nameInput) nameInput.focus();
+        else document.getElementById('btn-cerrar-modal-producto')?.focus();
+      } else {
+        const targetId = 
+          nature === 'PESO' ? 'btn-naturaleza-peso' : 
+          nature === 'CONSUMO' ? 'btn-naturaleza-consumo' : 
+          'btn-naturaleza-unidad';
+        const targetBtn = document.getElementById(targetId);
+        if (targetBtn) targetBtn.focus();
+        else document.getElementById('btn-cerrar-modal-producto')?.focus();
+      }
+    };
+
+    const timer = setTimeout(enforceFocus, 50);
+    return () => clearTimeout(timer);
+  }, [isOpen, step]);
+
+  // Focus Trap y Navegación de Teclado para ModalProducto
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleFormKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement as HTMLElement;
+
+      // Escape cierra dropdown primero si está abierto
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (showCatDropdown) {
+          setShowCatDropdown(false);
+          document.getElementById('input-categoria-producto')?.focus();
+          return;
+        }
+        resetAndClose();
+        return;
+      }
+
+      // ================= FOCUS TRAP DETERMINÍSTICO PARA TAB =================
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const step1Ids = [
+          'btn-cerrar-modal-producto',
+          'btn-naturaleza-unidad',
+          'btn-naturaleza-peso',
+          'btn-naturaleza-consumo'
+        ];
+
+        const step2Ids = [
+          'btn-volver-step-1',
+          'btn-cerrar-modal-producto',
+          'input-nombre-producto',
+          'input-categoria-producto',
+          'input-barcode-producto',
+          'input-buscar-foto-producto',
+          'btn-subir-local-producto',
+          'input-precio-producto',
+          'input-stock-minimo-producto',
+          'select-unidad-peso-producto',
+          'btn-guardar-producto',
+          'btn-guardar-ir-lotes'
+        ];
+
+        const targetIds = step === 1 ? step1Ids : step2Ids;
+        const focusables = targetIds
+          .map(id => document.getElementById(id))
+          .filter((el): el is HTMLElement => Boolean(el && (el.offsetParent !== null || el.getClientRects().length > 0) && !el.hasAttribute('disabled')));
+
+        if (focusables.length > 0) {
+          const currentIndex = focusables.indexOf(active);
+          if (e.shiftKey) {
+            const prevIndex = currentIndex <= 0 ? focusables.length - 1 : currentIndex - 1;
+            focusables[prevIndex]?.focus();
+          } else {
+            const nextIndex = currentIndex === -1 || currentIndex >= focusables.length - 1 ? 0 : currentIndex + 1;
+            focusables[nextIndex]?.focus();
+          }
+        }
+        return;
+      }
+
+      // ================= NAVEGACIÓN EN PASO 1 (NATURALEZA) =================
+      if (step === 1) {
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          if (active?.id === 'btn-naturaleza-unidad') {
+            document.getElementById('btn-naturaleza-peso')?.focus();
+          } else if (active?.id === 'btn-naturaleza-peso') {
+            document.getElementById('btn-naturaleza-consumo')?.focus();
+          } else if (active?.id === 'btn-naturaleza-consumo') {
+            document.getElementById('btn-naturaleza-unidad')?.focus();
+          } else {
+            document.getElementById('btn-naturaleza-unidad')?.focus();
+          }
+          return;
+        }
+
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          if (active?.id === 'btn-naturaleza-consumo') {
+            document.getElementById('btn-naturaleza-peso')?.focus();
+          } else if (active?.id === 'btn-naturaleza-peso') {
+            document.getElementById('btn-naturaleza-unidad')?.focus();
+          } else if (active?.id === 'btn-naturaleza-unidad') {
+            document.getElementById('btn-naturaleza-consumo')?.focus();
+          } else {
+            document.getElementById('btn-naturaleza-consumo')?.focus();
+          }
+          return;
+        }
+
+        if (e.key === 'ArrowUp') {
+          if (['btn-naturaleza-unidad', 'btn-naturaleza-peso', 'btn-naturaleza-consumo'].includes(active?.id)) {
+            e.preventDefault();
+            document.getElementById('btn-cerrar-modal-producto')?.focus();
+            return;
+          }
+        }
+
+        if (e.key === 'ArrowDown') {
+          if (active?.id === 'btn-cerrar-modal-producto') {
+            e.preventDefault();
+            const targetId = nature === 'PESO' ? 'btn-naturaleza-peso' : (nature === 'CONSUMO' ? 'btn-naturaleza-consumo' : 'btn-naturaleza-unidad');
+            document.getElementById(targetId)?.focus();
+            return;
+          }
+        }
+        return;
+      }
+
+      // ================= NAVEGACIÓN EN PASO 2 (DETALLES) =================
+      if (step === 2) {
+        // Cabecera
+        if (active?.id === 'btn-volver-step-1') {
+          if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            document.getElementById('btn-cerrar-modal-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            document.getElementById('input-nombre-producto')?.focus();
+            return;
+          }
+        }
+
+        if (active?.id === 'btn-cerrar-modal-producto') {
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            document.getElementById('btn-volver-step-1')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            document.getElementById('input-nombre-producto')?.focus();
+            return;
+          }
+        }
+
+        // Nombre
+        if (active?.id === 'input-nombre-producto') {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            document.getElementById('btn-volver-step-1')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown' || e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('input-categoria-producto')?.focus();
+            return;
+          }
+        }
+
+        // Categoría
+        if (active?.id === 'input-categoria-producto') {
+          if (e.key === 'ArrowUp') {
+            const btnAdd = document.getElementById('btn-agregar-categoria');
+            if (btnAdd && showCatDropdown) {
+              e.preventDefault();
+              btnAdd.focus();
+              return;
+            }
+            e.preventDefault();
+            setShowCatDropdown(false);
+            document.getElementById('input-nombre-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (!showCatDropdown) {
+              setShowCatDropdown(true);
+            }
+            setTimeout(() => {
+              const firstItem = document.querySelector('[data-cat-item="true"]') as HTMLElement;
+              if (firstItem) {
+                firstItem.focus();
+              } else {
+                document.getElementById('input-barcode-producto')?.focus();
+              }
+            }, 30);
+            return;
+          }
+          if (e.key === 'ArrowRight') {
+            const input = active as HTMLInputElement;
+            if (!input.value || input.selectionEnd === input.value.length) {
+              e.preventDefault();
+              setShowCatDropdown(false);
+              document.getElementById('input-barcode-producto')?.focus();
+              return;
+            }
+          }
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const typedCat = formData.category?.trim().toUpperCase() || '';
+            if (typedCat) {
+              const matches = categoriasLista.filter(c => c.includes(typedCat));
+              if (matches.length > 0) {
+                const chosen = matches.find(c => c === typedCat) || matches[0];
+                setFormData(prev => ({ ...prev, category: chosen }));
+                setShowCatDropdown(false);
+                document.getElementById('input-barcode-producto')?.focus();
+              } else {
+                handleCrearCategoria(typedCat);
+              }
+            } else {
+              setShowCatDropdown(false);
+              document.getElementById('input-barcode-producto')?.focus();
+            }
+            return;
+          }
+        }
+
+        // Elemento dentro del desplegable de categorías
+        if (active?.getAttribute('data-cat-item') === 'true') {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const items = Array.from(document.querySelectorAll('[data-cat-item="true"]')) as HTMLElement[];
+            const idx = items.indexOf(active);
+            if (idx !== -1 && idx < items.length - 1) {
+              items[idx + 1].focus();
+            }
+            return;
+          }
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const items = Array.from(document.querySelectorAll('[data-cat-item="true"]')) as HTMLElement[];
+            const idx = items.indexOf(active);
+            if (idx > 0) {
+              items[idx - 1].focus();
+            } else {
+              document.getElementById('input-categoria-producto')?.focus();
+            }
+            return;
+          }
+          if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            const btnEliminar = active.querySelector('.btn-eliminar-cat') as HTMLElement;
+            if (btnEliminar) {
+              btnEliminar.focus();
+            } else {
+              setShowCatDropdown(false);
+              document.getElementById('input-barcode-producto')?.focus();
+            }
+            return;
+          }
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            document.getElementById('input-categoria-producto')?.focus();
+            return;
+          }
+          if (e.key === 'Delete') {
+            const btnEliminar = active.querySelector('.btn-eliminar-cat') as HTMLElement;
+            if (btnEliminar) {
+              e.preventDefault();
+              btnEliminar.click();
+              return;
+            }
+          }
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            setShowCatDropdown(false);
+            document.getElementById('input-categoria-producto')?.focus();
+            return;
+          }
+        }
+
+        // Botón eliminar dentro del desplegable
+        if (active?.classList.contains('btn-eliminar-cat')) {
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            const parentItem = active.closest('[data-cat-item="true"]') as HTMLElement;
+            parentItem?.focus();
+            return;
+          }
+          if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            setShowCatDropdown(false);
+            document.getElementById('input-barcode-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const items = Array.from(document.querySelectorAll('[data-cat-item="true"]')) as HTMLElement[];
+            const currentItem = active.closest('[data-cat-item="true"]') as HTMLElement;
+            const idx = items.indexOf(currentItem);
+            if (idx !== -1 && idx < items.length - 1) {
+              items[idx + 1].focus();
+            }
+            return;
+          }
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const items = Array.from(document.querySelectorAll('[data-cat-item="true"]')) as HTMLElement[];
+            const currentItem = active.closest('[data-cat-item="true"]') as HTMLElement;
+            const idx = items.indexOf(currentItem);
+            if (idx > 0) {
+              items[idx - 1].focus();
+            } else {
+              document.getElementById('input-categoria-producto')?.focus();
+            }
+            return;
+          }
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            setShowCatDropdown(false);
+            document.getElementById('input-categoria-producto')?.focus();
+            return;
+          }
+        }
+
+        // Botón superior "+ AGREGAR"
+        if (active?.id === 'btn-agregar-categoria') {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            document.getElementById('input-categoria-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            document.getElementById('btn-cerrar-lista-categoria')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            document.getElementById('input-categoria-producto')?.focus();
+            return;
+          }
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleCrearCategoria(formData.category);
+            return;
+          }
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            setShowCatDropdown(false);
+            document.getElementById('input-categoria-producto')?.focus();
+            return;
+          }
+        }
+
+        // Botón superior "CERRAR LISTA"
+        if (active?.id === 'btn-cerrar-lista-categoria') {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            document.getElementById('input-categoria-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            const btnAdd = document.getElementById('btn-agregar-categoria');
+            if (btnAdd) btnAdd.focus();
+            else document.getElementById('input-categoria-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            setShowCatDropdown(false);
+            document.getElementById('input-barcode-producto')?.focus();
+            return;
+          }
+          if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+            e.preventDefault();
+            setShowCatDropdown(false);
+            document.getElementById('input-categoria-producto')?.focus();
+            return;
+          }
+        }
+
+        // Código de Barras / Escáner
+        if (active?.id === 'input-barcode-producto') {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            document.getElementById('input-nombre-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown' || e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('input-buscar-foto-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowLeft') {
+            const input = active as HTMLInputElement;
+            if (!input.value || input.selectionStart === 0) {
+              e.preventDefault();
+              document.getElementById('input-categoria-producto')?.focus();
+              return;
+            }
+          }
+        }
+
+        // Buscar Imagen
+        if (active?.id === 'input-buscar-foto-producto') {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            document.getElementById('input-categoria-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowRight' && (active as HTMLInputElement).selectionEnd === (active as HTMLInputElement).value?.length) {
+            e.preventDefault();
+            document.getElementById('btn-subir-local-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown' || e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('input-precio-producto')?.focus();
+            return;
+          }
+        }
+
+        // Botón Subir Local
+        if (active?.id === 'btn-subir-local-producto') {
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            document.getElementById('input-buscar-foto-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            document.getElementById('input-precio-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            document.getElementById('input-barcode-producto')?.focus();
+            return;
+          }
+        }
+
+        // Precio
+        if (active?.id === 'input-precio-producto') {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            document.getElementById('input-buscar-foto-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown' || e.key === 'Enter') {
+            e.preventDefault();
+            const next = document.getElementById('input-stock-minimo-producto') || 
+                         document.getElementById('select-unidad-peso-producto') || 
+                         document.getElementById('btn-guardar-producto');
+            next?.focus();
+            return;
+          }
+          if (e.key === 'ArrowRight') {
+            const next = document.getElementById('input-stock-minimo-producto') || 
+                         document.getElementById('btn-guardar-producto');
+            if (next) {
+              e.preventDefault();
+              next.focus();
+              return;
+            }
+          }
+        }
+
+        // Stock Mínimo
+        if (active?.id === 'input-stock-minimo-producto') {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            document.getElementById('input-buscar-foto-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown' || e.key === 'Enter') {
+            e.preventDefault();
+            const next = document.getElementById('select-unidad-peso-producto') || 
+                         document.getElementById('btn-guardar-producto');
+            next?.focus();
+            return;
+          }
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            document.getElementById('input-precio-producto')?.focus();
+            return;
+          }
+        }
+
+        // Unidad de Medida (select)
+        if (active?.id === 'select-unidad-peso-producto') {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            e.stopPropagation();
+            const prev = document.getElementById('input-stock-minimo-producto') || 
+                         document.getElementById('input-precio-producto');
+            prev?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown' || e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('btn-guardar-producto')?.focus();
+            return;
+          }
+        }
+
+        // Botón Guardar
+        if (active?.id === 'btn-guardar-producto') {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prev = document.getElementById('select-unidad-peso-producto') || 
+                         document.getElementById('input-stock-minimo-producto') || 
+                         document.getElementById('input-precio-producto');
+            prev?.focus();
+            return;
+          }
+          if (e.key === 'ArrowRight') {
+            const btnIrLotes = document.getElementById('btn-guardar-ir-lotes');
+            if (btnIrLotes) {
+              e.preventDefault();
+              btnIrLotes.focus();
+              return;
+            }
+          }
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleSave(false);
+            return;
+          }
+        }
+
+        // Botón Guardar e ir a Lotes
+        if (active?.id === 'btn-guardar-ir-lotes') {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prev = document.getElementById('select-unidad-peso-producto') || 
+                         document.getElementById('input-stock-minimo-producto') || 
+                         document.getElementById('input-precio-producto');
+            prev?.focus();
+            return;
+          }
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            document.getElementById('btn-guardar-producto')?.focus();
+            return;
+          }
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleSave(true);
+            return;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleFormKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', handleFormKeyDown, { capture: true });
+  }, [isOpen, step, nature, formData, isSubmitting, categoriasLista]);
+
+  if (!isOpen) return null;
+
   const handleNatureSelect = (selectedNature: ProductNature) => {
     setNature(selectedNature);
     setStep(2);
   };
 
   const handleSave = async (goToLotes: boolean) => {
-    if (!formData.name || isSubmitting) return;
+    if (!formData.name?.trim()) {
+      setIntegrityError('El nombre del producto es obligatorio.');
+      document.getElementById('input-nombre-producto')?.focus();
+      return;
+    }
+    if (isSubmitting) return;
     
     const nombreLimpio = formData.name.trim().toUpperCase();
     const codigoBarrasLimpio = formData.barcode?.trim() || '';
@@ -252,9 +882,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           control_type: nature === 'PESO' ? 'WEIGHT' : 'UND',
           weight_unit: nature === 'PESO' ? formData.weightUnit : null,
           unit: unidadAsignada,
-          image_url: formData.image,
+          image_url: formData.image,
           is_active: 1
-        }).eq('id', initialData.id).select().single();
+        }).eq('id', initialData.id).select().single();
 
         if (error) throw error;
         productoGuardado = data;
@@ -292,15 +922,15 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
       }
 
       // Sincronizamos con la pantalla
-      if (onProductSaved) {
-        onProductSaved({
-          ...productoGuardado, 
-          imageUrl: productoGuardado.image_url, 
-          minStock: productoGuardado.min_stock,
-          unit: unidadAsignada,
+      if (onProductSaved) {
+        onProductSaved({
+          ...productoGuardado, 
+          imageUrl: productoGuardado.image_url, 
+          minStock: productoGuardado.min_stock,
+          unit: unidadAsignada,
           is_active: 1
-        });
-      }
+        });
+      }
 
       resetAndClose();
 
@@ -331,8 +961,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           <div className="flex items-center gap-3">
             {step === 2 && (
               <button 
+                id="btn-volver-step-1"
                 onClick={() => setStep(1)} 
-                className="hover:text-[var(--color-success)] transition-colors mr-2 cursor-pointer"
+                className="hover:text-[var(--color-success)] focus:text-[var(--color-success)] focus:outline-none focus:ring-2 focus:ring-[var(--color-success)] p-1 transition-colors mr-2 cursor-pointer"
                 title="Volver a seleccionar tipo"
               >
                 <ArrowLeft size={20} />
@@ -347,7 +978,12 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               </p>
             </div>
           </div>
-          <button onClick={resetAndClose} className="hover:text-[var(--color-danger)] transition-colors cursor-pointer">
+          <button 
+            id="btn-cerrar-modal-producto"
+            onClick={resetAndClose} 
+            className="hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white/20 p-1.5 transition-colors cursor-pointer rounded-none"
+            title="Cerrar ventana (Escape)"
+          >
             <X size={20} />
           </button>
         </div>
@@ -361,8 +997,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               
               {/* Opción: UNIDAD */}
               <button 
+                id="btn-naturaleza-unidad"
                 onClick={() => handleNatureSelect('UNIDAD')}
-                className="bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-6 flex flex-col items-center text-center gap-4 hover:border-[var(--color-success)] hover:shadow-[4px_4px_0_0_var(--color-success)] hover:-translate-y-1 transition-all cursor-pointer group rounded-none"
+                className={`bg-[var(--color-surface)] border-2 ${nature === 'UNIDAD' ? 'border-[var(--color-success)] shadow-[4px_4px_0_0_var(--color-success)]' : 'border-[#E2E8F0]'} p-6 flex flex-col items-center text-center gap-4 hover:border-[var(--color-success)] hover:shadow-[4px_4px_0_0_var(--color-success)] hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-[var(--color-success)] focus:shadow-[4px_4px_0_0_var(--color-success)] focus:-translate-y-1 transition-all cursor-pointer group rounded-none`}
               >
                 <div className="w-16 h-16 bg-[#F8FAFC] rounded-none flex items-center justify-center group-hover:bg-[#ECFDF5] transition-colors border-2 border-[#E2E8F0] group-hover:border-[var(--color-success)]">
                   <Package size={32} className="text-[#64748B] group-hover:text-[var(--color-success)] transition-colors" />
@@ -375,8 +1012,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
               {/* Opción: PESO */}
               <button 
+                id="btn-naturaleza-peso"
                 onClick={() => handleNatureSelect('PESO')}
-                className="bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-6 flex flex-col items-center text-center gap-4 hover:border-[#3B82F6] hover:shadow-[4px_4px_0_0_#3B82F6] hover:-translate-y-1 transition-all cursor-pointer group rounded-none"
+                className={`bg-[var(--color-surface)] border-2 ${nature === 'PESO' ? 'border-[#3B82F6] shadow-[4px_4px_0_0_#3B82F6]' : 'border-[#E2E8F0]'} p-6 flex flex-col items-center text-center gap-4 hover:border-[#3B82F6] hover:shadow-[4px_4px_0_0_#3B82F6] hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-[#3B82F6] focus:shadow-[4px_4px_0_0_#3B82F6] focus:-translate-y-1 transition-all cursor-pointer group rounded-none`}
               >
                 <div className="w-16 h-16 bg-[#F8FAFC] rounded-none flex items-center justify-center group-hover:bg-[#EFF6FF] transition-colors border-2 border-[#E2E8F0] group-hover:border-[#3B82F6]">
                   <Scale size={32} className="text-[#64748B] group-hover:text-[#3B82F6] transition-colors" />
@@ -389,8 +1027,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
               {/* Opción: CONSUMO */}
               <button 
+                id="btn-naturaleza-consumo"
                 onClick={() => handleNatureSelect('CONSUMO')}
-                className="bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-6 flex flex-col items-center text-center gap-4 hover:border-[var(--color-warning)] hover:shadow-[4px_4px_0_0_var(--color-warning)] hover:-translate-y-1 transition-all cursor-pointer group rounded-none"
+                className={`bg-[var(--color-surface)] border-2 ${nature === 'CONSUMO' ? 'border-[var(--color-warning)] shadow-[4px_4px_0_0_var(--color-warning)]' : 'border-[#E2E8F0]'} p-6 flex flex-col items-center text-center gap-4 hover:border-[var(--color-warning)] hover:shadow-[4px_4px_0_0_var(--color-warning)] hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-[var(--color-warning)] focus:shadow-[4px_4px_0_0_var(--color-warning)] focus:-translate-y-1 transition-all cursor-pointer group rounded-none`}
               >
                 <div className="w-16 h-16 bg-[#F8FAFC] rounded-none flex items-center justify-center group-hover:bg-[#FFFBEB] transition-colors border-2 border-[#E2E8F0] group-hover:border-[var(--color-warning)]">
                   <Coffee size={32} className="text-[#64748B] group-hover:text-[var(--color-warning)] transition-colors" />
@@ -416,7 +1055,15 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               <div className="md:col-span-2 space-y-2">
                 <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">Nombre / Descripción del Producto</label>
                 <input 
+                  id="input-nombre-producto"
                   type="text"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  name="prod_nombre_no_history"
+                  data-lpignore="true"
+                  data-form-type="other"
                   placeholder="Ej: COCA COLA 3 LITROS RETORNABLE..."
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -424,29 +1071,34 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 />
               </div>
 
-              <div className="space-y-2 relative">
+              <div ref={catContainerRef} className="space-y-2 relative">
                 <div className="flex justify-between items-center">
                   <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">Categoría</label>
                   
                   {/* CONTROLES SUPERIORES: AGREGAR Y CERRAR */}
                   {showCatDropdown && (
                     <div className="flex items-center gap-4">
-                      {formData.category && !categoriasLista.includes(formData.category) && (
+                      {formData.category?.trim() && !categoriasLista.includes(formData.category.trim().toUpperCase()) && (
                         <button 
-                          onMouseDown={async (e) => {
+                          id="btn-agregar-categoria"
+                          type="button"
+                          tabIndex={0}
+                          onClick={(e) => {
                             e.preventDefault();
-                            const nuevaCat = formData.category.trim().toUpperCase();
-                            setCategoriasLista([...categoriasLista, nuevaCat].sort());
-                            setShowCatDropdown(false);
-                            // 🔥 NUEVO: Guarda en la DB cuando haces clic en Agregar
-                            await supabase.from('categories').insert([{ id: Date.now(), name: nuevaCat, is_synced: 1 }]);
+                            handleCrearCategoria(formData.category);
                           }}
-                          className="text-[10px] font-black text-[var(--color-success)] uppercase hover:underline cursor-pointer flex items-center gap-1"
+                          className="text-[10px] font-black text-[var(--color-success)] uppercase hover:underline focus:underline focus:outline-none focus:ring-1 focus:ring-[var(--color-success)] cursor-pointer flex items-center gap-1"
                         >
-                          + AGREGAR "{formData.category}"
+                          <Plus size={12} /> AGREGAR "{formData.category.trim().toUpperCase()}"
                         </button>
                       )}
-                      <button onClick={() => setShowCatDropdown(false)} className="text-[9px] font-bold text-[var(--color-danger)] uppercase hover:underline cursor-pointer">
+                      <button 
+                        id="btn-cerrar-lista-categoria"
+                        type="button"
+                        tabIndex={0}
+                        onClick={() => setShowCatDropdown(false)} 
+                        className="text-[9px] font-bold text-[var(--color-danger)] uppercase hover:underline focus:underline focus:outline-none focus:ring-1 focus:ring-[var(--color-danger)] cursor-pointer"
+                      >
                         Cerrar Lista
                       </button>
                     </div>
@@ -455,57 +1107,101 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 
                 <div className="relative">
                   <input 
+                    id="input-categoria-producto"
                     type="text"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    name="prod_categoria_no_history"
+                    data-lpignore="true"
+                    data-form-type="other"
                     placeholder="BUSCAR O ESCRIBIR NUEVA..."
                     value={formData.category}
                     onChange={(e) => {
-                      setFormData({...formData, category: e.target.value.toUpperCase()});
+                      setFormData(prev => ({...prev, category: e.target.value.toUpperCase()}));
                       setShowCatDropdown(true);
                     }}
                     onFocus={() => setShowCatDropdown(true)}
-                    onBlur={() => setShowCatDropdown(false)} // <-- CIERRE AUTOMÁTICO AL SALIR
-                    className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] transition-colors"
+                    className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
                   />
                   
                   {/* DROPDOWN INTELIGENTE DE CATEGORÍAS */}
                   {showCatDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] z-50 max-h-48 overflow-y-auto custom-scrollbar">
-                      {categoriasLista.filter(c => c.includes(formData.category)).length > 0 ? (
-                        categoriasLista.filter(c => c.includes(formData.category)).map(cat => (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] z-50 max-h-56 overflow-y-auto custom-scrollbar">
+                      {/* Opción rápida de agregar si la categoría escrita no existe en la lista */}
+                      {formData.category?.trim() && !categoriasLista.includes(formData.category.trim().toUpperCase()) && (
+                        <div 
+                          data-cat-item="true"
+                          role="option"
+                          tabIndex={0}
+                          onClick={() => handleCrearCategoria(formData.category)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleCrearCategoria(formData.category);
+                            }
+                          }}
+                          className="flex items-center gap-2 p-3 bg-emerald-50 text-emerald-800 font-black text-xs uppercase cursor-pointer hover:bg-[#1E293B] hover:text-white focus:!bg-[#1E293B] focus:!text-white border-b-2 border-[#1E293B] outline-none transition-colors group"
+                        >
+                          <Plus size={14} className="shrink-0 text-emerald-600 group-hover:text-emerald-400 group-focus:text-emerald-400" />
+                          <span className="flex-1">CREAR NUEVA CATEGORÍA "{formData.category.trim().toUpperCase()}"</span>
+                        </div>
+                      )}
+
+                      {categoriasLista.filter(c => c.includes(formData.category?.trim().toUpperCase() || '')).length > 0 ? (
+                        categoriasLista.filter(c => c.includes(formData.category?.trim().toUpperCase() || '')).map(cat => (
                           <div 
                             key={cat} 
-                            onMouseDown={(e) => { 
-                              e.preventDefault();
-                              setFormData({...formData, category: cat}); 
+                            data-cat-item="true"
+                            role="option"
+                            tabIndex={0}
+                            onClick={() => { 
+                              setFormData(prev => ({...prev, category: cat})); 
                               setShowCatDropdown(false); 
+                              document.getElementById('input-barcode-producto')?.focus();
                             }}
-                            className="flex items-center justify-between p-3 hover:bg-[#F8FAFC] border-b border-[#E2E8F0] last:border-0 cursor-pointer group"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                setFormData(prev => ({...prev, category: cat})); 
+                                setShowCatDropdown(false); 
+                                document.getElementById('input-barcode-producto')?.focus();
+                              }
+                            }}
+                            className="flex items-center justify-between p-3 bg-white hover:bg-[#1E293B] hover:text-white focus:!bg-[#1E293B] focus:!text-white border-b border-[#E2E8F0] last:border-0 cursor-pointer group outline-none transition-colors"
                           >
-                            <span className="flex-1 text-xs font-black text-[var(--color-ink)]">
+                            <span className="flex-1 text-xs font-black text-[#1E293B] group-hover:text-white group-focus:!text-white">
                               {cat}
                             </span>
                             <button 
-                              onMouseDown={async (e) => { 
-                                e.preventDefault();
+                              type="button"
+                              tabIndex={0}
+                              onClick={(e) => { 
                                 e.stopPropagation(); 
-                                if (window.confirm(`¿Estás seguro de que deseas eliminar la categoría "${cat}" DEFINITIVAMENTE de tu base de datos?`)) {
-                                  setCategoriasLista(categoriasLista.filter(c => c !== cat)); 
-                                  // 🔥 NUEVO: Elimina de la DB cuando haces clic en la X
-                                  await supabase.from('categories').delete().eq('name', cat);
+                                handleEliminarCategoria(cat);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleEliminarCategoria(cat);
                                 }
                               }}
-                              className="text-[#94A3B8] hover:text-[var(--color-danger)] transition-colors cursor-pointer"
-                              title="Eliminar Categoría"
+                              className="btn-eliminar-cat text-[#94A3B8] group-hover:text-slate-300 group-focus:text-slate-300 hover:text-red-500 hover:bg-red-50 focus:!text-white focus:!bg-red-600 focus:outline-none focus:ring-1 focus:ring-white p-1 transition-colors cursor-pointer"
+                              title={`Eliminar categoría ${cat}`}
                             >
                               <X size={16} />
                             </button>
                           </div>
                         ))
                       ) : (
-                        <div className="p-4 flex flex-col items-center justify-center gap-2 bg-[#F8FAFC] text-center">
-                          <span className="text-[10px] font-bold text-[#64748B] uppercase">Categoría no encontrada.</span>
-                          <span className="text-[9px] font-bold text-[var(--color-ink)] uppercase">Usa el botón "+ Agregar" arriba para crearla.</span>
-                        </div>
+                        !formData.category?.trim() && (
+                          <div className="p-4 flex flex-col items-center justify-center gap-2 bg-[#F8FAFC] text-center">
+                            <span className="text-[10px] font-bold text-[#64748B] uppercase">No hay categorías registradas.</span>
+                            <span className="text-[9px] font-bold text-[var(--color-ink)] uppercase">Escribe un nombre para crear una nueva.</span>
+                          </div>
+                        )
                       )}
                     </div>
                   )}
@@ -515,11 +1211,19 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">Escáner (Cód. Barras)</label>
                 <input 
+                  id="input-barcode-producto"
                   type="text"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  name="prod_barcode_no_history"
+                  data-lpignore="true"
+                  data-form-type="other"
                   placeholder="ESCANEAR..."
                   value={formData.barcode}
                   onChange={(e) => setFormData({...formData, barcode: e.target.value})}
-                  className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] transition-colors"
+                  className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
                 />
               </div>
 
@@ -538,7 +1242,15 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                       )}
                     </div>
                     <input 
+                      id="input-buscar-foto-producto"
                       type="text"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="none"
+                      spellCheck={false}
+                      name="prod_foto_no_history"
+                      data-lpignore="true"
+                      data-form-type="other"
                       placeholder="EJ: PERA, COCA COLA, TALADRO O PEGAR URL..."
                       value={imageQuery || formData.image}
                       onFocus={() => {
@@ -557,18 +1269,37 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                           setFormData({...formData, image: ''});
                         }
                       }}
-                      className="w-full p-3 text-xs font-black text-[var(--color-ink)] outline-none rounded-none bg-[var(--color-surface)] border-0 focus:ring-0"
+                      className="w-full p-3 text-xs font-black text-[var(--color-ink)] outline-none rounded-none bg-[var(--color-surface)] border-0 focus:ring-2 focus:ring-[var(--color-success)]"
                     />
                   </div>
                   
-                  <label className="bg-[var(--color-ink)] text-white px-6 py-3 border-2 border-[var(--color-ink)] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--color-surface)] hover:text-[var(--color-ink)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] shrink-0">
+                  <label 
+                    id="btn-subir-local-producto"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        const fileInput = document.getElementById('input-file-local-producto') as HTMLInputElement;
+                        fileInput?.click();
+                      } else if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        document.getElementById('input-buscar-foto-producto')?.focus();
+                      } else if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        document.getElementById('input-precio-producto')?.focus();
+                      }
+                    }}
+                    className="bg-[var(--color-ink)] text-white px-6 py-3 border-2 border-[var(--color-ink)] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--color-surface)] hover:text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-surface)] focus:text-[var(--color-ink)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] shrink-0"
+                  >
                     <ImagePlus size={16} /> Subir Local
                     <input 
+                      id="input-file-local-producto"
                       type="file" 
                       accept="image/*" 
                       className="hidden" 
                       onChange={(e) => {
-                        if(e.target.files && e.target.files[0]) {
+                        if(e.target.files && e.target.files[0]) {
                           // Lector de archivos local (Convierte la foto a Base64 para mostrarla al instante)
                           const file = e.target.files[0];
                           const reader = new FileReader();
@@ -576,8 +1307,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                             setFormData({...formData, image: reader.result as string});
                           };
                           reader.readAsDataURL(file);
-                        }
-                      }}
+                        }
+                      }}
                     />
                   </label>
 
@@ -646,11 +1377,19 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">Precio de Venta Sugerido</label>
                 <input 
+                  id="input-precio-producto"
                   type="number"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  name="prod_precio_no_history"
+                  data-lpignore="true"
+                  data-form-type="other"
                   placeholder="0.00"
                   value={formData.price}
                   onChange={(e) => setFormData({...formData, price: e.target.value})}
-                  className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] transition-colors"
+                  className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
                 />
               </div>
 
@@ -658,10 +1397,18 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">Stock Mínimo (Alerta)</label>
                   <input 
+                    id="input-stock-minimo-producto"
                     type="number"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    name="prod_minstock_no_history"
+                    data-lpignore="true"
+                    data-form-type="other"
                     value={formData.minStock}
                     onChange={(e) => setFormData({...formData, minStock: e.target.value})}
-                    className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] transition-colors"
+                    className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
                   />
                 </div>
               )}
@@ -671,9 +1418,21 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">Unidad de Medida</label>
                   <select 
+                    id="select-unidad-peso-producto"
                     value={formData.weightUnit}
                     onChange={(e) => setFormData({...formData, weightUnit: e.target.value})}
-                    className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] transition-colors cursor-pointer"
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        const minStock = document.getElementById('input-stock-minimo-producto');
+                        if (minStock) minStock.focus();
+                        else document.getElementById('input-precio-producto')?.focus();
+                      } else if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        document.getElementById('btn-guardar-producto')?.focus();
+                      }
+                    }}
+                    className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors cursor-pointer"
                   >
                     <option value="KG">Kilogramos (KG)</option>
                     <option value="GR">Gramos (GR)</option>
@@ -691,9 +1450,10 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         {step === 2 && (
           <div className="flex justify-end items-center gap-4 mt-5 w-full">
               <button 
+                id="btn-guardar-producto"
                 onClick={() => handleSave(false)}
-                disabled={!formData.name || isSubmitting}
-                className="relative -top-8 -left-8 bg-[var(--color-surface)] text-[var(--color-ink)] px-6 py-3 border-2 border-[var(--color-ink)] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#F8FAFC] hover:border-[var(--color-success)] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none min-w-[140px]"
+                disabled={isSubmitting}
+                className="relative -top-8 -left-8 bg-[var(--color-surface)] text-[var(--color-ink)] px-6 py-3 border-2 border-[var(--color-ink)] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#F8FAFC] hover:border-[var(--color-success)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[#E2E8F0] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none min-w-[140px]"
               >
                 {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />} 
                 <span>{isSubmitting ? 'Procesando...' : 'Guardar'}</span>
@@ -701,9 +1461,10 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
               {nature !== 'CONSUMO' && !initialData && (
                 <button 
+                  id="btn-guardar-ir-lotes"
                   onClick={() => handleSave(true)}
-                  disabled={!formData.name || isSubmitting}
-                  className="relative -top-8 -left-8 bg-[var(--color-success)] text-[var(--color-ink)] px-6 py-3 border-2 border-[var(--color-ink)] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-success)] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_var(--color-success)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none min-w-[220px]"
+                  disabled={isSubmitting}
+                  className="relative -top-8 -left-8 bg-[var(--color-success)] text-[var(--color-ink)] px-6 py-3 border-2 border-[var(--color-ink)] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-success)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-[var(--color-success)] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_var(--color-success)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none min-w-[220px]"
                 >
                   {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
                   <span>{isSubmitting ? 'Procesando...' : 'Guardar e ir a Lotes'}</span>

@@ -13,6 +13,39 @@ interface Props {
   onVerHistorial?: (nombre: string) => void;
 }
 
+const formatForDateInput = (dateStr: string) => {
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  } catch {
+    return '';
+  }
+};
+
+const combinarFechaYHora = (nuevaFechaStr: string, fechaOriginalISO: string): string => {
+  try {
+    if (nuevaFechaStr.includes('T')) {
+      const d = new Date(nuevaFechaStr);
+      if (!isNaN(d.getTime())) return d.toISOString();
+    }
+    const [year, month, day] = nuevaFechaStr.split('-').map(Number);
+    if (!year || !month || !day) return new Date(nuevaFechaStr).toISOString();
+    
+    const d = new Date(fechaOriginalISO);
+    if (isNaN(d.getTime())) {
+      const now = new Date();
+      now.setFullYear(year, month - 1, day);
+      return now.toISOString();
+    }
+    d.setFullYear(year, month - 1, day);
+    return d.toISOString();
+  } catch {
+    return new Date(nuevaFechaStr).toISOString();
+  }
+};
+
 export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, onRefetch, onVerHistorial }) => {
   useCerrarConEscape(isOpen, onClose);
   
@@ -21,22 +54,37 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
   const [yape, setYape] = useState<string>('');
   const [tarjeta, setTarjeta] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
+  const [fechasLocales, setFechasLocales] = useState<Record<string, string>>({});
+  const wasOpenRef = React.useRef(false);
+  const draftFechasRef = React.useRef<Record<string, string>>({});
   
-  // Editar Fecha
-  const [fechaEditId, setFechaEditId] = useState<string | null>(null);
-  const [nuevaFecha, setNuevaFecha] = useState<string>('');
-
   useEffect(() => {
     if (isOpen && cliente) {
-      setSelectedIds(new Set());
+      if (!wasOpenRef.current) {
+        // Solo la primera vez que se abre la ventana flotante
+        setSelectedIds(new Set());
         setEfectivo('');
-      setYape('');
-      setTarjeta('');
+        setYape('');
+        setTarjeta('');
+        setFechasLocales({});
+        draftFechasRef.current = {};
+
+        setTimeout(() => {
+          const firstCard = document.querySelector('[data-fiado-card]') as HTMLElement;
+          if (firstCard) {
+            firstCard.focus();
+          } else {
+            document.getElementById('input-abono-efectivo-modal')?.focus();
+          }
+        }, 100);
+      }
+      wasOpenRef.current = true;
     } else {
+      wasOpenRef.current = false;
       setSelectedIds(new Set());
-      setFechaEditId(null);
+      setFechasLocales({});
     }
-  }, [isOpen, cliente]);
+  }, [isOpen]);
 
   // Early return moved below hooks
 
@@ -149,12 +197,50 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
     })();
   };
 
-  const handleUpdateFecha = async (id: string) => {
-    if (!nuevaFecha) return;
+  const abrirCalendario = (fiadoId: string) => {
+    const input = document.getElementById(`input-fecha-${fiadoId}`) as HTMLInputElement;
+    if (!input) return;
+    const fechaActual = fechasLocales[fiadoId] || cliente?.fiados.find(f => f.id === fiadoId)?.fechaEmision || '';
+    if (fechaActual) {
+      input.value = formatForDateInput(fechaActual);
+      draftFechasRef.current[fiadoId] = input.value;
+    }
     try {
-      const { error } = await supabase.from('fiados').update({ date_given: new Date(nuevaFecha).toISOString(), expected_pay_date: new Date(nuevaFecha).toISOString() }).eq('id', id);
+      if (typeof input.showPicker === 'function') {
+        input.showPicker();
+        return;
+      }
+    } catch (err) {
+      console.warn('Error al abrir selector de fecha:', err);
+    }
+    try {
+      input.focus();
+      input.click();
+    } catch {}
+  };
+
+  const handleUpdateFecha = async (id: string, fechaInput: string) => {
+    if (!fechaInput) return;
+    try {
+      const fiadoOrig = cliente?.fiados.find(f => f.id === id);
+      const fechaOrig = fiadoOrig ? fiadoOrig.fechaEmision : new Date().toISOString();
+      const isoDate = combinarFechaYHora(fechaInput, fechaOrig);
+
+      // 🚀 1. Actualización optimista inmediata en la UI local sin cerrar la ventana
+      setFechasLocales(prev => ({ ...prev, [id]: isoDate }));
+      if (fiadoOrig) {
+        fiadoOrig.fechaEmision = isoDate;
+        fiadoOrig.fechaVencimiento = isoDate;
+      }
+
+      // 🚀 2. Guardar en Base de Datos Supabase
+      const { error } = await supabase.from('fiados').update({ 
+        date_given: isoDate, 
+        expected_pay_date: isoDate 
+      }).eq('id', id);
       if (error) throw error;
-      setFechaEditId(null);
+
+      // 🚀 3. Sincronizar en segundo plano silenciosamente
       onRefetch();
     } catch (e: any) {
       alert('Error al actualizar fecha: ' + e.message);
@@ -168,12 +254,20 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
     const handleKeyDown = (e: KeyboardEvent) => {
       const active = document.activeElement as HTMLElement;
 
+      // CERRAR CON ESCAPE
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+        return;
+      }
+
       // 1. FOCUS TRAP PARA TAB
       if (e.key === 'Tab') {
         e.stopPropagation();
-        const allFocusables = Array.from(document.querySelectorAll('input:not([type="file"]), select, button:not([disabled]), [data-fiado-card]')) as HTMLElement[];
+        const allFocusables = Array.from(document.querySelectorAll('input:not([type="file"]):not([tabindex="-1"]), select, button:not([disabled]), [data-fiado-card], [data-btn-editar]')) as HTMLElement[];
         const modalFocusables = allFocusables.filter(el =>
-          el.closest('.fixed.inset-0') &&
+          el.closest('[role="dialog"]') &&
           el.tabIndex !== -1 &&
           !el.classList.contains('hidden') &&
           el.offsetParent !== null
@@ -193,9 +287,85 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
         return;
       }
 
-      // 2. NAVEGACIÓN CON FLECHAS
-      if (active?.closest('[data-fiado-card]')) {
+      // 1.5. NAVEGACIÓN DESDE INPUT NATIVO DE FECHA
+      if (active?.id?.startsWith('input-fecha-')) {
         const currentCard = active.closest('[data-fiado-card]') as HTMLElement;
+        const btnEditar = currentCard?.querySelector('[data-btn-editar]') as HTMLElement;
+        const fiadoId = currentCard?.getAttribute('data-fiado-card');
+
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+          const inputVal = (active as HTMLInputElement).value || (fiadoId ? draftFechasRef.current[fiadoId] : '');
+          if (fiadoId && inputVal) {
+            handleUpdateFecha(fiadoId, inputVal);
+          }
+          btnEditar?.focus();
+          return;
+        }
+
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          btnEditar?.focus();
+          return;
+        }
+      }
+
+      // 2. NAVEGACIÓN EN BOTÓN EDITAR
+      const btnEditarActivo = (active?.hasAttribute('data-btn-editar') ? active : active?.closest('[data-btn-editar]')) as HTMLElement;
+      if (btnEditarActivo) {
+        const currentCard = btnEditarActivo.closest('[data-fiado-card]') as HTMLElement;
+        const allCards = Array.from(document.querySelectorAll('[data-fiado-card]')) as HTMLElement[];
+        const cardIndex = allCards.indexOf(currentCard);
+
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          currentCard?.focus();
+          return;
+        }
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          document.getElementById('input-abono-efectivo-modal')?.focus();
+          return;
+        }
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const nextCard = allCards[cardIndex + 1];
+          if (nextCard) {
+            const nextBtn = nextCard.querySelector('[data-btn-editar]') as HTMLElement;
+            if (nextBtn) nextBtn.focus(); else nextCard.focus();
+            nextCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+          return;
+        }
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          const prevCard = allCards[cardIndex - 1];
+          if (prevCard) {
+            const prevBtn = prevCard.querySelector('[data-btn-editar]') as HTMLElement;
+            if (prevBtn) prevBtn.focus(); else prevCard.focus();
+            prevCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          } else {
+            document.getElementById('btn-seleccionar-todas-modal')?.focus();
+          }
+          return;
+        }
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          const fiadoId = currentCard?.getAttribute('data-fiado-card');
+          if (fiadoId) {
+            abrirCalendario(fiadoId);
+          }
+          return;
+        }
+        return;
+      }
+
+      // 3. NAVEGACIÓN EN TARJETA DE DEUDA
+      const currentCard = (active?.hasAttribute('data-fiado-card') ? active : active?.closest('[data-fiado-card]')) as HTMLElement;
+      if (currentCard) {
         const allCards = Array.from(document.querySelectorAll('[data-fiado-card]')) as HTMLElement[];
         const cardIndex = allCards.indexOf(currentCard);
 
@@ -217,7 +387,18 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
           }
         } else if (e.key === 'ArrowRight') {
           e.preventDefault();
-          document.getElementById('input-abono-efectivo-modal')?.focus();
+          const btnEditar = currentCard.querySelector('[data-btn-editar]') as HTMLElement;
+          if (btnEditar) {
+            btnEditar.focus();
+          } else {
+            document.getElementById('input-abono-efectivo-modal')?.focus();
+          }
+        } else if (e.key.toLowerCase() === 'e') {
+          e.preventDefault();
+          const btnEditar = currentCard.querySelector('[data-btn-editar]') as HTMLElement;
+          if (btnEditar) btnEditar.focus();
+          const fiadoId = currentCard.getAttribute('data-fiado-card');
+          if (fiadoId) abrirCalendario(fiadoId);
         } else if (e.key === ' ' || e.key === 'Enter') {
           const fiadoId = currentCard.getAttribute('data-fiado-card');
           if (fiadoId && !active.closest('input')) {
@@ -270,7 +451,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
           if (firstCard) firstCard.focus();
         } else if (e.key === 'Enter') {
           e.preventDefault();
-          document.getElementById('btn-confirmar-pago-modal')?.focus();
+          document.getElementById('input-abono-yape-modal')?.focus();
         }
         return;
       }
@@ -288,7 +469,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
           if (firstCard) firstCard.focus();
         } else if (e.key === 'Enter') {
           e.preventDefault();
-          document.getElementById('btn-confirmar-pago-modal')?.focus();
+          document.getElementById('input-abono-tarjeta-modal')?.focus();
         }
         return;
       }
@@ -327,6 +508,12 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
         if (e.key === 'ArrowDown') {
           e.preventDefault();
           document.getElementById('btn-seleccionar-todas-modal')?.focus();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          document.getElementById('btn-seleccionar-todas-modal')?.focus();
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          document.getElementById('btn-ver-historial-modal')?.focus();
         }
         return;
       }
@@ -336,23 +523,10 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
     return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
   }, [isOpen, cliente, selectedIds, isSaving, totalAbono, totalSeleccionado]);
 
-  useEffect(() => {
-    if (isOpen && cliente) {
-      setTimeout(() => {
-        const firstCard = document.querySelector('[data-fiado-card]') as HTMLElement;
-        if (firstCard) {
-          firstCard.focus();
-        } else {
-          document.getElementById('input-abono-efectivo-modal')?.focus();
-        }
-      }, 100);
-    }
-  }, [isOpen, cliente]);
-
   if (!isOpen || !cliente) return null;
 
   return createPortal(
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in font-mono">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in font-mono">
       <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-6xl h-[90vh] flex flex-col rounded-none relative">
         
         {/* HEADER */}
@@ -382,12 +556,16 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-4">
               {cliente.fiados.filter(f => f.estado !== 'PAGADO').sort((a,b) => new Date(b.fechaEmision).getTime() - new Date(a.fechaEmision).getTime()).map((fiado) => (
                 <div key={fiado.id} 
-                  onClick={() => handleToggleSelect(fiado.id)} className={`cursor-pointer bg-white border-2 p-4 flex flex-col gap-2 relative transition-all ${selectedIds.has(fiado.id) ? 'border-[var(--color-accent)] shadow-[4px_4px_0_0_var(--color-accent)] bg-[var(--color-accent-bg)]' : 'border-[var(--color-border)] hover:border-[var(--color-ink)]'}`}
+                  data-fiado-card={fiado.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleToggleSelect(fiado.id)} 
+                  className={`cursor-pointer bg-white border-2 p-4 flex flex-col gap-2 relative transition-all focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:border-[var(--color-ink)] ${selectedIds.has(fiado.id) ? 'border-[var(--color-accent)] shadow-[4px_4px_0_0_var(--color-accent)] bg-[var(--color-accent-bg)]' : 'border-[var(--color-border)] hover:border-[var(--color-ink)]'}`}
                 >
                   <div className="flex justify-between items-start border-b-2 border-dashed border-[var(--color-line-light)] pb-2 mb-2">
                     <div className="flex gap-3 items-center">
                       {fiado.saldoPendiente > 0 && (
-                        <button onClick={() => handleToggleSelect(fiado.id)} className="cursor-pointer hover:text-[var(--color-accent)]">
+                        <button tabIndex={-1} onClick={(e) => { e.stopPropagation(); handleToggleSelect(fiado.id); }} className="cursor-pointer hover:text-[var(--color-accent)] focus:outline-none">
                           {selectedIds.has(fiado.id) ? <CheckSquare size={24} className="text-[var(--color-accent)]" /> : <Square size={24} />}
                         </button>
                       )}
@@ -395,24 +573,65 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                         <span className={`font-black text-lg ${selectedIds.has(fiado.id) ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)]'}`}>S/ {fiado.saldoPendiente.toFixed(2)}</span>
                         
                         <div className="text-xs font-bold text-[var(--color-muted)] flex flex-wrap items-center gap-2 mt-1">
-                          {fechaEditId === fiado.id ? (
-                            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                              <input type="datetime-local" value={nuevaFecha} onChange={e => setNuevaFecha(e.target.value)} className="border border-[var(--color-ink)] px-1 py-0.5 text-black" />
-                              <button onClick={() => handleUpdateFecha(fiado.id)} className="bg-[var(--color-success)] text-white px-2 py-0.5">OK</button>
-                              <button onClick={() => setFechaEditId(null)} className="bg-[var(--color-danger)] text-white px-2 py-0.5">X</button>
-                            </div>
-                          ) : (
-                            <>
-                              <Calendar size={12} /> {new Date(fiado.fechaEmision).toLocaleString('es-PE')}
-                              <button onClick={(e) => { e.stopPropagation(); setFechaEditId(fiado.id); setNuevaFecha(fiado.fechaEmision.slice(0, 16)); }} className="ml-2 bg-[var(--color-surface)] px-2 py-0.5 border border-[var(--color-border)] hover:bg-[var(--color-accent)] hover:text-white transition-colors flex items-center gap-1 cursor-pointer">
-                                  <Edit size={10} /> EDITAR
-                                </button>
+                          {(() => {
+                            const fechaActual = fechasLocales[fiado.id] || fiado.fechaEmision;
+                            return (
+                              <>
+                                <Calendar size={12} /> {new Date(fechaActual).toLocaleString('es-PE')}
+                                <div className="relative inline-flex items-center ml-2" onClick={(e) => e.stopPropagation()}>
+                                  <button 
+                                    type="button"
+                                    data-btn-editar
+                                    tabIndex={0}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      abrirCalendario(fiado.id);
+                                    }}
+                                    className="px-2.5 py-1 text-xs font-black uppercase tracking-wider bg-white border border-[var(--color-ink)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-accent)] focus:text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] transition-all flex items-center gap-1 cursor-pointer"
+                                    title="Editar fecha (Enter para abrir calendario)"
+                                  >
+                                    <Edit size={11} strokeWidth={2.5} /> EDITAR
+                                  </button>
+                                  <input 
+                                    id={`input-fecha-${fiado.id}`}
+                                    type="date"
+                                    tabIndex={-1}
+                                    aria-hidden="true"
+                                    className="absolute inset-0 opacity-0 pointer-events-none w-full h-full"
+                                    key={fiado.id}
+                                    defaultValue={formatForDateInput(fechaActual)}
+                                    onChange={(e) => {
+                                      e.stopPropagation();
+                                      const val = e.target.value;
+                                      if (val) {
+                                        handleUpdateFecha(fiado.id, val);
+                                      }
+                                      const btn = e.currentTarget.parentElement?.querySelector('[data-btn-editar]') as HTMLElement;
+                                      btn?.focus();
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        const val = e.currentTarget.value || draftFechasRef.current[fiado.id];
+                                        if (val) {
+                                          handleUpdateFecha(fiado.id, val);
+                                        }
+                                        const btn = e.currentTarget.parentElement?.querySelector('[data-btn-editar]') as HTMLElement;
+                                        btn?.focus();
+                                      }
+                                    }}
+                                  />
+                                </div>
+                              </>
+                            );
+                          })()}
                                 {(() => {
                                   const sumaDet = (fiado.detalles || []).reduce((acc, det) => acc + (Number(det.subtotal) || 0), 0);
                                   const abonoInicial = Math.max(0, sumaDet - fiado.montoOriginal);
                                   const abonosPost = fiado.montoPagado || 0;
                                   const totalAbonosHistorico = abonoInicial + abonosPost;
-                                  if (totalAbonosHistorico > 0) {
+                                  if (totalAbonosHistorico > 0.05) {
                                     return (
                                       <span style={{ marginLeft: '8px', backgroundColor: '#22c55e', color: 'white', border: '1px solid #16a34a', padding: '3px 10px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '900', fontSize: '11px', borderRadius: '4px' }}>
                                         ABONOS: S/ {totalAbonosHistorico.toFixed(2)}
@@ -421,8 +640,6 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                                   }
                                   return null;
                                 })()}
-                            </>
-                          )}
                         </div>
 
                       </div>

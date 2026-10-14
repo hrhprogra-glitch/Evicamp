@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Building2, FileText, MapPin, Phone, Upload, Save, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 
@@ -7,6 +7,8 @@ export const FormularioEmpresa: React.FC = () => {
   const [guardando, setGuardando] = useState(false);
   const [empresaId, setEmpresaId] = useState<number | null>(null);
   const [archivoLogo, setArchivoLogo] = useState<File | null>(null);
+  const nombreEmpresaRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [empresa, setEmpresa] = useState({
     nombre_empresa: '',
@@ -17,6 +19,71 @@ export const FormularioEmpresa: React.FC = () => {
   });
 
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => {
+        if (!document.querySelector('[role="dialog"]') && !document.querySelector('.fixed.inset-0.z-50')) {
+          nombreEmpresaRef.current?.focus();
+          nombreEmpresaRef.current?.select();
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
+
+  const focusAndSelect = (id: string) => {
+    const el = document.getElementById(id) as HTMLElement | null;
+    if (el) {
+      el.focus();
+      (el as HTMLInputElement)?.select?.();
+    }
+  };
+
+  const canExitRight = (input: HTMLInputElement) => {
+    const isAllSelected = input.selectionStart === 0 && input.selectionEnd === input.value.length;
+    const isAtEnd = input.selectionStart === input.value.length;
+    return isAllSelected || isAtEnd;
+  };
+
+  const canExitLeft = (input: HTMLInputElement) => {
+    const isAllSelected = input.selectionStart === 0 && input.selectionEnd === input.value.length;
+    const isAtStart = input.selectionStart === 0;
+    return isAllSelected || isAtStart;
+  };
+
+  // 🔒 Navegación fluida con tecla Tab entre campos del formulario sin abrir el sidebar
+  useEffect(() => {
+    const handleTabTrap = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        const order = [
+          'input-empresa-nombre',
+          'input-empresa-ruc',
+          'input-empresa-telefono',
+          'input-empresa-direccion',
+          'btn-guardar-empresa',
+          'btn-subir-logo-empresa',
+        ];
+
+        const activeId = document.activeElement?.id;
+        const currentIndex = order.indexOf(activeId || '');
+
+        if (currentIndex !== -1) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          let nextIndex = e.shiftKey ? currentIndex - 1 : currentIndex + 1;
+          if (nextIndex < 0) nextIndex = order.length - 1;
+          if (nextIndex >= order.length) nextIndex = 0;
+
+          focusAndSelect(order[nextIndex]);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleTabTrap, { capture: true });
+    return () => window.removeEventListener('keydown', handleTabTrap, { capture: true });
+  }, []);
 
   useEffect(() => {
     const fetchEmpresa = async () => {
@@ -130,9 +197,25 @@ export const FormularioEmpresa: React.FC = () => {
           </p>
         </div>
         <button
+          id="btn-guardar-empresa"
           onClick={handleGuardar}
           disabled={guardando}
-          className={`${guardando ? 'bg-[var(--color-subtle)]' : 'bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)]'} text-white px-4 py-2 font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-2`}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              e.stopPropagation();
+              document.getElementById('btn-tab-empresa')?.focus();
+            } else if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              e.stopPropagation();
+              focusAndSelect('input-empresa-nombre');
+            } else if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              e.stopPropagation();
+              focusAndSelect('input-empresa-telefono');
+            }
+          }}
+          className={`${guardando ? 'bg-[var(--color-subtle)]' : 'bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)]'} text-white px-5 py-2.5 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 focus:outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:shadow-[4px_4px_0_0_var(--color-accent)] cursor-pointer`}
         >
           {guardando ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
           {guardando ? 'Guardando...' : 'Guardar Cambios'}
@@ -142,7 +225,33 @@ export const FormularioEmpresa: React.FC = () => {
       <div className="p-6 flex flex-col md:flex-row gap-3 lg:gap-4">
         {/* COLUMNA IZQUIERDA: LOGO */}
         <div className="w-full md:w-1/3 flex flex-col items-center md:border-r border-dashed border-[var(--color-border)] md:pr-8">
-          <div className="w-40 h-40 border-2 border-dashed border-[var(--color-line-light)] bg-[var(--color-bg)] flex flex-col items-center justify-center mb-4 relative overflow-hidden group">
+          <div 
+            id="btn-subir-logo-empresa"
+            role="button"
+            tabIndex={0}
+            title="Presiona Enter o Espacio para subir o cambiar el logo"
+            onClick={() => fileInputRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                focusAndSelect('input-empresa-nombre');
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-tab-empresa')?.focus();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                focusAndSelect('input-empresa-ruc');
+              }
+            }}
+            className="w-40 h-40 border-2 border-dashed border-[var(--color-line-light)] bg-[var(--color-bg)] flex flex-col items-center justify-center mb-4 relative overflow-hidden group cursor-pointer focus:outline-none focus:ring-4 focus:ring-[var(--color-ink)]"
+          >
             {logoPreview ? (
               <img src={logoPreview} alt="Logo" className="w-full h-full object-contain p-2" />
             ) : (
@@ -153,15 +262,18 @@ export const FormularioEmpresa: React.FC = () => {
             )}
             
             {/* Overlay para cambiar imagen */}
-            <label className="absolute inset-0 bg-[var(--color-ink)]/80 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white">
+            <div className="absolute inset-0 bg-[var(--color-ink)]/80 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity text-white pointer-events-none">
               <Upload size={24} className="mb-2 text-[var(--color-accent)]" />
               <span className="text-xs font-bold uppercase tracking-wider">Subir Logo</span>
-              <input autoComplete="off" type="file" 
-                accept="image/*" 
-                onChange={handleLogoChange} 
-                className="hidden" 
-              />
-            </label>
+            </div>
+            <input 
+              ref={fileInputRef}
+              autoComplete="off" 
+              type="file" 
+              accept="image/*" 
+              onChange={handleLogoChange} 
+              className="hidden" 
+            />
           </div>
           <p className="text-[12px] text-[var(--color-muted)] font-mono text-center">
             Formato recomendado: PNG transparente.<br />Tamaño máximo: 2MB.
@@ -176,11 +288,38 @@ export const FormularioEmpresa: React.FC = () => {
               <Building2 size={14} className="text-[var(--color-muted)]" />
               Razón Social / Nombre Comercial
             </label>
-            <input autoComplete="off" type="text"
+            <input 
+              id="input-empresa-nombre"
+              ref={nombreEmpresaRef}
+              autoComplete="off" 
+              type="text"
               name="nombre_empresa"
               value={empresa.nombre_empresa}
               onChange={handleChange}
-              className="w-full border border-[var(--color-border)] p-3 text-sm focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] outline-none transition-all"
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  focusAndSelect('input-empresa-ruc');
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  document.getElementById('btn-tab-empresa')?.focus();
+                } else if (e.key === 'ArrowLeft') {
+                  if (canExitLeft(e.currentTarget)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('btn-subir-logo-empresa')?.focus();
+                  }
+                } else if (e.key === 'ArrowRight') {
+                  if (canExitRight(e.currentTarget)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('btn-guardar-empresa')?.focus();
+                  }
+                }
+              }}
+              className="w-full border-2 border-[var(--color-border)] p-3 text-sm focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-amber-50/40 outline-none transition-all uppercase"
               placeholder="Ej. Mi Bodega S.A.C."
             />
           </div>
@@ -191,11 +330,37 @@ export const FormularioEmpresa: React.FC = () => {
               <FileText size={14} className="text-[var(--color-muted)]" />
               RUC
             </label>
-            <input autoComplete="off" type="text"
+            <input 
+              id="input-empresa-ruc"
+              autoComplete="off" 
+              type="text"
               name="ruc"
               value={empresa.ruc}
               onChange={handleChange}
-              className="w-full border border-[var(--color-border)] p-3 text-sm focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] outline-none transition-all font-mono"
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  focusAndSelect('input-empresa-direccion');
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  focusAndSelect('input-empresa-nombre');
+                } else if (e.key === 'ArrowRight' || e.key === 'Enter') {
+                  if (e.key === 'Enter' || canExitRight(e.currentTarget)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    focusAndSelect('input-empresa-telefono');
+                  }
+                } else if (e.key === 'ArrowLeft') {
+                  if (canExitLeft(e.currentTarget)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('btn-subir-logo-empresa')?.focus();
+                  }
+                }
+              }}
+              className="w-full border-2 border-[var(--color-border)] p-3 text-sm focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-amber-50/40 outline-none transition-all font-mono uppercase"
               placeholder="Ej. 20123456789"
               maxLength={11}
             />
@@ -207,11 +372,37 @@ export const FormularioEmpresa: React.FC = () => {
               <Phone size={14} className="text-[var(--color-muted)]" />
               Teléfono de Contacto
             </label>
-            <input autoComplete="off" type="text"
+            <input 
+              id="input-empresa-telefono"
+              autoComplete="off" 
+              type="text"
               name="telefono"
               value={empresa.telefono}
               onChange={handleChange}
-              className="w-full border border-[var(--color-border)] p-3 text-sm focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] outline-none transition-all font-mono"
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  focusAndSelect('input-empresa-direccion');
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  document.getElementById('btn-guardar-empresa')?.focus();
+                } else if (e.key === 'ArrowLeft') {
+                  if (canExitLeft(e.currentTarget)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    focusAndSelect('input-empresa-ruc');
+                  }
+                } else if (e.key === 'ArrowRight') {
+                  if (canExitRight(e.currentTarget)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('btn-guardar-empresa')?.focus();
+                  }
+                }
+              }}
+              className="w-full border-2 border-[var(--color-border)] p-3 text-sm focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-amber-50/40 outline-none transition-all font-mono uppercase"
               placeholder="Ej. 987654321"
             />
           </div>
@@ -222,11 +413,37 @@ export const FormularioEmpresa: React.FC = () => {
               <MapPin size={14} className="text-[var(--color-muted)]" />
               Dirección Fiscal
             </label>
-            <input autoComplete="off" type="text"
+            <input 
+              id="input-empresa-direccion"
+              autoComplete="off" 
+              type="text"
               name="direccion"
               value={empresa.direccion}
               onChange={handleChange}
-              className="w-full border border-[var(--color-border)] p-3 text-sm focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] outline-none transition-all"
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  focusAndSelect('input-empresa-telefono');
+                } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  document.getElementById('btn-guardar-empresa')?.focus();
+                } else if (e.key === 'ArrowLeft') {
+                  if (canExitLeft(e.currentTarget)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('btn-subir-logo-empresa')?.focus();
+                  }
+                } else if (e.key === 'ArrowRight') {
+                  if (canExitRight(e.currentTarget)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('btn-guardar-empresa')?.focus();
+                  }
+                }
+              }}
+              className="w-full border-2 border-[var(--color-border)] p-3 text-sm focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-amber-50/40 outline-none transition-all uppercase"
               placeholder="Ej. Av. Los Pinos 123, Distrito"
             />
           </div>

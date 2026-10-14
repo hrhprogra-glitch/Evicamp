@@ -1,6 +1,6 @@
 import { coincideBusqueda } from '../../../utils/busqueda';
-import React, { useState, useEffect } from 'react';
-import { X, Save, Database, Search, Calculator, FileText, Check, Calendar, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Save, Database, Search, Calculator, FileText, Calendar, Loader2 } from 'lucide-react';
 import type { Product } from '../types';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
@@ -23,8 +23,28 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
   const [cantidad, setCantidad] = useState('');
   const [costoTotal, setCostoTotal] = useState('');
   const [sustento, setSustento] = useState('');
-  const [omitirSustento, setOmitirSustento] = useState(false);
   const [expiration, setExpiration] = useState('');
+
+  const prodContainerRef = useRef<HTMLDivElement>(null);
+  const provContainerRef = useRef<HTMLDivElement>(null);
+
+  // Cerrar dropdowns al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (prodContainerRef.current && !prodContainerRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+      if (provContainerRef.current && !provContainerRef.current.contains(e.target as Node)) {
+        setShowProviderDropdown(false);
+      }
+    };
+    if (showDropdown || showProviderDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDropdown, showProviderDropdown]);
 
   // Limpiar memoria o Cargar Lote si es modo edición
   useEffect(() => {
@@ -42,11 +62,9 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         const cTotal = (Number(initialLote.cost_unit) * Number(initialLote.initial_quantity)).toFixed(2);
         setCostoTotal(cTotal);
         
-        if (initialLote.document_ref === 'OMITIDO / SIN SUSTENTO') {
-          setOmitirSustento(true);
+        if (initialLote.document_ref === 'OMITIDO / SIN SUSTENTO' || initialLote.document_ref === 'SIN SUSTENTO') {
           setSustento('');
         } else {
-          setOmitirSustento(false);
           setSustento(initialLote.document_ref || '');
         }
         setExpiration(initialLote.expiration_date || '');
@@ -57,9 +75,25 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         setCantidad('');
         setCostoTotal('');
         setSustento('');
-        setOmitirSustento(false);
         setExpiration('');
       }
+
+      // 🛡️ AUTO-FOCUS INTELIGENTE: Al abrir el modal, enfocar y seleccionar de inmediato el primer campo relevante
+      setTimeout(() => {
+        if (initialLote || initialProduct) {
+          const inputCant = document.getElementById('input-cantidad-lote') as HTMLInputElement | null;
+          if (inputCant) {
+            inputCant.focus();
+            inputCant.select();
+          }
+        } else {
+          const inputBuscar = document.getElementById('input-buscar-producto-lote') as HTMLInputElement | null;
+          if (inputBuscar) {
+            inputBuscar.focus();
+            inputBuscar.select();
+          }
+        }
+      }, 50);
     }
   }, [isOpen, initialProduct, initialLote, productos]);
 
@@ -83,22 +117,243 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
 
   useCerrarConEscape(isOpen, onClose);
 
+  // Focus Trap para ModalLote y Navegación espacial con teclado
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleFormKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement as HTMLElement;
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+        return;
+      }
+
+      // 🛡️ RESCATE SI EL FOCO ESTÁ FUERA DEL MODAL
+      const isInsideModal = active && active.closest('.fixed.inset-0.z-50');
+      if (!isInsideModal) {
+        if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Enter', 'Tab'].includes(e.key)) {
+          e.preventDefault();
+          e.stopPropagation();
+          const target = (document.getElementById('input-cantidad-lote') as HTMLInputElement | null) ||
+                         (document.getElementById('input-buscar-producto-lote') as HTMLInputElement | null);
+          if (target) {
+            target.focus();
+            target.select?.();
+          }
+          return;
+        }
+      }
+
+      if (e.key === 'Tab') {
+        e.stopPropagation();
+        const allFocusables = Array.from(document.querySelectorAll('input:not([type="file"]), select, button:not([disabled]), textarea, [role="option"]')) as HTMLElement[];
+        const modalFocusables = allFocusables.filter(el => 
+          el.closest('.fixed.inset-0.z-50') && 
+          el.tabIndex !== -1 && 
+          !el.classList.contains('hidden') &&
+          el.offsetParent !== null
+        );
+
+        if (modalFocusables.length > 0) {
+          e.preventDefault();
+          const currentIndex = modalFocusables.indexOf(active);
+          if (e.shiftKey) {
+            const prevIndex = currentIndex <= 0 ? modalFocusables.length - 1 : currentIndex - 1;
+            modalFocusables[prevIndex]?.focus();
+          } else {
+            const nextIndex = currentIndex === -1 || currentIndex >= modalFocusables.length - 1 ? 0 : currentIndex + 1;
+            modalFocusables[nextIndex]?.focus();
+          }
+        }
+        return;
+      }
+
+      if (e.key === 'ArrowUp') {
+        if (active?.id === 'input-buscar-producto-lote' || active?.id === 'btn-cambiar-producto-lote') {
+          e.preventDefault();
+          document.getElementById('btn-cerrar-modal-lote')?.focus();
+          return;
+        }
+        if (active?.id === 'input-cantidad-lote') {
+          e.preventDefault();
+          const target = document.getElementById('btn-cambiar-producto-lote') || document.getElementById('input-buscar-producto-lote');
+          target?.focus();
+          return;
+        }
+        if (active?.id === 'input-costo-total-lote') {
+          e.preventDefault();
+          const target = document.getElementById('btn-cambiar-producto-lote') || document.getElementById('input-buscar-producto-lote');
+          target?.focus();
+          return;
+        }
+        if (active?.id === 'input-sustento-lote') {
+          e.preventDefault();
+          const target = document.getElementById('input-cantidad-lote') as HTMLInputElement | null;
+          target?.focus();
+          target?.select();
+          return;
+        }
+        if (active?.id === 'input-vencimiento-lote') {
+          e.preventDefault();
+          const target = document.getElementById('input-costo-total-lote') as HTMLInputElement | null;
+          target?.focus();
+          target?.select();
+          return;
+        }
+        if (active?.id === 'btn-guardar-lote') {
+          e.preventDefault();
+          document.getElementById('input-vencimiento-lote')?.focus();
+          return;
+        }
+        if (active?.id === 'btn-cancelar-lote') {
+          e.preventDefault();
+          const target = document.getElementById('input-sustento-lote') as HTMLInputElement | null;
+          target?.focus();
+          target?.select();
+          return;
+        }
+      }
+
+      if (e.key === 'ArrowDown') {
+        if (active?.id === 'btn-cerrar-modal-lote') {
+          e.preventDefault();
+          const target = document.getElementById('btn-cambiar-producto-lote') || document.getElementById('input-buscar-producto-lote') || document.getElementById('input-cantidad-lote');
+          target?.focus();
+          return;
+        }
+        if (active?.id === 'btn-cambiar-producto-lote') {
+          e.preventDefault();
+          const target = document.getElementById('input-cantidad-lote') as HTMLInputElement | null;
+          target?.focus();
+          target?.select();
+          return;
+        }
+        if (active?.id === 'input-cantidad-lote') {
+          e.preventDefault();
+          const target = document.getElementById('input-sustento-lote') as HTMLInputElement | null;
+          target?.focus();
+          target?.select();
+          return;
+        }
+        if (active?.id === 'input-costo-total-lote') {
+          e.preventDefault();
+          document.getElementById('input-vencimiento-lote')?.focus();
+          return;
+        }
+        if (active?.id === 'input-sustento-lote') {
+          if (showProviderDropdown) {
+            const first = document.querySelector('[data-lote-prov-item="true"]') as HTMLElement;
+            if (first) {
+              e.preventDefault();
+              first.focus();
+              return;
+            }
+          }
+          e.preventDefault();
+          setShowProviderDropdown(false);
+          (document.getElementById('btn-guardar-lote') || document.getElementById('btn-cancelar-lote'))?.focus();
+          return;
+        }
+        if (active?.id === 'input-vencimiento-lote') {
+          e.preventDefault();
+          (document.getElementById('btn-guardar-lote') || document.getElementById('btn-cancelar-lote'))?.focus();
+          return;
+        }
+      }
+
+      if (e.key === 'ArrowRight') {
+        if (active?.id === 'btn-cambiar-producto-lote') {
+          e.preventDefault();
+          const target = document.getElementById('input-cantidad-lote') as HTMLInputElement | null;
+          target?.focus();
+          target?.select();
+          return;
+        }
+        if (active?.id === 'input-cantidad-lote') {
+          e.preventDefault();
+          const target = document.getElementById('input-costo-total-lote') as HTMLInputElement | null;
+          target?.focus();
+          target?.select();
+          return;
+        }
+        if (active?.id === 'input-sustento-lote') {
+          e.preventDefault();
+          setShowProviderDropdown(false);
+          document.getElementById('input-vencimiento-lote')?.focus();
+          return;
+        }
+        if (active?.id === 'btn-cancelar-lote') {
+          e.preventDefault();
+          document.getElementById('btn-guardar-lote')?.focus();
+          return;
+        }
+      }
+
+      if (e.key === 'ArrowLeft') {
+        if (active?.id === 'input-costo-total-lote') {
+          e.preventDefault();
+          const target = document.getElementById('input-cantidad-lote') as HTMLInputElement | null;
+          target?.focus();
+          target?.select();
+          return;
+        }
+        if (active?.id === 'input-vencimiento-lote') {
+          e.preventDefault();
+          const target = document.getElementById('input-sustento-lote') as HTMLInputElement | null;
+          target?.focus();
+          target?.select();
+          return;
+        }
+        if (active?.id === 'btn-guardar-lote') {
+          e.preventDefault();
+          document.getElementById('btn-cancelar-lote')?.focus();
+          return;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleFormKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', handleFormKeyDown, { capture: true });
+  }, [isOpen, selectedProduct, showDropdown, showProviderDropdown]);
+
   if (!isOpen) return null;
 
   // Motor de filtrado ultra-rápido (EXCLUYE LOS PRODUCTOS DE CONSUMO INTERNO)
   const filteredProducts = productos.filter(p => {
     if (p.unit === 'CONSUMO') return false; // <-- BLOQUEO ESTRICTO: NO MOSTRAR CONSUMO AQUÍ
+    if (!searchQuery.trim()) return true;
     return coincideBusqueda([p.name, p.code, p.barcode], searchQuery);
   });
 
-  // 📡 SOPORTE DE ESCÁNER: el lector escribe el código y envía "Enter" automáticamente.
-  // Si hay una coincidencia, la seleccionamos al instante sin necesidad de hacer click.
+  const filteredProveedores = proveedoresActivos.filter(p => {
+    if (!sustento.trim()) return true;
+    return coincideBusqueda([p.razon_social], sustento);
+  });
+
+  // 📡 SOPORTE DE ESCÁNER Y TECLADO: el lector escribe el código y envía "Enter" automáticamente.
+  // Con flecha abajo se navega a la lista de resultados para seleccionar con Enter.
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && filteredProducts.length > 0) {
+    if (e.key === 'Enter') {
+      if (filteredProducts.length > 0) {
+        e.preventDefault();
+        setSelectedProduct(filteredProducts[0]);
+        setShowDropdown(false);
+        setSearchQuery('');
+        setTimeout(() => document.getElementById('input-cantidad-lote')?.focus(), 50);
+      }
+    } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedProduct(filteredProducts[0]);
-      setShowDropdown(false);
-      setSearchQuery('');
+      if (!showDropdown) {
+        setShowDropdown(true);
+      }
+      setTimeout(() => {
+        const first = document.querySelector('[data-lote-prod-item="true"]') as HTMLElement;
+        if (first) first.focus();
+        else document.getElementById('input-cantidad-lote')?.focus();
+      }, 30);
     }
   };
 
@@ -110,7 +365,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
   const handleSave = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
-    const documento = omitirSustento ? 'OMITIDO / SIN SUSTENTO' : (sustento || 'SIN SUSTENTO');
+    const documento = sustento.trim() || 'SIN SUSTENTO';
 
     try {
       if (initialLote) {
@@ -224,27 +479,32 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="bg-[var(--color-surface)] w-full max-w-2xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(75dvh/var(--ui-zoom))] sm:mt-10">
+      <div className="bg-[var(--color-surface)] w-full max-w-2xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))]">
         
         {/* CABECERA */}
         <div className="bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <Database size={24} className="text-[var(--color-success)]" />
             <div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-[var(--color-success)]">Ingresar Lote de Stock</h2>
-              <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">Añadir existencias al inventario</p>
+              <h2 className="text-sm font-black uppercase tracking-widest text-[var(--color-success)]">{initialLote ? 'Editar Lote de Stock' : 'Ingresar Lote de Stock'}</h2>
+              <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">{initialLote ? 'Modificar datos del lote registrado' : 'Añadir existencias al inventario'}</p>
             </div>
           </div>
-          <button onClick={onClose} className="hover:text-[var(--color-danger)] transition-colors cursor-pointer">
+          <button 
+            id="btn-cerrar-modal-lote"
+            onClick={onClose} 
+            className="hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white/20 p-1.5 transition-colors cursor-pointer rounded-none"
+            title="Cerrar ventana (Escape)"
+          >
             <X size={20} />
           </button>
         </div>
 
         {/* CUERPO DEL FORMULARIO */}
-        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar bg-[#F8FAFC] flex-1 min-h-0 space-y-6">
+        <div className="p-4 sm:p-6 overflow-y-auto sm:overflow-visible custom-scrollbar bg-[#F8FAFC] space-y-6">
           
           {/* 1. BUSCADOR DE PRODUCTO DESPLEGABLE */}
-          <div className="space-y-2 relative">
+          <div ref={prodContainerRef} className="space-y-2 relative">
             <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2">
               <Search size={14} className="text-[var(--color-success)]"/> 1. Buscar Producto *
             </label>
@@ -256,9 +516,24 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                   <span className="text-xs font-black text-[var(--color-ink)] uppercase mt-1">{selectedProduct.code} - {selectedProduct.name}</span>
                 </div>
                 <button 
-                  onClick={() => setSelectedProduct(null)} 
-                  className="text-[var(--color-danger)] hover:bg-[#FECACA] p-2 transition-colors cursor-pointer border-2 border-transparent hover:border-[var(--color-danger)]"
-                  title="Cambiar Producto"
+                  id="btn-cambiar-producto-lote"
+                  type="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    setSelectedProduct(null);
+                    setShowDropdown(true);
+                    setTimeout(() => document.getElementById('input-buscar-producto-lote')?.focus(), 50);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setSelectedProduct(null);
+                      setShowDropdown(true);
+                      setTimeout(() => document.getElementById('input-buscar-producto-lote')?.focus(), 50);
+                    }
+                  }}
+                  className="text-[var(--color-danger)] hover:bg-[#FECACA] focus:bg-red-500 focus:text-white focus:outline-none focus:ring-2 focus:ring-red-500 p-2 transition-colors cursor-pointer border-2 border-transparent hover:border-[var(--color-danger)]"
+                  title="Cambiar Producto (Enter o Clic)"
                 >
                   <X size={16} />
                 </button>
@@ -266,8 +541,16 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
             ) : (
               <div className="relative">
                 <input
+                  id="input-buscar-producto-lote"
                   type="text"
                   autoFocus
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  name="search_query_lote_no_history"
+                  data-lpignore="true"
+                  data-form-type="other"
                   placeholder="ESCANEA O ESCRIBE CÓDIGO / NOMBRE DEL PRODUCTO..."
                   value={searchQuery}
                   onChange={(e) => {
@@ -278,22 +561,54 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                   onKeyDown={handleSearchKeyDown}
                   className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] transition-colors"
                 />
-                {showDropdown && searchQuery && (
+                {showDropdown && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] z-50 max-h-48 overflow-y-auto custom-scrollbar">
                     {filteredProducts.length > 0 ? (
-                      filteredProducts.map(p => (
+                      filteredProducts.slice(0, 50).map(p => (
                         <div 
                           key={p.id} 
-                          onMouseDown={(e) => {
-                            e.preventDefault();
+                          data-lote-prod-item="true"
+                          role="option"
+                          tabIndex={0}
+                          onClick={() => {
                             setSelectedProduct(p);
                             setShowDropdown(false);
                             setSearchQuery('');
+                            setTimeout(() => document.getElementById('input-cantidad-lote')?.focus(), 50);
                           }}
-                          className="flex flex-col p-3 hover:bg-[#F8FAFC] border-b border-[#E2E8F0] cursor-pointer group"
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const items = Array.from(document.querySelectorAll('[data-lote-prod-item="true"]')) as HTMLElement[];
+                              const currentIdx = items.indexOf(e.currentTarget);
+                              if (currentIdx !== -1 && currentIdx < items.length - 1) {
+                                items[currentIdx + 1].focus();
+                              }
+                            } else if (e.key === 'ArrowUp') {
+                              e.preventDefault();
+                              const items = Array.from(document.querySelectorAll('[data-lote-prod-item="true"]')) as HTMLElement[];
+                              const currentIdx = items.indexOf(e.currentTarget);
+                              if (currentIdx > 0) {
+                                items[currentIdx - 1].focus();
+                              } else {
+                                document.getElementById('input-buscar-producto-lote')?.focus();
+                              }
+                            } else if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setSelectedProduct(p);
+                              setShowDropdown(false);
+                              setSearchQuery('');
+                              setTimeout(() => document.getElementById('input-cantidad-lote')?.focus(), 50);
+                            } else if (e.key === 'Escape') {
+                              e.preventDefault();
+                              setShowDropdown(false);
+                              document.getElementById('input-buscar-producto-lote')?.focus();
+                            }
+                          }}
+                          className="flex flex-col p-3 bg-white hover:bg-[#1E293B] hover:text-white focus:!bg-[#1E293B] focus:!text-white border-b border-[#E2E8F0] cursor-pointer group outline-none transition-colors"
                         >
-                          <span className="text-[9px] font-bold text-[#64748B] group-hover:text-[var(--color-success)]">{p.code} | {p.category}</span>
-                          <span className="text-xs font-black text-[var(--color-ink)] uppercase">{p.name}</span>
+                          <span className="text-[9px] font-bold text-[#64748B] group-hover:text-emerald-400 group-focus:!text-emerald-400">{p.code} | {p.category}</span>
+                          <span className="text-xs font-black text-[#1E293B] group-hover:text-white group-focus:!text-white uppercase">{p.name}</span>
                         </div>
                       ))
                     ) : (
@@ -314,14 +629,31 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
               </label>
               <div className="flex border-2 border-[#E2E8F0] bg-[var(--color-surface)] focus-within:border-[var(--color-success)] transition-colors">
                 <input 
+                  id="input-cantidad-lote"
                   type="number"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  name="lote_cantidad_no_history"
+                  data-lpignore="true"
+                  data-form-type="other"
                   min="0"
                   step="0.01"
                   placeholder="0"
                   value={cantidad}
                   onChange={(e) => setCantidad(e.target.value)}
+                  onFocus={(e) => e.currentTarget.select()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const next = document.getElementById('input-costo-total-lote') as HTMLInputElement | null;
+                      next?.focus();
+                      next?.select();
+                    }
+                  }}
                   disabled={!selectedProduct}
-                  className="w-full p-3 text-sm font-black text-[var(--color-ink)] outline-none disabled:bg-[#F1F5F9] disabled:cursor-not-allowed text-right"
+                  className="w-full p-3 text-sm font-black text-[var(--color-ink)] outline-none disabled:bg-[#F1F5F9] disabled:cursor-not-allowed text-right focus:ring-2 focus:ring-[var(--color-success)]"
                 />
                 <div className="bg-[#F8FAFC] px-4 border-l-2 border-[#E2E8F0] flex items-center justify-center text-[10px] font-black text-[#64748B] w-16 shrink-0">
                   {selectedProduct ? selectedProduct.unit : '---'}
@@ -338,14 +670,31 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                   S/
                 </div>
                 <input 
+                  id="input-costo-total-lote"
                   type="number"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  name="lote_costo_total_no_history"
+                  data-lpignore="true"
+                  data-form-type="other"
                   min="0"
                   step="0.01"
                   placeholder="0.00"
                   value={costoTotal}
                   onChange={(e) => setCostoTotal(e.target.value)}
+                  onFocus={(e) => e.currentTarget.select()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const next = document.getElementById('input-sustento-lote') as HTMLInputElement | null;
+                      next?.focus();
+                      next?.select();
+                    }
+                  }}
                   disabled={!selectedProduct}
-                  className="w-full p-3 text-sm font-black text-[var(--color-ink)] outline-none disabled:bg-[#F1F5F9] disabled:cursor-not-allowed"
+                  className="w-full p-3 text-sm font-black text-[var(--color-ink)] outline-none disabled:bg-[#F1F5F9] disabled:cursor-not-allowed focus:ring-2 focus:ring-[var(--color-success)]"
                 />
               </div>
             </div>
@@ -364,64 +713,113 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
           {/* 4. SUSTENTO TRIBUTARIO Y VENCIMIENTO */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t-2 border-[#E2E8F0] pt-6">
             
-            <div className="space-y-3">
+            <div ref={provContainerRef} className="space-y-3">
               <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2">
                 <FileText size={14} /> 4. Sustento (Doc. Proveedor) (Opcional)
               </label>
-              <div className="flex flex-col gap-3 relative">
+              <div className="relative">
                 <input 
+                  id="input-sustento-lote"
                   type="text"
-                  placeholder={omitirSustento ? "OMITIDO / SIN SUSTENTO..." : "BUSCAR PROVEEDOR O DOC..."}
-                  value={omitirSustento ? '' : sustento}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  placeholder="BUSCAR PROVEEDOR O DOC..."
+                  value={sustento}
                   onChange={(e) => {
                     setSustento(e.target.value.toUpperCase());
                     setShowProviderDropdown(true);
                   }}
-                  onFocus={() => setShowProviderDropdown(true)}
-                  onBlur={() => setTimeout(() => setShowProviderDropdown(false), 200)}
-                  disabled={omitirSustento || !selectedProduct}
-                  className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] transition-colors disabled:bg-[#F1F5F9] disabled:text-[#94A3B8]"
+                  onFocus={() => {
+                    if (proveedoresActivos.length > 0) {
+                      setShowProviderDropdown(true);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (!provContainerRef.current?.contains(e.relatedTarget as Node)) {
+                      setShowProviderDropdown(false);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                      if (showProviderDropdown && filteredProveedores.length > 0) {
+                        e.preventDefault();
+                        const firstItem = document.querySelector('[data-lote-prov-item="true"]') as HTMLElement;
+                        if (firstItem) {
+                          firstItem.focus();
+                          return;
+                        }
+                      }
+                    } else if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const matches = proveedoresActivos.filter(p => coincideBusqueda([p.razon_social], sustento));
+                      if (matches.length > 0 && showProviderDropdown && sustento.trim()) {
+                        setSustento(matches[0].razon_social);
+                      }
+                      setShowProviderDropdown(false);
+                      document.getElementById('input-vencimiento-lote')?.focus();
+                    } else if (e.key === 'Escape') {
+                      setShowProviderDropdown(false);
+                    }
+                  }}
+                  disabled={!selectedProduct}
+                  className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors disabled:bg-[#F1F5F9] disabled:text-[#94A3B8]"
                 />
 
-                {/* BUSCADOR DESPLEGABLE DE PROVEEDORES */}
-                {showProviderDropdown && !omitirSustento && selectedProduct && (
-                  <div className="absolute top-[48px] left-0 right-0 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] z-50 max-h-40 overflow-y-auto custom-scrollbar">
-                    {proveedoresActivos.filter(p => p.razon_social.includes(sustento)).length > 0 ? (
-                      proveedoresActivos.filter(p => p.razon_social.includes(sustento)).map(prov => (
-                        <div 
-                          key={prov.id}
-                          onMouseDown={(e) => {
-                            e.preventDefault(); // Evita que el onBlur cierre la ventana antes del click
+                {/* BUSCADOR DESPLEGABLE DE PROVEEDORES (SOLO SI HAY COINCIDENCIAS) */}
+                {showProviderDropdown && selectedProduct && filteredProveedores.length > 0 && (
+                  <div className="absolute top-full mt-1.5 left-0 right-0 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] z-50 max-h-44 overflow-y-auto custom-scrollbar">
+                    <div className="p-2 bg-[#F8FAFC] border-b border-[#E2E8F0] text-[9px] font-black text-[#64748B] uppercase tracking-wider flex items-center justify-between">
+                      <span>Proveedores sugeridos</span>
+                      <span className="text-[8px] font-bold text-[#94A3B8]">{filteredProveedores.length} opción(es)</span>
+                    </div>
+                    {filteredProveedores.map(prov => (
+                      <div 
+                        key={prov.id}
+                        data-lote-prov-item="true"
+                        role="option"
+                        tabIndex={0}
+                        onClick={() => {
+                          setSustento(prov.razon_social);
+                          setShowProviderDropdown(false);
+                          document.getElementById('input-vencimiento-lote')?.focus();
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            const items = Array.from(document.querySelectorAll('[data-lote-prov-item="true"]')) as HTMLElement[];
+                            const currentIdx = items.indexOf(e.currentTarget);
+                            if (currentIdx !== -1 && currentIdx < items.length - 1) {
+                              items[currentIdx + 1].focus();
+                            }
+                          } else if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            const items = Array.from(document.querySelectorAll('[data-lote-prov-item="true"]')) as HTMLElement[];
+                            const currentIdx = items.indexOf(e.currentTarget);
+                            if (currentIdx > 0) {
+                              items[currentIdx - 1].focus();
+                            } else {
+                              document.getElementById('input-sustento-lote')?.focus();
+                            }
+                          } else if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
                             setSustento(prov.razon_social);
                             setShowProviderDropdown(false);
-                          }}
-                          className="p-3 hover:bg-[#F8FAFC] border-b border-[#E2E8F0] cursor-pointer"
-                        >
-                          <span className="text-xs font-black text-[var(--color-ink)] uppercase">{prov.razon_social}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-3 text-[10px] font-bold text-[#64748B] uppercase text-center bg-[#F8FAFC]">
-                        ESCRIBE LIBREMENTE SI NO ESTÁ EN LA LISTA
+                            document.getElementById('input-vencimiento-lote')?.focus();
+                          } else if (e.key === 'ArrowLeft' || e.key === 'Escape') {
+                            e.preventDefault();
+                            setShowProviderDropdown(false);
+                            document.getElementById('input-sustento-lote')?.focus();
+                          }
+                        }}
+                        className="p-3 bg-white hover:bg-[#1E293B] hover:text-white focus:!bg-[#1E293B] focus:!text-white border-b border-[#E2E8F0] cursor-pointer outline-none group transition-colors"
+                      >
+                        <span className="text-xs font-black text-[#1E293B] group-hover:text-white group-focus:!text-white uppercase">{prov.razon_social}</span>
                       </div>
-                    )}
+                    ))}
                   </div>
                 )}
-                <label className="flex items-center gap-2 cursor-pointer w-max group">
-                  <div className={`w-4 h-4 border-2 flex items-center justify-center transition-colors ${omitirSustento ? 'bg-[var(--color-danger)] border-[var(--color-danger)]' : 'border-[#94A3B8] bg-[var(--color-surface)] group-hover:border-[var(--color-danger)]'}`}>
-                    {omitirSustento && <Check size={12} className="text-white" />}
-                  </div>
-                  <input 
-                    type="checkbox" 
-                    className="hidden" 
-                    checked={omitirSustento} 
-                    onChange={() => setOmitirSustento(!omitirSustento)} 
-                    disabled={!selectedProduct} 
-                  />
-                  <span className="text-[9px] font-bold text-[#64748B] uppercase select-none group-hover:text-[var(--color-danger)]">
-                    Ingresar sin sustento tributario
-                  </span>
-                </label>
               </div>
             </div>
 
@@ -430,11 +828,20 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                 <Calendar size={14} /> Fecha Vencimiento (Opcional)
               </label>
               <input 
+                id="input-vencimiento-lote"
                 type="date"
                 value={expiration}
                 onChange={(e) => setExpiration(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    try {
+                      (e.currentTarget as HTMLInputElement).showPicker();
+                    } catch {}
+                  }
+                }}
                 disabled={!selectedProduct}
-                className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] transition-colors disabled:bg-[#F1F5F9]"
+                className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors disabled:bg-[#F1F5F9] cursor-pointer"
               />
             </div>
 
@@ -445,18 +852,32 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         {/* PIE DE PÁGINA (BOTONES) */}
         <div className="p-6 bg-[var(--color-surface)] border-t-2 border-[#E2E8F0] flex justify-end gap-3 shrink-0">
           <button 
+            id="btn-cancelar-lote"
             onClick={onClose}
-            className="px-6 py-3 border-2 border-[#E2E8F0] text-[#64748B] font-black text-[10px] uppercase tracking-widest hover:bg-[#F8FAFC] hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] transition-all cursor-pointer rounded-none"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                document.getElementById('btn-guardar-lote')?.focus();
+              }
+            }}
+            className="px-6 py-3 border-2 border-[#E2E8F0] text-[#64748B] font-black text-[10px] uppercase tracking-widest hover:bg-[#F8FAFC] hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[#F8FAFC] focus:text-[var(--color-ink)] transition-all cursor-pointer rounded-none"
           >
             Cancelar
           </button>
           <button 
+            id="btn-guardar-lote"
             onClick={handleSave}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                document.getElementById('btn-cancelar-lote')?.focus();
+              }
+            }}
             disabled={!selectedProduct || !cantidad || Number(cantidad) <= 0 || isSubmitting}
-            className="bg-[var(--color-success)] text-[var(--color-ink)] px-6 py-3 border-2 border-[var(--color-ink)] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-success)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] disabled:opacity-50"
+            className="bg-[var(--color-success)] text-[var(--color-ink)] px-6 py-3 border-2 border-[var(--color-ink)] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-success)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-[var(--color-success)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] disabled:opacity-50"
           >
             {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
-            {isSubmitting ? 'PROCESANDO...' : 'Guardar Lote'}
+            {isSubmitting ? 'PROCESANDO...' : initialLote ? 'Guardar Cambios' : 'Guardar Lote'}
           </button>
         </div>
 

@@ -293,8 +293,8 @@ export const Proveedores: React.FC<Props> = ({ onNavigate }) => {
             filtroEstado={filtroEstadoLotes}
             filtroOrden={filtroOrdenLotes}
             nuevoLoteInyectado={nuevoLoteRealtime}
-            onViewMermas={(_lote) => {
-              if (onNavigate) onNavigate('mermas');
+            onViewHistory={(lote) => {
+              setSearchQueryLotes(lote.product_name);
             }}
             onEditLote={(lote) => {
               setLoteToEdit(lote);

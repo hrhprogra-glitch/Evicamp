@@ -20,12 +20,35 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       const activeTag = document.activeElement?.tagName;
-      if (document.querySelector('[role="dialog"]') || document.querySelector('.fixed.inset-0.z-\\[999999\\]')) return;
+      if (document.querySelector('[role="dialog"]')) return;
+
+      // 🛡️ PRIORIDAD DEL SIDEBAR: Si el sidebar está abierto o el foco está en el menú lateral, no interferir
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+      const activeEl = document.activeElement as HTMLElement;
+      if (activeEl && (activeEl.id === 'evicamp-sidebar' || activeEl.closest('#evicamp-sidebar') || sidebar?.contains(activeEl))) return;
 
       if (['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft', 'PageDown', 'PageUp'].includes(e.key)) {
         const active = document.activeElement as HTMLElement;
         const searchInput = document.getElementById('buscador-global-fiados') as HTMLInputElement;
         
+        // Si no hay nada enfocado o está en el body, rescatar el foco
+        if (!active || active === document.body) {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            searchInput?.focus();
+            return;
+          }
+        }
+
+        if (active?.id === 'btn-directorio-clientes') {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            searchInput?.focus();
+            return;
+          }
+        }
+
         if (active === searchInput) {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
@@ -70,7 +93,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
               searchInput?.focus();
             }
           } else if (e.key === 'ArrowRight') {
-            const btn = currentRow.querySelector('button') as HTMLElement;
+            const btn = currentRow.querySelector('button[data-btn-detalle]') as HTMLElement;
             if (btn) btn.focus();
           } else if (e.key === 'ArrowLeft') {
             currentRow.focus();
@@ -82,6 +105,42 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
             setCurrentPage(p => Math.max(1, p - 1));
           }
           return;
+        }
+
+        // Navegación en el botón de ver detalle dentro de la fila
+        if (active?.hasAttribute('data-btn-detalle')) {
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            const currentRow = active.closest('tr[role="button"]') as HTMLElement;
+            if (currentRow) currentRow.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const rows = Array.from(document.querySelectorAll('tr[role="button"]')) as HTMLElement[];
+            const currentRow = active.closest('tr[role="button"]') as HTMLElement;
+            const nextRow = rows[rows.indexOf(currentRow) + 1];
+            if (nextRow) {
+              const btn = nextRow.querySelector('button[data-btn-detalle]') as HTMLElement;
+              if (btn) btn.focus(); else nextRow.focus();
+              nextRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+            return;
+          }
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const rows = Array.from(document.querySelectorAll('tr[role="button"]')) as HTMLElement[];
+            const currentRow = active.closest('tr[role="button"]') as HTMLElement;
+            const prevRow = rows[rows.indexOf(currentRow) - 1];
+            if (prevRow) {
+              const btn = prevRow.querySelector('button[data-btn-detalle]') as HTMLElement;
+              if (btn) btn.focus(); else prevRow.focus();
+              prevRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+              searchInput?.focus();
+            }
+            return;
+          }
         }
       }
       
@@ -96,10 +155,18 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
     };
 
     const enforceFocus = () => {
-      if (document.querySelector('[role="dialog"]') || document.querySelector('.fixed.inset-0')) return;
-      const activeTag = document.activeElement?.tagName;
-      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'BUTTON' || activeTag === 'SELECT' || activeTag === 'A' || document.activeElement?.closest('tr[role="button"]')) return;
-      document.getElementById('buscador-global-fiados')?.focus();
+      if (document.querySelector('[role="dialog"]')) return;
+      // 🛡️ NO SECUESTRAR FOCO SI EL SIDEBAR ESTÁ ABIERTO
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+      const active = document.activeElement;
+      const activeTag = active?.tagName;
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'BUTTON' || activeTag === 'SELECT' || activeTag === 'A' || active?.closest('tr[role="button"]')) return;
+      const searchInput = document.getElementById('buscador-global-fiados') as HTMLInputElement | null;
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
     };
 
     const handleGlobalClick = () => setTimeout(enforceFocus, 50);
@@ -171,6 +238,13 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
           value={filtroEstado} 
           onChange={(e) => setFiltroEstado(e.target.value as any)}
           onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              try {
+                (e.currentTarget as HTMLSelectElement).showPicker();
+              } catch {}
+              return;
+            }
             if (e.key === 'ArrowUp') {
               e.preventDefault();
               e.stopPropagation();
@@ -201,6 +275,13 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
           value={ordenPor} 
           onChange={(e) => setOrdenPor(e.target.value as any)}
           onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              try {
+                (e.currentTarget as HTMLSelectElement).showPicker();
+              } catch {}
+              return;
+            }
             if (e.key === 'ArrowUp') {
               e.preventDefault();
               e.stopPropagation();
@@ -214,12 +295,9 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
               e.stopPropagation();
               document.getElementById('filtro-estado-fiados')?.focus();
             } else if (e.key === 'ArrowRight') {
-              const btn = document.getElementById('btn-limpiar-filtros-fiados');
-              if (btn) {
-                e.preventDefault();
-                e.stopPropagation();
-                btn.focus();
-              }
+              e.preventDefault();
+              e.stopPropagation();
+              document.getElementById('btn-limpiar-filtros-fiados')?.focus();
             }
           }}
           className="w-full lg:w-48 border-2 border-[var(--color-border)] px-4 py-3 text-sm font-black uppercase outline-none focus:border-[var(--color-info)] bg-white cursor-pointer rounded-none"
@@ -228,28 +306,33 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
           <option value="ALFABETICO">ALFABÉTICO</option>
         </select>
 
-        {hayFiltrosActivos && (
-          <button 
-            id="btn-limpiar-filtros-fiados"
-            onClick={limpiarFiltros} 
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                document.getElementById('filtro-orden-fiados')?.focus();
-              } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                (document.querySelector('tr[role="button"]') as HTMLElement)?.focus();
-              } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                document.getElementById('btn-directorio-clientes')?.focus();
-              }
-            }}
-            className="p-3 bg-[var(--color-danger)] text-white font-black uppercase tracking-widest text-xs hover:brightness-110 transition-all flex items-center justify-center cursor-pointer border-2 border-[var(--color-danger)] rounded-none shrink-0" 
-            title="Limpiar Filtros"
-          >
-            <FilterX size={20} strokeWidth={3} />
-          </button>
-        )}
+        <button 
+          id="btn-limpiar-filtros-fiados"
+          onClick={limpiarFiltros} 
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              e.stopPropagation();
+              document.getElementById('filtro-orden-fiados')?.focus();
+            } else if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              e.stopPropagation();
+              (document.querySelector('tr[role="button"]') as HTMLElement)?.focus();
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              e.stopPropagation();
+              document.getElementById('btn-directorio-clientes')?.focus();
+            }
+          }}
+          className={`p-3 font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center cursor-pointer border-2 rounded-none shrink-0 ${
+            hayFiltrosActivos 
+              ? 'bg-[var(--color-danger)] text-white border-[var(--color-danger)] hover:brightness-110 shadow-[2px_2px_0_0_var(--color-ink)]' 
+              : 'bg-[var(--color-surface)] text-[var(--color-subtle)] border-[var(--color-border)] opacity-60 hover:opacity-100 hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]'
+          }`}
+          title="Limpiar Filtros"
+        >
+          <FilterX size={20} strokeWidth={3} />
+        </button>
       </div>
 
       <div className="flex-1 overflow-auto custom-scrollbar relative min-h-0">

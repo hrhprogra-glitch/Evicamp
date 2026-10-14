@@ -188,6 +188,169 @@ export const Mermas: React.FC = () => {
     }
   };
 
+
+  // Auto-Focus Magnet para Mermas (Foco inicial en buscador)
+  useEffect(() => {
+    const enforceFocus = () => {
+      if (isModalMermaOpen || document.querySelector('[role="dialog"]') || document.querySelector('.fixed.inset-0.z-50')) return;
+      const active = document.activeElement;
+
+      // 🛡️ NO SECUESTRAR FOCO SI EL SIDEBAR ESTÁ ABIERTO
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+
+      const activeTag = active?.tagName;
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'BUTTON' || activeTag === 'A' || activeTag === 'SELECT' || active?.getAttribute('role') === 'button') return;
+
+      const searchInput = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
+    };
+
+    const forceMountFocus = () => {
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+
+      if (!isModalMermaOpen && !document.querySelector('.fixed.inset-0.z-50')) {
+        const searchInput = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        }
+      }
+    };
+
+    const handleGlobalClick = () => setTimeout(enforceFocus, 50);
+    const handleWindowFocus = () => setTimeout(enforceFocus, 50);
+
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('click', handleGlobalClick);
+
+    const timer = setTimeout(forceMountFocus, 100);
+
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('click', handleGlobalClick);
+      clearTimeout(timer);
+    };
+  }, [isModalMermaOpen]);
+
+  // Navegación de Grilla con Teclado (Patrón Selector de Evicamp)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (isModalMermaOpen || document.querySelector('.fixed.inset-0.z-50')) return;
+
+      const active = document.activeElement as HTMLElement;
+
+      // 🛡️ PRIORIDAD DEL SIDEBAR: Si el sidebar está abierto o el foco está en el menú lateral, Mermas no interfiere
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') {
+        return;
+      }
+      if (active && (active.id === 'evicamp-sidebar' || active.closest('#evicamp-sidebar') || sidebar?.contains(active))) {
+        return;
+      }
+
+      // Ignorar si el foco o target es un campo de texto / input
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
+      if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) return;
+
+      const rowSelector = 'div[data-row="true"][role="button"]';
+      const currentRow = active ? (active.closest(rowSelector) as HTMLElement) : null;
+
+      const getRows = () => {
+        return Array.from(document.querySelectorAll(rowSelector))
+          .filter((el): el is HTMLElement => {
+            const htmlEl = el as HTMLElement;
+            return !htmlEl.closest('.hidden');
+          });
+      };
+
+      if (currentRow) {
+        if (['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft'].includes(e.key)) {
+          e.preventDefault();
+          const rows = getRows();
+          const rowIndex = rows.indexOf(currentRow);
+
+          if (e.key === 'ArrowDown') {
+            const nextRow = rows[rowIndex + 1];
+            if (nextRow) {
+              nextRow.focus();
+              nextRow.scrollIntoView({ block: 'nearest' });
+            }
+          } else if (e.key === 'ArrowUp') {
+            if (rowIndex > 0) {
+              const prevRow = rows[rowIndex - 1];
+              if (prevRow) {
+                prevRow.focus();
+                prevRow.scrollIntoView({ block: 'nearest' });
+              }
+            } else {
+              // Fila 0: Subir al buscador global
+              const searchInput = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+              if (searchInput) {
+                searchInput.focus();
+                searchInput.select();
+                searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }
+            }
+          } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+            // Navegación horizontal DENTRO de la fila hacia botones de acción
+            const focusables = [currentRow, ...Array.from(currentRow.querySelectorAll('button:not([disabled])'))] as HTMLElement[];
+            const focusIndex = focusables.indexOf(active);
+
+            if (e.key === 'ArrowRight') {
+              const nextTarget = focusables[focusIndex + 1];
+              if (nextTarget) nextTarget.focus();
+            } else if (e.key === 'ArrowLeft') {
+              const prevTarget = focusables[focusIndex - 1];
+              if (prevTarget) prevTarget.focus();
+            }
+          }
+        } else if (e.key === 'Escape') {
+          const searchInput = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+          if (searchInput) {
+            e.preventDefault();
+            searchInput.focus();
+            searchInput.select();
+          }
+        }
+      } else {
+        // Rescate de foco perdido si está en body o contenedor general
+        if (e.key === 'ArrowUp') {
+          // 🛡️ TOPE: Si el foco está en un botón o control superior, actuar como límite y no devolver el foco abajo
+          if (active && (active.tagName === 'BUTTON' || active.closest('button'))) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+          e.preventDefault();
+          const searchInput = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+            searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const rows = getRows();
+          if (rows.length > 0) {
+            rows[0].focus();
+            rows[0].scrollIntoView({ block: 'nearest' });
+          } else {
+            const searchInput = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+            if (searchInput) searchInput.focus();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [isModalMermaOpen]);
+
   return (
     <div className="flex flex-col gap-6 short:gap-3 w-full pb-10 text-[var(--color-ink)] font-mono min-h-full bg-[var(--color-surface)] relative rounded-none">
       

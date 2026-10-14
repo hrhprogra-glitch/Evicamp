@@ -29,12 +29,13 @@ interface Props {
   filtroOrden: string;
   nuevoLoteInyectado?: any;
   onViewMermas?: (lote: any) => void;
+  onViewHistory?: (lote: any) => void;
   onEditLote?: (lote: any) => void;
   onLoteDeleted?: (productId: string, quantityRemoved: number) => void; // <-- AÑADIR ESTA LÍNEA
 }
 
 export const TablaLotes: React.FC<Props> = ({ 
-  searchQuery, filtroCategoria, filtroEstado, filtroOrden, nuevoLoteInyectado, onViewMermas, onEditLote, onLoteDeleted // <-- AÑADIR AQUÍ
+  searchQuery, filtroCategoria, filtroEstado, filtroOrden, nuevoLoteInyectado, onViewMermas, onViewHistory, onEditLote, onLoteDeleted // <-- AÑADIR AQUÍ
 }) => {
   const [lotes, setLotes] = useState<Lote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -233,9 +234,18 @@ export const TablaLotes: React.FC<Props> = ({
     // SE AGRANDÓ LA LETRA BASE DE LA FILA (text-base)
     <div
       key={lote.id}
+      data-row="true"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          if (onEditLote) onEditLote(lote);
+        }
+      }}
       onClick={() => onEditLote && onEditLote(lote)}
-      className="grid grid-cols-12 items-center p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors group text-base cursor-pointer"
-      title="Click para editar"
+      className="grid grid-cols-12 items-center p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] focus:bg-amber-50/50 dark:focus:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors group text-base cursor-pointer"
+      title="Presione Enter o haga clic para editar"
     >
       
       {/* 1. INGRESO Y REFERENCIA / SUSTENTO / PROVEEDOR */}
@@ -313,23 +323,30 @@ export const TablaLotes: React.FC<Props> = ({
 
       {/* 8. ACCIONES: HISTORIAL, EDITAR Y ELIMINAR (Íconos más grandes) */}
       <div className="col-span-1 text-center flex items-center justify-center gap-3">
-        {/* BOTÓN HISTORIAL DE MERMA */}
+        {/* BOTÓN HISTORIAL DE LOTES / MOVIMIENTOS */}
         <button
           onClick={(e) => {
             e.stopPropagation();
-            if (onViewMermas) {
-              onViewMermas(lote); // <-- Ahora TypeScript aceptará el argumento
+            if (onViewHistory) {
+              onViewHistory(lote);
+            } else if (onViewMermas) {
+              onViewMermas(lote);
             }
           }}
-          className="text-[#94A3B8] hover:text-[var(--color-warning)] transition-colors cursor-pointer"
-          title="Ver Historial de Mermas"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.stopPropagation();
+            }
+          }}
+          className="text-[#94A3B8] hover:text-[#3B82F6] focus:text-[#3B82F6] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] p-1 transition-colors cursor-pointer"
+          title="Historial de Lotes / Movimientos"
         >
           <History size={18} />
         </button>
 
         <button
           onClick={(e) => { e.stopPropagation(); onEditLote && onEditLote(lote); }}
-          className="text-[#94A3B8] hover:text-[var(--color-success)] transition-colors cursor-pointer"
+          className="text-[#94A3B8] hover:text-[var(--color-success)] focus:text-[var(--color-success)] focus:outline-none focus:ring-2 focus:ring-[var(--color-success)] p-1 transition-colors cursor-pointer"
           title="Editar datos del Lote"
         >
           <Edit size={18} />
@@ -362,7 +379,7 @@ export const TablaLotes: React.FC<Props> = ({
               }
             }
           }}
-          className="text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[#FFFFFF] border border-transparent hover:border-[#E2E8F0] p-1 rounded-none transition-colors cursor-pointer"
+          className="text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[#FFFFFF] focus:bg-[var(--color-ink)] focus:text-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-red-500 border border-transparent hover:border-[#E2E8F0] p-1 rounded-none transition-colors cursor-pointer"
           title="Eliminar Lote"
         >
           <Trash2 size={18} />

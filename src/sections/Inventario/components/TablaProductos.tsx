@@ -222,9 +222,19 @@ export const TablaProductos: React.FC<Props> = ({
             return (
               <div
                 key={item.id}
+                data-row="true"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    if (onEditProduct) onEditProduct(item);
+                    else startEditing(item);
+                  }
+                }}
                 onClick={() => onEditProduct ? onEditProduct(item) : startEditing(item)}
-                className="grid grid-cols-12 items-center p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors group cursor-pointer"
-                title="Click para editar"
+                className="grid grid-cols-12 items-center p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] focus:bg-amber-50/50 dark:focus:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors group cursor-pointer"
+                title="Presione Enter o haga clic para editar"
               >
                 
                 {/* 0. IMAGEN (BLINDADA CONTRA MEDIA://) */}
@@ -289,7 +299,7 @@ export const TablaProductos: React.FC<Props> = ({
                 {/* 6. ACCIONES + BOTÓN HISTORIAL LOTE */}
                 <div className="col-span-2 text-center flex items-center justify-center gap-3">
                   <button
-                    className="text-[#94A3B8] hover:text-[#3B82F6] transition-colors cursor-pointer"
+                    className="text-[#94A3B8] hover:text-[#3B82F6] focus:text-[#3B82F6] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] p-1 transition-colors cursor-pointer"
                     title="Historial de Lotes / Movimientos"
                     onClick={(e) => { e.stopPropagation(); onViewHistory ? onViewHistory(item) : alert(`ABRIENDO HISTORIAL DE LOTES PARA: ${item.code}`); }}
                   >
@@ -297,7 +307,7 @@ export const TablaProductos: React.FC<Props> = ({
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); onEditProduct ? onEditProduct(item) : startEditing(item); }}
-                    className="text-[#94A3B8] hover:text-[var(--color-success)] transition-colors cursor-pointer"
+                    className="text-[#94A3B8] hover:text-[var(--color-success)] focus:text-[var(--color-success)] focus:outline-none focus:ring-2 focus:ring-[var(--color-success)] p-1 transition-colors cursor-pointer"
                     title="Editar Producto"
                   >
                     <Edit size={16} />
@@ -309,7 +319,7 @@ export const TablaProductos: React.FC<Props> = ({
                         if (onDeleteProduct) onDeleteProduct(item);
                       }
                     }}
-                    className="text-[#94A3B8] hover:text-red-500 transition-colors cursor-pointer"
+                    className="text-[#94A3B8] hover:text-red-500 focus:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 p-1 transition-colors cursor-pointer"
                     title="Eliminar del Sistema"
                   >
                     <Trash2 size={16} />

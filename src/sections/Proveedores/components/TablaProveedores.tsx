@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Edit, Trash2, Truck, Phone, Mail, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Proveedor } from '../types';
 
@@ -60,7 +60,39 @@ export const TablaProveedores: React.FC<Props> = ({ proveedores, onEdit, onDelet
           </div>
         ) : (
           paginatedData.map((prov) => (
-            <div key={prov.id} className="grid grid-cols-12 gap-3 items-center p-4 border-b border-[var(--color-bg-2)] hover:bg-[var(--color-bg)] transition-colors group text-sm">
+            <div 
+              key={prov.id} 
+              data-row-prov="true"
+              role="button"
+              tabIndex={0}
+              onClick={() => onEdit(prov)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  const rows = Array.from(document.querySelectorAll('[data-row-prov="true"]')) as HTMLElement[];
+                  const idx = rows.indexOf(e.currentTarget);
+                  if (idx !== -1 && idx < rows.length - 1) {
+                    rows[idx + 1].focus();
+                  }
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  const rows = Array.from(document.querySelectorAll('[data-row-prov="true"]')) as HTMLElement[];
+                  const idx = rows.indexOf(e.currentTarget);
+                  if (idx > 0) {
+                    rows[idx - 1].focus();
+                  } else {
+                    document.getElementById('btn-nuevo-proveedor')?.focus();
+                  }
+                } else if (e.key === 'ArrowRight') {
+                  e.preventDefault();
+                  (e.currentTarget.querySelector('.btn-editar-prov') as HTMLElement)?.focus();
+                } else if (e.key === 'Enter') {
+                  e.preventDefault();
+                  onEdit(prov);
+                }
+              }}
+              className="grid grid-cols-12 gap-3 items-center p-4 border-b border-[var(--color-bg-2)] hover:bg-[var(--color-bg)] focus:bg-[#E2E8F0] focus:ring-2 focus:ring-[var(--color-ink)] transition-colors group text-sm cursor-pointer outline-none"
+            >
               
               {/* RUC */}
               <div className="col-span-2 min-w-0">
@@ -115,15 +147,78 @@ export const TablaProveedores: React.FC<Props> = ({ proveedores, onEdit, onDelet
               {/* ACCIONES */}
               <div className="col-span-1 min-w-0 flex items-center justify-center gap-2">
                 <button 
-                  onClick={() => onEdit(prov)}
-                  className="text-[var(--color-subtle)] hover:text-[var(--color-info)] transition-colors cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(prov);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowLeft') {
+                      e.preventDefault();
+                      (e.currentTarget.closest('[data-row-prov="true"]') as HTMLElement)?.focus();
+                    } else if (e.key === 'ArrowRight') {
+                      e.preventDefault();
+                      (e.currentTarget.parentElement?.querySelector('.btn-eliminar-prov') as HTMLElement)?.focus();
+                    } else if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      const rows = Array.from(document.querySelectorAll('[data-row-prov="true"]')) as HTMLElement[];
+                      const currentRow = e.currentTarget.closest('[data-row-prov="true"]') as HTMLElement;
+                      const idx = rows.indexOf(currentRow);
+                      if (idx !== -1 && idx < rows.length - 1) {
+                        rows[idx + 1].focus();
+                      }
+                    } else if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      const rows = Array.from(document.querySelectorAll('[data-row-prov="true"]')) as HTMLElement[];
+                      const currentRow = e.currentTarget.closest('[data-row-prov="true"]') as HTMLElement;
+                      const idx = rows.indexOf(currentRow);
+                      if (idx > 0) {
+                        rows[idx - 1].focus();
+                      } else {
+                        document.getElementById('btn-nuevo-proveedor')?.focus();
+                      }
+                    } else if (e.key === 'Enter') {
+                      e.stopPropagation();
+                      onEdit(prov);
+                    }
+                  }}
+                  className="btn-editar-prov text-[var(--color-subtle)] hover:text-[var(--color-info)] focus:text-[var(--color-info)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] focus:bg-white p-1 transition-colors cursor-pointer rounded-none"
                   title="Editar Proveedor"
                 >
                   <Edit size={16} />
                 </button>
                 <button 
-                  onClick={() => onDelete(prov)}
-                  className="text-[var(--color-subtle)] hover:text-[var(--color-danger)] transition-colors cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(prov);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowLeft') {
+                      e.preventDefault();
+                      (e.currentTarget.parentElement?.querySelector('.btn-editar-prov') as HTMLElement)?.focus();
+                    } else if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      const rows = Array.from(document.querySelectorAll('[data-row-prov="true"]')) as HTMLElement[];
+                      const currentRow = e.currentTarget.closest('[data-row-prov="true"]') as HTMLElement;
+                      const idx = rows.indexOf(currentRow);
+                      if (idx !== -1 && idx < rows.length - 1) {
+                        rows[idx + 1].focus();
+                      }
+                    } else if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      const rows = Array.from(document.querySelectorAll('[data-row-prov="true"]')) as HTMLElement[];
+                      const currentRow = e.currentTarget.closest('[data-row-prov="true"]') as HTMLElement;
+                      const idx = rows.indexOf(currentRow);
+                      if (idx > 0) {
+                        rows[idx - 1].focus();
+                      } else {
+                        document.getElementById('btn-nuevo-proveedor')?.focus();
+                      }
+                    } else if (e.key === 'Enter') {
+                      e.stopPropagation();
+                      onDelete(prov);
+                    }
+                  }}
+                  className="btn-eliminar-prov text-[var(--color-subtle)] hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-danger)] focus:bg-white p-1 transition-colors cursor-pointer rounded-none"
                   title="Eliminar Proveedor"
                 >
                   <Trash2 size={16} />

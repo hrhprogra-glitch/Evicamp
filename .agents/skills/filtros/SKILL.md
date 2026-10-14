@@ -84,4 +84,54 @@ Los botones en la barra de herramientas que se intersecan con los filtros deben 
 }
 ```
 
+## 5. Patrón para Calendarios / Inputs de Fecha (`<input type="date">`)
+
+Cuando se interactúa con un filtro o input de calendario con teclado:
+1. **Apertura con Enter o Espacio o Clic:**
+   Al enfocar el input y presionar Enter o Espacio (o hacer clic), se debe abrir el selector nativo invocando `showPicker()`.
+2. **Selección y Retorno de Foco:**
+   Al elegir la fecha y presionar Enter (evento `change`), el selector se cierra y el foco **debe regresar de inmediato a la selección del calendario** (`input.focus()`), permitiendo que el usuario continúe navegando fluidamente con las flechas espaciales (<kbd>←</kbd>, <kbd>→</kbd>, <kbd>↓</kbd>, <kbd>↑</kbd>).
+3. **Protección con `lastChangeRef`:**
+   Para evitar que el Enter de confirmación en el selector nativo vuelva a reabrir el calendario en bucle, se usa una marca de tiempo (`lastChangeRef`). Si el cambio ocurrió hace menos de 500ms, Enter solo mantiene/devuelve el foco en el input sin llamar a `showPicker()`.
+
+```tsx
+const lastDateChangeRef = useRef(0);
+
+<input 
+  id="filtro-fecha"
+  type="date"
+  value={filtroFecha}
+  onChange={(e) => {
+    lastDateChangeRef.current = Date.now();
+    setFiltroFecha(e.target.value);
+    setTimeout(() => {
+      document.getElementById('filtro-fecha')?.focus();
+    }, 50);
+  }}
+  onClick={(e) => {
+    try { (e.currentTarget as HTMLInputElement).showPicker?.(); } catch {}
+  }}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (Date.now() - lastDateChangeRef.current < 500) {
+        e.currentTarget.focus();
+        return;
+      }
+      try {
+        (e.currentTarget as HTMLInputElement).showPicker?.();
+      } catch {}
+      return;
+    }
+    // Navegación espacial con flechas
+    if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-arriba')?.focus(); }
+    if (e.key === 'ArrowDown') { e.preventDefault(); focusPrimerRegistro(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('filtro-anterior')?.focus(); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('siguiente-elemento')?.focus(); }
+  }}
+/>
+```
+
 *Este documento sirve como referencia de base. Asegúrate de activarlo o leerlo cuando el usuario solicite implementar los "filtros" o te diga que te bases en lo que se hizo con `/filtros`.*
+

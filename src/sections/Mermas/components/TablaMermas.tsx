@@ -80,9 +80,18 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
           paginatedData.map((merma, index) => (
             <div
               key={merma.id || `merma-${index}`}
-              {...clicConTeclado(() => onEdit?.(merma))}
-              className="grid grid-cols-12 gap-3 items-center p-4 border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] transition-colors text-sm rounded-none cursor-pointer"
-              title="Click para editar"
+              data-row="true"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault();
+                  onEdit?.(merma);
+                }
+              }}
+              onClick={() => onEdit?.(merma)}
+              className="grid grid-cols-12 gap-3 items-center p-4 border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors text-sm rounded-none cursor-pointer"
+              title="Click o Enter para editar"
             >
               
               {/* FECHA Y USUARIO */}
@@ -146,15 +155,17 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
               {/* ACCIONES */}
               <div className="col-span-1 min-w-0 flex items-center justify-center gap-2">
                 <button
+                  type="button"
                   onClick={(e) => { e.stopPropagation(); onEdit?.(merma); }}
-                  className="p-2 border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-surface)] hover:bg-[var(--color-ink)] transition-colors rounded-none bg-[var(--color-surface)]"
+                  className="p-2 border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-surface)] hover:bg-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-[var(--color-surface)] transition-colors rounded-none bg-[var(--color-surface)] cursor-pointer"
                   title="Editar Merma"
                 >
                   <Edit size={14} />
                 </button>
                 <button
+                  type="button"
                   onClick={(e) => { e.stopPropagation(); onDelete?.(merma); }}
-                  className="p-2 border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-surface)] hover:bg-[var(--color-danger)] hover:border-[var(--color-danger)] transition-colors rounded-none bg-[var(--color-surface)]"
+                  className="p-2 border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-surface)] hover:bg-[var(--color-danger)] hover:border-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-danger)] focus:bg-[var(--color-danger)] focus:text-white transition-colors rounded-none bg-[var(--color-surface)] cursor-pointer"
                   title="Eliminar Merma"
                 >
                   <Trash2 size={14} />

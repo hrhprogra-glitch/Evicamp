@@ -1,4 +1,5 @@
 import { coincideBusqueda } from '../../utils/busqueda';
+import { formatearCantidadDetalle } from '../../utils/formato';
 // src/sections/Finanzas/index.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Wallet, ArrowDownToLine, Lock, CreditCard, Smartphone, Banknote, ReceiptText, Search } from 'lucide-react';
@@ -134,7 +135,7 @@ export const Finanzas: React.FC = () => {
           const chunkSize = 200;
           for (let i = 0; i < salesIds.length; i += chunkSize) {
             const chunk = salesIds.slice(i, i + chunkSize);
-            const { data } = await supabase.from('sale_details').select('sale_id, product_name').in('sale_id', chunk);
+            const { data } = await supabase.from('sale_details').select('sale_id, product_name, quantity').in('sale_id', chunk);
             if (data) {
               saleDetailsData.push(...data);
             }
@@ -143,10 +144,13 @@ export const Finanzas: React.FC = () => {
         const detailsBySale: Record<string, string[]> = {};
         saleDetailsData.forEach((d: any) => {
           if (!detailsBySale[d.sale_id]) detailsBySale[d.sale_id] = [];
-          detailsBySale[d.sale_id].push(d.product_name);
+          const qty = Number(d.quantity);
+          const qtyStr = formatearCantidadDetalle(d.quantity);
+          const str = qty > 1 ? `${qtyStr}x ${d.product_name}` : d.product_name;
+          detailsBySale[d.sale_id].push(str);
         });
         salesData?.forEach((s: any) => {
-          s.productosStr = detailsBySale[s.id]?.join(' ') || '';
+          s.productosStr = detailsBySale[s.id]?.join(', ') || '';
         });
 
         // Cada movimiento cuenta en la bolsa de SU método de pago (no todo es efectivo).
@@ -441,6 +445,268 @@ export const Finanzas: React.FC = () => {
     }
   };
 
+  const focusPrimerRegistro = () => {
+    const visibleRows = Array.from(document.querySelectorAll('tr[data-row="true"][role="button"]'))
+      .filter((el): el is HTMLElement => {
+        const htmlEl = el as HTMLElement;
+        return !htmlEl.closest('.hidden');
+      });
+    const firstRow = visibleRows[0];
+    if (firstRow) {
+      firstRow.focus();
+      firstRow.scrollIntoView({ block: 'nearest' });
+    }
+  };
+
+  // Navegación de Grilla con Teclado (Patrón Selector de Evicamp)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Abortar si hay algún modal abierto
+      if (
+        isAperturaModalOpen ||
+        isMovimientoModalOpen ||
+        isCierreModalOpen ||
+        !!ticketSeleccionadoParaVer ||
+        document.querySelector('[role="dialog"]') ||
+        document.querySelector('.fixed.inset-0.z-50')
+      ) {
+        return;
+      }
+
+      const active = document.activeElement as HTMLElement;
+
+      // 🛡️ PRIORIDAD DEL SIDEBAR: Si el sidebar está abierto, Finanzas no interfiere
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') {
+        return;
+      }
+
+      // Ignorar si el foco o target es un input / textarea / select (cada uno maneja sus flechas)
+      if (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) return;
+      if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) return;
+
+      const rowSelector = 'tr[data-row="true"][role="button"]';
+      const targetRow = e.target ? ((e.target as HTMLElement).closest(rowSelector) as HTMLElement) : null;
+
+      // Si el evento se originó en un botón u otro control fuera de las filas de la tabla,
+      // no debemos procesar la navegación de filas (evita saltos dobles)
+      if (!targetRow && (e.target as HTMLElement)?.closest('button')) {
+        return;
+      }
+
+      const currentRow = targetRow || (active ? (active.closest(rowSelector) as HTMLElement) : null);
+
+      const getRows = () => {
+        return Array.from(document.querySelectorAll(rowSelector))
+          .filter((el): el is HTMLElement => {
+            const htmlEl = el as HTMLElement;
+            return !htmlEl.closest('.hidden');
+          });
+      };
+
+      if (currentRow) {
+        if (['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft'].includes(e.key)) {
+          e.preventDefault();
+          const rows = getRows();
+          const rowIndex = rows.indexOf(currentRow);
+
+          if (e.key === 'ArrowDown') {
+            const nextRow = rows[rowIndex + 1];
+            if (nextRow) {
+              nextRow.focus();
+              nextRow.scrollIntoView({ block: 'nearest' });
+            } else if (vistaActual === 'HISTORIAL') {
+              const btnAntBottom = document.getElementById('btn-historial-anterior-bottom');
+              if (btnAntBottom) {
+                btnAntBottom.focus();
+                btnAntBottom.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }
+            }
+          } else if (e.key === 'ArrowUp') {
+            if (rowIndex > 0) {
+              const prevRow = rows[rowIndex - 1];
+              if (prevRow) {
+                prevRow.focus();
+                prevRow.scrollIntoView({ block: 'nearest' });
+              }
+            } else {
+              // Fila 0: Subir a la interfaz superior
+              if (vistaActual === 'ACTUAL') {
+                const searchInput = document.getElementById('buscador-finanzas') as HTMLInputElement | null;
+                if (searchInput) {
+                  searchInput.focus();
+                  searchInput.select();
+                  searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+              } else {
+                const btnAnt = document.getElementById('btn-historial-anterior');
+                if (btnAnt) {
+                  btnAnt.focus();
+                  btnAnt.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                  const fechaInput = document.getElementById('filtro-fecha-desde-finanzas') as HTMLInputElement | null;
+                  if (fechaInput) {
+                    fechaInput.focus();
+                    fechaInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                  }
+                }
+              }
+            }
+          } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+            // Navegación horizontal DENTRO de la fila hacia botones de acción
+            const focusables = [currentRow, ...Array.from(currentRow.querySelectorAll('button:not([disabled])'))] as HTMLElement[];
+            const focusIndex = focusables.indexOf(active);
+
+            if (e.key === 'ArrowRight') {
+              const nextTarget = focusables[focusIndex + 1];
+              if (nextTarget) nextTarget.focus();
+            } else if (e.key === 'ArrowLeft') {
+              const prevTarget = focusables[focusIndex - 1];
+              if (prevTarget) prevTarget.focus();
+            }
+          }
+        } else if (e.key === 'Escape') {
+          if (vistaActual === 'ACTUAL') {
+            const searchInput = document.getElementById('buscador-finanzas') as HTMLInputElement | null;
+            if (searchInput) {
+              e.preventDefault();
+              searchInput.focus();
+              searchInput.select();
+            }
+          } else {
+            const fechaInput = document.getElementById('filtro-fecha-desde-finanzas') as HTMLInputElement | null;
+            if (fechaInput) {
+              e.preventDefault();
+              fechaInput.focus();
+            }
+          }
+        }
+      } else {
+        // Rescate de foco si el usuario está en body o contenedor general
+        if (e.key === 'ArrowUp') {
+          // 🛡️ TOPE: Si el foco está en un botón o control superior, actuar como límite y no devolver el foco abajo
+          if (active && (active.tagName === 'BUTTON' || active.closest('button'))) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+          e.preventDefault();
+          if (vistaActual === 'ACTUAL') {
+            const searchInput = document.getElementById('buscador-finanzas') as HTMLInputElement | null;
+            if (searchInput) {
+              searchInput.focus();
+              searchInput.select();
+            }
+          } else {
+            document.getElementById('filtro-fecha-desde-finanzas')?.focus();
+          }
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const rows = getRows();
+          if (rows.length > 0) {
+            rows[0].focus();
+            rows[0].scrollIntoView({ block: 'nearest' });
+          } else {
+            if (vistaActual === 'ACTUAL') {
+              document.getElementById('buscador-finanzas')?.focus();
+            } else {
+              document.getElementById('filtro-fecha-desde-finanzas')?.focus();
+            }
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [
+    isAperturaModalOpen,
+    isMovimientoModalOpen,
+    isCierreModalOpen,
+    ticketSeleccionadoParaVer,
+    vistaActual,
+    sessionActiva,
+    isLoading
+  ]);
+
+  // Auto-Focus Magnet (Patrón Selector Evicamp)
+  useEffect(() => {
+    if (isLoading) return;
+
+    const enfocarBuscador = () => {
+      if (document.querySelector('[role="dialog"]') || document.querySelector('.fixed.inset-0.z-50')) return;
+
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+
+      // 🛡️ Si el usuario ya está interactuando con un botón, input, select o fila de la tabla, NO robarle el foco
+      const active = document.activeElement as HTMLElement | null;
+      if (active && active !== document.body && !active.closest('#evicamp-sidebar')) {
+        const tag = active.tagName;
+        if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'].includes(tag)) return;
+        if (active.closest('tr[data-row="true"]')) return;
+        if (active.getAttribute('role') === 'button') return;
+      }
+
+      if (vistaActual === 'ACTUAL') {
+        const searchInput = document.getElementById('buscador-finanzas') as HTMLInputElement | null;
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        } else {
+          document.getElementById('btn-ver-historial')?.focus();
+        }
+      } else {
+        const dateInput = document.getElementById('filtro-fecha-desde-finanzas') as HTMLInputElement | null;
+        if (dateInput) {
+          dateInput.focus();
+          dateInput.select();
+        } else {
+          document.getElementById('btn-ver-historial')?.focus();
+        }
+      }
+    };
+
+    const enforceFocus = () => {
+      if (document.querySelector('[role="dialog"]') || document.querySelector('.fixed.inset-0.z-50')) return;
+
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+
+      const active = document.activeElement as HTMLElement | null;
+      if (active && active !== document.body && !active.closest('#evicamp-sidebar')) {
+        const tag = active.tagName;
+        if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'].includes(tag)) return;
+        if (active.closest('tr[data-row="true"]')) return;
+        if (active.getAttribute('role') === 'button') return;
+      }
+
+      enfocarBuscador();
+    };
+
+    const handleWindowFocus = () => setTimeout(enforceFocus, 50);
+    const handleGlobalClick = () => setTimeout(enforceFocus, 50);
+
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('click', handleGlobalClick);
+
+    // Forzar el foco de inmediato al terminar la carga / entrar a Finanzas
+    enfocarBuscador();
+    const t1 = setTimeout(enfocarBuscador, 50);
+    const t2 = setTimeout(enfocarBuscador, 150);
+    const t3 = setTimeout(enfocarBuscador, 300);
+    const t4 = setTimeout(enfocarBuscador, 600);
+
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('click', handleGlobalClick);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+    };
+  }, [vistaActual, sessionActiva, isLoading]);
+
   if (isLoading) return <div className="flex h-full items-center justify-center font-mono">Calculando Bóveda...</div>;
 
   return (
@@ -463,6 +729,7 @@ export const Finanzas: React.FC = () => {
 
         <div className="flex flex-wrap gap-3">
           <button 
+            id="btn-ver-historial"
             onClick={() => {
               if (vistaActual === 'ACTUAL') {
                 setVistaActual('HISTORIAL');
@@ -471,25 +738,101 @@ export const Finanzas: React.FC = () => {
                 setVistaActual('ACTUAL');
               }
             }}
-            className="flex-1 sm:flex-none justify-center bg-[var(--color-bg)] text-[var(--color-ink)] px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest sm:tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] transition-all cursor-pointer mr-2 flex items-center gap-2"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                const btnNext = document.getElementById('btn-nuevo-movimiento') || document.getElementById('btn-aperturar-caja');
+                if (btnNext) btnNext.focus();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (vistaActual === 'ACTUAL') {
+                  document.getElementById('buscador-finanzas')?.focus();
+                } else {
+                  document.getElementById('filtro-fecha-desde-finanzas')?.focus();
+                }
+              }
+            }}
+            className="flex-1 sm:flex-none justify-center bg-[var(--color-bg)] text-[var(--color-ink)] px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest sm:tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer mr-2 flex items-center gap-2"
           >
             <ReceiptText size={16} /> {vistaActual === 'ACTUAL' ? 'Ver Historial' : 'Volver a Caja'}
           </button>
 
           {vistaActual === 'ACTUAL' && (
             !sessionActiva ? (puedeTurno && (
-              <button onClick={() => setIsAperturaModalOpen(true)} className="flex-1 sm:flex-none bg-[var(--color-accent)] text-white px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] transition-all cursor-pointer">
+              <button 
+                id="btn-aperturar-caja"
+                onClick={() => setIsAperturaModalOpen(true)} 
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    document.getElementById('btn-ver-historial')?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    document.getElementById('buscador-finanzas')?.focus();
+                  }
+                }}
+                className="flex-1 sm:flex-none bg-[var(--color-accent)] text-white px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
+              >
                 Aperturar Caja
               </button>)
             ) : (
               <>
                 {puedeMovimientos && (
-                <button onClick={() => setIsMovimientoModalOpen(true)} className="flex-1 sm:flex-none justify-center bg-white text-[var(--color-ink)] px-4 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] transition-all cursor-pointer">
+                <button 
+                  id="btn-nuevo-movimiento"
+                  onClick={() => setIsMovimientoModalOpen(true)} 
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    } else if (e.key === 'ArrowLeft') {
+                      e.preventDefault();
+                      document.getElementById('btn-ver-historial')?.focus();
+                    } else if (e.key === 'ArrowRight') {
+                      e.preventDefault();
+                      document.getElementById('btn-cerrar-caja')?.focus();
+                    } else if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      const filtroEst = document.getElementById('filtro-estado-finanzas');
+                      if (filtroEst) filtroEst.focus();
+                      else document.getElementById('buscador-finanzas')?.focus();
+                    }
+                  }}
+                  className="flex-1 sm:flex-none justify-center bg-white text-[var(--color-ink)] px-4 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
+                >
                   + Nuevo Movimiento
                 </button>
                 )}
                 {puedeTurno && (
-                <button onClick={() => setIsCierreModalOpen(true)} className="flex-1 sm:flex-none justify-center bg-[var(--color-danger)] text-white px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-[0.2em] flex items-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] transition-all cursor-pointer">
+                <button 
+                  id="btn-cerrar-caja"
+                  onClick={() => setIsCierreModalOpen(true)} 
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    } else if (e.key === 'ArrowLeft') {
+                      e.preventDefault();
+                      const btnPrev = document.getElementById('btn-nuevo-movimiento') || document.getElementById('btn-ver-historial');
+                      if (btnPrev) btnPrev.focus();
+                    } else if (e.key === 'ArrowRight') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    } else if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      const filtroDeuda = document.getElementById('filtro-deuda-finanzas');
+                      if (filtroDeuda) filtroDeuda.focus();
+                      else document.getElementById('buscador-finanzas')?.focus();
+                    }
+                  }}
+                  className="flex-1 sm:flex-none justify-center bg-[var(--color-danger)] text-white px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-[0.2em] flex items-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
+                >
                   <Lock size={16} /> Cerrar Caja
                 </button>
                 )}
@@ -594,18 +937,60 @@ export const Finanzas: React.FC = () => {
                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none bg-[var(--color-ink)] text-white w-10 justify-center">
                    <Search size={16} />
                  </div>
-                 <input
-                   type="text"
-                   placeholder="BUSCAR POR CLIENTE, N° TICKET O DETALLE"
-                   value={searchTerm}
-                   onChange={(e) => setSearchTerm(e.target.value)}
-                   className="w-full pl-12 pr-3 py-2.5 text-xs font-bold uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none"
-                 />
+                <input
+                  id="buscador-finanzas"
+                  type="text"
+                  placeholder="BUSCAR POR CLIENTE, N° TICKET O DETALLE"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      focusPrimerRegistro();
+                    } else if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      document.getElementById('btn-ver-historial')?.focus();
+                    } else if (e.key === 'ArrowRight') {
+                      const input = e.currentTarget;
+                      if (input.selectionStart === input.value.length) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        document.getElementById('filtro-categoria-finanzas')?.focus();
+                      }
+                    } else if (e.key === 'Escape') {
+                      e.preventDefault();
+                      setSearchTerm('');
+                    }
+                  }}
+                  className="w-full pl-12 pr-3 py-2.5 text-xs font-bold uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+                />
                </div>
                <select
+                 id="filtro-categoria-finanzas"
                  value={filtroCategoria}
                  onChange={(e) => setFiltroCategoria(e.target.value)}
-                 className="px-3 py-2.5 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none cursor-pointer bg-white min-w-[140px]"
+                 onKeyDown={(e) => {
+                   if (e.key === 'ArrowUp') {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     document.getElementById('btn-ver-historial')?.focus();
+                   } else if (e.key === 'ArrowDown') {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     focusPrimerRegistro();
+                   } else if (e.key === 'ArrowLeft') {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     document.getElementById('buscador-finanzas')?.focus();
+                   } else if (e.key === 'ArrowRight') {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     document.getElementById('filtro-estado-finanzas')?.focus();
+                   }
+                 }}
+                 className="px-3 py-2.5 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer bg-white min-w-[140px]"
                >
                  <option value="TODOS">Tipo: TODOS</option>
                  <option value="VENTA">Solo Ventas</option>
@@ -613,18 +998,58 @@ export const Finanzas: React.FC = () => {
                  <option value="EGRESO">Solo Egresos</option>
                </select>
                <select
+                 id="filtro-estado-finanzas"
                  value={filtroEstado}
                  onChange={(e) => setFiltroEstado(e.target.value)}
-                 className="px-3 py-2.5 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none cursor-pointer bg-white min-w-[140px]"
+                 onKeyDown={(e) => {
+                   if (e.key === 'ArrowUp') {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     const btnNuevo = document.getElementById('btn-nuevo-movimiento');
+                     if (btnNuevo) btnNuevo.focus();
+                     else document.getElementById('btn-ver-historial')?.focus();
+                   } else if (e.key === 'ArrowDown') {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     focusPrimerRegistro();
+                   } else if (e.key === 'ArrowLeft') {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     document.getElementById('filtro-categoria-finanzas')?.focus();
+                   } else if (e.key === 'ArrowRight') {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     document.getElementById('filtro-deuda-finanzas')?.focus();
+                   }
+                 }}
+                 className="px-3 py-2.5 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer bg-white min-w-[140px]"
                >
                  <option value="TODOS">Estado: TODOS</option>
                  <option value="COMPLETADO">COMPLETADOS</option>
                  <option value="ANULADO">ANULADOS</option>
                </select>
                <select
+                 id="filtro-deuda-finanzas"
                  value={filtroDeuda}
                  onChange={(e) => setFiltroDeuda(e.target.value)}
-                 className="px-3 py-2.5 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none cursor-pointer bg-white min-w-[140px]"
+                 onKeyDown={(e) => {
+                   if (e.key === 'ArrowUp') {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     const btnCerrar = document.getElementById('btn-cerrar-caja');
+                     if (btnCerrar) btnCerrar.focus();
+                     else document.getElementById('btn-ver-historial')?.focus();
+                   } else if (e.key === 'ArrowDown') {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     focusPrimerRegistro();
+                   } else if (e.key === 'ArrowLeft') {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     document.getElementById('filtro-estado-finanzas')?.focus();
+                   }
+                 }}
+                 className="px-3 py-2.5 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer bg-white min-w-[140px]"
                >
                  <option value="TODOS">Deuda: TODAS</option>
                  <option value="CON_DEUDA">CON DEUDA</option>
@@ -652,11 +1077,13 @@ export const Finanzas: React.FC = () => {
                  if (filtroDeuda === 'SIN_DEUDA' && Number(m.monto_deuda) > 0) return false;
                  // CATEGORIA
                  if (filtroCategoria !== 'TODOS') {
-                   const isAbono = m.descripcion?.includes('ABONO DE FIADO');
-                   if (filtroCategoria === 'VENTAS' && !m.isTicket) return false;
-                   if (filtroCategoria === 'PAGOS_DEUDAS' && !isAbono) return false;
-                   if (filtroCategoria === 'MOV_INTERNOS' && (m.isTicket || isAbono || m.flujo === 'EXTERNO')) return false;
-                   if (filtroCategoria === 'MOV_EXTERNOS' && m.flujo !== 'EXTERNO') return false;
+                   if (filtroCategoria === 'VENTA' || filtroCategoria === 'VENTAS') {
+                     if (!m.isTicket && m.tipo !== 'VENTA') return false;
+                   } else if (filtroCategoria === 'INGRESO') {
+                     if (m.tipo !== 'INGRESO') return false;
+                   } else if (filtroCategoria === 'EGRESO') {
+                     if (m.tipo !== 'EGRESO') return false;
+                   }
                  }
                  return true;
                })} 

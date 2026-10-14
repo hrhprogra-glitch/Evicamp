@@ -180,8 +180,190 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     setFiltroOrden('NOMBRE_ASC');
   };
 
+  const handleViewHistory = (item: any) => {
+    const nombre = item.product_name || item.name || '';
+    setVistaActiva('LOTES');
+    setSearchQuery(nombre);
+
+    // 🛡️ EVICAMP: Enfocar el buscador de inmediato con el texto seleccionado, listo para navegar
+    setTimeout(() => {
+      const searchInput = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+        searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 100);
+  };
+
   const lowStockCount = products.filter(p => p.unit !== 'CONSUMO' && p.quantity <= p.minStock).length;
   const totalValue = products.reduce((acc, p) => acc + (p.cost * p.quantity), 0);
+
+  // Auto-Focus Magnet para Inventario (Foco inicial en buscador)
+  useEffect(() => {
+    const isModalOpenActive = isModalOpen || isModalLoteOpen || isModalProveedoresOpen;
+    const enforceFocus = () => {
+      if (isModalOpenActive || document.querySelector('[role="dialog"]') || document.querySelector('.fixed.inset-0.z-50')) return;
+      const active = document.activeElement;
+
+      // 🛡️ NO SECUESTRAR FOCO SI EL SIDEBAR ESTÁ ABIERTO
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+
+      const activeTag = active?.tagName;
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'BUTTON' || activeTag === 'A' || activeTag === 'SELECT' || active?.getAttribute('role') === 'button') return;
+
+      const searchInput = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
+    };
+
+    const forceMountFocus = () => {
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+
+      if (!isModalOpenActive && !document.querySelector('.fixed.inset-0.z-50')) {
+        const searchInput = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        }
+      }
+    };
+
+    const handleGlobalClick = () => setTimeout(enforceFocus, 50);
+    const handleWindowFocus = () => setTimeout(enforceFocus, 50);
+
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('click', handleGlobalClick);
+
+    const timer = setTimeout(forceMountFocus, 100);
+
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('click', handleGlobalClick);
+      clearTimeout(timer);
+    };
+  }, [isModalOpen, isModalLoteOpen, isModalProveedoresOpen]);
+
+  // Navegación de Grilla con Teclado (Patrón Selector de Evicamp)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Abortar si hay modal abierto
+      if (isModalOpen || isModalLoteOpen || isModalProveedoresOpen || document.querySelector('.fixed.inset-0.z-50')) return;
+
+      const active = document.activeElement as HTMLElement;
+
+      // 🛡️ PRIORIDAD DEL SIDEBAR: Si el sidebar está abierto o el foco está en el menú lateral, Inventario no interfiere
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') {
+        return;
+      }
+      if (active && (active.id === 'evicamp-sidebar' || active.closest('#evicamp-sidebar') || sidebar?.contains(active))) {
+        return;
+      }
+
+      // Ignorar si el foco o target es un campo de texto / input
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
+      if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) return;
+
+      const rowSelector = 'div[data-row="true"][role="button"]';
+      const currentRow = active ? (active.closest(rowSelector) as HTMLElement) : null;
+
+      const getRows = () => {
+        return Array.from(document.querySelectorAll(rowSelector))
+          .filter((el): el is HTMLElement => {
+            const htmlEl = el as HTMLElement;
+            return !htmlEl.closest('.hidden');
+          });
+      };
+
+      if (currentRow) {
+        if (['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft'].includes(e.key)) {
+          e.preventDefault();
+          const rows = getRows();
+          const rowIndex = rows.indexOf(currentRow);
+
+          if (e.key === 'ArrowDown') {
+            const nextRow = rows[rowIndex + 1];
+            if (nextRow) {
+              nextRow.focus();
+              nextRow.scrollIntoView({ block: 'nearest' });
+            }
+          } else if (e.key === 'ArrowUp') {
+            // Si hay una fila previa, subir a ella
+            if (rowIndex > 0) {
+              const prevRow = rows[rowIndex - 1];
+              if (prevRow) {
+                prevRow.focus();
+                prevRow.scrollIntoView({ block: 'nearest' });
+              }
+            } else {
+              // Fila 0 (primera fila): SUBIR AL BUSCADOR
+              const searchInput = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+              if (searchInput) {
+                searchInput.focus();
+                searchInput.select();
+                searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }
+            }
+          } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+            // Navegación horizontal DENTRO de la fila (hacia botones de acción)
+            const focusables = [currentRow, ...Array.from(currentRow.querySelectorAll('button:not([disabled])'))] as HTMLElement[];
+            const focusIndex = focusables.indexOf(active);
+
+            if (e.key === 'ArrowRight') {
+              const nextTarget = focusables[focusIndex + 1];
+              if (nextTarget) nextTarget.focus();
+            } else if (e.key === 'ArrowLeft') {
+              const prevTarget = focusables[focusIndex - 1];
+              if (prevTarget) prevTarget.focus();
+            }
+          }
+        } else if (e.key === 'Escape') {
+          // Escape en la fila sube al buscador y lo selecciona
+          const searchInput = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+          if (searchInput) {
+            e.preventDefault();
+            searchInput.focus();
+            searchInput.select();
+          }
+        }
+      } else {
+        // 🛡️ RESCATE DE FOCO PERDIDO: Si el foco quedó en document.body o fuera de la grilla
+        if (e.key === 'ArrowUp') {
+          // 🛡️ TOPE: Si el foco está en un botón o control superior, actuar como límite y no devolver el foco abajo
+          if (active && (active.tagName === 'BUTTON' || active.closest('button'))) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+          e.preventDefault();
+          const searchInput = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+            searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const rows = getRows();
+          if (rows.length > 0) {
+            rows[0].focus();
+            rows[0].scrollIntoView({ block: 'nearest' });
+          } else {
+            const searchInput = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+            if (searchInput) searchInput.focus();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [isModalOpen, isModalLoteOpen, isModalProveedoresOpen, vistaActiva, refreshLotesKey]);
 
   return (
     <div className="flex flex-col gap-6 pb-10 text-[var(--color-ink)] font-mono h-full bg-[var(--color-bg)] relative">
@@ -213,14 +395,43 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             {/* Switch de Vista */}
             <div className="flex border-2 border-[var(--color-ink)] bg-[var(--color-bg)] shadow-[4px_4px_0_0_var(--color-ink)] shrink-0 w-full md:w-auto">
               <button 
+                id="btn-tab-productos"
                 onClick={() => setVistaActiva('PRODUCTOS')} 
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer ${vistaActiva === 'PRODUCTOS' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'}`}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    document.getElementById('btn-tab-lotes')?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    document.getElementById('buscador-global-inventario')?.focus();
+                  }
+                }}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${vistaActiva === 'PRODUCTOS' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'}`}
               >
                 <Package size={14} /> Productos
               </button>
               <button 
+                id="btn-tab-lotes"
                 onClick={() => setVistaActiva('LOTES')} 
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer border-l-2 border-[var(--color-ink)] ${vistaActiva === 'LOTES' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'}`}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    document.getElementById('btn-tab-productos')?.focus();
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    document.getElementById('btn-nuevo-producto')?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    document.getElementById('buscador-global-inventario')?.focus();
+                  }
+                }}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer border-l-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${vistaActiva === 'LOTES' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'}`}
               >
                 <Layers size={14} /> Lotes
               </button>
@@ -234,20 +445,68 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             {/* Botones de Acción */}
             <div className="flex gap-3 shrink-0">
               <button
+                id="btn-nuevo-producto"
                 onClick={() => setIsModalOpen(true)}
-                className="bg-[var(--color-accent)] text-[var(--color-ink)] px-4 lg:px-6 py-3 lg:py-4 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    document.getElementById('btn-tab-lotes')?.focus();
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    document.getElementById('btn-ingresar-lote')?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    document.getElementById('filtro-categoria-inventario')?.focus();
+                  }
+                }}
+                className="bg-[var(--color-accent)] text-[var(--color-ink)] px-4 lg:px-6 py-3 lg:py-4 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
               >
                 <Plus size={16} /> <span className="hidden sm:inline">Nuevo</span> Producto
               </button>
               <button
+                id="btn-ingresar-lote"
                 onClick={() => setIsModalLoteOpen(true)}
-                className="bg-[var(--color-ink)] text-[var(--color-accent)] px-4 lg:px-6 py-3 lg:py-4 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--color-bg)] hover:text-[var(--color-ink)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-accent)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    document.getElementById('btn-nuevo-producto')?.focus();
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    document.getElementById('btn-proveedores')?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    document.getElementById('filtro-estado-inventario')?.focus();
+                  }
+                }}
+                className="bg-[var(--color-ink)] text-[var(--color-accent)] px-4 lg:px-6 py-3 lg:py-4 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--color-bg)] hover:text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-accent)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
               >
                 <Database size={16} /> <span className="hidden sm:inline">Ingresar</span> Lote
               </button>
               <button
+                id="btn-proveedores"
                 onClick={() => setIsModalProveedoresOpen(true)}
-                className="bg-[var(--color-bg)] text-[var(--color-info)] px-4 lg:px-6 py-3 lg:py-4 border-2 border-[var(--color-info)] font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--color-info)] hover:text-white transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-info)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    document.getElementById('btn-ingresar-lote')?.focus();
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    document.getElementById('filtro-orden-inventario')?.focus();
+                  }
+                }}
+                className="bg-[var(--color-bg)] text-[var(--color-info)] px-4 lg:px-6 py-3 lg:py-4 border-2 border-[var(--color-info)] font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--color-info)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-info)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
               >
                 <Users size={16} /> Proveedores
               </button>
@@ -304,8 +563,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   }}
   // === NUEVA CONEXIÓN AQUÍ ===
   onViewHistory={(producto) => {
-    setVistaActiva('LOTES'); // Cambia a la pestaña de Lotes
-    setSearchQuery(producto.name); // Busca automáticamente el nombre del producto
+    handleViewHistory(producto);
   }}
   // ===========================
 />
@@ -318,9 +576,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             filtroEstado={filtroEstado}
             filtroOrden={filtroOrden}
             nuevoLoteInyectado={nuevoLoteRealtime}
-            onViewMermas={(_lote) => {
-              // Aquí podrías filtrar las mermas por ese lote específico si lo deseas
-              if (onNavigate) onNavigate('mermas');
+            onViewHistory={(lote) => {
+              handleViewHistory(lote);
             }}
             onEditLote={(lote) => {
               setLoteToEdit(lote);

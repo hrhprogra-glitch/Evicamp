@@ -1,4 +1,4 @@
-﻿// src/sections/Reportes/components/TablaTickets.tsx
+// src/sections/Reportes/components/TablaTickets.tsx
 import React, { useState, useEffect } from 'react';
 import { RotateCcw, Trash2, Receipt, ChevronLeft, ChevronRight, Eye, X } from 'lucide-react';
 import { supabase } from '../../../db/supabase'; 
@@ -6,6 +6,7 @@ import type { TicketVenta } from '../types';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { usePermiso } from '../../../utils/permisos';
+import { formatearCantidadDetalle } from '../../../utils/formato';
 
 interface Props {
   tickets: TicketVenta[];
@@ -217,7 +218,7 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete, ids
                   <tbody>
                     {detallesTicket.map((item, index) => (
                       <tr key={index} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]">
-                        <td className="p-2 text-xs font-black text-[var(--color-ink)]">{Number(item.quantity).toString()}</td>
+                        <td className="p-2 text-xs font-black text-[var(--color-ink)]">{formatearCantidadDetalle(item.quantity)}</td>
                         <td className="p-2 text-xs font-bold text-[var(--color-muted)] uppercase">{item.product_name}</td>
                         <td className="p-2 text-xs font-mono text-[var(--color-muted)] text-right">S/ {Number(item.price_at_moment).toFixed(2)}</td>
                         <td className="p-2 text-sm font-black font-mono text-[var(--color-ink)] text-right">S/ {Number(item.subtotal).toFixed(2)}</td>

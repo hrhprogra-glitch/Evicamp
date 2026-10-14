@@ -26,7 +26,21 @@ export const HeaderMermas: React.FC<Props> = ({ onNuevaMerma, children }) => {
       <div className="flex flex-col md:flex-row items-end md:items-center gap-3 sm:gap-4 w-full xl:w-auto justify-end">
         {children}
         <button 
+          id="btn-registrar-merma"
           onClick={onNuevaMerma}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowUp") {
+              e.preventDefault();
+              e.stopPropagation();
+            } else if (e.key === "ArrowDown") {
+              e.preventDefault();
+              const searchInput = document.getElementById("buscador-global-mermas") as HTMLInputElement | null;
+              if (searchInput) {
+                searchInput.focus();
+                searchInput.select();
+              }
+            }
+          }}
           className="bg-[var(--color-danger)] text-white px-6 py-3 border-2 border-[var(--color-ink)] font-black text-[12px] uppercase tracking-widest flex items-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-danger)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] w-full md:w-auto justify-center"
         >
           <Plus size={16} /> Registrar Merma

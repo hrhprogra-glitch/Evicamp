@@ -19,17 +19,17 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
   return (
     <div className="w-full bg-white flex flex-col font-mono">
       <div className="overflow-x-auto w-full custom-scrollbar">
-        <table className="w-full text-left border-collapse min-w-[700px]">
+        <table id="tabla-movimientos-caja" className="w-full text-left border-collapse min-w-full">
           <thead className="bg-[var(--color-ink)] text-white sticky top-0 z-10">
             <tr>
-              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Fecha y Hora</th>
-              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Nro. Ticket / Detalle</th>
-              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Pago</th>
-              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Estado</th>
-              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-right">Pagado</th>
-              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-right">Deuda</th>
-              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-right">Total</th>
-              <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-center">Acciones</th>
+              <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] whitespace-nowrap w-[150px]">Fecha y Hora</th>
+              <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Nro. Ticket / Detalle</th>
+              <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] whitespace-nowrap text-center w-[80px]">Pago</th>
+              <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] whitespace-nowrap text-center w-[110px]">Estado</th>
+              <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-right whitespace-nowrap w-[90px]">Pagado</th>
+              <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-right whitespace-nowrap w-[80px]">Deuda</th>
+              <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-right whitespace-nowrap w-[95px]">Total</th>
+              <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-center whitespace-nowrap w-[95px]">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -43,6 +43,19 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
               movimientos.map((item) => (
                 <tr 
                   key={item.id} 
+                  data-row="true"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      if (item.isTicket) {
+                        onVerTicket(item.id);
+                      } else if (item.descripcion?.includes('ABONO DE FIADO')) {
+                        alert('ℹ️ DETALLE DE ABONO\n\nEste registro es solo el PAGO de una deuda.\n\nPara ver los productos exactos que se llevó el cliente, ve a la sección de CRÉDITOS, busca al cliente y haz clic en VER HISTORIAL.\nAllí tendrás el detalle de cada ticket fiado.');
+                      }
+                    }
+                  }}
                   onClick={() => {
                     if (item.isTicket) {
                       onVerTicket(item.id);
@@ -50,66 +63,88 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                       alert('ℹ️ DETALLE DE ABONO\n\nEste registro es solo el PAGO de una deuda.\n\nPara ver los productos exactos que se llevó el cliente, ve a la sección de CRÉDITOS, busca al cliente y haz clic en VER HISTORIAL.\nAllí tendrás el detalle de cada ticket fiado.');
                     }
                   }}
-                  className={`border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] transition-colors ${item.isTicket || item.descripcion?.includes('ABONO DE FIADO') ? 'cursor-pointer' : ''}`}
+                  className={`border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors cursor-pointer group`}
                 >
-                  <td className="p-4 text-xs font-bold text-[var(--color-muted)]">
+                  <td className="p-2.5 sm:p-3 text-xs font-bold text-[var(--color-muted)] whitespace-nowrap">
                     {new Date(item.created_at).toLocaleString('es-PE')}
                   </td>
                   
-                  <td className="p-4 text-sm font-black text-[var(--color-ink)] uppercase">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        {item.tipo === 'VENTA' ? <Receipt size={14} className="text-[var(--color-muted)]" /> : item.tipo === 'INGRESO' ? <ArrowUpFromLine size={14} className="text-[var(--color-accent)]" /> : <ArrowDownToLine size={14} className="text-[var(--color-danger)]" />}
-                        {item.isTicket ? '#' + String(item.id).slice(-6) : item.descripcion}
+                  <td className="p-2.5 sm:p-3 text-sm font-black text-[var(--color-ink)]">
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {item.tipo === 'VENTA' ? (
+                          <Receipt size={14} className="text-[var(--color-muted)] shrink-0" />
+                        ) : item.tipo === 'INGRESO' ? (
+                          <ArrowUpFromLine size={14} className="text-[var(--color-accent)] shrink-0" />
+                        ) : (
+                          <ArrowDownToLine size={14} className="text-[var(--color-danger)] shrink-0" />
+                        )}
+                        <span className="font-black tracking-wider text-xs sm:text-sm uppercase">
+                          {item.isTicket ? '#' + String(item.id).slice(-6) : item.descripcion}
+                        </span>
+                        {item.isTicket && item.es_fiado && item.cliente_nombre && (
+                          <span className="text-[10px] text-[var(--color-info)] font-bold tracking-widest uppercase bg-blue-50 px-1.5 py-0.5 border border-blue-200 whitespace-nowrap">
+                            [{item.cliente_nombre}]
+                          </span>
+                        )}
                       </div>
-                      {item.isTicket && item.es_fiado && item.cliente_nombre && (
-                        <span className="text-[12px] text-[var(--color-muted)] font-bold tracking-widest">[{item.cliente_nombre}]</span>
+                      {item.isTicket && item.productosStr && (
+                        <p 
+                          className="text-[11px] font-medium text-[var(--color-muted)] normal-case line-clamp-2 leading-tight" 
+                          title={item.productosStr}
+                        >
+                          {item.productosStr}
+                        </p>
                       )}
                     </div>
                   </td>
                   
-                  <td className="p-4 text-xs font-bold text-[var(--color-muted)] uppercase">{item.metodo_pago}</td>
+                  <td className="p-2.5 sm:p-3 text-xs font-bold text-[var(--color-muted)] uppercase whitespace-nowrap text-center">{item.metodo_pago}</td>
                   
-                  <td className="p-4">
+                  <td className="p-2.5 sm:p-3 whitespace-nowrap text-center">
                     {item.estado ? (
-                      <span className={`px-2 py-1 text-[12px] font-black tracking-wider border rounded-none ${
+                      <span className={`px-2 py-0.5 text-[10px] font-black tracking-wider border rounded-none whitespace-nowrap ${
                         item.estado === 'ANULADO' ? 'bg-[var(--color-surface)] text-[var(--color-danger)] border-[var(--color-danger)]' : 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-ink)]'
                       }`}>
                         {item.estado}
                       </span>
                     ) : (
-                      <span className="px-2 py-1 text-[12px] font-black tracking-wider border rounded-none bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-ink)]">
+                      <span className="px-2 py-0.5 text-[10px] font-black tracking-wider border rounded-none bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-ink)] whitespace-nowrap">
                         COMPLETADO
                       </span>
                     )}
                   </td>
 
                   {/* PAGADO */}
-                  <td className="p-4 text-right text-base font-bold text-[var(--color-muted)]">
+                  <td className="p-2.5 sm:p-3 text-right text-xs sm:text-sm font-bold text-[var(--color-muted)] whitespace-nowrap">
                     {item.isTicket ? `S/ ${Number(item.monto_pagado || 0).toFixed(2)}` : '-'}
                   </td>
 
                   {/* DEUDA */}
-                  <td className={`p-4 text-right text-base font-black ${Number(item.monto_deuda) > 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>
+                  <td className={`p-2.5 sm:p-3 text-right text-xs sm:text-sm font-black whitespace-nowrap ${Number(item.monto_deuda) > 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>
                     {item.isTicket && Number(item.monto_deuda) > 0 ? `S/ ${Number(item.monto_deuda).toFixed(2)}` : '-'}
                   </td>
 
-                  <td className={`p-4 text-right text-base font-black tracking-tight ${item.tipo === 'INGRESO' ? 'text-[var(--color-accent)]' : item.tipo === 'EGRESO' ? 'text-[var(--color-danger)]' : 'text-[var(--color-ink)]'}`}>
+                  <td className={`p-2.5 sm:p-3 text-right text-xs sm:text-sm font-black tracking-tight whitespace-nowrap ${item.tipo === 'INGRESO' ? 'text-[var(--color-accent)]' : item.tipo === 'EGRESO' ? 'text-[var(--color-danger)]' : 'text-[var(--color-ink)]'}`}>
                     {item.tipo === 'INGRESO' ? '+' : item.tipo === 'EGRESO' ? '-' : ''} S/ {Number(item.monto).toFixed(2)}
                   </td>
                   
-                  <td className="p-4">
+                  <td className="p-2.5 sm:p-3 whitespace-nowrap text-center">
                     <div className="flex items-center justify-center gap-1">
                       {item.isTicket ? (
                         <>
-                          <button onClick={(e) => { e.stopPropagation(); onVerTicket(item.id); }} className="p-1.5 bg-[var(--color-surface)] text-[var(--color-ink)] border border-[var(--color-border)] hover:border-[var(--color-ink)] transition-colors cursor-pointer rounded-none" title="Ver Detalles">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); onVerTicket(item.id); }} 
+                            className="p-1.5 bg-[var(--color-surface)] text-[var(--color-ink)] border border-[var(--color-border)] hover:border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors cursor-pointer rounded-none" 
+                            title="Ver Detalles"
+                          >
                             <Eye size={14} />
                           </button>
                           {item.estado !== 'ANULADO' && puedeAnular && (
                             <button
                               onClick={(e) => { e.stopPropagation(); onAnularTicket(item.id); }}
                               disabled={idsAnulando?.has(item.id)}
-                              className="p-1.5 bg-[var(--color-surface)] text-[var(--color-muted)] border border-[var(--color-border)] hover:border-[var(--color-warning)] hover:text-[var(--color-warning)] transition-colors cursor-pointer rounded-none disabled:opacity-40"
+                              className="p-1.5 bg-[var(--color-surface)] text-[var(--color-muted)] border border-[var(--color-border)] hover:border-[var(--color-warning)] hover:text-[var(--color-warning)] focus:outline-none focus:ring-2 focus:ring-[var(--color-warning)] transition-colors cursor-pointer rounded-none disabled:opacity-40"
                               title="Anular / Devolver"
                             >
                               <RotateCcw size={14} />
@@ -117,7 +152,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                           )}
                           <button
                             onClick={(e) => { e.stopPropagation(); onDelete(item.id, true); }}
-                            className="p-1.5 bg-[var(--color-surface)] text-[var(--color-muted)] border border-[var(--color-border)] hover:border-[var(--color-danger)] hover:text-[var(--color-danger)] transition-colors cursor-pointer rounded-none disabled:opacity-40"
+                            className="p-1.5 bg-[var(--color-surface)] text-[var(--color-muted)] border border-[var(--color-border)] hover:border-[var(--color-danger)] hover:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-danger)] transition-colors cursor-pointer rounded-none disabled:opacity-40"
                             title="Eliminar Venta"
                             disabled={idsAnulando?.has(item.id)}
                           >
@@ -127,7 +162,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                       ) : (
                         <button
                           onClick={(e) => { e.stopPropagation(); onDelete(item.id, false); }}
-                          className="p-1.5 bg-[var(--color-surface)] text-[var(--color-muted)] border border-[var(--color-border)] hover:border-[var(--color-danger)] hover:text-[var(--color-danger)] transition-colors cursor-pointer rounded-none"
+                          className="p-1.5 bg-[var(--color-surface)] text-[var(--color-muted)] border border-[var(--color-border)] hover:border-[var(--color-danger)] hover:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-danger)] transition-colors cursor-pointer rounded-none"
                           title="Eliminar Movimiento"
                         >
                           <Trash2 size={14} />

@@ -15,3 +15,15 @@ export const formatearCantidad = (qty: number | string | undefined | null, unit?
 
   return String(Number(valor.toFixed(2)));
 };
+
+// Formatea una cantidad de producto en tickets o transacciones evitando ruido de punto flotante (ej. 1.420399999999999 -> 1.42).
+// - Si es entero: devuelve el número sin decimales (ej. 1, 2, 5).
+// - Si tiene decimales: redondea hasta 3 decimales eliminando ceros finales (ej. 1.42, 0.5, 0.355).
+export const formatearCantidadDetalle = (qty: number | string | undefined | null): string => {
+  const valor = Number(qty);
+  if (isNaN(valor) || valor === 0) return '0';
+  
+  // Redondea a 3 decimales para eliminar la imprecisión binaria IEEE 754
+  const redondeado = Math.round(valor * 1000) / 1000;
+  return String(redondeado);
+};

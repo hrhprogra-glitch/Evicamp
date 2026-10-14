@@ -33,6 +33,12 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, on
       // 🛡️ Ignorar si hay modales abiertos
       if (document.querySelector('[role="dialog"]')) return;
 
+      // 🛡️ PRIORIDAD DEL SIDEBAR: Si el sidebar está abierto o el foco está en el menú lateral, no interferir
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+      const activeEl = document.activeElement as HTMLElement;
+      if (activeEl && (activeEl.id === 'evicamp-sidebar' || activeEl.closest('#evicamp-sidebar') || sidebar?.contains(activeEl))) return;
+
       // NAVEGACIÓN CON FLECHAS
       if (['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft'].includes(e.key)) {
         const active = document.activeElement as HTMLElement;
@@ -178,11 +184,17 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, on
 
     const enforceFocus = () => {
       if (document.querySelector('[role="dialog"]')) return;
+      // 🛡️ NO SECUESTRAR FOCO SI EL SIDEBAR ESTÁ ABIERTO
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
       const activeTag = document.activeElement?.tagName;
       if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'BUTTON' || activeTag === 'A' || activeTag === 'TR' || activeTag === 'TD' || activeTag === 'SELECT') return;
 
-      const searchInput = document.getElementById('buscador-global-fiados') as HTMLInputElement;
-      if (searchInput) searchInput.focus();
+      const searchInput = document.getElementById('buscador-global-fiados') as HTMLInputElement | null;
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
     };
 
     const handleGlobalClick = () => setTimeout(enforceFocus, 50);
