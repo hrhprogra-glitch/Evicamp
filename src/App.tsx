@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Login } from './sections/Login';
-import { SideBar } from './layout/SideBar';
+import { SideBar, ATAJOS_SESIONES } from './layout/SideBar';
 import { validarSesion, type EmpleadoSesion } from './utils/sesion';
 import { puedeVerModulo } from './utils/permisos';
 import { SesionProvider } from './utils/SesionProvider';
@@ -102,6 +102,41 @@ export const App: React.FC = () => {
     window.addEventListener('keydown', handleGlobalTab, { capture: true });
     return () => window.removeEventListener('keydown', handleGlobalTab, { capture: true });
   }, [isSidebarOpen]);
+
+  // Atajo global: Alt (o Alt Gr) + 1…7 entra directo a cada sesión del menú
+  const permisosRef = useRef(empleado?.permisos);
+  useEffect(() => {
+    permisosRef.current = empleado?.permisos;
+  }, [empleado]);
+
+  useEffect(() => {
+    const handleAtajoSesion = (e: KeyboardEvent) => {
+      // Alt Gr en Windows llega como Ctrl + Alt (o como el modificador "AltGraph")
+      const esAltGr = e.getModifierState('AltGraph') || (e.ctrlKey && e.altKey);
+      const esAlt = e.altKey && !e.ctrlKey;
+      if (!(esAlt || esAltGr) || e.shiftKey || e.metaKey) return;
+      // e.code es la tecla física: acepta los números de arriba y los del teclado numérico
+      const match = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
+      if (!match) return;
+      const view = ATAJOS_SESIONES[Number(match[1]) - 1];
+      if (!view) return;
+      // Respetar modales abiertos
+      if (document.querySelector('[role="dialog"]') || document.querySelector('.fixed.inset-0.z-50')) return;
+      if (!permisosRef.current || !puedeVerModulo(permisosRef.current, view)) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      setCurrentView(view);
+      const sidebar = document.getElementById('evicamp-sidebar');
+      sidebar?.setAttribute('data-sidebar-open', 'false');
+      setIsSidebarOpen(false);
+      localStorage.setItem('evicamp_sidebar_open', 'false');
+      programarRestauracionFoco(view);
+    };
+    window.addEventListener('keydown', handleAtajoSesion, { capture: true });
+    return () => window.removeEventListener('keydown', handleAtajoSesion, { capture: true });
+  }, []);
 
   // Estado para el Enrutador Interno
 

@@ -21,6 +21,9 @@ interface SideBarProps {
   permisos?: any; // <--- AÑADIMOS LOS PERMISOS
 }
 
+// Orden de los atajos Alt + 1…7 para entrar directo a cada sesión
+export const ATAJOS_SESIONES = ['pos', 'fiados', 'inventario', 'mermas', 'finanzas', 'utilidades', 'configuracion'];
+
 // Tiempo sin usar el menú abierto antes de que se contraiga solo
 const AUTO_OCULTAR_MS = 8000;
 
@@ -372,7 +375,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
                         onNavigate(item.id);
                         onClose();
                       }}
-                    title={!isOpen ? item.name : undefined}
+                    title={`${item.name} (Alt + ${ATAJOS_SESIONES.indexOf(item.id) + 1})`}
                     className={`w-full text-left py-3 short:py-2 text-xs font-black uppercase tracking-wider transition-all border rounded-none flex items-center cursor-pointer ${
                       isOpen ? 'pl-3 pr-2 gap-3 justify-between' : 'justify-center px-0'
                     } ${

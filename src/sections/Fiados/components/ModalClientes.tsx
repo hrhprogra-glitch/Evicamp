@@ -339,7 +339,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
         } else if (active?.id === "btn-volver-directorio") {
           if (e.key === "ArrowRight") {
             e.preventDefault();
-            document.getElementById("btn-ver-estado-cuenta-historial")?.focus();
+            (document.getElementById("btn-ver-estado-cuenta-historial") || document.getElementById("tab-historial-pendientes"))?.focus();
             return;
           }
           if (e.key === "ArrowDown") {
@@ -371,7 +371,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
           }
           if (e.key === "ArrowLeft") {
             e.preventDefault();
-            document.getElementById("btn-ver-estado-cuenta-historial")?.focus();
+            (document.getElementById("btn-ver-estado-cuenta-historial") || document.getElementById("btn-volver-directorio"))?.focus();
             return;
           }
           if (e.key === "ArrowRight") {
@@ -651,6 +651,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
   };
 
   const fiadosDelCliente = clienteActivo ? fiados.filter(f => f.clienteNombre.trim().toLowerCase() === clienteActivo.nombre.trim().toLowerCase()) : [];
+  const clienteTieneDeuda = fiadosDelCliente.some(f => f.estado !== 'PAGADO');
 
   let fiadosHistorial = fiadosDelCliente
     .filter(f => historialTab === 'PENDIENTES' ? f.estado !== 'PAGADO' : f.estado === 'PAGADO')
@@ -832,15 +833,18 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                 >
                   <ArrowLeft size={16} /> Volver al Directorio
                 </button>
-                <button 
-                  id="btn-ver-estado-cuenta-historial"
-                  onClick={() => {
-                    window.dispatchEvent(new CustomEvent('abrirEstadoCuentaGlobal', { detail: clienteActivo?.nombre }));
-                  }} 
-                  className="flex items-center gap-2 text-xs font-black uppercase bg-[var(--color-info)] text-white px-4 py-1.5 hover:bg-[var(--color-ink)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors ml-4 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
-                >
-                  Ver Estado de Cuenta
-                </button>
+                {/* Solo se muestra si el cliente tiene alguna deuda pendiente */}
+                {clienteTieneDeuda && (
+                  <button
+                    id="btn-ver-estado-cuenta-historial"
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('abrirEstadoCuentaGlobal', { detail: clienteActivo?.nombre }));
+                    }}
+                    className="flex items-center gap-2 text-xs font-black uppercase bg-[var(--color-info)] text-white px-4 py-1.5 hover:bg-[var(--color-ink)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors ml-4 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
+                  >
+                    Ver Estado de Cuenta
+                  </button>
+                )}
                 <div className="flex bg-[var(--color-surface)] border-2 border-[var(--color-ink)] p-1">
                   <button 
                     id="tab-historial-pendientes"
