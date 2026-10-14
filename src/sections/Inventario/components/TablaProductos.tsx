@@ -46,6 +46,9 @@ export const TablaProductos: React.FC<Props> = ({
   const renderPagination = (position: 'top' | 'bottom') => {
     if (loading || totalPages <= 0) return null;
     
+    const prevId = position === 'top' ? 'btn-pag-prev-inventario' : 'btn-pag-bottom-prev-inventario';
+    const nextId = position === 'top' ? 'btn-pag-next-inventario' : 'btn-pag-bottom-next-inventario';
+
     return (
       <div className={`${position === 'top' ? 'border-b' : 'border-t'} border-[#E2E8F0] bg-[#F8FAFC] p-3 flex items-center justify-between shrink-0`}>
         <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-widest">
@@ -53,16 +56,85 @@ export const TablaProductos: React.FC<Props> = ({
         </span>
         <div className="flex gap-2">
           <button 
+            id={prevId}
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[#E2E8F0] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                const btnNext = document.getElementById(nextId);
+                if (btnNext && !btnNext.hasAttribute('disabled')) btnNext.focus();
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                const btnLimpiar = document.getElementById('btn-limpiar-filtros-inventario');
+                if (btnLimpiar) btnLimpiar.focus();
+                else document.getElementById('filtro-orden-inventario')?.focus();
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (position === 'top') {
+                  const btnLimpiar = document.getElementById('btn-limpiar-filtros-inventario');
+                  if (btnLimpiar) btnLimpiar.focus();
+                  else document.getElementById('filtro-orden-inventario')?.focus();
+                } else {
+                  const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
+                  if (rows.length > 0) rows[rows.length - 1].focus();
+                }
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (position === 'top') {
+                  const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
+                  if (rows.length > 0) rows[0].focus();
+                }
+              }
+            }}
+            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[#E2E8F0] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white"
           >
             <ChevronLeft size={16} />
           </button>
           <button 
+            id={nextId}
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[#E2E8F0] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                const btnPrev = document.getElementById(prevId);
+                if (btnPrev && !btnPrev.hasAttribute('disabled')) {
+                  btnPrev.focus();
+                } else {
+                  const btnLimpiar = document.getElementById('btn-limpiar-filtros-inventario');
+                  if (btnLimpiar) btnLimpiar.focus();
+                  else document.getElementById('filtro-orden-inventario')?.focus();
+                }
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (position === 'top') {
+                  const btnLimpiar = document.getElementById('btn-limpiar-filtros-inventario');
+                  if (btnLimpiar) btnLimpiar.focus();
+                  else document.getElementById('filtro-orden-inventario')?.focus();
+                } else {
+                  const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
+                  if (rows.length > 0) rows[rows.length - 1].focus();
+                }
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (position === 'top') {
+                  const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
+                  if (rows.length > 0) rows[0].focus();
+                }
+              }
+            }}
+            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[#E2E8F0] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white"
           >
             <ChevronRight size={16} />
           </button>

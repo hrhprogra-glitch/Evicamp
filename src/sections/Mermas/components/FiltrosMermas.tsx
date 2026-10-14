@@ -217,11 +217,13 @@ export const FiltrosMermas: React.FC<Props> = ({
                 e.preventDefault();
                 e.stopPropagation();
                 const btnLimpiar = document.getElementById('btn-limpiar-filtros-mermas');
-                if (btnLimpiar) btnLimpiar.focus();
-                else {
-                  const search = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
-                  search?.focus();
-                  search?.select();
+                if (btnLimpiar) {
+                  btnLimpiar.focus();
+                } else {
+                  const btnPrev = document.getElementById('btn-pag-prev-mermas');
+                  const btnNext = document.getElementById('btn-pag-next-mermas');
+                  if (btnPrev && !btnPrev.hasAttribute('disabled')) btnPrev.focus();
+                  else if (btnNext && !btnNext.hasAttribute('disabled')) btnNext.focus();
                 }
               }
             }}
@@ -243,7 +245,11 @@ export const FiltrosMermas: React.FC<Props> = ({
                 } else if (e.key === 'ArrowDown') {
                   e.preventDefault();
                   e.stopPropagation();
-                  focusPrimerRegistro();
+                  const btnPrev = document.getElementById('btn-pag-prev-mermas');
+                  const btnNext = document.getElementById('btn-pag-next-mermas');
+                  if (btnPrev && !btnPrev.hasAttribute('disabled')) btnPrev.focus();
+                  else if (btnNext && !btnNext.hasAttribute('disabled')) btnNext.focus();
+                  else focusPrimerRegistro();
                 } else if (e.key === 'ArrowLeft') {
                   e.preventDefault();
                   e.stopPropagation();
@@ -251,9 +257,10 @@ export const FiltrosMermas: React.FC<Props> = ({
                 } else if (e.key === 'ArrowRight') {
                   e.preventDefault();
                   e.stopPropagation();
-                  const search = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
-                  search?.focus();
-                  search?.select();
+                  const btnPrev = document.getElementById('btn-pag-prev-mermas');
+                  const btnNext = document.getElementById('btn-pag-next-mermas');
+                  if (btnPrev && !btnPrev.hasAttribute('disabled')) btnPrev.focus();
+                  else if (btnNext && !btnNext.hasAttribute('disabled')) btnNext.focus();
                 }
               }}
               className="h-full w-full min-h-[46px] bg-white border-2 border-[var(--color-danger)] text-[var(--color-danger)] flex items-center justify-center hover:bg-[var(--color-danger)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-danger)] transition-colors cursor-pointer rounded-none font-bold text-[12px] xl:text-xs uppercase"

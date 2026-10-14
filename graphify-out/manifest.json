@@ -180,9 +180,9 @@
     "semantic_hash": "39292b9a5a2c042e4c792ca3a970540a"
   },
   "src/sections/Inventario/components/FiltrosInventario.tsx": {
-    "mtime": 1791955603.1263444,
-    "seen": 1791956920.5690033,
-    "ast_hash": "26b1d6dce6e921be90b207baa9e4fb47",
+    "mtime": 1791992850.9328573,
+    "seen": 1791993153.4004898,
+    "ast_hash": "56f0f4971925857a8d185177ccb3c38e",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/HeaderInventario.tsx": {
@@ -216,9 +216,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaProductos.tsx": {
-    "mtime": 1791955603.1293666,
-    "seen": 1791956920.5690084,
-    "ast_hash": "67ee942852ea6a8a2a4c323719da2778",
+    "mtime": 1791992823.211454,
+    "seen": 1791993153.4004958,
+    "ast_hash": "f5dc7349c8b593c0729fd97e551b69f4",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TarjetaMetrica.tsx": {
@@ -228,9 +228,9 @@
     "semantic_hash": "5aef44ce8fb808542dcfd88da55d1704"
   },
   "src/sections/Inventario/index.tsx": {
-    "mtime": 1791955603.1293666,
-    "seen": 1791956920.5690103,
-    "ast_hash": "e57af30bc65a7e7066a3f2257b66a276",
+    "mtime": 1791992876.677112,
+    "seen": 1791993153.4004974,
+    "ast_hash": "303092e950b1ad73761da856aa3e3002",
     "semantic_hash": ""
   },
   "src/sections/Inventario/types.ts": {
@@ -246,10 +246,10 @@
     "semantic_hash": ""
   },
   "src/sections/Mermas/components/FiltrosMermas.tsx": {
-    "mtime": 1791955603.1293666,
-    "seen": 1791956920.5690126,
-    "ast_hash": "d31fd5fdf7855ab0282b0f185bf09713",
-    "semantic_hash": "d31fd5fdf7855ab0282b0f185bf09713"
+    "mtime": 1791992938.816577,
+    "seen": 1791993153.4005,
+    "ast_hash": "a71af7e142398a6b4fca314f7d306127",
+    "semantic_hash": ""
   },
   "src/sections/Mermas/components/HeaderMermas.tsx": {
     "mtime": 1791955603.1293666,
@@ -258,10 +258,10 @@
     "semantic_hash": "46b997cd1a3608ec4f97de10c2157da9"
   },
   "src/sections/Mermas/components/TablaMermas.tsx": {
-    "mtime": 1791955603.1303709,
-    "seen": 1791956920.5690143,
-    "ast_hash": "a9cdc023d48ba7a26357cacd7e76b0e8",
-    "semantic_hash": "a9cdc023d48ba7a26357cacd7e76b0e8"
+    "mtime": 1791992909.8559573,
+    "seen": 1791993153.4005015,
+    "ast_hash": "caaf4b221d498f1b9c1d8d6a2ec37e61",
+    "semantic_hash": ""
   },
   "src/sections/Mermas/components/TarjetaMetrica.tsx": {
     "mtime": 1791332990.0222123,
@@ -270,9 +270,9 @@
     "semantic_hash": "51bac0faea626489ce5d4d36f1a78e18"
   },
   "src/sections/Mermas/index.tsx": {
-    "mtime": 1791955603.1303709,
-    "seen": 1791956920.569016,
-    "ast_hash": "07c60bddd1aec0e4e6424102940b0e9a",
+    "mtime": 1791992964.0840242,
+    "seen": 1791993153.4005034,
+    "ast_hash": "3928948df3dc468310acf89f8cab8811",
     "semantic_hash": ""
   },
   "src/sections/Mermas/types.ts": {
@@ -396,9 +396,9 @@
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/TablaAnalisisProductos.tsx": {
-    "mtime": 1791955603.1319385,
-    "seen": 1791956920.569034,
-    "ast_hash": "db2d84bb813a2fb89c44beb46e8d0d4e",
+    "mtime": 1791993113.246742,
+    "seen": 1791993153.4005256,
+    "ast_hash": "d72808e3648067c50e86a9740a5ef232",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/TablaRanking.tsx": {

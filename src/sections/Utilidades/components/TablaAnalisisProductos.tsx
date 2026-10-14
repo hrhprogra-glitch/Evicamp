@@ -216,12 +216,22 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                 prevRow.scrollIntoView({ block: 'nearest' });
               }
             } else {
-              // Fila 0: Subir al buscador y seleccionarlo (salida fluida de la tabla)
-              const searchInput = searchInputRef.current;
-              if (searchInput) {
-                searchInput.focus();
-                searchInput.select();
-                searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              // Fila 0: Subir a paginación superior antes de ir al buscador o filtros
+              const btnPrev = document.getElementById('btn-pag-prev-utilidades');
+              if (btnPrev && !btnPrev.hasAttribute('disabled')) {
+                btnPrev.focus();
+              } else {
+                const btnNext = document.getElementById('btn-pag-next-utilidades');
+                if (btnNext && !btnNext.hasAttribute('disabled')) {
+                  btnNext.focus();
+                } else {
+                  const searchInput = searchInputRef.current;
+                  if (searchInput) {
+                    searchInput.focus();
+                    searchInput.select();
+                    searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                  }
+                }
               }
             }
           }
@@ -488,6 +498,15 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                 e.preventDefault();
                 e.stopPropagation();
                 document.getElementById('btn-buscar-fechas-utilidades')?.focus();
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                const btnPrev = document.getElementById('btn-pag-prev-utilidades');
+                if (btnPrev && !btnPrev.hasAttribute('disabled')) {
+                  btnPrev.focus();
+                } else {
+                  document.getElementById('btn-pag-next-utilidades')?.focus();
+                }
               }
             }}
             className="bg-[var(--color-ink)] hover:bg-[var(--color-accent-shadow)] text-[var(--color-surface)] px-3 py-2 rounded-none transition-colors cursor-pointer border border-[var(--color-border)] hover:border-[var(--color-accent-shadow)] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-shadow)]"
@@ -512,18 +531,25 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
-                searchInputRef.current?.focus();
+                document.getElementById('btn-limpiar-filtros-utilidades')?.focus();
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
                 focusPrimerRegistro();
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-limpiar-filtros-utilidades')?.focus();
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('btn-pag-next-utilidades')?.focus();
+                const btnNext = document.getElementById('btn-pag-next-utilidades');
+                if (btnNext && !btnNext.hasAttribute('disabled')) {
+                  btnNext.focus();
+                }
               }
             }}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white"
           >
             <ChevronLeft size={16} />
           </button>
@@ -535,7 +561,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
-                searchInputRef.current?.focus();
+                document.getElementById('btn-limpiar-filtros-utilidades')?.focus();
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -543,10 +569,18 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('btn-pag-prev-utilidades')?.focus();
+                const btnPrev = document.getElementById('btn-pag-prev-utilidades');
+                if (btnPrev && !btnPrev.hasAttribute('disabled')) {
+                  btnPrev.focus();
+                } else {
+                  document.getElementById('btn-limpiar-filtros-utilidades')?.focus();
+                }
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
               }
             }}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white"
           >
             <ChevronRight size={16} />
           </button>
@@ -669,10 +703,13 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('btn-pag-bottom-next-utilidades')?.focus();
+                const btnBottomNext = document.getElementById('btn-pag-bottom-next-utilidades');
+                if (btnBottomNext && !btnBottomNext.hasAttribute('disabled')) {
+                  btnBottomNext.focus();
+                }
               }
             }}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white"
           >
             <ChevronLeft size={16} />
           </button>
@@ -692,10 +729,16 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('btn-pag-bottom-prev-utilidades')?.focus();
+                const btnBottomPrev = document.getElementById('btn-pag-bottom-prev-utilidades');
+                if (btnBottomPrev && !btnBottomPrev.hasAttribute('disabled')) {
+                  btnBottomPrev.focus();
+                } else {
+                  const rows = Array.from(document.querySelectorAll('#tabla-analisis-productos tr[data-row="true"]')) as HTMLElement[];
+                  if (rows.length > 0) rows[rows.length - 1].focus();
+                }
               }
             }}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white"
           >
             <ChevronRight size={16} />
           </button>

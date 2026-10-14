@@ -291,6 +291,15 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             if (nextRow) {
               nextRow.focus();
               nextRow.scrollIntoView({ block: 'nearest' });
+            } else {
+              // Última fila: bajar a la paginación inferior o superior
+              const btnNext = document.getElementById('btn-pag-bottom-next-inventario') || document.getElementById('btn-pag-next-inventario');
+              const btnPrev = document.getElementById('btn-pag-bottom-prev-inventario') || document.getElementById('btn-pag-prev-inventario');
+              if (btnNext && !btnNext.hasAttribute('disabled')) {
+                btnNext.focus();
+              } else if (btnPrev && !btnPrev.hasAttribute('disabled')) {
+                btnPrev.focus();
+              }
             }
           } else if (e.key === 'ArrowUp') {
             // Si hay una fila previa, subir a ella
@@ -301,12 +310,20 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                 prevRow.scrollIntoView({ block: 'nearest' });
               }
             } else {
-              // Fila 0 (primera fila): SUBIR AL BUSCADOR
-              const searchInput = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
-              if (searchInput) {
-                searchInput.focus();
-                searchInput.select();
-                searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              // Fila 0 (primera fila): SUBIR A LA PAGINACIÓN SUPERIOR
+              const btnPrev = document.getElementById('btn-pag-prev-inventario');
+              const btnNext = document.getElementById('btn-pag-next-inventario');
+              if (btnPrev && !btnPrev.hasAttribute('disabled')) {
+                btnPrev.focus();
+              } else if (btnNext && !btnNext.hasAttribute('disabled')) {
+                btnNext.focus();
+              } else {
+                const searchInput = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+                if (searchInput) {
+                  searchInput.focus();
+                  searchInput.select();
+                  searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
               }
             }
           } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {

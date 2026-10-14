@@ -237,10 +237,20 @@ export const FiltrosInventario: React.FC<Props> = ({
               document.getElementById('btn-proveedores')?.focus();
             } else if (e.key === 'ArrowDown') {
               e.preventDefault();
-              focusPrimerRegistro();
+              const btnPrev = document.getElementById('btn-pag-prev-inventario');
+              const btnNext = document.getElementById('btn-pag-next-inventario');
+              if (btnPrev && !btnPrev.hasAttribute('disabled')) btnPrev.focus();
+              else if (btnNext && !btnNext.hasAttribute('disabled')) btnNext.focus();
+              else focusPrimerRegistro();
             } else if (e.key === 'ArrowLeft') {
               e.preventDefault();
               document.getElementById('filtro-orden-inventario')?.focus();
+            } else if (e.key === 'ArrowRight') {
+              e.preventDefault();
+              const btnPrev = document.getElementById('btn-pag-prev-inventario');
+              const btnNext = document.getElementById('btn-pag-next-inventario');
+              if (btnPrev && !btnPrev.hasAttribute('disabled')) btnPrev.focus();
+              else if (btnNext && !btnNext.hasAttribute('disabled')) btnNext.focus();
             }
           }}
           title="Limpiar todos los filtros"

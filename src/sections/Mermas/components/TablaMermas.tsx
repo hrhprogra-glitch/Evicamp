@@ -24,6 +24,9 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
 
   const renderPagination = (position: 'top' | 'bottom') => {
     if (totalPages <= 0) return null;
+    const prevId = position === 'top' ? 'btn-pag-prev-mermas' : 'btn-pag-bottom-prev-mermas';
+    const nextId = position === 'top' ? 'btn-pag-next-mermas' : 'btn-pag-bottom-next-mermas';
+
     return (
       <div className={`${position === 'top' ? 'border-b' : 'border-t'} border-[var(--color-border)] bg-[var(--color-surface)] p-4 flex items-center justify-between shrink-0 rounded-none`}>
         <span className="text-xs font-black text-[var(--color-muted)] uppercase tracking-widest">
@@ -31,16 +34,85 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
         </span>
         <div className="flex gap-2">
           <button 
+            id={prevId}
             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                const btnNext = document.getElementById(nextId);
+                if (btnNext && !btnNext.hasAttribute('disabled')) btnNext.focus();
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                const btnLimpiar = document.getElementById('btn-limpiar-filtros-mermas');
+                if (btnLimpiar) btnLimpiar.focus();
+                else document.getElementById('filtro-fecha-mermas')?.focus();
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (position === 'top') {
+                  const btnLimpiar = document.getElementById('btn-limpiar-filtros-mermas');
+                  if (btnLimpiar) btnLimpiar.focus();
+                  else document.getElementById('filtro-fecha-mermas')?.focus();
+                } else {
+                  const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
+                  if (rows.length > 0) rows[rows.length - 1].focus();
+                }
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (position === 'top') {
+                  const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
+                  if (rows.length > 0) rows[0].focus();
+                }
+              }
+            }}
+            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-[var(--color-surface)]"
           >
             <ChevronLeft size={16} />
           </button>
           <button 
+            id={nextId}
             onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                const btnPrev = document.getElementById(prevId);
+                if (btnPrev && !btnPrev.hasAttribute('disabled')) {
+                  btnPrev.focus();
+                } else {
+                  const btnLimpiar = document.getElementById('btn-limpiar-filtros-mermas');
+                  if (btnLimpiar) btnLimpiar.focus();
+                  else document.getElementById('filtro-fecha-mermas')?.focus();
+                }
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (position === 'top') {
+                  const btnLimpiar = document.getElementById('btn-limpiar-filtros-mermas');
+                  if (btnLimpiar) btnLimpiar.focus();
+                  else document.getElementById('filtro-fecha-mermas')?.focus();
+                } else {
+                  const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
+                  if (rows.length > 0) rows[rows.length - 1].focus();
+                }
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (position === 'top') {
+                  const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
+                  if (rows.length > 0) rows[0].focus();
+                }
+              }
+            }}
+            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-[var(--color-surface)]"
           >
             <ChevronRight size={16} />
           </button>

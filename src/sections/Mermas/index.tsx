@@ -279,6 +279,15 @@ export const Mermas: React.FC = () => {
             if (nextRow) {
               nextRow.focus();
               nextRow.scrollIntoView({ block: 'nearest' });
+            } else {
+              // Última fila: bajar a la paginación
+              const btnNext = document.getElementById('btn-pag-bottom-next-mermas') || document.getElementById('btn-pag-next-mermas');
+              const btnPrev = document.getElementById('btn-pag-bottom-prev-mermas') || document.getElementById('btn-pag-prev-mermas');
+              if (btnNext && !btnNext.hasAttribute('disabled')) {
+                btnNext.focus();
+              } else if (btnPrev && !btnPrev.hasAttribute('disabled')) {
+                btnPrev.focus();
+              }
             }
           } else if (e.key === 'ArrowUp') {
             if (rowIndex > 0) {
@@ -288,12 +297,20 @@ export const Mermas: React.FC = () => {
                 prevRow.scrollIntoView({ block: 'nearest' });
               }
             } else {
-              // Fila 0: Subir al buscador global
-              const searchInput = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
-              if (searchInput) {
-                searchInput.focus();
-                searchInput.select();
-                searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              // Fila 0: Subir a la paginación superior
+              const btnPrev = document.getElementById('btn-pag-prev-mermas');
+              const btnNext = document.getElementById('btn-pag-next-mermas');
+              if (btnPrev && !btnPrev.hasAttribute('disabled')) {
+                btnPrev.focus();
+              } else if (btnNext && !btnNext.hasAttribute('disabled')) {
+                btnNext.focus();
+              } else {
+                const searchInput = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+                if (searchInput) {
+                  searchInput.focus();
+                  searchInput.select();
+                  searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
               }
             }
           } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
