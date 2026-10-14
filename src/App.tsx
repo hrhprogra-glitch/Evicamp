@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { Menu } from 'lucide-react';
 import { Login } from './sections/Login';
 import { SideBar, ATAJOS_SESIONES } from './layout/SideBar';
 import { validarSesion, type EmpleadoSesion } from './utils/sesion';
@@ -17,6 +18,18 @@ import Configuraciones from './sections/Configuraciones';
 import { aplicarTamanoInterfaz, leerTamanoInterfaz } from './utils/tamanoInterfaz';
 import { AlertaYape } from './layout/AlertaYape';
 import { programarRestauracionFoco } from './utils/navegacionSesion';
+
+// Nombre visible de cada sesión en la barra superior de celular/tablet
+const NOMBRES_SESIONES: Record<string, string> = {
+  pos: 'Caja',
+  fiados: 'Créditos',
+  inventario: 'Inventario',
+  mermas: 'Mermas',
+  finanzas: 'Finanzas',
+  utilidades: 'Utilidades',
+  configuracion: 'Ajustes',
+  proveedores: 'Proveedores',
+};
 
 // Cada cuánto se vuelve a leer el estado y los permisos del empleado desde la base
 const REVALIDAR_CADA_MS = 60_000;
@@ -238,6 +251,22 @@ export const App: React.FC = () => {
       />
 
       <main className="flex-1 min-w-0 flex flex-col overflow-hidden bg-[var(--color-bg)]">
+
+        {/* BARRA SUPERIOR SOLO EN TABLET/CELULAR: en esas pantallas el menú está oculto y este botón lo abre */}
+        <header className="lg:hidden shrink-0 h-11 flex items-center gap-3 px-2 bg-[var(--color-ink)] border-b-2 border-[var(--color-accent)] font-mono">
+          <button
+            onClick={toggleSidebar}
+            aria-label="Abrir menú de sesiones"
+            aria-expanded={isSidebarOpen}
+            className="flex items-center gap-2 h-8 px-2 border border-[var(--color-accent)] text-white cursor-pointer active:bg-[var(--color-accent)] active:text-[var(--color-ink)]"
+          >
+            <Menu size={18} />
+            <span className="text-xs font-black uppercase tracking-widest">Menú</span>
+          </button>
+          <span className="text-xs font-black uppercase tracking-[0.15em] text-[var(--color-accent)] truncate">
+            {NOMBRES_SESIONES[vista] || vista}
+          </span>
+        </header>
 
         <section className="p-2 flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
           {renderCurrentView()}

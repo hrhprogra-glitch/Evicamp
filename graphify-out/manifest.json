@@ -18,9 +18,9 @@
     "semantic_hash": "010de1bfb4f2c6a2a1fcb3d67915ec8f"
   },
   "src/App.tsx": {
-    "mtime": 1791995721.3511424,
-    "seen": 1791995731.576298,
-    "ast_hash": "903f8657b888f0cfc8c49d33de0012f6",
+    "mtime": 1791996662.575357,
+    "seen": 1791996681.3925261,
+    "ast_hash": "679390a7d4fcdcd3848f4941814028a9",
     "semantic_hash": ""
   },
   "src/db/supabase.ts": {
@@ -678,22 +678,22 @@
     "semantic_hash": "dbc4af9a0c02c026b061ca4287ebbcbc"
   },
   "ai-scripts/check_db.cjs": {
-    "mtime": 1790888157.8485184,
-    "seen": 1791938497.6545322,
-    "ast_hash": "6deffd11336d25f35244ccc6ed0acea7",
-    "semantic_hash": "6deffd11336d25f35244ccc6ed0acea7"
+    "mtime": 1791996272.2407644,
+    "seen": 1791996681.392426,
+    "ast_hash": "261a5fdb4e56e0f62646e0ffec5b66fd",
+    "semantic_hash": ""
   },
   "ai-scripts/check_users.cjs": {
-    "mtime": 1790888422.6279876,
-    "seen": 1791938497.6545331,
-    "ast_hash": "e18e411fc24cf863fbef906278eafcc4",
-    "semantic_hash": "e18e411fc24cf863fbef906278eafcc4"
+    "mtime": 1791996272.241268,
+    "seen": 1791996681.3924274,
+    "ast_hash": "6bb40c2e241367b6216df324af8bec16",
+    "semantic_hash": ""
   },
   "ai-scripts/deploy.cjs": {
-    "mtime": 1791517303.8511372,
-    "seen": 1791938497.6545339,
-    "ast_hash": "7bc96bf2fe7daf811ce0e526328dc98f",
-    "semantic_hash": "7bc96bf2fe7daf811ce0e526328dc98f"
+    "mtime": 1791996270.8509252,
+    "seen": 1791996681.3924286,
+    "ast_hash": "a199b9c0502147fdb6744f9ac5f7a015",
+    "semantic_hash": ""
   },
   "ai-scripts/fix-abonos-actuales.cjs": {
     "mtime": 1791389224.3169413,
@@ -1431,6 +1431,12 @@
     "mtime": 1791996031.9924352,
     "seen": 1791996049.35552,
     "ast_hash": "256ec273eaf8862b6e1d3e626de1f368",
+    "semantic_hash": ""
+  },
+  "ai-scripts/vps.cjs": {
+    "mtime": 1791996268.7441006,
+    "seen": 1791996681.392523,
+    "ast_hash": "54e5538cf76d39b6827380169c470d7c",
     "semantic_hash": ""
   }
 }

@@ -120,6 +120,19 @@
       "source_location": "L8"
     },
     {
+      "id": "src_sections_fiados_components_modalfiado_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Fiados/index.tsx",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "src/sections/Fiados/components/ModalFiado.tsx",
+      "source_location": "L11"
+    },
+    {
       "id": "src_sections_fiados_components_tablafiados_props",
       "label": "Props",
       "_callable": true,
@@ -211,45 +224,6 @@
       "source_location": "L18"
     },
     {
-      "id": "src_sections_inventario_components_modalgestionproveedores_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Fiados/index.tsx",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "src/sections/Inventario/components/ModalGestionProveedores.tsx",
-      "source_location": "L9"
-    },
-    {
-      "id": "src_sections_inventario_components_modalproducto_productnature",
-      "label": "ProductNature",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Fiados/index.tsx",
-      "file_type": "code",
-      "norm_label": "productnature",
-      "source_file": "src/sections/Inventario/components/ModalProducto.tsx",
-      "source_location": "L35"
-    },
-    {
-      "id": "src_sections_inventario_components_modalproducto_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Fiados/index.tsx",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "src/sections/Inventario/components/ModalProducto.tsx",
-      "source_location": "L25"
-    },
-    {
       "id": "src_sections_inventario_components_tarjetametrica_props",
       "label": "Props",
       "_callable": true,
@@ -263,7 +237,7 @@
       "source_location": "L3"
     },
     {
-      "id": "src_sections_proveedores_components_modalproveedor_props",
+      "id": "src_sections_reportes_components_tablatickets_props",
       "label": "Props",
       "_callable": true,
       "_callable_class": true,
@@ -272,34 +246,21 @@
       "community_name": "Fiados/index.tsx",
       "file_type": "code",
       "norm_label": "props",
-      "source_file": "src/sections/Proveedores/components/ModalProveedor.tsx",
-      "source_location": "L6"
+      "source_file": "src/sections/Reportes/components/TablaTickets.tsx",
+      "source_location": "L11"
     },
     {
-      "id": "src_sections_proveedores_components_tablaproveedores_props",
-      "label": "Props",
+      "id": "src_sections_reportes_types_ticketventa",
+      "label": "TicketVenta",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 0,
       "community_name": "Fiados/index.tsx",
       "file_type": "code",
-      "norm_label": "props",
-      "source_file": "src/sections/Proveedores/components/TablaProveedores.tsx",
-      "source_location": "L5"
-    },
-    {
-      "id": "src_sections_proveedores_types_proveedor",
-      "label": "Proveedor",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Fiados/index.tsx",
-      "file_type": "code",
-      "norm_label": "proveedor",
-      "source_file": "src/sections/Proveedores/types.ts",
-      "source_location": "L1"
+      "norm_label": "ticketventa",
+      "source_file": "src/sections/Reportes/types.ts",
+      "source_location": "L2"
     },
     {
       "id": "src_utils_buscarimagenes_fotoencontrada",
@@ -313,19 +274,6 @@
       "norm_label": "fotoencontrada",
       "source_file": "src/utils/buscarImagenes.ts",
       "source_location": "L15"
-    },
-    {
-      "id": "src_layout_alertayape_notificacionyape",
-      "label": "NotificacionYape",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "notificacionyape",
-      "source_file": "src/layout/AlertaYape.tsx",
-      "source_location": "L10"
     },
     {
       "id": "src_layout_sidebar_sidebarprops",
@@ -482,32 +430,6 @@
       "norm_label": "tamanointerfaz",
       "source_file": "src/utils/tamanoInterfaz.ts",
       "source_location": "L6"
-    },
-    {
-      "id": "src_sections_reportes_components_tablatickets_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "Utilidades/index.tsx",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "src/sections/Reportes/components/TablaTickets.tsx",
-      "source_location": "L11"
-    },
-    {
-      "id": "src_sections_reportes_types_ticketventa",
-      "label": "TicketVenta",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "Utilidades/index.tsx",
-      "file_type": "code",
-      "norm_label": "ticketventa",
-      "source_file": "src/sections/Reportes/types.ts",
-      "source_location": "L2"
     },
     {
       "id": "src_sections_utilidades_components_filtrosutilidades_props",
@@ -679,7 +601,7 @@
       "source_location": "L97"
     },
     {
-      "id": "src_sections_fiados_components_modalfiado_props",
+      "id": "src_components_modaldetalleticket_props",
       "label": "Props",
       "_callable": true,
       "_callable_class": true,
@@ -688,8 +610,21 @@
       "community_name": "react",
       "file_type": "code",
       "norm_label": "props",
-      "source_file": "src/sections/Fiados/components/ModalFiado.tsx",
-      "source_location": "L11"
+      "source_file": "src/components/ModalDetalleTicket.tsx",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_layout_alertayape_notificacionyape",
+      "label": "NotificacionYape",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "notificacionyape",
+      "source_file": "src/layout/AlertaYape.tsx",
+      "source_location": "L10"
     },
     {
       "id": "src_sections_finanzas_components_modalapertura_props",
@@ -702,6 +637,19 @@
       "file_type": "code",
       "norm_label": "props",
       "source_file": "src/sections/Finanzas/components/ModalApertura.tsx",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_sections_finanzas_components_modalnuevomovimiento_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "src/sections/Finanzas/components/ModalNuevoMovimiento.tsx",
       "source_location": "L6"
     },
     {
@@ -744,6 +692,19 @@
       "source_location": "L4"
     },
     {
+      "id": "src_sections_inventario_components_modalgestionproveedores_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "src/sections/Inventario/components/ModalGestionProveedores.tsx",
+      "source_location": "L9"
+    },
+    {
       "id": "src_sections_inventario_components_modallote_props",
       "label": "Props",
       "_callable": true,
@@ -768,6 +729,32 @@
       "norm_label": "props",
       "source_file": "src/sections/Inventario/components/ModalMerma.tsx",
       "source_location": "L9"
+    },
+    {
+      "id": "src_sections_inventario_components_modalproducto_productnature",
+      "label": "ProductNature",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "productnature",
+      "source_file": "src/sections/Inventario/components/ModalProducto.tsx",
+      "source_location": "L35"
+    },
+    {
+      "id": "src_sections_inventario_components_modalproducto_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "src/sections/Inventario/components/ModalProducto.tsx",
+      "source_location": "L25"
     },
     {
       "id": "src_sections_inventario_components_tablalotes_lote",
@@ -913,6 +900,32 @@
       "source_location": "L4"
     },
     {
+      "id": "src_sections_proveedores_components_modalproveedor_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "src/sections/Proveedores/components/ModalProveedor.tsx",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_sections_proveedores_components_tablaproveedores_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "src/sections/Proveedores/components/TablaProveedores.tsx",
+      "source_location": "L5"
+    },
+    {
       "id": "src_sections_proveedores_index_props",
       "label": "Props",
       "_callable": true,
@@ -924,6 +937,19 @@
       "norm_label": "props",
       "source_file": "src/sections/Proveedores/index.tsx",
       "source_location": "L17"
+    },
+    {
+      "id": "src_sections_proveedores_types_proveedor",
+      "label": "Proveedor",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "proveedor",
+      "source_file": "src/sections/Proveedores/types.ts",
+      "source_location": "L1"
     },
     {
       "id": "src_sections_punto_de_venta_components_minireportediario_props",
@@ -1030,19 +1056,6 @@
       "source_location": "L13"
     },
     {
-      "id": "src_sections_punto_de_venta_components_ticketventa_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "src/sections/Punto-de-venta/components/TicketVenta.tsx",
-      "source_location": "L6"
-    },
-    {
       "id": "src_sections_punto_de_venta_types_cartitem",
       "label": "CartItem",
       "_callable": true,
@@ -1080,19 +1093,6 @@
       "norm_label": "consultapaginable",
       "source_file": "src/utils/traerTodo.ts",
       "source_location": "L10"
-    },
-    {
-      "id": "src_components_modaldetalleticket_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Finanzas/index.tsx",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "src/components/ModalDetalleTicket.tsx",
-      "source_location": "L6"
     },
     {
       "id": "src_sections_finanzas_components_filtrofechas_props",
@@ -1145,19 +1145,6 @@
       "norm_label": "props",
       "source_file": "src/sections/Finanzas/components/ModalDetalleCaja.tsx",
       "source_location": "L16"
-    },
-    {
-      "id": "src_sections_finanzas_components_modalnuevomovimiento_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Finanzas/index.tsx",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "src/sections/Finanzas/components/ModalNuevoMovimiento.tsx",
-      "source_location": "L6"
     },
     {
       "id": "src_sections_finanzas_components_tablahistorial_props",
@@ -1236,6 +1223,19 @@
       "norm_label": "unifieditem",
       "source_file": "src/sections/Finanzas/types.ts",
       "source_location": "L31"
+    },
+    {
+      "id": "src_sections_punto_de_venta_components_ticketventa_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 67,
+      "community_name": "TicketVenta.tsx",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "src/sections/Punto-de-venta/components/TicketVenta.tsx",
+      "source_location": "L6"
     },
     {
       "id": "src_sections_fiados_components_modalabono_modalabono",
@@ -1322,6 +1322,30 @@
       "source_location": "L49"
     },
     {
+      "id": "src_sections_fiados_components_modalfiado_modalfiado",
+      "label": "ModalFiado()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Fiados/index.tsx",
+      "file_type": "code",
+      "norm_label": "modalfiado()",
+      "source_file": "src/sections/Fiados/components/ModalFiado.tsx",
+      "source_location": "L20"
+    },
+    {
+      "id": "src_sections_fiados_components_tablafiados_tablafiados",
+      "label": "TablaFiados()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Fiados/index.tsx",
+      "file_type": "code",
+      "norm_label": "tablafiados()",
+      "source_file": "src/sections/Fiados/components/TablaFiados.tsx",
+      "source_location": "L17"
+    },
+    {
       "id": "src_sections_fiados_components_tablafiadosagrupados_tablafiadosagrupados",
       "label": "TablaFiadosAgrupados()",
       "_callable": true,
@@ -1332,66 +1356,6 @@
       "norm_label": "tablafiadosagrupados()",
       "source_file": "src/sections/Fiados/components/TablaFiadosAgrupados.tsx",
       "source_location": "L12"
-    },
-    {
-      "id": "src_sections_fiados_index_fiados",
-      "label": "Fiados()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Fiados/index.tsx",
-      "file_type": "code",
-      "norm_label": "fiados()",
-      "source_file": "src/sections/Fiados/index.tsx",
-      "source_location": "L19"
-    },
-    {
-      "id": "src_sections_finanzas_index_finanzas",
-      "label": "Finanzas()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Fiados/index.tsx",
-      "file_type": "code",
-      "norm_label": "finanzas()",
-      "source_file": "src/sections/Finanzas/index.tsx",
-      "source_location": "L21"
-    },
-    {
-      "id": "src_sections_inventario_components_modalgestionproveedores_modalgestionproveedores",
-      "label": "ModalGestionProveedores()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Fiados/index.tsx",
-      "file_type": "code",
-      "norm_label": "modalgestionproveedores()",
-      "source_file": "src/sections/Inventario/components/ModalGestionProveedores.tsx",
-      "source_location": "L14"
-    },
-    {
-      "id": "src_sections_inventario_components_modalproducto_modalproducto",
-      "label": "ModalProducto()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Fiados/index.tsx",
-      "file_type": "code",
-      "norm_label": "modalproducto()",
-      "source_file": "src/sections/Inventario/components/ModalProducto.tsx",
-      "source_location": "L37"
-    },
-    {
-      "id": "src_sections_inventario_components_modalproducto_technicalalert",
-      "label": "TechnicalAlert()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Fiados/index.tsx",
-      "file_type": "code",
-      "norm_label": "technicalalert()",
-      "source_file": "src/sections/Inventario/components/ModalProducto.tsx",
-      "source_location": "L7"
     },
     {
       "id": "src_sections_inventario_components_tarjetametrica_tarjetametrica",
@@ -1406,28 +1370,28 @@
       "source_location": "L11"
     },
     {
-      "id": "src_sections_proveedores_components_modalproveedor_modalproveedor",
-      "label": "ModalProveedor()",
+      "id": "src_sections_reportes_components_tablatickets_tablatickets",
+      "label": "TablaTickets()",
       "_callable": true,
       "_origin": "ast",
       "community": 0,
       "community_name": "Fiados/index.tsx",
       "file_type": "code",
-      "norm_label": "modalproveedor()",
-      "source_file": "src/sections/Proveedores/components/ModalProveedor.tsx",
-      "source_location": "L14"
+      "norm_label": "tablatickets()",
+      "source_file": "src/sections/Reportes/components/TablaTickets.tsx",
+      "source_location": "L18"
     },
     {
-      "id": "src_sections_proveedores_components_tablaproveedores_tablaproveedores",
-      "label": "TablaProveedores()",
+      "id": "src_utils_clicconteclado_clicconteclado",
+      "label": "clicConTeclado()",
       "_callable": true,
       "_origin": "ast",
       "community": 0,
       "community_name": "Fiados/index.tsx",
       "file_type": "code",
-      "norm_label": "tablaproveedores()",
-      "source_file": "src/sections/Proveedores/components/TablaProveedores.tsx",
-      "source_location": "L11"
+      "norm_label": "clicconteclado()",
+      "source_file": "src/utils/clicConTeclado.ts",
+      "source_location": "L8"
     },
     {
       "id": "src_utils_permisos_usepermiso",
@@ -1655,7 +1619,7 @@
       "file_type": "code",
       "norm_label": "app()",
       "source_file": "src/App.tsx",
-      "source_location": "L24"
+      "source_location": "L37"
     },
     {
       "id": "src_app_app_handlenavigate",
@@ -1667,7 +1631,7 @@
       "file_type": "code",
       "norm_label": "handlenavigate()",
       "source_file": "src/App.tsx",
-      "source_location": "L221"
+      "source_location": "L234"
     },
     {
       "id": "src_layout_alertayape_alertayape",
@@ -1754,6 +1718,30 @@
       "source_location": "L8"
     },
     {
+      "id": "src_sections_fiados_index_fiados",
+      "label": "Fiados()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "fiados()",
+      "source_file": "src/sections/Fiados/index.tsx",
+      "source_location": "L19"
+    },
+    {
+      "id": "src_sections_inventario_index_inventario",
+      "label": "Inventario()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "inventario()",
+      "source_file": "src/sections/Inventario/index.tsx",
+      "source_location": "L19"
+    },
+    {
       "id": "src_sections_login_login",
       "label": "Login()",
       "_callable": true,
@@ -1764,6 +1752,42 @@
       "norm_label": "login()",
       "source_file": "src/sections/Login.tsx",
       "source_location": "L35"
+    },
+    {
+      "id": "src_sections_mermas_index_mermas",
+      "label": "Mermas()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "mermas()",
+      "source_file": "src/sections/Mermas/index.tsx",
+      "source_location": "L16"
+    },
+    {
+      "id": "src_sections_proveedores_index_proveedores",
+      "label": "Proveedores()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "proveedores()",
+      "source_file": "src/sections/Proveedores/index.tsx",
+      "source_location": "L21"
+    },
+    {
+      "id": "src_sections_punto_de_venta_index_pos",
+      "label": "POS()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "pos()",
+      "source_file": "src/sections/Punto-de-venta/index.tsx",
+      "source_location": "L18"
     },
     {
       "id": "src_utils_navegacionsesion_programarrestauracionfoco",
@@ -1946,6 +1970,18 @@
       "source_location": "L10"
     },
     {
+      "id": "src_utils_traertodo_traertodo",
+      "label": "traerTodo()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "traertodo()",
+      "source_file": "src/utils/traerTodo.ts",
+      "source_location": "L14"
+    },
+    {
       "id": "ai_scripts_check_checktoday",
       "label": "checkToday()",
       "_callable": true,
@@ -2004,18 +2040,6 @@
       "norm_label": "processtypes()",
       "source_file": "ai-scripts/fix-search.cjs",
       "source_location": "L68"
-    },
-    {
-      "id": "src_sections_reportes_components_tablatickets_tablatickets",
-      "label": "TablaTickets()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "Utilidades/index.tsx",
-      "file_type": "code",
-      "norm_label": "tablatickets()",
-      "source_file": "src/sections/Reportes/components/TablaTickets.tsx",
-      "source_location": "L18"
     },
     {
       "id": "src_sections_reportes_index_reportes",
@@ -2222,30 +2246,6 @@
       "source_location": "L13"
     },
     {
-      "id": "src_sections_fiados_components_modalfiado_modalfiado",
-      "label": "ModalFiado()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "modalfiado()",
-      "source_file": "src/sections/Fiados/components/ModalFiado.tsx",
-      "source_location": "L20"
-    },
-    {
-      "id": "src_sections_fiados_components_tablafiados_tablafiados",
-      "label": "TablaFiados()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "tablafiados()",
-      "source_file": "src/sections/Fiados/components/TablaFiados.tsx",
-      "source_location": "L17"
-    },
-    {
       "id": "src_sections_inventario_components_etiquetastock_etiquetastock",
       "label": "EtiquetaStock()",
       "_callable": true,
@@ -2282,6 +2282,18 @@
       "source_location": "L10"
     },
     {
+      "id": "src_sections_inventario_components_modalgestionproveedores_modalgestionproveedores",
+      "label": "ModalGestionProveedores()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "modalgestionproveedores()",
+      "source_file": "src/sections/Inventario/components/ModalGestionProveedores.tsx",
+      "source_location": "L14"
+    },
+    {
       "id": "src_sections_inventario_components_modallote_modallote",
       "label": "ModalLote()",
       "_callable": true,
@@ -2306,6 +2318,30 @@
       "source_location": "L17"
     },
     {
+      "id": "src_sections_inventario_components_modalproducto_modalproducto",
+      "label": "ModalProducto()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "modalproducto()",
+      "source_file": "src/sections/Inventario/components/ModalProducto.tsx",
+      "source_location": "L37"
+    },
+    {
+      "id": "src_sections_inventario_components_modalproducto_technicalalert",
+      "label": "TechnicalAlert()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "technicalalert()",
+      "source_file": "src/sections/Inventario/components/ModalProducto.tsx",
+      "source_location": "L7"
+    },
+    {
       "id": "src_sections_inventario_components_tablalotes_tablalotes",
       "label": "TablaLotes()",
       "_callable": true,
@@ -2328,18 +2364,6 @@
       "norm_label": "tablaproductos()",
       "source_file": "src/sections/Inventario/components/TablaProductos.tsx",
       "source_location": "L18"
-    },
-    {
-      "id": "src_sections_inventario_index_inventario",
-      "label": "Inventario()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "inventario()",
-      "source_file": "src/sections/Inventario/index.tsx",
-      "source_location": "L19"
     },
     {
       "id": "src_sections_mermas_components_filtrosmermas_filtrosmermas",
@@ -2390,18 +2414,6 @@
       "source_location": "L10"
     },
     {
-      "id": "src_sections_mermas_index_mermas",
-      "label": "Mermas()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "mermas()",
-      "source_file": "src/sections/Mermas/index.tsx",
-      "source_location": "L16"
-    },
-    {
       "id": "src_sections_proveedores_components_filtrosproveedores_filtrosproveedores",
       "label": "FiltrosProveedores()",
       "_callable": true,
@@ -2414,16 +2426,28 @@
       "source_location": "L12"
     },
     {
-      "id": "src_sections_proveedores_index_proveedores",
-      "label": "Proveedores()",
+      "id": "src_sections_proveedores_components_modalproveedor_modalproveedor",
+      "label": "ModalProveedor()",
       "_callable": true,
       "_origin": "ast",
       "community": 30,
       "community_name": "react",
       "file_type": "code",
-      "norm_label": "proveedores()",
-      "source_file": "src/sections/Proveedores/index.tsx",
-      "source_location": "L21"
+      "norm_label": "modalproveedor()",
+      "source_file": "src/sections/Proveedores/components/ModalProveedor.tsx",
+      "source_location": "L14"
+    },
+    {
+      "id": "src_sections_proveedores_components_tablaproveedores_tablaproveedores",
+      "label": "TablaProveedores()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "tablaproveedores()",
+      "source_file": "src/sections/Proveedores/components/TablaProveedores.tsx",
+      "source_location": "L11"
     },
     {
       "id": "src_sections_punto_de_venta_components_minireportediario_minireportediario",
@@ -2486,90 +2510,6 @@
       "source_location": "L17"
     },
     {
-      "id": "src_sections_punto_de_venta_components_ticketventa_inputpeso",
-      "label": "InputPeso()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "inputpeso()",
-      "source_file": "src/sections/Punto-de-venta/components/TicketVenta.tsx",
-      "source_location": "L40"
-    },
-    {
-      "id": "src_sections_punto_de_venta_components_ticketventa_inputprecio",
-      "label": "InputPrecio()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "inputprecio()",
-      "source_file": "src/sections/Punto-de-venta/components/TicketVenta.tsx",
-      "source_location": "L80"
-    },
-    {
-      "id": "src_sections_punto_de_venta_components_ticketventa_inputunidades",
-      "label": "InputUnidades()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "inputunidades()",
-      "source_file": "src/sections/Punto-de-venta/components/TicketVenta.tsx",
-      "source_location": "L113"
-    },
-    {
-      "id": "src_sections_punto_de_venta_components_ticketventa_redondearpeso",
-      "label": "redondearPeso()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "redondearpeso()",
-      "source_file": "src/sections/Punto-de-venta/components/TicketVenta.tsx",
-      "source_location": "L24"
-    },
-    {
-      "id": "src_sections_punto_de_venta_components_ticketventa_ticketventa",
-      "label": "TicketVenta()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "ticketventa()",
-      "source_file": "src/sections/Punto-de-venta/components/TicketVenta.tsx",
-      "source_location": "L148"
-    },
-    {
-      "id": "src_sections_punto_de_venta_components_ticketventa_useseleccionartodo",
-      "label": "useSeleccionarTodo()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "useseleccionartodo()",
-      "source_file": "src/sections/Punto-de-venta/components/TicketVenta.tsx",
-      "source_location": "L30"
-    },
-    {
-      "id": "src_sections_punto_de_venta_index_pos",
-      "label": "POS()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "pos()",
-      "source_file": "src/sections/Punto-de-venta/index.tsx",
-      "source_location": "L18"
-    },
-    {
       "id": "src_sections_utilidades_components_tablaranking_tablaranking",
       "label": "TablaRanking()",
       "_callable": true,
@@ -2606,18 +2546,6 @@
       "source_location": "L7"
     },
     {
-      "id": "src_utils_clicconteclado_clicconteclado",
-      "label": "clicConTeclado()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "clicconteclado()",
-      "source_file": "src/utils/clicConTeclado.ts",
-      "source_location": "L8"
-    },
-    {
       "id": "src_utils_formato_formatearcantidad",
       "label": "formatearCantidad()",
       "_callable": true,
@@ -2628,18 +2556,6 @@
       "norm_label": "formatearcantidad()",
       "source_file": "src/utils/formato.ts",
       "source_location": "L8"
-    },
-    {
-      "id": "src_utils_traertodo_traertodo",
-      "label": "traerTodo()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "traertodo()",
-      "source_file": "src/utils/traerTodo.ts",
-      "source_location": "L14"
     },
     {
       "id": "ai_scripts_fix_filters_processfinanzas",
@@ -2675,7 +2591,7 @@
       "file_type": "code",
       "norm_label": "check()",
       "source_file": "ai-scripts/check_db.cjs",
-      "source_location": "L4"
+      "source_location": "L5"
     },
     {
       "id": "ai_scripts_check_users_check",
@@ -2687,7 +2603,7 @@
       "file_type": "code",
       "norm_label": "check()",
       "source_file": "ai-scripts/check_users.cjs",
-      "source_location": "L3"
+      "source_location": "L4"
     },
     {
       "id": "ai_scripts_deploy_deploy",
@@ -2699,7 +2615,7 @@
       "file_type": "code",
       "norm_label": "deploy()",
       "source_file": "ai-scripts/deploy.cjs",
-      "source_location": "L5"
+      "source_location": "L6"
     },
     {
       "id": "ai_scripts_fix_modals_walkdir",
@@ -2918,6 +2834,18 @@
       "source_location": "L16"
     },
     {
+      "id": "src_sections_finanzas_index_finanzas",
+      "label": "Finanzas()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "Finanzas/index.tsx",
+      "file_type": "code",
+      "norm_label": "finanzas()",
+      "source_file": "src/sections/Finanzas/index.tsx",
+      "source_location": "L21"
+    },
+    {
       "id": "src_utils_formato_formatearcantidaddetalle",
       "label": "formatearCantidadDetalle()",
       "_callable": true,
@@ -2964,6 +2892,78 @@
       "norm_label": "instalarprotecciontecladotactil()",
       "source_file": "src/utils/tecladoTactil.ts",
       "source_location": "L29"
+    },
+    {
+      "id": "src_sections_punto_de_venta_components_ticketventa_inputpeso",
+      "label": "InputPeso()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 67,
+      "community_name": "TicketVenta.tsx",
+      "file_type": "code",
+      "norm_label": "inputpeso()",
+      "source_file": "src/sections/Punto-de-venta/components/TicketVenta.tsx",
+      "source_location": "L40"
+    },
+    {
+      "id": "src_sections_punto_de_venta_components_ticketventa_inputprecio",
+      "label": "InputPrecio()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 67,
+      "community_name": "TicketVenta.tsx",
+      "file_type": "code",
+      "norm_label": "inputprecio()",
+      "source_file": "src/sections/Punto-de-venta/components/TicketVenta.tsx",
+      "source_location": "L80"
+    },
+    {
+      "id": "src_sections_punto_de_venta_components_ticketventa_inputunidades",
+      "label": "InputUnidades()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 67,
+      "community_name": "TicketVenta.tsx",
+      "file_type": "code",
+      "norm_label": "inputunidades()",
+      "source_file": "src/sections/Punto-de-venta/components/TicketVenta.tsx",
+      "source_location": "L113"
+    },
+    {
+      "id": "src_sections_punto_de_venta_components_ticketventa_redondearpeso",
+      "label": "redondearPeso()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 67,
+      "community_name": "TicketVenta.tsx",
+      "file_type": "code",
+      "norm_label": "redondearpeso()",
+      "source_file": "src/sections/Punto-de-venta/components/TicketVenta.tsx",
+      "source_location": "L24"
+    },
+    {
+      "id": "src_sections_punto_de_venta_components_ticketventa_ticketventa",
+      "label": "TicketVenta()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 67,
+      "community_name": "TicketVenta.tsx",
+      "file_type": "code",
+      "norm_label": "ticketventa()",
+      "source_file": "src/sections/Punto-de-venta/components/TicketVenta.tsx",
+      "source_location": "L148"
+    },
+    {
+      "id": "src_sections_punto_de_venta_components_ticketventa_useseleccionartodo",
+      "label": "useSeleccionarTodo()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 67,
+      "community_name": "TicketVenta.tsx",
+      "file_type": "code",
+      "norm_label": "useseleccionartodo()",
+      "source_file": "src/sections/Punto-de-venta/components/TicketVenta.tsx",
+      "source_location": "L30"
     },
     {
       "id": "src_sections_fiados_components_modalabono",
@@ -3021,6 +3021,28 @@
       "source_location": "L1"
     },
     {
+      "id": "src_sections_fiados_components_modalfiado",
+      "label": "ModalFiado.tsx",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Fiados/index.tsx",
+      "file_type": "code",
+      "norm_label": "modalfiado.tsx",
+      "source_file": "src/sections/Fiados/components/ModalFiado.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_sections_fiados_components_tablafiados",
+      "label": "TablaFiados.tsx",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Fiados/index.tsx",
+      "file_type": "code",
+      "norm_label": "tablafiados.tsx",
+      "source_file": "src/sections/Fiados/components/TablaFiados.tsx",
+      "source_location": "L1"
+    },
+    {
       "id": "src_sections_fiados_components_tablafiadosagrupados",
       "label": "TablaFiadosAgrupados.tsx",
       "_origin": "ast",
@@ -3054,28 +3076,6 @@
       "source_location": "L1"
     },
     {
-      "id": "src_sections_inventario_components_modalgestionproveedores",
-      "label": "ModalGestionProveedores.tsx",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Fiados/index.tsx",
-      "file_type": "code",
-      "norm_label": "modalgestionproveedores.tsx",
-      "source_file": "src/sections/Inventario/components/ModalGestionProveedores.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_sections_inventario_components_modalproducto",
-      "label": "ModalProducto.tsx",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Fiados/index.tsx",
-      "file_type": "code",
-      "norm_label": "modalproducto.tsx",
-      "source_file": "src/sections/Inventario/components/ModalProducto.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "src_sections_inventario_components_tarjetametrica",
       "label": "Inventario/components/TarjetaMetrica.tsx",
       "_origin": "ast",
@@ -3087,36 +3087,36 @@
       "source_location": "L1"
     },
     {
-      "id": "src_sections_proveedores_components_modalproveedor",
-      "label": "ModalProveedor.tsx",
+      "id": "src_sections_reportes_components_tablatickets",
+      "label": "TablaTickets.tsx",
       "_origin": "ast",
       "community": 0,
       "community_name": "Fiados/index.tsx",
       "file_type": "code",
-      "norm_label": "modalproveedor.tsx",
-      "source_file": "src/sections/Proveedores/components/ModalProveedor.tsx",
+      "norm_label": "tablatickets.tsx",
+      "source_file": "src/sections/Reportes/components/TablaTickets.tsx",
       "source_location": "L1"
     },
     {
-      "id": "src_sections_proveedores_components_tablaproveedores",
-      "label": "TablaProveedores.tsx",
+      "id": "src_sections_reportes_types",
+      "label": "Reportes/types.ts",
       "_origin": "ast",
       "community": 0,
       "community_name": "Fiados/index.tsx",
       "file_type": "code",
-      "norm_label": "tablaproveedores.tsx",
-      "source_file": "src/sections/Proveedores/components/TablaProveedores.tsx",
+      "norm_label": "reportes/types.ts",
+      "source_file": "src/sections/Reportes/types.ts",
       "source_location": "L1"
     },
     {
-      "id": "src_sections_proveedores_types",
-      "label": "Proveedores/types.ts",
+      "id": "src_utils_clicconteclado",
+      "label": "clicConTeclado.ts",
       "_origin": "ast",
       "community": 0,
       "community_name": "Fiados/index.tsx",
       "file_type": "code",
-      "norm_label": "proveedores/types.ts",
-      "source_file": "src/sections/Proveedores/types.ts",
+      "norm_label": "clicconteclado.ts",
+      "source_file": "src/utils/clicConTeclado.ts",
       "source_location": "L1"
     },
     {
@@ -3659,39 +3659,6 @@
       "source_location": "L1"
     },
     {
-      "id": "ai_scripts_fix_ts",
-      "label": "fix-ts.cjs",
-      "_origin": "ast",
-      "community": 109,
-      "community_name": "fix-ts.cjs",
-      "file_type": "code",
-      "norm_label": "fix-ts.cjs",
-      "source_file": "ai-scripts/fix-ts.cjs",
-      "source_location": "L1"
-    },
-    {
-      "id": "ai_scripts_fix_ts_code",
-      "label": "code",
-      "_origin": "ast",
-      "community": 109,
-      "community_name": "fix-ts.cjs",
-      "file_type": "code",
-      "norm_label": "code",
-      "source_file": "ai-scripts/fix-ts.cjs",
-      "source_location": "L4"
-    },
-    {
-      "id": "ai_scripts_fix_ts_fs",
-      "label": "fs",
-      "_origin": "ast",
-      "community": 109,
-      "community_name": "fix-ts.cjs",
-      "file_type": "code",
-      "norm_label": "fs",
-      "source_file": "ai-scripts/fix-ts.cjs",
-      "source_location": "L1"
-    },
-    {
       "id": "ai_scripts_add_filters",
       "label": "add-filters.cjs",
       "_origin": "ast",
@@ -3758,136 +3725,136 @@
       "source_location": "L1"
     },
     {
-      "id": "ai_scripts_fix_header2",
-      "label": "fix-header2.cjs",
+      "id": "ai_scripts_fix_fetch",
+      "label": "fix-fetch.cjs",
       "_origin": "ast",
       "community": 11,
       "community_name": "ref_fs",
       "file_type": "code",
-      "norm_label": "fix-header2.cjs",
-      "source_file": "ai-scripts/fix-header2.cjs",
+      "norm_label": "fix-fetch.cjs",
+      "source_file": "ai-scripts/fix-fetch.cjs",
       "source_location": "L1"
     },
     {
-      "id": "ai_scripts_fix_header2_codeclientes",
-      "label": "codeClientes",
+      "id": "ai_scripts_fix_fetch_code",
+      "label": "code",
       "_origin": "ast",
       "community": 11,
       "community_name": "ref_fs",
       "file_type": "code",
-      "norm_label": "codeclientes",
-      "source_file": "ai-scripts/fix-header2.cjs",
-      "source_location": "L3"
+      "norm_label": "code",
+      "source_file": "ai-scripts/fix-fetch.cjs",
+      "source_location": "L2"
     },
     {
-      "id": "ai_scripts_fix_header2_fs",
+      "id": "ai_scripts_fix_fetch_fs",
       "label": "fs",
       "_origin": "ast",
       "community": 11,
       "community_name": "ref_fs",
       "file_type": "code",
       "norm_label": "fs",
-      "source_file": "ai-scripts/fix-header2.cjs",
+      "source_file": "ai-scripts/fix-fetch.cjs",
       "source_location": "L1"
     },
     {
-      "id": "ai_scripts_fix_index_modal",
-      "label": "fix-index-modal.cjs",
+      "id": "ai_scripts_fix_modal2",
+      "label": "fix-modal2.cjs",
       "_origin": "ast",
       "community": 11,
       "community_name": "ref_fs",
       "file_type": "code",
-      "norm_label": "fix-index-modal.cjs",
-      "source_file": "ai-scripts/fix-index-modal.cjs",
+      "norm_label": "fix-modal2.cjs",
+      "source_file": "ai-scripts/fix-modal2.cjs",
       "source_location": "L1"
     },
     {
-      "id": "ai_scripts_fix_index_modal_fs",
+      "id": "ai_scripts_fix_modal2_code",
+      "label": "code",
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "ref_fs",
+      "file_type": "code",
+      "norm_label": "code",
+      "source_file": "ai-scripts/fix-modal2.cjs",
+      "source_location": "L2"
+    },
+    {
+      "id": "ai_scripts_fix_modal2_fs",
       "label": "fs",
       "_origin": "ast",
       "community": 11,
       "community_name": "ref_fs",
       "file_type": "code",
       "norm_label": "fs",
-      "source_file": "ai-scripts/fix-index-modal.cjs",
+      "source_file": "ai-scripts/fix-modal2.cjs",
       "source_location": "L1"
     },
     {
-      "id": "ai_scripts_fix_index_modal_indexcode",
-      "label": "indexCode",
+      "id": "ai_scripts_fix_pill_debug3",
+      "label": "fix-pill-debug3.cjs",
       "_origin": "ast",
       "community": 11,
       "community_name": "ref_fs",
       "file_type": "code",
-      "norm_label": "indexcode",
-      "source_file": "ai-scripts/fix-index-modal.cjs",
+      "norm_label": "fix-pill-debug3.cjs",
+      "source_file": "ai-scripts/fix-pill-debug3.cjs",
+      "source_location": "L1"
+    },
+    {
+      "id": "ai_scripts_fix_pill_debug3_code",
+      "label": "code",
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "ref_fs",
+      "file_type": "code",
+      "norm_label": "code",
+      "source_file": "ai-scripts/fix-pill-debug3.cjs",
       "source_location": "L3"
     },
     {
-      "id": "ai_scripts_fix_ref_error",
-      "label": "fix-ref-error.cjs",
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "ref_fs",
-      "file_type": "code",
-      "norm_label": "fix-ref-error.cjs",
-      "source_file": "ai-scripts/fix-ref-error.cjs",
-      "source_location": "L1"
-    },
-    {
-      "id": "ai_scripts_fix_ref_error_fs",
+      "id": "ai_scripts_fix_pill_debug3_fs",
       "label": "fs",
       "_origin": "ast",
       "community": 11,
       "community_name": "ref_fs",
       "file_type": "code",
       "norm_label": "fs",
-      "source_file": "ai-scripts/fix-ref-error.cjs",
+      "source_file": "ai-scripts/fix-pill-debug3.cjs",
       "source_location": "L1"
     },
     {
-      "id": "ai_scripts_fix_ref_error_indexcode",
-      "label": "indexCode",
+      "id": "ai_scripts_fix_ts",
+      "label": "fix-ts.cjs",
       "_origin": "ast",
       "community": 11,
       "community_name": "ref_fs",
       "file_type": "code",
-      "norm_label": "indexcode",
-      "source_file": "ai-scripts/fix-ref-error.cjs",
-      "source_location": "L3"
+      "norm_label": "fix-ts.cjs",
+      "source_file": "ai-scripts/fix-ts.cjs",
+      "source_location": "L1"
     },
     {
-      "id": "ai_scripts_replace_merma",
-      "label": "replace-merma.cjs",
+      "id": "ai_scripts_fix_ts_code",
+      "label": "code",
       "_origin": "ast",
       "community": 11,
       "community_name": "ref_fs",
       "file_type": "code",
-      "norm_label": "replace-merma.cjs",
-      "source_file": "ai-scripts/replace-merma.cjs",
-      "source_location": "L1"
+      "norm_label": "code",
+      "source_file": "ai-scripts/fix-ts.cjs",
+      "source_location": "L4"
     },
     {
-      "id": "ai_scripts_replace_merma_fs",
+      "id": "ai_scripts_fix_ts_fs",
       "label": "fs",
       "_origin": "ast",
       "community": 11,
       "community_name": "ref_fs",
       "file_type": "code",
       "norm_label": "fs",
-      "source_file": "ai-scripts/replace-merma.cjs",
+      "source_file": "ai-scripts/fix-ts.cjs",
       "source_location": "L1"
-    },
-    {
-      "id": "ai_scripts_replace_merma_indexcode",
-      "label": "indexCode",
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "ref_fs",
-      "file_type": "code",
-      "norm_label": "indexcode",
-      "source_file": "ai-scripts/replace-merma.cjs",
-      "source_location": "L3"
     },
     {
       "id": "ai_scripts_fixtable",
@@ -5147,15 +5114,15 @@
       "source_location": "L1"
     },
     {
-      "id": "src_layout_alertayape",
-      "label": "AlertaYape.tsx",
+      "id": "src_app_nombres_sesiones",
+      "label": "NOMBRES_SESIONES",
       "_origin": "ast",
       "community": 2,
       "community_name": "App.tsx",
       "file_type": "code",
-      "norm_label": "alertayape.tsx",
-      "source_file": "src/layout/AlertaYape.tsx",
-      "source_location": "L1"
+      "norm_label": "nombres_sesiones",
+      "source_file": "src/App.tsx",
+      "source_location": "L23"
     },
     {
       "id": "src_layout_sidebar",
@@ -5860,17 +5827,6 @@
       "source_location": "L56"
     },
     {
-      "id": "src_sections_reportes_components_tablatickets",
-      "label": "TablaTickets.tsx",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "Utilidades/index.tsx",
-      "file_type": "code",
-      "norm_label": "tablatickets.tsx",
-      "source_file": "src/sections/Reportes/components/TablaTickets.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "src_sections_reportes_index",
       "label": "Reportes/index.tsx",
       "_origin": "ast",
@@ -5879,17 +5835,6 @@
       "file_type": "code",
       "norm_label": "reportes/index.tsx",
       "source_file": "src/sections/Reportes/index.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_sections_reportes_types",
-      "label": "Reportes/types.ts",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "Utilidades/index.tsx",
-      "file_type": "code",
-      "norm_label": "reportes/types.ts",
-      "source_file": "src/sections/Reportes/types.ts",
       "source_location": "L1"
     },
     {
@@ -5992,6 +5937,17 @@
       "source_location": "L1"
     },
     {
+      "id": "src_components_modaldetalleticket",
+      "label": "ModalDetalleTicket.tsx",
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "modaldetalleticket.tsx",
+      "source_file": "src/components/ModalDetalleTicket.tsx",
+      "source_location": "L1"
+    },
+    {
       "id": "src_db_supabase",
       "label": "supabase.ts",
       "_origin": "ast",
@@ -6014,6 +5970,17 @@
       "source_location": "L32"
     },
     {
+      "id": "src_layout_alertayape",
+      "label": "AlertaYape.tsx",
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "alertayape.tsx",
+      "source_file": "src/layout/AlertaYape.tsx",
+      "source_location": "L1"
+    },
+    {
       "id": "src_sections_configuraciones_components_formularioempresa",
       "label": "FormularioEmpresa.tsx",
       "_origin": "ast",
@@ -6022,28 +5989,6 @@
       "file_type": "code",
       "norm_label": "formularioempresa.tsx",
       "source_file": "src/sections/Configuraciones/components/FormularioEmpresa.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_sections_fiados_components_modalfiado",
-      "label": "ModalFiado.tsx",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "modalfiado.tsx",
-      "source_file": "src/sections/Fiados/components/ModalFiado.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_sections_fiados_components_tablafiados",
-      "label": "TablaFiados.tsx",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "tablafiados.tsx",
-      "source_file": "src/sections/Fiados/components/TablaFiados.tsx",
       "source_location": "L1"
     },
     {
@@ -6056,6 +6001,28 @@
       "norm_label": "modalapertura.tsx",
       "source_file": "src/sections/Finanzas/components/ModalApertura.tsx",
       "source_location": "L1"
+    },
+    {
+      "id": "src_sections_finanzas_components_modalnuevomovimiento",
+      "label": "ModalNuevoMovimiento.tsx",
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "modalnuevomovimiento.tsx",
+      "source_file": "src/sections/Finanzas/components/ModalNuevoMovimiento.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_sections_finanzas_components_modalnuevomovimiento_metodos",
+      "label": "METODOS",
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "metodos",
+      "source_file": "src/sections/Finanzas/components/ModalNuevoMovimiento.tsx",
+      "source_location": "L13"
     },
     {
       "id": "src_sections_inventario_components_etiquetastock",
@@ -6091,6 +6058,17 @@
       "source_location": "L1"
     },
     {
+      "id": "src_sections_inventario_components_modalgestionproveedores",
+      "label": "ModalGestionProveedores.tsx",
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "modalgestionproveedores.tsx",
+      "source_file": "src/sections/Inventario/components/ModalGestionProveedores.tsx",
+      "source_location": "L1"
+    },
+    {
       "id": "src_sections_inventario_components_modallote",
       "label": "ModalLote.tsx",
       "_origin": "ast",
@@ -6110,6 +6088,17 @@
       "file_type": "code",
       "norm_label": "modalmerma.tsx",
       "source_file": "src/sections/Inventario/components/ModalMerma.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_sections_inventario_components_modalproducto",
+      "label": "ModalProducto.tsx",
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "modalproducto.tsx",
+      "source_file": "src/sections/Inventario/components/ModalProducto.tsx",
       "source_location": "L1"
     },
     {
@@ -6234,6 +6223,28 @@
       "source_location": "L1"
     },
     {
+      "id": "src_sections_proveedores_components_modalproveedor",
+      "label": "ModalProveedor.tsx",
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "modalproveedor.tsx",
+      "source_file": "src/sections/Proveedores/components/ModalProveedor.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_sections_proveedores_components_tablaproveedores",
+      "label": "TablaProveedores.tsx",
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "tablaproveedores.tsx",
+      "source_file": "src/sections/Proveedores/components/TablaProveedores.tsx",
+      "source_location": "L1"
+    },
+    {
       "id": "src_sections_proveedores_index",
       "label": "Proveedores/index.tsx",
       "_origin": "ast",
@@ -6242,6 +6253,17 @@
       "file_type": "code",
       "norm_label": "proveedores/index.tsx",
       "source_file": "src/sections/Proveedores/index.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_sections_proveedores_types",
+      "label": "Proveedores/types.ts",
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "proveedores/types.ts",
+      "source_file": "src/sections/Proveedores/types.ts",
       "source_location": "L1"
     },
     {
@@ -6322,17 +6344,6 @@
       "source_location": "L28"
     },
     {
-      "id": "src_sections_punto_de_venta_components_ticketventa",
-      "label": "TicketVenta.tsx",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "ticketventa.tsx",
-      "source_file": "src/sections/Punto-de-venta/components/TicketVenta.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "src_sections_punto_de_venta_index",
       "label": "Punto-de-venta/index.tsx",
       "_origin": "ast",
@@ -6374,17 +6385,6 @@
       "file_type": "code",
       "norm_label": "busqueda.ts",
       "source_file": "src/utils/busqueda.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_utils_clicconteclado",
-      "label": "clicConTeclado.ts",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "clicconteclado.ts",
-      "source_file": "src/utils/clicConTeclado.ts",
       "source_location": "L1"
     },
     {
@@ -6817,6 +6817,17 @@
       "source_location": "L1"
     },
     {
+      "id": "ai_scripts_check_db_conexionvps",
+      "label": "{ conexionVps }",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "deploy.cjs",
+      "file_type": "code",
+      "norm_label": "{ conexionvps }",
+      "source_file": "ai-scripts/check_db.cjs",
+      "source_location": "L2"
+    },
+    {
       "id": "ai_scripts_check_db_nodessh",
       "label": "{ NodeSSH }",
       "_origin": "ast",
@@ -6836,7 +6847,7 @@
       "file_type": "code",
       "norm_label": "ssh",
       "source_file": "ai-scripts/check_db.cjs",
-      "source_location": "L2"
+      "source_location": "L3"
     },
     {
       "id": "ai_scripts_check_users",
@@ -6848,6 +6859,17 @@
       "norm_label": "check_users.cjs",
       "source_file": "ai-scripts/check_users.cjs",
       "source_location": "L1"
+    },
+    {
+      "id": "ai_scripts_check_users_conexionvps",
+      "label": "{ conexionVps }",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "deploy.cjs",
+      "file_type": "code",
+      "norm_label": "{ conexionvps }",
+      "source_file": "ai-scripts/check_users.cjs",
+      "source_location": "L2"
     },
     {
       "id": "ai_scripts_check_users_nodessh",
@@ -6869,7 +6891,7 @@
       "file_type": "code",
       "norm_label": "ssh",
       "source_file": "ai-scripts/check_users.cjs",
-      "source_location": "L2"
+      "source_location": "L3"
     },
     {
       "id": "ai_scripts_deploy",
@@ -6881,6 +6903,17 @@
       "norm_label": "deploy.cjs",
       "source_file": "ai-scripts/deploy.cjs",
       "source_location": "L1"
+    },
+    {
+      "id": "ai_scripts_deploy_conexionvps",
+      "label": "{ conexionVps }",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "deploy.cjs",
+      "file_type": "code",
+      "norm_label": "{ conexionvps }",
+      "source_file": "ai-scripts/deploy.cjs",
+      "source_location": "L3"
     },
     {
       "id": "ai_scripts_deploy_nodessh",
@@ -6913,7 +6946,7 @@
       "file_type": "code",
       "norm_label": "ssh",
       "source_file": "ai-scripts/deploy.cjs",
-      "source_location": "L3"
+      "source_location": "L4"
     },
     {
       "id": "ai_scripts_fix_imports",
@@ -7090,6 +7123,39 @@
       "norm_label": "path",
       "source_file": "ai-scripts/scratch_auto.cjs",
       "source_location": "L1"
+    },
+    {
+      "id": "ai_scripts_vps",
+      "label": "vps.cjs",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "deploy.cjs",
+      "file_type": "code",
+      "norm_label": "vps.cjs",
+      "source_file": "ai-scripts/vps.cjs",
+      "source_location": "L1"
+    },
+    {
+      "id": "ai_scripts_vps_archivo",
+      "label": "archivo",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "deploy.cjs",
+      "file_type": "code",
+      "norm_label": "archivo",
+      "source_file": "ai-scripts/vps.cjs",
+      "source_location": "L8"
+    },
+    {
+      "id": "ai_scripts_vps_path",
+      "label": "path",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "deploy.cjs",
+      "file_type": "code",
+      "norm_label": "path",
+      "source_file": "ai-scripts/vps.cjs",
+      "source_location": "L6"
     },
     {
       "id": "ai_scripts_fix_movs",
@@ -7719,17 +7785,6 @@
       "source_location": "L1"
     },
     {
-      "id": "src_components_modaldetalleticket",
-      "label": "ModalDetalleTicket.tsx",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Finanzas/index.tsx",
-      "file_type": "code",
-      "norm_label": "modaldetalleticket.tsx",
-      "source_file": "src/components/ModalDetalleTicket.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "src_sections_finanzas_components_filtrofechas",
       "label": "FiltroFechas.tsx",
       "_origin": "ast",
@@ -7761,28 +7816,6 @@
       "norm_label": "modaldetallecaja.tsx",
       "source_file": "src/sections/Finanzas/components/ModalDetalleCaja.tsx",
       "source_location": "L1"
-    },
-    {
-      "id": "src_sections_finanzas_components_modalnuevomovimiento",
-      "label": "ModalNuevoMovimiento.tsx",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Finanzas/index.tsx",
-      "file_type": "code",
-      "norm_label": "modalnuevomovimiento.tsx",
-      "source_file": "src/sections/Finanzas/components/ModalNuevoMovimiento.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_sections_finanzas_components_modalnuevomovimiento_metodos",
-      "label": "METODOS",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "Finanzas/index.tsx",
-      "file_type": "code",
-      "norm_label": "metodos",
-      "source_file": "src/sections/Finanzas/components/ModalNuevoMovimiento.tsx",
-      "source_location": "L13"
     },
     {
       "id": "src_sections_finanzas_components_tablahistorial",
@@ -7827,6 +7860,28 @@
       "norm_label": "finanzas/types.ts",
       "source_file": "src/sections/Finanzas/types.ts",
       "source_location": "L1"
+    },
+    {
+      "id": "ref_html2canvas_pro",
+      "label": "html2canvas-pro",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "Finanzas/index.tsx",
+      "file_type": "concept",
+      "norm_label": "html2canvas-pro",
+      "source_file": "package.json",
+      "source_location": "L15"
+    },
+    {
+      "id": "ref_react_to_print",
+      "label": "react-to-print",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "Finanzas/index.tsx",
+      "file_type": "concept",
+      "norm_label": "react-to-print",
+      "source_file": "package.json",
+      "source_location": "L19"
     },
     {
       "id": "ai_scripts_fix_caja_tickets",
@@ -8071,36 +8126,14 @@
       "source_location": "L1"
     },
     {
-      "id": "ai_scripts_fix_fetch",
-      "label": "fix-fetch.cjs",
+      "id": "src_sections_punto_de_venta_components_ticketventa",
+      "label": "TicketVenta.tsx",
       "_origin": "ast",
       "community": 67,
-      "community_name": "fix-fetch.cjs",
+      "community_name": "TicketVenta.tsx",
       "file_type": "code",
-      "norm_label": "fix-fetch.cjs",
-      "source_file": "ai-scripts/fix-fetch.cjs",
-      "source_location": "L1"
-    },
-    {
-      "id": "ai_scripts_fix_fetch_code",
-      "label": "code",
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "fix-fetch.cjs",
-      "file_type": "code",
-      "norm_label": "code",
-      "source_file": "ai-scripts/fix-fetch.cjs",
-      "source_location": "L2"
-    },
-    {
-      "id": "ai_scripts_fix_fetch_fs",
-      "label": "fs",
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "fix-fetch.cjs",
-      "file_type": "code",
-      "norm_label": "fs",
-      "source_file": "ai-scripts/fix-fetch.cjs",
+      "norm_label": "ticketventa.tsx",
+      "source_file": "src/sections/Punto-de-venta/components/TicketVenta.tsx",
       "source_location": "L1"
     },
     {
@@ -8302,17 +8335,6 @@
       "source_location": "L33"
     },
     {
-      "id": "ref_html2canvas_pro",
-      "label": "html2canvas-pro",
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "package.json",
-      "file_type": "concept",
-      "norm_label": "html2canvas-pro",
-      "source_file": "package.json",
-      "source_location": "L15"
-    },
-    {
       "id": "ref_postcss",
       "label": "postcss",
       "_origin": "ast",
@@ -8322,17 +8344,6 @@
       "norm_label": "postcss",
       "source_file": "package.json",
       "source_location": "L34"
-    },
-    {
-      "id": "ref_react_to_print",
-      "label": "react-to-print",
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "package.json",
-      "file_type": "concept",
-      "norm_label": "react-to-print",
-      "source_file": "package.json",
-      "source_location": "L19"
     },
     {
       "id": "ref_recharts",
@@ -8585,6 +8596,39 @@
       "file_type": "code",
       "norm_label": "fs",
       "source_file": "ai-scripts/fix-header.cjs",
+      "source_location": "L1"
+    },
+    {
+      "id": "ai_scripts_fix_header2",
+      "label": "fix-header2.cjs",
+      "_origin": "ast",
+      "community": 75,
+      "community_name": "fix-header2.cjs",
+      "file_type": "code",
+      "norm_label": "fix-header2.cjs",
+      "source_file": "ai-scripts/fix-header2.cjs",
+      "source_location": "L1"
+    },
+    {
+      "id": "ai_scripts_fix_header2_codeclientes",
+      "label": "codeClientes",
+      "_origin": "ast",
+      "community": 75,
+      "community_name": "fix-header2.cjs",
+      "file_type": "code",
+      "norm_label": "codeclientes",
+      "source_file": "ai-scripts/fix-header2.cjs",
+      "source_location": "L3"
+    },
+    {
+      "id": "ai_scripts_fix_header2_fs",
+      "label": "fs",
+      "_origin": "ast",
+      "community": 75,
+      "community_name": "fix-header2.cjs",
+      "file_type": "code",
+      "norm_label": "fs",
+      "source_file": "ai-scripts/fix-header2.cjs",
       "source_location": "L1"
     },
     {
@@ -9160,37 +9204,37 @@
       "source_location": "L1"
     },
     {
-      "id": "ai_scripts_fix_modal2",
-      "label": "fix-modal2.cjs",
+      "id": "ai_scripts_fix_index_modal",
+      "label": "fix-index-modal.cjs",
       "_origin": "ast",
       "community": 86,
-      "community_name": "fix-modal2.cjs",
+      "community_name": "fix-index-modal.cjs",
       "file_type": "code",
-      "norm_label": "fix-modal2.cjs",
-      "source_file": "ai-scripts/fix-modal2.cjs",
+      "norm_label": "fix-index-modal.cjs",
+      "source_file": "ai-scripts/fix-index-modal.cjs",
       "source_location": "L1"
     },
     {
-      "id": "ai_scripts_fix_modal2_code",
-      "label": "code",
-      "_origin": "ast",
-      "community": 86,
-      "community_name": "fix-modal2.cjs",
-      "file_type": "code",
-      "norm_label": "code",
-      "source_file": "ai-scripts/fix-modal2.cjs",
-      "source_location": "L2"
-    },
-    {
-      "id": "ai_scripts_fix_modal2_fs",
+      "id": "ai_scripts_fix_index_modal_fs",
       "label": "fs",
       "_origin": "ast",
       "community": 86,
-      "community_name": "fix-modal2.cjs",
+      "community_name": "fix-index-modal.cjs",
       "file_type": "code",
       "norm_label": "fs",
-      "source_file": "ai-scripts/fix-modal2.cjs",
+      "source_file": "ai-scripts/fix-index-modal.cjs",
       "source_location": "L1"
+    },
+    {
+      "id": "ai_scripts_fix_index_modal_indexcode",
+      "label": "indexCode",
+      "_origin": "ast",
+      "community": 86,
+      "community_name": "fix-index-modal.cjs",
+      "file_type": "code",
+      "norm_label": "indexcode",
+      "source_file": "ai-scripts/fix-index-modal.cjs",
+      "source_location": "L3"
     },
     {
       "id": "ai_scripts_fix_old_payments",
@@ -9545,37 +9589,70 @@
       "source_location": "L1"
     },
     {
-      "id": "ai_scripts_fix_pill_debug3",
-      "label": "fix-pill-debug3.cjs",
+      "id": "ai_scripts_fix_ref_error",
+      "label": "fix-ref-error.cjs",
       "_origin": "ast",
-      "community": 92,
-      "community_name": "fix-pill-debug3.cjs",
+      "community": 91,
+      "community_name": "fix-ref-error.cjs",
       "file_type": "code",
-      "norm_label": "fix-pill-debug3.cjs",
-      "source_file": "ai-scripts/fix-pill-debug3.cjs",
+      "norm_label": "fix-ref-error.cjs",
+      "source_file": "ai-scripts/fix-ref-error.cjs",
       "source_location": "L1"
     },
     {
-      "id": "ai_scripts_fix_pill_debug3_code",
-      "label": "code",
+      "id": "ai_scripts_fix_ref_error_fs",
+      "label": "fs",
       "_origin": "ast",
-      "community": 92,
-      "community_name": "fix-pill-debug3.cjs",
+      "community": 91,
+      "community_name": "fix-ref-error.cjs",
       "file_type": "code",
-      "norm_label": "code",
-      "source_file": "ai-scripts/fix-pill-debug3.cjs",
+      "norm_label": "fs",
+      "source_file": "ai-scripts/fix-ref-error.cjs",
+      "source_location": "L1"
+    },
+    {
+      "id": "ai_scripts_fix_ref_error_indexcode",
+      "label": "indexCode",
+      "_origin": "ast",
+      "community": 91,
+      "community_name": "fix-ref-error.cjs",
+      "file_type": "code",
+      "norm_label": "indexcode",
+      "source_file": "ai-scripts/fix-ref-error.cjs",
       "source_location": "L3"
     },
     {
-      "id": "ai_scripts_fix_pill_debug3_fs",
+      "id": "ai_scripts_replace_merma",
+      "label": "replace-merma.cjs",
+      "_origin": "ast",
+      "community": 92,
+      "community_name": "replace-merma.cjs",
+      "file_type": "code",
+      "norm_label": "replace-merma.cjs",
+      "source_file": "ai-scripts/replace-merma.cjs",
+      "source_location": "L1"
+    },
+    {
+      "id": "ai_scripts_replace_merma_fs",
       "label": "fs",
       "_origin": "ast",
       "community": 92,
-      "community_name": "fix-pill-debug3.cjs",
+      "community_name": "replace-merma.cjs",
       "file_type": "code",
       "norm_label": "fs",
-      "source_file": "ai-scripts/fix-pill-debug3.cjs",
+      "source_file": "ai-scripts/replace-merma.cjs",
       "source_location": "L1"
+    },
+    {
+      "id": "ai_scripts_replace_merma_indexcode",
+      "label": "indexCode",
+      "_origin": "ast",
+      "community": 92,
+      "community_name": "replace-merma.cjs",
+      "file_type": "code",
+      "norm_label": "indexcode",
+      "source_file": "ai-scripts/replace-merma.cjs",
+      "source_location": "L3"
     },
     {
       "id": "ai_scripts_fix_pill_final",
@@ -10693,6 +10770,17 @@
       "norm_label": "src_index",
       "source_file": "",
       "type": "external"
+    },
+    {
+      "id": "ai_scripts_vps_conexionvps",
+      "label": "ai_scripts_vps_conexionvps",
+      "community": 4,
+      "community_name": "deploy.cjs",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "ai_scripts_vps_conexionvps",
+      "source_file": "",
+      "type": "external"
     }
   ],
   "links": [
@@ -10753,7 +10841,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.tsx",
-      "source_location": "L125",
+      "source_location": "L138",
       "weight": 1.0
     },
     {
@@ -10765,7 +10853,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.tsx",
-      "source_location": "L154",
+      "source_location": "L167",
       "weight": 1.0
     },
     {
@@ -10777,7 +10865,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.tsx",
-      "source_location": "L154",
+      "source_location": "L167",
       "weight": 1.0
     },
     {
@@ -10789,7 +10877,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.tsx",
-      "source_location": "L158",
+      "source_location": "L171",
       "weight": 1.0
     },
     {
@@ -10801,7 +10889,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.tsx",
-      "source_location": "L53",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -10813,7 +10901,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/App.tsx",
-      "source_location": "L222",
+      "source_location": "L235",
       "weight": 1.0
     },
     {
@@ -12786,6 +12874,42 @@
       "weight": 1.0
     },
     {
+      "source": "ai_scripts_check_db_cjs_ai_scripts_check_db",
+      "target": "ai_scripts_vps_conexionvps",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "ai-scripts/check_db.cjs",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "ai_scripts_check_users",
+      "target": "ai_scripts_vps_conexionvps",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "ai-scripts/check_users.cjs",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "ai_scripts_deploy",
+      "target": "ai_scripts_vps_conexionvps",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "ai-scripts/deploy.cjs",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
       "source": "ai_scripts_update_py_ai_scripts_update",
       "target": "re",
       "relation": "imports",
@@ -13087,7 +13211,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_sections_mermas_index_mermas",
+      "target": "src_sections_inventario_index_inventario",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -13099,7 +13223,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_sections_proveedores_index_proveedores",
+      "target": "src_sections_mermas_index_mermas",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -13111,7 +13235,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_sections_punto_de_venta_index_pos",
+      "target": "src_sections_proveedores_index_proveedores",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -13123,7 +13247,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_sections_fiados_index_fiados",
+      "target": "src_sections_punto_de_venta_index_pos",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -13135,7 +13259,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_sections_finanzas_index_finanzas",
+      "target": "src_sections_fiados_index_fiados",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -13147,7 +13271,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_sections_utilidades_index_utilidades",
+      "target": "src_sections_finanzas_index_finanzas",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -13159,7 +13283,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_sections_configuraciones_index_configuraciones",
+      "target": "src_sections_utilidades_index_utilidades",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -13171,31 +13295,19 @@
     },
     {
       "source": "src_app",
+      "target": "src_sections_configuraciones_index_configuraciones",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/App.tsx",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app",
       "target": "src_utils_tamanointerfaz_aplicartamanointerfaz",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "src/App.tsx",
-      "source_location": "L17",
-      "weight": 1.0
-    },
-    {
-      "source": "src_app",
-      "target": "src_utils_tamanointerfaz_leertamanointerfaz",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "src/App.tsx",
-      "source_location": "L17",
-      "weight": 1.0
-    },
-    {
-      "source": "src_app",
-      "target": "src_layout_alertayape_alertayape",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -13207,7 +13319,19 @@
     },
     {
       "source": "src_app",
-      "target": "src_utils_navegacionsesion_programarrestauracionfoco",
+      "target": "src_utils_tamanointerfaz_leertamanointerfaz",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/App.tsx",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app",
+      "target": "src_layout_alertayape_alertayape",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -13219,6 +13343,18 @@
     },
     {
       "source": "src_app",
+      "target": "src_utils_navegacionsesion_programarrestauracionfoco",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/App.tsx",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app",
       "target": "src_sections_login_login",
       "relation": "imports",
       "_origin": "ast",
@@ -13226,7 +13362,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/App.tsx",
-      "source_location": "L2",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -13238,7 +13374,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/App.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -13250,7 +13386,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/App.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -13262,7 +13398,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/App.tsx",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -13274,7 +13410,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/App.tsx",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -13286,7 +13422,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/App.tsx",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -13298,19 +13434,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/App.tsx",
-      "source_location": "L6",
-      "weight": 1.0
-    },
-    {
-      "source": "src_app",
-      "target": "src_sections_inventario_index_inventario",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "src/App.tsx",
-      "source_location": "L9",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -16386,6 +16510,18 @@
       "weight": 1.0
     },
     {
+      "source": "ai_scripts_check_db_cjs_ai_scripts_check_db",
+      "target": "ai_scripts_vps",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "ai-scripts/check_db.cjs",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
       "source": "ai_scripts_check_db_js_ai_scripts_check_db",
       "target": "ref_src_db_supabase_js",
       "relation": "imports_from",
@@ -16446,6 +16582,18 @@
       "weight": 1.0
     },
     {
+      "source": "ai_scripts_check_users",
+      "target": "ai_scripts_vps",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "ai-scripts/check_users.cjs",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
       "source": "ai_scripts_deploy",
       "target": "ref_node_ssh",
       "relation": "imports_from",
@@ -16467,6 +16615,18 @@
       "context": "import",
       "source_file": "ai-scripts/deploy.cjs",
       "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "ai_scripts_deploy",
+      "target": "ai_scripts_vps",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "ai-scripts/deploy.cjs",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -17814,6 +17974,18 @@
       "weight": 1.0
     },
     {
+      "source": "ai_scripts_vps",
+      "target": "ref_path",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "ai-scripts/vps.cjs",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
       "source": "eslint_config",
       "target": "ref_eslint_js",
       "relation": "imports_from",
@@ -17899,7 +18071,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_sections_mermas_index",
+      "target": "src_sections_inventario_index",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -17911,7 +18083,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_sections_proveedores_index",
+      "target": "src_sections_mermas_index",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -17923,7 +18095,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_sections_punto_de_venta_index",
+      "target": "src_sections_proveedores_index",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -17935,7 +18107,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_sections_fiados_index",
+      "target": "src_sections_punto_de_venta_index",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -17947,7 +18119,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_sections_finanzas_index",
+      "target": "src_sections_fiados_index",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -17959,7 +18131,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_sections_utilidades_index",
+      "target": "src_sections_finanzas_index",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -17971,7 +18143,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_sections_configuraciones_index",
+      "target": "src_sections_utilidades_index",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -17983,7 +18155,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_utils_tamanointerfaz",
+      "target": "src_sections_configuraciones_index",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -17995,7 +18167,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_layout_alertayape",
+      "target": "src_utils_tamanointerfaz",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -18007,7 +18179,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_utils_navegacionsesion",
+      "target": "src_layout_alertayape",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -18019,7 +18191,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_sections_login",
+      "target": "ref_lucide_react",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -18031,7 +18203,19 @@
     },
     {
       "source": "src_app",
-      "target": "src_layout_sidebar",
+      "target": "src_utils_navegacionsesion",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/App.tsx",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app",
+      "target": "src_sections_login",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -18043,7 +18227,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_utils_sesion",
+      "target": "src_layout_sidebar",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -18055,7 +18239,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_utils_permisos",
+      "target": "src_utils_sesion",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -18067,7 +18251,7 @@
     },
     {
       "source": "src_app",
-      "target": "src_utils_sesionprovider",
+      "target": "src_utils_permisos",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -18079,14 +18263,14 @@
     },
     {
       "source": "src_app",
-      "target": "src_sections_inventario_index",
+      "target": "src_utils_sesionprovider",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/App.tsx",
-      "source_location": "L9",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -22849,7 +23033,7 @@
     },
     {
       "source": "ai_scripts_check_db_cjs_ai_scripts_check_db",
-      "target": "ai_scripts_check_db_ssh",
+      "target": "ai_scripts_check_db_conexionvps",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -22860,13 +23044,24 @@
     },
     {
       "source": "ai_scripts_check_db_cjs_ai_scripts_check_db",
+      "target": "ai_scripts_check_db_ssh",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "ai-scripts/check_db.cjs",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "ai_scripts_check_db_cjs_ai_scripts_check_db",
       "target": "ai_scripts_check_db_check",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "ai-scripts/check_db.cjs",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -22959,7 +23154,7 @@
     },
     {
       "source": "ai_scripts_check_users",
-      "target": "ai_scripts_check_users_ssh",
+      "target": "ai_scripts_check_users_conexionvps",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -22970,13 +23165,24 @@
     },
     {
       "source": "ai_scripts_check_users",
-      "target": "ai_scripts_check_users_check",
+      "target": "ai_scripts_check_users_ssh",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "ai-scripts/check_users.cjs",
       "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "ai_scripts_check_users",
+      "target": "ai_scripts_check_users_check",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "ai-scripts/check_users.cjs",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -23003,7 +23209,7 @@
     },
     {
       "source": "ai_scripts_deploy",
-      "target": "ai_scripts_deploy_ssh",
+      "target": "ai_scripts_deploy_conexionvps",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -23014,13 +23220,24 @@
     },
     {
       "source": "ai_scripts_deploy",
+      "target": "ai_scripts_deploy_ssh",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "ai-scripts/deploy.cjs",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "ai_scripts_deploy",
       "target": "ai_scripts_deploy_deploy",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "ai-scripts/deploy.cjs",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -25862,6 +26079,28 @@
       "weight": 1.0
     },
     {
+      "source": "ai_scripts_vps",
+      "target": "ai_scripts_vps_path",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "ai-scripts/vps.cjs",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "ai_scripts_vps",
+      "target": "ai_scripts_vps_archivo",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "ai-scripts/vps.cjs",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
       "source": "package",
       "target": "package_dependencies",
       "relation": "contains",
@@ -26248,13 +26487,24 @@
     },
     {
       "source": "src_app",
+      "target": "src_app_nombres_sesiones",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/App.tsx",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app",
       "target": "src_app_app",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.tsx",
-      "source_location": "L24",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -26265,7 +26515,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/App.tsx",
-      "source_location": "L221",
+      "source_location": "L234",
       "weight": 1.0
     },
     {
@@ -29996,5 +30246,5 @@
       "source_file": ".claude/skills/graphify/SKILL.md"
     }
   ],
-  "built_at_commit": "181eee6bfb81b475317b43288d6b4b741c2d67e5"
+  "built_at_commit": "7fa06f83fe8f1636ebe74be70b97813b781efc2e"
 }

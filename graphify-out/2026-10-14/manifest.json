@@ -36,10 +36,10 @@
     "semantic_hash": ""
   },
   "src/main.tsx": {
-    "mtime": 1791332990.0000985,
-    "seen": 1791935213.2041826,
-    "ast_hash": "df3369963799e47ef5a77cdca932abf0",
-    "semantic_hash": "df3369963799e47ef5a77cdca932abf0"
+    "mtime": 1791996033.083422,
+    "seen": 1791996049.3554084,
+    "ast_hash": "3eed7c617c376f56fe6deeaee55ecbef",
+    "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/FormularioEmpresa.tsx": {
     "mtime": 1791955603.1212897,
@@ -1425,6 +1425,12 @@
     "mtime": 1791990027.5059233,
     "seen": 1791990306.9174707,
     "ast_hash": "29111697358f1f55be5ff805c646e508",
+    "semantic_hash": ""
+  },
+  "src/utils/tecladoTactil.ts": {
+    "mtime": 1791996031.9924352,
+    "seen": 1791996049.35552,
+    "ast_hash": "256ec273eaf8862b6e1d3e626de1f368",
     "semantic_hash": ""
   }
 }
