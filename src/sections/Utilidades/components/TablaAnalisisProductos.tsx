@@ -377,11 +377,11 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
             <option value="SIN VENTAS">SIN VENTAS</option>
           </select>
 
-          <div className="flex flex-wrap items-center gap-2 bg-[var(--color-surface)] border border-[var(--color-border)] p-1.5 rounded-none w-full sm:w-auto min-w-0">
-            <div className="flex flex-col px-1.5">
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:flex sm:flex-wrap items-center gap-2 bg-[var(--color-surface)] border border-[var(--color-border)] p-1.5 rounded-none w-full sm:w-auto min-w-0">
+            <div className="flex flex-col px-1.5 min-w-0">
               <label className="text-[11px] font-black text-[var(--color-muted)] uppercase tracking-wider">Desde</label>
               <div className="flex items-center gap-1.5">
-                <CalendarDays size={12} className="text-[var(--color-ink)]" />
+                <CalendarDays size={12} className="text-[var(--color-ink)] shrink-0" />
                 <input 
                   id="filtro-fecha-desde-utilidades"
                   autoComplete="off" 
@@ -419,15 +419,15 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                       }
                     }
                   }}
-                  className="text-[13px] font-black text-[var(--color-ink)] outline-none bg-transparent cursor-pointer focus:ring-2 focus:ring-[var(--color-accent-shadow)]" 
+                  className="w-full min-w-0 text-[13px] font-black text-[var(--color-ink)] outline-none bg-transparent cursor-pointer focus:ring-2 focus:ring-[var(--color-accent-shadow)]" 
                 />
               </div>
             </div>
-            <div className="w-[1px] h-7 bg-[var(--color-border)]"></div>
-            <div className="flex flex-col px-1.5">
+            <div className="hidden sm:block w-[1px] h-7 bg-[var(--color-border)]"></div>
+            <div className="flex flex-col px-1.5 min-w-0">
               <label className="text-[11px] font-black text-[var(--color-muted)] uppercase tracking-wider">Hasta</label>
               <div className="flex items-center gap-1.5">
-                <CalendarDays size={12} className="text-[var(--color-ink)]" />
+                <CalendarDays size={12} className="text-[var(--color-ink)] shrink-0" />
                 <input 
                   id="filtro-fecha-hasta-utilidades"
                   autoComplete="off" 
@@ -465,7 +465,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                       }
                     }
                   }}
-                  className="text-[13px] font-black text-[var(--color-ink)] outline-none bg-transparent cursor-pointer focus:ring-2 focus:ring-[var(--color-accent-shadow)]" 
+                  className="w-full min-w-0 text-[13px] font-black text-[var(--color-ink)] outline-none bg-transparent cursor-pointer focus:ring-2 focus:ring-[var(--color-accent-shadow)]" 
                 />
               </div>
             </div>
@@ -606,17 +606,17 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
 
       {/* TABLA PRINCIPAL - DISEÑO TÉCNICO ESMERALDA LIGERO */}
       <div className="w-full overflow-x-auto">
-        <table id="tabla-analisis-productos" className="w-full text-left border-collapse min-w-[1000px]">
+        <table id="tabla-analisis-productos" className="w-full text-left border-collapse md:min-w-[1000px]">
           <thead className="bg-[var(--color-ink)] text-[var(--color-surface)] sticky top-0 z-10 p-4 text-xs md:text-sm font-black uppercase tracking-[0.1em]">
             <tr>
-              <th className="p-4">Producto / Ref</th>
-              <th className="p-4 text-center">Stock Actual</th>
-              <th className="p-4 text-center">U. Vendidas</th>
-              <th className="p-4 text-right">Ingreso Cobrado</th>
-              <th className="p-4 text-right">Costo Ventas</th>
-              <th className="p-4 text-right">Mermas</th>
-              <th className="p-4 text-right">Utilidad Neta</th>
-              <th className="p-4 text-center w-24">Margen</th>
+              <th className="p-3 md:p-4">Producto / Ref</th>
+              <th className="hidden md:table-cell p-4 text-center">Stock Actual</th>
+              <th className="p-2 md:p-4 text-center">U. Vendidas</th>
+              <th className="hidden md:table-cell p-4 text-right">Ingreso Cobrado</th>
+              <th className="hidden md:table-cell p-4 text-right">Costo Ventas</th>
+              <th className="hidden md:table-cell p-4 text-right">Mermas</th>
+              <th className="p-2 md:p-4 text-right">Utilidad</th>
+              <th className="p-2 md:p-4 text-center md:w-24">Margen</th>
             </tr>
           </thead>
           <tbody className="bg-[var(--color-surface)]">
@@ -632,9 +632,9 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                   className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors cursor-pointer group"
                   title="Ver ventas de este producto (Enter o Clic)"
                 >
-                  <td className="p-3">
+                  <td className="p-2 md:p-3">
                     <p className="text-xs font-black text-[var(--color-ink)] uppercase mb-1">{prod.nombre}</p>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-1 md:gap-2">
                       <span className="text-[12px] font-black text-[var(--color-muted)] border border-[var(--color-line-light)] bg-[var(--color-bg-2)] px-2 py-0.5 rounded-none uppercase tracking-widest">{prod.categoria}</span>
 
                       <span className={`text-[12px] font-black px-2 py-0.5 rounded-none uppercase tracking-widest border ${
@@ -648,7 +648,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                     </div>
                   </td>
 
-                  <td className="p-3 text-center">
+                  <td className="hidden md:table-cell p-3 text-center">
                     {prod.tipoControl === 'CONSUMO' ? (
                       <span className="text-[12px] font-black px-2 py-1 rounded-none border border-[var(--color-border)] text-[var(--color-ink)] uppercase tracking-widest">
                         INTERNO
@@ -666,22 +666,22 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                     )}
                   </td>
 
-                  <td className="p-3 text-center">
+                  <td className="p-2 md:p-3 text-center">
                     <div className="inline-flex items-center justify-center px-2 py-1 border-2 border-[var(--color-border)] bg-[var(--color-surface)] font-black text-[var(--color-ink)] text-xs min-w-[50px] truncate rounded-none">
                       {Number(prod.unidadesVendidas).toFixed(2)}
                     </div>
                   </td>
-                  <td className="p-3 text-right text-xs font-black text-[var(--color-muted)]">S/ {prod.ingresosTotales.toFixed(2)}</td>
-                  <td className="p-3 text-right text-xs font-black text-[var(--color-muted)]">S/ {prod.costoTotalVentas.toFixed(2)}</td>
-                  <td className="p-3 text-right text-xs font-black text-[var(--color-danger)]">
+                  <td className="hidden md:table-cell p-3 text-right text-xs font-black text-[var(--color-muted)]">S/ {prod.ingresosTotales.toFixed(2)}</td>
+                  <td className="hidden md:table-cell p-3 text-right text-xs font-black text-[var(--color-muted)]">S/ {prod.costoTotalVentas.toFixed(2)}</td>
+                  <td className="hidden md:table-cell p-3 text-right text-xs font-black text-[var(--color-danger)]">
                     {prod.perdidaMerma > 0 ? `- S/ ${prod.perdidaMerma.toFixed(2)}` : 'S/ 0.00'}
                   </td>
-                  <td className="p-3 text-right text-sm font-black bg-[var(--color-accent-bg)]">
+                  <td className="p-2 md:p-3 text-right text-sm font-black bg-[var(--color-accent-bg)] whitespace-nowrap">
                     <span className={`${prod.utilidadReal >= 0 ? 'text-[var(--color-accent-shadow)]' : 'text-[var(--color-danger)]'}`}>
                       S/ {prod.utilidadReal.toFixed(2)}
                     </span>
                   </td>
-                  <td className="p-3 text-center">
+                  <td className="p-2 md:p-3 text-center">
                     <span className={`flex items-center justify-center gap-1 text-[12px] font-black px-1.5 py-1 rounded-none border tracking-widest ${
                       prod.margen >= 30 ? 'border-[var(--color-accent-shadow)] text-[var(--color-accent-shadow)] bg-[var(--color-accent-bg)]' :
                       prod.margen > 0 ? 'border-[var(--color-border)] text-[var(--color-ink)]' :

@@ -222,15 +222,15 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
   const hayFiltrosActivos = searchTerm.trim() !== '' || filtroEstado !== 'ACTIVOS' || ordenPor !== 'MAYOR_DEUDA';
 
   return (
-    <div className="bg-white border-2 border-[var(--color-border)] shadow-[8px_8px_0_0_var(--color-border)] flex flex-col font-mono rounded-none h-full min-h-0">
+    <div className="bg-white border-2 border-[var(--color-border)] shadow-[8px_8px_0_0_var(--color-border)] flex flex-col font-mono rounded-none lg:h-full lg:min-h-0">
       
-      <div className="p-6 border-b-2 border-[var(--color-border)] flex flex-wrap lg:flex-nowrap gap-4 shrink-0 bg-[var(--color-bg)]">
+      <div className="p-3 sm:p-6 border-b-2 border-[var(--color-border)] grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:flex lg:flex-nowrap gap-2 sm:gap-4 shrink-0 bg-[var(--color-bg)]">
         <input autoComplete="off" type="text"
           id="buscador-global-fiados"
           placeholder="BUSCAR CLIENTE..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 min-w-[200px] border-2 border-[var(--color-border)] px-4 py-3 text-sm font-black uppercase outline-none focus:border-[var(--color-info)] transition-colors rounded-none"
+          className="col-span-3 lg:flex-1 min-w-0 lg:min-w-[200px] border-2 border-[var(--color-border)] px-3 sm:px-4 py-3 text-sm font-black uppercase outline-none focus:border-[var(--color-info)] transition-colors rounded-none"
         />
 
         <select 
@@ -263,7 +263,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
               document.getElementById('filtro-orden-fiados')?.focus();
             }
           }}
-          className="w-full lg:w-48 border-2 border-[var(--color-border)] px-4 py-3 text-sm font-black uppercase outline-none focus:border-[var(--color-info)] bg-white cursor-pointer rounded-none"
+          className="w-full min-w-0 lg:w-48 border-2 border-[var(--color-border)] px-2 sm:px-4 py-3 text-xs sm:text-sm font-black uppercase outline-none focus:border-[var(--color-info)] bg-white cursor-pointer rounded-none"
         >
           <option value="ACTIVOS">DEUDORES</option>
           <option value="TODOS">TODOS</option>
@@ -300,7 +300,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
               document.getElementById('btn-limpiar-filtros-fiados')?.focus();
             }
           }}
-          className="w-full lg:w-48 border-2 border-[var(--color-border)] px-4 py-3 text-sm font-black uppercase outline-none focus:border-[var(--color-info)] bg-white cursor-pointer rounded-none"
+          className="w-full min-w-0 lg:w-48 border-2 border-[var(--color-border)] px-2 sm:px-4 py-3 text-xs sm:text-sm font-black uppercase outline-none focus:border-[var(--color-info)] bg-white cursor-pointer rounded-none"
         >
           <option value="MAYOR_DEUDA">MAYOR DEUDA</option>
           <option value="ALFABETICO">ALFABÉTICO</option>
@@ -335,14 +335,14 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
         </button>
       </div>
 
-      <div className="flex-1 overflow-auto custom-scrollbar relative min-h-0">
+      <div className="lg:flex-1 overflow-auto custom-scrollbar relative lg:min-h-0">
         <table className="w-full text-left relative border-collapse">
           <thead className="sticky top-0 bg-[var(--color-ink)] text-white border-b-2 border-[var(--color-ink)] z-10">
             <tr className="uppercase text-[11px] font-black tracking-widest">
-              <th className="py-4 px-4 pl-6 border-r border-white/20 w-[45%]">Cliente / Empresa</th>
-              <th className="py-4 px-4 border-r border-white/20 text-right">Monto Prestado</th>
-              <th className="py-4 px-4 border-r border-white/20 text-right">Deuda Pendiente</th>
-              <th className="py-4 px-4 pr-6 text-center">Detalle</th>
+              <th className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6 border-r border-white/20 sm:w-[45%]">Cliente / Empresa</th>
+              <th className="hidden sm:table-cell py-4 px-4 border-r border-white/20 text-right">Monto Prestado</th>
+              <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20 text-right">Deuda</th>
+              <th className="py-3 sm:py-4 px-2 sm:px-4 sm:pr-6 text-center"><span className="hidden sm:inline">Detalle</span></th>
             </tr>
           </thead>
           <tbody className="text-sm font-bold divide-y-2 divide-[var(--color-border)]">
@@ -353,19 +353,19 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
                   onClick={() => onView(cli)}
                   className="hover:bg-[var(--color-surface)] transition-colors focus:outline-none focus:bg-[var(--color-accent-bg)] cursor-pointer"
                 >
-                  <td className="py-4 px-4 pl-6">
+                  <td className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6">
                     <span className="font-black text-[var(--color-ink)] uppercase text-base">{cli.clienteNombre}</span>
                     {cli.clienteDni && <span className="block text-xs text-[var(--color-muted)] mt-1 tracking-widest">DOC: {cli.clienteDni}</span>}
                   </td>
-                  <td className="py-4 px-4 text-right font-black text-[var(--color-muted)]">
+                  <td className="hidden sm:table-cell py-4 px-4 text-right font-black text-[var(--color-muted)]">
                     S/ {cli.totalOriginal.toFixed(2)}
                   </td>
-                  <td className="py-4 px-4 text-right">
-                    <span className={`font-black text-lg ${cli.totalPendiente > 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-success)]'}`}>
+                  <td className="py-3 sm:py-4 px-3 sm:px-4 text-right whitespace-nowrap">
+                    <span className={`font-black text-base sm:text-lg ${cli.totalPendiente > 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-success)]'}`}>
                       S/ {cli.totalPendiente.toFixed(2)}
                     </span>
                   </td>
-                  <td className="py-4 px-4 pr-6 text-center">
+                  <td className="py-3 sm:py-4 px-2 sm:px-4 sm:pr-6 text-center">
                     <button data-btn-detalle tabIndex={-1} onClick={(e) => { e.stopPropagation(); onView(cli); }} className="p-2 border-2 border-[var(--color-ink)] bg-[var(--color-bg)] hover:bg-[var(--color-ink)] hover:text-white transition-all cursor-pointer inline-flex shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-1 hover:translate-y-1">
                       <Eye size={20} strokeWidth={3} />
                     </button>
@@ -383,13 +383,13 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
         </table>
       </div>
 
-      <div className="p-3 border-t-2 border-[var(--color-border)] bg-[var(--color-bg)] flex justify-between items-center shrink-0">
-        <p className="text-[12px] font-black text-[var(--color-muted)] uppercase">
+      <div className="p-3 border-t-2 border-[var(--color-border)] bg-[var(--color-bg)] flex justify-between items-center gap-2 shrink-0">
+        <p className="text-[11px] sm:text-[12px] font-black text-[var(--color-muted)] uppercase">
           Mostrando {startIndex + 1} - {Math.min(startIndex + ITEMS_PER_PAGE, clientesProcesados.length)} de {clientesProcesados.length}
         </p>
         <div className="flex gap-2">
           <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-bg)] cursor-pointer rounded-none"><ChevronLeft size={16} /></button>
-          <span className="flex items-center justify-center px-4 border-2 border-[var(--color-border)] bg-white text-xs font-black text-[var(--color-ink)] rounded-none">Pág {currentPage} / {totalPages}</span>
+          <span className="flex items-center justify-center px-2 sm:px-4 whitespace-nowrap border-2 border-[var(--color-border)] bg-white text-xs font-black text-[var(--color-ink)] rounded-none">Pág {currentPage} / {totalPages}</span>
           <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-bg)] cursor-pointer rounded-none"><ChevronRight size={16} /></button>
         </div>
       </div>

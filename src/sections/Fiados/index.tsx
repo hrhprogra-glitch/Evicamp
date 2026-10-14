@@ -387,7 +387,7 @@ if (fiaData) {
   }, [clientesAgrupados]);
 
   return (
-      <div className="h-full flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono relative">
+      <div className="lg:h-full flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono relative">
       {loading && (
         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
@@ -399,7 +399,7 @@ if (fiaData) {
       
       {/* TARJETAS Y CONTROLES */}
       <div className="flex flex-col xl:flex-row justify-between items-stretch xl:items-end gap-4 shrink-0">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full xl:w-1/2">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full xl:w-1/2">
           <TarjetaMetrica 
             label="Por Cobrar" 
             value={`S/ ${totalPorCobrar.toFixed(2)}`} 
@@ -414,7 +414,7 @@ if (fiaData) {
         </div>
 
         {/* BOTONES PRINCIPALES */}
-        <div className="grid grid-cols-2 sm:flex gap-3">
+        <div className="flex gap-3">
           <button 
             id="btn-directorio-clientes" 
             onClick={() => setIsModalClientesOpen(true)}
@@ -433,7 +433,7 @@ if (fiaData) {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0">
+      <div className="lg:flex-1 lg:min-h-0">
         <TablaFiadosAgrupados clientes={clientesAgrupados} onView={(cli) => { setClienteEstadoCuenta(cli); setIsModalEstadoCuentaOpen(true); }} />
       </div>
 

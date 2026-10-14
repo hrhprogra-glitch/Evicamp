@@ -61,15 +61,15 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
               }
             }
           }}
-          className={`flex items-center gap-2 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] text-[var(--color-ink)] px-4 py-2 text-xs font-black uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-[var(--color-info)] focus:bg-[var(--color-ink)] focus:text-[var(--color-surface)] transition-all rounded-none ${
+          className={`flex items-center gap-2 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] text-[var(--color-ink)] px-3 sm:px-4 py-2 text-xs font-black uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-[var(--color-info)] focus:bg-[var(--color-ink)] focus:text-[var(--color-surface)] transition-all rounded-none ${
             paginaActual === 1
               ? 'opacity-40 cursor-not-allowed'
               : 'hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] cursor-pointer'
           }`}
         >
-          <ChevronLeft size={16} /> Anterior
+          <ChevronLeft size={16} /> <span className="hidden sm:inline">Anterior</span>
         </button>
-        <div className="text-xs font-black text-[var(--color-ink)] tracking-widest uppercase">
+        <div className="text-xs font-black text-[var(--color-ink)] tracking-wider sm:tracking-widest uppercase whitespace-nowrap">
           Página <span className="text-[var(--color-info)]">{paginaActual}</span> de {totalPaginas || 1}
         </div>
         <button
@@ -109,13 +109,13 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
               }
             }
           }}
-          className={`flex items-center gap-2 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] text-[var(--color-ink)] px-4 py-2 text-xs font-black uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-[var(--color-info)] focus:bg-[var(--color-ink)] focus:text-[var(--color-surface)] transition-all rounded-none ${
+          className={`flex items-center gap-2 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] text-[var(--color-ink)] px-3 sm:px-4 py-2 text-xs font-black uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-[var(--color-info)] focus:bg-[var(--color-ink)] focus:text-[var(--color-surface)] transition-all rounded-none ${
             paginaActual >= totalPaginas
               ? 'opacity-40 cursor-not-allowed'
               : 'hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] cursor-pointer'
           }`}
         >
-          Siguiente <ChevronRight size={16} />
+          <span className="hidden sm:inline">Siguiente</span> <ChevronRight size={16} />
         </button>
       </div>
     );
@@ -143,12 +143,12 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
         <table className="w-full text-left border-collapse">
           <thead className="bg-[var(--color-surface)] text-[var(--color-ink)] border-b-2 border-[var(--color-ink)]">
             <tr>
-              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[var(--color-border)] bg-[var(--color-surface)] whitespace-nowrap">Apertura</th>
-              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[var(--color-border)] bg-[var(--color-surface)] whitespace-nowrap">Cierre</th>
-              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[var(--color-border)] text-center bg-[var(--color-surface)] whitespace-nowrap">Fondo Inicial</th>
-              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[var(--color-border)] text-center bg-[var(--color-surface)] whitespace-nowrap">Efectivo / Yape / Tarjeta</th>
-              <th className="p-4 text-[12px] font-black tracking-widest uppercase border-r-2 border-[var(--color-border)] text-center bg-[var(--color-surface)] whitespace-nowrap">Diferencia Total</th>
-              <th className="p-4 text-[12px] font-black tracking-widest uppercase text-center bg-[var(--color-surface)] whitespace-nowrap">Acciones</th>
+              <th className="p-2 sm:p-4 text-[11px] sm:text-[12px] font-black tracking-wider sm:tracking-widest uppercase border-r-2 border-[var(--color-border)] bg-[var(--color-surface)] whitespace-nowrap">Apertura</th>
+              <th className="p-2 sm:p-4 text-[11px] sm:text-[12px] font-black tracking-wider sm:tracking-widest uppercase border-r-2 border-[var(--color-border)] bg-[var(--color-surface)] whitespace-nowrap hidden md:table-cell">Cierre</th>
+              <th className="p-2 sm:p-4 text-[11px] sm:text-[12px] font-black tracking-wider sm:tracking-widest uppercase border-r-2 border-[var(--color-border)] text-center bg-[var(--color-surface)] whitespace-nowrap hidden md:table-cell">Fondo Inicial</th>
+              <th className="p-2 sm:p-4 text-[11px] sm:text-[12px] font-black tracking-wider sm:tracking-widest uppercase border-r-2 border-[var(--color-border)] text-center bg-[var(--color-surface)] md:whitespace-nowrap">Efectivo / Yape / Tarjeta</th>
+              <th className="p-2 sm:p-4 text-[11px] sm:text-[12px] font-black tracking-wider sm:tracking-widest uppercase border-r-2 border-[var(--color-border)] text-center bg-[var(--color-surface)] whitespace-nowrap">Diferencia Total</th>
+              <th className="p-2 sm:p-4 text-[11px] sm:text-[12px] font-black tracking-wider sm:tracking-widest uppercase text-center bg-[var(--color-surface)] whitespace-nowrap hidden md:table-cell">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -187,24 +187,24 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
                     className="border-b-2 border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors cursor-pointer group"
                     title="Click o Enter para ver el detalle de esta caja"
                   >
-                    <td className="p-4 text-xs font-bold text-[var(--color-muted)] border-r-2 border-[var(--color-border)] whitespace-nowrap">
+                    <td className="p-2 sm:p-4 text-xs font-bold text-[var(--color-muted)] border-r-2 border-[var(--color-border)] md:whitespace-nowrap">
                       {new Date(caja.opened_at).toLocaleString('es-PE')}
                     </td>
-                    <td className="p-4 text-xs font-bold text-[var(--color-muted)] border-r-2 border-[var(--color-border)] whitespace-nowrap">
+                    <td className="p-2 sm:p-4 text-xs font-bold text-[var(--color-muted)] border-r-2 border-[var(--color-border)] whitespace-nowrap hidden md:table-cell">
                       {caja.closed_at ? new Date(caja.closed_at).toLocaleString('es-PE') : '---'}
                     </td>
-                    <td className="p-4 text-sm font-black text-[var(--color-ink)] text-center border-r-2 border-[var(--color-border)] whitespace-nowrap">
+                    <td className="p-2 sm:p-4 text-sm font-black text-[var(--color-ink)] text-center border-r-2 border-[var(--color-border)] whitespace-nowrap hidden md:table-cell">
                       S/ {Number(caja.opening_balance).toFixed(2)}
                     </td>
-                    <td className="p-4 text-xs font-black text-[var(--color-accent)] text-center border-r-2 border-[var(--color-border)] space-y-0.5 whitespace-nowrap">
+                    <td className="p-2 sm:p-4 text-xs font-black text-[var(--color-accent)] text-center border-r-2 border-[var(--color-border)] space-y-0.5 whitespace-nowrap">
                       <p>S/ {realEfectivo.toFixed(2)}</p>
                       <p className="text-[var(--color-info)]">S/ {realYape.toFixed(2)}</p>
                       <p className="text-[var(--color-purple)]">S/ {realTarjeta.toFixed(2)}</p>
                     </td>
-                    <td className={`p-4 text-sm font-black text-center border-r-2 border-[var(--color-border)] whitespace-nowrap ${diferencia < 0 ? 'text-[var(--color-danger)]' : (diferencia > 0 ? 'text-[var(--color-info)]' : 'text-[var(--color-muted)]')}`}>
+                    <td className={`p-2 sm:p-4 text-sm font-black text-center border-r-2 border-[var(--color-border)] whitespace-nowrap ${diferencia < 0 ? 'text-[var(--color-danger)]' : (diferencia > 0 ? 'text-[var(--color-info)]' : 'text-[var(--color-muted)]')}`}>
                       {diferencia !== 0 ? (diferencia > 0 ? `+ S/ ${diferencia.toFixed(2)}` : `- S/ ${Math.abs(diferencia).toFixed(2)}`) : 'CUADRE EXACTO'}
                     </td>
-                    <td className="p-4 text-center flex items-center justify-center gap-2 whitespace-nowrap">
+                    <td className="p-2 sm:p-4 text-center hidden md:flex items-center justify-center gap-2 whitespace-nowrap">
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();

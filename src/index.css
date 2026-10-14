@@ -188,6 +188,22 @@ html, body {
   color: var(--color-brand-primary);
   font-family: ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* Evita que el navegador del celular agrande el texto por su cuenta y rompa los diseños */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* CELULAR/TABLET: los navegadores Android dejan el selector de fecha vacío (sin "dd/mm/aaaa")
+   cuando no tiene valor; se ve como una caja gris rota. Se le da alto mínimo y un texto guía. */
+@media (pointer: coarse) {
+  input[type="date"] {
+    min-height: 2.5rem;
+  }
+  input[type="date"][value=""]:not(:focus)::before {
+    content: 'dd/mm/aaaa';
+    color: var(--color-subtle, #94A3B8);
+    margin-right: 0.5rem;
+  }
 }
 
 .custom-scrollbar::-webkit-scrollbar {

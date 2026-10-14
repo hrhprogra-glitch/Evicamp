@@ -552,7 +552,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
           ) : vista === 'DETALLE' ? (
           <>
             {/* VISTA CLARA: todo lo que hubo, con mayor espacio vertical para la tabla */}
-            <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+            <div className="flex-1 overflow-y-auto lg:overflow-hidden flex flex-col min-h-0">
               {/* Tarjetas resumen compactas para dar más espacio a la tabla */}
               <div className="p-3 sm:p-4 pb-2 flex flex-col gap-2 shrink-0">
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
@@ -584,8 +584,8 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
 
               {/* Barra de Filtros con navegación espacial */}
               <div className="px-3 sm:px-4 pb-2.5 shrink-0">
-                <div className="p-2 sm:p-2.5 bg-[var(--color-bg)] border-2 border-[var(--color-ink)] flex flex-wrap gap-2 items-center">
-                  <div className="relative flex-1 min-w-[200px]">
+                <div className="p-2 sm:p-2.5 bg-[var(--color-bg)] border-2 border-[var(--color-ink)] grid grid-cols-2 lg:flex lg:flex-wrap gap-2 items-center">
+                  <div className="relative col-span-2 lg:flex-1 lg:min-w-[200px]">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none bg-[var(--color-ink)] text-white w-9 justify-center">
                       <Search size={14} />
                     </div>
@@ -603,7 +603,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
                     id="filtro-categoria-detalle-caja"
                     value={filtroCategoria}
                     onChange={(e) => setFiltroCategoria(e.target.value)}
-                    className="px-2.5 py-2 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] cursor-pointer bg-white flex-1 min-w-[130px] rounded-none"
+                    className="px-2.5 py-2 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] cursor-pointer bg-white lg:flex-1 min-w-0 lg:min-w-[130px] rounded-none"
                   >
                     <option value="TODOS">Categoría: TODAS</option>
                     <option value="VENTAS">Solo Ventas</option>
@@ -615,7 +615,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
                     id="filtro-estado-detalle-caja"
                     value={filtroEstado}
                     onChange={(e) => setFiltroEstado(e.target.value)}
-                    className="px-2.5 py-2 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] cursor-pointer bg-white flex-1 min-w-[130px] rounded-none"
+                    className="px-2.5 py-2 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] cursor-pointer bg-white lg:flex-1 min-w-0 lg:min-w-[130px] rounded-none"
                   >
                     <option value="TODOS">Estado: TODOS</option>
                     <option value="COMPLETADO">COMPLETADOS</option>
@@ -625,7 +625,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
                     id="filtro-deuda-detalle-caja"
                     value={filtroDeuda}
                     onChange={(e) => setFiltroDeuda(e.target.value)}
-                    className="px-2.5 py-2 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] cursor-pointer bg-white flex-1 min-w-[130px] rounded-none"
+                    className="col-span-2 px-2.5 py-2 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] cursor-pointer bg-white lg:flex-1 min-w-0 lg:min-w-[130px] rounded-none"
                   >
                     <option value="TODOS">Deuda: TODAS</option>
                     <option value="CON_DEUDA">CON DEUDA</option>
@@ -635,7 +635,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
               </div>
 
               {/* Contenedor ampliado para la tabla */}
-              <div className="flex-1 overflow-auto bg-[var(--color-bg-2)] min-h-0 custom-scrollbar border-t-2 border-[var(--color-ink)]">
+              <div className="shrink-0 lg:shrink lg:flex-1 overflow-x-auto lg:overflow-auto bg-[var(--color-bg-2)] lg:min-h-0 custom-scrollbar border-t-2 border-[var(--color-ink)]">
                 <TablaMovimientos 
                   movimientos={unificados.filter(m => {
                     // SEARCH

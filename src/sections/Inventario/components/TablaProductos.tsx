@@ -173,10 +173,10 @@ export const TablaProductos: React.FC<Props> = ({
 
       {/* CONTENEDOR CON SCROLL HORIZONTAL (CABECERA + FILAS) — SIN SCROLL VERTICAL INTERNO: baja con el scroll de la página */}
       <div className="w-full overflow-x-auto custom-scrollbar">
-        <div className="min-w-[960px]">
+        <div className="md:min-w-[960px]">
 
       {/* CABECERAS DE LA TABLA REESTRUCTURADAS (CON COLUMNA DE IMAGEN) */}
-      <div className="grid grid-cols-12 bg-[var(--color-ink)] text-white p-4 text-sm font-black uppercase tracking-[0.2em] items-center">
+      <div className="hidden md:grid grid-cols-12 bg-[var(--color-ink)] text-white p-4 text-sm font-black uppercase tracking-[0.2em] items-center">
         <div className="col-span-1 text-center">Img</div>
         <div className="col-span-2">Códigos</div>
         <div className="col-span-3">Producto / Categoría</div>
@@ -319,12 +319,12 @@ export const TablaProductos: React.FC<Props> = ({
                   }
                 }}
                 onClick={() => onEditProduct ? onEditProduct(item) : startEditing(item)}
-                className="grid grid-cols-12 items-center p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] focus:bg-amber-50/50 dark:focus:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors group cursor-pointer"
+                className="grid grid-cols-[3rem_minmax(0,1fr)_auto] gap-x-3 gap-y-2 md:gap-0 md:grid-cols-12 items-center p-3 md:p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] focus:bg-amber-50/50 dark:focus:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors group cursor-pointer"
                 title="Presione Enter o haga clic para editar"
               >
                 
                 {/* 0. IMAGEN (BLINDADA CONTRA MEDIA://) */}
-                <div className="col-span-1 flex items-center justify-center pr-2">
+                <div className="col-start-1 row-start-1 row-span-2 md:col-start-auto md:row-start-auto md:row-span-1 md:col-span-1 flex items-center justify-center md:pr-2">
                   {item.imageUrl && (item.imageUrl.startsWith('http') || item.imageUrl.startsWith('data:')) ? (
                     <img 
                       src={item.imageUrl} 
@@ -340,7 +340,7 @@ export const TablaProductos: React.FC<Props> = ({
                 </div>
 
                 {/* 1. CÓDIGOS */}
-                <div className="col-span-2 flex flex-col gap-1.5 items-start">
+                <div className="col-start-2 row-start-2 md:col-start-auto md:row-start-auto md:col-span-2 flex flex-col gap-1.5 items-start min-w-0">
                   <span className="bg-[#F8FAFC] px-2 py-1 border border-[#E2E8F0] text-sm font-black text-[var(--color-ink)] rounded-none truncate max-w-full" title={item.code}>
                     {item.code}
                   </span>
@@ -353,7 +353,7 @@ export const TablaProductos: React.FC<Props> = ({
                 </div>
 
                 {/* 2. PRODUCTO Y CATEGORÍA VISIBLE */}
-                <div className="col-span-3 pr-4 flex flex-col gap-1">
+                <div className="col-start-2 row-start-1 md:col-start-auto md:row-start-auto md:col-span-3 md:pr-4 flex flex-col gap-1 min-w-0">
                   <p className="font-black text-sm uppercase text-[var(--color-ink)] leading-tight line-clamp-2" title={item.name}>
                     {item.name}
                   </p>
@@ -363,7 +363,7 @@ export const TablaProductos: React.FC<Props> = ({
                 </div>
 
                 {/* 3. INVERSIÓN (COSTO Y TOTAL CLAROS) */}
-                <div className="col-span-2 flex flex-col gap-1 justify-center">
+                <div className="col-start-1 col-span-2 row-start-3 md:col-start-auto md:row-start-auto md:col-span-2 flex flex-row flex-wrap md:flex-col gap-x-4 gap-y-1 md:gap-1 justify-start md:justify-center">
                   <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
                     Costo U: <strong className="text-[var(--color-ink)] text-sm">S/ {(item.cost || 0).toFixed(2)}</strong>
                   </span>
@@ -373,17 +373,17 @@ export const TablaProductos: React.FC<Props> = ({
                 </div>
 
                 {/* 4. PRECIO DE VENTA */}
-                <div className="col-span-1 font-black text-lg text-[var(--color-success)] text-right pr-2">
+                <div className="col-start-3 row-start-1 md:col-start-auto md:row-start-auto md:col-span-1 font-black text-base md:text-lg text-[var(--color-success)] text-right md:pr-2 whitespace-nowrap">
                   S/ {(item.price || 0).toFixed(2)}
                 </div>
 
                 {/* 5. STOCK */}
-                <div className="col-span-1 text-center flex justify-center">
+                <div className="col-start-3 row-start-2 md:col-start-auto md:row-start-auto md:col-span-1 text-center flex justify-end md:justify-center">
                   <EtiquetaStock qty={item.quantity} minStock={item.minStock} unit={item.unit} />
                 </div>
 
                 {/* 6. ACCIONES + BOTÓN HISTORIAL LOTE */}
-                <div className="col-span-2 text-center flex items-center justify-center gap-3">
+                <div className="col-start-3 row-start-3 md:col-start-auto md:row-start-auto md:col-span-2 text-center flex items-center justify-end md:justify-center gap-3">
                   <button
                     className="text-[#94A3B8] hover:text-[#3B82F6] focus:text-[#3B82F6] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] p-1 transition-colors cursor-pointer"
                     title="Historial de Lotes / Movimientos"

@@ -65,12 +65,12 @@ export const FiltrosInventario: React.FC<Props> = ({
   };
 
   return (
-    <div className="flex flex-col xl:flex-row gap-4 px-8 shrink-0 items-center justify-between">
-      
-      {/* BARRA DE BÚSQUEDA (Toma el espacio restante) */}
-      <div className="w-full flex-1 h-14 flex border border-[#E2E8F0] bg-[var(--color-surface)] focus-within:border-[var(--color-ink)] focus-within:ring-2 focus-within:ring-[var(--color-ink)] transition-all group shadow-sm">
-        <div className="w-14 h-full flex items-center justify-center bg-[#F8FAFC] border-r border-[#E2E8F0] text-[#94A3B8] group-focus-within:bg-[var(--color-ink)] group-focus-within:text-[var(--color-success)] group-focus-within:border-[var(--color-ink)] transition-colors shrink-0">
-          <div className="mt-[-6px]"><Search size={18} /></div>
+    <div className="flex flex-col xl:flex-row gap-3 sm:gap-4 px-2 sm:px-8 shrink-0 items-stretch xl:items-center justify-between">
+
+      {/* BARRA DE BÚSQUEDA (Toma el espacio restante; en columna no usa flex-1 porque perdería su alto) */}
+      <div className="w-full xl:flex-1 h-12 sm:h-14 shrink-0 flex border border-[#E2E8F0] bg-[var(--color-surface)] focus-within:border-[var(--color-ink)] focus-within:ring-2 focus-within:ring-[var(--color-ink)] transition-all group shadow-sm">
+        <div className="w-12 sm:w-14 h-full flex items-center justify-center bg-[#F8FAFC] border-r border-[#E2E8F0] text-[#94A3B8] group-focus-within:bg-[var(--color-ink)] group-focus-within:text-[var(--color-success)] group-focus-within:border-[var(--color-ink)] transition-colors shrink-0">
+          <Search size={18} />
         </div>
         <div className="flex-1 relative h-full flex items-center">
           <input 
@@ -116,7 +116,7 @@ export const FiltrosInventario: React.FC<Props> = ({
                 setSearchQuery('');
               }
             }}
-            className="w-full h-full pl-4 pr-32 bg-transparent font-black text-xs uppercase outline-none text-[var(--color-ink)] placeholder:text-[#CBD5E1]"
+            className={`w-full h-full pl-3 sm:pl-4 ${localQuery ? 'pr-32' : 'pr-3'} bg-transparent font-black text-xs uppercase outline-none text-[var(--color-ink)] placeholder:text-[#CBD5E1]`}
           />
           {localQuery && (
             <div className="absolute right-2 flex items-center gap-2">
@@ -141,7 +141,7 @@ export const FiltrosInventario: React.FC<Props> = ({
       </div>
 
       {/* BLOQUE DE FILTROS Y ORDENAMIENTO (A la derecha) */}
-      <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full xl:w-auto">
         
         {/* SELECT CATEGORÍA */}
         <select 
@@ -167,7 +167,7 @@ export const FiltrosInventario: React.FC<Props> = ({
               document.getElementById('filtro-estado-inventario')?.focus();
             }
           }}
-          className="h-14 bg-[var(--color-surface)] border border-[#E2E8F0] text-[10px] font-bold text-[var(--color-ink)] uppercase px-3 outline-none focus:border-[var(--color-success)] focus:ring-1 focus:ring-[var(--color-success)] transition-colors cursor-pointer"
+          className="h-11 sm:h-14 w-full sm:w-auto min-w-0 bg-[var(--color-surface)] border border-[#E2E8F0] text-[10px] font-bold text-[var(--color-ink)] uppercase px-3 outline-none focus:border-[var(--color-success)] focus:ring-1 focus:ring-[var(--color-success)] transition-colors cursor-pointer"
         >
           <option value="">Todas las Categorías</option>
           {categorias.map(cat => (
@@ -199,7 +199,7 @@ export const FiltrosInventario: React.FC<Props> = ({
               document.getElementById('filtro-orden-inventario')?.focus();
             }
           }}
-          className="h-14 bg-[var(--color-surface)] border border-[#E2E8F0] text-[10px] font-bold text-[var(--color-ink)] uppercase px-3 outline-none focus:border-[var(--color-success)] focus:ring-1 focus:ring-[var(--color-success)] transition-colors cursor-pointer"
+          className="h-11 sm:h-14 w-full sm:w-auto min-w-0 bg-[var(--color-surface)] border border-[#E2E8F0] text-[10px] font-bold text-[var(--color-ink)] uppercase px-3 outline-none focus:border-[var(--color-success)] focus:ring-1 focus:ring-[var(--color-success)] transition-colors cursor-pointer"
         >
           <option value="">Todos los Estados</option>
           <option value="CON_STOCK">Con Stock General</option>
@@ -231,7 +231,7 @@ export const FiltrosInventario: React.FC<Props> = ({
               document.getElementById('btn-limpiar-filtros-inventario')?.focus();
             }
           }}
-          className="h-14 bg-[var(--color-surface)] border border-[#E2E8F0] text-[10px] font-bold text-[var(--color-ink)] uppercase px-3 outline-none focus:border-[var(--color-success)] focus:ring-1 focus:ring-[var(--color-success)] transition-colors cursor-pointer"
+          className="h-11 sm:h-14 w-full sm:w-auto min-w-0 bg-[var(--color-surface)] border border-[#E2E8F0] text-[10px] font-bold text-[var(--color-ink)] uppercase px-3 outline-none focus:border-[var(--color-success)] focus:ring-1 focus:ring-[var(--color-success)] transition-colors cursor-pointer"
         >
           <option value="NOMBRE_ASC">Nombre (A - Z)</option>
           <option value="NOMBRE_DESC">Nombre (Z - A)</option>
@@ -261,7 +261,7 @@ export const FiltrosInventario: React.FC<Props> = ({
             }
           }}
           title="Limpiar todos los filtros"
-          className="h-14 px-4 flex items-center justify-center border border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] hover:bg-[var(--color-ink)] hover:text-white hover:border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
+          className="h-11 sm:h-14 px-4 flex items-center justify-center border border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] hover:bg-[var(--color-ink)] hover:text-white hover:border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
         >
           <FilterX size={16} />
         </button>

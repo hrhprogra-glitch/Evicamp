@@ -825,7 +825,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
           {view === 'HISTORIAL' && (
             <div className="flex flex-col gap-6 h-full">
               {/* BOTÓN VOLVER PROMINENTE */}
-              <div className="shrink-0 border-b-2 border-[var(--color-border)] pb-4 flex justify-between items-center">
+              <div className="shrink-0 border-b-2 border-[var(--color-border)] pb-4 flex flex-wrap justify-between items-center gap-2">
                 <button 
                   id="btn-volver-directorio"
                   onClick={() => setView('LISTA')} 
@@ -840,23 +840,23 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                     onClick={() => {
                       window.dispatchEvent(new CustomEvent('abrirEstadoCuentaGlobal', { detail: clienteActivo?.nombre }));
                     }}
-                    className="flex items-center gap-2 text-xs font-black uppercase bg-[var(--color-info)] text-white px-4 py-1.5 hover:bg-[var(--color-ink)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors ml-4 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
+                    className="flex items-center gap-2 text-xs font-black uppercase bg-[var(--color-info)] text-white px-4 py-1.5 hover:bg-[var(--color-ink)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors sm:ml-4 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
                   >
                     Ver Estado de Cuenta
                   </button>
                 )}
-                <div className="flex bg-[var(--color-surface)] border-2 border-[var(--color-ink)] p-1">
-                  <button 
+                <div className="flex shrink-0 ml-auto bg-[var(--color-surface)] border-2 border-[var(--color-ink)] p-1">
+                  <button
                     id="tab-historial-pendientes"
                     onClick={() => setHistorialTab('PENDIENTES')} 
-                    className={`px-4 py-1 text-xs font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors cursor-pointer ${historialTab === 'PENDIENTES' ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-subtle)] hover:text-[var(--color-ink)]'}`}
+                    className={`px-2 sm:px-4 py-1 text-xs font-black uppercase tracking-wider sm:tracking-widest focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors cursor-pointer ${historialTab === 'PENDIENTES' ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-subtle)] hover:text-[var(--color-ink)]'}`}
                   >
                     PENDIENTES
                   </button>
                   <button 
                     id="tab-historial-pagadas"
                     onClick={() => setHistorialTab('PAGADAS')} 
-                    className={`px-4 py-1 text-xs font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors cursor-pointer ${historialTab === 'PAGADAS' ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-subtle)] hover:text-[var(--color-ink)]'}`}
+                    className={`px-2 sm:px-4 py-1 text-xs font-black uppercase tracking-wider sm:tracking-widest focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors cursor-pointer ${historialTab === 'PAGADAS' ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-subtle)] hover:text-[var(--color-ink)]'}`}
                   >
                     PAGADAS
                   </button>
@@ -918,7 +918,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                         }}
                         className="bg-white border-2 border-[var(--color-ink)] p-4 flex flex-col gap-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] shadow-[4px_4px_0_0_var(--color-border)] cursor-pointer hover:bg-[var(--color-bg)] transition-colors"
                       >
-                        <div className="flex justify-between items-center w-full">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 w-full">
                           <div>
                             <p className="text-sm font-black text-[var(--color-ink)] uppercase">Fecha: {new Date(f.fechaEmision).toLocaleDateString()}</p>
                             <p className="text-xs font-bold mt-1">
@@ -927,10 +927,10 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                               </span>
                             </p>
                           </div>
-                          <div className="text-right flex flex-col gap-1">
-                            <p className="text-xs font-black uppercase text-[var(--color-muted)] tracking-widest">Monto Original: <span className="text-[var(--color-ink)] ml-1">S/ {f.montoOriginal.toFixed(2)}</span></p>
-                            <p className="text-xs font-black uppercase text-[var(--color-success)] tracking-widest mt-1">Total Abonado: <span className="ml-1">S/ {(f.montoPagado || 0).toFixed(2)}</span></p>
-                            <p className="text-sm font-black uppercase text-[var(--color-danger)] tracking-widest mt-1 border-t border-[var(--color-border)] pt-1">Debe: <span className="ml-1">S/ {f.saldoPendiente.toFixed(2)}</span></p>
+                          <div className="sm:text-right flex flex-col gap-1">
+                            <p className="flex justify-between sm:justify-end gap-2 text-xs font-black uppercase text-[var(--color-muted)] tracking-widest">Monto Original: <span className="text-[var(--color-ink)] whitespace-nowrap">S/ {f.montoOriginal.toFixed(2)}</span></p>
+                            <p className="flex justify-between sm:justify-end gap-2 text-xs font-black uppercase text-[var(--color-success)] tracking-widest mt-1">Total Abonado: <span className="whitespace-nowrap">S/ {(f.montoPagado || 0).toFixed(2)}</span></p>
+                            <p className="flex justify-between sm:justify-end gap-2 text-sm font-black uppercase text-[var(--color-danger)] tracking-widest mt-1 border-t border-[var(--color-border)] pt-1">Debe: <span className="whitespace-nowrap">S/ {f.saldoPendiente.toFixed(2)}</span></p>
                           </div>
                         </div>
 

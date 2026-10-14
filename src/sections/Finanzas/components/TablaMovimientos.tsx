@@ -22,12 +22,12 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
         <table id="tabla-movimientos-caja" className="w-full text-left border-collapse min-w-full">
           <thead className="bg-[var(--color-ink)] text-white sticky top-0 z-10">
             <tr>
-              <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] whitespace-nowrap w-[150px]">Fecha y Hora</th>
+              <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] md:whitespace-nowrap w-[90px] md:w-[150px]">Fecha y Hora</th>
               <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Nro. Ticket / Detalle</th>
-              <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] whitespace-nowrap text-center w-[80px]">Pago</th>
+              <th className="hidden md:table-cell p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] whitespace-nowrap text-center w-[80px]">Pago</th>
               <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] whitespace-nowrap text-center w-[110px]">Estado</th>
-              <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-right whitespace-nowrap w-[90px]">Pagado</th>
-              <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-right whitespace-nowrap w-[80px]">Deuda</th>
+              <th className="hidden md:table-cell p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-right whitespace-nowrap w-[90px]">Pagado</th>
+              <th className="hidden md:table-cell p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-right whitespace-nowrap w-[80px]">Deuda</th>
               <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-right whitespace-nowrap w-[95px]">Total</th>
               <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-center whitespace-nowrap w-[95px]">Acciones</th>
             </tr>
@@ -65,7 +65,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                   }}
                   className={`border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors cursor-pointer group`}
                 >
-                  <td className="p-2.5 sm:p-3 text-xs font-bold text-[var(--color-muted)] whitespace-nowrap">
+                  <td className="p-2.5 sm:p-3 text-xs font-bold text-[var(--color-muted)] md:whitespace-nowrap">
                     {new Date(item.created_at).toLocaleString('es-PE')}
                   </td>
                   
@@ -99,7 +99,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                     </div>
                   </td>
                   
-                  <td className="p-2.5 sm:p-3 text-xs font-bold text-[var(--color-muted)] uppercase whitespace-nowrap text-center">{item.metodo_pago}</td>
+                  <td className="hidden md:table-cell p-2.5 sm:p-3 text-xs font-bold text-[var(--color-muted)] uppercase whitespace-nowrap text-center">{item.metodo_pago}</td>
                   
                   <td className="p-2.5 sm:p-3 whitespace-nowrap text-center">
                     {item.estado ? (
@@ -116,12 +116,12 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                   </td>
 
                   {/* PAGADO */}
-                  <td className="p-2.5 sm:p-3 text-right text-xs sm:text-sm font-bold text-[var(--color-muted)] whitespace-nowrap">
+                  <td className="hidden md:table-cell p-2.5 sm:p-3 text-right text-xs sm:text-sm font-bold text-[var(--color-muted)] whitespace-nowrap">
                     {item.isTicket ? `S/ ${Number(item.monto_pagado || 0).toFixed(2)}` : '-'}
                   </td>
 
                   {/* DEUDA */}
-                  <td className={`p-2.5 sm:p-3 text-right text-xs sm:text-sm font-black whitespace-nowrap ${Number(item.monto_deuda) > 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>
+                  <td className={`hidden md:table-cell p-2.5 sm:p-3 text-right text-xs sm:text-sm font-black whitespace-nowrap ${Number(item.monto_deuda) > 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>
                     {item.isTicket && Number(item.monto_deuda) > 0 ? `S/ ${Number(item.monto_deuda).toFixed(2)}` : '-'}
                   </td>
 
