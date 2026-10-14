@@ -1,7 +1,8 @@
 const { NodeSSH } = require('node-ssh');
+const { conexionVps } = require('./vps.cjs');
 const ssh = new NodeSSH();
 async function check() {
-  await ssh.connect({ host: '72.60.242.133', username: 'root', password: 'X3L7S7rWbP?(ipa' });
+  await ssh.connect(conexionVps);
   
   const grantSQL = 'GRANT SELECT, INSERT, UPDATE, DELETE ON empleados TO anon, web_anon; GRANT SELECT, INSERT, UPDATE, DELETE ON sesiones TO anon, web_anon;';
   const res = await ssh.execCommand('sudo -u postgres psql -c "' + grantSQL + '"');

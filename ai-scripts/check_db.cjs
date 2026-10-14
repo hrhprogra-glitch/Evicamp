@@ -1,12 +1,9 @@
 const { NodeSSH } = require('node-ssh');
+const { conexionVps } = require('./vps.cjs');
 const ssh = new NodeSSH();
 
 async function check() {
-  await ssh.connect({
-    host: '72.60.242.133',
-    username: 'root',
-    password: 'X3L7S7rWbP?(ipa'
-  });
+  await ssh.connect(conexionVps);
   
   const res = await ssh.execCommand('sudo -u postgres psql -c "\\dt"');
   console.log('TABLES:\n', res.stdout);

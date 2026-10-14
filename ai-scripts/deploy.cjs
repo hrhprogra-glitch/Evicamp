@@ -1,15 +1,12 @@
 const { NodeSSH } = require('node-ssh');
 const path = require('path');
+const { conexionVps } = require('./vps.cjs');
 const ssh = new NodeSSH();
 
 async function deploy() {
   try {
     console.log('Connecting to VPS...');
-    await ssh.connect({
-      host: '72.60.242.133',
-      username: 'root',
-      password: 'X3L7S7rWbP?(ipa'
-    });
+    await ssh.connect(conexionVps);
     console.log('Connected!');
 
     const localDir = path.join(__dirname, '..', 'dist');
