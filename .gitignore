@@ -26,3 +26,4 @@ dist-ssr
 
 # Credenciales del VPS (nunca subir a GitHub)
 .env.vps
+dist-siuhub
