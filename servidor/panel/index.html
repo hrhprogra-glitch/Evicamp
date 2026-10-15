@@ -207,6 +207,9 @@ async function cargar() {
   try { estado = await api('/api/resumen'); pintar(); } catch (ex) { if (ex.message !== 'Sesión expirada.') toast(ex.message); }
 }
 
+// Nombre que se muestra para bases con nombre técnico (la base real no se renombra: Evicamp depende de ella)
+const NOMBRE_BASE = { postgres: 'evicamp' };
+
 const ETIQUETA_PAGO = {
   AL_DIA: ['Al día', 'c-ok'], POR_VENCER: ['Por vencer', 'c-warn'], VENCIDO: ['Vencido', 'c-danger'], SIN_PLAN: ['Sin plan', 'c-gris'],
 };
@@ -269,7 +272,7 @@ function pintar() {
   const fechaBackup = (n) => { const m = (n || '').match(/(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]}` : '-'; };
   $('#tabla-backups').innerHTML = !backups.length ? '<div class="vacio">Sin backups todavía.</div>' : `
     <table><thead><tr><th>Base de datos</th><th>Último backup</th><th>Tamaño</th><th>Copias guardadas</th></tr></thead><tbody>
-    ${backups.map((b) => `<tr><td><b>${esc(b.base)}</b></td><td data-t="Último">${fechaBackup(b.ultimo)}</td>
+    ${backups.map((b) => `<tr><td><b>${esc(NOMBRE_BASE[b.base] || b.base)}</b></td><td data-t="Último">${fechaBackup(b.ultimo)}</td>
       <td data-t="Tamaño">${b.tamano_kb >= 1024 ? (b.tamano_kb / 1024).toFixed(1) + ' MB' : b.tamano_kb + ' KB'}</td><td data-t="Copias">${b.copias}</td></tr>`).join('')}
     </tbody></table>`;
 }
