@@ -30,15 +30,15 @@
     "semantic_hash": "4bd6d4148302b242d97873595cc455bc"
   },
   "src/layout/SideBar.tsx": {
-    "mtime": 1792073127.4799347,
-    "seen": 1792073167.8173988,
-    "ast_hash": "2142cc6205d38be5a8b3f81c4dd9975f",
+    "mtime": 1792076105.103367,
+    "seen": 1792076121.7552063,
+    "ast_hash": "70d900ce8843c6c406a07f0d64df09ca",
     "semantic_hash": ""
   },
   "src/main.tsx": {
-    "mtime": 1791996033.083422,
-    "seen": 1791996049.3554084,
-    "ast_hash": "3eed7c617c376f56fe6deeaee55ecbef",
+    "mtime": 1792076085.0634248,
+    "seen": 1792076121.7552078,
+    "ast_hash": "683006498b13b737ff4ebb326daaa79a",
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/FormularioEmpresa.tsx": {
@@ -540,9 +540,9 @@
     "semantic_hash": "3b2217d641a9d9056c76a17e25047522"
   },
   "index.html": {
-    "mtime": 1792073127.4514115,
-    "seen": 1792073167.8174863,
-    "ast_hash": "09c06a83d53f5de4499c3d4f11dc5423",
+    "mtime": 1792076149.7415605,
+    "seen": 1792076173.9544613,
+    "ast_hash": "07eb1e1f06f63f78653e2964729017ae",
     "semantic_hash": ""
   },
   "public/vite.svg": {
@@ -1449,6 +1449,66 @@
     "mtime": 1792072015.3536692,
     "seen": 1792073167.8173847,
     "ast_hash": "d7e647a8a20f70c966df7e8a4b4077ea",
+    "semantic_hash": ""
+  },
+  "ai-scripts/generar-iconos-pwa.cjs": {
+    "mtime": 1792076045.7384696,
+    "seen": 1792076121.7551725,
+    "ast_hash": "2eff64c3c9a334106f2e4cbc199f2877",
+    "semantic_hash": ""
+  },
+  "public/sw.js": {
+    "mtime": 1792076067.2215016,
+    "seen": 1792076121.7551956,
+    "ast_hash": "4818352e1964426581b8f3370167146d",
+    "semantic_hash": ""
+  },
+  "src/utils/instalarApp.ts": {
+    "mtime": 1792076084.0076892,
+    "seen": 1792076121.7552714,
+    "ast_hash": "8e9c215384165f16d2cc81356384f496",
+    "semantic_hash": ""
+  },
+  "public/offline.html": {
+    "mtime": 1792076068.2783747,
+    "seen": 1792076121.7552981,
+    "ast_hash": "58e501d9ab1011adf13360d50de54276",
+    "semantic_hash": ""
+  },
+  "public/icons/apple-touch-icon.png": {
+    "mtime": 1792076047.1979623,
+    "seen": 1792076121.7552989,
+    "ast_hash": "1fd341d16d4d03fe8ef57da1d6e59e16",
+    "semantic_hash": ""
+  },
+  "public/icons/favicon-32.png": {
+    "mtime": 1792076047.1979623,
+    "seen": 1792076121.7552996,
+    "ast_hash": "6c48862c13ca6ef70f9b2774f708dcd1",
+    "semantic_hash": ""
+  },
+  "public/icons/icon-192.png": {
+    "mtime": 1792076047.1854541,
+    "seen": 1792076121.7553003,
+    "ast_hash": "052d0b5ba413bb4bc3cee220bc0743ff",
+    "semantic_hash": ""
+  },
+  "public/icons/icon-512.png": {
+    "mtime": 1792076047.1919615,
+    "seen": 1792076121.7553012,
+    "ast_hash": "ead5fd7a42799c3778f7cc3af102d18a",
+    "semantic_hash": ""
+  },
+  "public/icons/icon-maskable-512.png": {
+    "mtime": 1792076047.1969607,
+    "seen": 1792076121.7553017,
+    "ast_hash": "128dfcc1573a6aa24296b88f77f8325f",
+    "semantic_hash": ""
+  },
+  "public/manifest.json": {
+    "mtime": 1792076066.1545794,
+    "seen": 1792076173.9543643,
+    "ast_hash": "deaf47778df65f07fec853421f382d29",
     "semantic_hash": ""
   }
 }

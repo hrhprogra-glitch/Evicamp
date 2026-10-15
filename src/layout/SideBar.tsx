@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   ShoppingCart, Users, Package, 
   Truck, Trash2, Wallet, 
-  Settings, BarChart3, X, LogOut
+  Settings, BarChart3, X, LogOut, Download
 } from 'lucide-react';
+import { usePuedeInstalar, instalarApp } from '../utils/instalarApp';
 
 // IMPORTAMOS EL LOGO Y SUPABASE
 import logoEvicamp from '../assets/logo.png';
@@ -29,6 +30,7 @@ const AUTO_OCULTAR_MS = 8000;
 
 export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigate, onClose, onToggle, permisos }) => {
   const [empresaData, setEmpresaData] = useState({ nombre: 'SIUHUB', logo: logoEvicamp });
+  const puedeInstalar = usePuedeInstalar();
 
   // === TEMPORIZADOR DE AUTO-OCULTADO ===
   // Mientras el menú está abierto cuenta el tiempo sin actividad; con el mouse encima queda en pausa.
@@ -397,8 +399,24 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
         ))}
       </nav>
 
-            <div className="px-1.5 py-1.5 border-t border-[var(--color-border)] mt-auto">
-        <button 
+            <div className="px-1.5 py-1.5 border-t border-[var(--color-border)] mt-auto flex flex-col gap-1">
+        {/* Solo aparece si el navegador permite instalar y la app aún no está instalada */}
+        {puedeInstalar && (
+          <button
+            onClick={instalarApp}
+            title={!isOpen ? "Instalar app" : undefined}
+            aria-label="Instalar app SiuHub"
+            className={`w-full text-left py-2 short:py-1.5 text-xs font-black uppercase tracking-wider transition-all border-2 rounded-none flex items-center cursor-pointer border-[var(--color-accent)] text-[var(--color-accent)] bg-[var(--color-accent)]/5 hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] hover:shadow-[3px_3px_0_0_var(--color-ink)] hover:translate-x-[-2px] hover:translate-y-[-2px] focus:outline-none focus:bg-[var(--color-accent)] focus:text-[var(--color-ink)] focus:shadow-[3px_3px_0_0_var(--color-ink)] focus:translate-x-[-2px] focus:translate-y-[-2px] ${
+              isOpen ? 'pl-3 pr-2 gap-3 justify-between' : 'justify-center px-0'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Download size={18} className="shrink-0" />
+              {isOpen && <span className="whitespace-nowrap">Instalar app</span>}
+            </div>
+          </button>
+        )}
+        <button
           onClick={async () => {
             await cerrarSesion();
             window.location.reload();
