@@ -17,6 +17,7 @@ import { Utilidades } from './sections/Utilidades';
 import Configuraciones from './sections/Configuraciones';
 import { aplicarTamanoInterfaz, leerTamanoInterfaz } from './utils/tamanoInterfaz';
 import { AlertaYape } from './layout/AlertaYape';
+import { AvisoSuscripcion } from './layout/AvisoSuscripcion';
 import { programarRestauracionFoco } from './utils/navegacionSesion';
 
 // Nombre visible de cada sesión en la barra superior de celular/tablet
@@ -251,6 +252,9 @@ export const App: React.FC = () => {
       />
 
       <main className="flex-1 min-w-0 flex flex-col overflow-hidden bg-[var(--color-bg)]">
+
+        {/* Aviso de vencimiento del plan (solo clientes con plan en el Panel de Control) */}
+        <AvisoSuscripcion />
 
         {/* BARRA SUPERIOR SOLO EN TABLET/CELULAR: en esas pantallas el menú está oculto y este botón lo abre */}
         <header className="lg:hidden shrink-0 h-11 flex items-center gap-3 px-2 bg-[var(--color-ink)] border-b-2 border-[var(--color-accent)] font-mono">

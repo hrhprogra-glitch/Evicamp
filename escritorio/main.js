@@ -6,17 +6,9 @@ const { app, BrowserWindow, Menu, ipcMain, shell, dialog } = require('electron')
 const path = require('path');
 const fs = require('fs');
 
-// Link del negocio: lo escribe el script de compilación por cliente (destino.json).
-const DESTINO = (() => {
-  try {
-    return JSON.parse(fs.readFileSync(path.join(__dirname, 'destino.json'), 'utf8'));
-  } catch {
-    return { url: 'https://siuhub.duckdns.org', nombre: 'SiuHub' };
-  }
-})();
-const ORIGEN = new URL(DESTINO.url).origin;
+const DOMINIO_CLIENTES = 'siuhub.duckdns.org';
 
-// Preferencias de la PC (impresora elegida). Se guardan en la carpeta de datos del usuario.
+// Preferencias de la PC (link del negocio e impresora). Se guardan en la carpeta de datos del usuario.
 const archivoConfig = () => path.join(app.getPath('userData'), 'config.json');
 const leerConfig = () => {
   try { return JSON.parse(fs.readFileSync(archivoConfig(), 'utf8')); } catch { return {}; }
@@ -25,6 +17,23 @@ const guardarConfig = (cambios) => {
   const config = { ...leerConfig(), ...cambios };
   fs.writeFileSync(archivoConfig(), JSON.stringify(config, null, 2));
   return config;
+};
+
+// Link del negocio:
+//  - instalador de un cliente: viene fijo en destino.json (lo escribe build-escritorio.cjs)
+//  - instalador genérico (sin url): se pregunta la primera vez y queda guardado en config.json
+const DESTINO_FIJO = (() => {
+  try {
+    const d = JSON.parse(fs.readFileSync(path.join(__dirname, 'destino.json'), 'utf8'));
+    return d.url ? d : null;
+  } catch {
+    return null;
+  }
+})();
+const urlNegocio = () => (DESTINO_FIJO ? DESTINO_FIJO.url : leerConfig().url || null);
+const origenNegocio = () => {
+  const u = urlNegocio();
+  return u ? new URL(u).origin : null;
 };
 
 let ventana = null;
@@ -41,7 +50,12 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 const cargarSistema = () => {
-  ventana.loadURL(DESTINO.url).catch(() => {
+  const url = urlNegocio();
+  if (!url) {
+    ventana.loadFile(path.join(__dirname, 'configurar.html'));
+    return;
+  }
+  ventana.loadURL(url).catch(() => {
     ventana.loadFile(path.join(__dirname, 'sin-conexion.html'));
   });
 };
@@ -54,7 +68,7 @@ const crearVentana = () => {
     minHeight: 600,
     show: false,
     backgroundColor: '#1E293B',
-    title: DESTINO.nombre,
+    title: 'SiuHub',
     icon: path.join(__dirname, 'icono.png'),
     autoHideMenuBar: true, // el menú aparece con la tecla Alt, para no quitar espacio
     webPreferences: {
@@ -72,7 +86,8 @@ const crearVentana = () => {
 
   // Solo se navega dentro del sistema del cliente; cualquier otro link se abre en el navegador
   ventana.webContents.on('will-navigate', (e, url) => {
-    if (!url.startsWith(ORIGEN) && !url.startsWith('file://')) {
+    const origen = origenNegocio();
+    if (!(origen && url.startsWith(origen)) && !url.startsWith('file://')) {
       e.preventDefault();
       shell.openExternal(url);
     }
@@ -84,7 +99,8 @@ const crearVentana = () => {
 
   // Sin internet: pantalla local de "Sin conexión" con botón para reintentar
   ventana.webContents.on('did-fail-load', (_e, _codigo, _desc, url, esPrincipal) => {
-    if (esPrincipal && url.startsWith(ORIGEN)) {
+    const origen = origenNegocio();
+    if (esPrincipal && origen && url.startsWith(origen)) {
       ventana.loadFile(path.join(__dirname, 'sin-conexion.html'));
     }
   });
@@ -120,6 +136,32 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
 
 ipcMain.handle('reintentar', () => cargarSistema());
 
+// Instalador genérico: el usuario escribe "minegocio" o el link completo; se comprueba que sea un sistema SiuHub
+ipcMain.handle('configurar', async (_e, texto) => {
+  let valor = String(texto || '').trim().toLowerCase();
+  if (!valor) return { ok: false, motivo: 'Escribe el link de tu negocio.' };
+  if (!/^https?:\/\//.test(valor)) {
+    if (!/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/.test(valor)) {
+      return { ok: false, motivo: 'Link inválido: usa solo letras minúsculas, números y guiones.' };
+    }
+    valor = `https://${valor}.${DOMINIO_CLIENTES}`;
+  }
+  let url;
+  try { url = new URL(valor); } catch { return { ok: false, motivo: 'Link inválido.' }; }
+  if (url.protocol !== 'https:') return { ok: false, motivo: 'El link debe empezar con https://' };
+  try {
+    const r = await fetch(`${url.origin}/manifest.json`, { cache: 'no-store' });
+    const manifiesto = r.ok ? await r.json() : null;
+    if (!manifiesto || manifiesto.name !== 'SiuHub') throw new Error('no es SiuHub');
+  } catch {
+    return { ok: false, motivo: `No se encontró un sistema SiuHub en ${url.origin}. Revisa el link y el internet.` };
+  }
+  guardarConfig({ url: url.origin });
+  cargarSistema();
+  construirMenu();
+  return { ok: true };
+});
+
 // === MENÚ (tecla Alt) ===
 const construirMenu = async () => {
   const impresoras = ventana ? await ventana.webContents.getPrintersAsync() : [];
@@ -136,6 +178,10 @@ const construirMenu = async () => {
       submenu: [
         { label: 'Recargar', accelerator: 'F5', click: () => cargarSistema() },
         { label: 'Pantalla completa', accelerator: 'F11', click: () => ventana.setFullScreen(!ventana.isFullScreen()) },
+        ...(DESTINO_FIJO ? [] : [{
+          label: 'Cambiar link del negocio...',
+          click: () => { guardarConfig({ url: null }); cargarSistema(); },
+        }]),
         { type: 'separator' },
         { label: 'Salir', role: 'quit' },
       ],
@@ -168,7 +214,7 @@ const construirMenu = async () => {
             type: 'info',
             title: 'SiuHub',
             message: `SiuHub ${app.getVersion()}`,
-            detail: `Conectado a: ${DESTINO.url}\nImpresora: ${leerConfig().impresora || 'predeterminada de Windows'}`,
+            detail: `Conectado a: ${urlNegocio() || '(sin configurar)'}\nImpresora: ${leerConfig().impresora || 'predeterminada de Windows'}`,
           }),
         },
         { label: 'Herramientas de desarrollo', accelerator: 'Ctrl+Shift+I', click: () => ventana.webContents.toggleDevTools() },

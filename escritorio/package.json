@@ -28,7 +28,8 @@
       "preload.js",
       "sin-conexion.html",
       "icono.png",
-      "destino.json"
+      "destino.json",
+      "configurar.html"
     ],
     "win": {
       "target": "nsis",

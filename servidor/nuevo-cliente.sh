@@ -58,6 +58,10 @@ systemctl is-active --quiet "postgrest-cliente@$SLUG"
 
 echo "== 4/6 Link y certificado HTTPS ($HOST)"
 mkdir -p "$DIR_CLIENTES/$SLUG/descargas"
+# Instalador de PC genérico (pregunta el link al abrirse); se publica con build-escritorio.cjs generico
+if [ -f "$APP_COMPARTIDA/../descargas/SiuHub-Setup.exe" ]; then
+  cp "$APP_COMPARTIDA/../descargas/SiuHub-Setup.exe" "$DIR_CLIENTES/$SLUG/descargas/"
+fi
 escribir_nginx "$SLUG" "$PUERTO" http
 CREADO_NGINX=1
 recargar_nginx

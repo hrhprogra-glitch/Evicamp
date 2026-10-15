@@ -33,6 +33,10 @@ const cliente = (slug) => ({
   remoteDir: `/var/www/clientes/${slug}`,
 });
 
-const destino = (nombre) => SITIOS[nombre] || (/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/.test(nombre) ? cliente(nombre) : null);
+// Instalador genérico: pregunta el link al abrirse por primera vez. Se publica en la carpeta
+// compartida y el Panel de Control lo copia a cada cliente nuevo.
+const GENERICO = { nombre: 'SiuHub', url: null, generico: true, remoteDir: '/var/www/siuhub-app' };
+
+const destino = (nombre) => nombre === 'generico' ? GENERICO : SITIOS[nombre] || (/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/.test(nombre) ? cliente(nombre) : null);
 
 module.exports = { SITIOS, destino };

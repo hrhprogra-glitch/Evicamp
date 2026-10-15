@@ -15,9 +15,15 @@ host_cliente() { echo "$1.$DOMINIO_BASE"; }
 base_cliente() { echo "cli_${1//-/_}"; }
 
 # slug: solo minúsculas, números y guion; 3 a 30 caracteres; no empieza ni termina en guion
+LINKS_RESERVADOS=" panel www api admin app mail ftp siuhub evicamp creditaltoque descargas "
+
 validar_slug() {
   [[ "$1" =~ ^[a-z0-9]([a-z0-9-]{1,28})[a-z0-9]$ ]] || {
     echo "ERROR: link inválido '$1'. Usa minúsculas, números y guiones (3 a 30 caracteres)." >&2
+    return 1
+  }
+  [[ "$LINKS_RESERVADOS" != *" $1 "* ]] || {
+    echo "ERROR: el link '$1' está reservado para SiuHub. Elige otro." >&2
     return 1
   }
 }
@@ -78,6 +84,12 @@ escribir_nginx() {
     # Instalador de PC propio de este cliente (se conecta a su link)
     location /descargas/ {
         alias $DIR_CLIENTES/$slug/descargas/;
+    }
+
+    # Estado del plan (lo escribe el Panel de Control): el sistema avisa cuando está por vencer
+    location = /suscripcion.json {
+        alias $DIR_CLIENTES/$slug/suscripcion.json;
+        add_header Cache-Control "no-store" always;
     }
 
     location /rest/v1/ {

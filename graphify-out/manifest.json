@@ -18,9 +18,9 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1791996662.575357,
-    "seen": 1791996681.3925261,
-    "ast_hash": "679390a7d4fcdcd3848f4941814028a9",
+    "mtime": 1792080129.1320696,
+    "seen": 1792080418.9112837,
+    "ast_hash": "c0db75d3f2c82db0bd52ab49c0162e2a",
     "semantic_hash": ""
   },
   "src/db/supabase.ts": {
@@ -1506,33 +1506,33 @@
     "semantic_hash": ""
   },
   "ai-scripts/build-escritorio.cjs": {
-    "mtime": 1792079240.7228515,
-    "seen": 1792079426.852636,
-    "ast_hash": "c95aa03f9bc5e557ad38e0f8e8e8c334",
+    "mtime": 1792080282.2913418,
+    "seen": 1792080418.9111674,
+    "ast_hash": "b03823dd5f6283bb067658df99996f7f",
     "semantic_hash": ""
   },
   "ai-scripts/destinos.cjs": {
-    "mtime": 1792079220.5734942,
-    "seen": 1792079426.8526468,
-    "ast_hash": "a84d79a10ac4f2de31f535361cef42e9",
+    "mtime": 1792080282.2903416,
+    "seen": 1792080418.9111772,
+    "ast_hash": "efe22e1c2409d05c836e790bbd3e7b89",
     "semantic_hash": ""
   },
   "escritorio/main.js": {
-    "mtime": 1792076984.7063766,
-    "seen": 1792077193.3067715,
-    "ast_hash": "6f37edf0453ebc46e2f72e492bd0bf46",
+    "mtime": 1792080269.2457135,
+    "seen": 1792080418.9112706,
+    "ast_hash": "bb4acafa3fcf3f7aadad9ab1b9568250",
     "semantic_hash": ""
   },
   "escritorio/package.json": {
-    "mtime": 1792077068.0299375,
-    "seen": 1792077193.3067727,
-    "ast_hash": "f75b55889871a0e1c7c57674f4fe1703",
+    "mtime": 1792080270.6506486,
+    "seen": 1792080418.9112713,
+    "ast_hash": "e9ddc58e254a0f9de0454ad00baf7b18",
     "semantic_hash": ""
   },
   "escritorio/preload.js": {
-    "mtime": 1792076985.7594397,
-    "seen": 1792077193.306774,
-    "ast_hash": "62d05c2917ef2ea2cb42847bfba081d8",
+    "mtime": 1792080270.6506486,
+    "seen": 1792080418.9112723,
+    "ast_hash": "1fa5d1c2aa21d832d2587a217da18495",
     "semantic_hash": ""
   },
   "src/utils/impresion.ts": {
@@ -1554,9 +1554,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/cliente.cjs": {
-    "mtime": 1792079240.9407876,
-    "seen": 1792079426.852645,
-    "ast_hash": "8ee6dde5117374d4b1f274325939defc",
+    "mtime": 1792080346.4745338,
+    "seen": 1792080418.9111755,
+    "ast_hash": "86611e264fc835cbde0383a4479ca03b",
     "semantic_hash": ""
   },
   "servidor/backup.sh": {
@@ -1584,15 +1584,45 @@
     "semantic_hash": ""
   },
   "servidor/nuevo-cliente.sh": {
-    "mtime": 1792079185.4339306,
-    "seen": 1792079426.8527653,
-    "ast_hash": "ec165fa4f07c8015170bedef417b274a",
+    "mtime": 1792080338.2118938,
+    "seen": 1792080418.9112813,
+    "ast_hash": "803d8e5b8f01a6009f24e584de228d2b",
     "semantic_hash": ""
   },
   "servidor/siuhub-lib.sh": {
-    "mtime": 1792079143.409128,
-    "seen": 1792079426.8527663,
-    "ast_hash": "97720b0ad59c7b2787290de13be8407a",
+    "mtime": 1792079840.514068,
+    "seen": 1792080418.911283,
+    "ast_hash": "eee69a3db5149b2be125a5d738db995a",
+    "semantic_hash": ""
+  },
+  "servidor/instalar-panel.sh": {
+    "mtime": 1792080024.477463,
+    "seen": 1792080418.911279,
+    "ast_hash": "efb9266fab83d7434379a6d53186eb26",
+    "semantic_hash": ""
+  },
+  "servidor/panel/panel.py": {
+    "mtime": 1792080338.212894,
+    "seen": 1792080418.911282,
+    "ast_hash": "fe289246075ec18d2c773bc66d3b8091",
+    "semantic_hash": ""
+  },
+  "src/layout/AvisoSuscripcion.tsx": {
+    "mtime": 1792080122.0686045,
+    "seen": 1792080418.9112868,
+    "ast_hash": "88fd65c930697df1f2efe97d4636b170",
+    "semantic_hash": ""
+  },
+  "escritorio/configurar.html": {
+    "mtime": 1792080236.9307623,
+    "seen": 1792080418.911378,
+    "ast_hash": "2de6d2b37d80706d8ce361d815bea395",
+    "semantic_hash": ""
+  },
+  "servidor/panel/index.html": {
+    "mtime": 1792080000.941039,
+    "seen": 1792080418.911382,
+    "ast_hash": "03ee8947564a06430b0c17c290d108e3",
     "semantic_hash": ""
   }
 }

@@ -6,4 +6,5 @@ contextBridge.exposeInMainWorld('siuhubEscritorio', {
   version: '1.0.0',
   imprimir: (html, titulo) => ipcRenderer.invoke('imprimir', { html, titulo }),
   reintentar: () => ipcRenderer.invoke('reintentar'),
+  configurar: (link) => ipcRenderer.invoke('configurar', link),
 });

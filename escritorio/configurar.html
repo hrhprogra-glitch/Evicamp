@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'" />
+  <title>SiuHub - Configurar</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      background: #1E293B; color: #F8FAFC; padding: 16px; box-sizing: border-box;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    form { border: 2px solid #10B981; padding: 32px 28px; width: 100%; max-width: 480px; box-shadow: 6px 6px 0 0 #10B981; background: #1E293B; }
+    h1 { margin: 0 0 6px; font-size: 20px; letter-spacing: 0.15em; text-transform: uppercase; color: #10B981; }
+    p { margin: 0 0 22px; font-size: 13px; line-height: 1.6; color: #CBD5E1; }
+    label { display: block; font-size: 11px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
+    .campo { display: flex; border: 2px solid #F8FAFC; background: #fff; }
+    input { flex: 1; min-width: 0; border: 0; padding: 12px; font: inherit; font-size: 15px; color: #1E293B; outline: none; }
+    .sufijo { padding: 12px 10px; background: #E2E8F0; color: #475569; font-size: 13px; white-space: nowrap; }
+    .ayuda { font-size: 11px; color: #94A3B8; margin-top: 8px; }
+    .error { display: none; margin-top: 14px; padding: 10px; border: 2px solid #DC2626; background: #FEF2F2; color: #DC2626; font-size: 12px; font-weight: 700; }
+    button {
+      margin-top: 22px; width: 100%; background: #10B981; color: #1E293B; border: 2px solid #F8FAFC; padding: 13px;
+      font: inherit; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+    }
+    button:disabled { opacity: 0.6; cursor: wait; }
+  </style>
+</head>
+<body>
+  <form id="f">
+    <h1>Bienvenido a SiuHub</h1>
+    <p>Escribe el link de tu negocio. Te lo dio SiuHub junto con tu usuario. Solo se pide una vez.</p>
+    <label for="link">Link de tu negocio</label>
+    <div class="campo">
+      <input id="link" required autofocus autocomplete="off" spellcheck="false" placeholder="minegocio" />
+      <span class="sufijo">.siuhub.duckdns.org</span>
+    </div>
+    <div class="ayuda">También puedes pegar el link completo, por ejemplo https://minegocio.siuhub.duckdns.org</div>
+    <div class="error" id="error"></div>
+    <button id="b">Conectar</button>
+  </form>
+  <script>
+    const f = document.getElementById('f');
+    const b = document.getElementById('b');
+    const err = document.getElementById('error');
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.style.display = 'none';
+      b.disabled = true; b.textContent = 'Conectando...';
+      const r = await window.siuhubEscritorio.configurar(document.getElementById('link').value);
+      if (!r.ok) {
+        err.textContent = r.motivo; err.style.display = 'block';
+        b.disabled = false; b.textContent = 'Conectar';
+      }
+    });
+  </script>
+</body>
+</html>

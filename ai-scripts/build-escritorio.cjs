@@ -4,6 +4,7 @@
 //   node ai-scripts/build-escritorio.cjs siuhub            -> arma y sube a siuhub.duckdns.org
 //   node ai-scripts/build-escritorio.cjs evicamp           -> arma y sube a evicamp.duckdns.org
 //   node ai-scripts/build-escritorio.cjs bodegarosa        -> cliente nuevo: bodegarosa.siuhub.duckdns.org
+//   node ai-scripts/build-escritorio.cjs generico          -> instalador para todos (pregunta el link al abrirse)
 //   node ai-scripts/build-escritorio.cjs siuhub --local    -> solo arma (no sube), para probar
 const fs = require('fs');
 const path = require('path');
@@ -13,7 +14,7 @@ const { destino: buscarDestino } = require('./destinos.cjs');
 const nombre = process.argv[2];
 const soloLocal = process.argv.includes('--local');
 const destino = nombre && buscarDestino(nombre);
-if (!destino || !destino.url) {
+if (!destino || (!destino.url && !destino.generico)) {
   console.error(`Uso: node ai-scripts/build-escritorio.cjs <destino> [--local]. Opciones: evicamp, siuhub o el link de un cliente`);
   process.exit(1);
 }
@@ -26,7 +27,7 @@ fs.writeFileSync(
   path.join(carpeta, 'destino.json'),
   JSON.stringify({ url: destino.url, nombre: destino.nombre }, null, 2)
 );
-console.log(`Instalador para ${destino.nombre} -> ${destino.url}`);
+console.log(destino.generico ? 'Instalador genérico (pregunta el link al abrirse)' : `Instalador para ${destino.nombre} -> ${destino.url}`);
 
 // 2. Armar el .exe
 fs.rmSync(path.join(carpeta, 'salida'), { recursive: true, force: true });
@@ -52,5 +53,5 @@ if (soloLocal) process.exit(0);
   await ssh.putFile(instalador, `${remoto}/SiuHub-Setup.exe`);
   await ssh.execCommand(`chown -R www-data:www-data ${remoto}`);
   ssh.dispose();
-  console.log(`Publicado: ${destino.url}/descargas/SiuHub-Setup.exe`);
+  console.log(destino.generico ? `Publicado: ${remoto}/SiuHub-Setup.exe (lo usan los clientes nuevos)` : `Publicado: ${destino.url}/descargas/SiuHub-Setup.exe`);
 })().catch((e) => { console.error('Error al subir:', e.message); process.exit(1); });

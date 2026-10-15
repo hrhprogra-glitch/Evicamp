@@ -6,6 +6,8 @@
 //   node ai-scripts/cliente.cjs suspender <link>                           -> bloquea el acceso (no borra datos)
 //   node ai-scripts/cliente.cjs activar <link>                             -> lo reactiva
 //   node ai-scripts/cliente.cjs backup                                     -> copia de todas las bases ahora mismo
+//   node ai-scripts/cliente.cjs panel                                      -> instala/actualiza el Panel de Control
+//     (la primera vez usa PANEL_CLAVE de .env.vps como contraseña del panel)
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
@@ -36,7 +38,7 @@ const subirScripts = async (ssh) => {
 };
 
 (async () => {
-  const validos = ['instalar', 'nuevo', 'listar', 'suspender', 'activar', 'backup'];
+  const validos = ['instalar', 'nuevo', 'listar', 'suspender', 'activar', 'backup', 'panel'];
   if (!validos.includes(accion)) {
     console.error(fs.readFileSync(__filename, 'utf8').split('\n').filter((l) => l.startsWith('//')).join('\n'));
     process.exit(1);
@@ -62,11 +64,22 @@ const subirScripts = async (ssh) => {
         throw new Error('Uso: node ai-scripts/cliente.cjs nuevo <link> "<Negocio>" <correo> <clave>');
       }
       // La clave va como variable de entorno, no como argumento del script
+      // El instalador de PC genérico se copia solo dentro de nuevo-cliente.sh
       await ejecutar(ssh, `CLAVE_ADMIN=${q(clave)} ${DIR_REMOTO}/nuevo-cliente.sh ${q(slug)} ${q(negocio)} ${q(correo)}`);
-      console.log('\nArmando y publicando su instalador de PC...');
-      ssh.dispose();
-      execSync(`node ai-scripts/build-escritorio.cjs ${slug}`, { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
       console.log(`\nCliente listo: https://${slug}.siuhub.duckdns.org  |  usuario: ${correo.toLowerCase()}`);
+      return;
+    }
+
+    if (accion === 'panel') {
+      const dirPanel = path.join(DIR_LOCAL, 'panel');
+      await ssh.execCommand(`mkdir -p ${DIR_REMOTO}/panel`);
+      for (const archivo of fs.readdirSync(dirPanel)) {
+        const contenido = fs.readFileSync(path.join(dirPanel, archivo), 'utf8').replace(/\r\n/g, '\n');
+        await ssh.execCommand(`cat > ${DIR_REMOTO}/panel/${archivo}`, { stdin: contenido });
+      }
+      // Contraseña del panel: solo hace falta la primera vez (o para cambiarla). Vive en .env.vps.
+      const clave = process.env.PANEL_CLAVE;
+      await ejecutar(ssh, `${clave ? `PANEL_CLAVE=${q(clave)} ` : ''}${DIR_REMOTO}/instalar-panel.sh`);
       return;
     }
 

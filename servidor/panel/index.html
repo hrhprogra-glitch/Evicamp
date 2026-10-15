@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="es" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>SiuHub · Panel de Control</title>
+<style>
+:root {
+  --ink: #1E293B; --bg: #F8FAFC; --surface: #FFFFFF; --border: #CBD5E1; --muted: #64748B;
+  --accent: #10B981; --accent-bg: #ECFDF5; --warning: #F59E0B; --warning-bg: #FFFBEB;
+  --danger: #DC2626; --danger-bg: #FEF2F2; --info: #3B82F6; --info-bg: #EFF6FF;
+}
+* { box-sizing: border-box; border-radius: 0 !important; }
+html, body { margin: 0; background: var(--bg); color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.oculto { display: none !important; }
+
+/* Botones */
+.btn { border: 2px solid var(--ink); background: var(--surface); padding: 8px 14px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .08em; font-size: 12px; box-shadow: 3px 3px 0 0 var(--ink);
+  transition: transform .08s, box-shadow .08s; white-space: nowrap; }
+.btn:hover, .btn:focus-visible { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 0 var(--ink); outline: none; }
+.btn:active { transform: translate(2px,2px); box-shadow: none; }
+.btn:disabled { opacity: .5; cursor: wait; }
+.btn-ok { background: var(--accent); }
+.btn-dark { background: var(--ink); color: #fff; box-shadow: 3px 3px 0 0 var(--accent); }
+.btn-warn { background: var(--warning-bg); border-color: var(--warning); color: #92400E; box-shadow: 3px 3px 0 0 var(--warning); }
+.btn-danger { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); box-shadow: 3px 3px 0 0 var(--danger); }
+.btn-sm { padding: 5px 9px; font-size: 11px; box-shadow: 2px 2px 0 0 var(--ink); }
+
+/* Login */
+#login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--ink); }
+.login-caja { background: var(--surface); border: 2px solid var(--accent); box-shadow: 8px 8px 0 0 var(--accent); padding: 28px; width: 100%; max-width: 380px; }
+.login-caja h1 { margin: 0 0 4px; font-size: 20px; letter-spacing: .15em; text-transform: uppercase; }
+.login-caja p { margin: 0 0 20px; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .1em; }
+
+/* Formularios */
+label { display: block; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 12px 0 4px; }
+input, select, textarea { width: 100%; border: 2px solid var(--border); background: #fff; padding: 9px 10px; outline: none; }
+input:focus, select:focus, textarea:focus { border-color: var(--ink); }
+.fila { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ayuda { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.error { background: var(--danger-bg); border: 2px solid var(--danger); color: var(--danger); padding: 8px 10px; margin-top: 12px; font-size: 12px; font-weight: 700; white-space: pre-wrap; }
+
+/* Estructura */
+header { background: var(--ink); color: #fff; padding: 12px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; justify-content: space-between; border-bottom: 3px solid var(--accent); }
+header h1 { margin: 0; font-size: 16px; letter-spacing: .2em; text-transform: uppercase; }
+header h1 span { color: var(--accent); }
+.vps { display: flex; flex-wrap: wrap; gap: 14px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #CBD5E1; }
+.vps b { color: #fff; }
+main { padding: 16px; max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+.tarjetas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.tarjeta { background: var(--surface); border: 2px solid var(--ink); box-shadow: 4px 4px 0 0 var(--ink); padding: 12px 14px; }
+.tarjeta small { display: block; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.tarjeta strong { display: block; font-size: 22px; margin-top: 4px; }
+.seccion { background: var(--surface); border: 2px solid var(--ink); box-shadow: 4px 4px 0 0 var(--ink); }
+.seccion-cab { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 2px solid var(--ink); background: var(--bg); }
+.seccion-cab h2 { margin: 0; font-size: 13px; letter-spacing: .15em; text-transform: uppercase; }
+.vacio { padding: 24px; text-align: center; color: var(--muted); text-transform: uppercase; font-size: 12px; }
+
+/* Tabla de clientes */
+table { width: 100%; border-collapse: collapse; }
+th { background: var(--ink); color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; text-align: left; padding: 9px 12px; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+td .nombre { font-weight: 900; text-transform: uppercase; }
+td a { color: var(--info); font-size: 12px; word-break: break-all; }
+.acciones { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-block; padding: 2px 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; border: 1px solid; white-space: nowrap; }
+.c-ok { color: #047857; border-color: var(--accent); background: var(--accent-bg); }
+.c-warn { color: #92400E; border-color: var(--warning); background: var(--warning-bg); }
+.c-danger { color: var(--danger); border-color: var(--danger); background: var(--danger-bg); }
+.c-gris { color: var(--muted); border-color: var(--border); background: var(--bg); }
+.c-info { color: var(--info); border-color: var(--info); background: var(--info-bg); }
+
+/* Modales */
+.fondo { position: fixed; inset: 0; background: rgba(15,23,42,.6); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
+.modal { background: var(--surface); border: 2px solid var(--ink); box-shadow: 8px 8px 0 0 var(--ink); width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; }
+.modal-cab { background: var(--ink); color: #fff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+.modal-cab h3 { margin: 0; font-size: 13px; letter-spacing: .15em; text-transform: uppercase; }
+.modal-cab button { background: none; border: 0; color: #fff; font-size: 20px; line-height: 1; }
+.modal-cuerpo { padding: 4px 16px 16px; }
+.modal-pie { display: flex; gap: 10px; justify-content: flex-end; padding: 12px 16px; border-top: 2px solid var(--border); }
+.resultado { background: var(--accent-bg); border: 2px solid var(--accent); padding: 12px; margin-top: 12px; font-size: 13px; line-height: 1.7; word-break: break-word; }
+.toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border: 2px solid var(--accent); z-index: 60; font-weight: 700; max-width: calc(100% - 32px); }
+
+/* Celular / tablet */
+@media (max-width: 860px) {
+  .tarjetas { grid-template-columns: 1fr 1fr; }
+  thead { display: none; }
+  table, tbody, tr, td { display: block; width: 100%; }
+  tr { border-bottom: 2px solid var(--ink); padding: 8px 0; }
+  td { border: 0; padding: 4px 14px; }
+  td[data-t]::before { content: attr(data-t) ": "; font-size: 10px; font-weight: 900; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<section id="login" class="oculto">
+  <form class="login-caja" id="form-login">
+    <h1>SiuHub</h1>
+    <p>Panel de Control</p>
+    <label for="clave">Contraseña</label>
+    <input id="clave" type="password" autocomplete="current-password" required autofocus>
+    <div id="login-error" class="error oculto"></div>
+    <div style="margin-top:16px"><button class="btn btn-dark" style="width:100%">Entrar</button></div>
+  </form>
+</section>
+
+<!-- ===== PANEL ===== -->
+<section id="panel" class="oculto">
+  <header>
+    <h1>SiuHub<span>.</span> Panel</h1>
+    <div class="vps" id="vps"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sm" id="btn-recargar" title="Actualizar datos">↻ Actualizar</button>
+      <button class="btn btn-sm" id="btn-salir">Salir</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="tarjetas" id="tarjetas"></div>
+
+    <div class="seccion">
+      <div class="seccion-cab">
+        <h2>Clientes</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-sm" id="btn-externo" title="Para cobrar a un sistema que no se creó desde aquí (ej. Evicamp)">+ Cliente externo</button>
+          <button class="btn btn-ok" id="btn-nuevo">+ Nuevo cliente</button>
+        </div>
+      </div>
+      <div id="tabla-clientes"></div>
+    </div>
+
+    <div class="seccion">
+      <div class="seccion-cab"><h2>Últimos pagos</h2></div>
+      <div id="tabla-pagos"></div>
+    </div>
+
+    <div class="seccion">
+      <div class="seccion-cab">
+        <h2>Backups (todos los días 3:00 a. m.)</h2>
+        <button class="btn btn-sm" id="btn-backup">Backup ahora</button>
+      </div>
+      <div id="tabla-backups"></div>
+    </div>
+  </main>
+</section>
+
+<div id="modales"></div>
+<div id="toast" class="toast oculto"></div>
+
+<script>
+'use strict';
+const $ = (s) => document.querySelector(s);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const soles = (n) => 'S/ ' + Number(n || 0).toFixed(2);
+const fechaPe = (iso) => iso ? iso.slice(0, 10).split('-').reverse().join('/') : '-';
+const hoyIso = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+const sumarMesIso = (meses) => { const d = new Date(); d.setMonth(d.getMonth() + meses); return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+let estado = null;
+
+async function api(ruta, datos) {
+  const opciones = datos === undefined
+    ? { credentials: 'same-origin' }
+    : { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) };
+  const r = await fetch(ruta, opciones);
+  const j = await r.json().catch(() => ({ error: 'Respuesta inválida del servidor.' }));
+  if (r.status === 401 && ruta !== '/api/login') { mostrarLogin(); throw new Error('Sesión expirada.'); }
+  if (!r.ok) throw new Error(j.error + (j.detalle ? '\n\n' + j.detalle : ''));
+  return j;
+}
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.remove('oculto');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('oculto'), 4000);
+}
+
+function mostrarLogin() { $('#panel').classList.add('oculto'); $('#login').classList.remove('oculto'); $('#clave').focus(); }
+
+// ===== LOGIN =====
+$('#form-login').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = $('#login-error'); err.classList.add('oculto');
+  try {
+    await api('/api/login', { clave: $('#clave').value });
+    $('#clave').value = '';
+    $('#login').classList.add('oculto'); $('#panel').classList.remove('oculto');
+    cargar();
+  } catch (ex) { err.textContent = ex.message; err.classList.remove('oculto'); }
+});
+$('#btn-salir').onclick = async () => { await api('/api/logout', {}).catch(() => {}); mostrarLogin(); };
+$('#btn-recargar').onclick = () => cargar();
+
+// ===== DATOS =====
+async function cargar() {
+  try { estado = await api('/api/resumen'); pintar(); } catch (ex) { if (ex.message !== 'Sesión expirada.') toast(ex.message); }
+}
+
+const ETIQUETA_PAGO = {
+  AL_DIA: ['Al día', 'c-ok'], POR_VENCER: ['Por vencer', 'c-warn'], VENCIDO: ['Vencido', 'c-danger'], SIN_PLAN: ['Sin plan', 'c-gris'],
+};
+
+function chipPago(c) {
+  const [txt, cls] = ETIQUETA_PAGO[c.pago.estado];
+  let extra = '';
+  if (c.pago.estado === 'POR_VENCER') extra = c.pago.dias === 0 ? ' (hoy)' : ` (${c.pago.dias} d)`;
+  if (c.pago.estado === 'VENCIDO') extra = ` (${-c.pago.dias} d)`;
+  return `<span class="chip ${cls}">${txt}${extra}</span>`;
+}
+
+function chipServicio(c) {
+  if (c.externo) return '<span class="chip c-info">Externo</span>';
+  if (c.estado === 'SUSPENDIDO') return '<span class="chip c-danger">Suspendido</span>';
+  return c.api ? '<span class="chip c-ok">Activo</span>' : '<span class="chip c-warn">API caída</span>';
+}
+
+function pintar() {
+  const { vps, clientes, cobros, pagos, backups, config } = estado;
+  const ramPct = Math.round(vps.ram_usada_mb / vps.ram_total_mb * 100);
+  const discoPct = Math.round(vps.disco_usado_gb / vps.disco_total_gb * 100);
+  $('#vps').innerHTML = `<span>RAM <b>${ramPct}%</b> (${vps.ram_usada_mb}/${vps.ram_total_mb} MB)</span>
+    <span>Disco <b>${discoPct}%</b> (${vps.disco_usado_gb}/${vps.disco_total_gb} GB)</span>
+    <span>CPU <b>${vps.cpu_carga}</b> / ${vps.cpus}</span><span>Encendido <b>${vps.dias_encendido} d</b></span>`;
+
+  const activos = clientes.filter((c) => c.estado === 'ACTIVO' || c.externo).length;
+  $('#tarjetas').innerHTML = `
+    <div class="tarjeta"><small>Clientes activos</small><strong>${activos} / ${clientes.length}</strong></div>
+    <div class="tarjeta"><small>Cobrado este mes</small><strong>${soles(cobros.ingresos_mes)}</strong></div>
+    <div class="tarjeta"><small>Ingreso mensual esperado</small><strong>${soles(cobros.mensual_esperado)}</strong></div>
+    <div class="tarjeta" style="${cobros.vencidos ? 'border-color:var(--danger);box-shadow:4px 4px 0 0 var(--danger)' : ''}">
+      <small>Vencidos / por vencer</small><strong>${cobros.vencidos} / ${cobros.por_vencer}</strong></div>`;
+
+  $('#tabla-clientes').innerHTML = !clientes.length ? '<div class="vacio">Aún no tienes clientes. Crea el primero con "+ Nuevo cliente".</div>' : `
+    <table><thead><tr><th>Negocio</th><th>Servicio</th><th>Plan</th><th>Próximo pago</th><th>Pago</th><th>Acciones</th></tr></thead><tbody>
+    ${clientes.map((c) => `<tr>
+      <td><div class="nombre">${esc(c.nombre)}</div>${c.link ? `<a href="${esc(c.link)}" target="_blank" rel="noopener">${esc(c.link.replace('https://', ''))}</a>` : ''}</td>
+      <td data-t="Servicio">${chipServicio(c)}</td>
+      <td data-t="Plan">${c.plan ? `${esc(c.plan.tipo)} · ${soles(c.plan.precio)}` : '-'}</td>
+      <td data-t="Próximo pago">${c.plan ? fechaPe(c.plan.proximo_pago) : '-'}</td>
+      <td data-t="Pago">${chipPago(c)}</td>
+      <td><div class="acciones">
+        <button class="btn btn-sm btn-ok" data-accion="pago" data-slug="${esc(c.slug)}" ${c.plan ? '' : 'disabled title="Primero configura su plan"'}>Registrar pago</button>
+        <button class="btn btn-sm" data-accion="plan" data-slug="${esc(c.slug)}">${c.plan ? 'Plan' : 'Configurar plan'}</button>
+        ${c.externo ? '' : c.estado === 'SUSPENDIDO'
+          ? `<button class="btn btn-sm" data-accion="activar" data-slug="${esc(c.slug)}">Activar</button>`
+          : `<button class="btn btn-sm btn-danger" data-accion="suspender" data-slug="${esc(c.slug)}">Suspender</button>`}
+      </div></td></tr>`).join('')}
+    </tbody></table>`;
+
+  const nombreDe = (slug) => (clientes.find((c) => c.slug === slug) || {}).nombre || slug;
+  $('#tabla-pagos').innerHTML = !pagos.length ? '<div class="vacio">Sin pagos registrados.</div>' : `
+    <table><thead><tr><th>Fecha</th><th>Negocio</th><th>Monto</th><th>Método</th><th>Cubre hasta</th><th>Nota</th></tr></thead><tbody>
+    ${pagos.map((p) => `<tr><td data-t="Fecha">${fechaPe(p.fecha)}</td><td data-t="Negocio">${esc(nombreDe(p.slug))}</td>
+      <td data-t="Monto"><b>${soles(p.monto)}</b></td><td data-t="Método"><span class="chip c-info">${esc(p.metodo)}</span></td>
+      <td data-t="Cubre hasta">${fechaPe(p.periodo_hasta)}</td><td data-t="Nota">${esc(p.nota) || '-'}</td></tr>`).join('')}
+    </tbody></table>`;
+
+  const fechaBackup = (n) => { const m = (n || '').match(/(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]}` : '-'; };
+  $('#tabla-backups').innerHTML = !backups.length ? '<div class="vacio">Sin backups todavía.</div>' : `
+    <table><thead><tr><th>Base de datos</th><th>Último backup</th><th>Tamaño</th><th>Copias guardadas</th></tr></thead><tbody>
+    ${backups.map((b) => `<tr><td><b>${esc(b.base)}</b></td><td data-t="Último">${fechaBackup(b.ultimo)}</td>
+      <td data-t="Tamaño">${b.tamano_kb >= 1024 ? (b.tamano_kb / 1024).toFixed(1) + ' MB' : b.tamano_kb + ' KB'}</td><td data-t="Copias">${b.copias}</td></tr>`).join('')}
+    </tbody></table>`;
+}
+
+// ===== ACCIONES DE LA TABLA =====
+$('#tabla-clientes').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-accion]');
+  if (!b || b.disabled) return;
+  const c = estado.clientes.find((x) => x.slug === b.dataset.slug);
+  if (b.dataset.accion === 'pago') modalPago(c);
+  if (b.dataset.accion === 'plan') modalPlan(c);
+  if (b.dataset.accion === 'suspender') confirmarEstado(c, 'suspender');
+  if (b.dataset.accion === 'activar') confirmarEstado(c, 'activar');
+});
+
+$('#btn-nuevo').onclick = () => modalNuevo();
+$('#btn-externo').onclick = () => modalPlan(null);
+$('#btn-backup').onclick = async (e) => {
+  const b = e.target; b.disabled = true; b.textContent = 'Haciendo backup...';
+  try { await api('/api/backup', {}); toast('Backup completo de todas las bases.'); cargar(); }
+  catch (ex) { alert(ex.message); }
+  finally { b.disabled = false; b.textContent = 'Backup ahora'; }
+};
+
+// ===== MODALES =====
+function abrirModal(titulo, cuerpo, pie) {
+  $('#modales').innerHTML = `<div class="fondo"><div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-cab"><h3>${titulo}</h3><button type="button" data-cerrar aria-label="Cerrar">×</button></div>
+    <form id="form-modal"><div class="modal-cuerpo">${cuerpo}<div id="modal-error" class="error oculto"></div><div id="modal-resultado"></div></div>
+    <div class="modal-pie">${pie}</div></form></div></div>`;
+  $('#modales').querySelector('[data-cerrar]').onclick = cerrarModal;
+  $('#modales .fondo').addEventListener('click', (e) => { if (e.target.classList.contains('fondo')) cerrarModal(); });
+  const primero = $('#form-modal').querySelector('input, select'); if (primero) primero.focus();
+  return $('#form-modal');
+}
+function cerrarModal() { $('#modales').innerHTML = ''; }
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
+
+function errorModal(msg) { const el = $('#modal-error'); el.textContent = msg; el.classList.remove('oculto'); }
+
+const camposPlan = (p = {}) => `
+  <div class="fila">
+    <div><label>Plan</label><select name="tipo">
+      ${['MENSUAL', 'TRIMESTRAL', 'SEMESTRAL', 'ANUAL'].map((t) => `<option ${p.tipo === t ? 'selected' : ''}>${t}</option>`).join('')}
+    </select></div>
+    <div><label>Precio (S/)</label><input name="precio" type="number" step="0.01" min="0" value="${esc(p.precio ?? 50)}" required></div>
+  </div>
+  <label>Próximo pago (vencimiento)</label><input name="proximo_pago" type="date" value="${esc(p.proximo_pago || sumarMesIso(1))}" required>
+  <div class="ayuda">Desde ${estado.config.dias_aviso} días antes el cliente ve un aviso en su sistema. Si pasan ${estado.config.dias_gracia} días vencido sin pagar, se suspende solo.</div>
+  <div class="fila">
+    <div><label>Teléfono / WhatsApp</label><input name="telefono" value="${esc(p.telefono || '')}" maxlength="30"></div>
+    <div><label>Notas</label><input name="notas" value="${esc(p.notas || '')}" maxlength="300"></div>
+  </div>`;
+
+function modalNuevo() {
+  const f = abrirModal('Nuevo cliente', `
+    <label>Nombre del negocio</label><input name="nombre" required maxlength="60" placeholder="Bodega Rosa">
+    <label>Link</label><input name="slug" required pattern="[a-z0-9][a-z0-9-]{1,28}[a-z0-9]" placeholder="bodegarosa">
+    <div class="ayuda" id="vista-link">Quedará en: https://______.${estado.config.dominio}</div>
+    <div class="fila">
+      <div><label>Correo del dueño (usuario)</label><input name="correo" type="email" required placeholder="dueno@bodegarosa.com"></div>
+      <div><label>Contraseña inicial</label><input name="clave" type="text" required minlength="6" autocomplete="off"></div>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:16px;color:var(--ink)"><input type="checkbox" name="con_plan" checked style="width:auto"> Configurar plan de cobro ahora</label>
+    <div id="bloque-plan">${camposPlan()}</div>`,
+    '<button type="button" class="btn" data-cerrar2>Cancelar</button><button class="btn btn-ok" id="btn-crear">Crear cliente</button>');
+
+  const slug = f.slug, nombre = f.nombre;
+  nombre.addEventListener('input', () => {
+    if (slug.dataset.tocado) return;
+    slug.value = nombre.value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '').slice(0, 30);
+    slug.dispatchEvent(new Event('input'));
+  });
+  slug.addEventListener('input', (e) => {
+    if (e.isTrusted) slug.dataset.tocado = '1';
+    slug.value = slug.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    $('#vista-link').textContent = `Quedará en: https://${slug.value || '______'}.${estado.config.dominio}`;
+  });
+  f.con_plan.onchange = () => $('#bloque-plan').classList.toggle('oculto', !f.con_plan.checked);
+  f.querySelector('[data-cerrar2]').onclick = cerrarModal;
+
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    const b = $('#btn-crear'); b.disabled = true; b.textContent = 'Creando (1 a 2 min)...';
+    $('#modal-error').classList.add('oculto');
+    const datos = { nombre: f.nombre.value, slug: f.slug.value, correo: f.correo.value, clave: f.clave.value };
+    if (f.con_plan.checked) datos.plan = { tipo: f.tipo.value, precio: f.precio.value, proximo_pago: f.proximo_pago.value, telefono: f.telefono.value, notas: f.notas.value };
+    try {
+      const r = await api('/api/clientes/nuevo', datos);
+      $('#modal-resultado').innerHTML = `<div class="resultado"><b>✅ Cliente creado.</b><br>
+        Link: <a href="${esc(r.link)}" target="_blank" rel="noopener">${esc(r.link)}</a><br>
+        Usuario: <b>${esc(r.correo)}</b><br>Contraseña: <b>${esc(datos.clave)}</b><br>
+        <button type="button" class="btn btn-sm" id="btn-copiar" style="margin-top:8px">Copiar datos para enviar</button></div>`;
+      $('#btn-copiar').onclick = () => navigator.clipboard.writeText(
+        `¡Bienvenido a SiuHub!\n\nTu sistema: ${r.link}\nUsuario: ${r.correo}\nContraseña: ${datos.clave}\n\nTe recomendamos cambiar la contraseña al ingresar (Ajustes > Gestión de usuarios).`
+      ).then(() => toast('Datos copiados.'));
+      b.classList.add('oculto');
+      f.querySelector('[data-cerrar2]').textContent = 'Cerrar';
+      cargar();
+    } catch (ex) { errorModal(ex.message); b.disabled = false; b.textContent = 'Crear cliente'; }
+  };
+}
+
+function modalPlan(c) {
+  const externo = !c;
+  const f = abrirModal(externo ? 'Cliente externo' : `Plan · ${esc(c.nombre)}`, `
+    ${externo ? `<div class="ayuda">Para cobrar a un sistema que ya existe fuera del panel (por ejemplo Evicamp). No se puede suspender desde aquí.</div>
+      <div class="fila"><div><label>Nombre</label><input name="nombre" required maxlength="60" placeholder="Evicamp"></div>
+      <div><label>Identificador</label><input name="slug" required pattern="[a-z0-9][a-z0-9-]{1,28}[a-z0-9]" placeholder="evicamp"></div></div>
+      <label>Link</label><input name="link" placeholder="https://evicamp.duckdns.org">` : ''}
+    ${camposPlan(c && c.plan ? c.plan : {})}`,
+    '<button type="button" class="btn" data-cerrar2>Cancelar</button><button class="btn btn-ok">Guardar plan</button>');
+  f.querySelector('[data-cerrar2]').onclick = cerrarModal;
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    const datos = { slug: externo ? f.slug.value.toLowerCase() : c.slug, tipo: f.tipo.value, precio: f.precio.value,
+      proximo_pago: f.proximo_pago.value, telefono: f.telefono.value, notas: f.notas.value };
+    if (externo) Object.assign(datos, { externo: true, nombre: f.nombre.value, link: f.link.value });
+    else if (c.externo) Object.assign(datos, { externo: true, nombre: c.nombre, link: c.link });
+    try { await api('/api/plan', datos); cerrarModal(); toast('Plan guardado.'); cargar(); }
+    catch (ex) { errorModal(ex.message); }
+  };
+}
+
+function modalPago(c) {
+  const f = abrirModal(`Registrar pago · ${esc(c.nombre)}`, `
+    <div class="ayuda">Plan ${esc(c.plan.tipo)} · vence el <b>${fechaPe(c.plan.proximo_pago)}</b>. Al registrar el pago, el vencimiento avanza un periodo${c.estado === 'SUSPENDIDO' ? ' y el servicio se reactiva solo' : ''}.</div>
+    <div class="fila">
+      <div><label>Monto (S/)</label><input name="monto" type="number" step="0.01" min="0.01" value="${esc(c.plan.precio)}" required></div>
+      <div><label>Método</label><select name="metodo">${['YAPE', 'PLIN', 'TRANSFERENCIA', 'EFECTIVO', 'OTRO'].map((m) => `<option>${m}</option>`).join('')}</select></div>
+    </div>
+    <div class="fila">
+      <div><label>Fecha del pago</label><input name="fecha" type="date" value="${hoyIso()}" required></div>
+      <div><label>Nota (n.° de operación)</label><input name="nota" maxlength="200"></div>
+    </div>`,
+    '<button type="button" class="btn" data-cerrar2>Cancelar</button><button class="btn btn-ok">Registrar pago</button>');
+  f.querySelector('[data-cerrar2]').onclick = cerrarModal;
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const r = await api('/api/pago', { slug: c.slug, monto: f.monto.value, metodo: f.metodo.value, fecha: f.fecha.value, nota: f.nota.value });
+      cerrarModal();
+      toast(`Pago registrado. Nuevo vencimiento: ${fechaPe(r.plan.proximo_pago)}${r.reactivado ? ' · Servicio reactivado' : ''}`);
+      cargar();
+    } catch (ex) { errorModal(ex.message); }
+  };
+}
+
+function confirmarEstado(c, accion) {
+  const suspender = accion === 'suspender';
+  const f = abrirModal(suspender ? 'Suspender cliente' : 'Activar cliente', `
+    <p>${suspender
+      ? `¿Suspender <b>${esc(c.nombre)}</b>? Verá la página "Servicio suspendido" y no podrá usar el sistema. <b>Sus datos NO se borran.</b>`
+      : `¿Reactivar <b>${esc(c.nombre)}</b>? Podrá volver a usar su sistema de inmediato.`}</p>`,
+    `<button type="button" class="btn" data-cerrar2>Cancelar</button><button class="btn ${suspender ? 'btn-danger' : 'btn-ok'}">${suspender ? 'Suspender' : 'Activar'}</button>`);
+  f.querySelector('[data-cerrar2]').onclick = cerrarModal;
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    const b = f.querySelector('button:not([data-cerrar2])'); b.disabled = true;
+    try { await api(`/api/clientes/${accion}`, { slug: c.slug }); cerrarModal(); toast(suspender ? 'Cliente suspendido.' : 'Cliente activado.'); cargar(); }
+    catch (ex) { errorModal(ex.message); b.disabled = false; }
+  };
+}
+
+// ===== INICIO =====
+api('/api/sesion').then((r) => {
+  if (r.autenticado) { $('#panel').classList.remove('oculto'); cargar(); } else mostrarLogin();
+}).catch(() => mostrarLogin());
+setInterval(() => { if (!$('#panel').classList.contains('oculto') && !$('#modales').innerHTML) cargar(); }, 60000);
+</script>
+</body>
+</html>
