@@ -78,6 +78,8 @@ const subirScripts = async (ssh) => {
         await ssh.execCommand(`cat > ${DIR_REMOTO}/panel/${archivo}`, { stdin: contenido });
       }
       // Contraseña del panel: solo hace falta la primera vez (o para cambiarla). Vive en .env.vps.
+      // Logo de SiuHub: se sube en binario desde la misma imagen que usa el sistema
+      await ssh.putFile(path.join(__dirname, '..', 'src', 'assets', 'logo.png'), `${DIR_REMOTO}/panel/logo.png`);
       const clave = process.env.PANEL_CLAVE;
       await ejecutar(ssh, `${clave ? `PANEL_CLAVE=${q(clave)} ` : ''}${DIR_REMOTO}/instalar-panel.sh`);
       return;

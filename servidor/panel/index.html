@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>SiuHub · Panel de Control</title>
+<link rel="icon" type="image/png" href="/logo.png">
 <style>
 :root {
   --ink: #1E293B; --bg: #F8FAFC; --surface: #FFFFFF; --border: #CBD5E1; --muted: #64748B;
@@ -19,7 +20,7 @@ button { cursor: pointer; }
 .oculto { display: none !important; }
 
 /* Botones */
-.btn { border: 2px solid var(--ink); background: var(--surface); padding: 8px 14px; font-weight: 900;
+.btn { border: 2px solid var(--ink); background: var(--surface); color: var(--ink); padding: 8px 14px; font-weight: 900;
   text-transform: uppercase; letter-spacing: .08em; font-size: 12px; box-shadow: 3px 3px 0 0 var(--ink);
   transition: transform .08s, box-shadow .08s; white-space: nowrap; }
 .btn:hover, .btn:focus-visible { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 0 var(--ink); outline: none; }
@@ -34,6 +35,7 @@ button { cursor: pointer; }
 /* Login */
 #login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--ink); }
 .login-caja { background: var(--surface); border: 2px solid var(--accent); box-shadow: 8px 8px 0 0 var(--accent); padding: 28px; width: 100%; max-width: 380px; }
+.login-logo { width: 64px; height: 64px; object-fit: contain; margin-bottom: 14px; border: 2px solid var(--ink); padding: 4px; }
 .login-caja h1 { margin: 0 0 4px; font-size: 20px; letter-spacing: .15em; text-transform: uppercase; }
 .login-caja p { margin: 0 0 20px; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .1em; }
 
@@ -47,6 +49,9 @@ input:focus, select:focus, textarea:focus { border-color: var(--ink); }
 
 /* Estructura */
 header { background: var(--ink); color: #fff; padding: 12px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; justify-content: space-between; border-bottom: 3px solid var(--accent); }
+.marca { display: flex; align-items: center; gap: 10px; }
+.logo { width: 34px; height: 34px; object-fit: contain; background: #fff; border: 1px solid var(--accent); padding: 2px; }
+header .btn { border-color: #fff; box-shadow: 3px 3px 0 0 var(--accent); }
 header h1 { margin: 0; font-size: 16px; letter-spacing: .2em; text-transform: uppercase; }
 header h1 span { color: var(--accent); }
 .vps { display: flex; flex-wrap: wrap; gap: 14px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #CBD5E1; }
@@ -102,6 +107,7 @@ td a { color: var(--info); font-size: 12px; word-break: break-all; }
 <!-- ===== LOGIN ===== -->
 <section id="login" class="oculto">
   <form class="login-caja" id="form-login">
+    <img src="/logo.png" alt="SiuHub" class="login-logo">
     <h1>SiuHub</h1>
     <p>Panel de Control</p>
     <label for="clave">Contraseña</label>
@@ -114,7 +120,7 @@ td a { color: var(--info); font-size: 12px; word-break: break-all; }
 <!-- ===== PANEL ===== -->
 <section id="panel" class="oculto">
   <header>
-    <h1>SiuHub<span>.</span> Panel</h1>
+    <div class="marca"><img src="/logo.png" alt="" class="logo"><h1>SiuHub<span>.</span> Panel</h1></div>
     <div class="vps" id="vps"></div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-sm" id="btn-recargar" title="Actualizar datos">↻ Actualizar</button>

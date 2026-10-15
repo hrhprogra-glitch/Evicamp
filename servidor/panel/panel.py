@@ -380,6 +380,9 @@ class Panel(BaseHTTPRequestHandler):
         if ruta in ("/", "/index.html"):
             with open(INDEX_HTML, "rb") as f:
                 return self.responder(200, f.read(), "text/html")
+        if ruta == "/logo.png":  # logo de SiuHub (público: se ve también en el login)
+            with open(os.path.join(os.path.dirname(INDEX_HTML), "logo.png"), "rb") as f:
+                return self.responder(200, f.read(), "image/png")
         if ruta == "/api/sesion":
             return self.responder(200, {"autenticado": self.autenticado()})
         if not self.autenticado():
