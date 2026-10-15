@@ -1,4 +1,13 @@
-import { forwardRef } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
+import { supabase } from '../../../db/supabase';
+
+// Datos del negocio para la cabecera del ticket (Ajustes > Empresa). Cada cliente tiene los suyos.
+interface DatosEmpresa {
+  nombre_empresa?: string;
+  ruc?: string;
+  direccion?: string;
+  telefono?: string;
+}
 
 export interface CartItem {
   id: string;
@@ -28,6 +37,16 @@ interface Props {
 export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
   ({ cart, total, pagos, vuelto, nroBoleta, fiadoData }, ref) => {
     const fecha = new Date().toLocaleString('es-PE');
+    const [empresa, setEmpresa] = useState<DatosEmpresa>({});
+
+    useEffect(() => {
+      supabase
+        .from('empresa_config')
+        .select('nombre_empresa, ruc, direccion, telefono')
+        .limit(1)
+        .single()
+        .then(({ data }) => { if (data) setEmpresa(data); });
+    }, []);
 
     return (
       <div 
@@ -46,9 +65,10 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
 
         {/* CABECERA */}
         <div className="text-center border-b-2 border-black pb-2 mb-4">
-          <h3 className="font-black text-lg uppercase tracking-widest">EVICAMP POS</h3>
-          <p className="text-[12px] font-bold mt-1">RUC: 20123456789</p>
-          <p className="text-[12px]">Av. Arquitectura Técnica 123 | Lima</p>
+          <h3 className="font-black text-lg uppercase tracking-widest">{empresa.nombre_empresa || 'Mi Negocio'}</h3>
+          {empresa.ruc && <p className="text-[12px] font-bold mt-1">RUC: {empresa.ruc}</p>}
+          {empresa.direccion && <p className="text-[12px]">{empresa.direccion}</p>}
+          {empresa.telefono && <p className="text-[12px]">Tel: {empresa.telefono}</p>}
           
           <h3 className="font-black text-sm uppercase mt-2">
             {fiadoData ? 'TICKET DE FIADO' : 'Boleta Electrónica'}
@@ -118,7 +138,7 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
         <div className="text-center mt-6 border-t-2 border-dashed border-gray-400 pt-3">
           <p className="font-black text-[12px] uppercase">¡Gracias por su compra!</p>
           <p className="text-[11px] mt-1 font-bold">Consulte su documento en www.sunat.gob.pe</p>
-          <p className="mt-3 text-[11px] font-black">*** SISTEMA EVICAMP POS ***</p>
+          <p className="mt-3 text-[11px] font-black">*** SISTEMA SIUHUB ***</p>
         </div>
         <div className="h-2"></div>
       </div>

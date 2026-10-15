@@ -28,7 +28,7 @@ export const ATAJOS_SESIONES = ['pos', 'fiados', 'inventario', 'mermas', 'finanz
 const AUTO_OCULTAR_MS = 8000;
 
 export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigate, onClose, onToggle, permisos }) => {
-  const [empresaData, setEmpresaData] = useState({ nombre: 'EVICAMP', logo: logoEvicamp });
+  const [empresaData, setEmpresaData] = useState({ nombre: 'SIUHUB', logo: logoEvicamp });
 
   // === TEMPORIZADOR DE AUTO-OCULTADO ===
   // Mientras el menú está abierto cuenta el tiempo sin actividad; con el mouse encima queda en pausa.
@@ -220,7 +220,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
         const { data, error } = await supabase.from('empresa_config').select('nombre_empresa, logo_url').limit(1).single();
         if (data && !error) {
           setEmpresaData({
-            nombre: data.nombre_empresa || 'EVICAMP',
+            nombre: data.nombre_empresa || 'SIUHUB',
             logo: data.logo_url || logoEvicamp
           });
         }

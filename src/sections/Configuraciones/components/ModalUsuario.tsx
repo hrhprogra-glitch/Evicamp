@@ -327,7 +327,7 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
                       focusAndSelect('input-nombre-usuario-modal');
                     }
                   }}
-                  placeholder="usuario@evicamp.com" 
+                  placeholder="usuario@tunegocio.com" 
                   className="w-full border border-[var(--color-border)] p-2 text-sm focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-amber-50/40 outline-none font-mono" 
                 />
               </div>
