@@ -92,6 +92,8 @@ td a { color: var(--info); font-size: 12px; word-break: break-all; }
 .link-negocio { background: none; border: 0; padding: 0; font-weight: 900; text-transform: uppercase; text-align: left; color: var(--ink); text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 2px; text-underline-offset: 3px; }
 .link-negocio:hover, .link-negocio:focus-visible { color: var(--accent); outline: none; }
 .modal-ancho { max-width: 860px; }
+.fila-clic { cursor: pointer; }
+.fila-clic:hover, .fila-clic:focus-visible { background: var(--accent-bg); outline: none; }
 .sub { margin: 18px 0 8px; font-size: 12px; letter-spacing: .15em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .datos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .dato { border: 2px solid var(--border); padding: 8px 10px; }
@@ -152,7 +154,7 @@ td a { color: var(--info); font-size: 12px; word-break: break-all; }
     </div>
 
     <div class="seccion">
-      <div class="seccion-cab"><h2>Últimos pagos</h2></div>
+      <div class="seccion-cab"><h2>Pagos por negocio</h2><span class="ayuda" style="margin:0">Clic en un negocio para ver todos sus pagos</span></div>
       <div id="tabla-pagos"></div>
     </div>
 
@@ -271,12 +273,18 @@ function pintar() {
       </div></td></tr>`).join('')}
     </tbody></table>`;
 
+  // Pagos agrupados por negocio: una fila por negocio; clic -> todos sus pagos
   const nombreDe = (slug) => (clientes.find((c) => c.slug === slug) || {}).nombre || slug;
-  $('#tabla-pagos').innerHTML = !pagos.length ? '<div class="vacio">Sin pagos registrados.</div>' : `
-    <table><thead><tr><th>Fecha</th><th>Negocio</th><th>Monto</th><th>Método</th><th>Cubre hasta</th><th>Nota</th></tr></thead><tbody>
-    ${pagos.map((p) => `<tr><td data-t="Fecha">${fechaPe(p.fecha)}</td><td data-t="Negocio"><button type="button" class="link-negocio" data-detalle="${esc(p.slug)}">${esc(nombreDe(p.slug))}</button></td>
-      <td data-t="Monto"><b>${soles(p.monto)}</b></td><td data-t="Método"><span class="chip c-info">${esc(p.metodo)}</span></td>
-      <td data-t="Cubre hasta">${fechaPe(p.periodo_hasta)}</td><td data-t="Nota">${esc(p.nota) || '-'}</td></tr>`).join('')}
+  const grupos = estado.pagos_por_negocio || [];
+  $('#tabla-pagos').innerHTML = !grupos.length ? '<div class="vacio">Sin pagos registrados.</div>' : `
+    <table><thead><tr><th>Negocio</th><th>Pagos</th><th>Total pagado</th><th>Último pago</th><th>Cubre hasta</th><th></th></tr></thead><tbody>
+    ${grupos.map((g) => `<tr class="fila-clic" data-detalle="${esc(g.slug)}" tabindex="0" role="button" title="Ver todos sus pagos">
+      <td data-t="Negocio"><span class="link-negocio">${esc(nombreDe(g.slug))}</span></td>
+      <td data-t="Pagos">${g.cantidad}</td>
+      <td data-t="Total pagado"><b>${soles(g.total)}</b></td>
+      <td data-t="Último pago">${fechaPe(g.ultimo.fecha)} · ${soles(g.ultimo.monto)} <span class="chip c-info">${esc(g.ultimo.metodo)}</span></td>
+      <td data-t="Cubre hasta">${fechaPe(g.ultimo.periodo_hasta)}</td>
+      <td><span class="btn btn-sm">Ver pagos</span></td></tr>`).join('')}
     </tbody></table>`;
 
   const fechaBackup = (n) => { const m = (n || '').match(/(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]}` : '-'; };
@@ -299,9 +307,14 @@ $('#tabla-clientes').addEventListener('click', (e) => {
   if (b.dataset.accion === 'activar') confirmarEstado(c, 'activar');
 });
 
+// Toda la fila del negocio abre su historial (clic, Enter o Espacio)
 $('#tabla-pagos').addEventListener('click', (e) => {
-  const b = e.target.closest('button[data-detalle]');
-  if (b) modalCliente(b.dataset.detalle);
+  const fila = e.target.closest('[data-detalle]');
+  if (fila) modalCliente(fila.dataset.detalle);
+});
+$('#tabla-pagos').addEventListener('keydown', (e) => {
+  const fila = e.target.closest('[data-detalle]');
+  if (fila && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); modalCliente(fila.dataset.detalle); }
 });
 
 $('#btn-nuevo').onclick = () => modalNuevo();

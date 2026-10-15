@@ -218,12 +218,25 @@ def resumen():
         "clientes": clientes,
         "backups": info_backups(),
         "pagos": sorted(datos["pagos"], key=lambda p: p["registrado"], reverse=True)[:50],
+        "pagos_por_negocio": pagos_por_negocio(datos["pagos"]),
         "cobros": {"ingresos_mes": round(ingresos_mes, 2), "mensual_esperado": round(esperado, 2),
                    "vencidos": sum(1 for c in clientes if c["pago"]["estado"] == "VENCIDO"),
                    "por_vencer": sum(1 for c in clientes if c["pago"]["estado"] == "POR_VENCER")},
         "config": {"dias_aviso": DIAS_AVISO, "dias_gracia": DIAS_GRACIA, "dominio": DOMINIO_BASE,
                    "mercadopago": (mp_config() or {}).get("modo")},
     }
+
+
+def pagos_por_negocio(pagos):
+    """Un resumen por negocio sobre TODOS sus pagos: cantidad, total y el último."""
+    grupos = {}
+    for p in pagos:
+        g = grupos.setdefault(p["slug"], {"slug": p["slug"], "cantidad": 0, "total": 0.0, "ultimo": None})
+        g["cantidad"] += 1
+        g["total"] = round(g["total"] + p["monto"], 2)
+        if not g["ultimo"] or (p["fecha"], p["registrado"]) > (g["ultimo"]["fecha"], g["ultimo"]["registrado"]):
+            g["ultimo"] = p
+    return sorted(grupos.values(), key=lambda g: (g["ultimo"]["fecha"], g["ultimo"]["registrado"]), reverse=True)
 
 
 def MENSUAL_EQ(plan):
