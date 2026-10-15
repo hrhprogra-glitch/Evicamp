@@ -7,19 +7,7 @@ const { execSync } = require('child_process');
 const { conexionVps } = require('./vps.cjs');
 const ssh = new NodeSSH();
 
-const DESTINOS = {
-  evicamp: {
-    localDir: path.join(__dirname, '..', 'dist'),
-    remoteDir: '/var/www/evicamp.duckdns.org/html',
-  },
-  siuhub: {
-    localDir: path.join(__dirname, '..', 'dist-siuhub'),
-    remoteDir: '/var/www/siuhub/html',
-    // Vite da prioridad a las variables del proceso sobre .env: así el build apunta a la API de SiuHub
-    build: 'npx tsc -b && npx vite build --outDir dist-siuhub --emptyOutDir',
-    env: { VITE_SUPABASE_URL: 'https://siuhub.duckdns.org' },
-  },
-};
+const DESTINOS = require('./destinos.cjs');
 
 const nombre = process.argv[2] || 'evicamp';
 const destino = DESTINOS[nombre];

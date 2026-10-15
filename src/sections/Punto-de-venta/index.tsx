@@ -4,7 +4,7 @@ import type { CartItem } from './types';
 import type { Product } from '../Inventario/types';
 import { useRef } from 'react';
 import { Wallet, Printer, X } from 'lucide-react';
-import { useReactToPrint } from 'react-to-print';
+import { useImprimir } from '../../utils/impresion';
 // Componentes modulares
 import { TerminalBusqueda } from './components/TerminalBusqueda';
 import { TicketVenta } from './components/TicketVenta';
@@ -333,11 +333,8 @@ const [searchQuery, setSearchQuery] = useState('');
   const [selectedConsumoProduct, setSelectedConsumoProduct] = useState<Product | null>(null); // <-- NUEVO
   const componentRef = useRef<HTMLDivElement>(null);
 
-  const handlePrint = useReactToPrint({
-    contentRef: componentRef, // <-- Corrección de arquitectura v3
-    documentTitle: 'Boleta de Venta',
-    onAfterPrint: () => console.log('Impresión finalizada'),
-  });
+  // En la app de escritorio imprime directo; en el navegador abre la ventana de impresión
+  const handlePrint = useImprimir(componentRef, 'Boleta de Venta');
 
   // 🔥 NUEVO: ATAJOS DE TECLADO GLOBALES (F2, F4, ESCAPE)
   useEffect(() => {

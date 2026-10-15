@@ -6,7 +6,7 @@ import { X, Printer, Receipt, Download, FileText, ChevronLeft, Eye, RotateCcw, T
 import { supabase } from '../../../db/supabase';
 import { TablaMovimientos } from './TablaMovimientos';
 import type { UnifiedItem } from '../types';
-import { useReactToPrint } from 'react-to-print';
+import { useImprimir } from '../../../utils/impresion';
 // html2canvas-pro (no el html2canvas normal): Tailwind v4 usa colores oklch() en su CSS, y la
 // librería original no sabe interpretarlos (falla al generar la imagen). Este fork sí los soporta.
 import html2canvas from 'html2canvas-pro';
@@ -82,10 +82,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
     }
   };
 
-  const handlePrint = useReactToPrint({
-    contentRef: printRef,
-    documentTitle: `Resumen_Caja_${caja?.id}`,
-  });
+  const handlePrint = useImprimir(printRef, `Resumen_Caja_${caja?.id}`);
 
   const handleDescargar = async () => {
     if (!printRef.current) return;

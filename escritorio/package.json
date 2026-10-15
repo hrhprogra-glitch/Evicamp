@@ -1,0 +1,46 @@
+{
+  "name": "siuhub-escritorio",
+  "productName": "SiuHub",
+  "version": "1.0.0",
+  "description": "SiuHub para la PC de la caja: impresión directa de tickets.",
+  "author": "SiuHub",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "allowScripts": {
+    "electron@33.2.1": true
+  },
+  "build": {
+    "appId": "pe.siuhub.escritorio",
+    "productName": "SiuHub",
+    "directories": {
+      "output": "salida"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "sin-conexion.html",
+      "icono.png",
+      "destino.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icono.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "SiuHub",
+      "artifactName": "SiuHub-Setup.exe"
+    }
+  }
+}

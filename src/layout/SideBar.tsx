@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   ShoppingCart, Users, Package, 
   Truck, Trash2, Wallet, 
-  Settings, BarChart3, X, LogOut, Download
+  Settings, BarChart3, X, LogOut, Download, Monitor
 } from 'lucide-react';
-import { usePuedeInstalar, instalarApp } from '../utils/instalarApp';
+import { usePuedeInstalar, instalarApp, useHayInstaladorPC, RUTA_INSTALADOR_PC } from '../utils/instalarApp';
 
 // IMPORTAMOS EL LOGO Y SUPABASE
 import logoEvicamp from '../assets/logo.png';
@@ -31,6 +31,7 @@ const AUTO_OCULTAR_MS = 8000;
 export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigate, onClose, onToggle, permisos }) => {
   const [empresaData, setEmpresaData] = useState({ nombre: 'SIUHUB', logo: logoEvicamp });
   const puedeInstalar = usePuedeInstalar();
+  const hayInstaladorPC = useHayInstaladorPC();
 
   // === TEMPORIZADOR DE AUTO-OCULTADO ===
   // Mientras el menú está abierto cuenta el tiempo sin actividad; con el mouse encima queda en pausa.
@@ -415,6 +416,22 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
               {isOpen && <span className="whitespace-nowrap">Instalar app</span>}
             </div>
           </button>
+        )}
+        {hayInstaladorPC && (
+          <a
+            href={RUTA_INSTALADOR_PC}
+            download
+            title={!isOpen ? "Descargar app para PC" : undefined}
+            aria-label="Descargar app SiuHub para PC"
+            className={`w-full text-left py-2 short:py-1.5 text-xs font-black uppercase tracking-wider transition-all border-2 rounded-none flex items-center cursor-pointer border-[var(--color-ink)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white hover:shadow-[3px_3px_0_0_var(--color-accent)] hover:translate-x-[-2px] hover:translate-y-[-2px] focus:outline-none focus:bg-[var(--color-ink)] focus:text-white focus:shadow-[3px_3px_0_0_var(--color-accent)] focus:translate-x-[-2px] focus:translate-y-[-2px] ${
+              isOpen ? 'pl-3 pr-2 gap-3 justify-between' : 'justify-center px-0'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Monitor size={18} className="shrink-0" />
+              {isOpen && <span className="whitespace-nowrap">App para PC</span>}
+            </div>
+          </a>
         )}
         <button
           onClick={async () => {
