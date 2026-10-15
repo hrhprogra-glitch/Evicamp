@@ -135,7 +135,6 @@ td a { color: var(--info); font-size: 12px; word-break: break-all; }
       <div class="seccion-cab">
         <h2>Clientes</h2>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-sm" id="btn-externo" title="Para cobrar a un sistema que no se creó desde aquí (ej. Evicamp)">+ Cliente externo</button>
           <button class="btn btn-ok" id="btn-nuevo">+ Nuevo cliente</button>
         </div>
       </div>
@@ -289,7 +288,6 @@ $('#tabla-clientes').addEventListener('click', (e) => {
 });
 
 $('#btn-nuevo').onclick = () => modalNuevo();
-$('#btn-externo').onclick = () => modalPlan(null);
 $('#btn-backup').onclick = async (e) => {
   const b = e.target; b.disabled = true; b.textContent = 'Haciendo backup...';
   try { await api('/api/backup', {}); toast('Backup completo de todas las bases.'); cargar(); }
