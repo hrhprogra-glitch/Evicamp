@@ -82,6 +82,12 @@ const subirScripts = async (ssh) => {
       await ssh.putFile(path.join(__dirname, '..', 'src', 'assets', 'logo.png'), `${DIR_REMOTO}/panel/logo.png`);
       const clave = process.env.PANEL_CLAVE;
       await ejecutar(ssh, `${clave ? `PANEL_CLAVE=${q(clave)} ` : ''}${DIR_REMOTO}/instalar-panel.sh`);
+      // Mercado Pago: producción si existe MP_ACCESS_TOKEN; si no, el de prueba
+      const tokenMp = process.env.MP_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN_PRUEBA;
+      if (tokenMp) {
+        const modo = process.env.MP_ACCESS_TOKEN ? 'produccion' : 'prueba';
+        await ejecutar(ssh, `MP_ACCESS_TOKEN=${q(tokenMp.trim())} MP_MODO=${modo} python3 ${DIR_REMOTO}/panel/panel.py configurar-mp && systemctl restart siuhub-panel`);
+      }
       return;
     }
 

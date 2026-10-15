@@ -1554,9 +1554,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/cliente.cjs": {
-    "mtime": 1792080819.7101,
-    "seen": 1792081921.2325118,
-    "ast_hash": "68f8062bc1f6ace66f273e1a73a1ce6a",
+    "mtime": 1792084171.2867956,
+    "seen": 1792084271.1642501,
+    "ast_hash": "8ab5a5a2dba755969128098f88053387",
     "semantic_hash": ""
   },
   "servidor/backup.sh": {
@@ -1602,15 +1602,15 @@
     "semantic_hash": ""
   },
   "servidor/panel/panel.py": {
-    "mtime": 1792081841.437912,
-    "seen": 1792081921.232619,
-    "ast_hash": "e1ab25bc8cbc4ec0770f002fd699ac98",
+    "mtime": 1792084171.2867956,
+    "seen": 1792084271.164427,
+    "ast_hash": "d9d5fcadd967729529ef7112f7a9f844",
     "semantic_hash": ""
   },
   "src/layout/AvisoSuscripcion.tsx": {
-    "mtime": 1792080122.0686045,
-    "seen": 1792080418.9112868,
-    "ast_hash": "88fd65c930697df1f2efe97d4636b170",
+    "mtime": 1792084179.1915116,
+    "seen": 1792084271.1644356,
+    "ast_hash": "0538c15b13e58ac4e0dee3ddc4332fc2",
     "semantic_hash": ""
   },
   "escritorio/configurar.html": {
@@ -1620,9 +1620,9 @@
     "semantic_hash": ""
   },
   "servidor/panel/index.html": {
-    "mtime": 1792081883.0668998,
-    "seen": 1792081921.2327178,
-    "ast_hash": "58067f615a3079fa7420a573c37192e6",
+    "mtime": 1792084193.953969,
+    "seen": 1792084271.1645923,
+    "ast_hash": "e4e4860f7de3152e0949e9637f13f1cc",
     "semantic_hash": ""
   }
 }

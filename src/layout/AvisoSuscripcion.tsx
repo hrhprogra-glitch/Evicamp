@@ -8,6 +8,7 @@ interface Suscripcion {
   dias_restantes: number | null;
   proximo_pago: string | null;
   fecha_suspension: string | null;
+  pagar_url?: string | null; // Mercado Pago (tarjeta o Yape); el pago se registra solo
 }
 
 const REVISAR_CADA_MS = 60 * 60 * 1000;
@@ -56,6 +57,16 @@ export const AvisoSuscripcion: React.FC = () => {
     >
       <AlertTriangle size={16} className="shrink-0" />
       <span className="flex-1">{mensaje}</span>
+      {plan.pagar_url && (
+        <a
+          href={plan.pagar_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 px-3 py-1 border-2 border-current bg-white font-black uppercase tracking-widest hover:bg-[var(--color-ink)] hover:text-white transition-colors"
+        >
+          Pagar ahora
+        </a>
+      )}
       <button onClick={cerrar} aria-label="Ocultar aviso por hoy" title="Ocultar por hoy" className="shrink-0 p-1 cursor-pointer hover:opacity-70">
         <X size={16} />
       </button>

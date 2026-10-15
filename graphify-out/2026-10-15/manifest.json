@@ -1554,9 +1554,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/cliente.cjs": {
-    "mtime": 1792080346.4745338,
-    "seen": 1792080418.9111755,
-    "ast_hash": "86611e264fc835cbde0383a4479ca03b",
+    "mtime": 1792080819.7101,
+    "seen": 1792081921.2325118,
+    "ast_hash": "68f8062bc1f6ace66f273e1a73a1ce6a",
     "semantic_hash": ""
   },
   "servidor/backup.sh": {
@@ -1602,9 +1602,9 @@
     "semantic_hash": ""
   },
   "servidor/panel/panel.py": {
-    "mtime": 1792080338.212894,
-    "seen": 1792080418.911282,
-    "ast_hash": "fe289246075ec18d2c773bc66d3b8091",
+    "mtime": 1792081841.437912,
+    "seen": 1792081921.232619,
+    "ast_hash": "e1ab25bc8cbc4ec0770f002fd699ac98",
     "semantic_hash": ""
   },
   "src/layout/AvisoSuscripcion.tsx": {
@@ -1620,9 +1620,9 @@
     "semantic_hash": ""
   },
   "servidor/panel/index.html": {
-    "mtime": 1792080000.941039,
-    "seen": 1792080418.911382,
-    "ast_hash": "03ee8947564a06430b0c17c290d108e3",
+    "mtime": 1792081883.0668998,
+    "seen": 1792081921.2327178,
+    "ast_hash": "58067f615a3079fa7420a573c37192e6",
     "semantic_hash": ""
   }
 }

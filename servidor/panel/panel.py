@@ -14,6 +14,7 @@ Uso:
   python3 panel.py                 -> servidor del panel
   python3 panel.py revisar-cobros  -> tarea diaria (cron): avisos y suspensión por falta de pago
   PANEL_CLAVE='...' python3 panel.py crear-clave -> guarda/cambia la contraseña del panel
+  MP_ACCESS_TOKEN='...' MP_MODO=prueba|produccion python3 panel.py configurar-mp -> guarda Mercado Pago
 """
 import calendar
 import hashlib
@@ -29,7 +30,9 @@ import threading
 import time
 from datetime import date, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlparse
+from urllib.request import Request, urlopen
 
 DIR_SIUHUB = "/opt/siuhub"
 REGISTRO = f"{DIR_SIUHUB}/clientes.tsv"
@@ -45,7 +48,9 @@ DURACION_SESION = 12 * 3600
 DIAS_AVISO = 5      # "por vencer" desde 5 días antes
 DIAS_GRACIA = 5     # se suspende 5 días después de vencido
 MESES_PLAN = {"MENSUAL": 1, "TRIMESTRAL": 3, "SEMESTRAL": 6, "ANUAL": 12}
-METODOS_PAGO = {"YAPE", "PLIN", "TRANSFERENCIA", "EFECTIVO", "OTRO"}
+METODOS_PAGO = {"YAPE", "PLIN", "TRANSFERENCIA", "EFECTIVO", "OTRO", "MERCADOPAGO"}
+MERCADOPAGO = f"{DIR_SIUHUB}/mercadopago.json"   # {"access_token": "...", "modo": "prueba"|"produccion"}
+URL_PANEL = f"https://panel.{DOMINIO_BASE}"
 RE_SLUG = re.compile(r"^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$")
 RE_CORREO = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 RE_FECHA = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -124,7 +129,9 @@ def escribir_suscripcion(slug, plan):
         suspension = date.fromordinal(suspension).isoformat()
     datos = {"estado": ep["estado"], "dias_restantes": ep["dias"],
              "proximo_pago": plan.get("proximo_pago") if plan else None,
-             "fecha_suspension": suspension, "actualizado": datetime.now().isoformat(timespec="seconds")}
+             "fecha_suspension": suspension, "actualizado": datetime.now().isoformat(timespec="seconds"),
+             # Botón "Pagar ahora" del aviso: solo si Mercado Pago está configurado y hay precio
+             "pagar_url": f"{URL_PANEL}/pagar/{slug}" if (mp_config() and plan and plan.get("precio")) else None}
     ruta = os.path.join(carpeta, "suscripcion.json")
     with open(ruta + ".tmp", "w", encoding="utf-8") as f:
         json.dump(datos, f)
@@ -214,7 +221,8 @@ def resumen():
         "cobros": {"ingresos_mes": round(ingresos_mes, 2), "mensual_esperado": round(esperado, 2),
                    "vencidos": sum(1 for c in clientes if c["pago"]["estado"] == "VENCIDO"),
                    "por_vencer": sum(1 for c in clientes if c["pago"]["estado"] == "POR_VENCER")},
-        "config": {"dias_aviso": DIAS_AVISO, "dias_gracia": DIAS_GRACIA, "dominio": DOMINIO_BASE},
+        "config": {"dias_aviso": DIAS_AVISO, "dias_gracia": DIAS_GRACIA, "dominio": DOMINIO_BASE,
+                   "mercadopago": (mp_config() or {}).get("modo")},
     }
 
 
@@ -333,18 +341,22 @@ def registrar_pago(cuerpo):
     fecha = cuerpo.get("fecha") or date.today().isoformat()
     if not RE_FECHA.match(fecha):
         raise ValueError("Fecha inválida.")
+    mp_id = str(cuerpo.get("mp_id") or "")  # solo lo pone el aviso de Mercado Pago, nunca el formulario
     with candado:
         datos = leer_datos()
         plan = datos["planes"].get(slug)
         if not plan:
             raise ValueError("Primero configura el plan de este cliente.")
+        # Mercado Pago puede avisar el mismo pago varias veces: se registra una sola vez
+        if mp_id and any(p.get("mp_id") == mp_id for p in datos["pagos"]):
+            return {"plan": plan, "reactivado": False, "duplicado": True}
         # El siguiente vencimiento avanza un periodo desde el vencimiento actual (no desde hoy),
         # así pagar tarde o adelantado no regala ni quita días.
         base = date.fromisoformat(plan["proximo_pago"])
         plan["proximo_pago"] = sumar_meses(base, MESES_PLAN[plan["tipo"]]).isoformat()
         datos["pagos"].append({"id": secrets.token_hex(6), "slug": slug, "monto": round(monto, 2), "metodo": metodo,
                                "fecha": fecha, "nota": str(cuerpo.get("nota", ""))[:200],
-                               "periodo_hasta": plan["proximo_pago"],
+                               "periodo_hasta": plan["proximo_pago"], "mp_id": mp_id or None,
                                "registrado": datetime.now().isoformat(timespec="seconds")})
         suspendido_por_pago = plan.pop("suspendido_por_pago", False)
         guardar_json(DATOS, datos)
@@ -353,6 +365,67 @@ def registrar_pago(cuerpo):
     if suspendido_por_pago and estado_pago(plan)["estado"] != "VENCIDO":
         reactivado, _ = cambiar_estado(slug, "activar")
     return {"plan": plan, "reactivado": reactivado}
+
+
+# ===================== Mercado Pago =====================
+
+def mp_config():
+    c = leer_json(MERCADOPAGO, None)
+    return c if c and c.get("access_token") else None
+
+
+def mp_api(metodo, ruta, cuerpo=None):
+    conf = mp_config()
+    if not conf:
+        raise ValueError("Mercado Pago no está configurado.")
+    req = Request(f"https://api.mercadopago.com{ruta}", method=metodo,
+                  data=json.dumps(cuerpo).encode() if cuerpo is not None else None,
+                  headers={"Authorization": f"Bearer {conf['access_token']}", "Content-Type": "application/json"})
+    try:
+        with urlopen(req, timeout=20) as r:
+            return json.loads(r.read() or b"{}")
+    except HTTPError as e:
+        raise ValueError(f"Mercado Pago respondió {e.code}.") from e
+    except URLError as e:
+        raise ValueError("No se pudo conectar con Mercado Pago.") from e
+
+
+def crear_link_pago(slug):
+    """Link de Checkout Pro por el precio del plan. El slug va en external_reference para saber
+    de quién es el pago cuando Mercado Pago avise."""
+    reg = cliente_registrado(slug)
+    plan = leer_datos()["planes"].get(slug)
+    if not plan or not plan.get("precio"):
+        raise ValueError("Este cliente no tiene un plan con precio.")
+    link_cliente = f"https://{slug}.{DOMINIO_BASE}"
+    pref = mp_api("POST", "/checkout/preferences", {
+        "items": [{"title": f"SiuHub - Plan {plan['tipo'].lower()} ({reg['nombre']})", "quantity": 1,
+                   "unit_price": float(plan["precio"]), "currency_id": "PEN"}],
+        "external_reference": f"{slug}|{plan['proximo_pago']}",
+        "notification_url": f"{URL_PANEL}/api/mercadopago/webhook",
+        "back_urls": {"success": link_cliente, "pending": link_cliente, "failure": link_cliente},
+        "auto_return": "approved",
+        "statement_descriptor": "SIUHUB",
+    })
+    return pref.get("init_point") if mp_config().get("modo") == "produccion" else (pref.get("sandbox_init_point") or pref.get("init_point"))
+
+
+def procesar_aviso_mp(id_pago):
+    """Mercado Pago avisa que hubo un pago. No se confía en el aviso: se consulta el pago
+    directamente a Mercado Pago con nuestro token y solo se registra si está APROBADO."""
+    if not re.fullmatch(r"\d{1,20}", str(id_pago or "")):
+        return "id inválido"
+    pago = mp_api("GET", f"/v1/payments/{id_pago}")
+    if pago.get("status") != "approved":
+        return f"pago {id_pago} en estado {pago.get('status')}"
+    slug = str(pago.get("external_reference") or "").split("|")[0]
+    if not RE_SLUG.match(slug):
+        return "pago sin cliente"
+    metodo_mp = pago.get("payment_method_id") or pago.get("payment_type_id") or ""
+    fecha = (pago.get("date_approved") or "")[:10] or date.today().isoformat()
+    r = registrar_pago({"slug": slug, "monto": pago.get("transaction_amount"), "metodo": "MERCADOPAGO",
+                        "fecha": fecha, "nota": f"MP #{id_pago} ({metodo_mp})", "mp_id": str(id_pago)})
+    return f"{slug}: {'ya registrado' if r.get('duplicado') else 'pago registrado'}"
 
 
 def revisar_cobros():
@@ -392,11 +465,11 @@ def verificar_clave(clave):
     return hmac.compare_digest(h, admin["hash"])
 
 
-def ip_bloqueada(ip):
+def ip_bloqueada(ip, limite=5):
     ahora = time.time()
     fallos = [t for t in intentos.get(ip, []) if ahora - t < 900]
     intentos[ip] = fallos
-    return len(fallos) >= 5
+    return len(fallos) >= limite
 
 
 # ===================== Servidor HTTP =====================
@@ -455,6 +528,23 @@ class Panel(BaseHTTPRequestHandler):
                 return self.responder(200, f.read(), "image/png")
         if ruta == "/api/sesion":
             return self.responder(200, {"autenticado": self.autenticado()})
+        if ruta.startswith("/pagar/"):  # público: botón "Pagar ahora" del aviso del cliente
+            slug = ruta[len("/pagar/"):].strip("/")
+            try:
+                if ip_bloqueada("pagar:" + self.ip(), limite=30):
+                    raise ValueError("Demasiados intentos. Espera unos minutos.")
+                intentos.setdefault("pagar:" + self.ip(), []).append(time.time())
+                link = crear_link_pago(slug)
+                if not link:
+                    raise ValueError("Mercado Pago no devolvió el link de pago.")
+                return self.responder(302, b"", "text/plain", {"Location": link})
+            except ValueError as e:
+                aviso = (f"<!doctype html><meta charset='utf-8'><meta name='viewport' content='width=device-width'>"
+                         f"<body style='font-family:monospace;background:#1E293B;color:#F8FAFC;display:flex;align-items:center;"
+                         f"justify-content:center;min-height:100vh;margin:0;padding:16px;text-align:center'>"
+                         f"<div><h2 style='color:#F59E0B'>No se pudo abrir el pago</h2><p>{str(e)}</p>"
+                         f"<p>Comunícate con SiuHub.</p></div>")
+                return self.responder(400, aviso.encode(), "text/html")
         if not self.autenticado():
             return self.responder(401, {"error": "Inicia sesión."})
         if ruta == "/api/resumen":
@@ -469,6 +559,20 @@ class Panel(BaseHTTPRequestHandler):
 
     def do_POST(self):
         ruta = urlparse(self.path).path
+        if ruta == "/api/mercadopago/webhook":  # público: lo llama Mercado Pago
+            q = parse_qs(urlparse(self.path).query)
+            try:
+                cuerpo = self.cuerpo_json() if (self.headers.get("Content-Length") or "0") != "0" else {}
+            except (ValueError, json.JSONDecodeError):
+                cuerpo = {}
+            tipo = cuerpo.get("type") or cuerpo.get("topic") or (q.get("type") or q.get("topic") or [""])[0]
+            id_pago = (cuerpo.get("data") or {}).get("id") or (q.get("data.id") or q.get("id") or [""])[0]
+            if tipo == "payment" and id_pago:
+                try:
+                    sys.stderr.write(f"Mercado Pago: {procesar_aviso_mp(id_pago)}\n")
+                except ValueError as e:
+                    sys.stderr.write(f"Mercado Pago: error con pago {id_pago}: {e}\n")
+            return self.responder(200, {"ok": True})  # siempre 200 para que no reintente sin fin
         # Protección CSRF: solo JSON (un formulario de otra página no puede enviarlo)
         if "application/json" not in (self.headers.get("Content-Type") or ""):
             return self.responder(415, {"error": "Tipo de contenido no permitido."})
@@ -570,6 +674,18 @@ def main():
         sal, h = hash_clave(clave)
         guardar_json(ADMIN, {"sal": sal, "hash": h, "creado": datetime.now().isoformat(timespec="seconds")})
         print("Contraseña del panel guardada.")
+        return
+    if len(sys.argv) > 1 and sys.argv[1] == "configurar-mp":
+        token = os.environ.get("MP_ACCESS_TOKEN", "").strip()
+        modo = os.environ.get("MP_MODO", "prueba")
+        if not token.startswith(("APP_USR-", "TEST-")) or modo not in ("prueba", "produccion"):
+            sys.exit("MP_ACCESS_TOKEN o MP_MODO inválidos.")
+        guardar_json(MERCADOPAGO, {"access_token": token, "modo": modo,
+                                   "actualizado": datetime.now().isoformat(timespec="seconds")})
+        # Los avisos de cada cliente ahora llevan el botón "Pagar ahora"
+        for slug, plan in leer_datos()["planes"].items():
+            escribir_suscripcion(slug, plan)
+        print(f"Mercado Pago configurado en modo {modo}.")
         return
     if not os.path.isfile(ADMIN):
         sys.exit("Falta la contraseña del panel: ejecuta PANEL_CLAVE='...' panel.py crear-clave")

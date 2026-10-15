@@ -243,7 +243,8 @@ function pintar() {
   const discoPct = Math.round(vps.disco_usado_gb / vps.disco_total_gb * 100);
   $('#vps').innerHTML = `<span>RAM <b>${ramPct}%</b> (${vps.ram_usada_mb}/${vps.ram_total_mb} MB)</span>
     <span>Disco <b>${discoPct}%</b> (${vps.disco_usado_gb}/${vps.disco_total_gb} GB)</span>
-    <span>CPU <b>${vps.cpu_carga}</b> / ${vps.cpus}</span><span>Encendido <b>${vps.dias_encendido} d</b></span>`;
+    <span>CPU <b>${vps.cpu_carga}</b> / ${vps.cpus}</span><span>Encendido <b>${vps.dias_encendido} d</b></span>
+    <span>Mercado Pago <b style="color:${config.mercadopago === 'produccion' ? 'var(--accent)' : config.mercadopago ? 'var(--warning)' : '#94A3B8'}">${config.mercadopago === 'produccion' ? 'COBRANDO' : config.mercadopago ? 'MODO PRUEBA' : 'NO CONFIGURADO'}</b></span>`;
 
   const activos = clientes.filter((c) => c.estado === 'ACTIVO' || c.externo).length;
   $('#tarjetas').innerHTML = `
