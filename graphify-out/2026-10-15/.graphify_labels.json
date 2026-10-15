@@ -74,7 +74,7 @@
   "72": "fix-giant-text.cjs",
   "73": "fix-global-anim.cjs",
   "74": "fix-header.cjs",
-  "75": "coincideBusqueda",
+  "75": "Punto-de-venta/index.tsx",
   "76": "fix-historial-rectangles.cjs",
   "77": "fix-historial-sort.cjs",
   "78": "Proveedores/index.tsx",
@@ -85,7 +85,7 @@
   "83": "fix-layout-finanzas.cjs",
   "84": "fix-map.cjs",
   "85": "fix-modal.cjs",
-  "86": "Punto-de-venta/index.tsx",
+  "86": "Product",
   "87": "fix-old-payments.cjs",
   "88": "fix-partial.cjs",
   "89": "fix-phantom.cjs",
@@ -105,7 +105,7 @@
   "103": "fix-save-cliente.cjs",
   "104": "fix-save-cliente2.cjs",
   "105": "ModalMerma.tsx",
-  "106": "fix-syntax-error.cjs",
+  "106": "Inventario/index.tsx",
   "107": "fix-tabla.cjs",
   "108": "fix-tot.cjs",
   "109": "run-remote.cjs",
@@ -146,5 +146,7 @@
   "144": "fix-header2.cjs",
   "145": "fix-historial-tabs.cjs",
   "146": "fix-scroll.cjs",
-  "147": "remove-history.cjs"
+  "147": "remove-history.cjs",
+  "148": "TicketVenta.tsx",
+  "149": "fix-historial-abonos-tab.cjs"
 }

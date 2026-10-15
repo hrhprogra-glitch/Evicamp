@@ -3,17 +3,18 @@
 // Uso:
 //   node ai-scripts/build-escritorio.cjs siuhub            -> arma y sube a siuhub.duckdns.org
 //   node ai-scripts/build-escritorio.cjs evicamp           -> arma y sube a evicamp.duckdns.org
+//   node ai-scripts/build-escritorio.cjs bodegarosa        -> cliente nuevo: bodegarosa.siuhub.duckdns.org
 //   node ai-scripts/build-escritorio.cjs siuhub --local    -> solo arma (no sube), para probar
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const DESTINOS = require('./destinos.cjs');
+const { destino: buscarDestino } = require('./destinos.cjs');
 
 const nombre = process.argv[2];
 const soloLocal = process.argv.includes('--local');
-const destino = DESTINOS[nombre];
-if (!destino) {
-  console.error(`Uso: node ai-scripts/build-escritorio.cjs <destino> [--local]. Opciones: ${Object.keys(DESTINOS).join(', ')}`);
+const destino = nombre && buscarDestino(nombre);
+if (!destino || !destino.url) {
+  console.error(`Uso: node ai-scripts/build-escritorio.cjs <destino> [--local]. Opciones: evicamp, siuhub o el link de un cliente`);
   process.exit(1);
 }
 

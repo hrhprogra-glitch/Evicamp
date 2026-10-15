@@ -1,69 +1,50 @@
+// Compila el sistema UNA vez y lo publica.
 // Uso:
-//   node ai-scripts/deploy.cjs           -> sube dist/ a Evicamp (producción de la clienta)
-//   node ai-scripts/deploy.cjs siuhub    -> compila para SiuHub y sube dist-siuhub/ a siuhub.duckdns.org
+//   node ai-scripts/deploy.cjs siuhub      -> solo SiuHub (para probar)
+//   node ai-scripts/deploy.cjs evicamp     -> solo Evicamp
+//   node ai-scripts/deploy.cjs clientes    -> todos los clientes nuevos (*.siuhub.duckdns.org)
+//   node ai-scripts/deploy.cjs todos       -> Evicamp + SiuHub + clientes
+//   (sin argumento = evicamp, como antes)
 const { NodeSSH } = require('node-ssh');
 const path = require('path');
 const { execSync } = require('child_process');
 const { conexionVps } = require('./vps.cjs');
-const ssh = new NodeSSH();
+const { SITIOS } = require('./destinos.cjs');
 
-const DESTINOS = require('./destinos.cjs');
-
-const nombre = process.argv[2] || 'evicamp';
-const destino = DESTINOS[nombre];
-if (!destino) {
-  console.error(`Destino desconocido: ${nombre}. Opciones: ${Object.keys(DESTINOS).join(', ')}`);
-  process.exit(1);
-}
-
-async function deploy() {
-  try {
-    if (destino.build) {
-      console.log(`Compilando para ${nombre}...`);
-      execSync(destino.build, {
-        cwd: path.join(__dirname, '..'),
-        stdio: 'inherit',
-        env: { ...process.env, ...destino.env },
-      });
-    }
-
-    console.log('Connecting to VPS...');
-    await ssh.connect(conexionVps);
-    console.log('Connected!');
-
-    const { localDir, remoteDir } = destino;
-
-    console.log(`Uploading from ${localDir} to ${remoteDir}...`);
-    const failed = [];
-    const successful = [];
-
-    await ssh.putDirectory(localDir, remoteDir, {
-      recursive: true,
-      concurrency: 10,
-      tick: function(localPath, remotePath, error) {
-        if (error) {
-          failed.push(localPath);
-        } else {
-          successful.push(localPath);
-        }
-      }
-    });
-
-    console.log(`Upload complete. Success: ${successful.length}, Failed: ${failed.length}`);
-    if (failed.length > 0) {
-      console.log('Failed files:', failed);
-    }
-
-    console.log('Setting permissions and restarting nginx...');
-    await ssh.execCommand(`chown -R www-data:www-data ${remoteDir}/`);
-    await ssh.execCommand('systemctl restart nginx');
-
-    console.log(`Deploy a ${nombre} completed successfully!`);
-    ssh.dispose();
-  } catch (err) {
-    console.error('Deploy error:', err);
+const pedido = process.argv[2] || 'evicamp';
+const nombres = pedido === 'todos' ? Object.keys(SITIOS) : [pedido];
+for (const n of nombres) {
+  if (!SITIOS[n]) {
+    console.error(`Destino desconocido: ${n}. Opciones: ${Object.keys(SITIOS).join(', ')}, todos`);
     process.exit(1);
   }
 }
 
-deploy();
+async function deploy() {
+  console.log('Compilando...');
+  execSync('npm run build', { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
+
+  const ssh = new NodeSSH();
+  await ssh.connect(conexionVps);
+  try {
+    for (const n of nombres) {
+      const { localDir, remoteDir } = SITIOS[n];
+      await ssh.execCommand(`mkdir -p ${remoteDir}`);
+      let ok = 0; const fallidos = [];
+      await ssh.putDirectory(localDir, remoteDir, {
+        recursive: true,
+        concurrency: 10,
+        tick: (local, _remoto, error) => (error ? fallidos.push(local) : ok++),
+      });
+      await ssh.execCommand(`chown -R www-data:www-data ${remoteDir}/`);
+      console.log(`${n}: ${ok} archivos subidos${fallidos.length ? `, FALLARON ${fallidos.length}: ${fallidos.join(', ')}` : ''}`);
+      if (fallidos.length) process.exitCode = 1;
+    }
+    await ssh.execCommand('systemctl reload nginx');
+    console.log('Deploy completed successfully!');
+  } finally {
+    ssh.dispose();
+  }
+}
+
+deploy().catch((err) => { console.error('Deploy error:', err); process.exit(1); });

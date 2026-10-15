@@ -30,9 +30,9 @@
     "semantic_hash": "4bd6d4148302b242d97873595cc455bc"
   },
   "src/layout/SideBar.tsx": {
-    "mtime": 1792077038.706449,
-    "seen": 1792077193.3067884,
-    "ast_hash": "637291c648eb42874befcfaa7c18c566",
+    "mtime": 1792077306.5381427,
+    "seen": 1792077338.1945364,
+    "ast_hash": "f7061fbfe4a45bbe70db56b6f07a4e3c",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -1458,9 +1458,9 @@
     "semantic_hash": ""
   },
   "src/utils/instalarApp.ts": {
-    "mtime": 1792077022.1140707,
-    "seen": 1792077193.3068974,
-    "ast_hash": "2169dd44721b4d0c28dd7c0a2f59cfb9",
+    "mtime": 1792077306.778689,
+    "seen": 1792077338.1946027,
+    "ast_hash": "b9f2c691b25fcac4515bd6dd978560ac",
     "semantic_hash": ""
   },
   "public/offline.html": {

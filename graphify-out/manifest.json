@@ -24,10 +24,10 @@
     "semantic_hash": ""
   },
   "src/db/supabase.ts": {
-    "mtime": 1790180658.881819,
-    "seen": 1790794348.247246,
-    "ast_hash": "4bd6d4148302b242d97873595cc455bc",
-    "semantic_hash": "4bd6d4148302b242d97873595cc455bc"
+    "mtime": 1792079081.6355543,
+    "seen": 1792079426.8527684,
+    "ast_hash": "dbecb97d05ed9dcf740f3cce61859129",
+    "semantic_hash": ""
   },
   "src/layout/SideBar.tsx": {
     "mtime": 1792077306.5381427,
@@ -690,9 +690,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/deploy.cjs": {
-    "mtime": 1792077055.0614626,
-    "seen": 1792077193.3066149,
-    "ast_hash": "9344c28221e412492f0c06b22b959bd4",
+    "mtime": 1792079221.6369119,
+    "seen": 1792079426.8526459,
+    "ast_hash": "4f5b08aa59dae5c036fc2096c76583a4",
     "semantic_hash": ""
   },
   "ai-scripts/fix-abonos-actuales.cjs": {
@@ -1506,15 +1506,15 @@
     "semantic_hash": ""
   },
   "ai-scripts/build-escritorio.cjs": {
-    "mtime": 1792077068.259967,
-    "seen": 1792077193.3065999,
-    "ast_hash": "1866b788a4cf4c009668235e0c9a865e",
+    "mtime": 1792079240.7228515,
+    "seen": 1792079426.852636,
+    "ast_hash": "c95aa03f9bc5e557ad38e0f8e8e8c334",
     "semantic_hash": ""
   },
   "ai-scripts/destinos.cjs": {
-    "mtime": 1792077053.6370575,
-    "seen": 1792077193.3066165,
-    "ast_hash": "6febe30a9ba78469b09b6c1bd326aeac",
+    "mtime": 1792079220.5734942,
+    "seen": 1792079426.8526468,
+    "ast_hash": "a84d79a10ac4f2de31f535361cef42e9",
     "semantic_hash": ""
   },
   "escritorio/main.js": {
@@ -1551,6 +1551,48 @@
     "mtime": 1792077053.38,
     "seen": 1792077193.306943,
     "ast_hash": "6333feb3321a38dbe91acc0319da6fff",
+    "semantic_hash": ""
+  },
+  "ai-scripts/cliente.cjs": {
+    "mtime": 1792079240.9407876,
+    "seen": 1792079426.852645,
+    "ast_hash": "8ee6dde5117374d4b1f274325939defc",
+    "semantic_hash": ""
+  },
+  "servidor/backup.sh": {
+    "mtime": 1792079187.5348935,
+    "seen": 1792079426.8527625,
+    "ast_hash": "97bf5c9d48d76dd20304f91221da7835",
+    "semantic_hash": ""
+  },
+  "servidor/estado-cliente.sh": {
+    "mtime": 1792079186.4931657,
+    "seen": 1792079426.8527634,
+    "ast_hash": "9ba8954e2a472db15493ab3c50067475",
+    "semantic_hash": ""
+  },
+  "servidor/instalar.sh": {
+    "mtime": 1792079189.6403732,
+    "seen": 1792079426.8527641,
+    "ast_hash": "6f785b8f110ac1caa1a13d8ec5ba91ec",
+    "semantic_hash": ""
+  },
+  "servidor/listar-clientes.sh": {
+    "mtime": 1792079188.578376,
+    "seen": 1792079426.8527646,
+    "ast_hash": "3fbe617b08d68ec4f56bb742265ba94a",
+    "semantic_hash": ""
+  },
+  "servidor/nuevo-cliente.sh": {
+    "mtime": 1792079185.4339306,
+    "seen": 1792079426.8527653,
+    "ast_hash": "ec165fa4f07c8015170bedef417b274a",
+    "semantic_hash": ""
+  },
+  "servidor/siuhub-lib.sh": {
+    "mtime": 1792079143.409128,
+    "seen": 1792079426.8527663,
+    "ast_hash": "97720b0ad59c7b2787290de13be8407a",
     "semantic_hash": ""
   }
 }

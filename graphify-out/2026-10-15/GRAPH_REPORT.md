@@ -1,17 +1,17 @@
 # Graph Report - evicamp  (2026-10-15)
 
 ## Corpus Check
-- 244 files · ~750,127 words
+- 244 files · ~750,162 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 5 file(s) not represented in the graph (top: (none) 3, .css 2)
 
 ## Summary
-- 1022 nodes · 1809 edges · 148 communities (63 shown, 85 thin omitted)
+- 1023 nodes · 1810 edges · 150 communities (65 shown, 85 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f423da1d`
+- Built from commit: `ca053c68`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -90,7 +90,7 @@
 - fix-giant-text.cjs
 - fix-global-anim.cjs
 - fix-header.cjs
-- coincideBusqueda
+- Punto-de-venta/index.tsx
 - fix-historial-rectangles.cjs
 - fix-historial-sort.cjs
 - Proveedores/index.tsx
@@ -101,7 +101,7 @@
 - fix-layout-finanzas.cjs
 - fix-map.cjs
 - fix-modal.cjs
-- Punto-de-venta/index.tsx
+- Product
 - fix-old-payments.cjs
 - fix-partial.cjs
 - fix-phantom.cjs
@@ -121,7 +121,7 @@
 - fix-save-cliente.cjs
 - fix-save-cliente2.cjs
 - ModalMerma.tsx
-- fix-syntax-error.cjs
+- Inventario/index.tsx
 - fix-tabla.cjs
 - fix-tot.cjs
 - run-remote.cjs
@@ -162,6 +162,8 @@
 - fix-historial-tabs.cjs
 - fix-scroll.cjs
 - remove-history.cjs
+- TicketVenta.tsx
+- fix-historial-abonos-tab.cjs
 
 ## God Nodes (most connected - your core abstractions)
 1. `react` - 71 edges
@@ -181,11 +183,11 @@
 - `CLAUDE.md (Evicamp project rules)` --conceptually_related_to--> `graphify Skill (SKILL.md)`  [INFERRED]
   CLAUDE.md → .claude/skills/graphify/SKILL.md
 - `Props` --references--> `Product`  [EXTRACTED]
-  src/sections/Inventario/components/ModalLote.tsx → src/sections/Inventario/types.ts
-- `Props` --references--> `Product`  [EXTRACTED]
   src/sections/Inventario/components/ModalMerma.tsx → src/sections/Inventario/types.ts
-- `Props` --references--> `Product`  [EXTRACTED]
-  src/sections/Inventario/components/TablaProductos.tsx → src/sections/Inventario/types.ts
+- `index.html (Evicamp app entry)` --references--> `Evicamp (project name)`  [EXTRACTED]
+  index.html → README.md
+- `CLAUDE.md (Evicamp project rules)` --references--> `graphify (knowledge graph CLI/skill)`  [EXTRACTED]
+  CLAUDE.md → .claude/skills/graphify/SKILL.md
 
 ## Import Cycles
 - None detected.
@@ -195,7 +197,7 @@
 - **graphify Skill Package (core + reference docs)** — claude_skills_graphify_skill, claude_skills_graphify_references_add_watch, claude_skills_graphify_references_exports, claude_skills_graphify_references_extraction_spec, claude_skills_graphify_references_github_and_merge, claude_skills_graphify_references_hooks, claude_skills_graphify_references_query, claude_skills_graphify_references_transcribe, claude_skills_graphify_references_update [EXTRACTED 1.00]
 - **Incremental update manifest/cache integrity mechanisms** — claude_skills_graphify_skill, claude_skills_graphify_references_update, concept_manifest_stamping, concept_extraction_cache, concept_shrink_guard_479 [INFERRED 0.85]
 
-## Communities (148 total, 85 thin omitted)
+## Communities (150 total, 85 thin omitted)
 
 ### Community 1 - "main.js"
 Cohesion: 0.05
@@ -207,7 +209,7 @@ Nodes (68): Evicamp (project name), index.html (Evicamp app entry), README.md (E
 
 ### Community 3 - "Utilidades/index.tsx"
 Cohesion: 0.11
-Nodes (29): Reportes(), FiltrosUtilidades(), Props, formatearFecha(), ModalDetalleProducto(), Props, Props, TablaAnalisisProductos() (+21 more)
+Nodes (30): ModalDetalleTicket(), Reportes(), FiltrosUtilidades(), Props, formatearFecha(), ModalDetalleProducto(), Props, Props (+22 more)
 
 ### Community 4 - "check_db.cjs"
 Cohesion: 0.18
@@ -219,7 +221,7 @@ Nodes (34): CLAUDE.md (Evicamp project rules), .claude/CLAUDE.md (graphify trigg
 
 ### Community 6 - "Finanzas/index.tsx"
 Cohesion: 0.10
-Nodes (32): react-to-print, ModalDetalleTicket(), Props, FiltroFechas(), Props, ModalApertura(), BloqueArqueo(), BloqueArqueoProps (+24 more)
+Nodes (28): react-to-print, FiltroFechas(), Props, ModalApertura(), BloqueArqueo(), BloqueArqueoProps, ModalCierre(), Props (+20 more)
 
 ### Community 7 - "package.json"
 Cohesion: 0.11
@@ -367,23 +369,23 @@ Nodes (4): Business Analytics / Team Reporting Theme, proyectos.jpg (Business An
 
 ### Community 51 - "Fiados/index.tsx"
 Cohesion: 0.11
-Nodes (35): ModalAbono(), Props, ModalAnularPago(), Props, ModalClientes(), Props, ModalDetalleFiado(), Props (+27 more)
+Nodes (36): ModalAbono(), Props, ModalAnularPago(), Props, ModalClientes(), Props, ModalDetalleFiado(), Props (+28 more)
 
 ### Community 67 - "react"
-Cohesion: 0.12
-Nodes (16): react, supabase, NotificacionYape, Props, METODOS, ModalNuevoMovimiento(), Props, ModalProducto() (+8 more)
+Cohesion: 0.22
+Nodes (8): react, supabase, NotificacionYape, Props, CartItem, DatosEmpresa, Props, TicketImprimible
 
-### Community 75 - "coincideBusqueda"
-Cohesion: 0.14
-Nodes (20): FiltrosInventario(), Props, ModalGestionProveedores(), ModalLote(), Props, Lote, Props, TablaLotes() (+12 more)
+### Community 75 - "Punto-de-venta/index.tsx"
+Cohesion: 0.26
+Nodes (10): Inventario(), Mermas(), Proveedores(), Props, FiadoData, ModalCobro(), coincideBusqueda(), normalizarTexto() (+2 more)
 
 ### Community 78 - "Proveedores/index.tsx"
 Cohesion: 0.28
 Nodes (9): Props, FiltrosProveedores(), Props, ModalProveedor(), Props, Props, TablaProveedores(), Props (+1 more)
 
-### Community 86 - "Punto-de-venta/index.tsx"
-Cohesion: 0.30
-Nodes (9): Product, ModalBalanza(), Props, ModalPrecioConsumo(), Props, Props, TerminalBusqueda(), CartItem (+1 more)
+### Community 86 - "Product"
+Cohesion: 0.20
+Nodes (10): ModalLote(), Props, Props, Product, ModalBalanza(), Props, ModalPrecioConsumo(), Props (+2 more)
 
 ### Community 91 - "Mermas/index.tsx"
 Cohesion: 0.21
@@ -398,8 +400,12 @@ Cohesion: 0.25
 Nodes (5): path, raiz, fs, path, ref_path
 
 ### Community 105 - "ModalMerma.tsx"
-Cohesion: 0.27
-Nodes (7): EtiquetaStock(), Props, ModalMerma(), Props, Props, TablaProductos(), formatearCantidad()
+Cohesion: 0.19
+Nodes (10): Props, EtiquetaStock(), Props, ModalMerma(), Props, Lote, Props, TablaLotes() (+2 more)
+
+### Community 106 - "Inventario/index.tsx"
+Cohesion: 0.20
+Nodes (8): FiltrosInventario(), Props, ModalGestionProveedores(), ModalProducto(), ProductNature, Props, TablaProductos(), InventarioProps
 
 ### Community 109 - "run-remote.cjs"
 Cohesion: 0.25
@@ -449,25 +455,29 @@ Nodes (3): lucide-react, Props, Props
 Cohesion: 0.50
 Nodes (3): filesToUpdate, fs, path
 
+### Community 148 - "TicketVenta.tsx"
+Cohesion: 0.31
+Nodes (9): Props, InputPeso(), InputPrecio(), InputUnidades(), Props, redondearPeso(), TicketVenta(), useSeleccionarTodo() (+1 more)
+
 ## Knowledge Gaps
-- **479 isolated node(s):** `fs`, `content`, `fs`, `cssCode`, `tsCode` (+474 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 528 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **480 isolated node(s):** `fs`, `content`, `fs`, `cssCode`, `tsCode` (+475 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 529 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **85 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `@supabase/supabase-js` connect `check-fiados.cjs` to `react`, `package.json`?**
-  _High betweenness centrality (0.372) - this node is a cross-community bridge._
-- **Why does `react` connect `react` to `App.tsx`, `Utilidades/index.tsx`, `Finanzas/index.tsx`, `package.json`, `lucide-react`, `ModalMerma.tsx`, `coincideBusqueda`, `Proveedores/index.tsx`, `Fiados/index.tsx`, `Punto-de-venta/index.tsx`, `Mermas/index.tsx`?**
-  _High betweenness centrality (0.068) - this node is a cross-community bridge._
+  _High betweenness centrality (0.368) - this node is a cross-community bridge._
+- **Why does `react` connect `react` to `App.tsx`, `Utilidades/index.tsx`, `Finanzas/index.tsx`, `package.json`, `lucide-react`, `ModalMerma.tsx`, `Inventario/index.tsx`, `Punto-de-venta/index.tsx`, `Proveedores/index.tsx`, `Fiados/index.tsx`, `TicketVenta.tsx`, `Product`, `Mermas/index.tsx`?**
+  _High betweenness centrality (0.072) - this node is a cross-community bridge._
 - **What connects `fs`, `content`, `fs` to the rest of the system?**
-  _479 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _480 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `main.js` be split into smaller, more focused modules?**
   _Cohesion score 0.04902867715078631 - nodes in this community are weakly interconnected._
 - **Should `App.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.0519219736087206 - nodes in this community are weakly interconnected._
 - **Should `Utilidades/index.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.10931174089068826 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10512820512820513 - nodes in this community are weakly interconnected._
 - **Should `graphify Skill (SKILL.md)` be split into smaller, more focused modules?**
   _Cohesion score 0.09090909090909091 - nodes in this community are weakly interconnected._

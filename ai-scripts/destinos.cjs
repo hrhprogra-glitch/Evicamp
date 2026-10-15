@@ -1,22 +1,38 @@
-// Clientes (destinos) donde se publica SiuHub. Un solo código para todos; cada uno con su
-// propia carpeta web en el VPS y su propia API/base de datos.
+// Dónde se publica SiuHub. Un solo código y UNA sola compilación (dist/) para todos:
+// el sistema usa la API de su propio link, así que no hay que compilar por cliente.
+//  - evicamp / siuhub: tienen su propia carpeta web en el VPS.
+//  - clientes nuevos (<slug>.siuhub.duckdns.org): comparten /var/www/siuhub-app/html,
+//    así que actualizar esa carpeta actualiza a todos de una vez.
 const path = require('path');
-const raiz = path.join(__dirname, '..');
+const dist = path.join(__dirname, '..', 'dist');
 
-module.exports = {
+const SITIOS = {
   evicamp: {
     nombre: 'Evicamp',
     url: 'https://evicamp.duckdns.org',
-    localDir: path.join(raiz, 'dist'),
+    localDir: dist,
     remoteDir: '/var/www/evicamp.duckdns.org/html',
   },
   siuhub: {
     nombre: 'SiuHub',
     url: 'https://siuhub.duckdns.org',
-    localDir: path.join(raiz, 'dist-siuhub'),
+    localDir: dist,
     remoteDir: '/var/www/siuhub/html',
-    // Vite da prioridad a las variables del proceso sobre .env: así el build apunta a la API de SiuHub
-    build: 'npx tsc -b && npx vite build --outDir dist-siuhub --emptyOutDir',
-    env: { VITE_SUPABASE_URL: 'https://siuhub.duckdns.org' },
+  },
+  clientes: {
+    nombre: 'Clientes SiuHub (copia compartida)',
+    localDir: dist,
+    remoteDir: '/var/www/siuhub-app/html',
   },
 };
+
+// Un cliente creado con `cliente.cjs nuevo`: su instalador de PC va en /var/www/clientes/<slug>/descargas
+const cliente = (slug) => ({
+  nombre: slug,
+  url: `https://${slug}.siuhub.duckdns.org`,
+  remoteDir: `/var/www/clientes/${slug}`,
+});
+
+const destino = (nombre) => SITIOS[nombre] || (/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/.test(nombre) ? cliente(nombre) : null);
+
+module.exports = { SITIOS, destino };
