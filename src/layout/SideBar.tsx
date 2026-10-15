@@ -4,7 +4,7 @@ import {
   Truck, Trash2, Wallet, 
   Settings, BarChart3, X, LogOut, Download, Monitor
 } from 'lucide-react';
-import { usePuedeInstalar, instalarApp, useHayInstaladorPC, RUTA_INSTALADOR_PC } from '../utils/instalarApp';
+import { usePuedeInstalar, instalarApp, useHayInstaladorPC, descargarInstaladorPC } from '../utils/instalarApp';
 
 // IMPORTAMOS EL LOGO Y SUPABASE
 import logoEvicamp from '../assets/logo.png';
@@ -418,9 +418,8 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
           </button>
         )}
         {hayInstaladorPC && (
-          <a
-            href={RUTA_INSTALADOR_PC}
-            download
+          <button
+            onClick={descargarInstaladorPC}
             title={!isOpen ? "Descargar app para PC" : undefined}
             aria-label="Descargar app SiuHub para PC"
             className={`w-full text-left py-2 short:py-1.5 text-xs font-black uppercase tracking-wider transition-all border-2 rounded-none flex items-center cursor-pointer border-[var(--color-ink)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white hover:shadow-[3px_3px_0_0_var(--color-accent)] hover:translate-x-[-2px] hover:translate-y-[-2px] focus:outline-none focus:bg-[var(--color-ink)] focus:text-white focus:shadow-[3px_3px_0_0_var(--color-accent)] focus:translate-x-[-2px] focus:translate-y-[-2px] ${
@@ -431,7 +430,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
               <Monitor size={18} className="shrink-0" />
               {isOpen && <span className="whitespace-nowrap">App para PC</span>}
             </div>
-          </a>
+          </button>
         )}
         <button
           onClick={async () => {

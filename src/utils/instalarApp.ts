@@ -67,6 +67,16 @@ export const useHayInstaladorPC = () => {
   return hay;
 };
 
+// Botón (no enlace) para que entre en la navegación con flechas del menú lateral
+export const descargarInstaladorPC = () => {
+  const enlace = document.createElement('a');
+  enlace.href = RUTA_INSTALADOR_PC;
+  enlace.download = 'SiuHub-Setup.exe';
+  document.body.appendChild(enlace);
+  enlace.click();
+  enlace.remove();
+};
+
 export const instalarApp = async () => {
   if (!avisoPendiente) return;
   const aviso = avisoPendiente;

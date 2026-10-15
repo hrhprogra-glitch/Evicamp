@@ -30,9 +30,9 @@
     "semantic_hash": "4bd6d4148302b242d97873595cc455bc"
   },
   "src/layout/SideBar.tsx": {
-    "mtime": 1792076105.103367,
-    "seen": 1792076121.7552063,
-    "ast_hash": "70d900ce8843c6c406a07f0d64df09ca",
+    "mtime": 1792077038.706449,
+    "seen": 1792077193.3067884,
+    "ast_hash": "637291c648eb42874befcfaa7c18c566",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -138,9 +138,9 @@
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalDetalleCaja.tsx": {
-    "mtime": 1791997354.880332,
-    "seen": 1791997430.184633,
-    "ast_hash": "339fef4624671231d38f144802bed339",
+    "mtime": 1792077005.4623656,
+    "seen": 1792077193.306818,
+    "ast_hash": "ffd5f73154dcaf5ac6746425ab40e19e",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalNuevoMovimiento.tsx": {
@@ -354,9 +354,9 @@
     "semantic_hash": "347dc39c6c4a7868717d53fd5afc6905"
   },
   "src/sections/Punto-de-venta/index.tsx": {
-    "mtime": 1791995782.1642058,
-    "seen": 1791995789.95838,
-    "ast_hash": "d8b8f42a5d5c3727b043b0408b64c97a",
+    "mtime": 1792077005.4623656,
+    "seen": 1792077193.3068695,
+    "ast_hash": "ddd47c8446db69f834e5b2bd93e83fba",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/types.ts": {
@@ -690,9 +690,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/deploy.cjs": {
-    "mtime": 1792071986.1757607,
-    "seen": 1792073167.817294,
-    "ast_hash": "fc48843a5b4e7a298c4458670ad0a21b",
+    "mtime": 1792077055.0614626,
+    "seen": 1792077193.3066149,
+    "ast_hash": "9344c28221e412492f0c06b22b959bd4",
     "semantic_hash": ""
   },
   "ai-scripts/fix-abonos-actuales.cjs": {
@@ -1458,9 +1458,9 @@
     "semantic_hash": ""
   },
   "src/utils/instalarApp.ts": {
-    "mtime": 1792076084.0076892,
-    "seen": 1792076121.7552714,
-    "ast_hash": "8e9c215384165f16d2cc81356384f496",
+    "mtime": 1792077022.1140707,
+    "seen": 1792077193.3068974,
+    "ast_hash": "2169dd44721b4d0c28dd7c0a2f59cfb9",
     "semantic_hash": ""
   },
   "public/offline.html": {
@@ -1503,6 +1503,54 @@
     "mtime": 1792076066.1545794,
     "seen": 1792076173.9543643,
     "ast_hash": "deaf47778df65f07fec853421f382d29",
+    "semantic_hash": ""
+  },
+  "ai-scripts/build-escritorio.cjs": {
+    "mtime": 1792077068.259967,
+    "seen": 1792077193.3065999,
+    "ast_hash": "1866b788a4cf4c009668235e0c9a865e",
+    "semantic_hash": ""
+  },
+  "ai-scripts/destinos.cjs": {
+    "mtime": 1792077053.6370575,
+    "seen": 1792077193.3066165,
+    "ast_hash": "6febe30a9ba78469b09b6c1bd326aeac",
+    "semantic_hash": ""
+  },
+  "escritorio/main.js": {
+    "mtime": 1792076984.7063766,
+    "seen": 1792077193.3067715,
+    "ast_hash": "6f37edf0453ebc46e2f72e492bd0bf46",
+    "semantic_hash": ""
+  },
+  "escritorio/package.json": {
+    "mtime": 1792077068.0299375,
+    "seen": 1792077193.3067727,
+    "ast_hash": "f75b55889871a0e1c7c57674f4fe1703",
+    "semantic_hash": ""
+  },
+  "escritorio/preload.js": {
+    "mtime": 1792076985.7594397,
+    "seen": 1792077193.306774,
+    "ast_hash": "62d05c2917ef2ea2cb42847bfba081d8",
+    "semantic_hash": ""
+  },
+  "src/utils/impresion.ts": {
+    "mtime": 1792077004.0183344,
+    "seen": 1792077193.3068948,
+    "ast_hash": "158fa7b5c0579b4ece24536329ca4208",
+    "semantic_hash": ""
+  },
+  "escritorio/sin-conexion.html": {
+    "mtime": 1792076986.8239522,
+    "seen": 1792077193.3069377,
+    "ast_hash": "4e96e38bfb6ce4bd1ed35b14b8284ed9",
+    "semantic_hash": ""
+  },
+  "escritorio/icono.png": {
+    "mtime": 1792077053.38,
+    "seen": 1792077193.306943,
+    "ast_hash": "6333feb3321a38dbe91acc0319da6fff",
     "semantic_hash": ""
   }
 }
