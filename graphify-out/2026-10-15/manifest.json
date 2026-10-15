@@ -540,9 +540,9 @@
     "semantic_hash": "3b2217d641a9d9056c76a17e25047522"
   },
   "index.html": {
-    "mtime": 1792076082.956825,
-    "seen": 1792076121.7552965,
-    "ast_hash": "42dd1c44d459d84240e772d9a35bdb71",
+    "mtime": 1792076149.7415605,
+    "seen": 1792076173.9544613,
+    "ast_hash": "07eb1e1f06f63f78653e2964729017ae",
     "semantic_hash": ""
   },
   "public/vite.svg": {
@@ -1503,6 +1503,12 @@
     "mtime": 1792076047.1969607,
     "seen": 1792076121.7553017,
     "ast_hash": "128dfcc1573a6aa24296b88f77f8325f",
+    "semantic_hash": ""
+  },
+  "public/manifest.json": {
+    "mtime": 1792076066.1545794,
+    "seen": 1792076173.9543643,
+    "ast_hash": "deaf47778df65f07fec853421f382d29",
     "semantic_hash": ""
   }
 }

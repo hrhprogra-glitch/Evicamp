@@ -1451,12 +1451,6 @@
     "ast_hash": "d7e647a8a20f70c966df7e8a4b4077ea",
     "semantic_hash": ""
   },
-  "ai-scripts/generar-iconos-pwa.cjs": {
-    "mtime": 1792076045.7384696,
-    "seen": 1792076121.7551725,
-    "ast_hash": "2eff64c3c9a334106f2e4cbc199f2877",
-    "semantic_hash": ""
-  },
   "public/sw.js": {
     "mtime": 1792076067.2215016,
     "seen": 1792076121.7551956,
@@ -1476,33 +1470,33 @@
     "semantic_hash": ""
   },
   "public/icons/apple-touch-icon.png": {
-    "mtime": 1792076047.1979623,
-    "seen": 1792076121.7552989,
-    "ast_hash": "1fd341d16d4d03fe8ef57da1d6e59e16",
+    "mtime": 1792076351.372,
+    "seen": 1792076381.5190284,
+    "ast_hash": "8726d1a9ba5626d44d76b61f0052ffcc",
     "semantic_hash": ""
   },
   "public/icons/favicon-32.png": {
-    "mtime": 1792076047.1979623,
-    "seen": 1792076121.7552996,
-    "ast_hash": "6c48862c13ca6ef70f9b2774f708dcd1",
+    "mtime": 1792076351.381,
+    "seen": 1792076381.5190296,
+    "ast_hash": "ed032a7a413525d1fe2717fa520d1daa",
     "semantic_hash": ""
   },
   "public/icons/icon-192.png": {
-    "mtime": 1792076047.1854541,
-    "seen": 1792076121.7553003,
-    "ast_hash": "052d0b5ba413bb4bc3cee220bc0743ff",
+    "mtime": 1792076351.276,
+    "seen": 1792076381.5190303,
+    "ast_hash": "a96f792845272fdf113b36e63c6ba4c3",
     "semantic_hash": ""
   },
   "public/icons/icon-512.png": {
-    "mtime": 1792076047.1919615,
-    "seen": 1792076121.7553012,
-    "ast_hash": "ead5fd7a42799c3778f7cc3af102d18a",
+    "mtime": 1792076351.304,
+    "seen": 1792076381.519031,
+    "ast_hash": "6333feb3321a38dbe91acc0319da6fff",
     "semantic_hash": ""
   },
   "public/icons/icon-maskable-512.png": {
-    "mtime": 1792076047.1969607,
-    "seen": 1792076121.7553017,
-    "ast_hash": "128dfcc1573a6aa24296b88f77f8325f",
+    "mtime": 1792076351.347,
+    "seen": 1792076381.5190318,
+    "ast_hash": "6caaf5e35c70004cc7e67f31f7b9707b",
     "semantic_hash": ""
   },
   "public/manifest.json": {
