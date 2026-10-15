@@ -30,9 +30,9 @@
     "semantic_hash": ""
   },
   "src/layout/SideBar.tsx": {
-    "mtime": 1792077306.5381427,
-    "seen": 1792077338.1945364,
-    "ast_hash": "f7061fbfe4a45bbe70db56b6f07a4e3c",
+    "mtime": 1792084689.0842507,
+    "seen": 1792084732.3245559,
+    "ast_hash": "267b724b784bcd270da18ee1937fc463",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -1608,9 +1608,9 @@
     "semantic_hash": ""
   },
   "src/layout/AvisoSuscripcion.tsx": {
-    "mtime": 1792084179.1915116,
-    "seen": 1792084271.1644356,
-    "ast_hash": "0538c15b13e58ac4e0dee3ddc4332fc2",
+    "mtime": 1792084664.9816442,
+    "seen": 1792084732.324554,
+    "ast_hash": "cb865f1db413b1bfbaa73710f2451cf9",
     "semantic_hash": ""
   },
   "escritorio/configurar.html": {

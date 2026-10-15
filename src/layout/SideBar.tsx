@@ -2,14 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   ShoppingCart, Users, Package, 
   Truck, Trash2, Wallet, 
-  Settings, BarChart3, X, LogOut, Download, Monitor
+  Settings, BarChart3, X, LogOut, Download, Monitor, CreditCard
 } from 'lucide-react';
 import { usePuedeInstalar, instalarApp, useHayInstaladorPC, descargarInstaladorPC } from '../utils/instalarApp';
+import { useSuscripcion, fechaPe } from './AvisoSuscripcion';
 
 // IMPORTAMOS EL LOGO Y SUPABASE
 import logoEvicamp from '../assets/logo.png';
 import { supabase } from '../db/supabase';
-import { puedeVerModulo } from '../utils/permisos';
+import { puedeVerModulo, tienePermiso, useEmpleado } from '../utils/permisos';
 import { cerrarSesion } from '../utils/sesion';
 import { programarRestauracionFoco } from '../utils/navegacionSesion';
 
@@ -32,6 +33,12 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
   const [empresaData, setEmpresaData] = useState({ nombre: 'SIUHUB', logo: logoEvicamp });
   const puedeInstalar = usePuedeInstalar();
   const hayInstaladorPC = useHayInstaladorPC();
+
+  // Pagar el plan de SiuHub (también por adelantado): solo lo ve el dueño, no los trabajadores
+  const suscripcion = useSuscripcion();
+  const empleado = useEmpleado();
+  const esDueno = empleado?.rol === 'Administrador' || tienePermiso(empleado?.permisos, 'sistema_acceso_total');
+  const pagarUrl = esDueno ? suscripcion?.pagar_url : null;
 
   // === TEMPORIZADOR DE AUTO-OCULTADO ===
   // Mientras el menú está abierto cuenta el tiempo sin actividad; con el mouse encima queda en pausa.
@@ -401,6 +408,31 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
       </nav>
 
             <div className="px-1.5 py-1.5 border-t border-[var(--color-border)] mt-auto flex flex-col gap-1">
+        {/* Pagar el plan (por adelantado o al vencer): abre Mercado Pago en otra pestaña/navegador */}
+        {pagarUrl && (
+          <button
+            onClick={() => window.open(pagarUrl, '_blank', 'noopener')}
+            title={!isOpen ? `Pagar plan${suscripcion?.proximo_pago ? ` (vence ${fechaPe(suscripcion.proximo_pago)})` : ''}` : undefined}
+            aria-label="Pagar plan de SiuHub"
+            className={`w-full text-left py-2 short:py-1.5 text-xs font-black uppercase tracking-wider transition-all border-2 rounded-none flex items-center cursor-pointer border-[var(--color-info)] text-[var(--color-info)] bg-[var(--color-info)]/5 hover:bg-[var(--color-info)] hover:text-white hover:shadow-[3px_3px_0_0_var(--color-ink)] hover:translate-x-[-2px] hover:translate-y-[-2px] focus:outline-none focus:bg-[var(--color-info)] focus:text-white focus:shadow-[3px_3px_0_0_var(--color-ink)] focus:translate-x-[-2px] focus:translate-y-[-2px] ${
+              isOpen ? 'pl-3 pr-2 gap-3 justify-between' : 'justify-center px-0'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <CreditCard size={18} className="shrink-0" />
+              {isOpen && (
+                <span className="flex flex-col leading-tight">
+                  <span className="whitespace-nowrap">Pagar plan</span>
+                  {suscripcion?.proximo_pago && (
+                    <span className="text-[10px] font-bold normal-case tracking-normal opacity-80 whitespace-nowrap">
+                      Vence {fechaPe(suscripcion.proximo_pago)}
+                    </span>
+                  )}
+                </span>
+              )}
+            </div>
+          </button>
+        )}
         {/* Solo aparece si el navegador permite instalar y la app aún no está instalada */}
         {puedeInstalar && (
           <button

@@ -1,24 +1,24 @@
 # Graph Report - evicamp  (2026-10-15)
 
 ## Corpus Check
-- 254 files · ~759,339 words
+- 254 files · ~760,078 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 5 file(s) not represented in the graph (top: (none) 3, .css 2)
 
 ## Summary
-- 1121 nodes · 1980 edges · 162 communities (72 shown, 90 thin omitted)
+- 1129 nodes · 2004 edges · 161 communities (71 shown, 90 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 14 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `81e4a1cd`
+- Built from commit: `1cf8e190`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - ref_zlib
 - main.js
-- SideBar.tsx
+- instalarApp.ts
 - Utilidades/index.tsx
 - run-remote.cjs
 - graphify Skill (SKILL.md)
@@ -77,7 +77,7 @@
 - fix-block.cjs
 - fix-blue.cjs
 - fix-caja-tickets.cjs
-- tecladoTactil.ts
+- main.tsx
 - fix-delete.cjs
 - fix-end.cjs
 - fix-estado-cuenta-ui.cjs
@@ -93,20 +93,20 @@
 - Punto-de-venta/index.tsx
 - fix-historial-rectangles.cjs
 - fix-historial-sort.cjs
-- lucide-react
+- ModalGestionProveedores.tsx
 - fix-partial2.cjs
 - fix-inventario-index.cjs
 - fix-layout.cjs
 - fix-layout-effect.cjs
 - fix-layout-finanzas.cjs
 - fix-map.cjs
-- permisos.ts
+- ModalUsuario.tsx
 - cliente.cjs
 - fix-old-payments.cjs
 - fix-partial.cjs
 - fix-phantom.cjs
 - fix-pill-debug3.cjs
-- Mermas/index.tsx
+- lucide-react
 - deploy.cjs
 - fix-pill-final.cjs
 - fix-pill-final-inline.cjs
@@ -120,8 +120,8 @@
 - fix-right-panel2.cjs
 - fix-save-cliente.cjs
 - fix-save-cliente2.cjs
-- useCerrarConEscape
-- coincideBusqueda
+- react
+- supabase.ts
 - fix-tabla.cjs
 - scratch_auto.cjs
 - siuhub-lib.sh
@@ -173,9 +173,8 @@
 - fix-pill-debug.cjs
 - fixtable.cjs
 - instalar-panel.sh
-- react
-- formatearCantidad
-- App
+- permisos.ts
+- ModalMerma.tsx
 
 ## God Nodes (most connected - your core abstractions)
 1. `react` - 72 edges
@@ -195,11 +194,11 @@
 - `CLAUDE.md (Evicamp project rules)` --conceptually_related_to--> `graphify Skill (SKILL.md)`  [INFERRED]
   CLAUDE.md → .claude/skills/graphify/SKILL.md
 - `Props` --references--> `Product`  [EXTRACTED]
-  src/sections/Inventario/components/ModalLote.tsx → src/sections/Inventario/types.ts
-- `Props` --references--> `Product`  [EXTRACTED]
   src/sections/Inventario/components/ModalMerma.tsx → src/sections/Inventario/types.ts
 - `Props` --references--> `Product`  [EXTRACTED]
   src/sections/Inventario/components/TablaProductos.tsx → src/sections/Inventario/types.ts
+- `index.html (Evicamp app entry)` --references--> `Evicamp (project name)`  [EXTRACTED]
+  index.html → README.md
 
 ## Import Cycles
 - None detected.
@@ -209,19 +208,19 @@
 - **graphify Skill Package (core + reference docs)** — claude_skills_graphify_skill, claude_skills_graphify_references_add_watch, claude_skills_graphify_references_exports, claude_skills_graphify_references_extraction_spec, claude_skills_graphify_references_github_and_merge, claude_skills_graphify_references_hooks, claude_skills_graphify_references_query, claude_skills_graphify_references_transcribe, claude_skills_graphify_references_update [EXTRACTED 1.00]
 - **Incremental update manifest/cache integrity mechanisms** — claude_skills_graphify_skill, claude_skills_graphify_references_update, concept_manifest_stamping, concept_extraction_cache, concept_shrink_guard_479 [INFERRED 0.85]
 
-## Communities (162 total, 90 thin omitted)
+## Communities (161 total, 90 thin omitted)
 
 ### Community 1 - "main.js"
 Cohesion: 0.05
 Nodes (46): { app, BrowserWindow, Menu, ipcMain, shell, dialog }, archivoConfig(), cargarSistema(), construirMenu(), crearVentana(), DESTINO_FIJO, fs, guardarConfig() (+38 more)
 
-### Community 2 - "SideBar.tsx"
-Cohesion: 0.15
-Nodes (18): Evicamp (project name), index.html (Evicamp app entry), README.md (Evicamp), react-dom, src_index, SideBar(), SideBarProps, avisar() (+10 more)
+### Community 2 - "instalarApp.ts"
+Cohesion: 0.27
+Nodes (9): avisar(), descargarInstaladorPC(), EventoInstalacion, iniciarAppInstalable(), instalarApp(), RUTA_INSTALADOR_PC, suscriptores, usePuedeInstalar() (+1 more)
 
 ### Community 3 - "Utilidades/index.tsx"
-Cohesion: 0.10
-Nodes (31): Props, Reportes(), TicketVenta, FiltrosUtilidades(), Props, formatearFecha(), ModalDetalleProducto(), Props (+23 more)
+Cohesion: 0.15
+Nodes (20): Props, Reportes(), TicketVenta, FiltrosUtilidades(), Props, Props, TarjetasResumen(), Props (+12 more)
 
 ### Community 4 - "run-remote.cjs"
 Cohesion: 0.12
@@ -232,8 +231,8 @@ Cohesion: 0.09
 Nodes (34): CLAUDE.md (Evicamp project rules), .claude/CLAUDE.md (graphify trigger), graphify reference: add-watch.md, graphify reference: exports.md, graphify reference: extraction-spec.md, graphify reference: github-and-merge.md, graphify reference: hooks.md, graphify reference: query.md (+26 more)
 
 ### Community 6 - "App.tsx"
-Cohesion: 0.21
-Nodes (10): NOMBRES_SESIONES, AlertaYape(), AvisoSuscripcion(), fechaPe(), Suscripcion, ATAJOS_SESIONES, Fiados(), programarRestauracionFoco() (+2 more)
+Cohesion: 0.15
+Nodes (18): App(), handleNavigate(), NOMBRES_SESIONES, src_assets_logo, AlertaYape(), NotificacionYape, AvisoSuscripcion(), fechaPe() (+10 more)
 
 ### Community 7 - "package.json"
 Cohesion: 0.11
@@ -381,43 +380,43 @@ Nodes (4): Business Analytics / Team Reporting Theme, proyectos.jpg (Business An
 
 ### Community 51 - "Fiados/index.tsx"
 Cohesion: 0.14
-Nodes (23): ModalAbono(), Props, ModalAnularPago(), Props, ModalClientes(), Props, Props, combinarFechaYHora() (+15 more)
+Nodes (22): ModalAbono(), Props, ModalAnularPago(), Props, ModalClientes(), Props, Props, combinarFechaYHora() (+14 more)
 
 ### Community 52 - "Configuraciones/index.tsx"
-Cohesion: 0.27
+Cohesion: 0.26
 Nodes (9): FormularioEmpresa(), Tema, TEMAS, ThemeSwitcher(), Configuraciones(), aplicarTamanoInterfaz(), guardarTamanoInterfaz(), leerTamanoInterfaz() (+1 more)
 
-### Community 61 - "tecladoTactil.ts"
-Cohesion: 0.60
-Nodes (4): abreTeclado(), esPantallaTactil(), instalarProteccionTecladoTactil(), TIPOS_CON_TECLADO
+### Community 61 - "main.tsx"
+Cohesion: 0.27
+Nodes (8): Evicamp (project name), index.html (Evicamp app entry), README.md (Evicamp), src_index, abreTeclado(), esPantallaTactil(), instalarProteccionTecladoTactil(), TIPOS_CON_TECLADO
 
 ### Community 67 - "Finanzas/index.tsx"
 Cohesion: 0.14
-Nodes (19): FiltroFechas(), Props, ModalApertura(), BloqueArqueo(), BloqueArqueoProps, ModalCierre(), Props, redondearCentavos() (+11 more)
+Nodes (19): FiltroFechas(), Props, ModalApertura(), Props, BloqueArqueo(), BloqueArqueoProps, ModalCierre(), Props (+11 more)
 
 ### Community 70 - "Login.tsx"
-Cohesion: 0.22
-Nodes (9): src_assets_finanzas, src_assets_inventario, src_assets_logo, src_assets_proyectos, carouselSlides, Login(), LoginProps, iniciarSesion() (+1 more)
+Cohesion: 0.28
+Nodes (8): src_assets_finanzas, src_assets_inventario, src_assets_proyectos, carouselSlides, Login(), LoginProps, EmpleadoSesion, iniciarSesion()
 
 ### Community 75 - "Punto-de-venta/index.tsx"
-Cohesion: 0.19
-Nodes (16): Product, ModalBalanza(), Props, ModalPrecioConsumo(), Props, Props, TerminalBusqueda(), InputPeso() (+8 more)
+Cohesion: 0.13
+Nodes (22): Props, Product, ModalBalanza(), Props, Props, ModalPrecioConsumo(), Props, Props (+14 more)
 
-### Community 78 - "lucide-react"
-Cohesion: 0.17
-Nodes (17): lucide-react, FiltrosInventario(), Props, ModalGestionProveedores(), Props, ModalLote(), Props, Inventario() (+9 more)
+### Community 78 - "ModalGestionProveedores.tsx"
+Cohesion: 0.35
+Nodes (7): ModalGestionProveedores(), Props, ModalProveedor(), Props, Props, TablaProveedores(), Proveedor
 
-### Community 85 - "permisos.ts"
-Cohesion: 0.21
+### Community 85 - "ModalUsuario.tsx"
+Cohesion: 0.23
 Nodes (16): COLUMNAS_PERMISOS, ModalUsuario(), ModalUsuarioProps, PERMISOS_DEFAULT, TablaUsuarios(), DatosEmpresa, Empleado, PermisosUsuario (+8 more)
 
 ### Community 86 - "cliente.cjs"
 Cohesion: 0.18
 Nodes (7): [accion, ...args], { conexionVps }, DIR_LOCAL, { execSync }, fs, { NodeSSH }, path
 
-### Community 91 - "Mermas/index.tsx"
-Cohesion: 0.19
-Nodes (10): FiltrosMermas(), Props, HeaderMermas(), Props, Props, TablaMermas(), Props, TarjetaMetrica() (+2 more)
+### Community 91 - "lucide-react"
+Cohesion: 0.12
+Nodes (14): lucide-react, Props, FiltrosMermas(), Props, HeaderMermas(), Props, Props, TablaMermas() (+6 more)
 
 ### Community 92 - "deploy.cjs"
 Cohesion: 0.25
@@ -431,13 +430,13 @@ Nodes (6): cliente(), destino(), dist, GENERICO, path, SITIOS
 Cohesion: 0.22
 Nodes (6): filesToUpdate, fs, path, fs, path, ref_path
 
-### Community 105 - "useCerrarConEscape"
-Cohesion: 0.18
-Nodes (13): ModalDetalleTicket(), Props, ModalDetalleFiado(), ModalDetalleCaja(), Props, ModalMerma(), Props, ModalProducto() (+5 more)
+### Community 105 - "react"
+Cohesion: 0.13
+Nodes (26): react, ModalDetalleTicket(), Props, ModalDetalleFiado(), TablaFiados(), ModalDetalleCaja(), Props, TablaMovimientos() (+18 more)
 
-### Community 106 - "coincideBusqueda"
-Cohesion: 0.18
-Nodes (15): TablaFiados(), TablaFiadosAgrupados(), Lote, Props, TablaLotes(), Proveedores(), FiadoData, ModalCobro() (+7 more)
+### Community 106 - "supabase.ts"
+Cohesion: 0.13
+Nodes (24): react-dom, supabase, FiltrosInventario(), Props, ModalLote(), ModalProducto(), ProductNature, Props (+16 more)
 
 ### Community 108 - "scratch_auto.cjs"
 Cohesion: 0.50
@@ -473,7 +472,7 @@ Nodes (3): finanzas.jpg (Finance Carousel Image), Finanzas Login Carousel Slide,
 
 ### Community 127 - "panel.py"
 Cohesion: 0.07
-Nodes (47): BaseHTTPRequestHandler, calendar, datetime, hashlib, hmac, http_server, json, os (+39 more)
+Nodes (55): BaseHTTPRequestHandler, calendar, datetime, hashlib, hmac, http_server, json, os (+47 more)
 
 ### Community 131 - "vite.config.ts"
 Cohesion: 0.50
@@ -487,37 +486,33 @@ Nodes (3): fs, path, walkDir()
 Cohesion: 0.22
 Nodes (8): carpeta, { destino: buscarDestino }, { execSync }, fs, instalador, mb, path, soloLocal
 
-### Community 159 - "react"
-Cohesion: 0.12
-Nodes (12): react, supabase, NotificacionYape, Props, Props, MiniReporteDiario(), Props, CartItem (+4 more)
-
-### Community 160 - "formatearCantidad"
-Cohesion: 0.32
-Nodes (6): ModalFiado(), EtiquetaStock(), Props, Props, TablaProductos(), formatearCantidad()
-
-### Community 161 - "App"
+### Community 159 - "permisos.ts"
 Cohesion: 0.40
-Nodes (6): App(), handleNavigate(), puedeVerModulo(), tienePermiso(), guardarToken(), validarSesion()
+Nodes (4): ClavePermiso, PERMISOS_POR_MODULO, SesionContext, SesionProvider()
+
+### Community 160 - "ModalMerma.tsx"
+Cohesion: 0.24
+Nodes (8): ModalFiado(), EtiquetaStock(), Props, ModalMerma(), Props, Props, TablaProductos(), formatearCantidad()
 
 ## Knowledge Gaps
 - **495 isolated node(s):** `fs`, `content`, `fs`, `cssCode`, `tsCode` (+490 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 577 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 581 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **90 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `@supabase/supabase-js` connect `check-fiados.cjs` to `react`, `package.json`?**
-  _High betweenness centrality (0.349) - this node is a cross-community bridge._
-- **Why does `react` connect `react` to `formatearCantidad`, `SideBar.tsx`, `Finanzas/index.tsx`, `Utilidades/index.tsx`, `App.tsx`, `package.json`, `Login.tsx`, `useCerrarConEscape`, `coincideBusqueda`, `Punto-de-venta/index.tsx`, `lucide-react`, `impresion.ts`, `Fiados/index.tsx`, `Configuraciones/index.tsx`, `permisos.ts`, `Mermas/index.tsx`?**
-  _High betweenness centrality (0.092) - this node is a cross-community bridge._
-- **Why does `lucide-react` connect `lucide-react` to `formatearCantidad`, `SideBar.tsx`, `Finanzas/index.tsx`, `Utilidades/index.tsx`, `App.tsx`, `package.json`, `useCerrarConEscape`, `coincideBusqueda`, `Punto-de-venta/index.tsx`, `Fiados/index.tsx`, `Configuraciones/index.tsx`, `permisos.ts`, `Mermas/index.tsx`, `react`?**
-  _High betweenness centrality (0.060) - this node is a cross-community bridge._
+- **Why does `@supabase/supabase-js` connect `check-fiados.cjs` to `supabase.ts`, `package.json`?**
+  _High betweenness centrality (0.346) - this node is a cross-community bridge._
+- **Why does `react` connect `react` to `ModalMerma.tsx`, `instalarApp.ts`, `Finanzas/index.tsx`, `Utilidades/index.tsx`, `App.tsx`, `package.json`, `Login.tsx`, `supabase.ts`, `Punto-de-venta/index.tsx`, `ModalGestionProveedores.tsx`, `impresion.ts`, `Fiados/index.tsx`, `Configuraciones/index.tsx`, `ModalUsuario.tsx`, `lucide-react`, `main.tsx`, `permisos.ts`?**
+  _High betweenness centrality (0.077) - this node is a cross-community bridge._
 - **What connects `fs`, `content`, `fs` to the rest of the system?**
   _495 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `main.js` be split into smaller, more focused modules?**
   _Cohesion score 0.05102040816326531 - nodes in this community are weakly interconnected._
-- **Should `SideBar.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.14761904761904762 - nodes in this community are weakly interconnected._
-- **Should `Utilidades/index.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.09872241579558652 - nodes in this community are weakly interconnected._
+- **Should `run-remote.cjs` be split into smaller, more focused modules?**
+  _Cohesion score 0.12105263157894737 - nodes in this community are weakly interconnected._
+- **Should `graphify Skill (SKILL.md)` be split into smaller, more focused modules?**
+  _Cohesion score 0.09090909090909091 - nodes in this community are weakly interconnected._
+- **Should `package.json` be split into smaller, more focused modules?**
+  _Cohesion score 0.11255411255411256 - nodes in this community are weakly interconnected._

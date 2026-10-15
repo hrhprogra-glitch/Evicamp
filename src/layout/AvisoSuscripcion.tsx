@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 
-interface Suscripcion {
+export interface Suscripcion {
   estado: 'AL_DIA' | 'POR_VENCER' | 'VENCIDO' | 'SIN_PLAN';
   dias_restantes: number | null;
   proximo_pago: string | null;
@@ -13,14 +13,11 @@ interface Suscripcion {
 
 const REVISAR_CADA_MS = 60 * 60 * 1000;
 const CLAVE_CERRADO = 'siuhub_aviso_plan_cerrado';
-const fechaPe = (iso: string | null) => (iso ? iso.split('-').reverse().join('/') : '');
+export const fechaPe = (iso: string | null) => (iso ? iso.split('-').reverse().join('/') : '');
 
-export const AvisoSuscripcion: React.FC = () => {
+// Estado del plan del cliente (null en Evicamp/SiuHub, que no tienen /suscripcion.json)
+export const useSuscripcion = () => {
   const [plan, setPlan] = useState<Suscripcion | null>(null);
-  const [cerrado, setCerrado] = useState(() => {
-    try { return sessionStorage.getItem(CLAVE_CERRADO) === new Date().toDateString(); } catch { return false; }
-  });
-
   useEffect(() => {
     const revisar = () => {
       fetch('/suscripcion.json', { cache: 'no-store' })
@@ -32,6 +29,14 @@ export const AvisoSuscripcion: React.FC = () => {
     const intervalo = setInterval(revisar, REVISAR_CADA_MS);
     return () => clearInterval(intervalo);
   }, []);
+  return plan;
+};
+
+export const AvisoSuscripcion: React.FC = () => {
+  const plan = useSuscripcion();
+  const [cerrado, setCerrado] = useState(() => {
+    try { return sessionStorage.getItem(CLAVE_CERRADO) === new Date().toDateString(); } catch { return false; }
+  });
 
   if (!plan || cerrado || (plan.estado !== 'POR_VENCER' && plan.estado !== 'VENCIDO')) return null;
 
