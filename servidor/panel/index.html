@@ -89,6 +89,16 @@ td a { color: var(--info); font-size: 12px; word-break: break-all; }
 .modal-cuerpo { padding: 4px 16px 16px; }
 .modal-pie { display: flex; gap: 10px; justify-content: flex-end; padding: 12px 16px; border-top: 2px solid var(--border); }
 .resultado { background: var(--accent-bg); border: 2px solid var(--accent); padding: 12px; margin-top: 12px; font-size: 13px; line-height: 1.7; word-break: break-word; }
+.link-negocio { background: none; border: 0; padding: 0; font-weight: 900; text-transform: uppercase; text-align: left; color: var(--ink); text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.link-negocio:hover, .link-negocio:focus-visible { color: var(--accent); outline: none; }
+.modal-ancho { max-width: 860px; }
+.sub { margin: 18px 0 8px; font-size: 12px; letter-spacing: .15em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.datos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.dato { border: 2px solid var(--border); padding: 8px 10px; }
+.dato small { display: block; font-size: 10px; font-weight: 900; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
+.dato b { display: block; margin-top: 2px; word-break: break-word; }
+.modal table { border: 2px solid var(--ink); }
+@media (max-width: 860px) { .datos { grid-template-columns: 1fr 1fr; } }
 .toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border: 2px solid var(--accent); z-index: 60; font-weight: 700; max-width: calc(100% - 32px); }
 
 /* Celular / tablet */
@@ -246,7 +256,7 @@ function pintar() {
   $('#tabla-clientes').innerHTML = !clientes.length ? '<div class="vacio">Aún no tienes clientes. Crea el primero con "+ Nuevo cliente".</div>' : `
     <table><thead><tr><th>Negocio</th><th>Servicio</th><th>Plan</th><th>Próximo pago</th><th>Pago</th><th>Acciones</th></tr></thead><tbody>
     ${clientes.map((c) => `<tr>
-      <td><div class="nombre">${esc(c.nombre)}</div>${c.link ? `<a href="${esc(c.link)}" target="_blank" rel="noopener">${esc(c.link.replace('https://', ''))}</a>` : ''}</td>
+      <td><button type="button" class="link-negocio" data-accion="detalle" data-slug="${esc(c.slug)}" title="Ver pagos y usuarios">${esc(c.nombre)}</button><br>${c.link ? `<a href="${esc(c.link)}" target="_blank" rel="noopener">${esc(c.link.replace('https://', ''))}</a>` : ''}</td>
       <td data-t="Servicio">${chipServicio(c)}</td>
       <td data-t="Plan">${c.plan ? `${esc(c.plan.tipo)} · ${soles(c.plan.precio)}` : '-'}</td>
       <td data-t="Próximo pago">${c.plan ? fechaPe(c.plan.proximo_pago) : '-'}</td>
@@ -263,7 +273,7 @@ function pintar() {
   const nombreDe = (slug) => (clientes.find((c) => c.slug === slug) || {}).nombre || slug;
   $('#tabla-pagos').innerHTML = !pagos.length ? '<div class="vacio">Sin pagos registrados.</div>' : `
     <table><thead><tr><th>Fecha</th><th>Negocio</th><th>Monto</th><th>Método</th><th>Cubre hasta</th><th>Nota</th></tr></thead><tbody>
-    ${pagos.map((p) => `<tr><td data-t="Fecha">${fechaPe(p.fecha)}</td><td data-t="Negocio">${esc(nombreDe(p.slug))}</td>
+    ${pagos.map((p) => `<tr><td data-t="Fecha">${fechaPe(p.fecha)}</td><td data-t="Negocio"><button type="button" class="link-negocio" data-detalle="${esc(p.slug)}">${esc(nombreDe(p.slug))}</button></td>
       <td data-t="Monto"><b>${soles(p.monto)}</b></td><td data-t="Método"><span class="chip c-info">${esc(p.metodo)}</span></td>
       <td data-t="Cubre hasta">${fechaPe(p.periodo_hasta)}</td><td data-t="Nota">${esc(p.nota) || '-'}</td></tr>`).join('')}
     </tbody></table>`;
@@ -281,10 +291,16 @@ $('#tabla-clientes').addEventListener('click', (e) => {
   const b = e.target.closest('button[data-accion]');
   if (!b || b.disabled) return;
   const c = estado.clientes.find((x) => x.slug === b.dataset.slug);
+  if (b.dataset.accion === 'detalle') modalCliente(c.slug);
   if (b.dataset.accion === 'pago') modalPago(c);
   if (b.dataset.accion === 'plan') modalPlan(c);
   if (b.dataset.accion === 'suspender') confirmarEstado(c, 'suspender');
   if (b.dataset.accion === 'activar') confirmarEstado(c, 'activar');
+});
+
+$('#tabla-pagos').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-detalle]');
+  if (b) modalCliente(b.dataset.detalle);
 });
 
 $('#btn-nuevo').onclick = () => modalNuevo();
@@ -417,6 +433,77 @@ function modalPago(c) {
       cargar();
     } catch (ex) { errorModal(ex.message); }
   };
+}
+
+// ===== DETALLE DE UN CLIENTE: datos, pagos y usuarios =====
+async function modalCliente(slug) {
+  const f = abrirModal('Cargando...', '<div class="vacio">Cargando datos del cliente...</div>', '<button type="button" class="btn" data-cerrar2>Cerrar</button>');
+  $('#modales .modal').classList.add('modal-ancho');
+  f.querySelector('[data-cerrar2]').onclick = cerrarModal;
+  f.onsubmit = (e) => e.preventDefault();
+  let d;
+  try { d = await api(`/api/cliente?slug=${encodeURIComponent(slug)}`); }
+  catch (ex) { $('#modales .modal-cuerpo').innerHTML = `<div class="error">${esc(ex.message)}</div>`; return; }
+
+  const [txtPago, clsPago] = ETIQUETA_PAGO[d.pago.estado];
+  $('#modales .modal-cab h3').textContent = d.nombre;
+  $('#modales .modal-cuerpo').innerHTML = `
+    <div class="sub"><span>Datos</span></div>
+    <div class="datos">
+      <div class="dato"><small>Link</small><b><a href="${esc(d.link)}" target="_blank" rel="noopener">${esc(d.link.replace('https://', ''))}</a></b></div>
+      <div class="dato"><small>Servicio</small><b>${chipServicio(d)}</b></div>
+      <div class="dato"><small>Cliente desde</small><b>${fechaPe(d.alta)}</b></div>
+      <div class="dato"><small>Plan</small><b>${d.plan ? `${esc(d.plan.tipo)} · ${soles(d.plan.precio)}` : 'Sin plan'}</b></div>
+      <div class="dato"><small>Próximo pago</small><b>${d.plan ? fechaPe(d.plan.proximo_pago) : '-'} <span class="chip ${clsPago}">${txtPago}</span></b></div>
+      <div class="dato"><small>WhatsApp</small><b>${esc(d.plan && d.plan.telefono) || '-'}</b></div>
+    </div>
+    ${d.plan && d.plan.notas ? `<div class="ayuda" style="margin-top:8px">Notas: ${esc(d.plan.notas)}</div>` : ''}
+
+    <div class="sub"><span>Pagos (${d.pagos.length})</span><span>Total pagado: <b>${soles(d.total_pagado)}</b></span></div>
+    ${!d.pagos.length ? '<div class="vacio" style="border:2px solid var(--border)">Aún no tiene pagos registrados.</div>' : `
+      <table><thead><tr><th>Fecha</th><th>Monto</th><th>Método</th><th>Cubre hasta</th><th>Nota</th></tr></thead><tbody>
+      ${d.pagos.map((p) => `<tr><td data-t="Fecha">${fechaPe(p.fecha)}</td><td data-t="Monto"><b>${soles(p.monto)}</b></td>
+        <td data-t="Método"><span class="chip c-info">${esc(p.metodo)}</span></td><td data-t="Cubre hasta">${fechaPe(p.periodo_hasta)}</td>
+        <td data-t="Nota">${esc(p.nota) || '-'}</td></tr>`).join('')}
+      </tbody></table>`}
+
+    <div class="sub"><span>Usuarios (${d.usuarios.length})</span></div>
+    <div class="ayuda" style="margin:-4px 0 8px">El dueño crea y maneja a sus trabajadores desde su sistema (Ajustes > Gestión de usuarios). Las contraseñas están encriptadas y no se pueden ver; aquí puedes poner una nueva si alguien la olvidó.</div>
+    <table><thead><tr><th>Nombre</th><th>Usuario (correo)</th><th>Rol</th><th>Estado</th><th>Último ingreso</th><th></th></tr></thead><tbody>
+    ${d.usuarios.map((u) => `<tr>
+      <td data-t="Nombre"><b>${esc(u.nombre)}</b></td><td data-t="Usuario">${esc(u.email)}</td>
+      <td data-t="Rol">${esc(u.rol)}</td>
+      <td data-t="Estado"><span class="chip ${u.estado === 'ACTIVO' ? 'c-ok' : 'c-gris'}">${esc(u.estado)}</span></td>
+      <td data-t="Último ingreso">${u.ultimo_uso ? esc(u.ultimo_uso.split(' ')[0].split('-').reverse().join('/') + ' ' + u.ultimo_uso.split(' ')[1]) : 'Nunca'}</td>
+      <td><button type="button" class="btn btn-sm" data-reset="${esc(u.email)}">Restablecer contraseña</button></td></tr>`).join('')}
+    </tbody></table>
+    <div id="bloque-reset"></div>
+    <div id="modal-error" class="error oculto"></div>`;
+
+  $('#modales .modal-cuerpo').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-reset]');
+    if (!b) return;
+    const correo = b.dataset.reset;
+    const sugerida = Math.random().toString(36).slice(2, 6) + Math.floor(1000 + Math.random() * 9000);
+    $('#bloque-reset').innerHTML = `<div class="resultado" style="background:var(--warning-bg);border-color:var(--warning)">
+      <b>Nueva contraseña para ${esc(correo)}</b>
+      <div class="fila" style="align-items:end">
+        <div><label>Contraseña nueva</label><input id="reset-clave" value="${esc(sugerida)}" minlength="6" autocomplete="off"></div>
+        <div><button type="button" class="btn btn-warn" id="btn-confirmar-reset">Guardar contraseña</button></div>
+      </div>
+      <div class="ayuda">Se cerrarán sus sesiones abiertas y tendrá que entrar con la nueva.</div></div>`;
+    $('#reset-clave').focus();
+    $('#btn-confirmar-reset').onclick = async () => {
+      const clave = $('#reset-clave').value;
+      try {
+        await api('/api/usuario/clave', { slug: d.slug, email: correo, clave });
+        $('#bloque-reset').innerHTML = `<div class="resultado"><b>✅ Contraseña cambiada.</b><br>Usuario: <b>${esc(correo)}</b><br>Contraseña nueva: <b>${esc(clave)}</b><br>
+          <button type="button" class="btn btn-sm" id="btn-copiar-reset" style="margin-top:8px">Copiar para enviar</button></div>`;
+        $('#btn-copiar-reset').onclick = () => navigator.clipboard.writeText(
+          `Tu acceso a SiuHub:\n${d.link}\nUsuario: ${correo}\nContraseña nueva: ${clave}`).then(() => toast('Datos copiados.'));
+      } catch (ex) { errorModal(ex.message); }
+    };
+  });
 }
 
 function confirmarEstado(c, accion) {

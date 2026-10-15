@@ -29,7 +29,7 @@ import threading
 import time
 from datetime import date, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 DIR_SIUHUB = "/opt/siuhub"
 REGISTRO = f"{DIR_SIUHUB}/clientes.tsv"
@@ -222,6 +222,76 @@ def MENSUAL_EQ(plan):
     return plan["precio"] / MESES_PLAN.get(plan["tipo"], 1)
 
 
+# ===================== Detalle de un cliente =====================
+
+def base_cliente(slug):
+    return "cli_" + slug.replace("-", "_")
+
+
+def psql_cliente(slug, sql, variables=None):
+    """Ejecuta SQL en la base del cliente. Los valores van como variables de psql (:'x'),
+    nunca pegados en el texto, para que comillas o símbolos no puedan alterar la consulta."""
+    args = ["runuser", "-u", "postgres", "--", "psql", "-At", "-v", "ON_ERROR_STOP=1", "-d", base_cliente(slug)]
+    for k, v in (variables or {}).items():
+        args += ["-v", f"{k}={v}"]
+    r = subprocess.run(args, input=sql, capture_output=True, text=True, timeout=30)
+    if r.returncode != 0:
+        raise ValueError("Error en la base del cliente: " + r.stderr.strip()[-300:])
+    return r.stdout.strip()
+
+
+def cliente_registrado(slug):
+    if not RE_SLUG.match(slug or ""):
+        raise ValueError("Link inválido.")
+    reg = next((c for c in leer_registro() if c["slug"] == slug), None)
+    if not reg:
+        raise ValueError("Ese cliente no existe.")
+    return reg
+
+
+def detalle_cliente(slug):
+    reg = cliente_registrado(slug)
+    datos = leer_datos()
+    plan = datos["planes"].get(slug)
+    pagos = sorted((p for p in datos["pagos"] if p["slug"] == slug), key=lambda p: p["fecha"], reverse=True)
+    usuarios = json.loads(psql_cliente(slug, """
+        SELECT coalesce(json_agg(json_build_object(
+                 'nombre', e.nombre, 'email', e.email, 'rol', e.rol, 'estado', e.estado,
+                 'creado', to_char(e.created_at, 'YYYY-MM-DD'),
+                 'ultimo_uso', (SELECT to_char(max(s.ultimo_uso), 'YYYY-MM-DD HH24:MI') FROM sesiones s WHERE s.empleado_id = e.id)
+               ) ORDER BY (e.rol = 'Administrador') DESC, e.created_at), '[]')
+        FROM empleados e;
+    """) or "[]")
+    return {"slug": slug, "nombre": reg["nombre"], "link": f"https://{slug}.{DOMINIO_BASE}",
+            "estado": reg["estado"], "alta": reg["alta"], "api": api_activa(slug),
+            "plan": plan, "pago": estado_pago(plan), "pagos": pagos,
+            "total_pagado": round(sum(p["monto"] for p in pagos), 2), "usuarios": usuarios}
+
+
+def restablecer_clave(cuerpo):
+    slug = str(cuerpo.get("slug", ""))
+    cliente_registrado(slug)
+    correo = str(cuerpo.get("email", "")).strip().lower()
+    clave = str(cuerpo.get("clave", ""))
+    if not RE_CORREO.match(correo):
+        raise ValueError("Correo inválido.")
+    if len(clave) < 6:
+        raise ValueError("La contraseña debe tener al menos 6 caracteres.")
+    # Cambia la clave y cierra sus sesiones abiertas (tendrá que entrar con la nueva)
+    cambiados = psql_cliente(slug, """
+        WITH emp AS (
+          UPDATE empleados SET password_hash = crypt(:'clave', gen_salt('bf'))
+          WHERE lower(email) = :'correo' RETURNING id
+        ), cerradas AS (
+          DELETE FROM sesiones WHERE empleado_id IN (SELECT id FROM emp)
+        )
+        SELECT count(*) FROM emp;
+    """, {"clave": clave, "correo": correo})
+    if cambiados.strip() != "1":
+        raise ValueError("No se encontró ese usuario.")
+    return {"ok": True}
+
+
 # ===================== Cobros =====================
 
 def guardar_plan(cuerpo):
@@ -389,6 +459,12 @@ class Panel(BaseHTTPRequestHandler):
             return self.responder(401, {"error": "Inicia sesión."})
         if ruta == "/api/resumen":
             return self.responder(200, resumen())
+        if ruta == "/api/cliente":
+            slug = (parse_qs(urlparse(self.path).query).get("slug") or [""])[0]
+            try:
+                return self.responder(200, detalle_cliente(slug))
+            except ValueError as e:
+                return self.responder(400, {"error": str(e)})
         return self.responder(404, {"error": "No existe."})
 
     def do_POST(self):
@@ -458,6 +534,9 @@ class Panel(BaseHTTPRequestHandler):
                             datos["planes"][slug].pop("suspendido_por_pago", None)
                             guardar_json(DATOS, datos)
                 return self.responder(200 if ok else 500, {"ok": ok, "detalle": salida})
+
+            if ruta == "/api/usuario/clave":
+                return self.responder(200, restablecer_clave(cuerpo))
 
             if ruta == "/api/plan":
                 return self.responder(200, {"ok": True, "plan": guardar_plan(cuerpo)})
