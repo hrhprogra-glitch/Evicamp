@@ -261,7 +261,9 @@ export const FormularioEmpresa: React.FC = () => {
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
-                focusAndSelect('input-empresa-ruc');
+                const quitar = document.getElementById('btn-quitar-logo');
+                if (quitar) quitar.focus();
+                else focusAndSelect('input-empresa-ruc');
               }
             }}
             className="w-40 h-40 border-2 border-dashed border-[var(--color-line-light)] bg-[var(--color-bg)] flex flex-col items-center justify-center mb-4 relative overflow-hidden group cursor-pointer focus:outline-none focus:ring-4 focus:ring-[var(--color-ink)]"
@@ -294,9 +296,24 @@ export const FormularioEmpresa: React.FC = () => {
           </p>
           {logoPreview && (
             <button
+              id="btn-quitar-logo"
               type="button"
-              onClick={quitarLogo}
-              className="mt-2 text-[12px] font-mono font-bold uppercase text-[var(--color-danger)] underline cursor-pointer hover:opacity-70"
+              onClick={() => {
+                quitarLogo();
+                setTimeout(() => document.getElementById('btn-subir-logo-empresa')?.focus(), 0);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  document.getElementById('btn-subir-logo-empresa')?.focus();
+                } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  focusAndSelect('input-empresa-ruc');
+                }
+              }}
+              className="mt-2 px-2 py-1 text-[12px] font-mono font-bold uppercase text-[var(--color-danger)] underline cursor-pointer hover:opacity-70 focus:outline-none focus:ring-2 focus:ring-[var(--color-danger)]"
             >
               Quitar logo
             </button>

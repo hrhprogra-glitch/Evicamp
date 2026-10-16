@@ -5,17 +5,60 @@ import { TablaUsuarios } from './components/TablaUsuarios';
 import { ThemeSwitcher } from './components/ThemeSwitcher';
 import { usePermiso } from '../../utils/permisos';
 
+type Pestana = 'empresa' | 'usuarios' | 'apariencia';
+
 const Configuraciones: React.FC = () => {
   // Cada pestaña tiene su permiso; se abre en la primera permitida
   const puedeEmpresa = usePermiso('gerencia_configuracion_sistema');
   const puedeUsuarios = usePermiso('gerencia_gestionar_usuarios');
-  const [activeTab, setActiveTab] = useState<'empresa' | 'usuarios' | 'apariencia'>(puedeEmpresa ? 'empresa' : 'usuarios');
+  const [activeTab, setActiveTab] = useState<Pestana>(puedeEmpresa ? 'empresa' : 'usuarios');
 
-  const switchTab = (tab: 'empresa' | 'usuarios' | 'apariencia') => {
+  const pestanas = [
+    ...(puedeEmpresa ? [{ id: 'empresa' as Pestana, nombre: 'Datos de la Empresa', Icono: Building2 }] : []),
+    ...(puedeUsuarios ? [{ id: 'usuarios' as Pestana, nombre: 'Gestión de Usuarios', Icono: Users }] : []),
+    { id: 'apariencia' as Pestana, nombre: 'Apariencia', Icono: Palette },
+  ];
+
+  const switchTab = (tab: Pestana) => {
     setActiveTab(tab);
     setTimeout(() => {
       document.getElementById(`btn-tab-${tab}`)?.focus();
     }, 20);
+  };
+
+  // Primer elemento del contenido de la pestaña abierta
+  const enfocarContenido = () => {
+    if (activeTab === 'empresa') {
+      const input = document.getElementById('input-empresa-nombre') as HTMLInputElement | null;
+      input?.focus();
+      input?.select();
+    } else if (activeTab === 'usuarios') {
+      const buscador = document.getElementById('buscador-usuarios-ajustes') as HTMLInputElement | null;
+      buscador?.focus();
+      buscador?.select();
+    } else {
+      const activeTheme = localStorage.getItem('gestorpro_theme') || 'classic';
+      const themeBtn = document.getElementById(`btn-tema-${activeTheme}`) || (document.querySelector('#panel-temas-ajustes button') as HTMLElement | null);
+      themeBtn?.focus();
+    }
+  };
+
+  // Las flechas solo mueven la selección entre pestañas; la pestaña se abre con Enter (o clic)
+  const manejarTeclaPestana = (e: React.KeyboardEvent, id: Pestana) => {
+    const i = pestanas.findIndex((p) => p.id === id);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      e.stopPropagation();
+      const destino = pestanas[i + (e.key === 'ArrowRight' ? 1 : -1)];
+      if (destino) document.getElementById(`btn-tab-${destino.id}`)?.focus();
+    } else if (e.key === 'ArrowDown' || (!e.shiftKey && e.key === 'Tab')) {
+      e.preventDefault();
+      e.stopPropagation();
+      enfocarContenido();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   };
 
   // 🧲 Auto-Focus Magnet para la sesión Ajustes / Configuraciones
@@ -100,123 +143,25 @@ const Configuraciones: React.FC = () => {
       {/* TABS */}
       <div className="px-3 lg:px-4 pt-3 border-b border-[var(--color-border)] bg-white shrink-0 overflow-x-auto custom-scrollbar">
         <div className="flex gap-6 min-w-max">
-          {puedeEmpresa && (
-          <button
-            id="btn-tab-empresa"
-            onClick={() => switchTab('empresa')}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                e.stopPropagation();
-                if (puedeUsuarios) {
-                  switchTab('usuarios');
-                } else {
-                  switchTab('apariencia');
-                }
-              } else if (e.key === 'ArrowDown' || (!e.shiftKey && e.key === 'Tab')) {
-                e.preventDefault();
-                e.stopPropagation();
-                const primerInput = document.getElementById('input-empresa-nombre') as HTMLInputElement | null;
-                if (primerInput) {
-                  primerInput.focus();
-                  primerInput.select();
-                }
-              } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
-                e.preventDefault();
-                e.stopPropagation();
-              }
-            }}
-            className={`pb-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-colors relative focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer ${
-              activeTab === 'empresa'
-                ? 'text-[var(--color-accent)]'
-                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
-            }`}
-          >
-            <Building2 size={18} />
-            Datos de la Empresa
-            {activeTab === 'empresa' && (
-              <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[var(--color-accent)]"></div>
-            )}
-          </button>
-          )}
-          
-          {puedeUsuarios && (
-          <button
-            id="btn-tab-usuarios"
-            onClick={() => switchTab('usuarios')}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                e.stopPropagation();
-                if (puedeEmpresa) {
-                  switchTab('empresa');
-                }
-              } else if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                e.stopPropagation();
-                switchTab('apariencia');
-              } else if (e.key === 'ArrowDown' || (!e.shiftKey && e.key === 'Tab')) {
-                e.preventDefault();
-                e.stopPropagation();
-                const buscador = document.getElementById('buscador-usuarios-ajustes') as HTMLInputElement | null;
-                if (buscador) {
-                  buscador.focus();
-                  buscador.select();
-                }
-              } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                e.stopPropagation();
-              }
-            }}
-            className={`pb-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-colors relative focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer ${
-              activeTab === 'usuarios'
-                ? 'text-[var(--color-accent)]'
-                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
-            }`}
-          >
-            <Users size={18} />
-            Gestión de Usuarios
-            {activeTab === 'usuarios' && (
-              <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[var(--color-accent)]"></div>
-            )}
-          </button>
-          )}
-
-          <button
-            id="btn-tab-apariencia"
-            onClick={() => switchTab('apariencia')}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                e.stopPropagation();
-                if (puedeUsuarios) {
-                  switchTab('usuarios');
-                } else if (puedeEmpresa) {
-                  switchTab('empresa');
-                }
-              } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-                e.preventDefault();
-                e.stopPropagation();
-              } else if (e.key === 'ArrowDown' || (!e.shiftKey && e.key === 'Tab')) {
-                e.preventDefault();
-                e.stopPropagation();
-                const activeTheme = localStorage.getItem('gestorpro_theme') || 'classic';
-                const themeBtn = document.getElementById(`btn-tema-${activeTheme}`) || (document.querySelector('#panel-temas-ajustes button') as HTMLElement | null);
-                themeBtn?.focus();
-              }
-            }}
-            className={`pb-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-colors relative focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer ${
-              activeTab === 'apariencia'
-                ? 'text-[var(--color-accent)]'
-                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
-            }`}
-          >
-            <Palette size={18} />
-            Apariencia
-            {activeTab === 'apariencia' && (
-              <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[var(--color-accent)]"></div>
-            )}
-          </button>
+          {pestanas.map(({ id, nombre, Icono }) => (
+            <button
+              key={id}
+              id={`btn-tab-${id}`}
+              onClick={() => switchTab(id)}
+              onKeyDown={(e) => manejarTeclaPestana(e, id)}
+              className={`pb-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-colors relative focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer ${
+                activeTab === id
+                  ? 'text-[var(--color-accent)]'
+                  : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+              }`}
+            >
+              <Icono size={18} />
+              {nombre}
+              {activeTab === id && (
+                <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[var(--color-accent)]"></div>
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
