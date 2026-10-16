@@ -1,7 +1,7 @@
 {
   "name": "siuhub-escritorio",
   "productName": "SiuHub",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "SiuHub para la PC de la caja: impresión directa de tickets.",
   "author": "SiuHub",
   "private": true,
@@ -29,7 +29,8 @@
       "sin-conexion.html",
       "icono.png",
       "destino.json",
-      "configurar.html"
+      "configurar.html",
+      "node_modules/**/*"
     ],
     "win": {
       "target": "nsis",
@@ -42,6 +43,15 @@
       "createStartMenuShortcut": true,
       "shortcutName": "SiuHub",
       "artifactName": "SiuHub-Setup.exe"
-    }
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://siuhub.duckdns.org/actualizaciones/"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
   }
 }

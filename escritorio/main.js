@@ -5,6 +5,9 @@
 const { app, BrowserWindow, Menu, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { autoUpdater } = require('electron-updater');
+
+const REVISAR_ACTUALIZACION_MS = 6 * 60 * 60 * 1000;
 
 const DOMINIO_CLIENTES = 'siuhub.duckdns.org';
 
@@ -162,6 +165,56 @@ ipcMain.handle('configurar', async (_e, texto) => {
   return { ok: true };
 });
 
+// === ACTUALIZACIÓN AUTOMÁTICA DEL PROGRAMA (como Discord) ===
+// El sistema (ventas, inventario...) ya se actualiza solo desde el VPS; esto actualiza el
+// programa en sí (impresión, menú, ícono). Descarga en segundo plano y nunca corta una venta:
+// pregunta antes de reiniciar y, si se elige "Después", se instala al cerrar el programa.
+let avisoPendiente = false;
+let revisionManual = false;
+
+const configurarActualizaciones = () => {
+  if (!app.isPackaged) return; // en desarrollo (npm start) no hay nada que actualizar
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('update-downloaded', async (info) => {
+    if (avisoPendiente) return;
+    avisoPendiente = true;
+    const { response } = await dialog.showMessageBox(ventana, {
+      type: 'info',
+      title: 'Actualización de SiuHub',
+      message: `Hay una nueva versión de SiuHub (${info.version}) lista para instalar.`,
+      detail: 'Se instala en unos segundos. Si estás atendiendo una venta, elige "Después": se instalará sola al cerrar el programa.',
+      buttons: ['Reiniciar ahora', 'Después'],
+      defaultId: 1,
+      cancelId: 1,
+    });
+    avisoPendiente = false;
+    if (response === 0) autoUpdater.quitAndInstall(true, true);
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    if (revisionManual) dialog.showMessageBox(ventana, { type: 'info', title: 'SiuHub', message: `Ya tienes la última versión (${app.getVersion()}).` });
+    revisionManual = false;
+  });
+
+  autoUpdater.on('error', (err) => {
+    console.error('Actualización:', err && err.message);
+    if (revisionManual) dialog.showMessageBox(ventana, { type: 'warning', title: 'SiuHub', message: 'No se pudo buscar actualizaciones. Revisa el internet.' });
+    revisionManual = false;
+  });
+
+  const revisar = () => autoUpdater.checkForUpdates().catch(() => {});
+  revisar();
+  setInterval(revisar, REVISAR_ACTUALIZACION_MS);
+};
+
+const buscarActualizacionManual = () => {
+  if (!app.isPackaged) return;
+  revisionManual = true;
+  autoUpdater.checkForUpdates().catch(() => {});
+};
+
 // === MENÚ (tecla Alt) ===
 const construirMenu = async () => {
   const impresoras = ventana ? await ventana.webContents.getPrintersAsync() : [];
@@ -217,6 +270,7 @@ const construirMenu = async () => {
             detail: `Conectado a: ${urlNegocio() || '(sin configurar)'}\nImpresora: ${leerConfig().impresora || 'predeterminada de Windows'}`,
           }),
         },
+        { label: 'Buscar actualizaciones', click: () => buscarActualizacionManual() },
         { label: 'Herramientas de desarrollo', accelerator: 'Ctrl+Shift+I', click: () => ventana.webContents.toggleDevTools() },
       ],
     },
@@ -224,8 +278,12 @@ const construirMenu = async () => {
 };
 
 app.whenReady().then(() => {
+  // Un instalador de cliente trae su link fijo; se guarda también en la configuración para que,
+  // al actualizarse con la versión genérica, la app siga abriendo el mismo negocio.
+  if (DESTINO_FIJO && leerConfig().url !== DESTINO_FIJO.url) guardarConfig({ url: DESTINO_FIJO.url });
   crearVentana();
   construirMenu();
+  configurarActualizaciones();
 });
 
 app.on('window-all-closed', () => app.quit());
