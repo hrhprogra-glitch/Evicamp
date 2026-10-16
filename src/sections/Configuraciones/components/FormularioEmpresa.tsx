@@ -2,6 +2,32 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Building2, FileText, MapPin, Phone, Upload, Save, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 
+// El logo se guarda como imagen dentro de empresa_config (no hay servidor de archivos en el VPS):
+// se achica a 300 px como máximo para que pese poco (PNG conserva la transparencia; si pesa mucho, JPG)
+const LADO_MAXIMO_LOGO = 300;
+const achicarLogo = (archivo: File) =>
+  new Promise<string>((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(archivo);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const escala = Math.min(1, LADO_MAXIMO_LOGO / Math.max(img.width, img.height));
+      const lienzo = document.createElement('canvas');
+      lienzo.width = Math.max(1, Math.round(img.width * escala));
+      lienzo.height = Math.max(1, Math.round(img.height * escala));
+      lienzo.getContext('2d')!.drawImage(img, 0, 0, lienzo.width, lienzo.height);
+      const png = lienzo.toDataURL('image/png');
+      if (png.length <= 200_000) return resolve(png);
+      const fondo = document.createElement('canvas'); // JPG no tiene transparencia: fondo blanco
+      fondo.width = lienzo.width; fondo.height = lienzo.height;
+      const ctx = fondo.getContext('2d')!;
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, fondo.width, fondo.height); ctx.drawImage(lienzo, 0, 0);
+      resolve(fondo.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Imagen inválida')); };
+    img.src = url;
+  });
+
 export const FormularioEmpresa: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -115,43 +141,31 @@ export const FormularioEmpresa: React.FC = () => {
     setEmpresa({ ...empresa, [e.target.name]: e.target.value });
   };
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setArchivoLogo(file); // Guardamos el archivo físico para subirlo luego
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string); // Preview temporal
-      };
-      reader.readAsDataURL(file);
+    e.target.value = ''; // permite volver a elegir el mismo archivo
+    if (!file) return;
+    try {
+      setArchivoLogo(file);
+      setLogoPreview(await achicarLogo(file));
+    } catch {
+      setArchivoLogo(null);
+      alert('❌ No se pudo leer esa imagen. Prueba con un PNG o JPG.');
     }
+  };
+
+  const quitarLogo = () => {
+    setArchivoLogo(null);
+    setLogoPreview(null);
+    setEmpresa({ ...empresa, logo_url: '' });
   };
 
   const handleGuardar = async () => {
     setGuardando(true);
     try {
-      let finalLogoUrl = empresa.logo_url;
-
-      // Si el usuario seleccionó una imagen nueva
-      if (archivoLogo) {
-        // 1. Borramos el antiguo del Storage para ahorrar espacio
-        if (empresaId && empresa.logo_url?.includes('empresa_logos')) {
-          const oldPath = empresa.logo_url.split('empresa_logos/')[1];
-          if (oldPath) await supabase.storage.from('empresa_logos').remove([oldPath]);
-        }
-
-        // 2. Subimos el nuevo
-        const fileExt = archivoLogo.name.split('.').pop();
-        const fileName = `logo-${Date.now()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage.from('empresa_logos').upload(fileName, archivoLogo);
-        if (uploadError) throw uploadError;
-
-        // 3. Obtenemos URL pública
-        const { data: publicUrlData } = supabase.storage.from('empresa_logos').getPublicUrl(fileName);
-        finalLogoUrl = publicUrlData.publicUrl;
-      }
-
-      const datosAGuardar = { ...empresa, logo_url: finalLogoUrl };
+      // El logo va dentro de la base (ya achicado), no en un servidor de archivos
+      const finalLogoUrl = archivoLogo ? logoPreview : empresa.logo_url;
+      const datosAGuardar = { ...empresa, logo_url: finalLogoUrl || '' };
 
       // Guardamos en la tabla
       if (empresaId) {
@@ -276,8 +290,17 @@ export const FormularioEmpresa: React.FC = () => {
             />
           </div>
           <p className="text-[12px] text-[var(--color-muted)] font-mono text-center">
-            Formato recomendado: PNG transparente.<br />Tamaño máximo: 2MB.
+            Formato recomendado: PNG transparente.<br />Sale arriba en el ticket de venta.
           </p>
+          {logoPreview && (
+            <button
+              type="button"
+              onClick={quitarLogo}
+              className="mt-2 text-[12px] font-mono font-bold uppercase text-[var(--color-danger)] underline cursor-pointer hover:opacity-70"
+            >
+              Quitar logo
+            </button>
+          )}
         </div>
 
         {/* COLUMNA DERECHA: DATOS TEXTUALES */}

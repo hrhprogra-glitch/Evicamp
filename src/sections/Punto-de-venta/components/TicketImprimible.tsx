@@ -7,6 +7,7 @@ interface DatosEmpresa {
   ruc?: string;
   direccion?: string;
   telefono?: string;
+  logo_url?: string;
 }
 
 export interface CartItem {
@@ -42,7 +43,7 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
     useEffect(() => {
       supabase
         .from('empresa_config')
-        .select('nombre_empresa, ruc, direccion, telefono')
+        .select('nombre_empresa, ruc, direccion, telefono, logo_url')
         .limit(1)
         .single()
         .then(({ data }) => { if (data) setEmpresa(data); });
@@ -65,6 +66,7 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
 
         {/* CABECERA */}
         <div className="text-center border-b-2 border-black pb-2 mb-4">
+          {empresa.logo_url && <img src={empresa.logo_url} alt="" className="mx-auto mb-2 max-h-[22mm] max-w-[50mm] object-contain grayscale" />}
           <h3 className="font-black text-lg uppercase tracking-widest">{empresa.nombre_empresa || 'Mi Negocio'}</h3>
           {empresa.ruc && <p className="text-[12px] font-bold mt-1">RUC: {empresa.ruc}</p>}
           {empresa.direccion && <p className="text-[12px]">{empresa.direccion}</p>}
