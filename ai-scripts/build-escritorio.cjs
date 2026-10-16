@@ -72,8 +72,8 @@ if (soloLocal) process.exit(0);
     console.log(destino.generico ? `Publicado: ${remoto}/SiuMax-Setup.exe` : `Publicado: ${destino.url}/descargas/SiuMax-Setup.exe`);
 
     if (destino.generico) {
-      // Los clientes creados desde el panel descargan siempre el genérico más reciente
-      await ssh.execCommand(`for d in /var/www/clientes/*/descargas; do [ -d "$d" ] && cp ${remoto}/SiuMax-Setup.exe "$d/"; done`);
+      // Los clientes creados desde el panel (y el sistema de pruebas) descargan siempre el genérico más reciente
+      await ssh.execCommand(`for d in /var/www/clientes/*/descargas /var/www/siuhub/html/descargas; do [ -d "$d" ] && cp ${remoto}/SiuMax-Setup.exe "$d/"; done`);
 
       // Canal de actualizaciones: primero el instalador y su mapa, al final latest.yml
       // (así ninguna app ve la versión nueva antes de que el archivo esté completo)
