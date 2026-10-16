@@ -58,11 +58,8 @@ fetch('/suscripcion.json', { cache: 'no-store' })
       ' y el servicio se suspendió. Tus datos están guardados y seguros.<br><br>Renueva tu plan para seguir usando el sistema.';
     const b = document.getElementById('btn-pagar');
     b.href = s.pagar_url;
-    // Programa de PC: el pago se abre en el navegador y al terminar dice "ya puedes cerrar"
-    // (en el navegador va en la misma pestaña y Mercado Pago vuelve aquí)
-    if (window.siuhubEscritorio) {
-      b.addEventListener('click', (e) => { e.preventDefault(); window.open(s.pagar_url + '?volver=cerrar', '_blank'); });
-    }
+    // El pago se abre aparte; al terminar esa pestaña se cierra sola y esta página vuelve sola al sistema
+    b.addEventListener('click', (e) => { e.preventDefault(); window.open(s.pagar_url + '?volver=cerrar', '_blank'); });
     document.getElementById('pagar').style.display = 'block';
     b.focus();
   })

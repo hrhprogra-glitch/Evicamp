@@ -673,8 +673,8 @@ class Panel(BaseHTTPRequestHandler):
         if ruta == "/pago-listo":  # público: fin del pago abierto desde el programa de PC
             aprobado = (parse_qs(urlparse(self.path).query).get("status") or [""])[0] == "approved"
             titulo = "✅ Pago recibido" if aprobado else "Pago no completado"
-            texto = ("Gracias. Tu plan de SiuMax ya está al día.<br>Ya puedes cerrar esta ventana y volver al programa."
-                     if aprobado else "El pago no se completó. Puedes cerrar esta ventana e intentarlo de nuevo desde el programa.")
+            texto = ("Gracias. Tu plan de SiuMax ya está al día.<br>Esta pestaña se cerrará sola; si no, ciérrala y vuelve a tu sistema."
+                     if aprobado else "El pago no se completó. Cierra esta pestaña e inténtalo de nuevo desde tu sistema.")
             pagina = (f"<!doctype html><html lang='es'><meta charset='utf-8'><meta name='viewport' content='width=device-width'>"
                       f"<title>SiuMax</title><body style='font-family:ui-monospace,Menlo,Consolas,monospace;background:#1E293B;"
                       f"color:#F8FAFC;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;"
@@ -682,7 +682,7 @@ class Panel(BaseHTTPRequestHandler):
                       f"box-shadow:6px 6px 0 0 #F59E0B;padding:28px 24px;max-width:440px'>"
                       f"<h2 style='color:#F59E0B;margin:0 0 12px;letter-spacing:.1em;text-transform:uppercase'>{titulo}</h2>"
                       f"<p style='margin:0;line-height:1.6'>{texto}</p></div>"
-                      f"<script>setTimeout(function(){{window.close()}},4000)</script></body></html>")
+                      f"<script>setTimeout(function(){{window.close()}},{3000 if aprobado else 8000})</script></body></html>")
             return self.responder(200, pagina.encode(), "text/html")
         if ruta.startswith("/pagar/"):  # público: botón "Pagar ahora" del aviso del cliente
             slug = slug_actual(ruta[len("/pagar/"):].strip("/"))

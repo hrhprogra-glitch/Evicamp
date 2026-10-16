@@ -11,14 +11,12 @@ export interface Suscripcion {
   pagar_url?: string | null; // Mercado Pago (tarjeta o Yape); el pago se registra solo
 }
 
-// Abrir el pago de Mercado Pago:
-//  - navegador / app instalada: en la MISMA pestaña; al terminar, Mercado Pago vuelve a este mismo sistema
-//  - programa de PC: se abre en el navegador de Windows y al terminar muestra "Pago recibido, ya puedes cerrar"
-//    (el programa se entera solo del pago: el aviso de vencimiento se revisa de nuevo)
+// Abrir el pago de Mercado Pago SIEMPRE aparte (pestaña nueva; en el programa de PC, el navegador de Windows)
+// para no interrumpir una venta. Al terminar, esa pestaña muestra "Pago recibido" y se cierra sola en vez de
+// abrir otra copia del sistema; este sistema se entera solo (el aviso se revisa al volver a la ventana).
+// Sin "noopener": así el navegador permite que la pestaña del pago se cierre sola al final.
 export const abrirPago = (url: string) => {
-  const enEscritorio = !!(window as Window & { siuhubEscritorio?: unknown }).siuhubEscritorio;
-  if (enEscritorio) window.open(`${url}?volver=cerrar`, '_blank');
-  else window.location.href = url;
+  window.open(`${url}?volver=cerrar`, '_blank');
 };
 
 const REVISAR_CADA_MS = 60 * 60 * 1000;
