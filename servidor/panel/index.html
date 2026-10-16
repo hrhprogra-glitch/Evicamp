@@ -361,6 +361,12 @@ const camposPlan = (p = {}) => `
     <div><label>Notas</label><input name="notas" value="${esc(p.notas || '')}" maxlength="300"></div>
   </div>`;
 
+const mensajeBienvenida = (link, correo, clave) =>
+  `¡Bienvenido a SiuMax!\n\nTu sistema: ${link}\nUsuario: ${correo}\nContraseña: ${clave}\n\nTe recomendamos cambiar la contraseña al ingresar (Ajustes > Gestión de usuarios).`;
+
+// El dueño: el primer Administrador activo (la lista ya viene con los administradores primero)
+const duenoDe = (d) => (d.usuarios || []).find((u) => u.rol === 'Administrador' && u.estado === 'ACTIVO') || null;
+
 function modalNuevo() {
   const f = abrirModal('Nuevo cliente', `
     <label>Nombre del negocio</label><input name="nombre" required maxlength="60" placeholder="Bodega Rosa">
@@ -400,9 +406,7 @@ function modalNuevo() {
         Link: <a href="${esc(r.link)}" target="_blank" rel="noopener">${esc(r.link)}</a><br>
         Usuario: <b>${esc(r.correo)}</b><br>Contraseña: <b>${esc(datos.clave)}</b><br>
         <button type="button" class="btn btn-sm" id="btn-copiar" style="margin-top:8px">Copiar datos para enviar</button></div>`;
-      $('#btn-copiar').onclick = () => navigator.clipboard.writeText(
-        `¡Bienvenido a SiuMax!\n\nTu sistema: ${r.link}\nUsuario: ${r.correo}\nContraseña: ${datos.clave}\n\nTe recomendamos cambiar la contraseña al ingresar (Ajustes > Gestión de usuarios).`
-      ).then(() => toast('Datos copiados.'));
+      $('#btn-copiar').onclick = () => navigator.clipboard.writeText(mensajeBienvenida(r.link, r.correo, datos.clave)).then(() => toast('Datos copiados.'));
       b.classList.add('oculto');
       f.querySelector('[data-cerrar2]').textContent = 'Cerrar';
       cargar();
@@ -495,6 +499,8 @@ async function modalCliente(slug, vista) {
       <div class="dato"><small>WhatsApp</small><b>${esc(d.plan && d.plan.telefono) || '-'}</b></div>
     </div>
     ${d.plan && d.plan.notas ? `<div class="ayuda" style="margin-top:8px">Notas: ${esc(d.plan.notas)}</div>` : ''}
+    ${duenoDe(d) ? `<div style="margin-top:12px"><button type="button" class="btn btn-sm btn-dark" data-bienvenida>Copiar datos de acceso</button>
+      <span class="ayuda">Mensaje de bienvenida para enviarle, con una contraseña nueva para ${esc(duenoDe(d).email)}.</span></div>` : ''}
 
     ${d.externo ? '' : `<div class="sub"><span>Usuarios (${d.usuarios.length})</span></div>
     <div class="ayuda" style="margin:-4px 0 8px">El dueño crea y maneja a sus trabajadores desde su sistema (Ajustes > Gestión de usuarios). Las contraseñas están encriptadas y no se pueden ver; aquí puedes poner una nueva si alguien la olvidó.</div>
@@ -510,17 +516,19 @@ async function modalCliente(slug, vista) {
     <div id="modal-error" class="error oculto"></div>`;
 
   $('#modales .modal-cuerpo').addEventListener('click', (e) => {
+    const bienvenida = !!e.target.closest('button[data-bienvenida]');
     const b = e.target.closest('button[data-reset]');
-    if (!b) return;
-    const correo = b.dataset.reset;
+    if (!b && !bienvenida) return;
+    const correo = bienvenida ? duenoDe(d).email : b.dataset.reset;
     const sugerida = Math.random().toString(36).slice(2, 6) + Math.floor(1000 + Math.random() * 9000);
     $('#bloque-reset').innerHTML = `<div class="resultado" style="background:var(--warning-bg);border-color:var(--warning)">
-      <b>Nueva contraseña para ${esc(correo)}</b>
+      <b>${bienvenida ? 'Datos de acceso para enviar · ' : ''}Nueva contraseña para ${esc(correo)}</b>
       <div class="fila" style="align-items:end">
         <div><label>Contraseña nueva</label><input id="reset-clave" value="${esc(sugerida)}" minlength="6" autocomplete="off"></div>
-        <div><button type="button" class="btn btn-warn" id="btn-confirmar-reset">Guardar contraseña</button></div>
+        <div><button type="button" class="btn btn-warn" id="btn-confirmar-reset">${bienvenida ? 'Guardar y copiar' : 'Guardar contraseña'}</button></div>
       </div>
-      <div class="ayuda">Se cerrarán sus sesiones abiertas y tendrá que entrar con la nueva.</div></div>`;
+      <div class="ayuda">Su contraseña anterior dejará de funcionar: se cerrarán sus sesiones abiertas y tendrá que entrar con la nueva.</div></div>`;
+    $('#bloque-reset').scrollIntoView({ block: 'nearest' });
     $('#reset-clave').focus();
     $('#btn-confirmar-reset').onclick = async () => {
       const clave = $('#reset-clave').value;
@@ -528,8 +536,11 @@ async function modalCliente(slug, vista) {
         await api('/api/usuario/clave', { slug: d.slug, email: correo, clave });
         $('#bloque-reset').innerHTML = `<div class="resultado"><b>✅ Contraseña cambiada.</b><br>Usuario: <b>${esc(correo)}</b><br>Contraseña nueva: <b>${esc(clave)}</b><br>
           <button type="button" class="btn btn-sm" id="btn-copiar-reset" style="margin-top:8px">Copiar para enviar</button></div>`;
-        $('#btn-copiar-reset').onclick = () => navigator.clipboard.writeText(
-          `Tu acceso a SiuMax:\n${d.link}\nUsuario: ${correo}\nContraseña nueva: ${clave}`).then(() => toast('Datos copiados.'));
+        const texto = bienvenida ? mensajeBienvenida(d.link, correo, clave)
+          : `Tu acceso a SiuMax:\n${d.link}\nUsuario: ${correo}\nContraseña nueva: ${clave}`;
+        const copiar = () => navigator.clipboard.writeText(texto).then(() => toast('Datos copiados.'));
+        $('#btn-copiar-reset').onclick = copiar;
+        if (bienvenida) copiar().catch(() => {});
       } catch (ex) { errorModal(ex.message); }
     };
   });
