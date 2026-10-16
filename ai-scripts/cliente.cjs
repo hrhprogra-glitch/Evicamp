@@ -8,6 +8,7 @@
 //   node ai-scripts/cliente.cjs backup                                     -> copia de todas las bases ahora mismo
 //   node ai-scripts/cliente.cjs panel                                      -> instala/actualiza el Panel de Control
 //     (la primera vez usa PANEL_CLAVE de .env.vps como contraseña del panel)
+//     Mercado Pago: modo prueba con MP_ACCESS_TOKEN_PRUEBA; cobro real SOLO si .env.vps tiene MP_COBRAR=si
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
@@ -82,11 +83,16 @@ const subirScripts = async (ssh) => {
       await ssh.putFile(path.join(__dirname, '..', 'src', 'assets', 'logo.png'), `${DIR_REMOTO}/panel/logo.png`);
       const clave = process.env.PANEL_CLAVE;
       await ejecutar(ssh, `${clave ? `PANEL_CLAVE=${q(clave)} ` : ''}${DIR_REMOTO}/instalar-panel.sh`);
-      // Mercado Pago: producción si existe MP_ACCESS_TOKEN; si no, el de prueba
-      const tokenMp = process.env.MP_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN_PRUEBA;
+      // Mercado Pago: el cobro REAL solo se activa a propósito, con MP_COBRAR=si en .env.vps
+      // (además de MP_ACCESS_TOKEN). Si no, se usa MP_ACCESS_TOKEN_PRUEBA; sin ninguno, el panel se queda como está.
+      const cobrar = (process.env.MP_COBRAR || '').trim().toLowerCase() === 'si';
+      if (cobrar && !process.env.MP_ACCESS_TOKEN) throw new Error('MP_COBRAR=si pero falta MP_ACCESS_TOKEN en .env.vps');
+      const tokenMp = cobrar ? process.env.MP_ACCESS_TOKEN : process.env.MP_ACCESS_TOKEN_PRUEBA;
       if (tokenMp) {
-        const modo = process.env.MP_ACCESS_TOKEN ? 'produccion' : 'prueba';
+        const modo = cobrar ? 'produccion' : 'prueba';
         await ejecutar(ssh, `MP_ACCESS_TOKEN=${q(tokenMp.trim())} MP_MODO=${modo} python3 ${DIR_REMOTO}/panel/panel.py configurar-mp && systemctl restart siuhub-panel`);
+      } else {
+        console.log('Mercado Pago: sin cambios (no hay MP_ACCESS_TOKEN_PRUEBA y MP_COBRAR no es "si").');
       }
       return;
     }
