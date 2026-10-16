@@ -438,9 +438,12 @@ interface Props {
               value={fechaVencimiento}
               onChange={(e) => setFechaVencimiento(e.target.value)}
               onKeyDown={(e) => {
+                 // Enter abre el calendario; al elegir el día con Enter se cierra y el foco vuelve
+                 // aquí con la fecha puesta. Para seguir al botón de cobrar: flecha abajo.
                  if (e.key === 'Enter') {
                    e.preventDefault();
-                   document.getElementById('cobro-btn-confirm')?.focus();
+                   try { (e.target as HTMLInputElement).showPicker(); }
+                   catch { document.getElementById('cobro-btn-confirm')?.focus(); }
                  }
                  if (e.key === 'ArrowUp') { e.preventDefault(); const target = document.getElementById('fiado-celular') || document.getElementById('fiado-search'); target?.focus(); }
                  if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('cobro-btn-confirm')?.focus(); }
