@@ -19,6 +19,7 @@ Uso:
 import calendar
 import hashlib
 import hmac
+import html
 import json
 import os
 import re
@@ -323,7 +324,7 @@ def resumen():
                    "vencidos": sum(1 for c in clientes if c["pago"]["estado"] == "VENCIDO"),
                    "por_vencer": sum(1 for c in clientes if c["pago"]["estado"] == "POR_VENCER")},
         "config": {"dias_aviso": DIAS_AVISO, "dias_gracia": DIAS_GRACIA, "dominio": DOMINIO_BASE,
-                   "mercadopago": (mp_config() or {}).get("modo")},
+                   "mercadopago": (mp_config() or {}).get("modo"), "promo": promo_actual(datos)},
     }
 
 
@@ -454,6 +455,37 @@ def guardar_plan(cuerpo):
     return plan
 
 
+MESES_MAXIMOS = 12
+
+
+def promo_actual(datos=None):
+    """Promoción para todos: pagar 12 meses juntos a un precio fijo (ej. S/ 350)."""
+    p = (datos or leer_datos()).get("promo") or {}
+    return {"activa": bool(p.get("activa")), "precio": float(p.get("precio") or 0)}
+
+
+def guardar_promo(cuerpo):
+    activa = bool(cuerpo.get("activa"))
+    precio = float(cuerpo.get("precio") or 0)
+    if activa and not 0 < precio <= 100000:
+        raise ValueError("Precio de la promoción inválido.")
+    with candado:
+        datos = leer_datos()
+        datos["promo"] = {"activa": activa, "precio": round(precio, 2)}
+        guardar_json(DATOS, datos)
+    return datos["promo"]
+
+
+def precio_meses(plan, meses, promo=None):
+    """Lo que cuesta pagar N meses: precio mensual x N; 12 meses con la promoción si sale más barata."""
+    mensual = float(plan["precio"]) / MESES_PLAN.get(plan["tipo"], 1)
+    total = round(mensual * meses, 2)
+    promo = promo or promo_actual()
+    if meses == 12 and promo["activa"] and 0 < promo["precio"] < total:
+        return promo["precio"], True
+    return total, False
+
+
 def registrar_pago(cuerpo):
     slug = cuerpo.get("slug", "")
     metodo = cuerpo.get("metodo", "")
@@ -474,11 +506,15 @@ def registrar_pago(cuerpo):
         # Mercado Pago puede avisar el mismo pago varias veces: se registra una sola vez
         if mp_id and any(p.get("mp_id") == mp_id for p in datos["pagos"]):
             return {"plan": plan, "reactivado": False, "duplicado": True}
-        # El siguiente vencimiento avanza un periodo desde el vencimiento actual (no desde hoy),
-        # así pagar tarde o adelantado no regala ni quita días.
+        # El siguiente vencimiento avanza desde el vencimiento actual (no desde hoy), así pagar tarde o
+        # adelantado no regala ni quita días. Avanza los meses pagados; si no se indican, un periodo del plan.
+        meses = int(cuerpo.get("meses") or MESES_PLAN[plan["tipo"]])
+        if not 1 <= meses <= MESES_MAXIMOS:
+            raise ValueError(f"Los meses deben ser de 1 a {MESES_MAXIMOS}.")
         base = date.fromisoformat(plan["proximo_pago"])
-        plan["proximo_pago"] = sumar_meses(base, MESES_PLAN[plan["tipo"]]).isoformat()
+        plan["proximo_pago"] = sumar_meses(base, meses).isoformat()
         datos["pagos"].append({"id": secrets.token_hex(6), "slug": slug, "monto": round(monto, 2), "metodo": metodo,
+                               "meses": meses,
                                "fecha": fecha, "nota": str(cuerpo.get("nota", ""))[:200],
                                "periodo_hasta": plan["proximo_pago"], "mp_id": mp_id or None,
                                "registrado": datetime.now().isoformat(timespec="seconds")})
@@ -514,7 +550,57 @@ def mp_api(metodo, ruta, cuerpo=None):
         raise ValueError("No se pudo conectar con Mercado Pago.") from e
 
 
-def crear_link_pago(slug, cerrar_al_volver=False):
+def pagina_elegir_meses(slug, cerrar_al_volver):
+    """Antes de ir a Mercado Pago, el cliente elige cuántos meses paga (1 a 12)."""
+    reg = cliente_registrado(slug)
+    datos = leer_datos()
+    plan = datos["planes"].get(slug)
+    if not plan or not plan.get("precio"):
+        raise ValueError("Este cliente no tiene un plan con precio.")
+    promo = promo_actual(datos)
+    opciones = []
+    for m in range(1, MESES_MAXIMOS + 1):
+        total, con_promo = precio_meses(plan, m, promo)
+        normal = round(float(plan["precio"]) / MESES_PLAN.get(plan["tipo"], 1) * m, 2)
+        texto = f"{m} {'mes' if m == 1 else 'meses'} · S/ {total:.2f}"
+        if con_promo:
+            texto += f"  ⭐ PROMOCIÓN (ahorras S/ {normal - total:.2f})"
+        opciones.append((m, texto, con_promo))
+    defecto = 1
+    nuevo = sumar_meses(date.fromisoformat(plan["proximo_pago"]), defecto).isoformat()
+    vence = lambda iso: "/".join(reversed(iso.split("-")))
+    opts = "".join(f"<option value='{m}' {'selected' if m == defecto else ''}>{html.escape(t)}</option>" for m, t, _ in opciones)
+    hasta = {m: vence(sumar_meses(date.fromisoformat(plan["proximo_pago"]), m).isoformat()) for m in range(1, MESES_MAXIMOS + 1)}
+    promo_txt = ""
+    if promo["activa"] and precio_meses(plan, 12, promo)[1]:
+        promo_txt = (f"<div class='promo'>⭐ Promoción: <b>12 meses por S/ {promo['precio']:.2f}</b></div>")
+    return f"""<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pagar plan · SiuMax</title><style>
+html,body{{margin:0;min-height:100%}}
+body{{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#1E293B;color:#F8FAFC;padding:16px;box-sizing:border-box;font-family:ui-monospace,Menlo,Consolas,monospace}}
+.caja{{border:2px solid #F59E0B;box-shadow:6px 6px 0 0 #F59E0B;padding:28px 24px;width:100%;max-width:440px;box-sizing:border-box}}
+h1{{margin:0 0 6px;color:#F59E0B;font-size:18px;letter-spacing:.12em;text-transform:uppercase}}
+p{{margin:0 0 16px;font-size:13px;line-height:1.6;color:#CBD5E1}}
+label{{display:block;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}}
+select{{width:100%;padding:12px;font:inherit;font-size:14px;border:2px solid #F59E0B;background:#fff;color:#1E293B;border-radius:0}}
+.hasta{{margin-top:10px;font-size:13px}} .hasta b{{color:#F59E0B}}
+.promo{{border:2px dashed #F59E0B;padding:10px;margin-bottom:16px;font-size:13px;text-align:center}}
+button{{margin-top:20px;width:100%;padding:13px;font:inherit;font-weight:900;letter-spacing:.12em;text-transform:uppercase;background:#F59E0B;color:#1E293B;border:2px solid #1E293B;box-shadow:4px 4px 0 0 #F59E0B;cursor:pointer;border-radius:0}}
+button:hover,button:focus-visible{{outline:none;transform:translate(-1px,-1px);box-shadow:5px 5px 0 0 #F59E0B}}
+small{{display:block;margin-top:12px;color:#94A3B8;font-size:11px;text-align:center}}
+</style></head><body><form class="caja" method="get" action="/pagar/{slug}">
+<h1>Pagar plan</h1><p>{html.escape(reg['nombre'])} · vence el {vence(plan['proximo_pago'])}</p>{promo_txt}
+<label for="meses">¿Cuántos meses quieres pagar?</label>
+<select id="meses" name="meses" autofocus>{opts}</select>
+<div class="hasta">Tu plan quedará pagado hasta el <b id="hasta">{vence(nuevo)}</b></div>
+{'<input type="hidden" name="volver" value="cerrar">' if cerrar_al_volver else ''}
+<button type="submit">Continuar al pago</button>
+<small>Yape o tarjeta con Mercado Pago</small></form>
+<script>const H={json.dumps(hasta)};const s=document.getElementById('meses');
+s.addEventListener('change',()=>{{document.getElementById('hasta').textContent=H[s.value];}});</script></body></html>"""
+
+
+def crear_link_pago(slug, cerrar_al_volver=False, meses=None):
     """Link de Checkout Pro por el precio del plan. El slug va en external_reference para saber
     de quién es el pago cuando Mercado Pago avise.
     cerrar_al_volver: el pago se abrió desde el programa de PC (en el navegador); al terminar se muestra
@@ -524,10 +610,19 @@ def crear_link_pago(slug, cerrar_al_volver=False):
     if not plan or not plan.get("precio"):
         raise ValueError("Este cliente no tiene un plan con precio.")
     link_cliente = f"{URL_PANEL}/pago-listo" if cerrar_al_volver else f"https://{slug}.{DOMINIO_BASE}"
+    # Meses elegidos por el cliente (1 a 12); sin elegir, un periodo del plan a su precio
+    if meses is None:
+        meses, total, titulo = MESES_PLAN[plan["tipo"]], float(plan["precio"]), f"Plan {plan['tipo'].lower()}"
+    else:
+        if not 1 <= meses <= MESES_MAXIMOS:
+            raise ValueError(f"Elige de 1 a {MESES_MAXIMOS} meses.")
+        total, con_promo = precio_meses(plan, meses)
+        titulo = f"{meses} {'mes' if meses == 1 else 'meses'}" + (" (promoción)" if con_promo else "")
     pref = mp_api("POST", "/checkout/preferences", {
-        "items": [{"title": f"SiuMax - Plan {plan['tipo'].lower()} ({reg['nombre']})", "quantity": 1,
-                   "unit_price": float(plan["precio"]), "currency_id": "PEN"}],
-        "external_reference": f"{slug}|{plan['proximo_pago']}",
+        "items": [{"title": f"SiuMax - {titulo} ({reg['nombre']})", "quantity": 1,
+                   "unit_price": float(total), "currency_id": "PEN"}],
+        # slug | vencimiento que paga | meses que cubre (lo lee el aviso de pago para avanzar el plan)
+        "external_reference": f"{slug}|{plan['proximo_pago']}|{meses}",
         "notification_url": f"{URL_PANEL}/api/mercadopago/webhook",
         "back_urls": {"success": link_cliente, "pending": link_cliente, "failure": link_cliente},
         "auto_return": "approved",
@@ -547,25 +642,32 @@ def procesar_aviso_mp(id_pago):
     pago = mp_api("GET", f"/v1/payments/{id_pago}")
     if pago.get("status") != "approved":
         return f"pago {id_pago} en estado {pago.get('status')}"
-    slug = str(pago.get("external_reference") or "").split("|")[0]
+    partes = str(pago.get("external_reference") or "").split("|")
+    slug = partes[0]
     if not RE_SLUG.match(slug):
         return "pago sin cliente"
     slug = slug_actual(slug)   # pagado con el link viejo de un cliente que cambió de link
+    # Meses elegidos al pagar (los links antiguos no los traen: un periodo del plan)
+    meses = int(partes[2]) if len(partes) > 2 and partes[2].isdigit() and 1 <= int(partes[2]) <= MESES_MAXIMOS else None
     # Cobrando de verdad: un pago de prueba (dinero ficticio) nunca cuenta
     if mp_config().get("modo") == "produccion" and pago.get("live_mode") is False:
         print(f"MP: pago {id_pago} de {slug} RECHAZADO: es un pago de prueba", flush=True)
         return "pago de prueba rechazado"
-    # El monto debe cubrir el precio del plan (en soles)
+    # El monto debe cubrir lo que cuestan esos meses (en soles)
     plan = leer_datos()["planes"].get(slug) or {}
+    if not plan.get("precio"):
+        return "cliente sin plan"
+    esperado = precio_meses(plan, meses)[0] if meses else float(plan["precio"])
     monto = float(pago.get("transaction_amount") or 0)
-    if pago.get("currency_id") != "PEN" or monto + 0.009 < float(plan.get("precio") or 0):
-        print(f"MP: pago {id_pago} de {slug} RECHAZADO: {pago.get('currency_id')} {monto} no cubre el plan "
-              f"(S/ {plan.get('precio')})", flush=True)
+    if pago.get("currency_id") != "PEN" or monto + 0.009 < esperado:
+        print(f"MP: pago {id_pago} de {slug} RECHAZADO: {pago.get('currency_id')} {monto} no cubre "
+              f"{meses or 'el plan'} {'meses' if meses else ''} (S/ {esperado})", flush=True)
         return "monto insuficiente"
     metodo_mp = pago.get("payment_method_id") or pago.get("payment_type_id") or ""
     fecha = (pago.get("date_approved") or "")[:10] or date.today().isoformat()
     r = registrar_pago({"slug": slug, "monto": pago.get("transaction_amount"), "metodo": "MERCADOPAGO",
-                        "fecha": fecha, "nota": f"MP #{id_pago} ({metodo_mp})", "mp_id": str(id_pago)})
+                        "fecha": fecha, "nota": f"MP #{id_pago} ({metodo_mp})", "mp_id": str(id_pago),
+                        "meses": meses})
     return f"{slug}: {'ya registrado' if r.get('duplicado') else 'pago registrado'}"
 
 
@@ -690,8 +792,14 @@ class Panel(BaseHTTPRequestHandler):
                 if ip_bloqueada("pagar:" + self.ip(), limite=30):
                     raise ValueError("Demasiados intentos. Espera unos minutos.")
                 intentos.setdefault("pagar:" + self.ip(), []).append(time.time())
-                cerrar = (parse_qs(urlparse(self.path).query).get("volver") or [""])[0] == "cerrar"
-                link = crear_link_pago(slug, cerrar_al_volver=cerrar)
+                consulta = parse_qs(urlparse(self.path).query)
+                cerrar = (consulta.get("volver") or [""])[0] == "cerrar"
+                meses_txt = (consulta.get("meses") or [""])[0]
+                if not meses_txt:   # primero el cliente elige cuántos meses paga
+                    return self.responder(200, pagina_elegir_meses(slug, cerrar).encode(), "text/html")
+                if not meses_txt.isdigit():
+                    raise ValueError("Cantidad de meses inválida.")
+                link = crear_link_pago(slug, cerrar_al_volver=cerrar, meses=int(meses_txt))
                 if not link:
                     raise ValueError("Mercado Pago no devolvió el link de pago.")
                 return self.responder(302, b"", "text/plain", {"Location": link})
@@ -815,6 +923,9 @@ class Panel(BaseHTTPRequestHandler):
 
             if ruta == "/api/usuario/clave":
                 return self.responder(200, restablecer_clave(cuerpo))
+
+            if ruta == "/api/promo":
+                return self.responder(200, {"ok": True, "promo": guardar_promo(cuerpo)})
 
             if ruta == "/api/plan":
                 return self.responder(200, {"ok": True, "plan": guardar_plan(cuerpo)})
