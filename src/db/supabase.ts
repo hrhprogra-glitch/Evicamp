@@ -63,9 +63,24 @@ const mostrarSuspendido = () => {
   window.location.replace('/');
 };
 
+// La sesión vence tras 30 días SIN USO (servidor/sql/seguridad-sesion.sql). Cada hora se avisa que
+// sigue en uso, así una caja abierta todos los días nunca vence. Si ya no es válida, vuelve al login.
+const renovarSesion = () => {
+  let token: string | null = null;
+  try { token = localStorage.getItem(CLAVE_TOKEN_SESION); } catch { /* sin almacenamiento */ }
+  if (!token || document.visibilityState !== 'visible') return;
+  fetch('/rest/v1/rpc/fn_validar_sesion', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ p_token: token }),
+  })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((filas) => { if (Array.isArray(filas) && filas.length === 0) sesionVencida(); })
+    .catch(() => {}); // sin internet: no hacer nada
+};
+
 // Revisa cada 30 s aunque nadie esté usando el sistema (pantalla quieta en la caja)
 export const vigilarSuspension = () => {
   if (!import.meta.env.PROD) return;
+  setInterval(renovarSesion, 60 * 60 * 1000);
   setInterval(() => {
     if (document.visibilityState !== 'visible') return;
     fetch('/rest/v1/empresa_config?select=id&limit=1', { cache: 'no-store' })

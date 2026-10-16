@@ -73,6 +73,9 @@ setInterval(() => {
 </script></body></html>
 EOF
 
+echo "== Límite de intentos de login (la plantilla de los clientes lo usa)"
+bash "$DIR_SIUMAX/limitar-login.sh"
+
 echo "== Links de clientes (configuración de Nginx al día)"
 while IFS=$'\t' read -r slug _ puerto estado _; do
   [ -n "$slug" ] || continue

@@ -136,6 +136,10 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/$host/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    # Máximo 10 intentos de login por minuto desde una misma conexión (ver conf.d/siumax-login.conf)
+    limit_req zone=siumax_login burst=5 nodelay;
+    limit_req_status 429;
 $cuerpo
 }
 
