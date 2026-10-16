@@ -529,7 +529,10 @@ def crear_link_pago(slug):
         "auto_return": "approved",
         "statement_descriptor": "SIUMAX",
     })
-    return pref.get("init_point") if mp_config().get("modo") == "produccion" else (pref.get("sandbox_init_point") or pref.get("init_point"))
+    # Con credenciales TEST- se usa el sandbox; con las de una cuenta (real o vendedor de prueba), el link normal
+    if mp_config().get("access_token", "").startswith("TEST-"):
+        return pref.get("sandbox_init_point") or pref.get("init_point")
+    return pref.get("init_point")
 
 
 def procesar_aviso_mp(id_pago):
