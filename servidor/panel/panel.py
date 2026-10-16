@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Panel de Control de SiuHub (solo para el dueño de SiuHub).
+Panel de Control de SiuMax (solo para el dueño de SiuMax).
 Servidor sin dependencias externas (solo Python estándar). Escucha en 127.0.0.1:3090 y
-Nginx lo publica con HTTPS en panel.siuhub.duckdns.org.
+Nginx lo publica con HTTPS en panel.siumax.duckdns.org.
 
 Seguridad:
   - Contraseña encriptada (PBKDF2-SHA256) en /opt/siuhub/panel-admin.json (solo root).
@@ -34,14 +34,14 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlparse
 from urllib.request import Request, urlopen
 
-DIR_SIUHUB = "/opt/siuhub"
-REGISTRO = f"{DIR_SIUHUB}/clientes.tsv"
-DATOS = f"{DIR_SIUHUB}/panel-datos.json"
-ADMIN = f"{DIR_SIUHUB}/panel-admin.json"
+DIR_SIUMAX = "/opt/siuhub"
+REGISTRO = f"{DIR_SIUMAX}/clientes.tsv"
+DATOS = f"{DIR_SIUMAX}/panel-datos.json"
+ADMIN = f"{DIR_SIUMAX}/panel-admin.json"
 DIR_CLIENTES = "/var/www/clientes"
 DIR_BACKUPS = "/var/backups/siuhub"
 INDEX_HTML = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
-DOMINIO_BASE = "siuhub.duckdns.org"
+DOMINIO_BASE = "siumax.duckdns.org"
 
 PUERTO = 3090
 DURACION_SESION = 12 * 3600
@@ -49,7 +49,7 @@ DIAS_AVISO = 5      # "por vencer" desde 5 días antes
 DIAS_GRACIA = 5     # se suspende 5 días después de vencido
 MESES_PLAN = {"MENSUAL": 1, "TRIMESTRAL": 3, "SEMESTRAL": 6, "ANUAL": 12}
 METODOS_PAGO = {"YAPE", "PLIN", "TRANSFERENCIA", "EFECTIVO", "OTRO", "MERCADOPAGO"}
-MERCADOPAGO = f"{DIR_SIUHUB}/mercadopago.json"   # {"access_token": "...", "modo": "prueba"|"produccion"}
+MERCADOPAGO = f"{DIR_SIUMAX}/mercadopago.json"   # {"access_token": "...", "modo": "prueba"|"produccion"}
 URL_PANEL = f"https://panel.{DOMINIO_BASE}"
 RE_SLUG = re.compile(r"^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$")
 RE_CORREO = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -154,7 +154,7 @@ def api_activa(slug):
 
 
 def cambiar_estado(slug, accion):
-    return ejecutar([f"{DIR_SIUHUB}/estado-cliente.sh", slug, accion], espera=60)
+    return ejecutar([f"{DIR_SIUMAX}/estado-cliente.sh", slug, accion], espera=60)
 
 
 # ===================== Información =====================
@@ -412,13 +412,13 @@ def crear_link_pago(slug):
         raise ValueError("Este cliente no tiene un plan con precio.")
     link_cliente = f"https://{slug}.{DOMINIO_BASE}"
     pref = mp_api("POST", "/checkout/preferences", {
-        "items": [{"title": f"SiuHub - Plan {plan['tipo'].lower()} ({reg['nombre']})", "quantity": 1,
+        "items": [{"title": f"SiuMax - Plan {plan['tipo'].lower()} ({reg['nombre']})", "quantity": 1,
                    "unit_price": float(plan["precio"]), "currency_id": "PEN"}],
         "external_reference": f"{slug}|{plan['proximo_pago']}",
         "notification_url": f"{URL_PANEL}/api/mercadopago/webhook",
         "back_urls": {"success": link_cliente, "pending": link_cliente, "failure": link_cliente},
         "auto_return": "approved",
-        "statement_descriptor": "SIUHUB",
+        "statement_descriptor": "SIUMAX",
     })
     return pref.get("init_point") if mp_config().get("modo") == "produccion" else (pref.get("sandbox_init_point") or pref.get("init_point"))
 
@@ -488,7 +488,7 @@ def ip_bloqueada(ip, limite=5):
 # ===================== Servidor HTTP =====================
 
 class Panel(BaseHTTPRequestHandler):
-    server_version = "SiuHubPanel"
+    server_version = "SiuMaxPanel"
 
     def log_message(self, fmt, *args):
         sys.stderr.write("%s %s\n" % (self.ip(), fmt % args))
@@ -536,7 +536,7 @@ class Panel(BaseHTTPRequestHandler):
         if ruta in ("/", "/index.html"):
             with open(INDEX_HTML, "rb") as f:
                 return self.responder(200, f.read(), "text/html")
-        if ruta == "/logo.png":  # logo de SiuHub (público: se ve también en el login)
+        if ruta == "/logo.png":  # logo de SiuMax (público: se ve también en el login)
             with open(os.path.join(os.path.dirname(INDEX_HTML), "logo.png"), "rb") as f:
                 return self.responder(200, f.read(), "image/png")
         if ruta == "/api/sesion":
@@ -556,7 +556,7 @@ class Panel(BaseHTTPRequestHandler):
                          f"<body style='font-family:monospace;background:#1E293B;color:#F8FAFC;display:flex;align-items:center;"
                          f"justify-content:center;min-height:100vh;margin:0;padding:16px;text-align:center'>"
                          f"<div><h2 style='color:#F59E0B'>No se pudo abrir el pago</h2><p>{str(e)}</p>"
-                         f"<p>Comunícate con SiuHub.</p></div>")
+                         f"<p>Comunícate con SiuMax.</p></div>")
                 return self.responder(400, aviso.encode(), "text/html")
         if not self.autenticado():
             return self.responder(401, {"error": "Inicia sesión."})
@@ -630,7 +630,7 @@ class Panel(BaseHTTPRequestHandler):
                     raise ValueError("Correo inválido.")
                 if len(clave) < 6:
                     raise ValueError("La contraseña debe tener al menos 6 caracteres.")
-                ok, salida = ejecutar([f"{DIR_SIUHUB}/nuevo-cliente.sh", slug, nombre, correo],
+                ok, salida = ejecutar([f"{DIR_SIUMAX}/nuevo-cliente.sh", slug, nombre, correo],
                                       entorno={"CLAVE_ADMIN": clave}, espera=600)
                 if not ok:
                     return self.responder(500, {"error": "No se pudo crear el cliente.", "detalle": salida[-2000:]})
@@ -662,7 +662,7 @@ class Panel(BaseHTTPRequestHandler):
                 return self.responder(200, dict(registrar_pago(cuerpo), ok=True))
 
             if ruta == "/api/backup":
-                ok, salida = ejecutar([f"{DIR_SIUHUB}/backup.sh"], espera=900)
+                ok, salida = ejecutar([f"{DIR_SIUMAX}/backup.sh"], espera=900)
                 return self.responder(200 if ok else 500, {"ok": ok, "detalle": salida})
 
             if ruta == "/api/revisar-cobros":
@@ -702,7 +702,7 @@ def main():
         return
     if not os.path.isfile(ADMIN):
         sys.exit("Falta la contraseña del panel: ejecuta PANEL_CLAVE='...' panel.py crear-clave")
-    print(f"Panel SiuHub en 127.0.0.1:{PUERTO}")
+    print(f"Panel SiuMax en 127.0.0.1:{PUERTO}")
     ThreadingHTTPServer(("127.0.0.1", PUERTO), Panel).serve_forever()
 
 

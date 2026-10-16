@@ -51,7 +51,7 @@ export const usePuedeInstalar = () => {
 };
 
 // === APP DE ESCRITORIO (PC de la caja) ===
-export const RUTA_INSTALADOR_PC = '/descargas/SiuHub-Setup.exe';
+export const RUTA_INSTALADOR_PC = '/descargas/SiuMax-Setup.exe';
 
 // true en una PC con Windows, fuera de la app de escritorio, si el instalador está publicado
 export const useHayInstaladorPC = () => {
@@ -71,7 +71,7 @@ export const useHayInstaladorPC = () => {
 export const descargarInstaladorPC = () => {
   const enlace = document.createElement('a');
   enlace.href = RUTA_INSTALADOR_PC;
-  enlace.download = 'SiuHub-Setup.exe';
+  enlace.download = 'SiuMax-Setup.exe';
   document.body.appendChild(enlace);
   enlace.click();
   enlace.remove();

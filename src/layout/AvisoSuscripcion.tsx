@@ -1,5 +1,5 @@
-// Aviso de vencimiento del plan de SiuHub. El Panel de Control escribe /suscripcion.json
-// en el link de cada cliente; Evicamp y SiuHub no lo tienen y simplemente no muestran nada.
+// Aviso de vencimiento del plan de SiuMax. El Panel de Control escribe /suscripcion.json
+// en el link de cada cliente; Evicamp y SiuMax no lo tienen y simplemente no muestran nada.
 import React, { useEffect, useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 
@@ -15,7 +15,7 @@ const REVISAR_CADA_MS = 60 * 60 * 1000;
 const CLAVE_CERRADO = 'siuhub_aviso_plan_cerrado';
 export const fechaPe = (iso: string | null) => (iso ? iso.split('-').reverse().join('/') : '');
 
-// Estado del plan del cliente (null en Evicamp/SiuHub, que no tienen /suscripcion.json)
+// Estado del plan del cliente (null en Evicamp/SiuMax, que no tienen /suscripcion.json)
 export const useSuscripcion = () => {
   const [plan, setPlan] = useState<Suscripcion | null>(null);
   useEffect(() => {
@@ -43,8 +43,8 @@ export const AvisoSuscripcion: React.FC = () => {
   const vencido = plan.estado === 'VENCIDO';
   const dias = plan.dias_restantes ?? 0;
   const mensaje = vencido
-    ? `Tu plan de SiuHub venció el ${fechaPe(plan.proximo_pago)}. El servicio se suspenderá el ${fechaPe(plan.fecha_suspension)} si no se renueva.`
-    : `Tu plan de SiuHub vence ${dias === 0 ? 'hoy' : dias === 1 ? 'mañana' : `en ${dias} días`} (${fechaPe(plan.proximo_pago)}). Renuévalo para no perder el acceso.`;
+    ? `Tu plan de SiuMax venció el ${fechaPe(plan.proximo_pago)}. El servicio se suspenderá el ${fechaPe(plan.fecha_suspension)} si no se renueva.`
+    : `Tu plan de SiuMax vence ${dias === 0 ? 'hoy' : dias === 1 ? 'mañana' : `en ${dias} días`} (${fechaPe(plan.proximo_pago)}). Renuévalo para no perder el acceso.`;
 
   const cerrar = () => {
     setCerrado(true);

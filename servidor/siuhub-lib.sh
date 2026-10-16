@@ -1,10 +1,10 @@
 #!/bin/bash
-# Funciones comunes de los scripts de SiuHub en el VPS (se instalan en /opt/siuhub).
-# Cada cliente: base cli_<slug>, API PostgREST propia (puerto 3100+), link <slug>.siuhub.duckdns.org.
+# Funciones comunes de los scripts de SiuMax en el VPS (se instalan en /opt/siuhub).
+# Cada cliente: base cli_<slug>, API PostgREST propia (puerto 3100+), link <slug>.siumax.duckdns.org.
 
-DOMINIO_BASE="siuhub.duckdns.org"
-DIR_SIUHUB="/opt/siuhub"
-REGISTRO="$DIR_SIUHUB/clientes.tsv"           # slug  nombre  puerto  estado  fecha_alta
+DOMINIO_BASE="siumax.duckdns.org"
+DIR_SIUMAX="/opt/siuhub"
+REGISTRO="$DIR_SIUMAX/clientes.tsv"           # slug  nombre  puerto  estado  fecha_alta
 APP_COMPARTIDA="/var/www/siuhub-app/html"     # una sola copia del sistema para todos los clientes
 DIR_CLIENTES="/var/www/clientes"              # por cliente: descargas (instalador de PC)
 CONF_POSTGREST_BASE="/etc/postgrest_siuhub.conf"
@@ -15,7 +15,7 @@ host_cliente() { echo "$1.$DOMINIO_BASE"; }
 base_cliente() { echo "cli_${1//-/_}"; }
 
 # slug: solo minúsculas, números y guion; 3 a 30 caracteres; no empieza ni termina en guion
-LINKS_RESERVADOS=" panel www api admin app mail ftp siuhub evicamp creditaltoque descargas "
+LINKS_RESERVADOS=" panel www api admin app mail ftp siuhub siumax evicamp creditaltoque descargas actualizaciones "
 
 validar_slug() {
   [[ "$1" =~ ^[a-z0-9]([a-z0-9-]{1,28})[a-z0-9]$ ]] || {
@@ -23,7 +23,7 @@ validar_slug() {
     return 1
   }
   [[ "$LINKS_RESERVADOS" != *" $1 "* ]] || {
-    echo "ERROR: el link '$1' está reservado para SiuHub. Elige otro." >&2
+    echo "ERROR: el link '$1' está reservado para SiuMax. Elige otro." >&2
     return 1
   }
 }
@@ -120,7 +120,7 @@ server {
 EOF
   else
     cat > "$archivo" <<EOF
-# SiuHub - cliente $slug (generado por /opt/siuhub, no editar a mano)
+# SiuMax - cliente $slug (generado por /opt/siuhub, no editar a mano)
 server {
     listen 443 ssl;
     server_name $host;

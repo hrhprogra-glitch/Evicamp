@@ -1,4 +1,4 @@
-// Manejo de clientes de SiuHub desde tu PC (la Fase 5 hará lo mismo con botones en un panel).
+// Manejo de clientes de SiuMax desde tu PC (la Fase 5 hará lo mismo con botones en un panel).
 // Uso:
 //   node ai-scripts/cliente.cjs instalar                                   -> prepara el VPS (una sola vez; repetir no daña)
 //   node ai-scripts/cliente.cjs nuevo <link> "<Negocio>" <correo> <clave>  -> crea cliente completo
@@ -66,7 +66,7 @@ const subirScripts = async (ssh) => {
       // La clave va como variable de entorno, no como argumento del script
       // El instalador de PC genérico se copia solo dentro de nuevo-cliente.sh
       await ejecutar(ssh, `CLAVE_ADMIN=${q(clave)} ${DIR_REMOTO}/nuevo-cliente.sh ${q(slug)} ${q(negocio)} ${q(correo)}`);
-      console.log(`\nCliente listo: https://${slug}.siuhub.duckdns.org  |  usuario: ${correo.toLowerCase()}`);
+      console.log(`\nCliente listo: https://${slug}.siumax.duckdns.org  |  usuario: ${correo.toLowerCase()}`);
       return;
     }
 
@@ -78,7 +78,7 @@ const subirScripts = async (ssh) => {
         await ssh.execCommand(`cat > ${DIR_REMOTO}/panel/${archivo}`, { stdin: contenido });
       }
       // Contraseña del panel: solo hace falta la primera vez (o para cambiarla). Vive en .env.vps.
-      // Logo de SiuHub: se sube en binario desde la misma imagen que usa el sistema
+      // Logo de SiuMax: se sube en binario desde la misma imagen que usa el sistema
       await ssh.putFile(path.join(__dirname, '..', 'src', 'assets', 'logo.png'), `${DIR_REMOTO}/panel/logo.png`);
       const clave = process.env.PANEL_CLAVE;
       await ejecutar(ssh, `${clave ? `PANEL_CLAVE=${q(clave)} ` : ''}${DIR_REMOTO}/instalar-panel.sh`);

@@ -37,7 +37,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [empresaData, setEmpresaData] = useState({ nombre: 'SIUHUB', logo: logoEvicamp });
+  const [empresaData, setEmpresaData] = useState({ nombre: 'SIUMAX', logo: logoEvicamp });
 
   const inputUsuarioRef = useRef<HTMLInputElement>(null);
   const inputPasswordRef = useRef<HTMLInputElement>(null);
@@ -73,7 +73,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         const { data, error } = await supabase.from('empresa_config').select('nombre_empresa, logo_url').limit(1).single();
         if (data && !error) {
           setEmpresaData({
-            nombre: data.nombre_empresa || 'SIUHUB',
+            nombre: data.nombre_empresa || 'SIUMAX',
             logo: data.logo_url || logoEvicamp
           });
         }

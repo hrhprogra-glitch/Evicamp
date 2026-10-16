@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copia de seguridad diaria de TODAS las bases del VPS (Evicamp, CreditAltoque, SiuHub y clientes).
+# Copia de seguridad diaria de TODAS las bases del VPS (Evicamp, CreditAltoque, SiuMax y clientes).
 # Lo ejecuta cron todos los días a las 3:00 a. m. Guarda 14 días; las más viejas se borran solas.
 # Restaurar una copia en una base NUEVA (no pisa la original):
 #   sudo -u postgres createdb restaurada && sudo -u postgres pg_restore -d restaurada <archivo.dump>

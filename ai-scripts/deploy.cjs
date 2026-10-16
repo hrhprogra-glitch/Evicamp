@@ -1,17 +1,17 @@
 // Compila el sistema UNA vez y lo publica.
 // Uso:
-//   node ai-scripts/deploy.cjs siuhub      -> solo SiuHub (para probar)
+//   node ai-scripts/deploy.cjs siumax      -> solo SiuMax, tu sistema de pruebas (también acepta "siuhub")
 //   node ai-scripts/deploy.cjs evicamp     -> solo Evicamp
-//   node ai-scripts/deploy.cjs clientes    -> todos los clientes nuevos (*.siuhub.duckdns.org)
-//   node ai-scripts/deploy.cjs todos       -> Evicamp + SiuHub + clientes
+//   node ai-scripts/deploy.cjs clientes    -> todos los clientes nuevos (*.siumax.duckdns.org)
+//   node ai-scripts/deploy.cjs todos       -> Evicamp + SiuMax + clientes
 //   (sin argumento = evicamp, como antes)
 const { NodeSSH } = require('node-ssh');
 const path = require('path');
 const { execSync } = require('child_process');
 const { conexionVps } = require('./vps.cjs');
-const { SITIOS } = require('./destinos.cjs');
+const { SITIOS, normalizar } = require('./destinos.cjs');
 
-const pedido = process.argv[2] || 'evicamp';
+const pedido = normalizar(process.argv[2] || 'evicamp');
 const nombres = pedido === 'todos' ? Object.keys(SITIOS) : [pedido];
 for (const n of nombres) {
   if (!SITIOS[n]) {

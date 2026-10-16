@@ -138,7 +138,7 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
         <div className="text-center mt-6 border-t-2 border-dashed border-gray-400 pt-3">
           <p className="font-black text-[12px] uppercase">¡Gracias por su compra!</p>
           <p className="text-[11px] mt-1 font-bold">Consulte su documento en www.sunat.gob.pe</p>
-          <p className="mt-3 text-[11px] font-black">*** SISTEMA SIUHUB ***</p>
+          <p className="mt-3 text-[11px] font-black">*** SISTEMA SIUMAX ***</p>
         </div>
         <div className="h-2"></div>
       </div>

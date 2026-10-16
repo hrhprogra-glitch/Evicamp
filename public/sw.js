@@ -1,4 +1,4 @@
-// Service worker de SiuHub: hace que la app sea instalable SIN guardar copias del sistema.
+// Service worker de SiuMax: hace que la app sea instalable SIN guardar copias del sistema.
 // Todo se pide siempre al servidor, así cada actualización llega al instante.
 // Solo si no hay internet al abrir la app se muestra una pantalla de "Sin conexión".
 const CACHE = 'siuhub-offline-v1';

@@ -30,11 +30,11 @@ export const ATAJOS_SESIONES = ['pos', 'fiados', 'inventario', 'mermas', 'finanz
 const AUTO_OCULTAR_MS = 8000;
 
 export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigate, onClose, onToggle, permisos }) => {
-  const [empresaData, setEmpresaData] = useState({ nombre: 'SIUHUB', logo: logoEvicamp });
+  const [empresaData, setEmpresaData] = useState({ nombre: 'SIUMAX', logo: logoEvicamp });
   const puedeInstalar = usePuedeInstalar();
   const hayInstaladorPC = useHayInstaladorPC();
 
-  // Pagar el plan de SiuHub (también por adelantado): solo lo ve el dueño, no los trabajadores
+  // Pagar el plan de SiuMax (también por adelantado): solo lo ve el dueño, no los trabajadores
   const suscripcion = useSuscripcion();
   const empleado = useEmpleado();
   const esDueno = empleado?.rol === 'Administrador' || tienePermiso(empleado?.permisos, 'sistema_acceso_total');
@@ -230,7 +230,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
         const { data, error } = await supabase.from('empresa_config').select('nombre_empresa, logo_url').limit(1).single();
         if (data && !error) {
           setEmpresaData({
-            nombre: data.nombre_empresa || 'SIUHUB',
+            nombre: data.nombre_empresa || 'SIUMAX',
             logo: data.logo_url || logoEvicamp
           });
         }
@@ -413,7 +413,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
           <button
             onClick={() => window.open(pagarUrl, '_blank', 'noopener')}
             title={!isOpen ? `Pagar plan${suscripcion?.proximo_pago ? ` (vence ${fechaPe(suscripcion.proximo_pago)})` : ''}` : undefined}
-            aria-label="Pagar plan de SiuHub"
+            aria-label="Pagar plan de SiuMax"
             className={`w-full text-left py-2 short:py-1.5 text-xs font-black uppercase tracking-wider transition-all border-2 rounded-none flex items-center cursor-pointer border-[var(--color-info)] text-[var(--color-info)] bg-[var(--color-info)]/5 hover:bg-[var(--color-info)] hover:text-white hover:shadow-[3px_3px_0_0_var(--color-ink)] hover:translate-x-[-2px] hover:translate-y-[-2px] focus:outline-none focus:bg-[var(--color-info)] focus:text-white focus:shadow-[3px_3px_0_0_var(--color-ink)] focus:translate-x-[-2px] focus:translate-y-[-2px] ${
               isOpen ? 'pl-3 pr-2 gap-3 justify-between' : 'justify-center px-0'
             }`}
@@ -438,7 +438,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
           <button
             onClick={instalarApp}
             title={!isOpen ? "Instalar app" : undefined}
-            aria-label="Instalar app SiuHub"
+            aria-label="Instalar app SiuMax"
             className={`w-full text-left py-2 short:py-1.5 text-xs font-black uppercase tracking-wider transition-all border-2 rounded-none flex items-center cursor-pointer border-[var(--color-accent)] text-[var(--color-accent)] bg-[var(--color-accent)]/5 hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] hover:shadow-[3px_3px_0_0_var(--color-ink)] hover:translate-x-[-2px] hover:translate-y-[-2px] focus:outline-none focus:bg-[var(--color-accent)] focus:text-[var(--color-ink)] focus:shadow-[3px_3px_0_0_var(--color-ink)] focus:translate-x-[-2px] focus:translate-y-[-2px] ${
               isOpen ? 'pl-3 pr-2 gap-3 justify-between' : 'justify-center px-0'
             }`}
@@ -453,7 +453,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
           <button
             onClick={descargarInstaladorPC}
             title={!isOpen ? "Descargar app para PC" : undefined}
-            aria-label="Descargar app SiuHub para PC"
+            aria-label="Descargar app SiuMax para PC"
             className={`w-full text-left py-2 short:py-1.5 text-xs font-black uppercase tracking-wider transition-all border-2 rounded-none flex items-center cursor-pointer border-[var(--color-ink)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white hover:shadow-[3px_3px_0_0_var(--color-accent)] hover:translate-x-[-2px] hover:translate-y-[-2px] focus:outline-none focus:bg-[var(--color-ink)] focus:text-white focus:shadow-[3px_3px_0_0_var(--color-accent)] focus:translate-x-[-2px] focus:translate-y-[-2px] ${
               isOpen ? 'pl-3 pr-2 gap-3 justify-between' : 'justify-center px-0'
             }`}

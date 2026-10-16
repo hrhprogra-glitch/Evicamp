@@ -1,6 +1,6 @@
 /**
  * src/utils/impresion.ts
- * Imprimir tickets: en la app de escritorio SiuHub va directo a la impresora elegida (sin ventana);
+ * Imprimir tickets: en la app de escritorio SiuMax va directo a la impresora elegida (sin ventana);
  * en el navegador o la app instalable (PWA) abre la ventana de impresión de siempre (react-to-print).
  */
 import type { RefObject } from 'react';

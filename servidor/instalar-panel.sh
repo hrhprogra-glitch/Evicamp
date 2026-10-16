@@ -1,23 +1,23 @@
 #!/bin/bash
-# Instala o actualiza el Panel de Control en panel.siuhub.duckdns.org. Se puede repetir sin problema.
+# Instala o actualiza el Panel de Control en panel.siumax.duckdns.org. Se puede repetir sin problema.
 # Los archivos del panel ya fueron copiados a /opt/siuhub/panel por ai-scripts/cliente.cjs.
 # La primera vez: PANEL_CLAVE='...' instalar-panel.sh   (después la clave no hace falta)
 set -euo pipefail
 source /opt/siuhub/siuhub-lib.sh
 
 HOST="panel.$DOMINIO_BASE"
-PANEL="$DIR_SIUHUB/panel"
+PANEL="$DIR_SIUMAX/panel"
 chmod 700 "$PANEL"
 
 if [ -n "${PANEL_CLAVE:-}" ]; then
   python3 "$PANEL/panel.py" crear-clave
 fi
-[ -f "$DIR_SIUHUB/panel-admin.json" ] || { echo "ERROR: falta la contraseña. Ejecuta con PANEL_CLAVE='...'." >&2; exit 1; }
+[ -f "$DIR_SIUMAX/panel-admin.json" ] || { echo "ERROR: falta la contraseña. Ejecuta con PANEL_CLAVE='...'." >&2; exit 1; }
 
 echo "== Servicio del panel"
 cat > /etc/systemd/system/siuhub-panel.service <<EOF
 [Unit]
-Description=SiuHub Panel de Control
+Description=SiuMax Panel de Control
 After=network.target postgresql.service
 
 [Service]
@@ -50,7 +50,7 @@ EOF
   certbot certonly --nginx -d "$HOST" --non-interactive --agree-tos --keep-until-expiring > /dev/null
 fi
 cat > "$ARCHIVO" <<EOF
-# SiuHub - Panel de Control (generado por instalar-panel.sh)
+# SiuMax - Panel de Control (generado por instalar-panel.sh)
 server {
     listen 443 ssl;
     server_name $HOST;
@@ -82,8 +82,8 @@ recargar_nginx
 
 echo "== Revisión diaria de cobros (6:00 a. m.): avisos y suspensión por falta de pago"
 cat > /etc/cron.d/siuhub-cobros <<EOF
-# SiuHub: avisos de vencimiento y suspensión automática (ver $PANEL/panel.py)
-0 6 * * * root /usr/bin/python3 $PANEL/panel.py revisar-cobros >> $DIR_SIUHUB/cobros.log 2>&1
+# SiuMax: avisos de vencimiento y suspensión automática (ver $PANEL/panel.py)
+0 6 * * * root /usr/bin/python3 $PANEL/panel.py revisar-cobros >> $DIR_SIUMAX/cobros.log 2>&1
 EOF
 chmod 644 /etc/cron.d/siuhub-cobros
 

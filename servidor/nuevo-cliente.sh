@@ -1,5 +1,5 @@
 #!/bin/bash
-# Crea un cliente nuevo de SiuHub en un solo paso.
+# Crea un cliente nuevo de SiuMax en un solo paso.
 # Uso: CLAVE_ADMIN='secreta' nuevo-cliente.sh <slug> "<Nombre del negocio>" <correo-admin>
 # La contraseña va por variable de entorno para que no quede en el historial de comandos.
 set -euo pipefail
@@ -31,7 +31,7 @@ deshacer() {
 }
 trap deshacer ERR
 
-echo "== 1/6 Base de datos $BASE (estructura copiada de SiuHub, sin datos)"
+echo "== 1/6 Base de datos $BASE (estructura copiada de SiuMax, sin datos)"
 sudo -u postgres createdb "$BASE"
 CREADO_BASE=1
 sudo -u postgres pg_dump --schema-only siuhub | sudo -u postgres psql -q -v ON_ERROR_STOP=1 -d "$BASE" > /dev/null
@@ -59,8 +59,8 @@ systemctl is-active --quiet "postgrest-cliente@$SLUG"
 echo "== 4/6 Link y certificado HTTPS ($HOST)"
 mkdir -p "$DIR_CLIENTES/$SLUG/descargas"
 # Instalador de PC genérico (pregunta el link al abrirse); se publica con build-escritorio.cjs generico
-if [ -f "$APP_COMPARTIDA/../descargas/SiuHub-Setup.exe" ]; then
-  cp "$APP_COMPARTIDA/../descargas/SiuHub-Setup.exe" "$DIR_CLIENTES/$SLUG/descargas/"
+if [ -f "$APP_COMPARTIDA/../descargas/SiuMax-Setup.exe" ]; then
+  cp "$APP_COMPARTIDA/../descargas/SiuMax-Setup.exe" "$DIR_CLIENTES/$SLUG/descargas/"
 fi
 escribir_nginx "$SLUG" "$PUERTO" http
 CREADO_NGINX=1
@@ -70,7 +70,7 @@ escribir_nginx "$SLUG" "$PUERTO" activo
 recargar_nginx
 
 echo "== 5/6 Registro"
-mkdir -p "$DIR_SIUHUB"
+mkdir -p "$DIR_SIUMAX"
 printf '%s\t%s\t%s\t%s\t%s\n' "$SLUG" "$NOMBRE" "$PUERTO" "ACTIVO" "$(date +%F)" >> "$REGISTRO"
 trap - ERR
 

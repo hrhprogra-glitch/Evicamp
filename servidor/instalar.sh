@@ -1,19 +1,19 @@
 #!/bin/bash
-# Prepara el VPS para manejar varios clientes de SiuHub. Se puede ejecutar varias veces sin problema.
+# Prepara el VPS para manejar varios clientes de SiuMax. Se puede ejecutar varias veces sin problema.
 # Los scripts ya fueron copiados a /opt/siuhub por ai-scripts/cliente.cjs antes de llamar a este.
 set -euo pipefail
 source /opt/siuhub/siuhub-lib.sh
 
 echo "== Carpetas"
-mkdir -p "$DIR_SIUHUB" "$APP_COMPARTIDA" "$DIR_CLIENTES" "$DIR_CONF_CLIENTES" /var/backups/siuhub
+mkdir -p "$DIR_SIUMAX" "$APP_COMPARTIDA" "$DIR_CLIENTES" "$DIR_CONF_CLIENTES" /var/backups/siuhub
 touch "$REGISTRO"
 chmod 700 /var/backups/siuhub
-chmod +x "$DIR_SIUHUB"/*.sh
+chmod +x "$DIR_SIUMAX"/*.sh
 
 echo "== Servicio de API por cliente (postgrest-cliente@<slug>)"
 cat > /etc/systemd/system/postgrest-cliente@.service <<'EOF'
 [Unit]
-Description=SiuHub API cliente %i (PostgREST)
+Description=SiuMax API cliente %i (PostgREST)
 After=postgresql.service
 
 [Service]
@@ -40,13 +40,13 @@ h1{margin:0 0 12px;font-size:18px;letter-spacing:.15em;text-transform:uppercase;
 p{margin:0;font-size:14px;line-height:1.6}
 </style></head>
 <body><div class="caja"><h1>Servicio suspendido</h1>
-<p>El acceso a este sistema está suspendido temporalmente. Tus datos están guardados y seguros.<br><br>Comunícate con SiuHub para reactivarlo.</p></div></body></html>
+<p>El acceso a este sistema está suspendido temporalmente. Tus datos están guardados y seguros.<br><br>Comunícate con SiuMax para reactivarlo.</p></div></body></html>
 EOF
 
 echo "== Backup diario a las 3:00 a. m."
 cat > /etc/cron.d/siuhub-backup <<EOF
-# SiuHub: copia diaria de todas las bases (ver $DIR_SIUHUB/backup.sh)
-0 3 * * * root $DIR_SIUHUB/backup.sh
+# SiuMax: copia diaria de todas las bases (ver $DIR_SIUMAX/backup.sh)
+0 3 * * * root $DIR_SIUMAX/backup.sh
 EOF
 chmod 644 /etc/cron.d/siuhub-backup
 

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>SiuHub · Panel de Control</title>
+<title>SiuMax · Panel de Control</title>
 <link rel="icon" type="image/png" href="/logo.png">
 <style>
 :root {
@@ -119,8 +119,8 @@ td a { color: var(--info); font-size: 12px; word-break: break-all; }
 <!-- ===== LOGIN ===== -->
 <section id="login" class="oculto">
   <form class="login-caja" id="form-login">
-    <img src="/logo.png" alt="SiuHub" class="login-logo">
-    <h1>SiuHub</h1>
+    <img src="/logo.png" alt="SiuMax" class="login-logo">
+    <h1>SiuMax</h1>
     <p>Panel de Control</p>
     <label for="clave">Contraseña</label>
     <input id="clave" type="password" autocomplete="current-password" required autofocus>
@@ -132,7 +132,7 @@ td a { color: var(--info); font-size: 12px; word-break: break-all; }
 <!-- ===== PANEL ===== -->
 <section id="panel" class="oculto">
   <header>
-    <div class="marca"><img src="/logo.png" alt="" class="logo"><h1>SiuHub<span>.</span> Panel</h1></div>
+    <div class="marca"><img src="/logo.png" alt="" class="logo"><h1>SiuMax<span>.</span> Panel</h1></div>
     <div class="vps" id="vps"></div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-sm" id="btn-recargar" title="Actualizar datos">↻ Actualizar</button>
@@ -395,7 +395,7 @@ function modalNuevo() {
         Usuario: <b>${esc(r.correo)}</b><br>Contraseña: <b>${esc(datos.clave)}</b><br>
         <button type="button" class="btn btn-sm" id="btn-copiar" style="margin-top:8px">Copiar datos para enviar</button></div>`;
       $('#btn-copiar').onclick = () => navigator.clipboard.writeText(
-        `¡Bienvenido a SiuHub!\n\nTu sistema: ${r.link}\nUsuario: ${r.correo}\nContraseña: ${datos.clave}\n\nTe recomendamos cambiar la contraseña al ingresar (Ajustes > Gestión de usuarios).`
+        `¡Bienvenido a SiuMax!\n\nTu sistema: ${r.link}\nUsuario: ${r.correo}\nContraseña: ${datos.clave}\n\nTe recomendamos cambiar la contraseña al ingresar (Ajustes > Gestión de usuarios).`
       ).then(() => toast('Datos copiados.'));
       b.classList.add('oculto');
       f.querySelector('[data-cerrar2]').textContent = 'Cerrar';
@@ -514,7 +514,7 @@ async function modalCliente(slug) {
         $('#bloque-reset').innerHTML = `<div class="resultado"><b>✅ Contraseña cambiada.</b><br>Usuario: <b>${esc(correo)}</b><br>Contraseña nueva: <b>${esc(clave)}</b><br>
           <button type="button" class="btn btn-sm" id="btn-copiar-reset" style="margin-top:8px">Copiar para enviar</button></div>`;
         $('#btn-copiar-reset').onclick = () => navigator.clipboard.writeText(
-          `Tu acceso a SiuHub:\n${d.link}\nUsuario: ${correo}\nContraseña nueva: ${clave}`).then(() => toast('Datos copiados.'));
+          `Tu acceso a SiuMax:\n${d.link}\nUsuario: ${correo}\nContraseña nueva: ${clave}`).then(() => toast('Datos copiados.'));
       } catch (ex) { errorModal(ex.message); }
     };
   });

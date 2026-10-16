@@ -1,5 +1,5 @@
 #!/bin/bash
-# Lista los clientes de SiuHub con su estado real (API activa y último backup).
+# Lista los clientes de SiuMax con su estado real (API activa y último backup).
 source /opt/siuhub/siuhub-lib.sh
 
 printf '%-18s %-26s %-6s %-11s %-11s %-9s %s\n' "LINK" "NEGOCIO" "PUERTO" "ESTADO" "ALTA" "API" "ÚLTIMO BACKUP"

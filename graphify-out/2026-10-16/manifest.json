@@ -1506,9 +1506,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/build-escritorio.cjs": {
-    "mtime": 1792080282.2913418,
-    "seen": 1792080418.9111674,
-    "ast_hash": "b03823dd5f6283bb067658df99996f7f",
+    "mtime": 1792164072.6270404,
+    "seen": 1792164175.7673934,
+    "ast_hash": "ec36312aa5116da9312d6f000bd82aef",
     "semantic_hash": ""
   },
   "ai-scripts/destinos.cjs": {
@@ -1518,15 +1518,15 @@
     "semantic_hash": ""
   },
   "escritorio/main.js": {
-    "mtime": 1792080269.2457135,
-    "seen": 1792080418.9112706,
-    "ast_hash": "bb4acafa3fcf3f7aadad9ab1b9568250",
+    "mtime": 1792164037.344347,
+    "seen": 1792164175.767497,
+    "ast_hash": "f1e76df75d768f8f5935ac9752c2f151",
     "semantic_hash": ""
   },
   "escritorio/package.json": {
-    "mtime": 1792080270.6506486,
-    "seen": 1792080418.9112713,
-    "ast_hash": "e9ddc58e254a0f9de0454ad00baf7b18",
+    "mtime": 1792164046.1851492,
+    "seen": 1792164175.767498,
+    "ast_hash": "ca9c5c0d02d3fd69886679d96fdf8edc",
     "semantic_hash": ""
   },
   "escritorio/preload.js": {
@@ -1602,9 +1602,9 @@
     "semantic_hash": ""
   },
   "servidor/panel/panel.py": {
-    "mtime": 1792084171.2867956,
-    "seen": 1792084271.164427,
-    "ast_hash": "d9d5fcadd967729529ef7112f7a9f844",
+    "mtime": 1792084976.5842652,
+    "seen": 1792164175.767508,
+    "ast_hash": "a7fb5303ffb0afc41a43dea267b66507",
     "semantic_hash": ""
   },
   "src/layout/AvisoSuscripcion.tsx": {
@@ -1620,9 +1620,9 @@
     "semantic_hash": ""
   },
   "servidor/panel/index.html": {
-    "mtime": 1792084193.953969,
-    "seen": 1792084271.1645923,
-    "ast_hash": "e4e4860f7de3152e0949e9637f13f1cc",
+    "mtime": 1792084980.3906815,
+    "seen": 1792164175.767624,
+    "ast_hash": "4af67b81dff77cbf17ebfa6505fe4b0f",
     "semantic_hash": ""
   }
 }

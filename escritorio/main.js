@@ -1,4 +1,4 @@
-// SiuHub para escritorio (PC de la caja).
+// SiuMax para escritorio (PC de la caja).
 // Abre el sistema del cliente desde el VPS en su propia ventana, así cada actualización
 // llega al instante sin reinstalar, y agrega lo que el navegador no puede: imprimir tickets
 // directo a la impresora elegida, sin la ventana de impresión.
@@ -9,7 +9,7 @@ const { autoUpdater } = require('electron-updater');
 
 const REVISAR_ACTUALIZACION_MS = 6 * 60 * 60 * 1000;
 
-const DOMINIO_CLIENTES = 'siuhub.duckdns.org';
+const DOMINIO_CLIENTES = 'siumax.duckdns.org';
 
 // Preferencias de la PC (link del negocio e impresora). Se guardan en la carpeta de datos del usuario.
 const archivoConfig = () => path.join(app.getPath('userData'), 'config.json');
@@ -71,7 +71,7 @@ const crearVentana = () => {
     minHeight: 600,
     show: false,
     backgroundColor: '#1E293B',
-    title: 'SiuHub',
+    title: 'SiuMax',
     icon: path.join(__dirname, 'icono.png'),
     autoHideMenuBar: true, // el menú aparece con la tecla Alt, para no quitar espacio
     webPreferences: {
@@ -139,7 +139,7 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
 
 ipcMain.handle('reintentar', () => cargarSistema());
 
-// Instalador genérico: el usuario escribe "minegocio" o el link completo; se comprueba que sea un sistema SiuHub
+// Instalador genérico: el usuario escribe "minegocio" o el link completo; se comprueba que sea un sistema SiuMax
 ipcMain.handle('configurar', async (_e, texto) => {
   let valor = String(texto || '').trim().toLowerCase();
   if (!valor) return { ok: false, motivo: 'Escribe el link de tu negocio.' };
@@ -155,9 +155,10 @@ ipcMain.handle('configurar', async (_e, texto) => {
   try {
     const r = await fetch(`${url.origin}/manifest.json`, { cache: 'no-store' });
     const manifiesto = r.ok ? await r.json() : null;
-    if (!manifiesto || manifiesto.name !== 'SiuHub') throw new Error('no es SiuHub');
+    // 'SiuHub' es el nombre anterior: sistemas que aún no se actualizaron (ej. Evicamp) siguen siendo válidos
+    if (!manifiesto || !['SiuMax', 'SiuHub'].includes(manifiesto.name)) throw new Error('no es SiuMax');
   } catch {
-    return { ok: false, motivo: `No se encontró un sistema SiuHub en ${url.origin}. Revisa el link y el internet.` };
+    return { ok: false, motivo: `No se encontró un sistema SiuMax en ${url.origin}. Revisa el link y el internet.` };
   }
   guardarConfig({ url: url.origin });
   cargarSistema();
@@ -182,8 +183,8 @@ const configurarActualizaciones = () => {
     avisoPendiente = true;
     const { response } = await dialog.showMessageBox(ventana, {
       type: 'info',
-      title: 'Actualización de SiuHub',
-      message: `Hay una nueva versión de SiuHub (${info.version}) lista para instalar.`,
+      title: 'Actualización de SiuMax',
+      message: `Hay una nueva versión de SiuMax (${info.version}) lista para instalar.`,
       detail: 'Se instala en unos segundos. Si estás atendiendo una venta, elige "Después": se instalará sola al cerrar el programa.',
       buttons: ['Reiniciar ahora', 'Después'],
       defaultId: 1,
@@ -194,13 +195,13 @@ const configurarActualizaciones = () => {
   });
 
   autoUpdater.on('update-not-available', () => {
-    if (revisionManual) dialog.showMessageBox(ventana, { type: 'info', title: 'SiuHub', message: `Ya tienes la última versión (${app.getVersion()}).` });
+    if (revisionManual) dialog.showMessageBox(ventana, { type: 'info', title: 'SiuMax', message: `Ya tienes la última versión (${app.getVersion()}).` });
     revisionManual = false;
   });
 
   autoUpdater.on('error', (err) => {
     console.error('Actualización:', err && err.message);
-    if (revisionManual) dialog.showMessageBox(ventana, { type: 'warning', title: 'SiuHub', message: 'No se pudo buscar actualizaciones. Revisa el internet.' });
+    if (revisionManual) dialog.showMessageBox(ventana, { type: 'warning', title: 'SiuMax', message: 'No se pudo buscar actualizaciones. Revisa el internet.' });
     revisionManual = false;
   });
 
@@ -227,7 +228,7 @@ const construirMenu = async () => {
 
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     {
-      label: 'SiuHub',
+      label: 'SiuMax',
       submenu: [
         { label: 'Recargar', accelerator: 'F5', click: () => cargarSistema() },
         { label: 'Pantalla completa', accelerator: 'F11', click: () => ventana.setFullScreen(!ventana.isFullScreen()) },
@@ -262,11 +263,11 @@ const construirMenu = async () => {
       label: 'Ayuda',
       submenu: [
         {
-          label: 'Acerca de SiuHub',
+          label: 'Acerca de SiuMax',
           click: () => dialog.showMessageBox(ventana, {
             type: 'info',
-            title: 'SiuHub',
-            message: `SiuHub ${app.getVersion()}`,
+            title: 'SiuMax',
+            message: `SiuMax ${app.getVersion()}`,
             detail: `Conectado a: ${urlNegocio() || '(sin configurar)'}\nImpresora: ${leerConfig().impresora || 'predeterminada de Windows'}`,
           }),
         },

@@ -1,4 +1,4 @@
-// Arma el instalador de la app de escritorio (SiuHub-Setup.exe) y lo publica.
+// Arma el instalador de la app de escritorio (SiuMax-Setup.exe) y lo publica.
 // Uso:
 //   node ai-scripts/build-escritorio.cjs generico                  -> instalador para todos (pregunta el link al abrirse)
 //   node ai-scripts/build-escritorio.cjs generico --nueva-version  -> ACTUALIZACIÓN: sube la versión y todas las
@@ -7,7 +7,7 @@
 //   node ai-scripts/build-escritorio.cjs siuhub --local            -> solo arma (no sube), para probar
 //
 // El genérico publica además el canal de actualizaciones (latest.yml) en
-// https://siuhub.duckdns.org/actualizaciones/, que revisan todas las apps instaladas (también las de
+// https://siumax.duckdns.org/actualizaciones/, que revisan todas las apps instaladas (también las de
 // instaladores fijos: conservan su link al actualizarse).
 const fs = require('fs');
 const path = require('path');
@@ -25,7 +25,7 @@ if (!destino || (!destino.url && !destino.generico)) {
 
 const carpeta = path.join(__dirname, '..', 'escritorio');
 const salida = path.join(carpeta, 'salida');
-const instalador = path.join(salida, 'SiuHub-Setup.exe');
+const instalador = path.join(salida, 'SiuMax-Setup.exe');
 const CANAL_ACTUALIZACIONES = '/var/www/siuhub/html/actualizaciones';
 
 // 0. Nueva versión: las apps solo se actualizan si ven un número MAYOR (1.1.0 -> 1.1.1)
@@ -67,20 +67,20 @@ if (soloLocal) process.exit(0);
     const remoto = `${destino.remoteDir}/descargas`;
     await ssh.execCommand(`mkdir -p ${remoto}`);
     console.log('Subiendo instalador...');
-    await ssh.putFile(instalador, `${remoto}/SiuHub-Setup.exe`);
+    await ssh.putFile(instalador, `${remoto}/SiuMax-Setup.exe`);
     await ssh.execCommand(`chown -R www-data:www-data ${remoto}`);
-    console.log(destino.generico ? `Publicado: ${remoto}/SiuHub-Setup.exe` : `Publicado: ${destino.url}/descargas/SiuHub-Setup.exe`);
+    console.log(destino.generico ? `Publicado: ${remoto}/SiuMax-Setup.exe` : `Publicado: ${destino.url}/descargas/SiuMax-Setup.exe`);
 
     if (destino.generico) {
       // Los clientes creados desde el panel descargan siempre el genérico más reciente
-      await ssh.execCommand(`for d in /var/www/clientes/*/descargas; do [ -d "$d" ] && cp ${remoto}/SiuHub-Setup.exe "$d/"; done`);
+      await ssh.execCommand(`for d in /var/www/clientes/*/descargas; do [ -d "$d" ] && cp ${remoto}/SiuMax-Setup.exe "$d/"; done`);
 
       // Canal de actualizaciones: primero el instalador y su mapa, al final latest.yml
       // (así ninguna app ve la versión nueva antes de que el archivo esté completo)
       console.log('Publicando la actualización automática...');
       await ssh.execCommand(`mkdir -p ${CANAL_ACTUALIZACIONES}`);
-      await ssh.putFile(instalador, `${CANAL_ACTUALIZACIONES}/SiuHub-Setup.exe`);
-      await ssh.putFile(`${instalador}.blockmap`, `${CANAL_ACTUALIZACIONES}/SiuHub-Setup.exe.blockmap`);
+      await ssh.putFile(instalador, `${CANAL_ACTUALIZACIONES}/SiuMax-Setup.exe`);
+      await ssh.putFile(`${instalador}.blockmap`, `${CANAL_ACTUALIZACIONES}/SiuMax-Setup.exe.blockmap`);
       await ssh.putFile(path.join(salida, 'latest.yml'), `${CANAL_ACTUALIZACIONES}/latest.yml`);
       await ssh.execCommand(`chown -R www-data:www-data ${CANAL_ACTUALIZACIONES}`);
       console.log(`Actualización ${paquete.version} publicada: las apps instaladas la descargarán solas.`);
