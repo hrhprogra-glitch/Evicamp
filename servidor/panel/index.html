@@ -259,7 +259,7 @@ function pintar() {
   $('#tabla-clientes').innerHTML = !clientes.length ? '<div class="vacio">Aún no tienes clientes. Crea el primero con "+ Nuevo cliente".</div>' : `
     <table><thead><tr><th>Negocio</th><th>Servicio</th><th>Plan</th><th>Próximo pago</th><th>Pago</th><th>Acciones</th></tr></thead><tbody>
     ${clientes.map((c) => `<tr>
-      <td><button type="button" class="link-negocio" data-accion="detalle" data-slug="${esc(c.slug)}" title="Ver pagos y usuarios">${esc(c.nombre)}</button><br>${c.link ? `<a href="${esc(c.link)}" target="_blank" rel="noopener">${esc(c.link.replace('https://', ''))}</a>` : ''}</td>
+      <td><button type="button" class="link-negocio" data-accion="detalle" data-slug="${esc(c.slug)}" title="Ver datos y usuarios">${esc(c.nombre)}</button><br>${c.link ? `<a href="${esc(c.link)}" target="_blank" rel="noopener">${esc(c.link.replace('https://', ''))}</a>` : ''}</td>
       <td data-t="Servicio">${chipServicio(c)}</td>
       <td data-t="Plan">${c.plan ? `${esc(c.plan.tipo)} · ${soles(c.plan.precio)}` : '-'}</td>
       <td data-t="Próximo pago">${c.plan ? fechaPe(c.plan.proximo_pago) : '-'}</td>
@@ -300,7 +300,7 @@ $('#tabla-clientes').addEventListener('click', (e) => {
   const b = e.target.closest('button[data-accion]');
   if (!b || b.disabled) return;
   const c = estado.clientes.find((x) => x.slug === b.dataset.slug);
-  if (b.dataset.accion === 'detalle') modalCliente(c.slug);
+  if (b.dataset.accion === 'detalle') modalCliente(c.slug, 'negocio');
   if (b.dataset.accion === 'pago') modalPago(c);
   if (b.dataset.accion === 'plan') modalPlan(c);
   if (b.dataset.accion === 'suspender') confirmarEstado(c, 'suspender');
@@ -310,11 +310,11 @@ $('#tabla-clientes').addEventListener('click', (e) => {
 // Toda la fila del negocio abre su historial (clic, Enter o Espacio)
 $('#tabla-pagos').addEventListener('click', (e) => {
   const fila = e.target.closest('[data-detalle]');
-  if (fila) modalCliente(fila.dataset.detalle);
+  if (fila) modalCliente(fila.dataset.detalle, 'pagos');
 });
 $('#tabla-pagos').addEventListener('keydown', (e) => {
   const fila = e.target.closest('[data-detalle]');
-  if (fila && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); modalCliente(fila.dataset.detalle); }
+  if (fila && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); modalCliente(fila.dataset.detalle, 'pagos'); }
 });
 
 $('#btn-nuevo').onclick = () => modalNuevo();
@@ -449,8 +449,9 @@ function modalPago(c) {
   };
 }
 
-// ===== DETALLE DE UN CLIENTE: datos, pagos y usuarios =====
-async function modalCliente(slug) {
+// ===== DETALLE DE UN CLIENTE =====
+// 'negocio' (clic en la tabla de clientes): datos y usuarios · 'pagos' (clic en pagos por negocio): su historial de pagos
+async function modalCliente(slug, vista) {
   const f = abrirModal('Cargando...', '<div class="vacio">Cargando datos del cliente...</div>', '<button type="button" class="btn" data-cerrar2>Cerrar</button>');
   $('#modales .modal').classList.add('modal-ancho');
   f.querySelector('[data-cerrar2]').onclick = cerrarModal;
@@ -460,28 +461,36 @@ async function modalCliente(slug) {
   catch (ex) { $('#modales .modal-cuerpo').innerHTML = `<div class="error">${esc(ex.message)}</div>`; return; }
 
   const [txtPago, clsPago] = ETIQUETA_PAGO[d.pago.estado];
+  const chipEstadoPago = `<span class="chip ${clsPago}">${txtPago}</span>`;
+
+  if (vista === 'pagos') {
+    $('#modales .modal-cab h3').textContent = `Pagos · ${d.nombre}`;
+    $('#modales .modal-cuerpo').innerHTML = `
+      <div class="sub"><span>${d.plan ? `Plan ${esc(d.plan.tipo)} · ${soles(d.plan.precio)} · próximo pago ${fechaPe(d.plan.proximo_pago)} ${chipEstadoPago}` : 'Sin plan'}</span></div>
+      <div class="sub"><span>Pagos (${d.pagos.length})</span><span>Total pagado: <b>${soles(d.total_pagado)}</b></span></div>
+      ${!d.pagos.length ? '<div class="vacio" style="border:2px solid var(--border)">Aún no tiene pagos registrados.</div>' : `
+        <table><thead><tr><th>Fecha</th><th>Monto</th><th>Método</th><th>Cubre hasta</th><th>Nota</th></tr></thead><tbody>
+        ${d.pagos.map((p) => `<tr><td data-t="Fecha">${fechaPe(p.fecha)}</td><td data-t="Monto"><b>${soles(p.monto)}</b></td>
+          <td data-t="Método"><span class="chip c-info">${esc(p.metodo)}</span></td><td data-t="Cubre hasta">${fechaPe(p.periodo_hasta)}</td>
+          <td data-t="Nota">${esc(p.nota) || '-'}</td></tr>`).join('')}
+        </tbody></table>`}`;
+    return;
+  }
+
   $('#modales .modal-cab h3').textContent = d.nombre;
   $('#modales .modal-cuerpo').innerHTML = `
     <div class="sub"><span>Datos</span></div>
     <div class="datos">
-      <div class="dato"><small>Link</small><b><a href="${esc(d.link)}" target="_blank" rel="noopener">${esc(d.link.replace('https://', ''))}</a></b></div>
+      <div class="dato"><small>Link</small><b>${d.link ? `<a href="${esc(d.link)}" target="_blank" rel="noopener">${esc(d.link.replace('https://', ''))}</a>` : '-'}</b></div>
       <div class="dato"><small>Servicio</small><b>${chipServicio(d)}</b></div>
       <div class="dato"><small>Cliente desde</small><b>${fechaPe(d.alta)}</b></div>
       <div class="dato"><small>Plan</small><b>${d.plan ? `${esc(d.plan.tipo)} · ${soles(d.plan.precio)}` : 'Sin plan'}</b></div>
-      <div class="dato"><small>Próximo pago</small><b>${d.plan ? fechaPe(d.plan.proximo_pago) : '-'} <span class="chip ${clsPago}">${txtPago}</span></b></div>
+      <div class="dato"><small>Próximo pago</small><b>${d.plan ? fechaPe(d.plan.proximo_pago) : '-'} ${chipEstadoPago}</b></div>
       <div class="dato"><small>WhatsApp</small><b>${esc(d.plan && d.plan.telefono) || '-'}</b></div>
     </div>
     ${d.plan && d.plan.notas ? `<div class="ayuda" style="margin-top:8px">Notas: ${esc(d.plan.notas)}</div>` : ''}
 
-    <div class="sub"><span>Pagos (${d.pagos.length})</span><span>Total pagado: <b>${soles(d.total_pagado)}</b></span></div>
-    ${!d.pagos.length ? '<div class="vacio" style="border:2px solid var(--border)">Aún no tiene pagos registrados.</div>' : `
-      <table><thead><tr><th>Fecha</th><th>Monto</th><th>Método</th><th>Cubre hasta</th><th>Nota</th></tr></thead><tbody>
-      ${d.pagos.map((p) => `<tr><td data-t="Fecha">${fechaPe(p.fecha)}</td><td data-t="Monto"><b>${soles(p.monto)}</b></td>
-        <td data-t="Método"><span class="chip c-info">${esc(p.metodo)}</span></td><td data-t="Cubre hasta">${fechaPe(p.periodo_hasta)}</td>
-        <td data-t="Nota">${esc(p.nota) || '-'}</td></tr>`).join('')}
-      </tbody></table>`}
-
-    <div class="sub"><span>Usuarios (${d.usuarios.length})</span></div>
+    ${d.externo ? '' : `<div class="sub"><span>Usuarios (${d.usuarios.length})</span></div>
     <div class="ayuda" style="margin:-4px 0 8px">El dueño crea y maneja a sus trabajadores desde su sistema (Ajustes > Gestión de usuarios). Las contraseñas están encriptadas y no se pueden ver; aquí puedes poner una nueva si alguien la olvidó.</div>
     <table><thead><tr><th>Nombre</th><th>Usuario (correo)</th><th>Rol</th><th>Estado</th><th>Último ingreso</th><th></th></tr></thead><tbody>
     ${d.usuarios.map((u) => `<tr>
@@ -490,7 +499,7 @@ async function modalCliente(slug) {
       <td data-t="Estado"><span class="chip ${u.estado === 'ACTIVO' ? 'c-ok' : 'c-gris'}">${esc(u.estado)}</span></td>
       <td data-t="Último ingreso">${u.ultimo_uso ? esc(u.ultimo_uso.split(' ')[0].split('-').reverse().join('/') + ' ' + u.ultimo_uso.split(' ')[1]) : 'Nunca'}</td>
       <td><button type="button" class="btn btn-sm" data-reset="${esc(u.email)}">Restablecer contraseña</button></td></tr>`).join('')}
-    </tbody></table>
+    </tbody></table>`}
     <div id="bloque-reset"></div>
     <div id="modal-error" class="error oculto"></div>`;
 

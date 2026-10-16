@@ -271,10 +271,15 @@ def cliente_registrado(slug):
 
 
 def detalle_cliente(slug):
-    reg = cliente_registrado(slug)
     datos = leer_datos()
     plan = datos["planes"].get(slug)
     pagos = sorted((p for p in datos["pagos"] if p["slug"] == slug), key=lambda p: p["fecha"], reverse=True)
+    if plan and RE_SLUG.match(slug or "") and not any(c["slug"] == slug for c in leer_registro()):
+        # Cliente externo (ej. Evicamp): solo su plan y sus pagos; sus usuarios no están en una base cli_
+        return {"slug": slug, "nombre": plan.get("nombre", slug), "link": plan.get("link", ""), "externo": True,
+                "estado": "EXTERNO", "alta": "", "api": None, "plan": plan, "pago": estado_pago(plan), "pagos": pagos,
+                "total_pagado": round(sum(p["monto"] for p in pagos), 2), "usuarios": []}
+    reg = cliente_registrado(slug)
     usuarios = json.loads(psql_cliente(slug, """
         SELECT coalesce(json_agg(json_build_object(
                  'nombre', e.nombre, 'email', e.email, 'rol', e.rol, 'estado', e.estado,
