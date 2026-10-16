@@ -147,7 +147,6 @@ td a { color: var(--info); font-size: 12px; word-break: break-all; }
       <div class="seccion-cab">
         <h2>Clientes</h2>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn" id="btn-promo" title="Promoción para todos: pagar 12 meses juntos">⭐ Promoción</button>
           <button class="btn btn-ok" id="btn-nuevo">+ Nuevo cliente</button>
         </div>
       </div>
@@ -249,10 +248,6 @@ function pintar() {
     <span>CPU <b>${vps.cpu_carga}</b> / ${vps.cpus}</span><span>Encendido <b>${vps.dias_encendido} d</b></span>
     <span>Mercado Pago <b style="color:${config.mercadopago === 'produccion' ? 'var(--accent)' : config.mercadopago ? 'var(--warning)' : '#94A3B8'}">${config.mercadopago === 'produccion' ? 'COBRANDO' : config.mercadopago ? 'MODO PRUEBA' : 'NO CONFIGURADO'}</b></span>`;
 
-  const promo = config.promo || {};
-  $('#btn-promo').textContent = !promo.activa ? '⭐ Promoción: apagada'
-    : promo.modo === 'porcentaje' ? `⭐ Promo: 12 meses -${promo.porcentaje}%` : `⭐ Promo: 12 meses ${soles(promo.precio)}`;
-
   const activos = clientes.filter((c) => c.estado === 'ACTIVO' || c.externo).length;
   $('#tarjetas').innerHTML = `
     <div class="tarjeta"><small>Clientes activos</small><strong>${activos} / ${clientes.length}</strong></div>
@@ -266,7 +261,7 @@ function pintar() {
     ${clientes.map((c) => `<tr class="fila-clic" data-fila="${esc(c.slug)}" title="Ver datos y usuarios">
       <td><button type="button" class="link-negocio" data-accion="detalle" data-slug="${esc(c.slug)}" title="Ver datos y usuarios">${esc(c.nombre)}</button><br>${c.link ? `<a href="${esc(c.link)}" target="_blank" rel="noopener">${esc(c.link.replace('https://', ''))}</a>` : ''}</td>
       <td data-t="Servicio">${chipServicio(c)}</td>
-      <td data-t="Plan">${c.plan ? `${esc(c.plan.tipo)} · ${soles(c.plan.precio)}` : '-'}</td>
+      <td data-t="Plan">${c.plan ? textoPlan(c.plan) : '-'}</td>
       <td data-t="Próximo pago">${c.plan ? fechaPe(c.plan.proximo_pago) : '-'}</td>
       <td data-t="Pago">${chipPago(c)}</td>
       <td><div class="acciones">
@@ -335,7 +330,6 @@ $('#tabla-pagos').addEventListener('keydown', (e) => {
 });
 
 $('#btn-nuevo').onclick = () => modalNuevo();
-$('#btn-promo').onclick = () => modalPromo();
 $('#btn-backup').onclick = async (e) => {
   const b = e.target; b.disabled = true; b.textContent = 'Haciendo backup...';
   try { await api('/api/backup', {}); toast('Backup completo de todas las bases.'); cargar(); }
@@ -359,13 +353,31 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModa
 
 function errorModal(msg) { const el = $('#modal-error'); el.textContent = msg; el.classList.remove('oculto'); }
 
+// Texto corto del plan: "S/ 30.00 /mes · año -20%"
+const textoPlan = (p) => {
+  const mensual = p.precio / ({ MENSUAL: 1, TRIMESTRAL: 3, SEMESTRAL: 6, ANUAL: 12 }[p.tipo] || 1);
+  return `${soles(mensual)} /mes${p.descuento_anual > 0 ? ` · año -${p.descuento_anual}%` : ''}`;
+};
+
+// Precio por año calculado en vivo: mes x 12 y, si hay descuento, el precio final
+function verPrecioAnual(form) {
+  const mes = Number(form.precio.value) || 0, desc = Number(form.descuento_anual.value) || 0;
+  const anio = mes * 12, final = Math.round(anio * (1 - desc / 100) * 100) / 100;
+  form.querySelector('[data-anual]').innerHTML = desc > 0
+    ? `Precio por año: <s>${soles(anio)}</s> <b>${soles(final)}</b> (ahorra ${soles(anio - final)})`
+    : `Precio por año: <b>${soles(anio)}</b> (12 × ${soles(mes)})`;
+}
+
 const camposPlan = (p = {}) => `
+  <input type="hidden" name="tipo" value="MENSUAL">
   <div class="fila">
-    <div><label>Plan</label><select name="tipo">
-      ${['MENSUAL', 'TRIMESTRAL', 'SEMESTRAL', 'ANUAL'].map((t) => `<option ${p.tipo === t ? 'selected' : ''}>${t}</option>`).join('')}
-    </select></div>
-    <div><label>Precio (S/)</label><input name="precio" type="number" step="0.01" min="0" value="${esc(p.precio ?? 50)}" required></div>
+    <div><label>Precio por mes (S/)</label><input name="precio" type="number" step="0.01" min="0"
+      value="${esc(p.precio != null ? p.precio / ({ MENSUAL: 1, TRIMESTRAL: 3, SEMESTRAL: 6, ANUAL: 12 }[p.tipo] || 1) : 50)}" required oninput="verPrecioAnual(this.form)"></div>
+    <div><label>Descuento si paga el año (%)</label><input name="descuento_anual" type="number" step="0.01" min="0" max="99"
+      value="${esc(p.descuento_anual || 0)}" oninput="verPrecioAnual(this.form)"></div>
   </div>
+  <div class="ayuda" data-anual></div>
+  <div class="ayuda">Al pagar, el cliente elige <b>1 mes</b> o <b>1 año</b>. Pon 0% si no quieres descuento.</div>
   <label>Próximo pago (vencimiento)</label><input name="proximo_pago" type="date" value="${esc(p.proximo_pago || sumarMesIso(1))}" required>
   <div class="ayuda">Desde ${estado.config.dias_aviso} días antes el cliente ve un aviso en su sistema. Si pasan ${estado.config.dias_gracia} días vencido sin pagar, se suspende solo.</div>
   <div class="fila">
@@ -404,6 +416,7 @@ function modalNuevo() {
     $('#vista-link').textContent = `Quedará en: https://${slug.value || '______'}.${estado.config.dominio}`;
   });
   f.con_plan.onchange = () => $('#bloque-plan').classList.toggle('oculto', !f.con_plan.checked);
+  verPrecioAnual(f);
   f.querySelector('[data-cerrar2]').onclick = cerrarModal;
 
   f.onsubmit = async (e) => {
@@ -411,7 +424,7 @@ function modalNuevo() {
     const b = $('#btn-crear'); b.disabled = true; b.textContent = 'Creando (1 a 2 min)...';
     $('#modal-error').classList.add('oculto');
     const datos = { nombre: f.nombre.value, slug: f.slug.value, correo: f.correo.value, clave: f.clave.value };
-    if (f.con_plan.checked) datos.plan = { tipo: f.tipo.value, precio: f.precio.value, proximo_pago: f.proximo_pago.value, telefono: f.telefono.value, notas: f.notas.value };
+    if (f.con_plan.checked) datos.plan = { tipo: f.tipo.value, precio: f.precio.value, descuento_anual: f.descuento_anual.value, proximo_pago: f.proximo_pago.value, telefono: f.telefono.value, notas: f.notas.value };
     try {
       const r = await api('/api/clientes/nuevo', datos);
       $('#modal-resultado').innerHTML = `<div class="resultado"><b>✅ Cliente creado.</b><br>
@@ -435,10 +448,11 @@ function modalPlan(c) {
       <label>Link</label><input name="link" placeholder="https://evicamp.duckdns.org">` : ''}
     ${camposPlan(c && c.plan ? c.plan : {})}`,
     '<button type="button" class="btn" data-cerrar2>Cancelar</button><button class="btn btn-ok">Guardar plan</button>');
+  verPrecioAnual(f);
   f.querySelector('[data-cerrar2]').onclick = cerrarModal;
   f.onsubmit = async (e) => {
     e.preventDefault();
-    const datos = { slug: externo ? f.slug.value.toLowerCase() : c.slug, tipo: f.tipo.value, precio: f.precio.value,
+    const datos = { slug: externo ? f.slug.value.toLowerCase() : c.slug, tipo: f.tipo.value, precio: f.precio.value, descuento_anual: f.descuento_anual.value,
       proximo_pago: f.proximo_pago.value, telefono: f.telefono.value, notas: f.notas.value };
     if (externo) Object.assign(datos, { externo: true, nombre: f.nombre.value, link: f.link.value });
     else if (c.externo) Object.assign(datos, { externo: true, nombre: c.nombre, link: c.link });
@@ -447,13 +461,12 @@ function modalPlan(c) {
   };
 }
 
-// Igual que en el servidor: precio mensual x meses; 12 meses con la promoción si sale más barata
+// Igual que en el servidor: precio por mes x meses; el año (12 meses) con el descuento anual del plan
 const MESES_PLAN = { MENSUAL: 1, TRIMESTRAL: 3, SEMESTRAL: 6, ANUAL: 12 };
-function precioMeses(plan, meses, promo = estado.config.promo || {}) {
+function precioMeses(plan, meses) {
   const total = Math.round(plan.precio / (MESES_PLAN[plan.tipo] || 1) * meses * 100) / 100;
-  if (meses !== 12 || !promo.activa) return total;
-  const conPromo = promo.modo === 'porcentaje' ? Math.round(total * (1 - promo.porcentaje / 100) * 100) / 100 : promo.precio;
-  return conPromo > 0 && conPromo < total ? conPromo : total;
+  const desc = Number(plan.descuento_anual) || 0;
+  return meses === 12 && desc > 0 ? Math.round(total * (1 - desc / 100) * 100) / 100 : total;
 }
 const sumarMeses = (iso, meses) => {
   const [a, m, d] = iso.split('-').map(Number);
@@ -462,59 +475,13 @@ const sumarMeses = (iso, meses) => {
   return `${r.getFullYear()}-${String(r.getMonth() + 1).padStart(2, '0')}-${String(r.getDate()).padStart(2, '0')}`;
 };
 
-function modalPromo() {
-  const p = estado.config.promo || {};
-  const conPlan = estado.clientes.filter((c) => c.plan && c.plan.precio > 0);
-  const f = abrirModal('Promoción para todos', `
-    <div class="ayuda">Al pagar, tus clientes eligen de 1 a 12 meses. La promoción se aplica al pagar <b>12 meses juntos</b>
-      (solo si les sale más barato que 12 meses sueltos).</div>
-    <label style="display:flex;align-items:center;gap:8px;margin-top:16px;color:var(--ink)"><input type="checkbox" name="activa" ${p.activa ? 'checked' : ''} style="width:auto"> Promoción activa</label>
-    <label>Tipo de promoción</label>
-    <select name="modo">
-      <option value="fijo" ${p.modo !== 'porcentaje' ? 'selected' : ''}>Monto total de los 12 meses (igual para todos)</option>
-      <option value="porcentaje" ${p.modo === 'porcentaje' ? 'selected' : ''}>Porcentaje de descuento (según el precio de cada cliente)</option>
-    </select>
-    <div id="campo-fijo"><label>Monto total de los 12 meses (S/)</label><input name="precio" type="number" step="0.01" min="0" value="${esc(p.precio || '')}" placeholder="350"></div>
-    <div id="campo-porcentaje"><label>Descuento (%)</label><input name="porcentaje" type="number" step="0.01" min="0" max="99" value="${esc(p.porcentaje || '')}" placeholder="10"></div>
-    <div class="sub"><span>Así quedaría para tus clientes</span></div>
-    <div id="vista-promo"></div>`,
-    '<button type="button" class="btn" data-cerrar2>Cancelar</button><button class="btn btn-ok">Guardar</button>');
-  f.querySelector('[data-cerrar2]').onclick = cerrarModal;
-  const vista = () => {
-    const porcentaje = f.modo.value === 'porcentaje';
-    $('#campo-fijo').classList.toggle('oculto', porcentaje);
-    $('#campo-porcentaje').classList.toggle('oculto', !porcentaje);
-    const promo = { activa: true, modo: f.modo.value, precio: Number(f.precio.value) || 0, porcentaje: Number(f.porcentaje.value) || 0 };
-    $('#vista-promo').innerHTML = !conPlan.length ? '<div class="ayuda">Aún no tienes clientes con plan.</div>' : `
-      <table><thead><tr><th>Cliente</th><th>Mes</th><th>12 meses sueltos</th><th>Con promoción</th></tr></thead><tbody>
-      ${conPlan.map((c) => {
-        const normal = precioMeses(c.plan, 12, { activa: false });
-        const promoTotal = precioMeses(c.plan, 12, promo);
-        const aplica = promoTotal < normal;
-        return `<tr><td data-t="Cliente"><b>${esc(c.nombre)}</b></td><td data-t="Mes">${soles(precioMeses(c.plan, 1, { activa: false }))}</td>
-          <td data-t="12 meses">${soles(normal)}</td>
-          <td data-t="Con promoción">${aplica ? `<b>${soles(promoTotal)}</b> <span class="chip c-ok">ahorra ${soles(normal - promoTotal)}</span>`
-            : '<span class="chip c-gris">No aplica (no es más barato)</span>'}</td></tr>`;
-      }).join('')}</tbody></table>`;
-  };
-  [f.modo, f.precio, f.porcentaje].forEach((el) => el.addEventListener('input', vista));
-  vista();
-  f.onsubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await api('/api/promo', { activa: f.activa.checked, modo: f.modo.value, precio: f.precio.value, porcentaje: f.porcentaje.value });
-      cerrarModal(); toast('Promoción guardada.'); cargar();
-    } catch (ex) { errorModal(ex.message); }
-  };
-}
-
 function modalPago(c) {
-  const mesesPlan = MESES_PLAN[c.plan.tipo] || 1;
+  const mesesPlan = (MESES_PLAN[c.plan.tipo] || 1) === 12 ? 12 : 1;
   const f = abrirModal(`Registrar pago · ${esc(c.nombre)}`, `
     <div class="ayuda">Plan ${esc(c.plan.tipo)} · vence el <b>${fechaPe(c.plan.proximo_pago)}</b>. Al registrar el pago, el vencimiento avanza los meses pagados${c.estado === 'SUSPENDIDO' ? ' y el servicio se reactiva solo' : ''}.</div>
     <div class="fila">
-      <div><label>Meses que paga</label><select name="meses">${Array.from({ length: 12 }, (_, i) => i + 1)
-        .map((m) => `<option value="${m}" ${m === mesesPlan ? 'selected' : ''}>${m} ${m === 1 ? 'mes' : 'meses'}</option>`).join('')}</select></div>
+      <div><label>Paga</label><select name="meses">${[[1, '1 mes'], [12, '1 año']]
+        .map(([m, t]) => `<option value="${m}" ${m === mesesPlan ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
       <div><label>Monto (S/)</label><input name="monto" type="number" step="0.01" min="0.01" value="${esc(precioMeses(c.plan, mesesPlan))}" required></div>
     </div>
     <div class="ayuda" id="cubre-hasta"></div>
@@ -559,7 +526,7 @@ async function modalCliente(slug, vista) {
   if (vista === 'pagos') {
     $('#modales .modal-cab h3').textContent = `Pagos · ${d.nombre}`;
     $('#modales .modal-cuerpo').innerHTML = `
-      <div class="sub"><span>${d.plan ? `Plan ${esc(d.plan.tipo)} · ${soles(d.plan.precio)} · próximo pago ${fechaPe(d.plan.proximo_pago)} ${chipEstadoPago}` : 'Sin plan'}</span></div>
+      <div class="sub"><span>${d.plan ? `Plan ${textoPlan(d.plan)} · próximo pago ${fechaPe(d.plan.proximo_pago)} ${chipEstadoPago}` : 'Sin plan'}</span></div>
       <div class="sub"><span>Pagos (${d.pagos.length})</span><span>Total pagado: <b>${soles(d.total_pagado)}</b></span></div>
       ${!d.pagos.length ? '<div class="vacio" style="border:2px solid var(--border)">Aún no tiene pagos registrados.</div>' : `
         <table><thead><tr><th>Fecha</th><th>Monto</th><th>Meses</th><th>Método</th><th>Cubre hasta</th><th>Nota</th></tr></thead><tbody>
@@ -578,7 +545,7 @@ async function modalCliente(slug, vista) {
       <div class="dato"><small>Link</small><b>${d.link ? `<a href="${esc(d.link)}" target="_blank" rel="noopener">${esc(d.link.replace('https://', ''))}</a>` : '-'}</b></div>
       <div class="dato"><small>Servicio</small><b>${chipServicio(d)}</b></div>
       <div class="dato"><small>Cliente desde</small><b>${fechaPe(d.alta)}</b></div>
-      <div class="dato"><small>Plan</small><b>${d.plan ? `${esc(d.plan.tipo)} · ${soles(d.plan.precio)}` : 'Sin plan'}</b></div>
+      <div class="dato"><small>Plan</small><b>${d.plan ? textoPlan(d.plan) : 'Sin plan'}</b></div>
       <div class="dato"><small>Próximo pago</small><b>${d.plan ? fechaPe(d.plan.proximo_pago) : '-'} ${chipEstadoPago}</b></div>
       <div class="dato"><small>WhatsApp</small><b>${esc(d.plan && d.plan.telefono) || '-'}</b></div>
     </div>

@@ -324,7 +324,7 @@ def resumen():
                    "vencidos": sum(1 for c in clientes if c["pago"]["estado"] == "VENCIDO"),
                    "por_vencer": sum(1 for c in clientes if c["pago"]["estado"] == "POR_VENCER")},
         "config": {"dias_aviso": DIAS_AVISO, "dias_gracia": DIAS_GRACIA, "dominio": DOMINIO_BASE,
-                   "mercadopago": (mp_config() or {}).get("modo"), "promo": promo_actual(datos)},
+                   "mercadopago": (mp_config() or {}).get("modo")},
     }
 
 
@@ -431,12 +431,15 @@ def guardar_plan(cuerpo):
     slug = cuerpo.get("slug", "")
     if not RE_SLUG.match(slug):
         raise ValueError("Link inválido.")
-    tipo = cuerpo.get("tipo", "")
+    tipo = cuerpo.get("tipo") or "MENSUAL"   # el precio del plan es por mes
     if tipo not in MESES_PLAN:
         raise ValueError("Plan inválido.")
     precio = float(cuerpo.get("precio", 0))
     if not 0 <= precio <= 100000:
         raise ValueError("Precio inválido.")
+    descuento = float(cuerpo.get("descuento_anual") or 0)   # % de descuento al pagar el año completo
+    if not 0 <= descuento < 100:
+        raise ValueError("El descuento anual debe ser de 0% a 99%.")
     proximo = cuerpo.get("proximo_pago", "")
     if not RE_FECHA.match(proximo):
         raise ValueError("Fecha de próximo pago inválida.")
@@ -444,7 +447,7 @@ def guardar_plan(cuerpo):
     with candado:
         datos = leer_datos()
         plan = datos["planes"].get(slug, {})
-        plan.update({"tipo": tipo, "precio": precio, "proximo_pago": proximo,
+        plan.update({"tipo": tipo, "precio": precio, "descuento_anual": round(descuento, 2), "proximo_pago": proximo,
                      "telefono": str(cuerpo.get("telefono", ""))[:30], "notas": str(cuerpo.get("notas", ""))[:300]})
         if cuerpo.get("externo"):
             plan["nombre"] = str(cuerpo.get("nombre", slug))[:60]
@@ -458,40 +461,13 @@ def guardar_plan(cuerpo):
 MESES_MAXIMOS = 12
 
 
-def promo_actual(datos=None):
-    """Promoción para todos al pagar 12 meses juntos:
-    modo "fijo" -> los 12 meses cuestan un monto total (ej. S/ 350)
-    modo "porcentaje" -> los 12 meses tienen un % de descuento (ej. 10%), según el precio de cada cliente."""
-    p = (datos or leer_datos()).get("promo") or {}
-    return {"activa": bool(p.get("activa")), "modo": p.get("modo") if p.get("modo") in ("fijo", "porcentaje") else "fijo",
-            "precio": float(p.get("precio") or 0), "porcentaje": float(p.get("porcentaje") or 0)}
-
-
-def guardar_promo(cuerpo):
-    activa = bool(cuerpo.get("activa"))
-    modo = cuerpo.get("modo") if cuerpo.get("modo") in ("fijo", "porcentaje") else "fijo"
-    precio = float(cuerpo.get("precio") or 0)
-    porcentaje = float(cuerpo.get("porcentaje") or 0)
-    if activa and modo == "fijo" and not 0 < precio <= 100000:
-        raise ValueError("Pon el monto total de los 12 meses.")
-    if activa and modo == "porcentaje" and not 0 < porcentaje < 100:
-        raise ValueError("El descuento debe ser mayor a 0% y menor a 100%.")
-    with candado:
-        datos = leer_datos()
-        datos["promo"] = {"activa": activa, "modo": modo, "precio": round(precio, 2), "porcentaje": round(porcentaje, 2)}
-        guardar_json(DATOS, datos)
-    return datos["promo"]
-
-
-def precio_meses(plan, meses, promo=None):
-    """Lo que cuesta pagar N meses: precio mensual x N; 12 meses con la promoción si sale más barata."""
+def precio_meses(plan, meses):
+    """Lo que cuesta pagar N meses: precio por mes x N. El año (12 meses) lleva el descuento anual del plan."""
     mensual = float(plan["precio"]) / MESES_PLAN.get(plan["tipo"], 1)
     total = round(mensual * meses, 2)
-    promo = promo or promo_actual()
-    if meses == 12 and promo["activa"]:
-        con_promo = promo["precio"] if promo["modo"] == "fijo" else round(total * (1 - promo["porcentaje"] / 100), 2)
-        if 0 < con_promo < total:
-            return con_promo, True
+    descuento = float(plan.get("descuento_anual") or 0)
+    if meses == 12 and 0 < descuento < 100:
+        return round(total * (1 - descuento / 100), 2), True
     return total, False
 
 
@@ -560,55 +536,48 @@ def mp_api(metodo, ruta, cuerpo=None):
 
 
 def pagina_elegir_meses(slug, cerrar_al_volver):
-    """Antes de ir a Mercado Pago, el cliente elige cuántos meses paga (1 a 12)."""
+    """Antes de ir a Mercado Pago, el cliente elige: pagar 1 mes o 1 año (con el descuento anual del plan)."""
     reg = cliente_registrado(slug)
-    datos = leer_datos()
-    plan = datos["planes"].get(slug)
+    plan = leer_datos()["planes"].get(slug)
     if not plan or not plan.get("precio"):
         raise ValueError("Este cliente no tiene un plan con precio.")
-    promo = promo_actual(datos)
-    opciones = []
-    for m in range(1, MESES_MAXIMOS + 1):
-        total, con_promo = precio_meses(plan, m, promo)
-        normal = round(float(plan["precio"]) / MESES_PLAN.get(plan["tipo"], 1) * m, 2)
-        texto = f"{m} {'mes' if m == 1 else 'meses'} · S/ {total:.2f}"
-        if con_promo:
-            texto += f"  ⭐ PROMOCIÓN (ahorras S/ {normal - total:.2f})"
-        opciones.append((m, texto, con_promo))
-    defecto = 1
-    nuevo = sumar_meses(date.fromisoformat(plan["proximo_pago"]), defecto).isoformat()
     vence = lambda iso: "/".join(reversed(iso.split("-")))
-    opts = "".join(f"<option value='{m}' {'selected' if m == defecto else ''}>{html.escape(t)}</option>" for m, t, _ in opciones)
-    hasta = {m: vence(sumar_meses(date.fromisoformat(plan["proximo_pago"]), m).isoformat()) for m in range(1, MESES_MAXIMOS + 1)}
-    promo_txt = ""
-    total_promo, hay_promo = precio_meses(plan, 12, promo)
-    if hay_promo:
-        extra = f" ({promo['porcentaje']:g}% de descuento)" if promo["modo"] == "porcentaje" else ""
-        promo_txt = f"<div class='promo'>⭐ Promoción: <b>12 meses por S/ {total_promo:.2f}</b>{extra}</div>"
+    hasta = lambda m: vence(sumar_meses(date.fromisoformat(plan["proximo_pago"]), m).isoformat())
+    mes, _ = precio_meses(plan, 1)
+    anio, con_descuento = precio_meses(plan, 12)
+    normal = round(mes * 12, 2)
+    descuento = float(plan.get("descuento_anual") or 0)
+    ahorro = (f"<span class='ahorro'>-{descuento:g}% · ahorras S/ {normal - anio:.2f}</span>"
+              f"<s>S/ {normal:.2f}</s>") if con_descuento else ""
     return f"""<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pagar plan · SiuMax</title><style>
 html,body{{margin:0;min-height:100%}}
 body{{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#1E293B;color:#F8FAFC;padding:16px;box-sizing:border-box;font-family:ui-monospace,Menlo,Consolas,monospace}}
 .caja{{border:2px solid #F59E0B;box-shadow:6px 6px 0 0 #F59E0B;padding:28px 24px;width:100%;max-width:440px;box-sizing:border-box}}
 h1{{margin:0 0 6px;color:#F59E0B;font-size:18px;letter-spacing:.12em;text-transform:uppercase}}
-p{{margin:0 0 16px;font-size:13px;line-height:1.6;color:#CBD5E1}}
-label{{display:block;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}}
-select{{width:100%;padding:12px;font:inherit;font-size:14px;border:2px solid #F59E0B;background:#fff;color:#1E293B;border-radius:0}}
-.hasta{{margin-top:10px;font-size:13px}} .hasta b{{color:#F59E0B}}
-.promo{{border:2px dashed #F59E0B;padding:10px;margin-bottom:16px;font-size:13px;text-align:center}}
-button{{margin-top:20px;width:100%;padding:13px;font:inherit;font-weight:900;letter-spacing:.12em;text-transform:uppercase;background:#F59E0B;color:#1E293B;border:2px solid #1E293B;box-shadow:4px 4px 0 0 #F59E0B;cursor:pointer;border-radius:0}}
+p{{margin:0 0 18px;font-size:13px;line-height:1.6;color:#CBD5E1}}
+.opcion{{display:block;border:2px solid #475569;padding:14px;margin-bottom:12px;cursor:pointer}}
+.opcion:has(input:checked){{border-color:#F59E0B;background:rgba(245,158,11,.12)}}
+.opcion input{{accent-color:#F59E0B;margin-right:8px;transform:scale(1.2)}}
+.fila{{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:900}}
+.precio{{font-size:20px;color:#F59E0B}}
+.detalle{{margin-top:6px;font-size:12px;color:#CBD5E1}}
+.ahorro{{display:inline-block;background:#F59E0B;color:#1E293B;font-weight:900;font-size:11px;padding:2px 6px;margin-right:8px}}
+s{{color:#94A3B8;font-size:12px}}
+button{{margin-top:8px;width:100%;padding:13px;font:inherit;font-weight:900;letter-spacing:.12em;text-transform:uppercase;background:#F59E0B;color:#1E293B;border:2px solid #1E293B;box-shadow:4px 4px 0 0 #F59E0B;cursor:pointer;border-radius:0}}
 button:hover,button:focus-visible{{outline:none;transform:translate(-1px,-1px);box-shadow:5px 5px 0 0 #F59E0B}}
 small{{display:block;margin-top:12px;color:#94A3B8;font-size:11px;text-align:center}}
 </style></head><body><form class="caja" method="get" action="/pagar/{slug}">
-<h1>Pagar plan</h1><p>{html.escape(reg['nombre'])} · vence el {vence(plan['proximo_pago'])}</p>{promo_txt}
-<label for="meses">¿Cuántos meses quieres pagar?</label>
-<select id="meses" name="meses" autofocus>{opts}</select>
-<div class="hasta">Tu plan quedará pagado hasta el <b id="hasta">{vence(nuevo)}</b></div>
+<h1>Pagar plan</h1><p>{html.escape(reg['nombre'])} · vence el {vence(plan['proximo_pago'])}</p>
+<label class="opcion"><div class="fila"><span><input type="radio" name="meses" value="1" checked autofocus>1 mes</span>
+  <span class="precio">S/ {mes:.2f}</span></div>
+  <div class="detalle">Pagado hasta el {hasta(1)}</div></label>
+<label class="opcion"><div class="fila"><span><input type="radio" name="meses" value="12">1 año</span>
+  <span class="precio">S/ {anio:.2f}</span></div>
+  <div class="detalle">{ahorro}Pagado hasta el {hasta(12)}</div></label>
 {'<input type="hidden" name="volver" value="cerrar">' if cerrar_al_volver else ''}
 <button type="submit">Continuar al pago</button>
-<small>Yape o tarjeta con Mercado Pago</small></form>
-<script>const H={json.dumps(hasta)};const s=document.getElementById('meses');
-s.addEventListener('change',()=>{{document.getElementById('hasta').textContent=H[s.value];}});</script></body></html>"""
+<small>Yape o tarjeta con Mercado Pago</small></form></body></html>"""
 
 
 def crear_link_pago(slug, cerrar_al_volver=False, meses=None):
@@ -625,10 +594,10 @@ def crear_link_pago(slug, cerrar_al_volver=False, meses=None):
     if meses is None:
         meses, total, titulo = MESES_PLAN[plan["tipo"]], float(plan["precio"]), f"Plan {plan['tipo'].lower()}"
     else:
-        if not 1 <= meses <= MESES_MAXIMOS:
-            raise ValueError(f"Elige de 1 a {MESES_MAXIMOS} meses.")
-        total, con_promo = precio_meses(plan, meses)
-        titulo = f"{meses} {'mes' if meses == 1 else 'meses'}" + (" (promoción)" if con_promo else "")
+        if meses not in (1, 12):
+            raise ValueError("Elige pagar 1 mes o 1 año.")
+        total, con_descuento = precio_meses(plan, meses)
+        titulo = ("1 mes" if meses == 1 else "1 año") + (f" (-{float(plan.get('descuento_anual') or 0):g}%)" if con_descuento else "")
     pref = mp_api("POST", "/checkout/preferences", {
         "items": [{"title": f"SiuMax - {titulo} ({reg['nombre']})", "quantity": 1,
                    "unit_price": float(total), "currency_id": "PEN"}],
@@ -934,9 +903,6 @@ class Panel(BaseHTTPRequestHandler):
 
             if ruta == "/api/usuario/clave":
                 return self.responder(200, restablecer_clave(cuerpo))
-
-            if ruta == "/api/promo":
-                return self.responder(200, {"ok": True, "promo": guardar_promo(cuerpo)})
 
             if ruta == "/api/plan":
                 return self.responder(200, {"ok": True, "plan": guardar_plan(cuerpo)})
