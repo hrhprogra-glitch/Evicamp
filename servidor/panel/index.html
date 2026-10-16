@@ -356,16 +356,16 @@ function errorModal(msg) { const el = $('#modal-error'); el.textContent = msg; e
 // Texto corto del plan: "S/ 30.00 /mes · año -20%"
 const textoPlan = (p) => {
   const mensual = p.precio / ({ MENSUAL: 1, TRIMESTRAL: 3, SEMESTRAL: 6, ANUAL: 12 }[p.tipo] || 1);
-  return `${soles(mensual)} /mes${p.descuento_anual > 0 ? ` · año -${p.descuento_anual}%` : ''}`;
+  return `${soles(mensual)} /mes${p.precio_anual > 0 ? ` · ${soles(p.precio_anual)} /año` : ''}`;
 };
 
-// Precio por año calculado en vivo: mes x 12 y, si hay descuento, el precio final
+// Debajo del precio por año: cuánto serían 12 meses sueltos y cuánto ahorra el cliente
 function verPrecioAnual(form) {
-  const mes = Number(form.precio.value) || 0, desc = Number(form.descuento_anual.value) || 0;
-  const anio = mes * 12, final = Math.round(anio * (1 - desc / 100) * 100) / 100;
-  form.querySelector('[data-anual]').innerHTML = desc > 0
-    ? `Precio por año: <s>${soles(anio)}</s> <b>${soles(final)}</b> (ahorra ${soles(anio - final)})`
-    : `Precio por año: <b>${soles(anio)}</b> (12 × ${soles(mes)})`;
+  const mes = Number(form.precio.value) || 0, anual = Number(form.precio_anual.value) || 0, sueltos = mes * 12;
+  form.querySelector('[data-anual]').innerHTML = !anual
+    ? `Sin precio por año: el año cuesta 12 × ${soles(mes)} = <b>${soles(sueltos)}</b>`
+    : anual < sueltos ? `12 meses sueltos: ${soles(sueltos)} → el cliente ahorra <b>${soles(sueltos - anual)}</b>`
+    : `12 meses sueltos: ${soles(sueltos)}`;
 }
 
 const camposPlan = (p = {}) => `
@@ -373,11 +373,11 @@ const camposPlan = (p = {}) => `
   <div class="fila">
     <div><label>Precio por mes (S/)</label><input name="precio" type="number" step="0.01" min="0"
       value="${esc(p.precio != null ? p.precio / ({ MENSUAL: 1, TRIMESTRAL: 3, SEMESTRAL: 6, ANUAL: 12 }[p.tipo] || 1) : 50)}" required oninput="verPrecioAnual(this.form)"></div>
-    <div><label>Descuento si paga el año (%)</label><input name="descuento_anual" type="number" step="0.01" min="0" max="99"
-      value="${esc(p.descuento_anual || 0)}" oninput="verPrecioAnual(this.form)"></div>
+    <div><label>Precio por año (S/)</label><input name="precio_anual" type="number" step="0.01" min="0"
+      value="${esc(p.precio_anual || '')}" placeholder="Ej. 350" oninput="verPrecioAnual(this.form)"></div>
   </div>
   <div class="ayuda" data-anual></div>
-  <div class="ayuda">Al pagar, el cliente elige <b>1 mes</b> o <b>1 año</b>. Pon 0% si no quieres descuento.</div>
+  <div class="ayuda">Al pagar, el cliente elige <b>1 mes</b> o <b>1 año</b>. Si dejas vacío el precio por año, se cobra 12 × el precio por mes.</div>
   <label>Próximo pago (vencimiento)</label><input name="proximo_pago" type="date" value="${esc(p.proximo_pago || sumarMesIso(1))}" required>
   <div class="ayuda">Desde ${estado.config.dias_aviso} días antes el cliente ve un aviso en su sistema. Si pasan ${estado.config.dias_gracia} días vencido sin pagar, se suspende solo.</div>
   <div class="fila">
@@ -424,7 +424,7 @@ function modalNuevo() {
     const b = $('#btn-crear'); b.disabled = true; b.textContent = 'Creando (1 a 2 min)...';
     $('#modal-error').classList.add('oculto');
     const datos = { nombre: f.nombre.value, slug: f.slug.value, correo: f.correo.value, clave: f.clave.value };
-    if (f.con_plan.checked) datos.plan = { tipo: f.tipo.value, precio: f.precio.value, descuento_anual: f.descuento_anual.value, proximo_pago: f.proximo_pago.value, telefono: f.telefono.value, notas: f.notas.value };
+    if (f.con_plan.checked) datos.plan = { tipo: f.tipo.value, precio: f.precio.value, precio_anual: f.precio_anual.value, proximo_pago: f.proximo_pago.value, telefono: f.telefono.value, notas: f.notas.value };
     try {
       const r = await api('/api/clientes/nuevo', datos);
       $('#modal-resultado').innerHTML = `<div class="resultado"><b>✅ Cliente creado.</b><br>
@@ -452,7 +452,7 @@ function modalPlan(c) {
   f.querySelector('[data-cerrar2]').onclick = cerrarModal;
   f.onsubmit = async (e) => {
     e.preventDefault();
-    const datos = { slug: externo ? f.slug.value.toLowerCase() : c.slug, tipo: f.tipo.value, precio: f.precio.value, descuento_anual: f.descuento_anual.value,
+    const datos = { slug: externo ? f.slug.value.toLowerCase() : c.slug, tipo: f.tipo.value, precio: f.precio.value, precio_anual: f.precio_anual.value,
       proximo_pago: f.proximo_pago.value, telefono: f.telefono.value, notas: f.notas.value };
     if (externo) Object.assign(datos, { externo: true, nombre: f.nombre.value, link: f.link.value });
     else if (c.externo) Object.assign(datos, { externo: true, nombre: c.nombre, link: c.link });
@@ -461,12 +461,12 @@ function modalPlan(c) {
   };
 }
 
-// Igual que en el servidor: precio por mes x meses; el año (12 meses) con el descuento anual del plan
+// Igual que en el servidor: precio por mes x meses; el año (12 meses) a su precio por año, si lo tiene
 const MESES_PLAN = { MENSUAL: 1, TRIMESTRAL: 3, SEMESTRAL: 6, ANUAL: 12 };
 function precioMeses(plan, meses) {
   const total = Math.round(plan.precio / (MESES_PLAN[plan.tipo] || 1) * meses * 100) / 100;
-  const desc = Number(plan.descuento_anual) || 0;
-  return meses === 12 && desc > 0 ? Math.round(total * (1 - desc / 100) * 100) / 100 : total;
+  const anual = Number(plan.precio_anual) || 0;
+  return meses === 12 && anual > 0 ? anual : total;
 }
 const sumarMeses = (iso, meses) => {
   const [a, m, d] = iso.split('-').map(Number);

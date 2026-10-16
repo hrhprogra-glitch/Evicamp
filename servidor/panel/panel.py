@@ -437,9 +437,10 @@ def guardar_plan(cuerpo):
     precio = float(cuerpo.get("precio", 0))
     if not 0 <= precio <= 100000:
         raise ValueError("Precio inválido.")
-    descuento = float(cuerpo.get("descuento_anual") or 0)   # % de descuento al pagar el año completo
-    if not 0 <= descuento < 100:
-        raise ValueError("El descuento anual debe ser de 0% a 99%.")
+    # Precio por 12 meses que tú decides (vacío o 0 = precio por mes x 12)
+    precio_anual = float(cuerpo.get("precio_anual") or 0)
+    if not 0 <= precio_anual <= 1000000:
+        raise ValueError("Precio por año inválido.")
     proximo = cuerpo.get("proximo_pago", "")
     if not RE_FECHA.match(proximo):
         raise ValueError("Fecha de próximo pago inválida.")
@@ -447,7 +448,7 @@ def guardar_plan(cuerpo):
     with candado:
         datos = leer_datos()
         plan = datos["planes"].get(slug, {})
-        plan.update({"tipo": tipo, "precio": precio, "descuento_anual": round(descuento, 2), "proximo_pago": proximo,
+        plan.update({"tipo": tipo, "precio": precio, "precio_anual": round(precio_anual, 2), "proximo_pago": proximo,
                      "telefono": str(cuerpo.get("telefono", ""))[:30], "notas": str(cuerpo.get("notas", ""))[:300]})
         if cuerpo.get("externo"):
             plan["nombre"] = str(cuerpo.get("nombre", slug))[:60]
@@ -462,12 +463,12 @@ MESES_MAXIMOS = 12
 
 
 def precio_meses(plan, meses):
-    """Lo que cuesta pagar N meses: precio por mes x N. El año (12 meses) lleva el descuento anual del plan."""
+    """Lo que cuesta pagar N meses: precio por mes x N. El año (12 meses) cuesta su precio por año, si lo tiene."""
     mensual = float(plan["precio"]) / MESES_PLAN.get(plan["tipo"], 1)
     total = round(mensual * meses, 2)
-    descuento = float(plan.get("descuento_anual") or 0)
-    if meses == 12 and 0 < descuento < 100:
-        return round(total * (1 - descuento / 100), 2), True
+    anual = float(plan.get("precio_anual") or 0)
+    if meses == 12 and anual > 0:
+        return round(anual, 2), anual < total   # True: el año sale más barato que 12 meses sueltos
     return total, False
 
 
@@ -536,7 +537,7 @@ def mp_api(metodo, ruta, cuerpo=None):
 
 
 def pagina_elegir_meses(slug, cerrar_al_volver):
-    """Antes de ir a Mercado Pago, el cliente elige: pagar 1 mes o 1 año (con el descuento anual del plan)."""
+    """Antes de ir a Mercado Pago, el cliente elige: pagar 1 mes o 1 año (a su precio por año)."""
     reg = cliente_registrado(slug)
     plan = leer_datos()["planes"].get(slug)
     if not plan or not plan.get("precio"):
@@ -546,8 +547,7 @@ def pagina_elegir_meses(slug, cerrar_al_volver):
     mes, _ = precio_meses(plan, 1)
     anio, con_descuento = precio_meses(plan, 12)
     normal = round(mes * 12, 2)
-    descuento = float(plan.get("descuento_anual") or 0)
-    ahorro = (f"<span class='ahorro'>-{descuento:g}% · ahorras S/ {normal - anio:.2f}</span>"
+    ahorro = (f"<span class='ahorro'>ahorras S/ {normal - anio:.2f}</span>"
               f"<s>S/ {normal:.2f}</s>") if con_descuento else ""
     return f"""<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pagar plan · SiuMax</title><style>
@@ -596,8 +596,8 @@ def crear_link_pago(slug, cerrar_al_volver=False, meses=None):
     else:
         if meses not in (1, 12):
             raise ValueError("Elige pagar 1 mes o 1 año.")
-        total, con_descuento = precio_meses(plan, meses)
-        titulo = ("1 mes" if meses == 1 else "1 año") + (f" (-{float(plan.get('descuento_anual') or 0):g}%)" if con_descuento else "")
+        total, _ = precio_meses(plan, meses)
+        titulo = "1 mes" if meses == 1 else "1 año"
     pref = mp_api("POST", "/checkout/preferences", {
         "items": [{"title": f"SiuMax - {titulo} ({reg['nombre']})", "quantity": 1,
                    "unit_price": float(total), "currency_id": "PEN"}],
