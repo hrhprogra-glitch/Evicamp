@@ -186,6 +186,54 @@ def editar_cliente(cuerpo):
     return {"ok": True}
 
 
+REDIRECCIONES = f"{DIR_SIUMAX}/redirecciones.tsv"   # link_viejo  link_nuevo  fecha
+
+
+def slug_actual(slug):
+    """Si el cliente cambió de link, devuelve el link nuevo (sigue la cadena: a -> b -> c)."""
+    mapa = {}
+    try:
+        with open(REDIRECCIONES, encoding="utf-8") as f:
+            for linea in f:
+                partes = linea.rstrip("\n").split("\t")
+                if len(partes) >= 2 and partes[0]:
+                    mapa[partes[0]] = partes[1]
+    except FileNotFoundError:
+        pass
+    vistos = set()
+    while slug in mapa and slug not in vistos:
+        vistos.add(slug)
+        slug = mapa[slug]
+    return slug
+
+
+def cambiar_link(cuerpo):
+    """Cambia el link de un cliente conservando su base (se renombra). El link viejo redirige al nuevo."""
+    viejo = str(cuerpo.get("slug", ""))
+    cliente_registrado(viejo)
+    nuevo = str(cuerpo.get("nuevo", "")).strip().lower()
+    if not RE_SLUG.match(nuevo):
+        raise ValueError("Link nuevo inválido: usa minúsculas, números y guiones (3 a 30).")
+    if nuevo == viejo:
+        raise ValueError("El link nuevo es igual al actual.")
+    ok, salida = ejecutar([f"{DIR_SIUMAX}/cambiar-link.sh", viejo, nuevo], espera=300)
+    if not ok:
+        return False, salida
+    with candado:
+        datos = leer_datos()
+        if viejo in datos["planes"]:
+            datos["planes"][nuevo] = datos["planes"].pop(viejo)
+        for p in datos["pagos"]:
+            if p["slug"] == viejo:
+                p["slug"] = nuevo
+        datos.get("eliminados", {}).pop(nuevo, None)
+        guardar_json(DATOS, datos)
+        plan = datos["planes"].get(nuevo)
+    if plan:
+        escribir_suscripcion(nuevo, plan)   # el botón "Pagar ahora" ahora lleva el link nuevo
+    return True, salida
+
+
 def borrar_cliente(cuerpo):
     """Borra un cliente SUSPENDIDO, confirmando con su nombre. El script deja un backup final (30 días).
     Su historial de pagos se queda en el panel."""
@@ -495,6 +543,7 @@ def procesar_aviso_mp(id_pago):
     slug = str(pago.get("external_reference") or "").split("|")[0]
     if not RE_SLUG.match(slug):
         return "pago sin cliente"
+    slug = slug_actual(slug)   # pagado con el link viejo de un cliente que cambió de link
     metodo_mp = pago.get("payment_method_id") or pago.get("payment_type_id") or ""
     fecha = (pago.get("date_approved") or "")[:10] or date.today().isoformat()
     r = registrar_pago({"slug": slug, "monto": pago.get("transaction_amount"), "metodo": "MERCADOPAGO",
@@ -603,7 +652,7 @@ class Panel(BaseHTTPRequestHandler):
         if ruta == "/api/sesion":
             return self.responder(200, {"autenticado": self.autenticado()})
         if ruta.startswith("/pagar/"):  # público: botón "Pagar ahora" del aviso del cliente
-            slug = ruta[len("/pagar/"):].strip("/")
+            slug = slug_actual(ruta[len("/pagar/"):].strip("/"))
             try:
                 if ip_bloqueada("pagar:" + self.ip(), limite=30):
                     raise ValueError("Demasiados intentos. Espera unos minutos.")
@@ -715,6 +764,13 @@ class Panel(BaseHTTPRequestHandler):
 
             if ruta == "/api/clientes/editar":
                 return self.responder(200, editar_cliente(cuerpo))
+
+            if ruta == "/api/clientes/cambiar-link":
+                ok, salida = cambiar_link(cuerpo)
+                if not ok:
+                    return self.responder(500, {"error": "No se pudo cambiar el link.", "detalle": salida[-2000:]})
+                nuevo = str(cuerpo.get("nuevo", "")).strip().lower()
+                return self.responder(200, {"ok": True, "link": f"https://{nuevo}.{DOMINIO_BASE}", "detalle": salida[-2000:]})
 
             if ruta == "/api/clientes/borrar":
                 ok, salida = borrar_cliente(cuerpo)

@@ -25,10 +25,12 @@ for base in $(sudo -u postgres psql -At -c "select datname from pg_database wher
   find "$DESTINO/$base" -name "*.dump" -mtime +$DIAS -delete
 done
 
-# Backups de clientes borrados desde el panel: se guardan 30 días
-if [ -d /var/backups/siuhub-eliminados ]; then
-  find /var/backups/siuhub-eliminados -mindepth 1 -mtime +30 -delete
-  find /var/backups/siuhub-eliminados -mindepth 1 -type d -empty -delete
-fi
+# Backups de clientes borrados y de antes de cambiar un link: se guardan 30 días
+for extra in /var/backups/siuhub-eliminados /var/backups/siuhub-cambios; do
+  if [ -d "$extra" ]; then
+    find "$extra" -mindepth 1 -mtime +30 -delete
+    find "$extra" -mindepth 1 -type d -empty -delete
+  fi
+done
 
 exit $errores

@@ -38,8 +38,15 @@ rm -f "$DIR_CONF_CLIENTES/$SLUG.conf"
 
 echo "== 3/5 Link y certificado ($HOST)"
 rm -f "/etc/nginx/sites-enabled/cli-$SLUG" "/etc/nginx/sites-available/cli-$SLUG"
+# Links viejos que redirigían a este cliente (si se le cambió el link)
+if [ -f "$REDIRECCIONES" ]; then
+  for viejo in $(awk -F'\t' -v s="$SLUG" '$2==s {print $1}' "$REDIRECCIONES"); do
+    quitar_redireccion "$viejo"
+    borrar_certificado "$viejo"
+  done
+fi
 recargar_nginx
-certbot delete --cert-name "$HOST" --non-interactive > /dev/null 2>&1 || true
+borrar_certificado "$SLUG"
 
 echo "== 4/5 Base de datos y archivos"
 sudo -u postgres dropdb --if-exists "$BASE"

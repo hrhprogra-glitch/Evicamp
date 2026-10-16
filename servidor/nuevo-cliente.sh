@@ -15,6 +15,7 @@ validar_slug "$SLUG"
 HOST=$(host_cliente "$SLUG")
 BASE=$(base_cliente "$SLUG")
 [ -z "$(dato_registro "$SLUG" 1)" ] || { echo "ERROR: el cliente '$SLUG' ya existe." >&2; exit 1; }
+[ -z "$(redireccion_de "$SLUG")" ] || { echo "ERROR: el link '$SLUG' era de otro cliente y hoy redirige a su link nuevo. Elige otro." >&2; exit 1; }
 if sudo -u postgres psql -Atc "select 1 from pg_database where datname='$BASE'" | grep -q 1; then
   echo "ERROR: ya existe la base $BASE." >&2; exit 1
 fi

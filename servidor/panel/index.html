@@ -561,16 +561,57 @@ function modalEditar(c) {
       <div><label>Teléfono / WhatsApp</label><input name="telefono" value="${esc(p.telefono || '')}" maxlength="30"></div>
       <div><label>Notas</label><input name="notas" value="${esc(p.notas || '')}" maxlength="300"></div>
     </div>` : ''}
-    <label>Link</label><input value="${esc(c.link)}" disabled>
-    <div class="ayuda">El link no se puede cambiar: el cliente ya lo tiene instalado en sus equipos.</div>`,
+    <label>Link</label>
+    <div style="display:flex;gap:8px;align-items:center"><input value="${esc(c.link)}" disabled>
+      <button type="button" class="btn btn-sm btn-warn" id="btn-cambiar-link">Cambiar link</button></div>`,
     '<button type="button" class="btn" data-cerrar2>Cancelar</button><button class="btn btn-ok">Guardar</button>');
   f.querySelector('[data-cerrar2]').onclick = cerrarModal;
+  $('#btn-cambiar-link').onclick = () => modalCambiarLink(c);
   f.onsubmit = async (e) => {
     e.preventDefault();
     const datos = { slug: c.slug, nombre: f.nombre.value };
     if (c.plan) Object.assign(datos, { telefono: f.telefono.value, notas: f.notas.value });
     try { await api('/api/clientes/editar', datos); cerrarModal(); toast('Cliente actualizado.'); cargar(); }
     catch (ex) { errorModal(ex.message); }
+  };
+}
+
+function modalCambiarLink(c) {
+  const f = abrirModal(`Cambiar link · ${esc(c.nombre)}`, `
+    <div class="ayuda">Sus datos <b>no cambian</b> (ventas, inventario, créditos, usuarios y contraseñas). Antes del cambio se hace un backup.
+      El sistema queda sin servicio unos 30 a 60 segundos.</div>
+    <label>Link actual</label><input value="${esc(c.link.replace('https://', ''))}" disabled>
+    <label>Link nuevo</label><input name="nuevo" required pattern="[a-z0-9][a-z0-9-]{1,28}[a-z0-9]" placeholder="bodegaharry" autocomplete="off">
+    <div class="ayuda" id="vista-link-nuevo">Quedará en: https://______.${estado.config.dominio}</div>
+    <div class="resultado" style="background:var(--warning-bg);border-color:var(--warning)">
+      <b>Después del cambio:</b><br>
+      · El link viejo <b>redirige solo</b> al nuevo.<br>
+      · <b>App para PC:</b> sigue funcionando. Si quiere ver el link nuevo, lo cambia en el menú Alt.<br>
+      · <b>App instalada ("Instalar app"):</b> debe desinstalarla e instalarla de nuevo desde el link nuevo.</div>`,
+    '<button type="button" class="btn" data-cerrar2>Cancelar</button><button class="btn btn-warn" id="btn-confirmar-link">Cambiar link</button>');
+  f.querySelector('[data-cerrar2]').onclick = cerrarModal;
+  f.nuevo.addEventListener('input', () => {
+    f.nuevo.value = f.nuevo.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    $('#vista-link-nuevo').textContent = `Quedará en: https://${f.nuevo.value || '______'}.${estado.config.dominio}`;
+  });
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    const b = $('#btn-confirmar-link'); b.disabled = true; b.textContent = 'Cambiando (1 a 2 min)...';
+    $('#modal-error').classList.add('oculto');
+    try {
+      const r = await api('/api/clientes/cambiar-link', { slug: c.slug, nuevo: f.nuevo.value });
+      $('#modal-resultado').innerHTML = `<div class="resultado"><b>✅ Link cambiado.</b><br>
+        Nuevo: <a href="${esc(r.link)}" target="_blank" rel="noopener">${esc(r.link)}</a><br>
+        El link viejo redirige al nuevo.<br>
+        <button type="button" class="btn btn-sm" id="btn-copiar-link" style="margin-top:8px">Copiar aviso para el cliente</button></div>`;
+      $('#btn-copiar-link').onclick = () => navigator.clipboard.writeText(
+        `Hola, tu sistema SiuMax ahora está en:\n${r.link}\n\nTu usuario y contraseña son los mismos y tus datos están intactos.\n` +
+        `Si instalaste la app desde el navegador ("Instalar app"), desinstálala e instálala de nuevo desde el link nuevo.`
+      ).then(() => toast('Aviso copiado.'));
+      b.classList.add('oculto');
+      f.querySelector('[data-cerrar2]').textContent = 'Cerrar';
+      cargar();
+    } catch (ex) { errorModal(ex.message); b.disabled = false; b.textContent = 'Cambiar link'; }
   };
 }
 

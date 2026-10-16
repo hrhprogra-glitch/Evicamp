@@ -145,3 +145,57 @@ EOF
 recargar_nginx() {
   nginx -t 2>/dev/null && systemctl reload nginx
 }
+
+# === Links viejos que redirigen al nuevo (cuando se cambia el link de un cliente) ===
+REDIRECCIONES="$DIR_SIUMAX/redirecciones.tsv"   # link_viejo  link_nuevo  fecha
+DIR_CAMBIOS="/var/backups/siuhub-cambios"       # backup previo a cada cambio de link (30 días)
+
+redireccion_de() { # redireccion_de <link_viejo>: a qué link redirige (vacío si no redirige)
+  [ -f "$REDIRECCIONES" ] || return 0
+  awk -F'\t' -v s="$1" '$1==s {print $2}' "$REDIRECCIONES"
+}
+
+escribir_nginx_redireccion() { # <viejo> <nuevo>: usa el certificado que ya tenía el link viejo
+  local host_viejo; host_viejo=$(host_cliente "$1")
+  local archivo="/etc/nginx/sites-available/redir-$1"
+  cat > "$archivo" <<EOF
+# SiuMax - el link $1 cambió a $2 (generado por /opt/siuhub, no editar a mano)
+server {
+    listen 443 ssl;
+    server_name $host_viejo;
+
+    ssl_certificate /etc/letsencrypt/live/$host_viejo/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$host_viejo/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    return 301 https://$(host_cliente "$2")\$request_uri;
+}
+
+server {
+    listen 80;
+    server_name $host_viejo;
+    return 301 https://$(host_cliente "$2")\$request_uri;
+}
+EOF
+  ln -sf "$archivo" "/etc/nginx/sites-enabled/redir-$1"
+}
+
+agregar_redireccion() { # <viejo> <nuevo>; las que apuntaban al viejo ahora apuntan al nuevo
+  touch "$REDIRECCIONES"
+  awk -F'\t' -v OFS='\t' -v v="$1" -v n="$2" '$1!=v {if ($2==v) $2=n; print}' "$REDIRECCIONES" > "$REDIRECCIONES.tmp"
+  printf '%s\t%s\t%s\n' "$1" "$2" "$(date +%F)" >> "$REDIRECCIONES.tmp"
+  mv "$REDIRECCIONES.tmp" "$REDIRECCIONES"
+  while IFS=$'\t' read -r v n _; do
+    [ -n "$v" ] && escribir_nginx_redireccion "$v" "$n"
+  done < "$REDIRECCIONES"
+}
+
+quitar_redireccion() { # <viejo>: el link deja de redirigir (su certificado se borra aparte, si hace falta)
+  [ -f "$REDIRECCIONES" ] || return 0
+  [ -n "$(redireccion_de "$1")" ] || return 0
+  awk -F'\t' -v v="$1" '$1!=v' "$REDIRECCIONES" > "$REDIRECCIONES.tmp" && mv "$REDIRECCIONES.tmp" "$REDIRECCIONES"
+  rm -f "/etc/nginx/sites-enabled/redir-$1" "/etc/nginx/sites-available/redir-$1"
+}
+
+borrar_certificado() { certbot delete --cert-name "$(host_cliente "$1")" --non-interactive > /dev/null 2>&1 || true; }
