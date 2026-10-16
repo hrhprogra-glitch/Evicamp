@@ -130,6 +130,8 @@ def escribir_suscripcion(slug, plan):
     datos = {"estado": ep["estado"], "dias_restantes": ep["dias"],
              "proximo_pago": plan.get("proximo_pago") if plan else None,
              "fecha_suspension": suspension, "actualizado": datetime.now().isoformat(timespec="seconds"),
+             # La página "Servicio suspendido" solo ofrece pagar si la suspensión fue por falta de pago
+             "suspendido_por_pago": bool(plan and plan.get("suspendido_por_pago")),
              # Botón "Pagar ahora" del aviso: solo si Mercado Pago está configurado y hay precio
              "pagar_url": f"{URL_PANEL}/pagar/{slug}" if (mp_config() and plan and plan.get("precio")) else None}
     ruta = os.path.join(carpeta, "suscripcion.json")
@@ -568,6 +570,7 @@ def revisar_cobros():
                 ok, _ = cambiar_estado(slug, "suspender")
                 if ok:
                     plan["suspendido_por_pago"] = True
+                    escribir_suscripcion(slug, plan)   # la página de suspensión ya ofrece "Pagar ahora"
                     cambios.append(f"{slug}: suspendido por falta de pago ({-ep['dias']} días vencido)")
         guardar_json(DATOS, datos)
     for c in cambios:
@@ -763,6 +766,7 @@ class Panel(BaseHTTPRequestHandler):
                         if slug in datos["planes"]:
                             datos["planes"][slug].pop("suspendido_por_pago", None)
                             guardar_json(DATOS, datos)
+                            escribir_suscripcion(slug, datos["planes"][slug])
                 return self.responder(200 if ok else 500, {"ok": ok, "detalle": salida})
 
             if ruta == "/api/clientes/editar":

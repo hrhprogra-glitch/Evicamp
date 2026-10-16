@@ -68,6 +68,13 @@ escribir_nginx() {
     root $APP_COMPARTIDA;
     location / {
         try_files /suspendido.html =503;
+        add_header Cache-Control \"no-store\" always;
+    }
+
+    # Estado del plan: la página de suspensión muestra el botón \"Pagar ahora\"
+    location = /suscripcion.json {
+        alias $DIR_CLIENTES/$slug/suscripcion.json;
+        add_header Cache-Control \"no-store\" always;
     }
     location /rest/v1/ {
         return 503;
