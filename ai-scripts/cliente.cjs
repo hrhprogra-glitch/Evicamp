@@ -6,6 +6,7 @@
 //   node ai-scripts/cliente.cjs suspender <link>                           -> bloquea el acceso (no borra datos)
 //   node ai-scripts/cliente.cjs activar <link>                             -> lo reactiva
 //   node ai-scripts/cliente.cjs backup                                     -> copia de todas las bases ahora mismo
+//   node ai-scripts/cliente.cjs seguridad <evicamp|siumax|clientes|link> [--quitar] -> la API exige sesión en cada pedido
 //   node ai-scripts/cliente.cjs panel                                      -> instala/actualiza el Panel de Control
 //     (la primera vez usa PANEL_CLAVE de .env.vps como contraseña del panel)
 //     Mercado Pago: modo prueba con MP_ACCESS_TOKEN_PRUEBA; cobro real SOLO si .env.vps tiene MP_COBRAR=si
@@ -36,10 +37,16 @@ const subirScripts = async (ssh) => {
     const contenido = fs.readFileSync(path.join(DIR_LOCAL, archivo), 'utf8').replace(/\r\n/g, '\n');
     await ssh.execCommand(`cat > ${DIR_REMOTO}/${archivo} && chmod +x ${DIR_REMOTO}/${archivo}`, { stdin: contenido });
   }
+  // Cambios de base de datos que aplican los scripts (ej. sql/seguridad-sesion.sql)
+  await ssh.execCommand(`mkdir -p ${DIR_REMOTO}/sql`);
+  for (const archivo of fs.readdirSync(path.join(DIR_LOCAL, 'sql')).filter((f) => f.endsWith('.sql'))) {
+    const contenido = fs.readFileSync(path.join(DIR_LOCAL, 'sql', archivo), 'utf8').replace(/\r\n/g, '\n');
+    await ssh.execCommand(`cat > ${DIR_REMOTO}/sql/${archivo}`, { stdin: contenido });
+  }
 };
 
 (async () => {
-  const validos = ['instalar', 'nuevo', 'listar', 'suspender', 'activar', 'backup', 'panel'];
+  const validos = ['instalar', 'nuevo', 'listar', 'suspender', 'activar', 'backup', 'panel', 'seguridad'];
   if (!validos.includes(accion)) {
     console.error(fs.readFileSync(__filename, 'utf8').split('\n').filter((l) => l.startsWith('//')).join('\n'));
     process.exit(1);
@@ -104,6 +111,10 @@ const subirScripts = async (ssh) => {
     }
     if (accion === 'backup') {
       await ejecutar(ssh, `${DIR_REMOTO}/backup.sh && tail -n 20 /var/backups/siuhub/backup.log`);
+    }
+    if (accion === 'seguridad') {
+      if (!args[0]) throw new Error('Uso: node ai-scripts/cliente.cjs seguridad <evicamp|siumax|clientes|link> [--quitar]');
+      await ejecutar(ssh, `${DIR_REMOTO}/activar-seguridad.sh ${q(args[0])} ${args[1] === '--quitar' ? '--quitar' : ''}`);
     }
   } finally {
     ssh.dispose();
