@@ -33,7 +33,7 @@ certificado "$DOMINIO_BASE"
 CORS='
         add_header Access-Control-Allow-Origin * always;
         add_header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
-        add_header Access-Control-Allow-Headers "Authorization, Content-Type, apikey, prefer, x-client-info, range, accept-profile, content-profile, x-supabase-api-version" always;
+        add_header Access-Control-Allow-Headers "Authorization, Content-Type, apikey, prefer, x-client-info, range, accept-profile, content-profile, x-supabase-api-version, x-sesion" always;
         add_header Access-Control-Expose-Headers "Content-Range, Location, Range-Unit" always;'
 cat > /etc/nginx/sites-available/siumax <<EOF
 # SiuMax - sistema de pruebas (base siuhub, API puerto 3001)

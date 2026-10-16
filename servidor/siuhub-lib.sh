@@ -59,7 +59,7 @@ escribir_nginx() {
   local cors='
         add_header Access-Control-Allow-Origin * always;
         add_header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
-        add_header Access-Control-Allow-Headers "Authorization, Content-Type, apikey, prefer, x-client-info, range, accept-profile, content-profile, x-supabase-api-version" always;
+        add_header Access-Control-Allow-Headers "Authorization, Content-Type, apikey, prefer, x-client-info, range, accept-profile, content-profile, x-supabase-api-version, x-sesion" always;
         add_header Access-Control-Expose-Headers "Content-Range, Location, Range-Unit" always;'
 
   local cuerpo

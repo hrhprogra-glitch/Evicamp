@@ -27,12 +27,29 @@ const customFetch = (url: string | URL | Request, options?: RequestInit) => {
   // 2. ¡TU MAGIA INTACTA!: Borramos el token de autorización.
   // Así PostgREST usa automáticamente el rol 'anon' de PostgreSQL.
   headers.delete('Authorization');
+
+  // 3. La API exige la sesión en cada pedido (servidor/sql/seguridad-sesion.sql): va el token de la sesión
+  let token: string | null = null;
+  try { token = localStorage.getItem(CLAVE_TOKEN_SESION); } catch { /* sin almacenamiento */ }
+  if (token) headers.set('x-sesion', token);
   fetchOptions.headers = headers;
 
   return fetch(urlString, fetchOptions).then((r) => {
     if (r.status === 503) mostrarSuspendido();
+    // Sesión cerrada o empleado desactivado: volver al login (no aplica al propio inicio de sesión)
+    if (r.status === 401 && token && !urlString.includes('/rpc/fn_login')) sesionVencida();
     return r;
   });
+};
+
+// Misma clave que usa src/utils/sesion.ts (aquí se lee directo para no crear una importación circular)
+const CLAVE_TOKEN_SESION = 'gestorpro_sesion';
+let saliendo = false;
+const sesionVencida = () => {
+  if (saliendo) return;
+  saliendo = true;
+  try { localStorage.removeItem(CLAVE_TOKEN_SESION); } catch { /* sin almacenamiento */ }
+  window.location.replace('/');
 };
 
 // ----------------------------------------------------------------------
