@@ -843,7 +843,12 @@ const [searchQuery, setSearchQuery] = useState('');
             document.activeElement.blur();
           }
           document.getElementById('buscador-global-pos')?.focus();
-          setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 100);
+          // Si se abrió la vista previa del ticket, el foco se queda en sus botones
+          setTimeout(() => {
+            const nueva = document.getElementById('vista-btn-nueva');
+            if (nueva) nueva.focus();
+            else document.getElementById('buscador-global-pos')?.focus();
+          }, 100);
         }}
         cart={cart}
         total={Math.round(cart.reduce((acc, item) => acc + item.subtotal, 0) * 100) / 100}
@@ -859,7 +864,15 @@ const [searchQuery, setSearchQuery] = useState('');
               <h2 className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
                 <Printer size={18} /> Vista Previa del Ticket
               </h2>
-              <button onClick={() => { setIsVistaPreviaOpen(false); setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50); }} className="hover:rotate-90 transition-transform cursor-pointer">
+              <button
+                id="vista-btn-cerrar"
+                aria-label="Cerrar"
+                onClick={() => { setIsVistaPreviaOpen(false); setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('vista-btn-nueva')?.focus(); }
+                }}
+                className="p-1 hover:rotate-90 transition-transform cursor-pointer outline-none focus:ring-4 focus:ring-white"
+              >
                 <X size={20} strokeWidth={3} />
               </button>
             </div>
@@ -888,6 +901,9 @@ const [searchQuery, setSearchQuery] = useState('');
                 if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
                   e.preventDefault();
                   document.getElementById(e.key === 'ArrowRight' ? 'vista-btn-imprimir' : 'vista-btn-nueva')?.focus();
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  document.getElementById('vista-btn-cerrar')?.focus();
                 }
               }}
             >
