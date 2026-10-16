@@ -459,19 +459,26 @@ MESES_MAXIMOS = 12
 
 
 def promo_actual(datos=None):
-    """Promoción para todos: pagar 12 meses juntos a un precio fijo (ej. S/ 350)."""
+    """Promoción para todos al pagar 12 meses juntos:
+    modo "fijo" -> los 12 meses cuestan un monto total (ej. S/ 350)
+    modo "porcentaje" -> los 12 meses tienen un % de descuento (ej. 10%), según el precio de cada cliente."""
     p = (datos or leer_datos()).get("promo") or {}
-    return {"activa": bool(p.get("activa")), "precio": float(p.get("precio") or 0)}
+    return {"activa": bool(p.get("activa")), "modo": p.get("modo") if p.get("modo") in ("fijo", "porcentaje") else "fijo",
+            "precio": float(p.get("precio") or 0), "porcentaje": float(p.get("porcentaje") or 0)}
 
 
 def guardar_promo(cuerpo):
     activa = bool(cuerpo.get("activa"))
+    modo = cuerpo.get("modo") if cuerpo.get("modo") in ("fijo", "porcentaje") else "fijo"
     precio = float(cuerpo.get("precio") or 0)
-    if activa and not 0 < precio <= 100000:
-        raise ValueError("Precio de la promoción inválido.")
+    porcentaje = float(cuerpo.get("porcentaje") or 0)
+    if activa and modo == "fijo" and not 0 < precio <= 100000:
+        raise ValueError("Pon el monto total de los 12 meses.")
+    if activa and modo == "porcentaje" and not 0 < porcentaje < 100:
+        raise ValueError("El descuento debe ser mayor a 0% y menor a 100%.")
     with candado:
         datos = leer_datos()
-        datos["promo"] = {"activa": activa, "precio": round(precio, 2)}
+        datos["promo"] = {"activa": activa, "modo": modo, "precio": round(precio, 2), "porcentaje": round(porcentaje, 2)}
         guardar_json(DATOS, datos)
     return datos["promo"]
 
@@ -481,8 +488,10 @@ def precio_meses(plan, meses, promo=None):
     mensual = float(plan["precio"]) / MESES_PLAN.get(plan["tipo"], 1)
     total = round(mensual * meses, 2)
     promo = promo or promo_actual()
-    if meses == 12 and promo["activa"] and 0 < promo["precio"] < total:
-        return promo["precio"], True
+    if meses == 12 and promo["activa"]:
+        con_promo = promo["precio"] if promo["modo"] == "fijo" else round(total * (1 - promo["porcentaje"] / 100), 2)
+        if 0 < con_promo < total:
+            return con_promo, True
     return total, False
 
 
@@ -572,8 +581,10 @@ def pagina_elegir_meses(slug, cerrar_al_volver):
     opts = "".join(f"<option value='{m}' {'selected' if m == defecto else ''}>{html.escape(t)}</option>" for m, t, _ in opciones)
     hasta = {m: vence(sumar_meses(date.fromisoformat(plan["proximo_pago"]), m).isoformat()) for m in range(1, MESES_MAXIMOS + 1)}
     promo_txt = ""
-    if promo["activa"] and precio_meses(plan, 12, promo)[1]:
-        promo_txt = (f"<div class='promo'>⭐ Promoción: <b>12 meses por S/ {promo['precio']:.2f}</b></div>")
+    total_promo, hay_promo = precio_meses(plan, 12, promo)
+    if hay_promo:
+        extra = f" ({promo['porcentaje']:g}% de descuento)" if promo["modo"] == "porcentaje" else ""
+        promo_txt = f"<div class='promo'>⭐ Promoción: <b>12 meses por S/ {total_promo:.2f}</b>{extra}</div>"
     return f"""<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pagar plan · SiuMax</title><style>
 html,body{{margin:0;min-height:100%}}

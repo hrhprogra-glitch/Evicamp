@@ -250,7 +250,8 @@ function pintar() {
     <span>Mercado Pago <b style="color:${config.mercadopago === 'produccion' ? 'var(--accent)' : config.mercadopago ? 'var(--warning)' : '#94A3B8'}">${config.mercadopago === 'produccion' ? 'COBRANDO' : config.mercadopago ? 'MODO PRUEBA' : 'NO CONFIGURADO'}</b></span>`;
 
   const promo = config.promo || {};
-  $('#btn-promo').textContent = promo.activa ? `⭐ Promo: 12 meses ${soles(promo.precio)}` : '⭐ Promoción: apagada';
+  $('#btn-promo').textContent = !promo.activa ? '⭐ Promoción: apagada'
+    : promo.modo === 'porcentaje' ? `⭐ Promo: 12 meses -${promo.porcentaje}%` : `⭐ Promo: 12 meses ${soles(promo.precio)}`;
 
   const activos = clientes.filter((c) => c.estado === 'ACTIVO' || c.externo).length;
   $('#tarjetas').innerHTML = `
@@ -448,10 +449,11 @@ function modalPlan(c) {
 
 // Igual que en el servidor: precio mensual x meses; 12 meses con la promoción si sale más barata
 const MESES_PLAN = { MENSUAL: 1, TRIMESTRAL: 3, SEMESTRAL: 6, ANUAL: 12 };
-function precioMeses(plan, meses) {
+function precioMeses(plan, meses, promo = estado.config.promo || {}) {
   const total = Math.round(plan.precio / (MESES_PLAN[plan.tipo] || 1) * meses * 100) / 100;
-  const promo = estado.config.promo || {};
-  return meses === 12 && promo.activa && promo.precio > 0 && promo.precio < total ? promo.precio : total;
+  if (meses !== 12 || !promo.activa) return total;
+  const conPromo = promo.modo === 'porcentaje' ? Math.round(total * (1 - promo.porcentaje / 100) * 100) / 100 : promo.precio;
+  return conPromo > 0 && conPromo < total ? conPromo : total;
 }
 const sumarMeses = (iso, meses) => {
   const [a, m, d] = iso.split('-').map(Number);
@@ -462,18 +464,47 @@ const sumarMeses = (iso, meses) => {
 
 function modalPromo() {
   const p = estado.config.promo || {};
+  const conPlan = estado.clientes.filter((c) => c.plan && c.plan.precio > 0);
   const f = abrirModal('Promoción para todos', `
-    <div class="ayuda">Al pagar, tus clientes pueden elegir de 1 a 12 meses. Con la promoción activa, <b>12 meses</b> cuestan este precio fijo
-      (solo si les sale más barato que pagar 12 meses sueltos).</div>
+    <div class="ayuda">Al pagar, tus clientes eligen de 1 a 12 meses. La promoción se aplica al pagar <b>12 meses juntos</b>
+      (solo si les sale más barato que 12 meses sueltos).</div>
     <label style="display:flex;align-items:center;gap:8px;margin-top:16px;color:var(--ink)"><input type="checkbox" name="activa" ${p.activa ? 'checked' : ''} style="width:auto"> Promoción activa</label>
-    <label>Precio por 12 meses (S/)</label><input name="precio" type="number" step="0.01" min="0" value="${esc(p.precio || 350)}">
-    <div class="ayuda">Ejemplo: si el mes cuesta S/ 30, 12 meses sueltos son S/ 360; con promoción de S/ 350 ahorran S/ 10.</div>`,
+    <label>Tipo de promoción</label>
+    <select name="modo">
+      <option value="fijo" ${p.modo !== 'porcentaje' ? 'selected' : ''}>Monto total de los 12 meses (igual para todos)</option>
+      <option value="porcentaje" ${p.modo === 'porcentaje' ? 'selected' : ''}>Porcentaje de descuento (según el precio de cada cliente)</option>
+    </select>
+    <div id="campo-fijo"><label>Monto total de los 12 meses (S/)</label><input name="precio" type="number" step="0.01" min="0" value="${esc(p.precio || '')}" placeholder="350"></div>
+    <div id="campo-porcentaje"><label>Descuento (%)</label><input name="porcentaje" type="number" step="0.01" min="0" max="99" value="${esc(p.porcentaje || '')}" placeholder="10"></div>
+    <div class="sub"><span>Así quedaría para tus clientes</span></div>
+    <div id="vista-promo"></div>`,
     '<button type="button" class="btn" data-cerrar2>Cancelar</button><button class="btn btn-ok">Guardar</button>');
   f.querySelector('[data-cerrar2]').onclick = cerrarModal;
+  const vista = () => {
+    const porcentaje = f.modo.value === 'porcentaje';
+    $('#campo-fijo').classList.toggle('oculto', porcentaje);
+    $('#campo-porcentaje').classList.toggle('oculto', !porcentaje);
+    const promo = { activa: true, modo: f.modo.value, precio: Number(f.precio.value) || 0, porcentaje: Number(f.porcentaje.value) || 0 };
+    $('#vista-promo').innerHTML = !conPlan.length ? '<div class="ayuda">Aún no tienes clientes con plan.</div>' : `
+      <table><thead><tr><th>Cliente</th><th>Mes</th><th>12 meses sueltos</th><th>Con promoción</th></tr></thead><tbody>
+      ${conPlan.map((c) => {
+        const normal = precioMeses(c.plan, 12, { activa: false });
+        const promoTotal = precioMeses(c.plan, 12, promo);
+        const aplica = promoTotal < normal;
+        return `<tr><td data-t="Cliente"><b>${esc(c.nombre)}</b></td><td data-t="Mes">${soles(precioMeses(c.plan, 1, { activa: false }))}</td>
+          <td data-t="12 meses">${soles(normal)}</td>
+          <td data-t="Con promoción">${aplica ? `<b>${soles(promoTotal)}</b> <span class="chip c-ok">ahorra ${soles(normal - promoTotal)}</span>`
+            : '<span class="chip c-gris">No aplica (no es más barato)</span>'}</td></tr>`;
+      }).join('')}</tbody></table>`;
+  };
+  [f.modo, f.precio, f.porcentaje].forEach((el) => el.addEventListener('input', vista));
+  vista();
   f.onsubmit = async (e) => {
     e.preventDefault();
-    try { await api('/api/promo', { activa: f.activa.checked, precio: f.precio.value }); cerrarModal(); toast('Promoción guardada.'); cargar(); }
-    catch (ex) { errorModal(ex.message); }
+    try {
+      await api('/api/promo', { activa: f.activa.checked, modo: f.modo.value, precio: f.precio.value, porcentaje: f.porcentaje.value });
+      cerrarModal(); toast('Promoción guardada.'); cargar();
+    } catch (ex) { errorModal(ex.message); }
   };
 }
 
