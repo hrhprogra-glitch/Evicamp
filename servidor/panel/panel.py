@@ -549,6 +549,17 @@ def procesar_aviso_mp(id_pago):
     if not RE_SLUG.match(slug):
         return "pago sin cliente"
     slug = slug_actual(slug)   # pagado con el link viejo de un cliente que cambió de link
+    # Cobrando de verdad: un pago de prueba (dinero ficticio) nunca cuenta
+    if mp_config().get("modo") == "produccion" and pago.get("live_mode") is False:
+        print(f"MP: pago {id_pago} de {slug} RECHAZADO: es un pago de prueba", flush=True)
+        return "pago de prueba rechazado"
+    # El monto debe cubrir el precio del plan (en soles)
+    plan = leer_datos()["planes"].get(slug) or {}
+    monto = float(pago.get("transaction_amount") or 0)
+    if pago.get("currency_id") != "PEN" or monto + 0.009 < float(plan.get("precio") or 0):
+        print(f"MP: pago {id_pago} de {slug} RECHAZADO: {pago.get('currency_id')} {monto} no cubre el plan "
+              f"(S/ {plan.get('precio')})", flush=True)
+        return "monto insuficiente"
     metodo_mp = pago.get("payment_method_id") or pago.get("payment_type_id") or ""
     fecha = (pago.get("date_approved") or "")[:10] or date.today().isoformat()
     r = registrar_pago({"slug": slug, "monto": pago.get("transaction_amount"), "metodo": "MERCADOPAGO",
