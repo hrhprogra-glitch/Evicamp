@@ -29,7 +29,32 @@ const customFetch = (url: string | URL | Request, options?: RequestInit) => {
   headers.delete('Authorization');
   fetchOptions.headers = headers;
 
-  return fetch(urlString, fetchOptions);
+  return fetch(urlString, fetchOptions).then((r) => {
+    if (r.status === 503) mostrarSuspendido();
+    return r;
+  });
+};
+
+// ----------------------------------------------------------------------
+// SERVICIO SUSPENDIDO (Panel de Control): Nginx responde 503 en la API y la página
+// "Servicio suspendido" en todo el link. Recargando, el sistema abierto la muestra al instante.
+// ----------------------------------------------------------------------
+let recargando = false;
+const mostrarSuspendido = () => {
+  if (!import.meta.env.PROD || recargando) return;
+  recargando = true;
+  window.location.replace('/');
+};
+
+// Revisa cada 30 s aunque nadie esté usando el sistema (pantalla quieta en la caja)
+export const vigilarSuspension = () => {
+  if (!import.meta.env.PROD) return;
+  setInterval(() => {
+    if (document.visibilityState !== 'visible') return;
+    fetch('/rest/v1/empresa_config?select=id&limit=1', { cache: 'no-store' })
+      .then((r) => { if (r.status === 503) mostrarSuspendido(); })
+      .catch(() => {}); // sin internet: no hacer nada
+  }, 30_000);
 };
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
