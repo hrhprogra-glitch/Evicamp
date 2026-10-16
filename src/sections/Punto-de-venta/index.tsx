@@ -351,7 +351,8 @@ const [searchQuery, setSearchQuery] = useState('');
 
       // 2. ENTER con la vista previa del ticket abierta = "Nueva Venta": cierra y deja el buscador listo.
       // preventDefault evita que Enter también active el botón que tenga el foco (p. ej. Imprimir).
-      if (e.key === 'Enter' && isVistaPreviaOpen && !e.repeat) {
+      // Si el selector está en "Imprimir", Enter imprime (lo hace el propio botón).
+      if (e.key === 'Enter' && isVistaPreviaOpen && !e.repeat && document.activeElement?.id !== 'vista-btn-imprimir') {
         e.preventDefault();
         setIsVistaPreviaOpen(false);
         setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
@@ -880,16 +881,28 @@ const [searchQuery, setSearchQuery] = useState('');
             </div>
 
             {/* BOTONES */}
-            <div className="p-4 bg-white border-t-2 border-[var(--color-ink)] flex gap-3 shrink-0">
+            {/* Selector: ← → entre los dos botones, Enter activa el elegido */}
+            <div
+              className="p-4 bg-white border-t-2 border-[var(--color-ink)] flex gap-3 shrink-0"
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                  e.preventDefault();
+                  document.getElementById(e.key === 'ArrowRight' ? 'vista-btn-imprimir' : 'vista-btn-nueva')?.focus();
+                }
+              }}
+            >
               <button
+                id="vista-btn-nueva"
+                ref={(el) => { if (el && !el.dataset.enfocado) { el.dataset.enfocado = '1'; setTimeout(() => el.focus(), 30); } }}
                 onClick={() => { setIsVistaPreviaOpen(false); setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50); }}
-                className="flex-1 border-2 border-[var(--color-ink)] bg-white text-[var(--color-ink)] py-3 font-black text-xs uppercase tracking-widest hover:bg-gray-100 transition-colors cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-[4px] active:shadow-none"
+                className="flex-1 border-2 border-[var(--color-ink)] bg-white text-[var(--color-ink)] py-3 font-black text-xs uppercase tracking-widest hover:bg-gray-100 transition-colors cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-[4px] active:shadow-none outline-none focus:ring-4 focus:ring-[var(--color-info)] focus:ring-offset-2"
               >
                 Nueva Venta <span className="opacity-60">(Enter)</span>
               </button>
-              <button 
-                onClick={() => handlePrint()} 
-                className="flex-1 border-2 border-[var(--color-ink)] bg-[var(--color-accent)] text-[var(--color-ink)] py-3 font-black text-xs uppercase tracking-widest hover:bg-[var(--color-accent-dark)] hover:text-white transition-colors flex items-center justify-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-[4px] active:shadow-none cursor-pointer"
+              <button
+                id="vista-btn-imprimir"
+                onClick={() => handlePrint()}
+                className="flex-1 border-2 border-[var(--color-ink)] bg-[var(--color-accent)] text-[var(--color-ink)] py-3 font-black text-xs uppercase tracking-widest hover:bg-[var(--color-accent-dark)] hover:text-white transition-colors flex items-center justify-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-[4px] active:shadow-none cursor-pointer outline-none focus:ring-4 focus:ring-[var(--color-info)] focus:ring-offset-2"
               >
                 <Printer size={18} /> Imprimir
               </button>
