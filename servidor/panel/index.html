@@ -258,7 +258,7 @@ function pintar() {
 
   $('#tabla-clientes').innerHTML = !clientes.length ? '<div class="vacio">Aún no tienes clientes. Crea el primero con "+ Nuevo cliente".</div>' : `
     <table><thead><tr><th>Negocio</th><th>Servicio</th><th>Plan</th><th>Próximo pago</th><th>Pago</th><th>Acciones</th></tr></thead><tbody>
-    ${clientes.map((c) => `<tr>
+    ${clientes.map((c) => `<tr class="fila-clic" data-fila="${esc(c.slug)}" title="Ver datos y usuarios">
       <td><button type="button" class="link-negocio" data-accion="detalle" data-slug="${esc(c.slug)}" title="Ver datos y usuarios">${esc(c.nombre)}</button><br>${c.link ? `<a href="${esc(c.link)}" target="_blank" rel="noopener">${esc(c.link.replace('https://', ''))}</a>` : ''}</td>
       <td data-t="Servicio">${chipServicio(c)}</td>
       <td data-t="Plan">${c.plan ? `${esc(c.plan.tipo)} · ${soles(c.plan.precio)}` : '-'}</td>
@@ -298,7 +298,13 @@ function pintar() {
 // ===== ACCIONES DE LA TABLA =====
 $('#tabla-clientes').addEventListener('click', (e) => {
   const b = e.target.closest('button[data-accion]');
-  if (!b || b.disabled) return;
+  if (!b) {
+    // Clic en cualquier parte de la fila (menos el link del negocio) abre sus datos y usuarios
+    const fila = e.target.closest('[data-fila]');
+    if (fila && !e.target.closest('a')) modalCliente(fila.dataset.fila, 'negocio');
+    return;
+  }
+  if (b.disabled) return;
   const c = estado.clientes.find((x) => x.slug === b.dataset.slug);
   if (b.dataset.accion === 'detalle') modalCliente(c.slug, 'negocio');
   if (b.dataset.accion === 'pago') modalPago(c);
