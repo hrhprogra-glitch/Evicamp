@@ -344,7 +344,7 @@ function abrirModal(titulo, cuerpo, pie) {
     <form id="form-modal"><div class="modal-cuerpo">${cuerpo}<div id="modal-error" class="error oculto"></div><div id="modal-resultado"></div></div>
     <div class="modal-pie">${pie}</div></form></div></div>`;
   $('#modales').querySelector('[data-cerrar]').onclick = cerrarModal;
-  $('#modales .fondo').addEventListener('click', (e) => { if (e.target.classList.contains('fondo')) cerrarModal(); });
+  // Clic fuera de la ventana: NO se cierra (para no perder lo escrito). Se cierra con ×, Cancelar o Esc.
   const primero = $('#form-modal').querySelector('input, select'); if (primero) primero.focus();
   return $('#form-modal');
 }
