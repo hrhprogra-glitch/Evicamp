@@ -39,8 +39,8 @@ body{display:flex;align-items:center;justify-content:center;background:#1E293B;c
 h1{margin:0 0 12px;font-size:18px;letter-spacing:.15em;text-transform:uppercase;color:#F59E0B}
 p{margin:0;font-size:14px;line-height:1.6}
 .pagar{display:none;margin-top:22px}
-.pagar a{display:inline-block;background:#F59E0B;color:#1E293B;font-weight:900;text-decoration:none;letter-spacing:.12em;text-transform:uppercase;padding:12px 22px;border:2px solid #F8FAFC;box-shadow:4px 4px 0 0 #F8FAFC}
-.pagar a:hover,.pagar a:focus-visible{outline:none;transform:translate(-1px,-1px);box-shadow:5px 5px 0 0 #F8FAFC}
+.pagar a{display:inline-block;background:#F59E0B;color:#1E293B;font-weight:900;text-decoration:none;letter-spacing:.12em;text-transform:uppercase;padding:12px 22px;border:2px solid #1E293B;box-shadow:4px 4px 0 0 #F59E0B}
+.pagar a:hover,.pagar a:focus-visible{outline:none;transform:translate(-1px,-1px);box-shadow:5px 5px 0 0 #F59E0B}
 .pagar small{display:block;margin-top:12px;color:#CBD5E1;font-size:12px}
 </style></head>
 <body><div class="caja"><h1>Servicio suspendido</h1>
