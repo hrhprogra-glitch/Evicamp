@@ -267,14 +267,18 @@ function pintar() {
       <td><div class="acciones">
         <button class="btn btn-sm btn-ok" data-accion="pago" data-slug="${esc(c.slug)}" ${c.plan ? '' : 'disabled title="Primero configura su plan"'}>Registrar pago</button>
         <button class="btn btn-sm" data-accion="plan" data-slug="${esc(c.slug)}">${c.plan ? 'Plan' : 'Configurar plan'}</button>
+        ${c.externo ? '' : `<button class="btn btn-sm" data-accion="editar" data-slug="${esc(c.slug)}">Editar</button>`}
         ${c.externo ? '' : c.estado === 'SUSPENDIDO'
-          ? `<button class="btn btn-sm" data-accion="activar" data-slug="${esc(c.slug)}">Activar</button>`
+          ? `<button class="btn btn-sm" data-accion="activar" data-slug="${esc(c.slug)}">Activar</button>
+             <button class="btn btn-sm btn-danger" data-accion="borrar" data-slug="${esc(c.slug)}" title="Borra su base de datos (deja un backup de 30 días)">Borrar</button>`
           : `<button class="btn btn-sm btn-danger" data-accion="suspender" data-slug="${esc(c.slug)}">Suspender</button>`}
       </div></td></tr>`).join('')}
     </tbody></table>`;
 
   // Pagos agrupados por negocio: una fila por negocio; clic -> todos sus pagos
-  const nombreDe = (slug) => (clientes.find((c) => c.slug === slug) || {}).nombre || slug;
+  const eliminados = estado.eliminados || {};
+  const nombreDe = (slug) => (clientes.find((c) => c.slug === slug) || {}).nombre
+    || (eliminados[slug] ? `${eliminados[slug].nombre} (borrado)` : slug);
   const grupos = estado.pagos_por_negocio || [];
   $('#tabla-pagos').innerHTML = !grupos.length ? '<div class="vacio">Sin pagos registrados.</div>' : `
     <table><thead><tr><th>Negocio</th><th>Pagos</th><th>Total pagado</th><th>Último pago</th><th>Cubre hasta</th><th></th></tr></thead><tbody>
@@ -311,6 +315,8 @@ $('#tabla-clientes').addEventListener('click', (e) => {
   if (b.dataset.accion === 'plan') modalPlan(c);
   if (b.dataset.accion === 'suspender') confirmarEstado(c, 'suspender');
   if (b.dataset.accion === 'activar') confirmarEstado(c, 'activar');
+  if (b.dataset.accion === 'editar') modalEditar(c);
+  if (b.dataset.accion === 'borrar') modalBorrar(c);
 });
 
 // Toda la fila del negocio abre su historial (clic, Enter o Espacio)
@@ -544,6 +550,51 @@ async function modalCliente(slug, vista) {
       } catch (ex) { errorModal(ex.message); }
     };
   });
+}
+
+function modalEditar(c) {
+  const p = c.plan || {};
+  const f = abrirModal(`Editar · ${esc(c.nombre)}`, `
+    <label>Nombre del negocio</label><input name="nombre" required maxlength="60" value="${esc(c.nombre)}">
+    <div class="ayuda">Es el nombre que ves en este panel. El nombre que sale en su sistema y en sus tickets lo pone el cliente en Ajustes.</div>
+    ${c.plan ? `<div class="fila">
+      <div><label>Teléfono / WhatsApp</label><input name="telefono" value="${esc(p.telefono || '')}" maxlength="30"></div>
+      <div><label>Notas</label><input name="notas" value="${esc(p.notas || '')}" maxlength="300"></div>
+    </div>` : ''}
+    <label>Link</label><input value="${esc(c.link)}" disabled>
+    <div class="ayuda">El link no se puede cambiar: el cliente ya lo tiene instalado en sus equipos.</div>`,
+    '<button type="button" class="btn" data-cerrar2>Cancelar</button><button class="btn btn-ok">Guardar</button>');
+  f.querySelector('[data-cerrar2]').onclick = cerrarModal;
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    const datos = { slug: c.slug, nombre: f.nombre.value };
+    if (c.plan) Object.assign(datos, { telefono: f.telefono.value, notas: f.notas.value });
+    try { await api('/api/clientes/editar', datos); cerrarModal(); toast('Cliente actualizado.'); cargar(); }
+    catch (ex) { errorModal(ex.message); }
+  };
+}
+
+function modalBorrar(c) {
+  const f = abrirModal('Borrar cliente', `
+    <div class="error" style="margin-top:12px">Se borrará TODO el sistema de <b>${esc(c.nombre)}</b>: ventas, inventario, créditos, usuarios, su link y su servicio. El cliente ya no podrá entrar.</div>
+    <div class="ayuda" style="margin-top:10px">Antes de borrar se guarda un <b>backup final por 30 días</b>, por si hay que recuperarlo. Su historial de pagos se queda en este panel.</div>
+    <label>Para confirmar, escribe el nombre del negocio: <span style="color:var(--ink)">${esc(c.nombre)}</span></label>
+    <input name="confirmacion" autocomplete="off" required>`,
+    '<button type="button" class="btn" data-cerrar2>Cancelar</button><button class="btn btn-danger" id="btn-borrar" disabled>Borrar para siempre</button>');
+  f.querySelector('[data-cerrar2]').onclick = cerrarModal;
+  const normal = (t) => t.trim().replace(/\s+/g, ' ').toLowerCase();
+  const b = $('#btn-borrar');
+  f.confirmacion.addEventListener('input', () => { b.disabled = normal(f.confirmacion.value) !== normal(c.nombre); });
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    if (b.disabled) return;
+    b.disabled = true; b.textContent = 'Borrando...';
+    $('#modal-error').classList.add('oculto');
+    try {
+      await api('/api/clientes/borrar', { slug: c.slug, confirmacion: f.confirmacion.value });
+      cerrarModal(); toast(`${c.nombre} fue borrado. Backup final guardado por 30 días.`); cargar();
+    } catch (ex) { errorModal(ex.message); b.disabled = false; b.textContent = 'Borrar para siempre'; }
+  };
 }
 
 function confirmarEstado(c, accion) {

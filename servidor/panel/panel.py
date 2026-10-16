@@ -157,6 +157,55 @@ def cambiar_estado(slug, accion):
     return ejecutar([f"{DIR_SIUMAX}/estado-cliente.sh", slug, accion], espera=60)
 
 
+def editar_cliente(cuerpo):
+    """Cambia el nombre del negocio (en el registro) y, si tiene plan, su WhatsApp y notas."""
+    slug = str(cuerpo.get("slug", ""))
+    cliente_registrado(slug)
+    nombre = " ".join(str(cuerpo.get("nombre", "")).split())[:60]
+    if not nombre:
+        raise ValueError("Falta el nombre del negocio.")
+    with candado:
+        with open(REGISTRO, encoding="utf-8") as f:
+            lineas = f.readlines()
+        nuevas = []
+        for linea in lineas:
+            partes = linea.rstrip("\n").split("\t")
+            if partes[0] == slug and len(partes) >= 5:
+                partes[1] = nombre
+                linea = "\t".join(partes) + "\n"
+            nuevas.append(linea)
+        with open(REGISTRO + ".tmp", "w", encoding="utf-8") as f:
+            f.writelines(nuevas)
+        os.replace(REGISTRO + ".tmp", REGISTRO)
+        datos = leer_datos()
+        plan = datos["planes"].get(slug)
+        if plan:
+            plan["telefono"] = str(cuerpo.get("telefono", ""))[:30]
+            plan["notas"] = str(cuerpo.get("notas", ""))[:300]
+            guardar_json(DATOS, datos)
+    return {"ok": True}
+
+
+def borrar_cliente(cuerpo):
+    """Borra un cliente SUSPENDIDO, confirmando con su nombre. El script deja un backup final (30 días).
+    Su historial de pagos se queda en el panel."""
+    slug = str(cuerpo.get("slug", ""))
+    reg = cliente_registrado(slug)
+    if reg["estado"] != "SUSPENDIDO":
+        raise ValueError("Primero suspende al cliente.")
+    if " ".join(str(cuerpo.get("confirmacion", "")).split()).lower() != " ".join(reg["nombre"].split()).lower():
+        raise ValueError("El nombre escrito no coincide con el del negocio.")
+    ok, salida = ejecutar([f"{DIR_SIUMAX}/borrar-cliente.sh", slug], espera=300)
+    if not ok:
+        return False, salida
+    with candado:
+        datos = leer_datos()
+        datos["planes"].pop(slug, None)
+        datos.setdefault("eliminados", {})[slug] = {"nombre": reg["nombre"], "fecha": date.today().isoformat()}
+        guardar_json(DATOS, datos)
+    return True, salida
+
+
 # ===================== Información =====================
 
 def info_vps():
@@ -219,6 +268,7 @@ def resumen():
         "backups": info_backups(),
         "pagos": sorted(datos["pagos"], key=lambda p: p["registrado"], reverse=True)[:50],
         "pagos_por_negocio": pagos_por_negocio(datos["pagos"]),
+        "eliminados": datos.get("eliminados", {}),
         "cobros": {"ingresos_mes": round(ingresos_mes, 2), "mensual_esperado": round(esperado, 2),
                    "vencidos": sum(1 for c in clientes if c["pago"]["estado"] == "VENCIDO"),
                    "por_vencer": sum(1 for c in clientes if c["pago"]["estado"] == "POR_VENCER")},
@@ -274,6 +324,12 @@ def detalle_cliente(slug):
     datos = leer_datos()
     plan = datos["planes"].get(slug)
     pagos = sorted((p for p in datos["pagos"] if p["slug"] == slug), key=lambda p: p["fecha"], reverse=True)
+    eliminado = datos.get("eliminados", {}).get(slug)
+    if eliminado and RE_SLUG.match(slug or "") and not any(c["slug"] == slug for c in leer_registro()):
+        # Cliente borrado: solo queda su historial de pagos
+        return {"slug": slug, "nombre": eliminado["nombre"], "link": "", "eliminado": eliminado["fecha"],
+                "estado": "ELIMINADO", "alta": "", "api": None, "plan": None, "pago": estado_pago(None), "pagos": pagos,
+                "total_pagado": round(sum(p["monto"] for p in pagos), 2), "usuarios": []}
     if plan and RE_SLUG.match(slug or "") and not any(c["slug"] == slug for c in leer_registro()):
         # Cliente externo (ej. Evicamp): solo su plan y sus pagos; sus usuarios no están en una base cli_
         return {"slug": slug, "nombre": plan.get("nombre", slug), "link": plan.get("link", ""), "externo": True,
@@ -656,6 +712,15 @@ class Panel(BaseHTTPRequestHandler):
                             datos["planes"][slug].pop("suspendido_por_pago", None)
                             guardar_json(DATOS, datos)
                 return self.responder(200 if ok else 500, {"ok": ok, "detalle": salida})
+
+            if ruta == "/api/clientes/editar":
+                return self.responder(200, editar_cliente(cuerpo))
+
+            if ruta == "/api/clientes/borrar":
+                ok, salida = borrar_cliente(cuerpo)
+                if not ok:
+                    return self.responder(500, {"error": "No se pudo borrar el cliente.", "detalle": salida[-2000:]})
+                return self.responder(200, {"ok": True, "detalle": salida[-2000:]})
 
             if ruta == "/api/usuario/clave":
                 return self.responder(200, restablecer_clave(cuerpo))
