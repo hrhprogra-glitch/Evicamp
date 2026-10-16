@@ -11,6 +11,16 @@ export interface Suscripcion {
   pagar_url?: string | null; // Mercado Pago (tarjeta o Yape); el pago se registra solo
 }
 
+// Abrir el pago de Mercado Pago:
+//  - navegador / app instalada: en la MISMA pestaña; al terminar, Mercado Pago vuelve a este mismo sistema
+//  - programa de PC: se abre en el navegador de Windows y al terminar muestra "Pago recibido, ya puedes cerrar"
+//    (el programa se entera solo del pago: el aviso de vencimiento se revisa de nuevo)
+export const abrirPago = (url: string) => {
+  const enEscritorio = !!(window as Window & { siuhubEscritorio?: unknown }).siuhubEscritorio;
+  if (enEscritorio) window.open(`${url}?volver=cerrar`, '_blank');
+  else window.location.href = url;
+};
+
 const REVISAR_CADA_MS = 60 * 60 * 1000;
 const CLAVE_CERRADO = 'siuhub_aviso_plan_cerrado';
 export const fechaPe = (iso: string | null) => (iso ? iso.split('-').reverse().join('/') : '');
@@ -27,7 +37,9 @@ export const useSuscripcion = () => {
     };
     revisar();
     const intervalo = setInterval(revisar, REVISAR_CADA_MS);
-    return () => clearInterval(intervalo);
+    // Al volver a la ventana (por ejemplo, después de pagar en el navegador) se revisa de nuevo
+    window.addEventListener('focus', revisar);
+    return () => { clearInterval(intervalo); window.removeEventListener('focus', revisar); };
   }, []);
   return plan;
 };
@@ -65,8 +77,7 @@ export const AvisoSuscripcion: React.FC = () => {
       {plan.pagar_url && (
         <a
           href={plan.pagar_url}
-          target="_blank"
-          rel="noopener noreferrer"
+          onClick={(e) => { e.preventDefault(); abrirPago(plan.pagar_url!); }}
           className="shrink-0 px-3 py-1 border-2 border-current bg-white font-black uppercase tracking-widest hover:bg-[var(--color-ink)] hover:text-white transition-colors"
         >
           Pagar ahora

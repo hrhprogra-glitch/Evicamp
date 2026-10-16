@@ -45,7 +45,7 @@ p{margin:0;font-size:14px;line-height:1.6}
 </style></head>
 <body><div class="caja"><h1>Servicio suspendido</h1>
 <p id="mensaje">El acceso a este sistema está suspendido temporalmente. Tus datos están guardados y seguros.<br><br>Comunícate con SiuMax para reactivarlo.</p>
-<div class="pagar" id="pagar"><a id="btn-pagar" href="#" target="_blank" rel="noopener">Pagar ahora</a>
+<div class="pagar" id="pagar"><a id="btn-pagar" href="#">Pagar ahora</a>
 <small>Yape o tarjeta con Mercado Pago. Al pagar, tu sistema se reactiva solo.</small></div></div>
 <script>
 // Suspendido por falta de pago: el Panel de Control deja /suscripcion.json con el link de pago
@@ -58,6 +58,11 @@ fetch('/suscripcion.json', { cache: 'no-store' })
       ' y el servicio se suspendió. Tus datos están guardados y seguros.<br><br>Renueva tu plan para seguir usando el sistema.';
     const b = document.getElementById('btn-pagar');
     b.href = s.pagar_url;
+    // Programa de PC: el pago se abre en el navegador y al terminar dice "ya puedes cerrar"
+    // (en el navegador va en la misma pestaña y Mercado Pago vuelve aquí)
+    if (window.siuhubEscritorio) {
+      b.addEventListener('click', (e) => { e.preventDefault(); window.open(s.pagar_url + '?volver=cerrar', '_blank'); });
+    }
     document.getElementById('pagar').style.display = 'block';
     b.focus();
   })

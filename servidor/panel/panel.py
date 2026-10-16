@@ -514,14 +514,16 @@ def mp_api(metodo, ruta, cuerpo=None):
         raise ValueError("No se pudo conectar con Mercado Pago.") from e
 
 
-def crear_link_pago(slug):
+def crear_link_pago(slug, cerrar_al_volver=False):
     """Link de Checkout Pro por el precio del plan. El slug va en external_reference para saber
-    de quién es el pago cuando Mercado Pago avise."""
+    de quién es el pago cuando Mercado Pago avise.
+    cerrar_al_volver: el pago se abrió desde el programa de PC (en el navegador); al terminar se muestra
+    "Pago recibido, ya puedes cerrar" en vez de abrir otra copia del sistema."""
     reg = cliente_registrado(slug)
     plan = leer_datos()["planes"].get(slug)
     if not plan or not plan.get("precio"):
         raise ValueError("Este cliente no tiene un plan con precio.")
-    link_cliente = f"https://{slug}.{DOMINIO_BASE}"
+    link_cliente = f"{URL_PANEL}/pago-listo" if cerrar_al_volver else f"https://{slug}.{DOMINIO_BASE}"
     pref = mp_api("POST", "/checkout/preferences", {
         "items": [{"title": f"SiuMax - Plan {plan['tipo'].lower()} ({reg['nombre']})", "quantity": 1,
                    "unit_price": float(plan["precio"]), "currency_id": "PEN"}],
@@ -668,13 +670,28 @@ class Panel(BaseHTTPRequestHandler):
                 return self.responder(200, f.read(), "image/png")
         if ruta == "/api/sesion":
             return self.responder(200, {"autenticado": self.autenticado()})
+        if ruta == "/pago-listo":  # público: fin del pago abierto desde el programa de PC
+            aprobado = (parse_qs(urlparse(self.path).query).get("status") or [""])[0] == "approved"
+            titulo = "✅ Pago recibido" if aprobado else "Pago no completado"
+            texto = ("Gracias. Tu plan de SiuMax ya está al día.<br>Ya puedes cerrar esta ventana y volver al programa."
+                     if aprobado else "El pago no se completó. Puedes cerrar esta ventana e intentarlo de nuevo desde el programa.")
+            pagina = (f"<!doctype html><html lang='es'><meta charset='utf-8'><meta name='viewport' content='width=device-width'>"
+                      f"<title>SiuMax</title><body style='font-family:ui-monospace,Menlo,Consolas,monospace;background:#1E293B;"
+                      f"color:#F8FAFC;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;"
+                      f"padding:16px;box-sizing:border-box;text-align:center'><div style='border:2px solid #F59E0B;"
+                      f"box-shadow:6px 6px 0 0 #F59E0B;padding:28px 24px;max-width:440px'>"
+                      f"<h2 style='color:#F59E0B;margin:0 0 12px;letter-spacing:.1em;text-transform:uppercase'>{titulo}</h2>"
+                      f"<p style='margin:0;line-height:1.6'>{texto}</p></div>"
+                      f"<script>setTimeout(function(){{window.close()}},4000)</script></body></html>")
+            return self.responder(200, pagina.encode(), "text/html")
         if ruta.startswith("/pagar/"):  # público: botón "Pagar ahora" del aviso del cliente
             slug = slug_actual(ruta[len("/pagar/"):].strip("/"))
             try:
                 if ip_bloqueada("pagar:" + self.ip(), limite=30):
                     raise ValueError("Demasiados intentos. Espera unos minutos.")
                 intentos.setdefault("pagar:" + self.ip(), []).append(time.time())
-                link = crear_link_pago(slug)
+                cerrar = (parse_qs(urlparse(self.path).query).get("volver") or [""])[0] == "cerrar"
+                link = crear_link_pago(slug, cerrar_al_volver=cerrar)
                 if not link:
                     raise ValueError("Mercado Pago no devolvió el link de pago.")
                 return self.responder(302, b"", "text/plain", {"Location": link})

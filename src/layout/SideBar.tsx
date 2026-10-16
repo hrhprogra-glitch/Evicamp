@@ -5,7 +5,7 @@ import {
   Settings, BarChart3, X, LogOut, Download, Monitor, CreditCard
 } from 'lucide-react';
 import { usePuedeInstalar, instalarApp, useHayInstaladorPC, descargarInstaladorPC } from '../utils/instalarApp';
-import { useSuscripcion, fechaPe } from './AvisoSuscripcion';
+import { useSuscripcion, fechaPe, abrirPago } from './AvisoSuscripcion';
 
 // IMPORTAMOS EL LOGO Y SUPABASE
 import logoEvicamp from '../assets/logo.png';
@@ -411,7 +411,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
         {/* Pagar el plan (por adelantado o al vencer): abre Mercado Pago en otra pestaña/navegador */}
         {pagarUrl && (
           <button
-            onClick={() => window.open(pagarUrl, '_blank', 'noopener')}
+            onClick={() => abrirPago(pagarUrl)}
             title={!isOpen ? `Pagar plan${suscripcion?.proximo_pago ? ` (vence ${fechaPe(suscripcion.proximo_pago)})` : ''}` : undefined}
             aria-label="Pagar plan de SiuMax"
             className={`w-full text-left py-2 short:py-1.5 text-xs font-black uppercase tracking-wider transition-all border-2 rounded-none flex items-center cursor-pointer border-[var(--color-info)] text-[var(--color-info)] bg-[var(--color-info)]/5 hover:bg-[var(--color-info)] hover:text-white hover:shadow-[3px_3px_0_0_var(--color-ink)] hover:translate-x-[-2px] hover:translate-y-[-2px] focus:outline-none focus:bg-[var(--color-info)] focus:text-white focus:shadow-[3px_3px_0_0_var(--color-ink)] focus:translate-x-[-2px] focus:translate-y-[-2px] ${
