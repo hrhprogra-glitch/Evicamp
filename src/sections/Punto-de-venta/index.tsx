@@ -856,7 +856,8 @@ const [searchQuery, setSearchQuery] = useState('');
       />
       {/* VISTA PREVIA DEL TICKET (NUEVO MODAL) */}
       {isVistaPreviaOpen && ultimaVenta && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4">
+        // role="dialog": los atajos de la caja (flechas del carrito, imán del buscador) se apagan mientras está abierta
+        <div role="dialog" aria-modal="true" aria-label="Vista previa del ticket" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4">
           <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.95)] w-full max-w-md animate-fade-in">
             
             {/* CABECERA */}
