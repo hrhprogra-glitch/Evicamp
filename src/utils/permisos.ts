@@ -34,3 +34,8 @@ export const useEmpleado = () => useContext(SesionContext);
 
 // Uso: const puedeEliminar = usePermiso('almacen_eliminar_productos');
 export const usePermiso = (clave: ClavePermiso) => tienePermiso(useContext(SesionContext)?.permisos, clave);
+
+// Los botones siguen visibles (para no romper la navegación con flechas), pero sin el permiso avisan
+// en vez de intentar la acción. El servidor también la rechaza (servidor/sql/seguridad-sesion.sql).
+export const avisarSinPermiso = (accion: string) =>
+  alert(`🔒 No tienes permiso para ${accion}.\n\nPide al administrador que te lo dé en Ajustes > Gestión de usuarios.`);

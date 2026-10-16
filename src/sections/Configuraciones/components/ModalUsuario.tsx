@@ -20,6 +20,44 @@ const PERMISOS_DEFAULT: PermisosUsuario = {
   sistema_acceso_total: false,
 };
 
+// Al elegir el rol se marcan solos sus permisos (después se pueden ajustar a mano)
+const ROLES: { nombre: string; descripcion: string; permisos: (keyof PermisosUsuario)[] }[] = [
+  {
+    nombre: 'Administrador',
+    descripcion: 'Acceso total: todo el sistema, usuarios y configuración.',
+    permisos: ['sistema_acceso_total'],
+  },
+  {
+    nombre: 'Encargado',
+    descripcion: 'Maneja la tienda: caja, almacén, reportes y anular ventas. No ve utilidades ni maneja usuarios.',
+    permisos: [
+      'caja_realizar_ventas', 'caja_abrir_cerrar_turno', 'caja_ingresos_egresos', 'caja_ver_fiados', 'caja_cobrar_deudas',
+      'almacen_ver_stock', 'almacen_ingresar_lotes', 'almacen_crear_editar_productos', 'almacen_eliminar_productos',
+      'almacen_modificar_precios', 'almacen_gestionar_proveedores', 'almacen_registrar_mermas',
+      'reportes_ver_historial_ventas', 'reportes_anular_ventas', 'reportes_ver_globales',
+    ],
+  },
+  {
+    nombre: 'Cajero',
+    descripcion: 'Vende, abre y cierra su turno, fía y cobra deudas. Puede ver el stock, pero no cambia productos ni precios ni anula ventas.',
+    permisos: ['caja_realizar_ventas', 'caja_abrir_cerrar_turno', 'caja_ver_fiados', 'caja_cobrar_deudas', 'almacen_ver_stock', 'reportes_ver_historial_ventas'],
+  },
+  {
+    nombre: 'Almacenero',
+    descripcion: 'Maneja el almacén: productos, lotes, proveedores y mermas. No vende, no elimina productos ni cambia precios.',
+    permisos: ['almacen_ver_stock', 'almacen_ingresar_lotes', 'almacen_crear_editar_productos', 'almacen_gestionar_proveedores', 'almacen_registrar_mermas'],
+  },
+];
+
+const permisosDeRol = (nombre: string): PermisosUsuario => {
+  const rol = ROLES.find((r) => r.nombre === nombre);
+  if (!rol) return { ...PERMISOS_DEFAULT };
+  if (rol.permisos.includes('sistema_acceso_total')) {
+    return Object.fromEntries(Object.keys(PERMISOS_DEFAULT).map((k) => [k, true])) as unknown as PermisosUsuario;
+  }
+  return { ...PERMISOS_DEFAULT, ...Object.fromEntries(rol.permisos.map((k) => [k, true])) };
+};
+
 const COLUMNAS_PERMISOS: {
   titulo: string;
   items: { key: keyof PermisosUsuario; label: string }[];
@@ -142,7 +180,8 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
     estado: 'ACTIVO',
   });
 
-  const [permisos, setPermisos] = useState<PermisosUsuario>(PERMISOS_DEFAULT);
+  // Usuario nuevo: empieza como Cajero con sus permisos ya marcados
+  const [permisos, setPermisos] = useState<PermisosUsuario>(() => permisosDeRol('Cajero'));
 
   useEffect(() => {
     if (usuario) {
@@ -160,6 +199,8 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Cambiar el rol marca solos los permisos de ese rol
+    if (e.target.name === 'rol') setPermisos(permisosDeRol(e.target.value));
   };
 
   const togglePermiso = (key: keyof PermisosUsuario) => {
@@ -390,10 +431,13 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
                     }}
                     className="w-full border border-[var(--color-border)] p-2 text-sm focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-amber-50/40 outline-none bg-white font-bold cursor-pointer"
                   >
-                    <option value="Administrador">Administrador</option>
-                    <option value="Cajero">Cajero</option>
-                    <option value="Almacenero">Almacenero</option>
+                    {ROLES.map((r) => <option key={r.nombre} value={r.nombre}>{r.nombre}</option>)}
+                    {/* Un rol antiguo que no está en la lista se conserva tal cual */}
+                    {!ROLES.some((r) => r.nombre === formData.rol) && <option value={formData.rol}>{formData.rol}</option>}
                   </select>
+                  <p className="text-[11px] text-[var(--color-muted)] mt-1 leading-snug">
+                    {ROLES.find((r) => r.nombre === formData.rol)?.descripcion || 'Rol personalizado.'} Sus permisos se marcan solos; puedes ajustarlos abajo.
+                  </p>
                 </div>
                 <div>
                   <label className="block text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">Estado</label>

@@ -1,7 +1,74 @@
--- SiuMax: la API exige una sesión válida en CADA pedido (no solo la pantalla de login).
--- PostgREST llama a esta función antes de atender cualquier pedido (db-pre-request en su .conf).
+-- SiuMax: la API exige una sesión válida en CADA pedido (no solo la pantalla de login), y para
+-- crear / cambiar / borrar datos, que el empleado tenga el PERMISO de esa acción (no basta con que la
+-- pantalla esconda el botón). Leer sigue permitido a cualquiera con sesión.
+-- PostgREST llama a fn_verificar_peticion antes de atender cualquier pedido (db-pre-request en su .conf).
 -- El sistema manda el token de la sesión en la cabecera "x-sesion" (src/db/supabase.ts).
 -- Se puede aplicar varias veces sin problema (CREATE OR REPLACE).
+
+-- ¿Tiene alguno de estos permisos? (acceso total los incluye todos; lista vacía = basta la sesión)
+CREATE OR REPLACE FUNCTION public.fn_tiene_permiso(p_permisos jsonb, p_claves text[])
+RETURNS boolean
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT cardinality(p_claves) = 0
+      OR coalesce(p_permisos ->> 'sistema_acceso_total', '') = 'true'
+      OR EXISTS (SELECT 1 FROM unnest(p_claves) c WHERE coalesce(p_permisos ->> c, '') = 'true');
+$$;
+
+-- Qué permiso pide cada acción que cambia datos (una de la lista basta).
+-- NULL = acción desconocida: solo un administrador con acceso total.
+CREATE OR REPLACE FUNCTION public.fn_permisos_requeridos(p_metodo text, p_ruta text)
+RETURNS text[]
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT CASE p_metodo || ' ' || p_ruta
+    -- CAJA
+    WHEN 'POST /sales'               THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
+    WHEN 'POST /sale_details'        THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
+    WHEN 'POST /fiados'              THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
+    WHEN 'PATCH /fiados'             THEN ARRAY['caja_realizar_ventas', 'caja_cobrar_deudas']
+    WHEN 'POST /customers'           THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
+    WHEN 'PATCH /customers'          THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados', 'caja_cobrar_deudas']
+    WHEN 'DELETE /customers'         THEN ARRAY['caja_ver_fiados']
+    WHEN 'POST /debt_payments'       THEN ARRAY['caja_cobrar_deudas']
+    WHEN 'POST /cash_sessions'       THEN ARRAY['caja_abrir_cerrar_turno']
+    WHEN 'PATCH /cash_sessions'      THEN ARRAY['caja_abrir_cerrar_turno']
+    WHEN 'POST /cash_movements'      THEN ARRAY['caja_ingresos_egresos', 'caja_abrir_cerrar_turno', 'reportes_anular_ventas']
+    WHEN 'DELETE /cash_movements'    THEN ARRAY['caja_ingresos_egresos', 'caja_cobrar_deudas', 'reportes_anular_ventas']
+    -- ANULAR VENTAS (devuelve el stock: toca productos, lotes y movimientos)
+    WHEN 'PATCH /sales'              THEN ARRAY['reportes_anular_ventas']
+    WHEN 'DELETE /sales'             THEN ARRAY['reportes_anular_ventas']
+    -- ALMACÉN
+    WHEN 'POST /products'            THEN ARRAY['almacen_crear_editar_productos']
+    WHEN 'PATCH /products'           THEN ARRAY['almacen_crear_editar_productos', 'almacen_modificar_precios', 'reportes_anular_ventas']
+    WHEN 'POST /categories'          THEN ARRAY['almacen_crear_editar_productos']
+    WHEN 'DELETE /categories'        THEN ARRAY['almacen_crear_editar_productos']
+    WHEN 'POST /batches'             THEN ARRAY['almacen_ingresar_lotes']
+    WHEN 'PATCH /batches'            THEN ARRAY['almacen_ingresar_lotes', 'almacen_registrar_mermas', 'reportes_anular_ventas']
+    WHEN 'POST /inventory_movements' THEN ARRAY['almacen_ingresar_lotes', 'almacen_registrar_mermas', 'reportes_anular_ventas']
+    WHEN 'POST /waste'               THEN ARRAY['almacen_registrar_mermas']
+    WHEN 'PATCH /waste'              THEN ARRAY['almacen_registrar_mermas']
+    WHEN 'DELETE /waste'             THEN ARRAY['almacen_registrar_mermas']
+    WHEN 'POST /providers'           THEN ARRAY['almacen_gestionar_proveedores', 'almacen_crear_editar_productos', 'almacen_ingresar_lotes']
+    WHEN 'PATCH /providers'          THEN ARRAY['almacen_gestionar_proveedores', 'almacen_crear_editar_productos']
+    WHEN 'DELETE /providers'         THEN ARRAY['almacen_gestionar_proveedores']
+    WHEN 'POST /rpc/fn_edit_batch'          THEN ARRAY['almacen_ingresar_lotes']
+    WHEN 'POST /rpc/fn_soft_delete_batch'   THEN ARRAY['almacen_ingresar_lotes', 'almacen_eliminar_productos']
+    WHEN 'POST /rpc/fn_soft_delete_product' THEN ARRAY['almacen_eliminar_productos']
+    -- GERENCIA
+    WHEN 'PATCH /empresa_config'     THEN ARRAY['gerencia_configuracion_sistema']
+    WHEN 'POST /empresa_config'      THEN ARRAY['gerencia_configuracion_sistema']
+    WHEN 'POST /rpc/fn_crear_empleado'    THEN ARRAY['gerencia_gestionar_usuarios']
+    WHEN 'POST /rpc/fn_editar_empleado'   THEN ARRAY['gerencia_gestionar_usuarios']
+    WHEN 'POST /rpc/fn_eliminar_empleado' THEN ARRAY['gerencia_gestionar_usuarios']
+    -- Basta con la sesión
+    WHEN 'PATCH /yape_notifications' THEN ARRAY[]::text[]
+    WHEN 'POST /rpc/fn_sesion_activa' THEN ARRAY[]::text[]
+    ELSE NULL
+  END;
+$$;
 
 CREATE OR REPLACE FUNCTION public.fn_verificar_peticion()
 RETURNS void
@@ -13,6 +80,8 @@ DECLARE
   v_ruta   text := current_setting('request.path', true);
   v_metodo text := current_setting('request.method', true);
   v_token  text := current_setting('request.headers', true)::json ->> 'x-sesion';
+  v_permisos   jsonb;
+  v_requeridos text[];
 BEGIN
   -- Sin sesión: iniciar, validar y cerrar sesión, y el aviso de Yape del celular (trae su propia clave)
   IF v_ruta IN ('/rpc/fn_login', '/rpc/fn_validar_sesion', '/rpc/fn_cerrar_sesion',
@@ -26,17 +95,63 @@ BEGIN
   END IF;
 
   -- Todo lo demás: token de una sesión abierta (usada en los últimos 30 días) de un empleado ACTIVO
-  IF v_token IS NULL
-     OR v_token !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
-     OR NOT EXISTS (
-       SELECT 1 FROM sesiones s JOIN empleados e ON e.id = s.empleado_id
-       WHERE s.token = v_token::uuid AND e.estado = 'ACTIVO'
-         AND s.ultimo_uso > now() - interval '30 days'
-     ) THEN
+  IF v_token IS NOT NULL
+     AND v_token ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
+    SELECT e.permisos INTO v_permisos
+    FROM sesiones s JOIN empleados e ON e.id = s.empleado_id
+    WHERE s.token = v_token::uuid AND e.estado = 'ACTIVO'
+      AND s.ultimo_uso > now() - interval '30 days';
+  END IF;
+  IF v_permisos IS NULL THEN
     RAISE SQLSTATE 'PT401' USING MESSAGE = 'Sesión no válida', DETAIL = 'Inicia sesión de nuevo.';
+  END IF;
+
+  -- Leer: basta la sesión
+  IF v_metodo IN ('GET', 'HEAD') THEN
+    RETURN;
+  END IF;
+
+  -- Crear / cambiar / borrar: el permiso de esa acción
+  v_requeridos := fn_permisos_requeridos(v_metodo, v_ruta);
+  IF NOT fn_tiene_permiso(v_permisos, coalesce(v_requeridos, ARRAY['sistema_acceso_total'])) THEN
+    RAISE SQLSTATE 'PT403' USING MESSAGE = 'No tienes permiso para esta acción',
+      DETAIL = 'Pide al administrador que te dé el permiso en Ajustes > Gestión de usuarios.';
   END IF;
 END;
 $$;
+
+-- Cambiar precios (venta, costo o descuento) pide el permiso "modificar precios", aunque se haga desde
+-- el formulario de editar producto. Solo revisa cambios que llegan por la API (con sesión).
+CREATE OR REPLACE FUNCTION public.fn_proteger_precios()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_token text := current_setting('request.headers', true)::json ->> 'x-sesion';
+  v_permisos jsonb;
+BEGIN
+  IF NEW.price IS NOT DISTINCT FROM OLD.price
+     AND NEW.cost_price IS NOT DISTINCT FROM OLD.cost_price
+     AND NEW.discount_percent IS NOT DISTINCT FROM OLD.discount_percent THEN
+    RETURN NEW;
+  END IF;
+  IF v_token IS NULL OR v_token !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
+    RETURN NEW;   -- cambio interno del servidor (no viene del sistema)
+  END IF;
+  SELECT e.permisos INTO v_permisos FROM sesiones s JOIN empleados e ON e.id = s.empleado_id WHERE s.token = v_token::uuid;
+  IF NOT fn_tiene_permiso(v_permisos, ARRAY['almacen_modificar_precios']) THEN
+    RAISE SQLSTATE 'PT403' USING MESSAGE = 'No tienes permiso para cambiar precios',
+      DETAIL = 'Pide al administrador el permiso "Modificar precios".';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_proteger_precios ON public.products;
+CREATE TRIGGER trg_proteger_precios BEFORE UPDATE ON public.products
+  FOR EACH ROW EXECUTE FUNCTION public.fn_proteger_precios();
 
 -- La usa PostgREST con el rol anon
 GRANT EXECUTE ON FUNCTION public.fn_verificar_peticion() TO anon;

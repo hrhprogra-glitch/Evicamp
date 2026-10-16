@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Package, Scale, Coffee, ArrowLeft, Save, ImagePlus, Search, Loader2, Database, Plus } from 'lucide-react';
 import { supabase } from '../../../db/supabase'; // RETORNO TÉCNICO: Conexión a la DB
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
+import { usePermiso } from '../../../utils/permisos';
 
 // Componente de Notificación de Errores (Diseño Geométrico y Alto Contraste)
 const TechnicalAlert = ({ message }: { message: string }) => {
@@ -35,6 +36,9 @@ interface Props {
 type ProductNature = 'UNIDAD' | 'PESO' | 'CONSUMO' | null;
 
 export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, onProductSaved, initialData, productosExistentes = [] }) => {
+  // Al EDITAR, el precio solo se cambia con el permiso "modificar precios" (el servidor también lo exige)
+  const puedePrecios = usePermiso('almacen_modificar_precios');
+  const precioBloqueado = !!initialData && !puedePrecios;
   const [step, setStep] = useState<1 | 2>(1);
   const [nature, setNature] = useState<ProductNature>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1389,7 +1393,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                   placeholder="0.00"
                   value={formData.price}
                   onChange={(e) => setFormData({...formData, price: e.target.value})}
-                  className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                  readOnly={precioBloqueado}
+                  title={precioBloqueado ? 'Necesitas el permiso "Modificar precios" para cambiar el precio' : undefined}
+                  className="w-full bg-[var(--color-surface)] read-only:opacity-60 read-only:cursor-not-allowed border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
                 />
               </div>
 

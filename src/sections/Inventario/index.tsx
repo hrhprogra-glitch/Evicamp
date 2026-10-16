@@ -3,6 +3,7 @@ import { coincideBusqueda } from '../../utils/busqueda';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Package, Layers, Box, AlertTriangle, LayoutGrid, Plus, Database, Activity, Users } from 'lucide-react';
 import { supabase } from '../../db/supabase';
+import { usePermiso, avisarSinPermiso } from '../../utils/permisos';
 import type { Product } from './types';
 
 // Componentes importados
@@ -20,6 +21,11 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const [vistaActiva, setVistaActiva] = useState<'PRODUCTOS' | 'LOTES'>('PRODUCTOS');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalProveedoresOpen, setIsModalProveedoresOpen] = useState(false);
+  // Permisos de almacén (el servidor también los exige)
+  const puedeEditarProductos = usePermiso('almacen_crear_editar_productos');
+  const puedeEliminarProductos = usePermiso('almacen_eliminar_productos');
+  const puedeIngresarLotes = usePermiso('almacen_ingresar_lotes');
+  const puedeProveedores = usePermiso('almacen_gestionar_proveedores');
   const [mermaAEditar, setMermaAEditar] = useState<any>(null);
   const [isModalLoteOpen, setIsModalLoteOpen] = useState(false); // <-- ESTADO DEL NUEVO MODAL
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
@@ -465,7 +471,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             <div className="grid grid-cols-3 gap-2 sm:flex sm:gap-3 shrink-0">
               <button
                 id="btn-nuevo-producto"
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => (puedeEditarProductos ? setIsModalOpen(true) : avisarSinPermiso('crear productos'))}
                 onKeyDown={(e) => {
                   if (e.key === 'ArrowUp') {
                     e.preventDefault();
@@ -487,7 +493,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               </button>
               <button
                 id="btn-ingresar-lote"
-                onClick={() => setIsModalLoteOpen(true)}
+                onClick={() => (puedeIngresarLotes ? setIsModalLoteOpen(true) : avisarSinPermiso('ingresar lotes'))}
                 onKeyDown={(e) => {
                   if (e.key === 'ArrowUp') {
                     e.preventDefault();
@@ -509,7 +515,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               </button>
               <button
                 id="btn-proveedores"
-                onClick={() => setIsModalProveedoresOpen(true)}
+                onClick={() => (puedeProveedores ? setIsModalProveedoresOpen(true) : avisarSinPermiso('gestionar proveedores'))}
                 onKeyDown={(e) => {
                   if (e.key === 'ArrowUp') {
                     e.preventDefault();
@@ -557,10 +563,12 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   totalPages={totalPages}
   onPageChange={setCurrentPage}
   onEditProduct={(p) => {
+    if (!puedeEditarProductos) { avisarSinPermiso('editar productos'); return; }
     setProductToEdit(p);
     setIsModalOpen(true);
   }}
   onDeleteProduct={async (productToDelete) => {
+    if (!puedeEliminarProductos) { avisarSinPermiso('eliminar productos'); return; }
     // 1. EJECUCIÓN DEL PROCEDIMIENTO ALMACENADO EN POSTGRESQL (RPC)
     // Conectamos con el nombre exacto de tu función SQL y blindamos el ID
     const { error } = await supabase.rpc('fn_soft_delete_product', {
@@ -599,6 +607,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               handleViewHistory(lote);
             }}
             onEditLote={(lote) => {
+              if (!puedeIngresarLotes) { avisarSinPermiso('editar lotes'); return; }
               setLoteToEdit(lote);
               setIsModalLoteOpen(true);
             }}

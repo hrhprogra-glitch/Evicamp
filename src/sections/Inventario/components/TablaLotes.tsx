@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Database,Layers, Edit, Trash2, History, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { formatearCantidad } from '../../../utils/formato';
+import { usePermiso, avisarSinPermiso } from '../../../utils/permisos';
 
 interface Lote {
   id: string;
@@ -39,6 +40,10 @@ export const TablaLotes: React.FC<Props> = ({
 }) => {
   const [lotes, setLotes] = useState<Lote[]>([]);
   const [loading, setLoading] = useState(true);
+  // Retirar un lote: permiso de ingresar lotes o de eliminar productos (el servidor también lo exige)
+  const puedeIngresarLotes = usePermiso('almacen_ingresar_lotes');
+  const puedeEliminarProductos = usePermiso('almacen_eliminar_productos');
+  const puedeRetirarLote = puedeIngresarLotes || puedeEliminarProductos;
 
   useEffect(() => {
     const fetchLotes = async () => {
@@ -355,6 +360,7 @@ export const TablaLotes: React.FC<Props> = ({
         <button
           onClick={async (e) => {
             e.stopPropagation();
+            if (!puedeRetirarLote) { avisarSinPermiso('retirar lotes'); return; }
             if (window.confirm(`MANTENIMIENTO DE INTEGRIDAD\n\n¿Confirma el retiro del lote de "${lote.product_name}"?\n\nEsta acción descargará el stock actual pero mantendrá intacto el historial de ventas, utilidades y contabilidad.`)) {
               try {
                 // 🛡️ EVICAMP: Ejecución Transaccional Segura desde la Base de Datos

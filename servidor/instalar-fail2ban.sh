@@ -4,7 +4,11 @@
 # Se puede ejecutar varias veces sin problema.
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
-command -v fail2ban-client > /dev/null || { apt-get update -qq; apt-get install -y -qq fail2ban > /dev/null; }
+# Si las actualizaciones automáticas están instalando, espera su turno (hasta 20 min) en vez de fallar
+command -v fail2ban-client > /dev/null || {
+  apt-get -o DPkg::Lock::Timeout=1200 update -qq
+  apt-get -o DPkg::Lock::Timeout=1200 install -y -qq fail2ban > /dev/null
+}
 
 cat > /etc/fail2ban/jail.d/siumax.local <<'EOF'
 [DEFAULT]
