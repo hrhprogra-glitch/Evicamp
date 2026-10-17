@@ -111,6 +111,16 @@ const crearVentana = () => {
   cargarSistema();
 };
 
+// === FOCO TRAS UN AVISO ===
+// En Windows, después de un alert/confirm la página deja de recibir el teclado hasta cambiar de
+// ventana (el selector "desaparece"). La página avisa al cerrar cada aviso y aquí se reactiva.
+ipcMain.handle('recuperar-foco', () => {
+  if (!ventana || ventana.isDestroyed()) return;
+  ventana.blur();
+  ventana.focus();
+  ventana.webContents.focus();
+});
+
 // === IMPRESIÓN DIRECTA ===
 // La página manda el HTML del ticket; se carga en una ventana invisible y se imprime en silencio.
 ipcMain.handle('imprimir', async (_e, { html, titulo }) => {

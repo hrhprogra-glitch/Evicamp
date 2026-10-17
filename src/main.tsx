@@ -6,6 +6,7 @@ import { instalarProteccionTecladoTactil } from './utils/tecladoTactil'
 import { iniciarAppInstalable } from './utils/instalarApp'
 import { vigilarSuspension } from './db/supabase'
 import { iniciarSubidaAutomatica } from './utils/sinInternet'
+import { instalarFocoTrasAvisos } from './utils/focoTrasAvisos'
 
 // App instalable (PWA): service worker + aviso "Instalar app"
 iniciarAppInstalable()
@@ -15,6 +16,7 @@ vigilarSuspension()
 
 // Modo sin internet: sube solo lo que se hizo sin conexión (ventas, fiados) apenas vuelve el internet
 iniciarSubidaAutomatica()
+instalarFocoTrasAvisos() // el selector de teclado no se pierde después de un aviso
 
 // Al volver de Mercado Pago el link trae datos del pago (?collection_id=...&status=approved...):
 // no se usan (el pago se registra por el aviso verificado), así que se limpian para que el link quede limpio
