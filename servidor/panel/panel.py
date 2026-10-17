@@ -252,9 +252,19 @@ def borrar_cliente(cuerpo):
     with candado:
         datos = leer_datos()
         datos["planes"].pop(slug, None)
-        datos.setdefault("eliminados", {})[slug] = {"nombre": reg["nombre"], "fecha": date.today().isoformat()}
+        archivar_pagos(datos, slug, reg["nombre"])
         guardar_json(DATOS, datos)
     return True, salida
+
+
+def archivar_pagos(datos, slug, nombre):
+    """Cliente borrado: sus pagos salen del panel (no cuentan en 'cobrado este mes' ni en 'pagos por negocio')
+    y quedan archivados en panel-datos.json (y en el backup diario de la configuración) por si se necesitan."""
+    suyos = [p for p in datos["pagos"] if p["slug"] == slug]
+    datos["pagos"] = [p for p in datos["pagos"] if p["slug"] != slug]
+    eliminado = datos.setdefault("eliminados", {}).setdefault(slug, {"nombre": nombre})
+    eliminado.setdefault("fecha", date.today().isoformat())
+    eliminado["pagos_archivados"] = eliminado.get("pagos_archivados", []) + suyos
 
 
 # ===================== Información =====================
