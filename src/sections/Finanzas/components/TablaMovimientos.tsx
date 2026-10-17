@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { ArrowDownToLine, ArrowUpFromLine, Trash2, Eye, RotateCcw, Receipt } from 'lucide-react';
 import type { UnifiedItem } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
-import { usePermiso } from '../../../utils/permisos';
+import { usePermiso, avisar, avisarSinPermiso } from '../../../utils/permisos';
 
 interface Props {
   movimientos: UnifiedItem[];
@@ -15,6 +15,7 @@ interface Props {
 
 export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVerTicket, onAnularTicket, idsAnulando }) => {
   const puedeAnular = usePermiso('reportes_anular_ventas');
+  const esAdmin = usePermiso('sistema_acceso_total');
 
   return (
     <div className="w-full bg-white flex flex-col font-mono">
@@ -93,6 +94,11 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                           Vendió: {item.vendedor}
                         </p>
                       )}
+                      {item.isTicket && item.devolucion && (
+                        <p className="text-[11px] font-bold text-[var(--color-danger)] uppercase tracking-wide leading-tight">
+                          ↩ Devuelto S/ {item.devolucion.monto.toFixed(2)}{item.devolucion.autor ? ` · por ${item.devolucion.autor}` : ''}
+                        </p>
+                      )}
                       {item.isTicket && item.productosStr && (
                         <p 
                           className="text-[11px] font-medium text-[var(--color-muted)] normal-case line-clamp-2 leading-tight" 
@@ -156,7 +162,16 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                             </button>
                           )}
                           <button
-                            onClick={(e) => { e.stopPropagation(); onDelete(item.id, true); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Una venta no se borra: primero la devolución; y una anulada solo la borra el administrador
+                              if (item.estado !== 'ANULADO') {
+                                avisar('🔁 Primero haz la devolución de esta venta (botón ↺). Una venta no se borra: se anula para que el stock y la caja cuadren.');
+                                return;
+                              }
+                              if (!esAdmin) { avisarSinPermiso('borrar ventas (solo el administrador)'); return; }
+                              onDelete(item.id, true);
+                            }}
                             className="p-1.5 bg-[var(--color-surface)] text-[var(--color-muted)] border border-[var(--color-border)] hover:border-[var(--color-danger)] hover:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-danger)] transition-colors cursor-pointer rounded-none disabled:opacity-40"
                             title="Eliminar Venta"
                             disabled={idsAnulando?.has(item.id)}
@@ -166,7 +181,12 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                         </>
                       ) : (
                         <button
-                          onClick={(e) => { e.stopPropagation(); onDelete(item.id, false); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Borrar una devolución borra el registro de que salió dinero: solo el administrador
+                            if (String(item.flujo) === 'DEVOLUCION' && !esAdmin) { avisarSinPermiso('borrar devoluciones (solo el administrador)'); return; }
+                            onDelete(item.id, false);
+                          }}
                           className="p-1.5 bg-[var(--color-surface)] text-[var(--color-muted)] border border-[var(--color-border)] hover:border-[var(--color-danger)] hover:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-danger)] transition-colors cursor-pointer rounded-none"
                           title="Eliminar Movimiento"
                         >

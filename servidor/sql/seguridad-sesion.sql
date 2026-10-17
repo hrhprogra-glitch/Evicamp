@@ -200,6 +200,44 @@ DROP TRIGGER IF EXISTS trg_registrar_vendedor ON public.sales;
 CREATE TRIGGER trg_registrar_vendedor BEFORE INSERT ON public.sales
   FOR EACH ROW EXECUTE FUNCTION public.fn_registrar_vendedor();
 
+-- Borrar ventas y devoluciones borra la evidencia: una venta COMPLETADA no se borra (primero se anula con la
+-- devolución), y una venta anulada o un movimiento de devolución solo los borra un administrador (acceso total).
+CREATE OR REPLACE FUNCTION public.fn_proteger_borrados()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_token text := current_setting('request.headers', true)::json ->> 'x-sesion';
+  v_permisos jsonb;
+  v_fila jsonb := to_jsonb(OLD);   -- sirve para las dos tablas (cada una tiene columnas distintas)
+BEGIN
+  IF v_token IS NULL OR v_token !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
+    RETURN OLD;   -- borrado interno del servidor
+  END IF;
+  IF TG_TABLE_NAME = 'sales' AND coalesce(v_fila ->> 'sunat_status', '') <> 'ANULADO' THEN
+    RAISE SQLSTATE 'PT403' USING MESSAGE = 'Primero haz la devolución de esta venta',
+      DETAIL = 'Una venta completada no se borra: se anula (devolución) para que el stock y la caja cuadren.';
+  END IF;
+  IF TG_TABLE_NAME = 'sales' OR coalesce(v_fila ->> 'flujo', '') = 'DEVOLUCION' THEN
+    SELECT e.permisos INTO v_permisos FROM sesiones s JOIN empleados e ON e.id = s.empleado_id WHERE s.token = v_token::uuid;
+    IF NOT fn_tiene_permiso(v_permisos, ARRAY['sistema_acceso_total']) THEN
+      RAISE SQLSTATE 'PT403' USING MESSAGE = 'Solo un administrador puede borrar ventas o devoluciones',
+        DETAIL = 'Borrarlas elimina el registro de lo que pasó en la caja.';
+    END IF;
+  END IF;
+  RETURN OLD;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_proteger_borrado_ventas ON public.sales;
+CREATE TRIGGER trg_proteger_borrado_ventas BEFORE DELETE ON public.sales
+  FOR EACH ROW EXECUTE FUNCTION public.fn_proteger_borrados();
+DROP TRIGGER IF EXISTS trg_proteger_borrado_caja ON public.cash_movements;
+CREATE TRIGGER trg_proteger_borrado_caja BEFORE DELETE ON public.cash_movements
+  FOR EACH ROW EXECUTE FUNCTION public.fn_proteger_borrados();
+
 -- PostgREST: que vea la columna nueva sin reiniciar
 NOTIFY pgrst, 'reload schema';
 

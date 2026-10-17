@@ -17,6 +17,7 @@ import { ModalDetalleTicket } from '../../components/ModalDetalleTicket';
 import { rangoUTCPeru } from '../../utils/ingresos';
 import { usePermiso } from '../../utils/permisos';
 import { traerTodo } from '../../utils/traerTodo';
+import { numeroTicketDe, autorDe } from '../../utils/movimientosCaja';
 
 export const Finanzas: React.FC = () => {
   // Abrir/cerrar caja y registrar ingresos/egresos son permisos distintos
@@ -168,6 +169,19 @@ export const Finanzas: React.FC = () => {
         const anuladasDeEstaCaja = new Set(
           (salesData || []).filter(esAnulada).map((s: any) => String(s.id).slice(-6))
         );
+        // Devoluciones por ticket: el ticket anulado muestra quién la hizo y cuánto se devolvió
+        // (la fila aparte de la devolución se oculta abajo para no repetir lo mismo)
+        const devolucionesPorTicket = new Map<string, { monto: number; autor: string | null }>();
+        (movData || []).forEach((m: any) => {
+          if (m.flujo !== 'DEVOLUCION') return;
+          const ticket = numeroTicketDe(m.description);
+          if (!ticket) return;
+          const previa = devolucionesPorTicket.get(ticket);
+          devolucionesPorTicket.set(ticket, {
+            monto: (previa?.monto || 0) + Number(m.amount || 0),
+            autor: previa?.autor || autorDe(m.description),
+          });
+        });
 
         let gastos = 0, gastosYape = 0, gastosTarjeta = 0;
         let ingresosExtra = 0, ingresosExtraYape = 0, ingresosExtraTarjeta = 0;
@@ -196,7 +210,7 @@ export const Finanzas: React.FC = () => {
           }
           if (m.type === 'EGRESO') {
             if (m.flujo === 'DEVOLUCION') {
-              const ticket = /#(\w{1,6})\)?\s*$/.exec(String(m.description || ''))?.[1];
+              const ticket = numeroTicketDe(m.description);
               // Anulación de un ticket de esta caja: la venta ya no cuenta, no se resta de nuevo.
               if (ticket && anuladasDeEstaCaja.has(ticket)) return;
               // Si el ticket era de una caja anterior, el dinero sí sale ahora: se resta abajo.
@@ -265,7 +279,8 @@ export const Finanzas: React.FC = () => {
             monto_deuda: esFiado && fiado ? Number(fiado.amount) - Number(fiado.paid_amount) : 0,
             total: Number(t.total) || 0,
             productosStr: t.productosStr,
-            vendedor: t.vendedor || null // quién hizo la venta (lo guarda el servidor con la sesión)
+            vendedor: t.vendedor || null, // quién hizo la venta (lo guarda el servidor con la sesión)
+            devolucion: esAnulada(t) ? devolucionesPorTicket.get(String(t.id).slice(-6)) || null : null
           };
         });
 
@@ -286,8 +301,8 @@ export const Finanzas: React.FC = () => {
 
         const movsUnificados: UnifiedItem[] = (movData || []).filter((m: any) => {
           if (m.flujo === 'DEVOLUCION') {
-            const match = /#(\w{1,6})\)?\s*$/.exec(String(m.description || ''));
-            if (match && anuladasDeEstaCaja.has(match[1])) return false;
+            const ticket = numeroTicketDe(m.description);
+            if (ticket && anuladasDeEstaCaja.has(ticket)) return false;
           }
           return true;
         }).map((m: any) => {

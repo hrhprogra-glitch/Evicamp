@@ -7,6 +7,7 @@ import { supabase } from '../../../db/supabase';
 import { TablaMovimientos } from './TablaMovimientos';
 import type { UnifiedItem } from '../types';
 import { useImprimir } from '../../../utils/impresion';
+import { numeroTicketDe } from '../../../utils/movimientosCaja';
 // html2canvas-pro (no el html2canvas normal): Tailwind v4 usa colores oklch() en su CSS, y la
 // librería original no sabe interpretarlos (falla al generar la imagen). Este fork sí los soporta.
 import html2canvas from 'html2canvas-pro';
@@ -486,8 +487,8 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
 
   movimientos.forEach((m: any) => {
     if (m.flujo === 'DEVOLUCION') {
-      const match = /#(\w{1,6})\)?\s*$/.exec(String(m.description || ''));
-      if (match && anuladasDeEstaCaja.has(match[1])) return; // Ocultar para evitar "duplicado" visual
+      const ticket = numeroTicketDe(m.description);
+      if (ticket && anuladasDeEstaCaja.has(ticket)) return; // Ocultar para evitar "duplicado" visual
     }
     unificados.push({
       id: String(m.id),

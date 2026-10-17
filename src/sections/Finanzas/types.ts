@@ -39,6 +39,7 @@ export interface UnifiedItem {
   monto: number;
   productosStr?: string;
   vendedor?: string | null; // quién hizo la venta (lo guarda el servidor con la sesión)
+  devolucion?: { monto: number; autor: string | null } | null; // ticket anulado: cuánto se devolvió y quién
   
   // Exclusivo de Movimiento (flujo interno/externo):
   flujo?: 'INTERNO' | 'EXTERNO' | string;
