@@ -102,6 +102,10 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
           console.error("Error cargando lotes para merma:", error.message);
           setLotes([]);
           setLoadingLotes(false); // antes se quedaba "cargando" para siempre y no dejaba elegir
+          setTimeout(() => {
+            const cant = document.getElementById('merma-input-cantidad') as HTMLInputElement | null;
+            (cant || document.getElementById('btn-cambiar-producto-merma'))?.focus();
+          }, 50);
           return;
         }
 
@@ -304,7 +308,11 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
     setSearchQuery('');
     setSelectedDropdownIndex(0);
     setTimeout(() => {
-      const next = document.getElementById('merma-select-lote') || document.getElementById('merma-input-cantidad');
+      // El selector de lote está bloqueado mientras cargan los lotes: entonces el foco queda en
+      // "Cambiar producto" y al terminar de cargar pasa solo al lote (ver "ENFOQUE INTELIGENTE")
+      const lote = document.getElementById('merma-select-lote') as HTMLButtonElement | null;
+      const next = (lote && !lote.disabled ? lote : null)
+        || document.getElementById('btn-cambiar-producto-merma') || document.getElementById('merma-input-cantidad');
       if (next) {
         next.focus();
         (next as HTMLInputElement).select?.();

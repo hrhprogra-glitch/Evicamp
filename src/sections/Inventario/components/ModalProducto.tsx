@@ -1438,7 +1438,11 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                     value={formData.weightUnit}
                     onChange={(e) => setFormData({...formData, weightUnit: e.target.value})}
                     onKeyDown={(e) => {
-                      if (e.key === 'ArrowUp') {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        // Abrir la lista con el teclado (antes solo con el mouse)
+                        e.preventDefault();
+                        try { (e.currentTarget as HTMLSelectElement & { showPicker?: () => void }).showPicker?.(); } catch { /* navegador sin showPicker */ }
+                      } else if (e.key === 'ArrowUp') {
                         e.preventDefault();
                         const minStock = document.getElementById('input-stock-minimo-producto');
                         if (minStock) minStock.focus();
@@ -1451,9 +1455,10 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                     className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors cursor-pointer"
                   >
                     <option value="KG">Kilogramos (KG)</option>
-                    <option value="GR">Gramos (GR)</option>
                     <option value="LT">Litros (LT)</option>
-                    <option value="ML">Mililitros (ML)</option>
+                    {/* Solo kilos y litros; un producto antiguo en gramos o mililitros conserva su unidad */}
+                    {formData.weightUnit === 'GR' && <option value="GR">Gramos (GR)</option>}
+                    {formData.weightUnit === 'ML' && <option value="ML">Mililitros (ML)</option>}
                   </select>
                 </div>
               )}

@@ -34,5 +34,29 @@ export const precargarParaSinInternet = () => {
         traerTodo(() => supabase.from('debt_payments').select('*').order('id')),
       ]);
     } catch { hecha = false; /* se reintenta la próxima vez que abra */ }
+    void precargarFinanzas();
+    setInterval(() => { if (hayConexion()) void precargarFinanzas(); }, 2 * 60_000);
   }, 8_000);
+};
+
+// Finanzas (src/sections/Finanzas/index.tsx → cargarDatosCaja): la caja abierta con sus movimientos,
+// ventas, detalles y fiados. Se repite cada 2 minutos: si se corta el internet a media tarde, se ve
+// todo lo vendido hasta ese momento (y lo hecho sin internet se suma encima, ver sinInternet.ts).
+const precargarFinanzas = async () => {
+  try {
+    const { data: caja } = await supabase.from('cash_sessions').select('*').eq('status', 'OPEN')
+      .order('opened_at', { ascending: false }).limit(1).maybeSingle();
+    if (!caja) return;
+    const [, { data: ventas }] = await Promise.all([
+      traerTodo<any>(() => supabase.from('cash_movements').select('*').eq('session_id', caja.id).order('id')),
+      traerTodo<any>(() => supabase.from('sales').select('*').gte('created_at', caja.opened_at).order('id')),
+    ]);
+    const ids = (ventas || []).map((v: any) => v.id);
+    const conCredito = (ventas || []).filter((v: any) => Number(v.amount_credit || 0) > 0).map((v: any) => v.id);
+    // Por bloques de 200 (como Finanzas): un link con miles de ids sería demasiado largo
+    for (let i = 0; i < ids.length; i += 200) {
+      await supabase.from('sale_details').select('*').in('sale_id', ids.slice(i, i + 200));
+    }
+    if (conCredito.length) await supabase.from('fiados').select('sale_id, customer_name, amount, paid_amount').in('sale_id', conCredito);
+  } catch { /* se intenta de nuevo en 2 minutos */ }
 };

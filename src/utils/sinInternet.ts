@@ -74,74 +74,164 @@ const copiaParecida = async (clave: string) => {
 // Solo filtros simples; si la consulta usa algo más complejo, no se inventa nada (devuelve null).
 const PARAMS_SIN_FILTRO = new Set(['select', 'order', 'limit', 'offset', 'columns', 'on_conflict']);
 
+// Compara números, fechas (las del servidor y las de la PC tienen formato distinto) o texto
+const comparar = (a: unknown, b: string) => {
+  const na = Number(a), nb = Number(b);
+  if (a !== null && a !== '' && !Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+  const fa = Date.parse(String(a)), fb = Date.parse(b);
+  if (/^\d{4}-\d{2}-\d{2}/.test(b) && !Number.isNaN(fa) && !Number.isNaN(fb)) return fa - fb;
+  return String(a ?? '') < b ? -1 : String(a ?? '') > b ? 1 : 0;
+};
+const listaDe = (dato: string) => dato.replace(/^\(|\)$/g, '').split(',').map((x) => x.replace(/^"|"$/g, ''));
+
 const cumpleFiltro = (valor: unknown, filtro: string): boolean | null => {
   const [op, ...resto] = filtro.split('.');
   const dato = resto.join('.');
   const v = valor == null ? null : String(valor);
-  const num = (x: unknown) => Number(x);
   switch (op) {
     case 'eq': return v === dato;
     case 'neq': return v !== dato;
-    case 'gt': return num(valor) > num(dato);
-    case 'gte': return num(valor) >= num(dato);
-    case 'lt': return num(valor) < num(dato);
-    case 'lte': return num(valor) <= num(dato);
-    case 'in': return dato.replace(/^\(|\)$/g, '').split(',').map((x) => x.replace(/^"|"$/g, '')).includes(v ?? '');
+    case 'gt': return valor != null && comparar(valor, dato) > 0;
+    case 'gte': return valor != null && comparar(valor, dato) >= 0;
+    case 'lt': return valor != null && comparar(valor, dato) < 0;
+    case 'lte': return valor != null && comparar(valor, dato) <= 0;
+    case 'in': return listaDe(dato).includes(v ?? '');
     case 'is': return dato === 'null' ? valor == null : String(valor) === dato;
     default: return null; // filtro que no se sabe evaluar
   }
 };
 
+// ¿La copia guardada (con su filtro) trae TODAS las filas que pide la consulta (con el suyo)?
+// Ej.: guardado "detalles de las ventas 1,2,3" sirve para pedir "detalles de la venta 2".
+// Los ids hechos sin internet no están en el servidor: no hace falta que estén en la copia.
+const cubre = (guardado: string, pedido: string | undefined, locales: Set<string>) => {
+  if (pedido === undefined) return false;
+  if (guardado === pedido) return true;
+  const [opG, ...rG] = guardado.split('.'); const datoG = rG.join('.');
+  const [opP, ...rP] = pedido.split('.'); const datoP = rP.join('.');
+  if (opG === 'in' && (opP === 'in' || opP === 'eq')) {
+    const enCopia = new Set(listaDe(datoG));
+    return (opP === 'in' ? listaDe(datoP) : [datoP]).every((x) => enCopia.has(x) || locales.has(x));
+  }
+  if ((opG === 'gte' || opG === 'gt') && opP === opG) return comparar(datoP, datoG) >= 0;
+  return false;
+};
+
+const filtrosDe = (u: URL) => [...u.searchParams].filter(([k]) => !PARAMS_SIN_FILTRO.has(k));
+const columnasDe = (u: URL) => (u.searchParams.get('select') || '*').split(',').map((c) => c.trim());
+
+// Ordena, recorta columnas y arma la respuesta como la daría el servidor
+const armarRespuesta = (pedida: URL, filas: Record<string, unknown>[]): CopiaGuardada => {
+  let resultado = filas;
+  const [colOrden, dir] = (pedida.searchParams.get('order') || '').split(',')[0].split('.');
+  if (colOrden) {
+    resultado = [...resultado].sort((a, b) => comparar(a[colOrden], String(b[colOrden] ?? '')));
+    if (dir === 'desc') resultado.reverse();
+  }
+  const cols = columnasDe(pedida);
+  if (!cols.includes('*')) resultado = resultado.map((f) => Object.fromEntries(cols.map((c) => [c, f[c]])));
+  return {
+    cuerpo: JSON.stringify(resultado), estado: 200, tipo: 'application/json; charset=utf-8',
+    rango: `0-${Math.max(0, resultado.length - 1)}/${resultado.length}`, guardado: Date.now(),
+  };
+};
+
+const cumpleTodos = (fila: Record<string, unknown>, filtros: [string, string][]) => {
+  for (const [columna, filtro] of filtros) {
+    const ok = cumpleFiltro(fila[columna], filtro);
+    if (ok !== true) return ok; // false o null (filtro que no se sabe evaluar)
+  }
+  return true;
+};
+
 const copiaFiltrada = async (clave: string) => {
   const [url] = clave.split('|');
   const pedida = new URL(url, location.origin);
-  const filtros = [...pedida.searchParams].filter(([k]) => !PARAMS_SIN_FILTRO.has(k));
+  const filtros = filtrosDe(pedida);
   if (!filtros.length) return null;
-  const seleccion = pedida.searchParams.get('select') || '*';
-  if (/[()!:]/.test(seleccion)) return null; // con relaciones o renombres: no se arma en la PC
+  const columnas = columnasDe(pedida);
+  if (columnas.some((c) => /[()!:]/.test(c))) return null; // con relaciones o renombres: no se arma en la PC
+  const pedidos = new Map(filtros);
+  const locales = await idsLocales();
 
-  // Copias de la tabla completa (sin filtros, con todas las columnas): se juntan sus bloques de filas
+  // Copias de la misma tabla con TODAS las columnas pedidas y un filtro igual o más amplio: se juntan sus filas
   const filas = new Map<string, Record<string, unknown>>();
   for (const otra of await clavesLocal(ALMACEN_RESPUESTAS)) {
     const u = new URL(String(otra).split('|')[0], location.origin);
-    if (u.pathname !== pedida.pathname || (u.searchParams.get('select') || '*') !== '*') continue;
-    if ([...u.searchParams.keys()].some((k) => !PARAMS_SIN_FILTRO.has(k))) continue;
+    if (u.pathname !== pedida.pathname) continue;
+    const suyas = columnasDe(u);
+    if (!suyas.includes('*') && !columnas.every((c) => c !== '*' && suyas.includes(c))) continue;
+    if (!filtrosDe(u).every(([k, f]) => cubre(f, pedidos.get(k), locales))) continue;
     const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, otra);
     try { for (const f of JSON.parse(copia?.cuerpo || '[]')) filas.set(String(f?.id ?? JSON.stringify(f)), f); } catch { /* no es lista */ }
   }
   if (!filas.size) return null;
 
-  let resultado: Record<string, unknown>[] = [];
+  const resultado: Record<string, unknown>[] = [];
   for (const fila of filas.values()) {
-    let cumple = true;
-    for (const [columna, filtro] of filtros) {
-      const ok = cumpleFiltro(fila[columna], filtro);
-      if (ok === null) return null;
-      if (!ok) { cumple = false; break; }
-    }
-    if (cumple) resultado.push(fila);
+    const ok = cumpleTodos(fila, filtros);
+    if (ok === null) return null;
+    if (ok) resultado.push(fila);
   }
-  // Orden pedido (primera columna)
-  const [colOrden, dir] = (pedida.searchParams.get('order') || '').split(',')[0].split('.');
-  if (colOrden) {
-    resultado.sort((a, b) => (String(a[colOrden] ?? '') < String(b[colOrden] ?? '') ? -1 : String(a[colOrden] ?? '') > String(b[colOrden] ?? '') ? 1 : 0));
-    if (dir === 'desc') resultado.reverse();
+  return armarRespuesta(pedida, resultado);
+};
+
+// ---------------------------------------------------------------- lo hecho sin internet, en pantalla
+// Las filas guardadas en la cola (ventas, abonos, movimientos, mermas...) se suman a lo que se lee
+// de las copias: así Finanzas muestra lo vendido y cobrado sin internet.
+const filasPendientes = async () => {
+  const porTabla = new Map<string, Record<string, unknown>[]>();
+  const agregar = (tabla: string, fila: Record<string, unknown>) => porTabla.set(tabla, [...(porTabla.get(tabla) || []), fila]);
+  for (const p of await leerPendientes()) {
+    if (p.metodo !== 'POST') continue;
+    const tabla = p.accion.split('/')[1];
+    let datos: Record<string, unknown>[] = [];
+    try { datos = [JSON.parse(p.cuerpo)].flat(); } catch { continue; }
+    datos.forEach((f, i) => {
+      agregar(tabla, { id: f.id ?? `local-${p.id}-${i}`, ...f });
+      // En el servidor, cada abono crea su ingreso de caja (trigger fn_register_fiado_payment_in_cash)
+      if (tabla === 'debt_payments') {
+        agregar('cash_movements', {
+          id: `local-abono-${p.id}-${i}`, session_id: f.session_id == null ? null : String(f.session_id),
+          type: 'INGRESO', amount: f.amount, payment_type: f.payment_type, created_at: f.created_at,
+          description: `ABONO DE FIADO / Cliente ID: ${f.customer_id ?? 'General'}`, flujo: 'INGRESO_FIADO', is_synced: 1,
+        });
+      }
+    });
   }
-  if (seleccion !== '*') {
-    const cols = seleccion.split(',').map((c) => c.trim());
-    resultado = resultado.map((f) => Object.fromEntries(cols.map((c) => [c, f[c]])));
+  return porTabla;
+};
+
+// ids de lo hecho sin internet (ventas y sus detalles): no existen todavía en el servidor
+const idsLocales = async () => {
+  const ids = new Set<string>();
+  for (const filas of (await filasPendientes()).values()) {
+    for (const f of filas) { if (f.id != null) ids.add(String(f.id)); if (f.sale_id != null) ids.add(String(f.sale_id)); }
   }
-  return {
-    cuerpo: JSON.stringify(resultado), estado: 200, tipo: 'application/json; charset=utf-8',
-    rango: `0-${Math.max(0, resultado.length - 1)}/${resultado.length}`, guardado: Date.now(),
-  } satisfies CopiaGuardada;
+  return ids;
+};
+
+const sumarPendientes = async (clave: string, copia: CopiaGuardada) => {
+  const pedida = new URL(clave.split('|')[0], location.origin);
+  const tabla = pedida.pathname.replace(/^\/rest\/v1\//, '');
+  const nuevas = (await filasPendientes()).get(tabla);
+  if (!nuevas?.length || pedida.searchParams.has('offset') && pedida.searchParams.get('offset') !== '0') return copia;
+  let filas: unknown;
+  try { filas = JSON.parse(copia.cuerpo); } catch { return copia; }
+  if (!Array.isArray(filas)) return copia;
+  const filtros = filtrosDe(pedida);
+  const yaEstan = new Set(filas.map((f) => String(f?.id)));
+  const extra = nuevas.filter((f) => !yaEstan.has(String(f.id)) && cumpleTodos(f, filtros) === true);
+  if (!extra.length) return copia;
+  return armarRespuesta(pedida, [...filas, ...extra]);
 };
 
 export const leerCopia = async (clave: string) => {
   try {
-    const copia = (await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave))
+    let copia = (await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave))
       || (await copiaParecida(clave)) || (await copiaFiltrada(clave));
     if (!copia) return null;
+    copia = await sumarPendientes(clave, copia);
     const cabeceras = new Headers();
     if (copia.tipo) cabeceras.set('Content-Type', copia.tipo);
     if (copia.rango) cabeceras.set('Content-Range', copia.rango);

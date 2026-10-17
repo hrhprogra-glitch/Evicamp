@@ -2,7 +2,7 @@
 //  - Sin conexión: "🔌 Sin internet — la caja sigue funcionando · 3 cosas guardadas en esta PC"
 //  - Al volver: "⏳ Subiendo..." y luego "✅ Todo subido" (unos segundos)
 //  - Si el servidor rechazó algo al subirlo: aviso para revisarlo, con "Reintentar"
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { WifiOff, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 import { hayConexion, refrescarPendientes, reintentarErrores, leerPendientes } from '../utils/sinInternet';
 
@@ -28,18 +28,21 @@ export const useConexion = () => {
 export const BarraConexion: React.FC = () => {
   const { enLinea, cantidad, resumen, errores } = useConexion();
   const [subidoRecien, setSubidoRecien] = useState(false);
-  const [anterior, setAnterior] = useState(cantidad);
+  const anterior = useRef(cantidad);
 
   // Pasó de "había pendientes" a "todo subido" con internet: avisar unos segundos
   useEffect(() => {
-    if (enLinea && anterior > 0 && cantidad === 0) {
-      setSubidoRecien(true);
-      const t = setTimeout(() => setSubidoRecien(false), 5000);
-      setAnterior(cantidad);
-      return () => clearTimeout(t);
-    }
-    setAnterior(cantidad);
-  }, [enLinea, cantidad, anterior]);
+    const habia = anterior.current;
+    anterior.current = cantidad;
+    if (enLinea && habia > 0 && cantidad === 0) setSubidoRecien(true);
+  }, [enLinea, cantidad]);
+
+  // El aviso se quita solo (antes el contador se cancelaba al volver a dibujar y quedaba fijo)
+  useEffect(() => {
+    if (!subidoRecien) return;
+    const t = setTimeout(() => setSubidoRecien(false), 5000);
+    return () => clearTimeout(t);
+  }, [subidoRecien]);
 
   const verErrores = async () => {
     const lista = (await leerPendientes()).filter((p) => p.error);

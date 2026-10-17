@@ -18,6 +18,15 @@ import { rangoUTCPeru } from '../../utils/ingresos';
 import { usePermiso } from '../../utils/permisos';
 import { traerTodo } from '../../utils/traerTodo';
 import { numeroTicketDe, autorDe } from '../../utils/movimientosCaja';
+import { hayConexion } from '../../utils/sinInternet';
+
+// Sin internet, Finanzas se puede VER e ingresar ingresos/egresos, pero no devolver ni eliminar
+// (tocan el stock y la caja de todas las PCs: se hacen cuando vuelva la conexión)
+const bloqueadoSinInternet = () => {
+  if (hayConexion()) return false;
+  alert('🔌 Sin internet: las devoluciones y eliminaciones necesitan conexión. Hazlo cuando vuelva el internet.');
+  return true;
+};
 
 export const Finanzas: React.FC = () => {
   // Abrir/cerrar caja y registrar ingresos/egresos son permisos distintos
@@ -345,6 +354,7 @@ export const Finanzas: React.FC = () => {
   const [ticketSeleccionadoParaVer, setTicketSeleccionadoParaVer] = useState<string | null>(null);
 
   const handleDeleteMovimiento = async (idMov: string, isTicket?: boolean) => {
+    if (bloqueadoSinInternet()) return;
     if (isTicket) {
       if (!window.confirm('⚠️ ¿Seguro que deseas ELIMINAR permanentemente esta venta de la base de datos?\n(ESTO NO DEVUELVE EL STOCK. SI QUIERES DEVOLVER STOCK, USA "ANULAR/DEVOLVER" EN VEZ DE ESTE BOTÓN).')) return;
       const { error } = await supabase.from('sales').delete().eq('id', idMov);
@@ -390,6 +400,7 @@ export const Finanzas: React.FC = () => {
   };
 
   const handleAnularTicket = async (id: string) => {
+    if (bloqueadoSinInternet()) return;
     if (idsAnulandoRef.current.has(id)) return;
     if (id.startsWith('ERR-')) return;
     if (!window.confirm('⚠️ ¿Seguro que deseas ANULAR este ticket? El stock regresará y el dinero se descontará de la caja actual.')) return;
