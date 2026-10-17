@@ -283,7 +283,8 @@ def info_backups():
             carpeta = os.path.join(DIR_BACKUPS, base)
             if not os.path.isdir(carpeta):
                 continue
-            archivos = sorted((f for f in os.listdir(carpeta) if f.endswith(".dump")), reverse=True)
+            # .dump = una base de datos; .tar.gz = la configuración de todo el sistema
+            archivos = sorted((f for f in os.listdir(carpeta) if f.endswith((".dump", ".tar.gz"))), reverse=True)
             ultimo = archivos[0] if archivos else None
             bases.append({"base": base, "copias": len(archivos), "ultimo": ultimo,
                           "tamano_kb": os.path.getsize(os.path.join(carpeta, ultimo)) // 1024 if ultimo else 0})

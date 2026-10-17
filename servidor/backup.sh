@@ -25,6 +25,23 @@ for base in $(sudo -u postgres psql -At -c "select datname from pg_database wher
   find "$DESTINO/$base" -name "*.dump" -mtime +$DIAS -delete
 done
 
+# Configuración de TODO el sistema (sin ella, con solo las bases habría que rehacer el servidor a mano):
+# Panel de Control (planes, pagos, clientes, redirecciones, Mercado Pago), scripts, APIs de cada cliente,
+# Nginx (links), servicios, tareas automáticas y fail2ban. Los certificados HTTPS no: se sacan de nuevo.
+mkdir -p "$DESTINO/configuracion"
+config="$DESTINO/configuracion/configuracion-$FECHA.tar.gz"
+if tar -czf "$config" --ignore-failed-read --exclude='/var/www/clientes/*/descargas' \
+     /opt/siuhub /etc/nginx/sites-available /etc/nginx/conf.d /etc/postgrest.conf /etc/postgrest_siuhub.conf /etc/postgrest \
+     /etc/systemd/system/postgrest.service /etc/systemd/system/postgrest_siuhub.service /etc/systemd/system/postgrest-cliente@.service \
+     /etc/systemd/system/siuhub-panel.service /etc/cron.d /etc/fail2ban/jail.d /var/www/clientes 2> /dev/null; then
+  chmod 600 "$config"
+  echo "$(date '+%F %T') OK    configuracion  $(du -h "$config" | cut -f1)" >> "$LOG"
+else
+  echo "$(date '+%F %T') ERROR configuracion" >> "$LOG"
+  errores=$((errores + 1))
+fi
+find "$DESTINO/configuracion" -name "*.tar.gz" -mtime +$DIAS -delete
+
 # Backups de clientes borrados y de antes de cambiar un link: se guardan 30 días
 for extra in /var/backups/siuhub-eliminados /var/backups/siuhub-cambios; do
   if [ -d "$extra" ]; then

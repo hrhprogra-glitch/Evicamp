@@ -24,9 +24,9 @@ const registro = (msg) => {
   await ssh.connect(conexionVps);
   let nuevos = 0;
   try {
-    // El backup más reciente de cada base (una carpeta por base)
+    // El backup más reciente de cada base (una carpeta por base) y de la configuración del sistema (.tar.gz)
     const { stdout } = await ssh.execCommand(
-      `for d in ${REMOTO}/*/; do f=$(ls -1t "$d"*.dump 2>/dev/null | head -1); [ -n "$f" ] && echo "$f"; done`);
+      `for d in ${REMOTO}/*/; do f=$(ls -1t "$d"*.dump "$d"*.tar.gz 2>/dev/null | head -1); [ -n "$f" ] && echo "$f"; done`);
     const archivos = stdout.split('\n').map((s) => s.trim()).filter(Boolean);
     if (!archivos.length) throw new Error('No se encontraron backups en el servidor.');
 
@@ -42,7 +42,7 @@ const registro = (msg) => {
         registro(`OK  ${base}  ${path.basename(remoto)}  ${(fs.statSync(local).size / 1024).toFixed(0)} KB`);
       }
       // Solo los últimos 30 de cada base
-      const viejos = fs.readdirSync(carpeta).filter((f) => f.endsWith('.dump')).sort().reverse().slice(GUARDAR);
+      const viejos = fs.readdirSync(carpeta).filter((f) => f.endsWith('.dump') || f.endsWith('.tar.gz')).sort().reverse().slice(GUARDAR);
       for (const f of viejos) fs.unlinkSync(path.join(carpeta, f));
     }
     registro(`Listo: ${archivos.length} bases revisadas, ${nuevos} backups nuevos descargados en ${DESTINO}`);
