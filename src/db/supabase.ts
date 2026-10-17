@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { guardarLocal, leerLocal, ALMACEN_RESPUESTAS } from '../utils/almacenLocal';
 
 // En producción la API de cada cliente vive en su mismo link (/rest/v1/ detrás de Nginx),
 // así UNA sola compilación sirve para todos: evicamp.duckdns.org, bodega.siumax.duckdns.org...
@@ -34,12 +35,78 @@ const customFetch = (url: string | URL | Request, options?: RequestInit) => {
   if (token) headers.set('x-sesion', token);
   fetchOptions.headers = headers;
 
-  return fetch(urlString, fetchOptions).then((r) => {
+  // 4. MODO SIN INTERNET: cada consulta (GET) que responde bien deja una copia en el disco de la PC;
+  //    si no hay internet o el servidor no responde, se usa esa copia (así todas las secciones se ven).
+  const esLectura = (fetchOptions.method || 'GET').toUpperCase() === 'GET';
+  const claveCopia = `${urlString}|${headers.get('Range') || ''}`;
+
+  return pedirConLimite(urlString, fetchOptions).then((r) => {
+    avisarConexion(true);
     if (r.status === 503) mostrarSuspendido();
     // Sesión cerrada o empleado desactivado: volver al login (no aplica al propio inicio de sesión)
     if (r.status === 401 && token && !urlString.includes('/rpc/fn_login')) sesionVencida();
+    if (esLectura && r.ok) guardarCopia(claveCopia, r.clone());
     return r;
+  }).catch(async (error) => {
+    if (options?.signal?.aborted) throw error; // lo canceló el propio sistema, no es falta de internet
+    avisarConexion(false);
+    if (esLectura) {
+      const copia = await leerCopia(claveCopia);
+      if (copia) return copia;
+    }
+    throw error;
   });
+};
+
+// ----------------------------------------------------------------------
+// MODO SIN INTERNET: espera máxima, copias locales y estado de la conexión
+// ----------------------------------------------------------------------
+let enLinea = true;
+// Venía funcionando: se espera más (no cortar consultas lentas pero buenas). Ya sin conexión: 3 s.
+const esperaMaxima = () => (enLinea ? 10_000 : 3_000);
+
+const pedirConLimite = (url: string, opciones: RequestInit) => {
+  const control = new AbortController();
+  const original = opciones.signal;
+  if (original) {
+    if (original.aborted) control.abort();
+    else original.addEventListener('abort', () => control.abort(), { once: true });
+  }
+  const temporizador = setTimeout(() => control.abort(), esperaMaxima());
+  return fetch(url, { ...opciones, signal: control.signal }).finally(() => clearTimeout(temporizador));
+};
+
+// Avisa al sistema cuando cambia la conexión (la barra "Sin conexión" de la fase 5 lo escucha)
+const avisarConexion = (ahora: boolean) => {
+  if (ahora === enLinea) return;
+  enLinea = ahora;
+  window.dispatchEvent(new CustomEvent('siumax-conexion', { detail: { enLinea: ahora } }));
+};
+export const hayConexion = () => enLinea;
+
+interface CopiaGuardada { cuerpo: string; estado: number; tipo: string | null; rango: string | null; guardado: number }
+
+const guardarCopia = (clave: string, respuesta: Response) => {
+  respuesta.text()
+    .then((cuerpo) => guardarLocal(ALMACEN_RESPUESTAS, {
+      cuerpo, estado: respuesta.status, tipo: respuesta.headers.get('Content-Type'),
+      rango: respuesta.headers.get('Content-Range'), guardado: Date.now(),
+    } satisfies CopiaGuardada, clave))
+    .catch(() => { /* sin espacio o sin almacenamiento: se sigue funcionando con internet */ });
+};
+
+const leerCopia = async (clave: string) => {
+  try {
+    const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave);
+    if (!copia) return null;
+    const cabeceras = new Headers();
+    if (copia.tipo) cabeceras.set('Content-Type', copia.tipo);
+    if (copia.rango) cabeceras.set('Content-Range', copia.rango);
+    cabeceras.set('X-Siumax-Copia-Local', String(copia.guardado)); // de cuándo es la copia
+    return new Response(copia.cuerpo, { status: copia.estado, headers: cabeceras });
+  } catch {
+    return null;
+  }
 };
 
 // Misma clave que usa src/utils/sesion.ts (aquí se lee directo para no crear una importación circular)

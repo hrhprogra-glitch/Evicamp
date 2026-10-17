@@ -29,9 +29,23 @@ export const leerToken = () => {
 const guardarToken = (token: string | null) => {
   try {
     if (token) localStorage.setItem(CLAVE_TOKEN, token);
-    else localStorage.removeItem(CLAVE_TOKEN);
+    else { localStorage.removeItem(CLAVE_TOKEN); localStorage.removeItem(CLAVE_EMPLEADO_SIN_INTERNET); }
     localStorage.removeItem('empleado_session'); // formato anterior (guardaba los permisos en el navegador)
   } catch { /* sin acceso a localStorage */ }
+};
+
+// MODO SIN INTERNET: el último empleado validado por el servidor, para seguir trabajando si se corta
+// la conexión. Solo se usa sin internet; con internet manda siempre el servidor. Aunque alguien lo
+// edite en la PC, lo que haga sin internet se sube con su sesión y el servidor revisa sus permisos.
+const CLAVE_EMPLEADO_SIN_INTERNET = 'siumax_empleado_sin_internet';
+const recordarEmpleado = (token: string, empleado: EmpleadoSesion) => {
+  try { localStorage.setItem(CLAVE_EMPLEADO_SIN_INTERNET, JSON.stringify({ token, empleado })); } catch { /* sin almacenamiento */ }
+};
+const empleadoSinInternet = (token: string): EmpleadoSesion | null => {
+  try {
+    const guardado = JSON.parse(localStorage.getItem(CLAVE_EMPLEADO_SIN_INTERNET) || 'null');
+    return guardado && guardado.token === token ? guardado.empleado : null;
+  } catch { return null; }
 };
 
 // 🔐 Login, validación y cierre de sesión pasan por funciones seguras del servidor
@@ -50,7 +64,9 @@ export const iniciarSesion = async (usuario: string, password: string): Promise<
   if (!data || !data.token) return null;
 
   guardarToken(data.token);
-  return { id: data.id, nombre: data.nombre, email: data.email, rol: data.rol, permisos: data.permisos || {} };
+  const empleado = { id: data.id, nombre: data.nombre, email: data.email, rol: data.rol, permisos: data.permisos || {} };
+  recordarEmpleado(data.token, empleado);
+  return empleado;
 };
 
 // Devuelve el empleado de la sesión guardada, o null si la sesión no existe,
@@ -65,14 +81,17 @@ export const validarSesion = async (): Promise<EmpleadoSesion | null | 'sin-cone
 
   const { data, error } = await supabase.rpc('fn_validar_sesion', { p_token: token }).maybeSingle<RespuestaSesion>();
 
-  if (error) return error.code ? null : 'sin-conexion';
+  // Sin internet: se sigue con el empleado que el servidor validó la última vez en esta PC
+  if (error) return error.code ? null : (empleadoSinInternet(token) || 'sin-conexion');
 
   if (!data || !data.id) {
     guardarToken(null);
     return null;
   }
 
-  return { id: data.id, nombre: data.nombre, email: data.email, rol: data.rol, permisos: data.permisos || {} };
+  const empleado = { id: data.id, nombre: data.nombre, email: data.email, rol: data.rol, permisos: data.permisos || {} };
+  recordarEmpleado(token, empleado);
+  return empleado;
 };
 
 export const cerrarSesion = async () => {

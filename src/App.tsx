@@ -170,7 +170,13 @@ export const App: React.FC = () => {
     let activo = true;
     const revisar = async () => {
       const resultado = await validarSesion();
-      if (!activo || resultado === 'sin-conexion') return; // un corte de internet no cierra la sesión
+      if (!activo) return;
+      if (resultado === 'sin-conexion') {
+        // Un corte de internet no cierra la sesión abierta. Si la app recién abre sin internet y esta PC
+        // no tiene una sesión guardada, se muestra el login (no se queda en "Inicializando...").
+        setIsLoading(false);
+        return;
+      }
       setEmpleado(resultado);
       setIsLoading(false);
     };
