@@ -48,9 +48,30 @@ export const guardarCopia = (clave: string, respuesta: Response) => {
     .catch(() => { /* sin espacio o sin almacenamiento: se sigue funcionando con internet */ });
 };
 
+// La misma consulta aunque esté ordenada distinto (por ejemplo, los productos que cargó la Caja
+// sirven para Inventario): misma tabla, mismas columnas, mismos filtros y mismo bloque de filas
+const sinOrden = (clave: string) => {
+  const [url, rango = ''] = clave.split('|');
+  const u = new URL(url, location.origin);
+  u.searchParams.delete('order');
+  u.searchParams.sort();
+  return `${u.pathname}?${u.searchParams}|${rango}`;
+};
+
+const copiaParecida = async (clave: string) => {
+  const buscada = sinOrden(clave);
+  let mejor: CopiaGuardada | null = null;
+  for (const otra of await clavesLocal(ALMACEN_RESPUESTAS)) {
+    if (sinOrden(String(otra)) !== buscada) continue;
+    const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, otra);
+    if (copia && (!mejor || copia.guardado > mejor.guardado)) mejor = copia;
+  }
+  return mejor;
+};
+
 export const leerCopia = async (clave: string) => {
   try {
-    const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave);
+    const copia = (await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave)) || (await copiaParecida(clave));
     if (!copia) return null;
     const cabeceras = new Headers();
     if (copia.tipo) cabeceras.set('Content-Type', copia.tipo);
@@ -246,11 +267,27 @@ export const leerPendientes = async () =>
 let hayEnCola = false;
 export const hayPendientesEnCola = () => hayEnCola;
 
+// Para la barra: qué hay guardado, como lo entiende el cajero ("1 venta, 2 abonos"). Una venta son
+// varios pasos (venta + detalle), pero se cuenta como una.
+const NOMBRES: Record<string, [string, string]> = {
+  'POST /sales': ['venta', 'ventas'],
+  'POST /debt_payments': ['abono', 'abonos'],
+  'POST /cash_movements': ['movimiento de caja', 'movimientos de caja'],
+  'POST /waste': ['merma', 'mermas'], 'PATCH /waste': ['merma corregida', 'mermas corregidas'], 'DELETE /waste': ['merma borrada', 'mermas borradas'],
+  'PATCH /sales': ['devolución', 'devoluciones'],
+};
+const resumir = (lista: Pendiente[]) => {
+  const cuenta = new Map<string, number>();
+  for (const p of lista) if (NOMBRES[p.accion]) cuenta.set(p.accion, (cuenta.get(p.accion) || 0) + 1);
+  return [...cuenta].map(([a, n]) => `${n} ${NOMBRES[a][n === 1 ? 0 : 1]}`).join(', ');
+};
+
 const avisarPendientes = async () => {
   const todos = await leerPendientes().catch(() => [] as Pendiente[]);
-  hayEnCola = todos.some((p) => !p.error);
+  const enEspera = todos.filter((p) => !p.error);
+  hayEnCola = enEspera.length > 0;
   window.dispatchEvent(new CustomEvent('siumax-pendientes', {
-    detail: { cantidad: todos.filter((p) => !p.error).length, errores: todos.filter((p) => p.error).length },
+    detail: { cantidad: enEspera.length, resumen: resumir(enEspera) || 'cambios', errores: todos.filter((p) => p.error).length },
   }));
 };
 
@@ -317,6 +354,17 @@ export const subirPendientes = async () => {
     subiendo = false;
     void avisarPendientes();
   }
+};
+
+// Para la barra de estado: vuelve a contar y avisar (al abrir la pantalla)
+export const refrescarPendientes = () => avisarPendientes();
+
+// Lo que el servidor rechazó queda marcado con error: reintentarlo (por ejemplo, tras corregir un permiso)
+export const reintentarErrores = async () => {
+  for (const p of await leerPendientes()) {
+    if (p.error) await guardarLocal(ALMACEN_PENDIENTES, { ...p, error: undefined });
+  }
+  await subirPendientes();
 };
 
 // Revisa la conexión y sube lo pendiente: al abrir, al volver el internet y cada 20 s mientras haya algo

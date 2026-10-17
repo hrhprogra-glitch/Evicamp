@@ -18,6 +18,8 @@ import Configuraciones from './sections/Configuraciones';
 import { aplicarTamanoInterfaz, leerTamanoInterfaz } from './utils/tamanoInterfaz';
 import { AlertaYape } from './layout/AlertaYape';
 import { AvisoSuscripcion } from './layout/AvisoSuscripcion';
+import { BarraConexion } from './layout/BarraConexion';
+import { precargarParaSinInternet } from './utils/precargaSinInternet';
 import { programarRestauracionFoco } from './utils/navegacionSesion';
 
 // Nombre visible de cada sesión en la barra superior de celular/tablet
@@ -179,6 +181,8 @@ export const App: React.FC = () => {
       }
       setEmpleado(resultado);
       setIsLoading(false);
+      // Con sesión y con internet: dejar listas las copias para trabajar sin internet
+      if (resultado) precargarParaSinInternet();
     };
     revisar();
     const intervalo = setInterval(revisar, REVALIDAR_CADA_MS);
@@ -261,6 +265,8 @@ export const App: React.FC = () => {
 
         {/* Aviso de vencimiento del plan (solo clientes con plan en el Panel de Control) */}
         <AvisoSuscripcion />
+        {/* Modo sin internet: "Sin internet — la caja sigue funcionando", subida y errores */}
+        <BarraConexion />
 
         {/* BARRA SUPERIOR SOLO EN TABLET/CELULAR: en esas pantallas el menú está oculto y este botón lo abre */}
         <header className="lg:hidden shrink-0 h-11 flex items-center gap-3 px-2 bg-[var(--color-ink)] border-b-2 border-[var(--color-accent)] font-mono">

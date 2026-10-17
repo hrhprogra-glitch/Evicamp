@@ -50,6 +50,9 @@ const customFetch = (url: string | URL | Request, options?: RequestInit) => {
   if (vaALaCola && (!hayConexion() || hayPendientesEnCola())) {
     return encolar(urlString, fetchOptions, token).then((r) => { void subirPendientes(); return r; });
   }
+  // Sin conexión y es algo que necesita internet (editar productos, clientes nuevos, abrir/cerrar caja,
+  // ajustes...): aviso claro al instante, en vez de esperar y mostrar un error técnico
+  if (!esLectura && !hayConexion() && !/\/rpc\/fn_(login|validar_sesion|cerrar_sesion)\b/.test(urlString)) return Promise.resolve(necesitaInternet());
 
   return pedirConLimite(urlString, fetchOptions).then((r) => {
     avisarConexion(true);
@@ -67,9 +70,16 @@ const customFetch = (url: string | URL | Request, options?: RequestInit) => {
     }
     // Se cortó al enviar una venta o un fiado: queda en la cola (si alcanzó a llegar, no se duplica)
     if (vaALaCola) return encolar(urlString, fetchOptions, token);
+    if (!esLectura && !/\/rpc\/fn_(login|validar_sesion|cerrar_sesion)\b/.test(urlString)) return necesitaInternet();
     throw error;
   });
 };
+
+// Lo que no se puede hacer sin internet: la pantalla muestra este mensaje (no "Failed to fetch")
+const necesitaInternet = () => new Response(JSON.stringify({
+  message: '🔌 Sin internet: esto necesita conexión. Puedes seguir vendiendo, fiando, cobrando abonos, '
+    + 'registrando ingresos/egresos y mermas; lo demás, cuando vuelva el internet.',
+}), { status: 503, headers: { 'Content-Type': 'application/json' } });
 
 // Misma clave que usa src/utils/sesion.ts (aquí se lee directo para no crear una importación circular)
 const CLAVE_TOKEN_SESION = 'gestorpro_sesion';
@@ -106,16 +116,18 @@ const renovarSesion = () => {
     .catch(() => {}); // sin internet: no hacer nada
 };
 
-// Revisa cada 30 s aunque nadie esté usando el sistema (pantalla quieta en la caja)
+// Revisa cada 15 s aunque nadie esté usando el sistema (pantalla quieta en la caja): si el servicio fue
+// suspendido y si hay conexión (la barra "Sin conexión" aparece y desaparece sola)
 export const vigilarSuspension = () => {
   if (!import.meta.env.PROD) return;
   setInterval(renovarSesion, 60 * 60 * 1000);
+  window.addEventListener('offline', () => avisarConexion(false));
   setInterval(() => {
     if (document.visibilityState !== 'visible') return;
-    fetch('/rest/v1/empresa_config?select=id&limit=1', { cache: 'no-store' })
-      .then((r) => { if (r.status === 503) mostrarSuspendido(); })
-      .catch(() => {}); // sin internet: no hacer nada
-  }, 30_000);
+    pedirConLimite('/rest/v1/empresa_config?select=id&limit=1', { cache: 'no-store' }, 5_000)
+      .then((r) => { avisarConexion(true); if (r.status === 503) mostrarSuspendido(); })
+      .catch(() => avisarConexion(false));
+  }, 15_000);
 };
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Package, Layers, Box, AlertTriangle, LayoutGrid, Plus, Database, Activity, Users } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import { usePermiso, avisarSinPermiso } from '../../utils/permisos';
+import { useConexion } from '../../layout/BarraConexion';
 import type { Product } from './types';
 
 // Componentes importados
@@ -26,6 +27,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const puedeEliminarProductos = usePermiso('almacen_eliminar_productos');
   const puedeIngresarLotes = usePermiso('almacen_ingresar_lotes');
   const puedeProveedores = usePermiso('almacen_gestionar_proveedores');
+  const { enLinea } = useConexion(); // sin internet, Inventario es solo para ver
   const [mermaAEditar, setMermaAEditar] = useState<any>(null);
   const [isModalLoteOpen, setIsModalLoteOpen] = useState(false); // <-- ESTADO DEL NUEVO MODAL
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
@@ -545,7 +547,13 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-      <FiltrosInventario 
+      {!enLinea && (
+        <div role="status" className="mx-2 sm:mx-8 px-3 py-2 border-2 border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] font-mono text-xs font-bold">
+          🔌 SIN INTERNET: Inventario es solo para ver. No edites productos ni ingreses lotes hasta que vuelva la conexión (las mermas sí se pueden registrar).
+        </div>
+      )}
+
+      <FiltrosInventario
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         matchCount={filteredProducts.length}
