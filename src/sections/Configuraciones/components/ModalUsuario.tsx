@@ -39,8 +39,8 @@ const ROLES: { nombre: string; descripcion: string; permisos: (keyof PermisosUsu
   },
   {
     nombre: 'Cajero',
-    descripcion: 'Vende, abre y cierra su turno, fía y cobra deudas. Puede ver el stock, pero no cambia productos ni precios ni anula ventas.',
-    permisos: ['caja_realizar_ventas', 'caja_abrir_cerrar_turno', 'caja_ver_fiados', 'caja_cobrar_deudas', 'almacen_ver_stock', 'reportes_ver_historial_ventas'],
+    descripcion: 'Vende, abre y cierra su turno, fía, cobra deudas y hace devoluciones (quedan en Finanzas con su nombre). Ve el stock, pero no cambia productos ni precios.',
+    permisos: ['caja_realizar_ventas', 'caja_abrir_cerrar_turno', 'caja_ver_fiados', 'caja_cobrar_deudas', 'almacen_ver_stock', 'reportes_ver_historial_ventas', 'reportes_anular_ventas'],
   },
   {
     nombre: 'Almacenero',

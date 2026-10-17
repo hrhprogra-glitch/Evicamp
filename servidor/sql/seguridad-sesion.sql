@@ -149,6 +149,33 @@ BEGIN
 END;
 $$;
 
+-- Cada movimiento de caja (devoluciones, ingresos, egresos, abonos) guarda QUIÉN lo hizo, tomado de la
+-- sesión en el servidor (no se puede falsear desde la pantalla). Se ve en Finanzas: "... · por Juan Pérez".
+CREATE OR REPLACE FUNCTION public.fn_registrar_autor_caja()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_token text := current_setting('request.headers', true)::json ->> 'x-sesion';
+  v_nombre text;
+BEGIN
+  IF v_token IS NULL OR v_token !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
+    RETURN NEW;   -- movimiento interno del servidor
+  END IF;
+  SELECT e.nombre INTO v_nombre FROM sesiones s JOIN empleados e ON e.id = s.empleado_id WHERE s.token = v_token::uuid;
+  IF v_nombre IS NOT NULL AND coalesce(NEW.description, '') NOT LIKE '% · por %' THEN
+    NEW.description := concat_ws(' · por ', nullif(NEW.description, ''), v_nombre);
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_registrar_autor_caja ON public.cash_movements;
+CREATE TRIGGER trg_registrar_autor_caja BEFORE INSERT ON public.cash_movements
+  FOR EACH ROW EXECUTE FUNCTION public.fn_registrar_autor_caja();
+
 DROP TRIGGER IF EXISTS trg_proteger_precios ON public.products;
 CREATE TRIGGER trg_proteger_precios BEFORE UPDATE ON public.products
   FOR EACH ROW EXECUTE FUNCTION public.fn_proteger_precios();
