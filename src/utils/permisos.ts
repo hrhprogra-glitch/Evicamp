@@ -37,5 +37,23 @@ export const usePermiso = (clave: ClavePermiso) => tienePermiso(useContext(Sesio
 
 // Los botones siguen visibles (para no romper la navegación con flechas), pero sin el permiso avisan
 // en vez de intentar la acción. El servidor también la rechaza (servidor/sql/seguridad-sesion.sql).
-export const avisarSinPermiso = (accion: string) =>
-  alert(`🔒 No tienes permiso para ${accion}.\n\nPide al administrador que te lo dé en Ajustes > Gestión de usuarios.`);
+// El aviso es un mensaje en pantalla (no una ventana del navegador): no interrumpe ni le quita el
+// selector al elemento donde estaba el usuario, y se va solo.
+let ocultarAviso: ReturnType<typeof setTimeout> | undefined;
+export const avisarSinPermiso = (accion: string) => {
+  let aviso = document.getElementById('aviso-sin-permiso');
+  if (!aviso) {
+    aviso = document.createElement('div');
+    aviso.id = 'aviso-sin-permiso';
+    aviso.setAttribute('role', 'status');
+    aviso.setAttribute('aria-live', 'polite');
+    aviso.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:100000;max-width:calc(100% - 32px);'
+      + 'background:var(--color-ink,#1E293B);color:#fff;border:2px solid var(--color-warning,#F59E0B);box-shadow:4px 4px 0 0 var(--color-warning,#F59E0B);'
+      + 'padding:12px 16px;font:700 13px/1.5 ui-monospace,Menlo,Consolas,monospace;pointer-events:none;';
+    document.body.appendChild(aviso);
+  }
+  aviso.textContent = `🔒 No tienes permiso para ${accion}. Pide al administrador que te lo dé en Ajustes > Gestión de usuarios.`;
+  aviso.style.display = 'block';
+  clearTimeout(ocultarAviso);
+  ocultarAviso = setTimeout(() => { if (aviso) aviso.style.display = 'none'; }, 4500);
+};

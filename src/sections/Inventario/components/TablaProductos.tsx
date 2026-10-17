@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Database, ArrowUpDown, Search, Edit, Trash2, ChevronLeft, ChevronRight, Check, X, History, Barcode, Image as ImageIcon } from 'lucide-react';
 import { EtiquetaStock } from './EtiquetaStock';
 import type { Product } from '../types';
+import { usePermiso, avisarSinPermiso } from '../../../utils/permisos';
 
 interface Props {
   loading: boolean;
@@ -18,6 +19,8 @@ interface Props {
 export const TablaProductos: React.FC<Props> = ({ 
   loading, productos, currentPage, totalPages, onPageChange, onUpdateProduct, onEditProduct, onDeleteProduct, onViewHistory // <-- AGREGAR AQUÍ
 }) => {
+  // Sin permiso, el botón de borrar avisa antes de pedir la confirmación
+  const puedeEliminar = usePermiso('almacen_eliminar_productos');
   // ESTADOS PARA LA EDICIÓN EN LÍNEA
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Product>>({});
@@ -401,6 +404,7 @@ export const TablaProductos: React.FC<Props> = ({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!puedeEliminar) { avisarSinPermiso('eliminar productos'); return; }
                       if (window.confirm(`⚠️ ALERTA DE INTEGRIDAD GEOMÉTRICA\n\nEstá a punto de eliminar el producto:\n"${item.name}"\n\n🚨 ATENCIÓN: Al borrar este producto, TODOS LOS LOTES asociados a él serán eliminados automáticamente para no romper la contabilidad del sistema.\n\n¿Confirma la eliminación del producto y de todos sus lotes?`)) {
                         if (onDeleteProduct) onDeleteProduct(item);
                       }
