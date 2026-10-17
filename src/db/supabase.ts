@@ -44,7 +44,7 @@ const customFetch = (url: string | URL | Request, options?: RequestInit) => {
   const metodo = (fetchOptions.method || 'GET').toUpperCase();
   const esLectura = metodo === 'GET';
   const claveCopia = `${urlString}|${headers.get('Range') || ''}`;
-  const vaALaCola = !esLectura && sePuedeSinInternet(urlString, metodo);
+  const vaALaCola = !esLectura && sePuedeSinInternet(urlString, metodo, fetchOptions.body);
 
   // Sin conexión, o con cosas esperando en la cola (para que todo suba en orden): directo a la cola
   if (vaALaCola && (!hayConexion() || hayPendientesEnCola())) {
@@ -131,3 +131,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     fetch: customFetch 
   }
 });
+// Pruebas automáticas del modo sin internet: SOLO si en esta PC se activó a mano
+// (localStorage "siumax_pruebas" = "1"). No da ningún permiso extra: es el mismo cliente que usa
+// la pantalla, con la misma sesión y las mismas reglas del servidor.
+try {
+  if (localStorage.getItem('siumax_pruebas') === '1') (window as Window & { __siumaxPruebas?: unknown }).__siumaxPruebas = supabase;
+} catch { /* sin almacenamiento */ }

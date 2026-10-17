@@ -286,3 +286,16 @@ AS $$
     WHERE s.token = p_token AND e.estado = 'ACTIVO' AND s.ultimo_uso > now() - interval '30 days'
   );
 $$;
+
+-- MODO SIN INTERNET: lo que se hace sin conexión (abonos, ingresos/egresos, mermas) lleva una referencia
+-- única generada en la PC. Al subirlo, si el servidor ya la tiene (se cortó justo después de enviarlo),
+-- no se registra dos veces.
+ALTER TABLE public.debt_payments       ADD COLUMN IF NOT EXISTS ref_local text;
+ALTER TABLE public.cash_movements      ADD COLUMN IF NOT EXISTS ref_local text;
+ALTER TABLE public.waste               ADD COLUMN IF NOT EXISTS ref_local text;
+ALTER TABLE public.inventory_movements ADD COLUMN IF NOT EXISTS ref_local text;
+CREATE UNIQUE INDEX IF NOT EXISTS debt_payments_ref_local       ON public.debt_payments (ref_local)       WHERE ref_local IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS cash_movements_ref_local      ON public.cash_movements (ref_local)      WHERE ref_local IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS waste_ref_local               ON public.waste (ref_local)               WHERE ref_local IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS inventory_movements_ref_local ON public.inventory_movements (ref_local) WHERE ref_local IS NOT NULL;
+NOTIFY pgrst, 'reload schema';
