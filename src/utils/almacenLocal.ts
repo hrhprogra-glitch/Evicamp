@@ -49,5 +49,8 @@ export const leerLocal = <T>(almacen: string, clave: IDBValidKey) =>
 export const leerTodoLocal = <T>(almacen: string) =>
   operar<T[]>(almacen, 'readonly', (s) => s.getAll() as IDBRequest<T[]>).then((r) => r || []);
 
+export const clavesLocal = (almacen: string) =>
+  operar<IDBValidKey[]>(almacen, 'readonly', (s) => s.getAllKeys()).then((r) => r || []);
+
 export const borrarLocal = (almacen: string, clave: IDBValidKey) =>
   operar(almacen, 'readwrite', (s) => s.delete(clave)).then(() => undefined);
