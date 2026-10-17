@@ -16,7 +16,6 @@ const PERMISOS_POR_MODULO: Record<string, ClavePermiso[]> = {
   mermas: ['almacen_registrar_mermas'],
   finanzas: ['caja_abrir_cerrar_turno', 'caja_ingresos_egresos'],
   utilidades: ['gerencia_ver_utilidades'],
-  reportes: ['reportes_ver_historial_ventas', 'reportes_ver_globales'],
   configuracion: ['gerencia_configuracion_sistema', 'gerencia_gestionar_usuarios'],
 };
 
