@@ -12,6 +12,7 @@ import { FiltrosMermas } from './components/FiltrosMermas';
 import { TarjetaMetrica } from './components/TarjetaMetrica';
 import { TablaMermas } from './components/TablaMermas';
 import { traerTodo } from '../../utils/traerTodo';
+import { confirmar } from '../../utils/dialogos';
 
 export const Mermas: React.FC = () => {
   const [mermas, setMermas] = useState<Merma[]>([]);
@@ -147,7 +148,7 @@ export const Mermas: React.FC = () => {
       ? `OPERACIÓN FINANCIERA: ¿Anular el registro de gasto de S/ ${merma.total_loss.toFixed(2)} en ${merma.product_name}?`
       : `OPERACIÓN CRÍTICA: ¿Eliminar merma de ${merma.product_name}? Se restaurarán ${Math.abs(Number(merma.quantity))} unidades al inventario.`;
 
-    if (!window.confirm(mensajeConfirmacion)) return;
+    if (!await confirmar(mensajeConfirmacion)) return;
 
     try {
       setLoading(true);

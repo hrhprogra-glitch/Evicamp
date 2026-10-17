@@ -5,6 +5,7 @@ import { ModalUsuario } from './ModalUsuario';
 import { supabase } from '../../../db/supabase';
 import { useEmpleado } from '../../../utils/permisos';
 import { leerToken } from '../../../utils/sesion';
+import { confirmar } from '../../../utils/dialogos';
 
 export const TablaUsuarios: React.FC = () => {
   const [usuarios, setUsuarios] = useState<Empleado[]>([]);
@@ -71,7 +72,7 @@ export const TablaUsuarios: React.FC = () => {
   };
 
   const handleEliminar = async (usuario: Empleado) => {
-    if (!window.confirm(`¿Eliminar la cuenta de ${usuario.nombre} (${usuario.email})?\n\nSe cerrarán sus sesiones abiertas y ya no podrá entrar. Esta acción no se puede deshacer.`)) return;
+    if (!await confirmar(`¿Eliminar la cuenta de ${usuario.nombre} (${usuario.email})?\n\nSe cerrarán sus sesiones abiertas y ya no podrá entrar. Esta acción no se puede deshacer.`)) return;
     const token = leerToken();
     if (!token) { alert('Tu sesión expiró. Vuelve a iniciar sesión.'); return; }
     const { error } = await supabase.rpc('fn_eliminar_empleado', { p_token: token, p_empleado_id: usuario.id });

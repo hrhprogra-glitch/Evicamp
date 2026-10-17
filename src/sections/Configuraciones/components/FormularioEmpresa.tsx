@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Building2, FileText, MapPin, Phone, Upload, Save, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
+import { avisar } from '../../../utils/dialogos';
 
 // El logo se guarda como imagen dentro de empresa_config (no hay servidor de archivos en el VPS):
 // se achica a 300 px como máximo para que pese poco (PNG conserva la transparencia; si pesa mucho, JPG)
@@ -171,12 +172,12 @@ export const FormularioEmpresa: React.FC = () => {
       if (empresaId) {
         const { error } = await supabase.from('empresa_config').update(datosAGuardar).eq('id', empresaId);
         if (error) throw error;
-        alert('✅ Datos guardados correctamente. El sistema se actualizará ahora.');
+        await avisar('✅ Datos guardados correctamente. El sistema se actualizará ahora.'); // que se lea antes de recargar
         window.location.reload(); // <--- ESTA LÍNEA FUERZA LA ACTUALIZACIÓN VISUAL
       } else {
         const { error } = await supabase.from('empresa_config').insert([datosAGuardar]);
         if (error) throw error;
-        alert('✅ Empresa registrada. El sistema se actualizará ahora.');
+        await avisar('✅ Empresa registrada. El sistema se actualizará ahora.'); // que se lea antes de recargar
         window.location.reload(); // <--- ESTA LÍNEA FUERZA LA ACTUALIZACIÓN VISUAL
       }
       

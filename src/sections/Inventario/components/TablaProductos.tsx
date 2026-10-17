@@ -3,6 +3,7 @@ import { Database, ArrowUpDown, Search, Edit, Trash2, ChevronLeft, ChevronRight,
 import { EtiquetaStock } from './EtiquetaStock';
 import type { Product } from '../types';
 import { usePermiso, avisarSinPermiso } from '../../../utils/permisos';
+import { confirmar } from '../../../utils/dialogos';
 
 interface Props {
   loading: boolean;
@@ -402,10 +403,10 @@ export const TablaProductos: React.FC<Props> = ({
                     <Edit size={16} />
                   </button>
                   <button
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.stopPropagation();
                       if (!puedeEliminar) { avisarSinPermiso('eliminar productos'); return; }
-                      if (window.confirm(`⚠️ ALERTA DE INTEGRIDAD GEOMÉTRICA\n\nEstá a punto de eliminar el producto:\n"${item.name}"\n\n🚨 ATENCIÓN: Al borrar este producto, TODOS LOS LOTES asociados a él serán eliminados automáticamente para no romper la contabilidad del sistema.\n\n¿Confirma la eliminación del producto y de todos sus lotes?`)) {
+                      if (await confirmar(`⚠️ ALERTA DE INTEGRIDAD GEOMÉTRICA\n\nEstá a punto de eliminar el producto:\n"${item.name}"\n\n🚨 ATENCIÓN: Al borrar este producto, TODOS LOS LOTES asociados a él serán eliminados automáticamente para no romper la contabilidad del sistema.\n\n¿Confirma la eliminación del producto y de todos sus lotes?`)) {
                         if (onDeleteProduct) onDeleteProduct(item);
                       }
                     }}

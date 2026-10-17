@@ -13,6 +13,7 @@ import { TablaLotes } from '../Inventario/components/TablaLotes';
 import { ModalLote } from '../Inventario/components/ModalLote';
 import { FiltrosInventario } from '../Inventario/components/FiltrosInventario';
 import { traerTodo } from '../../utils/traerTodo';
+import { confirmar } from '../../utils/dialogos';
 
 interface Props {
   onNavigate?: (view: string) => void;
@@ -270,7 +271,7 @@ export const Proveedores: React.FC<Props> = ({ onNavigate }) => {
                 setIsModalProvOpen(true);
               }}
               onDelete={async (prov) => {
-                if (window.confirm(`⚠️ ALERTA: ¿Estás seguro de eliminar al proveedor "${prov.razon_social}"? Esta acción no se puede deshacer.`)) {
+                if (await confirmar(`⚠️ ALERTA: ¿Estás seguro de eliminar al proveedor "${prov.razon_social}"? Esta acción no se puede deshacer.`)) {
                   try {
                     const { error } = await supabase.from('providers').delete().eq('id', prov.id);
                     if (error) throw error;

@@ -5,6 +5,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { WifiOff, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 import { hayConexion, refrescarPendientes, reintentarErrores, leerPendientes } from '../utils/sinInternet';
+import { confirmar } from '../utils/dialogos';
 
 // Estado de la conexión y de lo guardado en esta PC, para cualquier pantalla
 export const useConexion = () => {
@@ -47,7 +48,7 @@ export const BarraConexion: React.FC = () => {
   const verErrores = async () => {
     const lista = (await leerPendientes()).filter((p) => p.error);
     const texto = lista.map((p) => `• ${new Date(p.creado).toLocaleString('es-PE')} — ${p.accion}\n   ${p.error}`).join('\n');
-    if (window.confirm(`No se pudieron subir ${lista.length} operaciones (el servidor las rechazó):\n\n${texto}\n\n¿Reintentar ahora?`)) {
+    if (await confirmar(`No se pudieron subir ${lista.length} operaciones (el servidor las rechazó):\n\n${texto}\n\n¿Reintentar ahora?`)) {
       await reintentarErrores();
     }
   };

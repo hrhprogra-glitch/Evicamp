@@ -13,6 +13,7 @@ import { numeroTicketDe, autorDe } from '../../../utils/movimientosCaja';
 import html2canvas from 'html2canvas-pro';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { ModalDetalleTicket } from '../../../components/ModalDetalleTicket';
+import { confirmar } from '../../../utils/dialogos';
 
 interface Props {
   isOpen: boolean;
@@ -53,7 +54,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
 
   const handleAnularInterno = async (id: string) => {
     if (!onAnular) return;
-    if (!window.confirm('¿Estás seguro de anular/devolver este ticket?')) return;
+    if (!await confirmar('¿Estás seguro de anular/devolver este ticket?')) return;
     try {
       setIdsProcesando(prev => new Set(prev).add(id));
       await onAnular(id, true);
@@ -69,7 +70,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
 
   const handleDeleteInterno = async (id: string) => {
     if (!onDelete) return;
-    if (!window.confirm('¿Eliminar este ticket permanentemente?')) return;
+    if (!await confirmar('¿Eliminar este ticket permanentemente?')) return;
     try {
       setIdsProcesando(prev => new Set(prev).add(id));
       await onDelete(id, true);

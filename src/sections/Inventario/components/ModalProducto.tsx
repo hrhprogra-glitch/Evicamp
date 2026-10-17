@@ -4,6 +4,7 @@ import { supabase } from '../../../db/supabase'; // RETORNO TÉCNICO: Conexión 
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { usePermiso } from '../../../utils/permisos';
 import { hayConexion } from '../../../utils/sinInternet';
+import { confirmar } from '../../../utils/dialogos';
 
 // Componente de Notificación de Errores (Diseño Geométrico y Alto Contraste)
 const TechnicalAlert = ({ message }: { message: string }) => {
@@ -96,7 +97,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   };
 
   const handleEliminarCategoria = async (cat: string) => {
-    if (window.confirm(`¿Estás seguro de que deseas eliminar la categoría "${cat}" DEFINITIVAMENTE de tu base de datos?`)) {
+    if (await confirmar(`¿Estás seguro de que deseas eliminar la categoría "${cat}" DEFINITIVAMENTE de tu base de datos?`)) {
       setCategoriasLista(prev => prev.filter(c => c !== cat));
       if (formData.category === cat) {
         setFormData(prev => ({ ...prev, category: '' }));

@@ -5,6 +5,7 @@ import { TablaProveedores } from '../../Proveedores/components/TablaProveedores'
 import { ModalProveedor } from '../../Proveedores/components/ModalProveedor';
 import type { Proveedor } from '../../Proveedores/types';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
+import { confirmar } from '../../../utils/dialogos';
 
 interface Props {
   isOpen: boolean;
@@ -221,7 +222,7 @@ export const ModalGestionProveedores: React.FC<Props> = ({ isOpen, onClose }) =>
                     setIsModalProveedorOpen(true);
                   }}
                   onDelete={async (p) => {
-                    if (!window.confirm(`¿Seguro que deseas eliminar al proveedor ${p.razon_social}?`)) return;
+                    if (!await confirmar(`¿Seguro que deseas eliminar al proveedor ${p.razon_social}?`)) return;
                     try {
                       const { error } = await supabase.from('providers').update({ is_active: 0 }).eq('id', p.id);
                       if (error) throw error;

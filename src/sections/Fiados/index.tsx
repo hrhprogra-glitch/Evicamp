@@ -15,6 +15,7 @@ import { usePermiso } from '../../utils/permisos';
 import { traerTodo } from '../../utils/traerTodo';
 import { eliminarAbonoYRevertirCaja } from '../../utils/revertirAbono';
 import { TarjetaMetrica } from '../Inventario/components/TarjetaMetrica';
+import { confirmar } from '../../utils/dialogos';
 
 export const Fiados: React.FC = () => {
   // Crear deudas es como vender a crédito
@@ -226,7 +227,7 @@ if (fiaData) {
   const handleAnularPagoEspecifico = async (pagoId: string, montoRestaurar: number) => {
     if (!fiadoAAnular) return;
     
-    if (window.confirm(`⚠️ ANULACIÓN TÉCNICA: ¿Seguro que deseas anular este pago de S/ ${montoRestaurar.toFixed(2)}?`)) {
+    if (await confirmar(`⚠️ ANULACIÓN TÉCNICA: ¿Seguro que deseas anular este pago de S/ ${montoRestaurar.toFixed(2)}?`)) {
       try {
         // 1. Releemos el pago completo: necesitamos session_id/amount/created_at exactos
         // para poder encontrar y borrar su movimiento de caja gemelo (ver revertirAbono.ts).
@@ -349,7 +350,7 @@ if (fiaData) {
       return alert(`⚠️ No se puede eliminar: este cliente tiene una deuda activa de S/ ${deudaActiva.toFixed(2)}. Primero debe saldarla o anular el fiado correspondiente.`);
     }
 
-    if (window.confirm('⚠️ ¿Estás seguro de ELIMINAR a este cliente del directorio?')) {
+    if (await confirmar('⚠️ ¿Estás seguro de ELIMINAR a este cliente del directorio?')) {
       // Borrar en Supabase
       const { error } = await supabase.from('customers').delete().eq('id', id);
 

@@ -19,6 +19,7 @@ import { usePermiso } from '../../utils/permisos';
 import { traerTodo } from '../../utils/traerTodo';
 import { numeroTicketDe, autorDe } from '../../utils/movimientosCaja';
 import { hayConexion } from '../../utils/sinInternet';
+import { confirmar } from '../../utils/dialogos';
 
 // Sin internet, Finanzas se puede VER e ingresar ingresos/egresos, pero no devolver ni eliminar
 // (tocan el stock y la caja de todas las PCs: se hacen cuando vuelva la conexión)
@@ -356,7 +357,7 @@ export const Finanzas: React.FC = () => {
   const handleDeleteMovimiento = async (idMov: string, isTicket?: boolean) => {
     if (bloqueadoSinInternet()) return;
     if (isTicket) {
-      if (!window.confirm('⚠️ ¿Seguro que deseas ELIMINAR permanentemente esta venta de la base de datos?\n(ESTO NO DEVUELVE EL STOCK. SI QUIERES DEVOLVER STOCK, USA "ANULAR/DEVOLVER" EN VEZ DE ESTE BOTÓN).')) return;
+      if (!await confirmar('⚠️ ¿Seguro que deseas ELIMINAR permanentemente esta venta de la base de datos?\n(ESTO NO DEVUELVE EL STOCK. SI QUIERES DEVOLVER STOCK, USA "ANULAR/DEVOLVER" EN VEZ DE ESTE BOTÓN).')) return;
       const { error } = await supabase.from('sales').delete().eq('id', idMov);
       if (error) {
         alert('No se pudo eliminar la venta: ' + error.message);
@@ -368,7 +369,7 @@ export const Finanzas: React.FC = () => {
 
     const mov = movimientos.find(m => String(m.id) === String(idMov));
     if (mov && (String(mov.flujo) === 'INGRESO_FIADO' || (mov.descripcion && mov.descripcion.includes('ABONO DE FIADO')))) {
-      if (!window.confirm('⚠️ ¿Seguro que deseas ANULAR este pago de fiado? La deuda regresará al cliente y el dinero se descontará de la caja.')) return;
+      if (!await confirmar('⚠️ ¿Seguro que deseas ANULAR este pago de fiado? La deuda regresará al cliente y el dinero se descontará de la caja.')) return;
       
       const { data: pagos } = await supabase
         .from('debt_payments')
@@ -389,7 +390,7 @@ export const Finanzas: React.FC = () => {
       return;
     }
 
-    if (window.confirm('⚠️ ¿Seguro que deseas ELIMINAR este movimiento? Esta acción recalculará la caja.')) {
+    if (await confirmar('⚠️ ¿Seguro que deseas ELIMINAR este movimiento? Esta acción recalculará la caja.')) {
       const { error } = await supabase.from('cash_movements').delete().eq('id', idMov);
       if (error) {
         alert('Error al eliminar: ' + error.message);
@@ -403,7 +404,7 @@ export const Finanzas: React.FC = () => {
     if (bloqueadoSinInternet()) return;
     if (idsAnulandoRef.current.has(id)) return;
     if (id.startsWith('ERR-')) return;
-    if (!window.confirm('⚠️ ¿Seguro que deseas ANULAR este ticket? El stock regresará y el dinero se descontará de la caja actual.')) return;
+    if (!await confirmar('⚠️ ¿Seguro que deseas ANULAR este ticket? El stock regresará y el dinero se descontará de la caja actual.')) return;
 
     idsAnulandoRef.current.add(id);
     setIdsAnulando(new Set(idsAnulandoRef.current));

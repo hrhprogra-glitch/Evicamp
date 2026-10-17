@@ -7,6 +7,4 @@ contextBridge.exposeInMainWorld('siuhubEscritorio', {
   imprimir: (html, titulo) => ipcRenderer.invoke('imprimir', { html, titulo }),
   reintentar: () => ipcRenderer.invoke('reintentar'),
   configurar: (link) => ipcRenderer.invoke('configurar', link),
-  // Tras un aviso (alert/confirm) Windows deja la ventana sin teclado: el programa la reactiva
-  recuperarFoco: () => ipcRenderer.invoke('recuperar-foco'),
 });

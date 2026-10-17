@@ -5,6 +5,7 @@ import { Database,Layers, Edit, Trash2, History, ChevronLeft, ChevronRight } fro
 import { supabase } from '../../../db/supabase';
 import { formatearCantidad } from '../../../utils/formato';
 import { usePermiso, avisarSinPermiso } from '../../../utils/permisos';
+import { confirmar } from '../../../utils/dialogos';
 
 interface Lote {
   id: string;
@@ -384,7 +385,7 @@ export const TablaLotes: React.FC<Props> = ({
           onClick={async (e) => {
             e.stopPropagation();
             if (!puedeRetirarLote) { avisarSinPermiso('retirar lotes'); return; }
-            if (window.confirm(`MANTENIMIENTO DE INTEGRIDAD\n\n¿Confirma el retiro del lote de "${lote.product_name}"?\n\nEsta acción descargará el stock actual pero mantendrá intacto el historial de ventas, utilidades y contabilidad.`)) {
+            if (await confirmar(`MANTENIMIENTO DE INTEGRIDAD\n\n¿Confirma el retiro del lote de "${lote.product_name}"?\n\nEsta acción descargará el stock actual pero mantendrá intacto el historial de ventas, utilidades y contabilidad.`)) {
               try {
                 // 🛡️ EVICAMP: Ejecución Transaccional Segura desde la Base de Datos
                 const { error: dbError } = await supabase.rpc('fn_soft_delete_batch', {
