@@ -277,6 +277,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
       const rowSelector = 'div[data-row="true"][role="button"]';
       const currentRow = active ? (active.closest(rowSelector) as HTMLElement) : null;
+      // La paginación con id es la de Productos: en la vista Lotes está escondida y no se puede enfocar
+      const visible = (el: HTMLElement | null) => (el && !el.closest('.hidden') && el.offsetParent !== null ? el : null);
 
       const getRows = () => {
         return Array.from(document.querySelectorAll(rowSelector))
@@ -299,8 +301,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               nextRow.scrollIntoView({ block: 'nearest' });
             } else {
               // Última fila: bajar a la paginación inferior o superior
-              const btnNext = document.getElementById('btn-pag-bottom-next-inventario') || document.getElementById('btn-pag-next-inventario');
-              const btnPrev = document.getElementById('btn-pag-bottom-prev-inventario') || document.getElementById('btn-pag-prev-inventario');
+              const btnNext = visible(document.getElementById('btn-pag-bottom-next-inventario')) || visible(document.getElementById('btn-pag-next-inventario'));
+              const btnPrev = visible(document.getElementById('btn-pag-bottom-prev-inventario')) || visible(document.getElementById('btn-pag-prev-inventario'));
               if (btnNext && !btnNext.hasAttribute('disabled')) {
                 btnNext.focus();
               } else if (btnPrev && !btnPrev.hasAttribute('disabled')) {
@@ -317,8 +319,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               }
             } else {
               // Fila 0 (primera fila): SUBIR A LA PAGINACIÓN SUPERIOR
-              const btnPrev = document.getElementById('btn-pag-prev-inventario');
-              const btnNext = document.getElementById('btn-pag-next-inventario');
+              const btnPrev = visible(document.getElementById('btn-pag-prev-inventario'));
+              const btnNext = visible(document.getElementById('btn-pag-next-inventario'));
               if (btnPrev && btnPrev.getAttribute('aria-disabled') !== 'true') {
                 btnPrev.focus();
               } else if (btnNext) {
