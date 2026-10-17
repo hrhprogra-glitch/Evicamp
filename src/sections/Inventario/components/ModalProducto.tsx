@@ -3,6 +3,7 @@ import { X, Package, Scale, Coffee, ArrowLeft, Save, ImagePlus, Search, Loader2,
 import { supabase } from '../../../db/supabase'; // RETORNO TÉCNICO: Conexión a la DB
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { usePermiso } from '../../../utils/permisos';
+import { hayConexion } from '../../../utils/sinInternet';
 
 // Componente de Notificación de Errores (Diseño Geométrico y Alto Contraste)
 const TechnicalAlert = ({ message }: { message: string }) => {
@@ -844,7 +845,15 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
       return;
     }
     if (isSubmitting) return;
-    
+    // Sin internet, Inventario es solo para ver: avisar al instante, sin bloquear el botón
+    // (un botón bloqueado pierde el foco y el selector de teclado desaparecía)
+    if (!hayConexion()) {
+      setIntegrityError('🔌 Sin internet: crear o editar productos necesita conexión. Hazlo cuando vuelva el internet.');
+      return;
+    }
+    // Botón que se usó: si algo falla, el foco vuelve ahí
+    const botonUsado = document.getElementById(goToLotes ? 'btn-guardar-ir-lotes' : 'btn-guardar-producto');
+
     const nombreLimpio = formData.name.trim().toUpperCase();
     const codigoBarrasLimpio = formData.barcode?.trim() || '';
 
@@ -951,6 +960,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
       } else {
         setIntegrityError(`ERROR DE SISTEMA: ${error?.message || 'Fallo de comunicación con la base de datos.'}`);
       }
+      setTimeout(() => botonUsado?.focus(), 0); // ya desbloqueado (finally)
     } finally {
       setIsSubmitting(false);
     }

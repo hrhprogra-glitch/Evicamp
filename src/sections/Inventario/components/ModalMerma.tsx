@@ -100,6 +100,8 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
         
         if (error) {
           console.error("Error cargando lotes para merma:", error.message);
+          setLotes([]);
+          setLoadingLotes(false); // antes se quedaba "cargando" para siempre y no dejaba elegir
           return;
         }
 

@@ -69,9 +69,78 @@ const copiaParecida = async (clave: string) => {
   return mejor;
 };
 
+// Sin copia de ESTA consulta con filtros (por ejemplo, "los lotes del producto X" en la merma): se
+// toma la copia de la tabla COMPLETA (sin filtros, la deja la precarga) y se filtra aquí en la PC.
+// Solo filtros simples; si la consulta usa algo más complejo, no se inventa nada (devuelve null).
+const PARAMS_SIN_FILTRO = new Set(['select', 'order', 'limit', 'offset', 'columns', 'on_conflict']);
+
+const cumpleFiltro = (valor: unknown, filtro: string): boolean | null => {
+  const [op, ...resto] = filtro.split('.');
+  const dato = resto.join('.');
+  const v = valor == null ? null : String(valor);
+  const num = (x: unknown) => Number(x);
+  switch (op) {
+    case 'eq': return v === dato;
+    case 'neq': return v !== dato;
+    case 'gt': return num(valor) > num(dato);
+    case 'gte': return num(valor) >= num(dato);
+    case 'lt': return num(valor) < num(dato);
+    case 'lte': return num(valor) <= num(dato);
+    case 'in': return dato.replace(/^\(|\)$/g, '').split(',').map((x) => x.replace(/^"|"$/g, '')).includes(v ?? '');
+    case 'is': return dato === 'null' ? valor == null : String(valor) === dato;
+    default: return null; // filtro que no se sabe evaluar
+  }
+};
+
+const copiaFiltrada = async (clave: string) => {
+  const [url] = clave.split('|');
+  const pedida = new URL(url, location.origin);
+  const filtros = [...pedida.searchParams].filter(([k]) => !PARAMS_SIN_FILTRO.has(k));
+  if (!filtros.length) return null;
+  const seleccion = pedida.searchParams.get('select') || '*';
+  if (/[()!:]/.test(seleccion)) return null; // con relaciones o renombres: no se arma en la PC
+
+  // Copias de la tabla completa (sin filtros, con todas las columnas): se juntan sus bloques de filas
+  const filas = new Map<string, Record<string, unknown>>();
+  for (const otra of await clavesLocal(ALMACEN_RESPUESTAS)) {
+    const u = new URL(String(otra).split('|')[0], location.origin);
+    if (u.pathname !== pedida.pathname || (u.searchParams.get('select') || '*') !== '*') continue;
+    if ([...u.searchParams.keys()].some((k) => !PARAMS_SIN_FILTRO.has(k))) continue;
+    const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, otra);
+    try { for (const f of JSON.parse(copia?.cuerpo || '[]')) filas.set(String(f?.id ?? JSON.stringify(f)), f); } catch { /* no es lista */ }
+  }
+  if (!filas.size) return null;
+
+  let resultado: Record<string, unknown>[] = [];
+  for (const fila of filas.values()) {
+    let cumple = true;
+    for (const [columna, filtro] of filtros) {
+      const ok = cumpleFiltro(fila[columna], filtro);
+      if (ok === null) return null;
+      if (!ok) { cumple = false; break; }
+    }
+    if (cumple) resultado.push(fila);
+  }
+  // Orden pedido (primera columna)
+  const [colOrden, dir] = (pedida.searchParams.get('order') || '').split(',')[0].split('.');
+  if (colOrden) {
+    resultado.sort((a, b) => (String(a[colOrden] ?? '') < String(b[colOrden] ?? '') ? -1 : String(a[colOrden] ?? '') > String(b[colOrden] ?? '') ? 1 : 0));
+    if (dir === 'desc') resultado.reverse();
+  }
+  if (seleccion !== '*') {
+    const cols = seleccion.split(',').map((c) => c.trim());
+    resultado = resultado.map((f) => Object.fromEntries(cols.map((c) => [c, f[c]])));
+  }
+  return {
+    cuerpo: JSON.stringify(resultado), estado: 200, tipo: 'application/json; charset=utf-8',
+    rango: `0-${Math.max(0, resultado.length - 1)}/${resultado.length}`, guardado: Date.now(),
+  } satisfies CopiaGuardada;
+};
+
 export const leerCopia = async (clave: string) => {
   try {
-    const copia = (await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave)) || (await copiaParecida(clave));
+    const copia = (await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave))
+      || (await copiaParecida(clave)) || (await copiaFiltrada(clave));
     if (!copia) return null;
     const cabeceras = new Headers();
     if (copia.tipo) cabeceras.set('Content-Type', copia.tipo);
