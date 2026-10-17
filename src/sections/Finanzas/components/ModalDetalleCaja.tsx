@@ -7,7 +7,7 @@ import { supabase } from '../../../db/supabase';
 import { TablaMovimientos } from './TablaMovimientos';
 import type { UnifiedItem } from '../types';
 import { useImprimir } from '../../../utils/impresion';
-import { numeroTicketDe } from '../../../utils/movimientosCaja';
+import { numeroTicketDe, autorDe } from '../../../utils/movimientosCaja';
 // html2canvas-pro (no el html2canvas normal): Tailwind v4 usa colores oklch() en su CSS, y la
 // librería original no sabe interpretarlos (falla al generar la imagen). Este fork sí los soporta.
 import html2canvas from 'html2canvas-pro';
@@ -463,6 +463,16 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
 
   const unificados: UnifiedItem[] = [];
 
+  // Devoluciones por ticket (igual que en Finanzas): el ticket anulado muestra cuánto se devolvió y quién
+  const devolucionesPorTicket = new Map<string, { monto: number; autor: string | null }>();
+  movimientos.forEach((m: any) => {
+    if (m.flujo !== 'DEVOLUCION') return;
+    const ticket = numeroTicketDe(m.description);
+    if (!ticket) return;
+    const previa = devolucionesPorTicket.get(ticket);
+    devolucionesPorTicket.set(ticket, { monto: (previa?.monto || 0) + Number(m.amount || 0), autor: previa?.autor || autorDe(m.description) });
+  });
+
   tickets.forEach((t: any) => {
     unificados.push({
       id: String(t.id),
@@ -479,7 +489,9 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
       flujo: 'INTERNO',
       monto_pagado: t.monto_pagado,
       monto_deuda: t.monto_deuda,
-      total: t.total
+      total: t.total,
+      vendedor: t.vendedor || null,
+      devolucion: esAnulada(t) ? devolucionesPorTicket.get(String(t.id).slice(-6)) || null : null
     });
   });
 
