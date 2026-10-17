@@ -301,12 +301,16 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               nextRow.scrollIntoView({ block: 'nearest' });
             } else {
               // Última fila: bajar a la paginación inferior o superior
-              const btnNext = visible(document.getElementById('btn-pag-bottom-next-inventario')) || visible(document.getElementById('btn-pag-next-inventario'));
-              const btnPrev = visible(document.getElementById('btn-pag-bottom-prev-inventario')) || visible(document.getElementById('btn-pag-prev-inventario'));
-              if (btnNext && !btnNext.hasAttribute('disabled')) {
+              const btnNext = visible(document.getElementById('btn-pag-bottom-next-inventario')) || visible(document.getElementById('btn-pag-bottom-next-lotes'))
+                || visible(document.getElementById('btn-pag-next-inventario')) || visible(document.getElementById('btn-pag-next-lotes'));
+              const btnPrev = visible(document.getElementById('btn-pag-bottom-prev-inventario')) || visible(document.getElementById('btn-pag-bottom-prev-lotes'))
+                || visible(document.getElementById('btn-pag-prev-inventario')) || visible(document.getElementById('btn-pag-prev-lotes'));
+              if (btnNext && btnNext.getAttribute('aria-disabled') !== 'true') {
                 btnNext.focus();
-              } else if (btnPrev && !btnPrev.hasAttribute('disabled')) {
+              } else if (btnPrev && btnPrev.getAttribute('aria-disabled') !== 'true') {
                 btnPrev.focus();
+              } else {
+                (btnNext || btnPrev)?.focus();
               }
             }
           } else if (e.key === 'ArrowUp') {
@@ -319,8 +323,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               }
             } else {
               // Fila 0 (primera fila): SUBIR A LA PAGINACIÓN SUPERIOR
-              const btnPrev = visible(document.getElementById('btn-pag-prev-inventario'));
-              const btnNext = visible(document.getElementById('btn-pag-next-inventario'));
+              const btnPrev = visible(document.getElementById('btn-pag-prev-inventario')) || visible(document.getElementById('btn-pag-prev-lotes'));
+              const btnNext = visible(document.getElementById('btn-pag-next-inventario')) || visible(document.getElementById('btn-pag-next-lotes'));
               if (btnPrev && btnPrev.getAttribute('aria-disabled') !== 'true') {
                 btnPrev.focus();
               } else if (btnNext) {

@@ -53,8 +53,8 @@ export const FiltrosInventario: React.FC<Props> = ({
   const focusPaginacionInventario = () => {
     // La paginación es de Productos: en la vista Lotes está escondida y no se puede enfocar
     const visible = (el: HTMLElement | null) => (el && !el.closest('.hidden') && el.offsetParent !== null ? el : null);
-    const btnPrev = visible(document.getElementById('btn-pag-prev-inventario'));
-    const btnNext = visible(document.getElementById('btn-pag-next-inventario'));
+    const btnPrev = visible(document.getElementById('btn-pag-prev-inventario')) || visible(document.getElementById('btn-pag-prev-lotes'));
+    const btnNext = visible(document.getElementById('btn-pag-next-inventario')) || visible(document.getElementById('btn-pag-next-lotes'));
     if (btnPrev && btnPrev.getAttribute('aria-disabled') !== 'true') {
       btnPrev.focus();
     } else if (btnNext) {

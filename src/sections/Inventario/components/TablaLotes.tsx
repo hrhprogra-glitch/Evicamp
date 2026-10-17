@@ -164,25 +164,48 @@ export const TablaLotes: React.FC<Props> = ({
   );
 
   // Generador de controles de paginación
+  // Igual que la paginación de Productos: se puede enfocar con flechas aunque esté en el límite
+  // (aria-disabled en vez de disabled, porque un botón disabled no recibe el selector)
   const renderPagination = (position: 'top' | 'bottom') => {
     if (loading || totalPages <= 0) return null;
+    const prevId = position === 'top' ? 'btn-pag-prev-lotes' : 'btn-pag-bottom-prev-lotes';
+    const nextId = position === 'top' ? 'btn-pag-next-lotes' : 'btn-pag-bottom-next-lotes';
+    const isPrevDisabled = currentPage === 1;
+    const isNextDisabled = currentPage === totalPages;
+    const filas = () => (Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[])
+      .filter((f) => !f.closest('.hidden'));
+    const teclas = (e: React.KeyboardEvent, otroId: string, haciaOtro: 'ArrowLeft' | 'ArrowRight') => {
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.key === haciaOtro) document.getElementById(otroId)?.focus();
+      else if (e.key === 'ArrowUp') {
+        if (position === 'top') document.getElementById('buscador-global-inventario')?.focus();
+        else filas().at(-1)?.focus();
+      } else if (e.key === 'ArrowDown' && position === 'top') filas()[0]?.focus();
+    };
+    const clase = (deshabilitado: boolean) => `w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[#E2E8F0] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white ${deshabilitado ? 'opacity-40 cursor-not-allowed' : ''}`;
     return (
       <div className={`${position === 'top' ? 'border-b' : 'border-t'} border-[#E2E8F0] bg-[#F8FAFC] p-3 flex items-center justify-between shrink-0`}>
         <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-widest">
           Página {currentPage} de {totalPages}
         </span>
         <div className="flex gap-2">
-          <button 
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[#E2E8F0] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
+          <button
+            id={prevId}
+            aria-disabled={isPrevDisabled}
+            onClick={() => { if (!isPrevDisabled) setCurrentPage(prev => Math.max(prev - 1, 1)); }}
+            onKeyDown={(e) => teclas(e, nextId, 'ArrowRight')}
+            className={clase(isPrevDisabled)}
           >
             <ChevronLeft size={16} />
           </button>
-          <button 
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[#E2E8F0] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none cursor-pointer"
+          <button
+            id={nextId}
+            aria-disabled={isNextDisabled}
+            onClick={() => { if (!isNextDisabled) setCurrentPage(prev => Math.min(prev + 1, totalPages)); }}
+            onKeyDown={(e) => teclas(e, prevId, 'ArrowLeft')}
+            className={clase(isNextDisabled)}
           >
             <ChevronRight size={16} />
           </button>
