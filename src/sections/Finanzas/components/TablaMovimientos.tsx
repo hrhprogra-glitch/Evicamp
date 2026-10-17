@@ -88,6 +88,11 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                           </span>
                         )}
                       </div>
+                      {item.isTicket && item.vendedor && (
+                        <p className="text-[11px] font-bold text-[var(--color-ink)] uppercase tracking-wide leading-tight">
+                          Vendió: {item.vendedor}
+                        </p>
+                      )}
                       {item.isTicket && item.productosStr && (
                         <p 
                           className="text-[11px] font-medium text-[var(--color-muted)] normal-case line-clamp-2 leading-tight" 

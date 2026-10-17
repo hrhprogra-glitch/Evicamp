@@ -5,6 +5,7 @@ import type { Product } from '../Inventario/types';
 import { useRef } from 'react';
 import { Wallet, Printer, X } from 'lucide-react';
 import { useImprimir } from '../../utils/impresion';
+import { useEmpleado } from '../../utils/permisos';
 // Componentes modulares
 import { TerminalBusqueda } from './components/TerminalBusqueda';
 import { TicketVenta } from './components/TicketVenta';
@@ -16,6 +17,7 @@ import { traerTodo } from '../../utils/traerTodo';
 import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ EVICAMP: Mini Reporte en Tiempo Real
 
 export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
+  const empleado = useEmpleado(); // quién vende: sale en el ticket ("Atendido por")
   const [hasOpenSession, setHasOpenSession] = useState<boolean | null>(null);
   const [isSessionOld, setIsSessionOld] = useState<boolean>(false);
   // En tablet/celular se muestra un panel a la vez: catálogo de productos o ticket de venta
@@ -712,7 +714,8 @@ const [searchQuery, setSearchQuery] = useState('');
           pagos: { efectivo: pagos.efectivo, yape: pagos.yape, tarjeta: pagos.tarjeta },
           vuelto: vuelto,
           nroBoleta: `B001-${String(trueSaleId).substring(0,8).padStart(8, '0')}`,
-          fiadoData: fiadoData 
+          fiadoData: fiadoData,
+          vendedor: empleado?.nombre || null
         });
         setIsVistaPreviaOpen(true);
       } else {
@@ -890,6 +893,7 @@ const [searchQuery, setSearchQuery] = useState('');
                   vuelto={ultimaVenta.vuelto}
                   nroBoleta={ultimaVenta.nroBoleta}
                   fiadoData={ultimaVenta.fiadoData}
+                  vendedor={ultimaVenta.vendedor}
                 />
               </div>
             </div>

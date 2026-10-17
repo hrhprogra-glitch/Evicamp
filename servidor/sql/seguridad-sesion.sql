@@ -176,6 +176,33 @@ DROP TRIGGER IF EXISTS trg_registrar_autor_caja ON public.cash_movements;
 CREATE TRIGGER trg_registrar_autor_caja BEFORE INSERT ON public.cash_movements
   FOR EACH ROW EXECUTE FUNCTION public.fn_registrar_autor_caja();
 
+-- Cada venta guarda QUIÉN la hizo (sale en el ticket y en el registro de ventas). Lo pone el servidor con
+-- la sesión: aunque la pantalla mande otro nombre, se reemplaza por el del empleado que tiene la sesión.
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS vendedor text;
+
+CREATE OR REPLACE FUNCTION public.fn_registrar_vendedor()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_token text := current_setting('request.headers', true)::json ->> 'x-sesion';
+BEGIN
+  IF v_token IS NOT NULL AND v_token ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
+    SELECT e.nombre INTO NEW.vendedor FROM sesiones s JOIN empleados e ON e.id = s.empleado_id WHERE s.token = v_token::uuid;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_registrar_vendedor ON public.sales;
+CREATE TRIGGER trg_registrar_vendedor BEFORE INSERT ON public.sales
+  FOR EACH ROW EXECUTE FUNCTION public.fn_registrar_vendedor();
+
+-- PostgREST: que vea la columna nueva sin reiniciar
+NOTIFY pgrst, 'reload schema';
+
 DROP TRIGGER IF EXISTS trg_proteger_precios ON public.products;
 CREATE TRIGGER trg_proteger_precios BEFORE UPDATE ON public.products
   FOR EACH ROW EXECUTE FUNCTION public.fn_proteger_precios();

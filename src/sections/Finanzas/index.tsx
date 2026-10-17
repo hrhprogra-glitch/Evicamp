@@ -264,7 +264,8 @@ export const Finanzas: React.FC = () => {
             monto_pagado: Number(t.amount_cash || 0) + Number(t.amount_yape || 0) + Number(t.amount_card || 0) + Number(t.amount_transfer || 0),
             monto_deuda: esFiado && fiado ? Number(fiado.amount) - Number(fiado.paid_amount) : 0,
             total: Number(t.total) || 0,
-            productosStr: t.productosStr
+            productosStr: t.productosStr,
+            vendedor: t.vendedor || null // quién hizo la venta (lo guarda el servidor con la sesión)
           };
         });
 

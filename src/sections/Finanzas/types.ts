@@ -36,8 +36,9 @@ export interface UnifiedItem {
   tipo: string; 
   descripcion: string; 
   metodo_pago: string; 
-  monto: number; 
+  monto: number;
   productosStr?: string;
+  vendedor?: string | null; // quién hizo la venta (lo guarda el servidor con la sesión)
   
   // Exclusivo de Movimiento (flujo interno/externo):
   flujo?: 'INTERNO' | 'EXTERNO' | string;

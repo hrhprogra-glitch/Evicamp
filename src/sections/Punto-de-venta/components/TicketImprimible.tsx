@@ -33,10 +33,11 @@ interface Props {
     clienteDni?: string;
     clienteTelefono?: string;
   };
+  vendedor?: string | null; // quién hizo la venta
 }
 
 export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
-  ({ cart, total, pagos, vuelto, nroBoleta, fiadoData }, ref) => {
+  ({ cart, total, pagos, vuelto, nroBoleta, fiadoData, vendedor }, ref) => {
     const fecha = new Date().toLocaleString('es-PE');
     const [empresa, setEmpresa] = useState<DatosEmpresa>({});
 
@@ -77,6 +78,7 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
           </h3>
           <p className="font-black tracking-widest text-base">{nroBoleta}</p>
           <p className="text-[12px] font-bold mt-1">Fecha: {fecha}</p>
+          {vendedor && <p className="text-[12px] font-bold uppercase">Atendido por: {vendedor}</p>}
 
           {/* DATOS DEL FIADO */}
           {fiadoData && (

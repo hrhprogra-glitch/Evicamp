@@ -91,6 +91,7 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete, ids
               <tr>
                 <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Fecha y Hora</th>
                 <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Nro. Ticket</th>
+                <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Vendedor</th>
                 <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Pago</th>
                 <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Estado</th>
                 <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] text-right">Pagado</th>
@@ -102,7 +103,7 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete, ids
             <tbody>
               {tickets.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-3 lg:p-4 text-center text-[var(--color-muted)] font-bold text-xs uppercase bg-[var(--color-surface)]">
+                  <td colSpan={9} className="p-3 lg:p-4 text-center text-[var(--color-muted)] font-bold text-xs uppercase bg-[var(--color-surface)]">
                     No hay tickets registrados en este mes.
                   </td>
                 </tr>
@@ -128,6 +129,7 @@ export const TablaTickets: React.FC<Props> = ({ tickets, onAnular, onDelete, ids
                         )}
                       </div>
                     </td>
+                    <td className="p-4 text-xs font-bold text-[var(--color-ink)] uppercase">{t.vendedor || '—'}</td>
                     <td className="p-4 text-xs font-bold text-[var(--color-muted)] uppercase">{t.metodo_pago}</td>
                     <td className="p-4">
                       <span className={`px-2 py-1 text-[12px] font-black tracking-wider border rounded-none ${

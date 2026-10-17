@@ -173,7 +173,8 @@ export const Reportes: React.FC = () => {
             es_fiado: esFiado,
             cliente_nombre: fiado?.customer_name || null,
             monto_pagado: montoPagado,
-            monto_deuda: deudaActual
+            monto_deuda: deudaActual,
+            vendedor: t.vendedor || null
           };
         });
         setTickets(ticketsFormateados);

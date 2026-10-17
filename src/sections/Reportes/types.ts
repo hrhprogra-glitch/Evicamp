@@ -12,4 +12,5 @@ export interface TicketVenta {
   cliente_nombre?: string | null;
   monto_pagado?: number;
   monto_deuda?: number;
+  vendedor?: string | null; // quién hizo la venta (lo guarda el servidor con la sesión)
 }
