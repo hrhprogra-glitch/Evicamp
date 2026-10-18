@@ -4,7 +4,7 @@ import { supabase } from '../../../db/supabase'; // RETORNO TÉCNICO: Conexión 
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { usePermiso } from '../../../utils/permisos';
 import { hayConexion } from '../../../utils/sinInternet';
-import { buscarImagenes, fotoParaGuardar } from '../../../utils/buscarImagenes';
+import { buscarImagenes, fotoParaGuardar, achicarImagen } from '../../../utils/buscarImagenes';
 import { confirmar } from '../../../utils/dialogos';
 
 // Componente de Notificación de Errores (Diseño Geométrico y Alto Contraste)
@@ -1338,18 +1338,23 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                       data-lpignore="true"
                       data-form-type="other"
                       placeholder="EJ: PERA, COCA COLA, TALADRO O PEGAR URL..."
-                      value={imageQuery || formData.image}
+                      // Una foto ya copiada al producto (data:...) no se muestra como texto: se ve abajo
+                      value={imageQuery || (formData.image.startsWith('data:') ? '' : formData.image)}
                       onFocus={() => {
                         if (imageResults.length > 0) setShowImageResults(true);
                       }}
-                      onBlur={() => setTimeout(() => setShowImageResults(false), 200)} 
+                      onBlur={() => setTimeout(() => setShowImageResults(false), 200)}
+                      // En Google: clic derecho en la foto → "Copiar imagen", y aquí Ctrl+V
+                      onPaste={(e) => {
+                        const archivo = Array.from(e.clipboardData.files).find((f) => f.type.startsWith('image/'));
+                        if (!archivo) return; // texto o enlace: lo maneja onChange
+                        e.preventDefault();
+                        void achicarImagen(archivo).then((foto) => aplicarImagen(foto)).catch(() => alert('No se pudo leer esa imagen. Prueba descargándola y usando "Subir local".'));
+                      }}
                       onChange={(e) => {
                         const val = e.target.value;
                         if (val.startsWith('http')) {
-                          setFormData({...formData, image: val});
-                          setImageQuery('');
-                          setImageResults([]);
-                          setShowImageResults(false);
+                          aplicarImagen(val); // enlace pegado: se guarda una copia achicada si la página lo permite
                         } else {
                           setImageQuery(val);
                           setFormData({...formData, image: ''});
@@ -1386,13 +1391,11 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                       className="hidden" 
                       onChange={(e) => {
                         if(e.target.files && e.target.files[0]) {
-                          // Lector de archivos local (Convierte la foto a Base64 para mostrarla al instante)
-                          const file = e.target.files[0];
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setFormData({...formData, image: reader.result as string});
-                          };
-                          reader.readAsDataURL(file);
+                          // La foto se guarda achicada dentro del producto (una de Google puede pesar varios MB)
+                          void achicarImagen(e.target.files[0])
+                            .then((foto) => setFormData((prev) => ({ ...prev, image: foto })))
+                            .catch(() => alert('No se pudo leer esa imagen. Prueba con otra (JPG o PNG).'));
+                          e.target.value = ''; // permite volver a elegir el mismo archivo
                         }
                       }}
                     />

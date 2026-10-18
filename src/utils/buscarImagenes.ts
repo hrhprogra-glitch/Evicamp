@@ -65,19 +65,35 @@ export const buscarImagenes = async (consulta: string, signal: AbortSignal, maxi
 };
 
 /**
- * La foto que se guarda en el producto. Las de Pixabay se copian achicadas (máx. 400 px, JPEG) dentro
- * del producto, porque Pixabay no permite enlazarlas para siempre; las demás se guardan como enlace.
+ * Achica una foto (máx. 400 px, JPEG) para guardarla DENTRO del producto: una foto bajada de Google
+ * puede pesar varios MB y haría lento el sistema; así queda en unos 30–60 KB.
+ */
+export const achicarImagen = async (archivo: Blob): Promise<string> => {
+  const imagen = await createImageBitmap(archivo);
+  const escala = Math.min(1, 400 / Math.max(imagen.width, imagen.height));
+  const lienzo = document.createElement('canvas');
+  lienzo.width = Math.round(imagen.width * escala);
+  lienzo.height = Math.round(imagen.height * escala);
+  const ctx = lienzo.getContext('2d');
+  if (ctx) {
+    ctx.fillStyle = '#ffffff'; // PNG con fondo transparente: fondo blanco en vez de negro
+    ctx.fillRect(0, 0, lienzo.width, lienzo.height);
+    ctx.drawImage(imagen, 0, 0, lienzo.width, lienzo.height);
+  }
+  return lienzo.toDataURL('image/jpeg', 0.82);
+};
+
+/**
+ * La foto que se guarda en el producto: una copia achicada dentro del producto (Pixabay no permite
+ * enlazar sus fotos, y un enlace de otra página puede dejar de funcionar). Si la página no deja
+ * copiarla (muchas tiendas lo bloquean), se guarda el enlace tal cual.
  */
 export const fotoParaGuardar = async (url: string): Promise<string> => {
-  if (!/^https:\/\/(cdn\.)?pixabay\.com\//.test(url)) return url;
+  if (!/^https?:\/\//.test(url)) return url;
   try {
-    const imagen = await createImageBitmap(await (await fetch(url)).blob());
-    const escala = Math.min(1, 400 / Math.max(imagen.width, imagen.height));
-    const lienzo = document.createElement('canvas');
-    lienzo.width = Math.round(imagen.width * escala);
-    lienzo.height = Math.round(imagen.height * escala);
-    lienzo.getContext('2d')?.drawImage(imagen, 0, 0, lienzo.width, lienzo.height);
-    return lienzo.toDataURL('image/jpeg', 0.82);
+    const r = await fetch(url);
+    if (!r.ok) return url;
+    return await achicarImagen(await r.blob());
   } catch {
     return url; // sin poder copiarla: al menos queda el enlace
   }
