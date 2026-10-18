@@ -190,46 +190,32 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     setImageResults([]); // Limpiamos la pantalla al instante para la nueva búsqueda
 
     try {
-      const q = encodeURIComponent(query.trim());
       
-      // Función inyectora: Coloca las fotos en pantalla APENAS llegan, sin esperar al otro
-      const inyectarResultados = (nuevasFotos: string[]) => {
-        if (abortController.signal.aborted || nuevasFotos.length === 0) return;
-        
-        setImageResults(prevFotos => {
-          // Unimos las fotos anteriores con las nuevas, borramos duplicados y cortamos en 4
-          const combinadas = Array.from(new Set([...prevFotos, ...nuevasFotos])).slice(0, 4);
-          return combinadas;
-        });
-        
-        // Si ya nos llegó al menos 1 resultado, matamos la animación de carga dando sensación de inmediatez
-        setIsSearchingImage(false); 
-      };
+      // Antes se buscaban ARTÍCULOS de Wikipedia: "papaya" traía un pueblo y "cocoa" un mapa de Florida.
+      // (Open Food Facts dejó de responder en su dirección de búsqueda antigua.)
+      // Ahora: FOTOS de Wikimedia Commons de esa cosa, sin mapas, banderas, escudos ni fotos de lugares
+      // (Cocoa también es una ciudad: fuera policía, letreros, calles, edificios, playas...).
+      const NO_SIRVE = new RegExp('\\b(' + [
+        'map', 'mapa', 'locator', 'location', 'ubicaci[oó]n', 'flag', 'bandera', 'escudo', 'coat.of.arms', 'seal',
+        'diagram', 'diagrama', 'chart', 'police', 'polic[ií]a', 'sign', 'letrero', 'welcome', 'street', 'calle', 'avenue',
+        'avenida', 'road', 'church', 'iglesia', 'station', 'estaci[oó]n', 'school', 'escuela', 'building', 'edificio',
+        'beach', 'playa', 'city', 'ciudad', 'hall', 'airport', 'aeropuerto', 'stadium', 'estadio', 'portrait', 'retrato',
+      ].join('|') + ')(e?s)?\\b', 'i'); // también en plural: "Welcomes", "signs", "streets"
 
-      // MOTOR 1: OpenFoodFacts -> Promesa suelta (No la esperamos con await)
-      const fetchFood = fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${q}&search_simple=1&action=process&json=1&page_size=4&fields=image_front_small_url,image_url`, { 
-        signal: abortController.signal 
+      const fotosDeCommons = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(`${query.trim()} filetype:bitmap`)}&gsrlimit=20&prop=imageinfo&iiprop=url&iiurlwidth=300&format=json&origin=*`, {
+        signal: abortController.signal
       })
       .then(res => res.json())
-      .then(data => data.products?.map((p: any) => p.image_front_small_url || p.image_url).filter(Boolean) || [])
-      .then(inyectarResultados)
-      .catch(() => {}); // Ignoramos errores silenciosamente para no romper el otro motor
+      .then(data => Object.values(data?.query?.pages || {})
+        .sort((a: any, b: any) => a.index - b.index)
+        .filter((p: any) => p.imageinfo?.[0]?.thumburl && !NO_SIRVE.test(String(p.title).replace(/[_-]/g, ' ')))
+        .map((p: any) => p.imageinfo[0].thumburl as string))
+      .catch(() => [] as string[]);
 
-      // MOTOR 2: Wikipedia API -> Promesa suelta
-      const fetchWiki = fetch(`https://es.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${q}&prop=pageimages&pithumbsize=400&format=json&origin=*`, { 
-        signal: abortController.signal 
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (!data.query || !data.query.pages) return [];
-        return Object.values(data.query.pages).map((p: any) => p.thumbnail?.source).filter(Boolean);
-      })
-      .then(inyectarResultados)
-      .catch(() => {});
-
-      // El código maestro solo espera en el fondo a que ambos terminen su trabajo para apagar el loader
-      // en caso de que NINGUNO haya encontrado absolutamente nada.
-      await Promise.all([fetchFood, fetchWiki]);
+      // 4 = una fila: entra completa en la ventana sin tapar los botones
+      if (!abortController.signal.aborted) {
+        setImageResults(Array.from(new Set(fotosDeCommons)).slice(0, 4));
+      }
 
     } catch (e: any) {
       if (e.name === 'AbortError') return;
