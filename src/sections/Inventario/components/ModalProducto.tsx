@@ -113,6 +113,52 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   // ESTADOS PARA BÚSQUEDA DE IMÁGENES
   const [imageQuery, setImageQuery] = useState('');
   const [isSearchingImage, setIsSearchingImage] = useState(false);
+
+  // Código de barras → nombre e imagen desde Open Food Facts (base pública de productos de marca).
+  // Solo cuando el usuario escanea/escribe el código (no al abrir un producto guardado) y SIN pisar
+  // lo que ya puso: el nombre se llena solo si está vacío, y la imagen solo si no eligió una.
+  const [codigoParaBuscar, setCodigoParaBuscar] = useState('');
+  const [estadoCodigo, setEstadoCodigo] = useState<{ tipo: 'buscando' | 'encontrado' | 'no-registrado'; texto: string } | null>(null);
+  useEffect(() => {
+    const codigo = codigoParaBuscar.trim();
+    if (!/^\d{8,14}$/.test(codigo)) { setEstadoCodigo(null); return; }
+    const control = new AbortController();
+    const espera = setTimeout(async () => {
+      setEstadoCodigo({ tipo: 'buscando', texto: 'Buscando el producto por su código...' });
+      try {
+        const r = await fetch(`https://world.openfoodfacts.org/api/v2/product/${codigo}.json?fields=product_name,product_name_es,brands,quantity,image_front_url`, { signal: control.signal });
+        const datos = await r.json();
+        const p = datos?.status === 1 ? datos.product : null;
+        const nombreBase = (p?.product_name_es || p?.product_name || '').trim();
+        if (!p || (!nombreBase && !p.image_front_url)) {
+          setEstadoCodigo({ tipo: 'no-registrado', texto: 'Este código no está registrado: escribe el nombre y elige la imagen.' });
+          return;
+        }
+        const marca = String(p.brands || '').split(',')[0].trim();
+        const compacto = (s: string) => s.toLowerCase().replace(/\s+/g, '');
+        const cantidad = String(p.quantity || '').trim();
+        const partes = [
+          marca && !compacto(nombreBase).includes(compacto(marca)) ? marca : '',
+          nombreBase,
+          cantidad && !compacto(nombreBase).includes(compacto(cantidad)) ? cantidad : '', // "500ml" no dos veces
+        ];
+        const nombre = partes.filter(Boolean).join(' ').replace(/\s+/g, ' ').toUpperCase();
+        const yaTeniaNombre = !!(document.getElementById('input-nombre-producto') as HTMLInputElement | null)?.value.trim();
+        setFormData((prev) => ({
+          ...prev,
+          name: prev.name.trim() ? prev.name : nombre,          // si ya escribió un nombre, se respeta
+          image: prev.image || p.image_front_url || '',         // si ya eligió imagen, se respeta
+        }));
+        setEstadoCodigo({
+          tipo: 'encontrado',
+          texto: yaTeniaNombre ? `Encontrado: ${nombre}. Se dejó el nombre que escribiste.` : `Encontrado: ${nombre || 'producto con imagen'}`,
+        });
+      } catch (e: any) {
+        if (e?.name !== 'AbortError') setEstadoCodigo({ tipo: 'no-registrado', texto: 'No se pudo consultar el código (¿sin internet?).' });
+      }
+    }, 600); // el lector escribe el código de golpe: se espera a que termine
+    return () => { clearTimeout(espera); control.abort(); };
+  }, [codigoParaBuscar]);
   const [imageResults, setImageResults] = useState<string[]>([]);
   const [showImageResults, setShowImageResults] = useState(false); // <-- Controla si la galería está abierta o cerrada
   // Imagen marcada con el teclado en la galería (-1 = ninguna; el foco sigue en el buscador)
@@ -243,6 +289,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
   const resetAndClose = () => {
     setIntegrityError(null);
+    setCodigoParaBuscar('');
     setStep(1);
     setNature(null);
     setFormData({ name: '', category: '', code: '', barcode: '', price: '', minStock: '5', weightUnit: 'KG', image: '' });
@@ -1271,9 +1318,16 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                   data-form-type="other"
                   placeholder="ESCANEAR..."
                   value={formData.barcode}
-                  onChange={(e) => setFormData({...formData, barcode: e.target.value})}
+                  onChange={(e) => { setFormData({...formData, barcode: e.target.value}); setCodigoParaBuscar(e.target.value); }}
                   className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
                 />
+                {estadoCodigo && (
+                  <p role="status" className={`text-[10px] font-black uppercase tracking-wide ${
+                    estadoCodigo.tipo === 'encontrado' ? 'text-[var(--color-success)]' : estadoCodigo.tipo === 'buscando' ? 'text-[var(--color-muted)]' : 'text-[var(--color-warning-dark)]'
+                  }`}>
+                    {estadoCodigo.tipo === 'buscando' ? '⏳ ' : estadoCodigo.tipo === 'encontrado' ? '✅ ' : 'ℹ️ '}{estadoCodigo.texto}
+                  </p>
+                )}
               </div>
 
               {/* === SECCIÓN DE BÚSQUEDA DE IMAGEN === */}
