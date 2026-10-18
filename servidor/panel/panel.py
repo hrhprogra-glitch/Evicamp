@@ -373,6 +373,83 @@ def psql_cliente(slug, sql, variables=None):
     return r.stdout.strip()
 
 
+# ===================== Sugerencias y errores de los clientes =====================
+# El sistema de cada cliente (Ajustes > Sugerencias y errores) envía a SU propio link /api/sugerencias;
+# nginx lo reenvía aquí agregando de qué link viene y una contraseña interna (snippets/siumax-sugerencias.conf,
+# la crea ai-scripts/sugerencias-servidor.cjs). Sin esa contraseña no se acepta: nadie puede inventar
+# mensajes llamando directo al panel.
+SUGERENCIAS = f"{DIR_SIUMAX}/sugerencias.json"
+SECRETO_SUGERENCIAS = f"{DIR_SIUMAX}/sugerencias-secreto"
+TIPOS_SUGERENCIA = {"sugerencia", "error", "pregunta"}
+ESTADOS_SUGERENCIA = {"nuevo", "visto", "resuelto"}
+envios_por_link = {}
+candado_sugerencias = threading.Lock()
+
+
+# Sistemas que no se crearon desde el panel (no están en clientes.tsv)
+NEGOCIOS_FIJOS = {"evicamp.duckdns.org": "Evicamp", "siumax.duckdns.org": "SiuMax (pruebas)"}
+
+
+def negocio_de_link(host):
+    """Nombre del negocio a partir del link (slug.dominio → nombre del registro)."""
+    host = (host or "").lower().strip()
+    if host in NEGOCIOS_FIJOS:
+        return NEGOCIOS_FIJOS[host]
+    slug = host.split(".")[0]
+    reg = next((c for c in leer_registro() if c["slug"] == slug), None)
+    return reg["nombre"] if reg else host
+
+
+def recibir_sugerencia(cabeceras, cuerpo):
+    try:
+        with open(SECRETO_SUGERENCIAS, encoding="utf-8") as f:
+            secreto = f.read().strip()
+    except FileNotFoundError:
+        raise PermissionError("Sugerencias sin configurar.")
+    if not secreto or not hmac.compare_digest(secreto, cabeceras.get("X-SiuMax-Origen") or ""):
+        raise PermissionError("No autorizado.")
+    host = (cabeceras.get("X-Cliente-Host") or "").lower()[:120]
+    tipo = str(cuerpo.get("tipo", "")).lower()
+    mensaje = str(cuerpo.get("mensaje", "")).strip()
+    if tipo not in TIPOS_SUGERENCIA:
+        raise ValueError("Tipo inválido.")
+    if not 5 <= len(mensaje) <= 2000:
+        raise ValueError("Escribe entre 5 y 2000 caracteres.")
+    ahora = time.time()
+    with candado_sugerencias:
+        recientes = [t for t in envios_por_link.get(host, []) if ahora - t < 3600]
+        if len(recientes) >= 20:
+            raise ValueError("Enviaste muchos mensajes en la última hora. Intenta más tarde.")
+        envios_por_link[host] = recientes + [ahora]
+        lista = leer_json(SUGERENCIAS, [])
+        lista.append({
+            "id": secrets.token_hex(6),
+            "fecha": datetime.now().isoformat(timespec="seconds"),
+            "link": host,
+            "negocio": negocio_de_link(host),
+            "tipo": tipo,
+            "mensaje": mensaje,
+            "contacto": str(cuerpo.get("contacto", "")).strip()[:80],
+            "nombre": str(cuerpo.get("nombre", "")).strip()[:80],
+            "email": str(cuerpo.get("email", "")).strip()[:120],
+            "seccion": str(cuerpo.get("seccion", "")).strip()[:40],
+            "estado": "nuevo",
+        })
+        guardar_json(SUGERENCIAS, lista[-1000:])  # se guardan los últimos 1000
+
+
+def cambiar_estado_sugerencia(id_, estado_nuevo):
+    if estado_nuevo not in ESTADOS_SUGERENCIA:
+        raise ValueError("Estado inválido.")
+    with candado_sugerencias:
+        lista = leer_json(SUGERENCIAS, [])
+        item = next((s for s in lista if s.get("id") == id_), None)
+        if not item:
+            raise ValueError("Ese mensaje no existe.")
+        item["estado"] = estado_nuevo
+        guardar_json(SUGERENCIAS, lista)
+
+
 def cliente_registrado(slug):
     if not RE_SLUG.match(slug or ""):
         raise ValueError("Link inválido.")
@@ -811,6 +888,9 @@ class Panel(BaseHTTPRequestHandler):
                 return self.responder(200, detalle_cliente(slug))
             except ValueError as e:
                 return self.responder(400, {"error": str(e)})
+        if ruta == "/api/sugerencias":
+            lista = list(reversed(leer_json(SUGERENCIAS, [])))  # las más nuevas primero
+            return self.responder(200, {"sugerencias": lista, "nuevas": sum(1 for s in lista if s.get("estado") == "nuevo")})
         return self.responder(404, {"error": "No existe."})
 
     def do_POST(self):
@@ -836,6 +916,15 @@ class Panel(BaseHTTPRequestHandler):
             cuerpo = self.cuerpo_json()
         except (ValueError, json.JSONDecodeError) as e:
             return self.responder(400, {"error": str(e)})
+
+        if ruta == "/api/sugerencia-cliente":  # público, pero solo llega por el reenvío de nginx (ver recibir_sugerencia)
+            try:
+                recibir_sugerencia(self.headers, cuerpo)
+                return self.responder(200, {"ok": True})
+            except PermissionError as e:
+                return self.responder(403, {"error": str(e)})
+            except ValueError as e:
+                return self.responder(400, {"error": str(e)})
 
         if ruta == "/api/login":
             ip = self.ip()
@@ -927,6 +1016,10 @@ class Panel(BaseHTTPRequestHandler):
 
             if ruta == "/api/revisar-cobros":
                 return self.responder(200, {"ok": True, "cambios": revisar_cobros()})
+
+            if ruta == "/api/sugerencias/estado":
+                cambiar_estado_sugerencia(str(cuerpo.get("id", "")), str(cuerpo.get("estado", "")))
+                return self.responder(200, {"ok": True})
 
         except ValueError as e:
             return self.responder(400, {"error": str(e)})

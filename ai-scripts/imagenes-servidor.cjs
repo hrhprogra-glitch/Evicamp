@@ -45,7 +45,7 @@ location = /api/imagenes {
 }
 `;
 // Glob: si algún día no existe el archivo, nginx no falla
-const INCLUDE = '    include snippets/siumax-imagenes*.conf;';
+const INCLUDE = '    include snippets/siumax-*.conf;'; // buscador de fotos + sugerencias (y lo que venga)
 
 (async () => {
   const ssh = new NodeSSH();
@@ -63,7 +63,7 @@ const INCLUDE = '    include snippets/siumax-imagenes*.conf;';
     for (const sitio of sitios) {
       const archivo = `/etc/nginx/sites-available/${sitio}`;
       const texto = await ej(`cat ${archivo}`);
-      if (texto.includes('snippets/siumax-imagenes')) { console.log(`${sitio}: ya estaba activado`); continue; }
+      if (texto.includes('snippets/siumax-')) { console.log(`${sitio}: ya estaba activado`); continue; }
       const i = texto.indexOf('    location /rest/v1/');
       if (i < 0) throw new Error(`${sitio}: no se encontró "location /rest/v1/"`);
       await ej(`cp ${archivo} /root/${sitio}.antes-imagenes-${sello}`);

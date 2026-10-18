@@ -154,6 +154,20 @@ td a { color: var(--info); font-size: 12px; word-break: break-all; }
     </div>
 
     <div class="seccion">
+      <div class="seccion-cab">
+        <h2>Sugerencias y errores <span id="sug-nuevas" class="chip c-warn oculto"></span></h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <select id="sug-filtro" class="btn btn-sm" aria-label="Filtrar mensajes">
+            <option value="pendientes">Pendientes</option>
+            <option value="todos">Todos</option>
+            <option value="resuelto">Resueltos</option>
+          </select>
+        </div>
+      </div>
+      <div id="tabla-sugerencias"></div>
+    </div>
+
+    <div class="seccion">
       <div class="seccion-cab"><h2>Pagos por negocio</h2><span class="ayuda" style="margin:0">Clic en un negocio para ver todos sus pagos</span></div>
       <div id="tabla-pagos"></div>
     </div>
@@ -216,7 +230,54 @@ $('#btn-recargar').onclick = () => cargar();
 // ===== DATOS =====
 async function cargar() {
   try { estado = await api('/api/resumen'); pintar(); } catch (ex) { if (ex.message !== 'Sesión expirada.') toast(ex.message); }
+  cargarSugerencias();
 }
+
+// ===== Sugerencias y errores que envían los clientes (Ajustes > Sugerencias y errores) =====
+let sugerencias = [];
+const TIPO_SUG = { sugerencia: ['💡 Sugerencia', 'c-ok'], error: ['🐞 Error', 'c-danger'], pregunta: ['❓ Pregunta', 'c-warn'] };
+const ESTADO_SUG = { nuevo: ['Nuevo', 'c-warn'], visto: ['Visto', 'c-gris'], resuelto: ['Resuelto', 'c-ok'] };
+async function cargarSugerencias() {
+  try {
+    const r = await api('/api/sugerencias');
+    sugerencias = r.sugerencias || [];
+    const chip = $('#sug-nuevas');
+    chip.textContent = `${r.nuevas} nuevas`;
+    chip.classList.toggle('oculto', !r.nuevas);
+    pintarSugerencias();
+  } catch (ex) { if (ex.message !== 'Sesión expirada.') toast(ex.message); }
+}
+function pintarSugerencias() {
+  const filtro = $('#sug-filtro').value;
+  const lista = sugerencias.filter((s) => filtro === 'todos' || (filtro === 'resuelto' ? s.estado === 'resuelto' : s.estado !== 'resuelto'));
+  if (!lista.length) { $('#tabla-sugerencias').innerHTML = '<p class="ayuda">No hay mensajes aquí.</p>'; return; }
+  $('#tabla-sugerencias').innerHTML = `<table><thead><tr><th>Fecha</th><th>Negocio</th><th>Tipo</th><th>Mensaje</th><th>Quién</th><th>Estado</th><th></th></tr></thead><tbody>${
+    lista.map((s) => {
+      const [tTxt, tCls] = TIPO_SUG[s.tipo] || [s.tipo, 'c-gris'];
+      const [eTxt, eCls] = ESTADO_SUG[s.estado] || [s.estado, 'c-gris'];
+      const fecha = (s.fecha || '').replace('T', ' ').slice(0, 16);
+      return `<tr>
+        <td style="white-space:nowrap">${esc(fecha)}</td>
+        <td><b>${esc(s.negocio)}</b><div class="ayuda" style="margin:0">${esc(s.link)}</div></td>
+        <td><span class="chip ${tCls}">${tTxt}</span></td>
+        <td style="white-space:pre-wrap;max-width:420px">${esc(s.mensaje)}${s.seccion ? `<div class="ayuda" style="margin:4px 0 0">Sección: ${esc(s.seccion)}</div>` : ''}</td>
+        <td>${esc(s.nombre)}<div class="ayuda" style="margin:0">${esc(s.email)}${s.contacto ? '<br>📞 ' + esc(s.contacto) : ''}</div></td>
+        <td><span class="chip ${eCls}">${eTxt}</span></td>
+        <td style="white-space:nowrap">
+          ${s.estado === 'nuevo' ? `<button class="btn btn-sm" data-sug="${esc(s.id)}" data-estado="visto">Visto</button>` : ''}
+          ${s.estado !== 'resuelto' ? `<button class="btn btn-sm btn-ok" data-sug="${esc(s.id)}" data-estado="resuelto">Resuelto</button>`
+            : `<button class="btn btn-sm" data-sug="${esc(s.id)}" data-estado="visto">Reabrir</button>`}
+        </td></tr>`;
+    }).join('')
+  }</tbody></table>`;
+}
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-sug]');
+  if (!b) return;
+  try { await api('/api/sugerencias/estado', { id: b.dataset.sug, estado: b.dataset.estado }); cargarSugerencias(); }
+  catch (ex) { toast(ex.message); }
+});
+document.addEventListener('change', (e) => { if (e.target.id === 'sug-filtro') pintarSugerencias(); });
 
 // Nombre que se muestra para bases con nombre técnico (la base real no se renombra: Evicamp depende de ella)
 const NOMBRE_BASE = { postgres: 'evicamp', configuracion: 'configuración (sistema completo)' };

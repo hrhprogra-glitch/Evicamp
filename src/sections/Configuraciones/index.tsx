@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Building2, Users, Palette } from 'lucide-react';
+import { Settings, Building2, Users, Palette, MessageSquare } from 'lucide-react';
 import { FormularioEmpresa } from './components/FormularioEmpresa';
 import { TablaUsuarios } from './components/TablaUsuarios';
 import { ThemeSwitcher } from './components/ThemeSwitcher';
+import { SugerenciasSiumax } from './components/SugerenciasSiumax';
 import { usePermiso } from '../../utils/permisos';
 
-type Pestana = 'empresa' | 'usuarios' | 'apariencia';
+type Pestana = 'empresa' | 'usuarios' | 'apariencia' | 'sugerencias';
 
 const Configuraciones: React.FC = () => {
   // Cada pestaña tiene su permiso; se abre en la primera permitida
@@ -17,6 +18,8 @@ const Configuraciones: React.FC = () => {
     ...(puedeEmpresa ? [{ id: 'empresa' as Pestana, nombre: 'Datos de la Empresa', Icono: Building2 }] : []),
     ...(puedeUsuarios ? [{ id: 'usuarios' as Pestana, nombre: 'Gestión de Usuarios', Icono: Users }] : []),
     { id: 'apariencia' as Pestana, nombre: 'Apariencia', Icono: Palette },
+    // Le escriben directo a SiuMax (llega al Panel de Control)
+    { id: 'sugerencias' as Pestana, nombre: 'Sugerencias y Errores', Icono: MessageSquare },
   ];
 
   const switchTab = (tab: Pestana) => {
@@ -36,6 +39,8 @@ const Configuraciones: React.FC = () => {
       const buscador = document.getElementById('buscador-usuarios-ajustes') as HTMLInputElement | null;
       buscador?.focus();
       buscador?.select();
+    } else if (activeTab === 'sugerencias') {
+      document.getElementById('sug-tipo-sugerencia')?.focus();
     } else {
       const activeTheme = localStorage.getItem('gestorpro_theme') || 'classic';
       const themeBtn = document.getElementById(`btn-tema-${activeTheme}`) || (document.querySelector('#panel-temas-ajustes button') as HTMLElement | null);
@@ -103,6 +108,8 @@ const Configuraciones: React.FC = () => {
           return;
         }
         document.getElementById('btn-tab-apariencia')?.focus();
+      } else if (activeTab === 'sugerencias') {
+        (document.querySelector('[id^="sug-tipo-"][aria-checked="true"]') as HTMLElement | null)?.focus();
       }
     };
 
@@ -134,7 +141,7 @@ const Configuraciones: React.FC = () => {
               Parámetros del Sistema
             </h1>
             <p className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest font-mono mt-1">
-              Gestiona los datos de tu empresa, los accesos y la apariencia visual.
+              Gestiona los datos de tu empresa, los accesos, la apariencia y escríbele a SiuMax.
             </p>
           </div>
         </div>
@@ -170,6 +177,7 @@ const Configuraciones: React.FC = () => {
         {activeTab === 'empresa' && puedeEmpresa && <FormularioEmpresa />}
         {activeTab === 'usuarios' && puedeUsuarios && <TablaUsuarios />}
         {activeTab === 'apariencia' && <ThemeSwitcher />}
+        {activeTab === 'sugerencias' && <SugerenciasSiumax />}
       </div>
     </div>
   );

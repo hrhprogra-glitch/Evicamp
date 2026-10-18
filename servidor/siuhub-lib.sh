@@ -99,8 +99,8 @@ escribir_nginx() {
         add_header Cache-Control "no-store" always;
     }
 
-    # Buscador de fotos del formulario de producto (Pixabay; ai-scripts/imagenes-servidor.cjs)
-    include snippets/siumax-imagenes*.conf;
+    # Buscador de fotos (ai-scripts/imagenes-servidor.cjs) y sugerencias al panel (ai-scripts/sugerencias-servidor.cjs)
+    include snippets/siumax-*.conf;
 
     location /rest/v1/ {
         if (\$request_method = OPTIONS) {$cors
