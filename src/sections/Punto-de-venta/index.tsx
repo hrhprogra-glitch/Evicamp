@@ -5,7 +5,7 @@ import type { Product } from '../Inventario/types';
 import { useRef } from 'react';
 import { Wallet, Printer, X } from 'lucide-react';
 import { useImprimir } from '../../utils/impresion';
-import { useEmpleado } from '../../utils/permisos';
+import { useEmpleado, usePermiso } from '../../utils/permisos';
 // Componentes modulares
 import { TerminalBusqueda } from './components/TerminalBusqueda';
 import { TicketVenta } from './components/TicketVenta';
@@ -18,6 +18,7 @@ import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ E
 
 export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
   const empleado = useEmpleado(); // quién vende: sale en el ticket ("Atendido por")
+  const veTotalesCaja = usePermiso('reportes_ver_globales'); // cierre a ciegas: el cajero no ve los montos del día
   const [hasOpenSession, setHasOpenSession] = useState<boolean | null>(null);
   const [isSessionOld, setIsSessionOld] = useState<boolean>(false);
   // En tablet/celular se muestra un panel a la vez: catálogo de productos o ticket de venta
@@ -790,7 +791,8 @@ const [searchQuery, setSearchQuery] = useState('');
       
       {/* 🛡️ CONTENEDOR DERECHO EVICAMP: MINI REPORTE + CAJA ALINEADA */}
       <div className={`${vistaMovil === 'ticket' ? 'flex' : 'hidden'} lg:flex flex-col flex-1 lg:flex-none lg:h-full gap-2 lg:gap-0 shrink-0 z-10 relative w-full lg:w-[420px] xl:w-[480px] 2xl:w-[560px] min-h-0`}>
-        <MiniReporteDiario refreshTrigger={refreshReport} />
+        {/* Cajero (sin 'Ver Totales de Caja'): no ve cuánto se vendió en el día ni el historial del día */}
+        {veTotalesCaja && <MiniReporteDiario refreshTrigger={refreshReport} />}
         
         {/* 🛡️ GEOMETRÍA PERFECTA: Flex-1 y min-h-0 hacen que se estire exactamente al ras del panel izquierdo */}
         <div className="flex-1 min-h-0 flex flex-col">

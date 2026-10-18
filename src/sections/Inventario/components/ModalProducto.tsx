@@ -115,6 +115,16 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   const [isSearchingImage, setIsSearchingImage] = useState(false);
   const [imageResults, setImageResults] = useState<string[]>([]);
   const [showImageResults, setShowImageResults] = useState(false); // <-- Controla si la galería está abierta o cerrada
+  // Imagen marcada con el teclado en la galería (-1 = ninguna; el foco sigue en el buscador)
+  const [imgResaltada, setImgResaltada] = useState(-1);
+  useEffect(() => { setImgResaltada(-1); }, [imageResults]);
+  const aplicarImagen = (imgUrl: string) => {
+    setFormData((prev) => ({ ...prev, image: imgUrl }));
+    setImageResults([]);
+    setImageQuery('');
+    setShowImageResults(false);
+    setImgResaltada(-1);
+  };
 
   // 1. LIMPIEZA DE MEMORIA AL ABRIR EL MODAL
   // 1. CONTROL DE MEMORIA AL ABRIR (MODO CREACIÓN vs MODO EDICIÓN)
@@ -678,6 +688,30 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
         // Buscar Imagen
         if (active?.id === 'input-buscar-foto-producto') {
+          // Resultados a la vista: elegir con el teclado (↓/Enter marca, ← → mueve, Enter aplica, ↑ vuelve al texto)
+          const hayResultados = showImageResults && imageResults.length > 0 && !formData.image;
+          if (hayResultados && imgResaltada >= 0) {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+              e.preventDefault();
+              setImgResaltada(Math.min(imageResults.length - 1, Math.max(0, imgResaltada + (e.key === 'ArrowRight' ? 1 : -1))));
+              return;
+            }
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              aplicarImagen(imageResults[imgResaltada]);
+              return;
+            }
+            if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              setImgResaltada(-1);
+              return;
+            }
+          }
+          if (hayResultados && imgResaltada < 0 && (e.key === 'ArrowDown' || e.key === 'Enter')) {
+            e.preventDefault();
+            setImgResaltada(0);
+            return;
+          }
           if (e.key === 'ArrowUp') {
             e.preventDefault();
             document.getElementById('input-categoria-producto')?.focus();
@@ -771,10 +805,24 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
             prev?.focus();
             return;
           }
-          if (e.key === 'ArrowDown' || e.key === 'Enter') {
+          if (e.key === 'ArrowDown') {
             e.preventDefault();
             e.stopPropagation();
             document.getElementById('btn-guardar-producto')?.focus();
+            return;
+          }
+          // Enter / Espacio despliegan la lista (antes Enter saltaba a Guardar y la lista nunca se abría)
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            try { (active as HTMLSelectElement & { showPicker?: () => void }).showPicker?.(); } catch { /* navegador sin showPicker */ }
+            return;
+          }
+          // ← → cambian entre Kilogramos y Litros sin abrir la lista
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            e.stopPropagation();
+            setFormData({ ...formData, weightUnit: formData.weightUnit === 'KG' ? 'LT' : 'KG' });
             return;
           }
         }
@@ -830,7 +878,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
     window.addEventListener('keydown', handleFormKeyDown, { capture: true });
     return () => window.removeEventListener('keydown', handleFormKeyDown, { capture: true });
-  }, [isOpen, step, nature, formData, isSubmitting, categoriasLista]);
+  }, [isOpen, step, nature, formData, isSubmitting, categoriasLista, showImageResults, imageResults, imgResaltada]);
 
   if (!isOpen) return null;
 
@@ -1337,12 +1385,12 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                             onMouseDown={(e) => {
                               // onMouseDown evita que el onBlur del input se dispare antes
                               e.preventDefault();
-                              setFormData({...formData, image: imgUrl});
-                              setImageResults([]);
-                              setImageQuery('');
-                              setShowImageResults(false);
+                              aplicarImagen(imgUrl);
                             }}
-                            className="aspect-square border-2 border-[#E2E8F0] bg-[var(--color-surface)] hover:border-[var(--color-success)] cursor-pointer overflow-hidden transition-all hover:scale-105 flex items-center justify-center"
+                            aria-selected={imgResaltada === idx}
+                            className={`aspect-square border-2 bg-[var(--color-surface)] hover:border-[var(--color-success)] cursor-pointer overflow-hidden transition-all hover:scale-105 flex items-center justify-center ${
+                              imgResaltada === idx ? 'border-[var(--color-success)] ring-4 ring-[var(--color-success)] scale-105' : 'border-[#E2E8F0]'
+                            }`}
                           >
                             <img 
                               src={imgUrl} 
@@ -1357,7 +1405,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                         ))}
                       </div>
                       <div className="text-center mt-2 text-[9px] font-bold text-[#94A3B8] uppercase tracking-widest">
-                        Selecciona una imagen para aplicarla
+                        {imgResaltada >= 0 ? '← → para elegir · Enter para aplicar · ↑ para volver' : 'Selecciona una imagen (↓ o clic) para aplicarla'}
                       </div>
                     </div>
                   )}
