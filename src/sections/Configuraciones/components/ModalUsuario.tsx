@@ -39,8 +39,8 @@ const ROLES: { nombre: string; descripcion: string; permisos: (keyof PermisosUsu
   },
   {
     nombre: 'Cajero',
-    descripcion: 'Vende, abre y cierra su turno, fía, cobra deudas y hace devoluciones (quedan en Finanzas con su nombre). No entra a Inventario (no ve costos) ni cambia productos o precios.',
-    permisos: ['caja_realizar_ventas', 'caja_abrir_cerrar_turno', 'caja_ver_fiados', 'caja_cobrar_deudas', 'reportes_ver_historial_ventas', 'reportes_anular_ventas'],
+    descripcion: 'Vende, abre y cierra su turno, fía y cobra deudas. Cierra a ciegas (no ve cuánto debería haber en caja). Para devolver o anular, el administrador pone su clave en esa pantalla. No entra a Inventario (no ve costos) ni cambia productos o precios.',
+    permisos: ['caja_realizar_ventas', 'caja_abrir_cerrar_turno', 'caja_ver_fiados', 'caja_cobrar_deudas', 'reportes_ver_historial_ventas'],
   },
   {
     nombre: 'Almacenero',
@@ -87,9 +87,9 @@ const COLUMNAS_PERMISOS: {
   {
     titulo: 'Reportes',
     items: [
-      { key: 'reportes_ver_historial_ventas', label: 'Ver Historial de Ventas' },
-      { key: 'reportes_anular_ventas', label: 'Anular Ventas (Extornos)' },
-      { key: 'reportes_ver_globales', label: 'Ver Reportes Globales' },
+      { key: 'reportes_ver_historial_ventas', label: 'Ver Ventas de su Turno' },
+      { key: 'reportes_anular_ventas', label: 'Anular Ventas sin Clave del Admin' },
+      { key: 'reportes_ver_globales', label: 'Ver Totales de Caja y Turnos Anteriores' },
     ],
   },
   {

@@ -17,6 +17,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // ----------------------------------------------------------------------
 // EL INTERCEPTOR MAESTRO (Optimizado para Nginx)
 // ----------------------------------------------------------------------
+// Sesión del administrador que autorizó una acción en esta PC (src/utils/autorizacion.tsx). Mientras está
+// puesta, los pedidos van con su sesión: el servidor revisa SUS permisos y deja su nombre como autor.
+let sesionAutorizada: string | null = null;
+export const usarSesionAutorizada = (token: string | null) => { sesionAutorizada = token; };
+
 const customFetch = (url: string | URL | Request, options?: RequestInit) => {
   const urlString = url.toString();
   
@@ -35,6 +40,8 @@ const customFetch = (url: string | URL | Request, options?: RequestInit) => {
   // 3. La API exige la sesión en cada pedido (servidor/sql/seguridad-sesion.sql): va el token de la sesión
   let token: string | null = null;
   try { token = localStorage.getItem(CLAVE_TOKEN_SESION); } catch { /* sin almacenamiento */ }
+  // Una acción autorizada por el administrador en la PC del cajero va con la sesión del administrador
+  if (sesionAutorizada) token = sesionAutorizada;
   if (token) headers.set('x-sesion', token);
   fetchOptions.headers = headers;
 

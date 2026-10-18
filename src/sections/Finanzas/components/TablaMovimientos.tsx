@@ -14,7 +14,6 @@ interface Props {
 }
 
 export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVerTicket, onAnularTicket, idsAnulando }) => {
-  const puedeAnular = usePermiso('reportes_anular_ventas');
   const esAdmin = usePermiso('sistema_acceso_total');
 
   return (
@@ -151,7 +150,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                           >
                             <Eye size={14} />
                           </button>
-                          {item.estado !== 'ANULADO' && puedeAnular && (
+                          {item.estado !== 'ANULADO' && ( /* sin permiso: pide la clave del administrador (Finanzas → conAutorizacion) */
                             <button
                               onClick={(e) => { e.stopPropagation(); onAnularTicket(item.id); }}
                               disabled={idsAnulando?.has(item.id)}

@@ -15,11 +15,12 @@ import { FiltroFechas } from './components/FiltroFechas';
 import { ModalDetalleTicket } from '../../components/ModalDetalleTicket';
 // de Efectivo/Yape/Tarjeta al cerrar caja.)
 import { rangoUTCPeru } from '../../utils/ingresos';
-import { usePermiso } from '../../utils/permisos';
+import { usePermiso, useEmpleado, avisarSinPermiso } from '../../utils/permisos';
 import { traerTodo } from '../../utils/traerTodo';
 import { numeroTicketDe, autorDe } from '../../utils/movimientosCaja';
 import { hayConexion } from '../../utils/sinInternet';
 import { confirmar } from '../../utils/dialogos';
+import { conAutorizacion } from '../../utils/autorizacion';
 
 // Sin internet, Finanzas se puede VER e ingresar ingresos/egresos, pero no devolver ni eliminar
 // (tocan el stock y la caja de todas las PCs: se hacen cuando vuelva la conexión)
@@ -33,6 +34,12 @@ export const Finanzas: React.FC = () => {
   // Abrir/cerrar caja y registrar ingresos/egresos son permisos distintos
   const puedeTurno = usePermiso('caja_abrir_cerrar_turno');
   const puedeMovimientos = usePermiso('caja_ingresos_egresos');
+  const puedeAnular = usePermiso('reportes_anular_ventas');
+  // Sin "Ver Reportes Globales" (cajero): cierre a ciegas. No ve totales ni lo esperado en caja,
+  // ni los turnos anteriores; solo las ventas y movimientos de su turno.
+  const veMontos = usePermiso('reportes_ver_globales');
+  const veVentasTurno = usePermiso('reportes_ver_historial_ventas') || veMontos;
+  const empleado = useEmpleado();
   const [sessionActiva, setSessionActiva] = useState<CashSession | null>(null);
   const [movimientos, setMovimientos] = useState<UnifiedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -405,7 +412,12 @@ export const Finanzas: React.FC = () => {
     if (idsAnulandoRef.current.has(id)) return;
     if (id.startsWith('ERR-')) return;
     if (!await confirmar('⚠️ ¿Seguro que deseas ANULAR este ticket? El stock regresará y el dinero se descontará de la caja actual.')) return;
+    // Sin permiso de anular (cajero): el administrador o encargado autoriza con su clave en esta pantalla
+    await conAutorizacion('anular esta venta', 'reportes_anular_ventas', puedeAnular, (autorizo) => anularTicket(id, autorizo));
+  };
 
+  // autorizo: nombre del administrador que lo autorizó en la PC del cajero (null si lo hizo alguien con permiso)
+  const anularTicket = async (id: string, autorizo: string | null) => {
     idsAnulandoRef.current.add(id);
     setIdsAnulando(new Set(idsAnulandoRef.current));
 
@@ -454,7 +466,8 @@ export const Finanzas: React.FC = () => {
           session_id: sessionActiva.id,
           type: 'EGRESO',
           amount: Number(venta.amount_cash || 0) + Number(venta.amount_yape || 0) + Number(venta.amount_card || 0),
-          description: `Devolución (Anulación Ticket #${String(id).slice(-6)})`,
+          // El autor (quien autorizó) lo agrega el servidor; aquí queda también quién lo pidió
+          description: `Devolución (Anulación Ticket #${String(id).slice(-6)})${autorizo ? ` · pidió ${empleado?.nombre || 'cajero'}` : ''}`,
           payment_type: 'EFECTIVO',
           flujo: 'DEVOLUCION',
           created_at: new Date().toISOString(),
@@ -764,6 +777,10 @@ export const Finanzas: React.FC = () => {
           <button 
             id="btn-ver-historial"
             onClick={() => {
+              if (vistaActual === 'ACTUAL' && !veMontos) {
+                avisarSinPermiso('ver los turnos anteriores (solo el administrador o encargado)');
+                return;
+              }
               if (vistaActual === 'ACTUAL') {
                 setVistaActual('HISTORIAL');
                 cargarHistorial();
@@ -899,6 +916,7 @@ export const Finanzas: React.FC = () => {
       ) : sessionActiva && superMetricas ? (
         <div className="flex flex-col gap-4 sm:gap-6 pb-8 lg:pr-2">
 
+          {veMontos ? (
           <div className="flex flex-col xl:flex-row gap-4 sm:gap-6 shrink-0">
 
             {/* PANEL MAESTRO DE RECAUDACIÓN (ESTILO EVICAMP) */}
@@ -968,6 +986,15 @@ export const Finanzas: React.FC = () => {
                  </div>
                </div>
                </div>
+          ) : (
+            // Cierre a ciegas: el cajero no ve cuánto debería haber; lo cuenta al cerrar y recién ahí ve la diferencia
+            <div className="bg-[var(--color-bg)] border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-4 flex items-center gap-3 shrink-0">
+              <Lock size={18} className="text-[var(--color-ink)] shrink-0" />
+              <p className="text-xs font-black uppercase tracking-widest text-[var(--color-ink)]">
+                Turno abierto · Los totales de caja los ve el administrador. Al cerrar, cuenta el dinero y el sistema te dirá si cuadra.
+              </p>
+            </div>
+          )}
 
           <div className="bg-white border-2 border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-border)] sm:shadow-[8px_8px_0_0_var(--color-border)] flex flex-col">
              
@@ -1096,9 +1123,12 @@ export const Finanzas: React.FC = () => {
                </select>
              </div>
              
+             {!veVentasTurno && (
+               <p className="p-3 text-xs font-black uppercase tracking-widest text-[var(--color-muted)] border-b border-[var(--color-border)]">🔒 Tu cuenta no tiene permiso para ver las ventas del turno.</p>
+             )}
              {/* TABLA FILTRADA CON FUNCIÓN ONDELTE */}
              <TablaMovimientos 
-               movimientos={movimientos.filter(m => {
+               movimientos={(veVentasTurno ? movimientos : []).filter(m => {
                   // SEARCH
                   if (searchTerm && searchTerm.trim()) {
                      const ticketId = m.isTicket ? ('#' + String(m.id).slice(-6)) : '';
@@ -1145,7 +1175,7 @@ export const Finanzas: React.FC = () => {
         <>
           <ModalNuevoMovimiento isOpen={isMovimientoModalOpen} onClose={() => setIsMovimientoModalOpen(false)} onSuccess={cargarDatosCaja} sessionId={sessionActiva.id} />
           {superMetricas && (
-            <ModalCierre isOpen={isCierreModalOpen} onClose={() => setIsCierreModalOpen(false)} onSuccess={cargarDatosCaja} sessionActiva={sessionActiva} superMetricas={superMetricas} />
+            <ModalCierre isOpen={isCierreModalOpen} onClose={() => setIsCierreModalOpen(false)} onSuccess={cargarDatosCaja} sessionActiva={sessionActiva} superMetricas={superMetricas} aCiegas={!veMontos} />
           )}
         </>
       )}

@@ -12,7 +12,12 @@ interface Props {
   onSuccess: () => void;
   sessionActiva: CashSession;
   superMetricas: SuperMetricas;
+  // Cierre a ciegas (cajero sin "Ver Reportes Globales"): no ve lo esperado mientras cuenta; la
+  // diferencia se muestra recién DESPUÉS de guardar el conteo, cuando ya no se puede cambiar
+  aCiegas?: boolean;
 }
+
+const textoDiferencia = (d: number) => (d === 0 ? '✅ Cuadra' : d > 0 ? `Sobra S/ ${d.toFixed(2)}` : `Falta S/ ${Math.abs(d).toFixed(2)}`);
 
 interface BloqueArqueoProps {
   id: string;
@@ -24,10 +29,11 @@ interface BloqueArqueoProps {
   valor: string;
   onChange: (val: string) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  aCiegas?: boolean;
 }
-const BloqueArqueo: React.FC<BloqueArqueoProps> = ({ id, inputRef, icono, color, titulo, esperado, valor, onChange, onKeyDown }) => {
+const BloqueArqueo: React.FC<BloqueArqueoProps> = ({ id, inputRef, icono, color, titulo, esperado, valor, onChange, onKeyDown, aCiegas }) => {
   const numReal = Number(valor) || 0;
-  const diferencia = redondearCentavos(numReal - esperado);
+  const diferencia = aCiegas ? 0 : redondearCentavos(numReal - esperado); // a ciegas: sin pistas mientras cuenta
   const hayDescuadre = valor !== '' && diferencia !== 0;
 
   return (
@@ -36,7 +42,7 @@ const BloqueArqueo: React.FC<BloqueArqueoProps> = ({ id, inputRef, icono, color,
         <label htmlFor={id} className="text-[12px] font-black uppercase tracking-widest flex items-center gap-2 cursor-pointer" style={{ color }}>
           {icono} {titulo}
         </label>
-        <span className="text-xs font-bold text-[var(--color-muted)] whitespace-nowrap">Espera: S/ {esperado.toFixed(2)}</span>
+        {!aCiegas && <span className="text-xs font-bold text-[var(--color-muted)] whitespace-nowrap">Espera: S/ {esperado.toFixed(2)}</span>}
       </div>
       <input 
         id={id}
@@ -49,7 +55,7 @@ const BloqueArqueo: React.FC<BloqueArqueoProps> = ({ id, inputRef, icono, color,
         onKeyDown={onKeyDown}
         placeholder="¿Cuánto hay realmente?"
         className={`w-full p-3 text-xl font-black text-center outline-none transition-all border-2 rounded-none focus:ring-4 focus:ring-[var(--color-ink)] focus:ring-offset-2 ${
-          valor === '' ? 'bg-[var(--color-bg)] border-[var(--color-ink)]' :
+          valor === '' || aCiegas ? 'bg-[var(--color-bg)] border-[var(--color-ink)]' :
           diferencia === 0 ? 'bg-[var(--color-accent-bg)] border-[var(--color-accent)] text-[var(--color-accent)]' : 'bg-[var(--color-danger-bg)] border-[var(--color-danger)] text-[var(--color-danger)]'
         }`}
       />
@@ -63,7 +69,10 @@ const BloqueArqueo: React.FC<BloqueArqueoProps> = ({ id, inputRef, icono, color,
   );
 };
 
-export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessionActiva, superMetricas }) => {
+export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessionActiva, superMetricas, aCiegas = false }) => {
+  // Cierre a ciegas: diferencias del conteo YA guardado (paso 2: el cajero las ve y explica el motivo)
+  const [resultado, setResultado] = useState<{ efectivo: number; yape: number; tarjeta: number } | null>(null);
+  const [guardandoMotivo, setGuardandoMotivo] = useState(false);
   const [montoEfectivo, setMontoEfectivo] = useState('');
   const [montoYape, setMontoYape] = useState('');
   const [montoTarjeta, setMontoTarjeta] = useState('');
@@ -110,7 +119,9 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
-        onClose();
+        // La caja ya se cerró (paso del resultado): Esc termina como el botón
+        if (resultado) document.getElementById('btn-terminar-cierre')?.click();
+        else onClose();
         return;
       }
 
@@ -149,7 +160,16 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
 
     window.addEventListener('keydown', handleKeyDownCapture, { capture: true });
     return () => window.removeEventListener('keydown', handleKeyDownCapture, { capture: true });
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, resultado]);
+
+  // Paso del resultado: el foco va a la explicación (si hay diferencia) o al botón Terminar
+  useEffect(() => {
+    if (!resultado) return;
+    setTimeout(() => {
+      const motivo = document.getElementById('input-cierre-justificacion') as HTMLInputElement | null;
+      (motivo || document.getElementById('btn-terminar-cierre'))?.focus();
+    }, 30);
+  }, [resultado]);
 
   if (!isOpen) return null;
 
@@ -167,10 +187,28 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
     (montoTarjeta !== '' && diferenciaTarjeta !== 0);
 
   const faltaCompletar = montoEfectivo === '' || montoYape === '' || montoTarjeta === '';
+  // Con lo esperado a la vista, el motivo se pide antes de cerrar; a ciegas, después (ver terminarCierre)
+  const pideMotivoAntes = !aCiegas && hayDescuadre;
+  const hayDiferenciaGuardada = !!resultado && (resultado.efectivo !== 0 || resultado.yape !== 0 || resultado.tarjeta !== 0);
+
+  // Cierre a ciegas, paso 2: guarda el motivo de la diferencia (si la hay) y termina
+  const terminarCierre = async () => {
+    if (hayDiferenciaGuardada) {
+      if (!justificacion.trim()) { justificacionRef.current?.focus(); return; }
+      setGuardandoMotivo(true);
+      const { error } = await supabase.from('cash_sessions').update({ justification: justificacion.trim().toUpperCase() }).eq('id', sessionActiva.id);
+      setGuardandoMotivo(false);
+      if (error) { alert('No se pudo guardar el motivo: ' + error.message); return; }
+    }
+    setResultado(null);
+    onSuccess();
+    onClose();
+  };
 
   const handleCierre = async () => {
     if (faltaCompletar) return;
-    if (hayDescuadre && !justificacion) {
+    // A ciegas el cajero no sabe si hay diferencia hasta guardar: el motivo se pide después
+    if (!aCiegas && hayDescuadre && !justificacion) {
       alert('Debes justificar la diferencia de dinero.');
       justificacionRef.current?.focus();
       return;
@@ -194,6 +232,9 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
 
     if (error) {
       alert('Error al cerrar caja: ' + error.message);
+    } else if (aCiegas) {
+      // El conteo ya quedó guardado con su nombre y hora: recién ahora se le muestra la diferencia
+      setResultado({ efectivo: diferenciaEfectivo, yape: diferenciaYape, tarjeta: diferenciaTarjeta });
     } else {
       const resumen = [
         `Efectivo: ${diferenciaEfectivo === 0 ? 'CUADRADO' : (diferenciaEfectivo > 0 ? `+S/ ${diferenciaEfectivo.toFixed(2)}` : `-S/ ${Math.abs(diferenciaEfectivo).toFixed(2)}`)}`,
@@ -244,10 +285,45 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
 
         <div className="p-6 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
 
+          {resultado ? (
+            // Cierre a ciegas, paso 2: el conteo YA está guardado; recién aquí se ve si cuadra
+            <div className="flex flex-col gap-3" role="status">
+              <p className="text-xs font-black uppercase tracking-widest text-[var(--color-ink)]">
+                ✅ Caja cerrada. Tu conteo quedó guardado. Resultado:
+              </p>
+              {([['Efectivo', resultado.efectivo], ['Yape / Transferencias', resultado.yape], ['Tarjeta', resultado.tarjeta]] as const).map(([nombre, d]) => (
+                <div key={nombre} className={`flex justify-between border-2 p-3 text-sm font-black uppercase ${d === 0 ? 'border-[var(--color-accent)] bg-[var(--color-accent-bg)] text-[var(--color-accent)]' : 'border-[var(--color-danger)] bg-[var(--color-danger-bg)] text-[var(--color-danger)]'}`}>
+                  <span>{nombre}</span><span>{textoDiferencia(d)}</span>
+                </div>
+              ))}
+              {hayDiferenciaGuardada && (
+                <div className="bg-[var(--color-warning-bg)] border-2 border-[var(--color-warning)] p-4 space-y-2">
+                  <span className="text-[12px] font-black uppercase tracking-widest text-[var(--color-warning-dark)] flex items-center gap-2">
+                    <AlertTriangle size={16} /> Explica el motivo de la diferencia
+                  </span>
+                  <input
+                    id="input-cierre-justificacion"
+                    ref={justificacionRef}
+                    autoComplete="off"
+                    type="text"
+                    value={justificacion}
+                    onChange={(e) => setJustificacion(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('btn-terminar-cierre')?.focus(); }
+                    }}
+                    placeholder="Ej: di mal un vuelto..."
+                    className="w-full bg-white border-2 border-[var(--color-warning-border)] p-2 text-xs font-black uppercase outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:border-[var(--color-warning)] rounded-none"
+                  />
+                </div>
+              )}
+            </div>
+          ) : (<>
           <div className="bg-[var(--color-bg)] border-2 border-[var(--color-border)] p-3 flex items-center gap-2 text-[var(--color-muted)]">
             <Calculator size={16} className="shrink-0" />
             <span className="text-[12px] font-bold uppercase tracking-widest">
-              Cuenta lo que hay físicamente en caja y confirma tu Yape/Tarjeta contra lo que el sistema calculó.
+              {aCiegas
+                ? "Cuenta lo que hay físicamente en caja y revisa tu Yape/Tarjeta. Al confirmar, el sistema te dirá si cuadra."
+                : "Cuenta lo que hay físicamente en caja y confirma tu Yape/Tarjeta contra lo que el sistema calculó."}
             </span>
           </div>
 
@@ -258,6 +334,7 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
             color="var(--color-accent)" 
             titulo="Efectivo"
             esperado={esperadoEfectivo} 
+            aCiegas={aCiegas}
             valor={montoEfectivo} 
             onChange={setMontoEfectivo}
             onKeyDown={(e) => {
@@ -278,6 +355,7 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
             color="var(--color-info)" 
             titulo="Yape / Transferencias"
             esperado={esperadoYape} 
+            aCiegas={aCiegas}
             valor={montoYape} 
             onChange={setMontoYape}
             onKeyDown={(e) => {
@@ -299,12 +377,13 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
             color="var(--color-purple)" 
             titulo="Tarjeta"
             esperado={esperadoTarjeta} 
+            aCiegas={aCiegas}
             valor={montoTarjeta} 
             onChange={setMontoTarjeta}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === 'ArrowDown') {
                 e.preventDefault();
-                if (hayDescuadre) {
+                if (pideMotivoAntes) {
                   justificacionRef.current?.focus();
                   justificacionRef.current?.select();
                 } else {
@@ -318,7 +397,7 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
             }}
           />
 
-          {hayDescuadre && (
+          {pideMotivoAntes && (
             <div className="bg-[var(--color-warning-bg)] border-2 border-[var(--color-warning)] p-4 animate-fade-in space-y-2">
               <div className="flex items-center gap-2 text-[var(--color-warning-dark)]">
                 <AlertTriangle size={16} />
@@ -346,10 +425,24 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
               />
             </div>
           )}
+          </>)}
 
         </div>
 
         <div className="p-4 bg-[var(--color-bg)] border-t-2 border-[var(--color-ink)] shrink-0">
+          {resultado ? (
+            <button
+              id="btn-terminar-cierre"
+              onClick={() => void terminarCierre()}
+              disabled={guardandoMotivo || (hayDiferenciaGuardada && !justificacion.trim())}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') { e.preventDefault(); justificacionRef.current?.focus(); }
+              }}
+              className="w-full bg-[var(--color-ink)] text-white p-3 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] focus:ring-offset-2 disabled:opacity-50 border-2 border-[var(--color-ink)] cursor-pointer rounded-none"
+            >
+              {guardandoMotivo ? 'Guardando...' : hayDiferenciaGuardada ? 'Guardar motivo y terminar' : 'Terminar'}
+            </button>
+          ) : (
           <button
             ref={btnSubmitRef}
             id="btn-confirmar-cierre"
@@ -358,7 +451,7 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
             onKeyDown={(e) => {
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
-                if (hayDescuadre) {
+                if (pideMotivoAntes) {
                   justificacionRef.current?.focus();
                   justificacionRef.current?.select();
                 } else {
@@ -371,6 +464,7 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
           >
             {isSubmitting ? 'Cerrando Bóveda...' : <><Lock size={18} /> Finalizar Día y Cerrar</>}
           </button>
+          )}
         </div>
 
       </div>
