@@ -99,6 +99,9 @@ escribir_nginx() {
         add_header Cache-Control "no-store" always;
     }
 
+    # Buscador de fotos del formulario de producto (Pixabay; ai-scripts/imagenes-servidor.cjs)
+    include snippets/siumax-imagenes*.conf;
+
     location /rest/v1/ {
         if (\$request_method = OPTIONS) {$cors
             add_header Access-Control-Max-Age 86400 always;

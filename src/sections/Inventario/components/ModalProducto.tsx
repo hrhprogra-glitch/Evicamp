@@ -4,6 +4,7 @@ import { supabase } from '../../../db/supabase'; // RETORNO TÉCNICO: Conexión 
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { usePermiso } from '../../../utils/permisos';
 import { hayConexion } from '../../../utils/sinInternet';
+import { buscarImagenes, fotoParaGuardar } from '../../../utils/buscarImagenes';
 import { confirmar } from '../../../utils/dialogos';
 
 // Componente de Notificación de Errores (Diseño Geométrico y Alto Contraste)
@@ -166,6 +167,10 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   useEffect(() => { setImgResaltada(-1); }, [imageResults]);
   const aplicarImagen = (imgUrl: string) => {
     setFormData((prev) => ({ ...prev, image: imgUrl }));
+    // Pixabay no permite enlazar sus fotos: se reemplaza por una copia achicada guardada en el producto
+    void fotoParaGuardar(imgUrl).then((copia) => {
+      if (copia !== imgUrl) setFormData((prev) => (prev.image === imgUrl ? { ...prev, image: copia } : prev));
+    });
     setImageResults([]);
     setImageQuery('');
     setShowImageResults(false);
@@ -236,32 +241,10 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     setImageResults([]); // Limpiamos la pantalla al instante para la nueva búsqueda
 
     try {
-      
-      // Antes se buscaban ARTÍCULOS de Wikipedia: "papaya" traía un pueblo y "cocoa" un mapa de Florida.
-      // (Open Food Facts dejó de responder en su dirección de búsqueda antigua.)
-      // Ahora: FOTOS de Wikimedia Commons de esa cosa, sin mapas, banderas, escudos ni fotos de lugares
-      // (Cocoa también es una ciudad: fuera policía, letreros, calles, edificios, playas...).
-      const NO_SIRVE = new RegExp('\\b(' + [
-        'map', 'mapa', 'locator', 'location', 'ubicaci[oó]n', 'flag', 'bandera', 'escudo', 'coat.of.arms', 'seal',
-        'diagram', 'diagrama', 'chart', 'police', 'polic[ií]a', 'sign', 'letrero', 'welcome', 'street', 'calle', 'avenue',
-        'avenida', 'road', 'church', 'iglesia', 'station', 'estaci[oó]n', 'school', 'escuela', 'building', 'edificio',
-        'beach', 'playa', 'city', 'ciudad', 'hall', 'airport', 'aeropuerto', 'stadium', 'estadio', 'portrait', 'retrato',
-      ].join('|') + ')(e?s)?\\b', 'i'); // también en plural: "Welcomes", "signs", "streets"
-
-      const fotosDeCommons = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(`${query.trim()} filetype:bitmap`)}&gsrlimit=20&prop=imageinfo&iiprop=url&iiurlwidth=300&format=json&origin=*`, {
-        signal: abortController.signal
-      })
-      .then(res => res.json())
-      .then(data => Object.values(data?.query?.pages || {})
-        .sort((a: any, b: any) => a.index - b.index)
-        .filter((p: any) => p.imageinfo?.[0]?.thumburl && !NO_SIRVE.test(String(p.title).replace(/[_-]/g, ' ')))
-        .map((p: any) => p.imageinfo[0].thumburl as string))
-      .catch(() => [] as string[]);
-
+      // Pixabay por el servidor; si no hay, fotos de Commons que nombran lo buscado (src/utils/buscarImagenes.ts).
       // 4 = una fila: entra completa en la ventana sin tapar los botones
-      if (!abortController.signal.aborted) {
-        setImageResults(Array.from(new Set(fotosDeCommons)).slice(0, 4));
-      }
+      const fotos = await buscarImagenes(query, abortController.signal, 4);
+      if (!abortController.signal.aborted) setImageResults(fotos.map((f) => f.url));
 
     } catch (e: any) {
       if (e.name === 'AbortError') return;
