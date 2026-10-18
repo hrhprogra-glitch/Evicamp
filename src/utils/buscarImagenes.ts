@@ -37,12 +37,31 @@ const leerJson = async (url: string, signal: AbortSignal) => {
 };
 
 const dePixabay = async (consulta: string, signal: AbortSignal): Promise<FotoEncontrada[]> => {
-  const parametros = new URLSearchParams({
-    q: consulta.trim(), lang: 'es', image_type: 'photo', safesearch: 'true', per_page: '12', order: 'popular',
-  });
-  const datos = await leerJson(`/api/imagenes?${parametros}`, signal);
-  return (datos?.hits || []).map((h: any) => ({ url: h.webformatURL || h.previewURL, titulo: h.tags || '' }))
-    .filter((f: FotoEncontrada) => !!f.url);
+  const pedir = (extra: Record<string, string>) => leerJson(`/api/imagenes?${new URLSearchParams({
+    q: consulta.trim(), lang: 'es', image_type: 'photo', safesearch: 'true', per_page: '30', order: 'popular', ...extra,
+  })}`, signal);
+  // En una tienda casi todo es comida: primero la categoría "food" (arroz = el grano y no el arrozal,
+  // pollo = para cocinar y no pollitos) y luego todo Pixabay (detergente, jabón, escoba...)
+  const [comida, todo] = await Promise.all([pedir({ category: 'food' }), pedir({})]);
+  const datos = { hits: [...(comida?.hits || []), ...(todo?.hits || [])] };
+  const buscadas = palabras(consulta).map(raiz);
+  // Primero las fotos cuyas ETIQUETAS dicen exactamente lo buscado: "fresa" es también una herramienta
+  // (fresadora) y Pixabay mezcla ambas; "fresas" en las etiquetas = la fruta.
+  // La primera etiqueta es el tema de la foto: "plátanos" primero = plátanos; "pastel, plátano" = un pastel
+  const puntaje = (tags: string) => {
+    const lista = normalizar(tags).split(/\s*,\s*/).map((t) => t.split(/\s+/).map(raiz));
+    return buscadas.reduce((total, w) => {
+      const pos = lista.findIndex((t) => t.includes(w));
+      return total + (pos === 0 ? 3 : pos > 0 && pos < 3 ? 2 : pos >= 3 ? 1 : 0);
+    }, 0);
+  };
+  const vistas = new Set<number>(); // la misma foto puede venir en "comida" y en "todo"
+  return (datos.hits as any[])
+    .filter((h) => !vistas.has(h.id) && !!vistas.add(h.id))
+    .map((h: any, i: number) => ({ url: h.webformatURL || h.previewURL, titulo: h.tags || '', puntos: puntaje(h.tags || ''), i }))
+    .filter((f: any) => !!f.url)
+    .sort((a: any, b: any) => b.puntos - a.puntos || a.i - b.i) // empate: el orden de Pixabay (más populares)
+    .map(({ url, titulo }: any) => ({ url, titulo }));
 };
 
 const deCommons = async (consulta: string, signal: AbortSignal): Promise<FotoEncontrada[]> => {
