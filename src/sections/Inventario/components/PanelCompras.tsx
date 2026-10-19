@@ -132,6 +132,33 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   };
   useEffect(() => { void cargar(); }, []);
 
+  // El selector no se pierde al volver de otra ventana (p. ej. WhatsApp) ni al hacer clic en un espacio vacío:
+  // se vuelve a marcar el último elemento elegido de Compras (o "Nueva lista")
+  const ultimo = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const recordar = (e: FocusEvent) => {
+      const t = e.target as HTMLElement;
+      if (t?.dataset?.nav && panel.current?.contains(t) && !t.closest('[role="dialog"]')) ultimo.current = t;
+    };
+    const recuperar = () => setTimeout(() => {
+      const activo = document.activeElement;
+      if (activo && activo !== document.body) return;                       // ya hay algo seleccionado
+      if (document.querySelector('[role="dialog"], [data-dialogo-sistema]')) return;
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+      const destino = ultimo.current?.isConnected && ultimo.current.offsetParent !== null ? ultimo.current : document.getElementById('btn-nueva-compra');
+      enfocar(destino);
+    }, 80);
+    document.addEventListener('focusin', recordar);
+    window.addEventListener('focus', recuperar);
+    document.addEventListener('click', recuperar);
+    return () => {
+      document.removeEventListener('focusin', recordar);
+      window.removeEventListener('focus', recuperar);
+      document.removeEventListener('click', recuperar);
+    };
+  }, []);
+
   const visibles = compras.filter((c) => filtro === 'TODAS' || c.estado === filtro);
   const stockBajo = productos.filter((p) => p.unit !== 'CONSUMO' && Number(p.quantity) <= Number(p.minStock));
 
@@ -305,7 +332,7 @@ const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.
         onKeyDown={(e) => moverEnGrilla(e, cuerpo.current)}>
         <div className="bg-[var(--color-ink)] text-white px-4 py-3 flex justify-between items-center shrink-0">
           <h3 className="text-sm font-black uppercase tracking-widest text-[var(--color-accent)]">{titulo}</h3>
-          <button type="button" onClick={onCerrar} aria-label="Cerrar (Esc)" tabIndex={-1} className="p-1 hover:text-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-white cursor-pointer"><X size={18} /></button>
+          <button type="button" data-nav="-1,0" onClick={onCerrar} aria-label="Cerrar (Esc)" title="Cerrar (Esc)" className="p-1 hover:text-[var(--color-accent)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] cursor-pointer"><X size={18} /></button>
         </div>
         <div className="p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3">{children}</div>
         <div className="p-3 border-t-2 border-[var(--color-ink)] bg-[var(--color-bg)] flex flex-wrap justify-end gap-2 shrink-0">{pie}</div>
@@ -409,8 +436,7 @@ const EditorCompra: React.FC<{
   return (
     <Ventana cuerpo={cuerpo} titulo={compra ? `Editar pedido #${String(compra.id).slice(-6)}` : 'Nueva lista de compras'} onCerrar={() => onCerrar(null)}
       pie={<>
-        <span className="mr-auto self-center text-[10px] font-bold text-[var(--color-muted)] uppercase hidden sm:inline">Flechas para moverte · Enter siguiente · Esc cerrar</span>
-        <button type="button" data-nav={`${FILA_PIE},0`} onClick={() => onCerrar(null)} className={`${claseBoton} bg-white text-[var(--color-ink)]`}>Cancelar</button>
+        <span className="mr-auto self-center text-[10px] font-bold text-[var(--color-muted)] uppercase hidden sm:inline">Flechas para moverte · Enter siguiente · Esc o X para cerrar</span>
         <button id="btn-guardar-compra" type="button" data-nav={`${FILA_PIE},1`} aria-disabled={guardando} onClick={() => void guardar()}
           className={`${claseBoton} bg-[var(--color-ink)] text-[var(--color-accent)] ${guardando ? 'opacity-60' : ''}`}>{guardando ? 'Guardando...' : 'Guardar lista'}</button>
       </>}>
@@ -576,7 +602,6 @@ const RecibirCompra: React.FC<{
     <Ventana cuerpo={cuerpo} titulo={`Recibir pedido #${String(compra.id).slice(-6)} · ${compra.proveedor || 'Sin proveedor'}`} onCerrar={() => onCerrar(null)}
       pie={<>
         <span className="mr-auto self-center text-sm font-black text-[var(--color-ink)]">Total: {soles(total)}</span>
-        <button type="button" data-nav={`${FILA_PIE},0`} onClick={() => onCerrar(null)} className={`${claseBoton} bg-white text-[var(--color-ink)]`}>Cancelar</button>
         <button id="btn-confirmar-recepcion" type="button" data-nav={`${FILA_PIE},1`} aria-disabled={guardando} onClick={() => void recibir()}
           className={`${claseBoton} bg-[var(--color-ink)] text-[var(--color-accent)] ${guardando ? 'opacity-60' : ''}`}>
           {guardando ? <><Loader2 size={14} className="animate-spin" /> Ingresando...</> : <><PackageCheck size={14} /> Ingresar al inventario</>}

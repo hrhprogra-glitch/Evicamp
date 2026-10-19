@@ -20,7 +20,14 @@ interface InventarioProps {
   onNavigate?: (view: string) => void;
 }
 export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
-  const [vistaActiva, setVistaActiva] = useState<'PRODUCTOS' | 'LOTES' | 'COMPRAS'>('PRODUCTOS');
+  // Pestaña abierta: se recuerda al ir a otra sección y volver (mientras dure la sesión del navegador)
+  const [vistaActiva, setVistaActivaEstado] = useState<'PRODUCTOS' | 'LOTES' | 'COMPRAS'>(() => {
+    try { const v = sessionStorage.getItem('inventario_vista'); return v === 'LOTES' || v === 'COMPRAS' ? v : 'PRODUCTOS'; } catch { return 'PRODUCTOS'; }
+  });
+  const setVistaActiva = (v: 'PRODUCTOS' | 'LOTES' | 'COMPRAS') => {
+    setVistaActivaEstado(v);
+    try { sessionStorage.setItem('inventario_vista', v); } catch { /* sin almacenamiento */ }
+  };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalProveedoresOpen, setIsModalProveedoresOpen] = useState(false);
   // Permisos de almacén (el servidor también los exige)

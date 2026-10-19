@@ -93,7 +93,8 @@ export const ModalGestionProveedores: React.FC<Props> = ({ isOpen, onClose }) =>
       const { data, error } = await supabase
         .from('providers')
         .select('*')
-        .eq('is_active', 1)
+        // La tabla providers no tiene is_active (usa estado): ese filtro hacía fallar la consulta y la lista salía vacía
+        .neq('estado', 'ELIMINADO')
         .order('razon_social');
       
       if (error) throw error;
@@ -159,10 +160,10 @@ export const ModalGestionProveedores: React.FC<Props> = ({ isOpen, onClose }) =>
 
   return (
     <div id="modal-gestion-proveedores-container" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-[var(--color-surface)] w-full max-w-5xl max-h-[90vh] flex flex-col border-4 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)]">
+      <div className="bg-[var(--color-surface)] w-full max-w-5xl max-h-[90vh] flex flex-col border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)]">
         
         {/* HEADER */}
-        <div className="flex items-center justify-between p-4 border-b-4 border-[var(--color-ink)] bg-[var(--color-info)] shrink-0">
+        <div className="flex items-center justify-between p-4 border-b-2 border-[var(--color-ink)] bg-[var(--color-info)] shrink-0">
           <div className="flex items-center gap-3 text-[var(--color-ink)]">
             <Users size={24} strokeWidth={2.5} />
             <h2 className="text-xl font-black uppercase tracking-widest">Gestión de Proveedores</h2>
@@ -207,7 +208,7 @@ export const ModalGestionProveedores: React.FC<Props> = ({ isOpen, onClose }) =>
             </button>
           </div>
 
-          <div className="flex-1 min-h-0 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] relative">
+          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar border-2 border-[var(--color-ink)] bg-[var(--color-surface)] relative">
             {loading ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-[var(--color-surface)]/80">
                 <Loader2 className="animate-spin text-[var(--color-ink)] mb-4" size={32} />
@@ -224,7 +225,7 @@ export const ModalGestionProveedores: React.FC<Props> = ({ isOpen, onClose }) =>
                   onDelete={async (p) => {
                     if (!await confirmar(`¿Seguro que deseas eliminar al proveedor ${p.razon_social}?`)) return;
                     try {
-                      const { error } = await supabase.from('providers').update({ is_active: 0 }).eq('id', p.id);
+                      const { error } = await supabase.from('providers').update({ estado: 'ELIMINADO' }).eq('id', p.id);
                       if (error) throw error;
                       setProveedores(prev => prev.filter(prov => prov.id !== p.id));
                     } catch (err) {
