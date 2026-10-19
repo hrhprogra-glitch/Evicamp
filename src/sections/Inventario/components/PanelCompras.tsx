@@ -310,15 +310,28 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
                 aria-label={`Pedido ${String(c.id).slice(-6)} de ${c.proveedor || 'sin proveedor'}, ${c.estado}. Enter para ver el detalle`}
                 onClick={() => setViendo(c)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setViendo(c); } }}
-                className="bg-white border-2 border-[var(--color-ink)] p-3 flex justify-between gap-2 cursor-pointer hover:bg-[var(--color-bg)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] focus:bg-[var(--color-accent-bg)]">
-                <div className="min-w-0">
-                  <p className="text-sm font-black uppercase text-[var(--color-ink)] truncate flex items-center gap-2"><Truck size={14} /> {c.proveedor || 'Sin proveedor'}</p>
-                  <p className="text-[10px] font-bold text-[var(--color-muted)] uppercase">
-                    Pedido #{String(c.id).slice(-6)} · {fecha(c.created_at)}{c.autor ? ` · por ${c.autor}` : ''}
-                    {c.estado === 'RECIBIDO' && ` · recibido ${fecha(c.recibido_at)}${c.documento ? ` (${c.documento})` : ''}`}
-                  </p>
+                className="bg-white border-2 border-[var(--color-ink)] p-3 flex flex-col gap-2 cursor-pointer hover:bg-[var(--color-bg)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] focus:bg-[var(--color-accent-bg)]">
+                <div className="flex justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-black uppercase text-[var(--color-ink)] truncate flex items-center gap-2"><Truck size={14} /> {c.proveedor || 'Sin proveedor'}</p>
+                    <p className="text-[10px] font-bold text-[var(--color-muted)] uppercase">
+                      Pedido #{String(c.id).slice(-6)} · {fecha(c.created_at)}{c.autor ? ` · por ${c.autor}` : ''}
+                      {c.estado === 'RECIBIDO' && ` · recibido ${fecha(c.recibido_at)}${c.documento ? ` (${c.documento})` : ''}`}
+                    </p>
+                  </div>
+                  <span className={`shrink-0 self-start px-2 py-0.5 border-2 text-[10px] font-black uppercase ${colorEstado}`}>{c.estado}</span>
                 </div>
-                <span className={`shrink-0 self-start px-2 py-0.5 border-2 text-[10px] font-black uppercase ${colorEstado}`}>{c.estado}</span>
+                {/* Productos (hasta 5; el resto en el detalle con Enter). Recibidas: lo que llegó */}
+                <ul className="text-xs font-bold text-[var(--color-ink)] border-t border-[var(--color-border)] pt-2 space-y-0.5">
+                  {c.compras_detalle.slice(0, 5).map((d) => (
+                    <li key={d.id} className="truncate">
+                      {c.estado === 'RECIBIDO' ? (d.cantidad_recibida ?? 0) : d.cantidad} x {d.product_name}
+                    </li>
+                  ))}
+                  {c.compras_detalle.length > 5 && (
+                    <li className="text-[10px] font-black uppercase text-[var(--color-muted)]">+{c.compras_detalle.length - 5} más · Enter para ver todo</li>
+                  )}
+                </ul>
               </div>
             );
           })}
