@@ -255,15 +255,6 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
     moverEnGrilla(e, panel.current);
   };
 
-  // Las tarjetas se ven en 2 columnas en pantalla ancha: las flechas siguen esa misma grilla
-  const [columnas, setColumnas] = useState(() => (window.matchMedia('(min-width: 1024px)').matches ? 2 : 1));
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1024px)');
-    const cambiar = () => setColumnas(mq.matches ? 2 : 1);
-    mq.addEventListener('change', cambiar);
-    return () => mq.removeEventListener('change', cambiar);
-  }, []);
-
   const filtros = [['PENDIENTE', 'Pendientes'], ['RECIBIDO', 'Recibidas'], ['TODAS', 'Todas']] as const;
 
   return (
@@ -291,7 +282,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
         </div>
       </div>
 
-      {/* Listas: solo proveedor y datos del pedido; Enter abre el detalle */}
+      {/* Listas en tabla; Enter abre el detalle */}
       {cargando ? (
         <div className="p-6 text-center text-xs font-black uppercase text-[var(--color-muted)]"><Loader2 className="inline animate-spin" size={16} /> Cargando...</div>
       ) : visibles.length === 0 ? (
@@ -299,42 +290,51 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
           {filtro === 'PENDIENTE' ? 'No hay pedidos pendientes. Crea una lista con "Nueva lista".' : 'No hay listas aquí.'}
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {visibles.map((c, n) => {
-            const colorEstado = c.estado === 'PENDIENTE' ? 'border-[var(--color-warning)] text-[var(--color-warning-dark)] bg-[var(--color-warning-bg)]'
-              : c.estado === 'RECIBIDO' ? 'border-[var(--color-success)] text-[var(--color-success)] bg-[var(--color-accent-bg)]'
-              : 'border-[var(--color-border)] text-[var(--color-muted)] bg-[var(--color-bg)]';
-            return (
-              <div key={c.id} data-compra={c.id} role="button" tabIndex={0}
-                data-nav={`${1 + Math.floor(n / columnas)},${n % columnas}`}
-                aria-label={`Pedido ${String(c.id).slice(-6)} de ${c.proveedor || 'sin proveedor'}, ${c.estado}. Enter para ver el detalle`}
-                onClick={() => setViendo(c)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setViendo(c); } }}
-                className="bg-white border-2 border-[var(--color-ink)] p-3 flex flex-col gap-2 cursor-pointer hover:bg-[var(--color-bg)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] focus:bg-[var(--color-accent-bg)]">
-                <div className="flex justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-black uppercase text-[var(--color-ink)] truncate flex items-center gap-2"><Truck size={14} /> {c.proveedor || 'Sin proveedor'}</p>
-                    <p className="text-[10px] font-bold text-[var(--color-muted)] uppercase">
-                      Pedido #{String(c.id).slice(-6)} · {fecha(c.created_at)}{c.autor ? ` · por ${c.autor}` : ''}
-                      {c.estado === 'RECIBIDO' && ` · recibido ${fecha(c.recibido_at)}${c.documento ? ` (${c.documento})` : ''}`}
-                    </p>
+        // Tabla (mismo estilo que Lotes): una fila por lista; ↑ ↓ para moverse, Enter abre el detalle
+        <div className="w-full overflow-x-auto custom-scrollbar border-2 border-[var(--color-ink)] bg-white">
+          <div className="min-w-[900px]">
+            <div className="grid grid-cols-12 gap-3 bg-[var(--color-ink)] text-white px-4 py-3 text-xs font-black uppercase tracking-[0.1em]">
+              <div className="col-span-2">Fecha / Pedido</div>
+              <div className="col-span-2">Proveedor</div>
+              <div className="col-span-4">Productos</div>
+              <div className="col-span-1 text-right">Total</div>
+              <div className="col-span-2">Recibido / Factura</div>
+              <div className="col-span-1 text-center">Estado</div>
+            </div>
+            {visibles.map((c, n) => {
+              const recibida = c.estado === 'RECIBIDO';
+              const colorEstado = c.estado === 'PENDIENTE' ? 'border-[var(--color-warning)] text-[var(--color-warning-dark)] bg-[var(--color-warning-bg)]'
+                : recibida ? 'border-[var(--color-success)] text-[var(--color-success)] bg-[var(--color-accent-bg)]'
+                : 'border-[var(--color-border)] text-[var(--color-muted)] bg-[var(--color-bg)]';
+              const total = totalDe(c.compras_detalle.map((d) => ({ cantidad: recibida ? Number(d.cantidad_recibida ?? 0) : d.cantidad, costo_unit: d.costo_unit })));
+              return (
+                <div key={c.id} data-compra={c.id} role="button" tabIndex={0} data-nav={`${n + 1},0`}
+                  aria-label={`Pedido ${String(c.id).slice(-6)} de ${c.proveedor || 'sin proveedor'}, ${c.estado}. Enter para ver el detalle`}
+                  onClick={() => setViendo(c)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setViendo(c); } }}
+                  className="grid grid-cols-12 gap-3 items-start px-4 py-3 border-b border-[var(--color-border)] text-sm cursor-pointer hover:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] focus:bg-[var(--color-accent-bg)]">
+                  <div className="col-span-2">
+                    <p className="font-black text-[var(--color-ink)]">{fecha(c.created_at)}</p>
+                    <p className="text-[11px] font-bold text-[var(--color-muted)] uppercase">#{String(c.id).slice(-6)}{c.autor ? ` · ${c.autor}` : ''}</p>
                   </div>
-                  <span className={`shrink-0 self-start px-2 py-0.5 border-2 text-[10px] font-black uppercase ${colorEstado}`}>{c.estado}</span>
+                  <div className="col-span-2 font-black uppercase text-[var(--color-ink)] truncate flex items-center gap-2"><Truck size={14} className="shrink-0" /> <span className="truncate">{c.proveedor || 'Sin proveedor'}</span></div>
+                  <ul className="col-span-4 text-xs font-bold text-[var(--color-ink)] space-y-0.5">
+                    {c.compras_detalle.slice(0, 3).map((d) => (
+                      <li key={d.id} className="truncate">{recibida ? (d.cantidad_recibida ?? 0) : d.cantidad} x {d.product_name}</li>
+                    ))}
+                    {c.compras_detalle.length > 3 && <li className="text-[10px] font-black uppercase text-[var(--color-muted)]">+{c.compras_detalle.length - 3} más</li>}
+                  </ul>
+                  <div className="col-span-1 text-right font-black text-[var(--color-ink)]">{soles(total)}</div>
+                  <div className="col-span-2 text-xs font-bold text-[var(--color-muted)] uppercase">
+                    {recibida ? <>{fecha(c.recibido_at)}{c.documento && <span className="block text-[var(--color-ink)]">{c.documento}</span>}</> : '—'}
+                  </div>
+                  <div className="col-span-1 text-center">
+                    <span className={`inline-block px-2 py-0.5 border-2 text-[10px] font-black uppercase ${colorEstado}`}>{c.estado}</span>
+                  </div>
                 </div>
-                {/* Productos (hasta 5; el resto en el detalle con Enter). Recibidas: lo que llegó */}
-                <ul className="text-xs font-bold text-[var(--color-ink)] border-t border-[var(--color-border)] pt-2 space-y-0.5">
-                  {c.compras_detalle.slice(0, 5).map((d) => (
-                    <li key={d.id} className="truncate">
-                      {c.estado === 'RECIBIDO' ? (d.cantidad_recibida ?? 0) : d.cantidad} x {d.product_name}
-                    </li>
-                  ))}
-                  {c.compras_detalle.length > 5 && (
-                    <li className="text-[10px] font-black uppercase text-[var(--color-muted)]">+{c.compras_detalle.length - 5} más · Enter para ver todo</li>
-                  )}
-                </ul>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
 
