@@ -8,6 +8,12 @@ interface Props {
   onDelete: (proveedor: Proveedor) => void;
 }
 
+// Flechas ↑ ↓ desde Editar/Eliminar: el mismo botón en la otra fila (grilla), no la fila entera
+const enfocarMismoBoton = (fila: HTMLElement, boton: HTMLElement) => {
+  const clase = boton.classList.contains('btn-eliminar-prov') ? '.btn-eliminar-prov' : '.btn-editar-prov';
+  ((fila.querySelector(clase) as HTMLElement | null) || fila).focus();
+};
+
 export const TablaProveedores: React.FC<Props> = ({ proveedores, onEdit, onDelete }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 50;
@@ -67,6 +73,9 @@ export const TablaProveedores: React.FC<Props> = ({ proveedores, onEdit, onDelet
               tabIndex={0}
               onClick={() => onEdit(prov)}
               onKeyDown={(e) => {
+                // Solo cuando la FILA está seleccionada: las teclas de Editar/Eliminar suben hasta aquí y antes
+                // la fila devolvía el foco a Editar (→ nunca llegaba a Eliminar) y Enter en Eliminar abría Editar
+                if (e.target !== e.currentTarget) return;
                 if (e.key === 'ArrowDown') {
                   e.preventDefault();
                   const rows = Array.from(document.querySelectorAll('[data-row-prov="true"]')) as HTMLElement[];
@@ -164,7 +173,7 @@ export const TablaProveedores: React.FC<Props> = ({ proveedores, onEdit, onDelet
                       const currentRow = e.currentTarget.closest('[data-row-prov="true"]') as HTMLElement;
                       const idx = rows.indexOf(currentRow);
                       if (idx !== -1 && idx < rows.length - 1) {
-                        rows[idx + 1].focus();
+                        enfocarMismoBoton(rows[idx + 1], e.currentTarget);
                       }
                     } else if (e.key === 'ArrowUp') {
                       e.preventDefault();
@@ -172,11 +181,12 @@ export const TablaProveedores: React.FC<Props> = ({ proveedores, onEdit, onDelet
                       const currentRow = e.currentTarget.closest('[data-row-prov="true"]') as HTMLElement;
                       const idx = rows.indexOf(currentRow);
                       if (idx > 0) {
-                        rows[idx - 1].focus();
+                        enfocarMismoBoton(rows[idx - 1], e.currentTarget);
                       } else {
                         document.getElementById('btn-nuevo-proveedor')?.focus();
                       }
                     } else if (e.key === 'Enter') {
+                      e.preventDefault(); // sin esto también se dispara el clic: la acción corría 2 veces
                       e.stopPropagation();
                       onEdit(prov);
                     }
@@ -201,7 +211,7 @@ export const TablaProveedores: React.FC<Props> = ({ proveedores, onEdit, onDelet
                       const currentRow = e.currentTarget.closest('[data-row-prov="true"]') as HTMLElement;
                       const idx = rows.indexOf(currentRow);
                       if (idx !== -1 && idx < rows.length - 1) {
-                        rows[idx + 1].focus();
+                        enfocarMismoBoton(rows[idx + 1], e.currentTarget);
                       }
                     } else if (e.key === 'ArrowUp') {
                       e.preventDefault();
@@ -209,11 +219,12 @@ export const TablaProveedores: React.FC<Props> = ({ proveedores, onEdit, onDelet
                       const currentRow = e.currentTarget.closest('[data-row-prov="true"]') as HTMLElement;
                       const idx = rows.indexOf(currentRow);
                       if (idx > 0) {
-                        rows[idx - 1].focus();
+                        enfocarMismoBoton(rows[idx - 1], e.currentTarget);
                       } else {
                         document.getElementById('btn-nuevo-proveedor')?.focus();
                       }
                     } else if (e.key === 'Enter') {
+                      e.preventDefault(); // sin esto también se dispara el clic: la acción corría 2 veces
                       e.stopPropagation();
                       onDelete(prov);
                     }

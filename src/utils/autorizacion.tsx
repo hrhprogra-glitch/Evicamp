@@ -15,6 +15,7 @@ import { normalizarEmail } from './sesion';
 import { tienePermiso, type ClavePermiso } from './permisos';
 import type { PermisosUsuario } from '../sections/Configuraciones/types';
 import { programarRestauracionFoco } from './navegacionSesion';
+import { tomarTeclado } from './dialogos';
 
 interface Autorizacion { token: string; nombre: string }
 interface Pedido { accion: string; permiso: ClavePermiso; responder: (a: Autorizacion | null) => void }
@@ -65,8 +66,7 @@ const VentanaAutorizacion: React.FC<{ pedido: Pedido; cerrar: () => void }> = ({
         document.getElementById(orden[(i + (e.shiftKey ? orden.length - 1 : 1)) % orden.length])?.focus();
       }
     };
-    window.addEventListener('keydown', teclas, true);
-    return () => window.removeEventListener('keydown', teclas, true);
+    return tomarTeclado(teclas); // recibe la tecla antes que la pantalla de atrás (ver dialogos.tsx)
   });
 
   const campo = 'w-full border-2 border-[var(--color-ink)] bg-[var(--color-bg)] p-3 text-sm font-bold text-[var(--color-ink)] outline-none focus:ring-4 focus:ring-[var(--color-accent)]';

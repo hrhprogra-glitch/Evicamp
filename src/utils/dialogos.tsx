@@ -16,6 +16,15 @@ import { programarRestauracionFoco } from './navegacionSesion';
 interface Dialogo { id: number; texto: string; conCancelar: boolean; responder: (si: boolean) => void }
 
 let cola: Dialogo[] = [];
+
+// Teclado de los avisos: un solo oyente instalado AL ARRANCAR (instalarDialogos), antes que el de cualquier
+// ventana. Así el aviso de arriba siempre recibe la tecla primero: antes, Esc en una confirmación también
+// cerraba la ventana de atrás (p. ej. Gestión de proveedores) porque esa escuchaba desde antes.
+const manejadores: ((e: KeyboardEvent) => void)[] = [];
+export const tomarTeclado = (manejador: (e: KeyboardEvent) => void) => {
+  manejadores.push(manejador);
+  return () => { const i = manejadores.lastIndexOf(manejador); if (i >= 0) manejadores.splice(i, 1); };
+};
 let avisarCambio: (() => void) | null = null;
 let contador = 0;
 
@@ -90,10 +99,10 @@ const VentanaDialogo: React.FC = () => {
       if ((e.target as Element | null)?.closest?.('[data-dialogo-sistema]')) return;
       document.getElementById(boton === 1 ? 'dialogo-sistema-cancelar' : 'dialogo-sistema-aceptar')?.focus();
     };
-    window.addEventListener('keydown', teclas, true); // antes que cualquier atajo de la pantalla
+    const soltar = tomarTeclado(teclas); // antes que cualquier atajo o ventana de la pantalla
     document.addEventListener('focusin', retener, true);
     return () => {
-      window.removeEventListener('keydown', teclas, true);
+      soltar();
       document.removeEventListener('focusin', retener, true);
     };
   }, [actual?.id, boton]);
@@ -127,6 +136,7 @@ const VentanaDialogo: React.FC = () => {
 };
 
 export const instalarDialogos = () => {
+  window.addEventListener('keydown', (e) => manejadores[manejadores.length - 1]?.(e), true);
   const lugar = document.createElement('div');
   lugar.id = 'dialogos-sistema';
   document.body.appendChild(lugar);
