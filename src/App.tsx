@@ -46,6 +46,9 @@ export const App: React.FC = () => {
   const currentViewRef = useRef(currentView);
   useEffect(() => {
     currentViewRef.current = currentView;
+    // La sección abierta, para devolver el foco a su elemento principal después de un aviso
+    // (navegacionSesion.ts la lee; sin esto siempre creía estar en Caja)
+    try { localStorage.setItem('evicamp_last_view', currentView); } catch { /* sin almacenamiento */ }
   }, [currentView]);
   // El menú lateral guarda su estado en localStorage.
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {

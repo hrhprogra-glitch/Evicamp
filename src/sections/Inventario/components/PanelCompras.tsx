@@ -5,7 +5,11 @@
 //  - Recibir pedido: se confirma lo que llegó y su costo, y se crean TODOS los lotes de una vez
 //    (igual que "Ingresar lote": lote + movimiento COMPRA + stock del producto recalculado).
 // Tablas compras / compras_detalle (servidor/sql/seguridad-sesion.sql). Permiso: almacen_ingresar_lotes.
-import React, { useEffect, useMemo, useState } from 'react';
+//
+// Teclado (patrón "selector" del sistema): cada elemento navegable lleva data-nav="fila,columna" y las
+// flechas van al vecino más cercano en esa dirección (moverEnGrilla). En los campos de número ↑ ↓ ya no
+// cambian el valor sin querer; Enter pasa al siguiente campo. Esc cierra las ventanas.
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, AlertTriangle, Loader2, Ban } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { usePermiso, useEmpleado, avisarSinPermiso } from '../../../utils/permisos';
@@ -32,7 +36,71 @@ const sugerida = (p: Product) => {
 const totalDe = (items: Pick<Item, 'cantidad' | 'costo_unit'>[]) => items.reduce((t, i) => t + (Number(i.cantidad) || 0) * (Number(i.costo_unit) || 0), 0);
 
 const claseInput = 'w-full border-2 border-[var(--color-border)] bg-[var(--color-bg)] p-2 text-xs font-black text-[var(--color-ink)] outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]';
-const claseBoton = 'px-3 py-2 border-2 border-[var(--color-ink)] text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] cursor-pointer disabled:opacity-50';
+const claseBoton = 'px-3 py-2 border-2 border-[var(--color-ink)] text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] focus:ring-offset-1 cursor-pointer disabled:opacity-50';
+
+// ======================================================= Navegación con flechas
+const FILA_PIE = 1000; // los botones de abajo de cada ventana siempre son la última fila
+
+const enfocar = (el: HTMLElement | null | undefined) => {
+  if (!el) return false;
+  el.focus();
+  if (el instanceof HTMLInputElement && ['text', 'number', 'search', 'tel'].includes(el.type)) el.select();
+  return true;
+};
+
+/** Mueve el foco al vecino [data-nav] en la dirección de la flecha. Devuelve true si se movió. */
+const moverEnGrilla = (e: React.KeyboardEvent, contenedor: HTMLElement | null) => {
+  const t = e.target as HTMLElement;
+  const pos = t.dataset?.nav;
+  if (!pos || !contenedor || !['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return false;
+  const tipo = t instanceof HTMLInputElement ? t.type : '';
+  // En texto, ← → mueven el cursor salvo en el borde; en fechas, ← → cambian día/mes/año
+  if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && t instanceof HTMLInputElement) {
+    if (tipo === 'date') return false;
+    if (tipo !== 'number' && t.value) {
+      const enBorde = e.key === 'ArrowLeft' ? t.selectionStart === 0 && t.selectionEnd === 0 : t.selectionEnd === t.value.length;
+      if (!enBorde) return false;
+    }
+  }
+  const [fila, col] = pos.split(',').map(Number);
+  const todos = Array.from(contenedor.querySelectorAll<HTMLElement>('[data-nav]'))
+    .filter((el) => el.offsetParent !== null && !(el as HTMLButtonElement).disabled)
+    .map((el) => { const [f, c] = el.dataset.nav!.split(',').map(Number); return { el, f, c }; });
+  let destino: { el: HTMLElement } | undefined;
+  if (e.key === 'ArrowRight') destino = todos.filter((x) => x.f === fila && x.c > col).sort((a, b) => a.c - b.c)[0];
+  if (e.key === 'ArrowLeft') destino = todos.filter((x) => x.f === fila && x.c < col).sort((a, b) => b.c - a.c)[0];
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    const otras = todos.filter((x) => (e.key === 'ArrowDown' ? x.f > fila : x.f < fila));
+    if (otras.length) {
+      const filaDestino = e.key === 'ArrowDown' ? Math.min(...otras.map((x) => x.f)) : Math.max(...otras.map((x) => x.f));
+      const enFila = otras.filter((x) => x.f === filaDestino);
+      // Al bajar a los botones de abajo se llega al principal (Guardar / Ingresar), nunca a "Cancelar"
+      destino = filaDestino === FILA_PIE
+        ? enFila.sort((a, b) => b.c - a.c)[0]
+        : enFila.sort((a, b) => Math.abs(a.c - col) - Math.abs(b.c - col) || a.c - b.c)[0];
+    }
+  }
+  // number y select: ↑ ↓ siempre se interceptan (no cambian el valor sin querer)
+  if (destino || tipo === 'number' || t.tagName === 'SELECT') e.preventDefault();
+  return destino ? enfocar(destino.el) : false;
+};
+
+/** Enter en un campo: pasa al siguiente campo [data-nav] (en orden de lectura); al final, al botón principal. */
+const siguienteCampo = (e: React.KeyboardEvent, contenedor: HTMLElement | null, principal: string) => {
+  const t = e.target as HTMLElement;
+  if (e.key !== 'Enter' || !(t instanceof HTMLInputElement) || !contenedor) return;
+  e.preventDefault();
+  const campos = Array.from(contenedor.querySelectorAll<HTMLElement>('input[data-nav], select[data-nav]')).filter((el) => el.offsetParent !== null);
+  const i = campos.indexOf(t);
+  if (!enfocar(campos[i + 1])) enfocar(document.getElementById(principal));
+};
+
+const abrirLista = (e: React.KeyboardEvent<HTMLSelectElement>) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    try { (e.currentTarget as HTMLSelectElement & { showPicker?: () => void }).showPicker?.(); } catch { /* sin showPicker */ }
+  }
+};
 
 interface Props {
   productos: Product[];
@@ -43,6 +111,7 @@ interface Props {
 export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado }) => {
   const puede = usePermiso('almacen_ingresar_lotes');
   const empleado = useEmpleado();
+  const panel = useRef<HTMLDivElement>(null);
   const [compras, setCompras] = useState<Compra[]>([]);
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -67,6 +136,10 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   const stockBajo = productos.filter((p) => p.unit !== 'CONSUMO' && Number(p.quantity) <= Number(p.minStock));
 
   const conPermiso = (accion: string, hacer: () => void) => (puede ? hacer() : avisarSinPermiso(accion));
+  // Al cerrar una ventana el foco vuelve a la lista (o a "Nueva lista")
+  const volverFoco = (compraId?: number) => setTimeout(() => {
+    enfocar((compraId && document.querySelector<HTMLElement>(`[data-compra="${compraId}"] [data-nav]`)) || document.getElementById('btn-nueva-compra'));
+  }, 120);
 
   const enviarWhatsApp = (c: Compra) => {
     const prov = proveedores.find((p) => p.id === c.provider_id);
@@ -81,12 +154,23 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
     if (!await confirmar(`¿Anular esta lista de compras${c.proveedor ? ` de ${c.proveedor}` : ''}? No se ingresa nada al inventario.`)) return;
     const { error } = await supabase.from('compras').update({ estado: 'ANULADO' }).eq('id', c.id);
     if (error) { void avisar(`No se pudo anular: ${error.message}`); return; }
-    void cargar();
+    await cargar();
+    volverFoco();
   };
 
+  // ↑ desde la primera fila vuelve a la pestaña "Compras"
+  const teclasPanel = (e: React.KeyboardEvent) => {
+    if (editando || recibiendo) return;
+    const fila = Number((e.target as HTMLElement).dataset?.nav?.split(',')[0]);
+    if (e.key === 'ArrowUp' && fila === 0) { e.preventDefault(); enfocar(document.getElementById('btn-tab-compras')); return; }
+    moverEnGrilla(e, panel.current);
+  };
+
+  const filtros = [['PENDIENTE', 'Pendientes'], ['RECIBIDO', 'Recibidas'], ['TODAS', 'Todas']] as const;
+
   return (
-    <div id="panel-compras" className="flex flex-col gap-4 font-mono">
-      {/* Cabecera */}
+    <div id="panel-compras" ref={panel} onKeyDown={teclasPanel} className="flex flex-col gap-4 font-mono">
+      {/* Cabecera (fila 0) */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-3 sm:p-4">
         <div>
           <h2 className="text-sm sm:text-base font-black uppercase tracking-widest text-[var(--color-ink)] flex items-center gap-2"><ShoppingCart size={18} /> Listas de compras</h2>
@@ -96,20 +180,20 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {(['PENDIENTE', 'RECIBIDO', 'TODAS'] as const).map((f) => (
-            <button key={f} id={`btn-compras-filtro-${f}`} type="button" onClick={() => setFiltro(f)}
+          {filtros.map(([f, nombre], i) => (
+            <button key={f} id={`btn-compras-filtro-${f}`} type="button" data-nav={`0,${i}`} onClick={() => setFiltro(f)} aria-pressed={filtro === f}
               className={`${claseBoton} ${filtro === f ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'bg-white text-[var(--color-ink)]'}`}>
-              {f === 'PENDIENTE' ? 'Pendientes' : f === 'RECIBIDO' ? 'Recibidas' : 'Todas'}
+              {nombre}
             </button>
           ))}
-          <button id="btn-nueva-compra" type="button" onClick={() => conPermiso('armar listas de compras', () => setEditando('nueva'))}
+          <button id="btn-nueva-compra" type="button" data-nav="0,3" onClick={() => conPermiso('armar listas de compras', () => setEditando('nueva'))}
             className={`${claseBoton} bg-[var(--color-accent)] text-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)]`}>
             <Plus size={14} /> Nueva lista
           </button>
         </div>
       </div>
 
-      {/* Listas */}
+      {/* Listas (una fila de navegación por lista) */}
       {cargando ? (
         <div className="p-6 text-center text-xs font-black uppercase text-[var(--color-muted)]"><Loader2 className="inline animate-spin" size={16} /> Cargando...</div>
       ) : visibles.length === 0 ? (
@@ -118,13 +202,24 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {visibles.map((c) => {
+          {visibles.map((c, n) => {
+            const fila = n + 1;
             const total = totalDe(c.compras_detalle);
+            const parcial = c.compras_detalle.some((d) => d.batch_id != null);
             const colorEstado = c.estado === 'PENDIENTE' ? 'border-[var(--color-warning)] text-[var(--color-warning-dark)] bg-[var(--color-warning-bg)]'
               : c.estado === 'RECIBIDO' ? 'border-[var(--color-success)] text-[var(--color-success)] bg-[var(--color-accent-bg)]'
               : 'border-[var(--color-border)] text-[var(--color-muted)] bg-[var(--color-bg)]';
+            const acciones = c.estado !== 'PENDIENTE' ? [] : [
+              { clave: 'whatsapp', titulo: 'Enviar el pedido por WhatsApp', contenido: <><Send size={13} /> WhatsApp</>, clase: 'bg-white text-[var(--color-success)] border-[var(--color-success)]', hacer: () => enviarWhatsApp(c) },
+              ...(!parcial ? [{ clave: 'editar', titulo: 'Editar la lista', contenido: <>Editar</>, clase: 'bg-white text-[var(--color-ink)]', hacer: () => conPermiso('editar listas de compras', () => setEditando(c)) }] : []),
+              { clave: 'anular', titulo: 'Anular la lista', contenido: <Ban size={13} />, clase: 'bg-white text-[var(--color-muted)]', hacer: () => conPermiso('anular listas de compras', () => void anular(c)) },
+              { clave: 'recibir', titulo: 'Recibir el pedido', contenido: <><PackageCheck size={14} /> Recibir</>, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]', hacer: () => conPermiso('recibir pedidos', () => setRecibiendo(c)) },
+            ];
             return (
-              <div key={c.id} className="bg-white border-2 border-[var(--color-ink)] p-3 flex flex-col gap-2">
+              <div key={c.id} data-compra={c.id}
+                // Sin botones (recibida/anulada): la tarjeta misma se puede seleccionar
+                {...(acciones.length ? {} : { tabIndex: 0, 'data-nav': `${fila},0` })}
+                className="bg-white border-2 border-[var(--color-ink)] p-3 flex flex-col gap-2 focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)]">
                 <div className="flex justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-sm font-black uppercase text-[var(--color-ink)] truncate flex items-center gap-2"><Truck size={14} /> {c.proveedor || 'Sin proveedor'}</p>
@@ -145,17 +240,12 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
                 </ul>
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--color-border)] pt-2">
                   <span className="text-xs font-black text-[var(--color-ink)]">{c.compras_detalle.length} producto(s) · Total aprox. {soles(total)}</span>
-                  {c.estado === 'PENDIENTE' && (
+                  {acciones.length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      <button type="button" onClick={() => enviarWhatsApp(c)} title="Enviar el pedido por WhatsApp"
-                        className={`${claseBoton} bg-white text-[var(--color-success)] border-[var(--color-success)]`}><Send size={13} /> WhatsApp</button>
-                      {!c.compras_detalle.some((d) => d.batch_id != null) && ( // recibida a medias: ya no se edita
-                      <button type="button" onClick={() => conPermiso('editar listas de compras', () => setEditando(c))}
-                        className={`${claseBoton} bg-white text-[var(--color-ink)]`}>Editar</button>)}
-                      <button type="button" onClick={() => conPermiso('anular listas de compras', () => void anular(c))} title="Anular"
-                        className={`${claseBoton} bg-white text-[var(--color-muted)]`}><Ban size={13} /></button>
-                      <button type="button" onClick={() => conPermiso('recibir pedidos', () => setRecibiendo(c))}
-                        className={`${claseBoton} bg-[var(--color-ink)] text-[var(--color-accent)]`}><PackageCheck size={14} /> Recibir</button>
+                      {acciones.map((a, i) => (
+                        <button key={a.clave} id={`btn-compra-${a.clave}-${c.id}`} type="button" data-nav={`${fila},${i}`} title={a.titulo} aria-label={a.titulo}
+                          onClick={a.hacer} className={`${claseBoton} ${a.clase}`}>{a.contenido}</button>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -171,7 +261,12 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
           productos={productos}
           proveedores={proveedores}
           autor={empleado?.nombre || ''}
-          onCerrar={(guardado) => { setEditando(null); if (guardado) void cargar(); }}
+          onCerrar={async (guardadoId) => {
+            const anterior = editando === 'nueva' ? undefined : editando.id;
+            setEditando(null);
+            if (guardadoId) { setFiltro('PENDIENTE'); await cargar(); }
+            volverFoco(guardadoId || anterior);
+          }}
         />
       )}
       {recibiendo && (
@@ -179,9 +274,11 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
           compra={recibiendo}
           productos={productos}
           receptor={empleado?.nombre || ''}
-          onCerrar={(cambios) => {
+          onCerrar={async (cambios) => {
+            const id = recibiendo.id;
             setRecibiendo(null);
-            if (cambios) { onStockActualizado(cambios); void cargar(); }
+            if (cambios) { onStockActualizado(cambios); await cargar(); }
+            volverFoco(id);
           }}
         />
       )}
@@ -190,20 +287,25 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
 };
 
 // ======================================================= Ventana base (Esc cierra)
-const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.ReactNode; pie: React.ReactNode }> = ({ titulo, onCerrar, children, pie }) => {
+const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.ReactNode; pie: React.ReactNode; cuerpo: React.RefObject<HTMLDivElement | null> }> = ({ titulo, onCerrar, children, pie, cuerpo }) => {
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !document.querySelector('[data-dialogo-sistema]')) { e.preventDefault(); e.stopPropagation(); onCerrar(); }
+      if (e.key !== 'Escape' || document.querySelector('[data-dialogo-sistema]')) return;
+      // Esc en un buscador con texto: primero borra la búsqueda (lo maneja el buscador)
+      const activo = document.activeElement as HTMLInputElement | null;
+      if (activo?.dataset?.escLimpia && activo.value) return;
+      e.preventDefault(); e.stopPropagation(); onCerrar();
     };
     window.addEventListener('keydown', tecla, true);
     return () => window.removeEventListener('keydown', tecla, true);
   }, [onCerrar]);
   return (
-    <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-3xl max-h-[calc(var(--alto-pantalla,100vh)*0.94)] flex flex-col">
+    <div role="dialog" aria-modal="true" aria-label={titulo} className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-2 sm:p-4 font-mono">
+      <div ref={cuerpo} className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-3xl max-h-[calc(var(--alto-pantalla,100vh)*0.94)] flex flex-col"
+        onKeyDown={(e) => moverEnGrilla(e, cuerpo.current)}>
         <div className="bg-[var(--color-ink)] text-white px-4 py-3 flex justify-between items-center shrink-0">
           <h3 className="text-sm font-black uppercase tracking-widest text-[var(--color-accent)]">{titulo}</h3>
-          <button type="button" onClick={onCerrar} aria-label="Cerrar (Esc)" className="p-1 hover:text-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-white cursor-pointer"><X size={18} /></button>
+          <button type="button" onClick={onCerrar} aria-label="Cerrar (Esc)" tabIndex={-1} className="p-1 hover:text-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-white cursor-pointer"><X size={18} /></button>
         </div>
         <div className="p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3">{children}</div>
         <div className="p-3 border-t-2 border-[var(--color-ink)] bg-[var(--color-bg)] flex flex-wrap justify-end gap-2 shrink-0">{pie}</div>
@@ -214,20 +316,26 @@ const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.
 
 // ======================================================= Crear / editar una lista
 const EditorCompra: React.FC<{
-  compra: Compra | null; productos: Product[]; proveedores: Proveedor[]; autor: string; onCerrar: (guardado: boolean) => void;
+  compra: Compra | null; productos: Product[]; proveedores: Proveedor[]; autor: string; onCerrar: (guardadoId: number | null) => void;
 }> = ({ compra, productos, proveedores, autor, onCerrar }) => {
+  const cuerpo = useRef<HTMLDivElement>(null);
   const [proveedorId, setProveedorId] = useState(compra?.provider_id || '');
   const [notas, setNotas] = useState(compra?.notas || '');
   const [items, setItems] = useState<Item[]>(compra?.compras_detalle.map((d) => ({
     product_id: String(d.product_id), product_name: d.product_name, cantidad: Number(d.cantidad), costo_unit: Number(d.costo_unit),
   })) || []);
   const [busqueda, setBusqueda] = useState('');
+  const [marcado, setMarcado] = useState(-1); // resultado marcado con ↑ ↓ (-1 = escribiendo)
   const [guardando, setGuardando] = useState(false);
+  const ocupado = useRef(false); // un segundo Enter mientras guarda no hace nada
   const porId = useMemo(() => new Map(productos.map((p) => [String(p.id), p])), [productos]);
+
+  // Al abrir: una lista nueva empieza por el proveedor; una existente, por el buscador
+  useEffect(() => { setTimeout(() => enfocar(document.getElementById(compra ? 'compra-buscar' : 'compra-proveedor')), 30); }, []);
 
   const agregar = (p: Product, cantidad = 1) => setItems((prev) => (prev.some((i) => i.product_id === String(p.id))
     ? prev
-    : [...prev, { product_id: String(p.id), product_name: p.name, cantidad, costo_unit: Number(p.cost) || 0, unidad: p.unit }]));
+    : [...prev, { product_id: String(p.id), product_name: p.name, cantidad, costo_unit: Math.round((Number(p.cost) || 0) * 100) / 100, unidad: p.unit }]));
   const agregarStockBajo = () => {
     const bajos = productos.filter((p) => p.unit !== 'CONSUMO' && Number(p.quantity) <= Number(p.minStock));
     if (!bajos.length) { void avisar('No hay productos con stock bajo. 👍'); return; }
@@ -235,14 +343,43 @@ const EditorCompra: React.FC<{
   };
   const cambiar = (id: string, campo: 'cantidad' | 'costo_unit', valor: string) =>
     setItems((prev) => prev.map((i) => (i.product_id === id ? { ...i, [campo]: Math.max(0, Number(valor) || 0) } : i)));
+  const quitar = (id: string, fila: number) => {
+    setItems((prev) => prev.filter((x) => x.product_id !== id));
+    // El foco pasa a la fila que quedó en su lugar (o al buscador si ya no hay)
+    setTimeout(() => enfocar(cuerpo.current?.querySelector<HTMLElement>(`[data-nav="${fila},2"]`)
+      || cuerpo.current?.querySelector<HTMLElement>(`[data-nav="${fila - 1},2"]`) || document.getElementById('compra-buscar')), 30);
+  };
 
   const resultados = busqueda.trim().length >= 2
     ? productos.filter((p) => coincideBusqueda([p.name, p.code, p.barcode], busqueda) && !items.some((i) => i.product_id === String(p.id))).slice(0, 8)
     : [];
+  useEffect(() => { setMarcado(-1); }, [busqueda]);
+  const elegir = (p: Product) => {
+    agregar(p);
+    setBusqueda('');
+    // Queda listo para escribir la cantidad del producto recién agregado
+    setTimeout(() => enfocar(cuerpo.current?.querySelector<HTMLElement>(`[data-producto="${p.id}"] input`)), 30);
+  };
+
+  const teclasBuscador = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (resultados.length) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); setMarcado((m) => Math.min(resultados.length - 1, m + 1)); return; }
+      if (e.key === 'ArrowUp' && marcado >= 0) { e.preventDefault(); e.stopPropagation(); setMarcado((m) => m - 1); return; }
+      if (e.key === 'Enter') { e.preventDefault(); elegir(resultados[Math.max(0, marcado)]); return; }
+    }
+    if (e.key === 'Escape' && busqueda) { e.preventDefault(); setBusqueda(''); return; }
+    // Sin resultados: Enter pasa a la primera cantidad de la lista (o a Guardar)
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      enfocar(cuerpo.current?.querySelector<HTMLElement>('[data-producto] input') || document.getElementById('btn-guardar-compra'));
+    }
+  };
 
   const guardar = async () => {
+    if (ocupado.current) return;
     const validos = items.filter((i) => i.cantidad > 0);
     if (!validos.length) { void avisar('Agrega al menos un producto con cantidad.'); return; }
+    ocupado.current = true;
     setGuardando(true);
     try {
       const prov = proveedores.find((p) => p.id === proveedorId);
@@ -260,56 +397,60 @@ const EditorCompra: React.FC<{
         compra_id: id, product_id: Number(i.product_id), product_name: i.product_name, cantidad: i.cantidad, costo_unit: i.costo_unit,
       })));
       if (r3.error) throw r3.error;
-      onCerrar(true);
+      onCerrar(id);
     } catch (e: any) {
       void avisar(`No se pudo guardar la lista: ${e?.message || e}`);
     } finally {
+      ocupado.current = false;
       setGuardando(false);
     }
   };
 
   return (
-    <Ventana titulo={compra ? `Editar pedido #${String(compra.id).slice(-6)}` : 'Nueva lista de compras'} onCerrar={() => onCerrar(false)}
+    <Ventana cuerpo={cuerpo} titulo={compra ? `Editar pedido #${String(compra.id).slice(-6)}` : 'Nueva lista de compras'} onCerrar={() => onCerrar(null)}
       pie={<>
-        <button type="button" onClick={() => onCerrar(false)} className={`${claseBoton} bg-white text-[var(--color-ink)]`}>Cancelar</button>
-        <button id="btn-guardar-compra" type="button" disabled={guardando} onClick={() => void guardar()}
-          className={`${claseBoton} bg-[var(--color-ink)] text-[var(--color-accent)]`}>{guardando ? 'Guardando...' : 'Guardar lista'}</button>
+        <span className="mr-auto self-center text-[10px] font-bold text-[var(--color-muted)] uppercase hidden sm:inline">Flechas para moverte · Enter siguiente · Esc cerrar</span>
+        <button type="button" data-nav={`${FILA_PIE},0`} onClick={() => onCerrar(null)} className={`${claseBoton} bg-white text-[var(--color-ink)]`}>Cancelar</button>
+        <button id="btn-guardar-compra" type="button" data-nav={`${FILA_PIE},1`} aria-disabled={guardando} onClick={() => void guardar()}
+          className={`${claseBoton} bg-[var(--color-ink)] text-[var(--color-accent)] ${guardando ? 'opacity-60' : ''}`}>{guardando ? 'Guardando...' : 'Guardar lista'}</button>
       </>}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <label className="space-y-1">
-          <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-ink)]">Proveedor</span>
-          <select id="compra-proveedor" value={proveedorId} onChange={(e) => setProveedorId(e.target.value)} className={claseInput}>
+          <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-ink)]">Proveedor (Enter para elegir)</span>
+          <select id="compra-proveedor" data-nav="0,0" value={proveedorId} onChange={(e) => setProveedorId(e.target.value)} onKeyDown={abrirLista} className={claseInput}>
             <option value="">— Sin proveedor —</option>
             {proveedores.map((p) => <option key={p.id} value={p.id}>{p.razon_social}</option>)}
           </select>
         </label>
         <label className="space-y-1">
           <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-ink)]">Nota para el proveedor (opcional)</span>
-          <input value={notas} onChange={(e) => setNotas(e.target.value)} maxLength={200} placeholder="Ej: entregar el lunes en la mañana" className={claseInput} />
+          <input id="compra-notas" data-nav="0,1" value={notas} onChange={(e) => setNotas(e.target.value)} maxLength={200} placeholder="Ej: entregar el lunes en la mañana"
+            onKeyDown={(e) => siguienteCampo(e, cuerpo.current, 'btn-guardar-compra')} className={claseInput} />
         </label>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
-          <input id="compra-buscar" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar producto para agregar..."
-            onKeyDown={(e) => { if (e.key === 'Enter' && resultados[0]) { e.preventDefault(); agregar(resultados[0]); setBusqueda(''); } }}
+          <input id="compra-buscar" data-nav="1,0" data-esc-limpia="1" value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
+            placeholder="Buscar producto para agregar... (↓ para elegir)" onKeyDown={teclasBuscador} autoComplete="off"
+            role="combobox" aria-expanded={resultados.length > 0} aria-controls="compra-resultados"
+            aria-activedescendant={marcado >= 0 ? `compra-resultado-${marcado}` : undefined}
             className={`${claseInput} pl-7`} />
           {resultados.length > 0 && (
-            <ul className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-56 overflow-auto">
-              {resultados.map((p) => (
-                <li key={p.id}>
-                  <button type="button" onClick={() => { agregar(p); setBusqueda(''); document.getElementById('compra-buscar')?.focus(); }}
-                    className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-[var(--color-bg)] focus:bg-[var(--color-accent-bg)] focus:outline-none flex justify-between gap-2 cursor-pointer">
-                    <span className="truncate">{p.name}</span>
-                    <span className={`shrink-0 ${Number(p.quantity) <= Number(p.minStock) ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>stock {p.quantity}</span>
-                  </button>
+            <ul id="compra-resultados" role="listbox" className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-56 overflow-auto">
+              {resultados.map((p, i) => (
+                <li key={p.id} id={`compra-resultado-${i}`} role="option" aria-selected={marcado === i}
+                  onMouseDown={(e) => { e.preventDefault(); elegir(p); }}
+                  className={`px-3 py-2 text-xs font-bold flex justify-between gap-2 cursor-pointer ${marcado === i ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'hover:bg-[var(--color-bg)]'}`}>
+                  <span className="truncate">{p.name}</span>
+                  <span className={`shrink-0 ${marcado === i ? '' : Number(p.quantity) <= Number(p.minStock) ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>stock {p.quantity}</span>
                 </li>
               ))}
             </ul>
           )}
         </div>
-        <button type="button" onClick={agregarStockBajo} className={`${claseBoton} bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] border-[var(--color-warning)]`}>
+        <button type="button" data-nav="1,1" onClick={agregarStockBajo} className={`${claseBoton} bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] border-[var(--color-warning)]`}>
           <AlertTriangle size={14} /> Agregar stock bajo
         </button>
       </div>
@@ -325,16 +466,22 @@ const EditorCompra: React.FC<{
               <th className="p-1">Producto</th><th className="p-1 w-20">Stock</th><th className="p-1 w-24">Pedir</th><th className="p-1 w-24">Costo u.</th><th className="p-1 w-24 text-right">Subtotal</th><th className="w-8" />
             </tr></thead>
             <tbody>
-              {items.map((i) => {
+              {items.map((i, n) => {
                 const p = porId.get(i.product_id);
+                const fila = 2 + n;
                 return (
-                  <tr key={i.product_id} className="border-t border-[var(--color-border)]">
+                  <tr key={i.product_id} data-producto={i.product_id} className="border-t border-[var(--color-border)]">
                     <td className="p-1 font-black">{i.product_name}</td>
                     <td className={`p-1 font-bold ${p && Number(p.quantity) <= Number(p.minStock) ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>{p ? `${p.quantity} / mín ${p.minStock}` : '-'}</td>
-                    <td className="p-1"><input type="number" min="0" step={esPeso(p) ? '0.01' : '1'} value={i.cantidad} onChange={(e) => cambiar(i.product_id, 'cantidad', e.target.value)} className={claseInput} aria-label={`Cantidad de ${i.product_name}`} /></td>
-                    <td className="p-1"><input type="number" min="0" step="0.01" value={i.costo_unit} onChange={(e) => cambiar(i.product_id, 'costo_unit', e.target.value)} className={claseInput} aria-label={`Costo de ${i.product_name}`} /></td>
+                    <td className="p-1"><input type="number" data-nav={`${fila},0`} min="0" step={esPeso(p) ? '0.01' : '1'} value={i.cantidad}
+                      onChange={(e) => cambiar(i.product_id, 'cantidad', e.target.value)} onKeyDown={(e) => siguienteCampo(e, cuerpo.current, 'btn-guardar-compra')}
+                      className={claseInput} aria-label={`Cantidad de ${i.product_name}`} /></td>
+                    <td className="p-1"><input type="number" data-nav={`${fila},1`} min="0" step="0.01" value={i.costo_unit}
+                      onChange={(e) => cambiar(i.product_id, 'costo_unit', e.target.value)} onKeyDown={(e) => siguienteCampo(e, cuerpo.current, 'btn-guardar-compra')}
+                      className={claseInput} aria-label={`Costo de ${i.product_name}`} /></td>
                     <td className="p-1 text-right font-black">{soles(i.cantidad * i.costo_unit)}</td>
-                    <td className="p-1"><button type="button" onClick={() => setItems((prev) => prev.filter((x) => x.product_id !== i.product_id))} aria-label={`Quitar ${i.product_name}`} className="p-1 text-[var(--color-muted)] hover:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-danger)] cursor-pointer"><Trash2 size={14} /></button></td>
+                    <td className="p-1"><button type="button" data-nav={`${fila},2`} onClick={() => quitar(i.product_id, fila)} aria-label={`Quitar ${i.product_name}`} title="Quitar (Enter)"
+                      className="p-1 text-[var(--color-muted)] hover:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-danger)] cursor-pointer"><Trash2 size={14} /></button></td>
                   </tr>
                 );
               })}
@@ -351,6 +498,7 @@ const EditorCompra: React.FC<{
 const RecibirCompra: React.FC<{
   compra: Compra; productos: Product[]; receptor: string; onCerrar: (cambios: { id: string; quantity: number }[] | null) => void;
 }> = ({ compra, productos, receptor, onCerrar }) => {
+  const cuerpo = useRef<HTMLDivElement>(null);
   // Lo que ya entró en un intento anterior (tiene lote) no se vuelve a ingresar
   const [filas, setFilas] = useState(compra.compras_detalle.filter((d) => d.batch_id == null).map((d) => ({
     detalle_id: d.id, product_id: String(d.product_id), product_name: d.product_name,
@@ -358,14 +506,19 @@ const RecibirCompra: React.FC<{
   })));
   const [documento, setDocumento] = useState('');
   const [guardando, setGuardando] = useState(false);
+  const ocupado = useRef(false); // un segundo Enter mientras ingresa no hace nada (no duplica lotes)
   const porId = useMemo(() => new Map(productos.map((p) => [String(p.id), p])), [productos]);
   const cambiar = (i: number, campo: 'llego' | 'costo' | 'vence', valor: string) => setFilas((prev) => prev.map((f, j) => (j === i ? { ...f, [campo]: valor } : f)));
   const total = filas.reduce((t, f) => t + (Number(f.llego) || 0) * (Number(f.costo) || 0), 0);
 
+  useEffect(() => { setTimeout(() => enfocar(document.getElementById('compra-documento')), 30); }, []);
+
   const recibir = async () => {
+    if (ocupado.current) return;
     const llegan = filas.filter((f) => Number(f.llego) > 0);
     if (!llegan.length) { void avisar('Escribe cuánto llegó de al menos un producto.'); return; }
-    if (!await confirmar(`¿Ingresar al inventario ${llegan.length} producto(s) por ${soles(total)}?\nSe creará un lote por cada producto.`)) return;
+    ocupado.current = true;
+    if (!await confirmar(`¿Ingresar al inventario ${llegan.length} producto(s) por ${soles(total)}?\nSe creará un lote por cada producto.`)) { ocupado.current = false; return; }
     setGuardando(true);
     const doc = documento.trim() || `COMPRA #${String(compra.id).slice(-6)}`;
     const cambios: { id: string; quantity: number }[] = [];
@@ -410,6 +563,7 @@ const RecibirCompra: React.FC<{
       }).eq('id', compra.id);
     }
     setGuardando(false);
+    ocupado.current = false;
     if (fallidos.length) {
       await avisar(`⚠️ Se ingresaron ${cambios.length} de ${llegan.length}. No se pudieron ingresar:\n${fallidos.join('\n')}\n\nEl pedido sigue PENDIENTE: al volver a "Recibir" solo aparecerá lo que faltó.`);
     } else {
@@ -419,21 +573,22 @@ const RecibirCompra: React.FC<{
   };
 
   return (
-    <Ventana titulo={`Recibir pedido #${String(compra.id).slice(-6)} · ${compra.proveedor || 'Sin proveedor'}`} onCerrar={() => onCerrar(null)}
+    <Ventana cuerpo={cuerpo} titulo={`Recibir pedido #${String(compra.id).slice(-6)} · ${compra.proveedor || 'Sin proveedor'}`} onCerrar={() => onCerrar(null)}
       pie={<>
         <span className="mr-auto self-center text-sm font-black text-[var(--color-ink)]">Total: {soles(total)}</span>
-        <button type="button" onClick={() => onCerrar(null)} className={`${claseBoton} bg-white text-[var(--color-ink)]`}>Cancelar</button>
-        <button id="btn-confirmar-recepcion" type="button" disabled={guardando} onClick={() => void recibir()}
-          className={`${claseBoton} bg-[var(--color-ink)] text-[var(--color-accent)]`}>
+        <button type="button" data-nav={`${FILA_PIE},0`} onClick={() => onCerrar(null)} className={`${claseBoton} bg-white text-[var(--color-ink)]`}>Cancelar</button>
+        <button id="btn-confirmar-recepcion" type="button" data-nav={`${FILA_PIE},1`} aria-disabled={guardando} onClick={() => void recibir()}
+          className={`${claseBoton} bg-[var(--color-ink)] text-[var(--color-accent)] ${guardando ? 'opacity-60' : ''}`}>
           {guardando ? <><Loader2 size={14} className="animate-spin" /> Ingresando...</> : <><PackageCheck size={14} /> Ingresar al inventario</>}
         </button>
       </>}>
       <p className="text-[11px] font-bold text-[var(--color-muted)]">
-        Revisa lo que llegó. Si algo no vino, déjalo en 0. Puedes corregir el costo según la factura.
+        Revisa lo que llegó. Si algo no vino, déjalo en 0. Puedes corregir el costo según la factura. Flechas para moverte · Enter siguiente.
       </p>
       <label className="space-y-1 max-w-sm">
         <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-ink)]">N° de factura o boleta (opcional)</span>
-        <input id="compra-documento" value={documento} onChange={(e) => setDocumento(e.target.value)} maxLength={40} placeholder="Ej: F001-000123" className={claseInput} />
+        <input id="compra-documento" data-nav="0,0" value={documento} onChange={(e) => setDocumento(e.target.value)} maxLength={40} placeholder="Ej: F001-000123"
+          onKeyDown={(e) => siguienteCampo(e, cuerpo.current, 'btn-confirmar-recepcion')} className={claseInput} />
       </label>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
@@ -443,13 +598,15 @@ const RecibirCompra: React.FC<{
           <tbody>
             {filas.map((f, i) => {
               const p = porId.get(f.product_id);
+              const fila = 1 + i;
+              const enter = (e: React.KeyboardEvent) => siguienteCampo(e, cuerpo.current, 'btn-confirmar-recepcion');
               return (
                 <tr key={f.detalle_id} className="border-t border-[var(--color-border)]">
                   <td className="p-1 font-black">{f.product_name}</td>
                   <td className="p-1 font-bold text-[var(--color-muted)]">{f.pedida}</td>
-                  <td className="p-1"><input type="number" min="0" step={esPeso(p) ? '0.01' : '1'} value={f.llego} onChange={(e) => cambiar(i, 'llego', e.target.value)} className={claseInput} aria-label={`Llegó de ${f.product_name}`} /></td>
-                  <td className="p-1"><input type="number" min="0" step="0.01" value={f.costo} onChange={(e) => cambiar(i, 'costo', e.target.value)} className={claseInput} aria-label={`Costo de ${f.product_name}`} /></td>
-                  <td className="p-1"><input type="date" value={f.vence} onChange={(e) => cambiar(i, 'vence', e.target.value)} className={claseInput} aria-label={`Vencimiento de ${f.product_name}`} /></td>
+                  <td className="p-1"><input type="number" data-nav={`${fila},0`} min="0" step={esPeso(p) ? '0.01' : '1'} value={f.llego} onChange={(e) => cambiar(i, 'llego', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Llegó de ${f.product_name}`} /></td>
+                  <td className="p-1"><input type="number" data-nav={`${fila},1`} min="0" step="0.01" value={f.costo} onChange={(e) => cambiar(i, 'costo', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Costo de ${f.product_name}`} /></td>
+                  <td className="p-1"><input type="date" data-nav={`${fila},2`} value={f.vence} onChange={(e) => cambiar(i, 'vence', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Vencimiento de ${f.product_name}`} /></td>
                 </tr>
               );
             })}
