@@ -1,7 +1,7 @@
 import { traerTodo } from '../../utils/traerTodo';
 import { coincideBusqueda } from '../../utils/busqueda';
 import React, { useState, useEffect, useMemo } from 'react';
-import { Package, Layers, Box, AlertTriangle, LayoutGrid, Plus, Database, Activity, Users } from 'lucide-react';
+import { Package, Layers, Box, AlertTriangle, LayoutGrid, Plus, Database, Activity, Users, ShoppingCart } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import { usePermiso, avisarSinPermiso } from '../../utils/permisos';
 import { useConexion } from '../../layout/BarraConexion';
@@ -14,12 +14,13 @@ import { ModalProducto } from './components/ModalProducto';
 import { TablaLotes } from './components/TablaLotes';
 import { ModalGestionProveedores } from './components/ModalGestionProveedores';
 import { ModalLote } from './components/ModalLote';
+import { PanelCompras } from './components/PanelCompras';
 
 interface InventarioProps {
   onNavigate?: (view: string) => void;
 }
 export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
-  const [vistaActiva, setVistaActiva] = useState<'PRODUCTOS' | 'LOTES'>('PRODUCTOS');
+  const [vistaActiva, setVistaActiva] = useState<'PRODUCTOS' | 'LOTES' | 'COMPRAS'>('PRODUCTOS');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalProveedoresOpen, setIsModalProveedoresOpen] = useState(false);
   // Permisos de almacén (el servidor también los exige)
@@ -263,6 +264,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
       if (isModalOpen || isModalLoteOpen || isModalProveedoresOpen || document.querySelector('.fixed.inset-0.z-50')) return;
 
       const active = document.activeElement as HTMLElement;
+      if (active?.closest?.('#panel-compras')) return; // Compras maneja su propio teclado
 
       // 🛡️ PRIORIDAD DEL SIDEBAR: Si el sidebar está abierto o el foco está en el menú lateral, Inventario no interfiere
       const sidebar = document.getElementById('evicamp-sidebar');
@@ -458,7 +460,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('btn-tab-productos')?.focus();
                   } else if (e.key === 'ArrowRight') {
                     e.preventDefault();
-                    document.getElementById('btn-nuevo-producto')?.focus();
+                    document.getElementById('btn-tab-compras')?.focus();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
                     document.getElementById('buscador-global-inventario')?.focus();
@@ -467,6 +469,29 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer border-l-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${vistaActiva === 'LOTES' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'}`}
               >
                 <Layers size={14} /> Lotes
+              </button>
+              {/* Listas de compras a proveedores; al recibir el pedido se crean los lotes (components/PanelCompras.tsx) */}
+              <button
+                id="btn-tab-compras"
+                onClick={() => setVistaActiva('COMPRAS')}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    document.getElementById('btn-tab-lotes')?.focus();
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    document.getElementById('btn-nuevo-producto')?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    document.getElementById('btn-nueva-compra')?.focus();
+                  }
+                }}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer border-l-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${vistaActiva === 'COMPRAS' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'}`}
+              >
+                <ShoppingCart size={14} /> Compras
               </button>
             </div>
           </div>
@@ -553,7 +578,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         </div>
       )}
 
-      <FiltrosInventario
+      {vistaActiva !== 'COMPRAS' && <FiltrosInventario
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         matchCount={filteredProducts.length}
@@ -565,7 +590,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         filtroOrden={filtroOrden}
         setFiltroOrden={setFiltroOrden}
         onClearFilters={handleClearFilters}
-      />
+      />}
 
       <div className="px-3 sm:px-6 lg:px-8 flex flex-col relative pb-3 sm:pb-6 lg:pb-8">
         <div className={`${vistaActiva === 'PRODUCTOS' ? 'flex flex-col' : 'hidden'}`}>
@@ -609,6 +634,16 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   // ===========================
 />
         </div>
+        {vistaActiva === 'COMPRAS' && (
+          <PanelCompras
+            productos={products}
+            onStockActualizado={(cambios) => {
+              const nuevo = new Map(cambios.map((c) => [String(c.id), c.quantity]));
+              setProducts((prev) => prev.map((p) => (nuevo.has(String(p.id)) ? { ...p, quantity: nuevo.get(String(p.id))! } : p)));
+              setRefreshLotesKey((k) => k + 1); // la pestaña Lotes muestra los lotes nuevos
+            }}
+          />
+        )}
         <div className={`${vistaActiva === 'LOTES' ? 'flex flex-col' : 'hidden'}`}>
           <TablaLotes 
             key={refreshLotesKey} // 🛡️ EVICAMP: Al cambiar esta variable, React destruye y vuelve a crear la tabla fresca

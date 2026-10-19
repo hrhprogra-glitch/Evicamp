@@ -57,6 +57,13 @@ AS $$
     WHEN 'POST /rpc/fn_edit_batch'          THEN ARRAY['almacen_ingresar_lotes']
     WHEN 'POST /rpc/fn_soft_delete_batch'   THEN ARRAY['almacen_ingresar_lotes', 'almacen_eliminar_productos']
     WHEN 'POST /rpc/fn_soft_delete_product' THEN ARRAY['almacen_eliminar_productos']
+    -- COMPRAS (Inventario > Compras: listas de pedido y "Recibir pedido", que crea los lotes)
+    WHEN 'POST /compras'             THEN ARRAY['almacen_ingresar_lotes']
+    WHEN 'PATCH /compras'            THEN ARRAY['almacen_ingresar_lotes']
+    WHEN 'DELETE /compras'           THEN ARRAY['almacen_ingresar_lotes']
+    WHEN 'POST /compras_detalle'     THEN ARRAY['almacen_ingresar_lotes']
+    WHEN 'PATCH /compras_detalle'    THEN ARRAY['almacen_ingresar_lotes']
+    WHEN 'DELETE /compras_detalle'   THEN ARRAY['almacen_ingresar_lotes']
     -- GERENCIA
     WHEN 'PATCH /empresa_config'     THEN ARRAY['gerencia_configuracion_sistema']
     WHEN 'POST /empresa_config'      THEN ARRAY['gerencia_configuracion_sistema']
@@ -298,4 +305,40 @@ CREATE UNIQUE INDEX IF NOT EXISTS debt_payments_ref_local       ON public.debt_p
 CREATE UNIQUE INDEX IF NOT EXISTS cash_movements_ref_local      ON public.cash_movements (ref_local)      WHERE ref_local IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS waste_ref_local               ON public.waste (ref_local)               WHERE ref_local IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS inventory_movements_ref_local ON public.inventory_movements (ref_local) WHERE ref_local IS NOT NULL;
+
+-- COMPRAS (Inventario > Compras): lista de lo que hay que pedir a cada proveedor. Al llegar la mercadería,
+-- "Recibir pedido" crea los lotes (como "Ingresar lote") y la compra queda RECIBIDA.
+CREATE TABLE IF NOT EXISTS public.compras (
+  id            bigint PRIMARY KEY,                     -- lo genera la PC (como los lotes)
+  provider_id   text,                                   -- providers.id (puede quedar vacío: "sin proveedor")
+  proveedor     text,                                   -- nombre al momento de crearla
+  estado        text NOT NULL DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'RECIBIDO', 'ANULADO')),
+  notas         text,
+  documento     text,                                   -- factura / boleta con que llegó
+  autor         text,                                   -- quién la armó
+  recibido_por  text,
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  recibido_at   timestamptz
+);
+CREATE TABLE IF NOT EXISTS public.compras_detalle (
+  id                bigserial PRIMARY KEY,
+  compra_id         bigint NOT NULL REFERENCES public.compras (id) ON DELETE CASCADE,
+  product_id        bigint NOT NULL,
+  product_name      text NOT NULL,
+  cantidad          numeric NOT NULL DEFAULT 0 CHECK (cantidad >= 0),   -- lo que se pide
+  costo_unit        numeric NOT NULL DEFAULT 0 CHECK (costo_unit >= 0), -- costo esperado (último lote)
+  cantidad_recibida numeric,                                            -- lo que llegó (al recibir)
+  batch_id          bigint                                              -- lote creado al recibir
+);
+CREATE INDEX IF NOT EXISTS compras_detalle_compra ON public.compras_detalle (compra_id);
+DO $$
+DECLARE r text;
+BEGIN
+  FOREACH r IN ARRAY ARRAY['anon', 'web_anon'] LOOP
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN
+      EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON public.compras, public.compras_detalle TO %I', r);
+      EXECUTE format('GRANT USAGE, SELECT ON SEQUENCE public.compras_detalle_id_seq TO %I', r);
+    END IF;
+  END LOOP;
+END $$;
 NOTIFY pgrst, 'reload schema';
