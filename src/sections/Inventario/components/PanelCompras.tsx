@@ -10,7 +10,7 @@
 // flechas van al vecino más cercano en esa dirección (moverEnGrilla). En los campos de número ↑ ↓ ya no
 // cambian el valor sin querer; Enter pasa al siguiente campo. Esc cierra las ventanas.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, AlertTriangle, Loader2, Ban } from 'lucide-react';
+import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, AlertTriangle, Loader2, Ban, Undo2 } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { usePermiso, useEmpleado, avisarSinPermiso } from '../../../utils/permisos';
 import { avisar, confirmar } from '../../../utils/dialogos';
@@ -118,13 +118,17 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   const [filtro, setFiltro] = useState<'PENDIENTE' | 'RECIBIDO' | 'TODAS'>('PENDIENTE');
   const [editando, setEditando] = useState<Compra | 'nueva' | null>(null);
   const [recibiendo, setRecibiendo] = useState<Compra | null>(null);
+  const [viendo, setViendo] = useState<Compra | null>(null); // detalle abierto (Enter sobre una lista)
+  const [empresa, setEmpresa] = useState({ nombre: '', telefono: '' }); // WhatsApp de Ajustes
 
   const cargar = async () => {
     setCargando(true);
-    const [c, p] = await Promise.all([
+    const [c, p, e] = await Promise.all([
       supabase.from('compras').select('*, compras_detalle(*)').order('created_at', { ascending: false }).limit(200),
       supabase.from('providers').select('id, razon_social, telefono').eq('estado', 'ACTIVO').order('razon_social'),
+      supabase.from('empresa_config').select('nombre_empresa, telefono').limit(1).maybeSingle(),
     ]);
+    setEmpresa({ nombre: String(e.data?.nombre_empresa || ''), telefono: String(e.data?.telefono || '') });
     if (c.error) void avisar(`No se pudieron cargar las compras: ${c.error.message}`);
     setCompras((c.data as Compra[]) || []);
     setProveedores((p.data as Proveedor[]) || []);
@@ -165,33 +169,100 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   const conPermiso = (accion: string, hacer: () => void) => (puede ? hacer() : avisarSinPermiso(accion));
   // Al cerrar una ventana el foco vuelve a la lista (o a "Nueva lista")
   const volverFoco = (compraId?: number) => setTimeout(() => {
-    enfocar((compraId && document.querySelector<HTMLElement>(`[data-compra="${compraId}"] [data-nav]`)) || document.getElementById('btn-nueva-compra'));
-  }, 120);
+    enfocar((compraId && document.querySelector<HTMLElement>(`[data-compra="${compraId}"]`)) || document.getElementById('btn-nueva-compra'));
+  }, 350); // después de que los avisos devuelvan su foco (navegacionSesion), para que no lo pisen
 
+  // WhatsApp de Ajustes > Datos de la empresa (Teléfono): el detalle se envía a ESE número
   const enviarWhatsApp = (c: Compra) => {
-    const prov = proveedores.find((p) => p.id === c.provider_id);
-    const lineas = c.compras_detalle.map((d) => `• ${d.cantidad} x ${d.product_name}`).join('\n');
-    const texto = `Hola${c.proveedor ? ` ${c.proveedor}` : ''}, le escribo para hacer este pedido:\n\n${lineas}${c.notas ? `\n\nNota: ${c.notas}` : ''}\n\nGracias.`;
-    const numero = String(prov?.telefono || '').replace(/\D/g, '');
+    const recibida = c.estado === 'RECIBIDO';
+    const lineas = c.compras_detalle.map((d) => {
+      const cant = recibida ? (d.cantidad_recibida ?? 0) : d.cantidad;
+      return `• ${cant} x ${d.product_name}  (S/ ${(Number(d.costo_unit) || 0).toFixed(2)} c/u)`;
+    }).join('\n');
+    const total = totalDe(c.compras_detalle.map((d) => ({ cantidad: recibida ? Number(d.cantidad_recibida ?? 0) : d.cantidad, costo_unit: d.costo_unit })));
+    const texto = [
+      `*${recibida ? 'Compra recibida' : 'Pedido de compra'} #${String(c.id).slice(-6)}*${empresa.nombre ? ` · ${empresa.nombre}` : ''}`,
+      `Proveedor: ${c.proveedor || 'Sin proveedor'}`,
+      `Fecha: ${fecha(c.created_at)}${recibida ? ` · recibido ${fecha(c.recibido_at)}${c.documento ? ` (${c.documento})` : ''}` : ''}`,
+      '', lineas, '', `Total aprox.: ${soles(total)}`,
+      ...(c.notas ? ['', `Nota: ${c.notas}`] : []),
+    ].join('\n');
+    const numero = empresa.telefono.replace(/\D/g, '');
     const destino = numero.length === 9 ? `51${numero}` : numero; // celular peruano sin código de país
+    if (!destino) void avisar('📱 No hay un número de WhatsApp en Ajustes > Datos de la empresa (Teléfono). Se abrirá WhatsApp para que elijas el chat; si lo registras en Ajustes, se enviará siempre a ese número.');
     window.open(`https://wa.me/${destino}?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
   };
 
   const anular = async (c: Compra) => {
-    if (!await confirmar(`¿Anular esta lista de compras${c.proveedor ? ` de ${c.proveedor}` : ''}? No se ingresa nada al inventario.`)) return;
+    if (!await confirmar(`¿Anular esta lista de compras${c.proveedor ? ` de ${c.proveedor}` : ''}? No se ingresa nada al inventario.`)) return false;
     const { error } = await supabase.from('compras').update({ estado: 'ANULADO' }).eq('id', c.id);
-    if (error) { void avisar(`No se pudo anular: ${error.message}`); return; }
+    if (error) { void avisar(`No se pudo anular: ${error.message}`); return false; }
     await cargar();
     volverFoco();
+    return true;
+  };
+
+  // "Devolver lo ingresado": la compra recibida vuelve a PENDIENTE y sus lotes se retiran (fn_soft_delete_batch,
+  // la misma función de "Retirar lote"). Solo si esa mercadería no se movió (vendida o mermada): si no, el
+  // stock quedaría mal.
+  const devolver = async (c: Compra) => {
+    const conLote = c.compras_detalle.filter((d) => d.batch_id != null);
+    if (!conLote.length) { void avisar('Esta compra no tiene lotes ingresados.'); return false; }
+    const { data: lotes, error } = await supabase.from('batches').select('id, quantity, initial_quantity, is_active').in('id', conLote.map((d) => d.batch_id!));
+    if (error) { void avisar(`No se pudo revisar los lotes: ${error.message}`); return false; }
+    const movidos = conLote.filter((d) => {
+      const l = (lotes || []).find((x: any) => String(x.id) === String(d.batch_id));
+      return !l || Number(l.is_active) !== 1 || Number(l.quantity) < Number(d.cantidad_recibida ?? 0);
+    });
+    if (movidos.length) {
+      void avisar(`⚠️ No se puede devolver esta compra.\n\nEstos productos ya se vendieron, se mermaron o su lote se retiró:\n${movidos.map((d) => `• ${d.product_name}`).join('\n')}\n\nSi hubo un error, corrige el stock desde Inventario > Lotes.`);
+      return false;
+    }
+    if (!await confirmar(
+      `↩️ DEVOLVER LO INGRESADO\n\nUsa esto si te equivocaste al recibir (cantidades, costos o el pedido equivocado):\n\n`
+      + `• Se retirarán del inventario los ${conLote.length} lote(s) que se crearon.\n`
+      + `• El stock vuelve a como estaba antes de recibir.\n`
+      + `• La compra vuelve a PENDIENTES: puedes editarla y recibirla de nuevo.\n\n¿Devolver?`,
+    )) return false;
+    const fallidos: string[] = [];
+    const cambios: { id: string; quantity: number }[] = [];
+    for (const d of conLote) {
+      const { error: e1 } = await supabase.rpc('fn_soft_delete_batch', { p_batch_id: String(d.batch_id), p_user_name: `${empleado?.nombre || 'Sistema'} (devolución compra #${String(c.id).slice(-6)})` });
+      if (e1) { fallidos.push(`${d.product_name}: ${e1.message}`); continue; }
+      await supabase.from('compras_detalle').update({ cantidad_recibida: null, batch_id: null }).eq('id', d.id);
+      const { data: p } = await supabase.from('products').select('quantity').eq('id', d.product_id).single();
+      cambios.push({ id: String(d.product_id), quantity: Number(p?.quantity || 0) });
+    }
+    if (!fallidos.length) {
+      await supabase.from('compras').update({ estado: 'PENDIENTE', recibido_at: null, recibido_por: null, documento: null }).eq('id', c.id);
+      await supabase.from('compras_detalle').update({ cantidad_recibida: null }).eq('compra_id', c.id);
+    }
+    if (cambios.length) onStockActualizado(cambios);
+    await cargar();
+    await avisar(fallidos.length
+      ? `⚠️ Se devolvieron ${cambios.length} de ${conLote.length}. No se pudo con:\n${fallidos.join('\n')}`
+      : `✅ Compra devuelta. Los lotes se retiraron y la compra volvió a PENDIENTES (pedido #${String(c.id).slice(-6)}).`);
+    setFiltro('PENDIENTE');
+    volverFoco(c.id);
+    return true;
   };
 
   // ↑ desde la primera fila vuelve a la pestaña "Compras"
   const teclasPanel = (e: React.KeyboardEvent) => {
-    if (editando || recibiendo) return;
+    if (editando || recibiendo || viendo) return;
     const fila = Number((e.target as HTMLElement).dataset?.nav?.split(',')[0]);
     if (e.key === 'ArrowUp' && fila === 0) { e.preventDefault(); enfocar(document.getElementById('btn-tab-compras')); return; }
     moverEnGrilla(e, panel.current);
   };
+
+  // Las tarjetas se ven en 2 columnas en pantalla ancha: las flechas siguen esa misma grilla
+  const [columnas, setColumnas] = useState(() => (window.matchMedia('(min-width: 1024px)').matches ? 2 : 1));
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const cambiar = () => setColumnas(mq.matches ? 2 : 1);
+    mq.addEventListener('change', cambiar);
+    return () => mq.removeEventListener('change', cambiar);
+  }, []);
 
   const filtros = [['PENDIENTE', 'Pendientes'], ['RECIBIDO', 'Recibidas'], ['TODAS', 'Todas']] as const;
 
@@ -202,7 +273,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
         <div>
           <h2 className="text-sm sm:text-base font-black uppercase tracking-widest text-[var(--color-ink)] flex items-center gap-2"><ShoppingCart size={18} /> Listas de compras</h2>
           <p className="text-[11px] font-bold text-[var(--color-muted)] mt-1">
-            Arma el pedido para tu proveedor y, cuando llegue, recíbelo: los lotes se crean solos.
+            Arma el pedido para tu proveedor y, cuando llegue, recíbelo: los lotes se crean solos. Enter sobre una lista para ver su detalle.
             {stockBajo.length > 0 && <span className="text-[var(--color-danger)]"> · {stockBajo.length} producto(s) con stock bajo.</span>}
           </p>
         </div>
@@ -220,7 +291,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
         </div>
       </div>
 
-      {/* Listas (una fila de navegación por lista) */}
+      {/* Listas: solo proveedor y datos del pedido; Enter abre el detalle */}
       {cargando ? (
         <div className="p-6 text-center text-xs font-black uppercase text-[var(--color-muted)]"><Loader2 className="inline animate-spin" size={16} /> Cargando...</div>
       ) : visibles.length === 0 ? (
@@ -230,56 +301,40 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {visibles.map((c, n) => {
-            const fila = n + 1;
-            const total = totalDe(c.compras_detalle);
-            const parcial = c.compras_detalle.some((d) => d.batch_id != null);
             const colorEstado = c.estado === 'PENDIENTE' ? 'border-[var(--color-warning)] text-[var(--color-warning-dark)] bg-[var(--color-warning-bg)]'
               : c.estado === 'RECIBIDO' ? 'border-[var(--color-success)] text-[var(--color-success)] bg-[var(--color-accent-bg)]'
               : 'border-[var(--color-border)] text-[var(--color-muted)] bg-[var(--color-bg)]';
-            const acciones = c.estado !== 'PENDIENTE' ? [] : [
-              { clave: 'whatsapp', titulo: 'Enviar el pedido por WhatsApp', contenido: <><Send size={13} /> WhatsApp</>, clase: 'bg-white text-[var(--color-success)] border-[var(--color-success)]', hacer: () => enviarWhatsApp(c) },
-              ...(!parcial ? [{ clave: 'editar', titulo: 'Editar la lista', contenido: <>Editar</>, clase: 'bg-white text-[var(--color-ink)]', hacer: () => conPermiso('editar listas de compras', () => setEditando(c)) }] : []),
-              { clave: 'anular', titulo: 'Anular la lista', contenido: <Ban size={13} />, clase: 'bg-white text-[var(--color-muted)]', hacer: () => conPermiso('anular listas de compras', () => void anular(c)) },
-              { clave: 'recibir', titulo: 'Recibir el pedido', contenido: <><PackageCheck size={14} /> Recibir</>, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]', hacer: () => conPermiso('recibir pedidos', () => setRecibiendo(c)) },
-            ];
             return (
-              <div key={c.id} data-compra={c.id}
-                // Sin botones (recibida/anulada): la tarjeta misma se puede seleccionar
-                {...(acciones.length ? {} : { tabIndex: 0, 'data-nav': `${fila},0` })}
-                className="bg-white border-2 border-[var(--color-ink)] p-3 flex flex-col gap-2 focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)]">
-                <div className="flex justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-black uppercase text-[var(--color-ink)] truncate flex items-center gap-2"><Truck size={14} /> {c.proveedor || 'Sin proveedor'}</p>
-                    <p className="text-[10px] font-bold text-[var(--color-muted)] uppercase">
-                      Pedido #{String(c.id).slice(-6)} · {fecha(c.created_at)}{c.autor ? ` · por ${c.autor}` : ''}
-                      {c.estado === 'RECIBIDO' && ` · recibido ${fecha(c.recibido_at)}${c.documento ? ` (${c.documento})` : ''}`}
-                    </p>
-                  </div>
-                  <span className={`shrink-0 self-start px-2 py-0.5 border-2 text-[10px] font-black uppercase ${colorEstado}`}>{c.estado}</span>
+              <div key={c.id} data-compra={c.id} role="button" tabIndex={0}
+                data-nav={`${1 + Math.floor(n / columnas)},${n % columnas}`}
+                aria-label={`Pedido ${String(c.id).slice(-6)} de ${c.proveedor || 'sin proveedor'}, ${c.estado}. Enter para ver el detalle`}
+                onClick={() => setViendo(c)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setViendo(c); } }}
+                className="bg-white border-2 border-[var(--color-ink)] p-3 flex justify-between gap-2 cursor-pointer hover:bg-[var(--color-bg)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] focus:bg-[var(--color-accent-bg)]">
+                <div className="min-w-0">
+                  <p className="text-sm font-black uppercase text-[var(--color-ink)] truncate flex items-center gap-2"><Truck size={14} /> {c.proveedor || 'Sin proveedor'}</p>
+                  <p className="text-[10px] font-bold text-[var(--color-muted)] uppercase">
+                    Pedido #{String(c.id).slice(-6)} · {fecha(c.created_at)}{c.autor ? ` · por ${c.autor}` : ''}
+                    {c.estado === 'RECIBIDO' && ` · recibido ${fecha(c.recibido_at)}${c.documento ? ` (${c.documento})` : ''}`}
+                  </p>
                 </div>
-                <ul className="text-xs font-bold text-[var(--color-ink)] border-t border-[var(--color-border)] pt-2 space-y-0.5 max-h-32 overflow-auto custom-scrollbar">
-                  {c.compras_detalle.map((d) => (
-                    <li key={d.id} className="flex justify-between gap-2">
-                      <span className="truncate">{c.estado === 'RECIBIDO' ? (d.cantidad_recibida ?? 0) : d.cantidad} x {d.product_name}</span>
-                      <span className="text-[var(--color-muted)] shrink-0">{soles(d.costo_unit)}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--color-border)] pt-2">
-                  <span className="text-xs font-black text-[var(--color-ink)]">{c.compras_detalle.length} producto(s) · Total aprox. {soles(total)}</span>
-                  {acciones.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {acciones.map((a, i) => (
-                        <button key={a.clave} id={`btn-compra-${a.clave}-${c.id}`} type="button" data-nav={`${fila},${i}`} title={a.titulo} aria-label={a.titulo}
-                          onClick={a.hacer} className={`${claseBoton} ${a.clase}`}>{a.contenido}</button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <span className={`shrink-0 self-start px-2 py-0.5 border-2 text-[10px] font-black uppercase ${colorEstado}`}>{c.estado}</span>
               </div>
             );
           })}
         </div>
+      )}
+
+      {viendo && (
+        <DetalleCompra
+          compra={viendo}
+          onCerrar={() => { const id = viendo.id; setViendo(null); volverFoco(id); }}
+          onWhatsApp={() => enviarWhatsApp(viendo)}
+          onEditar={() => conPermiso('editar listas de compras', () => { const c = viendo; setViendo(null); setEditando(c); })}
+          onAnular={() => conPermiso('anular listas de compras', () => { const c = viendo; void anular(c).then((ok) => { if (ok) setViendo(null); }); })}
+          onRecibir={() => conPermiso('recibir pedidos', () => { const c = viendo; setViendo(null); setRecibiendo(c); })}
+          onDevolver={() => conPermiso('devolver compras', () => { const c = viendo; void devolver(c).then((ok) => { if (ok) setViendo(null); }); })}
+        />
       )}
 
       {editando && (
@@ -320,7 +375,7 @@ const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.
       if (e.key !== 'Escape' || document.querySelector('[data-dialogo-sistema]')) return;
       // Esc en un buscador con texto: primero borra la búsqueda (lo maneja el buscador)
       const activo = document.activeElement as HTMLInputElement | null;
-      if (activo?.dataset?.escLimpia && activo.value) return;
+      if (activo?.dataset?.escLimpia) return; // el buscador cierra primero su desplegable / borra su texto
       e.preventDefault(); e.stopPropagation(); onCerrar();
     };
     window.addEventListener('keydown', tecla, true);
@@ -341,6 +396,69 @@ const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.
   );
 };
 
+// ======================================================= Detalle (Enter sobre una lista), en letra grande
+const DetalleCompra: React.FC<{
+  compra: Compra; onCerrar: () => void; onWhatsApp: () => void; onEditar: () => void;
+  onAnular: () => void; onRecibir: () => void; onDevolver: () => void;
+}> = ({ compra: c, onCerrar, onWhatsApp, onEditar, onAnular, onRecibir, onDevolver }) => {
+  const cuerpo = useRef<HTMLDivElement>(null);
+  const recibida = c.estado === 'RECIBIDO';
+  const parcial = c.compras_detalle.some((d) => d.batch_id != null);
+  const filas = c.compras_detalle.map((d) => ({ ...d, mostrar: recibida ? Number(d.cantidad_recibida ?? 0) : Number(d.cantidad) }));
+  const total = totalDe(filas.map((f) => ({ cantidad: f.mostrar, costo_unit: f.costo_unit })));
+  // Botones: el principal va al final (↓ llega a él y es el que queda marcado al abrir)
+  const botones = c.estado === 'PENDIENTE'
+    ? [
+      { clave: 'whatsapp', contenido: <><Send size={16} /> WhatsApp</>, clase: 'bg-white text-[var(--color-success)] border-[var(--color-success)]', hacer: onWhatsApp },
+      ...(!parcial ? [{ clave: 'editar', contenido: <>Editar</>, clase: 'bg-white text-[var(--color-ink)]', hacer: onEditar }] : []),
+      { clave: 'anular', contenido: <><Ban size={16} /> Anular</>, clase: 'bg-white text-[var(--color-muted)]', hacer: onAnular },
+      { clave: 'recibir', contenido: <><PackageCheck size={16} /> Recibir</>, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]', hacer: onRecibir },
+    ]
+    : recibida
+      ? [
+        { clave: 'devolver', contenido: <><Undo2 size={16} /> Devolver lo ingresado</>, clase: 'bg-white text-[var(--color-danger)] border-[var(--color-danger)]', hacer: onDevolver },
+        { clave: 'whatsapp', contenido: <><Send size={16} /> WhatsApp</>, clase: 'bg-[var(--color-success)] text-white border-[var(--color-success)]', hacer: onWhatsApp },
+      ]
+      : [{ clave: 'whatsapp', contenido: <><Send size={16} /> WhatsApp</>, clase: 'bg-[var(--color-success)] text-white border-[var(--color-success)]', hacer: onWhatsApp }];
+
+  useEffect(() => { setTimeout(() => enfocar(document.getElementById(`btn-detalle-${botones[botones.length - 1].clave}`)), 30); }, []);
+
+  return (
+    <Ventana cuerpo={cuerpo} titulo={`Pedido #${String(c.id).slice(-6)} · ${c.estado}`} onCerrar={onCerrar}
+      pie={<>{botones.map((b, i) => (
+        <button key={b.clave} id={`btn-detalle-${b.clave}`} type="button" data-nav={`${FILA_PIE},${i}`} onClick={b.hacer}
+          className={`${claseBoton} !text-sm !py-3 ${b.clase}`}>{b.contenido}</button>
+      ))}</>}>
+      <div className="flex flex-col gap-1">
+        <p className="text-xl sm:text-2xl font-black uppercase text-[var(--color-ink)] flex items-center gap-2"><Truck size={22} /> {c.proveedor || 'Sin proveedor'}</p>
+        <p className="text-sm font-bold text-[var(--color-muted)] uppercase">
+          {fecha(c.created_at)}{c.autor ? ` · armado por ${c.autor}` : ''}
+          {recibida && ` · recibido ${fecha(c.recibido_at)}${c.recibido_por ? ` por ${c.recibido_por}` : ''}${c.documento ? ` · ${c.documento}` : ''}`}
+        </p>
+        {c.notas && <p className="text-base font-bold text-[var(--color-ink)] mt-1">📝 {c.notas}</p>}
+      </div>
+      <table className="w-full text-base sm:text-lg">
+        <thead><tr className="text-left text-xs uppercase tracking-widest text-[var(--color-muted)] border-b-2 border-[var(--color-ink)]">
+          <th className="py-2 pr-2">Producto</th><th className="py-2 px-2 text-right">{recibida ? 'Llegó' : 'Pedir'}</th><th className="py-2 px-2 text-right">Costo u.</th><th className="py-2 pl-2 text-right">Subtotal</th>
+        </tr></thead>
+        <tbody>
+          {filas.map((f) => (
+            <tr key={f.id} className="border-b border-[var(--color-border)]">
+              <td className="py-2 pr-2 font-black text-[var(--color-ink)]">{f.product_name}
+                {recibida && Number(f.cantidad_recibida ?? 0) !== Number(f.cantidad) && <span className="block text-xs font-bold text-[var(--color-warning-dark)]">pedido: {f.cantidad}</span>}
+              </td>
+              <td className="py-2 px-2 text-right font-black">{f.mostrar}</td>
+              <td className="py-2 px-2 text-right font-bold text-[var(--color-muted)]">{soles(f.costo_unit)}</td>
+              <td className="py-2 pl-2 text-right font-black">{soles(f.mostrar * Number(f.costo_unit))}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="text-right text-xl sm:text-2xl font-black text-[var(--color-ink)]">Total aprox. {soles(total)}</p>
+    </Ventana>
+  );
+};
+
 // ======================================================= Crear / editar una lista
 const EditorCompra: React.FC<{
   compra: Compra | null; productos: Product[]; proveedores: Proveedor[]; autor: string; onCerrar: (guardadoId: number | null) => void;
@@ -349,7 +467,7 @@ const EditorCompra: React.FC<{
   const [proveedorId, setProveedorId] = useState(compra?.provider_id || '');
   const [notas, setNotas] = useState(compra?.notas || '');
   const [items, setItems] = useState<Item[]>(compra?.compras_detalle.map((d) => ({
-    product_id: String(d.product_id), product_name: d.product_name, cantidad: Number(d.cantidad), costo_unit: Number(d.costo_unit),
+    product_id: String(d.product_id), product_name: d.product_name, cantidad: Number(d.cantidad), costo_unit: Math.round(Number(d.costo_unit) * 100) / 100,
   })) || []);
   const [busqueda, setBusqueda] = useState('');
   const [marcado, setMarcado] = useState(-1); // resultado marcado con ↑ ↓ (-1 = escribiendo)
@@ -377,24 +495,33 @@ const EditorCompra: React.FC<{
       || cuerpo.current?.querySelector<HTMLElement>(`[data-nav="${fila - 1},2"]`) || document.getElementById('compra-buscar')), 30);
   };
 
-  const resultados = busqueda.trim().length >= 2
-    ? productos.filter((p) => coincideBusqueda([p.name, p.code, p.barcode], busqueda) && !items.some((i) => i.product_id === String(p.id))).slice(0, 8)
-    : [];
+  // Desplegable: se abre al escribir (desde la 1ra letra) o con ↓ en el buscador vacío (todos, stock bajo primero)
+  const [abierto, setAbierto] = useState(false);
+  const disponibles = productos.filter((p) => !items.some((i) => i.product_id === String(p.id)));
+  const resultados = !abierto ? [] : busqueda.trim()
+    ? disponibles.filter((p) => coincideBusqueda([p.name, p.code, p.barcode], busqueda)).slice(0, 50)
+    : [...disponibles].sort((a, b) => Number(b.unit !== 'CONSUMO' && Number(b.quantity) <= Number(b.minStock)) - Number(a.unit !== 'CONSUMO' && Number(a.quantity) <= Number(a.minStock))
+      || a.name.localeCompare(b.name)).slice(0, 50);
   useEffect(() => { setMarcado(-1); }, [busqueda]);
+  // El marcado siempre a la vista
+  useEffect(() => { if (marcado >= 0) document.getElementById(`compra-resultado-${marcado}`)?.scrollIntoView({ block: 'nearest' }); }, [marcado]);
   const elegir = (p: Product) => {
     agregar(p);
     setBusqueda('');
+    setAbierto(false);
     // Queda listo para escribir la cantidad del producto recién agregado
     setTimeout(() => enfocar(cuerpo.current?.querySelector<HTMLElement>(`[data-producto="${p.id}"] input`)), 30);
   };
 
   const teclasBuscador = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown' && !abierto) { e.preventDefault(); e.stopPropagation(); setAbierto(true); setMarcado(0); return; }
+    if (e.key === 'Escape' && abierto && !busqueda) { e.preventDefault(); setAbierto(false); return; }
     if (resultados.length) {
       if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); setMarcado((m) => Math.min(resultados.length - 1, m + 1)); return; }
       if (e.key === 'ArrowUp' && marcado >= 0) { e.preventDefault(); e.stopPropagation(); setMarcado((m) => m - 1); return; }
       if (e.key === 'Enter') { e.preventDefault(); elegir(resultados[Math.max(0, marcado)]); return; }
     }
-    if (e.key === 'Escape' && busqueda) { e.preventDefault(); setBusqueda(''); return; }
+    if (e.key === 'Escape' && busqueda) { e.preventDefault(); setBusqueda(''); setAbierto(false); return; }
     // Sin resultados: Enter pasa a la primera cantidad de la lista (o a Guardar)
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -458,28 +585,32 @@ const EditorCompra: React.FC<{
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
-          <input id="compra-buscar" data-nav="1,0" data-esc-limpia="1" value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar producto para agregar... (↓ para elegir)" onKeyDown={teclasBuscador} autoComplete="off"
-            role="combobox" aria-expanded={resultados.length > 0} aria-controls="compra-resultados"
+          <input id="compra-buscar" data-nav="1,0" data-esc-limpia={abierto || busqueda ? '1' : undefined} value={busqueda}
+            onChange={(e) => { setBusqueda(e.target.value); setAbierto(true); }}
+            onBlur={() => setTimeout(() => setAbierto(false), 150)}
+            placeholder="Escribe para buscar o ↓ para ver todos..." onKeyDown={teclasBuscador} autoComplete="off"
+            role="combobox" aria-expanded={abierto} aria-controls="compra-resultados"
             aria-activedescendant={marcado >= 0 ? `compra-resultado-${marcado}` : undefined}
             className={`${claseInput} pl-7`} />
-          {resultados.length > 0 && (
-            <ul id="compra-resultados" role="listbox" className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-56 overflow-auto">
-              {resultados.map((p, i) => (
-                <li key={p.id} id={`compra-resultado-${i}`} role="option" aria-selected={marcado === i}
-                  onMouseDown={(e) => { e.preventDefault(); elegir(p); }}
-                  className={`px-3 py-2 text-xs font-bold flex justify-between gap-2 cursor-pointer ${marcado === i ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'hover:bg-[var(--color-bg)]'}`}>
-                  <span className="truncate">{p.name}</span>
-                  <span className={`shrink-0 ${marcado === i ? '' : Number(p.quantity) <= Number(p.minStock) ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>stock {p.quantity}</span>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
         <button type="button" data-nav="1,1" onClick={agregarStockBajo} className={`${claseBoton} bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] border-[var(--color-warning)]`}>
           <AlertTriangle size={14} /> Agregar stock bajo
         </button>
       </div>
+      {abierto && (
+        <ul id="compra-resultados" role="listbox" aria-label="Productos" className="-mt-2 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-64 overflow-auto custom-scrollbar">
+          {resultados.length === 0 ? (
+            <li className="px-3 py-3 text-xs font-black uppercase text-[var(--color-muted)]">Sin resultados para "{busqueda}"</li>
+          ) : resultados.map((p, i) => (
+            <li key={p.id} id={`compra-resultado-${i}`} role="option" aria-selected={marcado === i}
+              onMouseDown={(e) => { e.preventDefault(); elegir(p); }}
+              className={`px-3 py-2 text-sm font-bold flex justify-between gap-2 cursor-pointer border-b border-[var(--color-border)] ${marcado === i ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'hover:bg-[var(--color-bg)]'}`}>
+              <span className="truncate">{p.name}</span>
+              <span className={`shrink-0 text-xs ${marcado === i ? '' : Number(p.quantity) <= Number(p.minStock) ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>stock {p.quantity}</span>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {items.length === 0 ? (
         <p className="p-4 border-2 border-dashed border-[var(--color-border)] text-center text-xs font-black uppercase text-[var(--color-muted)]">
