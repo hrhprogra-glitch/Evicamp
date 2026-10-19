@@ -396,7 +396,7 @@ const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.
   );
 };
 
-// ======================================================= Detalle (Enter sobre una lista), en letra grande
+// ======================================================= Detalle (Enter sobre una lista). Tamaño de letra normal: Ajustes > Apariencia lo agranda
 const DetalleCompra: React.FC<{
   compra: Compra; onCerrar: () => void; onWhatsApp: () => void; onEditar: () => void;
   onAnular: () => void; onRecibir: () => void; onDevolver: () => void;
@@ -427,18 +427,18 @@ const DetalleCompra: React.FC<{
     <Ventana cuerpo={cuerpo} titulo={`Pedido #${String(c.id).slice(-6)} · ${c.estado}`} onCerrar={onCerrar}
       pie={<>{botones.map((b, i) => (
         <button key={b.clave} id={`btn-detalle-${b.clave}`} type="button" data-nav={`${FILA_PIE},${i}`} onClick={b.hacer}
-          className={`${claseBoton} !text-sm !py-3 ${b.clase}`}>{b.contenido}</button>
+          className={`${claseBoton} ${b.clase}`}>{b.contenido}</button>
       ))}</>}>
       <div className="flex flex-col gap-1">
-        <p className="text-xl sm:text-2xl font-black uppercase text-[var(--color-ink)] flex items-center gap-2"><Truck size={22} /> {c.proveedor || 'Sin proveedor'}</p>
-        <p className="text-sm font-bold text-[var(--color-muted)] uppercase">
+        <p className="text-sm sm:text-base font-black uppercase text-[var(--color-ink)] flex items-center gap-2"><Truck size={16} /> {c.proveedor || 'Sin proveedor'}</p>
+        <p className="text-[10px] font-bold text-[var(--color-muted)] uppercase">
           {fecha(c.created_at)}{c.autor ? ` · armado por ${c.autor}` : ''}
           {recibida && ` · recibido ${fecha(c.recibido_at)}${c.recibido_por ? ` por ${c.recibido_por}` : ''}${c.documento ? ` · ${c.documento}` : ''}`}
         </p>
-        {c.notas && <p className="text-base font-bold text-[var(--color-ink)] mt-1">📝 {c.notas}</p>}
+        {c.notas && <p className="text-xs font-bold text-[var(--color-ink)] mt-1">📝 {c.notas}</p>}
       </div>
-      <table className="w-full text-base sm:text-lg">
-        <thead><tr className="text-left text-xs uppercase tracking-widest text-[var(--color-muted)] border-b-2 border-[var(--color-ink)]">
+      <table className="w-full text-xs">
+        <thead><tr className="text-left text-[10px] uppercase tracking-widest text-[var(--color-muted)] border-b-2 border-[var(--color-ink)]">
           <th className="py-2 pr-2">Producto</th><th className="py-2 px-2 text-right">{recibida ? 'Llegó' : 'Pedir'}</th><th className="py-2 px-2 text-right">Costo u.</th><th className="py-2 pl-2 text-right">Subtotal</th>
         </tr></thead>
         <tbody>
@@ -454,7 +454,7 @@ const DetalleCompra: React.FC<{
           ))}
         </tbody>
       </table>
-      <p className="text-right text-xl sm:text-2xl font-black text-[var(--color-ink)]">Total aprox. {soles(total)}</p>
+      <p className="text-right text-sm font-black text-[var(--color-ink)]">Total aprox. {soles(total)}</p>
     </Ventana>
   );
 };
