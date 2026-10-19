@@ -189,7 +189,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
     ].join('\n');
     const numero = empresa.telefono.replace(/\D/g, '');
     const destino = numero.length === 9 ? `51${numero}` : numero; // celular peruano sin código de país
-    if (!destino) void avisar('📱 No hay un número de WhatsApp en Ajustes > Datos de la empresa (Teléfono). Se abrirá WhatsApp para que elijas el chat; si lo registras en Ajustes, se enviará siempre a ese número.');
+    // Sin número en Ajustes: WhatsApp se abre para elegir el chat (sin aviso, a pedido del usuario)
     window.open(`https://wa.me/${destino}?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
   };
 
