@@ -25,8 +25,9 @@ export const restaurarFocoSesion = (view?: string): boolean => {
 
   // 3. INVENTARIO
   if (activeView === 'inventario') {
-    // Pestaña Compras (no tiene buscador): "Nueva lista"
-    const compras = document.getElementById('btn-nueva-compra') as HTMLElement | null;
+    // Pestaña Compras (no tiene buscador): "Nueva lista" o, para el cajero que solo recibe, el filtro marcado
+    const compras = (document.getElementById('btn-nueva-compra')
+      || document.querySelector('#panel-compras [id^="btn-compras-filtro-"][aria-pressed="true"]')) as HTMLElement | null;
     if (compras && compras.offsetParent !== null) { compras.focus(); return true; }
     const b = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
     if (b && b.offsetParent !== null) { b.focus(); b.select(); return true; }

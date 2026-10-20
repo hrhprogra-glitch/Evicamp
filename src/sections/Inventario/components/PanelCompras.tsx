@@ -11,12 +11,13 @@
 // cambian el valor sin querer; Enter pasa al siguiente campo. Esc cierra las ventanas.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, AlertTriangle, Loader2, Ban, Undo2, FileText, Share2, Download, Printer } from 'lucide-react';
+import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, AlertTriangle, Loader2, Ban, Undo2, FileText, Share2, Download, Printer, ArrowLeft } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { usePermiso, useEmpleado, avisarSinPermiso } from '../../../utils/permisos';
 import { avisar, confirmar } from '../../../utils/dialogos';
 import { coincideBusqueda } from '../../../utils/busqueda';
 import type { Product } from '../types';
+import logoSiumax from '../../../assets/logo.png'; // logo predeterminado (el mismo del menú) si el negocio no subió el suyo
 
 interface Proveedor { id: string; razon_social: string; telefono?: string | null }
 interface Item { product_id: string; product_name: string; cantidad: number; costo_unit: number; unidad?: string }
@@ -43,6 +44,9 @@ const claseBoton = 'px-3 py-2 border-2 border-[var(--color-ink)] text-[10px] sm:
 
 // ======================================================= Navegación con flechas
 const FILA_PIE = 1000; // los botones de abajo de cada ventana siempre son la última fila
+// Primer lugar del selector en Compras: "Nueva lista" o, para el cajero que solo recibe (no tiene ese botón), el filtro marcado
+export const inicioCompras = () =>
+  document.getElementById('btn-nueva-compra') || document.querySelector<HTMLElement>('#panel-compras [id^="btn-compras-filtro-"][aria-pressed="true"]');
 
 const enfocar = (el: HTMLElement | null | undefined) => {
   if (!el) return false;
@@ -105,18 +109,42 @@ const abrirLista = (e: React.KeyboardEvent<HTMLSelectElement>) => {
   }
 };
 
+// Logo para la hoja y el PDF: el de Ajustes > Datos de la empresa o, si no hay, el de SiuMax.
+// Se achica a 240 px para que el PDF no pese.
+const logoParaPdf = (src: string) => new Promise<{ data: string; ancho: number; alto: number } | null>((resolve) => {
+  const img = new Image();
+  img.onload = () => {
+    const escala = Math.min(1, 240 / Math.max(img.width, img.height));
+    const lienzo = document.createElement('canvas');
+    lienzo.width = Math.max(1, Math.round(img.width * escala)); lienzo.height = Math.max(1, Math.round(img.height * escala));
+    lienzo.getContext('2d')?.drawImage(img, 0, 0, lienzo.width, lienzo.height);
+    try { resolve({ data: lienzo.toDataURL('image/png'), ancho: lienzo.width, alto: lienzo.height }); } catch { resolve(null); }
+  };
+  img.onerror = () => resolve(null);
+  img.src = src;
+});
+
 // PDF de un pedido (jsPDF se carga solo al pedirlo, para no hacer más pesado el sistema)
-const pdfDeCompra = async (c: Compra, empresa: string, unidades: Map<string, string>) => {
+const pdfDeCompra = async (c: Compra, empresa: string, unidades: Map<string, string>, logo: string) => {
   const { jsPDF } = await import('jspdf');
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const recibida = c.estado === 'RECIBIDO';
   const num = String(c.id).slice(-6);
   let y = 18;
+  // Logo arriba a la izquierda (16 mm de alto) y el nombre del negocio a su lado
+  const imagen = await logoParaPdf(logo);
+  let xNombre = 14;
+  if (imagen) {
+    const alto = 16, ancho = Math.min(40, (imagen.ancho / imagen.alto) * alto);
+    doc.addImage(imagen.data, 'PNG', 14, 10, ancho, (imagen.alto / imagen.ancho) * ancho);
+    xNombre = 14 + ancho + 4;
+    y = 20;
+  }
   doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
-  doc.text(empresa || 'Pedido de compra', 14, y);
+  doc.text(empresa || 'Pedido de compra', xNombre, y);
   doc.setFontSize(12);
   doc.text(`${recibida ? 'COMPRA RECIBIDA' : 'PEDIDO DE COMPRA'} #${num}`, 196, y, { align: 'right' });
-  y += 9;
+  y += imagen ? 12 : 9;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
   const datos = [
     `Proveedor: ${c.proveedor || 'Sin proveedor'}`,
@@ -160,7 +188,7 @@ const pdfDeCompra = async (c: Compra, empresa: string, unidades: Map<string, str
 
 // Hoja del pedido en HTML: es la vista previa y lo que se imprime (A4). Mismo contenido que el PDF.
 const esc = (t: unknown) => String(t ?? '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]!));
-const htmlDeCompra = (c: Compra, empresa: string, unidades: Map<string, string>) => {
+const htmlDeCompra = (c: Compra, empresa: string, unidades: Map<string, string>, logo: string) => {
   const recibida = c.estado === 'RECIBIDO';
   const num = String(c.id).slice(-6);
   let total = 0;
@@ -186,6 +214,8 @@ html, body { margin: 0; background: #fff; color: #111; font: 13px/1.4 Arial, Hel
 body { padding: 28px 32px; }
 @media print { body { padding: 0; } }
 .cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 3px solid #1e293b; padding-bottom: 10px; }
+.cab .marca { display: flex; align-items: center; gap: 14px; }
+.cab .marca img { max-height: 64px; max-width: 160px; object-fit: contain; }
 .cab h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
 .cab .doc { text-align: right; } .cab .doc b { display: block; font-size: 15px; } .cab .doc span { font-size: 22px; font-weight: 900; }
 .datos { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; margin: 14px 0; }
@@ -199,7 +229,7 @@ tr { page-break-inside: avoid; }
 .nota { margin-top: 16px; padding: 8px 10px; border: 1px solid #ccc; }
 .pie { margin-top: 28px; color: #888; font-size: 10px; }
 </style></head><body>
-<div class="cab"><h1>${esc(empresa || 'Pedido de compra')}</h1><div class="doc"><b>${recibida ? 'COMPRA RECIBIDA' : 'PEDIDO DE COMPRA'}</b><span>#${num}</span></div></div>
+<div class="cab"><div class="marca"><img src="${esc(new URL(logo, location.href).href)}" alt="Logo"><h1>${esc(empresa || 'Pedido de compra')}</h1></div><div class="doc"><b>${recibida ? 'COMPRA RECIBIDA' : 'PEDIDO DE COMPRA'}</b><span>#${num}</span></div></div>
 <div class="datos">${datos}</div>
 <table><thead><tr><th>Producto</th><th class="n">${recibida ? 'Llegó' : 'Cantidad'}</th><th class="n">Costo u.</th><th class="n">Subtotal</th></tr></thead><tbody>${filas}</tbody></table>
 <div class="total">Total aprox.: ${soles(total)}</div>
@@ -229,7 +259,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   const [editando, setEditando] = useState<Compra | 'nueva' | null>(null);
   const [recibiendo, setRecibiendo] = useState<Compra | null>(null);
   const [viendo, setViendo] = useState<Compra | null>(null); // detalle abierto (Enter sobre una lista)
-  const [empresa, setEmpresa] = useState({ nombre: '', telefono: '' }); // WhatsApp de Ajustes
+  const [empresa, setEmpresa] = useState({ nombre: '', telefono: '', logo: logoSiumax }); // WhatsApp y logo de Ajustes
   const [previa, setPrevia] = useState<Compra | null>(null); // Enviar / Imprimir: vista previa de la hoja
 
   const cargar = async () => {
@@ -237,9 +267,9 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
     const [c, p, e] = await Promise.all([
       supabase.from('compras').select('*, compras_detalle(*)').order('created_at', { ascending: false }).limit(200),
       supabase.from('providers').select('id, razon_social, telefono').eq('estado', 'ACTIVO').order('razon_social'),
-      supabase.from('empresa_config').select('nombre_empresa, telefono').limit(1).maybeSingle(),
+      supabase.from('empresa_config').select('nombre_empresa, telefono, logo_url').limit(1).maybeSingle(),
     ]);
-    setEmpresa({ nombre: String(e.data?.nombre_empresa || ''), telefono: String(e.data?.telefono || '') });
+    setEmpresa({ nombre: String(e.data?.nombre_empresa || ''), telefono: String(e.data?.telefono || ''), logo: String(e.data?.logo_url || '') || logoSiumax });
     if (c.error) void avisar(`No se pudieron cargar las compras: ${c.error.message}`);
     setCompras((c.data as Compra[]) || []);
     setProveedores((p.data as Proveedor[]) || []);
@@ -261,7 +291,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
       if (document.querySelector('[role="dialog"], [data-dialogo-sistema]')) return;
       const sidebar = document.getElementById('evicamp-sidebar');
       if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
-      const destino = ultimo.current?.isConnected && ultimo.current.offsetParent !== null ? ultimo.current : document.getElementById('btn-nueva-compra');
+      const destino = ultimo.current?.isConnected && ultimo.current.offsetParent !== null ? ultimo.current : inicioCompras();
       enfocar(destino);
     }, 80);
     document.addEventListener('focusin', recordar);
@@ -288,7 +318,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   const puedeDevolver = (c: Compra) => puede || (recibePedidos && !!empleado?.id && c.recibido_por_id === String(empleado.id));
   // Al cerrar una ventana el foco vuelve a la lista (o a "Nueva lista")
   const volverFoco = (compraId?: number) => setTimeout(() => {
-    enfocar((compraId && document.querySelector<HTMLElement>(`[data-compra="${compraId}"]`)) || document.getElementById('btn-nueva-compra'));
+    enfocar((compraId && document.querySelector<HTMLElement>(`[data-compra="${compraId}"]`)) || inicioCompras());
   }, 350); // después de que los avisos devuelvan su foco (navegacionSesion), para que no lo pisen
 
   // Número de WhatsApp de Ajustes > Datos de la empresa (Teléfono). Solo se usa si es un CELULAR peruano válido
@@ -332,7 +362,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   };
   const descargarPdf = async (c: Compra) => {
     try {
-      const archivo = await pdfDeCompra(c, empresa.nombre, unidadPorId);
+      const archivo = await pdfDeCompra(c, empresa.nombre, unidadPorId, empresa.logo);
       guardarArchivo(archivo);
       await avisar(`📄 PDF descargado: "${archivo.name}".\n\nLo encuentras en Descargas (o en la carpeta que elegiste).`);
     } catch (e: any) {
@@ -344,7 +374,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   // y se abre el chat para adjuntarlo con el clip.
   const enviarPdf = async (c: Compra) => {
     try {
-      const archivo = await pdfDeCompra(c, empresa.nombre, unidadPorId);
+      const archivo = await pdfDeCompra(c, empresa.nombre, unidadPorId, empresa.logo);
       const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean };
       if (nav.canShare?.({ files: [archivo] })) {
         try { await navigator.share({ files: [archivo], title: archivo.name, text: `Pedido #${String(c.id).slice(-6)}` }); return; }
@@ -503,7 +533,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
       {previa && (
         <VistaPrevia
           compra={previa}
-          html={htmlDeCompra(previa, empresa.nombre, unidadPorId)}
+          html={htmlDeCompra(previa, empresa.nombre, unidadPorId, empresa.logo)}
           onCerrar={() => { const c = previa; setPrevia(null); focoDetalle.current = 'btn-detalle-compartir'; setViendo(c); }}
           onWhatsApp={() => enviarWhatsApp(previa)}
           onEnviarPdf={() => enviarPdf(previa)}
@@ -718,6 +748,8 @@ const VistaPrevia: React.FC<{
   return (
     <Ventana cuerpo={cuerpo} ancho="max-w-4xl" titulo={`Enviar, descargar o imprimir · Pedido #${String(c.id).slice(-6)}`} onCerrar={onCerrar}
       pie={<div className="w-full flex flex-wrap items-end justify-end gap-x-5 gap-y-2">
+        <button id="btn-previa-volver" type="button" data-nav={`${FILA_PIE},-1`} onClick={onCerrar} title="Volver al detalle (Esc)"
+          className={`${claseBoton} bg-white text-[var(--color-ink)] mr-auto self-end`}><ArrowLeft size={16} /> Volver</button>
         {grupos.map((g) => (
           <div key={g} className="flex flex-col gap-1">
             <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-muted)]">{g}</span>

@@ -14,7 +14,7 @@ import { ModalProducto } from './components/ModalProducto';
 import { TablaLotes } from './components/TablaLotes';
 import { ModalGestionProveedores } from './components/ModalGestionProveedores';
 import { ModalLote } from './components/ModalLote';
-import { PanelCompras } from './components/PanelCompras';
+import { PanelCompras, inicioCompras } from './components/PanelCompras';
 
 interface InventarioProps {
   onNavigate?: (view: string) => void;
@@ -502,7 +502,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('btn-nuevo-producto')?.focus();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
-                    document.getElementById('btn-nueva-compra')?.focus();
+                    inicioCompras()?.focus(); // el cajero que solo recibe no tiene "Nueva lista"
                   }
                 }}
                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer border-l-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${vistaActiva === 'COMPRAS' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'}`}
