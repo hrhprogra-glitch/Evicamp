@@ -29,6 +29,8 @@ interface Compra {
 const soles = (n: number) => `S/ ${(Number(n) || 0).toFixed(2)}`;
 const fecha = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-');
 const esPeso = (p?: Pick<Product, 'unit' | 'control_type'>) => !!p && (['KG', 'GR', 'LT', 'ML'].includes(p.unit) || p.control_type === 'WEIGHT');
+// Unidad que se muestra junto a cada cantidad: KG / GR / LT / ML (por peso) o UND
+const unidadDe = (p?: Pick<Product, 'unit' | 'control_type'>) => (!p ? '' : esPeso(p) ? (['KG', 'GR', 'LT', 'ML'].includes(p.unit) ? p.unit : 'KG') : 'UND');
 // Cantidad sugerida: llegar al doble del stock mínimo
 const sugerida = (p: Product) => {
   const falta = Math.max(0, (Number(p.minStock) || 0) * 2 - (Number(p.quantity) || 0));
@@ -104,7 +106,7 @@ const abrirLista = (e: React.KeyboardEvent<HTMLSelectElement>) => {
 };
 
 // PDF de un pedido (jsPDF se carga solo al pedirlo, para no hacer más pesado el sistema)
-const pdfDeCompra = async (c: Compra, empresa: string) => {
+const pdfDeCompra = async (c: Compra, empresa: string, unidades: Map<string, string>) => {
   const { jsPDF } = await import('jspdf');
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const recibida = c.estado === 'RECIBIDO';
@@ -140,7 +142,7 @@ const pdfDeCompra = async (c: Compra, empresa: string) => {
     const nombre = doc.splitTextToSize(d.product_name, 100);
     if (y + nombre.length * 5 > 280) { doc.addPage(); y = 18; }
     doc.text(nombre, col.prod + 2, y);
-    doc.text(String(cant), col.cant, y, { align: 'right' });
+    doc.text(`${cant} ${unidades.get(String(d.product_id)) || ''}`.trim(), col.cant, y, { align: 'right' });
     doc.text(soles(Number(d.costo_unit || 0)), col.costo, y, { align: 'right' });
     doc.text(soles(sub), col.sub - 2, y, { align: 'right' });
     y += nombre.length * 5 + 2;
@@ -224,6 +226,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   const visibles = compras.filter((c) => filtro === 'TODAS' || c.estado === filtro);
   const stockBajo = productos.filter((p) => p.unit !== 'CONSUMO' && Number(p.quantity) <= Number(p.minStock));
 
+  const unidadPorId = useMemo(() => new Map(productos.map((p) => [String(p.id), unidadDe(p)])), [productos]);
   const conPermiso = (accion: string, hacer: () => void) => (puede ? hacer() : avisarSinPermiso(accion));
   const conPermisoRecibir = (accion: string, hacer: () => void) => (puede || recibePedidos ? hacer() : avisarSinPermiso(accion));
   // Devolver: el admin / almacén cualquier pedido; con solo 'Recibir pedidos', únicamente lo que uno recibió
@@ -251,7 +254,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
     const recibida = c.estado === 'RECIBIDO';
     const lineas = c.compras_detalle.map((d) => {
       const cant = recibida ? (d.cantidad_recibida ?? 0) : d.cantidad;
-      return `- ${cant} x ${d.product_name} (S/ ${(Number(d.costo_unit) || 0).toFixed(2)} c/u)`;
+      return `- ${cant} ${unidadPorId.get(String(d.product_id)) || ''} x ${d.product_name} (S/ ${(Number(d.costo_unit) || 0).toFixed(2)} c/u)`;
     }).join('\n');
     const total = totalDe(c.compras_detalle.map((d) => ({ cantidad: recibida ? Number(d.cantidad_recibida ?? 0) : d.cantidad, costo_unit: d.costo_unit })));
     const texto = [
@@ -268,7 +271,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   // y se abre el chat para adjuntarlo con el clip.
   const enviarPdf = async (c: Compra) => {
     try {
-      const archivo = await pdfDeCompra(c, empresa.nombre);
+      const archivo = await pdfDeCompra(c, empresa.nombre, unidadPorId);
       const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean };
       if (nav.canShare?.({ files: [archivo] })) {
         try { await navigator.share({ files: [archivo], title: archivo.name, text: `Pedido #${String(c.id).slice(-6)}` }); return; }
@@ -414,6 +417,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
       {viendo && (
         <DetalleCompra
           compra={viendo}
+          unidades={unidadPorId}
           soloRecibe={soloRecibe}
           puedeDevolver={puedeDevolver(viendo)}
           onCerrar={() => { const id = viendo.id; setViendo(null); volverFoco(id); }}
@@ -491,9 +495,9 @@ const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.
 const ACCIONES: Record<string, string> = { CREADA: 'Creó la lista', EDITADA: 'Editó la lista', ANULADA: 'Anuló el pedido', RECIBIDA: 'Recibió el pedido', DEVUELTA: 'Devolvió lo ingresado' };
 
 const DetalleCompra: React.FC<{
-  compra: Compra; soloRecibe: boolean; puedeDevolver: boolean; onCerrar: () => void; onWhatsApp: () => void; onPdf: () => void; onEditar: () => void;
+  compra: Compra; unidades: Map<string, string>; soloRecibe: boolean; puedeDevolver: boolean; onCerrar: () => void; onWhatsApp: () => void; onPdf: () => void; onEditar: () => void;
   onAnular: () => void; onRecibir: () => void; onDevolver: () => void;
-}> = ({ compra: c, soloRecibe, puedeDevolver, onCerrar, onWhatsApp, onPdf, onEditar, onAnular, onRecibir, onDevolver }) => {
+}> = ({ compra: c, unidades, soloRecibe, puedeDevolver, onCerrar, onWhatsApp, onPdf, onEditar, onAnular, onRecibir, onDevolver }) => {
   const cuerpo = useRef<HTMLDivElement>(null);
   const recibida = c.estado === 'RECIBIDO';
   const parcial = c.compras_detalle.some((d) => d.batch_id != null);
@@ -555,9 +559,9 @@ const DetalleCompra: React.FC<{
           {filas.map((f) => (
             <tr key={f.id} className="border-b border-[var(--color-border)]">
               <td className="py-2 pr-2 font-black text-[var(--color-ink)]">{f.product_name}
-                {recibida && Number(f.cantidad_recibida ?? 0) !== Number(f.cantidad) && <span className="block text-[10px] font-bold text-[var(--color-warning-dark)]">pedido: {f.cantidad}</span>}
+                {recibida && Number(f.cantidad_recibida ?? 0) !== Number(f.cantidad) && <span className="block text-[10px] font-bold text-[var(--color-warning-dark)]">pedido: {f.cantidad} {unidades.get(String(f.product_id))}</span>}
               </td>
-              <td className="py-2 px-2 text-right font-black">{f.mostrar}</td>
+              <td className="py-2 px-2 text-right font-black whitespace-nowrap">{f.mostrar} <span className="text-[10px] text-[var(--color-muted)]">{unidades.get(String(f.product_id))}</span></td>
               {!soloRecibe && <>
                 <td className="py-2 px-2 text-right font-bold text-[var(--color-muted)]">{soles(f.costo_unit)}</td>
                 <td className="py-2 pl-2 text-right font-black">{soles(f.mostrar * Number(f.costo_unit))}</td>
@@ -619,8 +623,17 @@ const EditorCompra: React.FC<{
     if (!bajos.length) { void avisar('No hay productos con stock bajo. 👍'); return; }
     bajos.forEach((p) => agregar(p, sugerida(p)));
   };
-  const cambiar = (id: string, campo: 'cantidad' | 'costo_unit', valor: string) =>
+  // Lo que se está escribiendo en cada campo se guarda como TEXTO mientras tanto: antes se guardaba el número y,
+  // al borrar, volvía a salir 0 (y al escribir quedaba "05"). Un campo en 0 se ve vacío (con un "0" gris de ayuda).
+  const [borrador, setBorrador] = useState<Record<string, string>>({});
+  const valorCampo = (id: string, campo: 'cantidad' | 'costo_unit', numero: number) =>
+    borrador[`${id}:${campo}`] ?? (numero === 0 ? '' : String(numero));
+  const cambiar = (id: string, campo: 'cantidad' | 'costo_unit', valor: string) => {
+    setBorrador((prev) => ({ ...prev, [`${id}:${campo}`]: valor }));
     setItems((prev) => prev.map((i) => (i.product_id === id ? { ...i, [campo]: Math.max(0, Number(valor) || 0) } : i)));
+  };
+  const soltarCampo = (id: string, campo: 'cantidad' | 'costo_unit') =>
+    setBorrador((prev) => { const { [`${id}:${campo}`]: _, ...resto } = prev; return resto; });
   const quitar = (id: string, fila: number) => {
     setItems((prev) => prev.filter((x) => x.product_id !== id));
     // El foco pasa a la fila que quedó en su lugar (o al buscador si ya no hay)
@@ -760,7 +773,7 @@ const EditorCompra: React.FC<{
               onMouseDown={(e) => { e.preventDefault(); elegir(p); }}
               className={`px-3 py-2 text-sm font-bold flex justify-between gap-2 cursor-pointer border-b border-[var(--color-border)] ${marcado === i ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'hover:bg-[var(--color-bg)]'}`}>
               <span className="truncate">{p.name}{enLista.has(String(p.id)) && <span className="ml-2 text-[10px] font-black uppercase opacity-70">· ya en la lista</span>}</span>
-              <span className={`shrink-0 text-xs ${marcado === i ? '' : Number(p.quantity) <= Number(p.minStock) ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>stock {p.quantity}</span>
+              <span className={`shrink-0 text-xs ${marcado === i ? '' : Number(p.quantity) <= Number(p.minStock) ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>stock {p.quantity} {unidadDe(p)}</span>
             </li>
           ))}
         </ul>, document.getElementById('root') ?? document.body)
@@ -783,12 +796,17 @@ const EditorCompra: React.FC<{
                 return (
                   <tr key={i.product_id} data-producto={i.product_id} className="border-t border-[var(--color-border)]">
                     <td className="p-1 font-black">{i.product_name}</td>
-                    <td className={`p-1 font-bold ${p && Number(p.quantity) <= Number(p.minStock) ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>{p ? `${p.quantity} / mín ${p.minStock}` : '-'}</td>
-                    <td className="p-1"><input type="number" data-nav={`${fila},0`} min="0" step={esPeso(p) ? '0.01' : '1'} value={i.cantidad}
-                      onChange={(e) => cambiar(i.product_id, 'cantidad', e.target.value)} onKeyDown={(e) => siguienteCampo(e, cuerpo.current, 'btn-guardar-compra')}
-                      className={claseInput} aria-label={`Cantidad de ${i.product_name}`} /></td>
-                    <td className="p-1"><input type="number" data-nav={`${fila},1`} min="0" step="0.01" value={i.costo_unit}
-                      onChange={(e) => cambiar(i.product_id, 'costo_unit', e.target.value)} onKeyDown={(e) => siguienteCampo(e, cuerpo.current, 'btn-guardar-compra')}
+                    <td className={`p-1 font-bold ${p && Number(p.quantity) <= Number(p.minStock) ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>{p ? `${p.quantity} / mín ${p.minStock} ${unidadDe(p)}` : '-'}</td>
+                    <td className="p-1"><div className="flex items-center gap-1"><input type="number" data-nav={`${fila},0`} min="0" step={esPeso(p) ? '0.01' : '1'}
+                      value={valorCampo(i.product_id, 'cantidad', i.cantidad)} placeholder="0"
+                      onChange={(e) => cambiar(i.product_id, 'cantidad', e.target.value)} onBlur={() => soltarCampo(i.product_id, 'cantidad')}
+                      onFocus={(e) => e.currentTarget.select()} onKeyDown={(e) => siguienteCampo(e, cuerpo.current, 'btn-guardar-compra')}
+                      className={claseInput} aria-label={`Cantidad de ${i.product_name}`} />
+                      <span className="w-8 shrink-0 text-[10px] font-black text-[var(--color-muted)]">{unidadDe(p)}</span></div></td>
+                    <td className="p-1"><input type="number" data-nav={`${fila},1`} min="0" step="0.01"
+                      value={valorCampo(i.product_id, 'costo_unit', i.costo_unit)} placeholder="0"
+                      onChange={(e) => cambiar(i.product_id, 'costo_unit', e.target.value)} onBlur={() => soltarCampo(i.product_id, 'costo_unit')}
+                      onFocus={(e) => e.currentTarget.select()} onKeyDown={(e) => siguienteCampo(e, cuerpo.current, 'btn-guardar-compra')}
                       className={claseInput} aria-label={`Costo de ${i.product_name}`} /></td>
                     <td className="p-1 text-right font-black">{soles(i.cantidad * i.costo_unit)}</td>
                     <td className="p-1"><button type="button" data-nav={`${fila},2`} onClick={() => quitar(i.product_id, fila)} aria-label={`Quitar ${i.product_name}`} title="Quitar (Enter)"
@@ -883,9 +901,10 @@ const RecibirCompra: React.FC<{
               return (
                 <tr key={f.detalle_id} className="border-t border-[var(--color-border)]">
                   <td className="p-1 font-black">{f.product_name}</td>
-                  <td className="p-1 font-bold text-[var(--color-muted)]">{f.pedida}</td>
-                  <td className="p-1"><input type="number" data-nav={`${fila},0`} min="0" step={esPeso(p) ? '0.01' : '1'} value={f.llego} onChange={(e) => cambiar(i, 'llego', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Llegó de ${f.product_name}`} /></td>
-                  {!soloRecibe && <td className="p-1"><input type="number" data-nav={`${fila},1`} min="0" step="0.01" value={f.costo} onChange={(e) => cambiar(i, 'costo', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Costo de ${f.product_name}`} /></td>}
+                  <td className="p-1 font-bold text-[var(--color-muted)] whitespace-nowrap">{f.pedida} {unidadDe(p)}</td>
+                  <td className="p-1"><div className="flex items-center gap-1"><input type="number" data-nav={`${fila},0`} min="0" step={esPeso(p) ? '0.01' : '1'} value={f.llego} placeholder="0" onFocus={(e) => e.currentTarget.select()} onChange={(e) => cambiar(i, 'llego', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Llegó de ${f.product_name}`} />
+                    <span className="w-8 shrink-0 text-[10px] font-black text-[var(--color-muted)]">{unidadDe(p)}</span></div></td>
+                  {!soloRecibe && <td className="p-1"><input type="number" data-nav={`${fila},1`} min="0" step="0.01" value={f.costo} placeholder="0" onFocus={(e) => e.currentTarget.select()} onChange={(e) => cambiar(i, 'costo', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Costo de ${f.product_name}`} /></td>}
                   <td className="p-1"><input type="date" data-nav={`${fila},2`} value={f.vence} onChange={(e) => cambiar(i, 'vence', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Vencimiento de ${f.product_name}`} /></td>
                 </tr>
               );
