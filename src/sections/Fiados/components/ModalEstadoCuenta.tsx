@@ -4,6 +4,7 @@ import { supabase } from '../../../db/supabase';
 import { X, Calendar, Edit, Banknote, ShoppingCart, CheckCircle, Calculator, CheckSquare, Square } from 'lucide-react';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import type { ClienteFiadoAgrupado } from '../types';
+import { avisar } from '../../../utils/dialogos';
 
 interface Props {
   isOpen: boolean;
@@ -123,31 +124,50 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
   const valEfectivo = aCentimos(efectivo);
   const valYape = aCentimos(yape);
   const valTarjeta = aCentimos(tarjeta);
-  const totalAbono = Number((valEfectivo + valYape + valTarjeta).toFixed(2));
-  
+
   const selectedFiados = (cliente?.fiados || []).filter(f => selectedIds.has(f.id)).sort((a,b) => new Date(a.fechaEmision).getTime() - new Date(b.fechaEmision).getTime());
   const totalSeleccionado = Number(selectedFiados.reduce((acc, f) => acc + f.saldoPendiente, 0).toFixed(2));
+  const sinSeleccion = selectedFiados.length === 0;
+
+  // Vuelto: solo del EFECTIVO. Yape/Plin y tarjeta se cobran exactos (de eso no se da vuelto) y no pueden pasar la deuda.
+  // Si da S/ 20 en efectivo para S/ 10, se abonan S/ 10 y el vuelto es S/ 10.
+  const noEfectivo = Number((valYape + valTarjeta).toFixed(2));
+  const excedeSinEfectivo = noEfectivo > Number((totalSeleccionado + 0.001).toFixed(3));
+  const efectivoAplicado = Number(Math.max(0, Math.min(valEfectivo, totalSeleccionado - noEfectivo)).toFixed(2));
+  const vuelto = sinSeleccion || excedeSinEfectivo ? 0 : Number((valEfectivo - efectivoAplicado).toFixed(2));
+  const totalAbono = Number((efectivoAplicado + noEfectivo).toFixed(2));
+  const pagoInvalido = sinSeleccion || totalAbono <= 0 || excedeSinEfectivo;
+
+  // Sin deuda marcada no se escribe monto: se avisa y el selector vuelve a la primera deuda
+  const avisarSeleccion = async () => {
+    await avisar('Primero selecciona la deuda que va a pagar.\n\nMárcala con Enter o Espacio (o "Seleccionar todas") y luego escribe el monto.');
+    setTimeout(() => (document.querySelector('[data-fiado-card]') as HTMLElement | null)?.focus(), 350);
+  };
+  const teclaMonto = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!sinSeleccion) return;
+    if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); void avisarSeleccion(); }
+  };
 
   const handlePagar = async () => {
     if (isSaving) return;
-    if (selectedFiados.length === 0) return alert('Selecciona al menos una deuda para pagar.');
-    if (totalAbono <= 0) return alert('El monto a abonar debe ser mayor a 0.');
-    if (totalAbono > Number((totalSeleccionado + 0.05).toFixed(2))) {
-      return alert('El abono supera la deuda seleccionada.');
-    }
+    if (sinSeleccion) return void avisarSeleccion();
+    if (excedeSinEfectivo) return void avisar('Yape/Plin o tarjeta no pueden pasar la deuda seleccionada (de eso no se da vuelto). Corrige el monto.');
+    if (totalAbono <= 0) return void avisar('Escribe cuánto paga (efectivo, Yape/Plin o tarjeta).');
+    const vueltoAEntregar = vuelto;
 
     setIsSaving(true);
     
     // âœ… ACTUALIZACIÃ“N OPTIMISTA: Cerramos y refrescamos de inmediato
     onRefetch();
     onClose();
+    if (vueltoAEntregar > 0) void avisar(`✅ Abono registrado: S/ ${totalAbono.toFixed(2)}\n\n💵 VUELTO A ENTREGAR: S/ ${vueltoAEntregar.toFixed(2)}`);
 
     // El proceso fuerte va a background
     (async () => {
       try {
         const { data: session } = await supabase.from('cash_sessions').select('id').eq('status', 'OPEN').single();
-        
-        let restanteEf = valEfectivo;
+
+        let restanteEf = efectivoAplicado; // lo que se queda en caja (sin el vuelto)
         let restanteYa = valYape;
         let restanteTa = valTarjeta;
         
@@ -700,30 +720,48 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                     <div>
                       <label className="text-xs font-black uppercase tracking-widest text-[var(--color-muted)] block mb-1">Efectivo</label>
                       <input id="input-abono-efectivo-modal" type="number" min="0" step="0.01" value={efectivo} onChange={(e) => setEfectivo(e.target.value)}
+                        readOnly={sinSeleccion} onKeyDown={teclaMonto} onPaste={(e) => { if (sinSeleccion) { e.preventDefault(); void avisarSeleccion(); } }}
                         className="w-full border-2 border-[var(--color-ink)] px-4 py-3 font-black text-lg focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)] transition-all outline-none" placeholder="0.00" />
                     </div>
                     <div>
                       <label className="text-xs font-black uppercase tracking-widest text-[var(--color-purple)] block mb-1">Yape / Plin / Transferencia</label>
                       <input id="input-abono-yape-modal" type="number" min="0" step="0.01" value={yape} onChange={(e) => setYape(e.target.value)}
+                        readOnly={sinSeleccion} onKeyDown={teclaMonto} onPaste={(e) => { if (sinSeleccion) { e.preventDefault(); void avisarSeleccion(); } }}
                         className="w-full border-2 border-[var(--color-purple)] px-4 py-3 font-black text-lg focus:border-[var(--color-purple)] focus:ring-2 focus:ring-[var(--color-purple)] transition-all outline-none" placeholder="0.00" />
                     </div>
                     <div>
                       <label className="text-xs font-black uppercase tracking-widest text-[var(--color-info)] block mb-1">Tarjeta de Crédito / POS</label>
                       <input id="input-abono-tarjeta-modal" type="number" min="0" step="0.01" value={tarjeta} onChange={(e) => setTarjeta(e.target.value)}
+                        readOnly={sinSeleccion} onKeyDown={teclaMonto} onPaste={(e) => { if (sinSeleccion) { e.preventDefault(); void avisarSeleccion(); } }}
                         className="w-full border-2 border-[var(--color-info)] px-4 py-3 font-black text-lg focus:border-[var(--color-info)] focus:ring-2 focus:ring-[var(--color-info)] transition-all outline-none" placeholder="0.00" />
                     </div>
                  </div>
 
                  <div className="flex justify-between items-center pt-3 border-t-2 border-dashed border-[var(--color-line-light)]">
                     <span className="font-black text-xs uppercase text-[var(--color-subtle)] tracking-widest">Total a Abonar</span>
-                    <span className={`font-black text-2xl ${totalAbono > totalSeleccionado ? 'text-[var(--color-danger)]' : 'text-[var(--color-success)]'}`}>S/ {totalAbono.toFixed(2)}</span>
+                    <span className={`font-black text-2xl ${excedeSinEfectivo ? 'text-[var(--color-danger)]' : 'text-[var(--color-success)]'}`}>S/ {totalAbono.toFixed(2)}</span>
                  </div>
+                 {sinSeleccion && (
+                   <p className="text-[11px] font-bold text-[var(--color-muted)] -mt-2">Selecciona primero la deuda que va a pagar.</p>
+                 )}
+                 {excedeSinEfectivo && (
+                   <p className="text-[11px] font-black text-[var(--color-danger)] -mt-2">Yape/Plin o tarjeta pasan la deuda: de eso no se da vuelto.</p>
+                 )}
+                 {/* Vuelto: cuando el efectivo pasa lo que debe */}
+                 {vuelto > 0 && (
+                   <div id="vuelto-abono" className="flex justify-between items-center bg-[var(--color-warning-bg,#FEF3C7)] border-2 border-[var(--color-ink)] p-3 shadow-[3px_3px_0_0_var(--color-ink)]">
+                     <span className="font-black text-sm uppercase tracking-widest text-[var(--color-ink)] flex items-center gap-2"><Banknote size={20} /> Vuelto</span>
+                     <span className="font-black text-3xl text-[var(--color-ink)]">S/ {vuelto.toFixed(2)}</span>
+                   </div>
+                 )}
 
-                 <button 
+                 {/* No se apaga cuando falta algo: así el selector llega y, al presionarlo, dice qué falta */}
+                 <button
                   id="btn-confirmar-pago-modal"
                   onClick={handlePagar}
-                  disabled={isSaving || totalAbono <= 0 || totalAbono > totalSeleccionado}
-                  className="w-full bg-[var(--color-accent)] text-[var(--color-ink)] border-2 border-[var(--color-ink)] py-3 text-lg font-black uppercase tracking-widest hover:bg-[var(--color-success)] hover:text-white transition-colors cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                  disabled={isSaving}
+                  aria-disabled={pagoInvalido}
+                  className={`w-full bg-[var(--color-accent)] text-[var(--color-ink)] border-2 border-[var(--color-ink)] py-3 text-lg font-black uppercase tracking-widest hover:bg-[var(--color-success)] hover:text-white transition-colors cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-[4px] active:translate-x-[4px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-4 focus:ring-[var(--color-ink)] mt-2 ${pagoInvalido ? 'opacity-50' : ''}`}
                  >
                    {isSaving ? 'Procesando...' : 'CONFIRMAR PAGO'}
                  </button>
