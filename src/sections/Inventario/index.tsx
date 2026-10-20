@@ -35,6 +35,11 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const puedeEliminarProductos = usePermiso('almacen_eliminar_productos');
   const puedeIngresarLotes = usePermiso('almacen_ingresar_lotes');
   const puedeProveedores = usePermiso('almacen_gestionar_proveedores');
+  // Solo 'Recibir pedidos' (sin ver stock): entra únicamente a la pestaña Compras, sin productos, lotes ni costos
+  const verStock = usePermiso('almacen_ver_stock');
+  const recibePedidos = usePermiso('compras_recibir');
+  const soloCompras = !verStock && recibePedidos;
+  useEffect(() => { if (soloCompras && vistaActiva !== 'COMPRAS') setVistaActiva('COMPRAS'); }, [soloCompras, vistaActiva]);
   const { enLinea } = useConexion(); // sin internet, Inventario es solo para ver
   const [mermaAEditar, setMermaAEditar] = useState<any>(null);
   const [isModalLoteOpen, setIsModalLoteOpen] = useState(false); // <-- ESTADO DEL NUEVO MODAL
@@ -436,6 +441,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
             {/* Switch de Vista */}
             <div className="flex border-2 border-[var(--color-ink)] bg-[var(--color-bg)] shadow-[4px_4px_0_0_var(--color-ink)] shrink-0 w-full md:w-auto">
+              {!soloCompras && (
               <button 
                 id="btn-tab-productos"
                 onClick={() => setVistaActiva('PRODUCTOS')} 
@@ -455,6 +461,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               >
                 <Package size={14} /> Productos
               </button>
+              )}
+              {!soloCompras && (
               <button 
                 id="btn-tab-lotes"
                 onClick={() => setVistaActiva('LOTES')} 
@@ -477,6 +485,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               >
                 <Layers size={14} /> Lotes
               </button>
+              )}
               {/* Listas de compras a proveedores; al recibir el pedido se crean los lotes (components/PanelCompras.tsx) */}
               <button
                 id="btn-tab-compras"
@@ -503,6 +512,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             </div>
           </div>
 
+          {!soloCompras && (<>
           {/* LADO DERECHO: METRICAS Y BOTONES DE ACCIÓN */}
           <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-4 lg:gap-6 w-full xl:w-auto pb-1 pr-1">
             
@@ -577,6 +587,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               </button>
             </div>
           </div>
+          </>)}
         </div>
 
       {!enLinea && (

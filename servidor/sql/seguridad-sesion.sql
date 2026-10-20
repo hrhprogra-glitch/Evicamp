@@ -64,6 +64,10 @@ AS $$
     WHEN 'POST /compras_detalle'     THEN ARRAY['almacen_ingresar_lotes']
     WHEN 'PATCH /compras_detalle'    THEN ARRAY['almacen_ingresar_lotes']
     WHEN 'DELETE /compras_detalle'   THEN ARRAY['almacen_ingresar_lotes']
+    -- Recibir / devolver un pedido: también el permiso "Recibir pedidos" (cajero, solo Compras). Las reglas
+    -- finas (sin costos, solo devolver lo propio) están dentro de cada función.
+    WHEN 'POST /rpc/fn_recibir_compra'  THEN ARRAY['almacen_ingresar_lotes', 'compras_recibir']
+    WHEN 'POST /rpc/fn_devolver_compra' THEN ARRAY['almacen_ingresar_lotes', 'compras_recibir']
     -- GERENCIA
     WHEN 'PATCH /empresa_config'     THEN ARRAY['gerencia_configuracion_sistema']
     WHEN 'POST /empresa_config'      THEN ARRAY['gerencia_configuracion_sistema']
@@ -341,4 +345,196 @@ BEGIN
     END IF;
   END LOOP;
 END $$;
+
+-- COMPRAS: recibir y devolver se hacen EN EL SERVIDOR, todo o nada (si se corta, no quedan lotes a medias).
+-- Quién lo hizo lo pone el servidor con la sesión: la pantalla no puede mandar otro nombre.
+ALTER TABLE public.compras ADD COLUMN IF NOT EXISTS recibido_por_id text;
+
+-- Registro de modificaciones de cada pedido (solo lectura para la pantalla: lo escriben el trigger y las funciones)
+CREATE TABLE IF NOT EXISTS public.compras_historial (
+  id         bigserial PRIMARY KEY,
+  compra_id  bigint NOT NULL REFERENCES public.compras (id) ON DELETE CASCADE,
+  accion     text NOT NULL,          -- CREADA / EDITADA / ANULADA / RECIBIDA / DEVUELTA
+  empleado   text,
+  detalle    text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS compras_historial_compra ON public.compras_historial (compra_id);
+DO $$
+DECLARE r text;
+BEGIN
+  FOREACH r IN ARRAY ARRAY['anon', 'web_anon'] LOOP
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN
+      EXECUTE format('GRANT SELECT ON public.compras_historial TO %I', r);
+    END IF;
+  END LOOP;
+END $$;
+
+-- Empleado de la sesión del pedido actual (NULL si no hay sesión válida)
+CREATE OR REPLACE FUNCTION public.fn_empleado_de_sesion(OUT id text, OUT nombre text, OUT permisos jsonb)
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_token text := current_setting('request.headers', true)::json ->> 'x-sesion';
+BEGIN
+  IF v_token IS NULL OR v_token !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
+    RETURN;
+  END IF;
+  SELECT e.id::text, e.nombre, coalesce(e.permisos, '{}'::jsonb) INTO id, nombre, permisos
+  FROM sesiones s JOIN empleados e ON e.id = s.empleado_id
+  WHERE s.token = v_token::uuid AND e.estado = 'ACTIVO';
+END;
+$$;
+
+-- Historial automático: creada, editada (lista pendiente que se guarda de nuevo) y anulada.
+-- RECIBIDA y DEVUELTA las anotan fn_recibir_compra / fn_devolver_compra con su detalle.
+CREATE OR REPLACE FUNCTION public.fn_historial_compras()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_nombre text := (SELECT nombre FROM public.fn_empleado_de_sesion());
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    INSERT INTO compras_historial (compra_id, accion, empleado, detalle) VALUES (NEW.id, 'CREADA', v_nombre, NEW.proveedor);
+  ELSIF NEW.estado = 'ANULADO' AND OLD.estado <> 'ANULADO' THEN
+    INSERT INTO compras_historial (compra_id, accion, empleado) VALUES (NEW.id, 'ANULADA', v_nombre);
+  ELSIF NEW.estado = 'PENDIENTE' AND OLD.estado = 'PENDIENTE' THEN
+    INSERT INTO compras_historial (compra_id, accion, empleado, detalle) VALUES (NEW.id, 'EDITADA', v_nombre, NEW.proveedor);
+  END IF;
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS trg_historial_compras ON public.compras;
+CREATE TRIGGER trg_historial_compras AFTER INSERT OR UPDATE ON public.compras
+  FOR EACH ROW EXECUTE FUNCTION public.fn_historial_compras();
+
+-- Recibir un pedido: crea un lote por producto que llegó (como "Ingresar lote"), recalcula el stock y deja
+-- la compra RECIBIDA. p_items: [{"detalle_id": 1, "cantidad": 10, "costo": 2.5, "vence": "2026-12-31"}].
+-- Sin el permiso de almacén (cajero con "Recibir pedidos") el COSTO no se puede cambiar: se usa el de la lista.
+CREATE OR REPLACE FUNCTION public.fn_recibir_compra(p_compra_id bigint, p_items jsonb, p_documento text DEFAULT NULL)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_emp record;
+  v_almacen boolean;
+  v_compra compras%ROWTYPE;
+  v_det record;
+  v_item jsonb;
+  v_cant numeric;
+  v_costo numeric;
+  v_doc text;
+  v_lote bigint := (extract(epoch FROM clock_timestamp()) * 1000)::bigint;
+  v_stock numeric;
+  v_lotes int := 0;
+  v_cambios jsonb := '[]'::jsonb;
+BEGIN
+  SELECT * INTO v_emp FROM fn_empleado_de_sesion();
+  IF v_emp.id IS NULL THEN RAISE EXCEPTION 'Sesión no válida.'; END IF;
+  v_almacen := fn_tiene_permiso(v_emp.permisos, ARRAY['almacen_ingresar_lotes']);
+  IF NOT v_almacen AND NOT fn_tiene_permiso(v_emp.permisos, ARRAY['compras_recibir']) THEN
+    RAISE EXCEPTION 'No tienes permiso para recibir pedidos.';
+  END IF;
+
+  SELECT * INTO v_compra FROM compras WHERE id = p_compra_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Ese pedido no existe.'; END IF;
+  IF v_compra.estado <> 'PENDIENTE' THEN RAISE EXCEPTION 'Este pedido ya no está pendiente (está %).', v_compra.estado; END IF;
+  v_doc := coalesce(nullif(trim(p_documento), ''), 'COMPRA #' || right(v_compra.id::text, 6));
+
+  FOR v_det IN SELECT * FROM compras_detalle WHERE compra_id = p_compra_id AND batch_id IS NULL ORDER BY id LOOP
+    SELECT x INTO v_item FROM jsonb_array_elements(p_items) x WHERE (x ->> 'detalle_id')::bigint = v_det.id;
+    v_cant := greatest(0, coalesce((v_item ->> 'cantidad')::numeric, 0));
+    v_costo := CASE WHEN v_almacen AND v_item ? 'costo' THEN greatest(0, (v_item ->> 'costo')::numeric) ELSE v_det.costo_unit END;
+    IF v_cant > 0 THEN
+      v_lote := v_lote + 1;
+      INSERT INTO batches (id, product_id, quantity, initial_quantity, expiration_date, cost_total, cost_unit,
+                           document_ref, supplier, provider_id, is_synced, is_active)
+      VALUES (v_lote, v_det.product_id, v_cant, v_cant, nullif(v_item ->> 'vence', ''), round(v_cant * v_costo, 2), v_costo,
+              v_doc, v_compra.proveedor, v_compra.provider_id, 1, 1);
+      INSERT INTO inventory_movements (batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
+                                       operation_type, reason, notes, "user", is_synced)
+      VALUES (v_lote, v_det.product_id, v_det.product_name, v_cant, 0, v_cant, 'COMPRA', 'Ingreso Lote',
+              'Doc: ' || v_doc || ' · Pedido #' || right(v_compra.id::text, 6), v_emp.nombre, 1);
+      SELECT coalesce(sum(quantity), 0) INTO v_stock FROM batches WHERE product_id = v_det.product_id AND is_active = 1;
+      UPDATE products SET quantity = v_stock WHERE id = v_det.product_id;
+      UPDATE compras_detalle SET cantidad_recibida = v_cant, costo_unit = v_costo, batch_id = v_lote WHERE id = v_det.id;
+      v_lotes := v_lotes + 1;
+      v_cambios := v_cambios || jsonb_build_object('id', v_det.product_id::text, 'quantity', v_stock);
+    ELSE
+      UPDATE compras_detalle SET cantidad_recibida = 0 WHERE id = v_det.id;
+    END IF;
+  END LOOP;
+
+  UPDATE compras SET estado = 'RECIBIDO', documento = v_doc, recibido_por = v_emp.nombre, recibido_por_id = v_emp.id,
+                     recibido_at = now()
+  WHERE id = p_compra_id;
+  INSERT INTO compras_historial (compra_id, accion, empleado, detalle)
+  VALUES (p_compra_id, 'RECIBIDA', v_emp.nombre, v_lotes || ' lote(s) · ' || v_doc);
+  RETURN jsonb_build_object('lotes', v_lotes, 'cambios', v_cambios);
+END;
+$$;
+
+-- Devolver lo ingresado: retira los lotes de la recepción (fn_soft_delete_batch) y la compra vuelve a PENDIENTE
+-- (NO se borra). Solo si esa mercadería no se vendió ni se mermó. Con "Recibir pedidos" (sin permiso de
+-- almacén) solo se puede devolver lo que uno mismo recibió.
+CREATE OR REPLACE FUNCTION public.fn_devolver_compra(p_compra_id bigint)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_emp record;
+  v_almacen boolean;
+  v_compra compras%ROWTYPE;
+  v_det record;
+  v_movidos text;
+  v_stock numeric;
+  v_lotes int := 0;
+  v_cambios jsonb := '[]'::jsonb;
+BEGIN
+  SELECT * INTO v_emp FROM fn_empleado_de_sesion();
+  IF v_emp.id IS NULL THEN RAISE EXCEPTION 'Sesión no válida.'; END IF;
+  v_almacen := fn_tiene_permiso(v_emp.permisos, ARRAY['almacen_ingresar_lotes']);
+  IF NOT v_almacen AND NOT fn_tiene_permiso(v_emp.permisos, ARRAY['compras_recibir']) THEN
+    RAISE EXCEPTION 'No tienes permiso para devolver pedidos.';
+  END IF;
+
+  SELECT * INTO v_compra FROM compras WHERE id = p_compra_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Ese pedido no existe.'; END IF;
+  IF v_compra.estado <> 'RECIBIDO' THEN RAISE EXCEPTION 'Solo se puede devolver un pedido RECIBIDO.'; END IF;
+  IF NOT v_almacen AND coalesce(v_compra.recibido_por_id, '') <> v_emp.id THEN
+    RAISE EXCEPTION 'Solo puedes devolver los pedidos que tú recibiste. Pide ayuda al administrador.';
+  END IF;
+
+  SELECT string_agg('• ' || d.product_name, E'\n') INTO v_movidos
+  FROM compras_detalle d LEFT JOIN batches b ON b.id = d.batch_id
+  WHERE d.compra_id = p_compra_id AND d.batch_id IS NOT NULL
+    AND (b.id IS NULL OR b.is_active <> 1 OR b.quantity < coalesce(d.cantidad_recibida, 0));
+  IF v_movidos IS NOT NULL THEN
+    RAISE EXCEPTION E'No se puede devolver: estos productos ya se vendieron, se mermaron o su lote se retiró:\n%', v_movidos;
+  END IF;
+
+  FOR v_det IN SELECT * FROM compras_detalle WHERE compra_id = p_compra_id AND batch_id IS NOT NULL LOOP
+    PERFORM fn_soft_delete_batch(v_det.batch_id::text, v_emp.nombre || ' (devolución pedido #' || right(p_compra_id::text, 6) || ')');
+    SELECT coalesce(sum(quantity), 0) INTO v_stock FROM batches WHERE product_id = v_det.product_id AND is_active = 1;
+    v_cambios := v_cambios || jsonb_build_object('id', v_det.product_id::text, 'quantity', v_stock);
+    v_lotes := v_lotes + 1;
+  END LOOP;
+  UPDATE compras_detalle SET cantidad_recibida = NULL, batch_id = NULL WHERE compra_id = p_compra_id;
+  UPDATE compras SET estado = 'PENDIENTE', documento = NULL, recibido_por = NULL, recibido_por_id = NULL, recibido_at = NULL
+  WHERE id = p_compra_id;
+  INSERT INTO compras_historial (compra_id, accion, empleado, detalle)
+  VALUES (p_compra_id, 'DEVUELTA', v_emp.nombre, v_lotes || ' lote(s) retirado(s); vuelve a PENDIENTES');
+  RETURN jsonb_build_object('lotes', v_lotes, 'cambios', v_cambios);
+END;
+$$;
 NOTIFY pgrst, 'reload schema';

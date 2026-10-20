@@ -14,7 +14,7 @@ interface ModalUsuarioProps {
 
 const PERMISOS_DEFAULT: PermisosUsuario = {
   caja_realizar_ventas: false, caja_abrir_cerrar_turno: false, caja_ingresos_egresos: false, caja_ver_fiados: false, caja_cobrar_deudas: false,
-  almacen_ver_stock: false, almacen_ingresar_lotes: false, almacen_crear_editar_productos: false, almacen_eliminar_productos: false, almacen_modificar_precios: false, almacen_gestionar_proveedores: false, almacen_registrar_mermas: false,
+  almacen_ver_stock: false, almacen_ingresar_lotes: false, almacen_crear_editar_productos: false, almacen_eliminar_productos: false, almacen_modificar_precios: false, almacen_gestionar_proveedores: false, almacen_registrar_mermas: false, compras_recibir: false,
   reportes_ver_historial_ventas: false, reportes_anular_ventas: false, reportes_ver_globales: false,
   gerencia_ver_utilidades: false, gerencia_gestionar_usuarios: false, gerencia_configuracion_sistema: false,
   sistema_acceso_total: false,
@@ -77,6 +77,7 @@ const COLUMNAS_PERMISOS: {
     items: [
       { key: 'almacen_ver_stock', label: 'Ver Stock Productos' },
       { key: 'almacen_ingresar_lotes', label: 'Ingresar Lotes (Compras)' },
+      { key: 'compras_recibir', label: 'Recibir Pedidos (solo Compras)' },
       { key: 'almacen_crear_editar_productos', label: 'Crear/Editar Productos' },
       { key: 'almacen_eliminar_productos', label: 'Eliminar Productos' },
       { key: 'almacen_modificar_precios', label: 'Modificar Precios' },

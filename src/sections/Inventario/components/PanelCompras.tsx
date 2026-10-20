@@ -21,7 +21,7 @@ interface Proveedor { id: string; razon_social: string; telefono?: string | null
 interface Item { product_id: string; product_name: string; cantidad: number; costo_unit: number; unidad?: string }
 interface Compra {
   id: number; provider_id: string | null; proveedor: string | null; estado: 'PENDIENTE' | 'RECIBIDO' | 'ANULADO';
-  notas: string | null; documento: string | null; autor: string | null; recibido_por: string | null;
+  notas: string | null; documento: string | null; autor: string | null; recibido_por: string | null; recibido_por_id: string | null;
   created_at: string; recibido_at: string | null; compras_detalle: (Item & { id: number; cantidad_recibida: number | null; batch_id: number | null })[];
 }
 
@@ -110,6 +110,10 @@ interface Props {
 
 export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado }) => {
   const puede = usePermiso('almacen_ingresar_lotes');
+  // 'Recibir pedidos' sin permiso de almacén (cajero): solo ve pedidos (sin costos), los recibe y devuelve lo que
+  // él mismo recibió. No arma, edita, anula ni envía. El servidor aplica las mismas reglas (fn_recibir/devolver_compra).
+  const recibePedidos = usePermiso('compras_recibir');
+  const soloRecibe = !puede && recibePedidos;
   const empleado = useEmpleado();
   const panel = useRef<HTMLDivElement>(null);
   const [compras, setCompras] = useState<Compra[]>([]);
@@ -167,6 +171,9 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   const stockBajo = productos.filter((p) => p.unit !== 'CONSUMO' && Number(p.quantity) <= Number(p.minStock));
 
   const conPermiso = (accion: string, hacer: () => void) => (puede ? hacer() : avisarSinPermiso(accion));
+  const conPermisoRecibir = (accion: string, hacer: () => void) => (puede || recibePedidos ? hacer() : avisarSinPermiso(accion));
+  // Devolver: el admin / almacén cualquier pedido; con solo 'Recibir pedidos', únicamente lo que uno recibió
+  const puedeDevolver = (c: Compra) => puede || (recibePedidos && !!empleado?.id && c.recibido_por_id === String(empleado.id));
   // Al cerrar una ventana el foco vuelve a la lista (o a "Nueva lista")
   const volverFoco = (compraId?: number) => setTimeout(() => {
     enfocar((compraId && document.querySelector<HTMLElement>(`[data-compra="${compraId}"]`)) || document.getElementById('btn-nueva-compra'));
@@ -202,46 +209,23 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
     return true;
   };
 
-  // "Devolver lo ingresado": la compra recibida vuelve a PENDIENTE y sus lotes se retiran (fn_soft_delete_batch,
-  // la misma función de "Retirar lote"). Solo si esa mercadería no se movió (vendida o mermada): si no, el
-  // stock quedaría mal.
+  // "Devolver lo ingresado": lo hace el SERVIDOR (fn_devolver_compra, todo o nada): retira los lotes y la compra
+  // vuelve a PENDIENTE (no se borra). Revisa que nada se haya vendido ni mermado y, con solo "Recibir pedidos",
+  // que lo haya recibido el mismo empleado. Queda en el historial con su nombre.
   const devolver = async (c: Compra) => {
-    const conLote = c.compras_detalle.filter((d) => d.batch_id != null);
-    if (!conLote.length) { void avisar('Esta compra no tiene lotes ingresados.'); return false; }
-    const { data: lotes, error } = await supabase.from('batches').select('id, quantity, initial_quantity, is_active').in('id', conLote.map((d) => d.batch_id!));
-    if (error) { void avisar(`No se pudo revisar los lotes: ${error.message}`); return false; }
-    const movidos = conLote.filter((d) => {
-      const l = (lotes || []).find((x: any) => String(x.id) === String(d.batch_id));
-      return !l || Number(l.is_active) !== 1 || Number(l.quantity) < Number(d.cantidad_recibida ?? 0);
-    });
-    if (movidos.length) {
-      void avisar(`⚠️ No se puede devolver esta compra.\n\nEstos productos ya se vendieron, se mermaron o su lote se retiró:\n${movidos.map((d) => `• ${d.product_name}`).join('\n')}\n\nSi hubo un error, corrige el stock desde Inventario > Lotes.`);
-      return false;
-    }
     if (!await confirmar(
-      `↩️ DEVOLVER LO INGRESADO\n\nUsa esto si te equivocaste al recibir (cantidades, costos o el pedido equivocado):\n\n`
-      + `• Se retirarán del inventario los ${conLote.length} lote(s) que se crearon.\n`
+      `↩️ DEVOLVER LO INGRESADO\n\nUsa esto si te equivocaste al recibir (cantidades o el pedido equivocado):\n\n`
+      + `• Se retirarán del inventario los lotes que se crearon al recibir.\n`
       + `• El stock vuelve a como estaba antes de recibir.\n`
-      + `• La compra vuelve a PENDIENTES: puedes editarla y recibirla de nuevo.\n\n¿Devolver?`,
+      + `• El pedido NO se borra: vuelve a PENDIENTES para recibirlo bien.\n`
+      + `• Queda registrado que tú lo devolviste.\n\n¿Devolver?`,
     )) return false;
-    const fallidos: string[] = [];
-    const cambios: { id: string; quantity: number }[] = [];
-    for (const d of conLote) {
-      const { error: e1 } = await supabase.rpc('fn_soft_delete_batch', { p_batch_id: String(d.batch_id), p_user_name: `${empleado?.nombre || 'Sistema'} (devolución compra #${String(c.id).slice(-6)})` });
-      if (e1) { fallidos.push(`${d.product_name}: ${e1.message}`); continue; }
-      await supabase.from('compras_detalle').update({ cantidad_recibida: null, batch_id: null }).eq('id', d.id);
-      const { data: p } = await supabase.from('products').select('quantity').eq('id', d.product_id).single();
-      cambios.push({ id: String(d.product_id), quantity: Number(p?.quantity || 0) });
-    }
-    if (!fallidos.length) {
-      await supabase.from('compras').update({ estado: 'PENDIENTE', recibido_at: null, recibido_por: null, documento: null }).eq('id', c.id);
-      await supabase.from('compras_detalle').update({ cantidad_recibida: null }).eq('compra_id', c.id);
-    }
+    const { data, error } = await supabase.rpc('fn_devolver_compra', { p_compra_id: c.id });
+    if (error) { void avisar(`⚠️ No se pudo devolver.\n\n${error.message}`); return false; }
+    const cambios = ((data as any)?.cambios || []) as { id: string; quantity: number }[];
     if (cambios.length) onStockActualizado(cambios);
     await cargar();
-    await avisar(fallidos.length
-      ? `⚠️ Se devolvieron ${cambios.length} de ${conLote.length}. No se pudo con:\n${fallidos.join('\n')}`
-      : `✅ Compra devuelta. Los lotes se retiraron y la compra volvió a PENDIENTES (pedido #${String(c.id).slice(-6)}).`);
+    await avisar(`✅ Pedido devuelto: ${(data as any)?.lotes ?? 0} lote(s) retirado(s). El pedido #${String(c.id).slice(-6)} volvió a PENDIENTES.`);
     setFiltro('PENDIENTE');
     volverFoco(c.id);
     return true;
@@ -265,7 +249,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
           <h2 className="text-sm sm:text-base font-black uppercase tracking-widest text-[var(--color-ink)] flex items-center gap-2"><ShoppingCart size={18} /> Listas de compras</h2>
           <p className="text-[11px] font-bold text-[var(--color-muted)] mt-1">
             Arma el pedido para tu proveedor y, cuando llegue, recíbelo: los lotes se crean solos. Enter sobre una lista para ver su detalle.
-            {stockBajo.length > 0 && <span className="text-[var(--color-danger)]"> · {stockBajo.length} producto(s) con stock bajo.</span>}
+            {!soloRecibe && stockBajo.length > 0 && <span className="text-[var(--color-danger)]"> · {stockBajo.length} producto(s) con stock bajo.</span>}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -275,10 +259,12 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
               {nombre}
             </button>
           ))}
+          {!soloRecibe && (
           <button id="btn-nueva-compra" type="button" data-nav="0,3" onClick={() => conPermiso('armar listas de compras', () => setEditando('nueva'))}
             className={`${claseBoton} bg-[var(--color-accent)] text-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)]`}>
             <Plus size={14} /> Nueva lista
           </button>
+          )}
         </div>
       </div>
 
@@ -287,7 +273,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
         <div className="p-6 text-center text-xs font-black uppercase text-[var(--color-muted)]"><Loader2 className="inline animate-spin" size={16} /> Cargando...</div>
       ) : visibles.length === 0 ? (
         <div className="p-6 bg-white border-2 border-dashed border-[var(--color-border)] text-center text-xs font-black uppercase text-[var(--color-muted)]">
-          {filtro === 'PENDIENTE' ? 'No hay pedidos pendientes. Crea una lista con "Nueva lista".' : 'No hay listas aquí.'}
+          {filtro === 'PENDIENTE' ? (soloRecibe ? 'No hay pedidos por recibir.' : 'No hay pedidos pendientes. Crea una lista con "Nueva lista".') : 'No hay listas aquí.'}
         </div>
       ) : (
         // Tabla (mismo estilo que Lotes): una fila por lista; ↑ ↓ para moverse, Enter abre el detalle
@@ -297,7 +283,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
               <div className="col-span-2">Fecha / Pedido</div>
               <div className="col-span-3">Proveedor</div>
               <div className="col-span-1 text-center">Productos</div>
-              <div className="col-span-1 text-right">Total</div>
+              <div className="col-span-1 text-right">{soloRecibe ? '' : 'Total'}</div>
               <div className="col-span-3">Recibido por / Factura</div>
               <div className="col-span-1 text-center">Estado</div>
             </div>
@@ -320,7 +306,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
                   <div className="col-span-3 font-black uppercase text-[var(--color-ink)] truncate flex items-center gap-2"><Truck size={14} className="shrink-0" /> <span className="truncate">{c.proveedor || 'Sin proveedor'}</span></div>
                   {/* Los productos se ven en el detalle (Enter); aquí solo cuántos son */}
                   <div className="col-span-1 text-center font-black text-[var(--color-ink)]">{c.compras_detalle.length}</div>
-                  <div className="col-span-1 text-right font-black text-[var(--color-ink)]">{soles(total)}</div>
+                  <div className="col-span-1 text-right font-black text-[var(--color-ink)]">{soloRecibe ? '' : soles(total)}</div>
                   {/* Quién lo recibió: el empleado con la sesión abierta al recibir (admin o cajero) */}
                   <div className="col-span-3 text-xs font-bold text-[var(--color-muted)] uppercase">
                     {recibida ? <>
@@ -341,12 +327,14 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
       {viendo && (
         <DetalleCompra
           compra={viendo}
+          soloRecibe={soloRecibe}
+          puedeDevolver={puedeDevolver(viendo)}
           onCerrar={() => { const id = viendo.id; setViendo(null); volverFoco(id); }}
           onWhatsApp={() => enviarWhatsApp(viendo)}
           onEditar={() => conPermiso('editar listas de compras', () => { const c = viendo; setViendo(null); setEditando(c); })}
           onAnular={() => conPermiso('anular listas de compras', () => { const c = viendo; void anular(c).then((ok) => { if (ok) setViendo(null); }); })}
-          onRecibir={() => conPermiso('recibir pedidos', () => { const c = viendo; setViendo(null); setRecibiendo(c); })}
-          onDevolver={() => conPermiso('devolver compras', () => { const c = viendo; void devolver(c).then((ok) => { if (ok) setViendo(null); }); })}
+          onRecibir={() => conPermisoRecibir('recibir pedidos', () => { const c = viendo; setViendo(null); setRecibiendo(c); })}
+          onDevolver={() => conPermisoRecibir('devolver compras', () => { const c = viendo; void devolver(c).then((ok) => { if (ok) setViendo(null); }); })}
         />
       )}
 
@@ -368,7 +356,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
         <RecibirCompra
           compra={recibiendo}
           productos={productos}
-          receptor={empleado?.nombre || ''}
+          soloRecibe={soloRecibe}
           onCerrar={async (cambios) => {
             const id = recibiendo.id;
             setRecibiendo(null);
@@ -410,38 +398,56 @@ const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.
 };
 
 // ======================================================= Detalle (Enter sobre una lista). Tamaño de letra normal: Ajustes > Apariencia lo agranda
+// Con 'soloRecibe' (cajero con 'Recibir pedidos'): sin costos ni totales; solo Recibir y, si él lo recibió, Devolver.
+// Abajo, el registro de modificaciones (compras_historial): quién creó, editó, recibió, devolvió o anuló, y cuándo.
+const ACCIONES: Record<string, string> = { CREADA: 'Creó la lista', EDITADA: 'Editó la lista', ANULADA: 'Anuló el pedido', RECIBIDA: 'Recibió el pedido', DEVUELTA: 'Devolvió lo ingresado' };
+
 const DetalleCompra: React.FC<{
-  compra: Compra; onCerrar: () => void; onWhatsApp: () => void; onEditar: () => void;
+  compra: Compra; soloRecibe: boolean; puedeDevolver: boolean; onCerrar: () => void; onWhatsApp: () => void; onEditar: () => void;
   onAnular: () => void; onRecibir: () => void; onDevolver: () => void;
-}> = ({ compra: c, onCerrar, onWhatsApp, onEditar, onAnular, onRecibir, onDevolver }) => {
+}> = ({ compra: c, soloRecibe, puedeDevolver, onCerrar, onWhatsApp, onEditar, onAnular, onRecibir, onDevolver }) => {
   const cuerpo = useRef<HTMLDivElement>(null);
   const recibida = c.estado === 'RECIBIDO';
   const parcial = c.compras_detalle.some((d) => d.batch_id != null);
   const filas = c.compras_detalle.map((d) => ({ ...d, mostrar: recibida ? Number(d.cantidad_recibida ?? 0) : Number(d.cantidad) }));
   const total = totalDe(filas.map((f) => ({ cantidad: f.mostrar, costo_unit: f.costo_unit })));
+  const [historial, setHistorial] = useState<{ id: number; accion: string; empleado: string | null; detalle: string | null; created_at: string }[]>([]);
+  useEffect(() => {
+    void supabase.from('compras_historial').select('id, accion, empleado, detalle, created_at').eq('compra_id', c.id).order('created_at')
+      .then(({ data }) => setHistorial((data as any[]) || []));
+  }, [c.id]);
+
   // Botones: el principal va al final (↓ llega a él y es el que queda marcado al abrir)
+  const whatsapp = { clave: 'whatsapp', contenido: <><Send size={16} /> WhatsApp</>, clase: 'bg-[var(--color-success)] text-white border-[var(--color-success)]', hacer: onWhatsApp };
   const botones = c.estado === 'PENDIENTE'
-    ? [
-      { clave: 'whatsapp', contenido: <><Send size={16} /> WhatsApp</>, clase: 'bg-white text-[var(--color-success)] border-[var(--color-success)]', hacer: onWhatsApp },
-      ...(!parcial ? [{ clave: 'editar', contenido: <>Editar</>, clase: 'bg-white text-[var(--color-ink)]', hacer: onEditar }] : []),
-      { clave: 'anular', contenido: <><Ban size={16} /> Anular</>, clase: 'bg-white text-[var(--color-muted)]', hacer: onAnular },
-      { clave: 'recibir', contenido: <><PackageCheck size={16} /> Recibir</>, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]', hacer: onRecibir },
-    ]
+    ? (soloRecibe
+      ? [{ clave: 'recibir', contenido: <><PackageCheck size={16} /> Recibir</>, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]', hacer: onRecibir }]
+      : [
+        { ...whatsapp, clase: 'bg-white text-[var(--color-success)] border-[var(--color-success)]' },
+        ...(!parcial ? [{ clave: 'editar', contenido: <>Editar</>, clase: 'bg-white text-[var(--color-ink)]', hacer: onEditar }] : []),
+        { clave: 'anular', contenido: <><Ban size={16} /> Anular</>, clase: 'bg-white text-[var(--color-muted)]', hacer: onAnular },
+        { clave: 'recibir', contenido: <><PackageCheck size={16} /> Recibir</>, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]', hacer: onRecibir },
+      ])
     : recibida
       ? [
-        { clave: 'devolver', contenido: <><Undo2 size={16} /> Devolver lo ingresado</>, clase: 'bg-white text-[var(--color-danger)] border-[var(--color-danger)]', hacer: onDevolver },
-        { clave: 'whatsapp', contenido: <><Send size={16} /> WhatsApp</>, clase: 'bg-[var(--color-success)] text-white border-[var(--color-success)]', hacer: onWhatsApp },
+        ...(puedeDevolver ? [{ clave: 'devolver', contenido: <><Undo2 size={16} /> Devolver lo ingresado</>, clase: 'bg-white text-[var(--color-danger)] border-[var(--color-danger)]', hacer: onDevolver }] : []),
+        ...(!soloRecibe ? [whatsapp] : []),
       ]
-      : [{ clave: 'whatsapp', contenido: <><Send size={16} /> WhatsApp</>, clase: 'bg-[var(--color-success)] text-white border-[var(--color-success)]', hacer: onWhatsApp }];
+      : (!soloRecibe ? [whatsapp] : []);
 
-  useEffect(() => { setTimeout(() => enfocar(document.getElementById(`btn-detalle-${botones[botones.length - 1].clave}`)), 30); }, []);
+  // Al abrir, el foco va al botón principal; si no hay botones, a la X
+  useEffect(() => {
+    setTimeout(() => enfocar(botones.length ? document.getElementById(`btn-detalle-${botones[botones.length - 1].clave}`)
+      : cuerpo.current?.querySelector<HTMLElement>('[data-nav="-1,0"]')), 30);
+  }, []);
 
   return (
     <Ventana cuerpo={cuerpo} titulo={`Pedido #${String(c.id).slice(-6)} · ${c.estado}`} onCerrar={onCerrar}
-      pie={<>{botones.map((b, i) => (
-        <button key={b.clave} id={`btn-detalle-${b.clave}`} type="button" data-nav={`${FILA_PIE},${i}`} onClick={b.hacer}
-          className={`${claseBoton} ${b.clase}`}>{b.contenido}</button>
-      ))}</>}>
+      pie={<>{botones.length === 0 && <span className="mr-auto self-center text-[10px] font-bold uppercase text-[var(--color-muted)]">Solo lectura · Esc para cerrar</span>}
+        {botones.map((b, i) => (
+          <button key={b.clave} id={`btn-detalle-${b.clave}`} type="button" data-nav={`${FILA_PIE},${i}`} onClick={b.hacer}
+            className={`${claseBoton} ${b.clase}`}>{b.contenido}</button>
+        ))}</>}>
       <div className="flex flex-col gap-1">
         <p className="text-sm sm:text-base font-black uppercase text-[var(--color-ink)] flex items-center gap-2"><Truck size={16} /> {c.proveedor || 'Sin proveedor'}</p>
         <p className="text-[10px] font-bold text-[var(--color-muted)] uppercase">
@@ -452,22 +458,41 @@ const DetalleCompra: React.FC<{
       </div>
       <table className="w-full text-xs">
         <thead><tr className="text-left text-[10px] uppercase tracking-widest text-[var(--color-muted)] border-b-2 border-[var(--color-ink)]">
-          <th className="py-2 pr-2">Producto</th><th className="py-2 px-2 text-right">{recibida ? 'Llegó' : 'Pedir'}</th><th className="py-2 px-2 text-right">Costo u.</th><th className="py-2 pl-2 text-right">Subtotal</th>
+          <th className="py-2 pr-2">Producto</th><th className="py-2 px-2 text-right">{recibida ? 'Llegó' : 'Pedir'}</th>
+          {!soloRecibe && <><th className="py-2 px-2 text-right">Costo u.</th><th className="py-2 pl-2 text-right">Subtotal</th></>}
         </tr></thead>
         <tbody>
           {filas.map((f) => (
             <tr key={f.id} className="border-b border-[var(--color-border)]">
               <td className="py-2 pr-2 font-black text-[var(--color-ink)]">{f.product_name}
-                {recibida && Number(f.cantidad_recibida ?? 0) !== Number(f.cantidad) && <span className="block text-xs font-bold text-[var(--color-warning-dark)]">pedido: {f.cantidad}</span>}
+                {recibida && Number(f.cantidad_recibida ?? 0) !== Number(f.cantidad) && <span className="block text-[10px] font-bold text-[var(--color-warning-dark)]">pedido: {f.cantidad}</span>}
               </td>
               <td className="py-2 px-2 text-right font-black">{f.mostrar}</td>
-              <td className="py-2 px-2 text-right font-bold text-[var(--color-muted)]">{soles(f.costo_unit)}</td>
-              <td className="py-2 pl-2 text-right font-black">{soles(f.mostrar * Number(f.costo_unit))}</td>
+              {!soloRecibe && <>
+                <td className="py-2 px-2 text-right font-bold text-[var(--color-muted)]">{soles(f.costo_unit)}</td>
+                <td className="py-2 pl-2 text-right font-black">{soles(f.mostrar * Number(f.costo_unit))}</td>
+              </>}
             </tr>
           ))}
         </tbody>
       </table>
-      <p className="text-right text-sm font-black text-[var(--color-ink)]">Total aprox. {soles(total)}</p>
+      {!soloRecibe && <p className="text-right text-sm font-black text-[var(--color-ink)]">Total aprox. {soles(total)}</p>}
+      {/* Registro de modificaciones */}
+      <div className="border-t-2 border-[var(--color-ink)] pt-2">
+        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-muted)] mb-1">Registro de cambios</p>
+        {historial.length === 0 ? (
+          <p className="text-[11px] font-bold text-[var(--color-muted)]">Sin cambios registrados.</p>
+        ) : (
+          <ul className="space-y-0.5">
+            {historial.map((h) => (
+              <li key={h.id} className="text-[11px] font-bold text-[var(--color-ink)]">
+                <span className="text-[var(--color-muted)]">{new Date(h.created_at).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                {' · '}<b>{h.empleado || 'Sistema'}</b> — {ACCIONES[h.accion] || h.accion}{h.detalle ? ` (${h.detalle})` : ''}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </Ventana>
   );
 };
@@ -666,8 +691,8 @@ const EditorCompra: React.FC<{
 
 // ======================================================= Recibir: crea los lotes
 const RecibirCompra: React.FC<{
-  compra: Compra; productos: Product[]; receptor: string; onCerrar: (cambios: { id: string; quantity: number }[] | null) => void;
-}> = ({ compra, productos, receptor, onCerrar }) => {
+  compra: Compra; productos: Product[]; soloRecibe: boolean; onCerrar: (cambios: { id: string; quantity: number }[] | null) => void;
+}> = ({ compra, productos, soloRecibe, onCerrar }) => {
   const cuerpo = useRef<HTMLDivElement>(null);
   // Lo que ya entró en un intento anterior (tiene lote) no se vuelve a ingresar
   const [filas, setFilas] = useState(compra.compras_detalle.filter((d) => d.batch_id == null).map((d) => ({
@@ -683,76 +708,44 @@ const RecibirCompra: React.FC<{
 
   useEffect(() => { setTimeout(() => enfocar(document.getElementById('compra-documento')), 30); }, []);
 
+  // Lo hace el SERVIDOR (fn_recibir_compra): todo o nada, y quién recibió sale de la sesión.
+  // Con solo "Recibir pedidos" el costo no se manda: el servidor usa el de la lista (lo puso el admin).
   const recibir = async () => {
     if (ocupado.current) return;
     const llegan = filas.filter((f) => Number(f.llego) > 0);
     if (!llegan.length) { void avisar('Escribe cuánto llegó de al menos un producto.'); return; }
     ocupado.current = true;
-    if (!await confirmar(`¿Ingresar al inventario ${llegan.length} producto(s) por ${soles(total)}?\nSe creará un lote por cada producto.`)) { ocupado.current = false; return; }
+    const pregunta = soloRecibe
+      ? `¿Confirmas que llegaron ${llegan.length} producto(s)?\nSe ingresarán al inventario con tu nombre.`
+      : `¿Ingresar al inventario ${llegan.length} producto(s) por ${soles(total)}?\nSe creará un lote por cada producto.`;
+    if (!await confirmar(pregunta)) { ocupado.current = false; return; }
     setGuardando(true);
-    const doc = documento.trim() || `COMPRA #${String(compra.id).slice(-6)}`;
-    const cambios: { id: string; quantity: number }[] = [];
-    const fallidos: string[] = [];
-    let base = Date.now();
-    for (const f of llegan) {
-      try {
-        const cantidad = Number(f.llego);
-        const costo = Number(f.costo) || 0;
-        const batchId = String(base++);
-        // Igual que "Ingresar lote" (ModalLote): lote + movimiento COMPRA + stock real del producto
-        const { error: e1 } = await supabase.from('batches').insert([{
-          id: batchId, product_id: Number(f.product_id), quantity: cantidad, initial_quantity: cantidad,
-          expiration_date: f.vence || null, cost_total: Math.round(cantidad * costo * 100) / 100, cost_unit: costo,
-          document_ref: doc, supplier: compra.proveedor || null, provider_id: compra.provider_id || null,
-          is_synced: '1', is_active: 1,
-        }]);
-        if (e1) throw e1;
-        const { error: e2 } = await supabase.from('inventory_movements').insert([{
-          batch_id: batchId, product_id: Number(f.product_id), product_name: f.product_name,
-          change_amount: cantidad, previous_quantity: 0, new_quantity: cantidad,
-          operation_type: 'COMPRA', reason: 'Ingreso Lote', notes: `Doc: ${doc} · Pedido #${String(compra.id).slice(-6)}`,
-          user: receptor || 'Sistema', is_synced: '1',
-        }]);
-        if (e2) throw e2;
-        const { data: lotes } = await supabase.from('batches').select('quantity').eq('product_id', f.product_id).eq('is_active', 1);
-        const stock = (lotes || []).reduce((s, l: any) => s + Number(l.quantity || 0), 0);
-        await supabase.from('products').update({ quantity: stock }).eq('id', f.product_id);
-        await supabase.from('compras_detalle').update({ cantidad_recibida: cantidad, costo_unit: costo, batch_id: Number(batchId) }).eq('id', f.detalle_id);
-        cambios.push({ id: f.product_id, quantity: stock });
-      } catch (e: any) {
-        fallidos.push(`${f.product_name}: ${e?.message || e}`);
-      }
-    }
-    // Lo que no llegó queda en 0 recibido
-    for (const f of filas.filter((x) => !(Number(x.llego) > 0))) {
-      await supabase.from('compras_detalle').update({ cantidad_recibida: 0 }).eq('id', f.detalle_id);
-    }
-    if (!fallidos.length) {
-      await supabase.from('compras').update({
-        estado: 'RECIBIDO', documento: doc, recibido_por: receptor || null, recibido_at: new Date().toISOString(),
-      }).eq('id', compra.id);
-    }
+    const items = filas.map((f) => ({
+      detalle_id: f.detalle_id, cantidad: Math.max(0, Number(f.llego) || 0), vence: f.vence || null,
+      ...(soloRecibe ? {} : { costo: Math.max(0, Number(f.costo) || 0) }),
+    }));
+    const { data, error } = await supabase.rpc('fn_recibir_compra', { p_compra_id: compra.id, p_items: items, p_documento: documento.trim() || null });
     setGuardando(false);
     ocupado.current = false;
-    if (fallidos.length) {
-      await avisar(`⚠️ Se ingresaron ${cambios.length} de ${llegan.length}. No se pudieron ingresar:\n${fallidos.join('\n')}\n\nEl pedido sigue PENDIENTE: al volver a "Recibir" solo aparecerá lo que faltó.`);
-    } else {
-      await avisar(`✅ Pedido recibido: ${cambios.length} lote(s) creado(s). El stock ya está actualizado.`);
-    }
+    if (error) { void avisar(`⚠️ No se pudo recibir el pedido.\n\n${error.message}\n\nNo se ingresó nada: puedes intentarlo de nuevo.`); return; }
+    const cambios = ((data as any)?.cambios || []) as { id: string; quantity: number }[];
+    await avisar(`✅ Pedido recibido: ${(data as any)?.lotes ?? 0} lote(s) creado(s). El stock ya está actualizado.`);
     onCerrar(cambios);
   };
 
   return (
     <Ventana cuerpo={cuerpo} titulo={`Recibir pedido #${String(compra.id).slice(-6)} · ${compra.proveedor || 'Sin proveedor'}`} onCerrar={() => onCerrar(null)}
       pie={<>
-        <span className="mr-auto self-center text-sm font-black text-[var(--color-ink)]">Total: {soles(total)}</span>
+        {!soloRecibe && <span className="mr-auto self-center text-sm font-black text-[var(--color-ink)]">Total: {soles(total)}</span>}
         <button id="btn-confirmar-recepcion" type="button" data-nav={`${FILA_PIE},1`} aria-disabled={guardando} onClick={() => void recibir()}
           className={`${claseBoton} bg-[var(--color-ink)] text-[var(--color-accent)] ${guardando ? 'opacity-60' : ''}`}>
-          {guardando ? <><Loader2 size={14} className="animate-spin" /> Ingresando...</> : <><PackageCheck size={14} /> Ingresar al inventario</>}
+          {guardando ? <><Loader2 size={14} className="animate-spin" /> Ingresando...</> : <><PackageCheck size={14} /> {soloRecibe ? 'Confirmar recepción' : 'Ingresar al inventario'}</>}
         </button>
       </>}>
       <p className="text-[11px] font-bold text-[var(--color-muted)]">
-        Revisa lo que llegó. Si algo no vino, déjalo en 0. Puedes corregir el costo según la factura. Flechas para moverte · Enter siguiente.
+        {soloRecibe
+          ? 'Cuenta lo que llegó y escríbelo. Si algo no vino, déjalo en 0. Flechas para moverte · Enter siguiente.'
+          : 'Revisa lo que llegó. Si algo no vino, déjalo en 0. Puedes corregir el costo según la factura. Flechas para moverte · Enter siguiente.'}
       </p>
       <label className="space-y-1 max-w-sm">
         <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-ink)]">N° de factura o boleta (opcional)</span>
@@ -762,7 +755,9 @@ const RecibirCompra: React.FC<{
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead><tr className="text-left text-[10px] uppercase tracking-widest text-[var(--color-muted)]">
-            <th className="p-1">Producto</th><th className="p-1 w-16">Pedido</th><th className="p-1 w-24">Llegó</th><th className="p-1 w-24">Costo u.</th><th className="p-1 w-36">Vence (opcional)</th>
+            <th className="p-1">Producto</th><th className="p-1 w-16">Pedido</th><th className="p-1 w-24">Llegó</th>
+            {!soloRecibe && <th className="p-1 w-24">Costo u.</th>}
+            <th className="p-1 w-36">Vence (opcional)</th>
           </tr></thead>
           <tbody>
             {filas.map((f, i) => {
@@ -774,7 +769,7 @@ const RecibirCompra: React.FC<{
                   <td className="p-1 font-black">{f.product_name}</td>
                   <td className="p-1 font-bold text-[var(--color-muted)]">{f.pedida}</td>
                   <td className="p-1"><input type="number" data-nav={`${fila},0`} min="0" step={esPeso(p) ? '0.01' : '1'} value={f.llego} onChange={(e) => cambiar(i, 'llego', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Llegó de ${f.product_name}`} /></td>
-                  <td className="p-1"><input type="number" data-nav={`${fila},1`} min="0" step="0.01" value={f.costo} onChange={(e) => cambiar(i, 'costo', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Costo de ${f.product_name}`} /></td>
+                  {!soloRecibe && <td className="p-1"><input type="number" data-nav={`${fila},1`} min="0" step="0.01" value={f.costo} onChange={(e) => cambiar(i, 'costo', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Costo de ${f.product_name}`} /></td>}
                   <td className="p-1"><input type="date" data-nav={`${fila},2`} value={f.vence} onChange={(e) => cambiar(i, 'vence', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Vencimiento de ${f.product_name}`} /></td>
                 </tr>
               );

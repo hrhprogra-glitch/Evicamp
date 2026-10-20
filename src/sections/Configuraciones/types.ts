@@ -16,6 +16,8 @@ export interface PermisosUsuario {
   almacen_modificar_precios: boolean;
   almacen_gestionar_proveedores: boolean;
   almacen_registrar_mermas: boolean;
+  // Solo Inventario > Compras: recibir pedidos y devolver lo que uno recibió (sin costos ni editar)
+  compras_recibir: boolean;
 
   // REPORTES
   reportes_ver_historial_ventas: boolean;
