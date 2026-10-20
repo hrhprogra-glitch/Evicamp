@@ -749,9 +749,9 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                  )}
                  {/* Vuelto: cuando el efectivo pasa lo que debe */}
                  {vuelto > 0 && (
-                   <div id="vuelto-abono" className="flex justify-between items-center bg-[var(--color-warning-bg,#FEF3C7)] border-2 border-[var(--color-ink)] p-3 shadow-[3px_3px_0_0_var(--color-ink)]">
-                     <span className="font-black text-sm uppercase tracking-widest text-[var(--color-ink)] flex items-center gap-2"><Banknote size={20} /> Vuelto</span>
-                     <span className="font-black text-3xl text-[var(--color-ink)]">S/ {vuelto.toFixed(2)}</span>
+                   <div id="vuelto-abono" className="flex justify-between items-center bg-[var(--color-warning-bg,#FEF3C7)] border-2 border-[var(--color-ink)] px-3 py-1.5 -mt-2">
+                     <span className="font-black text-xs uppercase tracking-widest text-[var(--color-ink)] flex items-center gap-1.5"><Banknote size={14} /> Vuelto</span>
+                     <span className="font-black text-lg text-[var(--color-ink)]">S/ {vuelto.toFixed(2)}</span>
                    </div>
                  )}
 
