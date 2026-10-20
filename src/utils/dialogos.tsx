@@ -110,7 +110,8 @@ const VentanaDialogo: React.FC = () => {
   if (!actual) return null;
   return (
     <div data-dialogo-sistema role="dialog" aria-modal="true" aria-labelledby="dialogo-sistema-texto"
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 font-mono">
+      // Capa más alta posible: los avisos siempre encima de cualquier ventana (Estado de cuenta usa z 999999)
+      className="fixed inset-0 z-[2147483000] flex items-center justify-center bg-black/50 p-4 font-mono">
       <div className="w-full max-w-md border-2 border-[var(--color-ink)] bg-[var(--color-surface,#fff)] shadow-[6px_6px_0_0_var(--color-ink)]">
         <div className="bg-[var(--color-ink)] px-4 py-2 text-[11px] font-black uppercase tracking-widest text-[var(--color-accent)]">
           {actual.conCancelar ? 'Confirmar' : 'Aviso'}

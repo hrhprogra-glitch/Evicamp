@@ -77,7 +77,8 @@ const VentanaAutorizacion: React.FC<{ pedido: Pedido; cerrar: () => void }> = ({
 
   return (
     <div data-dialogo-sistema role="dialog" aria-modal="true" aria-labelledby="autorizacion-titulo"
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 font-mono">
+      // Encima de cualquier ventana (igual que los avisos de dialogos.tsx)
+      className="fixed inset-0 z-[2147483000] flex items-center justify-center bg-black/50 p-4 font-mono">
       <div className="w-full max-w-md border-2 border-[var(--color-ink)] bg-[var(--color-surface,#fff)] shadow-[6px_6px_0_0_var(--color-ink)]">
         <div id="autorizacion-titulo" className="bg-[var(--color-ink)] px-4 py-2 text-[11px] font-black uppercase tracking-widest text-[var(--color-accent)]">
           🔐 Autorización del administrador
