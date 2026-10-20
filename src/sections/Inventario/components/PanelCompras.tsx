@@ -41,7 +41,8 @@ const sugerida = (p: Product) => {
 const totalDe = (items: Pick<Item, 'cantidad' | 'costo_unit'>[]) => items.reduce((t, i) => t + (Number(i.cantidad) || 0) * (Number(i.costo_unit) || 0), 0);
 
 const claseInput = 'w-full border-2 border-[var(--color-border)] bg-[var(--color-bg)] p-2 text-xs font-black text-[var(--color-ink)] outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]';
-const claseBoton = 'px-3 py-2 border-2 border-[var(--color-ink)] text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] focus:ring-offset-1 cursor-pointer disabled:opacity-50';
+const claseCasilla = 'w-5 h-5 cursor-pointer accent-[var(--color-ink)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] focus:ring-offset-1';
+const claseBoton ='px-3 py-2 border-2 border-[var(--color-ink)] text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] focus:ring-offset-1 cursor-pointer disabled:opacity-50';
 
 // ======================================================= Navegación con flechas
 const FILA_PIE = 1000; // los botones de abajo de cada ventana siempre son la última fila
@@ -65,7 +66,8 @@ const moverEnGrilla = (e: React.KeyboardEvent, contenedor: HTMLElement | null) =
   // En texto, ← → mueven el cursor salvo en el borde; en fechas, ← → cambian día/mes/año
   if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && t instanceof HTMLInputElement) {
     if (tipo === 'date') return false;
-    if (tipo !== 'number' && t.value) {
+    // (las casillas de marcar no tienen cursor: ← → siempre mueven el selector)
+    if (tipo !== 'number' && t.value && typeof t.selectionStart === 'number') {
       const enBorde = e.key === 'ArrowLeft' ? t.selectionStart === 0 && t.selectionEnd === 0 : t.selectionEnd === t.value.length;
       if (!enBorde) return false;
     }
@@ -98,7 +100,9 @@ const siguienteCampo = (e: React.KeyboardEvent, contenedor: HTMLElement | null, 
   const t = e.target as HTMLElement;
   if (e.key !== 'Enter' || !(t instanceof HTMLInputElement) || !contenedor) return;
   e.preventDefault();
-  const campos = Array.from(contenedor.querySelectorAll<HTMLElement>('input[data-nav], select[data-nav]')).filter((el) => el.offsetParent !== null);
+  // Las casillas de marcar y los campos apagados se saltan (Enter va al siguiente dato a escribir)
+  const campos = Array.from(contenedor.querySelectorAll<HTMLElement>('input[data-nav]:not([type="checkbox"]), select[data-nav]'))
+    .filter((el) => el.offsetParent !== null && !(el as HTMLInputElement).disabled);
   const i = campos.indexOf(t);
   if (!enfocar(campos[i + 1])) enfocar(document.getElementById(principal));
 };
@@ -635,6 +639,22 @@ const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.
     window.addEventListener('keydown', tecla, true);
     return () => window.removeEventListener('keydown', tecla, true);
   }, [onCerrar]);
+  // Al salir a otra ventana (WhatsApp, otro programa) y volver, el selector regresa al último lugar de ESTA ventana
+  useEffect(() => {
+    let ultimo: HTMLElement | null = null;
+    const recordar = (e: FocusEvent) => { if (cuerpo.current?.contains(e.target as Node)) ultimo = e.target as HTMLElement; };
+    const recuperar = () => setTimeout(() => {
+      const caja = cuerpo.current;
+      if (!caja || caja.contains(document.activeElement) || document.querySelector('[data-dialogo-sistema]')) return;
+      const ventanas = document.querySelectorAll('[role="dialog"]');
+      if (ventanas[ventanas.length - 1] !== caja.closest('[role="dialog"]')) return; // solo la ventana de más arriba
+      const sirve = (el: HTMLElement | null) => !!el && el.isConnected && el.offsetParent !== null && !(el as HTMLInputElement).disabled;
+      (sirve(ultimo) ? ultimo : caja.querySelector<HTMLElement>('[data-nav]'))?.focus();
+    }, 120);
+    document.addEventListener('focusin', recordar);
+    window.addEventListener('focus', recuperar);
+    return () => { document.removeEventListener('focusin', recordar); window.removeEventListener('focus', recuperar); };
+  }, [cuerpo]);
   return (
     <div role="dialog" aria-modal="true" aria-label={titulo} className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-2 sm:p-4 font-mono">
       <div ref={cuerpo} className={`bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full ${ancho} max-h-[calc(var(--alto-pantalla,100vh)*0.94)] flex flex-col`}
@@ -1102,13 +1122,29 @@ const RecibirCompra: React.FC<{
   const [filas, setFilas] = useState(compra.compras_detalle.filter((d) => d.batch_id == null).map((d) => ({
     detalle_id: d.id, product_id: String(d.product_id), product_name: d.product_name,
     pedida: Number(d.cantidad), llego: String(d.cantidad), costo: String(d.costo_unit), vence: '',
+    vino: true, // casilla "¿Llegó?": desmarcado = no vino (cantidad 0, sus campos se apagan)
   })));
   const [documento, setDocumento] = useState('');
   const [guardando, setGuardando] = useState(false);
   const ocupado = useRef(false); // un segundo Enter mientras ingresa no hace nada (no duplica lotes)
   const porId = useMemo(() => new Map(productos.map((p) => [String(p.id), p])), [productos]);
   const cambiar = (i: number, campo: 'llego' | 'costo' | 'vence', valor: string) => setFilas((prev) => prev.map((f, j) => (j === i ? { ...f, [campo]: valor } : f)));
-  const total = filas.reduce((t, f) => t + (Number(f.llego) || 0) * (Number(f.costo) || 0), 0);
+  const cantidadDe = (f: (typeof filas)[number]) => (f.vino ? Math.max(0, Number(f.llego) || 0) : 0);
+  const total = filas.reduce((t, f) => t + cantidadDe(f) * (Number(f.costo) || 0), 0);
+  const todos = filas.length > 0 && filas.every((f) => f.vino);
+  const algunos = filas.some((f) => f.vino);
+  const marcar = (i: number) => setFilas((prev) => prev.map((f, j) => (j === i ? { ...f, vino: !f.vino } : f)));
+  const marcarTodos = () => setFilas((prev) => prev.map((f) => ({ ...f, vino: !todos })));
+  // Casillas: Espacio (o Enter) marca / desmarca
+  const teclaCasilla = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.click(); }
+  };
+  // Vencimiento: Enter abre el calendario (ahí se elige con flechas y Enter, y el selector vuelve a la fecha)
+  const teclaFecha = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    try { (e.currentTarget as HTMLInputElement & { showPicker?: () => void }).showPicker?.(); } catch { /* sin calendario: se escribe dd/mm/aaaa */ }
+  };
 
   useEffect(() => { setTimeout(() => enfocar(document.getElementById('compra-documento')), 30); }, []);
 
@@ -1116,7 +1152,7 @@ const RecibirCompra: React.FC<{
   // Con solo "Recibir pedidos" el costo no se manda: el servidor usa el de la lista (lo puso el admin).
   const recibir = async () => {
     if (ocupado.current) return;
-    const llegan = filas.filter((f) => Number(f.llego) > 0);
+    const llegan = filas.filter((f) => cantidadDe(f) > 0);
     if (!llegan.length) { void avisar('Escribe cuánto llegó de al menos un producto.'); return; }
     ocupado.current = true;
     const pregunta = soloRecibe
@@ -1125,7 +1161,7 @@ const RecibirCompra: React.FC<{
     if (!await confirmar(pregunta)) { ocupado.current = false; return; }
     setGuardando(true);
     const items = filas.map((f) => ({
-      detalle_id: f.detalle_id, cantidad: Math.max(0, Number(f.llego) || 0), vence: f.vence || null,
+      detalle_id: f.detalle_id, cantidad: cantidadDe(f), vence: f.vino ? f.vence || null : null,
       ...(soloRecibe ? {} : { costo: Math.max(0, Number(f.costo) || 0) }),
     }));
     const { data, error } = await supabase.rpc('fn_recibir_compra', { p_compra_id: compra.id, p_items: items, p_documento: documento.trim() || null });
@@ -1148,8 +1184,8 @@ const RecibirCompra: React.FC<{
       </>}>
       <p className="text-[11px] font-bold text-[var(--color-muted)]">
         {soloRecibe
-          ? 'Cuenta lo que llegó y escríbelo. Si algo no vino, déjalo en 0. Flechas para moverte · Enter siguiente.'
-          : 'Revisa lo que llegó. Si algo no vino, déjalo en 0. Puedes corregir el costo según la factura. Flechas para moverte · Enter siguiente.'}
+          ? 'Marca lo que llegó y cuenta cuánto. Lo que no vino, desmárcalo. Flechas para moverte · Espacio marca · Enter siguiente.'
+          : 'Marca lo que llegó y revisa cantidad y costo según la factura. Lo que no vino, desmárcalo. Flechas para moverte · Espacio marca · Enter siguiente.'}
       </p>
       <label className="space-y-1 max-w-sm">
         <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-ink)]">N° de factura o boleta (opcional)</span>
@@ -1159,23 +1195,34 @@ const RecibirCompra: React.FC<{
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead><tr className="text-left text-[10px] uppercase tracking-widest text-[var(--color-muted)]">
-            <th className="p-1">Producto</th><th className="p-1 w-16">Pedido</th><th className="p-1 w-24">Llegó</th>
+            <th className="p-1 w-16">
+              <label className="flex items-center gap-1.5 cursor-pointer" title="Marcar o desmarcar todos">
+                <input id="recibir-todos" type="checkbox" data-nav="1,0" checked={todos} onChange={marcarTodos} onKeyDown={teclaCasilla}
+                  ref={(el) => { if (el) el.indeterminate = algunos && !todos; }} className={claseCasilla} aria-label="Llegó todo" />
+                Todo
+              </label>
+            </th>
+            <th className="p-1">Producto</th><th className="p-1 w-16">Pedido</th><th className="p-1 w-32">Llegó</th>
             {!soloRecibe && <th className="p-1 w-24">Costo u.</th>}
             <th className="p-1 w-36">Vence (opcional)</th>
           </tr></thead>
           <tbody>
             {filas.map((f, i) => {
               const p = porId.get(f.product_id);
-              const fila = 1 + i;
+              const fila = 2 + i;
               const enter = (e: React.KeyboardEvent) => siguienteCampo(e, cuerpo.current, 'btn-confirmar-recepcion');
               return (
-                <tr key={f.detalle_id} className="border-t border-[var(--color-border)]">
-                  <td className="p-1 font-black">{f.product_name}</td>
+                <tr key={f.detalle_id} className={`border-t border-[var(--color-border)] ${f.vino ? '' : 'opacity-50'}`}>
+                  <td className="p-1">
+                    <input type="checkbox" data-nav={`${fila},0`} checked={f.vino} onChange={() => marcar(i)} onKeyDown={teclaCasilla}
+                      className={claseCasilla} aria-label={`Llegó ${f.product_name}`} />
+                  </td>
+                  <td className="p-1 font-black"><span className={f.vino ? '' : 'line-through'}>{f.product_name}</span>{!f.vino && <span className="block text-[10px] font-bold text-[var(--color-danger)]">No vino</span>}</td>
                   <td className="p-1 font-bold text-[var(--color-muted)] whitespace-nowrap">{f.pedida} {unidadDe(p)}</td>
-                  <td className="p-1"><div className="flex items-center gap-1"><input type="number" data-nav={`${fila},0`} min="0" step={esPeso(p) ? '0.01' : '1'} value={f.llego} placeholder="0" onFocus={(e) => e.currentTarget.select()} onChange={(e) => cambiar(i, 'llego', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Llegó de ${f.product_name}`} />
+                  <td className="p-1"><div className="flex items-center gap-1"><input type="number" data-nav={`${fila},1`} min="0" step={esPeso(p) ? '0.01' : '1'} value={f.vino ? f.llego : '0'} disabled={!f.vino} placeholder="0" onFocus={(e) => e.currentTarget.select()} onChange={(e) => cambiar(i, 'llego', e.target.value)} onKeyDown={enter} className={`${claseInput} min-w-[4.5rem]`} aria-label={`Llegó de ${f.product_name}`} />
                     <span className="w-8 shrink-0 text-[10px] font-black text-[var(--color-muted)]">{unidadDe(p)}</span></div></td>
-                  {!soloRecibe && <td className="p-1"><input type="number" data-nav={`${fila},1`} min="0" step="0.01" value={f.costo} placeholder="0" onFocus={(e) => e.currentTarget.select()} onChange={(e) => cambiar(i, 'costo', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Costo de ${f.product_name}`} /></td>}
-                  <td className="p-1"><input type="date" data-nav={`${fila},2`} value={f.vence} onChange={(e) => cambiar(i, 'vence', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Vencimiento de ${f.product_name}`} /></td>
+                  {!soloRecibe && <td className="p-1"><input type="number" data-nav={`${fila},2`} min="0" step="0.01" value={f.costo} disabled={!f.vino} placeholder="0" onFocus={(e) => e.currentTarget.select()} onChange={(e) => cambiar(i, 'costo', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Costo de ${f.product_name}`} /></td>}
+                  <td className="p-1"><input type="date" data-nav={`${fila},3`} value={f.vence} disabled={!f.vino} onChange={(e) => cambiar(i, 'vence', e.target.value)} onKeyDown={teclaFecha} className={claseInput} aria-label={`Vencimiento de ${f.product_name}`} /></td>
                 </tr>
               );
             })}
