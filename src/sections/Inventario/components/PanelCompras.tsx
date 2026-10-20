@@ -629,7 +629,10 @@ const EditorCompra: React.FC<{
 
   // Desplegable: se abre al escribir (desde la 1ra letra) o con ↓ en el buscador vacío (todos, stock bajo primero)
   const [abierto, setAbierto] = useState(false);
-  const disponibles = productos.filter((p) => !items.some((i) => i.product_id === String(p.id)));
+  // TODOS los productos (antes se ocultaban los que ya estaban en la lista y parecía que faltaban); esos salen
+  // marcados 'YA EN LA LISTA' y al elegirlos se va a su cantidad, sin duplicarlos
+  const enLista = new Set(items.map((i) => i.product_id));
+  const disponibles = productos;
   const resultados = !abierto ? [] : busqueda.trim()
     ? disponibles.filter((p) => coincideBusqueda([p.name, p.code, p.barcode], busqueda)) // todos (antes se cortaba en 50)
     : [...disponibles].sort((a, b) => Number(b.unit !== 'CONSUMO' && Number(b.quantity) <= Number(b.minStock)) - Number(a.unit !== 'CONSUMO' && Number(a.quantity) <= Number(a.minStock))
@@ -737,7 +740,7 @@ const EditorCompra: React.FC<{
             <li key={p.id} id={`compra-resultado-${i}`} role="option" aria-selected={marcado === i}
               onMouseDown={(e) => { e.preventDefault(); elegir(p); }}
               className={`px-3 py-2 text-sm font-bold flex justify-between gap-2 cursor-pointer border-b border-[var(--color-border)] ${marcado === i ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'hover:bg-[var(--color-bg)]'}`}>
-              <span className="truncate">{p.name}</span>
+              <span className="truncate">{p.name}{enLista.has(String(p.id)) && <span className="ml-2 text-[10px] font-black uppercase opacity-70">· ya en la lista</span>}</span>
               <span className={`shrink-0 text-xs ${marcado === i ? '' : Number(p.quantity) <= Number(p.minStock) ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>stock {p.quantity}</span>
             </li>
           ))}
