@@ -804,8 +804,10 @@ const VistaPrevia: React.FC<{
   // La hoja toma el alto de su contenido: se desplaza con la rueda dentro de la ventana
   const ajustarAlto = () => {
     const d = marco.current?.contentDocument;
-    if (marco.current && d) marco.current.style.height = `${d.documentElement.scrollHeight + 4}px`;
+    if (marco.current && d) marco.current.style.height = `${Math.max(d.documentElement.scrollHeight, d.body?.scrollHeight || 0) + 2}px`;
   };
+  // En pantalla la hoja no muestra barras de desplazamiento (el marco ya toma su alto completo); al imprimir no cambia nada
+  const vista = html.replace('</head>', '<style>@media screen { html, body { overflow: hidden !important; } }</style></head>');
   useEffect(() => { setTimeout(() => enfocar(document.getElementById('btn-previa-imprimir')), 30); }, []);
 
   const botones: { grupo: string; id: string; contenido: React.ReactNode; clase: string; accion: () => void | Promise<void> }[] = [
@@ -851,8 +853,9 @@ const VistaPrevia: React.FC<{
       </div>
       <div className="bg-[var(--color-bg)] border-2 border-[var(--color-border)] p-2 sm:p-4">
         {/* Sin foco ni clics dentro de la hoja: el selector siempre queda en los botones */}
-        <iframe ref={marco} title="Vista previa del pedido" srcDoc={html} tabIndex={-1} onLoad={ajustarAlto}
-          className={`${formato === 'TICKET' ? 'w-[80mm] mx-auto border-2 border-dashed border-gray-400' : 'w-full border border-[var(--color-border)]'} min-h-[300px] bg-white shadow-[4px_4px_0_0_var(--color-border)] pointer-events-none block`} />
+        {/* Ticket: 80 mm por DENTRO (box-content: el borde punteado va por fuera, antes le quitaba ancho y salían barras) */}
+        <iframe ref={marco} title="Vista previa del pedido" srcDoc={vista} tabIndex={-1} onLoad={ajustarAlto} scrolling="no"
+          className={`${formato === 'TICKET' ? 'box-content w-[80mm] mx-auto border-2 border-dashed border-gray-400' : 'w-full border border-[var(--color-border)]'} min-h-[300px] bg-white shadow-[4px_4px_0_0_var(--color-border)] pointer-events-none block overflow-hidden`} />
       </div>
     </Ventana>
   );
