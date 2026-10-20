@@ -1,7 +1,7 @@
 // src/sections/Inventario/components/PanelCompras.tsx
 // Inventario > Compras: listas de lo que hay que pedir a cada proveedor.
 //  - Nueva lista: proveedor + productos (botón "Agregar stock bajo" con cantidad sugerida) o búsqueda.
-//  - Enviar por WhatsApp al proveedor.
+//  - Enviar / Imprimir: vista previa de la hoja del pedido con WhatsApp, PDF, Descargar e Imprimir.
 //  - Recibir pedido: se confirma lo que llegó y su costo, y se crean TODOS los lotes de una vez
 //    (igual que "Ingresar lote": lote + movimiento COMPRA + stock del producto recalculado).
 // Tablas compras / compras_detalle (servidor/sql/seguridad-sesion.sql). Permiso: almacen_ingresar_lotes.
@@ -11,7 +11,7 @@
 // cambian el valor sin querer; Enter pasa al siguiente campo. Esc cierra las ventanas.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, AlertTriangle, Loader2, Ban, Undo2, FileText } from 'lucide-react';
+import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, AlertTriangle, Loader2, Ban, Undo2, FileText, Share2, Download, Printer } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { usePermiso, useEmpleado, avisarSinPermiso } from '../../../utils/permisos';
 import { avisar, confirmar } from '../../../utils/dialogos';
@@ -158,6 +158,56 @@ const pdfDeCompra = async (c: Compra, empresa: string, unidades: Map<string, str
   return new File([doc.output('blob')], `Pedido-${num}-${proveedor}.pdf`, { type: 'application/pdf' });
 };
 
+// Hoja del pedido en HTML: es la vista previa y lo que se imprime (A4). Mismo contenido que el PDF.
+const esc = (t: unknown) => String(t ?? '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]!));
+const htmlDeCompra = (c: Compra, empresa: string, unidades: Map<string, string>) => {
+  const recibida = c.estado === 'RECIBIDO';
+  const num = String(c.id).slice(-6);
+  let total = 0;
+  const filas = c.compras_detalle.map((d) => {
+    const cant = recibida ? Number(d.cantidad_recibida ?? 0) : Number(d.cantidad);
+    const sub = cant * Number(d.costo_unit || 0);
+    total += sub;
+    return `<tr><td>${esc(d.product_name)}</td><td class="n">${cant} ${esc(unidades.get(String(d.product_id)) || '')}</td>`
+      + `<td class="n">${soles(Number(d.costo_unit || 0))}</td><td class="n b">${soles(sub)}</td></tr>`;
+  }).join('');
+  const datos = [
+    ['Proveedor', c.proveedor || 'Sin proveedor'],
+    ['Fecha', fecha(c.created_at)],
+    ...(c.autor ? [['Armado por', c.autor]] : []),
+    ...(recibida ? [['Recibido', `${fecha(c.recibido_at)}${c.recibido_por ? ` por ${c.recibido_por}` : ''}`]] : []),
+    ...(recibida && c.documento ? [['Factura / guía', c.documento]] : []),
+    ['Estado', c.estado],
+  ].map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
+  return `<!doctype html><html lang="es"><head><meta charset="UTF-8"><title>Pedido ${num}</title><style>
+@page { size: A4; margin: 14mm; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #fff; color: #111; font: 13px/1.4 Arial, Helvetica, sans-serif; }
+body { padding: 28px 32px; }
+@media print { body { padding: 0; } }
+.cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 3px solid #1e293b; padding-bottom: 10px; }
+.cab h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
+.cab .doc { text-align: right; } .cab .doc b { display: block; font-size: 15px; } .cab .doc span { font-size: 22px; font-weight: 900; }
+.datos { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; margin: 14px 0; }
+.datos div { display: flex; gap: 8px; } .datos span { color: #555; min-width: 92px; }
+table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+th { background: #1e293b; color: #fff; text-align: left; padding: 7px 8px; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+td { padding: 7px 8px; border-bottom: 1px solid #ddd; vertical-align: top; }
+.n { text-align: right; white-space: nowrap; } .b { font-weight: 700; }
+tr { page-break-inside: avoid; }
+.total { text-align: right; font-size: 16px; font-weight: 900; margin-top: 12px; }
+.nota { margin-top: 16px; padding: 8px 10px; border: 1px solid #ccc; }
+.pie { margin-top: 28px; color: #888; font-size: 10px; }
+</style></head><body>
+<div class="cab"><h1>${esc(empresa || 'Pedido de compra')}</h1><div class="doc"><b>${recibida ? 'COMPRA RECIBIDA' : 'PEDIDO DE COMPRA'}</b><span>#${num}</span></div></div>
+<div class="datos">${datos}</div>
+<table><thead><tr><th>Producto</th><th class="n">${recibida ? 'Llegó' : 'Cantidad'}</th><th class="n">Costo u.</th><th class="n">Subtotal</th></tr></thead><tbody>${filas}</tbody></table>
+<div class="total">Total aprox.: ${soles(total)}</div>
+${c.notas ? `<div class="nota"><b>Nota:</b> ${esc(c.notas)}</div>` : ''}
+<div class="pie">Generado el ${esc(new Date().toLocaleString('es-PE'))} · SiuMax</div>
+</body></html>`;
+};
+
 interface Props {
   productos: Product[];
   // Al recibir un pedido: stock nuevo de cada producto (para refrescar la pantalla sin recargar)
@@ -180,6 +230,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   const [recibiendo, setRecibiendo] = useState<Compra | null>(null);
   const [viendo, setViendo] = useState<Compra | null>(null); // detalle abierto (Enter sobre una lista)
   const [empresa, setEmpresa] = useState({ nombre: '', telefono: '' }); // WhatsApp de Ajustes
+  const [previa, setPrevia] = useState<Compra | null>(null); // Enviar / Imprimir: vista previa de la hoja
 
   const cargar = async () => {
     setCargando(true);
@@ -222,6 +273,10 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
       document.removeEventListener('click', recuperar);
     };
   }, []);
+
+  // Al volver de la vista previa al detalle, el selector queda en "Enviar / Imprimir"
+  const focoDetalle = useRef<string | undefined>(undefined);
+  useEffect(() => { if (!viendo && !previa) focoDetalle.current = undefined; }, [viendo, previa]);
 
   const visibles = compras.filter((c) => filtro === 'TODAS' || c.estado === filtro);
   const stockBajo = productos.filter((p) => p.unit !== 'CONSUMO' && Number(p.quantity) <= Number(p.minStock));
@@ -267,6 +322,24 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
     abrirWhatsApp(texto);
   };
 
+  // Guarda el PDF en la PC (en el navegador va a Descargas; en la app de escritorio pregunta dónde guardarlo)
+  const guardarArchivo = (archivo: File) => {
+    const url = URL.createObjectURL(archivo);
+    const a = document.createElement('a');
+    a.href = url; a.download = archivo.name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  };
+  const descargarPdf = async (c: Compra) => {
+    try {
+      const archivo = await pdfDeCompra(c, empresa.nombre, unidadPorId);
+      guardarArchivo(archivo);
+      await avisar(`📄 PDF descargado: "${archivo.name}".\n\nLo encuentras en Descargas (o en la carpeta que elegiste).`);
+    } catch (e: any) {
+      void avisar(`No se pudo crear el PDF: ${e?.message || e}`);
+    }
+  };
+
   // PDF del pedido: se comparte (ventana de compartir de Windows → WhatsApp) o, si la PC no lo permite, se guarda
   // y se abre el chat para adjuntarlo con el clip.
   const enviarPdf = async (c: Compra) => {
@@ -277,11 +350,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
         try { await navigator.share({ files: [archivo], title: archivo.name, text: `Pedido #${String(c.id).slice(-6)}` }); return; }
         catch (e: any) { if (e?.name === 'AbortError') return; /* sin compartir: se guarda */ }
       }
-      const url = URL.createObjectURL(archivo);
-      const a = document.createElement('a');
-      a.href = url; a.download = archivo.name;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      guardarArchivo(archivo);
       await avisar(`📄 Se guardó "${archivo.name}" (normalmente en Descargas).\n\nSe abrirá WhatsApp: adjúntalo con el clip 📎 → Documento.`);
       abrirWhatsApp(`Le envío el ${c.estado === 'RECIBIDO' ? 'detalle de la compra' : 'pedido'} #${String(c.id).slice(-6)} en PDF.`);
     } catch (e: any) {
@@ -322,7 +391,8 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
 
   // ↑ desde la primera fila vuelve a la pestaña "Compras"
   const teclasPanel = (e: React.KeyboardEvent) => {
-    if (editando || recibiendo || viendo) return;
+    // Las teclas dentro de una ventana (detalle, vista previa, editor...) las maneja esa ventana
+    if (editando || recibiendo || viendo || previa || (e.target as HTMLElement).closest('[role="dialog"]')) return;
     const fila = Number((e.target as HTMLElement).dataset?.nav?.split(',')[0]);
     if (e.key === 'ArrowUp' && fila === 0) { e.preventDefault(); enfocar(document.getElementById('btn-tab-compras')); return; }
     moverEnGrilla(e, panel.current);
@@ -420,13 +490,24 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
           unidades={unidadPorId}
           soloRecibe={soloRecibe}
           puedeDevolver={puedeDevolver(viendo)}
+          foco={focoDetalle.current}
           onCerrar={() => { const id = viendo.id; setViendo(null); volverFoco(id); }}
-          onWhatsApp={() => enviarWhatsApp(viendo)}
-          onPdf={() => void enviarPdf(viendo)}
+          onCompartir={() => { const c = viendo; setViendo(null); setPrevia(c); }}
           onEditar={() => conPermiso('editar listas de compras', () => { const c = viendo; setViendo(null); setEditando(c); })}
           onAnular={() => conPermiso('anular listas de compras', () => { const c = viendo; void anular(c).then((ok) => { if (ok) setViendo(null); }); })}
           onRecibir={() => conPermisoRecibir('recibir pedidos', () => { const c = viendo; setViendo(null); setRecibiendo(c); })}
           onDevolver={() => conPermisoRecibir('devolver compras', () => { const c = viendo; void devolver(c).then((ok) => { if (ok) setViendo(null); }); })}
+        />
+      )}
+
+      {previa && (
+        <VistaPrevia
+          compra={previa}
+          html={htmlDeCompra(previa, empresa.nombre, unidadPorId)}
+          onCerrar={() => { const c = previa; setPrevia(null); focoDetalle.current = 'btn-detalle-compartir'; setViendo(c); }}
+          onWhatsApp={() => enviarWhatsApp(previa)}
+          onEnviarPdf={() => enviarPdf(previa)}
+          onDescargar={() => descargarPdf(previa)}
         />
       )}
 
@@ -462,7 +543,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
 };
 
 // ======================================================= Ventana base (Esc cierra)
-const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.ReactNode; pie: React.ReactNode; cuerpo: React.RefObject<HTMLDivElement | null> }> = ({ titulo, onCerrar, children, pie, cuerpo }) => {
+const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.ReactNode; pie: React.ReactNode; cuerpo: React.RefObject<HTMLDivElement | null>; ancho?: string }> = ({ titulo, onCerrar, children, pie, cuerpo, ancho = 'max-w-3xl' }) => {
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || document.querySelector('[data-dialogo-sistema]')) return;
@@ -476,7 +557,7 @@ const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.
   }, [onCerrar]);
   return (
     <div role="dialog" aria-modal="true" aria-label={titulo} className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div ref={cuerpo} className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-3xl max-h-[calc(var(--alto-pantalla,100vh)*0.94)] flex flex-col"
+      <div ref={cuerpo} className={`bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full ${ancho} max-h-[calc(var(--alto-pantalla,100vh)*0.94)] flex flex-col`}
         onKeyDown={(e) => moverEnGrilla(e, cuerpo.current)}>
         <div className="bg-[var(--color-ink)] text-white px-4 py-3 flex justify-between items-center shrink-0">
           <h3 className="text-sm font-black uppercase tracking-widest text-[var(--color-accent)]">{titulo}</h3>
@@ -495,9 +576,9 @@ const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.
 const ACCIONES: Record<string, string> = { CREADA: 'Creó la lista', EDITADA: 'Editó la lista', ANULADA: 'Anuló el pedido', RECIBIDA: 'Recibió el pedido', DEVUELTA: 'Devolvió lo ingresado' };
 
 const DetalleCompra: React.FC<{
-  compra: Compra; unidades: Map<string, string>; soloRecibe: boolean; puedeDevolver: boolean; onCerrar: () => void; onWhatsApp: () => void; onPdf: () => void; onEditar: () => void;
+  compra: Compra; unidades: Map<string, string>; soloRecibe: boolean; puedeDevolver: boolean; foco?: string; onCerrar: () => void; onCompartir: () => void; onEditar: () => void;
   onAnular: () => void; onRecibir: () => void; onDevolver: () => void;
-}> = ({ compra: c, unidades, soloRecibe, puedeDevolver, onCerrar, onWhatsApp, onPdf, onEditar, onAnular, onRecibir, onDevolver }) => {
+}> = ({ compra: c, unidades, soloRecibe, puedeDevolver, foco, onCerrar, onCompartir, onEditar, onAnular, onRecibir, onDevolver }) => {
   const cuerpo = useRef<HTMLDivElement>(null);
   const recibida = c.estado === 'RECIBIDO';
   const parcial = c.compras_detalle.some((d) => d.batch_id != null);
@@ -510,14 +591,13 @@ const DetalleCompra: React.FC<{
   }, [c.id]);
 
   // Botones: el principal va al final (↓ llega a él y es el que queda marcado al abrir)
-  const whatsapp = { clave: 'whatsapp', contenido: <><Send size={16} /> WhatsApp</>, clase: 'bg-[var(--color-success)] text-white border-[var(--color-success)]', hacer: onWhatsApp };
-  const pdf = { clave: 'pdf', contenido: <><FileText size={16} /> PDF</>, clase: 'bg-white text-[var(--color-ink)]', hacer: onPdf };
+  // Enviar (WhatsApp / PDF), descargar e imprimir están juntos en la vista previa
+  const compartir = { clave: 'compartir', contenido: <><Share2 size={16} /> Enviar / Imprimir</>, clase: 'bg-white text-[var(--color-ink)]', hacer: onCompartir };
   const botones = c.estado === 'PENDIENTE'
     ? (soloRecibe
       ? [{ clave: 'recibir', contenido: <><PackageCheck size={16} /> Recibir</>, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]', hacer: onRecibir }]
       : [
-        pdf,
-        { ...whatsapp, clase: 'bg-white text-[var(--color-success)] border-[var(--color-success)]' },
+        compartir,
         ...(!parcial ? [{ clave: 'editar', contenido: <>Editar</>, clase: 'bg-white text-[var(--color-ink)]', hacer: onEditar }] : []),
         { clave: 'anular', contenido: <><Ban size={16} /> Anular</>, clase: 'bg-white text-[var(--color-muted)]', hacer: onAnular },
         { clave: 'recibir', contenido: <><PackageCheck size={16} /> Recibir</>, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]', hacer: onRecibir },
@@ -525,14 +605,14 @@ const DetalleCompra: React.FC<{
     : recibida
       ? [
         ...(puedeDevolver ? [{ clave: 'devolver', contenido: <><Undo2 size={16} /> Devolver lo ingresado</>, clase: 'bg-white text-[var(--color-danger)] border-[var(--color-danger)]', hacer: onDevolver }] : []),
-        ...(!soloRecibe ? [pdf, whatsapp] : []),
+        ...(!soloRecibe ? [{ ...compartir, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]' }] : []),
       ]
-      : (!soloRecibe ? [pdf, whatsapp] : []);
+      : (!soloRecibe ? [{ ...compartir, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]' }] : []);
 
   // Al abrir, el foco va al botón principal; si no hay botones, a la X
   useEffect(() => {
-    setTimeout(() => enfocar(botones.length ? document.getElementById(`btn-detalle-${botones[botones.length - 1].clave}`)
-      : cuerpo.current?.querySelector<HTMLElement>('[data-nav="-1,0"]')), 30);
+    setTimeout(() => enfocar((foco && document.getElementById(foco)) || (botones.length ? document.getElementById(`btn-detalle-${botones[botones.length - 1].clave}`) : null)
+      || cuerpo.current?.querySelector<HTMLElement>('[data-nav="-1,0"]')), 30);
   }, []);
 
   return (
@@ -586,6 +666,77 @@ const DetalleCompra: React.FC<{
             ))}
           </ul>
         )}
+      </div>
+    </Ventana>
+  );
+};
+
+// ======================================================= Enviar / Imprimir: vista previa de la hoja del pedido
+// La hoja se ve tal cual se imprime. Botones agrupados: Enviar (WhatsApp texto / PDF), Guardar (Descargar PDF) e Imprimir.
+// Imprimir abre la ventana de impresión (elegir impresora, copias, guardar como PDF).
+const VistaPrevia: React.FC<{
+  compra: Compra; html: string; onCerrar: () => void; onWhatsApp: () => void; onEnviarPdf: () => Promise<void>; onDescargar: () => Promise<void>;
+}> = ({ compra: c, html, onCerrar, onWhatsApp, onEnviarPdf, onDescargar }) => {
+  const cuerpo = useRef<HTMLDivElement>(null);
+  const marco = useRef<HTMLIFrameElement>(null);
+  const [ocupado, setOcupado] = useState<string | null>(null);
+  // Al volver de la ventana de impresión o de WhatsApp, el selector regresa al último botón usado
+  const ultimo = useRef('btn-previa-imprimir');
+  useEffect(() => {
+    const recuperar = () => setTimeout(() => {
+      const a = document.activeElement;
+      if ((!a || a === document.body || a.tagName === 'IFRAME') && !document.querySelector('[data-dialogo-sistema]')) enfocar(document.getElementById(ultimo.current));
+    }, 80);
+    window.addEventListener('focus', recuperar);
+    return () => window.removeEventListener('focus', recuperar);
+  }, []);
+  const hacer = async (id: string, accion: () => void | Promise<void>) => {
+    if (ocupado) return;
+    ultimo.current = id;
+    setOcupado(id);
+    try { await accion(); } finally {
+      setOcupado(null);
+      setTimeout(() => enfocar(document.getElementById(id)), 60); // el selector vuelve al botón usado
+    }
+  };
+  const imprimir = () => { marco.current?.contentWindow?.print(); };
+  // La hoja toma el alto de su contenido: se desplaza con la rueda dentro de la ventana
+  const ajustarAlto = () => {
+    const d = marco.current?.contentDocument;
+    if (marco.current && d) marco.current.style.height = `${d.documentElement.scrollHeight + 4}px`;
+  };
+  useEffect(() => { setTimeout(() => enfocar(document.getElementById('btn-previa-imprimir')), 30); }, []);
+
+  const botones: { grupo: string; id: string; contenido: React.ReactNode; clase: string; accion: () => void | Promise<void> }[] = [
+    { grupo: 'Enviar', id: 'btn-previa-whatsapp', contenido: <><Send size={16} /> WhatsApp</>, clase: 'bg-white text-[var(--color-success)] border-[var(--color-success)]', accion: onWhatsApp },
+    { grupo: 'Enviar', id: 'btn-previa-pdf', contenido: <><FileText size={16} /> PDF por WhatsApp</>, clase: 'bg-white text-[var(--color-success)] border-[var(--color-success)]', accion: onEnviarPdf },
+    { grupo: 'Guardar', id: 'btn-previa-descargar', contenido: <><Download size={16} /> Descargar PDF</>, clase: 'bg-white text-[var(--color-ink)]', accion: onDescargar },
+    { grupo: 'Imprimir', id: 'btn-previa-imprimir', contenido: <><Printer size={16} /> Imprimir</>, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]', accion: imprimir },
+  ];
+  const grupos = [...new Set(botones.map((b) => b.grupo))];
+
+  return (
+    <Ventana cuerpo={cuerpo} ancho="max-w-4xl" titulo={`Enviar, descargar o imprimir · Pedido #${String(c.id).slice(-6)}`} onCerrar={onCerrar}
+      pie={<div className="w-full flex flex-wrap items-end justify-end gap-x-5 gap-y-2">
+        {grupos.map((g) => (
+          <div key={g} className="flex flex-col gap-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-muted)]">{g}</span>
+            <div className="flex flex-wrap gap-2">
+              {botones.filter((b) => b.grupo === g).map((b) => (
+                <button key={b.id} id={b.id} type="button" data-nav={`${FILA_PIE},${botones.indexOf(b)}`} aria-disabled={!!ocupado}
+                  onClick={() => void hacer(b.id, b.accion)} className={`${claseBoton} ${b.clase}`}>
+                  {ocupado === b.id ? <Loader2 size={16} className="animate-spin" /> : b.contenido}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>}>
+      <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-muted)]">Vista previa · así se imprime</p>
+      <div className="bg-[var(--color-bg)] border-2 border-[var(--color-border)] p-2 sm:p-4">
+        {/* Sin foco ni clics dentro de la hoja: el selector siempre queda en los botones */}
+        <iframe ref={marco} title="Vista previa del pedido" srcDoc={html} tabIndex={-1} onLoad={ajustarAlto}
+          className="w-full min-h-[300px] bg-white border border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-border)] pointer-events-none block" />
       </div>
     </Ventana>
   );
