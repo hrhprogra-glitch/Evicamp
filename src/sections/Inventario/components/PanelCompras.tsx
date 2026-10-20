@@ -63,9 +63,9 @@ const moverEnGrilla = (e: React.KeyboardEvent, contenedor: HTMLElement | null) =
   const pos = t.dataset?.nav;
   if (!pos || !contenedor || !['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return false;
   const tipo = t instanceof HTMLInputElement ? t.type : '';
-  // En texto, ← → mueven el cursor salvo en el borde; en fechas, ← → cambian día/mes/año
+  // En texto, ← → mueven el cursor salvo en el borde. En fechas ← → también mueven el selector (antes cambiaban
+  // día/mes/año y el selector quedaba atrapado): la fecha se escribe con números o se elige en el calendario (Enter)
   if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && t instanceof HTMLInputElement) {
-    if (tipo === 'date') return false;
     // (las casillas de marcar no tienen cursor: ← → siempre mueven el selector)
     if (tipo !== 'number' && t.value && typeof t.selectionStart === 'number') {
       const enBorde = e.key === 'ArrowLeft' ? t.selectionStart === 0 && t.selectionEnd === 0 : t.selectionEnd === t.value.length;
@@ -1139,8 +1139,14 @@ const RecibirCompra: React.FC<{
   const teclaCasilla = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.click(); }
   };
-  // Vencimiento: Enter abre el calendario (ahí se elige con flechas y Enter, y el selector vuelve a la fecha)
-  const teclaFecha = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  // Vencimiento: Enter abre el calendario (ahí se elige con flechas y Enter, y el selector vuelve a la fecha);
+  // Supr la borra. El botón ✕ de al lado también la borra (y el selector vuelve a la fecha).
+  const limpiarFecha = (i: number) => {
+    cambiar(i, 'vence', '');
+    setTimeout(() => cuerpo.current?.querySelector<HTMLElement>(`[data-nav="${2 + i},3"]`)?.focus(), 0);
+  };
+  const teclaFecha = (e: React.KeyboardEvent<HTMLInputElement>, i: number) => {
+    if (e.key === 'Delete') { e.preventDefault(); limpiarFecha(i); return; }
     if (e.key !== 'Enter') return;
     e.preventDefault();
     try { (e.currentTarget as HTMLInputElement & { showPicker?: () => void }).showPicker?.(); } catch { /* sin calendario: se escribe dd/mm/aaaa */ }
@@ -1204,7 +1210,7 @@ const RecibirCompra: React.FC<{
             </th>
             <th className="p-1">Producto</th><th className="p-1 w-16">Pedido</th><th className="p-1 w-32">Llegó</th>
             {!soloRecibe && <th className="p-1 w-24">Costo u.</th>}
-            <th className="p-1 w-36">Vence (opcional)</th>
+            <th className="p-1 w-48">Vence (opcional)</th>
           </tr></thead>
           <tbody>
             {filas.map((f, i) => {
@@ -1222,7 +1228,15 @@ const RecibirCompra: React.FC<{
                   <td className="p-1"><div className="flex items-center gap-1"><input type="number" data-nav={`${fila},1`} min="0" step={esPeso(p) ? '0.01' : '1'} value={f.vino ? f.llego : '0'} disabled={!f.vino} placeholder="0" onFocus={(e) => e.currentTarget.select()} onChange={(e) => cambiar(i, 'llego', e.target.value)} onKeyDown={enter} className={`${claseInput} min-w-[4.5rem]`} aria-label={`Llegó de ${f.product_name}`} />
                     <span className="w-8 shrink-0 text-[10px] font-black text-[var(--color-muted)]">{unidadDe(p)}</span></div></td>
                   {!soloRecibe && <td className="p-1"><input type="number" data-nav={`${fila},2`} min="0" step="0.01" value={f.costo} disabled={!f.vino} placeholder="0" onFocus={(e) => e.currentTarget.select()} onChange={(e) => cambiar(i, 'costo', e.target.value)} onKeyDown={enter} className={claseInput} aria-label={`Costo de ${f.product_name}`} /></td>}
-                  <td className="p-1"><input type="date" data-nav={`${fila},3`} value={f.vence} disabled={!f.vino} onChange={(e) => cambiar(i, 'vence', e.target.value)} onKeyDown={teclaFecha} className={claseInput} aria-label={`Vencimiento de ${f.product_name}`} /></td>
+                  <td className="p-1"><div className="flex items-center gap-1">
+                    <input type="date" data-nav={`${fila},3`} value={f.vence} disabled={!f.vino} onChange={(e) => cambiar(i, 'vence', e.target.value)} onKeyDown={(e) => teclaFecha(e, i)} className={claseInput} aria-label={`Vencimiento de ${f.product_name}`} />
+                    {/* Limpiar la fecha (apagado si no hay fecha: el selector lo salta) */}
+                    <button type="button" data-nav={`${fila},4`} disabled={!f.vino || !f.vence} onClick={() => limpiarFecha(i)}
+                      title="Quitar la fecha (Supr)" aria-label={`Quitar vencimiento de ${f.product_name}`}
+                      className="shrink-0 p-1.5 border-2 border-[var(--color-border)] bg-white text-[var(--color-muted)] hover:text-[var(--color-danger)] hover:border-[var(--color-danger)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] cursor-pointer disabled:opacity-30 disabled:cursor-default">
+                      <X size={14} />
+                    </button>
+                  </div></td>
                 </tr>
               );
             })}
