@@ -10,6 +10,7 @@
 // flechas van al vecino más cercano en esa dirección (moverEnGrilla). En los campos de número ↑ ↓ ya no
 // cambian el valor sin querer; Enter pasa al siguiente campo. Esc cierra las ventanas.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, AlertTriangle, Loader2, Ban, Undo2, FileText } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { usePermiso, useEmpleado, avisarSinPermiso } from '../../../utils/permisos';
@@ -629,6 +630,24 @@ const EditorCompra: React.FC<{
 
   // Desplegable: se abre al escribir (desde la 1ra letra) o con ↓ en el buscador vacío (todos, stock bajo primero)
   const [abierto, setAbierto] = useState(false);
+  // El desplegable FLOTA sobre la ventana (posición fija bajo el buscador): antes iba dentro y la agrandaba,
+  // y como la ventana está centrada, se movía entera. Se recalcula al desplazar o cambiar el tamaño.
+  const [posLista, setPosLista] = useState<{ top: number; left: number; width: number; maxHeight: number } | null>(null);
+  useEffect(() => {
+    if (!abierto) { setPosLista(null); return; }
+    const medir = () => {
+      const input = document.getElementById('compra-buscar');
+      const r = input?.getBoundingClientRect();
+      if (!input || !r) return;
+      const zoom = r.width / (input.offsetWidth || r.width) || 1; // Ajustes > Apariencia puede agrandar todo
+      setPosLista({ top: (r.bottom + 4) / zoom, left: r.left / zoom, width: r.width / zoom,
+        maxHeight: Math.max(120, Math.min(280, (window.innerHeight - r.bottom - 16) / zoom)) });
+    };
+    medir();
+    window.addEventListener('resize', medir);
+    window.addEventListener('scroll', medir, true);
+    return () => { window.removeEventListener('resize', medir); window.removeEventListener('scroll', medir, true); };
+  }, [abierto]);
   // TODOS los productos (antes se ocultaban los que ya estaban en la lista y parecía que faltaban); esos salen
   // marcados 'YA EN LA LISTA' y al elegirlos se va a su cantidad, sin duplicarlos
   const enLista = new Set(items.map((i) => i.product_id));
@@ -732,8 +751,8 @@ const EditorCompra: React.FC<{
           <AlertTriangle size={14} /> Agregar stock bajo
         </button>
       </div>
-      {abierto && (
-        <ul id="compra-resultados" role="listbox" aria-label="Productos" className="-mt-2 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-64 overflow-auto custom-scrollbar">
+      {abierto && posLista && createPortal(
+        <ul id="compra-resultados" role="listbox" aria-label="Productos" style={{ position: 'fixed', ...posLista }} className="z-[60] font-mono bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] overflow-auto custom-scrollbar">
           {resultados.length === 0 ? (
             <li className="px-3 py-3 text-xs font-black uppercase text-[var(--color-muted)]">Sin resultados para "{busqueda}"</li>
           ) : resultados.map((p, i) => (
@@ -744,8 +763,8 @@ const EditorCompra: React.FC<{
               <span className={`shrink-0 text-xs ${marcado === i ? '' : Number(p.quantity) <= Number(p.minStock) ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>stock {p.quantity}</span>
             </li>
           ))}
-        </ul>
-      )}
+        </ul>, document.getElementById('root') ?? document.body)
+      }
 
       {items.length === 0 ? (
         <p className="p-4 border-2 border-dashed border-[var(--color-border)] text-center text-xs font-black uppercase text-[var(--color-muted)]">
