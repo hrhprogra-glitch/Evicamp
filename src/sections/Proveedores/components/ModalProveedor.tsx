@@ -270,8 +270,10 @@ export const ModalProveedor: React.FC<Props> = ({ isOpen, onClose, onSave, prove
     const rucLimpio = formData.ruc?.trim() || '';
     const razonLimpia = formData.razon_social?.trim().toUpperCase() || '';
 
-    if (!rucLimpio || !razonLimpia) {
-      alert('Por favor, ingresa al menos el RUC y la Razón Social.');
+    // El RUC es opcional (muchos proveedores pequeños no lo dan); la Razón Social sí es obligatoria
+    if (!razonLimpia) {
+      alert('Escribe la Razón Social del proveedor (el RUC es opcional).');
+      document.getElementById('input-razon-proveedor')?.focus();
       return;
     }
 
@@ -340,7 +342,7 @@ export const ModalProveedor: React.FC<Props> = ({ isOpen, onClose, onSave, prove
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             
             <div className="space-y-2">
-              <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest">RUC / DNI *</label>
+              <label className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest">RUC / DNI (opcional)</label>
               <input 
                 id="input-ruc-proveedor"
                 autoComplete="off" 

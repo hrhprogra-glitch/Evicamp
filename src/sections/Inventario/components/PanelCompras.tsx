@@ -10,7 +10,7 @@
 // flechas van al vecino más cercano en esa dirección (moverEnGrilla). En los campos de número ↑ ↓ ya no
 // cambian el valor sin querer; Enter pasa al siguiente campo. Esc cierra las ventanas.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, AlertTriangle, Loader2, Ban, Undo2 } from 'lucide-react';
+import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, AlertTriangle, Loader2, Ban, Undo2, FileText } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { usePermiso, useEmpleado, avisarSinPermiso } from '../../../utils/permisos';
 import { avisar, confirmar } from '../../../utils/dialogos';
@@ -102,6 +102,59 @@ const abrirLista = (e: React.KeyboardEvent<HTMLSelectElement>) => {
   }
 };
 
+// PDF de un pedido (jsPDF se carga solo al pedirlo, para no hacer más pesado el sistema)
+const pdfDeCompra = async (c: Compra, empresa: string) => {
+  const { jsPDF } = await import('jspdf');
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const recibida = c.estado === 'RECIBIDO';
+  const num = String(c.id).slice(-6);
+  let y = 18;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
+  doc.text(empresa || 'Pedido de compra', 14, y);
+  doc.setFontSize(12);
+  doc.text(`${recibida ? 'COMPRA RECIBIDA' : 'PEDIDO DE COMPRA'} #${num}`, 196, y, { align: 'right' });
+  y += 9;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+  const datos = [
+    `Proveedor: ${c.proveedor || 'Sin proveedor'}`,
+    `Fecha: ${fecha(c.created_at)}${c.autor ? `   Armado por: ${c.autor}` : ''}`,
+    ...(recibida ? [`Recibido: ${fecha(c.recibido_at)}${c.recibido_por ? ` por ${c.recibido_por}` : ''}${c.documento ? `   Factura: ${c.documento}` : ''}`] : []),
+    `Estado: ${c.estado}`,
+  ];
+  datos.forEach((t) => { doc.text(t, 14, y); y += 6; });
+  y += 3;
+  // Tabla
+  const col = { prod: 14, cant: 128, costo: 156, sub: 196 };
+  doc.setFillColor(30, 41, 59); doc.rect(14, y - 5, 182, 8, 'F');
+  doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold');
+  doc.text('PRODUCTO', col.prod + 2, y); doc.text(recibida ? 'LLEGÓ' : 'CANT.', col.cant, y, { align: 'right' });
+  doc.text('COSTO U.', col.costo, y, { align: 'right' }); doc.text('SUBTOTAL', col.sub - 2, y, { align: 'right' });
+  doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'normal');
+  y += 8;
+  let total = 0;
+  for (const d of c.compras_detalle) {
+    const cant = recibida ? Number(d.cantidad_recibida ?? 0) : Number(d.cantidad);
+    const sub = cant * Number(d.costo_unit || 0);
+    total += sub;
+    const nombre = doc.splitTextToSize(d.product_name, 100);
+    if (y + nombre.length * 5 > 280) { doc.addPage(); y = 18; }
+    doc.text(nombre, col.prod + 2, y);
+    doc.text(String(cant), col.cant, y, { align: 'right' });
+    doc.text(soles(Number(d.costo_unit || 0)), col.costo, y, { align: 'right' });
+    doc.text(soles(sub), col.sub - 2, y, { align: 'right' });
+    y += nombre.length * 5 + 2;
+    doc.setDrawColor(226, 232, 240); doc.line(14, y - 4, 196, y - 4);
+  }
+  y += 4;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+  doc.text(`Total aprox.: ${soles(total)}`, 194, y, { align: 'right' });
+  if (c.notas) { y += 10; doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.text(doc.splitTextToSize(`Nota: ${c.notas}`, 180), 14, y); }
+  doc.setFontSize(8); doc.setTextColor(120, 120, 120);
+  doc.text(`Generado el ${new Date().toLocaleString('es-PE')} · SiuMax`, 14, 290);
+  const proveedor = (c.proveedor || 'proveedor').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-');
+  return new File([doc.output('blob')], `Pedido-${num}-${proveedor}.pdf`, { type: 'application/pdf' });
+};
+
 interface Props {
   productos: Product[];
   // Al recibir un pedido: stock nuevo de cada producto (para refrescar la pantalla sin recargar)
@@ -179,25 +232,57 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
     enfocar((compraId && document.querySelector<HTMLElement>(`[data-compra="${compraId}"]`)) || document.getElementById('btn-nueva-compra'));
   }, 350); // después de que los avisos devuelvan su foco (navegacionSesion), para que no lo pisen
 
-  // WhatsApp de Ajustes > Datos de la empresa (Teléfono): el detalle se envía a ESE número
+  // Número de WhatsApp de Ajustes > Datos de la empresa (Teléfono). Solo se usa si es un CELULAR peruano válido
+  // (9 dígitos que empiezan en 9, con o sin 51): un fijo u otro formato hacía que WhatsApp diera "número no válido".
+  // Si no sirve, WhatsApp se abre para elegir el chat.
+  const numeroWhatsApp = () => {
+    const d = empresa.telefono.replace(/\D/g, '');
+    if (/^9\d{8}$/.test(d)) return `51${d}`;
+    if (/^519\d{8}$/.test(d)) return d;
+    return '';
+  };
+  const abrirWhatsApp = (texto: string) => {
+    const numero = numeroWhatsApp();
+    window.open(`https://api.whatsapp.com/send?${numero ? `phone=${numero}&` : ''}text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
+  };
+
   const enviarWhatsApp = (c: Compra) => {
     const recibida = c.estado === 'RECIBIDO';
     const lineas = c.compras_detalle.map((d) => {
       const cant = recibida ? (d.cantidad_recibida ?? 0) : d.cantidad;
-      return `• ${cant} x ${d.product_name}  (S/ ${(Number(d.costo_unit) || 0).toFixed(2)} c/u)`;
+      return `- ${cant} x ${d.product_name} (S/ ${(Number(d.costo_unit) || 0).toFixed(2)} c/u)`;
     }).join('\n');
     const total = totalDe(c.compras_detalle.map((d) => ({ cantidad: recibida ? Number(d.cantidad_recibida ?? 0) : d.cantidad, costo_unit: d.costo_unit })));
     const texto = [
-      `*${recibida ? 'Compra recibida' : 'Pedido de compra'} #${String(c.id).slice(-6)}*${empresa.nombre ? ` · ${empresa.nombre}` : ''}`,
+      `*${recibida ? 'Compra recibida' : 'Pedido de compra'} #${String(c.id).slice(-6)}*${empresa.nombre ? ` - ${empresa.nombre}` : ''}`,
       `Proveedor: ${c.proveedor || 'Sin proveedor'}`,
-      `Fecha: ${fecha(c.created_at)}${recibida ? ` · recibido ${fecha(c.recibido_at)}${c.documento ? ` (${c.documento})` : ''}` : ''}`,
+      `Fecha: ${fecha(c.created_at)}${recibida ? ` - recibido ${fecha(c.recibido_at)}${c.documento ? ` (${c.documento})` : ''}` : ''}`,
       '', lineas, '', `Total aprox.: ${soles(total)}`,
       ...(c.notas ? ['', `Nota: ${c.notas}`] : []),
     ].join('\n');
-    const numero = empresa.telefono.replace(/\D/g, '');
-    const destino = numero.length === 9 ? `51${numero}` : numero; // celular peruano sin código de país
-    // Sin número en Ajustes: WhatsApp se abre para elegir el chat (sin aviso, a pedido del usuario)
-    window.open(`https://wa.me/${destino}?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
+    abrirWhatsApp(texto);
+  };
+
+  // PDF del pedido: se comparte (ventana de compartir de Windows → WhatsApp) o, si la PC no lo permite, se guarda
+  // y se abre el chat para adjuntarlo con el clip.
+  const enviarPdf = async (c: Compra) => {
+    try {
+      const archivo = await pdfDeCompra(c, empresa.nombre);
+      const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean };
+      if (nav.canShare?.({ files: [archivo] })) {
+        try { await navigator.share({ files: [archivo], title: archivo.name, text: `Pedido #${String(c.id).slice(-6)}` }); return; }
+        catch (e: any) { if (e?.name === 'AbortError') return; /* sin compartir: se guarda */ }
+      }
+      const url = URL.createObjectURL(archivo);
+      const a = document.createElement('a');
+      a.href = url; a.download = archivo.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      await avisar(`📄 Se guardó "${archivo.name}" (normalmente en Descargas).\n\nSe abrirá WhatsApp: adjúntalo con el clip 📎 → Documento.`);
+      abrirWhatsApp(`Le envío el ${c.estado === 'RECIBIDO' ? 'detalle de la compra' : 'pedido'} #${String(c.id).slice(-6)} en PDF.`);
+    } catch (e: any) {
+      void avisar(`No se pudo crear el PDF: ${e?.message || e}`);
+    }
   };
 
   const anular = async (c: Compra) => {
@@ -244,7 +329,8 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   return (
     <div id="panel-compras" ref={panel} onKeyDown={teclasPanel} className="flex flex-col gap-4 font-mono">
       {/* Cabecera (fila 0) */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-3 sm:p-4">
+      {/* En laptops el texto va arriba y los botones abajo (en una fila no entran) */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-3 sm:p-4">
         <div>
           <h2 className="text-sm sm:text-base font-black uppercase tracking-widest text-[var(--color-ink)] flex items-center gap-2"><ShoppingCart size={18} /> Listas de compras</h2>
           <p className="text-[11px] font-bold text-[var(--color-muted)] mt-1">
@@ -252,7 +338,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
             {!soloRecibe && stockBajo.length > 0 && <span className="text-[var(--color-danger)]"> · {stockBajo.length} producto(s) con stock bajo.</span>}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 shrink-0">
           {filtros.map(([f, nombre], i) => (
             <button key={f} id={`btn-compras-filtro-${f}`} type="button" data-nav={`0,${i}`} onClick={() => setFiltro(f)} aria-pressed={filtro === f}
               className={`${claseBoton} ${filtro === f ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'bg-white text-[var(--color-ink)]'}`}>
@@ -331,6 +417,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
           puedeDevolver={puedeDevolver(viendo)}
           onCerrar={() => { const id = viendo.id; setViendo(null); volverFoco(id); }}
           onWhatsApp={() => enviarWhatsApp(viendo)}
+          onPdf={() => void enviarPdf(viendo)}
           onEditar={() => conPermiso('editar listas de compras', () => { const c = viendo; setViendo(null); setEditando(c); })}
           onAnular={() => conPermiso('anular listas de compras', () => { const c = viendo; void anular(c).then((ok) => { if (ok) setViendo(null); }); })}
           onRecibir={() => conPermisoRecibir('recibir pedidos', () => { const c = viendo; setViendo(null); setRecibiendo(c); })}
@@ -403,9 +490,9 @@ const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.
 const ACCIONES: Record<string, string> = { CREADA: 'Creó la lista', EDITADA: 'Editó la lista', ANULADA: 'Anuló el pedido', RECIBIDA: 'Recibió el pedido', DEVUELTA: 'Devolvió lo ingresado' };
 
 const DetalleCompra: React.FC<{
-  compra: Compra; soloRecibe: boolean; puedeDevolver: boolean; onCerrar: () => void; onWhatsApp: () => void; onEditar: () => void;
+  compra: Compra; soloRecibe: boolean; puedeDevolver: boolean; onCerrar: () => void; onWhatsApp: () => void; onPdf: () => void; onEditar: () => void;
   onAnular: () => void; onRecibir: () => void; onDevolver: () => void;
-}> = ({ compra: c, soloRecibe, puedeDevolver, onCerrar, onWhatsApp, onEditar, onAnular, onRecibir, onDevolver }) => {
+}> = ({ compra: c, soloRecibe, puedeDevolver, onCerrar, onWhatsApp, onPdf, onEditar, onAnular, onRecibir, onDevolver }) => {
   const cuerpo = useRef<HTMLDivElement>(null);
   const recibida = c.estado === 'RECIBIDO';
   const parcial = c.compras_detalle.some((d) => d.batch_id != null);
@@ -419,10 +506,12 @@ const DetalleCompra: React.FC<{
 
   // Botones: el principal va al final (↓ llega a él y es el que queda marcado al abrir)
   const whatsapp = { clave: 'whatsapp', contenido: <><Send size={16} /> WhatsApp</>, clase: 'bg-[var(--color-success)] text-white border-[var(--color-success)]', hacer: onWhatsApp };
+  const pdf = { clave: 'pdf', contenido: <><FileText size={16} /> PDF</>, clase: 'bg-white text-[var(--color-ink)]', hacer: onPdf };
   const botones = c.estado === 'PENDIENTE'
     ? (soloRecibe
       ? [{ clave: 'recibir', contenido: <><PackageCheck size={16} /> Recibir</>, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]', hacer: onRecibir }]
       : [
+        pdf,
         { ...whatsapp, clase: 'bg-white text-[var(--color-success)] border-[var(--color-success)]' },
         ...(!parcial ? [{ clave: 'editar', contenido: <>Editar</>, clase: 'bg-white text-[var(--color-ink)]', hacer: onEditar }] : []),
         { clave: 'anular', contenido: <><Ban size={16} /> Anular</>, clase: 'bg-white text-[var(--color-muted)]', hacer: onAnular },
@@ -431,9 +520,9 @@ const DetalleCompra: React.FC<{
     : recibida
       ? [
         ...(puedeDevolver ? [{ clave: 'devolver', contenido: <><Undo2 size={16} /> Devolver lo ingresado</>, clase: 'bg-white text-[var(--color-danger)] border-[var(--color-danger)]', hacer: onDevolver }] : []),
-        ...(!soloRecibe ? [whatsapp] : []),
+        ...(!soloRecibe ? [pdf, whatsapp] : []),
       ]
-      : (!soloRecibe ? [whatsapp] : []);
+      : (!soloRecibe ? [pdf, whatsapp] : []);
 
   // Al abrir, el foco va al botón principal; si no hay botones, a la X
   useEffect(() => {
@@ -503,6 +592,11 @@ const EditorCompra: React.FC<{
 }> = ({ compra, productos, proveedores, autor, onCerrar }) => {
   const cuerpo = useRef<HTMLDivElement>(null);
   const [proveedorId, setProveedorId] = useState(compra?.provider_id || '');
+  const [listaProveedores, setListaProveedores] = useState(proveedores);
+  useEffect(() => {
+    void supabase.from('providers').select('id, razon_social, telefono').eq('estado', 'ACTIVO').order('razon_social')
+      .then(({ data }) => { if (data) setListaProveedores(data as Proveedor[]); });
+  }, []);
   const [notas, setNotas] = useState(compra?.notas || '');
   const [items, setItems] = useState<Item[]>(compra?.compras_detalle.map((d) => ({
     product_id: String(d.product_id), product_name: d.product_name, cantidad: Number(d.cantidad), costo_unit: Math.round(Number(d.costo_unit) * 100) / 100,
@@ -537,9 +631,9 @@ const EditorCompra: React.FC<{
   const [abierto, setAbierto] = useState(false);
   const disponibles = productos.filter((p) => !items.some((i) => i.product_id === String(p.id)));
   const resultados = !abierto ? [] : busqueda.trim()
-    ? disponibles.filter((p) => coincideBusqueda([p.name, p.code, p.barcode], busqueda)).slice(0, 50)
+    ? disponibles.filter((p) => coincideBusqueda([p.name, p.code, p.barcode], busqueda)) // todos (antes se cortaba en 50)
     : [...disponibles].sort((a, b) => Number(b.unit !== 'CONSUMO' && Number(b.quantity) <= Number(b.minStock)) - Number(a.unit !== 'CONSUMO' && Number(a.quantity) <= Number(a.minStock))
-      || a.name.localeCompare(b.name)).slice(0, 50);
+      || a.name.localeCompare(b.name));
   useEffect(() => { setMarcado(-1); }, [busqueda]);
   // El marcado siempre a la vista
   useEffect(() => { if (marcado >= 0) document.getElementById(`compra-resultado-${marcado}`)?.scrollIntoView({ block: 'nearest' }); }, [marcado]);
@@ -574,7 +668,7 @@ const EditorCompra: React.FC<{
     ocupado.current = true;
     setGuardando(true);
     try {
-      const prov = proveedores.find((p) => p.id === proveedorId);
+      const prov = listaProveedores.find((p) => p.id === proveedorId);
       const id = compra?.id ?? Date.now();
       const cabecera = { provider_id: prov?.id || null, proveedor: prov?.razon_social || null, notas: notas.trim() || null };
       const r1 = compra
@@ -610,7 +704,7 @@ const EditorCompra: React.FC<{
           <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-ink)]">Proveedor (Enter para elegir)</span>
           <select id="compra-proveedor" data-nav="0,0" value={proveedorId} onChange={(e) => setProveedorId(e.target.value)} onKeyDown={abrirLista} className={claseInput}>
             <option value="">— Sin proveedor —</option>
-            {proveedores.map((p) => <option key={p.id} value={p.id}>{p.razon_social}</option>)}
+            {listaProveedores.map((p) => <option key={p.id} value={p.id}>{p.razon_social}</option>)}
           </select>
         </label>
         <label className="space-y-1">

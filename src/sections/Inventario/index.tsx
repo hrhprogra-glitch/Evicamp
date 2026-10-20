@@ -423,10 +423,10 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         </div>
       )}
 {/* ENCABEZADO UNIFICADO NEOBRUTALISTA */}
-        <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] p-4 sm:p-6 lg:p-8 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 shrink-0">
+        <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] p-4 sm:p-6 lg:p-8 flex flex-col 2xl:flex-row justify-between items-start 2xl:items-center gap-4 2xl:gap-6 shrink-0">
           
           {/* LADO IZQUIERDO: TITULO Y SWITCH */}
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 lg:gap-8 w-full xl:w-auto">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 lg:gap-8 w-full 2xl:w-auto">
             {/* Título */}
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] rounded-none shrink-0">
@@ -514,7 +514,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
           {!soloCompras && (<>
           {/* LADO DERECHO: METRICAS Y BOTONES DE ACCIÓN */}
-          <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-4 lg:gap-6 w-full xl:w-auto pb-1 pr-1">
+          {/* Laptops (menos de 1536 px): los botones van en una segunda fila para que no se salgan de la pantalla */}
+          <div className="flex flex-col 2xl:flex-row items-stretch 2xl:items-center gap-4 lg:gap-6 w-full 2xl:w-auto pb-1 pr-1">
             
 
             {/* Botones de Acción */}
