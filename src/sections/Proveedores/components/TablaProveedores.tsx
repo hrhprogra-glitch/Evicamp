@@ -69,6 +69,7 @@ export const TablaProveedores: React.FC<Props> = ({ proveedores, onEdit, onDelet
             <div 
               key={prov.id} 
               data-row-prov="true"
+              data-prov-id={prov.id}
               role="button"
               tabIndex={0}
               onClick={() => onEdit(prov)}

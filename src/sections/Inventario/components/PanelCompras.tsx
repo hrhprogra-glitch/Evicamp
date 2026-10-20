@@ -11,7 +11,8 @@
 // cambian el valor sin querer; Enter pasa al siguiente campo. Esc cierra las ventanas.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, AlertTriangle, Loader2, Ban, Undo2, FileText, Share2, Download, Printer, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, AlertTriangle, Loader2, Ban, Undo2, FileText, Share2, Download, Printer, ArrowLeft, Receipt } from 'lucide-react';
+import { imprimirEnTicketera } from '../../../utils/impresion';
 import { supabase } from '../../../db/supabase';
 import { usePermiso, useEmpleado, avisarSinPermiso } from '../../../utils/permisos';
 import { avisar, confirmar } from '../../../utils/dialogos';
@@ -235,6 +236,54 @@ tr { page-break-inside: avoid; }
 <div class="total">Total aprox.: ${soles(total)}</div>
 ${c.notas ? `<div class="nota"><b>Nota:</b> ${esc(c.notas)}</div>` : ''}
 <div class="pie">Generado el ${esc(new Date().toLocaleString('es-PE'))} · SiuMax</div>
+</body></html>`;
+};
+
+// El mismo pedido en ticket de 80 mm (como las boletas de venta): logo en gris, letra de ticketera, una línea por producto
+const ticketDeCompra = (c: Compra, empresa: string, unidades: Map<string, string>, logo: string) => {
+  const recibida = c.estado === 'RECIBIDO';
+  const num = String(c.id).slice(-6);
+  let total = 0;
+  const items = c.compras_detalle.map((d) => {
+    const cant = recibida ? Number(d.cantidad_recibida ?? 0) : Number(d.cantidad);
+    const sub = cant * Number(d.costo_unit || 0);
+    total += sub;
+    return `<div class="item"><div class="nom">${esc(d.product_name)}</div>`
+      + `<div class="fila"><span>${cant} ${esc(unidades.get(String(d.product_id)) || '')} x ${soles(Number(d.costo_unit || 0))}</span><b>${soles(sub)}</b></div></div>`;
+  }).join('');
+  const datos = [
+    ['Proveedor', c.proveedor || 'Sin proveedor'],
+    ['Fecha', fecha(c.created_at)],
+    ...(c.autor ? [['Armado por', c.autor]] : []),
+    ...(recibida ? [['Recibido', `${fecha(c.recibido_at)}${c.recibido_por ? ` por ${c.recibido_por}` : ''}`]] : []),
+    ...(recibida && c.documento ? [['Factura', c.documento]] : []),
+    ['Estado', c.estado],
+  ].map(([k, v]) => `<div>${esc(k)}: <b>${esc(v)}</b></div>`).join('');
+  return `<!doctype html><html lang="es"><head><meta charset="UTF-8"><title>Pedido ${num}</title><style>
+@page { size: 80mm auto; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #fff; color: #000; font: 12px/1.35 'Courier New', Courier, monospace; }
+body { width: 80mm; padding: 4mm 4mm 6mm; }
+.cab { text-align: center; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 6px; }
+.cab img { display: block; margin: 0 auto 4px; max-height: 22mm; max-width: 50mm; object-fit: contain; filter: grayscale(1); }
+.cab h1 { margin: 0; font-size: 15px; text-transform: uppercase; letter-spacing: .08em; }
+.cab .tipo { margin-top: 6px; font-weight: 900; text-transform: uppercase; }
+.cab .num { font-size: 16px; font-weight: 900; letter-spacing: .12em; }
+.datos { text-transform: uppercase; font-size: 11px; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 4px; }
+.item { padding: 4px 0; border-bottom: 1px dotted #999; }
+.item .nom { font-weight: 700; text-transform: uppercase; }
+.fila { display: flex; justify-content: space-between; gap: 6px; }
+.total { display: flex; justify-content: space-between; font-size: 15px; font-weight: 900; border-top: 2px solid #000; margin-top: 6px; padding-top: 4px; }
+.nota { margin-top: 8px; border: 1px solid #000; padding: 4px; }
+.pie { margin-top: 10px; text-align: center; font-size: 10px; }
+</style></head><body>
+<div class="cab"><img src="${esc(new URL(logo, location.href).href)}" alt=""><h1>${esc(empresa || 'Mi negocio')}</h1>
+<div class="tipo">${recibida ? 'Compra recibida' : 'Pedido de compra'}</div><div class="num">#${num}</div></div>
+<div class="datos">${datos}</div>
+${items}
+<div class="total"><span>TOTAL APROX.</span><span>${soles(total)}</span></div>
+${c.notas ? `<div class="nota">NOTA: ${esc(c.notas)}</div>` : ''}
+<div class="pie">${esc(new Date().toLocaleString('es-PE'))}<br>SiuMax</div>
 </body></html>`;
 };
 
@@ -533,7 +582,8 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
       {previa && (
         <VistaPrevia
           compra={previa}
-          html={htmlDeCompra(previa, empresa.nombre, unidadPorId, empresa.logo)}
+          hoja={htmlDeCompra(previa, empresa.nombre, unidadPorId, empresa.logo)}
+          ticket={ticketDeCompra(previa, empresa.nombre, unidadPorId, empresa.logo)}
           onCerrar={() => { const c = previa; setPrevia(null); focoDetalle.current = 'btn-detalle-compartir'; setViendo(c); }}
           onWhatsApp={() => enviarWhatsApp(previa)}
           onEnviarPdf={() => enviarPdf(previa)}
@@ -703,13 +753,25 @@ const DetalleCompra: React.FC<{
 
 // ======================================================= Enviar / Imprimir: vista previa de la hoja del pedido
 // La hoja se ve tal cual se imprime. Botones agrupados: Enviar (WhatsApp texto / PDF), Guardar (Descargar PDF) e Imprimir.
-// Imprimir abre la ventana de impresión (elegir impresora, copias, guardar como PDF).
+// "Imprimir en": Hoja A4 (ventana de impresión: elegir impresora, copias, guardar como PDF) o Ticket de 80 mm
+// (en la app de escritorio va directo a la ticketera, igual que las boletas). La vista previa cambia con la opción.
+type Formato = 'HOJA' | 'TICKET';
+const CLAVE_FORMATO = 'compras_formato_impresion';
 const VistaPrevia: React.FC<{
-  compra: Compra; html: string; onCerrar: () => void; onWhatsApp: () => void; onEnviarPdf: () => Promise<void>; onDescargar: () => Promise<void>;
-}> = ({ compra: c, html, onCerrar, onWhatsApp, onEnviarPdf, onDescargar }) => {
+  compra: Compra; hoja: string; ticket: string; onCerrar: () => void; onWhatsApp: () => void; onEnviarPdf: () => Promise<void>; onDescargar: () => Promise<void>;
+}> = ({ compra: c, hoja, ticket, onCerrar, onWhatsApp, onEnviarPdf, onDescargar }) => {
   const cuerpo = useRef<HTMLDivElement>(null);
   const marco = useRef<HTMLIFrameElement>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
+  // Se recuerda la última opción elegida en esta PC
+  const [formato, setFormato] = useState<Formato>(() => {
+    try { return localStorage.getItem(CLAVE_FORMATO) === 'TICKET' ? 'TICKET' : 'HOJA'; } catch { return 'HOJA'; }
+  });
+  const elegirFormato = (f: Formato) => {
+    setFormato(f);
+    try { localStorage.setItem(CLAVE_FORMATO, f); } catch { /* sin almacenamiento: solo por esta vez */ }
+  };
+  const html = formato === 'TICKET' ? ticket : hoja;
   // Al volver de la ventana de impresión o de WhatsApp, el selector regresa al último botón usado
   const ultimo = useRef('btn-previa-imprimir');
   useEffect(() => {
@@ -729,7 +791,16 @@ const VistaPrevia: React.FC<{
       setTimeout(() => enfocar(document.getElementById(id)), 60); // el selector vuelve al botón usado
     }
   };
-  const imprimir = () => { marco.current?.contentWindow?.print(); };
+  const imprimir = async () => {
+    if (formato === 'TICKET') {
+      const r = await imprimirEnTicketera(ticket, `Pedido ${String(c.id).slice(-6)}`);
+      if (r) { // app de escritorio: ya se mandó a la ticketera
+        if (!r.ok) await avisar(`No se pudo imprimir el ticket: ${r.motivo}\n\nRevisa que la ticketera esté encendida y elegida en el menú de la app (tecla Alt > Impresora de tickets).`);
+        return;
+      }
+    }
+    marco.current?.contentWindow?.print();
+  };
   // La hoja toma el alto de su contenido: se desplaza con la rueda dentro de la ventana
   const ajustarAlto = () => {
     const d = marco.current?.contentDocument;
@@ -764,11 +835,24 @@ const VistaPrevia: React.FC<{
           </div>
         ))}
       </div>}>
-      <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-muted)]">Vista previa · así se imprime</p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-muted)]">Imprimir en:</span>
+          {([['HOJA', 'Hoja A4', FileText], ['TICKET', 'Ticket', Receipt]] as const).map(([f, nombre, Icono], i) => (
+            <button key={f} id={`btn-formato-${f}`} type="button" data-nav={`0,${i}`} aria-pressed={formato === f} onClick={() => elegirFormato(f)}
+              className={`${claseBoton} ${formato === f ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'bg-white text-[var(--color-ink)]'}`}>
+              <Icono size={14} /> {nombre}
+            </button>
+          ))}
+        </div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-muted)]">
+          Vista previa · {formato === 'TICKET' ? 'ticket de 80 mm' : 'hoja A4'}
+        </p>
+      </div>
       <div className="bg-[var(--color-bg)] border-2 border-[var(--color-border)] p-2 sm:p-4">
         {/* Sin foco ni clics dentro de la hoja: el selector siempre queda en los botones */}
         <iframe ref={marco} title="Vista previa del pedido" srcDoc={html} tabIndex={-1} onLoad={ajustarAlto}
-          className="w-full min-h-[300px] bg-white border border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-border)] pointer-events-none block" />
+          className={`${formato === 'TICKET' ? 'w-[80mm] mx-auto border-2 border-dashed border-gray-400' : 'w-full border border-[var(--color-border)]'} min-h-[300px] bg-white shadow-[4px_4px_0_0_var(--color-border)] pointer-events-none block`} />
       </div>
     </Ventana>
   );

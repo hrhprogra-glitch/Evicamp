@@ -16,6 +16,13 @@ const puente = (): PuenteEscritorio | undefined =>
 
 export const esAppEscritorio = () => !!puente();
 
+/** App de escritorio: manda un documento HTML completo directo a la ticketera elegida (sin ventana).
+ *  Fuera de la app devuelve null: ahí se usa la ventana de impresión del navegador. */
+export const imprimirEnTicketera = async (html: string, titulo: string) => {
+  const escritorio = puente();
+  return escritorio ? escritorio.imprimir(html, titulo) : null;
+};
+
 // Documento completo con los estilos de la página, para que el ticket salga igual que en pantalla
 const armarDocumento = (el: HTMLElement, titulo: string) => {
   const estilos = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
