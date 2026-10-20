@@ -130,7 +130,8 @@ const logoParaPdf = (src: string) => new Promise<{ data: string; ancho: number; 
 });
 
 // PDF de un pedido (jsPDF se carga solo al pedirlo, para no hacer más pesado el sistema)
-const pdfDeCompra = async (c: Compra, empresa: string, unidades: Map<string, string>, logo: string) => {
+// conPrecios = false (cajero con "Enviar / Imprimir pedidos" sin permiso de almacén): solo productos y cantidades
+const pdfDeCompra = async (c: Compra, empresa: string, unidades: Map<string, string>, logo: string, conPrecios = true) => {
   const { jsPDF } = await import('jspdf');
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const recibida = c.estado === 'RECIBIDO';
@@ -160,11 +161,11 @@ const pdfDeCompra = async (c: Compra, empresa: string, unidades: Map<string, str
   datos.forEach((t) => { doc.text(t, 14, y); y += 6; });
   y += 3;
   // Tabla
-  const col = { prod: 14, cant: 128, costo: 156, sub: 196 };
+  const col = { prod: 14, cant: conPrecios ? 128 : 194, costo: 156, sub: 196 };
   doc.setFillColor(30, 41, 59); doc.rect(14, y - 5, 182, 8, 'F');
   doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold');
   doc.text('PRODUCTO', col.prod + 2, y); doc.text(recibida ? 'LLEGÓ' : 'CANT.', col.cant, y, { align: 'right' });
-  doc.text('COSTO U.', col.costo, y, { align: 'right' }); doc.text('SUBTOTAL', col.sub - 2, y, { align: 'right' });
+  if (conPrecios) { doc.text('COSTO U.', col.costo, y, { align: 'right' }); doc.text('SUBTOTAL', col.sub - 2, y, { align: 'right' }); }
   doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'normal');
   y += 8;
   let total = 0;
@@ -176,14 +177,16 @@ const pdfDeCompra = async (c: Compra, empresa: string, unidades: Map<string, str
     if (y + nombre.length * 5 > 280) { doc.addPage(); y = 18; }
     doc.text(nombre, col.prod + 2, y);
     doc.text(`${cant} ${unidades.get(String(d.product_id)) || ''}`.trim(), col.cant, y, { align: 'right' });
-    doc.text(soles(Number(d.costo_unit || 0)), col.costo, y, { align: 'right' });
-    doc.text(soles(sub), col.sub - 2, y, { align: 'right' });
+    if (conPrecios) {
+      doc.text(soles(Number(d.costo_unit || 0)), col.costo, y, { align: 'right' });
+      doc.text(soles(sub), col.sub - 2, y, { align: 'right' });
+    }
     y += nombre.length * 5 + 2;
     doc.setDrawColor(226, 232, 240); doc.line(14, y - 4, 196, y - 4);
   }
   y += 4;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
-  doc.text(`Total aprox.: ${soles(total)}`, 194, y, { align: 'right' });
+  if (conPrecios) doc.text(`Total aprox.: ${soles(total)}`, 194, y, { align: 'right' });
   if (c.notas) { y += 10; doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.text(doc.splitTextToSize(`Nota: ${c.notas}`, 180), 14, y); }
   doc.setFontSize(8); doc.setTextColor(120, 120, 120);
   doc.text(`Generado el ${new Date().toLocaleString('es-PE')} · SiuMax`, 14, 290);
@@ -193,7 +196,7 @@ const pdfDeCompra = async (c: Compra, empresa: string, unidades: Map<string, str
 
 // Hoja del pedido en HTML: es la vista previa y lo que se imprime (A4). Mismo contenido que el PDF.
 const esc = (t: unknown) => String(t ?? '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]!));
-const htmlDeCompra = (c: Compra, empresa: string, unidades: Map<string, string>, logo: string) => {
+const htmlDeCompra = (c: Compra, empresa: string, unidades: Map<string, string>, logo: string, conPrecios = true) => {
   const recibida = c.estado === 'RECIBIDO';
   const num = String(c.id).slice(-6);
   let total = 0;
@@ -202,7 +205,7 @@ const htmlDeCompra = (c: Compra, empresa: string, unidades: Map<string, string>,
     const sub = cant * Number(d.costo_unit || 0);
     total += sub;
     return `<tr><td>${esc(d.product_name)}</td><td class="n">${cant} ${esc(unidades.get(String(d.product_id)) || '')}</td>`
-      + `<td class="n">${soles(Number(d.costo_unit || 0))}</td><td class="n b">${soles(sub)}</td></tr>`;
+      + (conPrecios ? `<td class="n">${soles(Number(d.costo_unit || 0))}</td><td class="n b">${soles(sub)}</td>` : '') + '</tr>';
   }).join('');
   const datos = [
     ['Proveedor', c.proveedor || 'Sin proveedor'],
@@ -236,15 +239,15 @@ tr { page-break-inside: avoid; }
 </style></head><body>
 <div class="cab"><div class="marca"><img src="${esc(new URL(logo, location.href).href)}" alt="Logo"><h1>${esc(empresa || 'Pedido de compra')}</h1></div><div class="doc"><b>${recibida ? 'COMPRA RECIBIDA' : 'PEDIDO DE COMPRA'}</b><span>#${num}</span></div></div>
 <div class="datos">${datos}</div>
-<table><thead><tr><th>Producto</th><th class="n">${recibida ? 'Llegó' : 'Cantidad'}</th><th class="n">Costo u.</th><th class="n">Subtotal</th></tr></thead><tbody>${filas}</tbody></table>
-<div class="total">Total aprox.: ${soles(total)}</div>
+<table><thead><tr><th>Producto</th><th class="n">${recibida ? 'Llegó' : 'Cantidad'}</th>${conPrecios ? '<th class="n">Costo u.</th><th class="n">Subtotal</th>' : ''}</tr></thead><tbody>${filas}</tbody></table>
+${conPrecios ? `<div class="total">Total aprox.: ${soles(total)}</div>` : ''}
 ${c.notas ? `<div class="nota"><b>Nota:</b> ${esc(c.notas)}</div>` : ''}
 <div class="pie">Generado el ${esc(new Date().toLocaleString('es-PE'))} · SiuMax</div>
 </body></html>`;
 };
 
 // El mismo pedido en ticket de 80 mm (como las boletas de venta): logo en gris, letra de ticketera, una línea por producto
-const ticketDeCompra = (c: Compra, empresa: string, unidades: Map<string, string>, logo: string) => {
+const ticketDeCompra = (c: Compra, empresa: string, unidades: Map<string, string>, logo: string, conPrecios = true) => {
   const recibida = c.estado === 'RECIBIDO';
   const num = String(c.id).slice(-6);
   let total = 0;
@@ -253,7 +256,9 @@ const ticketDeCompra = (c: Compra, empresa: string, unidades: Map<string, string
     const sub = cant * Number(d.costo_unit || 0);
     total += sub;
     return `<div class="item"><div class="nom">${esc(d.product_name)}</div>`
-      + `<div class="fila"><span>${cant} ${esc(unidades.get(String(d.product_id)) || '')} x ${soles(Number(d.costo_unit || 0))}</span><b>${soles(sub)}</b></div></div>`;
+      + (conPrecios
+        ? `<div class="fila"><span>${cant} ${esc(unidades.get(String(d.product_id)) || '')} x ${soles(Number(d.costo_unit || 0))}</span><b>${soles(sub)}</b></div></div>`
+        : `<div class="fila"><span>Cantidad</span><b>${cant} ${esc(unidades.get(String(d.product_id)) || '')}</b></div></div>`);
   }).join('');
   const datos = [
     ['Proveedor', c.proveedor || 'Sin proveedor'],
@@ -285,7 +290,7 @@ body { width: 80mm; padding: 4mm 4mm 6mm; }
 <div class="tipo">${recibida ? 'Compra recibida' : 'Pedido de compra'}</div><div class="num">#${num}</div></div>
 <div class="datos">${datos}</div>
 ${items}
-<div class="total"><span>TOTAL APROX.</span><span>${soles(total)}</span></div>
+${conPrecios ? `<div class="total"><span>TOTAL APROX.</span><span>${soles(total)}</span></div>` : ''}
 ${c.notas ? `<div class="nota">NOTA: ${esc(c.notas)}</div>` : ''}
 <div class="pie">${esc(new Date().toLocaleString('es-PE'))}<br>SiuMax</div>
 </body></html>`;
@@ -302,7 +307,11 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   // 'Recibir pedidos' sin permiso de almacén (cajero): solo ve pedidos (sin costos), los recibe y devuelve lo que
   // él mismo recibió. No arma, edita, anula ni envía. El servidor aplica las mismas reglas (fn_recibir/devolver_compra).
   const recibePedidos = usePermiso('compras_recibir');
-  const soloRecibe = !puede && recibePedidos;
+  // 'Enviar / Imprimir pedidos' (cajero): ve "Enviar / Imprimir" en el detalle; sin permiso de almacén, sin precios
+  const enviaPedidos = usePermiso('compras_enviar');
+  const soloRecibe = !puede && (recibePedidos || enviaPedidos); // vista solo Compras, sin costos
+  const puedeEnviar = puede || enviaPedidos;
+  const conPrecios = puede;
   const empleado = useEmpleado();
   const panel = useRef<HTMLDivElement>(null);
   const [compras, setCompras] = useState<Compra[]>([]);
@@ -392,14 +401,14 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
     const recibida = c.estado === 'RECIBIDO';
     const lineas = c.compras_detalle.map((d) => {
       const cant = recibida ? (d.cantidad_recibida ?? 0) : d.cantidad;
-      return `- ${cant} ${unidadPorId.get(String(d.product_id)) || ''} x ${d.product_name} (S/ ${(Number(d.costo_unit) || 0).toFixed(2)} c/u)`;
+      return `- ${cant} ${unidadPorId.get(String(d.product_id)) || ''} x ${d.product_name}${conPrecios ? ` (S/ ${(Number(d.costo_unit) || 0).toFixed(2)} c/u)` : ''}`;
     }).join('\n');
     const total = totalDe(c.compras_detalle.map((d) => ({ cantidad: recibida ? Number(d.cantidad_recibida ?? 0) : d.cantidad, costo_unit: d.costo_unit })));
     const texto = [
       `*${recibida ? 'Compra recibida' : 'Pedido de compra'} #${String(c.id).slice(-6)}*${empresa.nombre ? ` - ${empresa.nombre}` : ''}`,
       `Proveedor: ${c.proveedor || 'Sin proveedor'}`,
       `Fecha: ${fecha(c.created_at)}${recibida ? ` - recibido ${fecha(c.recibido_at)}${c.documento ? ` (${c.documento})` : ''}` : ''}`,
-      '', lineas, '', `Total aprox.: ${soles(total)}`,
+      '', lineas, ...(conPrecios ? ['', `Total aprox.: ${soles(total)}`] : []),
       ...(c.notas ? ['', `Nota: ${c.notas}`] : []),
     ].join('\n');
     abrirWhatsApp(texto);
@@ -415,7 +424,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   };
   const descargarPdf = async (c: Compra) => {
     try {
-      const archivo = await pdfDeCompra(c, empresa.nombre, unidadPorId, empresa.logo);
+      const archivo = await pdfDeCompra(c, empresa.nombre, unidadPorId, empresa.logo, conPrecios);
       guardarArchivo(archivo);
       await avisar(`📄 PDF descargado: "${archivo.name}".\n\nLo encuentras en Descargas (o en la carpeta que elegiste).`);
     } catch (e: any) {
@@ -427,7 +436,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   // y se abre el chat para adjuntarlo con el clip.
   const enviarPdf = async (c: Compra) => {
     try {
-      const archivo = await pdfDeCompra(c, empresa.nombre, unidadPorId, empresa.logo);
+      const archivo = await pdfDeCompra(c, empresa.nombre, unidadPorId, empresa.logo, conPrecios);
       const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean };
       if (nav.canShare?.({ files: [archivo] })) {
         try { await navigator.share({ files: [archivo], title: archivo.name, text: `Pedido #${String(c.id).slice(-6)}` }); return; }
@@ -572,6 +581,8 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
           compra={viendo}
           unidades={unidadPorId}
           soloRecibe={soloRecibe}
+          puedeEnviar={puedeEnviar}
+          puedeRecibir={puede || recibePedidos}
           puedeDevolver={puedeDevolver(viendo)}
           foco={focoDetalle.current}
           onCerrar={() => { const id = viendo.id; setViendo(null); volverFoco(id); }}
@@ -586,8 +597,8 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
       {previa && (
         <VistaPrevia
           compra={previa}
-          hoja={htmlDeCompra(previa, empresa.nombre, unidadPorId, empresa.logo)}
-          ticket={ticketDeCompra(previa, empresa.nombre, unidadPorId, empresa.logo)}
+          hoja={htmlDeCompra(previa, empresa.nombre, unidadPorId, empresa.logo, conPrecios)}
+          ticket={ticketDeCompra(previa, empresa.nombre, unidadPorId, empresa.logo, conPrecios)}
           onCerrar={() => { const c = previa; setPrevia(null); focoDetalle.current = 'btn-detalle-compartir'; setViendo(c); }}
           onWhatsApp={() => enviarWhatsApp(previa)}
           onEnviarPdf={() => enviarPdf(previa)}
@@ -676,9 +687,9 @@ const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.
 const ACCIONES: Record<string, string> = { CREADA: 'Creó la lista', EDITADA: 'Editó la lista', ANULADA: 'Anuló el pedido', RECIBIDA: 'Recibió el pedido', DEVUELTA: 'Devolvió lo ingresado' };
 
 const DetalleCompra: React.FC<{
-  compra: Compra; unidades: Map<string, string>; soloRecibe: boolean; puedeDevolver: boolean; foco?: string; onCerrar: () => void; onCompartir: () => void; onEditar: () => void;
-  onAnular: () => void; onRecibir: () => void; onDevolver: () => void;
-}> = ({ compra: c, unidades, soloRecibe, puedeDevolver, foco, onCerrar, onCompartir, onEditar, onAnular, onRecibir, onDevolver }) => {
+  compra: Compra; unidades: Map<string, string>; soloRecibe: boolean; puedeEnviar: boolean; puedeRecibir: boolean; puedeDevolver: boolean; foco?: string;
+  onCerrar: () => void; onCompartir: () => void; onEditar: () => void; onAnular: () => void; onRecibir: () => void; onDevolver: () => void;
+}> = ({ compra: c, unidades, soloRecibe, puedeEnviar, puedeRecibir, puedeDevolver, foco, onCerrar, onCompartir, onEditar, onAnular, onRecibir, onDevolver }) => {
   const cuerpo = useRef<HTMLDivElement>(null);
   const recibida = c.estado === 'RECIBIDO';
   const parcial = c.compras_detalle.some((d) => d.batch_id != null);
@@ -693,9 +704,12 @@ const DetalleCompra: React.FC<{
   // Botones: el principal va al final (↓ llega a él y es el que queda marcado al abrir)
   // Enviar (WhatsApp / PDF), descargar e imprimir están juntos en la vista previa
   const compartir = { clave: 'compartir', contenido: <><Share2 size={16} /> Enviar / Imprimir</>, clase: 'bg-white text-[var(--color-ink)]', hacer: onCompartir };
+  const recibirBoton = { clave: 'recibir', contenido: <><PackageCheck size={16} /> Recibir</>, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]', hacer: onRecibir };
+  const compartirPrincipal = { ...compartir, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]' };
+  // Cajero (soloRecibe): "Enviar / Imprimir" si tiene ese permiso, "Recibir" si tiene el suyo
   const botones = c.estado === 'PENDIENTE'
     ? (soloRecibe
-      ? [{ clave: 'recibir', contenido: <><PackageCheck size={16} /> Recibir</>, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]', hacer: onRecibir }]
+      ? [...(puedeEnviar ? [puedeRecibir ? compartir : compartirPrincipal] : []), ...(puedeRecibir ? [recibirBoton] : [])]
       : [
         compartir,
         ...(!parcial ? [{ clave: 'editar', contenido: <>Editar</>, clase: 'bg-white text-[var(--color-ink)]', hacer: onEditar }] : []),
@@ -705,9 +719,9 @@ const DetalleCompra: React.FC<{
     : recibida
       ? [
         ...(puedeDevolver ? [{ clave: 'devolver', contenido: <><Undo2 size={16} /> Devolver lo ingresado</>, clase: 'bg-white text-[var(--color-danger)] border-[var(--color-danger)]', hacer: onDevolver }] : []),
-        ...(!soloRecibe ? [{ ...compartir, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]' }] : []),
+        ...(puedeEnviar ? [compartirPrincipal] : []),
       ]
-      : (!soloRecibe ? [{ ...compartir, clase: 'bg-[var(--color-ink)] text-[var(--color-accent)]' }] : []);
+      : (puedeEnviar ? [compartirPrincipal] : []);
 
   // Al abrir, el foco va al botón principal; si no hay botones, a la X
   useEffect(() => {

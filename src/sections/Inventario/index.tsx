@@ -38,7 +38,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   // Solo 'Recibir pedidos' (sin ver stock): entra únicamente a la pestaña Compras, sin productos, lotes ni costos
   const verStock = usePermiso('almacen_ver_stock');
   const recibePedidos = usePermiso('compras_recibir');
-  const soloCompras = !verStock && recibePedidos;
+  const enviaPedidos = usePermiso('compras_enviar'); // enviar / imprimir pedidos
+  const soloCompras = !verStock && (recibePedidos || enviaPedidos);
   useEffect(() => { if (soloCompras && vistaActiva !== 'COMPRAS') setVistaActiva('COMPRAS'); }, [soloCompras, vistaActiva]);
   const { enLinea } = useConexion(); // sin internet, Inventario es solo para ver
   const [mermaAEditar, setMermaAEditar] = useState<any>(null);

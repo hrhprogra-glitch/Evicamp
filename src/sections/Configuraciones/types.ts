@@ -18,6 +18,8 @@ export interface PermisosUsuario {
   almacen_registrar_mermas: boolean;
   // Solo Inventario > Compras: recibir pedidos y devolver lo que uno recibió (sin costos ni editar)
   compras_recibir: boolean;
+  // Solo Inventario > Compras: enviar por WhatsApp, descargar PDF e imprimir los pedidos (sin precios)
+  compras_enviar: boolean;
 
   // REPORTES
   reportes_ver_historial_ventas: boolean;
