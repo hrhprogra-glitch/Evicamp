@@ -295,10 +295,10 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
           <div className="min-w-[900px]">
             <div className="grid grid-cols-12 gap-3 bg-[var(--color-ink)] text-white px-4 py-3 text-xs font-black uppercase tracking-[0.1em]">
               <div className="col-span-2">Fecha / Pedido</div>
-              <div className="col-span-2">Proveedor</div>
-              <div className="col-span-4">Productos</div>
+              <div className="col-span-3">Proveedor</div>
+              <div className="col-span-1 text-center">Productos</div>
               <div className="col-span-1 text-right">Total</div>
-              <div className="col-span-2">Recibido / Factura</div>
+              <div className="col-span-3">Recibido por / Factura</div>
               <div className="col-span-1 text-center">Estado</div>
             </div>
             {visibles.map((c, n) => {
@@ -317,16 +317,16 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
                     <p className="font-black text-[var(--color-ink)]">{fecha(c.created_at)}</p>
                     <p className="text-[11px] font-bold text-[var(--color-muted)] uppercase">#{String(c.id).slice(-6)}{c.autor ? ` · ${c.autor}` : ''}</p>
                   </div>
-                  <div className="col-span-2 font-black uppercase text-[var(--color-ink)] truncate flex items-center gap-2"><Truck size={14} className="shrink-0" /> <span className="truncate">{c.proveedor || 'Sin proveedor'}</span></div>
-                  <ul className="col-span-4 text-xs font-bold text-[var(--color-ink)] space-y-0.5">
-                    {c.compras_detalle.slice(0, 3).map((d) => (
-                      <li key={d.id} className="truncate">{recibida ? (d.cantidad_recibida ?? 0) : d.cantidad} x {d.product_name}</li>
-                    ))}
-                    {c.compras_detalle.length > 3 && <li className="text-[10px] font-black uppercase text-[var(--color-muted)]">+{c.compras_detalle.length - 3} más</li>}
-                  </ul>
+                  <div className="col-span-3 font-black uppercase text-[var(--color-ink)] truncate flex items-center gap-2"><Truck size={14} className="shrink-0" /> <span className="truncate">{c.proveedor || 'Sin proveedor'}</span></div>
+                  {/* Los productos se ven en el detalle (Enter); aquí solo cuántos son */}
+                  <div className="col-span-1 text-center font-black text-[var(--color-ink)]">{c.compras_detalle.length}</div>
                   <div className="col-span-1 text-right font-black text-[var(--color-ink)]">{soles(total)}</div>
-                  <div className="col-span-2 text-xs font-bold text-[var(--color-muted)] uppercase">
-                    {recibida ? <>{fecha(c.recibido_at)}{c.documento && <span className="block text-[var(--color-ink)]">{c.documento}</span>}</> : '—'}
+                  {/* Quién lo recibió: el empleado con la sesión abierta al recibir (admin o cajero) */}
+                  <div className="col-span-3 text-xs font-bold text-[var(--color-muted)] uppercase">
+                    {recibida ? <>
+                      <span className="block font-black text-[var(--color-ink)]">{c.recibido_por || 'Sin registrar'}</span>
+                      {fecha(c.recibido_at)}{c.documento ? ` · ${c.documento}` : ''}
+                    </> : '—'}
                   </div>
                   <div className="col-span-1 text-center">
                     <span className={`inline-block px-2 py-0.5 border-2 text-[10px] font-black uppercase ${colorEstado}`}>{c.estado}</span>
