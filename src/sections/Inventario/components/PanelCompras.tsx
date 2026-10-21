@@ -189,7 +189,7 @@ const pdfDeCompra = async (c: Compra, empresa: string, unidades: Map<string, str
   if (conPrecios) doc.text(`Total aprox.: ${soles(total)}`, 194, y, { align: 'right' });
   if (c.notas) { y += 10; doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.text(doc.splitTextToSize(`Nota: ${c.notas}`, 180), 14, y); }
   doc.setFontSize(8); doc.setTextColor(120, 120, 120);
-  doc.text(`Generado el ${new Date().toLocaleString('es-PE')} · SiuMax`, 14, 290);
+  doc.text(`Generado el ${new Date().toLocaleString('es-PE')} · SiuMax Comerc`, 14, 290);
   const proveedor = (c.proveedor || 'proveedor').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-');
   return new File([doc.output('blob')], `Pedido-${num}-${proveedor}.pdf`, { type: 'application/pdf' });
 };
@@ -242,7 +242,7 @@ tr { page-break-inside: avoid; }
 <table><thead><tr><th>Producto</th><th class="n">${recibida ? 'Llegó' : 'Cantidad'}</th>${conPrecios ? '<th class="n">Costo u.</th><th class="n">Subtotal</th>' : ''}</tr></thead><tbody>${filas}</tbody></table>
 ${conPrecios ? `<div class="total">Total aprox.: ${soles(total)}</div>` : ''}
 ${c.notas ? `<div class="nota"><b>Nota:</b> ${esc(c.notas)}</div>` : ''}
-<div class="pie">Generado el ${esc(new Date().toLocaleString('es-PE'))} · SiuMax</div>
+<div class="pie">Generado el ${esc(new Date().toLocaleString('es-PE'))} · SiuMax Comerc</div>
 </body></html>`;
 };
 
@@ -292,7 +292,7 @@ body { width: 80mm; padding: 4mm 4mm 6mm; }
 ${items}
 ${conPrecios ? `<div class="total"><span>TOTAL APROX.</span><span>${soles(total)}</span></div>` : ''}
 ${c.notas ? `<div class="nota">NOTA: ${esc(c.notas)}</div>` : ''}
-<div class="pie">${esc(new Date().toLocaleString('es-PE'))}<br>SiuMax</div>
+<div class="pie">${esc(new Date().toLocaleString('es-PE'))}<br>SiuMax Comerc</div>
 </body></html>`;
 };
 

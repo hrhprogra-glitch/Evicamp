@@ -74,7 +74,7 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
           {empresa.telefono && <p className="text-[12px]">Tel: {empresa.telefono}</p>}
           
           <h3 className="font-black text-sm uppercase mt-2">
-            {fiadoData ? 'TICKET DE FIADO' : 'Boleta Electrónica'}
+            {fiadoData ? 'TICKET DE FIADO' : 'Nota de Venta'}
           </h3>
           <p className="font-black tracking-widest text-base">{nroBoleta}</p>
           <p className="text-[12px] font-bold mt-1">Fecha: {fecha}</p>
@@ -141,8 +141,7 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
         {/* PIE DE PÁGINA */}
         <div className="text-center mt-6 border-t-2 border-dashed border-gray-400 pt-3">
           <p className="font-black text-[12px] uppercase">¡Gracias por su compra!</p>
-          <p className="text-[11px] mt-1 font-bold">Consulte su documento en www.sunat.gob.pe</p>
-          <p className="mt-3 text-[11px] font-black">*** SISTEMA SIUMAX ***</p>
+          <p className="mt-3 text-[11px] font-black">*** SIUMAX COMERC ***</p>
         </div>
         <div className="h-2"></div>
       </div>

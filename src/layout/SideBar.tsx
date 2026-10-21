@@ -30,7 +30,7 @@ export const ATAJOS_SESIONES = ['pos', 'fiados', 'inventario', 'mermas', 'finanz
 const AUTO_OCULTAR_MS = 8000;
 
 export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigate, onClose, onToggle, permisos }) => {
-  const [empresaData, setEmpresaData] = useState({ nombre: 'SIUMAX', logo: logoEvicamp });
+  const [empresaData, setEmpresaData] = useState({ nombre: 'SIUMAX COMERC', logo: logoEvicamp });
   const puedeInstalar = usePuedeInstalar();
   const hayInstaladorPC = useHayInstaladorPC();
 
@@ -230,7 +230,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
         const { data, error } = await supabase.from('empresa_config').select('nombre_empresa, logo_url').limit(1).single();
         if (data && !error) {
           setEmpresaData({
-            nombre: data.nombre_empresa || 'SIUMAX',
+            nombre: data.nombre_empresa || 'SIUMAX COMERC',
             logo: data.logo_url || logoEvicamp
           });
         }
