@@ -22,6 +22,7 @@ interface Lote {
   mermas_total?: number; // Suma total de unidades perdidas
   unit?: string; // <-- AÑADIDO PARA LA UNIDAD
   supplier?: string; // <-- AÑADIDO PARA EL PROVEEDOR
+  provider_id?: string | null; // proveedor registrado (para editar el lote sin perder el enlace)
 }
 
 interface Props {
@@ -74,6 +75,7 @@ export const TablaLotes: React.FC<Props> = ({
             product_name: b.products?.name || 'PRODUCTO DESCONOCIDO',
             document_ref: b.document_ref || 'INT-S/R',
             supplier: b.supplier || '',
+            provider_id: b.provider_id ?? null,
             category: b.products?.category || 'GENERAL',
             unit: b.products?.unit === 'CONSUMO' || b.products?.control_type === 'CONSUMO' || b.products?.control_type === 'SERVICE' ? 'CONSUMO' : (b.products?.unit || b.products?.weight_unit || (b.products?.control_type === 'WEIGHT' ? 'KG' : 'UND'))
           }));
@@ -117,7 +119,7 @@ export const TablaLotes: React.FC<Props> = ({
   const filteredLotes = lotes.filter(lote => {
     // 1. Filtro de Búsqueda de Texto Inteligente (coincidencia flexible)
     if (searchQuery && searchQuery.trim()) {
-      if (!coincideBusqueda([lote.product_name, lote.document_ref], searchQuery)) {
+      if (!coincideBusqueda([lote.product_name, lote.document_ref, lote.supplier], searchQuery)) {
         return false;
       }
     }

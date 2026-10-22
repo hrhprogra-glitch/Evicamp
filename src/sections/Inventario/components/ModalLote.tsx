@@ -1,9 +1,11 @@
 import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, Database, Search, Calculator, FileText, Calendar, Loader2 } from 'lucide-react';
+import { X, Save, Database, Search, Calculator, FileText, Calendar, Loader2, Truck } from 'lucide-react';
 import type { Product } from '../types';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
+import { avisar } from '../../../utils/dialogos';
+import { useEmpleado } from '../../../utils/permisos';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -22,8 +24,12 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
 
   const [cantidad, setCantidad] = useState('');
   const [costoTotal, setCostoTotal] = useState('');
-  const [sustento, setSustento] = useState('');
+  const [sustento, setSustento] = useState(''); // N° de factura o guía (opcional)
+  // Proveedor (opcional): el texto que se ve y, si se eligió de la lista, su id (igual que los lotes de Compras)
+  const [proveedor, setProveedor] = useState('');
+  const [proveedorId, setProveedorId] = useState<string | null>(null);
   const [expiration, setExpiration] = useState('');
+  const empleado = useEmpleado();
 
   const prodContainerRef = useRef<HTMLDivElement>(null);
   const provContainerRef = useRef<HTMLDivElement>(null);
@@ -67,6 +73,8 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         } else {
           setSustento(initialLote.document_ref || '');
         }
+        setProveedor(initialLote.supplier || '');
+        setProveedorId(initialLote.provider_id ? String(initialLote.provider_id) : null);
         setExpiration(initialLote.expiration_date || '');
 
       } else {
@@ -75,6 +83,8 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         setCantidad('');
         setCostoTotal('');
         setSustento('');
+        setProveedor('');
+        setProveedorId(null);
         setExpiration('');
       }
 
@@ -189,30 +199,31 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
           target?.focus();
           return;
         }
-        if (active?.id === 'input-sustento-lote') {
+        if (active?.id === 'input-proveedor-lote') {
           e.preventDefault();
+          setShowProviderDropdown(false);
           const target = document.getElementById('input-cantidad-lote') as HTMLInputElement | null;
           target?.focus();
           target?.select();
           return;
         }
-        if (active?.id === 'input-vencimiento-lote') {
+        if (active?.id === 'input-sustento-lote') {
           e.preventDefault();
           const target = document.getElementById('input-costo-total-lote') as HTMLInputElement | null;
           target?.focus();
           target?.select();
           return;
         }
-        if (active?.id === 'btn-guardar-lote') {
+        if (active?.id === 'input-vencimiento-lote') {
           e.preventDefault();
-          document.getElementById('input-vencimiento-lote')?.focus();
-          return;
-        }
-        if (active?.id === 'btn-cancelar-lote') {
-          e.preventDefault();
-          const target = document.getElementById('input-sustento-lote') as HTMLInputElement | null;
+          const target = document.getElementById('input-proveedor-lote') as HTMLInputElement | null;
           target?.focus();
           target?.select();
+          return;
+        }
+        if (active?.id === 'btn-guardar-lote' || active?.id === 'btn-cancelar-lote') {
+          e.preventDefault();
+          document.getElementById('input-vencimiento-lote')?.focus();
           return;
         }
       }
@@ -233,17 +244,19 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         }
         if (active?.id === 'input-cantidad-lote') {
           e.preventDefault();
-          const target = document.getElementById('input-sustento-lote') as HTMLInputElement | null;
+          const target = document.getElementById('input-proveedor-lote') as HTMLInputElement | null;
           target?.focus();
           target?.select();
           return;
         }
         if (active?.id === 'input-costo-total-lote') {
           e.preventDefault();
-          document.getElementById('input-vencimiento-lote')?.focus();
+          const target = document.getElementById('input-sustento-lote') as HTMLInputElement | null;
+          target?.focus();
+          target?.select();
           return;
         }
-        if (active?.id === 'input-sustento-lote') {
+        if (active?.id === 'input-proveedor-lote') {
           if (showProviderDropdown) {
             const first = document.querySelector('[data-lote-prov-item="true"]') as HTMLElement;
             if (first) {
@@ -254,7 +267,12 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
           }
           e.preventDefault();
           setShowProviderDropdown(false);
-          (document.getElementById('btn-guardar-lote') || document.getElementById('btn-cancelar-lote'))?.focus();
+          document.getElementById('input-vencimiento-lote')?.focus();
+          return;
+        }
+        if (active?.id === 'input-sustento-lote') {
+          e.preventDefault();
+          document.getElementById('input-vencimiento-lote')?.focus();
           return;
         }
         if (active?.id === 'input-vencimiento-lote') {
@@ -279,10 +297,12 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
           target?.select();
           return;
         }
-        if (active?.id === 'input-sustento-lote') {
+        if (active?.id === 'input-proveedor-lote') {
           e.preventDefault();
           setShowProviderDropdown(false);
-          document.getElementById('input-vencimiento-lote')?.focus();
+          const target = document.getElementById('input-sustento-lote') as HTMLInputElement | null;
+          target?.focus();
+          target?.select();
           return;
         }
         if (active?.id === 'btn-cancelar-lote') {
@@ -300,9 +320,9 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
           target?.select();
           return;
         }
-        if (active?.id === 'input-vencimiento-lote') {
+        if (active?.id === 'input-sustento-lote') {
           e.preventDefault();
-          const target = document.getElementById('input-sustento-lote') as HTMLInputElement | null;
+          const target = document.getElementById('input-proveedor-lote') as HTMLInputElement | null;
           target?.focus();
           target?.select();
           return;
@@ -329,9 +349,18 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
   });
 
   const filteredProveedores = proveedoresActivos.filter(p => {
-    if (!sustento.trim()) return true;
-    return coincideBusqueda([p.razon_social], sustento);
+    if (!proveedor.trim()) return true;
+    return coincideBusqueda([p.razon_social], proveedor);
   });
+
+  const elegirProveedor = (prov: { id: string | number; razon_social: string }) => {
+    setProveedor(prov.razon_social);
+    setProveedorId(String(prov.id));
+    setShowProviderDropdown(false);
+    const next = document.getElementById('input-sustento-lote') as HTMLInputElement | null;
+    next?.focus();
+    next?.select();
+  };
 
   // 📡 SOPORTE DE ESCÁNER Y TECLADO: el lector escribe el código y envía "Enter" automáticamente.
   // Con flecha abajo se navega a la lista de resultados para seleccionar con Enter.
@@ -366,6 +395,14 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
     if (isSubmitting) return;
     setIsSubmitting(true);
     const documento = sustento.trim() || 'SIN SUSTENTO';
+    // Proveedor opcional: si se escribió sin elegirlo de la lista pero coincide exacto con uno, se enlaza igual
+    const nombreProveedor = proveedor.trim();
+    const provEncontrado = proveedorId
+      ? proveedoresActivos.find(p => String(p.id) === proveedorId)
+      : proveedoresActivos.find(p => String(p.razon_social).trim().toUpperCase() === nombreProveedor.toUpperCase());
+    const supplier = nombreProveedor ? (provEncontrado?.razon_social || nombreProveedor) : null;
+    const providerId = nombreProveedor ? (provEncontrado ? String(provEncontrado.id) : proveedorId) : null;
+    const usuario = empleado?.nombre || 'Sistema';
 
     try {
       if (initialLote) {
@@ -380,6 +417,8 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
             expiration_date: expiration || null,
             cost_total: Number(costoTotal) || 0,
             document_ref: documento,
+            supplier,
+            provider_id: providerId,
             is_active: 1
           })
           .eq('id', initialLote.id);
@@ -391,7 +430,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
           p_batch_id: String(initialLote.id),
           p_new_qty: cantidadNueva,
           p_new_cost: Number(costoUnitario) || 0,
-          p_user_name: 'Admin'
+          p_user_name: usuario
         });
 
         if (rpcError) throw rpcError;
@@ -404,10 +443,13 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
             expiration_date: expiration, 
             cost_unit: Number(costoUnitario),
             cost_total: Number(costoTotal),
-            document_ref: documento 
+            document_ref: documento,
+            supplier: supplier || '',
+            provider_id: providerId
           });
         }
-        alert(`LOTE ACTUALIZADO Y STOCK GLOBAL SINCRONIZADO.\nProducto: ${selectedProduct?.name}`);
+        onClose();
+        void avisar(`✅ Lote actualizado y stock sincronizado.\nProducto: ${selectedProduct?.name}`);
 
       } else {
         // === MODO CREACIÓN (DELEGACIÓN DE IDs A POSTGRESQL) ===
@@ -425,6 +467,8 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
             cost_total: Number(costoTotal),
             cost_unit: Number(costoUnitario),
             document_ref: documento,
+            supplier,
+            provider_id: providerId,
             is_synced: '1',
             is_active: 1 // <--- 🔥 ¡ESTA ES LA LÍNEA MÁGICA QUE FALTABA!
           }])
@@ -445,8 +489,8 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
             new_quantity: Number(cantidad),  // <-- Número, sin comillas
             operation_type: 'COMPRA',
             reason: 'Ingreso Lote',
-            notes: 'Doc: ' + documento,
-            user: 'Sistema',
+            notes: 'Doc: ' + documento + (supplier ? ' | Prov: ' + supplier : ''),
+            user: usuario,
             is_synced: '1'
           }]);
 
@@ -467,11 +511,12 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
             unit: selectedProduct.unit
           });
         }
-        alert(`LOTE REGISTRADO CORRECTAMENTE.\nCantidad sumada al stock global: ${cantidad}`);
+        onClose();
+        void avisar(`✅ Lote registrado.\nCantidad sumada al stock: ${cantidad}`);
       }
-      onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      void avisar(`❌ No se pudo guardar el lote. Revisa los datos e intenta de nuevo.\n\nDetalle: ${err?.message || err}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -688,7 +733,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
-                      const next = document.getElementById('input-sustento-lote') as HTMLInputElement | null;
+                      const next = document.getElementById('input-proveedor-lote') as HTMLInputElement | null;
                       next?.focus();
                       next?.select();
                     }
@@ -710,25 +755,26 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
             </span>
           </div>
 
-          {/* 4. SUSTENTO TRIBUTARIO Y VENCIMIENTO */}
+          {/* 4. PROVEEDOR Y DOCUMENTO (ambos opcionales) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t-2 border-[#E2E8F0] pt-6">
-            
+
             <div ref={provContainerRef} className="space-y-3">
               <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2">
-                <FileText size={14} /> 4. Sustento (Doc. Proveedor) (Opcional)
+                <Truck size={14} /> 4. Proveedor (Opcional)
               </label>
               <div className="relative">
-                <input 
-                  id="input-sustento-lote"
+                <input
+                  id="input-proveedor-lote"
                   type="text"
                   autoComplete="off"
                   autoCorrect="off"
                   autoCapitalize="none"
                   spellCheck={false}
-                  placeholder="BUSCAR PROVEEDOR O DOC..."
-                  value={sustento}
+                  placeholder="BUSCAR PROVEEDOR..."
+                  value={proveedor}
                   onChange={(e) => {
-                    setSustento(e.target.value.toUpperCase());
+                    setProveedor(e.target.value.toUpperCase());
+                    setProveedorId(null); // lo escrito ya no es el proveedor elegido
                     setShowProviderDropdown(true);
                   }}
                   onFocus={() => {
@@ -742,25 +788,16 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                     }
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                      if (showProviderDropdown && filteredProveedores.length > 0) {
-                        e.preventDefault();
-                        const firstItem = document.querySelector('[data-lote-prov-item="true"]') as HTMLElement;
-                        if (firstItem) {
-                          firstItem.focus();
-                          return;
-                        }
-                      }
-                    } else if (e.key === 'Enter') {
+                    if (e.key === 'Enter') {
                       e.preventDefault();
-                      const matches = proveedoresActivos.filter(p => coincideBusqueda([p.razon_social], sustento));
-                      if (matches.length > 0 && showProviderDropdown && sustento.trim()) {
-                        setSustento(matches[0].razon_social);
+                      if (showProviderDropdown && proveedor.trim() && filteredProveedores.length > 0) {
+                        elegirProveedor(filteredProveedores[0]);
+                        return;
                       }
                       setShowProviderDropdown(false);
-                      document.getElementById('input-vencimiento-lote')?.focus();
-                    } else if (e.key === 'Escape') {
-                      setShowProviderDropdown(false);
+                      const next = document.getElementById('input-sustento-lote') as HTMLInputElement | null;
+                      next?.focus();
+                      next?.select();
                     }
                   }}
                   disabled={!selectedProduct}
@@ -771,20 +808,16 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                 {showProviderDropdown && selectedProduct && filteredProveedores.length > 0 && (
                   <div className="absolute top-full mt-1.5 left-0 right-0 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] z-50 max-h-44 overflow-y-auto custom-scrollbar">
                     <div className="p-2 bg-[#F8FAFC] border-b border-[#E2E8F0] text-[9px] font-black text-[#64748B] uppercase tracking-wider flex items-center justify-between">
-                      <span>Proveedores sugeridos</span>
+                      <span>Proveedores registrados</span>
                       <span className="text-[8px] font-bold text-[#94A3B8]">{filteredProveedores.length} opción(es)</span>
                     </div>
                     {filteredProveedores.map(prov => (
-                      <div 
+                      <div
                         key={prov.id}
                         data-lote-prov-item="true"
                         role="option"
                         tabIndex={0}
-                        onClick={() => {
-                          setSustento(prov.razon_social);
-                          setShowProviderDropdown(false);
-                          document.getElementById('input-vencimiento-lote')?.focus();
-                        }}
+                        onClick={() => elegirProveedor(prov)}
                         onKeyDown={(e) => {
                           if (e.key === 'ArrowDown') {
                             e.preventDefault();
@@ -800,17 +833,15 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                             if (currentIdx > 0) {
                               items[currentIdx - 1].focus();
                             } else {
-                              document.getElementById('input-sustento-lote')?.focus();
+                              document.getElementById('input-proveedor-lote')?.focus();
                             }
                           } else if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
-                            setSustento(prov.razon_social);
-                            setShowProviderDropdown(false);
-                            document.getElementById('input-vencimiento-lote')?.focus();
-                          } else if (e.key === 'ArrowLeft' || e.key === 'Escape') {
+                            elegirProveedor(prov);
+                          } else if (e.key === 'ArrowLeft') {
                             e.preventDefault();
                             setShowProviderDropdown(false);
-                            document.getElementById('input-sustento-lote')?.focus();
+                            document.getElementById('input-proveedor-lote')?.focus();
                           }
                         }}
                         className="p-3 bg-white hover:bg-[#1E293B] hover:text-white focus:!bg-[#1E293B] focus:!text-white border-b border-[#E2E8F0] cursor-pointer outline-none group transition-colors"
@@ -825,9 +856,34 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
 
             <div className="space-y-3">
               <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2">
-                <Calendar size={14} /> Fecha Vencimiento (Opcional)
+                <FileText size={14} /> 5. Documento (Factura / Guía) (Opcional)
               </label>
-              <input 
+              <input
+                id="input-sustento-lote"
+                type="text"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder="EJ: F001-123"
+                value={sustento}
+                onChange={(e) => setSustento(e.target.value.toUpperCase())}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('input-vencimiento-lote')?.focus();
+                  }
+                }}
+                disabled={!selectedProduct}
+                className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors disabled:bg-[#F1F5F9] disabled:text-[#94A3B8]"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2">
+                <Calendar size={14} /> 6. Fecha Vencimiento (Opcional)
+              </label>
+              <input
                 id="input-vencimiento-lote"
                 type="date"
                 value={expiration}
