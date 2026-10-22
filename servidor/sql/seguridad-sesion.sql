@@ -537,4 +537,102 @@ BEGIN
   RETURN jsonb_build_object('lotes', v_lotes, 'cambios', v_cambios);
 END;
 $$;
+
+-- Al vender (cada línea de sale_details) se descuenta el stock del producto y de sus lotes, del más antiguo
+-- al más nuevo, y queda un movimiento VENTA por cada lote tocado. Es la misma regla de siempre (antes solo
+-- vivía en la base) con UNA protección nueva: si ese producto de ese ticket YA se descontó (por ejemplo,
+-- si se vuelven a cargar ventas antiguas, como el reproceso del 01/04/2026 que descontó 726 ventas dos
+-- veces), no se descuenta otra vez. Dos líneas legítimas del mismo producto en un ticket se descuentan las dos.
+CREATE INDEX IF NOT EXISTS idx_movimientos_producto_tipo ON public.inventory_movements (product_id, operation_type);
+
+CREATE OR REPLACE FUNCTION public.fn_reduce_stock_from_sales()
+RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+  v_qty_to_deduct numeric;
+  v_current_stock numeric;
+  v_batch_record record;
+  v_deducted numeric;
+  v_is_consumo boolean;
+  v_costo_real numeric := 0;
+  v_ya_descontado numeric;
+  v_en_lineas numeric;
+BEGIN
+  BEGIN
+    SELECT (coalesce(unit, '') = 'CONSUMO' OR coalesce(control_type, '') = 'CONSUMPTION')
+    INTO v_is_consumo
+    FROM public.products WHERE id = NEW.product_id;
+
+    IF v_is_consumo = TRUE THEN
+      RETURN NEW;
+    END IF;
+
+    v_qty_to_deduct := abs(coalesce(NEW.quantity, 0));
+    IF v_qty_to_deduct = 0 THEN
+      RETURN NEW;
+    END IF;
+
+    -- ¿Ya se descontó? Lo descontado de este producto en este ticket ("Ticket #N", o "Doc: B001-000N" de las
+    -- ventas del sistema anterior) contra lo que suman sus líneas ya guardadas más esta.
+    SELECT coalesce(sum(-change_amount), 0) INTO v_ya_descontado
+    FROM public.inventory_movements
+    WHERE product_id = NEW.product_id AND operation_type = 'VENTA'
+      AND (notes = 'Ticket #' || NEW.sale_id::text OR notes ~ ('^Doc: B001-0*' || NEW.sale_id::text || '$'));
+    IF v_ya_descontado > 0 THEN
+      SELECT coalesce(sum(abs(quantity)), 0) INTO v_en_lineas
+      FROM public.sale_details WHERE sale_id = NEW.sale_id AND product_id = NEW.product_id;
+      IF v_ya_descontado >= v_en_lineas + v_qty_to_deduct THEN
+        RAISE WARNING 'Venta % producto %: ya estaba descontada, no se descuenta otra vez', NEW.sale_id, NEW.product_id;
+        RETURN NEW;
+      END IF;
+    END IF;
+
+    UPDATE public.products
+    SET quantity = coalesce(quantity, 0) - v_qty_to_deduct
+    WHERE id = NEW.product_id
+    RETURNING coalesce(quantity, 0) INTO v_current_stock;
+
+    FOR v_batch_record IN
+      SELECT id, coalesce(quantity, 0) AS qty, coalesce(cost_unit, 0) AS cost
+      FROM public.batches
+      WHERE product_id = NEW.product_id AND coalesce(quantity, 0) > 0
+      ORDER BY created_at ASC, id ASC
+      FOR UPDATE
+    LOOP
+      IF v_qty_to_deduct <= 0 THEN EXIT; END IF;
+
+      IF v_batch_record.qty >= v_qty_to_deduct THEN
+        UPDATE public.batches SET quantity = (v_batch_record.qty - v_qty_to_deduct) WHERE id = v_batch_record.id;
+        v_deducted := v_qty_to_deduct;
+        v_qty_to_deduct := 0;
+      ELSE
+        UPDATE public.batches SET quantity = 0 WHERE id = v_batch_record.id;
+        v_deducted := v_batch_record.qty;
+        v_qty_to_deduct := v_qty_to_deduct - v_batch_record.qty;
+      END IF;
+
+      -- Costo real del lote: Utilidades lo usa sin tener que adivinar
+      v_costo_real := v_batch_record.cost;
+
+      INSERT INTO public.inventory_movements (
+        batch_id, product_id, product_name, change_amount,
+        previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
+      ) VALUES (
+        v_batch_record.id, NEW.product_id, NEW.product_name, -v_deducted,
+        (v_current_stock + v_deducted), v_current_stock,
+        'VENTA', 'Venta POS', 'Ticket #' || NEW.sale_id::text, now(), 'Sistema', 1
+      );
+    END LOOP;
+
+    IF v_costo_real > 0 THEN
+      NEW.cost_at_moment := v_costo_real;
+    END IF;
+
+  EXCEPTION WHEN OTHERS THEN
+    RAISE WARNING 'Error interno al reducir stock: %', SQLERRM;
+  END;
+
+  RETURN NEW;
+END;
+$$;
+
 NOTIFY pgrst, 'reload schema';
