@@ -282,8 +282,9 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
     <>
     {/* FONDO OSCURO: solo en tablet/celular cuando el menú está abierto; al tocarlo se cierra */}
     {isOpen && (
-      <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden" 
+      <div
+        data-fondo-menu
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
         onClick={() => {
           onClose();
           programarRestauracionFoco(currentView);

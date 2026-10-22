@@ -21,6 +21,7 @@ import { AvisoSuscripcion } from './layout/AvisoSuscripcion';
 import { BarraConexion } from './layout/BarraConexion';
 import { precargarParaSinInternet } from './utils/precargaSinInternet';
 import { programarRestauracionFoco } from './utils/navegacionSesion';
+import { hayVentanaAbierta, ventanaSuperior, enfocablesDe } from './utils/ventanas';
 
 // Nombre visible de cada sesión en la barra superior de celular/tablet
 const NOMBRES_SESIONES: Record<string, string> = {
@@ -76,8 +77,18 @@ export const App: React.FC = () => {
   useEffect(() => {
     const handleGlobalTab = (e: KeyboardEvent) => {
       if (e.key === 'Tab') {
-        // Respetar focus-trap si hay modal abierto
-        if (document.querySelector('[role="dialog"]') || document.querySelector('.fixed.inset-0.z-50')) {
+        // Con una ventana abierta (cualquiera: modal, aviso, balanza...) Tab NO abre el menú: lo maneja la
+        // ventana. Red de seguridad: si después del Tab el selector quedó fuera de la ventana de arriba,
+        // vuelve a ella (al primer elemento, o al último con Shift+Tab).
+        if (hayVentanaAbierta()) {
+          const haciaAtras = e.shiftKey;
+          setTimeout(() => {
+            const ventana = ventanaSuperior();
+            const activo = document.activeElement;
+            if (!ventana || (activo && activo !== document.body && ventana.contains(activo))) return;
+            const enfocables = enfocablesDe(ventana);
+            (haciaAtras ? enfocables[enfocables.length - 1] : enfocables[0])?.focus();
+          }, 0);
           return;
         }
 

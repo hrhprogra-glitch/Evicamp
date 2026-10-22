@@ -223,8 +223,9 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
                 }
               }
             }}
-            disabled={!pesoKg || parseFloat(pesoKg) <= 0}
-            className="w-full h-16 bg-[var(--color-ink)] text-white flex items-center justify-center gap-3 font-black uppercase tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-accent)] focus:ring-4 focus:ring-[var(--color-accent)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all disabled:opacity-50 cursor-pointer"
+            // aria-disabled (no disabled): sin peso no agrega nada, pero el selector puede llegar al botón con Tab y flechas
+            aria-disabled={!pesoKg || parseFloat(pesoKg) <= 0}
+            className="w-full h-16 bg-[var(--color-ink)] text-white flex items-center justify-center gap-3 font-black uppercase tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-accent)] focus:ring-4 focus:ring-[var(--color-accent)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all aria-disabled:opacity-50 cursor-pointer"
           >
             <ShoppingCart size={24} /> Agregar al Carrito
           </button>
