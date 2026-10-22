@@ -31,6 +31,22 @@ export const claseBotonBarra = (activo: boolean) =>
 export const claseCampoBarra =
   'w-full sm:w-auto border-2 border-[var(--color-border)] px-4 py-3 text-xs font-black uppercase text-[var(--color-ink)] outline-none bg-white rounded-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]';
 
+// Buscador de la barra (va dentro de un div "relative" con la lupa: ver BuscadorBarra)
+export const claseBuscadorBarra =
+  'w-full bg-white border-2 border-[var(--color-border)] pl-9 pr-4 py-3 text-xs font-black uppercase outline-none focus:border-[var(--color-info)] focus:ring-2 focus:ring-[var(--color-ink)] transition-colors rounded-none';
+
+// Botón principal de la barra ("+ Nuevo cliente", "+ Nuevo proveedor")
+export const claseBotonPrincipal =
+  'w-full sm:w-auto h-[44px] bg-[var(--color-ink)] text-white px-3 sm:px-6 justify-center border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-[var(--color-warning)] hover:text-[var(--color-ink)] focus:bg-[var(--color-warning)] focus:text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] transition-colors shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer rounded-none shrink-0';
+
+// Botón cuadrado de ícono de la fila (editar / eliminar), como en el Directorio de clientes
+export const claseBotonIcono = (tipo: 'editar' | 'eliminar') =>
+  `p-2 bg-white text-[var(--color-subtle)] border-2 border-[var(--color-border)] transition-colors cursor-pointer outline-none rounded-none ${
+    tipo === 'eliminar'
+      ? 'hover:border-[var(--color-danger)] hover:text-[var(--color-danger)] focus:border-[var(--color-danger)] focus:text-[var(--color-danger)] focus:ring-2 focus:ring-[var(--color-danger)]'
+      : 'hover:border-[var(--color-warning)] hover:text-[var(--color-warning)] focus:border-[var(--color-warning)] focus:text-[var(--color-warning)] focus:ring-2 focus:ring-[var(--color-warning)]'
+  }`;
+
 // Texto chico de la barra (resúmenes como "Con stock: 2 lotes")
 export const TextoBarra: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <span className="text-[12px] font-black uppercase tracking-wider text-[var(--color-muted)]">{children}</span>

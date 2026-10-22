@@ -7,6 +7,7 @@ import type { Proveedor } from '../../Proveedores/types';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar, confirmar } from '../../../utils/dialogos';
 import { coincideBusqueda } from '../../../utils/busqueda';
+import { CuerpoVentana, BarraFiltros, CajaLista, claseBotonBarra, claseBuscadorBarra, claseBotonPrincipal } from '../../../components/ListaVentana';
 
 type FiltroEstado = 'TODOS' | 'ACTIVO' | 'INACTIVO';
 const FILTROS: [FiltroEstado, string][] = [['TODOS', 'Todos'], ['ACTIVO', 'Activos'], ['INACTIVO', 'Inactivos']];
@@ -208,30 +209,30 @@ export const ModalGestionProveedores: React.FC<Props> = ({ isOpen, onClose }) =>
   if (!isOpen) return null;
 
   return (
-    <div id="modal-gestion-proveedores-container" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-[var(--color-surface)] w-full max-w-5xl max-h-[90vh] flex flex-col border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)]">
+    <div id="modal-gestion-proveedores-container" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-fade-in flex items-center justify-center p-2 sm:p-4 font-mono">
+      <div className="bg-[var(--color-surface)] animate-slide-up w-full max-w-6xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.85)]">
 
-        {/* HEADER */}
-        <div className="flex items-center justify-between p-4 border-b-2 border-[var(--color-ink)] bg-[var(--color-info)] shrink-0">
-          <div className="flex items-center gap-3 text-[var(--color-ink)]">
-            <Users size={24} strokeWidth={2.5} />
-            <h2 className="text-xl font-black uppercase tracking-widest">Gestión de Proveedores</h2>
+        {/* CABECERA (igual que el Directorio de clientes) */}
+        <div className="bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
+          <div className="flex items-center gap-3">
+            <Users size={20} className="text-[var(--color-info)]" />
+            <h2 className="text-sm font-black uppercase tracking-widest">Gestión de Proveedores</h2>
           </div>
           <button
             id="btn-cerrar-modal-gestion-proveedores"
             onClick={onClose}
-            className="text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-info)] focus:bg-[var(--color-ink)] focus:text-[var(--color-info)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] p-1 transition-colors border-2 border-transparent hover:border-[var(--color-ink)]"
+            className="hover:text-[var(--color-danger)] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] p-1"
             title="Cerrar ventana (Escape)"
           >
-            <X size={24} strokeWidth={2.5} />
+            <X size={20} />
           </button>
         </div>
 
-        {/* ACCIONES Y TABLA */}
-        <div className="p-4 flex-1 min-h-0 flex flex-col gap-4 bg-[var(--color-bg)]">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-3 shrink-0">
-            <div className="relative flex-1 min-w-0">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)] pointer-events-none" />
+        {/* BARRA Y LISTA (estilo de src/components/ListaVentana.tsx) */}
+        <CuerpoVentana>
+          <BarraFiltros>
+            <div className="relative flex-1 min-w-[200px]">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-subtle)] pointer-events-none" />
               <input
                 id="buscador-proveedores-gestion"
                 type="text"
@@ -241,16 +242,17 @@ export const ModalGestionProveedores: React.FC<Props> = ({ isOpen, onClose }) =>
                 placeholder="Buscar por nombre, RUC, teléfono..."
                 aria-label="Buscar proveedores"
                 autoComplete="off"
-                className="w-full pl-9 pr-3 py-3 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] text-sm font-bold text-[var(--color-ink)] outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+                className={claseBuscadorBarra}
               />
             </div>
             <div className="flex items-center gap-2 shrink-0 flex-wrap">
               {FILTROS.map(([f, nombre]) => (
                 <button key={f} id={`btn-prov-filtro-${f}`} type="button" aria-pressed={filtro === f} onClick={() => setFiltro(f)} onKeyDown={teclasArriba}
-                  className={`px-3 py-3 border-2 border-[var(--color-ink)] text-xs font-black uppercase tracking-widest cursor-pointer focus:outline-none focus:ring-4 focus:ring-[var(--color-info)] ${filtro === f ? 'bg-[var(--color-ink)] text-[var(--color-info)]' : 'bg-[var(--color-surface)] text-[var(--color-ink)]'}`}>
+                  className={claseBotonBarra(filtro === f)}>
                   {nombre} ({f === 'TODOS' ? proveedores.length : proveedores.filter((p) => p.estado === f).length})
                 </button>
               ))}
+            </div>
             <button
               id="btn-nuevo-proveedor"
               onClick={() => {
@@ -259,21 +261,16 @@ export const ModalGestionProveedores: React.FC<Props> = ({ isOpen, onClose }) =>
                 setIsModalProveedorOpen(true);
               }}
               onKeyDown={teclasArriba}
-              className="bg-[var(--color-ink)] text-[var(--color-info)] px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--color-surface)] hover:text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-surface)] focus:text-[var(--color-ink)] transition-all cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+              className={claseBotonPrincipal}
             >
               <Plus size={16} /> Nuevo Proveedor
             </button>
-            </div>
-          </div>
+          </BarraFiltros>
 
-          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar border-2 border-[var(--color-ink)] bg-[var(--color-surface)] relative">
+          <div className="flex-1 min-h-0 flex flex-col">
             {loading ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-[var(--color-surface)]/80">
-                <Loader2 className="animate-spin text-[var(--color-ink)] mb-4" size={32} />
-                <p className="text-xs font-black uppercase tracking-widest">Cargando proveedores...</p>
-              </div>
+              <CajaLista vacia mensaje={<><Loader2 size={16} className="animate-spin" /> Cargando proveedores...</>} />
             ) : (
-              <div className="h-full overflow-y-auto custom-scrollbar">
                 <TablaProveedores
                   key={`${filtro}|${busqueda}`}
                   proveedores={visibles}
@@ -294,10 +291,9 @@ export const ModalGestionProveedores: React.FC<Props> = ({ isOpen, onClose }) =>
                     }
                   }}
                 />
-              </div>
             )}
           </div>
-        </div>
+        </CuerpoVentana>
 
         <ModalProveedor
           isOpen={isModalProveedorOpen}
