@@ -745,7 +745,7 @@ export const ModalClientes: React.FC<Props> = ({ isOpen, onClose, clientes, onSa
                     No se encontraron clientes
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 divide-y-2 divide-[var(--color-border)]">
+                  <div className="grid grid-cols-1 divide-y-2 divide-[var(--color-border)] border-b-2 border-[var(--color-border)]">
                     {currentClientes.map(cli => {
                       const deudaActiva = fiados.filter(f => f.clienteNombre.trim().toLowerCase() === cli.nombre.trim().toLowerCase() && f.saldoPendiente > 0).reduce((acc, f) => acc + f.saldoPendiente, 0);
 

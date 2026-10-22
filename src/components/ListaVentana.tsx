@@ -36,7 +36,8 @@ export const TextoBarra: React.FC<{ children: React.ReactNode }> = ({ children }
   <span className="text-[12px] font-black uppercase tracking-wider text-[var(--color-muted)]">{children}</span>
 );
 
-// Caja blanca de la lista. Sin filas muestra el mensaje centrado.
+// Caja blanca de la lista. Sin filas muestra el mensaje centrado. La última fila también lleva su línea
+// (border-b-2): si no, el espacio blanco de abajo parece parte de ella.
 export const CajaLista: React.FC<{ children?: React.ReactNode; vacia?: boolean; mensaje?: React.ReactNode }> = ({ children, vacia, mensaje }) => (
   <div className="flex-1 overflow-y-auto min-h-0 border-2 border-[var(--color-border)] bg-white [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
     {vacia ? (
@@ -44,7 +45,7 @@ export const CajaLista: React.FC<{ children?: React.ReactNode; vacia?: boolean; 
         {mensaje}
       </div>
     ) : (
-      <div className="grid grid-cols-1 divide-y-2 divide-[var(--color-border)]">{children}</div>
+      <div className="grid grid-cols-1 divide-y-2 divide-[var(--color-border)] border-b-2 border-[var(--color-border)]">{children}</div>
     )}
   </div>
 );
