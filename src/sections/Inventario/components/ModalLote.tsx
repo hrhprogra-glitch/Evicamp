@@ -28,6 +28,8 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
   // Proveedor (opcional): el texto que se ve y, si se eligió de la lista, su id (igual que los lotes de Compras)
   const [proveedor, setProveedor] = useState('');
   const [proveedorId, setProveedorId] = useState<string | null>(null);
+  // La lista de proveedores solo se filtra mientras se escribe; al entrar al campo muestra todos
+  const [filtrandoProveedor, setFiltrandoProveedor] = useState(false);
   const [expiration, setExpiration] = useState('');
   const empleado = useEmpleado();
 
@@ -348,14 +350,24 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
     return coincideBusqueda([p.name, p.code, p.barcode], searchQuery);
   });
 
-  const filteredProveedores = proveedoresActivos.filter(p => {
-    if (!proveedor.trim()) return true;
-    return coincideBusqueda([p.razon_social], proveedor);
-  });
+  const textoProveedor = proveedor.trim().toUpperCase();
+  const filteredProveedores = proveedoresActivos
+    .filter(p => {
+      if (!filtrandoProveedor || !textoProveedor) return true;
+      return coincideBusqueda([p.razon_social], proveedor);
+    })
+    // Primero los que contienen exactamente lo escrito (Enter elige el primero)
+    .sort((a, b) => {
+      if (!filtrandoProveedor || !textoProveedor) return 0;
+      const ea = String(a.razon_social).toUpperCase().includes(textoProveedor) ? 0 : 1;
+      const eb = String(b.razon_social).toUpperCase().includes(textoProveedor) ? 0 : 1;
+      return ea - eb;
+    });
 
   const elegirProveedor = (prov: { id: string | number; razon_social: string }) => {
     setProveedor(prov.razon_social);
     setProveedorId(String(prov.id));
+    setFiltrandoProveedor(false);
     setShowProviderDropdown(false);
     const next = document.getElementById('input-sustento-lote') as HTMLInputElement | null;
     next?.focus();
@@ -775,9 +787,11 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                   onChange={(e) => {
                     setProveedor(e.target.value.toUpperCase());
                     setProveedorId(null); // lo escrito ya no es el proveedor elegido
+                    setFiltrandoProveedor(true);
                     setShowProviderDropdown(true);
                   }}
                   onFocus={() => {
+                    setFiltrandoProveedor(false);
                     if (proveedoresActivos.length > 0) {
                       setShowProviderDropdown(true);
                     }
@@ -790,7 +804,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
-                      if (showProviderDropdown && proveedor.trim() && filteredProveedores.length > 0) {
+                      if (showProviderDropdown && filtrandoProveedor && proveedor.trim() && filteredProveedores.length > 0) {
                         elegirProveedor(filteredProveedores[0]);
                         return;
                       }
