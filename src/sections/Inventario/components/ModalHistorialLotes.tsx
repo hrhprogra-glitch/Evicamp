@@ -6,10 +6,11 @@
 //    la hizo (lo guarda el servidor con la sesión, ver fn_registrar_autor_inventario).
 // Solo para ver: editar y retirar lotes se hace en la pestaña Lotes.
 import React, { useEffect, useState } from 'react';
-import { X, History, Loader2 } from 'lucide-react';
+import { X, History, Loader2, Package, ArrowDownUp, ArrowDownToLine, ArrowUpFromLine, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { formatearCantidad } from '../../../utils/formato';
+import { CuerpoVentana, BarraFiltros, claseBotonBarra, claseCampoBarra, TextoBarra, CajaLista, SeparadorLista, FilaLista, LineaDato, Etiqueta, DatoFila, type TonoEtiqueta } from '../../../components/ListaVentana';
 
 export interface ProductoHistorial {
   id: string;
@@ -217,176 +218,128 @@ export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose }) => {
   const filaLote = (l: LoteHistorial) => {
     const vencido = !!l.expiration_date && new Date(l.expiration_date) < new Date();
     const estado = l.quantity <= 0 ? 'AGOTADO' : vencido ? 'CADUCADO' : 'VIGENTE';
+    const linea1 = `Doc: ${l.document_ref || '—'} | Prov: ${l.supplier || '—'}`;
+    const linea2 = `Costo U.: S/ ${l.cost_unit.toFixed(2)} | Vence: ${l.expiration_date ? fecha(l.expiration_date) : '—'}`;
+    const datos = <><LineaDato titulo={linea1}>{linea1}</LineaDato><LineaDato>{linea2}</LineaDato></>;
     return (
-      <div
+      <FilaLista
         key={l.id}
         data-hist-lote="true"
         tabIndex={0}
-        className={`grid grid-cols-12 items-center gap-2 px-4 py-3 border-b border-[#F1F5F9] text-xs font-bold outline-none focus:bg-amber-50/60 focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] ${
-          estado === 'AGOTADO' ? 'text-[#94A3B8]' : 'text-[var(--color-ink)]'
-        }`}
-      >
-        <span className="col-span-2">{fecha(l.created_at)}</span>
-        <span className="col-span-2 truncate uppercase" title={l.document_ref}>{l.document_ref || '—'}</span>
-        <span className="col-span-2 truncate uppercase" title={l.supplier}>{l.supplier || '—'}</span>
-        <span className="col-span-1 text-right">{formatearCantidad(l.initial_quantity, unidad)}</span>
-        <span className="col-span-1 text-right font-black">{formatearCantidad(l.quantity, unidad)}</span>
-        <span className="col-span-1 text-right">S/ {l.cost_unit.toFixed(2)}</span>
-        <span className="col-span-1 text-center">{l.expiration_date ? fecha(l.expiration_date) : '—'}</span>
-        <span className="col-span-2 flex justify-center">
-          <span className={`px-2 py-0.5 text-[10px] font-black uppercase border-2 ${
-            estado === 'VIGENTE'
-              ? 'bg-[#ECFDF5] text-[var(--color-success)] border-[var(--color-success)]'
-              : 'bg-[#FEF2F2] text-[var(--color-danger)] border-[var(--color-danger)]'
-          }`}>{estado}</span>
-        </span>
-      </div>
+        atenuada={estado === 'AGOTADO'}
+        icono={<Package size={32} />}
+        titulo={`Ingreso ${fecha(l.created_at)}`}
+        subtitulo={datos}
+        centro={<Etiqueta tono={estado === 'VIGENTE' ? 'verde' : estado === 'CADUCADO' ? 'rojo' : 'gris'}>{estado}</Etiqueta>}
+        derecha={<DatoFila etiqueta="Queda / Ingresó" valor={`${formatearCantidad(l.quantity, unidad)} / ${formatearCantidad(l.initial_quantity, unidad)} ${unidad}`} />}
+      />
     );
   };
 
+  const TONO_TIPO: Record<string, TonoEtiqueta> = {
+    COMPRA: 'verde', ANULACION: 'verde', DEVOLUCION: 'verde', VENTA: 'azul', MERMA: 'rojo', AJUSTE: 'ambar', ERROR: 'rojo',
+  };
   const filaMovimiento = (m: Movimiento) => {
     const esError = m.operation_type === 'ERROR';
-    const detalle = [m.reason, m.notes].filter(Boolean).join(' · ');
+    const entra = m.change_amount > 0;
+    const detalle = [m.reason, m.notes].filter(Boolean).join(' · ') || '—';
+    const cantidad = m.change_amount === 0 ? '—' : `${entra ? '+' : '−'}${formatearCantidad(Math.abs(m.change_amount), unidad)} ${unidad}`;
     return (
-      <div
+      <FilaLista
         key={m.id}
         data-hist-mov="true"
         tabIndex={0}
-        className={`grid grid-cols-12 items-center gap-2 px-4 py-3 border-b border-[#F1F5F9] text-xs font-bold outline-none focus:bg-amber-50/60 focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] ${
-          esError ? 'bg-[#FEF2F2] text-[var(--color-danger)]' : 'text-[var(--color-ink)]'
-        }`}
-      >
-        <span className="col-span-2">{fechaHora(m.created_at)}</span>
-        <span className="col-span-1 uppercase font-black">{TIPOS[m.operation_type] || m.operation_type || '—'}</span>
-        <span className="col-span-5 truncate" title={detalle}>{detalle || '—'}</span>
-        <span className="col-span-1 text-right text-[var(--color-success)] font-black">{m.change_amount > 0 ? formatearCantidad(m.change_amount, unidad) : ''}</span>
-        <span className="col-span-1 text-right text-[var(--color-danger)] font-black">{m.change_amount < 0 ? formatearCantidad(-m.change_amount, unidad) : ''}</span>
-        <span className="col-span-2 truncate uppercase" title={quien(m.user)}>{quien(m.user)}</span>
-      </div>
+        tono={esError ? 'error' : 'normal'}
+        icono={esError ? <AlertTriangle size={32} /> : entra ? <ArrowDownToLine size={32} /> : <ArrowUpFromLine size={32} />}
+        titulo={fechaHora(m.created_at)}
+        subtitulo={<><LineaDato titulo={detalle}>{detalle}</LineaDato><LineaDato>Por: {quien(m.user)}</LineaDato></>}
+        centro={<Etiqueta tono={TONO_TIPO[m.operation_type] || 'gris'}>{TIPOS[m.operation_type] || m.operation_type || '—'}</Etiqueta>}
+        derecha={<DatoFila valor={cantidad} tono={m.change_amount === 0 ? 'normal' : entra ? 'verde' : 'rojo'} />}
+      />
     );
   };
 
-  const clasePestana = (activa: boolean) => `px-4 py-2 text-[10px] font-black uppercase tracking-widest border-2 outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-ink)] cursor-pointer ${
-    activa ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]' : 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[#E2E8F0] hover:border-[var(--color-ink)]'
-  }`;
-  const claseFecha = 'border-2 border-[#E2E8F0] bg-[var(--color-surface)] px-2 py-1 text-xs font-black text-[var(--color-ink)] outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]';
-
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-fade-in flex items-center justify-center p-2 sm:p-4 font-mono">
       <div role="dialog" aria-modal="true" aria-labelledby="titulo-historial-lotes"
-        className="bg-[var(--color-surface)] w-full max-w-5xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))]">
+        className="bg-[var(--color-surface)] animate-slide-up w-full max-w-6xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.85)]">
 
-        {/* CABECERA */}
-        <div className="bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
+        {/* CABECERA (igual que el Directorio de clientes) */}
+        <div className="bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <History size={22} className="text-[var(--color-success)] shrink-0" />
-            <div className="min-w-0">
-              <h2 id="titulo-historial-lotes" className="text-sm font-black uppercase tracking-widest text-[var(--color-success)]">Historial del producto</h2>
-              <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest truncate">{producto.nombre}</p>
-            </div>
+            <History size={20} className="text-[var(--color-info)] shrink-0" />
+            <h2 id="titulo-historial-lotes" className="text-sm font-black uppercase tracking-widest truncate">
+              Historial · {producto.nombre}
+            </h2>
           </div>
           <button
             id="btn-cerrar-historial-lotes"
             onClick={onClose}
-            className="hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white/20 p-1.5 transition-colors cursor-pointer rounded-none"
+            className="hover:text-[var(--color-danger)] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] p-1"
             title="Cerrar (Escape)"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* PESTAÑAS (← → cambian) Y RESUMEN */}
-        <div className="px-6 py-3 bg-[#F8FAFC] border-b-2 border-[#E2E8F0] flex flex-wrap items-center gap-x-6 gap-y-2 shrink-0">
-          <div data-hist-tabs className="flex gap-2" role="tablist">
-            <button id="tab-hist-lotes" data-hist-tab role="tab" aria-selected={pestana === 'LOTES'}
-              onClick={() => setPestana('LOTES')} className={clasePestana(pestana === 'LOTES')}>Lotes</button>
-            <button id="tab-hist-movimientos" data-hist-tab role="tab" aria-selected={pestana === 'MOVIMIENTOS'}
-              onClick={() => setPestana('MOVIMIENTOS')} className={clasePestana(pestana === 'MOVIMIENTOS')}>Movimientos</button>
-          </div>
-          {pestana === 'LOTES' ? (
-            <div className="flex flex-wrap gap-x-6 gap-y-1 text-[10px] font-black uppercase tracking-widest text-[#64748B]">
-              <span>Con stock: <span className="text-[var(--color-ink)]">{conStock.length} lote(s) · {formatearCantidad(stockTotal, unidad)} {unidad}</span></span>
-              <span>Agotados: <span className="text-[var(--color-ink)]">{agotados.length}</span></span>
+        <CuerpoVentana>
+          {/* PESTAÑAS (← → mueven, Enter cambia), FECHAS Y RESUMEN */}
+          <BarraFiltros>
+            <div data-hist-tabs className="flex gap-2" role="tablist">
+              <button id="tab-hist-lotes" data-hist-tab role="tab" aria-selected={pestana === 'LOTES'}
+                onClick={() => setPestana('LOTES')} className={claseBotonBarra(pestana === 'LOTES')}>
+                <Package size={14} /> Lotes
+              </button>
+              <button id="tab-hist-movimientos" data-hist-tab role="tab" aria-selected={pestana === 'MOVIMIENTOS'}
+                onClick={() => setPestana('MOVIMIENTOS')} className={claseBotonBarra(pestana === 'MOVIMIENTOS')}>
+                <ArrowDownUp size={14} /> Movimientos
+              </button>
             </div>
-          ) : (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] font-black uppercase tracking-widest text-[#64748B]">
-              <label className="flex items-center gap-2">Desde
-                <input id="hist-desde" data-hist-fecha type="date" value={desde} max={hasta} onChange={(e) => setDesde(e.target.value)} className={claseFecha} />
-              </label>
-              <label className="flex items-center gap-2">Hasta
-                <input id="hist-hasta" data-hist-fecha type="date" value={hasta} min={desde} onChange={(e) => setHasta(e.target.value)} className={claseFecha} />
-              </label>
-              <span>Entró: <span className="text-[var(--color-success)]">{formatearCantidad(totalEntra, unidad)}</span></span>
-              <span>Salió: <span className="text-[var(--color-danger)]">{formatearCantidad(totalSale, unidad)}</span></span>
-            </div>
-          )}
-        </div>
+            {pestana === 'LOTES' ? (
+              <div className="flex flex-wrap gap-x-6 gap-y-1">
+                <TextoBarra>Con stock: <span className="text-[var(--color-ink)]">{conStock.length} lote(s) · {formatearCantidad(stockTotal, unidad)} {unidad}</span></TextoBarra>
+                <TextoBarra>Agotados: <span className="text-[var(--color-ink)]">{agotados.length}</span></TextoBarra>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <label className="flex items-center gap-2"><TextoBarra>Desde</TextoBarra>
+                  <input id="hist-desde" data-hist-fecha type="date" value={desde} max={hasta} onChange={(e) => setDesde(e.target.value)} className={claseCampoBarra} />
+                </label>
+                <label className="flex items-center gap-2"><TextoBarra>Hasta</TextoBarra>
+                  <input id="hist-hasta" data-hist-fecha type="date" value={hasta} min={desde} onChange={(e) => setHasta(e.target.value)} className={claseCampoBarra} />
+                </label>
+                <TextoBarra>Entró: <span className="text-[var(--color-accent)]">{formatearCantidad(totalEntra, unidad)} {unidad}</span></TextoBarra>
+                <TextoBarra>Salió: <span className="text-[var(--color-danger)]">{formatearCantidad(totalSale, unidad)} {unidad}</span></TextoBarra>
+              </div>
+            )}
+          </BarraFiltros>
 
-        {/* TABLA */}
-        <div className="overflow-auto custom-scrollbar">
+          {/* LISTA */}
           {pestana === 'LOTES' ? (
-            <div className="min-w-[760px]">
-              <div className="grid grid-cols-12 gap-2 bg-[#1E293B] text-white px-4 py-2 text-[10px] font-black uppercase tracking-widest sticky top-0">
-                <span className="col-span-2">Ingreso</span>
-                <span className="col-span-2">Documento</span>
-                <span className="col-span-2">Proveedor</span>
-                <span className="col-span-1 text-right">Ingresó</span>
-                <span className="col-span-1 text-right">Queda</span>
-                <span className="col-span-1 text-right">Costo U.</span>
-                <span className="col-span-1 text-center">Vence</span>
-                <span className="col-span-2 text-center">Estado</span>
-              </div>
-              {cargando ? (
-                <div className="p-10 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#64748B]">
-                  <Loader2 size={16} className="animate-spin" /> Cargando...
-                </div>
-              ) : error ? (
-                <div className="p-10 text-center text-xs font-bold text-[var(--color-danger)]">No se pudo cargar el historial: {error}</div>
-              ) : lotes.length === 0 ? (
-                <div className="p-10 text-center text-[10px] font-black uppercase tracking-widest text-[#94A3B8]">Este producto todavía no tiene lotes.</div>
-              ) : (
-                <>
-                  {conStock.map(filaLote)}
-                  {agotados.length > 0 && (
-                    <div className="px-4 py-2 bg-[#F1F5F9] border-b border-[#E2E8F0] text-[10px] font-black uppercase tracking-widest text-[#64748B]">
-                      Agotados ({agotados.length})
-                    </div>
-                  )}
-                  {agotados.map(filaLote)}
-                </>
-              )}
-            </div>
+            <CajaLista
+              vacia={cargando || !!error || lotes.length === 0}
+              mensaje={cargando ? <><Loader2 size={16} className="animate-spin" /> Cargando...</>
+                : error ? <span className="text-[var(--color-danger)]">No se pudo cargar el historial: {error}</span>
+                : 'Este producto todavía no tiene lotes'}
+            >
+              {conStock.map(filaLote)}
+              {agotados.length > 0 && <SeparadorLista>Agotados ({agotados.length})</SeparadorLista>}
+              {agotados.map(filaLote)}
+            </CajaLista>
           ) : (
-            <div className="min-w-[860px]">
-              <div className="grid grid-cols-12 gap-2 bg-[#1E293B] text-white px-4 py-2 text-[10px] font-black uppercase tracking-widest sticky top-0">
-                <span className="col-span-2">Fecha y hora</span>
-                <span className="col-span-1">Tipo</span>
-                <span className="col-span-5">Detalle</span>
-                <span className="col-span-1 text-right">Entra</span>
-                <span className="col-span-1 text-right">Sale</span>
-                <span className="col-span-2">Quién</span>
-              </div>
-              {cargandoMovs ? (
-                <div className="p-10 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#64748B]">
-                  <Loader2 size={16} className="animate-spin" /> Cargando...
-                </div>
-              ) : errorMovs ? (
-                <div className="p-10 text-center text-xs font-bold text-[var(--color-danger)]">No se pudieron cargar los movimientos: {errorMovs}</div>
-              ) : movimientos.length === 0 ? (
-                <div className="p-10 text-center text-[10px] font-black uppercase tracking-widest text-[#94A3B8]">No hay movimientos en estas fechas.</div>
-              ) : (
-                <>
-                  {movimientos.map(filaMovimiento)}
-                  {movimientos.length >= LIMITE_MOVIMIENTOS && (
-                    <div className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#64748B]">
-                      Se muestran los {LIMITE_MOVIMIENTOS} más recientes: acorta las fechas para ver el resto.
-                    </div>
-                  )}
-                </>
+            <CajaLista
+              vacia={cargandoMovs || !!errorMovs || movimientos.length === 0}
+              mensaje={cargandoMovs ? <><Loader2 size={16} className="animate-spin" /> Cargando...</>
+                : errorMovs ? <span className="text-[var(--color-danger)]">No se pudieron cargar los movimientos: {errorMovs}</span>
+                : 'No hay movimientos en estas fechas'}
+            >
+              {movimientos.map(filaMovimiento)}
+              {movimientos.length >= LIMITE_MOVIMIENTOS && (
+                <SeparadorLista>Se muestran los {LIMITE_MOVIMIENTOS} más recientes: acorta las fechas para ver el resto</SeparadorLista>
               )}
-            </div>
+            </CajaLista>
           )}
-        </div>
+        </CuerpoVentana>
       </div>
     </div>
   );
