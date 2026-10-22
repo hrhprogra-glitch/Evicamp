@@ -173,12 +173,17 @@ export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose }) => {
         elementos[siguiente].focus();
         return;
       }
+      // ← → solo mueven el selector entre las pestañas; la pestaña cambia recién con Enter (o clic)
       if (enPestana && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
         e.preventDefault();
         e.stopPropagation();
-        const nueva: Pestana = e.key === 'ArrowRight' ? 'MOVIMIENTOS' : 'LOTES';
-        setPestana(nueva);
-        setTimeout(() => document.getElementById(nueva === 'LOTES' ? 'tab-hist-lotes' : 'tab-hist-movimientos')?.focus(), 0);
+        document.getElementById(e.key === 'ArrowRight' ? 'tab-hist-movimientos' : 'tab-hist-lotes')?.focus();
+        return;
+      }
+      if (enPestana && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        e.stopPropagation();
+        setPestana(active?.id === 'tab-hist-movimientos' ? 'MOVIMIENTOS' : 'LOTES');
         return;
       }
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
