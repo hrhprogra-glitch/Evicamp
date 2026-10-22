@@ -15,6 +15,8 @@ export interface CashSession {
   closing_card?: number;
   expected_yape?: number;
   expected_card?: number;
+  abierta_por?: string | null;  // quién abrió y quién cerró: lo guarda el servidor con la sesión
+  cerrada_por?: string | null;
 }
 
 export interface CashMovement {

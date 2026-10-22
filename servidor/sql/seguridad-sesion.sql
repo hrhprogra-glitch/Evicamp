@@ -623,15 +623,132 @@ BEGIN
       );
     END LOOP;
 
+    -- Lo que no salió de ningún lote (producto con stock pero sin lotes) también queda en el kardex; así
+    -- anular la venta (Finanzas) también devuelve ese stock
+    IF v_qty_to_deduct > 0 THEN
+      INSERT INTO public.inventory_movements (
+        batch_id, product_id, product_name, change_amount,
+        previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
+      ) VALUES (
+        NULL, NEW.product_id, NEW.product_name, -v_qty_to_deduct,
+        (v_current_stock + v_qty_to_deduct), v_current_stock,
+        'VENTA', 'Venta POS (sin lote)', 'Ticket #' || NEW.sale_id::text, now(), 'Sistema', 1
+      );
+    END IF;
+
     IF v_costo_real > 0 THEN
       NEW.cost_at_moment := v_costo_real;
     END IF;
 
   EXCEPTION WHEN OTHERS THEN
+    -- La venta se guarda igual, pero el error queda en el kardex (antes pasaba en silencio)
     RAISE WARNING 'Error interno al reducir stock: %', SQLERRM;
+    BEGIN
+      INSERT INTO public.inventory_movements (
+        product_id, product_name, change_amount, previous_quantity, new_quantity,
+        operation_type, reason, notes, created_at, "user", is_synced
+      ) VALUES (
+        NEW.product_id, NEW.product_name, 0, 0, 0, 'ERROR', 'Error al descontar stock',
+        'Ticket #' || NEW.sale_id::text || ': ' || left(SQLERRM, 200), now(), 'Sistema', 1
+      );
+    EXCEPTION WHEN OTHERS THEN
+      NULL;
+    END;
   END;
 
   RETURN NEW;
+END;
+$$;
+
+-- Kardex y mermas: cada movimiento guarda QUIÉN lo hizo, tomado de la sesión (antes la pantalla mandaba
+-- "Sistema" y quedaba "postgres"). Sin sesión (servidor, scripts) se respeta el nombre que traiga.
+CREATE OR REPLACE FUNCTION public.fn_registrar_autor_inventario()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_nombre text := (SELECT nombre FROM public.fn_empleado_de_sesion());
+BEGIN
+  IF v_nombre IS NOT NULL THEN
+    NEW."user" := v_nombre;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_autor_movimiento ON public.inventory_movements;
+CREATE TRIGGER trg_autor_movimiento BEFORE INSERT ON public.inventory_movements
+  FOR EACH ROW EXECUTE FUNCTION public.fn_registrar_autor_inventario();
+DROP TRIGGER IF EXISTS trg_autor_merma ON public.waste;
+CREATE TRIGGER trg_autor_merma BEFORE INSERT ON public.waste
+  FOR EACH ROW EXECUTE FUNCTION public.fn_registrar_autor_inventario();
+
+-- Turnos: cada caja guarda quién la abrió y quién la cerró (para saber quién trabajaba cuando hubo una
+-- merma o una diferencia de inventario)
+ALTER TABLE public.cash_sessions ADD COLUMN IF NOT EXISTS abierta_por text;
+ALTER TABLE public.cash_sessions ADD COLUMN IF NOT EXISTS cerrada_por text;
+
+CREATE OR REPLACE FUNCTION public.fn_registrar_turno_caja()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_nombre text := (SELECT nombre FROM public.fn_empleado_de_sesion());
+BEGIN
+  IF v_nombre IS NULL THEN
+    RETURN NEW;
+  END IF;
+  IF TG_OP = 'INSERT' THEN
+    NEW.abierta_por := v_nombre;
+  ELSIF NEW.status = 'CLOSED' AND coalesce(OLD.status, '') <> 'CLOSED' THEN
+    NEW.cerrada_por := v_nombre;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_turno_caja ON public.cash_sessions;
+CREATE TRIGGER trg_turno_caja BEFORE INSERT OR UPDATE ON public.cash_sessions
+  FOR EACH ROW EXECUTE FUNCTION public.fn_registrar_turno_caja();
+
+-- Borrar un producto SIEMPRE queda en el kardex, aunque su stock ya fuera 0 (antes solo si tenía stock,
+-- y no se sabía cuándo se borró). Igual que antes en todo lo demás.
+CREATE OR REPLACE FUNCTION public.fn_soft_delete_product(p_product_id text, p_user_name text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_product_name text;
+  v_total_qty numeric;
+BEGIN
+  SELECT name, quantity INTO v_product_name, v_total_qty
+  FROM public.products
+  WHERE id = p_product_id::bigint;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Producto ID % no encontrado.', p_product_id;
+  END IF;
+
+  UPDATE public.products
+  SET is_active = '0', quantity = 0
+  WHERE id = p_product_id::bigint;
+
+  UPDATE public.batches
+  SET is_active = 0, quantity = 0
+  WHERE product_id = p_product_id::bigint;
+
+  INSERT INTO public.inventory_movements (
+    product_id, product_name, change_amount, previous_quantity, new_quantity,
+    operation_type, reason, "user", created_at, is_synced
+  ) VALUES (
+    p_product_id::bigint, v_product_name, -coalesce(v_total_qty, 0), coalesce(v_total_qty, 0), 0,
+    'AJUSTE', 'Eliminación del sistema (Soft Delete)', p_user_name, now(), '1'
+  );
 END;
 $$;
 

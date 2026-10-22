@@ -189,9 +189,12 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
                   >
                     <td className="p-2 sm:p-4 text-xs font-bold text-[var(--color-muted)] border-r-2 border-[var(--color-border)] md:whitespace-nowrap">
                       {new Date(caja.opened_at).toLocaleString('es-PE')}
+                      {/* Quién abrió / cerró: lo guarda el servidor con la sesión (cajas antiguas no lo tienen) */}
+                      {caja.abierta_por && <p className="text-[11px] font-black text-[var(--color-ink)] uppercase">Abrió: {caja.abierta_por}</p>}
                     </td>
                     <td className="p-2 sm:p-4 text-xs font-bold text-[var(--color-muted)] border-r-2 border-[var(--color-border)] whitespace-nowrap hidden md:table-cell">
                       {caja.closed_at ? new Date(caja.closed_at).toLocaleString('es-PE') : '---'}
+                      {caja.cerrada_por && <p className="text-[11px] font-black text-[var(--color-ink)] uppercase">Cerró: {caja.cerrada_por}</p>}
                     </td>
                     <td className="p-2 sm:p-4 text-sm font-black text-[var(--color-ink)] text-center border-r-2 border-[var(--color-border)] whitespace-nowrap hidden md:table-cell">
                       S/ {Number(caja.opening_balance).toFixed(2)}
