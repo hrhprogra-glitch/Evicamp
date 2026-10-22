@@ -23,6 +23,7 @@ interface Lote {
   unit?: string; // <-- AÑADIDO PARA LA UNIDAD
   supplier?: string; // <-- AÑADIDO PARA EL PROVEEDOR
   provider_id?: string | null; // proveedor registrado (para editar el lote sin perder el enlace)
+  created_ts?: number; // momento exacto de ingreso (created_at ya viene como fecha corta para mostrar)
 }
 
 interface Props {
@@ -71,6 +72,7 @@ export const TablaLotes: React.FC<Props> = ({
             initial_quantity: Number(b.initial_quantity) || 0,
             expiration_date: b.expiration_date,
             created_at: new Date(b.created_at).toLocaleDateString(),
+            created_ts: new Date(b.created_at).getTime(),
             cost_unit: Number(b.cost_unit) || 0,
             product_name: b.products?.name || 'PRODUCTO DESCONOCIDO',
             document_ref: b.document_ref || 'INT-S/R',
@@ -95,11 +97,13 @@ export const TablaLotes: React.FC<Props> = ({
     if (nuevoLoteInyectado) {
       
       // INTERCEPCIÓN TÉCNICA: Formateamos la fecha si viene cruda desde Supabase (ISO 8601)
+      const esFechaCruda = nuevoLoteInyectado.created_at && nuevoLoteInyectado.created_at.includes('T');
       const loteFormateado = {
         ...nuevoLoteInyectado,
-        created_at: nuevoLoteInyectado.created_at && nuevoLoteInyectado.created_at.includes('T') 
-          ? new Date(nuevoLoteInyectado.created_at).toLocaleDateString() 
-          : nuevoLoteInyectado.created_at
+        created_at: esFechaCruda
+          ? new Date(nuevoLoteInyectado.created_at).toLocaleDateString()
+          : nuevoLoteInyectado.created_at,
+        ...(esFechaCruda ? { created_ts: new Date(nuevoLoteInyectado.created_at).getTime() } : {})
       };
 
       setLotes(prev => {
@@ -116,7 +120,23 @@ export const TablaLotes: React.FC<Props> = ({
 
   // === MOTOR DE FILTRADO Y ORDENAMIENTO PARA LOS LOTES ===
   // 🔥 INTELIGENCIA DE BÚSQUEDA: Detectar si hay un producto que se llame EXACTAMENTE igual a lo que se busca
+  // Lote más nuevo de cada producto: un lote AGOTADO se sigue viendo mientras sea el último de su producto
+  // (falta reponer); apenas entra uno nuevo se oculta solo. No se borra: se ve en el historial (botón del reloj).
+  const ultimoDeProducto = new Map<string, Lote>();
+  for (const l of lotes) {
+    const actual = ultimoDeProducto.get(String(l.product_id));
+    const masNuevo = !actual
+      || (l.created_ts ?? 0) > (actual.created_ts ?? 0)
+      || ((l.created_ts ?? 0) === (actual.created_ts ?? 0) && Number(l.id) > Number(actual.id));
+    if (masNuevo) ultimoDeProducto.set(String(l.product_id), l);
+  }
+
   const filteredLotes = lotes.filter(lote => {
+    // 0. Agotado con un lote más nuevo del mismo producto: oculto (queda en el historial)
+    if (lote.quantity <= 0 && ultimoDeProducto.get(String(lote.product_id))?.id !== lote.id) {
+      return false;
+    }
+
     // 1. Filtro de Búsqueda de Texto Inteligente (coincidencia flexible)
     if (searchQuery && searchQuery.trim()) {
       if (!coincideBusqueda([lote.product_name, lote.document_ref, lote.supplier], searchQuery)) {

@@ -14,6 +14,7 @@ import { ModalProducto } from './components/ModalProducto';
 import { TablaLotes } from './components/TablaLotes';
 import { ModalGestionProveedores } from './components/ModalGestionProveedores';
 import { ModalLote } from './components/ModalLote';
+import { ModalHistorialLotes, type ProductoHistorial } from './components/ModalHistorialLotes';
 import { PanelCompras, inicioCompras } from './components/PanelCompras';
 
 interface InventarioProps {
@@ -202,20 +203,23 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     setFiltroOrden('NOMBRE_ASC');
   };
 
+  // Botón del reloj (fila de Productos o de Lotes): ventana flotante con todos los lotes del producto,
+  // también los agotados que la pestaña Lotes oculta. Al cerrarla, el selector vuelve al botón que la abrió.
+  const [historialProducto, setHistorialProducto] = useState<ProductoHistorial | null>(null);
+  const [focoAntesDelHistorial, setFocoAntesDelHistorial] = useState<HTMLElement | null>(null);
   const handleViewHistory = (item: any) => {
-    const nombre = item.product_name || item.name || '';
-    setVistaActiva('LOTES');
-    setSearchQuery(nombre);
-
-    // 🛡️ EVICAMP: Enfocar el buscador de inmediato con el texto seleccionado, listo para navegar
-    setTimeout(() => {
-      const searchInput = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
-      if (searchInput) {
-        searchInput.focus();
-        searchInput.select();
-        searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    }, 100);
+    const esLote = item.product_id != null;
+    setFocoAntesDelHistorial(document.activeElement as HTMLElement | null);
+    setHistorialProducto({
+      id: String(esLote ? item.product_id : item.id),
+      nombre: item.product_name || item.name || '',
+      unidad: item.unit || undefined,
+    });
+  };
+  const cerrarHistorial = () => {
+    setHistorialProducto(null);
+    const volver = focoAntesDelHistorial;
+    setTimeout(() => { if (volver && document.body.contains(volver)) volver.focus(); }, 30);
   };
 
   const lowStockCount = products.filter(p => p.unit !== 'CONSUMO' && p.quantity <= p.minStock).length;
@@ -747,6 +751,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         }}
       />
       <ModalGestionProveedores isOpen={isModalProveedoresOpen} onClose={() => setIsModalProveedoresOpen(false)} />
+      <ModalHistorialLotes producto={historialProducto} onClose={cerrarHistorial} />
       {/* INVOCACIÓN DEL NUEVO MODAL DE LOTES */}
       <ModalLote 
         isOpen={isModalLoteOpen} 
