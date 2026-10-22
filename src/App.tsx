@@ -221,7 +221,9 @@ export const App: React.FC = () => {
   }
 
   if (!empleado) {
-    return <Login onLoginSuccess={(nuevo) => { setCurrentView('pos'); setEmpleado(nuevo); }} />;
+    // Recién iniciada la sesión también se dejan listas las copias para trabajar sin internet (antes
+    // esperaba a la revisión de sesión del minuto siguiente: un corte en ese minuto dejaba la PC sin copias)
+    return <Login onLoginSuccess={(nuevo) => { setCurrentView('pos'); setEmpleado(nuevo); if (nuevo) precargarParaSinInternet(); }} />;
   }
 
   // Si le quitaron el permiso del módulo que tenía abierto, se muestra el POS

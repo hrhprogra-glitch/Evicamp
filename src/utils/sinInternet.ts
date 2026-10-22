@@ -154,13 +154,16 @@ const copiaFiltrada = async (clave: string) => {
   const pedidos = new Map(filtros);
   const locales = await idsLocales();
 
-  // Copias de la misma tabla con TODAS las columnas pedidas y un filtro igual o más amplio: se juntan sus filas
+  // Copias de la misma tabla con TODAS las columnas pedidas Y las de los filtros (si no, al juntar filas una
+  // copia con menos columnas pisaba a la completa y el filtro ya no se podía revisar: los lotes "activos"
+  // de un producto salían vacíos) y con un filtro igual o más amplio: se juntan sus filas
+  const necesarias = [...columnas, ...filtros.map(([k]) => k)];
   const filas = new Map<string, Record<string, unknown>>();
   for (const otra of await clavesLocal(ALMACEN_RESPUESTAS)) {
     const u = new URL(String(otra).split('|')[0], location.origin);
     if (u.pathname !== pedida.pathname) continue;
     const suyas = columnasDe(u);
-    if (!suyas.includes('*') && !columnas.every((c) => c !== '*' && suyas.includes(c))) continue;
+    if (!suyas.includes('*') && !necesarias.every((c) => c !== '*' && suyas.includes(c))) continue;
     if (!filtrosDe(u).every(([k, f]) => cubre(f, pedidos.get(k), locales))) continue;
     const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, otra);
     try { for (const f of JSON.parse(copia?.cuerpo || '[]')) filas.set(String(f?.id ?? JSON.stringify(f)), f); } catch { /* no es lista */ }
@@ -183,8 +186,19 @@ const filasPendientes = async () => {
   const porTabla = new Map<string, Record<string, unknown>[]>();
   const agregar = (tabla: string, fila: Record<string, unknown>) => porTabla.set(tabla, [...(porTabla.get(tabla) || []), fila]);
   for (const p of await leerPendientes()) {
-    if (p.metodo !== 'POST') continue;
     const tabla = p.accion.split('/')[1];
+    // Cambios y borrados de algo creado sin internet (ej. caja abierta y cerrada sin internet, cliente
+    // creado y corregido): se aplican a esa fila, en el orden en que se hicieron
+    if (p.metodo === 'PATCH' || p.metodo === 'DELETE') {
+      const id = idDelFiltro(p.url);
+      if (id == null) continue;
+      const filas = porTabla.get(tabla) || [];
+      if (p.metodo === 'DELETE') { porTabla.set(tabla, filas.filter((f) => String(f.id) !== id)); continue; }
+      const cambios = cambiosDe(p.cuerpo);
+      if (cambios) for (const f of filas) if (String(f.id) === id) Object.assign(f, cambios);
+      continue;
+    }
+    if (p.metodo !== 'POST') continue;
     let datos: Record<string, unknown>[] = [];
     try { datos = [JSON.parse(p.cuerpo)].flat(); } catch { continue; }
     datos.forEach((f, i) => {
@@ -196,6 +210,14 @@ const filasPendientes = async () => {
           type: 'INGRESO', amount: f.amount, payment_type: f.payment_type, created_at: f.created_at,
           description: `ABONO DE FIADO / Cliente ID: ${f.customer_id ?? 'General'}`, flujo: 'INGRESO_FIADO', is_synced: 1,
         });
+      }
+      // Vender o mermar un producto CREADO sin internet: su stock también baja en pantalla (los que ya
+      // existían bajan en las copias, ver descontarStockLocal y la merma en encolar)
+      if (tabla === 'sale_details' || tabla === 'waste') {
+        const cambio = tabla === 'sale_details' ? -Number(f.quantity || 0) : Number(f.quantity || 0);
+        for (const prod of porTabla.get('products') || []) {
+          if (String(prod.id) === String(f.product_id)) prod.quantity = Math.max(0, Number(prod.quantity || 0) + cambio);
+        }
       }
     });
   }
@@ -214,16 +236,23 @@ const idsLocales = async () => {
 const sumarPendientes = async (clave: string, copia: CopiaGuardada) => {
   const pedida = new URL(clave.split('|')[0], location.origin);
   const tabla = pedida.pathname.replace(/^\/rest\/v1\//, '');
-  const nuevas = (await filasPendientes()).get(tabla);
-  if (!nuevas?.length || pedida.searchParams.has('offset') && pedida.searchParams.get('offset') !== '0') return copia;
+  if (pedida.searchParams.has('offset') && pedida.searchParams.get('offset') !== '0') return copia;
   let filas: unknown;
   try { filas = JSON.parse(copia.cuerpo); } catch { return copia; }
   if (!Array.isArray(filas)) return copia;
   const filtros = filtrosDe(pedida);
-  const yaEstan = new Set(filas.map((f) => String(f?.id)));
+  // Filas cambiadas sin internet que ya no cumplen lo que se pide (ej. la caja que se cerró ya no es
+  // "la caja abierta"): se quitan. Solo se revisan los filtros cuya columna VIENE en la fila: si se
+  // pidieron otras columnas (ej. solo "quantity" de los lotes de un producto), la fila ya no trae la del
+  // filtro y NO se puede descartar por eso. Un filtro que no se sabe evaluar tampoco descarta.
+  const yaNoCumple = (f: Record<string, unknown>) => filtros.some(([columna, filtro]) =>
+    f && typeof f === 'object' && columna in f && cumpleFiltro(f[columna], filtro) === false);
+  const vigentes = filtros.length ? filas.filter((f) => !yaNoCumple(f)) : filas;
+  const nuevas = (await filasPendientes()).get(tabla) || [];
+  const yaEstan = new Set(vigentes.map((f) => String(f?.id)));
   const extra = nuevas.filter((f) => !yaEstan.has(String(f.id)) && cumpleTodos(f, filtros) === true);
-  if (!extra.length) return copia;
-  return armarRespuesta(pedida, [...filas, ...extra]);
+  if (!extra.length && vigentes.length === filas.length) return copia;
+  return armarRespuesta(pedida, [...vigentes, ...extra]);
 };
 
 export const leerCopia = async (clave: string) => {
@@ -251,9 +280,27 @@ const PERMITIDO_SIN_INTERNET = new Set([
   'PATCH /sales', 'PATCH /fiados',
   'POST /debt_payments', 'POST /cash_movements',
   'POST /waste', 'PATCH /waste', 'DELETE /waste', 'POST /inventory_movements',
+  // Fase SI-1 (22/10/2026): que el cajero siga trabajando sin internet
+  'POST /cash_sessions', 'PATCH /cash_sessions',                     // abrir y cerrar caja
+  'POST /customers', 'PATCH /customers', 'DELETE /customers',        // clientes
+  'POST /products', 'PATCH /products',                               // crear y editar productos
+  'POST /categories', 'DELETE /categories',
+  'POST /batches',                                                   // ingresar lotes
+  'POST /providers', 'PATCH /providers', 'DELETE /providers',        // proveedores
 ]);
-// La merma ajusta el stock del lote y del producto: SOLO la cantidad (editar productos sigue bloqueado)
-const SOLO_CANTIDAD = new Set(['PATCH /batches', 'PATCH /products']);
+// Los lotes solo cambian su CANTIDAD sin internet (merma); editarlos del todo es fase SI-2
+const SOLO_CANTIDAD = new Set(['PATCH /batches']);
+// El stock se guarda como DIFERENCIA (no como número fijo): así dos cajas sin internet no se pisan
+const CON_STOCK = new Set(['PATCH /batches', 'PATCH /products']);
+// Tablas cuyo número (id) lo pone el servidor: sin internet lo pone la PC (el servidor lo acepta,
+// sus ids son "BY DEFAULT"). Basado en la hora: nunca choca con los del servidor (van por miles).
+const ID_DESDE_LA_PC: Record<string, 'numero' | 'uuid'> = { products: 'numero', customers: 'numero', providers: 'uuid' };
+let ultimoIdNumero = 0;
+const nuevoId = (tipo: 'numero' | 'uuid') => {
+  if (tipo === 'uuid') return crypto.randomUUID();
+  ultimoIdNumero = Math.max(Date.now(), ultimoIdNumero + 1); // único aunque se creen varios en el mismo milisegundo
+  return ultimoIdNumero;
+};
 // Llevan una referencia única de la PC (ref_local): al subirlos, si ya llegaron, no se repiten
 const CON_REFERENCIA = new Set(['POST /debt_payments', 'POST /cash_movements', 'POST /waste', 'POST /inventory_movements']);
 
@@ -270,6 +317,14 @@ const esSoloCantidad = (cuerpo: unknown) => {
 export const sePuedeSinInternet = (url: string, metodo: string, cuerpo?: unknown) => {
   const accion = accionDe(url, metodo);
   return PERMITIDO_SIN_INTERNET.has(accion) || (SOLO_CANTIDAD.has(accion) && esSoloCantidad(cuerpo));
+};
+
+// Cuerpo de un cambio (PATCH) como objeto; null si no es un objeto
+const cambiosDe = (cuerpo: string): Record<string, unknown> | null => {
+  try {
+    const datos = JSON.parse(cuerpo || 'null');
+    return datos && typeof datos === 'object' && !Array.isArray(datos) ? datos : null;
+  } catch { return null; }
 };
 
 // id de la fila en un filtro "id=eq.X" de la URL
@@ -304,6 +359,25 @@ const cambiarEnCopias = async (tabla: string, id: string, cambiar: (fila: Record
     } catch { /* copia no es una lista */ }
   }
 };
+
+// Quita una fila de todas las copias de una tabla (algo borrado sin internet deja de verse)
+const quitarDeCopias = async (tabla: string, id: string) => {
+  for (const clave of await clavesLocal(ALMACEN_RESPUESTAS)) {
+    if (!String(clave).includes(`/rest/v1/${tabla}?`)) continue;
+    const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave);
+    if (!copia) continue;
+    try {
+      const filas = JSON.parse(copia.cuerpo);
+      if (!Array.isArray(filas)) continue;
+      const quedan = filas.filter((f) => String(f?.id) !== id);
+      if (quedan.length !== filas.length) await guardarLocal(ALMACEN_RESPUESTAS, { ...copia, cuerpo: JSON.stringify(quedan) }, clave);
+    } catch { /* copia no es una lista */ }
+  }
+};
+
+// La fila como se ve ahora en la PC: primero lo hecho sin internet (lo más nuevo), si no la copia
+const filaLocal = async (tabla: string, id: string) =>
+  (await filasPendientes()).get(tabla)?.find((f) => String(f.id) === id) || (await filaEnCopias(tabla, id));
 
 export interface Pendiente {
   id: string;              // orden de llegada (fecha + contador): se suben en este orden
@@ -345,16 +419,34 @@ export const encolar = async (url: string, opciones: RequestInit, token: string 
     }
   }
 
-  // Merma: el stock se guarda como DIFERENCIA (no como número fijo) para no pisar ventas hechas mientras tanto
-  if (SOLO_CANTIDAD.has(accion)) {
-    const tabla = accion.split('/')[1];
-    const filaId = idDelFiltro(url);
-    const actual = filaId ? await filaEnCopias(tabla, filaId) : null;
-    if (!filaId || typeof actual?.quantity !== 'number') {
+  const tabla = accion.split('/')[1];
+  const filaId = idDelFiltro(url);
+
+  // Producto, cliente o proveedor nuevo: su número lo pone la PC (el servidor lo acepta tal cual); así lo
+  // que se haga después sin internet con él (vender ese producto, fiarle a ese cliente) ya apunta bien
+  const tipoId = metodo === 'POST' ? ID_DESDE_LA_PC[tabla] : undefined;
+  if (tipoId) {
+    const datos = JSON.parse(pendiente.cuerpo || '[]');
+    const filas = (Array.isArray(datos) ? datos : [datos]).map((f) => (f.id == null ? { ...f, id: nuevoId(tipoId) } : f));
+    pendiente.cuerpo = cuerpo = JSON.stringify(Array.isArray(datos) ? filas : filas[0]);
+    const u = new URL(pendiente.url, location.origin);
+    const columnas = u.searchParams.get('columns');
+    if (columnas && !columnas.includes('"id"')) {
+      u.searchParams.set('columns', `${columnas},"id"`);
+      pendiente.url = u.toString();
+    }
+  }
+
+  // Stock (mermas, ingresar lote, editar producto): se guarda como DIFERENCIA, no como número fijo, para
+  // no pisar las ventas hechas mientras tanto (ni las de otra caja)
+  const cambios = metodo === 'PATCH' ? cambiosDe(cuerpo) : null;
+  if (CON_STOCK.has(accion) && cambios && typeof cambios.quantity === 'number') {
+    const actual = filaId ? await filaLocal(tabla, filaId) : null;
+    if (!filaId || actual?.quantity == null || Number.isNaN(Number(actual.quantity))) {
       return new Response(JSON.stringify({ message: 'Sin internet: no se pudo leer el stock actual. Inténtalo cuando vuelva la conexión.' }),
         { status: 503, headers: { 'Content-Type': 'application/json' } });
     }
-    pendiente.diferencia = JSON.parse(cuerpo).quantity - actual.quantity;
+    pendiente.diferencia = cambios.quantity - Number(actual.quantity);
   }
 
   await guardarLocal(ALMACEN_PENDIENTES, pendiente);          // en el disco ANTES de decir "listo"
@@ -375,10 +467,10 @@ export const encolar = async (url: string, opciones: RequestInit, token: string 
     const merma = mermaId ? await filaEnCopias('waste', mermaId) : null;
     if (merma) await cambiarEnCopias('products', String(merma.product_id), (f) => { f.quantity = Number(f.quantity || 0) - Number(merma.quantity || 0); });
   }
-  if (SOLO_CANTIDAD.has(accion)) {
-    const nueva = JSON.parse(cuerpo).quantity;
-    await cambiarEnCopias(accion.split('/')[1], idDelFiltro(url)!, (f) => { f.quantity = nueva; });
-  }
+  // Cualquier cambio o borrado se ve al instante en pantalla (en las copias); lo creado sin internet ya
+  // se suma a lo que se lee (filasPendientes)
+  if (metodo === 'PATCH' && filaId && cambios) await cambiarEnCopias(tabla, filaId, (f) => { Object.assign(f, cambios); });
+  if (metodo === 'DELETE' && filaId) await quitarDeCopias(tabla, filaId);
   if (accion === 'POST /debt_payments') {
     // Varios abonos al mismo cliente sin internet: la deuda que se ve baja con cada uno
     for (const abono of JSON.parse(cuerpo) as { fiado_id: number; amount: number }[]) {
@@ -388,10 +480,19 @@ export const encolar = async (url: string, opciones: RequestInit, token: string 
     }
   }
   void avisarPendientes();
-  // La pantalla recibe lo mismo que daría el servidor
+  // La pantalla recibe lo mismo que daría el servidor: las filas guardadas (la fila completa si fue un
+  // cambio) y, si pidió UNA sola (.single()), un objeto en vez de una lista
   const devolverFilas = (prefer || '').includes('return=representation');
-  return new Response(devolverFilas ? cuerpo : null, {
-    status: 201, headers: devolverFilas ? { 'Content-Type': 'application/json' } : undefined,
+  if (!devolverFilas) return new Response(null, { status: 201 });
+  let filas: unknown[] = [];
+  if (metodo === 'POST') filas = [JSON.parse(cuerpo || '[]')].flat();
+  else if (metodo === 'PATCH' && filaId) {
+    const fila = await filaLocal(tabla, filaId);
+    filas = fila ? [fila] : cambios ? [{ id: filaId, ...cambios }] : [];
+  }
+  const quiereUna = (new Headers(opciones.headers).get('Accept') || '').includes('vnd.pgrst.object');
+  return new Response(JSON.stringify(quiereUna ? (filas[0] ?? null) : filas), {
+    status: 201, headers: { 'Content-Type': 'application/json' },
   });
 };
 
@@ -434,6 +535,13 @@ const NOMBRES: Record<string, [string, string]> = {
   'POST /cash_movements': ['movimiento de caja', 'movimientos de caja'],
   'POST /waste': ['merma', 'mermas'], 'PATCH /waste': ['merma corregida', 'mermas corregidas'], 'DELETE /waste': ['merma borrada', 'mermas borradas'],
   'PATCH /sales': ['devolución', 'devoluciones'],
+  'POST /cash_sessions': ['apertura de caja', 'aperturas de caja'], 'PATCH /cash_sessions': ['cambio de caja', 'cambios de caja'],
+  'POST /customers': ['cliente nuevo', 'clientes nuevos'], 'PATCH /customers': ['cliente editado', 'clientes editados'],
+  'DELETE /customers': ['cliente borrado', 'clientes borrados'],
+  'POST /products': ['producto nuevo', 'productos nuevos'], 'PATCH /products': ['cambio de producto', 'cambios de productos'],
+  'POST /batches': ['lote', 'lotes'],
+  'POST /providers': ['proveedor nuevo', 'proveedores nuevos'], 'PATCH /providers': ['proveedor editado', 'proveedores editados'],
+  'DELETE /providers': ['proveedor borrado', 'proveedores borrados'],
 };
 const resumir = (lista: Pendiente[]) => {
   const cuenta = new Map<string, number>();
@@ -473,6 +581,21 @@ const yaEstaEnServidor = async (p: Pendiente) => {
   return (await r.json()).length > 0;
 };
 
+// Tras un 409 al subir algo creado sin internet con su número: ¿esas filas ya están en el servidor?
+// (sin número propio, como las ventas de antes, se mantiene lo de siempre: se da por subido)
+const creadoYaEnServidor = async (p: Pendiente) => {
+  if (p.metodo !== 'POST') return true;
+  let ids: string[] = [];
+  try { ids = [JSON.parse(p.cuerpo)].flat().map((f) => f?.id).filter((x) => x != null).map(String); } catch { return true; }
+  if (!ids.length) return true;
+  const tabla = p.accion.split('/')[1];
+  try {
+    const r = await pedirConLimite(`${location.origin}/rest/v1/${tabla}?select=id&id=in.(${ids.map(encodeURIComponent).join(',')})`, { headers: cabecerasDe(p) }, 15_000);
+    if (!r.ok) return true;
+    return (await r.json()).length >= ids.length;
+  } catch { return true; }
+};
+
 let subiendo = false;
 export const subirPendientes = async () => {
   if (subiendo) return;
@@ -493,7 +616,8 @@ export const subirPendientes = async () => {
           const actual = await pedirConLimite(`${location.origin}/rest/v1/${tabla}?select=quantity&id=eq.${filaId}`, { headers: cabecerasDe(p) }, 15_000);
           if (!actual.ok) throw new Error('sin respuesta');
           const filas = await actual.json();
-          cuerpo = JSON.stringify({ quantity: Math.max(0, Number(filas[0]?.quantity || 0) + p.diferencia) });
+          // Los demás datos del cambio (ej. nombre o precio al editar un producto) van tal cual
+          cuerpo = JSON.stringify({ ...(cambiosDe(p.cuerpo) || {}), quantity: Math.max(0, Number(filas[0]?.quantity || 0) + p.diferencia) });
         }
         r = await pedirConLimite(p.url, { method: p.metodo, headers: cabeceras, body: cuerpo || undefined }, 15_000);
       } catch {
@@ -501,7 +625,14 @@ export const subirPendientes = async () => {
         return;
       }
       avisarConexion(true);
-      // 409 = ya existía (la venta llegó antes de cortarse): no se duplica
+      // 409 = ya existía (la venta llegó antes de cortarse): no se duplica. Pero si lo creado tiene su
+      // número y ese número NO está en el servidor, el choque fue con otra cosa (ej. un RUC repetido):
+      // queda marcado con el error para revisarlo, no se da por subido
+      if (r.status === 409 && !(await creadoYaEnServidor(p))) {
+        const detalle = await r.text().catch(() => '');
+        await guardarLocal(ALMACEN_PENDIENTES, { ...p, error: `409 ${detalle.slice(0, 300)}` });
+        continue;
+      }
       if (r.ok || r.status === 409) {
         await borrarLocal(ALMACEN_PENDIENTES, p.id);
       } else {

@@ -32,6 +32,8 @@ export const precargarParaSinInternet = () => {
         traerTodo(() => supabase.from('customers').select('*').order('id')),
         traerTodo(() => supabase.from('fiados').select('*').in('status', ['PENDIENTE', 'VENCIDO', 'CANCELADO']).order('id')),
         traerTodo(() => supabase.from('debt_payments').select('*').order('id')),
+        // Proveedores (Inventario > Proveedores e Ingresar lote, src/sections/Inventario/components/ModalGestionProveedores.tsx)
+        traerTodo(() => supabase.from('providers').select('*').neq('estado', 'ELIMINADO').order('created_at', { ascending: false })),
       ]);
     } catch { hecha = false; /* se reintenta la próxima vez que abra */ }
     void precargarFinanzas();

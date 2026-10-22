@@ -42,7 +42,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const enviaPedidos = usePermiso('compras_enviar'); // enviar / imprimir pedidos
   const soloCompras = !verStock && (recibePedidos || enviaPedidos);
   useEffect(() => { if (soloCompras && vistaActiva !== 'COMPRAS') setVistaActiva('COMPRAS'); }, [soloCompras, vistaActiva]);
-  const { enLinea } = useConexion(); // sin internet, Inventario es solo para ver
+  const { enLinea } = useConexion(); // sin internet: aviso de qué se puede hacer (src/utils/sinInternet.ts)
   const [mermaAEditar, setMermaAEditar] = useState<any>(null);
   const [isModalLoteOpen, setIsModalLoteOpen] = useState(false); // <-- ESTADO DEL NUEVO MODAL
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
@@ -598,7 +598,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
       {!enLinea && (
         <div role="status" className="mx-2 sm:mx-8 px-3 py-2 border-2 border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] font-mono text-xs font-bold">
-          🔌 SIN INTERNET: Inventario es solo para ver. No edites productos ni ingreses lotes hasta que vuelva la conexión (las mermas sí se pueden registrar).
+          🔌 SIN INTERNET: puedes crear y editar productos, ingresar lotes y registrar mermas; se suben solos al volver la conexión. Editar o retirar lotes, borrar productos y recibir pedidos necesitan internet.
         </div>
       )}
 

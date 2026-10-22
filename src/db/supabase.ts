@@ -84,8 +84,9 @@ const customFetch = (url: string | URL | Request, options?: RequestInit) => {
 
 // Lo que no se puede hacer sin internet: la pantalla muestra este mensaje (no "Failed to fetch")
 const necesitaInternet = () => new Response(JSON.stringify({
-  message: '🔌 Sin internet: esto necesita conexión. Puedes seguir vendiendo, fiando, cobrando abonos, '
-    + 'registrando ingresos/egresos y mermas; lo demás, cuando vuelva el internet.',
+  message: '🔌 Sin internet: esto necesita conexión. Sin internet puedes vender, fiar, cobrar abonos, abrir y cerrar caja, '
+    + 'registrar ingresos/egresos y mermas, crear y editar clientes, productos y proveedores, e ingresar lotes; '
+    + 'lo demás, cuando vuelva el internet.',
 }), { status: 503, headers: { 'Content-Type': 'application/json' } });
 
 // Misma clave que usa src/utils/sesion.ts (aquí se lee directo para no crear una importación circular)

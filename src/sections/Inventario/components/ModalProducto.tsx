@@ -3,7 +3,6 @@ import { X, Package, Scale, Coffee, ArrowLeft, Save, ImagePlus, Search, Loader2,
 import { supabase } from '../../../db/supabase'; // RETORNO TÉCNICO: Conexión a la DB
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { usePermiso } from '../../../utils/permisos';
-import { hayConexion } from '../../../utils/sinInternet';
 import { buscarImagenes, fotoParaGuardar, achicarImagen } from '../../../utils/buscarImagenes';
 import { confirmar } from '../../../utils/dialogos';
 
@@ -910,12 +909,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
       return;
     }
     if (isSubmitting) return;
-    // Sin internet, Inventario es solo para ver: avisar al instante, sin bloquear el botón
-    // (un botón bloqueado pierde el foco y el selector de teclado desaparecía)
-    if (!hayConexion()) {
-      setIntegrityError('🔌 Sin internet: crear o editar productos necesita conexión. Hazlo cuando vuelva el internet.');
-      return;
-    }
+    // Sin internet también se crea y edita: va a la cola y se sube solo al volver (src/utils/sinInternet.ts)
     // Botón que se usó: si algo falla, el foco vuelve ahí
     const botonUsado = document.getElementById(goToLotes ? 'btn-guardar-ir-lotes' : 'btn-guardar-producto');
 

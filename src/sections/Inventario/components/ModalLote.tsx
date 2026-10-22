@@ -6,6 +6,7 @@ import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar } from '../../../utils/dialogos';
 import { useEmpleado } from '../../../utils/permisos';
+import { hayConexion } from '../../../utils/sinInternet';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -509,10 +510,16 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         if (movError) throw movError;
 
         // 🛡️ SINCRONIZACIÓN MAESTRA EVICAMP: Al editar un lote manualmente, recalculamos el stock global del producto
-        if (selectedProduct) {
+        if (selectedProduct && hayConexion()) {
           const { data: lotesActivos } = await supabase.from('batches').select('quantity').eq('product_id', selectedProduct.id).eq('is_active', 1);
           const stockReal = lotesActivos ? lotesActivos.reduce((sum, lote) => sum + Number(lote.quantity || 0), 0) : 0;
           await supabase.from('products').update({ quantity: stockReal }).eq('id', selectedProduct.id);
+        } else if (selectedProduct) {
+          // Sin internet NO se recalcula desde los lotes: sus copias pueden ser más viejas que la del producto
+          // (ventas hechas después) y el stock saldría mal. Se suma exactamente lo que entró: la cola lo sube
+          // como esa diferencia (src/utils/sinInternet.ts)
+          const { data: prod } = await supabase.from('products').select('quantity').eq('id', selectedProduct.id);
+          await supabase.from('products').update({ quantity: Number(prod?.[0]?.quantity || 0) + Number(cantidad) }).eq('id', selectedProduct.id);
         }
 
         if (onLoteSaved && selectedProduct) {
