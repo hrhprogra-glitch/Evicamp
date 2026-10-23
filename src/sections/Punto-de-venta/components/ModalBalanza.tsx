@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Scale, Banknote, Calculator, ShoppingCart } from 'lucide-react';
 import type { Product } from '../../Inventario/types';
+import { unidadDe, nombreUnidad } from '../../../utils/unidades';
 
 interface Props {
   isOpen: boolean;
@@ -61,7 +62,7 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
         {/* Cabecera */}
         <div className="bg-[var(--color-info)] text-white px-4 py-3 flex items-center justify-between border-b-2 border-[var(--color-ink)]">
           <h2 className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-            <Scale size={20} /> Balanza Digital
+            <Scale size={20} /> {unidadDe(product).corto === 'KG' ? 'Balanza Digital' : 'Venta por medida'}
           </h2>
           <button 
             id="balanza-btn-close"
@@ -92,10 +93,10 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
 
         <div className="p-6 space-y-6">
           <div className="bg-[var(--color-bg)] border-2 border-[var(--color-border)] p-4">
-            <p className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest mb-1">Cálculo de Peso</p>
+            <p className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest mb-1">{unidadDe(product).corto === 'KG' ? 'Cálculo de Peso' : 'Cálculo por medida'}</p>
             <h3 className="text-lg font-black text-[var(--color-ink)] uppercase mb-2 leading-tight">{product.name}</h3>
             <div className="flex justify-between items-center pt-2 border-t border-dashed border-[var(--color-border)]">
-              <span className="text-xs font-bold text-[var(--color-muted)] uppercase">Precio x KG:</span>
+              <span className="text-xs font-bold text-[var(--color-muted)] uppercase">Precio x {unidadDe(product).corto}:</span>
               <span className="text-xl font-black text-[var(--color-accent)]">S/ {precioUnitario.toFixed(2)}</span>
             </div>
           </div>
@@ -153,7 +154,7 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
 
             <div className="space-y-2">
               <label className="text-xs font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2">
-                <Scale size={16} className="text-[var(--color-info)]" /> ¿Cuántos Kilos va a pesar? (KG)
+                <Scale size={16} className="text-[var(--color-info)]" /> {unidadDe(product).corto === 'KG' ? '¿Cuántos Kilos va a pesar? (KG)' : `¿Cuántos ${nombreUnidad(product, true)}? (${unidadDe(product).corto})`}
               </label>
               <div className="relative">
                 <input autoComplete="off" id="balanza-input-peso"

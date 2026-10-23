@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Save, AlertTriangle, Database, Loader2, ChevronDown } from 'lucide-react';
 import { supabase } from '../../../db/supabase.ts';
 import { formatearCantidad } from '../../../utils/formato';
+import { esDecimal, nombreUnidad } from '../../../utils/unidades';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import type { Product } from '../types';
 
@@ -593,7 +594,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
             <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">
               { (selectedProduct?.unit?.toUpperCase().includes('CONS') || selectedProduct?.category?.toUpperCase().includes('CONS') || motivo === 'USO INTERNO') 
               ? 'PRECIO / COSTO RETIRADO (S/)' 
-              : (selectedProduct?.unit?.toUpperCase() === 'KG' ? 'CANTIDAD PERDIDA (KILOGRAMOS / GRAMOS)' : 'CANTIDAD PERDIDA (UNIDADES)') }
+              : (esDecimal(selectedProduct) ? `CANTIDAD PERDIDA (${nombreUnidad(selectedProduct, true).toUpperCase()})` : 'CANTIDAD PERDIDA (UNIDADES)') }
             </label>
             
             {selectedProduct ? (
@@ -871,7 +872,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
               <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">
                 {(selectedProduct?.unit?.toUpperCase().includes('CONS') || selectedProduct?.category?.toUpperCase().includes('CONS') || motivo === 'USO INTERNO') 
                 ? 'Costo Total (S/)' 
-                : (selectedProduct?.unit?.toUpperCase() === 'KG' ? 'Cantidad (Kilos / Gramos)' : 'Cantidad (Unidades)')}
+                : (esDecimal(selectedProduct) ? `Cantidad (${nombreUnidad(selectedProduct, true)})` : 'Cantidad (Unidades)')}
               </label>
               <input
                 type="number"
@@ -886,11 +887,11 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
                 value={cantidad}
                 disabled={!selectedProduct}
                 tabIndex={!selectedProduct ? -1 : 0}
-                step={(selectedProduct as any)?.control_type === 'WEIGHT' || selectedProduct?.unit === 'KG' ? "0.001" : "1"}
+                step={esDecimal(selectedProduct) ? "0.001" : "1"}
                 onChange={(e) => {
                   if (!selectedProduct) return;
                   const val = e.target.value;
-                  const isUnidad = (selectedProduct as any)?.control_type === 'UND' || selectedProduct?.unit === 'UND';
+                  const isUnidad = !esDecimal(selectedProduct);
                   if (isUnidad && !esConsumoActivo) {
                     setCantidad(val.replace(/[.,]/g, ''));
                   } else {
@@ -1160,7 +1161,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
               parseFloat(cantidad) <= 0 || 
               isSubmitting || 
               excedeStockLote || 
-              (((selectedProduct as any)?.control_type === 'UND' || selectedProduct?.unit === 'UND') && !esConsumoActivo && !Number.isInteger(Number(cantidad)))
+              (!esDecimal(selectedProduct) && !esConsumoActivo && !Number.isInteger(Number(cantidad)))
             }
             className={`px-6 py-3 border-2 border-[var(--color-ink)] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 transition-all shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:ring-offset-2 rounded-none ${excedeStockLote ? 'bg-[#94A3B8] text-white cursor-not-allowed' : 'bg-[var(--color-ink)] text-white hover:bg-[var(--color-danger)] disabled:opacity-50'}`}
           >

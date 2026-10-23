@@ -1125,3 +1125,23 @@ ALTER TABLE public.sale_details ADD COLUMN IF NOT EXISTS precio_lista numeric;
 ALTER TABLE public.sale_details ADD COLUMN IF NOT EXISTS precio_cambiado_por text;
 
 NOTIFY pgrst, 'reload schema';
+
+-- ===================================================================================================
+-- FASE 1.1: unidad de medida SUNAT (Catálogo 03; la lista está en src/utils/unidades.ts). Los productos que ya
+-- existen reciben el código de su unidad de siempre: UND → NIU, KG → KGM, GR → GRM, LT → LTR, ML → MLT, consumo → ZZ
+-- (el sistema anterior le puso NIU a todo, también a los de kilo). Antes se guarda una copia de los códigos
+-- anteriores para poder deshacerlo (servidor/sql/deshacer-fase1.sql). Solo toca las unidades antiguas: las nuevas
+-- (BOLSA, M, CAJA…) ya las guarda la pantalla con su código. Repetible.
+CREATE TABLE IF NOT EXISTS public.respaldo_fase1_unidades (id bigint PRIMARY KEY, sunat_unit_code text);
+INSERT INTO public.respaldo_fase1_unidades (id, sunat_unit_code)
+SELECT id, sunat_unit_code FROM public.products ON CONFLICT (id) DO NOTHING;
+UPDATE public.products SET sunat_unit_code = CASE
+    WHEN control_type = 'CONSUMPTION' OR upper(coalesce(unit, '')) = 'CONSUMO' THEN 'ZZ'
+    WHEN upper(coalesce(nullif(unit, ''), weight_unit, '')) = 'GR' THEN 'GRM'
+    WHEN upper(coalesce(nullif(unit, ''), weight_unit, '')) = 'LT' THEN 'LTR'
+    WHEN upper(coalesce(nullif(unit, ''), weight_unit, '')) = 'ML' THEN 'MLT'
+    WHEN upper(coalesce(nullif(unit, ''), weight_unit, '')) = 'KG' OR control_type = 'WEIGHT' THEN 'KGM'
+    ELSE 'NIU' END
+WHERE upper(coalesce(unit, '')) IN ('', 'UND', 'UN', 'UNIDAD', 'KG', 'GR', 'LT', 'ML', 'CONSUMO');
+
+NOTIFY pgrst, 'reload schema';

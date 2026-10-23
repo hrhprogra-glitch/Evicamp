@@ -2,6 +2,7 @@ import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
 import { Search, ScanLine, Package, Plus, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { formatearCantidad } from '../../../utils/formato';
+import { esDecimal, unidadDe } from '../../../utils/unidades';
 import type { Product } from '../../Inventario/types';
 import { supabase } from '../../../db/supabase';
 import { useEmpleado, usePermiso } from '../../../utils/permisos';
@@ -314,7 +315,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                       ? 'bg-[var(--color-surface)] border-[var(--color-border)] opacity-50 cursor-not-allowed' 
                       : esConsumo
                         ? 'bg-[var(--color-warning-bg)] border-[var(--color-warning-dark)] cursor-pointer hover:shadow-[4px_4px_0_0_var(--color-warning-dark)] hover:-translate-y-1'
-                        : prod.unit === 'KG'
+                        : esDecimal(prod)
                           ? 'bg-[#F0F9FF] border-[var(--color-info-dark)] cursor-pointer hover:shadow-[4px_4px_0_0_var(--color-info-dark)] hover:-translate-y-1'
                           : 'bg-[var(--color-surface)] border-[var(--color-ink)] cursor-pointer hover:shadow-[4px_4px_0_0_var(--color-ink)] hover:-translate-y-1'
                     }
@@ -333,12 +334,12 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                       <span className={`block w-full text-center text-sm sm:text-base font-black px-2 py-1.5 rounded-none uppercase tracking-wide whitespace-nowrap ${
                         estaAgotado
                           ? 'text-[var(--color-surface)] bg-[var(--color-ink)]'
-                          : prod.unit === 'KG'
+                          : esDecimal(prod)
                             ? 'text-[var(--color-info-dark)] bg-[#F0F9FF] border border-[var(--color-info-dark)]'
                             : 'text-[var(--color-ink)] bg-[var(--color-bg)] border border-[var(--color-ink)]'
                       }`}>
                         {prod.quantity > 0
-                          ? `STK: ${formatearCantidad(prod.quantity, prod.unit)} ${prod.unit === 'KG' ? 'KG' : 'UN'}`
+                          ? `STK: ${formatearCantidad(prod.quantity, prod.unit)} ${unidadDe(prod).corto === 'UND' ? 'UN' : unidadDe(prod).corto}`
                           : 'AGOTADO'
                         }
                       </span>
@@ -384,7 +385,7 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
                         ? 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-line-light)]' 
                         : esConsumo
                           ? 'bg-[var(--color-warning-dark)] border-[var(--color-warning-dark)]'
-                          : prod.unit === 'KG'
+                          : esDecimal(prod)
                             ? 'bg-[var(--color-info-dark)] border-[var(--color-info-dark)]'
                             : 'bg-[var(--color-ink)] border-[var(--color-ink)]'
                       }`}

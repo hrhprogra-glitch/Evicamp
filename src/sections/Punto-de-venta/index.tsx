@@ -7,6 +7,7 @@ import { Wallet, Printer, X } from 'lucide-react';
 import { useImprimir } from '../../utils/impresion';
 import { useEmpleado, usePermiso } from '../../utils/permisos';
 import { conAutorizacion } from '../../utils/autorizacion';
+import { esDecimal, unidadDe } from '../../utils/unidades';
 // Componentes modulares
 import { TerminalBusqueda } from './components/TerminalBusqueda';
 import { TicketVenta } from './components/TicketVenta';
@@ -422,8 +423,8 @@ const [searchQuery, setSearchQuery] = useState('');
       return;
     }
 
-    // Si el producto se vende por Kilo, abrir balanza
-    if (['KG', 'GR', 'LT', 'ML', 'WEIGHT'].includes(producto.unit) || producto.control_type === 'WEIGHT') {
+    // Si se vende con decimales (kilo, litro, metro…: fase 1.1), abrir la ventana de "¿cuánto?"
+    if (esDecimal(producto)) {
       setSelectedWeightProduct(producto);
       setIsBalanzaModalOpen(true);
       setSearchQuery('');
@@ -473,7 +474,7 @@ const [searchQuery, setSearchQuery] = useState('');
     
     // 🛡️ CANDADO 2: Bloquear si el peso que pidió supera los kilos en inventario
     if (nuevaQty > selectedWeightProduct.quantity && selectedWeightProduct.unit !== 'CONSUMO') {
-      alert(`🚫 STOCK INSUFICIENTE: Solo tienes ${selectedWeightProduct.quantity} KG de ${selectedWeightProduct.name}.`);
+      alert(`🚫 STOCK INSUFICIENTE: Solo tienes ${selectedWeightProduct.quantity} ${unidadDe(selectedWeightProduct).corto} de ${selectedWeightProduct.name}.`);
       return; // Cancela la acción por completo
     }
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { ShoppingCart, Trash2, Banknote, Pause, Play, Plus, Minus } from 'lucide-react';
 import type { CartItem } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
+import { esDecimal, unidadDe } from '../../../utils/unidades';
 
 interface Props {
   selectedIndex?: number;
@@ -254,7 +255,7 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
                     ? 'border-[var(--color-accent)] shadow-[inset_0_0_0_2px_var(--color-accent)] bg-[var(--color-accent-bg)]' 
                     : 'border-[var(--color-ink)] bg-[var(--color-surface)]'
                 }`}>
-                  {item.unit === 'KG' ? (
+                  {esDecimal(item) ? (
                     <div className="flex-1 flex items-center justify-center h-full bg-[var(--color-info-bg)] hover:bg-[var(--color-info-bg-2)] transition-colors">
                       <InputPeso item={item} updateQuantity={updateQuantity} index={index} setSelectedIndex={setSelectedIndex} setColIndex={setColIndex} />
                     </div>
@@ -290,7 +291,7 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
                     
                     {/* 🛡️ EVICAMP: STOCK VISIBLE EN LA CAJA ACTUAL */}
                     <span className="text-[12px] font-black text-[var(--color-ink)] whitespace-nowrap bg-[var(--color-surface)] px-2 py-0.5 rounded-sm border-2 border-[var(--color-border)]" title="Stock actual del producto">
-                      {item.unit === 'CONSUMO' ? '-' : `STK: ${item.quantity} ${item.unit === 'UNIDAD' ? 'UN' : item.unit}`}
+                      {item.unit === 'CONSUMO' ? '-' : `STK: ${item.quantity} ${unidadDe(item).corto === 'UND' ? 'UN' : unidadDe(item).corto}`}
                     </span>
                   </div>
                 </div>

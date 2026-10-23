@@ -18,6 +18,7 @@ import { usePermiso, useEmpleado, avisarSinPermiso } from '../../../utils/permis
 import { avisar, confirmar } from '../../../utils/dialogos';
 import { coincideBusqueda } from '../../../utils/busqueda';
 import type { Product } from '../types';
+import { esDecimal, unidadDe as unidadDeProducto } from '../../../utils/unidades';
 import logoSiumax from '../../../assets/logo.png'; // logo predeterminado (el mismo del menú) si el negocio no subió el suyo
 
 interface Proveedor { id: string; razon_social: string; telefono?: string | null }
@@ -30,9 +31,10 @@ interface Compra {
 
 const soles = (n: number) => `S/ ${(Number(n) || 0).toFixed(2)}`;
 const fecha = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-');
-const esPeso = (p?: Pick<Product, 'unit' | 'control_type'>) => !!p && (['KG', 'GR', 'LT', 'ML'].includes(p.unit) || p.control_type === 'WEIGHT');
-// Unidad que se muestra junto a cada cantidad: KG / GR / LT / ML (por peso) o UND
-const unidadDe = (p?: Pick<Product, 'unit' | 'control_type'>) => (!p ? '' : esPeso(p) ? (['KG', 'GR', 'LT', 'ML'].includes(p.unit) ? p.unit : 'KG') : 'UND');
+// Fase 1.1: con decimales = cualquier unidad decimal (kilo, litro, metro…; src/utils/unidades.ts)
+const esPeso = (p?: Pick<Product, 'unit' | 'control_type'>) => esDecimal(p);
+// Unidad que se muestra junto a cada cantidad: la del producto (UND, BOLSA, KG, M…)
+const unidadDe = (p?: Pick<Product, 'unit' | 'control_type'>) => (!p ? '' : unidadDeProducto(p).corto);
 // Cantidad sugerida: llegar al doble del stock mínimo
 const sugerida = (p: Product) => {
   const falta = Math.max(0, (Number(p.minStock) || 0) * 2 - (Number(p.quantity) || 0));

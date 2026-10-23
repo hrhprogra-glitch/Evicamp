@@ -5,6 +5,7 @@ import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { usePermiso } from '../../../utils/permisos';
 import { buscarImagenes, fotoParaGuardar, achicarImagen } from '../../../utils/buscarImagenes';
 import { confirmar } from '../../../utils/dialogos';
+import { UNIDADES, unidadDe } from '../../../utils/unidades';
 
 // Componente de Notificación de Errores (Diseño Geométrico y Alto Contraste)
 const TechnicalAlert = ({ message }: { message: string }) => {
@@ -193,12 +194,13 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           barcode: initialData.barcode || '',
           price: initialData.price?.toString() || '',
           minStock: initialData.minStock?.toString() || '5',
-          weightUnit: ['KG', 'GR', 'LT', 'ML'].includes(initialData.unit) ? initialData.unit : 'KG',
+          weightUnit: unidadDe(initialData).corto, // fase 1.1: "Se vende por" (UND, BOLSA, KG, M…)
           image: initialData.image || ''
         });
         
-        if (initialData.unit === 'UND') setNature('UNIDAD');
-        else if (['KG', 'GR', 'LT', 'ML'].includes(initialData.unit)) setNature('PESO');
+        const tipoUnidad = unidadDe(initialData).tipo;
+        if (tipoUnidad === 'ENTERA') setNature('UNIDAD');
+        else if (tipoUnidad === 'DECIMAL') setNature('PESO');
         else setNature('CONSUMO');
         
         setStep(2);
@@ -833,11 +835,14 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
             try { (active as HTMLSelectElement & { showPicker?: () => void }).showPicker?.(); } catch { /* navegador sin showPicker */ }
             return;
           }
-          // ← → cambian entre Kilogramos y Litros sin abrir la lista
+          // ← → pasan a la unidad anterior / siguiente de la lista sin abrirla (antes solo KG ↔ LT)
           if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
             e.preventDefault();
             e.stopPropagation();
-            setFormData({ ...formData, weightUnit: formData.weightUnit === 'KG' ? 'LT' : 'KG' });
+            const opciones = Array.from((active as HTMLSelectElement).options).map((o) => o.value);
+            const i = opciones.indexOf(formData.weightUnit);
+            const j = Math.max(0, Math.min(opciones.length - 1, i + (e.key === 'ArrowRight' ? 1 : -1)));
+            setFormData({ ...formData, weightUnit: opciones[j] });
             return;
           }
         }
@@ -899,6 +904,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
   const handleNatureSelect = (selectedNature: ProductNature) => {
     setNature(selectedNature);
+    // Fase 1.1: la unidad más común de ese tipo (se cambia en "Se vende por")
+    setFormData((f) => ({ ...f, weightUnit: selectedNature === 'PESO' ? (unidadDe({ unit: f.weightUnit }).tipo === 'DECIMAL' ? f.weightUnit : 'KG') : selectedNature === 'UNIDAD' ? (unidadDe({ unit: f.weightUnit }).tipo === 'ENTERA' ? f.weightUnit : 'UND') : 'CONSUMO' }));
     setStep(2);
   };
 
@@ -934,7 +941,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     setIsSubmitting(true); // 🔥 AHORA SÍ, ACTIVAMOS EL "PROCESANDO..." DE FORMA SEGURA
 
     try {
-      const unidadAsignada = nature === 'PESO' ? formData.weightUnit : (nature === 'CONSUMO' ? 'CONSUMO' : 'UND');
+      // Fase 1.1: la unidad elegida en "Se vende por" y su código SUNAT (Catálogo 03, src/utils/unidades.ts)
+      const unidadAsignada = nature === 'CONSUMO' ? 'CONSUMO' : formData.weightUnit;
+      const codigoSunat = unidadDe({ unit: unidadAsignada }).codigo;
       let productoGuardado;
 
       // === SANEAMIENTO ESTRICTO DE PAYLOAD ===
@@ -954,6 +963,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           control_type: nature === 'PESO' ? 'WEIGHT' : 'UND',
           weight_unit: nature === 'PESO' ? formData.weightUnit : null,
           unit: unidadAsignada,
+          sunat_unit_code: codigoSunat,
           image_url: formData.image,
           is_active: 1
         }).eq('id', initialData.id).select().single();
@@ -983,6 +993,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           control_type: nature === 'PESO' ? 'WEIGHT' : 'UND',
           weight_unit: nature === 'PESO' ? formData.weightUnit : null,
           unit: unidadAsignada,
+          sunat_unit_code: codigoSunat,
           image_url: formData.image, 
           is_synced: '1',
           is_active: 1 // <--- 🔥 ¡SEGUNDA LÍNEA MÁGICA PARA LOS PRODUCTOS!
@@ -1079,7 +1090,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 </div>
                 <div>
                   <h3 className="text-xs font-black text-[var(--color-ink)] uppercase tracking-widest mb-2">Por Unidad</h3>
-                  <p className="text-[9px] font-bold text-[#64748B] uppercase">Productos que se cuentan por piezas enteras (botellas, cajas, latas).</p>
+                  <p className="text-[9px] font-bold text-[#64748B] uppercase">Se vende entero: unidad, bolsa, caja, paquete, docena, par, rollo…</p>
                 </div>
               </button>
 
@@ -1093,8 +1104,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                   <Scale size={32} className="text-[#64748B] group-hover:text-[#3B82F6] transition-colors" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-black text-[var(--color-ink)] uppercase tracking-widest mb-2">Por Peso / Granel</h3>
-                  <p className="text-[9px] font-bold text-[#64748B] uppercase">Productos que requieren balanza o medida fraccionada (KG, GR, Litros).</p>
+                  <h3 className="text-xs font-black text-[var(--color-ink)] uppercase tracking-widest mb-2">Por Peso o Medida</h3>
+                  <p className="text-[9px] font-bold text-[#64748B] uppercase">Se vende con decimales: kilo, gramo, litro, galón, metro, metro cuadrado…</p>
                 </div>
               </button>
 
@@ -1499,9 +1510,12 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               )}
 
               {/* CAMPOS CONDICIONALES BASADOS EN LA NATURALEZA */}
-              {nature === 'PESO' && (
+              {(nature === 'PESO' || nature === 'UNIDAD') && (
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">Unidad de Medida</label>
+                  <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex justify-between">
+                    <span>Se vende por</span>
+                    <span id="codigo-sunat-producto" className="text-[var(--color-muted)]">SUNAT: {unidadDe({ unit: formData.weightUnit }).codigo}</span>
+                  </label>
                   <select 
                     id="select-unidad-peso-producto"
                     value={formData.weightUnit}
@@ -1523,11 +1537,10 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                     }}
                     className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors cursor-pointer"
                   >
-                    <option value="KG">Kilogramos (KG)</option>
-                    <option value="LT">Litros (LT)</option>
-                    {/* Solo kilos y litros; un producto antiguo en gramos o mililitros conserva su unidad */}
-                    {formData.weightUnit === 'GR' && <option value="GR">Gramos (GR)</option>}
-                    {formData.weightUnit === 'ML' && <option value="ML">Mililitros (ML)</option>}
+                    {/* Fase 1.1: unidades del Catálogo 03 de SUNAT del tipo elegido (enteras o con decimales) */}
+                    {UNIDADES.filter((u) => u.tipo === (nature === 'PESO' ? 'DECIMAL' : 'ENTERA')).map((u) => (
+                      <option key={u.codigo} value={u.corto}>{u.nombre} ({u.corto})</option>
+                    ))}
                   </select>
                 </div>
               )}

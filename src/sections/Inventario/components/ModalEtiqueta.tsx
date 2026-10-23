@@ -9,6 +9,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import JsBarcode from 'jsbarcode';
 import { Printer, Tag, X } from 'lucide-react';
 import type { Product } from '../types';
+import { esDecimal, unidadDe } from '../../../utils/unidades';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { useImprimir } from '../../../utils/impresion';
 import { avisar } from '../../../utils/dialogos';
@@ -24,7 +25,7 @@ const ANCHO: Record<Papel, string> = { '80': '72mm', '58': '48mm', A4: '63mm' };
 const leer = (clave: string, defecto: string) => { try { return localStorage.getItem(clave) || defecto; } catch { return defecto; } };
 const guardar = (clave: string, valor: string) => { try { localStorage.setItem(clave, valor); } catch { /* sin almacenamiento */ } };
 
-const esPeso = (p: Product) => ['KG', 'GR', 'LT', 'ML'].includes(String(p.unit).toUpperCase()) || p.control_type === 'WEIGHT';
+const esPeso = (p: Product) => esDecimal(p); // fase 1.1: cualquier unidad con decimales
 const codigoDeEtiqueta = (p: Product) => String(p.barcode || '').trim() || (p.code && p.code !== 'NO-SKU' ? String(p.code).trim() : '');
 
 const CodigoBarras: React.FC<{ valor: string; alto: number; grosor: number }> = ({ valor, alto, grosor }) => {
@@ -42,7 +43,7 @@ const CodigoBarras: React.FC<{ valor: string; alto: number; grosor: number }> = 
 // Una etiqueta (la misma en la vista previa y en la impresión)
 const Etiqueta: React.FC<{ producto: Product; tipo: Tipo; papel: Papel }> = ({ producto: p, tipo, papel }) => {
   const codigo = codigoDeEtiqueta(p);
-  const precio = `S/ ${Number(p.price || 0).toFixed(2)}${esPeso(p) ? ` x ${String(p.unit).toUpperCase()}` : ''}`;
+  const precio = `S/ ${Number(p.price || 0).toFixed(2)}${esPeso(p) ? ` x ${unidadDe(p).corto}` : ''}`;
   const chico = papel === '58';
   const caja: React.CSSProperties = {
     width: ANCHO[papel], boxSizing: 'border-box', padding: '2mm', fontFamily: 'Arial, Helvetica, sans-serif', color: '#000', background: '#fff',
