@@ -1150,7 +1150,7 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
                   <tr key={i.product_id} data-producto={i.product_id} className="border-t border-[var(--color-border)]">
                     <td className="p-1 font-black">{i.product_name}</td>
                     <td className={`p-1 font-bold ${p && Number(p.quantity) <= Number(p.minStock) ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>{p ? `${p.quantity} / mín ${p.minStock} ${unidadDe(p)}` : '-'}
-                      {p?.vendido30 !== undefined && <span className="block text-[10px] text-[var(--color-muted)]">{Number(p.vendido30) > 0 ? `vende ${Math.round((Number(p.vendido30) / 30) * 10) / 10}/día` : 'sin ventas 30 días'}</span>}</td>
+                      {p?.vendido30 !== undefined && <span className="block text-[10px] text-[var(--color-muted)]">{Number(p.vendido30) > 0 ? `vendió ${esPeso(p) ? Math.round(Number(p.vendido30) * 100) / 100 : Math.round(Number(p.vendido30))}${esPeso(p) ? ` ${unidadDe(p)}` : ''} en 30 días` : 'sin ventas en 30 días'}</span>}</td>
                     <td className="p-1"><div className="flex items-center gap-1"><input type="number" data-nav={`${fila},0`} min="0" step={esPeso(p) ? '0.01' : '1'}
                       value={valorCampo(i.product_id, 'cantidad', i.cantidad)} placeholder="0"
                       onChange={(e) => cambiar(i.product_id, 'cantidad', e.target.value)} onBlur={() => soltarCampo(i.product_id, 'cantidad')}
