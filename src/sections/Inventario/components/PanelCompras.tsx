@@ -931,6 +931,8 @@ const EditorCompra: React.FC<{
   // Filtros de "Sugerir pedido" (pedido del usuario 23/10): una categoría y qué sugerir
   const [categoriaSugerir, setCategoriaSugerir] = useState('');
   const [queSugerir, setQueSugerir] = useState<'TODO' | 'VENTA' | 'MINIMO'>('TODO');
+  // Cambiaste días, categoría o qué sugerir y todavía no presionaste "Sugerir pedido": el botón parpadea
+  const [sinAplicar, setSinAplicar] = useState(false);
   const categorias = useMemo(() => [...new Set(productos.map((p) => p.category).filter(Boolean))].sort(), [productos]);
   const limpiarLista = async () => {
     if (!items.length) return;
@@ -939,6 +941,7 @@ const EditorCompra: React.FC<{
     setTimeout(() => enfocar(document.getElementById('compra-buscar')), 30);
   };
   const sugerirPedido = async () => {
+    setSinAplicar(false);
     const d = Math.round(Number(dias));
     if (!d || d < 1 || d > 90) { await avisar('Escribe para cuántos días debe alcanzar el pedido (de 1 a 90).'); enfocar(document.getElementById('compra-dias')); return; }
     if (!productos.some((p) => p.vendido30 !== undefined)) { await avisar('No se pudo leer lo vendido de cada producto. Vuelve a abrir Inventario con internet.'); return; }
@@ -1117,14 +1120,16 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
         </div>
         {/* Fase 2.4: UN botón (antes "Agregar stock bajo" y "Sugerir pedido" por separado ocupaban mucho) */}
         <div className="flex items-stretch border-2 border-[var(--color-info)] bg-[var(--color-info-bg)] shrink-0">
+          {/* Botón relleno (se nota que ahí se presiona); parpadea si cambiaste algo y falta presionarlo */}
           <button id="btn-sugerir-pedido" type="button" data-nav="1,1" onClick={() => void sugerirPedido()}
-            className="px-3 py-2 flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-[var(--color-info)] hover:bg-[var(--color-info)] hover:text-white focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] cursor-pointer">
+            title={sinAplicar ? 'Presiona para sugerir con lo que cambiaste' : 'Sugerir pedido'}
+            className={`px-3 py-2 flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest bg-[var(--color-info)] text-white hover:bg-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] cursor-pointer ${sinAplicar ? 'animate-pulse ring-4 ring-[var(--color-accent)]' : ''}`}>
             <Sparkles size={14} /> Sugerir pedido
           </button>
           <label className="flex items-center gap-1 px-2 border-l-2 border-[var(--color-info)] text-[10px] font-black uppercase tracking-widest text-[var(--color-info)]">
             para
-            <input id="compra-dias" data-nav="1,2" type="number" min="1" max="90" value={dias} onChange={(e) => setDias(e.target.value)}
-              onFocus={(e) => e.currentTarget.select()} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void sugerirPedido(); } }}
+            <input id="compra-dias" data-nav="1,2" type="number" min="1" max="90" value={dias} onChange={(e) => { setDias(e.target.value); setSinAplicar(true); }}
+              onFocus={(e) => e.currentTarget.select()} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); enfocar(document.getElementById('btn-sugerir-pedido')); } }}
               aria-label="Días que debe alcanzar el pedido" className={`${claseInput} w-12 text-right !p-1`} />
             días
           </label>
@@ -1132,19 +1137,21 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
       </div>
       <div className="flex flex-col sm:flex-row sm:items-center gap-2">
         <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-info)] shrink-0">Sugerir de</span>
-        <select id="compra-sugerir-categoria" data-nav="2,0" value={categoriaSugerir} onChange={(e) => setCategoriaSugerir(e.target.value)} onKeyDown={abrirLista}
+        <select id="compra-sugerir-categoria" data-nav="2,0" value={categoriaSugerir} onChange={(e) => { setCategoriaSugerir(e.target.value); setSinAplicar(true); }} onKeyDown={abrirLista}
           aria-label="Categoría a sugerir" className={`${claseInput} sm:w-56`}>
           <option value="">Todas las categorías</option>
           {categorias.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
-        <select id="compra-sugerir-tipo" data-nav="2,1" value={queSugerir} onChange={(e) => setQueSugerir(e.target.value as 'TODO' | 'VENTA' | 'MINIMO')} onKeyDown={abrirLista}
+        <select id="compra-sugerir-tipo" data-nav="2,1" value={queSugerir} onChange={(e) => { setQueSugerir(e.target.value as 'TODO' | 'VENTA' | 'MINIMO'); setSinAplicar(true); }} onKeyDown={abrirLista}
           aria-label="Qué sugerir" className={`${claseInput} sm:w-64`}>
           <option value="TODO">Todo lo que se acaba</option>
           <option value="VENTA">Solo lo que se vende</option>
           <option value="MINIMO">Solo lo que está bajo el mínimo</option>
         </select>
         <button id="btn-limpiar-compra" type="button" data-nav="2,2" onClick={() => void limpiarLista()} aria-disabled={!items.length}
-          className={`${claseBoton} sm:ml-auto bg-white text-[var(--color-muted)] border-[var(--color-border)] hover:text-[var(--color-danger)] hover:border-[var(--color-danger)] ${items.length ? '' : 'opacity-50'}`}>
+          className={`${claseBoton} sm:ml-auto ${items.length
+            ? 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger)] hover:bg-[var(--color-danger)] hover:text-white focus:bg-[var(--color-danger)] focus:text-white'
+            : 'bg-white text-[var(--color-muted)] border-[var(--color-border)] opacity-50 cursor-not-allowed'}`}>
           <Trash2 size={14} /> Limpiar lista
         </button>
       </div>
