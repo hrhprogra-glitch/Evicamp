@@ -1,3 +1,4 @@
+import { diasParaVencer, estaVencido, vencePronto } from '../../utils/vencimiento';
 import { traerTodo } from '../../utils/traerTodo';
 import { coincideBusqueda } from '../../utils/busqueda';
 import React, { useState, useEffect, useMemo } from 'react';
@@ -81,7 +82,9 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         ] = await Promise.all([
           // 🛡️ EVICAMP: Solo descargar productos activos para evitar productos fantasma
           traerTodo(() => supabase.from('products').select('*').eq('is_active', 1).order('id')),
-          traerTodo(() => supabase.from('batches').select('id, product_id, quantity, cost_unit').order('id')),
+          // Con la fecha de vencimiento (filtros Vencidos / Vencen en 30 días). La misma consulta va en la precarga
+          // sin internet (src/utils/precargaSinInternet.ts): si se cambia aquí, cambiarla allá también
+          traerTodo(() => supabase.from('batches').select('id, product_id, quantity, cost_unit, expiration_date').order('id')),
           supabase.from('categories').select('name') // 🔥 CONEXIÓN A TU TABLA
         ]);
 
@@ -133,7 +136,11 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               category: p.category || 'GENERAL',
               // Si el radar detectó consumo, fuerza la etiqueta, sino usa la que traiga de BD
               unit: esConsumo ? 'CONSUMO' : (p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND')),
-              imageUrl: p.image_url || p.image_path || null
+              imageUrl: p.image_url || p.image_path || null,
+              vencimiento: lotesDelProducto
+                .filter((l: any) => Number(l.quantity) > 0 && diasParaVencer(l.expiration_date) !== null)
+                .map((l: any) => String(l.expiration_date).slice(0, 10))
+                .sort()[0] || null,
             };
           });
           setProducts(mapeados);
@@ -174,6 +181,10 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
       result = result.filter(p => p.quantity <= 0);
     } else if (filtroEstado === 'CRITICO') {
       result = result.filter(p => p.unit !== 'CONSUMO' && p.quantity <= p.minStock && p.quantity > 0);
+    } else if (filtroEstado === 'VENCIDOS') {
+      result = result.filter(p => estaVencido(p.vencimiento));
+    } else if (filtroEstado === 'POR_VENCER') {
+      result = result.filter(p => vencePronto(p.vencimiento));
     }
 
     result.sort((a, b) => {

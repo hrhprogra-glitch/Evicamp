@@ -11,4 +11,5 @@ export interface Product {
   unit: string;
   imageUrl?: string | null;
   control_type?: string;
+  vencimiento?: string | null; // el más cercano de sus lotes con stock (filtros Vencidos / Vencen en 30 días)
 }

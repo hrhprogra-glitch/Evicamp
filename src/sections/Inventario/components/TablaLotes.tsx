@@ -6,6 +6,7 @@ import { supabase } from '../../../db/supabase';
 import { formatearCantidad } from '../../../utils/formato';
 import { usePermiso, avisarSinPermiso } from '../../../utils/permisos';
 import { confirmar } from '../../../utils/dialogos';
+import { diasParaVencer, estaVencido, vencePronto } from '../../../utils/vencimiento';
 
 interface Lote {
   id: string;
@@ -152,9 +153,11 @@ export const TablaLotes: React.FC<Props> = ({
     // 3. Filtro por Estado 
     if (filtroEstado === 'CON_STOCK' && lote.quantity <= 0) return false;
     if (filtroEstado === 'SIN_STOCK' && lote.quantity > 0) return false;
+    if (filtroEstado === 'VENCIDOS' && !(lote.quantity > 0 && estaVencido(lote.expiration_date))) return false;
+    if (filtroEstado === 'POR_VENCER' && !(lote.quantity > 0 && vencePronto(lote.expiration_date))) return false;
     if (filtroEstado === 'CRITICO') {
       // Un lote es crítico si está vencido o le queda el 20% o menos de su capacidad inicial
-      const isExpired = lote.expiration_date && new Date(lote.expiration_date) < new Date();
+      const isExpired = estaVencido(lote.expiration_date);
       const isLow = lote.quantity > 0 && lote.quantity <= (lote.initial_quantity * 0.2);
       if (!isExpired && !isLow) return false;
     }
@@ -277,8 +280,10 @@ export const TablaLotes: React.FC<Props> = ({
         ) : (
           paginatedLotes.map((lote) => {
   // LÓGICA DE VIGENCIA Y CÁLCULOS TÉCNICOS
-  const isExpired = lote.expiration_date && new Date(lote.expiration_date) < new Date();
+  const isExpired = estaVencido(lote.expiration_date);
   const isVigente = lote.quantity > 0 && !isExpired;
+  // Cuánto le falta para vencer (solo si todavía tiene stock): rojo vencido, ámbar 30 días o menos, gris hasta 90
+  const dias = lote.quantity > 0 ? diasParaVencer(lote.expiration_date) : null;
   const totalCompra = (lote.initial_quantity * lote.cost_unit).toFixed(2);
 
   return (
@@ -336,6 +341,15 @@ export const TablaLotes: React.FC<Props> = ({
         <span className="text-xs font-black text-[#64748B]">
           {lote.expiration_date || 'SIN VENC.'}
         </span>
+        {dias !== null && dias <= 90 && (
+          <span data-vence="true" className={`text-[11px] font-black uppercase px-2 py-0.5 border ${
+            dias < 0 ? 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger)]'
+              : dias <= 30 ? 'bg-[var(--color-warning-bg)] text-[var(--color-warning-text)] border-[var(--color-warning)]'
+              : 'bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)]'
+          }`}>
+            {dias < 0 ? `Venció hace ${-dias} ${dias === -1 ? 'día' : 'días'}` : dias === 0 ? 'Vence hoy' : `Vence en ${dias} ${dias === 1 ? 'día' : 'días'}`}
+          </span>
+        )}
       </div>
 
       {/* 4. COSTO UNITARIO */}

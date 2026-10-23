@@ -21,7 +21,7 @@ export const precargarParaSinInternet = () => {
       await Promise.all([
         // Inventario (src/sections/Inventario/index.tsx)
         traerTodo(() => supabase.from('products').select('*').eq('is_active', 1).order('id')),
-        traerTodo(() => supabase.from('batches').select('id, product_id, quantity, cost_unit').order('id')),
+        traerTodo(() => supabase.from('batches').select('id, product_id, quantity, cost_unit, expiration_date').order('id')),
         supabase.from('categories').select('name'),
         // Mermas (src/sections/Mermas/index.tsx) y los lotes COMPLETOS: la ventana de merma pide los lotes
         // de un producto; sin internet se filtran en la PC desde esta copia (sinInternet.ts → copiaFiltrada)
