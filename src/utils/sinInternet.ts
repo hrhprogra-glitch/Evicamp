@@ -159,6 +159,9 @@ const copiaFiltrada = async (clave: string) => {
   // de un producto salían vacíos) y con un filtro igual o más amplio: se juntan sus filas
   const necesarias = [...columnas, ...filtros.map(([k]) => k)];
   const filas = new Map<string, Record<string, unknown>>();
+  // Hay una copia que sirve aunque esté VACÍA (ej. la caja recién abierta, o su único movimiento se borró sin
+  // internet): antes se tomaba como "no hay copia" y la lista dejaba de verse (no salían los abonos hechos sin internet)
+  let hayCopia = false;
   for (const otra of await clavesLocal(ALMACEN_RESPUESTAS)) {
     const u = new URL(String(otra).split('|')[0], location.origin);
     if (u.pathname !== pedida.pathname) continue;
@@ -166,9 +169,14 @@ const copiaFiltrada = async (clave: string) => {
     if (!suyas.includes('*') && !necesarias.every((c) => c !== '*' && suyas.includes(c))) continue;
     if (!filtrosDe(u).every(([k, f]) => cubre(f, pedidos.get(k), locales))) continue;
     const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, otra);
-    try { for (const f of JSON.parse(copia?.cuerpo || '[]')) filas.set(String(f?.id ?? JSON.stringify(f)), f); } catch { /* no es lista */ }
+    try {
+      const lista = JSON.parse(copia?.cuerpo || 'null');
+      if (!Array.isArray(lista)) continue;
+      hayCopia = true;
+      for (const f of lista) filas.set(String(f?.id ?? JSON.stringify(f)), f);
+    } catch { /* no es lista */ }
   }
-  if (!filas.size) return null;
+  if (!hayCopia) return null;
 
   const resultado: Record<string, unknown>[] = [];
   for (const fila of filas.values()) {
