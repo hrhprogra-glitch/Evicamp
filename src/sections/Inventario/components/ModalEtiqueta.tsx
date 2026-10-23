@@ -17,7 +17,7 @@ import { CuerpoVentana, claseBotonBarra, claseBotonPrincipal } from '../../../co
 type Tipo = 'PRECIO' | 'STICKER';
 type Papel = '80' | '58' | 'A4';
 const TIPOS: { valor: Tipo; texto: string }[] = [{ valor: 'PRECIO', texto: 'Precio para el estante' }, { valor: 'STICKER', texto: 'Sticker para el producto' }];
-const PAPELES: { valor: Papel; texto: string }[] = [{ valor: '80', texto: 'Ticketera 80 mm' }, { valor: '58', texto: 'Ticketera 58 mm' }, { valor: 'A4', texto: 'Hoja A4 de stickers' }];
+const PAPELES: { valor: Papel; texto: string }[] = [{ valor: '80', texto: 'Ticketera 80 mm' }, { valor: '58', texto: 'Ticketera 58 mm' }, { valor: 'A4', texto: 'Hoja A4' }];
 const ANCHO: Record<Papel, string> = { '80': '72mm', '58': '48mm', A4: '63mm' };
 
 // Lo último elegido se recuerda en esta PC
@@ -145,10 +145,11 @@ export const ModalEtiqueta: React.FC<Props> = ({ producto, onClose }) => {
           <div className="border-2 border-[var(--color-border)] bg-white p-3 sm:p-4 flex flex-col gap-4 shrink-0">
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-ink)] mb-2">Tipo de etiqueta</p>
-              <div className="flex flex-wrap gap-2" role="listbox" aria-label="Tipo de etiqueta">
+              {/* En filas parejas (antes "Hoja A4" se iba a otra línea) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="listbox" aria-label="Tipo de etiqueta">
                 {TIPOS.map((t) => (
                   <button key={t.valor} id={`etiqueta-tipo-${t.valor}`} type="button" role="option" aria-selected={tipo === t.valor} data-fila="fila-tipo"
-                    onClick={() => elegirTipo(t.valor)} onKeyDown={teclas} className={`${claseBotonBarra(tipo === t.valor)} !h-[40px]`}>{t.texto}</button>
+                    onClick={() => elegirTipo(t.valor)} onKeyDown={teclas} className={`${claseBotonBarra(tipo === t.valor)} !h-[40px] !px-2 justify-center`}>{t.texto}</button>
                 ))}
               </div>
             </div>
@@ -160,10 +161,10 @@ export const ModalEtiqueta: React.FC<Props> = ({ producto, onClose }) => {
             </div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-ink)] mb-2">Papel</p>
-              <div className="flex flex-wrap gap-2" role="listbox" aria-label="Papel">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2" role="listbox" aria-label="Papel">
                 {PAPELES.map((v) => (
                   <button key={v.valor} id={`etiqueta-papel-${v.valor}`} type="button" role="option" aria-selected={papel === v.valor} data-fila="fila-papel"
-                    onClick={() => elegirPapel(v.valor)} onKeyDown={teclas} className={`${claseBotonBarra(papel === v.valor)} !h-[40px]`}>{v.texto}</button>
+                    onClick={() => elegirPapel(v.valor)} onKeyDown={teclas} className={`${claseBotonBarra(papel === v.valor)} !h-[40px] !px-2 justify-center`}>{v.texto}</button>
                 ))}
               </div>
             </div>
