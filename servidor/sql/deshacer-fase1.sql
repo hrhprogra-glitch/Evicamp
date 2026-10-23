@@ -1,6 +1,10 @@
 -- DESHACER LA FASE 1 (por partes, de la última a la primera). Usar SOLO si el usuario no aprueba la fase 1.
 -- Las pantallas se deshacen con git (rama fase-1). Respaldo de siuhub antes de la fase: /var/lib/postgresql/respaldo-siuhub-antes-fase1-*.dump
 
+-- 1.2b Comprar por caja
+ALTER TABLE public.compras_detalle DROP COLUMN IF EXISTS presentacion_factor;
+ALTER TABLE public.compras_detalle DROP COLUMN IF EXISTS presentacion;
+
 -- 1.2 Presentaciones: fn_proteger_precios como quedó en la 1.3 (sin presentaciones) y se borran las columnas
 CREATE OR REPLACE FUNCTION public.fn_proteger_precios()
 RETURNS trigger

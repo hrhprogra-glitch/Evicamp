@@ -19,14 +19,21 @@ import { avisar, confirmar } from '../../../utils/dialogos';
 import { coincideBusqueda } from '../../../utils/busqueda';
 import type { Product } from '../types';
 import { esDecimal, unidadDe as unidadDeProducto } from '../../../utils/unidades';
+import { presentacionesValidas, nombrePresentacion } from '../../../utils/presentaciones';
 import logoSiumax from '../../../assets/logo.png'; // logo predeterminado (el mismo del menú) si el negocio no subió el suyo
 
 interface Proveedor { id: string; razon_social: string; telefono?: string | null }
-interface Item { product_id: string; product_name: string; cantidad: number; costo_unit: number; unidad?: string }
+// cantidad y costo_unit SIEMPRE en unidades; presentacion/factor (fase 1.2b) solo dicen cómo se pidió (5 CAJA x12 = 60)
+interface Item { product_id: string; product_name: string; cantidad: number; costo_unit: number; unidad?: string; presentacion?: string | null; factor?: number | null }
+// "5 CAJA x12 (60 UND)" si se pidió por presentación; si no, "60 UND"
+const cantidadPedida = (d: { presentacion?: string | null; presentacion_factor?: number | null }, cant: number, unidad: string) =>
+  d.presentacion && Number(d.presentacion_factor) > 1
+    ? `${Math.round((cant / Number(d.presentacion_factor)) * 100) / 100} ${d.presentacion} (${cant} ${unidad})`
+    : `${cant} ${unidad}`;
 interface Compra {
   id: number; provider_id: string | null; proveedor: string | null; estado: 'PENDIENTE' | 'RECIBIDO' | 'ANULADO';
   notas: string | null; documento: string | null; autor: string | null; recibido_por: string | null; recibido_por_id: string | null;
-  created_at: string; recibido_at: string | null; compras_detalle: (Item & { id: number; cantidad_recibida: number | null; batch_id: number | null })[];
+  created_at: string; recibido_at: string | null; compras_detalle: (Item & { id: number; cantidad_recibida: number | null; batch_id: number | null; presentacion_factor?: number | null })[];
 }
 
 const soles = (n: number) => `S/ ${(Number(n) || 0).toFixed(2)}`;
@@ -206,7 +213,7 @@ const htmlDeCompra = (c: Compra, empresa: string, unidades: Map<string, string>,
     const cant = recibida ? Number(d.cantidad_recibida ?? 0) : Number(d.cantidad);
     const sub = cant * Number(d.costo_unit || 0);
     total += sub;
-    return `<tr><td>${esc(d.product_name)}</td><td class="n">${cant} ${esc(unidades.get(String(d.product_id)) || '')}</td>`
+    return `<tr><td>${esc(d.product_name)}</td><td class="n">${esc(cantidadPedida(d, cant, unidades.get(String(d.product_id)) || ''))}</td>`
       + (conPrecios ? `<td class="n">${soles(Number(d.costo_unit || 0))}</td><td class="n b">${soles(sub)}</td>` : '') + '</tr>';
   }).join('');
   const datos = [
@@ -259,8 +266,8 @@ const ticketDeCompra = (c: Compra, empresa: string, unidades: Map<string, string
     total += sub;
     return `<div class="item"><div class="nom">${esc(d.product_name)}</div>`
       + (conPrecios
-        ? `<div class="fila"><span>${cant} ${esc(unidades.get(String(d.product_id)) || '')} x ${soles(Number(d.costo_unit || 0))}</span><b>${soles(sub)}</b></div></div>`
-        : `<div class="fila"><span>Cantidad</span><b>${cant} ${esc(unidades.get(String(d.product_id)) || '')}</b></div></div>`);
+        ? `<div class="fila"><span>${esc(cantidadPedida(d, cant, unidades.get(String(d.product_id)) || ''))} x ${soles(Number(d.costo_unit || 0))}</span><b>${soles(sub)}</b></div></div>`
+        : `<div class="fila"><span>Cantidad</span><b>${esc(cantidadPedida(d, cant, unidades.get(String(d.product_id)) || ''))}</b></div></div>`);
   }).join('');
   const datos = [
     ['Proveedor', c.proveedor || 'Sin proveedor'],
@@ -403,7 +410,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
     const recibida = c.estado === 'RECIBIDO';
     const lineas = c.compras_detalle.map((d) => {
       const cant = recibida ? (d.cantidad_recibida ?? 0) : d.cantidad;
-      return `- ${cant} ${unidadPorId.get(String(d.product_id)) || ''} x ${d.product_name}${conPrecios ? ` (S/ ${(Number(d.costo_unit) || 0).toFixed(2)} c/u)` : ''}`;
+      return `- ${cantidadPedida(d, Number(cant), unidadPorId.get(String(d.product_id)) || '')} x ${d.product_name}${conPrecios ? ` (S/ ${(Number(d.costo_unit) || 0).toFixed(2)} c/u)` : ''}`;
     }).join('\n');
     const total = totalDe(c.compras_detalle.map((d) => ({ cantidad: recibida ? Number(d.cantidad_recibida ?? 0) : d.cantidad, costo_unit: d.costo_unit })));
     const texto = [
@@ -757,7 +764,8 @@ const DetalleCompra: React.FC<{
               <td className="py-2 pr-2 font-black text-[var(--color-ink)]">{f.product_name}
                 {recibida && Number(f.cantidad_recibida ?? 0) !== Number(f.cantidad) && <span className="block text-[10px] font-bold text-[var(--color-warning-dark)]">pedido: {f.cantidad} {unidades.get(String(f.product_id))}</span>}
               </td>
-              <td className="py-2 px-2 text-right font-black whitespace-nowrap">{f.mostrar} <span className="text-[10px] text-[var(--color-muted)]">{unidades.get(String(f.product_id))}</span></td>
+              <td className="py-2 px-2 text-right font-black whitespace-nowrap">{f.mostrar} <span className="text-[10px] text-[var(--color-muted)]">{unidades.get(String(f.product_id))}</span>
+                {f.presentacion && <span data-presentacion-pedido className="block text-[10px] font-bold text-[var(--color-info)]">{cantidadPedida(f, f.mostrar, unidades.get(String(f.product_id)) || '')}</span>}</td>
               {!soloRecibe && <>
                 <td className="py-2 px-2 text-right font-bold text-[var(--color-muted)]">{soles(f.costo_unit)}</td>
                 <td className="py-2 pl-2 text-right font-black">{soles(f.mostrar * Number(f.costo_unit))}</td>
@@ -910,7 +918,8 @@ const EditorCompra: React.FC<{
   }, []);
   const [notas, setNotas] = useState(compra?.notas || '');
   const [items, setItems] = useState<Item[]>(compra?.compras_detalle.map((d) => ({
-    product_id: String(d.product_id), product_name: d.product_name, cantidad: Number(d.cantidad), costo_unit: Math.round(Number(d.costo_unit) * 100) / 100,
+    product_id: String(d.product_id), product_name: d.product_name, cantidad: Number(d.cantidad), costo_unit: Math.round(Number(d.costo_unit) * 10000) / 10000,
+    presentacion: d.presentacion ?? null, factor: d.presentacion_factor ? Number(d.presentacion_factor) : null,
   })) || []);
   const [busqueda, setBusqueda] = useState('');
   const [marcado, setMarcado] = useState(-1); // resultado marcado con ↑ ↓ (-1 = escribiendo)
@@ -985,11 +994,24 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
   // Lo que se está escribiendo en cada campo se guarda como TEXTO mientras tanto: antes se guardaba el número y,
   // al borrar, volvía a salir 0 (y al escribir quedaba "05"). Un campo en 0 se ve vacío (con un "0" gris de ayuda).
   const [borrador, setBorrador] = useState<Record<string, string>>({});
-  const valorCampo = (id: string, campo: 'cantidad' | 'costo_unit', numero: number) =>
-    borrador[`${id}:${campo}`] ?? (numero === 0 ? '' : String(numero));
+  // Fase 1.2b: si la línea se pide por presentación (CAJA x12), se escribe en cajas y en costo por caja; se guarda en unidades
+  const factorDe = (id: string) => Number(items.find((i) => i.product_id === id)?.factor) || 1;
+  const valorCampo = (id: string, campo: 'cantidad' | 'costo_unit', numero: number) => {
+    const f = factorDe(id);
+    const mostrar = campo === 'cantidad' ? Math.round((numero / f) * 100) / 100 : Math.round(numero * f * 100) / 100;
+    return borrador[`${id}:${campo}`] ?? (mostrar === 0 ? '' : String(mostrar));
+  };
   const cambiar = (id: string, campo: 'cantidad' | 'costo_unit', valor: string) => {
     setBorrador((prev) => ({ ...prev, [`${id}:${campo}`]: valor }));
-    setItems((prev) => prev.map((i) => (i.product_id === id ? { ...i, [campo]: Math.max(0, Number(valor) || 0) } : i)));
+    const f = factorDe(id);
+    const n = Math.max(0, Number(valor) || 0);
+    setItems((prev) => prev.map((i) => (i.product_id === id ? { ...i, [campo]: campo === 'cantidad' ? n * f : Math.round((n / f) * 10000) / 10000 } : i)));
+  };
+  // Pedir en unidades o en una presentación del producto (no cambia lo pedido: 5 cajas x12 siguen siendo 60 unidades)
+  const cambiarPresentacion = (id: string, valor: string) => {
+    const pr = presentacionesValidas(porId.get(id)?.presentaciones).find((x) => nombrePresentacion(x) === valor);
+    setItems((prev) => prev.map((i) => (i.product_id === id ? { ...i, presentacion: pr ? valor : null, factor: pr ? pr.factor : null } : i)));
+    setBorrador((prev) => { const { [`${id}:cantidad`]: _a, [`${id}:costo_unit`]: _b, ...resto } = prev; return resto; });
   };
   const soltarCampo = (id: string, campo: 'cantidad' | 'costo_unit') =>
     setBorrador((prev) => { const { [`${id}:${campo}`]: _, ...resto } = prev; return resto; });
@@ -1076,6 +1098,7 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
       }
       const r3 = await supabase.from('compras_detalle').insert(validos.map((i) => ({
         compra_id: id, product_id: Number(i.product_id), product_name: i.product_name, cantidad: i.cantidad, costo_unit: i.costo_unit,
+        presentacion: i.presentacion || null, presentacion_factor: i.presentacion ? i.factor : null,
       })));
       if (r3.error) throw r3.error;
       onCerrar(id);
@@ -1201,7 +1224,14 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
                       onChange={(e) => cambiar(i.product_id, 'cantidad', e.target.value)} onBlur={() => soltarCampo(i.product_id, 'cantidad')}
                       onFocus={(e) => e.currentTarget.select()} onKeyDown={(e) => siguienteCampo(e, cuerpo.current, 'btn-guardar-compra')}
                       className={claseInput} aria-label={`Cantidad de ${i.product_name}`} />
-                      <span className="w-8 shrink-0 text-[10px] font-black text-[var(--color-muted)]">{unidadDe(p)}</span></div></td>
+                      {presentacionesValidas(p?.presentaciones).length > 0 ? (
+                        <select data-nav={`${fila},0.5`} value={i.presentacion || ''} onChange={(e) => cambiarPresentacion(i.product_id, e.target.value)} onKeyDown={abrirLista}
+                          aria-label={`Pedir ${i.product_name} en`} className="w-28 shrink-0 border-2 border-[var(--color-border)] bg-[var(--color-bg)] p-1 text-[10px] font-black uppercase outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]">
+                          <option value="">{unidadDe(p)}</option>
+                          {presentacionesValidas(p?.presentaciones).map((x) => <option key={nombrePresentacion(x)} value={nombrePresentacion(x)}>{nombrePresentacion(x)}</option>)}
+                        </select>
+                      ) : <span className="w-8 shrink-0 text-[10px] font-black text-[var(--color-muted)]">{unidadDe(p)}</span>}
+                      </div>{i.presentacion && <span className="block text-[10px] font-bold text-[var(--color-info)]">= {i.cantidad} {unidadDe(p)}</span>}</td>
                     <td className="p-2"><input type="number" data-nav={`${fila},1`} min="0" step="0.01"
                       value={valorCampo(i.product_id, 'costo_unit', i.costo_unit)} placeholder="0"
                       onChange={(e) => cambiar(i.product_id, 'costo_unit', e.target.value)} onBlur={() => soltarCampo(i.product_id, 'costo_unit')}

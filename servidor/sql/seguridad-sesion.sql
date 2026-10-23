@@ -1221,3 +1221,10 @@ END;
 $$;
 
 NOTIFY pgrst, 'reload schema';
+
+-- FASE 1.2b: comprar por caja. La línea del pedido sigue en UNIDADES (cantidad, costo_unit: así se recibe y se crean
+-- los lotes); presentacion / presentacion_factor solo dicen cómo se pidió ("5 CAJA x12" = 60). Deshacer: deshacer-fase1.sql
+ALTER TABLE public.compras_detalle ADD COLUMN IF NOT EXISTS presentacion text;
+ALTER TABLE public.compras_detalle ADD COLUMN IF NOT EXISTS presentacion_factor numeric;
+
+NOTIFY pgrst, 'reload schema';
