@@ -210,6 +210,8 @@ export const FiltrosInventario: React.FC<Props> = ({
           {/* Vencimientos (fase 2.3): solo lotes con stock y con fecha (src/utils/vencimiento.ts) */}
           <option value="VENCIDOS">Vencidos</option>
           <option value="POR_VENCER">Vencen en 30 días</option>
+          {/* Fase 2.4: con stock y sin ninguna venta en 30 días */}
+          <option value="SIN_VENTAS">Sin ventas (30 días)</option>
         </select>
 
         {/* SELECT ORDENAMIENTO */}
@@ -244,6 +246,7 @@ export const FiltrosInventario: React.FC<Props> = ({
           <option value="STOCK_ASC">Menor Stock</option>
           <option value="PRECIO_DESC">Mayor Precio</option>
           <option value="PRECIO_ASC">Menor Precio</option>
+          <option value="PLATA_PARADA">Más plata parada</option>
         </select>
 
         {/* BOTÓN LIMPIAR FILTROS */}

@@ -11,7 +11,7 @@
 // cambian el valor sin querer; Enter pasa al siguiente campo. Esc cierra las ventanas.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, AlertTriangle, Loader2, Ban, Undo2, FileText, Share2, Download, Printer, ArrowLeft, Receipt } from 'lucide-react';
+import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, AlertTriangle, Loader2, Ban, Undo2, FileText, Share2, Download, Printer, ArrowLeft, Receipt, Sparkles } from 'lucide-react';
 import { imprimirEnTicketera } from '../../../utils/impresion';
 import { supabase } from '../../../db/supabase';
 import { usePermiso, useEmpleado, avisarSinPermiso } from '../../../utils/permisos';
@@ -927,6 +927,43 @@ const EditorCompra: React.FC<{
     if (!bajos.length) { void avisar('No hay productos con stock bajo. 👍'); return; }
     bajos.forEach((p) => agregar(p, sugerida(p)));
   };
+
+  // Fase 2.4 · SUGERIR PEDIDO: lo que se vende por día (últimos 30 días, sin anuladas: fn_ventas_por_producto) ×
+  // los días que debe alcanzar − lo que hay. Con proveedor elegido, solo los productos que ya se le compraron
+  // (sus lotes). Los que ya están en la lista se dejan como están.
+  const [dias, setDias] = useState('15');
+  const [resumenSugerido, setResumenSugerido] = useState('');
+  const sugerirPedido = async () => {
+    const d = Math.round(Number(dias));
+    if (!d || d < 1 || d > 90) { await avisar('Escribe para cuántos días debe alcanzar el pedido (de 1 a 90).'); enfocar(document.getElementById('compra-dias')); return; }
+    if (!productos.some((p) => p.vendido30 !== undefined)) { await avisar('No se pudo leer lo vendido de cada producto. Vuelve a abrir Inventario con internet.'); return; }
+    let delProveedor: Set<string> | null = null;
+    const prov = listaProveedores.find((x) => x.id === proveedorId);
+    if (prov) {
+      const { data } = await supabase.from('batches').select('product_id').eq('provider_id', prov.id);
+      delProveedor = new Set(((data as { product_id: number }[] | null) || []).map((b) => String(b.product_id)));
+      if (!delProveedor.size) {
+        await avisar(`Todavía no hay lotes recibidos de ${prov.razon_social}: el sistema no sabe qué productos le compras.
+Elige "— Sin proveedor —" para sugerir de todos los productos.`);
+        enfocar(document.getElementById('compra-proveedor'));
+        return;
+      }
+    }
+    const sugeridos = productos
+      .filter((p) => p.unit !== 'CONSUMO' && Number(p.vendido30 || 0) > 0 && (!delProveedor || delProveedor.has(String(p.id))))
+      .map((p) => {
+        const falta = (Number(p.vendido30) / 30) * d - Math.max(0, Number(p.quantity) || 0);
+        return { p, cantidad: esPeso(p) ? Math.round(falta * 100) / 100 : Math.ceil(falta) };
+      })
+      .filter((x) => x.cantidad > 0);
+    if (!sugeridos.length) {
+      setResumenSugerido(`Con lo que hay alcanza para ${d} días: no hace falta pedir.`);
+      return;
+    }
+    const nuevos = sugeridos.filter((x) => !items.some((i) => i.product_id === String(x.p.id)));
+    nuevos.forEach(({ p, cantidad }) => agregar(p, cantidad));
+    setResumenSugerido(`Sugerido para ${d} días: ${nuevos.length} producto(s)${sugeridos.length > nuevos.length ? ` (${sugeridos.length - nuevos.length} ya estaban en la lista)` : ''}. Revisa las cantidades antes de guardar.`);
+  };
   // Lo que se está escribiendo en cada campo se guarda como TEXTO mientras tanto: antes se guardaba el número y,
   // al borrar, volvía a salir 0 (y al escribir quedaba "05"). Un campo en 0 se ve vacío (con un "0" gris de ayuda).
   const [borrador, setBorrador] = useState<Record<string, string>>({});
@@ -1067,7 +1104,19 @@ const EditorCompra: React.FC<{
         <button type="button" data-nav="1,1" onClick={agregarStockBajo} className={`${claseBoton} bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] border-[var(--color-warning)]`}>
           <AlertTriangle size={14} /> Agregar stock bajo
         </button>
+        {/* Fase 2.4: pedido según lo que se vende */}
+        <label className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[var(--color-ink)] shrink-0">
+          Para
+          <input id="compra-dias" data-nav="1,2" type="number" min="1" max="90" value={dias} onChange={(e) => setDias(e.target.value)}
+            onFocus={(e) => e.currentTarget.select()} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void sugerirPedido(); } }}
+            aria-label="Días que debe alcanzar el pedido" className={`${claseInput} w-16 text-right`} />
+          días
+        </label>
+        <button id="btn-sugerir-pedido" type="button" data-nav="1,3" onClick={() => void sugerirPedido()} className={`${claseBoton} bg-[var(--color-info-bg)] text-[var(--color-info)] border-[var(--color-info)]`}>
+          <Sparkles size={14} /> Sugerir pedido
+        </button>
       </div>
+      {resumenSugerido && <p id="compra-resumen-sugerido" role="status" className="text-xs font-black text-[var(--color-info)]">{resumenSugerido}</p>}
       {abierto && posLista && createPortal(
         <ul id="compra-resultados" role="listbox" aria-label="Productos" style={{ position: 'fixed', ...posLista }} className="z-[60] font-mono bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] overflow-auto custom-scrollbar">
           {resultados.length === 0 ? (
@@ -1085,7 +1134,7 @@ const EditorCompra: React.FC<{
 
       {items.length === 0 ? (
         <p className="p-4 border-2 border-dashed border-[var(--color-border)] text-center text-xs font-black uppercase text-[var(--color-muted)]">
-          Busca productos o usa "Agregar stock bajo".
+          Busca productos, usa "Agregar stock bajo" o "Sugerir pedido".
         </p>
       ) : (
         <div className="overflow-x-auto">
@@ -1100,7 +1149,8 @@ const EditorCompra: React.FC<{
                 return (
                   <tr key={i.product_id} data-producto={i.product_id} className="border-t border-[var(--color-border)]">
                     <td className="p-1 font-black">{i.product_name}</td>
-                    <td className={`p-1 font-bold ${p && Number(p.quantity) <= Number(p.minStock) ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>{p ? `${p.quantity} / mín ${p.minStock} ${unidadDe(p)}` : '-'}</td>
+                    <td className={`p-1 font-bold ${p && Number(p.quantity) <= Number(p.minStock) ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>{p ? `${p.quantity} / mín ${p.minStock} ${unidadDe(p)}` : '-'}
+                      {p?.vendido30 !== undefined && <span className="block text-[10px] text-[var(--color-muted)]">{Number(p.vendido30) > 0 ? `vende ${Math.round((Number(p.vendido30) / 30) * 10) / 10}/día` : 'sin ventas 30 días'}</span>}</td>
                     <td className="p-1"><div className="flex items-center gap-1"><input type="number" data-nav={`${fila},0`} min="0" step={esPeso(p) ? '0.01' : '1'}
                       value={valorCampo(i.product_id, 'cantidad', i.cantidad)} placeholder="0"
                       onChange={(e) => cambiar(i.product_id, 'cantidad', e.target.value)} onBlur={() => soltarCampo(i.product_id, 'cantidad')}

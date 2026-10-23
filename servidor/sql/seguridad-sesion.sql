@@ -1095,3 +1095,25 @@ CREATE TRIGGER trg_proteger_conteo BEFORE UPDATE ON public.waste
   FOR EACH ROW EXECUTE FUNCTION public.fn_proteger_conteo();
 
 NOTIFY pgrst, 'reload schema';
+
+-- ===================================================================================================
+-- FASE 2.4: cuánto se vendió de cada producto en los últimos N días y cuándo fue su última venta (sin contar
+-- ventas anuladas). Lo usan el filtro "Sin ventas (30 días)" de Inventario y "Sugerir pedido" de Compras.
+-- Solo lectura (STABLE): la pantalla la pide por GET, así sin internet sirve la copia guardada.
+CREATE OR REPLACE FUNCTION public.fn_ventas_por_producto(p_dias integer DEFAULT 30)
+RETURNS TABLE (product_id bigint, vendido numeric, ultima_venta timestamptz)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+  SELECT d.product_id,
+         coalesce(sum(abs(coalesce(d.quantity, 0))) FILTER (WHERE s.created_at >= now() - make_interval(days => greatest(p_dias, 1))), 0),
+         max(s.created_at)
+  FROM sale_details d
+  JOIN sales s ON s.id = d.sale_id
+  WHERE coalesce(s.sunat_status, '') <> 'ANULADO' AND d.product_id IS NOT NULL
+  GROUP BY d.product_id;
+$$;
+
+NOTIFY pgrst, 'reload schema';

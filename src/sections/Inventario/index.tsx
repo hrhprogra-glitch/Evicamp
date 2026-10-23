@@ -78,15 +78,21 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         const [ 
           { data: productsData, error: productsError }, 
           { data: batchesData, error: batchesError },
-          { data: catData, error: catError } // 🔥 NUEVO: Traemos tu tabla
+          { data: catData, error: catError }, // 🔥 NUEVO: Traemos tu tabla
+          { data: ventasData } // fase 2.4: lo vendido en 30 días (filtro "Sin ventas" y "Sugerir pedido" de Compras)
         ] = await Promise.all([
           // 🛡️ EVICAMP: Solo descargar productos activos para evitar productos fantasma
           traerTodo(() => supabase.from('products').select('*').eq('is_active', 1).order('id')),
           // Con la fecha de vencimiento (filtros Vencidos / Vencen en 30 días). La misma consulta va en la precarga
           // sin internet (src/utils/precargaSinInternet.ts): si se cambia aquí, cambiarla allá también
           traerTodo(() => supabase.from('batches').select('id, product_id, quantity, cost_unit, expiration_date').order('id')),
-          supabase.from('categories').select('name') // 🔥 CONEXIÓN A TU TABLA
+          supabase.from('categories').select('name'), // 🔥 CONEXIÓN A TU TABLA
+          // Por GET (sin internet sirve la copia). La misma llamada va en la precarga (precargaSinInternet.ts)
+          supabase.rpc('fn_ventas_por_producto', { p_dias: 30 }, { get: true }),
         ]);
+        // Si falla (ej. sin copia sin internet), los productos se muestran igual, sin esos datos
+        const ventas = new Map(((ventasData as { product_id: number; vendido: number; ultima_venta: string | null }[] | null) || [])
+          .map((v) => [String(v.product_id), v]));
 
         if (productsError) throw productsError;
         if (batchesError) throw batchesError;
@@ -137,6 +143,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               // Si el radar detectó consumo, fuerza la etiqueta, sino usa la que traiga de BD
               unit: esConsumo ? 'CONSUMO' : (p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND')),
               imageUrl: p.image_url || p.image_path || null,
+              vendido30: ventasData ? Number(ventas.get(String(p.id))?.vendido || 0) : undefined,
+              ultimaVenta: ventas.get(String(p.id))?.ultima_venta || null,
               vencimiento: lotesDelProducto
                 .filter((l: any) => Number(l.quantity) > 0 && diasParaVencer(l.expiration_date) !== null)
                 .map((l: any) => String(l.expiration_date).slice(0, 10))
@@ -185,6 +193,9 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
       result = result.filter(p => estaVencido(p.vencimiento));
     } else if (filtroEstado === 'POR_VENCER') {
       result = result.filter(p => vencePronto(p.vencimiento));
+    } else if (filtroEstado === 'SIN_VENTAS') {
+      // Con stock y sin ninguna venta en 30 días (plata parada)
+      result = result.filter(p => p.unit !== 'CONSUMO' && p.quantity > 0 && p.vendido30 === 0);
     }
 
     result.sort((a, b) => {
@@ -194,11 +205,16 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
       if (filtroOrden === 'STOCK_DESC') return b.quantity - a.quantity;
       if (filtroOrden === 'PRECIO_ASC') return a.price - b.price;
       if (filtroOrden === 'PRECIO_DESC') return b.price - a.price;
+      // Lo que cuesta lo que hay en el estante: primero donde hay más dinero inmovilizado
+      if (filtroOrden === 'PLATA_PARADA') return (b.quantity * b.cost) - (a.quantity * a.cost);
       return 0;
     });
 
     return result;
   }, [products, searchQuery, filtroCategoria, filtroEstado, filtroOrden]);
+
+  // Fase 2.4: para el filtro "Sin ventas (30 días)" de la pestaña Lotes
+  const productosSinVentas = useMemo(() => new Set(products.filter((p) => p.vendido30 === 0).map((p) => String(p.id))), [products]);
 
   // === MATEMÁTICA DE LA PAGINACIÓN ===
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
@@ -686,6 +702,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             filtroCategoria={filtroCategoria}
             filtroEstado={filtroEstado}
             filtroOrden={filtroOrden}
+            sinVentas={productosSinVentas}
             nuevoLoteInyectado={nuevoLoteRealtime}
             onViewHistory={(lote) => {
               handleViewHistory(lote);

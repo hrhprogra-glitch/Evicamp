@@ -37,10 +37,11 @@ interface Props {
   onViewHistory?: (lote: any) => void;
   onEditLote?: (lote: any) => void;
   onLoteDeleted?: (productId: string, quantityRemoved: number) => void; // <-- AÑADIR ESTA LÍNEA
+  sinVentas?: Set<string>; // fase 2.4: productos con stock y sin ventas en 30 días (filtro "Sin ventas")
 }
 
 export const TablaLotes: React.FC<Props> = ({ 
-  searchQuery, filtroCategoria, filtroEstado, filtroOrden, nuevoLoteInyectado, onViewMermas, onViewHistory, onEditLote, onLoteDeleted // <-- AÑADIR AQUÍ
+  searchQuery, filtroCategoria, filtroEstado, filtroOrden, nuevoLoteInyectado, onViewMermas, onViewHistory, onEditLote, onLoteDeleted, sinVentas // <-- AÑADIR AQUÍ
 }) => {
   const [lotes, setLotes] = useState<Lote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -155,6 +156,7 @@ export const TablaLotes: React.FC<Props> = ({
     if (filtroEstado === 'SIN_STOCK' && lote.quantity > 0) return false;
     if (filtroEstado === 'VENCIDOS' && !(lote.quantity > 0 && estaVencido(lote.expiration_date))) return false;
     if (filtroEstado === 'POR_VENCER' && !(lote.quantity > 0 && vencePronto(lote.expiration_date))) return false;
+    if (filtroEstado === 'SIN_VENTAS' && !(lote.quantity > 0 && sinVentas?.has(String(lote.product_id)))) return false;
     if (filtroEstado === 'CRITICO') {
       // Un lote es crítico si está vencido o le queda el 20% o menos de su capacidad inicial
       const isExpired = estaVencido(lote.expiration_date);
@@ -171,6 +173,7 @@ export const TablaLotes: React.FC<Props> = ({
     if (filtroOrden === 'STOCK_DESC') return b.quantity - a.quantity;
     if (filtroOrden === 'PRECIO_ASC') return a.cost_unit - b.cost_unit;
     if (filtroOrden === 'PRECIO_DESC') return b.cost_unit - a.cost_unit;
+    if (filtroOrden === 'PLATA_PARADA') return (b.quantity * b.cost_unit) - (a.quantity * a.cost_unit);
     return 0;
   });
 
