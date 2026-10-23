@@ -285,6 +285,9 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
                         (ej. negocio/mayorista) sin tocar el precio general del catálogo. Solo
                         cambia esta venta — updatePrice nunca escribe en la tabla de productos. */}
                     <InputPrecio item={item} updatePrice={updatePrice} index={index} setSelectedIndex={setSelectedIndex} setColIndex={setColIndex} isSelected={index === selectedIndex && colIndex === 1} />
+                    {item.escala !== undefined && item.precioLista === undefined && (
+                      <span data-escala className="text-[11px] font-black text-[var(--color-info)] whitespace-nowrap" title={`Precio por cantidad: desde ${item.escala}`}>x{item.escala}+</span>
+                    )}
                     {item.precioLista !== undefined && (
                       <span data-precio-cambiado className="text-[11px] font-bold text-[var(--color-muted)] line-through whitespace-nowrap" title={`Precio cambiado por ${item.precioCambiadoPor || ''}`}>S/ {item.precioLista.toFixed(2)}</span>
                     )}

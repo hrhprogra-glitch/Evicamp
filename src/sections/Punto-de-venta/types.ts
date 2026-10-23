@@ -9,4 +9,6 @@ export interface CartItem extends Product {
   subtotal: number;     // Precio * Cantidad
   precioLista?: number;               // fase 1.4: el precio que tenía antes de cambiarlo al cobrar
   precioCambiadoPor?: string | null;  // quién lo cambió o, si fue con clave, el administrador que autorizó
+  precioBase?: number;                // fase 1.3: el precio normal del producto (sin escala)
+  escala?: number;                    // fase 1.3: "desde" de la escala aplicada (x6+)
 }

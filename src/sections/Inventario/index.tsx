@@ -1,4 +1,5 @@
 import { diasParaVencer, estaVencido, vencePronto } from '../../utils/vencimiento';
+import { escalasValidas } from '../../utils/preciosCantidad';
 import { traerTodo } from '../../utils/traerTodo';
 import { coincideBusqueda } from '../../utils/busqueda';
 import React, { useState, useEffect, useMemo } from 'react';
@@ -144,6 +145,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               // Si el radar detectó consumo, fuerza la etiqueta, sino usa la que traiga de BD
               unit: esConsumo ? 'CONSUMO' : (p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND')),
               imageUrl: p.image_url || p.image_path || null,
+              preciosCantidad: escalasValidas(p.precios_cantidad), // fase 1.3
               vendido30: ventasData ? Number(ventas.get(String(p.id))?.vendido || 0) : undefined,
               ultimaVenta: ventas.get(String(p.id))?.ultima_venta || null,
               vencimiento: lotesDelProducto
@@ -769,6 +771,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             category: nuevoProducto.category,
             code: nuevoProducto.code,
             unit: nuevoProducto.unit,
+            preciosCantidad: escalasValidas(nuevoProducto.precios_cantidad), // fase 1.3
             imageUrl: nuevoProducto.image_url || nuevoProducto.image_path || null
           };
 

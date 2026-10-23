@@ -8,6 +8,7 @@ import { useImprimir } from '../../utils/impresion';
 import { useEmpleado, usePermiso } from '../../utils/permisos';
 import { conAutorizacion } from '../../utils/autorizacion';
 import { esDecimal, unidadDe } from '../../utils/unidades';
+import { escalaPara, escalasValidas } from '../../utils/preciosCantidad';
 // Componentes modulares
 import { TerminalBusqueda } from './components/TerminalBusqueda';
 import { TicketVenta } from './components/TicketVenta';
@@ -407,6 +408,7 @@ const [searchQuery, setSearchQuery] = useState('');
           // CORRECCIÓN ESTRATÉGICA: Interceptar 'CONSUMPTION' desde la BD
           unit: p.control_type === 'CONSUMPTION' ? 'CONSUMO' : (p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND')),
           control_type: p.control_type, // Añadimos esto para validaciones estrictas
+          preciosCantidad: escalasValidas(p.precios_cantidad), // fase 1.3: precios por cantidad
           image_url: p.image_url || p.image_path || null // imagen para identificar el producto en las tarjetas
         } as Product));
         setProductos(mapeados);
@@ -414,6 +416,16 @@ const [searchQuery, setSearchQuery] = useState('');
     };
     fetchProducts();
   }, []);
+
+  // Fase 1.3: la línea con su cantidad y el precio que le toca (escala "desde N"). Si el precio se cambió a mano
+  // (fase 1.4) no se toca. precioBase = el precio normal, para volver a él si baja la cantidad.
+  const conCantidad = (item: CartItem, qty: number): CartItem => {
+    const base = item.precioBase ?? item.price;
+    if (item.precioLista !== undefined) return { ...item, precioBase: base, cartQuantity: qty, subtotal: Math.round((qty * item.price) * 100) / 100 };
+    const escala = escalaPara(item.preciosCantidad, qty);
+    const precio = escala ? escala.precio : base;
+    return { ...item, precioBase: base, cartQuantity: qty, price: precio, escala: escala?.desde, subtotal: Math.round((qty * precio) * 100) / 100 };
+  };
 
   // 2. FUNCIÓN PARA DISPARAR PRODUCTOS AL CARRITO (CON BALANZA Y CONSUMO)
   const handleAddToCart = (producto: Product) => {
@@ -454,11 +466,11 @@ const [searchQuery, setSearchQuery] = useState('');
       if (existePrev) {
         return prevCart.map(item => 
           item.id === producto.id 
-            ? { ...item, cartQuantity: nuevaQty, subtotal: Math.round((nuevaQty * item.price) * 100) / 100 }
+            ? conCantidad(item, nuevaQty)
             : item
         );
       } else {
-        return [{ ...producto, cartQuantity: 1, subtotal: Math.round(producto.price * 100) / 100 }, ...prevCart];
+        return [conCantidad({ ...producto, cartQuantity: 0, subtotal: 0 }, 1), ...prevCart];
       }
     });
     setSearchQuery(''); 
@@ -481,9 +493,9 @@ const [searchQuery, setSearchQuery] = useState('');
     setCart(prevCart => {
       const existePrev = prevCart.find(item => item.id === selectedWeightProduct.id);
       if (existePrev) {
-        return prevCart.map(item => item.id === selectedWeightProduct.id ? { ...item, cartQuantity: nuevaQty, subtotal: Math.round((nuevaQty * item.price) * 100) / 100 } : item);
+        return prevCart.map(item => item.id === selectedWeightProduct.id ? conCantidad(item, nuevaQty) : item);
       } else {
-        return [{ ...selectedWeightProduct, cartQuantity: weight, subtotal: Math.round((weight * selectedWeightProduct.price) * 100) / 100 }, ...prevCart];
+        return [conCantidad({ ...selectedWeightProduct, cartQuantity: 0, subtotal: 0 }, weight), ...prevCart];
       }
     });
     setSelectedWeightProduct(null);
@@ -549,7 +561,7 @@ const [searchQuery, setSearchQuery] = useState('');
       }
       return prevCart.map(item => {
         if (item.id === id) {
-          return { ...item, cartQuantity: finalQty, subtotal: Math.round((finalQty * item.price) * 100) / 100 };
+          return conCantidad(item, finalQty);
         }
         return item;
       });

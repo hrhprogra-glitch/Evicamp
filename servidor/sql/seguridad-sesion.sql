@@ -1145,3 +1145,39 @@ UPDATE public.products SET sunat_unit_code = CASE
 WHERE upper(coalesce(unit, '')) IN ('', 'UND', 'UN', 'UNIDAD', 'KG', 'GR', 'LT', 'ML', 'CONSUMO');
 
 NOTIFY pgrst, 'reload schema';
+
+-- ===================================================================================================
+-- FASE 1.3: precios por cantidad. products.precios_cantidad = [{"desde": 6, "precio": 1.8}, ...] (la Caja usa la escala
+-- más alta que alcance la cantidad). Cambiarlos es cambiar precios: fn_proteger_precios pide "Modificar precios".
+-- Deshacer: servidor/sql/deshacer-fase1.sql (devuelve fn_proteger_precios como estaba ANTES de borrar la columna).
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS precios_cantidad jsonb;
+
+CREATE OR REPLACE FUNCTION public.fn_proteger_precios()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_token text := current_setting('request.headers', true)::json ->> 'x-sesion';
+  v_permisos jsonb;
+BEGIN
+  IF NEW.price IS NOT DISTINCT FROM OLD.price
+     AND NEW.cost_price IS NOT DISTINCT FROM OLD.cost_price
+     AND NEW.discount_percent IS NOT DISTINCT FROM OLD.discount_percent
+     AND NEW.precios_cantidad IS NOT DISTINCT FROM OLD.precios_cantidad THEN
+    RETURN NEW;
+  END IF;
+  IF v_token IS NULL OR v_token !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
+    RETURN NEW;   -- cambio interno del servidor (no viene del sistema)
+  END IF;
+  SELECT e.permisos INTO v_permisos FROM sesiones s JOIN empleados e ON e.id = s.empleado_id WHERE s.token = v_token::uuid;
+  IF NOT fn_tiene_permiso(v_permisos, ARRAY['almacen_modificar_precios']) THEN
+    RAISE SQLSTATE 'PT403' USING MESSAGE = 'No tienes permiso para cambiar precios',
+      DETAIL = 'Pide al administrador el permiso "Modificar precios".';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+NOTIFY pgrst, 'reload schema';

@@ -14,4 +14,5 @@ export interface Product {
   vencimiento?: string | null; // el más cercano de sus lotes con stock (filtros Vencidos / Vencen en 30 días)
   vendido30?: number;           // fase 2.4: unidades vendidas en 30 días (undefined = no se pudo saber)
   ultimaVenta?: string | null;  // fecha de su última venta (sin las anuladas)
+  preciosCantidad?: { desde: number; precio: number }[]; // fase 1.3: "desde N → precio" (products.precios_cantidad)
 }

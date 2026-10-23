@@ -6,6 +6,7 @@ import { usePermiso } from '../../../utils/permisos';
 import { buscarImagenes, fotoParaGuardar, achicarImagen } from '../../../utils/buscarImagenes';
 import { confirmar } from '../../../utils/dialogos';
 import { UNIDADES, unidadDe } from '../../../utils/unidades';
+import { escalasValidas } from '../../../utils/preciosCantidad';
 
 // Componente de Notificación de Errores (Diseño Geométrico y Alto Contraste)
 const TechnicalAlert = ({ message }: { message: string }) => {
@@ -44,6 +45,24 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   const precioBloqueado = !!initialData && !puedePrecios;
   const [step, setStep] = useState<1 | 2>(1);
   const [nature, setNature] = useState<ProductNature>(null);
+  // Fase 1.3: precios por cantidad ("desde N → precio"), 3 filas opcionales
+  type FilaEscala = { desde: string; precio: string };
+  const filasEscalas = (lista?: { desde: number; precio: number }[]): FilaEscala[] => {
+    const filas = (lista || []).slice(0, 3).map((e) => ({ desde: String(e.desde), precio: String(e.precio) }));
+    while (filas.length < 3) filas.push({ desde: '', precio: '' });
+    return filas;
+  };
+  const [escalas, setEscalas] = useState<FilaEscala[]>(filasEscalas());
+  const cambiarEscala = (i: number, campo: keyof FilaEscala, valor: string) => setEscalas((prev) => prev.map((f, j) => (j === i ? { ...f, [campo]: valor } : f)));
+  // ↑ ↓ entre filas, ← → entre "desde" y "precio", Enter al siguiente; al terminar, Guardar
+  const teclasEscala = (e: React.KeyboardEvent<HTMLInputElement>, fila: number, col: 'desde' | 'precio') => {
+    const ir = (id: string) => { const el = document.getElementById(id) as HTMLInputElement | null; if (el) { el.focus(); el.select?.(); } return !!el; };
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (!ir(`escala-${col}-${fila + 1}`)) ir('btn-guardar-producto'); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); if (!ir(`escala-${col}-${fila - 1}`)) ir('select-unidad-peso-producto') || ir('input-stock-minimo-producto'); }
+    else if (e.key === 'ArrowRight' && col === 'desde') { e.preventDefault(); ir(`escala-precio-${fila}`); }
+    else if (e.key === 'ArrowLeft' && col === 'precio') { e.preventDefault(); ir(`escala-desde-${fila}`); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (col === 'desde') ir(`escala-precio-${fila}`); else if (!ir(`escala-desde-${fila + 1}`)) ir('btn-guardar-producto'); }
+  };
   const [isSubmitting, setIsSubmitting] = useState(false);
   // ESTADOS PARA EL AUTOCOMPLETADO DE CATEGORÍAS
   const [categoriasLista, setCategoriasLista] = useState<string[]>([]);
@@ -202,6 +221,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         if (tipoUnidad === 'ENTERA') setNature('UNIDAD');
         else if (tipoUnidad === 'DECIMAL') setNature('PESO');
         else setNature('CONSUMO');
+        setEscalas(filasEscalas(initialData.preciosCantidad)); // fase 1.3
         
         setStep(2);
       } else {
@@ -209,6 +229,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         setStep(1);
         setNature(null);
         setFormData({ name: '', category: '', code: '', barcode: '', price: '', minStock: '5', weightUnit: 'KG', image: '' });
+        setEscalas(filasEscalas());
       }
     }
   }, [isOpen, initialData]);
@@ -277,6 +298,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     setStep(1);
     setNature(null);
     setFormData({ name: '', category: '', code: '', barcode: '', price: '', minStock: '5', weightUnit: 'KG', image: '' });
+    setEscalas(filasEscalas());
     setImageQuery('');
     setImageResults([]);
     setShowImageResults(false);
@@ -352,6 +374,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           'input-precio-producto',
           'input-stock-minimo-producto',
           'select-unidad-peso-producto',
+          'escala-desde-0', 'escala-precio-0', 'escala-desde-1', 'escala-precio-1', 'escala-desde-2', 'escala-precio-2',
           'btn-guardar-producto',
           'btn-guardar-ir-lotes'
         ];
@@ -825,7 +848,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           if (e.key === 'ArrowDown') {
             e.preventDefault();
             e.stopPropagation();
-            document.getElementById('btn-guardar-producto')?.focus();
+            (document.getElementById('escala-desde-0') || document.getElementById('btn-guardar-producto'))?.focus();
             return;
           }
           // Enter / Espacio despliegan la lista (antes Enter saltaba a Guardar y la lista nunca se abría)
@@ -851,7 +874,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         if (active?.id === 'btn-guardar-producto') {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
-            const prev = document.getElementById('select-unidad-peso-producto') || 
+            const prev = document.getElementById('escala-precio-2') || document.getElementById('select-unidad-peso-producto') || 
                          document.getElementById('input-stock-minimo-producto') || 
                          document.getElementById('input-precio-producto');
             prev?.focus();
@@ -876,7 +899,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         if (active?.id === 'btn-guardar-ir-lotes') {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
-            const prev = document.getElementById('select-unidad-peso-producto') || 
+            const prev = document.getElementById('escala-precio-2') || document.getElementById('select-unidad-peso-producto') || 
                          document.getElementById('input-stock-minimo-producto') || 
                          document.getElementById('input-precio-producto');
             prev?.focus();
@@ -898,7 +921,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
     window.addEventListener('keydown', handleFormKeyDown, { capture: true });
     return () => window.removeEventListener('keydown', handleFormKeyDown, { capture: true });
-  }, [isOpen, step, nature, formData, isSubmitting, categoriasLista, showImageResults, imageResults, imgResaltada]);
+  }, [isOpen, step, nature, formData, escalas, isSubmitting, categoriasLista, showImageResults, imageResults, imgResaltada]); // escalas: Guardar con Enter usa las de ahora (fase 1.3)
 
   if (!isOpen) return null;
 
@@ -944,6 +967,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
       // Fase 1.1: la unidad elegida en "Se vende por" y su código SUNAT (Catálogo 03, src/utils/unidades.ts)
       const unidadAsignada = nature === 'CONSUMO' ? 'CONSUMO' : formData.weightUnit;
       const codigoSunat = unidadDe({ unit: unidadAsignada }).codigo;
+      // Fase 1.3: precios por cantidad válidos (vacío = sin escalas); los de consumo no llevan
+      const preciosCantidad = nature === 'CONSUMO' ? [] : escalasValidas(escalas.map((f) => ({ desde: f.desde, precio: f.precio })));
+      const conEscalas = precioBloqueado ? {} : { precios_cantidad: preciosCantidad.length ? preciosCantidad : null };
       let productoGuardado;
 
       // === SANEAMIENTO ESTRICTO DE PAYLOAD ===
@@ -964,6 +990,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           weight_unit: nature === 'PESO' ? formData.weightUnit : null,
           unit: unidadAsignada,
           sunat_unit_code: codigoSunat,
+          ...conEscalas,
           image_url: formData.image,
           is_active: 1
         }).eq('id', initialData.id).select().single();
@@ -994,6 +1021,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           weight_unit: nature === 'PESO' ? formData.weightUnit : null,
           unit: unidadAsignada,
           sunat_unit_code: codigoSunat,
+          ...conEscalas,
           image_url: formData.image, 
           is_synced: '1',
           is_active: 1 // <--- 🔥 ¡SEGUNDA LÍNEA MÁGICA PARA LOS PRODUCTOS!
@@ -1532,7 +1560,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                         else document.getElementById('input-precio-producto')?.focus();
                       } else if (e.key === 'ArrowDown') {
                         e.preventDefault();
-                        document.getElementById('btn-guardar-producto')?.focus();
+                        (document.getElementById('escala-desde-0') || document.getElementById('btn-guardar-producto'))?.focus();
                       }
                     }}
                     className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors cursor-pointer"
@@ -1542,6 +1570,28 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                       <option key={u.codigo} value={u.corto}>{u.nombre} ({u.corto})</option>
                     ))}
                   </select>
+                </div>
+              )}
+
+              {/* Fase 1.3: precios por cantidad (opcional). La Caja cambia el precio sola al llegar a esa cantidad */}
+              {(nature === 'PESO' || nature === 'UNIDAD') && (
+                <div className="space-y-2 md:col-span-2" id="bloque-escalas-producto">
+                  <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">Precios por cantidad (opcional)</label>
+                  <p className="text-[10px] font-bold text-[#64748B]">Ej.: desde 6 a S/ 1.80. Al llegar a esa cantidad, la Caja cambia el precio sola.{precioBloqueado ? ' (Necesitas el permiso "Modificar precios" para cambiarlos)' : ''}</p>
+                  {escalas.map((f, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="text-[10px] font-black text-[#64748B] uppercase w-12">Desde</span>
+                      <input id={`escala-desde-${i}`} type="number" min="0" step="any" autoComplete="off" data-lpignore="true" placeholder="—"
+                        value={f.desde} onChange={(e) => cambiarEscala(i, 'desde', e.target.value)} onKeyDown={(e) => teclasEscala(e, i, 'desde')}
+                        readOnly={precioBloqueado} aria-label={`Escala ${i + 1}: desde`}
+                        className="w-24 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-right outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
+                      <span className="text-[10px] font-black text-[#64748B] uppercase w-14">{formData.weightUnit} → S/</span>
+                      <input id={`escala-precio-${i}`} type="number" min="0" step="0.01" autoComplete="off" data-lpignore="true" placeholder="0.00"
+                        value={f.precio} onChange={(e) => cambiarEscala(i, 'precio', e.target.value)} onKeyDown={(e) => teclasEscala(e, i, 'precio')}
+                        readOnly={precioBloqueado} aria-label={`Escala ${i + 1}: precio`}
+                        className="w-28 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-right outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
+                    </div>
+                  ))}
                 </div>
               )}
 
