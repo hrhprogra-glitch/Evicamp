@@ -66,7 +66,10 @@ const customFetch = (url: string | URL | Request, options?: RequestInit) => {
     if (r.status === 503) mostrarSuspendido();
     // Sesión cerrada o empleado desactivado: volver al login (no aplica al propio inicio de sesión)
     if (r.status === 401 && token && !urlString.includes('/rpc/fn_login')) sesionVencida();
-    if (esLectura && r.ok) guardarCopia(claveCopia, r.clone());
+    // Con cosas esperando en la cola NO se pisa la copia: la del servidor todavía no trae lo hecho sin internet
+    // (ej. una lectura que salió con internet y llegó justo después del corte borraba en la copia la venta
+    // recién hecha, y el stock se calculaba desde un número equivocado). Se refresca al vaciarse la cola.
+    if (esLectura && r.ok && !hayPendientesEnCola()) guardarCopia(claveCopia, r.clone());
     return r;
   }).catch(async (error) => {
     if (options?.signal?.aborted) throw error; // lo canceló el propio sistema, no es falta de internet
@@ -84,9 +87,8 @@ const customFetch = (url: string | URL | Request, options?: RequestInit) => {
 
 // Lo que no se puede hacer sin internet: la pantalla muestra este mensaje (no "Failed to fetch")
 const necesitaInternet = () => new Response(JSON.stringify({
-  message: '🔌 Sin internet: esto necesita conexión. Sin internet puedes vender, fiar, cobrar abonos, abrir y cerrar caja, '
-    + 'registrar ingresos/egresos y mermas, crear y editar clientes, productos y proveedores, e ingresar lotes; '
-    + 'lo demás, cuando vuelva el internet.',
+  message: '🔌 Sin internet: esto necesita conexión (por ejemplo, crear usuarios o cambiar permisos). '
+    + 'Todo lo demás (ventas, caja, créditos, inventario, compras, mermas) se puede hacer sin internet y se sube solo al volver.',
 }), { status: 503, headers: { 'Content-Type': 'application/json' } });
 
 // Misma clave que usa src/utils/sesion.ts (aquí se lee directo para no crear una importación circular)

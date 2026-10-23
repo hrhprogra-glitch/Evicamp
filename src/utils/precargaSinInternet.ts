@@ -34,6 +34,12 @@ export const precargarParaSinInternet = () => {
         traerTodo(() => supabase.from('debt_payments').select('*').order('id')),
         // Proveedores (Inventario > Proveedores e Ingresar lote, src/sections/Inventario/components/ModalGestionProveedores.tsx)
         traerTodo(() => supabase.from('providers').select('*').neq('estado', 'ELIMINADO').order('created_at', { ascending: false })),
+        // Pestaña Lotes: lotes con su producto (src/sections/Inventario/components/TablaLotes.tsx → fetchLotes)
+        supabase.from('batches').select('*, products!batches_product_id_fkey (*)').neq('is_active', 0).order('created_at', { ascending: false }),
+        // Pedidos de Compras con sus productos (src/sections/Inventario/components/PanelCompras.tsx → cargar)
+        supabase.from('compras').select('*, compras_detalle(*)').order('created_at', { ascending: false }).limit(200),
+        // Ajustes > Datos de la empresa (src/sections/Configuraciones/components/FormularioEmpresa.tsx)
+        supabase.from('empresa_config').select('*').limit(1).single(),
       ]);
     } catch { hecha = false; /* se reintenta la próxima vez que abra */ }
     void precargarFinanzas();

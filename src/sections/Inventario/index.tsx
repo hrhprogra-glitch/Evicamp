@@ -598,7 +598,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
       {!enLinea && (
         <div role="status" className="mx-2 sm:mx-8 px-3 py-2 border-2 border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] font-mono text-xs font-bold">
-          🔌 SIN INTERNET: puedes crear y editar productos, ingresar lotes y registrar mermas; se suben solos al volver la conexión. Editar o retirar lotes, borrar productos y recibir pedidos necesitan internet.
+          🔌 SIN INTERNET: puedes seguir trabajando en Inventario (productos, lotes, mermas, pedidos de Compras); todo se sube solo al volver la conexión. Solo el buscador de fotos y el autocompletar por código de barras necesitan internet.
         </div>
       )}
 

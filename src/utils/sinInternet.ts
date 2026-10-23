@@ -180,22 +180,46 @@ const copiaFiltrada = async (clave: string) => {
 };
 
 // ---------------------------------------------------------------- lo hecho sin internet, en pantalla
+type Fila = Record<string, unknown>;
+type Filtros = [string, string][];
+// Lo que una acción hecha sin internet le hace a los datos, para verlo en pantalla antes de subirlo.
+// Las acciones del servidor (recibir pedido, editar o retirar lote, borrar producto) se imitan así.
+type Efecto =
+  | { tipo: 'nueva'; tabla: string; fila: Fila }
+  | { tipo: 'cambio'; tabla: string; filtros: Filtros; cambios: Fila }
+  | { tipo: 'borrado'; tabla: string; filtros: Filtros }
+  | { tipo: 'stock'; producto: string; delta: number };
+const cumpleExacto = (fila: Fila, filtros: Filtros) => cumpleTodos(fila, filtros) === true;
+
+const aplicarEnPendientes = (porTabla: Map<string, Fila[]>, e: Efecto) => {
+  if (e.tipo === 'nueva') { porTabla.set(e.tabla, [...(porTabla.get(e.tabla) || []), { ...e.fila }]); return; }
+  if (e.tipo === 'stock') {
+    for (const p of porTabla.get('products') || []) if (String(p.id) === e.producto) p.quantity = Math.max(0, Number(p.quantity || 0) + e.delta);
+    return;
+  }
+  const filas = porTabla.get(e.tabla) || [];
+  if (e.tipo === 'borrado') porTabla.set(e.tabla, filas.filter((f) => !cumpleExacto(f, e.filtros)));
+  else for (const f of filas) if (cumpleExacto(f, e.filtros)) Object.assign(f, e.cambios);
+};
+
 // Las filas guardadas en la cola (ventas, abonos, movimientos, mermas...) se suman a lo que se lee
 // de las copias: así Finanzas muestra lo vendido y cobrado sin internet.
 const filasPendientes = async () => {
-  const porTabla = new Map<string, Record<string, unknown>[]>();
-  const agregar = (tabla: string, fila: Record<string, unknown>) => porTabla.set(tabla, [...(porTabla.get(tabla) || []), fila]);
+  const porTabla = new Map<string, Fila[]>();
+  const agregar = (tabla: string, fila: Fila) => porTabla.set(tabla, [...(porTabla.get(tabla) || []), fila]);
   for (const p of await leerPendientes()) {
     const tabla = p.accion.split('/')[1];
+    // Acción del servidor hecha sin internet: sus efectos, en orden
+    if (p.efectos) { for (const e of p.efectos) aplicarEnPendientes(porTabla, e); continue; }
     // Cambios y borrados de algo creado sin internet (ej. caja abierta y cerrada sin internet, cliente
-    // creado y corregido): se aplican a esa fila, en el orden en que se hicieron
+    // creado y corregido, los productos de un pedido editado): se aplican a las filas que cumplen su
+    // filtro (id u otro, ej. compra_id), en el orden en que se hicieron
     if (p.metodo === 'PATCH' || p.metodo === 'DELETE') {
-      const id = idDelFiltro(p.url);
-      if (id == null) continue;
-      const filas = porTabla.get(tabla) || [];
-      if (p.metodo === 'DELETE') { porTabla.set(tabla, filas.filter((f) => String(f.id) !== id)); continue; }
+      const filtros = filtrosDe(new URL(p.url, location.origin));
+      if (!filtros.length) continue;
       const cambios = cambiosDe(p.cuerpo);
-      if (cambios) for (const f of filas) if (String(f.id) === id) Object.assign(f, cambios);
+      if (p.metodo === 'DELETE') aplicarEnPendientes(porTabla, { tipo: 'borrado', tabla, filtros });
+      else if (cambios) aplicarEnPendientes(porTabla, { tipo: 'cambio', tabla, filtros, cambios });
       continue;
     }
     if (p.metodo !== 'POST') continue;
@@ -248,11 +272,29 @@ const sumarPendientes = async (clave: string, copia: CopiaGuardada) => {
   const yaNoCumple = (f: Record<string, unknown>) => filtros.some(([columna, filtro]) =>
     f && typeof f === 'object' && columna in f && cumpleFiltro(f[columna], filtro) === false);
   const vigentes = filtros.length ? filas.filter((f) => !yaNoCumple(f)) : filas;
-  const nuevas = (await filasPendientes()).get(tabla) || [];
+  const pendientes = await filasPendientes();
+  const nuevas = pendientes.get(tabla) || [];
   const yaEstan = new Set(vigentes.map((f) => String(f?.id)));
   const extra = nuevas.filter((f) => !yaEstan.has(String(f.id)) && cumpleTodos(f, filtros) === true);
   if (!extra.length && vigentes.length === filas.length) return copia;
+  // Lo creado sin internet que la pantalla pide CON otra tabla adentro (el pedido con sus productos, el
+  // lote con su producto): se arma aquí, como lo haría el servidor
+  const select = pedida.searchParams.get('select') || '';
+  for (const rel of RELACIONES[tabla] || []) {
+    if (!new RegExp(`(^|,)\\s*${rel.tabla}\\s*[!(]`).test(select)) continue;
+    for (const fila of extra) {
+      if (rel.uno) fila[rel.tabla] = (await filaLocal(rel.tabla, String(fila[rel.local]))) || null;
+      else fila[rel.tabla] = (pendientes.get(rel.tabla) || []).filter((h) => String(h[rel.remoto]) === String(fila[rel.local]));
+    }
+  }
   return armarRespuesta(pedida, [...vigentes, ...extra]);
+};
+
+// Tablas que las pantallas piden con otra adentro (ver PanelCompras: compras con compras_detalle;
+// TablaLotes: lotes con su producto)
+const RELACIONES: Record<string, { tabla: string; local: string; remoto: string; uno: boolean }[]> = {
+  batches: [{ tabla: 'products', local: 'product_id', remoto: 'id', uno: true }],
+  compras: [{ tabla: 'compras_detalle', local: 'id', remoto: 'compra_id', uno: false }],
 };
 
 export const leerCopia = async (clave: string) => {
@@ -287,14 +329,24 @@ const PERMITIDO_SIN_INTERNET = new Set([
   'POST /categories', 'DELETE /categories',
   'POST /batches',                                                   // ingresar lotes
   'POST /providers', 'PATCH /providers', 'DELETE /providers',        // proveedores
+  // Fase SI-2: lo que calcula el servidor (ver IMITAR_RPC más abajo)
+  'PATCH /batches',                                                  // editar lote (sus datos)
+  'POST /compras', 'PATCH /compras',                                 // pedidos: crear, editar, anular
+  'POST /compras_detalle', 'DELETE /compras_detalle',
+  'POST /empresa_config', 'PATCH /empresa_config',                   // Ajustes > Datos de la empresa
+  'POST /rpc/fn_recibir_compra', 'POST /rpc/fn_devolver_compra',     // recibir y devolver pedidos
+  'POST /rpc/fn_edit_batch', 'POST /rpc/fn_soft_delete_batch',       // editar y retirar lote
+  'POST /rpc/fn_soft_delete_product',                                // borrar producto
 ]);
-// Los lotes solo cambian su CANTIDAD sin internet (merma); editarlos del todo es fase SI-2
-const SOLO_CANTIDAD = new Set(['PATCH /batches']);
+// (antes de la fase SI-2 los lotes solo podían cambiar su cantidad sin internet)
+const SOLO_CANTIDAD = new Set<string>();
 // El stock se guarda como DIFERENCIA (no como número fijo): así dos cajas sin internet no se pisan
 const CON_STOCK = new Set(['PATCH /batches', 'PATCH /products']);
 // Tablas cuyo número (id) lo pone el servidor: sin internet lo pone la PC (el servidor lo acepta,
 // sus ids son "BY DEFAULT"). Basado en la hora: nunca choca con los del servidor (van por miles).
-const ID_DESDE_LA_PC: Record<string, 'numero' | 'uuid'> = { products: 'numero', customers: 'numero', providers: 'uuid' };
+const ID_DESDE_LA_PC: Record<string, 'numero' | 'uuid'> = {
+  products: 'numero', customers: 'numero', providers: 'uuid', compras_detalle: 'numero', empresa_config: 'numero',
+};
 let ultimoIdNumero = 0;
 const nuevoId = (tipo: 'numero' | 'uuid') => {
   if (tipo === 'uuid') return crypto.randomUUID();
@@ -330,14 +382,23 @@ const cambiosDe = (cuerpo: string): Record<string, unknown> | null => {
 // id de la fila en un filtro "id=eq.X" de la URL
 const idDelFiltro = (url: string) => new URL(url, location.origin).searchParams.get('id')?.replace(/^eq\./, '') ?? null;
 
+// Una copia puede ser una lista o UN registro (consultas .single(), ej. los datos de la empresa)
+const filasDeCopia = (cuerpo: string): { filas: Fila[]; uno: boolean } | null => {
+  try {
+    const datos = JSON.parse(cuerpo || 'null');
+    if (Array.isArray(datos)) return { filas: datos, uno: false };
+    return datos && typeof datos === 'object' ? { filas: [datos], uno: true } : null;
+  } catch { return null; }
+};
+const cuerpoDeCopia = (filas: Fila[], uno: boolean) => JSON.stringify(uno ? (filas[0] ?? null) : filas);
+
 // Busca en las copias guardadas la fila de una tabla (para saber su cantidad actual)
 const filaEnCopias = async (tabla: string, id: string) => {
   for (const clave of await clavesLocal(ALMACEN_RESPUESTAS)) {
     if (!String(clave).includes(`/rest/v1/${tabla}?`)) continue;
     const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave);
     try {
-      const filas = JSON.parse(copia?.cuerpo || '[]');
-      const fila = Array.isArray(filas) ? filas.find((f) => String(f?.id) === id) : null;
+      const fila = filasDeCopia(copia?.cuerpo || '')?.filas.find((f) => String(f?.id) === id);
       if (fila) return fila as Record<string, unknown>;
     } catch { /* copia no es una lista */ }
   }
@@ -351,26 +412,11 @@ const cambiarEnCopias = async (tabla: string, id: string, cambiar: (fila: Record
     const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave);
     if (!copia) continue;
     try {
-      const filas = JSON.parse(copia.cuerpo);
-      if (!Array.isArray(filas)) continue;
+      const copiaLeida = filasDeCopia(copia.cuerpo);
+      if (!copiaLeida) continue;
       let cambio = false;
-      for (const f of filas) if (String(f?.id) === id) { cambiar(f); cambio = true; }
-      if (cambio) await guardarLocal(ALMACEN_RESPUESTAS, { ...copia, cuerpo: JSON.stringify(filas) }, clave);
-    } catch { /* copia no es una lista */ }
-  }
-};
-
-// Quita una fila de todas las copias de una tabla (algo borrado sin internet deja de verse)
-const quitarDeCopias = async (tabla: string, id: string) => {
-  for (const clave of await clavesLocal(ALMACEN_RESPUESTAS)) {
-    if (!String(clave).includes(`/rest/v1/${tabla}?`)) continue;
-    const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave);
-    if (!copia) continue;
-    try {
-      const filas = JSON.parse(copia.cuerpo);
-      if (!Array.isArray(filas)) continue;
-      const quedan = filas.filter((f) => String(f?.id) !== id);
-      if (quedan.length !== filas.length) await guardarLocal(ALMACEN_RESPUESTAS, { ...copia, cuerpo: JSON.stringify(quedan) }, clave);
+      for (const f of copiaLeida.filas) if (String(f?.id) === id) { cambiar(f); cambio = true; }
+      if (cambio) await guardarLocal(ALMACEN_RESPUESTAS, { ...copia, cuerpo: cuerpoDeCopia(copiaLeida.filas, copiaLeida.uno) }, clave);
     } catch { /* copia no es una lista */ }
   }
 };
@@ -378,6 +424,65 @@ const quitarDeCopias = async (tabla: string, id: string) => {
 // La fila como se ve ahora en la PC: primero lo hecho sin internet (lo más nuevo), si no la copia
 const filaLocal = async (tabla: string, id: string) =>
   (await filasPendientes()).get(tabla)?.find((f) => String(f.id) === id) || (await filaEnCopias(tabla, id));
+
+// Cambia (o quita) en las copias las filas que cumplen un filtro. compras_detalle también vive DENTRO de
+// las copias de compras (PanelCompras las pide juntas): ahí también se cambia.
+const cambiarFilasEnCopias = async (tabla: string, cambiar: (filas: Fila[]) => Fila[] | null) => {
+  for (const clave of await clavesLocal(ALMACEN_RESPUESTAS)) {
+    if (!String(clave).includes(`/rest/v1/${tabla}?`)) continue;
+    const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave);
+    if (!copia) continue;
+    try {
+      const copiaLeida = filasDeCopia(copia.cuerpo);
+      if (!copiaLeida) continue;
+      const nuevas = cambiar(copiaLeida.filas);
+      if (nuevas) await guardarLocal(ALMACEN_RESPUESTAS, { ...copia, cuerpo: cuerpoDeCopia(nuevas, copiaLeida.uno) }, clave);
+    } catch { /* copia no es una lista */ }
+  }
+};
+const conFiltro = (filas: Fila[], filtros: Filtros, accion: (f: Fila) => Fila | null) => {
+  let cambio = false;
+  const resultado: Fila[] = [];
+  for (const f of filas) {
+    if (!cumpleExacto(f, filtros)) { resultado.push(f); continue; }
+    cambio = true;
+    const nueva = accion(f);
+    if (nueva) resultado.push(nueva);
+  }
+  return cambio ? resultado : null;
+};
+const aplicarEnCopias = async (e: Efecto) => {
+  if (e.tipo === 'stock') {
+    await cambiarEnCopias('products', e.producto, (f) => { f.quantity = Math.max(0, Number(f.quantity || 0) + e.delta); });
+    return;
+  }
+  if (e.tipo === 'nueva') {
+    // Lo nuevo se ve por filasPendientes; un producto nuevo de un pedido que ya estaba, dentro de su pedido
+    if (e.tabla === 'compras_detalle') {
+      await cambiarFilasEnCopias('compras', (filas) => {
+        let cambio = false;
+        for (const c of filas) {
+          if (String(c.id) === String(e.fila.compra_id) && Array.isArray(c.compras_detalle)) { c.compras_detalle = [...c.compras_detalle, { ...e.fila }]; cambio = true; }
+        }
+        return cambio ? filas : null;
+      });
+    }
+    return;
+  }
+  const accion = (f: Fila) => (e.tipo === 'borrado' ? null : { ...f, ...e.cambios });
+  await cambiarFilasEnCopias(e.tabla, (filas) => conFiltro(filas, e.filtros, accion));
+  if (e.tabla === 'compras_detalle') {
+    await cambiarFilasEnCopias('compras', (filas) => {
+      let cambio = false;
+      for (const c of filas) {
+        if (!Array.isArray(c.compras_detalle)) continue;
+        const nuevas = conFiltro(c.compras_detalle as Fila[], e.filtros, accion);
+        if (nuevas) { c.compras_detalle = nuevas; cambio = true; }
+      }
+      return cambio ? filas : null;
+    });
+  }
+};
 
 export interface Pendiente {
   id: string;              // orden de llegada (fecha + contador): se suben en este orden
@@ -390,6 +495,7 @@ export interface Pendiente {
   creado: number;
   ref?: string;            // referencia única (ref_local) de abonos, movimientos y mermas
   diferencia?: number;     // merma: cuánto cambia el stock (se aplica sobre el stock REAL al subir)
+  efectos?: Efecto[];      // acción del servidor hecha sin internet: lo que se ve en pantalla hasta subirla
   error?: string;          // el servidor lo rechazó (no por falta de internet): queda para revisar
 }
 
@@ -421,6 +527,26 @@ export const encolar = async (url: string, opciones: RequestInit, token: string 
 
   const tabla = accion.split('/')[1];
   const filaId = idDelFiltro(url);
+
+  // Acción del SERVIDOR (recibir pedido, editar o retirar lote, borrar producto): la PC la imita para
+  // que la pantalla quede igual que si hubiera internet; al subirla la hace el servidor de verdad
+  if (tabla === 'rpc') {
+    const imitar = IMITAR_RPC[accion.split('/')[2]];
+    if (!imitar) return new Response(JSON.stringify({ message: 'Sin internet: esto necesita conexión.' }), { status: 503, headers: { 'Content-Type': 'application/json' } });
+    let resultado: Awaited<ReturnType<typeof imitar>>;
+    try { resultado = await imitar(JSON.parse(cuerpo || '{}')); } catch (e) {
+      // Lo mismo que respondería el servidor (ej. "ya se vendió, no se puede devolver")
+      return new Response(JSON.stringify({ message: (e as Error).message }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    }
+    if (resultado.params) pendiente.cuerpo = cuerpo = JSON.stringify(resultado.params);
+    if (resultado.diferencia !== undefined) pendiente.diferencia = resultado.diferencia;
+    pendiente.efectos = resultado.efectos;
+    await guardarLocal(ALMACEN_PENDIENTES, pendiente);          // en el disco ANTES de decir "listo"
+    hayEnCola = true;
+    for (const e of resultado.efectos) await aplicarEnCopias(e);
+    void avisarPendientes();
+    return new Response(JSON.stringify(resultado.respuesta ?? null), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  }
 
   // Producto, cliente o proveedor nuevo: su número lo pone la PC (el servidor lo acepta tal cual); así lo
   // que se haga después sin internet con él (vender ese producto, fiarle a ese cliente) ya apunta bien
@@ -467,10 +593,14 @@ export const encolar = async (url: string, opciones: RequestInit, token: string 
     const merma = mermaId ? await filaEnCopias('waste', mermaId) : null;
     if (merma) await cambiarEnCopias('products', String(merma.product_id), (f) => { f.quantity = Number(f.quantity || 0) - Number(merma.quantity || 0); });
   }
-  // Cualquier cambio o borrado se ve al instante en pantalla (en las copias); lo creado sin internet ya
-  // se suma a lo que se lee (filasPendientes)
-  if (metodo === 'PATCH' && filaId && cambios) await cambiarEnCopias(tabla, filaId, (f) => { Object.assign(f, cambios); });
-  if (metodo === 'DELETE' && filaId) await quitarDeCopias(tabla, filaId);
+  // Cualquier cambio o borrado se ve al instante en pantalla (en las copias, por su filtro: id u otro);
+  // lo creado sin internet ya se suma a lo que se lee (filasPendientes)
+  const filtrosUrl = filtrosDe(new URL(url, location.origin));
+  if (metodo === 'PATCH' && cambios && filtrosUrl.length) await aplicarEnCopias({ tipo: 'cambio', tabla, filtros: filtrosUrl, cambios });
+  if (metodo === 'DELETE' && filtrosUrl.length) await aplicarEnCopias({ tipo: 'borrado', tabla, filtros: filtrosUrl });
+  if (accion === 'POST /compras_detalle') {
+    for (const fila of [JSON.parse(cuerpo || '[]')].flat() as Fila[]) await aplicarEnCopias({ tipo: 'nueva', tabla, fila });
+  }
   if (accion === 'POST /debt_payments') {
     // Varios abonos al mismo cliente sin internet: la deuda que se ve baja con cada uno
     for (const abono of JSON.parse(cuerpo) as { fiado_id: number; amount: number }[]) {
@@ -494,6 +624,178 @@ export const encolar = async (url: string, opciones: RequestInit, token: string 
   return new Response(JSON.stringify(quiereUna ? (filas[0] ?? null) : filas), {
     status: 201, headers: { 'Content-Type': 'application/json' },
   });
+};
+
+// ---------------------------------------------------------------- 4) acciones del servidor sin internet (fase SI-2)
+// Cada una imita EXACTAMENTE lo que hace su función en el servidor (servidor/sql/seguridad-sesion.sql y
+// fn_edit_batch / fn_soft_delete_batch / fn_soft_delete_product de la base) para que la pantalla quede
+// igual. Al volver el internet, la cola llama a la función real (ver PREPARAR_RPC: no se repite lo ya hecho).
+interface ResultadoImitado { efectos: Efecto[]; respuesta?: unknown; params?: Record<string, unknown>; diferencia?: number }
+
+// Quién está usando la PC (lo guarda sesion.ts para trabajar sin internet)
+const empleadoLocal = () => {
+  try { return String(JSON.parse(localStorage.getItem('siumax_empleado_sin_internet') || '{}')?.empleado?.nombre || ''); } catch { return ''; }
+};
+let contadorMov = 0;
+const movimiento = (fila: Fila): Efecto => ({
+  tipo: 'nueva', tabla: 'inventory_movements',
+  fila: { id: `local-mov-${Date.now()}-${contadorMov++}`, created_at: new Date().toISOString(), user: empleadoLocal() || 'Sistema', is_synced: 1, ...fila },
+});
+
+// Los productos de un pedido como se ven en la PC: los de su copia (vienen dentro del pedido) y los
+// agregados sin internet
+const detallesDeCompra = async (compraId: string) => {
+  const enCopia = ((await filaEnCopias('compras', compraId))?.compras_detalle as Fila[] | undefined) || [];
+  const nuevos = ((await filasPendientes()).get('compras_detalle') || []).filter((d) => String(d.compra_id) === compraId);
+  const ids = new Set(enCopia.map((d) => String(d.id)));
+  return [...enCopia, ...nuevos.filter((d) => !ids.has(String(d.id)))];
+};
+
+const IMITAR_RPC: Record<string, (p: Record<string, any>) => Promise<ResultadoImitado>> = {
+  // Recibir pedido: un lote por producto que llegó, stock, detalle con su lote y la compra RECIBIDA.
+  // Los números de los lotes los pone la PC y viajan al servidor (lote_id): así coinciden y no se repite
+  fn_recibir_compra: async (p) => {
+    const compraId = String(p.p_compra_id);
+    const compra = await filaLocal('compras', compraId);
+    if (!compra) throw new Error('Ese pedido no existe.');
+    if (compra.estado !== 'PENDIENTE') throw new Error(`Este pedido ya no está pendiente (está ${compra.estado}).`);
+    const doc = String(p.p_documento || '').trim() || `COMPRA #${compraId.slice(-6)}`;
+    const ahora = new Date().toISOString();
+    const items = ((p.p_items || []) as Fila[]).map((i) => ({ ...i }));
+    const efectos: Efecto[] = [];
+    const cambios: { id: string; quantity: number }[] = [];
+    let lotes = 0;
+    for (const det of (await detallesDeCompra(compraId)).filter((d) => d.batch_id == null)) {
+      const item = items.find((i) => String(i.detalle_id) === String(det.id));
+      const cant = Math.max(0, Number(item?.cantidad || 0));
+      const costo = item && item.costo != null ? Math.max(0, Number(item.costo)) : Number(det.costo_unit || 0);
+      if (!item || cant <= 0) {
+        efectos.push({ tipo: 'cambio', tabla: 'compras_detalle', filtros: [['id', `eq.${det.id}`]], cambios: { cantidad_recibida: 0 } });
+        continue;
+      }
+      const loteId = nuevoId('numero') as number;
+      item.lote_id = loteId;
+      const producto = String(det.product_id);
+      efectos.push({ tipo: 'nueva', tabla: 'batches', fila: {
+        id: loteId, product_id: det.product_id, quantity: cant, initial_quantity: cant, expiration_date: item.vence || null,
+        cost_total: Math.round(cant * costo * 100) / 100, cost_unit: costo, document_ref: doc,
+        supplier: compra.proveedor ?? null, provider_id: compra.provider_id ?? null, is_active: 1, is_synced: 1, created_at: ahora,
+      } });
+      efectos.push(movimiento({ batch_id: loteId, product_id: det.product_id, product_name: det.product_name, change_amount: cant,
+        previous_quantity: 0, new_quantity: cant, operation_type: 'COMPRA', reason: 'Ingreso Lote', notes: `Doc: ${doc} · Pedido #${compraId.slice(-6)}` }));
+      efectos.push({ tipo: 'stock', producto, delta: cant });
+      efectos.push({ tipo: 'cambio', tabla: 'compras_detalle', filtros: [['id', `eq.${det.id}`]], cambios: { cantidad_recibida: cant, costo_unit: costo, batch_id: loteId } });
+      const ya = cambios.find((c) => c.id === producto);
+      if (ya) ya.quantity += cant;
+      else cambios.push({ id: producto, quantity: Number((await filaLocal('products', producto))?.quantity || 0) + cant });
+      lotes++;
+    }
+    efectos.push({ tipo: 'cambio', tabla: 'compras', filtros: [['id', `eq.${compraId}`]], cambios: { estado: 'RECIBIDO', documento: doc, recibido_por: empleadoLocal() || null, recibido_at: ahora } });
+    return { efectos, respuesta: { lotes, cambios }, params: { ...p, p_items: items } };
+  },
+
+  // Devolver lo recibido: retira sus lotes (si no se vendieron ni mermaron) y la compra vuelve a PENDIENTE
+  fn_devolver_compra: async (p) => {
+    const compraId = String(p.p_compra_id);
+    const compra = await filaLocal('compras', compraId);
+    if (!compra) throw new Error('Ese pedido no existe.');
+    if (compra.estado !== 'RECIBIDO') throw new Error('Solo se puede devolver un pedido RECIBIDO.');
+    const efectos: Efecto[] = [];
+    const cambios: { id: string; quantity: number }[] = [];
+    const movidos: string[] = [];
+    const conLote: { det: Fila; lote: Fila }[] = [];
+    for (const det of (await detallesDeCompra(compraId)).filter((d) => d.batch_id != null)) {
+      const lote = await filaLocal('batches', String(det.batch_id));
+      if (!lote || Number(lote.is_active) !== 1 || Number(lote.quantity || 0) < Number(det.cantidad_recibida || 0)) movidos.push(`• ${det.product_name}`);
+      else conLote.push({ det, lote });
+    }
+    if (movidos.length) throw new Error(`No se puede devolver: estos productos ya se vendieron, se mermaron o su lote se retiró:\n${movidos.join('\n')}`);
+    for (const { det, lote } of conLote) {
+      const cant = Number(lote.quantity || 0);
+      const producto = String(det.product_id);
+      efectos.push({ tipo: 'cambio', tabla: 'batches', filtros: [['id', `eq.${lote.id}`]], cambios: { is_active: 0, quantity: 0 } });
+      efectos.push({ tipo: 'stock', producto, delta: -cant });
+      efectos.push(movimiento({ batch_id: lote.id, product_id: det.product_id, product_name: det.product_name, change_amount: -cant,
+        previous_quantity: cant, new_quantity: 0, operation_type: 'AJUSTE', reason: 'Retiro de Lote (Soft Delete)' }));
+      const ya = cambios.find((c) => c.id === producto);
+      if (ya) ya.quantity = Math.max(0, ya.quantity - cant);
+      else cambios.push({ id: producto, quantity: Math.max(0, Number((await filaLocal('products', producto))?.quantity || 0) - cant) });
+    }
+    efectos.push({ tipo: 'cambio', tabla: 'compras_detalle', filtros: [['compra_id', `eq.${compraId}`]], cambios: { cantidad_recibida: null, batch_id: null } });
+    efectos.push({ tipo: 'cambio', tabla: 'compras', filtros: [['id', `eq.${compraId}`]], cambios: { estado: 'PENDIENTE', documento: null, recibido_por: null, recibido_por_id: null, recibido_at: null } });
+    return { efectos, respuesta: { lotes: conLote.length, cambios } };
+  },
+
+  // Editar lote: su cantidad queda en la nueva y el stock del producto cambia en la diferencia. Al subir
+  // se manda esa DIFERENCIA sobre la cantidad real del servidor (no pisa lo vendido en otra caja)
+  fn_edit_batch: async (p) => {
+    const lote = await filaLocal('batches', String(p.p_batch_id));
+    if (!lote || Number(lote.is_active) !== 1) return { efectos: [] }; // el servidor tampoco hace nada
+    const viejo = Number(lote.quantity || 0);
+    const nuevo = Number(p.p_new_qty || 0);
+    const efectos: Efecto[] = [
+      { tipo: 'cambio', tabla: 'batches', filtros: [['id', `eq.${lote.id}`]], cambios: { quantity: nuevo, cost_unit: Number(p.p_new_cost || 0) } },
+      { tipo: 'stock', producto: String(lote.product_id), delta: nuevo - viejo },
+    ];
+    if (nuevo !== viejo) efectos.push(movimiento({ batch_id: lote.id, product_id: lote.product_id, change_amount: nuevo - viejo,
+      previous_quantity: viejo, new_quantity: nuevo, operation_type: 'AJUSTE', reason: 'Edición manual de lote' }));
+    return { efectos, diferencia: nuevo - viejo };
+  },
+
+  // Retirar lote: queda inactivo y en 0, y el stock del producto baja lo que tenía
+  fn_soft_delete_batch: async (p) => {
+    const lote = await filaLocal('batches', String(p.p_batch_id));
+    if (!lote) return { efectos: [] };
+    const cant = Number(lote.quantity || 0);
+    const activo = Number(lote.is_active) === 1;
+    return { efectos: [
+      { tipo: 'cambio', tabla: 'batches', filtros: [['id', `eq.${lote.id}`]], cambios: { is_active: 0, quantity: 0 } },
+      ...(activo ? [{ tipo: 'stock', producto: String(lote.product_id), delta: -cant } as Efecto] : []),
+      movimiento({ batch_id: lote.id, product_id: lote.product_id, change_amount: -cant, previous_quantity: cant, new_quantity: 0,
+        operation_type: 'AJUSTE', reason: 'Retiro de Lote (Soft Delete)' }),
+    ] };
+  },
+
+  // Borrar producto: queda inactivo y en 0, con todos sus lotes
+  fn_soft_delete_product: async (p) => {
+    const id = String(p.p_product_id);
+    const prod = await filaLocal('products', id);
+    if (!prod) throw new Error(`Producto ID ${id} no encontrado.`);
+    const cant = Number(prod.quantity || 0);
+    return { efectos: [
+      { tipo: 'cambio', tabla: 'products', filtros: [['id', `eq.${id}`]], cambios: { is_active: '0', quantity: 0 } },
+      { tipo: 'cambio', tabla: 'batches', filtros: [['product_id', `eq.${id}`]], cambios: { is_active: 0, quantity: 0 } },
+      movimiento({ product_id: prod.id, product_name: prod.name, change_amount: -cant, previous_quantity: cant, new_quantity: 0,
+        operation_type: 'AJUSTE', reason: 'Eliminación del sistema (Soft Delete)' }),
+    ] };
+  },
+};
+
+// Antes de subir una acción del servidor hecha sin internet: ¿ya está hecha? (se cortó justo después de
+// mandarla, u otra caja la hizo) → no se repite. Editar lote se manda como diferencia sobre lo real.
+const leerServidor = async (p: Pendiente, consulta: string) => {
+  const r = await pedirConLimite(`${location.origin}/rest/v1/${consulta}`, { headers: cabecerasDe(p) }, 15_000);
+  if (!r.ok) throw new Error(`no se pudo revisar (${r.status})`);
+  return ((await r.json()) as Fila[])[0] || null;
+};
+const PREPARAR_RPC: Record<string, (p: Pendiente, params: Record<string, any>) => Promise<{ saltar?: boolean; cuerpo?: string }>> = {
+  fn_soft_delete_batch: async (p, params) => {
+    const lote = await leerServidor(p, `batches?select=is_active&id=eq.${encodeURIComponent(params.p_batch_id)}`);
+    return { saltar: !lote || Number(lote.is_active) === 0 };
+  },
+  fn_soft_delete_product: async (p, params) => {
+    const prod = await leerServidor(p, `products?select=is_active&id=eq.${encodeURIComponent(params.p_product_id)}`);
+    return { saltar: !prod || String(prod.is_active) === '0' };
+  },
+  fn_devolver_compra: async (p, params) => {
+    const compra = await leerServidor(p, `compras?select=estado&id=eq.${encodeURIComponent(params.p_compra_id)}`);
+    return { saltar: !compra || compra.estado !== 'RECIBIDO' };
+  },
+  fn_edit_batch: async (p, params) => {
+    const lote = await leerServidor(p, `batches?select=quantity&id=eq.${encodeURIComponent(params.p_batch_id)}`);
+    if (!lote) return { saltar: true };
+    return { cuerpo: JSON.stringify({ ...params, p_new_qty: Math.max(0, Number(lote.quantity || 0) + Number(p.diferencia || 0)) }) };
+  },
 };
 
 // El stock que se ve en pantalla baja también sin internet (en las copias de productos)
@@ -542,6 +844,12 @@ const NOMBRES: Record<string, [string, string]> = {
   'POST /batches': ['lote', 'lotes'],
   'POST /providers': ['proveedor nuevo', 'proveedores nuevos'], 'PATCH /providers': ['proveedor editado', 'proveedores editados'],
   'DELETE /providers': ['proveedor borrado', 'proveedores borrados'],
+  'POST /compras': ['pedido nuevo', 'pedidos nuevos'], 'PATCH /compras': ['pedido editado', 'pedidos editados'],
+  'PATCH /batches': ['cambio de lote', 'cambios de lotes'],
+  'POST /empresa_config': ['datos de la empresa', 'datos de la empresa'], 'PATCH /empresa_config': ['datos de la empresa', 'datos de la empresa'],
+  'POST /rpc/fn_recibir_compra': ['pedido recibido', 'pedidos recibidos'], 'POST /rpc/fn_devolver_compra': ['pedido devuelto', 'pedidos devueltos'],
+  'POST /rpc/fn_edit_batch': ['lote editado', 'lotes editados'], 'POST /rpc/fn_soft_delete_batch': ['lote retirado', 'lotes retirados'],
+  'POST /rpc/fn_soft_delete_product': ['producto borrado', 'productos borrados'],
 };
 const resumir = (lista: Pendiente[]) => {
   const cuenta = new Map<string, number>();
@@ -609,7 +917,15 @@ export const subirPendientes = async () => {
         const cabeceras: Record<string, string> = cabecerasDe(p);
         if (p.prefer) cabeceras.Prefer = p.prefer;
         let cuerpo = p.cuerpo;
-        if (p.diferencia !== undefined) {
+        const esRpc = p.accion.startsWith('POST /rpc/');
+        if (esRpc) {
+          // Acción del servidor hecha sin internet: si ya está hecha no se repite; editar lote, como diferencia
+          const preparar = PREPARAR_RPC[p.accion.split('/')[2]];
+          const listo = preparar ? await preparar(p, JSON.parse(p.cuerpo || '{}')) : {};
+          if (listo.saltar) { await borrarLocal(ALMACEN_PENDIENTES, p.id); continue; }
+          if (listo.cuerpo) cuerpo = listo.cuerpo;
+        }
+        if (p.diferencia !== undefined && !esRpc) {
           // Merma: se aplica la diferencia sobre el stock REAL de este momento (respeta las ventas)
           const filaId = idDelFiltro(p.url);
           const tabla = p.accion.split('/')[1];

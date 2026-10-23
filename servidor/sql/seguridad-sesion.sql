@@ -446,7 +446,17 @@ BEGIN
 
   SELECT * INTO v_compra FROM compras WHERE id = p_compra_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Ese pedido no existe.'; END IF;
-  IF v_compra.estado <> 'PENDIENTE' THEN RAISE EXCEPTION 'Este pedido ya no está pendiente (está %).', v_compra.estado; END IF;
+  IF v_compra.estado <> 'PENDIENTE' THEN
+    -- Recepción hecha SIN INTERNET que se vuelve a mandar (se cortó justo después de llegar): sus lotes, con los
+    -- números que puso la PC (lote_id), ya existen → ya está hecha, no es un error (src/utils/sinInternet.ts)
+    IF v_compra.estado = 'RECIBIDO'
+       AND EXISTS (SELECT 1 FROM jsonb_array_elements(p_items) x WHERE x ? 'lote_id')
+       AND NOT EXISTS (SELECT 1 FROM jsonb_array_elements(p_items) x
+                       WHERE x ? 'lote_id' AND NOT EXISTS (SELECT 1 FROM batches b WHERE b.id = (x ->> 'lote_id')::bigint)) THEN
+      RETURN jsonb_build_object('lotes', 0, 'cambios', '[]'::jsonb, 'ya_recibido', true);
+    END IF;
+    RAISE EXCEPTION 'Este pedido ya no está pendiente (está %).', v_compra.estado;
+  END IF;
   v_doc := coalesce(nullif(trim(p_documento), ''), 'COMPRA #' || right(v_compra.id::text, 6));
 
   FOR v_det IN SELECT * FROM compras_detalle WHERE compra_id = p_compra_id AND batch_id IS NULL ORDER BY id LOOP
@@ -454,7 +464,8 @@ BEGIN
     v_cant := greatest(0, coalesce((v_item ->> 'cantidad')::numeric, 0));
     v_costo := CASE WHEN v_almacen AND v_item ? 'costo' THEN greatest(0, (v_item ->> 'costo')::numeric) ELSE v_det.costo_unit END;
     IF v_cant > 0 THEN
-      v_lote := v_lote + 1;
+      -- Sin internet la PC ya le puso número al lote (lote_id): se usa ese, así coincide con lo que se vio
+      v_lote := coalesce(nullif(v_item ->> 'lote_id', '')::bigint, v_lote + 1);
       INSERT INTO batches (id, product_id, quantity, initial_quantity, expiration_date, cost_total, cost_unit,
                            document_ref, supplier, provider_id, is_synced, is_active)
       VALUES (v_lote, v_det.product_id, v_cant, v_cant, nullif(v_item ->> 'vence', ''), round(v_cant * v_costo, 2), v_costo,
