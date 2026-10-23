@@ -1,7 +1,7 @@
 import { traerTodo } from '../../utils/traerTodo';
 import { coincideBusqueda } from '../../utils/busqueda';
 import React, { useState, useEffect, useMemo } from 'react';
-import { Package, Layers, Box, AlertTriangle, LayoutGrid, Plus, Database, Activity, Users, ShoppingCart, ClipboardCheck } from 'lucide-react';
+import { Package, Layers, Box, AlertTriangle, LayoutGrid, Plus, Database, Activity, Users, ShoppingCart } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import { usePermiso, avisarSinPermiso } from '../../utils/permisos';
 import { useConexion } from '../../layout/BarraConexion';
@@ -15,7 +15,6 @@ import { TablaLotes } from './components/TablaLotes';
 import { ModalGestionProveedores } from './components/ModalGestionProveedores';
 import { ModalLote } from './components/ModalLote';
 import { ModalHistorialLotes, type ProductoHistorial } from './components/ModalHistorialLotes';
-import { ModalTomaInventario } from './components/ModalTomaInventario';
 import { PanelCompras, inicioCompras } from './components/PanelCompras';
 
 interface InventarioProps {
@@ -43,12 +42,6 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const enviaPedidos = usePermiso('compras_enviar'); // enviar / imprimir pedidos
   const soloCompras = !verStock && (recibePedidos || enviaPedidos);
   useEffect(() => { if (soloCompras && vistaActiva !== 'COMPRAS') setVistaActiva('COMPRAS'); }, [soloCompras, vistaActiva]);
-  // Toma de inventario (fase 2.2, components/ModalTomaInventario.tsx). Solo "Contar inventario" (sin ver stock):
-  // entra únicamente a contar, nunca ve el stock (el conteo es a ciegas)
-  const puedeContar = usePermiso('inventario_contar');
-  const soloConteo = !verStock && !soloCompras && puedeContar;
-  const [isModalConteoOpen, setIsModalConteoOpen] = useState(false);
-  const abrirConteo = () => (puedeContar ? setIsModalConteoOpen(true) : avisarSinPermiso('contar inventario'));
   const { enLinea } = useConexion(); // sin internet: aviso de qué se puede hacer (src/utils/sinInternet.ts)
   const [mermaAEditar, setMermaAEditar] = useState<any>(null);
   const [isModalLoteOpen, setIsModalLoteOpen] = useState(false); // <-- ESTADO DEL NUEVO MODAL
@@ -424,27 +417,6 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, [isModalOpen, isModalLoteOpen, isModalProveedoresOpen, vistaActiva, refreshLotesKey]);
 
-  // Quien solo cuenta: una pantalla con el botón Contar, sin productos, lotes ni stock
-  if (soloConteo) {
-    return (
-      <div className="flex flex-col gap-6 p-4 sm:p-8 text-[var(--color-ink)] font-mono h-full bg-[var(--color-bg)]">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] shrink-0">
-            <Package size={20} className="text-[var(--color-accent)]" />
-          </div>
-          <h1 className="text-xl lg:text-2xl font-black uppercase tracking-widest">Inventario</h1>
-        </div>
-        <div className="border-2 border-[var(--color-border)] bg-[var(--color-surface)] p-6 flex flex-col items-start gap-4 max-w-xl">
-          <p className="font-bold text-sm">Tu usuario cuenta el inventario. Escanea o busca cada producto y escribe cuántos hay en el estante; si falta o sobra, elige el motivo y escribe qué pasó.</p>
-          <button id="btn-toma-inventario" autoFocus onClick={abrirConteo} className="bg-[var(--color-warning)] text-[var(--color-ink)] px-6 py-4 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
-            <ClipboardCheck size={16} /> Contar inventario
-          </button>
-        </div>
-        <ModalTomaInventario isOpen={isModalConteoOpen} onClose={() => { setIsModalConteoOpen(false); setTimeout(() => document.getElementById('btn-toma-inventario')?.focus(), 30); }} products={products} />
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-6 pb-10 text-[var(--color-ink)] font-mono h-full bg-[var(--color-bg)] relative">
       {loading && (
@@ -552,7 +524,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             
 
             {/* Botones de Acción */}
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3 shrink-0">
+            <div className="grid grid-cols-3 gap-2 sm:flex sm:gap-3 shrink-0">
               <button
                 id="btn-nuevo-producto"
                 onClick={() => (puedeEditarProductos ? setIsModalOpen(true) : avisarSinPermiso('crear productos'))}
@@ -609,7 +581,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('btn-ingresar-lote')?.focus();
                   } else if (e.key === 'ArrowRight') {
                     e.preventDefault();
-                    document.getElementById('btn-toma-inventario')?.focus();
+                    e.stopPropagation();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
                     document.getElementById('filtro-orden-inventario')?.focus();
@@ -618,26 +590,6 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                 className="bg-[var(--color-bg)] text-[var(--color-info)] px-1 sm:px-4 lg:px-6 py-3 lg:py-4 min-w-0 border-2 border-[var(--color-info)] font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-widest flex items-center justify-center gap-1 sm:gap-2 hover:bg-[var(--color-info)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-info)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
               >
                 <Users size={16} className="shrink-0" /> <span className="truncate">Proveedores</span>
-              </button>
-              {/* Toma de inventario a ciegas (components/ModalTomaInventario.tsx) */}
-              <button
-                id="btn-toma-inventario"
-                onClick={abrirConteo}
-                onKeyDown={(e) => {
-                  if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  } else if (e.key === 'ArrowLeft') {
-                    e.preventDefault();
-                    document.getElementById('btn-proveedores')?.focus();
-                  } else if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    document.getElementById('filtro-orden-inventario')?.focus();
-                  }
-                }}
-                className="bg-[var(--color-bg)] text-[var(--color-ink)] px-1 sm:px-4 lg:px-6 py-3 lg:py-4 min-w-0 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-widest flex items-center justify-center gap-1 sm:gap-2 hover:bg-[var(--color-warning)] focus:outline-none focus:ring-2 focus:ring-[var(--color-warning)] focus:bg-[var(--color-warning)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-warning)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
-              >
-                <ClipboardCheck size={16} className="shrink-0" /> <span className="truncate">Contar</span>
               </button>
             </div>
           </div>
@@ -800,16 +752,6 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
       />
       <ModalGestionProveedores isOpen={isModalProveedoresOpen} onClose={() => setIsModalProveedoresOpen(false)} />
       <ModalHistorialLotes producto={historialProducto} onClose={cerrarHistorial} />
-      <ModalTomaInventario
-        isOpen={isModalConteoOpen}
-        onClose={() => { setIsModalConteoOpen(false); setTimeout(() => document.getElementById('btn-toma-inventario')?.focus(), 30); }}
-        products={products}
-        onContado={(id, contado) => {
-          // Después del conteo, los lotes suman lo contado (fn_cuadrar_lotes_conteo)
-          setProducts((prev) => prev.map((p) => (String(p.id) === String(id) ? { ...p, quantity: contado } : p)));
-          setRefreshLotesKey((k) => k + 1);
-        }}
-      />
       {/* INVOCACIÓN DEL NUEVO MODAL DE LOTES */}
       <ModalLote 
         isOpen={isModalLoteOpen} 

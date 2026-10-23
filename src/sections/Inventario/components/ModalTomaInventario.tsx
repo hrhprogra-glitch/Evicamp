@@ -1,5 +1,5 @@
 // src/sections/Inventario/components/ModalTomaInventario.tsx
-// TOMA DE INVENTARIO (fase 2.2): el empleado cuenta A CIEGAS (nunca ve cuánto dice el sistema antes de
+// TOMA DE INVENTARIO (fase 2.2, botón "Contar" de la sección Mermas): el empleado cuenta A CIEGAS (nunca ve cuánto dice el sistema antes de
 // contar). Al escribir lo que hay, el sistema muestra si falta o sobra; si hay diferencia, el motivo y la
 // justificación son obligatorios. Se aplica al instante, sin límite ni aprobación: lo hace el servidor con
 // fn_registrar_conteo (servidor/sql/seguridad-sesion.sql), que deja la merma o el sobrante en Mermas con quién,

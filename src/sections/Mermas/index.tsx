@@ -1,10 +1,12 @@
 import { coincideBusqueda } from '../../utils/busqueda';
 ﻿import React, { useState, useEffect, useMemo } from 'react';
-import { Database, TrendingDown, PackageMinus } from 'lucide-react';
+import { Database, TrendingDown, PackageMinus, ClipboardCheck, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import type { Merma } from './types';
 import type { Product } from '../Inventario/types';
 import { ModalMerma } from '../Inventario/components/ModalMerma';
+import { ModalTomaInventario } from '../Inventario/components/ModalTomaInventario';
+import { usePermiso, avisarSinPermiso } from '../../utils/permisos';
 
 // Componentes
 import { HeaderMermas } from './components/HeaderMermas';
@@ -20,6 +22,14 @@ export const Mermas: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isModalMermaOpen, setIsModalMermaOpen] = useState(false);
   const [mermaAEditar, setMermaAEditar] = useState<any>(null);
+  // Toma de inventario (fase 2.2): lo contado queda anotado aquí. Quien solo tiene "Contar inventario" ve
+  // únicamente el botón Contar: la lista de mermas muestra lo que decía el sistema (el conteo es a ciegas)
+  const puedeContar = usePermiso('inventario_contar');
+  const veMermas = usePermiso('almacen_registrar_mermas');
+  const soloConteo = puedeContar && !veMermas;
+  const [isModalConteoOpen, setIsModalConteoOpen] = useState(false);
+  const abrirConteo = () => (puedeContar ? setIsModalConteoOpen(true) : avisarSinPermiso('contar inventario'));
+  const cerrarConteo = () => { setIsModalConteoOpen(false); setTimeout(() => document.getElementById('btn-toma-inventario')?.focus(), 30); };
 
   // Estados de Filtros
   const [searchQuery, setSearchQuery] = useState('');
@@ -389,11 +399,32 @@ export const Mermas: React.FC = () => {
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, [isModalMermaOpen]);
 
+  if (soloConteo) {
+    return (
+      <div className="flex flex-col gap-6 p-4 sm:p-8 text-[var(--color-ink)] font-mono min-h-full bg-[var(--color-surface)]">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-[var(--color-danger-bg)] border-2 border-[var(--color-danger)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-danger)] shrink-0">
+            <AlertTriangle size={24} className="text-[var(--color-danger)]" />
+          </div>
+          <h1 className="text-2xl font-black uppercase tracking-widest">Control de Pérdidas</h1>
+        </div>
+        <div className="border-2 border-[var(--color-border)] bg-[var(--color-bg)] p-6 flex flex-col items-start gap-4 max-w-xl">
+          <p className="font-bold text-sm">Tu usuario cuenta el inventario. Escanea o busca cada producto y escribe cuántos hay en el estante; si falta o sobra, elige el motivo y escribe qué pasó.</p>
+          <button id="btn-toma-inventario" autoFocus onClick={abrirConteo} className="bg-[var(--color-warning)] text-[var(--color-ink)] px-6 py-4 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
+            <ClipboardCheck size={16} /> Contar inventario
+          </button>
+        </div>
+        <ModalTomaInventario isOpen={isModalConteoOpen} onClose={cerrarConteo} products={products} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6 short:gap-3 w-full pb-10 text-[var(--color-ink)] font-mono min-h-full bg-[var(--color-surface)] relative rounded-none">
       
       <HeaderMermas 
         onNuevaMerma={() => setIsModalMermaOpen(true)} 
+        onContar={abrirConteo}
       >
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:flex gap-3 sm:gap-4 w-full xl:w-auto">
           <TarjetaMetrica 
@@ -459,6 +490,13 @@ export const Mermas: React.FC = () => {
           />
         )}
       </div>
+
+      <ModalTomaInventario
+        isOpen={isModalConteoOpen}
+        onClose={cerrarConteo}
+        products={products}
+        onContado={() => { fetchMermas(); fetchProducts(); }}
+      />
 
       {/* MODAL */}
       <ModalMerma 

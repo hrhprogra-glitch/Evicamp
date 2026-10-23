@@ -13,10 +13,10 @@ const PERMISOS_POR_MODULO: Record<string, ClavePermiso[]> = {
   fiados: ['caja_ver_fiados'],
   // 'compras_recibir': entra a Inventario pero solo ve la pestaña Compras (recibir / devolver)
   // 'compras_enviar': igual, solo Compras, para enviar por WhatsApp / descargar / imprimir los pedidos
-  // 'inventario_contar': entra a Inventario solo para contar (toma de inventario a ciegas, sin ver el stock)
-  inventario: ['almacen_ver_stock', 'compras_recibir', 'compras_enviar', 'inventario_contar'],
+  inventario: ['almacen_ver_stock', 'compras_recibir', 'compras_enviar'],
   proveedores: ['almacen_gestionar_proveedores'],
-  mermas: ['almacen_registrar_mermas'],
+  // 'inventario_contar': entra a Mermas solo para contar (toma de inventario a ciegas, sin ver la lista)
+  mermas: ['almacen_registrar_mermas', 'inventario_contar'],
   finanzas: ['caja_abrir_cerrar_turno', 'caja_ingresos_egresos'],
   utilidades: ['gerencia_ver_utilidades'],
   configuracion: ['gerencia_configuracion_sistema', 'gerencia_gestionar_usuarios'],
