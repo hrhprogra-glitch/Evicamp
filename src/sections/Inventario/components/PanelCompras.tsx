@@ -928,6 +928,16 @@ const EditorCompra: React.FC<{
   // Con proveedor elegido, solo los productos que ya se le compraron (sus lotes). Lo que ya está en la lista se deja.
   const [dias, setDias] = useState('15');
   const [resumenSugerido, setResumenSugerido] = useState('');
+  // Filtros de "Sugerir pedido" (pedido del usuario 23/10): una categoría y qué sugerir
+  const [categoriaSugerir, setCategoriaSugerir] = useState('');
+  const [queSugerir, setQueSugerir] = useState<'TODO' | 'VENTA' | 'MINIMO'>('TODO');
+  const categorias = useMemo(() => [...new Set(productos.map((p) => p.category).filter(Boolean))].sort(), [productos]);
+  const limpiarLista = async () => {
+    if (!items.length) return;
+    if (!await confirmar(`¿Quitar los ${items.length} productos de la lista?`)) return;
+    setItems([]); setBorrador({}); setResumenSugerido('');
+    setTimeout(() => enfocar(document.getElementById('compra-buscar')), 30);
+  };
   const sugerirPedido = async () => {
     const d = Math.round(Number(dias));
     if (!d || d < 1 || d > 90) { await avisar('Escribe para cuántos días debe alcanzar el pedido (de 1 a 90).'); enfocar(document.getElementById('compra-dias')); return; }
@@ -945,16 +955,16 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
       }
     }
     const sugeridos = productos
-      .filter((p) => p.unit !== 'CONSUMO' && (!delProveedor || delProveedor.has(String(p.id))))
+      .filter((p) => p.unit !== 'CONSUMO' && (!delProveedor || delProveedor.has(String(p.id))) && (!categoriaSugerir || p.category === categoriaSugerir))
       .map((p) => {
         const falta = (Number(p.vendido30 || 0) / 30) * d - Math.max(0, Number(p.quantity) || 0);
-        const porVenta = falta > 0 ? (esPeso(p) ? Math.round(falta * 100) / 100 : Math.ceil(falta)) : 0;
-        const porMinimo = Number(p.quantity) <= Number(p.minStock) ? sugerida(p) : 0;
+        const porVenta = queSugerir !== 'MINIMO' && falta > 0 ? (esPeso(p) ? Math.round(falta * 100) / 100 : Math.ceil(falta)) : 0;
+        const porMinimo = queSugerir !== 'VENTA' && Number(p.quantity) <= Number(p.minStock) ? sugerida(p) : 0;
         return { p, cantidad: Math.max(porVenta, porMinimo), motivo: porVenta >= porMinimo ? 'venta' : 'minimo' };
       })
       .filter((x) => x.cantidad > 0);
     if (!sugeridos.length) {
-      setResumenSugerido(`Nada que pedir: con lo que hay alcanza para ${d} días y nada está bajo el stock mínimo.`);
+      setResumenSugerido(`Nada que pedir${categoriaSugerir ? ` en ${categoriaSugerir}` : ''}: ${queSugerir === 'MINIMO' ? 'nada está bajo el stock mínimo' : queSugerir === 'VENTA' ? `con lo que hay alcanza para ${d} días` : `con lo que hay alcanza para ${d} días y nada está bajo el stock mínimo`}.`);
       return;
     }
     const nuevos = sugeridos.filter((x) => !items.some((i) => i.product_id === String(x.p.id)));
@@ -1120,8 +1130,26 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
           </label>
         </div>
       </div>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-info)] shrink-0">Sugerir de</span>
+        <select id="compra-sugerir-categoria" data-nav="2,0" value={categoriaSugerir} onChange={(e) => setCategoriaSugerir(e.target.value)} onKeyDown={abrirLista}
+          aria-label="Categoría a sugerir" className={`${claseInput} sm:w-56`}>
+          <option value="">Todas las categorías</option>
+          {categorias.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <select id="compra-sugerir-tipo" data-nav="2,1" value={queSugerir} onChange={(e) => setQueSugerir(e.target.value as 'TODO' | 'VENTA' | 'MINIMO')} onKeyDown={abrirLista}
+          aria-label="Qué sugerir" className={`${claseInput} sm:w-64`}>
+          <option value="TODO">Todo lo que se acaba</option>
+          <option value="VENTA">Solo lo que se vende</option>
+          <option value="MINIMO">Solo lo que está bajo el mínimo</option>
+        </select>
+        <button id="btn-limpiar-compra" type="button" data-nav="2,2" onClick={() => void limpiarLista()} aria-disabled={!items.length}
+          className={`${claseBoton} sm:ml-auto bg-white text-[var(--color-muted)] border-[var(--color-border)] hover:text-[var(--color-danger)] hover:border-[var(--color-danger)] ${items.length ? '' : 'opacity-50'}`}>
+          <Trash2 size={14} /> Limpiar lista
+        </button>
+      </div>
       <p className="text-[11px] font-bold text-[var(--color-muted)] -mt-1">
-        <b>Sugerir pedido</b> agrega lo que se acaba: lo que se vende (según los últimos 30 días) en la cantidad que alcance para los días que elijas, y lo que está bajo el stock mínimo. Después puedes cambiar las cantidades o quitar productos.
+        <b>Sugerir pedido</b> agrega lo que se acaba: lo que se vende (según los últimos 30 días) en la cantidad que alcance para los días que elijas, y lo que está bajo el stock mínimo. Con "Sugerir de" eliges la categoría y qué agregar. Después puedes cambiar las cantidades o quitar productos.
       </p>
       {resumenSugerido && <p id="compra-resumen-sugerido" role="status" className="text-xs font-black text-[var(--color-info)]">{resumenSugerido}</p>}
       {abierto && posLista && createPortal(
@@ -1153,7 +1181,7 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
             <tbody>
               {items.map((i, n) => {
                 const p = porId.get(i.product_id);
-                const fila = 2 + n;
+                const fila = 3 + n; // 1: buscador · 2: filtros de "Sugerir pedido" · 3+: productos
                 return (
                   <tr key={i.product_id} data-producto={i.product_id} className="border-t border-[var(--color-border)]">
                     <td className="p-2 font-black">{i.product_name}</td>
