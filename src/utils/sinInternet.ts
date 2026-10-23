@@ -337,6 +337,9 @@ const PERMITIDO_SIN_INTERNET = new Set([
   'POST /rpc/fn_recibir_compra', 'POST /rpc/fn_devolver_compra',     // recibir y devolver pedidos
   'POST /rpc/fn_edit_batch', 'POST /rpc/fn_soft_delete_batch',       // editar y retirar lote
   'POST /rpc/fn_soft_delete_product',                                // borrar producto
+  // Fase SI-3: Finanzas sin internet (anular venta y borrar), con las mismas reglas del servidor (ver BORRADOS_PROTEGIDOS)
+  'POST /rpc/fn_anular_venta',
+  'DELETE /sales', 'DELETE /cash_movements', 'DELETE /debt_payments',
 ]);
 // (antes de la fase SI-2 los lotes solo podían cambiar su cantidad sin internet)
 const SOLO_CANTIDAD = new Set<string>();
@@ -528,6 +531,14 @@ export const encolar = async (url: string, opciones: RequestInit, token: string 
   const tabla = accion.split('/')[1];
   const filaId = idDelFiltro(url);
 
+  // Borrar: las mismas reglas que el servidor (si no, se vería borrado y el servidor lo rechazaría al subir)
+  if (metodo === 'DELETE') {
+    const rechazo = await borradoRechazado(tabla, filtrosDe(new URL(url, location.origin)));
+    if (rechazo) return respuestaError(403, rechazo);
+    // Algo creado sin internet que todavía no subió: se quita de la cola (nunca llega al servidor)
+    if (filaId?.startsWith('local-')) return quitarCreadoSinInternet(tabla, filaId);
+  }
+
   // Acción del SERVIDOR (recibir pedido, editar o retirar lote, borrar producto): la PC la imita para
   // que la pantalla quede igual que si hubiera internet; al subirla la hace el servidor de verdad
   if (tabla === 'rpc') {
@@ -538,6 +549,8 @@ export const encolar = async (url: string, opciones: RequestInit, token: string 
       // Lo mismo que respondería el servidor (ej. "ya se vendió, no se puede devolver")
       return new Response(JSON.stringify({ message: (e as Error).message }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
+    // Ya estaba hecho (ej. la venta ya se anuló): el servidor tampoco haría nada, no va a la cola
+    if (resultado.nada) return new Response(JSON.stringify(resultado.respuesta ?? null), { status: 200, headers: { 'Content-Type': 'application/json' } });
     if (resultado.params) pendiente.cuerpo = cuerpo = JSON.stringify(resultado.params);
     if (resultado.diferencia !== undefined) pendiente.diferencia = resultado.diferencia;
     pendiente.efectos = resultado.efectos;
@@ -593,6 +606,11 @@ export const encolar = async (url: string, opciones: RequestInit, token: string 
     const merma = mermaId ? await filaEnCopias('waste', mermaId) : null;
     if (merma) await cambiarEnCopias('products', String(merma.product_id), (f) => { f.quantity = Number(f.quantity || 0) - Number(merma.quantity || 0); });
   }
+  if (accion === 'DELETE /debt_payments' && filaId) {
+    // Anular un abono: la deuda vuelve (en el servidor lo recalcula el trigger update_fiado_status)
+    const pago = await filaEnCopias('debt_payments', filaId);
+    if (pago?.fiado_id != null) await devolverAbonoEnFiado(String(pago.fiado_id), Number(pago.amount || 0));
+  }
   // Cualquier cambio o borrado se ve al instante en pantalla (en las copias, por su filtro: id u otro);
   // lo creado sin internet ya se suma a lo que se lee (filasPendientes)
   const filtrosUrl = filtrosDe(new URL(url, location.origin));
@@ -630,7 +648,7 @@ export const encolar = async (url: string, opciones: RequestInit, token: string 
 // Cada una imita EXACTAMENTE lo que hace su función en el servidor (servidor/sql/seguridad-sesion.sql y
 // fn_edit_batch / fn_soft_delete_batch / fn_soft_delete_product de la base) para que la pantalla quede
 // igual. Al volver el internet, la cola llama a la función real (ver PREPARAR_RPC: no se repite lo ya hecho).
-interface ResultadoImitado { efectos: Efecto[]; respuesta?: unknown; params?: Record<string, unknown>; diferencia?: number }
+interface ResultadoImitado { efectos: Efecto[]; respuesta?: unknown; params?: Record<string, unknown>; diferencia?: number; nada?: boolean }
 
 // Quién está usando la PC (lo guarda sesion.ts para trabajar sin internet)
 const empleadoLocal = () => {
@@ -769,6 +787,118 @@ const IMITAR_RPC: Record<string, (p: Record<string, any>) => Promise<ResultadoIm
         operation_type: 'AJUSTE', reason: 'Eliminación del sistema (Soft Delete)' }),
     ] };
   },
+
+  // Anular venta (Finanzas, fase SI-3): devuelve a cada lote lo que salió de él según los movimientos VENTA
+  // del ticket (la precarga guarda los de la caja abierta). Una venta hecha sin internet todavía no tiene
+  // movimientos (los crea el servidor al subirla): su stock vuelve según sus productos.
+  fn_anular_venta: async (p) => {
+    const ventaId = String(p.p_sale_id);
+    const venta = await filaLocal('sales', ventaId);
+    if (!venta) throw new Error('No se encontró la venta.');
+    if (venta.sunat_status === 'ANULADO') return { efectos: [], respuesta: { ya_anulada: true }, nada: true };
+    const ticket = `Ticket #${ventaId}`;
+    const cuando = String(p.p_cuando || new Date().toISOString());
+    let salidas = (await filasLocales('inventory_movements', (m) => m.operation_type === 'VENTA' && m.notes === ticket))
+      .map((m) => ({ batch_id: m.batch_id ?? null, product_id: m.product_id, product_name: m.product_name, cant: Math.abs(Number(m.change_amount) || 0) }));
+    if (!salidas.length) {
+      salidas = (await filasLocales('sale_details', (d) => String(d.sale_id) === ventaId))
+        .map((d) => ({ batch_id: null, product_id: d.product_id, product_name: d.product_name, cant: Math.abs(Number(d.quantity) || 0) }));
+    }
+    const efectos: Efecto[] = [];
+    const lotes = new Map<string, number>();   // un lote puede salir en varias filas: se acumula
+    const stock = new Map<string, number>();
+    let productos = 0;
+    for (const s of salidas) {
+      if (s.cant <= 0) continue;
+      if (s.batch_id != null) {
+        const lote = String(s.batch_id);
+        const ahora = (lotes.has(lote) ? lotes.get(lote)! : Number((await filaLocal('batches', lote))?.quantity || 0)) + s.cant;
+        lotes.set(lote, ahora);
+        efectos.push({ tipo: 'cambio', tabla: 'batches', filtros: [['id', `eq.${lote}`]], cambios: { quantity: ahora } });
+      }
+      const producto = String(s.product_id);
+      const antes = stock.has(producto) ? stock.get(producto)! : Number((await filaLocal('products', producto))?.quantity || 0);
+      stock.set(producto, antes + s.cant);
+      efectos.push({ tipo: 'stock', producto, delta: s.cant });
+      efectos.push(movimiento({ batch_id: s.batch_id, product_id: s.product_id, product_name: s.product_name, change_amount: s.cant,
+        previous_quantity: antes, new_quantity: antes + s.cant, operation_type: 'ANULACION', reason: 'Anulación de venta',
+        notes: `Anulación ${ticket}`, created_at: cuando }));
+      productos++;
+    }
+    efectos.push({ tipo: 'cambio', tabla: 'sales', filtros: [['id', `eq.${ventaId}`]], cambios: { sunat_status: 'ANULADO' } });
+    const esFiado = (await filasLocales('fiados', (f) => String(f.sale_id) === ventaId)).length > 0 || Number(venta.amount_credit || 0) > 0;
+    if (esFiado) efectos.push({ tipo: 'cambio', tabla: 'fiados', filtros: [['sale_id', `eq.${ventaId}`]], cambios: { status: 'ANULADO' } });
+    if (p.p_sesion_caja != null && !esFiado) {
+      const quien = empleadoLocal();
+      efectos.push({ tipo: 'nueva', tabla: 'cash_movements', fila: {
+        id: `local-anulacion-${Date.now()}`, session_id: String(p.p_sesion_caja), type: 'EGRESO',
+        amount: Number(venta.amount_cash || 0) + Number(venta.amount_yape || 0) + Number(venta.amount_card || 0),
+        description: `Devolución (Anulación Ticket #${ventaId.slice(-6)})${p.p_pidio ? ` · pidió ${p.p_pidio}` : ''}${quien ? ` · por ${quien}` : ''}`,
+        payment_type: 'EFECTIVO', flujo: 'DEVOLUCION', created_at: cuando, is_synced: 1,
+      } });
+    }
+    return { efectos, respuesta: { ya_anulada: false, productos } };
+  },
+};
+
+// ---------------------------------------------------------------- 5) borrar sin internet (fase SI-3)
+const respuestaError = (estado: number, mensaje: string) =>
+  new Response(JSON.stringify({ message: mensaje }), { status: estado, headers: { 'Content-Type': 'application/json' } });
+
+const permisosLocales = (): Record<string, unknown> => {
+  try { return JSON.parse(localStorage.getItem('siumax_empleado_sin_internet') || '{}')?.empleado?.permisos || {}; } catch { return {}; }
+};
+
+// Todas las filas de una tabla que hay en la PC (todas sus copias y lo hecho sin internet), una vez cada una
+const filasLocales = async (tabla: string, cumple: (f: Fila) => boolean) => {
+  const porId = new Map<string, Fila>();
+  const sinId: Fila[] = [];
+  const juntar = (f: Fila) => {
+    if (!f || typeof f !== 'object' || !cumple(f)) return;
+    if (f.id == null) sinId.push(f);
+    else porId.set(String(f.id), { ...porId.get(String(f.id)), ...f });
+  };
+  for (const clave of await clavesLocal(ALMACEN_RESPUESTAS)) {
+    if (!String(clave).includes(`/rest/v1/${tabla}?`)) continue;
+    filasDeCopia((await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave))?.cuerpo || '')?.filas.forEach(juntar);
+  }
+  ((await filasPendientes()).get(tabla) || []).forEach(juntar);
+  return [...porId.values(), ...sinId];
+};
+
+// Igual que fn_proteger_borrados (servidor/sql/seguridad-sesion.sql): una venta completada no se borra
+// (primero se anula) y una venta anulada o una devolución solo las borra un administrador
+const borradoRechazado = async (tabla: string, filtros: Filtros) => {
+  if ((tabla !== 'sales' && tabla !== 'cash_movements') || !filtros.length) return null;
+  const filas = await filasLocales(tabla, (f) => cumpleExacto(f, filtros));
+  if (tabla === 'sales' && filas.some((f) => f.sunat_status !== 'ANULADO')) return 'Primero haz la devolución de esta venta';
+  const protegidas = tabla === 'sales' ? filas : filas.filter((f) => f.flujo === 'DEVOLUCION');
+  if (protegidas.length && permisosLocales().sistema_acceso_total !== true) return 'Solo un administrador puede borrar ventas o devoluciones';
+  return null;
+};
+
+const devolverAbonoEnFiado = (fiadoId: string, monto: number) => cambiarEnCopias('fiados', fiadoId, (f) => {
+  f.paid_amount = Math.max(0, Number(f.paid_amount || 0) - monto);
+  if (f.status === 'CANCELADO' && Number(f.paid_amount) < Number(f.amount || 0) - 0.05) { f.status = 'PENDIENTE'; f.date_paid = null; }
+});
+
+// Borrar algo creado sin internet (su número es "local-<cola>-<fila>", ver filasPendientes): esa fila sale de
+// lo que espera en la cola. El ingreso de caja de un abono hecho sin internet ("local-abono-...") se va con
+// su abono (Finanzas borra los dos).
+const quitarCreadoSinInternet = async (tabla: string, filaId: string) => {
+  const partes = /^local-(abono-)?(\d{15}-\d{5})-(\d+)$/.exec(filaId);
+  if (!partes) return respuestaError(409, 'Esto se hizo sin internet y todavía no se subió: bórralo cuando vuelva la conexión.');
+  if (partes[1]) return new Response(null, { status: 204 });
+  const p = await leerLocal<Pendiente>(ALMACEN_PENDIENTES, partes[2]);
+  if (!p || p.accion !== `POST /${tabla}`) return new Response(null, { status: 204 }); // ya no está
+  const datos = JSON.parse(p.cuerpo || '[]');
+  const filas = [datos].flat() as Fila[];
+  const [quitada] = filas.splice(Number(partes[3]), 1);
+  if (!filas.length) await borrarLocal(ALMACEN_PENDIENTES, p.id);
+  else await guardarLocal(ALMACEN_PENDIENTES, { ...p, cuerpo: JSON.stringify(Array.isArray(datos) ? filas : filas[0]) });
+  if (tabla === 'debt_payments' && quitada?.fiado_id != null) await devolverAbonoEnFiado(String(quitada.fiado_id), Number(quitada.amount || 0));
+  void avisarPendientes();
+  return new Response(null, { status: 204 });
 };
 
 // Antes de subir una acción del servidor hecha sin internet: ¿ya está hecha? (se cortó justo después de
@@ -850,6 +980,8 @@ const NOMBRES: Record<string, [string, string]> = {
   'POST /rpc/fn_recibir_compra': ['pedido recibido', 'pedidos recibidos'], 'POST /rpc/fn_devolver_compra': ['pedido devuelto', 'pedidos devueltos'],
   'POST /rpc/fn_edit_batch': ['lote editado', 'lotes editados'], 'POST /rpc/fn_soft_delete_batch': ['lote retirado', 'lotes retirados'],
   'POST /rpc/fn_soft_delete_product': ['producto borrado', 'productos borrados'],
+  'POST /rpc/fn_anular_venta': ['venta anulada', 'ventas anuladas'], 'DELETE /sales': ['venta borrada', 'ventas borradas'],
+  'DELETE /cash_movements': ['movimiento borrado', 'movimientos borrados'], 'DELETE /debt_payments': ['abono anulado', 'abonos anulados'],
 };
 const resumir = (lista: Pendiente[]) => {
   const cuenta = new Map<string, number>();

@@ -65,6 +65,12 @@ const precargarFinanzas = async () => {
     for (let i = 0; i < ids.length; i += 200) {
       await supabase.from('sale_details').select('*').in('sale_id', ids.slice(i, i + 200));
     }
+    // De qué lote salió cada venta: así anular sin internet devuelve el stock al lote correcto
+    // (sinInternet.ts → IMITAR_RPC.fn_anular_venta). Bloques de 100: cada nota es más larga que un id.
+    for (let i = 0; i < ids.length; i += 100) {
+      await supabase.from('inventory_movements').select('id, batch_id, product_id, product_name, change_amount, operation_type, notes')
+        .eq('operation_type', 'VENTA').in('notes', ids.slice(i, i + 100).map((id: any) => `Ticket #${id}`));
+    }
     if (conCredito.length) await supabase.from('fiados').select('sale_id, customer_name, amount, paid_amount').in('sale_id', conCredito);
   } catch { /* se intenta de nuevo en 2 minutos */ }
 };

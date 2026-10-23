@@ -40,6 +40,7 @@ AS $$
     -- ANULAR VENTAS (devuelve el stock: toca productos, lotes y movimientos)
     WHEN 'PATCH /sales'              THEN ARRAY['reportes_anular_ventas']
     WHEN 'DELETE /sales'             THEN ARRAY['reportes_anular_ventas']
+    WHEN 'POST /rpc/fn_anular_venta' THEN ARRAY['reportes_anular_ventas']
     -- ALMACÉN
     WHEN 'POST /products'            THEN ARRAY['almacen_crear_editar_productos']
     WHEN 'PATCH /products'           THEN ARRAY['almacen_crear_editar_productos', 'almacen_modificar_precios', 'reportes_anular_ventas']
@@ -725,6 +726,70 @@ $$;
 DROP TRIGGER IF EXISTS trg_turno_caja ON public.cash_sessions;
 CREATE TRIGGER trg_turno_caja BEFORE INSERT OR UPDATE ON public.cash_sessions
   FOR EACH ROW EXECUTE FUNCTION public.fn_registrar_turno_caja();
+
+-- Anular una venta (Finanzas): devuelve a cada lote y al producto lo que se descontó (según sus movimientos
+-- VENTA), deja el movimiento ANULACION, marca la venta y su fiado como ANULADO y, si hay caja abierta y no
+-- era fiado, registra el egreso de la devolución. Todo junto en el servidor (antes eran pasos sueltos desde
+-- la pantalla: un corte a la mitad dejaba la anulación a medias, y sin internet no se sabía de qué lotes
+-- devolver una venta hecha sin internet). Si ya estaba anulada no hace nada (reintento sin internet).
+CREATE OR REPLACE FUNCTION public.fn_anular_venta(p_sale_id bigint, p_sesion_caja text DEFAULT NULL, p_pidio text DEFAULT NULL,
+                                                  p_cuando timestamptz DEFAULT NULL)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_emp record;
+  v_venta sales%ROWTYPE;
+  v_mov record;
+  v_cant numeric;
+  v_nuevo numeric;
+  v_fiados int;
+  v_productos int := 0;
+  v_cuando timestamptz := coalesce(p_cuando, now());   -- sin internet: la hora en que se anuló en la caja
+BEGIN
+  SELECT * INTO v_emp FROM fn_empleado_de_sesion();
+  IF v_emp.id IS NULL THEN RAISE EXCEPTION 'Sesión no válida.'; END IF;
+  IF NOT fn_tiene_permiso(v_emp.permisos, ARRAY['reportes_anular_ventas']) THEN
+    RAISE EXCEPTION 'No tienes permiso para anular ventas.';
+  END IF;
+
+  SELECT * INTO v_venta FROM sales WHERE id = p_sale_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'No se encontró la venta.'; END IF;
+  IF v_venta.sunat_status = 'ANULADO' THEN RETURN jsonb_build_object('ya_anulada', true); END IF;
+
+  FOR v_mov IN SELECT * FROM inventory_movements
+               WHERE operation_type = 'VENTA' AND notes = 'Ticket #' || p_sale_id::text ORDER BY id LOOP
+    v_cant := abs(coalesce(v_mov.change_amount, 0));
+    IF v_cant <= 0 THEN CONTINUE; END IF;
+    IF v_mov.batch_id IS NOT NULL THEN
+      UPDATE batches SET quantity = coalesce(quantity, 0) + v_cant WHERE id = v_mov.batch_id;
+    END IF;
+    UPDATE products SET quantity = coalesce(quantity, 0) + v_cant WHERE id = v_mov.product_id
+    RETURNING quantity INTO v_nuevo;
+    INSERT INTO inventory_movements (batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
+                                     operation_type, reason, notes, created_at, "user", is_synced)
+    VALUES (v_mov.batch_id, v_mov.product_id, v_mov.product_name, v_cant, coalesce(v_nuevo, 0) - v_cant, coalesce(v_nuevo, 0),
+            'ANULACION', 'Anulación de venta', 'Anulación Ticket #' || p_sale_id::text, v_cuando, v_emp.nombre, 1);
+    v_productos := v_productos + 1;
+  END LOOP;
+
+  UPDATE sales SET sunat_status = 'ANULADO' WHERE id = p_sale_id;
+  UPDATE fiados SET status = 'ANULADO' WHERE sale_id = p_sale_id;
+  GET DIAGNOSTICS v_fiados = ROW_COUNT;
+
+  IF p_sesion_caja IS NOT NULL AND v_fiados = 0 THEN
+    -- El autor (quien autorizó) lo agrega trg_registrar_autor_caja ("· por ..."); aquí también quién lo pidió
+    INSERT INTO cash_movements (id, session_id, type, amount, description, payment_type, flujo, created_at, is_synced)
+    VALUES ((extract(epoch FROM clock_timestamp()) * 1000)::bigint, p_sesion_caja, 'EGRESO',
+            coalesce(v_venta.amount_cash, 0) + coalesce(v_venta.amount_yape, 0) + coalesce(v_venta.amount_card, 0),
+            'Devolución (Anulación Ticket #' || right(p_sale_id::text, 6) || ')' || coalesce(' · pidió ' || p_pidio, ''),
+            'EFECTIVO', 'DEVOLUCION', v_cuando, 1);
+  END IF;
+  RETURN jsonb_build_object('ya_anulada', false, 'productos', v_productos);
+END;
+$$;
 
 -- Borrar un producto SIEMPRE queda en el kardex, aunque su stock ya fuera 0 (antes solo si tenía stock,
 -- y no se sabía cuándo se borró). Igual que antes en todo lo demás.

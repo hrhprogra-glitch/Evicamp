@@ -18,17 +18,8 @@ import { rangoUTCPeru } from '../../utils/ingresos';
 import { usePermiso, useEmpleado, avisarSinPermiso } from '../../utils/permisos';
 import { traerTodo } from '../../utils/traerTodo';
 import { numeroTicketDe, autorDe } from '../../utils/movimientosCaja';
-import { hayConexion } from '../../utils/sinInternet';
 import { confirmar } from '../../utils/dialogos';
 import { conAutorizacion } from '../../utils/autorizacion';
-
-// Sin internet, Finanzas se puede VER e ingresar ingresos/egresos, pero no devolver ni eliminar
-// (tocan el stock y la caja de todas las PCs: se hacen cuando vuelva la conexión)
-const bloqueadoSinInternet = () => {
-  if (hayConexion()) return false;
-  alert('🔌 Sin internet: las devoluciones y eliminaciones necesitan conexión. Hazlo cuando vuelva el internet.');
-  return true;
-};
 
 export const Finanzas: React.FC = () => {
   // Abrir/cerrar caja y registrar ingresos/egresos son permisos distintos
@@ -362,7 +353,6 @@ export const Finanzas: React.FC = () => {
   const [ticketSeleccionadoParaVer, setTicketSeleccionadoParaVer] = useState<string | null>(null);
 
   const handleDeleteMovimiento = async (idMov: string, isTicket?: boolean) => {
-    if (bloqueadoSinInternet()) return;
     if (isTicket) {
       if (!await confirmar('⚠️ ¿Seguro que deseas ELIMINAR permanentemente esta venta de la base de datos?\n(ESTO NO DEVUELVE EL STOCK. SI QUIERES DEVOLVER STOCK, USA "ANULAR/DEVOLVER" EN VEZ DE ESTE BOTÓN).')) return;
       const { error } = await supabase.from('sales').delete().eq('id', idMov);
@@ -408,7 +398,6 @@ export const Finanzas: React.FC = () => {
   };
 
   const handleAnularTicket = async (id: string) => {
-    if (bloqueadoSinInternet()) return;
     if (idsAnulandoRef.current.has(id)) return;
     if (id.startsWith('ERR-')) return;
     if (!await confirmar('⚠️ ¿Seguro que deseas ANULAR este ticket? El stock regresará y el dinero se descontará de la caja actual.')) return;
@@ -429,51 +418,17 @@ export const Finanzas: React.FC = () => {
         return;
       }
 
-      const ticketTag = `Ticket #${id}`;
-      const { data: movsInv } = await supabase.from('inventory_movements').select('*').eq('operation_type', 'VENTA').eq('notes', ticketTag);
-
-      for (const mov of movsInv || []) {
-        const cantidad = Math.abs(Number(mov.change_amount) || 0);
-        if (cantidad <= 0) continue;
-
-        if (mov.batch_id) {
-          const { data: lote } = await supabase.from('batches').select('quantity').eq('id', mov.batch_id).single();
-          await supabase.from('batches').update({ quantity: Number(lote?.quantity || 0) + cantidad }).eq('id', mov.batch_id);
-        }
-
-        const { data: producto } = await supabase.from('products').select('quantity').eq('id', mov.product_id).single();
-        const prevProducto = Number(producto?.quantity || 0);
-        const nuevoProducto = prevProducto + cantidad;
-        await supabase.from('products').update({ quantity: nuevoProducto }).eq('id', mov.product_id);
-
-        await supabase.from('inventory_movements').insert([{
-          batch_id: mov.batch_id, product_id: mov.product_id, product_name: mov.product_name,
-          change_amount: cantidad, previous_quantity: prevProducto, new_quantity: nuevoProducto,
-          operation_type: 'ANULACION', reason: 'Anulación de venta', notes: `Anulación ${ticketTag}`,
-          created_at: new Date().toISOString(), user: 'Sistema', is_synced: 1
-        }]);
-      }
-
-      await supabase.from('sales').update({ sunat_status: 'ANULADO' }).eq('id', id);
-
-      const { data: fiado } = await supabase.from('fiados').select('*').eq('sale_id', id).maybeSingle();
-      if (fiado) {
-        await supabase.from('fiados').update({ status: 'ANULADO' }).eq('id', fiado.id);
-      }
-
-      if (sessionActiva && !fiado) {
-        await supabase.from('cash_movements').insert([{
-          session_id: sessionActiva.id,
-          type: 'EGRESO',
-          amount: Number(venta.amount_cash || 0) + Number(venta.amount_yape || 0) + Number(venta.amount_card || 0),
-          // El autor (quien autorizó) lo agrega el servidor; aquí queda también quién lo pidió
-          description: `Devolución (Anulación Ticket #${String(id).slice(-6)})${autorizo ? ` · pidió ${empleado?.nombre || 'cajero'}` : ''}`,
-          payment_type: 'EFECTIVO',
-          flujo: 'DEVOLUCION',
-          created_at: new Date().toISOString(),
-          is_synced: 1
-        }]);
-      }
+      // Lo hace el SERVIDOR, todo junto (fn_anular_venta en servidor/sql/seguridad-sesion.sql): devuelve el
+      // stock a cada lote según los movimientos de la venta, deja el movimiento ANULACION, anula la venta y su
+      // fiado y registra el egreso de la devolución. Sin internet la cola lo imita y lo sube después
+      // (src/utils/sinInternet.ts → IMITAR_RPC). El autor (quien autorizó) lo pone el servidor con la sesión.
+      const { error: errAnular } = await supabase.rpc('fn_anular_venta', {
+        p_sale_id: Number(id),
+        p_sesion_caja: sessionActiva ? String(sessionActiva.id) : null,
+        p_pidio: autorizo ? (empleado?.nombre || 'cajero') : null,
+        p_cuando: new Date().toISOString(),
+      });
+      if (errAnular) throw errAnular;
 
       alert('✅ Ticket anulado. Stock devuelto y caja actualizada.');
       cargarDatosCaja(true);
