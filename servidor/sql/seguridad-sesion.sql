@@ -71,6 +71,8 @@ AS $$
     WHEN 'POST /rpc/fn_devolver_compra' THEN ARRAY['almacen_ingresar_lotes', 'compras_recibir']
     -- Toma de inventario (fase 2.2): contar a ciegas y dejar la merma o el sobrante (fn_registrar_conteo)
     WHEN 'POST /rpc/fn_registrar_conteo' THEN ARRAY['inventario_contar']
+    -- Corregir el motivo o la justificación de un conteo (sin tocar la cantidad): quien revisa Mermas
+    WHEN 'POST /rpc/fn_editar_conteo'    THEN ARRAY['almacen_registrar_mermas']
     -- GERENCIA
     WHEN 'PATCH /empresa_config'     THEN ARRAY['gerencia_configuracion_sistema']
     WHEN 'POST /empresa_config'      THEN ARRAY['gerencia_configuracion_sistema']
@@ -1026,5 +1028,70 @@ BEGIN
   RETURN OLD;
 END;
 $$;
+
+NOTIFY pgrst, 'reload schema';
+
+-- Corregir un conteo (pedido del usuario 23/10): SOLO el motivo y la justificación, nunca la cantidad ni el stock.
+-- Queda quién lo corrigió, cuándo y lo que decía antes (la primera versión no se pierde aunque se corrija varias veces).
+ALTER TABLE public.waste ADD COLUMN IF NOT EXISTS conteo_editado_por text;
+ALTER TABLE public.waste ADD COLUMN IF NOT EXISTS conteo_editado_at timestamptz;
+ALTER TABLE public.waste ADD COLUMN IF NOT EXISTS conteo_motivo_original text;
+ALTER TABLE public.waste ADD COLUMN IF NOT EXISTS conteo_justificacion_original text;
+
+CREATE OR REPLACE FUNCTION public.fn_editar_conteo(p_waste_id bigint, p_motivo text, p_justificacion text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_emp record;
+  v_fila waste%ROWTYPE;
+  v_motivo text := upper(trim(coalesce(p_motivo, '')));
+  v_just text := trim(coalesce(p_justificacion, ''));
+BEGIN
+  SELECT * INTO v_emp FROM fn_empleado_de_sesion();
+  IF v_emp.id IS NULL THEN RAISE EXCEPTION 'Sesión no válida.'; END IF;
+  IF NOT fn_tiene_permiso(v_emp.permisos, ARRAY['almacen_registrar_mermas']) THEN
+    RAISE EXCEPTION 'No tienes permiso para corregir conteos.';
+  END IF;
+  SELECT * INTO v_fila FROM waste WHERE id = p_waste_id;
+  IF NOT FOUND OR coalesce(v_fila.origen, '') <> 'CONTEO' THEN RAISE EXCEPTION 'No se encontró ese conteo.'; END IF;
+  IF v_motivo = '' THEN RAISE EXCEPTION 'Elige el motivo.'; END IF;
+  IF length(v_just) < 3 THEN RAISE EXCEPTION 'Escribe la justificación.'; END IF;
+
+  -- Un faltante que salió de varios lotes son varias filas del mismo conteo (mismo producto y misma hora): todas
+  UPDATE waste SET
+    conteo_motivo_original = coalesce(conteo_motivo_original, reason),
+    conteo_justificacion_original = coalesce(conteo_justificacion_original, notes),
+    reason = v_motivo, notes = v_just,
+    conteo_editado_por = v_emp.nombre, conteo_editado_at = now()
+  WHERE origen = 'CONTEO' AND product_id = v_fila.product_id AND created_at = v_fila.created_at;
+  -- El kardex dice lo mismo que Mermas
+  UPDATE inventory_movements SET reason = 'Conteo: ' || v_motivo, notes = v_just
+  WHERE product_id = v_fila.product_id AND created_at = v_fila.created_at
+    AND operation_type IN ('MERMA', 'SOBRANTE') AND reason LIKE 'Conteo: %';
+  RETURN jsonb_build_object('motivo', v_motivo, 'editado_por', v_emp.nombre);
+END;
+$$;
+
+-- La cantidad de un conteo no se cambia por ningún lado (ni editando la merma a mano): se borra y se vuelve a contar
+CREATE OR REPLACE FUNCTION public.fn_proteger_conteo()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF coalesce(OLD.origen, '') = 'CONTEO' AND (NEW.quantity IS DISTINCT FROM OLD.quantity
+      OR NEW.product_id IS DISTINCT FROM OLD.product_id OR NEW.batch_id IS DISTINCT FROM OLD.batch_id
+      OR NEW.origen IS DISTINCT FROM OLD.origen) THEN
+    RAISE SQLSTATE 'PT403' USING MESSAGE = 'La cantidad de un conteo no se cambia',
+      DETAIL = 'Si hubo un error, bórralo y vuelve a contar. El motivo y la justificación sí se pueden corregir.';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS trg_proteger_conteo ON public.waste;
+CREATE TRIGGER trg_proteger_conteo BEFORE UPDATE ON public.waste
+  FOR EACH ROW EXECUTE FUNCTION public.fn_proteger_conteo();
 
 NOTIFY pgrst, 'reload schema';

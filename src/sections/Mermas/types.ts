@@ -19,4 +19,9 @@ export interface Merma {
   conteo_sistema?: number | null;
   conteo_contado?: number | null;
   turno?: string; // quién abrió / cerró la caja en ese momento
+  // Corrección del motivo o la justificación de un conteo (Mermas/components/ModalEditarConteo.tsx)
+  conteo_editado_por?: string | null;
+  conteo_editado_at?: string | null;
+  conteo_motivo_original?: string | null;
+  conteo_justificacion_original?: string | null;
 }

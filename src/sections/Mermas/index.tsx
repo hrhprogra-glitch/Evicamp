@@ -6,6 +6,7 @@ import type { Merma } from './types';
 import type { Product } from '../Inventario/types';
 import { ModalMerma } from '../Inventario/components/ModalMerma';
 import { ModalTomaInventario } from '../Inventario/components/ModalTomaInventario';
+import { ModalEditarConteo } from './components/ModalEditarConteo';
 import { usePermiso, avisarSinPermiso } from '../../utils/permisos';
 
 // Componentes
@@ -28,6 +29,8 @@ export const Mermas: React.FC = () => {
   const veMermas = usePermiso('almacen_registrar_mermas');
   const soloConteo = puedeContar && !veMermas;
   const [isModalConteoOpen, setIsModalConteoOpen] = useState(false);
+  const [conteoAEditar, setConteoAEditar] = useState<Merma | null>(null);
+  const cerrarEdicionConteo = () => { setConteoAEditar(null); setTimeout(() => document.getElementById('buscador-global-mermas')?.focus(), 30); };
   const abrirConteo = () => (puedeContar ? setIsModalConteoOpen(true) : avisarSinPermiso('contar inventario'));
   const cerrarConteo = () => { setIsModalConteoOpen(false); setTimeout(() => document.getElementById('btn-toma-inventario')?.focus(), 30); };
 
@@ -478,9 +481,9 @@ export const Mermas: React.FC = () => {
             mermas={filteredMermas}
             products={products}
             onEdit={(merma) => {
-              // Un ajuste del conteo no se edita: si hubo un error, se borra y se vuelve a contar
+              // Un registro del conteo solo corrige su motivo y justificación (la cantidad no: se borra y se vuelve a contar)
               if (merma.origen === 'CONTEO') {
-                void avisar(`Este registro viene de la TOMA DE INVENTARIO y no se edita.\n\n${merma.sobrante ? 'Sobrante' : 'Merma'} de ${merma.product_name}: contó ${merma.conteo_contado ?? '—'}, el sistema decía ${merma.conteo_sistema ?? '—'}.\nMotivo: ${merma.reason}\nJustificación: ${merma.notes || '—'}\nPor: ${merma.user_name} · ${merma.created_at}${merma.turno ? `\n${merma.turno}` : ''}\n\nSi hubo un error, bórralo con el tacho y vuelve a contar.`);
+                setConteoAEditar(merma);
                 return;
               }
               setMermaAEditar(merma);
@@ -497,6 +500,8 @@ export const Mermas: React.FC = () => {
         products={products}
         onContado={() => { fetchMermas(); fetchProducts(); }}
       />
+
+      <ModalEditarConteo merma={conteoAEditar} onClose={cerrarEdicionConteo} onGuardado={() => { cerrarEdicionConteo(); fetchMermas(); }} />
 
       {/* MODAL */}
       <ModalMerma 

@@ -12,6 +12,7 @@ import { coincideBusqueda } from '../../../utils/busqueda';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar } from '../../../utils/dialogos';
 import { formatearCantidad } from '../../../utils/formato';
+import { MOTIVOS_FALTA, MOTIVOS_SOBRA } from '../motivosConteo';
 import { CuerpoVentana, CajaLista, FilaLista, LineaDato, Etiqueta, DatoFila, claseBotonBarra, claseBotonPrincipal } from '../../../components/ListaVentana';
 
 interface Props {
@@ -21,8 +22,6 @@ interface Props {
   onContado?: (productoId: string | number, contado: number) => void; // para refrescar el stock de la pantalla
 }
 
-const MOTIVOS_FALTA = ['ROBO', 'PÉRDIDA', 'DAÑADO', 'VENCIDO', 'ERROR DE CONTEO', 'ERROR DE INGRESO', 'USO INTERNO', 'OTRO'];
-const MOTIVOS_SOBRA = ['NO INGRESADO', 'ERROR DE INGRESO', 'ERROR DE CONTEO', 'DEVOLUCIÓN', 'OTRO'];
 
 interface Contado { producto: string; unidad: string; contado: number; diferencia: number; motivo: string; hora: string }
 

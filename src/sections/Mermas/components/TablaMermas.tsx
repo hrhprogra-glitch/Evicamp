@@ -210,6 +210,11 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
                     Contó {merma.conteo_contado ?? '—'} · sistema {merma.conteo_sistema ?? '—'}
                   </p>
                 )}
+                {merma.conteo_editado_por && (
+                  <p className="text-[11px] font-black text-[var(--color-warning-text)] truncate" title={`Antes: ${merma.conteo_motivo_original} — ${merma.conteo_justificacion_original || ''}`}>
+                    Corregido por {merma.conteo_editado_por}
+                  </p>
+                )}
                 {merma.notes ? (
                   <p className="text-xs font-black text-[var(--color-muted)] line-clamp-2" title={merma.notes}>
                     {merma.notes}

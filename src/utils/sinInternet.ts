@@ -341,6 +341,7 @@ const PERMITIDO_SIN_INTERNET = new Set([
   'POST /rpc/fn_anular_venta',
   'DELETE /sales', 'DELETE /cash_movements', 'DELETE /debt_payments',
   'POST /rpc/fn_registrar_conteo',                                   // toma de inventario (fase 2.2)
+  'POST /rpc/fn_editar_conteo',                                      // corregir su motivo y justificación
 ]);
 // (antes de la fase SI-2 los lotes solo podían cambiar su cantidad sin internet)
 const SOLO_CANTIDAD = new Set<string>();
@@ -892,6 +893,23 @@ const IMITAR_RPC: Record<string, (p: Record<string, any>) => Promise<ResultadoIm
       new_quantity: sistema + dif, operation_type: dif < 0 ? 'MERMA' : 'SOBRANTE', reason: `Conteo: ${motivo}`, notes: justificacion, created_at: cuando }));
     return { efectos, respuesta, params: { ...p, p_diferencia: dif } };
   },
+
+  // Corregir un conteo: igual que fn_editar_conteo (solo motivo y justificación, en todas las filas de ese conteo)
+  fn_editar_conteo: async (p) => {
+    const id = String(p.p_waste_id);
+    if (id.startsWith('local-')) throw new Error('Este conteo se hizo sin internet y todavía no se subió: corrígelo cuando vuelva la conexión.');
+    const fila = await filaLocal('waste', id);
+    if (!fila || fila.origen !== 'CONTEO') throw new Error('No se encontró ese conteo.');
+    const motivo = String(p.p_motivo || '').trim().toUpperCase();
+    const justificacion = String(p.p_justificacion || '').trim();
+    if (!motivo) throw new Error('Elige el motivo.');
+    if (justificacion.length < 3) throw new Error('Escribe la justificación.');
+    const quien = empleadoLocal() || 'Sistema';
+    return { efectos: [{ tipo: 'cambio', tabla: 'waste', filtros: [['origen', 'eq.CONTEO'], ['product_id', `eq.${fila.product_id}`], ['created_at', `eq.${fila.created_at}`]],
+      cambios: { reason: motivo, notes: justificacion, conteo_editado_por: quien, conteo_editado_at: new Date().toISOString(),
+        conteo_motivo_original: fila.conteo_motivo_original ?? fila.reason, conteo_justificacion_original: fila.conteo_justificacion_original ?? fila.notes } }],
+      respuesta: { motivo, editado_por: quien } };
+  },
 };
 
 // ---------------------------------------------------------------- 5) borrar sin internet (fase SI-3)
@@ -1036,6 +1054,7 @@ const NOMBRES: Record<string, [string, string]> = {
   'POST /rpc/fn_anular_venta': ['venta anulada', 'ventas anuladas'], 'DELETE /sales': ['venta borrada', 'ventas borradas'],
   'DELETE /cash_movements': ['movimiento borrado', 'movimientos borrados'], 'DELETE /debt_payments': ['abono anulado', 'abonos anulados'],
   'POST /rpc/fn_registrar_conteo': ['producto contado', 'productos contados'],
+  'POST /rpc/fn_editar_conteo': ['conteo corregido', 'conteos corregidos'],
 };
 const resumir = (lista: Pendiente[]) => {
   const cuenta = new Map<string, number>();
