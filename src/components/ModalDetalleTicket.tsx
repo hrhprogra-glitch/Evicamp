@@ -155,7 +155,14 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
                 {detallesTicket.map((item, index) => (
                   <tr key={index} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]">
                     <td className="p-2 text-xs font-black text-[var(--color-ink)]">{formatearCantidadDetalle(item.quantity)}</td>
-                    <td className="p-2 text-xs font-bold text-[var(--color-muted)] uppercase">{item.product_name}</td>
+                    <td className="p-2 text-xs font-bold text-[var(--color-muted)] uppercase">{item.product_name}
+                      {/* Fase 1.4: precio cambiado al cobrar */}
+                      {item.precio_lista != null && Number(item.precio_lista) !== Number(item.price_at_moment) && (
+                        <span data-precio-cambiado className="block normal-case text-[11px] text-[var(--color-warning-text)]">
+                          Precio cambiado: S/ {Number(item.precio_lista).toFixed(2)} → S/ {Number(item.price_at_moment).toFixed(2)}{item.precio_cambiado_por ? ` · ${item.precio_cambiado_por}` : ''}
+                        </span>
+                      )}
+                    </td>
                     <td className="p-2 text-xs font-mono text-[var(--color-muted)] text-right">S/ {Number(item.price_at_moment).toFixed(2)}</td>
                     <td className="p-2 text-sm font-black font-mono text-[var(--color-ink)] text-right">S/ {Number(item.subtotal).toFixed(2)}</td>
                   </tr>

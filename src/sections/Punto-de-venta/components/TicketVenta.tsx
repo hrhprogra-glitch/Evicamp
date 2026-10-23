@@ -11,7 +11,7 @@ interface Props {
   cart: CartItem[];
   setCart: (cart: CartItem[]) => void;
   updateQuantity: (id: string, qty: number) => void;
-  updatePrice: (id: string, price: number) => void;
+  updatePrice: (id: string, price: number) => Promise<boolean>;
   activeTabIndex: number;
   heldCarts: CartItem[][];
   holdCurrentCart: () => void;
@@ -77,13 +77,14 @@ const InputPeso = ({ item, updateQuantity, index, setSelectedIndex, setColIndex 
   );
 };
 
-const InputPrecio = ({ item, updatePrice, index, setSelectedIndex, setColIndex, isSelected }: { item: CartItem, updatePrice: (id: string, price: number) => void, index: number, setSelectedIndex: (i: number) => void, setColIndex: (i: number) => void, isSelected?: boolean }) => {
+const InputPrecio = ({ item, updatePrice, index, setSelectedIndex, setColIndex, isSelected }: { item: CartItem, updatePrice: (id: string, price: number) => Promise<boolean>, index: number, setSelectedIndex: (i: number) => void, setColIndex: (i: number) => void, isSelected?: boolean }) => {
   const { seleccionar, onMouseUp } = useSeleccionarTodo();
   const [val, setVal] = React.useState(item.price.toFixed(2));
   React.useEffect(() => { setVal(item.price.toFixed(2)); }, [item.price]);
   const aplicarCambio = () => {
     const num = parseFloat(val);
-    if (!isNaN(num) && num >= 0) updatePrice(item.id, num);
+    // Sin permiso y sin la clave del administrador, el precio vuelve a como estaba
+    if (!isNaN(num) && num >= 0) void updatePrice(item.id, num).then((ok) => { if (!ok) setVal(item.price.toFixed(2)); });
     else setVal(item.price.toFixed(2));
   };
   return (
@@ -283,6 +284,9 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
                         (ej. negocio/mayorista) sin tocar el precio general del catálogo. Solo
                         cambia esta venta — updatePrice nunca escribe en la tabla de productos. */}
                     <InputPrecio item={item} updatePrice={updatePrice} index={index} setSelectedIndex={setSelectedIndex} setColIndex={setColIndex} isSelected={index === selectedIndex && colIndex === 1} />
+                    {item.precioLista !== undefined && (
+                      <span data-precio-cambiado className="text-[11px] font-bold text-[var(--color-muted)] line-through whitespace-nowrap" title={`Precio cambiado por ${item.precioCambiadoPor || ''}`}>S/ {item.precioLista.toFixed(2)}</span>
+                    )}
                     
                     {/* 🛡️ EVICAMP: STOCK VISIBLE EN LA CAJA ACTUAL */}
                     <span className="text-[12px] font-black text-[var(--color-ink)] whitespace-nowrap bg-[var(--color-surface)] px-2 py-0.5 rounded-sm border-2 border-[var(--color-border)]" title="Stock actual del producto">

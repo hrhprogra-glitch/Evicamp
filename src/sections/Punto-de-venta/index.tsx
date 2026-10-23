@@ -6,6 +6,7 @@ import { useRef } from 'react';
 import { Wallet, Printer, X } from 'lucide-react';
 import { useImprimir } from '../../utils/impresion';
 import { useEmpleado, usePermiso } from '../../utils/permisos';
+import { conAutorizacion } from '../../utils/autorizacion';
 // Componentes modulares
 import { TerminalBusqueda } from './components/TerminalBusqueda';
 import { TicketVenta } from './components/TicketVenta';
@@ -19,6 +20,7 @@ import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ E
 export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
   const empleado = useEmpleado(); // quién vende: sale en el ticket ("Atendido por")
   const veTotalesCaja = usePermiso('reportes_ver_globales'); // cierre a ciegas: el cajero no ve los montos del día
+  const puedeCambiarPrecio = usePermiso('caja_cambiar_precio'); // fase 1.4: sin él, la clave del administrador
   const [hasOpenSession, setHasOpenSession] = useState<boolean | null>(null);
   // En tablet/celular se muestra un panel a la vez: catálogo de productos o ticket de venta
   const [vistaMovil, setVistaMovil] = useState<'productos' | 'ticket'>('productos');
@@ -511,11 +513,22 @@ const [searchQuery, setSearchQuery] = useState('');
     setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 100);
   };
 
-  // 2.3 EDITAR PRECIO MANUALMENTE DESDE EL TICKET
-  const updatePrice = (id: string, newPrice: number) => {
-    setCart(prevCart => prevCart.map(item => 
-      item.id === id ? { ...item, price: newPrice, subtotal: Math.round((newPrice * item.cartQuantity) * 100) / 100 } : item
-    ));
+  // 2.3 EDITAR PRECIO MANUALMENTE DESDE EL TICKET (fase 1.4): con el permiso "Cambiar Precio al Cobrar" se cambia
+  // directo; sin él, se pide la clave del administrador (como al anular). Queda el precio de lista y quién lo cambió,
+  // y se guarda en el detalle de la venta (precio_lista / precio_cambiado_por). Devuelve false si no se cambió.
+  const updatePrice = async (id: string, newPrice: number): Promise<boolean> => {
+    const item = cart.find((i) => i.id === id);
+    if (!item || newPrice === item.price) return true;
+    const aplicar = (autorizo: string | null) => setCart((prevCart) => prevCart.map((i) => {
+      if (i.id !== id) return i;
+      const lista = i.precioLista ?? i.price;
+      const vuelveALista = newPrice === lista;
+      return { ...i, price: newPrice, subtotal: Math.round((newPrice * i.cartQuantity) * 100) / 100,
+        precioLista: vuelveALista ? undefined : lista, precioCambiadoPor: vuelveALista ? null : (autorizo || empleado?.nombre || null) };
+    }));
+    let hecho = false;
+    await conAutorizacion(`cambiar el precio de ${item.name}`, 'caja_cambiar_precio', puedeCambiarPrecio, async (autorizo) => { aplicar(autorizo); hecho = true; });
+    return hecho;
   };
 
   // 3. EDITAR CANTIDAD MANUALMENTE (+ / - o PESO)
@@ -665,6 +678,9 @@ const [searchQuery, setSearchQuery] = useState('');
         product_name: item.name,
         quantity: Number(item.cartQuantity),
         price_at_moment: Number(item.price),
+        // fase 1.4: si se cambió el precio al cobrar, el de lista y quién lo cambió (si no, vacíos)
+        precio_lista: item.precioLista ?? null,
+        precio_cambiado_por: item.precioLista !== undefined ? (item.precioCambiadoPor ?? null) : null,
         subtotal: Number(item.subtotal),
         is_synced: 1
       }));

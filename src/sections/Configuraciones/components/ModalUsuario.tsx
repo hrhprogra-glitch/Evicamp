@@ -13,7 +13,7 @@ interface ModalUsuarioProps {
 }
 
 const PERMISOS_DEFAULT: PermisosUsuario = {
-  caja_realizar_ventas: false, caja_abrir_cerrar_turno: false, caja_ingresos_egresos: false, caja_ver_fiados: false, caja_cobrar_deudas: false,
+  caja_realizar_ventas: false, caja_abrir_cerrar_turno: false, caja_ingresos_egresos: false, caja_ver_fiados: false, caja_cobrar_deudas: false, caja_cambiar_precio: false,
   almacen_ver_stock: false, almacen_ingresar_lotes: false, almacen_crear_editar_productos: false, almacen_eliminar_productos: false, almacen_modificar_precios: false, almacen_gestionar_proveedores: false, almacen_registrar_mermas: false, compras_recibir: false, compras_enviar: false, inventario_contar: false,
   reportes_ver_historial_ventas: false, reportes_anular_ventas: false, reportes_ver_globales: false,
   gerencia_ver_utilidades: false, gerencia_gestionar_usuarios: false, gerencia_configuracion_sistema: false,
@@ -66,6 +66,7 @@ const COLUMNAS_PERMISOS: {
     titulo: 'Caja / POS',
     items: [
       { key: 'caja_realizar_ventas', label: 'Realizar Ventas (POS)' },
+      { key: 'caja_cambiar_precio', label: 'Cambiar Precio al Cobrar (sin clave del admin)' },
       { key: 'caja_abrir_cerrar_turno', label: 'Abrir/Cerrar Turno' },
       { key: 'caja_ingresos_egresos', label: 'Ingresos/Egresos Manuales' },
       { key: 'caja_ver_fiados', label: 'Ver Fiados' },

@@ -7,6 +7,8 @@ export interface PermisosUsuario {
   caja_ingresos_egresos: boolean;
   caja_ver_fiados: boolean;
   caja_cobrar_deudas: boolean;
+  // Fase 1.4: cambiar el precio de un producto al cobrar; sin él, la Caja pide la clave del administrador
+  caja_cambiar_precio: boolean;
 
   // ALMACÉN
   almacen_ver_stock: boolean;

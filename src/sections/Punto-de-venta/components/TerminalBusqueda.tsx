@@ -99,7 +99,8 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
 
       // 🛡️ PARCHE EVICAMP: Si hay un producto seleccionado en la caja (fondo gris), NO robamos los números.
       // Esto permite que el componente TicketVenta capture el número para editar la cantidad o precio.
-      const isCartSelected = document.querySelector('.bg-\\[\\var(--color-muted)\\]') !== null;
+      // (antes el selector estaba mal escrito y daba error en cada tecla: el imán hacia el buscador nunca llegaba a actuar)
+      const isCartSelected = document.querySelector(`.${CSS.escape('bg-[var(--color-muted)]')}`) !== null;
       if (isCartSelected && /^[0-9]$/.test(e.key)) return;
 
       // 3. Forzar el imán hacia el buscador

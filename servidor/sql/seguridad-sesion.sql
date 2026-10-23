@@ -1117,3 +1117,11 @@ AS $$
 $$;
 
 NOTIFY pgrst, 'reload schema';
+
+-- ===================================================================================================
+-- FASE 1.4: cambiar el precio al cobrar (Caja). Cada línea de la venta guarda el precio de lista y quién lo cambió
+-- (o el administrador que autorizó con su clave). Deshacer: servidor/sql/deshacer-fase1.sql
+ALTER TABLE public.sale_details ADD COLUMN IF NOT EXISTS precio_lista numeric;
+ALTER TABLE public.sale_details ADD COLUMN IF NOT EXISTS precio_cambiado_por text;
+
+NOTIFY pgrst, 'reload schema';
