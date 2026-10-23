@@ -55,7 +55,14 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
     ? [] 
     : productos.filter(p => {
         return coincideBusqueda([p.name, p.code, p.barcode], searchQuery);
-      }).slice(0, 48);
+      })
+      // El código exacto primero (lector de barras / etiquetas de la fase 2.5): "SKU-12" no debe agregar "SKU-123"
+      .sort((a, b) => {
+        const q = searchQuery.trim().toUpperCase();
+        const exacto = (p: typeof a) => [p.code, p.barcode].some((c) => c && String(c).trim().toUpperCase() === q);
+        return Number(exacto(b)) - Number(exacto(a));
+      })
+      .slice(0, 48);
 
   // 🔥 NUEVO: Resetear el selector cuando se busca algo nuevo
   useEffect(() => {

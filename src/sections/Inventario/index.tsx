@@ -16,6 +16,7 @@ import { TablaLotes } from './components/TablaLotes';
 import { ModalGestionProveedores } from './components/ModalGestionProveedores';
 import { ModalLote } from './components/ModalLote';
 import { ModalHistorialLotes, type ProductoHistorial } from './components/ModalHistorialLotes';
+import { ModalEtiqueta } from './components/ModalEtiqueta';
 import { PanelCompras, inicioCompras } from './components/PanelCompras';
 
 interface InventarioProps {
@@ -233,6 +234,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   // Botón del reloj (fila de Productos o de Lotes): ventana flotante con todos los lotes del producto,
   // también los agotados que la pestaña Lotes oculta. Al cerrarla, el selector vuelve al botón que la abrió.
   const [historialProducto, setHistorialProducto] = useState<ProductoHistorial | null>(null);
+  const [productoEtiqueta, setProductoEtiqueta] = useState<Product | null>(null); // fase 2.5: etiquetas
   const [focoAntesDelHistorial, setFocoAntesDelHistorial] = useState<HTMLElement | null>(null);
   const handleViewHistory = (item: any) => {
     const esLote = item.product_id != null;
@@ -682,6 +684,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   onViewHistory={(producto) => {
     handleViewHistory(producto);
   }}
+  // Fase 2.5: ícono de etiqueta en las acciones de cada producto
+  onEtiqueta={(producto) => setProductoEtiqueta(producto)}
   // ===========================
 />
         </div>
@@ -780,6 +784,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
       />
       <ModalGestionProveedores isOpen={isModalProveedoresOpen} onClose={() => setIsModalProveedoresOpen(false)} />
       <ModalHistorialLotes producto={historialProducto} onClose={cerrarHistorial} />
+      <ModalEtiqueta key={productoEtiqueta?.id ?? 'ninguno'} producto={productoEtiqueta} onClose={() => setProductoEtiqueta(null)} />
       {/* INVOCACIÓN DEL NUEVO MODAL DE LOTES */}
       <ModalLote 
         isOpen={isModalLoteOpen} 

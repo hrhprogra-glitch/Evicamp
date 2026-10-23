@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Database, ArrowUpDown, Search, Edit, Trash2, ChevronLeft, ChevronRight, Check, X, History, Barcode, Image as ImageIcon } from 'lucide-react';
+import { Database, ArrowUpDown, Search, Edit, Trash2, ChevronLeft, ChevronRight, Check, X, History, Barcode, Tag, Image as ImageIcon } from 'lucide-react';
 import { EtiquetaStock } from './EtiquetaStock';
 import type { Product } from '../types';
 import { usePermiso, avisarSinPermiso } from '../../../utils/permisos';
@@ -15,10 +15,11 @@ interface Props {
   onEditProduct?: (product: Product) => void;
   onDeleteProduct?: (product: Product) => void; 
   onViewHistory?: (product: Product) => void; // <-- NUEVA PROP AQUÍ
+  onEtiqueta?: (product: Product) => void; // fase 2.5: imprimir etiquetas (components/ModalEtiqueta.tsx)
 }
 
 export const TablaProductos: React.FC<Props> = ({ 
-  loading, productos, currentPage, totalPages, onPageChange, onUpdateProduct, onEditProduct, onDeleteProduct, onViewHistory // <-- AGREGAR AQUÍ
+  loading, productos, currentPage, totalPages, onPageChange, onUpdateProduct, onEditProduct, onDeleteProduct, onViewHistory, onEtiqueta // <-- AGREGAR AQUÍ
 }) => {
   // Sin permiso, el botón de borrar avisa antes de pedir la confirmación
   const puedeEliminar = usePermiso('almacen_eliminar_productos');
@@ -395,6 +396,16 @@ export const TablaProductos: React.FC<Props> = ({
                   >
                     <History size={16} />
                   </button>
+                  {onEtiqueta && (
+                    <button
+                      data-accion="etiqueta"
+                      className="text-[#94A3B8] hover:text-[var(--color-warning)] focus:text-[var(--color-warning)] focus:outline-none focus:ring-2 focus:ring-[var(--color-warning)] p-1 transition-colors cursor-pointer"
+                      title="Imprimir etiquetas (precio / código de barras)"
+                      onClick={(e) => { e.stopPropagation(); onEtiqueta(item); }}
+                    >
+                      <Tag size={16} />
+                    </button>
+                  )}
                   <button
                     onClick={(e) => { e.stopPropagation(); onEditProduct ? onEditProduct(item) : startEditing(item); }}
                     className="text-[#94A3B8] hover:text-[var(--color-success)] focus:text-[var(--color-success)] focus:outline-none focus:ring-2 focus:ring-[var(--color-success)] p-1 transition-colors cursor-pointer"
