@@ -31,7 +31,8 @@ const enfocar = (id: string) => setTimeout(() => document.getElementById(id)?.fo
 
 export const ModalTomaInventario: React.FC<Props> = ({ isOpen, onClose, products, onContado }) => {
   const [busqueda, setBusqueda] = useState('');
-  const [abierta, setAbierta] = useState(true);
+  // La lista aparece desde la 1ra letra (o con ↓ en vacío): al abrir no tapa el resto de la ventana
+  const [abierta, setAbierta] = useState(false);
   const [producto, setProducto] = useState<Product | null>(null);
   const [contado, setContado] = useState('');
   const [diferencia, setDiferencia] = useState<number | null>(null); // null = todavía no se calculó
@@ -62,7 +63,7 @@ export const ModalTomaInventario: React.FC<Props> = ({ isOpen, onClose, products
 
   const reiniciar = () => {
     setProducto(null); setBusqueda(''); setContado(''); setDiferencia(null); setMotivo(''); setJustificacion('');
-    setAbierta(true);
+    setAbierta(false);
     enfocar('input-buscar-conteo');
   };
 
@@ -152,7 +153,8 @@ export const ModalTomaInventario: React.FC<Props> = ({ isOpen, onClose, products
         <CuerpoVentana>
           {/* CONTAR */}
           <div className="border-2 border-[var(--color-border)] bg-white p-3 sm:p-4 flex flex-col gap-4 shrink-0">
-            <div className="relative">
+            {/* Si el selector sale del buscador y de su lista (ej. ↑ a la X), la lista se cierra */}
+            <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setAbierta(false); }}>
               <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2 mb-2">
                 <Search size={14} /> 1. Producto
               </label>
@@ -188,8 +190,8 @@ export const ModalTomaInventario: React.FC<Props> = ({ isOpen, onClose, products
                     data-form-type="other"
                     placeholder="ESCANEA O ESCRIBE CÓDIGO / NOMBRE..."
                     value={busqueda}
-                    onChange={(e) => { setBusqueda(e.target.value); setAbierta(true); }}
-                    onFocus={() => setAbierta(true)}
+                    onChange={(e) => { setBusqueda(e.target.value); setAbierta(e.target.value.trim() !== ''); }}
+                    onFocus={() => setAbierta(busqueda.trim() !== '')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') { e.preventDefault(); if (filtrados.length) elegir(filtrados[0]); }
                       else if (e.key === 'ArrowDown') { e.preventDefault(); setAbierta(true); setTimeout(() => items()[0]?.focus(), 30); }
