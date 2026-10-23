@@ -12,7 +12,7 @@ interface Props {
   onDelete?: (merma: Merma) => void;
 }
 
-export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelete }) => {
+export const TablaConteos: React.FC<Props> = ({ mermas, products, onEdit, onDelete }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 50;
 
@@ -24,8 +24,8 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
 
   const renderPagination = (position: 'top' | 'bottom') => {
     if (totalPages <= 0) return null;
-    const prevId = position === 'top' ? 'btn-pag-prev-mermas' : 'btn-pag-bottom-prev-mermas';
-    const nextId = position === 'top' ? 'btn-pag-next-mermas' : 'btn-pag-bottom-next-mermas';
+    const prevId = position === 'top' ? 'btn-pag-prev-conteos' : 'btn-pag-bottom-prev-conteos';
+    const nextId = position === 'top' ? 'btn-pag-next-conteos' : 'btn-pag-bottom-next-conteos';
 
     const isPrevDisabled = currentPage <= 1;
     const isNextDisabled = currentPage >= totalPages;
@@ -52,19 +52,19 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
-                const btnLimpiar = document.getElementById('btn-limpiar-filtros-mermas');
+                const btnLimpiar = document.getElementById('btn-limpiar-filtros-conteos');
                 if (btnLimpiar) btnLimpiar.focus();
-                else document.getElementById('filtro-fecha-mermas')?.focus();
+                else document.getElementById('filtro-fecha-conteos')?.focus();
               } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
                 if (position === 'top') {
-                  const search = document.getElementById('buscador-global-mermas');
+                  const search = document.getElementById('buscador-global-conteos');
                   if (search) search.focus();
                   else {
-                    const btnLimpiar = document.getElementById('btn-limpiar-filtros-mermas');
+                    const btnLimpiar = document.getElementById('btn-limpiar-filtros-conteos');
                     if (btnLimpiar) btnLimpiar.focus();
-                    else document.getElementById('filtro-fecha-mermas')?.focus();
+                    else document.getElementById('filtro-fecha-conteos')?.focus();
                   }
                 } else {
                   const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
@@ -105,12 +105,12 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
                 e.preventDefault();
                 e.stopPropagation();
                 if (position === 'top') {
-                  const search = document.getElementById('buscador-global-mermas');
+                  const search = document.getElementById('buscador-global-conteos');
                   if (search) search.focus();
                   else {
-                    const btnLimpiar = document.getElementById('btn-limpiar-filtros-mermas');
+                    const btnLimpiar = document.getElementById('btn-limpiar-filtros-conteos');
                     if (btnLimpiar) btnLimpiar.focus();
-                    else document.getElementById('filtro-fecha-mermas')?.focus();
+                    else document.getElementById('filtro-fecha-conteos')?.focus();
                   }
                 } else {
                   const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
@@ -161,7 +161,7 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
         {paginatedData.length === 0 ? (
           <div className="p-6 sm:p-12 text-center text-[var(--color-muted)] font-bold uppercase text-[12px] tracking-widest flex flex-col items-center justify-center h-full gap-2 bg-[var(--color-surface)]">
             <Layers size={32} className="text-[var(--color-border)] mb-2" />
-            <p>No hay registros de mermas con estos filtros.</p>
+            <p>No hay registros con estos filtros.</p>
           </div>
         ) : (
           paginatedData.map((merma, index) => (
@@ -226,11 +226,10 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
 
               {/* MOTIVO */}
               <div className="col-span-2 min-w-0 pr-2 flex flex-col items-start gap-1">
-                {merma.origen === 'CONTEO' && (
-                  <span className={`text-[11px] font-black uppercase px-2 py-0.5 border ${merma.sobrante ? 'bg-[var(--color-info-bg)] text-[var(--color-info)] border-[var(--color-info)]' : 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger)]'}`}>
-                    Conteo · {merma.sobrante ? 'Sobrante' : 'Faltante'}
-                  </span>
-                )}
+                {/* Qué fue: un conteo (faltante o sobrante), una salida (dañado, vencido...) o un gasto de consumo */}
+                <span className={`text-[11px] font-black uppercase px-2 py-0.5 border ${merma.sobrante ? 'bg-[var(--color-info-bg)] text-[var(--color-info)] border-[var(--color-info)]' : 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger)]'}`}>
+                  {merma.origen === 'CONTEO' ? `Conteo · ${merma.sobrante ? 'Sobrante' : 'Faltante'}` : Number(merma.quantity) === 0 ? 'Gasto' : 'Salida'}
+                </span>
                 <span className="text-xs font-black uppercase px-2 py-1 border-2 inline-block bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-border)] truncate max-w-full rounded-none">
                   {merma.reason}
                 </span>
@@ -264,7 +263,7 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onEdit?.(merma); }}
                   className="p-2 border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-surface)] hover:bg-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-[var(--color-surface)] transition-colors rounded-none bg-[var(--color-surface)] cursor-pointer"
-                  title="Editar Merma"
+                  title="Editar"
                 >
                   <Edit size={14} />
                 </button>
@@ -272,7 +271,7 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onDelete?.(merma); }}
                   className="p-2 border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-surface)] hover:bg-[var(--color-danger)] hover:border-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-danger)] focus:bg-[var(--color-danger)] focus:text-white transition-colors rounded-none bg-[var(--color-surface)] cursor-pointer"
-                  title="Eliminar Merma"
+                  title="Eliminar"
                 >
                   <Trash2 size={14} />
                 </button>

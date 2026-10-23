@@ -44,7 +44,7 @@ const ROLES: { nombre: string; descripcion: string; permisos: (keyof PermisosUsu
   },
   {
     nombre: 'Almacenero',
-    descripcion: 'Maneja el almacén: productos, lotes, proveedores y mermas. No vende, no elimina productos ni cambia precios.',
+    descripcion: 'Maneja el almacén: productos, lotes, proveedores y conteos. No vende, no elimina productos ni cambia precios.',
     permisos: ['almacen_ver_stock', 'almacen_ingresar_lotes', 'almacen_crear_editar_productos', 'almacen_gestionar_proveedores', 'almacen_registrar_mermas'],
   },
 ];
@@ -84,8 +84,8 @@ const COLUMNAS_PERMISOS: {
       { key: 'almacen_eliminar_productos', label: 'Eliminar Productos' },
       { key: 'almacen_modificar_precios', label: 'Modificar Precios' },
       { key: 'almacen_gestionar_proveedores', label: 'Gestionar Proveedores' },
-      { key: 'almacen_registrar_mermas', label: 'Registrar Mermas' },
-      { key: 'inventario_contar', label: 'Contar Inventario (a ciegas)' },
+      { key: 'almacen_registrar_mermas', label: 'Conteos: registrar salidas y ver todo' },
+      { key: 'inventario_contar', label: 'Conteos: solo contar (a ciegas)' },
     ],
   },
   {

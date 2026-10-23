@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   ShoppingCart, Users, Package, 
-  Truck, Trash2, Wallet, 
+  Truck, ClipboardCheck, Wallet, 
   Settings, BarChart3, X, LogOut, Download, Monitor, CreditCard
 } from 'lucide-react';
 import { usePuedeInstalar, instalarApp, useHayInstaladorPC, descargarInstaladorPC } from '../utils/instalarApp';
@@ -24,7 +24,7 @@ interface SideBarProps {
 }
 
 // Orden de los atajos Alt + 1…7 para entrar directo a cada sesión
-export const ATAJOS_SESIONES = ['pos', 'fiados', 'inventario', 'mermas', 'finanzas', 'utilidades', 'configuracion'];
+export const ATAJOS_SESIONES = ['pos', 'fiados', 'inventario', 'conteos', 'finanzas', 'utilidades', 'configuracion'];
 
 // Tiempo sin usar el menú abierto antes de que se contraiga solo
 const AUTO_OCULTAR_MS = 8000;
@@ -257,7 +257,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
       category: 'Almacén',
       items: [
         { id: 'inventario', name: 'Inventario', icon: Package },
-        { id: 'mermas', name: 'Mermas', icon: Trash2 },
+        { id: 'conteos', name: 'Conteos', icon: ClipboardCheck },
       ]
     },
     {

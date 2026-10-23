@@ -15,7 +15,7 @@ interface Props {
   matchCount: number;
 }
 
-export const FiltrosMermas: React.FC<Props> = ({
+export const FiltrosConteos: React.FC<Props> = ({
   searchQuery, setSearchQuery,
   filtroMotivo, setFiltroMotivo,
   filtroOrden, setFiltroOrden,
@@ -38,9 +38,9 @@ export const FiltrosMermas: React.FC<Props> = ({
     }
   };
 
-  const focusPaginacionMermas = () => {
-    const btnPrev = document.getElementById('btn-pag-prev-mermas');
-    const btnNext = document.getElementById('btn-pag-next-mermas');
+  const focusPaginacion = () => {
+    const btnPrev = document.getElementById('btn-pag-prev-conteos');
+    const btnNext = document.getElementById('btn-pag-next-conteos');
     if (btnPrev && btnPrev.getAttribute('aria-disabled') !== 'true') {
       btnPrev.focus();
     } else if (btnNext) {
@@ -62,7 +62,7 @@ export const FiltrosMermas: React.FC<Props> = ({
             <Search size={18} />
           </div>
           <input 
-            id="buscador-global-mermas"
+            id="buscador-global-conteos"
             autoComplete="off" 
             type="text" 
             placeholder="BUSCAR PRODUCTO..." 
@@ -72,17 +72,17 @@ export const FiltrosMermas: React.FC<Props> = ({
               if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
-                focusPaginacionMermas();
+                focusPaginacion();
               } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('btn-registrar-merma')?.focus();
+                document.getElementById('btn-nuevo-ajuste')?.focus();
               } else if (e.key === 'ArrowRight') {
                 const input = e.currentTarget;
                 if (input.selectionStart === input.value.length) {
                   e.preventDefault();
                   e.stopPropagation();
-                  document.getElementById('filtro-motivo-mermas')?.focus();
+                  document.getElementById('filtro-motivo-conteos')?.focus();
                 }
               } else if (e.key === 'Escape') {
                 e.preventDefault();
@@ -99,28 +99,28 @@ export const FiltrosMermas: React.FC<Props> = ({
             <Filter size={16} />
           </div>
           <select 
-            id="filtro-motivo-mermas"
+            id="filtro-motivo-conteos"
             value={filtroMotivo}
             onChange={(e) => setFiltroMotivo(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('btn-registrar-merma')?.focus();
+                document.getElementById('btn-nuevo-ajuste')?.focus();
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
-                focusPaginacionMermas();
+                focusPaginacion();
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
-                const search = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+                const search = document.getElementById('buscador-global-conteos') as HTMLInputElement | null;
                 search?.focus();
                 search?.select();
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('filtro-orden-mermas')?.focus();
+                document.getElementById('filtro-orden-conteos')?.focus();
               }
             }}
             className="w-full p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none bg-transparent cursor-pointer appearance-none"
@@ -138,26 +138,26 @@ export const FiltrosMermas: React.FC<Props> = ({
             <ArrowUpDown size={16} />
           </div>
           <select 
-            id="filtro-orden-mermas"
+            id="filtro-orden-conteos"
             value={filtroOrden}
             onChange={(e) => setFiltroOrden(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('btn-registrar-merma')?.focus();
+                document.getElementById('btn-nuevo-ajuste')?.focus();
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
-                focusPaginacionMermas();
+                focusPaginacion();
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('filtro-motivo-mermas')?.focus();
+                document.getElementById('filtro-motivo-conteos')?.focus();
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('filtro-fecha-mermas')?.focus();
+                document.getElementById('filtro-fecha-conteos')?.focus();
               }
             }}
             className="w-full p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none bg-transparent cursor-pointer appearance-none"
@@ -172,7 +172,7 @@ export const FiltrosMermas: React.FC<Props> = ({
         {/* SELECTOR DE FECHA */}
         <div 
           onClick={() => {
-            const input = document.getElementById('filtro-fecha-mermas') as HTMLInputElement | null;
+            const input = document.getElementById('filtro-fecha-conteos') as HTMLInputElement | null;
             input?.focus();
             try { input?.showPicker?.(); } catch {}
           }}
@@ -182,7 +182,7 @@ export const FiltrosMermas: React.FC<Props> = ({
             <Calendar size={16} />
           </div>
           <input 
-            id="filtro-fecha-mermas"
+            id="filtro-fecha-conteos"
             autoComplete="off" 
             type="date"
             value={filtroFecha}
@@ -191,7 +191,7 @@ export const FiltrosMermas: React.FC<Props> = ({
               setFiltroFecha(e.target.value);
               // Al seleccionar la fecha, devolver foco a la selección del calendario de inmediato
               setTimeout(() => {
-                const el = document.getElementById('filtro-fecha-mermas') as HTMLInputElement | null;
+                const el = document.getElementById('filtro-fecha-conteos') as HTMLInputElement | null;
                 el?.focus();
               }, 50);
             }}
@@ -218,23 +218,23 @@ export const FiltrosMermas: React.FC<Props> = ({
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('btn-registrar-merma')?.focus();
+                document.getElementById('btn-nuevo-ajuste')?.focus();
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
-                focusPaginacionMermas();
+                focusPaginacion();
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('filtro-orden-mermas')?.focus();
+                document.getElementById('filtro-orden-conteos')?.focus();
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 e.stopPropagation();
-                const btnLimpiar = document.getElementById('btn-limpiar-filtros-mermas');
+                const btnLimpiar = document.getElementById('btn-limpiar-filtros-conteos');
                 if (btnLimpiar) {
                   btnLimpiar.focus();
                 } else {
-                  focusPaginacionMermas();
+                  focusPaginacion();
                 }
               }
             }}
@@ -246,25 +246,25 @@ export const FiltrosMermas: React.FC<Props> = ({
         <div className="md:col-span-2 lg:col-span-1 flex items-center justify-end">
           {hasActiveFilters && (
             <button 
-              id="btn-limpiar-filtros-mermas"
+              id="btn-limpiar-filtros-conteos"
               onClick={onClearFilters}
               onKeyDown={(e) => {
                 if (e.key === 'ArrowUp') {
                   e.preventDefault();
                   e.stopPropagation();
-                  document.getElementById('btn-registrar-merma')?.focus();
+                  document.getElementById('btn-nuevo-ajuste')?.focus();
                 } else if (e.key === 'ArrowDown') {
                   e.preventDefault();
                   e.stopPropagation();
-                  focusPaginacionMermas();
+                  focusPaginacion();
                 } else if (e.key === 'ArrowLeft') {
                   e.preventDefault();
                   e.stopPropagation();
-                  document.getElementById('filtro-fecha-mermas')?.focus();
+                  document.getElementById('filtro-fecha-conteos')?.focus();
                 } else if (e.key === 'ArrowRight') {
                   e.preventDefault();
                   e.stopPropagation();
-                  focusPaginacionMermas();
+                  focusPaginacion();
                 }
               }}
               className="h-full w-full min-h-[46px] bg-white border-2 border-[var(--color-danger)] text-[var(--color-danger)] flex items-center justify-center hover:bg-[var(--color-danger)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-danger)] transition-colors cursor-pointer rounded-none font-bold text-[12px] xl:text-xs uppercase"

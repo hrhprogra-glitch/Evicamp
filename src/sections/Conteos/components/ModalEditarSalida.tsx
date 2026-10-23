@@ -1,3 +1,7 @@
+// src/sections/Conteos/components/ModalEditarSalida.tsx
+// CORREGIR UNA SALIDA ya guardada (sección Conteos): cantidad, lote, motivo o detalle. Las salidas nuevas se
+// registran en "Nuevo ajuste" (ModalAjuste.tsx); los conteos se corrigen en ModalEditarConteo.tsx.
+// (Antes era la ventana "Registrar merma" de Inventario; su modo "nuevo" ya no se abre.)
 import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Save, AlertTriangle, Database, Loader2, ChevronDown } from 'lucide-react';
@@ -5,7 +9,8 @@ import { supabase } from '../../../db/supabase.ts';
 import { formatearCantidad } from '../../../utils/formato';
 import { esDecimal, nombreUnidad } from '../../../utils/unidades';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
-import type { Product } from '../types';
+import type { Product } from '../../Inventario/types';
+import { MOTIVOS_SALIDA } from '../motivos';
 
 interface Props {
   isOpen: boolean;
@@ -15,7 +20,7 @@ interface Props {
   initialData?: any;
 }
 
-export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProductSaved, initialData }) => {
+export const ModalEditarSalida: React.FC<Props> = ({ isOpen, onClose, productos, onProductSaved, initialData }) => {
   // Búsqueda de Producto
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -31,13 +36,9 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
   const [highlightedMotivoIdx, setHighlightedMotivoIdx] = useState(0);
   const motivoDropdownRef = useRef<HTMLDivElement>(null);
 
-  const MOTIVOS = [
-    { value: 'DAÑADO', label: 'PRODUCTO DAÑADO' },
-    { value: 'VENCIDO', label: 'FECHA VENCIDA' },
-    { value: 'ROBO', label: 'PÉRDIDA / ROBO' },
-    { value: 'USO INTERNO', label: 'USO INTERNO' },
-    { value: 'OTRO', label: 'OTRO' },
-  ];
+  // Los mismos motivos de "Nuevo ajuste"; si la salida tenía otro (de antes), se conserva en la lista
+  const MOTIVOS = [...MOTIVOS_SALIDA, ...(initialData?.reason && !MOTIVOS_SALIDA.includes(initialData.reason) ? [initialData.reason] : [])]
+    .map((m: string) => ({ value: m, label: m }));
 
   // Cerrar desplegables al hacer clic afuera
   useEffect(() => {
@@ -168,7 +169,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
         setSearchQuery(initialData.product_name || '');
         
         // Corrección: Mostrar Soles si fue consumo, o Cantidad si fue físico
-        const esConsumoInicial = initialData.reason === 'USO INTERNO' || Number(initialData.quantity) === 0;
+        const esConsumoInicial = Number(initialData.quantity) === 0;
         setCantidad(esConsumoInicial ? initialData.total_loss.toString() : Math.abs(initialData.quantity).toString());
         
         setMotivo(initialData.reason || 'DAÑADO');
@@ -188,9 +189,8 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
 
   // --- MOTOR DE VALIDACIÓN Y CÁLCULO DE DIFERENCIAL (REACTIVO) ---
   const inputNumVal = Number(cantidad) || 0;
-  const esConsumoActivo = selectedProduct?.unit?.toUpperCase().includes('CONS') || 
-                          selectedProduct?.category?.toUpperCase().includes('CONS') || 
-                          motivo === 'USO INTERNO';
+  // Gasto de consumo: producto sin stock (CONSUMO) o un gasto guardado así (sin unidades)
+  const esConsumoActivo = selectedProduct?.unit?.toUpperCase() === 'CONSUMO' || (isEdit && Number(initialData.quantity) === 0);
   const costoUnitLote = Number(selectedLote?.cost_unit) || 0;
   
   let cantNumCalculada = 0;
@@ -402,9 +402,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
 
     try {
       // 1. Detectamos de forma segura si es consumo/uso interno
-      const esConsumo = selectedProduct?.unit?.toUpperCase().includes('CONS') || 
-                        selectedProduct?.category?.toUpperCase().includes('CONS') || 
-                        motivo === 'USO INTERNO';
+      const esConsumo = esConsumoActivo;
 
       // A. ACTUALIZAR o REGISTRAR en Waste (Merma / Gasto)
       if (isEdit) {
@@ -592,7 +590,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
           {/* 1. BUSCADOR DE PRODUCTO DESPLEGABLE */}
           <div className="space-y-2 relative">
             <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">
-              { (selectedProduct?.unit?.toUpperCase().includes('CONS') || selectedProduct?.category?.toUpperCase().includes('CONS') || motivo === 'USO INTERNO') 
+              { esConsumoActivo 
               ? 'PRECIO / COSTO RETIRADO (S/)' 
               : (esDecimal(selectedProduct) ? `CANTIDAD PERDIDA (${nombreUnidad(selectedProduct, true).toUpperCase()})` : 'CANTIDAD PERDIDA (UNIDADES)') }
             </label>
@@ -870,7 +868,7 @@ export const ModalMerma: React.FC<Props> = ({ isOpen, onClose, productos, onProd
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">
-                {(selectedProduct?.unit?.toUpperCase().includes('CONS') || selectedProduct?.category?.toUpperCase().includes('CONS') || motivo === 'USO INTERNO') 
+                {esConsumoActivo 
                 ? 'Costo Total (S/)' 
                 : (esDecimal(selectedProduct) ? `Cantidad (${nombreUnidad(selectedProduct, true)})` : 'Cantidad (Unidades)')}
               </label>

@@ -36,8 +36,8 @@ export const restaurarFocoSesion = (view?: string): boolean => {
   }
 
   // 4. MERMAS
-  if (activeView === 'mermas') {
-    const b = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+  if (activeView === 'conteos') {
+    const b = document.getElementById('buscador-global-conteos') as HTMLInputElement | null;
     if (b && b.offsetParent !== null) { b.focus(); b.select(); return true; }
     const btnNueva = document.getElementById('btn-nueva-merma') as HTMLElement | null;
     if (btnNueva && btnNueva.offsetParent !== null) { btnNueva.focus(); return true; }

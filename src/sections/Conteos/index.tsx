@@ -1,38 +1,40 @@
 import { coincideBusqueda } from '../../utils/busqueda';
 ﻿import React, { useState, useEffect, useMemo } from 'react';
-import { Database, TrendingDown, PackageMinus, ClipboardCheck, AlertTriangle } from 'lucide-react';
+import { Database, TrendingDown, PackageMinus, ClipboardCheck } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import type { Merma } from './types';
 import type { Product } from '../Inventario/types';
-import { ModalMerma } from '../Inventario/components/ModalMerma';
-import { ModalTomaInventario } from '../Inventario/components/ModalTomaInventario';
+import { ModalEditarSalida } from './components/ModalEditarSalida';
+import { ModalAjuste } from './components/ModalAjuste';
 import { ModalEditarConteo } from './components/ModalEditarConteo';
 import { usePermiso, avisarSinPermiso } from '../../utils/permisos';
 
 // Componentes
-import { HeaderMermas } from './components/HeaderMermas';
-import { FiltrosMermas } from './components/FiltrosMermas';
+import { HeaderConteos } from './components/HeaderConteos';
+import { FiltrosConteos } from './components/FiltrosConteos';
 import { TarjetaMetrica } from './components/TarjetaMetrica';
-import { TablaMermas } from './components/TablaMermas';
+import { TablaConteos } from './components/TablaConteos';
 import { traerTodo } from '../../utils/traerTodo';
 import { confirmar, avisar } from '../../utils/dialogos';
 
-export const Mermas: React.FC = () => {
+// Sección CONTEOS (antes Mermas): lo que salió del stock y lo contado en el estante (faltantes y sobrantes).
+// Un solo botón, "Nuevo ajuste" (components/ModalAjuste.tsx), para las dos cosas.
+export const Conteos: React.FC = () => {
   const [mermas, setMermas] = useState<Merma[]>([]);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
-  const [isModalMermaOpen, setIsModalMermaOpen] = useState(false);
+  const [isEditarSalidaOpen, setIsEditarSalidaOpen] = useState(false);
   const [mermaAEditar, setMermaAEditar] = useState<any>(null);
-  // Toma de inventario (fase 2.2): lo contado queda anotado aquí. Quien solo tiene "Contar inventario" ve
-  // únicamente el botón Contar: la lista de mermas muestra lo que decía el sistema (el conteo es a ciegas)
+  // Quien solo tiene "Conteos: solo contar" ve únicamente el botón: la lista muestra lo que decía el
+  // sistema (el conteo es a ciegas)
   const puedeContar = usePermiso('inventario_contar');
   const veMermas = usePermiso('almacen_registrar_mermas');
   const soloConteo = puedeContar && !veMermas;
-  const [isModalConteoOpen, setIsModalConteoOpen] = useState(false);
+  const [isModalAjusteOpen, setIsModalAjusteOpen] = useState(false);
   const [conteoAEditar, setConteoAEditar] = useState<Merma | null>(null);
-  const cerrarEdicionConteo = () => { setConteoAEditar(null); setTimeout(() => document.getElementById('buscador-global-mermas')?.focus(), 30); };
-  const abrirConteo = () => (puedeContar ? setIsModalConteoOpen(true) : avisarSinPermiso('contar inventario'));
-  const cerrarConteo = () => { setIsModalConteoOpen(false); setTimeout(() => document.getElementById('btn-toma-inventario')?.focus(), 30); };
+  const cerrarEdicionConteo = () => { setConteoAEditar(null); setTimeout(() => document.getElementById('buscador-global-conteos')?.focus(), 30); };
+  const abrirAjuste = () => (puedeContar || veMermas ? setIsModalAjusteOpen(true) : avisarSinPermiso('registrar ajustes'));
+  const cerrarAjuste = () => { setIsModalAjusteOpen(false); setTimeout(() => document.getElementById('btn-nuevo-ajuste')?.focus(), 30); };
 
   // Estados de Filtros
   const [searchQuery, setSearchQuery] = useState('');
@@ -81,7 +83,7 @@ export const Mermas: React.FC = () => {
         setMermas(mapeados);
       }
     } catch (error) {
-      console.error("DEBUG TÉCNICO - Error cargando mermas:", error);
+      console.error("DEBUG TÉCNICO - Error cargando conteos:", error);
     } finally {
       setLoading(false);
     }
@@ -169,7 +171,7 @@ export const Mermas: React.FC = () => {
 
   // CONTROLADOR DE ELIMINACIÓN INTELIGENTE - EVICAMP STANDARD (V2 Resiliente)
   const handleDeleteMerma = async (merma: Merma) => {
-    const esConsumo = merma.reason === 'USO INTERNO' || Number(merma.quantity) === 0;
+    const esConsumo = Number(merma.quantity) === 0 && !merma.sobrante; // gasto de consumo: sin unidades
 
     const mensajeConfirmacion = merma.sobrante
       ? `¿Eliminar el sobrante de ${merma.product_name}? Se quitarán ${Math.abs(Number(merma.quantity))} unidades del inventario.`
@@ -224,7 +226,7 @@ export const Mermas: React.FC = () => {
   // Auto-Focus Magnet para Mermas (Foco inicial en buscador)
   useEffect(() => {
     const enforceFocus = () => {
-      if (isModalMermaOpen || document.querySelector('[role="dialog"]') || document.querySelector('.fixed.inset-0.z-50')) return;
+      if (isEditarSalidaOpen || document.querySelector('[role="dialog"]') || document.querySelector('.fixed.inset-0.z-50')) return;
       const active = document.activeElement;
 
       // 🛡️ NO SECUESTRAR FOCO SI EL SIDEBAR ESTÁ ABIERTO
@@ -234,7 +236,7 @@ export const Mermas: React.FC = () => {
       const activeTag = active?.tagName;
       if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'BUTTON' || activeTag === 'A' || activeTag === 'SELECT' || active?.getAttribute('role') === 'button') return;
 
-      const searchInput = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+      const searchInput = document.getElementById('buscador-global-conteos') as HTMLInputElement | null;
       if (searchInput) {
         searchInput.focus();
         searchInput.select();
@@ -245,8 +247,8 @@ export const Mermas: React.FC = () => {
       const sidebar = document.getElementById('evicamp-sidebar');
       if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
 
-      if (!isModalMermaOpen && !document.querySelector('.fixed.inset-0.z-50')) {
-        const searchInput = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+      if (!isEditarSalidaOpen && !document.querySelector('.fixed.inset-0.z-50')) {
+        const searchInput = document.getElementById('buscador-global-conteos') as HTMLInputElement | null;
         if (searchInput) {
           searchInput.focus();
           searchInput.select();
@@ -267,12 +269,12 @@ export const Mermas: React.FC = () => {
       document.removeEventListener('click', handleGlobalClick);
       clearTimeout(timer);
     };
-  }, [isModalMermaOpen]);
+  }, [isEditarSalidaOpen]);
 
   // Navegación de Grilla con Teclado (Patrón Selector de Evicamp)
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if (isModalMermaOpen || document.querySelector('.fixed.inset-0.z-50')) return;
+      if (isEditarSalidaOpen || document.querySelector('.fixed.inset-0.z-50')) return;
 
       const active = document.activeElement as HTMLElement;
 
@@ -313,8 +315,8 @@ export const Mermas: React.FC = () => {
               nextRow.scrollIntoView({ block: 'nearest' });
             } else {
               // Última fila: bajar a la paginación
-              const btnNext = document.getElementById('btn-pag-bottom-next-mermas') || document.getElementById('btn-pag-next-mermas');
-              const btnPrev = document.getElementById('btn-pag-bottom-prev-mermas') || document.getElementById('btn-pag-prev-mermas');
+              const btnNext = document.getElementById('btn-pag-bottom-next-conteos') || document.getElementById('btn-pag-next-conteos');
+              const btnPrev = document.getElementById('btn-pag-bottom-prev-conteos') || document.getElementById('btn-pag-prev-conteos');
               if (btnNext) {
                 btnNext.focus();
               } else if (btnPrev) {
@@ -330,8 +332,8 @@ export const Mermas: React.FC = () => {
               }
             } else {
               // Fila 0: Subir a la paginación superior
-              const btnPrev = document.getElementById('btn-pag-prev-mermas');
-              const btnNext = document.getElementById('btn-pag-next-mermas');
+              const btnPrev = document.getElementById('btn-pag-prev-conteos');
+              const btnNext = document.getElementById('btn-pag-next-conteos');
               if (btnPrev && btnPrev.getAttribute('aria-disabled') !== 'true') {
                 btnPrev.focus();
               } else if (btnNext) {
@@ -339,7 +341,7 @@ export const Mermas: React.FC = () => {
               } else if (btnPrev) {
                 btnPrev.focus();
               } else {
-                const searchInput = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+                const searchInput = document.getElementById('buscador-global-conteos') as HTMLInputElement | null;
                 if (searchInput) {
                   searchInput.focus();
                   searchInput.select();
@@ -361,7 +363,7 @@ export const Mermas: React.FC = () => {
             }
           }
         } else if (e.key === 'Escape') {
-          const searchInput = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+          const searchInput = document.getElementById('buscador-global-conteos') as HTMLInputElement | null;
           if (searchInput) {
             e.preventDefault();
             searchInput.focus();
@@ -378,7 +380,7 @@ export const Mermas: React.FC = () => {
             return;
           }
           e.preventDefault();
-          const searchInput = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+          const searchInput = document.getElementById('buscador-global-conteos') as HTMLInputElement | null;
           if (searchInput) {
             searchInput.focus();
             searchInput.select();
@@ -391,7 +393,7 @@ export const Mermas: React.FC = () => {
             rows[0].focus();
             rows[0].scrollIntoView({ block: 'nearest' });
           } else {
-            const searchInput = document.getElementById('buscador-global-mermas') as HTMLInputElement | null;
+            const searchInput = document.getElementById('buscador-global-conteos') as HTMLInputElement | null;
             if (searchInput) searchInput.focus();
           }
         }
@@ -400,24 +402,24 @@ export const Mermas: React.FC = () => {
 
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [isModalMermaOpen]);
+  }, [isEditarSalidaOpen]);
 
   if (soloConteo) {
     return (
       <div className="flex flex-col gap-6 p-4 sm:p-8 text-[var(--color-ink)] font-mono min-h-full bg-[var(--color-surface)]">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-[var(--color-danger-bg)] border-2 border-[var(--color-danger)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-danger)] shrink-0">
-            <AlertTriangle size={24} className="text-[var(--color-danger)]" />
+          <div className="w-12 h-12 bg-[var(--color-warning)] border-2 border-[var(--color-ink)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-ink)] shrink-0">
+            <ClipboardCheck size={24} className="text-[var(--color-ink)]" />
           </div>
-          <h1 className="text-2xl font-black uppercase tracking-widest">Control de Pérdidas</h1>
+          <h1 className="text-2xl font-black uppercase tracking-widest">Conteos</h1>
         </div>
         <div className="border-2 border-[var(--color-border)] bg-[var(--color-bg)] p-6 flex flex-col items-start gap-4 max-w-xl">
           <p className="font-bold text-sm">Tu usuario cuenta el inventario. Escanea o busca cada producto y escribe cuántos hay en el estante; si falta o sobra, elige el motivo y escribe qué pasó.</p>
-          <button id="btn-toma-inventario" autoFocus onClick={abrirConteo} className="bg-[var(--color-warning)] text-[var(--color-ink)] px-6 py-4 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
+          <button id="btn-nuevo-ajuste" autoFocus onClick={abrirAjuste} className="bg-[var(--color-warning)] text-[var(--color-ink)] px-6 py-4 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
             <ClipboardCheck size={16} /> Contar inventario
           </button>
         </div>
-        <ModalTomaInventario isOpen={isModalConteoOpen} onClose={cerrarConteo} products={products} />
+        <ModalAjuste isOpen={isModalAjusteOpen} onClose={cerrarAjuste} products={products} puedeSalida={false} puedeContar />
       </div>
     );
   }
@@ -425,10 +427,7 @@ export const Mermas: React.FC = () => {
   return (
     <div className="flex flex-col gap-6 short:gap-3 w-full pb-10 text-[var(--color-ink)] font-mono min-h-full bg-[var(--color-surface)] relative rounded-none">
       
-      <HeaderMermas 
-        onNuevaMerma={() => setIsModalMermaOpen(true)} 
-        onContar={abrirConteo}
-      >
+      <HeaderConteos onNuevoAjuste={abrirAjuste}>
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:flex gap-3 sm:gap-4 w-full xl:w-auto">
           <TarjetaMetrica 
             label="Eventos Registrados" 
@@ -447,9 +446,9 @@ export const Mermas: React.FC = () => {
             isAlert={totalPerdidaEconómica > 0} 
           />
         </div>
-      </HeaderMermas>
+      </HeaderConteos>
 
-      <FiltrosMermas 
+      <FiltrosConteos 
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         filtroMotivo={filtroMotivo}
@@ -477,7 +476,7 @@ export const Mermas: React.FC = () => {
   </div>
 </div>
         ) : (
-          <TablaMermas
+          <TablaConteos
             mermas={filteredMermas}
             products={products}
             onEdit={(merma) => {
@@ -487,28 +486,30 @@ export const Mermas: React.FC = () => {
                 return;
               }
               setMermaAEditar(merma);
-              setIsModalMermaOpen(true);
+              setIsEditarSalidaOpen(true);
             }}
             onDelete={handleDeleteMerma}
           />
         )}
       </div>
 
-      <ModalTomaInventario
-        isOpen={isModalConteoOpen}
-        onClose={cerrarConteo}
+      <ModalAjuste
+        isOpen={isModalAjusteOpen}
+        onClose={cerrarAjuste}
         products={products}
-        onContado={() => { fetchMermas(); fetchProducts(); }}
+        puedeSalida={veMermas}
+        puedeContar={puedeContar}
+        onGuardado={() => { fetchMermas(); fetchProducts(); }}
       />
 
       <ModalEditarConteo merma={conteoAEditar} onClose={cerrarEdicionConteo} onGuardado={() => { cerrarEdicionConteo(); fetchMermas(); }} />
 
-      {/* MODAL */}
-      <ModalMerma 
-        isOpen={isModalMermaOpen} 
+      {/* Corregir una salida ya guardada (cantidad, lote o motivo) */}
+      <ModalEditarSalida 
+        isOpen={isEditarSalidaOpen} 
         initialData={mermaAEditar} 
         onClose={() => {
-          setIsModalMermaOpen(false);
+          setIsEditarSalidaOpen(false);
           setMermaAEditar(null);
           fetchMermas(); 
           fetchProducts();

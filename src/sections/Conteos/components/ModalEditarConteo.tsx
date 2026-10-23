@@ -1,4 +1,4 @@
-// src/sections/Mermas/components/ModalEditarConteo.tsx
+// src/sections/Conteos/components/ModalEditarConteo.tsx
 // Corregir un registro de la TOMA DE INVENTARIO (pedido del usuario 23/10): SOLO el motivo y la justificación.
 // La cantidad y el stock no se tocan (si hubo un error de cantidad: se borra y se vuelve a contar). Lo hace el
 // servidor con fn_editar_conteo (servidor/sql/seguridad-sesion.sql), que anota quién lo corrigió, cuándo y lo
@@ -9,7 +9,7 @@ import { supabase } from '../../../db/supabase';
 import type { Merma } from '../types';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar } from '../../../utils/dialogos';
-import { MOTIVOS_FALTA, MOTIVOS_SOBRA } from '../../Inventario/motivosConteo';
+import { MOTIVOS_FALTA, MOTIVOS_SOBRA } from '../motivos';
 import { CuerpoVentana, claseBotonBarra, claseBotonPrincipal } from '../../../components/ListaVentana';
 
 interface Props {

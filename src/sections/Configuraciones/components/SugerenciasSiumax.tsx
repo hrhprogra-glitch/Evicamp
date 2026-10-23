@@ -15,7 +15,7 @@ const TIPOS: { id: Tipo; nombre: string; ayuda: string; Icono: typeof Lightbulb 
   { id: 'error', nombre: 'Error', ayuda: 'Algo que no funciona bien', Icono: Bug },
   { id: 'pregunta', nombre: 'Pregunta', ayuda: 'Una duda sobre cómo usar algo', Icono: HelpCircle },
 ];
-const SECCIONES = ['Caja', 'Créditos', 'Inventario', 'Mermas', 'Finanzas', 'Utilidades', 'Ajustes', 'Otro'];
+const SECCIONES = ['Caja', 'Créditos', 'Inventario', 'Conteos', 'Finanzas', 'Utilidades', 'Ajustes', 'Otro'];
 
 export const SugerenciasSiumax: React.FC = () => {
   const empleado = useEmpleado();

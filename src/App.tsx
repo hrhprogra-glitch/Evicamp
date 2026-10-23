@@ -8,7 +8,7 @@ import { SesionProvider } from './utils/SesionProvider';
 
 // Importación de Módulos (Secciones)
 import { Inventario } from './sections/Inventario';
-import { Mermas } from './sections/Mermas';
+import { Conteos } from './sections/Conteos';
 import { Proveedores } from './sections/Proveedores';
 import { POS } from './sections/Punto-de-venta';
 import { Fiados } from './sections/Fiados'; // <--- IMPORTAMOS FIADOS
@@ -28,7 +28,7 @@ const NOMBRES_SESIONES: Record<string, string> = {
   pos: 'Caja',
   fiados: 'Créditos',
   inventario: 'Inventario',
-  mermas: 'Mermas',
+  conteos: 'Conteos',
   finanzas: 'Finanzas',
   utilidades: 'Utilidades',
   configuracion: 'Ajustes',
@@ -237,8 +237,8 @@ export const App: React.FC = () => {
     switch (vista) {
       case 'inventario':
         return <Inventario onNavigate={handleNavigate} />;
-      case 'mermas':
-        return <Mermas />;
+      case 'conteos':
+        return <Conteos />;
       case 'proveedores':
         return <Proveedores />;
       case 'pos':
