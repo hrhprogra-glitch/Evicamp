@@ -21,7 +21,7 @@ import { AvisoSuscripcion } from './layout/AvisoSuscripcion';
 import { BarraConexion } from './layout/BarraConexion';
 import { precargarParaSinInternet } from './utils/precargaSinInternet';
 import { programarRestauracionFoco } from './utils/navegacionSesion';
-import { hayVentanaAbierta, ventanaSuperior, enfocablesDe } from './utils/ventanas';
+import { hayVentanaAbierta, ventanaSuperior, enfocablesDe, recordarSeleccionEnVentanas } from './utils/ventanas';
 
 // Nombre visible de cada sesión en la barra superior de celular/tablet
 const NOMBRES_SESIONES: Record<string, string> = {
@@ -72,6 +72,9 @@ export const App: React.FC = () => {
     localStorage.setItem('evicamp_sidebar_open', 'false');
     programarRestauracionFoco(currentViewRef.current);
   };
+
+  // Al cerrar cualquier ventana, el selector vuelve a lo que estaba seleccionado (src/utils/ventanas.ts)
+  useEffect(() => recordarSeleccionEnVentanas(), []);
 
   // Atajo global: Tab para alternar el menú lateral con prioridad absoluta
   useEffect(() => {

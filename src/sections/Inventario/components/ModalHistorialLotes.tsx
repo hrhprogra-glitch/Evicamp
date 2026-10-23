@@ -5,7 +5,7 @@
 //  - MOVIMIENTOS (kardex): cada entrada y salida (compras, ventas, mermas, ajustes, devoluciones) con quién
 //    la hizo (lo guarda el servidor con la sesión, ver fn_registrar_autor_inventario).
 // Solo para ver: editar y retirar lotes se hace en la pestaña Lotes.
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X, History, Loader2, Package, ArrowDownUp, ArrowDownToLine, ArrowUpFromLine, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
@@ -72,6 +72,7 @@ export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose }) => {
   const [hasta, setHasta] = useState(hoyISO());
 
   useCerrarConEscape(!!producto, onClose);
+  const ultimoEnBarra = useRef(''); // en qué parte de la barra estaba el selector antes de bajar a la lista
 
   // Cada vez que se abre para un producto: empieza en LOTES y con los últimos 30 días
   useEffect(() => {
@@ -175,17 +176,52 @@ export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose }) => {
         elementos[siguiente].focus();
         return;
       }
-      // ← → solo mueven el selector entre las pestañas; la pestaña cambia recién con Enter (o clic)
-      if (enPestana && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+      // La barra de arriba es una fila: pestañas y fechas (pedido del usuario 23/10: también ← →, no solo ↑ ↓).
+      // ← → recorren la barra; ↓ baja a la lista; ↑ sube a la X. La pestaña cambia recién con Enter (o clic).
+      const barra = elementos.filter((el) => el.hasAttribute('data-hist-tab') || el.hasAttribute('data-hist-fecha'));
+      const filas = elementos.filter((el) => el.hasAttribute('data-hist-lote') || el.hasAttribute('data-hist-mov'));
+      const enBarra = !!active && barra.includes(active);
+      const enFecha = !!active?.hasAttribute('data-hist-fecha');
+      if (enBarra && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
         e.preventDefault();
         e.stopPropagation();
-        document.getElementById(e.key === 'ArrowRight' ? 'tab-hist-movimientos' : 'tab-hist-lotes')?.focus();
+        const j = barra.indexOf(active!);
+        barra[e.key === 'ArrowRight' ? Math.min(j + 1, barra.length - 1) : Math.max(j - 1, 0)]?.focus();
+        return;
+      }
+      if (enBarra && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+        e.preventDefault();
+        e.stopPropagation();
+        ultimoEnBarra.current = active!.id;
+        if (e.key === 'ArrowUp') document.getElementById('btn-cerrar-historial-lotes')?.focus();
+        else filas[0]?.focus();
         return;
       }
       if (enPestana && (e.key === 'Enter' || e.key === ' ')) {
         e.preventDefault();
         e.stopPropagation();
         setPestana(active?.id === 'tab-hist-movimientos' ? 'MOVIMIENTOS' : 'LOTES');
+        return;
+      }
+      // Enter en una fecha abre el calendario; al elegir el día (Enter) el selector sigue en esa fecha
+      if (enFecha && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        e.stopPropagation();
+        try { (active as HTMLInputElement).showPicker(); } catch { /* navegador sin calendario: se escribe la fecha */ }
+        return;
+      }
+      // ↑ desde la primera fila vuelve a la barra, a donde estaba (o a la pestaña abierta)
+      if (e.key === 'ArrowUp' && active && filas[0] === active) {
+        e.preventDefault();
+        e.stopPropagation();
+        (document.getElementById(ultimoEnBarra.current) || document.getElementById(pestana === 'MOVIMIENTOS' ? 'tab-hist-movimientos' : 'tab-hist-lotes'))?.focus();
+        return;
+      }
+      // ↓ desde la X va a la barra
+      if (e.key === 'ArrowDown' && active?.id === 'btn-cerrar-historial-lotes') {
+        e.preventDefault();
+        e.stopPropagation();
+        (document.getElementById(ultimoEnBarra.current) || document.getElementById(pestana === 'MOVIMIENTOS' ? 'tab-hist-movimientos' : 'tab-hist-lotes'))?.focus();
         return;
       }
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -205,7 +241,7 @@ export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose }) => {
     };
     window.addEventListener('keydown', handleKeyDown, { capture: true });
     return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
-  }, [producto, onClose]);
+  }, [producto, onClose, pestana]);
 
   if (!producto) return null;
 
