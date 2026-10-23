@@ -136,7 +136,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     setFormData(prev => ({ ...prev, category: nuevaCat }));
     setShowCatDropdown(false);
     setTimeout(() => {
-      document.getElementById('input-barcode-producto')?.focus();
+      document.getElementById('input-codigo-producto')?.focus();
     }, 50);
   };
 
@@ -395,6 +395,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           'btn-cerrar-modal-producto',
           'input-nombre-producto',
           'input-categoria-producto',
+          'input-codigo-producto',
           'input-barcode-producto',
           'input-buscar-foto-producto',
           'btn-subir-local-producto',
@@ -541,7 +542,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               if (firstItem) {
                 firstItem.focus();
               } else {
-                document.getElementById('input-barcode-producto')?.focus();
+                document.getElementById('input-codigo-producto')?.focus();
               }
             }, 30);
             return;
@@ -551,7 +552,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
             if (!input.value || input.selectionEnd === input.value.length) {
               e.preventDefault();
               setShowCatDropdown(false);
-              document.getElementById('input-barcode-producto')?.focus();
+              document.getElementById('input-codigo-producto')?.focus();
               return;
             }
           }
@@ -564,13 +565,13 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 const chosen = matches.find(c => c === typedCat) || matches[0];
                 setFormData(prev => ({ ...prev, category: chosen }));
                 setShowCatDropdown(false);
-                document.getElementById('input-barcode-producto')?.focus();
+                document.getElementById('input-codigo-producto')?.focus();
               } else {
                 handleCrearCategoria(typedCat);
               }
             } else {
               setShowCatDropdown(false);
-              document.getElementById('input-barcode-producto')?.focus();
+              document.getElementById('input-codigo-producto')?.focus();
             }
             return;
           }
@@ -605,7 +606,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               btnEliminar.focus();
             } else {
               setShowCatDropdown(false);
-              document.getElementById('input-barcode-producto')?.focus();
+              document.getElementById('input-codigo-producto')?.focus();
             }
             return;
           }
@@ -641,7 +642,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           if (e.key === 'ArrowRight') {
             e.preventDefault();
             setShowCatDropdown(false);
-            document.getElementById('input-barcode-producto')?.focus();
+            document.getElementById('input-codigo-producto')?.focus();
             return;
           }
           if (e.key === 'ArrowDown') {
@@ -721,12 +722,32 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           if (e.key === 'ArrowRight') {
             e.preventDefault();
             setShowCatDropdown(false);
-            document.getElementById('input-barcode-producto')?.focus();
+            document.getElementById('input-codigo-producto')?.focus();
             return;
           }
           if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
             e.preventDefault();
             setShowCatDropdown(false);
+            document.getElementById('input-categoria-producto')?.focus();
+            return;
+          }
+        }
+
+        // Código (SKU): Enter/↓ pasa al código de barras
+        if (active?.id === 'input-codigo-producto') {
+          const input = active as HTMLInputElement;
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            document.getElementById('input-nombre-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown' || e.key === 'Enter' || (e.key === 'ArrowRight' && input.selectionEnd === input.value.length)) {
+            e.preventDefault();
+            document.getElementById('input-barcode-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowLeft' && (!input.value || input.selectionStart === 0)) {
+            e.preventDefault();
             document.getElementById('input-categoria-producto')?.focus();
             return;
           }
@@ -748,7 +769,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
             const input = active as HTMLInputElement;
             if (!input.value || input.selectionStart === 0) {
               e.preventDefault();
-              document.getElementById('input-categoria-producto')?.focus();
+              document.getElementById('input-codigo-producto')?.focus();
               return;
             }
           }
@@ -973,13 +994,15 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
     const nombreLimpio = formData.name.trim().toUpperCase();
     const codigoBarrasLimpio = formData.barcode?.trim() || '';
+    const codigoLimpio = formData.code?.trim().toUpperCase() || '';
 
     // === VALIDACIÓN DE INTEGRIDAD ===
     const isDuplicate = productosExistentes.some((p: any) => {
       if (initialData && p.id === initialData.id) return false;
       const mismoNombre = p.name.toUpperCase() === nombreLimpio;
       const mismoCodigoBarras = codigoBarrasLimpio !== '' && p.barcode === codigoBarrasLimpio;
-      return mismoNombre || mismoCodigoBarras;
+      const mismoCodigo = codigoLimpio !== '' && String(p.code || '').toUpperCase() === codigoLimpio;
+      return mismoNombre || mismoCodigoBarras || mismoCodigo;
     });
 
     // 🔥 SALIMOS ANTES DE BLOQUEAR LA PANTALLA SI HAY ERROR
@@ -1004,15 +1027,17 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
       // === SANEAMIENTO ESTRICTO DE PAYLOAD ===
       // Si el usuario deja los campos en blanco, los forzamos a NULL
-      const safeCode = formData.code?.trim() || null;
+      const safeCode = codigoLimpio || null;
       const safeBarcode = formData.barcode?.trim() || null;
+      // Código (SKU) vacío: se genera uno de 6 dígitos (también al editar, para que ningún producto quede sin código)
+      const codigoGenerado = safeCode || `SKU-${Math.floor(100000 + Math.random() * 900000)}`;
 
       if (initialData) {
         // [ RETORNO ]: MODO EDICIÓN
         const { data, error } = await supabase.from('products').update({
           name: nombreLimpio,
           category: formData.category || 'GENERAL',
-          code: safeCode,
+          code: codigoGenerado,
           barcode: safeBarcode,
           price: Number(formData.price) || 0,
           min_stock: Number(formData.minStock) || 5,
@@ -1036,9 +1061,6 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         alert(`PRODUCTO ACTUALIZADO CORRECTAMENTE.\nNombre: ${nombreLimpio}`);
       } else {
         // [ SALIDA ]: MODO CREACIÓN
-        // RETORNO TÉCNICO: Autogenerador de código SKU de 6 dígitos si el campo está vacío
-        const codigoGenerado = safeCode || `SKU-${Math.floor(100000 + Math.random() * 900000)}`;
-
         const { data, error } = await supabase.from('products').insert([{
           name: nombreLimpio,
           category: formData.category || 'GENERAL',
@@ -1301,14 +1323,14 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                             onClick={() => { 
                               setFormData(prev => ({...prev, category: cat})); 
                               setShowCatDropdown(false); 
-                              document.getElementById('input-barcode-producto')?.focus();
+                              document.getElementById('input-codigo-producto')?.focus();
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
                                 e.preventDefault();
                                 setFormData(prev => ({...prev, category: cat})); 
                                 setShowCatDropdown(false); 
-                                document.getElementById('input-barcode-producto')?.focus();
+                                document.getElementById('input-codigo-producto')?.focus();
                               }
                             }}
                             className="flex items-center justify-between p-3 bg-white hover:bg-[#1E293B] hover:text-white focus:!bg-[#1E293B] focus:!text-white border-b border-[#E2E8F0] last:border-0 cursor-pointer group outline-none transition-colors"
@@ -1350,9 +1372,29 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 </div>
               </div>
 
+              {/* Código (SKU) propio del negocio y código de barras; el SKU vacío se genera solo al guardar */}
+              <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">Escáner (Cód. Barras)</label>
-                <input 
+                <label htmlFor="input-codigo-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">Código (SKU)</label>
+                <input
+                  id="input-codigo-producto"
+                  type="text"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  name="prod_code_no_history"
+                  data-lpignore="true"
+                  data-form-type="other"
+                  placeholder="AUTOMÁTICO"
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="input-barcode-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">Cód. de barras</label>
+                <input
                   id="input-barcode-producto"
                   type="text"
                   autoComplete="off"
@@ -1367,8 +1409,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                   onChange={(e) => { setFormData({...formData, barcode: e.target.value}); setCodigoParaBuscar(e.target.value); }}
                   className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
                 />
+              </div>
                 {estadoCodigo && (
-                  <p role="status" className={`text-[10px] font-black uppercase tracking-wide ${
+                  <p role="status" className={`col-span-2 text-[10px] font-black uppercase tracking-wide ${
                     estadoCodigo.tipo === 'encontrado' ? 'text-[var(--color-success)]' : estadoCodigo.tipo === 'buscando' ? 'text-[var(--color-muted)]' : 'text-[var(--color-warning-dark)]'
                   }`}>
                     {estadoCodigo.tipo === 'buscando' ? '⏳ ' : estadoCodigo.tipo === 'encontrado' ? '✅ ' : 'ℹ️ '}{estadoCodigo.texto}
