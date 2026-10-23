@@ -20,6 +20,8 @@ export interface PermisosUsuario {
   compras_recibir: boolean;
   // Solo Inventario > Compras: enviar por WhatsApp, descargar PDF e imprimir los pedidos (sin precios)
   compras_enviar: boolean;
+  // Inventario > Contar: toma de inventario a ciegas (sin ver el stock); lo que falta o sobra queda en Mermas
+  inventario_contar: boolean;
 
   // REPORTES
   reportes_ver_historial_ventas: boolean;

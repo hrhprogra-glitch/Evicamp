@@ -340,6 +340,7 @@ const PERMITIDO_SIN_INTERNET = new Set([
   // Fase SI-3: Finanzas sin internet (anular venta y borrar), con las mismas reglas del servidor (ver BORRADOS_PROTEGIDOS)
   'POST /rpc/fn_anular_venta',
   'DELETE /sales', 'DELETE /cash_movements', 'DELETE /debt_payments',
+  'POST /rpc/fn_registrar_conteo',                                   // toma de inventario (fase 2.2)
 ]);
 // (antes de la fase SI-2 los lotes solo podían cambiar su cantidad sin internet)
 const SOLO_CANTIDAD = new Set<string>();
@@ -395,17 +396,20 @@ const filasDeCopia = (cuerpo: string): { filas: Fila[]; uno: boolean } | null =>
 };
 const cuerpoDeCopia = (filas: Fila[], uno: boolean) => JSON.stringify(uno ? (filas[0] ?? null) : filas);
 
-// Busca en las copias guardadas la fila de una tabla (para saber su cantidad actual)
+// Busca en las copias guardadas la fila de una tabla (para saber su cantidad actual). Si está en varias, la de
+// la copia MÁS RECIENTE: una copia vieja (ej. la lista de productos de cuando se abrió el sistema) puede traer un
+// stock que ya cambió con internet (fase 2.2: un conteo sin internet tomaba 10 cuando ya era 9)
 const filaEnCopias = async (tabla: string, id: string) => {
+  let mejor: { fila: Record<string, unknown>; guardado: number } | null = null;
   for (const clave of await clavesLocal(ALMACEN_RESPUESTAS)) {
     if (!String(clave).includes(`/rest/v1/${tabla}?`)) continue;
     const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave);
     try {
       const fila = filasDeCopia(copia?.cuerpo || '')?.filas.find((f) => String(f?.id) === id);
-      if (fila) return fila as Record<string, unknown>;
+      if (fila && (!mejor || (copia?.guardado || 0) > mejor.guardado)) mejor = { fila, guardado: copia?.guardado || 0 };
     } catch { /* copia no es una lista */ }
   }
-  return null;
+  return mejor?.fila ?? null;
 };
 
 // Cambia filas en todas las copias de una tabla (lo que se ve en pantalla sin internet)
@@ -839,6 +843,55 @@ const IMITAR_RPC: Record<string, (p: Record<string, any>) => Promise<ResultadoIm
     }
     return { efectos, respuesta: { ya_anulada: false, productos } };
   },
+
+  // Toma de inventario (fase 2.2): igual que fn_registrar_conteo. La diferencia se calcula AQUÍ, con el stock
+  // que se ve al contar, y viaja al servidor (p_diferencia): así las ventas hechas antes de subirlo no se pierden.
+  // Lo que falta sale de los lotes más antiguos y lo que sobra entra al último (el cuadre fino lo hace el servidor).
+  fn_registrar_conteo: async (p) => {
+    const id = String(p.p_product_id);
+    const prod = await filaLocal('products', id);
+    if (!prod) throw new Error('No se encontró el producto.');
+    const contado = Number(p.p_contado);
+    if (Number.isNaN(contado) || contado < 0) throw new Error('Escribe cuánto contaste (0 o más).');
+    const sistema = Number(prod.quantity || 0);
+    const dif = Math.max(Math.round((p.p_diferencia != null ? Number(p.p_diferencia) : contado - sistema) * 1000) / 1000, -sistema);
+    const cuando = String(p.p_cuando || new Date().toISOString());
+    const motivo = String(p.p_motivo || '').trim().toUpperCase();
+    const justificacion = String(p.p_justificacion || '').trim();
+    const respuesta = { diferencia: dif, sistema, contado };
+    if (dif === 0) {
+      return { efectos: [movimiento({ product_id: prod.id, product_name: prod.name, change_amount: 0, previous_quantity: sistema,
+        new_quantity: sistema, operation_type: 'CONTEO', reason: 'Conteo sin diferencia', notes: `Contó ${contado}`, created_at: cuando })],
+        respuesta, params: { ...p, p_diferencia: 0 } };
+    }
+    if (!motivo) throw new Error('Elige el motivo de la diferencia.');
+    if (justificacion.length < 3) throw new Error('Escribe la justificación de la diferencia.');
+    const lotes = (await filasLocales('batches', (b) => String(b.product_id) === id && Number(b.is_active ?? 1) !== 0))
+      .sort((a, b) => comparar(a.created_at, String(b.created_at ?? '')) || Number(a.id) - Number(b.id));
+    const efectos: Efecto[] = [];
+    if (dif < 0) {
+      let falta = -dif;
+      for (const l of lotes) {
+        if (falta <= 0) break;
+        const toma = Math.min(Number(l.quantity || 0), falta);
+        if (toma <= 0) continue;
+        efectos.push({ tipo: 'cambio', tabla: 'batches', filtros: [['id', `eq.${l.id}`]], cambios: { quantity: Number(l.quantity || 0) - toma } });
+        falta -= toma;
+      }
+    } else if (lotes.length) {
+      const ultimo = lotes[lotes.length - 1];
+      efectos.push({ tipo: 'cambio', tabla: 'batches', filtros: [['id', `eq.${ultimo.id}`]], cambios: { quantity: Number(ultimo.quantity || 0) + dif } });
+    }
+    efectos.push({ tipo: 'stock', producto: id, delta: dif });
+    efectos.push({ tipo: 'nueva', tabla: 'waste', fila: {
+      id: `local-conteo-${Date.now()}`, batch_id: null, product_id: prod.id, product_name: prod.name, quantity: dif, cost_unit: 0, total_loss: 0,
+      reason: motivo, notes: justificacion, user: empleadoLocal() || 'Sistema', created_at: cuando, is_synced: 1,
+      previous_quantity: sistema, new_quantity: sistema + dif, origen: 'CONTEO', conteo_sistema: sistema, conteo_contado: contado,
+    } });
+    efectos.push(movimiento({ product_id: prod.id, product_name: prod.name, change_amount: dif, previous_quantity: sistema,
+      new_quantity: sistema + dif, operation_type: dif < 0 ? 'MERMA' : 'SOBRANTE', reason: `Conteo: ${motivo}`, notes: justificacion, created_at: cuando }));
+    return { efectos, respuesta, params: { ...p, p_diferencia: dif } };
+  },
 };
 
 // ---------------------------------------------------------------- 5) borrar sin internet (fase SI-3)
@@ -982,6 +1035,7 @@ const NOMBRES: Record<string, [string, string]> = {
   'POST /rpc/fn_soft_delete_product': ['producto borrado', 'productos borrados'],
   'POST /rpc/fn_anular_venta': ['venta anulada', 'ventas anuladas'], 'DELETE /sales': ['venta borrada', 'ventas borradas'],
   'DELETE /cash_movements': ['movimiento borrado', 'movimientos borrados'], 'DELETE /debt_payments': ['abono anulado', 'abonos anulados'],
+  'POST /rpc/fn_registrar_conteo': ['producto contado', 'productos contados'],
 };
 const resumir = (lista: Pendiente[]) => {
   const cuenta = new Map<string, number>();

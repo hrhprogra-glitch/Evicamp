@@ -12,7 +12,7 @@ import { FiltrosMermas } from './components/FiltrosMermas';
 import { TarjetaMetrica } from './components/TarjetaMetrica';
 import { TablaMermas } from './components/TablaMermas';
 import { traerTodo } from '../../utils/traerTodo';
-import { confirmar } from '../../utils/dialogos';
+import { confirmar, avisar } from '../../utils/dialogos';
 
 export const Mermas: React.FC = () => {
   const [mermas, setMermas] = useState<Merma[]>([]);
@@ -30,19 +30,33 @@ export const Mermas: React.FC = () => {
   const fetchMermas = async () => {
     setLoading(true);
     try {
-      const { data, error } = await traerTodo(() => supabase
-        .from('waste')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .order('id'));
+      const [{ data, error }, { data: cajas }] = await Promise.all([
+        traerTodo(() => supabase
+          .from('waste')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .order('id')),
+        // El turno de cada registro: quién abrió y quién cerró la caja en ese momento
+        supabase.from('cash_sessions').select('id, opened_at, closed_at, abierta_por, cerrada_por').order('opened_at', { ascending: false }).limit(1000),
+      ]);
 
       if (error) throw error;
+
+      const turnoDe = (fecha: string | null) => {
+        if (!fecha || !cajas) return '';
+        const t = Date.parse(fecha);
+        const caja = (cajas as any[]).find((c) => Date.parse(c.opened_at) <= t && (!c.closed_at || t <= Date.parse(c.closed_at)));
+        if (!caja) return '';
+        return `Turno: ${caja.abierta_por || 'sin registro'}${caja.closed_at ? ` → ${caja.cerrada_por || 'sin registro'}` : ' (caja abierta)'}`;
+      };
 
       if (data) {
         const mapeados = data.map((w: any) => ({
           ...w,
           product_name: w.product_name || 'DESCONOCIDO',
           quantity: Math.abs(Number(w.quantity) || 0),
+          sobrante: Number(w.quantity) > 0,
+          turno: turnoDe(w.created_at),
           cost_unit: Number(w.cost_unit) || 0,
           total_loss: Number(w.total_loss) || 0,
           reason: w.reason || 'SIN MOTIVO',
@@ -138,14 +152,16 @@ export const Mermas: React.FC = () => {
   }, [mermas, searchQuery, filtroMotivo, filtroOrden, filtroFecha]);
 
   const totalPerdidaEconómica = filteredMermas.reduce((acc, m) => acc + m.total_loss, 0);
-  const totalUnidadesPerdidas = filteredMermas.reduce((acc, m) => acc + m.quantity, 0);
+  const totalUnidadesPerdidas = filteredMermas.reduce((acc, m) => acc + (m.sobrante ? -m.quantity : m.quantity), 0); // un sobrante descuenta
 
   // CONTROLADOR DE ELIMINACIÓN INTELIGENTE - EVICAMP STANDARD (V2 Resiliente)
   const handleDeleteMerma = async (merma: Merma) => {
     const esConsumo = merma.reason === 'USO INTERNO' || Number(merma.quantity) === 0;
 
-    const mensajeConfirmacion = esConsumo 
-      ? `OPERACIÓN FINANCIERA: ¿Anular el registro de gasto de S/ ${merma.total_loss.toFixed(2)} en ${merma.product_name}?`
+    const mensajeConfirmacion = merma.sobrante
+      ? `¿Eliminar el sobrante de ${merma.product_name}? Se quitarán ${Math.abs(Number(merma.quantity))} unidades del inventario.`
+      : esConsumo
+      ?`OPERACIÓN FINANCIERA: ¿Anular el registro de gasto de S/ ${merma.total_loss.toFixed(2)} en ${merma.product_name}?`
       : `OPERACIÓN CRÍTICA: ¿Eliminar merma de ${merma.product_name}? Se restaurarán ${Math.abs(Number(merma.quantity))} unidades al inventario.`;
 
     if (!await confirmar(mensajeConfirmacion)) return;
@@ -174,8 +190,10 @@ export const Mermas: React.FC = () => {
 
       if (deleteError) throw new Error(`Fallo en motor SQL: ${deleteError.message}`);
 
-      alert(esConsumo 
-        ? '✅ REGISTRO FINANCIERO DE GASTO ELIMINADO CON ÉXITO.' 
+      await avisar(merma.sobrante
+        ? '✅ SOBRANTE ELIMINADO. SE QUITÓ DEL INVENTARIO.'
+        : esConsumo
+        ? '✅ REGISTRO FINANCIERO DE GASTO ELIMINADO CON ÉXITO.'
         : '✅ MERMA ELIMINADA. EL INVENTARIO FUE RESTAURADO.');
       
       // Sincronización del Plano de Datos
@@ -429,6 +447,11 @@ export const Mermas: React.FC = () => {
             mermas={filteredMermas}
             products={products}
             onEdit={(merma) => {
+              // Un ajuste del conteo no se edita: si hubo un error, se borra y se vuelve a contar
+              if (merma.origen === 'CONTEO') {
+                void avisar(`Este registro viene de la TOMA DE INVENTARIO y no se edita.\n\n${merma.sobrante ? 'Sobrante' : 'Merma'} de ${merma.product_name}: contó ${merma.conteo_contado ?? '—'}, el sistema decía ${merma.conteo_sistema ?? '—'}.\nMotivo: ${merma.reason}\nJustificación: ${merma.notes || '—'}\nPor: ${merma.user_name} · ${merma.created_at}${merma.turno ? `\n${merma.turno}` : ''}\n\nSi hubo un error, bórralo con el tacho y vuelve a contar.`);
+                return;
+              }
               setMermaAEditar(merma);
               setIsModalMermaOpen(true);
             }}

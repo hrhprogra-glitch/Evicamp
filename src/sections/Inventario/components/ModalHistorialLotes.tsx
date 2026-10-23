@@ -55,6 +55,7 @@ const haceDiasISO = (dias: number) => { const d = new Date(); d.setDate(d.getDat
 const TIPOS: Record<string, string> = {
   COMPRA: 'Ingreso', VENTA: 'Venta', MERMA: 'Merma', AJUSTE: 'Ajuste',
   ANULACION: 'Devolución', DEVOLUCION: 'Devolución', ERROR: 'Error',
+  SOBRANTE: 'Sobrante', CONTEO: 'Conteo', ENTRADA: 'Entrada', SALIDA: 'Salida',
 };
 // Movimientos antiguos guardados sin el nombre real ("postgres") o por el servidor ("Sistema")
 const quien = (u: string) => (!u || u === 'postgres' ? 'Sin registro' : u);
@@ -238,6 +239,7 @@ export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose }) => {
 
   const TONO_TIPO: Record<string, TonoEtiqueta> = {
     COMPRA: 'verde', ANULACION: 'verde', DEVOLUCION: 'verde', VENTA: 'azul', MERMA: 'rojo', AJUSTE: 'ambar', ERROR: 'rojo',
+    SOBRANTE: 'verde', CONTEO: 'gris', ENTRADA: 'verde', SALIDA: 'rojo',
   };
   const filaMovimiento = (m: Movimiento) => {
     const esError = m.operation_type === 'ERROR';

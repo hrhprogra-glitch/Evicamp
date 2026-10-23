@@ -69,6 +69,8 @@ AS $$
     -- finas (sin costos, solo devolver lo propio) están dentro de cada función.
     WHEN 'POST /rpc/fn_recibir_compra'  THEN ARRAY['almacen_ingresar_lotes', 'compras_recibir']
     WHEN 'POST /rpc/fn_devolver_compra' THEN ARRAY['almacen_ingresar_lotes', 'compras_recibir']
+    -- Toma de inventario (fase 2.2): contar a ciegas y dejar la merma o el sobrante (fn_registrar_conteo)
+    WHEN 'POST /rpc/fn_registrar_conteo' THEN ARRAY['inventario_contar']
     -- GERENCIA
     WHEN 'PATCH /empresa_config'     THEN ARRAY['gerencia_configuracion_sistema']
     WHEN 'POST /empresa_config'      THEN ARRAY['gerencia_configuracion_sistema']
@@ -825,6 +827,203 @@ BEGIN
     p_product_id::bigint, v_product_name, -coalesce(v_total_qty, 0), coalesce(v_total_qty, 0), 0,
     'AJUSTE', 'Eliminación del sistema (Soft Delete)', p_user_name, now(), '1'
   );
+END;
+$$;
+
+NOTIFY pgrst, 'reload schema';
+
+-- ===================================================================================================
+-- TOMA DE INVENTARIO (fase 2.2): el empleado cuenta A CIEGAS y la diferencia se aplica al instante, sin
+-- límite y sin aprobación. El control es que el motivo y la justificación son obligatorios y queda quién,
+-- cuándo y en qué turno (trg_autor_merma y cash_sessions.abierta_por / cerrada_por): el admin lo revisa en
+-- Mermas. Lo que FALTA es una merma (sale de los lotes más antiguos, igual que la venta); lo que SOBRA es un
+-- sobrante: la misma tabla con la cantidad en positivo (entra al último lote).
+ALTER TABLE public.waste ADD COLUMN IF NOT EXISTS origen text;              -- 'CONTEO' (vacío = merma a mano)
+ALTER TABLE public.waste ADD COLUMN IF NOT EXISTS conteo_sistema numeric;   -- lo que decía el sistema
+ALTER TABLE public.waste ADD COLUMN IF NOT EXISTS conteo_contado numeric;   -- lo que contó el empleado
+
+-- Después de contar, la suma de los lotes queda IGUAL al stock del producto (Inventario muestra la suma de los
+-- lotes y la venta usa el stock del producto: si no coincidían, como pasó con CERVILLETA, el conteo los cuadra).
+-- Si faltan unidades en los lotes entran al último; si sobran salen de los más antiguos. El stock no cambia.
+CREATE OR REPLACE FUNCTION public.fn_cuadrar_lotes_conteo(p_product_id bigint, p_quien text, p_cuando timestamptz)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_stock numeric;
+  v_suma numeric;
+  v_resto numeric;
+  v_toma numeric;
+  v_lote record;
+  v_nombre text;
+BEGIN
+  SELECT coalesce(quantity, 0), name INTO v_stock, v_nombre FROM products WHERE id = p_product_id;
+  SELECT coalesce(sum(coalesce(quantity, 0)), 0) INTO v_suma FROM batches WHERE product_id = p_product_id AND coalesce(is_active, 1) <> 0;
+  IF v_suma = v_stock OR NOT EXISTS (SELECT 1 FROM batches WHERE product_id = p_product_id AND coalesce(is_active, 1) <> 0) THEN
+    RETURN;
+  END IF;
+  IF v_suma < v_stock THEN
+    SELECT id INTO v_lote FROM batches WHERE product_id = p_product_id AND coalesce(is_active, 1) <> 0
+    ORDER BY created_at DESC, id DESC LIMIT 1 FOR UPDATE;
+    UPDATE batches SET quantity = coalesce(quantity, 0) + (v_stock - v_suma) WHERE id = v_lote.id;
+    INSERT INTO inventory_movements (batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
+                                     operation_type, reason, notes, created_at, "user", is_synced)
+    VALUES (v_lote.id, p_product_id, v_nombre, 0, v_stock, v_stock, 'AJUSTE', 'Cuadre de lotes (conteo)',
+            'Lote +' || (v_stock - v_suma)::text || ': los lotes no sumaban el stock', p_cuando, p_quien, 1);
+  ELSE
+    v_resto := v_suma - v_stock;
+    FOR v_lote IN SELECT id, coalesce(quantity, 0) AS qty FROM batches
+                  WHERE product_id = p_product_id AND coalesce(is_active, 1) <> 0 AND coalesce(quantity, 0) > 0
+                  ORDER BY created_at ASC, id ASC FOR UPDATE LOOP
+      EXIT WHEN v_resto <= 0;
+      v_toma := least(v_lote.qty, v_resto);
+      UPDATE batches SET quantity = v_lote.qty - v_toma WHERE id = v_lote.id;
+      INSERT INTO inventory_movements (batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
+                                       operation_type, reason, notes, created_at, "user", is_synced)
+      VALUES (v_lote.id, p_product_id, v_nombre, 0, v_stock, v_stock, 'AJUSTE', 'Cuadre de lotes (conteo)',
+              'Lote -' || v_toma::text || ': los lotes sumaban más que el stock', p_cuando, p_quien, 1);
+      v_resto := v_resto - v_toma;
+    END LOOP;
+  END IF;
+END;
+$$;
+
+-- p_diferencia: la que el empleado VIO al contar y justificó (ModalTomaInventario); sin internet viaja así hasta
+-- que se sube, y las ventas hechas entre el conteo y la subida no se pierden. Si va NULL se calcula aquí.
+CREATE OR REPLACE FUNCTION public.fn_registrar_conteo(p_product_id bigint, p_contado numeric, p_motivo text DEFAULT NULL,
+                                                      p_justificacion text DEFAULT NULL, p_diferencia numeric DEFAULT NULL,
+                                                      p_cuando timestamptz DEFAULT NULL)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_emp record;
+  v_prod record;
+  v_lote record;
+  v_dif numeric;
+  v_falta numeric;
+  v_toma numeric;
+  v_stock numeric;
+  v_cuando timestamptz := coalesce(p_cuando, now());
+  v_motivo text := upper(trim(coalesce(p_motivo, '')));
+  v_just text := trim(coalesce(p_justificacion, ''));
+BEGIN
+  SELECT * INTO v_emp FROM fn_empleado_de_sesion();
+  IF v_emp.id IS NULL THEN RAISE EXCEPTION 'Sesión no válida.'; END IF;
+  IF NOT fn_tiene_permiso(v_emp.permisos, ARRAY['inventario_contar']) THEN
+    RAISE EXCEPTION 'No tienes permiso para contar inventario.';
+  END IF;
+  IF p_contado IS NULL OR p_contado < 0 THEN RAISE EXCEPTION 'Escribe cuánto contaste (0 o más).'; END IF;
+
+  SELECT id, name, coalesce(quantity, 0) AS quantity INTO v_prod FROM products WHERE id = p_product_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'No se encontró el producto.'; END IF;
+  v_dif := coalesce(p_diferencia, p_contado - v_prod.quantity);
+  v_dif := greatest(v_dif, -v_prod.quantity);   -- el stock nunca queda negativo
+
+  -- Cuadra: solo queda en el kardex que se contó (sin motivo)
+  IF v_dif = 0 THEN
+    INSERT INTO inventory_movements (product_id, product_name, change_amount, previous_quantity, new_quantity,
+                                     operation_type, reason, notes, created_at, "user", is_synced)
+    VALUES (v_prod.id, v_prod.name, 0, v_prod.quantity, v_prod.quantity, 'CONTEO', 'Conteo sin diferencia',
+            'Contó ' || p_contado::text, v_cuando, v_emp.nombre, 1);
+    PERFORM fn_cuadrar_lotes_conteo(p_product_id, v_emp.nombre, v_cuando);
+    RETURN jsonb_build_object('diferencia', 0, 'sistema', v_prod.quantity, 'contado', p_contado);
+  END IF;
+
+  IF v_motivo = '' THEN RAISE EXCEPTION 'Elige el motivo de la diferencia.'; END IF;
+  IF length(v_just) < 3 THEN RAISE EXCEPTION 'Escribe la justificación de la diferencia.'; END IF;
+
+  IF v_dif < 0 THEN
+    -- FALTA: merma, sacada de los lotes más antiguos con stock (como la venta); lo que no está en ningún lote
+    -- (producto con stock pero sin lotes) queda en una merma sin lote
+    v_falta := -v_dif;
+    v_stock := v_prod.quantity;
+    FOR v_lote IN SELECT id, coalesce(quantity, 0) AS qty, coalesce(cost_unit, 0) AS cost FROM batches
+                  WHERE product_id = p_product_id AND coalesce(quantity, 0) > 0 AND coalesce(is_active, 1) <> 0
+                  ORDER BY created_at ASC, id ASC FOR UPDATE LOOP
+      EXIT WHEN v_falta <= 0;
+      v_toma := least(v_lote.qty, v_falta);
+      UPDATE batches SET quantity = v_lote.qty - v_toma WHERE id = v_lote.id;
+      -- El stock del producto lo baja el trigger tr_waste_reduce (quantity en negativo)
+      INSERT INTO waste (batch_id, product_id, product_name, quantity, cost_unit, total_loss, reason, notes, created_at,
+                         is_synced, previous_quantity, new_quantity, origen, conteo_sistema, conteo_contado)
+      VALUES (v_lote.id, v_prod.id, v_prod.name, -v_toma, v_lote.cost, round(v_toma * v_lote.cost, 2), v_motivo, v_just,
+              v_cuando, 1, v_stock, v_stock - v_toma, 'CONTEO', v_prod.quantity, p_contado);
+      INSERT INTO inventory_movements (batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
+                                       operation_type, reason, notes, created_at, "user", is_synced)
+      VALUES (v_lote.id, v_prod.id, v_prod.name, -v_toma, v_stock, v_stock - v_toma, 'MERMA', 'Conteo: ' || v_motivo,
+              v_just, v_cuando, v_emp.nombre, 1);
+      v_stock := v_stock - v_toma;
+      v_falta := v_falta - v_toma;
+    END LOOP;
+    IF v_falta > 0 THEN
+      INSERT INTO waste (product_id, product_name, quantity, cost_unit, total_loss, reason, notes, created_at,
+                         is_synced, previous_quantity, new_quantity, origen, conteo_sistema, conteo_contado)
+      VALUES (v_prod.id, v_prod.name, -v_falta, 0, 0, v_motivo, v_just, v_cuando, 1, v_stock, v_stock - v_falta,
+              'CONTEO', v_prod.quantity, p_contado);
+      INSERT INTO inventory_movements (product_id, product_name, change_amount, previous_quantity, new_quantity,
+                                       operation_type, reason, notes, created_at, "user", is_synced)
+      VALUES (v_prod.id, v_prod.name, -v_falta, v_stock, v_stock - v_falta, 'MERMA', 'Conteo: ' || v_motivo,
+              v_just, v_cuando, v_emp.nombre, 1);
+    END IF;
+  ELSE
+    -- SOBRA: entra al último lote activo; si el producto no tiene lotes, se crea uno ("SOBRANTE CONTEO")
+    SELECT id, coalesce(cost_unit, 0) AS cost INTO v_lote FROM batches
+    WHERE product_id = p_product_id AND coalesce(is_active, 1) <> 0 ORDER BY created_at DESC, id DESC LIMIT 1 FOR UPDATE;
+    IF NOT FOUND THEN
+      INSERT INTO batches (id, product_id, quantity, initial_quantity, cost_total, cost_unit, document_ref, is_active, is_synced, created_at)
+      VALUES ((extract(epoch FROM clock_timestamp()) * 1000)::bigint, p_product_id, 0, 0, 0, 0, 'SOBRANTE CONTEO', 1, 1, v_cuando)
+      RETURNING id, coalesce(cost_unit, 0) AS cost INTO v_lote;
+    END IF;
+    UPDATE batches SET quantity = coalesce(quantity, 0) + v_dif WHERE id = v_lote.id;
+    -- total_loss en negativo: un sobrante resta de lo perdido en Mermas
+    INSERT INTO waste (batch_id, product_id, product_name, quantity, cost_unit, total_loss, reason, notes, created_at,
+                       is_synced, previous_quantity, new_quantity, origen, conteo_sistema, conteo_contado)
+    VALUES (v_lote.id, v_prod.id, v_prod.name, v_dif, v_lote.cost, -round(v_dif * v_lote.cost, 2), v_motivo, v_just,
+            v_cuando, 1, v_prod.quantity, v_prod.quantity + v_dif, 'CONTEO', v_prod.quantity, p_contado);
+    INSERT INTO inventory_movements (batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
+                                     operation_type, reason, notes, created_at, "user", is_synced)
+    VALUES (v_lote.id, v_prod.id, v_prod.name, v_dif, v_prod.quantity, v_prod.quantity + v_dif, 'SOBRANTE',
+            'Conteo: ' || v_motivo, v_just, v_cuando, v_emp.nombre, 1);
+  END IF;
+  PERFORM fn_cuadrar_lotes_conteo(p_product_id, v_emp.nombre, v_cuando);
+  RETURN jsonb_build_object('diferencia', v_dif, 'sistema', v_prod.quantity, 'contado', p_contado);
+END;
+$$;
+
+-- Borrar una merma devuelve lo que se sacó; borrar un SOBRANTE (cantidad en positivo) quita lo que entró.
+-- Antes usaba el valor absoluto: borrar un sobrante habría SUMADO otra vez. Las mermas (en negativo) siguen igual.
+CREATE OR REPLACE FUNCTION public.fn_restore_stock_on_waste_delete()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_current_stock numeric;
+  v_cambio numeric := -coalesce(OLD.quantity, 0);
+BEGIN
+  UPDATE public.products SET quantity = coalesce(quantity, 0) + v_cambio
+  WHERE id = OLD.product_id
+  RETURNING quantity INTO v_current_stock;
+
+  INSERT INTO public.inventory_movements (
+    batch_id, product_id, product_name, change_amount,
+    previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
+  ) VALUES (
+    OLD.batch_id, OLD.product_id, OLD.product_name, v_cambio,
+    (v_current_stock - v_cambio), v_current_stock,
+    CASE WHEN v_cambio >= 0 THEN 'ENTRADA' ELSE 'SALIDA' END,
+    CASE WHEN v_cambio >= 0 THEN 'Anulación Gasto/Merma' ELSE 'Anulación Sobrante' END,
+    'Sistema BD: Restauración automática.', now(), 'Sistema', 0
+  );
+
+  IF OLD.batch_id IS NOT NULL THEN
+    UPDATE public.batches SET quantity = greatest(coalesce(quantity, 0) + v_cambio, 0) WHERE id = OLD.batch_id;
+  END IF;
+  RETURN OLD;
 END;
 $$;
 

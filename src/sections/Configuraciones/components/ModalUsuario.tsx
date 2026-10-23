@@ -14,7 +14,7 @@ interface ModalUsuarioProps {
 
 const PERMISOS_DEFAULT: PermisosUsuario = {
   caja_realizar_ventas: false, caja_abrir_cerrar_turno: false, caja_ingresos_egresos: false, caja_ver_fiados: false, caja_cobrar_deudas: false,
-  almacen_ver_stock: false, almacen_ingresar_lotes: false, almacen_crear_editar_productos: false, almacen_eliminar_productos: false, almacen_modificar_precios: false, almacen_gestionar_proveedores: false, almacen_registrar_mermas: false, compras_recibir: false, compras_enviar: false,
+  almacen_ver_stock: false, almacen_ingresar_lotes: false, almacen_crear_editar_productos: false, almacen_eliminar_productos: false, almacen_modificar_precios: false, almacen_gestionar_proveedores: false, almacen_registrar_mermas: false, compras_recibir: false, compras_enviar: false, inventario_contar: false,
   reportes_ver_historial_ventas: false, reportes_anular_ventas: false, reportes_ver_globales: false,
   gerencia_ver_utilidades: false, gerencia_gestionar_usuarios: false, gerencia_configuracion_sistema: false,
   sistema_acceso_total: false,
@@ -84,6 +84,7 @@ const COLUMNAS_PERMISOS: {
       { key: 'almacen_modificar_precios', label: 'Modificar Precios' },
       { key: 'almacen_gestionar_proveedores', label: 'Gestionar Proveedores' },
       { key: 'almacen_registrar_mermas', label: 'Registrar Mermas' },
+      { key: 'inventario_contar', label: 'Contar Inventario (a ciegas)' },
     ],
   },
   {

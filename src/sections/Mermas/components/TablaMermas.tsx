@@ -190,6 +190,9 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
                 <span className="text-xs font-black text-[var(--color-accent)] uppercase flex items-center gap-1 truncate">
                   Por: {merma.user_name || 'SISTEMA'}
                 </span>
+                {merma.turno && (
+                  <span className="text-[11px] font-bold text-[var(--color-muted)] truncate" title={merma.turno}>{merma.turno}</span>
+                )}
               </div>
 
               {/* PRODUCTO */}
@@ -202,6 +205,11 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
 
               {/* DETALLE */}
               <div className="col-span-2 min-w-0 pr-2">
+                {merma.origen === 'CONTEO' && (
+                  <p className="text-xs font-black text-[var(--color-ink)] truncate">
+                    Contó {merma.conteo_contado ?? '—'} · sistema {merma.conteo_sistema ?? '—'}
+                  </p>
+                )}
                 {merma.notes ? (
                   <p className="text-xs font-black text-[var(--color-muted)] line-clamp-2" title={merma.notes}>
                     {merma.notes}
@@ -212,7 +220,12 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
               </div>
 
               {/* MOTIVO */}
-              <div className="col-span-2 min-w-0 pr-2">
+              <div className="col-span-2 min-w-0 pr-2 flex flex-col items-start gap-1">
+                {merma.origen === 'CONTEO' && (
+                  <span className={`text-[11px] font-black uppercase px-2 py-0.5 border ${merma.sobrante ? 'bg-[var(--color-info-bg)] text-[var(--color-info)] border-[var(--color-info)]' : 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger)]'}`}>
+                    Conteo · {merma.sobrante ? 'Sobrante' : 'Faltante'}
+                  </span>
+                )}
                 <span className="text-xs font-black uppercase px-2 py-1 border-2 inline-block bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-border)] truncate max-w-full rounded-none">
                   {merma.reason}
                 </span>
@@ -221,7 +234,7 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
               {/* UNIDADES */}
               <div className="col-span-1 min-w-0 flex justify-center">
                 <div className="inline-flex items-center justify-center px-2 py-1 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] font-black text-[var(--color-ink)] text-xs w-full max-w-[50px] truncate rounded-none">
-                  {formatearCantidad(merma.quantity, products.find(p => p.id === merma.product_id)?.unit)}
+                  {merma.sobrante ? '+' : ''}{formatearCantidad(merma.quantity, products.find(p => p.id === merma.product_id)?.unit)}
                 </div>
               </div>
 
@@ -234,8 +247,9 @@ export const TablaMermas: React.FC<Props> = ({ mermas, products, onEdit, onDelet
 
               {/* TOTAL */}
               <div className="col-span-1 min-w-0 text-right">
-                <p className="font-black text-[var(--color-ink)] text-sm truncate" title={`S/ ${merma.total_loss.toFixed(2)}`}>
-                  S/{merma.total_loss.toFixed(2)}
+                {/* Un sobrante resta de lo perdido (en la base su total va en negativo) */}
+                <p className={`font-black text-sm truncate ${merma.sobrante ? 'text-[var(--color-accent)]' : 'text-[var(--color-ink)]'}`} title={`S/ ${merma.total_loss.toFixed(2)}`}>
+                  {merma.sobrante ? `+S/${Math.abs(merma.total_loss).toFixed(2)}` : `S/${merma.total_loss.toFixed(2)}`}
                 </p>
               </div>
 

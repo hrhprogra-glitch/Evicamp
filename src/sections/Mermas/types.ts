@@ -13,4 +13,10 @@ export interface Merma {
   raw_date: string; /* <-- AÑADIMOS ESTA LÍNEA AQUÍ */
   previous_quantity: number;
   new_quantity: number;
+  // Toma de inventario (fase 2.2): origen 'CONTEO'; sobrante = entró mercadería (cantidad positiva en la tabla)
+  origen?: string | null;
+  sobrante?: boolean;
+  conteo_sistema?: number | null;
+  conteo_contado?: number | null;
+  turno?: string; // quién abrió / cerró la caja en ese momento
 }
