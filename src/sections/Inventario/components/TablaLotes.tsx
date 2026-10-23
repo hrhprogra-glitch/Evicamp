@@ -303,7 +303,7 @@ export const TablaLotes: React.FC<Props> = ({
         }
       }}
       onClick={() => onEditLote && onEditLote(lote)}
-      className="grid grid-cols-12 items-center p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] focus:bg-amber-50/50 dark:focus:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors group text-base cursor-pointer"
+      className="grid grid-cols-12 items-center p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] focus:bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors group text-base cursor-pointer"
       title="Presione Enter o haga clic para editar"
     >
       
