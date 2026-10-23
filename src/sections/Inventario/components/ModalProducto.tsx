@@ -7,6 +7,7 @@ import { buscarImagenes, fotoParaGuardar, achicarImagen } from '../../../utils/b
 import { confirmar } from '../../../utils/dialogos';
 import { UNIDADES, unidadDe } from '../../../utils/unidades';
 import { escalasValidas } from '../../../utils/preciosCantidad';
+import { presentacionesValidas } from '../../../utils/presentaciones';
 
 // Componente de Notificación de Errores (Diseño Geométrico y Alto Contraste)
 const TechnicalAlert = ({ message }: { message: string }) => {
@@ -53,15 +54,38 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     return filas;
   };
   const [escalas, setEscalas] = useState<FilaEscala[]>(filasEscalas());
+  // Fase 1.2: presentaciones (caja, paquete…), 3 filas opcionales: unidad · trae · precio · código de barras
+  type FilaPres = { unidad: string; factor: string; precio: string; barcode: string };
+  const filasPres = (lista?: { unidad: string; factor: number; precio: number; barcode?: string | null }[]): FilaPres[] => {
+    const filas = (lista || []).slice(0, 3).map((e) => ({ unidad: e.unidad, factor: String(e.factor), precio: String(e.precio), barcode: e.barcode || '' }));
+    while (filas.length < 3) filas.push({ unidad: 'CAJA', factor: '', precio: '', barcode: '' });
+    return filas;
+  };
+  const [presentacionesForm, setPresentacionesForm] = useState<FilaPres[]>(filasPres());
+  const cambiarPres = (i: number, campo: keyof FilaPres, valor: string) => setPresentacionesForm((prev) => prev.map((f, j) => (j === i ? { ...f, [campo]: valor } : f)));
+  const COLS_PRES = ['unidad', 'factor', 'precio', 'barcode'] as const;
+  const teclasPres = (e: React.KeyboardEvent<HTMLElement>, fila: number, col: typeof COLS_PRES[number]) => {
+    const ir = (id: string) => { const el = document.getElementById(id) as HTMLInputElement | null; if (el) { el.focus(); if (el.tagName === 'INPUT') el.select?.(); } return !!el; };
+    const c = COLS_PRES.indexOf(col);
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (!ir(`pres-${col}-${fila + 1}`)) ir('btn-guardar-producto'); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); if (!ir(`pres-${col}-${fila - 1}`)) ir('escala-precio-2') || ir('select-unidad-peso-producto'); }
+    else if (e.key === 'ArrowRight' && c < COLS_PRES.length - 1) { e.preventDefault(); ir(`pres-${COLS_PRES[c + 1]}-${fila}`); }
+    else if (e.key === 'ArrowLeft' && c > 0) { e.preventDefault(); ir(`pres-${COLS_PRES[c - 1]}-${fila}`); }
+    else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (col === 'unidad') { try { (e.currentTarget as HTMLSelectElement & { showPicker?: () => void }).showPicker?.(); } catch { /* sin showPicker */ } return; }
+      if (c < COLS_PRES.length - 1) ir(`pres-${COLS_PRES[c + 1]}-${fila}`); else if (!ir(`pres-unidad-${fila + 1}`)) ir('btn-guardar-producto');
+    }
+  };
   const cambiarEscala = (i: number, campo: keyof FilaEscala, valor: string) => setEscalas((prev) => prev.map((f, j) => (j === i ? { ...f, [campo]: valor } : f)));
   // ↑ ↓ entre filas, ← → entre "desde" y "precio", Enter al siguiente; al terminar, Guardar
   const teclasEscala = (e: React.KeyboardEvent<HTMLInputElement>, fila: number, col: 'desde' | 'precio') => {
     const ir = (id: string) => { const el = document.getElementById(id) as HTMLInputElement | null; if (el) { el.focus(); el.select?.(); } return !!el; };
-    if (e.key === 'ArrowDown') { e.preventDefault(); if (!ir(`escala-${col}-${fila + 1}`)) ir('btn-guardar-producto'); }
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (!ir(`escala-${col}-${fila + 1}`)) ir('pres-unidad-0') || ir('btn-guardar-producto'); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); if (!ir(`escala-${col}-${fila - 1}`)) ir('select-unidad-peso-producto') || ir('input-stock-minimo-producto'); }
     else if (e.key === 'ArrowRight' && col === 'desde') { e.preventDefault(); ir(`escala-precio-${fila}`); }
     else if (e.key === 'ArrowLeft' && col === 'precio') { e.preventDefault(); ir(`escala-desde-${fila}`); }
-    else if (e.key === 'Enter') { e.preventDefault(); if (col === 'desde') ir(`escala-precio-${fila}`); else if (!ir(`escala-desde-${fila + 1}`)) ir('btn-guardar-producto'); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (col === 'desde') ir(`escala-precio-${fila}`); else if (!ir(`escala-desde-${fila + 1}`)) ir('pres-unidad-0') || ir('btn-guardar-producto'); }
   };
   const [isSubmitting, setIsSubmitting] = useState(false);
   // ESTADOS PARA EL AUTOCOMPLETADO DE CATEGORÍAS
@@ -222,6 +246,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         else if (tipoUnidad === 'DECIMAL') setNature('PESO');
         else setNature('CONSUMO');
         setEscalas(filasEscalas(initialData.preciosCantidad)); // fase 1.3
+        setPresentacionesForm(filasPres(initialData.presentaciones)); // fase 1.2
         
         setStep(2);
       } else {
@@ -230,6 +255,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         setNature(null);
         setFormData({ name: '', category: '', code: '', barcode: '', price: '', minStock: '5', weightUnit: 'KG', image: '' });
         setEscalas(filasEscalas());
+        setPresentacionesForm(filasPres());
       }
     }
   }, [isOpen, initialData]);
@@ -299,6 +325,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     setNature(null);
     setFormData({ name: '', category: '', code: '', barcode: '', price: '', minStock: '5', weightUnit: 'KG', image: '' });
     setEscalas(filasEscalas());
+    setPresentacionesForm(filasPres());
     setImageQuery('');
     setImageResults([]);
     setShowImageResults(false);
@@ -375,6 +402,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           'input-stock-minimo-producto',
           'select-unidad-peso-producto',
           'escala-desde-0', 'escala-precio-0', 'escala-desde-1', 'escala-precio-1', 'escala-desde-2', 'escala-precio-2',
+          ...[0, 1, 2].flatMap((i) => [`pres-unidad-${i}`, `pres-factor-${i}`, `pres-precio-${i}`, `pres-barcode-${i}`]),
           'btn-guardar-producto',
           'btn-guardar-ir-lotes'
         ];
@@ -874,7 +902,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         if (active?.id === 'btn-guardar-producto') {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
-            const prev = document.getElementById('escala-precio-2') || document.getElementById('select-unidad-peso-producto') || 
+            const prev = document.getElementById('pres-barcode-2') || document.getElementById('escala-precio-2') || document.getElementById('select-unidad-peso-producto') || 
                          document.getElementById('input-stock-minimo-producto') || 
                          document.getElementById('input-precio-producto');
             prev?.focus();
@@ -899,7 +927,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         if (active?.id === 'btn-guardar-ir-lotes') {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
-            const prev = document.getElementById('escala-precio-2') || document.getElementById('select-unidad-peso-producto') || 
+            const prev = document.getElementById('pres-barcode-2') || document.getElementById('escala-precio-2') || document.getElementById('select-unidad-peso-producto') || 
                          document.getElementById('input-stock-minimo-producto') || 
                          document.getElementById('input-precio-producto');
             prev?.focus();
@@ -921,7 +949,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
     window.addEventListener('keydown', handleFormKeyDown, { capture: true });
     return () => window.removeEventListener('keydown', handleFormKeyDown, { capture: true });
-  }, [isOpen, step, nature, formData, escalas, isSubmitting, categoriasLista, showImageResults, imageResults, imgResaltada]); // escalas: Guardar con Enter usa las de ahora (fase 1.3)
+  }, [isOpen, step, nature, formData, escalas, presentacionesForm, isSubmitting, categoriasLista, showImageResults, imageResults, imgResaltada]); // escalas: Guardar con Enter usa las de ahora (fase 1.3)
 
   if (!isOpen) return null;
 
@@ -969,7 +997,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
       const codigoSunat = unidadDe({ unit: unidadAsignada }).codigo;
       // Fase 1.3: precios por cantidad válidos (vacío = sin escalas); los de consumo no llevan
       const preciosCantidad = nature === 'CONSUMO' ? [] : escalasValidas(escalas.map((f) => ({ desde: f.desde, precio: f.precio })));
-      const conEscalas = precioBloqueado ? {} : { precios_cantidad: preciosCantidad.length ? preciosCantidad : null };
+      // Fase 1.2: presentaciones válidas (unidad, trae 2 o más, precio); los de consumo no llevan
+      const presentaciones = nature === 'CONSUMO' ? [] : presentacionesValidas(presentacionesForm.map((f) => ({ unidad: f.unidad, factor: Number(f.factor), precio: Number(f.precio), barcode: f.barcode })));
+      const conEscalas = precioBloqueado ? {} : { precios_cantidad: preciosCantidad.length ? preciosCantidad : null, presentaciones: presentaciones.length ? presentaciones : null };
       let productoGuardado;
 
       // === SANEAMIENTO ESTRICTO DE PAYLOAD ===
@@ -1590,6 +1620,37 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                         value={f.precio} onChange={(e) => cambiarEscala(i, 'precio', e.target.value)} onKeyDown={(e) => teclasEscala(e, i, 'precio')}
                         readOnly={precioBloqueado} aria-label={`Escala ${i + 1}: precio`}
                         className="w-28 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-right outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Fase 1.2: presentaciones (caja, paquete, docena…). En Caja se venden como otro producto y descuentan las unidades */}
+              {(nature === 'PESO' || nature === 'UNIDAD') && (
+                <div className="space-y-2 md:col-span-2" id="bloque-presentaciones-producto">
+                  <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">Presentaciones (opcional)</label>
+                  <p className="text-[10px] font-bold text-[#64748B]">Ej.: CAJA que trae 12 {formData.weightUnit} a S/ 60, con su código de barras. En Caja, vender 1 caja descuenta 12 {formData.weightUnit}.</p>
+                  {presentacionesForm.map((f, i) => (
+                    <div key={i} className="flex flex-wrap items-center gap-2">
+                      <select id={`pres-unidad-${i}`} value={f.unidad} onChange={(e) => cambiarPres(i, 'unidad', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'unidad')}
+                        disabled={precioBloqueado} aria-label={`Presentación ${i + 1}: unidad`}
+                        className="w-32 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] cursor-pointer">
+                        {UNIDADES.filter((u) => u.tipo === 'ENTERA' && u.corto !== 'UND').map((u) => <option key={u.codigo} value={u.corto}>{u.nombre}</option>)}
+                      </select>
+                      <span className="text-[10px] font-black text-[#64748B] uppercase">trae</span>
+                      <input id={`pres-factor-${i}`} type="number" min="2" step="any" autoComplete="off" data-lpignore="true" placeholder="12"
+                        value={f.factor} onChange={(e) => cambiarPres(i, 'factor', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'factor')}
+                        readOnly={precioBloqueado} aria-label={`Presentación ${i + 1}: cuántas trae`}
+                        className="w-20 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-right outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
+                      <span className="text-[10px] font-black text-[#64748B] uppercase">{formData.weightUnit} · S/</span>
+                      <input id={`pres-precio-${i}`} type="number" min="0" step="0.01" autoComplete="off" data-lpignore="true" placeholder="0.00"
+                        value={f.precio} onChange={(e) => cambiarPres(i, 'precio', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'precio')}
+                        readOnly={precioBloqueado} aria-label={`Presentación ${i + 1}: precio`}
+                        className="w-24 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-right outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
+                      <input id={`pres-barcode-${i}`} type="text" autoComplete="off" data-lpignore="true" placeholder="Código de barras (opcional)"
+                        value={f.barcode} onChange={(e) => cambiarPres(i, 'barcode', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'barcode')}
+                        readOnly={precioBloqueado} aria-label={`Presentación ${i + 1}: código de barras`}
+                        className="flex-1 min-w-[140px] bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
                     </div>
                   ))}
                 </div>

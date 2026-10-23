@@ -156,6 +156,10 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
                   <tr key={index} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]">
                     <td className="p-2 text-xs font-black text-[var(--color-ink)]">{formatearCantidadDetalle(item.quantity)}</td>
                     <td className="p-2 text-xs font-bold text-[var(--color-muted)] uppercase">{item.product_name}
+                      {/* Fase 1.2: vendido en presentación */}
+                      {item.presentacion && (
+                        <span data-presentacion className="block normal-case text-[11px] text-[var(--color-info)]">{Number(item.presentacion_cantidad)} × {item.presentacion} = {Number(item.quantity)} unidades</span>
+                      )}
                       {/* Fase 1.4: precio cambiado al cobrar */}
                       {item.precio_lista != null && Number(item.precio_lista) !== Number(item.price_at_moment) && (
                         <span data-precio-cambiado className="block normal-case text-[11px] text-[var(--color-warning-text)]">

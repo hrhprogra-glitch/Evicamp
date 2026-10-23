@@ -1,5 +1,6 @@
 import { diasParaVencer, estaVencido, vencePronto } from '../../utils/vencimiento';
 import { escalasValidas } from '../../utils/preciosCantidad';
+import { presentacionesValidas } from '../../utils/presentaciones';
 import { traerTodo } from '../../utils/traerTodo';
 import { coincideBusqueda } from '../../utils/busqueda';
 import React, { useState, useEffect, useMemo } from 'react';
@@ -146,6 +147,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               unit: esConsumo ? 'CONSUMO' : (p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND')),
               imageUrl: p.image_url || p.image_path || null,
               preciosCantidad: escalasValidas(p.precios_cantidad), // fase 1.3
+              presentaciones: presentacionesValidas(p.presentaciones), // fase 1.2
               vendido30: ventasData ? Number(ventas.get(String(p.id))?.vendido || 0) : undefined,
               ultimaVenta: ventas.get(String(p.id))?.ultima_venta || null,
               vencimiento: lotesDelProducto
@@ -772,6 +774,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             code: nuevoProducto.code,
             unit: nuevoProducto.unit,
             preciosCantidad: escalasValidas(nuevoProducto.precios_cantidad), // fase 1.3
+            presentaciones: presentacionesValidas(nuevoProducto.presentaciones), // fase 1.2
             imageUrl: nuevoProducto.image_url || nuevoProducto.image_path || null
           };
 
