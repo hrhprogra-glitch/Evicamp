@@ -3,8 +3,17 @@
  * Devuelve el foco al elemento interactivo primario de la sesión activa
  * garantizando que nunca quede atrapado en el SideBar al cerrar con Tab o Esc.
  */
+import { ventanaSuperior, enfocablesDe } from './ventanas';
 
 export const restaurarFocoSesion = (view?: string): boolean => {
+  // Con una ventana abierta (ej. el Historial tras guardar un lote), el foco no se va a la sección de atrás:
+  // se queda en la ventana (si ya está dentro, no se toca)
+  const arriba = ventanaSuperior();
+  if (arriba) {
+    if (arriba.contains(document.activeElement)) return true;
+    const primero = enfocablesDe(arriba)[0];
+    if (primero) { primero.focus(); return true; }
+  }
   const activeView = view || localStorage.getItem('evicamp_last_view') || 'pos';
 
   // 1. POS

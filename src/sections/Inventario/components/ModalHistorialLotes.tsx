@@ -163,14 +163,22 @@ export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose, onEdit
   // Al terminar de cargar LOTES: el selector va a la primera fila (o a la X si no hay lotes)
   useEffect(() => {
     if (!producto || cargando || pestana !== 'LOTES') return;
-    const t = setTimeout(() => {
+    // Si hay otra ventana o un aviso encima (ej. "lote guardado"), espera a que se cierre y recién ahí pone el selector
+    let intentos = 0;
+    let t: ReturnType<typeof setTimeout>;
+    const ponerFoco = () => {
       if (document.activeElement?.closest?.('[data-hist-tabs]')) return; // está eligiendo pestaña
-      if (ventanaSuperior() && !ventanaSuperior()!.contains(document.getElementById('btn-cerrar-historial-lotes'))) return; // hay otra ventana encima
+      const arriba = ventanaSuperior();
+      if (arriba && !arriba.contains(document.getElementById('btn-cerrar-historial-lotes'))) {
+        if (++intentos < 40) t = setTimeout(ponerFoco, 150);
+        return;
+      }
       // Tras editar o eliminar: el mismo lote (o el que quedó en su lugar); si no, la primera fila
       const usado = loteEnUso.current ? document.querySelector(`[data-hist-lote-id="${loteEnUso.current}"]`) as HTMLElement | null : null;
       const primera = document.querySelector('[data-hist-lote="true"]') as HTMLElement | null;
       (usado || primera || document.getElementById('btn-cerrar-historial-lotes'))?.focus();
-    }, 30);
+    };
+    t = setTimeout(ponerFoco, 30);
     return () => clearTimeout(t);
   }, [producto, cargando, pestana, lotes]);
 

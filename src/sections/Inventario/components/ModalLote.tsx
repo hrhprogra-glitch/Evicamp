@@ -63,7 +63,8 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
 
       if (initialLote) {
         // === MODO EDICIÓN ===
-        const prod = productos.find(p => p.id === initialLote.product_id) || null;
+        // Como texto: desde el Historial el id llega como texto y desde la pestaña Lotes como número
+        const prod = productos.find(p => String(p.id) === String(initialLote.product_id)) || null;
         setSelectedProduct(prod);
         setCantidad(initialLote.initial_quantity?.toString() || '');
         
