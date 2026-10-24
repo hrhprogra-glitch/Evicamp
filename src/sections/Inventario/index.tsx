@@ -238,6 +238,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   // Botón del reloj (fila de Productos o de Lotes): ventana flotante con todos los lotes del producto,
   // también los agotados que la pestaña Lotes oculta. Al cerrarla, el selector vuelve al botón que la abrió.
   const [historialProducto, setHistorialProducto] = useState<ProductoHistorial | null>(null);
+  const [historialRecarga, setHistorialRecarga] = useState(0); // tras editar un lote desde el historial, se vuelve a leer
   const [productoEtiqueta, setProductoEtiqueta] = useState<Product | null>(null); // fase 2.5: etiquetas
   const [focoAntesDelHistorial, setFocoAntesDelHistorial] = useState<HTMLElement | null>(null);
   const handleViewHistory = (item: any) => {
@@ -789,7 +790,22 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         }}
       />
       <ModalGestionProveedores isOpen={isModalProveedoresOpen} onClose={() => setIsModalProveedoresOpen(false)} />
-      <ModalHistorialLotes producto={historialProducto} onClose={cerrarHistorial} />
+      <ModalHistorialLotes
+        producto={historialProducto}
+        onClose={cerrarHistorial}
+        recarga={historialRecarga}
+        // Editar un lote desde el historial: la misma ventana que en la pestaña Lotes (se abre encima)
+        onEditarLote={(lote) => { setLoteToEdit(lote); setIsModalLoteOpen(true); }}
+        // Eliminado desde el historial: baja el stock en pantalla y la pestaña Lotes se vuelve a leer
+        onRetirado={(productId, cantidad) => {
+          setProducts((prev) => prev.map((p) => {
+            if (String(p.id) !== String(productId)) return p;
+            const nuevoStock = Math.max(0, p.quantity - cantidad);
+            return { ...p, quantity: nuevoStock, cost: nuevoStock === 0 ? 0 : p.cost };
+          }));
+          setRefreshLotesKey((k) => k + 1);
+        }}
+      />
       <ModalEtiqueta key={productoEtiqueta?.id ?? 'ninguno'} producto={productoEtiqueta} onClose={() => setProductoEtiqueta(null)} />
       {/* INVOCACIÓN DEL NUEVO MODAL DE LOTES */}
       <ModalLote 
@@ -798,6 +814,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           setIsModalLoteOpen(false);
           setPreselectedLoteProduct(null);
           setLoteToEdit(null); // <-- LIMPIAR MEMORIA
+          // Se editó desde el historial: lo actualiza (el selector vuelve al lote) y la pestaña Lotes se vuelve a leer
+          if (historialProducto) { setHistorialRecarga((n) => n + 1); setRefreshLotesKey((k) => k + 1); }
         }} 
         productos={products} 
         initialProduct={preselectedLoteProduct}

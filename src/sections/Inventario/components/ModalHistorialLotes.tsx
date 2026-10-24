@@ -4,11 +4,16 @@
 //    los agotados que ya tienen un lote más nuevo (en la pestaña Lotes se ocultan solos, ver TablaLotes).
 //  - MOVIMIENTOS (kardex): cada entrada y salida (compras, ventas, mermas, ajustes, devoluciones) con quién
 //    la hizo (lo guarda el servidor con la sesión, ver fn_registrar_autor_inventario).
-// Solo para ver: editar y retirar lotes se hace en la pestaña Lotes.
+// En LOTES cada fila tiene Editar y Eliminar (pedido del usuario 23/10, "para que sea más rápido"): editar abre la
+// misma ventana que en la pestaña Lotes (ModalLote, la abre Inventario) y eliminar retira el lote igual que allá
+// (fn_soft_delete_batch). ← → en una fila recorren sus botones.
 import React, { useEffect, useRef, useState } from 'react';
-import { X, History, Loader2, Package, ArrowDownUp, ArrowDownToLine, ArrowUpFromLine, AlertTriangle } from 'lucide-react';
+import { X, History, Loader2, Package, ArrowDownUp, ArrowDownToLine, ArrowUpFromLine, AlertTriangle, Edit, Trash2 } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
+import { usePermiso, avisarSinPermiso } from '../../../utils/permisos';
+import { confirmar, avisar } from '../../../utils/dialogos';
+import { ventanaSuperior } from '../../../utils/ventanas';
 import { formatearCantidad } from '../../../utils/formato';
 import { CuerpoVentana, BarraFiltros, claseBotonBarra, claseCampoBarra, TextoBarra, CajaLista, SeparadorLista, FilaLista, LineaDato, Etiqueta, DatoFila, type TonoEtiqueta } from '../../../components/ListaVentana';
 
@@ -21,6 +26,9 @@ export interface ProductoHistorial {
 interface Props {
   producto: ProductoHistorial | null;
   onClose: () => void;
+  onEditarLote?: (lote: Record<string, unknown>) => void; // abre ModalLote para editar (Inventario)
+  onRetirado?: (productId: string, cantidad: number) => void; // para actualizar el stock y la pestaña Lotes
+  recarga?: number; // al cambiar (se guardó o cerró la edición), vuelve a leer los lotes
 }
 
 interface LoteHistorial {
@@ -30,6 +38,7 @@ interface LoteHistorial {
   quantity: number;
   cost_unit: number;
   supplier: string;
+  provider_id: string | null;
   document_ref: string;
   expiration_date: string | null;
 }
@@ -60,7 +69,7 @@ const TIPOS: Record<string, string> = {
 // Movimientos antiguos guardados sin el nombre real ("postgres") o por el servidor ("Sistema")
 const quien = (u: string) => (!u || u === 'postgres' ? 'Sin registro' : u);
 
-export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose }) => {
+export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose, onEditarLote, onRetirado, recarga = 0 }) => {
   const [pestana, setPestana] = useState<Pestana>('LOTES');
   const [lotes, setLotes] = useState<LoteHistorial[]>([]);
   const [cargando, setCargando] = useState(false);
@@ -73,6 +82,11 @@ export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose }) => {
 
   useCerrarConEscape(!!producto, onClose);
   const ultimoEnBarra = useRef(''); // en qué parte de la barra estaba el selector antes de bajar a la lista
+  const loteEnUso = useRef(''); // el lote que se editó o eliminó: al recargar, el selector vuelve ahí
+  // Los mismos permisos que la pestaña Lotes: editar = ingresar lotes; eliminar = ingresar lotes o eliminar productos
+  const puedeIngresarLotes = usePermiso('almacen_ingresar_lotes');
+  const puedeEliminarProductos = usePermiso('almacen_eliminar_productos');
+  const puedeRetirarLote = puedeIngresarLotes || puedeEliminarProductos;
 
   // Cada vez que se abre para un producto: empieza en LOTES y con los últimos 30 días
   useEffect(() => {
@@ -91,7 +105,7 @@ export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose }) => {
     (async () => {
       const { data, error: e } = await supabase
         .from('batches')
-        .select('id, created_at, initial_quantity, quantity, cost_unit, supplier, document_ref, expiration_date')
+        .select('id, created_at, initial_quantity, quantity, cost_unit, supplier, provider_id, document_ref, expiration_date')
         .eq('product_id', producto.id)
         .neq('is_active', 0) // los retirados (borrados) no se muestran, igual que en la pestaña Lotes
         .order('created_at', { ascending: false });
@@ -105,6 +119,7 @@ export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose }) => {
         quantity: Number(b.quantity) || 0,
         cost_unit: Number(b.cost_unit) || 0,
         supplier: b.supplier || '',
+        provider_id: b.provider_id ?? null,
         document_ref: b.document_ref || '',
         expiration_date: b.expiration_date || null,
       }));
@@ -112,7 +127,7 @@ export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose }) => {
       setCargando(false);
     })();
     return () => { vigente = false; };
-  }, [producto]);
+  }, [producto, recarga]);
 
   // Kardex: se carga al entrar a MOVIMIENTOS y cada vez que cambian las fechas
   useEffect(() => {
@@ -150,18 +165,36 @@ export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose }) => {
     if (!producto || cargando || pestana !== 'LOTES') return;
     const t = setTimeout(() => {
       if (document.activeElement?.closest?.('[data-hist-tabs]')) return; // está eligiendo pestaña
+      if (ventanaSuperior() && !ventanaSuperior()!.contains(document.getElementById('btn-cerrar-historial-lotes'))) return; // hay otra ventana encima
+      // Tras editar o eliminar: el mismo lote (o el que quedó en su lugar); si no, la primera fila
+      const usado = loteEnUso.current ? document.querySelector(`[data-hist-lote-id="${loteEnUso.current}"]`) as HTMLElement | null : null;
       const primera = document.querySelector('[data-hist-lote="true"]') as HTMLElement | null;
-      (primera || document.getElementById('btn-cerrar-historial-lotes'))?.focus();
+      (usado || primera || document.getElementById('btn-cerrar-historial-lotes'))?.focus();
     }, 30);
     return () => clearTimeout(t);
-  }, [producto, cargando, pestana]);
+  }, [producto, cargando, pestana, lotes]);
 
   // Teclado: ↑ ↓ recorren X, pestañas, fechas y filas; ← → cambian de pestaña; Tab encerrado en la ventana
   useEffect(() => {
     if (!producto) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.querySelector('[data-dialogo-sistema]')) return;
-      const active = document.activeElement as HTMLElement | null;
+      // La ventana de editar lote (u otra) está encima: el teclado es de ella
+      const arriba = ventanaSuperior();
+      if (arriba && !arriba.contains(document.getElementById('btn-cerrar-historial-lotes'))) return;
+      let active = document.activeElement as HTMLElement | null;
+      // En un botón de una fila (Editar / Eliminar): ← → entre la fila y sus botones; ↑ ↓ como si estuviera en la fila
+      const filaDelBoton = active?.hasAttribute('data-hist-accion') ? active.closest('[data-hist-lote="true"]') as HTMLElement | null : null;
+      const filaActual = filaDelBoton || (active?.getAttribute('data-hist-lote') === 'true' ? active : null);
+      if (filaActual && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const partes = [filaActual, ...Array.from(filaActual.querySelectorAll('[data-hist-accion]'))] as HTMLElement[];
+        const k = partes.indexOf(active!);
+        partes[e.key === 'ArrowRight' ? Math.min(k + 1, partes.length - 1) : Math.max(k - 1, 0)]?.focus();
+        return;
+      }
+      if (filaDelBoton && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Tab')) active = filaDelBoton;
       const elementos = (Array.from(document.querySelectorAll(
         '#btn-cerrar-historial-lotes, [data-hist-tab], [data-hist-fecha], [data-hist-lote="true"], [data-hist-mov="true"]',
       )) as HTMLElement[]);
@@ -252,6 +285,37 @@ export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose }) => {
   const totalEntra = movimientos.reduce((s, m) => s + (m.change_amount > 0 ? m.change_amount : 0), 0);
   const totalSale = movimientos.reduce((s, m) => s + (m.change_amount < 0 ? -m.change_amount : 0), 0);
 
+  // Editar: la misma ventana que en la pestaña Lotes, con los datos que necesita (ModalLote → initialLote)
+  const editarLote = (l: LoteHistorial) => {
+    if (!puedeIngresarLotes) { avisarSinPermiso('editar lotes'); return; }
+    loteEnUso.current = l.id;
+    onEditarLote?.({ ...l, product_id: producto.id, product_name: producto.nombre, unit: unidad });
+  };
+
+  // Eliminar: igual que en la pestaña Lotes (el servidor descarga su stock y guarda el historial)
+  const retirarLote = async (l: LoteHistorial) => {
+    if (!puedeRetirarLote) { avisarSinPermiso('retirar lotes'); return; }
+    const filas = Array.from(document.querySelectorAll('[data-hist-lote="true"]')) as HTMLElement[];
+    const i = filas.findIndex((f) => f.getAttribute('data-hist-lote-id') === l.id);
+    const vecina = filas[i + 1] || filas[i - 1];
+    const texto = l.quantity > 0
+      ? `¿Eliminar el lote del ${fecha(l.created_at)} de "${producto.nombre}"?
+
+Se descargan sus ${formatearCantidad(l.quantity, unidad)} ${unidad} del stock. El historial de ventas y movimientos no se toca.`
+      : `¿Eliminar el lote agotado del ${fecha(l.created_at)} de "${producto.nombre}"?
+
+Ya no tiene stock; el historial de ventas y movimientos no se toca.`;
+    if (!(await confirmar(texto))) { document.getElementById(`hist-retirar-${l.id}`)?.focus(); return; }
+    const { error: e } = await supabase.rpc('fn_soft_delete_batch', { p_batch_id: String(l.id), p_user_name: 'Admin' });
+    if (e) { await avisar(`No se pudo eliminar el lote: ${e.message}`); document.getElementById(`hist-retirar-${l.id}`)?.focus(); return; }
+    loteEnUso.current = vecina?.getAttribute('data-hist-lote-id') || '';
+    setLotes((lista) => lista.filter((x) => x.id !== l.id));
+    onRetirado?.(producto.id, l.quantity);
+  };
+
+  // Botones de acción de cada fila (← → desde la fila)
+  const claseAccion = 'p-1.5 border-2 border-transparent text-[var(--color-muted)] cursor-pointer focus:outline-none';
+
   const filaLote = (l: LoteHistorial) => {
     const vencido = !!l.expiration_date && new Date(l.expiration_date) < new Date();
     const estado = l.quantity <= 0 ? 'AGOTADO' : vencido ? 'CADUCADO' : 'VIGENTE';
@@ -262,13 +326,30 @@ export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose }) => {
       <FilaLista
         key={l.id}
         data-hist-lote="true"
+        data-hist-lote-id={l.id}
         tabIndex={0}
         atenuada={estado === 'AGOTADO'}
         icono={<Package size={32} />}
         titulo={`Ingreso ${fecha(l.created_at)}`}
         subtitulo={datos}
         centro={<Etiqueta tono={estado === 'VIGENTE' ? 'verde' : estado === 'CADUCADO' ? 'rojo' : 'gris'}>{estado}</Etiqueta>}
-        derecha={<DatoFila etiqueta="Queda / Ingresó" valor={`${formatearCantidad(l.quantity, unidad)} / ${formatearCantidad(l.initial_quantity, unidad)} ${unidad}`} />}
+        derecha={<>
+          <DatoFila etiqueta="Queda / Ingresó" valor={`${formatearCantidad(l.quantity, unidad)} / ${formatearCantidad(l.initial_quantity, unidad)} ${unidad}`} />
+          {(onEditarLote || onRetirado) && (
+            <div className="flex items-center gap-1 ml-3">
+              <button id={`hist-editar-${l.id}`} data-hist-accion type="button" tabIndex={-1} title="Editar lote"
+                onClick={() => editarLote(l)}
+                className={`${claseAccion} hover:text-[var(--color-success)] hover:border-[var(--color-success)] focus:text-white focus:bg-[var(--color-success)]`}>
+                <Edit size={18} />
+              </button>
+              <button id={`hist-retirar-${l.id}`} data-hist-accion type="button" tabIndex={-1} title="Eliminar lote"
+                onClick={() => void retirarLote(l)}
+                className={`${claseAccion} hover:text-[var(--color-danger)] hover:border-[var(--color-danger)] focus:text-white focus:bg-[var(--color-danger)]`}>
+                <Trash2 size={18} />
+              </button>
+            </div>
+          )}
+        </>}
       />
     );
   };

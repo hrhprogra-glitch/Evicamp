@@ -557,10 +557,25 @@ const [searchQuery, setSearchQuery] = useState('');
     // 🛡️ Extraemos la alerta fuera del setCart para evitar que React la dispare 2 veces en su ciclo de renderizado
     const itemInCart = cart.find(i => i.id === id);
     let finalQty = newQty;
-    
-    if (itemInCart && finalQty > itemInCart.quantity && itemInCart.unit !== 'CONSUMO') {
-      alert(`🚫 STOCK INSUFICIENTE: Solo tienes ${itemInCart.quantity} disponible(s) de ${itemInCart.name}.`);
-      finalQty = itemInCart.quantity;
+
+    // Fase 1.2: el stock se revisa en UNIDADES del producto real, sumando las OTRAS líneas del mismo producto
+    // (sueltas y presentaciones). Antes cada línea se miraba sola: 8 paquetes x25 + 200 sueltas pasaban con 200 en stock.
+    if (itemInCart && itemInCart.unit !== 'CONSUMO') {
+      const idReal = String(itemInCart.productoId ?? itemInCart.id);
+      const factor = itemInCart.presentacion?.factor ?? 1;
+      const stockReal = productos.find((p) => String(p.id) === idReal)?.quantity ?? itemInCart.quantity;
+      const otras = cart.filter((i) => i.id !== id && String(i.productoId ?? i.id) === idReal)
+        .reduce((t, i) => t + i.cartQuantity * (i.presentacion?.factor ?? 1), 0);
+      if (otras + finalQty * factor > stockReal) {
+        const disponible = Math.max(0, stockReal - otras);
+        // Lo que todavía entra en esta línea (en paquetes enteros si es una presentación)
+        const maximo = factor > 1 ? Math.floor(disponible / factor) : (esDecimal(itemInCart) ? Math.round(disponible * 1000) / 1000 : Math.floor(disponible));
+        const nombre = itemInCart.productoId ? itemInCart.name.replace(/ \([^)]*\)$/, '') : itemInCart.name;
+        alert(otras > 0
+          ? `🚫 STOCK INSUFICIENTE: Solo tienes ${stockReal} de ${nombre} y ya hay ${otras} en otras líneas del ticket. En esta línea entran ${maximo}.`
+          : `🚫 STOCK INSUFICIENTE: Solo tienes ${stockReal} de ${nombre}.${factor > 1 ? ` En esta línea entran ${maximo}.` : ''}`);
+        finalQty = maximo;
+      }
     }
 
     setCart(prevCart => {
