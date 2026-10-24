@@ -12,6 +12,7 @@ interface Props {
   cart: CartItem[];
   setCart: (cart: CartItem[]) => void;
   updateQuantity: (id: string, qty: number) => void;
+  alternarEscala?: (id: string) => void; // prender/apagar el precio por cantidad de una línea
   updatePrice: (id: string, price: number) => Promise<boolean>;
   activeTabIndex: number;
   heldCarts: CartItem[][];
@@ -147,7 +148,7 @@ const InputUnidades = ({ item, updateQuantity, index, setSelectedIndex, setColIn
 };
 
 // 🔥 2. COMPONENTE PRINCIPAL (Receptor)
-export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0, setSelectedIndex, setColIndex, cart, setCart, updateQuantity, updatePrice, activeTabIndex, heldCarts, holdCurrentCart, restoreCart, onPagar
+export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0, setSelectedIndex, setColIndex, cart, setCart, updateQuantity, updatePrice, alternarEscala, activeTabIndex, heldCarts, holdCurrentCart, restoreCart, onPagar
 }) => {
 
   // CÁLCULO DE TOTALES AUTOMÁTICO
@@ -285,9 +286,31 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
                         (ej. negocio/mayorista) sin tocar el precio general del catálogo. Solo
                         cambia esta venta — updatePrice nunca escribe en la tabla de productos. */}
                     <InputPrecio item={item} updatePrice={updatePrice} index={index} setSelectedIndex={setSelectedIndex} setColIndex={setColIndex} isSelected={index === selectedIndex && colIndex === 1} />
-                    {item.escala !== undefined && item.precioLista === undefined && (
-                      <span data-escala className="text-[11px] font-black text-[var(--color-info)] whitespace-nowrap" title={`Precio por cantidad: desde ${item.escala}`}>x{item.escala}+</span>
-                    )}
+                    {/* Precio por cantidad: botón para apagarlo en esta línea (cobra el precio normal) y volver a prenderlo.
+                        Con teclado: → desde el precio y Enter (columna 3 de la línea) */}
+                    {!!item.preciosCantidad?.length && item.precioLista === undefined && (() => {
+                      const desde = item.escala ?? Math.min(...item.preciosCantidad.map((e) => e.desde));
+                      const elegido = index === selectedIndex && colIndex === 3;
+                      return (
+                        <button
+                          id={`btn-escala-${index}`}
+                          type="button"
+                          tabIndex={-1}
+                          {...(item.escala !== undefined ? { 'data-escala': '' } : {})}
+                          data-sin-escala={item.sinEscala ? 'true' : undefined}
+                          aria-pressed={!item.sinEscala}
+                          onClick={(e) => { e.stopPropagation(); setSelectedIndex(index); setColIndex(3); alternarEscala?.(item.id); }}
+                          title={item.sinEscala ? `Precio por cantidad APAGADO (cobra el precio normal). Enter: prenderlo` : item.escala !== undefined ? `Precio por cantidad desde ${desde} aplicado. Enter: apagarlo` : `Precio por cantidad desde ${desde} (todavía no llega). Enter: apagarlo`}
+                          className={`text-[11px] font-black whitespace-nowrap px-1.5 py-0.5 border-2 cursor-pointer outline-none ${
+                            item.sinEscala ? 'border-[var(--color-border)] text-[var(--color-muted)]'
+                              : item.escala !== undefined ? 'border-[var(--color-info)] text-[var(--color-info)] bg-[var(--color-info-bg)]'
+                              : 'border-[var(--color-border)] text-[var(--color-info)]'
+                          } ${elegido ? 'ring-2 ring-[var(--color-ink)] ring-offset-1' : ''}`}
+                        >
+                          {item.sinEscala ? <><s>x{desde}+</s> NO</> : item.escala !== undefined ? <>x{desde}+ ✓</> : <>x{desde}+</>}
+                        </button>
+                      );
+                    })()}
                     {item.precioLista !== undefined && (
                       <span data-precio-cambiado className="text-[11px] font-bold text-[var(--color-muted)] line-through whitespace-nowrap" title={`Precio cambiado por ${item.precioCambiadoPor || ''}`}>S/ {item.precioLista.toFixed(2)}</span>
                     )}

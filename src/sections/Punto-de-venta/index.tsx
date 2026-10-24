@@ -46,6 +46,17 @@ const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Botón de precio por cantidad de la línea (columna 3, entre el precio y borrar): solo si el producto tiene
+      // escalas y su precio no se cambió a mano
+      const tieneEscala = (i: number) => !!cart[i]?.preciosCantidad?.length && cart[i]?.precioLista === undefined;
+      const irDespuesDelPrecio = () => {
+        if (tieneEscala(selectedIndex)) { setColIndex(3); setTimeout(() => document.getElementById(`btn-escala-${selectedIndex}`)?.focus(), 10); }
+        else setColIndex(2); // ir a borrar
+      };
+      const enColumnaEscala = (i: number) => {
+        if (tieneEscala(i)) document.getElementById(`btn-escala-${i}`)?.focus();
+        else { setColIndex(1); document.getElementById(`edit-price-${i}`)?.focus(); }
+      };
       // 🛡️ EVICAMP: Ignorar todos los atajos globales si hay alguna ventana flotante (modal) abierta
       if (document.querySelector('[role="dialog"]')) return;
 
@@ -165,7 +176,7 @@ const [searchQuery, setSearchQuery] = useState('');
               setColIndex(1);
               setTimeout(() => document.getElementById(`edit-price-${selectedIndex}`)?.focus(), 10);
             } else if (colIndex === 1) {
-              setColIndex(2); // ir a borrar
+              irDespuesDelPrecio(); // al botón de precio por cantidad (si lo tiene) o a borrar
             }
             e.preventDefault();
             return;
@@ -199,6 +210,7 @@ const [searchQuery, setSearchQuery] = useState('');
               } else {
                 if (colIndex === 0) document.getElementById(`edit-input-${next}`)?.focus();
                 else if (colIndex === 1) document.getElementById(`edit-price-${next}`)?.focus();
+                else if (colIndex === 3) enColumnaEscala(next);
               }
             }, 10);
             return next;
@@ -217,6 +229,7 @@ const [searchQuery, setSearchQuery] = useState('');
                 if (colIndex === 0) document.getElementById(`edit-input-${next}`)?.focus();
                 else if (colIndex === 1) document.getElementById(`edit-price-${next}`)?.focus();
                 else if (colIndex === 2) document.getElementById(`btn-del-${next}`)?.focus(); // (Opcional, en caso de estar en la columna 2)
+                else if (colIndex === 3) enColumnaEscala(next);
               }, 10);
               return next;
             });
@@ -224,20 +237,26 @@ const [searchQuery, setSearchQuery] = useState('');
           return;
         }
         
-        // Navegación manual cuando no hay input activo (ej. colIndex = 2 Borrar)
+        // Navegación manual cuando no hay input activo (ej. colIndex = 2 Borrar, 3 = botón de precio por cantidad)
         if (e.key === 'ArrowRight') {
           e.preventDefault();
           if (colIndex === 0) {
             setColIndex(1);
             setTimeout(() => document.getElementById(`edit-price-${selectedIndex}`)?.focus(), 10);
           } else if (colIndex === 1) {
+            irDespuesDelPrecio();
+          } else if (colIndex === 3) {
+            (document.activeElement as HTMLElement | null)?.blur();
             setColIndex(2);
           }
           return;
         }
         if (e.key === 'ArrowLeft') {
           e.preventDefault();
-          if (colIndex === 2) {
+          if (colIndex === 2 && tieneEscala(selectedIndex)) {
+            setColIndex(3);
+            setTimeout(() => document.getElementById(`btn-escala-${selectedIndex}`)?.focus(), 10);
+          } else if (colIndex === 2 || colIndex === 3) {
             setColIndex(1);
             setTimeout(() => document.getElementById(`edit-price-${selectedIndex}`)?.focus(), 10);
           } else if (colIndex === 1) {
@@ -247,6 +266,13 @@ const [searchQuery, setSearchQuery] = useState('');
           return;
         }
         
+        // Enter en el botón de precio por cantidad: lo prende o lo apaga en esta línea
+        if (e.key === 'Enter' && colIndex === 3) {
+          e.preventDefault();
+          if (cart[selectedIndex]) alternarEscala(cart[selectedIndex].id);
+          return;
+        }
+
         // Acción de Borrar (con Enter sobre el tacho, o con Suprimir en cualquier parte de la fila que no sea input)
         if ((e.key === 'Enter' && colIndex === 2) || (e.key === 'Delete' && !isInputActive)) {
           e.preventDefault();
@@ -426,7 +452,7 @@ const [searchQuery, setSearchQuery] = useState('');
   const conCantidad = (item: CartItem, qty: number): CartItem => {
     const base = item.precioBase ?? item.price;
     if (item.precioLista !== undefined) return { ...item, precioBase: base, cartQuantity: qty, subtotal: Math.round((qty * item.price) * 100) / 100 };
-    const escala = escalaPara(item.preciosCantidad, qty);
+    const escala = item.sinEscala ? null : escalaPara(item.preciosCantidad, qty); // apagado a mano: precio normal
     const precio = escala ? escala.precio : base;
     return { ...item, precioBase: base, cartQuantity: qty, price: precio, escala: escala?.desde, subtotal: Math.round((qty * precio) * 100) / 100 };
   };
@@ -550,6 +576,11 @@ const [searchQuery, setSearchQuery] = useState('');
     let hecho = false;
     await conAutorizacion(`cambiar el precio de ${item.name}`, 'caja_cambiar_precio', puedeCambiarPrecio, async (autorizo) => { aplicar(autorizo); hecho = true; });
     return hecho;
+  };
+
+  // Prender o apagar el precio por cantidad de una línea (botón "x6+" de la línea; con teclado: → desde el precio y Enter)
+  const alternarEscala = (id: string) => {
+    setCart((prev) => prev.map((item) => (item.id === id ? conCantidad({ ...item, sinEscala: !item.sinEscala }, item.cartQuantity) : item)));
   };
 
   // 3. EDITAR CANTIDAD MANUALMENTE (+ / - o PESO)
@@ -838,6 +869,7 @@ const [searchQuery, setSearchQuery] = useState('');
             setCart={setCart} 
             updateQuantity={updateQuantity}
             updatePrice={updatePrice}
+            alternarEscala={alternarEscala}
             activeTabIndex={activeTabIndex}
             heldCarts={heldCarts}
             holdCurrentCart={holdCurrentCart}

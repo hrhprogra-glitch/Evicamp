@@ -11,4 +11,5 @@ export interface CartItem extends Product {
   precioCambiadoPor?: string | null;  // quién lo cambió o, si fue con clave, el administrador que autorizó
   precioBase?: number;                // fase 1.3: el precio normal del producto (sin escala)
   escala?: number;                    // fase 1.3: "desde" de la escala aplicada (x6+)
+  sinEscala?: boolean;                // el cajero apagó el precio por cantidad en esta línea (cobra el precio normal)
 }
