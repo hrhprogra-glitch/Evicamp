@@ -1,5 +1,6 @@
 # Instrucciones para cualquier IA que trabaje en este proyecto
 
+0. **Lee `docs/BITACORA.md`** (qué hizo la última IA y qué sigue). **Al terminar, o si te quedas sin uso, agrega tu entrada arriba y haz `git commit`.** Así Claude y Antigravity pueden turnarse sin perder nada.
 1. Lee primero **docs/PLAN-SIUMAX-COMERC.md**: qué es el sistema, las reglas de trabajo, las fases hechas y la que sigue
    (fase 4, Clientes y empresas, con su propuesta completa).
 2. **Responde siempre en español**, simple. El dueño no es programador.

@@ -1,3 +1,7 @@
+## Proyecto
+
+Antes de trabajar, lee **AGENTS.md** (reglas), **docs/BITACORA.md** (último estado; otra IA, como la de Antigravity, puede haber trabajado aquí) y **docs/PLAN-SIUMAX-COMERC.md** (plan y fases). Al terminar, o si te vas a quedar sin uso, agrega tu entrada en docs/BITACORA.md y haz commit.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
