@@ -1,6 +1,6 @@
 ## Proyecto
 
-Antes de trabajar, lee **AGENTS.md** (reglas), **docs/MEMORIA-IA.md** (lo aprendido y los errores a no repetir), **docs/BITACORA.md** (último estado; otra IA, como la de Antigravity, puede haber trabajado aquí) y **docs/PLAN-SIUMAX-COMERC.md** (plan y fases). Al terminar, o si te vas a quedar sin uso, agrega tu entrada en docs/BITACORA.md y haz commit.
+Antes de trabajar, lee **AGENTS.md** (reglas), **docs/MEMORIA-IA.md** (lo aprendido y los errores a no repetir), **docs/BITACORA.md** (último estado; otra IA, como la de Antigravity, puede haber trabajado aquí) y **docs/PLAN-SIUMAX-COMERC.md** (plan y fases). Después de cada paso o conversación importante, actualiza SIEMPRE docs/BITACORA.md, "DÓNDE ESTAMOS AHORA" y "PROPUESTAS" en el plan, docs/CONVERSACIONES.md y, si aprendiste algo, docs/MEMORIA-IA.md; luego haz commit.
 
 ## graphify
 

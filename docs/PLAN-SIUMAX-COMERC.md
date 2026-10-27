@@ -3,6 +3,35 @@
 > Documento para continuar el trabajo con **cualquier IA o programador**. Léelo completo antes de tocar el código.
 > Última actualización: 27/10/2026.
 
+## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
+- **Última actualización:** 27/10/2026, Claude.
+- **Fases hechas y subidas:** 0, 1 y 2. En producción en Evicamp desde el 23/10/2026 (commit d36efca).
+- **Fase actual:** **4, Clientes y empresas**, en **propuesta**. Todavía no se escribió código. Falta:
+  1. el **OK final** del dueño;
+  2. su decisión: **¿el pedido descuenta el stock al guardarlo o al entregarlo?** (recomendado: al guardarlo).
+- **Primer paso al recibir el OK:** rama `fase-4` + respaldo de siuhub → **4.1** (Créditos → sección Clientes con pestañas).
+- **Últimos commits locales sin push:** la documentación para otras IAs (AGENTS.md y docs/).
+- **Avisos pendientes para el cliente de Evicamp:**
+  - "Mermas" ahora es "Conteos";
+  - dar el permiso "Cambiar precio al cobrar" a quien corresponda.
+
+## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
+| Propuesta | Estado |
+|---|---|
+| Fase 4 completa (sección 5 de este documento) | **Aceptada, falta el OK final y la decisión del stock de pedidos** |
+| Fase 11 SUNAT: camino A (proveedor PSE) → B (directo) | **En pausa** hasta que el dueño lo pida |
+| Cobros con QR (Yape/Plin) y aparato de tarjetas (Mercado Pago: QR en pantalla + aparato Point) | **En pausa**; faltan dos decisiones (qué procesador y si empezar por el QR) |
+| Importar facturas XML de compras | **En pausa** |
+| Estilo "Directorio de clientes" en 6 ventanas (Detalle de caja, Estado de cuenta, Detalle de ticket, Mini reporte, Detalle de producto, Detalle del pedido) | **Pendiente**; esperar los detalles del dueño |
+| Aviso al retirar un lote que todavía tiene stock | **Ofrecida, sin respuesta** |
+| Ingresar lotes por caja ("llegaron 5 cajas x12") | **El dueño dijo que no por ahora** ("déjalo como está") |
+| FEFO (vender primero lo que vence antes) | **Rechazada** |
+| Mover cajas y paquetes del producto al lote | **Rechazada** |
+| Borrar y crear datos de prueba nuevos en siumax | **Cancelada** por el dueño |
+| Autorizar con la clave del admin sin internet | **Rechazada** (se deja como está) |
+| Selector de familia en el panel de control | **Para cuando haya 2 familias** |
+| Usar otra IA cuando se acabe Claude: Antigravity (Gemini 3.8 Flash High; Claude Sonnet/Opus ahí), o Cline/Kilo Code con clave gratis de Gemini | **Información dada**; la memoria compartida está en estos documentos |
+
 ## 1. Qué es
 SiuMax Comerc es un sistema de punto de venta para minoristas (bodegas, ferreterías, librerías, farmacias…) y negocios
 que venden a empresas. El primer cliente en producción es **Evicamp** (https://evicamp.duckdns.org). El sitio de pruebas
