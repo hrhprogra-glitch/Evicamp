@@ -110,3 +110,14 @@
   - este resumen;
   - las pruebas en `ai-scripts/pruebas/`.
 - **Regla nueva del dueño:** guardar también lo conversado, las fases, en qué parte se quedó y las propuestas, y **actualizar siempre lo último**.
+
+## 28/10/2026: Fase 4.1 (sección Clientes)
+- **"Continuemos con lo que dejamos":** Claude lo tomó como el OK y empezó la 4.1a.
+  - El dueño reclamó: **"no te dije que lo hagas, muéstrame primero lo que planeamos"**.
+  - Lección guardada: "continuemos" no es aprobar; primero se muestra el plan y se pregunta "¿empiezo?".
+- **Preguntó** "¿ya terminaste la 4.1?" y pidió ver las partes de la 4.1 y todas las fases.
+- **"Ya haz la fase 4.1":** aprobó la 4.1a y pidió la 4.1b.
+  - Detalle del cliente (resumen, lo que más lleva, créditos).
+  - Unir clientes repetidos.
+  - "Ver historial" del estado de cuenta abre el detalle nuevo.
+  - Se quitó la ventana vieja del directorio.

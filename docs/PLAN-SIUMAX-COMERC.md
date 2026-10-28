@@ -6,10 +6,13 @@
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
 - **Última actualización:** 28/10/2026, Claude.
 - **Fases hechas y subidas:** 0, 1 y 2. En producción en Evicamp desde el 23/10/2026 (commit d36efca).
-- **Fase actual:** **4, Clientes y empresas**. La **4.1a** se construyó **sin el OK** (rama `fase-4` y siumax): **el dueño debe ver el plan y decidir** si se aprueba, se cambia o se deshace. Además falta:
+- **Fase actual:** **4, Clientes y empresas.** La **4.1 está terminada en siumax** (rama `fase-4`):
+  - sección Clientes con pestañas Clientes | Créditos, ficha con DNI/RUC, detalle del cliente y unir repetidos;
+  - el dueño aprobó la 4.1a y pidió terminar la 4.1. Falta que la revise.
+  - **Siguiente: mostrar el plan de la 4.2 (cliente opcional en la Caja) y esperar un OK explícito.**
+  - Además falta:
   1. el **OK final** del dueño;
   2. su decisión: **¿el pedido descuenta el stock al guardarlo o al entregarlo?** (recomendado: al guardarlo).
-- **Primer paso al recibir el OK:** rama `fase-4` + respaldo de siuhub → **4.1** (Créditos → sección Clientes con pestañas).
 - **Últimos commits locales sin push:** la documentación para otras IAs (AGENTS.md y docs/).
 - **Avisos pendientes para el cliente de Evicamp:**
   - "Mermas" ahora es "Conteos";
@@ -18,7 +21,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
-| Fase 4 completa (sección 5 de este documento) | **Aceptada, falta el OK final y la decisión del stock de pedidos** |
+| Fase 4 (sección 5 de este documento) — **4.1 hecha en siumax** | **Aceptada, falta el OK final y la decisión del stock de pedidos** |
 | Fase 11 SUNAT: camino A (proveedor PSE) → B (directo) | **En pausa** hasta que el dueño lo pida |
 | Cobros con QR (Yape/Plin) y aparato de tarjetas (Mercado Pago: QR en pantalla + aparato Point) | **En pausa**; faltan dos decisiones (qué procesador y si empezar por el QR) |
 | Importar facturas XML de compras | **En pausa** |

@@ -7,6 +7,20 @@
 
 ---
 
+## 28/10/2026 (tarde) · Claude (Claude Code)
+- **El dueño aprobó la 4.1a y pidió terminar la 4.1** ("ya haz la fase 4.1").
+- **Hecho (rama `fase-4`, solo siumax; nada en Evicamp ni en GitHub):**
+  - **4.1b:** Enter en un cliente abre su **detalle** (`ModalDetalleCliente`):
+    - sus datos y un resumen (deuda, créditos, total fiado, último crédito, cada cuánto viene, contando días distintos);
+    - lo que más lleva y sus créditos (Enter abre el detalle del crédito);
+    - botones Editar, Estado de cuenta y **Unir con otro cliente** (`ModalUnirClientes`): los créditos del repetido pasan uno por uno por id (funciona sin internet), se completan los datos que falten y el repetido se borra.
+  - "Ver historial" del Estado de cuenta abre el detalle nuevo. Se **borró la ventana vieja** `ModalClientes`.
+  - Commits 6b65525 (4.1a) y e0c124d (4.1b).
+- **Pruebas:**
+  - nuevas: `prueba-clientes` 37/37 y `prueba-clientes-detalle` 24/24;
+  - lo que podía afectarse: si1 22, si2 23, si3 30, dos-cajas 9, precio-caja 9, tab-ventanas 12, seleccion 8 (ahora prueba las dos pestañas).
+- **Siguiente paso:** que el dueño revise la 4.1 en siumax. **Antes de la 4.2, mostrarle su plan y esperar un OK explícito.**
+
 ## 28/10/2026 · Claude (Claude Code)
 - **Error mío:** el dueño dijo "continuemos con lo que dejamos" y lo tomé como el OK de la fase 4. **No lo era**: él quería ver primero el plan de la 4.1. Reclamó: "no te dije que lo hagas, muéstrame primero lo que planeamos".
 - **Lo que quedó hecho SIN aprobar**, solo en la rama `fase-4` (commit 6b65525) y en siumax, nada en Evicamp ni en GitHub:
