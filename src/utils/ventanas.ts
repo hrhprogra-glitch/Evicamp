@@ -44,13 +44,22 @@ const perdido = (activo: Element | null) => !activo || activo === document.body
 export const recordarSeleccionEnVentanas = () => {
   let recuerdo: Recuerdo | null = null;
   let habiaVentana = hayVentanaAbierta();
+  let cuantasVentanas = ventanasAbiertas().length;
   let teclaDespues = false;     // si la persona ya se movió tras cerrar, no se le quita el selector
   let pendiente = false;
+  // Ventanas una sobre otra (ej. el detalle del cliente y encima Editar, Estado de cuenta o Unir): cada ventana
+  // recuerda dónde estaba el selector; al cerrarse la de arriba, vuelve ahí (pedido del dueño 28/10/2026)
+  const enVentana = new WeakMap<HTMLElement, HTMLElement>();
 
   const alEnfocar = (e: FocusEvent) => {
     const el = e.target as HTMLElement | null;
     if (!el || !(el instanceof HTMLElement) || el === document.body) return;
-    if (el.closest('#evicamp-sidebar') || hayVentanaAbierta()) return;
+    if (hayVentanaAbierta()) {
+      const v = ventanasAbiertas().find((x) => x.contains(el));
+      if (v) enVentana.set(v, el);
+      return;
+    }
+    if (el.closest('#evicamp-sidebar')) return;
     const fila = el.matches(FILA) ? filasVisibles().indexOf(el) : -1;
     recuerdo = { el, id: el.id, fila, texto: fila >= 0 ? textoDe(el) : '' };
   };
@@ -74,9 +83,25 @@ export const recordarSeleccionEnVentanas = () => {
     el.scrollIntoView({ block: 'nearest' });
   };
 
+  // Se cerró una ventana pero queda otra debajo: el selector vuelve a donde estaba en ESA ventana
+  const devolverEnVentana = (v: HTMLElement | null) => {
+    if (!v || !v.isConnected || ventanaSuperior() !== v) return;
+    const a = document.activeElement;
+    if (a && a !== document.body && v.contains(a)) return;   // ya está dentro (la ventana lo puso)
+    const guardado = enVentana.get(v);
+    const el = guardado && guardado.isConnected && visible(guardado) ? guardado : enfocablesDe(v)[0];
+    el?.focus();
+  };
+
   const revisar = () => {
     pendiente = false;
     const hay = hayVentanaAbierta();
+    const cuantas = ventanasAbiertas().length;
+    if (cuantas > 0 && cuantas < cuantasVentanas) {
+      const arriba = ventanaSuperior();
+      [0, 60, 150, 300].forEach((ms) => setTimeout(() => devolverEnVentana(arriba), ms));
+    }
+    cuantasVentanas = cuantas;
     if (habiaVentana && !hay) {
       teclaDespues = false;
       const guardado = recuerdo;
