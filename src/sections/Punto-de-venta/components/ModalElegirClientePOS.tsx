@@ -1,5 +1,4 @@
-// src/sections/Punto-de-venta/components/ModalElegirClientePOS.tsx
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, UserPlus, Users, X, UserCheck } from 'lucide-react';
 import type { Cliente } from '../types';
 import { supabase } from '../../../db/supabase';
@@ -25,6 +24,7 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
   const [search, setSearch] = useState('');
   const [creandoCliente, setCreandoCliente] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
+  const ultimoEnfoqueRef = useRef<HTMLElement | null>(null);
 
   useCerrarConEscape(isOpen && !creandoCliente, onClose);
 
@@ -99,6 +99,7 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
       // F2: Crear cliente nuevo rápido
       if (e.key === 'F2') {
         e.preventDefault();
+        ultimoEnfoqueRef.current = (document.activeElement as HTMLElement) || document.getElementById('btn-cliente-pos-nuevo');
         setCreandoCliente(true);
         return;
       }
@@ -252,10 +253,14 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
             <button
               id="btn-cliente-pos-nuevo"
               type="button"
-              onClick={() => setCreandoCliente(true)}
+              onClick={() => {
+                ultimoEnfoqueRef.current = document.getElementById('btn-cliente-pos-nuevo');
+                setCreandoCliente(true);
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
+                  ultimoEnfoqueRef.current = document.getElementById('btn-cliente-pos-nuevo');
                   setCreandoCliente(true);
                 } else if (e.key === 'ArrowLeft') {
                   e.preventDefault();
@@ -277,14 +282,18 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
         </div>
 
         {/* Lista de clientes */}
-        <div className="flex-1 overflow-y-auto divide-y divide-[var(--color-border)] bg-white p-1">
+        <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-[var(--color-border)] bg-white p-1">
           {filtrados.length === 0 ? (
             <div className="p-8 text-center text-xs font-black text-[var(--color-subtle)] uppercase">
               No se encontraron clientes con "{search}"
               <div className="mt-3">
                 <button
                   type="button"
-                  onClick={() => setCreandoCliente(true)}
+                  id="btn-crear-busqueda-pos"
+                  onClick={() => {
+                    ultimoEnfoqueRef.current = (document.activeElement as HTMLElement) || document.getElementById('btn-cliente-pos-nuevo');
+                    setCreandoCliente(true);
+                  }}
                   className="px-4 py-2 border-2 border-[var(--color-ink)] bg-[var(--color-accent)] text-[var(--color-ink)] text-xs font-black uppercase cursor-pointer"
                 >
                   + Crear a "{search.toUpperCase()}" ahora
@@ -388,7 +397,13 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
           cliente={null}
           clientes={clientes}
           onGuardar={handleGuardarNuevo}
-          onClose={() => setCreandoCliente(false)}
+          onClose={() => {
+            setCreandoCliente(false);
+            setTimeout(() => {
+              const btn = document.getElementById('btn-cliente-pos-nuevo') || document.getElementById('buscar-cliente-pos');
+              btn?.focus();
+            }, 50);
+          }}
         />
       )}
     </div>

@@ -914,10 +914,14 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       </div>
 
       <div className={`${vistaMovil === 'productos' ? 'flex' : 'hidden'} lg:flex flex-1 min-w-0 min-h-0`}>
-        <TerminalBusqueda onNavigate={onNavigate}           searchQuery={searchQuery} 
+        <TerminalBusqueda
+          onNavigate={onNavigate}
+          searchQuery={searchQuery} 
           setSearchQuery={setSearchQuery} 
           productos={productosVenta}
           onAddToCart={handleAddToCart}
+          clienteSeleccionado={clienteSeleccionado}
+          onAbrirElegirCliente={() => setIsClienteModalOpen(true)}
         />
       </div>
       

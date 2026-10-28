@@ -149,7 +149,7 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
           </button>
         </div>
 
-        <div className="p-4 sm:p-6 flex flex-col gap-4 overflow-y-auto">
+        <div className="p-4 sm:p-6 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
           {campo('ficha-nombre', 'Nombre o razón social *', datos.nombre, (v) => poner('nombre', v), { placeholder: 'EJ.: ROSA PÉREZ O FERRETERÍA SAN JUAN SAC', className: `${claseCampo} uppercase` })}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {campo('ficha-dni', 'DNI', datos.dni, (v) => poner('dni', v.replace(/\D/g, '').slice(0, 8)), { inputMode: 'numeric', placeholder: 'OPCIONAL · 8 NÚMEROS', className: `${claseCampo} tracking-widest` })}

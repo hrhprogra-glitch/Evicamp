@@ -1,9 +1,10 @@
 import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
-import { Search, ScanLine, Package, Plus, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Search, ScanLine, Package, Plus, AlertTriangle, CheckCircle2, Users } from 'lucide-react';
 import { formatearCantidad } from '../../../utils/formato';
 import { esDecimal, unidadDe } from '../../../utils/unidades';
 import type { Product } from '../../Inventario/types';
+import type { Cliente } from '../types';
 import { supabase } from '../../../db/supabase';
 import { useEmpleado, usePermiso } from '../../../utils/permisos';
 
@@ -13,9 +14,19 @@ interface Props {
   productos: Product[];
   onAddToCart: (producto: Product) => void;
   onNavigate?: (view: string) => void;
+  clienteSeleccionado?: Cliente | null;
+  onAbrirElegirCliente?: () => void;
 }
 
-export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery, productos, onAddToCart, onNavigate }) => {
+export const TerminalBusqueda: React.FC<Props> = ({
+  searchQuery,
+  setSearchQuery,
+  productos,
+  onAddToCart,
+  onNavigate,
+  clienteSeleccionado,
+  onAbrirElegirCliente
+}) => {
   const empleado = useEmpleado();
   const userEmail = empleado?.email || '';
   const puedeVerFiados = usePermiso('caja_ver_fiados');
@@ -231,6 +242,28 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
             <div className="hidden sm:flex items-center whitespace-nowrap border border-[var(--color-border)] px-3 py-1 bg-[var(--color-bg)] text-xs font-black uppercase tracking-widest text-[var(--color-ink)]">
               [ {time} ]
             </div>
+
+            {onAbrirElegirCliente && (
+              <button
+                id="btn-pos-header-cliente"
+                type="button"
+                onClick={onAbrirElegirCliente}
+                title="Elegir o cambiar cliente para esta venta (F3 o clic)"
+                className="flex items-center shrink-0 whitespace-nowrap border-2 border-[var(--color-ink)] px-2 sm:px-3 py-1 text-[12px] font-black uppercase tracking-widest bg-white text-[var(--color-ink)] hover:bg-[var(--color-accent)] transition-all cursor-pointer shadow-[2px_2px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px]"
+              >
+                <Users size={13} className="mr-1.5 text-[var(--color-ink)]" />
+                {clienteSeleccionado ? (
+                  <span>
+                    CLI: <span className="text-[var(--color-accent-dark)] font-black">{clienteSeleccionado.nombre}</span>{' '}
+                    <span className="text-[10px] text-[var(--color-subtle)]">(F3)</span>
+                  </span>
+                ) : (
+                  <span>
+                    CLIENTE <span className="text-[10px] text-[var(--color-subtle)]">(F3)</span>
+                  </span>
+                )}
+              </button>
+            )}
 
             {puedeVerFiados && (
               <button

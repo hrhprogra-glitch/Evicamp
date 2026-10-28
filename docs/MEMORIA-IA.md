@@ -26,7 +26,8 @@
   - las ventanas con listas usan el estilo del "Directorio de clientes" (`src/components/ListaVentana.tsx`).
 - **Pestañas:** ← → solo mueven el selector; la pestaña cambia con Enter.
 - **Barras con fechas:** una sola fila; ← → recorre, ↓ baja a la lista y **Enter en una fecha abre el calendario**.
-- **Al cerrar cualquier ventana**, el selector vuelve a lo que estaba elegido (regla global en `src/utils/ventanas.ts`).
+- **Al cerrar cualquier ventana o submodal**, el selector debe volver explícitamente a lo que estaba elegido (regla global en `src/utils/ventanas.ts`). Si un submodal se desmonta (como la ficha de nuevo cliente dentro del selector del POS), el foco debe enviarse a un botón del modal padre (`btn-cliente-pos-nuevo`), de lo contrario el navegador envía el foco a `document.body` y el selector desaparece.
+- **Scrollbars estilizados:** todo contenedor con scroll (`overflow-y-auto` u `overflow-auto`) debe incluir la clase `.custom-scrollbar` (5px, sin botones de flechas) para evitar la barra gris nativa gruesa de Windows.
 - **Exige usar graphify** (si está instalado) antes de leer código y `graphify update .` después de cambiarlo.
 
 ## 2. El producto

@@ -158,7 +158,10 @@
 - **El dueño respondió:** "ok".
 - **Desarrollo y pruebas completadas:**
   - Migración SQL aplicada en `siuhub` (`sales.customer_id`, `sales.customer_name`).
-  - Implementados `ModalElegirClientePOS.tsx`, `ModalNombreEspera.tsx` y adaptados `TicketVenta.tsx`, `ModalCobro.tsx`, `TicketImprimible.tsx` e `index.tsx`.
-  - Pruebas automatizadas en Edge con navegador real (`test-fase4-2.cjs` y `test-clear-customer.cjs`): 100% aprobadas.
-  - Desplegado a `siumax` (pruebas).
+- **Ajustes solicitados por el dueño en siumax (28/10 noche):**
+  1. *"el scrooll aruina la estetica cabialo"*: Se reemplazó la barra de desplazamiento nativa de Windows (gris y gruesa) por la estilizada `custom-scrollbar` de 5px en la lista de clientes y modales de ficha.
+  2. *"otra cosa cuando pongo nuevo cliente y pongo x el selector desaparece"*: Al cerrar la ficha de nuevo cliente con 'X' o Escape dentro de la selección de clientes del POS, el foco ahora regresa inmediatamente a `+ Nuevo (F2)`, manteniendo activo el selector y la navegación por flechas.
+  3. *"en el pos ahi dice id y admin osea dependiendo de que usuario entre cambiara eso no ? asi ahi agrega el boton de clientes y pon ahi f3 para que sepa que si quieres entrar le haces click o f3"*: Se explicó que `ID: ADMIN` cambia según la cuenta del cajero conectada, y se agregó en la barra superior junto al ID el botón `CLIENTE (F3)` (o `CLI: [NOMBRE] (F3)`) que permite abrir la ventana tanto con clic como con la tecla F3.
+  - Se probó con script automatizado en Edge en `siumax` (100% OK) y se desplegó.
+
 

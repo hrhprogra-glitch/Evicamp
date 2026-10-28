@@ -206,9 +206,13 @@ html, body {
   }
 }
 
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 #F8FAFC;
+}
 .custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
   background: #F8FAFC;
@@ -217,7 +221,7 @@ html, body {
   background: #CBD5E1;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-brand-accent);
+  background: var(--color-ink);
 }
 
 .technical-panel {

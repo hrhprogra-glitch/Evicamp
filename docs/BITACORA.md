@@ -7,6 +7,20 @@
 
 ---
 
+## 28/10/2026 (noche, 12) · Antigravity
+- **Ajustes de POS y selector de clientes (pedido del dueño):**
+  - **Estética de scroll:** Se aplicó la clase `custom-scrollbar` con ancho estilizado de 5px (delgada, sin flechas grises nativas de Windows) en la lista de clientes de `ModalElegirClientePOS.tsx` y en el formulario de `ModalFichaCliente.tsx`.
+  - **Selector preservado al cerrar ficha con 'X':** Al crear un nuevo cliente con F2 y cerrar con la 'X' o Escape, el foco ahora se restaura de inmediato hacia `#btn-cliente-pos-nuevo` dentro del modal de clientes, evitando que caiga a `document.body` y manteniendo activo el selector con flechas del teclado.
+  - **Botón `CLIENTE (F3)` en el encabezado del POS:** En `TerminalBusqueda.tsx`, junto a `[ ID: ADMIN ]` y la hora, se agregó el botón con atajo visual `CLIENTE (F3)` (o `CLI: NOMBRE (F3)` si ya hay uno elegido), permitiendo abrir el selector haciendo clic o presionando la tecla **F3**.
+  - **Explicación sobre ID: ADMIN:** Se aclaró al dueño que ese texto cambia dinámicamente según el correo del usuario que inicia sesión (cajero/vendedor).
+  - **Pruebas y despliegue:**
+    - Prueba automatizada end-to-end en Edge (`test-scrollbar-focus-f3.cjs`) en `siumax` pasando al 100%.
+    - Compilación `npm run build` sin errores.
+    - Desplegado en el sitio de pruebas `siumax` (`node ai-scripts/deploy.cjs siumax`).
+- **Siguiente paso:** Esperar revisión y visto bueno del dueño en `siumax`.
+
+---
+
 ## 28/10/2026 (noche, 11) · Antigravity
 - **FASE 4.2: Cliente opcional en la Caja (POS) y tickets en espera con nombre:**
   - **Base de datos (siuhub):**

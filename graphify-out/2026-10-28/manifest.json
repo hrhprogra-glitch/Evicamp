@@ -234,9 +234,9 @@
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalCobro.tsx": {
-    "mtime": 1792167714.7306664,
-    "seen": 1792167736.744713,
-    "ast_hash": "629d3f0cc447830eca4926dc0a2b65ad",
+    "mtime": 1793228214.0617962,
+    "seen": 1793228884.3829336,
+    "ast_hash": "9ffec8f1c436221800c45977a5d41e64",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalPrecioConsumo.tsx": {
@@ -252,27 +252,27 @@
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/TicketImprimible.tsx": {
-    "mtime": 1792622548.5983267,
-    "seen": 1792622561.0694356,
-    "ast_hash": "ec6379ae4e6b17d578320432eb26e5ed",
+    "mtime": 1793228153.6116018,
+    "seen": 1793228884.3829386,
+    "ast_hash": "329734f4870484dd52217e7812c4b1a4",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/TicketVenta.tsx": {
-    "mtime": 1792806551.1693294,
-    "seen": 1793205876.2445836,
-    "ast_hash": "a6275447328e4aa395dbceb18eb480e9",
+    "mtime": 1793228279.0359612,
+    "seen": 1793228884.3829393,
+    "ast_hash": "110a44d3ef2f1ec4b38bbc7dee532b17",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/index.tsx": {
-    "mtime": 1792806551.1703296,
-    "seen": 1793205876.2445853,
-    "ast_hash": "b2e6297302d12d405b3b6ad1f72b2be1",
+    "mtime": 1793228502.9682086,
+    "seen": 1793228884.3829405,
+    "ast_hash": "4479f1309fd951ad89a3e4d3da9ac019",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/types.ts": {
-    "mtime": 1792806551.1703296,
-    "seen": 1793205876.2445867,
-    "ast_hash": "b33aa93946cc550eaf29348d24c22e04",
+    "mtime": 1793228071.108433,
+    "seen": 1793228884.3829412,
+    "ast_hash": "e06a6165aebaa89077bad9a781974754",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/FiltrosUtilidades.tsx": {
@@ -1458,9 +1458,9 @@
     "semantic_hash": ""
   },
   "servidor/sql/seguridad-sesion.sql": {
-    "mtime": 1793214861.7904954,
-    "seen": 1793215261.7589946,
-    "ast_hash": "0860440e146949b8dfaf7d4f5fef91df",
+    "mtime": 1793227939.1411715,
+    "seen": 1793228884.3828633,
+    "ast_hash": "1c68d4d87a48eddfa24870e60d61cded",
     "semantic_hash": ""
   },
   "servidor/activar-seguridad.sh": {
@@ -1914,9 +1914,9 @@
     "semantic_hash": ""
   },
   "servidor/sql/deshacer-fase4.sql": {
-    "mtime": 1793214781.3176172,
-    "seen": 1793215261.7589931,
-    "ast_hash": "365c1a6040d0d285ecd5c2e5d24c8d53",
+    "mtime": 1793227954.4538686,
+    "seen": 1793228884.382862,
+    "ast_hash": "97c175e2f745c92e1e84152adb013706",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalAbono.tsx": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793220795.1251833,
-    "seen": 1793222936.1513362,
-    "ast_hash": "8c0c00a309f246a22a68e108f1b92e8b",
+    "mtime": 1793228713.5027301,
+    "seen": 1793228884.3829865,
+    "ast_hash": "da4fb28e87767b9cd66dcb3173a5b1c0",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793220827.6343262,
-    "seen": 1793222936.1513383,
-    "ast_hash": "9ab82d79375f0289a7f05beddd5fe183",
+    "mtime": 1793228713.514743,
+    "seen": 1793228884.3829875,
+    "ast_hash": "7e52296ed1b53e13191753b68956ba13",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793220857.7641616,
-    "seen": 1793222936.1513398,
-    "ast_hash": "3d4a45824c7c685ca1c1aad72eb14fec",
+    "mtime": 1793228713.489944,
+    "seen": 1793228884.3829882,
+    "ast_hash": "0cfd93805f956c122b174f0c2af83786",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793220814.9055731,
-    "seen": 1793222936.1513412,
-    "ast_hash": "758a90713d7809589877df599bb00477",
+    "mtime": 1793222977.0681767,
+    "seen": 1793228884.3829894,
+    "ast_hash": "84a4e59b0078d3732a1700b5d94ba693",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2073,6 +2073,18 @@
     "mtime": 1793214959.1277342,
     "seen": 1793215261.7590249,
     "ast_hash": "4d13436cdc2a6670ab5325d89c3ae557",
+    "semantic_hash": ""
+  },
+  "src/sections/Punto-de-venta/components/ModalElegirClientePOS.tsx": {
+    "mtime": 1793228702.6668408,
+    "seen": 1793228884.3829346,
+    "ast_hash": "cb99a45a2eee35090563a700fd544374",
+    "semantic_hash": ""
+  },
+  "src/sections/Punto-de-venta/components/ModalNombreEspera.tsx": {
+    "mtime": 1793228126.6410782,
+    "seen": 1793228884.3829358,
+    "ast_hash": "0194e482015643f1af6ee369ccab223c",
     "semantic_hash": ""
   }
 }
