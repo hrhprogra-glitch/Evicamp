@@ -201,3 +201,4 @@
 - Si el dueño escribe a mano en un chat, el bot se calla ahí 6 h (`PAUSA_HORAS` en `.env`).
 - Si WhatsApp cierra la sesión, el servicio se detiene (código 2) y deja `SESION_CERRADA.txt`: borrar `auth_info` y volver a escanear el QR.
 - Lista de interesados en el VPS: `/opt/siumax-bot/interesados.csv` (abre en Excel).
+- **Conversación del bot:** se configura en `bot-whatsapp/conversacion.js`. Respuestas cortas, una pregunta con opciones numeradas, y si el cliente va al grano se le responde directo y queda con interés ALTO. Al final de cada respuesta Gemini agrega `[[negocio | interes]]`; el bot la quita antes de enviar y la guarda en las columnas Negocio e Interés de la lista. Para probar sin WhatsApp: `node probar-conversacion.js`.

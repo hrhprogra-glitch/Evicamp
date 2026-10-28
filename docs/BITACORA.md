@@ -170,3 +170,4 @@
 - Script nuevo: `bot-whatsapp/subir-al-vps.cjs`. Detalles en MEMORIA-IA sección 10.
 - **Siguiente paso:** que el dueño le escriba desde otro número para comprobar que responde.
 - **Ajuste (28/10):** el dueño probó y funciona. Pidió que no diga "asistente virtual": ahora se presenta como el equipo de Siumax. Si le preguntan en serio si es una persona, no lo niega (dice que es la atención automática). Ya está subido al VPS.
+- **Conversación (28/10):** respuestas cortas, preguntas con opciones 1️⃣2️⃣3️⃣ (tipo de negocio → qué mejorar → demo), y al que va al grano se le responde directo y queda marcado como interés ALTO. La lista de interesados tiene ahora Negocio e Interés (primero los ALTO). Probado con `probar-conversacion.js` y subido al VPS.
