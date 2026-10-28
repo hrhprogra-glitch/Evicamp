@@ -9,3 +9,6 @@ ALTER TABLE public.customers DROP COLUMN IF EXISTS telefono;
 ALTER TABLE public.customers DROP COLUMN IF EXISTS tipo_doc;
 
 NOTIFY pgrst, 'reload schema';
+
+-- 4.1 (lote en el conteo): fn_registrar_conteo con p_batch_id es compatible con la anterior (sin lote hace lo mismo);
+-- no hace falta deshacerla. Si se quiere la versión vieja, volver a correr seguridad-sesion.sql de antes de la fase 4.

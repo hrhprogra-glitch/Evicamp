@@ -29,7 +29,8 @@ const texto = (sel) => page.evaluate((s) => document.querySelector(s)?.innerText
 const aviso = () => page.evaluate(() => document.getElementById('dialogo-sistema-texto')?.innerText || '');
 
 // Cuenta un producto con teclado: buscar por código, cantidad, Enter
-// (Conteos: el admin puede las dos cosas → pregunta "¿Qué pasó?"; → elige "Conté lo que hay")
+// (Conteos: el admin puede las dos cosas → pregunta "¿Qué pasó?"; → elige "CONTEO". El admin ve el lote: se deja
+// en "Automático" y ↓ baja a "¿Cuántos hay?")
 const contar = async (codigo, cantidad) => {
   await page.waitForSelector('#input-buscar-ajuste'); await page.focus('#input-buscar-ajuste');
   await page.keyboard.type(codigo, { delay: 15 }); await pausa(300); await tecla('Enter'); await pausa(400);
@@ -38,8 +39,10 @@ const contar = async (codigo, cantidad) => {
   const f2 = await foco();
   await tecla('Enter'); await pausa(200);
   const f3 = await foco();
+  if (f3 === 'lote-ajuste-elegido') await tecla('ArrowDown');
+  const f4 = await foco();
   await page.keyboard.type(String(cantidad)); await tecla('Enter'); await pausa(1200);
-  return { f1, f2, f3 };
+  return { f1, f2, f3, f4 };
 };
 try {
   await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
@@ -71,8 +74,8 @@ try {
 
   // 1) FALTANTE: contó 7, el sistema dice 10
   const f1 = await contar(`CNT${m}`, 7);
-  ok('Enter en el buscador elige el producto y pregunta "¿Qué pasó?" (Salió del stock)', f1.f1 === 'modo-ajuste-SALIDA', f1.f1);
-  ok('→ elige "Conté lo que hay" y Enter pasa a "¿Cuántos hay?"', f1.f2 === 'modo-ajuste-CONTEO' && f1.f3 === 'input-contado', JSON.stringify(f1));
+  ok('Enter en el buscador elige el producto y pregunta "¿Qué pasó?" (MERMA marcada)', f1.f1 === 'modo-ajuste-SALIDA', f1.f1);
+  ok('→ elige CONTEO; el admin pasa por el lote (Automático) y ↓ llega a "¿Cuántos hay?"', f1.f2 === 'modo-ajuste-CONTEO' && f1.f3 === 'lote-ajuste-elegido' && f1.f4 === 'input-contado', JSON.stringify(f1));
   ok('Muestra "Faltan 3 UND" y el selector va al primer motivo', /FALTAN 3 UND/i.test(await texto('#ajuste-diferencia')) && (await foco()) === 'motivo-ajuste-0', `${await texto('#ajuste-diferencia')} / ${await foco()}`);
   // Sin motivo: Guardar avisa
   await tecla('ArrowDown'); await tecla('ArrowDown');

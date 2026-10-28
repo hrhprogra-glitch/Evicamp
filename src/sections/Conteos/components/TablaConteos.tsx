@@ -228,7 +228,7 @@ export const TablaConteos: React.FC<Props> = ({ mermas, products, onEdit, onDele
               <div className="col-span-2 min-w-0 pr-2 flex flex-col items-start gap-1">
                 {/* Qué fue: un conteo (faltante o sobrante), una salida (dañado, vencido...) o un gasto de consumo */}
                 <span className={`text-[11px] font-black uppercase px-2 py-0.5 border ${merma.sobrante ? 'bg-[var(--color-info-bg)] text-[var(--color-info)] border-[var(--color-info)]' : 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger)]'}`}>
-                  {merma.origen === 'CONTEO' ? `Conteo · ${merma.sobrante ? 'Sobrante' : 'Faltante'}` : Number(merma.quantity) === 0 ? 'Gasto' : 'Salida'}
+                  {merma.origen === 'CONTEO' ? `Conteo · ${merma.sobrante ? 'Sobrante' : 'Faltante'}` : Number(merma.quantity) === 0 ? 'Gasto' : 'Merma'}
                 </span>
                 <span className="text-xs font-black uppercase px-2 py-1 border-2 inline-block bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-border)] truncate max-w-full rounded-none">
                   {merma.reason}

@@ -894,9 +894,13 @@ $$;
 
 -- p_diferencia: la que el empleado VIO al contar y justificó (ModalTomaInventario); sin internet viaja así hasta
 -- que se sube, y las ventas hechas entre el conteo y la subida no se pierden. Si va NULL se calcula aquí.
+-- Fase 4.1 (pedido del dueño 28/10/2026): quien tiene "Conteos completo" (almacen_registrar_mermas) puede elegir a qué
+-- lote va la diferencia (p_batch_id); sin lote se hace como siempre (falta → lotes más antiguos, sobra → último).
+-- Se borra la versión sin p_batch_id para que PostgREST no tenga dos funciones con el mismo nombre.
+DROP FUNCTION IF EXISTS public.fn_registrar_conteo(bigint, numeric, text, text, numeric, timestamptz);
 CREATE OR REPLACE FUNCTION public.fn_registrar_conteo(p_product_id bigint, p_contado numeric, p_motivo text DEFAULT NULL,
                                                       p_justificacion text DEFAULT NULL, p_diferencia numeric DEFAULT NULL,
-                                                      p_cuando timestamptz DEFAULT NULL)
+                                                      p_cuando timestamptz DEFAULT NULL, p_batch_id bigint DEFAULT NULL)
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -920,6 +924,15 @@ BEGIN
     RAISE EXCEPTION 'No tienes permiso para contar inventario.';
   END IF;
   IF p_contado IS NULL OR p_contado < 0 THEN RAISE EXCEPTION 'Escribe cuánto contaste (0 o más).'; END IF;
+  -- Elegir el lote es de quien tiene Conteos completo (el cajero cuenta a ciegas, sin ver lotes)
+  IF p_batch_id IS NOT NULL THEN
+    IF NOT fn_tiene_permiso(v_emp.permisos, ARRAY['almacen_registrar_mermas']) THEN
+      RAISE EXCEPTION 'Solo quien tiene Conteos completo puede elegir el lote.';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM batches WHERE id = p_batch_id AND product_id = p_product_id AND coalesce(is_active, 1) <> 0) THEN
+      RAISE EXCEPTION 'Ese lote no es de este producto.';
+    END IF;
+  END IF;
 
   SELECT id, name, coalesce(quantity, 0) AS quantity INTO v_prod FROM products WHERE id = p_product_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'No se encontró el producto.'; END IF;
@@ -944,8 +957,14 @@ BEGIN
     -- (producto con stock pero sin lotes) queda en una merma sin lote
     v_falta := -v_dif;
     v_stock := v_prod.quantity;
+    -- Con lote elegido, todo sale de ese lote (si no alcanza, se avisa)
+    IF p_batch_id IS NOT NULL AND (SELECT coalesce(quantity, 0) FROM batches WHERE id = p_batch_id) < v_falta THEN
+      RAISE EXCEPTION 'Ese lote solo tiene %; faltan %. Elige otro lote o "Automático".',
+        (SELECT coalesce(quantity, 0) FROM batches WHERE id = p_batch_id), v_falta;
+    END IF;
     FOR v_lote IN SELECT id, coalesce(quantity, 0) AS qty, coalesce(cost_unit, 0) AS cost FROM batches
                   WHERE product_id = p_product_id AND coalesce(quantity, 0) > 0 AND coalesce(is_active, 1) <> 0
+                    AND (p_batch_id IS NULL OR id = p_batch_id)
                   ORDER BY created_at ASC, id ASC FOR UPDATE LOOP
       EXIT WHEN v_falta <= 0;
       v_toma := least(v_lote.qty, v_falta);
@@ -975,7 +994,8 @@ BEGIN
   ELSE
     -- SOBRA: entra al último lote activo; si el producto no tiene lotes, se crea uno ("SOBRANTE CONTEO")
     SELECT id, coalesce(cost_unit, 0) AS cost INTO v_lote FROM batches
-    WHERE product_id = p_product_id AND coalesce(is_active, 1) <> 0 ORDER BY created_at DESC, id DESC LIMIT 1 FOR UPDATE;
+    WHERE product_id = p_product_id AND coalesce(is_active, 1) <> 0 AND (p_batch_id IS NULL OR id = p_batch_id)
+    ORDER BY created_at DESC, id DESC LIMIT 1 FOR UPDATE;
     IF NOT FOUND THEN
       INSERT INTO batches (id, product_id, quantity, initial_quantity, cost_total, cost_unit, document_ref, is_active, is_synced, created_at)
       VALUES ((extract(epoch FROM clock_timestamp()) * 1000)::bigint, p_product_id, 0, 0, 0, 0, 'SOBRANTE CONTEO', 1, 1, v_cuando)

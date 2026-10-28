@@ -875,8 +875,14 @@ const IMITAR_RPC: Record<string, (p: Record<string, any>) => Promise<ResultadoIm
     }
     if (!motivo) throw new Error('Elige el motivo de la diferencia.');
     if (justificacion.length < 3) throw new Error('Escribe la justificación de la diferencia.');
-    const lotes = (await filasLocales('batches', (b) => String(b.product_id) === id && Number(b.is_active ?? 1) !== 0))
+    // Fase 4.1: con lote elegido (p_batch_id, quien tiene Conteos completo), toda la diferencia va a ese lote
+    const loteElegido = p.p_batch_id != null ? String(p.p_batch_id) : '';
+    const lotes = (await filasLocales('batches', (b) => String(b.product_id) === id && Number(b.is_active ?? 1) !== 0 && (!loteElegido || String(b.id) === loteElegido)))
       .sort((a, b) => comparar(a.created_at, String(b.created_at ?? '')) || Number(a.id) - Number(b.id));
+    if (loteElegido && !lotes.length) throw new Error('Ese lote no es de este producto.');
+    if (loteElegido && dif < 0 && Number(lotes[0].quantity || 0) < -dif) {
+      throw new Error(`Ese lote solo tiene ${Number(lotes[0].quantity || 0)}; faltan ${-dif}. Elige otro lote o "Automático".`);
+    }
     const efectos: Efecto[] = [];
     if (dif < 0) {
       let falta = -dif;

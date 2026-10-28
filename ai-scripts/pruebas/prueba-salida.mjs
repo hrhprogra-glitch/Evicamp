@@ -1,4 +1,4 @@
-// Prueba (siumax), SOLO CON TECLADO: "Nuevo ajuste" → "Salió del stock" en la sección Conteos.
+// Prueba (siumax), SOLO CON TECLADO: "Nuevo ajuste" → "MERMA" (antes "Salió del stock") en la sección Conteos.
 // Lote (el más antiguo por defecto, ↓ cambia), cantidad que no pasa del lote, motivo y justificación obligatorios,
 // stock/lote/kardex/autor en el servidor, la lista con "Salida", corregir una salida, gasto de consumo y sin internet.
 // Uso: node prueba-salida.mjs <carpeta tools> <carpeta del proyecto>
@@ -39,7 +39,7 @@ try {
 
   // 1) SALIÓ DEL STOCK
   await buscar(`SAL${m}`);
-  ok('Al elegir el producto pregunta "¿Qué pasó?" con "Salió del stock" marcado', (await foco()) === 'modo-ajuste-SALIDA' && (await page.evaluate(() => document.getElementById('modo-ajuste-SALIDA')?.getAttribute('aria-checked'))) === 'true', await foco());
+  ok('Al elegir el producto pregunta "¿Qué pasó?" con "MERMA" marcado', (await foco()) === 'modo-ajuste-SALIDA' && (await page.evaluate(() => document.getElementById('modo-ajuste-SALIDA')?.getAttribute('aria-checked'))) === 'true', await foco());
   await tecla('Enter'); await pausa(300);
   ok('Enter pasa al lote: desplegable cerrado con el más antiguo (4 en stock) y la HORA en que entró', (await foco()) === 'lote-ajuste-elegido' && /QUEDAN 4 UND/i.test(await texto('#lote-ajuste-elegido')) && /\d{1,2}:\d{2}/.test(await texto('#lote-ajuste-elegido')) && !(await page.$('[data-lote-ajuste]')), `${await foco()} / ${await texto('#lote-ajuste-elegido')}`);
   await tecla('Enter'); await pausa(200);
@@ -67,7 +67,7 @@ try {
   ok('Sin justificación no se guarda: avisa', /justificaci/i.test(await aviso()), await aviso());
   await tecla('Enter'); await pausa(400);
   await page.keyboard.type('se cayeron al bajarlas', { delay: 10 }); await tecla('Enter'); await tecla('Enter'); await pausa(2500);
-  ok('Guardado: vuelve al buscador y aparece en "Hechos ahora" como Salida', (await foco()) === 'input-buscar-ajuste' && /SALIDA/i.test(await texto('[data-ajuste-fila="true"]')), `${await foco()} / ${await texto('[data-ajuste-fila="true"]')}`);
+  ok('Guardado: vuelve al buscador y aparece en "Hechos ahora" como Merma', (await foco()) === 'input-buscar-ajuste' && /MERMA/i.test(await texto('[data-ajuste-fila="true"]')), `${await foco()} / ${await texto('[data-ajuste-fila="true"]')}`);
   let s = await estado(P);
   ok('Servidor: stock 8 y salió del lote elegido (B 6→4)', s === '8 | SAL-A=4,SAL-B=4', s);
   const w = await sql(`select quantity||':'||reason||':'||notes||':'||cost_unit||':'||total_loss||':'||"user"||':'||coalesce(origen,'') from waste where product_id=${P};`);
@@ -88,7 +88,7 @@ try {
   await tecla('Escape'); await pausa(3000);
   ok('Esc cierra y el selector vuelve a "Nuevo ajuste"', (await foco()) === 'btn-nuevo-ajuste', await foco());
   const fila = await page.evaluate((n) => [...document.querySelectorAll('div[data-row="true"]')].find((f) => f.innerText.includes(n))?.innerText.replace(/\s+/g, ' ') || '', `PRUEBA SALIDA ${m}`);
-  ok('La lista muestra la salida con su etiqueta, motivo y justificación', /SALIDA/i.test(fila) && /DAÑADO/.test(fila) && /se cayeron al bajarlas/i.test(fila), fila.slice(0, 200));
+  ok('La lista muestra la merma con su etiqueta, motivo y justificación', /MERMA/i.test(fila) && /DAÑADO/.test(fila) && /se cayeron al bajarlas/i.test(fila), fila.slice(0, 200));
   const filaGasto = await page.evaluate((n) => [...document.querySelectorAll('div[data-row="true"]')].find((f) => f.innerText.includes(n))?.innerText.replace(/\s+/g, ' ') || '', `PRUEBA BOLSA ${m}`);
   ok('El gasto de consumo sale como "Gasto"', /GASTO/i.test(filaGasto), filaGasto.slice(0, 160));
   await page.evaluate((n) => [...document.querySelectorAll('div[data-row="true"]')].find((f) => f.innerText.includes(n))?.focus(), `PRUEBA SALIDA ${m}`);

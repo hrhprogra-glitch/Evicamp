@@ -26,7 +26,8 @@ await sql(`insert into products (id, name, category, code, price, quantity, min_
   insert into batches (id, product_id, quantity, initial_quantity, cost_total, cost_unit, document_ref, is_active, is_synced) values (${m}, ${P}, 8, 8, 8, 1, 'CTD', 1, 1);`);
 
 const nav = await puppeteer.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', headless: true, defaultViewport: { width: 1366, height: 860 } });
-const page = await nav.newPage(); const errores = []; page.on('pageerror', (e) => errores.push(e.message));
+const page = await nav.newPage();
+await page.evaluateOnNewDocument(() => { if (window.top === window) localStorage.setItem('siumax_pruebas', '1'); }); const errores = []; page.on('pageerror', (e) => errores.push(e.message));
 const foco = () => page.evaluate(() => document.activeElement?.id || document.activeElement?.tagName);
 const tecla = async (k) => { await page.keyboard.press(k); await pausa(200); };
 try {
@@ -46,6 +47,10 @@ try {
   ok('A ciegas: el producto aparece sin su stock', lista.includes(`PRUEBA CONTADOR ${m}`) && !/\b8\b/.test(lista), JSON.stringify(lista));
   await tecla('Enter'); await pausa(300);
   ok('Sin la pregunta "¿Qué pasó?": va directo a "¿Cuántos hay?"', (await foco()) === 'input-contado' && !(await page.$('#modo-ajuste-SALIDA')), await foco());
+  ok('El cajero cuenta a ciegas: NO ve el desplegable de lotes', !(await page.$('#lote-ajuste-elegido')));
+  const lote = await sql(`select id from batches where product_id=${P} and is_active<>0 limit 1;`);
+  const rechazo = await page.evaluate(async (args) => (await window.__siumaxPruebas.rpc('fn_registrar_conteo', { p_product_id: args.p, p_contado: 8, p_diferencia: 0, p_batch_id: Number(args.l) })).error?.message || 'sin error', { p: P, l: lote });
+  ok('Servidor: el cajero NO puede elegir el lote (lo rechaza)', /Conteos completo/i.test(rechazo), rechazo);
   await page.keyboard.type('6'); await tecla('Enter'); await pausa(1500);
   await tecla('Enter'); await page.keyboard.type('rotos en el almacén', { delay: 10 }); await tecla('Enter'); await tecla('Enter'); await pausa(2000);
   const w = await sql(`select quantity||':'||reason||':'||"user" from waste where product_id=${P};`);

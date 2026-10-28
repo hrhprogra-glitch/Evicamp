@@ -1,14 +1,16 @@
 // src/sections/Conteos/components/ModalAjuste.tsx
 // NUEVO AJUSTE (sección Conteos): una sola ventana para todo lo que cambia el stock fuera de una venta o compra.
 // Se elige el producto y luego "¿Qué pasó?":
-//  - SALIÓ DEL STOCK (se dañó, venció, robo, uso interno): cuántos salieron y de qué lote. Se guarda igual que
-//    la antigua "Registrar merma" (waste + lote + producto + kardex), así funciona igual sin internet.
+//  - MERMA (antes "Salió del stock": se dañó, venció, se perdió o se usó): cuántos salieron y de qué lote. Se guarda
+//    igual que la antigua "Registrar merma" (waste + lote + kardex), así funciona igual sin internet.
 //    Los productos de consumo (bolsas, servicios) no tienen stock: se anota lo gastado en soles.
-//  - CONTÉ LO QUE HAY: conteo A CIEGAS (nunca ve cuánto dice el sistema antes de contar). Al escribir lo que hay,
-//    el sistema muestra si falta o sobra y lo aplica con fn_registrar_conteo (servidor/sql/seguridad-sesion.sql).
+//  - CONTEO (antes "Conté lo que hay"): el cajero cuenta A CIEGAS (nunca ve cuánto dice el sistema ni los lotes).
+//    Al escribir lo que hay, el sistema muestra si falta o sobra y lo aplica con fn_registrar_conteo
+//    (servidor/sql/seguridad-sesion.sql). Quien tiene Conteos completo ve el desplegable de lotes y puede elegir a
+//    cuál va la diferencia (p_batch_id); "Automático" = como siempre (falta → lote más antiguo, sobra → el último).
 // En los dos casos el motivo y la justificación son obligatorios; quién, cuándo y el turno quedan anotados.
-// Quien solo tiene "Conteos: solo contar" ve únicamente "Conté lo que hay". Sin internet se imita y se sube
-// después (src/utils/sinInternet.ts).
+// Quien solo tiene "Conteos: solo contar" ve únicamente CONTEO. Sin internet se imita y se sube después
+// (src/utils/sinInternet.ts).
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ClipboardCheck, Search, X } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
@@ -32,8 +34,9 @@ interface Props {
 
 type Modo = 'SALIDA' | 'CONTEO';
 const MODOS: { modo: Modo; titulo: string; ayuda: string }[] = [
-  { modo: 'SALIDA', titulo: 'Salió del stock', ayuda: 'Se dañó, venció, robo o uso interno' },
-  { modo: 'CONTEO', titulo: 'Conté lo que hay', ayuda: 'Cuentas el estante y el sistema ve si falta o sobra' },
+  // Nombres claros para el cajero (pedido del dueño 28/10/2026): antes "Salió del stock" y "Conté lo que hay"
+  { modo: 'SALIDA', titulo: 'Merma', ayuda: 'Se dañó, venció, se perdió o se usó' },
+  { modo: 'CONTEO', titulo: 'Conteo', ayuda: 'Cuento lo que hay y el sistema ve si falta o sobra' },
 ];
 
 interface Lote { id: number | string; quantity: number; cost_unit: number; created_at: string; expiration_date?: string | null }
@@ -43,6 +46,14 @@ const redondear = (n: number) => Math.round(n * 1000) / 1000;
 const enfocar = (id: string) => setTimeout(() => document.getElementById(id)?.focus(), 30);
 const fechaCorta = (f?: string | null) => (f ? new Date(f.length === 10 ? `${f}T12:00:00` : f).toLocaleDateString('es-PE') : '');
 const horaCorta = (f?: string | null) => (f ? new Date(f).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) : '');
+
+// En CONTEO, la opción "Automático": la diferencia va como siempre (falta → lote más antiguo, sobra → el último)
+const LoteAutomatico: React.FC<{ marca?: string }> = ({ marca = '' }) => (
+  <span className="flex flex-1 flex-wrap items-center justify-between gap-x-4 gap-y-1 min-w-0">
+    <span className="text-xs font-black uppercase">{marca}Automático</span>
+    <span className="text-[11px] font-black">Falta → lote más antiguo · sobra → el último</span>
+  </span>
+);
 
 // Un lote en el desplegable: cuándo entró (día y hora), cuándo vence, cuánto queda y su costo
 const DatosLote: React.FC<{ l: Lote; unidad: string; marca?: string }> = ({ l, unidad, marca = '' }) => (
@@ -95,10 +106,12 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
     return [...exacto, ...resto];
   }, [elegibles, busqueda]);
 
-  // Lotes con stock del producto (de donde sale lo dañado o vencido); se propone el más antiguo
+  // Lotes con stock del producto. MERMA: de dónde sale (se propone el más antiguo). CONTEO: solo para quien tiene
+  // Conteos completo, a qué lote va la diferencia (empieza en "Automático" = null). El cajero cuenta a ciegas.
   useEffect(() => {
     setLotesAbierto(false);
-    if (!producto || modo !== 'SALIDA' || esConsumo(producto)) { setLotes([]); setLote(null); return; }
+    const usaLotes = modo === 'SALIDA' || puedeSalida;
+    if (!producto || !usaLotes || esConsumo(producto)) { setLotes([]); setLote(null); return; }
     let vigente = true;
     setCargandoLotes(true);
     (async () => {
@@ -106,11 +119,11 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
       if (!vigente) return;
       const conStock = ((data || []) as Lote[]).filter((l) => Number(l.quantity) > 0);
       setLotes(conStock);
-      setLote(conStock[0] || null);
+      setLote(modo === 'SALIDA' ? conStock[0] || null : null);
       setCargandoLotes(false);
     })();
     return () => { vigente = false; };
-  }, [producto, modo]);
+  }, [producto, modo, puedeSalida]);
 
   // Al terminar de cargar los lotes (salida recién elegida sin pregunta), el foco pasa al lote
   useEffectFocoLote(producto, modo, cargandoLotes, modosDe(producto).length);
@@ -123,6 +136,11 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
   const motivos = modo === 'SALIDA' ? MOTIVOS_SALIDA : diferencia !== null && diferencia < 0 ? MOTIVOS_FALTA : MOTIVOS_SOBRA;
   // Hay que pedir motivo y justificación: en la salida siempre; en el conteo, solo si falta o sobra
   const pideMotivo = producto && (modo === 'SALIDA' || (diferencia !== null && diferencia !== 0));
+  // ¿Se muestra el desplegable de lotes? MERMA siempre (salvo consumo); CONTEO solo con Conteos completo
+  const veLotes = !!producto && !consumo && lotes.length > 0 && (modo === 'SALIDA' || puedeSalida);
+  const conAutomatico = modo === 'CONTEO';
+  const opcionesLote: (Lote | null)[] = conAutomatico ? [null, ...lotes] : lotes;
+  const campoDespuesDelLote = modo === 'SALIDA' ? 'input-cantidad-ajuste' : 'input-contado';
 
   const limpiarCampos = () => {
     setCantidad(''); setContado(''); setDiferencia(null); setMotivo(''); setJustificacion('');
@@ -134,7 +152,9 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
   };
 
   // Primer campo de cada opción
-  const primerCampo = (m: Modo) => (m === 'CONTEO' ? 'input-contado' : consumo || !lotes.length ? 'input-cantidad-ajuste' : 'lote-ajuste-elegido');
+  const primerCampo = (m: Modo) => (m === 'CONTEO'
+    ? (puedeSalida && !consumo && lotes.length ? 'lote-ajuste-elegido' : 'input-contado')
+    : consumo || !lotes.length ? 'input-cantidad-ajuste' : 'lote-ajuste-elegido');
   const irAlPrimerCampo = (m: Modo) => setTimeout(() => (document.getElementById(primerCampo(m)) || document.getElementById('input-cantidad-ajuste'))?.focus(), 30);
 
   const elegir = (p: Product) => {
@@ -149,12 +169,12 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
   // Desplegable de lotes: al abrir, el selector va al lote elegido; al elegir, se cierra y pasa a la cantidad
   const abrirLotes = () => {
     setLotesAbierto(true);
-    const i = Math.max(0, lotes.findIndex((l) => l.id === lote?.id));
+    const i = Math.max(0, opcionesLote.findIndex((l) => (l?.id ?? null) === (lote?.id ?? null)));
     enfocar(`lote-ajuste-op-${i}`);
   };
-  const elegirLote = (l: Lote) => {
+  const elegirLote = (l: Lote | null) => {
     setLote(l); setLotesAbierto(false);
-    enfocar('input-cantidad-ajuste');
+    enfocar(campoDespuesDelLote);
   };
 
   const cambiarModo = (m: Modo) => {
@@ -180,7 +200,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
       enfocar('input-cantidad-ajuste'); return false;
     }
     if (consumo) return true;
-    if (!lote) { await avisar('Este producto no tiene lotes con stock: no hay de dónde sacar. Si en el estante hay, usa "Conté lo que hay".'); enfocar('input-cantidad-ajuste'); return false; }
+    if (!lote) { await avisar('Este producto no tiene lotes con stock: no hay de dónde sacar. Si en el estante hay, usa "Conteo".'); enfocar('input-cantidad-ajuste'); return false; }
     if (!esDecimal(producto) && !Number.isInteger(cant)) { await avisar(`Este producto va por ${unidad}: escribe un número entero.`); enfocar('input-cantidad-ajuste'); return false; }
     if (cant > Number(lote.quantity)) { await avisar(`Ese lote solo tiene ${formatearCantidad(lote.quantity, unidad)} ${unidad}.`); enfocar('input-cantidad-ajuste'); return false; }
     return true;
@@ -231,7 +251,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
         if (e3) throw e3;
       }
       anotar({ producto: producto.name, unidad, modo: 'SALIDA', cantidad: cant, diferencia: consumo ? 0 : -cant, motivo, consumo });
-      setUltimo(consumo ? `✔ ${producto.name}: gasto de S/ ${cant.toFixed(2)} guardado (${motivo}).` : `✔ ${producto.name}: salida guardada (${motivo}).`);
+      setUltimo(consumo ? `✔ ${producto.name}: gasto de S/ ${cant.toFixed(2)} guardado (${motivo}).` : `✔ ${producto.name}: merma guardada (${motivo}).`);
       onGuardado?.();
       reiniciar();
     } catch (e) {
@@ -256,6 +276,8 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
         // Se aplica la diferencia que el empleado VIO y justificó (no se recalcula con otro stock)
         p_diferencia: dif,
         p_cuando: new Date().toISOString(),
+        // Lote elegido por quien tiene Conteos completo (sin lote: automático, como siempre)
+        ...(puedeSalida && lote ? { p_batch_id: Number(lote.id) } : {}),
       });
       if (error) throw error;
       const real = Number((data as { diferencia?: number } | null)?.diferencia ?? dif);
@@ -301,12 +323,74 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
   const campoAntesDelMotivo = modo === 'SALIDA' ? 'input-cantidad-ajuste' : 'input-contado';
   // Campo de arriba de la cantidad (↑ desde la cantidad o el conteo)
   const campoAntesDeCantidad = () => {
-    if (modo === 'SALIDA' && !consumo && lotes.length) return 'lote-ajuste-elegido';
+    if (veLotes) return 'lote-ajuste-elegido';
     if (modos.length > 1) return `modo-ajuste-${modo}`;
     return 'btn-cambiar-producto-ajuste';
   };
 
   const items = () => Array.from(document.querySelectorAll('[data-ajuste-prod-item="true"]')) as HTMLElement[];
+
+  // Desplegable de lotes (MERMA: de qué lote sale; CONTEO con Conteos completo: a qué lote va, con "Automático").
+  // Cerrado muestra el elegido; Enter lo abre, ↑ ↓ recorre, Enter elige (se cierra y pasa al campo siguiente), Esc lo cierra.
+  const selectorLote = (titulo: string) => (
+    <div>
+      <p className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest mb-2">{titulo}</p>
+      {cargandoLotes ? (
+        <p className="text-[11px] font-bold text-[var(--color-muted)]">Cargando lotes...</p>
+      ) : !lotes.length ? (
+        modo === 'SALIDA' ? <p id="ajuste-sin-lotes" className="text-[11px] font-black text-[var(--color-danger)] uppercase">Este producto no tiene lotes con stock.</p> : null
+      ) : (
+        <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setLotesAbierto(false); }}>
+          <button
+            id="lote-ajuste-elegido"
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded={lotesAbierto}
+            onClick={() => (lotesAbierto ? setLotesAbierto(false) : abrirLotes())}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirLotes(); }
+              else if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById(campoDespuesDelLote)?.focus(); }
+              else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(modos.length > 1 ? `modo-ajuste-${modo}` : 'btn-cambiar-producto-ajuste')?.focus(); }
+            }}
+            className="w-full flex items-center justify-between gap-3 p-3 border-2 border-[var(--color-ink)] bg-white text-[var(--color-ink)] text-left cursor-pointer outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-ink)]"
+          >
+            {lote ? <DatosLote l={lote} unidad={unidad} /> : <LoteAutomatico />}
+            <ChevronDown size={16} className={`shrink-0 transition-transform ${lotesAbierto ? 'rotate-180' : ''}`} />
+          </button>
+          {lotesAbierto && (
+            <div role="listbox" aria-label="Lotes" className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] z-50 max-h-56 overflow-y-auto">
+              {opcionesLote.map((l, i) => {
+                const elegido = (lote?.id ?? null) === (l?.id ?? null);
+                return (
+                  <button
+                    key={l?.id ?? 'auto'}
+                    id={`lote-ajuste-op-${i}`}
+                    type="button"
+                    role="option"
+                    aria-selected={elegido}
+                    data-lote-ajuste="true"
+                    onClick={() => elegirLote(l)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById(`lote-ajuste-op-${Math.min(i + 1, opcionesLote.length - 1)}`)?.focus(); }
+                      else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        if (i > 0) document.getElementById(`lote-ajuste-op-${i - 1}`)?.focus();
+                        else { setLotesAbierto(false); document.getElementById('lote-ajuste-elegido')?.focus(); }
+                      } else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); elegirLote(l); }
+                      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setLotesAbierto(false); document.getElementById('lote-ajuste-elegido')?.focus(); }
+                    }}
+                    className={`w-full flex items-center justify-between gap-3 p-3 border-b border-[var(--color-border)] text-left cursor-pointer outline-none hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white group ${elegido ? 'bg-[var(--color-bg)]' : ''}`}
+                  >
+                    {l ? <DatosLote l={l} unidad={unidad} marca={elegido ? '● ' : '○ '} /> : <LoteAutomatico marca={elegido ? '● ' : '○ '} />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
   const n = modos.length > 1 ? 3 : 2; // numeración de los pasos: con "¿Qué pasó?" hay un paso más
 
   return (
@@ -451,67 +535,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
             {/* SALIÓ DEL STOCK: lote y cantidad */}
             {producto && modo === 'SALIDA' && (
               <>
-                {!consumo && (
-                  <div>
-                    <p className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest mb-2">{n}. ¿De qué lote? {lotes.length > 1 ? `(Enter: ver los ${lotes.length})` : ''}</p>
-                    {cargandoLotes ? (
-                      <p className="text-[11px] font-bold text-[var(--color-muted)]">Cargando lotes...</p>
-                    ) : !lotes.length ? (
-                      <p id="ajuste-sin-lotes" className="text-[11px] font-black text-[var(--color-danger)] uppercase">Este producto no tiene lotes con stock.</p>
-                    ) : (
-                      // Desplegable: cerrado muestra el lote elegido; Enter lo abre con todos los lotes con stock,
-                      // ↑ ↓ recorre, Enter elige (se cierra y pasa a la cantidad), Esc lo cierra sin cambiar
-                      <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setLotesAbierto(false); }}>
-                        <button
-                          id="lote-ajuste-elegido"
-                          type="button"
-                          aria-haspopup="listbox"
-                          aria-expanded={lotesAbierto}
-                          onClick={() => (lotesAbierto ? setLotesAbierto(false) : abrirLotes())}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirLotes(); }
-                            else if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('input-cantidad-ajuste')?.focus(); }
-                            else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(modos.length > 1 ? `modo-ajuste-${modo}` : 'btn-cambiar-producto-ajuste')?.focus(); }
-                          }}
-                          className="w-full flex items-center justify-between gap-3 p-3 border-2 border-[var(--color-ink)] bg-white text-[var(--color-ink)] text-left cursor-pointer outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-ink)]"
-                        >
-                          {lote && <DatosLote l={lote} unidad={unidad} />}
-                          <ChevronDown size={16} className={`shrink-0 transition-transform ${lotesAbierto ? 'rotate-180' : ''}`} />
-                        </button>
-                        {lotesAbierto && (
-                          <div role="listbox" aria-label="Lotes" className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] z-50 max-h-56 overflow-y-auto">
-                            {lotes.map((l, i) => {
-                              const elegido = lote?.id === l.id;
-                              return (
-                                <button
-                                  key={l.id}
-                                  id={`lote-ajuste-op-${i}`}
-                                  type="button"
-                                  role="option"
-                                  aria-selected={elegido}
-                                  data-lote-ajuste="true"
-                                  onClick={() => elegirLote(l)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById(`lote-ajuste-op-${Math.min(i + 1, lotes.length - 1)}`)?.focus(); }
-                                    else if (e.key === 'ArrowUp') {
-                                      e.preventDefault();
-                                      if (i > 0) document.getElementById(`lote-ajuste-op-${i - 1}`)?.focus();
-                                      else { setLotesAbierto(false); document.getElementById('lote-ajuste-elegido')?.focus(); }
-                                    } else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); elegirLote(l); }
-                                    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setLotesAbierto(false); document.getElementById('lote-ajuste-elegido')?.focus(); }
-                                  }}
-                                  className={`w-full flex items-center justify-between gap-3 p-3 border-b border-[var(--color-border)] text-left cursor-pointer outline-none hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white group ${elegido ? 'bg-[var(--color-bg)]' : ''}`}
-                                >
-                                  <DatosLote l={l} unidad={unidad} marca={elegido ? '● ' : '○ '} />
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                {!consumo && selectorLote(`${n}. ¿De qué lote? ${lotes.length > 1 ? `(Enter: ver los ${lotes.length})` : ''}`)}
                 <div>
                   <label htmlFor="input-cantidad-ajuste" className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest mb-2 block">
                     {consumo ? `${n}. ¿Cuánto se gastó? (S/)` : `${n + 1}. ¿Cuántos salieron? (${unidad})`}
@@ -541,10 +565,11 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
             )}
 
             {/* CONTÉ LO QUE HAY */}
+            {producto && modo === 'CONTEO' && veLotes && selectorLote(`${n}. ¿A qué lote va la diferencia? (Enter: elegir)`)}
             {producto && modo === 'CONTEO' && (
               <div>
                 <label htmlFor="input-contado" className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest mb-2 block">
-                  {n}. ¿Cuántos hay? ({unidad})
+                  {veLotes ? n + 1 : n}. ¿Cuántos hay? ({unidad})
                 </label>
                 <input
                   id="input-contado"
@@ -570,7 +595,9 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                   <div id="ajuste-diferencia" role="status" className={`mt-3 p-3 border-2 font-black uppercase ${diferencia < 0 ? 'border-[var(--color-danger)] bg-[var(--color-danger-bg)] text-[var(--color-danger)]' : 'border-[var(--color-info)] bg-[var(--color-info-bg)] text-[var(--color-info)]'}`}>
                     {diferencia < 0 ? `Faltan ${formatearCantidad(-diferencia, unidad)} ${unidad}` : `Sobran ${formatearCantidad(diferencia, unidad)} ${unidad}`}
                     <span className="block text-[11px] font-bold normal-case">
-                      {diferencia < 0 ? 'Se guardará como merma (sale del lote más antiguo).' : 'Se guardará como sobrante (entra al último lote).'} Quedará tu nombre, la hora y el turno.
+                      {diferencia < 0
+                        ? `Se guardará como merma (sale ${lote ? `del lote del ${fechaCorta(lote.created_at)}` : 'del lote más antiguo'}).`
+                        : `Se guardará como sobrante (entra ${lote ? `al lote del ${fechaCorta(lote.created_at)}` : 'al último lote'}).`} Quedará tu nombre, la hora y el turno.
                     </span>
                   </div>
                 )}
@@ -673,7 +700,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                   <LineaDato>{h.modo === 'CONTEO' ? `Contó ${formatearCantidad(h.cantidad, h.unidad)} ${h.unidad}` : h.consumo ? `Gasto de S/ ${h.cantidad.toFixed(2)}` : `Salieron ${formatearCantidad(h.cantidad, h.unidad)} ${h.unidad}`} · {h.hora}</LineaDato>
                   {h.motivo && <LineaDato>Motivo: {h.motivo}</LineaDato>}
                 </>}
-                centro={h.modo === 'SALIDA' ? <Etiqueta tono="rojo">{h.consumo ? 'Gasto' : 'Salida'}</Etiqueta> : h.diferencia === 0 ? <Etiqueta tono="verde">Cuadra</Etiqueta> : h.diferencia < 0 ? <Etiqueta tono="rojo">Merma</Etiqueta> : <Etiqueta tono="azul">Sobrante</Etiqueta>}
+                centro={h.modo === 'SALIDA' ? <Etiqueta tono="rojo">{h.consumo ? 'Gasto' : 'Merma'}</Etiqueta> : h.diferencia === 0 ? <Etiqueta tono="verde">Cuadra</Etiqueta> : h.diferencia < 0 ? <Etiqueta tono="rojo">Merma</Etiqueta> : <Etiqueta tono="azul">Sobrante</Etiqueta>}
                 derecha={<DatoFila etiqueta="Diferencia" valor={h.consumo ? '—' : `${h.diferencia > 0 ? '+' : ''}${formatearCantidad(h.diferencia, h.unidad)} ${h.unidad}`} tono={h.diferencia < 0 ? 'rojo' : h.diferencia > 0 ? 'verde' : 'normal'} />}
               />
             ))}
