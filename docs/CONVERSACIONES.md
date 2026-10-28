@@ -146,3 +146,4 @@
 - **Bot:** "funciona, aunque no quiero que diga que es un asistente virtual" → ahora habla como el equipo de Siumax, sin mentir si le preguntan directamente.
 - **Bot:** "que responda corto y haga preguntas con opciones, y si va al grano mejor, porque así sabemos que quiere el sistema" → hecho en `conversacion.js`; el interés queda en la lista.
 - **Bot:** "me gustaría que fuera para marcar como una encuesta" → hecho con encuestas nativas de WhatsApp.
+- **Bot:** "falta una presentación… que no diga que es asesor virtual o bot… corta… ¿qué pasa si presiona una y otra vez el voto?" → presentación de una línea y un solo voto por encuesta (eligió "Encuesta, 1 voto"). Se le avisó del límite de 20 respuestas al día de Gemini gratis.
