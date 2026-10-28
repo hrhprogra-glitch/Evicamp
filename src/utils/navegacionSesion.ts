@@ -24,9 +24,9 @@ export const restaurarFocoSesion = (view?: string): boolean => {
     if (btnCobrar && btnCobrar.offsetParent !== null) { btnCobrar.focus(); return true; }
   }
 
-  // 2. FIADOS
-  if (activeView === 'fiados') {
-    const b = document.getElementById('buscador-global-fiados') as HTMLInputElement | null;
+  // 2. CLIENTES (antes Créditos): el buscador de la pestaña abierta (Clientes o Créditos)
+  if (activeView === 'clientes') {
+    const b = (document.getElementById('buscador-clientes') || document.getElementById('buscador-global-fiados')) as HTMLInputElement | null;
     if (b && b.offsetParent !== null) { b.focus(); b.select(); return true; }
     const btnNuevo = document.getElementById('btn-nuevo-cliente') as HTMLElement | null;
     if (btnNuevo && btnNuevo.offsetParent !== null) { btnNuevo.focus(); return true; }

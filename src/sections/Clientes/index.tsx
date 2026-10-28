@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {  Coins, Plus, BookOpen } from 'lucide-react';
+import { Coins, Users, BookOpen } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import { TablaFiadosAgrupados } from './components/TablaFiadosAgrupados';
 import { ModalFiado } from './components/ModalFiado';
@@ -16,8 +16,28 @@ import { traerTodo } from '../../utils/traerTodo';
 import { eliminarAbonoYRevertirCaja } from '../../utils/revertirAbono';
 import { TarjetaMetrica } from '../Inventario/components/TarjetaMetrica';
 import { confirmar } from '../../utils/dialogos';
+import { tipoDeNumero } from '../../utils/documento';
+import { PestanaClientes } from './components/PestanaClientes';
+import { ModalFichaCliente, type DatosCliente } from './components/ModalFichaCliente';
+import { claseBotonBarra } from '../../components/ListaVentana';
 
-export const Fiados: React.FC = () => {
+// Sección CLIENTES (fase 4.1, antes "Créditos"): pestañas Clientes (el directorio, nuevo) y Créditos (la de siempre:
+// deudas por cliente, abonos, estado de cuenta). La pestaña se recuerda; "Por cobrar" de la Caja abre Créditos.
+type Pestana = 'CLIENTES' | 'CREDITOS';
+const PESTANAS: { id: Pestana; nombre: string; boton: string }[] = [
+  { id: 'CLIENTES', nombre: 'Clientes', boton: 'tab-clientes-clientes' },
+  { id: 'CREDITOS', nombre: 'Créditos', boton: 'tab-clientes-creditos' },
+];
+const pestanaGuardada = (): Pestana => { try { return sessionStorage.getItem('clientes_pestana') === 'CREDITOS' ? 'CREDITOS' : 'CLIENTES'; } catch { return 'CLIENTES'; } };
+
+export const Clientes: React.FC = () => {
+  const [pestana, setPestanaEstado] = useState<Pestana>(pestanaGuardada);
+  const setPestana = (p: Pestana) => { setPestanaEstado(p); try { sessionStorage.setItem('clientes_pestana', p); } catch { /* sin almacenamiento */ } };
+  const buscadorDe = (p: Pestana) => (p === 'CLIENTES' ? 'buscador-clientes' : 'buscador-global-fiados');
+  // Ficha del cliente (nuevo o editar)
+  const [fichaAbierta, setFichaAbierta] = useState(false);
+  const [clienteEnFicha, setClienteEnFicha] = useState<Cliente | null>(null);
+  const abrirFicha = (c: Cliente | null) => { setClienteEnFicha(c); setFichaAbierta(true); };
   // Crear deudas es como vender a crédito
   const [loading, setLoading] = useState(true);
   const [fiados, setFiados] = useState<Fiado[]>([]);
@@ -87,7 +107,11 @@ if (clis) {
     id: c.id?.toString() ?? 'ID_NULO', // <-- PROTECCIÓN AQUÍ
     nombre: c.name ?? 'Sin Nombre',
     dni: c.dni ?? '',
-    telefono: '' 
+    // Fase 4.1: antes el teléfono no se guardaba (siempre vacío)
+    telefono: c.telefono ?? '',
+    tipoDoc: tipoDeNumero(c.dni, c.tipo_doc),
+    direccion: c.direccion ?? '',
+    referencia: c.referencia ?? '',
   }));
   setClientes(clientesMapeados);
 }
@@ -171,14 +195,16 @@ if (fiaData) {
 
   // 🔥 RESTAURAR FOCO AL CERRAR MODALES O TERMINAR DE CARGAR
   useEffect(() => {
-    if (!loading && !isModalFiadoOpen && !isModalAbonoOpen && !isModalClientesOpen && !isModalDetalleOpen && !isModalAnularOpen && !isModalEstadoCuentaOpen) {
+    if (!loading && !isModalFiadoOpen && !isModalAbonoOpen && !isModalClientesOpen && !isModalDetalleOpen && !isModalAnularOpen && !isModalEstadoCuentaOpen && !fichaAbierta) {
       setTimeout(() => {
-        if (!document.querySelector('[role="dialog"]')) {
-          document.getElementById('buscador-global-fiados')?.focus();
+        // Solo si el selector no está ya en algo de la pantalla (al cerrar una ventana vuelve a su fila: ventanas.ts)
+        const a = document.activeElement;
+        if (!document.querySelector('[role="dialog"]') && (!a || a === document.body)) {
+          document.getElementById(buscadorDe(pestana))?.focus();
         }
       }, 100);
     }
-  }, [loading, isModalFiadoOpen, isModalAbonoOpen, isModalClientesOpen, isModalDetalleOpen, isModalAnularOpen, isModalEstadoCuentaOpen]);
+  }, [loading, isModalFiadoOpen, isModalAbonoOpen, isModalClientesOpen, isModalDetalleOpen, isModalAnularOpen, isModalEstadoCuentaOpen, fichaAbierta, pestana]);
 
   const clientesAgrupados = React.useMemo(() => {
     const mapa = new Map<string, ClienteFiadoAgrupado>();
@@ -311,30 +337,31 @@ if (fiaData) {
   };
 
   // --- FUNCIONES DE CLIENTES CON SUPABASE ---
+  // Fase 4.1: crea o edita con la ficha completa (documento, teléfono, dirección, referencia). Devuelve si se guardó.
+  const guardarCliente = async (d: DatosCliente, id?: string): Promise<boolean> => {
+    const fila = { name: d.nombre, dni: d.dni || null, tipo_doc: d.tipoDoc || null, telefono: d.telefono || null, direccion: d.direccion || null, referencia: d.referencia || null };
+    const nuevo: Omit<Cliente, 'id'> = { nombre: d.nombre, dni: d.dni, tipoDoc: d.tipoDoc, telefono: d.telefono, direccion: d.direccion, referencia: d.referencia };
+    if (id) {
+      const { error } = await supabase.from('customers').update(fila).eq('id', id);
+      if (error) { alert('Error al actualizar cliente: ' + error.message); return false; }
+      setClientes((lista) => lista.map((c) => (c.id === id ? { ...c, ...nuevo } : c)));
+      // Sus créditos muestran el nombre nuevo
+      if (clientes.find((c) => c.id === id)?.nombre !== d.nombre) await cargarDatos(true);
+      return true;
+    }
+    const { data, error } = await supabase.from('customers').insert([{ ...fila, created_at: new Date().toISOString(), is_synced: '1' }]).select().single();
+    if (error) { alert('Error al guardar cliente: ' + error.message); return false; }
+    setClientes((lista) => [...lista, { ...nuevo, id: String(data.id) }]);
+    return true;
+  };
+
+  // (ventana antigua del directorio, que sigue abriéndose desde el estado de cuenta → historial)
   const handleSaveCliente = async (cli: Omit<Cliente, 'id'>) => {
-      // Dejamos que Supabase asigne el ID (generalmente autoincremental)
-      const { data, error } = await supabase.from('customers').insert([{
-        name: cli.nombre,
-        dni: cli.dni,
-        created_at: new Date().toISOString(),
-        is_synced: '1'
-      }]).select().single();
-  
-      if (error) return alert('Error al guardar cliente: ' + error.message);
-      
-      // Actualizamos el estado con el ID real que nos dio la base de datos
-      setClientes([...clientes, { ...cli, id: data.id.toString() }]);
-    };
+    await guardarCliente({ nombre: cli.nombre, dni: cli.dni, tipoDoc: tipoDeNumero(cli.dni, cli.tipoDoc), telefono: cli.telefono || '', direccion: cli.direccion || '', referencia: cli.referencia || '' });
+  };
 
-  const handleEditCliente = async (cliModificado: Cliente) => {
-    // Actualizar en Supabase
-    const { error } = await supabase.from('customers').update({
-      name: cliModificado.nombre,
-      dni: cliModificado.dni
-    }).eq('id', cliModificado.id);
-
-    if (error) return alert('Error al actualizar cliente: ' + error.message);
-    setClientes(clientes.map(c => c.id === cliModificado.id ? cliModificado : c));
+  const handleEditCliente = async (cli: Cliente) => {
+    await guardarCliente({ nombre: cli.nombre, dni: cli.dni, tipoDoc: tipoDeNumero(cli.dni, cli.tipoDoc), telefono: cli.telefono || '', direccion: cli.direccion || '', referencia: cli.referencia || '' }, cli.id);
   };
 
   const handleDeleteCliente = async (id: string) => {
@@ -398,45 +425,72 @@ if (fiaData) {
         </div>
       )}
       
-      {/* TARJETAS Y CONTROLES */}
-      <div className="flex flex-col xl:flex-row justify-between items-stretch xl:items-end gap-4 shrink-0">
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full xl:w-1/2">
-          <TarjetaMetrica 
-            label="Por Cobrar" 
-            value={`S/ ${totalPorCobrar.toFixed(2)}`} 
-            icon={<Coins size={16} />} 
-          />
-          <TarjetaMetrica 
-            label="Recuperado Hoy" 
-            value={`S/ ${totalRecuperadoHoy.toFixed(2)}`} 
-            icon={<Coins size={16} />} 
-            isGreen={true} 
-          />
-        </div>
-
-        {/* BOTONES PRINCIPALES */}
-        <div className="flex gap-3">
-          <button 
-            id="btn-directorio-clientes" 
-            onClick={() => setIsModalClientesOpen(true)}
+      {/* PESTAÑAS: ← → mueven el selector, Enter (o clic) cambia de pestaña, ↓ baja a su buscador */}
+      <div role="tablist" aria-label="Clientes" className="flex gap-2 shrink-0">
+        {PESTANAS.map((p, i) => (
+          <button key={p.id} id={p.boton} role="tab" aria-selected={pestana === p.id} type="button"
+            onClick={() => setPestana(p.id)}
             onKeyDown={(e) => {
-              if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                e.stopPropagation();
-                document.getElementById('buscador-global-fiados')?.focus();
+              if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                e.preventDefault(); e.stopPropagation();
+                document.getElementById(PESTANAS[(i + (e.key === 'ArrowRight' ? 1 : -1) + PESTANAS.length) % PESTANAS.length].boton)?.focus();
+              } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault(); e.stopPropagation();
+                setPestana(p.id);
+                setTimeout(() => document.getElementById(buscadorDe(p.id))?.focus(), 50);
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault(); e.stopPropagation();
+                document.getElementById(buscadorDe(pestana))?.focus();
               }
             }}
-            className="h-12 bg-white text-[var(--color-ink)] px-3 sm:px-6 justify-center border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-[var(--color-bg)] focus:outline-none focus:bg-[var(--color-ink)] focus:text-white transition-colors shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] cursor-pointer"
-          >
-            <BookOpen size={16} /> Directorio Clientes
+            className={claseBotonBarra(pestana === p.id)}>
+            {p.id === 'CLIENTES' ? <Users size={14} /> : <BookOpen size={14} />} {p.nombre}
           </button>
-          
-        </div>
+        ))}
       </div>
 
-      <div className="lg:flex-1 lg:min-h-0">
-        <TablaFiadosAgrupados clientes={clientesAgrupados} onView={(cli) => { setClienteEstadoCuenta(cli); setIsModalEstadoCuentaOpen(true); }} />
-      </div>
+      {pestana === 'CLIENTES' ? (
+        <div className="lg:flex-1 lg:min-h-0">
+          <PestanaClientes
+            clientes={clientes}
+            fiados={fiados}
+            idPestana="tab-clientes-clientes"
+            onNuevo={() => abrirFicha(null)}
+            onAbrir={(c) => abrirFicha(c)}
+            onEditar={(c) => abrirFicha(c)}
+            onEliminar={(c) => void handleDeleteCliente(c.id)}
+          />
+        </div>
+      ) : (
+        <>
+          {/* TARJETAS */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full xl:w-1/2 shrink-0">
+            <TarjetaMetrica
+              label="Por Cobrar"
+              value={`S/ ${totalPorCobrar.toFixed(2)}`}
+              icon={<Coins size={16} />}
+            />
+            <TarjetaMetrica
+              label="Recuperado Hoy"
+              value={`S/ ${totalRecuperadoHoy.toFixed(2)}`}
+              icon={<Coins size={16} />}
+              isGreen={true}
+            />
+          </div>
+
+          <div className="lg:flex-1 lg:min-h-0">
+            <TablaFiadosAgrupados clientes={clientesAgrupados} onView={(cli) => { setClienteEstadoCuenta(cli); setIsModalEstadoCuentaOpen(true); }} />
+          </div>
+        </>
+      )}
+
+      <ModalFichaCliente
+        abierta={fichaAbierta}
+        cliente={clienteEnFicha}
+        clientes={clientes}
+        onGuardar={(d) => guardarCliente(d, clienteEnFicha?.id)}
+        onClose={() => setFichaAbierta(false)}
+      />
 
       {/* MODALES */}
       <ModalClientes 

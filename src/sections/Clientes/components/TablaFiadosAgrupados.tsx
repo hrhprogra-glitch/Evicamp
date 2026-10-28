@@ -41,7 +41,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
           }
         }
 
-        if (active?.id === 'btn-directorio-clientes') {
+        if (active?.id === 'tab-clientes-creditos') {
           if (e.key === 'ArrowDown') {
             e.preventDefault();
             searchInput?.focus();
@@ -52,7 +52,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
         if (active === searchInput) {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
-            document.getElementById('btn-directorio-clientes')?.focus();
+            document.getElementById('tab-clientes-creditos')?.focus();
             return;
           }
           if (e.key === 'ArrowDown') {
@@ -248,7 +248,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
             if (e.key === 'ArrowUp') {
               e.preventDefault();
               e.stopPropagation();
-              document.getElementById('btn-directorio-clientes')?.focus();
+              document.getElementById('tab-clientes-creditos')?.focus();
             } else if (e.key === 'ArrowDown') {
               e.preventDefault();
               e.stopPropagation();
@@ -285,7 +285,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
             if (e.key === 'ArrowUp') {
               e.preventDefault();
               e.stopPropagation();
-              document.getElementById('btn-directorio-clientes')?.focus();
+              document.getElementById('tab-clientes-creditos')?.focus();
             } else if (e.key === 'ArrowDown') {
               e.preventDefault();
               e.stopPropagation();
@@ -321,7 +321,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
             } else if (e.key === 'ArrowUp') {
               e.preventDefault();
               e.stopPropagation();
-              document.getElementById('btn-directorio-clientes')?.focus();
+              document.getElementById('tab-clientes-creditos')?.focus();
             }
           }}
           className={`p-3 font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center cursor-pointer border-2 rounded-none shrink-0 ${

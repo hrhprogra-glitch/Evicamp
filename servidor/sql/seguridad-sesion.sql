@@ -1228,3 +1228,15 @@ ALTER TABLE public.compras_detalle ADD COLUMN IF NOT EXISTS presentacion text;
 ALTER TABLE public.compras_detalle ADD COLUMN IF NOT EXISTS presentacion_factor numeric;
 
 NOTIFY pgrst, 'reload schema';
+
+-- ===================================================================================================
+-- FASE 4.1: ficha del cliente (sección Clientes, antes Créditos). Solo el nombre es obligatorio; lo demás es opcional
+-- para no complicar a la vecina que fía. El número de documento sigue en la columna "dni" (la usan la Caja y los
+-- fiados); tipo_doc dice si es DNI o RUC (vacío = sin documento). Antes el teléfono se pedía pero NO se guardaba.
+-- Deshacer: servidor/sql/deshacer-fase4.sql
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS tipo_doc text;     -- 'DNI' | 'RUC' | null (sin documento)
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS telefono text;
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS direccion text;
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS referencia text;   -- para distinguir: "Sra. Rosa – vecina 2do piso"
+
+NOTIFY pgrst, 'reload schema';

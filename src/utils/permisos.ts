@@ -10,7 +10,7 @@ export const tienePermiso = (permisos: Partial<PermisosUsuario> | null | undefin
 // Qué permiso abre cada módulo del menú (uno basta)
 const PERMISOS_POR_MODULO: Record<string, ClavePermiso[]> = {
   pos: ['caja_realizar_ventas'],
-  fiados: ['caja_ver_fiados'],
+  clientes: ['caja_ver_fiados'], // sección Clientes (antes Créditos)
   // 'compras_recibir': entra a Inventario pero solo ve la pestaña Compras (recibir / devolver)
   // 'compras_enviar': igual, solo Compras, para enviar por WhatsApp / descargar / imprimir los pedidos
   inventario: ['almacen_ver_stock', 'compras_recibir', 'compras_enviar'],

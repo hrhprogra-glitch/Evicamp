@@ -24,7 +24,7 @@ interface SideBarProps {
 }
 
 // Orden de los atajos Alt + 1…7 para entrar directo a cada sesión
-export const ATAJOS_SESIONES = ['pos', 'fiados', 'inventario', 'conteos', 'finanzas', 'utilidades', 'configuracion'];
+export const ATAJOS_SESIONES = ['pos', 'clientes', 'inventario', 'conteos', 'finanzas', 'utilidades', 'configuracion'];
 
 // Tiempo sin usar el menú abierto antes de que se contraiga solo
 const AUTO_OCULTAR_MS = 8000;
@@ -250,7 +250,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
       category: 'Operaciones',
       items: [
         { id: 'pos', name: 'Caja', icon: ShoppingCart },
-        { id: 'fiados', name: 'Créditos', icon: Users },
+        { id: 'clientes', name: 'Clientes', icon: Users },
       ]
     },
     {

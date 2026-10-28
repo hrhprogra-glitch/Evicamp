@@ -11,7 +11,7 @@ import { Inventario } from './sections/Inventario';
 import { Conteos } from './sections/Conteos';
 import { Proveedores } from './sections/Proveedores';
 import { POS } from './sections/Punto-de-venta';
-import { Fiados } from './sections/Fiados'; // <--- IMPORTAMOS FIADOS
+import { Clientes } from './sections/Clientes'; // sección Clientes (antes Créditos): pestañas Clientes y Créditos
 import { Finanzas } from './sections/Finanzas'; // <--- IMPORTAMOS FINANZAS
 import { Utilidades } from './sections/Utilidades';
 import Configuraciones from './sections/Configuraciones';
@@ -26,7 +26,7 @@ import { hayVentanaAbierta, ventanaSuperior, enfocablesDe, recordarSeleccionEnVe
 // Nombre visible de cada sesión en la barra superior de celular/tablet
 const NOMBRES_SESIONES: Record<string, string> = {
   pos: 'Caja',
-  fiados: 'Créditos',
+  clientes: 'Clientes',
   inventario: 'Inventario',
   conteos: 'Conteos',
   finanzas: 'Finanzas',
@@ -243,8 +243,8 @@ export const App: React.FC = () => {
         return <Proveedores />;
       case 'pos':
         return <POS onNavigate={handleNavigate} />;
-      case 'fiados': // <--- CONECTAMOS LA PANTALLA DE FIADOS
-        return <Fiados />;
+      case 'clientes': // sección Clientes (antes Créditos)
+        return <Clientes />;
       case 'finanzas': // <--- CONECTAMOS LA PANTALLA DE FINANZAS
         return <Finanzas />;
       case 'utilidades':

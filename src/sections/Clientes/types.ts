@@ -1,8 +1,12 @@
 export interface Cliente {
   id: string;
   nombre: string;
-  dni: string;
+  dni: string;            // número de documento (DNI o RUC); vacío = sin documento
   telefono: string;
+  // Fase 4.1: ficha del cliente (todo opcional, ver src/utils/documento.ts)
+  tipoDoc?: '' | 'DNI' | 'RUC';
+  direccion?: string;
+  referencia?: string;    // para distinguir: "Sra. Rosa – vecina 2do piso"
 }
 
 export interface FiadoDetalle {

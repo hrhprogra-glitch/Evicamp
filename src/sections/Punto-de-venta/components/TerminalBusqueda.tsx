@@ -234,7 +234,8 @@ export const TerminalBusqueda: React.FC<Props> = ({ searchQuery, setSearchQuery,
 
             {puedeVerFiados && (
               <button
-                onClick={() => onNavigate && onNavigate('fiados')}
+                // "Por cobrar" abre la sección Clientes directo en la pestaña Créditos
+                onClick={() => { try { sessionStorage.setItem('clientes_pestana', 'CREDITOS'); } catch { /* sin almacenamiento */ } onNavigate?.('clientes'); }}
                 title={fiadosCount > 0 ? 'Hay deudas pendientes por cobrar' : 'Nadie tiene deudas pendientes'}
                 className={`flex items-center shrink-0 whitespace-nowrap border-2 px-2 sm:px-3 py-1 text-[12px] font-black uppercase tracking-widest transition-all cursor-pointer hover:shadow-none active:translate-x-[2px] active:translate-y-[2px] ${
                   fiadosCount > 0
