@@ -45,10 +45,18 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
   const [abiertos, setAbiertos] = useState<Set<string>>(new Set());
 
   // Sus créditos: por id o, los antiguos sin id, por nombre (del más nuevo al más antiguo)
-  const creditos = useMemo(() => (cliente
-    ? fiados.filter((f) => (f.clienteId ? f.clienteId === cliente.id : f.clienteNombre === cliente.nombre))
-      .sort((a, b) => String(b.fechaEmision).localeCompare(String(a.fechaEmision)))
-    : []), [cliente, fiados]);
+  const creditos = useMemo(() => {
+    if (!cliente) return [];
+    const cId = String(cliente.id || '').trim();
+    const cNombre = (cliente.nombre || '').trim().toUpperCase();
+    return fiados.filter((f) => {
+      const fId = String(f.clienteId || '').trim();
+      const fNombre = (f.clienteNombre || '').trim().toUpperCase();
+      if (fId && cId && fId === cId) return true;
+      if (fNombre && cNombre && fNombre === cNombre) return true;
+      return false;
+    }).sort((a, b) => String(b.fechaEmision).localeCompare(String(a.fechaEmision)));
+  }, [cliente, fiados]);
 
   const resumen = useMemo(() => {
     const deuda = creditos.reduce((t, f) => t + (Number(f.saldoPendiente) || 0), 0);

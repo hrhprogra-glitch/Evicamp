@@ -134,6 +134,40 @@ if (clis) {
     referencia: c.referencia ?? '',
     grupoId: c.grupo_id != null ? String(c.grupo_id) : '',
   }));
+
+  // 🛡️ PROTECCIÓN: Si hay fiados de clientes que no están en customers (antiguos o borrados con saldo)
+  if (fiaData && fiaData.length > 0) {
+    const idsExistentes = new Set(clientesMapeados.map(c => String(c.id)));
+    const nombresExistentes = new Set(clientesMapeados.map(c => c.nombre.trim().toUpperCase()));
+
+    for (const f of fiaData) {
+      if (f.status === 'ANULADO') continue;
+      const fId = f.customer_id != null ? String(f.customer_id) : '';
+      const fNombre = (f.customer_name || '').trim();
+      if (!fNombre) continue;
+
+      const existePorId = fId && idsExistentes.has(fId);
+      const existePorNombre = nombresExistentes.has(fNombre.toUpperCase());
+
+      if (!existePorId && !existePorNombre) {
+        const nuevoId = fId || `fiado-cli-${fNombre}`;
+        clientesMapeados.push({
+          id: nuevoId,
+          nombre: fNombre,
+          dni: f.customer_dni || '',
+          telefono: f.customer_phone || '',
+          ruc: '',
+          direccion: '',
+          ubicacion: '',
+          referencia: '',
+          grupoId: '',
+        });
+        idsExistentes.add(nuevoId);
+        nombresExistentes.add(fNombre.toUpperCase());
+      }
+    }
+  }
+
   setClientes(clientesMapeados);
 }
 
@@ -242,7 +276,7 @@ if (fiaData) {
       const nombre = f.clienteNombre || 'CLIENTE DESCONOCIDO';
       if (!mapa.has(nombre)) {
         // DNI/RUC y teléfono salen de la ficha del cliente (el crédito casi nunca los trae)
-        const ficha = clientes.find((c) => (f.clienteId ? c.id === f.clienteId : c.nombre === nombre));
+        const ficha = clientes.find((c) => (f.clienteId && String(c.id) === String(f.clienteId)) || c.nombre.trim().toUpperCase() === nombre.trim().toUpperCase());
         mapa.set(nombre, {
           clienteNombre: nombre,
           clienteId: f.clienteId,
@@ -477,7 +511,9 @@ if (fiaData) {
 
   // Estado de cuenta de un cliente (desde su detalle): sus créditos agrupados
   const verEstadoCuenta = (c: Cliente) => {
-    const grupo = clientesAgrupados.find((g) => (g.clienteId ? g.clienteId === c.id : g.clienteNombre === c.nombre)) || clientesAgrupados.find((g) => g.clienteNombre === c.nombre);
+    const cId = String(c.id || '').trim();
+    const cNombre = (c.nombre || '').trim().toUpperCase();
+    const grupo = clientesAgrupados.find((g) => (g.clienteId && cId && String(g.clienteId) === cId) || (g.clienteNombre && g.clienteNombre.trim().toUpperCase() === cNombre));
     if (!grupo) { void avisar('Este cliente todavía no tiene créditos.'); return; }
     setClienteEstadoCuenta(grupo);
     setIsModalEstadoCuentaOpen(true);

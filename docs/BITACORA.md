@@ -7,6 +7,19 @@
 
 ---
 
+## 28/10/2026 (noche, 8) · Antigravity
+- **Ajustes en la 4.1 a pedido del dueño (aprobados y probados en siumax):**
+  - **Teclado en Editar cliente (`ModalFichaCliente`):** navegación direccional 2D con flechas (← → entre DNI y RUC, y entre Teléfono y Dirección; ↑ ↓ entre filas; Enter avanza en secuencia paso a paso).
+  - **Columna "Grupo" en la tabla de Clientes (`PestanaClientes`):** agregada como columna dedicada al lado de Cliente / Empresa (con su distintivo de grupo o "—"); se retiró de debajo del nombre del cliente para que no esté apretado.
+  - **Filtro predeterminado:** la tabla de Clientes ahora abre por defecto ordenada por **MAYOR DEUDA**, mostrando de primero a los clientes con saldo pendiente.
+  - **Deudas de clientes sin ficha (`index.tsx`, `resumenDeCliente`, `ModalDetalleCliente`):** si un fiado tiene deuda pero el cliente no existía en `customers` (caso "CLIENTE PRUEBA PLAYWRIGHT"), el sistema lo incluye automáticamente en la lista de Clientes para que ninguna deuda quede invisible; además, los fiados ahora se asocian tanto por ID como por nombre normalizado (mayúsculas/trim).
+  - En la base `siuhub`, se restauró el cliente id 1 (`CLIENTE PRUEBA PLAYWRIGHT`).
+- **Pruebas:**
+  - `prueba-grupos` 19/19 ✅;
+  - verificación en navegador headless con Edge de los 4 cambios ✅;
+  - `npx tsc -b` sin errores;
+  - desplegado a siumax (`node ai-scripts/deploy.cjs siumax`).
+
 ## 28/10/2026 (noche, 7) · Claude (Claude Code)
 - **El bot de WhatsApp ("chat de SiuMax para encontrar clientes") se movió FUERA del proyecto** a `D:Programaciónsiumaxot-whatsapp` (antes estaba en `comercio/bot-whatsapp` con un acceso directo afuera).
   - Su carpeta `auth_info` (la sesión de WhatsApp: secreta) ya no está dentro del repo de Comerc.

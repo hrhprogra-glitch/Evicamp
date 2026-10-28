@@ -4,17 +4,15 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 28/10/2026, Claude.
+- **Última actualización:** 28/10/2026 (noche, 8), Antigravity.
 - **Fases hechas y subidas:** 0, 1 y 2. En producción en Evicamp desde el 23/10/2026 (commit d36efca).
-- **Fase actual:** **4, Clientes y empresas.** La **4.1 está terminada en siumax** (rama `fase-4`):
-  - sección Clientes con pestañas Clientes | Créditos, ficha con DNI/RUC, detalle del cliente y unir repetidos;
-  - el dueño aprobó la 4.1a y pidió terminar la 4.1. Falta que la revise.
-  - **Siguiente: mostrar el plan de la 4.2 (cliente opcional en la Caja) y esperar un OK explícito.**
-  - Además falta:
-  1. su **revisión de la 4.1** en siumax;
-  2. su decisión: **¿el pedido descuenta el stock al guardarlo o al entregarlo?** (recomendado: al guardarlo).
-- **Commits locales sin push:** documentación para IAs (en main) y la fase 4.1 (rama `fase-4`: 6b65525, e0c124d).
-- **URGENTE para Evicamp:** el arreglo del cobro de créditos (se cobraba dos veces) está en la rama `fase-4`. Conviene subirlo apenas el dueño lo diga, y revisar si hay créditos pagados de más.
+- **Fase actual:** **4, Clientes y empresas.** La **4.1 ajustada y probada en siumax** (rama `fase-4`):
+  - sección Clientes con pestañas Clientes | Créditos, ficha con DNI/RUC directo, detalle del cliente y grupos de clientes;
+  - ajustes del dueño completados: selector 2D en Editar cliente (flechas ← →), columna "Grupo" dedicada en la tabla, orden por defecto en MAYOR DEUDA y vinculación blindada de fiados huérfanos;
+  - **Siguiente: esperar visto bueno del dueño de estos 4 ajustes y mostrar la propuesta de la 4.2 (cliente opcional en la Caja).**
+  - Además falta su decisión para pedidos: **¿el pedido descuenta el stock al guardarlo o al entregarlo?** (recomendado: al guardarlo).
+- **Commits locales sin push:** documentación para IAs y la fase 4.1 en rama `fase-4`.
+- **URGENTE para Evicamp:** el arreglo del cobro de créditos (se cobraba dos veces) y los cambios de la 4.1 están en la rama `fase-4`. Subirlos cuando el dueño lo autorice.
 - **Avisos pendientes para el cliente de Evicamp:**
   - "Mermas" ahora es "Conteos";
   - dar el permiso "Cambiar precio al cobrar" a quien corresponda.

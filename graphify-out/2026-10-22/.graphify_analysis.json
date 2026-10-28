@@ -1,0 +1,1415 @@
+{
+  "communities": {
+    "0": [
+      "ref_lucide_react",
+      "ref_react",
+      "ref_react_dom",
+      "src_db_supabase",
+      "src_db_supabase_customfetch",
+      "src_db_supabase_supabase",
+      "src_index",
+      "src_layout_alertayape",
+      "src_layout_alertayape_notificacionyape",
+      "src_main",
+      "src_sections_configuraciones_components_formularioempresa",
+      "src_sections_fiados_components_modalabono",
+      "src_sections_fiados_components_modalabono_modalabono",
+      "src_sections_fiados_components_modalabono_props",
+      "src_sections_fiados_components_modalanularpago",
+      "src_sections_fiados_components_modalanularpago_modalanularpago",
+      "src_sections_fiados_components_modalanularpago_props",
+      "src_sections_fiados_components_modalclientes",
+      "src_sections_fiados_components_modalclientes_modalclientes",
+      "src_sections_fiados_components_modalclientes_props",
+      "src_sections_fiados_components_modaldetallefiado",
+      "src_sections_fiados_components_modaldetallefiado_modaldetallefiado",
+      "src_sections_fiados_components_modaldetallefiado_props",
+      "src_sections_fiados_components_modalestadocuenta",
+      "src_sections_fiados_components_modalestadocuenta_combinarfechayhora",
+      "src_sections_fiados_components_modalestadocuenta_formatfordateinput",
+      "src_sections_fiados_components_modalestadocuenta_modalestadocuenta",
+      "src_sections_fiados_components_modalestadocuenta_props",
+      "src_sections_fiados_components_modalfiado",
+      "src_sections_fiados_components_modalfiado_modalfiado",
+      "src_sections_fiados_components_modalfiado_props",
+      "src_sections_fiados_components_tablafiados",
+      "src_sections_fiados_components_tablafiados_props",
+      "src_sections_fiados_components_tablafiados_tablafiados",
+      "src_sections_fiados_components_tablafiadosagrupados",
+      "src_sections_fiados_components_tablafiadosagrupados_props",
+      "src_sections_fiados_components_tablafiadosagrupados_tablafiadosagrupados",
+      "src_sections_fiados_index",
+      "src_sections_fiados_types",
+      "src_sections_fiados_types_cliente",
+      "src_sections_fiados_types_clientefiadoagrupado",
+      "src_sections_fiados_types_fiado",
+      "src_sections_fiados_types_fiadodetalle",
+      "src_sections_fiados_types_pagoabono",
+      "src_sections_finanzas_components_modalapertura",
+      "src_sections_finanzas_components_modalapertura_props",
+      "src_sections_finanzas_components_modalnuevomovimiento",
+      "src_sections_finanzas_components_modalnuevomovimiento_metodos",
+      "src_sections_finanzas_components_modalnuevomovimiento_modalnuevomovimiento",
+      "src_sections_finanzas_components_modalnuevomovimiento_props",
+      "src_sections_inventario_components_headerinventario",
+      "src_sections_inventario_components_headerinventario_headerinventario",
+      "src_sections_inventario_components_headerinventario_props",
+      "src_sections_inventario_components_modalgestionproveedores",
+      "src_sections_inventario_components_modalgestionproveedores_modalgestionproveedores",
+      "src_sections_inventario_components_modalgestionproveedores_props",
+      "src_sections_inventario_components_modalmerma",
+      "src_sections_inventario_components_modalmerma_modalmerma",
+      "src_sections_inventario_components_modalproducto",
+      "src_sections_inventario_components_modalproducto_modalproducto",
+      "src_sections_inventario_components_modalproducto_productnature",
+      "src_sections_inventario_components_modalproducto_props",
+      "src_sections_inventario_components_modalproducto_technicalalert",
+      "src_sections_inventario_components_tarjetametrica",
+      "src_sections_inventario_components_tarjetametrica_props",
+      "src_sections_inventario_components_tarjetametrica_tarjetametrica",
+      "src_sections_proveedores_components_modalproveedor",
+      "src_sections_proveedores_components_modalproveedor_modalproveedor",
+      "src_sections_proveedores_components_modalproveedor_props",
+      "src_sections_proveedores_components_tablaproveedores",
+      "src_sections_proveedores_components_tablaproveedores_props",
+      "src_sections_proveedores_components_tablaproveedores_tablaproveedores",
+      "src_sections_proveedores_types",
+      "src_sections_proveedores_types_proveedor",
+      "src_sections_punto_de_venta_components_minireportediario",
+      "src_sections_punto_de_venta_components_minireportediario_minireportediario",
+      "src_sections_punto_de_venta_components_minireportediario_props",
+      "src_sections_reportes_components_tablatickets",
+      "src_sections_utilidades_components_tablaranking",
+      "src_sections_utilidades_components_tablaranking_props",
+      "src_sections_utilidades_components_tablaranking_tablaranking",
+      "src_utils_clicconteclado",
+      "src_utils_clicconteclado_clicconteclado",
+      "src_utils_revertirabono",
+      "src_utils_usecerrarconescape",
+      "src_utils_usecerrarconescape_usecerrarconescape",
+      "src_utils_usecerrarconescape_ventanasabiertas"
+    ],
+    "1": [
+      "src_app",
+      "src_layout_alertayape_alertayape",
+      "src_sections_fiados_index_fiados",
+      "src_sections_inventario_components_etiquetastock",
+      "src_sections_inventario_components_etiquetastock_etiquetastock",
+      "src_sections_inventario_components_etiquetastock_props",
+      "src_sections_inventario_components_filtrosinventario",
+      "src_sections_inventario_components_filtrosinventario_filtrosinventario",
+      "src_sections_inventario_components_filtrosinventario_props",
+      "src_sections_inventario_components_modallote",
+      "src_sections_inventario_components_modallote_modallote",
+      "src_sections_inventario_components_modallote_props",
+      "src_sections_inventario_components_modalmerma_props",
+      "src_sections_inventario_components_tablalotes",
+      "src_sections_inventario_components_tablalotes_lote",
+      "src_sections_inventario_components_tablalotes_props",
+      "src_sections_inventario_components_tablalotes_tablalotes",
+      "src_sections_inventario_components_tablaproductos",
+      "src_sections_inventario_components_tablaproductos_props",
+      "src_sections_inventario_components_tablaproductos_tablaproductos",
+      "src_sections_inventario_index",
+      "src_sections_inventario_index_inventario",
+      "src_sections_inventario_index_inventarioprops",
+      "src_sections_inventario_types",
+      "src_sections_inventario_types_product",
+      "src_sections_mermas_components_filtrosmermas",
+      "src_sections_mermas_components_filtrosmermas_filtrosmermas",
+      "src_sections_mermas_components_filtrosmermas_props",
+      "src_sections_mermas_components_headermermas",
+      "src_sections_mermas_components_headermermas_headermermas",
+      "src_sections_mermas_components_headermermas_props",
+      "src_sections_mermas_components_tablamermas",
+      "src_sections_mermas_components_tablamermas_props",
+      "src_sections_mermas_components_tablamermas_tablamermas",
+      "src_sections_mermas_components_tarjetametrica",
+      "src_sections_mermas_components_tarjetametrica_props",
+      "src_sections_mermas_components_tarjetametrica_tarjetametrica",
+      "src_sections_mermas_index",
+      "src_sections_mermas_index_mermas",
+      "src_sections_mermas_types",
+      "src_sections_mermas_types_merma",
+      "src_sections_proveedores_components_filtrosproveedores",
+      "src_sections_proveedores_components_filtrosproveedores_filtrosproveedores",
+      "src_sections_proveedores_components_filtrosproveedores_props",
+      "src_sections_proveedores_index",
+      "src_sections_proveedores_index_props",
+      "src_sections_proveedores_index_proveedores",
+      "src_sections_punto_de_venta_components_modalbalanza",
+      "src_sections_punto_de_venta_components_modalbalanza_modalbalanza",
+      "src_sections_punto_de_venta_components_modalbalanza_props",
+      "src_sections_punto_de_venta_components_modalcobro",
+      "src_sections_punto_de_venta_components_modalcobro_fiadodata",
+      "src_sections_punto_de_venta_components_modalcobro_modalcobro",
+      "src_sections_punto_de_venta_components_modalcobro_props",
+      "src_sections_punto_de_venta_components_modalprecioconsumo",
+      "src_sections_punto_de_venta_components_modalprecioconsumo_modalprecioconsumo",
+      "src_sections_punto_de_venta_components_modalprecioconsumo_props",
+      "src_sections_punto_de_venta_components_terminalbusqueda",
+      "src_sections_punto_de_venta_components_terminalbusqueda_props",
+      "src_sections_punto_de_venta_components_terminalbusqueda_terminalbusqueda",
+      "src_sections_punto_de_venta_components_ticketimprimible",
+      "src_sections_punto_de_venta_components_ticketimprimible_cartitem",
+      "src_sections_punto_de_venta_components_ticketimprimible_props",
+      "src_sections_punto_de_venta_components_ticketimprimible_ticketimprimible",
+      "src_sections_punto_de_venta_components_ticketventa",
+      "src_sections_punto_de_venta_components_ticketventa_inputpeso",
+      "src_sections_punto_de_venta_components_ticketventa_inputprecio",
+      "src_sections_punto_de_venta_components_ticketventa_inputunidades",
+      "src_sections_punto_de_venta_components_ticketventa_props",
+      "src_sections_punto_de_venta_components_ticketventa_redondearpeso",
+      "src_sections_punto_de_venta_components_ticketventa_ticketventa",
+      "src_sections_punto_de_venta_components_ticketventa_useseleccionartodo",
+      "src_sections_punto_de_venta_index",
+      "src_sections_punto_de_venta_index_pos",
+      "src_sections_punto_de_venta_types",
+      "src_sections_punto_de_venta_types_cartitem",
+      "src_sections_punto_de_venta_types_product",
+      "src_utils_busqueda",
+      "src_utils_busqueda_coincidebusqueda",
+      "src_utils_busqueda_normalizartexto",
+      "src_utils_formato_formatearcantidad",
+      "src_utils_traertodo",
+      "src_utils_traertodo_consultapaginable",
+      "src_utils_traertodo_traertodo"
+    ],
+    "2": [
+      "src_app_app",
+      "src_app_app_handlenavigate",
+      "src_assets_finanzas",
+      "src_assets_inventario",
+      "src_assets_logo",
+      "src_assets_proyectos",
+      "src_layout_sidebar",
+      "src_layout_sidebar_sidebar",
+      "src_layout_sidebar_sidebarprops",
+      "src_sections_configuraciones_components_formularioempresa_formularioempresa",
+      "src_sections_configuraciones_components_modalusuario",
+      "src_sections_configuraciones_components_modalusuario_modalusuario",
+      "src_sections_configuraciones_components_modalusuario_modalusuarioprops",
+      "src_sections_configuraciones_components_modalusuario_permisos_default",
+      "src_sections_configuraciones_components_tablausuarios",
+      "src_sections_configuraciones_components_tablausuarios_tablausuarios",
+      "src_sections_configuraciones_components_themeswitcher",
+      "src_sections_configuraciones_components_themeswitcher_tema",
+      "src_sections_configuraciones_components_themeswitcher_temas",
+      "src_sections_configuraciones_components_themeswitcher_themeswitcher",
+      "src_sections_configuraciones_index",
+      "src_sections_configuraciones_index_configuraciones",
+      "src_sections_configuraciones_types",
+      "src_sections_configuraciones_types_datosempresa",
+      "src_sections_configuraciones_types_empleado",
+      "src_sections_configuraciones_types_permisosusuario",
+      "src_sections_login",
+      "src_sections_login_carouselslides",
+      "src_sections_login_login",
+      "src_sections_login_loginprops",
+      "src_utils_permisos",
+      "src_utils_permisos_clavepermiso",
+      "src_utils_permisos_permisos_por_modulo",
+      "src_utils_permisos_puedevermodulo",
+      "src_utils_permisos_sesioncontext",
+      "src_utils_permisos_tienepermiso",
+      "src_utils_permisos_useempleado",
+      "src_utils_sesion",
+      "src_utils_sesion_cerrarsesion",
+      "src_utils_sesion_empleadosesion",
+      "src_utils_sesion_guardartoken",
+      "src_utils_sesion_iniciarsesion",
+      "src_utils_sesion_leertoken",
+      "src_utils_sesion_normalizaremail",
+      "src_utils_sesion_respuestalogin",
+      "src_utils_sesion_respuestasesion",
+      "src_utils_sesion_validarsesion",
+      "src_utils_sesionprovider",
+      "src_utils_sesionprovider_sesionprovider",
+      "src_utils_tamanointerfaz",
+      "src_utils_tamanointerfaz_aplicartamanointerfaz",
+      "src_utils_tamanointerfaz_guardartamanointerfaz",
+      "src_utils_tamanointerfaz_leertamanointerfaz",
+      "src_utils_tamanointerfaz_tamanointerfaz"
+    ],
+    "3": [
+      "src_sections_reportes_components_tablatickets_props",
+      "src_sections_reportes_index",
+      "src_sections_reportes_index_reportes",
+      "src_sections_reportes_types",
+      "src_sections_reportes_types_ticketventa",
+      "src_sections_utilidades_components_filtrosutilidades",
+      "src_sections_utilidades_components_filtrosutilidades_filtrosutilidades",
+      "src_sections_utilidades_components_filtrosutilidades_props",
+      "src_sections_utilidades_components_modaldetalleproducto",
+      "src_sections_utilidades_components_modaldetalleproducto_formatearfecha",
+      "src_sections_utilidades_components_modaldetalleproducto_modaldetalleproducto",
+      "src_sections_utilidades_components_modaldetalleproducto_props",
+      "src_sections_utilidades_components_tablaanalisisproductos",
+      "src_sections_utilidades_components_tablaanalisisproductos_props",
+      "src_sections_utilidades_components_tablaanalisisproductos_tablaanalisisproductos",
+      "src_sections_utilidades_components_tarjetasresumen",
+      "src_sections_utilidades_components_tarjetasresumen_props",
+      "src_sections_utilidades_components_tarjetasresumen_tarjetasresumen",
+      "src_sections_utilidades_components_ventanatopsflotante",
+      "src_sections_utilidades_components_ventanatopsflotante_props",
+      "src_sections_utilidades_components_ventanatopsflotante_topproduct",
+      "src_sections_utilidades_components_ventanatopsflotante_ventanatopsflotante",
+      "src_sections_utilidades_index",
+      "src_sections_utilidades_index_utilidades",
+      "src_sections_utilidades_types",
+      "src_sections_utilidades_types_analisisproducto",
+      "src_sections_utilidades_types_metricacategoria",
+      "src_sections_utilidades_types_metricadia",
+      "src_sections_utilidades_types_metricaproducto",
+      "src_sections_utilidades_types_statsfiltro",
+      "src_sections_utilidades_types_ventaproductodetalle",
+      "src_utils_ingresos",
+      "src_utils_ingresos_calcularingresototal",
+      "src_utils_ingresos_fechalocalperu",
+      "src_utils_ingresos_fetchallrango",
+      "src_utils_ingresos_fetchalltabla",
+      "src_utils_ingresos_hacendiasperu",
+      "src_utils_ingresos_ingresototalresult",
+      "src_utils_ingresos_primerdiamesperu",
+      "src_utils_ingresos_rangoutcperu",
+      "src_utils_revertirabono_eliminarabonoyrevertircaja"
+    ],
+    "4": [
+      "ai_scripts_check_db_check",
+      "ai_scripts_check_db_cjs_ai_scripts_check_db",
+      "ai_scripts_check_db_nodessh",
+      "ai_scripts_check_db_ssh",
+      "ai_scripts_check_users",
+      "ai_scripts_check_users_check",
+      "ai_scripts_check_users_nodessh",
+      "ai_scripts_check_users_ssh",
+      "ai_scripts_deploy",
+      "ai_scripts_deploy_deploy",
+      "ai_scripts_deploy_nodessh",
+      "ai_scripts_deploy_path",
+      "ai_scripts_deploy_ssh",
+      "ai_scripts_fix_imports",
+      "ai_scripts_fix_imports_filestoupdate",
+      "ai_scripts_fix_imports_fs",
+      "ai_scripts_fix_imports_path",
+      "ai_scripts_fix_modals",
+      "ai_scripts_fix_modals_fs",
+      "ai_scripts_fix_modals_path",
+      "ai_scripts_fix_modals_walkdir",
+      "ai_scripts_parche_buscadores",
+      "ai_scripts_parche_buscadores_fs",
+      "ai_scripts_parche_buscadores_patchfile",
+      "ai_scripts_parche_buscadores_path",
+      "ai_scripts_purge_inventario_colors",
+      "ai_scripts_purge_inventario_colors_fs",
+      "ai_scripts_purge_inventario_colors_path",
+      "ai_scripts_purge_inventario_colors_processdir",
+      "ai_scripts_purge_inventario_colors_replaceinfile",
+      "ai_scripts_scratch_auto",
+      "ai_scripts_scratch_auto_fs",
+      "ai_scripts_scratch_auto_path",
+      "ai_scripts_scratch_auto_walk",
+      "ref_node_ssh",
+      "ref_path"
+    ],
+    "5": [
+      "claude",
+      "claude_claude",
+      "claude_skills_graphify_references_add_watch",
+      "claude_skills_graphify_references_exports",
+      "claude_skills_graphify_references_extraction_spec",
+      "claude_skills_graphify_references_github_and_merge",
+      "claude_skills_graphify_references_hooks",
+      "claude_skills_graphify_references_query",
+      "claude_skills_graphify_references_transcribe",
+      "claude_skills_graphify_references_update",
+      "claude_skills_graphify_skill",
+      "concept_ast_extraction",
+      "concept_build_merge_801",
+      "concept_claude_md_integration",
+      "concept_confidence_rubric",
+      "concept_extraction_cache",
+      "concept_falkordb_push_pref",
+      "concept_graphify_clone",
+      "concept_graphify_extract_cli",
+      "concept_graphify_tool",
+      "concept_honesty_rules",
+      "concept_lessons_md",
+      "concept_manifest_stamping",
+      "concept_mcp_server",
+      "concept_merge_graphs_cli",
+      "concept_no_api_key_needed",
+      "concept_node_id_format",
+      "concept_post_commit_hook",
+      "concept_replace_on_reextract_1344",
+      "concept_semantic_extraction",
+      "concept_shrink_guard_479",
+      "concept_vocab_expansion",
+      "concept_watch_debounce",
+      "concept_work_memory_loop"
+    ],
+    "6": [
+      "src_components_modaldetalleticket",
+      "src_components_modaldetalleticket_modaldetalleticket",
+      "src_components_modaldetalleticket_props",
+      "src_sections_finanzas_components_filtrofechas",
+      "src_sections_finanzas_components_filtrofechas_filtrofechas",
+      "src_sections_finanzas_components_filtrofechas_props",
+      "src_sections_finanzas_components_modalapertura_modalapertura",
+      "src_sections_finanzas_components_modalcierre",
+      "src_sections_finanzas_components_modalcierre_bloquearqueo",
+      "src_sections_finanzas_components_modalcierre_bloquearqueoprops",
+      "src_sections_finanzas_components_modalcierre_modalcierre",
+      "src_sections_finanzas_components_modalcierre_props",
+      "src_sections_finanzas_components_modalcierre_redondearcentavos",
+      "src_sections_finanzas_components_modaldetallecaja",
+      "src_sections_finanzas_components_modaldetallecaja_modaldetallecaja",
+      "src_sections_finanzas_components_modaldetallecaja_props",
+      "src_sections_finanzas_components_tablahistorial",
+      "src_sections_finanzas_components_tablahistorial_props",
+      "src_sections_finanzas_components_tablahistorial_tablahistorial",
+      "src_sections_finanzas_components_tablamovimientos",
+      "src_sections_finanzas_components_tablamovimientos_props",
+      "src_sections_finanzas_components_tablamovimientos_tablamovimientos",
+      "src_sections_finanzas_index",
+      "src_sections_finanzas_index_finanzas",
+      "src_sections_finanzas_types",
+      "src_sections_finanzas_types_cashmovement",
+      "src_sections_finanzas_types_cashsession",
+      "src_sections_finanzas_types_supermetricas",
+      "src_sections_finanzas_types_unifieditem",
+      "src_sections_reportes_components_tablatickets_tablatickets",
+      "src_utils_formato",
+      "src_utils_formato_formatearcantidaddetalle",
+      "src_utils_permisos_usepermiso"
+    ],
+    "7": [
+      "eslint_config",
+      "package",
+      "package_name",
+      "package_private",
+      "package_type",
+      "package_version",
+      "ref_autoprefixer",
+      "ref_eslint",
+      "ref_eslint_js",
+      "ref_eslint_plugin_react_hooks",
+      "ref_eslint_plugin_react_refresh",
+      "ref_globals",
+      "ref_html2canvas_pro",
+      "ref_postcss",
+      "ref_react_to_print",
+      "ref_recharts",
+      "ref_tailwindcss",
+      "ref_tailwindcss_postcss",
+      "ref_types_node",
+      "ref_types_react",
+      "ref_types_react_dom",
+      "ref_typescript",
+      "ref_typescript_eslint"
+    ],
+    "8": [
+      "tsconfig_app",
+      "tsconfig_app_compileroptions",
+      "tsconfig_app_compileroptions_allowimportingtsextensions",
+      "tsconfig_app_compileroptions_erasablesyntaxonly",
+      "tsconfig_app_compileroptions_jsx",
+      "tsconfig_app_compileroptions_lib",
+      "tsconfig_app_compileroptions_module",
+      "tsconfig_app_compileroptions_moduledetection",
+      "tsconfig_app_compileroptions_moduleresolution",
+      "tsconfig_app_compileroptions_noemit",
+      "tsconfig_app_compileroptions_nofallthroughcasesinswitch",
+      "tsconfig_app_compileroptions_nouncheckedsideeffectimports",
+      "tsconfig_app_compileroptions_nounusedlocals",
+      "tsconfig_app_compileroptions_nounusedparameters",
+      "tsconfig_app_compileroptions_skiplibcheck",
+      "tsconfig_app_compileroptions_strict",
+      "tsconfig_app_compileroptions_target",
+      "tsconfig_app_compileroptions_tsbuildinfofile",
+      "tsconfig_app_compileroptions_types",
+      "tsconfig_app_compileroptions_usedefineforclassfields",
+      "tsconfig_app_compileroptions_verbatimmodulesyntax",
+      "tsconfig_app_include"
+    ],
+    "9": [
+      "tsconfig_node",
+      "tsconfig_node_compileroptions",
+      "tsconfig_node_compileroptions_allowimportingtsextensions",
+      "tsconfig_node_compileroptions_erasablesyntaxonly",
+      "tsconfig_node_compileroptions_lib",
+      "tsconfig_node_compileroptions_module",
+      "tsconfig_node_compileroptions_moduledetection",
+      "tsconfig_node_compileroptions_moduleresolution",
+      "tsconfig_node_compileroptions_noemit",
+      "tsconfig_node_compileroptions_nofallthroughcasesinswitch",
+      "tsconfig_node_compileroptions_nouncheckedsideeffectimports",
+      "tsconfig_node_compileroptions_nounusedlocals",
+      "tsconfig_node_compileroptions_nounusedparameters",
+      "tsconfig_node_compileroptions_skiplibcheck",
+      "tsconfig_node_compileroptions_strict",
+      "tsconfig_node_compileroptions_target",
+      "tsconfig_node_compileroptions_tsbuildinfofile",
+      "tsconfig_node_compileroptions_types",
+      "tsconfig_node_compileroptions_verbatimmodulesyntax",
+      "tsconfig_node_include"
+    ],
+    "10": [
+      "package_devdependencies",
+      "package_devdependencies_autoprefixer",
+      "package_devdependencies_eslint",
+      "package_devdependencies_eslint_js",
+      "package_devdependencies_eslint_plugin_react_hooks",
+      "package_devdependencies_eslint_plugin_react_refresh",
+      "package_devdependencies_globals",
+      "package_devdependencies_postcss",
+      "package_devdependencies_tailwindcss",
+      "package_devdependencies_tailwindcss_postcss",
+      "package_devdependencies_types_node",
+      "package_devdependencies_types_react",
+      "package_devdependencies_types_react_dom",
+      "package_devdependencies_typescript",
+      "package_devdependencies_typescript_eslint",
+      "package_devdependencies_vite",
+      "package_devdependencies_vitejs_plugin_react_swc"
+    ],
+    "11": [
+      "ai_scripts_add_filters",
+      "ai_scripts_add_filters_content",
+      "ai_scripts_add_filters_fs",
+      "ai_scripts_fix_header2",
+      "ai_scripts_fix_header2_codeclientes",
+      "ai_scripts_fix_header2_fs",
+      "ai_scripts_fix_partial2",
+      "ai_scripts_fix_partial2_code",
+      "ai_scripts_fix_partial2_fs",
+      "ai_scripts_fix_ts_2",
+      "ai_scripts_fix_ts_2_code",
+      "ai_scripts_fix_ts_2_fs",
+      "ai_scripts_replace_merma",
+      "ai_scripts_replace_merma_fs",
+      "ai_scripts_replace_merma_indexcode",
+      "ref_fs"
+    ],
+    "12": [
+      "ai_scripts_check_fiados",
+      "ai_scripts_check_fiados_createclient",
+      "ai_scripts_check_fiados_env",
+      "ai_scripts_check_fiados_envfile",
+      "ai_scripts_check_fiados_fs",
+      "ai_scripts_check_fiados_supabase",
+      "ai_scripts_test_vps_insert_cjs_ai_scripts_test_vps_insert",
+      "ai_scripts_test_vps_insert_cjs_ai_scripts_test_vps_insert_testinsert",
+      "ai_scripts_test_vps_insert_createclient",
+      "ai_scripts_test_vps_insert_supabase",
+      "ai_scripts_test_vps_insert_v2",
+      "ai_scripts_test_vps_insert_v2_createclient",
+      "ai_scripts_test_vps_insert_v2_customfetch",
+      "ai_scripts_test_vps_insert_v2_supabase",
+      "ai_scripts_test_vps_insert_v2_testinsert",
+      "ref_supabase_supabase_js"
+    ],
+    "13": [
+      "src_utils_buscarimagenes",
+      "src_utils_buscarimagenes_buscarimagenes",
+      "src_utils_buscarimagenes_coincide",
+      "src_utils_buscarimagenes_distancia",
+      "src_utils_buscarimagenes_fonetica",
+      "src_utils_buscarimagenes_fotoencontrada",
+      "src_utils_buscarimagenes_imagenporcodigobarras",
+      "src_utils_buscarimagenes_leerjson",
+      "src_utils_buscarimagenes_normalizar",
+      "src_utils_buscarimagenes_palabras",
+      "src_utils_buscarimagenes_puntaje",
+      "src_utils_buscarimagenes_tolerancia",
+      "src_utils_buscarimagenes_vacias",
+      "src_utils_buscarimagenes_variantes"
+    ],
+    "14": [
+      "package_dependencies",
+      "package_dependencies_html2canvas_pro",
+      "package_dependencies_lucide_react",
+      "package_dependencies_react",
+      "package_dependencies_react_dom",
+      "package_dependencies_react_to_print",
+      "package_dependencies_recharts",
+      "package_dependencies_supabase_supabase_js",
+      "package_dependencies_tailwindcss_vite"
+    ],
+    "15": [
+      "agents_skills_selector_skill",
+      "agents_skills_selector_skill_1_el_objetivo",
+      "agents_skills_selector_skill_2_requisitos_previos",
+      "agents_skills_selector_skill_3_implementaci\u00f3n_en_c\u00f3digo_handleglobalkeydown",
+      "agents_skills_selector_skill_4_puntos_importantes",
+      "agents_skills_selector_skill_auto_focus_magnet_el_punto_de_partida",
+      "agents_skills_selector_skill_l\u00f3gica_del_selector_de_filas",
+      "agents_skills_selector_skill_patr\u00f3n_selector_de_tablas_grid_navigation"
+    ],
+    "16": [
+      "agents_skills_filtros_skill",
+      "agents_skills_filtros_skill_1_el_problema_a_evitar",
+      "agents_skills_filtros_skill_2_la_soluci\u00f3n_patr\u00f3n_evicamp",
+      "agents_skills_filtros_skill_3_implementaci\u00f3n_en_c\u00f3digo",
+      "agents_skills_filtros_skill_4_patr\u00f3n_para_botones_superior_ej_nuevo_cliente",
+      "agents_skills_filtros_skill_5_patr\u00f3n_para_calendarios_inputs_de_fecha_input_type_date",
+      "agents_skills_filtros_skill_navegaci\u00f3n_espacial_de_filtros_y_botones"
+    ],
+    "17": [
+      "ai_scripts_fix_desc",
+      "ai_scripts_fix_desc_contentmodal",
+      "ai_scripts_fix_desc_fixfile",
+      "ai_scripts_fix_desc_fs",
+      "ai_scripts_fix_desc_insertindexmodal",
+      "ai_scripts_fix_desc_linesmodal"
+    ],
+    "18": [
+      "ai_scripts_fix_index",
+      "ai_scripts_fix_index_chunk1target",
+      "ai_scripts_fix_index_chunk2target",
+      "ai_scripts_fix_index_code",
+      "ai_scripts_fix_index_fs",
+      "ai_scripts_fix_index_lines"
+    ],
+    "19": [
+      "agents_rules_lecciones_aprendidas",
+      "agents_rules_lecciones_aprendidas_aciertos_y_patrones_de_oro_lo_que_hicimos_bien",
+      "agents_rules_lecciones_aprendidas_errores_a_no_repetir_lo_que_hicimos_mal",
+      "agents_rules_lecciones_aprendidas_memoria_de_errores_y_aciertos_lecciones_aprendidas",
+      "agents_rules_lecciones_aprendidas_navegaci_n_con_flechas_en_inputs_nativos"
+    ],
+    "20": [
+      "agents_skills_modal_focus_trap_skill",
+      "agents_skills_modal_focus_trap_skill_contexto",
+      "agents_skills_modal_focus_trap_skill_importante_fase_de_captura",
+      "agents_skills_modal_focus_trap_skill_modal_focus_trap_jaula_de_foco",
+      "agents_skills_modal_focus_trap_skill_patr\u00f3n_de_implementaci\u00f3n"
+    ],
+    "21": [
+      "ai_scripts_check",
+      "ai_scripts_check_checktoday",
+      "ai_scripts_check_db_js_ai_scripts_check_db",
+      "ai_scripts_check_db_js_ai_scripts_check_db_run",
+      "ref_src_db_supabase_js"
+    ],
+    "22": [
+      "ai_scripts_fix_estado_bugs",
+      "ai_scripts_fix_estado_bugs_fs",
+      "ai_scripts_fix_estado_bugs_indexcode",
+      "ai_scripts_fix_estado_bugs_modalcli",
+      "ai_scripts_fix_estado_bugs_modalec"
+    ],
+    "23": [
+      "ai_scripts_fix_finanzas_tabs",
+      "ai_scripts_fix_finanzas_tabs_content",
+      "ai_scripts_fix_finanzas_tabs_fs",
+      "ai_scripts_fix_finanzas_tabs_iend",
+      "ai_scripts_fix_finanzas_tabs_istart"
+    ],
+    "24": [
+      "ai_scripts_fix_search",
+      "ai_scripts_fix_search_fs",
+      "ai_scripts_fix_search_processfinanzas",
+      "ai_scripts_fix_search_processmodaldetallecaja",
+      "ai_scripts_fix_search_processtypes"
+    ],
+    "25": [
+      "ai_scripts_fix_tabs",
+      "ai_scripts_fix_tabs_content",
+      "ai_scripts_fix_tabs_endofblock",
+      "ai_scripts_fix_tabs_fs",
+      "ai_scripts_fix_tabs_startindex"
+    ],
+    "26": [
+      "ai_scripts_fix_themes",
+      "ai_scripts_fix_themes_fs",
+      "ai_scripts_fix_themes_invcode",
+      "ai_scripts_fix_themes_modalclientescode",
+      "ai_scripts_fix_themes_themecode"
+    ],
+    "27": [
+      "ai_scripts_force_bw",
+      "ai_scripts_force_bw_csscode",
+      "ai_scripts_force_bw_fs",
+      "ai_scripts_force_bw_startindex",
+      "ai_scripts_force_bw_tscode"
+    ],
+    "28": [
+      "ai_scripts_force_gray",
+      "ai_scripts_force_gray_csscode",
+      "ai_scripts_force_gray_fs",
+      "ai_scripts_force_gray_startindex",
+      "ai_scripts_force_gray_tscode"
+    ],
+    "29": [
+      "ai_scripts_force_light_gray",
+      "ai_scripts_force_light_gray_csscode",
+      "ai_scripts_force_light_gray_fs",
+      "ai_scripts_force_light_gray_startindex",
+      "ai_scripts_force_light_gray_tscode"
+    ],
+    "30": [
+      "package_scripts",
+      "package_scripts_build",
+      "package_scripts_dev",
+      "package_scripts_lint",
+      "package_scripts_preview"
+    ],
+    "31": [
+      "ai_scripts_apply_matrix",
+      "ai_scripts_apply_matrix_csscode",
+      "ai_scripts_apply_matrix_fs",
+      "ai_scripts_apply_matrix_tscode"
+    ],
+    "32": [
+      "ai_scripts_fix_contrast",
+      "ai_scripts_fix_contrast_csscode",
+      "ai_scripts_fix_contrast_fs",
+      "ai_scripts_fix_contrast_startindex"
+    ],
+    "33": [
+      "ai_scripts_fix_dark_mode",
+      "ai_scripts_fix_dark_mode_csscode",
+      "ai_scripts_fix_dark_mode_fs",
+      "ai_scripts_fix_dark_mode_tscode"
+    ],
+    "34": [
+      "ai_scripts_fix_filters",
+      "ai_scripts_fix_filters_fs",
+      "ai_scripts_fix_filters_processfinanzas",
+      "ai_scripts_fix_filters_processmodaldetallecaja"
+    ],
+    "35": [
+      "ai_scripts_fix_flash",
+      "ai_scripts_fix_flash_fs",
+      "ai_scripts_fix_flash_indexcode",
+      "ai_scripts_fix_flash_modalcode"
+    ],
+    "36": [
+      "ai_scripts_fix_font_size",
+      "ai_scripts_fix_font_size_fs",
+      "ai_scripts_fix_font_size_modalcli",
+      "ai_scripts_fix_font_size_modalec"
+    ],
+    "37": [
+      "ai_scripts_fix_inventory",
+      "ai_scripts_fix_inventory_fs",
+      "ai_scripts_fix_inventory_modalcode",
+      "ai_scripts_fix_inventory_sidebarcode"
+    ],
+    "38": [
+      "ai_scripts_fix_jump_historial",
+      "ai_scripts_fix_jump_historial_fs",
+      "ai_scripts_fix_jump_historial_modalcli",
+      "ai_scripts_fix_jump_historial_modalec"
+    ],
+    "39": [
+      "ai_scripts_fix_locations",
+      "ai_scripts_fix_locations_codeclientes",
+      "ai_scripts_fix_locations_codeestado",
+      "ai_scripts_fix_locations_fs"
+    ],
+    "40": [
+      "ai_scripts_fix_movs",
+      "ai_scripts_fix_movs_fs",
+      "ai_scripts_fix_movs_idx",
+      "ai_scripts_fix_movs_tm"
+    ],
+    "41": [
+      "ai_scripts_fix_queries",
+      "ai_scripts_fix_queries_fixfinanzas",
+      "ai_scripts_fix_queries_fixmodal",
+      "ai_scripts_fix_queries_fs"
+    ],
+    "42": [
+      "ai_scripts_fix_styles",
+      "ai_scripts_fix_styles_fs",
+      "ai_scripts_fix_styles_modalcli",
+      "ai_scripts_fix_styles_modalec"
+    ],
+    "43": [
+      "ai_scripts_fix_transicion",
+      "ai_scripts_fix_transicion_fs",
+      "ai_scripts_fix_transicion_indexcode",
+      "ai_scripts_fix_transicion_modalcode"
+    ],
+    "44": [
+      "ai_scripts_force_matrix",
+      "ai_scripts_force_matrix_csscode",
+      "ai_scripts_force_matrix_fs",
+      "ai_scripts_force_matrix_startindex"
+    ],
+    "45": [
+      "ai_scripts_replace_map",
+      "ai_scripts_replace_map_c",
+      "ai_scripts_replace_map_fs",
+      "ai_scripts_replace_map_lines"
+    ],
+    "46": [
+      "ai_scripts_revert",
+      "ai_scripts_revert_content1",
+      "ai_scripts_revert_content2",
+      "ai_scripts_revert_fs"
+    ],
+    "47": [
+      "ref_tailwindcss_vite",
+      "ref_vite",
+      "ref_vitejs_plugin_react_swc",
+      "vite_config"
+    ],
+    "48": [
+      "src_assets_inventario_image",
+      "src_assets_inventario_login_carousel",
+      "src_assets_inventario_module",
+      "src_assets_inventario_warehouse_worker_scene"
+    ],
+    "49": [
+      "src_assets_proyectos_business_analytics_theme",
+      "src_assets_proyectos_image",
+      "src_assets_proyectos_login_carousel",
+      "src_assets_proyectos_projects_slide"
+    ],
+    "50": [
+      "ai_scripts_check_db_ts_ai_scripts_check_db",
+      "ai_scripts_check_db_ts_ai_scripts_check_db_run",
+      "ref_src_db_supabase_ts"
+    ],
+    "51": [
+      "ai_scripts_fix",
+      "ai_scripts_fix_f",
+      "ai_scripts_fix_fs"
+    ],
+    "52": [
+      "ai_scripts_fix3",
+      "ai_scripts_fix3_c",
+      "ai_scripts_fix3_fs"
+    ],
+    "53": [
+      "ai_scripts_fix_abonos_actuales",
+      "ai_scripts_fix_abonos_actuales_code",
+      "ai_scripts_fix_abonos_actuales_fs"
+    ],
+    "54": [
+      "ai_scripts_fix_abonos_badge",
+      "ai_scripts_fix_abonos_badge_fs",
+      "ai_scripts_fix_abonos_badge_modalec"
+    ],
+    "55": [
+      "ai_scripts_fix_abonos_cards",
+      "ai_scripts_fix_abonos_cards_code",
+      "ai_scripts_fix_abonos_cards_fs"
+    ],
+    "56": [
+      "ai_scripts_fix_aesthetics",
+      "ai_scripts_fix_aesthetics_code",
+      "ai_scripts_fix_aesthetics_fs"
+    ],
+    "57": [
+      "ai_scripts_fix_aesthetics2",
+      "ai_scripts_fix_aesthetics2_code",
+      "ai_scripts_fix_aesthetics2_fs"
+    ],
+    "58": [
+      "ai_scripts_fix_block",
+      "ai_scripts_fix_block_code",
+      "ai_scripts_fix_block_fs"
+    ],
+    "59": [
+      "ai_scripts_fix_blue",
+      "ai_scripts_fix_blue_code",
+      "ai_scripts_fix_blue_fs"
+    ],
+    "60": [
+      "ai_scripts_fix_caja_tickets",
+      "ai_scripts_fix_caja_tickets_content",
+      "ai_scripts_fix_caja_tickets_fs"
+    ],
+    "61": [
+      "ai_scripts_fix_color",
+      "ai_scripts_fix_color_code",
+      "ai_scripts_fix_color_fs"
+    ],
+    "62": [
+      "ai_scripts_fix_compress",
+      "ai_scripts_fix_compress_code",
+      "ai_scripts_fix_compress_fs"
+    ],
+    "63": [
+      "ai_scripts_fix_delete",
+      "ai_scripts_fix_delete_content",
+      "ai_scripts_fix_delete_fs"
+    ],
+    "64": [
+      "ai_scripts_fix_end",
+      "ai_scripts_fix_end_c",
+      "ai_scripts_fix_end_fs"
+    ],
+    "65": [
+      "ai_scripts_fix_estado_cuenta_ui",
+      "ai_scripts_fix_estado_cuenta_ui_code",
+      "ai_scripts_fix_estado_cuenta_ui_fs"
+    ],
+    "66": [
+      "ai_scripts_fix_estado_cuenta_ui_2",
+      "ai_scripts_fix_estado_cuenta_ui_2_code",
+      "ai_scripts_fix_estado_cuenta_ui_2_fs"
+    ],
+    "67": [
+      "ai_scripts_fix_fetch",
+      "ai_scripts_fix_fetch_code",
+      "ai_scripts_fix_fetch_fs"
+    ],
+    "68": [
+      "ai_scripts_fix_fiados",
+      "ai_scripts_fix_fiados_content",
+      "ai_scripts_fix_fiados_fs"
+    ],
+    "69": [
+      "ai_scripts_fix_filter",
+      "ai_scripts_fix_filter_code",
+      "ai_scripts_fix_filter_fs"
+    ],
+    "70": [
+      "ai_scripts_fix_final",
+      "ai_scripts_fix_final_code",
+      "ai_scripts_fix_final_fs"
+    ],
+    "71": [
+      "ai_scripts_fix_general",
+      "ai_scripts_fix_general_code",
+      "ai_scripts_fix_general_fs"
+    ],
+    "72": [
+      "ai_scripts_fix_giant_text",
+      "ai_scripts_fix_giant_text_code",
+      "ai_scripts_fix_giant_text_fs"
+    ],
+    "73": [
+      "ai_scripts_fix_global_anim",
+      "ai_scripts_fix_global_anim_csscode",
+      "ai_scripts_fix_global_anim_fs"
+    ],
+    "74": [
+      "ai_scripts_fix_header",
+      "ai_scripts_fix_header_codeclientes",
+      "ai_scripts_fix_header_fs"
+    ],
+    "75": [
+      "ai_scripts_fix_historial_abonos_tab",
+      "ai_scripts_fix_historial_abonos_tab_code",
+      "ai_scripts_fix_historial_abonos_tab_fs"
+    ],
+    "76": [
+      "ai_scripts_fix_historial_rectangles",
+      "ai_scripts_fix_historial_rectangles_code",
+      "ai_scripts_fix_historial_rectangles_fs"
+    ],
+    "77": [
+      "ai_scripts_fix_historial_sort",
+      "ai_scripts_fix_historial_sort_code",
+      "ai_scripts_fix_historial_sort_fs"
+    ],
+    "78": [
+      "ai_scripts_fix_historial_tabs",
+      "ai_scripts_fix_historial_tabs_content",
+      "ai_scripts_fix_historial_tabs_fs"
+    ],
+    "79": [
+      "ai_scripts_fix_index_modal",
+      "ai_scripts_fix_index_modal_fs",
+      "ai_scripts_fix_index_modal_indexcode"
+    ],
+    "80": [
+      "ai_scripts_fix_inventario_index",
+      "ai_scripts_fix_inventario_index_fs",
+      "ai_scripts_fix_inventario_index_indexcode"
+    ],
+    "81": [
+      "ai_scripts_fix_layout",
+      "ai_scripts_fix_layout_content",
+      "ai_scripts_fix_layout_fs"
+    ],
+    "82": [
+      "ai_scripts_fix_layout_effect",
+      "ai_scripts_fix_layout_effect_code",
+      "ai_scripts_fix_layout_effect_fs"
+    ],
+    "83": [
+      "ai_scripts_fix_layout_finanzas",
+      "ai_scripts_fix_layout_finanzas_content",
+      "ai_scripts_fix_layout_finanzas_fs"
+    ],
+    "84": [
+      "ai_scripts_fix_map",
+      "ai_scripts_fix_map_code",
+      "ai_scripts_fix_map_fs"
+    ],
+    "85": [
+      "ai_scripts_fix_modal",
+      "ai_scripts_fix_modal_content",
+      "ai_scripts_fix_modal_fs"
+    ],
+    "86": [
+      "ai_scripts_fix_modal2",
+      "ai_scripts_fix_modal2_code",
+      "ai_scripts_fix_modal2_fs"
+    ],
+    "87": [
+      "ai_scripts_fix_old_payments",
+      "ai_scripts_fix_old_payments_code",
+      "ai_scripts_fix_old_payments_fs"
+    ],
+    "88": [
+      "ai_scripts_fix_partial",
+      "ai_scripts_fix_partial_code",
+      "ai_scripts_fix_partial_fs"
+    ],
+    "89": [
+      "ai_scripts_fix_phantom",
+      "ai_scripts_fix_phantom_code",
+      "ai_scripts_fix_phantom_fs"
+    ],
+    "90": [
+      "ai_scripts_fix_pill_debug",
+      "ai_scripts_fix_pill_debug_code",
+      "ai_scripts_fix_pill_debug_fs"
+    ],
+    "91": [
+      "ai_scripts_fix_pill_debug2",
+      "ai_scripts_fix_pill_debug2_code",
+      "ai_scripts_fix_pill_debug2_fs"
+    ],
+    "92": [
+      "ai_scripts_fix_pill_debug3",
+      "ai_scripts_fix_pill_debug3_code",
+      "ai_scripts_fix_pill_debug3_fs"
+    ],
+    "93": [
+      "ai_scripts_fix_pill_final",
+      "ai_scripts_fix_pill_final_code",
+      "ai_scripts_fix_pill_final_fs"
+    ],
+    "94": [
+      "ai_scripts_fix_pill_final_inline",
+      "ai_scripts_fix_pill_final_inline_code",
+      "ai_scripts_fix_pill_final_inline_fs"
+    ],
+    "95": [
+      "ai_scripts_fix_pill_ml2",
+      "ai_scripts_fix_pill_ml2_code",
+      "ai_scripts_fix_pill_ml2_fs"
+    ],
+    "96": [
+      "ai_scripts_fix_pill_notofixed",
+      "ai_scripts_fix_pill_notofixed_code",
+      "ai_scripts_fix_pill_notofixed_fs"
+    ],
+    "97": [
+      "ai_scripts_fix_pill_unconditional",
+      "ai_scripts_fix_pill_unconditional_code",
+      "ai_scripts_fix_pill_unconditional_fs"
+    ],
+    "98": [
+      "ai_scripts_fix_pos_cliente",
+      "ai_scripts_fix_pos_cliente_code",
+      "ai_scripts_fix_pos_cliente_fs"
+    ],
+    "99": [
+      "ai_scripts_fix_ref_error",
+      "ai_scripts_fix_ref_error_fs",
+      "ai_scripts_fix_ref_error_indexcode"
+    ],
+    "100": [
+      "ai_scripts_fix_revert_tab",
+      "ai_scripts_fix_revert_tab_code",
+      "ai_scripts_fix_revert_tab_fs"
+    ],
+    "101": [
+      "ai_scripts_fix_right_panel",
+      "ai_scripts_fix_right_panel_code",
+      "ai_scripts_fix_right_panel_fs"
+    ],
+    "102": [
+      "ai_scripts_fix_right_panel2",
+      "ai_scripts_fix_right_panel2_code",
+      "ai_scripts_fix_right_panel2_fs"
+    ],
+    "103": [
+      "ai_scripts_fix_save_cliente",
+      "ai_scripts_fix_save_cliente_code",
+      "ai_scripts_fix_save_cliente_fs"
+    ],
+    "104": [
+      "ai_scripts_fix_save_cliente2",
+      "ai_scripts_fix_save_cliente2_code",
+      "ai_scripts_fix_save_cliente2_fs"
+    ],
+    "105": [
+      "ai_scripts_fix_scroll",
+      "ai_scripts_fix_scroll_fs",
+      "ai_scripts_fix_scroll_indexcode"
+    ],
+    "106": [
+      "ai_scripts_fix_syntax_error",
+      "ai_scripts_fix_syntax_error_code",
+      "ai_scripts_fix_syntax_error_fs"
+    ],
+    "107": [
+      "ai_scripts_fix_tabla",
+      "ai_scripts_fix_tabla_code",
+      "ai_scripts_fix_tabla_fs"
+    ],
+    "108": [
+      "ai_scripts_fix_tot",
+      "ai_scripts_fix_tot_content",
+      "ai_scripts_fix_tot_fs"
+    ],
+    "109": [
+      "ai_scripts_fix_ts",
+      "ai_scripts_fix_ts_code",
+      "ai_scripts_fix_ts_fs"
+    ],
+    "110": [
+      "ai_scripts_fixtable",
+      "ai_scripts_fixtable_c",
+      "ai_scripts_fixtable_fs"
+    ],
+    "111": [
+      "ai_scripts_remove_history",
+      "ai_scripts_remove_history_code",
+      "ai_scripts_remove_history_fs"
+    ],
+    "112": [
+      "ai_scripts_remove_metrics",
+      "ai_scripts_remove_metrics_fs",
+      "ai_scripts_remove_metrics_indexcode"
+    ],
+    "113": [
+      "ai_scripts_replace_modal",
+      "ai_scripts_replace_modal_code",
+      "ai_scripts_replace_modal_fs"
+    ],
+    "114": [
+      "ai_scripts_restore_aesthetics",
+      "ai_scripts_restore_aesthetics_code",
+      "ai_scripts_restore_aesthetics_fs"
+    ],
+    "115": [
+      "ai_scripts_restore_lotes",
+      "ai_scripts_restore_lotes_fs",
+      "ai_scripts_restore_lotes_indexcode"
+    ],
+    "116": [
+      "ai_scripts_revert_badge",
+      "ai_scripts_revert_badge_fs",
+      "ai_scripts_revert_badge_modalec"
+    ],
+    "117": [
+      "ai_scripts_test_vps_insert_ts_ai_scripts_test_vps_insert",
+      "ai_scripts_test_vps_insert_ts_ai_scripts_test_vps_insert_testinsert",
+      "ref_src_db_supabase"
+    ],
+    "118": [
+      "ai_scripts_update_c",
+      "ai_scripts_update_cjs_ai_scripts_update",
+      "ai_scripts_update_fs"
+    ],
+    "119": [
+      "ai_scripts_update_modal",
+      "ai_scripts_update_modal_c",
+      "ai_scripts_update_modal_fs"
+    ],
+    "120": [
+      "ai_scripts_update_modal_actions",
+      "ai_scripts_update_modal_actions_content",
+      "ai_scripts_update_modal_actions_fs"
+    ],
+    "121": [
+      "ai_scripts_update_modal_clientes",
+      "ai_scripts_update_modal_clientes_code",
+      "ai_scripts_update_modal_clientes_fs"
+    ],
+    "122": [
+      "concept_evicamp_project",
+      "index",
+      "readme"
+    ],
+    "123": [
+      "src_assets_finanzas_image",
+      "src_assets_finanzas_login_carousel_slide",
+      "src_assets_finanzas_module_branding"
+    ],
+    "124": [
+      "tsconfig",
+      "tsconfig_files",
+      "tsconfig_references"
+    ],
+    "125": [
+      "agents_rules_graphify",
+      "agents_rules_graphify_graphify"
+    ],
+    "126": [
+      "agents_workflows_graphify",
+      "agents_workflows_graphify_workflow_graphify"
+    ],
+    "127": [
+      "ai_scripts_update_py_ai_scripts_update",
+      "re"
+    ],
+    "128": [
+      "ai_scripts_scratch_inventario"
+    ],
+    "129": [
+      "public_vite_svg_vite_logo"
+    ],
+    "130": [
+      "src_assets_logo_logo"
+    ]
+  },
+  "cohesion": {
+    "0": 0.06602512697139802,
+    "1": 0.05593803786574871,
+    "2": 0.07896575821104122,
+    "3": 0.10121951219512196,
+    "4": 0.05714285714285714,
+    "5": 0.09090909090909091,
+    "6": 0.13825757575757575,
+    "7": 0.1067193675889328,
+    "8": 0.09090909090909091,
+    "9": 0.1,
+    "10": 0.11764705882352941,
+    "11": 0.125,
+    "12": 0.125,
+    "13": 0.2967032967032967,
+    "14": 0.2222222222222222,
+    "15": 0.25,
+    "16": 0.2857142857142857,
+    "17": 0.3333333333333333,
+    "18": 0.3333333333333333,
+    "19": 0.4,
+    "20": 0.4,
+    "21": 0.4,
+    "22": 0.4,
+    "23": 0.4,
+    "24": 0.4,
+    "25": 0.4,
+    "26": 0.4,
+    "27": 0.4,
+    "28": 0.4,
+    "29": 0.4,
+    "30": 0.4,
+    "31": 0.5,
+    "32": 0.5,
+    "33": 0.5,
+    "34": 0.5,
+    "35": 0.5,
+    "36": 0.5,
+    "37": 0.5,
+    "38": 0.5,
+    "39": 0.5,
+    "40": 0.5,
+    "41": 0.5,
+    "42": 0.5,
+    "43": 0.5,
+    "44": 0.5,
+    "45": 0.5,
+    "46": 0.5,
+    "47": 0.5,
+    "48": 0.8333333333333334,
+    "49": 0.8333333333333334,
+    "50": 0.6666666666666666,
+    "51": 0.6666666666666666,
+    "52": 0.6666666666666666,
+    "53": 0.6666666666666666,
+    "54": 0.6666666666666666,
+    "55": 0.6666666666666666,
+    "56": 0.6666666666666666,
+    "57": 0.6666666666666666,
+    "58": 0.6666666666666666,
+    "59": 0.6666666666666666,
+    "60": 0.6666666666666666,
+    "61": 0.6666666666666666,
+    "62": 0.6666666666666666,
+    "63": 0.6666666666666666,
+    "64": 0.6666666666666666,
+    "65": 0.6666666666666666,
+    "66": 0.6666666666666666,
+    "67": 0.6666666666666666,
+    "68": 0.6666666666666666,
+    "69": 0.6666666666666666,
+    "70": 0.6666666666666666,
+    "71": 0.6666666666666666,
+    "72": 0.6666666666666666,
+    "73": 0.6666666666666666,
+    "74": 0.6666666666666666,
+    "75": 0.6666666666666666,
+    "76": 0.6666666666666666,
+    "77": 0.6666666666666666,
+    "78": 0.6666666666666666,
+    "79": 0.6666666666666666,
+    "80": 0.6666666666666666,
+    "81": 0.6666666666666666,
+    "82": 0.6666666666666666,
+    "83": 0.6666666666666666,
+    "84": 0.6666666666666666,
+    "85": 0.6666666666666666,
+    "86": 0.6666666666666666,
+    "87": 0.6666666666666666,
+    "88": 0.6666666666666666,
+    "89": 0.6666666666666666,
+    "90": 0.6666666666666666,
+    "91": 0.6666666666666666,
+    "92": 0.6666666666666666,
+    "93": 0.6666666666666666,
+    "94": 0.6666666666666666,
+    "95": 0.6666666666666666,
+    "96": 0.6666666666666666,
+    "97": 0.6666666666666666,
+    "98": 0.6666666666666666,
+    "99": 0.6666666666666666,
+    "100": 0.6666666666666666,
+    "101": 0.6666666666666666,
+    "102": 0.6666666666666666,
+    "103": 0.6666666666666666,
+    "104": 0.6666666666666666,
+    "105": 0.6666666666666666,
+    "106": 0.6666666666666666,
+    "107": 0.6666666666666666,
+    "108": 0.6666666666666666,
+    "109": 0.6666666666666666,
+    "110": 0.6666666666666666,
+    "111": 0.6666666666666666,
+    "112": 0.6666666666666666,
+    "113": 0.6666666666666666,
+    "114": 0.6666666666666666,
+    "115": 0.6666666666666666,
+    "116": 0.6666666666666666,
+    "117": 0.6666666666666666,
+    "118": 0.6666666666666666,
+    "119": 0.6666666666666666,
+    "120": 0.6666666666666666,
+    "121": 0.6666666666666666,
+    "122": 0.6666666666666666,
+    "123": 1.0,
+    "124": 0.6666666666666666,
+    "125": 1.0,
+    "126": 1.0,
+    "127": 1.0,
+    "128": 1.0,
+    "129": 1.0,
+    "130": 1.0
+  },
+  "gods": [
+    {
+      "id": "ref_react",
+      "label": "react",
+      "degree": 69
+    },
+    {
+      "id": "ref_lucide_react",
+      "label": "lucide-react",
+      "degree": 59
+    },
+    {
+      "id": "src_db_supabase_supabase",
+      "label": "supabase",
+      "degree": 35
+    },
+    {
+      "id": "src_utils_usecerrarconescape_usecerrarconescape",
+      "label": "useCerrarConEscape()",
+      "degree": 33
+    },
+    {
+      "id": "src_utils_busqueda_coincidebusqueda",
+      "label": "coincideBusqueda()",
+      "degree": 28
+    },
+    {
+      "id": "src_sections_inventario_types_product",
+      "label": "Product",
+      "degree": 22
+    },
+    {
+      "id": "src_utils_clicconteclado_clicconteclado",
+      "label": "clicConTeclado()",
+      "degree": 22
+    },
+    {
+      "id": "claude_skills_graphify_skill",
+      "label": "graphify Skill (SKILL.md)",
+      "degree": 22
+    },
+    {
+      "id": "tsconfig_app_compileroptions",
+      "label": "compilerOptions",
+      "degree": 20
+    },
+    {
+      "id": "src_utils_traertodo_traertodo",
+      "label": "traerTodo()",
+      "degree": 18
+    }
+  ],
+  "surprises": [
+    {
+      "source": "2. Requisitos Previos",
+      "target": "clicConTeclado()",
+      "source_files": [
+        ".agents/skills/selector/SKILL.md",
+        "src/utils/clicConTeclado.ts"
+      ],
+      "confidence": "INFERRED",
+      "relation": "references",
+      "why": "inferred connection - not explicitly stated in source; crosses file types (code \u2194 doc); connects across different repos/directories; bridges separate communities; peripheral node `2. Requisitos Previos` unexpectedly reaches hub `clicConTeclado()`"
+    },
+    {
+      "source": "CLAUDE.md (Evicamp project rules)",
+      "target": "graphify Skill (SKILL.md)",
+      "source_files": [
+        "CLAUDE.md",
+        ".claude/skills/graphify/SKILL.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "conceptually_related_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; peripheral node `CLAUDE.md (Evicamp project rules)` unexpectedly reaches hub `graphify Skill (SKILL.md)`"
+    },
+    {
+      "source": "index.html (Evicamp app entry)",
+      "target": "Evicamp (project name)",
+      "source_files": [
+        "index.html",
+        "README.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "CLAUDE.md (Evicamp project rules)",
+      "target": "graphify (knowledge graph CLI/skill)",
+      "source_files": [
+        "CLAUDE.md",
+        ".claude/skills/graphify/SKILL.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "Props",
+      "target": "Proveedor",
+      "source_files": [
+        "src/sections/Proveedores/components/ModalProveedor.tsx",
+        "src/sections/Proveedores/types.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "peripheral node `Props` unexpectedly reaches hub `Proveedor`"
+    }
+  ],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}

@@ -132,3 +132,10 @@
 - **Unir clientes:** no quiere que la otra cuenta desaparezca; deben compartir deuda y mostrar con quién. También agrupar por familia o empresa (técnicos de una empresa). Preguntó si es para otra fase. Se le dio la propuesta de "Grupos de clientes" (4.1c).
 - **Ficha:** "tiene que mostrar el DNI y RUC para llenarlos sin escoger nada" → hecho; además pidió el **link de ubicación** → hecho.
 - **Unir y grupos:** quitar "Unir"; un solo grupo por cliente con la opción de sacarlo; hacerlo como parte de la 4.1 → hechos los **Grupos de clientes** (familia o empresa).
+- **Ajustes en la 4.1 (con Antigravity):** el dueño revisó en siumax y reportó 4 puntos:
+  1. En Editar cliente, el selector solo se movía arriba y abajo: permitir moverse izquierda/derecha entre columnas (DNI <-> RUC, Teléfono <-> Dirección).
+  2. En la tabla de Clientes, no había columna de "Grupo": crear la columna dedicada "GRUPO" para ver a qué grupo pertenece cada cliente y quitar la etiqueta de debajo del nombre.
+  3. "CLIENTE PRUEBA PLAYWRIGHT" aparecía en Créditos con S/ 2.00 de deuda pero en Clientes no salía: se descubrió que el cliente 1 no existía en `customers`. Se protegió el sistema para que clientes con deuda siempre salgan en Clientes y se vinculen por ID o nombre, y se restauró en `siuhub`.
+  4. Poner como predeterminado en el filtro de Clientes "MAYOR DEUDA" para ver primero a quienes deben dinero.
+  - El dueño dio el OK a la propuesta, se aplicó en siumax y se validó con Edge y `prueba-grupos`.
+

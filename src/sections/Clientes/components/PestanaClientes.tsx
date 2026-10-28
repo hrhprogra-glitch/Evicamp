@@ -24,7 +24,15 @@ const fecha = (f?: string) => (f ? new Date(f).toLocaleDateString('es-PE') : '�
 
 /** Deuda y último crédito de un cliente (sus fiados por id o, los antiguos sin id, por nombre). */
 export const resumenDeCliente = (cliente: Cliente, fiados: Fiado[]) => {
-  const suyos = fiados.filter((f) => (f.clienteId ? f.clienteId === cliente.id : f.clienteNombre === cliente.nombre));
+  const cId = String(cliente.id || '').trim();
+  const cNombre = (cliente.nombre || '').trim().toUpperCase();
+  const suyos = fiados.filter((f) => {
+    const fId = String(f.clienteId || '').trim();
+    const fNombre = (f.clienteNombre || '').trim().toUpperCase();
+    if (fId && cId && fId === cId) return true;
+    if (fNombre && cNombre && fNombre === cNombre) return true;
+    return false;
+  });
   const deuda = suyos.reduce((t, f) => t + (Number(f.saldoPendiente) || 0), 0);
   const ultimo = suyos.reduce<string | undefined>((u, f) => (!u || (f.fechaEmision && f.fechaEmision > u) ? f.fechaEmision : u), undefined);
   return { deuda, ultimo, creditos: suyos.length };
@@ -33,7 +41,7 @@ export const resumenDeCliente = (cliente: Cliente, fiados: Fiado[]) => {
 export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = [], onNuevo, onAbrir, onEditar, onEliminar, idPestana }) => {
   const [busqueda, setBusqueda] = useState('');
   const [filtro, setFiltro] = useState<'TODOS' | 'CON_DEUDA' | 'SIN_DEUDA'>('TODOS');
-  const [orden, setOrden] = useState<'A-Z' | 'DEUDA'>('A-Z');
+  const [orden, setOrden] = useState<'A-Z' | 'DEUDA'>('DEUDA');
   const [pagina, setPagina] = useState(1);
 
   const filas = useMemo(() => {
@@ -49,7 +57,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
   const totalPaginas = Math.max(1, Math.ceil(filas.length / POR_PAGINA));
   const paginaReal = Math.min(pagina, totalPaginas);
   const visibles = filas.slice((paginaReal - 1) * POR_PAGINA, paginaReal * POR_PAGINA);
-  const hayFiltros = !!busqueda || filtro !== 'TODOS' || orden !== 'A-Z';
+  const hayFiltros = !!busqueda || filtro !== 'TODOS' || orden !== 'DEUDA';
 
   const filasDom = () => Array.from(document.querySelectorAll('[data-fila-cliente="true"]')) as HTMLElement[];
   const irA = (id: string) => document.getElementById(id)?.focus();
@@ -92,7 +100,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
       {/* BARRA */}
       <div className="p-3 border-b-2 border-[var(--color-border)] grid grid-cols-3 lg:flex gap-2 sm:gap-3 shrink-0">
         <input id="buscador-clientes" autoComplete="off" spellCheck={false} data-lpignore="true"
-          placeholder="BUSCAR NOMBRE, DNI/RUC, TELÉFONO O REFERENCIA..." value={busqueda}
+          placeholder="BUSCAR NOMBRE, GRUPO, DNI/RUC, TELÉFONO O REFERENCIA..." value={busqueda}
           onChange={(e) => { setBusqueda(e.target.value); setPagina(1); }} onKeyDown={teclasBarra('buscador-clientes')}
           className="col-span-3 lg:flex-1 min-w-0 lg:min-w-[200px] border-2 border-[var(--color-border)] px-3 sm:px-4 py-3 text-sm font-black uppercase outline-none focus:border-[var(--color-info)] rounded-none" />
         <select id="filtro-deuda-clientes" value={filtro} onChange={(e) => { setFiltro(e.target.value as typeof filtro); setPagina(1); }} onKeyDown={teclasBarra('filtro-deuda-clientes')} className={claseSelect}>
@@ -101,12 +109,12 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
           <option value="SIN_DEUDA">SIN DEUDA</option>
         </select>
         <select id="orden-clientes" value={orden} onChange={(e) => setOrden(e.target.value as typeof orden)} onKeyDown={teclasBarra('orden-clientes')} className={claseSelect}>
-          <option value="A-Z">A - Z</option>
           <option value="DEUDA">MAYOR DEUDA</option>
+          <option value="A-Z">A - Z</option>
         </select>
         {hayFiltros && (
           <button id="btn-limpiar-clientes" type="button" title="Limpiar filtros" onKeyDown={teclasBarra('btn-limpiar-clientes')}
-            onClick={() => { setBusqueda(''); setFiltro('TODOS'); setOrden('A-Z'); setPagina(1); setTimeout(() => irA('buscador-clientes'), 30); }}
+            onClick={() => { setBusqueda(''); setFiltro('TODOS'); setOrden('DEUDA'); setPagina(1); setTimeout(() => irA('buscador-clientes'), 30); }}
             className="p-3 border-2 bg-[var(--color-danger)] text-white border-[var(--color-danger)] hover:brightness-110 cursor-pointer flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-ink)]">
             <FilterX size={20} strokeWidth={3} />
           </button>
@@ -124,6 +132,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
             <tr className="uppercase text-[11px] font-black tracking-widest">
               {/* DNI/RUC, teléfono y dirección se ven SIEMPRE (pedido del dueño): en pantallas angostas la tabla se desliza */}
               <th className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6 border-r border-white/20">Cliente / Empresa</th>
+              <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20">Grupo</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20">DNI / RUC</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20">Teléfono</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20">Dirección</th>
@@ -140,7 +149,15 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
                 <td className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6">
                   <span className="font-black text-[var(--color-ink)] uppercase text-base">{c.nombre}</span>
                   {c.referencia && <span className="block text-xs text-[var(--color-muted)] mt-0.5 normal-case">{c.referencia}</span>}
-                  {grupo && <span data-grupo-cliente="true" className="inline-block mt-1 px-2 py-0.5 text-[11px] font-black uppercase border border-[var(--color-info)] text-[var(--color-info)] bg-[var(--color-info-bg)]">Grupo: {grupo}</span>}
+                </td>
+                <td data-col="grupo" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] whitespace-nowrap">
+                  {grupo ? (
+                    <span data-grupo-cliente="true" className="inline-block px-2 py-0.5 text-[11px] font-black uppercase border border-[var(--color-info)] text-[var(--color-info)] bg-[var(--color-info-bg)]">
+                      {grupo}
+                    </span>
+                  ) : (
+                    <span className="text-[var(--color-subtle)]">—</span>
+                  )}
                 </td>
                 <td data-col="documento" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] whitespace-nowrap">
                   {c.dni || c.ruc ? (<>
@@ -181,7 +198,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
               </tr>
             )) : (
               <tr>
-                <td colSpan={7} className="py-12 text-center text-[var(--color-muted)] font-black uppercase tracking-widest text-sm bg-[var(--color-bg)]">
+                <td colSpan={8} className="py-12 text-center text-[var(--color-muted)] font-black uppercase tracking-widest text-sm bg-[var(--color-bg)]">
                   <span className="inline-block border-2 border-[var(--color-muted)] p-4 border-dashed">{clientes.length ? 'No se encontraron clientes' : 'Todavía no hay clientes'}</span>
                 </td>
               </tr>

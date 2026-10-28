@@ -24,8 +24,6 @@ interface Props {
 
 const vacio: DatosCliente = { nombre: '', dni: '', ruc: '', telefono: '', direccion: '', ubicacion: '', referencia: '' };
 const enfocar = (id: string) => setTimeout(() => { const el = document.getElementById(id) as HTMLInputElement | null; el?.focus(); el?.select?.(); }, 30);
-// Orden de los campos para el teclado
-const CAMPOS = ['ficha-nombre', 'ficha-dni', 'ficha-ruc', 'ficha-telefono', 'ficha-direccion', 'ficha-ubicacion', 'ficha-referencia', 'btn-guardar-ficha'];
 
 // "ROSA" y "ROSA PEREZ" son parecidos; "ROSA" y "ROSARIO" no
 const parecidos = (a: string, b: string) => {
@@ -51,14 +49,43 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
   if (!abierta) return null;
 
   const poner = (campo: keyof DatosCliente, valor: string) => setDatos((d) => ({ ...d, [campo]: valor }));
-  const mover = (desde: string, paso: 1 | -1) => {
-    const destino = CAMPOS[CAMPOS.indexOf(desde) + paso];
-    if (destino) enfocar(destino);
-    else if (paso === -1) document.getElementById('btn-cerrar-ficha')?.focus();
-  };
+
   const teclasCampo = (id: string) => (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === 'ArrowDown') { e.preventDefault(); mover(id, 1); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); mover(id, -1); }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const orden = ['ficha-nombre', 'ficha-dni', 'ficha-ruc', 'ficha-telefono', 'ficha-direccion', 'ficha-ubicacion', 'ficha-referencia', 'btn-guardar-ficha'];
+      const sig = orden[orden.indexOf(id) + 1];
+      if (sig === 'btn-guardar-ficha') document.getElementById('btn-guardar-ficha')?.focus();
+      else if (sig) enfocar(sig);
+      return;
+    }
+
+    if (id === 'ficha-nombre') {
+      if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-dni'); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-cerrar-ficha')?.focus(); }
+    } else if (id === 'ficha-dni') {
+      if (e.key === 'ArrowRight') { e.preventDefault(); enfocar('ficha-ruc'); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-telefono'); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-nombre'); }
+    } else if (id === 'ficha-ruc') {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); enfocar('ficha-dni'); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-direccion'); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-nombre'); }
+    } else if (id === 'ficha-telefono') {
+      if (e.key === 'ArrowRight') { e.preventDefault(); enfocar('ficha-direccion'); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-ubicacion'); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-dni'); }
+    } else if (id === 'ficha-direccion') {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); enfocar('ficha-telefono'); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-ubicacion'); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-ruc'); }
+    } else if (id === 'ficha-ubicacion') {
+      if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-referencia'); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-telefono'); }
+    } else if (id === 'ficha-referencia') {
+      if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('btn-guardar-ficha')?.focus(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-ubicacion'); }
+    }
   };
 
   const guardar = async () => {
@@ -138,7 +165,7 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
 
         <div className="px-4 sm:px-6 py-4 border-t-2 border-[var(--color-border)] flex justify-end shrink-0">
           <button id="btn-guardar-ficha" type="button" aria-disabled={guardando} onClick={() => void guardar()}
-            onKeyDown={(e) => { if (e.key === 'ArrowUp') { e.preventDefault(); mover('btn-guardar-ficha', -1); } }}
+            onKeyDown={(e) => { if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-referencia'); } }}
             className={claseBotonPrincipal}>
             {guardando ? 'Guardando...' : cliente ? 'Guardar cambios' : 'Guardar cliente'}
           </button>
