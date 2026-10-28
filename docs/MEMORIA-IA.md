@@ -133,6 +133,7 @@
 16. **Unidades de presentaciones:** se guardan con el código CORTO (`PAQ`, `CAJA`), no con el nombre ("PAQUETE"). Si no, se ignoran.
 17. **Editar archivos con comandos de shell que tienen `\`, `$` o comillas** (heredoc, `node -e`, `sed`). Se pierden caracteres. Usar el editor de archivos. Los archivos pueden tener fin de línea CRLF.
 18. **Un `restaurarFocoSesion` que mandaba el foco a la sección de atrás con una ventana abierta.** Ya corregido: se queda en la ventana.
+22. **Quitar una ventana vieja sin revisar todo lo que hacía** (28/10/2026): al reemplazar el "Directorio de clientes" se perdió su historial de créditos Pendientes | Pagados y el dueño lo reportó como error grave. Antes de borrar algo, listar cada función que tiene y comprobar que sigue en otro lado.
 20. **Tomar "continuemos" o "seguimos" como el OK de una fase con propuesta pendiente** (28/10/2026). El OK tiene que ser explícito. Ante la duda, primero muestra el plan de esa parte y pregunta "¿empiezo?".
 21. **Poner `onKeyDown` en un botón dentro de una fila que también tiene `onKeyDown`:** la tecla se atiende dos veces (Enter en Eliminar abría la ficha). Un solo oyente en la fila, usando `e.target`.
 19. **Asumir que Escape en un desplegable no cierra la ventana:** `useCerrarConEscape` escucha en `window`. En el desplegable hay que hacer `e.stopPropagation()` en su `onKeyDown`.

@@ -7,6 +7,15 @@
 
 ---
 
+## 28/10/2026 (noche) · Claude (Claude Code)
+- **Error grave reportado por el dueño:** al quitar la ventana vieja del directorio desapareció el **historial de créditos pendientes y pagados**.
+- **Arreglado (commit 44441e5):** el detalle del cliente (`ModalDetalleCliente`) ahora tiene el historial como antes:
+  - pestañas **Pendientes | Pagados** (← → mueven, Enter cambia);
+  - buscador de producto o monto y filtro por fecha (Enter abre el calendario);
+  - **Enter en un crédito despliega** los productos sacados y sus abonos (fecha, método, monto).
+- **Pruebas:** `prueba-clientes-detalle` 30/30.
+- **Lección (en MEMORIA-IA):** antes de quitar una pantalla o ventana, listar TODO lo que hacía y confirmar que cada función sigue existiendo en otro lado.
+
 ## 28/10/2026 (tarde) · Claude (Claude Code)
 - **El dueño aprobó la 4.1a y pidió terminar la 4.1** ("ya haz la fase 4.1").
 - **Hecho (rama `fase-4`, solo siumax; nada en Evicamp ni en GitHub):**

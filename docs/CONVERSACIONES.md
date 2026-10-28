@@ -121,3 +121,5 @@
   - Unir clientes repetidos.
   - "Ver historial" del estado de cuenta abre el detalle nuevo.
   - Se quitó la ventana vieja del directorio.
+- **"Encontré un error gravísimo":** no estaba el historial de pagados y pendientes (era de la ventana vieja del directorio).
+  - Se recuperó dentro del detalle del cliente: pestañas, buscador, fecha, y productos y abonos al dar Enter.
