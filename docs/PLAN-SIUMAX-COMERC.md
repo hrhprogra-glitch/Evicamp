@@ -11,9 +11,9 @@
   - el dueño aprobó la 4.1a y pidió terminar la 4.1. Falta que la revise.
   - **Siguiente: mostrar el plan de la 4.2 (cliente opcional en la Caja) y esperar un OK explícito.**
   - Además falta:
-  1. el **OK final** del dueño;
+  1. su **revisión de la 4.1** en siumax;
   2. su decisión: **¿el pedido descuenta el stock al guardarlo o al entregarlo?** (recomendado: al guardarlo).
-- **Últimos commits locales sin push:** la documentación para otras IAs (AGENTS.md y docs/).
+- **Commits locales sin push:** documentación para IAs (en main) y la fase 4.1 (rama `fase-4`: 6b65525, e0c124d).
 - **Avisos pendientes para el cliente de Evicamp:**
   - "Mermas" ahora es "Conteos";
   - dar el permiso "Cambiar precio al cobrar" a quien corresponda.
