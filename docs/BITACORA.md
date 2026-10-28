@@ -144,3 +144,4 @@
 - VPS: Node 22 en `/opt/node22` (sin apt), servicio `siumax-bot` activo y habilitado (~85 MB). postgrest, postgrest_siuhub y el panel siguieron activos.
 - Script nuevo: `bot-whatsapp/subir-al-vps.cjs`. Detalles en MEMORIA-IA sección 10.
 - **Siguiente paso:** que el dueño le escriba desde otro número para comprobar que responde.
+- **Ajuste (28/10):** el dueño probó y funciona. Pidió que no diga "asistente virtual": ahora se presenta como el equipo de Siumax. Si le preguntan en serio si es una persona, no lo niega (dice que es la atención automática). Ya está subido al VPS.

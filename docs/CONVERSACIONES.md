@@ -141,3 +141,4 @@
 
 - **Bot de WhatsApp 24 h:** el dueño quiere tenerlo en el VPS; ya tiene un número aparte con WhatsApp Business. Se revisó el código y el VPS y se le mostró el plan. Esperando su OK.
 - **Bot 24 h:** el dueño dio el OK ("si empieza usa graphify!"). Se arreglaron los 5 puntos, la lista de interesados quedó en un archivo en el VPS y el bot quedó como servicio. Falta su prueba escribiéndole.
+- **Bot:** "funciona, aunque no quiero que diga que es un asistente virtual" → ahora habla como el equipo de Siumax, sin mentir si le preguntan directamente.
