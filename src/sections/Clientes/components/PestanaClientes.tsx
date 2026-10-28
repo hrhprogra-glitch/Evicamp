@@ -5,12 +5,13 @@
 // Teclado propio (onKeyDown en cada control), sin oyentes globales: así no choca con la pestaña Créditos.
 import React, { useMemo, useState } from 'react';
 import { Edit, Plus, Trash2, ChevronLeft, ChevronRight, FilterX, MapPin } from 'lucide-react';
-import type { Cliente, Fiado } from '../types';
+import type { Cliente, Fiado, GrupoClientes } from '../types';
 import { coincideBusqueda } from '../../../utils/busqueda';
 
 interface Props {
   clientes: Cliente[];
   fiados: Fiado[];
+  grupos?: GrupoClientes[];                // para mostrar (y buscar) el grupo de cada cliente
   onNuevo: () => void;
   onAbrir: (cliente: Cliente) => void;     // Enter en la fila
   onEditar: (cliente: Cliente) => void;
@@ -29,20 +30,21 @@ export const resumenDeCliente = (cliente: Cliente, fiados: Fiado[]) => {
   return { deuda, ultimo, creditos: suyos.length };
 };
 
-export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, onNuevo, onAbrir, onEditar, onEliminar, idPestana }) => {
+export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = [], onNuevo, onAbrir, onEditar, onEliminar, idPestana }) => {
   const [busqueda, setBusqueda] = useState('');
   const [filtro, setFiltro] = useState<'TODOS' | 'CON_DEUDA' | 'SIN_DEUDA'>('TODOS');
   const [orden, setOrden] = useState<'A-Z' | 'DEUDA'>('A-Z');
   const [pagina, setPagina] = useState(1);
 
   const filas = useMemo(() => {
-    const conResumen = clientes.map((c) => ({ c, ...resumenDeCliente(c, fiados) }));
+    const nombreGrupo = new Map(grupos.map((g) => [g.id, g.nombre]));
+    const conResumen = clientes.map((c) => ({ c, grupo: c.grupoId ? nombreGrupo.get(c.grupoId) || '' : '', ...resumenDeCliente(c, fiados) }));
     const texto = busqueda.trim();
-    let lista = texto ? conResumen.filter(({ c }) => coincideBusqueda([c.nombre, c.dni, c.ruc, c.telefono, c.referencia, c.direccion], texto)) : conResumen;
+    let lista = texto ? conResumen.filter(({ c, grupo }) => coincideBusqueda([c.nombre, c.dni, c.ruc, c.telefono, c.referencia, c.direccion, grupo], texto)) : conResumen;
     if (filtro === 'CON_DEUDA') lista = lista.filter((x) => x.deuda > 0.05);
     if (filtro === 'SIN_DEUDA') lista = lista.filter((x) => x.deuda <= 0.05);
     return [...lista].sort((a, b) => (orden === 'DEUDA' ? b.deuda - a.deuda : a.c.nombre.localeCompare(b.c.nombre, 'es')));
-  }, [clientes, fiados, busqueda, filtro, orden]);
+  }, [clientes, fiados, grupos, busqueda, filtro, orden]);
 
   const totalPaginas = Math.max(1, Math.ceil(filas.length / POR_PAGINA));
   const paginaReal = Math.min(pagina, totalPaginas);
@@ -131,13 +133,14 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, onNuevo, on
             </tr>
           </thead>
           <tbody className="text-sm font-bold divide-y-2 divide-[var(--color-border)] border-b-2 border-[var(--color-border)]">
-            {visibles.length ? visibles.map(({ c, deuda, ultimo }) => (
+            {visibles.length ? visibles.map(({ c, grupo, deuda, ultimo }) => (
               <tr key={c.id} role="button" tabIndex={0} data-row="true" data-fila-cliente="true" data-cliente-id={c.id}
                 onClick={() => onAbrir(c)} onKeyDown={teclasFila(c)}
                 className="hover:bg-[var(--color-surface)] focus:outline-none focus:bg-[var(--color-accent-bg)] cursor-pointer">
                 <td className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6">
                   <span className="font-black text-[var(--color-ink)] uppercase text-base">{c.nombre}</span>
                   {c.referencia && <span className="block text-xs text-[var(--color-muted)] mt-0.5 normal-case">{c.referencia}</span>}
+                  {grupo && <span data-grupo-cliente="true" className="inline-block mt-1 px-2 py-0.5 text-[11px] font-black uppercase border border-[var(--color-info)] text-[var(--color-info)] bg-[var(--color-info-bg)]">Grupo: {grupo}</span>}
                 </td>
                 <td data-col="documento" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] whitespace-nowrap">
                   {c.dni || c.ruc ? (<>

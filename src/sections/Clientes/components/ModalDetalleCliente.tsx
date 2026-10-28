@@ -8,8 +8,8 @@
 // Teclado: fila 1 = botones, fila 2 = pestañas + buscador + fecha (← → dentro de cada fila, ↑ ↓ entre filas y créditos;
 // la pestaña cambia con Enter; Enter en la fecha abre el calendario); Esc cierra.
 import React, { useEffect, useMemo, useState } from 'react';
-import { BookOpen, Edit, UserCircle, X, ReceiptText, FilterX, Search, MapPin } from 'lucide-react';
-import type { Cliente, Fiado } from '../types';
+import { BookOpen, Edit, UserCircle, X, ReceiptText, FilterX, Search, MapPin, Users, UserMinus } from 'lucide-react';
+import type { Cliente, Fiado, GrupoClientes } from '../types';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { ventanaSuperior } from '../../../utils/ventanas';
 import { CuerpoVentana, BarraFiltros, TextoBarra, CajaLista, FilaLista, LineaDato, Etiqueta, DatoFila, claseBotonBarra, claseCampoBarra } from '../../../components/ListaVentana';
@@ -20,17 +20,24 @@ interface Props {
   onClose: () => void;
   onEditar: (c: Cliente) => void;
   onEstadoCuenta: (c: Cliente) => void;
+  // Grupo de clientes (familia o empresa)
+  grupo?: GrupoClientes | null;
+  miembrosGrupo?: number;
+  deudaGrupo?: number;
+  onGrupo: (c: Cliente) => void;          // sin grupo: elegir uno; con grupo: ver el grupo
+  onSacarDeGrupo: (c: Cliente) => void;
 }
 
 type PestanaHistorial = 'PENDIENTES' | 'PAGADOS';
 const fecha = (f?: string) => (f ? new Date(f).toLocaleDateString('es-PE') : '—');
 const soles = (n: number) => `S/ ${n.toFixed(2)}`;
-const BOTONES = ['btn-detalle-cliente-editar', 'btn-detalle-cliente-cuenta'];
 const estaPagado = (f: Fiado) => f.estado === 'PAGADO' || (Number(f.saldoPendiente) || 0) <= 0.05;
 // Fecha del crédito como AAAA-MM-DD en hora local (para el filtro de fecha)
 const diaLocal = (f: string) => { const d = new Date(f); return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-CA'); };
 
-export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose, onEditar, onEstadoCuenta }) => {
+export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose, onEditar, onEstadoCuenta, grupo, miembrosGrupo = 0, deudaGrupo = 0, onGrupo, onSacarDeGrupo }) => {
+  // Botones de arriba (← →): con grupo aparece también "Sacar del grupo"
+  const BOTONES = ['btn-detalle-cliente-editar', 'btn-detalle-cliente-cuenta', 'btn-detalle-cliente-grupo', ...(grupo ? ['btn-detalle-cliente-sacar'] : [])];
   useCerrarConEscape(!!cliente, onClose);
   const [pestana, setPestana] = useState<PestanaHistorial>('PENDIENTES');
   const [busqueda, setBusqueda] = useState('');
@@ -164,6 +171,10 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
             <div className="flex flex-wrap gap-2">
               <button id={BOTONES[0]} type="button" onClick={() => onEditar(cliente)} className={claseBotonBarra(false)}><Edit size={14} /> Editar</button>
               <button id={BOTONES[1]} type="button" onClick={() => onEstadoCuenta(cliente)} className={claseBotonBarra(false)}><BookOpen size={14} /> Estado de cuenta</button>
+              <button id="btn-detalle-cliente-grupo" type="button" onClick={() => onGrupo(cliente)} className={claseBotonBarra(false)}>
+                <Users size={14} /> {grupo ? `Grupo: ${grupo.nombre}` : 'Agregar a un grupo'}
+              </button>
+              {grupo && <button id="btn-detalle-cliente-sacar" type="button" onClick={() => onSacarDeGrupo(cliente)} className={claseBotonBarra(false)}><UserMinus size={14} /> Sacar del grupo</button>}
             </div>
             <TextoBarra><span id="datos-detalle-cliente" className="text-[var(--color-ink)] normal-case">{datos}</span></TextoBarra>
             {cliente.ubicacion && (
@@ -171,6 +182,14 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
                 className={`${claseBotonBarra(false)} no-underline`}><MapPin size={14} /> Ver ubicación</a>
             )}
           </BarraFiltros>
+
+          {grupo && (
+            <p id="info-grupo-cliente" className="text-[12px] font-bold text-[var(--color-muted)] shrink-0">
+              <span className="font-black uppercase tracking-widest text-[var(--color-ink)]">Grupo: </span>
+              {grupo.nombre} ({grupo.tipo === 'EMPRESA' ? 'Empresa' : 'Familia'} · {miembrosGrupo} persona{miembrosGrupo === 1 ? '' : 's'}) · Deuda del grupo:{' '}
+              <span className={deudaGrupo > 0.05 ? 'text-[var(--color-danger)] font-black' : 'text-[var(--color-ink)] font-black'}>{soles(deudaGrupo)}</span>
+            </p>
+          )}
 
           {/* RESUMEN */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2 shrink-0" id="resumen-detalle-cliente">

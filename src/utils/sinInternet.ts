@@ -333,6 +333,7 @@ const PERMITIDO_SIN_INTERNET = new Set([
   // Fase SI-1 (22/10/2026): que el cajero siga trabajando sin internet
   'POST /cash_sessions', 'PATCH /cash_sessions',                     // abrir y cerrar caja
   'POST /customers', 'PATCH /customers', 'DELETE /customers',        // clientes
+  'POST /grupos_clientes', 'PATCH /grupos_clientes', 'DELETE /grupos_clientes', // grupos de clientes (fase 4.1)
   'POST /products', 'PATCH /products',                               // crear y editar productos
   'POST /categories', 'DELETE /categories',
   'POST /batches',                                                   // ingresar lotes
@@ -359,6 +360,7 @@ const CON_STOCK = new Set(['PATCH /batches', 'PATCH /products']);
 // sus ids son "BY DEFAULT"). Basado en la hora: nunca choca con los del servidor (van por miles).
 const ID_DESDE_LA_PC: Record<string, 'numero' | 'uuid'> = {
   products: 'numero', customers: 'numero', providers: 'uuid', compras_detalle: 'numero', empresa_config: 'numero',
+  grupos_clientes: 'numero',
 };
 let ultimoIdNumero = 0;
 const nuevoId = (tipo: 'numero' | 'uuid') => {
@@ -1055,6 +1057,8 @@ const NOMBRES: Record<string, [string, string]> = {
   'POST /cash_sessions': ['apertura de caja', 'aperturas de caja'], 'PATCH /cash_sessions': ['cambio de caja', 'cambios de caja'],
   'POST /customers': ['cliente nuevo', 'clientes nuevos'], 'PATCH /customers': ['cliente editado', 'clientes editados'],
   'DELETE /customers': ['cliente borrado', 'clientes borrados'],
+  'POST /grupos_clientes': ['grupo nuevo', 'grupos nuevos'], 'PATCH /grupos_clientes': ['grupo editado', 'grupos editados'],
+  'DELETE /grupos_clientes': ['grupo borrado', 'grupos borrados'],
   'POST /products': ['producto nuevo', 'productos nuevos'], 'PATCH /products': ['cambio de producto', 'cambios de productos'],
   'POST /batches': ['lote', 'lotes'],
   'POST /providers': ['proveedor nuevo', 'proveedores nuevos'], 'PATCH /providers': ['proveedor editado', 'proveedores editados'],

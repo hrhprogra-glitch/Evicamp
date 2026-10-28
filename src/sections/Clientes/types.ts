@@ -8,6 +8,15 @@ export interface Cliente {
   direccion?: string;
   ubicacion?: string;     // link de ubicación (ej. Google Maps)
   referencia?: string;    // para distinguir: "Sra. Rosa – vecina 2do piso"
+  grupoId?: string;       // grupo de clientes (familia o empresa); vacío = sin grupo
+}
+
+// Grupo de clientes (fase 4.1): familia o empresa. Cada cliente conserva su cuenta; el grupo junta sus deudas
+export interface GrupoClientes {
+  id: string;
+  nombre: string;
+  tipo: 'FAMILIA' | 'EMPRESA';
+  ruc?: string;
 }
 
 export interface FiadoDetalle {
@@ -48,6 +57,7 @@ export interface ClienteFiadoAgrupado {
   clienteId?: string;
   clienteDni?: string;
   clienteTelefono?: string;
+  grupoNombre?: string;   // fase 4.1: su grupo (familia o empresa)
   totalOriginal: number;
   totalPendiente: number;
   totalPagado: number;

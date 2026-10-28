@@ -29,9 +29,10 @@ export const precargarParaSinInternet = () => {
         // de un producto; sin internet se filtran en la PC desde esta copia (sinInternet.ts → copiaFiltrada)
         traerTodo(() => supabase.from('waste').select('*').order('created_at', { ascending: false }).order('id')),
         traerTodo(() => supabase.from('batches').select('*').order('id')),
-        // Créditos (src/sections/Fiados/index.tsx)
+        // Clientes y Créditos (src/sections/Clientes/index.tsx), con los grupos de clientes (fase 4.1)
         traerTodo(() => supabase.from('products').select('*').order('id')),
         traerTodo(() => supabase.from('customers').select('*').order('id')),
+        traerTodo(() => supabase.from('grupos_clientes').select('*').order('id')),
         traerTodo(() => supabase.from('fiados').select('*').in('status', ['PENDIENTE', 'VENCIDO', 'CANCELADO']).order('id')),
         traerTodo(() => supabase.from('debt_payments').select('*').order('id')),
         // Proveedores (Inventario > Proveedores e Ingresar lote, src/sections/Inventario/components/ModalGestionProveedores.tsx)

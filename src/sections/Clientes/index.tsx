@@ -8,7 +8,7 @@ import { ModalDetalleFiado } from './components/ModalDetalleFiado';
 import { ModalAnularPago } from './components/ModalAnularPago';
 import { ModalEstadoCuenta } from './components/ModalEstadoCuenta';
 import type { ClienteFiadoAgrupado } from './types'; // <-- Nuevo modal
-import type { Fiado, Cliente, PagoAbono } from './types'; // <-- Importamos PagoAbono
+import type { Fiado, Cliente, PagoAbono, GrupoClientes } from './types'; // <-- Importamos PagoAbono
 import type { Product } from '../Inventario/types';
 import { usePermiso } from '../../utils/permisos';
 import { traerTodo } from '../../utils/traerTodo';
@@ -18,6 +18,10 @@ import { confirmar, avisar } from '../../utils/dialogos';
 import { PestanaClientes } from './components/PestanaClientes';
 import { ModalFichaCliente, type DatosCliente } from './components/ModalFichaCliente';
 import { ModalDetalleCliente } from './components/ModalDetalleCliente';
+import { ModalGrupo } from './components/ModalGrupo';
+import { ModalElegir } from './components/ModalElegir';
+import { ModalFormGrupo, type DatosGrupo } from './components/ModalFormGrupo';
+import { resumenDeCliente } from './components/PestanaClientes';
 import { claseBotonBarra } from '../../components/ListaVentana';
 
 // Sección CLIENTES (fase 4.1, antes "Créditos"): pestañas Clientes (el directorio, nuevo) y Créditos (la de siempre:
@@ -39,6 +43,13 @@ export const Clientes: React.FC = () => {
   const abrirFicha = (c: Cliente | null) => { setClienteEnFicha(c); setFichaAbierta(true); };
   // Detalle del cliente (4.1b): por id, así muestra siempre los datos al día
   const [detalleId, setDetalleId] = useState<string | null>(null);
+  // Grupos de clientes (fase 4.1): familia o empresa
+  const [grupos, setGrupos] = useState<GrupoClientes[]>([]);
+  const [grupoVerId, setGrupoVerId] = useState<string | null>(null);            // ventana del grupo
+  const [elegirGrupoPara, setElegirGrupoPara] = useState<string | null>(null);  // cliente al que se le elige grupo
+  const [agregarAGrupo, setAgregarAGrupo] = useState<string | null>(null);      // grupo al que se agregan clientes
+  const [formGrupo, setFormGrupo] = useState<{ grupo: GrupoClientes | null; paraCliente?: string } | null>(null);
+  const [cuentaGrupoId, setCuentaGrupoId] = useState<string | null>(null);      // "Cobrar al grupo"
   // Crear deudas es como vender a crédito
   const [loading, setLoading] = useState(true);
   const [fiados, setFiados] = useState<Fiado[]>([]);
@@ -75,14 +86,17 @@ export const Clientes: React.FC = () => {
         { data: prods },
         { data: clis },
         { data: fiaData },
-        { data: pagosData }
+        { data: pagosData },
+        { data: grupData }
       ] = await Promise.all([
         traerTodo(() => supabase.from('products').select('*').order('id')),
         traerTodo(() => supabase.from('customers').select('*').order('id')),
         // Filtro Ampliado: Descarga también los CANCELADOS para poder visualizarlos en la tabla como 'PAGADOS'
         traerTodo(() => supabase.from('fiados').select('*').in('status', ['PENDIENTE', 'VENCIDO', 'CANCELADO']).order('id')),
-        traerTodo(() => supabase.from('debt_payments').select('*').order('id'))
+        traerTodo(() => supabase.from('debt_payments').select('*').order('id')),
+        traerTodo(() => supabase.from('grupos_clientes').select('*').order('id'))
       ]);
+      if (grupData) setGrupos(grupData.map((g: any) => ({ id: String(g.id), nombre: g.nombre || 'SIN NOMBRE', tipo: g.tipo === 'EMPRESA' ? 'EMPRESA' : 'FAMILIA', ruc: g.ruc || '' })));
 
       // OPTIMIZACIÓN: Solo descargar detalles de las ventas que corresponden a fiados
       let detailsData: any[] = [];
@@ -118,6 +132,7 @@ if (clis) {
     direccion: c.direccion ?? '',
     ubicacion: c.ubicacion ?? '',
     referencia: c.referencia ?? '',
+    grupoId: c.grupo_id != null ? String(c.grupo_id) : '',
   }));
   setClientes(clientesMapeados);
 }
@@ -233,6 +248,7 @@ if (fiaData) {
           clienteId: f.clienteId,
           clienteDni: ficha?.dni || ficha?.ruc || f.clienteDni,
           clienteTelefono: ficha?.telefono || f.clienteTelefono,
+          grupoNombre: ficha?.grupoId ? grupos.find((g) => g.id === ficha.grupoId)?.nombre : undefined,
           totalOriginal: 0,
           totalPendiente: 0,
           totalPagado: 0,
@@ -246,12 +262,28 @@ if (fiaData) {
       agrupado.totalPagado += Number(f.montoPagado) || 0;
     });
     return Array.from(mapa.values()).sort((a, b) => b.totalPendiente - a.totalPendiente);
-  }, [fiados, clientes]);
+  }, [fiados, clientes, grupos]);
+
+  // "Cobrar al grupo": un estado de cuenta con los créditos de TODOS los miembros del grupo
+  const cuentaDeGrupo = (gid: string): ClienteFiadoAgrupado | null => {
+    const g = grupos.find((x) => x.id === gid);
+    if (!g) return null;
+    const miembros = clientes.filter((c) => c.grupoId === gid);
+    const ids = new Set(miembros.map((c) => c.id)); const nombres = new Set(miembros.map((c) => c.nombre));
+    const suyos = fiados.filter((f) => (f.clienteId ? ids.has(f.clienteId) : nombres.has(f.clienteNombre)));
+    return {
+      clienteNombre: `GRUPO ${g.nombre}`, clienteId: undefined, clienteDni: g.ruc, fiados: suyos,
+      totalOriginal: suyos.reduce((t, x) => t + (Number(x.montoOriginal) || 0), 0),
+      totalPendiente: suyos.reduce((t, x) => t + (Number(x.saldoPendiente) || 0), 0),
+      totalPagado: suyos.reduce((t, x) => t + (Number(x.montoPagado) || 0), 0),
+    };
+  };
 
   const clienteActualEstadoCuenta = React.useMemo(() => {
+    if (cuentaGrupoId) return cuentaDeGrupo(cuentaGrupoId);
     if (!clienteEstadoCuenta) return null;
     return clientesAgrupados.find(c => c.clienteNombre === clienteEstadoCuenta.clienteNombre) || clienteEstadoCuenta;
-  }, [clienteEstadoCuenta, clientesAgrupados]);
+  }, [clienteEstadoCuenta, clientesAgrupados, cuentaGrupoId, grupos, clientes, fiados]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSaveFiado = async () => {
     setIsModalFiadoOpen(false);
@@ -396,6 +428,53 @@ if (fiaData) {
   };
   // ------------------------------------
 
+  // ---------- GRUPOS DE CLIENTES (fase 4.1) ----------
+  const idNum = (id: string) => (/^\d+$/.test(id) ? Number(id) : id);
+  const miembrosDe = (gid: string) => clientes.filter((c) => c.grupoId === gid);
+  // Crear o editar un grupo. Devuelve su id (o null si falló)
+  const guardarGrupo = async (d: DatosGrupo, id?: string): Promise<string | null> => {
+    const fila = { nombre: d.nombre, tipo: d.tipo, ruc: d.ruc || null };
+    if (id) {
+      const { error } = await supabase.from('grupos_clientes').update(fila).eq('id', id);
+      if (error) { await avisar(`No se pudo guardar el grupo: ${error.message}`); return null; }
+      setGrupos((l) => l.map((g) => (g.id === id ? { ...g, ...d } : g)));
+      return id;
+    }
+    const { data, error } = await supabase.from('grupos_clientes').insert([{ ...fila, created_at: new Date().toISOString(), is_synced: 1 }]).select().single();
+    if (error) { await avisar(`No se pudo crear el grupo: ${error.message}`); return null; }
+    const nuevo: GrupoClientes = { id: String(data.id), ...d };
+    setGrupos((l) => [...l, nuevo]);
+    return nuevo.id;
+  };
+  // Poner a un cliente en un grupo (uno solo) o sacarlo (null). Su cuenta y sus créditos no cambian
+  const ponerEnGrupo = async (clienteId: string, grupoId: string | null): Promise<boolean> => {
+    const { error } = await supabase.from('customers').update({ grupo_id: grupoId ? idNum(grupoId) : null }).eq('id', clienteId);
+    if (error) { await avisar(`No se pudo cambiar el grupo: ${error.message}`); return false; }
+    setClientes((l) => l.map((c) => (c.id === clienteId ? { ...c, grupoId: grupoId || '' } : c)));
+    return true;
+  };
+  const sacarDeGrupo = async (c: Cliente) => {
+    const g = grupos.find((x) => x.id === c.grupoId);
+    if (!(await confirmar(`¿Sacar a "${c.nombre}" del grupo "${g?.nombre || ''}"?\n\nSu cuenta y sus créditos siguen igual; solo deja de estar en el grupo.`))) return;
+    await ponerEnGrupo(c.id, null);
+  };
+  const eliminarGrupo = async (g: GrupoClientes) => {
+    const miembros = miembrosDe(g.id);
+    if (!(await confirmar(`¿Eliminar el grupo "${g.nombre}"?\n\nSus ${miembros.length} cliente(s) quedan sin grupo; sus cuentas y créditos NO se tocan.`))) return;
+    for (const c of miembros) if (!(await ponerEnGrupo(c.id, null))) return;
+    const { error } = await supabase.from('grupos_clientes').delete().eq('id', g.id);
+    if (error) { await avisar(`No se pudo eliminar el grupo: ${error.message}`); return; }
+    setGrupos((l) => l.filter((x) => x.id !== g.id));
+    setGrupoVerId(null);
+  };
+  const cobrarAlGrupo = (g: GrupoClientes) => {
+    const cuenta = cuentaDeGrupo(g.id);
+    if (!cuenta || !cuenta.fiados.some((x) => x.saldoPendiente > 0.05)) { void avisar('Nadie de este grupo tiene deudas pendientes.'); return; }
+    setCuentaGrupoId(g.id);
+    setClienteEstadoCuenta(cuenta);
+    setIsModalEstadoCuentaOpen(true);
+  };
+
   // Estado de cuenta de un cliente (desde su detalle): sus créditos agrupados
   const verEstadoCuenta = (c: Cliente) => {
     const grupo = clientesAgrupados.find((g) => (g.clienteId ? g.clienteId === c.id : g.clienteNombre === c.nombre)) || clientesAgrupados.find((g) => g.clienteNombre === c.nombre);
@@ -468,6 +547,7 @@ if (fiaData) {
       {pestana === 'CLIENTES' ? (
         <div className="lg:flex-1 lg:min-h-0">
           <PestanaClientes
+            grupos={grupos}
             clientes={clientes}
             fiados={fiados}
             idPestana="tab-clientes-clientes"
@@ -506,6 +586,11 @@ if (fiaData) {
         onClose={() => setDetalleId(null)}
         onEditar={(c) => abrirFicha(c)}
         onEstadoCuenta={verEstadoCuenta}
+        grupo={(() => { const c = clientes.find((x) => x.id === detalleId); return c?.grupoId ? grupos.find((g) => g.id === c.grupoId) || null : null; })()}
+        miembrosGrupo={(() => { const c = clientes.find((x) => x.id === detalleId); return c?.grupoId ? miembrosDe(c.grupoId).length : 0; })()}
+        deudaGrupo={(() => { const c = clientes.find((x) => x.id === detalleId); return c?.grupoId ? miembrosDe(c.grupoId).reduce((t, m) => t + resumenDeCliente(m, fiados).deuda, 0) : 0; })()}
+        onGrupo={(c) => (c.grupoId && grupos.some((g) => g.id === c.grupoId) ? setGrupoVerId(c.grupoId) : setElegirGrupoPara(c.id))}
+        onSacarDeGrupo={(c) => void sacarDeGrupo(c)}
       />
 
       <ModalFichaCliente
@@ -514,6 +599,52 @@ if (fiaData) {
         clientes={clientes}
         onGuardar={(d) => guardarCliente(d, clienteEnFicha?.id)}
         onClose={() => setFichaAbierta(false)}
+      />
+
+      {/* GRUPOS DE CLIENTES (fase 4.1) */}
+      <ModalGrupo
+        grupo={grupoVerId ? grupos.find((g) => g.id === grupoVerId) || null : null}
+        miembros={grupoVerId ? miembrosDe(grupoVerId) : []}
+        fiados={fiados}
+        onClose={() => setGrupoVerId(null)}
+        onCobrar={cobrarAlGrupo}
+        onAgregar={(g) => setAgregarAGrupo(g.id)}
+        onEditar={(g) => setFormGrupo({ grupo: g })}
+        onEliminar={(g) => void eliminarGrupo(g)}
+        onSacar={(c) => void sacarDeGrupo(c)}
+        onVerCliente={(c) => { setGrupoVerId(null); setDetalleId(c.id); }}
+      />
+      <ModalElegir
+        abierta={!!elegirGrupoPara}
+        titulo={`Agregar a un grupo: ${clientes.find((c) => c.id === elegirGrupoPara)?.nombre || ''}`}
+        ayuda="Elige su familia o empresa (un cliente está en un solo grupo)"
+        opciones={grupos.map((g) => ({ id: g.id, titulo: g.nombre, subtitulo: `${g.tipo === 'EMPRESA' ? 'Empresa' : 'Familia'}${g.ruc ? ` · RUC ${g.ruc}` : ''} · ${miembrosDe(g.id).length} persona(s)`, buscar: [g.ruc] }))}
+        vacia="Todavía no hay grupos: crea uno."
+        extra={{ titulo: '+ Crear grupo nuevo', alElegir: () => setFormGrupo({ grupo: null, paraCliente: elegirGrupoPara || undefined }) }}
+        onElegir={async (gid) => { if (elegirGrupoPara && (await ponerEnGrupo(elegirGrupoPara, gid))) setElegirGrupoPara(null); }}
+        onClose={() => setElegirGrupoPara(null)}
+      />
+      <ModalElegir
+        abierta={!!agregarAGrupo}
+        titulo={`Agregar cliente al grupo: ${grupos.find((g) => g.id === agregarAGrupo)?.nombre || ''}`}
+        ayuda="Solo aparecen los clientes que todavía no tienen grupo"
+        opciones={clientes.filter((c) => !c.grupoId).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')).map((c) => ({ id: c.id, titulo: c.nombre, subtitulo: [c.referencia, c.dni && `DNI ${c.dni}`, c.ruc && `RUC ${c.ruc}`, c.telefono].filter(Boolean).join(' · '), buscar: [c.dni, c.ruc, c.telefono] }))}
+        vacia="No hay clientes sin grupo con ese nombre."
+        onElegir={async (cid) => { if (agregarAGrupo) await ponerEnGrupo(cid, agregarAGrupo); }}
+        onClose={() => setAgregarAGrupo(null)}
+      />
+      <ModalFormGrupo
+        abierta={!!formGrupo}
+        grupo={formGrupo?.grupo || null}
+        grupos={grupos}
+        onGuardar={async (d) => {
+          const id = await guardarGrupo(d, formGrupo?.grupo?.id);
+          if (!id) return false;
+          // Creado desde "Agregar a un grupo": el cliente entra al grupo nuevo y se cierra la lista
+          if (formGrupo?.paraCliente && (await ponerEnGrupo(formGrupo.paraCliente, id))) setElegirGrupoPara(null);
+          return true;
+        }}
+        onClose={() => setFormGrupo(null)}
       />
 
 
@@ -539,12 +670,13 @@ if (fiaData) {
       {/* Modal Unificado de Estado de Cuenta */}
       <ModalEstadoCuenta 
         isOpen={isModalEstadoCuentaOpen}
-        onClose={() => setIsModalEstadoCuentaOpen(false)}
+        onClose={() => { setIsModalEstadoCuentaOpen(false); setCuentaGrupoId(null); }}
         cliente={clienteActualEstadoCuenta}
+        mostrarNombre={!!cuentaGrupoId}
         onRefetch={async () => {
           await cargarDatos(true);
         }}
-        onVerHistorial={(nombre) => {
+        onVerHistorial={cuentaGrupoId ? undefined : (nombre) => {
           // Fase 4.1b: abre el detalle del cliente (antes, la ventana vieja del directorio)
           const c = clientes.find((x) => x.nombre === nombre);
           setIsModalEstadoCuentaOpen(false);

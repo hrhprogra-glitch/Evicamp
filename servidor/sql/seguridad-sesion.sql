@@ -32,6 +32,10 @@ AS $$
     WHEN 'POST /customers'           THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
     WHEN 'PATCH /customers'          THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados', 'caja_cobrar_deudas']
     WHEN 'DELETE /customers'         THEN ARRAY['caja_ver_fiados']
+    -- Grupos de clientes (familia o empresa, fase 4.1): quien entra a Clientes los maneja
+    WHEN 'POST /grupos_clientes'     THEN ARRAY['caja_ver_fiados']
+    WHEN 'PATCH /grupos_clientes'    THEN ARRAY['caja_ver_fiados']
+    WHEN 'DELETE /grupos_clientes'   THEN ARRAY['caja_ver_fiados']
     WHEN 'POST /debt_payments'       THEN ARRAY['caja_cobrar_deudas']
     WHEN 'POST /cash_sessions'       THEN ARRAY['caja_abrir_cerrar_turno']
     WHEN 'PATCH /cash_sessions'      THEN ARRAY['caja_abrir_cerrar_turno']
@@ -1269,5 +1273,35 @@ ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS ruc text;
 ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS ubicacion text;
 UPDATE public.customers SET ruc = dni, dni = NULL, tipo_doc = NULL
 WHERE tipo_doc = 'RUC' AND ruc IS NULL AND dni IS NOT NULL;
+
+NOTIFY pgrst, 'reload schema';
+
+-- ===================================================================================================
+-- FASE 4.1: GRUPOS DE CLIENTES (familia o empresa; pedido del dueño 28/10/2026, reemplaza a "Unir clientes").
+-- Cada cliente sigue con su propia cuenta y sus créditos; el grupo los junta para ver y cobrar la deuda de todos
+-- (ej. la empresa paga lo que sacaron sus técnicos). Un cliente está en UN solo grupo (customers.grupo_id) y se
+-- puede sacar. El id lo pone la PC (como customers), así se puede crear sin internet.
+-- Deshacer: servidor/sql/deshacer-fase4.sql
+CREATE TABLE IF NOT EXISTS public.grupos_clientes (
+  id          bigint PRIMARY KEY,
+  nombre      text NOT NULL,
+  tipo        text NOT NULL DEFAULT 'FAMILIA' CHECK (tipo IN ('FAMILIA', 'EMPRESA')),
+  ruc         text,                                   -- opcional (empresa)
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  is_synced   bigint
+);
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS grupo_id bigint REFERENCES public.grupos_clientes (id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS customers_grupo ON public.customers (grupo_id);
+-- Con internet el número lo pone el servidor (la hora en milisegundos); sin internet, la PC (sinInternet.ts)
+ALTER TABLE public.grupos_clientes ALTER COLUMN id SET DEFAULT (extract(epoch FROM clock_timestamp()) * 1000)::bigint;
+DO $$
+DECLARE r text;
+BEGIN
+  FOREACH r IN ARRAY ARRAY['anon', 'web_anon'] LOOP
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN
+      EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON public.grupos_clientes TO %I', r);
+    END IF;
+  END LOOP;
+END $$;
 
 NOTIFY pgrst, 'reload schema';

@@ -12,6 +12,7 @@ interface Props {
   cliente: ClienteFiadoAgrupado | null;
   onRefetch: () => void;
   onVerHistorial?: (nombre: string) => void;
+  mostrarNombre?: boolean;   // "Cobrar al grupo": cada tarjeta dice de quién es el crédito (fase 4.1)
 }
 
 const formatForDateInput = (dateStr: string) => {
@@ -47,7 +48,7 @@ const combinarFechaYHora = (nuevaFechaStr: string, fechaOriginalISO: string): st
   }
 };
 
-export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, onRefetch, onVerHistorial }) => {
+export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, onRefetch, onVerHistorial, mostrarNombre = false }) => {
   useCerrarConEscape(isOpen, onClose);
   
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -593,6 +594,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                         </button>
                       )}
                       <div className="flex flex-col">
+                        {mostrarNombre && <span data-nombre-credito="true" className="text-xs font-black uppercase text-[var(--color-info)]">{fiado.clienteNombre}</span>}
                         <span className={`font-black text-lg ${selectedIds.has(fiado.id) ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)]'}`}>S/ {fiado.saldoPendiente.toFixed(2)}</span>
                         
                         <div className="text-xs font-bold text-[var(--color-muted)] flex flex-wrap items-center gap-2 mt-1">
@@ -695,6 +697,8 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                     <p className="text-[var(--color-danger)] font-black uppercase tracking-widest text-xs">Deuda Total Pendiente</p>
                     <h1 className="text-3xl sm:text-4xl font-black text-[var(--color-danger)] drop-shadow-md leading-none mt-1">S/ {cliente.totalPendiente.toFixed(2)}</h1>
                   </div>
+                  {/* En "Cobrar al grupo" no hay historial de una sola persona */}
+                  {onVerHistorial && (
                   <button 
                     onClick={() => {
                       if (onVerHistorial) {
@@ -705,6 +709,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                   >
                     Ver Historial
                   </button>
+                  )}
                 </div>
               </div>
             
