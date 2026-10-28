@@ -145,3 +145,4 @@
 - **Bot 24 h:** el dueño dio el OK ("si empieza usa graphify!"). Se arreglaron los 5 puntos, la lista de interesados quedó en un archivo en el VPS y el bot quedó como servicio. Falta su prueba escribiéndole.
 - **Bot:** "funciona, aunque no quiero que diga que es un asistente virtual" → ahora habla como el equipo de Siumax, sin mentir si le preguntan directamente.
 - **Bot:** "que responda corto y haga preguntas con opciones, y si va al grano mejor, porque así sabemos que quiere el sistema" → hecho en `conversacion.js`; el interés queda en la lista.
+- **Bot:** "me gustaría que fuera para marcar como una encuesta" → hecho con encuestas nativas de WhatsApp.
