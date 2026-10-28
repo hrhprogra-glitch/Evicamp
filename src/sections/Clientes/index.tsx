@@ -516,7 +516,6 @@ if (fiaData) {
         onEditar={(c) => abrirFicha(c)}
         onEstadoCuenta={verEstadoCuenta}
         onUnir={(c) => setUnirId(c.id)}
-        onVerCredito={(f) => { setFiadoAVer(f); setIsModalDetalleOpen(true); }}
       />
 
       <ModalFichaCliente

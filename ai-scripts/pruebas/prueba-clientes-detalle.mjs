@@ -20,7 +20,11 @@ await sql(`insert into customers (id, name, dni, tipo_doc, telefono, referencia,
   (${B}, '${NB}', '4${corto}9', 'DNI', null, null, now(), 1);
   insert into fiados (id, customer_id, customer_name, amount, date_given, expected_pay_date, status, paid_amount, is_synced) values
   (${m}, ${B}, '${NB}', 20, now() - interval '10 day', to_char(now(), 'YYYY-MM-DD'), 'PENDIENTE', 0, 1),
-  (${m + 1}, ${B}, '${NB}', 15, now() - interval '3 day', to_char(now(), 'YYYY-MM-DD'), 'PENDIENTE', 5, 1);`);
+  (${m + 1}, ${B}, '${NB}', 15, now() - interval '3 day', to_char(now(), 'YYYY-MM-DD'), 'PENDIENTE', 5, 1),
+  (${m + 2}, ${B}, '${NB}', 10, now() - interval '17 day', to_char(now(), 'YYYY-MM-DD'), 'CANCELADO', 10, 1);
+  insert into debt_payments (id, fiado_id, customer_id, amount, payment_type, created_at, is_synced) values
+  (${m + 5}, ${m + 1}, ${B}, 5, 'EFECTIVO', now() - interval '2 day', 1),
+  (${m + 6}, ${m + 2}, ${B}, 10, 'YAPE', now() - interval '16 day', 1);`);
 
 const nav = await puppeteer.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', headless: true, defaultViewport: { width: 1366, height: 860 } });
 const page = await nav.newPage(); const errores = [];
@@ -42,17 +46,30 @@ try {
   await buscar(NB); await tecla('ArrowDown'); await tecla('Enter'); await pausa(800);
   ok('Enter en un cliente abre su DETALLE con el selector en "Editar"', !!(await page.$('#titulo-detalle-cliente')) && (await foco()) === 'btn-detalle-cliente-editar', await foco());
   const resumen = await texto('#resumen-detalle-cliente');
-  ok('Resumen: deuda S/ 30.00, 2 créditos, total fiado S/ 35.00 y viene cada 7 días', /DEUDA ACTUAL S\/ 30\.00/i.test(resumen) && /CR[EÉ]DITOS 2/i.test(resumen) && /TOTAL FIADO S\/ 35\.00/i.test(resumen) && /CADA 7 D[IÍ]AS/i.test(resumen), resumen);
+  ok('Resumen: deuda S/ 30.00, 3 créditos, total fiado S/ 45.00 y viene cada 7 días', /DEUDA ACTUAL S\/ 30\.00/i.test(resumen) && /CR[EÉ]DITOS 3/i.test(resumen) && /TOTAL FIADO S\/ 45\.00/i.test(resumen) && /CADA 7 D[IÍ]AS/i.test(resumen), resumen);
   ok('Muestra sus datos (DNI)', (await texto('#datos-detalle-cliente')).includes(`4${corto}9`), await texto('#datos-detalle-cliente'));
+  // HISTORIAL: pestañas Pendientes | Pagados, Enter despliega productos y abonos, buscador
   await tecla('ArrowDown');
-  ok('↓ baja a sus créditos (el más nuevo primero)', (await foco()) === 'credito:0', await foco());
+  ok('↓ baja al historial: pestaña "Pendientes (2)" elegida (debe algo)', (await foco()) === 'tab-historial-cliente-pendientes' && /PENDIENTES \(2\)/i.test(await texto('#tab-historial-cliente-pendientes')) && (await page.evaluate(() => document.getElementById('tab-historial-cliente-pendientes')?.getAttribute('aria-selected'))) === 'true', await foco());
   await tecla('ArrowDown');
-  ok('↓ pasa al segundo crédito', (await foco()) === 'credito:1', await foco());
-  await tecla('Enter'); await pausa(800);
-  const ventanas = await page.evaluate(() => document.querySelectorAll('.fixed.inset-0').length);
-  ok('Enter en un crédito abre su detalle encima', ventanas >= 2, String(ventanas));
-  await tecla('Escape'); await pausa(600);
-  ok('Esc cierra solo el crédito: el detalle del cliente sigue', !!(await page.$('#titulo-detalle-cliente')));
+  ok('↓ baja a los créditos pendientes (el más nuevo primero)', (await foco()) === 'credito:0' && (await page.$$eval('[data-credito-cliente]', (x) => x.length)) === 2, await foco());
+  await tecla('Enter'); await pausa(300);
+  const abierto = await texto('[data-credito-abierto="true"]');
+  ok('Enter despliega "Productos sacados" y "Abonos" (+ S/ 5.00 EFECTIVO)', /PRODUCTOS SACADOS/i.test(abierto) && /ABONOS/i.test(abierto) && /\+ S\/ 5\.00/.test(abierto) && /EFECTIVO/i.test(abierto), abierto.slice(0, 160));
+  await tecla('Enter'); await pausa(300);
+  ok('Enter otra vez lo oculta', !(await page.$('[data-credito-abierto="true"]')));
+  await tecla('ArrowUp'); await tecla('ArrowRight');
+  ok('↑ vuelve a la pestaña y → pasa a "Pagados (1)" sin cambiar todavía', (await foco()) === 'tab-historial-cliente-pagados' && (await page.$$eval('[data-credito-cliente]', (x) => x.length)) === 2, await foco());
+  await tecla('Enter'); await pausa(300);
+  ok('Enter muestra los pagados (1)', (await page.$$eval('[data-credito-cliente]', (x) => x.length)) === 1 && /PAGADO/i.test(await texto('[data-credito-cliente]')));
+  await tecla('ArrowDown'); await tecla('Enter'); await pausa(300);
+  ok('El pagado muestra su abono (+ S/ 10.00 YAPE)', /\+ S\/ 10\.00/.test(await texto('[data-credito-abierto="true"]')) && /YAPE/i.test(await texto('[data-credito-abierto="true"]')));
+  await tecla('ArrowUp'); await tecla('ArrowLeft'); await tecla('Enter'); await tecla('ArrowRight', 2);
+  ok('En Pendientes, → → llega al buscador del historial', (await foco()) === 'buscar-historial-cliente', await foco());
+  await page.keyboard.type('15'); await pausa(400);
+  ok('Buscar "15" deja solo el crédito de S/ 15.00', (await page.$$eval('[data-credito-cliente]', (x) => x.length)) === 1 && /15\.00/.test(await texto('[data-credito-cliente]')));
+  await tecla('ArrowUp');
+  ok('↑ desde el historial sube a los botones', (await foco()) === 'btn-detalle-cliente-editar', await foco());
   await tecla('Escape'); await pausa(800);
   ok('Esc cierra el detalle y el selector vuelve a la fila del cliente', !(await page.$('#titulo-detalle-cliente')) && (await foco()) === `fila:${B}`, await foco());
 
@@ -77,11 +94,11 @@ try {
   ok('Pregunta antes de unir, diciendo qué pasa', /unir/i.test(pregunta) && pregunta.includes(NB) && /se borra/i.test(pregunta), pregunta.slice(0, 120));
   await tecla('Enter'); await pausa(3000);
   const listo = await aviso();
-  ok('Avisa que pasaron los 2 créditos', /2 cr[eé]dito/i.test(listo), listo);
+  ok('Avisa que pasaron los 3 créditos', /3 cr[eé]dito/i.test(listo), listo);
   await tecla('Enter'); await pausa(800);
   const srv = await sql(`select count(*) from fiados where customer_id=${A} and customer_name='${NA}'; select count(*) from customers where id=${B}; select coalesce(dni,'')||'|'||coalesce(tipo_doc,'')||'|'||coalesce(telefono,'') from customers where id=${A};`);
-  ok('Servidor: los 2 créditos pasaron, el repetido se borró y el DNI se completó (teléfono se mantiene)', srv.replace(/\n/g, ' ; ') === `2 ; 0 ; 4${corto}9|DNI|911222333`, srv.replace(/\n/g, ' ; '));
-  ok('El detalle ya muestra la deuda de S/ 30.00 y 2 créditos', /DEUDA ACTUAL S\/ 30\.00/i.test(await texto('#resumen-detalle-cliente')) && /CR[EÉ]DITOS 2/i.test(await texto('#resumen-detalle-cliente')), await texto('#resumen-detalle-cliente'));
+  ok('Servidor: los 3 créditos pasaron, el repetido se borró y el DNI se completó (teléfono se mantiene)', srv.replace(/\n/g, ' ; ') === `3 ; 0 ; 4${corto}9|DNI|911222333`, srv.replace(/\n/g, ' ; '));
+  ok('El detalle ya muestra la deuda de S/ 30.00 y 3 créditos', /DEUDA ACTUAL S\/ 30\.00/i.test(await texto('#resumen-detalle-cliente')) && /CR[EÉ]DITOS 3/i.test(await texto('#resumen-detalle-cliente')), await texto('#resumen-detalle-cliente'));
 
   // Editar desde el detalle: la ficha se abre encima y al guardar el detalle se actualiza
   await page.focus('#btn-detalle-cliente-editar'); await tecla('Enter'); await pausa(600);
@@ -102,6 +119,6 @@ try {
 finally {
   ok('Sin errores de JavaScript', errores.length === 0, errores.join(' | ').slice(0, 300));
   await nav.close();
-  await sql(`delete from fiados where id in (${m}, ${m + 1}); delete from customers where id in (${A}, ${B});`).catch(() => {});
+  await sql(`delete from debt_payments where id in (${m + 5}, ${m + 6}); delete from fiados where id in (${m}, ${m + 1}, ${m + 2}); delete from customers where id in (${A}, ${B});`).catch(() => {});
   console.log(res.join('\n'));
 }
