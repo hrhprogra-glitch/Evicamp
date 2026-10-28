@@ -33,11 +33,18 @@ interface Props {
     clienteDni?: string;
     clienteTelefono?: string;
   };
+  cliente?: {
+    nombre: string;
+    dni?: string;
+    ruc?: string;
+    telefono?: string;
+    direccion?: string;
+  } | null;
   vendedor?: string | null; // quién hizo la venta
 }
 
 export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
-  ({ cart, total, pagos, vuelto, nroBoleta, fiadoData, vendedor }, ref) => {
+  ({ cart, total, pagos, vuelto, nroBoleta, fiadoData, cliente, vendedor }, ref) => {
     const fecha = new Date().toLocaleString('es-PE');
     const [empresa, setEmpresa] = useState<DatosEmpresa>({});
 
@@ -88,6 +95,17 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
               {fiadoData.clienteDni && <p className="text-[12px] font-bold uppercase">DNI: <span className="font-black">{fiadoData.clienteDni}</span></p>}
               {fiadoData.clienteTelefono && <p className="text-[12px] font-bold uppercase">Cel: <span className="font-black">{fiadoData.clienteTelefono}</span></p>}
               <p className="text-[12px] font-black uppercase mt-1 text-red-600">Límite Pago: {fiadoData.fechaVencimiento}</p>
+            </div>
+          )}
+
+          {/* DATOS DEL CLIENTE EN NOTA DE VENTA */}
+          {!fiadoData && cliente && (
+            <div className="mt-2 text-left border-2 border-black p-1.5 bg-gray-50">
+              <p className="text-[12px] font-bold uppercase">Cliente: <span className="font-black">{cliente.nombre}</span></p>
+              {cliente.dni && <p className="text-[12px] font-bold uppercase">DNI: <span className="font-black">{cliente.dni}</span></p>}
+              {cliente.ruc && <p className="text-[12px] font-bold uppercase">RUC: <span className="font-black">{cliente.ruc}</span></p>}
+              {cliente.telefono && <p className="text-[12px] font-bold uppercase">Cel: <span className="font-black">{cliente.telefono}</span></p>}
+              {cliente.direccion && <p className="text-[12px] uppercase">Dir: <span>{cliente.direccion}</span></p>}
             </div>
           )}
         </div>

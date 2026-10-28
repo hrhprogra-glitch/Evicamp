@@ -147,3 +147,18 @@
 - **Bot:** "que responda corto y haga preguntas con opciones, y si va al grano mejor, porque así sabemos que quiere el sistema" → hecho en `conversacion.js`; el interés queda en la lista.
 - **Bot:** "me gustaría que fuera para marcar como una encuesta" → hecho con encuestas nativas de WhatsApp.
 - **Bot:** "falta una presentación… que no diga que es asesor virtual o bot… corta… ¿qué pasa si presiona una y otra vez el voto?" → presentación de una línea y un solo voto por encuesta (eligió "Encuesta, 1 voto"). Se le avisó del límite de 20 respuestas al día de Gemini gratis.
+
+## 28/10/2026: Fase 4.2 (Cliente opcional en la Caja)
+- **El dueño preguntó:** "perfecto ahora que tenemos que haces ?=:3"
+- **Se le presentó el plan de la Fase 4.2 (Cliente opcional en la Caja):**
+  - Barra de cliente en el ticket (F3 o clic), por defecto "Cliente varios".
+  - Búsqueda en tiempo real o creación rápida con F2.
+  - Nombre en tickets en espera (Shift+Q), restaurando cliente y carrito al recuperar.
+  - Guardado en `sales.customer_id` y `sales.customer_name` y visualización en la boleta impresa.
+- **El dueño respondió:** "ok".
+- **Desarrollo y pruebas completadas:**
+  - Migración SQL aplicada en `siuhub` (`sales.customer_id`, `sales.customer_name`).
+  - Implementados `ModalElegirClientePOS.tsx`, `ModalNombreEspera.tsx` y adaptados `TicketVenta.tsx`, `ModalCobro.tsx`, `TicketImprimible.tsx` e `index.tsx`.
+  - Pruebas automatizadas en Edge con navegador real (`test-fase4-2.cjs` y `test-clear-customer.cjs`): 100% aprobadas.
+  - Desplegado a `siumax` (pruebas).
+

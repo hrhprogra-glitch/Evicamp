@@ -1,8 +1,10 @@
 // src/sections/Punto-de-venta/types.ts
 import type { Product } from '../Inventario/types';
 
-// RE-EXPORTAR PRODUCT PARA USO EN COMPONENTES DEL POS
-export type { Product };
+import type { Cliente } from '../Clientes/types';
+
+// RE-EXPORTAR PRODUCT Y CLIENTE PARA USO EN COMPONENTES DEL POS
+export type { Product, Cliente };
 
 export interface CartItem extends Product {
   cartQuantity: number; // Cantidad que el cliente está comprando
@@ -13,3 +15,11 @@ export interface CartItem extends Product {
   escala?: number;                    // fase 1.3: "desde" de la escala aplicada (x6+)
   sinEscala?: boolean;                // el cajero apagó el precio por cantidad en esta línea (cobra el precio normal)
 }
+
+export interface HeldCart {
+  id?: string;
+  cart: CartItem[];
+  cliente?: Cliente | null;
+  nombre?: string;
+  timestamp?: number;
+}

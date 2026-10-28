@@ -7,6 +7,39 @@
 
 ---
 
+## 28/10/2026 (noche, 11) · Antigravity
+- **FASE 4.2: Cliente opcional en la Caja (POS) y tickets en espera con nombre:**
+  - **Base de datos (siuhub):**
+    - Se agregaron las columnas `customer_id bigint REFERENCES customers(id) ON DELETE SET NULL` y `customer_name text` en la tabla `sales`, con índice `idx_sales_customer_id`.
+    - Se actualizaron `servidor/sql/seguridad-sesion.sql` y el rollback en `servidor/sql/deshacer-fase4.sql`.
+  - **Caja (Punto de Venta):**
+    - **Barra de cliente en el ticket (`TicketVenta.tsx`):** muestra por defecto `Cliente: Cliente Varios (F3)`.
+    - **Modal de selección (`ModalElegirClientePOS.tsx`):**
+      - Atajo rápido **F3** (o clic en el ticket) abre el selector.
+      - Búsqueda en tiempo real por Nombre, DNI, RUC o Teléfono.
+      - Navegación 100% con teclado (escribe para filtrar, flecha abajo o Enter va a la lista de coincidencias, Enter elige, Esc cierra).
+      - Opción rápida para volver a "Cliente Varios" y botón con atajo **F2** para crear un cliente nuevo al instante (con DNI/RUC y teléfono opcionales) seleccionándolo de inmediato.
+      - Botón `✕` en el ticket para desvincular el cliente y volver a "Cliente Varios".
+    - **Tickets en espera con nombre (`ModalNombreEspera.tsx`):**
+      - Al pulsar "Espera" o Shift+Q, se abre un diálogo que sugiere como nombre el cliente actual o `Ticket N`, permitiendo escribir una nota personalizada (ej. "Mesa 4", "Don Mario").
+      - Los tickets en espera muestran su nombre en los botones (`[ ▶ Ticket Prueba 4.2 (1) ]`).
+      - Al recuperar el ticket en espera, se restaura tanto el carrito como el cliente asignado (intercambio in-place si había una venta en curso).
+    - **Cobro y boleta impresa:**
+      - Si hay un cliente seleccionado, `ModalCobro` ya lo reconoce y pre-llena los datos de fiado si se elige esa opción.
+      - Al confirmar la venta (sea en efectivo, yape, tarjeta o fiado), se registran `customer_id` y `customer_name` en `sales`.
+      - En la vista previa y en la boleta impresa (`TicketImprimible.tsx`), los datos del cliente (Nombre, DNI/RUC, teléfono y dirección) salen detallados en la cabecera.
+- **Pruebas:**
+  - Script automatizado end-to-end en Edge (`test-fase4-2.cjs`):
+    1. Apertura con F3 y selección de cliente con teclado ✅
+    2. Asignación correcta al ticket ✅
+    3. Pausar ticket con nombre personalizado con Shift+Q ✅
+    4. Recuperar ticket restaurando productos y cliente ✅
+    5. Cobro con F4 e impresión de boleta con datos del cliente ✅
+    6. Verificación en PostgreSQL (`siuhub`): venta guardada con `customer_id` y `customer_name` ✅
+  - Script de desvinculación con `✕` (`test-clear-customer.cjs`): vuelve a "Cliente Varios" ✅
+  - `npx tsc -b` 0 errores ✅
+  - Desplegado en siumax (`node ai-scripts/deploy.cjs siumax`) ✅.
+
 ## 28/10/2026 (noche, 10) · Antigravity
 - **Arreglo de selector atrapado en la paginación inferior (< y >) de Inventario:**
   - **Problema reportado:** al seleccionar las flechas de cambiar de página en la parte de abajo de la tabla de Inventario (Productos), presionar Flecha Arriba (↑) no permitía subir hacia las filas de la tabla; el foco se quedaba atrapado.

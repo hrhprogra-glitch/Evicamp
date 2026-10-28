@@ -1,6 +1,6 @@
 import React from 'react';
-import { ShoppingCart, Trash2, Banknote, Pause, Play, Plus, Minus } from 'lucide-react';
-import type { CartItem } from '../types';
+import { ShoppingCart, Trash2, Banknote, Pause, Play, Plus, Minus, User, X } from 'lucide-react';
+import type { CartItem, Cliente, HeldCart } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { esDecimal, unidadDe } from '../../../utils/unidades';
 
@@ -11,11 +11,14 @@ interface Props {
   setColIndex: (index: number) => void;      // 🛡️ NUEVO
   cart: CartItem[];
   setCart: (cart: CartItem[]) => void;
+  clienteSeleccionado?: Cliente | null;
+  onAbrirElegirCliente?: () => void;
+  onLimpiarCliente?: () => void;
   updateQuantity: (id: string, qty: number) => void;
   alternarEscala?: (id: string) => void; // prender/apagar el precio por cantidad de una línea
   updatePrice: (id: string, price: number) => Promise<boolean>;
   activeTabIndex: number;
-  heldCarts: CartItem[][];
+  heldCarts: (HeldCart | CartItem[])[];
   holdCurrentCart: () => void;
   restoreCart: (index: number) => void;
   onPagar: () => void;
@@ -148,7 +151,24 @@ const InputUnidades = ({ item, updateQuantity, index, setSelectedIndex, setColIn
 };
 
 // 🔥 2. COMPONENTE PRINCIPAL (Receptor)
-export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0, setSelectedIndex, setColIndex, cart, setCart, updateQuantity, updatePrice, alternarEscala, activeTabIndex, heldCarts, holdCurrentCart, restoreCart, onPagar
+export const TicketVenta: React.FC<Props> = ({
+  selectedIndex = -1,
+  colIndex = 0,
+  setSelectedIndex,
+  setColIndex,
+  cart,
+  setCart,
+  clienteSeleccionado,
+  onAbrirElegirCliente,
+  onLimpiarCliente,
+  updateQuantity,
+  updatePrice,
+  alternarEscala,
+  activeTabIndex,
+  heldCarts,
+  holdCurrentCart,
+  restoreCart,
+  onPagar
 }) => {
 
   // CÁLCULO DE TOTALES AUTOMÁTICO
@@ -180,41 +200,84 @@ export const TicketVenta: React.FC<Props> = ({ selectedIndex = -1, colIndex = 0,
         </div>
         <div className="flex gap-3">
           <button 
+            id="btn-pausar-ticket"
             onClick={holdCurrentCart}
             disabled={cart.length === 0}
             className="h-7 flex items-center justify-center px-3 gap-1 bg-[var(--color-warning)] text-[var(--color-ink)] border-2 border-[var(--color-warning)] hover:bg-white hover:border-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-[2px_2px_0_0_var(--color-ink-dark)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]" 
-            title="Pausar y Guardar Ticket"
+            title="Pausar y Guardar Ticket (Shift+Q)"
           >
             <Pause size={14} fill="currentColor" /> <span className="text-[12px] font-black uppercase">Espera</span>
           </button>
           <button 
+            id="btn-vaciar-ticket"
             onClick={() => setCart([])}
             className="w-7 h-7 flex items-center justify-center bg-[var(--color-danger)] text-white border-2 border-[var(--color-danger)] hover:bg-white hover:text-[var(--color-danger)] transition-colors cursor-pointer shadow-[2px_2px_0_0_var(--color-ink-dark)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]" 
-            title="Vaciar Ticket"
+            title="Vaciar Ticket (Shift+W)"
           >
             <Trash2 size={14} />
           </button>
         </div>
       </div>
 
+      {/* BARRA DE CLIENTE OPCIONAL (F3) */}
+      <div className="bg-[var(--color-bg)] px-3 py-1.5 border-b-2 border-[var(--color-ink)] flex items-center justify-between gap-2 shrink-0">
+        <button
+          id="btn-elegir-cliente-pos"
+          type="button"
+          onClick={onAbrirElegirCliente}
+          title="Elegir o cambiar cliente (F3)"
+          className="flex-1 flex items-center gap-2 text-xs font-black uppercase text-left hover:text-[var(--color-accent)] cursor-pointer truncate outline-none focus:ring-2 focus:ring-[var(--color-ink)] p-0.5 rounded-none"
+        >
+          <User size={15} className={clienteSeleccionado ? "text-[var(--color-ink)] shrink-0" : "text-[var(--color-subtle)] shrink-0"} />
+          {clienteSeleccionado ? (
+            <span className="truncate text-[var(--color-ink)]">
+              <span className="text-[var(--color-muted)] font-normal mr-1">CLI:</span>
+              {clienteSeleccionado.nombre}
+              {clienteSeleccionado.dni ? ` (DNI ${clienteSeleccionado.dni})` : clienteSeleccionado.ruc ? ` (RUC ${clienteSeleccionado.ruc})` : ''}
+            </span>
+          ) : (
+            <span className="text-[var(--color-muted)] truncate">
+              Cliente: <span className="text-[var(--color-ink)]">Cliente Varios</span> <span className="text-[10px] text-[var(--color-subtle)]">(F3)</span>
+            </span>
+          )}
+        </button>
+
+        {clienteSeleccionado && (
+          <button
+            id="btn-limpiar-cliente-pos"
+            type="button"
+            onClick={onLimpiarCliente}
+            title="Quitar cliente (volver a Cliente Varios)"
+            className="w-6 h-6 flex items-center justify-center bg-white border border-[var(--color-border)] hover:bg-[var(--color-danger)] hover:text-white hover:border-[var(--color-danger)] text-[var(--color-muted)] transition-colors cursor-pointer shrink-0"
+          >
+            <X size={13} />
+          </button>
+        )}
+      </div>
+
       {/* NUEVA BARRA: TICKETS EN ESPERA (Aparece solo si hay tickets guardados) */}
       {heldCarts.length > 0 && (
-        <div id="held-carts-container" className="bg-[var(--color-bg)] p-3 flex gap-2 overflow-x-auto border-b-2 border-[var(--color-ink)] shrink-0 custom-scrollbar">
-          {heldCarts.map((_, i) => (
-            <button 
-              key={i} 
-              id={`btn-held-${i}`}
-              onClick={() => restoreCart(i)}
-              className={`border-2 px-3 py-1.5 text-[12px] font-black uppercase flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
-                activeTabIndex === i 
-                  ? 'bg-[var(--color-accent)] text-[var(--color-ink)] border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] scale-105 animate-pulse-fast'
-                  : 'bg-[var(--color-info)] text-white border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-none'
-              }`}
-              title="Recuperar Ticket"
-            >
-              <Play size={10} fill="currentColor" /> RECUPERAR T-{i + 1}
-            </button>
-          ))}
+        <div id="held-carts-container" className="bg-[var(--color-bg)] p-2 flex gap-2 overflow-x-auto border-b-2 border-[var(--color-ink)] shrink-0 custom-scrollbar">
+          {heldCarts.map((item, i) => {
+            const held = Array.isArray(item) ? { cart: item, nombre: `T-${i + 1}` } : item;
+            const nombreMostrar = held.nombre || `T-${i + 1}`;
+            const count = held.cart?.length || 0;
+            return (
+              <button 
+                key={i} 
+                id={`btn-held-${i}`}
+                onClick={() => restoreCart(i)}
+                className={`border-2 px-2.5 py-1 text-[11px] font-black uppercase flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
+                  activeTabIndex === i 
+                    ? 'bg-[var(--color-accent)] text-[var(--color-ink)] border-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)] scale-105 animate-pulse-fast'
+                    : 'bg-[var(--color-info)] text-white border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] hover:translate-y-[1px] hover:translate-x-[1px] hover:shadow-none'
+                }`}
+                title="Recuperar Ticket"
+              >
+                <Play size={10} fill="currentColor" /> {nombreMostrar} ({count})
+              </button>
+            );
+          })}
         </div>
       )}
 

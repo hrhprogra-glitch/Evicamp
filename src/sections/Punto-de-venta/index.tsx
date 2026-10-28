@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../db/supabase';
-import type { CartItem } from './types';
+import type { CartItem, Cliente, HeldCart } from './types';
 import type { Product } from '../Inventario/types';
 import { useRef } from 'react';
-import { Wallet, Printer, X } from 'lucide-react';
+import { Wallet, Printer, X, Users } from 'lucide-react';
 import { useImprimir } from '../../utils/impresion';
 import { useEmpleado, usePermiso } from '../../utils/permisos';
 import { conAutorizacion } from '../../utils/autorizacion';
@@ -17,6 +17,8 @@ import { ModalCobro } from './components/ModalCobro';
 import { ModalBalanza } from './components/ModalBalanza';
 import { ModalPrecioConsumo } from './components/ModalPrecioConsumo';
 import { TicketImprimible } from './components/TicketImprimible';
+import { ModalElegirClientePOS } from './components/ModalElegirClientePOS';
+import { ModalNombreEspera } from './components/ModalNombreEspera';
 import { traerTodo } from '../../utils/traerTodo';
 import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ EVICAMP: Mini Reporte en Tiempo Real
 
@@ -27,7 +29,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
   const [hasOpenSession, setHasOpenSession] = useState<boolean | null>(null);
   // En tablet/celular se muestra un panel a la vez: catálogo de productos o ticket de venta
   const [vistaMovil, setVistaMovil] = useState<'productos' | 'ticket'>('productos');
-const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   
   // 🚀 MEMORIA PERSISTENTE: Cargar carrito desde el navegador
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -35,10 +37,37 @@ const [searchQuery, setSearchQuery] = useState('');
     return guardado ? JSON.parse(guardado) : [];
   });
   
+  // 🚀 MEMORIA PERSISTENTE: Cliente seleccionado (opcional, por defecto Cliente Varios)
+  const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(() => {
+    const guardado = localStorage.getItem('evicamp_cliente_pos');
+    return guardado ? JSON.parse(guardado) : null;
+  });
+  const [isClienteModalOpen, setIsClienteModalOpen] = useState(false);
+  const [isEsperaModalOpen, setIsEsperaModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (clienteSeleccionado) {
+      localStorage.setItem('evicamp_cliente_pos', JSON.stringify(clienteSeleccionado));
+    } else {
+      localStorage.removeItem('evicamp_cliente_pos');
+    }
+  }, [clienteSeleccionado]);
+
   // 🚀 MEMORIA PERSISTENTE: Cargar tickets en espera desde el navegador
-  const [heldCarts, setHeldCarts] = useState<CartItem[][]>(() => {
+  const [heldCarts, setHeldCarts] = useState<HeldCart[]>(() => {
     const guardado = localStorage.getItem('evicamp_held_carts');
-    return guardado ? JSON.parse(guardado) : [];
+    if (!guardado) return [];
+    try {
+      const parsed = JSON.parse(guardado);
+      return parsed.map((item: any, idx: number) => {
+        if (Array.isArray(item)) {
+          return { cart: item, nombre: `T-${idx + 1}`, timestamp: Date.now() };
+        }
+        return item;
+      });
+    } catch {
+      return [];
+    }
   });
   // --- INICIO EVICAMP: MOTOR DE NAVEGACIÓN PRO v4 (Salto de Panel) ---
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
@@ -85,16 +114,11 @@ const [searchQuery, setSearchQuery] = useState('');
       if (e.key.toLowerCase() === 'q' && e.shiftKey) {
         e.preventDefault();
         if (cart.length > 0) {
-          setHeldCarts(prev => {
-            if (prev.length >= 5) {
-              alert("Límite máximo: Tienes 5 tickets en espera.");
-              return prev;
-            }
-            return [...prev, cart];
-          });
-          setCart([]);
-          setSelectedIndex(-1);
-          document.getElementById('buscador-global-pos')?.focus();
+          if (heldCarts.length >= 5) {
+            alert("Límite máximo: Tienes 5 tickets en espera. Termina alguno antes de guardar otro.");
+            return;
+          }
+          setIsEsperaModalOpen(true);
         }
         return;
       }
@@ -102,6 +126,7 @@ const [searchQuery, setSearchQuery] = useState('');
         e.preventDefault();
         if (cart.length > 0) {
           setCart([]);
+          setClienteSeleccionado(null);
           setSelectedIndex(-1);
           document.getElementById('buscador-global-pos')?.focus();
         }
@@ -371,7 +396,7 @@ const [searchQuery, setSearchQuery] = useState('');
   // En la app de escritorio imprime directo; en el navegador abre la ventana de impresión
   const handlePrint = useImprimir(componentRef, 'Boleta de Venta');
 
-  // 🔥 NUEVO: ATAJOS DE TECLADO GLOBALES (F2, F4, ESCAPE)
+  // 🔥 NUEVO: ATAJOS DE TECLADO GLOBALES (F2, F3, F4, ESCAPE)
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       // 1. ESCAPE: Cierra cualquier ventana modal abierta al instante
@@ -380,6 +405,8 @@ const [searchQuery, setSearchQuery] = useState('');
         setIsBalanzaModalOpen(false);
         setIsPrecioModalOpen(false);
         setIsVistaPreviaOpen(false);
+        setIsClienteModalOpen(false);
+        setIsEsperaModalOpen(false);
         setSelectedWeightProduct(null);
         setSelectedConsumoProduct(null);
       }
@@ -394,11 +421,20 @@ const [searchQuery, setSearchQuery] = useState('');
         return;
       }
 
-      // 3. F2 o F4: Proceder al Pago Inmediato desde cualquier parte de la pantalla
+      // 3. F3: Seleccionar cliente para la venta (opcional)
+      if (e.key === 'F3') {
+        e.preventDefault();
+        if (!isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isEsperaModalOpen && !isClienteModalOpen) {
+          setIsClienteModalOpen(true);
+        }
+        return;
+      }
+
+      // 4. F2 o F4: Proceder al Pago Inmediato desde cualquier parte de la pantalla
       if (e.key === 'F2' || e.key === 'F4') {
         e.preventDefault(); // Evita el comportamiento por defecto del navegador web
         // Solo abrimos la ventana de pago si hay algo en el carrito y no hay otros modales encima
-        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen) {
+        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isEsperaModalOpen) {
           setIsCobroModalOpen(true);
         }
       }
@@ -406,7 +442,7 @@ const [searchQuery, setSearchQuery] = useState('');
 
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [cart.length, isCobroModalOpen, isBalanzaModalOpen, isPrecioModalOpen, isVistaPreviaOpen]);
+  }, [cart.length, isCobroModalOpen, isBalanzaModalOpen, isPrecioModalOpen, isVistaPreviaOpen, isClienteModalOpen, isEsperaModalOpen]);
 
   // 1. CARGAR PRODUCTOS AL ABRIR LA VENTANA
   useEffect(() => {
@@ -621,33 +657,54 @@ const [searchQuery, setSearchQuery] = useState('');
       });
     });
   };
-  // 4. NUEVO: PONER TICKET EN ESPERA (Guardar Caja)
+  // 4. NUEVO: PONER TICKET EN ESPERA (Guardar Caja con Nombre)
   const holdCurrentCart = () => {
     if (cart.length > 0) {
       if (heldCarts.length >= 5) {
         alert("Límite máximo: Tienes 5 tickets en espera. Termina alguno antes de guardar otro.");
         return;
       }
-      setHeldCarts([...heldCarts, cart]); // Guarda el carrito actual en la lista de espera
-      setCart([]); // Deja la caja vacía y lista para el siguiente cliente
-      setActiveTabIndex(-1); // 🛡️ Resetea el foco visual, ya que estamos en una caja nueva
+      setIsEsperaModalOpen(true);
     }
   };
 
-  // 5. NUEVO: RECUPERAR TICKET EN ESPERA (Swap In-Place)
+  const handleConfirmarEspera = (nombre: string) => {
+    const nuevoHeld: HeldCart = {
+      cart,
+      cliente: clienteSeleccionado,
+      nombre: nombre.trim() || clienteSeleccionado?.nombre || `T-${heldCarts.length + 1}`,
+      timestamp: Date.now()
+    };
+    setHeldCarts(prev => [...prev, nuevoHeld]);
+    setCart([]);
+    setClienteSeleccionado(null);
+    setActiveTabIndex(-1);
+    setIsEsperaModalOpen(false);
+    setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
+  };
+
+  // 5. NUEVO: RECUPERAR TICKET EN ESPERA (Swap In-Place con Cliente)
   const restoreCart = (index: number) => {
     const restored = heldCarts[index];
+    const restoredCart = Array.isArray(restored) ? restored : (restored.cart || []);
+    const restoredCliente = Array.isArray(restored) ? null : (restored.cliente || null);
     const newHeld = [...heldCarts];
     
     // Intercambio en la misma posición (in-place) para que los botones no salten
     if (cart.length > 0) {
-      newHeld[index] = cart;
+      newHeld[index] = {
+        cart,
+        cliente: clienteSeleccionado,
+        nombre: clienteSeleccionado?.nombre || `T-${index + 1}`,
+        timestamp: Date.now()
+      };
     } else {
       newHeld.splice(index, 1);
     }
     
     setHeldCarts(newHeld);
-    setCart(restored);
+    setCart(restoredCart);
+    setClienteSeleccionado(restoredCliente);
     setActiveTabIndex(index); // Actualizar el índice para que brille permanente
   };
   // 6. PROCESAR PAGO (GUARDA VENTA, REDUCE STOCK Y REGISTRA FIADOS)
@@ -695,12 +752,13 @@ const [searchQuery, setSearchQuery] = useState('');
       else if (metodosUsados.length > 1) tipoPago = 'MIXTO';
 
       // === REGISTRO DE VENTA (inserciones directas) ===
-      // Nota técnica: esto reemplaza una llamada a supabase.rpc('fn_register_sale', ...) que
-      // impedía confirmar CUALQUIER pago porque esa función no existe en la base de datos
-      // (se agregó al código sin crearla en el servidor). El detalle de productos sigue
-      // descontando el stock y el lote correspondiente automáticamente: existe un trigger en
-      // la BD (fn_reduce_stock_from_sales) que se dispara al insertar en sale_details.
       const trueSaleId = Date.now();
+      const finalCustomerId = fiadoData?.clienteId
+        ? Number(fiadoData.clienteId)
+        : clienteSeleccionado?.id
+        ? Number(clienteSeleccionado.id)
+        : null;
+      const finalCustomerName = fiadoData?.clienteNombre || clienteSeleccionado?.nombre || null;
 
       const { error: saleError } = await supabase.from('sales').insert([{
         id: trueSaleId,
@@ -710,6 +768,8 @@ const [searchQuery, setSearchQuery] = useState('');
         amount_yape: cobradoYape,
         amount_card: cobradoTarjeta,
         amount_credit: montoCredito,
+        customer_id: finalCustomerId,
+        customer_name: finalCustomerName,
         sunat_status: 'ACEPTADO',
         created_at: new Date().toISOString(),
         is_synced: 1
@@ -786,6 +846,13 @@ const [searchQuery, setSearchQuery] = useState('');
           vuelto: vuelto,
           nroBoleta: `B001-${String(trueSaleId).substring(0,8).padStart(8, '0')}`,
           fiadoData: fiadoData,
+          cliente: clienteSeleccionado ? {
+            nombre: clienteSeleccionado.nombre,
+            dni: clienteSeleccionado.dni,
+            ruc: clienteSeleccionado.ruc,
+            telefono: clienteSeleccionado.telefono,
+            direccion: clienteSeleccionado.direccion
+          } : null,
           vendedor: empleado?.nombre || null
         });
         setIsVistaPreviaOpen(true);
@@ -798,6 +865,7 @@ const [searchQuery, setSearchQuery] = useState('');
       // Limpiar Caja Rápido
       setIsCobroModalOpen(false);
       setCart([]);
+      setClienteSeleccionado(null);
       setRefreshReport(prev => prev + 1); // 🛡️ EVICAMP: Actualizar números del reporte al terminar la venta
       
     } catch (err) {
@@ -867,6 +935,9 @@ const [searchQuery, setSearchQuery] = useState('');
             setColIndex={setColIndex}           // 🛡️ NUEVO
             cart={cart} 
             setCart={setCart} 
+            clienteSeleccionado={clienteSeleccionado}
+            onAbrirElegirCliente={() => setIsClienteModalOpen(true)}
+            onLimpiarCliente={() => setClienteSeleccionado(null)}
             updateQuantity={updateQuantity}
             updatePrice={updatePrice}
             alternarEscala={alternarEscala}
@@ -893,16 +964,16 @@ const [searchQuery, setSearchQuery] = useState('');
         onConfirm={handleConfirmWeight}
       />
       {/* Reemplaza <ModalPrecioManual ... /> por este bloque: */}
-<ModalPrecioConsumo 
-  isOpen={isPrecioModalOpen}
-  onClose={() => {
-    setIsPrecioModalOpen(false);
-    setSelectedConsumoProduct(null);
-    setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 100);
-  }}
-  producto={selectedConsumoProduct}
-  onConfirm={handleConfirmPrecio}
-/>
+      <ModalPrecioConsumo 
+        isOpen={isPrecioModalOpen}
+        onClose={() => {
+          setIsPrecioModalOpen(false);
+          setSelectedConsumoProduct(null);
+          setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 100);
+        }}
+        producto={selectedConsumoProduct}
+        onConfirm={handleConfirmPrecio}
+      />
       {/* MODAL DE COBRO */}
       <ModalCobro 
         isOpen={isCobroModalOpen}
@@ -922,6 +993,7 @@ const [searchQuery, setSearchQuery] = useState('');
         }}
         cart={cart}
         total={Math.round(cart.reduce((acc, item) => acc + item.subtotal, 0) * 100) / 100}
+        clienteSeleccionado={clienteSeleccionado}
         onConfirm={handleConfirmPayment}
       />
       {/* VISTA PREVIA DEL TICKET (NUEVO MODAL) */}
@@ -960,6 +1032,7 @@ const [searchQuery, setSearchQuery] = useState('');
                   vuelto={ultimaVenta.vuelto}
                   nroBoleta={ultimaVenta.nroBoleta}
                   fiadoData={ultimaVenta.fiadoData}
+                  cliente={ultimaVenta.cliente}
                   vendedor={ultimaVenta.vendedor}
                 />
               </div>
@@ -999,6 +1072,34 @@ const [searchQuery, setSearchQuery] = useState('');
           </div>
         </div>
       )}
+
+      {/* MODAL ELEGIR CLIENTE POS (F3) */}
+      <ModalElegirClientePOS
+        isOpen={isClienteModalOpen}
+        clienteActual={clienteSeleccionado}
+        onSelectCliente={(c) => {
+          setClienteSeleccionado(c);
+          setIsClienteModalOpen(false);
+          setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
+        }}
+        onClose={() => {
+          setIsClienteModalOpen(false);
+          setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
+        }}
+      />
+
+      {/* MODAL PAUSAR TICKET CON NOMBRE (Shift+Q) */}
+      <ModalNombreEspera
+        isOpen={isEsperaModalOpen}
+        defaultNombre={clienteSeleccionado ? clienteSeleccionado.nombre : `Ticket ${heldCarts.length + 1}`}
+        total={Math.round(cart.reduce((acc, item) => acc + item.subtotal, 0) * 100) / 100}
+        itemsCount={cart.length}
+        onConfirm={handleConfirmarEspera}
+        onClose={() => {
+          setIsEsperaModalOpen(false);
+          setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
+        }}
+      />
     </div>
   );
 };

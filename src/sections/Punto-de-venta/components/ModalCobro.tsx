@@ -2,7 +2,7 @@ import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
 import { X, Banknote, Smartphone, CreditCard, CheckCircle2, Calculator, UserPlus, Calendar, ChevronDown, Plus } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
-import type { CartItem } from '../types';
+import type { CartItem, Cliente } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { traerTodo } from '../../../utils/traerTodo';
 
@@ -21,11 +21,12 @@ interface Props {
   onClose: () => void;
   cart: CartItem[];
   total: number;
+  clienteSeleccionado?: Cliente | null;
   // 🛡️ Actualizamos a Promesa para que el botón sepa cuándo terminó
-      onConfirm: (pagos: { efectivo: number, yape: number, tarjeta: number }, imprimirBoleta: boolean, fiadoData?: FiadoData) => Promise<void> | void;
-    }
+  onConfirm: (pagos: { efectivo: number, yape: number, tarjeta: number }, imprimirBoleta: boolean, fiadoData?: FiadoData) => Promise<void> | void;
+}
 
-    export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, onConfirm }) => {
+export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSeleccionado, onConfirm }) => {
       const [montoEfectivo, setMontoEfectivo] = useState<string>('');
       const [montoYape, setMontoYape] = useState<string>('');
       const [montoTarjeta, setMontoTarjeta] = useState<string>('');
@@ -55,11 +56,19 @@ interface Props {
       setMontoTarjeta('');
       setImprimirBoleta(true);
       setIsProcessing(false);
-      setClienteId('');
-      setClienteNombre('');
-      setSearchCliente('');
-      setClienteDni('');
-      setClienteTelefono('');
+      if (clienteSeleccionado) {
+        setClienteId(clienteSeleccionado.id);
+        setClienteNombre(clienteSeleccionado.nombre);
+        setSearchCliente(clienteSeleccionado.nombre);
+        setClienteDni(clienteSeleccionado.dni || clienteSeleccionado.ruc || '');
+        setClienteTelefono(clienteSeleccionado.telefono || '');
+      } else {
+        setClienteId('');
+        setClienteNombre('');
+        setSearchCliente('');
+        setClienteDni('');
+        setClienteTelefono('');
+      }
       const manana = new Date();
       manana.setDate(manana.getDate() + 1);
       const year = manana.getFullYear();

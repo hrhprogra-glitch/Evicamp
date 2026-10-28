@@ -1305,3 +1305,12 @@ BEGIN
 END $$;
 
 NOTIFY pgrst, 'reload schema';
+
+-- ===================================================================================================
+-- FASE 4.2: Cliente opcional en la Caja (POS). Permite asociar una venta a un cliente (por nombre, DNI o RUC)
+-- y reflejarlo en el historial de compras y el ticket impreso.
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS customer_id bigint REFERENCES public.customers (id) ON DELETE SET NULL;
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS customer_name text;
+CREATE INDEX IF NOT EXISTS idx_sales_customer_id ON public.sales (customer_id);
+
+NOTIFY pgrst, 'reload schema';

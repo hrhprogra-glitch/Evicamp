@@ -2,6 +2,11 @@
 -- Uso (solo si el dueño pide volver atrás): psql -d <base> -f servidor/sql/deshacer-fase4.sql
 -- OJO: borrar columnas borra lo que se escribió en ellas (teléfonos, direcciones…). Sacar respaldo antes.
 
+-- 4.2: cliente en la venta
+DROP INDEX IF EXISTS public.idx_sales_customer_id;
+ALTER TABLE public.sales DROP COLUMN IF EXISTS customer_id;
+ALTER TABLE public.sales DROP COLUMN IF EXISTS customer_name;
+
 -- 4.1: grupos de clientes
 ALTER TABLE public.customers DROP COLUMN IF EXISTS grupo_id;
 DROP TABLE IF EXISTS public.grupos_clientes;

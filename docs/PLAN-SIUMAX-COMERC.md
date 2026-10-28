@@ -4,15 +4,15 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 28/10/2026 (noche, 10), Antigravity.
+- **Última actualización:** 28/10/2026 (noche, 11), Antigravity.
 - **Fases hechas y subidas:** 0, 1 y 2. En producción en Evicamp desde el 23/10/2026 (commit d36efca).
-- **Fase actual:** **4, Clientes y empresas.** La **4.1 ajustada y probada en siumax** (rama `fase-4`):
-  - sección Clientes con pestañas Clientes | Créditos, ficha con DNI/RUC directo, detalle del cliente y grupos de clientes;
-  - ajustes del dueño completados: selector 2D en Editar cliente (flechas ← →), columna "Grupo" dedicada en la tabla, orden por defecto en MAYOR DEUDA, vinculación blindada de fiados huérfanos, retención de foco al eliminar proveedores o clientes, y liberación de flechas de paginación inferior en Inventario (↑ sube a la grilla sin quedar atrapado);
-  - **Siguiente: esperar visto bueno del dueño de estos ajustes y mostrar la propuesta de la 4.2 (cliente opcional en la Caja).**
+- **Fase actual:** **4, Clientes y empresas.** La **4.1 y la 4.2 hechas y probadas en siumax** (rama `fase-4`):
+  - **4.1:** sección Clientes con pestañas Clientes | Créditos, ficha con DNI/RUC directo, detalle del cliente y grupos de clientes (familia/empresa).
+  - **4.2:** cliente opcional en la Caja (POS) con atajo F3 y botón en ticket, búsqueda y creación rápida con F2, tickets en espera con nombre personalizado (Shift+Q), guardado de cliente en `sales` (`customer_id` y `customer_name`) e impresión de datos del cliente en la boleta.
+  - **Siguiente: esperar visto bueno del dueño y continuar con la 4.3 (Crédito con plazo y límite).**
   - Además falta su decisión para pedidos: **¿el pedido descuenta el stock al guardarlo o al entregarlo?** (recomendado: al guardarlo).
-- **Commits locales sin push:** documentación para IAs y la fase 4.1 en rama `fase-4`.
-- **URGENTE para Evicamp:** el arreglo del cobro de créditos (se cobraba dos veces) y los cambios de la 4.1 están en la rama `fase-4`. Subirlos cuando el dueño lo autorice.
+- **Commits locales sin push:** documentación para IAs y fases 4.1 y 4.2 en rama `fase-4`.
+- **URGENTE para Evicamp:** el arreglo del cobro de créditos (se cobraba dos veces) y los cambios de la fase 4 están en la rama `fase-4`. Subirlos cuando el dueño lo autorice.
 - **Avisos pendientes para el cliente de Evicamp:**
   - "Mermas" ahora es "Conteos";
   - dar el permiso "Cambiar precio al cobrar" a quien corresponda.
@@ -21,7 +21,7 @@
 | Propuesta | Estado |
 |---|---|
 | **Grupos de clientes (familia/empresa)** dentro de la 4.1; "Unir" se quitó | **Hecho en siumax (28/10)** |
-| Fase 4 (sección 5 de este documento) — **4.1 hecha en siumax** | **Aceptada, falta el OK final y la decisión del stock de pedidos** |
+| Fase 4 (sección 5 de este documento) — **4.1 y 4.2 hechas en siumax** | **Aceptada, 4.1 y 4.2 listas en siumax; falta la decisión del stock de pedidos** |
 | Fase 11 SUNAT: camino A (proveedor PSE) → B (directo) | **En pausa** hasta que el dueño lo pida |
 | Cobros con QR (Yape/Plin) y aparato de tarjetas (Mercado Pago: QR en pantalla + aparato Point) | **En pausa**; faltan dos decisiones (qué procesador y si empezar por el QR) |
 | Importar facturas XML de compras | **En pausa** |
@@ -126,16 +126,14 @@ Datos de Evicamp al 23/10/2026:
 - **Para no duplicar:** al crear, avisa "¿Es esta Rosa?". Se pueden **unir dos clientes** en uno (junta deudas y compras).
 - **Los 70 clientes de Evicamp** pasan tal cual, con sus deudas.
 
-### 5.3 En la Caja (4.2)
-- **"Cliente (opcional)":** una tecla para elegirlo (por nombre, DNI o RUC) o crearlo solo con el nombre. Si no se elige, queda "Cliente varios", igual que hoy.
-  - Si es mayorista, los precios cambian solos.
-  - El ticket sale con su nombre y DNI/RUC.
-  - La venta queda en su historial (agregar `sales.customer_id`).
-- **Fiado:** igual que hoy, usando la misma lista de clientes.
-- **ESPERA** (hoy guarda hasta 5 tickets en el navegador de esa PC: `localStorage evicamp_held_carts`):
-  - sigue igual, más un **nombre** por ticket en espera;
-  - botón **"Pasar a pedido"**.
-- **Dos opciones nuevas al cobrar:** "Guardar como cotización" y "Guardar como pedido".
+### 5.3 En la Caja (4.2) — ✅ Hecho en siumax (28/10)
+- **"Cliente (opcional)":** atajo F3 o botón en el ticket para elegirlo (por nombre, DNI, RUC o teléfono) o crearlo con F2 (nombre obligatorio, DNI/RUC y teléfono opcionales). Si no se elige, queda "Cliente varios", igual que hoy.
+  - El ticket impreso sale con su nombre y DNI/RUC.
+  - La venta queda en su historial (columnas `sales.customer_id` y `sales.customer_name`).
+- **Fiado:** igual que hoy; si el cliente ya estaba elegido en el ticket, la ventana de cobro lo precarga automáticamente.
+- **ESPERA:** al pausar (botón o Shift+Q) pide un nombre para el ticket (sugiere el del cliente o Ticket N); al recuperarlo restaura los productos y el cliente.
+- **Botón "✕" en el ticket:** para desvincular el cliente y volver a "Cliente varios" con un solo clic o tecla.
+- **Dos opciones nuevas al cobrar (Fases 4.5 y 4.6):** "Guardar como cotización" y "Guardar como pedido".
 
 ### 5.4 Crédito con plazo y límite (4.3)
 - Solo aplica si el dueño lo pone. Un cliente sin límite **nunca** recibe avisos ni bloqueos.
