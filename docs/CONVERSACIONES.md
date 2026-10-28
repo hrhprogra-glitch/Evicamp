@@ -130,3 +130,5 @@
 - **Tabla de clientes:** debe mostrar DNI/RUC, teléfono y dirección, y la ficha de "nuevo cliente" debe permitir llenarlos (opcionales y editables). Hecho: columnas siempre visibles; la ficha ya los tenía.
 - **Selector** perdido al volver de Editar, Estado de cuenta o Unir en el detalle del cliente: arreglado (regla global).
 - **Unir clientes:** no quiere que la otra cuenta desaparezca; deben compartir deuda y mostrar con quién. También agrupar por familia o empresa (técnicos de una empresa). Preguntó si es para otra fase. Se le dio la propuesta de "Grupos de clientes" (4.1c).
+- **Ficha:** "tiene que mostrar el DNI y RUC para llenarlos sin escoger nada" → hecho; además pidió el **link de ubicación** → hecho.
+- **Unir y grupos:** quitar "Unir"; un solo grupo por cliente con la opción de sacarlo; hacerlo como parte de la 4.1 → hechos los **Grupos de clientes** (familia o empresa).

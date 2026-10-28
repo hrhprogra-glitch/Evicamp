@@ -7,6 +7,22 @@
 
 ---
 
+## 28/10/2026 (noche, 6) · Claude (Claude Code)
+- **Ficha del cliente:**
+  - **DNI y RUC a la vista**, los dos opcionales y sin elegir tipo (columna nueva `customers.ruc`; los que tenían el RUC en `dni` se pasaron);
+  - **link de ubicación** (`customers.ubicacion`): ícono en la tabla y botón "Ver ubicación" en el detalle.
+- **Se quitó "Unir clientes"** (decisión del dueño).
+- **Grupos de clientes (familia o empresa), parte de la 4.1, con OK del dueño:**
+  - tabla `grupos_clientes` (id con default por hora; sin internet lo pone la PC) y `customers.grupo_id` (un solo grupo);
+  - permisos `caja_ver_fiados`.
+  - **Ventanas:** `ModalGrupo` (miembros con su deuda, Cobrar al grupo, Agregar cliente, Editar, Eliminar, Sacar), `ModalElegir` (lista con buscador) y `ModalFormGrupo`.
+  - **Detalle del cliente:** "Agregar a un grupo" o "Grupo: X", "Sacar del grupo" y la deuda del grupo.
+  - **Estado de cuenta:** con `mostrarNombre` en "Cobrar al grupo".
+- **Prueba de lo cambiado:** `prueba-grupos` 19/19.
+- **IMPORTANTE para cualquier IA:** el chequeo de tipos correcto es `npx tsc -b`. `npx tsc --noEmit -p .` NO revisa nada (tsconfig.json tiene "files": []).
+- **Para Evicamp hace falta el SQL nuevo:** ruc, ubicacion, grupos_clientes, permisos y `fn_registrar_conteo` con lote.
+- **Falta actualizar** `prueba-clientes` y `prueba-clientes-detalle` (usaban la ficha vieja y "Unir").
+
 ## 28/10/2026 (noche, 5) · Claude (Claude Code)
 - **Error:** el selector desaparecía en el detalle del cliente al volver de Editar, Estado de cuenta o Unir.
   - **Arreglo GLOBAL** en `src/utils/ventanas.ts`: cada ventana recuerda dónde estaba el selector y, al cerrarse la de encima, vuelve ahí. Verificado con las 3 ventanas.

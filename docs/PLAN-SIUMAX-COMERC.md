@@ -22,7 +22,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
-| **Grupos de clientes (familia/empresa), propuesta 4.1c:** cuentas vinculadas que comparten deuda; reemplaza o complementa "Unir" | **Propuesta enviada 28/10, esperando respuestas** |
+| **Grupos de clientes (familia/empresa)** dentro de la 4.1; "Unir" se quitó | **Hecho en siumax (28/10)** |
 | Fase 4 (sección 5 de este documento) — **4.1 hecha en siumax** | **Aceptada, falta el OK final y la decisión del stock de pedidos** |
 | Fase 11 SUNAT: camino A (proveedor PSE) → B (directo) | **En pausa** hasta que el dueño lo pida |
 | Cobros con QR (Yape/Plin) y aparato de tarjetas (Mercado Pago: QR en pantalla + aparato Point) | **En pausa**; faltan dos decisiones (qué procesador y si empezar por el QR) |
