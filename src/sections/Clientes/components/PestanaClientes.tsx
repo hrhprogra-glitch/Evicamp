@@ -120,11 +120,13 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, onNuevo, on
         <table className="w-full text-left border-collapse">
           <thead className="sticky top-0 bg-[var(--color-ink)] text-white z-10">
             <tr className="uppercase text-[11px] font-black tracking-widest">
+              {/* DNI/RUC, teléfono y dirección se ven SIEMPRE (pedido del dueño): en pantallas angostas la tabla se desliza */}
               <th className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6 border-r border-white/20">Cliente / Empresa</th>
-              <th className="hidden md:table-cell py-4 px-4 border-r border-white/20">Documento</th>
-              <th className="hidden md:table-cell py-4 px-4 border-r border-white/20">Teléfono</th>
+              <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20">DNI / RUC</th>
+              <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20">Teléfono</th>
+              <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20">Dirección</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20 text-right">Deuda</th>
-              <th className="hidden sm:table-cell py-4 px-4 border-r border-white/20 text-center">Último crédito</th>
+              <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20 text-center">Último crédito</th>
               <th className="py-3 sm:py-4 px-2 sm:px-4 sm:pr-6 text-center">Acciones</th>
             </tr>
           </thead>
@@ -136,14 +138,14 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, onNuevo, on
                 <td className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6">
                   <span className="font-black text-[var(--color-ink)] uppercase text-base">{c.nombre}</span>
                   {c.referencia && <span className="block text-xs text-[var(--color-muted)] mt-0.5 normal-case">{c.referencia}</span>}
-                  <span className="md:hidden block text-xs text-[var(--color-muted)] mt-0.5">{c.dni ? `${c.tipoDoc || 'DOC'} ${c.dni}` : ''}{c.telefono ? ` · ${c.telefono}` : ''}</span>
                 </td>
-                <td className="hidden md:table-cell py-4 px-4 text-[var(--color-ink)] whitespace-nowrap">{c.dni ? <><span className="text-[11px] text-[var(--color-muted)]">{c.tipoDoc || 'DOC'}</span> {c.dni}</> : <span className="text-[var(--color-subtle)]">—</span>}</td>
-                <td className="hidden md:table-cell py-4 px-4 text-[var(--color-ink)] whitespace-nowrap">{c.telefono || <span className="text-[var(--color-subtle)]">—</span>}</td>
+                <td data-col="documento" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] whitespace-nowrap">{c.dni ? <><span className="text-[11px] text-[var(--color-muted)]">{c.tipoDoc || 'DOC'}</span> {c.dni}</> : <span className="text-[var(--color-subtle)]">—</span>}</td>
+                <td data-col="telefono" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] whitespace-nowrap">{c.telefono || <span className="text-[var(--color-subtle)]">—</span>}</td>
+                <td data-col="direccion" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] max-w-[220px] truncate" title={c.direccion || ''}>{c.direccion || <span className="text-[var(--color-subtle)]">—</span>}</td>
                 <td className="py-3 sm:py-4 px-3 sm:px-4 text-right whitespace-nowrap">
                   <span className={`font-black ${deuda > 0.05 ? 'text-[var(--color-danger)]' : 'text-[var(--color-subtle)]'}`}>S/ {deuda.toFixed(2)}</span>
                 </td>
-                <td className="hidden sm:table-cell py-4 px-4 text-center text-[var(--color-muted)] whitespace-nowrap">{fecha(ultimo)}</td>
+                <td className="py-3 sm:py-4 px-3 sm:px-4 text-center text-[var(--color-muted)] whitespace-nowrap">{fecha(ultimo)}</td>
                 <td className="py-3 sm:py-4 px-2 sm:px-4 sm:pr-6">
                   <div className="flex items-center justify-center gap-2">
                     <button data-accion-cliente="editar" tabIndex={-1} title="Editar cliente"
@@ -161,7 +163,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, onNuevo, on
               </tr>
             )) : (
               <tr>
-                <td colSpan={6} className="py-12 text-center text-[var(--color-muted)] font-black uppercase tracking-widest text-sm bg-[var(--color-bg)]">
+                <td colSpan={7} className="py-12 text-center text-[var(--color-muted)] font-black uppercase tracking-widest text-sm bg-[var(--color-bg)]">
                   <span className="inline-block border-2 border-[var(--color-muted)] p-4 border-dashed">{clientes.length ? 'No se encontraron clientes' : 'Todavía no hay clientes'}</span>
                 </td>
               </tr>

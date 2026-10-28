@@ -355,7 +355,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
                 >
                   <td className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6">
                     <span className="font-black text-[var(--color-ink)] uppercase text-base">{cli.clienteNombre}</span>
-                    {cli.clienteDni && <span className="block text-xs text-[var(--color-muted)] mt-1 tracking-widest">DOC: {cli.clienteDni}</span>}
+                    {(cli.clienteDni || cli.clienteTelefono) && <span className="block text-xs text-[var(--color-muted)] mt-1 tracking-widest">{[cli.clienteDni && `DNI/RUC: ${cli.clienteDni}`, cli.clienteTelefono && `TEL.: ${cli.clienteTelefono}`].filter(Boolean).join(" · ")}</span>}
                   </td>
                   <td className="hidden sm:table-cell py-4 px-4 text-right font-black text-[var(--color-muted)]">
                     S/ {cli.totalOriginal.toFixed(2)}

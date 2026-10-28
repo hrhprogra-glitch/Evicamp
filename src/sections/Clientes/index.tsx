@@ -227,11 +227,13 @@ if (fiaData) {
     fiados.forEach(f => {
       const nombre = f.clienteNombre || 'CLIENTE DESCONOCIDO';
       if (!mapa.has(nombre)) {
+        // DNI/RUC y teléfono salen de la ficha del cliente (el crédito casi nunca los trae)
+        const ficha = clientes.find((c) => (f.clienteId ? c.id === f.clienteId : c.nombre === nombre));
         mapa.set(nombre, {
           clienteNombre: nombre,
           clienteId: f.clienteId,
-          clienteDni: f.clienteDni,
-          clienteTelefono: f.clienteTelefono,
+          clienteDni: ficha?.dni || f.clienteDni,
+          clienteTelefono: ficha?.telefono || f.clienteTelefono,
           totalOriginal: 0,
           totalPendiente: 0,
           totalPagado: 0,
@@ -245,7 +247,7 @@ if (fiaData) {
       agrupado.totalPagado += Number(f.montoPagado) || 0;
     });
     return Array.from(mapa.values()).sort((a, b) => b.totalPendiente - a.totalPendiente);
-  }, [fiados]);
+  }, [fiados, clientes]);
 
   const clienteActualEstadoCuenta = React.useMemo(() => {
     if (!clienteEstadoCuenta) return null;
