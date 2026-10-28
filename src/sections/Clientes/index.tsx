@@ -65,9 +65,14 @@ export const Clientes: React.FC = () => {
   const [isModalAnularOpen, setIsModalAnularOpen] = useState(false);
   const [fiadoAAnular, setFiadoAAnular] = useState<Fiado | null>(null);
 
+  // Filas de la pestaña abierta (Clientes o Créditos): para no perder el selector cuando la lista cambia
+  const filasDeLaPestana = () => Array.from(document.querySelectorAll('[data-fila-cliente="true"], tr[role="button"]')) as HTMLElement[];
+
   // Cargar datos desde Supabase al iniciar
   const cargarDatos = async (silencioso = false) => {
     if (!silencioso) setLoading(true);
+    // En qué fila estaba el selector (ej. el cliente al que se le cobró, que al quedar sin deuda sale de Créditos)
+    const filaAntes = filasDeLaPestana().indexOf(document.activeElement as HTMLElement);
       // 🔥 OPTIMIZACIÓN: Lanzamos todas las consultas al mismo tiempo (Paralelo)
       const [
         { data: prods },
@@ -189,6 +194,15 @@ if (fiaData) {
     }));
   }
   setLoading(false);
+  // Si la fila donde estaba el selector desapareció (o el selector se perdió), va a la fila que quedó en su lugar
+  // o, si no hay filas, al buscador de la pestaña. Nunca se queda sin selector.
+  setTimeout(() => {
+    const a = document.activeElement;
+    if (document.querySelector('[role="dialog"]') || (a && a !== document.body && a.isConnected)) return;
+    const filas = filasDeLaPestana();
+    const destino = filas.length ? filas[Math.min(Math.max(filaAntes, 0), filas.length - 1)] : null;
+    (destino || document.getElementById('buscador-clientes') || document.getElementById('buscador-global-fiados'))?.focus();
+  }, 150);
     };
 
   useEffect(() => {

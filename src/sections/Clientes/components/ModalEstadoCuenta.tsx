@@ -156,13 +156,14 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
     const vueltoAEntregar = vuelto;
 
     setIsSaving(true);
-    
-    // âœ… ACTUALIZACIÃ“N OPTIMISTA: Cerramos y refrescamos de inmediato
-    onRefetch();
+
+    // Se cierra de inmediato, pero la lista se recarga recién DESPUÉS de guardar el abono (abajo, en "finally").
+    // Antes se recargaba aquí, ANTES de guardar: la deuda seguía apareciendo y, si se cobraba otra vez, el crédito
+    // quedaba pagado dos veces.
     onClose();
     if (vueltoAEntregar > 0) void avisar(`✅ Abono registrado: S/ ${totalAbono.toFixed(2)}\n\n💵 VUELTO A ENTREGAR: S/ ${vueltoAEntregar.toFixed(2)}`);
 
-    // El proceso fuerte va a background
+    // El guardado va por detrás (la caja no espera)
     (async () => {
       try {
         const { data: session } = await supabase.from('cash_sessions').select('id').eq('status', 'OPEN').single();
@@ -207,12 +208,14 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
 
         if (inserciones.length > 0) {
           const { error } = await supabase.from('debt_payments').insert(inserciones);
-          if (error) console.error('Error al insertar abonos en lote:', error);
+          if (error) { console.error('Error al insertar abonos en lote:', error); void avisar(`No se pudo registrar el abono: ${error.message}`); }
         }
       } catch (e: any) {
         console.error('Error al registrar abono en background: ' + e.message);
+        void avisar(`No se pudo registrar el abono: ${e.message}`);
       } finally {
         setIsSaving(false);
+        onRefetch(); // ahora sí: la deuda ya bajó en la base
       }
     })();
   };
