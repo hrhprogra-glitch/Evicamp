@@ -4,9 +4,9 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 27/10/2026, Claude.
+- **Última actualización:** 28/10/2026, Claude.
 - **Fases hechas y subidas:** 0, 1 y 2. En producción en Evicamp desde el 23/10/2026 (commit d36efca).
-- **Fase actual:** **4, Clientes y empresas**, en **propuesta**. Todavía no se escribió código. Falta:
+- **Fase actual:** **4, Clientes y empresas**. La **4.1a** se construyó **sin el OK** (rama `fase-4` y siumax): **el dueño debe ver el plan y decidir** si se aprueba, se cambia o se deshace. Además falta:
   1. el **OK final** del dueño;
   2. su decisión: **¿el pedido descuenta el stock al guardarlo o al entregarlo?** (recomendado: al guardarlo).
 - **Primer paso al recibir el OK:** rama `fase-4` + respaldo de siuhub → **4.1** (Créditos → sección Clientes con pestañas).
