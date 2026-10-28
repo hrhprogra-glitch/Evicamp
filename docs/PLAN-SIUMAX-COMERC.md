@@ -14,6 +14,7 @@
   1. su **revisión de la 4.1** en siumax;
   2. su decisión: **¿el pedido descuenta el stock al guardarlo o al entregarlo?** (recomendado: al guardarlo).
 - **Commits locales sin push:** documentación para IAs (en main) y la fase 4.1 (rama `fase-4`: 6b65525, e0c124d).
+- **URGENTE para Evicamp:** el arreglo del cobro de créditos (se cobraba dos veces) está en la rama `fase-4`. Conviene subirlo apenas el dueño lo diga, y revisar si hay créditos pagados de más.
 - **Avisos pendientes para el cliente de Evicamp:**
   - "Mermas" ahora es "Conteos";
   - dar el permiso "Cambiar precio al cobrar" a quien corresponda.

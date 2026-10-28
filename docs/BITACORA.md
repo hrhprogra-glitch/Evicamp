@@ -7,6 +7,15 @@
 
 ---
 
+## 28/10/2026 (noche, 3) · Claude (Claude Code)
+- **Error reportado por el dueño:** al cobrar un crédito la deuda no desaparecía y había que cobrar otra vez; además el selector desaparecía en Clientes.
+- **Causa (error ANTIGUO, también está en Evicamp):** `ModalEstadoCuenta.handlePagar` recargaba la lista ANTES de guardar el abono (lo guardaba por detrás). Al cobrar dos veces, el crédito quedaba **pagado dos veces**.
+- **Arreglo (commit en rama fase-4):**
+  - la lista se recarga DESPUÉS de guardar y avisa si falla;
+  - en `cargarDatos`, si la fila del selector desaparece, pasa a la fila que quedó en su lugar o al buscador.
+- **Prueba de lo cambiado:** `prueba-cobro-credito` 4/4.
+- **PENDIENTE:** revisar en Evicamp si hay créditos pagados de más (solo lectura). El permiso automático bloqueó la consulta: hace falta que el dueño la autorice.
+
 ## 28/10/2026 (noche, 2) · Claude (Claude Code)
 - **Pedido del dueño:** en Nuevo ajuste, nombres claros. Ahora son **MERMA** ("Se dañó, venció, se perdió o se usó") y **CONTEO** ("Cuento lo que hay y el sistema ve si falta o sobra").
 - **Lote en CONTEO** solo para quien tiene Conteos completo:

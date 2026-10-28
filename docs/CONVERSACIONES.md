@@ -126,3 +126,4 @@
 - **Nombres en Nuevo ajuste:** el dueño pidió palabras claras. Eligió **MERMA / CONTEO**; en CONTEO, quien tiene Conteos completo elige a qué lote va la diferencia y el cajero cuenta a ciegas.
 - **Pregunta:** ¿los ajustes dentro de Inventario registran quién? Sí: quién y cuándo, en el kardex, pero sin motivo.
 - **Preferencia:** "solo revisa si lo que modificaste está bien" (no más tandas de pruebas sin pedirlas).
+- **Error al cobrar un crédito:** la deuda no desaparecía y había que cobrar dos veces. Era un error antiguo (la lista se recargaba antes de guardar); se arregló. Falta revisar si en Evicamp quedaron créditos pagados dos veces.
