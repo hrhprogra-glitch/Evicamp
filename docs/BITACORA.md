@@ -132,3 +132,9 @@
 - **Avisos pendientes al cliente de Evicamp:**
   - "Mermas" ahora es "Conteos";
   - dar el permiso "Cambiar precio al cobrar" a quien corresponda.
+
+## 28/10/2026 (noche, 8) — Revisión del bot de WhatsApp (fuera de Comerc)
+- El bot está en `D:\Programación\siumax\bot-whatsapp` (Baileys + Gemini). Solo **responde** a quien escribe (no envía masivo).
+- Revisado para dejarlo 24 h en el VPS. Fallas encontradas: el historial de cada chat crece sin límite, puede responder mensajes viejos al reconectar, no se calla cuando el dueño atiende a mano, no guarda los interesados.
+- VPS: **no tiene Node** (hay que instalar Node 20+), 3 GB de RAM libres, disco 39 GB libres. Irá como servicio propio, aparte de Evicamp.
+- **Siguiente paso:** el OK del dueño al plan del bot. No se subió nada.

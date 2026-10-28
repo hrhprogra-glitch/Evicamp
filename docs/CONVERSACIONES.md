@@ -139,3 +139,4 @@
   4. Poner como predeterminado en el filtro de Clientes "MAYOR DEUDA" para ver primero a quienes deben dinero.
   - El dueño dio el OK a la propuesta, se aplicó en siumax y se validó con Edge y `prueba-grupos`.
 
+- **Bot de WhatsApp 24 h:** el dueño quiere tenerlo en el VPS; ya tiene un número aparte con WhatsApp Business. Se revisó el código y el VPS y se le mostró el plan. Esperando su OK.
