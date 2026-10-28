@@ -127,3 +127,4 @@
 - **Pregunta:** ¿los ajustes dentro de Inventario registran quién? Sí: quién y cuándo, en el kardex, pero sin motivo.
 - **Preferencia:** "solo revisa si lo que modificaste está bien" (no más tandas de pruebas sin pedirlas).
 - **Error al cobrar un crédito:** la deuda no desaparecía y había que cobrar dos veces. Era un error antiguo (la lista se recargaba antes de guardar); se arregló. Falta revisar si en Evicamp quedaron créditos pagados dos veces.
+- **Tabla de clientes:** debe mostrar DNI/RUC, teléfono y dirección, y la ficha de "nuevo cliente" debe permitir llenarlos (opcionales y editables). Hecho: columnas siempre visibles; la ficha ya los tenía.

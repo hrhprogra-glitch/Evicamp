@@ -7,6 +7,13 @@
 
 ---
 
+## 28/10/2026 (noche, 4) · Claude (Claude Code)
+- **Pedido del dueño:** la tabla de Clientes debe mostrar DNI/RUC, teléfono y dirección.
+  - Antes las columnas se ocultaban en pantallas angostas o con zoom, y no había dirección. Ahora se ven siempre.
+  - Créditos también muestra el DNI/RUC y el teléfono de la ficha del cliente.
+- **La ficha "Nuevo cliente"** ya tenía esos campos (opcionales y editables).
+- **Falta preguntar:** el "nuevo cliente" que se crea al fiar en la Caja solo pide nombre y DNI. ¿Agregar teléfono y dirección ahí ahora o en la 4.2?
+
 ## 28/10/2026 (noche, 3) · Claude (Claude Code)
 - **Error reportado por el dueño:** al cobrar un crédito la deuda no desaparecía y había que cobrar otra vez; además el selector desaparecía en Clientes.
 - **Causa (error ANTIGUO, también está en Evicamp):** `ModalEstadoCuenta.handlePagar` recargaba la lista ANTES de guardar el abono (lo guardaba por detrás). Al cobrar dos veces, el crédito quedaba **pagado dos veces**.
