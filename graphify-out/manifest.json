@@ -156,15 +156,15 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaLotes.tsx": {
-    "mtime": 1792806551.1683295,
-    "seen": 1793205876.244555,
-    "ast_hash": "84d3e741efb446b9fc24ad78ee7d6af3",
+    "mtime": 1793222697.1007032,
+    "seen": 1793222936.1512153,
+    "ast_hash": "7891362049ba20d5b5105133a103034f",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaProductos.tsx": {
-    "mtime": 1792806551.1683295,
-    "seen": 1793205876.244557,
-    "ast_hash": "c9291b8092e90592b252285fc07afb6b",
+    "mtime": 1793222647.095939,
+    "seen": 1793222936.151217,
+    "ast_hash": "2dcf9dfabae4dc0bd1c9b2128e7c5ff4",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TarjetaMetrica.tsx": {
@@ -174,9 +174,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/index.tsx": {
-    "mtime": 1792806551.1683295,
-    "seen": 1793205876.2445602,
-    "ast_hash": "9c737bbeefeadc5a8b63d3cf3270b6d9",
+    "mtime": 1793222669.005191,
+    "seen": 1793222936.1512206,
+    "ast_hash": "5f770a0dc1c204f29aeac1c600e2ed26",
     "semantic_hash": ""
   },
   "src/sections/Inventario/types.ts": {
@@ -204,9 +204,9 @@
     "semantic_hash": ""
   },
   "src/sections/Proveedores/components/TablaProveedores.tsx": {
-    "mtime": 1792698691.193766,
-    "seen": 1792698763.918213,
-    "ast_hash": "db85dae73a953723e4afa71b9f5c6260",
+    "mtime": 1793222835.5787416,
+    "seen": 1793222936.151229,
+    "ast_hash": "1aae5c9eba34c1bb610e41732f380b7c",
     "semantic_hash": ""
   },
   "src/sections/Proveedores/index.tsx": {
@@ -1656,9 +1656,9 @@
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/TablaConteos.tsx": {
-    "mtime": 1793213493.950092,
-    "seen": 1793213733.1110892,
-    "ast_hash": "85bada4ec3e67699b9cf7633cd36b987",
+    "mtime": 1793222783.6699948,
+    "seen": 1793222936.151174,
+    "ast_hash": "991efe1df42cb3c1223495f0a30fd886",
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/TarjetaMetrica.tsx": {
@@ -1956,9 +1956,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/PestanaClientes.tsx": {
-    "mtime": 1793216716.0177283,
-    "seen": 1793217276.0619278,
-    "ast_hash": "7347f76609f7f6c045648a88b84b5c8b",
+    "mtime": 1793222808.0282152,
+    "seen": 1793222936.1511416,
+    "ast_hash": "da2681a88fc89bfc3afe40d4f4b3764e",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/TablaFiados.tsx": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793220729.746361,
-    "seen": 1793220759.5465605,
-    "ast_hash": "c92c708de0dd42ed75c4dc9a97ea1a4a",
+    "mtime": 1793220795.1251833,
+    "seen": 1793222936.1513362,
+    "ast_hash": "8c0c00a309f246a22a68e108f1b92e8b",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793220729.760341,
-    "seen": 1793220759.5465615,
-    "ast_hash": "1e44200fdba794609d9742fdf0386b0b",
+    "mtime": 1793220827.6343262,
+    "seen": 1793222936.1513383,
+    "ast_hash": "9ab82d79375f0289a7f05beddd5fe183",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793218165.6802745,
-    "seen": 1793220759.5465627,
-    "ast_hash": "b8e57cf94ee78bc059f95bc90ba0e0de",
+    "mtime": 1793220857.7641616,
+    "seen": 1793222936.1513398,
+    "ast_hash": "3d4a45824c7c685ca1c1aad72eb14fec",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793217351.4152572,
-    "seen": 1793220759.5465634,
-    "ast_hash": "8bf61813e0286969325219d9c7bc7ad2",
+    "mtime": 1793220814.9055731,
+    "seen": 1793222936.1513412,
+    "ast_hash": "758a90713d7809589877df599bb00477",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {

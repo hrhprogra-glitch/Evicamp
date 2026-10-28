@@ -47,6 +47,14 @@ export const TablaProductos: React.FC<Props> = ({
     setEditForm({});
   };
 
+  // Obtener filas visibles y enfocables exclusivamente de esta tabla de productos
+  const obtenerFilas = () => {
+    const container = document.getElementById('tabla-productos-inventario');
+    const root = container || document;
+    return (Array.from(root.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[])
+      .filter((el) => !el.closest('.hidden') && el.offsetParent !== null);
+  };
+
   // Función para dibujar la paginación
   const renderPagination = (position: 'top' | 'bottom') => {
     if (loading || totalPages <= 0) return null;
@@ -78,30 +86,46 @@ export const TablaProductos: React.FC<Props> = ({
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
-                const btnLimpiar = document.getElementById('btn-limpiar-filtros-inventario');
-                if (btnLimpiar) btnLimpiar.focus();
-                else document.getElementById('filtro-orden-inventario')?.focus();
+                if (position === 'top') {
+                  const btnLimpiar = document.getElementById('btn-limpiar-filtros-inventario');
+                  if (btnLimpiar) btnLimpiar.focus();
+                  else document.getElementById('filtro-orden-inventario')?.focus();
+                }
               } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
                 if (position === 'top') {
-                  const search = document.getElementById('buscador-global-inventario');
-                  if (search) search.focus();
-                  else {
+                  const search = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+                  if (search) {
+                    search.focus();
+                    search.select();
+                  } else {
                     const btnLimpiar = document.getElementById('btn-limpiar-filtros-inventario');
                     if (btnLimpiar) btnLimpiar.focus();
                     else document.getElementById('filtro-orden-inventario')?.focus();
                   }
                 } else {
-                  const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
-                  if (rows.length > 0) rows[rows.length - 1].focus();
+                  const rows = obtenerFilas();
+                  if (rows.length > 0) {
+                    const target = rows[rows.length - 1];
+                    target.focus();
+                    target.scrollIntoView({ block: 'nearest' });
+                  } else {
+                    const search = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+                    search?.focus();
+                    search?.select();
+                  }
                 }
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
                 if (position === 'top') {
-                  const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
-                  if (rows.length > 0) rows[0].focus();
+                  const rows = obtenerFilas();
+                  if (rows.length > 0) {
+                    const target = rows[0];
+                    target.focus();
+                    target.scrollIntoView({ block: 'nearest' });
+                  }
                 }
               }
             }}
@@ -131,23 +155,37 @@ export const TablaProductos: React.FC<Props> = ({
                 e.preventDefault();
                 e.stopPropagation();
                 if (position === 'top') {
-                  const search = document.getElementById('buscador-global-inventario');
-                  if (search) search.focus();
-                  else {
+                  const search = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+                  if (search) {
+                    search.focus();
+                    search.select();
+                  } else {
                     const btnLimpiar = document.getElementById('btn-limpiar-filtros-inventario');
                     if (btnLimpiar) btnLimpiar.focus();
                     else document.getElementById('filtro-orden-inventario')?.focus();
                   }
                 } else {
-                  const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
-                  if (rows.length > 0) rows[rows.length - 1].focus();
+                  const rows = obtenerFilas();
+                  if (rows.length > 0) {
+                    const target = rows[rows.length - 1];
+                    target.focus();
+                    target.scrollIntoView({ block: 'nearest' });
+                  } else {
+                    const search = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+                    search?.focus();
+                    search?.select();
+                  }
                 }
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
                 if (position === 'top') {
-                  const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
-                  if (rows.length > 0) rows[0].focus();
+                  const rows = obtenerFilas();
+                  if (rows.length > 0) {
+                    const target = rows[0];
+                    target.focus();
+                    target.scrollIntoView({ block: 'nearest' });
+                  }
                 }
               }
             }}
@@ -163,7 +201,7 @@ export const TablaProductos: React.FC<Props> = ({
   };
 
   return (
-    <div className="border border-[#E2E8F0] flex flex-col bg-[var(--color-surface)] relative min-h-[200px]">
+    <div id="tabla-productos-inventario" className="border border-[#E2E8F0] flex flex-col bg-[var(--color-surface)] relative min-h-[200px]">
       {loading && (
         <div className="absolute inset-0 bg-white/80 dark:bg-[var(--color-surface)]/80 backdrop-blur-sm z-10 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">

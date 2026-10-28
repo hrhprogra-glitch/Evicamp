@@ -7,6 +7,20 @@
 
 ---
 
+## 28/10/2026 (noche, 10) · Antigravity
+- **Arreglo de selector atrapado en la paginación inferior (< y >) de Inventario:**
+  - **Problema reportado:** al seleccionar las flechas de cambiar de página en la parte de abajo de la tabla de Inventario (Productos), presionar Flecha Arriba (↑) no permitía subir hacia las filas de la tabla; el foco se quedaba atrapado.
+  - **Causa raíz:** `TablaProductos.tsx` hacía `document.querySelectorAll('div[data-row="true"][role="button"]')` sin filtrar elementos ocultos ni acotar al contenedor de productos. Como la pestaña `TablaLotes` está montada debajo con clase `.hidden`, `rows[rows.length - 1]` seleccionaba una fila invisible de Lotes donde `.focus()` falla silenciosamente. Además, el listener global en `Inventario/index.tsx` bloqueaba ArrowUp en cualquier `BUTTON` pensando que eran controles superiores.
+  - **Solución:**
+    - En `TablaProductos.tsx` se acotó la búsqueda con `id="tabla-productos-inventario"` y se filtró que las filas sean visibles (`!closest('.hidden') && offsetParent !== null`).
+    - Al presionar Flecha Arriba en los botones inferiores (`prev` o `next`), el foco sube a la última fila visible con `scrollIntoView` (o al buscador si no hay filas).
+    - En `Inventario/index.tsx`, el listener global ahora detecta si el botón enfocado es de paginación inferior (`id?.includes('bottom')`) y lo redirige a la última fila visible en vez de bloquearlo.
+    - Se aplicó el mismo blindaje en `TablaLotes.tsx` y `TablaConteos.tsx`.
+- **Pruebas:**
+  - Script automatizado en Edge headless (`test-pagination-focus.cjs`): enfocar botón `>` y `<` de la parte inferior de Productos en siumax -> presionar Flecha Arriba -> el foco subió limpiamente a la fila del producto en ambas pruebas ✅;
+  - `npx tsc -b` 0 errores ✅;
+  - Desplegado a siumax (`node ai-scripts/deploy.cjs siumax`) ✅.
+
 ## 28/10/2026 (noche, 9) · Antigravity
 - **Arreglo de selector perdido al eliminar proveedor o cliente:**
   - **Problema:** Al crear y borrar un proveedor (en Gestión de Proveedores o la sección Proveedores), el selector desaparecía por completo porque la fila se desmontaba del DOM mientras tenía el foco, cayendo en `document.body`.

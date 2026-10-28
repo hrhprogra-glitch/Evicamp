@@ -201,17 +201,42 @@ export const TablaLotes: React.FC<Props> = ({
     const nextId = position === 'top' ? 'btn-pag-next-lotes' : 'btn-pag-bottom-next-lotes';
     const isPrevDisabled = currentPage === 1;
     const isNextDisabled = currentPage === totalPages;
-    const filas = () => (Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[])
-      .filter((f) => !f.closest('.hidden'));
+    const filas = () => {
+      const container = document.getElementById('tabla-lotes-inventario');
+      const root = container || document;
+      return (Array.from(root.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[])
+        .filter((f) => !f.closest('.hidden') && f.offsetParent !== null);
+    };
     const teclas = (e: React.KeyboardEvent, otroId: string, haciaOtro: 'ArrowLeft' | 'ArrowRight') => {
       if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
       e.preventDefault();
       e.stopPropagation();
       if (e.key === haciaOtro) document.getElementById(otroId)?.focus();
       else if (e.key === 'ArrowUp') {
-        if (position === 'top') document.getElementById('buscador-global-inventario')?.focus();
-        else filas().at(-1)?.focus();
-      } else if (e.key === 'ArrowDown' && position === 'top') filas()[0]?.focus();
+        if (position === 'top') {
+          const search = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+          search?.focus();
+          search?.select();
+        } else {
+          const list = filas();
+          if (list.length > 0) {
+            const target = list[list.length - 1];
+            target.focus();
+            target.scrollIntoView({ block: 'nearest' });
+          } else {
+            const search = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+            search?.focus();
+            search?.select();
+          }
+        }
+      } else if (e.key === 'ArrowDown' && position === 'top') {
+        const list = filas();
+        if (list.length > 0) {
+          const target = list[0];
+          target.focus();
+          target.scrollIntoView({ block: 'nearest' });
+        }
+      }
     };
     const clase = (deshabilitado: boolean) => `w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[#E2E8F0] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white ${deshabilitado ? 'opacity-40 cursor-not-allowed' : ''}`;
     return (
@@ -244,7 +269,7 @@ export const TablaLotes: React.FC<Props> = ({
   };
 
   return (
-    <div className="border border-[#E2E8F0] flex flex-col bg-[var(--color-surface)] relative min-h-[200px]">
+    <div id="tabla-lotes-inventario" className="border border-[#E2E8F0] flex flex-col bg-[var(--color-surface)] relative min-h-[200px]">
       {loading && (
         <div className="absolute inset-0 bg-white/80 dark:bg-[var(--color-surface)]/80 backdrop-blur-sm z-10 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">

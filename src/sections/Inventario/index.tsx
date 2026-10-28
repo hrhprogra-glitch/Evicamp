@@ -420,8 +420,24 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
       } else {
         // 🛡️ RESCATE DE FOCO PERDIDO: Si el foco quedó en document.body o fuera de la grilla
         if (e.key === 'ArrowUp') {
-          // 🛡️ TOPE: Si el foco está en un botón o control superior, actuar como límite y no devolver el foco abajo
+          // 🛡️ TOPE: Si el foco está en un botón o control superior, actuar como límite y no devolver el foco abajo.
+          // Pero si es un botón de paginación inferior, subir a la última fila visible.
           if (active && (active.tagName === 'BUTTON' || active.closest('button'))) {
+            const esPaginacionInferior = !!active.id?.includes('bottom');
+            if (esPaginacionInferior) {
+              e.preventDefault();
+              e.stopPropagation();
+              const rows = getRows();
+              if (rows.length > 0) {
+                const target = rows[rows.length - 1];
+                target.focus();
+                target.scrollIntoView({ block: 'nearest' });
+              } else {
+                const searchInput = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+                searchInput?.focus();
+              }
+              return;
+            }
             e.preventDefault();
             e.stopPropagation();
             return;

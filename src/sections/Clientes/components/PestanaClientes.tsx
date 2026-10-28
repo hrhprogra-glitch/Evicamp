@@ -214,11 +214,41 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
         </p>
         <div className="flex gap-2">
           <button id="btn-pagina-ant-clientes" onClick={() => setPagina(Math.max(1, paginaReal - 1))} aria-disabled={paginaReal === 1}
-            onKeyDown={(e) => { if (e.key === 'ArrowUp') { e.preventDefault(); filasDom().at(-1)?.focus(); } else if (e.key === 'ArrowRight') { e.preventDefault(); irA('btn-pagina-sig-clientes'); } }}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const list = filasDom();
+                if (list.length) {
+                  const target = list.at(-1);
+                  target?.focus();
+                  target?.scrollIntoView({ block: 'nearest' });
+                } else {
+                  irA('buscador-clientes');
+                }
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                irA('btn-pagina-sig-clientes');
+              }
+            }}
             className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] aria-disabled:opacity-50 hover:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer"><ChevronLeft size={16} /></button>
           <span className="flex items-center px-2 sm:px-4 whitespace-nowrap border-2 border-[var(--color-border)] bg-white text-xs font-black text-[var(--color-ink)]">Pág {paginaReal} / {totalPaginas}</span>
           <button id="btn-pagina-sig-clientes" onClick={() => setPagina(Math.min(totalPaginas, paginaReal + 1))} aria-disabled={paginaReal === totalPaginas}
-            onKeyDown={(e) => { if (e.key === 'ArrowUp') { e.preventDefault(); filasDom().at(-1)?.focus(); } else if (e.key === 'ArrowLeft') { e.preventDefault(); irA('btn-pagina-ant-clientes'); } }}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const list = filasDom();
+                if (list.length) {
+                  const target = list.at(-1);
+                  target?.focus();
+                  target?.scrollIntoView({ block: 'nearest' });
+                } else {
+                  irA('buscador-clientes');
+                }
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                irA('btn-pagina-ant-clientes');
+              }
+            }}
             className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] aria-disabled:opacity-50 hover:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer"><ChevronRight size={16} /></button>
         </div>
       </div>

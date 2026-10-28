@@ -144,9 +144,55 @@ export const TablaProveedores: React.FC<Props> = ({ proveedores, onEdit, onDelet
             Mostrando {(currentPage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, proveedores.length)} de {proveedores.length}
           </p>
           <div className="flex gap-2">
-            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-bg)] cursor-pointer rounded-none"><ChevronLeft size={16} /></button>
+            <button
+              id="btn-pagina-ant-prov"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-row-prov="true"]'));
+                  if (rows.length) {
+                    const target = rows[rows.length - 1];
+                    target.focus();
+                    target.scrollIntoView({ block: 'nearest' });
+                  } else {
+                    document.getElementById('buscador-proveedores-gestion')?.focus();
+                  }
+                } else if (e.key === 'ArrowRight') {
+                  e.preventDefault();
+                  document.getElementById('btn-pagina-sig-prov')?.focus();
+                }
+              }}
+              className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-bg)] cursor-pointer rounded-none"
+            >
+              <ChevronLeft size={16} />
+            </button>
             <span className="flex items-center justify-center px-4 border-2 border-[var(--color-border)] bg-white text-xs font-black text-[var(--color-ink)] rounded-none">Pág {currentPage} / {totalPages}</span>
-            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-bg)] cursor-pointer rounded-none"><ChevronRight size={16} /></button>
+            <button
+              id="btn-pagina-sig-prov"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-row-prov="true"]'));
+                  if (rows.length) {
+                    const target = rows[rows.length - 1];
+                    target.focus();
+                    target.scrollIntoView({ block: 'nearest' });
+                  } else {
+                    document.getElementById('buscador-proveedores-gestion')?.focus();
+                  }
+                } else if (e.key === 'ArrowLeft') {
+                  e.preventDefault();
+                  document.getElementById('btn-pagina-ant-prov')?.focus();
+                }
+              }}
+              className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-bg)] cursor-pointer rounded-none"
+            >
+              <ChevronRight size={16} />
+            </button>
           </div>
         </div>
       )}

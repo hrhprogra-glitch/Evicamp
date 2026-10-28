@@ -22,6 +22,13 @@ export const TablaConteos: React.FC<Props> = ({ mermas, products, onEdit, onDele
     currentPage * ITEMS_PER_PAGE
   );
 
+  const obtenerFilas = () => {
+    const container = document.getElementById('tabla-conteos-container');
+    const root = container || document;
+    return (Array.from(root.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[])
+      .filter((el) => !el.closest('.hidden') && el.offsetParent !== null);
+  };
+
   const renderPagination = (position: 'top' | 'bottom') => {
     if (totalPages <= 0) return null;
     const prevId = position === 'top' ? 'btn-pag-prev-conteos' : 'btn-pag-bottom-prev-conteos';
@@ -52,9 +59,11 @@ export const TablaConteos: React.FC<Props> = ({ mermas, products, onEdit, onDele
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
-                const btnLimpiar = document.getElementById('btn-limpiar-filtros-conteos');
-                if (btnLimpiar) btnLimpiar.focus();
-                else document.getElementById('filtro-fecha-conteos')?.focus();
+                if (position === 'top') {
+                  const btnLimpiar = document.getElementById('btn-limpiar-filtros-conteos');
+                  if (btnLimpiar) btnLimpiar.focus();
+                  else document.getElementById('filtro-fecha-conteos')?.focus();
+                }
               } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -67,15 +76,25 @@ export const TablaConteos: React.FC<Props> = ({ mermas, products, onEdit, onDele
                     else document.getElementById('filtro-fecha-conteos')?.focus();
                   }
                 } else {
-                  const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
-                  if (rows.length > 0) rows[rows.length - 1].focus();
+                  const rows = obtenerFilas();
+                  if (rows.length > 0) {
+                    const target = rows[rows.length - 1];
+                    target.focus();
+                    target.scrollIntoView({ block: 'nearest' });
+                  } else {
+                    document.getElementById('buscador-global-conteos')?.focus();
+                  }
                 }
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
                 if (position === 'top') {
-                  const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
-                  if (rows.length > 0) rows[0].focus();
+                  const rows = obtenerFilas();
+                  if (rows.length > 0) {
+                    const target = rows[0];
+                    target.focus();
+                    target.scrollIntoView({ block: 'nearest' });
+                  }
                 }
               }
             }}
@@ -113,15 +132,25 @@ export const TablaConteos: React.FC<Props> = ({ mermas, products, onEdit, onDele
                     else document.getElementById('filtro-fecha-conteos')?.focus();
                   }
                 } else {
-                  const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
-                  if (rows.length > 0) rows[rows.length - 1].focus();
+                  const rows = obtenerFilas();
+                  if (rows.length > 0) {
+                    const target = rows[rows.length - 1];
+                    target.focus();
+                    target.scrollIntoView({ block: 'nearest' });
+                  } else {
+                    document.getElementById('buscador-global-conteos')?.focus();
+                  }
                 }
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
                 if (position === 'top') {
-                  const rows = Array.from(document.querySelectorAll('div[data-row="true"][role="button"]')) as HTMLElement[];
-                  if (rows.length > 0) rows[0].focus();
+                  const rows = obtenerFilas();
+                  if (rows.length > 0) {
+                    const target = rows[0];
+                    target.focus();
+                    target.scrollIntoView({ block: 'nearest' });
+                  }
                 }
               }
             }}
@@ -137,7 +166,7 @@ export const TablaConteos: React.FC<Props> = ({ mermas, products, onEdit, onDele
   };
 
   return (
-    <div className="border border-[var(--color-border)] flex-1 flex flex-col bg-[var(--color-surface)] relative w-full rounded-none">
+    <div id="tabla-conteos-container" className="border border-[var(--color-border)] flex-1 flex flex-col bg-[var(--color-surface)] relative w-full rounded-none">
       
       {renderPagination('top')}
 
