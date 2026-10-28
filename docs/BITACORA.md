@@ -138,3 +138,9 @@
 - Revisado para dejarlo 24 h en el VPS. Fallas encontradas: el historial de cada chat crece sin límite, puede responder mensajes viejos al reconectar, no se calla cuando el dueño atiende a mano, no guarda los interesados.
 - VPS: **no tiene Node** (hay que instalar Node 20+), 3 GB de RAM libres, disco 39 GB libres. Irá como servicio propio, aparte de Evicamp.
 - **Siguiente paso:** el OK del dueño al plan del bot. No se subió nada.
+
+## 28/10/2026 (noche, 9) — Bot de WhatsApp activo 24 h en el VPS
+- Arreglos en el bot: historial limitado de verdad (y se olvida a las 24 h), solo responde mensajes nuevos, se calla 6 h si el dueño escribe a mano, guarda los interesados (`interesados.csv`), avisa y se detiene si WhatsApp cierra la sesión, y un error en un mensaje ya no lo tumba.
+- VPS: Node 22 en `/opt/node22` (sin apt), servicio `siumax-bot` activo y habilitado (~85 MB). postgrest, postgrest_siuhub y el panel siguieron activos.
+- Script nuevo: `bot-whatsapp/subir-al-vps.cjs`. Detalles en MEMORIA-IA sección 10.
+- **Siguiente paso:** que el dueño le escriba desde otro número para comprobar que responde.

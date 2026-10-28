@@ -190,3 +190,12 @@
 - **Lotes borrados con saldo** (1142, 1281, 1404, 1424): corregidos con un movimiento AJUSTE.
 - **La clienta retiraba el lote viejo con sobrante y sumaba ese sobrante al lote nuevo.** El sistema lo permite, pero ensucia el kardex. Se le recomendó ingresar solo lo que llegó.
 - **Unidades corregidas en la fase 1:** KGM 211, NIU 971, ZZ 34. Respaldo en la tabla `respaldo_fase1_unidades`.
+
+## 10. Bot de WhatsApp de SiuMax (fuera de Comerc)
+- Carpeta: `D:\Programación\siumax\bot-whatsapp`. Corre 24 h en el VPS como **`siumax-bot.service`**, en `/opt/siumax-bot`, con usuario `siumaxbot` y su propio Node en `/opt/node22`. No toca a Evicamp ni a siumax.
+- Actualizarlo: `node subir-al-vps.cjs` (desde la carpeta del bot). Ver cómo está: `node subir-al-vps.cjs estado`.
+- **No correrlo a la vez en la PC:** comparten la sesión de WhatsApp.
+- `auth_info` (sesión) y `.env` (clave de Gemini) son secretos: nunca a git ni GitHub.
+- Si el dueño escribe a mano en un chat, el bot se calla ahí 6 h (`PAUSA_HORAS` en `.env`).
+- Si WhatsApp cierra la sesión, el servicio se detiene (código 2) y deja `SESION_CERRADA.txt`: borrar `auth_info` y volver a escanear el QR.
+- Lista de interesados en el VPS: `/opt/siumax-bot/interesados.csv` (abre en Excel).
