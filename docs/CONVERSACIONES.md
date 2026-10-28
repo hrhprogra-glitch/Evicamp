@@ -128,3 +128,5 @@
 - **Preferencia:** "solo revisa si lo que modificaste está bien" (no más tandas de pruebas sin pedirlas).
 - **Error al cobrar un crédito:** la deuda no desaparecía y había que cobrar dos veces. Era un error antiguo (la lista se recargaba antes de guardar); se arregló. Falta revisar si en Evicamp quedaron créditos pagados dos veces.
 - **Tabla de clientes:** debe mostrar DNI/RUC, teléfono y dirección, y la ficha de "nuevo cliente" debe permitir llenarlos (opcionales y editables). Hecho: columnas siempre visibles; la ficha ya los tenía.
+- **Selector** perdido al volver de Editar, Estado de cuenta o Unir en el detalle del cliente: arreglado (regla global).
+- **Unir clientes:** no quiere que la otra cuenta desaparezca; deben compartir deuda y mostrar con quién. También agrupar por familia o empresa (técnicos de una empresa). Preguntó si es para otra fase. Se le dio la propuesta de "Grupos de clientes" (4.1c).

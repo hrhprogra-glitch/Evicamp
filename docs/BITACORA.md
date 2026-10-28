@@ -7,6 +7,14 @@
 
 ---
 
+## 28/10/2026 (noche, 5) · Claude (Claude Code)
+- **Error:** el selector desaparecía en el detalle del cliente al volver de Editar, Estado de cuenta o Unir.
+  - **Arreglo GLOBAL** en `src/utils/ventanas.ts`: cada ventana recuerda dónde estaba el selector y, al cerrarse la de encima, vuelve ahí. Verificado con las 3 ventanas.
+- **Pedido nuevo (en propuesta, sin construir):**
+  - "Unir" NO debe borrar la otra cuenta: las cuentas deben quedar vinculadas, compartiendo deuda y mostrando con quién comparten.
+  - Además, grupos por familia o empresa (varios técnicos de una empresa).
+  - Se le mostró la propuesta de **Grupos de clientes** y se esperan sus respuestas.
+
 ## 28/10/2026 (noche, 4) · Claude (Claude Code)
 - **Pedido del dueño:** la tabla de Clientes debe mostrar DNI/RUC, teléfono y dirección.
   - Antes las columnas se ocultaban en pantallas angostas o con zoom, y no había dirección. Ahora se ven siempre.
