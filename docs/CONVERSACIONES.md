@@ -123,3 +123,6 @@
   - Se quitó la ventana vieja del directorio.
 - **"Encontré un error gravísimo":** no estaba el historial de pagados y pendientes (era de la ventana vieja del directorio).
   - Se recuperó dentro del detalle del cliente: pestañas, buscador, fecha, y productos y abonos al dar Enter.
+- **Nombres en Nuevo ajuste:** el dueño pidió palabras claras. Eligió **MERMA / CONTEO**; en CONTEO, quien tiene Conteos completo elige a qué lote va la diferencia y el cajero cuenta a ciegas.
+- **Pregunta:** ¿los ajustes dentro de Inventario registran quién? Sí: quién y cuándo, en el kardex, pero sin motivo.
+- **Preferencia:** "solo revisa si lo que modificaste está bien" (no más tandas de pruebas sin pedirlas).

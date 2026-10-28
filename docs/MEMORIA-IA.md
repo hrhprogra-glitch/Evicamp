@@ -138,6 +138,8 @@
 21. **Poner `onKeyDown` en un botón dentro de una fila que también tiene `onKeyDown`:** la tecla se atiende dos veces (Enter en Eliminar abría la ficha). Un solo oyente en la fila, usando `e.target`.
 19. **Asumir que Escape en un desplegable no cierra la ventana:** `useCerrarConEscape` escucha en `window`. En el desplegable hay que hacer `e.stopPropagation()` en su `onKeyDown`.
 
+- **Pruebas (28/10/2026):** el dueño quiere que se pruebe SOLO lo que se modificó. Las tandas de regresión, solo si él lo pide.
+
 ## 7. Cómo se organiza el trabajo
 1. **Pregunta del dueño** → investigar el código (graphify si está) → **propuesta corta** con opciones y una recomendación.
 2. **Con su OK:**

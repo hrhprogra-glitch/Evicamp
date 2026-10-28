@@ -7,6 +7,17 @@
 
 ---
 
+## 28/10/2026 (noche, 2) · Claude (Claude Code)
+- **Pedido del dueño:** en Nuevo ajuste, nombres claros. Ahora son **MERMA** ("Se dañó, venció, se perdió o se usó") y **CONTEO** ("Cuento lo que hay y el sistema ve si falta o sobra").
+- **Lote en CONTEO** solo para quien tiene Conteos completo:
+  - desplegable con "Automático" primero;
+  - `fn_registrar_conteo` ahora recibe `p_batch_id`; se borró la versión sin lote para que PostgREST no tenga dos.
+  - El cajero que solo cuenta sigue a ciegas y el servidor le rechaza elegir lote.
+  - Commit 35885e3. **Para Evicamp hace falta aplicar el SQL.**
+- **Prueba de lo cambiado:** `prueba-conteo-lote` 9/9.
+- **Preferencia nueva del dueño:** probar SOLO lo modificado; regresiones grandes solo si él lo pide.
+- **Respuesta al dueño:** los ajustes en Inventario (editar o retirar lote, ingresar) SÍ guardan quién y cuándo en el kardex (trigger `trg_autor_movimiento`), pero no piden motivo.
+
 ## 28/10/2026 (noche) · Claude (Claude Code)
 - **Error grave reportado por el dueño:** al quitar la ventana vieja del directorio desapareció el **historial de créditos pendientes y pagados**.
 - **Arreglado (commit 44441e5):** el detalle del cliente (`ModalDetalleCliente`) ahora tiene el historial como antes:
