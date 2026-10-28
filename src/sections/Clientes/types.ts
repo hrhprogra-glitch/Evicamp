@@ -1,11 +1,12 @@
 export interface Cliente {
   id: string;
   nombre: string;
-  dni: string;            // número de documento (DNI o RUC); vacío = sin documento
+  dni: string;            // DNI (8 números); vacío = no tiene o no se sabe
   telefono: string;
   // Fase 4.1: ficha del cliente (todo opcional, ver src/utils/documento.ts)
-  tipoDoc?: '' | 'DNI' | 'RUC';
+  ruc?: string;           // RUC (11 números), aparte del DNI: una persona con negocio puede tener los dos
   direccion?: string;
+  ubicacion?: string;     // link de ubicación (ej. Google Maps)
   referencia?: string;    // para distinguir: "Sra. Rosa – vecina 2do piso"
 }
 

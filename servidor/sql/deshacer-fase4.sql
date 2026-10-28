@@ -2,7 +2,10 @@
 -- Uso (solo si el dueño pide volver atrás): psql -d <base> -f servidor/sql/deshacer-fase4.sql
 -- OJO: borrar columnas borra lo que se escribió en ellas (teléfonos, direcciones…). Sacar respaldo antes.
 
--- 4.1: ficha del cliente
+-- 4.1: ficha del cliente (el RUC vuelve a la columna dni como antes, si el cliente no tiene DNI)
+UPDATE public.customers SET dni = ruc, tipo_doc = 'RUC' WHERE ruc IS NOT NULL AND (dni IS NULL OR dni = '');
+ALTER TABLE public.customers DROP COLUMN IF EXISTS ruc;
+ALTER TABLE public.customers DROP COLUMN IF EXISTS ubicacion;
 ALTER TABLE public.customers DROP COLUMN IF EXISTS referencia;
 ALTER TABLE public.customers DROP COLUMN IF EXISTS direccion;
 ALTER TABLE public.customers DROP COLUMN IF EXISTS telefono;

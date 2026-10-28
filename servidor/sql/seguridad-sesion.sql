@@ -1260,3 +1260,14 @@ ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS direccion text;
 ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS referencia text;   -- para distinguir: "Sra. Rosa – vecina 2do piso"
 
 NOTIFY pgrst, 'reload schema';
+
+-- FASE 4.1 (cambio pedido por el dueño 28/10/2026): la ficha muestra DNI y RUC a la vez, los dos opcionales, sin elegir
+-- un tipo (una persona con negocio puede tener los dos). El RUC va en su propia columna; "dni" queda solo para el DNI.
+-- Los que tenían el RUC guardado como documento (tipo_doc = 'RUC') pasan a la columna nueva. Repetible.
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS ruc text;
+-- Link de ubicación (ej. Google Maps) para repartos y para ubicar al cliente (pedido del dueño 28/10/2026)
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS ubicacion text;
+UPDATE public.customers SET ruc = dni, dni = NULL, tipo_doc = NULL
+WHERE tipo_doc = 'RUC' AND ruc IS NULL AND dni IS NOT NULL;
+
+NOTIFY pgrst, 'reload schema';

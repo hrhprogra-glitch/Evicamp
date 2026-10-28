@@ -1,14 +1,7 @@
 // src/utils/documento.ts
-// Documento del cliente (fase 4.1): sin documento, DNI (8 dígitos) o RUC (11 dígitos con su dígito verificador).
-// Lo usan la ficha del cliente (sections/Clientes) y, más adelante, la Caja y la factura (fase 11).
-
-export type TipoDoc = '' | 'DNI' | 'RUC';
-
-export const TIPOS_DOC: { tipo: TipoDoc; nombre: string }[] = [
-  { tipo: '', nombre: 'Sin documento' },
-  { tipo: 'DNI', nombre: 'DNI' },
-  { tipo: 'RUC', nombre: 'RUC' },
-];
+// Datos del cliente (fase 4.1): DNI (8 dígitos) y RUC (11 dígitos con su dígito verificador), los dos opcionales y a
+// la vez (una persona con negocio puede tener los dos), y el link de ubicación. Los usa la ficha del cliente
+// (sections/Clientes) y, más adelante, la Caja y la factura (fase 11).
 
 /** RUC peruano: 11 dígitos, empieza en 10, 15, 16, 17 o 20, y el último es el dígito verificador (módulo 11). */
 export const rucValido = (ruc: string) => {
@@ -20,24 +13,25 @@ export const rucValido = (ruc: string) => {
   return verificador === Number(ruc[10]);
 };
 
-/** El problema del número escrito (o null si está bien). Sin documento no se revisa nada. */
-export const errorDocumento = (tipo: TipoDoc, numero: string): string | null => {
-  const n = numero.trim();
-  if (!tipo) return null;
-  if (!n) return `Escribe el número de ${tipo} o elige "Sin documento".`;
-  if (tipo === 'DNI' && !/^\d{8}$/.test(n)) return 'El DNI tiene 8 números.';
-  if (tipo === 'RUC' && !/^\d{11}$/.test(n)) return 'El RUC tiene 11 números.';
-  if (tipo === 'RUC' && !rucValido(n)) return 'Ese RUC no es válido: revisa los números (el último no coincide).';
+/** El problema del DNI escrito (o null si está bien o vacío: es opcional). */
+export const errorDni = (dni: string): string | null => {
+  const n = dni.trim();
+  return n && !/^\d{8}$/.test(n) ? 'El DNI tiene 8 números (o déjalo vacío).' : null;
+};
+
+/** El problema del RUC escrito (o null si está bien o vacío: es opcional). */
+export const errorRuc = (ruc: string): string | null => {
+  const n = ruc.trim();
+  if (!n) return null;
+  if (!/^\d{11}$/.test(n)) return 'El RUC tiene 11 números (o déjalo vacío).';
+  if (!rucValido(n)) return 'Ese RUC no es válido: revisa los números (el último no coincide).';
   return null;
 };
 
-/** Para los clientes antiguos sin tipo: lo deduce del número (8 → DNI, 11 → RUC). */
-export const tipoDeNumero = (numero: string | null | undefined, tipo?: string | null): TipoDoc => {
-  if (tipo === 'DNI' || tipo === 'RUC') return tipo;
-  const n = String(numero || '').trim();
-  if (/^\d{8}$/.test(n)) return 'DNI';
-  if (/^\d{11}$/.test(n)) return 'RUC';
-  return '';
+/** El link de ubicación (ej. Google Maps) debe ser una dirección web; vacío está bien (es opcional). */
+export const errorUbicacion = (link: string): string | null => {
+  const n = link.trim();
+  return n && !/^https?:\/\/\S+$/i.test(n) ? 'El link de ubicación debe empezar con https:// (cópialo de Google Maps → Compartir).' : null;
 };
 
 /** Para comparar nombres sin importar mayúsculas, tildes ni espacios de más ("¿Es esta Rosa?"). */

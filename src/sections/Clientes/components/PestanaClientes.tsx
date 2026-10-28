@@ -4,7 +4,7 @@
 // orden; "Nuevo cliente"; en cada fila Editar y Eliminar (← → desde la fila). Enter en una fila abre su ficha.
 // Teclado propio (onKeyDown en cada control), sin oyentes globales: así no choca con la pestaña Créditos.
 import React, { useMemo, useState } from 'react';
-import { Edit, Plus, Trash2, ChevronLeft, ChevronRight, FilterX } from 'lucide-react';
+import { Edit, Plus, Trash2, ChevronLeft, ChevronRight, FilterX, MapPin } from 'lucide-react';
 import type { Cliente, Fiado } from '../types';
 import { coincideBusqueda } from '../../../utils/busqueda';
 
@@ -38,7 +38,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, onNuevo, on
   const filas = useMemo(() => {
     const conResumen = clientes.map((c) => ({ c, ...resumenDeCliente(c, fiados) }));
     const texto = busqueda.trim();
-    let lista = texto ? conResumen.filter(({ c }) => coincideBusqueda([c.nombre, c.dni, c.telefono, c.referencia, c.direccion], texto)) : conResumen;
+    let lista = texto ? conResumen.filter(({ c }) => coincideBusqueda([c.nombre, c.dni, c.ruc, c.telefono, c.referencia, c.direccion], texto)) : conResumen;
     if (filtro === 'CON_DEUDA') lista = lista.filter((x) => x.deuda > 0.05);
     if (filtro === 'SIN_DEUDA') lista = lista.filter((x) => x.deuda <= 0.05);
     return [...lista].sort((a, b) => (orden === 'DEUDA' ? b.deuda - a.deuda : a.c.nombre.localeCompare(b.c.nombre, 'es')));
@@ -139,9 +139,24 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, onNuevo, on
                   <span className="font-black text-[var(--color-ink)] uppercase text-base">{c.nombre}</span>
                   {c.referencia && <span className="block text-xs text-[var(--color-muted)] mt-0.5 normal-case">{c.referencia}</span>}
                 </td>
-                <td data-col="documento" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] whitespace-nowrap">{c.dni ? <><span className="text-[11px] text-[var(--color-muted)]">{c.tipoDoc || 'DOC'}</span> {c.dni}</> : <span className="text-[var(--color-subtle)]">—</span>}</td>
+                <td data-col="documento" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] whitespace-nowrap">
+                  {c.dni || c.ruc ? (<>
+                    {c.dni && <span className="block"><span className="text-[11px] text-[var(--color-muted)]">DNI</span> {c.dni}</span>}
+                    {c.ruc && <span className="block"><span className="text-[11px] text-[var(--color-muted)]">RUC</span> {c.ruc}</span>}
+                  </>) : <span className="text-[var(--color-subtle)]">—</span>}
+                </td>
                 <td data-col="telefono" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] whitespace-nowrap">{c.telefono || <span className="text-[var(--color-subtle)]">—</span>}</td>
-                <td data-col="direccion" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] max-w-[220px] truncate" title={c.direccion || ''}>{c.direccion || <span className="text-[var(--color-subtle)]">—</span>}</td>
+                <td data-col="direccion" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] max-w-[240px]">
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span className="truncate" title={c.direccion || ''}>{c.direccion || <span className="text-[var(--color-subtle)]">—</span>}</span>
+                    {c.ubicacion && (
+                      // Link de ubicación (Google Maps): se abre aparte; no le quita el selector a la fila
+                      <a href={c.ubicacion} target="_blank" rel="noopener noreferrer" tabIndex={-1} data-ubicacion-cliente="true"
+                        onClick={(e) => e.stopPropagation()} title="Ver ubicación"
+                        className="shrink-0 text-[var(--color-info)] hover:text-[var(--color-ink)]"><MapPin size={16} /></a>
+                    )}
+                  </span>
+                </td>
                 <td className="py-3 sm:py-4 px-3 sm:px-4 text-right whitespace-nowrap">
                   <span className={`font-black ${deuda > 0.05 ? 'text-[var(--color-danger)]' : 'text-[var(--color-subtle)]'}`}>S/ {deuda.toFixed(2)}</span>
                 </td>

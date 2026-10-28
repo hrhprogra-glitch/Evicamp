@@ -15,11 +15,9 @@ import { traerTodo } from '../../utils/traerTodo';
 import { eliminarAbonoYRevertirCaja } from '../../utils/revertirAbono';
 import { TarjetaMetrica } from '../Inventario/components/TarjetaMetrica';
 import { confirmar, avisar } from '../../utils/dialogos';
-import { tipoDeNumero } from '../../utils/documento';
 import { PestanaClientes } from './components/PestanaClientes';
 import { ModalFichaCliente, type DatosCliente } from './components/ModalFichaCliente';
 import { ModalDetalleCliente } from './components/ModalDetalleCliente';
-import { ModalUnirClientes } from './components/ModalUnirClientes';
 import { claseBotonBarra } from '../../components/ListaVentana';
 
 // Sección CLIENTES (fase 4.1, antes "Créditos"): pestañas Clientes (el directorio, nuevo) y Créditos (la de siempre:
@@ -39,9 +37,8 @@ export const Clientes: React.FC = () => {
   const [fichaAbierta, setFichaAbierta] = useState(false);
   const [clienteEnFicha, setClienteEnFicha] = useState<Cliente | null>(null);
   const abrirFicha = (c: Cliente | null) => { setClienteEnFicha(c); setFichaAbierta(true); };
-  // Detalle del cliente (4.1b) y unir repetidos: por id, así muestran siempre los datos al día
+  // Detalle del cliente (4.1b): por id, así muestra siempre los datos al día
   const [detalleId, setDetalleId] = useState<string | null>(null);
-  const [unirId, setUnirId] = useState<string | null>(null);
   // Crear deudas es como vender a crédito
   const [loading, setLoading] = useState(true);
   const [fiados, setFiados] = useState<Fiado[]>([]);
@@ -116,8 +113,10 @@ if (clis) {
     dni: c.dni ?? '',
     // Fase 4.1: antes el teléfono no se guardaba (siempre vacío)
     telefono: c.telefono ?? '',
-    tipoDoc: tipoDeNumero(c.dni, c.tipo_doc),
+    // Los antiguos con el RUC guardado como "documento" (tipo_doc RUC) ya se pasaron a la columna ruc (seguridad-sesion.sql)
+    ruc: c.ruc ?? '',
     direccion: c.direccion ?? '',
+    ubicacion: c.ubicacion ?? '',
     referencia: c.referencia ?? '',
   }));
   setClientes(clientesMapeados);
@@ -211,7 +210,7 @@ if (fiaData) {
 
   // 🔥 RESTAURAR FOCO AL CERRAR MODALES O TERMINAR DE CARGAR
   useEffect(() => {
-    if (!loading && !isModalFiadoOpen && !isModalAbonoOpen && !isModalDetalleOpen && !isModalAnularOpen && !isModalEstadoCuentaOpen && !fichaAbierta && !detalleId && !unirId) {
+    if (!loading && !isModalFiadoOpen && !isModalAbonoOpen && !isModalDetalleOpen && !isModalAnularOpen && !isModalEstadoCuentaOpen && !fichaAbierta && !detalleId) {
       setTimeout(() => {
         // Solo si el selector no está ya en algo de la pantalla (al cerrar una ventana vuelve a su fila: ventanas.ts)
         const a = document.activeElement;
@@ -220,7 +219,7 @@ if (fiaData) {
         }
       }, 100);
     }
-  }, [loading, isModalFiadoOpen, isModalAbonoOpen, isModalDetalleOpen, isModalAnularOpen, isModalEstadoCuentaOpen, fichaAbierta, detalleId, unirId, pestana]);
+  }, [loading, isModalFiadoOpen, isModalAbonoOpen, isModalDetalleOpen, isModalAnularOpen, isModalEstadoCuentaOpen, fichaAbierta, detalleId, pestana]);
 
   const clientesAgrupados = React.useMemo(() => {
     const mapa = new Map<string, ClienteFiadoAgrupado>();
@@ -232,7 +231,7 @@ if (fiaData) {
         mapa.set(nombre, {
           clienteNombre: nombre,
           clienteId: f.clienteId,
-          clienteDni: ficha?.dni || f.clienteDni,
+          clienteDni: ficha?.dni || ficha?.ruc || f.clienteDni,
           clienteTelefono: ficha?.telefono || f.clienteTelefono,
           totalOriginal: 0,
           totalPendiente: 0,
@@ -357,8 +356,9 @@ if (fiaData) {
   // --- FUNCIONES DE CLIENTES CON SUPABASE ---
   // Fase 4.1: crea o edita con la ficha completa (documento, teléfono, dirección, referencia). Devuelve si se guardó.
   const guardarCliente = async (d: DatosCliente, id?: string): Promise<boolean> => {
-    const fila = { name: d.nombre, dni: d.dni || null, tipo_doc: d.tipoDoc || null, telefono: d.telefono || null, direccion: d.direccion || null, referencia: d.referencia || null };
-    const nuevo: Omit<Cliente, 'id'> = { nombre: d.nombre, dni: d.dni, tipoDoc: d.tipoDoc, telefono: d.telefono, direccion: d.direccion, referencia: d.referencia };
+    // tipo_doc se sigue llenando (DNI si tiene DNI) para lo que aún lo lee
+    const fila = { name: d.nombre, dni: d.dni || null, ruc: d.ruc || null, tipo_doc: d.dni ? 'DNI' : null, telefono: d.telefono || null, direccion: d.direccion || null, ubicacion: d.ubicacion || null, referencia: d.referencia || null };
+    const nuevo: Omit<Cliente, 'id'> = { nombre: d.nombre, dni: d.dni, ruc: d.ruc, telefono: d.telefono, direccion: d.direccion, ubicacion: d.ubicacion, referencia: d.referencia };
     if (id) {
       const { error } = await supabase.from('customers').update(fila).eq('id', id);
       if (error) { alert('Error al actualizar cliente: ' + error.message); return false; }
@@ -395,31 +395,6 @@ if (fiaData) {
     }
   };
   // ------------------------------------
-
-  // Fase 4.1b: unir un cliente repetido (seVa) con el que queda. Sus créditos pasan al que queda (uno por uno, por id:
-  // así funciona igual sin internet), se completan los datos que le falten y el repetido se borra.
-  const unirClientes = async (queda: Cliente, seVa: Cliente): Promise<boolean> => {
-    const idQueda = /^\d+$/.test(queda.id) ? Number(queda.id) : queda.id;
-    const suyos = fiados.filter((f) => (f.clienteId ? f.clienteId === seVa.id : f.clienteNombre === seVa.nombre));
-    for (const f of suyos) {
-      const { error } = await supabase.from('fiados').update({ customer_id: idQueda, customer_name: queda.nombre }).eq('id', f.id);
-      if (error) { await avisar(`No se pudo pasar un crédito de "${seVa.nombre}": ${error.message}`); await cargarDatos(true); return false; }
-    }
-    const completar: Record<string, string> = {};
-    if (!queda.dni && seVa.dni) { completar.dni = seVa.dni; if (seVa.tipoDoc) completar.tipo_doc = seVa.tipoDoc; }
-    if (!queda.telefono && seVa.telefono) completar.telefono = seVa.telefono;
-    if (!queda.direccion && seVa.direccion) completar.direccion = seVa.direccion;
-    if (!queda.referencia && seVa.referencia) completar.referencia = seVa.referencia;
-    if (Object.keys(completar).length) {
-      const { error } = await supabase.from('customers').update(completar).eq('id', queda.id);
-      if (error) { await avisar(`No se pudieron completar los datos: ${error.message}`); }
-    }
-    const { error } = await supabase.from('customers').delete().eq('id', seVa.id);
-    if (error) { await avisar(`Los créditos ya pasaron, pero no se pudo borrar "${seVa.nombre}": ${error.message}`); }
-    await cargarDatos(true);
-    await avisar(`Listo: ${suyos.length} crédito(s) de "${seVa.nombre}" pasaron a "${queda.nombre}".`);
-    return true;
-  };
 
   // Estado de cuenta de un cliente (desde su detalle): sus créditos agrupados
   const verEstadoCuenta = (c: Cliente) => {
@@ -531,7 +506,6 @@ if (fiaData) {
         onClose={() => setDetalleId(null)}
         onEditar={(c) => abrirFicha(c)}
         onEstadoCuenta={verEstadoCuenta}
-        onUnir={(c) => setUnirId(c.id)}
       />
 
       <ModalFichaCliente
@@ -542,12 +516,6 @@ if (fiaData) {
         onClose={() => setFichaAbierta(false)}
       />
 
-      <ModalUnirClientes
-        queda={unirId ? clientes.find((c) => c.id === unirId) || null : null}
-        clientes={clientes}
-        onUnir={unirClientes}
-        onClose={() => setUnirId(null)}
-      />
 
       {/* MODALES */}
       <ModalFiado isOpen={isModalFiadoOpen} onClose={() => setIsModalFiadoOpen(false)} onSave={handleSaveFiado} fiadoAEditar={fiadoAEditar} clientes={clientes} productos={productosInventario} />

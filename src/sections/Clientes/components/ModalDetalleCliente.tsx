@@ -8,7 +8,7 @@
 // Teclado: fila 1 = botones, fila 2 = pestañas + buscador + fecha (← → dentro de cada fila, ↑ ↓ entre filas y créditos;
 // la pestaña cambia con Enter; Enter en la fecha abre el calendario); Esc cierra.
 import React, { useEffect, useMemo, useState } from 'react';
-import { BookOpen, Edit, GitMerge, UserCircle, X, ReceiptText, FilterX, Search } from 'lucide-react';
+import { BookOpen, Edit, UserCircle, X, ReceiptText, FilterX, Search, MapPin } from 'lucide-react';
 import type { Cliente, Fiado } from '../types';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { ventanaSuperior } from '../../../utils/ventanas';
@@ -20,18 +20,17 @@ interface Props {
   onClose: () => void;
   onEditar: (c: Cliente) => void;
   onEstadoCuenta: (c: Cliente) => void;
-  onUnir: (c: Cliente) => void;
 }
 
 type PestanaHistorial = 'PENDIENTES' | 'PAGADOS';
 const fecha = (f?: string) => (f ? new Date(f).toLocaleDateString('es-PE') : '—');
 const soles = (n: number) => `S/ ${n.toFixed(2)}`;
-const BOTONES = ['btn-detalle-cliente-editar', 'btn-detalle-cliente-cuenta', 'btn-detalle-cliente-unir'];
+const BOTONES = ['btn-detalle-cliente-editar', 'btn-detalle-cliente-cuenta'];
 const estaPagado = (f: Fiado) => f.estado === 'PAGADO' || (Number(f.saldoPendiente) || 0) <= 0.05;
 // Fecha del crédito como AAAA-MM-DD en hora local (para el filtro de fecha)
 const diaLocal = (f: string) => { const d = new Date(f); return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-CA'); };
 
-export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose, onEditar, onEstadoCuenta, onUnir }) => {
+export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose, onEditar, onEstadoCuenta }) => {
   useCerrarConEscape(!!cliente, onClose);
   const [pestana, setPestana] = useState<PestanaHistorial>('PENDIENTES');
   const [busqueda, setBusqueda] = useState('');
@@ -133,7 +132,9 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
   };
 
   const datos = [
-    cliente.dni ? `${cliente.tipoDoc || 'DOC'}: ${cliente.dni}` : 'Sin documento',
+    cliente.dni ? `DNI: ${cliente.dni}` : null,
+    cliente.ruc ? `RUC: ${cliente.ruc}` : null,
+    !cliente.dni && !cliente.ruc ? 'Sin DNI ni RUC' : null,
     cliente.telefono ? `Tel.: ${cliente.telefono}` : null,
     cliente.direccion ? `Dirección: ${cliente.direccion}` : null,
   ].filter(Boolean).join(' · ');
@@ -163,9 +164,12 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
             <div className="flex flex-wrap gap-2">
               <button id={BOTONES[0]} type="button" onClick={() => onEditar(cliente)} className={claseBotonBarra(false)}><Edit size={14} /> Editar</button>
               <button id={BOTONES[1]} type="button" onClick={() => onEstadoCuenta(cliente)} className={claseBotonBarra(false)}><BookOpen size={14} /> Estado de cuenta</button>
-              <button id={BOTONES[2]} type="button" onClick={() => onUnir(cliente)} className={claseBotonBarra(false)}><GitMerge size={14} /> Unir con otro cliente</button>
             </div>
             <TextoBarra><span id="datos-detalle-cliente" className="text-[var(--color-ink)] normal-case">{datos}</span></TextoBarra>
+            {cliente.ubicacion && (
+              <a id="btn-detalle-cliente-ubicacion" href={cliente.ubicacion} target="_blank" rel="noopener noreferrer"
+                className={`${claseBotonBarra(false)} no-underline`}><MapPin size={14} /> Ver ubicación</a>
+            )}
           </BarraFiltros>
 
           {/* RESUMEN */}
