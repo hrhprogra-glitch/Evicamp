@@ -40,7 +40,8 @@ try {
   await probar('Inventario · Productos (editar producto)', { sidebar: 'inventario', pestana: '#btn-tab-productos' });
   await probar('Inventario · Lotes (editar lote)', { sidebar: 'inventario', pestana: '#btn-tab-lotes' });
   await probar('Conteos (editar registro)', { sidebar: 'conteos' });
-  await probar('Créditos (detalle)', { sidebar: 'fiados', selector: 'tr[role="button"]' });
+  await probar('Clientes · Créditos (estado de cuenta)', { sidebar: 'clientes', pestana: '#tab-clientes-creditos', selector: 'tr[role="button"]' });
+  await probar('Clientes · Clientes (detalle del cliente)', { sidebar: 'clientes', pestana: '#tab-clientes-clientes', selector: '[data-fila-cliente="true"]' });
   await probar('Finanzas (detalle de un ticket)', { sidebar: 'finanzas', texto: 'VENDI', n: 0 });
   await probar('Utilidades (detalle de producto)', { sidebar: 'utilidades' });
 } catch (e) { ok('Sin fallas', false, e.stack || e.message); }

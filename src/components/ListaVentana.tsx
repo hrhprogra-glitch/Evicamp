@@ -1,6 +1,6 @@
 // src/components/ListaVentana.tsx
 // Piezas comunes para las listas dentro de ventanas flotantes, con el estilo del "Directorio de clientes"
-// (Fiados > ModalClientes): fondo gris claro, barra de filtros en caja blanca, lista en caja blanca con
+// (antes el "Directorio de clientes" de Créditos): fondo gris claro, barra de filtros en caja blanca, lista en caja blanca con
 // líneas grises y filas de 3 zonas (ícono + título + datos en gris / etiqueta de estado / acciones o números).
 // Usarlas en toda ventana nueva con una lista o tabla para que todas se vean iguales.
 import React from 'react';

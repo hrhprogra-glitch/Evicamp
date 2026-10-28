@@ -4,7 +4,6 @@ import { supabase } from '../../db/supabase';
 import { TablaFiadosAgrupados } from './components/TablaFiadosAgrupados';
 import { ModalFiado } from './components/ModalFiado';
 import { ModalAbono } from './components/ModalAbono';
-import { ModalClientes } from './components/ModalClientes';
 import { ModalDetalleFiado } from './components/ModalDetalleFiado';
 import { ModalAnularPago } from './components/ModalAnularPago';
 import { ModalEstadoCuenta } from './components/ModalEstadoCuenta';
@@ -15,10 +14,12 @@ import { usePermiso } from '../../utils/permisos';
 import { traerTodo } from '../../utils/traerTodo';
 import { eliminarAbonoYRevertirCaja } from '../../utils/revertirAbono';
 import { TarjetaMetrica } from '../Inventario/components/TarjetaMetrica';
-import { confirmar } from '../../utils/dialogos';
+import { confirmar, avisar } from '../../utils/dialogos';
 import { tipoDeNumero } from '../../utils/documento';
 import { PestanaClientes } from './components/PestanaClientes';
 import { ModalFichaCliente, type DatosCliente } from './components/ModalFichaCliente';
+import { ModalDetalleCliente } from './components/ModalDetalleCliente';
+import { ModalUnirClientes } from './components/ModalUnirClientes';
 import { claseBotonBarra } from '../../components/ListaVentana';
 
 // Sección CLIENTES (fase 4.1, antes "Créditos"): pestañas Clientes (el directorio, nuevo) y Créditos (la de siempre:
@@ -38,6 +39,9 @@ export const Clientes: React.FC = () => {
   const [fichaAbierta, setFichaAbierta] = useState(false);
   const [clienteEnFicha, setClienteEnFicha] = useState<Cliente | null>(null);
   const abrirFicha = (c: Cliente | null) => { setClienteEnFicha(c); setFichaAbierta(true); };
+  // Detalle del cliente (4.1b) y unir repetidos: por id, así muestran siempre los datos al día
+  const [detalleId, setDetalleId] = useState<string | null>(null);
+  const [unirId, setUnirId] = useState<string | null>(null);
   // Crear deudas es como vender a crédito
   const [loading, setLoading] = useState(true);
   const [fiados, setFiados] = useState<Fiado[]>([]);
@@ -50,8 +54,6 @@ export const Clientes: React.FC = () => {
   const [isModalAbonoOpen, setIsModalAbonoOpen] = useState(false);
   const [fiadoAAbonar, setFiadoAAbonar] = useState<Fiado | null>(null);
 
-  const [isModalClientesOpen, setIsModalClientesOpen] = useState(false);
-    const [forceHistorialCliente, setForceHistorialCliente] = useState<string | null>(null);
   const [isModalEstadoCuentaOpen, setIsModalEstadoCuentaOpen] = useState(false);
   const [clienteEstadoCuenta, setClienteEstadoCuenta] = useState<ClienteFiadoAgrupado | null>(null);
 
@@ -195,7 +197,7 @@ if (fiaData) {
 
   // 🔥 RESTAURAR FOCO AL CERRAR MODALES O TERMINAR DE CARGAR
   useEffect(() => {
-    if (!loading && !isModalFiadoOpen && !isModalAbonoOpen && !isModalClientesOpen && !isModalDetalleOpen && !isModalAnularOpen && !isModalEstadoCuentaOpen && !fichaAbierta) {
+    if (!loading && !isModalFiadoOpen && !isModalAbonoOpen && !isModalDetalleOpen && !isModalAnularOpen && !isModalEstadoCuentaOpen && !fichaAbierta && !detalleId && !unirId) {
       setTimeout(() => {
         // Solo si el selector no está ya en algo de la pantalla (al cerrar una ventana vuelve a su fila: ventanas.ts)
         const a = document.activeElement;
@@ -204,7 +206,7 @@ if (fiaData) {
         }
       }, 100);
     }
-  }, [loading, isModalFiadoOpen, isModalAbonoOpen, isModalClientesOpen, isModalDetalleOpen, isModalAnularOpen, isModalEstadoCuentaOpen, fichaAbierta, pestana]);
+  }, [loading, isModalFiadoOpen, isModalAbonoOpen, isModalDetalleOpen, isModalAnularOpen, isModalEstadoCuentaOpen, fichaAbierta, detalleId, unirId, pestana]);
 
   const clientesAgrupados = React.useMemo(() => {
     const mapa = new Map<string, ClienteFiadoAgrupado>();
@@ -355,15 +357,6 @@ if (fiaData) {
     return true;
   };
 
-  // (ventana antigua del directorio, que sigue abriéndose desde el estado de cuenta → historial)
-  const handleSaveCliente = async (cli: Omit<Cliente, 'id'>) => {
-    await guardarCliente({ nombre: cli.nombre, dni: cli.dni, tipoDoc: tipoDeNumero(cli.dni, cli.tipoDoc), telefono: cli.telefono || '', direccion: cli.direccion || '', referencia: cli.referencia || '' });
-  };
-
-  const handleEditCliente = async (cli: Cliente) => {
-    await guardarCliente({ nombre: cli.nombre, dni: cli.dni, tipoDoc: tipoDeNumero(cli.dni, cli.tipoDoc), telefono: cli.telefono || '', direccion: cli.direccion || '', referencia: cli.referencia || '' }, cli.id);
-  };
-
   const handleDeleteCliente = async (id: string) => {
     // 🛡️ Blindaje en el propio app: no confiamos solo en que la base de datos rechace el
     // borrado (puede no tener la restricción de integridad activa). Si el cliente tiene
@@ -387,6 +380,39 @@ if (fiaData) {
   };
   // ------------------------------------
 
+  // Fase 4.1b: unir un cliente repetido (seVa) con el que queda. Sus créditos pasan al que queda (uno por uno, por id:
+  // así funciona igual sin internet), se completan los datos que le falten y el repetido se borra.
+  const unirClientes = async (queda: Cliente, seVa: Cliente): Promise<boolean> => {
+    const idQueda = /^\d+$/.test(queda.id) ? Number(queda.id) : queda.id;
+    const suyos = fiados.filter((f) => (f.clienteId ? f.clienteId === seVa.id : f.clienteNombre === seVa.nombre));
+    for (const f of suyos) {
+      const { error } = await supabase.from('fiados').update({ customer_id: idQueda, customer_name: queda.nombre }).eq('id', f.id);
+      if (error) { await avisar(`No se pudo pasar un crédito de "${seVa.nombre}": ${error.message}`); await cargarDatos(true); return false; }
+    }
+    const completar: Record<string, string> = {};
+    if (!queda.dni && seVa.dni) { completar.dni = seVa.dni; if (seVa.tipoDoc) completar.tipo_doc = seVa.tipoDoc; }
+    if (!queda.telefono && seVa.telefono) completar.telefono = seVa.telefono;
+    if (!queda.direccion && seVa.direccion) completar.direccion = seVa.direccion;
+    if (!queda.referencia && seVa.referencia) completar.referencia = seVa.referencia;
+    if (Object.keys(completar).length) {
+      const { error } = await supabase.from('customers').update(completar).eq('id', queda.id);
+      if (error) { await avisar(`No se pudieron completar los datos: ${error.message}`); }
+    }
+    const { error } = await supabase.from('customers').delete().eq('id', seVa.id);
+    if (error) { await avisar(`Los créditos ya pasaron, pero no se pudo borrar "${seVa.nombre}": ${error.message}`); }
+    await cargarDatos(true);
+    await avisar(`Listo: ${suyos.length} crédito(s) de "${seVa.nombre}" pasaron a "${queda.nombre}".`);
+    return true;
+  };
+
+  // Estado de cuenta de un cliente (desde su detalle): sus créditos agrupados
+  const verEstadoCuenta = (c: Cliente) => {
+    const grupo = clientesAgrupados.find((g) => (g.clienteId ? g.clienteId === c.id : g.clienteNombre === c.nombre)) || clientesAgrupados.find((g) => g.clienteNombre === c.nombre);
+    if (!grupo) { void avisar('Este cliente todavía no tiene créditos.'); return; }
+    setClienteEstadoCuenta(grupo);
+    setIsModalEstadoCuentaOpen(true);
+  };
+
   const totalPorCobrar = fiados.reduce((acc, f) => acc + f.saldoPendiente, 0);
   
   // 🔥 NUEVO: Filtrar los pagos para sumar solo lo recuperado en el día de HOY (Con protección TypeScript)
@@ -407,7 +433,6 @@ if (fiaData) {
       if (cliAgrupado) {
         setClienteEstadoCuenta(cliAgrupado);
         setIsModalEstadoCuentaOpen(true);
-        setIsModalClientesOpen(false);
       }
     };
     window.addEventListener('abrirEstadoCuentaGlobal', handleAbrir);
@@ -456,7 +481,7 @@ if (fiaData) {
             fiados={fiados}
             idPestana="tab-clientes-clientes"
             onNuevo={() => abrirFicha(null)}
-            onAbrir={(c) => abrirFicha(c)}
+            onAbrir={(c) => setDetalleId(c.id)}
             onEditar={(c) => abrirFicha(c)}
             onEliminar={(c) => void handleDeleteCliente(c.id)}
           />
@@ -484,6 +509,16 @@ if (fiaData) {
         </>
       )}
 
+      <ModalDetalleCliente
+        cliente={detalleId ? clientes.find((c) => c.id === detalleId) || null : null}
+        fiados={fiados}
+        onClose={() => setDetalleId(null)}
+        onEditar={(c) => abrirFicha(c)}
+        onEstadoCuenta={verEstadoCuenta}
+        onUnir={(c) => setUnirId(c.id)}
+        onVerCredito={(f) => { setFiadoAVer(f); setIsModalDetalleOpen(true); }}
+      />
+
       <ModalFichaCliente
         abierta={fichaAbierta}
         cliente={clienteEnFicha}
@@ -492,19 +527,14 @@ if (fiaData) {
         onClose={() => setFichaAbierta(false)}
       />
 
-      {/* MODALES */}
-      <ModalClientes 
-        isOpen={isModalClientesOpen} 
-        onClose={() => setIsModalClientesOpen(false)} 
-        clientes={clientes} 
-        onSaveCliente={handleSaveCliente} 
-        onEditCliente={handleEditCliente} // <-- Nueva propiedad enviada
-        onDeleteCliente={handleDeleteCliente} // <-- Nueva propiedad enviada
-        fiados={fiados} 
-        forceHistorialCliente={forceHistorialCliente}
-        onClearForce={() => setForceHistorialCliente(null)}
+      <ModalUnirClientes
+        queda={unirId ? clientes.find((c) => c.id === unirId) || null : null}
+        clientes={clientes}
+        onUnir={unirClientes}
+        onClose={() => setUnirId(null)}
       />
-      
+
+      {/* MODALES */}
       <ModalFiado isOpen={isModalFiadoOpen} onClose={() => setIsModalFiadoOpen(false)} onSave={handleSaveFiado} fiadoAEditar={fiadoAEditar} clientes={clientes} productos={productosInventario} />
       <ModalAbono isOpen={isModalAbonoOpen} onClose={() => setIsModalAbonoOpen(false)} onConfirm={handleConfirmAbono} fiado={fiadoAAbonar} />
       
@@ -532,9 +562,10 @@ if (fiaData) {
           await cargarDatos(true);
         }}
         onVerHistorial={(nombre) => {
-          setForceHistorialCliente(nombre);
-          setIsModalClientesOpen(true);
+          // Fase 4.1b: abre el detalle del cliente (antes, la ventana vieja del directorio)
+          const c = clientes.find((x) => x.nombre === nombre);
           setIsModalEstadoCuentaOpen(false);
+          if (c) setDetalleId(c.id);
         }}
       />
     </div>
