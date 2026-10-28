@@ -922,6 +922,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           onAddToCart={handleAddToCart}
           clienteSeleccionado={clienteSeleccionado}
           onAbrirElegirCliente={() => setIsClienteModalOpen(true)}
+          onLimpiarCliente={() => setClienteSeleccionado(null)}
         />
       </div>
       

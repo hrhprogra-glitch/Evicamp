@@ -1,6 +1,6 @@
 import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
-import { Search, ScanLine, Package, Plus, AlertTriangle, CheckCircle2, Users } from 'lucide-react';
+import { Search, ScanLine, Package, Plus, AlertTriangle, CheckCircle2, Users, X } from 'lucide-react';
 import { formatearCantidad } from '../../../utils/formato';
 import { esDecimal, unidadDe } from '../../../utils/unidades';
 import type { Product } from '../../Inventario/types';
@@ -16,6 +16,7 @@ interface Props {
   onNavigate?: (view: string) => void;
   clienteSeleccionado?: Cliente | null;
   onAbrirElegirCliente?: () => void;
+  onLimpiarCliente?: () => void;
 }
 
 export const TerminalBusqueda: React.FC<Props> = ({
@@ -25,7 +26,8 @@ export const TerminalBusqueda: React.FC<Props> = ({
   onAddToCart,
   onNavigate,
   clienteSeleccionado,
-  onAbrirElegirCliente
+  onAbrirElegirCliente,
+  onLimpiarCliente
 }) => {
   const empleado = useEmpleado();
   const userEmail = empleado?.email || '';
@@ -244,25 +246,40 @@ export const TerminalBusqueda: React.FC<Props> = ({
             </div>
 
             {onAbrirElegirCliente && (
-              <button
-                id="btn-pos-header-cliente"
-                type="button"
-                onClick={onAbrirElegirCliente}
-                title="Elegir o cambiar cliente para esta venta (F3 o clic)"
-                className="flex items-center shrink-0 whitespace-nowrap border-2 border-[var(--color-ink)] px-2 sm:px-3 py-1 text-[12px] font-black uppercase tracking-widest bg-white text-[var(--color-ink)] hover:bg-[var(--color-accent)] transition-all cursor-pointer shadow-[2px_2px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px]"
-              >
-                <Users size={13} className="mr-1.5 text-[var(--color-ink)]" />
-                {clienteSeleccionado ? (
-                  <span>
-                    CLI: <span className="text-[var(--color-accent-dark)] font-black">{clienteSeleccionado.nombre}</span>{' '}
-                    <span className="text-[10px] text-[var(--color-subtle)]">(F3)</span>
-                  </span>
-                ) : (
-                  <span>
-                    CLIENTE <span className="text-[10px] text-[var(--color-subtle)]">(F3)</span>
-                  </span>
+              <div className="flex items-center shrink-0">
+                <button
+                  id="btn-pos-header-cliente"
+                  type="button"
+                  onClick={onAbrirElegirCliente}
+                  title="Elegir o cambiar cliente para esta venta (F3 o clic)"
+                  className={`flex items-center whitespace-nowrap border-2 border-[var(--color-ink)] px-2 sm:px-3 py-1 text-[12px] font-black uppercase tracking-widest bg-white text-[var(--color-ink)] hover:bg-[var(--color-accent)] transition-all cursor-pointer shadow-[2px_2px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] ${
+                    clienteSeleccionado && onLimpiarCliente ? 'border-r-0' : ''
+                  }`}
+                >
+                  <Users size={13} className="mr-1.5 text-[var(--color-ink)]" />
+                  {clienteSeleccionado ? (
+                    <span>
+                      CLI: <span className="text-[var(--color-accent-dark)] font-black">{clienteSeleccionado.nombre}</span>{' '}
+                      <span className="text-[10px] text-[var(--color-subtle)]">(F3)</span>
+                    </span>
+                  ) : (
+                    <span>
+                      CLIENTE <span className="text-[10px] text-[var(--color-subtle)]">(F3)</span>
+                    </span>
+                  )}
+                </button>
+                {clienteSeleccionado && onLimpiarCliente && (
+                  <button
+                    id="btn-limpiar-cliente-pos"
+                    type="button"
+                    onClick={onLimpiarCliente}
+                    title="Quitar cliente (volver a Cliente Varios)"
+                    className="border-2 border-[var(--color-ink)] bg-white hover:bg-[var(--color-danger)] hover:text-white px-2 py-1 text-[var(--color-muted)] transition-colors cursor-pointer shadow-[2px_2px_0_0_var(--color-ink)] flex items-center justify-center active:translate-x-[2px] active:translate-y-[2px]"
+                  >
+                    <X size={13} />
+                  </button>
                 )}
-              </button>
+              </div>
             )}
 
             {puedeVerFiados && (

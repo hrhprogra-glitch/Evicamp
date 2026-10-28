@@ -7,6 +7,16 @@
 
 ---
 
+## 28/10/2026 (noche, 13) · Antigravity
+- **Eliminación de la barra redundante de cliente en el ticket:**
+  - Siguiendo la captura del dueño, se quitó la franja `CLIENTE: CLIENTE VARIOS (F3)` que estaba sobre la tabla del carrito en `TicketVenta.tsx`, ganando más espacio vertical para ver los productos.
+  - La visualización y selección del cliente ahora está 100% centralizada en la barra superior (`CLIENTE (F3)` o `CLI: [NOMBRE] (F3)`), con botón `✕` para desvincular el cliente si se desea volver a "Cliente Varios".
+  - Verificado con prueba automatizada end-to-end (`test-remove-client-bar.cjs`): 100% OK.
+  - Desplegado a `siumax` (`node ai-scripts/deploy.cjs siumax`).
+- **Siguiente paso:** Esperar revisión y visto bueno del dueño en `siumax`.
+
+---
+
 ## 28/10/2026 (noche, 12) · Antigravity
 - **Ajustes de POS y selector de clientes (pedido del dueño):**
   - **Estética de scroll:** Se aplicó la clase `custom-scrollbar` con ancho estilizado de 5px (delgada, sin flechas grises nativas de Windows) en la lista de clientes de `ModalElegirClientePOS.tsx` y en el formulario de `ModalFichaCliente.tsx`.

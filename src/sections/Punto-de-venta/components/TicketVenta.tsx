@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingCart, Trash2, Banknote, Pause, Play, Plus, Minus, User, X } from 'lucide-react';
+import { ShoppingCart, Trash2, Banknote, Pause, Play, Plus, Minus } from 'lucide-react';
 import type { CartItem, Cliente, HeldCart } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { esDecimal, unidadDe } from '../../../utils/unidades';
@@ -217,42 +217,6 @@ export const TicketVenta: React.FC<Props> = ({
             <Trash2 size={14} />
           </button>
         </div>
-      </div>
-
-      {/* BARRA DE CLIENTE OPCIONAL (F3) */}
-      <div className="bg-[var(--color-bg)] px-3 py-1.5 border-b-2 border-[var(--color-ink)] flex items-center justify-between gap-2 shrink-0">
-        <button
-          id="btn-elegir-cliente-pos"
-          type="button"
-          onClick={onAbrirElegirCliente}
-          title="Elegir o cambiar cliente (F3)"
-          className="flex-1 flex items-center gap-2 text-xs font-black uppercase text-left hover:text-[var(--color-accent)] cursor-pointer truncate outline-none focus:ring-2 focus:ring-[var(--color-ink)] p-0.5 rounded-none"
-        >
-          <User size={15} className={clienteSeleccionado ? "text-[var(--color-ink)] shrink-0" : "text-[var(--color-subtle)] shrink-0"} />
-          {clienteSeleccionado ? (
-            <span className="truncate text-[var(--color-ink)]">
-              <span className="text-[var(--color-muted)] font-normal mr-1">CLI:</span>
-              {clienteSeleccionado.nombre}
-              {clienteSeleccionado.dni ? ` (DNI ${clienteSeleccionado.dni})` : clienteSeleccionado.ruc ? ` (RUC ${clienteSeleccionado.ruc})` : ''}
-            </span>
-          ) : (
-            <span className="text-[var(--color-muted)] truncate">
-              Cliente: <span className="text-[var(--color-ink)]">Cliente Varios</span> <span className="text-[10px] text-[var(--color-subtle)]">(F3)</span>
-            </span>
-          )}
-        </button>
-
-        {clienteSeleccionado && (
-          <button
-            id="btn-limpiar-cliente-pos"
-            type="button"
-            onClick={onLimpiarCliente}
-            title="Quitar cliente (volver a Cliente Varios)"
-            className="w-6 h-6 flex items-center justify-center bg-white border border-[var(--color-border)] hover:bg-[var(--color-danger)] hover:text-white hover:border-[var(--color-danger)] text-[var(--color-muted)] transition-colors cursor-pointer shrink-0"
-          >
-            <X size={13} />
-          </button>
-        )}
       </div>
 
       {/* NUEVA BARRA: TICKETS EN ESPERA (Aparece solo si hay tickets guardados) */}
