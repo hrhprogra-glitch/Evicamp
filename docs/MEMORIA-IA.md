@@ -139,6 +139,7 @@
 21. **Poner `onKeyDown` en un botón dentro de una fila que también tiene `onKeyDown`:** la tecla se atiende dos veces (Enter en Eliminar abría la ficha). Un solo oyente en la fila, usando `e.target`.
 19. **Asumir que Escape en un desplegable no cierra la ventana:** `useCerrarConEscape` escucha en `window`. En el desplegable hay que hacer `e.stopPropagation()` en su `onKeyDown`.
 24. **Fiados huérfanos sin cliente en `customers`** (28/10/2026): si un cliente fue borrado o fiado sin ficha previa en `customers`, su deuda no salía en la lista de Clientes aunque sí en Créditos. Al mapear clientes, incluir automáticamente a cualquiera que tenga fiados en la base, y al vincular fiados comparar siempre tanto por ID (`String(f.clienteId) === String(c.id)`) como por nombre normalizado (mayúsculas/trim).
+25. **Pérdida de foco al eliminar filas de forma asíncrona** (28/10/2026): al borrar una fila (proveedor, cliente, etc.), `confirmar()` intenta restaurar el foco al botón original a los 80ms mientras la petición al servidor aún está en curso. Luego, cuando React elimina el elemento del DOM, el navegador pasa el foco a `document.body` y el selector desaparece. Para evitarlo: guardar el índice de la fila antes del borrado y, tras actualizar el estado de React, programar el foco (`setTimeout ~120ms`) hacia la fila contigua (`rows[Math.min(idx, rows.length - 1)]`) o al buscador si la lista quedó vacía.
 
 - **Pruebas (28/10/2026):** el dueño quiere que se pruebe SOLO lo que se modificó. Las tandas de regresión, solo si él lo pide.
 

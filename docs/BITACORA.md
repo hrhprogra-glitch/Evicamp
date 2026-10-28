@@ -7,6 +7,17 @@
 
 ---
 
+## 28/10/2026 (noche, 9) · Antigravity
+- **Arreglo de selector perdido al eliminar proveedor o cliente:**
+  - **Problema:** Al crear y borrar un proveedor (en Gestión de Proveedores o la sección Proveedores), el selector desaparecía por completo porque la fila se desmontaba del DOM mientras tenía el foco, cayendo en `document.body`.
+  - **Solución:** Se captura el índice de la fila antes del borrado y, tras eliminarla del estado de React, se programa el foco hacia la fila adyacente (o al buscador / botón de creación si no quedan registros).
+  - Se aplicó el mismo blindaje en `ModalGestionProveedores.tsx`, `Proveedores/index.tsx` y `Clientes/index.tsx` (al eliminar cliente, sacar de grupo o eliminar grupo).
+- **Pruebas:**
+  - Script automatizado en Edge headless (`test-proveedor-delete.cjs`): crear proveedor, buscarlo, borrarlo, confirmar con Enter -> el foco se mantuvo correctamente en `buscador-proveedores-gestion` ✅;
+  - `prueba-grupos` 19/19 ✅;
+  - `npx tsc -b` 0 errores ✅;
+  - Desplegado a siumax (`node ai-scripts/deploy.cjs siumax`) ✅.
+
 ## 28/10/2026 (noche, 8) · Antigravity
 - **Ajustes en la 4.1 a pedido del dueño (aprobados y probados en siumax):**
   - **Teclado en Editar cliente (`ModalFichaCliente`):** navegación direccional 2D con flechas (← → entre DNI y RUC, y entre Teléfono y Dirección; ↑ ↓ entre filas; Enter avanza en secuencia paso a paso).

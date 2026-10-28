@@ -271,11 +271,19 @@ export const Proveedores: React.FC<Props> = ({ onNavigate }) => {
                 setIsModalProvOpen(true);
               }}
               onDelete={async (prov) => {
+                const idxAntes = filteredProveedores.findIndex((x) => x.id === prov.id);
                 if (await confirmar(`⚠️ ALERTA: ¿Estás seguro de eliminar al proveedor "${prov.razon_social}"? Esta acción no se puede deshacer.`)) {
                   try {
                     const { error } = await supabase.from('providers').delete().eq('id', prov.id);
                     if (error) throw error;
-                    fetchProveedores();
+                    await fetchProveedores();
+                    setTimeout(() => {
+                      const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-row-prov="true"]'));
+                      const destino = rows.length ? rows[Math.min(Math.max(idxAntes, 0), rows.length - 1)] : null;
+                      const el = destino || document.getElementById('buscador-seccion-proveedores') || document.querySelector<HTMLElement>('input[type="text"]');
+                      el?.focus();
+                      el?.scrollIntoView({ block: 'nearest' });
+                    }, 120);
                   } catch (e: any) {
                     alert("Error al eliminar: " + e.message);
                   }

@@ -453,11 +453,20 @@ if (fiaData) {
     }
 
     if (await confirmar('⚠️ ¿Estás seguro de ELIMINAR a este cliente del directorio?')) {
+      const rowsAntes = Array.from(document.querySelectorAll<HTMLElement>('[data-fila-cliente="true"]'));
+      const idxAntes = rowsAntes.findIndex(el => el.getAttribute('data-cliente-id') === String(id));
       // Borrar en Supabase
       const { error } = await supabase.from('customers').delete().eq('id', id);
 
       if (error) return alert('No se pudo eliminar al cliente: ' + error.message);
       setClientes(clientes.filter(c => c.id !== id));
+      setTimeout(() => {
+        const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-fila-cliente="true"]'));
+        const destino = rows.length ? rows[Math.min(Math.max(idxAntes, 0), rows.length - 1)] : null;
+        const el = destino || document.getElementById('buscador-clientes');
+        el?.focus();
+        el?.scrollIntoView({ block: 'nearest' });
+      }, 120);
     }
   };
   // ------------------------------------
@@ -490,7 +499,16 @@ if (fiaData) {
   const sacarDeGrupo = async (c: Cliente) => {
     const g = grupos.find((x) => x.id === c.grupoId);
     if (!(await confirmar(`¿Sacar a "${c.nombre}" del grupo "${g?.nombre || ''}"?\n\nSu cuenta y sus créditos siguen igual; solo deja de estar en el grupo.`))) return;
+    const rowsAntes = Array.from(document.querySelectorAll<HTMLElement>('[data-miembro-grupo="true"]'));
+    const idxAntes = rowsAntes.findIndex(el => el.innerText.includes(c.nombre));
     await ponerEnGrupo(c.id, null);
+    setTimeout(() => {
+      const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-miembro-grupo="true"]'));
+      const destino = rows.length ? rows[Math.min(Math.max(idxAntes, 0), rows.length - 1)] : null;
+      const el = destino || document.getElementById('btn-grupo-cobrar') || document.getElementById('btn-cerrar-grupo');
+      el?.focus();
+      el?.scrollIntoView({ block: 'nearest' });
+    }, 120);
   };
   const eliminarGrupo = async (g: GrupoClientes) => {
     const miembros = miembrosDe(g.id);
@@ -500,6 +518,9 @@ if (fiaData) {
     if (error) { await avisar(`No se pudo eliminar el grupo: ${error.message}`); return; }
     setGrupos((l) => l.filter((x) => x.id !== g.id));
     setGrupoVerId(null);
+    setTimeout(() => {
+      document.getElementById('buscador-clientes')?.focus();
+    }, 120);
   };
   const cobrarAlGrupo = (g: GrupoClientes) => {
     const cuenta = cuentaDeGrupo(g.id);

@@ -4,12 +4,12 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 28/10/2026 (noche, 8), Antigravity.
+- **Última actualización:** 28/10/2026 (noche, 9), Antigravity.
 - **Fases hechas y subidas:** 0, 1 y 2. En producción en Evicamp desde el 23/10/2026 (commit d36efca).
 - **Fase actual:** **4, Clientes y empresas.** La **4.1 ajustada y probada en siumax** (rama `fase-4`):
   - sección Clientes con pestañas Clientes | Créditos, ficha con DNI/RUC directo, detalle del cliente y grupos de clientes;
-  - ajustes del dueño completados: selector 2D en Editar cliente (flechas ← →), columna "Grupo" dedicada en la tabla, orden por defecto en MAYOR DEUDA y vinculación blindada de fiados huérfanos;
-  - **Siguiente: esperar visto bueno del dueño de estos 4 ajustes y mostrar la propuesta de la 4.2 (cliente opcional en la Caja).**
+  - ajustes del dueño completados: selector 2D en Editar cliente (flechas ← →), columna "Grupo" dedicada en la tabla, orden por defecto en MAYOR DEUDA, vinculación blindada de fiados huérfanos, y retención de foco al eliminar proveedores o clientes;
+  - **Siguiente: esperar visto bueno del dueño de estos ajustes y mostrar la propuesta de la 4.2 (cliente opcional en la Caja).**
   - Además falta su decisión para pedidos: **¿el pedido descuenta el stock al guardarlo o al entregarlo?** (recomendado: al guardarlo).
 - **Commits locales sin push:** documentación para IAs y la fase 4.1 en rama `fase-4`.
 - **URGENTE para Evicamp:** el arreglo del cobro de créditos (se cobraba dos veces) y los cambios de la 4.1 están en la rama `fase-4`. Subirlos cuando el dueño lo autorice.

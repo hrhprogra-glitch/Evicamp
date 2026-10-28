@@ -137,6 +137,7 @@
   2. En la tabla de Clientes, no había columna de "Grupo": crear la columna dedicada "GRUPO" para ver a qué grupo pertenece cada cliente y quitar la etiqueta de debajo del nombre.
   3. "CLIENTE PRUEBA PLAYWRIGHT" aparecía en Créditos con S/ 2.00 de deuda pero en Clientes no salía: se descubrió que el cliente 1 no existía en `customers`. Se protegió el sistema para que clientes con deuda siempre salgan en Clientes y se vinculen por ID o nombre, y se restauró en `siuhub`.
   4. Poner como predeterminado en el filtro de Clientes "MAYOR DEUDA" para ver primero a quienes deben dinero.
+  5. Al crear y borrar un proveedor el selector desaparecía: el elemento activo se destruía tras la eliminación asíncrona; se arregló programando el foco hacia la fila contigua o el buscador en `ModalGestionProveedores`, `Proveedores` y `Clientes`.
   - El dueño dio el OK a la propuesta, se aplicó en siumax y se validó con Edge y `prueba-grupos`.
 
 - **Bot de WhatsApp 24 h:** el dueño quiere tenerlo en el VPS; ya tiene un número aparte con WhatsApp Business. Se revisó el código y el VPS y se le mostró el plan. Esperando su OK.

@@ -280,11 +280,19 @@ export const ModalGestionProveedores: React.FC<Props> = ({ isOpen, onClose }) =>
                     setIsModalProveedorOpen(true);
                   }}
                   onDelete={async (p) => {
+                    const idxAntes = visibles.findIndex((x) => x.id === p.id);
                     if (!await confirmar(`¿Seguro que deseas eliminar al proveedor ${p.razon_social}?`)) return;
                     try {
                       const { error } = await supabase.from('providers').update({ estado: 'ELIMINADO' }).eq('id', p.id);
                       if (error) throw error;
                       setProveedores(prev => prev.filter(prov => prov.id !== p.id));
+                      setTimeout(() => {
+                        const rows = Array.from(document.querySelectorAll<HTMLElement>('#modal-gestion-proveedores-container [data-row-prov="true"]'));
+                        const destino = rows.length ? rows[Math.min(Math.max(idxAntes, 0), rows.length - 1)] : null;
+                        const el = destino || document.getElementById('buscador-proveedores-gestion') || document.getElementById('btn-nuevo-proveedor');
+                        el?.focus();
+                        el?.scrollIntoView({ block: 'nearest' });
+                      }, 120);
                     } catch (err) {
                       console.error(err);
                       void avisar('Error eliminando proveedor');
