@@ -243,4 +243,13 @@
        - Se agregaron controles de paginación sincronizados tanto arriba como al final de la tabla.
        - Se confirmó la visualización de 50 clientes por página (`POR_PAGINA = 50`).
        - Compilado y desplegado a `siumax.duckdns.org`.
+    19. **Corrección de flujo del selector por teclado en paginación superior e inferior (29/10 tarde):**
+       - *"perfecto pero falta que el selector pase por la siguiente pagina como tambien la de abajo el selector no pasa por ahi"*:
+       - El selector de teclado se saltaba la paginación superior al bajar desde la barra o subir desde la primera fila, y no pasaba fluidamente a "Siguiente página" (>).
+       - En la última fila de la tabla, al pulsar Flecha Abajo ⬇️, el selector no realizaba scrollIntoView hacia la paginación de abajo y el foco no tenía contraste evidente.
+       - Se estandarizó el selector en ambos bloques de paginación (arriba y abajo):
+         - Resaltado brutalista en amarillo neón con sombra negra (focus:bg-[var(--color-accent)] focus:shadow-[2px_2px_0_0_var(--color-ink)]) 100% visible.
+         - Desplazamiento automático de pantalla (scrollIntoView) para que la ventana acompañe el foco al ir a la paginación inferior.
+         - Tránsito bidireccional fluido: Flecha Abajo ⬇️ desde la barra entra a la paginación superior; Flechas ⬅️ y ➡️ alternan entre anterior y siguiente; Flecha Abajo ⬇️ baja a la fila 0; Flecha Abajo ⬇️ desde la última fila salta al botón de siguiente página inferior; Flecha Arriba ⬆️ sube a la tabla; Flecha Abajo ⬇️ en el pie cicla arriba al buscador.
+       - Desplegado a siumax.duckdns.org.
 

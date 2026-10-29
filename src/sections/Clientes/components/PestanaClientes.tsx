@@ -61,6 +61,12 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
   const visibles = filas.slice((paginaReal - 1) * POR_PAGINA, paginaReal * POR_PAGINA);
   const hayFiltros = !!busqueda || filtro !== 'TODOS' || orden !== 'DEUDA';
 
+  const claseBotonPag =
+    'p-2 border-2 border-[var(--color-ink)] bg-white text-[var(--color-ink)] transition-all cursor-pointer select-none ' +
+    'aria-disabled:opacity-30 aria-disabled:cursor-not-allowed hover:bg-[var(--color-bg)] ' +
+    'focus:outline-none focus:bg-[var(--color-accent)] focus:text-[var(--color-ink)] focus:border-[var(--color-ink)] ' +
+    'focus:ring-2 focus:ring-[var(--color-ink)] focus:shadow-[2px_2px_0_0_var(--color-ink)]';
+
   const renderPaginacion = (posicion: 'arriba' | 'abajo') => {
     const prevId = posicion === 'arriba' ? 'btn-pagina-ant-clientes-arriba' : 'btn-pagina-ant-clientes';
     const sigId = posicion === 'arriba' ? 'btn-pagina-sig-clientes-arriba' : 'btn-pagina-sig-clientes';
@@ -75,16 +81,25 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
           <button
             id={prevId}
             type="button"
-            onClick={() => setPagina(Math.max(1, paginaReal - 1))}
+            tabIndex={0}
+            onClick={() => {
+              if (paginaReal > 1) setPagina(paginaReal - 1);
+            }}
             aria-disabled={paginaReal === 1}
             onKeyDown={(e) => {
               if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 irA(sigId);
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                if (posicion === 'arriba') irA('buscador-clientes');
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 if (posicion === 'arriba') {
-                  filasDom()[0]?.focus();
+                  const f0 = filasDom()[0];
+                  if (f0) { f0.focus(); f0.scrollIntoView({ block: 'nearest' }); }
+                } else {
+                  irA('buscador-clientes');
                 }
               } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
@@ -92,43 +107,60 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
                   irA('buscador-clientes');
                 } else {
                   const list = filasDom();
-                  list[list.length - 1]?.focus();
+                  const ult = list[list.length - 1];
+                  if (ult) { ult.focus(); ult.scrollIntoView({ block: 'nearest' }); }
                 }
+              } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (paginaReal > 1) setPagina(paginaReal - 1);
               }
             }}
-            className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] aria-disabled:opacity-40 aria-disabled:cursor-not-allowed hover:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer"
+            className={claseBotonPag}
             title="Página anterior"
           >
             <ChevronLeft size={16} />
           </button>
-          <span className="flex items-center px-2 sm:px-4 whitespace-nowrap border-2 border-[var(--color-border)] bg-white text-xs font-black text-[var(--color-ink)]">
+          <span className="flex items-center px-2 sm:px-4 whitespace-nowrap border-2 border-[var(--color-ink)] bg-white text-xs font-black text-[var(--color-ink)]">
             Pág {paginaReal} / {totalPaginas}
           </span>
           <button
             id={sigId}
             type="button"
-            onClick={() => setPagina(Math.min(totalPaginas, paginaReal + 1))}
+            tabIndex={0}
+            onClick={() => {
+              if (paginaReal < totalPaginas) setPagina(paginaReal + 1);
+            }}
             aria-disabled={paginaReal === totalPaginas}
             onKeyDown={(e) => {
               if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 irA(prevId);
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                if (posicion === 'abajo') irA('buscador-clientes');
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 if (posicion === 'arriba') {
-                  filasDom()[0]?.focus();
+                  const f0 = filasDom()[0];
+                  if (f0) { f0.focus(); f0.scrollIntoView({ block: 'nearest' }); }
+                } else {
+                  irA('buscador-clientes');
                 }
               } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 if (posicion === 'arriba') {
-                  irA('buscador-clientes');
+                  irA('btn-nuevo-cliente');
                 } else {
                   const list = filasDom();
-                  list[list.length - 1]?.focus();
+                  const ult = list[list.length - 1];
+                  if (ult) { ult.focus(); ult.scrollIntoView({ block: 'nearest' }); }
                 }
+              } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (paginaReal < totalPaginas) setPagina(paginaReal + 1);
               }
             }}
-            className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] aria-disabled:opacity-40 aria-disabled:cursor-not-allowed hover:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer"
+            className={claseBotonPag}
             title="Página siguiente"
           >
             <ChevronRight size={16} />
@@ -139,7 +171,13 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
   };
 
   const filasDom = () => Array.from(document.querySelectorAll('[data-fila-cliente="true"]')) as HTMLElement[];
-  const irA = (id: string) => document.getElementById(id)?.focus();
+  const irA = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.focus();
+      el.scrollIntoView({ block: 'nearest' });
+    }
+  };
   // Barra: buscador → filtro → orden → limpiar → nuevo (← →); ↓ baja a la lista; ↑ sube a la pestaña
   const barra = ['buscador-clientes', 'filtro-deuda-clientes', 'orden-clientes', ...(hayFiltros ? ['btn-limpiar-clientes'] : []), 'btn-nuevo-cliente'];
   const teclasBarra = (id: string) => (e: React.KeyboardEvent<HTMLElement>) => {
@@ -148,11 +186,27 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
     const input = e.currentTarget as HTMLInputElement;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      const topPag = document.getElementById('btn-pagina-ant-clientes-arriba');
-      if (topPag && totalPaginas > 1) {
-        topPag.focus();
+      // Si está en la derecha (nuevo cliente o limpiar), bajar a página siguiente arriba
+      if (id === 'btn-nuevo-cliente' || id === 'btn-limpiar-clientes') {
+        const sigTop = document.getElementById('btn-pagina-sig-clientes-arriba');
+        if (sigTop) {
+          sigTop.focus();
+          sigTop.scrollIntoView({ block: 'nearest' });
+          return;
+        }
+      }
+      // Si está en la izquierda, bajar a página anterior arriba
+      const antTop = document.getElementById('btn-pagina-ant-clientes-arriba');
+      const sigTop = document.getElementById('btn-pagina-sig-clientes-arriba');
+      if (antTop) {
+        antTop.focus();
+        antTop.scrollIntoView({ block: 'nearest' });
+      } else if (sigTop) {
+        sigTop.focus();
+        sigTop.scrollIntoView({ block: 'nearest' });
       } else {
-        filasDom()[0]?.focus();
+        const f0 = filasDom()[0];
+        if (f0) { f0.focus(); f0.scrollIntoView({ block: 'nearest' }); }
       }
     }
     else if (e.key === 'ArrowUp') { e.preventDefault(); irA(idPestana); }
@@ -169,15 +223,36 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
     const k = partes.indexOf(document.activeElement as HTMLElement);
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (lista[i + 1]) { lista[i + 1].focus(); lista[i + 1].scrollIntoView({ block: 'nearest' }); }
-      else irA(paginaReal < totalPaginas ? 'btn-pagina-sig-clientes' : 'btn-pagina-ant-clientes');
+      if (lista[i + 1]) {
+        lista[i + 1].focus();
+        lista[i + 1].scrollIntoView({ block: 'nearest' });
+      } else {
+        // Al final de la tabla: pasar a la paginación de abajo
+        // Si hay siguiente página, va a "Página Siguiente", si no a "Página Anterior"
+        const sigAbajo = document.getElementById('btn-pagina-sig-clientes');
+        const antAbajo = document.getElementById('btn-pagina-ant-clientes');
+        const destino = (paginaReal < totalPaginas ? sigAbajo : antAbajo) || sigAbajo || antAbajo;
+        if (destino) {
+          destino.focus();
+          destino.scrollIntoView({ block: 'nearest' });
+        }
+      }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      if (lista[i - 1]) { lista[i - 1].focus(); lista[i - 1].scrollIntoView({ block: 'nearest' }); }
-      else {
-        const topPag = document.getElementById('btn-pagina-ant-clientes-arriba');
-        if (topPag && totalPaginas > 1) topPag.focus();
-        else irA('buscador-clientes');
+      if (lista[i - 1]) {
+        lista[i - 1].focus();
+        lista[i - 1].scrollIntoView({ block: 'nearest' });
+      } else {
+        // En la primera fila (i === 0), subir a la paginación superior
+        const sigArriba = document.getElementById('btn-pagina-sig-clientes-arriba');
+        const antArriba = document.getElementById('btn-pagina-ant-clientes-arriba');
+        const destino = (k > 0 ? sigArriba : antArriba) || antArriba || sigArriba;
+        if (destino) {
+          destino.focus();
+          destino.scrollIntoView({ block: 'nearest' });
+        } else {
+          irA('buscador-clientes');
+        }
       }
     } else if (e.key === 'ArrowRight') { e.preventDefault(); partes[Math.min(k + 1, partes.length - 1)]?.focus(); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); partes[Math.max(k - 1, 0)]?.focus(); }

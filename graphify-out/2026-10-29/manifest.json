@@ -1956,9 +1956,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/PestanaClientes.tsx": {
-    "mtime": 1793291840.8559208,
-    "seen": 1793296973.0701287,
-    "ast_hash": "64ea58a4c3d2673691682300ff4d5acc",
+    "mtime": 1793298571.0626252,
+    "seen": 1793298703.3494637,
+    "ast_hash": "e65b7deabdd51b8ef10820b4034f0f0b",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/TablaFiados.tsx": {
@@ -1974,9 +1974,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/index.tsx": {
-    "mtime": 1793291743.4780111,
-    "seen": 1793296973.070133,
-    "ast_hash": "d00aa365246aeedbbe7a478cf139c4c1",
+    "mtime": 1793298592.4756377,
+    "seen": 1793298703.3494694,
+    "ast_hash": "ac7552570a5a6390594bc95b47d4d445",
     "semantic_hash": ""
   },
   "src/sections/Clientes/types.ts": {
@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793289445.8710825,
-    "seen": 1793296973.070299,
-    "ast_hash": "790b6e0b320c045944c2ab6bd23b969d",
+    "mtime": 1793297012.4808638,
+    "seen": 1793298703.3496442,
+    "ast_hash": "4ee1bc7fdbc6acacbdbd5304b5ee1ad6",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793289284.1601608,
-    "seen": 1793296973.0703003,
-    "ast_hash": "5062cd616d56431264a459727ea2ff7d",
+    "mtime": 1793297054.3066397,
+    "seen": 1793298703.3496459,
+    "ast_hash": "94168f695d97a848d1bdf17550102fc3",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793289416.977817,
-    "seen": 1793296973.070303,
-    "ast_hash": "e4d75e13b0232d53a03c77153489dffb",
+    "mtime": 1793297077.543065,
+    "seen": 1793298703.349649,
+    "ast_hash": "a40cec7d43d788f42c6bfab53507d525",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {

@@ -7,6 +7,36 @@
 
 ---
 
+## 29/10/2026 (tarde, 26) · Antigravity
+- **Corrección de flujo del selector por teclado en paginación superior e inferior:**
+  - **Solicitud del dueño:** *"perfecto pero falta que el selector pase por la siguiente pagina como tambien la de abajo el selector no pasa por ahi"*
+  - **Diagnóstico:**
+    1. En la paginación superior, la navegación vertical se saltaba los controles si `totalPaginas === 1` o iba siempre directo a "página anterior", impidiendo que el selector pasara cómodamente por el botón de "siguiente página" (`>`).
+    2. En la última fila de la tabla, al presionar Flecha Abajo ⬇️, no se realizaba `scrollIntoView` al botón de paginación inferior y el estilo de foco (`focus:ring-[var(--color-ink)]`) era prácticamente invisible en pantalla.
+    3. En los botones inferiores, Flecha Abajo ⬇️ no tenía acción de escape y quedaba muerto.
+  - **Cambios realizados (`PestanaClientes.tsx`):**
+    1. **Resaltado Neobrutalista del Selector:** Los botones de paginación ahora usan `claseBotonPag` con `focus:bg-[var(--color-accent)] focus:text-[var(--color-ink)] focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] focus:shadow-[2px_2px_0_0_var(--color-ink)]`. Al posar el selector, se iluminan inmediatamente en amarillo neón brillante con texto negro y sombra brutalista.
+    2. **Desplazamiento automático (`scrollIntoView`):** La función `irA` ahora incluye `.scrollIntoView({ block: 'nearest' })`, asegurando que la ventana acompañe al selector al saltar a la paginación inferior o a los extremos.
+    3. **Paginación Superior:**
+       - Desde la barra arriba (Buscador/Filtros/Nuevo Cliente), Flecha Abajo ⬇️ desciende a la paginación superior sin saltarse los botones.
+       - Flecha Derecha ➡️ pasa de Anterior (`<`) a Siguiente (`>`).
+       - Flecha Izquierda ⬅️ pasa de Siguiente (`>`) a Anterior (`<`).
+       - Flecha Abajo ⬇️ desde cualquiera de los dos botones desciende directamente a la primera fila de la tabla.
+    4. **Paginación Inferior:**
+       - Desde la última fila de la tabla, Flecha Abajo ⬇️ salta directamente a la paginación inferior (enfocando preferentemente "Siguiente página" `#btn-pagina-sig-clientes` o "Anterior").
+       - Navegación bidireccional fluida con Flecha Izquierda ⬅️ y Derecha ➡️ entre `<` y `>`.
+       - Flecha Arriba ⬆️ sube a la última fila de la tabla.
+       - Flecha Abajo ⬇️ cicla hacia arriba al buscador, garantizando que el usuario nunca quede atrapado.
+       - Presionar `Enter` o `Espacio` en los botones ejecuta el cambio de página instantáneo.
+  - **Validación y Despliegue:**
+    - `npx tsc -b`: 0 errores.
+    - `npm run build`: compilación limpia en 5.1s.
+    - `deploy.cjs siumax`: subido exitosamente a `siumax.duckdns.org` (20 archivos).
+    - `graphify update .`: grafo de conocimiento actualizado.
+- **Siguiente paso:** Notificar al dueño para que verifique la navegación con las flechas en siumax.
+
+---
+
 ## 29/10/2026 (tarde, 25) · Antigravity
 - **Ajustes en tabla de Clientes (columna Plazo, scroll general y paginación doble):**
   - **Solicitud del dueño:** *"en la tabla no sale los dias de plazo como sabre cuantos tiene y otra cosa mas el scrooll tiene que ser de la ventana general como tambien falta para pasar a la pagina siguiente arriba como tambien al final agrega eso tiene que mostrar por lo menos 50 clientes por pagina"* (captura mostrando la tabla con scroll interno marcado en rojo).

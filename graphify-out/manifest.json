@@ -1956,9 +1956,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/PestanaClientes.tsx": {
-    "mtime": 1793298571.0626252,
-    "seen": 1793298703.3494637,
-    "ast_hash": "e65b7deabdd51b8ef10820b4034f0f0b",
+    "mtime": 1793299234.606217,
+    "seen": 1793299314.3250396,
+    "ast_hash": "3f0b3dc9e66dffc244c54a8bd1a0a0cc",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/TablaFiados.tsx": {
@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793297012.4808638,
-    "seen": 1793298703.3496442,
-    "ast_hash": "4ee1bc7fdbc6acacbdbd5304b5ee1ad6",
+    "mtime": 1793298718.6185517,
+    "seen": 1793299314.3252723,
+    "ast_hash": "dda1f4fd281ab14838c215369b7a4852",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793297054.3066397,
-    "seen": 1793298703.3496459,
-    "ast_hash": "94168f695d97a848d1bdf17550102fc3",
+    "mtime": 1793298785.4592705,
+    "seen": 1793299314.3252742,
+    "ast_hash": "2366c117b7df27ec62a14e23eded6bcc",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
