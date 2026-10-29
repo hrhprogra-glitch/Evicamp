@@ -183,3 +183,12 @@
      - El dueño envió una captura donde la barra de pestañas y filtros del detalle del cliente se quebraba en dos filas asimétricas: el campo de fecha caía a una segunda fila a la derecha, las pestañas quedaban flotando en el medio y el buscador en la esquina superior derecha, estirando la barra a 138px con espacios en blanco vacíos.
      - Se unificó la altura de todos los controles a `h-[40px]`, se ajustó el padding de las pestañas a `px-3 sm:px-4`, se fijó `flex-nowrap` en los filtros y se redujo la altura de la barra a 76px en una sola fila armónica.
      - Validado al 100% con Puppeteer en `siumax`.
+  11. *"perfecto ahora vamos agregar el modo dark porque mis ojos duelen me gustaria que sea una convinación del modo clasico pero con tonos negro gris blanco ahi ve tu la mejor paleta"*, *"que rempleaze la plata gris"* y *"si si hazlo que remplece el color plata gris"*:
+     - El dueño envió una captura marcando en círculo rojo el tema "PLATA / GRIS" en Parámetros del Sistema -> Apariencia para reemplazarlo por un "Modo Oscuro" para descansar la vista.
+     - Se implementó el tema **Modo Oscuro** reemplazando "Plata / Gris":
+       - Fondo profundo: `#0B0F17` (carbón profundo).
+       - Superficies, tarjetas, modales y tablas: `#111827` (grafito pizarra) con bordes `#334155`.
+       - Texto principal: `#F8FAFC` (blanco brillante) y secundario `#94A3B8` (gris pizarra).
+       - Acentos clásicos preservados para total claridad en estados y ventas: verde esmeralda (`#10B981`), ámbar (`#FBBF24`), rojo (`#F87171`) y azul (`#38BDF8`).
+       - Mapeo automático de `.bg-white` a grafito, controles oscuros (`color-scheme: dark !important;`), scrollbar oscuro y protección para impresión (`@media print` estrictamente blanco y negro para no gastar tinta).
+     - Probado y verificado en `siumax` con pruebas automatizadas en Edge al 100% y desplegado.

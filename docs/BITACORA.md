@@ -7,6 +7,27 @@
 
 ---
 
+## 28/10/2026 (noche, 18) · Antigravity
+- **Implementación del Modo Oscuro (Dark Mode) reemplazando "Plata / Gris":**
+  - **Solicitud del dueño:** Añadir un Modo Oscuro para evitar cansancio visual ("mis ojos duelen"), combinando la elegancia del modo clásico con tonos negro, gris grafito y blanco, reemplazando el tema "Plata / Gris".
+  - **Diseño del tema (`src/index.css`):**
+    - Fondo de pantalla profundo: `#0B0F17` (negro carbón profundo).
+    - Tarjetas, modales, tablas y superficies: `#111827` (grafito pizarra) con bordes en gris acero `#334155`.
+    - Texto principal de alto contraste: `#F8FAFC` (blanco brillante).
+    - Texto secundario y datos: `#94A3B8` (gris plata).
+    - Acentos vivos del Clásico preservados: Verde esmeralda `#10B981`, Ámbar `#FBBF24`, Rojo `#F87171` y Azul `#38BDF8`, con fondos tenues oscuros para badges y estados.
+    - Soporte completo para `bg-white`, inputs, selects, scrollbar oscuro (`.custom-scrollbar`), y protección `@media print` para que las boletas impresas sigan saliendo siempre en papel blanco y tinta negra.
+  - **Selector de temas (`ThemeSwitcher.tsx` y `App.tsx`):**
+    - Se reemplazó la opción "Plata / Gris" por **"Modo Oscuro"** con swatches `[#0B0F17, #111827, #10B981, #F8FAFC]`.
+    - Se aplica `theme-monochrome` y `data-theme="dark"` para máxima compatibilidad con navegadores y persistencia en `localStorage`.
+  - **Pruebas y despliegue:**
+    - Prueba automatizada end-to-end con Edge (`test-modo-oscuro.cjs` y `test-dark-modal.cjs`): 100% OK.
+    - Verificación visual con capturas en Parámetros, POS, Clientes y Ventanas flotantes.
+    - Desplegado a `siumax` (`node ai-scripts/deploy.cjs siumax`).
+- **Siguiente paso:** Notificar al dueño para que lo pruebe en `siumax`.
+
+---
+
 ## 28/10/2026 (noche, 17) · Antigravity
 - **Corrección estética de la barra de pestañas y filtros en el detalle del cliente (`ModalDetalleCliente.tsx`):**
   - **Problema encontrado por el dueño:** Al haber 3 pestañas (`PENDIENTES`, `PAGADOS`, `COMPRAS`), el contenedor de filtros de la derecha no alcanzaba el ancho mínimo, provocando que el input de fecha bajara a una segunda fila a la derecha, mientras que las pestañas quedaban flotando en el medio y el buscador en la parte superior derecha, dejando la barra deforme con 138px de altura y espacios vacíos.

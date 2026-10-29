@@ -8,7 +8,7 @@ type Tema = 'classic' | 'monochrome' | 'oceano' | 'atardecer' | 'bosque' | 'rosa
 // decir qué 4 colores mostrar en su muestra y qué atributo data-theme aplicar.
 const TEMAS: { id: Tema; nombre: string; descripcion: string; swatches: string[] }[] = [
   { id: 'classic', nombre: 'Tema Clásico', descripcion: 'Colores vibrantes e indicadores visuales dinámicos (Por defecto).', swatches: ['#1E293B', '#10B981', '#F59E0B', '#EF4444'] },
-  { id: 'monochrome', nombre: 'Plata / Gris', descripcion: 'Estilo profesional en escala de grises y blanco, súper limpio y minimalista.', swatches: ['#171717', '#525252', '#E5E5E5', '#FFFFFF'] },
+  { id: 'monochrome', nombre: 'Modo Oscuro', descripcion: 'Negro carbón, grafito y blanco con acentos clásicos, descanso total para la vista.', swatches: ['#0B0F17', '#111827', '#10B981', '#F8FAFC'] },
   { id: 'oceano', nombre: 'Océano', descripcion: 'Azules fríos y relajados, ideal para jornadas largas.', swatches: ['#0F2942', '#0EA5E9', '#F59E0B', '#EF4444'] },
   { id: 'atardecer', nombre: 'Atardecer', descripcion: 'Naranjas y tonos cálidos, cálido y energético.', swatches: ['#3B2317', '#F97316', '#F59E0B', '#EF4444'] },
   { id: 'bosque', nombre: 'Bosque', descripcion: 'Verdes profundos, natural y descansado para la vista.', swatches: ['#1A2E1F', '#16A34A', '#F59E0B', '#EF4444'] },
@@ -29,13 +29,14 @@ export const ThemeSwitcher: React.FC = () => {
     setTheme(newTheme);
     localStorage.setItem('gestorpro_theme', newTheme);
     // Siempre se limpian los atributos primero
-      document.documentElement.classList.remove('theme-monochrome');
-      document.documentElement.removeAttribute('data-theme');
-      if (newTheme === 'monochrome') {
-        document.documentElement.classList.add('theme-monochrome');
-      } else if (newTheme !== 'classic') {
-        document.documentElement.setAttribute('data-theme', newTheme);
-      }
+    document.documentElement.classList.remove('theme-monochrome');
+    document.documentElement.removeAttribute('data-theme');
+    if (newTheme === 'monochrome') {
+      document.documentElement.classList.add('theme-monochrome');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else if (newTheme !== 'classic') {
+      document.documentElement.setAttribute('data-theme', newTheme);
+    }
   };
 
   // 🧲 Autofoco inicial en el tema activo
@@ -155,7 +156,7 @@ export const ThemeSwitcher: React.FC = () => {
             </div>
             <div className="flex gap-2 w-full mb-3">
               {t.swatches.map((hex, i) => (
-                <div key={i} className="h-6 flex-1" style={{ backgroundColor: hex }}></div>
+                <div key={i} className="h-6 flex-1 border border-[var(--color-border)]" style={{ backgroundColor: hex }}></div>
               ))}
             </div>
             <p className="text-xs text-[var(--color-muted)] font-bold">{t.descripcion}</p>

@@ -4,14 +4,15 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 28/10/2026 (noche, 17), Antigravity.
+- **Última actualización:** 28/10/2026 (noche, 18), Antigravity.
 - **Fases hechas y subidas:** 0, 1 y 2. En producción en Evicamp desde el 23/10/2026 (commit d36efca).
 - **Fase actual:** **4, Clientes y empresas.** La **4.1 y la 4.2 hechas y probadas en siumax** (rama `fase-4`):
   - **4.1:** sección Clientes con pestañas Clientes | Créditos, ficha con DNI/RUC directo, detalle del cliente con pestaña **COMPRAS** para compras directas en caja (al contado/tarjeta/yape) además de PENDIENTES y PAGADOS, con detalle de productos desplegables, barra de pestañas y filtros alineada en una sola fila (40px) y grupos de clientes (familia/empresa).
   - **4.2:** cliente opcional en la Caja (POS) con atajos F3 y botón `CLIENTE (F3)` en cabecera del POS, búsqueda y creación rápida con F2, tickets en espera con nombre personalizado (Shift+Q), guardado de cliente en `sales` (`customer_id` y `customer_name`) e impresión de datos del cliente en la boleta. Ajustes estéticos (scrollbar estilizado) y navegación por teclado (flecha arriba a la ✕, Shift+F3 para quitar cliente, botón claro 'Quitar cliente'). Visualización clara del cliente en Finanzas con badge `[CLIENTE: NOMBRE]` en tabla de movimientos para cualquier venta y cabecera en el detalle de la venta/ticket.
+  - **Apariencia / Modo Oscuro:** implementado tema Modo Oscuro reemplazando "Plata / Gris" en Parámetros -> Apariencia con paleta de alto contraste (fondo `#0B0F17`, superficies `#111827`, texto `#F8FAFC`, bordes `#334155` y acentos clásicos), con adaptación de `.bg-white`, controles oscuros nativos, scrollbar estilizado e impresión protegida.
   - **Siguiente: esperar visto bueno del dueño y continuar con la 4.3 (Crédito con plazo y límite).**
   - Además falta su decisión para pedidos: **¿el pedido descuenta el stock al guardarlo o al entregarlo?** (recomendado: al guardarlo).
-- **Commits locales sin push:** documentación para IAs y fases 4.1 y 4.2 en rama `fase-4`.
+- **Commits locales sin push:** documentación para IAs, fases 4.1 y 4.2 y Modo Oscuro en rama `fase-4`.
 - **URGENTE para Evicamp:** el arreglo del cobro de créditos (se cobraba dos veces) y los cambios de la fase 4 están en la rama `fase-4`. Subirlos cuando el dueño lo autorice.
 - **Avisos pendientes para el cliente de Evicamp:**
   - "Mermas" ahora es "Conteos";
@@ -20,6 +21,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Modo Oscuro (Dark Mode)** reemplazando "Plata / Gris" en Apariencia | **Hecho en siumax (28/10)** |
 | **Grupos de clientes (familia/empresa)** dentro de la 4.1; "Unir" se quitó | **Hecho en siumax (28/10)** |
 | Fase 4 (sección 5 de este documento) — **4.1 y 4.2 hechas en siumax** | **Aceptada, 4.1 y 4.2 listas en siumax; falta la decisión del stock de pedidos** |
 | Fase 11 SUNAT: camino A (proveedor PSE) → B (directo) | **En pausa** hasta que el dueño lo pida |

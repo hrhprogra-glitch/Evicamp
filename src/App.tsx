@@ -179,8 +179,9 @@ export const App: React.FC = () => {
   useEffect(() => {
     // Aplicar tema guardado al cargar
       const temaGuardado = localStorage.getItem('gestorpro_theme');
-      if (temaGuardado === 'monochrome') {
+      if (temaGuardado === 'monochrome' || temaGuardado === 'dark') {
         document.documentElement.classList.add('theme-monochrome');
+        document.documentElement.setAttribute('data-theme', 'dark');
       } else if (temaGuardado && temaGuardado !== 'classic') {
         document.documentElement.setAttribute('data-theme', temaGuardado);
       }
