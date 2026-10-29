@@ -4,10 +4,10 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 28/10/2026 (noche, 15), Antigravity.
+- **Última actualización:** 28/10/2026 (noche, 16), Antigravity.
 - **Fases hechas y subidas:** 0, 1 y 2. En producción en Evicamp desde el 23/10/2026 (commit d36efca).
 - **Fase actual:** **4, Clientes y empresas.** La **4.1 y la 4.2 hechas y probadas en siumax** (rama `fase-4`):
-  - **4.1:** sección Clientes con pestañas Clientes | Créditos, ficha con DNI/RUC directo, detalle del cliente y grupos de clientes (familia/empresa).
+  - **4.1:** sección Clientes con pestañas Clientes | Créditos, ficha con DNI/RUC directo, detalle del cliente con pestaña **COMPRAS** para compras directas en caja (al contado/tarjeta/yape) además de PENDIENTES y PAGADOS, con detalle de productos desplegables y grupos de clientes (familia/empresa).
   - **4.2:** cliente opcional en la Caja (POS) con atajos F3 y botón `CLIENTE (F3)` en cabecera del POS, búsqueda y creación rápida con F2, tickets en espera con nombre personalizado (Shift+Q), guardado de cliente en `sales` (`customer_id` y `customer_name`) e impresión de datos del cliente en la boleta. Ajustes estéticos (scrollbar estilizado) y navegación por teclado (flecha arriba a la ✕, Shift+F3 para quitar cliente, botón claro 'Quitar cliente'). Visualización clara del cliente en Finanzas con badge `[CLIENTE: NOMBRE]` en tabla de movimientos para cualquier venta y cabecera en el detalle de la venta/ticket.
   - **Siguiente: esperar visto bueno del dueño y continuar con la 4.3 (Crédito con plazo y límite).**
   - Además falta su decisión para pedidos: **¿el pedido descuenta el stock al guardarlo o al entregarlo?** (recomendado: al guardarlo).

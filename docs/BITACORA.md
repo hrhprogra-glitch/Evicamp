@@ -7,6 +7,29 @@
 
 ---
 
+## 28/10/2026 (noche, 16) · Antigravity
+- **Pestaña "COMPRAS" en la ficha/detalle del cliente (`ModalDetalleCliente.tsx`):**
+  - **Historial completo de compras pagadas en caja (ventas al contado/tarjeta/yape):**
+    - Se agregaron las ventas directas desde la tabla `sales` vinculadas por `customer_id` y `customer_name`.
+    - Se obtienen sus productos y cantidades desde `sale_details`.
+    - Se excluyen las ventas que ya corresponden a créditos fiados para no duplicar datos.
+    - Se agregó una tercera pestaña: **`COMPRAS (N)`** (junto a `PENDIENTES` y `PAGADOS`), con nombre elegido según preferencia del usuario (descartando "Al contado").
+  - **Apertura inteligente según estado del cliente:**
+    - Si el cliente no tiene deudas pendientes ni créditos pagados (como Billy), la ventana abre por defecto en la pestaña **COMPRAS** para no mostrar mensajes de "no tiene créditos pagados".
+  - **Detalle desplegable con teclado y clic:**
+    - Cada fila de compra muestra número de ticket, fecha/hora, método de pago (EFECTIVO, YAPE, etc.) y total.
+    - Al hacer clic o presionar `Enter`/`Espacio`, se despliega la lista con los productos comprados, cantidades, precio unitario, subtotal y vendedor/cajero que atendió.
+  - **Tarjetas de resumen global actualizadas:**
+    - `Total comprado`: suma tanto créditos fiados como compras pagadas en caja.
+    - `Última compra`: considera tanto la fecha del último fiado como de la última compra.
+    - `Lo que más lleva`: ranking de los 5 productos que más compra sumando ambos tipos de movimientos.
+  - **Pruebas y despliegue:**
+    - Prueba automatizada end-to-end con Edge (`test-compras-cliente.cjs`): 100% OK.
+    - Desplegado y verificado en `siumax` (`https://siumax.duckdns.org`).
+- **Siguiente paso:** Avisar al dueño y esperar su confirmación.
+
+---
+
 ## 28/10/2026 (noche, 15) · Antigravity
 - **Etiqueta clara en Finanzas y mejoras de navegación con teclado en Clientes:**
   - **Etiqueta en Finanzas (`TablaMovimientos.tsx`):**

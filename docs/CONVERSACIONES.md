@@ -173,3 +173,9 @@
      - Validado al 100% con script automatizado en Edge (`test-finanzas-badge-and-keyboard.cjs`) y desplegado a `siumax`.
   8. *"no es mejor que diga quitar cliente o "limpiar" algo asi ??"*:
      - Se cambió el texto del botón por el que sugirió el dueño: ahora dice **`✕ QUITAR CLIENTE / LIMPIAR`** (o **`✕ QUITAR CLIENTE (NOMBRE)`** si hay uno puesto) y en el pie **`Sin cliente asignado (Venta normal)`**, eliminando la frase confusa "Cliente Varios (Sin Cuenta)".
+  9. *"perfecto una pregunta cuando compro con un cliente selecionado lo que compra se registra en clientes ???"* y *"si si donde dice pendiente pagado ahi falta lo que compra"*:
+     - El dueño notó que la ventana de detalle del cliente solo tenía pestañas de fiados (`PENDIENTES` y `PAGADOS`), por lo que las ventas pagadas en caja con cliente seleccionado no se veían en la sección Clientes.
+     - Se agregó la pestaña **`COMPRAS (N)`** (cargando las ventas de `sales` y productos de `sale_details` vinculados al cliente y excluyendo las que ya son fiados).
+     - El dueño rechazó el nombre "Al contado" ("si si aunque escoge otro nombre al contado no me gusta") por lo que se mantuvo el nombre directo y profesional: **`COMPRAS`**.
+     - Se probó la apertura inteligente (si el cliente no tiene deudas abre directo en `COMPRAS`), el desplegable de productos comprados con `Enter` o clic, y las tarjetas de resumen (`Total comprado`, `Última compra`, `Lo que más lleva`).
+     - Validado al 100% con script automatizado en Edge (`test-compras-cliente.cjs`) y desplegado en `siumax`.

@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793238775.155581,
-    "seen": 1793241822.1506896,
-    "ast_hash": "0fcacb2a7d6178758a01b2c0870db530",
+    "mtime": 1793244417.254836,
+    "seen": 1793244484.0655656,
+    "ast_hash": "ebfbad87860db802114391bced6a95e6",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793238791.65137,
-    "seen": 1793241822.1506906,
-    "ast_hash": "11253c28ec1e92c047d378e2caceeb27",
+    "mtime": 1793244457.6869626,
+    "seen": 1793244484.065567,
+    "ast_hash": "a8d257e221b7a78d451aa348e18ae182",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793238811.5737607,
-    "seen": 1793241822.1506927,
-    "ast_hash": "ee4ff5035b02f8ca4e18bdc8152ab3c4",
+    "mtime": 1793244432.0042217,
+    "seen": 1793244484.0655692,
+    "ast_hash": "8eb115afc5491d393def430efd7b426b",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2034,9 +2034,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalDetalleCliente.tsx": {
-    "mtime": 1793216800.8090146,
-    "seen": 1793217276.0619195,
-    "ast_hash": "2b3a4b85603ec883c5a2768925253baa",
+    "mtime": 1793244095.9305212,
+    "seen": 1793244484.065423,
+    "ast_hash": "b616c55c215abd19d0b61e5a687820ef",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-conteo-lote.mjs": {
