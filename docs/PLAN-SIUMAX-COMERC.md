@@ -4,21 +4,19 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 29/10/2026 (mañana, 22), Antigravity.
-- **Fases hechas y subidas:** 0, 1 y 2. En producción en Evicamp desde el 23/10/2026 (commit d36efca).
-- **Fase actual:** **4, Clientes y empresas.** La **4.1 y la 4.2 hechas y probadas en siumax** (rama `fase-4`):
-  - **4.1:** sección Clientes con pestañas Clientes | Créditos, ficha con DNI/RUC directo, detalle del cliente con pestaña **COMPRAS** para compras directas en caja (al contado/tarjeta/yape) además de PENDIENTES y PAGADOS, con detalle de productos desplegables, barra de pestañas y filtros alineada en una sola fila (40px) y grupos de clientes (familia/empresa).
-  - **4.2:** cliente opcional en la Caja (POS) con atajos F3 y botón `CLIENTE (F3)` en cabecera del POS, búsqueda y creación rápida con F2, tickets en espera con nombre personalizado (Shift+Q), guardado de cliente en `sales` (`customer_id` y `customer_name`) e impresión de datos del cliente en la boleta. Ajustes estéticos (scrollbar estilizado) y navegación por teclado (flecha arriba a la ✕, Shift+F3 para quitar cliente, botón claro 'Quitar cliente'). Visualización clara del cliente en Finanzas con badge `[CLIENTE: NOMBRE]` en tabla de movimientos para cualquier venta y cabecera en el detalle de la venta/ticket.
-  - **Apariencia / Modo Oscuro:** implementado tema Modo Oscuro reemplazando "Plata / Gris" en Parámetros -> Apariencia con paleta relajante y descansada sin blanco (fondo `#0B0F17`, superficies `#111827`, texto gris plata suave `#CBD5E1`, bordes `#334155`, sombras negras puras `#000000`, cuarto swatch en gris acero `#64748B` y acentos clásicos), con adaptación de `.bg-white`, controles oscuros nativos, scrollbar estilizado e impresión protegida. Corregidos contrastes de texto en clientes, finanzas y usuarios, libre navegación con flechas en la vista ticket de caja, y eliminación total de fondos blancos en tablas.
-  - **Conteos / Ajuste:** indicador explícito `ENTER PARA CONTINUAR`, botón visible `[ CONTINUAR | ENTER ↵ ]` y aviso visual claro en el paso de cantidad de Conteo y Merma (`ModalAjuste.tsx`) para eliminar la confusión al ingresar montos y facilitar el avance tanto con teclado como con mouse. Probado con 100% éxito en `prueba-conteo.mjs` y `prueba-salida.mjs`.
-  - **Listo para pase a producción en Evicamp** (autorizado por el dueño en este turno tras solucionar la indicación de Enter).
-  - **Siguiente después del pase:** continuar con la 4.3 (Crédito con plazo y límite).
-  - Además falta su decisión para pedidos: **¿el pedido descuenta el stock al guardarlo o al entregarlo?** (recomendado: al guardarlo).
-- **Commits locales sin push:** documentación para IAs, fases 4.1 y 4.2 y Modo Oscuro en rama `fase-4`.
-- **URGENTE para Evicamp:** el arreglo del cobro de créditos (se cobraba dos veces) y los cambios de la fase 4 están en la rama `fase-4`. Subirlos cuando el dueño lo autorice.
-- **Avisos pendientes para el cliente de Evicamp:**
-  - "Mermas" ahora es "Conteos";
-  - dar el permiso "Cambiar precio al cobrar" a quien corresponda.
+- **Última actualización:** 29/10/2026 (mañana, 23), Antigravity.
+- **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4.1 y 4.2. En producción en Evicamp desde el 29/10/2026 (commit 583ad4e).
+- **Subido a producción en este pase:**
+  - **4.1 Clientes:** sección Clientes con pestañas Clientes | Créditos, ficha con DNI y RUC directos, link de ubicación, pestaña COMPRAS en detalle del cliente para compras al contado/tarjeta/yape además de PENDIENTES y PAGADOS, con desglose de productos, y Grupos de clientes (familia/empresa) con cobro grupal.
+  - **4.2 Cliente opcional en Caja (POS):** atajo F3 y botón `CLIENTE (F3)` en cabecera del POS, búsqueda rápida F2, tickets en espera con nombre (Shift+Q), guardado en `sales` (`customer_id`, `customer_name`) e impresión en boleta. Badge `[CLIENTE: NOMBRE]` en Finanzas.
+  - **Arreglo del cobro doble de créditos:** al registrar abono se recarga después de confirmar el guardado.
+  - **Modo Oscuro:** paleta descansada y elegante en Parámetros -> Apariencia (`#0B0F17`, `#111827`, `#CBD5E1`), sin blancos en tablas, paginación ni stock.
+  - **Conteos / Ajuste:** indicador explícito `ENTER PARA CONTINUAR`, botón interactivo `[ CONTINUAR | ENTER ↵ ]` y aviso visual en el paso de cantidad.
+- **Fase que sigue:** **4.3 (Crédito con plazo y límite).**
+  - Falta decisión del dueño para pedidos: **¿el pedido descuenta el stock al guardarlo o al entregarlo?** (recomendado: al guardarlo).
+- **Avisos para la clienta de Evicamp:**
+  - "Mermas" ahora se llama "Conteos";
+  - dar el permiso "Cambiar precio al cobrar" a quien corresponda si desean que un cajero modifique precios en caja.
 
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |

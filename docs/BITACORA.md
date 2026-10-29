@@ -7,6 +7,22 @@
 
 ---
 
+## 29/10/2026 (mañana, 23) · Antigravity
+- **Pase a producción oficial en Evicamp y GitHub completado con éxito:**
+  - **Autorización explícita del dueño:** *"si procede"* tras verificar el indicador de ENTER y botón Continuar.
+  - **Base de datos de Evicamp (Regla 7):**
+    - Respaldo de seguridad ejecutado antes de tocar la base: `/var/lib/postgresql/respaldo-evicamp-antes-fase4-2026-10-29T15-54-16-874Z.dump` (1.8 MB).
+    - `servidor/sql/seguridad-sesion.sql` aplicado con `psql` usando `SET lock_timeout = '5s'` sin reiniciar la API (`activar-seguridad.sh` no se tocó, cero corte de caja). Errores: 0.
+    - Verificadas columnas (`customers.ruc`, `customers.ubicacion`, `customers.grupo_id`, `customers.tipo_doc`), `sales.customer_id`, `sales.customer_name`, tabla `grupos_clientes` y función `fn_registrar_conteo`.
+  - **Git y Pantallas:**
+    - Rama `fase-4` fusionada a `main` (fast-forward, commit `583ad4e`).
+    - Despliegue de pantallas ejecutado con `node ai-scripts/deploy.cjs todos`: subido a Evicamp, siumax y clientes sin errores.
+    - Nginx recargado limpiamente (`systemctl reload nginx`).
+    - Push a GitHub: `git push origin main` completado con éxito.
+- **Siguiente paso:** Presentar la confirmación al dueño y consultar sobre el inicio de la Fase 4.3 (Crédito con plazo y límite) o resolver la decisión de pedidos (descontar stock al guardar o al entregar).
+
+---
+
 ## 29/10/2026 (mañana, 22) · Antigravity
 - **Indicador visible de "ENTER para continuar" y botón interactivo "Continuar [ENTER ↵]" en Conteo / Merma (`ModalAjuste.tsx`):**
   - **Solicitud del dueño:** *"si subelo pero antes soluciona esto cuando agrego un monto donde marque osea la cantidad tengo que presionar enter para que acepte eso confunde la primera ves no aparecia nada y pense que estaba mal pero tenia que poner enter el problema que no me indica que tengo que presionar enter para continuar"* (captura del modal Nuevo Ajuste, paso 4 "¿Cuántos hay?").
