@@ -40,7 +40,7 @@ uno() { # uno <nombre> <base> <conf> <servicio> <nginx>
 
 case "$OBJETIVO" in
   evicamp) uno Evicamp postgres /etc/postgrest.conf postgrest /etc/nginx/sites-available/evicamp ;;
-  siumax)  uno SiuMax siuhub /etc/postgrest_siuhub.conf postgrest_siuhub /etc/nginx/sites-available/siumax ;;
+  siumax)  uno SiuMax siumax /etc/postgrest_siuhub.conf postgrest_siuhub /etc/nginx/sites-available/siumax ;;
   clientes)
     while IFS=$'\t' read -r slug _ _ _ _; do
       [ -n "$slug" ] && uno "$slug" "$(base_cliente "$slug")" "$DIR_CONF_CLIENTES/$slug.conf" "postgrest-cliente@$slug" "/etc/nginx/sites-available/cli-$slug"

@@ -7,4 +7,4 @@ const { NodeSSH } = require(path.join(P, 'node_modules/node-ssh')); const { cone
  UPDATE sale_details SET product_id = NULL WHERE product_id = 920003 AND sale_id <> 920201 AND sale_id IN (SELECT id FROM sales WHERE created_at > now() - interval '31 day');
  UPDATE products SET quantity = 50 WHERE id = 920003; UPDATE batches SET quantity = 50 WHERE id = 920103;
  COMMIT; SELECT quantity FROM products WHERE id = 920003;`;
- const r = await s.execCommand('runuser -u postgres -- psql -At -d siuhub', { stdin: q }); console.log(r.stdout, r.stderr); s.dispose(); })();
+ const r = await s.execCommand('runuser -u postgres -- psql -At -d siumax', { stdin: q }); console.log(r.stdout, r.stderr); s.dispose(); })();

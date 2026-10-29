@@ -50,10 +50,10 @@
 | Sitio | Base de datos | API |
 |---|---|---|
 | Evicamp | `postgres` | PostgREST en el puerto 3000 |
-| siumax (pruebas) | `siuhub` | PostgREST en el puerto 3001 |
+| siumax (pruebas) | `siumax` | PostgREST en el puerto 3001 |
 | CreditAltoque (otro sistema de la clienta, .NET) | `creditaltoque` | Docker. **No tocarlo** |
 
-- **Nombres internos viejos que NO se cambian:** `/opt/siuhub`, base `siuhub`, servicios `postgrest_siuhub` y `siuhub-panel`.
+- **Nombres internos en el servidor:** `/opt/siuhub`, servicios `postgrest_siuhub` y `siuhub-panel` (la base de datos de pruebas ahora se llama `siumax`, renombrada desde `siuhub` el 29/10/2026 por pedido del dueño).
 - **Conexión:** `ai-scripts/vps.cjs` + `.env.vps`. Para SQL desde Node: `node-ssh` → `runuser -u postgres -- psql -d <base>`.
 - **Seguridad de la API:**
   - Cada pedido lleva la cabecera `x-sesion` (`src/db/supabase.ts`) y el servidor la revisa con `fn_verificar_peticion`.

@@ -7,6 +7,26 @@
 
 ---
 
+## 29/10/2026 (tarde, 32) · Antigravity
+- **Renombrado de Base de Datos de Pruebas en VPS: `siuhub` ➔ `siumax`:**
+  - **Solicitud del dueño:** *"quiero que mi base de datos se llame siumax"*.
+  - **Confirmación interactiva:** el dueño eligió expresamente renombrar la base de datos de pruebas `siuhub` (que alimenta el sitio `siumax.duckdns.org` en el puerto 3001) para que coincida con el nombre del sistema. La base de producción `postgres` (Evicamp, puerto 3000) permanece intacta.
+  - **Procedimiento técnico en VPS:**
+    - Respaldo de seguridad previo: `/var/lib/postgresql/respaldo-siuhub-antes-renombrar-siumax-2026-10-29T20-52-20-830Z.dump` (369 KB).
+    - Detención de servicio `postgrest_siuhub` y cierre de conexiones activas.
+    - Ejecución en PostgreSQL: `ALTER DATABASE siuhub RENAME TO siumax;`.
+    - Actualización de `/etc/postgrest_siuhub.conf`: `db-uri = ".../siumax"`.
+    - Reinicio de `postgrest_siuhub.service` y verificación de estado (activo y corriendo).
+  - **Verificación en siumax:**
+    - Datos verificados en base `siumax`: 25 clientes, 218 productos intactos.
+    - API PostgREST y webapp en `https://siumax.duckdns.org` respondiendo OK (código 200).
+    - Cron diario de respaldo `/opt/siuhub/backup.sh` detecta `siumax` automáticamente.
+  - **Scripts de servidor y pruebas actualizados:**
+    - `servidor/nuevo-cliente.sh` y `servidor/activar-seguridad.sh` actualizados y subidos a `/opt/siuhub/`.
+    - `ai-scripts/clave-pruebas.cjs` y 27 scripts de pruebas en `ai-scripts/pruebas/` actualizados de `-d siuhub` a `-d siumax`.
+  - **Documentación actualizada:** `docs/MEMORIA-IA.md`, `docs/PLAN-SIUMAX-COMERC.md`, `docs/CONVERSACIONES.md` y esta bitácora.
+  - **Evicamp y GitHub:** 100% intactos conforme a la regla 4 del proyecto.
+
 ## 29/10/2026 (tarde, 31) · Antigravity
 - **Implementación de Descuento Porcentual Fijo por Cliente o Empresa (Extensión Fase 4.4):**
   - **Decisión del dueño:** ante la consulta sobre precios especiales para empresas/familias vs precio mayorista general, el dueño eligió la Opción 2: *"Descuento % fijo por cliente o empresa (Ej: 10% de descuento en todo a Constructora ABC, muy fácil de mantener y actualizar)"*, y confirmó *"si hazlo"*.

@@ -35,10 +35,10 @@ trap deshacer ERR
 echo "== 1/6 Base de datos $BASE (estructura copiada de SiuMax, sin datos)"
 sudo -u postgres createdb "$BASE"
 CREADO_BASE=1
-sudo -u postgres pg_dump --schema-only siuhub | sudo -u postgres psql -q -v ON_ERROR_STOP=1 -d "$BASE" > /dev/null
+sudo -u postgres pg_dump --schema-only siumax | sudo -u postgres psql -q -v ON_ERROR_STOP=1 -d "$BASE" > /dev/null
 
 echo "== 2/6 Empresa y usuario administrador"
-PERMISOS=$(sudo -u postgres psql -At -d siuhub -c "select permisos from empleados where rol='Administrador' order by created_at limit 1")
+PERMISOS=$(sudo -u postgres psql -At -d siumax -c "select permisos from empleados where rol='Administrador' order by created_at limit 1")
 [ -n "$PERMISOS" ] || PERMISOS='{}'
 # Valores pasados como variables de psql (:'x') para que comillas en el nombre no rompan nada
 sudo -u postgres psql -q -v ON_ERROR_STOP=1 -d "$BASE" \
@@ -50,7 +50,7 @@ SQL
 
 echo "== 3/6 API propia (PostgREST, puerto $PUERTO)"
 mkdir -p "$DIR_CONF_CLIENTES"
-sed -E "s#/siuhub\"#/$BASE\"#; s#^server-port *=.*#server-port = $PUERTO#" "$CONF_POSTGREST_BASE" > "$DIR_CONF_CLIENTES/$SLUG.conf"
+sed -E "s#/siumax\"#/$BASE\"#; s#^server-port *=.*#server-port = $PUERTO#" "$CONF_POSTGREST_BASE" > "$DIR_CONF_CLIENTES/$SLUG.conf"
 grep -q "/$BASE\"" "$DIR_CONF_CLIENTES/$SLUG.conf"
 CREADO_API=1
 systemctl enable --now "postgrest-cliente@$SLUG" > /dev/null 2>&1

@@ -13,8 +13,8 @@ const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
 const sql = async (q, clave) => {
   const s = new NodeSSH(); await s.connect(conexionVps);
   const r = clave
-    ? await s.execCommand(`read -r CLAVE; printf '%s\\n' "${q.replace(/\s+/g, ' ')}" | runuser -u postgres -- psql -At -F '|' -d siuhub -v clave="$CLAVE"`, { stdin: `${clave}\n` })
-    : await s.execCommand('runuser -u postgres -- psql -At -F "|" -d siuhub', { stdin: q });
+    ? await s.execCommand(`read -r CLAVE; printf '%s\\n' "${q.replace(/\s+/g, ' ')}" | runuser -u postgres -- psql -At -F '|' -d siumax -v clave="$CLAVE"`, { stdin: `${clave}\n` })
+    : await s.execCommand('runuser -u postgres -- psql -At -F "|" -d siumax', { stdin: q });
   s.dispose(); if (r.stderr && /ERROR/.test(r.stderr)) throw new Error(r.stderr); return r.stdout.trim();
 };
 const CLAVE = crypto.randomBytes(12).toString('base64url');

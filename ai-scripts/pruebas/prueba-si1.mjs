@@ -10,7 +10,7 @@ const { NodeSSH } = reqP('node-ssh'); const { conexionVps } = reqP('./ai-scripts
 process.loadEnvFile(path.join(proyecto, '.env.vps'));
 const res = []; const ok = (n, c, x = '') => res.push(`${c ? '✅' : '❌'} ${n}${x !== '' ? ' — ' + x : ''}`);
 const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
-const sql = async (q) => { const s = new NodeSSH(); await s.connect(conexionVps); const r = await s.execCommand('runuser -u postgres -- psql -At -F "|" -d siuhub', { stdin: q }); s.dispose(); return r.stdout.trim(); };
+const sql = async (q) => { const s = new NodeSSH(); await s.connect(conexionVps); const r = await s.execCommand('runuser -u postgres -- psql -At -F "|" -d siumax', { stdin: q }); s.dispose(); return r.stdout.trim(); };
 
 const marca = Date.now().toString().slice(-6);
 const NOMBRE_PROD = `PRUEBA SIN INTERNET ${marca}`;

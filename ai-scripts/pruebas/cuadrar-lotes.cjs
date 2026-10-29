@@ -10,7 +10,7 @@ const { conexionVps } = require(path.join(proyecto, 'ai-scripts', 'vps.cjs'));
 
 if (!/^[a-z_]+$/.test(base)) throw new Error('base inválida');
 const prueba = modo === '--prueba';
-if (prueba && base !== 'siuhub') throw new Error('--prueba solo en siuhub');
+if (prueba && base !== 'siumax') throw new Error('--prueba solo en siuhub');
 const ids = prueba ? [1] : (idsTexto || '').split(',').filter(Boolean).map(Number);
 if (!ids.length || ids.some((n) => !Number.isSafeInteger(n))) throw new Error('ids inválidos');
 const lista = ids.join(',');

@@ -8,7 +8,7 @@ const { NodeSSH } = require(path.join(proyecto, 'node_modules', 'node-ssh'));
 const { conexionVps } = require(path.join(proyecto, 'ai-scripts', 'vps.cjs'));
 
 if (!/^[a-z_]+$/.test(base)) throw new Error('base inválida');
-if (modo === '--prueba' && base !== 'siuhub') throw new Error('--prueba solo en siuhub');
+if (modo === '--prueba' && base !== 'siumax') throw new Error('--prueba solo en siuhub');
 
 (async () => {
   const ssh = new NodeSSH();

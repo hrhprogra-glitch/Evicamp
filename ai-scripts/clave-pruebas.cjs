@@ -18,7 +18,7 @@ if (!/^[A-Za-z0-9]{14}$/.test(clave)) throw new Error('clave mal generada');
   try {
     // La clave va como variable de psql (nunca pegada en el SQL) y por stdin (no queda en el historial)
     const r = await ssh.execCommand(
-      `read -r CLAVE; printf '%s\\n' "UPDATE empleados SET password_hash = crypt(:'clave', gen_salt('bf')) WHERE lower(email) = 'admin@siumax.com';" "DELETE FROM sesiones s USING empleados e WHERE e.id = s.empleado_id AND lower(e.email) = 'admin@siumax.com';" | runuser -u postgres -- psql -At -d siuhub -v clave="$CLAVE"`,
+      `read -r CLAVE; printf '%s\\n' "UPDATE empleados SET password_hash = crypt(:'clave', gen_salt('bf')) WHERE lower(email) = 'admin@siumax.com';" "DELETE FROM sesiones s USING empleados e WHERE e.id = s.empleado_id AND lower(e.email) = 'admin@siumax.com';" | runuser -u postgres -- psql -At -d siumax -v clave="$CLAVE"`,
       { stdin: clave + '\n' });
     if (r.code || !/UPDATE 1/.test(r.stdout)) throw new Error('no se pudo cambiar en el servidor: ' + (r.stderr || r.stdout));
   } finally {

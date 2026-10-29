@@ -292,4 +292,12 @@
         - Herencia de descuento: si el cliente pertenece a una empresa o familia con descuento, lo hereda en la caja automáticamente.
         - Caja POS: detecta el descuento, recalcula el carrito, muestra el precio rebajado en verde con el precio regular tachado en las tarjetas de producto, y coloca la insignia `🏷️ -XX%` en el ticket.
         - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+     24. **Renombrar base de datos de pruebas a 'siumax' (29/10 tarde):**
+        - El dueño solicitó: *"quiero que mi base de datos se llame siumax"*.
+        - Se confirmó mediante pregunta interactiva que se refería a la base de pruebas del sistema (`siuhub` -> `siumax`), manteniendo la de Evicamp (`postgres`) separada en producción.
+        - Respaldo previo de seguridad: `/var/lib/postgresql/respaldo-siuhub-antes-renombrar-siumax-2026-10-29T20-52-20-830Z.dump` (369 KB).
+        - En PostgreSQL: `ALTER DATABASE siuhub RENAME TO siumax;`.
+        - PostgREST en VPS actualizado en `/etc/postgrest_siuhub.conf` apuntando a `siumax`.
+        - Scripts del servidor (`activar-seguridad.sh`, `nuevo-cliente.sh`) y 27 scripts de pruebas de `ai-scripts/pruebas/` actualizados a `-d siumax`.
+        - Evicamp (producción) y GitHub completamente intactos.
 

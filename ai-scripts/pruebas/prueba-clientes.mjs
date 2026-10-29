@@ -10,7 +10,7 @@ const { NodeSSH } = reqP('node-ssh'); const { conexionVps } = reqP('./ai-scripts
 process.loadEnvFile(path.join(proyecto, '.env.vps'));
 const res = []; const ok = (n, c, x = '') => res.push(`${c ? '✅' : '❌'} ${n}${x !== '' ? ' — ' + x : ''}`);
 const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
-const sql = async (q) => { const s = new NodeSSH(); await s.connect(conexionVps); const r = await s.execCommand('runuser -u postgres -- psql -At -F "|" -d siuhub', { stdin: q }); s.dispose(); if (r.stderr && /ERROR/.test(r.stderr)) throw new Error(r.stderr); return r.stdout.trim(); };
+const sql = async (q) => { const s = new NodeSSH(); await s.connect(conexionVps); const r = await s.execCommand('runuser -u postgres -- psql -At -F "|" -d siumax', { stdin: q }); s.dispose(); if (r.stderr && /ERROR/.test(r.stderr)) throw new Error(r.stderr); return r.stdout.trim(); };
 
 // Un RUC válido (dígito verificador módulo 11) para la prueba
 const rucCon = (base10) => { const p = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]; const s = p.reduce((t, w, i) => t + w * Number(base10[i]), 0); const r = 11 - (s % 11); return base10 + (r === 10 ? 0 : r === 11 ? 1 : r); };
