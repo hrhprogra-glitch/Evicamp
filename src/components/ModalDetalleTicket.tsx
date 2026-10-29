@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
+import { X, Printer } from 'lucide-react';
 import { supabase } from '../db/supabase';
 import { formatearCantidadDetalle } from '../utils/formato';
+import { useImprimir } from '../utils/impresion';
+import { TicketImprimible } from '../sections/Punto-de-venta/components/TicketImprimible';
 
 interface Props {
   ticketId: string | null;
@@ -14,6 +16,8 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
   const [isLoadingDetalles, setIsLoadingDetalles] = useState(false);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const printContainerRef = useRef<HTMLDivElement>(null);
+  const imprimirTicket = useImprimir(printContainerRef, `Ticket-${ticketId}`);
 
   useEffect(() => {
     if (!ticketId) return;
@@ -76,11 +80,25 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
         return;
       }
 
-      // 2. TAB: Focus Trap estricto (no dejar escapar hacia el sidebar de App.tsx)
+      // Atajo 'p' o 'P': Reimprimir ticket
+      if (e.key === 'p' || e.key === 'P') {
+        e.preventDefault();
+        e.stopPropagation();
+        void imprimirTicket();
+        return;
+      }
+
+      // 2. TAB: Focus Trap entre botón cerrar y botón reimprimir
       if (e.key === 'Tab') {
         e.preventDefault();
         e.stopPropagation();
-        closeBtnRef.current?.focus();
+        const btnPrint = document.getElementById('btn-reimprimir-ticket');
+        const active = document.activeElement;
+        if (active === closeBtnRef.current && btnPrint) {
+          btnPrint.focus();
+        } else {
+          closeBtnRef.current?.focus();
+        }
         return;
       }
 
@@ -196,13 +214,48 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
           )}
         </div>
         {!isLoadingDetalles && detallesTicket.length > 0 && (
-          <div className="border-t-2 border-[var(--color-ink)] p-4 bg-[var(--color-bg)] flex justify-between items-center shrink-0">
-             <span className="text-[var(--color-muted)] text-xs font-black uppercase tracking-widest">Total Facturado</span>
-             <span className="text-[var(--color-ink)] text-xl font-black font-mono">
-               S/ {detallesTicket.reduce((acc, item) => acc + Number(item.subtotal), 0).toFixed(2)}
-             </span>
+          <div className="border-t-2 border-[var(--color-ink)] p-4 bg-[var(--color-bg)] flex flex-wrap justify-between items-center gap-3 shrink-0">
+             <button
+               id="btn-reimprimir-ticket"
+               type="button"
+               onClick={() => void imprimirTicket()}
+               className="flex items-center gap-2 bg-[var(--color-ink)] text-white hover:bg-[var(--color-accent)] hover:text-black focus:bg-[var(--color-accent)] focus:text-black focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] font-black text-xs uppercase px-4 py-2.5 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer"
+               title="Reimprimir Ticket de Venta (tecla P)"
+             >
+               <Printer size={16} /> Reimprimir Ticket
+             </button>
+             <div className="flex items-center gap-3">
+               <span className="text-[var(--color-muted)] text-xs font-black uppercase tracking-widest">Total Facturado</span>
+               <span className="text-[var(--color-ink)] text-xl font-black font-mono">
+                 S/ {detallesTicket.reduce((acc, item) => acc + Number(item.subtotal), 0).toFixed(2)}
+               </span>
+             </div>
           </div>
         )}
+
+        {/* Contenedor invisible para impresión física directa o vía navegador */}
+        <div style={{ display: 'none' }}>
+          <TicketImprimible
+            ref={printContainerRef}
+            cart={detallesTicket.map((d) => ({
+              id: String(d.product_id),
+              name: d.product_name,
+              price: Number(d.price_at_moment),
+              cartQuantity: Number(d.quantity),
+              subtotal: Number(d.subtotal),
+              unit: d.unit,
+            }))}
+            total={detallesTicket.reduce((acc, item) => acc + Number(item.subtotal), 0)}
+            pagos={{
+              efectivo: ventaInfo?.metodoPago === 'EFECTIVO' ? detallesTicket.reduce((acc, item) => acc + Number(item.subtotal), 0) : 0,
+              yape: ventaInfo?.metodoPago === 'YAPE' ? detallesTicket.reduce((acc, item) => acc + Number(item.subtotal), 0) : 0,
+              tarjeta: ventaInfo?.metodoPago === 'TARJETA' ? detallesTicket.reduce((acc, item) => acc + Number(item.subtotal), 0) : 0,
+            }}
+            vuelto={0}
+            nroBoleta={String(ticketId).slice(-6)}
+            cliente={ventaInfo?.clienteNombre ? { nombre: ventaInfo.clienteNombre } : null}
+          />
+        </div>
       </div>
     </div>
   );

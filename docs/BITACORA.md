@@ -7,6 +7,29 @@
 
 ---
 
+## 29/10/2026 (tarde, 33) · Antigravity
+- **Correcciones y Mejoras de la Fase 4 (Reportadas por el dueño en pruebas):**
+  - **Selector y teclado en ModalProducto:**
+    - Se agregó `input-precio-mayorista-producto` al Tab trap determinístico (`step2Ids`).
+    - Se implementó navegación bidireccional con flechas: desde Precio sugerido `ArrowRight` pasa a Precio mayorista, `ArrowLeft` regresa; flechas verticales conectan fluidamente con fotos (arriba) y Unidad/Stock (abajo).
+  - **Cálculo de Descuento Porcentual en POS (`conCantidad`):**
+    - Corregido el problema reportado con producto EVELYN (S/ 2.00 con 10% daba S/ 1.00 en vez de S/ 1.80 debido a que el precio mayorista de 1.00 sobreescribía el cálculo). Ahora el descuento % se respeta estrictamente (`Math.round(base * (1 - descPct / 100) * 100) / 100 = S/ 1.80`).
+  - **Superposición estética en el Ticket de Caja (`TicketVenta.tsx`):**
+    - Corregida la colisión entre el badge de stock (`STK: 1000 UN`), las etiquetas de descuento y el subtotal (`100.00`).
+    - Se aplicó `flex-wrap` en la fila de datos y ancho fijo con `whitespace-nowrap pl-1` en la columna del subtotal para evitar todo solapamiento.
+  - **Reimpresión de Tickets en Finanzas (`ModalDetalleTicket.tsx`):**
+    - Se integró el botón **`[ 🖨️ Reimprimir Ticket ]`** y atajo de teclado tecla `P` en la ventana de detalle de ticket de Finanzas, conectado a `TicketImprimible` y `useImprimir`.
+  - **Nuevos registros al principio de las tablas (Clientes, Productos y Lotes):**
+    - En Clientes: orden por defecto a `RECIENTES`, consulta con `order('id', { ascending: false })` y adición al inicio del estado (`[{ ...nuevo }, ...prev]`).
+    - En Inventario (Productos): orden por defecto a `RECIENTES`, consulta `order('id', { ascending: false })` y al guardar nuevo producto se sitúa en la fila 1 de la página 1.
+    - En Lotes: soporte para orden `RECIENTES` y recarga reactiva al inicio.
+  - **Todos los datos de precios en tabla de inventario (`TablaProductos.tsx`):**
+    - La columna de precios ahora muestra: Precio regular, Precio mayorista (`⭐ May: S/ XX.XX`), Escalas por cantidad (`x6+: S/ XX.XX`) y Presentaciones (`CAJA x12: S/ XX.XX`).
+  - **Validación y despliegue:**
+    - `npx tsc -b` (0 errores).
+    - `npm run build` (3.58s limpio).
+    - `deploy.cjs siumax` (20 archivos subidos a `siumax.duckdns.org`). Evicamp y GitHub intactos.
+
 ## 29/10/2026 (tarde, 32) · Antigravity
 - **Renombrado de Base de Datos de Pruebas en VPS: `siuhub` ➔ `siumax`:**
   - **Solicitud del dueño:** *"quiero que mi base de datos se llame siumax"*.

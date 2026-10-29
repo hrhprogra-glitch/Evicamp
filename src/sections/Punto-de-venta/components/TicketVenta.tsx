@@ -322,7 +322,7 @@ export const TicketVenta: React.FC<Props> = ({
 
                 <div className="col-span-5 flex flex-col min-w-0 pr-1 pl-1">
                   <span className="truncate uppercase font-black text-[13px] leading-tight text-[var(--color-ink)]" title={item.name}>{item.name}</span>
-                  <div className="flex items-center justify-between gap-1">
+                  <div className="flex flex-wrap items-center gap-1 mt-0.5">
                     {/* 🏷️ PRECIO EDITABLE POR LÍNEA: para bajarle el precio a un cliente puntual
                         (ej. negocio/mayorista) sin tocar el precio general del catálogo. Solo
                         cambia esta venta — updatePrice nunca escribe en la tabla de productos. */}
@@ -342,7 +342,7 @@ export const TicketVenta: React.FC<Props> = ({
                           aria-pressed={!item.sinEscala}
                           onClick={(e) => { e.stopPropagation(); setSelectedIndex(index); setColIndex(3); alternarEscala?.(item.id); }}
                           title={item.sinEscala ? `Precio por cantidad APAGADO (cobra el precio normal). Enter: prenderlo` : item.escala !== undefined ? `Precio por cantidad desde ${desde} aplicado. Enter: apagarlo` : `Precio por cantidad desde ${desde} (todavía no llega). Enter: apagarlo`}
-                          className={`text-[11px] font-black whitespace-nowrap px-1.5 py-0.5 border-2 cursor-pointer outline-none ${
+                          className={`text-[10px] font-black whitespace-nowrap px-1 py-0.5 border cursor-pointer outline-none ${
                             item.sinEscala ? 'border-[var(--color-border)] text-[var(--color-muted)]'
                               : item.escala !== undefined ? 'border-[var(--color-info)] text-[var(--color-info)] bg-[var(--color-info-bg)]'
                               : 'border-[var(--color-border)] text-[var(--color-info)]'
@@ -367,13 +367,13 @@ export const TicketVenta: React.FC<Props> = ({
                     )}
                     
                     {/* 🛡️ EVICAMP: STOCK VISIBLE EN LA CAJA ACTUAL */}
-                    <span className="text-[12px] font-black text-[var(--color-ink)] whitespace-nowrap bg-[var(--color-surface)] px-2 py-0.5 rounded-sm border-2 border-[var(--color-border)]" title="Stock actual del producto">
+                    <span className="text-[10px] font-bold text-[var(--color-muted)] whitespace-nowrap bg-[var(--color-surface)] px-1 py-0.5 rounded-none border border-[var(--color-border)]" title="Stock actual del producto">
                       {item.unit === 'CONSUMO' ? '-' : `STK: ${item.quantity} ${unidadDe(item).corto === 'UND' ? 'UN' : unidadDe(item).corto}`}
                     </span>
                   </div>
                 </div>
                 
-                <div className="col-span-3 text-right text-sm font-black text-[var(--color-ink)]">
+                <div className="col-span-3 text-right text-sm font-black text-[var(--color-ink)] whitespace-nowrap pl-1">
                   {item.subtotal.toFixed(2)}
                 </div>
 

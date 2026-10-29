@@ -300,4 +300,13 @@
         - PostgREST en VPS actualizado en `/etc/postgrest_siuhub.conf` apuntando a `siumax`.
         - Scripts del servidor (`activar-seguridad.sh`, `nuevo-cliente.sh`) y 27 scripts de pruebas de `ai-scripts/pruebas/` actualizados a `-d siumax`.
         - Evicamp (producción) y GitHub completamente intactos.
+     25. **Ajustes y correcciones de la Fase 4 en pruebas (29/10 tarde):**
+        - El dueño probó la fase 4 y reportó varios puntos:
+          1. *Selector en ModalProducto*: al crear producto el selector no seleccionaba "Precio mayorista" ni permitía moverse de izquierda a derecha. Se agregó `input-precio-mayorista-producto` al Tab trap y flechas ← → bidireccionales con Precio sugerido, ↑ a fotos y ↓ a Unidad / Stock.
+          2. *Cálculo de descuento %*: *"el precio del producto evelyn es 2 soles pero tiene un descuento ya que es mayorista del 10 porciento y sale 1 sol porque 1 sol no deberia ser 1.8 ???"*. Se corrigió `conCantidad` para que aplique el 10% de descuento directo sobre el precio base (2.00 - 10% = S/ 1.80) sin pisarlo con el precio mayorista.
+          3. *Error estético en ticket*: el dueño envió captura con círculo rojo mostrando que `STK: 1000 UN` y las etiquetas colisionaban encima del subtotal `100.00`. Se aplicó `flex-wrap` y protección de ancho en la columna de subtotal para evitar cualquier solapamiento.
+          4. *Reimprimir ticket en Finanzas*: el dueño señaló que al ver lo comprado en Finanzas no había opción para imprimir el ticket de nuevo. Se integró `[ 🖨️ Reimprimir Ticket ]` (con tecla P) conectado a `TicketImprimible` y `useImprimir`.
+          5. *Nuevos registros al inicio de las tablas*: *"cuando creo un cliente nuevo o un producto o un lote nuevo no sale al principio de la tabla arreglar eso tambien"*. Se configuró el orden por defecto a `RECIENTES` y se actualizó la adición de clientes, productos y lotes para que aparezcan siempre al inicio de la tabla (fila 1, página 1).
+          6. *Todos los datos de precios en tabla de inventario*: se expandió la columna de precios en `TablaProductos` para mostrar el precio normal, precio mayorista, escalas por cantidad (`x6+: S/ XX.XX`) y presentaciones (`CAJA x12: S/ XX.XX`).
+        - `npx tsc -b` (0 errores), `npm run build` limpio y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
 

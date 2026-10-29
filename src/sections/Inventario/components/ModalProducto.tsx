@@ -402,6 +402,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           'input-buscar-foto-producto',
           'btn-subir-local-producto',
           'input-precio-producto',
+          'input-precio-mayorista-producto',
           'input-stock-minimo-producto',
           'select-unidad-peso-producto',
           'escala-desde-0', 'escala-precio-0', 'escala-desde-1', 'escala-precio-1', 'escala-desde-2', 'escala-precio-2',
@@ -839,7 +840,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           }
         }
 
-        // Precio
+        // Precio de venta sugerido
         if (active?.id === 'input-precio-producto') {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
@@ -855,6 +856,12 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
             return;
           }
           if (e.key === 'ArrowRight') {
+            const mayorista = document.getElementById('input-precio-mayorista-producto');
+            if (mayorista) {
+              e.preventDefault();
+              mayorista.focus();
+              return;
+            }
             const next = document.getElementById('input-stock-minimo-producto') || 
                          document.getElementById('btn-guardar-producto');
             if (next) {
@@ -865,16 +872,19 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           }
         }
 
-        // Stock Mínimo
-        if (active?.id === 'input-stock-minimo-producto') {
+        // Precio Mayorista (Opcional)
+        if (active?.id === 'input-precio-mayorista-producto') {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
-            document.getElementById('input-buscar-foto-producto')?.focus();
+            const prev = document.getElementById('btn-subir-local-producto') || 
+                         document.getElementById('input-buscar-foto-producto');
+            prev?.focus();
             return;
           }
           if (e.key === 'ArrowDown' || e.key === 'Enter') {
             e.preventDefault();
             const next = document.getElementById('select-unidad-peso-producto') || 
+                         document.getElementById('input-stock-minimo-producto') || 
                          document.getElementById('btn-guardar-producto');
             next?.focus();
             return;
@@ -886,14 +896,51 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           }
         }
 
+        // Stock Mínimo
+        if (active?.id === 'input-stock-minimo-producto') {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            document.getElementById('input-precio-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown' || e.key === 'Enter') {
+            e.preventDefault();
+            const next = document.getElementById('select-unidad-peso-producto') || 
+                         document.getElementById('escala-desde-0') ||
+                         document.getElementById('btn-guardar-producto');
+            next?.focus();
+            return;
+          }
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            document.getElementById('input-precio-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowRight') {
+            const next = document.getElementById('select-unidad-peso-producto');
+            if (next) {
+              e.preventDefault();
+              next.focus();
+              return;
+            }
+          }
+        }
+
         // Unidad de Medida (select)
         if (active?.id === 'select-unidad-peso-producto') {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
             e.stopPropagation();
-            const prev = document.getElementById('input-stock-minimo-producto') || 
+            const prev = document.getElementById('input-precio-mayorista-producto') ||
+                         document.getElementById('input-stock-minimo-producto') || 
                          document.getElementById('input-precio-producto');
             prev?.focus();
+            return;
+          }
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('input-stock-minimo-producto')?.focus();
             return;
           }
           if (e.key === 'ArrowDown') {

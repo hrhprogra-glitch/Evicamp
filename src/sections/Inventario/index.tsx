@@ -62,7 +62,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
-  const [filtroOrden, setFiltroOrden] = useState('NOMBRE_ASC');
+  const [filtroOrden, setFiltroOrden] = useState('RECIENTES');
 
   // ESTADO DE LA PAGINACIÓN
   const [currentPage, setCurrentPage] = useState(1);
@@ -84,11 +84,10 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           { data: catData, error: catError }, // 🔥 NUEVO: Traemos tu tabla
           { data: ventasData } // fase 2.4: lo vendido en 30 días (filtro "Sin ventas" y "Sugerir pedido" de Compras)
         ] = await Promise.all([
-          // 🛡️ EVICAMP: Solo descargar productos activos para evitar productos fantasma
-          traerTodo(() => supabase.from('products').select('*').eq('is_active', 1).order('id')),
-          // Con la fecha de vencimiento (filtros Vencidos / Vencen en 30 días). La misma consulta va en la precarga
-          // sin internet (src/utils/precargaSinInternet.ts): si se cambia aquí, cambiarla allá también
-          traerTodo(() => supabase.from('batches').select('id, product_id, quantity, cost_unit, expiration_date').order('id')),
+          // 🛡️ EVICAMP: Solo descargar productos activos para evitar productos fantasma (últimos primero)
+          traerTodo(() => supabase.from('products').select('*').eq('is_active', 1).order('id', { ascending: false })),
+          // Con la fecha de vencimiento (filtros Vencidos / Vencen en 30 días)
+          traerTodo(() => supabase.from('batches').select('id, product_id, quantity, cost_unit, expiration_date').order('id', { ascending: false })),
           supabase.from('categories').select('name'), // 🔥 CONEXIÓN A TU TABLA
           // Por GET (sin internet sirve la copia). La misma llamada va en la precarga (precargaSinInternet.ts)
           supabase.rpc('fn_ventas_por_producto', { p_dias: 30 }, { get: true }),
@@ -205,6 +204,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     }
 
     result.sort((a, b) => {
+      if (filtroOrden === 'RECIENTES') return (Number(b.id) || 0) - (Number(a.id) || 0);
       if (filtroOrden === 'NOMBRE_ASC') return a.name.localeCompare(b.name);
       if (filtroOrden === 'NOMBRE_DESC') return b.name.localeCompare(a.name);
       if (filtroOrden === 'STOCK_ASC') return a.quantity - b.quantity;
@@ -213,7 +213,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
       if (filtroOrden === 'PRECIO_DESC') return b.price - a.price;
       // Lo que cuesta lo que hay en el estante: primero donde hay más dinero inmovilizado
       if (filtroOrden === 'PLATA_PARADA') return (b.quantity * b.cost) - (a.quantity * a.cost);
-      return 0;
+      return (Number(b.id) || 0) - (Number(a.id) || 0);
     });
 
     return result;
@@ -802,6 +802,10 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             setRefreshLotesKey(prev => prev + 1);
           } else {
             setProducts(prev => [productoFormateado, ...prev]);
+            setFiltroOrden('RECIENTES');
+            setSearchQuery('');
+            setFiltroCategoria('');
+            setFiltroEstado('');
             setCurrentPage(1);
           }
         }}
@@ -840,6 +844,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         onLoteSaved={(lote) => {
           setNuevoLoteRealtime(lote);
           setLoteToEdit(null);
+          setFiltroOrden('RECIENTES');
+          setRefreshLotesKey(prev => prev + 1);
           if (!loteToEdit) setSearchQuery(''); 
 
           // 🛡️ PARCHE EVICAMP: Actualizamos la pantalla al instante tanto para LOTES NUEVOS como para EDICIONES

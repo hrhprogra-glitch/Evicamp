@@ -107,8 +107,8 @@ export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNav
         { data: pagosData },
         { data: grupData }
       ] = await Promise.all([
-        traerTodo(() => supabase.from('products').select('*').order('id')),
-        traerTodo(() => supabase.from('customers').select('*').order('id')),
+        traerTodo(() => supabase.from('products').select('*').order('id', { ascending: false })),
+        traerTodo(() => supabase.from('customers').select('*').order('id', { ascending: false })),
         // Filtro Ampliado: Descarga también los CANCELADOS para poder visualizarlos en la tabla como 'PAGADOS'
         traerTodo(() => supabase.from('fiados').select('*').in('status', ['PENDIENTE', 'VENCIDO', 'CANCELADO']).order('id')),
         traerTodo(() => supabase.from('debt_payments').select('*').order('id')),
@@ -487,7 +487,7 @@ if (fiaData) {
     }
     const { data, error } = await supabase.from('customers').insert([{ ...fila, created_at: new Date().toISOString(), is_synced: '1' }]).select().single();
     if (error) { alert('Error al guardar cliente: ' + error.message); return false; }
-    setClientes((lista) => [...lista, { ...nuevo, id: String(data.id) }]);
+    setClientes((lista) => [{ ...nuevo, id: String(data.id) }, ...lista]);
     return true;
   };
 

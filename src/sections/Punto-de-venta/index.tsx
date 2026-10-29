@@ -524,19 +524,14 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
 
     // 1. Si el cliente o su empresa tiene descuento % especial fijo (ej. 10%)
     if (descPct > 0) {
-      let precio = Math.round(base * (1 - descPct / 100) * 100) / 100;
-      let esMayoristaAplicado = false;
-      if (esMayorista && item.precioMayorista != null && item.precioMayorista > 0 && item.precioMayorista < precio) {
-        precio = item.precioMayorista;
-        esMayoristaAplicado = true;
-      }
+      const precio = Math.round(base * (1 - descPct / 100) * 100) / 100;
       return {
         ...item,
         precioBase: base,
         cartQuantity: qty,
         price: precio,
         escala: undefined,
-        esMayoristaAplicado,
+        esMayoristaAplicado: false,
         descuentoPorcentajeAplicado: descPct,
         subtotal: Math.round((qty * precio) * 100) / 100
       };

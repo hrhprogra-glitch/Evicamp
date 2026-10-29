@@ -167,6 +167,7 @@ export const TablaLotes: React.FC<Props> = ({
     return true;
   }).sort((a, b) => {
     // 4. Filtro de Ordenamiento Alfabético o Matemático
+    if (filtroOrden === 'RECIENTES') return (Number(b.id) || 0) - (Number(a.id) || 0);
     if (filtroOrden === 'NOMBRE_ASC') return a.product_name.localeCompare(b.product_name);
     if (filtroOrden === 'NOMBRE_DESC') return b.product_name.localeCompare(a.product_name);
     if (filtroOrden === 'STOCK_ASC') return a.quantity - b.quantity;
@@ -174,7 +175,7 @@ export const TablaLotes: React.FC<Props> = ({
     if (filtroOrden === 'PRECIO_ASC') return a.cost_unit - b.cost_unit;
     if (filtroOrden === 'PRECIO_DESC') return b.cost_unit - a.cost_unit;
     if (filtroOrden === 'PLATA_PARADA') return (b.quantity * b.cost_unit) - (a.quantity * a.cost_unit);
-    return 0;
+    return (Number(b.id) || 0) - (Number(a.id) || 0);
   });
 
   // === ESTADOS Y LÓGICA DE PAGINACIÓN ===

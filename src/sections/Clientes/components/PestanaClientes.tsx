@@ -43,7 +43,7 @@ export const resumenDeCliente = (cliente: Cliente, fiados: Fiado[]) => {
 export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = [], onNuevo, onAbrir, onEditar, onEliminar, idPestana }) => {
   const [busqueda, setBusqueda] = useState('');
   const [filtro, setFiltro] = useState<'TODOS' | 'CON_DEUDA' | 'SIN_DEUDA'>('TODOS');
-  const [orden, setOrden] = useState<'A-Z' | 'DEUDA'>('DEUDA');
+  const [orden, setOrden] = useState<'RECIENTES' | 'A-Z' | 'DEUDA'>('RECIENTES');
   const [pagina, setPagina] = useState(1);
 
   const filas = useMemo(() => {
@@ -53,7 +53,15 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
     let lista = texto ? conResumen.filter(({ c, grupo }) => coincideBusqueda([c.nombre, c.dni, c.ruc, c.telefono, c.referencia, c.direccion, grupo], texto)) : conResumen;
     if (filtro === 'CON_DEUDA') lista = lista.filter((x) => x.deuda > 0.05);
     if (filtro === 'SIN_DEUDA') lista = lista.filter((x) => x.deuda <= 0.05);
-    return [...lista].sort((a, b) => (orden === 'DEUDA' ? b.deuda - a.deuda : a.c.nombre.localeCompare(b.c.nombre, 'es')));
+    return [...lista].sort((a, b) => {
+      if (orden === 'RECIENTES') return (Number(b.c.id) || 0) - (Number(a.c.id) || 0);
+      if (orden === 'DEUDA') {
+        const diff = b.deuda - a.deuda;
+        if (Math.abs(diff) > 0.001) return diff;
+        return (Number(b.c.id) || 0) - (Number(a.c.id) || 0);
+      }
+      return a.c.nombre.localeCompare(b.c.nombre, 'es');
+    });
   }, [clientes, fiados, grupos, busqueda, filtro, orden]);
 
   const totalPaginas = Math.max(1, Math.ceil(filas.length / POR_PAGINA));
@@ -287,6 +295,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
           <option value="SIN_DEUDA">SIN DEUDA</option>
         </select>
         <select id="orden-clientes" value={orden} onChange={(e) => setOrden(e.target.value as typeof orden)} onKeyDown={teclasBarra('orden-clientes')} className={claseSelect}>
+          <option value="RECIENTES">MÁS RECIENTES</option>
           <option value="DEUDA">MAYOR DEUDA</option>
           <option value="A-Z">A - Z</option>
         </select>

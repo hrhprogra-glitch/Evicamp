@@ -4,7 +4,7 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 29/10/2026 (tarde, 32), Antigravity: Base de datos de pruebas en VPS renombrada de `siuhub` a `siumax` con respaldo previo y PostgREST actualizado; Fases 4.4, 4.5 y 4.6 completadas y desplegadas en el sitio de pruebas `siumax` (rama `fase-4-completa`).
+- **Última actualización:** 29/10/2026 (tarde, 33), Antigravity: Correcciones de la Fase 4 en pruebas (teclado en ModalProducto, cálculo 10% en POS, colisión estética en ticket, reimpresión en Finanzas, orden inicial de nuevos clientes/productos/lotes y precios completos en tabla de inventario) desplegadas en `siumax` (rama `fase-4-completa`).
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4.1, 4.2 y 4.3 en producción en Evicamp (commits 583ad4e y c8c6be3). Fases 4.4 (con descuento % cliente/empresa), 4.5 y 4.6 listas en el sitio de pruebas `siumax` para revisión y visto bueno del dueño.
 - **Fase que sigue:** Revisión por parte del dueño de las Fases 4.4, 4.5 y 4.6 en `siumax.duckdns.org` para su posterior pase oficial a producción.
 - **Avisos para la clienta de Evicamp:**
