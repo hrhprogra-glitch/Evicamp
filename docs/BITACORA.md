@@ -7,6 +7,22 @@
 
 ---
 
+## 29/10/2026 (mañana, 21) · Antigravity
+- **Eliminación completa de fondos blancos en tablas y componentes (`src/index.css`, `TablaProductos.tsx`, `TablaLotes.tsx`, `EtiquetaStock.tsx`, `FiltrosInventario.tsx`):**
+  - **Solicitud del dueño:** *"en las tablas hay mucho blanco arregla eso"* (captura de Inventario con barra de paginación `PÁGINA 1 DE 2`, etiquetas de stock, badges de SKU y caja de escáner en blanco puro).
+  - **Causa raíz:** Clases directas como `bg-[#F8FAFC]`, `bg-[#F1F5F9]`, `bg-[#ECFDF5]`, `bg-[#FEF2F2]` y `bg-red-50` no estaban mapeadas a tokens del modo oscuro.
+  - **Corrección aplicada:**
+    - `EtiquetaStock.tsx`: Se cambiaron las pastillas de stock para usar fondos translúcidos elegantes (`bg-[var(--color-danger-bg)]` / `bg-[var(--color-accent-bg)]` / `bg-[var(--color-bg-2)]`) con textos brillantes coloreados y bordes definidos. Cero blanco.
+    - `TablaProductos.tsx` y `TablaLotes.tsx`: Se cambiaron las barras de paginación superior e inferior de `bg-[#F8FAFC]` a `bg-[var(--color-surface)]`, los badges de SKU/Códigos a `bg-[var(--color-bg-2)]`, los placeholders de fotos y los badges de estado a tokens semánticos.
+    - `FiltrosInventario.tsx`: Se eliminó el fondo blanco del ícono de búsqueda y del botón de limpiar filtros, pasando a `bg-[var(--color-bg-2)]`.
+    - `src/index.css`: Se añadieron reglas globales de Modo Oscuro para que `.bg-[#F8FAFC]`, `.bg-[#F1F5F9]`, `.bg-[#E2E8F0]`, `.bg-slate-50`, `.bg-slate-100`, `.bg-gray-50`, `.bg-[#ECFDF5]`, `.bg-[#FEF2F2]`, `.bg-red-50`, etc., se evalúen siempre a superficies oscuras y acentos suaves en modo oscuro.
+  - **Verificación y Despliegue:**
+    - Verificado con Edge headless en `siumax.duckdns.org` con capturas reales (`shot-inventario-dark.png` y `shot-lotes-dark.png`), confirmando eliminación del 100% de los elementos blancos.
+    - Desplegado exitosamente en `siumax`.
+- **Siguiente paso:** Confirmar con el dueño el resultado.
+
+---
+
 ## 29/10/2026 (mañana, 20) · Antigravity
 - **Corrección de contrastes de texto en Modo Oscuro y navegación en Ticket de Caja:**
   - **1. Nombres de clientes en desplegable de cobro a crédito (`ModalCobro.tsx` e `index.css`):**

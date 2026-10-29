@@ -238,10 +238,10 @@ export const TablaLotes: React.FC<Props> = ({
         }
       }
     };
-    const clase = (deshabilitado: boolean) => `w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[#E2E8F0] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white ${deshabilitado ? 'opacity-40 cursor-not-allowed' : ''}`;
+    const clase = (deshabilitado: boolean) => `w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white ${deshabilitado ? 'opacity-40 cursor-not-allowed' : ''}`;
     return (
-      <div className={`${position === 'top' ? 'border-b' : 'border-t'} border-[#E2E8F0] bg-[#F8FAFC] p-3 flex items-center justify-between shrink-0`}>
-        <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-widest">
+      <div className={`${position === 'top' ? 'border-b' : 'border-t'} border-[var(--color-border)] bg-[var(--color-surface)] p-3 flex items-center justify-between shrink-0`}>
+        <span className="text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-widest">
           Página {currentPage} de {totalPages}
         </span>
         <div className="flex gap-2">
@@ -269,7 +269,7 @@ export const TablaLotes: React.FC<Props> = ({
   };
 
   return (
-    <div id="tabla-lotes-inventario" className="border border-[#E2E8F0] flex flex-col bg-[var(--color-surface)] relative min-h-[200px]">
+    <div id="tabla-lotes-inventario" className="border border-[var(--color-border)] flex flex-col bg-[var(--color-surface)] relative min-h-[200px]">
       {loading && (
         <div className="absolute inset-0 bg-white/80 dark:bg-[var(--color-surface)]/80 backdrop-blur-sm z-10 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
@@ -354,7 +354,7 @@ export const TablaLotes: React.FC<Props> = ({
         <p className="font-black uppercase text-[var(--color-ink)] truncate" title={lote.product_name}>
           {lote.product_name}
         </p>
-        <span className="text-xs font-black bg-[#E2E8F0] px-2 py-1 text-[#64748B] uppercase mt-1 inline-block w-max">
+        <span className="text-xs font-black bg-[var(--color-bg-2)] border border-[var(--color-border)] px-2 py-1 text-[var(--color-muted)] uppercase mt-1 inline-block w-max">
           {lote.category}
         </span>
       </div>
@@ -362,7 +362,7 @@ export const TablaLotes: React.FC<Props> = ({
       {/* 3. ESTADO DINÁMICO Y VENCIMIENTO */}
       <div className="col-span-2 flex flex-col items-center gap-1">
         <div className={`px-3 py-1 text-xs font-black uppercase border-2 ${
-          isVigente ? 'bg-[#ECFDF5] text-[var(--color-success)] border-[var(--color-success)]' : 'bg-[#FEF2F2] text-[var(--color-danger)] border-[var(--color-danger)]'
+          isVigente ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent)] border-[var(--color-accent)]' : 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger)]'
         }`}>
           {isVigente ? 'VIGENTE' : isExpired ? 'CADUCADO' : 'AGOTADO'}
         </div>
@@ -393,11 +393,11 @@ export const TablaLotes: React.FC<Props> = ({
       {/* 6. TRAZABILIDAD DE MERMAS */}
       <div className="col-span-1 text-center">
         {lote.mermas_total && lote.mermas_total > 0 ? (
-          <div className="bg-red-50 text-red-600 border border-red-200 px-2 py-0.5 text-[11px] font-black inline-block mx-auto rounded-none" title={`Eventos: ${lote.mermas_count}`}>
+          <div className="bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger)] px-2 py-0.5 text-[11px] font-black inline-block mx-auto rounded-none" title={`Eventos: ${lote.mermas_count}`}>
             -{lote.mermas_total}
           </div>
         ) : (
-          <span className="text-[#CBD5E1] font-bold text-xs">-</span>
+          <span className="text-[var(--color-muted)] font-bold text-xs">-</span>
         )}
       </div>
 
@@ -405,7 +405,7 @@ export const TablaLotes: React.FC<Props> = ({
       <div className="col-span-1 text-center flex flex-col items-center px-1">
         <div 
           className={`flex flex-col items-center justify-center px-1 py-0.5 text-sm font-black border-2 w-full max-w-[60px] overflow-hidden text-ellipsis ${
-            isVigente ? 'border-[var(--color-ink)] bg-[var(--color-surface)] text-[var(--color-ink)]' : 'border-[#CBD5E1] bg-[#F1F5F9] text-[#94A3B8]'
+            isVigente ? 'border-[var(--color-border)] bg-[var(--color-bg-2)] text-[var(--color-ink)]' : 'border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)]'
           }`} 
           title={`Stock exacto en DB: ${lote.quantity} ${lote.unit || 'UND'}`}
         >

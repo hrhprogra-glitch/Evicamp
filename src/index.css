@@ -354,6 +354,59 @@ html[data-theme="dark"] .bg-white {
   border-color: var(--color-border);
 }
 
+/* Adaptación de fondos claros y neutros en Modo Oscuro (eliminar todo blanco en tablas y tarjetas) */
+html.theme-monochrome .bg-\[\#F8FAFC\],
+html.theme-monochrome .bg-\[\#F1F5F9\],
+html.theme-monochrome .bg-\[\#E2E8F0\],
+html.theme-monochrome .bg-slate-50,
+html.theme-monochrome .bg-slate-100,
+html.theme-monochrome .bg-gray-50,
+html.theme-monochrome .bg-gray-100,
+html[data-theme="dark"] .bg-\[\#F8FAFC\],
+html[data-theme="dark"] .bg-\[\#F1F5F9\],
+html[data-theme="dark"] .bg-\[\#E2E8F0\],
+html[data-theme="dark"] .bg-slate-50,
+html[data-theme="dark"] .bg-slate-100,
+html[data-theme="dark"] .bg-gray-50,
+html[data-theme="dark"] .bg-gray-100 {
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* Insignias con fondos suaves (verde, rojo, ámbar) en Modo Oscuro para evitar fondo blanco */
+html.theme-monochrome .bg-\[\#ECFDF5\],
+html[data-theme="dark"] .bg-\[\#ECFDF5\] {
+  background-color: var(--color-accent-bg) !important;
+  color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+}
+html.theme-monochrome .bg-\[\#FEF2F2\],
+html.theme-monochrome .bg-red-50,
+html[data-theme="dark"] .bg-\[\#FEF2F2\],
+html[data-theme="dark"] .bg-red-50 {
+  background-color: var(--color-danger-bg) !important;
+  color: var(--color-danger) !important;
+  border-color: var(--color-danger) !important;
+}
+html.theme-monochrome .bg-\[\#FFFBEB\],
+html.theme-monochrome .bg-amber-50,
+html[data-theme="dark"] .bg-\[\#FFFBEB\],
+html[data-theme="dark"] .bg-amber-50 {
+  background-color: var(--color-warning-bg) !important;
+  color: var(--color-warning-text) !important;
+  border-color: var(--color-warning) !important;
+}
+
+/* Bordes claros que se veían blancos o grises claros en modo oscuro */
+html.theme-monochrome .border-\[\#E2E8F0\],
+html.theme-monochrome .border-\[\#CBD5E1\],
+html.theme-monochrome .border-\[\#F1F5F9\],
+html[data-theme="dark"] .border-\[\#E2E8F0\],
+html[data-theme="dark"] .border-\[\#CBD5E1\],
+html[data-theme="dark"] .border-\[\#F1F5F9\] {
+  border-color: var(--color-border) !important;
+}
+
 /* Overlays de carga (Cargando...): fondo oscuro translúcido en lugar de blanco */
 html.theme-monochrome [class*="bg-white\/80"],
 html.theme-monochrome [class*="bg-white\/70"],

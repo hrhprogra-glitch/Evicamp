@@ -70,8 +70,8 @@ export const FiltrosInventario: React.FC<Props> = ({
     <div className="flex flex-col xl:flex-row gap-3 sm:gap-4 px-2 sm:px-8 shrink-0 items-stretch xl:items-center justify-between">
 
       {/* BARRA DE BÚSQUEDA (Toma el espacio restante; en columna no usa flex-1 porque perdería su alto) */}
-      <div className="w-full xl:flex-1 h-12 sm:h-14 shrink-0 flex border border-[#E2E8F0] bg-[var(--color-surface)] focus-within:border-[var(--color-ink)] focus-within:ring-2 focus-within:ring-[var(--color-ink)] transition-all group shadow-sm">
-        <div className="w-12 sm:w-14 h-full flex items-center justify-center bg-[#F8FAFC] border-r border-[#E2E8F0] text-[#94A3B8] group-focus-within:bg-[var(--color-ink)] group-focus-within:text-[var(--color-success)] group-focus-within:border-[var(--color-ink)] transition-colors shrink-0">
+      <div className="w-full xl:flex-1 h-12 sm:h-14 shrink-0 flex border border-[var(--color-border)] bg-[var(--color-surface)] focus-within:border-[var(--color-ink)] focus-within:ring-2 focus-within:ring-[var(--color-ink)] transition-all group shadow-sm">
+        <div className="w-12 sm:w-14 h-full flex items-center justify-center bg-[var(--color-bg-2)] border-r border-[var(--color-border)] text-[var(--color-muted)] group-focus-within:bg-[var(--color-ink)] group-focus-within:text-[var(--color-success)] group-focus-within:border-[var(--color-ink)] transition-colors shrink-0">
           <Search size={18} />
         </div>
         <div className="flex-1 relative h-full flex items-center">
@@ -133,7 +133,7 @@ export const FiltrosInventario: React.FC<Props> = ({
                   setLocalQuery('');
                   setSearchQuery('');
                 }}
-                className="w-8 h-8 flex items-center justify-center border border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors cursor-pointer rounded-none"
+                className="w-8 h-8 flex items-center justify-center border border-[var(--color-border)] bg-[var(--color-bg-2)] text-[var(--color-muted)] hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors cursor-pointer rounded-none"
               >
                 <X size={14} />
               </button>
@@ -269,7 +269,7 @@ export const FiltrosInventario: React.FC<Props> = ({
             }
           }}
           title="Limpiar todos los filtros"
-          className="h-11 sm:h-14 px-4 flex items-center justify-center border border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] hover:bg-[var(--color-ink)] hover:text-white hover:border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
+          className="h-11 sm:h-14 px-4 flex items-center justify-center border border-[var(--color-border)] bg-[var(--color-bg-2)] text-[var(--color-muted)] hover:bg-[var(--color-ink)] hover:text-white hover:border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
         >
           <FilterX size={16} />
         </button>

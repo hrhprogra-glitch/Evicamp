@@ -65,8 +65,8 @@ export const TablaProductos: React.FC<Props> = ({
     const isNextDisabled = currentPage >= totalPages;
 
     return (
-      <div className={`${position === 'top' ? 'border-b' : 'border-t'} border-[#E2E8F0] bg-[#F8FAFC] p-3 flex items-center justify-between shrink-0`}>
-        <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-widest">
+      <div className={`${position === 'top' ? 'border-b' : 'border-t'} border-[var(--color-border)] bg-[var(--color-surface)] p-3 flex items-center justify-between shrink-0`}>
+        <span className="text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-widest">
           Página {currentPage} de {totalPages}
         </span>
         <div className="flex gap-2">
@@ -129,7 +129,7 @@ export const TablaProductos: React.FC<Props> = ({
                 }
               }
             }}
-            className={`w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[#E2E8F0] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white ${
+            className={`w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white ${
               isPrevDisabled ? 'opacity-40 cursor-not-allowed' : ''
             }`}
           >
@@ -189,7 +189,7 @@ export const TablaProductos: React.FC<Props> = ({
                 }
               }
             }}
-            className={`w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[#E2E8F0] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white ${
+            className={`w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white ${
               isNextDisabled ? 'opacity-40 cursor-not-allowed' : ''
             }`}
           >
@@ -201,7 +201,7 @@ export const TablaProductos: React.FC<Props> = ({
   };
 
   return (
-    <div id="tabla-productos-inventario" className="border border-[#E2E8F0] flex flex-col bg-[var(--color-surface)] relative min-h-[200px]">
+    <div id="tabla-productos-inventario" className="border border-[var(--color-border)] flex flex-col bg-[var(--color-surface)] relative min-h-[200px]">
       {loading && (
         <div className="absolute inset-0 bg-white/80 dark:bg-[var(--color-surface)]/80 backdrop-blur-sm z-10 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
@@ -247,25 +247,25 @@ export const TablaProductos: React.FC<Props> = ({
             // === MODO EDICIÓN EN LÍNEA ===
             if (editingId === item.id) {
               return (
-                <div key={item.id} className="grid grid-cols-12 items-center p-4 border-b-2 border-[var(--color-ink)] bg-[#F8FAFC] shadow-inner">
+                <div key={item.id} className="grid grid-cols-12 items-center p-4 border-b-2 border-[var(--color-ink)] bg-[var(--color-bg-2)] shadow-inner">
                   {/* IMAGEN (NO EDITABLE DESDE AQUÍ) */}
                   <div className="col-span-1 flex justify-center pr-2">
                     {item.imageUrl && (item.imageUrl.startsWith('http') || item.imageUrl.startsWith('data:')) ? (
                       <img 
                         src={item.imageUrl} 
                         alt="img" 
-                        className="w-10 h-10 object-cover rounded border border-[#E2E8F0]"
+                        className="w-10 h-10 object-cover rounded border border-[var(--color-border)]"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
                     ) : (
-                      <div className="w-10 h-10 bg-[#E2E8F0] rounded flex items-center justify-center text-[#94A3B8]" title={item.imageUrl?.startsWith('media') ? 'Formato de App móvil no compatible en web' : 'Sin imagen'}>
+                      <div className="w-10 h-10 bg-[var(--color-surface)] rounded border border-[var(--color-border)] flex items-center justify-center text-[var(--color-muted)]" title={item.imageUrl?.startsWith('media') ? 'Formato de App móvil no compatible en web' : 'Sin imagen'}>
                         <ImageIcon size={16}/>
                       </div>
                     )}
                   </div>
 
                   <div className="col-span-2 flex flex-col gap-1 items-start pr-2">
-                    <span className="bg-[#E2E8F0] px-2 py-1 border border-[#CBD5E1] text-[9px] font-bold text-[#64748B] rounded-none cursor-not-allowed w-full truncate">
+                    <span className="bg-[var(--color-surface)] px-2 py-1 border border-[var(--color-border)] text-[9px] font-bold text-[var(--color-muted)] rounded-none cursor-not-allowed w-full truncate">
                       {item.code}
                     </span>
                     {item.barcode && (
@@ -372,11 +372,11 @@ export const TablaProductos: React.FC<Props> = ({
                     <img 
                       src={item.imageUrl} 
                       alt={item.name} 
-                      className="w-10 h-10 object-cover rounded-md border border-[#E2E8F0] shadow-sm" 
+                      className="w-10 h-10 object-cover rounded-md border border-[var(--color-border)] shadow-sm" 
                       onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                   ) : (
-                    <div className="w-10 h-10 bg-[#F1F5F9] rounded-md border border-[#E2E8F0] flex items-center justify-center text-[#CBD5E1]" title={item.imageUrl?.startsWith('media') ? 'Formato de App móvil no compatible en web' : 'Sin Imagen'}>
+                    <div className="w-10 h-10 bg-[var(--color-bg-2)] rounded-md border border-[var(--color-border)] flex items-center justify-center text-[var(--color-muted)]" title={item.imageUrl?.startsWith('media') ? 'Formato de App móvil no compatible en web' : 'Sin Imagen'}>
                       <ImageIcon size={18} />
                     </div>
                   )}
@@ -384,7 +384,7 @@ export const TablaProductos: React.FC<Props> = ({
 
                 {/* 1. CÓDIGOS */}
                 <div className="col-start-2 row-start-2 md:col-start-auto md:row-start-auto md:col-span-2 flex flex-col gap-1.5 items-start min-w-0">
-                  <span className="bg-[#F8FAFC] px-2 py-1 border border-[#E2E8F0] text-sm font-black text-[var(--color-ink)] rounded-none truncate max-w-full" title={item.code}>
+                  <span className="bg-[var(--color-bg-2)] px-2 py-1 border border-[var(--color-border)] text-sm font-black text-[var(--color-ink)] rounded-none truncate max-w-full" title={item.code}>
                     {item.code}
                   </span>
                   {item.barcode && (
