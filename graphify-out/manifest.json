@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793233826.2060866,
-    "seen": 1793238734.984653,
-    "ast_hash": "aabb89aa673c7123dc3a3ffc502ed3d8",
+    "mtime": 1793238775.155581,
+    "seen": 1793241822.1506896,
+    "ast_hash": "0fcacb2a7d6178758a01b2c0870db530",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793233878.4758608,
-    "seen": 1793238734.9846547,
-    "ast_hash": "e1e226c3b736bf040c994f59eb8d65db",
+    "mtime": 1793238791.65137,
+    "seen": 1793241822.1506906,
+    "ast_hash": "11253c28ec1e92c047d378e2caceeb27",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793233945.5395112,
-    "seen": 1793238734.9846578,
-    "ast_hash": "a0d08f8ff2655f4137787777c30a8d9c",
+    "mtime": 1793238811.5737607,
+    "seen": 1793241822.1506927,
+    "ast_hash": "ee4ff5035b02f8ca4e18bdc8152ab3c4",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2076,9 +2076,9 @@
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalElegirClientePOS.tsx": {
-    "mtime": 1793237700.9390156,
-    "seen": 1793238734.984563,
-    "ast_hash": "dba8b506d099ab382fd6b720e0b8ecc4",
+    "mtime": 1793241726.0498984,
+    "seen": 1793241822.1506333,
+    "ast_hash": "38f0ab713b6370390cd8b04f63f64f0e",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalNombreEspera.tsx": {

@@ -268,8 +268,8 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
                 </>
               ) : (
                 <>
-                  <Users size={14} />
-                  <span>Cliente Varios (Sin Cuenta)</span>
+                  <X size={14} />
+                  <span>✕ Quitar cliente / Limpiar</span>
                 </>
               )}
             </button>
@@ -410,7 +410,7 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
         {/* Footer informativo */}
         <div className="p-2.5 bg-[var(--color-bg)] border-t-2 border-[var(--color-border)] flex items-center justify-between text-[11px] font-black uppercase text-[var(--color-muted)] shrink-0">
           <span>{filtrados.length} clientes encontrados</span>
-          <span>{clienteActual ? `Actual: ${clienteActual.nombre}` : 'Sin cliente (Cliente Varios)'}</span>
+          <span>{clienteActual ? `Actual: ${clienteActual.nombre}` : 'Sin cliente asignado (Venta normal)'}</span>
         </div>
       </div>
 

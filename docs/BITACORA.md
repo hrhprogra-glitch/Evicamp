@@ -14,7 +14,7 @@
   - **Navegación con teclado en `ModalElegirClientePOS.tsx`:**
     - Flecha Arriba (`ArrowUp`) desde el buscador de clientes ahora enfoca directamente el botón de cerrar `✕` (`btn-cerrar-cliente-pos`), con anillo y fondo rojo visible.
     - Presionar `Enter` o barra espaciadora sobre la `✕` cierra el modal.
-    - Cuando ya hay un cliente asignado (ej. BILLY), el primer botón de acción ahora dice expresamente: `✕ QUITAR CLIENTE (BILLY)` con borde e icono rojo. Presionar `Enter` o `Supr (Delete)` quita el cliente y vuelve a "Cliente Varios".
+    - Cuando ya hay un cliente asignado (ej. BILLY), el primer botón de acción ahora dice expresamente: `✕ QUITAR CLIENTE (BILLY)`. Si no hay ninguno asignado, dice `✕ QUITAR CLIENTE / LIMPIAR`. Presionar `Enter` o `Supr (Delete)` quita el cliente y vuelve a la venta normal.
   - **Atajo en POS para quitar cliente con teclado (`Punto-de-venta/index.tsx`):**
     - Se agregó el atajo de teclado **`Shift + F3`** en la pantalla del POS para quitar el cliente asignado al instante sin tener que abrir ningún modal.
   - **Foco y escape en `ModalFichaCliente.tsx`:**

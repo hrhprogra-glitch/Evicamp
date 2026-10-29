@@ -171,3 +171,5 @@
   7. *"perfecto si sale el nombre del cliente pero solo sale el nombre nose si ese nombre es del cliente agrega eso"*:
      - Se actualizó la etiqueta en la tabla de Finanzas para que muestre claramente: **`[CLIENTE: NOMBRE]`**.
      - Validado al 100% con script automatizado en Edge (`test-finanzas-badge-and-keyboard.cjs`) y desplegado a `siumax`.
+  8. *"no es mejor que diga quitar cliente o "limpiar" algo asi ??"*:
+     - Se cambió el texto del botón por el que sugirió el dueño: ahora dice **`✕ QUITAR CLIENTE / LIMPIAR`** (o **`✕ QUITAR CLIENTE (NOMBRE)`** si hay uno puesto) y en el pie **`Sin cliente asignado (Venta normal)`**, eliminando la frase confusa "Cliente Varios (Sin Cuenta)".
