@@ -15,6 +15,7 @@ export interface Product {
   vendido30?: number;           // fase 2.4: unidades vendidas en 30 días (undefined = no se pudo saber)
   ultimaVenta?: string | null;  // fecha de su última venta (sin las anuladas)
   preciosCantidad?: { desde: number; precio: number }[]; // fase 1.3: "desde N → precio" (products.precios_cantidad)
+  precioMayorista?: number;                               // fase 4.4: precio preferencial para clientes mayoristas
   // Fase 1.2: presentaciones (caja, paquete…) y, en la Caja, la presentación vendida como otro "producto"
   presentaciones?: { unidad: string; factor: number; precio: number; barcode?: string | null }[];
   productoId?: string;                                              // el producto real (si esto es una presentación)

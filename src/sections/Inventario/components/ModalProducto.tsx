@@ -236,6 +236,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           code: initialData.code || '',
           barcode: initialData.barcode || '',
           price: initialData.price?.toString() || '',
+          precioMayorista: initialData.precioMayorista?.toString() || '',
           minStock: initialData.minStock?.toString() || '5',
           weightUnit: unidadDe(initialData).corto, // fase 1.1: "Se vende por" (UND, BOLSA, KG, M…)
           image: initialData.image || ''
@@ -253,7 +254,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         // MODO CREACIÓN: Limpiamos todo
         setStep(1);
         setNature(null);
-        setFormData({ name: '', category: '', code: '', barcode: '', price: '', minStock: '5', weightUnit: 'KG', image: '' });
+        setFormData({ name: '', category: '', code: '', barcode: '', price: '', precioMayorista: '', minStock: '5', weightUnit: 'KG', image: '' });
         setEscalas(filasEscalas());
         setPresentacionesForm(filasPres());
       }
@@ -313,6 +314,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     code: '',
     barcode: '',
     price: '',
+    precioMayorista: '',
     minStock: '5',
     weightUnit: 'KG', // Solo importa si nature === 'PESO'
     image: '' // <-- NUEVO ESTADO PARA LA IMAGEN
@@ -323,7 +325,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     setCodigoParaBuscar('');
     setStep(1);
     setNature(null);
-    setFormData({ name: '', category: '', code: '', barcode: '', price: '', minStock: '5', weightUnit: 'KG', image: '' });
+    setFormData({ name: '', category: '', code: '', barcode: '', price: '', precioMayorista: '', minStock: '5', weightUnit: 'KG', image: '' });
     setEscalas(filasEscalas());
     setPresentacionesForm(filasPres());
     setImageQuery('');
@@ -1040,6 +1042,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           code: codigoGenerado,
           barcode: safeBarcode,
           price: Number(formData.price) || 0,
+          precio_mayorista: formData.precioMayorista ? Number(formData.precioMayorista) : null,
           min_stock: Number(formData.minStock) || 5,
           control_type: nature === 'PESO' ? 'WEIGHT' : 'UND',
           weight_unit: nature === 'PESO' ? formData.weightUnit : null,
@@ -1067,6 +1070,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           code: codigoGenerado,
           barcode: safeBarcode,
           price: Number(formData.price) || 0,
+          precio_mayorista: formData.precioMayorista ? Number(formData.precioMayorista) : null,
           quantity: 0,
           min_stock: Number(formData.minStock) || 5,
           control_type: nature === 'PESO' ? 'WEIGHT' : 'UND',
@@ -1584,6 +1588,31 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                   placeholder="0.00"
                   value={formData.price}
                   onChange={(e) => setFormData({...formData, price: e.target.value})}
+                  readOnly={precioBloqueado}
+                  title={precioBloqueado ? 'Necesitas el permiso "Modificar precios" para cambiar el precio' : undefined}
+                  className="w-full bg-[var(--color-surface)] read-only:opacity-60 read-only:cursor-not-allowed border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                />
+              </div>
+
+              {/* FASE 4.4: Precio Mayorista Opcional */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center justify-between">
+                  <span>Precio Mayorista (Opcional)</span>
+                  <span className="text-[9px] text-[var(--color-muted)] font-bold">CLIENTES MAYORISTAS</span>
+                </label>
+                <input 
+                  id="input-precio-mayorista-producto"
+                  type="number"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  name="prod_precio_mayorista_no_history"
+                  data-lpignore="true"
+                  data-form-type="other"
+                  placeholder="0.00 (Opcional)"
+                  value={formData.precioMayorista}
+                  onChange={(e) => setFormData({...formData, precioMayorista: e.target.value})}
                   readOnly={precioBloqueado}
                   title={precioBloqueado ? 'Necesitas el permiso "Modificar precios" para cambiar el precio' : undefined}
                   className="w-full bg-[var(--color-surface)] read-only:opacity-60 read-only:cursor-not-allowed border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"

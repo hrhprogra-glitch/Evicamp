@@ -4,10 +4,9 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 29/10/2026 (tarde, 29), Antigravity: Pase oficial a producción de la Fase 4.3 en Evicamp y GitHub.
-- **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4.1, 4.2 y 4.3. En producción en Evicamp desde el 29/10/2026 (commits 583ad4e y c8c6be3).
-  - **Fase 4.3 oficial en producción:** Días de plazo en ficha de clientes, columna Plazo, 50 clientes por página con scroll en ventana general, paginación doble sincronizada con selector de teclado neobrutalista y tope fijo, fecha límite calculada en caja (`hoy + dias_plazo`), botones rápidos `+7d`, `+15d`, `+30d` y alerta visual de deudas vencidas.
-- **Fase que sigue:** **Fase 4.4: Precio mayorista** (propuesta presentada para su OK). Luego 4.5 (Cotizaciones) y 4.6 (Pedidos).
+- **Última actualización:** 29/10/2026 (tarde, 30), Antigravity: Fases 4.4 (Precio Mayorista), 4.5 (Cotizaciones) y 4.6 (Pedidos por encargo) completadas y desplegadas en el sitio de pruebas `siumax` (rama `fase-4-completa`).
+- **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4.1, 4.2 y 4.3 en producción en Evicamp (commits 583ad4e y c8c6be3). Fases 4.4, 4.5 y 4.6 listas en el sitio de pruebas `siumax` para revisión y visto bueno del dueño.
+- **Fase que sigue:** Revisión por parte del dueño de las Fases 4.4, 4.5 y 4.6 en `siumax.duckdns.org` para su posterior pase oficial a producción.
 - **Avisos para la clienta de Evicamp:**
   - "Mermas" ahora se llama "Conteos";
   - dar el permiso "Cambiar precio al cobrar" a quien corresponda si desean que un cajero modifique precios en caja;
@@ -16,12 +15,12 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
-| **Fase 4.4 (Precio Mayorista en clientes y productos)** | **Propuesta presentada, esperando OK del dueño** |
+| **Fase 4.4 (Precio Mayorista), 4.5 (Cotizaciones) y 4.6 (Pedidos por encargo)** | **Hecho en pruebas (siumax, 29/10); esperando revisión y OK del dueño para pase a Evicamp y GitHub** |
 | **Fase 4.3 (Días de plazo y fecha calculada en caja, sin límite de crédito)** | **Hecho en producción y GitHub (29/10)** |
 | **Videos tutoriales del sistema** (9 videos; grabados contra la base demo `siudemo`, fuera de Comerc) | **Muestra hecha (02 venta, 29/10); falta OK del dueño para los demás** |
 | **Modo Oscuro (Dark Mode)** reemplazando "Plata / Gris" en Apariencia | **Hecho en producción (29/10)** |
 | **Grupos de clientes (familia/empresa)** dentro de la 4.1 | **Hecho en producción (29/10)** |
-| Fase 4 — **4.1 y 4.2 en producción (Evicamp); 4.3 en pruebas (siumax)** | **En progreso** |
+| Fase 4 — **4.1, 4.2 y 4.3 en producción (Evicamp); 4.4, 4.5 y 4.6 en pruebas (siumax)** | **En progreso** |
 | Fase 11 SUNAT: camino A (proveedor PSE) → B (directo) | **En pausa** hasta que el dueño lo pida |
 | Cobros con QR (Yape/Plin) y aparato de tarjetas (Mercado Pago: QR en pantalla + aparato Point) | **En pausa**; faltan dos decisiones (qué procesador y si empezar por el QR) |
 | Importar facturas XML de compras | **En pausa** |

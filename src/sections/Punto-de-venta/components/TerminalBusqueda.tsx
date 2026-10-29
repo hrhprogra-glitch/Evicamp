@@ -258,9 +258,14 @@ export const TerminalBusqueda: React.FC<Props> = ({
                 >
                   <Users size={13} className="mr-1.5 text-[var(--color-ink)]" />
                   {clienteSeleccionado ? (
-                    <span>
-                      CLI: <span className="text-[var(--color-accent-dark)] font-black">{clienteSeleccionado.nombre}</span>{' '}
-                      <span className="text-[10px] text-[var(--color-subtle)]">(F3)</span>
+                    <span className="flex items-center gap-1.5">
+                      {clienteSeleccionado.esMayorista && (
+                        <span className="bg-amber-400 text-black px-1 text-[9px] font-black rounded-none">⭐ MAY</span>
+                      )}
+                      <span>
+                        CLI: <span className="text-[var(--color-accent-dark)] font-black">{clienteSeleccionado.nombre}</span>{' '}
+                        <span className="text-[10px] text-[var(--color-subtle)]">(F3)</span>
+                      </span>
                     </span>
                   ) : (
                     <span>

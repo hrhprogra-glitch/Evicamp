@@ -10,6 +10,7 @@ export interface Cliente {
   referencia?: string;    // para distinguir: "Sra. Rosa – vecina 2do piso"
   grupoId?: string;       // grupo de clientes (familia o empresa); vacío = sin grupo
   diasPlazo?: number;     // fase 4.3: días de plazo para pagar (ej. 7, 15, 30 días; vacío = fecha por defecto)
+  esMayorista?: boolean;   // fase 4.4: si es true, paga precio mayorista en caja automáticamente
 }
 
 // Grupo de clientes (fase 4.1): familia o empresa. Cada cliente conserva su cuenta; el grupo junta sus deudas
@@ -63,4 +64,64 @@ export interface ClienteFiadoAgrupado {
   totalPendiente: number;
   totalPagado: number;
   fiados: Fiado[];
+}
+
+// Fase 4.5: Cotizaciones (proformas que NO descuentan stock)
+export interface DetalleCotizacion {
+  id?: number | string;
+  cotizacion_id?: number | string;
+  product_id?: number | string;
+  product_name: string;
+  quantity: number;
+  price: number;
+  subtotal: number;
+  es_mayorista?: boolean;
+}
+
+export interface Cotizacion {
+  id: number | string;
+  numero: string;
+  cliente_id?: string;
+  cliente_nombre: string;
+  cliente_documento?: string;
+  cliente_telefono?: string;
+  fecha_emision: string;
+  fecha_vencimiento?: string;
+  estado: 'VIGENTE' | 'CONVERTIDA' | 'VENCIDA' | 'ANULADA';
+  total: number;
+  observaciones?: string;
+  sale_id?: number;
+  vendedor?: string;
+  detalles?: DetalleCotizacion[];
+}
+
+// Fase 4.6: Pedidos por encargo (reserva de mercadería con fecha de entrega y adelanto)
+export interface DetallePedido {
+  id?: number | string;
+  pedido_id?: number | string;
+  product_id?: number | string;
+  product_name: string;
+  quantity: number;
+  price: number;
+  subtotal: number;
+  es_mayorista?: boolean;
+}
+
+export interface PedidoCliente {
+  id: number | string;
+  numero: string;
+  cliente_id?: string;
+  cliente_nombre: string;
+  cliente_documento?: string;
+  cliente_telefono?: string;
+  fecha_entrega: string;
+  estado: 'PENDIENTE' | 'ENTREGADO' | 'CANCELADO';
+  total: number;
+  adelanto: number;
+  saldo_pendiente: number;
+  metodo_adelanto?: string;
+  sale_id?: number;
+  observaciones?: string;
+  vendedor?: string;
+  detalles?: DetallePedido[];
 }

@@ -35,8 +35,21 @@ AS $$
     -- Grupos de clientes (familia o empresa, fase 4.1): quien entra a Clientes los maneja
     WHEN 'POST /grupos_clientes'     THEN ARRAY['caja_ver_fiados']
     WHEN 'PATCH /grupos_clientes'    THEN ARRAY['caja_ver_fiados']
-    WHEN 'DELETE /grupos_clientes'   THEN ARRAY['caja_ver_fiados']
     WHEN 'POST /debt_payments'       THEN ARRAY['caja_cobrar_deudas']
+    -- Cotizaciones (proformas, fase 4.5): quien hace ventas o ve clientes puede cotizar
+    WHEN 'POST /cotizaciones'        THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
+    WHEN 'PATCH /cotizaciones'       THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
+    WHEN 'DELETE /cotizaciones'      THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
+    WHEN 'POST /cotizacion_detalles' THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
+    WHEN 'PATCH /cotizacion_detalles' THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
+    WHEN 'DELETE /cotizacion_detalles' THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
+    -- Pedidos por encargo (fase 4.6): quien hace ventas o ve clientes maneja pedidos
+    WHEN 'POST /pedidos_clientes'    THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
+    WHEN 'PATCH /pedidos_clientes'   THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
+    WHEN 'DELETE /pedidos_clientes'  THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
+    WHEN 'POST /pedido_detalles'     THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
+    WHEN 'PATCH /pedido_detalles'    THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
+    WHEN 'DELETE /pedido_detalles'   THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
     WHEN 'POST /cash_sessions'       THEN ARRAY['caja_abrir_cerrar_turno']
     WHEN 'PATCH /cash_sessions'      THEN ARRAY['caja_abrir_cerrar_turno']
     WHEN 'POST /cash_movements'      THEN ARRAY['caja_ingresos_egresos', 'caja_abrir_cerrar_turno', 'reportes_anular_ventas']
@@ -1320,4 +1333,117 @@ NOTIFY pgrst, 'reload schema';
 -- Permite que al fiarle en caja, la fecha límite de pago se autocalcule automáticamente a partir de hoy.
 ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS dias_plazo integer;
 
+-- ===================================================================================================
+-- FASE 4.4: Precio mayorista en productos y clientes mayoristas
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS es_mayorista boolean DEFAULT false;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS precio_mayorista numeric(12,2);
+
+-- Redefinir fn_proteger_precios para proteger también precio_mayorista
+CREATE OR REPLACE FUNCTION public.fn_proteger_precios()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_token text := current_setting('request.headers', true)::json ->> 'x-sesion';
+  v_permisos jsonb;
+BEGIN
+  IF NEW.price IS NOT DISTINCT FROM OLD.price
+     AND NEW.cost_price IS NOT DISTINCT FROM OLD.cost_price
+     AND NEW.discount_percent IS NOT DISTINCT FROM OLD.discount_percent
+     AND NEW.precios_cantidad IS NOT DISTINCT FROM OLD.precios_cantidad
+     AND NEW.presentaciones IS NOT DISTINCT FROM OLD.presentaciones
+     AND NEW.precio_mayorista IS NOT DISTINCT FROM OLD.precio_mayorista THEN
+    RETURN NEW;
+  END IF;
+  IF v_token IS NULL OR v_token !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
+    RETURN NEW;   -- cambio interno del servidor (no viene del sistema)
+  END IF;
+  SELECT e.permisos INTO v_permisos FROM sesiones s JOIN empleados e ON e.id = s.empleado_id WHERE s.token = v_token::uuid;
+  IF NOT fn_tiene_permiso(v_permisos, ARRAY['almacen_modificar_precios']) THEN
+    RAISE SQLSTATE 'PT403' USING MESSAGE = 'No tienes permiso para cambiar precios',
+      DETAIL = 'Pide al administrador el permiso "Modificar precios".';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+-- ===================================================================================================
+-- FASE 4.5: Cotizaciones (proformas que NO descuentan stock)
+CREATE TABLE IF NOT EXISTS public.cotizaciones (
+  id serial PRIMARY KEY,
+  numero text NOT NULL UNIQUE,
+  cliente_id text,
+  cliente_nombre text NOT NULL,
+  cliente_documento text,
+  cliente_telefono text,
+  fecha_emision timestamptz DEFAULT now(),
+  fecha_vencimiento timestamptz,
+  estado text DEFAULT 'VIGENTE', -- VIGENTE, CONVERTIDA, VENCIDA, ANULADA
+  total numeric(12,2) NOT NULL DEFAULT 0,
+  observaciones text,
+  sale_id bigint,
+  vendedor text,
+  created_at timestamptz DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_cotizaciones_estado ON public.cotizaciones (estado);
+CREATE INDEX IF NOT EXISTS idx_cotizaciones_cliente ON public.cotizaciones (cliente_nombre);
+
+CREATE TABLE IF NOT EXISTS public.cotizacion_detalles (
+  id serial PRIMARY KEY,
+  cotizacion_id integer NOT NULL REFERENCES public.cotizaciones (id) ON DELETE CASCADE,
+  product_id bigint,
+  product_name text NOT NULL,
+  quantity numeric(12,3) NOT NULL,
+  price numeric(12,2) NOT NULL,
+  subtotal numeric(12,2) NOT NULL,
+  es_mayorista boolean DEFAULT false
+);
+CREATE INDEX IF NOT EXISTS idx_cotizacion_detalles_coti ON public.cotizacion_detalles (cotizacion_id);
+
+-- ===================================================================================================
+-- FASE 4.6: Pedidos de clientes (reserva de mercadería con fecha de entrega y adelanto)
+CREATE TABLE IF NOT EXISTS public.pedidos_clientes (
+  id serial PRIMARY KEY,
+  numero text NOT NULL UNIQUE,
+  cliente_id text,
+  cliente_nombre text NOT NULL,
+  cliente_documento text,
+  cliente_telefono text,
+  fecha_entrega timestamptz NOT NULL,
+  estado text DEFAULT 'PENDIENTE', -- PENDIENTE, ENTREGADO, CANCELADO
+  total numeric(12,2) NOT NULL DEFAULT 0,
+  adelanto numeric(12,2) NOT NULL DEFAULT 0,
+  saldo_pendiente numeric(12,2) NOT NULL DEFAULT 0,
+  metodo_adelanto text,
+  sale_id bigint,
+  observaciones text,
+  vendedor text,
+  created_at timestamptz DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_pedidos_clientes_estado ON public.pedidos_clientes (estado);
+CREATE INDEX IF NOT EXISTS idx_pedidos_clientes_fecha ON public.pedidos_clientes (fecha_entrega);
+
+CREATE TABLE IF NOT EXISTS public.pedido_detalles (
+  id serial PRIMARY KEY,
+  pedido_id integer NOT NULL REFERENCES public.pedidos_clientes (id) ON DELETE CASCADE,
+  product_id bigint,
+  product_name text NOT NULL,
+  quantity numeric(12,3) NOT NULL,
+  price numeric(12,2) NOT NULL,
+  subtotal numeric(12,2) NOT NULL,
+  es_mayorista boolean DEFAULT false
+);
+CREATE INDEX IF NOT EXISTS idx_pedido_detalles_pedido ON public.pedido_detalles (pedido_id);
+
+-- Permisos y secuencias para PostgREST (solo rol anon en VPS)
+GRANT ALL ON public.cotizaciones TO anon;
+GRANT ALL ON public.cotizacion_detalles TO anon;
+GRANT ALL ON public.pedidos_clientes TO anon;
+GRANT ALL ON public.pedido_detalles TO anon;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon;
+
 NOTIFY pgrst, 'reload schema';
+
+

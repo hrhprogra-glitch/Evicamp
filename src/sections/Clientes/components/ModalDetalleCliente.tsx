@@ -293,6 +293,7 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
   };
 
   const datos = [
+    cliente.esMayorista ? '⭐ PRECIO MAYORISTA' : null,
     cliente.dni ? `DNI: ${cliente.dni}` : null,
     cliente.ruc ? `RUC: ${cliente.ruc}` : null,
     !cliente.dni && !cliente.ruc ? 'Sin DNI ni RUC' : null,

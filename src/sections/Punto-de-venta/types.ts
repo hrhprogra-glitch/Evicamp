@@ -14,6 +14,7 @@ export interface CartItem extends Product {
   precioBase?: number;                // fase 1.3: el precio normal del producto (sin escala)
   escala?: number;                    // fase 1.3: "desde" de la escala aplicada (x6+)
   sinEscala?: boolean;                // el cajero apagó el precio por cantidad en esta línea (cobra el precio normal)
+  esMayoristaAplicado?: boolean;      // fase 4.4: se le aplicó el precio mayorista
 }
 
 export interface HeldCart {

@@ -272,4 +272,16 @@
         - `seguridad-sesion.sql` aplicado con `psql` y `lock_timeout = '5s'` en `postgres` (Evicamp) sin reiniciar la API. Columna `dias_plazo integer` verificada en `customers`.
         - Despliegue de frontend a `evicamp`, `siumax` y `clientes` con `deploy.cjs todos`.
         - Fusión de `fase-4.3` a `main` y `git push origin main` a GitHub.
+     22. **Implementación de Fases 4.4 (Mayorista), 4.5 (Cotizaciones) y 4.6 (Pedidos) en pruebas (29/10 tarde):**
+        - El dueño solicitó: *"si vamos hacer la 4.4, 4.5 y 4.6"*.
+        - En pregunta interactiva sobre reserva de mercadería, el dueño escogió: *"(Recomendado) Al guardarlo (separa la mercadería de inmediato para que ningún cajero la venda por error)"*.
+        - Respaldo previo de `siuhub` en VPS: `/var/lib/postgresql/respaldo-siuhub-antes-fase4-completa-2026-10-29T19-08-24-497Z.dump` (204K).
+        - Base de datos actualizada con columnas `es_mayorista` en `customers`, `precio_mayorista` en `products`, y tablas `cotizaciones`, `cotizacion_detalles`, `pedidos_clientes`, `pedido_detalles`. Trigger `fn_proteger_precios()` protege precio mayorista.
+        - Frontend completado:
+          - Ficha de cliente con toggle interactivo mayorista y badge `⭐ MAYORISTA` en el directorio.
+          - Modal de producto con campo precio mayorista y visualización en tabla de inventario.
+          - Recálculo automático de precios en la caja (POS) según el cliente sea mayorista o normal, e insignias en el ticket.
+          - `ModalCotizacionPOS` (F7) y pestaña `Cotizaciones` con botón `Convertir en Venta`, WhatsApp e impresión.
+          - `ModalPedidoPOS` (F8) con fecha de entrega, adelanto y reserva inmediata de stock en inventario (`inventory_movements`), y pestaña `Pedidos` con botón `Entregar y Cobrar Saldo` o `Cancelar (Devolver Stock)`.
+        - Compilado y desplegado con éxito en el sitio de pruebas `siumax.duckdns.org` (20 archivos). Evicamp y GitHub intactos para su revisión.
 

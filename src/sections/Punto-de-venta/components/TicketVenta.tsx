@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingCart, Trash2, Banknote, Pause, Play, Plus, Minus } from 'lucide-react';
+import { ShoppingCart, Trash2, Banknote, Pause, Play, Plus, Minus, FileText, Package } from 'lucide-react';
 import type { CartItem, Cliente, HeldCart } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { esDecimal, unidadDe } from '../../../utils/unidades';
@@ -22,6 +22,8 @@ interface Props {
   holdCurrentCart: () => void;
   restoreCart: (index: number) => void;
   onPagar: () => void;
+  onCotizar?: () => void;
+  onPedido?: () => void;
 }
 
 // 🔥 1. SACAMOS LOS COMPONENTES AFUERA PARA QUE NO SE REINICIEN (Evita que se cierre o pierda el foco)
@@ -168,7 +170,9 @@ export const TicketVenta: React.FC<Props> = ({
   heldCarts,
   holdCurrentCart,
   restoreCart,
-  onPagar
+  onPagar,
+  onCotizar,
+  onPedido
 }) => {
 
   // CÁLCULO DE TOTALES AUTOMÁTICO
@@ -196,6 +200,11 @@ export const TicketVenta: React.FC<Props> = ({
         <div className="flex flex-col">
           <h2 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 text-[var(--color-accent)]">
             <ShoppingCart size={18} /> Caja Actual
+            {clienteSeleccionado?.esMayorista && (
+              <span className="bg-amber-400 text-black text-[10px] px-1.5 py-0.5 font-black border border-black shadow-[1px_1px_0_0_black]" title="Cliente Mayorista">
+                ⭐ MAYORISTA
+              </span>
+            )}
           </h2>
         </div>
         <div className="flex gap-3">
@@ -338,6 +347,11 @@ export const TicketVenta: React.FC<Props> = ({
                         </button>
                       );
                     })()}
+                    {item.esMayoristaAplicado && (
+                      <span className="text-[10px] font-black bg-amber-400 text-black px-1 py-0.5 rounded-none whitespace-nowrap" title="Precio Mayorista Aplicado">
+                        ⭐ MAYORISTA
+                      </span>
+                    )}
                     {item.precioLista !== undefined && (
                       <span data-precio-cambiado className="text-[11px] font-bold text-[var(--color-muted)] line-through whitespace-nowrap" title={`Precio cambiado por ${item.precioCambiadoPor || ''}`}>S/ {item.precioLista.toFixed(2)}</span>
                     )}
@@ -403,6 +417,29 @@ export const TicketVenta: React.FC<Props> = ({
         >
           <Banknote size={18} /> Proceder al Pago (F4)
         </button>
+
+        <div className="grid grid-cols-2 gap-2 mt-0.5">
+          <button
+            id="btn-pos-cotizacion"
+            type="button"
+            onClick={onCotizar}
+            disabled={cart.length === 0}
+            className="py-1.5 px-2 border-2 border-[var(--color-ink)] bg-white hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[2px_2px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] cursor-pointer"
+            title="Guardar como Cotización / Proforma (F7)"
+          >
+            <FileText size={13} className="text-blue-600" /> Cotización (F7)
+          </button>
+          <button
+            id="btn-pos-pedido"
+            type="button"
+            onClick={onPedido}
+            disabled={cart.length === 0}
+            className="py-1.5 px-2 border-2 border-[var(--color-ink)] bg-white hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[2px_2px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] cursor-pointer"
+            title="Guardar como Pedido por Encargo (F8)"
+          >
+            <Package size={13} className="text-amber-600" /> Pedido (F8)
+          </button>
+        </div>
       </div>
     </div>
   );

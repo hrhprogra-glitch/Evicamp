@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../db/supabase';
 import type { CartItem, Cliente, HeldCart } from './types';
 import type { Product } from '../Inventario/types';
@@ -19,6 +19,8 @@ import { ModalPrecioConsumo } from './components/ModalPrecioConsumo';
 import { TicketImprimible } from './components/TicketImprimible';
 import { ModalElegirClientePOS } from './components/ModalElegirClientePOS';
 import { ModalNombreEspera } from './components/ModalNombreEspera';
+import { ModalCotizacionPOS } from './components/ModalCotizacionPOS';
+import { ModalPedidoPOS } from './components/ModalPedidoPOS';
 import { traerTodo } from '../../utils/traerTodo';
 import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ EVICAMP: Mini Reporte en Tiempo Real
 
@@ -44,6 +46,8 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
   });
   const [isClienteModalOpen, setIsClienteModalOpen] = useState(false);
   const [isEsperaModalOpen, setIsEsperaModalOpen] = useState(false);
+  const [isCotizacionModalOpen, setIsCotizacionModalOpen] = useState(false);
+  const [isPedidoModalOpen, setIsPedidoModalOpen] = useState(false);
 
   useEffect(() => {
     if (clienteSeleccionado) {
@@ -407,6 +411,8 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         setIsVistaPreviaOpen(false);
         setIsClienteModalOpen(false);
         setIsEsperaModalOpen(false);
+        setIsCotizacionModalOpen(false);
+        setIsPedidoModalOpen(false);
         setSelectedWeightProduct(null);
         setSelectedConsumoProduct(null);
       }
@@ -430,7 +436,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           }
           return;
         }
-        if (!isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isEsperaModalOpen && !isClienteModalOpen) {
+        if (!isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isEsperaModalOpen && !isClienteModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
           setIsClienteModalOpen(true);
         }
         return;
@@ -440,64 +446,115 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       if (e.key === 'F2' || e.key === 'F4') {
         e.preventDefault(); // Evita el comportamiento por defecto del navegador web
         // Solo abrimos la ventana de pago si hay algo en el carrito y no hay otros modales encima
-        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isEsperaModalOpen) {
+        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isEsperaModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
           setIsCobroModalOpen(true);
+        }
+      }
+
+      // 5. F7: Guardar como Cotización / Proforma
+      if (e.key === 'F7') {
+        e.preventDefault();
+        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isEsperaModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
+          setIsCotizacionModalOpen(true);
+        }
+      }
+
+      // 6. F8: Guardar como Pedido por Encargo
+      if (e.key === 'F8') {
+        e.preventDefault();
+        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isEsperaModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
+          setIsPedidoModalOpen(true);
         }
       }
     };
 
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [cart.length, isCobroModalOpen, isBalanzaModalOpen, isPrecioModalOpen, isVistaPreviaOpen, isClienteModalOpen, isEsperaModalOpen]);
+  }, [cart.length, isCobroModalOpen, isBalanzaModalOpen, isPrecioModalOpen, isVistaPreviaOpen, isClienteModalOpen, isEsperaModalOpen, isCotizacionModalOpen, isPedidoModalOpen]);
 
   // 1. CARGAR PRODUCTOS AL ABRIR LA VENTANA
-  useEffect(() => {
-    const fetchProducts = async () => {
-      // Bloqueo de Seguridad: Verificar Caja
-      const { data: session } = await supabase.from('cash_sessions').select('id, opened_at').eq('status', 'OPEN').maybeSingle();
-      // Una caja abierta sigue sirviendo aunque sea de otro día: se cierra cuando el negocio decide
-      // (antes se bloqueaba la venta si la caja era del día anterior)
-      setHasOpenSession(!!session);
-      // Supabase devuelve máximo 1000 filas por consulta: traerTodo las pide por bloques
-      const { data } = await traerTodo(() => supabase.from('products')
-        .select('*')
-        .eq('is_active', 1) // 🛡️ EVICAMP: Bloqueo de productos fantasma directo en el motor de BD
-        .order('name', { ascending: true })
-        .order('id'));
-        
-      if (data) {
-        const mapeados: Product[] = data.map((p: any) => ({
-          id: p.id,
-          name: p.name || 'SIN NOMBRE',
-          price: Number(p.price) || 0,
-          cost: Number(p.cost_price) || 0,
-          quantity: Number(p.quantity) || 0,
-          minStock: Number(p.min_stock) || 0,
-          code: p.code || 'NO-SKU',
-          barcode: p.barcode || '',
-          category: p.category || 'GENERAL',
-          // CORRECCIÓN ESTRATÉGICA: Interceptar 'CONSUMPTION' desde la BD
-          unit: p.control_type === 'CONSUMPTION' ? 'CONSUMO' : (p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND')),
-          control_type: p.control_type, // Añadimos esto para validaciones estrictas
-          preciosCantidad: escalasValidas(p.precios_cantidad), // fase 1.3: precios por cantidad
-          presentaciones: presentacionesValidas(p.presentaciones), // fase 1.2: caja, paquete…
-          image_url: p.image_url || p.image_path || null // imagen para identificar el producto en las tarjetas
-        } as Product));
-        setProductos(mapeados);
-      }
-    };
-    fetchProducts();
+  const fetchProducts = useCallback(async () => {
+    // Bloqueo de Seguridad: Verificar Caja
+    const { data: session } = await supabase.from('cash_sessions').select('id, opened_at').eq('status', 'OPEN').maybeSingle();
+    // Una caja abierta sigue sirviendo aunque sea de otro día: se cierra cuando el negocio decide
+    // (antes se bloqueaba la venta si la caja era del día anterior)
+    setHasOpenSession(!!session);
+    // Supabase devuelve máximo 1000 filas por consulta: traerTodo las pide por bloques
+    const { data } = await traerTodo(() => supabase.from('products')
+      .select('*')
+      .eq('is_active', 1) // 🛡️ EVICAMP: Bloqueo de productos fantasma directo en el motor de BD
+      .order('name', { ascending: true })
+      .order('id'));
+      
+    if (data) {
+      const mapeados: Product[] = data.map((p: any) => ({
+        id: p.id,
+        name: p.name || 'SIN NOMBRE',
+        price: Number(p.price) || 0,
+        precioMayorista: p.precio_mayorista != null && !isNaN(Number(p.precio_mayorista)) ? Number(p.precio_mayorista) : undefined,
+        cost: Number(p.cost_price) || 0,
+        quantity: Number(p.quantity) || 0,
+        minStock: Number(p.min_stock) || 0,
+        code: p.code || 'NO-SKU',
+        barcode: p.barcode || '',
+        category: p.category || 'GENERAL',
+        // CORRECCIÓN ESTRATÉGICA: Interceptar 'CONSUMPTION' desde la BD
+        unit: p.control_type === 'CONSUMPTION' ? 'CONSUMO' : (p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND')),
+        control_type: p.control_type, // Añadimos esto para validaciones estrictas
+        preciosCantidad: escalasValidas(p.precios_cantidad), // fase 1.3: precios por cantidad
+        presentaciones: presentacionesValidas(p.presentaciones), // fase 1.2: caja, paquete…
+        image_url: p.image_url || p.image_path || null // imagen para identificar el producto en las tarjetas
+      } as Product));
+      setProductos(mapeados);
+    }
   }, []);
 
-  // Fase 1.3: la línea con su cantidad y el precio que le toca (escala "desde N"). Si el precio se cambió a mano
-  // (fase 1.4) no se toca. precioBase = el precio normal, para volver a él si baja la cantidad.
-  const conCantidad = (item: CartItem, qty: number): CartItem => {
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  // Fase 1.3 y 4.4: la línea con su cantidad y el precio que le toca (mayorista o escala "desde N").
+  // Si el precio se cambió a mano (fase 1.4) no se toca. precioBase = el precio normal.
+  const conCantidad = (item: CartItem, qty: number, mayoristaOverride?: boolean): CartItem => {
     const base = item.precioBase ?? item.price;
     if (item.precioLista !== undefined) return { ...item, precioBase: base, cartQuantity: qty, subtotal: Math.round((qty * item.price) * 100) / 100 };
+    
+    const esMayorista = mayoristaOverride !== undefined ? mayoristaOverride : Boolean(clienteSeleccionado?.esMayorista);
+    if (esMayorista && item.precioMayorista != null && item.precioMayorista > 0) {
+      const precio = item.precioMayorista;
+      return {
+        ...item,
+        precioBase: base,
+        cartQuantity: qty,
+        price: precio,
+        escala: undefined,
+        esMayoristaAplicado: true,
+        subtotal: Math.round((qty * precio) * 100) / 100
+      };
+    }
+
     const escala = item.sinEscala ? null : escalaPara(item.preciosCantidad, qty); // apagado a mano: precio normal
     const precio = escala ? escala.precio : base;
-    return { ...item, precioBase: base, cartQuantity: qty, price: precio, escala: escala?.desde, subtotal: Math.round((qty * precio) * 100) / 100 };
+    return { ...item, precioBase: base, cartQuantity: qty, price: precio, escala: escala?.desde, esMayoristaAplicado: false, subtotal: Math.round((qty * precio) * 100) / 100 };
   };
+
+  // Fase 4.4: Si el cliente cambia o se le activa mayorista, recalcular precios del carrito automáticamente
+  useEffect(() => {
+    const esMayorista = Boolean(clienteSeleccionado?.esMayorista);
+    setCart((prevCart) => {
+      let cambio = false;
+      const nuevo = prevCart.map((item) => {
+        if (item.precioLista !== undefined) return item;
+        const actualizado = conCantidad(item, item.cartQuantity, esMayorista);
+        if (actualizado.price !== item.price || actualizado.esMayoristaAplicado !== item.esMayoristaAplicado) {
+          cambio = true;
+          return actualizado;
+        }
+        return item;
+      });
+      return cambio ? nuevo : prevCart;
+    });
+  }, [clienteSeleccionado?.id, clienteSeleccionado?.esMayorista]);
 
   // 2. FUNCIÓN PARA DISPARAR PRODUCTOS AL CARRITO (CON BALANZA Y CONSUMO)
   const handleAddToCart = (producto: Product) => {
@@ -786,6 +843,17 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         return;
       }
 
+      // Fase 4.5: Si la venta proviene de una cotización/proforma, marcarla como CONVERTIDA
+      const cotiActiva = sessionStorage.getItem('evicamp_coti_activa');
+      if (cotiActiva) {
+        try {
+          await supabase.from('cotizaciones').update({ estado: 'CONVERTIDA', sale_id: trueSaleId }).eq('id', Number(cotiActiva));
+          sessionStorage.removeItem('evicamp_coti_activa');
+        } catch (e) {
+          console.error('Error actualizando cotización a CONVERTIDA:', e);
+        }
+      }
+
       // Fiado (solo si quedó parte o todo al crédito)
       if (fiadoData) {
         const { error: fiadoError } = await supabase.from('fiados').insert([{
@@ -960,6 +1028,8 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
               (document.activeElement as HTMLElement)?.blur();
               setIsCobroModalOpen(true);
             }}
+            onCotizar={() => setIsCotizacionModalOpen(true)}
+            onPedido={() => setIsPedidoModalOpen(true)}
           />
         </div>
       </div>
@@ -1109,6 +1179,39 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         onClose={() => {
           setIsEsperaModalOpen(false);
           setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
+        }}
+      />
+
+      {/* MODAL COTIZACIÓN / PROFORMA (F7) */}
+      <ModalCotizacionPOS
+        isOpen={isCotizacionModalOpen}
+        onClose={() => {
+          setIsCotizacionModalOpen(false);
+          setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
+        }}
+        cart={cart}
+        total={Math.round(cart.reduce((acc, item) => acc + item.subtotal, 0) * 100) / 100}
+        clienteSeleccionado={clienteSeleccionado}
+        onCotizacionGuardada={() => {
+          setCart([]);
+          setClienteSeleccionado(null);
+        }}
+      />
+
+      {/* MODAL PEDIDO POR ENCARGO (F8) */}
+      <ModalPedidoPOS
+        isOpen={isPedidoModalOpen}
+        onClose={() => {
+          setIsPedidoModalOpen(false);
+          setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
+        }}
+        cart={cart}
+        total={Math.round(cart.reduce((acc, item) => acc + item.subtotal, 0) * 100) / 100}
+        clienteSeleccionado={clienteSeleccionado}
+        onPedidoGuardado={() => {
+          setCart([]);
+          setClienteSeleccionado(null);
+          fetchProducts();
         }}
       />
     </div>

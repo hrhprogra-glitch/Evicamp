@@ -417,7 +417,12 @@ export const TablaProductos: React.FC<Props> = ({
 
                 {/* 4. PRECIO DE VENTA */}
                 <div className="col-start-3 row-start-1 md:col-start-auto md:row-start-auto md:col-span-1 font-black text-base md:text-lg text-[var(--color-success)] text-right md:pr-2 whitespace-nowrap">
-                  S/ {(item.price || 0).toFixed(2)}
+                  <div>S/ {(item.price || 0).toFixed(2)}</div>
+                  {item.precioMayorista != null && item.precioMayorista > 0 && (
+                    <div className="text-[10px] font-bold text-amber-600 dark:text-amber-400 leading-none mt-0.5" title="Precio Mayorista">
+                      ⭐ May: S/ {item.precioMayorista.toFixed(2)}
+                    </div>
+                  )}
                 </div>
 
                 {/* 5. STOCK */}

@@ -245,7 +245,7 @@ export const App: React.FC = () => {
       case 'pos':
         return <POS onNavigate={handleNavigate} />;
       case 'clientes': // sección Clientes (antes Créditos)
-        return <Clientes />;
+        return <Clientes onNavigate={handleNavigate} />;
       case 'finanzas': // <--- CONECTAMOS LA PANTALLA DE FINANZAS
         return <Finanzas />;
       case 'utilidades':

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Coins, Users, BookOpen } from 'lucide-react';
+import { Coins, Users, BookOpen, FileText, Package } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import { TablaFiadosAgrupados } from './components/TablaFiadosAgrupados';
 import { ModalFiado } from './components/ModalFiado';
@@ -16,6 +16,8 @@ import { eliminarAbonoYRevertirCaja } from '../../utils/revertirAbono';
 import { TarjetaMetrica } from '../Inventario/components/TarjetaMetrica';
 import { confirmar, avisar } from '../../utils/dialogos';
 import { PestanaClientes } from './components/PestanaClientes';
+import { PestanaCotizaciones } from './components/PestanaCotizaciones';
+import { PestanaPedidos } from './components/PestanaPedidos';
 import { ModalFichaCliente, type DatosCliente } from './components/ModalFichaCliente';
 import { ModalDetalleCliente } from './components/ModalDetalleCliente';
 import { ModalGrupo } from './components/ModalGrupo';
@@ -24,19 +26,35 @@ import { ModalFormGrupo, type DatosGrupo } from './components/ModalFormGrupo';
 import { resumenDeCliente } from './components/PestanaClientes';
 import { claseBotonBarra } from '../../components/ListaVentana';
 
-// Sección CLIENTES (fase 4.1, antes "Créditos"): pestañas Clientes (el directorio, nuevo) y Créditos (la de siempre:
-// deudas por cliente, abonos, estado de cuenta). La pestaña se recuerda; "Por cobrar" de la Caja abre Créditos.
-type Pestana = 'CLIENTES' | 'CREDITOS';
+// Sección CLIENTES (fases 4.1 a 4.6): Clientes, Créditos, Cotizaciones y Pedidos.
+type Pestana = 'CLIENTES' | 'CREDITOS' | 'COTIZACIONES' | 'PEDIDOS';
 const PESTANAS: { id: Pestana; nombre: string; boton: string }[] = [
   { id: 'CLIENTES', nombre: 'Clientes', boton: 'tab-clientes-clientes' },
   { id: 'CREDITOS', nombre: 'Créditos', boton: 'tab-clientes-creditos' },
+  { id: 'COTIZACIONES', nombre: 'Cotizaciones', boton: 'tab-clientes-cotizaciones' },
+  { id: 'PEDIDOS', nombre: 'Pedidos', boton: 'tab-clientes-pedidos' },
 ];
-const pestanaGuardada = (): Pestana => { try { return sessionStorage.getItem('clientes_pestana') === 'CREDITOS' ? 'CREDITOS' : 'CLIENTES'; } catch { return 'CLIENTES'; } };
+const pestanaGuardada = (): Pestana => {
+  try {
+    const val = sessionStorage.getItem('clientes_pestana');
+    if (val === 'CREDITOS' || val === 'COTIZACIONES' || val === 'PEDIDOS') return val;
+    return 'CLIENTES';
+  } catch {
+    return 'CLIENTES';
+  }
+};
 
-export const Clientes: React.FC = () => {
+export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
   const [pestana, setPestanaEstado] = useState<Pestana>(pestanaGuardada);
   const setPestana = (p: Pestana) => { setPestanaEstado(p); try { sessionStorage.setItem('clientes_pestana', p); } catch { /* sin almacenamiento */ } };
-  const buscadorDe = (p: Pestana) => (p === 'CLIENTES' ? 'buscador-clientes' : 'buscador-global-fiados');
+  const buscadorDe = (p: Pestana) => {
+    switch (p) {
+      case 'CLIENTES': return 'buscador-clientes';
+      case 'CREDITOS': return 'buscador-global-fiados';
+      case 'COTIZACIONES': return 'buscador-cotizaciones';
+      case 'PEDIDOS': return 'buscador-pedidos';
+    }
+  };
   // Ficha del cliente (nuevo o editar)
   const [fichaAbierta, setFichaAbierta] = useState(false);
   const [clienteEnFicha, setClienteEnFicha] = useState<Cliente | null>(null);
@@ -134,6 +152,7 @@ if (clis) {
     referencia: c.referencia ?? '',
     grupoId: c.grupo_id != null ? String(c.grupo_id) : '',
     diasPlazo: c.dias_plazo != null && !Number.isNaN(Number(c.dias_plazo)) ? Number(c.dias_plazo) : undefined,
+    esMayorista: !!c.es_mayorista,
   }));
 
   // 🛡️ PROTECCIÓN: Si hay fiados de clientes que no están en customers (antiguos o borrados con saldo)
@@ -435,6 +454,7 @@ if (fiaData) {
       ubicacion: d.ubicacion || null,
       referencia: d.referencia || null,
       dias_plazo: diasPlazoNum && Number.isFinite(diasPlazoNum) ? diasPlazoNum : null,
+      es_mayorista: !!d.es_mayorista,
     };
     const nuevo: Omit<Cliente, 'id'> = {
       nombre: d.nombre,
@@ -445,6 +465,7 @@ if (fiaData) {
       ubicacion: d.ubicacion,
       referencia: d.referencia,
       diasPlazo: diasPlazoNum && Number.isFinite(diasPlazoNum) ? diasPlazoNum : undefined,
+      esMayorista: !!d.es_mayorista,
     };
     if (id) {
       const { error } = await supabase.from('customers').update(fila).eq('id', id);
@@ -617,7 +638,7 @@ if (fiaData) {
               }
             }}
             className={claseBotonBarra(pestana === p.id)}>
-            {p.id === 'CLIENTES' ? <Users size={14} /> : <BookOpen size={14} />} {p.nombre}
+            {p.id === 'CLIENTES' ? <Users size={14} /> : p.id === 'CREDITOS' ? <BookOpen size={14} /> : p.id === 'COTIZACIONES' ? <FileText size={14} /> : <Package size={14} />} {p.nombre}
           </button>
         ))}
       </div>
@@ -635,7 +656,7 @@ if (fiaData) {
             onEliminar={(c) => void handleDeleteCliente(c.id)}
           />
         </div>
-      ) : (
+      ) : pestana === 'CREDITOS' ? (
         <>
           {/* TARJETAS */}
           <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full xl:w-1/2 shrink-0">
@@ -656,6 +677,14 @@ if (fiaData) {
             <TablaFiadosAgrupados clientes={clientesAgrupados} onView={(cli) => { setClienteEstadoCuenta(cli); setIsModalEstadoCuentaOpen(true); }} />
           </div>
         </>
+      ) : pestana === 'COTIZACIONES' ? (
+        <div className="lg:flex-1 lg:min-h-0">
+          <PestanaCotizaciones onNavigatePOS={() => onNavigate ? onNavigate('pos') : (window.location.hash = '#pos')} />
+        </div>
+      ) : (
+        <div className="lg:flex-1 lg:min-h-0">
+          <PestanaPedidos />
+        </div>
       )}
 
       <ModalDetalleCliente

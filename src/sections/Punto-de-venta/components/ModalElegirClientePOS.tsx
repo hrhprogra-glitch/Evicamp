@@ -122,6 +122,8 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
         direccion: d.direccion || null,
         ubicacion: d.ubicacion || null,
         referencia: d.referencia || null,
+        dias_plazo: d.dias_plazo ? parseInt(d.dias_plazo, 10) : null,
+        es_mayorista: !!d.es_mayorista,
         created_at: new Date().toISOString(),
         is_synced: 1
       };
@@ -140,7 +142,9 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
         telefono: d.telefono,
         direccion: d.direccion,
         ubicacion: d.ubicacion,
-        referencia: d.referencia
+        referencia: d.referencia,
+        diasPlazo: d.dias_plazo ? parseInt(d.dias_plazo, 10) : undefined,
+        esMayorista: !!d.es_mayorista,
       };
 
       setClientes(prev => [nuevo, ...prev]);

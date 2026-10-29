@@ -136,6 +136,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               id: p.id,
               name: p.name || 'SIN NOMBRE',
               price: Number(p.price) || 0,
+              precioMayorista: p.precio_mayorista != null && !isNaN(Number(p.precio_mayorista)) ? Number(p.precio_mayorista) : undefined,
               // Usamos el costo del lote reciente, si no hay, usamos el del producto
               cost: loteMasReciente ? Number(loteMasReciente.cost_unit) : (Number(p.cost_price) || 0),
               quantity: stockRealGlobal,

@@ -7,6 +7,47 @@
 
 ---
 
+## 29/10/2026 (tarde, 30) · Antigravity
+- **Implementación completa de Fases 4.4 (Precio Mayorista), 4.5 (Cotizaciones) y 4.6 (Pedidos por encargo) en pruebas:**
+  - **Autorización explícita del dueño:** *"si vamos hacer la 4.4, 4.5 y 4.6"*.
+  - **Respaldo de base de datos de pruebas (`siuhub` en VPS):**
+    - `/var/lib/postgresql/respaldo-siuhub-antes-fase4-completa-2026-10-29T19-08-24-497Z.dump` (204K).
+    - Script para deshacer creado en `servidor/sql/deshacer-fase4-completa.sql`.
+  - **Base de datos (`siuhub` / siumax):**
+    - `customers.es_mayorista boolean DEFAULT false`.
+    - `products.precio_mayorista numeric(12,2)`.
+    - Trigger `fn_proteger_precios()` actualizado para proteger `precio_mayorista` contra cambios no autorizados.
+    - Tablas `cotizaciones` y `cotizacion_detalles` con índices y permisos a `anon`.
+    - Tablas `pedidos_clientes` y `pedido_detalles` con índices y permisos a `anon`.
+  - **Frontend desarrollado:**
+    - **Fase 4.4 (Precio Mayorista):**
+      - Ficha de cliente con toggle brutalista `ficha-es-mayorista` operable con teclado y mouse.
+      - Pestaña Clientes muestra badge `⭐ MAYORISTA` junto al nombre.
+      - Modal de producto con campo `input-precio-mayorista-producto`.
+      - Tabla de inventario muestra precio mayorista `⭐ May: S/ XX.XX` cuando existe.
+      - Caja POS: detecta clientes mayoristas, recalcula automáticamente los precios del ticket hacia el precio mayorista (o revierte a regular si se deselecciona), y muestra la insignia `⭐ MAYORISTA` en el ticket.
+    - **Fase 4.5 (Cotizaciones / Proformas):**
+      - Botón `Cotización (F7)` en el ticket de caja.
+      - Modal `ModalCotizacionPOS` con emisión correlativa (`COT-XXXX`), fecha de vencimiento por defecto (7 días) o configurable, cliente y detalle. **No descuenta stock**.
+      - Soporte para envío directo a WhatsApp e impresión de proforma.
+      - Pestaña `Cotizaciones` en la sección Clientes con filtros por estado (`TODAS`, `VIGENTE`, `CONVERTIDA`, `VENCIDA`, `ANULADA`), selector de teclado, modal de detalle y botón **`Convertir en Venta`** (carga los productos en la caja POS y navega a la venta; al concretar el cobro en POS la marca automáticamente como `CONVERTIDA`).
+    - **Fase 4.6 (Pedidos por encargo):**
+      - Botón `Pedido (F8)` en el ticket de caja.
+      - Modal `ModalPedidoPOS` con correlativo (`PED-XXXX`), fecha y hora prometida de entrega, registro de adelanto opcional (Efectivo/Yape/Tarjeta) y cálculo automático de saldo pendiente.
+      - **Reserva de stock inmediata** (decisión del dueño): descuenta el stock de inmediato de `products` y registra movimiento `RESERVA_PEDIDO` en `inventory_movements`. Si hubo adelanto en efectivo, registra ingreso en la caja abierta.
+      - Pestaña `Pedidos` en la sección Clientes con alertas visuales de fecha (`¡ENTREGA HOY!` o `FECHA PASADA`).
+      - Botón **`Entregar y Cobrar Saldo`**: liquida el saldo restante en caja y marca `ENTREGADO`.
+      - Botón **`Cancelar (Devolver Stock)`**: devuelve automáticamente los productos reservados a `products.quantity` con movimiento `CANCELACION_PEDIDO` y marca `CANCELADO`.
+  - **Validación y Despliegue:**
+    - `npx tsc -b`: 0 errores.
+    - `npm run build`: compilación limpia en 3.57s.
+    - `deploy.cjs siumax`: subido con éxito a `siumax.duckdns.org` (20 archivos).
+    - `graphify update .`: grafo actualizado con 2238 nodos y 4480 relaciones.
+    - **Evicamp (producción) y GitHub intactos** respetando la regla 4 (solo se subirá cuando el dueño dé su orden explícita).
+- **Siguiente paso:** Avisar al dueño para que revise las 3 nuevas funciones en `siumax.duckdns.org`.
+
+---
+
 ## 29/10/2026 (tarde, 29) · Antigravity
 - **Pase a producción oficial en Evicamp y GitHub de la Fase 4.3:**
   - **Autorización explícita del dueño:** *"si sube el 4.3 a evicamp y a siumax y a mi github y luego avanza la propuesta 4.4"*.
