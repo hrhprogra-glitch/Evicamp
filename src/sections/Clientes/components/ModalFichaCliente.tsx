@@ -12,7 +12,7 @@ import { avisar, confirmar } from '../../../utils/dialogos';
 import { errorDni, errorRuc, errorUbicacion, normalizarNombre } from '../../../utils/documento';
 import { claseBotonPrincipal } from '../../../components/ListaVentana';
 
-export interface DatosCliente { nombre: string; dni: string; ruc: string; telefono: string; direccion: string; ubicacion: string; referencia: string }
+export interface DatosCliente { nombre: string; dni: string; ruc: string; telefono: string; direccion: string; ubicacion: string; referencia: string; dias_plazo: string }
 
 interface Props {
   abierta: boolean;
@@ -22,7 +22,7 @@ interface Props {
   onClose: () => void;
 }
 
-const vacio: DatosCliente = { nombre: '', dni: '', ruc: '', telefono: '', direccion: '', ubicacion: '', referencia: '' };
+const vacio: DatosCliente = { nombre: '', dni: '', ruc: '', telefono: '', direccion: '', ubicacion: '', referencia: '', dias_plazo: '' };
 const enfocar = (id: string) => setTimeout(() => { const el = document.getElementById(id) as HTMLInputElement | null; el?.focus(); el?.select?.(); }, 30);
 
 // "ROSA" y "ROSA PEREZ" son parecidos; "ROSA" y "ROSARIO" no
@@ -71,7 +71,7 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
   useEffect(() => {
     if (!abierta) return;
     setDatos(cliente
-      ? { nombre: cliente.nombre, dni: cliente.dni || '', ruc: cliente.ruc || '', telefono: cliente.telefono || '', direccion: cliente.direccion || '', ubicacion: cliente.ubicacion || '', referencia: cliente.referencia || '' }
+      ? { nombre: cliente.nombre, dni: cliente.dni || '', ruc: cliente.ruc || '', telefono: cliente.telefono || '', direccion: cliente.direccion || '', ubicacion: cliente.ubicacion || '', referencia: cliente.referencia || '', dias_plazo: cliente.diasPlazo != null ? String(cliente.diasPlazo) : '' }
       : vacio);
     enfocar('ficha-nombre');
   }, [abierta, cliente]);
@@ -83,7 +83,7 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
   const teclasCampo = (id: string) => (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      const orden = ['ficha-nombre', 'ficha-dni', 'ficha-ruc', 'ficha-telefono', 'ficha-direccion', 'ficha-ubicacion', 'ficha-referencia', 'btn-guardar-ficha'];
+      const orden = ['ficha-nombre', 'ficha-dni', 'ficha-ruc', 'ficha-telefono', 'ficha-direccion', 'ficha-ubicacion', 'ficha-referencia', 'ficha-dias-plazo', 'btn-guardar-ficha'];
       const sig = orden[orden.indexOf(id) + 1];
       if (sig === 'btn-guardar-ficha') document.getElementById('btn-guardar-ficha')?.focus();
       else if (sig) enfocar(sig);
@@ -113,7 +113,11 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
       if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-referencia'); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-telefono'); }
     } else if (id === 'ficha-referencia') {
-      if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('btn-guardar-ficha')?.focus(); }
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-dias-plazo'); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-ubicacion'); }
+    } else if (id === 'ficha-dias-plazo') {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); enfocar('ficha-referencia'); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('btn-guardar-ficha')?.focus(); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-ubicacion'); }
     }
   };
@@ -143,7 +147,7 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
     }
     setGuardando(true);
     try {
-      const ok = await onGuardar({ nombre, dni, ruc, telefono: datos.telefono.trim(), direccion: datos.direccion.trim(), ubicacion: datos.ubicacion.trim(), referencia: datos.referencia.trim() });
+      const ok = await onGuardar({ nombre, dni, ruc, telefono: datos.telefono.trim(), direccion: datos.direccion.trim(), ubicacion: datos.ubicacion.trim(), referencia: datos.referencia.trim(), dias_plazo: datos.dias_plazo.trim() });
       if (ok) onClose();
       else enfocar('btn-guardar-ficha');
     } finally {
@@ -193,12 +197,15 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
             {campo('ficha-direccion', 'Dirección', datos.direccion, (v) => poner('direccion', v), { placeholder: 'OPCIONAL' })}
           </div>
           {campo('ficha-ubicacion', 'Link de ubicación (Google Maps)', datos.ubicacion, (v) => poner('ubicacion', v), { placeholder: 'OPCIONAL · PEGA EL LINK DE GOOGLE MAPS (COMPARTIR)', inputMode: 'url' })}
-          {campo('ficha-referencia', 'Referencia (para distinguirlo)', datos.referencia, (v) => poner('referencia', v), { placeholder: 'EJ.: VECINA DEL 2DO PISO · MAESTRO DE OBRA' })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {campo('ficha-referencia', 'Referencia (para distinguirlo)', datos.referencia, (v) => poner('referencia', v), { placeholder: 'EJ.: VECINA DEL 2DO PISO · MAESTRO DE OBRA' })}
+            {campo('ficha-dias-plazo', 'Días de plazo para pagar', datos.dias_plazo, (v) => poner('dias_plazo', v.replace(/\D/g, '').slice(0, 3)), { inputMode: 'numeric', placeholder: 'OPCIONAL · EJ.: 7, 15, 30 DÍAS' })}
+          </div>
         </div>
 
         <div className="px-4 sm:px-6 py-4 border-t-2 border-[var(--color-border)] flex justify-end shrink-0">
           <button id="btn-guardar-ficha" type="button" aria-disabled={guardando} onClick={() => void guardar()}
-            onKeyDown={(e) => { if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-referencia'); } }}
+            onKeyDown={(e) => { if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-dias-plazo'); } }}
             className={claseBotonPrincipal}>
             {guardando ? 'Guardando...' : cliente ? 'Guardar cambios' : 'Guardar cliente'}
           </button>

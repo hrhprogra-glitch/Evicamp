@@ -35,7 +35,9 @@ export const resumenDeCliente = (cliente: Cliente, fiados: Fiado[]) => {
   });
   const deuda = suyos.reduce((t, f) => t + (Number(f.saldoPendiente) || 0), 0);
   const ultimo = suyos.reduce<string | undefined>((u, f) => (!u || (f.fechaEmision && f.fechaEmision > u) ? f.fechaEmision : u), undefined);
-  return { deuda, ultimo, creditos: suyos.length };
+  const hoyStr = new Date().toLocaleDateString('en-CA');
+  const tieneVencido = suyos.some((f) => (Number(f.saldoPendiente) || 0) > 0.05 && f.fechaVencimiento && f.fechaVencimiento.slice(0, 10) < hoyStr);
+  return { deuda, ultimo, creditos: suyos.length, tieneVencido };
 };
 
 export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = [], onNuevo, onAbrir, onEditar, onEliminar, idPestana }) => {
@@ -142,12 +144,19 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
             </tr>
           </thead>
           <tbody className="text-sm font-bold divide-y-2 divide-[var(--color-border)] border-b-2 border-[var(--color-border)]">
-            {visibles.length ? visibles.map(({ c, grupo, deuda, ultimo }) => (
+            {visibles.length ? visibles.map(({ c, grupo, deuda, ultimo, tieneVencido }) => (
               <tr key={c.id} role="button" tabIndex={0} data-row="true" data-fila-cliente="true" data-cliente-id={c.id}
                 onClick={() => onAbrir(c)} onKeyDown={teclasFila(c)}
                 className="hover:bg-[var(--color-surface)] focus:outline-none focus-visible:bg-[var(--color-bg-2)] cursor-pointer">
                 <td className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6">
-                  <span className="font-black text-[var(--color-ink)] uppercase text-base">{c.nombre}</span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-black text-[var(--color-ink)] uppercase text-base">{c.nombre}</span>
+                    {c.diasPlazo != null && (
+                      <span className="px-1.5 py-0.5 text-[10px] font-black uppercase border border-[var(--color-border)] text-[var(--color-muted)] bg-[var(--color-bg)]">
+                        {c.diasPlazo}d plazo
+                      </span>
+                    )}
+                  </div>
                   {c.referencia && <span className="block text-xs text-[var(--color-muted)] mt-0.5 normal-case">{c.referencia}</span>}
                 </td>
                 <td data-col="grupo" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] whitespace-nowrap">
@@ -179,6 +188,11 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
                 </td>
                 <td className="py-3 sm:py-4 px-3 sm:px-4 text-right whitespace-nowrap">
                   <span className={`font-black ${deuda > 0.05 ? 'text-[var(--color-danger)]' : 'text-[var(--color-subtle)]'}`}>S/ {deuda.toFixed(2)}</span>
+                  {tieneVencido && (
+                    <span className="block text-[10px] font-black text-[var(--color-danger)] uppercase tracking-wider">
+                      Vencido
+                    </span>
+                  )}
                 </td>
                 <td className="py-3 sm:py-4 px-3 sm:px-4 text-center text-[var(--color-muted)] whitespace-nowrap">{fecha(ultimo)}</td>
                 <td className="py-3 sm:py-4 px-2 sm:px-4 sm:pr-6">

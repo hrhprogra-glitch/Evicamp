@@ -1638,9 +1638,9 @@
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/ModalAjuste.tsx": {
-    "mtime": 1793213492.2654238,
-    "seen": 1793213733.1110866,
-    "ast_hash": "d8610bf00e065e8c3b2c5838c9459326",
+    "mtime": 1793287427.329416,
+    "seen": 1793287973.8056204,
+    "ast_hash": "3730265170ffdc5520b0aa7ab237fd00",
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/ModalEditarConteo.tsx": {

@@ -7,6 +7,35 @@
 
 ---
 
+## 29/10/2026 (mañana, 24) · Antigravity
+- **Fase 4.3 completada y desplegada en siumax (pruebas): Días de plazo en clientes y fecha límite calculada en caja (SIN límite de crédito):**
+  - **Decisión del dueño:** *"todo excepto el límite de crédito ahora si arranca"* y *"no quites lo de escoger fecha porque eso le gustó a mis clientes"*.
+  - **Base de datos (siuhub - VPS):**
+    - Respaldo de siuhub antes de tocar: `/var/lib/postgresql/respaldo-siuhub-antes-fase4-3.dump` (203K).
+    - `servidor/sql/seguridad-sesion.sql`: agregada columna `ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS dias_plazo integer; NOTIFY pgrst, 'reload schema';`.
+    - Script de reversión creado: `servidor/sql/deshacer-fase4-3.sql`.
+    - Migración ejecutada exitosamente en `siuhub` (PostgreSQL puerto 3001).
+  - **Frontend / Pantallas:**
+    - `src/sections/Clientes/types.ts`: agregado `diasPlazo?: number;` a la interfaz `Cliente`.
+    - `src/sections/Clientes/components/ModalFichaCliente.tsx`: nuevo campo "Días de plazo para pagar" (`#ficha-dias-plazo`, ej. 7, 15, 30 días, numérico) con navegación completa por teclado (Enter, flechas ↑ ↓ ← →).
+    - `src/sections/Clientes/index.tsx`: mapeo de `diasPlazo` desde `c.dias_plazo` y guardado tanto en actualización como en creación de clientes.
+    - `src/sections/Clientes/components/ModalDetalleCliente.tsx`: se muestra en la cabecera `Plazo acordado: X días`.
+    - `src/sections/Clientes/components/PestanaClientes.tsx`: badge visible `Xd plazo` en la fila del cliente. Alerta `Vencido` en rojo si el cliente tiene fiados pendientes vencidos a la fecha de hoy.
+    - `src/sections/Punto-de-venta/components/ModalCobro.tsx`:
+      - El selector de fecha (`#fiado-fecha`) se mantuvo **100% intacto y funcional**.
+      - Al seleccionar un cliente con días de plazo configurados, el sistema calcula automáticamente la fecha de vencimiento (`hoy + dias_plazo`).
+      - Si el cliente no tiene plazo configurado, por defecto propone 1 día (mañana) como antes.
+      - Se agregaron botones rápidos `+7d`, `+15d`, `+30d` para fijar la fecha con un clic sin borrar el selector nativo.
+      - Alerta visual en caja si el cliente seleccionado tiene créditos vencidos pendientes de pago (`⚠ Tiene deudas vencidas`) y monto de deuda pendiente actual.
+  - **Validación y Pruebas:**
+    - `npx tsc -b`: 0 errores.
+    - `npm run build`: compilación limpia en 3.6s.
+    - `deploy.cjs siumax`: subido a sitio de pruebas `siumax.duckdns.org` (20 archivos).
+    - `graphify update .`: grafo de conocimiento actualizado.
+- **Siguiente paso:** Mostrar los resultados al dueño para que lo pruebe en siumax y decida si da el visto bueno para subir a Evicamp (producción).
+
+---
+
 ## 29/10/2026 (mañana, 23) · Antigravity
 - **Pase a producción oficial en Evicamp y GitHub completado con éxito:**
   - **Autorización explícita del dueño:** *"si procede"* tras verificar el indicador de ENTER y botón Continuar.

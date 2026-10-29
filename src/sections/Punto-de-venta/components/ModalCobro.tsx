@@ -45,7 +45,77 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
   const [clienteTelefono, setClienteTelefono] = useState('');
   const [fechaVencimiento, setFechaVencimiento] = useState('');
 
+  const [deudaPendiente, setDeudaPendiente] = useState<number>(0);
+  const [tieneDeudaVencida, setTieneDeudaVencida] = useState<boolean>(false);
+
   const [lastOpen, setLastOpen] = useState(false);
+
+  const calcularFechaVencimiento = (dias?: number | null) => {
+    const d = new Date();
+    const plazo = dias && dias > 0 ? dias : 1;
+    d.setDate(d.getDate() + plazo);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const clienteActual = React.useMemo(() => {
+    if (clienteId) return clientesDb.find((c) => String(c.id) === String(clienteId)) || null;
+    if (clienteNombre) return clientesDb.find((c) => (c.nombre || c.name || '').toUpperCase() === clienteNombre.toUpperCase()) || null;
+    return null;
+  }, [clientesDb, clienteId, clienteNombre]);
+
+  useEffect(() => {
+    if (!clienteId && !clienteNombre) {
+      setDeudaPendiente(0);
+      setTieneDeudaVencida(false);
+      return;
+    }
+    let cancelado = false;
+    const revisarDeudas = async () => {
+      try {
+        let q = supabase.from('fiados').select('amount, paid_amount, expected_pay_date, status').in('status', ['PENDIENTE', 'VENCIDO']);
+        if (clienteId) {
+          q = q.eq('customer_id', clienteId);
+        } else {
+          q = q.eq('customer_name', clienteNombre);
+        }
+        const { data } = await q;
+        if (cancelado || !data) return;
+        const hoy = new Date().toLocaleDateString('en-CA');
+        let totalDeuda = 0;
+        let vencida = false;
+        for (const f of data) {
+          const saldo = Math.max(0, (Number(f.amount) || 0) - (Number(f.paid_amount) || 0));
+          if (saldo > 0.05) {
+            totalDeuda += saldo;
+            if (f.expected_pay_date && f.expected_pay_date.slice(0, 10) < hoy) {
+              vencida = true;
+            }
+          }
+        }
+        setDeudaPendiente(totalDeuda);
+        setTieneDeudaVencida(vencida);
+      } catch {
+        // Silencioso
+      }
+    };
+    revisarDeudas();
+    return () => { cancelado = true; };
+  }, [clienteId, clienteNombre]);
+
+  const seleccionarCliente = (c: any) => {
+    setClienteId(c.id?.toString() || '');
+    setClienteNombre(c.nombre || c.name || '');
+    setClienteDni(c.dni || c.ruc || '');
+    setClienteTelefono(c.telefono || '');
+    setSearchCliente('');
+    setIsDropdownOpen(false);
+    const dias = c.dias_plazo != null && !Number.isNaN(Number(c.dias_plazo)) ? Number(c.dias_plazo) : 1;
+    setFechaVencimiento(calcularFechaVencimiento(dias));
+    setTimeout(() => document.getElementById('fiado-fecha')?.focus(), 50);
+  };
 
   // 🛡️ RESETEO SÍNCRONO: Evita que el panel de fiado parpadee al abrir la ventana
   if (isOpen !== lastOpen) {
@@ -62,19 +132,15 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
         setSearchCliente(clienteSeleccionado.nombre);
         setClienteDni(clienteSeleccionado.dni || clienteSeleccionado.ruc || '');
         setClienteTelefono(clienteSeleccionado.telefono || '');
+        setFechaVencimiento(calcularFechaVencimiento(clienteSeleccionado.diasPlazo));
       } else {
         setClienteId('');
         setClienteNombre('');
         setSearchCliente('');
         setClienteDni('');
         setClienteTelefono('');
+        setFechaVencimiento(calcularFechaVencimiento(1));
       }
-      const manana = new Date();
-      manana.setDate(manana.getDate() + 1);
-      const year = manana.getFullYear();
-      const month = String(manana.getMonth() + 1).padStart(2, '0');
-      const day = String(manana.getDate()).padStart(2, '0');
-      setFechaVencimiento(`${year}-${month}-${day}`);
       setIsDropdownOpen(false);
       setIsCreatingNew(false);
     }
@@ -302,6 +368,26 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                 </button>
               </div>
 
+              {clienteNombre && (
+                <div className="text-[11px] font-bold text-[var(--color-ink)] flex flex-wrap gap-2 items-center pt-1">
+                  {clienteActual?.dias_plazo != null && (
+                    <span className="bg-white/80 px-1.5 py-0.5 border border-[var(--color-warning-border)]">
+                      Plazo: <strong>{clienteActual.dias_plazo} días</strong>
+                    </span>
+                  )}
+                  {deudaPendiente > 0.05 && (
+                    <span className="bg-white/80 px-1.5 py-0.5 border border-[var(--color-warning-border)]">
+                      Deuda actual: <strong className="text-[var(--color-danger)]">S/ {deudaPendiente.toFixed(2)}</strong>
+                    </span>
+                  )}
+                  {tieneDeudaVencida && (
+                    <span className="bg-[var(--color-danger)] text-white px-1.5 py-0.5 font-black uppercase tracking-wider text-[10px]">
+                      ⚠ Tiene deudas vencidas
+                    </span>
+                  )}
+                </div>
+              )}
+
               {/* LISTA DESPLEGABLE CONECTADA A LA BASE DE DATOS */}
               {isDropdownOpen && searchCliente.trim() !== '' && (
                 <div className="absolute z-50 top-[100%] left-0 w-full mt-1 bg-[var(--color-surface)] border-2 border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-48 overflow-y-auto custom-scrollbar rounded-none">
@@ -311,7 +397,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                     </div>
                   ) : (
                     clientesDb
-                      .filter(c => (c.nombre || c.name || '').toUpperCase().includes(searchCliente))
+                      .filter(c => coincideBusqueda([c.nombre, c.name, c.dni, c.telefono], searchCliente))
                       .map((c, index, arr) => (
                         <div
                           key={c.id}
@@ -337,25 +423,19 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                              }
                              if (e.key === 'Enter' || e.key === ' ') {
                                e.preventDefault();
-                               setClienteId(c.id?.toString() || '');
-                               setClienteNombre(c.nombre || c.name || '');
-                               setClienteDni(c.dni || '');
-                               setClienteTelefono(c.telefono || '');
-                               setSearchCliente('');
-                               setIsDropdownOpen(false);
-                               setTimeout(() => document.getElementById('fiado-fecha')?.focus(), 50);
+                               seleccionarCliente(c);
                              }
                           }}
                           onClick={() => {
-                            setClienteId(c.id?.toString() || '');
-                            setClienteNombre(c.nombre || c.name || '');
-                            setClienteDni(c.dni || '');
-                            setClienteTelefono(c.telefono || '');
-                            setSearchCliente('');
-                            setIsDropdownOpen(false);
+                            seleccionarCliente(c);
                           }}
                         >
-                          <span>{c.nombre || c.name || 'SIN NOMBRE'}</span>
+                          <div>
+                            <span>{c.nombre || c.name || 'SIN NOMBRE'}</span>
+                            {c.dias_plazo != null && (
+                              <span className="block text-[10px] font-bold opacity-75">Plazo: {c.dias_plazo} días</span>
+                            )}
+                          </div>
                           {c.dni && <span className="text-[12px] opacity-70">DNI:{c.dni}</span>}
                         </div>
                       ))
@@ -428,20 +508,36 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
           )}
 
           {/* FECHA VENCIMIENTO (APLICA PARA AMBOS MODOS) */}
-          <div className="space-y-1 mt-1 pt-2 border-t-2 border-[var(--color-warning-border)]">
-            <label 
-              htmlFor="fiado-fecha" 
-              className="text-[12px] font-black text-[var(--color-warning-text)] uppercase flex items-center gap-1 cursor-pointer"
-              onClick={(e) => {
-                 e.preventDefault();
-                 document.getElementById('fiado-fecha')?.focus();
-                 if ('showPicker' in HTMLInputElement.prototype) {
-                   try { (document.getElementById('fiado-fecha') as HTMLInputElement).showPicker(); } catch (err) {}
-                 }
-              }}
-            >
-              <Calendar size={14}/> Fecha Límite de Pago *
-            </label>
+          <div className="space-y-1.5 mt-1 pt-2 border-t-2 border-[var(--color-warning-border)]">
+            <div className="flex items-center justify-between gap-1 flex-wrap">
+              <label 
+                htmlFor="fiado-fecha" 
+                className="text-[12px] font-black text-[var(--color-warning-text)] uppercase flex items-center gap-1 cursor-pointer"
+                onClick={(e) => {
+                   e.preventDefault();
+                   document.getElementById('fiado-fecha')?.focus();
+                   if ('showPicker' in HTMLInputElement.prototype) {
+                     try { (document.getElementById('fiado-fecha') as HTMLInputElement).showPicker(); } catch (err) {}
+                   }
+                }}
+              >
+                <Calendar size={14}/> Fecha Límite de Pago *
+              </label>
+              <div className="flex gap-1">
+                {[7, 15, 30].map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setFechaVencimiento(calcularFechaVencimiento(d))}
+                    title={`Poner fecha a ${d} días`}
+                    className="px-1.5 py-0.5 text-[10px] font-black uppercase border border-[var(--color-warning-border)] bg-white hover:bg-[var(--color-warning)] text-[var(--color-ink)] cursor-pointer"
+                  >
+                    +{d}d
+                  </button>
+                ))}
+              </div>
+            </div>
             <input autoComplete="off" id="fiado-fecha"
               type="date" 
               value={fechaVencimiento}

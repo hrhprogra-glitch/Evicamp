@@ -217,9 +217,22 @@
        - *"en las tablas hay mucho blanco arregla eso"*: El dueño envió una captura de Inventario mostrando barras de paginación (`PÁGINA 1 DE 2`), pastillas de stock (`0 UND`, `8 UND`), badges de SKU y caja del buscador en blanco puro.
        - Se adaptaron `TablaProductos.tsx`, `TablaLotes.tsx`, `EtiquetaStock.tsx` y `FiltrosInventario.tsx` a tokens semánticos del tema, y se agregaron reglas globales en `src/index.css` que convierten automáticamente cualquier fondo neutro (`#F8FAFC`, `#F1F5F9`, `#E2E8F0`, slate/gray) o pastel suave (`#ECFDF5`, `#FEF2F2`, `bg-red-50`, `#FFFBEB`) en superficies oscuras y acentos suaves en Modo Oscuro.
        - Validado con capturas en `siumax.duckdns.org` y desplegado.
-    15. **Indicación clara de presionar ENTER y botón Continuar en Conteo / Merma (29/10 mañana):**
-       - *"si subelo pero antes soluciona esto cuando agrego un monto donde marque osea la cantidad tengo que presionar enter para que acepte eso confunde la primera ves no aparecia nada y pense que estaba mal pero tenia que poner enter el problema que no me indica que tengo que presionar enter para continuar"*:
-       - El dueño adjuntó captura del modal `NUEVO AJUSTE` en el paso 4 (`¿CUÁNTOS HAY? (UND)`). Al ingresar el número, no había indicación clara de presionar Enter para continuar ni botón visible para el mouse, lo que generaba confusión y la sensación de que el sistema no respondía.
-       - Se añadió un aviso destacado en ámbar en la cabecera (`ENTER PARA CONTINUAR`), un botón visible y clickeable `[ CONTINUAR | ENTER ↵ ]` al costado del campo (`#btn-confirmar-contado` y `#btn-confirmar-salida`), y un banner inferior informativo `[AVISO] Escribe la cantidad contada y presiona ENTER ↵ o el botón Continuar para revisar la diferencia.`
-       - Verificado con Edge headless en `siumax.duckdns.org` (capturas `screenshot-conteo-enter.png` y `screenshot-conteo-after-enter.png`), y ejecutadas las pruebas automatizadas `prueba-conteo.mjs` y `prueba-salida.mjs` con 100% de éxito.
+    16. **Pase a producción oficial en Evicamp y GitHub (29/10 mañana):**
+       - El dueño dio su autorización explícita: *"si procede"*.
+       - Respaldo de Evicamp `/var/lib/postgresql/respaldo-evicamp-antes-fase4-2026-10-29T15-54-16-874Z.dump` (1.8 MB).
+       - `servidor/sql/seguridad-sesion.sql` aplicado con `psql` y `SET lock_timeout = '5s'` en `postgres` (Evicamp) sin reiniciar la API (`activar-seguridad.sh` intacto).
+       - Fusión de `fase-4` a `main` (commit `583ad4e`), despliegue con `node ai-scripts/deploy.cjs todos` y `git push origin main`.
+    17. **Fase 4.3: Días de plazo en clientes y cálculo automático de fecha en caja (29/10 mañana):**
+       - El dueño autorizó: *"vamos por el 4.3"*.
+       - Aclaró expresamente: *"no quites lo de escoger fecha porque eso le gustó a mis clientes"* y *"todo excepto el limite de credito ahora si arranca"*.
+       - Se acordó NO incluir límite de crédito monetario, mantener 100% funcional el selector/calendario de fecha en caja, y calcular automáticamente la fecha de vencimiento (`hoy + dias_plazo`) cuando se seleccione a un cliente con plazo acordado.
+       - Base de datos `siuhub`: columna `dias_plazo integer` agregada a `customers`.
+       - Ficha del cliente (`ModalFichaCliente.tsx`): nuevo campo numérico "Días de plazo para pagar" (ej. 7, 15, 30 días) con soporte de teclado completo (Enter, flechas ↑ ↓ ← →).
+       - Directorio de clientes (`PestanaClientes.tsx` y `ModalDetalleCliente.tsx`): muestra `Xd plazo` en la fila y en la ficha. Muestra etiqueta roja `Vencido` si el cliente tiene deudas impagas vencidas.
+       - Modal de cobro en caja (`ModalCobro.tsx`):
+         - Selector de fecha nativo `#fiado-fecha` **100% intacto y disponible** para elegir cualquier día en el calendario.
+         - Al seleccionar un cliente con plazo configurado, calcula y propone automáticamente su fecha límite (`hoy + dias_plazo`).
+         - Botones rápidos `+7d`, `+15d`, `+30d` agregados para fijar fechas con un solo clic.
+         - Aviso visual en caja si el cliente tiene deudas vencidas (`⚠ Tiene deudas vencidas`) y monto total de deuda pendiente actual.
+       - Compilado con `npx tsc -b` (0 errores) y desplegado en `siumax.duckdns.org` para validación del dueño.
 
