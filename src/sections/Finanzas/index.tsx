@@ -880,7 +880,7 @@ export const Finanzas: React.FC = () => {
 
               <span className="text-[var(--color-muted)] text-xs sm:text-[10px] 2xl:text-xs uppercase tracking-widest font-bold">Gran Total de ESTA Caja</span>
 
-              <h1 className="text-[var(--color-surface)] text-3xl sm:text-4xl 2xl:text-5xl font-mono font-black mt-2">
+              <h1 className="text-white text-3xl sm:text-4xl 2xl:text-5xl font-mono font-black mt-2">
 
                 S/ {(superMetricas.efectivoEsperadoCaja + superMetricas.yapeEsperado + superMetricas.tarjetaEsperada).toFixed(2)}
 

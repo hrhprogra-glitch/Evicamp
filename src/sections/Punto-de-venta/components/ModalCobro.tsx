@@ -304,7 +304,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
 
               {/* LISTA DESPLEGABLE CONECTADA A LA BASE DE DATOS */}
               {isDropdownOpen && searchCliente.trim() !== '' && (
-                <div className="absolute z-50 top-[100%] left-0 w-full mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-48 overflow-y-auto custom-scrollbar rounded-none">
+                <div className="absolute z-50 top-[100%] left-0 w-full mt-1 bg-[var(--color-surface)] border-2 border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-48 overflow-y-auto custom-scrollbar rounded-none">
                   {clientesDb.filter(c => coincideBusqueda([c.nombre, c.name, c.dni, c.telefono], searchCliente)).length === 0 ? (
                     <div className="p-4 text-xs font-black uppercase text-[var(--color-muted)] text-center bg-[var(--color-bg)]">
                       NO SE ENCONTRARON CLIENTES
@@ -317,7 +317,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                           key={c.id}
                           id={`fiado-list-item-${index}`}
                           tabIndex={0}
-                          className="p-3 text-[13px] font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-warning)] hover:text-white focus:bg-[var(--color-warning)] focus:text-white focus:outline-none cursor-pointer border-b border-[var(--color-border)] last:border-0 transition-colors flex justify-between items-center rounded-none"
+                          className="p-3 text-[13px] font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-warning)] hover:text-[#030712] focus:bg-[var(--color-warning)] focus:text-[#030712] focus:outline-none cursor-pointer border-b border-[var(--color-border)] last:border-0 transition-colors flex justify-between items-center rounded-none"
                           onKeyDown={(e) => {
                              if (e.key === 'ArrowDown') {
                                e.preventDefault();

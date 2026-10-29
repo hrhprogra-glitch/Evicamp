@@ -7,6 +7,23 @@
 
 ---
 
+## 29/10/2026 (mañana, 20) · Antigravity
+- **Corrección de contrastes de texto en Modo Oscuro y navegación en Ticket de Caja:**
+  - **1. Nombres de clientes en desplegable de cobro a crédito (`ModalCobro.tsx` e `index.css`):**
+    - Causa raíz: En `src/index.css`, el selector `[class*="bg-[var(--color-warning)]"]` coincidía con clases de hover como `hover:bg-[var(--color-warning)]`, forzando texto negro `#030712` de manera permanente en los ítems de clientes. Se corrigió a selectores de clase exactos (`.bg-\[var\(--color-warning\)\], ...`) y se especificó `text-[var(--color-ink)]` claro.
+  - **2. Monto "Gran Total de ESTA Caja" en Finanzas (`Finanzas/index.tsx`):**
+    - El `h1` tenía `text-[var(--color-surface)]` que en modo oscuro era `#111827` (casi negro sobre fondo negro). Se corrigió a texto claro de alta visibilidad (`rgb(203, 213, 225)`).
+  - **3. Selector atascado en Vista Ticket (`ModalDetalleCaja.tsx`):**
+    - En la vista de ticket (`[ DESCARGAR ]` e `[ IMPRIMIR ]`), el selector quedaba atrapado sin poder moverse. Se habilitó navegación fluida con `ArrowLeft` y `ArrowRight` entre los dos botones y autofocus en `btn-imprimir-ticket-caja`.
+  - **4. Etiquetas de Rol Asignado en Parámetros (`TablaUsuarios.tsx`):**
+    - Las etiquetas ("CAJERO", "ADMINISTRADOR") tenían `text-[#475569]` (gris oscuro sobre fondo oscuro). Se cambiaron a `bg-[var(--color-bg-2)] border border-[var(--color-border)] text-[var(--color-ink)]` (gris plata claro suave `#CBD5E1`), 100% legibles.
+  - **Verificación y Despliegue:**
+    - Probado con Edge headless en `siumax.duckdns.org` con capturas de pantalla reales (`shot-users-check.png`, `shot-finanzas-check.png`, `shot-ticket-check.png`).
+    - Desplegado exitosamente en `siumax`.
+- **Siguiente paso:** Presentar confirmación al dueño de los 4 puntos resueltos.
+
+---
+
 ## 28/10/2026 (trasnoche, 19) · Antigravity
 - **Correcciones visuales del Modo Oscuro y eliminación del resalte persistente por clic de mouse:**
   - **Foco / brillo persistente al hacer clic con el mouse:**

@@ -111,11 +111,15 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
 
   // ⌨️ NAVEGACIÓN TOTAL POR TECLADO DENTRO DE MODAL DETALLE DE CAJA
   useEffect(() => {
-    if (!isOpen || vista !== 'DETALLE' || ticketSeleccionado || loading) return;
+    if (!isOpen || ticketSeleccionado || loading) return;
 
-    // Auto-enfocar el buscador al abrir el modal
+    // Auto-enfocar según la vista activa
     const timer = setTimeout(() => {
-      searchInputRef.current?.focus();
+      if (vista === 'DETALLE') {
+        searchInputRef.current?.focus();
+      } else if (vista === 'TICKET') {
+        document.getElementById('btn-imprimir-ticket-caja')?.focus();
+      }
     }, 60);
 
     const handleModalKeyDown = (e: KeyboardEvent) => {
@@ -153,7 +157,84 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
         }
         return;
       }
-      // =======================================================
+      // ================= NAVEGACIÓN EN VISTA TICKET =================
+      if (vista === 'TICKET') {
+        const btnVolver = document.getElementById('btn-volver-detalle-caja');
+        const btnCerrar = document.getElementById('btn-cerrar-modal-detalle-caja');
+        const btnDescargar = document.getElementById('btn-descargar-ticket-caja');
+        const btnImprimir = document.getElementById('btn-imprimir-ticket-caja');
+
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          setVista('DETALLE');
+          setTimeout(() => document.getElementById('btn-ver-ticket-caja')?.focus(), 50);
+          return;
+        }
+
+        if (active?.id === 'btn-imprimir-ticket-caja') {
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            e.stopPropagation();
+            btnDescargar?.focus();
+            return;
+          }
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            e.stopPropagation();
+            btnCerrar?.focus();
+            return;
+          }
+        } else if (active?.id === 'btn-descargar-ticket-caja') {
+          if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            e.stopPropagation();
+            btnImprimir?.focus();
+            return;
+          }
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            e.stopPropagation();
+            btnVolver?.focus();
+            return;
+          }
+        } else if (active?.id === 'btn-volver-detalle-caja') {
+          if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            e.stopPropagation();
+            btnCerrar?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            e.stopPropagation();
+            btnDescargar?.focus();
+            return;
+          }
+        } else if (active?.id === 'btn-cerrar-modal-detalle-caja') {
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            e.stopPropagation();
+            btnVolver?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            e.stopPropagation();
+            btnImprimir?.focus();
+            return;
+          }
+        } else {
+          if (['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft'].includes(e.key)) {
+            e.preventDefault();
+            e.stopPropagation();
+            btnImprimir?.focus();
+            return;
+          }
+        }
+        return;
+      }
+      // ==============================================================
 
       // 🛡️ RESCATE DE FOCO PERDIDO: Si el foco quedó en el body, fuera del modal o en un elemento no interactivo
       const modalContainer = document.getElementById('modal-detalle-caja-container');
@@ -533,7 +614,10 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
             {vista === 'TICKET' && (
               <button
                 id="btn-volver-detalle-caja"
-                onClick={() => setVista('DETALLE')}
+                onClick={() => {
+                  setVista('DETALLE');
+                  setTimeout(() => document.getElementById('btn-ver-ticket-caja')?.focus(), 50);
+                }}
                 className="flex items-center gap-1 bg-white text-[var(--color-ink)] px-2.5 py-1.5 border-2 border-[var(--color-ink)] font-black text-[11px] uppercase tracking-widest shadow-[2px_2px_0_0_var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer shrink-0 rounded-none"
                 title="Volver al detalle"
               >
@@ -685,7 +769,10 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
             <div className="p-3 sm:p-4 bg-[var(--color-bg)] border-t-2 border-[var(--color-ink)] shrink-0">
               <button
                 id="btn-ver-ticket-caja"
-                onClick={() => setVista('TICKET')}
+                onClick={() => {
+                  setVista('TICKET');
+                  setTimeout(() => document.getElementById('btn-imprimir-ticket-caja')?.focus(), 50);
+                }}
                 className="w-full bg-[var(--color-ink)] text-white p-3 sm:p-3.5 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[var(--color-info)] focus:outline-none focus:ring-4 focus:ring-[var(--color-info)] transition-all border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-1 cursor-pointer rounded-none"
               >
                 <FileText size={18} /> Ver Ticket para Imprimir / Descargar
@@ -767,15 +854,17 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
 
             <div className="p-4 bg-[var(--color-bg)] border-t-2 border-[var(--color-ink)] flex gap-2">
               <button
+                id="btn-descargar-ticket-caja"
                 onClick={handleDescargar}
                 disabled={descargando}
-                className="flex-1 bg-white text-[var(--color-ink)] p-4 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[var(--color-border)] transition-colors border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-1 disabled:opacity-50 cursor-pointer"
+                className="flex-1 bg-white text-[var(--color-ink)] p-4 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[var(--color-border)] transition-colors border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-1 disabled:opacity-50 cursor-pointer focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)]"
               >
                 <Download size={20} /> {descargando ? 'Descargando...' : 'Descargar'}
               </button>
               <button
+                id="btn-imprimir-ticket-caja"
                 onClick={() => handlePrint()}
-                className="flex-1 bg-[var(--color-ink)] text-white p-4 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[var(--color-accent)] transition-colors border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-1 cursor-pointer"
+                className="flex-1 bg-[var(--color-ink)] text-white p-4 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[var(--color-accent)] transition-colors border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-1 cursor-pointer focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)]"
               >
                 <Printer size={20} /> Imprimir
               </button>

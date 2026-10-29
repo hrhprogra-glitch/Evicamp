@@ -380,13 +380,23 @@ html[data-theme="dark"] .bg-\[var\(--color-ink\)\] {
 /* Botones o insignias con fondo amarillo/ámbar de advertencia: letras e íconos en negro puro para máximo contraste */
 .bg-\[var\(--color-warning\)\],
 button.bg-\[var\(--color-warning\)\],
-[class*="bg-[var(--color-warning)]"] {
+div.bg-\[var\(--color-warning\)\],
+span.bg-\[var\(--color-warning\)\] {
   color: #030712 !important;
 }
 .bg-\[var\(--color-warning\)\] svg,
 button.bg-\[var\(--color-warning\)\] svg,
-[class*="bg-[var(--color-warning)]"] svg {
+div.bg-\[var\(--color-warning\)\] svg,
+span.bg-\[var\(--color-warning\)\] svg {
   color: #030712 !important;
+}
+
+/* Elementos que usaban text-[var(--color-surface)] asumiendo blanco: en modo oscuro deben ser gris plata claro #CBD5E1, nunca oscuro */
+html.theme-monochrome .text-\[var\(--color-surface\)\],
+html.theme-monochrome [class*="text-\[var\(--color-surface\)\]"],
+html[data-theme="dark"] .text-\[var\(--color-surface\)\],
+html[data-theme="dark"] [class*="text-\[var\(--color-surface\)\]"] {
+  color: #CBD5E1 !important;
 }
 
 /* Bordes que usaban var(--color-ink): en modo oscuro usan gris acero #334155, nunca blanco */

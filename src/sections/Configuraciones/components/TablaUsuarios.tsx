@@ -411,14 +411,16 @@ export const TablaUsuarios: React.FC = () => {
                     <div className="text-xs text-[var(--color-muted)] font-mono">{usuario.email}</div>
                   </td>
                   <td className="p-4">
-                    <span className="bg-[var(--color-border)] text-[#475569] text-[12px] px-2 py-1 font-bold uppercase tracking-wider rounded-sm flex w-fit items-center gap-1">
-                      {usuario.rol === 'Administrador' && <ShieldAlert size={12} className="text-red-500" />}
+                    <span className="bg-[var(--color-bg-2)] border border-[var(--color-border)] text-[var(--color-ink)] text-[12px] px-2.5 py-1 font-black uppercase tracking-wider rounded-none flex w-fit items-center gap-1.5">
+                      {usuario.rol === 'Administrador' && <ShieldAlert size={14} className="text-red-500 shrink-0" />}
                       {usuario.rol}
                     </span>
                   </td>
                   <td className="p-4 text-center">
-                    <span className={`text-[12px] px-2 py-1 font-bold uppercase tracking-wider rounded-sm ${
-                      usuario.estado === 'ACTIVO' ? 'bg-[var(--color-accent-bg-2)] text-[var(--color-accent-dark)]' : 'bg-[#FEE2E2] text-[var(--color-danger-dark)]'
+                    <span className={`text-[12px] px-2.5 py-1 font-black uppercase tracking-wider rounded-none border ${
+                      usuario.estado === 'ACTIVO' 
+                        ? 'bg-[var(--color-accent-bg)] border-[var(--color-accent)] text-[var(--color-accent)]' 
+                        : 'bg-[var(--color-danger-bg)] border-[var(--color-danger)] text-[var(--color-danger)]'
                     }`}>
                       {usuario.estado}
                     </span>
