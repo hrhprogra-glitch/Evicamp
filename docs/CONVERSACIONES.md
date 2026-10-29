@@ -179,3 +179,7 @@
      - El dueño rechazó el nombre "Al contado" ("si si aunque escoge otro nombre al contado no me gusta") por lo que se mantuvo el nombre directo y profesional: **`COMPRAS`**.
      - Se probó la apertura inteligente (si el cliente no tiene deudas abre directo en `COMPRAS`), el desplegable de productos comprados con `Enter` o clic, y las tarjetas de resumen (`Total comprado`, `Última compra`, `Lo que más lleva`).
      - Validado al 100% con script automatizado en Edge (`test-compras-cliente.cjs`) y desplegado en `siumax`.
+  10. *"perfecto pero encontre un error estetico lo marque con rojo en la imagen"*:
+     - El dueño envió una captura donde la barra de pestañas y filtros del detalle del cliente se quebraba en dos filas asimétricas: el campo de fecha caía a una segunda fila a la derecha, las pestañas quedaban flotando en el medio y el buscador en la esquina superior derecha, estirando la barra a 138px con espacios en blanco vacíos.
+     - Se unificó la altura de todos los controles a `h-[40px]`, se ajustó el padding de las pestañas a `px-3 sm:px-4`, se fijó `flex-nowrap` en los filtros y se redujo la altura de la barra a 76px en una sola fila armónica.
+     - Validado al 100% con Puppeteer en `siumax`.

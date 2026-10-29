@@ -369,29 +369,33 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
 
           {/* HISTORIAL: PENDIENTES | PAGADOS | COMPRAS + BUSCADOR + FECHA */}
           <BarraFiltros>
-            <div className="flex gap-2" role="tablist" aria-label="Historial de compras y créditos">
-              <button id={barra[0]} type="button" role="tab" aria-selected={pestana === 'PENDIENTES'} onClick={() => setPestana('PENDIENTES')} className={claseBotonBarra(pestana === 'PENDIENTES')}>
+            <div className="flex items-center gap-2 shrink-0" role="tablist" aria-label="Historial de compras y créditos">
+              <button id={barra[0]} type="button" role="tab" aria-selected={pestana === 'PENDIENTES'} onClick={() => setPestana('PENDIENTES')}
+                className={`h-[40px] px-3 sm:px-4 border-2 font-black text-xs uppercase tracking-widest flex items-center gap-2 cursor-pointer rounded-none transition-colors outline-none shrink-0 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] ${pestana === 'PENDIENTES' ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]' : 'bg-white text-[var(--color-ink)] border-[var(--color-border)] hover:border-[var(--color-ink)]'}`}>
                 Pendientes ({pendientes.length})
               </button>
-              <button id={barra[1]} type="button" role="tab" aria-selected={pestana === 'PAGADOS'} onClick={() => setPestana('PAGADOS')} className={claseBotonBarra(pestana === 'PAGADOS')}>
+              <button id={barra[1]} type="button" role="tab" aria-selected={pestana === 'PAGADOS'} onClick={() => setPestana('PAGADOS')}
+                className={`h-[40px] px-3 sm:px-4 border-2 font-black text-xs uppercase tracking-widest flex items-center gap-2 cursor-pointer rounded-none transition-colors outline-none shrink-0 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] ${pestana === 'PAGADOS' ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]' : 'bg-white text-[var(--color-ink)] border-[var(--color-border)] hover:border-[var(--color-ink)]'}`}>
                 Pagados ({pagados.length})
               </button>
-              <button id={barra[2]} type="button" role="tab" aria-selected={pestana === 'COMPRAS'} onClick={() => setPestana('COMPRAS')} className={claseBotonBarra(pestana === 'COMPRAS')}>
+              <button id={barra[2]} type="button" role="tab" aria-selected={pestana === 'COMPRAS'} onClick={() => setPestana('COMPRAS')}
+                className={`h-[40px] px-3 sm:px-4 border-2 font-black text-xs uppercase tracking-widest flex items-center gap-2 cursor-pointer rounded-none transition-colors outline-none shrink-0 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] ${pestana === 'COMPRAS' ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]' : 'bg-white text-[var(--color-ink)] border-[var(--color-border)] hover:border-[var(--color-ink)]'}`}>
                 Compras ({compras.length})
               </button>
             </div>
-            <div className="flex flex-wrap items-center gap-2 flex-1 justify-end">
-              <div className="relative flex-1 min-w-[260px]">
+            <div className="flex items-center gap-2 flex-1 justify-end flex-nowrap min-w-0">
+              <div className="relative flex-1 min-w-[150px] max-w-[240px]">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-subtle)]" />
                 <input id="buscar-historial-cliente" type="text" autoComplete="off" spellCheck={false} data-lpignore="true" value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)} placeholder="PRODUCTO O MONTO..."
-                  className={`${claseCampoBarra} w-full pl-8 uppercase`} />
+                  className="w-full h-[40px] border-2 border-[var(--color-border)] pl-8 pr-3 text-xs font-black uppercase text-[var(--color-ink)] outline-none bg-white rounded-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]" />
               </div>
-              <input id="fecha-historial-cliente" type="date" value={dia} onChange={(e) => setDia(e.target.value)} title="Filtrar por fecha (Enter abre el calendario)" className={claseCampoBarra} />
+              <input id="fecha-historial-cliente" type="date" value={dia} onChange={(e) => setDia(e.target.value)} title="Filtrar por fecha (Enter abre el calendario)"
+                className="h-[40px] w-[145px] sm:w-[155px] border-2 border-[var(--color-border)] px-3 text-xs font-black uppercase text-[var(--color-ink)] outline-none bg-white rounded-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] shrink-0 cursor-pointer" />
               {hayFiltros && (
                 <button id="btn-limpiar-historial-cliente" type="button" title="Limpiar filtros"
                   onClick={() => { setBusqueda(''); setDia(''); setTimeout(() => document.getElementById('buscar-historial-cliente')?.focus(), 30); }}
-                  className="p-2.5 border-2 border-[var(--color-border)] bg-[var(--color-danger-bg)] text-[var(--color-danger)] hover:bg-[var(--color-danger)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer">
+                  className="h-[40px] w-[40px] flex items-center justify-center border-2 border-[var(--color-border)] bg-[var(--color-danger-bg)] text-[var(--color-danger)] hover:bg-[var(--color-danger)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer shrink-0">
                   <FilterX size={16} />
                 </button>
               )}

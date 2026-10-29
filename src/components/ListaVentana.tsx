@@ -13,8 +13,8 @@ export const CuerpoVentana: React.FC<{ children: React.ReactNode }> = ({ childre
 );
 
 // Barra de filtros, pestañas y botones de arriba
-export const BarraFiltros: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="p-3 sm:p-4 border-2 border-[var(--color-border)] flex flex-wrap items-center gap-3 sm:gap-4 shrink-0 bg-[var(--color-surface)]">
+export const BarraFiltros: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
+  <div className={`p-3 sm:p-4 border-2 border-[var(--color-border)] flex flex-wrap items-center justify-between gap-3 sm:gap-4 shrink-0 bg-[var(--color-surface)] ${className}`}>
     {children}
   </div>
 );

@@ -7,6 +7,22 @@
 
 ---
 
+## 28/10/2026 (noche, 17) · Antigravity
+- **Corrección estética de la barra de pestañas y filtros en el detalle del cliente (`ModalDetalleCliente.tsx`):**
+  - **Problema encontrado por el dueño:** Al haber 3 pestañas (`PENDIENTES`, `PAGADOS`, `COMPRAS`), el contenedor de filtros de la derecha no alcanzaba el ancho mínimo, provocando que el input de fecha bajara a una segunda fila a la derecha, mientras que las pestañas quedaban flotando en el medio y el buscador en la parte superior derecha, dejando la barra deforme con 138px de altura y espacios vacíos.
+  - **Solución estética aplicada:**
+    - Se ajustó el padding de las pestañas a `px-3 sm:px-4` (compacto y elegante, reduciendo el ancho total de las pestañas de 500px a 450px).
+    - Se unificó la altura de todos los elementos de la barra exactamente a **`h-[40px]`** (pestañas, buscador, selector de fecha y botón de limpiar filtros).
+    - Se definió `flex-nowrap` en el bloque de filtros (buscador + fecha) para que nunca se quiebren entre sí.
+    - Se redujo la altura de la barra de **138px** a **76px**, quedando todos los controles (`top: 397px`) alineados al píxel en una sola fila limpia y armónica.
+  - **Pruebas y despliegue:**
+    - Verificación visual y de coordenadas DOM con Puppeteer: barra en una sola fila de 40px de alto con tops idénticos.
+    - Pruebas automatizadas de regresión (`test-compras-cliente.cjs`, `test-scrollbar-focus-f3.cjs`, `test-finanzas-badge-and-keyboard.cjs`): 100% OK.
+    - Desplegado a `siumax` (`node ai-scripts/deploy.cjs siumax`).
+- **Siguiente paso:** Avisar al dueño para su confirmación visual.
+
+---
+
 ## 28/10/2026 (noche, 16) · Antigravity
 - **Pestaña "COMPRAS" en la ficha/detalle del cliente (`ModalDetalleCliente.tsx`):**
   - **Historial completo de compras pagadas en caja (ventas al contado/tarjeta/yape):**
