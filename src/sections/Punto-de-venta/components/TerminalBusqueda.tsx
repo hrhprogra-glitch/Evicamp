@@ -273,7 +273,7 @@ export const TerminalBusqueda: React.FC<Props> = ({
                     id="btn-limpiar-cliente-pos"
                     type="button"
                     onClick={onLimpiarCliente}
-                    title="Quitar cliente (volver a Cliente Varios)"
+                    title="Quitar cliente (Shift+F3 o clic en ✕)"
                     className="border-2 border-[var(--color-ink)] bg-white hover:bg-[var(--color-danger)] hover:text-white px-2 py-1 text-[var(--color-muted)] transition-colors cursor-pointer shadow-[2px_2px_0_0_var(--color-ink)] flex items-center justify-center active:translate-x-[2px] active:translate-y-[2px]"
                   >
                     <X size={13} />

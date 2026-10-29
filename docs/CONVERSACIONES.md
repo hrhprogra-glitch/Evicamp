@@ -164,7 +164,10 @@
   3. *"en el pos ahi dice id y admin osea dependiendo de que usuario entre cambiara eso no ? asi ahi agrega el boton de clientes y pon ahi f3 para que sepa que si quieres entrar le haces click o f3"*: Se explicó que `ID: ADMIN` cambia según la cuenta del cajero conectada, y se agregó en la barra superior junto al ID el botón `CLIENTE (F3)` (o `CLI: [NOMBRE] (F3)`) que permite abrir la ventana tanto con clic como con la tecla F3.
   5. *"en finanzas sale el cliente?? en la tabla y en el detalle de la venta ??"*: El dueño preguntó por la visibilidad del cliente en Finanzas. Se revisó y se descubrió que anteriormente la tabla solo mostraba el cliente si era fiado, y el modal de detalle del ticket no lo mostraba. Se actualizó la tabla de Finanzas para mostrar `[NOMBRE DEL CLIENTE]` en cualquier venta vinculada a un cliente, y se agregó en la cabecera de `ModalDetalleTicket` la fila `Cliente: [NOMBRE]` con badge.
   - Se probó con scripts automatizados en Edge en `siumax` (`test-finanzas-cliente.cjs` 100% OK) y se desplegó.
-
-
-
-
+  6. *"no puedo selecionar la x como tambien cuando agrego un cliente como puedo cancelarlo con teclado??"*:
+     - La `✕` del modal de clientes ahora se enfoca con Flecha Arriba (`ArrowUp`) desde el buscador y se cierra con `Enter` o `Space` (además de `Esc`), con indicador visual rojo y foco activo.
+     - Se agregó el atajo **`Shift + F3`** en el POS para desvincular o cancelar el cliente asignado con una sola combinación de teclas.
+     - Si ya hay un cliente asignado, el botón de selección ahora dice claramente **`✕ QUITAR CLIENTE (NOMBRE)`**, permitiendo cancelar con `Enter` o `Supr (Delete)`.
+  7. *"perfecto si sale el nombre del cliente pero solo sale el nombre nose si ese nombre es del cliente agrega eso"*:
+     - Se actualizó la etiqueta en la tabla de Finanzas para que muestre claramente: **`[CLIENTE: NOMBRE]`**.
+     - Validado al 100% con script automatizado en Edge (`test-finanzas-badge-and-keyboard.cjs`) y desplegado a `siumax`.

@@ -421,9 +421,15 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         return;
       }
 
-      // 3. F3: Seleccionar cliente para la venta (opcional)
+      // 3. F3: Seleccionar cliente para la venta / Shift+F3: Quitar cliente
       if (e.key === 'F3') {
         e.preventDefault();
+        if (e.shiftKey) {
+          if (clienteSeleccionado) {
+            setClienteSeleccionado(null);
+          }
+          return;
+        }
         if (!isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isEsperaModalOpen && !isClienteModalOpen) {
           setIsClienteModalOpen(true);
         }

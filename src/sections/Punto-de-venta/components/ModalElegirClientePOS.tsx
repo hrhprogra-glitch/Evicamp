@@ -175,14 +175,25 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
             <div>
               <h2 className="text-sm font-black uppercase tracking-wider">Cliente de la Venta</h2>
               <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
-                F2 nuevo · Enter elige · Esc salir
+                {clienteActual
+                  ? 'F2 nuevo · Supr quita cliente · Esc o clic en ✕ salir'
+                  : 'F2 nuevo · Enter elige · Esc o clic en ✕ salir'}
               </p>
             </div>
           </div>
           <button
             id="btn-cerrar-cliente-pos"
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center hover:bg-[var(--color-danger)] text-white transition-colors cursor-pointer"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                document.getElementById('buscar-cliente-pos')?.focus();
+              } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClose();
+              }
+            }}
+            className="w-7 h-7 flex items-center justify-center hover:bg-[var(--color-danger)] focus:bg-[var(--color-danger)] focus:ring-2 focus:ring-white focus:outline-none text-white transition-colors cursor-pointer"
             title="Cerrar (Esc)"
           >
             <X size={18} />
@@ -200,7 +211,10 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  document.getElementById('btn-cerrar-cliente-pos')?.focus();
+                } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
                   e.preventDefault();
                   if (search.trim() !== '') {
                     const primerCliente = document.querySelector<HTMLElement>('[data-fila-cliente="true"]');
@@ -225,7 +239,7 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
                 onClose();
               }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' || e.key === 'Delete') {
                   e.preventDefault();
                   onSelectCliente(null);
                   onClose();
@@ -242,12 +256,22 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
                 }
               }}
               className={`flex-1 py-2 px-3 border-2 font-black text-xs uppercase flex items-center justify-center gap-2 transition-colors cursor-pointer outline-none focus:ring-2 focus:ring-[var(--color-ink)] ${
-                !clienteActual
-                  ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]'
-                  : 'bg-white border-[var(--color-border)] hover:border-[var(--color-ink)] text-[var(--color-ink)]'
+                clienteActual
+                  ? 'bg-red-50 hover:bg-red-100 border-red-500 text-red-700 shadow-[2px_2px_0_0_rgba(239,68,68,0.4)]'
+                  : 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]'
               }`}
             >
-              <Users size={14} /> Cliente Varios (Sin Cuenta)
+              {clienteActual ? (
+                <>
+                  <X size={14} className="text-red-600 stroke-[3]" />
+                  <span>✕ Quitar cliente ({clienteActual.nombre})</span>
+                </>
+              ) : (
+                <>
+                  <Users size={14} />
+                  <span>Cliente Varios (Sin Cuenta)</span>
+                </>
+              )}
             </button>
 
             <button

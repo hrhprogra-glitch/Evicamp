@@ -7,6 +7,25 @@
 
 ---
 
+## 28/10/2026 (noche, 15) · Antigravity
+- **Etiqueta clara en Finanzas y mejoras de navegación con teclado en Clientes:**
+  - **Etiqueta en Finanzas (`TablaMovimientos.tsx`):**
+    - Se cambió el formato de la etiqueta en cada fila de venta para que diga expresamente `[CLIENTE: NOMBRE]` (en lugar de solo `[NOMBRE]`), eliminando cualquier ambigüedad visual.
+  - **Navegación con teclado en `ModalElegirClientePOS.tsx`:**
+    - Flecha Arriba (`ArrowUp`) desde el buscador de clientes ahora enfoca directamente el botón de cerrar `✕` (`btn-cerrar-cliente-pos`), con anillo y fondo rojo visible.
+    - Presionar `Enter` o barra espaciadora sobre la `✕` cierra el modal.
+    - Cuando ya hay un cliente asignado (ej. BILLY), el primer botón de acción ahora dice expresamente: `✕ QUITAR CLIENTE (BILLY)` con borde e icono rojo. Presionar `Enter` o `Supr (Delete)` quita el cliente y vuelve a "Cliente Varios".
+  - **Atajo en POS para quitar cliente con teclado (`Punto-de-venta/index.tsx`):**
+    - Se agregó el atajo de teclado **`Shift + F3`** en la pantalla del POS para quitar el cliente asignado al instante sin tener que abrir ningún modal.
+  - **Foco y escape en `ModalFichaCliente.tsx`:**
+    - Se implementó la jaula de foco (Focus Trap) para la tecla `Tab` según el estándar de Evicamp y se permitió cerrar con `Enter` en la `✕` (`btn-cerrar-ficha`) además de `Esc`.
+  - **Pruebas y despliegue:**
+    - Prueba automatizada end-to-end con Edge (`test-finanzas-badge-and-keyboard.cjs`): 100% OK.
+    - Desplegado en `siumax` (`node ai-scripts/deploy.cjs siumax`).
+- **Siguiente paso:** Informar al dueño y esperar su revisión en `siumax`.
+
+---
+
 ## 28/10/2026 (noche, 14) · Antigravity
 - **Visualización de clientes en Finanzas (tabla y detalle de venta):**
   - **Tabla de Finanzas (`TablaMovimientos.tsx` / `Finanzas/index.tsx`):**

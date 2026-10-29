@@ -40,6 +40,36 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
 
   useEffect(() => {
     if (!abierta) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        e.stopPropagation();
+        const allFocusables = Array.from(document.querySelectorAll('input:not([type="file"]), select, button:not([disabled])')) as HTMLElement[];
+        const modalFocusables = allFocusables.filter(el =>
+          el.closest('#modal-ficha-cliente') &&
+          el.tabIndex !== -1 &&
+          !el.classList.contains('hidden') &&
+          el.offsetParent !== null
+        );
+
+        if (modalFocusables.length > 0) {
+          const first = modalFocusables[0];
+          const last = modalFocusables[modalFocusables.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
+  }, [abierta]);
+
+  useEffect(() => {
+    if (!abierta) return;
     setDatos(cliente
       ? { nombre: cliente.nombre, dni: cliente.dni || '', ruc: cliente.ruc || '', telefono: cliente.telefono || '', direccion: cliente.direccion || '', ubicacion: cliente.ubicacion || '', referencia: cliente.referencia || '' }
       : vacio);
@@ -132,7 +162,7 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
   );
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
+    <div id="modal-ficha-cliente" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
       <div role="dialog" aria-label={cliente ? 'Editar cliente' : 'Nuevo cliente'} className="bg-[var(--color-surface)] w-full max-w-lg border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))]">
         <div className="bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -143,7 +173,10 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
             </div>
           </div>
           <button id="btn-cerrar-ficha" onClick={onClose}
-            onKeyDown={(e) => { if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-nombre'); } }}
+            onKeyDown={(e) => { 
+              if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-nombre'); }
+              else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClose(); }
+            }}
             className="hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white/20 p-1.5 cursor-pointer" title="Cerrar (Escape)">
             <X size={20} />
           </button>
