@@ -1,7 +1,7 @@
-# Graph Report - comercio  (2026-10-28)
+# Graph Report - comercio  (2026-10-29)
 
 ## Corpus Check
-- 331 files · ~869,356 words
+- 331 files · ~869,517 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 4 file(s) not represented in the graph (top: (none) 2, .css 2)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7c75df95`
+- Built from commit: `dc065166`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -789,16 +789,16 @@ Nodes (3): CartItem, DatosEmpresa, Props
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `node-ssh` connect `descargar-backups.cjs` to `package.json`, `build-escritorio.cjs`, `imagenes-servidor.cjs`, `cliente.cjs`, `sugerencias-servidor.cjs`?**
-  _High betweenness centrality (0.201) - this node is a cross-community bridge._
+  _High betweenness centrality (0.206) - this node is a cross-community bridge._
 - **What connects `electron-builder`, `recharts`, `@tailwindcss/postcss` to the rest of the system?**
   _16 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `prueba-clientes-detalle.mjs` be split into smaller, more focused modules?**
   _Cohesion score 0.11695906432748537 - nodes in this community are weakly interconnected._
 - **Why does `@supabase/supabase-js` connect `test-vps-insert-v2.cjs` to `check-fiados.cjs`, `supabase.ts`, `package.json`?**
-  _High betweenness centrality (0.165) - this node is a cross-community bridge._
+  _High betweenness centrality (0.163) - this node is a cross-community bridge._
 - **Should `escritorio/package.json` be split into smaller, more focused modules?**
   _Cohesion score 0.125 - nodes in this community are weakly interconnected._
 - **Why does `react` connect `react` to `scratch_inventario.tsx`, `ModalAjuste.tsx`, `package.json`, `Inventario/index.tsx`, `ModalGestionProveedores.tsx`, `sesion.ts`, `Finanzas/index.tsx`, `Clientes/index.tsx`, `subirPendientes`, `Utilidades/index.tsx`, `ModalDetalleCliente.tsx`, `SideBar.tsx`, `ModalHistorialLotes.tsx`, `Punto-de-venta/index.tsx`, `Cliente`, `App.tsx`, `ModalFichaCliente.tsx`, `ModalUsuario.tsx`, `PanelCompras.tsx`, `PestanaClientes.tsx`, `Conteos/index.tsx`, `TicketImprimible.tsx`, `ThemeSwitcher.tsx`, `dialogos.tsx`?**
-  _High betweenness centrality (0.143) - this node is a cross-community bridge._
+  _High betweenness centrality (0.142) - this node is a cross-community bridge._
 - **Should `descargar-backups.cjs` be split into smaller, more focused modules?**
   _Cohesion score 0.07862903225806452 - nodes in this community are weakly interconnected._

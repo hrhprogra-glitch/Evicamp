@@ -280,14 +280,14 @@ html, body {
 
 /* ==========================================================================
    MODO OSCURO (DARK MODE) - Reemplaza tema Plata / Gris
-   Descanso total para la vista con tonos negro carbón, grafito, blanco y acentos clásicos
+   Descanso total para la vista con tonos negro carbón, grafito, gris acero y acentos clásicos (sin blanco)
    ========================================================================== */
 html.theme-monochrome,
 html[data-theme="dark"] {
   color-scheme: dark !important;
 
   /* Variables base de marca */
-  --color-brand-primary: #F8FAFC;
+  --color-brand-primary: #CBD5E1;
   --color-brand-accent: #10B981;
   --color-brand-border: #334155;
   --color-brand-bg: #0B0F17;
@@ -299,11 +299,11 @@ html[data-theme="dark"] {
   --color-border: #334155;    /* Bordes y líneas divisorias visibles y nítidas */
   --color-line-light: #1E293B;/* Líneas punteadas y separadores suaves */
 
-  /* Textos nítidos de alto contraste */
-  --color-ink: #F8FAFC;       /* Texto principal blanco/hueso brillante */
-  --color-ink-rgb: 248, 250, 252;
-  --color-ink-dark: #FFFFFF;
-  --color-muted: #94A3B8;     /* Texto secundario y etiquetas en gris plata */
+  /* Textos nítidos y descansados sin blanco encandilante */
+  --color-ink: #CBD5E1;       /* Texto principal gris plata suave / humo (reemplaza al blanco) */
+  --color-ink-rgb: 203, 213, 225;
+  --color-ink-dark: #E2E8F0;
+  --color-muted: #94A3B8;     /* Texto secundario y etiquetas en gris pizarra */
   --color-subtle: #64748B;    /* Placeholders e íconos inactivos */
 
   /* Acentos clásicos (verde esmeralda, ámbar, rojo, azul) adaptados para fondo oscuro */
@@ -354,11 +354,57 @@ html[data-theme="dark"] .bg-white {
   border-color: var(--color-border);
 }
 
+/* Textos blancos pasan a gris plata relajante */
+html.theme-monochrome .text-white,
+html[data-theme="dark"] .text-white {
+  color: #CBD5E1 !important;
+}
+
 /* Cabeceras oscuras y botones principales que usan bg-[var(--color-ink)] */
 html.theme-monochrome .bg-\[var\(--color-ink\)\],
 html[data-theme="dark"] .bg-\[var\(--color-ink\)\] {
   background-color: #030712 !important;
-  color: #F8FAFC !important;
+  color: #CBD5E1 !important;
+}
+
+/* Bordes que usaban var(--color-ink): en modo oscuro usan gris acero #334155, nunca blanco */
+html.theme-monochrome .border-\[var\(--color-ink\)\],
+html.theme-monochrome .border-b-2.border-\[var\(--color-ink\)\],
+html[data-theme="dark"] .border-\[var\(--color-ink\)\],
+html[data-theme="dark"] .border-b-2.border-\[var\(--color-ink\)\] {
+  border-color: #334155 !important;
+}
+
+/* Pestañas y botones activos con bg-[var(--color-ink)]: borde de acento verde */
+html.theme-monochrome button.bg-\[var\(--color-ink\)\],
+html[data-theme="dark"] button.bg-\[var\(--color-ink\)\] {
+  border-color: var(--color-accent) !important;
+}
+
+/* Sombras duras que usaban var(--color-ink): en modo oscuro son sombra negra pura #000000, nunca blanca */
+html.theme-monochrome .shadow-\[8px_8px_0_0_var\(--color-ink\)\],
+html.theme-monochrome .shadow-\[6px_6px_0_0_var\(--color-ink\)\],
+html.theme-monochrome .shadow-\[4px_4px_0_0_var\(--color-ink\)\],
+html.theme-monochrome [class*="shadow-\["][class*="var\(--color-ink\)"],
+html[data-theme="dark"] .shadow-\[8px_8px_0_0_var\(--color-ink\)\],
+html[data-theme="dark"] .shadow-\[6px_6px_0_0_var\(--color-ink\)\],
+html[data-theme="dark"] .shadow-\[4px_4px_0_0_var\(--color-ink\)\],
+html[data-theme="dark"] [class*="shadow-\["][class*="var\(--color-ink\)"] {
+  box-shadow: 4px 4px 0 0 #000000 !important;
+}
+html.theme-monochrome .hover\:shadow-none:hover,
+html[data-theme="dark"] .hover\:shadow-none:hover {
+  box-shadow: none !important;
+}
+
+/* Anillos de foco y selección */
+html.theme-monochrome [class*="focus:ring-\[var\(--color-ink\)\]"]:focus,
+html[data-theme="dark"] [class*="focus:ring-\[var\(--color-ink\)\]"]:focus {
+  --tw-ring-color: #334155 !important;
+}
+html.theme-monochrome .focus\:bg-amber-100\/50:focus,
+html[data-theme="dark"] .focus\:bg-amber-100\/50:focus {
+  background-color: rgba(245, 158, 11, 0.15) !important;
 }
 
 /* Inputs, textareas y selects */
@@ -369,7 +415,7 @@ html[data-theme="dark"] input,
 html[data-theme="dark"] select,
 html[data-theme="dark"] textarea {
   background-color: #111827 !important;
-  color: #F8FAFC !important;
+  color: #CBD5E1 !important;
   border-color: #334155 !important;
 }
 html.theme-monochrome input::placeholder,

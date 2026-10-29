@@ -8,23 +8,26 @@
 ---
 
 ## 28/10/2026 (noche, 18) · Antigravity
-- **Implementación del Modo Oscuro (Dark Mode) reemplazando "Plata / Gris":**
-  - **Solicitud del dueño:** Añadir un Modo Oscuro para evitar cansancio visual ("mis ojos duelen"), combinando la elegancia del modo clásico con tonos negro, gris grafito y blanco, reemplazando el tema "Plata / Gris".
-  - **Diseño del tema (`src/index.css`):**
+- **Implementación y ajuste del Modo Oscuro (Dark Mode) reemplazando "Plata / Gris":**
+  - **Solicitud del dueño:**
+    1. Añadir Modo Oscuro para evitar cansancio visual ("mis ojos duelen"), reemplazando "Plata / Gris".
+    2. Al ver el blanco: *"el blanco no me gusta un color mas oscuro que remplece el blanco"*.
+  - **Diseño del tema sin blanco (`src/index.css`):**
     - Fondo de pantalla profundo: `#0B0F17` (negro carbón profundo).
     - Tarjetas, modales, tablas y superficies: `#111827` (grafito pizarra) con bordes en gris acero `#334155`.
-    - Texto principal de alto contraste: `#F8FAFC` (blanco brillante).
-    - Texto secundario y datos: `#94A3B8` (gris plata).
-    - Acentos vivos del Clásico preservados: Verde esmeralda `#10B981`, Ámbar `#FBBF24`, Rojo `#F87171` y Azul `#38BDF8`, con fondos tenues oscuros para badges y estados.
-    - Soporte completo para `bg-white`, inputs, selects, scrollbar oscuro (`.custom-scrollbar`), y protección `@media print` para que las boletas impresas sigan saliendo siempre en papel blanco y tinta negra.
+    - Textos descansados (sin blanco encandilante): `#CBD5E1` (gris plata suave / humo) para texto principal y `.text-white`; `#94A3B8` para texto secundario; `#64748B` para placeholders y sutiles.
+    - Sombras y bordes duros: sombras retro en negro puro `#000000` (eliminando la sombra blanca dura que producía `var(--color-ink)`). Bordes de pestañas activas en verde esmeralda (`var(--color-accent)`).
+    - Acentos vivos del Clásico preservados: Verde esmeralda `#10B981`, Ámbar `#FBBF24`, Rojo `#F87171` y Azul `#38BDF8`.
+    - Soporte completo para `bg-white`, inputs, selects, scrollbar oscuro (`.custom-scrollbar`), y protección `@media print` para que las boletas impresas sigan saliendo en papel blanco y tinta negra.
   - **Selector de temas (`ThemeSwitcher.tsx` y `App.tsx`):**
-    - Se reemplazó la opción "Plata / Gris" por **"Modo Oscuro"** con swatches `[#0B0F17, #111827, #10B981, #F8FAFC]`.
+    - Se reemplazó la opción "Plata / Gris" por **"Modo Oscuro"** con swatches `[#0B0F17, #111827, #10B981, #64748B]` (el cuarto color ahora es gris acero `#64748B`, sin blanco).
+    - Descripción actualizada: *"Negro carbón, grafito y gris acero con acentos clásicos, descanso total para la vista."*.
     - Se aplica `theme-monochrome` y `data-theme="dark"` para máxima compatibilidad con navegadores y persistencia en `localStorage`.
   - **Pruebas y despliegue:**
-    - Prueba automatizada end-to-end con Edge (`test-modo-oscuro.cjs` y `test-dark-modal.cjs`): 100% OK.
-    - Verificación visual con capturas en Parámetros, POS, Clientes y Ventanas flotantes.
+    - Pruebas automatizadas end-to-end con Edge (`test-modo-oscuro.cjs` y `test-dark-modal.cjs`): 100% OK.
+    - Verificación visual con capturas sin blanco en Parámetros, POS, Clientes y Detalle del cliente.
     - Desplegado a `siumax` (`node ai-scripts/deploy.cjs siumax`).
-- **Siguiente paso:** Notificar al dueño para que lo pruebe en `siumax`.
+- **Siguiente paso:** Notificar al dueño para que revise el nuevo tono oscuro sin blanco en `siumax`.
 
 ---
 
