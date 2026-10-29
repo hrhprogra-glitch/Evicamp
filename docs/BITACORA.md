@@ -7,6 +7,26 @@
 
 ---
 
+## 29/10/2026 (tarde, 28) · Antigravity
+- **Corrección de tope en la paginación inferior de Clientes:**
+  - **Solicitud del dueño:** *"encontre otro error cuando bajo hasta abajo para selecionar la siguiente pagina pero de la parte de abajo sube hasta arriba deberia mantenerse ahi como un tope"*
+  - **Causa:** En la paginación inferior, al presionar Flecha Abajo ⬇️ o Flecha Derecha ➡️ desde el botón de página siguiente, el código llamaba a `irA('buscador-clientes')` ciclando hacia arriba, lo que provocaba un scroll brusco de la ventana hacia arriba.
+  - **Solución (`PestanaClientes.tsx`):**
+    - Se eliminó el salto al buscador en la paginación inferior. Ahora actúa como un **tope firme**.
+    - Con Flecha Abajo ⬇️ en el pie: se queda en el botón actual sin mover la ventana.
+    - Con Flecha Derecha ➡️ en el botón siguiente: se queda en el botón como tope.
+    - Con Flecha Izquierda ⬅️ en el botón anterior: se queda como tope.
+    - Entre los botones `<` y `>` se navega con normalidad.
+    - Al presionar `Enter` o `Espacio` para cambiar de página, se preserva el foco en el botón de abajo con `setTimeout(() => irA(id), 30)` para que la ventana no salte.
+  - **Validación y Despliegue:**
+    - `npx tsc -b`: 0 errores.
+    - `npm run build`: compilación limpia en 4.08s.
+    - `deploy.cjs siumax`: subido a `siumax.duckdns.org` (20 archivos).
+    - `graphify update .`: grafo de conocimiento actualizado.
+- **Siguiente paso:** Avisar al dueño para que verifique el tope en siumax.
+
+---
+
 ## 29/10/2026 (tarde, 27) · Claude — Videos tutoriales (fuera de Comerc)
 - **El dueño pidió** videos tutoriales del sistema por partes, priorizando los videos.
   Aprobó cargar datos de ejemplo y hacer primero un video de muestra.

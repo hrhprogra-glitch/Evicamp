@@ -4,13 +4,13 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 29/10/2026 (tarde, 27), Claude: videos tutoriales (ver Bitácora; no cambia el sistema).
+- **Última actualización:** 29/10/2026 (tarde, 28), Antigravity: tope de paginación inferior en Clientes.
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4.1 y 4.2. En producción en Evicamp desde el 29/10/2026 (commit 583ad4e).
 - **Fase 4.3 hecha y desplegada en siumax (pruebas):**
   - **Días de plazo en clientes:** campo opcional "Días de plazo para pagar" en la ficha del cliente (ej. 7, 15, 30 días).
   - **Columna Plazo en tabla de clientes:** visible en cabecera y filas (ej. `15 días` o `—`).
   - **Scroll de ventana principal:** tabla sin scroll vertical interno forzado, 50 clientes por página y paginación doble sincronizada (arriba y abajo).
-  - **Navegación fluida por teclado (selector):** paso directo con flechas entre buscador, paginación superior (`<` y `>`), tabla de clientes y paginación inferior (`<` y `>`), con foco resaltado en amarillo neón y desplazamiento automático de pantalla.
+  - **Navegación fluida por teclado (selector):** paso directo con flechas entre buscador, paginación superior (`<` y `>`), tabla de clientes y paginación inferior (`<` y `>`), con foco resaltado en amarillo neón, desplazamiento automático de pantalla y tope firme al final sin saltos indeseados.
   - **Fecha límite calculada en caja:** al elegir al cliente en el cobro a crédito, la fecha límite se calcula y llena sola (`hoy + dias_plazo`).
   - **Selector de fecha nativo 100% intacto:** se puede seguir abriendo el calendario para elegir cualquier día a mano.
   - **Botones rápidos:** accesos directos `+7d`, `+15d`, `+30d` en el panel de fiado.

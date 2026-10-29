@@ -261,3 +261,9 @@
   - Se creó la base demo `siudemo` (API interna, sin link público) con datos de una bodega ficticia.
   - Se armó el grabador en `D:\Programación\siumax\videos\grabador`.
   - Se grabó la muestra `02-como-hacer-una-venta.mp4`.
+     20. **Tope en paginación inferior de Clientes (29/10 tarde):**
+        - *"encontre otro error cuando bajo hasta abajo para selecionar la siguiente pagina pero de la parte de abajo sube hasta arriba deberia mantenerse ahi como un tope"*:
+        - En la paginación inferior, al estar en el botón de página siguiente y presionar Flecha Abajo o Flecha Derecha, el código saltaba hacia el buscador superior provocando un desplazamiento no deseado de la ventana.
+        - Se corrigió para que actúe como un TOPE firme: Flecha Abajo en el pie y Flecha Derecha en siguiente se mantienen en el botón sin saltar ni desplazar la ventana. Al dar Enter o Espacio para cambiar de página, el foco se mantiene en la paginación inferior.
+        - Compilado y desplegado a siumax.duckdns.org.
+

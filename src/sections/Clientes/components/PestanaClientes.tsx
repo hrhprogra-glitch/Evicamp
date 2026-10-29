@@ -83,7 +83,10 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
             type="button"
             tabIndex={0}
             onClick={() => {
-              if (paginaReal > 1) setPagina(paginaReal - 1);
+              if (paginaReal > 1) {
+                setPagina(paginaReal - 1);
+                setTimeout(() => irA(prevId), 30);
+              }
             }}
             aria-disabled={paginaReal === 1}
             onKeyDown={(e) => {
@@ -93,14 +96,14 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 if (posicion === 'arriba') irA('buscador-clientes');
+                // En abajo se mantiene como tope
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 if (posicion === 'arriba') {
                   const f0 = filasDom()[0];
                   if (f0) { f0.focus(); f0.scrollIntoView({ block: 'nearest' }); }
-                } else {
-                  irA('buscador-clientes');
                 }
+                // En la paginación de abajo se mantiene como TOPE (no sube a ningún lado)
               } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 if (posicion === 'arriba') {
@@ -112,7 +115,10 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
                 }
               } else if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                if (paginaReal > 1) setPagina(paginaReal - 1);
+                if (paginaReal > 1) {
+                  setPagina(paginaReal - 1);
+                  setTimeout(() => irA(prevId), 30);
+                }
               }
             }}
             className={claseBotonPag}
@@ -128,7 +134,10 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
             type="button"
             tabIndex={0}
             onClick={() => {
-              if (paginaReal < totalPaginas) setPagina(paginaReal + 1);
+              if (paginaReal < totalPaginas) {
+                setPagina(paginaReal + 1);
+                setTimeout(() => irA(sigId), 30);
+              }
             }}
             aria-disabled={paginaReal === totalPaginas}
             onKeyDown={(e) => {
@@ -137,15 +146,14 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
                 irA(prevId);
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
-                if (posicion === 'abajo') irA('buscador-clientes');
+                // En abajo se mantiene como TOPE (no sube al buscador)
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 if (posicion === 'arriba') {
                   const f0 = filasDom()[0];
                   if (f0) { f0.focus(); f0.scrollIntoView({ block: 'nearest' }); }
-                } else {
-                  irA('buscador-clientes');
                 }
+                // En la paginación de abajo se mantiene como TOPE (no sube a ningún lado)
               } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 if (posicion === 'arriba') {
@@ -157,7 +165,10 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
                 }
               } else if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                if (paginaReal < totalPaginas) setPagina(paginaReal + 1);
+                if (paginaReal < totalPaginas) {
+                  setPagina(paginaReal + 1);
+                  setTimeout(() => irA(sigId), 30);
+                }
               }
             }}
             className={claseBotonPag}
