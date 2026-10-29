@@ -18,6 +18,7 @@ export const PestanaPedidos: React.FC = () => {
   const [modalEntregaAbierto, setModalEntregaAbierto] = useState(false);
   const [metodoCobroSaldo, setMetodoCobroSaldo] = useState<'EFECTIVO' | 'YAPE' | 'TARJETA'>('EFECTIVO');
   const [procesandoAccion, setProcesandoAccion] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   const cargarPedidos = async () => {
     setLoading(true);
@@ -69,7 +70,26 @@ export const PestanaPedidos: React.FC = () => {
     });
   }, [pedidos, search, filtroEstado]);
 
-  const abrirDetalle = async (ped: PedidoCliente) => {
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [search, filtroEstado]);
+
+  const cerrarDetallePedido = () => {
+    setPedidoSeleccionado(null);
+    setModalEntregaAbierto(false);
+    setTimeout(() => {
+      const fila = document.getElementById(`ped-row-${selectedIndex}`) || document.getElementById('ped-row-0');
+      if (fila) {
+        fila.focus();
+        fila.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        document.getElementById('buscador-pedidos')?.focus();
+      }
+    }, 60);
+  };
+
+  const abrirDetalle = async (ped: PedidoCliente, index?: number) => {
+    if (typeof index === 'number') setSelectedIndex(index);
     setPedidoSeleccionado(ped);
     setCargandoDetalles(true);
     try {
@@ -97,6 +117,203 @@ export const PestanaPedidos: React.FC = () => {
       setCargandoDetalles(false);
     }
   };
+
+  const ESTADOS_PED = ['TODOS', 'PENDIENTE', 'ENTREGADO', 'CANCELADO'] as const;
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (pedidosFiltrados.length > 0) {
+        const targetIdx = Math.min(selectedIndex, pedidosFiltrados.length - 1);
+        const row = document.getElementById(`ped-row-${targetIdx}`) || document.getElementById('ped-row-0');
+        row?.focus();
+        row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    } else if (e.key === 'ArrowRight') {
+      const input = e.currentTarget;
+      if (input.selectionStart === input.value.length) {
+        e.preventDefault();
+        document.getElementById(`btn-filtro-ped-${filtroEstado}`)?.focus();
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (pedidosFiltrados.length > 0) {
+        const targetIdx = Math.min(selectedIndex, pedidosFiltrados.length - 1);
+        const row = document.getElementById(`ped-row-${targetIdx}`) || document.getElementById('ped-row-0');
+        row?.focus();
+        row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  };
+
+  const handleFiltroKeyDown = (e: React.KeyboardEvent, index: number, est: typeof ESTADOS_PED[number]) => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (index === 0) {
+        document.getElementById('buscador-pedidos')?.focus();
+      } else {
+        document.getElementById(`btn-filtro-ped-${ESTADOS_PED[index - 1]}`)?.focus();
+      }
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      if (index < ESTADOS_PED.length - 1) {
+        document.getElementById(`btn-filtro-ped-${ESTADOS_PED[index + 1]}`)?.focus();
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (pedidosFiltrados.length > 0) {
+        const targetIdx = Math.min(selectedIndex, pedidosFiltrados.length - 1);
+        const row = document.getElementById(`ped-row-${targetIdx}`) || document.getElementById('ped-row-0');
+        row?.focus();
+        row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      document.getElementById('tab-clientes-pedidos')?.focus();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setFiltroEstado(est);
+    }
+  };
+
+  const handleRowKeyDown = (e: React.KeyboardEvent, idx: number, ped: PedidoCliente) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (idx < pedidosFiltrados.length - 1) {
+        setSelectedIndex(idx + 1);
+        const next = document.getElementById(`ped-row-${idx + 1}`);
+        next?.focus();
+        next?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (idx > 0) {
+        setSelectedIndex(idx - 1);
+        const prev = document.getElementById(`ped-row-${idx - 1}`);
+        prev?.focus();
+        prev?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        document.getElementById('buscador-pedidos')?.focus();
+      }
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const btn = document.getElementById(`btn-detalle-ped-${idx}`);
+      btn?.focus();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      document.getElementById(`btn-filtro-ped-${filtroEstado}`)?.focus();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      abrirDetalle(ped, idx);
+    }
+  };
+
+  const handleBtnDetalleKeyDown = (e: React.KeyboardEvent, idx: number, ped: PedidoCliente) => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      document.getElementById(`ped-row-${idx}`)?.focus();
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (idx < pedidosFiltrados.length - 1) {
+        setSelectedIndex(idx + 1);
+        const nextBtn = document.getElementById(`btn-detalle-ped-${idx + 1}`);
+        if (nextBtn) {
+          nextBtn.focus();
+        } else {
+          document.getElementById(`ped-row-${idx + 1}`)?.focus();
+        }
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (idx > 0) {
+        setSelectedIndex(idx - 1);
+        const prevBtn = document.getElementById(`btn-detalle-ped-${idx - 1}`);
+        if (prevBtn) {
+          prevBtn.focus();
+        } else {
+          document.getElementById(`ped-row-${idx - 1}`)?.focus();
+        }
+      } else {
+        document.getElementById('buscador-pedidos')?.focus();
+      }
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      abrirDetalle(ped, idx);
+    }
+  };
+
+  // Imán de foco y oyentes globales para PestanaPedidos
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (pedidoSeleccionado || modalEntregaAbierto || document.querySelector('[role="dialog"]')) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          cerrarDetallePedido();
+        }
+        return;
+      }
+
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+
+      const active = document.activeElement as HTMLElement | null;
+      const activeTag = active?.tagName;
+
+      if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA' && activeTag !== 'SELECT') {
+          const searchInput = document.getElementById('buscador-pedidos') as HTMLInputElement | null;
+          if (searchInput) {
+            searchInput.focus();
+          }
+        }
+      }
+    };
+
+    const enforceFocus = () => {
+      if (pedidoSeleccionado || modalEntregaAbierto || document.querySelector('[role="dialog"]')) return;
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+
+      const active = document.activeElement;
+      const activeTag = active?.tagName;
+      if (
+        activeTag === 'INPUT' ||
+        activeTag === 'TEXTAREA' ||
+        activeTag === 'BUTTON' ||
+        activeTag === 'SELECT' ||
+        activeTag === 'A' ||
+        active?.closest('[role="button"]') ||
+        active?.hasAttribute('data-row')
+      ) {
+        return;
+      }
+
+      const row = document.getElementById(`ped-row-${selectedIndex}`) || document.getElementById('ped-row-0');
+      if (row) {
+        row.focus();
+      } else {
+        const searchInput = document.getElementById('buscador-pedidos') as HTMLInputElement | null;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+    };
+
+    const handleWindowFocus = () => setTimeout(enforceFocus, 50);
+    const handleGlobalClick = () => setTimeout(enforceFocus, 50);
+
+    setTimeout(enforceFocus, 100);
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('click', handleGlobalClick);
+
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, [pedidoSeleccionado, modalEntregaAbierto, selectedIndex, pedidosFiltrados.length]);
 
   // Entregar pedido y cobrar saldo pendiente
   const handleEntregarPedido = async () => {
@@ -284,14 +501,18 @@ export const PestanaPedidos: React.FC = () => {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
               placeholder="Buscar por Nro, Cliente, DNI, Teléfono..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs font-black uppercase border-2 border-[var(--color-ink)] outline-none bg-white focus:ring-2 focus:ring-[var(--color-ink)]"
+              className="w-full pl-8 pr-3 py-1.5 text-xs font-black uppercase border-2 border-[var(--color-ink)] outline-none bg-white focus:ring-4 focus:ring-[var(--color-ink)]"
             />
           </div>
           {search && (
             <button
-              onClick={() => setSearch('')}
-              className="px-2 py-1 text-xs font-bold border-2 border-[var(--color-ink)] bg-white hover:bg-gray-100"
+              onClick={() => {
+                setSearch('');
+                document.getElementById('buscador-pedidos')?.focus();
+              }}
+              className="px-2 py-1 text-xs font-bold border-2 border-[var(--color-ink)] bg-white hover:bg-gray-100 cursor-pointer"
             >
               Limpiar
             </button>
@@ -300,12 +521,14 @@ export const PestanaPedidos: React.FC = () => {
 
         {/* FILTROS DE ESTADO */}
         <div className="flex gap-1 overflow-x-auto">
-          {(['TODOS', 'PENDIENTE', 'ENTREGADO', 'CANCELADO'] as const).map((est) => (
+          {ESTADOS_PED.map((est, index) => (
             <button
               key={est}
+              id={`btn-filtro-ped-${est}`}
               type="button"
               onClick={() => setFiltroEstado(est)}
-              className={`px-2.5 py-1 text-[11px] font-black uppercase border-2 border-[var(--color-ink)] transition-all cursor-pointer ${
+              onKeyDown={(e) => handleFiltroKeyDown(e, index, est)}
+              className={`px-2.5 py-1 text-[11px] font-black uppercase border-2 border-[var(--color-ink)] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] ${
                 filtroEstado === est
                   ? 'bg-[var(--color-ink)] text-white shadow-[2px_2px_0_0_black]'
                   : 'bg-white text-[var(--color-ink)] hover:bg-gray-100'
@@ -333,6 +556,7 @@ export const PestanaPedidos: React.FC = () => {
         ) : (
           <div className="divide-y divide-[var(--color-border)]">
             {pedidosFiltrados.map((ped, idx) => {
+              const isSelected = selectedIndex === idx;
               const entregaDate = new Date(ped.fecha_entrega);
               const entregaStr = entregaDate.toLocaleDateString();
               const entregaHora = entregaDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -352,18 +576,20 @@ export const PestanaPedidos: React.FC = () => {
                 <div
                   key={ped.id}
                   id={`ped-row-${idx}`}
+                  data-row="true"
+                  data-ped-id={ped.id}
                   role="button"
                   tabIndex={0}
-                  onClick={() => abrirDetalle(ped)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      abrirDetalle(ped);
-                    }
-                  }}
-                  className={`p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 cursor-pointer transition-colors ${
-                    esHoy ? 'bg-amber-50/80 border-l-4 border-l-amber-500' : 'hover:bg-gray-50'
-                  }`}
+                  onFocus={() => setSelectedIndex(idx)}
+                  onClick={() => abrirDetalle(ped, idx)}
+                  onKeyDown={(e) => handleRowKeyDown(e, idx, ped)}
+                  className={`p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 cursor-pointer transition-all border-2 ${
+                    isSelected
+                      ? 'bg-amber-100/90 border-[var(--color-ink)] shadow-[2px_2px_0_0_black] ring-2 ring-[var(--color-ink)]'
+                      : esHoy
+                      ? 'bg-amber-50/80 border-amber-500/50 hover:bg-amber-100/50'
+                      : 'bg-white border-transparent hover:bg-amber-50/50'
+                  } focus:outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:bg-amber-100/90 focus:border-[var(--color-ink)]`}
                 >
                   <div className="flex flex-col gap-0.5 min-w-0">
                     <div className="flex items-center gap-2">
@@ -415,12 +641,16 @@ export const PestanaPedidos: React.FC = () => {
                     </div>
 
                     <button
+                      id={`btn-detalle-ped-${idx}`}
+                      data-btn-detalle="true"
                       type="button"
+                      tabIndex={0}
                       onClick={(e) => {
                         e.stopPropagation();
-                        abrirDetalle(ped);
+                        abrirDetalle(ped, idx);
                       }}
-                      className="px-3 py-1.5 border-2 border-[var(--color-ink)] bg-white hover:bg-[var(--color-accent)] text-xs font-black uppercase tracking-wider shadow-[2px_2px_0_0_black]"
+                      onKeyDown={(e) => handleBtnDetalleKeyDown(e, idx, ped)}
+                      className="px-3 py-1.5 border-2 border-[var(--color-ink)] bg-white hover:bg-[var(--color-accent)] text-xs font-black uppercase tracking-wider shadow-[2px_2px_0_0_black] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-accent)] cursor-pointer"
                     >
                       Ver Pedido
                     </button>
@@ -437,6 +667,9 @@ export const PestanaPedidos: React.FC = () => {
         <div
           role="dialog"
           aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) cerrarDetallePedido();
+          }}
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4"
         >
           <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[92vh] w-full max-w-xl animate-fade-in">
@@ -454,7 +687,7 @@ export const PestanaPedidos: React.FC = () => {
               </div>
               <button
                 type="button"
-                onClick={() => setPedidoSeleccionado(null)}
+                onClick={cerrarDetallePedido}
                 className="p-1 hover:rotate-90 transition-transform cursor-pointer text-white"
               >
                 <X size={20} />
@@ -536,7 +769,7 @@ export const PestanaPedidos: React.FC = () => {
                     type="button"
                     onClick={() => setModalEntregaAbierto(true)}
                     disabled={procesandoAccion}
-                    className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-emerald-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-emerald-700 cursor-pointer"
+                    className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-emerald-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-emerald-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
                   >
                     <CheckCircle2 size={16} /> Entregar y Cobrar Saldo
                   </button>
@@ -545,7 +778,7 @@ export const PestanaPedidos: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleWhatsApp(pedidoSeleccionado, detallesModal)}
-                  className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-green-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-green-600 cursor-pointer"
+                  className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-green-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-green-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
                 >
                   <MessageCircle size={16} /> WhatsApp Cliente
                 </button>
@@ -553,7 +786,7 @@ export const PestanaPedidos: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-white text-[var(--color-ink)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-gray-100 cursor-pointer"
+                  className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-white text-[var(--color-ink)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-gray-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
                 >
                   <Printer size={16} /> Imprimir Comprobante
                 </button>
@@ -563,7 +796,7 @@ export const PestanaPedidos: React.FC = () => {
                     type="button"
                     onClick={handleCancelarPedido}
                     disabled={procesandoAccion}
-                    className="py-2.5 px-3 border-2 border-red-600 bg-white text-red-600 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_red] hover:bg-red-50 cursor-pointer"
+                    className="py-2.5 px-3 border-2 border-red-600 bg-white text-red-600 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_red] hover:bg-red-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-600"
                   >
                     <X size={16} /> Cancelar (Devolver Stock)
                   </button>
@@ -581,6 +814,9 @@ export const PestanaPedidos: React.FC = () => {
         <div
           role="dialog"
           aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) cerrarDetallePedido();
+          }}
           className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[10000] flex items-center justify-center p-3"
         >
           <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_black] p-5 w-full max-w-md flex flex-col gap-4 animate-fade-in">
@@ -590,7 +826,7 @@ export const PestanaPedidos: React.FC = () => {
               </h4>
               <button
                 type="button"
-                onClick={() => setModalEntregaAbierto(false)}
+                onClick={cerrarDetallePedido}
                 className="p-1 hover:rotate-90 transition-transform cursor-pointer"
               >
                 <X size={18} />
@@ -638,7 +874,7 @@ export const PestanaPedidos: React.FC = () => {
             <div className="flex gap-2 pt-2">
               <button
                 type="button"
-                onClick={() => setModalEntregaAbierto(false)}
+                onClick={cerrarDetallePedido}
                 className="flex-1 py-2.5 border-2 border-[var(--color-ink)] bg-gray-100 hover:bg-gray-200 text-xs font-black uppercase tracking-wider cursor-pointer"
               >
                 Cancelar

@@ -86,7 +86,21 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
     setSelectedIndex(0);
   }, [search, filtroEstado]);
 
-  const abrirDetalle = async (coti: Cotizacion) => {
+  const cerrarDetalle = () => {
+    setCotiSeleccionada(null);
+    setTimeout(() => {
+      const fila = document.getElementById(`coti-row-${selectedIndex}`) || document.getElementById('coti-row-0');
+      if (fila) {
+        fila.focus();
+        fila.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        document.getElementById('buscador-cotizaciones')?.focus();
+      }
+    }, 60);
+  };
+
+  const abrirDetalle = async (coti: Cotizacion, index?: number) => {
+    if (typeof index === 'number') setSelectedIndex(index);
     setCotiSeleccionada(coti);
     setCargandoDetalles(true);
     try {
@@ -114,6 +128,203 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
       setCargandoDetalles(false);
     }
   };
+
+  const ESTADOS_COTI = ['TODAS', 'VIGENTE', 'CONVERTIDA', 'VENCIDA', 'ANULADA'] as const;
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (cotizacionesFiltradas.length > 0) {
+        const targetIdx = Math.min(selectedIndex, cotizacionesFiltradas.length - 1);
+        const row = document.getElementById(`coti-row-${targetIdx}`) || document.getElementById('coti-row-0');
+        row?.focus();
+        row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    } else if (e.key === 'ArrowRight') {
+      const input = e.currentTarget;
+      if (input.selectionStart === input.value.length) {
+        e.preventDefault();
+        document.getElementById(`btn-filtro-coti-${filtroEstado}`)?.focus();
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (cotizacionesFiltradas.length > 0) {
+        const targetIdx = Math.min(selectedIndex, cotizacionesFiltradas.length - 1);
+        const row = document.getElementById(`coti-row-${targetIdx}`) || document.getElementById('coti-row-0');
+        row?.focus();
+        row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  };
+
+  const handleFiltroKeyDown = (e: React.KeyboardEvent, index: number, est: typeof ESTADOS_COTI[number]) => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (index === 0) {
+        document.getElementById('buscador-cotizaciones')?.focus();
+      } else {
+        document.getElementById(`btn-filtro-coti-${ESTADOS_COTI[index - 1]}`)?.focus();
+      }
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      if (index < ESTADOS_COTI.length - 1) {
+        document.getElementById(`btn-filtro-coti-${ESTADOS_COTI[index + 1]}`)?.focus();
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (cotizacionesFiltradas.length > 0) {
+        const targetIdx = Math.min(selectedIndex, cotizacionesFiltradas.length - 1);
+        const row = document.getElementById(`coti-row-${targetIdx}`) || document.getElementById('coti-row-0');
+        row?.focus();
+        row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      document.getElementById('tab-clientes-cotizaciones')?.focus();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setFiltroEstado(est);
+    }
+  };
+
+  const handleRowKeyDown = (e: React.KeyboardEvent, idx: number, coti: Cotizacion) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (idx < cotizacionesFiltradas.length - 1) {
+        setSelectedIndex(idx + 1);
+        const next = document.getElementById(`coti-row-${idx + 1}`);
+        next?.focus();
+        next?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (idx > 0) {
+        setSelectedIndex(idx - 1);
+        const prev = document.getElementById(`coti-row-${idx - 1}`);
+        prev?.focus();
+        prev?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        document.getElementById('buscador-cotizaciones')?.focus();
+      }
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const btn = document.getElementById(`btn-detalle-coti-${idx}`);
+      btn?.focus();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      document.getElementById(`btn-filtro-coti-${filtroEstado}`)?.focus();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      abrirDetalle(coti, idx);
+    }
+  };
+
+  const handleBtnDetalleKeyDown = (e: React.KeyboardEvent, idx: number, coti: Cotizacion) => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      document.getElementById(`coti-row-${idx}`)?.focus();
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (idx < cotizacionesFiltradas.length - 1) {
+        setSelectedIndex(idx + 1);
+        const nextBtn = document.getElementById(`btn-detalle-coti-${idx + 1}`);
+        if (nextBtn) {
+          nextBtn.focus();
+        } else {
+          document.getElementById(`coti-row-${idx + 1}`)?.focus();
+        }
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (idx > 0) {
+        setSelectedIndex(idx - 1);
+        const prevBtn = document.getElementById(`btn-detalle-coti-${idx - 1}`);
+        if (prevBtn) {
+          prevBtn.focus();
+        } else {
+          document.getElementById(`coti-row-${idx - 1}`)?.focus();
+        }
+      } else {
+        document.getElementById('buscador-cotizaciones')?.focus();
+      }
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      abrirDetalle(coti, idx);
+    }
+  };
+
+  // Imán de foco y oyentes globales para PestanaCotizaciones
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (cotiSeleccionada || document.querySelector('[role="dialog"]')) {
+        if (e.key === 'Escape' && cotiSeleccionada) {
+          e.preventDefault();
+          cerrarDetalle();
+        }
+        return;
+      }
+
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+
+      const active = document.activeElement as HTMLElement | null;
+      const activeTag = active?.tagName;
+
+      if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA' && activeTag !== 'SELECT') {
+          const searchInput = document.getElementById('buscador-cotizaciones') as HTMLInputElement | null;
+          if (searchInput) {
+            searchInput.focus();
+          }
+        }
+      }
+    };
+
+    const enforceFocus = () => {
+      if (cotiSeleccionada || document.querySelector('[role="dialog"]')) return;
+      const sidebar = document.getElementById('evicamp-sidebar');
+      if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
+
+      const active = document.activeElement;
+      const activeTag = active?.tagName;
+      if (
+        activeTag === 'INPUT' ||
+        activeTag === 'TEXTAREA' ||
+        activeTag === 'BUTTON' ||
+        activeTag === 'SELECT' ||
+        activeTag === 'A' ||
+        active?.closest('[role="button"]') ||
+        active?.hasAttribute('data-row')
+      ) {
+        return;
+      }
+
+      const row = document.getElementById(`coti-row-${selectedIndex}`) || document.getElementById('coti-row-0');
+      if (row) {
+        row.focus();
+      } else {
+        const searchInput = document.getElementById('buscador-cotizaciones') as HTMLInputElement | null;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+    };
+
+    const handleWindowFocus = () => setTimeout(enforceFocus, 50);
+    const handleGlobalClick = () => setTimeout(enforceFocus, 50);
+
+    setTimeout(enforceFocus, 100);
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('click', handleGlobalClick);
+
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, [cotiSeleccionada, selectedIndex, cotizacionesFiltradas.length]);
 
   const handleConvertirEnVenta = async (coti: Cotizacion) => {
     if (coti.estado === 'CONVERTIDA') {
@@ -257,14 +468,18 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
               placeholder="Buscar por Nro, Cliente, DNI, Teléfono..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs font-black uppercase border-2 border-[var(--color-ink)] outline-none bg-white focus:ring-2 focus:ring-[var(--color-ink)]"
+              className="w-full pl-8 pr-3 py-1.5 text-xs font-black uppercase border-2 border-[var(--color-ink)] outline-none bg-white focus:ring-4 focus:ring-[var(--color-ink)]"
             />
           </div>
           {search && (
             <button
-              onClick={() => setSearch('')}
-              className="px-2 py-1 text-xs font-bold border-2 border-[var(--color-ink)] bg-white hover:bg-gray-100"
+              onClick={() => {
+                setSearch('');
+                document.getElementById('buscador-cotizaciones')?.focus();
+              }}
+              className="px-2 py-1 text-xs font-bold border-2 border-[var(--color-ink)] bg-white hover:bg-gray-100 cursor-pointer"
             >
               Limpiar
             </button>
@@ -273,12 +488,14 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
 
         {/* FILTRO DE ESTADO */}
         <div className="flex gap-1 overflow-x-auto">
-          {(['TODAS', 'VIGENTE', 'CONVERTIDA', 'VENCIDA', 'ANULADA'] as const).map((est) => (
+          {ESTADOS_COTI.map((est, index) => (
             <button
               key={est}
+              id={`btn-filtro-coti-${est}`}
               type="button"
               onClick={() => setFiltroEstado(est)}
-              className={`px-2.5 py-1 text-[11px] font-black uppercase border-2 border-[var(--color-ink)] transition-all cursor-pointer ${
+              onKeyDown={(e) => handleFiltroKeyDown(e, index, est)}
+              className={`px-2.5 py-1 text-[11px] font-black uppercase border-2 border-[var(--color-ink)] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] ${
                 filtroEstado === est
                   ? 'bg-[var(--color-ink)] text-white shadow-[2px_2px_0_0_black]'
                   : 'bg-white text-[var(--color-ink)] hover:bg-gray-100'
@@ -321,18 +538,18 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
                 <div
                   key={coti.id}
                   id={`coti-row-${idx}`}
+                  data-row="true"
+                  data-coti-id={coti.id}
                   role="button"
                   tabIndex={0}
-                  onClick={() => abrirDetalle(coti)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      abrirDetalle(coti);
-                    }
-                  }}
-                  className={`p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 cursor-pointer transition-colors ${
-                    isSelected ? 'bg-amber-50 border-l-4 border-l-[var(--color-ink)]' : 'hover:bg-gray-50'
-                  }`}
+                  onFocus={() => setSelectedIndex(idx)}
+                  onClick={() => abrirDetalle(coti, idx)}
+                  onKeyDown={(e) => handleRowKeyDown(e, idx, coti)}
+                  className={`p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 cursor-pointer transition-all border-2 ${
+                    isSelected
+                      ? 'bg-amber-100/90 border-[var(--color-ink)] shadow-[2px_2px_0_0_black] ring-2 ring-[var(--color-ink)]'
+                      : 'bg-white border-transparent hover:bg-amber-50/50'
+                  } focus:outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:bg-amber-100/90 focus:border-[var(--color-ink)]`}
                 >
                   <div className="flex flex-col gap-0.5 min-w-0">
                     <div className="flex items-center gap-2">
@@ -370,12 +587,16 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
                     </div>
 
                     <button
+                      id={`btn-detalle-coti-${idx}`}
+                      data-btn-detalle="true"
                       type="button"
+                      tabIndex={0}
                       onClick={(e) => {
                         e.stopPropagation();
-                        abrirDetalle(coti);
+                        abrirDetalle(coti, idx);
                       }}
-                      className="px-3 py-1.5 border-2 border-[var(--color-ink)] bg-white hover:bg-[var(--color-accent)] text-xs font-black uppercase tracking-wider shadow-[2px_2px_0_0_black]"
+                      onKeyDown={(e) => handleBtnDetalleKeyDown(e, idx, coti)}
+                      className="px-3 py-1.5 border-2 border-[var(--color-ink)] bg-white hover:bg-[var(--color-accent)] text-xs font-black uppercase tracking-wider shadow-[2px_2px_0_0_black] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-accent)] cursor-pointer"
                     >
                       Ver Detalle
                     </button>
@@ -392,6 +613,9 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
         <div
           role="dialog"
           aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) cerrarDetalle();
+          }}
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4"
         >
           <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[92vh] w-full max-w-xl animate-fade-in">
@@ -409,7 +633,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
               </div>
               <button
                 type="button"
-                onClick={() => setCotiSeleccionada(null)}
+                onClick={cerrarDetalle}
                 className="p-1 hover:rotate-90 transition-transform cursor-pointer text-white"
               >
                 <X size={20} />
@@ -482,7 +706,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
                   <button
                     type="button"
                     onClick={() => handleConvertirEnVenta(cotiSeleccionada)}
-                    className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-emerald-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-emerald-700 cursor-pointer"
+                    className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-emerald-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-emerald-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
                   >
                     <ShoppingBag size={16} /> Convertir en Venta
                   </button>
@@ -491,7 +715,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
                 <button
                   type="button"
                   onClick={() => handleWhatsApp(cotiSeleccionada, detallesModal)}
-                  className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-green-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-green-600 cursor-pointer"
+                  className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-green-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-green-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
                 >
                   <MessageCircle size={16} /> Compartir WhatsApp
                 </button>
@@ -499,7 +723,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-white text-[var(--color-ink)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-gray-100 cursor-pointer"
+                  className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-white text-[var(--color-ink)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-gray-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
                 >
                   <Printer size={16} /> Imprimir
                 </button>
@@ -508,7 +732,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
                   <button
                     type="button"
                     onClick={() => handleAnular(cotiSeleccionada)}
-                    className="py-2.5 px-3 border-2 border-red-600 bg-white text-red-600 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_red] hover:bg-red-50 cursor-pointer"
+                    className="py-2.5 px-3 border-2 border-red-600 bg-white text-red-600 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_red] hover:bg-red-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-600"
                   >
                     <X size={16} /> Anular Cotización
                   </button>

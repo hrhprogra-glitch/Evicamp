@@ -7,6 +7,29 @@
 
 ---
 
+## 29/10/2026 (tarde, 35) · Antigravity
+- **Selector Completo en Cotizaciones, Pedidos y Recuperación de Foco Global tras Modales/Ventanas:**
+  - **1. Selector de Grilla en Pestaña Cotizaciones (`PestanaCotizaciones.tsx`):**
+    - El selector ya no queda atrapado en el buscador: desde `buscador-cotizaciones`, `ArrowDown` o `Enter` bajan de inmediato a la lista de cotizaciones (`coti-row-0`), y `ArrowRight` pasa a los filtros.
+    - Filtros de estado (`TODAS`, `VIGENTE`, `CONVERTIDA`, `VENCIDA`, `ANULADA`): navegación con flechas `ArrowLeft` / `ArrowRight`, `ArrowDown` baja a la primera fila, `ArrowUp` regresa a la barra de pestañas.
+    - Filas de cotizaciones (`coti-row-${idx}`): atributo `data-row="true"`, anillo de selector de alto contraste (`focus:ring-4 focus:ring-[var(--color-ink)] focus:bg-amber-100/90 focus:border-[var(--color-ink)]`), flechas `ArrowDown` y `ArrowUp` para recorrer las filas, `ArrowRight` salta al botón `[Ver Detalle]`, y `Enter` abre el modal.
+    - Botón `[Ver Detalle]`: `ArrowLeft` devuelve el foco a la fila, `ArrowDown`/`ArrowUp` pasan a los botones de filas contiguas.
+  - **2. Selector de Grilla en Pestaña Pedidos (`PestanaPedidos.tsx`):**
+    - Exactamente la misma experiencia fluida: `buscador-pedidos` con `ArrowDown` baja a las filas de pedidos y `ArrowRight` a los filtros de estado (`TODOS`, `PENDIENTE`, `ENTREGADO`, `CANCELADO`).
+    - Filas con `data-row="true"`, resaltado visual nítido y navegación completa ↑ ↓ ← → y Enter.
+  - **3. Recuperación Universal del Selector al Cerrar Modales y Cambiar de Ventana ("si entro y salgo de la ventana no funciona el selector no marca nada"):**
+    - En `ventanas.ts`: se expandió `FILA` para reconocer `[id^="coti-row-"]`, `[id^="ped-row-"]`, etc. Al cerrar cualquier modal (`devolver`), si el elemento guardado no existe o el foco quedó en el body, se activa automáticamente el callback de restauración de foco de la sesión activa (`programarRestauracionFoco`).
+    - En `App.tsx`:
+      - `recordarSeleccionEnVentanas` ahora recibe como fallback universal la restauración de la sesión activa.
+      - Se añadió detector de foco de ventana (`window.addEventListener('focus', ...)`) y de clics en vacío (`document.addEventListener('click', ...)`): si el usuario sale a otra aplicación (Alt-Tab / otra ventana de Windows) o hace clic fuera y regresa, el selector se reactiva inmediatamente en la sesión activa sin dejar nada en blanco.
+    - En `navegacionSesion.ts`: se añadieron `buscador-cotizaciones` y `buscador-pedidos` y la primera fila activa al orden de prioridad de foco para la sección Clientes.
+    - En `Clientes/index.tsx`: al hacer clic o cambiar a cualquier pestaña se auto-enfoca su buscador de inmediato, y se añadieron todos los estados de modales al efecto de restauración.
+  - **Validación y despliegue:**
+    - `npx tsc -b` (0 errores).
+    - `npm run build` (4.06s).
+    - `node ai-scripts/deploy.cjs siumax` (20 archivos subidos a `siumax.duckdns.org`). Evicamp y GitHub intactos.
+    - `graphify update .` ejecutado.
+
 ## 29/10/2026 (tarde, 34) · Antigravity
 - **Ajustes de Precios Mayoristas, Selector en Modales y Pago Mixto en Pedidos:**
   - **1. Descuento % sobre Precio Mayorista (`Punto-de-venta/index.tsx`):**

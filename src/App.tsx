@@ -74,7 +74,33 @@ export const App: React.FC = () => {
   };
 
   // Al cerrar cualquier ventana, el selector vuelve a lo que estaba seleccionado (src/utils/ventanas.ts)
-  useEffect(() => recordarSeleccionEnVentanas(), []);
+  useEffect(() => recordarSeleccionEnVentanas(() => programarRestauracionFoco(currentViewRef.current)), []);
+
+  // Al entrar de nuevo a la ventana del navegador o al hacer clic fuera: asegurar que el selector no se pierda
+  useEffect(() => {
+    const handleWindowFocus = () => {
+      setTimeout(() => {
+        if (!hayVentanaAbierta() && (!document.activeElement || document.activeElement === document.body)) {
+          programarRestauracionFoco(currentViewRef.current);
+        }
+      }, 60);
+    };
+
+    const handleGlobalClick = () => {
+      setTimeout(() => {
+        if (!hayVentanaAbierta() && (!document.activeElement || document.activeElement === document.body)) {
+          programarRestauracionFoco(currentViewRef.current);
+        }
+      }, 60);
+    };
+
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('click', handleGlobalClick);
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, []);
 
   // Atajo global: Tab para alternar el menú lateral con prioridad absoluta
   useEffect(() => {

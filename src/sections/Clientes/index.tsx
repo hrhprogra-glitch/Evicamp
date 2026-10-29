@@ -286,7 +286,7 @@ if (fiaData) {
 
   // 🔥 RESTAURAR FOCO AL CERRAR MODALES O TERMINAR DE CARGAR
   useEffect(() => {
-    if (!loading && !isModalFiadoOpen && !isModalAbonoOpen && !isModalDetalleOpen && !isModalAnularOpen && !isModalEstadoCuentaOpen && !fichaAbierta && !detalleId) {
+    if (!loading && !isModalFiadoOpen && !isModalAbonoOpen && !isModalDetalleOpen && !isModalAnularOpen && !isModalEstadoCuentaOpen && !fichaAbierta && !detalleId && !grupoVerId && !elegirGrupoPara && !agregarAGrupo && !formGrupo && !cuentaGrupoId) {
       setTimeout(() => {
         // Solo si el selector no está ya en algo de la pantalla (al cerrar una ventana vuelve a su fila: ventanas.ts)
         const a = document.activeElement;
@@ -295,7 +295,7 @@ if (fiaData) {
         }
       }, 100);
     }
-  }, [loading, isModalFiadoOpen, isModalAbonoOpen, isModalDetalleOpen, isModalAnularOpen, isModalEstadoCuentaOpen, fichaAbierta, detalleId, pestana]);
+  }, [loading, isModalFiadoOpen, isModalAbonoOpen, isModalDetalleOpen, isModalAnularOpen, isModalEstadoCuentaOpen, fichaAbierta, detalleId, grupoVerId, elegirGrupoPara, agregarAGrupo, formGrupo, cuentaGrupoId, pestana]);
 
   const clientesAgrupados = React.useMemo(() => {
     const mapa = new Map<string, ClienteFiadoAgrupado>();
@@ -645,7 +645,10 @@ if (fiaData) {
       <div role="tablist" aria-label="Clientes" className="flex gap-2 shrink-0">
         {PESTANAS.map((p, i) => (
           <button key={p.id} id={p.boton} role="tab" aria-selected={pestana === p.id} type="button"
-            onClick={() => setPestana(p.id)}
+            onClick={() => {
+              setPestana(p.id);
+              setTimeout(() => document.getElementById(buscadorDe(p.id))?.focus(), 50);
+            }}
             onKeyDown={(e) => {
               if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
                 e.preventDefault(); e.stopPropagation();

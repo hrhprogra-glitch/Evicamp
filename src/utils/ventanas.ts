@@ -34,14 +34,14 @@ export const enfocablesDe = (contenedor: HTMLElement): HTMLElement[] =>
 // lista se volvió a dibujar (al guardar), se busca la misma fila por su texto o por su posición.
 interface Recuerdo { el: HTMLElement; id: string; fila: number; texto: string }
 // Filas de las listas: casi todas llevan data-row; las de Créditos son <tr role="button">
-const FILA = '[data-row="true"], tr[role="button"]';
+const FILA = '[data-row="true"], [data-row-prov="true"], [data-fila-cliente="true"], tr[role="button"], [id^="coti-row-"], [id^="ped-row-"]';
 const filasVisibles = () => (Array.from(document.querySelectorAll(FILA)) as HTMLElement[])
   .filter((f) => visible(f) && !ventanasAbiertas().some((v) => v.contains(f)));
 const textoDe = (el: HTMLElement) => (el.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 120);
 const perdido = (activo: Element | null) => !activo || activo === document.body
   || (activo instanceof HTMLElement && activo.id.startsWith('buscador'));
 
-export const recordarSeleccionEnVentanas = () => {
+export const recordarSeleccionEnVentanas = (fallbackRestaurar?: () => void) => {
   let recuerdo: Recuerdo | null = null;
   let habiaVentana = hayVentanaAbierta();
   let cuantasVentanas = ventanasAbiertas().length;
@@ -76,11 +76,20 @@ export const recordarSeleccionEnVentanas = () => {
 
   // Se usa lo guardado AL CERRAR (el imán de la sesión enfoca su buscador justo después y eso no cuenta)
   const devolver = (r: Recuerdo | null) => {
-    if (!r || teclaDespues || hayVentanaAbierta() || !perdido(document.activeElement)) return;
-    const el = destino(r);
-    if (!el || el === document.activeElement) return;
-    el.focus();
-    el.scrollIntoView({ block: 'nearest' });
+    if (teclaDespues || hayVentanaAbierta()) return;
+    const el = r ? destino(r) : null;
+    if (el && el.isConnected && visible(el)) {
+      el.focus();
+      el.scrollIntoView({ block: 'nearest' });
+      return;
+    }
+    // Si no había elemento guardado o ya no existe, asegurar que el selector no se quede en el vacío
+    const a = document.activeElement;
+    if (!a || a === document.body) {
+      if (fallbackRestaurar) {
+        fallbackRestaurar();
+      }
+    }
   };
 
   // Se cerró una ventana pero queda otra debajo: el selector vuelve a donde estaba en ESA ventana

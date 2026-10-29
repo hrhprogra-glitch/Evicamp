@@ -318,4 +318,11 @@
           5. *"cuando entro a pedido no sale el selector no te olvides moverme izquierda y derecha"*: en `ModalPedidoPOS.tsx` se habilitó navegación de selector con flechas en 2D (incluyendo ← → entre campos en columnas).
           6. *"me e dado cuenta que el metodo de pago de pedidos no es mixto osea que pasa si el cliente quiere pagar en efectivo una parte y en yape o tarjeta la otra arregla eso"*: se transformó el adelanto de pedidos a **pago mixto en 3 columnas** (Efectivo, Yape/Plin, Tarjeta) con suma automática del total de adelanto y saldo pendiente restante.
         - Todo compilado (`npx tsc -b`, `npm run build`) y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
-
+     27. **Selector en Cotizaciones/Pedidos y Recuperación de Foco en todas las sesiones/ventanas (29/10 tarde):**
+        - El dueño reportó: *"el selector solo funciona en el buscador arregla eso lo mismo en pedido otra cosa si entro y salgo de la ventana no funciona el selector no marca nada arregla eso con todas las sesiones"*.
+        - Se implementó la navegación completa del selector de grilla en `PestanaCotizaciones.tsx` y `PestanaPedidos.tsx`:
+          - Desde el buscador (`buscador-cotizaciones` / `buscador-pedidos`), flecha Abajo o Enter bajan de inmediato a las filas (`coti-row-0` / `ped-row-0`), y flecha Derecha pasa a los botones de filtro.
+          - Botones de filtro de estado navegan con flechas ← →, Abajo salta a la tabla, y Arriba regresa a la barra de pestañas.
+          - Filas con atributo `data-row="true"` y resaltado de selector nítido (`focus:ring-4 focus:ring-black focus:bg-amber-100`). Flechas Arriba/Abajo navegan entre filas, y Derecha salta a `[Ver Detalle]` / `[Ver Pedido]`.
+          - En `ventanas.ts`, `App.tsx` y `navegacionSesion.ts`: se blindó la recuperación de foco automática. Al cerrar cualquier modal o volver a entrar a la ventana desde otra aplicación o hacer clic fuera, si el foco queda en el vacío (`body`), el sistema re-enfoca automáticamente el elemento primario de la sesión activa, evitando que el selector desaparezca en cualquiera de las sesiones.
+        - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.

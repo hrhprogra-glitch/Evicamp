@@ -24,10 +24,24 @@ export const restaurarFocoSesion = (view?: string): boolean => {
     if (btnCobrar && btnCobrar.offsetParent !== null) { btnCobrar.focus(); return true; }
   }
 
-  // 2. CLIENTES (antes Créditos): el buscador de la pestaña abierta (Clientes o Créditos)
+  // 2. CLIENTES: el buscador de la pestaña activa (Clientes, Créditos, Cotizaciones o Pedidos)
   if (activeView === 'clientes') {
-    const b = (document.getElementById('buscador-clientes') || document.getElementById('buscador-global-fiados')) as HTMLInputElement | null;
+    const b = (
+      document.getElementById('buscador-cotizaciones') ||
+      document.getElementById('buscador-pedidos') ||
+      document.getElementById('buscador-clientes') ||
+      document.getElementById('buscador-global-fiados')
+    ) as HTMLInputElement | null;
     if (b && b.offsetParent !== null) { b.focus(); b.select(); return true; }
+
+    const primeraFila = (
+      document.querySelector('[id="coti-row-0"]') ||
+      document.querySelector('[id="ped-row-0"]') ||
+      document.querySelector('tr[data-fila-cliente="true"]') ||
+      document.querySelector('tr[role="button"]')
+    ) as HTMLElement | null;
+    if (primeraFila && primeraFila.offsetParent !== null) { primeraFila.focus(); return true; }
+
     const btnNuevo = document.getElementById('btn-nuevo-cliente') as HTMLElement | null;
     if (btnNuevo && btnNuevo.offsetParent !== null) { btnNuevo.focus(); return true; }
   }
