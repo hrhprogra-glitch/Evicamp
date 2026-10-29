@@ -7,6 +7,21 @@
 
 ---
 
+## 29/10/2026 (tarde, 27) · Claude — Videos tutoriales (fuera de Comerc)
+- **El dueño pidió** videos tutoriales del sistema por partes, priorizando los videos.
+  Aprobó cargar datos de ejemplo y hacer primero un video de muestra.
+- **Base demo aparte en el VPS: `siudemo`.** Para no ensuciar siumax ni sus pruebas.
+  - Estructura copiada de siuhub y empresa "BODEGA LA ESQUINA", con usuario `demo@siumax.com` (Rosa, administradora).
+  - Datos: 35 productos de bodega, lotes, 3 proveedores, 6 clientes, 87 ventas de la semana, 6 fiados y la caja de hoy abierta.
+  - **API solo interna** (puerto 3199 en 127.0.0.1, unidad temporal `siudemo-api`), sin link público, nginx ni certificado.
+  - No está en el registro de clientes ni en el Panel.
+- **Grabador** en `D:\Programación\siumax\videos\grabador` (no está en git; ver su LEEME.md).
+  - Sirve en localhost una copia de la pantalla de siumax conectada a siudemo por un túnel SSH.
+  - Graba con Edge sin ventana y ffmpeg: MP4 1920x1080 con portada, textos por paso, resaltes, teclas en pantalla y cierre con el WhatsApp 955 476 689.
+- **Muestra hecha:** `videos/02-como-hacer-una-venta.mp4` (75 s, 6 MB), esperando que el dueño la revise.
+- **Siguiente:** con su OK, los demás tutoriales:
+  1 Conociendo SiuMax, 3 Agregar productos, 4 Entradas/salidas, 5 Fiados, 6 Caja, 7 Proveedores, 8 Conteos, 9 Configuración.
+
 ## 29/10/2026 (tarde, 26) · Antigravity
 - **Corrección de flujo del selector por teclado en paginación superior e inferior:**
   - **Solicitud del dueño:** *"perfecto pero falta que el selector pase por la siguiente pagina como tambien la de abajo el selector no pasa por ahi"*

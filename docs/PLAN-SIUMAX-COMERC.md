@@ -4,7 +4,7 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 29/10/2026 (tarde, 26), Antigravity.
+- **Última actualización:** 29/10/2026 (tarde, 27), Claude: videos tutoriales (ver Bitácora; no cambia el sistema).
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4.1 y 4.2. En producción en Evicamp desde el 29/10/2026 (commit 583ad4e).
 - **Fase 4.3 hecha y desplegada en siumax (pruebas):**
   - **Días de plazo en clientes:** campo opcional "Días de plazo para pagar" en la ficha del cliente (ej. 7, 15, 30 días).
@@ -24,6 +24,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Videos tutoriales del sistema** (9 videos; grabados contra la base demo `siudemo`, fuera de Comerc) | **Muestra hecha (02 venta, 29/10); falta OK del dueño para los demás** |
 | **Fase 4.3 (Días de plazo y fecha calculada en caja, sin límite de crédito)** | **Hecho en siumax (29/10), listo para revisión** |
 | **Modo Oscuro (Dark Mode)** reemplazando "Plata / Gris" en Apariencia | **Hecho en producción (29/10)** |
 | **Grupos de clientes (familia/empresa)** dentro de la 4.1 | **Hecho en producción (29/10)** |

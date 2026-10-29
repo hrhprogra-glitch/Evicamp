@@ -253,3 +253,11 @@
          - Tránsito bidireccional fluido: Flecha Abajo ⬇️ desde la barra entra a la paginación superior; Flechas ⬅️ y ➡️ alternan entre anterior y siguiente; Flecha Abajo ⬇️ baja a la fila 0; Flecha Abajo ⬇️ desde la última fila salta al botón de siguiente página inferior; Flecha Arriba ⬆️ sube a la tabla; Flecha Abajo ⬇️ en el pie cicla arriba al buscador.
        - Desplegado a siumax.duckdns.org.
 
+
+### 29/10/2026 (tarde) · Claude — Videos tutoriales
+- *"quiero crear imagenes de mi sistema y videos tu puedes crearme??"* → se explicó qué se puede (capturas, publicaciones, videos demo y para redes; sin voz).
+- *"prioridad son el video puedes grabar como funciona el programa por partes osea crear varios videos tutoriales"* → se propusieron 9 tutoriales y hacer primero el de ventas como muestra.
+- *"si hazlo"*:
+  - Se creó la base demo `siudemo` (API interna, sin link público) con datos de una bodega ficticia.
+  - Se armó el grabador en `D:\Programación\siumax\videos\grabador`.
+  - Se grabó la muestra `02-como-hacer-una-venta.mp4`.
