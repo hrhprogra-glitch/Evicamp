@@ -10,6 +10,7 @@ interface Props {
 
 export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
   const [detallesTicket, setDetallesTicket] = useState<any[]>([]);
+  const [ventaInfo, setVentaInfo] = useState<{ clienteNombre?: string | null; metodoPago?: string | null } | null>(null);
   const [isLoadingDetalles, setIsLoadingDetalles] = useState(false);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -19,11 +20,22 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
     const fetchDetalles = async () => {
       setIsLoadingDetalles(true);
       try {
-        const { data } = await supabase
-          .from('sale_details')
-          .select('*')
-          .eq('sale_id', ticketId);
-        setDetallesTicket(data || []);
+        const [detallesRes, ventaRes] = await Promise.all([
+          supabase.from('sale_details').select('*').eq('sale_id', ticketId),
+          supabase.from('sales').select('customer_name, payment_type').eq('id', ticketId).maybeSingle()
+        ]);
+        setDetallesTicket(detallesRes.data || []);
+
+        let clienteNombre = ventaRes.data?.customer_name;
+        if (!clienteNombre) {
+          const { data: fiado } = await supabase.from('fiados').select('customer_name').eq('sale_id', ticketId).maybeSingle();
+          clienteNombre = fiado?.customer_name;
+        }
+
+        setVentaInfo({
+          clienteNombre: clienteNombre || null,
+          metodoPago: ventaRes.data?.payment_type || null
+        });
       } catch (error) {
         console.error('Error fetching ticket details:', error);
       } finally {
@@ -113,6 +125,14 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
             <h2 id="modal-ticket-title" className="text-[var(--color-ink)] font-black text-lg uppercase tracking-widest">
               TICKET #{String(ticketId).slice(-6)}
             </h2>
+            {ventaInfo?.clienteNombre && (
+              <p className="text-xs font-black text-[var(--color-ink)] uppercase mt-1 flex items-center gap-1.5">
+                <span className="text-[var(--color-muted)] font-normal">Cliente:</span>
+                <span className="text-[var(--color-info)] font-black bg-blue-50 px-1.5 py-0.5 border border-blue-200">
+                  {ventaInfo.clienteNombre}
+                </span>
+              </p>
+            )}
           </div>
           <button 
             ref={closeBtnRef}

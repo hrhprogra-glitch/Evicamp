@@ -403,7 +403,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
           ...t,
           payment_type: esFiado ? 'FIADO' : (t.payment_type || 'MIXTO'),
           es_fiado: esFiado,
-          cliente_nombre: fiado ? fiado.customer_name : null,
+          cliente_nombre: t.customer_name || (fiado ? fiado.customer_name : null),
           monto_pagado: montoPagado,
           monto_deuda: deudaActual
         };

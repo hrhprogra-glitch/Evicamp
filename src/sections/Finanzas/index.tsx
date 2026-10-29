@@ -281,7 +281,7 @@ export const Finanzas: React.FC = () => {
             monto: Number(t.total) || 0,
             estado: esAnulada(t) ? 'ANULADO' : 'COMPLETADO',
             es_fiado: esFiado,
-            cliente_nombre: fiado?.customer_name,
+            cliente_nombre: t.customer_name || fiado?.customer_name,
             flujo: 'INTERNO', // Ventas siempre son del negocio
             monto_pagado: Number(t.amount_cash || 0) + Number(t.amount_yape || 0) + Number(t.amount_card || 0) + Number(t.amount_transfer || 0),
             monto_deuda: esFiado && fiado ? Number(fiado.amount) - Number(fiado.paid_amount) : 0,

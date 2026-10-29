@@ -162,8 +162,9 @@
   1. *"el scrooll aruina la estetica cabialo"*: Se reemplazó la barra de desplazamiento nativa de Windows (gris y gruesa) por la estilizada `custom-scrollbar` de 5px en la lista de clientes y modales de ficha.
   2. *"otra cosa cuando pongo nuevo cliente y pongo x el selector desaparece"*: Al cerrar la ficha de nuevo cliente con 'X' o Escape dentro de la selección de clientes del POS, el foco ahora regresa inmediatamente a `+ Nuevo (F2)`, manteniendo activo el selector y la navegación por flechas.
   3. *"en el pos ahi dice id y admin osea dependiendo de que usuario entre cambiara eso no ? asi ahi agrega el boton de clientes y pon ahi f3 para que sepa que si quieres entrar le haces click o f3"*: Se explicó que `ID: ADMIN` cambia según la cuenta del cajero conectada, y se agregó en la barra superior junto al ID el botón `CLIENTE (F3)` (o `CLI: [NOMBRE] (F3)`) que permite abrir la ventana tanto con clic como con la tecla F3.
-  4. *"quita lo que marque con rojo en la imagen"*: El dueño marcó con un círculo rojo la franja `CLIENTE: CLIENTE VARIOS (F3)` que estaba arriba del carrito en el panel derecho del ticket. Al estar ya el botón de clientes en la barra superior del POS, esa franja era redundante y restaba espacio. Se eliminó por completo del ticket y se agregó la opción de desvincular el cliente (botón `✕`) directamente en la barra superior.
-  - Se probó con scripts automatizados en Edge en `siumax` (`test-scrollbar-focus-f3.cjs` y `test-remove-client-bar.cjs` al 100% OK) y se desplegó.
+  5. *"en finanzas sale el cliente?? en la tabla y en el detalle de la venta ??"*: El dueño preguntó por la visibilidad del cliente en Finanzas. Se revisó y se descubrió que anteriormente la tabla solo mostraba el cliente si era fiado, y el modal de detalle del ticket no lo mostraba. Se actualizó la tabla de Finanzas para mostrar `[NOMBRE DEL CLIENTE]` en cualquier venta vinculada a un cliente, y se agregó en la cabecera de `ModalDetalleTicket` la fila `Cliente: [NOMBRE]` con badge.
+  - Se probó con scripts automatizados en Edge en `siumax` (`test-finanzas-cliente.cjs` 100% OK) y se desplegó.
+
 
 
 

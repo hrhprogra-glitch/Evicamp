@@ -82,7 +82,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                         <span className="font-black tracking-wider text-xs sm:text-sm uppercase">
                           {item.isTicket ? '#' + String(item.id).slice(-6) : item.descripcion}
                         </span>
-                        {item.isTicket && item.es_fiado && item.cliente_nombre && (
+                        {item.isTicket && item.cliente_nombre && (
                           <span className="text-[10px] text-[var(--color-info)] font-bold tracking-widest uppercase bg-blue-50 px-1.5 py-0.5 border border-blue-200 whitespace-nowrap">
                             [{item.cliente_nombre}]
                           </span>

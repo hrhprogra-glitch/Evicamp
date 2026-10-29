@@ -7,6 +7,24 @@
 
 ---
 
+## 28/10/2026 (noche, 14) · Antigravity
+- **Visualización de clientes en Finanzas (tabla y detalle de venta):**
+  - **Tabla de Finanzas (`TablaMovimientos.tsx` / `Finanzas/index.tsx`):**
+    - Se vinculó `cliente_nombre: t.customer_name || fiado?.customer_name`.
+    - Se quitó la restricción `item.es_fiado`, permitiendo que cualquier venta (sea al contado en efectivo, yape, tarjeta o fiado) muestre la etiqueta `[NOMBRE DEL CLIENTE]` en su fila.
+    - Se mantuvo la compatibilidad con el buscador de Finanzas, que filtra inmediatamente por el nombre del cliente.
+  - **Detalle del ticket (`ModalDetalleTicket.tsx`):**
+    - Se consultan los datos de la venta en `sales` (o `fiados` como fallback).
+    - Muestra en la cabecera: `Cliente: [NOMBRE DEL CLIENTE]` destacado con badge.
+  - **Detalle de caja cerrada (`ModalDetalleCaja.tsx`):**
+    - En el resumen de ventas de la caja, ahora también incluye el cliente si la venta lo tuvo.
+  - **Pruebas y despliegue:**
+    - Prueba automatizada en Edge (`test-finanzas-cliente.cjs`) validando etiquetas en la tabla y nombre en el modal: 100% OK.
+    - Desplegado a `siumax` (`node ai-scripts/deploy.cjs siumax`).
+- **Siguiente paso:** Esperar revisión y visto bueno del dueño en `siumax`.
+
+---
+
 ## 28/10/2026 (noche, 13) · Antigravity
 - **Eliminación de la barra redundante de cliente en el ticket:**
   - Siguiendo la captura del dueño, se quitó la franja `CLIENTE: CLIENTE VARIOS (F3)` que estaba sobre la tabla del carrito en `TicketVenta.tsx`, ganando más espacio vertical para ver los productos.
