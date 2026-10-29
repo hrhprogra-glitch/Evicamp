@@ -1314,3 +1314,10 @@ ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS customer_name text;
 CREATE INDEX IF NOT EXISTS idx_sales_customer_id ON public.sales (customer_id);
 
 NOTIFY pgrst, 'reload schema';
+
+-- ===================================================================================================
+-- FASE 4.3: Días de plazo acordados con el cliente para pagar créditos/fiados (opcional; ej. 7, 15, 30 días).
+-- Permite que al fiarle en caja, la fecha límite de pago se autocalcule automáticamente a partir de hoy.
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS dias_plazo integer;
+
+NOTIFY pgrst, 'reload schema';

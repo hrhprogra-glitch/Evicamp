@@ -9,6 +9,7 @@ export interface Cliente {
   ubicacion?: string;     // link de ubicación (ej. Google Maps)
   referencia?: string;    // para distinguir: "Sra. Rosa – vecina 2do piso"
   grupoId?: string;       // grupo de clientes (familia o empresa); vacío = sin grupo
+  diasPlazo?: number;     // fase 4.3: días de plazo para pagar (ej. 7, 15, 30 días; vacío = fecha por defecto)
 }
 
 // Grupo de clientes (fase 4.1): familia o empresa. Cada cliente conserva su cuenta; el grupo junta sus deudas

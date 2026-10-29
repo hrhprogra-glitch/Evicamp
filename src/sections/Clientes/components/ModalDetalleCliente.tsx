@@ -298,6 +298,7 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
     !cliente.dni && !cliente.ruc ? 'Sin DNI ni RUC' : null,
     cliente.telefono ? `Tel.: ${cliente.telefono}` : null,
     cliente.direccion ? `Dirección: ${cliente.direccion}` : null,
+    cliente.diasPlazo ? `Plazo acordado: ${cliente.diasPlazo} días` : null,
   ].filter(Boolean).join(' · ');
 
   return (

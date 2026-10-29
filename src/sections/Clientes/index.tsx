@@ -133,6 +133,7 @@ if (clis) {
     ubicacion: c.ubicacion ?? '',
     referencia: c.referencia ?? '',
     grupoId: c.grupo_id != null ? String(c.grupo_id) : '',
+    diasPlazo: c.dias_plazo != null && !Number.isNaN(Number(c.dias_plazo)) ? Number(c.dias_plazo) : undefined,
   }));
 
   // 🛡️ PROTECCIÓN: Si hay fiados de clientes que no están en customers (antiguos o borrados con saldo)
@@ -420,11 +421,31 @@ if (fiaData) {
   };
 
   // --- FUNCIONES DE CLIENTES CON SUPABASE ---
-  // Fase 4.1: crea o edita con la ficha completa (documento, teléfono, dirección, referencia). Devuelve si se guardó.
+  // Fase 4.1 y 4.3: crea o edita con la ficha completa (documento, teléfono, dirección, referencia, días de plazo). Devuelve si se guardó.
   const guardarCliente = async (d: DatosCliente, id?: string): Promise<boolean> => {
     // tipo_doc se sigue llenando (DNI si tiene DNI) para lo que aún lo lee
-    const fila = { name: d.nombre, dni: d.dni || null, ruc: d.ruc || null, tipo_doc: d.dni ? 'DNI' : null, telefono: d.telefono || null, direccion: d.direccion || null, ubicacion: d.ubicacion || null, referencia: d.referencia || null };
-    const nuevo: Omit<Cliente, 'id'> = { nombre: d.nombre, dni: d.dni, ruc: d.ruc, telefono: d.telefono, direccion: d.direccion, ubicacion: d.ubicacion, referencia: d.referencia };
+    const diasPlazoNum = d.dias_plazo ? parseInt(d.dias_plazo, 10) : null;
+    const fila = {
+      name: d.nombre,
+      dni: d.dni || null,
+      ruc: d.ruc || null,
+      tipo_doc: d.dni ? 'DNI' : null,
+      telefono: d.telefono || null,
+      direccion: d.direccion || null,
+      ubicacion: d.ubicacion || null,
+      referencia: d.referencia || null,
+      dias_plazo: diasPlazoNum && Number.isFinite(diasPlazoNum) ? diasPlazoNum : null,
+    };
+    const nuevo: Omit<Cliente, 'id'> = {
+      nombre: d.nombre,
+      dni: d.dni,
+      ruc: d.ruc,
+      telefono: d.telefono,
+      direccion: d.direccion,
+      ubicacion: d.ubicacion,
+      referencia: d.referencia,
+      diasPlazo: diasPlazoNum && Number.isFinite(diasPlazoNum) ? diasPlazoNum : undefined,
+    };
     if (id) {
       const { error } = await supabase.from('customers').update(fila).eq('id', id);
       if (error) { alert('Error al actualizar cliente: ' + error.message); return false; }
@@ -567,7 +588,7 @@ if (fiaData) {
   }, [clientesAgrupados]);
 
   return (
-      <div className="lg:h-full flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono relative">
+    <div className="flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono relative">
       {loading && (
         <div className="absolute inset-0 bg-[var(--color-surface)]/85 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">

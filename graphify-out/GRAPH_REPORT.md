@@ -1,17 +1,17 @@
 # Graph Report - comercio  (2026-10-29)
 
 ## Corpus Check
-- 331 files · ~871,784 words
+- 333 files · ~875,964 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 4 file(s) not represented in the graph (top: (none) 2, .css 2)
 
 ## Summary
-- 2200 nodes · 4379 edges · 218 communities (115 shown, 103 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 94 edges (avg confidence: 0.93)
+- 2214 nodes · 4394 edges · 226 communities (120 shown, 106 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 97 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7abca633`
+- Built from commit: `5b5df278`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -19,7 +19,7 @@
 - prueba-clientes-detalle.mjs
 - escritorio/package.json
 - main.js
-- ModalAjuste.tsx
+- lucide-react
 - descargar-backups.cjs
 - CLAUDE.md (Evicamp project rules)
 - build
@@ -65,7 +65,7 @@
 - replace-merma.cjs
 - inventario.jpg (Inventory Carousel Photo)
 - proyectos.jpg (Business Analytics Meeting Photo)
-- ModalHistorialLotes.tsx
+- main.tsx
 - sinInternet.ts
 - Finanzas/index.tsx
 - fix-abonos-badge.cjs
@@ -77,20 +77,21 @@
 - dependencies
 - nsis
 - sw.js
-- check-fiados.cjs
+- permisos.ts
 - fix-end.cjs
 - fix-estado-cuenta-ui.cjs
 - fix-estado-cuenta-ui-2.cjs
-- App.tsx
+- SideBar.tsx
 - fix-color.cjs
 - fix.cjs
-- Punto-de-venta/index.tsx
+- ModalUsuario.tsx
 - fix-general.cjs
 - fix-giant-text.cjs
 - fix-global-anim.cjs
 - fix-header.cjs
-- ModalDetalleCliente.tsx
-- supabase.ts
+- react
+- App.tsx
+- SugerenciasSiumax.tsx
 - prueba-unidades.mjs
 - PanelCompras.tsx
 - fix-inventario-index.cjs
@@ -102,12 +103,14 @@
 - fix-map.cjs
 - activar-seguridad.sh
 - fix-phantom.cjs
-- react
+- Conteos/index.tsx
 - prueba-compra-sugerida.mjs
 - prueba-conteo.mjs
 - fix-compress.cjs
 - fix-tot.cjs
 - devDependencies
+- buscarImagenes.ts
+- Memoria del proyecto para cualquier IA
 - fix-pos-cliente.cjs
 - ref_path
 - fix-abonos-cards.cjs
@@ -186,17 +189,17 @@
 - fix-filter.cjs
 - fix-pill-debug.cjs
 - fix-syntax-error.cjs
-- lucide-react
+- autorizacion.tsx
+- check-fiados.cjs
 - Plan de SiuMax Comerc: estado, fases y forma de trabajo
 - scripts
 - prueba-vencimientos.mjs
-- buscarImagenes.ts
 - prueba-hist-acciones.mjs
 - prueba-precio-caja.mjs
 - prueba-contador.mjs
 - prueba-escala-off.mjs
 - prueba-si2.mjs
-- ListaVentana.tsx
+- ModalAjuste.tsx
 - Clientes/index.tsx
 - prueba-dos-cajas.mjs
 - prueba-dos-cajas-debug.mjs
@@ -207,7 +210,7 @@
 - prueba-lote.mjs
 - prueba-cobro-credito.mjs
 - prueba-tab-ventanas.mjs
-- ModalFichaCliente.tsx
+- useCerrarConEscape
 - prueba-historial.mjs
 - ref_node_module
 - prueba-seleccion.mjs
@@ -216,15 +219,18 @@
 - prueba-proveedores.mjs
 - ref_puppeteer_core
 - aplicar-proteccion.cjs
+- build-escritorio.cjs
 - cuadrar-lotes.cjs
 - leer.cjs
-- fix-imports.cjs
-- aplicar-fase1-evicamp.cjs
-- reset-gaseosa.cjs
+- Resumen de las conversaciones con el dueño
 - trig-waste.cjs
-- traerTodo
+- Punto-de-venta/index.tsx
 - AGENTS.md
 - LEEME.md
+- corregir-lotes-borrados.cjs
+- fix-modals.cjs
+- parche-buscadores.cjs
+- aplicar-fase4-evicamp.cjs
 
 ## God Nodes (most connected - your core abstractions)
 1. `react` - 88 edges
@@ -234,26 +240,26 @@
 5. `coincideBusqueda()` - 40 edges
 6. `confirmar()` - 36 edges
 7. `avisar()` - 34 edges
-8. `usePermiso()` - 32 edges
-9. `Product` - 31 edges
-10. `Bitácora compartida (Claude ↔ Antigravity ↔ cualquier IA)` - 28 edges
+8. `Bitácora compartida (Claude ↔ Antigravity ↔ cualquier IA)` - 34 edges
+9. `usePermiso()` - 32 edges
+10. `Product` - 31 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `28/10/2026 · Claude (Claude Code)` --references--> `main()`  [INFERRED]
+  docs/BITACORA.md → servidor/panel/panel.py
+- `29/10/2026 (mañana, 23) · Antigravity` --references--> `main()`  [INFERRED]
+  docs/BITACORA.md → servidor/panel/panel.py
+- `7. Cómo se organiza el trabajo` --references--> `main()`  [INFERRED]
+  docs/MEMORIA-IA.md → servidor/panel/panel.py
 - `28/10/2026 (noche) · Claude (Claude Code)` --references--> `ModalDetalleCliente()`  [INFERRED]
   docs/BITACORA.md → src/sections/Clientes/components/ModalDetalleCliente.tsx
 - `28/10/2026 (tarde) · Claude (Claude Code)` --references--> `ModalDetalleCliente()`  [INFERRED]
   docs/BITACORA.md → src/sections/Clientes/components/ModalDetalleCliente.tsx
-- `28/10/2026 (noche, 10) · Antigravity` --references--> `TablaLotes()`  [INFERRED]
-  docs/BITACORA.md → src/sections/Inventario/components/TablaLotes.tsx
-- `28/10/2026 (noche, 11) · Antigravity` --references--> `ModalCobro()`  [INFERRED]
-  docs/BITACORA.md → src/sections/Punto-de-venta/components/ModalCobro.tsx
-- `2. Requisitos Previos` --references--> `clicConTeclado()`  [INFERRED]
-  .agents/skills/selector/SKILL.md → src/utils/clicConTeclado.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (218 total, 103 thin omitted)
+## Communities (226 total, 106 thin omitted)
 
 ### Community 0 - "prueba-clientes-detalle.mjs"
 Cohesion: 0.12
@@ -267,9 +273,9 @@ Nodes (15): allowScripts, electron@33.2.1, author, dependencies, electron-update
 Cohesion: 0.21
 Nodes (15): { app, BrowserWindow, Menu, ipcMain, shell, dialog }, archivoConfig(), { autoUpdater }, buscarActualizacionManual(), cargarSistema(), construirMenu(), crearVentana(), DESTINO_FIJO (+7 more)
 
-### Community 3 - "ModalAjuste.tsx"
-Cohesion: 0.18
-Nodes (17): DatosLote(), enfocar(), esConsumo(), fechaCorta(), Hecho, horaCorta(), Lote, LoteAutomatico() (+9 more)
+### Community 3 - "lucide-react"
+Cohesion: 0.12
+Nodes (27): 4. El código (dónde está cada cosa), lucide-react, ModalFiado(), FiadoDetalle, ModalEditarSalida(), Props, EtiquetaStock(), Props (+19 more)
 
 ### Community 4 - "descargar-backups.cjs"
 Cohesion: 0.08
@@ -304,8 +310,8 @@ Cohesion: 0.20
 Nodes (5): { createClient }, supabase, { createClient }, supabase, @supabase/supabase-js
 
 ### Community 13 - "ModalEtiqueta.tsx"
-Cohesion: 0.21
-Nodes (14): CuerpoVentana(), ANCHO, CodigoBarras(), codigoDeEtiqueta(), esPeso(), Etiqueta(), guardar(), leer() (+6 more)
+Cohesion: 0.15
+Nodes (20): react-to-print, ANCHO, CodigoBarras(), codigoDeEtiqueta(), esPeso(), Etiqueta(), guardar(), leer() (+12 more)
 
 ### Community 15 - "Patrón "Selector" de Tablas (Grid Navigation)"
 Cohesion: 0.25
@@ -423,17 +429,17 @@ Nodes (4): inventario.jpg (Inventory Carousel Photo), Evicamp Login Screen Carou
 Cohesion: 0.83
 Nodes (4): Business Analytics / Team Reporting Theme, proyectos.jpg (Business Analytics Meeting Photo), Evicamp Login Screen Carousel, "Proyectos" (Projects) Slide
 
-### Community 51 - "ModalHistorialLotes.tsx"
-Cohesion: 0.21
-Nodes (13): SeparadorLista(), fecha(), fechaHora(), haceDiasISO(), hoyISO(), LoteHistorial, ModalHistorialLotes(), Movimiento (+5 more)
+### Community 51 - "main.tsx"
+Cohesion: 0.16
+Nodes (14): Evicamp (project name), index.html (Evicamp app entry), README.md (Evicamp), cola, Dialogo, instalarDialogos(), manejadores, tomarTeclado() (+6 more)
 
 ### Community 52 - "sinInternet.ts"
 Cohesion: 0.05
-Nodes (91): 5. Modo sin internet (cómo funciona), customFetch(), mostrarSuspendido(), necesitaInternet(), renovarSesion(), sesionVencida(), vigilarSuspension(), BarraConexion() (+83 more)
+Nodes (94): 5. Modo sin internet (cómo funciona), customFetch(), mostrarSuspendido(), necesitaInternet(), renovarSesion(), sesionVencida(), vigilarSuspension(), BarraConexion() (+86 more)
 
 ### Community 53 - "Finanzas/index.tsx"
 Cohesion: 0.06
-Nodes (63): 28/10/2026 (trasnoche, 19) · Antigravity, 15–20/10/2026: la base del producto (antes de SiuMax Comerc), 21/10/2026: SiuMax Comerc y el plan de fases, 22/10/2026: Fase 0 y comienzo de la Fase 2, 23/10/2026: Fase 2 completa y Fase 1 completa, 24/10/2026: arreglos, subida de la Fase 1 y propuesta de la Fase 4, 27/10/2026: IAs gratis y memoria compartida, 28/10/2026: Fase 4.2 (Cliente opcional en la Caja) (+55 more)
+Nodes (57): ModalDetalleTicket(), Props, FiltroFechas(), Props, ModalApertura(), Props, BloqueArqueo(), BloqueArqueoProps (+49 more)
 
 ### Community 55 - "sugerencias-servidor.cjs"
 Cohesion: 0.14
@@ -447,33 +453,37 @@ Nodes (11): dependencies, html2canvas-pro, jsbarcode, jspdf, lucide-react, react
 Cohesion: 0.29
 Nodes (7): nsis, artifactName, createDesktopShortcut, createStartMenuShortcut, oneClick, perMachine, shortcutName
 
-### Community 63 - "check-fiados.cjs"
-Cohesion: 0.33
-Nodes (5): { createClient }, env, envFile, fs, supabase
+### Community 63 - "permisos.ts"
+Cohesion: 0.17
+Nodes (13): PermisosUsuario, carouselSlides, LoginProps, PERMISOS_POR_MODULO, SesionContext, EmpleadoSesion, empleadoSinInternet(), guardarToken() (+5 more)
 
-### Community 67 - "App.tsx"
-Cohesion: 0.05
-Nodes (64): Evicamp (project name), index.html (Evicamp app entry), README.md (Evicamp), App(), handleNavigate(), NOMBRES_SESIONES, AlertaYape(), abrirPago() (+56 more)
+### Community 67 - "SideBar.tsx"
+Cohesion: 0.15
+Nodes (22): handleNavigate(), abrirPago(), AvisoSuscripcion(), fechaPe(), Suscripcion, useSuscripcion(), ATAJOS_SESIONES, SideBar() (+14 more)
 
-### Community 70 - "Punto-de-venta/index.tsx"
-Cohesion: 0.11
-Nodes (40): 4. El código (dónde está cada cosa), ModalEditarSalida(), Props, Conteos(), Props, Props, Product, MiniReporteDiario() (+32 more)
+### Community 70 - "ModalUsuario.tsx"
+Cohesion: 0.29
+Nodes (11): COLUMNAS_PERMISOS, ModalUsuario(), ModalUsuarioProps, PERMISOS_DEFAULT, permisosDeRol(), ROLES, TablaUsuarios(), DatosEmpresa (+3 more)
 
-### Community 76 - "ModalDetalleCliente.tsx"
-Cohesion: 0.26
-Nodes (15): BarraFiltros(), claseBotonBarra(), DatoFila(), TextoBarra(), CompraCliente, diaLocal(), estaPagado(), fecha() (+7 more)
+### Community 75 - "react"
+Cohesion: 0.19
+Nodes (11): react, TablaFiados(), Props, InputPeso(), InputPrecio(), InputUnidades(), redondearPeso(), TicketVenta() (+3 more)
 
-### Community 77 - "supabase.ts"
-Cohesion: 0.08
-Nodes (41): supabase, usarSesionAutorizada(), NotificacionYape, achicarLogo(), FormularioEmpresa(), COLUMNAS_PERMISOS, ModalUsuario(), ModalUsuarioProps (+33 more)
+### Community 76 - "App.tsx"
+Cohesion: 0.24
+Nodes (18): App(), NOMBRES_SESIONES, AlertaYape(), NotificacionYape, Login(), programarRestauracionFoco(), restaurarFocoSesion(), SesionProvider() (+10 more)
+
+### Community 77 - "SugerenciasSiumax.tsx"
+Cohesion: 0.17
+Nodes (15): achicarLogo(), FormularioEmpresa(), SECCIONES, SugerenciasSiumax(), Tipo, TIPOS, Tema, TEMAS (+7 more)
 
 ### Community 78 - "prueba-unidades.mjs"
 Cohesion: 0.15
 Nodes (12): { conexionVps }, crear(), errores, m, { NodeSSH }, pausa(), puppeteer, reqP (+4 more)
 
 ### Community 79 - "PanelCompras.tsx"
-Cohesion: 0.13
-Nodes (36): react-to-print, ACCIONES, cantidadPedida(), Compra, DetalleCompra(), EditorCompra(), enfocar(), esc() (+28 more)
+Cohesion: 0.16
+Nodes (31): ACCIONES, cantidadPedida(), Compra, DetalleCompra(), EditorCompra(), enfocar(), esc(), esPeso() (+23 more)
 
 ### Community 81 - "ref_fs"
 Cohesion: 0.08
@@ -483,9 +493,9 @@ Nodes (16): code, fs, code, fs, content, fs, content, fs (+8 more)
 Cohesion: 0.18
 Nodes (7): [accion, ...args], { conexionVps }, DIR_LOCAL, { execSync }, fs, { NodeSSH }, path
 
-### Community 90 - "react"
-Cohesion: 0.13
-Nodes (19): react, FiltrosConteos(), Props, HeaderConteos(), Props, enfocar(), fecha(), ModalEditarConteo() (+11 more)
+### Community 90 - "Conteos/index.tsx"
+Cohesion: 0.17
+Nodes (16): FiltrosConteos(), Props, HeaderConteos(), Props, enfocar(), fecha(), ModalEditarConteo(), Props (+8 more)
 
 ### Community 91 - "prueba-compra-sugerida.mjs"
 Cohesion: 0.17
@@ -499,9 +509,17 @@ Nodes (15): { conexionVps }, contar(), errores, estado(), foco(), m, { NodeSSH }
 Cohesion: 0.67
 Nodes (3): devDependencies, electron, electron-builder
 
+### Community 96 - "buscarImagenes.ts"
+Cohesion: 0.40
+Nodes (10): buscarImagenes(), deCommons(), dePixabay(), FotoEncontrada, leerJson(), NO_SIRVE, normalizar(), palabras() (+2 more)
+
+### Community 97 - "Memoria del proyecto para cualquier IA"
+Cohesion: 0.20
+Nodes (9): 10. Bot de WhatsApp de SiuMax (fuera de Comerc), 11. Videos tutoriales (fuera de Comerc), 1. El dueño y cómo le gusta trabajar, 2. El producto, 3. El servidor (VPS) y cómo tocarlo sin romper nada, 7. Cómo se organiza el trabajo, 8. Cómo se hacen las pruebas, 9. Historia útil de Evicamp (+1 more)
+
 ### Community 99 - "ref_path"
-Cohesion: 0.09
-Nodes (15): fs, path, walkDir(), fs, path, { conexionVps }, { NodeSSH }, path (+7 more)
+Cohesion: 0.10
+Nodes (15): filesToUpdate, fs, path, { conexionVps }, { NodeSSH }, path, { conexionVps }, { NodeSSH } (+7 more)
 
 ### Community 103 - "prueba-clientes.mjs"
 Cohesion: 0.10
@@ -524,32 +542,32 @@ Cohesion: 0.50
 Nodes (4): fs, path, processDir(), replaceInFile()
 
 ### Community 119 - "ref_node_path"
-Cohesion: 0.14
-Nodes (12): CLAVE, { conexionVps }, entrar(), errores, { NodeSSH }, pausa(), puppeteer, reqP (+4 more)
+Cohesion: 0.09
+Nodes (15): CLAVE, { conexionVps }, entrar(), errores, { NodeSSH }, pausa(), puppeteer, reqP (+7 more)
 
 ### Community 123 - "finanzas.jpg (Finance Carousel Image)"
 Cohesion: 1.00
 Nodes (3): finanzas.jpg (Finance Carousel Image), Finanzas Login Carousel Slide, Finance Module Branding/Marketing Imagery
 
 ### Community 127 - "panel.py"
-Cohesion: 0.05
-Nodes (51): 28/10/2026 · Claude (Claude Code), 10. Bot de WhatsApp de SiuMax (fuera de Comerc), 1. El dueño y cómo le gusta trabajar, 2. El producto, 3. El servidor (VPS) y cómo tocarlo sin romper nada, 7. Cómo se organiza el trabajo, 8. Cómo se hacen las pruebas, 9. Historia útil de Evicamp (+43 more)
+Cohesion: 0.06
+Nodes (42): api_activa(), archivar_pagos(), base_cliente(), borrar_cliente(), cambiar_estado(), cambiar_estado_sugerencia(), cambiar_link(), cliente_registrado() (+34 more)
 
 ### Community 131 - "seguridad-sesion.sql"
 Cohesion: 0.05
 Nodes (39): cash_movements_ref_local, compras_detalle_compra, compras_historial_compra, debt_payments_ref_local, idx_movimientos_producto_tipo, inventory_movements_ref_local, public.compras, public.compras_detalle (+31 more)
 
 ### Community 135 - "build-escritorio.cjs"
-Cohesion: 0.08
-Nodes (26): archivoPaquete, carpeta, { destino: buscarDestino }, { execSync }, fs, instalador, mb, nuevaVersion (+18 more)
+Cohesion: 0.14
+Nodes (14): { conexionVps }, { execSync }, { NodeSSH }, path, pedido, { SITIOS, normalizar }, ALIAS, cliente() (+6 more)
 
 ### Community 161 - "prueba-si3.mjs"
 Cohesion: 0.13
 Nodes (17): anular(), caja(), cola(), { conexionVps }, db(), errores, lote(), m (+9 more)
 
 ### Community 163 - "Inventario/index.tsx"
-Cohesion: 0.15
-Nodes (28): 6. Errores que ya se cometieron (NO repetir), 2. Reglas de trabajo (OBLIGATORIAS), ModalProducto(), ProductNature, Props, TechnicalAlert(), Lote, Props (+20 more)
+Cohesion: 0.13
+Nodes (30): 28/10/2026: Fase 4.1 (sección Clientes), claseBotonPrincipal, FiltrosInventario(), Props, FILA_ARRIBA, FiltroEstado, FILTROS, ModalGestionProveedores() (+22 more)
 
 ### Community 169 - "prueba-grupos.mjs"
 Cohesion: 0.12
@@ -564,16 +582,20 @@ Cohesion: 0.12
 Nodes (14): buscar(), { conexionVps }, errores, estado(), m, { NodeSSH }, pausa(), puppeteer (+6 more)
 
 ### Community 174 - "Bitácora compartida (Claude ↔ Antigravity ↔ cualquier IA)"
-Cohesion: 0.08
-Nodes (24): 27/10/2026 · Claude (Claude Code), 27/10/2026 (tarde) · Claude (Claude Code), 28/10/2026 (noche, 10) · Antigravity, 28/10/2026 (noche, 11) · Antigravity, 28/10/2026 (noche, 12) · Antigravity, 28/10/2026 (noche, 13) · Antigravity, 28/10/2026 (noche, 14) · Antigravity, 28/10/2026 (noche, 15) · Antigravity (+16 more)
+Cohesion: 0.06
+Nodes (31): 27/10/2026 · Claude (Claude Code), 27/10/2026 (tarde) · Claude (Claude Code), 28/10/2026 · Claude (Claude Code), 28/10/2026 (noche, 10) · Antigravity, 28/10/2026 (noche, 11) · Antigravity, 28/10/2026 (noche, 12) · Antigravity, 28/10/2026 (noche, 13) · Antigravity, 28/10/2026 (noche, 14) · Antigravity (+23 more)
 
-### Community 178 - "lucide-react"
-Cohesion: 0.16
-Nodes (11): lucide-react, FiltrosInventario(), Props, Props, ModalLote(), FiltrosProveedores(), Props, ModalProveedor() (+3 more)
+### Community 178 - "autorizacion.tsx"
+Cohesion: 0.36
+Nodes (8): usarSesionAutorizada(), Autorizacion, conAutorizacion(), Pedido, pedirAutorizacion(), VentanaAutorizacion(), ClavePermiso, normalizarEmail()
+
+### Community 179 - "check-fiados.cjs"
+Cohesion: 0.33
+Nodes (5): { createClient }, env, envFile, fs, supabase
 
 ### Community 180 - "Plan de SiuMax Comerc: estado, fases y forma de trabajo"
-Cohesion: 0.11
-Nodes (18): 1. Qué es, 3. Comandos, 4. Fases (plan aprobado el 21/10/2026), 5.1 La sección: Créditos → **Clientes**, 5.2 Ficha del cliente (4.1), 5.3 En la Caja (4.2) — ✅ Hecho en siumax (28/10), 5.4 Crédito con plazo y límite (4.3), 5.5 Precio mayorista (4.4) (+10 more)
+Cohesion: 0.10
+Nodes (19): 1. Qué es, 2. Reglas de trabajo (OBLIGATORIAS), 3. Comandos, 4. Fases (plan aprobado el 21/10/2026), 5.1 La sección: Créditos → **Clientes**, 5.2 Ficha del cliente (4.1), 5.3 En la Caja (4.2) — ✅ Hecho en siumax (28/10), 5.4 Crédito con plazo y límite (4.3) (+11 more)
 
 ### Community 182 - "scripts"
 Cohesion: 0.40
@@ -582,10 +604,6 @@ Nodes (5): scripts, build, dev, lint, preview
 ### Community 185 - "prueba-vencimientos.mjs"
 Cohesion: 0.12
 Nodes (14): buscar(), casos, { conexionVps }, errores, filtrar(), m, { NodeSSH }, pausa() (+6 more)
-
-### Community 187 - "buscarImagenes.ts"
-Cohesion: 0.40
-Nodes (10): buscarImagenes(), deCommons(), dePixabay(), FotoEncontrada, leerJson(), NO_SIRVE, normalizar(), palabras() (+2 more)
 
 ### Community 188 - "prueba-hist-acciones.mjs"
 Cohesion: 0.12
@@ -596,8 +614,8 @@ Cohesion: 0.14
 Nodes (13): agregar(), cambiarPrecio(), CLAVE, { conexionVps }, entrar(), errores, { NodeSSH }, pausa() (+5 more)
 
 ### Community 190 - "prueba-contador.mjs"
-Cohesion: 0.09
-Nodes (15): CLAVE, { conexionVps }, errores, m, { NodeSSH }, pausa(), puppeteer, reqP (+7 more)
+Cohesion: 0.13
+Nodes (12): CLAVE, { conexionVps }, errores, m, { NodeSSH }, pausa(), puppeteer, reqP (+4 more)
 
 ### Community 191 - "prueba-escala-off.mjs"
 Cohesion: 0.13
@@ -607,13 +625,13 @@ Nodes (11): { conexionVps }, errores, m, { NodeSSH }, pausa(), puppeteer, reqP, 
 Cohesion: 0.14
 Nodes (12): compraLocal(), { conexionVps }, db(), errores, m, { NodeSSH }, puppeteer, reqP (+4 more)
 
-### Community 193 - "ListaVentana.tsx"
-Cohesion: 0.13
-Nodes (26): 28/10/2026 (noche, 6) · Claude (Claude Code), 28/10/2026: Fase 4.1 (sección Clientes), CajaLista(), claseBotonIcono(), claseBotonPrincipal, claseBuscadorBarra, claseCampoBarra, Etiqueta() (+18 more)
+### Community 193 - "ModalAjuste.tsx"
+Cohesion: 0.08
+Nodes (62): 28/10/2026 (noche, 6) · Claude (Claude Code), BarraFiltros(), CajaLista(), claseBotonBarra(), claseBotonIcono(), claseBuscadorBarra, claseCampoBarra, CuerpoVentana() (+54 more)
 
 ### Community 194 - "Clientes/index.tsx"
-Cohesion: 0.11
-Nodes (35): ModalAbono(), Props, ModalAnularPago(), Props, Props, ModalDetalleFiado(), Props, combinarFechaYHora() (+27 more)
+Cohesion: 0.08
+Nodes (42): 28/10/2026 (noche, 8) · Antigravity, 28/10/2026 (trasnoche, 19) · Antigravity, 28/10/2026: Fase 4.2 (Cliente opcional en la Caja), 29/10/2026 (tarde) · Claude — Videos tutoriales, react-dom, ModalAbono(), Props, ModalAnularPago() (+34 more)
 
 ### Community 196 - "prueba-dos-cajas.mjs"
 Cohesion: 0.13
@@ -651,16 +669,16 @@ Nodes (12): { conexionVps }, corto, errores, m, { NodeSSH }, pausa(), puppeteer,
 Cohesion: 0.20
 Nodes (8): errores, pausa(), puppeteer, require, res, shiftTab(), tecla(), [tools, envVps]
 
-### Community 205 - "ModalFichaCliente.tsx"
+### Community 205 - "useCerrarConEscape"
 Cohesion: 0.15
-Nodes (22): 28/10/2026 (noche, 8) · Antigravity, enfocar(), ModalFichaCliente(), parecidos(), Props, vacio, DatosGrupo, enfocar() (+14 more)
+Nodes (22): 6. Errores que ya se cometieron (NO repetir), DatosCliente, enfocar(), ModalFichaCliente(), parecidos(), vacio, ModalProducto(), ProductNature (+14 more)
 
 ### Community 206 - "prueba-historial.mjs"
 Cohesion: 0.20
 Nodes (7): errores, pausa(), puppeteer, require, resultados, tecla(), [tools, envVps]
 
 ### Community 207 - "ref_node_module"
-Cohesion: 0.22
+Cohesion: 0.20
 Nodes (7): errores, pausa(), puppeteer, require, res, tecla(), [tools, envVps]
 
 ### Community 208 - "prueba-seleccion.mjs"
@@ -668,7 +686,7 @@ Cohesion: 0.24
 Nodes (9): errores, hayVentana(), ok(), pausa(), probar(), puppeteer, require, res (+1 more)
 
 ### Community 209 - "prueba-etiquetas.mjs"
-Cohesion: 0.20
+Cohesion: 0.22
 Nodes (7): errores, pausa(), puppeteer, require, res, tecla(), [tools, proyecto]
 
 ### Community 210 - "prueba-kardex.mjs"
@@ -687,6 +705,10 @@ Nodes (7): errores, pausa(), puppeteer, require, res, tecla(), [tools, envVps, s
 Cohesion: 0.22
 Nodes (8): { conexionVps }, fs, funcion, ini, { NodeSSH }, path, [proyecto, base], texto
 
+### Community 216 - "build-escritorio.cjs"
+Cohesion: 0.15
+Nodes (12): archivoPaquete, carpeta, { destino: buscarDestino }, { execSync }, fs, instalador, mb, nuevaVersion (+4 more)
+
 ### Community 218 - "cuadrar-lotes.cjs"
 Cohesion: 0.33
 Nodes (5): { conexionVps }, lista, { NodeSSH }, path, [proyecto, base, idsTexto, modo]
@@ -695,45 +717,49 @@ Nodes (5): { conexionVps }, lista, { NodeSSH }, path, [proyecto, base, idsTexto,
 Cohesion: 0.40
 Nodes (4): { conexionVps }, { NodeSSH }, path, [proyecto, base, q]
 
-### Community 220 - "fix-imports.cjs"
-Cohesion: 0.50
-Nodes (3): filesToUpdate, fs, path
-
-### Community 221 - "aplicar-fase1-evicamp.cjs"
-Cohesion: 0.50
-Nodes (3): { conexionVps }, { NodeSSH }, path
-
-### Community 222 - "reset-gaseosa.cjs"
-Cohesion: 0.50
-Nodes (3): { conexionVps }, { NodeSSH }, path
+### Community 221 - "Resumen de las conversaciones con el dueño"
+Cohesion: 0.25
+Nodes (7): 15–20/10/2026: la base del producto (antes de SiuMax Comerc), 21/10/2026: SiuMax Comerc y el plan de fases, 22/10/2026: Fase 0 y comienzo de la Fase 2, 23/10/2026: Fase 2 completa y Fase 1 completa, 24/10/2026: arreglos, subida de la Fase 1 y propuesta de la Fase 4, 27/10/2026: IAs gratis y memoria compartida, Resumen de las conversaciones con el dueño
 
 ### Community 223 - "trig-waste.cjs"
 Cohesion: 0.50
 Nodes (3): { conexionVps }, { NodeSSH }, path
 
-### Community 224 - "traerTodo"
-Cohesion: 0.24
-Nodes (9): react-dom, DatosCliente, Props, Props, precargarFinanzas(), precargarParaSinInternet(), hayConexion(), ConsultaPaginable (+1 more)
+### Community 224 - "Punto-de-venta/index.tsx"
+Cohesion: 0.14
+Nodes (24): supabase, Props, Cliente, MiniReporteDiario(), Props, FiadoData, ModalCobro(), Props (+16 more)
+
+### Community 229 - "corregir-lotes-borrados.cjs"
+Cohesion: 0.40
+Nodes (4): { conexionVps }, { NodeSSH }, path, [proyecto, base, idsTexto, modo]
+
+### Community 233 - "fix-modals.cjs"
+Cohesion: 0.50
+Nodes (3): fs, path, walkDir()
+
+### Community 235 - "aplicar-fase4-evicamp.cjs"
+Cohesion: 0.50
+Nodes (3): { conexionVps }, { NodeSSH }, path
 
 ## Knowledge Gaps
 - **16 isolated node(s):** `electron-builder`, `recharts`, `@tailwindcss/postcss`, `@types/node`, `@types/react` (+11 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1173 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **103 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1184 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **106 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `node-ssh` connect `descargar-backups.cjs` to `package.json`, `build-escritorio.cjs`, `imagenes-servidor.cjs`, `cliente.cjs`, `sugerencias-servidor.cjs`?**
-  _High betweenness centrality (0.196) - this node is a cross-community bridge._
+- **Why does `node-ssh` connect `descargar-backups.cjs` to `build-escritorio.cjs`, `package.json`, `imagenes-servidor.cjs`, `cliente.cjs`, `sugerencias-servidor.cjs`, `build-escritorio.cjs`?**
+  _High betweenness centrality (0.212) - this node is a cross-community bridge._
 - **What connects `electron-builder`, `recharts`, `@tailwindcss/postcss` to the rest of the system?**
   _16 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `prueba-clientes-detalle.mjs` be split into smaller, more focused modules?**
   _Cohesion score 0.11695906432748537 - nodes in this community are weakly interconnected._
-- **Why does `@supabase/supabase-js` connect `test-vps-insert-v2.cjs` to `package.json`, `supabase.ts`, `check-fiados.cjs`?**
-  _High betweenness centrality (0.165) - this node is a cross-community bridge._
+- **Why does `@supabase/supabase-js` connect `test-vps-insert-v2.cjs` to `check-fiados.cjs`, `sinInternet.ts`, `package.json`?**
+  _High betweenness centrality (0.157) - this node is a cross-community bridge._
 - **Should `escritorio/package.json` be split into smaller, more focused modules?**
   _Cohesion score 0.125 - nodes in this community are weakly interconnected._
-- **Why does `react` connect `react` to `scratch_inventario.tsx`, `ListaVentana.tsx`, `Clientes/index.tsx`, `App.tsx`, `ModalAjuste.tsx`, `Inventario/index.tsx`, `Punto-de-venta/index.tsx`, `package.json`, `traerTodo`, `ModalDetalleCliente.tsx`, `supabase.ts`, `ModalFichaCliente.tsx`, `ModalEtiqueta.tsx`, `PanelCompras.tsx`, `lucide-react`, `ModalHistorialLotes.tsx`, `sinInternet.ts`, `Finanzas/index.tsx`?**
-  _High betweenness centrality (0.144) - this node is a cross-community bridge._
-- **Should `descargar-backups.cjs` be split into smaller, more focused modules?**
-  _Cohesion score 0.07862903225806452 - nodes in this community are weakly interconnected._
+- **Why does `react` connect `react` to `scratch_inventario.tsx`, `lucide-react`, `package.json`, `ModalEtiqueta.tsx`, `Inventario/index.tsx`, `autorizacion.tsx`, `main.tsx`, `sinInternet.ts`, `Finanzas/index.tsx`, `permisos.ts`, `ModalAjuste.tsx`, `Clientes/index.tsx`, `SideBar.tsx`, `ModalUsuario.tsx`, `App.tsx`, `useCerrarConEscape`, `SugerenciasSiumax.tsx`, `PanelCompras.tsx`, `Conteos/index.tsx`, `Punto-de-venta/index.tsx`?**
+  _High betweenness centrality (0.150) - this node is a cross-community bridge._
+- **Should `lucide-react` be split into smaller, more focused modules?**
+  _Cohesion score 0.11806543385490754 - nodes in this community are weakly interconnected._

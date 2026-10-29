@@ -217,9 +217,53 @@
        - *"en las tablas hay mucho blanco arregla eso"*: El dueño envió una captura de Inventario mostrando barras de paginación (`PÁGINA 1 DE 2`), pastillas de stock (`0 UND`, `8 UND`), badges de SKU y caja del buscador en blanco puro.
        - Se adaptaron `TablaProductos.tsx`, `TablaLotes.tsx`, `EtiquetaStock.tsx` y `FiltrosInventario.tsx` a tokens semánticos del tema, y se agregaron reglas globales en `src/index.css` que convierten automáticamente cualquier fondo neutro (`#F8FAFC`, `#F1F5F9`, `#E2E8F0`, slate/gray) o pastel suave (`#ECFDF5`, `#FEF2F2`, `bg-red-50`, `#FFFBEB`) en superficies oscuras y acentos suaves en Modo Oscuro.
        - Validado con capturas en `siumax.duckdns.org` y desplegado.
-    15. **Indicación clara de presionar ENTER y botón Continuar en Conteo / Merma (29/10 mañana):**
-       - *"si subelo pero antes soluciona esto cuando agrego un monto donde marque osea la cantidad tengo que presionar enter para que acepte eso confunde la primera ves no aparecia nada y pense que estaba mal pero tenia que poner enter el problema que no me indica que tengo que presionar enter para continuar"*:
-       - El dueño adjuntó captura del modal `NUEVO AJUSTE` en el paso 4 (`¿CUÁNTOS HAY? (UND)`). Al ingresar el número, no había indicación clara de presionar Enter para continuar ni botón visible para el mouse, lo que generaba confusión y la sensación de que el sistema no respondía.
-       - Se añadió un aviso destacado en ámbar en la cabecera (`ENTER PARA CONTINUAR`), un botón visible y clickeable `[ CONTINUAR | ENTER ↵ ]` al costado del campo (`#btn-confirmar-contado` y `#btn-confirmar-salida`), y un banner inferior informativo `[AVISO] Escribe la cantidad contada y presiona ENTER ↵ o el botón Continuar para revisar la diferencia.`
-       - Verificado con Edge headless en `siumax.duckdns.org` (capturas `screenshot-conteo-enter.png` y `screenshot-conteo-after-enter.png`), y ejecutadas las pruebas automatizadas `prueba-conteo.mjs` y `prueba-salida.mjs` con 100% de éxito.
+    16. **Pase a producción oficial en Evicamp y GitHub (29/10 mañana):**
+       - El dueño dio su autorización explícita: *"si procede"*.
+       - Respaldo de Evicamp `/var/lib/postgresql/respaldo-evicamp-antes-fase4-2026-10-29T15-54-16-874Z.dump` (1.8 MB).
+       - `servidor/sql/seguridad-sesion.sql` aplicado con `psql` y `SET lock_timeout = '5s'` en `postgres` (Evicamp) sin reiniciar la API (`activar-seguridad.sh` intacto).
+       - Fusión de `fase-4` a `main` (commit `583ad4e`), despliegue con `node ai-scripts/deploy.cjs todos` y `git push origin main`.
+    17. **Fase 4.3: Días de plazo en clientes y cálculo automático de fecha en caja (29/10 mañana):**
+       - El dueño autorizó: *"vamos por el 4.3"*.
+       - Aclaró expresamente: *"no quites lo de escoger fecha porque eso le gustó a mis clientes"* y *"todo excepto el limite de credito ahora si arranca"*.
+       - Se acordó NO incluir límite de crédito monetario, mantener 100% funcional el selector/calendario de fecha en caja, y calcular automáticamente la fecha de vencimiento (`hoy + dias_plazo`) cuando se seleccione a un cliente con plazo acordado.
+       - Base de datos `siuhub`: columna `dias_plazo integer` agregada a `customers`.
+       - Ficha del cliente (`ModalFichaCliente.tsx`): nuevo campo numérico "Días de plazo para pagar" (ej. 7, 15, 30 días) con soporte de teclado completo (Enter, flechas ↑ ↓ ← →).
+       - Directorio de clientes (`PestanaClientes.tsx` y `ModalDetalleCliente.tsx`): muestra `Xd plazo` en la fila y en la ficha. Muestra etiqueta roja `Vencido` si el cliente tiene deudas impagas vencidas.
+       - Modal de cobro en caja (`ModalCobro.tsx`):
+         - Selector de fecha nativo `#fiado-fecha` **100% intacto y disponible** para elegir cualquier día en el calendario.
+         - Al seleccionar un cliente con plazo configurado, calcula y propone automáticamente su fecha límite (`hoy + dias_plazo`).
+         - Botones rápidos `+7d`, `+15d`, `+30d` agregados para fijar fechas con un solo clic.
+         - Aviso visual en caja si el cliente tiene deudas vencidas (`⚠ Tiene deudas vencidas`) y monto total de deuda pendiente actual.
+       - Compilado con `npx tsc -b` (0 errores) y desplegado en `siumax.duckdns.org` para validación del dueño.
+    18. **Ajustes de tabla de clientes: columna Plazo, scroll general y paginación doble (29/10 tarde):**
+       - *"en la tabla no sale los dias de plazo como sabre cuantos tiene y otra cosa mas el scrooll tiene que ser de la ventana general como tambien falta para pasar a la pagina siguiente arriba como tambien al final agrega eso tiene que mostrar por lo menos 50 clientes por pagina"*:
+       - El dueño envió una captura marcando con línea roja el scroll vertical que quedaba atrapado dentro del contenedor de la tabla en lugar de fluir con la ventana principal, y señaló que en la tabla no se distinguían los días de plazo de los clientes.
+       - Se agregó una columna dedicada **"Plazo"** en la tabla con pastillas legibles (`15 días` o `—`).
+       - Se removió `lg:h-full` y el `overflow-y` interno de la tabla, pasando a `overflow-x-auto` para que la tabla se expanda de forma natural y el desplazamiento sea fluido en el scroll de la ventana general.
+       - Se agregaron controles de paginación sincronizados tanto arriba como al final de la tabla.
+       - Se confirmó la visualización de 50 clientes por página (`POR_PAGINA = 50`).
+       - Compilado y desplegado a `siumax.duckdns.org`.
+    19. **Corrección de flujo del selector por teclado en paginación superior e inferior (29/10 tarde):**
+       - *"perfecto pero falta que el selector pase por la siguiente pagina como tambien la de abajo el selector no pasa por ahi"*:
+       - El selector de teclado se saltaba la paginación superior al bajar desde la barra o subir desde la primera fila, y no pasaba fluidamente a "Siguiente página" (>).
+       - En la última fila de la tabla, al pulsar Flecha Abajo ⬇️, el selector no realizaba scrollIntoView hacia la paginación de abajo y el foco no tenía contraste evidente.
+       - Se estandarizó el selector en ambos bloques de paginación (arriba y abajo):
+         - Resaltado brutalista en amarillo neón con sombra negra (focus:bg-[var(--color-accent)] focus:shadow-[2px_2px_0_0_var(--color-ink)]) 100% visible.
+         - Desplazamiento automático de pantalla (scrollIntoView) para que la ventana acompañe el foco al ir a la paginación inferior.
+         - Tránsito bidireccional fluido: Flecha Abajo ⬇️ desde la barra entra a la paginación superior; Flechas ⬅️ y ➡️ alternan entre anterior y siguiente; Flecha Abajo ⬇️ baja a la fila 0; Flecha Abajo ⬇️ desde la última fila salta al botón de siguiente página inferior; Flecha Arriba ⬆️ sube a la tabla; Flecha Abajo ⬇️ en el pie cicla arriba al buscador.
+       - Desplegado a siumax.duckdns.org.
+
+
+### 29/10/2026 (tarde) · Claude — Videos tutoriales
+- *"quiero crear imagenes de mi sistema y videos tu puedes crearme??"* → se explicó qué se puede (capturas, publicaciones, videos demo y para redes; sin voz).
+- *"prioridad son el video puedes grabar como funciona el programa por partes osea crear varios videos tutoriales"* → se propusieron 9 tutoriales y hacer primero el de ventas como muestra.
+- *"si hazlo"*:
+  - Se creó la base demo `siudemo` (API interna, sin link público) con datos de una bodega ficticia.
+  - Se armó el grabador en `D:\Programación\siumax\videos\grabador`.
+  - Se grabó la muestra `02-como-hacer-una-venta.mp4`.
+     20. **Tope en paginación inferior de Clientes (29/10 tarde):**
+        - *"encontre otro error cuando bajo hasta abajo para selecionar la siguiente pagina pero de la parte de abajo sube hasta arriba deberia mantenerse ahi como un tope"*:
+        - En la paginación inferior, al estar en el botón de página siguiente y presionar Flecha Abajo o Flecha Derecha, el código saltaba hacia el buscador superior provocando un desplazamiento no deseado de la ventana.
+        - Se corrigió para que actúe como un TOPE firme: Flecha Abajo en el pie y Flecha Derecha en siguiente se mantienen en el botón sin saltar ni desplazar la ventana. Al dar Enter o Espacio para cambiar de página, el foco se mantiene en la paginación inferior.
+        - Compilado y desplegado a siumax.duckdns.org.
 

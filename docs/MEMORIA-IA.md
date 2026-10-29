@@ -213,3 +213,15 @@
 - **Cupo de Gemini (OJO):** la clave gratis da solo **20 respuestas al día con gemini-2.5-flash** (cada mensaje de cliente gasta 1, y las pruebas también). El bot usa primero `gemini-2.5-flash-lite` y, si se le acaba el cupo (429) o está saturado (5xx), pasa a `gemini-2.5-flash` (`pedirAGemini` en `conversacion.js`; se cambia con `GEMINI_MODELOS` en `.env`). No gastar el cupo con pruebas innecesarias. Para no tener límite, el dueño debe activar la facturación en Google AI Studio.
 - **Encuestas:** solo cuenta el PRIMER voto de cada cliente en cada encuesta; si vuelve a marcar, no se responde. La presentación es de una línea: "¡Hola! 👋 Te saluda el equipo de SiuMax…".
 - **Cupo medido (28/10):** gemini-2.5-flash-lite gratis = **20 pedidos al día**, igual que gemini-2.5-flash. Total: 40 respuestas al día (unos 10 clientes de 4 mensajes). Se renueva a la **medianoche de California**: 02:00 en Lima con el horario de verano de EE. UU. y **03:00 en Lima desde el 1/11**. Además hay un límite por minuto.
+
+## 11. Videos tutoriales (fuera de Comerc)
+- **Se graban contra la base demo `siudemo` del VPS, nunca contra siumax, Evicamp ni clientes.**
+  - siumax está llena de productos de prueba; siudemo tiene datos de bodega realistas.
+  - Su API es interna: puerto 3199 en 127.0.0.1, unidad temporal `siudemo-api`. Si el VPS se reinicia, hay que levantarla otra vez (ver LEEME del grabador).
+- **Herramienta:** `D:\Programación\siumax\videos\grabador` (`servidor-demo.cjs` + `grabar.mjs` + `guiones/`).
+  - Graba a 1366x768 escalado a 1920x1080: a 1600x900 la letra se veía muy chica en el celular.
+- **El Punto de venta por teclado:**
+  - el buscador agrega el primero con Enter (con flechas se elige otro);
+  - los productos nuevos entran arriba (`edit-input-0`);
+  - el granel abre la balanza (S/ → kilos);
+  - **F4 cobra**; Enter confirma; Enter en el ticket empieza una venta nueva.

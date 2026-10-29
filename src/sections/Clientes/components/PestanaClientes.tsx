@@ -35,7 +35,9 @@ export const resumenDeCliente = (cliente: Cliente, fiados: Fiado[]) => {
   });
   const deuda = suyos.reduce((t, f) => t + (Number(f.saldoPendiente) || 0), 0);
   const ultimo = suyos.reduce<string | undefined>((u, f) => (!u || (f.fechaEmision && f.fechaEmision > u) ? f.fechaEmision : u), undefined);
-  return { deuda, ultimo, creditos: suyos.length };
+  const hoyStr = new Date().toLocaleDateString('en-CA');
+  const tieneVencido = suyos.some((f) => (Number(f.saldoPendiente) || 0) > 0.05 && f.fechaVencimiento && f.fechaVencimiento.slice(0, 10) < hoyStr);
+  return { deuda, ultimo, creditos: suyos.length, tieneVencido };
 };
 
 export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = [], onNuevo, onAbrir, onEditar, onEliminar, idPestana }) => {
@@ -59,15 +61,165 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
   const visibles = filas.slice((paginaReal - 1) * POR_PAGINA, paginaReal * POR_PAGINA);
   const hayFiltros = !!busqueda || filtro !== 'TODOS' || orden !== 'DEUDA';
 
+  const claseBotonPag =
+    'p-2 border-2 border-[var(--color-ink)] bg-white text-[var(--color-ink)] transition-all cursor-pointer select-none ' +
+    'aria-disabled:opacity-30 aria-disabled:cursor-not-allowed hover:bg-[var(--color-bg)] ' +
+    'focus:outline-none focus:bg-[var(--color-accent)] focus:text-[var(--color-ink)] focus:border-[var(--color-ink)] ' +
+    'focus:ring-2 focus:ring-[var(--color-ink)] focus:shadow-[2px_2px_0_0_var(--color-ink)]';
+
+  const renderPaginacion = (posicion: 'arriba' | 'abajo') => {
+    const prevId = posicion === 'arriba' ? 'btn-pagina-ant-clientes-arriba' : 'btn-pagina-ant-clientes';
+    const sigId = posicion === 'arriba' ? 'btn-pagina-sig-clientes-arriba' : 'btn-pagina-sig-clientes';
+    const bordeClase = posicion === 'arriba' ? 'border-b-2' : 'border-t-2';
+
+    return (
+      <div className={`p-3 ${bordeClase} border-[var(--color-border)] bg-[var(--color-bg)] flex justify-between items-center gap-2 shrink-0`}>
+        <p className="text-[11px] sm:text-[12px] font-black text-[var(--color-muted)] uppercase">
+          {filas.length ? `Mostrando ${(paginaReal - 1) * POR_PAGINA + 1} - ${Math.min(paginaReal * POR_PAGINA, filas.length)} de ${filas.length} clientes` : '0 clientes'}
+        </p>
+        <div className="flex gap-2">
+          <button
+            id={prevId}
+            type="button"
+            tabIndex={0}
+            onClick={() => {
+              if (paginaReal > 1) {
+                setPagina(paginaReal - 1);
+                setTimeout(() => irA(prevId), 30);
+              }
+            }}
+            aria-disabled={paginaReal === 1}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                irA(sigId);
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                if (posicion === 'arriba') irA('buscador-clientes');
+                // En abajo se mantiene como tope
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (posicion === 'arriba') {
+                  const f0 = filasDom()[0];
+                  if (f0) { f0.focus(); f0.scrollIntoView({ block: 'nearest' }); }
+                }
+                // En la paginación de abajo se mantiene como TOPE (no sube a ningún lado)
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (posicion === 'arriba') {
+                  irA('buscador-clientes');
+                } else {
+                  const list = filasDom();
+                  const ult = list[list.length - 1];
+                  if (ult) { ult.focus(); ult.scrollIntoView({ block: 'nearest' }); }
+                }
+              } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (paginaReal > 1) {
+                  setPagina(paginaReal - 1);
+                  setTimeout(() => irA(prevId), 30);
+                }
+              }
+            }}
+            className={claseBotonPag}
+            title="Página anterior"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <span className="flex items-center px-2 sm:px-4 whitespace-nowrap border-2 border-[var(--color-ink)] bg-white text-xs font-black text-[var(--color-ink)]">
+            Pág {paginaReal} / {totalPaginas}
+          </span>
+          <button
+            id={sigId}
+            type="button"
+            tabIndex={0}
+            onClick={() => {
+              if (paginaReal < totalPaginas) {
+                setPagina(paginaReal + 1);
+                setTimeout(() => irA(sigId), 30);
+              }
+            }}
+            aria-disabled={paginaReal === totalPaginas}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                irA(prevId);
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                // En abajo se mantiene como TOPE (no sube al buscador)
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (posicion === 'arriba') {
+                  const f0 = filasDom()[0];
+                  if (f0) { f0.focus(); f0.scrollIntoView({ block: 'nearest' }); }
+                }
+                // En la paginación de abajo se mantiene como TOPE (no sube a ningún lado)
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (posicion === 'arriba') {
+                  irA('btn-nuevo-cliente');
+                } else {
+                  const list = filasDom();
+                  const ult = list[list.length - 1];
+                  if (ult) { ult.focus(); ult.scrollIntoView({ block: 'nearest' }); }
+                }
+              } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (paginaReal < totalPaginas) {
+                  setPagina(paginaReal + 1);
+                  setTimeout(() => irA(sigId), 30);
+                }
+              }
+            }}
+            className={claseBotonPag}
+            title="Página siguiente"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const filasDom = () => Array.from(document.querySelectorAll('[data-fila-cliente="true"]')) as HTMLElement[];
-  const irA = (id: string) => document.getElementById(id)?.focus();
+  const irA = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.focus();
+      el.scrollIntoView({ block: 'nearest' });
+    }
+  };
   // Barra: buscador → filtro → orden → limpiar → nuevo (← →); ↓ baja a la lista; ↑ sube a la pestaña
   const barra = ['buscador-clientes', 'filtro-deuda-clientes', 'orden-clientes', ...(hayFiltros ? ['btn-limpiar-clientes'] : []), 'btn-nuevo-cliente'];
   const teclasBarra = (id: string) => (e: React.KeyboardEvent<HTMLElement>) => {
     const i = barra.indexOf(id);
     const esTexto = e.currentTarget instanceof HTMLInputElement;
     const input = e.currentTarget as HTMLInputElement;
-    if (e.key === 'ArrowDown') { e.preventDefault(); filasDom()[0]?.focus(); }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      // Si está en la derecha (nuevo cliente o limpiar), bajar a página siguiente arriba
+      if (id === 'btn-nuevo-cliente' || id === 'btn-limpiar-clientes') {
+        const sigTop = document.getElementById('btn-pagina-sig-clientes-arriba');
+        if (sigTop) {
+          sigTop.focus();
+          sigTop.scrollIntoView({ block: 'nearest' });
+          return;
+        }
+      }
+      // Si está en la izquierda, bajar a página anterior arriba
+      const antTop = document.getElementById('btn-pagina-ant-clientes-arriba');
+      const sigTop = document.getElementById('btn-pagina-sig-clientes-arriba');
+      if (antTop) {
+        antTop.focus();
+        antTop.scrollIntoView({ block: 'nearest' });
+      } else if (sigTop) {
+        sigTop.focus();
+        sigTop.scrollIntoView({ block: 'nearest' });
+      } else {
+        const f0 = filasDom()[0];
+        if (f0) { f0.focus(); f0.scrollIntoView({ block: 'nearest' }); }
+      }
+    }
     else if (e.key === 'ArrowUp') { e.preventDefault(); irA(idPestana); }
     else if (e.key === 'ArrowRight' && (!esTexto || input.selectionEnd === input.value.length)) { e.preventDefault(); irA(barra[Math.min(i + 1, barra.length - 1)]); }
     else if (e.key === 'ArrowLeft' && (!esTexto || input.selectionStart === 0)) { e.preventDefault(); irA(barra[Math.max(i - 1, 0)]); }
@@ -82,11 +234,37 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
     const k = partes.indexOf(document.activeElement as HTMLElement);
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (lista[i + 1]) { lista[i + 1].focus(); lista[i + 1].scrollIntoView({ block: 'nearest' }); }
-      else irA(paginaReal < totalPaginas ? 'btn-pagina-sig-clientes' : 'btn-pagina-ant-clientes');
+      if (lista[i + 1]) {
+        lista[i + 1].focus();
+        lista[i + 1].scrollIntoView({ block: 'nearest' });
+      } else {
+        // Al final de la tabla: pasar a la paginación de abajo
+        // Si hay siguiente página, va a "Página Siguiente", si no a "Página Anterior"
+        const sigAbajo = document.getElementById('btn-pagina-sig-clientes');
+        const antAbajo = document.getElementById('btn-pagina-ant-clientes');
+        const destino = (paginaReal < totalPaginas ? sigAbajo : antAbajo) || sigAbajo || antAbajo;
+        if (destino) {
+          destino.focus();
+          destino.scrollIntoView({ block: 'nearest' });
+        }
+      }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      if (lista[i - 1]) { lista[i - 1].focus(); lista[i - 1].scrollIntoView({ block: 'nearest' }); } else irA('buscador-clientes');
+      if (lista[i - 1]) {
+        lista[i - 1].focus();
+        lista[i - 1].scrollIntoView({ block: 'nearest' });
+      } else {
+        // En la primera fila (i === 0), subir a la paginación superior
+        const sigArriba = document.getElementById('btn-pagina-sig-clientes-arriba');
+        const antArriba = document.getElementById('btn-pagina-ant-clientes-arriba');
+        const destino = (k > 0 ? sigArriba : antArriba) || antArriba || sigArriba;
+        if (destino) {
+          destino.focus();
+          destino.scrollIntoView({ block: 'nearest' });
+        } else {
+          irA('buscador-clientes');
+        }
+      }
     } else if (e.key === 'ArrowRight') { e.preventDefault(); partes[Math.min(k + 1, partes.length - 1)]?.focus(); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); partes[Math.max(k - 1, 0)]?.focus(); }
     // Enter en la fila abre; en un botón de la fila, el botón hace lo suyo (Editar / Eliminar)
@@ -96,7 +274,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
   const claseSelect = 'w-full min-w-0 lg:w-48 border-2 border-[var(--color-border)] px-2 sm:px-4 py-3 text-xs sm:text-sm font-black uppercase outline-none focus:border-[var(--color-info)] bg-white cursor-pointer rounded-none';
 
   return (
-    <div className="lg:h-full flex flex-col border-2 border-[var(--color-ink)] bg-white">
+    <div className="flex flex-col border-2 border-[var(--color-ink)] bg-white">
       {/* BARRA */}
       <div className="p-3 border-b-2 border-[var(--color-border)] grid grid-cols-3 lg:flex gap-2 sm:gap-3 shrink-0">
         <input id="buscador-clientes" autoComplete="off" spellCheck={false} data-lpignore="true"
@@ -125,16 +303,20 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
         </button>
       </div>
 
-      {/* TABLA */}
-      <div className="lg:flex-1 overflow-auto custom-scrollbar lg:min-h-0">
+      {/* PAGINACIÓN SUPERIOR */}
+      {renderPaginacion('arriba')}
+
+      {/* TABLA: SIN SCROLL VERTICAL INTERNO (el scroll lo maneja la ventana general) */}
+      <div className="w-full overflow-x-auto custom-scrollbar">
         <table className="w-full text-left border-collapse">
           <thead className="sticky top-0 bg-[var(--color-ink)] text-white z-10">
             <tr className="uppercase text-[11px] font-black tracking-widest">
-              {/* DNI/RUC, teléfono y dirección se ven SIEMPRE (pedido del dueño): en pantallas angostas la tabla se desliza */}
+              {/* DNI/RUC, teléfono, plazo y dirección se ven SIEMPRE */}
               <th className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6 border-r border-white/20">Cliente / Empresa</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20">Grupo</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20">DNI / RUC</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20">Teléfono</th>
+              <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20 text-center">Plazo</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20">Dirección</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20 text-right">Deuda</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20 text-center">Último crédito</th>
@@ -142,7 +324,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
             </tr>
           </thead>
           <tbody className="text-sm font-bold divide-y-2 divide-[var(--color-border)] border-b-2 border-[var(--color-border)]">
-            {visibles.length ? visibles.map(({ c, grupo, deuda, ultimo }) => (
+            {visibles.length ? visibles.map(({ c, grupo, deuda, ultimo, tieneVencido }) => (
               <tr key={c.id} role="button" tabIndex={0} data-row="true" data-fila-cliente="true" data-cliente-id={c.id}
                 onClick={() => onAbrir(c)} onKeyDown={teclasFila(c)}
                 className="hover:bg-[var(--color-surface)] focus:outline-none focus-visible:bg-[var(--color-bg-2)] cursor-pointer">
@@ -166,6 +348,15 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
                   </>) : <span className="text-[var(--color-subtle)]">—</span>}
                 </td>
                 <td data-col="telefono" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] whitespace-nowrap">{c.telefono || <span className="text-[var(--color-subtle)]">—</span>}</td>
+                <td data-col="plazo" className="py-3 sm:py-4 px-3 sm:px-4 text-center whitespace-nowrap">
+                  {c.diasPlazo != null ? (
+                    <span className="inline-block px-2.5 py-1 text-xs font-black uppercase border border-[var(--color-info)] text-[var(--color-info)] bg-[var(--color-info-bg)]">
+                      {c.diasPlazo} días
+                    </span>
+                  ) : (
+                    <span className="text-[var(--color-subtle)] font-bold">—</span>
+                  )}
+                </td>
                 <td data-col="direccion" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] max-w-[240px]">
                   <span className="flex items-center gap-2 min-w-0">
                     <span className="truncate" title={c.direccion || ''}>{c.direccion || <span className="text-[var(--color-subtle)]">—</span>}</span>
@@ -179,6 +370,11 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
                 </td>
                 <td className="py-3 sm:py-4 px-3 sm:px-4 text-right whitespace-nowrap">
                   <span className={`font-black ${deuda > 0.05 ? 'text-[var(--color-danger)]' : 'text-[var(--color-subtle)]'}`}>S/ {deuda.toFixed(2)}</span>
+                  {tieneVencido && (
+                    <span className="block text-[10px] font-black text-[var(--color-danger)] uppercase tracking-wider">
+                      Vencido
+                    </span>
+                  )}
                 </td>
                 <td className="py-3 sm:py-4 px-3 sm:px-4 text-center text-[var(--color-muted)] whitespace-nowrap">{fecha(ultimo)}</td>
                 <td className="py-3 sm:py-4 px-2 sm:px-4 sm:pr-6">
@@ -198,7 +394,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
               </tr>
             )) : (
               <tr>
-                <td colSpan={8} className="py-12 text-center text-[var(--color-muted)] font-black uppercase tracking-widest text-sm bg-[var(--color-bg)]">
+                <td colSpan={9} className="py-12 text-center text-[var(--color-muted)] font-black uppercase tracking-widest text-sm bg-[var(--color-bg)]">
                   <span className="inline-block border-2 border-[var(--color-muted)] p-4 border-dashed">{clientes.length ? 'No se encontraron clientes' : 'Todavía no hay clientes'}</span>
                 </td>
               </tr>
@@ -207,51 +403,8 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
         </table>
       </div>
 
-      {/* PIE */}
-      <div className="p-3 border-t-2 border-[var(--color-border)] bg-[var(--color-bg)] flex justify-between items-center gap-2 shrink-0">
-        <p className="text-[11px] sm:text-[12px] font-black text-[var(--color-muted)] uppercase">
-          {filas.length ? `Mostrando ${(paginaReal - 1) * POR_PAGINA + 1} - ${Math.min(paginaReal * POR_PAGINA, filas.length)} de ${filas.length}` : '0 clientes'}
-        </p>
-        <div className="flex gap-2">
-          <button id="btn-pagina-ant-clientes" onClick={() => setPagina(Math.max(1, paginaReal - 1))} aria-disabled={paginaReal === 1}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                const list = filasDom();
-                if (list.length) {
-                  const target = list.at(-1);
-                  target?.focus();
-                  target?.scrollIntoView({ block: 'nearest' });
-                } else {
-                  irA('buscador-clientes');
-                }
-              } else if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                irA('btn-pagina-sig-clientes');
-              }
-            }}
-            className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] aria-disabled:opacity-50 hover:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer"><ChevronLeft size={16} /></button>
-          <span className="flex items-center px-2 sm:px-4 whitespace-nowrap border-2 border-[var(--color-border)] bg-white text-xs font-black text-[var(--color-ink)]">Pág {paginaReal} / {totalPaginas}</span>
-          <button id="btn-pagina-sig-clientes" onClick={() => setPagina(Math.min(totalPaginas, paginaReal + 1))} aria-disabled={paginaReal === totalPaginas}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                const list = filasDom();
-                if (list.length) {
-                  const target = list.at(-1);
-                  target?.focus();
-                  target?.scrollIntoView({ block: 'nearest' });
-                } else {
-                  irA('buscador-clientes');
-                }
-              } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                irA('btn-pagina-ant-clientes');
-              }
-            }}
-            className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] aria-disabled:opacity-50 hover:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer"><ChevronRight size={16} /></button>
-        </div>
-      </div>
+      {/* PAGINACIÓN INFERIOR */}
+      {renderPaginacion('abajo')}
     </div>
   );
 };

@@ -7,6 +7,117 @@
 
 ---
 
+## 29/10/2026 (tarde, 28) · Antigravity
+- **Corrección de tope en la paginación inferior de Clientes:**
+  - **Solicitud del dueño:** *"encontre otro error cuando bajo hasta abajo para selecionar la siguiente pagina pero de la parte de abajo sube hasta arriba deberia mantenerse ahi como un tope"*
+  - **Causa:** En la paginación inferior, al presionar Flecha Abajo ⬇️ o Flecha Derecha ➡️ desde el botón de página siguiente, el código llamaba a `irA('buscador-clientes')` ciclando hacia arriba, lo que provocaba un scroll brusco de la ventana hacia arriba.
+  - **Solución (`PestanaClientes.tsx`):**
+    - Se eliminó el salto al buscador en la paginación inferior. Ahora actúa como un **tope firme**.
+    - Con Flecha Abajo ⬇️ en el pie: se queda en el botón actual sin mover la ventana.
+    - Con Flecha Derecha ➡️ en el botón siguiente: se queda en el botón como tope.
+    - Con Flecha Izquierda ⬅️ en el botón anterior: se queda como tope.
+    - Entre los botones `<` y `>` se navega con normalidad.
+    - Al presionar `Enter` o `Espacio` para cambiar de página, se preserva el foco en el botón de abajo con `setTimeout(() => irA(id), 30)` para que la ventana no salte.
+  - **Validación y Despliegue:**
+    - `npx tsc -b`: 0 errores.
+    - `npm run build`: compilación limpia en 4.08s.
+    - `deploy.cjs siumax`: subido a `siumax.duckdns.org` (20 archivos).
+    - `graphify update .`: grafo de conocimiento actualizado.
+- **Siguiente paso:** Avisar al dueño para que verifique el tope en siumax.
+
+---
+
+## 29/10/2026 (tarde, 27) · Claude — Videos tutoriales (fuera de Comerc)
+- **El dueño pidió** videos tutoriales del sistema por partes, priorizando los videos.
+  Aprobó cargar datos de ejemplo y hacer primero un video de muestra.
+- **Base demo aparte en el VPS: `siudemo`.** Para no ensuciar siumax ni sus pruebas.
+  - Estructura copiada de siuhub y empresa "BODEGA LA ESQUINA", con usuario `demo@siumax.com` (Rosa, administradora).
+  - Datos: 35 productos de bodega, lotes, 3 proveedores, 6 clientes, 87 ventas de la semana, 6 fiados y la caja de hoy abierta.
+  - **API solo interna** (puerto 3199 en 127.0.0.1, unidad temporal `siudemo-api`), sin link público, nginx ni certificado.
+  - No está en el registro de clientes ni en el Panel.
+- **Grabador** en `D:\Programación\siumax\videos\grabador` (no está en git; ver su LEEME.md).
+  - Sirve en localhost una copia de la pantalla de siumax conectada a siudemo por un túnel SSH.
+  - Graba con Edge sin ventana y ffmpeg: MP4 1920x1080 con portada, textos por paso, resaltes, teclas en pantalla y cierre con el WhatsApp 955 476 689.
+- **Muestra hecha:** `videos/02-como-hacer-una-venta.mp4` (75 s, 6 MB), esperando que el dueño la revise.
+- **Siguiente:** con su OK, los demás tutoriales:
+  1 Conociendo SiuMax, 3 Agregar productos, 4 Entradas/salidas, 5 Fiados, 6 Caja, 7 Proveedores, 8 Conteos, 9 Configuración.
+
+## 29/10/2026 (tarde, 26) · Antigravity
+- **Corrección de flujo del selector por teclado en paginación superior e inferior:**
+  - **Solicitud del dueño:** *"perfecto pero falta que el selector pase por la siguiente pagina como tambien la de abajo el selector no pasa por ahi"*
+  - **Diagnóstico:**
+    1. En la paginación superior, la navegación vertical se saltaba los controles si `totalPaginas === 1` o iba siempre directo a "página anterior", impidiendo que el selector pasara cómodamente por el botón de "siguiente página" (`>`).
+    2. En la última fila de la tabla, al presionar Flecha Abajo ⬇️, no se realizaba `scrollIntoView` al botón de paginación inferior y el estilo de foco (`focus:ring-[var(--color-ink)]`) era prácticamente invisible en pantalla.
+    3. En los botones inferiores, Flecha Abajo ⬇️ no tenía acción de escape y quedaba muerto.
+  - **Cambios realizados (`PestanaClientes.tsx`):**
+    1. **Resaltado Neobrutalista del Selector:** Los botones de paginación ahora usan `claseBotonPag` con `focus:bg-[var(--color-accent)] focus:text-[var(--color-ink)] focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] focus:shadow-[2px_2px_0_0_var(--color-ink)]`. Al posar el selector, se iluminan inmediatamente en amarillo neón brillante con texto negro y sombra brutalista.
+    2. **Desplazamiento automático (`scrollIntoView`):** La función `irA` ahora incluye `.scrollIntoView({ block: 'nearest' })`, asegurando que la ventana acompañe al selector al saltar a la paginación inferior o a los extremos.
+    3. **Paginación Superior:**
+       - Desde la barra arriba (Buscador/Filtros/Nuevo Cliente), Flecha Abajo ⬇️ desciende a la paginación superior sin saltarse los botones.
+       - Flecha Derecha ➡️ pasa de Anterior (`<`) a Siguiente (`>`).
+       - Flecha Izquierda ⬅️ pasa de Siguiente (`>`) a Anterior (`<`).
+       - Flecha Abajo ⬇️ desde cualquiera de los dos botones desciende directamente a la primera fila de la tabla.
+    4. **Paginación Inferior:**
+       - Desde la última fila de la tabla, Flecha Abajo ⬇️ salta directamente a la paginación inferior (enfocando preferentemente "Siguiente página" `#btn-pagina-sig-clientes` o "Anterior").
+       - Navegación bidireccional fluida con Flecha Izquierda ⬅️ y Derecha ➡️ entre `<` y `>`.
+       - Flecha Arriba ⬆️ sube a la última fila de la tabla.
+       - Flecha Abajo ⬇️ cicla hacia arriba al buscador, garantizando que el usuario nunca quede atrapado.
+       - Presionar `Enter` o `Espacio` en los botones ejecuta el cambio de página instantáneo.
+  - **Validación y Despliegue:**
+    - `npx tsc -b`: 0 errores.
+    - `npm run build`: compilación limpia en 5.1s.
+    - `deploy.cjs siumax`: subido exitosamente a `siumax.duckdns.org` (20 archivos).
+    - `graphify update .`: grafo de conocimiento actualizado.
+- **Siguiente paso:** Notificar al dueño para que verifique la navegación con las flechas en siumax.
+
+---
+
+## 29/10/2026 (tarde, 25) · Antigravity
+- **Ajustes en tabla de Clientes (columna Plazo, scroll general y paginación doble):**
+  - **Solicitud del dueño:** *"en la tabla no sale los dias de plazo como sabre cuantos tiene y otra cosa mas el scrooll tiene que ser de la ventana general como tambien falta para pasar a la pagina siguiente arriba como tambien al final agrega eso tiene que mostrar por lo menos 50 clientes por pagina"* (captura mostrando la tabla con scroll interno marcado en rojo).
+  - **Cambios realizados:**
+    1. **Columna "Plazo":** Se añadió una columna dedicada `Plazo` en la cabecera y filas de la tabla de clientes (`PestanaClientes.tsx`). Si el cliente tiene plazo configurado, muestra una pastilla informativa visible (ej. `15 días`). Si no tiene, muestra `—`.
+    2. **Scroll de la ventana general:** Se removió `lg:h-full` de `Clientes/index.tsx` y de `PestanaClientes.tsx`, y se cambió el contenedor de la tabla a `w-full overflow-x-auto custom-scrollbar` eliminando el scroll vertical interno atrapado. Ahora la tabla fluye libremente y se desplaza con el scroll principal de la ventana general.
+    3. **Paginación arriba y al final:** Se implementó la barra de paginación tanto arriba de la tabla (`#btn-pagina-ant-clientes-arriba`, `#btn-pagina-sig-clientes-arriba`) como abajo al pie (`#btn-pagina-ant-clientes`, `#btn-pagina-sig-clientes`), sincronizadas y con navegación completa por teclado.
+    4. **50 clientes por página:** Configurado en `POR_PAGINA = 50`.
+  - **Validación y Despliegue:**
+    - `npx tsc -b`: 0 errores.
+    - `npm run build`: compilación limpia en 3.7s.
+    - `deploy.cjs siumax`: subido a sitio de pruebas `siumax.duckdns.org`.
+    - `graphify update .`: grafo de conocimiento actualizado.
+- **Siguiente paso:** Notificar al dueño para que revise los cambios en siumax.
+
+---
+
+## 29/10/2026 (mañana, 24) · Antigravity
+- **Fase 4.3 completada y desplegada en siumax (pruebas): Días de plazo en clientes y fecha límite calculada en caja (SIN límite de crédito):**
+  - **Decisión del dueño:** *"todo excepto el límite de crédito ahora si arranca"* y *"no quites lo de escoger fecha porque eso le gustó a mis clientes"*.
+  - **Base de datos (siuhub - VPS):**
+    - Respaldo de siuhub antes de tocar: `/var/lib/postgresql/respaldo-siuhub-antes-fase4-3.dump` (203K).
+    - `servidor/sql/seguridad-sesion.sql`: agregada columna `ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS dias_plazo integer; NOTIFY pgrst, 'reload schema';`.
+    - Script de reversión creado: `servidor/sql/deshacer-fase4-3.sql`.
+    - Migración ejecutada exitosamente en `siuhub` (PostgreSQL puerto 3001).
+  - **Frontend / Pantallas:**
+    - `src/sections/Clientes/types.ts`: agregado `diasPlazo?: number;` a la interfaz `Cliente`.
+    - `src/sections/Clientes/components/ModalFichaCliente.tsx`: nuevo campo "Días de plazo para pagar" (`#ficha-dias-plazo`, ej. 7, 15, 30 días, numérico) con navegación completa por teclado (Enter, flechas ↑ ↓ ← →).
+    - `src/sections/Clientes/index.tsx`: mapeo de `diasPlazo` desde `c.dias_plazo` y guardado tanto en actualización como en creación de clientes.
+    - `src/sections/Clientes/components/ModalDetalleCliente.tsx`: se muestra en la cabecera `Plazo acordado: X días`.
+    - `src/sections/Clientes/components/PestanaClientes.tsx`: badge visible `Xd plazo` en la fila del cliente. Alerta `Vencido` en rojo si el cliente tiene fiados pendientes vencidos a la fecha de hoy.
+    - `src/sections/Punto-de-venta/components/ModalCobro.tsx`:
+      - El selector de fecha (`#fiado-fecha`) se mantuvo **100% intacto y funcional**.
+      - Al seleccionar un cliente con días de plazo configurados, el sistema calcula automáticamente la fecha de vencimiento (`hoy + dias_plazo`).
+      - Si el cliente no tiene plazo configurado, por defecto propone 1 día (mañana) como antes.
+      - Se agregaron botones rápidos `+7d`, `+15d`, `+30d` para fijar la fecha con un clic sin borrar el selector nativo.
+      - Alerta visual en caja si el cliente seleccionado tiene créditos vencidos pendientes de pago (`⚠ Tiene deudas vencidas`) y monto de deuda pendiente actual.
+  - **Validación y Pruebas:**
+    - `npx tsc -b`: 0 errores.
+    - `npm run build`: compilación limpia en 3.6s.
+    - `deploy.cjs siumax`: subido a sitio de pruebas `siumax.duckdns.org` (20 archivos).
+    - `graphify update .`: grafo de conocimiento actualizado.
+- **Siguiente paso:** Mostrar los resultados al dueño para que lo pruebe en siumax y decida si da el visto bueno para subir a Evicamp (producción).
+
+---
+
 ## 29/10/2026 (mañana, 23) · Antigravity
 - **Pase a producción oficial en Evicamp y GitHub completado con éxito:**
   - **Autorización explícita del dueño:** *"si procede"* tras verificar el indicador de ENTER y botón Continuar.
