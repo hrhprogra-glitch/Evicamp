@@ -309,4 +309,13 @@
           5. *Nuevos registros al inicio de las tablas*: *"cuando creo un cliente nuevo o un producto o un lote nuevo no sale al principio de la tabla arreglar eso tambien"*. Se configuró el orden por defecto a `RECIENTES` y se actualizó la adición de clientes, productos y lotes para que aparezcan siempre al inicio de la tabla (fila 1, página 1).
           6. *Todos los datos de precios en tabla de inventario*: se expandió la columna de precios en `TablaProductos` para mostrar el precio normal, precio mayorista, escalas por cantidad (`x6+: S/ XX.XX`) y presentaciones (`CAJA x12: S/ XX.XX`).
         - `npx tsc -b` (0 errores), `npm run build` limpio y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+     26. **Selector en Cotización, Pedido, Pago Mixto y Previsualización de Tickets (29/10 tarde):**
+        - El dueño realizó pruebas adicionales y solicitó:
+          1. *"esta mal comodado quita el -10 porciento de lo que marque con rojo porque ya esta arriba"*: se eliminó la etiqueta de línea individual `-10%` en `TicketVenta.tsx`, dejando el ticket limpio y ordenado con la indicación en la cabecera.
+          2. *"ahora lo del precio mayorista del producto es 1 sol pero con el descuento del cliente -10 porciento ceria 0.9"*: se ajustó `conCantidad` para que si el cliente tiene descuento % y el producto tiene precio mayorista, el descuento aplique sobre el precio mayorista (S/ 1.00 - 10% = S/ 0.90).
+          3. *"el selector no baja para reimprimir ticket y otr acosa no me sale la previsualisación para imprimir"*: en `ModalDetalleTicket.tsx` se integró la previsualización visual real del ticket de 80mm con pestañas `[ 🧾 Ticket ]` y `[ 📋 Tabla ]`, foco inicial automático en `[ 🖨️ Reimprimir Ticket ]`, navegación fluida con flechas ↑ ↓ y tecla P para reimprimir de inmediato.
+          4. *"cuando entro a cotización no sale el selector"*: en `ModalCotizacionPOS.tsx` se agregó selector por teclado completo con flechas ↑ ↓ ← → (moverse entre DNI/RUC y Celular, y Fecha y Observaciones), foco inicial automático y Focus Trap.
+          5. *"cuando entro a pedido no sale el selector no te olvides moverme izquierda y derecha"*: en `ModalPedidoPOS.tsx` se habilitó navegación de selector con flechas en 2D (incluyendo ← → entre campos en columnas).
+          6. *"me e dado cuenta que el metodo de pago de pedidos no es mixto osea que pasa si el cliente quiere pagar en efectivo una parte y en yape o tarjeta la otra arregla eso"*: se transformó el adelanto de pedidos a **pago mixto en 3 columnas** (Efectivo, Yape/Plin, Tarjeta) con suma automática del total de adelanto y saldo pendiente restante.
+        - Todo compilado (`npx tsc -b`, `npm run build`) y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
 

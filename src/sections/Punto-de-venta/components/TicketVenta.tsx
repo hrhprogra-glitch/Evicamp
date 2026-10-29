@@ -322,7 +322,7 @@ export const TicketVenta: React.FC<Props> = ({
 
                 <div className="col-span-5 flex flex-col min-w-0 pr-1 pl-1">
                   <span className="truncate uppercase font-black text-[13px] leading-tight text-[var(--color-ink)]" title={item.name}>{item.name}</span>
-                  <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                  <div className="flex items-center justify-between gap-1 mt-0.5">
                     {/* 🏷️ PRECIO EDITABLE POR LÍNEA: para bajarle el precio a un cliente puntual
                         (ej. negocio/mayorista) sin tocar el precio general del catálogo. Solo
                         cambia esta venta — updatePrice nunca escribe en la tabla de productos. */}
@@ -352,16 +352,6 @@ export const TicketVenta: React.FC<Props> = ({
                         </button>
                       );
                     })()}
-                    {item.descuentoPorcentajeAplicado != null && item.descuentoPorcentajeAplicado > 0 && (
-                      <span className="text-[10px] font-black bg-[var(--color-success)] text-white px-1 py-0.5 rounded-none whitespace-nowrap shadow-[1px_1px_0_0_black]" title={`Descuento especial de ${item.descuentoPorcentajeAplicado}% aplicado`}>
-                        🏷️ -{item.descuentoPorcentajeAplicado}%
-                      </span>
-                    )}
-                    {item.esMayoristaAplicado && (
-                      <span className="text-[10px] font-black bg-amber-400 text-black px-1 py-0.5 rounded-none whitespace-nowrap" title="Precio Mayorista Aplicado">
-                        ⭐ MAYORISTA
-                      </span>
-                    )}
                     {item.precioLista !== undefined && (
                       <span data-precio-cambiado className="text-[11px] font-bold text-[var(--color-muted)] line-through whitespace-nowrap" title={`Precio cambiado por ${item.precioCambiadoPor || ''}`}>S/ {item.precioLista.toFixed(2)}</span>
                     )}

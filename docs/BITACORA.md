@@ -7,6 +7,27 @@
 
 ---
 
+## 29/10/2026 (tarde, 34) · Antigravity
+- **Ajustes de Precios Mayoristas, Selector en Modales y Pago Mixto en Pedidos:**
+  - **1. Descuento % sobre Precio Mayorista (`Punto-de-venta/index.tsx`):**
+    - Si un cliente es mayorista y el producto tiene precio mayorista (ej. S/ 1.00), el descuento del cliente (-10%) se aplica sobre el precio mayorista (`1.00 - 10% = S/ 0.90`).
+    - En `TicketVenta.tsx`: se quitó la etiqueta redundante `-10%` de la línea individual del producto (ya que el ticket lo indica claramente arriba en la cabecera), despejando el espacio del subtotal y stock.
+  - **2. Previsualización Real y Selector en Reimpresión de Tickets (`ModalDetalleTicket.tsx`):**
+    - Se agregó previsualización visual del ticket de 80mm en pantalla (`TicketImprimible`), con toggle de pestañas: `[ 🧾 Ticket ]` y `[ 📋 Tabla ]`.
+    - Selector por teclado corregido: foco inicial directo en `[ 🖨️ Reimprimir Ticket ]`, tecla `P` o `Enter` reimprime; flechas arriba/abajo y Tab permiten saltar entre pestañas, tabla y botón de reimpresión sin trabarse.
+    - Llamada de impresión robusta con fallback automático a `window.print()`.
+  - **3. Selector por Teclado en Modal Cotizaciones (`ModalCotizacionPOS.tsx`):**
+    - Foco inicial inmediato en `input-coti-cliente` con anillo de selector visible (`ring-4 ring-black bg-amber-50`).
+    - Navegación bidireccional completa con flechas: arriba/abajo entre filas, izquierda/derecha entre columnas (DNI/RUC ↔ Teléfono, Fecha ↔ Observaciones), Enter para avanzar/guardar, y Focus Trap con Tab.
+  - **4. Pago Mixto de Adelanto y Selector en Pedidos (`ModalPedidoPOS.tsx`):**
+    - El adelanto de pedidos ahora es **100% mixto**: 3 campos independientes para 💵 Efectivo, 📱 Yape / Plin y 💳 Tarjeta.
+    - Se calcula automáticamente el Total Adelanto y el Saldo Pendiente. Se guarda la combinación exacta (`metodo_adelanto: 'MIXTO (Efectivo: S/ ..., Yape: S/ ...)'`).
+    - Selector por teclado con navegación izquierda/derecha entre los 3 métodos de pago de adelanto y entre DNI/RUC y Celular.
+  - **Validación y despliegue:**
+    - `npx tsc -b` (0 errores).
+    - `npm run build` (3.72s).
+    - `node ai-scripts/deploy.cjs siumax` (20 archivos subidos a `siumax.duckdns.org`). Evicamp intacto.
+
 ## 29/10/2026 (tarde, 33) · Antigravity
 - **Correcciones y Mejoras de la Fase 4 (Reportadas por el dueño en pruebas):**
   - **Selector y teclado en ModalProducto:**

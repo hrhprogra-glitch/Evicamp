@@ -132,9 +132,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/FiltrosInventario.tsx": {
-    "mtime": 1793289284.4969215,
-    "seen": 1793296973.070177,
-    "ast_hash": "c9f4445619a1e001aaea5b388a623bdb",
+    "mtime": 1793311413.6962833,
+    "seen": 1793311598.3653848,
+    "ast_hash": "f8f2c99e6e8c892a0a62bbe9aad54718",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/HeaderInventario.tsx": {
@@ -150,21 +150,21 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProducto.tsx": {
-    "mtime": 1793301679.113914,
-    "seen": 1793302715.327817,
-    "ast_hash": "948566cff9e5db10a1083849c618e636",
+    "mtime": 1793310852.244396,
+    "seen": 1793311598.3653905,
+    "ast_hash": "23fc215baa6f9188ffdbef72c64e0515",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaLotes.tsx": {
-    "mtime": 1793289284.4969215,
-    "seen": 1793296973.0701895,
-    "ast_hash": "2e0428b3545e060a97a7740b197cbf55",
+    "mtime": 1793311436.2023032,
+    "seen": 1793311598.3653924,
+    "ast_hash": "6cd9a55dbd4d544933e574dd6118c415",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaProductos.tsx": {
-    "mtime": 1793301993.276278,
-    "seen": 1793302715.3278196,
-    "ast_hash": "ede6abf2c2f06c3464e1b099e9276c56",
+    "mtime": 1793311468.8659973,
+    "seen": 1793311598.3653934,
+    "ast_hash": "9847b059cfc5b5c87b022a70a9dc3987",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TarjetaMetrica.tsx": {
@@ -174,9 +174,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/index.tsx": {
-    "mtime": 1793301981.1414578,
-    "seen": 1793302715.3278213,
-    "ast_hash": "8a72964f84c1a2ae681b1673cc2284a4",
+    "mtime": 1793311508.5544696,
+    "seen": 1793311598.3653953,
+    "ast_hash": "3c40eb0aad4ac61e131e3baf5d3bd174",
     "semantic_hash": ""
   },
   "src/sections/Inventario/types.ts": {
@@ -258,15 +258,15 @@
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/TicketVenta.tsx": {
-    "mtime": 1793304926.989475,
-    "seen": 1793305023.4309704,
-    "ast_hash": "787fe7c24b0441dc5f446a577744afe8",
+    "mtime": 1793310985.0073729,
+    "seen": 1793311598.3654132,
+    "ast_hash": "54f6a20bf64649a0831df15354c1f838",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/index.tsx": {
-    "mtime": 1793304889.3069372,
-    "seen": 1793305023.4309711,
-    "ast_hash": "ca920bd8601e64b779058d07cbce72a3",
+    "mtime": 1793310922.556257,
+    "seen": 1793311598.365414,
+    "ast_hash": "1428a3ca27d1046bebbb8d825b6abe7c",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/types.ts": {
@@ -1188,9 +1188,9 @@
     "semantic_hash": "300aa7d63cc8421dc097e6bfd49e1521"
   },
   "src/components/ModalDetalleTicket.tsx": {
-    "mtime": 1793289284.412601,
-    "seen": 1793296973.0701034,
-    "ast_hash": "68e4173432e1a1f359b1b8926352a8e2",
+    "mtime": 1793311106.0622215,
+    "seen": 1793311598.3653347,
+    "ast_hash": "e7e65ae862b92689f4a028004c2c10d9",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalGestionProveedores.tsx": {
@@ -1956,9 +1956,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/PestanaClientes.tsx": {
-    "mtime": 1793304758.5946112,
-    "seen": 1793305023.4309099,
-    "ast_hash": "d2b351c5e0d10a6330f56d3d37e11384",
+    "mtime": 1793311243.4328194,
+    "seen": 1793311598.3653517,
+    "ast_hash": "a39d859179fd7f1d58c19f7bd951138c",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/TablaFiados.tsx": {
@@ -1974,9 +1974,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/index.tsx": {
-    "mtime": 1793304708.8096886,
-    "seen": 1793305023.4309149,
-    "ast_hash": "4add1b845767e4a72c3a6911261c427d",
+    "mtime": 1793311190.4448185,
+    "seen": 1793311598.3653564,
+    "ast_hash": "399359f77198c2c61ce548df742e6c0b",
     "semantic_hash": ""
   },
   "src/sections/Clientes/types.ts": {

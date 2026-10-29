@@ -84,18 +84,70 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
     obtenerCorrelativo();
   }, [isOpen, clienteSeleccionado]);
 
-  // Manejo de teclado y foco
+  // Auto-Focus inmediato en el primer campo al abrir el modal (o botón imprimir al guardar)
   useEffect(() => {
     if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
+    const enfocar = () => {
+      if (guardadoExitoso) {
+        document.getElementById('btn-coti-imprimir')?.focus();
+      } else {
+        document.getElementById('input-coti-cliente')?.focus();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+    enfocar();
+    const t1 = setTimeout(enfocar, 50);
+    const t2 = setTimeout(enfocar, 150);
+    const t3 = setTimeout(enfocar, 300);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [isOpen, guardadoExitoso]);
+
+  // Manejo de teclado, Focus Trap y navegación por teclado (Patrón Evicamp)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 1. ESCAPE: Cerrar modal
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+        return;
+      }
+
+      // 2. FOCUS TRAP PARA TAB
+      if (e.key === 'Tab') {
+        e.stopPropagation();
+        const modalEl = document.getElementById('modal-cotizacion-container');
+        if (!modalEl) return;
+        const focusables = Array.from(
+          modalEl.querySelectorAll<HTMLElement>(
+            'input:not([type="file"]):not([disabled]), button:not([disabled])'
+          )
+        ).filter(el => el.tabIndex !== -1 && !el.classList.contains('hidden') && el.offsetParent !== null);
+
+        if (focusables.length > 0) {
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          const active = document.activeElement;
+
+          if (e.shiftKey && active === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && active === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
+  }, [isOpen, onClose, guardadoExitoso]);
 
   if (!isOpen) return null;
 
@@ -204,9 +256,10 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
       role="dialog"
       aria-modal="true"
       aria-label="Modal Cotización"
+      id="modal-cotizacion-container"
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4"
     >
-      <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[95vh] w-full max-w-xl animate-fade-in">
+      <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[95vh] w-full max-w-xl animate-fade-in font-mono">
         
         {/* CABECERA */}
         <div className="bg-[var(--color-ink)] text-white p-3 sm:p-4 flex justify-between items-center border-b-2 border-[var(--color-ink)] shrink-0">
@@ -225,7 +278,14 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
             id="coti-btn-cerrar"
             type="button"
             onClick={onClose}
-            className="p-1 hover:rotate-90 transition-transform cursor-pointer outline-none focus:ring-2 focus:ring-white text-white"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                document.getElementById('input-coti-cliente')?.focus();
+              }
+            }}
+            className="p-1 hover:rotate-90 transition-transform cursor-pointer outline-none focus:ring-4 focus:ring-white text-white"
+            title="Cerrar (Esc)"
           >
             <X size={20} />
           </button>
@@ -252,33 +312,60 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
 
             <div className="flex flex-col sm:flex-row gap-3 w-full mt-4">
               <button
+                id="btn-coti-wsp"
                 type="button"
                 onClick={handleWhatsApp}
-                className="flex-1 py-3 px-4 border-2 border-[var(--color-ink)] bg-emerald-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[3px_3px_0_0_black] hover:bg-emerald-700 cursor-pointer"
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    document.getElementById('btn-coti-imprimir')?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    document.getElementById('btn-coti-listo')?.focus();
+                  }
+                }}
+                className="flex-1 py-3 px-4 border-2 border-[var(--color-ink)] bg-emerald-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[3px_3px_0_0_black] hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-black cursor-pointer"
               >
                 <MessageCircle size={18} /> Enviar WhatsApp
               </button>
               <button
+                id="btn-coti-imprimir"
                 type="button"
                 onClick={() => {
                   window.print();
                 }}
-                className="flex-1 py-3 px-4 border-2 border-[var(--color-ink)] bg-[var(--color-accent)] text-[var(--color-ink)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[3px_3px_0_0_black] hover:bg-white cursor-pointer"
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    document.getElementById('btn-coti-wsp')?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    document.getElementById('btn-coti-listo')?.focus();
+                  }
+                }}
+                className="flex-1 py-3 px-4 border-2 border-[var(--color-ink)] bg-[var(--color-accent)] text-[var(--color-ink)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[3px_3px_0_0_black] hover:bg-white focus:outline-none focus:ring-4 focus:ring-black cursor-pointer"
               >
                 <Printer size={18} /> Imprimir Ticket
               </button>
             </div>
 
             <button
+              id="btn-coti-listo"
               type="button"
               onClick={onClose}
-              className="w-full mt-2 py-2.5 border-2 border-[var(--color-ink)] bg-gray-100 hover:bg-gray-200 text-[var(--color-ink)] font-black text-xs uppercase tracking-wider cursor-pointer"
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  document.getElementById('btn-coti-imprimir')?.focus();
+                }
+              }}
+              className="w-full mt-2 py-2.5 border-2 border-[var(--color-ink)] bg-gray-100 hover:bg-gray-200 focus:bg-gray-300 focus:outline-none focus:ring-4 focus:ring-black text-[var(--color-ink)] font-black text-xs uppercase tracking-wider cursor-pointer"
             >
-              Listo / Continuar en Caja
+              Listo / Continuar en Caja (Esc)
             </button>
           </div>
         ) : (
-          /* FORMULARIO DE EMISIÓN */
+          /* FORMULARIO DE EMISIÓN CON SELECTOR TECLADO TOTAL */
           <div className="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col gap-4 custom-scrollbar">
             
             {/* DATOS DEL CLIENTE */}
@@ -296,8 +383,17 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
                     type="text"
                     value={clienteNombre}
                     onChange={(e) => setClienteNombre(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        document.getElementById('coti-btn-cerrar')?.focus();
+                      } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                        e.preventDefault();
+                        document.getElementById('input-coti-doc')?.focus();
+                      }
+                    }}
                     placeholder="NOMBRE O EMPRESA"
-                    className="w-full border-2 border-[var(--color-ink)] p-2 text-xs font-black uppercase outline-none focus:border-[var(--color-accent-dark)] bg-white"
+                    className="w-full border-2 border-[var(--color-ink)] p-2 text-xs font-black uppercase outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:bg-amber-50 bg-white"
                   />
                 </div>
                 <div>
@@ -305,11 +401,24 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
                     DNI / RUC (Opcional)
                   </label>
                   <input
+                    id="input-coti-doc"
                     type="text"
                     value={clienteDoc}
                     onChange={(e) => setClienteDoc(e.target.value.replace(/[^0-9]/g, ''))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        document.getElementById('input-coti-cliente')?.focus();
+                      } else if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        document.getElementById('input-coti-tel')?.focus();
+                      } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                        e.preventDefault();
+                        document.getElementById('input-coti-fecha')?.focus();
+                      }
+                    }}
                     placeholder="NRO. DOCUMENTO"
-                    className="w-full border-2 border-[var(--color-ink)] p-2 text-xs font-bold outline-none focus:border-[var(--color-accent-dark)] bg-white"
+                    className="w-full border-2 border-[var(--color-ink)] p-2 text-xs font-bold outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:bg-amber-50 bg-white"
                   />
                 </div>
                 <div>
@@ -317,11 +426,24 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
                     Teléfono / WhatsApp (Opcional)
                   </label>
                   <input
+                    id="input-coti-tel"
                     type="text"
                     value={clienteTel}
                     onChange={(e) => setClienteTel(e.target.value.replace(/[^0-9]/g, ''))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        document.getElementById('input-coti-cliente')?.focus();
+                      } else if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        document.getElementById('input-coti-doc')?.focus();
+                      } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                        e.preventDefault();
+                        document.getElementById('input-coti-obs')?.focus();
+                      }
+                    }}
                     placeholder="999 888 777"
-                    className="w-full border-2 border-[var(--color-ink)] p-2 text-xs font-bold outline-none focus:border-[var(--color-accent-dark)] bg-white"
+                    className="w-full border-2 border-[var(--color-ink)] p-2 text-xs font-bold outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:bg-amber-50 bg-white"
                   />
                 </div>
               </div>
@@ -334,10 +456,23 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
                   <Calendar size={12} /> Validez hasta (Vencimiento)
                 </label>
                 <input
+                  id="input-coti-fecha"
                   type="date"
                   value={fechaVencimiento}
                   onChange={(e) => setFechaVencimiento(e.target.value)}
-                  className="w-full border-2 border-[var(--color-ink)] p-2 text-xs font-bold outline-none bg-white cursor-pointer"
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      document.getElementById('input-coti-doc')?.focus();
+                    } else if (e.key === 'ArrowRight') {
+                      e.preventDefault();
+                      document.getElementById('input-coti-obs')?.focus();
+                    } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                      e.preventDefault();
+                      document.getElementById('btn-confirmar-cotizacion')?.focus();
+                    }
+                  }}
+                  className="w-full border-2 border-[var(--color-ink)] p-2 text-xs font-bold outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:bg-amber-50 bg-white cursor-pointer"
                 />
               </div>
               <div>
@@ -345,11 +480,24 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
                   Observaciones / Términos
                 </label>
                 <input
+                  id="input-coti-obs"
                   type="text"
                   value={observaciones}
                   onChange={(e) => setObservaciones(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      document.getElementById('input-coti-tel')?.focus();
+                    } else if (e.key === 'ArrowLeft') {
+                      e.preventDefault();
+                      document.getElementById('input-coti-fecha')?.focus();
+                    } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                      e.preventDefault();
+                      document.getElementById('btn-confirmar-cotizacion')?.focus();
+                    }
+                  }}
                   placeholder="Ej: Precios válidos por 7 días"
-                  className="w-full border-2 border-[var(--color-ink)] p-2 text-xs font-bold outline-none bg-white"
+                  className="w-full border-2 border-[var(--color-ink)] p-2 text-xs font-bold outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:bg-amber-50 bg-white"
                 />
               </div>
             </div>
@@ -391,14 +539,20 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
                 type="button"
                 onClick={handleGuardar}
                 disabled={guardando}
-                className="w-full py-3 border-2 border-[var(--color-ink)] bg-[var(--color-ink)] text-white hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] font-black text-xs uppercase tracking-widest transition-all cursor-pointer shadow-[3px_3px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-60 flex items-center justify-center gap-2"
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    document.getElementById('input-coti-fecha')?.focus();
+                  }
+                }}
+                className="w-full py-3 border-2 border-[var(--color-ink)] bg-[var(--color-ink)] text-white hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] focus:bg-[var(--color-accent)] focus:text-[var(--color-ink)] focus:outline-none focus:ring-4 focus:ring-[var(--color-ink)] font-black text-xs uppercase tracking-widest transition-all cursor-pointer shadow-[3px_3px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {guardando ? (
                   <span>Guardando Cotización...</span>
                 ) : (
                   <>
                     <FileText size={16} />
-                    <span>Guardar Cotización ({numero})</span>
+                    <span>Guardar Cotización ({numero}) [ENTER]</span>
                   </>
                 )}
               </button>

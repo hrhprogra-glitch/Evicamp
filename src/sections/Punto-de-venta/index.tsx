@@ -522,33 +522,38 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
     const esMayorista = mayoristaOverride !== undefined ? mayoristaOverride : Boolean(clienteSeleccionado?.esMayorista);
     const descPct = descuentoOverride !== undefined ? descuentoOverride : (clienteSeleccionado?.descuentoPorcentaje || 0);
 
-    // 1. Si el cliente o su empresa tiene descuento % especial fijo (ej. 10%)
+    // Determinar precio de partida: si el cliente es mayorista y el producto tiene precio mayorista, arranca de ahí
+    const aplicaMayorista = Boolean(esMayorista && item.precioMayorista != null && item.precioMayorista > 0);
+    const precioPartida: number = (aplicaMayorista && item.precioMayorista != null
+      ? item.precioMayorista
+      : (item.sinEscala ? base : (escalaPara(item.preciosCantidad, qty)?.precio ?? base))) ?? base;
+
+    // 1. Si el cliente o su empresa tiene descuento % especial fijo (ej. 10%), se descuenta sobre el precio que le toca
     if (descPct > 0) {
-      const precio = Math.round(base * (1 - descPct / 100) * 100) / 100;
+      const precio = Math.round(precioPartida * (1 - descPct / 100) * 100) / 100;
       return {
         ...item,
         precioBase: base,
         cartQuantity: qty,
         price: precio,
-        escala: undefined,
-        esMayoristaAplicado: false,
+        escala: aplicaMayorista ? undefined : (item.sinEscala ? undefined : escalaPara(item.preciosCantidad, qty)?.desde),
+        esMayoristaAplicado: aplicaMayorista,
         descuentoPorcentajeAplicado: descPct,
         subtotal: Math.round((qty * precio) * 100) / 100
       };
     }
 
     // 2. Si es mayorista sin descuento porcentual
-    if (esMayorista && item.precioMayorista != null && item.precioMayorista > 0) {
-      const precio = item.precioMayorista;
+    if (aplicaMayorista) {
       return {
         ...item,
         precioBase: base,
         cartQuantity: qty,
-        price: precio,
+        price: precioPartida,
         escala: undefined,
         esMayoristaAplicado: true,
         descuentoPorcentajeAplicado: undefined,
-        subtotal: Math.round((qty * precio) * 100) / 100
+        subtotal: Math.round((qty * precioPartida) * 100) / 100
       };
     }
 
