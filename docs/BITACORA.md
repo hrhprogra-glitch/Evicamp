@@ -7,6 +7,23 @@
 
 ---
 
+## 29/10/2026 (tarde, 29) · Antigravity
+- **Pase a producción oficial en Evicamp y GitHub de la Fase 4.3:**
+  - **Autorización explícita del dueño:** *"si sube el 4.3 a evicamp y a siumax y a mi github y luego avanza la propuesta 4.4"*.
+  - **Base de datos en Evicamp (Regla 7):**
+    - Respaldo de seguridad ejecutado antes de tocar la base: `/var/lib/postgresql/respaldo-evicamp-antes-fase4-3-2026-10-29T18-57-43-392Z.dump` (1.9 MB).
+    - `servidor/sql/seguridad-sesion.sql` aplicado con `psql` y `SET lock_timeout = '5s'` en base `postgres` (Evicamp).
+    - Verificación exitosa: columna `dias_plazo integer` agregada a `customers`.
+    - Cero reinicios de API (`activar-seguridad.sh` intacto, sin cortes en caja).
+  - **Despliegue del Frontend:**
+    - `node ai-scripts/deploy.cjs todos` ejecutado exitosamente en `evicamp`, `siumax` y `clientes` (20 archivos cada uno).
+  - **GitHub:**
+    - Rama `fase-4.3` fusionada a `main` (merge commit ort).
+    - `git push origin main` completado con éxito a `https://github.com/hrhprogra-glitch/Evicamp.git`.
+- **Siguiente paso:** Presentar la propuesta de la Fase 4.4 (Precio Mayorista) y esperar el visto bueno del dueño.
+
+---
+
 ## 29/10/2026 (tarde, 28) · Antigravity
 - **Corrección de tope en la paginación inferior de Clientes:**
   - **Solicitud del dueño:** *"encontre otro error cuando bajo hasta abajo para selecionar la siguiente pagina pero de la parte de abajo sube hasta arriba deberia mantenerse ahi como un tope"*

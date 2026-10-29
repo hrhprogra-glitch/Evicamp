@@ -266,4 +266,10 @@
         - En la paginación inferior, al estar en el botón de página siguiente y presionar Flecha Abajo o Flecha Derecha, el código saltaba hacia el buscador superior provocando un desplazamiento no deseado de la ventana.
         - Se corrigió para que actúe como un TOPE firme: Flecha Abajo en el pie y Flecha Derecha en siguiente se mantienen en el botón sin saltar ni desplazar la ventana. Al dar Enter o Espacio para cambiar de página, el foco se mantiene en la paginación inferior.
         - Compilado y desplegado a siumax.duckdns.org.
+     21. **Pase a producción oficial en Evicamp y GitHub de la Fase 4.3 (29/10 tarde):**
+        - El dueño dio su autorización explícita: *"si sube el 4.3 a evicamp y a siumax y a mi github y luego avanza la propuesta 4.4"*.
+        - Respaldo de seguridad en Evicamp: `/var/lib/postgresql/respaldo-evicamp-antes-fase4-3-2026-10-29T18-57-43-392Z.dump` (1.9 MB).
+        - `seguridad-sesion.sql` aplicado con `psql` y `lock_timeout = '5s'` en `postgres` (Evicamp) sin reiniciar la API. Columna `dias_plazo integer` verificada en `customers`.
+        - Despliegue de frontend a `evicamp`, `siumax` y `clientes` con `deploy.cjs todos`.
+        - Fusión de `fase-4.3` a `main` y `git push origin main` a GitHub.
 

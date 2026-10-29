@@ -4,28 +4,21 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 29/10/2026 (tarde, 28), Antigravity: tope de paginación inferior en Clientes.
-- **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4.1 y 4.2. En producción en Evicamp desde el 29/10/2026 (commit 583ad4e).
-- **Fase 4.3 hecha y desplegada en siumax (pruebas):**
-  - **Días de plazo en clientes:** campo opcional "Días de plazo para pagar" en la ficha del cliente (ej. 7, 15, 30 días).
-  - **Columna Plazo en tabla de clientes:** visible en cabecera y filas (ej. `15 días` o `—`).
-  - **Scroll de ventana principal:** tabla sin scroll vertical interno forzado, 50 clientes por página y paginación doble sincronizada (arriba y abajo).
-  - **Navegación fluida por teclado (selector):** paso directo con flechas entre buscador, paginación superior (`<` y `>`), tabla de clientes y paginación inferior (`<` y `>`), con foco resaltado en amarillo neón, desplazamiento automático de pantalla y tope firme al final sin saltos indeseados.
-  - **Fecha límite calculada en caja:** al elegir al cliente en el cobro a crédito, la fecha límite se calcula y llena sola (`hoy + dias_plazo`).
-  - **Selector de fecha nativo 100% intacto:** se puede seguir abriendo el calendario para elegir cualquier día a mano.
-  - **Botones rápidos:** accesos directos `+7d`, `+15d`, `+30d` en el panel de fiado.
-  - **Avisos visuales:** aviso destacado `⚠ Tiene deudas vencidas` si el cliente registra créditos no pagados cuya fecha ya venció, y monto de deuda pendiente.
-  - **Límite de crédito monetario:** EXCLUIDO por instrucción explícita del dueño (*"todo excepto el limite de credito"*).
-- **Fase que sigue:** Visto bueno del dueño en siumax para subir 4.3 a Evicamp. Luego continuar con decisión de pedidos: **¿el pedido descuenta el stock al guardarlo o al entregarlo?** (recomendado: al guardarlo).
+- **Última actualización:** 29/10/2026 (tarde, 29), Antigravity: Pase oficial a producción de la Fase 4.3 en Evicamp y GitHub.
+- **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4.1, 4.2 y 4.3. En producción en Evicamp desde el 29/10/2026 (commits 583ad4e y c8c6be3).
+  - **Fase 4.3 oficial en producción:** Días de plazo en ficha de clientes, columna Plazo, 50 clientes por página con scroll en ventana general, paginación doble sincronizada con selector de teclado neobrutalista y tope fijo, fecha límite calculada en caja (`hoy + dias_plazo`), botones rápidos `+7d`, `+15d`, `+30d` y alerta visual de deudas vencidas.
+- **Fase que sigue:** **Fase 4.4: Precio mayorista** (propuesta presentada para su OK). Luego 4.5 (Cotizaciones) y 4.6 (Pedidos).
 - **Avisos para la clienta de Evicamp:**
   - "Mermas" ahora se llama "Conteos";
-  - dar el permiso "Cambiar precio al cobrar" a quien corresponda si desean que un cajero modifique precios en caja.
+  - dar el permiso "Cambiar precio al cobrar" a quien corresponda si desean que un cajero modifique precios en caja;
+  - en la ficha de cada cliente se le puede configurar opcionalmente cuántos días de plazo tiene para pagar (ej. 15 o 30 días).
 
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Fase 4.4 (Precio Mayorista en clientes y productos)** | **Propuesta presentada, esperando OK del dueño** |
+| **Fase 4.3 (Días de plazo y fecha calculada en caja, sin límite de crédito)** | **Hecho en producción y GitHub (29/10)** |
 | **Videos tutoriales del sistema** (9 videos; grabados contra la base demo `siudemo`, fuera de Comerc) | **Muestra hecha (02 venta, 29/10); falta OK del dueño para los demás** |
-| **Fase 4.3 (Días de plazo y fecha calculada en caja, sin límite de crédito)** | **Hecho en siumax (29/10), listo para revisión** |
 | **Modo Oscuro (Dark Mode)** reemplazando "Plata / Gris" en Apariencia | **Hecho en producción (29/10)** |
 | **Grupos de clientes (familia/empresa)** dentro de la 4.1 | **Hecho en producción (29/10)** |
 | Fase 4 — **4.1 y 4.2 en producción (Evicamp); 4.3 en pruebas (siumax)** | **En progreso** |
