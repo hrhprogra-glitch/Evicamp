@@ -403,7 +403,7 @@ export const TablaUsuarios: React.FC = () => {
                       handleEditar(usuario);
                     }
                   }}
-                  className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors cursor-pointer group"
+                  className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:outline-none focus-visible:bg-[var(--color-bg-2)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-ink)] transition-colors cursor-pointer group"
                   title="Enter o Clic para editar este usuario"
                 >
                   <td className="p-4">

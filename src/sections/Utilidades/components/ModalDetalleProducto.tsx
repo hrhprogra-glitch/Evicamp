@@ -228,7 +228,7 @@ export const ModalDetalleProducto: React.FC<Props> = ({ producto, onClose }) => 
                       setTicketSeleccionado(v.saleId);
                     }
                   }}
-                  className="border border-[var(--color-border)] p-3 flex flex-wrap items-center justify-between gap-2 hover:bg-[var(--color-bg)] focus:bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors cursor-pointer group rounded-none"
+                  className="border border-[var(--color-border)] p-3 flex flex-wrap items-center justify-between gap-2 hover:bg-[var(--color-bg)] focus:outline-none focus-visible:bg-[var(--color-bg-2)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-ink)] transition-colors cursor-pointer group rounded-none"
                   title={`Ver ticket #${v.saleId.slice(-6)} (Enter o Clic)`}
                 >
                   <div>

@@ -1,6 +1,6 @@
 import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
-import { Search, ScanLine, Package, Plus, AlertTriangle, CheckCircle2, Users, X } from 'lucide-react';
+import { Search, ScanLine, Package, Plus, AlertTriangle, CheckCircle2, Users, X, Scale, Tag } from 'lucide-react';
 import { formatearCantidad } from '../../../utils/formato';
 import { esDecimal, unidadDe } from '../../../utils/unidades';
 import type { Product } from '../../Inventario/types';
@@ -359,16 +359,16 @@ export const TerminalBusqueda: React.FC<Props> = ({
                   id={`producto-pos-${index}`}
                   tabIndex={-1} // Evita que reciba el foco nativo con el Tab
                   onClick={() => !estaAgotado && onAddToCart({ ...prod, unit: esConsumo ? 'CONSUMO' : prod.unit })}
-                  disabled={estaAgotado} 
+                  disabled={estaAgotado}
                   className={`p-2 sm:p-2.5 text-left flex flex-col min-w-0 transition-all rounded-none border-2 focus:outline-none focus:ring-0
                     ${isSelected ? 'ring-4 ring-[var(--color-accent)] border-[var(--color-accent)] scale-[1.02] shadow-xl z-10' : ''}
                     ${estaAgotado 
-                      ? 'bg-[var(--color-surface)] border-[var(--color-border)] opacity-50 cursor-not-allowed' 
+                      ? 'bg-[var(--color-surface)] border-[var(--color-border)] opacity-40 cursor-not-allowed' 
                       : esConsumo
-                        ? 'bg-[var(--color-warning-bg)] border-[var(--color-warning-dark)] cursor-pointer hover:shadow-[4px_4px_0_0_var(--color-warning-dark)] hover:-translate-y-1'
+                        ? 'bg-[var(--color-warning-bg)] border-[var(--color-warning)] cursor-pointer hover:shadow-[4px_4px_0_0_var(--color-warning)] hover:-translate-y-1'
                         : esDecimal(prod)
-                          ? 'bg-[#F0F9FF] border-[var(--color-info-dark)] cursor-pointer hover:shadow-[4px_4px_0_0_var(--color-info-dark)] hover:-translate-y-1'
-                          : 'bg-[var(--color-surface)] border-[var(--color-ink)] cursor-pointer hover:shadow-[4px_4px_0_0_var(--color-ink)] hover:-translate-y-1'
+                          ? 'bg-[var(--color-info-bg)] border-[var(--color-info)] cursor-pointer hover:shadow-[4px_4px_0_0_var(--color-info)] hover:-translate-y-1'
+                          : 'bg-[var(--color-surface)] border-[var(--color-border)] cursor-pointer hover:border-[var(--color-accent)] hover:shadow-[4px_4px_0_0_#000000] hover:-translate-y-1'
                     }
                   `}
                 >
@@ -378,16 +378,16 @@ export const TerminalBusqueda: React.FC<Props> = ({
                   <div className="w-full mb-1">
                     {/* Estricto etiquetado de Alto Contraste por Color */}
                     {esConsumo ? (
-                      <span className="block w-full text-center text-sm sm:text-base font-black text-[var(--color-surface)] bg-[var(--color-warning-dark)] px-2 py-1.5 uppercase tracking-widest whitespace-nowrap rounded-none">
+                      <span className="block w-full text-center text-sm sm:text-base font-black text-black bg-[var(--color-warning)] px-2 py-1.5 uppercase tracking-widest whitespace-nowrap rounded-none">
                         CONSUMO
                       </span>
                     ) : (
                       <span className={`block w-full text-center text-sm sm:text-base font-black px-2 py-1.5 rounded-none uppercase tracking-wide whitespace-nowrap ${
                         estaAgotado
-                          ? 'text-[var(--color-surface)] bg-[var(--color-ink)]'
+                          ? 'text-[var(--color-muted)] bg-[var(--color-bg)] border border-[var(--color-border)]'
                           : esDecimal(prod)
-                            ? 'text-[var(--color-info-dark)] bg-[#F0F9FF] border border-[var(--color-info-dark)]'
-                            : 'text-[var(--color-ink)] bg-[var(--color-bg)] border border-[var(--color-ink)]'
+                            ? 'text-[var(--color-info)] bg-[var(--color-info-bg-2)] border border-[var(--color-info)]'
+                            : 'text-[var(--color-ink)] bg-[var(--color-bg)] border border-[var(--color-border)]'
                       }`}>
                         {prod.quantity > 0
                           ? `STK: ${formatearCantidad(prod.quantity, prod.unit)} ${unidadDe(prod).corto === 'UND' ? 'UN' : unidadDe(prod).corto}`
@@ -397,16 +397,19 @@ export const TerminalBusqueda: React.FC<Props> = ({
                     )}
                   </div>
                   
-                  {/* BLOQUE IMAGEN + NOMBRE: alto total fijo (el mismo que antes con nombre de 2
-                      líneas). El nombre solo ocupa lo que necesita (1 o 2 líneas) y la imagen
-                      crece con flex-1 para aprovechar el espacio libre cuando el nombre es corto,
-                      sin mover ni afectar el precio/botón de abajo. */}
+                  {/* BLOQUE IMAGEN + NOMBRE: contenedor de foto con color distintivo según Kilo / Consumo / Unidad */}
                   <div className="w-full flex flex-col gap-1 sm:gap-1.5 h-[122px] sm:h-[146px] mb-1.5 sm:mb-2">
                     {(() => {
                       const img = (prod as any).image_url || (prod as any).image_path || '';
                       const valida = img.startsWith('http') || img.startsWith('data:');
+                      const marcoColor = esConsumo
+                        ? 'border-[var(--color-warning)]/40 bg-[var(--color-warning-bg)]'
+                        : esDecimal(prod)
+                          ? 'border-[var(--color-info)]/40 bg-[var(--color-info-bg-2)]'
+                          : 'border-[var(--color-border)] bg-[var(--color-bg)]';
+
                       return (
-                        <div className={`flex-1 min-h-0 flex items-center justify-center border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden ${estaAgotado ? 'grayscale' : ''}`}>
+                        <div className={`flex-1 min-h-0 flex items-center justify-center border ${marcoColor} overflow-hidden ${estaAgotado ? 'grayscale' : ''}`}>
                           {valida ? (
                             <img
                               src={img}
@@ -415,8 +418,21 @@ export const TerminalBusqueda: React.FC<Props> = ({
                               className="max-w-full max-h-full object-contain"
                               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                             />
+                          ) : esConsumo ? (
+                            <div className="flex flex-col items-center justify-center gap-1 text-[var(--color-warning)]">
+                              <Tag size={26} />
+                              <span className="text-[9px] font-black uppercase tracking-widest">Consumo</span>
+                            </div>
+                          ) : esDecimal(prod) ? (
+                            <div className="flex flex-col items-center justify-center gap-1 text-[var(--color-info)]">
+                              <Scale size={26} />
+                              <span className="text-[9px] font-black uppercase tracking-widest">Balanza/Kg</span>
+                            </div>
                           ) : (
-                            <Package size={32} className="text-[var(--color-line-light)]" aria-hidden="true" />
+                            <div className="flex flex-col items-center justify-center gap-1 text-[var(--color-muted)]">
+                              <Package size={26} />
+                              <span className="text-[9px] font-black uppercase tracking-widest">Unidad</span>
+                            </div>
                           )}
                         </div>
                       );
@@ -431,14 +447,14 @@ export const TerminalBusqueda: React.FC<Props> = ({
                     <span className="text-lg sm:text-xl font-black text-[var(--color-ink)] font-mono">
                       S/ {prod.price.toFixed(2)}
                     </span>
-                    <div className={`w-7 h-7 flex items-center justify-center transition-colors rounded-none border text-[var(--color-surface)]
+                    <div className={`w-7 h-7 flex items-center justify-center transition-colors rounded-none border text-xs font-black
                       ${estaAgotado 
-                        ? 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-line-light)]' 
+                        ? 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-subtle)]' 
                         : esConsumo
-                          ? 'bg-[var(--color-warning-dark)] border-[var(--color-warning-dark)]'
+                          ? 'bg-[var(--color-warning)] text-black border-[var(--color-warning)]'
                           : esDecimal(prod)
-                            ? 'bg-[var(--color-info-dark)] border-[var(--color-info-dark)]'
-                            : 'bg-[var(--color-ink)] border-[var(--color-ink)]'
+                            ? 'bg-[var(--color-info)] text-black border-[var(--color-info)]'
+                            : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-ink)]'
                       }`}
                     >
                       <Plus size={16} />

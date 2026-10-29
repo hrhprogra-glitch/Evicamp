@@ -206,7 +206,7 @@ export const TablaConteos: React.FC<Props> = ({ mermas, products, onEdit, onDele
                 }
               }}
               onClick={() => onEdit?.(merma)}
-              className="grid grid-cols-12 gap-3 items-center p-4 border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors text-sm rounded-none cursor-pointer"
+              className="grid grid-cols-12 gap-3 items-center p-4 border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:outline-none focus-visible:bg-[var(--color-bg-2)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-ink)] transition-colors text-sm rounded-none cursor-pointer"
               title="Click o Enter para editar"
             >
               

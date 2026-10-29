@@ -10,8 +10,8 @@ export const HeaderConteos: React.FC<Props> = ({ onNuevoAjuste, children }) => {
   return (
     <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 p-3 lg:p-4 bg-white border-b-2 border-[var(--color-ink)] shrink-0">
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 bg-[var(--color-warning)] border-2 border-[var(--color-ink)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-ink)] rounded-none">
-          <ClipboardCheck size={24} className="text-[var(--color-ink)]" />
+        <div className="w-12 h-12 bg-[var(--color-warning)] border-2 border-[var(--color-warning)] flex items-center justify-center shadow-[4px_4px_0_0_#000000] rounded-none">
+          <ClipboardCheck size={24} className="text-[#030712]" />
         </div>
         <div>
           <h1 className="text-2xl font-black text-[var(--color-ink)] uppercase tracking-widest">
@@ -41,9 +41,9 @@ export const HeaderConteos: React.FC<Props> = ({ onNuevoAjuste, children }) => {
               }
             }
           }}
-          className="bg-[var(--color-warning)] text-[var(--color-ink)] px-6 py-3 border-2 border-[var(--color-ink)] font-black text-[12px] uppercase tracking-widest flex items-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-warning)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] w-full md:w-auto justify-center whitespace-nowrap"
+          className="bg-[var(--color-warning)] text-[#030712] px-6 py-3 border-2 border-[var(--color-warning)] font-black text-[12px] uppercase tracking-widest flex items-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-warning)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-warning)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_#000000] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] w-full md:w-auto justify-center whitespace-nowrap"
         >
-          <Plus size={16} /> Nuevo ajuste
+          <Plus size={16} className="text-[#030712]" /> Nuevo ajuste
         </button>
       </div>
     </div>

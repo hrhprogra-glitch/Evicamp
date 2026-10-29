@@ -362,7 +362,7 @@ export const TablaProductos: React.FC<Props> = ({
                   }
                 }}
                 onClick={() => onEditProduct ? onEditProduct(item) : startEditing(item)}
-                className="grid grid-cols-[3rem_minmax(0,1fr)_auto] gap-x-3 gap-y-2 md:gap-0 md:grid-cols-12 items-center p-3 md:p-4 border-b border-[#F1F5F9] hover:bg-[#F8FAFC] focus:bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors group cursor-pointer"
+                className="grid grid-cols-[3rem_minmax(0,1fr)_auto] gap-x-3 gap-y-2 md:gap-0 md:grid-cols-12 items-center p-3 md:p-4 border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:outline-none focus-visible:bg-[var(--color-bg-2)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-ink)] transition-colors group cursor-pointer"
                 title="Presione Enter o haga clic para editar"
               >
                 

@@ -145,7 +145,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
             {visibles.length ? visibles.map(({ c, grupo, deuda, ultimo }) => (
               <tr key={c.id} role="button" tabIndex={0} data-row="true" data-fila-cliente="true" data-cliente-id={c.id}
                 onClick={() => onAbrir(c)} onKeyDown={teclasFila(c)}
-                className="hover:bg-[var(--color-surface)] focus:outline-none focus:bg-[var(--color-accent-bg)] cursor-pointer">
+                className="hover:bg-[var(--color-surface)] focus:outline-none focus-visible:bg-[var(--color-bg-2)] cursor-pointer">
                 <td className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6">
                   <span className="font-black text-[var(--color-ink)] uppercase text-base">{c.nombre}</span>
                   {c.referencia && <span className="block text-xs text-[var(--color-muted)] mt-0.5 normal-case">{c.referencia}</span>}

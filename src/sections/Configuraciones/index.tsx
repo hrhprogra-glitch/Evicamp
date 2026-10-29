@@ -133,8 +133,8 @@ const Configuraciones: React.FC = () => {
       {/* HEADER */}
       <div className="bg-white border-b border-[var(--color-border)] p-3 lg:p-4 shrink-0">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-white border-2 border-[var(--color-accent-shadow)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent-shadow)] rounded-none shrink-0">
-            <Settings size={24} className="text-[var(--color-accent-shadow)]" strokeWidth={2.5} />
+          <div className="w-12 h-12 bg-[var(--color-surface)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-ink)] rounded-none shrink-0">
+            <Settings size={24} className="text-[var(--color-accent)]" strokeWidth={2.5} />
           </div>
           <div>
             <h1 className="text-2xl font-black text-[var(--color-ink)] uppercase tracking-wider font-mono">

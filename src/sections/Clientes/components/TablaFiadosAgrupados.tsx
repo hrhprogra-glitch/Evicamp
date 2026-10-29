@@ -351,7 +351,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
                 <tr key={i}
                   {...clicConTeclado(() => onView(cli))}
                   onClick={() => onView(cli)}
-                  className="hover:bg-[var(--color-surface)] transition-colors focus:outline-none focus:bg-[var(--color-accent-bg)] cursor-pointer"
+                  className="hover:bg-[var(--color-surface)] transition-colors focus:outline-none focus-visible:bg-[var(--color-bg-2)] cursor-pointer"
                 >
                   <td className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6">
                     <span className="font-black text-[var(--color-ink)] uppercase text-base">{cli.clienteNombre}</span>

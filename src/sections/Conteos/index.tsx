@@ -408,15 +408,15 @@ export const Conteos: React.FC = () => {
     return (
       <div className="flex flex-col gap-6 p-4 sm:p-8 text-[var(--color-ink)] font-mono min-h-full bg-[var(--color-surface)]">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-[var(--color-warning)] border-2 border-[var(--color-ink)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-ink)] shrink-0">
-            <ClipboardCheck size={24} className="text-[var(--color-ink)]" />
+          <div className="w-12 h-12 bg-[var(--color-warning)] border-2 border-[var(--color-warning)] flex items-center justify-center shadow-[4px_4px_0_0_#000000] shrink-0">
+            <ClipboardCheck size={24} className="text-[#030712]" />
           </div>
           <h1 className="text-2xl font-black uppercase tracking-widest">Conteos</h1>
         </div>
         <div className="border-2 border-[var(--color-border)] bg-[var(--color-bg)] p-6 flex flex-col items-start gap-4 max-w-xl">
           <p className="font-bold text-sm">Tu usuario cuenta el inventario. Escanea o busca cada producto y escribe cuántos hay en el estante; si falta o sobra, elige el motivo y escribe qué pasó.</p>
-          <button id="btn-nuevo-ajuste" autoFocus onClick={abrirAjuste} className="bg-[var(--color-warning)] text-[var(--color-ink)] px-6 py-4 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] cursor-pointer shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
-            <ClipboardCheck size={16} /> Contar inventario
+          <button id="btn-nuevo-ajuste" autoFocus onClick={abrirAjuste} className="bg-[var(--color-warning)] text-[#030712] px-6 py-4 border-2 border-[var(--color-warning)] font-black text-xs uppercase tracking-widest flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-warning)] cursor-pointer shadow-[4px_4px_0_0_#000000] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]">
+            <ClipboardCheck size={16} className="text-[#030712]" /> Contar inventario
           </button>
         </div>
         <ModalAjuste isOpen={isModalAjusteOpen} onClose={cerrarAjuste} products={products} puedeSalida={false} puedeContar />
@@ -469,7 +469,7 @@ export const Conteos: React.FC = () => {
 
       <div className="px-3 lg:px-4 flex-1 flex flex-col min-h-[calc(var(--alto-pantalla)*0.6)] relative pb-8 rounded-none">
         {loading ? (
-          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-[var(--color-surface)]/85 backdrop-blur-sm z-50 flex items-center justify-center">
   <div className="flex flex-col items-center gap-4">
     <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
     <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest font-mono">Cargando...</span>

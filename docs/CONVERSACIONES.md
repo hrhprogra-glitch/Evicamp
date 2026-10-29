@@ -195,3 +195,15 @@
        - Acentos clásicos preservados para total claridad en estados y ventas: verde esmeralda (`#10B981`), ámbar (`#FBBF24`), rojo (`#F87171`) y azul (`#38BDF8`).
        - Mapeo automático de `.bg-white` a grafito, controles oscuros (`color-scheme: dark !important;`), scrollbar oscuro y protección para impresión (`@media print` estrictamente blanco y negro para no gastar tinta).
      - Probado y verificado en `siumax` con pruebas automatizadas en Edge al 100% y desplegado.
+   12. **Ajustes y correcciones visuales del Modo Oscuro solicitados por el dueño (28/10 trasnoche):**
+      - *"esto tambien modifica el carga el fondo es blanco"*: Fondo oscuro translúcido en el overlay de carga de todas las sesiones.
+      - *"esto tambien no se diferencia entre kilo unida o consumo como tambien la parte donde pone la foto no cambia de color si es kilo unidad o consumo arregla eso"*:
+        - Kilo: azul cian (`--color-info`), marco con tinte azul e ícono de Balanza (`Scale`), botón `+` en cian con texto negro.
+        - Consumo: ámbar (`--color-warning`), marco con tinte ámbar e ícono de Etiqueta (`Tag`), botón `+` en ámbar con texto negro.
+        - Unidad: grafito pizarra, marco con ícono de Paquete (`Package`), botón `+` oscuro.
+      - *"en la imagen donde marque con rojo las letras no se ven bien"*: En Conteos, botón `+ NUEVO AJUSTE` e ícono en amarillo con texto e ícono negro puro (`#030712`) para contraste total.
+      - *"aqui donde marque nisiquiera se ve el icono de ajuste arregla eso"*: En Parámetros, el engranaje de configuración ahora usa `text-[var(--color-accent)]` y `border-[var(--color-accent)]` (verde esmeralda), 100% visible.
+      - *"encontre un error cuando hago click con el mouse el color del brillo a la hora de selecionar se mantiene ahi te envie una foto eso no tiene que pasar en ninguna sesión"*:
+        - Eliminado el fondo ámbar/crema persistente (`focus:bg-amber-50/50`) en todas las tablas del sistema (`TablaAnalisisProductos`, `ModalDetalleProducto`, `TablaConteos`, `TablaLotes`, `TablaProductos`, `TablaUsuarios`, `TablaHistorial`, `TablaMovimientos`, `TablaFiadosAgrupados`, `PestanaClientes`).
+        - En `src/index.css`, regla global para `:focus:not(:focus-visible)` reseteando background-color, outline, shadow y rings al hacer clic con mouse, preservando la navegación por teclado con flechas.
+      - Validado en `siumax` con Edge headless y capturas limpias.

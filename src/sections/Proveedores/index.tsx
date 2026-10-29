@@ -257,7 +257,7 @@ export const Proveedores: React.FC<Props> = ({ onNavigate }) => {
         {/* VISTA PROVEEDORES */}
         <div className={`flex-1 min-h-0 flex-col ${vistaActiva === 'PROVEEDORES' ? 'flex' : 'hidden'}`}>
           {loadingProv ? (
-            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center border-2 border-[var(--color-border)]">
+            <div className="absolute inset-0 bg-[var(--color-surface)]/85 backdrop-blur-sm z-10 flex items-center justify-center border-2 border-[var(--color-border)]">
               <div className="flex flex-col items-center gap-3">
                 <Loader2 size={24} className="text-[var(--color-info)] animate-spin" />
                 <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-[0.2em]">Cargando Directorio...</span>

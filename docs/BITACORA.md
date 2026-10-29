@@ -7,6 +7,28 @@
 
 ---
 
+## 28/10/2026 (trasnoche, 19) · Antigravity
+- **Correcciones visuales del Modo Oscuro y eliminación del resalte persistente por clic de mouse:**
+  - **Foco / brillo persistente al hacer clic con el mouse:**
+    - Se reemplazó en todas las tablas (`TablaAnalisisProductos`, `ModalDetalleProducto`, `TablaConteos`, `TablaLotes`, `TablaProductos`, `TablaUsuarios`, `TablaHistorial`, `TablaMovimientos`, `TablaFiadosAgrupados`, `PestanaClientes`) la clase `focus:bg-amber-50/50` por `focus:outline-none focus-visible:bg-[var(--color-bg-2)]`.
+    - En `src/index.css`, se añadió regla global para `:focus:not(:focus-visible)` reseteando fondo, contorno y anillos (`--tw-ring-shadow`) al hacer clic con el ratón. Con el teclado la navegación sigue 100% visible.
+  - **Diferenciación de Kilo, Consumo y Unidad en POS (`TerminalBusqueda.tsx`):**
+    - Kilo / Balanza: Borde y fondo azul cian (`--color-info`), marco de foto con tinte azul e ícono de Balanza (`Scale`), botón `+` cian con texto negro.
+    - Consumo: Borde y fondo ámbar (`--color-warning`), marco con tinte ámbar e ícono de Etiqueta (`Tag`), botón `+` ámbar con texto negro.
+    - Unidad: Grafito pizarra (`--color-surface`), marco con ícono de Paquete (`Package`), botón `+` oscuro.
+  - **Contraste de texto en amarillo (`HeaderConteos.tsx`, `Conteos/index.tsx`):**
+    - El botón `+ NUEVO AJUSTE` y el ícono de portapapeles ahora usan texto e ícono negro puro (`#030712`) sobre el fondo amarillo para legibilidad total.
+  - **Icono de Ajustes en Parámetros (`Configuraciones/index.tsx`):**
+    - Se cambió el contenedor e ícono a `text-[var(--color-accent)]` y `border-[var(--color-accent)]` (verde esmeralda) con sombra negra retro, 100% visible.
+  - **Overlay de carga oscuro (`Clientes`, `Conteos`, `Proveedores`, `Utilidades`, `ModalDetalleTicket`):**
+    - Se reemplazó el fondo blanco `bg-white/80` por `bg-[var(--color-surface)]/85` oscuro translúcido.
+  - **Verificación y Despliegue:**
+    - Probado con Edge headless en `https://siumax.duckdns.org` con capturas visuales limpias (cero brillos pegados).
+    - Desplegado a `siumax` (`node ai-scripts/deploy.cjs siumax`).
+- **Siguiente paso:** Presentar confirmación al dueño de los 5 puntos corregidos.
+
+---
+
 ## 28/10/2026 (noche, 18) · Antigravity
 - **Implementación y ajuste del Modo Oscuro (Dark Mode) reemplazando "Plata / Gris":**
   - **Solicitud del dueño:**

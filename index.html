@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="es" translate="no">
   <head>
     <meta charset="UTF-8" />
@@ -23,6 +23,7 @@
           var tema = localStorage.getItem('gestorpro_theme');
           if (tema === 'monochrome') {
             document.documentElement.classList.add('theme-monochrome');
+            document.documentElement.setAttribute('data-theme', 'dark');
           } else if (tema && tema !== 'classic') {
             document.documentElement.setAttribute('data-theme', tema);
           }

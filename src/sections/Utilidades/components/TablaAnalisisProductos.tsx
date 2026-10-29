@@ -629,7 +629,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                   data-row="true"
                   data-prod-id={prod.id}
                   {...clicConTeclado(() => abrirModalProducto(prod))}
-                  className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors cursor-pointer group"
+                  className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:outline-none focus-visible:bg-[var(--color-bg-2)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-ink)] transition-colors cursor-pointer group"
                   title="Ver ventas de este producto (Enter o Clic)"
                 >
                   <td className="p-2 md:p-3">

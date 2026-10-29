@@ -311,8 +311,8 @@ html[data-theme="dark"] {
   --color-accent-rgb: 16, 185, 129;
   --color-accent-dark: #059669;
   --color-accent-dark-2: #047857;
-  --color-accent-shadow: #000000;
-  --color-accent-shadow-rgb: 0, 0, 0;
+  --color-accent-shadow: #10B981;
+  --color-accent-shadow-rgb: 16, 185, 129;
   --color-accent-bg: #064E3B; /* Fondo verde oscuro suave para tags */
   --color-accent-bg-2: #022C22;
 
@@ -354,6 +354,16 @@ html[data-theme="dark"] .bg-white {
   border-color: var(--color-border);
 }
 
+/* Overlays de carga (Cargando...): fondo oscuro translúcido en lugar de blanco */
+html.theme-monochrome [class*="bg-white\/80"],
+html.theme-monochrome [class*="bg-white\/70"],
+html.theme-monochrome [class*="bg-white\/90"],
+html[data-theme="dark"] [class*="bg-white\/80"],
+html[data-theme="dark"] [class*="bg-white\/70"],
+html[data-theme="dark"] [class*="bg-white\/90"] {
+  background-color: rgba(11, 15, 23, 0.85) !important;
+}
+
 /* Textos blancos pasan a gris plata relajante */
 html.theme-monochrome .text-white,
 html[data-theme="dark"] .text-white {
@@ -365,6 +375,18 @@ html.theme-monochrome .bg-\[var\(--color-ink\)\],
 html[data-theme="dark"] .bg-\[var\(--color-ink\)\] {
   background-color: #030712 !important;
   color: #CBD5E1 !important;
+}
+
+/* Botones o insignias con fondo amarillo/ámbar de advertencia: letras e íconos en negro puro para máximo contraste */
+.bg-\[var\(--color-warning\)\],
+button.bg-\[var\(--color-warning\)\],
+[class*="bg-[var(--color-warning)]"] {
+  color: #030712 !important;
+}
+.bg-\[var\(--color-warning\)\] svg,
+button.bg-\[var\(--color-warning\)\] svg,
+[class*="bg-[var(--color-warning)]"] svg {
+  color: #030712 !important;
 }
 
 /* Bordes que usaban var(--color-ink): en modo oscuro usan gris acero #334155, nunca blanco */
@@ -441,7 +463,7 @@ html[data-theme="dark"] .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #475569 !important;
 }
 
-/* Resalte de filas al enfocar o hover */
+/* Resalte de filas al enfocar con teclado o hover */
 html.theme-monochrome tr:hover,
 html.theme-monochrome [data-row="true"]:hover,
 html[data-theme="dark"] tr:hover,
@@ -449,11 +471,31 @@ html[data-theme="dark"] [data-row="true"]:hover {
   background-color: #161F30 !important;
 }
 
-/* Foco visible en modo oscuro */
+/* Foco con teclado en modo oscuro */
 html.theme-monochrome [role="button"]:not([role="option"]):not([data-cat-item]):not([data-lote-prod-item]):not([data-lote-prov-item]):focus-visible,
 html[data-theme="dark"] [role="button"]:not([role="option"]):not([data-cat-item]):not([data-lote-prod-item]):not([data-lote-prov-item]):focus-visible {
   background-color: #1E293B !important;
   outline-color: var(--color-accent) !important;
+}
+
+/* Al hacer clic con el mouse, NO debe quedar ningún color, brillo, fondo ni aro pegado en ninguna fila ni elemento de ninguna sesión */
+tr:focus:not(:focus-visible),
+[data-row="true"]:focus:not(:focus-visible),
+[role="button"]:not(button):focus:not(:focus-visible),
+tbody tr:focus:not(:focus-visible),
+table tr:focus:not(:focus-visible),
+html.theme-monochrome tr:focus:not(:focus-visible),
+html.theme-monochrome [data-row="true"]:focus:not(:focus-visible),
+html.theme-monochrome [role="button"]:not(button):focus:not(:focus-visible),
+html[data-theme="dark"] tr:focus:not(:focus-visible),
+html[data-theme="dark"] [data-row="true"]:focus:not(:focus-visible),
+html[data-theme="dark"] [role="button"]:not(button):focus:not(:focus-visible) {
+  background-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-shadow: 0 0 #0000 !important;
 }
 
 /* Botones de navegación en Sidebar al estar activos */
