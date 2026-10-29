@@ -7,6 +7,23 @@
 
 ---
 
+## 29/10/2026 (tarde, 25) · Antigravity
+- **Ajustes en tabla de Clientes (columna Plazo, scroll general y paginación doble):**
+  - **Solicitud del dueño:** *"en la tabla no sale los dias de plazo como sabre cuantos tiene y otra cosa mas el scrooll tiene que ser de la ventana general como tambien falta para pasar a la pagina siguiente arriba como tambien al final agrega eso tiene que mostrar por lo menos 50 clientes por pagina"* (captura mostrando la tabla con scroll interno marcado en rojo).
+  - **Cambios realizados:**
+    1. **Columna "Plazo":** Se añadió una columna dedicada `Plazo` en la cabecera y filas de la tabla de clientes (`PestanaClientes.tsx`). Si el cliente tiene plazo configurado, muestra una pastilla informativa visible (ej. `15 días`). Si no tiene, muestra `—`.
+    2. **Scroll de la ventana general:** Se removió `lg:h-full` de `Clientes/index.tsx` y de `PestanaClientes.tsx`, y se cambió el contenedor de la tabla a `w-full overflow-x-auto custom-scrollbar` eliminando el scroll vertical interno atrapado. Ahora la tabla fluye libremente y se desplaza con el scroll principal de la ventana general.
+    3. **Paginación arriba y al final:** Se implementó la barra de paginación tanto arriba de la tabla (`#btn-pagina-ant-clientes-arriba`, `#btn-pagina-sig-clientes-arriba`) como abajo al pie (`#btn-pagina-ant-clientes`, `#btn-pagina-sig-clientes`), sincronizadas y con navegación completa por teclado.
+    4. **50 clientes por página:** Configurado en `POR_PAGINA = 50`.
+  - **Validación y Despliegue:**
+    - `npx tsc -b`: 0 errores.
+    - `npm run build`: compilación limpia en 3.7s.
+    - `deploy.cjs siumax`: subido a sitio de pruebas `siumax.duckdns.org`.
+    - `graphify update .`: grafo de conocimiento actualizado.
+- **Siguiente paso:** Notificar al dueño para que revise los cambios en siumax.
+
+---
+
 ## 29/10/2026 (mañana, 24) · Antigravity
 - **Fase 4.3 completada y desplegada en siumax (pruebas): Días de plazo en clientes y fecha límite calculada en caja (SIN límite de crédito):**
   - **Decisión del dueño:** *"todo excepto el límite de crédito ahora si arranca"* y *"no quites lo de escoger fecha porque eso le gustó a mis clientes"*.

@@ -588,7 +588,7 @@ if (fiaData) {
   }, [clientesAgrupados]);
 
   return (
-      <div className="lg:h-full flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono relative">
+    <div className="flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono relative">
       {loading && (
         <div className="absolute inset-0 bg-[var(--color-surface)]/85 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">

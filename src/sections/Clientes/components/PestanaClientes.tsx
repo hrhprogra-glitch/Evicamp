@@ -61,6 +61,83 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
   const visibles = filas.slice((paginaReal - 1) * POR_PAGINA, paginaReal * POR_PAGINA);
   const hayFiltros = !!busqueda || filtro !== 'TODOS' || orden !== 'DEUDA';
 
+  const renderPaginacion = (posicion: 'arriba' | 'abajo') => {
+    const prevId = posicion === 'arriba' ? 'btn-pagina-ant-clientes-arriba' : 'btn-pagina-ant-clientes';
+    const sigId = posicion === 'arriba' ? 'btn-pagina-sig-clientes-arriba' : 'btn-pagina-sig-clientes';
+    const bordeClase = posicion === 'arriba' ? 'border-b-2' : 'border-t-2';
+
+    return (
+      <div className={`p-3 ${bordeClase} border-[var(--color-border)] bg-[var(--color-bg)] flex justify-between items-center gap-2 shrink-0`}>
+        <p className="text-[11px] sm:text-[12px] font-black text-[var(--color-muted)] uppercase">
+          {filas.length ? `Mostrando ${(paginaReal - 1) * POR_PAGINA + 1} - ${Math.min(paginaReal * POR_PAGINA, filas.length)} de ${filas.length} clientes` : '0 clientes'}
+        </p>
+        <div className="flex gap-2">
+          <button
+            id={prevId}
+            type="button"
+            onClick={() => setPagina(Math.max(1, paginaReal - 1))}
+            aria-disabled={paginaReal === 1}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                irA(sigId);
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (posicion === 'arriba') {
+                  filasDom()[0]?.focus();
+                }
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (posicion === 'arriba') {
+                  irA('buscador-clientes');
+                } else {
+                  const list = filasDom();
+                  list[list.length - 1]?.focus();
+                }
+              }
+            }}
+            className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] aria-disabled:opacity-40 aria-disabled:cursor-not-allowed hover:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer"
+            title="Página anterior"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <span className="flex items-center px-2 sm:px-4 whitespace-nowrap border-2 border-[var(--color-border)] bg-white text-xs font-black text-[var(--color-ink)]">
+            Pág {paginaReal} / {totalPaginas}
+          </span>
+          <button
+            id={sigId}
+            type="button"
+            onClick={() => setPagina(Math.min(totalPaginas, paginaReal + 1))}
+            aria-disabled={paginaReal === totalPaginas}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                irA(prevId);
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (posicion === 'arriba') {
+                  filasDom()[0]?.focus();
+                }
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (posicion === 'arriba') {
+                  irA('buscador-clientes');
+                } else {
+                  const list = filasDom();
+                  list[list.length - 1]?.focus();
+                }
+              }
+            }}
+            className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] aria-disabled:opacity-40 aria-disabled:cursor-not-allowed hover:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer"
+            title="Página siguiente"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const filasDom = () => Array.from(document.querySelectorAll('[data-fila-cliente="true"]')) as HTMLElement[];
   const irA = (id: string) => document.getElementById(id)?.focus();
   // Barra: buscador → filtro → orden → limpiar → nuevo (← →); ↓ baja a la lista; ↑ sube a la pestaña
@@ -69,7 +146,15 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
     const i = barra.indexOf(id);
     const esTexto = e.currentTarget instanceof HTMLInputElement;
     const input = e.currentTarget as HTMLInputElement;
-    if (e.key === 'ArrowDown') { e.preventDefault(); filasDom()[0]?.focus(); }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const topPag = document.getElementById('btn-pagina-ant-clientes-arriba');
+      if (topPag && totalPaginas > 1) {
+        topPag.focus();
+      } else {
+        filasDom()[0]?.focus();
+      }
+    }
     else if (e.key === 'ArrowUp') { e.preventDefault(); irA(idPestana); }
     else if (e.key === 'ArrowRight' && (!esTexto || input.selectionEnd === input.value.length)) { e.preventDefault(); irA(barra[Math.min(i + 1, barra.length - 1)]); }
     else if (e.key === 'ArrowLeft' && (!esTexto || input.selectionStart === 0)) { e.preventDefault(); irA(barra[Math.max(i - 1, 0)]); }
@@ -88,7 +173,12 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
       else irA(paginaReal < totalPaginas ? 'btn-pagina-sig-clientes' : 'btn-pagina-ant-clientes');
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      if (lista[i - 1]) { lista[i - 1].focus(); lista[i - 1].scrollIntoView({ block: 'nearest' }); } else irA('buscador-clientes');
+      if (lista[i - 1]) { lista[i - 1].focus(); lista[i - 1].scrollIntoView({ block: 'nearest' }); }
+      else {
+        const topPag = document.getElementById('btn-pagina-ant-clientes-arriba');
+        if (topPag && totalPaginas > 1) topPag.focus();
+        else irA('buscador-clientes');
+      }
     } else if (e.key === 'ArrowRight') { e.preventDefault(); partes[Math.min(k + 1, partes.length - 1)]?.focus(); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); partes[Math.max(k - 1, 0)]?.focus(); }
     // Enter en la fila abre; en un botón de la fila, el botón hace lo suyo (Editar / Eliminar)
@@ -98,7 +188,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
   const claseSelect = 'w-full min-w-0 lg:w-48 border-2 border-[var(--color-border)] px-2 sm:px-4 py-3 text-xs sm:text-sm font-black uppercase outline-none focus:border-[var(--color-info)] bg-white cursor-pointer rounded-none';
 
   return (
-    <div className="lg:h-full flex flex-col border-2 border-[var(--color-ink)] bg-white">
+    <div className="flex flex-col border-2 border-[var(--color-ink)] bg-white">
       {/* BARRA */}
       <div className="p-3 border-b-2 border-[var(--color-border)] grid grid-cols-3 lg:flex gap-2 sm:gap-3 shrink-0">
         <input id="buscador-clientes" autoComplete="off" spellCheck={false} data-lpignore="true"
@@ -127,16 +217,20 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
         </button>
       </div>
 
-      {/* TABLA */}
-      <div className="lg:flex-1 overflow-auto custom-scrollbar lg:min-h-0">
+      {/* PAGINACIÓN SUPERIOR */}
+      {renderPaginacion('arriba')}
+
+      {/* TABLA: SIN SCROLL VERTICAL INTERNO (el scroll lo maneja la ventana general) */}
+      <div className="w-full overflow-x-auto custom-scrollbar">
         <table className="w-full text-left border-collapse">
           <thead className="sticky top-0 bg-[var(--color-ink)] text-white z-10">
             <tr className="uppercase text-[11px] font-black tracking-widest">
-              {/* DNI/RUC, teléfono y dirección se ven SIEMPRE (pedido del dueño): en pantallas angostas la tabla se desliza */}
+              {/* DNI/RUC, teléfono, plazo y dirección se ven SIEMPRE */}
               <th className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6 border-r border-white/20">Cliente / Empresa</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20">Grupo</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20">DNI / RUC</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20">Teléfono</th>
+              <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20 text-center">Plazo</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20">Dirección</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20 text-right">Deuda</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 border-r border-white/20 text-center">Último crédito</th>
@@ -149,14 +243,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
                 onClick={() => onAbrir(c)} onKeyDown={teclasFila(c)}
                 className="hover:bg-[var(--color-surface)] focus:outline-none focus-visible:bg-[var(--color-bg-2)] cursor-pointer">
                 <td className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-black text-[var(--color-ink)] uppercase text-base">{c.nombre}</span>
-                    {c.diasPlazo != null && (
-                      <span className="px-1.5 py-0.5 text-[10px] font-black uppercase border border-[var(--color-border)] text-[var(--color-muted)] bg-[var(--color-bg)]">
-                        {c.diasPlazo}d plazo
-                      </span>
-                    )}
-                  </div>
+                  <span className="font-black text-[var(--color-ink)] uppercase text-base">{c.nombre}</span>
                   {c.referencia && <span className="block text-xs text-[var(--color-muted)] mt-0.5 normal-case">{c.referencia}</span>}
                 </td>
                 <td data-col="grupo" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] whitespace-nowrap">
@@ -175,6 +262,15 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
                   </>) : <span className="text-[var(--color-subtle)]">—</span>}
                 </td>
                 <td data-col="telefono" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] whitespace-nowrap">{c.telefono || <span className="text-[var(--color-subtle)]">—</span>}</td>
+                <td data-col="plazo" className="py-3 sm:py-4 px-3 sm:px-4 text-center whitespace-nowrap">
+                  {c.diasPlazo != null ? (
+                    <span className="inline-block px-2.5 py-1 text-xs font-black uppercase border border-[var(--color-info)] text-[var(--color-info)] bg-[var(--color-info-bg)]">
+                      {c.diasPlazo} días
+                    </span>
+                  ) : (
+                    <span className="text-[var(--color-subtle)] font-bold">—</span>
+                  )}
+                </td>
                 <td data-col="direccion" className="py-3 sm:py-4 px-3 sm:px-4 text-[var(--color-ink)] max-w-[240px]">
                   <span className="flex items-center gap-2 min-w-0">
                     <span className="truncate" title={c.direccion || ''}>{c.direccion || <span className="text-[var(--color-subtle)]">—</span>}</span>
@@ -212,7 +308,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
               </tr>
             )) : (
               <tr>
-                <td colSpan={8} className="py-12 text-center text-[var(--color-muted)] font-black uppercase tracking-widest text-sm bg-[var(--color-bg)]">
+                <td colSpan={9} className="py-12 text-center text-[var(--color-muted)] font-black uppercase tracking-widest text-sm bg-[var(--color-bg)]">
                   <span className="inline-block border-2 border-[var(--color-muted)] p-4 border-dashed">{clientes.length ? 'No se encontraron clientes' : 'Todavía no hay clientes'}</span>
                 </td>
               </tr>
@@ -221,51 +317,8 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
         </table>
       </div>
 
-      {/* PIE */}
-      <div className="p-3 border-t-2 border-[var(--color-border)] bg-[var(--color-bg)] flex justify-between items-center gap-2 shrink-0">
-        <p className="text-[11px] sm:text-[12px] font-black text-[var(--color-muted)] uppercase">
-          {filas.length ? `Mostrando ${(paginaReal - 1) * POR_PAGINA + 1} - ${Math.min(paginaReal * POR_PAGINA, filas.length)} de ${filas.length}` : '0 clientes'}
-        </p>
-        <div className="flex gap-2">
-          <button id="btn-pagina-ant-clientes" onClick={() => setPagina(Math.max(1, paginaReal - 1))} aria-disabled={paginaReal === 1}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                const list = filasDom();
-                if (list.length) {
-                  const target = list.at(-1);
-                  target?.focus();
-                  target?.scrollIntoView({ block: 'nearest' });
-                } else {
-                  irA('buscador-clientes');
-                }
-              } else if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                irA('btn-pagina-sig-clientes');
-              }
-            }}
-            className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] aria-disabled:opacity-50 hover:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer"><ChevronLeft size={16} /></button>
-          <span className="flex items-center px-2 sm:px-4 whitespace-nowrap border-2 border-[var(--color-border)] bg-white text-xs font-black text-[var(--color-ink)]">Pág {paginaReal} / {totalPaginas}</span>
-          <button id="btn-pagina-sig-clientes" onClick={() => setPagina(Math.min(totalPaginas, paginaReal + 1))} aria-disabled={paginaReal === totalPaginas}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                const list = filasDom();
-                if (list.length) {
-                  const target = list.at(-1);
-                  target?.focus();
-                  target?.scrollIntoView({ block: 'nearest' });
-                } else {
-                  irA('buscador-clientes');
-                }
-              } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                irA('btn-pagina-ant-clientes');
-              }
-            }}
-            className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] aria-disabled:opacity-50 hover:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer"><ChevronRight size={16} /></button>
-        </div>
-      </div>
+      {/* PAGINACIÓN INFERIOR */}
+      {renderPaginacion('abajo')}
     </div>
   );
 };

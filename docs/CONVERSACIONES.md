@@ -235,4 +235,12 @@
          - Botones rápidos `+7d`, `+15d`, `+30d` agregados para fijar fechas con un solo clic.
          - Aviso visual en caja si el cliente tiene deudas vencidas (`⚠ Tiene deudas vencidas`) y monto total de deuda pendiente actual.
        - Compilado con `npx tsc -b` (0 errores) y desplegado en `siumax.duckdns.org` para validación del dueño.
+    18. **Ajustes de tabla de clientes: columna Plazo, scroll general y paginación doble (29/10 tarde):**
+       - *"en la tabla no sale los dias de plazo como sabre cuantos tiene y otra cosa mas el scrooll tiene que ser de la ventana general como tambien falta para pasar a la pagina siguiente arriba como tambien al final agrega eso tiene que mostrar por lo menos 50 clientes por pagina"*:
+       - El dueño envió una captura marcando con línea roja el scroll vertical que quedaba atrapado dentro del contenedor de la tabla en lugar de fluir con la ventana principal, y señaló que en la tabla no se distinguían los días de plazo de los clientes.
+       - Se agregó una columna dedicada **"Plazo"** en la tabla con pastillas legibles (`15 días` o `—`).
+       - Se removió `lg:h-full` y el `overflow-y` interno de la tabla, pasando a `overflow-x-auto` para que la tabla se expanda de forma natural y el desplazamiento sea fluido en el scroll de la ventana general.
+       - Se agregaron controles de paginación sincronizados tanto arriba como al final de la tabla.
+       - Se confirmó la visualización de 50 clientes por página (`POR_PAGINA = 50`).
+       - Compilado y desplegado a `siumax.duckdns.org`.
 
