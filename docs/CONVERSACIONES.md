@@ -284,4 +284,12 @@
           - `ModalCotizacionPOS` (F7) y pestaña `Cotizaciones` con botón `Convertir en Venta`, WhatsApp e impresión.
           - `ModalPedidoPOS` (F8) con fecha de entrega, adelanto y reserva inmediata de stock en inventario (`inventory_movements`), y pestaña `Pedidos` con botón `Entregar y Cobrar Saldo` o `Cancelar (Devolver Stock)`.
         - Compilado y desplegado con éxito en el sitio de pruebas `siumax.duckdns.org` (20 archivos). Evicamp y GitHub intactos para su revisión.
+     23. **Descuento porcentual fijo por cliente o empresa (29/10 tarde):**
+        - El dueño consultó sobre precios mayoristas: *"en precio mayorista no es mejor poner un precio especial mayorista a cada cliente o familia o empresa que uno general para todos???"*.
+        - Se analizaron las alternativas y en la pregunta interactiva el dueño seleccionó la Opción 2: *"Descuento % fijo por cliente o empresa (Ej: 10% de descuento en todo a Constructora ABC, muy fácil de mantener y actualizar)"*, confirmando con *"si hazlo"*.
+        - Base de datos (`siuhub` en VPS): columnas `descuento_porcentaje numeric(5,2) DEFAULT 0` agregadas a `customers` y `grupos_clientes` con recarga de PostgREST.
+        - Ficha de cliente y grupos: campos de descuento con botones de acceso rápido `[ 0% ]`, `[ 5% ]`, `[ 10% ]`, `[ 15% ]`, `[ 20% ]`.
+        - Herencia de descuento: si el cliente pertenece a una empresa o familia con descuento, lo hereda en la caja automáticamente.
+        - Caja POS: detecta el descuento, recalcula el carrito, muestra el precio rebajado en verde con el precio regular tachado en las tarjetas de producto, y coloca la insignia `🏷️ -XX%` en el ticket.
+        - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
 

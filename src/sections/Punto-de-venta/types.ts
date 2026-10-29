@@ -15,6 +15,7 @@ export interface CartItem extends Product {
   escala?: number;                    // fase 1.3: "desde" de la escala aplicada (x6+)
   sinEscala?: boolean;                // el cajero apagó el precio por cantidad en esta línea (cobra el precio normal)
   esMayoristaAplicado?: boolean;      // fase 4.4: se le aplicó el precio mayorista
+  descuentoPorcentajeAplicado?: number; // fase 4.4: descuento porcentual del cliente o empresa aplicado
 }
 
 export interface HeldCart {

@@ -4,18 +4,19 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 29/10/2026 (tarde, 30), Antigravity: Fases 4.4 (Precio Mayorista), 4.5 (Cotizaciones) y 4.6 (Pedidos por encargo) completadas y desplegadas en el sitio de pruebas `siumax` (rama `fase-4-completa`).
-- **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4.1, 4.2 y 4.3 en producción en Evicamp (commits 583ad4e y c8c6be3). Fases 4.4, 4.5 y 4.6 listas en el sitio de pruebas `siumax` para revisión y visto bueno del dueño.
+- **Última actualización:** 29/10/2026 (tarde, 31), Antigravity: Fases 4.4 (Precio Mayorista y Descuento % fijo por cliente o empresa), 4.5 (Cotizaciones) y 4.6 (Pedidos por encargo) completadas y desplegadas en el sitio de pruebas `siumax` (rama `fase-4-completa`).
+- **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4.1, 4.2 y 4.3 en producción en Evicamp (commits 583ad4e y c8c6be3). Fases 4.4 (con descuento % cliente/empresa), 4.5 y 4.6 listas en el sitio de pruebas `siumax` para revisión y visto bueno del dueño.
 - **Fase que sigue:** Revisión por parte del dueño de las Fases 4.4, 4.5 y 4.6 en `siumax.duckdns.org` para su posterior pase oficial a producción.
 - **Avisos para la clienta de Evicamp:**
   - "Mermas" ahora se llama "Conteos";
   - dar el permiso "Cambiar precio al cobrar" a quien corresponda si desean que un cajero modifique precios en caja;
-  - en la ficha de cada cliente se le puede configurar opcionalmente cuántos días de plazo tiene para pagar (ej. 15 o 30 días).
+  - en la ficha de cada cliente se le puede configurar opcionalmente cuántos días de plazo tiene para pagar (ej. 15 o 30 días);
+  - se le puede asignar descuento fijo (%) por cliente o a toda una empresa/familia.
 
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
-| **Fase 4.4 (Precio Mayorista), 4.5 (Cotizaciones) y 4.6 (Pedidos por encargo)** | **Hecho en pruebas (siumax, 29/10); esperando revisión y OK del dueño para pase a Evicamp y GitHub** |
+| **Fase 4.4 (Precio Mayorista y Descuento % cliente/empresa), 4.5 (Cotizaciones) y 4.6 (Pedidos por encargo)** | **Hecho en pruebas (siumax, 29/10); esperando revisión y OK del dueño para pase a Evicamp y GitHub** |
 | **Fase 4.3 (Días de plazo y fecha calculada en caja, sin límite de crédito)** | **Hecho en producción y GitHub (29/10)** |
 | **Videos tutoriales del sistema** (9 videos; grabados contra la base demo `siudemo`, fuera de Comerc) | **Muestra hecha (02 venta, 29/10); falta OK del dueño para los demás** |
 | **Modo Oscuro (Dark Mode)** reemplazando "Plata / Gris" en Apariencia | **Hecho en producción (29/10)** |

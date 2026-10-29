@@ -292,7 +292,9 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
     }
   };
 
+  const descEfectivo = Math.max(cliente.descuentoPorcentaje || 0, grupo?.descuentoPorcentaje || 0);
   const datos = [
+    descEfectivo > 0 ? `🏷️ DESCUENTO ESPECIAL: ${descEfectivo}%${!cliente.descuentoPorcentaje && grupo?.descuentoPorcentaje ? ` (por ${grupo.nombre})` : ''}` : null,
     cliente.esMayorista ? '⭐ PRECIO MAYORISTA' : null,
     cliente.dni ? `DNI: ${cliente.dni}` : null,
     cliente.ruc ? `RUC: ${cliente.ruc}` : null,

@@ -9,7 +9,7 @@ import { avisar } from '../../../utils/dialogos';
 import { errorRuc } from '../../../utils/documento';
 import { claseBotonPrincipal } from '../../../components/ListaVentana';
 
-export interface DatosGrupo { nombre: string; tipo: 'FAMILIA' | 'EMPRESA'; ruc: string }
+export interface DatosGrupo { nombre: string; tipo: 'FAMILIA' | 'EMPRESA'; ruc: string; descuento_porcentaje: string }
 
 interface Props {
   abierta: boolean;
@@ -23,18 +23,25 @@ const TIPOS: { tipo: 'FAMILIA' | 'EMPRESA'; nombre: string }[] = [{ tipo: 'FAMIL
 const enfocar = (id: string) => setTimeout(() => { const el = document.getElementById(id) as HTMLInputElement | null; el?.focus(); el?.select?.(); }, 30);
 
 export const ModalFormGrupo: React.FC<Props> = ({ abierta, grupo, grupos, onGuardar, onClose }) => {
-  const [datos, setDatos] = useState<DatosGrupo>({ nombre: '', tipo: 'FAMILIA', ruc: '' });
+  const [datos, setDatos] = useState<DatosGrupo>({ nombre: '', tipo: 'FAMILIA', ruc: '', descuento_porcentaje: '' });
   const [guardando, setGuardando] = useState(false);
   useCerrarConEscape(abierta, onClose);
 
   useEffect(() => {
     if (!abierta) return;
-    setDatos(grupo ? { nombre: grupo.nombre, tipo: grupo.tipo, ruc: grupo.ruc || '' } : { nombre: '', tipo: 'FAMILIA', ruc: '' });
+    setDatos(grupo
+      ? {
+          nombre: grupo.nombre,
+          tipo: grupo.tipo,
+          ruc: grupo.ruc || '',
+          descuento_porcentaje: grupo.descuentoPorcentaje != null && grupo.descuentoPorcentaje > 0 ? String(grupo.descuentoPorcentaje) : ''
+        }
+      : { nombre: '', tipo: 'FAMILIA', ruc: '', descuento_porcentaje: '' });
     enfocar('grupo-nombre');
   }, [abierta, grupo]);
 
   if (!abierta) return null;
-  const campos = ['grupo-nombre', `grupo-tipo-${datos.tipo}`, 'grupo-ruc', 'btn-guardar-grupo'];
+  const campos = ['grupo-nombre', `grupo-tipo-${datos.tipo}`, 'grupo-ruc', 'grupo-descuento', 'btn-guardar-grupo'];
   const mover = (desde: string, paso: 1 | -1) => {
     const destino = campos[campos.indexOf(desde) + paso];
     if (destino) enfocar(destino); else if (paso === -1) document.getElementById('btn-cerrar-form-grupo')?.focus();
@@ -50,7 +57,7 @@ export const ModalFormGrupo: React.FC<Props> = ({ abierta, grupo, grupos, onGuar
     if (repetido) { await avisar(`Ya hay un grupo llamado "${repetido.nombre}".`); enfocar('grupo-nombre'); return; }
     setGuardando(true);
     try {
-      if (await onGuardar({ nombre, tipo: datos.tipo, ruc: datos.ruc.trim() })) onClose();
+      if (await onGuardar({ nombre, tipo: datos.tipo, ruc: datos.ruc.trim(), descuento_porcentaje: datos.descuento_porcentaje.trim() })) onClose();
       else enfocar('btn-guardar-grupo');
     } finally { setGuardando(false); }
   };
@@ -110,6 +117,53 @@ export const ModalFormGrupo: React.FC<Props> = ({ abierta, grupo, grupos, onGuar
               onChange={(e) => setDatos((d) => ({ ...d, ruc: e.target.value.replace(/\D/g, '').slice(0, 11) }))}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'ArrowDown') { e.preventDefault(); mover('grupo-ruc', 1); } else if (e.key === 'ArrowUp') { e.preventDefault(); mover('grupo-ruc', -1); } }}
               placeholder="11 NÚMEROS" className={`${claseCampo} tracking-widest`} />
+          </div>
+          {/* FASE 4.4: Descuento fijo para la empresa o grupo */}
+          <div className="border-2 border-[var(--color-border)] p-3 bg-white">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div>
+                <label htmlFor="grupo-descuento" className={etiqueta}>Descuento para todos los miembros (%)</label>
+                <p className="text-[11px] text-[var(--color-muted)] font-bold">Aplica a cualquier cliente que pertenezca a esta empresa o familia</p>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <input
+                  id="grupo-descuento"
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  value={datos.descuento_porcentaje}
+                  onChange={(e) => {
+                    const clean = e.target.value.replace(/[^0-9.]/g, '');
+                    if (Number(clean) <= 100) setDatos((d) => ({ ...d, descuento_porcentaje: clean }));
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === 'ArrowDown') { e.preventDefault(); mover('grupo-descuento', 1); }
+                    else if (e.key === 'ArrowUp') { e.preventDefault(); mover('grupo-descuento', -1); }
+                  }}
+                  placeholder="0"
+                  className="w-20 text-center bg-white border-2 border-[var(--color-border)] p-2 text-sm font-black text-[var(--color-ink)] outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]"
+                />
+                <span className="text-sm font-black text-[var(--color-ink)]">%</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] font-black text-[var(--color-muted)] mr-1 uppercase">Rápidos:</span>
+              {['0', '5', '10', '15', '20'].map((pct) => (
+                <button
+                  key={pct}
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setDatos((d) => ({ ...d, descuento_porcentaje: pct === '0' ? '' : pct }))}
+                  className={`px-2 py-0.5 text-[11px] font-black border uppercase transition-colors cursor-pointer ${
+                    (datos.descuento_porcentaje === pct || (pct === '0' && !datos.descuento_porcentaje))
+                      ? 'border-[var(--color-ink)] bg-[var(--color-ink)] text-white shadow-[1px_1px_0_0_var(--color-ink)]'
+                      : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-ink)] hover:bg-slate-200'
+                  }`}
+                >
+                  {pct}%
+                </button>
+              ))}
+            </div>
           </div>
         </div>
         <div className="px-4 sm:px-6 py-4 border-t-2 border-[var(--color-border)] flex justify-end">

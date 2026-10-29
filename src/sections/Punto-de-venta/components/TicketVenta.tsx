@@ -205,6 +205,11 @@ export const TicketVenta: React.FC<Props> = ({
                 ⭐ MAYORISTA
               </span>
             )}
+            {clienteSeleccionado?.descuentoPorcentaje != null && clienteSeleccionado.descuentoPorcentaje > 0 && (
+              <span className="bg-[var(--color-success)] text-white text-[10px] px-1.5 py-0.5 font-black border border-black shadow-[1px_1px_0_0_black]" title="Descuento especial de cliente/empresa">
+                🏷️ {clienteSeleccionado.descuentoPorcentaje}% DCTO
+              </span>
+            )}
           </h2>
         </div>
         <div className="flex gap-3">
@@ -347,6 +352,11 @@ export const TicketVenta: React.FC<Props> = ({
                         </button>
                       );
                     })()}
+                    {item.descuentoPorcentajeAplicado != null && item.descuentoPorcentajeAplicado > 0 && (
+                      <span className="text-[10px] font-black bg-[var(--color-success)] text-white px-1 py-0.5 rounded-none whitespace-nowrap shadow-[1px_1px_0_0_black]" title={`Descuento especial de ${item.descuentoPorcentajeAplicado}% aplicado`}>
+                        🏷️ -{item.descuentoPorcentajeAplicado}%
+                      </span>
+                    )}
                     {item.esMayoristaAplicado && (
                       <span className="text-[10px] font-black bg-amber-400 text-black px-1 py-0.5 rounded-none whitespace-nowrap" title="Precio Mayorista Aplicado">
                         ⭐ MAYORISTA

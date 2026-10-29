@@ -262,6 +262,9 @@ export const TerminalBusqueda: React.FC<Props> = ({
                       {clienteSeleccionado.esMayorista && (
                         <span className="bg-amber-400 text-black px-1 text-[9px] font-black rounded-none">⭐ MAY</span>
                       )}
+                      {clienteSeleccionado.descuentoPorcentaje != null && clienteSeleccionado.descuentoPorcentaje > 0 && (
+                        <span className="bg-[var(--color-success)] text-white px-1 text-[9px] font-black rounded-none">🏷️ -{clienteSeleccionado.descuentoPorcentaje}%</span>
+                      )}
                       <span>
                         CLI: <span className="text-[var(--color-accent-dark)] font-black">{clienteSeleccionado.nombre}</span>{' '}
                         <span className="text-[10px] text-[var(--color-subtle)]">(F3)</span>
@@ -449,9 +452,37 @@ export const TerminalBusqueda: React.FC<Props> = ({
                   </div>
 
                   <div className="mt-auto flex items-center justify-between pt-1.5 border-t border-dashed border-[var(--color-border)] w-full">
-                    <span className="text-lg sm:text-xl font-black text-[var(--color-ink)] font-mono">
-                      S/ {prod.price.toFixed(2)}
-                    </span>
+                    {(() => {
+                      const descPct = clienteSeleccionado?.descuentoPorcentaje || 0;
+                      const esMayorista = Boolean(clienteSeleccionado?.esMayorista);
+                      let precioEfectivo = prod.price;
+                      if (descPct > 0) {
+                        precioEfectivo = Math.round(prod.price * (1 - descPct / 100) * 100) / 100;
+                        if (esMayorista && prod.precioMayorista && prod.precioMayorista < precioEfectivo) {
+                          precioEfectivo = prod.precioMayorista;
+                        }
+                      } else if (esMayorista && prod.precioMayorista) {
+                        precioEfectivo = prod.precioMayorista;
+                      }
+
+                      if (precioEfectivo < prod.price) {
+                        return (
+                          <div className="flex items-baseline gap-1.5 flex-wrap">
+                            <span className="text-base sm:text-lg font-black text-[var(--color-success)] font-mono">
+                              S/ {precioEfectivo.toFixed(2)}
+                            </span>
+                            <span className="text-[11px] line-through text-[var(--color-muted)] font-mono">
+                              S/ {prod.price.toFixed(2)}
+                            </span>
+                          </div>
+                        );
+                      }
+                      return (
+                        <span className="text-lg sm:text-xl font-black text-[var(--color-ink)] font-mono">
+                          S/ {prod.price.toFixed(2)}
+                        </span>
+                      );
+                    })()}
                     <div className={`w-7 h-7 flex items-center justify-center transition-colors rounded-none border text-xs font-black
                       ${estaAgotado 
                         ? 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-subtle)]' 

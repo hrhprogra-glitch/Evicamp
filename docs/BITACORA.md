@@ -7,6 +7,31 @@
 
 ---
 
+## 29/10/2026 (tarde, 31) · Antigravity
+- **Implementación de Descuento Porcentual Fijo por Cliente o Empresa (Extensión Fase 4.4):**
+  - **Decisión del dueño:** ante la consulta sobre precios especiales para empresas/familias vs precio mayorista general, el dueño eligió la Opción 2: *"Descuento % fijo por cliente o empresa (Ej: 10% de descuento en todo a Constructora ABC, muy fácil de mantener y actualizar)"*, y confirmó *"si hazlo"*.
+  - **Base de datos (`siuhub` / siumax):**
+    - `customers.descuento_porcentaje numeric(5,2) DEFAULT 0`.
+    - `grupos_clientes.descuento_porcentaje numeric(5,2) DEFAULT 0`.
+    - `NOTIFY pgrst, 'reload schema'` ejecutado con éxito en PostgreSQL.
+    - Scripts `seguridad-sesion.sql` y `deshacer-fase4-completa.sql` actualizados.
+  - **Frontend desarrollado:**
+    - `ModalFichaCliente`: input de porcentaje y botones de acceso rápido `[ 0% ]`, `[ 5% ]`, `[ 10% ]`, `[ 15% ]`, `[ 20% ]`.
+    - `ModalFormGrupo`: input de porcentaje y botones de acceso rápido para empresas/familias.
+    - `ModalGrupo`: visualiza `🏷️ XX% DCTO` en el encabezado del grupo.
+    - `ModalDetalleCliente`: visualiza `🏷️ DESCUENTO ESPECIAL: XX%` (especificando si es individual o si lo hereda de su empresa).
+    - `PestanaClientes`: pastilla `🏷️ XX% DCTO` junto al nombre del cliente en el directorio general.
+    - `ModalElegirClientePOS`: carga grupos y calcula el descuento efectivo por herencia (`Math.max(cliente, grupo)`), mostrando insignias en cada fila.
+    - `Punto-de-venta/index.tsx`: función `conCantidad` aplica el descuento a los productos (si el producto tiene además un precio mayorista menor y el cliente es mayorista, aplica el menor). Efecto reactivo recalcula el ticket en tiempo real al seleccionar o retirar el cliente.
+    - `TicketVenta`: muestra `🏷️ XX% DCTO` en la cabecera y `🏷️ -XX%` en cada línea de producto con descuento aplicado.
+    - `TerminalBusqueda`: muestra badge en el botón de cliente y muestra el precio rebajado en verde con el precio regular tachado en cada tarjeta de producto.
+  - **Despliegue y validación:**
+    - `npx tsc -b` (0 errores).
+    - `npm run build` (3.59s, limpio).
+    - `node ai-scripts/deploy.cjs siumax` (20 archivos subidos a `siumax.duckdns.org`).
+    - `graphify update .` ejecutado.
+    - **Evicamp (producción) y GitHub permanecen intactos** conforme a la regla 4 del proyecto.
+
 ## 29/10/2026 (tarde, 30) · Antigravity
 - **Implementación completa de Fases 4.4 (Precio Mayorista), 4.5 (Cotizaciones) y 4.6 (Pedidos por encargo) en pruebas:**
   - **Autorización explícita del dueño:** *"si vamos hacer la 4.4, 4.5 y 4.6"*.

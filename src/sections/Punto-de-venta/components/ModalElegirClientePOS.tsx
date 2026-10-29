@@ -36,19 +36,44 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
     setCreandoCliente(false);
 
     const cargar = async () => {
-      const { data } = await traerTodo(() => supabase.from('customers').select('*').order('name'));
-      if (data) {
-        setClientes(data.map((c: any) => ({
-          id: String(c.id),
-          nombre: c.name || c.nombre || '',
-          dni: c.dni || '',
-          ruc: c.ruc || '',
-          telefono: c.telefono || '',
-          direccion: c.direccion || '',
-          ubicacion: c.ubicacion || '',
-          referencia: c.referencia || '',
-          grupoId: c.grupo_id ? String(c.grupo_id) : undefined
-        })));
+      const [
+        { data: clis },
+        { data: grupData }
+      ] = await Promise.all([
+        traerTodo(() => supabase.from('customers').select('*').order('name')),
+        traerTodo(() => supabase.from('grupos_clientes').select('*'))
+      ]);
+
+      const gruposMap = new Map<string, any>();
+      if (grupData) {
+        grupData.forEach((g: any) => {
+          gruposMap.set(String(g.id), g);
+        });
+      }
+
+      if (clis) {
+        setClientes(clis.map((c: any) => {
+          const gId = c.grupo_id != null ? String(c.grupo_id) : undefined;
+          const grupo = gId ? gruposMap.get(gId) : null;
+          const descCliente = c.descuento_porcentaje != null && !isNaN(Number(c.descuento_porcentaje)) ? Number(c.descuento_porcentaje) : 0;
+          const descGrupo = grupo && grupo.descuento_porcentaje != null && !isNaN(Number(grupo.descuento_porcentaje)) ? Number(grupo.descuento_porcentaje) : 0;
+          const descEfectivo = Math.max(descCliente, descGrupo);
+
+          return {
+            id: String(c.id),
+            nombre: c.name || c.nombre || '',
+            dni: c.dni || '',
+            ruc: c.ruc || '',
+            telefono: c.telefono || '',
+            direccion: c.direccion || '',
+            ubicacion: c.ubicacion || '',
+            referencia: c.referencia || '',
+            grupoId: gId,
+            diasPlazo: c.dias_plazo != null ? Number(c.dias_plazo) : undefined,
+            esMayorista: !!c.es_mayorista,
+            descuentoPorcentaje: descEfectivo > 0 ? descEfectivo : undefined
+          };
+        }));
       }
     };
     cargar();
@@ -113,6 +138,7 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
 
   const handleGuardarNuevo = async (d: DatosCliente): Promise<boolean> => {
     try {
+      const descNum = d.descuento_porcentaje ? parseFloat(d.descuento_porcentaje) : 0;
       const fila = {
         name: d.nombre.toUpperCase(),
         dni: d.dni || null,
@@ -124,6 +150,7 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
         referencia: d.referencia || null,
         dias_plazo: d.dias_plazo ? parseInt(d.dias_plazo, 10) : null,
         es_mayorista: !!d.es_mayorista,
+        descuento_porcentaje: descNum > 0 ? descNum : 0,
         created_at: new Date().toISOString(),
         is_synced: 1
       };
@@ -145,6 +172,7 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
         referencia: d.referencia,
         diasPlazo: d.dias_plazo ? parseInt(d.dias_plazo, 10) : undefined,
         esMayorista: !!d.es_mayorista,
+        descuentoPorcentaje: descNum > 0 ? descNum : undefined,
       };
 
       setClientes(prev => [nuevo, ...prev]);
@@ -381,10 +409,20 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
                       {c.nombre.charAt(0)}
                     </div>
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-black text-xs uppercase truncate text-[var(--color-ink)]">
                           {c.nombre}
                         </span>
+                        {c.esMayorista && (
+                          <span className="text-[9px] bg-amber-400 text-black border border-black font-black px-1 py-0.5 uppercase tracking-wider shrink-0 shadow-[1px_1px_0_0_black]">
+                            ⭐ MAY
+                          </span>
+                        )}
+                        {c.descuentoPorcentaje != null && c.descuentoPorcentaje > 0 && (
+                          <span className="text-[9px] bg-[var(--color-success)] text-white border border-black font-black px-1.5 py-0.5 uppercase tracking-wider shrink-0 shadow-[1px_1px_0_0_black]">
+                            🏷️ {c.descuentoPorcentaje}% DCTO
+                          </span>
+                        )}
                         {seleccionado && (
                           <span className="text-[10px] bg-[var(--color-ink)] text-white font-black px-1.5 py-0.5 uppercase tracking-widest shrink-0">
                             Actual

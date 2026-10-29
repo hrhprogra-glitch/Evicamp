@@ -114,7 +114,13 @@ export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNav
         traerTodo(() => supabase.from('debt_payments').select('*').order('id')),
         traerTodo(() => supabase.from('grupos_clientes').select('*').order('id'))
       ]);
-      if (grupData) setGrupos(grupData.map((g: any) => ({ id: String(g.id), nombre: g.nombre || 'SIN NOMBRE', tipo: g.tipo === 'EMPRESA' ? 'EMPRESA' : 'FAMILIA', ruc: g.ruc || '' })));
+      if (grupData) setGrupos(grupData.map((g: any) => ({
+        id: String(g.id),
+        nombre: g.nombre || 'SIN NOMBRE',
+        tipo: g.tipo === 'EMPRESA' ? 'EMPRESA' : 'FAMILIA',
+        ruc: g.ruc || '',
+        descuentoPorcentaje: g.descuento_porcentaje != null && !Number.isNaN(Number(g.descuento_porcentaje)) ? Number(g.descuento_porcentaje) : undefined
+      })));
 
       // OPTIMIZACIÓN: Solo descargar detalles de las ventas que corresponden a fiados
       let detailsData: any[] = [];
@@ -153,6 +159,7 @@ if (clis) {
     grupoId: c.grupo_id != null ? String(c.grupo_id) : '',
     diasPlazo: c.dias_plazo != null && !Number.isNaN(Number(c.dias_plazo)) ? Number(c.dias_plazo) : undefined,
     esMayorista: !!c.es_mayorista,
+    descuentoPorcentaje: c.descuento_porcentaje != null && !Number.isNaN(Number(c.descuento_porcentaje)) ? Number(c.descuento_porcentaje) : undefined,
   }));
 
   // 🛡️ PROTECCIÓN: Si hay fiados de clientes que no están en customers (antiguos o borrados con saldo)
@@ -444,6 +451,7 @@ if (fiaData) {
   const guardarCliente = async (d: DatosCliente, id?: string): Promise<boolean> => {
     // tipo_doc se sigue llenando (DNI si tiene DNI) para lo que aún lo lee
     const diasPlazoNum = d.dias_plazo ? parseInt(d.dias_plazo, 10) : null;
+    const descNum = d.descuento_porcentaje ? parseFloat(d.descuento_porcentaje) : 0;
     const fila = {
       name: d.nombre,
       dni: d.dni || null,
@@ -455,6 +463,7 @@ if (fiaData) {
       referencia: d.referencia || null,
       dias_plazo: diasPlazoNum && Number.isFinite(diasPlazoNum) ? diasPlazoNum : null,
       es_mayorista: !!d.es_mayorista,
+      descuento_porcentaje: descNum > 0 ? descNum : 0,
     };
     const nuevo: Omit<Cliente, 'id'> = {
       nombre: d.nombre,
@@ -466,6 +475,7 @@ if (fiaData) {
       referencia: d.referencia,
       diasPlazo: diasPlazoNum && Number.isFinite(diasPlazoNum) ? diasPlazoNum : undefined,
       esMayorista: !!d.es_mayorista,
+      descuentoPorcentaje: descNum > 0 ? descNum : undefined,
     };
     if (id) {
       const { error } = await supabase.from('customers').update(fila).eq('id', id);
@@ -518,16 +528,28 @@ if (fiaData) {
   const miembrosDe = (gid: string) => clientes.filter((c) => c.grupoId === gid);
   // Crear o editar un grupo. Devuelve su id (o null si falló)
   const guardarGrupo = async (d: DatosGrupo, id?: string): Promise<string | null> => {
-    const fila = { nombre: d.nombre, tipo: d.tipo, ruc: d.ruc || null };
+    const descNum = d.descuento_porcentaje ? parseFloat(d.descuento_porcentaje) : 0;
+    const fila = {
+      nombre: d.nombre,
+      tipo: d.tipo,
+      ruc: d.ruc || null,
+      descuento_porcentaje: descNum > 0 ? descNum : 0,
+    };
     if (id) {
       const { error } = await supabase.from('grupos_clientes').update(fila).eq('id', id);
       if (error) { await avisar(`No se pudo guardar el grupo: ${error.message}`); return null; }
-      setGrupos((l) => l.map((g) => (g.id === id ? { ...g, ...d } : g)));
+      setGrupos((l) => l.map((g) => (g.id === id ? { ...g, nombre: d.nombre, tipo: d.tipo, ruc: d.ruc || '', descuentoPorcentaje: descNum > 0 ? descNum : undefined } : g)));
       return id;
     }
     const { data, error } = await supabase.from('grupos_clientes').insert([{ ...fila, created_at: new Date().toISOString(), is_synced: 1 }]).select().single();
     if (error) { await avisar(`No se pudo crear el grupo: ${error.message}`); return null; }
-    const nuevo: GrupoClientes = { id: String(data.id), ...d };
+    const nuevo: GrupoClientes = {
+      id: String(data.id),
+      nombre: d.nombre,
+      tipo: d.tipo,
+      ruc: d.ruc || '',
+      descuentoPorcentaje: descNum > 0 ? descNum : undefined,
+    };
     setGrupos((l) => [...l, nuevo]);
     return nuevo.id;
   };

@@ -191,6 +191,7 @@
   - inventario: lote, historial, kardex, seleccion;
   - sin internet: si1, si2, si3, dos-cajas;
   - conteos: conteo, contador, salida.
+- **Descuentos especiales (%):** `customers.descuento_porcentaje` y `grupos_clientes.descuento_porcentaje`. En la caja POS se calcula como `Math.round(base * (1 - pct / 100) * 100) / 100`. Si el cliente pertenece a una empresa o familia con descuento, se toma el mayor (`Math.max(cliente.descuentoPorcentaje, grupo.descuentoPorcentaje)`). Si además el producto tiene un precio mayorista aún más bajo y el cliente es mayorista, se le otorga el precio menor.
 
 ## 9. Historia útil de Evicamp
 - **01/04/2026:** un evento volvió a descontar ventas ya descontadas (911 unidades, 277 productos).

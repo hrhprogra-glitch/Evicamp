@@ -1334,8 +1334,10 @@ NOTIFY pgrst, 'reload schema';
 ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS dias_plazo integer;
 
 -- ===================================================================================================
--- FASE 4.4: Precio mayorista en productos y clientes mayoristas
+-- FASE 4.4: Precio mayorista y descuento especial en clientes y empresas
 ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS es_mayorista boolean DEFAULT false;
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS descuento_porcentaje numeric(5,2) DEFAULT 0;
+ALTER TABLE public.grupos_clientes ADD COLUMN IF NOT EXISTS descuento_porcentaje numeric(5,2) DEFAULT 0;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS precio_mayorista numeric(12,2);
 
 -- Redefinir fn_proteger_precios para proteger también precio_mayorista

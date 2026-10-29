@@ -83,7 +83,10 @@ export const ModalGrupo: React.FC<Props> = ({ grupo, miembros, fiados, onClose, 
             <Users size={22} className="text-[var(--color-info)] shrink-0" />
             <div className="min-w-0">
               <h2 id="titulo-grupo" className="text-sm font-black uppercase tracking-widest truncate">{grupo.nombre}</h2>
-              <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{grupo.tipo === 'EMPRESA' ? 'Empresa' : 'Familia'}{grupo.ruc ? ` · RUC ${grupo.ruc}` : ''} · {miembros.length} persona{miembros.length === 1 ? '' : 's'}</p>
+              <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest">
+                {grupo.tipo === 'EMPRESA' ? 'Empresa' : 'Familia'}{grupo.ruc ? ` · RUC ${grupo.ruc}` : ''}
+                {grupo.descuentoPorcentaje != null && grupo.descuentoPorcentaje > 0 ? ` · 🏷️ ${grupo.descuentoPorcentaje}% DCTO` : ''} · {miembros.length} persona{miembros.length === 1 ? '' : 's'}
+              </p>
             </div>
           </div>
           <button id="btn-cerrar-grupo" onClick={onClose} title="Cerrar (Escape)"

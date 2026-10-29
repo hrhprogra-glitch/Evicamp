@@ -513,13 +513,36 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
     fetchProducts();
   }, [fetchProducts]);
 
-  // Fase 1.3 y 4.4: la línea con su cantidad y el precio que le toca (mayorista o escala "desde N").
+  // Fase 1.3 y 4.4: la línea con su cantidad y el precio que le toca (descuento % fijo, mayorista o escala "desde N").
   // Si el precio se cambió a mano (fase 1.4) no se toca. precioBase = el precio normal.
-  const conCantidad = (item: CartItem, qty: number, mayoristaOverride?: boolean): CartItem => {
+  const conCantidad = (item: CartItem, qty: number, mayoristaOverride?: boolean, descuentoOverride?: number): CartItem => {
     const base = item.precioBase ?? item.price;
     if (item.precioLista !== undefined) return { ...item, precioBase: base, cartQuantity: qty, subtotal: Math.round((qty * item.price) * 100) / 100 };
     
     const esMayorista = mayoristaOverride !== undefined ? mayoristaOverride : Boolean(clienteSeleccionado?.esMayorista);
+    const descPct = descuentoOverride !== undefined ? descuentoOverride : (clienteSeleccionado?.descuentoPorcentaje || 0);
+
+    // 1. Si el cliente o su empresa tiene descuento % especial fijo (ej. 10%)
+    if (descPct > 0) {
+      let precio = Math.round(base * (1 - descPct / 100) * 100) / 100;
+      let esMayoristaAplicado = false;
+      if (esMayorista && item.precioMayorista != null && item.precioMayorista > 0 && item.precioMayorista < precio) {
+        precio = item.precioMayorista;
+        esMayoristaAplicado = true;
+      }
+      return {
+        ...item,
+        precioBase: base,
+        cartQuantity: qty,
+        price: precio,
+        escala: undefined,
+        esMayoristaAplicado,
+        descuentoPorcentajeAplicado: descPct,
+        subtotal: Math.round((qty * precio) * 100) / 100
+      };
+    }
+
+    // 2. Si es mayorista sin descuento porcentual
     if (esMayorista && item.precioMayorista != null && item.precioMayorista > 0) {
       const precio = item.precioMayorista;
       return {
@@ -529,24 +552,40 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         price: precio,
         escala: undefined,
         esMayoristaAplicado: true,
+        descuentoPorcentajeAplicado: undefined,
         subtotal: Math.round((qty * precio) * 100) / 100
       };
     }
 
+    // 3. Precio normal o escala por cantidad
     const escala = item.sinEscala ? null : escalaPara(item.preciosCantidad, qty); // apagado a mano: precio normal
     const precio = escala ? escala.precio : base;
-    return { ...item, precioBase: base, cartQuantity: qty, price: precio, escala: escala?.desde, esMayoristaAplicado: false, subtotal: Math.round((qty * precio) * 100) / 100 };
+    return {
+      ...item,
+      precioBase: base,
+      cartQuantity: qty,
+      price: precio,
+      escala: escala?.desde,
+      esMayoristaAplicado: false,
+      descuentoPorcentajeAplicado: undefined,
+      subtotal: Math.round((qty * precio) * 100) / 100
+    };
   };
 
-  // Fase 4.4: Si el cliente cambia o se le activa mayorista, recalcular precios del carrito automáticamente
+  // Fase 4.4: Si el cliente cambia o se le activa mayorista/descuento %, recalcular precios del carrito automáticamente
   useEffect(() => {
     const esMayorista = Boolean(clienteSeleccionado?.esMayorista);
+    const descPct = clienteSeleccionado?.descuentoPorcentaje || 0;
     setCart((prevCart) => {
       let cambio = false;
       const nuevo = prevCart.map((item) => {
         if (item.precioLista !== undefined) return item;
-        const actualizado = conCantidad(item, item.cartQuantity, esMayorista);
-        if (actualizado.price !== item.price || actualizado.esMayoristaAplicado !== item.esMayoristaAplicado) {
+        const actualizado = conCantidad(item, item.cartQuantity, esMayorista, descPct);
+        if (
+          actualizado.price !== item.price ||
+          actualizado.esMayoristaAplicado !== item.esMayoristaAplicado ||
+          actualizado.descuentoPorcentajeAplicado !== item.descuentoPorcentajeAplicado
+        ) {
           cambio = true;
           return actualizado;
         }
@@ -554,7 +593,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       });
       return cambio ? nuevo : prevCart;
     });
-  }, [clienteSeleccionado?.id, clienteSeleccionado?.esMayorista]);
+  }, [clienteSeleccionado?.id, clienteSeleccionado?.esMayorista, clienteSeleccionado?.descuentoPorcentaje]);
 
   // 2. FUNCIÓN PARA DISPARAR PRODUCTOS AL CARRITO (CON BALANZA Y CONSUMO)
   const handleAddToCart = (producto: Product) => {

@@ -11,6 +11,7 @@ export interface Cliente {
   grupoId?: string;       // grupo de clientes (familia o empresa); vacío = sin grupo
   diasPlazo?: number;     // fase 4.3: días de plazo para pagar (ej. 7, 15, 30 días; vacío = fecha por defecto)
   esMayorista?: boolean;   // fase 4.4: si es true, paga precio mayorista en caja automáticamente
+  descuentoPorcentaje?: number; // fase 4.4: descuento porcentual especial (ej. 10%)
 }
 
 // Grupo de clientes (fase 4.1): familia o empresa. Cada cliente conserva su cuenta; el grupo junta sus deudas
@@ -19,6 +20,7 @@ export interface GrupoClientes {
   nombre: string;
   tipo: 'FAMILIA' | 'EMPRESA';
   ruc?: string;
+  descuentoPorcentaje?: number; // fase 4.4: descuento porcentual para todos los miembros de la empresa/grupo
 }
 
 export interface FiadoDetalle {

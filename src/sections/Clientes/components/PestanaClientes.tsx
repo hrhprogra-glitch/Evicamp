@@ -336,6 +336,11 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
                         ⭐ MAYORISTA
                       </span>
                     )}
+                    {c.descuentoPorcentaje != null && c.descuentoPorcentaje > 0 && (
+                      <span className="px-1.5 py-0.5 text-[9px] font-black uppercase bg-[var(--color-success)] text-white border border-[var(--color-ink)] shadow-[1px_1px_0_0_var(--color-ink)] tracking-wider">
+                        🏷️ {c.descuentoPorcentaje}% DCTO
+                      </span>
+                    )}
                   </div>
                   {c.referencia && <span className="block text-xs text-[var(--color-muted)] mt-0.5 normal-case">{c.referencia}</span>}
                 </td>

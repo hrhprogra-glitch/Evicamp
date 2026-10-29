@@ -12,7 +12,7 @@ import { avisar, confirmar } from '../../../utils/dialogos';
 import { errorDni, errorRuc, errorUbicacion, normalizarNombre } from '../../../utils/documento';
 import { claseBotonPrincipal } from '../../../components/ListaVentana';
 
-export interface DatosCliente { nombre: string; dni: string; ruc: string; telefono: string; direccion: string; ubicacion: string; referencia: string; dias_plazo: string; es_mayorista: boolean }
+export interface DatosCliente { nombre: string; dni: string; ruc: string; telefono: string; direccion: string; ubicacion: string; referencia: string; dias_plazo: string; es_mayorista: boolean; descuento_porcentaje: string }
 
 interface Props {
   abierta: boolean;
@@ -22,7 +22,7 @@ interface Props {
   onClose: () => void;
 }
 
-const vacio: DatosCliente = { nombre: '', dni: '', ruc: '', telefono: '', direccion: '', ubicacion: '', referencia: '', dias_plazo: '', es_mayorista: false };
+const vacio: DatosCliente = { nombre: '', dni: '', ruc: '', telefono: '', direccion: '', ubicacion: '', referencia: '', dias_plazo: '', es_mayorista: false, descuento_porcentaje: '' };
 const enfocar = (id: string) => setTimeout(() => { const el = document.getElementById(id) as HTMLInputElement | null; el?.focus(); el?.select?.(); }, 30);
 
 // "ROSA" y "ROSA PEREZ" son parecidos; "ROSA" y "ROSARIO" no
@@ -71,7 +71,18 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
   useEffect(() => {
     if (!abierta) return;
     setDatos(cliente
-      ? { nombre: cliente.nombre, dni: cliente.dni || '', ruc: cliente.ruc || '', telefono: cliente.telefono || '', direccion: cliente.direccion || '', ubicacion: cliente.ubicacion || '', referencia: cliente.referencia || '', dias_plazo: cliente.diasPlazo != null ? String(cliente.diasPlazo) : '', es_mayorista: !!cliente.esMayorista }
+      ? {
+          nombre: cliente.nombre,
+          dni: cliente.dni || '',
+          ruc: cliente.ruc || '',
+          telefono: cliente.telefono || '',
+          direccion: cliente.direccion || '',
+          ubicacion: cliente.ubicacion || '',
+          referencia: cliente.referencia || '',
+          dias_plazo: cliente.diasPlazo != null ? String(cliente.diasPlazo) : '',
+          es_mayorista: !!cliente.esMayorista,
+          descuento_porcentaje: cliente.descuentoPorcentaje != null && cliente.descuentoPorcentaje > 0 ? String(cliente.descuentoPorcentaje) : ''
+        }
       : vacio);
     enfocar('ficha-nombre');
   }, [abierta, cliente]);
@@ -83,7 +94,7 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
   const teclasCampo = (id: string) => (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      const orden = ['ficha-nombre', 'ficha-dni', 'ficha-ruc', 'ficha-telefono', 'ficha-direccion', 'ficha-ubicacion', 'ficha-referencia', 'ficha-dias-plazo', 'ficha-es-mayorista', 'btn-guardar-ficha'];
+      const orden = ['ficha-nombre', 'ficha-dni', 'ficha-ruc', 'ficha-telefono', 'ficha-direccion', 'ficha-ubicacion', 'ficha-referencia', 'ficha-dias-plazo', 'ficha-descuento', 'ficha-es-mayorista', 'btn-guardar-ficha'];
       const sig = orden[orden.indexOf(id) + 1];
       if (sig === 'btn-guardar-ficha') document.getElementById('btn-guardar-ficha')?.focus();
       else if (sig === 'ficha-es-mayorista') document.getElementById('ficha-es-mayorista')?.focus();
@@ -118,8 +129,11 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
       else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-ubicacion'); }
     } else if (id === 'ficha-dias-plazo') {
       if (e.key === 'ArrowLeft') { e.preventDefault(); enfocar('ficha-referencia'); }
-      else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('ficha-es-mayorista')?.focus(); }
+      else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); enfocar('ficha-descuento'); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-ubicacion'); }
+    } else if (id === 'ficha-descuento') {
+      if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('ficha-es-mayorista')?.focus(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-dias-plazo'); }
     }
   };
 
@@ -148,7 +162,7 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
     }
     setGuardando(true);
     try {
-      const ok = await onGuardar({ nombre, dni, ruc, telefono: datos.telefono.trim(), direccion: datos.direccion.trim(), ubicacion: datos.ubicacion.trim(), referencia: datos.referencia.trim(), dias_plazo: datos.dias_plazo.trim(), es_mayorista: datos.es_mayorista });
+      const ok = await onGuardar({ nombre, dni, ruc, telefono: datos.telefono.trim(), direccion: datos.direccion.trim(), ubicacion: datos.ubicacion.trim(), referencia: datos.referencia.trim(), dias_plazo: datos.dias_plazo.trim(), es_mayorista: datos.es_mayorista, descuento_porcentaje: datos.descuento_porcentaje.trim() });
       if (ok) onClose();
       else enfocar('btn-guardar-ficha');
     } finally {
@@ -202,6 +216,51 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
             {campo('ficha-referencia', 'Referencia (para distinguirlo)', datos.referencia, (v) => poner('referencia', v), { placeholder: 'EJ.: VECINA DEL 2DO PISO · MAESTRO DE OBRA' })}
             {campo('ficha-dias-plazo', 'Días de plazo para pagar', datos.dias_plazo, (v) => poner('dias_plazo', v.replace(/\D/g, '').slice(0, 3)), { inputMode: 'numeric', placeholder: 'OPCIONAL · EJ.: 7, 15, 30 DÍAS' })}
           </div>
+          {/* FASE 4.4: Descuento % fijo / especial */}
+          <div className="border-2 border-[var(--color-border)] p-3 bg-white">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+              <div>
+                <label htmlFor="ficha-descuento" className={etiqueta}>Descuento especial en ventas (%)</label>
+                <p className="text-[11px] text-[var(--color-muted)] font-bold">Descuento automático en todos los productos (0% a 100%)</p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <input
+                  id="ficha-descuento"
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  value={datos.descuento_porcentaje}
+                  onChange={(e) => {
+                    const clean = e.target.value.replace(/[^0-9.]/g, '');
+                    if (Number(clean) <= 100) poner('descuento_porcentaje', clean);
+                  }}
+                  onKeyDown={teclasCampo('ficha-descuento')}
+                  placeholder="0"
+                  className="w-20 text-center bg-white border-2 border-[var(--color-border)] p-2 text-sm font-black text-[var(--color-ink)] outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]"
+                />
+                <span className="text-sm font-black text-[var(--color-ink)]">%</span>
+              </div>
+            </div>
+            {/* Botones rápidos de porcentaje */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] font-black text-[var(--color-muted)] mr-1 uppercase">Rápidos:</span>
+              {['0', '5', '10', '15', '20'].map((pct) => (
+                <button
+                  key={pct}
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => poner('descuento_porcentaje', pct === '0' ? '' : pct)}
+                  className={`px-2 py-0.5 text-[11px] font-black border uppercase transition-colors cursor-pointer ${
+                    (datos.descuento_porcentaje === pct || (pct === '0' && !datos.descuento_porcentaje))
+                      ? 'border-[var(--color-ink)] bg-[var(--color-ink)] text-white shadow-[1px_1px_0_0_var(--color-ink)]'
+                      : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-ink)] hover:bg-slate-200'
+                  }`}
+                >
+                  {pct}%
+                </button>
+              ))}
+            </div>
+          </div>
           {/* FASE 4.4: Interruptor Cliente Mayorista */}
           <div className="border-2 border-[var(--color-border)] p-3 bg-white flex items-center justify-between gap-3">
             <div>
@@ -220,7 +279,7 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
                   poner('es_mayorista', !datos.es_mayorista);
                 } else if (e.key === 'ArrowUp') {
                   e.preventDefault();
-                  enfocar('ficha-dias-plazo');
+                  enfocar('ficha-descuento');
                 } else if (e.key === 'ArrowDown') {
                   e.preventDefault();
                   document.getElementById('btn-guardar-ficha')?.focus();

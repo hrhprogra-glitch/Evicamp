@@ -18,9 +18,9 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1793289284.3969398,
-    "seen": 1793296973.0701005,
-    "ast_hash": "ae16715c0c46ce4eb3582ddc3693ed37",
+    "mtime": 1793302532.2023802,
+    "seen": 1793302715.327761,
+    "ast_hash": "197e40da5f034796b8709778ca3292c7",
     "semantic_hash": ""
   },
   "src/db/supabase.ts": {
@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProducto.tsx": {
-    "mtime": 1792806551.1673295,
-    "seen": 1793205876.2445524,
-    "ast_hash": "10b0b38bda202501dc973bc3df38a6c7",
+    "mtime": 1793301679.113914,
+    "seen": 1793302715.327817,
+    "ast_hash": "948566cff9e5db10a1083849c618e636",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaLotes.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaProductos.tsx": {
-    "mtime": 1793289284.4986444,
-    "seen": 1793296973.0701911,
-    "ast_hash": "b8f72a2464a4931e33fdf3a7cbb5c785",
+    "mtime": 1793301993.276278,
+    "seen": 1793302715.3278196,
+    "ast_hash": "ede6abf2c2f06c3464e1b099e9276c56",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TarjetaMetrica.tsx": {
@@ -174,15 +174,15 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/index.tsx": {
-    "mtime": 1793289284.4986444,
-    "seen": 1793296973.070194,
-    "ast_hash": "5f770a0dc1c204f29aeac1c600e2ed26",
+    "mtime": 1793301981.1414578,
+    "seen": 1793302715.3278213,
+    "ast_hash": "8a72964f84c1a2ae681b1673cc2284a4",
     "semantic_hash": ""
   },
   "src/sections/Inventario/types.ts": {
-    "mtime": 1792806551.1693294,
-    "seen": 1793205876.244562,
-    "ast_hash": "ef13bd5626db82a9fea823226e0af654",
+    "mtime": 1793301163.4402108,
+    "seen": 1793302715.327822,
+    "ast_hash": "d2d0e88943e375a2bc8de48f489eefff",
     "semantic_hash": ""
   },
   "src/sections/Login.tsx": {
@@ -234,8 +234,8 @@
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalCobro.tsx": {
-    "mtime": 1793292024.5856771,
-    "seen": 1793296973.0702097,
+    "mtime": 1793300327.1257226,
+    "seen": 1793302715.3278308,
     "ast_hash": "bcd80c7978f4ad6773bc7f1d0f4ba5f2",
     "semantic_hash": ""
   },
@@ -246,9 +246,9 @@
     "semantic_hash": "1883283f7fdd4654e55b2782aab17e8e"
   },
   "src/sections/Punto-de-venta/components/TerminalBusqueda.tsx": {
-    "mtime": 1793289284.550202,
-    "seen": 1793296973.070216,
-    "ast_hash": "14eb8d7df20ffaec59ea0bf515038651",
+    "mtime": 1793302089.0048182,
+    "seen": 1793302715.3278363,
+    "ast_hash": "51c915d7653e876955430bf839c4ba07",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/TicketImprimible.tsx": {
@@ -258,21 +258,21 @@
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/TicketVenta.tsx": {
-    "mtime": 1793289284.5756402,
-    "seen": 1793296973.070219,
-    "ast_hash": "11e63e1a22626e5faaf8d80dcd909d40",
+    "mtime": 1793302624.4288392,
+    "seen": 1793302715.327838,
+    "ast_hash": "4a85dcbb7bab4ab3718340db3b13020f",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/index.tsx": {
-    "mtime": 1793289284.5878577,
-    "seen": 1793296973.0702205,
-    "ast_hash": "c2b88083b7c25a338171330d288a68df",
+    "mtime": 1793302591.112785,
+    "seen": 1793302715.327839,
+    "ast_hash": "1799d19c17e015941d2bb96c5f7967d9",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/types.ts": {
-    "mtime": 1793289284.5878577,
-    "seen": 1793296973.0702221,
-    "ast_hash": "e06a6165aebaa89077bad9a781974754",
+    "mtime": 1793302008.1743174,
+    "seen": 1793302715.3278399,
+    "ast_hash": "44f1a679098cc4d0c022fb8e476f89de",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/FiltrosUtilidades.tsx": {
@@ -1458,9 +1458,9 @@
     "semantic_hash": ""
   },
   "servidor/sql/seguridad-sesion.sql": {
-    "mtime": 1793291365.5840757,
-    "seen": 1793296973.070099,
-    "ast_hash": "cb2c4f4e9a182d2d421b4e8616fa22e1",
+    "mtime": 1793301112.8287125,
+    "seen": 1793302715.32776,
+    "ast_hash": "e221b09e81d288e63d57d4f1214d4b37",
     "semantic_hash": ""
   },
   "servidor/activar-seguridad.sh": {
@@ -1950,15 +1950,15 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalFichaCliente.tsx": {
-    "mtime": 1793291657.553443,
-    "seen": 1793296973.0701244,
-    "ast_hash": "5d33469721e460ecd048a194db5604f7",
+    "mtime": 1793301334.9783027,
+    "seen": 1793302715.3277757,
+    "ast_hash": "beee3233d4e7fbbe25ec61cf976c0ffc",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/PestanaClientes.tsx": {
-    "mtime": 1793299868.7344396,
-    "seen": 1793299917.3122642,
-    "ast_hash": "80dfc66f6c1ccd4d863933a80901f7dc",
+    "mtime": 1793301456.798158,
+    "seen": 1793302715.3277783,
+    "ast_hash": "d8cc146bde3c97aa1fe722a2a0cd2236",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/TablaFiados.tsx": {
@@ -1974,15 +1974,15 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/index.tsx": {
-    "mtime": 1793298592.4756377,
-    "seen": 1793298703.3494694,
-    "ast_hash": "ac7552570a5a6390594bc95b47d4d445",
+    "mtime": 1793302572.3592422,
+    "seen": 1793302715.3277829,
+    "ast_hash": "a5e43a3ef64019f648bf974fc394b030",
     "semantic_hash": ""
   },
   "src/sections/Clientes/types.ts": {
-    "mtime": 1793291455.0568695,
-    "seen": 1793296973.0701342,
-    "ast_hash": "f6292b93293abdecc4c75b842e96904c",
+    "mtime": 1793301182.1218092,
+    "seen": 1793302715.3277836,
+    "ast_hash": "33f553f85d86f903b5ca98bdb2c005f4",
     "semantic_hash": ""
   },
   "src/utils/documento.ts": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793299548.1593995,
-    "seen": 1793299917.312454,
-    "ast_hash": "6cd4e54b5e69032666882c82930f064a",
+    "mtime": 1793300351.1970701,
+    "seen": 1793302715.3278859,
+    "ast_hash": "f32308ce59d7d517563c1b2ae14cb62e",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793299549.2570615,
-    "seen": 1793299917.3124557,
-    "ast_hash": "a41d47b681d2e7fae06ef3031d2c8392",
+    "mtime": 1793300368.3364182,
+    "seen": 1793302715.3278866,
+    "ast_hash": "d9ff6b6929a7d0d61d88a32d9267e406",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793299559.0014145,
-    "seen": 1793299917.3124573,
+    "mtime": 1793300327.114153,
+    "seen": 1793302715.3278873,
     "ast_hash": "93ea34fc5e538727a45c11490a23d879",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793299573.6540582,
-    "seen": 1793299917.3124588,
-    "ast_hash": "b349ca33e86911df46a7bb36fe70fbe6",
+    "mtime": 1793300390.5688362,
+    "seen": 1793302715.327888,
+    "ast_hash": "bcaf4b2fd87afefae3d08c9d733e876f",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2034,9 +2034,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalDetalleCliente.tsx": {
-    "mtime": 1793291774.1414216,
-    "seen": 1793296973.0701172,
-    "ast_hash": "8db69e94508c52b83d805599321ef0c3",
+    "mtime": 1793301475.651289,
+    "seen": 1793302715.3277712,
+    "ast_hash": "d8486482802336bf4e8da167696bbaf3",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-conteo-lote.mjs": {
@@ -2076,9 +2076,9 @@
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalElegirClientePOS.tsx": {
-    "mtime": 1793289284.5414615,
-    "seen": 1793296973.0702112,
-    "ast_hash": "a38b4af9e8ee526b5a20e9aacc4bd4e2",
+    "mtime": 1793301384.8748903,
+    "seen": 1793302715.3278325,
+    "ast_hash": "ff91af061b98077f7769d6a426589147",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalNombreEspera.tsx": {
@@ -2094,9 +2094,45 @@
     "semantic_hash": ""
   },
   "servidor/sql/deshacer-fase4-3.sql": {
-    "mtime": 1793291334.772867,
-    "seen": 1793296973.070096,
-    "ast_hash": "a525cb4b8549b8ee098329877fdc3940",
+    "mtime": 1793300327.1246934,
+    "seen": 1793302715.3277571,
+    "ast_hash": "7f5ac74f0a95bc3876ee3860d630a1c4",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/aplicar-fase4-3-evicamp.cjs": {
+    "mtime": 1793300327.11364,
+    "seen": 1793302715.32767,
+    "ast_hash": "f2cfaea11728c7300f727248a2a130a6",
+    "semantic_hash": ""
+  },
+  "servidor/sql/deshacer-fase4-completa.sql": {
+    "mtime": 1793301025.498994,
+    "seen": 1793302715.327758,
+    "ast_hash": "761cc9d0530ea878ae358ed14a43d797",
+    "semantic_hash": ""
+  },
+  "src/sections/Clientes/components/PestanaCotizaciones.tsx": {
+    "mtime": 1793302387.599371,
+    "seen": 1793302715.327779,
+    "ast_hash": "06d3e49c30e27d206244859d0ed48f46",
+    "semantic_hash": ""
+  },
+  "src/sections/Clientes/components/PestanaPedidos.tsx": {
+    "mtime": 1793302443.667606,
+    "seen": 1793302715.32778,
+    "ast_hash": "533e589b4e3f52580f20ee6312268c49",
+    "semantic_hash": ""
+  },
+  "src/sections/Punto-de-venta/components/ModalCotizacionPOS.tsx": {
+    "mtime": 1793302138.192181,
+    "seen": 1793302715.3278315,
+    "ast_hash": "2b3638b83fec9b6116e458c2ae5cc7bb",
+    "semantic_hash": ""
+  },
+  "src/sections/Punto-de-venta/components/ModalPedidoPOS.tsx": {
+    "mtime": 1793302184.7833583,
+    "seen": 1793302715.3278344,
+    "ast_hash": "b1b119071863874a985b8bc67c7af59f",
     "semantic_hash": ""
   }
 }
