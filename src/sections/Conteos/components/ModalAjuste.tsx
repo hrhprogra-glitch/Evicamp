@@ -85,6 +85,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
   const [guardando, setGuardando] = useState(false);
   const [hechos, setHechos] = useState<Hecho[]>([]);
   const [ultimo, setUltimo] = useState('');
+  const [calculandoEstado, setCalculandoEstado] = useState(false);
   const calculando = useRef(false);
 
   useCerrarConEscape(isOpen, onClose);
@@ -298,6 +299,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
     if (!producto || calculando.current) return;
     if (contado.trim() === '' || Number.isNaN(Number(contado)) || Number(contado) < 0) { await avisar('Escribe cuánto contaste (0 o más).'); enfocar('input-contado'); return; }
     calculando.current = true;
+    setCalculandoEstado(true);
     try {
       // Con el id: sin internet esa copia se actualiza con cada conteo (sinInternet.ts → cambiarEnCopias busca por id)
       const { data } = await supabase.from('products').select('id, quantity').eq('id', producto.id);
@@ -309,6 +311,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
       enfocar('motivo-ajuste-0');
     } finally {
       calculando.current = false;
+      setCalculandoEstado(false);
     }
   };
 
@@ -537,28 +540,62 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
               <>
                 {!consumo && selectorLote(`${n}. ¿De qué lote? ${lotes.length > 1 ? `(Enter: ver los ${lotes.length})` : ''}`)}
                 <div>
-                  <label htmlFor="input-cantidad-ajuste" className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest mb-2 block">
-                    {consumo ? `${n}. ¿Cuánto se gastó? (S/)` : `${n + 1}. ¿Cuántos salieron? (${unidad})`}
-                  </label>
-                  <input
-                    id="input-cantidad-ajuste"
-                    type="number"
-                    min="0"
-                    step="any"
-                    autoComplete="off"
-                    data-lpignore="true"
-                    placeholder="0"
-                    value={cantidad}
-                    onChange={(e) => setCantidad(e.target.value)}
-                    onFocus={(e) => e.currentTarget.select()}
-                    onKeyDown={async (e) => {
-                      if (e.key === 'Enter' || e.key === 'ArrowDown') {
-                        e.preventDefault();
+                  <div className="flex items-center justify-between mb-2">
+                    <label htmlFor="input-cantidad-ajuste" className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest block">
+                      {consumo ? `${n}. ¿Cuánto se gastó? (S/)` : `${n + 1}. ¿Cuántos salieron? (${unidad})`}
+                    </label>
+                    <span className="text-[11px] font-black text-amber-500 uppercase flex items-center gap-1">
+                      <span>ENTER para continuar</span>
+                    </span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <input
+                      id="input-cantidad-ajuste"
+                      type="number"
+                      min="0"
+                      step="any"
+                      autoComplete="off"
+                      data-lpignore="true"
+                      placeholder="0"
+                      value={cantidad}
+                      onChange={(e) => setCantidad(e.target.value)}
+                      onFocus={(e) => e.currentTarget.select()}
+                      onKeyDown={async (e) => {
+                        if (e.key === 'Enter' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          if (await revisarCantidad()) enfocar(`motivo-ajuste-${Math.max(0, motivos.indexOf(motivo))}`);
+                        } else if (e.key === 'ArrowRight') {
+                          e.preventDefault();
+                          document.getElementById('btn-confirmar-salida')?.focus();
+                        } else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(campoAntesDeCantidad())?.focus(); }
+                      }}
+                      className="w-full sm:w-60 bg-white border-2 border-[var(--color-border)] p-3 text-sm font-black text-[var(--color-ink)] text-right outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]"
+                    />
+                    <button
+                      id="btn-confirmar-salida"
+                      type="button"
+                      onClick={async () => {
                         if (await revisarCantidad()) enfocar(`motivo-ajuste-${Math.max(0, motivos.indexOf(motivo))}`);
-                      } else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(campoAntesDeCantidad())?.focus(); }
-                    }}
-                    className="w-full sm:w-60 bg-white border-2 border-[var(--color-border)] p-3 text-sm font-black text-[var(--color-ink)] text-right outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]"
-                  />
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('input-cantidad-ajuste')?.focus(); }
+                        else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(campoAntesDeCantidad())?.focus(); }
+                      }}
+                      className="h-[46px] px-4 bg-[var(--color-ink)] text-[var(--color-bg)] hover:opacity-90 font-black text-xs uppercase flex items-center justify-center gap-2 border-2 border-[var(--color-ink)] cursor-pointer select-none shrink-0"
+                    >
+                      <span>Continuar</span>
+                      <span className="bg-amber-400 text-black px-1.5 py-0.5 rounded font-black text-[10px] tracking-wider">
+                        ENTER ↵
+                      </span>
+                    </button>
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 p-2 bg-amber-500/10 border border-amber-500/30 text-xs font-bold text-[var(--color-ink)]">
+                    <span className="bg-amber-500 text-black font-black px-1.5 py-0.5 rounded text-[10px] uppercase shrink-0">Aviso</span>
+                    <span>
+                      {consumo ? 'Escribe el gasto y presiona ' : 'Escribe cuántos salieron y presiona '}
+                      <kbd className="px-1.5 py-0.5 bg-[var(--color-bg-2)] border border-[var(--color-border)] rounded font-mono font-black text-[var(--color-ink)]">ENTER ↵</kbd> o el botón <strong>Continuar</strong> para elegir el motivo.
+                    </span>
+                  </div>
                   {consumo && <p className="text-[11px] font-bold text-[var(--color-muted)] mt-1">Es de consumo (no lleva stock): se anota como gasto.</p>}
                 </div>
               </>
@@ -568,29 +605,64 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
             {producto && modo === 'CONTEO' && veLotes && selectorLote(`${n}. ¿A qué lote va la diferencia? (Enter: elegir)`)}
             {producto && modo === 'CONTEO' && (
               <div>
-                <label htmlFor="input-contado" className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest mb-2 block">
-                  {veLotes ? n + 1 : n}. ¿Cuántos hay? ({unidad})
-                </label>
-                <input
-                  id="input-contado"
-                  type="number"
-                  min="0"
-                  step="any"
-                  autoComplete="off"
-                  data-lpignore="true"
-                  placeholder="0"
-                  value={contado}
-                  readOnly={diferencia !== null}
-                  onChange={(e) => setContado(e.target.value)}
-                  onFocus={(e) => e.currentTarget.select()}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') { e.preventDefault(); if (diferencia === null) void calcular(); else enfocar('motivo-ajuste-0'); }
-                    else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(campoAntesDeCantidad())?.focus(); }
-                    else if (e.key === 'ArrowDown' && diferencia !== null) { e.preventDefault(); document.getElementById('motivo-ajuste-0')?.focus(); }
-                  }}
-                  className="w-full sm:w-60 bg-white border-2 border-[var(--color-border)] p-3 text-sm font-black text-[var(--color-ink)] text-right outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] read-only:bg-[var(--color-bg)]"
-                />
-                {diferencia === null && <p className="text-[11px] font-bold text-[var(--color-muted)] mt-1">Enter para revisar la diferencia.</p>}
+                <div className="flex items-center justify-between mb-2">
+                  <label htmlFor="input-contado" className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest block">
+                    {veLotes ? n + 1 : n}. ¿Cuántos hay? ({unidad})
+                  </label>
+                  {diferencia === null && (
+                    <span className="text-[11px] font-black text-amber-500 uppercase flex items-center gap-1">
+                      <span>ENTER para continuar</span>
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <input
+                    id="input-contado"
+                    type="number"
+                    min="0"
+                    step="any"
+                    autoComplete="off"
+                    data-lpignore="true"
+                    placeholder="0"
+                    value={contado}
+                    readOnly={diferencia !== null}
+                    onChange={(e) => setContado(e.target.value)}
+                    onFocus={(e) => e.currentTarget.select()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') { e.preventDefault(); if (diferencia === null) void calcular(); else enfocar('motivo-ajuste-0'); }
+                      else if (e.key === 'ArrowRight' && diferencia === null) { e.preventDefault(); document.getElementById('btn-confirmar-contado')?.focus(); }
+                      else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(campoAntesDeCantidad())?.focus(); }
+                      else if (e.key === 'ArrowDown' && diferencia !== null) { e.preventDefault(); document.getElementById('motivo-ajuste-0')?.focus(); }
+                    }}
+                    className="w-full sm:w-60 bg-white border-2 border-[var(--color-border)] p-3 text-sm font-black text-[var(--color-ink)] text-right outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] read-only:bg-[var(--color-bg)]"
+                  />
+                  {diferencia === null && (
+                    <button
+                      id="btn-confirmar-contado"
+                      type="button"
+                      disabled={calculandoEstado}
+                      onClick={() => void calcular()}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('input-contado')?.focus(); }
+                        else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(campoAntesDeCantidad())?.focus(); }
+                      }}
+                      className="h-[46px] px-4 bg-[var(--color-ink)] text-[var(--color-bg)] hover:opacity-90 font-black text-xs uppercase flex items-center justify-center gap-2 border-2 border-[var(--color-ink)] cursor-pointer select-none shrink-0"
+                    >
+                      <span>{calculandoEstado ? 'Revisando...' : 'Continuar'}</span>
+                      <span className="bg-amber-400 text-black px-1.5 py-0.5 rounded font-black text-[10px] tracking-wider">
+                        ENTER ↵
+                      </span>
+                    </button>
+                  )}
+                </div>
+                {diferencia === null && (
+                  <div className="mt-2 flex items-center gap-2 p-2 bg-amber-500/10 border border-amber-500/30 text-xs font-bold text-[var(--color-ink)]">
+                    <span className="bg-amber-500 text-black font-black px-1.5 py-0.5 rounded text-[10px] uppercase shrink-0">Aviso</span>
+                    <span>
+                      Escribe la cantidad contada y presiona <kbd className="px-1.5 py-0.5 bg-[var(--color-bg-2)] border border-[var(--color-border)] rounded font-mono font-black text-[var(--color-ink)]">ENTER ↵</kbd> o el botón <strong>Continuar</strong> para revisar la diferencia.
+                    </span>
+                  </div>
+                )}
                 {diferencia !== null && (
                   <div id="ajuste-diferencia" role="status" className={`mt-3 p-3 border-2 font-black uppercase ${diferencia < 0 ? 'border-[var(--color-danger)] bg-[var(--color-danger-bg)] text-[var(--color-danger)]' : 'border-[var(--color-info)] bg-[var(--color-info-bg)] text-[var(--color-info)]'}`}>
                     {diferencia < 0 ? `Faltan ${formatearCantidad(-diferencia, unidad)} ${unidad}` : `Sobran ${formatearCantidad(diferencia, unidad)} ${unidad}`}

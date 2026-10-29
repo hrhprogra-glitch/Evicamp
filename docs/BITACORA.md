@@ -7,6 +7,24 @@
 
 ---
 
+## 29/10/2026 (mañana, 22) · Antigravity
+- **Indicador visible de "ENTER para continuar" y botón interactivo "Continuar [ENTER ↵]" en Conteo / Merma (`ModalAjuste.tsx`):**
+  - **Solicitud del dueño:** *"si subelo pero antes soluciona esto cuando agrego un monto donde marque osea la cantidad tengo que presionar enter para que acepte eso confunde la primera ves no aparecia nada y pense que estaba mal pero tenia que poner enter el problema que no me indica que tengo que presionar enter para continuar"* (captura del modal Nuevo Ajuste, paso 4 "¿Cuántos hay?").
+  - **Causa raíz:** En `ModalAjuste.tsx`, al escribir la cantidad en Conteo o Salida/Merma, la diferencia y el siguiente paso no se calculan hasta presionar Enter. La indicación era solo un texto pequeño y gris ("Enter para revisar la diferencia"), y no había botón visible ni llamada a la acción clara.
+  - **Corrección aplicada:**
+    - Se añadió en la cabecera de la etiqueta un indicador destacado en ámbar: `ENTER PARA CONTINUAR`.
+    - Se agregó al lado del input un botón visible y clickeable: `[ CONTINUAR | ENTER ↵ ]` (`#btn-confirmar-contado` y `#btn-confirmar-salida`), que permite avanzar tanto haciendo clic como presionando Enter.
+    - Se añadió un banner de aviso de alta visibilidad debajo del campo: `[AVISO] Escribe la cantidad contada y presiona ENTER ↵ o el botón Continuar para revisar la diferencia.`
+    - Se mantuvo intacta la navegación por teclado (`Enter`, `ArrowRight`, `ArrowLeft`, `ArrowUp`, `ArrowDown`).
+  - **Verificación y Pruebas:**
+    - Compilación limpia con `npm run build`.
+    - Desplegado en `siumax.duckdns.org`.
+    - Verificado con Edge headless capturando capturas reales (`screenshot-conteo-enter.png` y `screenshot-conteo-after-enter.png`).
+    - Ejecutadas las suites automatizadas de teclado completas: `prueba-conteo.mjs` (100% ✅) y `prueba-salida.mjs` (100% ✅).
+- **Siguiente paso:** Presentar la solución al dueño con la captura para su OK final y proceder con el pase a producción en Evicamp (Regla 7).
+
+---
+
 ## 29/10/2026 (mañana, 21) · Antigravity
 - **Eliminación completa de fondos blancos en tablas y componentes (`src/index.css`, `TablaProductos.tsx`, `TablaLotes.tsx`, `EtiquetaStock.tsx`, `FiltrosInventario.tsx`):**
   - **Solicitud del dueño:** *"en las tablas hay mucho blanco arregla eso"* (captura de Inventario con barra de paginación `PÁGINA 1 DE 2`, etiquetas de stock, badges de SKU y caja de escáner en blanco puro).
