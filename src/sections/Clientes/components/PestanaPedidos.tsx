@@ -315,6 +315,211 @@ export const PestanaPedidos: React.FC = () => {
     };
   }, [pedidoSeleccionado, modalEntregaAbierto, selectedIndex, pedidosFiltrados.length]);
 
+  // Navegación por teclado dentro del modal de detalle de pedido
+  useEffect(() => {
+    if (!pedidoSeleccionado || modalEntregaAbierto) return;
+
+    const timer = setTimeout(() => {
+      const primerBoton =
+        document.getElementById('btn-ped-entregar') ||
+        document.getElementById('btn-ped-whatsapp') ||
+        document.getElementById('btn-ped-cerrar');
+      primerBoton?.focus();
+    }, 60);
+
+    const handleModalKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement as HTMLElement | null;
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        cerrarDetallePedido();
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        e.stopPropagation();
+        const focusables = [
+          document.getElementById('btn-ped-cerrar'),
+          document.getElementById('btn-ped-entregar'),
+          document.getElementById('btn-ped-whatsapp'),
+          document.getElementById('btn-ped-imprimir'),
+          document.getElementById('btn-ped-cancelar')
+        ].filter(Boolean) as HTMLElement[];
+
+        if (focusables.length > 0) {
+          const currentIndex = focusables.indexOf(active as HTMLElement);
+          if (e.shiftKey) {
+            const prev = currentIndex <= 0 ? focusables.length - 1 : currentIndex - 1;
+            focusables[prev]?.focus();
+          } else {
+            const next = currentIndex === -1 || currentIndex >= focusables.length - 1 ? 0 : currentIndex + 1;
+            focusables[next]?.focus();
+          }
+        }
+        return;
+      }
+
+      const btnCerrar = document.getElementById('btn-ped-cerrar');
+      const btnEntregar = document.getElementById('btn-ped-entregar');
+      const btnWhatsApp = document.getElementById('btn-ped-whatsapp');
+      const btnImprimir = document.getElementById('btn-ped-imprimir');
+      const btnCancelar = document.getElementById('btn-ped-cancelar');
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (active === btnCerrar) {
+          (btnEntregar || btnWhatsApp || btnImprimir)?.focus();
+        } else if (active === btnEntregar) {
+          btnImprimir?.focus();
+        } else if (active === btnWhatsApp) {
+          (btnCancelar || btnImprimir)?.focus();
+        } else if (active === btnImprimir || active === btnCancelar) {
+          btnCerrar?.focus();
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (active === btnImprimir) {
+          (btnEntregar || btnCerrar)?.focus();
+        } else if (active === btnCancelar) {
+          (btnWhatsApp || btnCerrar)?.focus();
+        } else if (active === btnEntregar || active === btnWhatsApp) {
+          btnCerrar?.focus();
+        } else if (active === btnCerrar) {
+          (btnCancelar || btnImprimir)?.focus();
+        }
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        if (active === btnEntregar) {
+          btnWhatsApp?.focus();
+        } else if (active === btnWhatsApp) {
+          (btnEntregar || btnImprimir)?.focus();
+        } else if (active === btnImprimir) {
+          (btnCancelar || btnImprimir)?.focus();
+        } else if (active === btnCancelar) {
+          btnImprimir?.focus();
+        }
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (active === btnWhatsApp) {
+          (btnEntregar || btnWhatsApp)?.focus();
+        } else if (active === btnEntregar) {
+          (btnWhatsApp || btnEntregar)?.focus();
+        } else if (active === btnCancelar) {
+          btnImprimir?.focus();
+        } else if (active === btnImprimir) {
+          (btnCancelar || btnImprimir)?.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleModalKeyDown, { capture: true });
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', handleModalKeyDown, { capture: true });
+    };
+  }, [pedidoSeleccionado, modalEntregaAbierto]);
+
+  // Navegación dentro del modal de entrega / cobrar saldo
+  useEffect(() => {
+    if (!modalEntregaAbierto) return;
+
+    const timer = setTimeout(() => {
+      const target =
+        document.getElementById(`btn-pago-saldo-${metodoCobroSaldo}`) ||
+        document.getElementById('btn-entrega-confirmar') ||
+        document.getElementById('btn-entrega-cerrar');
+      target?.focus();
+    }, 60);
+
+    const handleEntregaKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement as HTMLElement | null;
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        setModalEntregaAbierto(false);
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        e.stopPropagation();
+        const focusables = [
+          document.getElementById('btn-entrega-cerrar'),
+          document.getElementById('btn-pago-saldo-EFECTIVO'),
+          document.getElementById('btn-pago-saldo-YAPE'),
+          document.getElementById('btn-pago-saldo-TARJETA'),
+          document.getElementById('btn-entrega-cancelar'),
+          document.getElementById('btn-entrega-confirmar')
+        ].filter(Boolean) as HTMLElement[];
+
+        if (focusables.length > 0) {
+          const currentIndex = focusables.indexOf(active as HTMLElement);
+          if (e.shiftKey) {
+            const prev = currentIndex <= 0 ? focusables.length - 1 : currentIndex - 1;
+            focusables[prev]?.focus();
+          } else {
+            const next = currentIndex === -1 || currentIndex >= focusables.length - 1 ? 0 : currentIndex + 1;
+            focusables[next]?.focus();
+          }
+        }
+        return;
+      }
+
+      const metodos: ('EFECTIVO' | 'YAPE' | 'TARJETA')[] = ['EFECTIVO', 'YAPE', 'TARJETA'];
+      if (active?.id.startsWith('btn-pago-saldo-')) {
+        const curM = active.id.replace('btn-pago-saldo-', '') as 'EFECTIVO' | 'YAPE' | 'TARJETA';
+        const curIdx = metodos.indexOf(curM);
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          const nextM = metodos[(curIdx + 1) % metodos.length];
+          setMetodoCobroSaldo(nextM);
+          document.getElementById(`btn-pago-saldo-${nextM}`)?.focus();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          const prevM = metodos[(curIdx - 1 + metodos.length) % metodos.length];
+          setMetodoCobroSaldo(prevM);
+          document.getElementById(`btn-pago-saldo-${prevM}`)?.focus();
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          document.getElementById('btn-entrega-confirmar')?.focus();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          document.getElementById('btn-entrega-cerrar')?.focus();
+        }
+      } else if (active?.id === 'btn-entrega-confirmar') {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          document.getElementById('btn-entrega-cancelar')?.focus();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          document.getElementById(`btn-pago-saldo-${metodoCobroSaldo}`)?.focus();
+        }
+      } else if (active?.id === 'btn-entrega-cancelar') {
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          document.getElementById('btn-entrega-confirmar')?.focus();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          document.getElementById(`btn-pago-saldo-${metodoCobroSaldo}`)?.focus();
+        }
+      } else if (active?.id === 'btn-entrega-cerrar') {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          document.getElementById(`btn-pago-saldo-${metodoCobroSaldo}`)?.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleEntregaKeyDown, { capture: true });
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', handleEntregaKeyDown, { capture: true });
+    };
+  }, [modalEntregaAbierto, metodoCobroSaldo]);
+
   // Entregar pedido y cobrar saldo pendiente
   const handleEntregarPedido = async () => {
     if (!pedidoSeleccionado) return;
@@ -567,10 +772,10 @@ export const PestanaPedidos: React.FC = () => {
               const estaVencido = new Date() > entregaDate && ped.estado === 'PENDIENTE';
 
               const badgeEstado = {
-                PENDIENTE: 'bg-amber-100 text-amber-900 border-amber-500',
-                ENTREGADO: 'bg-emerald-100 text-emerald-800 border-emerald-500',
-                CANCELADO: 'bg-red-100 text-red-800 border-red-500'
-              }[ped.estado] || 'bg-gray-100 text-gray-800 border-gray-400';
+                PENDIENTE: 'bg-[var(--color-warning-bg,#fef3c7)] text-[var(--color-warning-text,#d97706)] border-[var(--color-warning,#f59e0b)]',
+                ENTREGADO: 'bg-[var(--color-accent-bg,#dcfce7)] text-[var(--color-accent,#16a34a)] border-[var(--color-accent,#16a34a)]',
+                CANCELADO: 'bg-[var(--color-danger-bg,#fee2e2)] text-[var(--color-danger,#dc2626)] border-[var(--color-danger,#dc2626)]'
+              }[ped.estado] || 'bg-[var(--color-bg-2)] text-[var(--color-muted)] border-[var(--color-border)]';
 
               return (
                 <div
@@ -585,11 +790,11 @@ export const PestanaPedidos: React.FC = () => {
                   onKeyDown={(e) => handleRowKeyDown(e, idx, ped)}
                   className={`p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 cursor-pointer transition-all border-2 ${
                     isSelected
-                      ? 'bg-amber-100/90 border-[var(--color-ink)] shadow-[2px_2px_0_0_black] ring-2 ring-[var(--color-ink)]'
+                      ? 'bg-[var(--color-bg-2)] border-[var(--color-accent)] shadow-[2px_2px_0_0_black] ring-2 ring-[var(--color-accent)]'
                       : esHoy
-                      ? 'bg-amber-50/80 border-amber-500/50 hover:bg-amber-100/50'
-                      : 'bg-white border-transparent hover:bg-amber-50/50'
-                  } focus:outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:bg-amber-100/90 focus:border-[var(--color-ink)]`}
+                      ? 'bg-[var(--color-warning-bg)] border-[var(--color-warning)] hover:bg-[var(--color-bg-2)]'
+                      : 'bg-[var(--color-surface)] border-transparent hover:bg-[var(--color-bg-2)]'
+                  } focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:bg-[var(--color-bg-2)] focus:border-[var(--color-accent)]`}
                 >
                   <div className="flex flex-col gap-0.5 min-w-0">
                     <div className="flex items-center gap-2">
@@ -650,7 +855,7 @@ export const PestanaPedidos: React.FC = () => {
                         abrirDetalle(ped, idx);
                       }}
                       onKeyDown={(e) => handleBtnDetalleKeyDown(e, idx, ped)}
-                      className="px-3 py-1.5 border-2 border-[var(--color-ink)] bg-white hover:bg-[var(--color-accent)] text-xs font-black uppercase tracking-wider shadow-[2px_2px_0_0_black] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-accent)] cursor-pointer"
+                      className="px-3 py-1.5 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:bg-[var(--color-accent)] text-xs font-black uppercase tracking-wider shadow-[2px_2px_0_0_black] focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-[var(--color-accent)] cursor-pointer"
                     >
                       Ver Pedido
                     </button>
@@ -672,7 +877,7 @@ export const PestanaPedidos: React.FC = () => {
           }}
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4"
         >
-          <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[92vh] w-full max-w-xl animate-fade-in">
+          <div className="bg-[var(--color-surface,#fff)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[92vh] w-full max-w-xl animate-fade-in text-[var(--color-ink)]">
             
             {/* CABECERA */}
             <div className="bg-[var(--color-ink)] text-white p-3 sm:p-4 flex justify-between items-center border-b-2 border-[var(--color-ink)]">
@@ -686,9 +891,11 @@ export const PestanaPedidos: React.FC = () => {
                 </span>
               </div>
               <button
+                id="btn-ped-cerrar"
                 type="button"
                 onClick={cerrarDetallePedido}
-                className="p-1 hover:rotate-90 transition-transform cursor-pointer text-white"
+                className="p-1 hover:bg-[var(--color-danger)] transition-colors cursor-pointer text-white focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-[var(--color-danger)]"
+                title="Cerrar (Esc)"
               >
                 <X size={20} />
               </button>
@@ -704,7 +911,7 @@ export const PestanaPedidos: React.FC = () => {
                 {pedidoSeleccionado.cliente_telefono && <div>Teléfono: <strong>{pedidoSeleccionado.cliente_telefono}</strong></div>}
                 <div>
                   📅 Fecha Prometida de Entrega:{' '}
-                  <strong className="text-amber-800">
+                  <strong className="text-[var(--color-warning)]">
                     {new Date(pedidoSeleccionado.fecha_entrega).toLocaleString()}
                   </strong>
                 </div>
@@ -734,7 +941,7 @@ export const PestanaPedidos: React.FC = () => {
                           </p>
                           <span className="text-[10px] text-[var(--color-muted)] font-bold">
                             {det.quantity} x S/ {det.price.toFixed(2)}
-                            {det.es_mayorista && <span className="ml-1 text-amber-600 font-black">⭐ MAYORISTA</span>}
+                            {det.es_mayorista && <span className="ml-1 text-amber-500 font-black">⭐ MAYORISTA</span>}
                           </span>
                         </div>
                         <span className="font-black text-sm text-[var(--color-ink)] shrink-0">
@@ -747,16 +954,16 @@ export const PestanaPedidos: React.FC = () => {
               </div>
 
               {/* CUENTAS DEL PEDIDO */}
-              <div className="bg-amber-50 p-3 border-2 border-amber-300 flex flex-col gap-1 text-xs">
+              <div className="bg-[var(--color-bg-2)] p-3 border-2 border-[var(--color-border)] flex flex-col gap-1 text-xs text-[var(--color-ink)]">
                 <div className="flex justify-between">
                   <span>Total Pedido:</span>
                   <strong className="text-sm">S/ {pedidoSeleccionado.total.toFixed(2)}</strong>
                 </div>
-                <div className="flex justify-between text-emerald-800">
+                <div className="flex justify-between text-[var(--color-accent)]">
                   <span>Adelanto Pagado:</span>
                   <strong>S/ {pedidoSeleccionado.adelanto.toFixed(2)} {pedidoSeleccionado.metodo_adelanto ? `(${pedidoSeleccionado.metodo_adelanto})` : ''}</strong>
                 </div>
-                <div className="flex justify-between text-base font-black text-amber-900 pt-1 border-t border-amber-200">
+                <div className="flex justify-between text-base font-black text-[var(--color-warning)] pt-1 border-t border-[var(--color-border)]">
                   <span>Saldo Pendiente al Recoger:</span>
                   <span>S/ {pedidoSeleccionado.saldo_pendiente.toFixed(2)}</span>
                 </div>
@@ -766,37 +973,41 @@ export const PestanaPedidos: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
                 {pedidoSeleccionado.estado === 'PENDIENTE' && (
                   <button
+                    id="btn-ped-entregar"
                     type="button"
                     onClick={() => setModalEntregaAbierto(true)}
                     disabled={procesandoAccion}
-                    className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-emerald-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-emerald-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+                    className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-emerald-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-emerald-700 cursor-pointer focus:outline-none focus:ring-4 focus:ring-amber-400 focus:border-white focus:brightness-110 transition-all"
                   >
                     <CheckCircle2 size={16} /> Entregar y Cobrar Saldo
                   </button>
                 )}
 
                 <button
+                  id="btn-ped-whatsapp"
                   type="button"
                   onClick={() => handleWhatsApp(pedidoSeleccionado, detallesModal)}
-                  className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-green-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-green-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+                  className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-green-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-green-600 cursor-pointer focus:outline-none focus:ring-4 focus:ring-amber-400 focus:border-white focus:brightness-110 transition-all"
                 >
                   <MessageCircle size={16} /> WhatsApp Cliente
                 </button>
 
                 <button
+                  id="btn-ped-imprimir"
                   type="button"
                   onClick={() => window.print()}
-                  className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-white text-[var(--color-ink)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-gray-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+                  className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] text-[var(--color-ink)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-[var(--color-bg-2)] cursor-pointer focus:outline-none focus:ring-4 focus:ring-amber-400 focus:border-white focus:brightness-110 transition-all"
                 >
                   <Printer size={16} /> Imprimir Comprobante
                 </button>
 
                 {pedidoSeleccionado.estado === 'PENDIENTE' && (
                   <button
+                    id="btn-ped-cancelar"
                     type="button"
                     onClick={handleCancelarPedido}
                     disabled={procesandoAccion}
-                    className="py-2.5 px-3 border-2 border-red-600 bg-white text-red-600 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_red] hover:bg-red-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-600"
+                    className="py-2.5 px-3 border-2 border-red-600 bg-[var(--color-surface)] text-red-600 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_red] hover:bg-red-500 hover:text-white cursor-pointer focus:outline-none focus:ring-4 focus:ring-amber-400 focus:border-white focus:brightness-110 transition-all"
                   >
                     <X size={16} /> Cancelar (Devolver Stock)
                   </button>
@@ -819,15 +1030,17 @@ export const PestanaPedidos: React.FC = () => {
           }}
           className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[10000] flex items-center justify-center p-3"
         >
-          <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_black] p-5 w-full max-w-md flex flex-col gap-4 animate-fade-in">
+          <div className="bg-[var(--color-surface,#fff)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_black] p-5 w-full max-w-md flex flex-col gap-4 animate-fade-in text-[var(--color-ink)]">
             <div className="flex justify-between items-center border-b-2 border-[var(--color-ink)] pb-2">
               <h4 className="font-black text-sm uppercase tracking-wider flex items-center gap-1.5">
                 <CheckCircle2 size={18} className="text-emerald-600" /> Confirmar Entrega de Mercadería
               </h4>
               <button
+                id="btn-entrega-cerrar"
                 type="button"
                 onClick={cerrarDetallePedido}
-                className="p-1 hover:rotate-90 transition-transform cursor-pointer"
+                className="p-1 hover:bg-[var(--color-danger)] transition-colors cursor-pointer text-white focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-[var(--color-danger)]"
+                title="Cerrar (Esc)"
               >
                 <X size={18} />
               </button>
@@ -838,10 +1051,10 @@ export const PestanaPedidos: React.FC = () => {
             </p>
 
             {pedidoSeleccionado.saldo_pendiente > 0 ? (
-              <div className="bg-amber-50 border-2 border-amber-300 p-3 flex flex-col gap-2">
+              <div className="bg-[var(--color-bg-2)] border-2 border-[var(--color-border)] p-3 flex flex-col gap-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-black uppercase text-amber-900">Saldo a Cobrar:</span>
-                  <span className="text-lg font-black text-amber-900">
+                  <span className="text-xs font-black uppercase text-[var(--color-muted)]">Saldo a Cobrar:</span>
+                  <span className="text-lg font-black text-[var(--color-warning)]">
                     S/ {pedidoSeleccionado.saldo_pendiente.toFixed(2)}
                   </span>
                 </div>
@@ -852,12 +1065,13 @@ export const PestanaPedidos: React.FC = () => {
                   {(['EFECTIVO', 'YAPE', 'TARJETA'] as const).map((m) => (
                     <button
                       key={m}
+                      id={`btn-pago-saldo-${m}`}
                       type="button"
                       onClick={() => setMetodoCobroSaldo(m)}
-                      className={`py-2 text-[10px] font-black uppercase border border-[var(--color-ink)] transition-colors cursor-pointer ${
+                      className={`py-2 text-[10px] font-black uppercase border border-[var(--color-ink)] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400 ${
                         metodoCobroSaldo === m
                           ? 'bg-[var(--color-ink)] text-white shadow-[2px_2px_0_0_black]'
-                          : 'bg-white text-[var(--color-ink)] hover:bg-gray-100'
+                          : 'bg-[var(--color-surface)] text-[var(--color-ink)] hover:bg-[var(--color-bg)]'
                       }`}
                     >
                       {m}
@@ -866,24 +1080,26 @@ export const PestanaPedidos: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="bg-emerald-50 border-2 border-emerald-300 p-3 text-xs font-bold text-emerald-800">
+              <div className="bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] p-3 text-xs font-bold text-[var(--color-accent)]">
                 El pedido ya fue pagado en su totalidad (Saldo: S/ 0.00). Solo confirme la entrega física.
               </div>
             )}
 
             <div className="flex gap-2 pt-2">
               <button
+                id="btn-entrega-cancelar"
                 type="button"
                 onClick={cerrarDetallePedido}
-                className="flex-1 py-2.5 border-2 border-[var(--color-ink)] bg-gray-100 hover:bg-gray-200 text-xs font-black uppercase tracking-wider cursor-pointer"
+                className="flex-1 py-2.5 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] hover:bg-[var(--color-bg-2)] text-[var(--color-ink)] text-xs font-black uppercase tracking-wider cursor-pointer focus:outline-none focus:ring-4 focus:ring-amber-400 focus:border-white transition-all"
               >
                 Cancelar
               </button>
               <button
+                id="btn-entrega-confirmar"
                 type="button"
                 onClick={handleEntregarPedido}
                 disabled={procesandoAccion}
-                className="flex-1 py-2.5 border-2 border-[var(--color-ink)] bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider shadow-[3px_3px_0_0_black] cursor-pointer"
+                className="flex-1 py-2.5 border-2 border-[var(--color-ink)] bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider shadow-[3px_3px_0_0_black] cursor-pointer focus:outline-none focus:ring-4 focus:ring-amber-400 focus:border-white transition-all"
               >
                 {procesandoAccion ? 'Registrando...' : 'Confirmar Entrega'}
               </button>

@@ -4,8 +4,9 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 29/10/2026 (tarde, 35), Antigravity: Selector por teclado completo en Cotizaciones y Pedidos (baja desde buscador a filas y filtros, resaltado visual de grilla), y recuperación automática del selector al cerrar ventanas o volver a entrar a la aplicación en todas las sesiones, desplegados en `siumax` (rama `fase-4-completa`).
+- **Última actualización:** 29/10/2026 (tarde, 36), Antigravity: Selector por teclado 2D en modales ("Pausar Ticket en Espera", "Detalle de Proforma" y "Detalle de Pedido") y corrección del color de fondo claro en filas para el Modo Oscuro, desplegados en `siumax` (rama `fase-4-completa`).
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4.1, 4.2 y 4.3 en producción en Evicamp (commits 583ad4e y c8c6be3). Fases 4.4 (con descuento % cliente/empresa), 4.5 y 4.6 listas en el sitio de pruebas `siumax` para revisión y visto bueno del dueño.
+
 - **Fase que sigue:** Revisión por parte del dueño de las Fases 4.4, 4.5 y 4.6 en `siumax.duckdns.org` para su posterior pase oficial a producción.
 - **Avisos para la clienta de Evicamp:**
   - "Mermas" ahora se llama "Conteos";

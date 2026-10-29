@@ -18,9 +18,9 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1793302532.2023802,
-    "seen": 1793302715.327761,
-    "ast_hash": "197e40da5f034796b8709778ca3292c7",
+    "mtime": 1793314446.7901175,
+    "seen": 1793314807.3276668,
+    "ast_hash": "6b99f984b248b2d70586dcef00e9e454",
     "semantic_hash": ""
   },
   "src/db/supabase.ts": {
@@ -1236,9 +1236,9 @@
     "semantic_hash": ""
   },
   "src/utils/navegacionSesion.ts": {
-    "mtime": 1793289284.622826,
-    "seen": 1793296973.0702565,
-    "ast_hash": "3d6e864608b1ca99de8493b408509e36",
+    "mtime": 1793314405.7598321,
+    "seen": 1793314807.327845,
+    "ast_hash": "53c1ae27f53d3c7a36eaedee4c1da482",
     "semantic_hash": ""
   },
   "src/utils/tecladoTactil.ts": {
@@ -1578,9 +1578,9 @@
     "semantic_hash": ""
   },
   "src/utils/ventanas.ts": {
-    "mtime": 1793289284.6238346,
-    "seen": 1793296973.070278,
-    "ast_hash": "e44608a6e12b9fef5b02400bc596f589",
+    "mtime": 1793314431.3560278,
+    "seen": 1793314807.3278677,
+    "ast_hash": "328b1e2511f159c5538eda3302008680",
     "semantic_hash": ""
   },
   "src/components/ListaVentana.tsx": {
@@ -1974,9 +1974,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/index.tsx": {
-    "mtime": 1793311190.4448185,
-    "seen": 1793311598.3653564,
-    "ast_hash": "399359f77198c2c61ce548df742e6c0b",
+    "mtime": 1793314472.7098598,
+    "seen": 1793314807.3277087,
+    "ast_hash": "34cb20f1a940263ae6f9a13dc2d2a053",
     "semantic_hash": ""
   },
   "src/sections/Clientes/types.ts": {
@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793311666.78641,
-    "seen": 1793313459.457927,
-    "ast_hash": "7bd8e0c361d21e687d5cefd039fe1d02",
+    "mtime": 1793313490.0064206,
+    "seen": 1793314807.3278894,
+    "ast_hash": "1870e3015c4f792c83c6ab145f4acaee",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793311642.6720593,
-    "seen": 1793313459.4579282,
-    "ast_hash": "73194ec6fc29e93ae219f8e3f9e0702b",
+    "mtime": 1793313537.8526208,
+    "seen": 1793314807.3278909,
+    "ast_hash": "1f5643a1cdd0ec4d2459be542b09303b",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793311693.4953508,
-    "seen": 1793313459.4579315,
-    "ast_hash": "4cb08a28d61e1f86eab702e82fe649c1",
+    "mtime": 1793313559.0828464,
+    "seen": 1793314807.327894,
+    "ast_hash": "4eb6c54808f7a888cd2c4a48bffdc8b4",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2112,15 +2112,15 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/PestanaCotizaciones.tsx": {
-    "mtime": 1793302387.599371,
-    "seen": 1793302715.327779,
-    "ast_hash": "06d3e49c30e27d206244859d0ed48f46",
+    "mtime": 1793314587.0126252,
+    "seen": 1793314807.327702,
+    "ast_hash": "f60c2f7a48c6ea3660fedc5c8aa961ae",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/PestanaPedidos.tsx": {
-    "mtime": 1793302443.667606,
-    "seen": 1793302715.32778,
-    "ast_hash": "533e589b4e3f52580f20ee6312268c49",
+    "mtime": 1793314734.0746233,
+    "seen": 1793314807.3277037,
+    "ast_hash": "706323030f9d179f106b5e734181be1c",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalCotizacionPOS.tsx": {

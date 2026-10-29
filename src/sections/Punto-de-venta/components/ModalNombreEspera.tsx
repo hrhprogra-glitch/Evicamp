@@ -40,18 +40,23 @@ export const ModalNombreEspera: React.FC<Props> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Tab') {
         e.stopPropagation();
-        const focusables = Array.from(
-          document.querySelectorAll('#modal-nombre-espera input, #modal-nombre-espera button')
-        ) as HTMLElement[];
+        const focusables = [
+          document.getElementById('input-nombre-espera'),
+          document.getElementById('btn-cancelar-espera'),
+          document.getElementById('btn-confirmar-espera'),
+          document.getElementById('btn-cerrar-espera')
+        ].filter(Boolean) as HTMLElement[];
+
         if (focusables.length > 0) {
-          const first = focusables[0];
-          const last = focusables[focusables.length - 1];
-          if (e.shiftKey && document.activeElement === first) {
+          const currentIndex = focusables.indexOf(document.activeElement as HTMLElement);
+          if (e.shiftKey) {
             e.preventDefault();
-            last.focus();
-          } else if (!e.shiftKey && document.activeElement === last) {
+            const prevIndex = currentIndex <= 0 ? focusables.length - 1 : currentIndex - 1;
+            focusables[prevIndex].focus();
+          } else {
             e.preventDefault();
-            first.focus();
+            const nextIndex = currentIndex === -1 || currentIndex >= focusables.length - 1 ? 0 : currentIndex + 1;
+            focusables[nextIndex].focus();
           }
         }
       }
@@ -77,7 +82,7 @@ export const ModalNombreEspera: React.FC<Props> = ({
         role="dialog"
         aria-modal="true"
         aria-label="Pausar ticket en espera"
-        className="w-full max-w-md bg-[var(--color-surface,#fff)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col overflow-hidden"
+        className="w-full max-w-md bg-[var(--color-surface,#fff)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col overflow-hidden animate-fade-in"
       >
         {/* Cabecera */}
         <div className="bg-[var(--color-ink)] text-white px-4 py-3 flex items-center justify-between shrink-0">
@@ -86,8 +91,16 @@ export const ModalNombreEspera: React.FC<Props> = ({
             <h2 className="text-sm font-black uppercase tracking-wider">Pausar Ticket en Espera</h2>
           </div>
           <button
+            id="btn-cerrar-espera"
+            type="button"
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center hover:bg-[var(--color-danger)] text-white transition-colors cursor-pointer"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                document.getElementById('input-nombre-espera')?.focus();
+              }
+            }}
+            className="w-7 h-7 flex items-center justify-center hover:bg-[var(--color-danger)] text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-[var(--color-danger)]"
             title="Cerrar (Esc)"
           >
             <X size={18} />
@@ -112,8 +125,17 @@ export const ModalNombreEspera: React.FC<Props> = ({
               autoComplete="off"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  document.getElementById('btn-confirmar-espera')?.focus();
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  document.getElementById('btn-cerrar-espera')?.focus();
+                }
+              }}
               placeholder="Ej: Don Mario, Mesa 3, Delivery Juan..."
-              className="w-full bg-white border-2 border-[var(--color-border)] px-3 py-2.5 text-sm font-black uppercase outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]"
+              className="w-full bg-white border-2 border-[var(--color-border)] px-3 py-2.5 text-sm font-black uppercase outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-400 focus:bg-amber-50 dark:focus:bg-slate-800 transition-all"
             />
             <span className="text-[10px] font-bold text-[var(--color-muted)] uppercase">
               Enter guarda en espera · Esc cancela
@@ -122,16 +144,35 @@ export const ModalNombreEspera: React.FC<Props> = ({
 
           <div className="flex justify-end gap-2 pt-2 border-t-2 border-[var(--color-border)]">
             <button
+              id="btn-cancelar-espera"
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border-2 border-[var(--color-border)] text-[var(--color-ink)] text-xs font-black uppercase hover:border-[var(--color-ink)] transition-colors cursor-pointer"
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                  e.preventDefault();
+                  document.getElementById('btn-confirmar-espera')?.focus();
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  document.getElementById('input-nombre-espera')?.focus();
+                }
+              }}
+              className="px-4 py-2 border-2 border-[var(--color-border)] text-[var(--color-ink)] text-xs font-black uppercase hover:border-[var(--color-ink)] transition-all cursor-pointer focus:outline-none focus:ring-4 focus:ring-amber-400 focus:border-amber-400 focus:bg-slate-200 dark:focus:bg-slate-700"
             >
               Cancelar (Esc)
             </button>
             <button
               id="btn-confirmar-espera"
               type="submit"
-              className="px-5 py-2 border-2 border-[var(--color-ink)] bg-[var(--color-warning)] text-[var(--color-ink)] text-xs font-black uppercase flex items-center gap-1.5 shadow-[2px_2px_0_0_var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer"
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                  e.preventDefault();
+                  document.getElementById('btn-cancelar-espera')?.focus();
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  document.getElementById('input-nombre-espera')?.focus();
+                }
+              }}
+              className="px-5 py-2 border-2 border-[var(--color-ink)] bg-[var(--color-warning)] text-[var(--color-ink)] text-xs font-black uppercase flex items-center gap-1.5 shadow-[2px_2px_0_0_var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-all cursor-pointer focus:outline-none focus:ring-4 focus:ring-amber-400 focus:border-white focus:brightness-110"
             >
               <Check size={14} /> Guardar (Enter)
             </button>

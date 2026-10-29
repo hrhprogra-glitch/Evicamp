@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793313490.0064206,
-    "seen": 1793314807.3278894,
-    "ast_hash": "1870e3015c4f792c83c6ab145f4acaee",
+    "mtime": 1793314845.3463936,
+    "seen": 1793317026.0667112,
+    "ast_hash": "3fd9eb49280b166bb5f6ff02663f54d6",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793313537.8526208,
-    "seen": 1793314807.3278909,
-    "ast_hash": "1f5643a1cdd0ec4d2459be542b09303b",
+    "mtime": 1793314878.61437,
+    "seen": 1793317026.0667126,
+    "ast_hash": "35f02ade31bba058119859945acae3bd",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793313559.0828464,
-    "seen": 1793314807.327894,
-    "ast_hash": "4eb6c54808f7a888cd2c4a48bffdc8b4",
+    "mtime": 1793314897.687664,
+    "seen": 1793317026.0667157,
+    "ast_hash": "79bca1cfd3d9e2c490712f14d3b789ef",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2082,9 +2082,9 @@
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalNombreEspera.tsx": {
-    "mtime": 1793289284.5431287,
-    "seen": 1793296973.0702128,
-    "ast_hash": "cd14e422e7f8ecda378cdc13beed9136",
+    "mtime": 1793316365.1884115,
+    "seen": 1793317026.0666199,
+    "ast_hash": "4520786aad909ace79bd234d36ab5c62",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-fase4-evicamp.cjs": {
@@ -2112,15 +2112,15 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/PestanaCotizaciones.tsx": {
-    "mtime": 1793314587.0126252,
-    "seen": 1793314807.327702,
-    "ast_hash": "f60c2f7a48c6ea3660fedc5c8aa961ae",
+    "mtime": 1793316769.0833254,
+    "seen": 1793317026.0665233,
+    "ast_hash": "7f07bb900a853575720288bb5a16f2f2",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/PestanaPedidos.tsx": {
-    "mtime": 1793314734.0746233,
-    "seen": 1793314807.3277037,
-    "ast_hash": "706323030f9d179f106b5e734181be1c",
+    "mtime": 1793316920.845843,
+    "seen": 1793317026.0665257,
+    "ast_hash": "9e0d8ee4cd894aa31104cc808789268d",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalCotizacionPOS.tsx": {

@@ -326,3 +326,10 @@
           - Filas con atributo `data-row="true"` y resaltado de selector nítido (`focus:ring-4 focus:ring-black focus:bg-amber-100`). Flechas Arriba/Abajo navegan entre filas, y Derecha salta a `[Ver Detalle]` / `[Ver Pedido]`.
           - En `ventanas.ts`, `App.tsx` y `navegacionSesion.ts`: se blindó la recuperación de foco automática. Al cerrar cualquier modal o volver a entrar a la ventana desde otra aplicación o hacer clic fuera, si el foco queda en el vacío (`body`), el sistema re-enfoca automáticamente el elemento primario de la sesión activa, evitando que el selector desaparezca en cualquiera de las sesiones.
         - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+     28. **Selector en Modales y Corrección de Resaltado Claro en Modo Oscuro (29/10 tarde):**
+        - El dueño reportó:
+          1. *"el selector no funciona ahi"* (captura de modal 'Pausar ticket en espera'): no se podía bajar con flechas desde el texto a los botones. Se agregó navegación con flechas en 2D (Abajo/Arriba entre texto y botones, Izquierda/Derecha entre botones Cancelar y Guardar) y anillo de foco ámbar de alto contraste.
+          2. *"otro error el color es muy claro"* (captura de lista de cotizaciones): la fila seleccionada tenía un fondo `bg-amber-100` deslumbrante en modo oscuro que no dejaba leer el texto blanco. Se reemplazó por variables nativas del tema (`bg-[var(--color-bg-2)] border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]`) tanto en Cotizaciones como en Pedidos.
+          3. *"el selector no funciona aqui"* (captura de modal 'Detalle de proforma'): los botones no tenían selector ni respondían a flechas de teclado. Se implementó navegación 2D completa con flechas, autofoco inicial al abrir, focus trap con Tab y anillos dorados brillantes de alto contraste en los modales de Cotizaciones y Pedidos.
+        - Compilado (`npx tsc -b`, `npm run build`), desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+

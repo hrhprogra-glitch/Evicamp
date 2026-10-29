@@ -326,6 +326,116 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
     };
   }, [cotiSeleccionada, selectedIndex, cotizacionesFiltradas.length]);
 
+  // Navegación por teclado dentro del modal de cotización
+  useEffect(() => {
+    if (!cotiSeleccionada) return;
+
+    // Autofoco inicial en el primer botón disponible
+    const timer = setTimeout(() => {
+      const primerBoton =
+        document.getElementById('btn-coti-convertir') ||
+        document.getElementById('btn-coti-whatsapp') ||
+        document.getElementById('btn-coti-cerrar');
+      primerBoton?.focus();
+    }, 60);
+
+    const handleModalKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement as HTMLElement | null;
+
+      // Escape cierra
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        cerrarDetalle();
+        return;
+      }
+
+      // Focus trap para Tab
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        e.stopPropagation();
+        const focusables = [
+          document.getElementById('btn-coti-cerrar'),
+          document.getElementById('btn-coti-convertir'),
+          document.getElementById('btn-coti-whatsapp'),
+          document.getElementById('btn-coti-imprimir'),
+          document.getElementById('btn-coti-anular')
+        ].filter(Boolean) as HTMLElement[];
+
+        if (focusables.length > 0) {
+          const currentIndex = focusables.indexOf(active as HTMLElement);
+          if (e.shiftKey) {
+            const prev = currentIndex <= 0 ? focusables.length - 1 : currentIndex - 1;
+            focusables[prev]?.focus();
+          } else {
+            const next = currentIndex === -1 || currentIndex >= focusables.length - 1 ? 0 : currentIndex + 1;
+            focusables[next]?.focus();
+          }
+        }
+        return;
+      }
+
+      // Flechas (2D selector)
+      const btnCerrar = document.getElementById('btn-coti-cerrar');
+      const btnConvertir = document.getElementById('btn-coti-convertir');
+      const btnWhatsApp = document.getElementById('btn-coti-whatsapp');
+      const btnImprimir = document.getElementById('btn-coti-imprimir');
+      const btnAnular = document.getElementById('btn-coti-anular');
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (active === btnCerrar) {
+          (btnConvertir || btnWhatsApp || btnImprimir)?.focus();
+        } else if (active === btnConvertir) {
+          btnImprimir?.focus();
+        } else if (active === btnWhatsApp) {
+          (btnAnular || btnImprimir)?.focus();
+        } else if (active === btnImprimir || active === btnAnular) {
+          btnCerrar?.focus();
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (active === btnImprimir) {
+          (btnConvertir || btnCerrar)?.focus();
+        } else if (active === btnAnular) {
+          (btnWhatsApp || btnCerrar)?.focus();
+        } else if (active === btnConvertir || active === btnWhatsApp) {
+          btnCerrar?.focus();
+        } else if (active === btnCerrar) {
+          (btnAnular || btnImprimir)?.focus();
+        }
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        if (active === btnConvertir) {
+          btnWhatsApp?.focus();
+        } else if (active === btnWhatsApp) {
+          (btnConvertir || btnImprimir)?.focus();
+        } else if (active === btnImprimir) {
+          (btnAnular || btnImprimir)?.focus();
+        } else if (active === btnAnular) {
+          btnImprimir?.focus();
+        }
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (active === btnWhatsApp) {
+          (btnConvertir || btnWhatsApp)?.focus();
+        } else if (active === btnConvertir) {
+          (btnWhatsApp || btnConvertir)?.focus();
+        } else if (active === btnAnular) {
+          btnImprimir?.focus();
+        } else if (active === btnImprimir) {
+          (btnAnular || btnImprimir)?.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleModalKeyDown, { capture: true });
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', handleModalKeyDown, { capture: true });
+    };
+  }, [cotiSeleccionada]);
+
   const handleConvertirEnVenta = async (coti: Cotizacion) => {
     if (coti.estado === 'CONVERTIDA') {
       alert('Esta cotización ya fue convertida en venta anteriormente.');
@@ -528,11 +638,11 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
               const vencimientoStr = coti.fecha_vencimiento ? new Date(coti.fecha_vencimiento).toLocaleDateString() : 'Sin fecha';
 
               const badgeEstado = {
-                VIGENTE: 'bg-emerald-100 text-emerald-800 border-emerald-500',
-                CONVERTIDA: 'bg-blue-100 text-blue-800 border-blue-500',
-                VENCIDA: 'bg-amber-100 text-amber-800 border-amber-500',
-                ANULADA: 'bg-red-100 text-red-800 border-red-500'
-              }[coti.estado] || 'bg-gray-100 text-gray-800 border-gray-400';
+                VIGENTE: 'bg-[var(--color-accent-bg,#dcfce7)] text-[var(--color-accent,#16a34a)] border-[var(--color-accent,#16a34a)]',
+                CONVERTIDA: 'bg-[var(--color-info-bg,#eff6ff)] text-[var(--color-info,#2563eb)] border-[var(--color-info,#2563eb)]',
+                VENCIDA: 'bg-[var(--color-warning-bg,#fef3c7)] text-[var(--color-warning-text,#d97706)] border-[var(--color-warning,#f59e0b)]',
+                ANULADA: 'bg-[var(--color-danger-bg,#fee2e2)] text-[var(--color-danger,#dc2626)] border-[var(--color-danger,#dc2626)]'
+              }[coti.estado] || 'bg-[var(--color-bg-2)] text-[var(--color-muted)] border-[var(--color-border)]';
 
               return (
                 <div
@@ -547,9 +657,9 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
                   onKeyDown={(e) => handleRowKeyDown(e, idx, coti)}
                   className={`p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 cursor-pointer transition-all border-2 ${
                     isSelected
-                      ? 'bg-amber-100/90 border-[var(--color-ink)] shadow-[2px_2px_0_0_black] ring-2 ring-[var(--color-ink)]'
-                      : 'bg-white border-transparent hover:bg-amber-50/50'
-                  } focus:outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:bg-amber-100/90 focus:border-[var(--color-ink)]`}
+                      ? 'bg-[var(--color-bg-2)] border-[var(--color-accent)] shadow-[2px_2px_0_0_black] ring-2 ring-[var(--color-accent)]'
+                      : 'bg-[var(--color-surface)] border-transparent hover:bg-[var(--color-bg-2)]'
+                  } focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:bg-[var(--color-bg-2)] focus:border-[var(--color-accent)]`}
                 >
                   <div className="flex flex-col gap-0.5 min-w-0">
                     <div className="flex items-center gap-2">
@@ -596,7 +706,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
                         abrirDetalle(coti, idx);
                       }}
                       onKeyDown={(e) => handleBtnDetalleKeyDown(e, idx, coti)}
-                      className="px-3 py-1.5 border-2 border-[var(--color-ink)] bg-white hover:bg-[var(--color-accent)] text-xs font-black uppercase tracking-wider shadow-[2px_2px_0_0_black] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-accent)] cursor-pointer"
+                      className="px-3 py-1.5 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:bg-[var(--color-accent)] text-xs font-black uppercase tracking-wider shadow-[2px_2px_0_0_black] focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-[var(--color-accent)] cursor-pointer"
                     >
                       Ver Detalle
                     </button>
@@ -618,7 +728,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
           }}
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4"
         >
-          <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[92vh] w-full max-w-xl animate-fade-in">
+          <div className="bg-[var(--color-surface,#fff)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[92vh] w-full max-w-xl animate-fade-in text-[var(--color-ink)]">
             
             {/* CABECERA */}
             <div className="bg-[var(--color-ink)] text-white p-3 sm:p-4 flex justify-between items-center border-b-2 border-[var(--color-ink)]">
@@ -632,9 +742,11 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
                 </span>
               </div>
               <button
+                id="btn-coti-cerrar"
                 type="button"
                 onClick={cerrarDetalle}
-                className="p-1 hover:rotate-90 transition-transform cursor-pointer text-white"
+                className="p-1 hover:bg-[var(--color-danger)] transition-colors cursor-pointer text-white focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-[var(--color-danger)]"
+                title="Cerrar (Esc)"
               >
                 <X size={20} />
               </button>
@@ -678,7 +790,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
                           </p>
                           <span className="text-[10px] text-[var(--color-muted)] font-bold">
                             {det.quantity} x S/ {det.price.toFixed(2)}
-                            {det.es_mayorista && <span className="ml-1 text-amber-600 font-black">⭐ MAYORISTA</span>}
+                            {det.es_mayorista && <span className="ml-1 text-amber-500 font-black">⭐ MAYORISTA</span>}
                           </span>
                         </div>
                         <span className="font-black text-sm text-[var(--color-ink)] shrink-0">
@@ -691,11 +803,11 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
               </div>
 
               {/* TOTAL */}
-              <div className="flex justify-between items-center p-3 bg-amber-50 border-2 border-amber-300">
-                <span className="text-xs font-black uppercase text-amber-900 tracking-wider">
+              <div className="flex justify-between items-center p-3 bg-[var(--color-bg-2)] border-2 border-[var(--color-border)]">
+                <span className="text-xs font-black uppercase text-[var(--color-muted)] tracking-wider">
                   Total de la Cotización:
                 </span>
-                <span className="text-xl font-black text-amber-900">
+                <span className="text-xl font-black text-[var(--color-accent)]">
                   S/ {cotiSeleccionada.total.toFixed(2)}
                 </span>
               </div>
@@ -704,35 +816,39 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
                 {cotiSeleccionada.estado === 'VIGENTE' && (
                   <button
+                    id="btn-coti-convertir"
                     type="button"
                     onClick={() => handleConvertirEnVenta(cotiSeleccionada)}
-                    className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-emerald-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-emerald-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+                    className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-emerald-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-emerald-700 cursor-pointer focus:outline-none focus:ring-4 focus:ring-amber-400 focus:border-white focus:brightness-110 transition-all"
                   >
                     <ShoppingBag size={16} /> Convertir en Venta
                   </button>
                 )}
 
                 <button
+                  id="btn-coti-whatsapp"
                   type="button"
                   onClick={() => handleWhatsApp(cotiSeleccionada, detallesModal)}
-                  className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-green-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-green-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+                  className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-green-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-green-600 cursor-pointer focus:outline-none focus:ring-4 focus:ring-amber-400 focus:border-white focus:brightness-110 transition-all"
                 >
                   <MessageCircle size={16} /> Compartir WhatsApp
                 </button>
 
                 <button
+                  id="btn-coti-imprimir"
                   type="button"
                   onClick={() => window.print()}
-                  className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-white text-[var(--color-ink)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-gray-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+                  className="py-2.5 px-3 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] text-[var(--color-ink)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_black] hover:bg-[var(--color-bg-2)] cursor-pointer focus:outline-none focus:ring-4 focus:ring-amber-400 focus:border-white focus:brightness-110 transition-all"
                 >
                   <Printer size={16} /> Imprimir
                 </button>
 
                 {cotiSeleccionada.estado === 'VIGENTE' && (
                   <button
+                    id="btn-coti-anular"
                     type="button"
                     onClick={() => handleAnular(cotiSeleccionada)}
-                    className="py-2.5 px-3 border-2 border-red-600 bg-white text-red-600 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_red] hover:bg-red-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-600"
+                    className="py-2.5 px-3 border-2 border-red-600 bg-[var(--color-surface)] text-red-600 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[3px_3px_0_0_red] hover:bg-red-500 hover:text-white cursor-pointer focus:outline-none focus:ring-4 focus:ring-amber-400 focus:border-white focus:brightness-110 transition-all"
                   >
                     <X size={16} /> Anular Cotización
                   </button>
@@ -748,3 +864,4 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
     </div>
   );
 };
+

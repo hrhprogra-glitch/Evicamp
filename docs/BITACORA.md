@@ -7,7 +7,36 @@
 
 ---
 
-## 29/10/2026 (tarde, 35) · Antigravity
+## 29/10/2026 (tarde, 36) · Antigravity
+- **Selector en Modales ("Pausar Ticket en Espera" y "Detalle de Proforma / Pedido") y Corrección de Color Claro en Filas:**
+  - **1. Modal "Pausar Ticket en Espera" (`ModalNombreEspera.tsx`):**
+    - El dueño reportó: *"el selector no funciona ahi"*.
+    - Se agregó navegación 2D por teclado con flechas:
+      - En el campo de texto `input-nombre-espera`: `ArrowDown` salta a los botones de acción (`btn-confirmar-espera`), `ArrowUp` sube al botón cerrar `[ X ]`.
+      - En los botones inferiores: `ArrowLeft` / `ArrowRight` alternan entre `[ Cancelar (Esc) ]` y `[ Guardar (Enter) ]`, `ArrowUp` regresa al campo de texto.
+      - En el botón cerrar `[ X ]`: `ArrowDown` regresa al campo de texto.
+    - Se implementó Focus Trap determinístico con `Tab` / `Shift+Tab`.
+    - Se añadieron anillos de foco de alto contraste (`focus:ring-4 focus:ring-amber-400 focus:border-amber-400 focus:outline-none`) visibles tanto en tema claro como en modo oscuro.
+  - **2. Corrección del color de selección claro ("otro error el color es muy claro") en Cotizaciones y Pedidos:**
+    - El dueño reportó que en modo oscuro la fila seleccionada se veía con un fondo beige/amarillo claro (`bg-amber-100`) deslumbrante donde el texto blanco no se leía.
+    - Se corrigieron `PestanaCotizaciones.tsx` y `PestanaPedidos.tsx` para usar variables CSS nativas del tema:
+      - Fila no seleccionada: `bg-[var(--color-surface)] border-transparent hover:bg-[var(--color-bg-2)]`.
+      - Fila seleccionada: `bg-[var(--color-bg-2)] border-[var(--color-accent)] ring-2 ring-[var(--color-accent)] shadow-[2px_2px_0_0_black]` con texto nítido de alto contraste.
+      - Insignias de estado adaptadas con variables CSS (`var(--color-accent-bg)`, `var(--color-warning-bg)`, etc.) eliminando fondos blancos fijos.
+  - **3. Selector por teclado en modal "Detalle de Proforma" y "Detalle de Pedido" ("el selector no funciona aqui"):**
+    - En `PestanaCotizaciones.tsx` y `PestanaPedidos.tsx`:
+      - Autofoco inicial inmediato al abrir el modal en el primer botón disponible (`[ Convertir en Venta ]` o `[ WhatsApp Cliente ]`).
+      - Navegación bidireccional completa con flechas:
+        - `ArrowRight` / `ArrowLeft` entre botones de la misma fila (`[ Convertir en Venta ]` ↔ `[ Compartir WhatsApp ]`, `[ Imprimir ]` ↔ `[ Anular Cotización ]`).
+        - `ArrowDown` / `ArrowUp` entre la fila superior e inferior, y hacia el botón cerrar `[ X ]`.
+      - Focus Trap con `Tab` / `Shift+Tab` para que el cursor no escape ni abra el Sidebar.
+      - Botones con anillo de foco dorado brillante de alto contraste (`focus:ring-4 focus:ring-amber-400 focus:border-white focus:brightness-110`).
+      - Cuadros de Total y Cuentas adaptados a variables de tema (`bg-[var(--color-bg-2)] border-[var(--color-border)]`) para lectura limpia en modo oscuro.
+  - **Validación y despliegue:**
+    - `npx tsc -b` (0 errores).
+    - `npm run build` (4.03s).
+    - `node ai-scripts/deploy.cjs siumax` (20 archivos subidos a `siumax.duckdns.org`). Evicamp y GitHub intactos.
+    - `graphify update .` ejecutado.
 - **Selector Completo en Cotizaciones, Pedidos y Recuperación de Foco Global tras Modales/Ventanas:**
   - **1. Selector de Grilla en Pestaña Cotizaciones (`PestanaCotizaciones.tsx`):**
     - El selector ya no queda atrapado en el buscador: desde `buscador-cotizaciones`, `ArrowDown` o `Enter` bajan de inmediato a la lista de cotizaciones (`coti-row-0`), y `ArrowRight` pasa a los filtros.
