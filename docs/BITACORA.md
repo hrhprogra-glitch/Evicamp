@@ -7,6 +7,22 @@
 
 ---
 
+## 30/10/2026 (mañana, 41) · Antigravity
+- **Ajuste en Inventario (ModalProducto y Tabla): Visibilidad de Garantía y diferenciación con Modelo:**
+  - El dueño reportó: *"no sale el numero de seria si sale pero dice modelo/serie ahora lo de mese de garantia no sale"*.
+  - **Causa identificada:**
+    1. En Fase 3 se había puesto la etiqueta `Modelo / Serie`, lo cual generaba confusión entre el modelo del producto (ej: DCD771) y el número de serie individual por unidad física.
+    2. El campo `input-meses-garantia-producto` estaba condicionado dentro de `{formData.controlaSeries && ...}`, por lo que al estar desmarcado el checkbox, no se veía en la pantalla.
+  - **Solución implementada:**
+    1. Se cambió la etiqueta en Fase 3 a `Modelo / Versión` (placeholder `EJ: 50MM, PLUS, X-200, DCD771`) para que sea inconfundible.
+    2. Se creó un bloque dedicado **`🛡️ Garantía y Control de Series / IMEI (OPCIONAL)`** con dos campos **siempre visibles**:
+       - `Garantía de Fábrica (Meses)`: input numérico visible siempre (ej: 0 si no tiene garantía, 6, 12 meses).
+       - `Control de Unidades Físicas`: tarjeta con checkbox `Exigir Nº de Serie / IMEI al vender en Caja`.
+    3. En base de datos se guarda `meses_garantia` directamente (independiente de si controla serie o no).
+    4. En `TablaProductos.tsx` se agregaron badges visibles `🛡️ N meses` y `🔢 Serie/IMEI` bajo el nombre del producto.
+    5. Navegación con teclado en 2D y Focus Trap actualizados con orden exacto.
+  - Compilación (`npx tsc -b`, `npm run build`) limpia y despliegue a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+
 ## 29/10/2026 (noche, 40) · Antigravity
 - **Implementación y Despliegue de la Fase 6 (Cambios de Producto y Garantías / Series) en Pruebas (siumax):**
   - El dueño pidió revisar la Fase 6 porque en Finanzas ya existía anulación de ticket, y aprobó explícitamente: *"perfecto hagamos el 2 y 3 ya que ya tenemos el 1, lo que si quiero que el 2 este dentro de finanzas"* y *"si hazlo"*.

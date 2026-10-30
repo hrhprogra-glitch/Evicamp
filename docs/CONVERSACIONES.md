@@ -365,7 +365,14 @@
           - Captura opcional de Serie/IMEI al vender en Caja (`TicketVenta.tsx`) e impresión en el ticket físico (`TicketImprimible.tsx`).
           - Modal `ModalCambioProducto.tsx` dentro de Finanzas con cálculo automático de diferencia económica y stock (+1 al devuelto, -1 al nuevo).
           - Modal `ModalConsultarGarantia.tsx` dentro de Finanzas con semáforo en tiempo real (Vigente / Vencida).
-          - Compilado (`npx tsc -b`, `npm run build`) y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+      33. **Ajuste de visibilidad de Garantía y diferenciación con Modelo (30/10 mañana):**
+        - El dueño reportó: *"no sale el numero de seria si sale pero dice modelo/serie ahora lo de mese de garantia no sale"*.
+        - Se le explicó que "Modelo / Serie" era el modelo general del producto de la Fase 3 y que "Meses de Garantía" estaba condicionado a la casilla de serie.
+        - Se corrigió de inmediato:
+          - Se cambió la etiqueta a "Modelo / Versión" para evitar confusiones.
+          - Se creó una sección destacada "🛡️ Garantía y Control de Series / IMEI" donde el campo "Garantía de Fábrica (Meses)" y la casilla "Exigir Nº de Serie / IMEI al vender en Caja" están siempre visibles.
+          - Se agregaron etiquetas `🛡️ N meses` y `🔢 Serie/IMEI` en la tabla de productos de Inventario.
+        - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
 
 
 

@@ -425,8 +425,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           'input-medida-producto',
           'input-laboratorio-producto',
           'input-ubicacion-producto',
-          'input-controla-series-producto',
           'input-meses-garantia-producto',
+          'input-controla-series-producto',
           'escala-desde-0', 'escala-precio-0', 'escala-desde-1', 'escala-precio-1', 'escala-desde-2', 'escala-precio-2',
           ...[0, 1, 2].flatMap((i) => [`pres-unidad-${i}`, `pres-factor-${i}`, `pres-precio-${i}`, `pres-barcode-${i}`]),
           'btn-guardar-producto',
@@ -1083,7 +1083,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           }
           if (e.key === 'ArrowDown' || e.key === 'Enter') {
             e.preventDefault();
-            const next = document.getElementById('input-controla-series-producto') ||
+            const next = document.getElementById('input-meses-garantia-producto') ||
+                         document.getElementById('input-controla-series-producto') ||
                          document.getElementById('escala-desde-0') ||
                          document.getElementById('pres-unidad-0') ||
                          document.getElementById('btn-guardar-producto');
@@ -1092,34 +1093,23 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           }
         }
 
-        if (active?.id === 'input-controla-series-producto') {
+        if (active?.id === 'input-meses-garantia-producto') {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
             document.getElementById('input-ubicacion-producto')?.focus();
             return;
           }
-          if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === 'ArrowDown') {
-            const mesesInput = document.getElementById('input-meses-garantia-producto');
-            if (mesesInput && formData.controlaSeries) {
-              e.preventDefault();
-              mesesInput.focus();
-              return;
-            }
-            if (e.key === 'ArrowDown') {
-              e.preventDefault();
-              const next = document.getElementById('escala-desde-0') ||
-                           document.getElementById('pres-unidad-0') ||
-                           document.getElementById('btn-guardar-producto');
-              next?.focus();
-              return;
-            }
+          if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('input-controla-series-producto')?.focus();
+            return;
           }
         }
 
-        if (active?.id === 'input-meses-garantia-producto') {
+        if (active?.id === 'input-controla-series-producto') {
           if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
             e.preventDefault();
-            document.getElementById('input-controla-series-producto')?.focus();
+            document.getElementById('input-meses-garantia-producto')?.focus();
             return;
           }
           if (e.key === 'ArrowDown' || e.key === 'Enter') {
@@ -1274,7 +1264,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           laboratorio: safeLaboratorio,
           ubicacion: safeUbicacion,
           controla_series: formData.controlaSeries,
-          meses_garantia: formData.controlaSeries ? (Number(formData.mesesGarantia) || 0) : 0,
+          meses_garantia: Number(formData.mesesGarantia) || 0,
           is_active: 1
         }).eq('id', initialData.id).select().single();
 
@@ -1310,7 +1300,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           laboratorio: safeLaboratorio,
           ubicacion: safeUbicacion,
           controla_series: formData.controlaSeries,
-          meses_garantia: formData.controlaSeries ? (Number(formData.mesesGarantia) || 0) : 0,
+          meses_garantia: Number(formData.mesesGarantia) || 0,
           is_synced: '1',
           is_active: 1 // <--- 🔥 ¡SEGUNDA LÍNEA MÁGICA PARA LOS PRODUCTOS!
         }]).select().single();
@@ -1937,13 +1927,13 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                   {/* Modelo */}
                   <div className="space-y-1.5">
                     <label htmlFor="input-modelo-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
-                      Modelo / Serie
+                      Modelo / Versión
                     </label>
                     <input
                       id="input-modelo-producto"
                       type="text"
                       autoComplete="off"
-                      placeholder="EJ: 50MM, PLUS, X-200"
+                      placeholder="EJ: 50MM, PLUS, X-200, DCD771"
                       value={formData.modelo}
                       onChange={(e) => setFormData({ ...formData, modelo: e.target.value })}
                       className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2.5 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
@@ -1997,42 +1987,64 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                       className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2.5 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
                     />
                   </div>
+                </div>
+              </div>
 
-                  {/* FASE 6: Control de Garantía y Series / IMEI */}
-                  <div className="space-y-2 md:col-span-2 pt-2 border-t border-[#E2E8F0]">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider flex items-center gap-2 cursor-pointer">
-                        <input
-                          id="input-controla-series-producto"
-                          type="checkbox"
-                          checked={formData.controlaSeries}
-                          onChange={(e) => setFormData({ ...formData, controlaSeries: e.target.checked })}
-                          className="w-4 h-4 text-[var(--color-success)] rounded-none border-2 border-[#E2E8F0] focus:ring-2 focus:ring-[var(--color-success)] cursor-pointer"
-                        />
-                        <span>🛡️ ¿Controla número de serie / IMEI por unidad?</span>
-                      </label>
-                      <span className="text-[9px] text-[#64748B] font-bold">Herramientas, celulares, repuestos</span>
+              {/* FASE 6: GARANTÍA Y CONTROL DE SERIES / IMEI (OPCIONAL) */}
+              <div className="md:col-span-2 pt-3 border-t border-dashed border-[#E2E8F0] space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-1.5">
+                    <span>🛡️ Garantía y Control de Series / IMEI</span>
+                    <span className="text-[9px] text-[var(--color-muted)] font-bold">(OPCIONAL)</span>
+                  </span>
+                  <span className="text-[9px] text-[#64748B] font-bold">Herramientas, celulares, repuestos</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-[var(--color-bg)] p-3 border border-[#E2E8F0]">
+                  {/* Meses de Garantía (SIEMPRE VISIBLE) */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="input-meses-garantia-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
+                      Garantía de Fábrica (Meses)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        id="input-meses-garantia-producto"
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={formData.mesesGarantia}
+                        onChange={(e) => setFormData({ ...formData, mesesGarantia: e.target.value })}
+                        className="w-24 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2.5 text-xs font-black text-center text-[var(--color-ink)] outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                      />
+                      <span className="text-xs font-bold text-[var(--color-ink)] uppercase">meses de garantía</span>
                     </div>
+                    <p className="text-[9px] text-[#64748B] font-bold">
+                      Pon 0 si no tiene garantía, o ej. 6, 12 meses (se calculará y grabará en el ticket).
+                    </p>
+                  </div>
 
-                    {formData.controlaSeries && (
-                      <div className="pl-6 pt-1 flex items-center gap-3">
-                        <label htmlFor="input-meses-garantia-producto" className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider shrink-0">
-                          Garantía de Fábrica:
-                        </label>
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            id="input-meses-garantia-producto"
-                            type="number"
-                            min="0"
-                            placeholder="0"
-                            value={formData.mesesGarantia}
-                            onChange={(e) => setFormData({ ...formData, mesesGarantia: e.target.value })}
-                            className="w-20 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-1.5 text-xs font-black text-center text-[var(--color-ink)] outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
-                          />
-                          <span className="text-[10px] font-bold text-[#64748B] uppercase">meses</span>
-                        </div>
+                  {/* Control de Serie / IMEI por unidad (SIEMPRE VISIBLE) */}
+                  <div className="space-y-1.5 flex flex-col justify-center">
+                    <label htmlFor="input-controla-series-producto" className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider block mb-1">
+                      Control de Unidades Físicas
+                    </label>
+                    <label className="flex items-start gap-2.5 p-2 bg-[var(--color-surface)] border-2 border-[#E2E8F0] hover:border-[var(--color-success)] transition-colors cursor-pointer">
+                      <input
+                        id="input-controla-series-producto"
+                        type="checkbox"
+                        checked={formData.controlaSeries}
+                        onChange={(e) => setFormData({ ...formData, controlaSeries: e.target.checked })}
+                        className="w-4 h-4 mt-0.5 text-[var(--color-success)] rounded-none border-2 border-[#E2E8F0] focus:ring-2 focus:ring-[var(--color-success)] cursor-pointer shrink-0"
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-black text-[var(--color-ink)] uppercase leading-tight">
+                          Exigir Nº de Serie / IMEI al vender en Caja
+                        </span>
+                        <span className="text-[9px] text-[#64748B] font-bold mt-0.5">
+                          Pedirá escanear o escribir el código grabado de cada unidad física.
+                        </span>
                       </div>
-                    )}
+                    </label>
                   </div>
                 </div>
               </div>

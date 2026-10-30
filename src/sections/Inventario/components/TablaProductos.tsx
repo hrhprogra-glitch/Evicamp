@@ -419,6 +419,16 @@ export const TablaProductos: React.FC<Props> = ({
                         📍 {item.ubicacion}
                       </span>
                     )}
+                    {Boolean(item.mesesGarantia && item.mesesGarantia > 0) && (
+                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 border border-emerald-200 uppercase" title="Garantía de fábrica">
+                        🛡️ {item.mesesGarantia} {item.mesesGarantia === 1 ? 'mes' : 'meses'}
+                      </span>
+                    )}
+                    {item.controlaSeries && (
+                      <span className="text-[10px] font-bold text-indigo-800 bg-indigo-50 px-1.5 py-0.5 border border-indigo-200 uppercase" title="Controla número de serie / IMEI por unidad">
+                        🔢 Serie/IMEI
+                      </span>
+                    )}
                   </div>
                 </div>
 
