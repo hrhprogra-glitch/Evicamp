@@ -7,6 +7,41 @@
 
 ---
 
+## 29/10/2026 (noche, 38) · Antigravity
+- **Implementación y Despliegue de la Fase 3 en Pruebas (siumax):**
+  - El dueño dio luz verde para avanzar: *"si dale vamos !!!! }"*.
+  - Rama activa: `fase-3-busqueda-especializada`.
+  - **1. Base de datos de pruebas (`siumax`):**
+    - Respaldo de seguridad creado antes de migrar: `/var/lib/postgresql/respaldo-siumax-antes-fase3-2026-10-30T01-38-11-069Z.dump` (241 KB).
+    - Nuevas columnas añadidas a la tabla `products`: `marca`, `modelo`, `medida`, `laboratorio`, `ubicacion` (todas tipo TEXT, por defecto NULL).
+    - Índices creados: `idx_products_marca`, `idx_products_modelo`, `idx_products_medida`.
+    - Script de reversión guardado en `servidor/sql/deshacer-fase3.sql`.
+    - Script maestro actualizado en `servidor/sql/seguridad-sesion.sql`.
+  - **2. Interfaz y Tipado (`types.ts`, `Inventario`, `Punto-de-venta`):**
+    - En `src/sections/Inventario/types.ts`: agregados `marca`, `modelo`, `medida`, `laboratorio`, `ubicacion` opcionales en `Product`.
+    - En `src/sections/Inventario/index.tsx`: mapeo de los 5 campos en `fetchInventory` y en `onProductSaved`.
+    - En `src/sections/Inventario/components/ModalProducto.tsx`:
+      - Sección *"🔍 Búsqueda y Ubicación en Tienda (OPCIONAL)"* con campos: Marca / Fabricante, Modelo / Serie, Medida / Capacidad, Laboratorio / Detalle Técnico, y Ubicación en Tienda (📍).
+      - Integrado en el lector de códigos de barras (Open Food Facts): si el producto escaneado tiene marca en la base global, se sugiere automáticamente.
+      - 100% accesible con teclado: Focus Trap determinístico con `Tab` / `Shift+Tab`, navegación bidireccional con flechas (`ArrowUp`, `ArrowDown`, `ArrowLeft`, `ArrowRight`, `Enter`).
+      - Inserción y actualización en base de datos con saneamiento en mayúsculas y `null` si están vacíos.
+    - En `src/sections/Inventario/components/TablaProductos.tsx`:
+      - Etiquetas discretas bajo la categoría con `🏷️ Marca`, `📏 Medida`, `📍 Ubicación` con colores armónicos y alto contraste.
+    - En `src/sections/Punto-de-venta/index.tsx`:
+      - Paso de los 5 campos en el mapeo de productos para la caja.
+    - En `src/sections/Punto-de-venta/components/TerminalBusqueda.tsx`:
+      - Motor de búsqueda ultrarrápido multi-término (`coincideBusqueda`) busca instantáneamente combinando Nombre, Código (SKU), Código de barras, Marca, Modelo, Medida, Laboratorio y Ubicación en tienda (ej. buscar "yale 50", "pavco 1/2" o "paracetamol 500").
+      - Tarjeta de producto en el POS muestra línea compacta `[ 🏷️ Marca · 📏 Medida · 📍 Ubicación ]`.
+    - En `ModalLote.tsx`, `PanelCompras.tsx`, `ModalAjuste.tsx`, `ModalEditarSalida.tsx`, `ModalFiado.tsx`:
+      - Buscadores de producto en Lotes, Compras, Ajustes de stock, Mermas y Fiados actualizados para buscar también por Marca, Modelo, Medida, Laboratorio y Ubicación.
+  - **3. Compilación y Despliegue:**
+    - `npx tsc -b`: 0 errores.
+    - `npm run build`: compilación limpia en 4.10s.
+    - Despliegue completado a `siumax.duckdns.org` (`node ai-scripts/deploy.cjs siumax`).
+    - Base de datos y web de Evicamp (producción) y GitHub completamente intactos (Regla 4).
+    - `graphify update .` ejecutado.
+  - **4. Qué sigue:** Probar en `siumax.duckdns.org` crear/editar productos con Marca, Medida y Ubicación, y verificar las búsquedas multi-palabra tanto en Inventario como en la Caja (POS).
+
 ## 29/10/2026 (noche, 37) · Antigravity
 - **Pase Oficial a Producción de la Fase 4 Completa (Evicamp y GitHub) e Inicio de Fase 3:**
   - El dueño confirmó: *"perfecto ya no tengo mas pruebas ya quedo ahora en que fase estamos ???"* y dio autorización explícita para subir a producción: *"si hazlo y vamos a las fase 3"*.

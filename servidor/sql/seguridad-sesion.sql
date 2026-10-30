@@ -1444,7 +1444,16 @@ GRANT ALL ON public.cotizaciones TO anon;
 GRANT ALL ON public.cotizacion_detalles TO anon;
 GRANT ALL ON public.pedidos_clientes TO anon;
 GRANT ALL ON public.pedido_detalles TO anon;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon;
+-- ===================================================================================================
+-- FASE 3: Búsquedas especializadas (marca, modelo, medida, laboratorio, ubicación)
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS marca text;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS modelo text;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS medida text;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS laboratorio text;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS ubicacion text;
+CREATE INDEX IF NOT EXISTS idx_products_marca ON public.products (marca);
+CREATE INDEX IF NOT EXISTS idx_products_modelo ON public.products (modelo);
+CREATE INDEX IF NOT EXISTS idx_products_medida ON public.products (medida);
 
 NOTIFY pgrst, 'reload schema';
 

@@ -400,9 +400,26 @@ export const TablaProductos: React.FC<Props> = ({
                   <p className="font-black text-sm uppercase text-[var(--color-ink)] leading-tight line-clamp-2" title={item.name}>
                     {item.name}
                   </p>
-                  <span className="self-start text-[10px] font-black text-white bg-[var(--color-ink)] px-2 py-1 tracking-widest rounded-none mt-0.5">
-                    {item.category}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                    <span className="self-start text-[10px] font-black text-white bg-[var(--color-ink)] px-2 py-0.5 tracking-widest rounded-none">
+                      {item.category}
+                    </span>
+                    {item.marca && (
+                      <span className="text-[10px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 border border-slate-300 uppercase" title="Marca">
+                        🏷️ {item.marca}
+                      </span>
+                    )}
+                    {item.medida && (
+                      <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-1.5 py-0.5 border border-teal-200 uppercase" title="Medida">
+                        📏 {item.medida}
+                      </span>
+                    )}
+                    {item.ubicacion && (
+                      <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 border border-amber-200 uppercase" title="Ubicación en tienda">
+                        📍 {item.ubicacion}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* 3. INVERSIÓN (COSTO Y TOTAL CLAROS) */}

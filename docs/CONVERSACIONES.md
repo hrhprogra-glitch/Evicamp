@@ -340,5 +340,12 @@
         - Se desplegó la web a `evicamp.duckdns.org` (20 archivos subidos).
         - Se fusionó la rama `fase-4-completa` a `main` y se hizo `git push origin main`.
         - Se inicia la preparación de la propuesta de la **Fase 3: Búsquedas especializadas por Marca, Modelo, Medidas y Laboratorio**.
+      30. **Implementación de la Fase 3 en Pruebas (29/10 noche):**
+        - El dueño dio luz verde: *"si dale vamos !!!! }"*.
+        - Rama creada y activa: `fase-3-busqueda-especializada`.
+        - Respaldo de seguridad en VPS (`siumax`): `/var/lib/postgresql/respaldo-siumax-antes-fase3-2026-10-30T01-38-11-069Z.dump`.
+        - Migración aplicada en base de datos `siumax` (columnas `marca`, `modelo`, `medida`, `laboratorio`, `ubicacion` e índices).
+        - Implementación completa en `ModalProducto.tsx`, `TablaProductos.tsx`, `TerminalBusqueda.tsx`, `Inventario/index.tsx`, `Punto-de-venta/index.tsx`, `ModalLote.tsx`, `PanelCompras.tsx`, `ModalAjuste.tsx`, `ModalEditarSalida.tsx`, `ModalFiado.tsx`.
+        - Compilado (`npx tsc -b`, `npm run build`) y desplegado a `siumax.duckdns.org`. Evicamp y GitHub completamente intactos.
 
 

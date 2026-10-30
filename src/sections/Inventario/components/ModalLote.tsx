@@ -349,7 +349,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
   const filteredProducts = productos.filter(p => {
     if (p.unit === 'CONSUMO') return false; // <-- BLOQUEO ESTRICTO: NO MOSTRAR CONSUMO AQUÍ
     if (!searchQuery.trim()) return true;
-    return coincideBusqueda([p.name, p.code, p.barcode], searchQuery);
+    return coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion], searchQuery);
   });
 
   const textoProveedor = proveedor.trim().toUpperCase();

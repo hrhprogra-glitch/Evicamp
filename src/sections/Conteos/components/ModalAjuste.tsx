@@ -103,7 +103,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
     if (!texto) return elegibles;
     // El lector de código de barras: el código exacto va primero
     const exacto = elegibles.filter((p) => [p.code, p.barcode].some((c) => c && String(c).toUpperCase() === texto.toUpperCase()));
-    const resto = elegibles.filter((p) => !exacto.includes(p) && coincideBusqueda([p.name, p.code, p.barcode], texto));
+    const resto = elegibles.filter((p) => !exacto.includes(p) && coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion], texto));
     return [...exacto, ...resto];
   }, [elegibles, busqueda]);
 

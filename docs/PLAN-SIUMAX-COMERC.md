@@ -4,9 +4,9 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 29/10/2026 (noche, 37), Antigravity: Fase 4 completa (Clientes, Mayoristas, Descuentos %, Cotizaciones y Pedidos por encargo) subida oficialmente a producción en Evicamp y a GitHub (`main`), con respaldo de base de datos previo.
+- **Última actualización:** 29/10/2026 (noche, 38), Antigravity: Fase 3 (Búsquedas especializadas por Marca, Modelo, Medidas, Laboratorio y Ubicación en tienda) implementada y desplegada en pruebas (`siumax.duckdns.org` en rama `fase-3-busqueda-especializada`), lista para pruebas del dueño. Evicamp y GitHub intactos.
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2 y 4 (completa) en producción en Evicamp (commits 583ad4e, c8c6be3 y bd3780f).
-- **Fase que sigue:** **Fase 3 — Búsquedas avanzadas para ferreterías, repuestos y boticas** (Marca, Laboratorio, Principio activo, Modelo y Medidas).
+- **Fase en pruebas (siumax):** **Fase 3 — Búsquedas avanzadas para ferreterías, repuestos y boticas** (Marca, Laboratorio, Principio activo, Modelo, Medidas y Ubicación en tienda).
 - **Avisos para la clienta de Evicamp:**
   - "Mermas" ahora se llama "Conteos";
   - dar el permiso "Cambiar precio al cobrar" a quien corresponda si desean que un cajero modifique precios en caja;
@@ -18,11 +18,10 @@
 | Propuesta | Estado |
 |---|---|
 | **Fase 4 (Clientes, Empresas, Mayoristas, Cotizaciones y Pedidos)** | **✅ Hecho en producción y GitHub (29/10, commit bd3780f)** |
-| **Fase 3 (Marca, Laboratorio, Principio activo, Modelo y Medidas)** | **⏭️ En preparación para propuesta y OK del dueño** |
+| **Fase 3 (Marca, Laboratorio, Principio activo, Modelo, Medidas y Ubicación)** | **🧪 En pruebas en siumax (29/10, rama fase-3-busqueda-especializada)** |
 | **Videos tutoriales del sistema** (9 videos; grabados contra la base demo `siudemo`, fuera de Comerc) | **Muestra hecha (02 venta, 29/10); falta OK del dueño para los demás** |
 | **Modo Oscuro (Dark Mode)** reemplazando "Plata / Gris" en Apariencia | **Hecho en producción (29/10)** |
 | **Grupos de clientes (familia/empresa)** dentro de la 4.1 | **Hecho en producción (29/10)** |
-| Fase 4 — **4.1, 4.2 y 4.3 en producción (Evicamp); 4.4, 4.5 y 4.6 en pruebas (siumax)** | **En progreso** |
 | Fase 11 SUNAT: camino A (proveedor PSE) → B (directo) | **En pausa** hasta que el dueño lo pida |
 | Cobros con QR (Yape/Plin) y aparato de tarjetas (Mercado Pago: QR en pantalla + aparato Point) | **En pausa**; faltan dos decisiones (qué procesador y si empezar por el QR) |
 | Importar facturas XML de compras | **En pausa** |

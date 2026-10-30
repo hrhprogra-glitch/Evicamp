@@ -503,7 +503,12 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         control_type: p.control_type, // Añadimos esto para validaciones estrictas
         preciosCantidad: escalasValidas(p.precios_cantidad), // fase 1.3: precios por cantidad
         presentaciones: presentacionesValidas(p.presentaciones), // fase 1.2: caja, paquete…
-        image_url: p.image_url || p.image_path || null // imagen para identificar el producto en las tarjetas
+        image_url: p.image_url || p.image_path || null, // imagen para identificar el producto en las tarjetas
+        marca: p.marca || null,
+        modelo: p.modelo || null,
+        medida: p.medida || null,
+        laboratorio: p.laboratorio || null,
+        ubicacion: p.ubicacion || null
       } as Product));
       setProductos(mapeados);
     }

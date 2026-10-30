@@ -150,6 +150,11 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               presentaciones: presentacionesValidas(p.presentaciones), // fase 1.2
               vendido30: ventasData ? Number(ventas.get(String(p.id))?.vendido || 0) : undefined,
               ultimaVenta: ventas.get(String(p.id))?.ultima_venta || null,
+              marca: p.marca || null,
+              modelo: p.modelo || null,
+              medida: p.medida || null,
+              laboratorio: p.laboratorio || null,
+              ubicacion: p.ubicacion || null,
               vencimiento: lotesDelProducto
                 .filter((l: any) => Number(l.quantity) > 0 && diasParaVencer(l.expiration_date) !== null)
                 .map((l: any) => String(l.expiration_date).slice(0, 10))
@@ -180,7 +185,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     if (searchQuery && searchQuery.trim()) {
       result = result.filter(p => {
         if (!p) return false;
-        return coincideBusqueda([p.name, p.code, p.barcode], searchQuery);
+        return coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion], searchQuery);
       });
     }
 
@@ -793,7 +798,12 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             unit: nuevoProducto.unit,
             preciosCantidad: escalasValidas(nuevoProducto.precios_cantidad), // fase 1.3
             presentaciones: presentacionesValidas(nuevoProducto.presentaciones), // fase 1.2
-            imageUrl: nuevoProducto.image_url || nuevoProducto.image_path || null
+            imageUrl: nuevoProducto.image_url || nuevoProducto.image_path || null,
+            marca: nuevoProducto.marca || null,
+            modelo: nuevoProducto.modelo || null,
+            medida: nuevoProducto.medida || null,
+            laboratorio: nuevoProducto.laboratorio || null,
+            ubicacion: nuevoProducto.ubicacion || null
           };
 
           if (productToEdit) {

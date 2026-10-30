@@ -1048,7 +1048,7 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
   const enLista = new Set(items.map((i) => i.product_id));
   const disponibles = productos;
   const resultados = !abierto ? [] : busqueda.trim()
-    ? disponibles.filter((p) => coincideBusqueda([p.name, p.code, p.barcode], busqueda)) // todos (antes se cortaba en 50)
+    ? disponibles.filter((p) => coincideBusqueda([p.name, p.code, p.barcode, (p as any).marca, (p as any).modelo, (p as any).medida, (p as any).laboratorio, (p as any).ubicacion], busqueda)) // todos (antes se cortaba en 50)
     : [...disponibles].sort((a, b) => Number(b.unit !== 'CONSUMO' && Number(b.quantity) <= Number(b.minStock)) - Number(a.unit !== 'CONSUMO' && Number(a.quantity) <= Number(a.minStock))
       || a.name.localeCompare(b.name));
   useEffect(() => { setMarcado(-1); }, [busqueda]);

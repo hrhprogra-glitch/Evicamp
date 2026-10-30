@@ -300,7 +300,7 @@ export const ModalEditarSalida: React.FC<Props> = ({ isOpen, onClose, productos,
 
   // Filtro inteligente
   const filteredProducts = productos.filter(p => {
-    return coincideBusqueda([p.name, p.code, p.barcode], searchQuery);
+    return coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion], searchQuery);
   });
 
   const handleSeleccionarProducto = (prod: Product) => {

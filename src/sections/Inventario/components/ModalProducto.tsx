@@ -68,7 +68,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     const ir = (id: string) => { const el = document.getElementById(id) as HTMLInputElement | null; if (el) { el.focus(); if (el.tagName === 'INPUT') el.select?.(); } return !!el; };
     const c = COLS_PRES.indexOf(col);
     if (e.key === 'ArrowDown') { e.preventDefault(); if (!ir(`pres-${col}-${fila + 1}`)) ir('btn-guardar-producto'); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); if (!ir(`pres-${col}-${fila - 1}`)) ir('escala-precio-2') || ir('select-unidad-peso-producto'); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); if (!ir(`pres-${col}-${fila - 1}`)) ir('escala-precio-2') || ir('input-ubicacion-producto') || ir('select-unidad-peso-producto'); }
     else if (e.key === 'ArrowRight' && c < COLS_PRES.length - 1) { e.preventDefault(); ir(`pres-${COLS_PRES[c + 1]}-${fila}`); }
     else if (e.key === 'ArrowLeft' && c > 0) { e.preventDefault(); ir(`pres-${COLS_PRES[c - 1]}-${fila}`); }
     else if (e.key === 'Enter') {
@@ -82,7 +82,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   const teclasEscala = (e: React.KeyboardEvent<HTMLInputElement>, fila: number, col: 'desde' | 'precio') => {
     const ir = (id: string) => { const el = document.getElementById(id) as HTMLInputElement | null; if (el) { el.focus(); el.select?.(); } return !!el; };
     if (e.key === 'ArrowDown') { e.preventDefault(); if (!ir(`escala-${col}-${fila + 1}`)) ir('pres-unidad-0') || ir('btn-guardar-producto'); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); if (!ir(`escala-${col}-${fila - 1}`)) ir('select-unidad-peso-producto') || ir('input-stock-minimo-producto'); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); if (!ir(`escala-${col}-${fila - 1}`)) ir('input-ubicacion-producto') || ir('select-unidad-peso-producto') || ir('input-stock-minimo-producto'); }
     else if (e.key === 'ArrowRight' && col === 'desde') { e.preventDefault(); ir(`escala-precio-${fila}`); }
     else if (e.key === 'ArrowLeft' && col === 'precio') { e.preventDefault(); ir(`escala-desde-${fila}`); }
     else if (e.key === 'Enter') { e.preventDefault(); if (col === 'desde') ir(`escala-precio-${fila}`); else if (!ir(`escala-desde-${fila + 1}`)) ir('pres-unidad-0') || ir('btn-guardar-producto'); }
@@ -192,6 +192,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           ...prev,
           name: prev.name.trim() ? prev.name : nombre,          // si ya escribió un nombre, se respeta
           image: prev.image || p.image_front_url || '',         // si ya eligió imagen, se respeta
+          marca: prev.marca.trim() ? prev.marca : (marca ? marca.toUpperCase() : ''),
         }));
         setEstadoCodigo({
           tipo: 'encontrado',
@@ -239,7 +240,12 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           precioMayorista: initialData.precioMayorista?.toString() || '',
           minStock: initialData.minStock?.toString() || '5',
           weightUnit: unidadDe(initialData).corto, // fase 1.1: "Se vende por" (UND, BOLSA, KG, M…)
-          image: initialData.image || ''
+          image: initialData.image || '',
+          marca: initialData.marca || '',
+          modelo: initialData.modelo || '',
+          medida: initialData.medida || '',
+          laboratorio: initialData.laboratorio || '',
+          ubicacion: initialData.ubicacion || ''
         });
         
         const tipoUnidad = unidadDe(initialData).tipo;
@@ -254,7 +260,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         // MODO CREACIÓN: Limpiamos todo
         setStep(1);
         setNature(null);
-        setFormData({ name: '', category: '', code: '', barcode: '', price: '', precioMayorista: '', minStock: '5', weightUnit: 'KG', image: '' });
+        setFormData({ name: '', category: '', code: '', barcode: '', price: '', precioMayorista: '', minStock: '5', weightUnit: 'KG', image: '', marca: '', modelo: '', medida: '', laboratorio: '', ubicacion: '' });
         setEscalas(filasEscalas());
         setPresentacionesForm(filasPres());
       }
@@ -317,7 +323,12 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     precioMayorista: '',
     minStock: '5',
     weightUnit: 'KG', // Solo importa si nature === 'PESO'
-    image: '' // <-- NUEVO ESTADO PARA LA IMAGEN
+    image: '', // <-- NUEVO ESTADO PARA LA IMAGEN
+    marca: '',
+    modelo: '',
+    medida: '',
+    laboratorio: '',
+    ubicacion: ''
   });
 
   const resetAndClose = () => {
@@ -325,7 +336,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     setCodigoParaBuscar('');
     setStep(1);
     setNature(null);
-    setFormData({ name: '', category: '', code: '', barcode: '', price: '', precioMayorista: '', minStock: '5', weightUnit: 'KG', image: '' });
+    setFormData({ name: '', category: '', code: '', barcode: '', price: '', precioMayorista: '', minStock: '5', weightUnit: 'KG', image: '', marca: '', modelo: '', medida: '', laboratorio: '', ubicacion: '' });
     setEscalas(filasEscalas());
     setPresentacionesForm(filasPres());
     setImageQuery('');
@@ -405,6 +416,11 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           'input-precio-mayorista-producto',
           'input-stock-minimo-producto',
           'select-unidad-peso-producto',
+          'input-marca-producto',
+          'input-modelo-producto',
+          'input-medida-producto',
+          'input-laboratorio-producto',
+          'input-ubicacion-producto',
           'escala-desde-0', 'escala-precio-0', 'escala-desde-1', 'escala-precio-1', 'escala-desde-2', 'escala-precio-2',
           ...[0, 1, 2].flatMap((i) => [`pres-unidad-${i}`, `pres-factor-${i}`, `pres-precio-${i}`, `pres-barcode-${i}`]),
           'btn-guardar-producto',
@@ -946,7 +962,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           if (e.key === 'ArrowDown') {
             e.preventDefault();
             e.stopPropagation();
-            (document.getElementById('escala-desde-0') || document.getElementById('btn-guardar-producto'))?.focus();
+            (document.getElementById('input-marca-producto') || document.getElementById('escala-desde-0') || document.getElementById('btn-guardar-producto'))?.focus();
             return;
           }
           // Enter / Espacio despliegan la lista (antes Enter saltaba a Guardar y la lista nunca se abría)
@@ -968,11 +984,112 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           }
         }
 
+        // FASE 3: Navegación de campos especializados
+        if (active?.id === 'input-marca-producto') {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prev = document.getElementById('select-unidad-peso-producto') ||
+                         document.getElementById('input-stock-minimo-producto') ||
+                         document.getElementById('input-precio-mayorista-producto') ||
+                         document.getElementById('input-precio-producto');
+            prev?.focus();
+            return;
+          }
+          if (e.key === 'ArrowRight' || e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('input-modelo-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            document.getElementById('input-medida-producto')?.focus();
+            return;
+          }
+        }
+
+        if (active?.id === 'input-modelo-producto') {
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            document.getElementById('input-marca-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prev = document.getElementById('select-unidad-peso-producto') ||
+                         document.getElementById('input-stock-minimo-producto') ||
+                         document.getElementById('input-precio-mayorista-producto');
+            prev?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown' || e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('input-medida-producto')?.focus();
+            return;
+          }
+        }
+
+        if (active?.id === 'input-medida-producto') {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            document.getElementById('input-marca-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowRight' || e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('input-laboratorio-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            document.getElementById('input-ubicacion-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            document.getElementById('input-modelo-producto')?.focus();
+            return;
+          }
+        }
+
+        if (active?.id === 'input-laboratorio-producto') {
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            document.getElementById('input-medida-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            document.getElementById('input-modelo-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown' || e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('input-ubicacion-producto')?.focus();
+            return;
+          }
+        }
+
+        if (active?.id === 'input-ubicacion-producto') {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            document.getElementById('input-medida-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown' || e.key === 'Enter') {
+            e.preventDefault();
+            const next = document.getElementById('escala-desde-0') ||
+                         document.getElementById('pres-unidad-0') ||
+                         document.getElementById('btn-guardar-producto');
+            next?.focus();
+            return;
+          }
+        }
+
         // Botón Guardar
         if (active?.id === 'btn-guardar-producto') {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
-            const prev = document.getElementById('pres-barcode-2') || document.getElementById('escala-precio-2') || document.getElementById('select-unidad-peso-producto') || 
+            const prev = document.getElementById('pres-barcode-2') || document.getElementById('escala-precio-2') || document.getElementById('input-ubicacion-producto') || document.getElementById('select-unidad-peso-producto') || 
                          document.getElementById('input-stock-minimo-producto') || 
                          document.getElementById('input-precio-producto');
             prev?.focus();
@@ -1081,6 +1198,13 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
       // Código (SKU) vacío: se genera uno de 6 dígitos (también al editar, para que ningún producto quede sin código)
       const codigoGenerado = safeCode || `SKU-${Math.floor(100000 + Math.random() * 900000)}`;
 
+      // Fase 3: campos especializados saneados
+      const safeMarca = formData.marca?.trim().toUpperCase() || null;
+      const safeModelo = formData.modelo?.trim().toUpperCase() || null;
+      const safeMedida = formData.medida?.trim().toUpperCase() || null;
+      const safeLaboratorio = formData.laboratorio?.trim().toUpperCase() || null;
+      const safeUbicacion = formData.ubicacion?.trim().toUpperCase() || null;
+
       if (initialData) {
         // [ RETORNO ]: MODO EDICIÓN
         const { data, error } = await supabase.from('products').update({
@@ -1097,6 +1221,11 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           sunat_unit_code: codigoSunat,
           ...conEscalas,
           image_url: formData.image,
+          marca: safeMarca,
+          modelo: safeModelo,
+          medida: safeMedida,
+          laboratorio: safeLaboratorio,
+          ubicacion: safeUbicacion,
           is_active: 1
         }).eq('id', initialData.id).select().single();
 
@@ -1125,7 +1254,12 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           unit: unidadAsignada,
           sunat_unit_code: codigoSunat,
           ...conEscalas,
-          image_url: formData.image, 
+          image_url: formData.image,
+          marca: safeMarca,
+          modelo: safeModelo,
+          medida: safeMedida,
+          laboratorio: safeLaboratorio,
+          ubicacion: safeUbicacion,
           is_synced: '1',
           is_active: 1 // <--- 🔥 ¡SEGUNDA LÍNEA MÁGICA PARA LOS PRODUCTOS!
         }]).select().single();
@@ -1721,6 +1855,99 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                   </select>
                 </div>
               )}
+
+              {/* FASE 3: BÚSQUEDAS ESPECIALIZADAS Y UBICACIÓN EN TIENDA (OPCIONAL) */}
+              <div className="md:col-span-2 pt-2 border-t border-dashed border-[#E2E8F0] space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-1.5">
+                    <span>🔍 Búsqueda y Ubicación en Tienda</span>
+                    <span className="text-[9px] text-[var(--color-muted)] font-bold">(OPCIONAL)</span>
+                  </span>
+                  <span className="text-[9px] text-[#64748B] font-bold">Ayuda a encontrar el producto al instante</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {/* Marca */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="input-marca-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
+                      Marca / Fabricante
+                    </label>
+                    <input
+                      id="input-marca-producto"
+                      type="text"
+                      autoComplete="off"
+                      placeholder="EJ: YALE, GLORIA, BOSCH"
+                      value={formData.marca}
+                      onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
+                      className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2.5 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                    />
+                  </div>
+
+                  {/* Modelo */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="input-modelo-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
+                      Modelo / Serie
+                    </label>
+                    <input
+                      id="input-modelo-producto"
+                      type="text"
+                      autoComplete="off"
+                      placeholder="EJ: 50MM, PLUS, X-200"
+                      value={formData.modelo}
+                      onChange={(e) => setFormData({ ...formData, modelo: e.target.value })}
+                      className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2.5 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                    />
+                  </div>
+
+                  {/* Medida */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="input-medida-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
+                      Medida / Capacidad
+                    </label>
+                    <input
+                      id="input-medida-producto"
+                      type="text"
+                      autoComplete="off"
+                      placeholder="EJ: 1/2 PULGADA, 500ML, 100G"
+                      value={formData.medida}
+                      onChange={(e) => setFormData({ ...formData, medida: e.target.value })}
+                      className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2.5 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                    />
+                  </div>
+
+                  {/* Laboratorio / Composición */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="input-laboratorio-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
+                      Laboratorio / Detalle Técnico
+                    </label>
+                    <input
+                      id="input-laboratorio-producto"
+                      type="text"
+                      autoComplete="off"
+                      placeholder="EJ: BAYER, PARACETAMOL, ACERO"
+                      value={formData.laboratorio}
+                      onChange={(e) => setFormData({ ...formData, laboratorio: e.target.value })}
+                      className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2.5 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                    />
+                  </div>
+
+                  {/* Ubicación en tienda (Full width) */}
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label htmlFor="input-ubicacion-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
+                      📍 Ubicación en Tienda
+                    </label>
+                    <input
+                      id="input-ubicacion-producto"
+                      type="text"
+                      autoComplete="off"
+                      placeholder="EJ: PASILLO 2 - ESTANTE B, VITRINA CENTRAL"
+                      value={formData.ubicacion}
+                      onChange={(e) => setFormData({ ...formData, ubicacion: e.target.value })}
+                      className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2.5 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
 
               {/* Fase 1.3: precios por cantidad (opcional). La Caja cambia el precio sola al llegar a esa cantidad */}
               {(nature === 'PESO' || nature === 'UNIDAD') && (

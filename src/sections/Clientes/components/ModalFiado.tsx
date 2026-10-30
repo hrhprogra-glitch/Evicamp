@@ -166,7 +166,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
   // 🔥 FILTRO DE SEGURIDAD: Solo mostramos productos que tengan stock físico
   const prodFiltrados = searchProd.trim() === '' ? [] : productos.filter(p => {
     if (!p.name || p.quantity <= 0) return false; // <--- Solo productos con stock
-    return coincideBusqueda([p.name, p.code, p.barcode], searchProd);
+    return coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion], searchProd);
   }).slice(0, 5);
 
   const agregarProducto = (prod: Product) => {

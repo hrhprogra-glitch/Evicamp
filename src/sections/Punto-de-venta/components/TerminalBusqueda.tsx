@@ -68,7 +68,7 @@ export const TerminalBusqueda: React.FC<Props> = ({
   const filteredProducts = searchQuery.trim() === '' 
     ? [] 
     : productos.filter(p => {
-        return coincideBusqueda([p.name, p.code, p.barcode], searchQuery);
+        return coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion], searchQuery);
       })
       // El código exacto primero (lector de barras / etiquetas de la fase 2.5): "SKU-12" no debe agregar "SKU-123"
       .sort((a, b) => {
@@ -449,6 +449,13 @@ export const TerminalBusqueda: React.FC<Props> = ({
                     <span className="text-sm sm:text-base font-black text-[var(--color-ink)] uppercase leading-tight line-clamp-2 break-words shrink-0">
                       {prod.name}
                     </span>
+                    {Boolean(prod.marca || prod.medida || prod.ubicacion) && (
+                      <div className="flex flex-wrap items-center gap-1 text-[10px] font-bold text-[var(--color-muted)] uppercase truncate shrink-0">
+                        {prod.marca && <span className="text-[var(--color-ink)]">🏷️ {prod.marca}</span>}
+                        {prod.medida && <span>· 📏 {prod.medida}</span>}
+                        {prod.ubicacion && <span>· 📍 {prod.ubicacion}</span>}
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-auto flex items-center justify-between pt-1.5 border-t border-dashed border-[var(--color-border)] w-full">
