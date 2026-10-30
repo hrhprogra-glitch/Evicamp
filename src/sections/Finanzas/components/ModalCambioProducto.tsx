@@ -4,6 +4,7 @@ import {
   Receipt, Package, Printer, ChevronRight, CornerDownLeft, ShieldCheck 
 } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
+import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import type { CambioProducto } from '../types';
 import type { Product } from '../../Inventario/types';
 
@@ -87,6 +88,9 @@ export const ModalCambioProducto: React.FC<Props> = ({
     }
   }, [isOpen, initialSaleId]);
 
+  // Cierre con Escape compatible con pila de modales
+  useCerrarConEscape(isOpen, onClose);
+
   // Focus trap y navegación por teclado
   useEffect(() => {
     if (!isOpen) return;
@@ -94,6 +98,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
+        e.stopPropagation();
         onClose();
         return;
       }
@@ -424,7 +429,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 z-[300] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       id="modal-cambio-producto"

@@ -124,7 +124,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
     }, 60);
 
     const handleModalKeyDown = (e: KeyboardEvent) => {
-      if (ticketSeleccionado) return;
+      if (ticketSeleccionado || document.getElementById('modal-cambio-producto')) return;
 
       const active = document.activeElement as HTMLElement;
 

@@ -386,6 +386,11 @@
           2. Se añadió el buscador `#buscador-historial-cajas` en la pestaña Historial de Cajas con filtrado instantáneo por fecha, cajero, montos y notas, operable al 100% por teclado.
           3. Se habilitó el cambio de productos en cajas anteriores cerradas (`ModalDetalleCaja.tsx`), liquidando cualquier diferencia en la caja activa del día y ajustando el stock del producto original de la venta.
         - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+      36. **Corrección de z-index en Cambio de Producto sobre Detalle de Caja (30/10 tarde):**
+        - El dueño reportó: *"cuando pongo cambio de producto dentro de historial de caja en la ventana para ver los ticket de una caja anterior la ventan de cambio de producto sale debajo de esa ventana arreglar eso"*.
+        - Se ajustó el z-index de `ModalCambioProducto` a `z-[300]` (por encima de `ModalDetalleCaja` con `z-[100]` y `ModalDetalleTicket` con `z-[200]`).
+        - Se integró `useCerrarConEscape` y guardia de eventos en `ModalDetalleCaja`.
+        - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
 
 
 

@@ -7,6 +7,19 @@
 
 ---
 
+## 30/10/2026 (tarde, 44) · Antigravity
+- **Corrección de superposición (z-index) y foco en ModalCambioProducto sobre ModalDetalleCaja:**
+  - El dueño reportó: *"cuando pongo cambio de producto dentro de historial de caja en la ventana para ver los ticket de una caja anterior la ventan de cambio de producto sale debajo de esa ventana arreglar eso"*.
+  - **Causa identificada:**
+    1. `ModalDetalleCaja` tiene `z-[100]` y `ModalDetalleTicket` tiene `z-[200]`.
+    2. `ModalCambioProducto` tenía `z-50`, por lo que al invocarse desde una caja del historial, se dibujaba debajo de la ventana de detalle de caja.
+    3. `ModalDetalleCaja` tenía captura de teclado `window.addEventListener('keydown', ..., { capture: true })` que interceptaba teclas de dirección y escape cuando el modal de cambio estaba abierto.
+  - **Solución implementada:**
+    - Se elevó el z-index de `ModalCambioProducto.tsx` y `ModalConsultarGarantia.tsx` a `z-[300]`.
+    - Se integró `useCerrarConEscape(isOpen, onClose)` en `ModalCambioProducto.tsx` para sincronizarse correctamente con la pila de modales.
+    - Se agregó guardia en `ModalDetalleCaja.tsx` para no interceptar eventos de teclado si `modal-cambio-producto` está abierto.
+  - Compilación (`npx tsc -b`, `npm run build`), `graphify update .` y despliegue a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+
 ## 30/10/2026 (tarde, 43) · Antigravity
 - **Simplificación del Flujo de Cambios de Producto, Búsqueda en Historial de Cajas y Cambios desde Cajas Anteriores:**
   - El dueño solicitó:

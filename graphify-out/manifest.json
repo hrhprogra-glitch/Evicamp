@@ -90,9 +90,9 @@
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalDetalleCaja.tsx": {
-    "mtime": 1793402375.6467392,
-    "seen": 1793402835.0170205,
-    "ast_hash": "3ac8341b1a6e3ebec8545c5c31b052b7",
+    "mtime": 1793403383.254421,
+    "seen": 1793403477.5374415,
+    "ast_hash": "0989600696645f6fb40f4c736c5e9d8e",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalNuevoMovimiento.tsx": {
@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793399591.4295883,
-    "seen": 1793402835.017174,
-    "ast_hash": "3b051bea127a9fecda13ed7f3d6cc582",
+    "mtime": 1793402869.483133,
+    "seen": 1793403477.5375876,
+    "ast_hash": "2d17f0fe8acc29201c83e798c741ca97",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793399629.012336,
-    "seen": 1793402835.0171754,
-    "ast_hash": "a0892f1b6cfdb80806ce1611e9bccc56",
+    "mtime": 1793402908.685411,
+    "seen": 1793403477.5375893,
+    "ast_hash": "0f83f8b9eef3b2134c86ca6c6d6a04c5",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793399601.0551012,
-    "seen": 1793402835.0171788,
-    "ast_hash": "29ec45659ae5e73f6217d1694731a610",
+    "mtime": 1793402881.1160886,
+    "seen": 1793403477.5375926,
+    "ast_hash": "b19645b2cee2c397d85254c014f0af2f",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2178,15 +2178,15 @@
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalCambioProducto.tsx": {
-    "mtime": 1793402755.1232762,
-    "seen": 1793402835.0170147,
-    "ast_hash": "23714fbb6dd1ea19abb176df9330281c",
+    "mtime": 1793403370.1101432,
+    "seen": 1793403477.537435,
+    "ast_hash": "0f651dac190364b4eebba5e05c01e56a",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalConsultarGarantia.tsx": {
-    "mtime": 1793331256.961979,
-    "seen": 1793331636.3625185,
-    "ast_hash": "5f71510061fa654eb33f540a0bcfc803",
+    "mtime": 1793403396.7413888,
+    "seen": 1793403477.5374398,
+    "ast_hash": "1221e978e37729c0185bc3ccf7714626",
     "semantic_hash": ""
   }
 }
