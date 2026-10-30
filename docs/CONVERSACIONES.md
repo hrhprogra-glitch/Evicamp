@@ -353,5 +353,19 @@
         - Migración aplicada con `lock_timeout = '5s'`, columnas e índices confirmados en Evicamp, sin reiniciar la API ni cortar ventas.
         - Web desplegada a `evicamp.duckdns.org` (20 archivos).
         - Rama `fase-3-busqueda-especializada` fusionada a `main` y enviada a GitHub (`git push origin main` con commit `994bdca`).
+      32. **Propuesta e Implementación de la Fase 6 (Cambios de producto y Garantías / Series) en Pruebas (29/10 noche):**
+        - El dueño pidió revisar la Fase 6 indicando que en Finanzas ya tenía devoluciones: *"a ver la opción A pero quiero quier oque revices bien la fase 6 porque en finanzas ya tengo devoluciones, cambio y garantías/ series si no"*.
+        - Se le aclaró que hoy solo existía la anulación total de ticket (devolver la venta entera) y que faltaban:
+          1. Cambio directo de mercadería (devolver 1 producto, llevar otro y cobrar o devolver la diferencia sin anular todo el ticket).
+          2. Garantías y números de serie / IMEI (identificar cada unidad por su número único de fábrica y controlar los meses de vigencia).
+        - El dueño autorizó e instruyó: *"perfecto hagamos el 2 y 3 ya que ya tenemos el 1, lo que si quiero que el 2 este dentro de finanzas"* y *"si hazlo"*.
+        - Se implementó en la rama `fase-6-cambios-garantias`:
+          - Base de datos en `siumax` migrada con respaldo previo (`.dump` de 242 KB): tabla `cambios_productos`, columnas en `products` e índices en `sale_details`.
+          - Opción de "Controla Serie / IMEI" y "Meses de Garantía" en `ModalProducto.tsx`.
+          - Captura opcional de Serie/IMEI al vender en Caja (`TicketVenta.tsx`) e impresión en el ticket físico (`TicketImprimible.tsx`).
+          - Modal `ModalCambioProducto.tsx` dentro de Finanzas con cálculo automático de diferencia económica y stock (+1 al devuelto, -1 al nuevo).
+          - Modal `ModalConsultarGarantia.tsx` dentro de Finanzas con semáforo en tiempo real (Vigente / Vencida).
+          - Compilado (`npx tsc -b`, `npm run build`) y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+
 
 

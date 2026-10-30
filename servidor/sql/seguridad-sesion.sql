@@ -1455,6 +1455,51 @@ CREATE INDEX IF NOT EXISTS idx_products_marca ON public.products (marca);
 CREATE INDEX IF NOT EXISTS idx_products_modelo ON public.products (modelo);
 CREATE INDEX IF NOT EXISTS idx_products_medida ON public.products (medida);
 
+-- ===================================================================================================
+-- FASE 6: Cambios de producto y control de garantías con series / IMEI
+-- 1. Soporte de garantías y series en productos
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS controla_series boolean DEFAULT false;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS meses_garantia integer DEFAULT 0;
+
+-- 2. Registro de serie y vigencia de garantía en el detalle de cada venta
+ALTER TABLE public.sale_details ADD COLUMN IF NOT EXISTS numero_serie text;
+ALTER TABLE public.sale_details ADD COLUMN IF NOT EXISTS garantia_hasta date;
+CREATE INDEX IF NOT EXISTS idx_sale_details_numero_serie ON public.sale_details (numero_serie);
+
+-- 3. Tabla de Cambios de Producto (registrados en Finanzas)
+CREATE TABLE IF NOT EXISTS public.cambios_productos (
+  id bigint PRIMARY KEY,
+  sale_id bigint REFERENCES public.sales (id) ON DELETE CASCADE,
+  fecha timestamptz DEFAULT now(),
+  session_id text,
+  usuario text,
+  customer_id bigint REFERENCES public.customers (id) ON DELETE SET NULL,
+  customer_name text,
+  producto_devuelto_id bigint REFERENCES public.products (id) ON DELETE SET NULL,
+  producto_devuelto_nombre text,
+  cantidad_devuelta numeric(12,3) NOT NULL DEFAULT 1,
+  precio_devuelto numeric(12,2) NOT NULL DEFAULT 0,
+  serie_devuelta text,
+  producto_nuevo_id bigint REFERENCES public.products (id) ON DELETE SET NULL,
+  producto_nuevo_nombre text,
+  cantidad_nueva numeric(12,3) NOT NULL DEFAULT 1,
+  precio_nuevo numeric(12,2) NOT NULL DEFAULT 0,
+  serie_nueva text,
+  diferencia numeric(12,2) NOT NULL DEFAULT 0,
+  payment_type text DEFAULT 'EFECTIVO',
+  motivo text,
+  created_at timestamptz DEFAULT now(),
+  is_synced integer DEFAULT 1
+);
+
+CREATE INDEX IF NOT EXISTS idx_cambios_sale_id ON public.cambios_productos (sale_id);
+CREATE INDEX IF NOT EXISTS idx_cambios_serie_devuelta ON public.cambios_productos (serie_devuelta);
+CREATE INDEX IF NOT EXISTS idx_cambios_serie_nueva ON public.cambios_productos (serie_nueva);
+
+-- Permisos PostgREST
+GRANT ALL ON public.cambios_productos TO anon;
+
 NOTIFY pgrst, 'reload schema';
+
 
 

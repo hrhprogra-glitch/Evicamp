@@ -2,7 +2,7 @@ import { coincideBusqueda } from '../../utils/busqueda';
 import { formatearCantidadDetalle } from '../../utils/formato';
 // src/sections/Finanzas/index.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { Wallet, ArrowDownToLine, Lock, CreditCard, Smartphone, Banknote, ReceiptText, Search } from 'lucide-react';
+import { Wallet, ArrowDownToLine, Lock, CreditCard, Smartphone, Banknote, ReceiptText, Search, ArrowLeftRight, ShieldCheck } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import type { CashSession, CashMovement, SuperMetricas, UnifiedItem } from './types';
 
@@ -13,6 +13,8 @@ import { ModalCierre } from './components/ModalCierre';
 import { TablaHistorial } from './components/TablaHistorial';
 import { FiltroFechas } from './components/FiltroFechas';
 import { ModalDetalleTicket } from '../../components/ModalDetalleTicket';
+import { ModalCambioProducto } from './components/ModalCambioProducto';
+import { ModalConsultarGarantia } from './components/ModalConsultarGarantia';
 // de Efectivo/Yape/Tarjeta al cerrar caja.)
 import { rangoUTCPeru } from '../../utils/ingresos';
 import { usePermiso, useEmpleado, avisarSinPermiso } from '../../utils/permisos';
@@ -41,6 +43,9 @@ export const Finanzas: React.FC = () => {
   const [isAperturaModalOpen, setIsAperturaModalOpen] = useState(false);
   const [isMovimientoModalOpen, setIsMovimientoModalOpen] = useState(false);
   const [isCierreModalOpen, setIsCierreModalOpen] = useState(false);
+  const [isCambioModalOpen, setIsCambioModalOpen] = useState(false);
+  const [ticketIdParaCambio, setTicketIdParaCambio] = useState<string | null>(null);
+  const [isGarantiaModalOpen, setIsGarantiaModalOpen] = useState(false);
 
   // NUEVO: Estados y funciones para el Historial y Limpieza
   const [vistaActual, setVistaActual] = useState<'ACTUAL' | 'HISTORIAL'>('ACTUAL');
@@ -807,7 +812,7 @@ export const Finanzas: React.FC = () => {
                       document.getElementById('btn-ver-historial')?.focus();
                     } else if (e.key === 'ArrowRight') {
                       e.preventDefault();
-                      document.getElementById('btn-cerrar-caja')?.focus();
+                      document.getElementById('btn-cambio-producto')?.focus();
                     } else if (e.key === 'ArrowDown') {
                       e.preventDefault();
                       const filtroEst = document.getElementById('filtro-estado-finanzas');
@@ -820,6 +825,28 @@ export const Finanzas: React.FC = () => {
                   + Nuevo Movimiento
                 </button>
                 )}
+
+                <button 
+                  id="btn-cambio-producto"
+                  onClick={() => {
+                    setTicketIdParaCambio(null);
+                    setIsCambioModalOpen(true);
+                  }}
+                  className="flex-1 sm:flex-none justify-center bg-white text-[var(--color-info)] border-2 border-[var(--color-ink)] px-3.5 py-3 font-black text-xs uppercase tracking-widest flex items-center gap-1.5 shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
+                  title="Realizar cambio de producto de un ticket"
+                >
+                  <ArrowLeftRight size={15} /> Cambio
+                </button>
+
+                <button 
+                  id="btn-consultar-garantia"
+                  onClick={() => setIsGarantiaModalOpen(true)}
+                  className="flex-1 sm:flex-none justify-center bg-white text-emerald-800 border-2 border-[var(--color-ink)] px-3.5 py-3 font-black text-xs uppercase tracking-widest flex items-center gap-1.5 shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
+                  title="Consultar vigencia de garantía y serie/IMEI"
+                >
+                  <ShieldCheck size={15} /> Garantías
+                </button>
+
                 {puedeTurno && (
                 <button 
                   id="btn-cerrar-caja"
@@ -1114,6 +1141,10 @@ export const Finanzas: React.FC = () => {
                onDelete={handleDeleteMovimiento}
                onVerTicket={(id) => setTicketSeleccionadoParaVer(id)}
                onAnularTicket={handleAnularTicket}
+               onCambiarProducto={(id) => {
+                 setTicketIdParaCambio(id);
+                 setIsCambioModalOpen(true);
+               }}
                idsAnulando={idsAnulando}
              />
           </div>
@@ -1138,6 +1169,24 @@ export const Finanzas: React.FC = () => {
       <ModalDetalleTicket 
         ticketId={ticketSeleccionadoParaVer} 
         onClose={() => setTicketSeleccionadoParaVer(null)} 
+      />
+
+      <ModalCambioProducto
+        isOpen={isCambioModalOpen}
+        onClose={() => {
+          setIsCambioModalOpen(false);
+          setTicketIdParaCambio(null);
+        }}
+        initialSaleId={ticketIdParaCambio}
+        sessionId={sessionActiva?.id}
+        onCambioGuardado={() => {
+          void cargarDatosCaja();
+        }}
+      />
+
+      <ModalConsultarGarantia
+        isOpen={isGarantiaModalOpen}
+        onClose={() => setIsGarantiaModalOpen(false)}
       />
     </div>
   );

@@ -126,6 +126,15 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
                 <td className="py-1.5 pr-1 uppercase align-top">
                   <span className="font-bold leading-tight block">{item.name}</span>
                   <span className="text-[11px] text-gray-600 font-bold">S/ {item.price.toFixed(2)} c/u</span>
+                  {item.numeroSerie && (
+                    <span className="text-[10px] text-black font-mono font-bold block">SERIE/IMEI: {item.numeroSerie}</span>
+                  )}
+                  {item.garantiaHasta && (
+                    <span className="text-[10px] text-gray-800 font-bold block">GARANTÍA HASTA: {item.garantiaHasta}</span>
+                  )}
+                  {Boolean(!item.garantiaHasta && item.mesesGarantia && item.mesesGarantia > 0) && (
+                    <span className="text-[10px] text-gray-800 font-bold block">GARANTÍA: {item.mesesGarantia} {item.mesesGarantia === 1 ? 'MES' : 'MESES'}</span>
+                  )}
                 </td>
                 <td className="py-1.5 text-right font-bold align-top">
                   {item.subtotal.toFixed(2)}

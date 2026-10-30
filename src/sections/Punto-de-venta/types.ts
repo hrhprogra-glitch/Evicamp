@@ -16,6 +16,8 @@ export interface CartItem extends Product {
   sinEscala?: boolean;                // el cajero apagó el precio por cantidad en esta línea (cobra el precio normal)
   esMayoristaAplicado?: boolean;      // fase 4.4: se le aplicó el precio mayorista
   descuentoPorcentajeAplicado?: number; // fase 4.4: descuento porcentual del cliente o empresa aplicado
+  numeroSerie?: string;               // fase 6: número de serie / IMEI para productos que lo requieran
+  garantiaHasta?: string;             // fase 6: fecha calculada de vencimiento de garantía (YYYY-MM-DD)
 }
 
 export interface HeldCart {

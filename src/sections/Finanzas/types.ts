@@ -73,3 +73,27 @@ export interface SuperMetricas {
   tarjetaEsperada: number;      // ventas + cobros + ingresos - egresos, todo con Tarjeta
   totalFacturado: number;
 }
+
+export interface CambioProducto {
+  id: number;
+  sale_id: number;
+  fecha: string;
+  session_id?: string | null;
+  usuario?: string | null;
+  customer_id?: number | null;
+  customer_name?: string | null;
+  producto_devuelto_id?: number | null;
+  producto_devuelto_nombre: string;
+  cantidad_devuelta: number;
+  precio_devuelto: number;
+  serie_devuelta?: string | null;
+  producto_nuevo_id?: number | null;
+  producto_nuevo_nombre: string;
+  cantidad_nueva: number;
+  precio_nuevo: number;
+  serie_nueva?: string | null;
+  diferencia: number;
+  payment_type?: string | null;
+  motivo?: string | null;
+  created_at?: string;
+}

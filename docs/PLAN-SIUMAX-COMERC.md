@@ -4,9 +4,9 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 29/10/2026 (noche, 39), Antigravity: Fase 3 completa (Marca, Modelo, Medidas, Laboratorio y Ubicación en tienda) subida oficialmente a producción en Evicamp y a GitHub (`main`), con respaldo previo de base de datos.
+- **Última actualización:** 29/10/2026 (noche, 40), Antigravity: Fase 6 (Cambios de producto, garantías y números de serie / IMEI) construida y desplegada en pruebas (`siumax.duckdns.org`) en la rama `fase-6-cambios-garantias`.
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4 y 3 en producción en Evicamp (commits 583ad4e, c8c6be3, bd3780f y 994bdca).
-- **Fase que sigue:** **Fase 6 — Devoluciones y cambios con retorno de stock, garantías y números de serie (IMEI)** (o Fase 5 — Descuentos y promociones / combos).
+- **Fase en pruebas en siumax:** **Fase 6 — Cambios de producto integrados en Finanzas, garantías y control de números de serie (IMEI)**.
 - **Avisos para la clienta de Evicamp:**
   - "Mermas" ahora se llama "Conteos";
   - dar el permiso "Cambiar precio al cobrar" a quien corresponda si desean que un cajero modifique precios en caja;
@@ -18,9 +18,9 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Fase 6 (Cambios de Producto y Garantías / Series)** | **🧪 Construida y desplegada en siumax (pruebas, 29/10). Lista para revisión del dueño.** |
 | **Fase 4 (Clientes, Empresas, Mayoristas, Cotizaciones y Pedidos)** | **✅ Hecho en producción y GitHub (29/10, commit bd3780f)** |
 | **Fase 3 (Marca, Laboratorio, Principio activo, Modelo, Medidas y Ubicación)** | **✅ Hecho en producción y GitHub (29/10, commit 994bdca)** |
-| **Fase 6 (Devoluciones, Cambios y Garantías / Series)** | **⏭️ Siguiente fase recomendada para propuesta y OK del dueño** |
 | **Videos tutoriales del sistema** (9 videos; grabados contra la base demo `siudemo`, fuera de Comerc) | **Muestra hecha (02 venta, 29/10); falta OK del dueño para los demás** |
 | **Modo Oscuro (Dark Mode)** reemplazando "Plata / Gris" en Apariencia | **Hecho en producción (29/10)** |
 | **Grupos de clientes (familia/empresa)** dentro de la 4.1 | **Hecho en producción (29/10)** |

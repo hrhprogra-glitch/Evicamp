@@ -329,6 +329,8 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
                   cartQuantity: Number(d.quantity),
                   subtotal: Number(d.subtotal),
                   unit: d.unit,
+                  numeroSerie: d.numero_serie || undefined,
+                  garantiaHasta: d.garantia_hasta || undefined,
                 }))}
                 total={totalCalculado}
                 pagos={{
@@ -368,6 +370,16 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
                         {item.precio_lista != null && Number(item.precio_lista) !== Number(item.price_at_moment) && (
                           <span data-precio-cambiado className="block normal-case text-[11px] text-[var(--color-warning-text)]">
                             Precio cambiado: S/ {Number(item.precio_lista).toFixed(2)} → S/ {Number(item.price_at_moment).toFixed(2)}{item.precio_cambiado_por ? ` · ${item.precio_cambiado_por}` : ''}
+                          </span>
+                        )}
+                        {item.numero_serie && (
+                          <span className="block font-mono text-[10px] font-bold text-amber-900 bg-amber-50 px-1 border border-amber-300 w-fit mt-0.5 uppercase">
+                            SERIE/IMEI: {item.numero_serie}
+                          </span>
+                        )}
+                        {item.garantia_hasta && (
+                          <span className="block font-mono text-[10px] font-bold text-emerald-900 bg-emerald-50 px-1 border border-emerald-300 w-fit mt-0.5 uppercase">
+                            🛡️ Garantía hasta: {item.garantia_hasta}
                           </span>
                         )}
                       </td>
@@ -415,6 +427,8 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
                 cartQuantity: Number(d.quantity),
                 subtotal: Number(d.subtotal),
                 unit: d.unit,
+                numeroSerie: d.numero_serie || undefined,
+                garantiaHasta: d.garantia_hasta || undefined,
               }))}
               total={totalCalculado}
               pagos={{

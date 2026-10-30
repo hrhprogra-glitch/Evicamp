@@ -1,6 +1,5 @@
-// src/sections/Finanzas/components/TablaMovimientos.tsx
 import React, { useState } from 'react';
-import { ArrowDownToLine, ArrowUpFromLine, Trash2, Eye, RotateCcw, Receipt } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, Trash2, Eye, RotateCcw, Receipt, ArrowLeftRight } from 'lucide-react';
 import type { UnifiedItem } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { usePermiso, avisar, avisarSinPermiso } from '../../../utils/permisos';
@@ -10,10 +9,11 @@ interface Props {
   onDelete: (id: string, isTicket: boolean) => void;
   onVerTicket: (id: string) => void;
   onAnularTicket: (id: string) => void;
+  onCambiarProducto?: (id: string) => void;
   idsAnulando?: Set<string>;
 }
 
-export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVerTicket, onAnularTicket, idsAnulando }) => {
+export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVerTicket, onAnularTicket, onCambiarProducto, idsAnulando }) => {
   const esAdmin = usePermiso('sistema_acceso_total');
 
   return (
@@ -150,6 +150,16 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                           >
                             <Eye size={14} />
                           </button>
+                          {item.estado !== 'ANULADO' && onCambiarProducto && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); onCambiarProducto(item.id); }}
+                              disabled={idsAnulando?.has(item.id)}
+                              className="p-1.5 bg-[var(--color-surface)] text-[var(--color-info)] border border-[var(--color-border)] hover:border-[var(--color-info)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] transition-colors cursor-pointer rounded-none disabled:opacity-40"
+                              title="Cambio de Producto"
+                            >
+                              <ArrowLeftRight size={14} />
+                            </button>
+                          )}
                           {item.estado !== 'ANULADO' && ( /* sin permiso: pide la clave del administrador (Finanzas → conAutorizacion) */
                             <button
                               onClick={(e) => { e.stopPropagation(); onAnularTicket(item.id); }}

@@ -508,7 +508,9 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         modelo: p.modelo || null,
         medida: p.medida || null,
         laboratorio: p.laboratorio || null,
-        ubicacion: p.ubicacion || null
+        ubicacion: p.ubicacion || null,
+        controlaSeries: Boolean(p.controla_series),
+        mesesGarantia: Number(p.meses_garantia || 0)
       } as Product));
       setProductos(mapeados);
     }
@@ -919,20 +921,31 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
 
       // Fase 1.2: una presentación (CAJA x12) se guarda en UNIDADES del producto real (el stock baja 12 por caja),
       // con el precio por unidad; cuántas cajas y cuál queda en presentacion / presentacion_cantidad
-      const saleDetails = cart.map(item => ({
-        sale_id: trueSaleId,
-        product_id: item.productoId ?? item.id,
-        product_name: item.name,
-        quantity: Number(item.cartQuantity) * (item.presentacion?.factor ?? 1),
-        price_at_moment: item.presentacion ? Math.round((Number(item.price) / item.presentacion.factor) * 10000) / 10000 : Number(item.price),
-        presentacion: item.presentacion?.nombre ?? null,
-        presentacion_cantidad: item.presentacion ? Number(item.cartQuantity) : null,
-        // fase 1.4: si se cambió el precio al cobrar, el de lista y quién lo cambió (si no, vacíos)
-        precio_lista: item.precioLista ?? null,
-        precio_cambiado_por: item.precioLista !== undefined ? (item.precioCambiadoPor ?? null) : null,
-        subtotal: Number(item.subtotal),
-        is_synced: 1
-      }));
+      const saleDetails = cart.map(item => {
+        let garantiaHasta: string | null = null;
+        if (item.mesesGarantia && item.mesesGarantia > 0) {
+          const d = new Date();
+          d.setMonth(d.getMonth() + item.mesesGarantia);
+          garantiaHasta = d.toISOString().slice(0, 10);
+        }
+
+        return {
+          sale_id: trueSaleId,
+          product_id: item.productoId ?? item.id,
+          product_name: item.name,
+          quantity: Number(item.cartQuantity) * (item.presentacion?.factor ?? 1),
+          price_at_moment: item.presentacion ? Math.round((Number(item.price) / item.presentacion.factor) * 10000) / 10000 : Number(item.price),
+          presentacion: item.presentacion?.nombre ?? null,
+          presentacion_cantidad: item.presentacion ? Number(item.cartQuantity) : null,
+          // fase 1.4: si se cambió el precio al cobrar, el de lista y quién lo cambió (si no, vacíos)
+          precio_lista: item.precioLista ?? null,
+          precio_cambiado_por: item.precioLista !== undefined ? (item.precioCambiadoPor ?? null) : null,
+          numero_serie: item.numeroSerie?.trim() || null,
+          garantia_hasta: item.garantiaHasta || garantiaHasta,
+          subtotal: Number(item.subtotal),
+          is_synced: 1
+        };
+      });
 
       const { error: detailError } = await supabase.from('sale_details').insert(saleDetails);
       if (detailError) {

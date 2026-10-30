@@ -245,7 +245,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           modelo: initialData.modelo || '',
           medida: initialData.medida || '',
           laboratorio: initialData.laboratorio || '',
-          ubicacion: initialData.ubicacion || ''
+          ubicacion: initialData.ubicacion || '',
+          controlaSeries: Boolean(initialData.controla_series ?? initialData.controlaSeries),
+          mesesGarantia: (initialData.meses_garantia ?? initialData.mesesGarantia ?? 0).toString()
         });
         
         const tipoUnidad = unidadDe(initialData).tipo;
@@ -260,7 +262,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         // MODO CREACIÓN: Limpiamos todo
         setStep(1);
         setNature(null);
-        setFormData({ name: '', category: '', code: '', barcode: '', price: '', precioMayorista: '', minStock: '5', weightUnit: 'KG', image: '', marca: '', modelo: '', medida: '', laboratorio: '', ubicacion: '' });
+        setFormData({ name: '', category: '', code: '', barcode: '', price: '', precioMayorista: '', minStock: '5', weightUnit: 'KG', image: '', marca: '', modelo: '', medida: '', laboratorio: '', ubicacion: '', controlaSeries: false, mesesGarantia: '0' });
         setEscalas(filasEscalas());
         setPresentacionesForm(filasPres());
       }
@@ -328,7 +330,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     modelo: '',
     medida: '',
     laboratorio: '',
-    ubicacion: ''
+    ubicacion: '',
+    controlaSeries: false,
+    mesesGarantia: '0'
   });
 
   const resetAndClose = () => {
@@ -336,7 +340,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     setCodigoParaBuscar('');
     setStep(1);
     setNature(null);
-    setFormData({ name: '', category: '', code: '', barcode: '', price: '', precioMayorista: '', minStock: '5', weightUnit: 'KG', image: '', marca: '', modelo: '', medida: '', laboratorio: '', ubicacion: '' });
+    setFormData({ name: '', category: '', code: '', barcode: '', price: '', precioMayorista: '', minStock: '5', weightUnit: 'KG', image: '', marca: '', modelo: '', medida: '', laboratorio: '', ubicacion: '', controlaSeries: false, mesesGarantia: '0' });
     setEscalas(filasEscalas());
     setPresentacionesForm(filasPres());
     setImageQuery('');
@@ -421,6 +425,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           'input-medida-producto',
           'input-laboratorio-producto',
           'input-ubicacion-producto',
+          'input-controla-series-producto',
+          'input-meses-garantia-producto',
           'escala-desde-0', 'escala-precio-0', 'escala-desde-1', 'escala-precio-1', 'escala-desde-2', 'escala-precio-2',
           ...[0, 1, 2].flatMap((i) => [`pres-unidad-${i}`, `pres-factor-${i}`, `pres-precio-${i}`, `pres-barcode-${i}`]),
           'btn-guardar-producto',
@@ -1077,6 +1083,47 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           }
           if (e.key === 'ArrowDown' || e.key === 'Enter') {
             e.preventDefault();
+            const next = document.getElementById('input-controla-series-producto') ||
+                         document.getElementById('escala-desde-0') ||
+                         document.getElementById('pres-unidad-0') ||
+                         document.getElementById('btn-guardar-producto');
+            next?.focus();
+            return;
+          }
+        }
+
+        if (active?.id === 'input-controla-series-producto') {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            document.getElementById('input-ubicacion-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === 'ArrowDown') {
+            const mesesInput = document.getElementById('input-meses-garantia-producto');
+            if (mesesInput && formData.controlaSeries) {
+              e.preventDefault();
+              mesesInput.focus();
+              return;
+            }
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              const next = document.getElementById('escala-desde-0') ||
+                           document.getElementById('pres-unidad-0') ||
+                           document.getElementById('btn-guardar-producto');
+              next?.focus();
+              return;
+            }
+          }
+        }
+
+        if (active?.id === 'input-meses-garantia-producto') {
+          if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+            e.preventDefault();
+            document.getElementById('input-controla-series-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown' || e.key === 'Enter') {
+            e.preventDefault();
             const next = document.getElementById('escala-desde-0') ||
                          document.getElementById('pres-unidad-0') ||
                          document.getElementById('btn-guardar-producto');
@@ -1226,6 +1273,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           medida: safeMedida,
           laboratorio: safeLaboratorio,
           ubicacion: safeUbicacion,
+          controla_series: formData.controlaSeries,
+          meses_garantia: formData.controlaSeries ? (Number(formData.mesesGarantia) || 0) : 0,
           is_active: 1
         }).eq('id', initialData.id).select().single();
 
@@ -1260,6 +1309,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           medida: safeMedida,
           laboratorio: safeLaboratorio,
           ubicacion: safeUbicacion,
+          controla_series: formData.controlaSeries,
+          meses_garantia: formData.controlaSeries ? (Number(formData.mesesGarantia) || 0) : 0,
           is_synced: '1',
           is_active: 1 // <--- 🔥 ¡SEGUNDA LÍNEA MÁGICA PARA LOS PRODUCTOS!
         }]).select().single();
@@ -1945,6 +1996,43 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                       onChange={(e) => setFormData({ ...formData, ubicacion: e.target.value })}
                       className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2.5 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
                     />
+                  </div>
+
+                  {/* FASE 6: Control de Garantía y Series / IMEI */}
+                  <div className="space-y-2 md:col-span-2 pt-2 border-t border-[#E2E8F0]">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider flex items-center gap-2 cursor-pointer">
+                        <input
+                          id="input-controla-series-producto"
+                          type="checkbox"
+                          checked={formData.controlaSeries}
+                          onChange={(e) => setFormData({ ...formData, controlaSeries: e.target.checked })}
+                          className="w-4 h-4 text-[var(--color-success)] rounded-none border-2 border-[#E2E8F0] focus:ring-2 focus:ring-[var(--color-success)] cursor-pointer"
+                        />
+                        <span>🛡️ ¿Controla número de serie / IMEI por unidad?</span>
+                      </label>
+                      <span className="text-[9px] text-[#64748B] font-bold">Herramientas, celulares, repuestos</span>
+                    </div>
+
+                    {formData.controlaSeries && (
+                      <div className="pl-6 pt-1 flex items-center gap-3">
+                        <label htmlFor="input-meses-garantia-producto" className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider shrink-0">
+                          Garantía de Fábrica:
+                        </label>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            id="input-meses-garantia-producto"
+                            type="number"
+                            min="0"
+                            placeholder="0"
+                            value={formData.mesesGarantia}
+                            onChange={(e) => setFormData({ ...formData, mesesGarantia: e.target.value })}
+                            className="w-20 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-1.5 text-xs font-black text-center text-[var(--color-ink)] outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                          />
+                          <span className="text-[10px] font-bold text-[#64748B] uppercase">meses</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

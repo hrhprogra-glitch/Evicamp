@@ -7,6 +7,38 @@
 
 ---
 
+## 29/10/2026 (noche, 40) · Antigravity
+- **Implementación y Despliegue de la Fase 6 (Cambios de Producto y Garantías / Series) en Pruebas (siumax):**
+  - El dueño pidió revisar la Fase 6 porque en Finanzas ya existía anulación de ticket, y aprobó explícitamente: *"perfecto hagamos el 2 y 3 ya que ya tenemos el 1, lo que si quiero que el 2 este dentro de finanzas"* y *"si hazlo"*.
+  - Rama activa: `fase-6-cambios-garantias`.
+  - **1. Base de datos de pruebas (`siumax`):**
+    - Respaldo de seguridad creado antes de migrar: `/var/lib/postgresql/respaldo-siumax-antes-fase6-2026-10-30T03-24-58-158Z.dump` (242 KB).
+    - Tabla `cambios_productos` creada para registrar cada sustitución con campos para ticket original, producto devuelto (+ serie), producto nuevo (+ serie), diferencia económica calculada y motivo.
+    - Columnas añadidas a `products`: `controla_series boolean DEFAULT false`, `meses_garantia integer DEFAULT 0`.
+    - Columnas añadidas a `sale_details`: `numero_serie text`, `garantia_hasta date` e índice `idx_sale_details_numero_serie`.
+    - Script de reversión creado en `servidor/sql/deshacer-fase6-cambios-garantias.sql`.
+    - Script maestro actualizado en `servidor/sql/seguridad-sesion.sql`.
+  - **2. Interfaz y Código:**
+    - `ModalProducto.tsx` (Inventario): checkbox "Controla Nº de Serie / IMEI" y campo numérico "Meses de Garantía (opcional)" con Focus Trap y 2D arrow keys.
+    - `Inventario/index.tsx`: mapeo de `controlaSeries` y `mesesGarantia` al cargar inventario y guardar producto.
+    - `Punto-de-venta/index.tsx`, `TicketVenta.tsx`, `types.ts`:
+      - Si el producto controla series, la línea del carrito muestra input destacado para escanear/digitar Nº de Serie o IMEI.
+      - Al cobrar la venta, `sale_details` guarda `numero_serie` y la fecha calculada `garantia_hasta` (hoy + meses).
+      - `TicketImprimible.tsx` imprime en el ticket físico la serie/IMEI y vencimiento de la garantía de cada producto aplicable.
+    - `ModalCambioProducto.tsx` (en Finanzas):
+      - Carga el ticket original, permite seleccionar qué producto devuelve el cliente (retorno a stock +1 en `inventory_movements`), qué producto nuevo del catálogo se entrega (salida de stock -1 en `inventory_movements`), calcula automáticamente si el cliente paga diferencia (ingreso en caja) o si la tienda le da vuelto (egreso en caja), o cambio exacto S/ 0.00. Genera vale de cambio oficial imprimible.
+    - `ModalConsultarGarantia.tsx` (en Finanzas):
+      - Buscador para escanear cualquier serie o IMEI: verifica si fue vendido en la tienda, ticket, fecha, cliente, y muestra badge en tiempo real de si la garantía está VIGENTE (días restantes) o VENCIDA, o si el producto ya fue cambiado previamente.
+    - `TablaMovimientos.tsx` y `ModalDetalleTicket.tsx`:
+      - Botón `[ 🔄 Cambio ]` en cada fila de venta y botones `[ 🔄 Cambio ]` y `[ 🛡️ Garantías ]` en la barra superior de Tesorería/Finanzas.
+  - **3. Compilación y Despliegue:**
+    - `npx tsc -b`: 0 errores.
+    - `npm run build`: compilación limpia en 3.68s.
+    - Despliegue a `siumax.duckdns.org` (`node ai-scripts/deploy.cjs siumax`) completado con éxito (20 archivos subidos).
+    - Evicamp (producción) y GitHub completamente intactos (Regla 4).
+    - `graphify update .` ejecutado.
+  - **4. Qué sigue:** El dueño probará en `siumax.duckdns.org` el cambio de producto y la consulta de garantías/series.
+
 ## 29/10/2026 (noche, 39) · Antigravity
 - **Pase Oficial a Producción de la Fase 3 (Evicamp y GitHub):**
   - El dueño confirmó: *"esta perfecto que fase sigue ya termino las pruebas lo paso"*.

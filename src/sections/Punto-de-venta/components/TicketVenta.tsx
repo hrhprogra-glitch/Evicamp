@@ -361,6 +361,31 @@ export const TicketVenta: React.FC<Props> = ({
                       {item.unit === 'CONSUMO' ? '-' : `STK: ${item.quantity} ${unidadDe(item).corto === 'UND' ? 'UN' : unidadDe(item).corto}`}
                     </span>
                   </div>
+
+                  {/* FASE 6: Control de Serie / IMEI y Garantía */}
+                  {item.controlaSeries && (
+                    <div className="mt-1 flex items-center gap-1">
+                      <span className="text-[9px] font-black uppercase text-amber-800 bg-amber-100 px-1 border border-amber-300 rounded-none shrink-0">
+                        SERIE:
+                      </span>
+                      <input
+                        type="text"
+                        placeholder="Nº serie / IMEI..."
+                        value={item.numeroSerie || ''}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCart(cart.map(it => it.id === item.id ? { ...it, numeroSerie: val } : it));
+                        }}
+                        className="w-full text-[10px] font-mono px-1 py-0.5 border border-amber-300 bg-amber-50/50 focus:bg-white focus:outline-none focus:border-amber-600 uppercase"
+                      />
+                    </div>
+                  )}
+                  {Boolean(item.mesesGarantia && item.mesesGarantia > 0) && (
+                    <span className="text-[9px] font-black text-emerald-800 bg-emerald-50 px-1 border border-emerald-300 mt-0.5 inline-block w-fit">
+                      🛡️ Garantía: {item.mesesGarantia} {item.mesesGarantia === 1 ? 'mes' : 'meses'}
+                    </span>
+                  )}
                 </div>
                 
                 <div className="col-span-3 text-right text-sm font-black text-[var(--color-ink)] whitespace-nowrap pl-1">

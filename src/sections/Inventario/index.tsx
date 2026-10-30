@@ -155,6 +155,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               medida: p.medida || null,
               laboratorio: p.laboratorio || null,
               ubicacion: p.ubicacion || null,
+              controlaSeries: Boolean(p.controla_series),
+              mesesGarantia: Number(p.meses_garantia || 0),
               vencimiento: lotesDelProducto
                 .filter((l: any) => Number(l.quantity) > 0 && diasParaVencer(l.expiration_date) !== null)
                 .map((l: any) => String(l.expiration_date).slice(0, 10))
@@ -803,7 +805,9 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             modelo: nuevoProducto.modelo || null,
             medida: nuevoProducto.medida || null,
             laboratorio: nuevoProducto.laboratorio || null,
-            ubicacion: nuevoProducto.ubicacion || null
+            ubicacion: nuevoProducto.ubicacion || null,
+            controlaSeries: Boolean(nuevoProducto.controla_series ?? nuevoProducto.controlaSeries),
+            mesesGarantia: Number(nuevoProducto.meses_garantia ?? nuevoProducto.mesesGarantia ?? 0),
           };
 
           if (productToEdit) {
