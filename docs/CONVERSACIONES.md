@@ -347,5 +347,11 @@
         - Migración aplicada en base de datos `siumax` (columnas `marca`, `modelo`, `medida`, `laboratorio`, `ubicacion` e índices).
         - Implementación completa en `ModalProducto.tsx`, `TablaProductos.tsx`, `TerminalBusqueda.tsx`, `Inventario/index.tsx`, `Punto-de-venta/index.tsx`, `ModalLote.tsx`, `PanelCompras.tsx`, `ModalAjuste.tsx`, `ModalEditarSalida.tsx`, `ModalFiado.tsx`.
         - Compilado (`npx tsc -b`, `npm run build`) y desplegado a `siumax.duckdns.org`. Evicamp y GitHub completamente intactos.
+      31. **Pase Oficial de la Fase 3 a Producción y GitHub (29/10 noche):**
+        - El dueño confirmó: *"esta perfecto que fase sigue ya termino las pruebas lo paso"*.
+        - Respaldo de seguridad en VPS (`postgres` - Evicamp): `/var/lib/postgresql/respaldo-evicamp-antes-fase3-2026-10-30T02-05-11-169Z.dump` (1.9 MB).
+        - Migración aplicada con `lock_timeout = '5s'`, columnas e índices confirmados en Evicamp, sin reiniciar la API ni cortar ventas.
+        - Web desplegada a `evicamp.duckdns.org` (20 archivos).
+        - Rama `fase-3-busqueda-especializada` fusionada a `main` y enviada a GitHub (`git push origin main` con commit `994bdca`).
 
 
