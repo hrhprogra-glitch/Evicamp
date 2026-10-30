@@ -21,9 +21,10 @@ interface Props {
   caja: any;
   onAnular?: (id: string, isTicket?: boolean) => Promise<void>;
   onDelete?: (id: string, isTicket?: boolean) => Promise<void>;
+  onCambiarProducto?: (ticketId: string) => void;
 }
 
-export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnular, onDelete }) => {
+export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnular, onDelete, onCambiarProducto }) => {
   const [ticketSeleccionado, setTicketSeleccionado] = useState<string | null>(null);
   const [idsProcesando, setIdsProcesando] = useState<Set<string>>(new Set());
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -761,6 +762,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
                   onDelete={onDelete ? handleDeleteInterno : undefined as any}
                   onAnularTicket={onAnular ? handleAnularInterno : undefined as any}
                   onVerTicket={(id) => setTicketSeleccionado(id)}
+                  onCambiarProducto={onCambiarProducto}
                   idsAnulando={idsProcesando}
                 />
               </div>
@@ -878,6 +880,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
       <ModalDetalleTicket
         ticketId={ticketSeleccionado}
         onClose={() => setTicketSeleccionado(null)}
+        onCambiarProducto={onCambiarProducto}
       />
     )}
     </>

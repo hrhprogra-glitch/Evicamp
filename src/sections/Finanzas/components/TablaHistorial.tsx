@@ -1,6 +1,6 @@
 // src/sections/Finanzas/components/TablaHistorial.tsx
-import React from 'react';
-import { ReceiptText, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ReceiptText, Eye, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { ModalDetalleCaja } from './ModalDetalleCaja';
 import type { CashSession } from '../types';
 
@@ -11,10 +11,37 @@ interface Props {
   onPageChange: (page: number) => void;
   onAnular?: (id: string, isTicket?: boolean) => Promise<void>;
   onDelete?: (id: string, isTicket?: boolean) => Promise<void>;
+  onCambiarProducto?: (ticketId: string) => void;
 }
 
-export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, totalPaginas, onPageChange, onAnular, onDelete }) => {
-  const [selectedCaja, setSelectedCaja] = React.useState<CashSession | null>(null);
+export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, totalPaginas, onPageChange, onAnular, onDelete, onCambiarProducto }) => {
+  const [selectedCaja, setSelectedCaja] = useState<CashSession | null>(null);
+  const [busqueda, setBusqueda] = useState('');
+
+  const cajasFiltradas = useMemo(() => {
+    if (!busqueda.trim()) return historialCajas;
+    const q = busqueda.toLowerCase().trim();
+    return historialCajas.filter((caja) => {
+      const fechaApertura = caja.opened_at ? new Date(caja.opened_at).toLocaleString('es-PE').toLowerCase() : '';
+      const fechaCierre = caja.closed_at ? new Date(caja.closed_at).toLocaleString('es-PE').toLowerCase() : '';
+      const autorApertura = (caja.abierta_por || '').toLowerCase();
+      const autorCierre = (caja.cerrada_por || '').toLowerCase();
+      const fondo = String(caja.opening_balance || '');
+      const realEf = String(caja.closing_balance || '');
+      const idStr = String(caja.id).toLowerCase();
+      const notas = (caja.justification || '').toLowerCase();
+      return (
+        fechaApertura.includes(q) ||
+        fechaCierre.includes(q) ||
+        autorApertura.includes(q) ||
+        autorCierre.includes(q) ||
+        fondo.includes(q) ||
+        realEf.includes(q) ||
+        idStr.includes(q) ||
+        notas.includes(q)
+      );
+    });
+  }, [historialCajas, busqueda]);
 
   // EXTRAEMOS LA PAGINACIÓN PARA USARLA ARRIBA Y ABAJO SIN REPETIR CÓDIGO
   const ControlesPaginacion = ({ posicion }: { posicion: 'top' | 'bottom' }) => {
@@ -131,8 +158,42 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
           <ReceiptText size={18} /> Historial de Cajas Cerradas
         </h2>
         <span className="text-[var(--color-muted)] text-[12px] font-bold uppercase tracking-widest">
-          Mostrando {historialCajas.length} registros
+          Mostrando {cajasFiltradas.length} registros{busqueda ? ` (filtrados de ${historialCajas.length})` : ''}
         </span>
+      </div>
+
+      {/* BUSCADOR DE CAJAS */}
+      <div className="bg-[var(--color-bg)] p-2.5 sm:p-3 border-b-2 border-[var(--color-ink)] flex items-center gap-2">
+        <div className="relative flex-1">
+          <input
+            id="buscador-historial-cajas"
+            type="text"
+            placeholder="Buscar caja por fecha, hora, cajero, montos o notas..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="w-full bg-white border-2 border-[var(--color-ink)] text-xs font-black p-2 pl-8 focus:bg-white uppercase focus:outline-none placeholder:normal-case placeholder:font-normal placeholder:text-gray-400"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const firstRow = document.querySelector('tr[data-row="true"][role="button"]') as HTMLElement;
+                firstRow?.focus();
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                document.getElementById('filtro-fecha-desde-finanzas')?.focus();
+              }
+            }}
+          />
+          <Search size={14} className="absolute left-2.5 top-2.5 text-[var(--color-muted)]" />
+          {busqueda && (
+            <button
+              type="button"
+              onClick={() => setBusqueda('')}
+              className="absolute right-2.5 top-2 text-gray-400 hover:text-black font-black text-xs cursor-pointer"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       {/* PAGINACIÓN SUPERIOR */}
@@ -152,14 +213,14 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
             </tr>
           </thead>
           <tbody>
-            {historialCajas.length === 0 ? (
+            {cajasFiltradas.length === 0 ? (
               <tr>
                 <td colSpan={6} className="p-3 lg:p-4 text-center text-[var(--color-muted)] text-xs font-bold uppercase tracking-widest border-b-2 border-[var(--color-border)]">
-                  No se encontraron registros para estas fechas.
+                  {busqueda ? 'No se encontraron cajas cerradas que coincidan con la búsqueda.' : 'No se encontraron registros para estas fechas.'}
                 </td>
               </tr>
             ) : (
-              historialCajas.map((caja) => {
+              cajasFiltradas.map((caja) => {
                 const esperadoEfectivo = Number(caja.expected_balance || 0);
                 const realEfectivo = Number(caja.closing_balance || 0);
                 const esperadoYape = Number(caja.expected_yape || 0);
@@ -238,6 +299,7 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
         caja={selectedCaja}
         onAnular={onAnular}
         onDelete={onDelete}
+        onCambiarProducto={onCambiarProducto}
       />
     </div>
   );

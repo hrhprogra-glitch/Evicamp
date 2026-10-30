@@ -379,6 +379,13 @@
         - Se ajustó `ModalCambioProducto.tsx` con búsqueda inteligente por coincidencia de sufijo (6 dígitos) o ID completo, columna `sunat_status`, sincronización de stock de productos y ajuste de identity en `cambios_productos`.
         - Probado en vivo contra la base de datos de pruebas `siumax` con la venta del producto `EVELYN`.
         - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+      35. **Flujo directo de Cambios, Buscador en Historial y Cambios en Cajas Anteriores (30/10 tarde):**
+        - El dueño observó: *"perfecto me di cuenta que el buscador no es necesario porque en finanzas tengo un buscador de ticket no tiene sentido que si quiero hacer cambio tengo que buscarlo otra cosa mas en el historial de cajas no hay un buscador y otra cosa mas en cajas anteriores no hay para cambiar productos haz esos cambios"*.
+        - Se implementaron los 3 pedidos:
+          1. Se retiró el botón general de la barra de Finanzas y el paso redundante de digitar el ticket. Ahora el cambio se lanza directamente con `[ 🔄 ]` en la fila del ticket o con `[ 🔄 [C] CAMBIAR PRODUCTO ]` desde la vista del comprobante.
+          2. Se añadió el buscador `#buscador-historial-cajas` en la pestaña Historial de Cajas con filtrado instantáneo por fecha, cajero, montos y notas, operable al 100% por teclado.
+          3. Se habilitó el cambio de productos en cajas anteriores cerradas (`ModalDetalleCaja.tsx`), liquidando cualquier diferencia en la caja activa del día y ajustando el stock del producto original de la venta.
+        - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
 
 
 

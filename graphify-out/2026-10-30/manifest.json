@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793331695.4055188,
-    "seen": 1793367420.1564362,
-    "ast_hash": "30fa606dbfefc6e919816b6fb78877d9",
+    "mtime": 1793367457.4604769,
+    "seen": 1793399545.0693219,
+    "ast_hash": "300cf05ae1d1e42fdb41259c44554b35",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793331737.8348083,
-    "seen": 1793367420.156437,
-    "ast_hash": "bccef39b2336c6bd62936b53475588ba",
+    "mtime": 1793367481.5729222,
+    "seen": 1793399545.0693235,
+    "ast_hash": "b8afec7a590a2a0a2f1fff96a736feb0",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2178,9 +2178,9 @@
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalCambioProducto.tsx": {
-    "mtime": 1793331565.457403,
-    "seen": 1793331636.3625166,
-    "ast_hash": "e1e9770a1f1a79af69aebf57fce77b54",
+    "mtime": 1793399368.4896927,
+    "seen": 1793399545.0691714,
+    "ast_hash": "5eb3ee4710f4693b754a268eba659d58",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalConsultarGarantia.tsx": {

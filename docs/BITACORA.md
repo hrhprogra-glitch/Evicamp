@@ -7,6 +7,20 @@
 
 ---
 
+## 30/10/2026 (tarde, 43) · Antigravity
+- **Simplificación del Flujo de Cambios de Producto, Búsqueda en Historial de Cajas y Cambios desde Cajas Anteriores:**
+  - El dueño solicitó:
+    1. *"el buscador no es necesario porque en finanzas tengo un buscador de ticket no tiene sentido que si quiero hacer cambio tengo que buscarlo"*: Eliminar la búsqueda manual redundante de tickets para el cambio de producto; el cambio se inicia directamente desde la fila del ticket en Finanzas o desde la vista previa del comprobante.
+    2. *"en el historial de cajas no hay un buscador"*: Agregar un buscador rápido en el Historial de Cajas para filtrar sesiones cerradas por fecha, cajero, montos o notas.
+    3. *"en cajas anteriores no hay para cambiar productos"*: Permitir realizar cambios de producto sobre tickets pertenecientes a cajas anteriores cerradas.
+  - **Cambios realizados:**
+    - `Finanzas/index.tsx`: Se eliminó el botón `btn-cambio-producto` de la barra superior. El botón de cambio de producto `[ 🔄 ]` vive directamente en cada fila de ticket en la grilla y dentro del detalle del comprobante.
+    - `ModalCambioProducto.tsx`: Se eliminó el Paso 1 (formulario de búsqueda manual por input) y se muestra directamente la cabecera informativa del ticket. Se renumeraron los pasos: Paso 1 (Producto devuelto -), Paso 2 (Producto nuevo +) y Paso 3 (Balance y cuadre de caja =). Si el ticket tiene 1 solo producto, se preselecciona automáticamente y se enfoca el buscador del catálogo.
+    - `TablaHistorial.tsx`: Se agregó el buscador `#buscador-historial-cajas` con filtrado en tiempo real por fecha, cajero, monto esperado, monto real, diferencia y notas de cierre, con navegación por teclado accesible (Flecha Abajo pasa a la primera fila, Flecha Arriba vuelve al selector de fechas).
+    - `ModalDetalleCaja.tsx`: Se conectó `onCambiarProducto` tanto en la tabla de movimientos como en el modal de detalle del ticket de la caja cerrada, permitiendo abrir el cambio de producto sin importar qué tan antigua sea la caja.
+    - `ModalDetalleTicket.tsx`: Se agregó el botón `[ 🔄 [C] CAMBIAR PRODUCTO ]` y el atajo de teclado `c` / `C` para iniciar el cambio directamente mientras se inspecciona el comprobante.
+  - Compilación (`npx tsc -b`, `npm run build`), `graphify update .` y despliegue a `siumax.duckdns.org` completado con éxito. Evicamp y GitHub intactos.
+
 ## 30/10/2026 (tarde, 42) · Antigravity
 - **Corrección en Finanzas (ModalCambioProducto): Búsqueda de tickets por 6 dígitos o ID completo y columna sunat_status:**
   - El dueño reportó: *"pues no funciona entonces puse un producto y compre y puse el numero del ticket pero no carga nada"*.

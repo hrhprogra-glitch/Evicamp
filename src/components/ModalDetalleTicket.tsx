@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Printer, Receipt, ListFilter } from 'lucide-react';
+import { X, Printer, Receipt, ListFilter, ArrowLeftRight } from 'lucide-react';
 import { supabase } from '../db/supabase';
 import { formatearCantidadDetalle } from '../utils/formato';
 import { useImprimir } from '../utils/impresion';
@@ -8,9 +8,10 @@ import { TicketImprimible } from '../sections/Punto-de-venta/components/TicketIm
 interface Props {
   ticketId: string | null;
   onClose: () => void;
+  onCambiarProducto?: (ticketId: string) => void;
 }
 
-export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
+export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambiarProducto }) => {
   const [detallesTicket, setDetallesTicket] = useState<any[]>([]);
   const [ventaInfo, setVentaInfo] = useState<{
     clienteNombre?: string | null;
@@ -142,25 +143,37 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
         return;
       }
 
+      // Atajo 'c' o 'C': Cambiar producto
+      if ((e.key === 'c' || e.key === 'C') && onCambiarProducto) {
+        e.preventDefault();
+        e.stopPropagation();
+        onCambiarProducto(String(ticketId));
+        onClose();
+        return;
+      }
+
       // 2. TAB: Focus Trap
       if (e.key === 'Tab') {
         e.preventDefault();
         e.stopPropagation();
         const active = document.activeElement;
         const btnPrint = document.getElementById('btn-reimprimir-ticket');
+        const btnCambio = document.getElementById('btn-cambiar-producto-ticket');
         const btnCerrar = closeBtnRef.current;
         const tabTicket = document.getElementById('btn-tab-ticket');
         const tabTabla = document.getElementById('btn-tab-tabla');
 
         if (e.shiftKey) {
-          if (active === btnPrint) {
+          if (active === btnCambio) {
+            btnPrint?.focus();
+          } else if (active === btnPrint) {
             tabTabla?.focus();
           } else if (active === tabTabla) {
             tabTicket?.focus();
           } else if (active === tabTicket) {
             btnCerrar?.focus();
           } else {
-            btnPrint?.focus();
+            (btnCambio || btnPrint)?.focus();
           }
         } else {
           if (active === btnCerrar) {
@@ -169,6 +182,8 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
             tabTabla?.focus();
           } else if (active === tabTabla) {
             btnPrint?.focus();
+          } else if (active === btnPrint && btnCambio) {
+            btnCambio?.focus();
           } else {
             btnCerrar?.focus();
           }
@@ -179,6 +194,7 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
       // 3. FLECHAS: Selector arriba / abajo / izquierda / derecha
       const active = document.activeElement;
       const btnPrint = document.getElementById('btn-reimprimir-ticket');
+      const btnCambio = document.getElementById('btn-cambiar-producto-ticket');
       const btnCerrar = closeBtnRef.current;
       const tabTicket = document.getElementById('btn-tab-ticket');
       const tabTabla = document.getElementById('btn-tab-tabla');
@@ -194,7 +210,7 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         e.stopPropagation();
-        if (active === btnPrint) {
+        if (active === btnPrint || active === btnCambio) {
           tabTicket?.focus();
         } else if (scrollContainerRef.current) {
           scrollContainerRef.current.scrollTop -= 60;
@@ -206,6 +222,9 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
         } else if (active === tabTabla) {
           e.preventDefault();
           btnCerrar?.focus();
+        } else if (active === btnPrint && btnCambio) {
+          e.preventDefault();
+          btnCambio?.focus();
         }
       } else if (e.key === 'ArrowLeft') {
         if (active === btnCerrar) {
@@ -214,6 +233,9 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
         } else if (active === tabTabla) {
           e.preventDefault();
           tabTicket?.focus();
+        } else if (active === btnCambio && btnPrint) {
+          e.preventDefault();
+          btnPrint?.focus();
         }
       }
     };
@@ -396,16 +418,33 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose }) => {
         {/* PIE DE PÁGINA CON SELECTOR DESTACADO */}
         {!isLoadingDetalles && detallesTicket.length > 0 && (
           <div className="border-t-2 border-[var(--color-ink)] p-3 sm:p-4 bg-[var(--color-bg)] flex flex-wrap justify-between items-center gap-3 shrink-0">
-             <button
-               ref={printBtnRef}
-               id="btn-reimprimir-ticket"
-               type="button"
-               onClick={() => void ejecutarImpresion()}
-               className="flex items-center gap-2 bg-[var(--color-ink)] text-white hover:bg-[var(--color-accent)] hover:text-black focus:bg-[var(--color-accent)] focus:text-black focus:outline-none focus:ring-4 focus:ring-black font-black text-xs uppercase px-4 py-2.5 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
-               title="Reimprimir Ticket de Venta (tecla Enter o P)"
-             >
-               <Printer size={16} /> [ENTER / P] REIMPRIMIR TICKET
-             </button>
+             <div className="flex flex-wrap items-center gap-2">
+               <button
+                 ref={printBtnRef}
+                 id="btn-reimprimir-ticket"
+                 type="button"
+                 onClick={() => void ejecutarImpresion()}
+                 className="flex items-center gap-2 bg-[var(--color-ink)] text-white hover:bg-[var(--color-accent)] hover:text-black focus:bg-[var(--color-accent)] focus:text-black focus:outline-none focus:ring-4 focus:ring-black font-black text-xs uppercase px-4 py-2.5 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                 title="Reimprimir Ticket de Venta (tecla Enter o P)"
+               >
+                 <Printer size={16} /> [ENTER / P] REIMPRIMIR
+               </button>
+
+               {onCambiarProducto && (
+                 <button
+                   id="btn-cambiar-producto-ticket"
+                   type="button"
+                   onClick={() => {
+                     onCambiarProducto(String(ticketId));
+                     onClose();
+                   }}
+                   className="flex items-center gap-1.5 bg-white text-[var(--color-info)] hover:bg-[var(--color-info)] hover:text-white focus:bg-[var(--color-info)] focus:text-white focus:outline-none focus:ring-4 focus:ring-blue-400 font-black text-xs uppercase px-3.5 py-2.5 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                   title="Realizar cambio de producto de este ticket (tecla C)"
+                 >
+                   <ArrowLeftRight size={15} /> [C] CAMBIAR PRODUCTO
+                 </button>
+               )}
+             </div>
              <div className="flex items-center gap-3">
                <span className="text-[var(--color-muted)] text-xs font-black uppercase tracking-widest">Total Facturado</span>
                <span className="text-[var(--color-ink)] text-xl font-black font-mono">

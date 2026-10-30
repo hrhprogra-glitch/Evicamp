@@ -540,15 +540,22 @@ export const Finanzas: React.FC = () => {
                   searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
               } else {
-                const btnAnt = document.getElementById('btn-historial-anterior');
-                if (btnAnt) {
-                  btnAnt.focus();
-                  btnAnt.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                const buscadorHistorial = document.getElementById('buscador-historial-cajas') as HTMLInputElement | null;
+                if (buscadorHistorial) {
+                  buscadorHistorial.focus();
+                  buscadorHistorial.select();
+                  buscadorHistorial.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
-                  const fechaInput = document.getElementById('filtro-fecha-desde-finanzas') as HTMLInputElement | null;
-                  if (fechaInput) {
-                    fechaInput.focus();
-                    fechaInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                  const btnAnt = document.getElementById('btn-historial-anterior');
+                  if (btnAnt) {
+                    btnAnt.focus();
+                    btnAnt.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                  } else {
+                    const fechaInput = document.getElementById('filtro-fecha-desde-finanzas') as HTMLInputElement | null;
+                    if (fechaInput) {
+                      fechaInput.focus();
+                      fechaInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
                   }
                 }
               }
@@ -812,7 +819,7 @@ export const Finanzas: React.FC = () => {
                       document.getElementById('btn-ver-historial')?.focus();
                     } else if (e.key === 'ArrowRight') {
                       e.preventDefault();
-                      document.getElementById('btn-cambio-producto')?.focus();
+                      document.getElementById('btn-consultar-garantia')?.focus();
                     } else if (e.key === 'ArrowDown') {
                       e.preventDefault();
                       const filtroEst = document.getElementById('filtro-estado-finanzas');
@@ -827,20 +834,24 @@ export const Finanzas: React.FC = () => {
                 )}
 
                 <button 
-                  id="btn-cambio-producto"
-                  onClick={() => {
-                    setTicketIdParaCambio(null);
-                    setIsCambioModalOpen(true);
-                  }}
-                  className="flex-1 sm:flex-none justify-center bg-white text-[var(--color-info)] border-2 border-[var(--color-ink)] px-3.5 py-3 font-black text-xs uppercase tracking-widest flex items-center gap-1.5 shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
-                  title="Realizar cambio de producto de un ticket"
-                >
-                  <ArrowLeftRight size={15} /> Cambio
-                </button>
-
-                <button 
                   id="btn-consultar-garantia"
                   onClick={() => setIsGarantiaModalOpen(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    } else if (e.key === 'ArrowLeft') {
+                      e.preventDefault();
+                      const btnPrev = document.getElementById('btn-nuevo-movimiento') || document.getElementById('btn-ver-historial');
+                      btnPrev?.focus();
+                    } else if (e.key === 'ArrowRight') {
+                      e.preventDefault();
+                      document.getElementById('btn-cerrar-caja')?.focus();
+                    } else if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      document.getElementById('buscador-finanzas')?.focus();
+                    }
+                  }}
                   className="flex-1 sm:flex-none justify-center bg-white text-emerald-800 border-2 border-[var(--color-ink)] px-3.5 py-3 font-black text-xs uppercase tracking-widest flex items-center gap-1.5 shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
                   title="Consultar vigencia de garantía y serie/IMEI"
                 >
@@ -857,7 +868,7 @@ export const Finanzas: React.FC = () => {
                       e.stopPropagation();
                     } else if (e.key === 'ArrowLeft') {
                       e.preventDefault();
-                      const btnPrev = document.getElementById('btn-nuevo-movimiento') || document.getElementById('btn-ver-historial');
+                      const btnPrev = document.getElementById('btn-consultar-garantia') || document.getElementById('btn-nuevo-movimiento') || document.getElementById('btn-ver-historial');
                       if (btnPrev) btnPrev.focus();
                     } else if (e.key === 'ArrowRight') {
                       e.preventDefault();
@@ -893,6 +904,10 @@ export const Finanzas: React.FC = () => {
             }}
             onAnular={handleAnularTicket}
             onDelete={handleDeleteMovimiento}
+            onCambiarProducto={(id) => {
+              setTicketIdParaCambio(id);
+              setIsCambioModalOpen(true);
+            }}
           />
         </div>
       ) : sessionActiva && superMetricas ? (
@@ -1169,6 +1184,11 @@ export const Finanzas: React.FC = () => {
       <ModalDetalleTicket 
         ticketId={ticketSeleccionadoParaVer} 
         onClose={() => setTicketSeleccionadoParaVer(null)} 
+        onCambiarProducto={(id) => {
+          setTicketSeleccionadoParaVer(null);
+          setTicketIdParaCambio(id);
+          setIsCambioModalOpen(true);
+        }}
       />
 
       <ModalCambioProducto

@@ -4,7 +4,7 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 30/10/2026 (tarde, 42), Antigravity: En Fase 6 (Cambios de producto) se corrigió la búsqueda de tickets para aceptar los 6 dígitos del comprobante impreso (ej: 623154 o #623154) además del ID completo, se corrigió la columna `sunat_status` de ventas y la identity de `cambios_productos`. Desplegado en pruebas (`siumax.duckdns.org`).
+- **Última actualización:** 30/10/2026 (tarde, 43), Antigravity: En Fase 6 se eliminó el buscador redundante de tickets para cambios (inicia directo desde la fila del ticket o desde el comprobante), se agregó buscador rápido en el Historial de Cajas y se habilitó el cambio de producto para tickets de cajas anteriores cerradas. Desplegado en pruebas (`siumax.duckdns.org`).
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4 y 3 en producción en Evicamp (commits 583ad4e, c8c6be3, bd3780f y 994bdca).
 - **Fase en pruebas en siumax:** **Fase 6 — Cambios de producto integrados en Finanzas, garantías y control de números de serie (IMEI)**.
 - **Avisos para la clienta de Evicamp:**

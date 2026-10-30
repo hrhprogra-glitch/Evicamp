@@ -33,8 +33,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
   sessionId = null,
   onCambioGuardado
 }) => {
-  // Búsqueda de ticket
-  const [saleIdInput, setSaleIdInput] = useState<string>('');
+  // Búsqueda y carga de ticket
   const [cargandoTicket, setCargandoTicket] = useState(false);
   const [ticketError, setTicketError] = useState<string | null>(null);
 
@@ -65,7 +64,6 @@ export const ModalCambioProducto: React.FC<Props> = ({
   const [guardando, setGuardando] = useState<boolean>(false);
   const [cambioFinalizado, setCambioFinalizado] = useState<CambioProducto | null>(null);
 
-  const ticketInputRef = useRef<HTMLInputElement>(null);
   const printAreaRef = useRef<HTMLDivElement>(null);
 
   // Cargar ticket al abrir si hay initialSaleId
@@ -82,12 +80,9 @@ export const ModalCambioProducto: React.FC<Props> = ({
       setCantidadNueva(1);
 
       if (initialSaleId) {
-        setSaleIdInput(String(initialSaleId));
         void cargarTicket(String(initialSaleId));
       } else {
-        setSaleIdInput('');
         setTicketData(null);
-        setTimeout(() => ticketInputRef.current?.focus(), 100);
       }
     }
   }, [isOpen, initialSaleId]);
@@ -270,11 +265,14 @@ export const ModalCambioProducto: React.FC<Props> = ({
         }))
       });
 
-      // Seleccionar primer producto por defecto si hay uno solo
+      // Seleccionar primer producto por defecto si hay uno solo y enfocar catálogo
       if (detalles.length === 1) {
         setSelectedDetalleIndex(0);
         setCantidadDevolver(1);
         setSerieDevuelta(detalles[0].numero_serie || '');
+        setTimeout(() => document.getElementById('input-buscar-nuevo')?.focus(), 100);
+      } else {
+        setTimeout(() => document.getElementById('select-producto-devuelto')?.focus(), 100);
       }
     } catch (err: any) {
       console.error('Error al cargar ticket:', err);
@@ -541,61 +539,46 @@ export const ModalCambioProducto: React.FC<Props> = ({
             </div>
           ) : (
             <>
-              {/* PASO 1: SELECCIONAR TICKET */}
+              {/* INFORMACIÓN DEL TICKET ORIGINAL */}
               <div className="border-2 border-[var(--color-ink)] bg-white p-3 shadow-[3px_3px_0_0_var(--color-ink)]">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="w-5 h-5 rounded-full bg-[var(--color-ink)] text-white flex items-center justify-center text-[10px] font-black">1</span>
-                  <span className="text-xs font-black uppercase text-[var(--color-ink)]">Identificar Ticket de Venta Original</span>
-                </div>
-
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void cargarTicket(saleIdInput);
-                  }}
-                  className="flex gap-2"
-                >
-                  <div className="relative flex-1">
-                    <input
-                      ref={ticketInputRef}
-                      id="input-ticket-cambio"
-                      type="text"
-                      placeholder="Ingresar o escanear Nº de Ticket (ej. 142)..."
-                      value={saleIdInput}
-                      onChange={(e) => setSaleIdInput(e.target.value)}
-                      className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-ink)] text-xs font-black p-2 pl-8 focus:bg-white uppercase focus:outline-none"
-                    />
-                    <Receipt size={14} className="absolute left-2.5 top-2.5 text-[var(--color-muted)]" />
+                <div className="flex flex-wrap justify-between items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <Receipt size={18} className="text-[var(--color-ink)]" />
+                    <div>
+                      <span className="text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-wider block">Ticket Original</span>
+                      <h3 className="text-sm font-black uppercase text-[var(--color-ink)]">
+                        Ticket #{ticketData ? String(ticketData.id).slice(-6) : (initialSaleId ? String(initialSaleId).slice(-6) : '---')}
+                      </h3>
+                    </div>
                   </div>
-                  <button
-                    type="submit"
-                    disabled={cargandoTicket || !saleIdInput.trim()}
-                    className="bg-[var(--color-ink)] text-white hover:bg-[var(--color-accent)] hover:text-black font-black text-xs uppercase px-4 py-2 border-2 border-[var(--color-ink)] cursor-pointer disabled:opacity-50"
-                  >
-                    {cargandoTicket ? 'Cargando...' : 'Cargar'}
-                  </button>
-                </form>
+
+                  {ticketData && (
+                    <div className="text-[11px] text-[var(--color-muted)] flex flex-wrap gap-3">
+                      <span><b>Cliente:</b> <span className="text-[var(--color-ink)] uppercase font-bold">{ticketData.customer_name || 'CLIENTE GENERAL'}</span></span>
+                      <span><b>Fecha:</b> {new Date(ticketData.created_at).toLocaleDateString('es-PE')}</span>
+                      <span><b>Líneas vendidas:</b> {ticketData.detalles.length}</span>
+                    </div>
+                  )}
+
+                  {cargandoTicket && (
+                    <span className="text-xs font-bold text-blue-600 animate-pulse">
+                      ⏳ Cargando datos del ticket...
+                    </span>
+                  )}
+                </div>
 
                 {ticketError && (
                   <p className="mt-2 text-xs font-bold text-red-600 bg-red-50 p-2 border border-red-200">
                     ❌ {ticketError}
                   </p>
                 )}
-
-                {ticketData && (
-                  <div className="mt-2 text-[11px] text-[var(--color-muted)] flex flex-wrap gap-3 pt-2 border-t border-dashed border-gray-300">
-                    <span><b>Cliente:</b> {ticketData.customer_name}</span>
-                    <span><b>Fecha:</b> {new Date(ticketData.created_at).toLocaleDateString('es-PE')}</span>
-                    <span><b>Productos:</b> {ticketData.detalles.length} líneas</span>
-                  </div>
-                )}
               </div>
 
-              {/* PASO 2: PRODUCTO A DEVOLVER (DEL TICKET) */}
+              {/* PASO 1: PRODUCTO A DEVOLVER (DEL TICKET) */}
               {ticketData && (
                 <div className="border-2 border-[var(--color-ink)] bg-white p-3 shadow-[3px_3px_0_0_var(--color-ink)]">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] font-black">2</span>
+                    <span className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] font-black">1</span>
                     <span className="text-xs font-black uppercase text-red-700">Producto que el Cliente Devuelve (-)</span>
                   </div>
 
@@ -667,11 +650,11 @@ export const ModalCambioProducto: React.FC<Props> = ({
                 </div>
               )}
 
-              {/* PASO 3: PRODUCTO NUEVO QUE SE LLEVA (CATÁLOGO) */}
+              {/* PASO 2: PRODUCTO NUEVO QUE SE LLEVA (CATÁLOGO) */}
               {itemDevuelto && (
                 <div className="border-2 border-[var(--color-ink)] bg-white p-3 shadow-[3px_3px_0_0_var(--color-ink)]">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-black">3</span>
+                    <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-black">2</span>
                     <span className="text-xs font-black uppercase text-emerald-800">Producto Nuevo que el Cliente se Lleva (+)</span>
                   </div>
 
@@ -777,11 +760,11 @@ export const ModalCambioProducto: React.FC<Props> = ({
                 </div>
               )}
 
-              {/* PASO 4: CÁLCULO DE DIFERENCIA Y CONFIRMACIÓN */}
+              {/* PASO 3: CÁLCULO DE DIFERENCIA Y CONFIRMACIÓN */}
               {itemDevuelto && productoNuevo && (
                 <div className="border-2 border-[var(--color-ink)] bg-white p-3 shadow-[3px_3px_0_0_var(--color-ink)] space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-[var(--color-ink)] text-white flex items-center justify-center text-[10px] font-black">4</span>
+                    <span className="w-5 h-5 rounded-full bg-[var(--color-ink)] text-white flex items-center justify-center text-[10px] font-black">3</span>
                     <span className="text-xs font-black uppercase text-[var(--color-ink)]">Balance y Cuadre de Caja</span>
                   </div>
 
