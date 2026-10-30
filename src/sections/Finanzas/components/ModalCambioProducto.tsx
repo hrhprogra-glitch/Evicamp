@@ -172,8 +172,8 @@ export const ModalCambioProducto: React.FC<Props> = ({
   }, [busquedaCatalogo]);
 
   const cargarTicket = async (idInput: string) => {
-    const rawId = idInput.replace(/[^0-9]/g, '');
-    if (!rawId) return;
+    const rawDigits = idInput.replace(/[^0-9]/g, '');
+    if (!rawDigits) return;
 
     setCargandoTicket(true);
     setTicketError(null);
@@ -181,41 +181,81 @@ export const ModalCambioProducto: React.FC<Props> = ({
     setSelectedDetalleIndex(-1);
 
     try {
-      // 1. Obtener datos de la venta
-      const { data: venta, error: errVenta } = await supabase
-        .from('sales')
-        .select('id, customer_name, created_at, status')
-        .eq('id', Number(rawId))
-        .maybeSingle();
+      let venta: { id: number | string; customer_name?: string | null; created_at: string; sunat_status?: string | null } | null = null;
+      const numInput = Number(rawDigits);
 
-      if (errVenta) throw errVenta;
+      // 1. Si tiene 10 o más dígitos, intentar primero búsqueda exacta por ID
+      if (rawDigits.length >= 10 && !isNaN(numInput)) {
+        const { data: vExact, error: errExact } = await supabase
+          .from('sales')
+          .select('id, customer_name, created_at, sunat_status')
+          .eq('id', numInput)
+          .maybeSingle();
+
+        if (errExact) throw errExact;
+        if (vExact) venta = vExact;
+      }
+
+      // 2. Si no se encontró por ID exacto, buscar en las ventas recientes (para los 6 dígitos del ticket impreso ej: 623154)
+      if (!venta) {
+        const { data: ultimasVentas, error: errUltimas } = await supabase
+          .from('sales')
+          .select('id, customer_name, created_at, sunat_status')
+          .order('id', { ascending: false })
+          .limit(300);
+
+        if (errUltimas) throw errUltimas;
+
+        if (ultimasVentas && ultimasVentas.length > 0) {
+          venta = ultimasVentas.find((s: any) => {
+            const sid = String(s.id);
+            const ultimos6 = sid.slice(-6);
+            return (
+              sid === rawDigits ||
+              ultimos6 === rawDigits ||
+              ultimos6 === rawDigits.padStart(6, '0') ||
+              sid.endsWith(rawDigits)
+            );
+          }) || null;
+        }
+      }
+
+      // 3. Fallback directo por si es un ID bajo antiguo
+      if (!venta && !isNaN(numInput)) {
+        const { data: vFallback } = await supabase
+          .from('sales')
+          .select('id, customer_name, created_at, sunat_status')
+          .eq('id', numInput)
+          .maybeSingle();
+        if (vFallback) venta = vFallback;
+      }
 
       if (!venta) {
-        setTicketError(`No se encontró el ticket #${rawId}. Verifica el número.`);
+        setTicketError(`No se encontró el ticket #${rawDigits}. Verifica el número en tu comprobante o en la tabla de Finanzas.`);
         return;
       }
 
-      if (venta.status === 'ANULADO') {
-        setTicketError(`El ticket #${rawId} está ANULADO. No se pueden realizar cambios sobre ventas anuladas.`);
+      if (venta.sunat_status === 'ANULADO') {
+        setTicketError(`El ticket #${String(venta.id).slice(-6)} está ANULADO. No se pueden realizar cambios sobre ventas anuladas.`);
         return;
       }
 
-      // 2. Obtener detalles de productos vendidos
+      // 4. Obtener detalles de productos vendidos usando el ID real de la venta
       const { data: detalles, error: errDetalles } = await supabase
         .from('sale_details')
         .select('*')
-        .eq('sale_id', Number(rawId))
+        .eq('sale_id', venta.id)
         .order('id', { ascending: true });
 
       if (errDetalles) throw errDetalles;
 
       if (!detalles || detalles.length === 0) {
-        setTicketError(`El ticket #${rawId} no tiene productos registrados.`);
+        setTicketError(`El ticket #${String(venta.id).slice(-6)} no tiene productos registrados.`);
         return;
       }
 
       setTicketData({
-        id: venta.id,
+        id: Number(venta.id),
         customer_name: venta.customer_name || 'CLIENTE',
         created_at: venta.created_at,
         detalles: detalles.map((d: any) => ({
@@ -258,7 +298,8 @@ export const ModalCambioProducto: React.FC<Props> = ({
     try {
       // 1. Registrar en cambios_productos
       const nuevoCambio: Partial<CambioProducto> = {
-        sale_id: ticketData.id,
+        id: Date.now(),
+        sale_id: Number(ticketData.id),
         session_id: sessionId || null,
         usuario: 'Caja',
         customer_name: ticketData.customer_name,
@@ -285,7 +326,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
 
       if (errCambio) throw errCambio;
 
-      // 2. Ajuste de stock en inventory_movements
+      // 2. Ajuste de stock en inventory_movements y actualización directa en products
       // + Stock del producto devuelto
       await supabase.from('inventory_movements').insert([{
         product_id: itemDevuelto.product_id,
@@ -293,10 +334,24 @@ export const ModalCambioProducto: React.FC<Props> = ({
         change_amount: cantidadDevolver,
         operation_type: 'DEVOLUCION',
         reason: 'CAMBIO_PRODUCTO',
-        notes: `Ingreso por cambio de producto (Ticket #${ticketData.id})${serieDevuelta ? ` · Serie: ${serieDevuelta}` : ''}`,
+        notes: `Ingreso por cambio de producto (Ticket #${String(ticketData.id).slice(-6)})${serieDevuelta ? ` · Serie: ${serieDevuelta}` : ''}`,
         user: 'Caja',
         is_synced: 1
       }]);
+
+      if (itemDevuelto.product_id) {
+        const { data: pDev } = await supabase
+          .from('products')
+          .select('quantity')
+          .eq('id', itemDevuelto.product_id)
+          .maybeSingle();
+        if (pDev) {
+          await supabase
+            .from('products')
+            .update({ quantity: Number(pDev.quantity || 0) + cantidadDevolver })
+            .eq('id', itemDevuelto.product_id);
+        }
+      }
 
       // - Stock del producto nuevo que se entrega
       await supabase.from('inventory_movements').insert([{
@@ -305,37 +360,51 @@ export const ModalCambioProducto: React.FC<Props> = ({
         change_amount: -cantidadNueva,
         operation_type: 'VENTA',
         reason: 'CAMBIO_PRODUCTO',
-        notes: `Salida por cambio de producto (Ticket #${ticketData.id})${serieNueva ? ` · Serie: ${serieNueva}` : ''}`,
+        notes: `Salida por cambio de producto (Ticket #${String(ticketData.id).slice(-6)})${serieNueva ? ` · Serie: ${serieNueva}` : ''}`,
         user: 'Caja',
         is_synced: 1
       }]);
+
+      if (productoNuevo.id) {
+        const { data: pNue } = await supabase
+          .from('products')
+          .select('quantity')
+          .eq('id', Number(productoNuevo.id))
+          .maybeSingle();
+        if (pNue) {
+          await supabase
+            .from('products')
+            .update({ quantity: Number(pNue.quantity || 0) - cantidadNueva })
+            .eq('id', Number(productoNuevo.id));
+        }
+      }
 
       // 3. Ajuste de dinero en cash_movements si hubo diferencia
       if (diferencia > 0) {
         // El cliente pagó la diferencia -> Ingreso de caja
         await supabase.from('cash_movements').insert([{
-          id: Date.now().toString(),
+          id: Date.now(),
           session_id: sessionId,
           type: 'INGRESO',
           amount: diferencia,
-          description: `DIFERENCIA POR CAMBIO DE PRODUCTO (TICKET #${ticketData.id})`.toUpperCase(),
+          description: `DIFERENCIA POR CAMBIO DE PRODUCTO (TICKET #${String(ticketData.id).slice(-6)})`.toUpperCase(),
           payment_type: metodoPagoDiferencia,
           flujo: 'INTERNO',
           created_at: new Date().toISOString(),
-          is_synced: '1'
+          is_synced: 1
         }]);
       } else if (diferencia < 0) {
         // La tienda devolvió plata al cliente -> Egreso de caja
         await supabase.from('cash_movements').insert([{
-          id: Date.now().toString(),
+          id: Date.now(),
           session_id: sessionId,
           type: 'EGRESO',
           amount: Math.abs(diferencia),
-          description: `DEVOLUCIÓN POR CAMBIO DE PRODUCTO (TICKET #${ticketData.id})`.toUpperCase(),
+          description: `DEVOLUCIÓN POR CAMBIO DE PRODUCTO (TICKET #${String(ticketData.id).slice(-6)})`.toUpperCase(),
           payment_type: 'EFECTIVO',
           flujo: 'INTERNO',
           created_at: new Date().toISOString(),
-          is_synced: '1'
+          is_synced: 1
         }]);
       }
 

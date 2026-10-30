@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProducto.tsx": {
-    "mtime": 1793330855.4613638,
-    "seen": 1793331636.3625321,
-    "ast_hash": "8046f05ebae99be52892cdc60700b7d2",
+    "mtime": 1793367266.7400842,
+    "seen": 1793367420.15636,
+    "ast_hash": "fe525262181fd51fe6c158ef16b375a3",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaLotes.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaProductos.tsx": {
-    "mtime": 1793325977.5905392,
-    "seen": 1793331636.3625348,
-    "ast_hash": "1891c03842513c673d9936acd9f6748e",
+    "mtime": 1793367286.799775,
+    "seen": 1793367420.1563635,
+    "ast_hash": "2e26751b58a6688abffcbcb334f54b45",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TarjetaMetrica.tsx": {
@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793326025.2276304,
-    "seen": 1793331636.3626,
-    "ast_hash": "c0966c9e213c4f9a5e105ea47c409cfa",
+    "mtime": 1793331695.4055188,
+    "seen": 1793367420.1564362,
+    "ast_hash": "30fa606dbfefc6e919816b6fb78877d9",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793326046.1429925,
-    "seen": 1793331636.3626013,
-    "ast_hash": "763fded57b81193a9ec1e271e4df6192",
+    "mtime": 1793331737.8348083,
+    "seen": 1793367420.156437,
+    "ast_hash": "bccef39b2336c6bd62936b53475588ba",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793326006.3336754,
-    "seen": 1793331636.362603,
-    "ast_hash": "8b2e6a1b44ddd0b574619b77af37e513",
+    "mtime": 1793331715.4029825,
+    "seen": 1793367420.1564388,
+    "ast_hash": "2178785b38550666c90e56be011429e5",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {

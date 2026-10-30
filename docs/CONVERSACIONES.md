@@ -373,6 +373,12 @@
           - Se creó una sección destacada "🛡️ Garantía y Control de Series / IMEI" donde el campo "Garantía de Fábrica (Meses)" y la casilla "Exigir Nº de Serie / IMEI al vender en Caja" están siempre visibles.
           - Se agregaron etiquetas `🛡️ N meses` y `🔢 Serie/IMEI` en la tabla de productos de Inventario.
         - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+      34. **Corrección de búsqueda de tickets en Cambio de Producto (30/10 tarde):**
+        - El dueño probó la función en `siumax` y reportó: *"pues no funciona entonces puse un producto y compre y puse el numero del ticket pero no carga nada"*.
+        - Se detectó que el número impreso en el comprobante y en Finanzas son los últimos 6 dígitos (ej: `623154`), pero la búsqueda exigía el número completo de 13 dígitos y consultaba `status` en vez de `sunat_status`.
+        - Se ajustó `ModalCambioProducto.tsx` con búsqueda inteligente por coincidencia de sufijo (6 dígitos) o ID completo, columna `sunat_status`, sincronización de stock de productos y ajuste de identity en `cambios_productos`.
+        - Probado en vivo contra la base de datos de pruebas `siumax` con la venta del producto `EVELYN`.
+        - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
 
 
 
