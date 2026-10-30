@@ -332,4 +332,13 @@
           2. *"otro error el color es muy claro"* (captura de lista de cotizaciones): la fila seleccionada tenía un fondo `bg-amber-100` deslumbrante en modo oscuro que no dejaba leer el texto blanco. Se reemplazó por variables nativas del tema (`bg-[var(--color-bg-2)] border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]`) tanto en Cotizaciones como en Pedidos.
           3. *"el selector no funciona aqui"* (captura de modal 'Detalle de proforma'): los botones no tenían selector ni respondían a flechas de teclado. Se implementó navegación 2D completa con flechas, autofoco inicial al abrir, focus trap con Tab y anillos dorados brillantes de alto contraste en los modales de Cotizaciones y Pedidos.
         - Compilado (`npx tsc -b`, `npm run build`), desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+     29. **Pase Oficial de la Fase 4 a Producción (Evicamp y GitHub) y Decisión de ir a Fase 3 (29/10 noche):**
+        - El dueño confirmó: *"perfecto ya no tengo mas pruebas ya quedo ahora en que fase estamos ???"*.
+        - Se le explicó la diferencia entre cotización (sin dinero ni reserva de stock) y pedido (con adelanto y reserva de stock).
+        - El dueño autorizó explícitamente subir a producción: *"si hazlo y vamos a las fase 3"*.
+        - Se aplicó la migración completa de Fase 4 en Evicamp (base `postgres`) con respaldo previo (`.dump` de 1.9 MB), `lock_timeout = '5s'` y sin reiniciar la API.
+        - Se desplegó la web a `evicamp.duckdns.org` (20 archivos subidos).
+        - Se fusionó la rama `fase-4-completa` a `main` y se hizo `git push origin main`.
+        - Se inicia la preparación de la propuesta de la **Fase 3: Búsquedas especializadas por Marca, Modelo, Medidas y Laboratorio**.
+
 

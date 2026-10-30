@@ -7,6 +7,23 @@
 
 ---
 
+## 29/10/2026 (noche, 37) · Antigravity
+- **Pase Oficial a Producción de la Fase 4 Completa (Evicamp y GitHub) e Inicio de Fase 3:**
+  - El dueño confirmó: *"perfecto ya no tengo mas pruebas ya quedo ahora en que fase estamos ???"* y dio autorización explícita para subir a producción: *"si hazlo y vamos a las fase 3"*.
+  - **1. Base de datos de producción (Evicamp - base `postgres`):**
+    - Se ejecutó script seguro `ai-scripts/pruebas/aplicar-fase4-completa-evicamp.cjs`.
+    - Respaldo previo creado: `/var/lib/postgresql/respaldo-evicamp-antes-fase4-completa-2026-10-30T00-48-26-051Z.dump` (1.9 MB).
+    - `servidor/sql/seguridad-sesion.sql` aplicado con `psql` y `SET lock_timeout = '5s'`. ERRORES: (ninguno).
+    - Tablas creadas y verificadas: `cotizaciones`, `cotizacion_detalles`, `pedidos_clientes`, `pedido_detalles`.
+    - Columnas creadas y verificadas: `customers.es_mayorista`, `customers.descuento_porcentaje`, `grupos_clientes.descuento_porcentaje`, `products.precio_mayorista`.
+    - PostgREST recargó el esquema sin reiniciar la API ni interrumpir ventas en Evicamp.
+  - **2. Despliegue de aplicación web a producción (Evicamp):**
+    - `node ai-scripts/deploy.cjs evicamp`: compilación limpia y 20 archivos subidos exitosamente a `evicamp.duckdns.org`.
+  - **3. Git y GitHub:**
+    - Fusión limpia de la rama `fase-4-completa` a `main`.
+    - `git push origin main` completado con éxito (`b8a2c9a..bd3780f`).
+  - **4. Fase que sigue:** Fase 3 (Búsqueda avanzada por Marca, Modelo, Medidas y Laboratorio).
+
 ## 29/10/2026 (tarde, 36) · Antigravity
 - **Selector en Modales ("Pausar Ticket en Espera" y "Detalle de Proforma / Pedido") y Corrección de Color Claro en Filas:**
   - **1. Modal "Pausar Ticket en Espera" (`ModalNombreEspera.tsx`):**

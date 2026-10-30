@@ -4,21 +4,21 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 29/10/2026 (tarde, 36), Antigravity: Selector por teclado 2D en modales ("Pausar Ticket en Espera", "Detalle de Proforma" y "Detalle de Pedido") y corrección del color de fondo claro en filas para el Modo Oscuro, desplegados en `siumax` (rama `fase-4-completa`).
-- **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4.1, 4.2 y 4.3 en producción en Evicamp (commits 583ad4e y c8c6be3). Fases 4.4 (con descuento % cliente/empresa), 4.5 y 4.6 listas en el sitio de pruebas `siumax` para revisión y visto bueno del dueño.
-
-- **Fase que sigue:** Revisión por parte del dueño de las Fases 4.4, 4.5 y 4.6 en `siumax.duckdns.org` para su posterior pase oficial a producción.
+- **Última actualización:** 29/10/2026 (noche, 37), Antigravity: Fase 4 completa (Clientes, Mayoristas, Descuentos %, Cotizaciones y Pedidos por encargo) subida oficialmente a producción en Evicamp y a GitHub (`main`), con respaldo de base de datos previo.
+- **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2 y 4 (completa) en producción en Evicamp (commits 583ad4e, c8c6be3 y bd3780f).
+- **Fase que sigue:** **Fase 3 — Búsquedas avanzadas para ferreterías, repuestos y boticas** (Marca, Laboratorio, Principio activo, Modelo y Medidas).
 - **Avisos para la clienta de Evicamp:**
   - "Mermas" ahora se llama "Conteos";
   - dar el permiso "Cambiar precio al cobrar" a quien corresponda si desean que un cajero modifique precios en caja;
   - en la ficha de cada cliente se le puede configurar opcionalmente cuántos días de plazo tiene para pagar (ej. 15 o 30 días);
-  - se le puede asignar descuento fijo (%) por cliente o a toda una empresa/familia.
+  - se le puede asignar descuento fijo (%) por cliente o a toda una empresa/familia;
+  - ahora cuentan con proformas (Cotizaciones) y Pedidos por encargo con reserva automática de stock y adelanto en caja.
 
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
-| **Fase 4.4 (Precio Mayorista y Descuento % cliente/empresa), 4.5 (Cotizaciones) y 4.6 (Pedidos por encargo)** | **Hecho en pruebas (siumax, 29/10); esperando revisión y OK del dueño para pase a Evicamp y GitHub** |
-| **Fase 4.3 (Días de plazo y fecha calculada en caja, sin límite de crédito)** | **Hecho en producción y GitHub (29/10)** |
+| **Fase 4 (Clientes, Empresas, Mayoristas, Cotizaciones y Pedidos)** | **✅ Hecho en producción y GitHub (29/10, commit bd3780f)** |
+| **Fase 3 (Marca, Laboratorio, Principio activo, Modelo y Medidas)** | **⏭️ En preparación para propuesta y OK del dueño** |
 | **Videos tutoriales del sistema** (9 videos; grabados contra la base demo `siudemo`, fuera de Comerc) | **Muestra hecha (02 venta, 29/10); falta OK del dueño para los demás** |
 | **Modo Oscuro (Dark Mode)** reemplazando "Plata / Gris" en Apariencia | **Hecho en producción (29/10)** |
 | **Grupos de clientes (familia/empresa)** dentro de la 4.1 | **Hecho en producción (29/10)** |
@@ -83,8 +83,8 @@ es **siumax** (https://siumax.duckdns.org).
 | 0 | Arreglos: ingresar lote con proveedor, protección contra doble descuento de stock | ✅ Hecha y subida |
 | 1 | Productos para todo minorista: unidades SUNAT (metro, galón, bolsa…), cajas y paquetes con precio y código propio (Caja y Compras), precios por cantidad (se pueden apagar en la línea de la Caja), cambiar precio al cobrar con permiso o clave del admin. Extras: campo SKU, Mermas → **Conteos**, Editar/Eliminar en el Historial del lote | ✅ Hecha y subida (23/10/2026, commit d36efca) |
 | 2 | Control de inventario: kardex, conteo a ciegas y salidas (sección Conteos), vencimientos, sin ventas y "Sugerir pedido", etiquetas | ✅ Hecha y subida |
-| **4** | **Clientes y empresas** (propuesta abajo) | ⏭️ **La que sigue**: falta el OK y una decisión del dueño |
-| 3 | Marca, laboratorio, principio activo, modelo y medidas para buscar; venta con receta (farmacia) | Pendiente |
+| **4** | **Clientes y empresas**: ficha, empresas/familias, mayoristas, descuentos %, cotizaciones y pedidos por encargo | ✅ Hecha y subida (29/10/2026, commit bd3780f) |
+| **3** | **Marca, laboratorio, principio activo, modelo y medidas para buscar**; venta con receta (farmacia/ferretería) | ⏭️ **La que sigue**: en preparación de propuesta |
 | 5 | Descuentos y promociones (2x1, combos, por monto o por cliente) | Pendiente |
 | 6 | Devoluciones y cambios que devuelven stock, garantía con número de serie o IMEI, separados con adelanto | Pendiente |
 | 7 | Tallas y colores (variantes con stock propio) | Pendiente |
