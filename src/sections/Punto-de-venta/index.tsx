@@ -10,6 +10,7 @@ import { conAutorizacion } from '../../utils/autorizacion';
 import { esDecimal, unidadDe } from '../../utils/unidades';
 import { escalaPara, escalasValidas } from '../../utils/preciosCantidad';
 import { conPresentaciones, presentacionesValidas } from '../../utils/presentaciones';
+import { conVariantesYPresentaciones } from '../../utils/variantes';
 // Componentes modulares
 import { TerminalBusqueda } from './components/TerminalBusqueda';
 import { TicketVenta } from './components/TicketVenta';
@@ -339,8 +340,8 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
   // Modificamos el envío al TicketVenta para incluir el colIndex
   // --- FIN EVICAMP ---
   const [productos, setProductos] = useState<Product[]>([]);
-  // Fase 1.2: para buscar y vender, cada presentación (CAJA x12…) es otro "producto" (src/utils/presentaciones.ts)
-  const productosVenta = React.useMemo(() => conPresentaciones(productos), [productos]);
+  // Fase 7: para buscar y vender, cada variante o presentación es un ítem con su propio stock (src/utils/variantes.ts)
+  const productosVenta = React.useMemo(() => conVariantesYPresentaciones(productos), [productos]);
   const [isVistaPreviaOpen, setIsVistaPreviaOpen] = useState(false);
   // NUEVO: Estados para la impresión de la última boleta
   const [ultimaVenta, setUltimaVenta] = useState<any>(null);
@@ -480,38 +481,56 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
     // (antes se bloqueaba la venta si la caja era del día anterior)
     setHasOpenSession(!!session);
     // Supabase devuelve máximo 1000 filas por consulta: traerTodo las pide por bloques
-    const { data } = await traerTodo(() => supabase.from('products')
-      .select('*')
-      .eq('is_active', 1) // 🛡️ EVICAMP: Bloqueo de productos fantasma directo en el motor de BD
-      .order('name', { ascending: true })
-      .order('id'));
+    const [{ data: productsData }, { data: variantsData }] = await Promise.all([
+      traerTodo(() => supabase.from('products')
+        .select('*')
+        .eq('is_active', 1) // 🛡️ EVICAMP: Bloqueo de productos fantasma directo en el motor de BD
+        .order('name', { ascending: true })
+        .order('id')),
+      traerTodo(() => supabase.from('product_variants').select('*').eq('is_active', 1).order('id')),
+    ]);
+
+    const variantesPorProducto = new Map<number | string, any[]>();
+    (variantsData || []).forEach((v: any) => {
+      const pid = v.product_id;
+      if (!variantesPorProducto.has(pid)) variantesPorProducto.set(pid, []);
+      variantesPorProducto.get(pid)!.push(v);
+    });
       
-    if (data) {
-      const mapeados: Product[] = data.map((p: any) => ({
-        id: p.id,
-        name: p.name || 'SIN NOMBRE',
-        price: Number(p.price) || 0,
-        precioMayorista: p.precio_mayorista != null && !isNaN(Number(p.precio_mayorista)) ? Number(p.precio_mayorista) : undefined,
-        cost: Number(p.cost_price) || 0,
-        quantity: Number(p.quantity) || 0,
-        minStock: Number(p.min_stock) || 0,
-        code: p.code || 'NO-SKU',
-        barcode: p.barcode || '',
-        category: p.category || 'GENERAL',
-        // CORRECCIÓN ESTRATÉGICA: Interceptar 'CONSUMPTION' desde la BD
-        unit: p.control_type === 'CONSUMPTION' ? 'CONSUMO' : (p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND')),
-        control_type: p.control_type, // Añadimos esto para validaciones estrictas
-        preciosCantidad: escalasValidas(p.precios_cantidad), // fase 1.3: precios por cantidad
-        presentaciones: presentacionesValidas(p.presentaciones), // fase 1.2: caja, paquete…
-        image_url: p.image_url || p.image_path || null, // imagen para identificar el producto en las tarjetas
-        marca: p.marca || null,
-        modelo: p.modelo || null,
-        medida: p.medida || null,
-        laboratorio: p.laboratorio || null,
-        ubicacion: p.ubicacion || null,
-        controlaSeries: Boolean(p.controla_series),
-        mesesGarantia: Number(p.meses_garantia || 0)
-      } as Product));
+    if (productsData) {
+      const mapeados: Product[] = productsData.map((p: any) => {
+        const vars = variantesPorProducto.get(p.id) || [];
+        const tieneVars = Boolean(p.tiene_variantes || vars.length > 0);
+        const stockVariantes = vars.reduce((acc: number, v: any) => acc + (Number(v.quantity) || 0), 0);
+
+        return {
+          id: p.id,
+          name: p.name || 'SIN NOMBRE',
+          price: Number(p.price) || 0,
+          precioMayorista: p.precio_mayorista != null && !isNaN(Number(p.precio_mayorista)) ? Number(p.precio_mayorista) : undefined,
+          cost: Number(p.cost_price) || 0,
+          quantity: tieneVars ? stockVariantes : (Number(p.quantity) || 0),
+          minStock: Number(p.min_stock) || 0,
+          code: p.code || 'NO-SKU',
+          barcode: p.barcode || '',
+          category: p.category || 'GENERAL',
+          // CORRECCIÓN ESTRATÉGICA: Interceptar 'CONSUMPTION' desde la BD
+          unit: p.control_type === 'CONSUMPTION' ? 'CONSUMO' : (p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND')),
+          control_type: p.control_type, // Añadimos esto para validaciones estrictas
+          preciosCantidad: escalasValidas(p.precios_cantidad), // fase 1.3: precios por cantidad
+          presentaciones: presentacionesValidas(p.presentaciones), // fase 1.2: caja, paquete…
+          image_url: p.image_url || p.image_path || null, // imagen para identificar el producto en las tarjetas
+          marca: p.marca || null,
+          modelo: p.modelo || null,
+          medida: p.medida || null,
+          laboratorio: p.laboratorio || null,
+          ubicacion: p.ubicacion || null,
+          controlaSeries: Boolean(p.controla_series),
+          mesesGarantia: Number(p.meses_garantia || 0),
+          tieneVariantes: tieneVars,
+          variantes: vars
+        } as Product;
+      });
       setProductos(mapeados);
     }
   }, []);
@@ -630,13 +649,22 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
     const existe = cart.find(item => item.id === producto.id);
     const nuevaQty = existe ? existe.cartQuantity + 1 : 1;
     
-    // Fase 1.2: el stock se revisa en UNIDADES del producto real, sumando sueltas y presentaciones (1 CAJA x12 = 12)
-    const idReal = String(producto.productoId ?? producto.id);
-    const stockReal = productos.find((p) => String(p.id) === idReal)?.quantity ?? producto.quantity;
-    const unidadesEnCarrito = cart.filter((i) => String(i.productoId ?? i.id) === idReal).reduce((t, i) => t + i.cartQuantity * (i.presentacion?.factor ?? 1), 0);
-    if (unidadesEnCarrito + (producto.presentacion?.factor ?? 1) > stockReal && producto.unit !== 'CONSUMO') {
-      alert(`🚫 STOCK INSUFICIENTE: Solo tienes ${stockReal} en stock de ${producto.productoId ? producto.name.replace(/ \([^)]*\)$/, '') : producto.name}.`);
-      return;
+    // Fase 7: si es una variante específica con stock propio
+    if (producto.variantId) {
+      const unidadesEnCarritoVar = cart.filter((i) => i.variantId === producto.variantId).reduce((t, i) => t + i.cartQuantity, 0);
+      if (unidadesEnCarritoVar + 1 > producto.quantity && producto.unit !== 'CONSUMO') {
+        alert(`🚫 STOCK INSUFICIENTE: Solo tienes ${producto.quantity} en stock de esta variante (${producto.name}).`);
+        return;
+      }
+    } else {
+      // Fase 1.2: el stock se revisa en UNIDADES del producto real, sumando sueltas y presentaciones (1 CAJA x12 = 12)
+      const idReal = String(producto.productoId ?? producto.id);
+      const stockReal = productos.find((p) => String(p.id) === idReal)?.quantity ?? producto.quantity;
+      const unidadesEnCarrito = cart.filter((i) => String(i.productoId ?? i.id) === idReal).reduce((t, i) => t + i.cartQuantity * (i.presentacion?.factor ?? 1), 0);
+      if (unidadesEnCarrito + (producto.presentacion?.factor ?? 1) > stockReal && producto.unit !== 'CONSUMO') {
+        alert(`🚫 STOCK INSUFICIENTE: Solo tienes ${stockReal} en stock de ${producto.productoId ? producto.name.replace(/ \([^)]*\)$/, '') : producto.name}.`);
+        return;
+      }
     }
 
     // Flujo normal para unidades
@@ -937,6 +965,8 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           price_at_moment: item.presentacion ? Math.round((Number(item.price) / item.presentacion.factor) * 10000) / 10000 : Number(item.price),
           presentacion: item.presentacion?.nombre ?? null,
           presentacion_cantidad: item.presentacion ? Number(item.cartQuantity) : null,
+          variant_id: item.variantId ?? null,
+          variant_name: item.variantName ?? null,
           // fase 1.4: si se cambió el precio al cobrar, el de lista y quién lo cambió (si no, vacíos)
           precio_lista: item.precioLista ?? null,
           precio_cambiado_por: item.precioLista !== undefined ? (item.precioCambiadoPor ?? null) : null,
@@ -959,11 +989,27 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       if (!detailError) {
         setProductos(prevProductos =>
           prevProductos.map(p => {
-            // Unidades vendidas de este producto: sueltas y en presentaciones (1 CAJA x12 = 12)
+            // Unidades vendidas de este producto: sueltas, variantes y en presentaciones (1 CAJA x12 = 12)
             const lineas = cart.filter(i => String(i.productoId ?? i.id) === String(p.id) && i.unit !== 'CONSUMO');
             if (!lineas.length) return p;
             const unidades = lineas.reduce((t, i) => t + Number(i.cartQuantity) * (i.presentacion?.factor ?? 1), 0);
-            return { ...p, quantity: p.quantity - unidades };
+
+            let nuevasVariantes = p.variantes;
+            if (p.tieneVariantes && Array.isArray(p.variantes)) {
+              nuevasVariantes = p.variantes.map(v => {
+                const lineaVar = cart.find(i => i.variantId === v.id);
+                if (lineaVar) {
+                  return { ...v, quantity: Math.max(0, (Number(v.quantity) || 0) - Number(lineaVar.cartQuantity)) };
+                }
+                return v;
+              });
+            }
+
+            return {
+              ...p,
+              quantity: Math.max(0, p.quantity - unidades),
+              variantes: nuevasVariantes
+            };
           })
         );
       }

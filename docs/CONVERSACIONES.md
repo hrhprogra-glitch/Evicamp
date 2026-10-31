@@ -443,3 +443,16 @@
           3. Recarga del esquema PostgREST sin reiniciar la API ni interrumpir ventas de Evicamp.
           4. Despliegue de la aplicación web a `evicamp.duckdns.org` (20 archivos subidos). Verificación HTTP 200 OK.
           5. Fusión de la rama `fase-6-cambios-garantias` a `main` y push completado hacia GitHub (`git push origin main`).
+      44. **Propuesta y Ejecución de la Fase 7: Tallas y Colores (31/10 tarde):**
+        - El dueño consultó: *"la fase 7 dime el plan"*.
+        - Se le presentó la propuesta detallada:
+          1. Inventario: opción "Activar Variantes", plantillas rápidas (Ropa S-M-L-XL, Calzado 36-42), generador combinado por comas y matriz para asignar stock, código de barras y precio individual.
+          2. Caja (POS): cada variante se vende con su propio stock y código.
+          3. Kardex y Anulaciones: seguimiento por `variant_id` y devolución de stock a la variante al anular.
+          4. Soporte offline (sin internet) 100% integrado.
+        - El dueño aprobó de inmediato: *"si dale"*.
+        - Se creó la rama `fase-7-tallas-colores`.
+        - Se aplicó la migración SQL con respaldo en `siumax` (`product_variants`, columnas en `sale_details` e `inventory_movements`, y triggers actualizados).
+        - Se integraron las interfaces en Inventario (`ModalProducto`, `TablaProductos`) y Caja (`Punto-de-venta`, `variantes.ts`).
+        - Pruebas superadas al 100%: backend (`prueba-fase7-variantes.mjs`) y navegador Edge (`prueba-fase7-ui.mjs`).
+        - Desplegado a `siumax.duckdns.org` para que el dueño pruebe. Evicamp y GitHub permanecen intactos esperando su visto bueno.

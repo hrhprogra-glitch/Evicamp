@@ -429,6 +429,11 @@ export const TablaProductos: React.FC<Props> = ({
                         🔢 Serie/IMEI
                       </span>
                     )}
+                    {item.tieneVariantes && (
+                      <span className="text-[10px] font-bold text-fuchsia-800 bg-fuchsia-50 dark:bg-fuchsia-950/40 dark:text-fuchsia-300 px-1.5 py-0.5 border border-fuchsia-200 dark:border-fuchsia-800 uppercase" title={item.variantes && item.variantes.length > 0 ? item.variantes.map(v => `${v.nombre_variante}: ${v.quantity} und`).join(' | ') : 'Con variantes'}>
+                        🏷️ {item.variantes?.length || 0} {item.variantes?.length === 1 ? 'variante' : 'variantes'}
+                      </span>
+                    )}
                   </div>
                 </div>
 

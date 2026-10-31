@@ -335,6 +335,7 @@ const PERMITIDO_SIN_INTERNET = new Set([
   'POST /customers', 'PATCH /customers', 'DELETE /customers',        // clientes
   'POST /grupos_clientes', 'PATCH /grupos_clientes', 'DELETE /grupos_clientes', // grupos de clientes (fase 4.1)
   'POST /products', 'PATCH /products',                               // crear y editar productos
+  'POST /product_variants', 'PATCH /product_variants', 'DELETE /product_variants', // variantes de productos (fase 7)
   'POST /categories', 'DELETE /categories',
   'POST /batches',                                                   // ingresar lotes
   'POST /providers', 'PATCH /providers', 'DELETE /providers',        // proveedores
@@ -355,11 +356,11 @@ const PERMITIDO_SIN_INTERNET = new Set([
 // (antes de la fase SI-2 los lotes solo podían cambiar su cantidad sin internet)
 const SOLO_CANTIDAD = new Set<string>();
 // El stock se guarda como DIFERENCIA (no como número fijo): así dos cajas sin internet no se pisan
-const CON_STOCK = new Set(['PATCH /batches', 'PATCH /products']);
+const CON_STOCK = new Set(['PATCH /batches', 'PATCH /products', 'PATCH /product_variants']);
 // Tablas cuyo número (id) lo pone el servidor: sin internet lo pone la PC (el servidor lo acepta,
 // sus ids son "BY DEFAULT"). Basado en la hora: nunca choca con los del servidor (van por miles).
 const ID_DESDE_LA_PC: Record<string, 'numero' | 'uuid'> = {
-  products: 'numero', customers: 'numero', providers: 'uuid', compras_detalle: 'numero', empresa_config: 'numero',
+  products: 'numero', product_variants: 'numero', customers: 'numero', providers: 'uuid', compras_detalle: 'numero', empresa_config: 'numero',
   grupos_clientes: 'numero',
 };
 let ultimoIdNumero = 0;
@@ -814,13 +815,14 @@ const IMITAR_RPC: Record<string, (p: Record<string, any>) => Promise<ResultadoIm
     const ticket = `Ticket #${ventaId}`;
     const cuando = String(p.p_cuando || new Date().toISOString());
     let salidas = (await filasLocales('inventory_movements', (m) => m.operation_type === 'VENTA' && m.notes === ticket))
-      .map((m) => ({ batch_id: m.batch_id ?? null, product_id: m.product_id, product_name: m.product_name, cant: Math.abs(Number(m.change_amount) || 0) }));
+      .map((m) => ({ batch_id: m.batch_id ?? null, variant_id: m.variant_id ?? null, variant_name: m.variant_name ?? null, product_id: m.product_id, product_name: m.product_name, cant: Math.abs(Number(m.change_amount) || 0) }));
     if (!salidas.length) {
       salidas = (await filasLocales('sale_details', (d) => String(d.sale_id) === ventaId))
-        .map((d) => ({ batch_id: null, product_id: d.product_id, product_name: d.product_name, cant: Math.abs(Number(d.quantity) || 0) }));
+        .map((d) => ({ batch_id: null, variant_id: d.variant_id ?? null, variant_name: d.variant_name ?? null, product_id: d.product_id, product_name: d.product_name, cant: Math.abs(Number(d.quantity) || 0) }));
     }
     const efectos: Efecto[] = [];
     const lotes = new Map<string, number>();   // un lote puede salir en varias filas: se acumula
+    const vars = new Map<string, number>();
     const stock = new Map<string, number>();
     let productos = 0;
     for (const s of salidas) {
@@ -831,11 +833,17 @@ const IMITAR_RPC: Record<string, (p: Record<string, any>) => Promise<ResultadoIm
         lotes.set(lote, ahora);
         efectos.push({ tipo: 'cambio', tabla: 'batches', filtros: [['id', `eq.${lote}`]], cambios: { quantity: ahora } });
       }
+      if (s.variant_id != null) {
+        const varId = String(s.variant_id);
+        const ahoraVar = (vars.has(varId) ? vars.get(varId)! : Number((await filaLocal('product_variants', varId))?.quantity || 0)) + s.cant;
+        vars.set(varId, ahoraVar);
+        efectos.push({ tipo: 'cambio', tabla: 'product_variants', filtros: [['id', `eq.${varId}`]], cambios: { quantity: ahoraVar } });
+      }
       const producto = String(s.product_id);
       const antes = stock.has(producto) ? stock.get(producto)! : Number((await filaLocal('products', producto))?.quantity || 0);
       stock.set(producto, antes + s.cant);
       efectos.push({ tipo: 'stock', producto, delta: s.cant });
-      efectos.push(movimiento({ batch_id: s.batch_id, product_id: s.product_id, product_name: s.product_name, change_amount: s.cant,
+      efectos.push(movimiento({ batch_id: s.batch_id, variant_id: s.variant_id, variant_name: s.variant_name, product_id: s.product_id, product_name: s.product_name, change_amount: s.cant,
         previous_quantity: antes, new_quantity: antes + s.cant, operation_type: 'ANULACION', reason: 'Anulación de venta',
         notes: `Anulación ${ticket}`, created_at: cuando }));
       productos++;

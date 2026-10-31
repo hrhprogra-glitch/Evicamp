@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProducto.tsx": {
-    "mtime": 1793465972.4741938,
-    "seen": 1793466099.8757,
-    "ast_hash": "fe525262181fd51fe6c158ef16b375a3",
+    "mtime": 1793472246.0855482,
+    "seen": 1793472730.9102595,
+    "ast_hash": "6ba79ad2435eee68f85460be9541a832",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaLotes.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaProductos.tsx": {
-    "mtime": 1793465972.4741938,
-    "seen": 1793466099.8757045,
-    "ast_hash": "2e26751b58a6688abffcbcb334f54b45",
+    "mtime": 1793470738.4561853,
+    "seen": 1793472730.9102643,
+    "ast_hash": "cb425bd0eb8c3eb278010945e5c1ba34",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TarjetaMetrica.tsx": {
@@ -174,15 +174,15 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/index.tsx": {
-    "mtime": 1793465972.4741938,
-    "seen": 1793466099.8757074,
-    "ast_hash": "b2bc7a9c967f5e2ad5ef08a835fb3c2e",
+    "mtime": 1793470721.5927935,
+    "seen": 1793472730.9102674,
+    "ast_hash": "b619c4283f96b37178678922ac469a8c",
     "semantic_hash": ""
   },
   "src/sections/Inventario/types.ts": {
-    "mtime": 1793465972.4741938,
-    "seen": 1793466099.8757088,
-    "ast_hash": "0789c8d7c6275c5ef211c1faf8662686",
+    "mtime": 1793470127.548395,
+    "seen": 1793472730.910269,
+    "ast_hash": "33d5ad1fe8dfbdad92e6763bafd19751",
     "semantic_hash": ""
   },
   "src/sections/Login.tsx": {
@@ -264,9 +264,9 @@
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/index.tsx": {
-    "mtime": 1793465972.4741938,
-    "seen": 1793466099.8757377,
-    "ast_hash": "ea2dd96a90c74672e250c9f0ed54f629",
+    "mtime": 1793471158.7398825,
+    "seen": 1793472730.9102979,
+    "ast_hash": "926afd3fbe120cc584ae79532b1c352a",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/types.ts": {
@@ -1458,9 +1458,9 @@
     "semantic_hash": ""
   },
   "servidor/sql/seguridad-sesion.sql": {
-    "mtime": 1793465972.3340094,
-    "seen": 1793466099.8756018,
-    "ast_hash": "be075d1c6f05df0cff1166531646e40c",
+    "mtime": 1793471430.4444325,
+    "seen": 1793472730.9101596,
+    "ast_hash": "aecda0adbb278b83bf4db4d006282ac7",
     "semantic_hash": ""
   },
   "servidor/activar-seguridad.sh": {
@@ -1518,9 +1518,9 @@
     "semantic_hash": ""
   },
   "src/utils/sinInternet.ts": {
-    "mtime": 1793289284.6238346,
-    "seen": 1793296973.070267,
-    "ast_hash": "367b20e4f4cf32de8e816f1bd72657d8",
+    "mtime": 1793470498.493404,
+    "seen": 1793472730.9103441,
+    "ast_hash": "1b160921480a66ae90387b6b80125bfa",
     "semantic_hash": ""
   },
   "src/layout/BarraConexion.tsx": {
@@ -1530,9 +1530,9 @@
     "semantic_hash": ""
   },
   "src/utils/precargaSinInternet.ts": {
-    "mtime": 1793289284.6238346,
-    "seen": 1793296973.0702596,
-    "ast_hash": "f34d7c0c484fbb0651c57b18d8fb43d3",
+    "mtime": 1793470508.5046427,
+    "seen": 1793472730.910337,
+    "ast_hash": "c584a253b27ac95332ae876c137ff321",
     "semantic_hash": ""
   },
   "src/utils/dialogos.tsx": {
@@ -2193,6 +2193,36 @@
     "mtime": 1793465971.8806722,
     "seen": 1793466099.8754513,
     "ast_hash": "96bc8c86293e8454e14cf975fc86efa9",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/aplicar-fase7-siumax.cjs": {
+    "mtime": 1793470048.845148,
+    "seen": 1793472730.9100022,
+    "ast_hash": "315ddada516ce2797be8992435af5f3a",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-fase7-ui.mjs": {
+    "mtime": 1793472649.6334593,
+    "seen": 1793472730.910035,
+    "ast_hash": "fbcd04a74964a663faac0e8893efe4c1",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-fase7-variantes.mjs": {
+    "mtime": 1793471546.7559104,
+    "seen": 1793472730.9100366,
+    "ast_hash": "e0111d829b957643067c2c392f37976a",
+    "semantic_hash": ""
+  },
+  "servidor/sql/deshacer-fase7-tallas-colores.sql": {
+    "mtime": 1793469993.5118408,
+    "seen": 1793472730.9101582,
+    "ast_hash": "6021214b0301443f4c403ea553c71110",
+    "semantic_hash": ""
+  },
+  "src/utils/variantes.ts": {
+    "mtime": 1793470145.9615755,
+    "seen": 1793472730.9103534,
+    "ast_hash": "bbe2148da819fa395ab160fd7d6b2469",
     "semantic_hash": ""
   }
 }
