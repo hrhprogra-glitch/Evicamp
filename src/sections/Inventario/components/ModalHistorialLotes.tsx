@@ -41,6 +41,8 @@ interface LoteHistorial {
   provider_id: string | null;
   document_ref: string;
   expiration_date: string | null;
+  variant_id?: number | string | null;
+  variant_name?: string | null;
 }
 
 interface Movimiento {
@@ -105,7 +107,7 @@ export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose, onEdit
     (async () => {
       const { data, error: e } = await supabase
         .from('batches')
-        .select('id, created_at, initial_quantity, quantity, cost_unit, supplier, provider_id, document_ref, expiration_date')
+        .select('id, created_at, initial_quantity, quantity, cost_unit, supplier, provider_id, document_ref, expiration_date, variant_id, variant_name')
         .eq('product_id', producto.id)
         .neq('is_active', 0) // los retirados (borrados) no se muestran, igual que en la pestaña Lotes
         .order('created_at', { ascending: false });
@@ -122,6 +124,8 @@ export const ModalHistorialLotes: React.FC<Props> = ({ producto, onClose, onEdit
         provider_id: b.provider_id ?? null,
         document_ref: b.document_ref || '',
         expiration_date: b.expiration_date || null,
+        variant_id: b.variant_id ?? null,
+        variant_name: b.variant_name || null,
       }));
       setLotes([...filas.filter((l) => l.quantity > 0), ...filas.filter((l) => l.quantity <= 0)]);
       setCargando(false);
@@ -338,7 +342,16 @@ Ya no tiene stock; el historial de ventas y movimientos no se toca.`;
         tabIndex={0}
         atenuada={estado === 'AGOTADO'}
         icono={<Package size={32} />}
-        titulo={`Ingreso ${fecha(l.created_at)}`}
+        titulo={
+          <span className="flex items-center gap-2">
+            <span>Ingreso {fecha(l.created_at)}</span>
+            {l.variant_name && (
+              <span className="text-[10px] font-black bg-indigo-100 text-indigo-800 border border-indigo-300 px-1.5 py-0.5 uppercase tracking-wider inline-flex items-center gap-1">
+                🏷️ {l.variant_name}
+              </span>
+            )}
+          </span>
+        }
         subtitulo={datos}
         centro={<Etiqueta tono={estado === 'VIGENTE' ? 'verde' : estado === 'CADUCADO' ? 'rojo' : 'gris'}>{estado}</Etiqueta>}
         derecha={<>

@@ -7,6 +7,35 @@
 
 ---
 
+## 31/10/2026 (tarde, 54) · Antigravity
+- **Adaptación del Botón [ Ingresar Lote ] por Tipo de Producto (Tallas y Colores / Variantes):**
+  - **Pregunta del dueño:** *"no seria mejor que la creación de lotes por tipo de productos este en el boton de lotes ??"*
+  - **Decisión acordada:** Opción A1 elegida por el dueño. El botón `[ Ingresar Lote ]` se adapta inteligentemente al producto seleccionado: si el producto tiene tallas/colores, despliega la grilla de variantes para ingresar cuántas unidades llegaron de cada una (ej. 20 M, 30 L) y alimente el stock individual de cada variante.
+  - **1. Base de datos (`servidor/sql/seguridad-sesion.sql` y `siumax`):**
+    - Agregadas columnas `variant_id bigint` y `variant_name text` a `public.batches`. Creado índice `idx_batches_variant_id`.
+    - Actualizado `fn_reduce_stock_from_sales` para descontar por FIFO del lote correspondiente a la variante (`variant_id = NEW.variant_id`) cuando la venta tiene variante, o de los lotes genéricos (`variant_id IS NULL`) cuando es genérico.
+    - Creadas/actualizadas funciones `fn_edit_batch` y `fn_soft_delete_batch`: al editar o retirar un lote con `variant_id`, se sincroniza automáticamente tanto el stock de la variante (`product_variants.quantity`) como el del producto (`products.quantity`).
+    - Migración aplicada en `siumax` con respaldo previo (`.dump`). Cero errores SQL.
+  - **2. Interfaz en `ModalLote.tsx`:**
+    - Al buscar y seleccionar un producto con variantes (`tieneVariantes`), la Sección 2 se adapta: oculta el campo único de cantidad y muestra una grilla con las variantes del producto (`Variante (Talla/Color)`, `Stock Actual`, `Cant. a Ingresar`).
+    - Foco inteligente: al elegir el producto, el cursor salta automáticamente al primer casillero de variante (`input-lote-var-0`). Con Flechas Arriba/Abajo o Enter se navega rápidamente entre variantes sin usar el mouse.
+    - Suma y costo automático: la cantidad total del lote se calcula sola sumando las variantes ingresadas, y el costo unitario (`costoTotal / cantidad`) se calcula al instante.
+    - Al guardar: inserta un lote independiente por cada variante con cantidad > 0, actualiza `product_variants.quantity`, genera movimientos en Kardex (`inventory_movements`) y recalcula el stock global de `products`.
+    - Si el producto es estándar o a granel (sin variantes), mantiene la entrada clásica de un solo número.
+  - **3. Pestaña Lotes (`TablaLotes.tsx`) y Modal de Historial (`ModalHistorialLotes.tsx`):**
+    - Mapeadas columnas `variant_id` y `variant_name`.
+    - Cada lote de variante muestra una insignia `🏷️ {variant_name}` al lado del nombre del producto.
+    - El buscador inteligente de Lotes ahora permite filtrar por talla o color (ej. "M", "Negro", "Polo Blanco").
+  - **4. Modo Offline (`sinInternet.ts`):**
+    - `fn_edit_batch` y `fn_soft_delete_batch` sincronizan localmente el stock de `product_variants` cuando `variant_id` está presente.
+  - **5. Pruebas Automáticas Superadas 100%:**
+    - `ai-scripts/pruebas/prueba-lote-variantes-ui.mjs`: Probó login, apertura de modal, búsqueda de producto con variantes, adaptación de sección 2 a variantes, ingreso de unidades en Talla M, cálculo de costo, guardado en base de datos `batches`, aumento de stock en `product_variants` y visualización con insignia `🏷️` en pestaña Lotes. Todo OK.
+    - `ai-scripts/pruebas/prueba-fase7-ui.mjs`: Prueba de regresión de interfaz y ventas POS sin errores.
+  - **6. Despliegue y Git:**
+    - `tsc -b && vite build` limpio. Desplegado en `siumax.duckdns.org`.
+    - Rama activa: `fase-7-tallas-colores`.
+    - Producción Evicamp y GitHub main intactos (Regla 4).
+
 ## 31/10/2026 (tarde, 53) · Antigravity
 - **Modelo Híbrido de Stock para Variantes y Lotes Genéricos en Caja (Fase 7):**
   - **Pregunta del dueño:** *"pero que pasa si pongo polo nicke y lo ingreso en lote 100 pero en variantes tengo polo nicket blanco M y pongo 100 deben aparecer los 2 no??"*

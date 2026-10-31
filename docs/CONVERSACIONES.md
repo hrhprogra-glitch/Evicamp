@@ -464,3 +464,12 @@
         - Se ajustaron `servidor/sql/seguridad-sesion.sql` (trigger `fn_reduce_stock_from_sales` y `fn_anular_venta`), `src/utils/variantes.ts`, `Punto-de-venta/index.tsx`, `Inventario/index.tsx`, `TablaProductos.tsx` y `sinInternet.ts`.
         - Se validó con un script automatizado específico (`ai-scripts/pruebas/prueba-fase7-hibrido.mjs`) que creó 100 unidades en lote y 100 en variante: ambos aparecieron en Caja, la venta de la variante descontó de la variante dejando intacto el lote, la venta genérica descontó del lote dejando intacta la variante, y las anulaciones devolvieron el stock de cada uno de forma 100% independiente.
         - Todo compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub permanecen intactos.
+      46. **Adaptación del Botón [ Ingresar Lote ] por Tipo de Producto (31/10 tarde):**
+        - El dueño preguntó: *"no seria mejor que la creación de lotes por tipo de productos este en el boton de lotes ??"*.
+        - Se le consultó mediante pregunta interactiva y el dueño confirmó la Opción A1: *(Recomendado) Sí: que el botón 'Ingresar Lote' se adapte al producto. Si el producto tiene tallas/colores, me permita ingresar cuántas unidades llegaron de cada variante (ej. 20 M, 30 L) y alimente el stock de cada una.*
+        - Implementación completada:
+          1. Base de datos: `batches` incluye ahora `variant_id bigint` y `variant_name text`. `fn_reduce_stock_from_sales` descuenta de lotes con variante por FIFO. `fn_edit_batch` y `fn_soft_delete_batch` sincronizan tanto el stock de la variante como el del producto al editar o retirar un lote.
+          2. `ModalLote.tsx`: Al seleccionar un producto con variantes, la Sección 2 despliega una tabla con las variantes, stock actual y campo de ingreso por variante. Auto-enfoca el primer campo de variante con navegación por teclado fluida. Suma las cantidades y calcula el costo unitario automáticamente. Al guardar crea un lote individual por cada variante con unidades ingresadas.
+          3. `TablaLotes.tsx` y `ModalHistorialLotes.tsx`: Muestran el distintivo `🏷️ {variant_name}` y el buscador permite filtrar por talla o color.
+          4. Pruebas automáticas completas en `siumax` (`prueba-lote-variantes-ui.mjs` y `prueba-fase7-ui.mjs` al 100% OK).
+          5. Desplegado en `siumax.duckdns.org`. Evicamp y GitHub permanecen intactos esperando la orden del dueño.

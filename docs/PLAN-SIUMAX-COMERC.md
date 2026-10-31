@@ -4,14 +4,14 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 31/10/2026 (tarde, 53), Antigravity: **Fase 7 (Tallas y Colores: Variantes con stock propio + modelo híbrido)** implementada y probada al 100% en `siumax.duckdns.org` (backend, triggers desacoplados, frontend con visualización simultánea de producto genérico con lotes y variantes, y pruebas automatizadas 100% OK). En espera del visto bueno del dueño para pase a producción.
+- **Última actualización:** 31/10/2026 (tarde, 54), Antigravity: **Fase 7 (Tallas y Colores: Variantes con stock propio, modelo híbrido y botón Ingresar Lote adaptable)** implementada y probada al 100% en `siumax.duckdns.org` (backend triggers y funciones de lote con variant_id, grilla adaptable en ModalLote para variantes, insignias en TablaLotes e Historial, y pruebas automatizadas 100% OK). En espera del visto bueno del dueño para pase a producción.
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 3, 4, 5 y 6 en producción en Evicamp (commits d36efca, bd3780f, 994bdca y 59538a0).
 - **Fase en pruebas en siumax:** Fase 7 (Tallas y Colores) en la rama `fase-7-tallas-colores`.
 
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
-| **Fase 7 (Tallas y Colores - Variantes con stock propio)** | **🧪 Hecho y probado 100% en siumax (31/10); esperando revisión del dueño** |
+| **Fase 7 (Tallas y Colores - Variantes con stock propio + Ingreso de Lotes por Variante)** | **🧪 Hecho y probado 100% en siumax (31/10); esperando revisión del dueño** |
 | **Fase 6 (Cambios de Producto y Garantías / Series)** | **✅ Hecho en producción y GitHub (31/10, commit 59538a0)** |
 | **Fase 5 (Descuentos y Promociones)** | **✅ Hecho (incluido en creación de productos: escalas por cantidad, presentaciones y mayoristas)** |
 | **Fase 4 (Clientes, Empresas, Mayoristas, Cotizaciones y Pedidos/Separados)** | **✅ Hecho en producción y GitHub (29/10, commit bd3780f)** |

@@ -571,6 +571,98 @@ BEGIN
 END;
 $$;
 
+-- Edición y retiro de lotes (usados por Almacén y por la devolución de Compras):
+-- Al editar o retirar un lote que pertenece a una variante (variant_id IS NOT NULL),
+-- se mantiene sincronizado tanto el stock de la variante como el stock global del producto.
+CREATE OR REPLACE FUNCTION public.fn_edit_batch(p_batch_id text, p_new_qty numeric, p_new_cost numeric, p_user_name text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_product_id bigint;
+    v_variant_id bigint;
+    v_product_name text;
+    v_old_qty numeric;
+    v_diff numeric;
+BEGIN
+    SELECT product_id, variant_id, quantity INTO v_product_id, v_variant_id, v_old_qty 
+    FROM public.batches 
+    WHERE id = p_batch_id::bigint AND is_active = 1;
+    
+    IF NOT FOUND THEN RETURN; END IF;
+    
+    SELECT name INTO v_product_name FROM public.products WHERE id = v_product_id;
+    
+    v_diff := p_new_qty - v_old_qty;
+
+    UPDATE public.batches 
+    SET quantity = p_new_qty, cost_unit = p_new_cost 
+    WHERE id = p_batch_id::bigint;
+
+    IF v_variant_id IS NOT NULL THEN
+        UPDATE public.product_variants
+        SET quantity = GREATEST(0, coalesce(quantity, 0) + v_diff)
+        WHERE id = v_variant_id;
+    END IF;
+
+    UPDATE public.products SET quantity = (
+        SELECT COALESCE(SUM(quantity), 0) 
+        FROM public.batches 
+        WHERE product_id = v_product_id AND is_active = 1
+    ) WHERE id = v_product_id;
+
+    IF v_diff <> 0 THEN
+        INSERT INTO public.inventory_movements (
+            batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity, 
+            operation_type, reason, "user", created_at, is_synced
+        ) VALUES (
+            p_batch_id::bigint, v_product_id, v_product_name, v_diff, v_old_qty, p_new_qty, 
+            'AJUSTE', 'Edición manual de lote', p_user_name, NOW(), '1'
+        );
+    END IF;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.fn_soft_delete_batch(p_batch_id text, p_user_name text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_product_id bigint;
+    v_variant_id bigint;
+    v_product_name text;
+    v_quantity numeric;
+BEGIN
+    SELECT product_id, variant_id, quantity INTO v_product_id, v_variant_id, v_quantity 
+    FROM public.batches WHERE id = p_batch_id::bigint;
+    
+    IF NOT FOUND THEN RETURN; END IF;
+    SELECT name INTO v_product_name FROM public.products WHERE id = v_product_id;
+
+    UPDATE public.batches SET is_active = 0, quantity = 0 WHERE id = p_batch_id::bigint;
+    
+    IF v_variant_id IS NOT NULL THEN
+        UPDATE public.product_variants
+        SET quantity = GREATEST(0, coalesce(quantity, 0) - v_quantity)
+        WHERE id = v_variant_id;
+    END IF;
+
+    UPDATE public.products SET quantity = (
+        SELECT COALESCE(SUM(quantity), 0) FROM public.batches WHERE product_id = v_product_id AND is_active = 1
+    ) WHERE id = v_product_id;
+
+    INSERT INTO public.inventory_movements (
+        batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity, 
+        operation_type, reason, "user", created_at, is_synced
+    ) VALUES (
+        p_batch_id::bigint, v_product_id, v_product_name, -v_quantity, v_quantity, 0, 
+        'AJUSTE', 'Retiro de Lote (Soft Delete)', p_user_name, NOW(), '1'
+    );
+END;
+$$;
+
 -- Al vender (cada línea de sale_details) se descuenta el stock del producto y de sus lotes, del más antiguo
 -- al más nuevo, y queda un movimiento VENTA por cada lote tocado. Es la misma regla de siempre (antes solo
 -- vivía en la base) con UNA protección nueva: si ese producto de ese ticket YA se descontó (por ejemplo,
@@ -621,21 +713,56 @@ BEGIN
       END IF;
     END IF;
 
-    -- FASE 7: Si es venta de variante específica, se descuenta de product_variants con su costo
+    -- FASE 7: Si es venta de variante específica, se descuenta de product_variants y de sus lotes si los tiene
     IF NEW.variant_id IS NOT NULL THEN
       UPDATE public.product_variants
       SET quantity = GREATEST(0, coalesce(quantity, 0) - v_qty_to_deduct)
       WHERE id = NEW.variant_id
       RETURNING coalesce(quantity, 0), coalesce(cost_price, 0) INTO v_current_stock, v_costo_real;
 
-      INSERT INTO public.inventory_movements (
-        batch_id, variant_id, variant_name, product_id, product_name, change_amount,
-        previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
-      ) VALUES (
-        NULL, NEW.variant_id, NEW.variant_name, NEW.product_id, NEW.product_name, -v_qty_to_deduct,
-        (v_current_stock + v_qty_to_deduct), v_current_stock,
-        'VENTA', 'Venta POS (Variante)', 'Ticket #' || NEW.sale_id::text, now(), 'Sistema', 1
-      );
+      FOR v_batch_record IN
+        SELECT id, coalesce(quantity, 0) AS qty, coalesce(cost_unit, 0) AS cost
+        FROM public.batches
+        WHERE product_id = NEW.product_id AND variant_id = NEW.variant_id AND coalesce(quantity, 0) > 0
+        ORDER BY created_at ASC, id ASC
+        FOR UPDATE
+      LOOP
+        IF v_qty_to_deduct <= 0 THEN EXIT; END IF;
+
+        IF v_batch_record.qty >= v_qty_to_deduct THEN
+          UPDATE public.batches SET quantity = (v_batch_record.qty - v_qty_to_deduct) WHERE id = v_batch_record.id;
+          v_deducted := v_qty_to_deduct;
+          v_qty_to_deduct := 0;
+        ELSE
+          UPDATE public.batches SET quantity = 0 WHERE id = v_batch_record.id;
+          v_deducted := v_batch_record.qty;
+          v_qty_to_deduct := v_qty_to_deduct - v_batch_record.qty;
+        END IF;
+
+        IF v_batch_record.cost > 0 THEN
+          v_costo_real := v_batch_record.cost;
+        END IF;
+
+        INSERT INTO public.inventory_movements (
+          batch_id, variant_id, variant_name, product_id, product_name, change_amount,
+          previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
+        ) VALUES (
+          v_batch_record.id, NEW.variant_id, NEW.variant_name, NEW.product_id, NEW.product_name, -v_deducted,
+          (v_current_stock + v_deducted), v_current_stock,
+          'VENTA', 'Venta POS (Variante)', 'Ticket #' || NEW.sale_id::text, now(), 'Sistema', 1
+        );
+      END LOOP;
+
+      IF v_qty_to_deduct > 0 THEN
+        INSERT INTO public.inventory_movements (
+          batch_id, variant_id, variant_name, product_id, product_name, change_amount,
+          previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
+        ) VALUES (
+          NULL, NEW.variant_id, NEW.variant_name, NEW.product_id, NEW.product_name, -v_qty_to_deduct,
+          (v_current_stock + v_qty_to_deduct), v_current_stock,
+          'VENTA', 'Venta POS (Variante)', 'Ticket #' || NEW.sale_id::text, now(), 'Sistema', 1
+        );
+      END IF;
 
       IF v_costo_real > 0 THEN
         NEW.cost_at_moment := v_costo_real;
@@ -653,7 +780,7 @@ BEGIN
     FOR v_batch_record IN
       SELECT id, coalesce(quantity, 0) AS qty, coalesce(cost_unit, 0) AS cost
       FROM public.batches
-      WHERE product_id = NEW.product_id AND coalesce(quantity, 0) > 0
+      WHERE product_id = NEW.product_id AND variant_id IS NULL AND coalesce(quantity, 0) > 0
       ORDER BY created_at ASC, id ASC
       FOR UPDATE
     LOOP
@@ -815,9 +942,13 @@ BEGIN
       UPDATE product_variants SET quantity = coalesce(quantity, 0) + v_cant WHERE id = v_mov.variant_id
       RETURNING quantity INTO v_nuevo;
 
+      IF v_mov.batch_id IS NOT NULL THEN
+        UPDATE batches SET quantity = coalesce(quantity, 0) + v_cant WHERE id = v_mov.batch_id;
+      END IF;
+
       INSERT INTO inventory_movements (batch_id, variant_id, variant_name, product_id, product_name, change_amount, previous_quantity, new_quantity,
                                        operation_type, reason, notes, created_at, "user", is_synced)
-      VALUES (NULL, v_mov.variant_id, v_mov.variant_name, v_mov.product_id, v_mov.product_name, v_cant, coalesce(v_nuevo, 0) - v_cant, coalesce(v_nuevo, 0),
+      VALUES (v_mov.batch_id, v_mov.variant_id, v_mov.variant_name, v_mov.product_id, v_mov.product_name, v_cant, coalesce(v_nuevo, 0) - v_cant, coalesce(v_nuevo, 0),
               'ANULACION', 'Anulación de venta (Variante)', 'Anulación Ticket #' || p_sale_id::text, v_cuando, v_emp.nombre, 1);
     ELSE
       -- Restaurar stock a lotes / producto genérico
@@ -1580,6 +1711,11 @@ ALTER TABLE public.sale_details ADD COLUMN IF NOT EXISTS variant_name text;
 -- Movimientos de inventario con variante
 ALTER TABLE public.inventory_movements ADD COLUMN IF NOT EXISTS variant_id bigint;
 ALTER TABLE public.inventory_movements ADD COLUMN IF NOT EXISTS variant_name text;
+
+-- Lotes con variante específica (fase 7)
+ALTER TABLE public.batches ADD COLUMN IF NOT EXISTS variant_id bigint;
+ALTER TABLE public.batches ADD COLUMN IF NOT EXISTS variant_name text;
+CREATE INDEX IF NOT EXISTS idx_batches_variant_id ON public.batches (variant_id);
 
 -- Permisos PostgREST
 GRANT ALL ON public.product_variants TO anon;

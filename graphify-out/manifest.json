@@ -144,9 +144,9 @@
     "semantic_hash": "bdde9ae3b37e0c489a08617a909d466e"
   },
   "src/sections/Inventario/components/ModalLote.tsx": {
-    "mtime": 1793325977.589539,
-    "seen": 1793331636.3625312,
-    "ast_hash": "8e48c6f1e1db98369440f87d1d7a5ef0",
+    "mtime": 1793477977.2875085,
+    "seen": 1793478676.2969077,
+    "ast_hash": "9c5838490f214579f8a8c5813491812a",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProducto.tsx": {
@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaLotes.tsx": {
-    "mtime": 1793321368.2793672,
-    "seen": 1793324961.3548348,
-    "ast_hash": "6cd9a55dbd4d544933e574dd6118c415",
+    "mtime": 1793478018.3448706,
+    "seen": 1793478676.2969105,
+    "ast_hash": "993460709b1f8906a4a88100259301e4",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaProductos.tsx": {
@@ -1458,9 +1458,9 @@
     "semantic_hash": ""
   },
   "servidor/sql/seguridad-sesion.sql": {
-    "mtime": 1793475756.655785,
-    "seen": 1793476230.7007391,
-    "ast_hash": "e13c18921a1f06de37f72c75c41ae35b",
+    "mtime": 1793477699.0071354,
+    "seen": 1793478676.2968476,
+    "ast_hash": "86cafa161d243de082700335c756dec1",
     "semantic_hash": ""
   },
   "servidor/activar-seguridad.sh": {
@@ -1518,9 +1518,9 @@
     "semantic_hash": ""
   },
   "src/utils/sinInternet.ts": {
-    "mtime": 1793475861.134388,
-    "seen": 1793476230.7008486,
-    "ast_hash": "0e54da4b1f4fb94bf14d86eb79cff439",
+    "mtime": 1793477731.4050407,
+    "seen": 1793478676.2969604,
+    "ast_hash": "498884b8a846ae982ec8ab7f772261eb",
     "semantic_hash": ""
   },
   "src/layout/BarraConexion.tsx": {
@@ -1572,9 +1572,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalHistorialLotes.tsx": {
-    "mtime": 1792806551.1663296,
-    "seen": 1793205876.2445493,
-    "ast_hash": "47a69a5d1b99ef5a1d460ba921690c75",
+    "mtime": 1793478050.5015366,
+    "seen": 1793478676.296907,
+    "ast_hash": "60ad407d735eb45924c7126290e9a2e5",
     "semantic_hash": ""
   },
   "src/utils/ventanas.ts": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793476172.221873,
-    "seen": 1793476230.7008686,
-    "ast_hash": "3deee2ed2661c155d7b728f4daf22e4a",
+    "mtime": 1793478555.2504706,
+    "seen": 1793478676.2969806,
+    "ast_hash": "8f4485e30a078a8bbbe52836ba50d7ea",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793476202.7659137,
-    "seen": 1793476230.7008693,
-    "ast_hash": "bb6791bffe08e2a08c09b3211c4e8fa3",
+    "mtime": 1793478600.1586154,
+    "seen": 1793478676.2969816,
+    "ast_hash": "d6b53b063a452323c57f4760b32f32ba",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793476216.7077382,
-    "seen": 1793476230.70087,
-    "ast_hash": "808d81c3c0fa53dffa2d1410a59815d1",
+    "mtime": 1793478648.1237893,
+    "seen": 1793478676.2969823,
+    "ast_hash": "cda7bdb8c96203a64fcd2c0a9abc498d",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793476188.0005343,
-    "seen": 1793476230.700871,
-    "ast_hash": "8143ffeb6dee89d4ad1445ea4df74830",
+    "mtime": 1793478575.6998835,
+    "seen": 1793478676.2969832,
+    "ast_hash": "69b487eef1c50eb84222450630f259f9",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2147,12 +2147,6 @@
     "ast_hash": "aae5928e222e7ab0fb25193fcbdba3e9",
     "semantic_hash": ""
   },
-  "scratch/check-products-cols.cjs": {
-    "mtime": 1793324162.8756943,
-    "seen": 1793324961.3547556,
-    "ast_hash": "5a759abcf1984627dc21d06c060bb189",
-    "semantic_hash": ""
-  },
   "servidor/sql/deshacer-fase3.sql": {
     "mtime": 1793325977.5875318,
     "seen": 1793331636.3624675,
@@ -2229,6 +2223,12 @@
     "mtime": 1793476098.5836236,
     "seen": 1793476230.700662,
     "ast_hash": "7a1d6f3b58542bda9e0bc15cb8687f38",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-lote-variantes-ui.mjs": {
+    "mtime": 1793478410.390517,
+    "seen": 1793478676.2967782,
+    "ast_hash": "2e52ab2b1cbc5da68408c702e7aff6a0",
     "semantic_hash": ""
   }
 }

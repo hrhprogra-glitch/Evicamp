@@ -767,13 +767,20 @@ const IMITAR_RPC: Record<string, (p: Record<string, any>) => Promise<ResultadoIm
     if (!lote || Number(lote.is_active) !== 1) return { efectos: [] }; // el servidor tampoco hace nada
     const viejo = Number(lote.quantity || 0);
     const nuevo = Number(p.p_new_qty || 0);
+    const dif = nuevo - viejo;
     const efectos: Efecto[] = [
       { tipo: 'cambio', tabla: 'batches', filtros: [['id', `eq.${lote.id}`]], cambios: { quantity: nuevo, cost_unit: Number(p.p_new_cost || 0) } },
-      { tipo: 'stock', producto: String(lote.product_id), delta: nuevo - viejo },
+      { tipo: 'stock', producto: String(lote.product_id), delta: dif },
     ];
-    if (nuevo !== viejo) efectos.push(movimiento({ batch_id: lote.id, product_id: lote.product_id, change_amount: nuevo - viejo,
+    if (lote.variant_id && dif !== 0) {
+      const vId = String(lote.variant_id);
+      const varFila = await filaLocal('product_variants', vId);
+      const cantVar = Math.max(0, Number(varFila?.quantity || 0) + dif);
+      efectos.push({ tipo: 'cambio', tabla: 'product_variants', filtros: [['id', `eq.${vId}`]], cambios: { quantity: cantVar } });
+    }
+    if (nuevo !== viejo) efectos.push(movimiento({ batch_id: lote.id, product_id: lote.product_id, change_amount: dif,
       previous_quantity: viejo, new_quantity: nuevo, operation_type: 'AJUSTE', reason: 'Edición manual de lote' }));
-    return { efectos, diferencia: nuevo - viejo };
+    return { efectos, diferencia: dif };
   },
 
   // Retirar lote: queda inactivo y en 0, y el stock del producto baja lo que tenía
@@ -782,12 +789,19 @@ const IMITAR_RPC: Record<string, (p: Record<string, any>) => Promise<ResultadoIm
     if (!lote) return { efectos: [] };
     const cant = Number(lote.quantity || 0);
     const activo = Number(lote.is_active) === 1;
-    return { efectos: [
+    const efectos: Efecto[] = [
       { tipo: 'cambio', tabla: 'batches', filtros: [['id', `eq.${lote.id}`]], cambios: { is_active: 0, quantity: 0 } },
       ...(activo ? [{ tipo: 'stock', producto: String(lote.product_id), delta: -cant } as Efecto] : []),
       movimiento({ batch_id: lote.id, product_id: lote.product_id, change_amount: -cant, previous_quantity: cant, new_quantity: 0,
         operation_type: 'AJUSTE', reason: 'Retiro de Lote (Soft Delete)' }),
-    ] };
+    ];
+    if (activo && lote.variant_id && cant > 0) {
+      const vId = String(lote.variant_id);
+      const varFila = await filaLocal('product_variants', vId);
+      const cantVar = Math.max(0, Number(varFila?.quantity || 0) - cant);
+      efectos.push({ tipo: 'cambio', tabla: 'product_variants', filtros: [['id', `eq.${vId}`]], cambios: { quantity: cantVar } });
+    }
+    return { efectos };
   },
 
   // Borrar producto: queda inactivo y en 0, con todos sus lotes
