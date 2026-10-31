@@ -90,8 +90,8 @@
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalDetalleCaja.tsx": {
-    "mtime": 1793415402.6508377,
-    "seen": 1793415508.2336857,
+    "mtime": 1793465972.4214182,
+    "seen": 1793466099.8756795,
     "ast_hash": "6adc2e831422dbb88b8321a0a10e03a8",
     "semantic_hash": ""
   },
@@ -102,26 +102,26 @@
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/TablaHistorial.tsx": {
-    "mtime": 1793402461.3954115,
-    "seen": 1793402835.017024,
+    "mtime": 1793465972.4368982,
+    "seen": 1793466099.8756828,
     "ast_hash": "07654dd0e249574a2d55d75de7133604",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/TablaMovimientos.tsx": {
-    "mtime": 1793331365.6952286,
-    "seen": 1793331636.3625226,
+    "mtime": 1793465972.4384043,
+    "seen": 1793466099.8756843,
     "ast_hash": "31ca574b8451237fa8a2555549e611ef",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/index.tsx": {
-    "mtime": 1793415373.831109,
-    "seen": 1793415508.2336926,
+    "mtime": 1793465972.4736905,
+    "seen": 1793466099.875686,
     "ast_hash": "5bd784c0aeed3ed652e03f9d4457caca",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/types.ts": {
-    "mtime": 1793331538.332751,
-    "seen": 1793331636.3625243,
+    "mtime": 1793465972.4736905,
+    "seen": 1793466099.8756871,
     "ast_hash": "b536c8e98aab3fa667a2b4f843df12ab",
     "semantic_hash": ""
   },
@@ -150,8 +150,8 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProducto.tsx": {
-    "mtime": 1793367266.7400842,
-    "seen": 1793367420.15636,
+    "mtime": 1793465972.4741938,
+    "seen": 1793466099.8757,
     "ast_hash": "fe525262181fd51fe6c158ef16b375a3",
     "semantic_hash": ""
   },
@@ -162,8 +162,8 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaProductos.tsx": {
-    "mtime": 1793367286.799775,
-    "seen": 1793367420.1563635,
+    "mtime": 1793465972.4741938,
+    "seen": 1793466099.8757045,
     "ast_hash": "2e26751b58a6688abffcbcb334f54b45",
     "semantic_hash": ""
   },
@@ -174,14 +174,14 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/index.tsx": {
-    "mtime": 1793330923.7403626,
-    "seen": 1793331636.3625362,
+    "mtime": 1793465972.4741938,
+    "seen": 1793466099.8757074,
     "ast_hash": "b2bc7a9c967f5e2ad5ef08a835fb3c2e",
     "semantic_hash": ""
   },
   "src/sections/Inventario/types.ts": {
-    "mtime": 1793330735.2355797,
-    "seen": 1793331636.3625371,
+    "mtime": 1793465972.4741938,
+    "seen": 1793466099.8757088,
     "ast_hash": "0789c8d7c6275c5ef211c1faf8662686",
     "semantic_hash": ""
   },
@@ -252,26 +252,26 @@
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/TicketImprimible.tsx": {
-    "mtime": 1793331090.594218,
-    "seen": 1793331636.3625524,
+    "mtime": 1793465972.4741938,
+    "seen": 1793466099.8757346,
     "ast_hash": "77267861eb29ac51b550aa2f0d6bbd69",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/TicketVenta.tsx": {
-    "mtime": 1793331077.624207,
-    "seen": 1793331636.3625531,
+    "mtime": 1793465972.4741938,
+    "seen": 1793466099.875736,
     "ast_hash": "cab8294aa25f831084215f426f13216f",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/index.tsx": {
-    "mtime": 1793331051.7210698,
-    "seen": 1793331636.3625538,
+    "mtime": 1793465972.4741938,
+    "seen": 1793466099.8757377,
     "ast_hash": "ea2dd96a90c74672e250c9f0ed54f629",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/types.ts": {
-    "mtime": 1793331023.1393826,
-    "seen": 1793331636.3625546,
+    "mtime": 1793465972.4741938,
+    "seen": 1793466099.8757389,
     "ast_hash": "7aca19cf0cab3dfa99560749b8b3cc93",
     "semantic_hash": ""
   },
@@ -1188,8 +1188,8 @@
     "semantic_hash": "300aa7d63cc8421dc097e6bfd49e1521"
   },
   "src/components/ModalDetalleTicket.tsx": {
-    "mtime": 1793402326.4176764,
-    "seen": 1793402835.0169356,
+    "mtime": 1793465972.3454301,
+    "seen": 1793466099.8756068,
     "ast_hash": "4c3e2e0b32afe1f8095938cf4cec6e04",
     "semantic_hash": ""
   },
@@ -1458,8 +1458,8 @@
     "semantic_hash": ""
   },
   "servidor/sql/seguridad-sesion.sql": {
-    "mtime": 1793330663.0217612,
-    "seen": 1793331636.3624723,
+    "mtime": 1793465972.3340094,
+    "seen": 1793466099.8756018,
     "ast_hash": "be075d1c6f05df0cff1166531646e40c",
     "semantic_hash": ""
   },
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793415530.1102235,
-    "seen": 1793416296.2014306,
-    "ast_hash": "52b7421d644fadb483668033e0283fab",
+    "mtime": 1793466006.9831448,
+    "seen": 1793466099.875815,
+    "ast_hash": "89221a93b6e2bf7a1fc63219711f3e1c",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793415559.8763647,
-    "seen": 1793416296.2014318,
-    "ast_hash": "844488d424f65067b5c45f91f5d58546",
+    "mtime": 1793466075.8817613,
+    "seen": 1793466099.8758163,
+    "ast_hash": "8e67c658ad8cdc8dd1ca5e8651d9bfd5",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793399668.4235656,
-    "seen": 1793402835.0171773,
+    "mtime": 1793465971.9847589,
+    "seen": 1793466099.8758178,
     "ast_hash": "4a2606978b8edadc155296079f292d53",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793415543.2637522,
-    "seen": 1793416296.2014341,
-    "ast_hash": "8e1ec4cd53c28b6131754450362bf201",
+    "mtime": 1793466056.3094738,
+    "seen": 1793466099.875819,
+    "ast_hash": "adc151e8e69cf250d3fe645c46ba6271",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2166,27 +2166,33 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-fase6-cambios-siumax.cjs": {
-    "mtime": 1793330680.3274748,
-    "seen": 1793331636.3623838,
-    "ast_hash": "72131b718fe5dd0749f82053b0a8c9c6",
+    "mtime": 1793465971.8796718,
+    "seen": 1793466099.875449,
+    "ast_hash": "99a7df597e258addf62aac42c6f27855",
     "semantic_hash": ""
   },
   "servidor/sql/deshacer-fase6-cambios-garantias.sql": {
-    "mtime": 1793330641.6946328,
-    "seen": 1793331636.3624713,
-    "ast_hash": "ed342b213d1dd4fecd0ebb7dbfdc1db0",
+    "mtime": 1793465972.3340094,
+    "seen": 1793466099.8756,
+    "ast_hash": "208301e387653b3d9cddc574643439d7",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalCambioProducto.tsx": {
-    "mtime": 1793416217.4679291,
-    "seen": 1793416296.201297,
-    "ast_hash": "2045e1497758cd06bc202a5c1852c583",
+    "mtime": 1793465972.3718479,
+    "seen": 1793466099.8756747,
+    "ast_hash": "8ba7ef86d71607accd6b88fc381f27db",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalConsultarGarantia.tsx": {
-    "mtime": 1793403396.7413888,
-    "seen": 1793403477.5374398,
-    "ast_hash": "1221e978e37729c0185bc3ccf7714626",
+    "mtime": 1793465972.3943684,
+    "seen": 1793466099.875678,
+    "ast_hash": "429d52e432a296b1e81cf3e1ecc04f02",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/aplicar-fase6-evicamp.cjs": {
+    "mtime": 1793465971.8806722,
+    "seen": 1793466099.8754513,
+    "ast_hash": "96bc8c86293e8454e14cf975fc86efa9",
     "semantic_hash": ""
   }
 }

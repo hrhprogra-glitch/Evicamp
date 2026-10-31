@@ -4,10 +4,11 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 30/10/2026 (noche, 50), Antigravity: En Fase 6 se permitió editar y borrar libremente las cantidades (`CANTIDAD A DEVOLVER` y `CANTIDAD A ENTREGAR`), con auto-selección al entrar y validación en `onBlur`. Desplegado en pruebas (`siumax.duckdns.org`).
-- **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4 y 3 en producción en Evicamp (commits 583ad4e, c8c6be3, bd3780f y 994bdca).
-- **Fase en pruebas en siumax:** **Fase 6 — Cambios de producto integrados en Finanzas, garantías y control de números de serie (IMEI)**.
+- **Última actualización:** 31/10/2026 (mañana, 51), Antigravity: Pase oficial de **Fase 6 (Cambios de Producto y Garantías / Series)** a Producción en Evicamp y GitHub (commit 59538a0). Se aclaró que **Separados con adelanto** (Fase 4.6 en Pedidos) y **Promociones** (Fase 1.3 en productos) ya estaban completamente implementadas.
+- **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 3, 4, 5 y 6 en producción en Evicamp (commits d36efca, bd3780f, 994bdca y 59538a0).
 - **Avisos para la clienta de Evicamp:**
+  - En Finanzas ahora cuentan con el botón `[ 🔄 ]` para realizar **Cambios de Producto** directamente desde el ticket, cuadrando automáticamente la caja, el stock y el comprobante sin duplicar registros.
+  - En la ficha del producto pueden registrar meses de garantía de fábrica y activar el control de **Números de Serie / IMEI** para registrar la serie de cada unidad en caja y consultar su vigencia desde Finanzas.
   - "Mermas" ahora se llama "Conteos";
   - dar el permiso "Cambiar precio al cobrar" a quien corresponda si desean que un cajero modifique precios en caja;
   - en la ficha de cada cliente se le puede configurar opcionalmente cuántos días de plazo tiene para pagar (ej. 15 o 30 días);
@@ -18,8 +19,9 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
-| **Fase 6 (Cambios de Producto y Garantías / Series)** | **🧪 Construida y desplegada en siumax (pruebas, 29/10). Lista para revisión del dueño.** |
-| **Fase 4 (Clientes, Empresas, Mayoristas, Cotizaciones y Pedidos)** | **✅ Hecho en producción y GitHub (29/10, commit bd3780f)** |
+| **Fase 6 (Cambios de Producto y Garantías / Series)** | **✅ Hecho en producción y GitHub (31/10, commit 59538a0)** |
+| **Fase 5 (Descuentos y Promociones)** | **✅ Hecho (incluido en creación de productos: escalas por cantidad, presentaciones y mayoristas)** |
+| **Fase 4 (Clientes, Empresas, Mayoristas, Cotizaciones y Pedidos/Separados)** | **✅ Hecho en producción y GitHub (29/10, commit bd3780f)** |
 | **Fase 3 (Marca, Laboratorio, Principio activo, Modelo, Medidas y Ubicación)** | **✅ Hecho en producción y GitHub (29/10, commit 994bdca)** |
 | **Videos tutoriales del sistema** (9 videos; grabados contra la base demo `siudemo`, fuera de Comerc) | **Muestra hecha (02 venta, 29/10); falta OK del dueño para los demás** |
 | **Modo Oscuro (Dark Mode)** reemplazando "Plata / Gris" en Apariencia | **Hecho en producción (29/10)** |
@@ -84,15 +86,15 @@ es **siumax** (https://siumax.duckdns.org).
 | 0 | Arreglos: ingresar lote con proveedor, protección contra doble descuento de stock | ✅ Hecha y subida |
 | 1 | Productos para todo minorista: unidades SUNAT (metro, galón, bolsa…), cajas y paquetes con precio y código propio (Caja y Compras), precios por cantidad (se pueden apagar en la línea de la Caja), cambiar precio al cobrar con permiso o clave del admin. Extras: campo SKU, Mermas → **Conteos**, Editar/Eliminar en el Historial del lote | ✅ Hecha y subida (23/10/2026, commit d36efca) |
 | 2 | Control de inventario: kardex, conteo a ciegas y salidas (sección Conteos), vencimientos, sin ventas y "Sugerir pedido", etiquetas | ✅ Hecha y subida |
-| **4** | **Clientes y empresas**: ficha, empresas/familias, mayoristas, descuentos %, cotizaciones y pedidos por encargo | ✅ Hecha y subida (29/10/2026, commit bd3780f) |
-| **3** | **Marca, laboratorio, principio activo, modelo y medidas para buscar**; venta con receta (farmacia/ferretería) | ⏭️ **La que sigue**: en preparación de propuesta |
-| 5 | Descuentos y promociones (2x1, combos, por monto o por cliente) | Pendiente |
-| 6 | Devoluciones y cambios que devuelven stock, garantía con número de serie o IMEI, separados con adelanto | Pendiente |
-| 7 | Tallas y colores (variantes con stock propio) | Pendiente |
-| 8 | Producción y encargos (recetas e insumos, encargos con fecha y adelanto) | Pendiente |
-| 9 | Varias tiendas o almacenes y traspasos | Pendiente |
-| 10 | Catálogo en línea (el cliente ve productos y pide por WhatsApp, opción de ocultar precios) | Pendiente |
-| 11 | SUNAT: boleta y factura electrónica | **En pausa** hasta que el dueño lo pida (ver sección 7) |
+| **4** | **Clientes y empresas**: ficha, empresas/familias, mayoristas, descuentos %, cotizaciones y pedidos por encargo (separados con adelanto) | ✅ Hecha y subida (29/10/2026, commit bd3780f) |
+| **3** | **Marca, laboratorio, principio activo, modelo y medidas para buscar**; ubicación en tienda | ✅ Hecha y subida (29/10/2026, commit 994bdca) |
+| **5** | **Descuentos y promociones**: precios por cantidad automáticos (escalas), presentaciones (cajas/packs) y mayoristas | ✅ Hecha y subida (Fases 1 y 4) |
+| **6** | **Devoluciones, cambios que devuelven stock y garantía con número de serie o IMEI** | ✅ Hecha y subida (31/10/2026, commit 59538a0) |
+| **7** | **Tallas y colores (variantes con stock propio)** | ⏭️ **La que sigue**: en preparación de propuesta |
+| **8** | Producción y encargos (recetas e insumos, kits) | Pendiente |
+| **9** | Varias tiendas o almacenes y traspasos | Pendiente |
+| **10** | Catálogo en línea (el cliente ve productos y pide por WhatsApp, opción de ocultar precios) | Pendiente |
+| **11** | SUNAT: boleta y factura electrónica | **En pausa** hasta que el dueño lo pida (ver sección 7) |
 
 Orden acordado: 4 → luego 3 y 6 (importantes para ferreterías) → el resto. Para ferreterías que venden a empresas,
 la 11 es necesaria tarde o temprano.

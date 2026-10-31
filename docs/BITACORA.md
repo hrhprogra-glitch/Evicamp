@@ -7,6 +7,29 @@
 
 ---
 
+## 31/10/2026 (mañana, 51) · Antigravity
+- **Pase Oficial de la Fase 6 (Cambios de Producto y Garantías / Series) a Producción (Evicamp) y GitHub:**
+  - El dueño dio la orden explícita: *"si subelo"*.
+  - **1. Base de datos de Producción (`postgres` - Evicamp):**
+    - Respaldo de seguridad creado con `pg_dump -Fc`: `/var/lib/postgresql/respaldo-evicamp-antes-fase6-2026-10-31T16-57-56-337Z.dump` (1.9 MB).
+    - SQL de seguridad aplicado con `psql` y `SET lock_timeout = '5s'`:
+      - Tabla `cambios_productos` creada con índices.
+      - Columnas agregadas a `products`: `controla_series boolean DEFAULT false`, `meses_garantia integer DEFAULT 0`.
+      - Columnas agregadas a `sale_details`: `numero_serie text`, `garantia_hasta date` e índice.
+      - PostgREST recargó el esquema (`NOTIFY pgrst, 'reload schema'`) sin reiniciar la API ni cortar ventas de la clienta.
+      - Errores del SQL: (ninguno). Verificaciones de tablas y columnas: 100% OK.
+  - **2. Despliegue Web a Evicamp:**
+    - Compilación limpia con `tsc -b && vite build` (20 archivos subidos a `evicamp.duckdns.org`).
+    - Verificación HTTP en vivo: 200 OK.
+  - **3. GitHub y control de versiones:**
+    - Rama `fase-6-cambios-garantias` fusionada exitosamente en `main`.
+    - `git push origin main` completado hacia GitHub (`fb7bfd9..59538a0`).
+  - **4. Aclaración del alcance del Plan con el dueño:**
+    - Se constató que **Separados con adelanto** ya estaba 100% hecho y activo desde la Fase 4 (sección Clientes -> pestaña Pedidos, y en Caja -> botón Pedido con adelanto, saldo y reserva de stock).
+    - Se constató que las **Promociones** ya estaban resueltas en la creación de productos (precios por cantidad / escalas automáticas, presentaciones de cajas/packs con precio oferta y precios mayoristas).
+    - Ambas quedan marcadas como completadas.
+  - Siguiente paso: acordar con el dueño el inicio de la siguiente fase (Fase 7: Tallas y Colores, Fase 8: Producción/Recetas, Fase 9: Sucursales/Traspasos, o Fase 10: Catálogo Web WhatsApp).
+
 ## 30/10/2026 (noche, 50) · Antigravity
 - **Permitir borrar y tipear cualquier número libremente en cantidades de Cambio de Producto:**
   - El dueño reportó: *"aqui no puedo borrar el 1 y poner el numero que quiera se mantiene en 1 arregla eso"* (con captura del modal de cambio de producto mostrando `CANTIDAD A DEVOLVER: 1` y `CANTIDAD A ENTREGAR: 1`).

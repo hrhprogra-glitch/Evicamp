@@ -435,8 +435,11 @@
           2. Se cambiaron los inputs a `type="text" inputMode="numeric"`.
           3. Al enfocar o hacer clic (`onFocus` / `onClick`), se auto-selecciona todo el texto (`e.target.select()`) para que el usuario pueda escribir directamente sin necesidad de borrar primero.
           4. La normalización a un número válido (mínimo 1) se realiza únicamente al perder el foco (`onBlur`).
-          5. En la cantidad a devolver, se indica el límite máximo comprado en el ticket `(máx. comprada: X)` y en la nueva se indica el stock disponible `(stock: Y)`.
-        - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
-
-
-
+      43. **Pase Oficial de la Fase 6 a Producción (Evicamp) y GitHub (31/10 mañana):**
+        - El dueño ordenó: *"si subelo"*, tras aclarar que tanto los **Separados con adelanto** (implementados en Fase 4 como Pedidos con anticipo, saldo y reserva de stock) como las **Promociones** (implementadas en la creación de productos como precios por cantidad y presentaciones) ya estaban listos.
+        - Acciones ejecutadas:
+          1. Respaldo de seguridad en Evicamp (`postgres`): `/var/lib/postgresql/respaldo-evicamp-antes-fase6-2026-10-31T16-57-56-337Z.dump` (1.9 MB).
+          2. Migración SQL aplicada con `lock_timeout = '5s'`: tabla `cambios_productos`, columnas `controla_series` y `meses_garantia` en `products`, columnas `numero_serie` y `garantia_hasta` en `sale_details`.
+          3. Recarga del esquema PostgREST sin reiniciar la API ni interrumpir ventas de Evicamp.
+          4. Despliegue de la aplicación web a `evicamp.duckdns.org` (20 archivos subidos). Verificación HTTP 200 OK.
+          5. Fusión de la rama `fase-6-cambios-garantias` a `main` y push completado hacia GitHub (`git push origin main`).
