@@ -28,6 +28,7 @@ export interface Product {
   // Fase 7: tallas y colores (variantes con stock propio)
   tieneVariantes?: boolean;
   variantes?: ProductVariant[];
+  stockBase?: number;                                               // stock propio/lotes general (además de sus variantes)
   variantId?: string | number;                                      // id de variante en la caja
   variantName?: string | null;                                      // "Talla M / Negro"
   // Fase 1.2: presentaciones (caja, paquete…) y, en la Caja, la presentación vendida como otro "producto"

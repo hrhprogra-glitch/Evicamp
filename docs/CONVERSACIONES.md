@@ -456,3 +456,11 @@
         - Se integraron las interfaces en Inventario (`ModalProducto`, `TablaProductos`) y Caja (`Punto-de-venta`, `variantes.ts`).
         - Pruebas superadas al 100%: backend (`prueba-fase7-variantes.mjs`) y navegador Edge (`prueba-fase7-ui.mjs`).
         - Desplegado a `siumax.duckdns.org` para que el dueño pruebe. Evicamp y GitHub permanecen intactos esperando su visto bueno.
+      45. **Aclaración y Decisión del Modelo Híbrido: Lotes Genéricos + Variantes (31/10 tarde):**
+        - El dueño preguntó: *"pero que pasa si pongo polo nicke y lo ingreso en lote 100 pero en variantes tengo polo nicket blanco M y pongo 100 deben aparecer los 2 no??"*.
+        - Se le presentó la consulta interactiva con las alternativas de negocio. El dueño seleccionó la Opción A1 (Recomendada):
+          - En Caja deben aparecer los dos: el 'Polo Nike' genérico (con su stock de lote) y el 'Polo Nike Blanco M' (con su stock propio).
+          - Si el producto genérico no tiene stock en lotes (`quantity = 0`), solo aparecen las variantes específicas.
+        - Se ajustaron `servidor/sql/seguridad-sesion.sql` (trigger `fn_reduce_stock_from_sales` y `fn_anular_venta`), `src/utils/variantes.ts`, `Punto-de-venta/index.tsx`, `Inventario/index.tsx`, `TablaProductos.tsx` y `sinInternet.ts`.
+        - Se validó con un script automatizado específico (`ai-scripts/pruebas/prueba-fase7-hibrido.mjs`) que creó 100 unidades en lote y 100 en variante: ambos aparecieron en Caja, la venta de la variante descontó de la variante dejando intacto el lote, la venta genérica descontó del lote dejando intacta la variante, y las anulaciones devolvieron el stock de cada uno de forma 100% independiente.
+        - Todo compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub permanecen intactos.

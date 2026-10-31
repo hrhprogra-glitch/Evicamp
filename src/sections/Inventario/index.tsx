@@ -141,7 +141,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             const vars = variantesPorProducto.get(p.id) || [];
             const tieneVars = Boolean(p.tiene_variantes || vars.length > 0);
             const stockVariantes = vars.reduce((acc, v) => acc + (Number(v.quantity) || 0), 0);
-            const stockFinal = tieneVars ? stockVariantes : (lotesDelProducto.length > 0 ? stockRealGlobal : (Number(p.quantity) || 0));
+            const stockLoteOBase = lotesDelProducto.length > 0 ? stockRealGlobal : (Number(p.quantity) || 0);
+            const stockFinal = tieneVars ? (stockVariantes + stockLoteOBase) : stockLoteOBase;
 
             return {
               id: p.id,
@@ -151,6 +152,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               // Usamos el costo del lote reciente, si no hay, usamos el del producto
               cost: loteMasReciente ? Number(loteMasReciente.cost_unit) : (Number(p.cost_price) || 0),
               quantity: stockFinal,
+              stockBase: tieneVars ? stockLoteOBase : undefined,
               minStock: Number(p.min_stock) || 0,
               code: p.code || 'NO-SKU',
               barcode: p.barcode || '',

@@ -827,25 +827,30 @@ const IMITAR_RPC: Record<string, (p: Record<string, any>) => Promise<ResultadoIm
     let productos = 0;
     for (const s of salidas) {
       if (s.cant <= 0) continue;
-      if (s.batch_id != null) {
-        const lote = String(s.batch_id);
-        const ahora = (lotes.has(lote) ? lotes.get(lote)! : Number((await filaLocal('batches', lote))?.quantity || 0)) + s.cant;
-        lotes.set(lote, ahora);
-        efectos.push({ tipo: 'cambio', tabla: 'batches', filtros: [['id', `eq.${lote}`]], cambios: { quantity: ahora } });
-      }
       if (s.variant_id != null) {
         const varId = String(s.variant_id);
-        const ahoraVar = (vars.has(varId) ? vars.get(varId)! : Number((await filaLocal('product_variants', varId))?.quantity || 0)) + s.cant;
+        const antesVar = vars.has(varId) ? vars.get(varId)! : Number((await filaLocal('product_variants', varId))?.quantity || 0);
+        const ahoraVar = antesVar + s.cant;
         vars.set(varId, ahoraVar);
         efectos.push({ tipo: 'cambio', tabla: 'product_variants', filtros: [['id', `eq.${varId}`]], cambios: { quantity: ahoraVar } });
+        efectos.push(movimiento({ batch_id: null, variant_id: s.variant_id, variant_name: s.variant_name, product_id: s.product_id, product_name: s.product_name, change_amount: s.cant,
+          previous_quantity: antesVar, new_quantity: ahoraVar, operation_type: 'ANULACION', reason: 'Anulación de venta (Variante)',
+          notes: `Anulación ${ticket}`, created_at: cuando }));
+      } else {
+        if (s.batch_id != null) {
+          const lote = String(s.batch_id);
+          const ahora = (lotes.has(lote) ? lotes.get(lote)! : Number((await filaLocal('batches', lote))?.quantity || 0)) + s.cant;
+          lotes.set(lote, ahora);
+          efectos.push({ tipo: 'cambio', tabla: 'batches', filtros: [['id', `eq.${lote}`]], cambios: { quantity: ahora } });
+        }
+        const producto = String(s.product_id);
+        const antes = stock.has(producto) ? stock.get(producto)! : Number((await filaLocal('products', producto))?.quantity || 0);
+        stock.set(producto, antes + s.cant);
+        efectos.push({ tipo: 'stock', producto, delta: s.cant });
+        efectos.push(movimiento({ batch_id: s.batch_id, variant_id: null, variant_name: null, product_id: s.product_id, product_name: s.product_name, change_amount: s.cant,
+          previous_quantity: antes, new_quantity: antes + s.cant, operation_type: 'ANULACION', reason: 'Anulación de venta',
+          notes: `Anulación ${ticket}`, created_at: cuando }));
       }
-      const producto = String(s.product_id);
-      const antes = stock.has(producto) ? stock.get(producto)! : Number((await filaLocal('products', producto))?.quantity || 0);
-      stock.set(producto, antes + s.cant);
-      efectos.push({ tipo: 'stock', producto, delta: s.cant });
-      efectos.push(movimiento({ batch_id: s.batch_id, variant_id: s.variant_id, variant_name: s.variant_name, product_id: s.product_id, product_name: s.product_name, change_amount: s.cant,
-        previous_quantity: antes, new_quantity: antes + s.cant, operation_type: 'ANULACION', reason: 'Anulación de venta',
-        notes: `Anulación ${ticket}`, created_at: cuando }));
       productos++;
     }
     efectos.push({ tipo: 'cambio', tabla: 'sales', filtros: [['id', `eq.${ventaId}`]], cambios: { sunat_status: 'ANULADO' } });
@@ -1023,25 +1028,43 @@ const PREPARAR_RPC: Record<string, (p: Pendiente, params: Record<string, any>) =
   },
 };
 
-// El stock que se ve en pantalla baja también sin internet (en las copias de productos)
+// El stock que se ve en pantalla baja también sin internet (en las copias de productos y variantes)
 const descontarStockLocal = async (cuerpo: string) => {
   try {
-    const vendido = new Map<string, number>();
-    for (const d of JSON.parse(cuerpo) as { product_id: string | number; quantity: number }[]) {
-      vendido.set(String(d.product_id), (vendido.get(String(d.product_id)) || 0) + Number(d.quantity || 0));
+    const vendidoProd = new Map<string, number>();
+    const vendidoVar = new Map<string, number>();
+    for (const d of JSON.parse(cuerpo) as { product_id: string | number; variant_id?: string | number | null; quantity: number }[]) {
+      if (d.variant_id != null) {
+        vendidoVar.set(String(d.variant_id), (vendidoVar.get(String(d.variant_id)) || 0) + Number(d.quantity || 0));
+      } else {
+        vendidoProd.set(String(d.product_id), (vendidoProd.get(String(d.product_id)) || 0) + Number(d.quantity || 0));
+      }
     }
     for (const clave of await clavesLocal(ALMACEN_RESPUESTAS)) {
-      if (!String(clave).includes('/rest/v1/products?')) continue;
-      const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave);
-      if (!copia) continue;
-      const filas = JSON.parse(copia.cuerpo);
-      if (!Array.isArray(filas)) continue;
-      let cambio = false;
-      for (const f of filas) {
-        const resta = vendido.get(String(f?.id));
-        if (resta && typeof f.quantity === 'number') { f.quantity = Math.max(0, f.quantity - resta); cambio = true; }
+      if (String(clave).includes('/rest/v1/products?')) {
+        const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave);
+        if (!copia) continue;
+        const filas = JSON.parse(copia.cuerpo);
+        if (!Array.isArray(filas)) continue;
+        let cambio = false;
+        for (const f of filas) {
+          const resta = vendidoProd.get(String(f?.id));
+          if (resta && typeof f.quantity === 'number') { f.quantity = Math.max(0, f.quantity - resta); cambio = true; }
+        }
+        if (cambio) await guardarLocal(ALMACEN_RESPUESTAS, { ...copia, cuerpo: JSON.stringify(filas) }, clave);
       }
-      if (cambio) await guardarLocal(ALMACEN_RESPUESTAS, { ...copia, cuerpo: JSON.stringify(filas) }, clave);
+      if (String(clave).includes('/rest/v1/product_variants?')) {
+        const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave);
+        if (!copia) continue;
+        const filas = JSON.parse(copia.cuerpo);
+        if (!Array.isArray(filas)) continue;
+        let cambio = false;
+        for (const f of filas) {
+          const resta = vendidoVar.get(String(f?.id));
+          if (resta && typeof f.quantity === 'number') { f.quantity = Math.max(0, f.quantity - resta); cambio = true; }
+        }
+        if (cambio) await guardarLocal(ALMACEN_RESPUESTAS, { ...copia, cuerpo: JSON.stringify(filas) }, clave);
+      }
     }
   } catch { /* es solo lo que se ve en pantalla: el stock real lo descuenta el servidor al subir */ }
 };

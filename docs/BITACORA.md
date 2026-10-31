@@ -7,6 +7,25 @@
 
 ---
 
+## 31/10/2026 (tarde, 53) · Antigravity
+- **Modelo Híbrido de Stock para Variantes y Lotes Genéricos en Caja (Fase 7):**
+  - **Pregunta del dueño:** *"pero que pasa si pongo polo nicke y lo ingreso en lote 100 pero en variantes tengo polo nicket blanco M y pongo 100 deben aparecer los 2 no??"*
+  - **Decisión acordada:** Opción A1 recomendada. En Caja aparecen ambos: el 'Polo Nike' genérico (con su stock de lote) y cada variante específica ('Polo Nike Blanco M') con su stock individual. Si el producto genérico no tiene stock de lote (`quantity = 0`), solo aparecen las variantes para no saturar con tarjetas agotadas.
+  - **1. Base de datos (`servidor/sql/seguridad-sesion.sql` y `siumax`):**
+    - `fn_reduce_stock_from_sales`: Si `NEW.variant_id IS NOT NULL`, descuenta exclusivamente de `product_variants.quantity`, toma el costo de la variante y sale sin tocar `batches` ni `products.quantity`. Si `NEW.variant_id IS NULL`, descuenta de `batches` y `products.quantity` sin tocar variantes.
+    - `fn_anular_venta`: Si el movimiento tiene `variant_id`, restaura el stock a `product_variants`; si no tiene `variant_id`, restaura a `batches` y `products`.
+    - Respaldo de base de datos realizado y SQL aplicado con cero errores en `siumax`.
+  - **2. Lógica Frontend y Modo Offline:**
+    - `src/utils/variantes.ts`: `conVariantesYPresentaciones` incluye la variante vendible y, si `Number(p.quantity) > 0`, incluye también el producto base genérico.
+    - `src/sections/Punto-de-venta/index.tsx`: mantiene `p.quantity` intacto en `fetchProducts`; en `handleAddToCart` y `setProductos` post-venta separa el conteo y descuento de unidades genéricas (`!i.variantId`) de las variantes.
+    - `src/sections/Inventario/index.tsx`: suma el stock global de lotes + variantes en `stockFinal`, y guarda `stockBase` para el tooltip de la tabla.
+    - `src/utils/sinInternet.ts`: desacoplamiento de stock offline en `descontarStockLocal` y `IMITAR_RPC.fn_anular_venta`.
+  - **3. Verificación Automatizada 100% Exitosa:**
+    - `ai-scripts/pruebas/prueba-fase7-hibrido.mjs`: probó el caso exacto del dueño: 100 und en lote de Polo Nike + 100 und en variante Blanco M. Comprobó que en Caja aparecen los 2 ítems, vender 10 Blanco M descuenta variante a 90 dejando el lote intacto en 100; vender 15 genérico descuenta lote a 85 dejando variante intacta en 90; y anular ambas devuelve cada uno a 100.
+    - `ai-scripts/pruebas/prueba-fase7-variantes.mjs`: 13/13 pruebas OK.
+    - `ai-scripts/pruebas/prueba-fase7-ui.mjs`: prueba de interfaz con Puppeteer Edge OK.
+  - **4. Despliegue:** Compilado y desplegado a `siumax.duckdns.org`. Producción Evicamp y GitHub main intactos (Regla 4).
+
 ## 31/10/2026 (tarde, 52) · Antigravity
 - **Implementación y Pruebas Completas de la Fase 7 (Tallas y Colores: Variantes con stock propio) en `siumax`:**
   - El dueño dio su aprobación para comenzar: *"si dale"*.

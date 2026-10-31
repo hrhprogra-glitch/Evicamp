@@ -509,7 +509,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           price: Number(p.price) || 0,
           precioMayorista: p.precio_mayorista != null && !isNaN(Number(p.precio_mayorista)) ? Number(p.precio_mayorista) : undefined,
           cost: Number(p.cost_price) || 0,
-          quantity: tieneVars ? stockVariantes : (Number(p.quantity) || 0),
+          quantity: Number(p.quantity) || 0,
           minStock: Number(p.min_stock) || 0,
           code: p.code || 'NO-SKU',
           barcode: p.barcode || '',
@@ -660,7 +660,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       // Fase 1.2: el stock se revisa en UNIDADES del producto real, sumando sueltas y presentaciones (1 CAJA x12 = 12)
       const idReal = String(producto.productoId ?? producto.id);
       const stockReal = productos.find((p) => String(p.id) === idReal)?.quantity ?? producto.quantity;
-      const unidadesEnCarrito = cart.filter((i) => String(i.productoId ?? i.id) === idReal).reduce((t, i) => t + i.cartQuantity * (i.presentacion?.factor ?? 1), 0);
+      const unidadesEnCarrito = cart.filter((i) => String(i.productoId ?? i.id) === idReal && !i.variantId).reduce((t, i) => t + i.cartQuantity * (i.presentacion?.factor ?? 1), 0);
       if (unidadesEnCarrito + (producto.presentacion?.factor ?? 1) > stockReal && producto.unit !== 'CONSUMO') {
         alert(`🚫 STOCK INSUFICIENTE: Solo tienes ${stockReal} en stock de ${producto.productoId ? producto.name.replace(/ \([^)]*\)$/, '') : producto.name}.`);
         return;
@@ -989,10 +989,9 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       if (!detailError) {
         setProductos(prevProductos =>
           prevProductos.map(p => {
-            // Unidades vendidas de este producto: sueltas, variantes y en presentaciones (1 CAJA x12 = 12)
-            const lineas = cart.filter(i => String(i.productoId ?? i.id) === String(p.id) && i.unit !== 'CONSUMO');
-            if (!lineas.length) return p;
-            const unidades = lineas.reduce((t, i) => t + Number(i.cartQuantity) * (i.presentacion?.factor ?? 1), 0);
+            // Unidades vendidas del producto base genérico: sueltas y en presentaciones (1 CAJA x12 = 12), excluyendo variantes
+            const lineasBase = cart.filter(i => String(i.productoId ?? i.id) === String(p.id) && !i.variantId && i.unit !== 'CONSUMO');
+            const unidadesBase = lineasBase.reduce((t, i) => t + Number(i.cartQuantity) * (i.presentacion?.factor ?? 1), 0);
 
             let nuevasVariantes = p.variantes;
             if (p.tieneVariantes && Array.isArray(p.variantes)) {
@@ -1007,7 +1006,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
 
             return {
               ...p,
-              quantity: Math.max(0, p.quantity - unidades),
+              quantity: Math.max(0, p.quantity - unidadesBase),
               variantes: nuevasVariantes
             };
           })

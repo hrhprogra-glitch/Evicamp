@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaProductos.tsx": {
-    "mtime": 1793470738.4561853,
-    "seen": 1793472730.9102643,
-    "ast_hash": "cb425bd0eb8c3eb278010945e5c1ba34",
+    "mtime": 1793475805.110507,
+    "seen": 1793476230.7008014,
+    "ast_hash": "01fa02544ddcd8449461cc0964dfdc9b",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TarjetaMetrica.tsx": {
@@ -174,15 +174,15 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/index.tsx": {
-    "mtime": 1793470721.5927935,
-    "seen": 1793472730.9102674,
-    "ast_hash": "b619c4283f96b37178678922ac469a8c",
+    "mtime": 1793475792.3309097,
+    "seen": 1793476230.700803,
+    "ast_hash": "6b305422ca122d2b37fd65b75af16dd9",
     "semantic_hash": ""
   },
   "src/sections/Inventario/types.ts": {
-    "mtime": 1793470127.548395,
-    "seen": 1793472730.910269,
-    "ast_hash": "33d5ad1fe8dfbdad92e6763bafd19751",
+    "mtime": 1793475779.1947074,
+    "seen": 1793476230.7008038,
+    "ast_hash": "09eb1a99f9016405662f7226414d3327",
     "semantic_hash": ""
   },
   "src/sections/Login.tsx": {
@@ -264,9 +264,9 @@
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/index.tsx": {
-    "mtime": 1793471158.7398825,
-    "seen": 1793472730.9102979,
-    "ast_hash": "926afd3fbe120cc584ae79532b1c352a",
+    "mtime": 1793475830.8947892,
+    "seen": 1793476230.700821,
+    "ast_hash": "c4b5382e95738efccf7903c9fa11c363",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/types.ts": {
@@ -1458,9 +1458,9 @@
     "semantic_hash": ""
   },
   "servidor/sql/seguridad-sesion.sql": {
-    "mtime": 1793471430.4444325,
-    "seen": 1793472730.9101596,
-    "ast_hash": "aecda0adbb278b83bf4db4d006282ac7",
+    "mtime": 1793475756.655785,
+    "seen": 1793476230.7007391,
+    "ast_hash": "e13c18921a1f06de37f72c75c41ae35b",
     "semantic_hash": ""
   },
   "servidor/activar-seguridad.sh": {
@@ -1518,9 +1518,9 @@
     "semantic_hash": ""
   },
   "src/utils/sinInternet.ts": {
-    "mtime": 1793470498.493404,
-    "seen": 1793472730.9103441,
-    "ast_hash": "1b160921480a66ae90387b6b80125bfa",
+    "mtime": 1793475861.134388,
+    "seen": 1793476230.7008486,
+    "ast_hash": "0e54da4b1f4fb94bf14d86eb79cff439",
     "semantic_hash": ""
   },
   "src/layout/BarraConexion.tsx": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793466006.9831448,
-    "seen": 1793466099.875815,
-    "ast_hash": "89221a93b6e2bf7a1fc63219711f3e1c",
+    "mtime": 1793476172.221873,
+    "seen": 1793476230.7008686,
+    "ast_hash": "3deee2ed2661c155d7b728f4daf22e4a",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793466075.8817613,
-    "seen": 1793466099.8758163,
-    "ast_hash": "8e67c658ad8cdc8dd1ca5e8651d9bfd5",
+    "mtime": 1793476202.7659137,
+    "seen": 1793476230.7008693,
+    "ast_hash": "bb6791bffe08e2a08c09b3211c4e8fa3",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793465971.9847589,
-    "seen": 1793466099.8758178,
-    "ast_hash": "4a2606978b8edadc155296079f292d53",
+    "mtime": 1793476216.7077382,
+    "seen": 1793476230.70087,
+    "ast_hash": "808d81c3c0fa53dffa2d1410a59815d1",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793466056.3094738,
-    "seen": 1793466099.875819,
-    "ast_hash": "adc151e8e69cf250d3fe645c46ba6271",
+    "mtime": 1793476188.0005343,
+    "seen": 1793476230.700871,
+    "ast_hash": "8143ffeb6dee89d4ad1445ea4df74830",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2208,9 +2208,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-fase7-variantes.mjs": {
-    "mtime": 1793471546.7559104,
-    "seen": 1793472730.9100366,
-    "ast_hash": "e0111d829b957643067c2c392f37976a",
+    "mtime": 1793475943.5446627,
+    "seen": 1793476230.7006648,
+    "ast_hash": "67918718b0ff9369aabcb105d69d3c92",
     "semantic_hash": ""
   },
   "servidor/sql/deshacer-fase7-tallas-colores.sql": {
@@ -2220,9 +2220,15 @@
     "semantic_hash": ""
   },
   "src/utils/variantes.ts": {
-    "mtime": 1793470145.9615755,
-    "seen": 1793472730.9103534,
-    "ast_hash": "bbe2148da819fa395ab160fd7d6b2469",
+    "mtime": 1793475578.2409325,
+    "seen": 1793476230.700854,
+    "ast_hash": "253170b1723ed3cb90435ba7d7599e04",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-fase7-hibrido.mjs": {
+    "mtime": 1793476098.5836236,
+    "seen": 1793476230.700662,
+    "ast_hash": "7a1d6f3b58542bda9e0bc15cb8687f38",
     "semantic_hash": ""
   }
 }

@@ -609,26 +609,46 @@ BEGIN
     SELECT coalesce(sum(-change_amount), 0) INTO v_ya_descontado
     FROM public.inventory_movements
     WHERE product_id = NEW.product_id AND operation_type = 'VENTA'
-      AND (notes = 'Ticket #' || NEW.sale_id::text OR notes ~ ('^Doc: B001-0*' || NEW.sale_id::text || '$'));
+      AND (notes = 'Ticket #' || NEW.sale_id::text OR notes ~ ('^Doc: B001-0*' || NEW.sale_id::text || '$'))
+      AND (variant_id IS NOT DISTINCT FROM NEW.variant_id);
     IF v_ya_descontado > 0 THEN
       SELECT coalesce(sum(abs(quantity)), 0) INTO v_en_lineas
-      FROM public.sale_details WHERE sale_id = NEW.sale_id AND product_id = NEW.product_id;
+      FROM public.sale_details WHERE sale_id = NEW.sale_id AND product_id = NEW.product_id
+        AND (variant_id IS NOT DISTINCT FROM NEW.variant_id);
       IF v_ya_descontado >= v_en_lineas + v_qty_to_deduct THEN
-        RAISE WARNING 'Venta % producto %: ya estaba descontada, no se descuenta otra vez', NEW.sale_id, NEW.product_id;
+        RAISE WARNING 'Venta % producto % (variante %): ya estaba descontada, no se descuenta otra vez', NEW.sale_id, NEW.product_id, NEW.variant_id;
         RETURN NEW;
       END IF;
     END IF;
 
+    -- FASE 7: Si es venta de variante específica, se descuenta de product_variants con su costo
+    IF NEW.variant_id IS NOT NULL THEN
+      UPDATE public.product_variants
+      SET quantity = GREATEST(0, coalesce(quantity, 0) - v_qty_to_deduct)
+      WHERE id = NEW.variant_id
+      RETURNING coalesce(quantity, 0), coalesce(cost_price, 0) INTO v_current_stock, v_costo_real;
+
+      INSERT INTO public.inventory_movements (
+        batch_id, variant_id, variant_name, product_id, product_name, change_amount,
+        previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
+      ) VALUES (
+        NULL, NEW.variant_id, NEW.variant_name, NEW.product_id, NEW.product_name, -v_qty_to_deduct,
+        (v_current_stock + v_qty_to_deduct), v_current_stock,
+        'VENTA', 'Venta POS (Variante)', 'Ticket #' || NEW.sale_id::text, now(), 'Sistema', 1
+      );
+
+      IF v_costo_real > 0 THEN
+        NEW.cost_at_moment := v_costo_real;
+      END IF;
+
+      RETURN NEW;
+    END IF;
+
+    -- Venta de producto genérico / lotes:
     UPDATE public.products
     SET quantity = coalesce(quantity, 0) - v_qty_to_deduct
     WHERE id = NEW.product_id
     RETURNING coalesce(quantity, 0) INTO v_current_stock;
-
-    IF NEW.variant_id IS NOT NULL THEN
-      UPDATE public.product_variants
-      SET quantity = GREATEST(0, coalesce(quantity, 0) - v_qty_to_deduct)
-      WHERE id = NEW.variant_id;
-    END IF;
 
     FOR v_batch_record IN
       SELECT id, coalesce(quantity, 0) AS qty, coalesce(cost_unit, 0) AS cost
@@ -656,7 +676,7 @@ BEGIN
         batch_id, variant_id, variant_name, product_id, product_name, change_amount,
         previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
       ) VALUES (
-        v_batch_record.id, NEW.variant_id, NEW.variant_name, NEW.product_id, NEW.product_name, -v_deducted,
+        v_batch_record.id, NULL, NULL, NEW.product_id, NEW.product_name, -v_deducted,
         (v_current_stock + v_deducted), v_current_stock,
         'VENTA', 'Venta POS', 'Ticket #' || NEW.sale_id::text, now(), 'Sistema', 1
       );
@@ -669,7 +689,7 @@ BEGIN
         batch_id, variant_id, variant_name, product_id, product_name, change_amount,
         previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
       ) VALUES (
-        NULL, NEW.variant_id, NEW.variant_name, NEW.product_id, NEW.product_name, -v_qty_to_deduct,
+        NULL, NULL, NULL, NEW.product_id, NEW.product_name, -v_qty_to_deduct,
         (v_current_stock + v_qty_to_deduct), v_current_stock,
         'VENTA', 'Venta POS (sin lote)', 'Ticket #' || NEW.sale_id::text, now(), 'Sistema', 1
       );
@@ -790,18 +810,28 @@ BEGIN
                WHERE operation_type = 'VENTA' AND notes = 'Ticket #' || p_sale_id::text ORDER BY id LOOP
     v_cant := abs(coalesce(v_mov.change_amount, 0));
     IF v_cant <= 0 THEN CONTINUE; END IF;
-    IF v_mov.batch_id IS NOT NULL THEN
-      UPDATE batches SET quantity = coalesce(quantity, 0) + v_cant WHERE id = v_mov.batch_id;
-    END IF;
     IF v_mov.variant_id IS NOT NULL THEN
-      UPDATE product_variants SET quantity = coalesce(quantity, 0) + v_cant WHERE id = v_mov.variant_id;
+      -- Restaurar stock a la variante específica
+      UPDATE product_variants SET quantity = coalesce(quantity, 0) + v_cant WHERE id = v_mov.variant_id
+      RETURNING quantity INTO v_nuevo;
+
+      INSERT INTO inventory_movements (batch_id, variant_id, variant_name, product_id, product_name, change_amount, previous_quantity, new_quantity,
+                                       operation_type, reason, notes, created_at, "user", is_synced)
+      VALUES (NULL, v_mov.variant_id, v_mov.variant_name, v_mov.product_id, v_mov.product_name, v_cant, coalesce(v_nuevo, 0) - v_cant, coalesce(v_nuevo, 0),
+              'ANULACION', 'Anulación de venta (Variante)', 'Anulación Ticket #' || p_sale_id::text, v_cuando, v_emp.nombre, 1);
+    ELSE
+      -- Restaurar stock a lotes / producto genérico
+      IF v_mov.batch_id IS NOT NULL THEN
+        UPDATE batches SET quantity = coalesce(quantity, 0) + v_cant WHERE id = v_mov.batch_id;
+      END IF;
+      UPDATE products SET quantity = coalesce(quantity, 0) + v_cant WHERE id = v_mov.product_id
+      RETURNING quantity INTO v_nuevo;
+
+      INSERT INTO inventory_movements (batch_id, variant_id, variant_name, product_id, product_name, change_amount, previous_quantity, new_quantity,
+                                       operation_type, reason, notes, created_at, "user", is_synced)
+      VALUES (v_mov.batch_id, NULL, NULL, v_mov.product_id, v_mov.product_name, v_cant, coalesce(v_nuevo, 0) - v_cant, coalesce(v_nuevo, 0),
+              'ANULACION', 'Anulación de venta', 'Anulación Ticket #' || p_sale_id::text, v_cuando, v_emp.nombre, 1);
     END IF;
-    UPDATE products SET quantity = coalesce(quantity, 0) + v_cant WHERE id = v_mov.product_id
-    RETURNING quantity INTO v_nuevo;
-    INSERT INTO inventory_movements (batch_id, variant_id, variant_name, product_id, product_name, change_amount, previous_quantity, new_quantity,
-                                     operation_type, reason, notes, created_at, "user", is_synced)
-    VALUES (v_mov.batch_id, v_mov.variant_id, v_mov.variant_name, v_mov.product_id, v_mov.product_name, v_cant, coalesce(v_nuevo, 0) - v_cant, coalesce(v_nuevo, 0),
-            'ANULACION', 'Anulación de venta', 'Anulación Ticket #' || p_sale_id::text, v_cuando, v_emp.nombre, 1);
     v_productos := v_productos + 1;
   END LOOP;
 

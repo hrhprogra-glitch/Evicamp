@@ -4,7 +4,7 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 31/10/2026 (tarde, 52), Antigravity: **Fase 7 (Tallas y Colores: Variantes con stock propio)** implementada y probada al 100% en `siumax.duckdns.org` (backend, triggers, frontend y pruebas con navegador Edge). En espera del visto bueno del dueño para pase a producción.
+- **Última actualización:** 31/10/2026 (tarde, 53), Antigravity: **Fase 7 (Tallas y Colores: Variantes con stock propio + modelo híbrido)** implementada y probada al 100% en `siumax.duckdns.org` (backend, triggers desacoplados, frontend con visualización simultánea de producto genérico con lotes y variantes, y pruebas automatizadas 100% OK). En espera del visto bueno del dueño para pase a producción.
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 3, 4, 5 y 6 en producción en Evicamp (commits d36efca, bd3780f, 994bdca y 59538a0).
 - **Fase en pruebas en siumax:** Fase 7 (Tallas y Colores) en la rama `fase-7-tallas-colores`.
 

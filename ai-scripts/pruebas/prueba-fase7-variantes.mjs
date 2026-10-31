@@ -84,9 +84,9 @@ try {
 
   ok('Trigger redujo el stock de Talla M de 10 a 8', Number(stockM) === 8, `Stock actual M: ${stockM}`);
   ok('Stock de Talla L intacto en 5', Number(stockL) === 5, `Stock actual L: ${stockL}`);
-  ok('Stock del producto padre se redujo a 13', Number(stockParent) === 13, `Stock actual padre: ${stockParent}`);
+  ok('Stock del producto padre genérico intacto en 15 (stock propio/lote independiente)', Number(stockParent) === 15, `Stock actual padre: ${stockParent}`);
 
-  // 5. Verificar Kardex
+  // 5. Verificar Kardex de variante
   const kardex = await sql(`
     SELECT variant_id, variant_name, change_amount, operation_type 
     FROM inventory_movements 
@@ -94,18 +94,44 @@ try {
   `);
   ok('Kardex VENTA registró variant_id y variant_name', kardex.includes(idVarM) && kardex.includes('TALLA M / NEGRO'), kardex);
 
-  // 6. Probar Anular Venta (Devolución)
+  // 6. Simular venta de 3 unidades del producto genérico (sin variante)
+  const saleGenRaw = await sql(`
+    INSERT INTO sales (total, payment_type, amount_cash, sunat_status, is_synced, created_at)
+    VALUES (135.00, 'EFECTIVO', 135.00, 'EMITIDO', 1, now())
+    RETURNING id;
+  `);
+  const saleGenId = saleGenRaw.match(/\d+/)?.[0];
+
+  await sql(`
+    INSERT INTO sale_details (sale_id, product_id, product_name, quantity, price_at_moment, variant_id, variant_name, subtotal, is_synced)
+    VALUES (${saleGenId}, ${prodId}, 'POLO TEST FASE 7', 3, 45.00, NULL, NULL, 135.00, 1);
+  `);
+
+  const stockParentDespGen = await sql(`SELECT quantity FROM products WHERE id = ${prodId};`);
+  const stockMDespGen = await sql(`SELECT quantity FROM product_variants WHERE id = ${idVarM};`);
+  ok('Venta genérica redujo el stock del padre de 15 a 12', Number(stockParentDespGen) === 12, `Stock Padre: ${stockParentDespGen}`);
+  ok('Venta genérica dejó intacto el stock de variante M en 8', Number(stockMDespGen) === 8, `Stock M: ${stockMDespGen}`);
+
+  // 7. Probar Anular Venta de Variante
   const anularRes = await sql(`
     SELECT set_config('request.headers', json_build_object('x-sesion', token::text)::text, false) FROM sesiones ORDER BY ultimo_uso DESC LIMIT 1;
     SELECT fn_anular_venta(${saleId});
   `);
-  ok('fn_anular_venta ejecutada sin error', !!anularRes, anularRes);
+  ok('fn_anular_venta de variante ejecutada sin error', !!anularRes, anularRes);
 
   const stockMRestaurado = await sql(`SELECT quantity FROM product_variants WHERE id = ${idVarM};`);
-  const stockParentRestaurado = await sql(`SELECT quantity FROM products WHERE id = ${prodId};`);
+  const stockParentTrasAnulVar = await sql(`SELECT quantity FROM products WHERE id = ${prodId};`);
 
   ok('Stock de Talla M restaurado a 10 tras anulación', Number(stockMRestaurado) === 10, `Stock M: ${stockMRestaurado}`);
-  ok('Stock del producto padre restaurado a 15', Number(stockParentRestaurado) === 15, `Stock Padre: ${stockParentRestaurado}`);
+  ok('Stock del producto padre sigue en 12 (no se alteró por anular la variante)', Number(stockParentTrasAnulVar) === 12, `Stock Padre: ${stockParentTrasAnulVar}`);
+
+  // 8. Probar Anular Venta Genérica
+  await sql(`
+    SELECT set_config('request.headers', json_build_object('x-sesion', token::text)::text, false) FROM sesiones ORDER BY ultimo_uso DESC LIMIT 1;
+    SELECT fn_anular_venta(${saleGenId});
+  `);
+  const stockParentRestauradoTotal = await sql(`SELECT quantity FROM products WHERE id = ${prodId};`);
+  ok('Stock del producto padre restaurado a 15 tras anular venta genérica', Number(stockParentRestauradoTotal) === 15, `Stock Padre: ${stockParentRestauradoTotal}`);
 
   const kardexAnulacion = await sql(`
     SELECT variant_id, variant_name, change_amount, operation_type 
@@ -116,9 +142,9 @@ try {
 
   // Limpieza de prueba
   await sql(`
-    DELETE FROM inventory_movements WHERE notes LIKE '%Ticket #' || ${saleId}::text;
-    DELETE FROM sale_details WHERE sale_id = ${saleId};
-    DELETE FROM sales WHERE id = ${saleId};
+    DELETE FROM inventory_movements WHERE notes LIKE '%Ticket #' || ${saleId}::text OR notes LIKE '%Ticket #' || ${saleGenId}::text;
+    DELETE FROM sale_details WHERE sale_id IN (${saleId}, ${saleGenId});
+    DELETE FROM sales WHERE id IN (${saleId}, ${saleGenId});
     DELETE FROM product_variants WHERE product_id = ${prodId};
     DELETE FROM products WHERE id = ${prodId};
   `);
