@@ -40,12 +40,18 @@ export const conVariantesYPresentaciones = (productos: Product[]): Product[] => 
     }
 
     // El producto base genérico (ej. "POLO NIKE") se muestra en Caja:
-    // - Si no tiene variantes, siempre se muestra.
-    // - Si tiene variantes, se muestra si tiene stock propio/general > 0 (por ejemplo ingresado en un lote genérico),
-    //   para que aparezcan los dos: el genérico con su stock y cada variante con su stock.
+    // - Si NO tiene variantes: se muestra siempre con su stock.
+    // - Si TIENE variantes: solo se muestra si tiene stock propio/general sin clasificar (> 0).
+    //   Si todo el stock está repartido en las variantes (como ocurre al ingresar lotes por talla/color),
+    //   en Caja solo aparecen las variantes específicas, evitando vender prendas sin talla.
     const tieneVars = Boolean(p.tieneVariantes && Array.isArray(p.variantes) && p.variantes.some((v) => v.is_active !== 0));
-    if (!tieneVars || Number(p.quantity || 0) > 0) {
-      resultado.push(p);
+    const stockVariantes = tieneVars
+      ? (p.variantes || []).filter((v) => v.is_active !== 0).reduce((sum, v) => sum + Number(v.quantity || 0), 0)
+      : 0;
+    const stockGenerico = Number(p.quantity || 0) - stockVariantes;
+
+    if (!tieneVars || stockGenerico > 0) {
+      resultado.push(tieneVars ? { ...p, quantity: stockGenerico } : p);
     }
 
     // Si además tiene presentaciones (cajas, paquetes de fase 1.2)

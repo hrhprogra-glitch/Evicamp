@@ -7,6 +7,16 @@
 
 ---
 
+## 31/10/2026 (tarde, 55) · Antigravity
+- **Filtrado de Productos con Variantes en Caja (POS):**
+  - **Pregunta del dueño:** *"entonces ahora si ingreso un producto como polo nicke y tiene una variante no va aparecer el polo nicke si no la variante no??"*
+  - **Ajuste en `src/utils/variantes.ts`:**
+    - Al ingresar stock por variante, el stock global de `products.quantity` refleja la suma de las variantes.
+    - Se calculó el stock genérico real restante: `stockGenerico = products.quantity - suma(variantes.quantity)`.
+    - Si `stockGenerico <= 0` (todo el stock pertenece a tallas o colores), en la Caja **aparecen únicamente las variantes específicas** (`Polo Nike (Talla M)`, `Polo Nike (Talla L)`) y **se oculta el producto genérico padre**, evitando que el cajero venda una prenda sin talla y descuadre el stock de las variantes.
+    - Si el producto tiene stock genérico remanente sin clasificar (`stockGenerico > 0`), el genérico sí se muestra con su stock exacto.
+  - **Pruebas:** `prueba-fase7-ui.mjs` y `prueba-lote-variantes-ui.mjs` aprobadas al 100%. Desplegado en `siumax.duckdns.org`.
+
 ## 31/10/2026 (tarde, 54) · Antigravity
 - **Adaptación del Botón [ Ingresar Lote ] por Tipo de Producto (Tallas y Colores / Variantes):**
   - **Pregunta del dueño:** *"no seria mejor que la creación de lotes por tipo de productos este en el boton de lotes ??"*

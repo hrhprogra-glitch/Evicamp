@@ -473,3 +473,8 @@
           3. `TablaLotes.tsx` y `ModalHistorialLotes.tsx`: Muestran el distintivo `🏷️ {variant_name}` y el buscador permite filtrar por talla o color.
           4. Pruebas automáticas completas en `siumax` (`prueba-lote-variantes-ui.mjs` y `prueba-fase7-ui.mjs` al 100% OK).
           5. Desplegado en `siumax.duckdns.org`. Evicamp y GitHub permanecen intactos esperando la orden del dueño.
+      47. **Visibilidad de Variantes vs. Producto Genérico en Caja (31/10 tarde):**
+        - El dueño consultó: *"entonces ahora si ingreso un producto como polo nicke y tiene una variante no va aparecer el polo nicke si no la variante no??"*.
+        - Se ajustó `src/utils/variantes.ts` para que si todo el stock del producto está distribuido en sus tallas o colores (`stockGenerico <= 0`), en la Caja únicamente aparezcan las variantes (`Polo Nike (Talla M)`, `Polo Nike (Talla L)`), evitando que el cajero venda un polo genérico sin talla y descuadre las existencias. El producto padre genérico solo aparece en Caja si tiene stock suelto sin clasificar (`stockGenerico > 0`).
+        - En Inventario e Ingresar Lote siempre se mantiene el producto padre visible para ver totales y cargar mercadería por variantes.
+        - Pruebas automáticas UI aprobadas al 100% y desplegado en `siumax.duckdns.org`.
