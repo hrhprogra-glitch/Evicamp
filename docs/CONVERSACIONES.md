@@ -391,6 +391,13 @@
         - Se ajustó el z-index de `ModalCambioProducto` a `z-[300]` (por encima de `ModalDetalleCaja` con `z-[100]` y `ModalDetalleTicket` con `z-[200]`).
         - Se integró `useCerrarConEscape` y guardia de eventos en `ModalDetalleCaja`.
         - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+      37. **Selector por teclado y navegación 2D en Cambio de Producto (30/10 noche):**
+        - El dueño reportó: *"el selector no funciona en esta pestaña"* (adjuntando captura buscando en el catálogo de productos nuevos).
+        - Se implementó la navegación estándar por teclado:
+          1. En el buscador del catálogo: `Flecha Abajo` baja al primer resultado de la lista, `Enter` selecciona el primer producto coincidente.
+          2. En los resultados del catálogo: `Flecha Arriba/Abajo` recorre las opciones con resaltado negro/blanco (`focus:bg-[var(--color-ink)] focus:text-white`), `Enter` o `Espacio` selecciona el producto y enfoca la cantidad con texto seleccionado.
+          3. Navegación con flechas en todos los campos (producto devuelto, serie, catálogo, cantidad, método de diferencia, motivo y confirmación).
+        - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
 
 
 

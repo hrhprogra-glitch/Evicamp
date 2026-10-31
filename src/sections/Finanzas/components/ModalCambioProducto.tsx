@@ -97,35 +97,46 @@ export const ModalCambioProducto: React.FC<Props> = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        e.preventDefault();
         e.stopPropagation();
-        onClose();
         return;
       }
 
       if (e.key === 'Tab') {
+        e.stopPropagation();
         const modal = document.getElementById('modal-cambio-producto');
         if (!modal) return;
-        const focusables = modal.querySelectorAll<HTMLElement>(
-          'input:not([disabled]), button:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        );
+        const focusables = Array.from(modal.querySelectorAll<HTMLElement>(
+          'input:not([disabled]), button:not([disabled]), select:not([disabled]), [role="option"], [tabindex]:not([tabindex="-1"])'
+        )).filter(el => el.offsetParent !== null && !el.classList.contains('hidden'));
+
         if (focusables.length === 0) return;
         const first = focusables[0];
         const last = focusables[focusables.length - 1];
 
-        if (e.shiftKey && document.activeElement === first) {
+        if (e.shiftKey && (document.activeElement === first || !focusables.includes(document.activeElement as HTMLElement))) {
           e.preventDefault();
           last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
+        } else if (!e.shiftKey && (document.activeElement === last || !focusables.includes(document.activeElement as HTMLElement))) {
           e.preventDefault();
           first.focus();
         }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
+  }, [isOpen]);
+
+  const seleccionarProducto = (prod: Product) => {
+    setProductoNuevo(prod);
+    setBusquedaCatalogo('');
+    setCatalogoResultados([]);
+    setTimeout(() => {
+      const cantInput = document.getElementById('input-cantidad-nueva') as HTMLInputElement | null;
+      cantInput?.focus();
+      cantInput?.select();
+    }, 60);
+  };
 
   // Búsqueda en catálogo de productos con debounce
   useEffect(() => {
@@ -453,9 +464,20 @@ export const ModalCambioProducto: React.FC<Props> = ({
           </div>
 
           <button 
+            id="btn-cerrar-modal-cambio"
             onClick={onClose} 
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (document.getElementById('input-buscar-nuevo')) {
+                  document.getElementById('input-buscar-nuevo')?.focus();
+                } else if (document.getElementById('select-producto-devuelto')) {
+                  document.getElementById('select-producto-devuelto')?.focus();
+                }
+              }
+            }}
             title="Cerrar ventana (Esc)"
-            className="p-1.5 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer"
+            className="p-1.5 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white transition-colors cursor-pointer"
           >
             <X size={16} />
           </button>
@@ -603,7 +625,20 @@ export const ModalCambioProducto: React.FC<Props> = ({
                           setSerieDevuelta(item.numero_serie || '');
                         }
                       }}
-                      className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-ink)] text-xs font-bold p-2 focus:bg-white uppercase focus:outline-none"
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                          e.preventDefault();
+                          if (itemDevuelto) {
+                            document.getElementById('input-cantidad-devolver')?.focus();
+                          } else {
+                            document.getElementById('input-buscar-nuevo')?.focus();
+                          }
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          document.getElementById('btn-cerrar-modal-cambio')?.focus();
+                        }
+                      }}
+                      className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-ink)] text-xs font-bold p-2 focus:bg-white uppercase focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
                     >
                       <option value={-1}>-- Seleccione el producto a devolver --</option>
                       {ticketData.detalles.map((item, idx) => (
@@ -620,6 +655,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                             Cantidad a devolver:
                           </label>
                           <input
+                            id="input-cantidad-devolver"
                             type="number"
                             min={1}
                             max={itemDevuelto.quantity}
@@ -628,7 +664,19 @@ export const ModalCambioProducto: React.FC<Props> = ({
                               const val = Math.max(1, Math.min(itemDevuelto.quantity, Number(e.target.value) || 1));
                               setCantidadDevolver(val);
                             }}
-                            className="w-full bg-white border border-red-300 text-xs font-black p-1.5 focus:outline-none"
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowRight' || e.key === 'Enter') {
+                                e.preventDefault();
+                                document.getElementById('input-serie-devuelta')?.focus();
+                              } else if (e.key === 'ArrowUp') {
+                                e.preventDefault();
+                                document.getElementById('select-producto-devuelto')?.focus();
+                              } else if (e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                document.getElementById('input-buscar-nuevo')?.focus();
+                              }
+                            }}
+                            className="w-full bg-white border border-red-300 text-xs font-black p-1.5 focus:outline-none focus:ring-2 focus:ring-red-500"
                           />
                         </div>
 
@@ -637,11 +685,24 @@ export const ModalCambioProducto: React.FC<Props> = ({
                             Nº Serie / IMEI devuelto (si aplica):
                           </label>
                           <input
+                            id="input-serie-devuelta"
                             type="text"
                             placeholder="Ej. SN-981247"
                             value={serieDevuelta}
                             onChange={(e) => setSerieDevuelta(e.target.value)}
-                            className="w-full bg-white border border-red-300 text-xs font-mono p-1.5 focus:outline-none uppercase"
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowLeft') {
+                                e.preventDefault();
+                                document.getElementById('input-cantidad-devolver')?.focus();
+                              } else if (e.key === 'ArrowUp') {
+                                e.preventDefault();
+                                document.getElementById('select-producto-devuelto')?.focus();
+                              } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                                e.preventDefault();
+                                document.getElementById('input-buscar-nuevo')?.focus();
+                              }
+                            }}
+                            className="w-full bg-white border border-red-300 text-xs font-mono p-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 uppercase"
                           />
                         </div>
 
@@ -674,35 +735,99 @@ export const ModalCambioProducto: React.FC<Props> = ({
                         placeholder="Buscar por nombre, código de barras o SKU..."
                         value={busquedaCatalogo}
                         onChange={(e) => setBusquedaCatalogo(e.target.value)}
-                        className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-ink)] text-xs font-bold p-2 pl-8 focus:bg-white uppercase focus:outline-none"
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            const firstItem = document.querySelector('[data-cambio-prod-item="true"]') as HTMLElement;
+                            if (firstItem) {
+                              firstItem.focus();
+                            } else if (productoNuevo) {
+                              document.getElementById('btn-cambiar-nuevo')?.focus();
+                            } else {
+                              document.getElementById('btn-cancelar-cambio')?.focus();
+                            }
+                          } else if (e.key === 'Enter') {
+                            if (catalogoResultados.length > 0) {
+                              e.preventDefault();
+                              seleccionarProducto(catalogoResultados[0]);
+                            }
+                          } else if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            if (document.getElementById('input-serie-devuelta')) {
+                              document.getElementById('input-serie-devuelta')?.focus();
+                            } else if (document.getElementById('input-cantidad-devolver')) {
+                              document.getElementById('input-cantidad-devolver')?.focus();
+                            } else {
+                              document.getElementById('select-producto-devuelto')?.focus();
+                            }
+                          } else if (e.key === 'Escape') {
+                            if (catalogoResultados.length > 0) {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setCatalogoResultados([]);
+                            }
+                          }
+                        }}
+                        className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-ink)] text-xs font-bold p-2 pl-8 focus:bg-white uppercase focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
                       />
                       <Search size={14} className="absolute left-2.5 top-2.5 text-[var(--color-muted)]" />
                     </div>
 
-                    {/* LISTA DE COINCIDENCIAS */}
+                    {/* LISTA DE COINCIDENCIAS (SELECTOR DE GRILLA / LISTA) */}
                     {catalogoResultados.length > 0 && !productoNuevo && (
-                      <div className="border border-[var(--color-border)] max-h-40 overflow-y-auto bg-white divide-y divide-gray-100">
+                      <div 
+                        id="lista-resultados-catalogo"
+                        role="listbox"
+                        aria-label="Resultados de búsqueda"
+                        className="border-2 border-[var(--color-ink)] max-h-48 overflow-y-auto bg-[var(--color-surface)] divide-y divide-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-ink)] custom-scrollbar"
+                      >
                         {catalogoResultados.map((prod) => (
-                          <button
+                          <div
                             key={prod.id}
-                            type="button"
-                            onClick={() => {
-                              setProductoNuevo(prod);
-                              setBusquedaCatalogo('');
-                              setCatalogoResultados([]);
+                            data-cambio-prod-item="true"
+                            role="option"
+                            tabIndex={0}
+                            onClick={() => seleccionarProducto(prod)}
+                            onKeyDown={(e) => {
+                              const items = Array.from(document.querySelectorAll('[data-cambio-prod-item="true"]')) as HTMLElement[];
+                              const currentIdx = items.indexOf(e.currentTarget);
+
+                              if (e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                if (currentIdx !== -1 && currentIdx < items.length - 1) {
+                                  items[currentIdx + 1]?.focus();
+                                }
+                              } else if (e.key === 'ArrowUp') {
+                                e.preventDefault();
+                                if (currentIdx > 0) {
+                                  items[currentIdx - 1]?.focus();
+                                } else {
+                                  document.getElementById('input-buscar-nuevo')?.focus();
+                                }
+                              } else if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                seleccionarProducto(prod);
+                              } else if (e.key === 'Escape') {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setCatalogoResultados([]);
+                                document.getElementById('input-buscar-nuevo')?.focus();
+                              }
                             }}
-                            className="w-full text-left p-2 hover:bg-emerald-50 text-xs flex justify-between items-center transition-colors cursor-pointer"
+                            className="w-full text-left p-2.5 hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white text-xs flex justify-between items-center transition-colors cursor-pointer group"
                           >
                             <div>
-                              <p className="font-black uppercase text-[var(--color-ink)]">{prod.name}</p>
-                              <span className="text-[10px] text-[var(--color-muted)] font-mono">
-                                SKU: {prod.code} · Stock: {prod.quantity}
+                              <p className="font-black uppercase text-[var(--color-ink)] group-hover:text-white group-focus:text-white">
+                                {prod.name}
+                              </p>
+                              <span className="text-[10px] text-[var(--color-muted)] font-mono group-hover:text-gray-200 group-focus:text-gray-200">
+                                SKU: {prod.code || '---'} · Stock: {prod.quantity} {prod.controlaSeries ? '· 🔢 Serie/IMEI' : ''}
                               </span>
                             </div>
-                            <span className="font-black text-emerald-800 font-mono text-xs">
+                            <span className="font-black font-mono text-xs text-emerald-700 group-hover:text-emerald-300 group-focus:text-emerald-300">
                               S/ {prod.price.toFixed(2)}
                             </span>
-                          </button>
+                          </div>
                         ))}
                       </div>
                     )}
@@ -719,9 +844,22 @@ export const ModalCambioProducto: React.FC<Props> = ({
                             </span>
                           </div>
                           <button
+                            id="btn-cambiar-nuevo"
                             type="button"
-                            onClick={() => setProductoNuevo(null)}
-                            className="text-[10px] font-black text-red-600 hover:underline uppercase cursor-pointer"
+                            onClick={() => {
+                              setProductoNuevo(null);
+                              setTimeout(() => document.getElementById('input-buscar-nuevo')?.focus(), 50);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                                e.preventDefault();
+                                document.getElementById('input-cantidad-nueva')?.focus();
+                              } else if (e.key === 'ArrowUp') {
+                                e.preventDefault();
+                                document.getElementById('input-buscar-nuevo')?.focus();
+                              }
+                            }}
+                            className="text-[10px] font-black text-red-600 hover:underline focus:underline focus:bg-red-50 uppercase cursor-pointer"
                           >
                             Cambiar
                           </button>
@@ -733,11 +871,34 @@ export const ModalCambioProducto: React.FC<Props> = ({
                               Cantidad a entregar:
                             </label>
                             <input
+                              id="input-cantidad-nueva"
                               type="number"
                               min={1}
                               value={cantidadNueva}
                               onChange={(e) => setCantidadNueva(Math.max(1, Number(e.target.value) || 1))}
-                              className="w-full bg-white border border-emerald-400 text-xs font-black p-1.5 focus:outline-none"
+                              onKeyDown={(e) => {
+                                if (e.key === 'ArrowRight' || e.key === 'Enter') {
+                                  e.preventDefault();
+                                  if (document.getElementById('input-serie-nueva')) {
+                                    document.getElementById('input-serie-nueva')?.focus();
+                                  } else if (document.getElementById('select-metodo-diferencia')) {
+                                    document.getElementById('select-metodo-diferencia')?.focus();
+                                  } else {
+                                    document.getElementById('input-motivo-cambio')?.focus();
+                                  }
+                                } else if (e.key === 'ArrowUp') {
+                                  e.preventDefault();
+                                  document.getElementById('btn-cambiar-nuevo')?.focus();
+                                } else if (e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  if (document.getElementById('select-metodo-diferencia')) {
+                                    document.getElementById('select-metodo-diferencia')?.focus();
+                                  } else {
+                                    document.getElementById('input-motivo-cambio')?.focus();
+                                  }
+                                }
+                              }}
+                              className="w-full bg-white border border-emerald-400 text-xs font-black p-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-600"
                             />
                           </div>
 
@@ -746,11 +907,28 @@ export const ModalCambioProducto: React.FC<Props> = ({
                               {productoNuevo.controlaSeries ? 'Nº Serie / IMEI Nuevo (Requerido):' : 'Nº Serie / IMEI (Opcional):'}
                             </label>
                             <input
+                              id="input-serie-nueva"
                               type="text"
                               placeholder="Ej. SN-NEW-5491"
                               value={serieNueva}
                               onChange={(e) => setSerieNueva(e.target.value)}
-                              className="w-full bg-white border border-emerald-400 text-xs font-mono p-1.5 focus:outline-none uppercase"
+                              onKeyDown={(e) => {
+                                if (e.key === 'ArrowLeft') {
+                                  e.preventDefault();
+                                  document.getElementById('input-cantidad-nueva')?.focus();
+                                } else if (e.key === 'ArrowUp') {
+                                  e.preventDefault();
+                                  document.getElementById('btn-cambiar-nuevo')?.focus();
+                                } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                                  e.preventDefault();
+                                  if (document.getElementById('select-metodo-diferencia')) {
+                                    document.getElementById('select-metodo-diferencia')?.focus();
+                                  } else {
+                                    document.getElementById('input-motivo-cambio')?.focus();
+                                  }
+                                }
+                              }}
+                              className="w-full bg-white border border-emerald-400 text-xs font-mono p-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-600 uppercase"
                             />
                           </div>
                         </div>
@@ -797,9 +975,19 @@ export const ModalCambioProducto: React.FC<Props> = ({
                       <div className="mt-3 pt-2 border-t border-dashed border-gray-400 flex items-center gap-2 text-xs">
                         <span className="font-black uppercase">Método para cobrar diferencia:</span>
                         <select
+                          id="select-metodo-diferencia"
                           value={metodoPagoDiferencia}
                           onChange={(e) => setMetodoPagoDiferencia(e.target.value as any)}
-                          className="bg-white border-2 border-black font-black p-1 text-xs uppercase"
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                              e.preventDefault();
+                              document.getElementById('input-motivo-cambio')?.focus();
+                            } else if (e.key === 'ArrowUp') {
+                              e.preventDefault();
+                              document.getElementById('input-cantidad-nueva')?.focus();
+                            }
+                          }}
+                          className="bg-white border-2 border-black font-black p-1 text-xs uppercase focus:ring-2 focus:ring-black"
                         >
                           <option value="EFECTIVO">💵 Efectivo</option>
                           <option value="YAPE">📱 Yape / Plin</option>
@@ -821,19 +1009,43 @@ export const ModalCambioProducto: React.FC<Props> = ({
                       Motivo del cambio (opcional):
                     </label>
                     <input
+                      id="input-motivo-cambio"
                       type="text"
                       placeholder="Ej. Medida incorrecta, cliente prefirió otro modelo..."
                       value={motivo}
                       onChange={(e) => setMotivo(e.target.value)}
-                      className="w-full bg-[var(--color-bg)] border border-[var(--color-ink)] text-xs p-2 focus:bg-white uppercase focus:outline-none"
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                          e.preventDefault();
+                          document.getElementById('btn-confirmar-cambio')?.focus();
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          if (document.getElementById('select-metodo-diferencia')) {
+                            document.getElementById('select-metodo-diferencia')?.focus();
+                          } else {
+                            document.getElementById('input-cantidad-nueva')?.focus();
+                          }
+                        }
+                      }}
+                      className="w-full bg-[var(--color-bg)] border border-[var(--color-ink)] text-xs p-2 focus:bg-white uppercase focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
                     />
                   </div>
 
                   <button
+                    id="btn-confirmar-cambio"
                     type="button"
                     disabled={guardando}
                     onClick={handleConfirmarCambio}
-                    className="w-full bg-[var(--color-ink)] text-white hover:bg-[var(--color-accent)] hover:text-black font-black text-sm uppercase py-3 border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer flex items-center justify-center gap-2"
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        document.getElementById('btn-cancelar-cambio')?.focus();
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        document.getElementById('input-motivo-cambio')?.focus();
+                      }
+                    }}
+                    className="w-full bg-[var(--color-ink)] text-white hover:bg-[var(--color-accent)] hover:text-black font-black text-sm uppercase py-3 border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-black"
                   >
                     <Check size={18} /> {guardando ? 'Procesando Cambio...' : 'Confirmar y Realizar Cambio'}
                   </button>
@@ -850,7 +1062,17 @@ export const ModalCambioProducto: React.FC<Props> = ({
               id="btn-cancelar-cambio"
               type="button"
               onClick={onClose}
-              className="bg-white text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white font-black text-xs uppercase px-4 py-2 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] active:translate-x-[1px] active:translate-y-[1px] transition-all cursor-pointer"
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  if (document.getElementById('btn-confirmar-cambio')) {
+                    document.getElementById('btn-confirmar-cambio')?.focus();
+                  } else {
+                    document.getElementById('input-buscar-nuevo')?.focus();
+                  }
+                }
+              }}
+              className="bg-white text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white font-black text-xs uppercase px-4 py-2 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] active:translate-x-[1px] active:translate-y-[1px] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-black"
             >
               Cancelar [ESC]
             </button>

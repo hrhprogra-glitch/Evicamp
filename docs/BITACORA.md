@@ -7,6 +7,24 @@
 
 ---
 
+## 30/10/2026 (noche, 45) · Antigravity
+- **Implementación de Selector y Navegación 100% Teclado en ModalCambioProducto:**
+  - El dueño reportó: *"el selector no funciona en esta pestaña"* (adjuntando captura buscando en el catálogo de productos nuevos).
+  - **Causa identificada:**
+    1. El input `#input-buscar-nuevo` no contaba con evento `onKeyDown`, por lo que al presionar `Flecha Abajo` o `Enter` no ocurría nada.
+    2. La lista de coincidencias del catálogo (`catalogoResultados`) usaba elementos simples sin `role="option"`, sin `tabIndex={0}`, sin navegación entre filas por flechas y sin indicador de selector visual resaltado.
+    3. Faltaba navegación 2D continua entre todos los campos del modal (producto devuelto, serie, catálogo, cantidad nueva, método de pago, motivo y botones de confirmación).
+  - **Solución implementada:**
+    - Se implementó el patrón `selector` de Evicamp en la lista del catálogo:
+      - `Flecha Abajo` en el buscador pasa al primer resultado.
+      - `Enter` en el buscador selecciona directamente el primer producto.
+      - `Flecha Arriba/Abajo` recorre los resultados de la lista con resaltado de selector negro y letras blancas (`focus:bg-[var(--color-ink)] focus:text-white`).
+      - `Enter` o `Espacio` selecciona el producto y auto-enfoca la cantidad a entregar con selección de texto (`cantInput.select()`).
+      - `Esc` limpia los resultados y devuelve el foco al buscador.
+    - Se asignaron IDs y navegación con flechas (Arriba/Abajo/Izquierda/Derecha) para todos los campos: `#select-producto-devuelto`, `#input-cantidad-devolver`, `#input-serie-devuelta`, `#input-buscar-nuevo`, `#btn-cambiar-nuevo`, `#input-cantidad-nueva`, `#input-serie-nueva`, `#select-metodo-diferencia`, `#input-motivo-cambio`, `#btn-confirmar-cambio` y `#btn-cancelar-cambio`.
+    - Focus Trap mejorado con fase de captura y `e.stopPropagation()` para proteger contra atajos globales.
+  - Compilación (`npx tsc -b`, `npm run build`), `graphify update .` y despliegue a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+
 ## 30/10/2026 (tarde, 44) · Antigravity
 - **Corrección de superposición (z-index) y foco en ModalCambioProducto sobre ModalDetalleCaja:**
   - El dueño reportó: *"cuando pongo cambio de producto dentro de historial de caja en la ventana para ver los ticket de una caja anterior la ventan de cambio de producto sale debajo de esa ventana arreglar eso"*.
