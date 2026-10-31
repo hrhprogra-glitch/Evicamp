@@ -476,67 +476,93 @@ export const ModalCambioProducto: React.FC<Props> = ({
         }
       }
 
-      // 3. Ajuste de dinero en cash_movements si hubo diferencia
-      if (diferencia > 0) {
-        // El cliente pagó la diferencia -> Ingreso de caja por cada método usado
-        const baseId = Date.now();
-        let movCounter = 0;
+      // 3. Actualizar directamente el ticket con el producto nuevo
+      if (cantidadDevolver >= itemDevuelto.quantity) {
+        // Se reemplaza la línea del producto devuelto por el producto nuevo
+        await supabase
+          .from('sale_details')
+          .update({
+            product_id: Number(productoNuevo.id),
+            product_name: productoNuevo.name,
+            quantity: cantidadNueva,
+            price_at_moment: productoNuevo.price,
+            subtotal: Math.round(productoNuevo.price * cantidadNueva * 100) / 100,
+            numero_serie: serieNueva.trim() || null
+          })
+          .eq('id', itemDevuelto.id);
+      } else {
+        // Si devolvió solo parte de la cantidad (ej. 1 de 2), se resta de la original y se agrega la nueva
+        const restoCant = itemDevuelto.quantity - cantidadDevolver;
+        await supabase
+          .from('sale_details')
+          .update({
+            quantity: restoCant,
+            subtotal: Math.round(itemDevuelto.price_at_moment * restoCant * 100) / 100
+          })
+          .eq('id', itemDevuelto.id);
 
-        if (numEf > 0) {
-          await supabase.from('cash_movements').insert([{
-            id: String(baseId + movCounter++),
-            session_id: sessionId,
-            type: 'INGRESO',
-            amount: numEf,
-            description: `DIFERENCIA POR CAMBIO (TICKET #${String(ticketData.id).slice(-6)}) [EFECTIVO]`.toUpperCase(),
-            payment_type: 'EFECTIVO',
-            flujo: 'INTERNO',
-            created_at: new Date().toISOString(),
+        await supabase
+          .from('sale_details')
+          .insert([{
+            sale_id: Number(ticketData.id),
+            product_id: Number(productoNuevo.id),
+            product_name: productoNuevo.name,
+            quantity: cantidadNueva,
+            price_at_moment: productoNuevo.price,
+            subtotal: Math.round(productoNuevo.price * cantidadNueva * 100) / 100,
+            numero_serie: serieNueva.trim() || null,
             is_synced: 1
           }]);
-        }
-
-        if (numYap > 0) {
-          await supabase.from('cash_movements').insert([{
-            id: String(baseId + movCounter++),
-            session_id: sessionId,
-            type: 'INGRESO',
-            amount: numYap,
-            description: `DIFERENCIA POR CAMBIO (TICKET #${String(ticketData.id).slice(-6)}) [YAPE]`.toUpperCase(),
-            payment_type: 'YAPE',
-            flujo: 'INTERNO',
-            created_at: new Date().toISOString(),
-            is_synced: 1
-          }]);
-        }
-
-        if (numTar > 0) {
-          await supabase.from('cash_movements').insert([{
-            id: String(baseId + movCounter++),
-            session_id: sessionId,
-            type: 'INGRESO',
-            amount: numTar,
-            description: `DIFERENCIA POR CAMBIO (TICKET #${String(ticketData.id).slice(-6)}) [TARJETA]`.toUpperCase(),
-            payment_type: 'TARJETA',
-            flujo: 'INTERNO',
-            created_at: new Date().toISOString(),
-            is_synced: 1
-          }]);
-        }
-      } else if (diferencia < 0) {
-        // La tienda devolvió plata al cliente -> Egreso de caja
-        await supabase.from('cash_movements').insert([{
-          id: String(Date.now()),
-          session_id: sessionId,
-          type: 'EGRESO',
-          amount: Math.abs(diferencia),
-          description: `DEVOLUCIÓN POR CAMBIO DE PRODUCTO (TICKET #${String(ticketData.id).slice(-6)})`.toUpperCase(),
-          payment_type: 'EFECTIVO',
-          flujo: 'INTERNO',
-          created_at: new Date().toISOString(),
-          is_synced: 1
-        }]);
       }
+
+      // 4. Actualizar total y métodos de pago del ticket en sales
+      const { data: vActual } = await supabase
+        .from('sales')
+        .select('*')
+        .eq('id', ticketData.id)
+        .maybeSingle();
+
+      if (vActual) {
+        const nuevoTotal = Math.max(0, Math.round((Number(vActual.total || 0) + diferencia) * 100) / 100);
+
+        let nuevoCash = Number(vActual.amount_cash || 0);
+        let nuevoYape = Number(vActual.amount_yape || 0);
+        let nuevoCard = Number(vActual.amount_card || 0);
+
+        if (diferencia > 0) {
+          nuevoCash = Math.round((nuevoCash + numEf) * 100) / 100;
+          nuevoYape = Math.round((nuevoYape + numYap) * 100) / 100;
+          nuevoCard = Math.round((nuevoCard + numTar) * 100) / 100;
+        } else if (diferencia < 0) {
+          nuevoCash = Math.max(0, Math.round((nuevoCash - Math.abs(diferencia)) * 100) / 100);
+        }
+
+        const metodos = [
+          nuevoCash > 0 ? 'EFECTIVO' : null,
+          nuevoYape > 0 ? 'YAPE' : null,
+          nuevoCard > 0 ? 'TARJETA' : null,
+          Number(vActual.amount_credit || 0) > 0 ? 'FIADO' : null
+        ].filter(Boolean);
+
+        const tipoFinal = metodos.length === 1 ? metodos[0] : (metodos.length > 1 ? 'MIXTO' : 'EFECTIVO');
+
+        await supabase
+          .from('sales')
+          .update({
+            total: nuevoTotal,
+            amount_cash: nuevoCash,
+            amount_yape: nuevoYape,
+            amount_card: nuevoCard,
+            payment_type: tipoFinal
+          })
+          .eq('id', ticketData.id);
+      }
+
+      // 5. Limpiar cualquier movimiento previo de diferencia para este ticket, manteniendo la tabla 100% limpia
+      await supabase
+        .from('cash_movements')
+        .delete()
+        .ilike('description', `%${String(ticketData.id).slice(-6)}%`);
 
       setCambioFinalizado(cambioInsertado as CambioProducto);
       onCambioGuardado?.();

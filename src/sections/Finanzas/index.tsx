@@ -204,6 +204,7 @@ export const Finanzas: React.FC = () => {
         // 🔥 INGENIERÍA EVICAMP: El Trigger de la BD ya mete los abonos en cash_movements con flujo='INGRESO_FIADO'.
         movData?.forEach(m => {
           if (m.flujo === 'EXTERNO') return;
+          if (m.description && m.description.toUpperCase().includes('DIFERENCIA POR CAMBIO')) return;
           const monto = Number(m.amount) || 0;
           const bolsa = bolsaDe(m.payment_type);
 
@@ -316,6 +317,9 @@ export const Finanzas: React.FC = () => {
           if (m.flujo === 'DEVOLUCION') {
             const ticket = numeroTicketDe(m.description);
             if (ticket && anuladasDeEstaCaja.has(ticket)) return false;
+          }
+          if (m.description && m.description.toUpperCase().includes('DIFERENCIA POR CAMBIO')) {
+            return false;
           }
           return true;
         }).map((m: any) => {

@@ -418,7 +418,14 @@
           1. Tres botones de 1 clic para liquidar todo en un solo método (`[ 💵 Todo Efectivo ]`, `[ 📱 Todo Yape ]`, `[ 💳 Todo Tarjeta ]`).
           2. Tres casillas para montos combinados: Efectivo, Yape y Tarjeta, con navegación fluida por flechas de teclado.
           3. Sincronización automática con la diferencia calculada y validación en tiempo real (alerta de monto faltante o sobrante; el botón se deshabilita si no cuadra exactamente).
-          4. En la base de datos se guarda el detalle en `cambios_productos` (`MIXTO (...)` o el método individual) y se inserta un movimiento `INGRESO` individual en `cash_movements` por cada billetera usada (Efectivo, Yape, Tarjeta) para que el cuadre de caja de Finanzas coincida al céntimo.
+        - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+      41. **Actualización directa del Ticket y eliminación de filas de diferencia (30/10 noche):**
+        - El dueño señaló: *"a ver veo que el ticket sigue diciendo el mismo producto osea el ticket tiene el producto evelyn pero cuando cambio el producto con el de prueba sigue manteniendo el de evelyn y me sale este mensaje DIFERENCIA POR CAMBIO (TICKET #623154) [EFECTIVO]... no dijimos que eso ya no ?? que solo cambie el producto del ticket nada mas"*.
+        - Se implementó de inmediato la actualización directa del ticket:
+          1. Al cambiar un producto, `sale_details` reemplaza el producto anterior por el nuevo (nombre, cantidad, precio, serie).
+          2. En `sales`, se actualiza el total final y los montos pagados.
+          3. Se eliminó la creación de movimientos en `cash_movements` para que en Finanzas no salga ninguna fila extra ni texto de "DIFERENCIA POR CAMBIO...". La tabla queda 100% limpia mostrando solo el ticket con el producto y total actualizados.
+          4. Se limpiaron los registros previos de prueba en la base de datos de siumax, y el ticket #623154 ahora refleja directamente `PRUEBA SIN INTERNET 834743` por S/ 4.50.
         - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
 
 

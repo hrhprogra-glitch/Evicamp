@@ -7,6 +7,19 @@
 
 ---
 
+## 30/10/2026 (noche, 49) · Antigravity
+- **Actualización directa del Ticket al cambiar producto (eliminación de filas extras de diferencia en Finanzas):**
+  - El dueño observó: *"a ver veo que el ticket sigue diciendo el mismo producto osea el ticket tiene el producto evelyn pero cuando cambio el producto con el de prueba sigue manteniendo el de evelyn y me sale este mensaje DIFERENCIA POR CAMBIO (TICKET #623154) [EFECTIVO]... no dijimos que eso ya no ?? que solo cambie el producto del ticket nada mas"*.
+  - **Causa identificada:**
+    1. Anteriormente, el cambio de producto registraba el movimiento en `cambios_productos` y un movimiento de dinero en `cash_movements`, pero **no actualizaba `sale_details` ni `sales`**.
+    2. Como resultado, el ticket original seguía mostrando el producto devuelto (ej. "EVELYN") con el total antiguo, y en Finanzas aparecía una fila separada con la "DIFERENCIA POR CAMBIO...".
+  - **Solución implementada:**
+    1. **Actualización directa en `sale_details`:** Al confirmar el cambio, la línea del producto devuelto se actualiza automáticamente con el nuevo producto seleccionado (nombre, id, nueva cantidad, precio unitario, subtotal y número de serie). Si solo se devolvió parte de la cantidad, se descuenta de la original y se agrega la línea nueva.
+    2. **Actualización directa en `sales`:** El total del ticket y los montos pagados (`amount_cash`, `amount_yape`, `amount_card`, `payment_type`) se actualizan absorbiendo la diferencia monetaria.
+    3. **Eliminación de filas extras en Finanzas:** Ya no se inserta ningún movimiento en `cash_movements`. La caja de Finanzas cuadra exacta y directamente a través del ticket actualizado. Además, se limpiaron los movimientos residuales creados durante las pruebas y se agregaron filtros de protección en `Finanzas/index.tsx` y `ModalDetalleCaja.tsx`.
+    4. El ticket de prueba #623154 fue actualizado en la base de datos de pruebas para reflejar inmediatamente `PRUEBA SIN INTERNET 834743` y un total de S/ 4.50.
+  - Compilación (`npx tsc -b`, `npm run build`), `graphify update .` y despliegue exitoso a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+
 ## 30/10/2026 (noche, 48) · Antigravity
 - **Soporte de Pago Mixto en Cobro de Diferencia por Cambio de Producto:**
   - El dueño reportó: *"otro error que pasa si pago mixto ?? el metodo de pago tiene que ser mixto no uno solo"* (mostrando captura del paso 3 Balance y Cuadre de Caja con la diferencia a favor de la tienda y un único selector de método).

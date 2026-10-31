@@ -519,7 +519,9 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
       }
     }
     
-    const movsConNombre = (movs || []).map(m => {
+    const movsConNombre = (movs || [])
+      .filter(m => !m.description || !m.description.toUpperCase().includes('DIFERENCIA POR CAMBIO'))
+      .map(m => {
       let desc = m.description;
       if (desc) {
         const match = desc.match(/Cliente ID: (\d+)/);
