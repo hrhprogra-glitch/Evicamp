@@ -7,6 +7,24 @@
 
 ---
 
+## 31/10/2026 (tarde, 56) · Antigravity
+- **Selector de Teclado y Retiro de Casillero Stock en ModalProducto (Fase 7):**
+  - **Pregunta / reporte del dueño:** *"el selector no funciona ahi como tambien ahi se puede ingresar lotes y precios lo que si esta bien que ahi se tenga que poner el precio del producto de ese polo o talla ya que no habra un presio unico para todos"* (con captura del modal Paso 2 en bloque de Tallas y Colores).
+  - **Decisión acordada por pregunta interactiva:** Opción A1: Quitar la columna 'Stock' de esta ventana y dejar solo 'Precio'. El stock se ingresa con el botón [ Ingresar Lote ] con su costo y proveedor.
+  - **1. Selector de Teclado (Navegación 100% fluida):**
+    - En `ModalProducto.tsx`, se conectó la salida de Presentaciones (`pres-barcode-N`) y Escalas (`escala-precio-N`) hacia `check-tiene-variantes`.
+    - En `check-tiene-variantes`, Flecha Abajo baja a las plantillas rápidas (`btn-preset-ropa` / `btn-preset-calzado`) o a `btn-guardar-producto`. Enter activa/desactiva variantes.
+    - Se agregaron IDs y navegación horizontal/vertical para las plantillas rápidas y el generador (`input-tallas-generator`, `input-colores-generator`, `btn-generar-combinaciones`).
+    - En la tabla de variantes: cada celda (`var-talla-N`, `var-color-N`, `var-nombre-N`, `var-barcode-N`, `var-price-N`, `var-quitar-N`) cuenta con selector bidireccional fluido (`teclasVar`). Al terminar la última fila, Flecha Abajo baja a `btn-agregar-variante-manual` y de ahí a `btn-guardar-producto`. Flecha Arriba desde Guardar regresa directamente al bloque de variantes.
+  - **2. Retiro de Stock en Creación de Producto:**
+    - Se retiró la columna 'Stock' de la tabla de variantes en `ModalProducto.tsx` (dejando solo Talla, Color, Nombre Variante, Código de Barras y Precio).
+    - Las nuevas variantes inician con stock 0 (se alimentan mediante el botón [ Ingresar Lote ] con proveedor y costo real) y las existentes en edición conservan su stock.
+  - **3. Pruebas Automáticas 100% OK:**
+    - `prueba-modal-variantes-teclado.mjs`: Probó todos los movimientos de teclado (bajada desde presentaciones, activación con Enter, selección de preset, navegación celda a celda en la grilla y regreso desde Guardar con Flecha Arriba). 11 de 11 pasadas.
+    - `prueba-lote-variantes-ui.mjs` y `prueba-fase7-ui.mjs` aprobadas.
+  - **4. Despliegue:**
+    - Desplegado a `siumax.duckdns.org`. Producción Evicamp y GitHub main intactos (Regla 4).
+
 ## 31/10/2026 (tarde, 55) · Antigravity
 - **Filtrado de Productos con Variantes en Caja (POS):**
   - **Pregunta del dueño:** *"entonces ahora si ingreso un producto como polo nicke y tiene una variante no va aparecer el polo nicke si no la variante no??"*

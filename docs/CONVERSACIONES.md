@@ -478,3 +478,14 @@
         - Se ajustó `src/utils/variantes.ts` para que si todo el stock del producto está distribuido en sus tallas o colores (`stockGenerico <= 0`), en la Caja únicamente aparezcan las variantes (`Polo Nike (Talla M)`, `Polo Nike (Talla L)`), evitando que el cajero venda un polo genérico sin talla y descuadre las existencias. El producto padre genérico solo aparece en Caja si tiene stock suelto sin clasificar (`stockGenerico > 0`).
         - En Inventario e Ingresar Lote siempre se mantiene el producto padre visible para ver totales y cargar mercadería por variantes.
         - Pruebas automáticas UI aprobadas al 100% y desplegado en `siumax.duckdns.org`.
+      48. **Selector de Teclado y Retiro de Casillero Stock en ModalProducto (31/10 tarde):**
+        - El dueño reportó: *"el selector no funciona ahi como tambien ahi se puede ingresar lotes y precios lo que si esta bien que ahi se tenga que poner el precio del producto de ese polo o talla ya que no habra un presio unico para todos"* (con captura del modal Paso 2 en bloque de Tallas y Colores).
+        - Mediante pregunta interactiva, el dueño seleccionó la Opción A1: Quitar la columna 'Stock' de esta ventana y dejar solo 'Precio'. El stock se ingresa con el botón [ Ingresar Lote ] con su costo y proveedor.
+        - Se corrigió integralmente la navegación por teclado (selector) en `ModalProducto.tsx`:
+          1. Conexión de Presentaciones y Escalas hacia `check-tiene-variantes`.
+          2. Activación de variantes con Enter y navegación hacia las plantillas rápidas (`btn-preset-ropa` y `btn-preset-calzado`) y el generador.
+          3. Selector de grilla bidireccional (Flechas Arriba/Abajo/Izquierda/Derecha y Enter) en todas las celdas de la tabla de variantes (`teclasVar`).
+          4. Salida hacia el botón `[ + Agregar Variante Manual ]` y `[ Guardar ]`, y retorno hacia las variantes con Flecha Arriba desde Guardar.
+        - Se retiró la columna 'Stock' de la tabla de variantes: en la creación de producto solo se define la talla, color, código y precio específico. El stock se alimenta de forma ordenada y controlada a través del botón verde `[ Ingresar Lote ]`.
+        - Pruebas automatizadas con navegador en Edge (`prueba-modal-variantes-teclado.mjs`) pasaron al 100% (11 de 11 pasos validados).
+        - Desplegado en `siumax.duckdns.org`. Evicamp y GitHub permanecen intactos esperando visto bueno.

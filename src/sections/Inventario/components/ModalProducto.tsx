@@ -65,27 +65,73 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   const cambiarPres = (i: number, campo: keyof FilaPres, valor: string) => setPresentacionesForm((prev) => prev.map((f, j) => (j === i ? { ...f, [campo]: valor } : f)));
   const COLS_PRES = ['unidad', 'factor', 'precio', 'barcode'] as const;
   const teclasPres = (e: React.KeyboardEvent<HTMLElement>, fila: number, col: typeof COLS_PRES[number]) => {
-    const ir = (id: string) => { const el = document.getElementById(id) as HTMLInputElement | null; if (el) { el.focus(); if (el.tagName === 'INPUT') el.select?.(); } return !!el; };
+    const ir = (id: string) => { const el = document.getElementById(id) as HTMLElement | null; if (el) { el.focus(); if (el instanceof HTMLInputElement) el.select?.(); } return !!el; };
     const c = COLS_PRES.indexOf(col);
-    if (e.key === 'ArrowDown') { e.preventDefault(); if (!ir(`pres-${col}-${fila + 1}`)) ir('btn-guardar-producto'); }
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (!ir(`pres-${col}-${fila + 1}`)) ir('check-tiene-variantes') || ir('btn-guardar-producto'); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); if (!ir(`pres-${col}-${fila - 1}`)) ir('escala-precio-2') || ir('input-ubicacion-producto') || ir('select-unidad-peso-producto'); }
     else if (e.key === 'ArrowRight' && c < COLS_PRES.length - 1) { e.preventDefault(); ir(`pres-${COLS_PRES[c + 1]}-${fila}`); }
     else if (e.key === 'ArrowLeft' && c > 0) { e.preventDefault(); ir(`pres-${COLS_PRES[c - 1]}-${fila}`); }
     else if (e.key === 'Enter') {
       e.preventDefault();
       if (col === 'unidad') { try { (e.currentTarget as HTMLSelectElement & { showPicker?: () => void }).showPicker?.(); } catch { /* sin showPicker */ } return; }
-      if (c < COLS_PRES.length - 1) ir(`pres-${COLS_PRES[c + 1]}-${fila}`); else if (!ir(`pres-unidad-${fila + 1}`)) ir('btn-guardar-producto');
+      if (c < COLS_PRES.length - 1) ir(`pres-${COLS_PRES[c + 1]}-${fila}`); else if (!ir(`pres-unidad-${fila + 1}`)) ir('check-tiene-variantes') || ir('btn-guardar-producto');
     }
   };
   const cambiarEscala = (i: number, campo: keyof FilaEscala, valor: string) => setEscalas((prev) => prev.map((f, j) => (j === i ? { ...f, [campo]: valor } : f)));
-  // ↑ ↓ entre filas, ← → entre "desde" y "precio", Enter al siguiente; al terminar, Guardar
+  // ↑ ↓ entre filas, ← → entre "desde" y "precio", Enter al siguiente; al terminar, Guardar o Variantes
   const teclasEscala = (e: React.KeyboardEvent<HTMLInputElement>, fila: number, col: 'desde' | 'precio') => {
-    const ir = (id: string) => { const el = document.getElementById(id) as HTMLInputElement | null; if (el) { el.focus(); el.select?.(); } return !!el; };
-    if (e.key === 'ArrowDown') { e.preventDefault(); if (!ir(`escala-${col}-${fila + 1}`)) ir('pres-unidad-0') || ir('btn-guardar-producto'); }
+    const ir = (id: string) => { const el = document.getElementById(id) as HTMLElement | null; if (el) { el.focus(); if (el instanceof HTMLInputElement) el.select?.(); } return !!el; };
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (!ir(`escala-${col}-${fila + 1}`)) ir('pres-unidad-0') || ir('check-tiene-variantes') || ir('btn-guardar-producto'); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); if (!ir(`escala-${col}-${fila - 1}`)) ir('input-ubicacion-producto') || ir('select-unidad-peso-producto') || ir('input-stock-minimo-producto'); }
     else if (e.key === 'ArrowRight' && col === 'desde') { e.preventDefault(); ir(`escala-precio-${fila}`); }
     else if (e.key === 'ArrowLeft' && col === 'precio') { e.preventDefault(); ir(`escala-desde-${fila}`); }
-    else if (e.key === 'Enter') { e.preventDefault(); if (col === 'desde') ir(`escala-precio-${fila}`); else if (!ir(`escala-desde-${fila + 1}`)) ir('pres-unidad-0') || ir('btn-guardar-producto'); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (col === 'desde') ir(`escala-precio-${fila}`); else if (!ir(`escala-desde-${fila + 1}`)) ir('pres-unidad-0') || ir('check-tiene-variantes') || ir('btn-guardar-producto'); }
+  };
+  // Fase 7: Navegación de Variantes con Teclado
+  const COLS_VAR = ['talla', 'color', 'nombre', 'barcode', 'price', 'quitar'] as const;
+  const teclasVar = (e: React.KeyboardEvent<HTMLElement>, fila: number, col: typeof COLS_VAR[number]) => {
+    const ir = (id: string) => {
+      const el = document.getElementById(id) as HTMLElement | null;
+      if (el) {
+        el.focus();
+        if (el instanceof HTMLInputElement) el.select?.();
+      }
+      return !!el;
+    };
+    const c = COLS_VAR.indexOf(col);
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!ir(`var-${col}-${fila + 1}`)) {
+        ir('btn-agregar-variante-manual') || ir('btn-guardar-producto');
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!ir(`var-${col}-${fila - 1}`)) {
+        ir('input-tallas-generator') || ir('btn-preset-ropa') || ir('check-tiene-variantes');
+      }
+    } else if (e.key === 'ArrowRight' && c < COLS_VAR.length - 1) {
+      e.preventDefault();
+      ir(`var-${COLS_VAR[c + 1]}-${fila}`);
+    } else if (e.key === 'ArrowLeft' && c > 0) {
+      e.preventDefault();
+      ir(`var-${COLS_VAR[c - 1]}-${fila}`);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (col === 'quitar') {
+        eliminarVariante(fila);
+        setTimeout(() => {
+          (document.getElementById(`var-talla-${Math.min(fila, Math.max(0, variantesLista.length - 2))}`) ||
+           document.getElementById('btn-agregar-variante-manual') ||
+           document.getElementById('check-tiene-variantes'))?.focus();
+        }, 30);
+        return;
+      }
+      if (c < COLS_VAR.length - 1) {
+        ir(`var-${COLS_VAR[c + 1]}-${fila}`);
+      } else if (!ir(`var-talla-${fila + 1}`)) {
+        ir('btn-agregar-variante-manual') || ir('btn-guardar-producto');
+      }
+    }
   };
   // Fase 7: Tallas y Colores (Variantes con stock propio)
   interface FilaVarianteForm {
@@ -1296,9 +1342,21 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         if (active?.id === 'btn-guardar-producto') {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
-            const prev = document.getElementById('pres-barcode-2') || document.getElementById('escala-precio-2') || document.getElementById('input-ubicacion-producto') || document.getElementById('select-unidad-peso-producto') || 
-                         document.getElementById('input-stock-minimo-producto') || 
-                         document.getElementById('input-precio-producto');
+            const checkEl = document.getElementById('check-tiene-variantes') as HTMLInputElement | null;
+            const tieneVarsActivas = checkEl?.checked || tieneVariantes;
+            const ultimasVars = Array.from(document.querySelectorAll('[id^="var-price-"]'));
+            const ultimaVar = ultimasVars.length > 0 ? (ultimasVars[ultimasVars.length - 1] as HTMLElement) : null;
+            const prev = tieneVarsActivas
+              ? (document.getElementById('btn-agregar-variante-manual') || ultimaVar)
+              : (document.getElementById('check-tiene-variantes') ||
+                 document.getElementById('pres-barcode-2') ||
+                 document.getElementById('pres-barcode-1') ||
+                 document.getElementById('pres-barcode-0') ||
+                 document.getElementById('escala-precio-2') ||
+                 document.getElementById('input-ubicacion-producto') ||
+                 document.getElementById('select-unidad-peso-producto') || 
+                 document.getElementById('input-stock-minimo-producto') || 
+                 document.getElementById('input-precio-producto'));
             prev?.focus();
             return;
           }
@@ -1321,9 +1379,20 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         if (active?.id === 'btn-guardar-ir-lotes') {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
-            const prev = document.getElementById('pres-barcode-2') || document.getElementById('escala-precio-2') || document.getElementById('select-unidad-peso-producto') || 
-                         document.getElementById('input-stock-minimo-producto') || 
-                         document.getElementById('input-precio-producto');
+            const checkEl = document.getElementById('check-tiene-variantes') as HTMLInputElement | null;
+            const tieneVarsActivas = checkEl?.checked || tieneVariantes;
+            const ultimasVars = Array.from(document.querySelectorAll('[id^="var-price-"]'));
+            const ultimaVar = ultimasVars.length > 0 ? (ultimasVars[ultimasVars.length - 1] as HTMLElement) : null;
+            const prev = tieneVarsActivas
+              ? (document.getElementById('btn-agregar-variante-manual') || ultimaVar)
+              : (document.getElementById('check-tiene-variantes') ||
+                 document.getElementById('pres-barcode-2') ||
+                 document.getElementById('pres-barcode-1') ||
+                 document.getElementById('pres-barcode-0') ||
+                 document.getElementById('escala-precio-2') ||
+                 document.getElementById('select-unidad-peso-producto') || 
+                 document.getElementById('input-stock-minimo-producto') || 
+                 document.getElementById('input-precio-producto'));
             prev?.focus();
             return;
           }
@@ -1343,7 +1412,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
     window.addEventListener('keydown', handleFormKeyDown, { capture: true });
     return () => window.removeEventListener('keydown', handleFormKeyDown, { capture: true });
-  }, [isOpen, step, nature, formData, escalas, presentacionesForm, isSubmitting, categoriasLista, showImageResults, imageResults, imgResaltada]); // escalas: Guardar con Enter usa las de ahora (fase 1.3)
+  }, [isOpen, step, nature, formData, escalas, presentacionesForm, tieneVariantes, variantesLista, isSubmitting, categoriasLista, showImageResults, imageResults, imgResaltada]); // escalas: Guardar con Enter usa las de ahora (fase 1.3)
 
   if (!isOpen) return null;
 
@@ -1413,7 +1482,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
       const safeUbicacion = formData.ubicacion?.trim().toUpperCase() || null;
 
       const totalStockVariantes = tieneVariantes
-        ? variantesLista.reduce((acc, v) => acc + Math.max(0, Number(v.quantity) || 0), 0)
+        ? variantesLista.reduce((acc, v) => acc + (v.id ? Math.max(0, Number(v.quantity) || 0) : 0), 0)
         : null;
 
       if (initialData) {
@@ -1497,7 +1566,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
             price: v.price !== '' ? Number(v.price) : null,
             precio_mayorista: v.precioMayorista !== '' ? Number(v.precioMayorista) : null,
             cost_price: v.cost_price !== '' ? Number(v.cost_price) : null,
-            quantity: Math.max(0, Number(v.quantity) || 0),
+            quantity: v.id ? Math.max(0, Number(v.quantity) || 0) : 0,
             min_stock: Number(v.min_stock) || 2,
             is_active: 1,
             is_synced: 1
@@ -2349,6 +2418,35 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                             agregarVarianteVacia();
                           }
                         }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            if (tieneVariantes) {
+                              (document.getElementById('btn-preset-ropa') ||
+                               document.getElementById('input-tallas-generator') ||
+                               document.getElementById('btn-guardar-producto'))?.focus();
+                            } else {
+                              document.getElementById('btn-guardar-producto')?.focus();
+                            }
+                          } else if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            (document.getElementById('pres-barcode-2') ||
+                             document.getElementById('pres-barcode-1') ||
+                             document.getElementById('pres-barcode-0') ||
+                             document.getElementById('escala-precio-2') ||
+                             document.getElementById('input-ubicacion-producto') ||
+                             document.getElementById('select-unidad-peso-producto'))?.focus();
+                          } else if (e.key === 'Enter') {
+                            e.preventDefault();
+                            setTieneVariantes(prev => {
+                              const nextVal = !prev;
+                              if (nextVal && variantesLista.length === 0) {
+                                agregarVarianteVacia();
+                              }
+                              return nextVal;
+                            });
+                          }
+                        }}
                         className="w-4 h-4 text-fuchsia-600 rounded-none border-2 border-[var(--color-ink)] cursor-pointer"
                       />
                       <span>{tieneVariantes ? 'Variantes Activadas' : 'Activar Variantes'}</span>
@@ -2363,7 +2461,20 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                         <button
                           id="btn-preset-ropa"
                           type="button"
-                          onClick={() => aplicarPresetTallas(['S', 'M', 'L', 'XL'])}
+                          onClick={() => {
+                            aplicarPresetTallas(['S', 'M', 'L', 'XL']);
+                            setTimeout(() => (document.getElementById('var-price-0') || document.getElementById('input-tallas-generator'))?.focus(), 50);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('btn-preset-calzado')?.focus(); }
+                            else if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('input-tallas-generator')?.focus(); }
+                            else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('check-tiene-variantes')?.focus(); }
+                            else if (e.key === 'Enter') {
+                              e.preventDefault();
+                              aplicarPresetTallas(['S', 'M', 'L', 'XL']);
+                              setTimeout(() => (document.getElementById('var-price-0') || document.getElementById('input-tallas-generator'))?.focus(), 50);
+                            }
+                          }}
                           className="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-[10px] font-black uppercase text-[var(--color-ink)] transition-colors cursor-pointer"
                         >
                           👕 Ropa (S, M, L, XL)
@@ -2371,7 +2482,20 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                         <button
                           id="btn-preset-calzado"
                           type="button"
-                          onClick={() => aplicarPresetTallas(['36', '37', '38', '39', '40', '41', '42'])}
+                          onClick={() => {
+                            aplicarPresetTallas(['36', '37', '38', '39', '40', '41', '42']);
+                            setTimeout(() => (document.getElementById('var-price-0') || document.getElementById('input-tallas-generator'))?.focus(), 50);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('btn-preset-ropa')?.focus(); }
+                            else if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('input-tallas-generator')?.focus(); }
+                            else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('check-tiene-variantes')?.focus(); }
+                            else if (e.key === 'Enter') {
+                              e.preventDefault();
+                              aplicarPresetTallas(['36', '37', '38', '39', '40', '41', '42']);
+                              setTimeout(() => (document.getElementById('var-price-0') || document.getElementById('input-tallas-generator'))?.focus(), 50);
+                            }
+                          }}
                           className="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-[10px] font-black uppercase text-[var(--color-ink)] transition-colors cursor-pointer"
                         >
                           👟 Calzado (36 - 42)
@@ -2383,29 +2507,69 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                         <div className="sm:col-span-5 space-y-1">
                           <label className="text-[9px] font-black uppercase text-[#64748B]">Tallas (separadas por coma):</label>
                           <input
+                            id="input-tallas-generator"
                             type="text"
                             placeholder="EJ: S, M, L, XL"
                             value={tallasInput}
                             onChange={(e) => setTallasInput(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); generarCombinaciones(); } }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === 'ArrowRight') {
+                                e.preventDefault();
+                                document.getElementById('input-colores-generator')?.focus();
+                              } else if (e.key === 'ArrowUp') {
+                                e.preventDefault();
+                                document.getElementById('btn-preset-ropa')?.focus();
+                              } else if (e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                (document.getElementById('var-talla-0') || document.getElementById('btn-agregar-variante-manual'))?.focus();
+                              }
+                            }}
                             className="w-full bg-white dark:bg-[var(--color-surface)] border border-[#CBD5E1] p-1.5 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
                           />
                         </div>
                         <div className="sm:col-span-5 space-y-1">
                           <label className="text-[9px] font-black uppercase text-[#64748B]">Colores (separados por coma):</label>
                           <input
+                            id="input-colores-generator"
                             type="text"
                             placeholder="EJ: NEGRO, BLANCO, AZUL"
                             value={coloresInput}
                             onChange={(e) => setColoresInput(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); generarCombinaciones(); } }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                generarCombinaciones();
+                                setTimeout(() => (document.getElementById('var-price-0') || document.getElementById('var-talla-0'))?.focus(), 50);
+                              } else if (e.key === 'ArrowRight') {
+                                e.preventDefault();
+                                document.getElementById('btn-generar-combinaciones')?.focus();
+                              } else if (e.key === 'ArrowLeft') {
+                                e.preventDefault();
+                                document.getElementById('input-tallas-generator')?.focus();
+                              } else if (e.key === 'ArrowUp') {
+                                e.preventDefault();
+                                document.getElementById('btn-preset-ropa')?.focus();
+                              } else if (e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                (document.getElementById('var-talla-0') || document.getElementById('btn-agregar-variante-manual'))?.focus();
+                              }
+                            }}
                             className="w-full bg-white dark:bg-[var(--color-surface)] border border-[#CBD5E1] p-1.5 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
                           />
                         </div>
                         <div className="sm:col-span-2">
                           <button
+                            id="btn-generar-combinaciones"
                             type="button"
-                            onClick={generarCombinaciones}
+                            onClick={() => {
+                              generarCombinaciones();
+                              setTimeout(() => (document.getElementById('var-price-0') || document.getElementById('var-talla-0'))?.focus(), 50);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('input-colores-generator')?.focus(); }
+                              else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-preset-calzado')?.focus(); }
+                              else if (e.key === 'ArrowDown') { e.preventDefault(); (document.getElementById('var-talla-0') || document.getElementById('btn-agregar-variante-manual'))?.focus(); }
+                            }}
                             className="w-full bg-[var(--color-ink)] text-white hover:bg-fuchsia-700 p-2 text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
                           >
                             ⚡ Generar
@@ -2419,9 +2583,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                           <div className="grid grid-cols-12 gap-1 text-[9px] font-black uppercase text-[#64748B] px-1">
                             <span className="col-span-2">Talla</span>
                             <span className="col-span-2">Color</span>
-                            <span className="col-span-3">Nombre Variante</span>
+                            <span className="col-span-4">Nombre Variante</span>
                             <span className="col-span-2">Cód. Barras</span>
-                            <span className="col-span-1 text-center">Stock</span>
                             <span className="col-span-1 text-right">Precio</span>
                             <span className="col-span-1 text-center">Quitar</span>
                           </div>
@@ -2430,59 +2593,61 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                             {variantesLista.map((v, idx) => (
                               <div key={idx} className="grid grid-cols-12 gap-1 items-center bg-[var(--color-bg)] p-1.5 border border-[#E2E8F0]">
                                 <input
+                                  id={`var-talla-${idx}`}
                                   type="text"
                                   placeholder="Talla"
                                   value={v.talla}
                                   onChange={(e) => actualizarVariante(idx, 'talla', e.target.value)}
+                                  onKeyDown={(e) => teclasVar(e, idx, 'talla')}
                                   className="col-span-2 bg-white dark:bg-[var(--color-surface)] border border-[#CBD5E1] p-1 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
                                 />
                                 <input
+                                  id={`var-color-${idx}`}
                                   type="text"
                                   placeholder="Color"
                                   value={v.color}
                                   onChange={(e) => actualizarVariante(idx, 'color', e.target.value)}
+                                  onKeyDown={(e) => teclasVar(e, idx, 'color')}
                                   className="col-span-2 bg-white dark:bg-[var(--color-surface)] border border-[#CBD5E1] p-1 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
                                 />
                                 <input
+                                  id={`var-nombre-${idx}`}
                                   type="text"
                                   placeholder="Nombre variante"
                                   value={v.nombre_variante}
                                   onChange={(e) => actualizarVariante(idx, 'nombre_variante', e.target.value)}
-                                  className="col-span-3 bg-white dark:bg-[var(--color-surface)] border border-[#CBD5E1] p-1 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
+                                  onKeyDown={(e) => teclasVar(e, idx, 'nombre')}
+                                  className="col-span-4 bg-white dark:bg-[var(--color-surface)] border border-[#CBD5E1] p-1 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
                                 />
                                 <input
+                                  id={`var-barcode-${idx}`}
                                   type="text"
                                   placeholder="Opcional"
                                   value={v.barcode}
                                   onChange={(e) => actualizarVariante(idx, 'barcode', e.target.value)}
+                                  onKeyDown={(e) => teclasVar(e, idx, 'barcode')}
                                   className="col-span-2 bg-white dark:bg-[var(--color-surface)] border border-[#CBD5E1] p-1 text-xs font-black outline-none focus:border-fuchsia-600"
                                 />
                                 <input
-                                  type="number"
-                                  min="0"
-                                  step="1"
-                                  placeholder="0"
-                                  value={v.quantity}
-                                  onChange={(e) => actualizarVariante(idx, 'quantity', e.target.value)}
-                                  className="col-span-1 bg-white dark:bg-[var(--color-surface)] border border-[#CBD5E1] p-1 text-xs font-black text-center text-fuchsia-600 outline-none focus:border-fuchsia-600"
-                                  title="Stock inicial de esta variante"
-                                />
-                                <input
+                                  id={`var-price-${idx}`}
                                   type="number"
                                   min="0"
                                   step="0.01"
                                   placeholder="Base"
                                   value={v.price}
                                   onChange={(e) => actualizarVariante(idx, 'price', e.target.value)}
+                                  onKeyDown={(e) => teclasVar(e, idx, 'price')}
                                   className="col-span-1 bg-white dark:bg-[var(--color-surface)] border border-[#CBD5E1] p-1 text-xs font-black text-right outline-none focus:border-fuchsia-600"
-                                  title="Precio específico (deja vacío para usar precio del producto)"
+                                  title="Precio específico para esta talla/color (deja vacío para usar el precio base del producto)"
                                 />
                                 <div className="col-span-1 flex justify-center">
                                   <button
+                                    id={`var-quitar-${idx}`}
                                     type="button"
                                     onClick={() => eliminarVariante(idx)}
+                                    onKeyDown={(e) => teclasVar(e, idx, 'quitar')}
                                     className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors cursor-pointer"
-                                    title="Eliminar variante"
+                                    title="Eliminar variante (Enter o Clic)"
                                   >
                                     <Trash2 size={14} />
                                   </button>
@@ -2493,17 +2658,42 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                         </div>
                       )}
 
-                      <div className="flex justify-between items-center pt-2">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2">
                         <button
+                          id="btn-agregar-variante-manual"
                           type="button"
-                          onClick={agregarVarianteVacia}
+                          onClick={() => {
+                            agregarVarianteVacia();
+                            setTimeout(() => {
+                              document.getElementById(`var-talla-${variantesLista.length}`)?.focus();
+                            }, 50);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp') {
+                              e.preventDefault();
+                              if (variantesLista.length > 0) {
+                                document.getElementById(`var-price-${variantesLista.length - 1}`)?.focus();
+                              } else {
+                                document.getElementById('input-tallas-generator')?.focus();
+                              }
+                            } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                              e.preventDefault();
+                              document.getElementById('btn-guardar-producto')?.focus();
+                            }
+                          }}
                           className="flex items-center gap-1 text-[10px] font-black uppercase text-fuchsia-700 hover:text-fuchsia-900 bg-fuchsia-50 hover:bg-fuchsia-100 px-2.5 py-1.5 border border-fuchsia-200 transition-colors cursor-pointer"
                         >
                           <Plus size={14} /> Agregar Variante Manual
                         </button>
-                        <span className="text-[10px] font-bold text-[#64748B]">
-                          Total stock variantes: <strong className="text-[var(--color-ink)]">{variantesLista.reduce((tot, v) => tot + (Math.max(0, Number(v.quantity) || 0)), 0)}</strong> und
-                        </span>
+                        <div className="flex items-center gap-3 text-[10px] text-[#64748B]">
+                          <span>
+                            Total variantes: <strong className="text-[var(--color-ink)]">{variantesLista.length}</strong>
+                          </span>
+                          <span className="hidden sm:inline text-slate-400">|</span>
+                          <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 border border-emerald-200">
+                            💡 El stock se ingresa con el botón [ Ingresar Lote ]
+                          </span>
+                        </div>
                       </div>
                     </div>
                   )}
