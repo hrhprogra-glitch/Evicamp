@@ -639,7 +639,14 @@ export const ModalCambioProducto: React.FC<Props> = ({
                         }
                       }}
                       onKeyDown={(e) => {
-                        if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          try {
+                            (e.currentTarget as HTMLSelectElement & { showPicker?: () => void }).showPicker?.();
+                          } catch {}
+                          return;
+                        }
+                        if (e.key === 'ArrowDown') {
                           e.preventDefault();
                           if (itemDevuelto) {
                             document.getElementById('input-cantidad-devolver')?.focus();
@@ -678,15 +685,12 @@ export const ModalCambioProducto: React.FC<Props> = ({
                               setCantidadDevolver(val);
                             }}
                             onKeyDown={(e) => {
-                              if (e.key === 'ArrowRight' || e.key === 'Enter') {
+                              if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                                 e.preventDefault();
                                 document.getElementById('input-serie-devuelta')?.focus();
-                              } else if (e.key === 'ArrowUp') {
+                              } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
                                 e.preventDefault();
                                 document.getElementById('select-producto-devuelto')?.focus();
-                              } else if (e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                document.getElementById('input-buscar-nuevo')?.focus();
                               }
                             }}
                             className="w-full bg-white border border-red-300 text-xs font-black p-1.5 focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -710,7 +714,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                               } else if (e.key === 'ArrowUp') {
                                 e.preventDefault();
                                 document.getElementById('select-producto-devuelto')?.focus();
-                              } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                              } else if (e.key === 'ArrowDown') {
                                 e.preventDefault();
                                 document.getElementById('input-buscar-nuevo')?.focus();
                               }
@@ -943,7 +947,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                               setTimeout(() => document.getElementById('input-buscar-nuevo')?.focus(), 50);
                             }}
                             onKeyDown={(e) => {
-                              if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                              if (e.key === 'ArrowDown') {
                                 e.preventDefault();
                                 document.getElementById('input-cantidad-nueva')?.focus();
                               } else if (e.key === 'ArrowUp') {
@@ -969,7 +973,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                               value={cantidadNueva}
                               onChange={(e) => setCantidadNueva(Math.max(1, Number(e.target.value) || 1))}
                               onKeyDown={(e) => {
-                                if (e.key === 'ArrowRight' || e.key === 'Enter') {
+                                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                                   e.preventDefault();
                                   if (document.getElementById('input-serie-nueva')) {
                                     document.getElementById('input-serie-nueva')?.focus();
@@ -978,16 +982,9 @@ export const ModalCambioProducto: React.FC<Props> = ({
                                   } else {
                                     document.getElementById('input-motivo-cambio')?.focus();
                                   }
-                                } else if (e.key === 'ArrowUp') {
+                                } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
                                   e.preventDefault();
                                   document.getElementById('btn-cambiar-nuevo')?.focus();
-                                } else if (e.key === 'ArrowDown') {
-                                  e.preventDefault();
-                                  if (document.getElementById('select-metodo-diferencia')) {
-                                    document.getElementById('select-metodo-diferencia')?.focus();
-                                  } else {
-                                    document.getElementById('input-motivo-cambio')?.focus();
-                                  }
                                 }
                               }}
                               className="w-full bg-white border border-emerald-400 text-xs font-black p-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-600"
@@ -1011,7 +1008,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                                 } else if (e.key === 'ArrowUp') {
                                   e.preventDefault();
                                   document.getElementById('btn-cambiar-nuevo')?.focus();
-                                } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                                } else if (e.key === 'ArrowDown') {
                                   e.preventDefault();
                                   if (document.getElementById('select-metodo-diferencia')) {
                                     document.getElementById('select-metodo-diferencia')?.focus();
@@ -1045,7 +1042,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
 
                   <div className="p-3 border-2 border-[var(--color-ink)] bg-[var(--color-bg)]">
                     <div className="flex justify-between items-center text-xs mb-1">
-                      <span>Valor devuelto:</span>
+                       <span>Valor devuelto:</span>
                       <span className="font-black text-red-600">- S/ {totalDevuelto.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs mb-2">
@@ -1071,7 +1068,14 @@ export const ModalCambioProducto: React.FC<Props> = ({
                           value={metodoPagoDiferencia}
                           onChange={(e) => setMetodoPagoDiferencia(e.target.value as any)}
                           onKeyDown={(e) => {
-                            if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              try {
+                                (e.currentTarget as HTMLSelectElement & { showPicker?: () => void }).showPicker?.();
+                              } catch {}
+                              return;
+                            }
+                            if (e.key === 'ArrowDown') {
                               e.preventDefault();
                               document.getElementById('input-motivo-cambio')?.focus();
                             } else if (e.key === 'ArrowUp') {
@@ -1107,7 +1111,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                       value={motivo}
                       onChange={(e) => setMotivo(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                        if (e.key === 'ArrowDown') {
                           e.preventDefault();
                           document.getElementById('btn-confirmar-cambio')?.focus();
                         } else if (e.key === 'ArrowUp') {

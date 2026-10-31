@@ -406,6 +406,12 @@
           2. Al presionar `Enter` en el input, selecciona inmediatamente el producto resaltado. Si se escribió/escaneó antes del debounce, lanza una búsqueda instantánea y selecciona el primer producto coincidente.
           3. Cada opción es un `<button type="button">` con apariencia destacada de selector Evicamp (fondo negro, texto blanco, anillo amarillo, numeración e indicador `[ENTER ⏎]`).
         - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+      39. **Eliminación de saltos indeseados con Enter en inputs y selects (30/10 noche):**
+        - El dueño aclaró: *"cuando presiono enter no hace la funcion del click osea entrar mas bien cuando presiono enter pasa al siguiente eso no tiene que pasar"* (mostrando el Paso 1 con el selector de producto y campos de cantidad y serie).
+        - Se eliminó el comportamiento de saltar al siguiente campo con `Enter`.
+        - En los `<select>` (`select-producto-devuelto` y `select-metodo-diferencia`), presionar `Enter` o `Espacio` ahora invoca `showPicker()` nativo para abrir la lista desplegable y elegir la opción ("hacer la función de click osea entrar"), en lugar de saltar a la casilla siguiente.
+        - Los desplazamientos entre campos quedan asignados exclusivamente a las flechas de dirección.
+        - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
 
 
 

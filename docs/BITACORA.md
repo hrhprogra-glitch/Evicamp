@@ -7,6 +7,19 @@
 
 ---
 
+## 30/10/2026 (noche, 47) · Antigravity
+- **Corrección de Enter (eliminación de saltos indeseados y apertura con showPicker en selects):**
+  - El dueño reportó: *"cuando presiono enter no hace la funcion del click osea entrar mas bien cuando presiono enter pasa al siguiente eso no tiene que pasar"* (adjuntando captura en el Paso 1 de Selección de Producto del ticket y número de serie).
+  - **Causa identificada:**
+    1. Se había asignado `e.key === 'Enter'` en los manejadores `onKeyDown` de los campos (`select-producto-devuelto`, `input-cantidad-devolver`, `input-serie-devuelta`, `input-cantidad-nueva`, etc.) para forzar el foco al siguiente campo.
+    2. En el `<select id="select-producto-devuelto">`, al presionar `Enter` para abrir el menú desplegable y elegir un producto, el `e.preventDefault()` cancelaba la apertura nativa y saltaba forzosamente a la cantidad a devolver.
+    3. En `btn-cambiar-nuevo`, el `Enter` saltaba a la cantidad nueva en lugar de ejecutar el clic para cambiar el producto.
+  - **Solución implementada:**
+    - Se eliminó el salto de campo con `Enter` en todos los inputs y selects del modal. Los saltos espaciales entre campos quedan reservados para las flechas (`Flecha Abajo/Arriba/Derecha/Izquierda`).
+    - En `<select id="select-producto-devuelto">` y `<select id="select-metodo-diferencia">`, al presionar `Enter` o `Espacio` se invoca `showPicker()` nativo, cumpliendo con la función de click para "entrar" y abrir la lista de opciones sin saltar al siguiente campo.
+    - En los botones (`btn-cambiar-nuevo`, `btn-confirmar-cambio`), `Enter` ejecuta su acción natural de click (`onClick`).
+  - Compilación (`npx tsc -b`, `npm run build`), `graphify update .` y despliegue exitoso a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+
 ## 30/10/2026 (noche, 46) · Antigravity
 - **Soporte de Enter instantáneo y Selector visible en Catálogo de Cambio de Producto:**
   - El dueño reportó: *"el enter no hace click"* en el modal de cambio de producto al buscar en el catálogo (ej: "EVE").

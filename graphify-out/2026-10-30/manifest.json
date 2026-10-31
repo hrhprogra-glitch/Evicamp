@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793403497.1163628,
-    "seen": 1793405678.2297835,
-    "ast_hash": "efe6cf92fd8a7f56cffd5d4b8d4080f4",
+    "mtime": 1793405710.378408,
+    "seen": 1793406852.9844704,
+    "ast_hash": "61d074d74c70e30acb5194da6fa1abde",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793403523.261116,
-    "seen": 1793405678.2297852,
-    "ast_hash": "fd204befd954511c9e1bf223359a2094",
+    "mtime": 1793405750.1490085,
+    "seen": 1793406852.9844723,
+    "ast_hash": "19ebaa395c1bd648b990def31f81393d",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793403505.6268513,
-    "seen": 1793405678.2297878,
-    "ast_hash": "45925fc96a6463e2e887da7e25372b3e",
+    "mtime": 1793405722.5379903,
+    "seen": 1793406852.9844754,
+    "ast_hash": "b74a9caeb42b1a6c842550e1aa4d34b8",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2178,9 +2178,9 @@
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalCambioProducto.tsx": {
-    "mtime": 1793405569.483526,
-    "seen": 1793405678.2296414,
-    "ast_hash": "ae93417b6dbf85e29293cf83653a6bc9",
+    "mtime": 1793406770.6766324,
+    "seen": 1793406852.984306,
+    "ast_hash": "4d3fdda47b79fdacaf903f7a6d21eed2",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalConsultarGarantia.tsx": {
