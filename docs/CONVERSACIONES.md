@@ -496,3 +496,14 @@
           4. Compilación del bundle y despliegue del frontend a Evicamp (`node ai-scripts/deploy.cjs evicamp`). Verificado HTTP 200 OK.
           5. Fusión de la rama `fase-7-tallas-colores` en `main` y subida a GitHub (`git push origin main`).
         - Se procede a preparar la propuesta de la **Fase 8: Producción y Encargos (Recetas e Insumos, Combos / Kits)**.
+      50. **Implementación y Despliegue de Fase 8 (Producción, Recetas y Combos) en siumax (31/10 noche):**
+        - El dueño preguntó: *"dime antes cuantas fases nos falta"*.
+        - Se le explicó detalladamente el avance: 8 fases completadas (73% del roadmap) y las 4 fases restantes (Fase 8: Producción y Combos, Fase 9: Múltiples tiendas y almacenes, Fase 10: Catálogo web, Fase 11: Facturación electrónica SUNAT).
+        - El dueño instruyó: *"dale avanza la fase 8"*.
+        - Se desarrolló e implementó la Fase 8 completa:
+          1. Base de datos en `siumax`: columnas `tipo_compuesto` y `costo_adicional_produccion` en `products`, tabla `product_recipes`, función atómica `fn_producir_receta` (descuento FIFO de insumos, cálculo de costo unitario, creación de lote en Kardex) y trigger de venta de combos que descuenta insumos automáticamente.
+          2. Frontend Inventario: configuración de receta/combo en `ModalProducto.tsx`, nueva ventana modal `ModalProduccion.tsx` para órdenes de fabricación en vivo, y botón verde esmeralda `[ + Producir ]` en la cabecera de inventario y botón rápido por fila.
+          3. Frontend Caja (POS): cálculo dinámico de disponibilidad de Combos en función del insumo más limitante (`min(stock / req)`), y visualización con tarjeta `📦 COMBO: N`.
+          4. Modo sin internet: precarga de `product_recipes` en IndexedDB y registro de IDs locales.
+          5. Pruebas automáticas superadas al 100%: backend (`prueba-fase8-backend.mjs`, 11/11 OK) y navegador Edge (`prueba-fase8-ui.mjs`, 12/12 OK).
+          6. Compilado y desplegado a `https://siumax.duckdns.org`. Producción Evicamp y GitHub main intactos (Regla 4).

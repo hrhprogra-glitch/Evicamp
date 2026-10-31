@@ -681,10 +681,18 @@ DECLARE
   v_costo_real numeric := 0;
   v_ya_descontado numeric;
   v_en_lineas numeric;
+  v_tipo_compuesto text;
+  v_receta_record record;
+  v_comp_qty_to_deduct numeric;
+  v_comp_current_stock numeric;
+  v_comp_batch_record record;
+  v_comp_deducted numeric;
+  v_comp_costo_real numeric;
+  v_costo_total_combo numeric := 0;
 BEGIN
   BEGIN
-    SELECT (coalesce(unit, '') = 'CONSUMO' OR coalesce(control_type, '') = 'CONSUMPTION')
-    INTO v_is_consumo
+    SELECT coalesce(tipo_compuesto, 'ESTANDAR'), (coalesce(unit, '') = 'CONSUMO' OR coalesce(control_type, '') = 'CONSUMPTION')
+    INTO v_tipo_compuesto, v_is_consumo
     FROM public.products WHERE id = NEW.product_id;
 
     IF v_is_consumo = TRUE THEN
@@ -711,6 +719,130 @@ BEGIN
         RAISE WARNING 'Venta % producto % (variante %): ya estaba descontada, no se descuenta otra vez', NEW.sale_id, NEW.product_id, NEW.variant_id;
         RETURN NEW;
       END IF;
+    END IF;
+
+    -- FASE 8: Si es un COMBO / KIT, descontar de cada insumo que lo compone
+    IF v_tipo_compuesto = 'COMBO' THEN
+      FOR v_receta_record IN
+        SELECT pr.component_product_id, pr.component_variant_id, pr.quantity AS factor,
+               p.name AS comp_product_name, pv.nombre_variante AS comp_variant_name
+        FROM public.product_recipes pr
+        JOIN public.products p ON p.id = pr.component_product_id
+        LEFT JOIN public.product_variants pv ON pv.id = pr.component_variant_id
+        WHERE pr.parent_product_id = NEW.product_id
+      LOOP
+        v_comp_qty_to_deduct := v_qty_to_deduct * v_receta_record.factor;
+        v_comp_costo_real := 0;
+
+        IF v_receta_record.component_variant_id IS NOT NULL THEN
+          UPDATE public.product_variants
+          SET quantity = GREATEST(0, coalesce(quantity, 0) - v_comp_qty_to_deduct)
+          WHERE id = v_receta_record.component_variant_id
+          RETURNING coalesce(quantity, 0), coalesce(cost_price, 0) INTO v_comp_current_stock, v_comp_costo_real;
+
+          FOR v_comp_batch_record IN
+            SELECT id, coalesce(quantity, 0) AS qty, coalesce(cost_unit, 0) AS cost
+            FROM public.batches
+            WHERE product_id = v_receta_record.component_product_id AND variant_id = v_receta_record.component_variant_id AND coalesce(quantity, 0) > 0
+            ORDER BY created_at ASC, id ASC
+            FOR UPDATE
+          LOOP
+            IF v_comp_qty_to_deduct <= 0 THEN EXIT; END IF;
+            IF v_comp_batch_record.qty >= v_comp_qty_to_deduct THEN
+              UPDATE public.batches SET quantity = (v_comp_batch_record.qty - v_comp_qty_to_deduct) WHERE id = v_comp_batch_record.id;
+              v_comp_deducted := v_comp_qty_to_deduct;
+              v_comp_qty_to_deduct := 0;
+            ELSE
+              UPDATE public.batches SET quantity = 0 WHERE id = v_comp_batch_record.id;
+              v_comp_deducted := v_comp_batch_record.qty;
+              v_comp_qty_to_deduct := v_comp_qty_to_deduct - v_comp_batch_record.qty;
+            END IF;
+
+            IF v_comp_batch_record.cost > 0 THEN v_comp_costo_real := v_comp_batch_record.cost; END IF;
+            v_costo_total_combo := v_costo_total_combo + (v_comp_deducted * v_comp_costo_real);
+
+            INSERT INTO public.inventory_movements (
+              batch_id, variant_id, variant_name, product_id, product_name, change_amount,
+              previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
+            ) VALUES (
+              v_comp_batch_record.id, v_receta_record.component_variant_id, v_receta_record.comp_variant_name,
+              v_receta_record.component_product_id, v_receta_record.comp_product_name, -v_comp_deducted,
+              (v_comp_current_stock + v_comp_deducted), v_comp_current_stock,
+              'VENTA', 'Venta Combo: ' || NEW.product_name, 'Ticket #' || NEW.sale_id::text, now(), 'Sistema', 1
+            );
+          END LOOP;
+
+          IF v_comp_qty_to_deduct > 0 THEN
+            v_costo_total_combo := v_costo_total_combo + (v_comp_qty_to_deduct * v_comp_costo_real);
+            INSERT INTO public.inventory_movements (
+              batch_id, variant_id, variant_name, product_id, product_name, change_amount,
+              previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
+            ) VALUES (
+              NULL, v_receta_record.component_variant_id, v_receta_record.comp_variant_name,
+              v_receta_record.component_product_id, v_receta_record.comp_product_name, -v_comp_qty_to_deduct,
+              (v_comp_current_stock + v_comp_qty_to_deduct), v_comp_current_stock,
+              'VENTA', 'Venta Combo: ' || NEW.product_name, 'Ticket #' || NEW.sale_id::text, now(), 'Sistema', 1
+            );
+          END IF;
+
+        ELSE
+          UPDATE public.products
+          SET quantity = coalesce(quantity, 0) - v_comp_qty_to_deduct
+          WHERE id = v_receta_record.component_product_id
+          RETURNING coalesce(quantity, 0), coalesce(cost_price, 0) INTO v_comp_current_stock, v_comp_costo_real;
+
+          FOR v_comp_batch_record IN
+            SELECT id, coalesce(quantity, 0) AS qty, coalesce(cost_unit, 0) AS cost
+            FROM public.batches
+            WHERE product_id = v_receta_record.component_product_id AND variant_id IS NULL AND coalesce(quantity, 0) > 0
+            ORDER BY created_at ASC, id ASC
+            FOR UPDATE
+          LOOP
+            IF v_comp_qty_to_deduct <= 0 THEN EXIT; END IF;
+            IF v_comp_batch_record.qty >= v_comp_qty_to_deduct THEN
+              UPDATE public.batches SET quantity = (v_comp_batch_record.qty - v_comp_qty_to_deduct) WHERE id = v_comp_batch_record.id;
+              v_comp_deducted := v_comp_qty_to_deduct;
+              v_comp_qty_to_deduct := 0;
+            ELSE
+              UPDATE public.batches SET quantity = 0 WHERE id = v_comp_batch_record.id;
+              v_comp_deducted := v_comp_batch_record.qty;
+              v_comp_qty_to_deduct := v_comp_qty_to_deduct - v_comp_batch_record.qty;
+            END IF;
+
+            IF v_comp_batch_record.cost > 0 THEN v_comp_costo_real := v_comp_batch_record.cost; END IF;
+            v_costo_total_combo := v_costo_total_combo + (v_comp_deducted * v_comp_costo_real);
+
+            INSERT INTO public.inventory_movements (
+              batch_id, variant_id, variant_name, product_id, product_name, change_amount,
+              previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
+            ) VALUES (
+              v_comp_batch_record.id, NULL, NULL,
+              v_receta_record.component_product_id, v_receta_record.comp_product_name, -v_comp_deducted,
+              (v_comp_current_stock + v_comp_deducted), v_comp_current_stock,
+              'VENTA', 'Venta Combo: ' || NEW.product_name, 'Ticket #' || NEW.sale_id::text, now(), 'Sistema', 1
+            );
+          END LOOP;
+
+          IF v_comp_qty_to_deduct > 0 THEN
+            v_costo_total_combo := v_costo_total_combo + (v_comp_qty_to_deduct * v_comp_costo_real);
+            INSERT INTO public.inventory_movements (
+              batch_id, variant_id, variant_name, product_id, product_name, change_amount,
+              previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
+            ) VALUES (
+              NULL, NULL, NULL,
+              v_receta_record.component_product_id, v_receta_record.comp_product_name, -v_comp_qty_to_deduct,
+              (v_comp_current_stock + v_comp_qty_to_deduct), v_comp_current_stock,
+              'VENTA', 'Venta Combo: ' || NEW.product_name, 'Ticket #' || NEW.sale_id::text, now(), 'Sistema', 1
+            );
+          END IF;
+        END IF;
+      END LOOP;
+
+      IF v_costo_total_combo > 0 AND v_qty_to_deduct > 0 THEN
+        NEW.cost_at_moment := round(v_costo_total_combo / v_qty_to_deduct, 2);
+      END IF;
+
+      RETURN NEW;
     END IF;
 
     -- FASE 7: Si es venta de variante específica, se descuenta de product_variants y de sus lotes si los tiene
@@ -1719,6 +1851,252 @@ CREATE INDEX IF NOT EXISTS idx_batches_variant_id ON public.batches (variant_id)
 
 -- Permisos PostgREST
 GRANT ALL ON public.product_variants TO anon;
+
+-- ===================================================================================================
+-- FASE 8: Producción, Recetas, Insumos, Combos y Kits
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS tipo_compuesto text DEFAULT 'ESTANDAR'; -- 'ESTANDAR', 'COMBO', 'RECETA'
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS costo_adicional_produccion numeric(12,2) DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS public.product_recipes (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  parent_product_id bigint NOT NULL REFERENCES public.products (id) ON DELETE CASCADE,
+  component_product_id bigint NOT NULL REFERENCES public.products (id) ON DELETE RESTRICT,
+  component_variant_id bigint REFERENCES public.product_variants (id) ON DELETE RESTRICT,
+  quantity numeric(12,3) NOT NULL CHECK (quantity > 0),
+  created_at timestamptz DEFAULT now()
+);
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_attribute WHERE attrelid = 'public.product_recipes'::regclass AND attname = 'id' AND attidentity != ''
+  ) THEN
+    ALTER TABLE public.product_recipes ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY;
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_recipes_parent ON public.product_recipes (parent_product_id);
+CREATE INDEX IF NOT EXISTS idx_recipes_component ON public.product_recipes (component_product_id);
+
+GRANT ALL ON public.product_recipes TO anon;
+
+-- Función atómica para registrar una orden de producción / elaboración
+CREATE OR REPLACE FUNCTION public.fn_producir_receta(
+  p_product_id bigint,
+  p_cantidad numeric,
+  p_costo_adicional numeric,
+  p_usuario text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_parent_record record;
+  v_receta_record record;
+  v_costo_insumos_total numeric := 0;
+  v_costo_unitario_final numeric := 0;
+  v_nuevo_lote_id bigint;
+  v_comp_qty_to_deduct numeric;
+  v_comp_current_stock numeric;
+  v_comp_batch_record record;
+  v_comp_deducted numeric;
+  v_comp_costo_unit numeric;
+  v_codigo_lote text;
+BEGIN
+  IF coalesce(p_cantidad, 0) <= 0 THEN
+    RAISE EXCEPTION 'La cantidad a producir debe ser mayor a 0';
+  END IF;
+
+  SELECT id, name, coalesce(tipo_compuesto, 'ESTANDAR') AS tipo, coalesce(quantity, 0) AS stock_actual
+  INTO v_parent_record
+  FROM public.products
+  WHERE id = p_product_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Producto no encontrado';
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM public.product_recipes WHERE parent_product_id = p_product_id) THEN
+    RAISE EXCEPTION 'El producto % no tiene insumos configurados en su receta', v_parent_record.name;
+  END IF;
+
+  -- 1. Validar que haya stock suficiente de todos los componentes antes de descontar nada
+  FOR v_receta_record IN
+    SELECT pr.component_product_id, pr.component_variant_id, pr.quantity AS factor,
+           p.name AS comp_product_name,
+           coalesce(pv.quantity, p.quantity, 0) AS comp_stock_disponible
+    FROM public.product_recipes pr
+    JOIN public.products p ON p.id = pr.component_product_id
+    LEFT JOIN public.product_variants pv ON pv.id = pr.component_variant_id
+    WHERE pr.parent_product_id = p_product_id
+  LOOP
+    IF v_receta_record.comp_stock_disponible < (p_cantidad * v_receta_record.factor) THEN
+      RAISE EXCEPTION 'Stock insuficiente del insumo %: requiere %, disponible %',
+        v_receta_record.comp_product_name, (p_cantidad * v_receta_record.factor), v_receta_record.comp_stock_disponible;
+    END IF;
+  END LOOP;
+
+  -- 2. Descontar cada insumo por FIFO de sus lotes respectivos
+  FOR v_receta_record IN
+    SELECT pr.component_product_id, pr.component_variant_id, pr.quantity AS factor,
+           p.name AS comp_product_name, pv.nombre_variante AS comp_variant_name
+    FROM public.product_recipes pr
+    JOIN public.products p ON p.id = pr.component_product_id
+    LEFT JOIN public.product_variants pv ON pv.id = pr.component_variant_id
+    WHERE pr.parent_product_id = p_product_id
+  LOOP
+    v_comp_qty_to_deduct := p_cantidad * v_receta_record.factor;
+
+    IF v_receta_record.component_variant_id IS NOT NULL THEN
+      UPDATE public.product_variants
+      SET quantity = GREATEST(0, coalesce(quantity, 0) - v_comp_qty_to_deduct)
+      WHERE id = v_receta_record.component_variant_id
+      RETURNING coalesce(quantity, 0) INTO v_comp_current_stock;
+
+      FOR v_comp_batch_record IN
+        SELECT id, coalesce(quantity, 0) AS qty, coalesce(cost_unit, 0) AS cost
+        FROM public.batches
+        WHERE product_id = v_receta_record.component_product_id AND variant_id = v_receta_record.component_variant_id AND coalesce(quantity, 0) > 0
+        ORDER BY created_at ASC, id ASC
+        FOR UPDATE
+      LOOP
+        IF v_comp_qty_to_deduct <= 0 THEN EXIT; END IF;
+        IF v_comp_batch_record.qty >= v_comp_qty_to_deduct THEN
+          UPDATE public.batches SET quantity = (v_comp_batch_record.qty - v_comp_qty_to_deduct) WHERE id = v_comp_batch_record.id;
+          v_comp_deducted := v_comp_qty_to_deduct;
+          v_comp_qty_to_deduct := 0;
+        ELSE
+          UPDATE public.batches SET quantity = 0 WHERE id = v_comp_batch_record.id;
+          v_comp_deducted := v_comp_batch_record.qty;
+          v_comp_qty_to_deduct := v_comp_qty_to_deduct - v_comp_batch_record.qty;
+        END IF;
+
+        v_costo_insumos_total := v_costo_insumos_total + (v_comp_deducted * coalesce(v_comp_batch_record.cost, 0));
+
+        INSERT INTO public.inventory_movements (
+          batch_id, variant_id, variant_name, product_id, product_name, change_amount,
+          previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
+        ) VALUES (
+          v_comp_batch_record.id, v_receta_record.component_variant_id, v_receta_record.comp_variant_name,
+          v_receta_record.component_product_id, v_receta_record.comp_product_name, -v_comp_deducted,
+          (v_comp_current_stock + v_comp_deducted), v_comp_current_stock,
+          'PRODUCCION', 'Insumo para producción de ' || v_parent_record.name, 'Lote producido ' || p_cantidad::text || ' und', now(), coalesce(p_usuario, 'Sistema'), 1
+        );
+      END LOOP;
+
+      IF v_comp_qty_to_deduct > 0 THEN
+        SELECT coalesce(cost_price, 0) INTO v_comp_costo_unit FROM public.products WHERE id = v_receta_record.component_product_id;
+        v_costo_insumos_total := v_costo_insumos_total + (v_comp_qty_to_deduct * v_comp_costo_unit);
+
+        INSERT INTO public.inventory_movements (
+          batch_id, variant_id, variant_name, product_id, product_name, change_amount,
+          previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
+        ) VALUES (
+          NULL, v_receta_record.component_variant_id, v_receta_record.comp_variant_name,
+          v_receta_record.component_product_id, v_receta_record.comp_product_name, -v_comp_qty_to_deduct,
+          (v_comp_current_stock + v_comp_qty_to_deduct), v_comp_current_stock,
+          'PRODUCCION', 'Insumo para producción de ' || v_parent_record.name, 'Lote producido ' || p_cantidad::text || ' und', now(), coalesce(p_usuario, 'Sistema'), 1
+        );
+      END IF;
+
+    ELSE
+      UPDATE public.products
+      SET quantity = coalesce(quantity, 0) - v_comp_qty_to_deduct
+      WHERE id = v_receta_record.component_product_id
+      RETURNING coalesce(quantity, 0) INTO v_comp_current_stock;
+
+      FOR v_comp_batch_record IN
+        SELECT id, coalesce(quantity, 0) AS qty, coalesce(cost_unit, 0) AS cost
+        FROM public.batches
+        WHERE product_id = v_receta_record.component_product_id AND variant_id IS NULL AND coalesce(quantity, 0) > 0
+        ORDER BY created_at ASC, id ASC
+        FOR UPDATE
+      LOOP
+        IF v_comp_qty_to_deduct <= 0 THEN EXIT; END IF;
+        IF v_comp_batch_record.qty >= v_comp_qty_to_deduct THEN
+          UPDATE public.batches SET quantity = (v_comp_batch_record.qty - v_comp_qty_to_deduct) WHERE id = v_comp_batch_record.id;
+          v_comp_deducted := v_comp_qty_to_deduct;
+          v_comp_qty_to_deduct := 0;
+        ELSE
+          UPDATE public.batches SET quantity = 0 WHERE id = v_comp_batch_record.id;
+          v_comp_deducted := v_comp_batch_record.qty;
+          v_comp_qty_to_deduct := v_comp_qty_to_deduct - v_comp_batch_record.qty;
+        END IF;
+
+        v_costo_insumos_total := v_costo_insumos_total + (v_comp_deducted * coalesce(v_comp_batch_record.cost, 0));
+
+        INSERT INTO public.inventory_movements (
+          batch_id, variant_id, variant_name, product_id, product_name, change_amount,
+          previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
+        ) VALUES (
+          v_comp_batch_record.id, NULL, NULL,
+          v_receta_record.component_product_id, v_receta_record.comp_product_name, -v_comp_deducted,
+          (v_comp_current_stock + v_comp_deducted), v_comp_current_stock,
+          'PRODUCCION', 'Insumo para producción de ' || v_parent_record.name, 'Lote producido ' || p_cantidad::text || ' und', now(), coalesce(p_usuario, 'Sistema'), 1
+        );
+      END LOOP;
+
+      IF v_comp_qty_to_deduct > 0 THEN
+        SELECT coalesce(cost_price, 0) INTO v_comp_costo_unit FROM public.products WHERE id = v_receta_record.component_product_id;
+        v_costo_insumos_total := v_costo_insumos_total + (v_comp_qty_to_deduct * v_comp_costo_unit);
+
+        INSERT INTO public.inventory_movements (
+          batch_id, variant_id, variant_name, product_id, product_name, change_amount,
+          previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
+        ) VALUES (
+          NULL, NULL, NULL,
+          v_receta_record.component_product_id, v_receta_record.comp_product_name, -v_comp_qty_to_deduct,
+          (v_comp_current_stock + v_comp_qty_to_deduct), v_comp_current_stock,
+          'PRODUCCION', 'Insumo para producción de ' || v_parent_record.name, 'Lote producido ' || p_cantidad::text || ' und', now(), coalesce(p_usuario, 'Sistema'), 1
+        );
+      END IF;
+    END IF;
+  END LOOP;
+
+  -- 3. Calcular costo unitario
+  v_costo_unitario_final := round((v_costo_insumos_total + coalesce(p_costo_adicional, 0)) / p_cantidad, 2);
+
+  -- 4. Crear lote para producto terminado
+  v_codigo_lote := 'PROD-' || to_char(now(), 'YYYYMMDD-HH24MI');
+  v_nuevo_lote_id := (extract(epoch from clock_timestamp()) * 1000)::bigint;
+
+  INSERT INTO public.batches (
+    id, product_id, quantity, initial_quantity, cost_unit, cost_total, document_ref, is_active, created_at, is_synced
+  ) VALUES (
+    v_nuevo_lote_id, p_product_id, p_cantidad, p_cantidad, v_costo_unitario_final,
+    round(v_costo_unitario_final * p_cantidad, 2), v_codigo_lote, 1, now(), 1
+  );
+
+  -- 5. Actualizar stock y costo de producto terminado
+  UPDATE public.products
+  SET quantity = coalesce(quantity, 0) + p_cantidad,
+      cost_price = v_costo_unitario_final
+  WHERE id = p_product_id;
+
+  -- 6. Movimiento Kardex entrada de producto elaborado
+  INSERT INTO public.inventory_movements (
+    batch_id, variant_id, variant_name, product_id, product_name, change_amount,
+    previous_quantity, new_quantity, operation_type, reason, notes, created_at, "user", is_synced
+  ) VALUES (
+    v_nuevo_lote_id, NULL, NULL,
+    p_product_id, v_parent_record.name, p_cantidad,
+    v_parent_record.stock_actual, (v_parent_record.stock_actual + p_cantidad),
+    'PRODUCCION', 'Elaboración / Fabricación de lote', 'Lote ' || v_codigo_lote, now(), coalesce(p_usuario, 'Sistema'), 1
+  );
+
+  RETURN jsonb_build_object(
+    'ok', true,
+    'batch_id', v_nuevo_lote_id,
+    'batch_code', v_codigo_lote,
+    'quantity_produced', p_cantidad,
+    'cost_unit', v_costo_unitario_final,
+    'total_cost', (v_costo_insumos_total + coalesce(p_costo_adicional, 0))
+  );
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.fn_producir_receta(bigint, numeric, numeric, text) TO anon;
 
 NOTIFY pgrst, 'reload schema';
 

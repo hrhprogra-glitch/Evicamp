@@ -22,6 +22,7 @@ export const precargarParaSinInternet = () => {
         // Inventario (src/sections/Inventario/index.tsx)
         traerTodo(() => supabase.from('products').select('*').eq('is_active', 1).order('id')),
         traerTodo(() => supabase.from('product_variants').select('*').eq('is_active', 1).order('id')),
+        traerTodo(() => supabase.from('product_recipes').select('*').order('id')), // fase 8: recetas, combos y producción
         traerTodo(() => supabase.from('batches').select('id, product_id, quantity, cost_unit, expiration_date').order('id')),
         supabase.from('categories').select('name'),
         // Lo vendido en 30 días (Inventario: "Sin ventas"; Compras: "Sugerir pedido"). Igual que en Inventario/index.tsx

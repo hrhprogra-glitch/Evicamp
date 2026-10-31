@@ -7,7 +7,31 @@
 
 ---
 
-## 31/10/2026 (noche, 57) · Antigravity
+## 31/10/2026 (noche, 58) · Antigravity
+- **Implementación Completa de Fase 8 (Producción y Encargos: Recetas, Insumos, Combos y Kits) en siumax:**
+  - **Instrucción del dueño:** *"dale avanza la fase 8"*.
+  - **1. Base de datos y Backend (`siumax` y `servidor/sql/seguridad-sesion.sql`):**
+    - Añadidas columnas a `products`: `tipo_compuesto` ('ESTANDAR', 'COMBO', 'RECETA') y `costo_adicional_produccion`.
+    - Creada tabla `product_recipes` (parent_product_id, component_product_id, component_variant_id, quantity) con índices y permisos.
+    - Creada función atómica `fn_producir_receta(p_product_id, p_cantidad, p_costo_adicional, p_usuario)`: valida stock de insumos, descuenta por FIFO de lotes, inserta movimientos Kardex de PRODUCCION, calcula costo unitario del lote final e incrementa stock del producto elaborado.
+    - Creado script de reversión: `servidor/sql/deshacer-fase8-recetas-combos.sql`.
+    - Modificado trigger `fn_reduce_stock_from_sales()`: si el producto vendido es un 'COMBO', descuenta automáticamente los insumos requeridos por FIFO en Kardex.
+    - `prueba-fase8-backend.mjs`: 11 de 11 pruebas pasadas al 100%.
+  - **2. Interfaz y Flujo de Teclado (Frontend):**
+    - `ModalProducto.tsx`: Configuración de Receta o Combo en Paso 2 con buscador de insumos, tabla de componentes con costo en vivo, costo adicional x lote y navegación 100% por teclado.
+    - `ModalProduccion.tsx`: Ventana modal para emitir órdenes de producción con cálculo en tiempo real de insumos necesarios vs disponibles, stock máximo fabricable, costeo unitario y confirmación con tecla Enter.
+    - `Inventario/index.tsx`: Añadido botón verde `[ + Producir ]` (`#btn-header-producir`) en la barra de acciones con navegación por flechas, conectado al modal de producción.
+    - `TablaProductos.tsx`: Insignias visibles `👨‍🍳 RECETA` y `📦 COMBO` en la lista, y botón rápido `[ Producir ]` con icono de chef en cada producto con receta.
+    - `Punto-de-venta/index.tsx` y `TerminalBusqueda.tsx`: Los Combos calculan su stock disponible dinámicamente según la disponibilidad de sus insumos (`min(stock / req)`). En Caja se muestran con insignia `📦 COMBO: N`.
+  - **3. Modo Sin Internet:**
+    - `precargaSinInternet.ts`: Descarga automática de `product_recipes` en IndexedDB.
+    - `sinInternet.ts`: Habilitado `product_recipes` con IDs locales en cola.
+  - **4. Despliegue y Pruebas UI:**
+    - Build de producción impecable en 4.25s (`npm run build`).
+    - Desplegado a `https://siumax.duckdns.org`. Producción Evicamp y GitHub main intactos (Regla 4).
+    - `prueba-fase8-ui.mjs`: 12 de 12 pruebas aprobadas al 100% en Edge headless (creación de insumos, apertura de modal, fabricación de unidades, actualización de stock y visualización de combo en POS).
+  - **5. Siguiente paso:**
+    - Presentar la entrega de Fase 8 al dueño para su revisión en siumax y decisión para pase a producción.
 - **Pase Oficial de Fase 7 (Tallas y Colores: Variantes con stock propio y Lotes por variante) a Evicamp y GitHub:**
   - **Instrucción del dueño:** *"perfecto bien echo ya quedo ahora si avnacemos"* (tras confirmación de Opción 1: Subir Fase 7 a Producción Evicamp y GitHub).
   - **1. Respaldo y Base de Datos en Producción (Evicamp):**

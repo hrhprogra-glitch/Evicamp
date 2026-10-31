@@ -1,13 +1,14 @@
 import React from 'react';
-import { Package, Database, Plus, AlertTriangle } from 'lucide-react';
+import { Package, Database, Plus, AlertTriangle, ChefHat } from 'lucide-react';
 
 interface Props {
   onIngresoStock: () => void;
   onNuevoSKU: () => void;
-  onRegistrarMerma: () => void; // <-- AGREGA ESTA LÍNEA
+  onRegistrarMerma: () => void;
+  onProducirReceta?: () => void;
 }
 
-export const HeaderInventario: React.FC<Props> = ({ onIngresoStock, onNuevoSKU, onRegistrarMerma }) => {
+export const HeaderInventario: React.FC<Props> = ({ onIngresoStock, onNuevoSKU, onRegistrarMerma, onProducirReceta }) => {
   return (
     <div className="bg-[var(--color-surface)] border-b border-[#E2E8F0] p-4 sm:p-6 lg:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 lg:gap-6 rounded-none relative shrink-0">
       <div>
@@ -20,7 +21,7 @@ export const HeaderInventario: React.FC<Props> = ({ onIngresoStock, onNuevoSKU, 
       </div>
 
       {/* PANEL DE ACCIONES RÁPIDAS */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 md:flex md:flex-wrap gap-2 sm:gap-3 lg:gap-4 w-full md:w-auto">
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-wrap gap-2 sm:gap-3 lg:gap-4 w-full md:w-auto">
 
         {/* 1. NUEVO PRODUCTO */}
         <button
@@ -38,7 +39,18 @@ export const HeaderInventario: React.FC<Props> = ({ onIngresoStock, onNuevoSKU, 
           <Database size={18} /> <span className="whitespace-nowrap">Ingresar Lote</span>
         </button>
 
-        {/* 3. REGISTRAR MERMA */}
+        {/* 3. PRODUCIR / ELABORAR (FASE 8) */}
+        {onProducirReceta && (
+          <button
+            id="btn-header-producir"
+            onClick={onProducirReceta}
+            className="bg-emerald-600 text-white px-3 sm:px-5 lg:px-6 py-2.5 sm:py-3 lg:py-4 border-2 border-[var(--color-ink)] font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center justify-center gap-2 lg:gap-3 hover:bg-[var(--color-ink)] hover:text-emerald-400 hover:border-emerald-400 transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+          >
+            <ChefHat size={18} /> <span className="whitespace-nowrap">Producir</span>
+          </button>
+        )}
+
+        {/* 4. REGISTRAR MERMA */}
         <button
           onClick={onRegistrarMerma}
           className="bg-[var(--color-surface)] text-[var(--color-danger)] px-3 sm:px-5 lg:px-6 py-2.5 sm:py-3 lg:py-4 border-2 border-[var(--color-danger)] font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center justify-center gap-2 lg:gap-3 hover:bg-[var(--color-danger)] hover:text-white transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-danger)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"

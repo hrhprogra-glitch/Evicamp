@@ -31,6 +31,10 @@ export interface Product {
   stockBase?: number;                                               // stock propio/lotes general (además de sus variantes)
   variantId?: string | number;                                      // id de variante en la caja
   variantName?: string | null;                                      // "Talla M / Negro"
+  // Fase 8: recetas, combos y producción
+  tipoCompuesto?: 'ESTANDAR' | 'COMBO' | 'RECETA';
+  costoAdicionalProduccion?: number;
+  recetas?: ProductRecipeItem[];
   // Fase 1.2: presentaciones (caja, paquete…) y, en la Caja, la presentación vendida como otro "producto"
   presentaciones?: { unidad: string; factor: number; precio: number; barcode?: string | null }[];
   productoId?: string;                                              // el producto real (si esto es una presentación o variante)
@@ -51,5 +55,18 @@ export interface ProductVariant {
   quantity: number;
   min_stock?: number | null;
   is_active?: number;
+}
+
+export interface ProductRecipeItem {
+  id?: string | number;
+  parent_product_id?: string | number;
+  component_product_id: string | number;
+  component_variant_id?: string | number | null;
+  quantity: number;
+  component_name?: string;
+  component_variant_name?: string | null;
+  component_unit?: string;
+  component_cost?: number;
+  component_stock?: number;
 }
 

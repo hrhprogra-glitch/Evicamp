@@ -4,13 +4,14 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 31/10/2026 (noche, 57), Antigravity: **Fase 7 (Tallas y Colores: Variantes con stock propio + Ingreso de Lotes por Variante)** pasada oficialmente a producción en Evicamp y GitHub. Siguiente paso: preparar y proponer la **Fase 8 (Producción y Encargos: Recetas, Insumos, Combos y Kits)**.
+- **Última actualización:** 31/10/2026 (noche, 58), Antigravity: **Fase 8 (Producción y Encargos: Recetas, Insumos, Combos y Kits)** implementada, desplegada y probada al 100% en `siumax` (backend con FIFO/Kardex y UI con puppeteer). Esperando revisión del dueño para pase a producción en Evicamp y GitHub.
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 3, 4, 5, 6 y 7 en producción en Evicamp (commits d36efca, bd3780f, 994bdca, 59538a0 y merge de Fase 7).
-- **Fase en preparación:** Fase 8 (Producción y Encargos).
+- **Fase terminada en pruebas:** Fase 8 (Producción y Encargos).
 
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Fase 8 (Producción y Encargos: Recetas, Insumos, Combos y Kits)** | **✅ Hecho y probado en siumax (31/10); listo para pase a producción** |
 | **Fase 7 (Tallas y Colores - Variantes con stock propio + Ingreso de Lotes por Variante)** | **✅ Hecho en producción y GitHub (31/10)** |
 | **Fase 6 (Cambios de Producto y Garantías / Series)** | **✅ Hecho en producción y GitHub (31/10, commit 59538a0)** |
 | **Fase 5 (Descuentos y Promociones)** | **✅ Hecho (incluido en creación de productos: escalas por cantidad, presentaciones y mayoristas)** |

@@ -481,13 +481,14 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
     // (antes se bloqueaba la venta si la caja era del día anterior)
     setHasOpenSession(!!session);
     // Supabase devuelve máximo 1000 filas por consulta: traerTodo las pide por bloques
-    const [{ data: productsData }, { data: variantsData }] = await Promise.all([
+    const [{ data: productsData }, { data: variantsData }, { data: recipesData }] = await Promise.all([
       traerTodo(() => supabase.from('products')
         .select('*')
         .eq('is_active', 1) // 🛡️ EVICAMP: Bloqueo de productos fantasma directo en el motor de BD
         .order('name', { ascending: true })
         .order('id')),
       traerTodo(() => supabase.from('product_variants').select('*').eq('is_active', 1).order('id')),
+      traerTodo(() => supabase.from('product_recipes').select('*').order('id')),
     ]);
 
     const variantesPorProducto = new Map<number | string, any[]>();
@@ -496,12 +497,48 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       if (!variantesPorProducto.has(pid)) variantesPorProducto.set(pid, []);
       variantesPorProducto.get(pid)!.push(v);
     });
+
+    const recetasPorProducto = new Map<number | string, any[]>();
+    (recipesData || []).forEach((r: any) => {
+      const pid = r.parent_product_id;
+      if (!recetasPorProducto.has(pid)) recetasPorProducto.set(pid, []);
+      recetasPorProducto.get(pid)!.push(r);
+    });
+
+    const stockPorProducto = new Map<number | string, number>();
+    (productsData || []).forEach((p: any) => {
+      stockPorProducto.set(p.id, Number(p.quantity || 0));
+    });
+    const stockPorVariante = new Map<number | string, number>();
+    (variantsData || []).forEach((v: any) => {
+      stockPorVariante.set(v.id, Number(v.quantity || 0));
+    });
       
     if (productsData) {
       const mapeados: Product[] = productsData.map((p: any) => {
         const vars = variantesPorProducto.get(p.id) || [];
         const tieneVars = Boolean(p.tiene_variantes || vars.length > 0);
-        const stockVariantes = vars.reduce((acc: number, v: any) => acc + (Number(v.quantity) || 0), 0);
+        const tipoComp = p.tipo_compuesto || 'ESTANDAR';
+        const recetas = recetasPorProducto.get(p.id) || [];
+        let stockFinal = Number(p.quantity) || 0;
+
+        // Fase 8: Si es un COMBO / KIT, su stock disponible depende de sus insumos actuales
+        if (tipoComp === 'COMBO') {
+          if (recetas.length === 0) {
+            stockFinal = 0;
+          } else {
+            let maxCombos = Infinity;
+            for (const item of recetas) {
+              const cantReq = Number(item.quantity) || 1;
+              const stockInsumo = item.component_variant_id
+                ? (stockPorVariante.get(item.component_variant_id) ?? 0)
+                : (stockPorProducto.get(item.component_product_id) ?? 0);
+              const combosPosibles = Math.floor(stockInsumo / cantReq);
+              if (combosPosibles < maxCombos) maxCombos = combosPosibles;
+            }
+            stockFinal = maxCombos === Infinity ? 0 : Math.max(0, maxCombos);
+          }
+        }
 
         return {
           id: p.id,
@@ -509,7 +546,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           price: Number(p.price) || 0,
           precioMayorista: p.precio_mayorista != null && !isNaN(Number(p.precio_mayorista)) ? Number(p.precio_mayorista) : undefined,
           cost: Number(p.cost_price) || 0,
-          quantity: Number(p.quantity) || 0,
+          quantity: stockFinal,
           minStock: Number(p.min_stock) || 0,
           code: p.code || 'NO-SKU',
           barcode: p.barcode || '',
@@ -528,7 +565,10 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           controlaSeries: Boolean(p.controla_series),
           mesesGarantia: Number(p.meses_garantia || 0),
           tieneVariantes: tieneVars,
-          variantes: vars
+          variantes: vars,
+          tipoCompuesto: tipoComp,
+          costoAdicionalProduccion: Number(p.costo_adicional_produccion || 0),
+          recetas: recetas,
         } as Product;
       });
       setProductos(mapeados);
