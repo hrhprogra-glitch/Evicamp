@@ -443,3 +443,56 @@
           3. Recarga del esquema PostgREST sin reiniciar la API ni interrumpir ventas de Evicamp.
           4. Despliegue de la aplicación web a `evicamp.duckdns.org` (20 archivos subidos). Verificación HTTP 200 OK.
           5. Fusión de la rama `fase-6-cambios-garantias` a `main` y push completado hacia GitHub (`git push origin main`).
+      44. **Propuesta y Ejecución de la Fase 7: Tallas y Colores (31/10 tarde):**
+        - El dueño consultó: *"la fase 7 dime el plan"*.
+        - Se le presentó la propuesta detallada:
+          1. Inventario: opción "Activar Variantes", plantillas rápidas (Ropa S-M-L-XL, Calzado 36-42), generador combinado por comas y matriz para asignar stock, código de barras y precio individual.
+          2. Caja (POS): cada variante se vende con su propio stock y código.
+          3. Kardex y Anulaciones: seguimiento por `variant_id` y devolución de stock a la variante al anular.
+          4. Soporte offline (sin internet) 100% integrado.
+        - El dueño aprobó de inmediato: *"si dale"*.
+        - Se creó la rama `fase-7-tallas-colores`.
+        - Se aplicó la migración SQL con respaldo en `siumax` (`product_variants`, columnas en `sale_details` e `inventory_movements`, y triggers actualizados).
+        - Se integraron las interfaces en Inventario (`ModalProducto`, `TablaProductos`) y Caja (`Punto-de-venta`, `variantes.ts`).
+        - Pruebas superadas al 100%: backend (`prueba-fase7-variantes.mjs`) y navegador Edge (`prueba-fase7-ui.mjs`).
+        - Desplegado a `siumax.duckdns.org` para que el dueño pruebe. Evicamp y GitHub permanecen intactos esperando su visto bueno.
+      45. **Aclaración y Decisión del Modelo Híbrido: Lotes Genéricos + Variantes (31/10 tarde):**
+        - El dueño preguntó: *"pero que pasa si pongo polo nicke y lo ingreso en lote 100 pero en variantes tengo polo nicket blanco M y pongo 100 deben aparecer los 2 no??"*.
+        - Se le presentó la consulta interactiva con las alternativas de negocio. El dueño seleccionó la Opción A1 (Recomendada):
+          - En Caja deben aparecer los dos: el 'Polo Nike' genérico (con su stock de lote) y el 'Polo Nike Blanco M' (con su stock propio).
+          - Si el producto genérico no tiene stock en lotes (`quantity = 0`), solo aparecen las variantes específicas.
+        - Se ajustaron `servidor/sql/seguridad-sesion.sql` (trigger `fn_reduce_stock_from_sales` y `fn_anular_venta`), `src/utils/variantes.ts`, `Punto-de-venta/index.tsx`, `Inventario/index.tsx`, `TablaProductos.tsx` y `sinInternet.ts`.
+        - Se validó con un script automatizado específico (`ai-scripts/pruebas/prueba-fase7-hibrido.mjs`) que creó 100 unidades en lote y 100 en variante: ambos aparecieron en Caja, la venta de la variante descontó de la variante dejando intacto el lote, la venta genérica descontó del lote dejando intacta la variante, y las anulaciones devolvieron el stock de cada uno de forma 100% independiente.
+        - Todo compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub permanecen intactos.
+      46. **Adaptación del Botón [ Ingresar Lote ] por Tipo de Producto (31/10 tarde):**
+        - El dueño preguntó: *"no seria mejor que la creación de lotes por tipo de productos este en el boton de lotes ??"*.
+        - Se le consultó mediante pregunta interactiva y el dueño confirmó la Opción A1: *(Recomendado) Sí: que el botón 'Ingresar Lote' se adapte al producto. Si el producto tiene tallas/colores, me permita ingresar cuántas unidades llegaron de cada variante (ej. 20 M, 30 L) y alimente el stock de cada una.*
+        - Implementación completada:
+          1. Base de datos: `batches` incluye ahora `variant_id bigint` y `variant_name text`. `fn_reduce_stock_from_sales` descuenta de lotes con variante por FIFO. `fn_edit_batch` y `fn_soft_delete_batch` sincronizan tanto el stock de la variante como el del producto al editar o retirar un lote.
+          2. `ModalLote.tsx`: Al seleccionar un producto con variantes, la Sección 2 despliega una tabla con las variantes, stock actual y campo de ingreso por variante. Auto-enfoca el primer campo de variante con navegación por teclado fluida. Suma las cantidades y calcula el costo unitario automáticamente. Al guardar crea un lote individual por cada variante con unidades ingresadas.
+          3. `TablaLotes.tsx` y `ModalHistorialLotes.tsx`: Muestran el distintivo `🏷️ {variant_name}` y el buscador permite filtrar por talla o color.
+          4. Pruebas automáticas completas en `siumax` (`prueba-lote-variantes-ui.mjs` y `prueba-fase7-ui.mjs` al 100% OK).
+          5. Desplegado en `siumax.duckdns.org`. Evicamp y GitHub permanecen intactos esperando la orden del dueño.
+      47. **Visibilidad de Variantes vs. Producto Genérico en Caja (31/10 tarde):**
+        - El dueño consultó: *"entonces ahora si ingreso un producto como polo nicke y tiene una variante no va aparecer el polo nicke si no la variante no??"*.
+        - Se ajustó `src/utils/variantes.ts` para que si todo el stock del producto está distribuido en sus tallas o colores (`stockGenerico <= 0`), en la Caja únicamente aparezcan las variantes (`Polo Nike (Talla M)`, `Polo Nike (Talla L)`), evitando que el cajero venda un polo genérico sin talla y descuadre las existencias. El producto padre genérico solo aparece en Caja si tiene stock suelto sin clasificar (`stockGenerico > 0`).
+        - En Inventario e Ingresar Lote siempre se mantiene el producto padre visible para ver totales y cargar mercadería por variantes.
+        - Pruebas automáticas UI aprobadas al 100% y desplegado en `siumax.duckdns.org`.
+      48. **Selector de Teclado y Retiro de Casillero Stock en ModalProducto (31/10 tarde):**
+        - El dueño reportó: *"el selector no funciona ahi como tambien ahi se puede ingresar lotes y precios lo que si esta bien que ahi se tenga que poner el precio del producto de ese polo o talla ya que no habra un presio unico para todos"* (con captura del modal Paso 2 en bloque de Tallas y Colores).
+        - Mediante pregunta interactiva, el dueño seleccionó la Opción A1: Quitar la columna 'Stock' de esta ventana y dejar solo 'Precio'. El stock se ingresa con el botón [ Ingresar Lote ] con su costo y proveedor.
+        - Se corrigió integralmente la navegación por teclado (selector) en `ModalProducto.tsx`:
+          1. Conexión de Presentaciones y Escalas hacia `check-tiene-variantes`.
+          2. Activación de variantes con Enter y navegación hacia las plantillas rápidas (`btn-preset-ropa` y `btn-preset-calzado`) y el generador.
+          3. Selector de grilla bidireccional (Flechas Arriba/Abajo/Izquierda/Derecha y Enter) en todas las celdas de la tabla de variantes (`teclasVar`).
+      49. **Aprobación Oficial y Pase de Fase 7 a Producción en Evicamp y GitHub (31/10 noche):**
+        - El dueño expresó: *"perfecto bien echo ya quedo ahora si avnacemos"*.
+        - Se le consultó si avanzar subiendo primero la Fase 7 a Producción (Evicamp) y GitHub antes de empezar la Fase 8, o pasar directo a la Fase 8.
+        - El dueño seleccionó la Opción A1: *(Recomendado) Subir primero la Fase 7 (Tallas y Colores) a Producción (Evicamp) y GitHub, y luego arrancar la Fase 8*.
+        - Se procedió con el pase formal:
+          1. Respaldo previo de la base de datos de producción `postgres` en `/var/lib/postgresql/respaldo-evicamp-antes-fase7-2026-10-31T22-29-31-496Z.dump` (1.9 MB).
+          2. Aplicación de `servidor/sql/seguridad-sesion.sql` en Evicamp con `lock_timeout = '5s'` y recarga de esquema de PostgREST con `NOTIFY pgrst, 'reload schema'`. Cero errores de SQL y cero tiempo de inactividad (sin reiniciar la API).
+          3. Verificación de tablas y columnas (`product_variants`, `sale_details.variant_id`, `batches.variant_id`, `inventory_movements.variant_id`).
+          4. Compilación del bundle y despliegue del frontend a Evicamp (`node ai-scripts/deploy.cjs evicamp`). Verificado HTTP 200 OK.
+          5. Fusión de la rama `fase-7-tallas-colores` en `main` y subida a GitHub (`git push origin main`).
+        - Se procede a preparar la propuesta de la **Fase 8: Producción y Encargos (Recetas e Insumos, Combos / Kits)**.

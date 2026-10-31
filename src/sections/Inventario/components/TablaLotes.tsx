@@ -25,6 +25,8 @@ interface Lote {
   supplier?: string; // <-- AÑADIDO PARA EL PROVEEDOR
   provider_id?: string | null; // proveedor registrado (para editar el lote sin perder el enlace)
   created_ts?: number; // momento exacto de ingreso (created_at ya viene como fecha corta para mostrar)
+  variant_id?: number | string | null;
+  variant_name?: string | null;
 }
 
 interface Props {
@@ -80,6 +82,8 @@ export const TablaLotes: React.FC<Props> = ({
             document_ref: b.document_ref || 'INT-S/R',
             supplier: b.supplier || '',
             provider_id: b.provider_id ?? null,
+            variant_id: b.variant_id ?? null,
+            variant_name: b.variant_name || null,
             category: b.products?.category || 'GENERAL',
             unit: b.products?.unit === 'CONSUMO' || b.products?.control_type === 'CONSUMO' || b.products?.control_type === 'SERVICE' ? 'CONSUMO' : (b.products?.unit || b.products?.weight_unit || (b.products?.control_type === 'WEIGHT' ? 'KG' : 'UND'))
           }));
@@ -141,7 +145,7 @@ export const TablaLotes: React.FC<Props> = ({
 
     // 1. Filtro de Búsqueda de Texto Inteligente (coincidencia flexible)
     if (searchQuery && searchQuery.trim()) {
-      if (!coincideBusqueda([lote.product_name, lote.document_ref, lote.supplier], searchQuery)) {
+      if (!coincideBusqueda([lote.product_name, lote.variant_name, lote.document_ref, lote.supplier], searchQuery)) {
         return false;
       }
     }
@@ -352,9 +356,16 @@ export const TablaLotes: React.FC<Props> = ({
 
       {/* 2. PRODUCTO Y CATEGORÍA */}
       <div className="col-span-3 pr-4">
-        <p className="font-black uppercase text-[var(--color-ink)] truncate" title={lote.product_name}>
-          {lote.product_name}
-        </p>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <p className="font-black uppercase text-[var(--color-ink)] truncate" title={lote.product_name}>
+            {lote.product_name}
+          </p>
+          {lote.variant_name && (
+            <span className="text-[10px] font-black bg-indigo-100 text-indigo-800 border border-indigo-300 px-1.5 py-0.5 uppercase tracking-wider inline-flex items-center gap-1">
+              🏷️ {lote.variant_name}
+            </span>
+          )}
+        </div>
         <span className="text-xs font-black bg-[var(--color-bg-2)] border border-[var(--color-border)] px-2 py-1 text-[var(--color-muted)] uppercase mt-1 inline-block w-max">
           {lote.category}
         </span>

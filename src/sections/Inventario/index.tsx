@@ -81,6 +81,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         const [ 
           { data: productsData, error: productsError }, 
           { data: batchesData, error: batchesError },
+          { data: variantsData, error: variantsError }, // fase 7: variantes con stock propio
           { data: catData, error: catError }, // 🔥 NUEVO: Traemos tu tabla
           { data: ventasData } // fase 2.4: lo vendido en 30 días (filtro "Sin ventas" y "Sugerir pedido" de Compras)
         ] = await Promise.all([
@@ -88,6 +89,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           traerTodo(() => supabase.from('products').select('*').eq('is_active', 1).order('id', { ascending: false })),
           // Con la fecha de vencimiento (filtros Vencidos / Vencen en 30 días)
           traerTodo(() => supabase.from('batches').select('id, product_id, quantity, cost_unit, expiration_date').order('id', { ascending: false })),
+          traerTodo(() => supabase.from('product_variants').select('*').eq('is_active', 1).order('id', { ascending: true })),
           supabase.from('categories').select('name'), // 🔥 CONEXIÓN A TU TABLA
           // Por GET (sin internet sirve la copia). La misma llamada va en la precarga (precargaSinInternet.ts)
           supabase.rpc('fn_ventas_por_producto', { p_dias: 30 }, { get: true }),
@@ -98,7 +100,15 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
         if (productsError) throw productsError;
         if (batchesError) throw batchesError;
+        if (variantsError) console.error("Error cargando variantes:", variantsError);
         if (catError) console.error("Error cargando categorías:", catError); // 🔥 NUEVO: Ahora sí leemos el error
+
+        const variantesPorProducto = new Map<number | string, any[]>();
+        (variantsData || []).forEach((v: any) => {
+          const pid = v.product_id;
+          if (!variantesPorProducto.has(pid)) variantesPorProducto.set(pid, []);
+          variantesPorProducto.get(pid)!.push(v);
+        });
 
         if (catData) {
           setDbCategories(catData.map((c: any) => c.name?.trim().toUpperCase()).filter(Boolean));
@@ -119,9 +129,6 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             const lotesDelProducto = batchesData?.filter(b => b.product_id === p.id) || [];
             
             // [ COSTO RECIENTE ]: Ordenamos por ID de forma NUMÉRICA para obtener el costo del lote más nuevo.
-            // 🚨 CORRECCIÓN: Antes se comparaban los IDs como texto (localeCompare), lo que hacía que
-            // lotes antiguos con ID corto (ej. "947") se leyeran como "mayores" que lotes nuevos con
-            // ID largo tipo timestamp (ej. "1785512128146"), tomando costos viejos e incorrectos.
             const loteMasReciente = lotesDelProducto.length > 0
               ? [...lotesDelProducto].sort((a, b) => Number(b.id || 0) - Number(a.id || 0))[0]
               : null;
@@ -131,6 +138,12 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               ? lotesDelProducto.reduce((total: number, lote: any) => total + (Number(lote.quantity) || 0), 0)
               : 0; // <--- Cambiamos el fallback a 0
 
+            const vars = variantesPorProducto.get(p.id) || [];
+            const tieneVars = Boolean(p.tiene_variantes || vars.length > 0);
+            const stockVariantes = vars.reduce((acc, v) => acc + (Number(v.quantity) || 0), 0);
+            const stockLoteOBase = lotesDelProducto.length > 0 ? stockRealGlobal : (Number(p.quantity) || 0);
+            const stockFinal = tieneVars ? (stockVariantes + stockLoteOBase) : stockLoteOBase;
+
             return {
               id: p.id,
               name: p.name || 'SIN NOMBRE',
@@ -138,7 +151,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               precioMayorista: p.precio_mayorista != null && !isNaN(Number(p.precio_mayorista)) ? Number(p.precio_mayorista) : undefined,
               // Usamos el costo del lote reciente, si no hay, usamos el del producto
               cost: loteMasReciente ? Number(loteMasReciente.cost_unit) : (Number(p.cost_price) || 0),
-              quantity: stockRealGlobal,
+              quantity: stockFinal,
+              stockBase: tieneVars ? stockLoteOBase : undefined,
               minStock: Number(p.min_stock) || 0,
               code: p.code || 'NO-SKU',
               barcode: p.barcode || '',
@@ -157,6 +171,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               ubicacion: p.ubicacion || null,
               controlaSeries: Boolean(p.controla_series),
               mesesGarantia: Number(p.meses_garantia || 0),
+              tieneVariantes: tieneVars,
+              variantes: vars,
               vencimiento: lotesDelProducto
                 .filter((l: any) => Number(l.quantity) > 0 && diasParaVencer(l.expiration_date) !== null)
                 .map((l: any) => String(l.expiration_date).slice(0, 10))
@@ -787,13 +803,17 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           // [ RETORNO TÉCNICO ]: Mapeo de integridad. Si es edición, preservamos el stock calculado actual.
           const stockActual = products.find(p => p.id === nuevoProducto.id)?.quantity;
 
+          const tieneVars = Boolean(nuevoProducto.tiene_variantes ?? nuevoProducto.tieneVariantes);
+          const varsLista = nuevoProducto.variantes || [];
+          const stockVars = varsLista.reduce((acc: number, v: any) => acc + (Number(v.quantity) || 0), 0);
+
           const productoFormateado: Product = {
             ...nuevoProducto,
             id: nuevoProducto.id,
             name: nuevoProducto.name,
             cost: Number(nuevoProducto.cost_price || nuevoProducto.cost || 0),
             price: Number(nuevoProducto.price || 0),
-            quantity: stockActual !== undefined ? stockActual : Number(nuevoProducto.quantity || 0),
+            quantity: tieneVars ? stockVars : (stockActual !== undefined ? stockActual : Number(nuevoProducto.quantity || 0)),
             minStock: Number(nuevoProducto.min_stock || nuevoProducto.minStock || 0),
             category: nuevoProducto.category,
             code: nuevoProducto.code,
@@ -808,6 +828,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             ubicacion: nuevoProducto.ubicacion || null,
             controlaSeries: Boolean(nuevoProducto.controla_series ?? nuevoProducto.controlaSeries),
             mesesGarantia: Number(nuevoProducto.meses_garantia ?? nuevoProducto.mesesGarantia ?? 0),
+            tieneVariantes: tieneVars,
+            variantes: varsLista,
           };
 
           if (productToEdit) {

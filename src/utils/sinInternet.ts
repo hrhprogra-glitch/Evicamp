@@ -335,6 +335,7 @@ const PERMITIDO_SIN_INTERNET = new Set([
   'POST /customers', 'PATCH /customers', 'DELETE /customers',        // clientes
   'POST /grupos_clientes', 'PATCH /grupos_clientes', 'DELETE /grupos_clientes', // grupos de clientes (fase 4.1)
   'POST /products', 'PATCH /products',                               // crear y editar productos
+  'POST /product_variants', 'PATCH /product_variants', 'DELETE /product_variants', // variantes de productos (fase 7)
   'POST /categories', 'DELETE /categories',
   'POST /batches',                                                   // ingresar lotes
   'POST /providers', 'PATCH /providers', 'DELETE /providers',        // proveedores
@@ -355,11 +356,11 @@ const PERMITIDO_SIN_INTERNET = new Set([
 // (antes de la fase SI-2 los lotes solo podían cambiar su cantidad sin internet)
 const SOLO_CANTIDAD = new Set<string>();
 // El stock se guarda como DIFERENCIA (no como número fijo): así dos cajas sin internet no se pisan
-const CON_STOCK = new Set(['PATCH /batches', 'PATCH /products']);
+const CON_STOCK = new Set(['PATCH /batches', 'PATCH /products', 'PATCH /product_variants']);
 // Tablas cuyo número (id) lo pone el servidor: sin internet lo pone la PC (el servidor lo acepta,
 // sus ids son "BY DEFAULT"). Basado en la hora: nunca choca con los del servidor (van por miles).
 const ID_DESDE_LA_PC: Record<string, 'numero' | 'uuid'> = {
-  products: 'numero', customers: 'numero', providers: 'uuid', compras_detalle: 'numero', empresa_config: 'numero',
+  products: 'numero', product_variants: 'numero', customers: 'numero', providers: 'uuid', compras_detalle: 'numero', empresa_config: 'numero',
   grupos_clientes: 'numero',
 };
 let ultimoIdNumero = 0;
@@ -766,13 +767,20 @@ const IMITAR_RPC: Record<string, (p: Record<string, any>) => Promise<ResultadoIm
     if (!lote || Number(lote.is_active) !== 1) return { efectos: [] }; // el servidor tampoco hace nada
     const viejo = Number(lote.quantity || 0);
     const nuevo = Number(p.p_new_qty || 0);
+    const dif = nuevo - viejo;
     const efectos: Efecto[] = [
       { tipo: 'cambio', tabla: 'batches', filtros: [['id', `eq.${lote.id}`]], cambios: { quantity: nuevo, cost_unit: Number(p.p_new_cost || 0) } },
-      { tipo: 'stock', producto: String(lote.product_id), delta: nuevo - viejo },
+      { tipo: 'stock', producto: String(lote.product_id), delta: dif },
     ];
-    if (nuevo !== viejo) efectos.push(movimiento({ batch_id: lote.id, product_id: lote.product_id, change_amount: nuevo - viejo,
+    if (lote.variant_id && dif !== 0) {
+      const vId = String(lote.variant_id);
+      const varFila = await filaLocal('product_variants', vId);
+      const cantVar = Math.max(0, Number(varFila?.quantity || 0) + dif);
+      efectos.push({ tipo: 'cambio', tabla: 'product_variants', filtros: [['id', `eq.${vId}`]], cambios: { quantity: cantVar } });
+    }
+    if (nuevo !== viejo) efectos.push(movimiento({ batch_id: lote.id, product_id: lote.product_id, change_amount: dif,
       previous_quantity: viejo, new_quantity: nuevo, operation_type: 'AJUSTE', reason: 'Edición manual de lote' }));
-    return { efectos, diferencia: nuevo - viejo };
+    return { efectos, diferencia: dif };
   },
 
   // Retirar lote: queda inactivo y en 0, y el stock del producto baja lo que tenía
@@ -781,12 +789,19 @@ const IMITAR_RPC: Record<string, (p: Record<string, any>) => Promise<ResultadoIm
     if (!lote) return { efectos: [] };
     const cant = Number(lote.quantity || 0);
     const activo = Number(lote.is_active) === 1;
-    return { efectos: [
+    const efectos: Efecto[] = [
       { tipo: 'cambio', tabla: 'batches', filtros: [['id', `eq.${lote.id}`]], cambios: { is_active: 0, quantity: 0 } },
       ...(activo ? [{ tipo: 'stock', producto: String(lote.product_id), delta: -cant } as Efecto] : []),
       movimiento({ batch_id: lote.id, product_id: lote.product_id, change_amount: -cant, previous_quantity: cant, new_quantity: 0,
         operation_type: 'AJUSTE', reason: 'Retiro de Lote (Soft Delete)' }),
-    ] };
+    ];
+    if (activo && lote.variant_id && cant > 0) {
+      const vId = String(lote.variant_id);
+      const varFila = await filaLocal('product_variants', vId);
+      const cantVar = Math.max(0, Number(varFila?.quantity || 0) - cant);
+      efectos.push({ tipo: 'cambio', tabla: 'product_variants', filtros: [['id', `eq.${vId}`]], cambios: { quantity: cantVar } });
+    }
+    return { efectos };
   },
 
   // Borrar producto: queda inactivo y en 0, con todos sus lotes
@@ -814,30 +829,42 @@ const IMITAR_RPC: Record<string, (p: Record<string, any>) => Promise<ResultadoIm
     const ticket = `Ticket #${ventaId}`;
     const cuando = String(p.p_cuando || new Date().toISOString());
     let salidas = (await filasLocales('inventory_movements', (m) => m.operation_type === 'VENTA' && m.notes === ticket))
-      .map((m) => ({ batch_id: m.batch_id ?? null, product_id: m.product_id, product_name: m.product_name, cant: Math.abs(Number(m.change_amount) || 0) }));
+      .map((m) => ({ batch_id: m.batch_id ?? null, variant_id: m.variant_id ?? null, variant_name: m.variant_name ?? null, product_id: m.product_id, product_name: m.product_name, cant: Math.abs(Number(m.change_amount) || 0) }));
     if (!salidas.length) {
       salidas = (await filasLocales('sale_details', (d) => String(d.sale_id) === ventaId))
-        .map((d) => ({ batch_id: null, product_id: d.product_id, product_name: d.product_name, cant: Math.abs(Number(d.quantity) || 0) }));
+        .map((d) => ({ batch_id: null, variant_id: d.variant_id ?? null, variant_name: d.variant_name ?? null, product_id: d.product_id, product_name: d.product_name, cant: Math.abs(Number(d.quantity) || 0) }));
     }
     const efectos: Efecto[] = [];
     const lotes = new Map<string, number>();   // un lote puede salir en varias filas: se acumula
+    const vars = new Map<string, number>();
     const stock = new Map<string, number>();
     let productos = 0;
     for (const s of salidas) {
       if (s.cant <= 0) continue;
-      if (s.batch_id != null) {
-        const lote = String(s.batch_id);
-        const ahora = (lotes.has(lote) ? lotes.get(lote)! : Number((await filaLocal('batches', lote))?.quantity || 0)) + s.cant;
-        lotes.set(lote, ahora);
-        efectos.push({ tipo: 'cambio', tabla: 'batches', filtros: [['id', `eq.${lote}`]], cambios: { quantity: ahora } });
+      if (s.variant_id != null) {
+        const varId = String(s.variant_id);
+        const antesVar = vars.has(varId) ? vars.get(varId)! : Number((await filaLocal('product_variants', varId))?.quantity || 0);
+        const ahoraVar = antesVar + s.cant;
+        vars.set(varId, ahoraVar);
+        efectos.push({ tipo: 'cambio', tabla: 'product_variants', filtros: [['id', `eq.${varId}`]], cambios: { quantity: ahoraVar } });
+        efectos.push(movimiento({ batch_id: null, variant_id: s.variant_id, variant_name: s.variant_name, product_id: s.product_id, product_name: s.product_name, change_amount: s.cant,
+          previous_quantity: antesVar, new_quantity: ahoraVar, operation_type: 'ANULACION', reason: 'Anulación de venta (Variante)',
+          notes: `Anulación ${ticket}`, created_at: cuando }));
+      } else {
+        if (s.batch_id != null) {
+          const lote = String(s.batch_id);
+          const ahora = (lotes.has(lote) ? lotes.get(lote)! : Number((await filaLocal('batches', lote))?.quantity || 0)) + s.cant;
+          lotes.set(lote, ahora);
+          efectos.push({ tipo: 'cambio', tabla: 'batches', filtros: [['id', `eq.${lote}`]], cambios: { quantity: ahora } });
+        }
+        const producto = String(s.product_id);
+        const antes = stock.has(producto) ? stock.get(producto)! : Number((await filaLocal('products', producto))?.quantity || 0);
+        stock.set(producto, antes + s.cant);
+        efectos.push({ tipo: 'stock', producto, delta: s.cant });
+        efectos.push(movimiento({ batch_id: s.batch_id, variant_id: null, variant_name: null, product_id: s.product_id, product_name: s.product_name, change_amount: s.cant,
+          previous_quantity: antes, new_quantity: antes + s.cant, operation_type: 'ANULACION', reason: 'Anulación de venta',
+          notes: `Anulación ${ticket}`, created_at: cuando }));
       }
-      const producto = String(s.product_id);
-      const antes = stock.has(producto) ? stock.get(producto)! : Number((await filaLocal('products', producto))?.quantity || 0);
-      stock.set(producto, antes + s.cant);
-      efectos.push({ tipo: 'stock', producto, delta: s.cant });
-      efectos.push(movimiento({ batch_id: s.batch_id, product_id: s.product_id, product_name: s.product_name, change_amount: s.cant,
-        previous_quantity: antes, new_quantity: antes + s.cant, operation_type: 'ANULACION', reason: 'Anulación de venta',
-        notes: `Anulación ${ticket}`, created_at: cuando }));
       productos++;
     }
     efectos.push({ tipo: 'cambio', tabla: 'sales', filtros: [['id', `eq.${ventaId}`]], cambios: { sunat_status: 'ANULADO' } });
@@ -1015,25 +1042,43 @@ const PREPARAR_RPC: Record<string, (p: Pendiente, params: Record<string, any>) =
   },
 };
 
-// El stock que se ve en pantalla baja también sin internet (en las copias de productos)
+// El stock que se ve en pantalla baja también sin internet (en las copias de productos y variantes)
 const descontarStockLocal = async (cuerpo: string) => {
   try {
-    const vendido = new Map<string, number>();
-    for (const d of JSON.parse(cuerpo) as { product_id: string | number; quantity: number }[]) {
-      vendido.set(String(d.product_id), (vendido.get(String(d.product_id)) || 0) + Number(d.quantity || 0));
+    const vendidoProd = new Map<string, number>();
+    const vendidoVar = new Map<string, number>();
+    for (const d of JSON.parse(cuerpo) as { product_id: string | number; variant_id?: string | number | null; quantity: number }[]) {
+      if (d.variant_id != null) {
+        vendidoVar.set(String(d.variant_id), (vendidoVar.get(String(d.variant_id)) || 0) + Number(d.quantity || 0));
+      } else {
+        vendidoProd.set(String(d.product_id), (vendidoProd.get(String(d.product_id)) || 0) + Number(d.quantity || 0));
+      }
     }
     for (const clave of await clavesLocal(ALMACEN_RESPUESTAS)) {
-      if (!String(clave).includes('/rest/v1/products?')) continue;
-      const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave);
-      if (!copia) continue;
-      const filas = JSON.parse(copia.cuerpo);
-      if (!Array.isArray(filas)) continue;
-      let cambio = false;
-      for (const f of filas) {
-        const resta = vendido.get(String(f?.id));
-        if (resta && typeof f.quantity === 'number') { f.quantity = Math.max(0, f.quantity - resta); cambio = true; }
+      if (String(clave).includes('/rest/v1/products?')) {
+        const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave);
+        if (!copia) continue;
+        const filas = JSON.parse(copia.cuerpo);
+        if (!Array.isArray(filas)) continue;
+        let cambio = false;
+        for (const f of filas) {
+          const resta = vendidoProd.get(String(f?.id));
+          if (resta && typeof f.quantity === 'number') { f.quantity = Math.max(0, f.quantity - resta); cambio = true; }
+        }
+        if (cambio) await guardarLocal(ALMACEN_RESPUESTAS, { ...copia, cuerpo: JSON.stringify(filas) }, clave);
       }
-      if (cambio) await guardarLocal(ALMACEN_RESPUESTAS, { ...copia, cuerpo: JSON.stringify(filas) }, clave);
+      if (String(clave).includes('/rest/v1/product_variants?')) {
+        const copia = await leerLocal<CopiaGuardada>(ALMACEN_RESPUESTAS, clave);
+        if (!copia) continue;
+        const filas = JSON.parse(copia.cuerpo);
+        if (!Array.isArray(filas)) continue;
+        let cambio = false;
+        for (const f of filas) {
+          const resta = vendidoVar.get(String(f?.id));
+          if (resta && typeof f.quantity === 'number') { f.quantity = Math.max(0, f.quantity - resta); cambio = true; }
+        }
+        if (cambio) await guardarLocal(ALMACEN_RESPUESTAS, { ...copia, cuerpo: JSON.stringify(filas) }, clave);
+      }
     }
   } catch { /* es solo lo que se ve en pantalla: el stock real lo descuenta el servidor al subir */ }
 };

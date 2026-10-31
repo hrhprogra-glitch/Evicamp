@@ -1,7 +1,7 @@
 import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, Database, Search, Calculator, FileText, Calendar, Loader2, Truck } from 'lucide-react';
-import type { Product } from '../types';
+import { X, Save, Database, Search, Calculator, FileText, Calendar, Loader2, Truck, Layers } from 'lucide-react';
+import type { Product, ProductVariant } from '../types';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar } from '../../../utils/dialogos';
@@ -33,6 +33,14 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
   const [filtrandoProveedor, setFiltrandoProveedor] = useState(false);
   const [expiration, setExpiration] = useState('');
   const empleado = useEmpleado();
+
+  // FASE 7: Variantes (tallas y colores)
+  const [variantes, setVariantes] = useState<ProductVariant[]>([]);
+  const [variantesCantidades, setVariantesCantidades] = useState<Record<string, string>>({});
+  const tieneVariantes = Boolean(
+    selectedProduct?.tieneVariantes || 
+    (selectedProduct?.variantes && selectedProduct.variantes.length > 0)
+  );
 
   const prodContainerRef = useRef<HTMLDivElement>(null);
   const provContainerRef = useRef<HTMLDivElement>(null);
@@ -67,6 +75,11 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         const prod = productos.find(p => String(p.id) === String(initialLote.product_id)) || null;
         setSelectedProduct(prod);
         setCantidad(initialLote.initial_quantity?.toString() || '');
+        if (initialLote.variant_id) {
+          setVariantesCantidades({ [String(initialLote.variant_id)]: String(initialLote.initial_quantity || initialLote.quantity || '') });
+        } else {
+          setVariantesCantidades({});
+        }
         
         // Calculamos el costo total reverso (costo_unitario * cantidad_inicial)
         const cTotal = (Number(initialLote.cost_unit) * Number(initialLote.initial_quantity)).toFixed(2);
@@ -85,6 +98,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         // === MODO CREACIÓN ===
         setSelectedProduct(initialProduct || null);
         setCantidad('');
+        setVariantesCantidades({});
         setCostoTotal('');
         setSustento('');
         setProveedor('');
@@ -94,22 +108,95 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
 
       // 🛡️ AUTO-FOCUS INTELIGENTE: Al abrir el modal, enfocar y seleccionar de inmediato el primer campo relevante
       setTimeout(() => {
-        if (initialLote || initialProduct) {
+        if (initialLote) {
           const inputCant = document.getElementById('input-cantidad-lote') as HTMLInputElement | null;
-          if (inputCant) {
-            inputCant.focus();
-            inputCant.select();
+          inputCant?.focus();
+          inputCant?.select();
+        } else if (initialProduct) {
+          const tieneVars = Boolean(initialProduct.tieneVariantes || (initialProduct.variantes && initialProduct.variantes.length > 0));
+          if (tieneVars) {
+            const firstVar = document.getElementById('input-lote-var-0') as HTMLInputElement | null;
+            if (firstVar) {
+              firstVar.focus();
+              firstVar.select();
+              return;
+            }
           }
+          const inputCant = document.getElementById('input-cantidad-lote') as HTMLInputElement | null;
+          inputCant?.focus();
+          inputCant?.select();
         } else {
           const inputBuscar = document.getElementById('input-buscar-producto-lote') as HTMLInputElement | null;
-          if (inputBuscar) {
-            inputBuscar.focus();
-            inputBuscar.select();
-          }
+          inputBuscar?.focus();
+          inputBuscar?.select();
         }
-      }, 50);
+      }, 60);
     }
   }, [isOpen, initialProduct, initialLote, productos]);
+
+  // FASE 7: Cargar variantes activas cuando se selecciona un producto
+  useEffect(() => {
+    if (!selectedProduct) {
+      setVariantes([]);
+      return;
+    }
+    const tieneVars = Boolean(selectedProduct.tieneVariantes || (selectedProduct.variantes && selectedProduct.variantes.length > 0));
+    if (!tieneVars) {
+      setVariantes([]);
+      return;
+    }
+
+    let activo = true;
+    (async () => {
+      if (selectedProduct.variantes && selectedProduct.variantes.length > 0) {
+        setVariantes(selectedProduct.variantes);
+      }
+      const { data } = await supabase
+        .from('product_variants')
+        .select('*')
+        .eq('product_id', selectedProduct.id)
+        .eq('is_active', 1)
+        .order('id', { ascending: true });
+
+      if (activo && data && data.length > 0) {
+        setVariantes(data);
+      }
+    })();
+
+    return () => { activo = false; };
+  }, [selectedProduct?.id]);
+
+  const actualizarCantVar = (varId: string | number, valor: string) => {
+    setVariantesCantidades(prev => {
+      const nuevas = { ...prev, [String(varId)]: valor };
+      const suma = variantes.reduce((acc, v) => {
+        const val = String(v.id) === String(varId) ? valor : (nuevas[String(v.id)] || '');
+        return acc + (Number(val) || 0);
+      }, 0);
+      setCantidad(suma > 0 ? String(suma) : '');
+      return nuevas;
+    });
+  };
+
+  const seleccionarProducto = (prod: Product) => {
+    setSelectedProduct(prod);
+    setShowDropdown(false);
+    setSearchQuery('');
+    const tieneVars = Boolean(prod.tieneVariantes || (prod.variantes && prod.variantes.length > 0));
+    setTimeout(() => {
+      if (tieneVars) {
+        const firstVar = document.getElementById('input-lote-var-0') as HTMLInputElement | null;
+        if (firstVar) {
+          firstVar.focus();
+          firstVar.select();
+          return;
+        }
+      }
+      const cantInput = document.getElementById('input-cantidad-lote') as HTMLInputElement | null;
+      cantInput?.focus();
+      cantInput?.select();
+    }, 60);
+  };
 
   // --- NUEVO: CARGAR PROVEEDORES DESDE LA BASE DE DATOS ---
   const [proveedoresActivos, setProveedoresActivos] = useState<any[]>([]);
@@ -191,6 +278,14 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
           document.getElementById('btn-cerrar-modal-lote')?.focus();
           return;
         }
+        if (active?.id?.startsWith('input-lote-var-')) {
+          const idx = parseInt(active.id.replace('input-lote-var-', ''), 10);
+          if (idx === 0) {
+            e.preventDefault();
+            (document.getElementById('btn-cambiar-producto-lote') || document.getElementById('input-buscar-producto-lote'))?.focus();
+            return;
+          }
+        }
         if (active?.id === 'input-cantidad-lote') {
           e.preventDefault();
           const target = document.getElementById('btn-cambiar-producto-lote') || document.getElementById('input-buscar-producto-lote');
@@ -199,6 +294,12 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         }
         if (active?.id === 'input-costo-total-lote') {
           e.preventDefault();
+          if (tieneVariantes && !initialLote && variantes.length > 0) {
+            const lastVar = document.getElementById(`input-lote-var-${variantes.length - 1}`) as HTMLInputElement | null;
+            lastVar?.focus();
+            lastVar?.select();
+            return;
+          }
           const target = document.getElementById('btn-cambiar-producto-lote') || document.getElementById('input-buscar-producto-lote');
           target?.focus();
           return;
@@ -206,7 +307,9 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         if (active?.id === 'input-proveedor-lote') {
           e.preventDefault();
           setShowProviderDropdown(false);
-          const target = document.getElementById('input-cantidad-lote') as HTMLInputElement | null;
+          const target = (tieneVariantes && !initialLote)
+            ? (document.getElementById('input-costo-total-lote') as HTMLInputElement | null)
+            : (document.getElementById('input-cantidad-lote') as HTMLInputElement | null);
           target?.focus();
           target?.select();
           return;
@@ -241,10 +344,26 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         }
         if (active?.id === 'btn-cambiar-producto-lote') {
           e.preventDefault();
+          if (tieneVariantes && !initialLote && variantes.length > 0) {
+            const firstVar = document.getElementById('input-lote-var-0') as HTMLInputElement | null;
+            firstVar?.focus();
+            firstVar?.select();
+            return;
+          }
           const target = document.getElementById('input-cantidad-lote') as HTMLInputElement | null;
           target?.focus();
           target?.select();
           return;
+        }
+        if (active?.id?.startsWith('input-lote-var-')) {
+          const idx = parseInt(active.id.replace('input-lote-var-', ''), 10);
+          if (idx === variantes.length - 1) {
+            e.preventDefault();
+            const target = document.getElementById('input-costo-total-lote') as HTMLInputElement | null;
+            target?.focus();
+            target?.select();
+            return;
+          }
         }
         if (active?.id === 'input-cantidad-lote') {
           e.preventDefault();
@@ -255,7 +374,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         }
         if (active?.id === 'input-costo-total-lote') {
           e.preventDefault();
-          const target = document.getElementById('input-sustento-lote') as HTMLInputElement | null;
+          const target = document.getElementById('input-proveedor-lote') as HTMLInputElement | null || document.getElementById('input-sustento-lote') as HTMLInputElement | null;
           target?.focus();
           target?.select();
           return;
@@ -382,10 +501,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
     if (e.key === 'Enter') {
       if (filteredProducts.length > 0) {
         e.preventDefault();
-        setSelectedProduct(filteredProducts[0]);
-        setShowDropdown(false);
-        setSearchQuery('');
-        setTimeout(() => document.getElementById('input-cantidad-lote')?.focus(), 50);
+        seleccionarProducto(filteredProducts[0]);
       }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -395,7 +511,10 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
       setTimeout(() => {
         const first = document.querySelector('[data-lote-prod-item="true"]') as HTMLElement;
         if (first) first.focus();
-        else document.getElementById('input-cantidad-lote')?.focus();
+        else {
+          if (tieneVariantes) document.getElementById('input-lote-var-0')?.focus();
+          else document.getElementById('input-cantidad-lote')?.focus();
+        }
       }, 30);
     }
   };
@@ -439,7 +558,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
 
         if (metaError) throw metaError;
 
-        // 🛡️ 2. RPC BLINDADO: El VPS hace toda la matemática, actualiza cantidad y stock en 0.001ms
+        // 🛡️ 2. RPC BLINDADO: El VPS hace toda la matemática, actualiza cantidad y stock en 0.001ms (y variantes si tiene variant_id)
         const { error: rpcError } = await supabase.rpc('fn_edit_batch', {
           p_batch_id: String(initialLote.id),
           p_new_qty: cantidadNueva,
@@ -463,7 +582,100 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
           });
         }
         onClose();
-        void avisar(`✅ Lote actualizado y stock sincronizado.\nProducto: ${selectedProduct?.name}`);
+        void avisar(`✅ Lote actualizado y stock sincronizado.\nProducto: ${selectedProduct?.name}${initialLote.variant_name ? ` [${initialLote.variant_name}]` : ''}`);
+
+      } else if (tieneVariantes && variantes.length > 0) {
+        // === MODO CREACIÓN CON TALLAS Y COLORES (VARIANTES) ===
+        const variantesAIngresar = variantes.filter(v => Number(variantesCantidades[String(v.id)]) > 0);
+        if (variantesAIngresar.length === 0) {
+          void avisar('⚠️ Por favor ingresa al menos 1 unidad en alguna de las variantes.');
+          setIsSubmitting(false);
+          return;
+        }
+
+        const cantTotalNum = Number(cantidad) || 0;
+        const costoTotalNum = Number(costoTotal) || 0;
+        const costoUnitNum = cantTotalNum > 0 ? Number((costoTotalNum / cantTotalNum).toFixed(2)) : 0;
+
+        let index = 0;
+        const lotesCreados: any[] = [];
+        for (const v of variantesAIngresar) {
+          const cantVar = Number(variantesCantidades[String(v.id)]);
+          const generatedId = (Date.now() + index).toString();
+          index++;
+
+          const vNombre = v.nombre_variante || `${v.talla || ''} ${v.color || ''}`.trim() || 'VAR';
+          const batchPayload = {
+            id: generatedId,
+            product_id: selectedProduct?.id,
+            variant_id: v.id,
+            variant_name: vNombre,
+            quantity: cantVar,
+            initial_quantity: cantVar,
+            expiration_date: expiration || null,
+            cost_total: Number((cantVar * costoUnitNum).toFixed(2)),
+            cost_unit: costoUnitNum,
+            document_ref: documento,
+            supplier,
+            provider_id: providerId,
+            is_synced: '1',
+            is_active: 1
+          };
+
+          const { data: newBatch, error: batchError } = await supabase
+            .from('batches')
+            .insert([batchPayload])
+            .select()
+            .single();
+
+          if (batchError) throw batchError;
+          lotesCreados.push(newBatch);
+
+          // Actualizar stock de la variante
+          const nuevaCantVar = Number(v.quantity || 0) + cantVar;
+          await supabase
+            .from('product_variants')
+            .update({ quantity: nuevaCantVar })
+            .eq('id', v.id);
+
+          // Registrar movimiento en el kardex
+          await supabase
+            .from('inventory_movements')
+            .insert([{
+              batch_id: newBatch.id,
+              product_id: selectedProduct?.id,
+              product_name: `${selectedProduct?.name} [${vNombre}]`,
+              change_amount: cantVar,
+              previous_quantity: Number(v.quantity || 0),
+              new_quantity: nuevaCantVar,
+              operation_type: 'COMPRA',
+              reason: 'Ingreso Lote (Variante)',
+              notes: 'Doc: ' + documento + (supplier ? ' | Prov: ' + supplier : '') + ` [${vNombre}]`,
+              user: usuario,
+              is_synced: '1'
+            }]);
+        }
+
+        // Recalcular stock global del producto
+        if (selectedProduct && hayConexion()) {
+          const { data: lotesActivos } = await supabase.from('batches').select('quantity').eq('product_id', selectedProduct.id).eq('is_active', 1);
+          const stockReal = lotesActivos ? lotesActivos.reduce((sum, lote) => sum + Number(lote.quantity || 0), 0) : 0;
+          await supabase.from('products').update({ quantity: stockReal }).eq('id', selectedProduct.id);
+        } else if (selectedProduct) {
+          const { data: prod } = await supabase.from('products').select('quantity').eq('id', selectedProduct.id);
+          await supabase.from('products').update({ quantity: Number(prod?.[0]?.quantity || 0) + cantTotalNum }).eq('id', selectedProduct.id);
+        }
+
+        if (onLoteSaved && selectedProduct && lotesCreados.length > 0) {
+          onLoteSaved({
+            ...lotesCreados[0],
+            product_name: selectedProduct.name,
+            category: selectedProduct.category || 'GENERAL',
+            unit: selectedProduct.unit
+          });
+        }
+        onClose();
+        void avisar(`✅ Lotes registrados exitosamente.\nTotal: ${cantTotalNum} ${selectedProduct?.unit || 'unidades'} repartidas en ${variantesAIngresar.length} variante(s).`);
 
       } else {
         // === MODO CREACIÓN (DELEGACIÓN DE IDs A POSTGRESQL) ===
@@ -578,7 +790,14 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
               <div className="flex items-center justify-between border-2 border-[var(--color-success)] bg-[#ECFDF5] p-3 rounded-none">
                 <div className="flex flex-col">
                   <span className="text-[9px] font-bold text-[var(--color-success)] uppercase tracking-wider">Producto Seleccionado:</span>
-                  <span className="text-xs font-black text-[var(--color-ink)] uppercase mt-1">{selectedProduct.code} - {selectedProduct.name}</span>
+                  <div className="flex items-center gap-2 flex-wrap mt-1">
+                    <span className="text-xs font-black text-[var(--color-ink)] uppercase">{selectedProduct.code} - {selectedProduct.name}</span>
+                    {initialLote?.variant_name && (
+                      <span className="text-[10px] font-black bg-indigo-100 text-indigo-800 border border-indigo-300 px-1.5 py-0.5 uppercase tracking-wider inline-flex items-center gap-1">
+                        🏷️ {initialLote.variant_name}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <button 
                   id="btn-cambiar-producto-lote"
@@ -635,12 +854,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                           data-lote-prod-item="true"
                           role="option"
                           tabIndex={0}
-                          onClick={() => {
-                            setSelectedProduct(p);
-                            setShowDropdown(false);
-                            setSearchQuery('');
-                            setTimeout(() => document.getElementById('input-cantidad-lote')?.focus(), 50);
-                          }}
+                          onClick={() => seleccionarProducto(p)}
                           onKeyDown={(e) => {
                             if (e.key === 'ArrowDown') {
                               e.preventDefault();
@@ -660,10 +874,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                               }
                             } else if (e.key === 'Enter' || e.key === ' ') {
                               e.preventDefault();
-                              setSelectedProduct(p);
-                              setShowDropdown(false);
-                              setSearchQuery('');
-                              setTimeout(() => document.getElementById('input-cantidad-lote')?.focus(), 50);
+                              seleccionarProducto(p);
                             } else if (e.key === 'Escape') {
                               e.preventDefault();
                               setShowDropdown(false);
@@ -685,85 +896,233 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
             )}
           </div>
 
-          {/* 2. CANTIDAD Y COSTO TOTAL */}
-          <div className="grid grid-cols-2 gap-4 border-t-2 border-[#E2E8F0] pt-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex justify-between">
-                <span>2. Cantidad *</span>
-                <span className="text-[var(--color-success)]">{selectedProduct ? `(${selectedProduct.unit})` : ''}</span>
-              </label>
-              <div className="flex border-2 border-[#E2E8F0] bg-[var(--color-surface)] focus-within:border-[var(--color-success)] transition-colors">
-                <input 
-                  id="input-cantidad-lote"
-                  type="number"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  name="lote_cantidad_no_history"
-                  data-lpignore="true"
-                  data-form-type="other"
-                  min="0"
-                  step="0.01"
-                  placeholder="0"
-                  value={cantidad}
-                  onChange={(e) => setCantidad(e.target.value)}
-                  onFocus={(e) => e.currentTarget.select()}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      const next = document.getElementById('input-costo-total-lote') as HTMLInputElement | null;
-                      next?.focus();
-                      next?.select();
-                    }
-                  }}
-                  disabled={!selectedProduct}
-                  className="w-full p-3 text-sm font-black text-[var(--color-ink)] outline-none disabled:bg-[#F1F5F9] disabled:cursor-not-allowed text-right focus:ring-2 focus:ring-[var(--color-success)]"
-                />
-                <div className="bg-[#F8FAFC] px-4 border-l-2 border-[#E2E8F0] flex items-center justify-center text-[10px] font-black text-[#64748B] w-16 shrink-0">
-                  {selectedProduct ? selectedProduct.unit : '---'}
-                </div>
+          {/* 2. CANTIDAD Y COSTO TOTAL (SE ADAPTA AL TIPO DE PRODUCTO) */}
+          {tieneVariantes && !initialLote ? (
+            <div className="space-y-4 border-t-2 border-[#E2E8F0] pt-6">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2">
+                  <Layers size={14} className="text-indigo-600" /> 2. Ingreso por Tallas / Colores / Variantes *
+                </label>
+                <span className="text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 uppercase tracking-wider">
+                  Total ingresado: <strong className="text-xs font-black">{cantidad || 0}</strong> {selectedProduct?.unit || 'UND'}
+                </span>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">
-                3. Costo Compra (Total)
-              </label>
-              <div className="flex border-2 border-[#E2E8F0] bg-[var(--color-surface)] focus-within:border-[var(--color-success)] transition-colors">
-                <div className="bg-[#F8FAFC] px-4 border-r-2 border-[#E2E8F0] flex items-center justify-center text-[10px] font-black text-[#64748B] shrink-0">
-                  S/
+              {/* Grid de variantes */}
+              <div className="border-2 border-[var(--color-ink)] bg-white max-h-56 overflow-y-auto custom-scrollbar">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[var(--color-ink)] text-white uppercase text-[9px] tracking-wider sticky top-0 z-10">
+                    <tr>
+                      <th className="p-2.5 font-black">Variante (Talla / Color)</th>
+                      <th className="p-2.5 font-black text-center w-28">Stock Actual</th>
+                      <th className="p-2.5 font-black text-right w-36">Cant. a Ingresar</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E2E8F0]">
+                    {variantes.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="p-4 text-center text-[11px] font-bold text-slate-500 uppercase">
+                          Cargando variantes o sin variantes configuradas...
+                        </td>
+                      </tr>
+                    ) : (
+                      variantes.map((v, idx) => {
+                        const vNombre = v.nombre_variante || `${v.talla || ''} ${v.color || ''}`.trim() || `Variante #${idx + 1}`;
+                        const cantIngresada = variantesCantidades[String(v.id)] || '';
+                        return (
+                          <tr key={v.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="p-2.5">
+                              <div className="flex items-center gap-2">
+                                <span className="font-black text-[var(--color-ink)] uppercase">{vNombre}</span>
+                                {v.code && <span className="text-[9px] font-bold text-slate-400 font-mono">({v.code})</span>}
+                              </div>
+                            </td>
+                            <td className="p-2.5 text-center font-bold text-slate-600 font-mono">
+                              {v.quantity} {selectedProduct?.unit || 'UND'}
+                            </td>
+                            <td className="p-2 text-right">
+                              <input
+                                id={`input-lote-var-${idx}`}
+                                type="number"
+                                autoComplete="off"
+                                data-lpignore="true"
+                                min="0"
+                                step="0.01"
+                                placeholder="0"
+                                value={cantIngresada}
+                                onChange={(e) => actualizarCantVar(v.id, e.target.value)}
+                                onFocus={(e) => e.currentTarget.select()}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                                    e.preventDefault();
+                                    if (idx < variantes.length - 1) {
+                                      const next = document.getElementById(`input-lote-var-${idx + 1}`) as HTMLInputElement | null;
+                                      next?.focus();
+                                      next?.select();
+                                    } else {
+                                      const next = document.getElementById('input-costo-total-lote') as HTMLInputElement | null;
+                                      next?.focus();
+                                      next?.select();
+                                    }
+                                  } else if (e.key === 'ArrowUp') {
+                                    e.preventDefault();
+                                    if (idx > 0) {
+                                      const prev = document.getElementById(`input-lote-var-${idx - 1}`) as HTMLInputElement | null;
+                                      prev?.focus();
+                                      prev?.select();
+                                    } else {
+                                      document.getElementById('btn-cambiar-producto-lote')?.focus();
+                                    }
+                                  } else if (e.key === 'ArrowRight') {
+                                    e.preventDefault();
+                                    const next = document.getElementById('input-costo-total-lote') as HTMLInputElement | null;
+                                    next?.focus();
+                                    next?.select();
+                                  }
+                                }}
+                                className="w-28 p-2 text-xs font-black text-right border-2 border-slate-300 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 outline-none"
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Total Unidades + Costo Total */}
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex justify-between">
+                    <span>Total Unidades del Lote</span>
+                    <span className="text-[var(--color-success)] font-bold">({selectedProduct?.unit || 'UND'})</span>
+                  </label>
+                  <div className="flex border-2 border-[#E2E8F0] bg-slate-100 p-3 items-center justify-between">
+                    <span className="text-xs font-black text-slate-500 uppercase">Suma de Variantes:</span>
+                    <span className="text-sm font-black text-[var(--color-ink)]">{cantidad || '0'} {selectedProduct?.unit || 'UND'}</span>
+                  </div>
                 </div>
-                <input 
-                  id="input-costo-total-lote"
-                  type="number"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  name="lote_costo_total_no_history"
-                  data-lpignore="true"
-                  data-form-type="other"
-                  min="0"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={costoTotal}
-                  onChange={(e) => setCostoTotal(e.target.value)}
-                  onFocus={(e) => e.currentTarget.select()}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      const next = document.getElementById('input-proveedor-lote') as HTMLInputElement | null;
-                      next?.focus();
-                      next?.select();
-                    }
-                  }}
-                  disabled={!selectedProduct}
-                  className="w-full p-3 text-sm font-black text-[var(--color-ink)] outline-none disabled:bg-[#F1F5F9] disabled:cursor-not-allowed focus:ring-2 focus:ring-[var(--color-success)]"
-                />
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">
+                    3. Costo Compra (Total)
+                  </label>
+                  <div className="flex border-2 border-[#E2E8F0] bg-[var(--color-surface)] focus-within:border-[var(--color-success)] transition-colors">
+                    <div className="bg-[#F8FAFC] px-4 border-r-2 border-[#E2E8F0] flex items-center justify-center text-[10px] font-black text-[#64748B] shrink-0">
+                      S/
+                    </div>
+                    <input 
+                      id="input-costo-total-lote"
+                      type="number"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="none"
+                      spellCheck={false}
+                      name="lote_costo_total_no_history"
+                      data-lpignore="true"
+                      data-form-type="other"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={costoTotal}
+                      onChange={(e) => setCostoTotal(e.target.value)}
+                      onFocus={(e) => e.currentTarget.select()}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const next = document.getElementById('input-proveedor-lote') as HTMLInputElement | null;
+                          next?.focus();
+                          next?.select();
+                        }
+                      }}
+                      disabled={!selectedProduct}
+                      className="w-full p-3 text-sm font-black text-[var(--color-ink)] outline-none disabled:bg-[#F1F5F9] disabled:cursor-not-allowed focus:ring-2 focus:ring-[var(--color-success)]"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 border-t-2 border-[#E2E8F0] pt-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex justify-between">
+                  <span>2. Cantidad *</span>
+                  <span className="text-[var(--color-success)]">{selectedProduct ? `(${selectedProduct.unit})` : ''}</span>
+                </label>
+                <div className="flex border-2 border-[#E2E8F0] bg-[var(--color-surface)] focus-within:border-[var(--color-success)] transition-colors">
+                  <input 
+                    id="input-cantidad-lote"
+                    type="number"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    name="lote_cantidad_no_history"
+                    data-lpignore="true"
+                    data-form-type="other"
+                    min="0"
+                    step="0.01"
+                    placeholder="0"
+                    value={cantidad}
+                    onChange={(e) => setCantidad(e.target.value)}
+                    onFocus={(e) => e.currentTarget.select()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const next = document.getElementById('input-costo-total-lote') as HTMLInputElement | null;
+                        next?.focus();
+                        next?.select();
+                      }
+                    }}
+                    disabled={!selectedProduct}
+                    className="w-full p-3 text-sm font-black text-[var(--color-ink)] outline-none disabled:bg-[#F1F5F9] disabled:cursor-not-allowed text-right focus:ring-2 focus:ring-[var(--color-success)]"
+                  />
+                  <div className="bg-[#F8FAFC] px-4 border-l-2 border-[#E2E8F0] flex items-center justify-center text-[10px] font-black text-[#64748B] w-16 shrink-0">
+                    {selectedProduct ? selectedProduct.unit : '---'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">
+                  3. Costo Compra (Total)
+                </label>
+                <div className="flex border-2 border-[#E2E8F0] bg-[var(--color-surface)] focus-within:border-[var(--color-success)] transition-colors">
+                  <div className="bg-[#F8FAFC] px-4 border-r-2 border-[#E2E8F0] flex items-center justify-center text-[10px] font-black text-[#64748B] shrink-0">
+                    S/
+                  </div>
+                  <input 
+                    id="input-costo-total-lote"
+                    type="number"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    name="lote_costo_total_no_history"
+                    data-lpignore="true"
+                    data-form-type="other"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={costoTotal}
+                    onChange={(e) => setCostoTotal(e.target.value)}
+                    onFocus={(e) => e.currentTarget.select()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const next = document.getElementById('input-proveedor-lote') as HTMLInputElement | null;
+                        next?.focus();
+                        next?.select();
+                      }
+                    }}
+                    disabled={!selectedProduct}
+                    className="w-full p-3 text-sm font-black text-[var(--color-ink)] outline-none disabled:bg-[#F1F5F9] disabled:cursor-not-allowed focus:ring-2 focus:ring-[var(--color-success)]"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* 3. FÓRMULA MATEMÁTICA: COSTO UNITARIO AUTOMÁTICO */}
           <div className="bg-[var(--color-ink)] p-4 flex items-center justify-between shadow-inner">

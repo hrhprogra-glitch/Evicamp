@@ -7,6 +7,129 @@
 
 ---
 
+## 31/10/2026 (noche, 57) · Antigravity
+- **Pase Oficial de Fase 7 (Tallas y Colores: Variantes con stock propio y Lotes por variante) a Evicamp y GitHub:**
+  - **Instrucción del dueño:** *"perfecto bien echo ya quedo ahora si avnacemos"* (tras confirmación de Opción 1: Subir Fase 7 a Producción Evicamp y GitHub).
+  - **1. Respaldo y Base de Datos en Producción (Evicamp):**
+    - Se ejecutó `ai-scripts/pruebas/aplicar-fase7-evicamp.cjs`.
+    - Respaldo de `postgres` creado en `/var/lib/postgresql/respaldo-evicamp-antes-fase7-2026-10-31T22-29-31-496Z.dump` (1.9 MB).
+    - `servidor/sql/seguridad-sesion.sql` aplicado con `psql` y `SET lock_timeout = '5s'`. Cero errores de SQL y cero tiempo de inactividad (sin reiniciar la API).
+    - `NOTIFY pgrst, 'reload schema'` ejecutado con éxito. Verificadas columnas en `products`, `sale_details`, `batches`, `inventory_movements` y tabla `product_variants`.
+  - **2. Despliegue Frontend a Evicamp:**
+    - Build de producción impecable en 4.35s (`npm run build`).
+    - Despliegue ejecutado vía `node ai-scripts/deploy.cjs evicamp` (20 archivos subidos, HTTP 200 OK verificado).
+  - **3. Git:**
+    - Fusión limpia de `fase-7-tallas-colores` a `main` y push a GitHub (`origin main`).
+  - **4. Siguiente paso:**
+    - Presentar la propuesta de la **Fase 8: Producción y Encargos (Recetas e Insumos, Combos / Kits)** para visto bueno del dueño.
+
+## 31/10/2026 (tarde, 56) · Antigravity
+- **Selector de Teclado y Retiro de Casillero Stock en ModalProducto (Fase 7):**
+  - **Pregunta / reporte del dueño:** *"el selector no funciona ahi como tambien ahi se puede ingresar lotes y precios lo que si esta bien que ahi se tenga que poner el precio del producto de ese polo o talla ya que no habra un presio unico para todos"* (con captura del modal Paso 2 en bloque de Tallas y Colores).
+  - **Decisión acordada por pregunta interactiva:** Opción A1: Quitar la columna 'Stock' de esta ventana y dejar solo 'Precio'. El stock se ingresa con el botón [ Ingresar Lote ] con su costo y proveedor.
+  - **1. Selector de Teclado (Navegación 100% fluida):**
+    - En `ModalProducto.tsx`, se conectó la salida de Presentaciones (`pres-barcode-N`) y Escalas (`escala-precio-N`) hacia `check-tiene-variantes`.
+    - En `check-tiene-variantes`, Flecha Abajo baja a las plantillas rápidas (`btn-preset-ropa` / `btn-preset-calzado`) o a `btn-guardar-producto`. Enter activa/desactiva variantes.
+    - Se agregaron IDs y navegación horizontal/vertical para las plantillas rápidas y el generador (`input-tallas-generator`, `input-colores-generator`, `btn-generar-combinaciones`).
+    - En la tabla de variantes: cada celda (`var-talla-N`, `var-color-N`, `var-nombre-N`, `var-barcode-N`, `var-price-N`, `var-quitar-N`) cuenta con selector bidireccional fluido (`teclasVar`). Al terminar la última fila, Flecha Abajo baja a `btn-agregar-variante-manual` y de ahí a `btn-guardar-producto`. Flecha Arriba desde Guardar regresa directamente al bloque de variantes.
+  - **2. Retiro de Stock en Creación de Producto:**
+    - Se retiró la columna 'Stock' de la tabla de variantes en `ModalProducto.tsx` (dejando solo Talla, Color, Nombre Variante, Código de Barras y Precio).
+    - Las nuevas variantes inician con stock 0 (se alimentan mediante el botón [ Ingresar Lote ] con proveedor y costo real) y las existentes en edición conservan su stock.
+  - **3. Pruebas Automáticas 100% OK:**
+    - `prueba-modal-variantes-teclado.mjs`: Probó todos los movimientos de teclado (bajada desde presentaciones, activación con Enter, selección de preset, navegación celda a celda en la grilla y regreso desde Guardar con Flecha Arriba). 11 de 11 pasadas.
+    - `prueba-lote-variantes-ui.mjs` y `prueba-fase7-ui.mjs` aprobadas.
+  - **4. Despliegue:**
+    - Desplegado a `siumax.duckdns.org`. Producción Evicamp y GitHub main intactos (Regla 4).
+
+## 31/10/2026 (tarde, 55) · Antigravity
+- **Filtrado de Productos con Variantes en Caja (POS):**
+  - **Pregunta del dueño:** *"entonces ahora si ingreso un producto como polo nicke y tiene una variante no va aparecer el polo nicke si no la variante no??"*
+  - **Ajuste en `src/utils/variantes.ts`:**
+    - Al ingresar stock por variante, el stock global de `products.quantity` refleja la suma de las variantes.
+    - Se calculó el stock genérico real restante: `stockGenerico = products.quantity - suma(variantes.quantity)`.
+    - Si `stockGenerico <= 0` (todo el stock pertenece a tallas o colores), en la Caja **aparecen únicamente las variantes específicas** (`Polo Nike (Talla M)`, `Polo Nike (Talla L)`) y **se oculta el producto genérico padre**, evitando que el cajero venda una prenda sin talla y descuadre el stock de las variantes.
+    - Si el producto tiene stock genérico remanente sin clasificar (`stockGenerico > 0`), el genérico sí se muestra con su stock exacto.
+  - **Pruebas:** `prueba-fase7-ui.mjs` y `prueba-lote-variantes-ui.mjs` aprobadas al 100%. Desplegado en `siumax.duckdns.org`.
+
+## 31/10/2026 (tarde, 54) · Antigravity
+- **Adaptación del Botón [ Ingresar Lote ] por Tipo de Producto (Tallas y Colores / Variantes):**
+  - **Pregunta del dueño:** *"no seria mejor que la creación de lotes por tipo de productos este en el boton de lotes ??"*
+  - **Decisión acordada:** Opción A1 elegida por el dueño. El botón `[ Ingresar Lote ]` se adapta inteligentemente al producto seleccionado: si el producto tiene tallas/colores, despliega la grilla de variantes para ingresar cuántas unidades llegaron de cada una (ej. 20 M, 30 L) y alimente el stock individual de cada variante.
+  - **1. Base de datos (`servidor/sql/seguridad-sesion.sql` y `siumax`):**
+    - Agregadas columnas `variant_id bigint` y `variant_name text` a `public.batches`. Creado índice `idx_batches_variant_id`.
+    - Actualizado `fn_reduce_stock_from_sales` para descontar por FIFO del lote correspondiente a la variante (`variant_id = NEW.variant_id`) cuando la venta tiene variante, o de los lotes genéricos (`variant_id IS NULL`) cuando es genérico.
+    - Creadas/actualizadas funciones `fn_edit_batch` y `fn_soft_delete_batch`: al editar o retirar un lote con `variant_id`, se sincroniza automáticamente tanto el stock de la variante (`product_variants.quantity`) como el del producto (`products.quantity`).
+    - Migración aplicada en `siumax` con respaldo previo (`.dump`). Cero errores SQL.
+  - **2. Interfaz en `ModalLote.tsx`:**
+    - Al buscar y seleccionar un producto con variantes (`tieneVariantes`), la Sección 2 se adapta: oculta el campo único de cantidad y muestra una grilla con las variantes del producto (`Variante (Talla/Color)`, `Stock Actual`, `Cant. a Ingresar`).
+    - Foco inteligente: al elegir el producto, el cursor salta automáticamente al primer casillero de variante (`input-lote-var-0`). Con Flechas Arriba/Abajo o Enter se navega rápidamente entre variantes sin usar el mouse.
+    - Suma y costo automático: la cantidad total del lote se calcula sola sumando las variantes ingresadas, y el costo unitario (`costoTotal / cantidad`) se calcula al instante.
+    - Al guardar: inserta un lote independiente por cada variante con cantidad > 0, actualiza `product_variants.quantity`, genera movimientos en Kardex (`inventory_movements`) y recalcula el stock global de `products`.
+    - Si el producto es estándar o a granel (sin variantes), mantiene la entrada clásica de un solo número.
+  - **3. Pestaña Lotes (`TablaLotes.tsx`) y Modal de Historial (`ModalHistorialLotes.tsx`):**
+    - Mapeadas columnas `variant_id` y `variant_name`.
+    - Cada lote de variante muestra una insignia `🏷️ {variant_name}` al lado del nombre del producto.
+    - El buscador inteligente de Lotes ahora permite filtrar por talla o color (ej. "M", "Negro", "Polo Blanco").
+  - **4. Modo Offline (`sinInternet.ts`):**
+    - `fn_edit_batch` y `fn_soft_delete_batch` sincronizan localmente el stock de `product_variants` cuando `variant_id` está presente.
+  - **5. Pruebas Automáticas Superadas 100%:**
+    - `ai-scripts/pruebas/prueba-lote-variantes-ui.mjs`: Probó login, apertura de modal, búsqueda de producto con variantes, adaptación de sección 2 a variantes, ingreso de unidades en Talla M, cálculo de costo, guardado en base de datos `batches`, aumento de stock en `product_variants` y visualización con insignia `🏷️` en pestaña Lotes. Todo OK.
+    - `ai-scripts/pruebas/prueba-fase7-ui.mjs`: Prueba de regresión de interfaz y ventas POS sin errores.
+  - **6. Despliegue y Git:**
+    - `tsc -b && vite build` limpio. Desplegado en `siumax.duckdns.org`.
+    - Rama activa: `fase-7-tallas-colores`.
+    - Producción Evicamp y GitHub main intactos (Regla 4).
+
+## 31/10/2026 (tarde, 53) · Antigravity
+- **Modelo Híbrido de Stock para Variantes y Lotes Genéricos en Caja (Fase 7):**
+  - **Pregunta del dueño:** *"pero que pasa si pongo polo nicke y lo ingreso en lote 100 pero en variantes tengo polo nicket blanco M y pongo 100 deben aparecer los 2 no??"*
+  - **Decisión acordada:** Opción A1 recomendada. En Caja aparecen ambos: el 'Polo Nike' genérico (con su stock de lote) y cada variante específica ('Polo Nike Blanco M') con su stock individual. Si el producto genérico no tiene stock de lote (`quantity = 0`), solo aparecen las variantes para no saturar con tarjetas agotadas.
+  - **1. Base de datos (`servidor/sql/seguridad-sesion.sql` y `siumax`):**
+    - `fn_reduce_stock_from_sales`: Si `NEW.variant_id IS NOT NULL`, descuenta exclusivamente de `product_variants.quantity`, toma el costo de la variante y sale sin tocar `batches` ni `products.quantity`. Si `NEW.variant_id IS NULL`, descuenta de `batches` y `products.quantity` sin tocar variantes.
+    - `fn_anular_venta`: Si el movimiento tiene `variant_id`, restaura el stock a `product_variants`; si no tiene `variant_id`, restaura a `batches` y `products`.
+    - Respaldo de base de datos realizado y SQL aplicado con cero errores en `siumax`.
+  - **2. Lógica Frontend y Modo Offline:**
+    - `src/utils/variantes.ts`: `conVariantesYPresentaciones` incluye la variante vendible y, si `Number(p.quantity) > 0`, incluye también el producto base genérico.
+    - `src/sections/Punto-de-venta/index.tsx`: mantiene `p.quantity` intacto en `fetchProducts`; en `handleAddToCart` y `setProductos` post-venta separa el conteo y descuento de unidades genéricas (`!i.variantId`) de las variantes.
+    - `src/sections/Inventario/index.tsx`: suma el stock global de lotes + variantes en `stockFinal`, y guarda `stockBase` para el tooltip de la tabla.
+    - `src/utils/sinInternet.ts`: desacoplamiento de stock offline en `descontarStockLocal` y `IMITAR_RPC.fn_anular_venta`.
+  - **3. Verificación Automatizada 100% Exitosa:**
+    - `ai-scripts/pruebas/prueba-fase7-hibrido.mjs`: probó el caso exacto del dueño: 100 und en lote de Polo Nike + 100 und en variante Blanco M. Comprobó que en Caja aparecen los 2 ítems, vender 10 Blanco M descuenta variante a 90 dejando el lote intacto en 100; vender 15 genérico descuenta lote a 85 dejando variante intacta en 90; y anular ambas devuelve cada uno a 100.
+    - `ai-scripts/pruebas/prueba-fase7-variantes.mjs`: 13/13 pruebas OK.
+    - `ai-scripts/pruebas/prueba-fase7-ui.mjs`: prueba de interfaz con Puppeteer Edge OK.
+  - **4. Despliegue:** Compilado y desplegado a `siumax.duckdns.org`. Producción Evicamp y GitHub main intactos (Regla 4).
+
+## 31/10/2026 (tarde, 52) · Antigravity
+- **Implementación y Pruebas Completas de la Fase 7 (Tallas y Colores: Variantes con stock propio) en `siumax`:**
+  - El dueño dio su aprobación para comenzar: *"si dale"*.
+  - **1. Base de datos y Triggers (`siumax`):**
+    - Respaldo de seguridad creado con `pg_dump`: `/var/lib/postgresql/respaldo-siumax-antes-fase7-2026-10-31T18-30-43-213Z.dump`.
+    - Creada tabla `product_variants` con `id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY`, `product_id`, `nombre_variante`, `talla`, `color`, `barcode`, `code`, `price`, `cost_price`, `quantity`, `is_active`, `is_synced`.
+    - Agregadas columnas a `sale_details` e `inventory_movements`: `variant_id bigint` y `variant_name text`.
+    - Columna agregada a `products`: `tiene_variantes boolean DEFAULT false`.
+    - Actualizado trigger `fn_reduce_stock_from_sales`: descuenta el stock de la variante específica en `product_variants` si `variant_id` está presente, y registra en Kardex (`inventory_movements`) el `variant_id` y `variant_name`.
+    - Actualizada función `fn_anular_venta`: al anular un ticket restaura el stock a la variante respectiva y genera movimiento Kardex `ANULACION` con variante.
+    - PostgREST recargó el esquema (`NOTIFY pgrst, 'reload schema'`). Cero errores SQL.
+    - Script para deshacer creado: `servidor/sql/deshacer-fase7-tallas-colores.sql`.
+  - **2. Soporte Offline (Sin Internet):**
+    - Rutas `/product_variants` añadidas a `PERMITIDO_SIN_INTERNET`, `CON_STOCK` e `ID_DESDE_LA_PC` en `src/utils/sinInternet.ts`.
+    - Sincronización de anulación offline adaptada para variantes en `src/utils/sinInternet.ts`.
+    - Precarga local en `src/utils/precargaSinInternet.ts` configurada para descargar y cachear `product_variants`.
+  - **3. Interfaz de Inventario:**
+    - `ModalProducto.tsx`: Casilla "Activar Variantes", plantillas rápidas (`#btn-preset-ropa` S, M, L, XL y `#btn-preset-calzado` 36-42), generador combinado por comas, matriz editable con stock independiente por variante, código de barras y precio específico.
+    - `TablaProductos.tsx`: Insignia destacada `[ 🏷️ X variantes ]` con tooltip detallando stock por talla/color.
+  - **4. Interfaz de Caja (POS):**
+    - `src/utils/variantes.ts`: Función `conVariantesYPresentaciones` que desglosa productos con variantes en tarjetas individuales en el catálogo de venta, mostrando stock y código propio.
+    - `Punto-de-venta/index.tsx`: Validación de stock por variante en `handleAddToCart`, envío de `variant_id` y `variant_name` en la venta, y descuento instantáneo en memoria.
+  - **5. Pruebas Automáticas Superadas 100%:**
+    - `ai-scripts/pruebas/prueba-fase7-variantes.mjs`: Probó creación, venta en POS con trigger descontando solo la talla vendida, Kardex con variante y anulación de venta devolviendo stock a la variante. Todo OK.
+    - `ai-scripts/pruebas/prueba-fase7-ui.mjs`: Probó navegación real con Edge, creación de producto con variantes mediante plantilla ropa, visualización de insignia en Inventario y búsqueda de las 4 variantes individuales en POS. Todo OK.
+  - **6. Estado de Servidores y Git:**
+    - Compilación limpia con `tsc -b && vite build` y desplegado en `siumax.duckdns.org`.
+    - Rama git: `fase-7-tallas-colores`.
+    - **Evicamp (producción) y GitHub main intactos** (Regla 4). A la espera del visto bueno del dueño.
+  - Siguiente paso: El dueño prueba en `siumax` y cuando indique *"si subelo"*, pasar la Fase 7 a Evicamp y GitHub.
+
 ## 31/10/2026 (mañana, 51) · Antigravity
 - **Pase Oficial de la Fase 6 (Cambios de Producto y Garantías / Series) a Producción (Evicamp) y GitHub:**
   - El dueño dio la orden explícita: *"si subelo"*.
