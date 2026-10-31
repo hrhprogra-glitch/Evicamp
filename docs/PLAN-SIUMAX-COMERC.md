@@ -4,7 +4,7 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 30/10/2026 (noche, 47), Antigravity: En Fase 6 se corrigió la tecla Enter para que actúe como clic y despliegue opciones con showPicker() en selects en lugar de saltar campos; la navegación entre casillas se realiza con flechas de dirección. Desplegado en pruebas (`siumax.duckdns.org`).
+- **Última actualización:** 30/10/2026 (noche, 48), Antigravity: En Fase 6 se incorporó Pago Mixto (Efectivo, Yape y Tarjeta) en el cobro de diferencia por cambio de producto con botones rápidos, validación en vivo y registro discriminado en cash_movements para cuadre de caja exacto. Desplegado en pruebas (`siumax.duckdns.org`).
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4 y 3 en producción en Evicamp (commits 583ad4e, c8c6be3, bd3780f y 994bdca).
 - **Fase en pruebas en siumax:** **Fase 6 — Cambios de producto integrados en Finanzas, garantías y control de números de serie (IMEI)**.
 - **Avisos para la clienta de Evicamp:**

@@ -412,6 +412,14 @@
         - En los `<select>` (`select-producto-devuelto` y `select-metodo-diferencia`), presionar `Enter` o `Espacio` ahora invoca `showPicker()` nativo para abrir la lista desplegable y elegir la opción ("hacer la función de click osea entrar"), en lugar de saltar a la casilla siguiente.
         - Los desplazamientos entre campos quedan asignados exclusivamente a las flechas de dirección.
         - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+      40. **Soporte de Pago Mixto en Cobro de Diferencia por Cambio (30/10 noche):**
+        - El dueño indicó: *"otro error que pasa si pago mixto ?? el metodo de pago tiene que ser mixto no uno solo"* (mostrando captura del paso 3 Balance y Cuadre de Caja con la diferencia positiva y un select de método único).
+        - Se implementó la interfaz y lógica de Pago Mixto:
+          1. Tres botones de 1 clic para liquidar todo en un solo método (`[ 💵 Todo Efectivo ]`, `[ 📱 Todo Yape ]`, `[ 💳 Todo Tarjeta ]`).
+          2. Tres casillas para montos combinados: Efectivo, Yape y Tarjeta, con navegación fluida por flechas de teclado.
+          3. Sincronización automática con la diferencia calculada y validación en tiempo real (alerta de monto faltante o sobrante; el botón se deshabilita si no cuadra exactamente).
+          4. En la base de datos se guarda el detalle en `cambios_productos` (`MIXTO (...)` o el método individual) y se inserta un movimiento `INGRESO` individual en `cash_movements` por cada billetera usada (Efectivo, Yape, Tarjeta) para que el cuadre de caja de Finanzas coincida al céntimo.
+        - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
 
 
 

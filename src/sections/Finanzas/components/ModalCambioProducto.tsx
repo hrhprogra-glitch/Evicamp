@@ -60,9 +60,11 @@ export const ModalCambioProducto: React.FC<Props> = ({
   const [cantidadNueva, setCantidadNueva] = useState<number>(1);
   const [serieNueva, setSerieNueva] = useState<string>('');
 
-  // Metadatos del cambio
+  // Metadatos del cambio y Pago Mixto de la diferencia
   const [motivo, setMotivo] = useState<string>('');
-  const [metodoPagoDiferencia, setMetodoPagoDiferencia] = useState<'EFECTIVO' | 'YAPE' | 'TARJETA'>('EFECTIVO');
+  const [pagoEf, setPagoEf] = useState<string>('');
+  const [pagoYap, setPagoYap] = useState<string>('');
+  const [pagoTar, setPagoTar] = useState<string>('');
   const [guardando, setGuardando] = useState<boolean>(false);
   const [cambioFinalizado, setCambioFinalizado] = useState<CambioProducto | null>(null);
 
@@ -81,6 +83,9 @@ export const ModalCambioProducto: React.FC<Props> = ({
       setCantidadDevolver(1);
       setCantidadNueva(1);
       setIndiceSeleccionado(0);
+      setPagoEf('');
+      setPagoYap('');
+      setPagoTar('');
 
       if (initialSaleId) {
         void cargarTicket(String(initialSaleId));
@@ -318,11 +323,76 @@ export const ModalCambioProducto: React.FC<Props> = ({
   const totalNuevo = productoNuevo ? Math.round(productoNuevo.price * cantidadNueva * 100) / 100 : 0;
   const diferencia = Math.round((totalNuevo - totalDevuelto) * 100) / 100;
 
+  // Montos ingresados en pago mixto
+  const numEf = Math.round((Number(pagoEf) || 0) * 100) / 100;
+  const numYap = Math.round((Number(pagoYap) || 0) * 100) / 100;
+  const numTar = Math.round((Number(pagoTar) || 0) * 100) / 100;
+  const totalCubierto = Math.round((numEf + numYap + numTar) * 100) / 100;
+  const faltaCubrir = Math.round(Math.max(0, diferencia - totalCubierto) * 100) / 100;
+  const sobrante = Math.round(Math.max(0, totalCubierto - diferencia) * 100) / 100;
+  const pagoValido = diferencia <= 0 || (totalCubierto > 0 && Math.abs(diferencia - totalCubierto) < 0.01);
+  const puedeConfirmar = Boolean(ticketData && itemDevuelto && productoNuevo && !guardando && (diferencia <= 0 || pagoValido));
+
+  const partesMetodo: string[] = [];
+  if (numEf > 0) partesMetodo.push(`Efectivo: S/ ${numEf.toFixed(2)}`);
+  if (numYap > 0) partesMetodo.push(`Yape: S/ ${numYap.toFixed(2)}`);
+  if (numTar > 0) partesMetodo.push(`Tarjeta: S/ ${numTar.toFixed(2)}`);
+
+  const pagoExacto = (metodo: 'EFECTIVO' | 'YAPE' | 'TARJETA') => {
+    if (diferencia <= 0) return;
+    const difStr = diferencia.toFixed(2);
+    if (metodo === 'EFECTIVO') {
+      setPagoEf(difStr);
+      setPagoYap('');
+      setPagoTar('');
+      setTimeout(() => document.getElementById('pago-cambio-efectivo')?.focus(), 30);
+    } else if (metodo === 'YAPE') {
+      setPagoEf('');
+      setPagoYap(difStr);
+      setPagoTar('');
+      setTimeout(() => document.getElementById('pago-cambio-yape')?.focus(), 30);
+    } else if (metodo === 'TARJETA') {
+      setPagoEf('');
+      setPagoYap('');
+      setPagoTar(difStr);
+      setTimeout(() => document.getElementById('pago-cambio-tarjeta')?.focus(), 30);
+    }
+  };
+
+  // Sincronizar pago por defecto (Efectivo) cuando cambia la diferencia a favor de la tienda
+  useEffect(() => {
+    if (diferencia > 0) {
+      setPagoEf(diferencia.toFixed(2));
+      setPagoYap('');
+      setPagoTar('');
+    } else {
+      setPagoEf('');
+      setPagoYap('');
+      setPagoTar('');
+    }
+  }, [diferencia]);
+
   const handleConfirmarCambio = async () => {
-    if (!ticketData || !itemDevuelto || !productoNuevo) return;
+    if (!ticketData || !itemDevuelto || !productoNuevo || !puedeConfirmar) return;
     setGuardando(true);
 
     try {
+      // Determinar método de pago para el registro del cambio
+      let metodoFinal: string | null = null;
+      if (diferencia > 0) {
+        if (partesMetodo.length === 1) {
+          if (numEf > 0) metodoFinal = 'EFECTIVO';
+          else if (numYap > 0) metodoFinal = 'YAPE';
+          else if (numTar > 0) metodoFinal = 'TARJETA';
+        } else if (partesMetodo.length > 1) {
+          metodoFinal = `MIXTO (${partesMetodo.join(', ')})`;
+        } else {
+          metodoFinal = 'EFECTIVO';
+        }
+      } else if (diferencia < 0) {
+        metodoFinal = 'EFECTIVO';
+      }
+
       // 1. Registrar en cambios_productos
       const nuevoCambio: Partial<CambioProducto> = {
         id: Date.now(),
@@ -341,7 +411,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
         precio_nuevo: productoNuevo.price,
         serie_nueva: serieNueva.trim() || null,
         diferencia: diferencia,
-        payment_type: diferencia > 0 ? metodoPagoDiferencia : (diferencia < 0 ? 'EFECTIVO' : null),
+        payment_type: metodoFinal,
         motivo: motivo.trim() || 'CAMBIO DE PRODUCTO'
       };
 
@@ -408,22 +478,55 @@ export const ModalCambioProducto: React.FC<Props> = ({
 
       // 3. Ajuste de dinero en cash_movements si hubo diferencia
       if (diferencia > 0) {
-        // El cliente pagó la diferencia -> Ingreso de caja
-        await supabase.from('cash_movements').insert([{
-          id: Date.now(),
-          session_id: sessionId,
-          type: 'INGRESO',
-          amount: diferencia,
-          description: `DIFERENCIA POR CAMBIO DE PRODUCTO (TICKET #${String(ticketData.id).slice(-6)})`.toUpperCase(),
-          payment_type: metodoPagoDiferencia,
-          flujo: 'INTERNO',
-          created_at: new Date().toISOString(),
-          is_synced: 1
-        }]);
+        // El cliente pagó la diferencia -> Ingreso de caja por cada método usado
+        const baseId = Date.now();
+        let movCounter = 0;
+
+        if (numEf > 0) {
+          await supabase.from('cash_movements').insert([{
+            id: String(baseId + movCounter++),
+            session_id: sessionId,
+            type: 'INGRESO',
+            amount: numEf,
+            description: `DIFERENCIA POR CAMBIO (TICKET #${String(ticketData.id).slice(-6)}) [EFECTIVO]`.toUpperCase(),
+            payment_type: 'EFECTIVO',
+            flujo: 'INTERNO',
+            created_at: new Date().toISOString(),
+            is_synced: 1
+          }]);
+        }
+
+        if (numYap > 0) {
+          await supabase.from('cash_movements').insert([{
+            id: String(baseId + movCounter++),
+            session_id: sessionId,
+            type: 'INGRESO',
+            amount: numYap,
+            description: `DIFERENCIA POR CAMBIO (TICKET #${String(ticketData.id).slice(-6)}) [YAPE]`.toUpperCase(),
+            payment_type: 'YAPE',
+            flujo: 'INTERNO',
+            created_at: new Date().toISOString(),
+            is_synced: 1
+          }]);
+        }
+
+        if (numTar > 0) {
+          await supabase.from('cash_movements').insert([{
+            id: String(baseId + movCounter++),
+            session_id: sessionId,
+            type: 'INGRESO',
+            amount: numTar,
+            description: `DIFERENCIA POR CAMBIO (TICKET #${String(ticketData.id).slice(-6)}) [TARJETA]`.toUpperCase(),
+            payment_type: 'TARJETA',
+            flujo: 'INTERNO',
+            created_at: new Date().toISOString(),
+            is_synced: 1
+          }]);
+        }
       } else if (diferencia < 0) {
         // La tienda devolvió plata al cliente -> Egreso de caja
         await supabase.from('cash_movements').insert([{
-          id: Date.now(),
+          id: String(Date.now()),
           session_id: sessionId,
           type: 'EGRESO',
           amount: Math.abs(diferencia),
@@ -546,7 +649,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                       {cambioFinalizado.diferencia > 0 
                         ? `CLIENTE PAGÓ: S/ ${cambioFinalizado.diferencia.toFixed(2)} (${cambioFinalizado.payment_type})`
                         : cambioFinalizado.diferencia < 0
-                          ? `TIENDA DEVOLVIÓ: S/ ${Math.abs(cambioFinalizado.diferencia).toFixed(2)}`
+                          ? `TIENDA DEVOLVIÓ: S/ ${Math.abs(cambioFinalizado.diferencia).toFixed(2)} (EFECTIVO)`
                           : 'S/ 0.00 (CAMBIO EXACTO)'}
                     </span>
                   </div>
@@ -977,8 +1080,10 @@ export const ModalCambioProducto: React.FC<Props> = ({
                                   e.preventDefault();
                                   if (document.getElementById('input-serie-nueva')) {
                                     document.getElementById('input-serie-nueva')?.focus();
-                                  } else if (document.getElementById('select-metodo-diferencia')) {
-                                    document.getElementById('select-metodo-diferencia')?.focus();
+                                  } else if (document.getElementById('btn-exacto-efectivo-cambio')) {
+                                    document.getElementById('btn-exacto-efectivo-cambio')?.focus();
+                                  } else if (document.getElementById('pago-cambio-efectivo')) {
+                                    document.getElementById('pago-cambio-efectivo')?.focus();
                                   } else {
                                     document.getElementById('input-motivo-cambio')?.focus();
                                   }
@@ -1010,8 +1115,10 @@ export const ModalCambioProducto: React.FC<Props> = ({
                                   document.getElementById('btn-cambiar-nuevo')?.focus();
                                 } else if (e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  if (document.getElementById('select-metodo-diferencia')) {
-                                    document.getElementById('select-metodo-diferencia')?.focus();
+                                  if (document.getElementById('btn-exacto-efectivo-cambio')) {
+                                    document.getElementById('btn-exacto-efectivo-cambio')?.focus();
+                                  } else if (document.getElementById('pago-cambio-efectivo')) {
+                                    document.getElementById('pago-cambio-efectivo')?.focus();
                                   } else {
                                     document.getElementById('input-motivo-cambio')?.focus();
                                   }
@@ -1040,12 +1147,12 @@ export const ModalCambioProducto: React.FC<Props> = ({
                     <span className="text-xs font-black uppercase text-[var(--color-ink)]">Balance y Cuadre de Caja</span>
                   </div>
 
-                  <div className="p-3 border-2 border-[var(--color-ink)] bg-[var(--color-bg)]">
-                    <div className="flex justify-between items-center text-xs mb-1">
+                  <div className="p-3 border-2 border-[var(--color-ink)] bg-[var(--color-bg)] space-y-2">
+                    <div className="flex justify-between items-center text-xs">
                        <span>Valor devuelto:</span>
                       <span className="font-black text-red-600">- S/ {totalDevuelto.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center text-xs mb-2">
+                    <div className="flex justify-between items-center text-xs">
                       <span>Valor nuevo:</span>
                       <span className="font-black text-emerald-700">+ S/ {totalNuevo.toFixed(2)}</span>
                     </div>
@@ -1059,36 +1166,228 @@ export const ModalCambioProducto: React.FC<Props> = ({
                       </span>
                     </div>
 
-                    {/* SI EL CLIENTE PAGA DIFERENCIA */}
+                    {/* SI EL CLIENTE PAGA DIFERENCIA: PAGO MIXTO */}
                     {diferencia > 0 && (
-                      <div className="mt-3 pt-2 border-t border-dashed border-gray-400 flex items-center gap-2 text-xs">
-                        <span className="font-black uppercase">Método para cobrar diferencia:</span>
-                        <select
-                          id="select-metodo-diferencia"
-                          value={metodoPagoDiferencia}
-                          onChange={(e) => setMetodoPagoDiferencia(e.target.value as any)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault();
-                              try {
-                                (e.currentTarget as HTMLSelectElement & { showPicker?: () => void }).showPicker?.();
-                              } catch {}
-                              return;
-                            }
-                            if (e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              document.getElementById('input-motivo-cambio')?.focus();
-                            } else if (e.key === 'ArrowUp') {
-                              e.preventDefault();
-                              document.getElementById('input-cantidad-nueva')?.focus();
-                            }
-                          }}
-                          className="bg-white border-2 border-black font-black p-1 text-xs uppercase focus:ring-2 focus:ring-black"
-                        >
-                          <option value="EFECTIVO">💵 Efectivo</option>
-                          <option value="YAPE">📱 Yape / Plin</option>
-                          <option value="TARJETA">💳 Tarjeta</option>
-                        </select>
+                      <div className="mt-3 pt-3 border-t-2 border-dashed border-gray-400 space-y-2.5">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[11px] font-black uppercase tracking-wider text-[var(--color-ink)]">
+                            Cobro de Diferencia (Permite Pago Mixto):
+                          </span>
+                          <span className="text-[10px] font-bold text-gray-500 uppercase">
+                            Efectivo, Yape o Tarjeta
+                          </span>
+                        </div>
+
+                        {/* BOTONES DE PAGO EXACTO RÁPIDO */}
+                        <div className="flex gap-2">
+                          <button
+                            id="btn-exacto-efectivo-cambio"
+                            type="button"
+                            onClick={() => pagoExacto('EFECTIVO')}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp') {
+                                e.preventDefault();
+                                if (document.getElementById('input-serie-nueva')) {
+                                  document.getElementById('input-serie-nueva')?.focus();
+                                } else {
+                                  document.getElementById('input-cantidad-nueva')?.focus();
+                                }
+                              } else if (e.key === 'ArrowRight') {
+                                e.preventDefault();
+                                document.getElementById('btn-exacto-yape-cambio')?.focus();
+                              } else if (e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                document.getElementById('pago-cambio-efectivo')?.focus();
+                              }
+                            }}
+                            className="flex-1 bg-white border-2 border-emerald-600 text-emerald-700 font-black text-[11px] uppercase py-1.5 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-black"
+                          >
+                            💵 Todo Efectivo
+                          </button>
+                          <button
+                            id="btn-exacto-yape-cambio"
+                            type="button"
+                            onClick={() => pagoExacto('YAPE')}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp') {
+                                e.preventDefault();
+                                if (document.getElementById('input-serie-nueva')) {
+                                  document.getElementById('input-serie-nueva')?.focus();
+                                } else {
+                                  document.getElementById('input-cantidad-nueva')?.focus();
+                                }
+                              } else if (e.key === 'ArrowLeft') {
+                                e.preventDefault();
+                                document.getElementById('btn-exacto-efectivo-cambio')?.focus();
+                              } else if (e.key === 'ArrowRight') {
+                                e.preventDefault();
+                                document.getElementById('btn-exacto-tarjeta-cambio')?.focus();
+                              } else if (e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                document.getElementById('pago-cambio-yape')?.focus();
+                              }
+                            }}
+                            className="flex-1 bg-white border-2 border-purple-600 text-purple-700 font-black text-[11px] uppercase py-1.5 hover:bg-purple-600 hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-black"
+                          >
+                            📱 Todo Yape
+                          </button>
+                          <button
+                            id="btn-exacto-tarjeta-cambio"
+                            type="button"
+                            onClick={() => pagoExacto('TARJETA')}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp') {
+                                e.preventDefault();
+                                if (document.getElementById('input-serie-nueva')) {
+                                  document.getElementById('input-serie-nueva')?.focus();
+                                } else {
+                                  document.getElementById('input-cantidad-nueva')?.focus();
+                                }
+                              } else if (e.key === 'ArrowLeft') {
+                                e.preventDefault();
+                                document.getElementById('btn-exacto-yape-cambio')?.focus();
+                              } else if (e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                document.getElementById('pago-cambio-tarjeta')?.focus();
+                              }
+                            }}
+                            className="flex-1 bg-white border-2 border-blue-600 text-blue-700 font-black text-[11px] uppercase py-1.5 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-black"
+                          >
+                            💳 Todo Tarjeta
+                          </button>
+                        </div>
+
+                        {/* 3 CASILLAS DE PAGO */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          {/* Efectivo */}
+                          <div className="bg-white border-2 border-[var(--color-ink)] p-2 focus-within:ring-2 focus-within:ring-emerald-600">
+                            <label htmlFor="pago-cambio-efectivo" className="flex items-center gap-1.5 text-[10px] font-black uppercase text-emerald-800 mb-1">
+                              💵 Efectivo (S/)
+                            </label>
+                            <div className="relative">
+                              <span className="absolute left-1.5 top-1/2 -translate-y-1/2 font-black text-gray-400 text-xs">S/</span>
+                              <input
+                                id="pago-cambio-efectivo"
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="0.00"
+                                value={pagoEf}
+                                onChange={(e) => setPagoEf(e.target.value.replace(/[^0-9.]/g, ''))}
+                                onFocus={(e) => e.target.select()}
+                                onClick={(e) => (e.target as HTMLInputElement).select()}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'ArrowRight') {
+                                    e.preventDefault();
+                                    document.getElementById('pago-cambio-yape')?.focus();
+                                  } else if (e.key === 'ArrowUp') {
+                                    e.preventDefault();
+                                    document.getElementById('btn-exacto-efectivo-cambio')?.focus();
+                                  } else if (e.key === 'ArrowDown') {
+                                    e.preventDefault();
+                                    document.getElementById('input-motivo-cambio')?.focus();
+                                  }
+                                }}
+                                className="w-full bg-transparent pl-6 pr-1 py-1 text-sm font-black text-right outline-none text-[var(--color-ink)] focus:bg-emerald-50/50"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Yape / Plin */}
+                          <div className="bg-white border-2 border-[var(--color-ink)] p-2 focus-within:ring-2 focus-within:ring-purple-600">
+                            <label htmlFor="pago-cambio-yape" className="flex items-center gap-1.5 text-[10px] font-black uppercase text-purple-800 mb-1">
+                              📱 Yape / Plin (S/)
+                            </label>
+                            <div className="relative">
+                              <span className="absolute left-1.5 top-1/2 -translate-y-1/2 font-black text-gray-400 text-xs">S/</span>
+                              <input
+                                id="pago-cambio-yape"
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="0.00"
+                                value={pagoYap}
+                                onChange={(e) => setPagoYap(e.target.value.replace(/[^0-9.]/g, ''))}
+                                onFocus={(e) => e.target.select()}
+                                onClick={(e) => (e.target as HTMLInputElement).select()}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'ArrowLeft') {
+                                    e.preventDefault();
+                                    document.getElementById('pago-cambio-efectivo')?.focus();
+                                  } else if (e.key === 'ArrowRight') {
+                                    e.preventDefault();
+                                    document.getElementById('pago-cambio-tarjeta')?.focus();
+                                  } else if (e.key === 'ArrowUp') {
+                                    e.preventDefault();
+                                    document.getElementById('btn-exacto-yape-cambio')?.focus();
+                                  } else if (e.key === 'ArrowDown') {
+                                    e.preventDefault();
+                                    document.getElementById('input-motivo-cambio')?.focus();
+                                  }
+                                }}
+                                className="w-full bg-transparent pl-6 pr-1 py-1 text-sm font-black text-right outline-none text-[var(--color-ink)] focus:bg-purple-50/50"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Tarjeta */}
+                          <div className="bg-white border-2 border-[var(--color-ink)] p-2 focus-within:ring-2 focus-within:ring-blue-600">
+                            <label htmlFor="pago-cambio-tarjeta" className="flex items-center gap-1.5 text-[10px] font-black uppercase text-blue-800 mb-1">
+                              💳 Tarjeta (S/)
+                            </label>
+                            <div className="relative">
+                              <span className="absolute left-1.5 top-1/2 -translate-y-1/2 font-black text-gray-400 text-xs">S/</span>
+                              <input
+                                id="pago-cambio-tarjeta"
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="0.00"
+                                value={pagoTar}
+                                onChange={(e) => setPagoTar(e.target.value.replace(/[^0-9.]/g, ''))}
+                                onFocus={(e) => e.target.select()}
+                                onClick={(e) => (e.target as HTMLInputElement).select()}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'ArrowLeft') {
+                                    e.preventDefault();
+                                    document.getElementById('pago-cambio-yape')?.focus();
+                                  } else if (e.key === 'ArrowUp') {
+                                    e.preventDefault();
+                                    document.getElementById('btn-exacto-tarjeta-cambio')?.focus();
+                                  } else if (e.key === 'ArrowDown') {
+                                    e.preventDefault();
+                                    document.getElementById('input-motivo-cambio')?.focus();
+                                  }
+                                }}
+                                className="w-full bg-transparent pl-6 pr-1 py-1 text-sm font-black text-right outline-none text-[var(--color-ink)] focus:bg-blue-50/50"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* RESUMEN DE COBERTURA Y AVISOS */}
+                        <div className="flex flex-wrap justify-between items-center text-xs p-2 bg-slate-100 border border-slate-300">
+                          <span className="font-bold text-gray-700">Diferencia requerida: <b>S/ {diferencia.toFixed(2)}</b></span>
+                          <span className="font-bold text-gray-700">Total cubierto: <b className={pagoValido ? 'text-emerald-700' : 'text-red-600'}>S/ {totalCubierto.toFixed(2)}</b></span>
+                        </div>
+
+                        {faltaCubrir > 0.009 && (
+                          <p className="text-[11px] font-black text-amber-900 bg-amber-50 p-2 border border-amber-300 flex items-center gap-1.5">
+                            <AlertTriangle size={15} className="shrink-0 text-amber-600" />
+                            <span>Falta cubrir <b>S/ {faltaCubrir.toFixed(2)}</b> para liquidar la diferencia.</span>
+                          </p>
+                        )}
+
+                        {sobrante > 0.009 && (
+                          <p className="text-[11px] font-black text-red-900 bg-red-50 p-2 border border-red-300 flex items-center gap-1.5">
+                            <AlertTriangle size={15} className="shrink-0 text-red-600" />
+                            <span>El total ingresado supera la diferencia por <b>S/ {sobrante.toFixed(2)}</b>. Ajusta los montos.</span>
+                          </p>
+                        )}
+
+                        {pagoValido && totalCubierto > 0 && (
+                          <p className="text-[11px] font-black text-emerald-900 bg-emerald-50 p-2 border border-emerald-300 flex items-center gap-1.5">
+                            <Check size={15} className="shrink-0 text-emerald-600" />
+                            <span>Pago exacto: <b>{partesMetodo.length > 1 ? `Mixto (${partesMetodo.join(' + ')})` : partesMetodo[0] || 'Listo'}</b></span>
+                          </p>
+                        )}
                       </div>
                     )}
 
@@ -1116,8 +1415,10 @@ export const ModalCambioProducto: React.FC<Props> = ({
                           document.getElementById('btn-confirmar-cambio')?.focus();
                         } else if (e.key === 'ArrowUp') {
                           e.preventDefault();
-                          if (document.getElementById('select-metodo-diferencia')) {
-                            document.getElementById('select-metodo-diferencia')?.focus();
+                          if (document.getElementById('pago-cambio-efectivo')) {
+                            document.getElementById('pago-cambio-efectivo')?.focus();
+                          } else if (document.getElementById('input-serie-nueva')) {
+                            document.getElementById('input-serie-nueva')?.focus();
                           } else {
                             document.getElementById('input-cantidad-nueva')?.focus();
                           }
@@ -1130,7 +1431,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                   <button
                     id="btn-confirmar-cambio"
                     type="button"
-                    disabled={guardando}
+                    disabled={!puedeConfirmar}
                     onClick={handleConfirmarCambio}
                     onKeyDown={(e) => {
                       if (e.key === 'ArrowDown') {
@@ -1141,7 +1442,11 @@ export const ModalCambioProducto: React.FC<Props> = ({
                         document.getElementById('input-motivo-cambio')?.focus();
                       }
                     }}
-                    className="w-full bg-[var(--color-ink)] text-white hover:bg-[var(--color-accent)] hover:text-black font-black text-sm uppercase py-3 border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-black"
+                    className={`w-full font-black text-sm uppercase py-3 border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-black ${
+                      !puedeConfirmar
+                        ? 'bg-gray-300 text-gray-600 border-gray-400 shadow-none cursor-not-allowed opacity-60'
+                        : 'bg-[var(--color-ink)] text-white hover:bg-[var(--color-accent)] hover:text-black cursor-pointer'
+                    }`}
                   >
                     <Check size={18} /> {guardando ? 'Procesando Cambio...' : 'Confirmar y Realizar Cambio'}
                   </button>

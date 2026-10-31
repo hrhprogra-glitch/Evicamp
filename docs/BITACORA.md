@@ -7,6 +7,29 @@
 
 ---
 
+## 30/10/2026 (noche, 48) · Antigravity
+- **Soporte de Pago Mixto en Cobro de Diferencia por Cambio de Producto:**
+  - El dueño reportó: *"otro error que pasa si pago mixto ?? el metodo de pago tiene que ser mixto no uno solo"* (mostrando captura del paso 3 Balance y Cuadre de Caja con la diferencia a favor de la tienda y un único selector de método).
+  - **Causa identificada:**
+    1. El paso 3 solo tenía un `<select>` simple que obligaba a elegir un único método (Efectivo, Yape o Tarjeta).
+    2. Si el cliente pagaba una parte en efectivo y otra con Yape o tarjeta (pago mixto), no se podía dividir el monto, impidiendo que el cuadre de caja de Finanzas cuadrara con la realidad.
+  - **Solución implementada:**
+    - Se reemplazó el `<select>` único por una sección completa de **Pago Mixto** idéntica a `ModalCobro.tsx`:
+      - 3 botones de acceso rápido para liquidación total en 1 clic: `[ 💵 Todo Efectivo ]`, `[ 📱 Todo Yape ]`, `[ 💳 Todo Tarjeta ]`.
+      - 3 casillas de entrada independientes para montos: `💵 Efectivo (S/)`, `📱 Yape / Plin (S/)` y `💳 Tarjeta (S/)`.
+      - Sincronización automática: al calcularse una diferencia a cobrar (`diferencia > 0`), por defecto se precarga el monto total en Efectivo y las demás en 0.
+      - Cálculo y validación en vivo:
+        - Muestra resumen: *Diferencia requerida: S/ X.XX | Total cubierto: S/ Y.YY*.
+        - Alertas dinámicas: indica si *Falta cubrir S/ Z.ZZ* o si *El total ingresado supera la diferencia*.
+        - Si el pago no cuadra exactamente con la diferencia, el botón *Confirmar y Realizar Cambio* se bloquea visualmente (`disabled`).
+      - En el guardado:
+        - En `cambios_productos` se guarda `payment_type` con el detalle completo (ej. `MIXTO (Efectivo: S/ 1.50, Yape: S/ 1.00)` o `EFECTIVO`).
+        - En `cash_movements` se inserta un registro de `INGRESO` individual por cada método utilizado con monto > 0, asegurando que las bolsas de dinero (efectivo de cajón, Yape y tarjeta) de Finanzas y el cierre de caja cuadren al 100%.
+      - Si la diferencia es a favor del cliente (`diferencia < 0`), se mantiene el aviso y egreso en efectivo.
+      - Navegación bidireccional completa con flechas de teclado entre botones rápidos, casillas numéricas, motivo y botón de confirmación.
+      - Vale de cambio imprimible actualizado con desglose detallado si el pago fue mixto.
+  - Compilación (`npx tsc -b`, `npm run build`), `graphify update .` y despliegue exitoso a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+
 ## 30/10/2026 (noche, 47) · Antigravity
 - **Corrección de Enter (eliminación de saltos indeseados y apertura con showPicker en selects):**
   - El dueño reportó: *"cuando presiono enter no hace la funcion del click osea entrar mas bien cuando presiono enter pasa al siguiente eso no tiene que pasar"* (adjuntando captura en el Paso 1 de Selección de Producto del ticket y número de serie).
