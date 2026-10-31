@@ -7,6 +7,22 @@
 
 ---
 
+## 31/10/2026 (noche, 57) · Antigravity
+- **Pase Oficial de Fase 7 (Tallas y Colores: Variantes con stock propio y Lotes por variante) a Evicamp y GitHub:**
+  - **Instrucción del dueño:** *"perfecto bien echo ya quedo ahora si avnacemos"* (tras confirmación de Opción 1: Subir Fase 7 a Producción Evicamp y GitHub).
+  - **1. Respaldo y Base de Datos en Producción (Evicamp):**
+    - Se ejecutó `ai-scripts/pruebas/aplicar-fase7-evicamp.cjs`.
+    - Respaldo de `postgres` creado en `/var/lib/postgresql/respaldo-evicamp-antes-fase7-2026-10-31T22-29-31-496Z.dump` (1.9 MB).
+    - `servidor/sql/seguridad-sesion.sql` aplicado con `psql` y `SET lock_timeout = '5s'`. Cero errores de SQL y cero tiempo de inactividad (sin reiniciar la API).
+    - `NOTIFY pgrst, 'reload schema'` ejecutado con éxito. Verificadas columnas en `products`, `sale_details`, `batches`, `inventory_movements` y tabla `product_variants`.
+  - **2. Despliegue Frontend a Evicamp:**
+    - Build de producción impecable en 4.35s (`npm run build`).
+    - Despliegue ejecutado vía `node ai-scripts/deploy.cjs evicamp` (20 archivos subidos, HTTP 200 OK verificado).
+  - **3. Git:**
+    - Fusión limpia de `fase-7-tallas-colores` a `main` y push a GitHub (`origin main`).
+  - **4. Siguiente paso:**
+    - Presentar la propuesta de la **Fase 8: Producción y Encargos (Recetas e Insumos, Combos / Kits)** para visto bueno del dueño.
+
 ## 31/10/2026 (tarde, 56) · Antigravity
 - **Selector de Teclado y Retiro de Casillero Stock en ModalProducto (Fase 7):**
   - **Pregunta / reporte del dueño:** *"el selector no funciona ahi como tambien ahi se puede ingresar lotes y precios lo que si esta bien que ahi se tenga que poner el precio del producto de ese polo o talla ya que no habra un presio unico para todos"* (con captura del modal Paso 2 en bloque de Tallas y Colores).

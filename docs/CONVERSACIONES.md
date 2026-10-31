@@ -485,7 +485,14 @@
           1. Conexión de Presentaciones y Escalas hacia `check-tiene-variantes`.
           2. Activación de variantes con Enter y navegación hacia las plantillas rápidas (`btn-preset-ropa` y `btn-preset-calzado`) y el generador.
           3. Selector de grilla bidireccional (Flechas Arriba/Abajo/Izquierda/Derecha y Enter) en todas las celdas de la tabla de variantes (`teclasVar`).
-          4. Salida hacia el botón `[ + Agregar Variante Manual ]` y `[ Guardar ]`, y retorno hacia las variantes con Flecha Arriba desde Guardar.
-        - Se retiró la columna 'Stock' de la tabla de variantes: en la creación de producto solo se define la talla, color, código y precio específico. El stock se alimenta de forma ordenada y controlada a través del botón verde `[ Ingresar Lote ]`.
-        - Pruebas automatizadas con navegador en Edge (`prueba-modal-variantes-teclado.mjs`) pasaron al 100% (11 de 11 pasos validados).
-        - Desplegado en `siumax.duckdns.org`. Evicamp y GitHub permanecen intactos esperando visto bueno.
+      49. **Aprobación Oficial y Pase de Fase 7 a Producción en Evicamp y GitHub (31/10 noche):**
+        - El dueño expresó: *"perfecto bien echo ya quedo ahora si avnacemos"*.
+        - Se le consultó si avanzar subiendo primero la Fase 7 a Producción (Evicamp) y GitHub antes de empezar la Fase 8, o pasar directo a la Fase 8.
+        - El dueño seleccionó la Opción A1: *(Recomendado) Subir primero la Fase 7 (Tallas y Colores) a Producción (Evicamp) y GitHub, y luego arrancar la Fase 8*.
+        - Se procedió con el pase formal:
+          1. Respaldo previo de la base de datos de producción `postgres` en `/var/lib/postgresql/respaldo-evicamp-antes-fase7-2026-10-31T22-29-31-496Z.dump` (1.9 MB).
+          2. Aplicación de `servidor/sql/seguridad-sesion.sql` en Evicamp con `lock_timeout = '5s'` y recarga de esquema de PostgREST con `NOTIFY pgrst, 'reload schema'`. Cero errores de SQL y cero tiempo de inactividad (sin reiniciar la API).
+          3. Verificación de tablas y columnas (`product_variants`, `sale_details.variant_id`, `batches.variant_id`, `inventory_movements.variant_id`).
+          4. Compilación del bundle y despliegue del frontend a Evicamp (`node ai-scripts/deploy.cjs evicamp`). Verificado HTTP 200 OK.
+          5. Fusión de la rama `fase-7-tallas-colores` en `main` y subida a GitHub (`git push origin main`).
+        - Se procede a preparar la propuesta de la **Fase 8: Producción y Encargos (Recetas e Insumos, Combos / Kits)**.
