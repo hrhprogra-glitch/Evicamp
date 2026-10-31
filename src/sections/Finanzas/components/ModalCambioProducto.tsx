@@ -48,7 +48,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
 
   // Producto a devolver (del ticket)
   const [selectedDetalleIndex, setSelectedDetalleIndex] = useState<number>(-1);
-  const [cantidadDevolver, setCantidadDevolver] = useState<number>(1);
+  const [cantidadDevolver, setCantidadDevolver] = useState<string>('1');
   const [serieDevuelta, setSerieDevuelta] = useState<string>('');
 
   // Producto nuevo que se lleva
@@ -57,7 +57,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
   const [indiceSeleccionado, setIndiceSeleccionado] = useState<number>(0);
   const [buscandoCatalogo, setBuscandoCatalogo] = useState<boolean>(false);
   const [productoNuevo, setProductoNuevo] = useState<Product | null>(null);
-  const [cantidadNueva, setCantidadNueva] = useState<number>(1);
+  const [cantidadNueva, setCantidadNueva] = useState<string>('1');
   const [serieNueva, setSerieNueva] = useState<string>('');
 
   // Metadatos del cambio y Pago Mixto de la diferencia
@@ -80,8 +80,8 @@ export const ModalCambioProducto: React.FC<Props> = ({
       setMotivo('');
       setSerieDevuelta('');
       setSerieNueva('');
-      setCantidadDevolver(1);
-      setCantidadNueva(1);
+      setCantidadDevolver('1');
+      setCantidadNueva('1');
       setIndiceSeleccionado(0);
       setPagoEf('');
       setPagoYap('');
@@ -139,6 +139,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
     setBusquedaCatalogo('');
     setCatalogoResultados([]);
     setIndiceSeleccionado(0);
+    setCantidadNueva('1');
     setTimeout(() => {
       const cantInput = document.getElementById('input-cantidad-nueva') as HTMLInputElement | null;
       cantInput?.focus();
@@ -302,7 +303,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
       // Seleccionar primer producto por defecto si hay uno solo y enfocar catálogo
       if (detalles.length === 1) {
         setSelectedDetalleIndex(0);
-        setCantidadDevolver(1);
+        setCantidadDevolver('1');
         setSerieDevuelta(detalles[0].numero_serie || '');
         setTimeout(() => document.getElementById('input-buscar-nuevo')?.focus(), 100);
       } else {
@@ -318,9 +319,15 @@ export const ModalCambioProducto: React.FC<Props> = ({
 
   const itemDevuelto = ticketData && selectedDetalleIndex >= 0 ? ticketData.detalles[selectedDetalleIndex] : null;
 
+  // Cantidades numéricas seguras
+  const cantDevolverNum = itemDevuelto
+    ? Math.min(itemDevuelto.quantity, Math.max(1, Number(cantidadDevolver) || 1))
+    : Math.max(1, Number(cantidadDevolver) || 1);
+  const cantNuevaNum = Math.max(1, Number(cantidadNueva) || 1);
+
   // Cálculos financieros
-  const totalDevuelto = itemDevuelto ? Math.round(itemDevuelto.price_at_moment * cantidadDevolver * 100) / 100 : 0;
-  const totalNuevo = productoNuevo ? Math.round(productoNuevo.price * cantidadNueva * 100) / 100 : 0;
+  const totalDevuelto = itemDevuelto ? Math.round(itemDevuelto.price_at_moment * cantDevolverNum * 100) / 100 : 0;
+  const totalNuevo = productoNuevo ? Math.round(productoNuevo.price * cantNuevaNum * 100) / 100 : 0;
   const diferencia = Math.round((totalNuevo - totalDevuelto) * 100) / 100;
 
   // Montos ingresados en pago mixto
@@ -402,12 +409,12 @@ export const ModalCambioProducto: React.FC<Props> = ({
         customer_name: ticketData.customer_name,
         producto_devuelto_id: itemDevuelto.product_id,
         producto_devuelto_nombre: itemDevuelto.product_name,
-        cantidad_devuelta: cantidadDevolver,
+        cantidad_devuelta: cantDevolverNum,
         precio_devuelto: itemDevuelto.price_at_moment,
         serie_devuelta: serieDevuelta.trim() || null,
         producto_nuevo_id: Number(productoNuevo.id),
         producto_nuevo_nombre: productoNuevo.name,
-        cantidad_nueva: cantidadNueva,
+        cantidad_nueva: cantNuevaNum,
         precio_nuevo: productoNuevo.price,
         serie_nueva: serieNueva.trim() || null,
         diferencia: diferencia,
@@ -428,7 +435,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
       await supabase.from('inventory_movements').insert([{
         product_id: itemDevuelto.product_id,
         product_name: itemDevuelto.product_name,
-        change_amount: cantidadDevolver,
+        change_amount: cantDevolverNum,
         operation_type: 'DEVOLUCION',
         reason: 'CAMBIO_PRODUCTO',
         notes: `Ingreso por cambio de producto (Ticket #${String(ticketData.id).slice(-6)})${serieDevuelta ? ` · Serie: ${serieDevuelta}` : ''}`,
@@ -445,7 +452,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
         if (pDev) {
           await supabase
             .from('products')
-            .update({ quantity: Number(pDev.quantity || 0) + cantidadDevolver })
+            .update({ quantity: Number(pDev.quantity || 0) + cantDevolverNum })
             .eq('id', itemDevuelto.product_id);
         }
       }
@@ -454,7 +461,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
       await supabase.from('inventory_movements').insert([{
         product_id: Number(productoNuevo.id),
         product_name: productoNuevo.name,
-        change_amount: -cantidadNueva,
+        change_amount: -cantNuevaNum,
         operation_type: 'VENTA',
         reason: 'CAMBIO_PRODUCTO',
         notes: `Salida por cambio de producto (Ticket #${String(ticketData.id).slice(-6)})${serieNueva ? ` · Serie: ${serieNueva}` : ''}`,
@@ -471,28 +478,28 @@ export const ModalCambioProducto: React.FC<Props> = ({
         if (pNue) {
           await supabase
             .from('products')
-            .update({ quantity: Number(pNue.quantity || 0) - cantidadNueva })
+            .update({ quantity: Number(pNue.quantity || 0) - cantNuevaNum })
             .eq('id', Number(productoNuevo.id));
         }
       }
 
       // 3. Actualizar directamente el ticket con el producto nuevo
-      if (cantidadDevolver >= itemDevuelto.quantity) {
+      if (cantDevolverNum >= itemDevuelto.quantity) {
         // Se reemplaza la línea del producto devuelto por el producto nuevo
         await supabase
           .from('sale_details')
           .update({
             product_id: Number(productoNuevo.id),
             product_name: productoNuevo.name,
-            quantity: cantidadNueva,
+            quantity: cantNuevaNum,
             price_at_moment: productoNuevo.price,
-            subtotal: Math.round(productoNuevo.price * cantidadNueva * 100) / 100,
+            subtotal: Math.round(productoNuevo.price * cantNuevaNum * 100) / 100,
             numero_serie: serieNueva.trim() || null
           })
           .eq('id', itemDevuelto.id);
       } else {
         // Si devolvió solo parte de la cantidad (ej. 1 de 2), se resta de la original y se agrega la nueva
-        const restoCant = itemDevuelto.quantity - cantidadDevolver;
+        const restoCant = itemDevuelto.quantity - cantDevolverNum;
         await supabase
           .from('sale_details')
           .update({
@@ -507,9 +514,9 @@ export const ModalCambioProducto: React.FC<Props> = ({
             sale_id: Number(ticketData.id),
             product_id: Number(productoNuevo.id),
             product_name: productoNuevo.name,
-            quantity: cantidadNueva,
+            quantity: cantNuevaNum,
             price_at_moment: productoNuevo.price,
-            subtotal: Math.round(productoNuevo.price * cantidadNueva * 100) / 100,
+            subtotal: Math.round(productoNuevo.price * cantNuevaNum * 100) / 100,
             numero_serie: serieNueva.trim() || null,
             is_synced: 1
           }]);
@@ -763,7 +770,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                         setSelectedDetalleIndex(idx);
                         if (idx >= 0) {
                           const item = ticketData.detalles[idx];
-                          setCantidadDevolver(1);
+                          setCantidadDevolver('1');
                           setSerieDevuelta(item.numero_serie || '');
                         }
                       }}
@@ -802,16 +809,29 @@ export const ModalCambioProducto: React.FC<Props> = ({
                         <div>
                           <label className="text-[10px] font-black uppercase text-red-900 block mb-1">
                             Cantidad a devolver:
+                            {itemDevuelto && (
+                              <span className="ml-1 text-[9px] font-normal text-red-700 lowercase">
+                                (máx. comprada: {itemDevuelto.quantity})
+                              </span>
+                            )}
                           </label>
                           <input
                             id="input-cantidad-devolver"
-                            type="number"
-                            min={1}
-                            max={itemDevuelto.quantity}
+                            type="text"
+                            inputMode="numeric"
                             value={cantidadDevolver}
+                            onFocus={(e) => e.target.select()}
+                            onClick={(e) => (e.target as HTMLInputElement).select()}
                             onChange={(e) => {
-                              const val = Math.max(1, Math.min(itemDevuelto.quantity, Number(e.target.value) || 1));
-                              setCantidadDevolver(val);
+                              const raw = e.target.value.replace(/[^0-9]/g, '');
+                              setCantidadDevolver(raw);
+                            }}
+                            onBlur={() => {
+                              if (!cantidadDevolver || Number(cantidadDevolver) < 1) {
+                                setCantidadDevolver('1');
+                              } else if (itemDevuelto && Number(cantidadDevolver) > itemDevuelto.quantity) {
+                                setCantidadDevolver(String(itemDevuelto.quantity));
+                              }
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
@@ -1094,13 +1114,28 @@ export const ModalCambioProducto: React.FC<Props> = ({
                           <div>
                             <label className="text-[10px] font-black uppercase text-emerald-900 block mb-1">
                               Cantidad a entregar:
+                              {productoNuevo && (
+                                <span className="ml-1 text-[9px] font-normal text-emerald-700 lowercase">
+                                  (stock: {productoNuevo.quantity})
+                                </span>
+                              )}
                             </label>
                             <input
                               id="input-cantidad-nueva"
-                              type="number"
-                              min={1}
+                              type="text"
+                              inputMode="numeric"
                               value={cantidadNueva}
-                              onChange={(e) => setCantidadNueva(Math.max(1, Number(e.target.value) || 1))}
+                              onFocus={(e) => e.target.select()}
+                              onClick={(e) => (e.target as HTMLInputElement).select()}
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/[^0-9]/g, '');
+                                setCantidadNueva(raw);
+                              }}
+                              onBlur={() => {
+                                if (!cantidadNueva || Number(cantidadNueva) < 1) {
+                                  setCantidadNueva('1');
+                                }
+                              }}
                               onKeyDown={(e) => {
                                 if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                                   e.preventDefault();

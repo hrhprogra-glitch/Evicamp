@@ -7,6 +7,22 @@
 
 ---
 
+## 30/10/2026 (noche, 50) · Antigravity
+- **Permitir borrar y tipear cualquier número libremente en cantidades de Cambio de Producto:**
+  - El dueño reportó: *"aqui no puedo borrar el 1 y poner el numero que quiera se mantiene en 1 arregla eso"* (con captura del modal de cambio de producto mostrando `CANTIDAD A DEVOLVER: 1` y `CANTIDAD A ENTREGAR: 1`).
+  - **Causa identificada:**
+    1. Los inputs tenían `type="number"` y el evento `onChange` evaluaba `setCantidad(Math.max(1, Number(e.target.value) || 1))`.
+    2. Al intentar borrar el `1` con retroceso (Backspace), el input quedaba momentáneamente vacío `""`. En JavaScript, `Number("") || 1` da `1`, por lo que el estado se restablecía inmediatamente a `1`, impidiendo borrarlo o tipear números de varios dígitos con soltura.
+  - **Solución implementada:**
+    1. **Estado como texto flexible:** `cantidadDevolver` y `cantidadNueva` ahora se almacenan como `string` (`'1'`), permitiendo dejar el campo vacío temporalmente mientras el usuario tipea o borra dígitos.
+    2. **Inputs tipo texto numérico:** Se convirtieron a `type="text" inputMode="numeric"`.
+    3. **Auto-selección al enfocar/clic:** Se añadió `onFocus={(e) => e.target.select()}` y `onClick={(e) => (e.target as HTMLInputElement).select()}`. Al hacer clic o entrar con el teclado a la casilla, el número queda sombreado de inmediato, permitiendo sobreescribirlo directamente sin necesidad de presionar borrar primero.
+    4. **Normalización en onBlur:** Solo cuando el usuario sale del input (`onBlur`), si quedó vacío o con un valor menor a 1, se restablece a `'1'`.
+    5. **Tope inteligente:** En la cantidad a devolver, si se escribe un número mayor a las unidades compradas en el ticket original, se normaliza al máximo comprado en `onBlur` y se visualiza claramente `(máx. comprada: X)` en la etiqueta. En la cantidad a entregar se indica `(stock: Y)`.
+    6. **Cálculos seguros:** Las operaciones matemáticas y guardados usan `cantDevolverNum` y `cantNuevaNum` evaluados con salvaguardas sin alterar el texto en pantalla.
+    7. Se respetó la regla de no saltar campos con Enter (solicitada por el dueño en la entrada 47), manteniendo la navegación por flechas de dirección.
+  - Compilación (`npx tsc -b`, `npm run build`), `graphify update .` y despliegue exitoso a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+
 ## 30/10/2026 (noche, 49) · Antigravity
 - **Actualización directa del Ticket al cambiar producto (eliminación de filas extras de diferencia en Finanzas):**
   - El dueño observó: *"a ver veo que el ticket sigue diciendo el mismo producto osea el ticket tiene el producto evelyn pero cuando cambio el producto con el de prueba sigue manteniendo el de evelyn y me sale este mensaje DIFERENCIA POR CAMBIO (TICKET #623154) [EFECTIVO]... no dijimos que eso ya no ?? que solo cambie el producto del ticket nada mas"*.

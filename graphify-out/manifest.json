@@ -90,9 +90,9 @@
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalDetalleCaja.tsx": {
-    "mtime": 1793403383.254421,
-    "seen": 1793403477.5374415,
-    "ast_hash": "0989600696645f6fb40f4c736c5e9d8e",
+    "mtime": 1793415402.6508377,
+    "seen": 1793415508.2336857,
+    "ast_hash": "6adc2e831422dbb88b8321a0a10e03a8",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalNuevoMovimiento.tsx": {
@@ -114,9 +114,9 @@
     "semantic_hash": ""
   },
   "src/sections/Finanzas/index.tsx": {
-    "mtime": 1793402574.0067432,
-    "seen": 1793402835.0170274,
-    "ast_hash": "fc6d627b76ceae2eb990570abe23dbeb",
+    "mtime": 1793415373.831109,
+    "seen": 1793415508.2336926,
+    "ast_hash": "5bd784c0aeed3ed652e03f9d4457caca",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/types.ts": {
@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793406909.2760162,
-    "seen": 1793412933.1069386,
-    "ast_hash": "ad438fa99e80afa34fba586f69bcb963",
+    "mtime": 1793415530.1102235,
+    "seen": 1793416296.2014306,
+    "ast_hash": "52b7421d644fadb483668033e0283fab",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793406933.4569843,
-    "seen": 1793412933.1069398,
-    "ast_hash": "e3f4036e5f3cc8199df58058ea507e9b",
+    "mtime": 1793415559.8763647,
+    "seen": 1793416296.2014318,
+    "ast_hash": "844488d424f65067b5c45f91f5d58546",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793406954.0582566,
-    "seen": 1793412933.106943,
-    "ast_hash": "8ac938bd34f56e5a00b51fdb8a0c833e",
+    "mtime": 1793415543.2637522,
+    "seen": 1793416296.2014341,
+    "ast_hash": "8e1ec4cd53c28b6131754450362bf201",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2178,9 +2178,9 @@
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalCambioProducto.tsx": {
-    "mtime": 1793412796.6147633,
-    "seen": 1793412933.1067958,
-    "ast_hash": "15fb4a6b2325f8dd283618d222a33c27",
+    "mtime": 1793416217.4679291,
+    "seen": 1793416296.201297,
+    "ast_hash": "2045e1497758cd06bc202a5c1852c583",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalConsultarGarantia.tsx": {

@@ -427,6 +427,16 @@
           3. Se eliminó la creación de movimientos en `cash_movements` para que en Finanzas no salga ninguna fila extra ni texto de "DIFERENCIA POR CAMBIO...". La tabla queda 100% limpia mostrando solo el ticket con el producto y total actualizados.
           4. Se limpiaron los registros previos de prueba en la base de datos de siumax, y el ticket #623154 ahora refleja directamente `PRUEBA SIN INTERNET 834743` por S/ 4.50.
         - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+      42. **Permitir borrar el 1 y escribir cualquier cantidad en Cambio de Producto (30/10 noche):**
+        - El dueño reportó: *"aqui no puedo borrar el 1 y poner el numero que quiera se mantiene en 1 arregla eso"* (adjuntando captura del modal de Cambio de Producto en los campos de cantidad).
+        - Causa: los inputs de cantidad tenían `type="number"` y forzaban `Math.max(1, Number(e.target.value) || 1)` en cada pulsación (`onChange`). Al presionar Retroceso (Backspace) para borrar el `1`, el valor pasaba temporalmente a cadena vacía `""`, la cual se evaluaba como falsy (`|| 1`) e inmediatamente volvía a fijarse en `1`, impidiendo borrar o tipear números mayores libremente.
+        - Solución:
+          1. Se cambió el estado de las cantidades a `string` (`'1'`), permitiendo dejar el campo vacío mientras el usuario tipea o borra.
+          2. Se cambiaron los inputs a `type="text" inputMode="numeric"`.
+          3. Al enfocar o hacer clic (`onFocus` / `onClick`), se auto-selecciona todo el texto (`e.target.select()`) para que el usuario pueda escribir directamente sin necesidad de borrar primero.
+          4. La normalización a un número válido (mínimo 1) se realiza únicamente al perder el foco (`onBlur`).
+          5. En la cantidad a devolver, se indica el límite máximo comprado en el ticket `(máx. comprada: X)` y en la nueva se indica el stock disponible `(stock: Y)`.
+        - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
 
 
 
