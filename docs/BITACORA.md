@@ -7,6 +7,22 @@
 
 ---
 
+## 30/10/2026 (noche, 46) · Antigravity
+- **Soporte de Enter instantáneo y Selector visible en Catálogo de Cambio de Producto:**
+  - El dueño reportó: *"el enter no hace click"* en el modal de cambio de producto al buscar en el catálogo (ej: "EVE").
+  - **Causa identificada:**
+    1. Si el usuario escribía y presionaba `Enter` antes de que venciera el debounce de 250ms, la lista de resultados aún estaba vacía (`catalogoResultados.length === 0`), por lo que `Enter` era ignorado.
+    2. No existía un estado de índice preseleccionado (`indiceSeleccionado`), por lo que ningún producto se mostraba resaltado por defecto al buscar, y el usuario no sabía si estaba seleccionado para Enter.
+    3. Los elementos de la lista eran simples `<div>` que no emitían el evento nativo de `click` en los navegadores al pulsar Enter, requiriendo foco manual obligatorio.
+  - **Solución implementada:**
+    - Se agregó el estado `indiceSeleccionado` (iniciado en `0` por defecto en cada búsqueda).
+    - Al presionar `Enter` en `#input-buscar-nuevo`:
+      - Si ya hay resultados visibles, selecciona inmediatamente el producto resaltado (`catalogoResultados[indiceSeleccionado]`).
+      - Si el usuario o una lectora de código de barras envió `Enter` de inmediato con texto en el input antes de que termine el debounce, se lanza una consulta directa a la base de datos y se selecciona el primer producto coincidente sin esperar el temporizador.
+    - Cada elemento de la lista se convirtió en un botón real (`<button type="button">`) con el estilo de selector clásico de Evicamp: fondo negro, texto blanco, anillo contrastado, numeración y etiqueta visual `[ENTER ⏎]` para máxima claridad.
+    - `Flecha Abajo` y `Flecha Arriba` navegan suavemente por la lista manteniendo el auto-scroll visible (`scrollIntoView`).
+  - Compilación (`npx tsc -b`, `npm run build`), `graphify update .` y despliegue exitoso a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+
 ## 30/10/2026 (noche, 45) · Antigravity
 - **Implementación de Selector y Navegación 100% Teclado en ModalCambioProducto:**
   - El dueño reportó: *"el selector no funciona en esta pestaña"* (adjuntando captura buscando en el catálogo de productos nuevos).

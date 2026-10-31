@@ -398,6 +398,14 @@
           2. En los resultados del catálogo: `Flecha Arriba/Abajo` recorre las opciones con resaltado negro/blanco (`focus:bg-[var(--color-ink)] focus:text-white`), `Enter` o `Espacio` selecciona el producto y enfoca la cantidad con texto seleccionado.
           3. Navegación con flechas en todos los campos (producto devuelto, serie, catálogo, cantidad, método de diferencia, motivo y confirmación).
         - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
+      38. **Enter instantáneo y selector visual en Catálogo de Cambio de Producto (30/10 noche):**
+        - El dueño reportó: *"el enter no hace click"*.
+        - Se detectó que si el usuario presionaba Enter antes de cumplirse el debounce de 250ms o mientras estaba en el input, la lista no tenía foco y no se ejecutaba la selección.
+        - Se mejoró el flujo:
+          1. Estado `indiceSeleccionado` (comienza en `0` en cada búsqueda).
+          2. Al presionar `Enter` en el input, selecciona inmediatamente el producto resaltado. Si se escribió/escaneó antes del debounce, lanza una búsqueda instantánea y selecciona el primer producto coincidente.
+          3. Cada opción es un `<button type="button">` con apariencia destacada de selector Evicamp (fondo negro, texto blanco, anillo amarillo, numeración e indicador `[ENTER ⏎]`).
+        - Compilado y desplegado a `siumax.duckdns.org`. Evicamp y GitHub intactos.
 
 
 

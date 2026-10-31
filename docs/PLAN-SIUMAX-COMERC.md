@@ -4,7 +4,7 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 30/10/2026 (noche, 45), Antigravity: En Fase 6 se implementó el selector de teclado completo en el modal de cambio de producto (navegación por catálogo con flechas y Enter, resaltado visual de selector e interconexión fluida 2D entre todos los campos). Desplegado en pruebas (`siumax.duckdns.org`).
+- **Última actualización:** 30/10/2026 (noche, 46), Antigravity: En Fase 6 se perfeccionó la selección con Enter instantáneo y el selector visual del catálogo de cambio de producto (selecciona con Enter tanto desde el buscador como recorriendo con flechas o clic directo). Desplegado en pruebas (`siumax.duckdns.org`).
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 4 y 3 en producción en Evicamp (commits 583ad4e, c8c6be3, bd3780f y 994bdca).
 - **Fase en pruebas en siumax:** **Fase 6 — Cambios de producto integrados en Finanzas, garantías y control de números de serie (IMEI)**.
 - **Avisos para la clienta de Evicamp:**

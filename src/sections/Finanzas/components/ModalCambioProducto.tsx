@@ -54,6 +54,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
   // Producto nuevo que se lleva
   const [busquedaCatalogo, setBusquedaCatalogo] = useState<string>('');
   const [catalogoResultados, setCatalogoResultados] = useState<Product[]>([]);
+  const [indiceSeleccionado, setIndiceSeleccionado] = useState<number>(0);
   const [buscandoCatalogo, setBuscandoCatalogo] = useState<boolean>(false);
   const [productoNuevo, setProductoNuevo] = useState<Product | null>(null);
   const [cantidadNueva, setCantidadNueva] = useState<number>(1);
@@ -79,6 +80,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
       setSerieNueva('');
       setCantidadDevolver(1);
       setCantidadNueva(1);
+      setIndiceSeleccionado(0);
 
       if (initialSaleId) {
         void cargarTicket(String(initialSaleId));
@@ -131,6 +133,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
     setProductoNuevo(prod);
     setBusquedaCatalogo('');
     setCatalogoResultados([]);
+    setIndiceSeleccionado(0);
     setTimeout(() => {
       const cantInput = document.getElementById('input-cantidad-nueva') as HTMLInputElement | null;
       cantInput?.focus();
@@ -142,6 +145,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
   useEffect(() => {
     if (!busquedaCatalogo.trim()) {
       setCatalogoResultados([]);
+      setIndiceSeleccionado(0);
       return;
     }
 
@@ -171,6 +175,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
             controlaSeries: Boolean(p.controla_series),
             mesesGarantia: Number(p.meses_garantia || 0)
           })));
+          setIndiceSeleccionado(0);
         }
       } catch (err) {
         console.error('Error buscando catálogo:', err);
@@ -181,6 +186,14 @@ export const ModalCambioProducto: React.FC<Props> = ({
 
     return () => clearTimeout(timer);
   }, [busquedaCatalogo]);
+
+  // Auto-scroll del selector de catálogo
+  useEffect(() => {
+    if (catalogoResultados.length > 0) {
+      const el = document.getElementById(`catalogo-item-${indiceSeleccionado}`);
+      el?.scrollIntoView({ block: 'nearest' });
+    }
+  }, [indiceSeleccionado, catalogoResultados.length]);
 
   const cargarTicket = async (idInput: string) => {
     const rawDigits = idInput.replace(/[^0-9]/g, '');
@@ -734,31 +747,84 @@ export const ModalCambioProducto: React.FC<Props> = ({
                         type="text"
                         placeholder="Buscar por nombre, código de barras o SKU..."
                         value={busquedaCatalogo}
-                        onChange={(e) => setBusquedaCatalogo(e.target.value)}
-                        onKeyDown={(e) => {
+                        onChange={(e) => {
+                          setBusquedaCatalogo(e.target.value);
+                          setIndiceSeleccionado(0);
+                        }}
+                        onKeyDown={async (e) => {
                           if (e.key === 'ArrowDown') {
                             e.preventDefault();
-                            const firstItem = document.querySelector('[data-cambio-prod-item="true"]') as HTMLElement;
-                            if (firstItem) {
-                              firstItem.focus();
+                            if (catalogoResultados.length > 0) {
+                              setIndiceSeleccionado((prev) => {
+                                const next = Math.min(catalogoResultados.length - 1, prev + 1);
+                                document.getElementById(`catalogo-item-${next}`)?.scrollIntoView({ block: 'nearest' });
+                                return next;
+                              });
                             } else if (productoNuevo) {
                               document.getElementById('btn-cambiar-nuevo')?.focus();
                             } else {
                               document.getElementById('btn-cancelar-cambio')?.focus();
                             }
-                          } else if (e.key === 'Enter') {
-                            if (catalogoResultados.length > 0) {
-                              e.preventDefault();
-                              seleccionarProducto(catalogoResultados[0]);
-                            }
                           } else if (e.key === 'ArrowUp') {
                             e.preventDefault();
-                            if (document.getElementById('input-serie-devuelta')) {
+                            if (catalogoResultados.length > 0 && indiceSeleccionado > 0) {
+                              setIndiceSeleccionado((prev) => {
+                                const next = Math.max(0, prev - 1);
+                                document.getElementById(`catalogo-item-${next}`)?.scrollIntoView({ block: 'nearest' });
+                                return next;
+                              });
+                            } else if (document.getElementById('input-serie-devuelta')) {
                               document.getElementById('input-serie-devuelta')?.focus();
                             } else if (document.getElementById('input-cantidad-devolver')) {
                               document.getElementById('input-cantidad-devolver')?.focus();
                             } else {
                               document.getElementById('select-producto-devuelto')?.focus();
+                            }
+                          } else if (e.key === 'Enter') {
+                            e.preventDefault();
+                            // 1. Si ya hay resultados visibles, seleccionar el producto seleccionado actualmente
+                            if (catalogoResultados.length > 0) {
+                              const prod = catalogoResultados[indiceSeleccionado] || catalogoResultados[0];
+                              if (prod) {
+                                seleccionarProducto(prod);
+                              }
+                              return;
+                            }
+
+                            // 2. Si el usuario escribió o escaneó un código y presionó Enter de inmediato (antes del debounce)
+                            if (busquedaCatalogo.trim()) {
+                              setBuscandoCatalogo(true);
+                              try {
+                                const q = busquedaCatalogo.trim();
+                                const { data, error } = await supabase
+                                  .from('products')
+                                  .select('*')
+                                  .eq('is_active', 1)
+                                  .or(`name.ilike.%${q}%,barcode.ilike.%${q}%,code.ilike.%${q}%`)
+                                  .limit(8);
+
+                                if (!error && data && data.length > 0) {
+                                  const mapeado: Product = {
+                                    id: data[0].id,
+                                    name: data[0].name,
+                                    price: Number(data[0].price || 0),
+                                    cost: Number(data[0].cost_price || 0),
+                                    quantity: Number(data[0].quantity || 0),
+                                    minStock: Number(data[0].min_stock || 0),
+                                    code: data[0].code,
+                                    barcode: data[0].barcode,
+                                    category: data[0].category,
+                                    unit: data[0].unit,
+                                    controlaSeries: Boolean(data[0].controla_series),
+                                    mesesGarantia: Number(data[0].meses_garantia || 0)
+                                  };
+                                  seleccionarProducto(mapeado);
+                                }
+                              } catch (err) {
+                                console.error('Error buscando catálogo al presionar Enter:', err);
+                              } finally {
+                                setBuscandoCatalogo(false);
+                              }
                             }
                           } else if (e.key === 'Escape') {
                             if (catalogoResultados.length > 0) {
@@ -779,56 +845,82 @@ export const ModalCambioProducto: React.FC<Props> = ({
                         id="lista-resultados-catalogo"
                         role="listbox"
                         aria-label="Resultados de búsqueda"
-                        className="border-2 border-[var(--color-ink)] max-h-48 overflow-y-auto bg-[var(--color-surface)] divide-y divide-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-ink)] custom-scrollbar"
+                        className="border-2 border-[var(--color-ink)] max-h-56 overflow-y-auto bg-white divide-y-2 divide-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-ink)] custom-scrollbar"
                       >
-                        {catalogoResultados.map((prod) => (
-                          <div
-                            key={prod.id}
-                            data-cambio-prod-item="true"
-                            role="option"
-                            tabIndex={0}
-                            onClick={() => seleccionarProducto(prod)}
-                            onKeyDown={(e) => {
-                              const items = Array.from(document.querySelectorAll('[data-cambio-prod-item="true"]')) as HTMLElement[];
-                              const currentIdx = items.indexOf(e.currentTarget);
-
-                              if (e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                if (currentIdx !== -1 && currentIdx < items.length - 1) {
-                                  items[currentIdx + 1]?.focus();
-                                }
-                              } else if (e.key === 'ArrowUp') {
-                                e.preventDefault();
-                                if (currentIdx > 0) {
-                                  items[currentIdx - 1]?.focus();
-                                } else {
+                        {catalogoResultados.map((prod, idx) => {
+                          const isSelected = idx === indiceSeleccionado;
+                          return (
+                            <button
+                              key={prod.id}
+                              id={`catalogo-item-${idx}`}
+                              type="button"
+                              data-cambio-prod-item="true"
+                              role="option"
+                              aria-selected={isSelected}
+                              tabIndex={isSelected ? 0 : -1}
+                              onClick={() => seleccionarProducto(prod)}
+                              onMouseEnter={() => setIndiceSeleccionado(idx)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  if (idx < catalogoResultados.length - 1) {
+                                    setIndiceSeleccionado(idx + 1);
+                                    document.getElementById(`catalogo-item-${idx + 1}`)?.focus();
+                                  }
+                                } else if (e.key === 'ArrowUp') {
+                                  e.preventDefault();
+                                  if (idx > 0) {
+                                    setIndiceSeleccionado(idx - 1);
+                                    document.getElementById(`catalogo-item-${idx - 1}`)?.focus();
+                                  } else {
+                                    document.getElementById('input-buscar-nuevo')?.focus();
+                                  }
+                                } else if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  seleccionarProducto(prod);
+                                } else if (e.key === 'Escape') {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setCatalogoResultados([]);
                                   document.getElementById('input-buscar-nuevo')?.focus();
                                 }
-                              } else if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                seleccionarProducto(prod);
-                              } else if (e.key === 'Escape') {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setCatalogoResultados([]);
-                                document.getElementById('input-buscar-nuevo')?.focus();
-                              }
-                            }}
-                            className="w-full text-left p-2.5 hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white text-xs flex justify-between items-center transition-colors cursor-pointer group"
-                          >
-                            <div>
-                              <p className="font-black uppercase text-[var(--color-ink)] group-hover:text-white group-focus:text-white">
-                                {prod.name}
-                              </p>
-                              <span className="text-[10px] text-[var(--color-muted)] font-mono group-hover:text-gray-200 group-focus:text-gray-200">
-                                SKU: {prod.code || '---'} · Stock: {prod.quantity} {prod.controlaSeries ? '· 🔢 Serie/IMEI' : ''}
-                              </span>
-                            </div>
-                            <span className="font-black font-mono text-xs text-emerald-700 group-hover:text-emerald-300 group-focus:text-emerald-300">
-                              S/ {prod.price.toFixed(2)}
-                            </span>
-                          </div>
-                        ))}
+                              }}
+                              className={`w-full text-left p-3 text-xs flex justify-between items-center transition-all cursor-pointer border-b-2 border-[var(--color-border)] last:border-b-0 ${
+                                isSelected
+                                  ? 'bg-[var(--color-ink)] text-white shadow-inner ring-2 ring-inset ring-[var(--color-accent)] font-black'
+                                  : 'bg-white hover:bg-slate-100 text-[var(--color-ink)]'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <span className={`text-[10px] font-black px-1.5 py-0.5 border ${
+                                  isSelected 
+                                    ? 'bg-[var(--color-accent)] text-black border-[var(--color-accent)]' 
+                                    : 'bg-slate-100 text-slate-700 border-slate-300'
+                                }`}>
+                                  {idx + 1}
+                                </span>
+                                <div className="truncate">
+                                  <p className={`font-black uppercase truncate text-xs ${isSelected ? 'text-white' : 'text-[var(--color-ink)]'}`}>
+                                    {prod.name}
+                                  </p>
+                                  <span className={`text-[10px] font-mono block ${isSelected ? 'text-slate-300' : 'text-[var(--color-muted)]'}`}>
+                                    SKU: {prod.code || '---'} · Stock: {prod.quantity} {prod.controlaSeries ? '· 🔢 Serie/IMEI' : ''}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className={`font-black font-mono text-xs ${isSelected ? 'text-[var(--color-accent)] font-black' : 'text-emerald-700'}`}>
+                                  S/ {prod.price.toFixed(2)}
+                                </span>
+                                {isSelected && (
+                                  <span className="text-[10px] font-black uppercase bg-[var(--color-accent)] text-black px-2 py-0.5 border border-black shadow-[1px_1px_0_0_black] flex items-center gap-1">
+                                    [ENTER ⏎]
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
 
