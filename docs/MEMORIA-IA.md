@@ -241,3 +241,14 @@
 - **Inicialización de modales con lista de opciones:** Cuando un modal de acción general (como `[ + Producir ]`) se abre desde una cabecera global sin un elemento preseleccionado, **nunca** debe autoseleccionar el primer registro del array por defecto (`array[0]`). Debe iniciar con estado vacío `""`, mostrar la opción `-- SELECCIONA UN PRODUCTO --` y una tarjeta informativa con instrucciones claras. La preselección automática solo debe ocurrir cuando el usuario hace clic en el botón específico de una fila (`productoInicial`).
 - **Limpieza rigurosa de datos en pruebas automatizadas:** Al ejecutar tests con Puppeteer o scripts SQL que inserten datos de prueba con nombres aleatorios o prefijos (ej. `P8`), todo el flujo debe envolverse en un bloque `try ... finally` que garantice la eliminación de los registros (productos, recetas, lotes) en la base de datos de pruebas `siumax`, evitando que queden elementos residuales visibles cuando el dueño entre a probar manualmente.
 
+## 14. Diseño de Modales Complejos: Ventana Principal Fija + Panel Lateral Adosado
+- **Separación de datos básicos y datos avanzados:** Para evitar abrumar al usuario con decenas de campos en una sola pantalla, la ventana principal del modal debe contener únicamente los datos esenciales e inmediatos (Nombre, Categoría, SKU, Barras, Foto, PVP en Caja, Mayorista opcional, Stock Mínimo).
+- **Cómo mantener la ventana central 100% inmóvil al abrir un panel lateral:**
+  - Si se usa `flex` y se inserta un panel hermano dentro del flujo flex normal, el contenedor recalcula el centrado y la ventana principal "salta" hacia la izquierda.
+  - Para evitar cualquier movimiento:
+    1. El modal central se envuelve en un contenedor con `relative` y tamaño fijo (`max-w-2xl`).
+    2. La pestaña o flechita vertical se adosa al borde exterior derecho con `absolute -right-10 top-16` (o botón en cabecera).
+    3. El panel lateral de opciones avanzadas se posiciona adosado a la derecha mediante `fixed xl:absolute xl:left-[calc(100%+12px)] top-10 xl:top-0 bottom-10 xl:bottom-0 max-w-[490px]`.
+    4. De esta manera, el modal central conserva su posición exacta a nivel de pixel (comprobado con `getBoundingClientRect` en Puppeteer: `x, y, width` idénticos antes y después de abrir el panel).
+
+

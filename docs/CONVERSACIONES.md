@@ -534,3 +534,12 @@
         - Se ejecutó el vaciado controlado en `siumax` (`ai-scripts/pruebas/limpiar-siumax-total.cjs`), reseteando secuencias a 1.
         - Evicamp y GitHub main quedaron 100% intactos (Regla 4).
         - Verificado por navegador: inventario y tablas listas en blanco para pruebas generales.
+      54. **Simplificación del Modal de Creación de Productos con Flecha Lateral Fija (02/11 tarde):**
+        - El dueño observó al iniciar la creación de productos: *"a ver me di cuenta de algo es muy complejo y confundo lo que se llena en cada producto los primeros pasos son faciles pero el resto confunde tiene tantas cosas mi pregunta es se puede ser mas intuitivo y facil de ingresar los producto porque con funde en lotes se ingresa lo que compraste y lo que te costo no? y productos ingresas el precio general eso esta bien creo pero ahi no hay algo que diga eso dice Precio de Venta Sugerido lo que haremos es colocar un flechita arriba de esa ventana de producto para separar lo de llenar los datos importante a los datos que se usan pero para diversas cosas... quiero que la flechita no esta abajo si no al costado al lado derecho pero ojo que la posición de la ventana principal se mantenga"*.
+        - Se rediseñó `ModalProducto.tsx`:
+          1. El campo de precio se aclaró a "PRECIO DE VENTA AL PÚBLICO (PVP)" con distintivo "PRECIO EN CAJA" y placeholder "0.00 (Precio de venta en Caja)".
+          2. La ventana principal se mantiene fija y centrada en el medio de la pantalla (cero movimiento, cero saltos).
+          3. En el borde lateral derecho exterior se colocó una pestaña vertical fija `[ ▶ MÁS OPCIONES ]` (también accesible desde el header y un botón inferior).
+          4. Al hacer clic, se abre adosado a la derecha un panel lateral (`panel-opciones-avanzadas-derecho`) que contiene todas las configuraciones avanzadas (Ubicación, Garantías, Series, Escalas por cantidad, Presentaciones/Empaques, Variantes de ropa/calzado y Recetas/Combos), sin mover la ventana central.
+        - Se verificó con Puppeteer en Edge que la posición del modal central `(x: 384, y: 111, width: 672)` es 100% idéntica antes y después de abrir el panel lateral.
+        - Desplegado en `https://siumax.duckdns.org`. Evicamp y GitHub main intactos (Regla 4).

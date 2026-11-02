@@ -7,6 +7,38 @@
 
 ---
 
+## 02/11/2026 (tarde, 62) · Antigravity
+- **Simplificación y Organización de Creación de Producto (Ventana Fija + Panel Lateral Derecho con Flecha):**
+  - **Petición del dueño:** *"a ver me di cuenta de algo es muy complejo y confundo lo que se llena en cada producto los primeros pasos son faciles pero el resto confunde tiene tantas cosas mi pregunta es se puede ser mas intuitivo y facil de ingresar los producto porque con funde en lotes se ingresa lo que compraste y lo que te costo no? y productos ingresas el precio general eso esta bien creo pero ahi no hay algo que diga eso dice Precio de Venta Sugerido lo que haremos es colocar un flechita arriba de esa ventana de producto para separar lo de llenar los datos importante a los datos que se usan pero para diversas cosas... quiero que la flechita no esta abajo si no al costado al lado derecho pero ojo que la posición de la ventana principal se mantenga"*.
+  - **Cambios realizados en `ModalProducto.tsx`:**
+    1. **Claridad en Precios:**
+       - Etiqueta cambiada a `"PRECIO DE VENTA AL PÚBLICO (PVP)"` con badge visual `"PRECIO EN CAJA"`.
+       - Placeholder explicativo: `"0.00 (Precio de venta en Caja)"`.
+       - Mantiene el campo de Precio Mayorista opcional debidamente identificado.
+    2. **Ventana Central Fija e Inmóvil:**
+       - La ventana principal mantiene su posición fija y centrada en pantalla (tamaño `max-w-2xl` con `relative`), sin desplazarse ni un solo pixel cuando se abren las opciones avanzadas.
+       - Contiene exclusivamente lo esencial: Nombre, Categoría, SKU, Código de barras, Imagen, PVP en Caja, Mayorista opcional, Stock Mínimo y Se vende por.
+    3. **Pestaña / Flechita Lateral Derecha:**
+       - Pestaña vertical acoplada al borde derecho exterior de la ventana (`#btn-toggle-avanzado-lateral`): `▶ MÁS OPCIONES` (o `◀ OCULTAR`).
+       - Botón adicional en la cabecera del modal (`#btn-header-toggle-avanzado`) y banner de acceso directo al final de los datos básicos.
+    4. **Panel Lateral Derecho Acoplado (`#panel-opciones-avanzadas-derecho`):**
+       - Se abre adosado a la derecha de la ventana central fija (`fixed xl:absolute xl:left-[calc(100%+12px)] top-0 bottom-0 max-w-[490px]`).
+       - Reúne todas las opciones avanzadas y especializadas:
+         - Fase 3: Marca, Modelo, Medida, Laboratorio y Ubicación en tienda.
+         - Fase 6: Meses de Garantía y Control de Series / IMEI al vender.
+         - Fase 1.3: Precios por cantidad (Escalas de descuento).
+         - Fase 1.2: Presentaciones (Caja x12, Six-pack, etc.).
+         - Fase 7: Tallas y Colores (Variantes con stock propio).
+         - Fase 8: Tipo de Producto y Composición (Combos y Recetas).
+       - Botón inferior `[ ✓ Listo / Volver a Principal ]` y tecla `Esc` para replegar el panel.
+  - **Verificación y Despliegue:**
+    - `npm run build`: 0 errores de TypeScript y Vite.
+    - Desplegado a `https://siumax.duckdns.org` (`node ai-scripts/deploy.cjs siumax`). Evicamp y GitHub intactos (Regla 4).
+    - Prueba automatizada de UI en Edge (`ai-scripts/pruebas/prueba-modal-lateral.mjs`): 7/7 checks aprobados ✅ (validado que el modal central mide `x: 384, y: 111, width: 672` tanto antes como después de abrir el panel derecho: cero desplazamiento).
+  - **Siguiente paso:** Presentar el resultado al dueño y asistirlo en la creación de sus primeros productos en limpio.
+
+---
+
 ## 02/11/2026 (mañana, 61) · Antigravity
 - **Limpieza Total y Puesta a Punto de la Base de Pruebas `siumax` para Pruebas Generales del Dueño:**
   - **Petición del dueño:** *"perfecto ahora hare pruebas generales quiero que borres todos los prodcutos y el historial de finanzas y de cliente tambien que borres todo para yo probar cada cosa antes de avanzar hare pruebas generales"*.
