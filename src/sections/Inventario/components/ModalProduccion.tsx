@@ -185,7 +185,7 @@ export const ModalProduccion: React.FC<Props> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
       <div 
         id="modal-produccion-receta"
-        className="bg-white dark:bg-slate-900 border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-2xl max-h-[90vh] flex flex-col rounded-none overflow-hidden"
+        className="bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-2xl max-h-[90vh] flex flex-col rounded-none overflow-hidden"
       >
         {/* CABECERA */}
         <div className="p-4 bg-emerald-600 text-white flex justify-between items-center border-b-2 border-[var(--color-ink)]">
@@ -210,9 +210,9 @@ export const ModalProduccion: React.FC<Props> = ({
         </div>
 
         {/* CONTENIDO */}
-        <div className="p-5 overflow-y-auto custom-scrollbar space-y-4 flex-1">
+        <div className="p-5 overflow-y-auto custom-scrollbar space-y-4 flex-1 bg-[var(--color-surface)]">
           {productosReceta.length === 0 ? (
-            <div className="p-6 text-center space-y-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200">
+            <div className="p-6 text-center space-y-3 bg-amber-50 border-2 border-amber-300">
               <AlertTriangle size={36} className="mx-auto text-amber-600" />
               <h4 className="text-sm font-black text-[var(--color-ink)] uppercase">
                 No hay productos configurados con Receta
@@ -249,7 +249,7 @@ export const ModalProduccion: React.FC<Props> = ({
                       }
                     }
                   }}
-                  className="w-full p-2.5 text-xs font-black uppercase border-2 border-[#CBD5E1] bg-white dark:bg-slate-800 outline-none focus:border-emerald-600"
+                  className="w-full p-2.5 text-xs font-black uppercase border-2 border-[#CBD5E1] bg-[var(--color-surface)] text-[var(--color-ink)] outline-none focus:border-emerald-600"
                 >
                   <option value="">-- SELECCIONA UN PRODUCTO A FABRICAR --</option>
                   {productosReceta.map(p => (
@@ -261,7 +261,7 @@ export const ModalProduccion: React.FC<Props> = ({
               </div>
 
               {!selectedProductId ? (
-                <div className="p-8 text-center border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 space-y-2">
+                <div className="p-8 text-center border-2 border-dashed border-slate-300 bg-slate-50 space-y-2">
                   <ChefHat size={36} className="mx-auto text-emerald-600 opacity-60" />
                   <p className="text-xs font-black uppercase text-[var(--color-ink)]">
                     Selecciona un producto en la lista de arriba
@@ -297,7 +297,7 @@ export const ModalProduccion: React.FC<Props> = ({
                         document.getElementById('input-costo-adicional-produccion')?.focus();
                       }
                     }}
-                    className={`w-full p-2.5 text-xs font-black text-right border-2 bg-white dark:bg-slate-800 outline-none ${
+                    className={`w-full p-2.5 text-xs font-black text-right border-2 bg-[var(--color-surface)] text-[var(--color-ink)] outline-none ${
                       insumosInsuficientes.length > 0 ? 'border-red-500 text-red-600' : 'border-[#CBD5E1] focus:border-emerald-600'
                     }`}
                   />
@@ -326,13 +326,13 @@ export const ModalProduccion: React.FC<Props> = ({
                         document.getElementById('btn-confirmar-produccion')?.focus();
                       }
                     }}
-                    className="w-full p-2.5 text-xs font-black text-right border-2 border-[#CBD5E1] bg-white dark:bg-slate-800 outline-none focus:border-emerald-600"
+                    className="w-full p-2.5 text-xs font-black text-right border-2 border-[#CBD5E1] bg-[var(--color-surface)] text-[var(--color-ink)] outline-none focus:border-emerald-600"
                   />
                 </div>
 
-                <div className="p-2.5 border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex flex-col justify-center">
+                <div className="p-2.5 border-2 border-slate-200 bg-slate-50 flex flex-col justify-center">
                   <span className="text-[9px] font-black text-[#64748B] uppercase">Máximo con insumos actuales</span>
-                  <span className={`text-base font-black ${maximoPosible > 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-600'}`}>
+                  <span className={`text-base font-black ${maximoPosible > 0 ? 'text-emerald-700' : 'text-red-600'}`}>
                     {maximoPosible} {selectedProduct?.unit || 'UND'}
                   </span>
                 </div>
@@ -353,32 +353,32 @@ export const ModalProduccion: React.FC<Props> = ({
                     ⚠️ Este producto no tiene insumos asignados en su receta. Edita el producto en Inventario para agregarle insumos.
                   </p>
                 ) : (
-                  <div className="border-2 border-[#CBD5E1] dark:border-slate-800 overflow-hidden">
-                    <div className="grid grid-cols-12 gap-1 bg-slate-200 dark:bg-slate-800 p-2 text-[9px] font-black uppercase text-[#64748B]">
+                  <div className="border-2 border-[#CBD5E1] overflow-hidden">
+                    <div className="grid grid-cols-12 gap-1 bg-slate-100 p-2 text-[9px] font-black uppercase text-[#64748B] border-b border-[#CBD5E1]">
                       <span className="col-span-5">Insumo</span>
                       <span className="col-span-2 text-right">Por Unidad</span>
                       <span className="col-span-2 text-right">Requerido</span>
                       <span className="col-span-3 text-right">Disponible</span>
                     </div>
 
-                    <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-48 overflow-y-auto">
+                    <div className="divide-y divide-slate-100 max-h-48 overflow-y-auto custom-scrollbar">
                       {recetasInsumos.map((item, idx) => {
                         const cantReq = (Number(cantidadProducir) || 0) * Number(item.quantity || 1);
                         const disponible = Number(item.component_stock || 0);
                         const alcanza = disponible >= cantReq;
 
                         return (
-                          <div key={idx} className={`grid grid-cols-12 gap-1 p-2 text-xs items-center ${alcanza ? 'hover:bg-slate-50' : 'bg-red-50 dark:bg-red-950/30'}`}>
+                          <div key={idx} className={`grid grid-cols-12 gap-1 p-2 text-xs items-center ${alcanza ? 'hover:bg-slate-50 bg-[var(--color-surface)]' : 'bg-red-50'}`}>
                             <span className="col-span-5 font-bold text-[var(--color-ink)] uppercase truncate">
                               {item.component_name}
                             </span>
                             <span className="col-span-2 text-right text-slate-600 font-mono text-[11px]">
                               {item.quantity} {item.component_unit}
                             </span>
-                            <span className={`col-span-2 text-right font-black font-mono text-[11px] ${alcanza ? 'text-slate-800 dark:text-slate-200' : 'text-red-600 font-black'}`}>
+                            <span className={`col-span-2 text-right font-black font-mono text-[11px] ${alcanza ? 'text-slate-800' : 'text-red-600 font-black'}`}>
                               {cantReq} {item.component_unit}
                             </span>
-                            <span className={`col-span-3 text-right font-black font-mono text-[11px] ${alcanza ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-600 font-black'}`}>
+                            <span className={`col-span-3 text-right font-black font-mono text-[11px] ${alcanza ? 'text-emerald-700' : 'text-red-600 font-black'}`}>
                               {disponible} {item.component_unit} {!alcanza && '⚠️'}
                             </span>
                           </div>
@@ -390,22 +390,22 @@ export const ModalProduccion: React.FC<Props> = ({
               </div>
 
               {/* RESUMEN ECONÓMICO Y LOTE RESULTANTE */}
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-300 dark:border-emerald-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
+              <div className="p-3 bg-emerald-50 border-2 border-emerald-300 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
                 <div>
-                  <span className="text-[10px] font-black text-emerald-900 dark:text-emerald-200 uppercase">
+                  <span className="text-[10px] font-black text-emerald-900 uppercase">
                     Costo unitario calculado:
                   </span>
-                  <div className="text-base font-black text-emerald-800 dark:text-emerald-300">
+                  <div className="text-base font-black text-emerald-800">
                     S/ {calculoCosto.costoUnitario.toFixed(2)}{' '}
                     <span className="text-[10px] font-normal text-emerald-700">x {selectedProduct?.unit || 'UND'}</span>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-[10px] font-black text-emerald-900 dark:text-emerald-200 uppercase">
+                  <span className="text-[10px] font-black text-emerald-900 uppercase">
                     Inversión total del lote:
                   </span>
-                  <div className="text-sm font-black text-emerald-800 dark:text-emerald-300">
+                  <div className="text-sm font-black text-emerald-800">
                     S/ {calculoCosto.totalGeneral.toFixed(2)}
                   </div>
                 </div>
@@ -417,11 +417,11 @@ export const ModalProduccion: React.FC<Props> = ({
     </div>
 
       {/* PIE Y BOTONES */}
-      <div className="p-4 bg-slate-100 dark:bg-slate-800 border-t-2 border-[var(--color-ink)] flex justify-between items-center">
+      <div className="p-4 bg-slate-100 border-t-2 border-[var(--color-ink)] flex justify-between items-center">
         <button
           type="button"
           onClick={onClose}
-          className="px-4 py-2 text-xs font-bold uppercase text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+          className="px-4 py-2 text-xs font-bold uppercase text-slate-700 hover:text-slate-900 hover:bg-slate-200 transition-colors cursor-pointer"
         >
           Cancelar (Esc)
         </button>

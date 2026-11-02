@@ -110,7 +110,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       if (!ir(`var-${col}-${fila - 1}`)) {
-        ir('input-tallas-generator') || ir('btn-preset-ropa') || ir('check-tiene-variantes');
+        ir('check-tiene-variantes');
       }
     } else if (e.key === 'ArrowRight' && c < COLS_VAR.length - 1) {
       e.preventDefault();
@@ -152,8 +152,6 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   }
   const [tieneVariantes, setTieneVariantes] = useState(false);
   const [variantesLista, setVariantesLista] = useState<FilaVarianteForm[]>([]);
-  const [tallasInput, setTallasInput] = useState('');
-  const [coloresInput, setColoresInput] = useState('');
 
   // Fase 8: Recetas y Combos
   const [tipoCompuesto, setTipoCompuesto] = useState<'ESTANDAR' | 'COMBO' | 'RECETA'>('ESTANDAR');
@@ -217,91 +215,6 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     ]);
   };
 
-  const aplicarPresetTallas = (tallas: string[]) => {
-    // Si la lista solo tiene 1 variante vacía inicial, la reemplazamos con las del preset
-    const listaLimpia = (variantesLista.length === 1 && !variantesLista[0].talla && !variantesLista[0].color)
-      ? []
-      : variantesLista;
-    const existentes = new Set(listaLimpia.map(v => v.talla.trim().toUpperCase()));
-    const nuevas: FilaVarianteForm[] = [];
-    tallas.forEach(t => {
-      if (!existentes.has(t.toUpperCase())) {
-        nuevas.push({
-          nombre_variante: `TALLA ${t}`,
-          talla: t,
-          color: '',
-          barcode: '',
-          code: '',
-          price: '',
-          precioMayorista: '',
-          cost_price: '',
-          quantity: '0',
-          min_stock: '2',
-        });
-      }
-    });
-    setVariantesLista([...listaLimpia, ...nuevas]);
-  };
-
-  const generarCombinaciones = () => {
-    const tArr = tallasInput.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
-    const cArr = coloresInput.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
-    if (!tArr.length && !cArr.length) return;
-
-    const nuevas: FilaVarianteForm[] = [];
-    if (tArr.length && cArr.length) {
-      for (const t of tArr) {
-        for (const c of cArr) {
-          nuevas.push({
-            nombre_variante: `TALLA ${t} / ${c}`,
-            talla: t,
-            color: c,
-            barcode: '',
-            code: '',
-            price: '',
-            precioMayorista: '',
-            cost_price: '',
-            quantity: '0',
-            min_stock: '2',
-          });
-        }
-      }
-    } else if (tArr.length) {
-      for (const t of tArr) {
-        nuevas.push({
-          nombre_variante: `TALLA ${t}`,
-          talla: t,
-          color: '',
-          barcode: '',
-          code: '',
-          price: '',
-          precioMayorista: '',
-          cost_price: '',
-          quantity: '0',
-          min_stock: '2',
-        });
-      }
-    } else if (cArr.length) {
-      for (const c of cArr) {
-        nuevas.push({
-          nombre_variante: `COLOR ${c}`,
-          talla: '',
-          color: c,
-          barcode: '',
-          code: '',
-          price: '',
-          precioMayorista: '',
-          cost_price: '',
-          quantity: '0',
-          min_stock: '2',
-        });
-      }
-    }
-
-    setVariantesLista(prev => [...prev, ...nuevas]);
-    setTallasInput('');
-    setColoresInput('');
-  };
 
   const eliminarVariante = (index: number) => {
     setVariantesLista(prev => prev.filter((_, i) => i !== index));
@@ -568,8 +481,6 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         setPresentacionesForm(filasPres());
         setTieneVariantes(false);
         setVariantesLista([]);
-        setTallasInput('');
-        setColoresInput('');
         setTipoCompuesto('ESTANDAR');
         setCostoAdicionalProd('');
         setRecetaItems([]);
@@ -656,8 +567,6 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     setPresentacionesForm(filasPres());
     setTieneVariantes(false);
     setVariantesLista([]);
-    setTallasInput('');
-    setColoresInput('');
     setImageQuery('');
     setImageResults([]);
     setShowImageResults(false);
@@ -735,6 +644,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           'input-precio-mayorista-producto',
           'input-stock-minimo-producto',
           'select-unidad-peso-producto',
+          'btn-toggle-opciones-avanzadas',
           'input-marca-producto',
           'input-modelo-producto',
           'input-medida-producto',
@@ -1243,7 +1153,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           if (e.key === 'ArrowDown' || e.key === 'Enter') {
             e.preventDefault();
             const next = document.getElementById('select-unidad-peso-producto') || 
-                         document.getElementById('escala-desde-0') ||
+                         document.getElementById('btn-toggle-opciones-avanzadas') ||
                          document.getElementById('btn-guardar-producto');
             next?.focus();
             return;
@@ -1283,7 +1193,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           if (e.key === 'ArrowDown') {
             e.preventDefault();
             e.stopPropagation();
-            (document.getElementById('input-marca-producto') || document.getElementById('escala-desde-0') || document.getElementById('btn-guardar-producto'))?.focus();
+            (document.getElementById('btn-toggle-opciones-avanzadas') || document.getElementById('btn-guardar-producto'))?.focus();
             return;
           }
           // Enter / Espacio despliegan la lista (antes Enter saltaba a Guardar y la lista nunca se abría)
@@ -1305,8 +1215,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           }
         }
 
-        // FASE 3: Navegación de campos especializados
-        if (active?.id === 'input-marca-producto') {
+        // Botón Desplegable de Opciones Avanzadas
+        if (active?.id === 'btn-toggle-opciones-avanzadas') {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
             const prev = document.getElementById('select-unidad-peso-producto') ||
@@ -1314,6 +1224,36 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                          document.getElementById('input-precio-mayorista-producto') ||
                          document.getElementById('input-precio-producto');
             prev?.focus();
+            return;
+          }
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (showAdvancedPanel) {
+              const next = document.getElementById('input-marca-producto') ||
+                           document.getElementById('input-meses-garantia-producto') ||
+                           document.getElementById('escala-desde-0') ||
+                           document.getElementById('pres-unidad-0') ||
+                           document.getElementById('check-tiene-variantes') ||
+                           document.getElementById('btn-tipo-estandar') ||
+                           document.getElementById('btn-guardar-producto');
+              next?.focus();
+            } else {
+              document.getElementById('btn-guardar-producto')?.focus();
+            }
+            return;
+          }
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setShowAdvancedPanel(prev => !prev);
+            return;
+          }
+        }
+
+        // FASE 3: Navegación de campos especializados
+        if (active?.id === 'input-marca-producto') {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            document.getElementById('btn-toggle-opciones-avanzadas')?.focus();
             return;
           }
           if (e.key === 'ArrowRight' || e.key === 'Enter') {
@@ -1455,6 +1395,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                          document.getElementById('pres-barcode-0') ||
                          document.getElementById('escala-precio-2') ||
                          document.getElementById('input-ubicacion-producto') ||
+                         document.getElementById('btn-toggle-opciones-avanzadas') ||
                          document.getElementById('select-unidad-peso-producto') || 
                          document.getElementById('input-stock-minimo-producto') || 
                          document.getElementById('input-precio-producto');
@@ -1493,6 +1434,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                          document.getElementById('pres-barcode-1') ||
                          document.getElementById('pres-barcode-0') ||
                          document.getElementById('escala-precio-2') ||
+                         document.getElementById('input-ubicacion-producto') ||
+                         document.getElementById('btn-toggle-opciones-avanzadas') ||
                          document.getElementById('select-unidad-peso-producto') || 
                          document.getElementById('input-stock-minimo-producto') || 
                          document.getElementById('input-precio-producto');
@@ -2318,7 +2261,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                         else document.getElementById('input-precio-producto')?.focus();
                       } else if (e.key === 'ArrowDown') {
                         e.preventDefault();
-                        (document.getElementById('escala-desde-0') || document.getElementById('btn-guardar-producto'))?.focus();
+                        (document.getElementById('btn-toggle-opciones-avanzadas') || document.getElementById('btn-guardar-producto'))?.focus();
                       }
                     }}
                     className="w-full bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-2.5 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors cursor-pointer"
@@ -2336,20 +2279,48 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 <button
                   id="btn-toggle-opciones-avanzadas"
                   type="button"
+                  tabIndex={0}
                   onClick={() => setShowAdvancedPanel(prev => !prev)}
-                  className={`w-full p-3.5 border-2 transition-all flex items-center justify-between cursor-pointer ${
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setShowAdvancedPanel(prev => !prev);
+                    } else if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      const prev = document.getElementById('select-unidad-peso-producto') ||
+                                   document.getElementById('input-stock-minimo-producto') ||
+                                   document.getElementById('input-precio-mayorista-producto') ||
+                                   document.getElementById('input-precio-producto');
+                      prev?.focus();
+                    } else if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      if (showAdvancedPanel) {
+                        const next = document.getElementById('input-marca-producto') ||
+                                     document.getElementById('input-meses-garantia-producto') ||
+                                     document.getElementById('escala-desde-0') ||
+                                     document.getElementById('pres-unidad-0') ||
+                                     document.getElementById('check-tiene-variantes') ||
+                                     document.getElementById('btn-tipo-estandar') ||
+                                     document.getElementById('btn-guardar-producto');
+                        next?.focus();
+                      } else {
+                        document.getElementById('btn-guardar-producto')?.focus();
+                      }
+                    }
+                  }}
+                  className={`group w-full p-3.5 border-2 transition-all flex items-center justify-between cursor-pointer outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:border-[var(--color-ink)] focus:bg-[#E2E8F0] ${
                     showAdvancedPanel
-                      ? 'border-[var(--color-ink)] bg-slate-100 text-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)]'
-                      : 'border-[#CBD5E1] hover:border-[var(--color-ink)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:bg-slate-50'
+                      ? 'border-[var(--color-ink)] bg-slate-100 text-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)]'
+                      : 'border-[#CBD5E1] hover:border-[var(--color-ink)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:bg-slate-50 focus:shadow-[3px_3px_0_0_var(--color-ink)]'
                   }`}
                 >
                   <div className="flex items-center gap-3 text-left">
-                    <SlidersHorizontal size={18} className={showAdvancedPanel ? 'text-[var(--color-success)]' : 'text-slate-500'} />
+                    <SlidersHorizontal size={18} className={`${showAdvancedPanel ? 'text-[var(--color-success)]' : 'text-slate-500'} group-focus:text-[var(--color-ink)]`} />
                     <div>
                       <span className="text-xs font-black uppercase tracking-wider block">
                         {showAdvancedPanel ? '▼ Opciones Avanzadas (Ubicación, Garantías, Escalas, Tallas, Recetas)' : '▶ Más Opciones Avanzadas (Ubicación, Garantías, Escalas, Tallas, Recetas)'}
                       </span>
-                      <span className="text-[10px] text-[#64748B] font-bold">
+                      <span className="text-[10px] text-[#64748B] font-bold group-focus:text-[var(--color-ink)]">
                         {showAdvancedPanel ? 'Haz clic para replegar las opciones avanzadas' : 'Empaques por caja, tallas de ropa/calzado, recetas o ubicación en tienda'}
                       </span>
                     </div>
@@ -2360,7 +2331,11 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                         ✓ Activas
                       </span>
                     )}
-                    <span className="text-xs font-black bg-[var(--color-ink)] text-white px-3 py-1.5 shadow-[2px_2px_0_0_var(--color-ink)]">
+                    <span className={`text-xs font-black px-3.5 py-1.5 transition-all shadow-[2px_2px_0_0_var(--color-ink)] border-2 border-[var(--color-ink)] ${
+                      showAdvancedPanel
+                        ? 'bg-[var(--color-ink)] text-white group-focus:bg-[var(--color-success)] group-focus:text-[var(--color-ink)]'
+                        : 'bg-[var(--color-ink)] text-white group-focus:bg-[var(--color-success)] group-focus:text-[var(--color-ink)]'
+                    }`}>
                       {showAdvancedPanel ? 'Ocultar ▲' : 'Desplegar ▼'}
                     </span>
                   </div>
@@ -2371,8 +2346,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               {showAdvancedPanel && (
                 <>
                   {/* FASE 3: BÚSQUEDAS ESPECIALIZADAS Y UBICACIÓN EN TIENDA (OPCIONAL) */}
-                  <div className="md:col-span-2 p-4 bg-[var(--color-surface)] border-2 border-[#CBD5E1] space-y-3">
-                    <div className="flex items-center justify-between">
+                  <div className="md:col-span-2 pt-4 border-t-2 border-[#CBD5E1] space-y-3">
+                    <div className="flex items-center justify-between pb-1 border-b border-[#E2E8F0]">
                       <span className="text-xs font-black text-[var(--color-ink)] uppercase tracking-wider flex items-center gap-1.5">
                         <span>🔍 Búsqueda y Ubicación en Tienda</span>
                         <span className="text-[10px] text-[var(--color-muted)] font-bold">(OPCIONAL)</span>
@@ -2464,8 +2439,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                   </div>
 
                   {/* FASE 6: GARANTÍA Y CONTROL DE SERIES / IMEI (OPCIONAL) */}
-                  <div className="md:col-span-2 p-4 bg-[var(--color-surface)] border-2 border-[#CBD5E1] space-y-3">
-                    <div className="flex items-center justify-between">
+                  <div className="md:col-span-2 pt-4 border-t-2 border-[#CBD5E1] space-y-3">
+                    <div className="flex items-center justify-between pb-1 border-b border-[#E2E8F0]">
                       <span className="text-xs font-black text-[var(--color-ink)] uppercase tracking-wider flex items-center gap-1.5">
                         <span>🛡️ Garantía y Series / IMEI</span>
                         <span className="text-[10px] text-[var(--color-muted)] font-bold">(OPCIONAL)</span>
@@ -2473,7 +2448,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                       <span className="text-[10px] text-[#64748B] font-bold">Celulares, repuestos</span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[var(--color-surface)] p-3 border-2 border-[#CBD5E1]">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {/* Meses de Garantía */}
                       <div className="space-y-1">
                         <label htmlFor="input-meses-garantia-producto" className="block text-xs font-black text-[var(--color-ink)] uppercase tracking-wider">
@@ -2495,7 +2470,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
                       {/* Control de Serie / IMEI por unidad */}
                       <div className="space-y-1 pt-1">
-                        <label className="flex items-start gap-2 p-2 bg-[var(--color-surface)] border-2 border-[#CBD5E1] hover:border-[var(--color-success)] transition-colors cursor-pointer">
+                        <label className="flex items-start gap-2 p-2.5 bg-[var(--color-surface)] border-2 border-[#CBD5E1] hover:border-[var(--color-success)] transition-colors cursor-pointer">
                           <input
                             id="input-controla-series-producto"
                             type="checkbox"
@@ -2518,11 +2493,13 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
                   {/* Fase 1.3: precios por cantidad (opcional) */}
                   {(nature === 'PESO' || nature === 'UNIDAD') && (
-                    <div className="md:col-span-2 p-4 bg-[var(--color-surface)] border-2 border-[#CBD5E1] space-y-3" id="bloque-escalas-producto">
-                      <label className="text-xs font-black text-[var(--color-ink)] uppercase tracking-wider block">
-                        🏷️ Precios por cantidad (Escalas de descuento)
-                      </label>
-                      <p className="text-[10px] font-bold text-[#64748B]">Ejemplo: desde 6 unidades a S/ 1.80. Al alcanzar esa cantidad en Caja, se aplica el precio con descuento automáticamente.{precioBloqueado ? ' (Sin permiso para cambiar precios)' : ''}</p>
+                    <div className="md:col-span-2 pt-4 border-t-2 border-[#CBD5E1] space-y-3" id="bloque-escalas-producto">
+                      <div className="pb-1 border-b border-[#E2E8F0]">
+                        <label className="text-xs font-black text-[var(--color-ink)] uppercase tracking-wider block">
+                          🏷️ Precios por cantidad (Escalas de descuento)
+                        </label>
+                        <p className="text-[10px] font-bold text-[#64748B]">Ejemplo: desde 6 unidades a S/ 1.80. Al alcanzar esa cantidad en Caja, se aplica el precio con descuento automáticamente.{precioBloqueado ? ' (Sin permiso para cambiar precios)' : ''}</p>
+                      </div>
                       <div className="space-y-2">
                         {escalas.map((f, i) => (
                           <div key={i} className="flex items-center gap-2">
@@ -2544,14 +2521,16 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
                   {/* Fase 1.2: presentaciones (caja, paquete, docena…) */}
                   {(nature === 'PESO' || nature === 'UNIDAD') && (
-                    <div className="md:col-span-2 p-4 bg-[var(--color-surface)] border-2 border-[#CBD5E1] space-y-3" id="bloque-presentaciones-producto">
-                      <label className="text-xs font-black text-[var(--color-ink)] uppercase tracking-wider block">
-                        📦 Presentaciones (Venta por Caja, Six-pack, etc.)
-                      </label>
-                      <p className="text-[10px] font-bold text-[#64748B]">Ejemplo: CAJA que contiene 12 {formData.weightUnit} a S/ 60. En Caja, vender 1 caja descuenta automáticamente 12 unidades del almacén.</p>
+                    <div className="md:col-span-2 pt-4 border-t-2 border-[#CBD5E1] space-y-3" id="bloque-presentaciones-producto">
+                      <div className="pb-1 border-b border-[#E2E8F0]">
+                        <label className="text-xs font-black text-[var(--color-ink)] uppercase tracking-wider block">
+                          📦 Presentaciones (Venta por Caja, Six-pack, etc.)
+                        </label>
+                        <p className="text-[10px] font-bold text-[#64748B]">Ejemplo: CAJA que contiene 12 {formData.weightUnit} a S/ 60. En Caja, vender 1 caja descuenta automáticamente 12 unidades del almacén.</p>
+                      </div>
                       <div className="space-y-2">
                         {presentacionesForm.map((f, i) => (
-                          <div key={i} className="flex flex-wrap items-center gap-2 bg-[var(--color-surface)] p-2.5 border-2 border-[#CBD5E1]">
+                          <div key={i} className="flex flex-wrap items-center gap-2">
                             <select id={`pres-unidad-${i}`} value={f.unidad} onChange={(e) => cambiarPres(i, 'unidad', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'unidad')}
                               disabled={precioBloqueado} aria-label={`Presentación ${i + 1}: unidad`}
                               className="w-28 bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-2 text-xs font-black uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] cursor-pointer">
@@ -2579,8 +2558,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
                   {/* FASE 7: TALLAS Y COLORES (VARIANTES CON STOCK PROPIO) */}
                   {(nature === 'UNIDAD' || nature === 'PESO') && (
-                    <div className="md:col-span-2 p-4 bg-[var(--color-surface)] border-2 border-[#CBD5E1] space-y-3" id="bloque-variantes-producto">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[var(--color-surface)] p-3 border-2 border-[var(--color-ink)]">
+                    <div className="md:col-span-2 pt-4 border-t-2 border-[#CBD5E1] space-y-3" id="bloque-variantes-producto">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#E2E8F0]">
                         <div className="flex items-center gap-2">
                           <Layers size={18} className="text-fuchsia-600 shrink-0" />
                           <div>
@@ -2611,126 +2590,65 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                       </div>
 
                       {tieneVariantes && (
-                        <div className="space-y-3 bg-[var(--color-surface)] p-3 border-2 border-[#CBD5E1]">
-                          {/* Presets */}
-                          <div className="flex flex-wrap items-center gap-2 pb-2 border-b-2 border-[#CBD5E1]">
-                            <span className="text-xs font-black uppercase text-[#64748B]">Plantillas:</span>
-                            <button
-                              id="btn-preset-ropa"
-                              type="button"
-                              onClick={() => {
-                                aplicarPresetTallas(['S', 'M', 'L', 'XL']);
-                              }}
-                              className="px-2.5 py-1 bg-[var(--color-surface)] hover:bg-slate-100 border-2 border-[#CBD5E1] text-xs font-black uppercase text-[var(--color-ink)] transition-colors cursor-pointer"
-                            >
-                              👕 Ropa (S-XL)
-                            </button>
-                            <button
-                              id="btn-preset-calzado"
-                              type="button"
-                              onClick={() => {
-                                aplicarPresetTallas(['36', '37', '38', '39', '40', '41', '42']);
-                              }}
-                              className="px-2.5 py-1 bg-[var(--color-surface)] hover:bg-slate-100 border-2 border-[#CBD5E1] text-xs font-black uppercase text-[var(--color-ink)] transition-colors cursor-pointer"
-                            >
-                              👟 Calzado (36-42)
-                            </button>
-                          </div>
-
-                          {/* Generador Combinado */}
-                          <div className="space-y-2 bg-[var(--color-surface)] p-3 border-2 border-[#CBD5E1]">
-                            <div className="space-y-1">
-                              <label className="text-xs font-black uppercase text-[#64748B]">Tallas (separadas por coma):</label>
-                              <input
-                                id="input-tallas-generator"
-                                type="text"
-                                placeholder="EJ: S, M, L, XL"
-                                value={tallasInput}
-                                onChange={(e) => setTallasInput(e.target.value)}
-                                className="w-full bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-2 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-xs font-black uppercase text-[#64748B]">Colores (separados por coma):</label>
-                              <input
-                                id="input-colores-generator"
-                                type="text"
-                                placeholder="EJ: NEGRO, BLANCO, AZUL"
-                                value={coloresInput}
-                                onChange={(e) => setColoresInput(e.target.value)}
-                                className="w-full bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-2 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
-                              />
-                            </div>
-                            <button
-                              id="btn-generar-combinaciones"
-                              type="button"
-                              onClick={generarCombinaciones}
-                              className="w-full bg-[var(--color-ink)] text-white hover:bg-fuchsia-700 py-2 text-xs font-black uppercase tracking-wider transition-colors cursor-pointer shadow-[2px_2px_0_0_var(--color-ink)]"
-                            >
-                              ⚡ Generar Combinaciones
-                            </button>
-                          </div>
-
-                          {/* Tabla de Variantes */}
+                        <div className="space-y-3">
+                          {/* Tabla de Variantes (fluye con el modal principal) */}
                           {variantesLista.length > 0 && (
                             <div className="space-y-2">
-                              <div className="max-h-56 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                                {variantesLista.map((v, idx) => (
-                                  <div key={idx} className="bg-[var(--color-surface)] p-2.5 border-2 border-[#CBD5E1] space-y-2 text-xs">
-                                    <div className="flex items-center justify-between gap-2">
-                                      <span className="font-black text-xs uppercase text-[var(--color-ink)] truncate">
-                                        {v.nombre_variante || `Variante #${idx + 1}`}
-                                      </span>
-                                      <button
-                                        id={`var-quitar-${idx}`}
-                                        type="button"
-                                        onClick={() => eliminarVariante(idx)}
-                                        className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
-                                        title="Eliminar variante"
-                                      >
-                                        <Trash2 size={14} />
-                                      </button>
-                                    </div>
-                                    <div className="grid grid-cols-4 gap-2">
-                                      <input
-                                        id={`var-talla-${idx}`}
-                                        type="text"
-                                        placeholder="Talla"
-                                        value={v.talla}
-                                        onChange={(e) => actualizarVariante(idx, 'talla', e.target.value)}
-                                        className="bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-1.5 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
-                                      />
-                                      <input
-                                        id={`var-color-${idx}`}
-                                        type="text"
-                                        placeholder="Color"
-                                        value={v.color}
-                                        onChange={(e) => actualizarVariante(idx, 'color', e.target.value)}
-                                        className="bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-1.5 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
-                                      />
-                                      <input
-                                        id={`var-price-${idx}`}
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        placeholder="Precio"
-                                        value={v.price}
-                                        onChange={(e) => actualizarVariante(idx, 'price', e.target.value)}
-                                        className="bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-1.5 text-xs font-black text-right outline-none focus:border-fuchsia-600"
-                                        title="Precio de esta variante"
-                                      />
-                                      <input
-                                        id={`var-barcode-${idx}`}
-                                        type="text"
-                                        placeholder="Barras"
-                                        value={v.barcode}
-                                        onChange={(e) => actualizarVariante(idx, 'barcode', e.target.value)}
-                                        className="bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-1.5 text-xs font-black outline-none focus:border-fuchsia-600"
-                                      />
-                                    </div>
+                              {variantesLista.map((v, idx) => (
+                                <div key={idx} className="bg-[var(--color-surface)] p-2.5 border-2 border-[#CBD5E1] space-y-2 text-xs">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="font-black text-xs uppercase text-[var(--color-ink)] truncate">
+                                      {v.nombre_variante || `Variante #${idx + 1}`}
+                                    </span>
+                                    <button
+                                      id={`var-quitar-${idx}`}
+                                      type="button"
+                                      onClick={() => eliminarVariante(idx)}
+                                      className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
+                                      title="Eliminar variante"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
                                   </div>
-                                ))}
-                              </div>
+                                  <div className="grid grid-cols-4 gap-2">
+                                    <input
+                                      id={`var-talla-${idx}`}
+                                      type="text"
+                                      placeholder="Talla"
+                                      value={v.talla}
+                                      onChange={(e) => actualizarVariante(idx, 'talla', e.target.value)}
+                                      className="bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-1.5 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
+                                    />
+                                    <input
+                                      id={`var-color-${idx}`}
+                                      type="text"
+                                      placeholder="Color"
+                                      value={v.color}
+                                      onChange={(e) => actualizarVariante(idx, 'color', e.target.value)}
+                                      className="bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-1.5 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
+                                    />
+                                    <input
+                                      id={`var-price-${idx}`}
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      placeholder="Precio"
+                                      value={v.price}
+                                      onChange={(e) => actualizarVariante(idx, 'price', e.target.value)}
+                                      className="bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-1.5 text-xs font-black text-right outline-none focus:border-fuchsia-600"
+                                      title="Precio de esta variante"
+                                    />
+                                    <input
+                                      id={`var-barcode-${idx}`}
+                                      type="text"
+                                      placeholder="Barras"
+                                      value={v.barcode}
+                                      onChange={(e) => actualizarVariante(idx, 'barcode', e.target.value)}
+                                      className="bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-1.5 text-xs font-black outline-none focus:border-fuchsia-600"
+                                    />
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           )}
 
@@ -2738,9 +2656,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                             id="btn-agregar-variante-manual"
                             type="button"
                             onClick={agregarVarianteVacia}
-                            className="w-full flex items-center justify-center gap-1.5 text-xs font-black uppercase text-fuchsia-700 bg-[var(--color-surface)] hover:bg-fuchsia-50 py-2 border-2 border-fuchsia-300 transition-colors cursor-pointer"
+                            className="w-full flex items-center justify-center gap-1.5 text-xs font-black uppercase text-fuchsia-700 bg-[var(--color-surface)] hover:bg-fuchsia-50 py-2.5 border-2 border-dashed border-fuchsia-400 transition-colors cursor-pointer"
                           >
-                            <Plus size={14} /> Agregar Variante Manual
+                            <Plus size={15} /> Agregar Variante Manual
                           </button>
                         </div>
                       )}
@@ -2749,8 +2667,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
                   {/* FASE 8: TIPO DE PRODUCTO Y COMPOSICIÓN (COMBOS Y RECETAS) */}
                   {nature !== 'CONSUMO' && (
-                    <div className="md:col-span-2 p-4 bg-[var(--color-surface)] border-2 border-[#CBD5E1] space-y-3">
-                      <div className="flex items-center gap-2">
+                    <div className="md:col-span-2 pt-4 border-t-2 border-[#CBD5E1] space-y-3">
+                      <div className="flex items-center gap-2 pb-1 border-b border-[#E2E8F0]">
                         <Boxes className="text-amber-600" size={18} />
                         <div>
                           <h4 className="text-xs font-black text-[var(--color-ink)] uppercase tracking-wider">

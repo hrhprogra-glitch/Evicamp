@@ -1,7 +1,7 @@
 # Graph Report - comercio  (2026-11-02)
 
 ## Corpus Check
-- 376 files · ~942,705 words
+- 376 files · ~942,427 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 4 file(s) not represented in the graph (top: (none) 2, .css 2)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `280f97fe`
+- Built from commit: `a8734f66`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -883,7 +883,7 @@ Nodes (3): fs, path, walk()
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `node-ssh` connect `descargar-backups.cjs` to `sugerencias-servidor.cjs`, `package.json`, `build-escritorio.cjs`, `check_sync_batches.cjs`, `build-escritorio.cjs`, `imagenes-servidor.cjs`, `inspect_siumax_production.cjs`, `test_fn_76.cjs`, `test_fn_fix.cjs`?**
-  _High betweenness centrality (0.226) - this node is a cross-community bridge._
+  _High betweenness centrality (0.220) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `useCerrarConEscape()` (e.g. with `29/10/2026 (tarde) · Claude — Videos tutoriales` and `6. Errores que ya se cometieron (NO repetir)`) actually correct?**
   _`useCerrarConEscape()` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `electron-builder`, `recharts`, `@tailwindcss/postcss` to the rest of the system?**
@@ -895,4 +895,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `descargar-backups.cjs` be split into smaller, more focused modules?**
   _Cohesion score 0.04934687953555878 - nodes in this community are weakly interconnected._
 - **Why does `react` connect `react` to `scratch_inventario.tsx`, `ModalEtiqueta.tsx`, `package.json`, `4. El código (dónde está cada cosa)`, `Punto-de-venta/index.tsx`, `usePermiso`, `Utilidades/index.tsx`, `sinInternet.ts`, `ModalCierre.tsx`, `dialogos.tsx`, `ModalAjuste.tsx`, `Clientes/index.tsx`, `Inventario/index.tsx`, `ModalHistorialLotes.tsx`, `impresion.ts`, `App.tsx`, `permisos.ts`, `ModalDetalleProducto.tsx`, `Product`, `coincideBusqueda`, `Finanzas/index.tsx`, `buscarImagenes.ts`, `TicketVenta.tsx`, `PanelCompras.tsx`?**
-  _High betweenness centrality (0.138) - this node is a cross-community bridge._
+  _High betweenness centrality (0.137) - this node is a cross-community bridge._

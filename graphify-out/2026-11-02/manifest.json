@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProducto.tsx": {
-    "mtime": 1793636842.7773616,
-    "seen": 1793637325.7300885,
-    "ast_hash": "ca87038296262dce83de63ce87ba5191",
+    "mtime": 1793640294.165958,
+    "seen": 1793640507.6964984,
+    "ast_hash": "33be0faacf7b8666991d89fc6fcd52d0",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaLotes.tsx": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793637202.2613645,
-    "seen": 1793637325.7302032,
-    "ast_hash": "85b579d778d53f3ada161e2932bfcb9b",
+    "mtime": 1793639287.9989333,
+    "seen": 1793639359.780064,
+    "ast_hash": "eeb1dbb866454337082a886b4ec59a8e",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793637231.9103563,
-    "seen": 1793637325.7302043,
-    "ast_hash": "689cfdeaa5634522ee4bef8cd5ef6d85",
+    "mtime": 1793639315.7246206,
+    "seen": 1793639359.7800648,
+    "ast_hash": "676b6b685ea3109ed51bd41bcfcde84d",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793637266.8012044,
-    "seen": 1793637325.730206,
-    "ast_hash": "aa52b563f0bb50ff8506112cbf6a6cc2",
+    "mtime": 1793640488.8370376,
+    "seen": 1793640507.6965709,
+    "ast_hash": "5099744328ea660476b4db683ef68de9",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793637215.67857,
-    "seen": 1793637325.7302072,
-    "ast_hash": "acde2f1b1e222abca5263b2df8718a62",
+    "mtime": 1793639299.2112985,
+    "seen": 1793639359.7800665,
+    "ast_hash": "dcc557a2a5028f6fa7cecef881042b8b",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2280,9 +2280,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-modal-lateral.mjs": {
-    "mtime": 1793637121.7485898,
-    "seen": 1793637325.729861,
-    "ast_hash": "264c80554407e9e4aef952b2d777f046",
+    "mtime": 1793640394.956195,
+    "seen": 1793640507.696357,
+    "ast_hash": "ec37e40f212e3b2ba4e9d5d3afabfb8c",
     "semantic_hash": ""
   },
   "scratch/apply_fn_siumax.cjs": {
@@ -2349,6 +2349,12 @@
     "mtime": 1793633678.290026,
     "seen": 1793637325.7299533,
     "ast_hash": "4a34a53f4802105909758efc00244acf",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-modal-opciones-abajo.mjs": {
+    "mtime": 1793639198.2200859,
+    "seen": 1793639359.7798424,
+    "ast_hash": "6c50b17453198035ef7e1af2462e316e",
     "semantic_hash": ""
   }
 }
