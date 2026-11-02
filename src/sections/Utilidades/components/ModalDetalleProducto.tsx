@@ -237,6 +237,12 @@ export const ModalDetalleProducto: React.FC<Props> = ({ producto, onClose }) => 
                       {Number(v.cantidad).toFixed(2)} {producto.unidadMedida} · Ticket #{v.saleId.slice(-6)}
                       {v.clienteNombre ? ` · ${v.clienteNombre}` : ''}
                     </p>
+                    {/* Venta de otro período: solo cuenta lo abonado dentro del período, no el ticket completo */}
+                    {v.ventaAnterior && (
+                      <p className="text-[12px] font-black text-[var(--color-warning)] uppercase tracking-wider">
+                        Venta anterior · cobrado en el período: S/ {Number(v.cobradoEnPeriodo || 0).toFixed(2)}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2">
