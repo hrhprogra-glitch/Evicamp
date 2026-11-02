@@ -1773,39 +1773,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono overflow-hidden">
-      <div className={`relative bg-[var(--color-surface)] w-full border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(78dvh/var(--ui-zoom))] sm:mt-6 transition-all duration-300 ${step === 1 ? 'max-w-3xl' : 'max-w-2xl'}`}>
-        
-        {/* PESTAÑA / FLECHITA VERTICAL AL COSTADO DERECHO (VENTANA PRINCIPAL FIJA) */}
-        {step === 2 && (
-          <button
-            id="btn-toggle-avanzado-lateral"
-            type="button"
-            onClick={() => setShowAdvancedPanel(prev => !prev)}
-            className={`absolute -right-10 sm:-right-11 top-16 z-40 flex flex-col items-center justify-center py-4 px-2.5 bg-[var(--color-ink)] text-white border-2 border-[var(--color-ink)] border-l-0 shadow-[4px_4px_0_0_rgba(0,0,0,0.3)] hover:bg-[var(--color-success)] hover:text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-success)] transition-all cursor-pointer rounded-r-md group ${
-              showAdvancedPanel ? 'bg-[var(--color-success)] text-[var(--color-ink)] border-[var(--color-ink)]' : ''
-            }`}
-            title={showAdvancedPanel ? "Ocultar panel derecho (Esc)" : "Desplegar opciones avanzadas al costado derecho: Tallas, Recetas, Empaques, Ubicación..."}
-          >
-            {showAdvancedPanel ? (
-              <>
-                <ChevronRight size={18} className="rotate-180 text-[var(--color-ink)] stroke-[3]" />
-                <span className="text-[9px] font-black uppercase [writing-mode:vertical-rl] tracking-widest mt-1 text-[var(--color-ink)]">
-                  OCULTAR
-                </span>
-              </>
-            ) : (
-              <>
-                <ChevronRight size={18} className="text-white group-hover:text-[var(--color-ink)] group-hover:translate-x-0.5 transition-transform stroke-[3]" />
-                <span className="text-[9px] font-black uppercase [writing-mode:vertical-rl] tracking-widest mt-1">
-                  MÁS OPCIONES
-                </span>
-                {tieneOpcionesAvanzadasActivas && (
-                  <span className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 animate-ping" title="Tiene datos avanzados configurados" />
-                )}
-              </>
-            )}
-          </button>
-        )}
+      <div className={`bg-[var(--color-surface)] w-full border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(86dvh/var(--ui-zoom))] sm:mt-4 transition-all duration-300 ${step === 1 ? 'max-w-3xl' : 'max-w-3xl'}`}>
 
         {/* HEADER */}
         <div className="bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
@@ -1830,24 +1798,6 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {step === 2 && (
-              <button
-                id="btn-header-toggle-avanzado"
-                type="button"
-                onClick={() => setShowAdvancedPanel(prev => !prev)}
-                className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 border border-white/30 flex items-center gap-1.5 hover:bg-white hover:text-[var(--color-ink)] transition-colors cursor-pointer mr-1 ${
-                  showAdvancedPanel ? 'bg-[var(--color-success)] text-[var(--color-ink)] border-[var(--color-success)]' : 'text-white'
-                }`}
-                title="Abrir o cerrar opciones avanzadas al costado derecho"
-              >
-                <SlidersHorizontal size={13} />
-                <span className="hidden sm:inline">{showAdvancedPanel ? '◀ Ocultar Opciones' : 'Más Opciones ▶'}</span>
-                <span className="sm:hidden">{showAdvancedPanel ? '◀' : '▶'}</span>
-                {tieneOpcionesAvanzadasActivas && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                )}
-              </button>
-            )}
             <button 
               id="btn-cerrar-modal-producto"
               onClick={resetAndClose} 
@@ -2381,748 +2331,688 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                 </div>
               )}
 
-              {/* BANNER DE ACCESO A OPCIONES AVANZADAS */}
-              <div className="md:col-span-2 pt-2 border-t-2 border-dashed border-[#E2E8F0]">
+              {/* UN SOLO BOTÓN PARA OPCIONES AVANZADAS (DESPLIEGUE HACIA ABAJO) */}
+              <div className="md:col-span-2 pt-2 border-t-2 border-[#E2E8F0]">
                 <button
-                  id="btn-banner-abrir-avanzado"
+                  id="btn-toggle-opciones-avanzadas"
                   type="button"
                   onClick={() => setShowAdvancedPanel(prev => !prev)}
                   className={`w-full p-3 border-2 transition-all flex items-center justify-between cursor-pointer ${
                     showAdvancedPanel
                       ? 'border-[var(--color-ink)] bg-slate-100 text-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)]'
-                      : 'border-dashed border-slate-300 hover:border-[var(--color-ink)] bg-white text-slate-700 hover:bg-slate-50'
+                      : 'border-[#CBD5E1] hover:border-[var(--color-ink)] bg-white text-slate-700 hover:bg-slate-50'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 text-left">
                     <SlidersHorizontal size={16} className={showAdvancedPanel ? 'text-[var(--color-success)]' : 'text-slate-500'} />
                     <div>
                       <span className="text-[10px] font-black uppercase tracking-wider block">
-                        {showAdvancedPanel ? '◀ Panel de Opciones Avanzadas Abierto' : '▶ ¿Vendes por caja, ropa con tallas, o combos/recetas?'}
+                        {showAdvancedPanel ? '▼ Opciones Avanzadas (Ubicación, Garantías, Escalas, Tallas, Recetas)' : '▶ Más Opciones Avanzadas (Ubicación, Garantías, Escalas, Tallas, Recetas)'}
                       </span>
                       <span className="text-[9px] text-[#64748B] font-bold">
-                        {showAdvancedPanel ? 'Haz clic para replegar el panel lateral derecho' : 'Haz clic aquí o en la pestaña derecha ▶ para abrir opciones avanzadas'}
+                        {showAdvancedPanel ? 'Haz clic para replegar las opciones avanzadas' : 'Empaques por caja, tallas de ropa/calzado, recetas o ubicación en tienda'}
                       </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {tieneOpcionesAvanzadasActivas && (
-                      <span className="text-[9px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5">
+                      <span className="text-[9px] font-black uppercase bg-emerald-600 text-white px-2 py-0.5">
                         ✓ Activas
                       </span>
                     )}
-                    <span className="text-xs font-black bg-[var(--color-ink)] text-white px-2 py-1">
-                      {showAdvancedPanel ? '◀ Ocultar' : 'Abrir ▶'}
+                    <span className="text-xs font-black bg-[var(--color-ink)] text-white px-2.5 py-1">
+                      {showAdvancedPanel ? 'Ocultar ▲' : 'Desplegar ▼'}
                     </span>
                   </div>
                 </button>
               </div>
 
+              {/* CONTENIDO DESPLEGABLE HACIA ABAJO DE OPCIONES AVANZADAS */}
+              {showAdvancedPanel && (
+                <>
+                  {/* FASE 3: BÚSQUEDAS ESPECIALIZADAS Y UBICACIÓN EN TIENDA (OPCIONAL) */}
+                  <div className="md:col-span-2 p-3 bg-white border border-[#E2E8F0] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-1.5">
+                        <span>🔍 Búsqueda y Ubicación en Tienda</span>
+                        <span className="text-[9px] text-[var(--color-muted)] font-bold">(OPCIONAL)</span>
+                      </span>
+                      <span className="text-[9px] text-[#64748B] font-bold">Filtros rápidos</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {/* Marca */}
+                      <div className="space-y-1">
+                        <label htmlFor="input-marca-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
+                          Marca / Fabricante
+                        </label>
+                        <input
+                          id="input-marca-producto"
+                          type="text"
+                          autoComplete="off"
+                          placeholder="EJ: YALE, GLORIA, BOSCH"
+                          value={formData.marca}
+                          onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
+                          className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                        />
+                      </div>
+
+                      {/* Modelo */}
+                      <div className="space-y-1">
+                        <label htmlFor="input-modelo-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
+                          Modelo / Versión
+                        </label>
+                        <input
+                          id="input-modelo-producto"
+                          type="text"
+                          autoComplete="off"
+                          placeholder="EJ: 50MM, PLUS, X-200"
+                          value={formData.modelo}
+                          onChange={(e) => setFormData({ ...formData, modelo: e.target.value })}
+                          className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                        />
+                      </div>
+
+                      {/* Medida */}
+                      <div className="space-y-1">
+                        <label htmlFor="input-medida-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
+                          Medida / Capacidad
+                        </label>
+                        <input
+                          id="input-medida-producto"
+                          type="text"
+                          autoComplete="off"
+                          placeholder="EJ: 1/2 PULGADA, 500ML"
+                          value={formData.medida}
+                          onChange={(e) => setFormData({ ...formData, medida: e.target.value })}
+                          className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                        />
+                      </div>
+
+                      {/* Laboratorio / Composición */}
+                      <div className="space-y-1">
+                        <label htmlFor="input-laboratorio-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
+                          Laboratorio / Detalle
+                        </label>
+                        <input
+                          id="input-laboratorio-producto"
+                          type="text"
+                          autoComplete="off"
+                          placeholder="EJ: BAYER, PARACETAMOL"
+                          value={formData.laboratorio}
+                          onChange={(e) => setFormData({ ...formData, laboratorio: e.target.value })}
+                          className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                        />
+                      </div>
+
+                      {/* Ubicación en tienda (Full width) */}
+                      <div className="space-y-1 sm:col-span-2">
+                        <label htmlFor="input-ubicacion-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
+                          📍 Ubicación en Tienda
+                        </label>
+                        <input
+                          id="input-ubicacion-producto"
+                          type="text"
+                          autoComplete="off"
+                          placeholder="EJ: PASILLO 2 - ESTANTE B, VITRINA CENTRAL"
+                          value={formData.ubicacion}
+                          onChange={(e) => setFormData({ ...formData, ubicacion: e.target.value })}
+                          className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* FASE 6: GARANTÍA Y CONTROL DE SERIES / IMEI (OPCIONAL) */}
+                  <div className="md:col-span-2 p-3 bg-white border border-[#E2E8F0] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-1.5">
+                        <span>🛡️ Garantía y Series / IMEI</span>
+                        <span className="text-[9px] text-[var(--color-muted)] font-bold">(OPCIONAL)</span>
+                      </span>
+                      <span className="text-[9px] text-[#64748B] font-bold">Celulares, repuestos</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 bg-[var(--color-bg)] p-2.5 border border-[#E2E8F0]">
+                      {/* Meses de Garantía */}
+                      <div className="space-y-1">
+                        <label htmlFor="input-meses-garantia-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
+                          Garantía de Fábrica (Meses)
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            id="input-meses-garantia-producto"
+                            type="number"
+                            min="0"
+                            placeholder="0"
+                            value={formData.mesesGarantia}
+                            onChange={(e) => setFormData({ ...formData, mesesGarantia: e.target.value })}
+                            className="w-20 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-center text-[var(--color-ink)] outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                          />
+                          <span className="text-xs font-bold text-[var(--color-ink)] uppercase">meses de garantía</span>
+                        </div>
+                      </div>
+
+                      {/* Control de Serie / IMEI por unidad */}
+                      <div className="space-y-1 pt-1">
+                        <label className="flex items-start gap-2 p-2 bg-[var(--color-surface)] border-2 border-[#E2E8F0] hover:border-[var(--color-success)] transition-colors cursor-pointer">
+                          <input
+                            id="input-controla-series-producto"
+                            type="checkbox"
+                            checked={formData.controlaSeries}
+                            onChange={(e) => setFormData({ ...formData, controlaSeries: e.target.checked })}
+                            className="w-4 h-4 mt-0.5 text-[var(--color-success)] rounded-none border-2 border-[#E2E8F0] focus:ring-2 focus:ring-[var(--color-success)] cursor-pointer shrink-0"
+                          />
+                          <div className="flex flex-col">
+                            <span className="text-xs font-black text-[var(--color-ink)] uppercase leading-tight">
+                              Exigir Nº de Serie / IMEI al vender en Caja
+                            </span>
+                            <span className="text-[9px] text-[#64748B] font-bold mt-0.5">
+                              Pedirá escanear o escribir el código grabado de cada unidad física.
+                            </span>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Fase 1.3: precios por cantidad (opcional) */}
+                  {(nature === 'PESO' || nature === 'UNIDAD') && (
+                    <div className="md:col-span-2 p-3 bg-white border border-[#E2E8F0] space-y-2" id="bloque-escalas-producto">
+                      <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest block">
+                        🏷️ Precios por cantidad (Escalas de descuento)
+                      </label>
+                      <p className="text-[9px] font-bold text-[#64748B]">Ej.: desde 6 a S/ 1.80. Al llegar a esa cantidad en Caja, cambia el precio sola.{precioBloqueado ? ' (Sin permiso para cambiar precios)' : ''}</p>
+                      {escalas.map((f, i) => (
+                        <div key={i} className="flex items-center gap-1.5">
+                          <span className="text-[9px] font-black text-[#64748B] uppercase w-10">Desde</span>
+                          <input id={`escala-desde-${i}`} type="number" min="0" step="any" autoComplete="off" data-lpignore="true" placeholder="—"
+                            value={f.desde} onChange={(e) => cambiarEscala(i, 'desde', e.target.value)} onKeyDown={(e) => teclasEscala(e, i, 'desde')}
+                            readOnly={precioBloqueado} aria-label={`Escala ${i + 1}: desde`}
+                            className="w-20 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-1.5 text-xs font-black text-right outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
+                          <span className="text-[9px] font-black text-[#64748B] uppercase w-12">{formData.weightUnit} → S/</span>
+                          <input id={`escala-precio-${i}`} type="number" min="0" step="0.01" autoComplete="off" data-lpignore="true" placeholder="0.00"
+                            value={f.precio} onChange={(e) => cambiarEscala(i, 'precio', e.target.value)} onKeyDown={(e) => teclasEscala(e, i, 'precio')}
+                            readOnly={precioBloqueado} aria-label={`Escala ${i + 1}: precio`}
+                            className="w-24 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-1.5 text-xs font-black text-right outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Fase 1.2: presentaciones (caja, paquete, docena…) */}
+                  {(nature === 'PESO' || nature === 'UNIDAD') && (
+                    <div className="md:col-span-2 p-3 bg-white border border-[#E2E8F0] space-y-2" id="bloque-presentaciones-producto">
+                      <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest block">
+                        📦 Presentaciones (Venta por Caja, Six-pack, etc.)
+                      </label>
+                      <p className="text-[9px] font-bold text-[#64748B]">Ej.: CAJA que trae 12 {formData.weightUnit} a S/ 60. En Caja, vender 1 caja descuenta 12 unidades.</p>
+                      {presentacionesForm.map((f, i) => (
+                        <div key={i} className="flex flex-wrap items-center gap-1.5 bg-[#F8FAFC] p-1.5 border border-[#E2E8F0]">
+                          <select id={`pres-unidad-${i}`} value={f.unidad} onChange={(e) => cambiarPres(i, 'unidad', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'unidad')}
+                            disabled={precioBloqueado} aria-label={`Presentación ${i + 1}: unidad`}
+                            className="w-24 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-1.5 text-xs font-black uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] cursor-pointer">
+                            {UNIDADES.filter((u) => u.tipo === 'ENTERA' && u.corto !== 'UND').map((u) => <option key={u.codigo} value={u.corto}>{u.nombre}</option>)}
+                          </select>
+                          <span className="text-[9px] font-black text-[#64748B] uppercase">trae</span>
+                          <input id={`pres-factor-${i}`} type="number" min="2" step="any" autoComplete="off" data-lpignore="true" placeholder="12"
+                            value={f.factor} onChange={(e) => cambiarPres(i, 'factor', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'factor')}
+                            readOnly={precioBloqueado} aria-label={`Presentación ${i + 1}: cuántas trae`}
+                            className="w-16 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-1.5 text-xs font-black text-right outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
+                          <span className="text-[9px] font-black text-[#64748B] uppercase">S/</span>
+                          <input id={`pres-precio-${i}`} type="number" min="0" step="0.01" autoComplete="off" data-lpignore="true" placeholder="0.00"
+                            value={f.precio} onChange={(e) => cambiarPres(i, 'precio', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'precio')}
+                            readOnly={precioBloqueado} aria-label={`Presentación ${i + 1}: precio`}
+                            className="w-20 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-1.5 text-xs font-black text-right outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
+                          <input id={`pres-barcode-${i}`} type="text" autoComplete="off" data-lpignore="true" placeholder="Cód. barras (opcional)"
+                            value={f.barcode} onChange={(e) => cambiarPres(i, 'barcode', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'barcode')}
+                            readOnly={precioBloqueado} aria-label={`Presentación ${i + 1}: código de barras`}
+                            className="w-full sm:flex-1 min-w-[120px] bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-1.5 text-xs font-black outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* FASE 7: TALLAS Y COLORES (VARIANTES CON STOCK PROPIO) */}
+                  {(nature === 'UNIDAD' || nature === 'PESO') && (
+                    <div className="md:col-span-2 p-3 bg-white border border-[#E2E8F0] space-y-3" id="bloque-variantes-producto">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[var(--color-bg)] p-2.5 border border-[var(--color-ink)]">
+                        <div className="flex items-center gap-1.5">
+                          <Layers size={16} className="text-fuchsia-600 shrink-0" />
+                          <div>
+                            <span className="text-xs font-black text-[var(--color-ink)] uppercase tracking-wider block">
+                              Tallas y Colores (Variantes)
+                            </span>
+                            <span className="text-[9px] text-[#64748B] font-bold">
+                              Stock independiente por variante
+                            </span>
+                          </div>
+                        </div>
+                        <label className="flex items-center gap-2 cursor-pointer self-start sm:self-auto bg-white px-2.5 py-1 border border-[var(--color-ink)] font-black text-[10px] uppercase hover:bg-fuchsia-50 transition-colors">
+                          <input
+                            id="check-tiene-variantes"
+                            type="checkbox"
+                            checked={tieneVariantes}
+                            onChange={(e) => {
+                              const val = e.target.checked;
+                              setTieneVariantes(val);
+                              if (val && variantesLista.length === 0) {
+                                agregarVarianteVacia();
+                              }
+                            }}
+                            className="w-3.5 h-3.5 text-fuchsia-600 rounded-none border border-[var(--color-ink)] cursor-pointer"
+                          />
+                          <span>{tieneVariantes ? 'Variantes Activadas' : 'Activar Variantes'}</span>
+                        </label>
+                      </div>
+
+                      {tieneVariantes && (
+                        <div className="space-y-3 bg-[var(--color-bg)] p-2.5 border border-[#E2E8F0]">
+                          {/* Presets */}
+                          <div className="flex flex-wrap items-center gap-1.5 pb-1.5 border-b border-[#E2E8F0]">
+                            <span className="text-[9px] font-black uppercase text-[#64748B]">Plantillas:</span>
+                            <button
+                              id="btn-preset-ropa"
+                              type="button"
+                              onClick={() => {
+                                aplicarPresetTallas(['S', 'M', 'L', 'XL']);
+                              }}
+                              className="px-2 py-0.5 bg-white hover:bg-slate-100 border border-slate-300 text-[9px] font-black uppercase text-[var(--color-ink)] transition-colors cursor-pointer"
+                            >
+                              👕 Ropa (S-XL)
+                            </button>
+                            <button
+                              id="btn-preset-calzado"
+                              type="button"
+                              onClick={() => {
+                                aplicarPresetTallas(['36', '37', '38', '39', '40', '41', '42']);
+                              }}
+                              className="px-2 py-0.5 bg-white hover:bg-slate-100 border border-slate-300 text-[9px] font-black uppercase text-[var(--color-ink)] transition-colors cursor-pointer"
+                            >
+                              👟 Calzado (36-42)
+                            </button>
+                          </div>
+
+                          {/* Generador Combinado */}
+                          <div className="space-y-1.5 bg-white p-2 border border-[#E2E8F0]">
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-black uppercase text-[#64748B]">Tallas (separadas por coma):</label>
+                              <input
+                                id="input-tallas-generator"
+                                type="text"
+                                placeholder="EJ: S, M, L, XL"
+                                value={tallasInput}
+                                onChange={(e) => setTallasInput(e.target.value)}
+                                className="w-full bg-white border border-[#CBD5E1] p-1.5 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-black uppercase text-[#64748B]">Colores (separados por coma):</label>
+                              <input
+                                id="input-colores-generator"
+                                type="text"
+                                placeholder="EJ: NEGRO, BLANCO, AZUL"
+                                value={coloresInput}
+                                onChange={(e) => setColoresInput(e.target.value)}
+                                className="w-full bg-white border border-[#CBD5E1] p-1.5 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
+                              />
+                            </div>
+                            <button
+                              id="btn-generar-combinaciones"
+                              type="button"
+                              onClick={generarCombinaciones}
+                              className="w-full bg-[var(--color-ink)] text-white hover:bg-fuchsia-700 py-1.5 text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
+                            >
+                              ⚡ Generar Combinaciones
+                            </button>
+                          </div>
+
+                          {/* Tabla de Variantes */}
+                          {variantesLista.length > 0 && (
+                            <div className="space-y-1.5">
+                              <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+                                {variantesLista.map((v, idx) => (
+                                  <div key={idx} className="bg-white p-2 border border-[#E2E8F0] space-y-1.5 text-xs">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <span className="font-black text-[10px] uppercase text-[var(--color-ink)] truncate">
+                                        {v.nombre_variante || `Variante #${idx + 1}`}
+                                      </span>
+                                      <button
+                                        id={`var-quitar-${idx}`}
+                                        type="button"
+                                        onClick={() => eliminarVariante(idx)}
+                                        className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
+                                        title="Eliminar variante"
+                                      >
+                                        <Trash2 size={13} />
+                                      </button>
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-1.5">
+                                      <input
+                                        id={`var-talla-${idx}`}
+                                        type="text"
+                                        placeholder="Talla"
+                                        value={v.talla}
+                                        onChange={(e) => actualizarVariante(idx, 'talla', e.target.value)}
+                                        className="bg-white border border-[#CBD5E1] p-1 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
+                                      />
+                                      <input
+                                        id={`var-color-${idx}`}
+                                        type="text"
+                                        placeholder="Color"
+                                        value={v.color}
+                                        onChange={(e) => actualizarVariante(idx, 'color', e.target.value)}
+                                        className="bg-white border border-[#CBD5E1] p-1 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
+                                      />
+                                      <input
+                                        id={`var-price-${idx}`}
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder="Precio"
+                                        value={v.price}
+                                        onChange={(e) => actualizarVariante(idx, 'price', e.target.value)}
+                                        className="bg-white border border-[#CBD5E1] p-1 text-xs font-black text-right outline-none focus:border-fuchsia-600"
+                                        title="Precio de esta variante"
+                                      />
+                                      <input
+                                        id={`var-barcode-${idx}`}
+                                        type="text"
+                                        placeholder="Barras"
+                                        value={v.barcode}
+                                        onChange={(e) => actualizarVariante(idx, 'barcode', e.target.value)}
+                                        className="bg-white border border-[#CBD5E1] p-1 text-xs font-black outline-none focus:border-fuchsia-600"
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          <button
+                            id="btn-agregar-variante-manual"
+                            type="button"
+                            onClick={agregarVarianteVacia}
+                            className="w-full flex items-center justify-center gap-1 text-[10px] font-black uppercase text-fuchsia-700 bg-white hover:bg-fuchsia-50 py-1.5 border border-fuchsia-200 transition-colors cursor-pointer"
+                          >
+                            <Plus size={13} /> Agregar Variante Manual
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* FASE 8: TIPO DE PRODUCTO Y COMPOSICIÓN (COMBOS Y RECETAS) */}
+                  {nature !== 'CONSUMO' && (
+                    <div className="md:col-span-2 p-3 bg-white border border-[#E2E8F0] space-y-3">
+                      <div className="flex items-center gap-1.5">
+                        <Boxes className="text-amber-600" size={16} />
+                        <div>
+                          <h4 className="text-xs font-black text-[var(--color-ink)] uppercase tracking-wider">
+                            Tipo de Producto y Composición
+                          </h4>
+                          <p className="text-[9px] text-[#64748B]">
+                            Elige si es estándar, combo o receta elaborada
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* SELECTOR DE 3 MODOS */}
+                      <div className="grid grid-cols-3 gap-1.5">
+                        <button
+                          id="btn-tipo-estandar"
+                          type="button"
+                          onClick={() => setTipoCompuesto('ESTANDAR')}
+                          className={`p-2 border-2 text-left transition-all cursor-pointer ${
+                            tipoCompuesto === 'ESTANDAR'
+                              ? 'border-[var(--color-ink)] bg-slate-100 shadow-[2px_2px_0_0_var(--color-ink)]'
+                              : 'border-[#CBD5E1] bg-transparent opacity-60 hover:opacity-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1 font-black text-[10px] text-[var(--color-ink)] uppercase">
+                            <Package size={12} className="text-blue-600" />
+                            <span>Estándar</span>
+                          </div>
+                          <p className="text-[8px] text-[#64748B] mt-0.5">Compra y venta directa</p>
+                        </button>
+
+                        <button
+                          id="btn-tipo-combo"
+                          type="button"
+                          onClick={() => setTipoCompuesto('COMBO')}
+                          className={`p-2 border-2 text-left transition-all cursor-pointer ${
+                            tipoCompuesto === 'COMBO'
+                              ? 'border-amber-600 bg-amber-50 shadow-[2px_2px_0_0_rgb(217,119,6)]'
+                              : 'border-[#CBD5E1] bg-transparent opacity-60 hover:opacity-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1 font-black text-[10px] text-amber-700 uppercase">
+                            <Boxes size={12} className="text-amber-600" />
+                            <span>Combo</span>
+                          </div>
+                          <p className="text-[8px] text-[#64748B] mt-0.5">Descuenta al vender</p>
+                        </button>
+
+                        <button
+                          id="btn-tipo-receta"
+                          type="button"
+                          onClick={() => setTipoCompuesto('RECETA')}
+                          className={`p-2 border-2 text-left transition-all cursor-pointer ${
+                            tipoCompuesto === 'RECETA'
+                              ? 'border-emerald-600 bg-emerald-50 shadow-[2px_2px_0_0_rgb(5,150,105)]'
+                              : 'border-[#CBD5E1] bg-transparent opacity-60 hover:opacity-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1 font-black text-[10px] text-emerald-700 uppercase">
+                            <ChefHat size={12} className="text-emerald-600" />
+                            <span>Receta</span>
+                          </div>
+                          <p className="text-[8px] text-[#64748B] mt-0.5">Se fabrica en cocina/taller</p>
+                        </button>
+                      </div>
+
+                      {/* BLOQUE DE INSUMOS SI ES COMBO O RECETA */}
+                      {tipoCompuesto !== 'ESTANDAR' && (
+                        <div className="space-y-2.5 pt-2 border-t border-[#E2E8F0]">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-[var(--color-ink)]">
+                              {tipoCompuesto === 'COMBO' ? 'Componentes del Combo:' : 'Insumos que requiere cada unidad:'}
+                            </span>
+                            {tipoCompuesto === 'RECETA' && (
+                              <div className="flex items-center gap-1.5">
+                                <label className="text-[9px] font-bold text-[#64748B] uppercase">Costo adic.:</label>
+                                <input
+                                  id="input-costo-adicional-prod"
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  placeholder="0.00"
+                                  value={costoAdicionalProd}
+                                  onChange={(e) => setCostoAdicionalProd(e.target.value)}
+                                  className="w-16 p-1 text-xs font-black text-right border border-[#CBD5E1] bg-white outline-none focus:border-emerald-600"
+                                  title="Mano de obra o costo indirecto por unidad"
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* BUSCADOR Y AGREGADOR DE INSUMOS */}
+                          <div className="flex gap-1.5 items-center relative">
+                            <div className="flex-1 relative">
+                              <input
+                                id="input-buscar-insumo"
+                                type="text"
+                                placeholder="Buscar insumo por nombre o código..."
+                                value={busquedaInsumo}
+                                onChange={(e) => {
+                                  setBusquedaInsumo(e.target.value);
+                                  setShowInsumoDropdown(true);
+                                }}
+                                onFocus={() => setShowInsumoDropdown(true)}
+                                className="w-full p-1.5 text-xs font-black uppercase border-2 border-[#CBD5E1] bg-white outline-none focus:border-amber-600"
+                              />
+
+                              {/* DROPDOWN DE INSUMOS */}
+                              {showInsumoDropdown && busquedaInsumo.trim().length > 0 && (
+                                <div className="absolute top-full left-0 right-0 mt-1 max-h-44 overflow-y-auto bg-white border-2 border-[var(--color-ink)] shadow-lg z-50 custom-scrollbar">
+                                  {productosExistentes
+                                    .filter((p: any) =>
+                                      p.name?.toLowerCase().includes(busquedaInsumo.toLowerCase()) ||
+                                      p.code?.toLowerCase().includes(busquedaInsumo.toLowerCase()) ||
+                                      p.barcode?.includes(busquedaInsumo)
+                                    )
+                                    .slice(0, 10)
+                                    .map((p: any) => (
+                                      <div
+                                        key={p.id}
+                                        data-insumo-item="true"
+                                        onClick={() => {
+                                          setInsumoElegido(p);
+                                          setBusquedaInsumo(p.name);
+                                          setShowInsumoDropdown(false);
+                                          document.getElementById('input-cant-insumo')?.focus();
+                                        }}
+                                        className="p-2 border-b border-[#E2E8F0] hover:bg-amber-50 cursor-pointer flex justify-between items-center text-xs"
+                                      >
+                                        <div>
+                                          <p className="font-bold text-[var(--color-ink)] uppercase">{p.name}</p>
+                                          <p className="text-[9px] text-slate-500 font-mono">
+                                            Cód: {p.code || 'S/C'} · Stock: {p.quantity ?? 0} {p.unit || 'UND'}
+                                          </p>
+                                        </div>
+                                        <span className="text-emerald-700 font-bold font-mono text-[11px]">
+                                          Costo: S/ {Number(p.cost || 0).toFixed(2)}
+                                        </span>
+                                      </div>
+                                    ))}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="w-16">
+                              <input
+                                id="input-cant-insumo"
+                                type="number"
+                                min="0.001"
+                                step="any"
+                                placeholder="Cant."
+                                value={cantInsumo}
+                                onChange={(e) => setCantInsumo(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    agregarInsumo();
+                                    document.getElementById('input-buscar-insumo')?.focus();
+                                  }
+                                }}
+                                className="w-full p-1.5 text-xs font-black text-right border-2 border-[#CBD5E1] bg-white outline-none focus:border-amber-600"
+                                title="Cantidad requerida por unidad"
+                              />
+                            </div>
+
+                            <button
+                              id="btn-agregar-insumo"
+                              type="button"
+                              onClick={agregarInsumo}
+                              className="px-2.5 py-1.5 bg-[var(--color-ink)] text-white text-xs font-black uppercase hover:bg-amber-600 transition-colors flex items-center gap-1 cursor-pointer"
+                            >
+                              <Plus size={13} />
+                            </button>
+                          </div>
+
+                          {/* TABLA DE INSUMOS CONFIGURADOS */}
+                          {recetaItems.length > 0 ? (
+                            <div className="border border-[#CBD5E1] overflow-hidden">
+                              <div className="grid grid-cols-12 gap-1 bg-slate-200 p-1 text-[8px] font-black uppercase text-[#64748B]">
+                                <span className="col-span-6">Insumo</span>
+                                <span className="col-span-2 text-right">Cant.</span>
+                                <span className="col-span-3 text-right">Costo Estim.</span>
+                                <span className="col-span-1 text-center">✕</span>
+                              </div>
+                              <div className="max-h-36 overflow-y-auto divide-y divide-slate-100">
+                                {recetaItems.map((item, idx) => (
+                                  <div key={idx} className="grid grid-cols-12 gap-1 p-1.5 text-xs items-center hover:bg-slate-50">
+                                    <span className="col-span-6 font-bold text-[var(--color-ink)] uppercase truncate text-[11px]">
+                                      {item.component_name || `Insumo #${item.component_product_id}`}
+                                    </span>
+                                    <span className="col-span-2 text-right font-black text-slate-700 text-[11px]">
+                                      {item.quantity} {item.component_unit || 'UND'}
+                                    </span>
+                                    <span className="col-span-3 text-right text-slate-500 font-mono text-[10px]">
+                                      S/ {(Number(item.component_cost || 0) * item.quantity).toFixed(2)}
+                                    </span>
+                                    <div className="col-span-1 flex justify-center">
+                                      <button
+                                        id={`btn-quitar-insumo-${idx}`}
+                                        type="button"
+                                        onClick={() => eliminarInsumo(idx)}
+                                        className="p-0.5 text-red-500 hover:text-red-700 transition-colors cursor-pointer"
+                                        title="Quitar de la receta"
+                                      >
+                                        <Trash2 size={12} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="p-1.5 bg-slate-100 flex justify-between items-center text-xs border-t border-slate-200">
+                                <span className="text-[9px] text-[#64748B] font-bold uppercase">
+                                  Total: {recetaItems.length}
+                                </span>
+                                <span className="font-black text-[var(--color-ink)] text-[11px]">
+                                  Costo estimado:{' '}
+                                  <strong className="text-emerald-700">
+                                    S/{' '}
+                                    {(
+                                      recetaItems.reduce((acc, it) => acc + (Number(it.component_cost || 0) * it.quantity), 0) +
+                                      (tipoCompuesto === 'RECETA' ? (Number(costoAdicionalProd) || 0) : 0)
+                                    ).toFixed(2)}
+                                  </strong>
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-[9px] text-amber-700 bg-amber-50 p-1.5 border border-amber-200 font-bold">
+                              ⚠️ Aún no has agregado componentes a este combo o receta.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
             </div>
           )}
+
         </div>
 
         {/* FOOTER PRINCIPAL - Botones alineados y limpios */}
         {step === 2 && (
-          <div className="bg-[var(--color-surface)] px-6 py-3.5 border-t-2 border-[var(--color-ink)] flex flex-wrap items-center justify-between gap-3 shrink-0">
-            <button
-              id="btn-footer-toggle-avanzado"
-              type="button"
-              onClick={() => setShowAdvancedPanel(prev => !prev)}
-              className="text-[10px] font-black text-[var(--color-ink)] hover:text-[var(--color-success)] uppercase tracking-wider flex items-center gap-1.5 cursor-pointer underline decoration-dotted"
+          <div className="bg-[var(--color-surface)] px-6 py-3.5 border-t-2 border-[var(--color-ink)] flex items-center justify-end gap-3 shrink-0">
+            <button 
+              id="btn-guardar-producto"
+              onClick={() => handleSave(false)}
+              disabled={isSubmitting}
+              className="bg-[var(--color-surface)] text-[var(--color-ink)] px-5 py-2.5 border-2 border-[var(--color-ink)] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#F8FAFC] hover:border-[var(--color-success)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[#E2E8F0] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[3px_3px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] cursor-pointer rounded-none min-w-[120px]"
             >
-              <SlidersHorizontal size={14} />
-              <span>{showAdvancedPanel ? '◀ Ocultar Opciones Avanzadas' : 'Más Opciones (Tallas, Recetas, Empaques) ▶'}</span>
+              {isSubmitting ? <Loader2 className="animate-spin" size={15} /> : <Save size={15} />} 
+              <span>{isSubmitting ? 'Procesando...' : 'Guardar'}</span>
             </button>
 
-            <div className="flex items-center gap-3">
+            {nature !== 'CONSUMO' && !initialData && (
               <button 
-                id="btn-guardar-producto"
-                onClick={() => handleSave(false)}
+                id="btn-guardar-ir-lotes"
+                onClick={() => handleSave(true)}
                 disabled={isSubmitting}
-                className="bg-[var(--color-surface)] text-[var(--color-ink)] px-5 py-2.5 border-2 border-[var(--color-ink)] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#F8FAFC] hover:border-[var(--color-success)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[#E2E8F0] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[3px_3px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] cursor-pointer rounded-none min-w-[120px]"
+                className="bg-[var(--color-success)] text-[var(--color-ink)] px-5 py-2.5 border-2 border-[var(--color-ink)] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-success)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-[var(--color-success)] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[3px_3px_0_0_var(--color-success)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] cursor-pointer rounded-none min-w-[180px]"
               >
-                {isSubmitting ? <Loader2 className="animate-spin" size={15} /> : <Save size={15} />} 
-                <span>{isSubmitting ? 'Procesando...' : 'Guardar'}</span>
+                {isSubmitting ? <Loader2 className="animate-spin" size={15} /> : <Database size={15} />}
+                <span>{isSubmitting ? 'Procesando...' : 'Guardar e ir a Lotes'}</span>
               </button>
-
-              {nature !== 'CONSUMO' && !initialData && (
-                <button 
-                  id="btn-guardar-ir-lotes"
-                  onClick={() => handleSave(true)}
-                  disabled={isSubmitting}
-                  className="bg-[var(--color-success)] text-[var(--color-ink)] px-5 py-2.5 border-2 border-[var(--color-ink)] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-success)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-[var(--color-success)] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[3px_3px_0_0_var(--color-success)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] cursor-pointer rounded-none min-w-[180px]"
-                >
-                  {isSubmitting ? <Loader2 className="animate-spin" size={15} /> : <Database size={15} />}
-                  <span>{isSubmitting ? 'Procesando...' : 'Guardar e ir a Lotes'}</span>
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* PANEL LATERAL DERECHO DE OPCIONES AVANZADAS (FASES 3, 6, 7, 8) */}
-        {/* Posicionado adosado a la derecha de la ventana principal fija sin desplazarla */}
-        {step === 2 && showAdvancedPanel && (
-          <div 
-            id="panel-opciones-avanzadas-derecho"
-            className="fixed xl:absolute right-2 xl:right-auto xl:left-[calc(100%+12px)] top-10 xl:top-0 bottom-10 xl:bottom-0 w-[calc(100vw-24px)] max-w-[460px] xl:max-w-[490px] bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col z-50 animate-in fade-in slide-in-from-right-4 duration-200"
-          >
-            {/* HEADER DEL PANEL LATERAL */}
-            <div className="bg-[#1E293B] text-white px-4 py-3 flex items-center justify-between shrink-0 border-b-2 border-[var(--color-ink)]">
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal size={16} className="text-[var(--color-success)]" />
-                <div>
-                  <h3 className="text-xs font-black uppercase tracking-wider text-[var(--color-success)]">
-                    Opciones Avanzadas
-                  </h3>
-                  <p className="text-[9px] text-slate-300 font-bold uppercase">
-                    Ubicación, Garantías, Escalas, Variantes, Recetas
-                  </p>
-                </div>
-              </div>
-              <button
-                id="btn-cerrar-panel-avanzado"
-                type="button"
-                onClick={() => setShowAdvancedPanel(false)}
-                className="text-slate-300 hover:text-white p-1 hover:bg-white/10 transition-colors cursor-pointer"
-                title="Ocultar panel lateral (Esc)"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* CUERPO DEL PANEL LATERAL CON SCROLL */}
-            <div className="p-4 sm:p-5 overflow-y-auto custom-scrollbar bg-[#F8FAFC] flex-1 space-y-5">
-              
-              {/* FASE 3: BÚSQUEDAS ESPECIALIZADAS Y UBICACIÓN EN TIENDA (OPCIONAL) */}
-              <div className="p-3 bg-white border border-[#E2E8F0] space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-1.5">
-                    <span>🔍 Búsqueda y Ubicación en Tienda</span>
-                    <span className="text-[9px] text-[var(--color-muted)] font-bold">(OPCIONAL)</span>
-                  </span>
-                  <span className="text-[9px] text-[#64748B] font-bold">Filtros rápidos</span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {/* Marca */}
-                  <div className="space-y-1">
-                    <label htmlFor="input-marca-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
-                      Marca / Fabricante
-                    </label>
-                    <input
-                      id="input-marca-producto"
-                      type="text"
-                      autoComplete="off"
-                      placeholder="EJ: YALE, GLORIA, BOSCH"
-                      value={formData.marca}
-                      onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
-                      className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
-                    />
-                  </div>
-
-                  {/* Modelo */}
-                  <div className="space-y-1">
-                    <label htmlFor="input-modelo-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
-                      Modelo / Versión
-                    </label>
-                    <input
-                      id="input-modelo-producto"
-                      type="text"
-                      autoComplete="off"
-                      placeholder="EJ: 50MM, PLUS, X-200"
-                      value={formData.modelo}
-                      onChange={(e) => setFormData({ ...formData, modelo: e.target.value })}
-                      className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
-                    />
-                  </div>
-
-                  {/* Medida */}
-                  <div className="space-y-1">
-                    <label htmlFor="input-medida-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
-                      Medida / Capacidad
-                    </label>
-                    <input
-                      id="input-medida-producto"
-                      type="text"
-                      autoComplete="off"
-                      placeholder="EJ: 1/2 PULGADA, 500ML"
-                      value={formData.medida}
-                      onChange={(e) => setFormData({ ...formData, medida: e.target.value })}
-                      className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
-                    />
-                  </div>
-
-                  {/* Laboratorio / Composición */}
-                  <div className="space-y-1">
-                    <label htmlFor="input-laboratorio-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
-                      Laboratorio / Detalle
-                    </label>
-                    <input
-                      id="input-laboratorio-producto"
-                      type="text"
-                      autoComplete="off"
-                      placeholder="EJ: BAYER, PARACETAMOL"
-                      value={formData.laboratorio}
-                      onChange={(e) => setFormData({ ...formData, laboratorio: e.target.value })}
-                      className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
-                    />
-                  </div>
-
-                  {/* Ubicación en tienda (Full width) */}
-                  <div className="space-y-1 sm:col-span-2">
-                    <label htmlFor="input-ubicacion-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
-                      📍 Ubicación en Tienda
-                    </label>
-                    <input
-                      id="input-ubicacion-producto"
-                      type="text"
-                      autoComplete="off"
-                      placeholder="EJ: PASILLO 2 - ESTANTE B, VITRINA CENTRAL"
-                      value={formData.ubicacion}
-                      onChange={(e) => setFormData({ ...formData, ubicacion: e.target.value })}
-                      className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* FASE 6: GARANTÍA Y CONTROL DE SERIES / IMEI (OPCIONAL) */}
-              <div className="p-3 bg-white border border-[#E2E8F0] space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-1.5">
-                    <span>🛡️ Garantía y Series / IMEI</span>
-                    <span className="text-[9px] text-[var(--color-muted)] font-bold">(OPCIONAL)</span>
-                  </span>
-                  <span className="text-[9px] text-[#64748B] font-bold">Celulares, repuestos</span>
-                </div>
-
-                <div className="grid grid-cols-1 gap-2.5 bg-[var(--color-bg)] p-2.5 border border-[#E2E8F0]">
-                  {/* Meses de Garantía */}
-                  <div className="space-y-1">
-                    <label htmlFor="input-meses-garantia-producto" className="block text-[10px] font-black text-[var(--color-ink)] uppercase tracking-wider">
-                      Garantía de Fábrica (Meses)
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        id="input-meses-garantia-producto"
-                        type="number"
-                        min="0"
-                        placeholder="0"
-                        value={formData.mesesGarantia}
-                        onChange={(e) => setFormData({ ...formData, mesesGarantia: e.target.value })}
-                        className="w-20 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-2 text-xs font-black text-center text-[var(--color-ink)] outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
-                      />
-                      <span className="text-xs font-bold text-[var(--color-ink)] uppercase">meses de garantía</span>
-                    </div>
-                  </div>
-
-                  {/* Control de Serie / IMEI por unidad */}
-                  <div className="space-y-1 pt-1">
-                    <label className="flex items-start gap-2 p-2 bg-[var(--color-surface)] border-2 border-[#E2E8F0] hover:border-[var(--color-success)] transition-colors cursor-pointer">
-                      <input
-                        id="input-controla-series-producto"
-                        type="checkbox"
-                        checked={formData.controlaSeries}
-                        onChange={(e) => setFormData({ ...formData, controlaSeries: e.target.checked })}
-                        className="w-4 h-4 mt-0.5 text-[var(--color-success)] rounded-none border-2 border-[#E2E8F0] focus:ring-2 focus:ring-[var(--color-success)] cursor-pointer shrink-0"
-                      />
-                      <div className="flex flex-col">
-                        <span className="text-xs font-black text-[var(--color-ink)] uppercase leading-tight">
-                          Exigir Nº de Serie / IMEI al vender en Caja
-                        </span>
-                        <span className="text-[9px] text-[#64748B] font-bold mt-0.5">
-                          Pedirá escanear o escribir el código grabado de cada unidad física.
-                        </span>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Fase 1.3: precios por cantidad (opcional) */}
-              {(nature === 'PESO' || nature === 'UNIDAD') && (
-                <div className="p-3 bg-white border border-[#E2E8F0] space-y-2" id="bloque-escalas-producto">
-                  <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest block">
-                    🏷️ Precios por cantidad (Escalas de descuento)
-                  </label>
-                  <p className="text-[9px] font-bold text-[#64748B]">Ej.: desde 6 a S/ 1.80. Al llegar a esa cantidad en Caja, cambia el precio sola.{precioBloqueado ? ' (Sin permiso para cambiar precios)' : ''}</p>
-                  {escalas.map((f, i) => (
-                    <div key={i} className="flex items-center gap-1.5">
-                      <span className="text-[9px] font-black text-[#64748B] uppercase w-10">Desde</span>
-                      <input id={`escala-desde-${i}`} type="number" min="0" step="any" autoComplete="off" data-lpignore="true" placeholder="—"
-                        value={f.desde} onChange={(e) => cambiarEscala(i, 'desde', e.target.value)} onKeyDown={(e) => teclasEscala(e, i, 'desde')}
-                        readOnly={precioBloqueado} aria-label={`Escala ${i + 1}: desde`}
-                        className="w-20 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-1.5 text-xs font-black text-right outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
-                      <span className="text-[9px] font-black text-[#64748B] uppercase w-12">{formData.weightUnit} → S/</span>
-                      <input id={`escala-precio-${i}`} type="number" min="0" step="0.01" autoComplete="off" data-lpignore="true" placeholder="0.00"
-                        value={f.precio} onChange={(e) => cambiarEscala(i, 'precio', e.target.value)} onKeyDown={(e) => teclasEscala(e, i, 'precio')}
-                        readOnly={precioBloqueado} aria-label={`Escala ${i + 1}: precio`}
-                        className="w-24 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-1.5 text-xs font-black text-right outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Fase 1.2: presentaciones (caja, paquete, docena…) */}
-              {(nature === 'PESO' || nature === 'UNIDAD') && (
-                <div className="p-3 bg-white border border-[#E2E8F0] space-y-2" id="bloque-presentaciones-producto">
-                  <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest block">
-                    📦 Presentaciones (Venta por Caja, Six-pack, etc.)
-                  </label>
-                  <p className="text-[9px] font-bold text-[#64748B]">Ej.: CAJA que trae 12 {formData.weightUnit} a S/ 60. En Caja, vender 1 caja descuenta 12 unidades.</p>
-                  {presentacionesForm.map((f, i) => (
-                    <div key={i} className="flex flex-wrap items-center gap-1.5 bg-[#F8FAFC] p-1.5 border border-[#E2E8F0]">
-                      <select id={`pres-unidad-${i}`} value={f.unidad} onChange={(e) => cambiarPres(i, 'unidad', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'unidad')}
-                        disabled={precioBloqueado} aria-label={`Presentación ${i + 1}: unidad`}
-                        className="w-24 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-1.5 text-xs font-black uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] cursor-pointer">
-                        {UNIDADES.filter((u) => u.tipo === 'ENTERA' && u.corto !== 'UND').map((u) => <option key={u.codigo} value={u.corto}>{u.nombre}</option>)}
-                      </select>
-                      <span className="text-[9px] font-black text-[#64748B] uppercase">trae</span>
-                      <input id={`pres-factor-${i}`} type="number" min="2" step="any" autoComplete="off" data-lpignore="true" placeholder="12"
-                        value={f.factor} onChange={(e) => cambiarPres(i, 'factor', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'factor')}
-                        readOnly={precioBloqueado} aria-label={`Presentación ${i + 1}: cuántas trae`}
-                        className="w-16 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-1.5 text-xs font-black text-right outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
-                      <span className="text-[9px] font-black text-[#64748B] uppercase">S/</span>
-                      <input id={`pres-precio-${i}`} type="number" min="0" step="0.01" autoComplete="off" data-lpignore="true" placeholder="0.00"
-                        value={f.precio} onChange={(e) => cambiarPres(i, 'precio', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'precio')}
-                        readOnly={precioBloqueado} aria-label={`Presentación ${i + 1}: precio`}
-                        className="w-20 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-1.5 text-xs font-black text-right outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
-                      <input id={`pres-barcode-${i}`} type="text" autoComplete="off" data-lpignore="true" placeholder="Cód. barras (opcional)"
-                        value={f.barcode} onChange={(e) => cambiarPres(i, 'barcode', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'barcode')}
-                        readOnly={precioBloqueado} aria-label={`Presentación ${i + 1}: código de barras`}
-                        className="w-full sm:flex-1 min-w-[120px] bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-1.5 text-xs font-black outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* FASE 7: TALLAS Y COLORES (VARIANTES CON STOCK PROPIO) */}
-              {(nature === 'UNIDAD' || nature === 'PESO') && (
-                <div className="p-3 bg-white border border-[#E2E8F0] space-y-3" id="bloque-variantes-producto">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[var(--color-bg)] p-2.5 border border-[var(--color-ink)]">
-                    <div className="flex items-center gap-1.5">
-                      <Layers size={16} className="text-fuchsia-600 shrink-0" />
-                      <div>
-                        <span className="text-xs font-black text-[var(--color-ink)] uppercase tracking-wider block">
-                          Tallas y Colores (Variantes)
-                        </span>
-                        <span className="text-[9px] text-[#64748B] font-bold">
-                          Stock independiente por variante
-                        </span>
-                      </div>
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer self-start sm:self-auto bg-white px-2.5 py-1 border border-[var(--color-ink)] font-black text-[10px] uppercase hover:bg-fuchsia-50 transition-colors">
-                      <input
-                        id="check-tiene-variantes"
-                        type="checkbox"
-                        checked={tieneVariantes}
-                        onChange={(e) => {
-                          const val = e.target.checked;
-                          setTieneVariantes(val);
-                          if (val && variantesLista.length === 0) {
-                            agregarVarianteVacia();
-                          }
-                        }}
-                        className="w-3.5 h-3.5 text-fuchsia-600 rounded-none border border-[var(--color-ink)] cursor-pointer"
-                      />
-                      <span>{tieneVariantes ? 'Variantes Activadas' : 'Activar Variantes'}</span>
-                    </label>
-                  </div>
-
-                  {tieneVariantes && (
-                    <div className="space-y-3 bg-[var(--color-bg)] p-2.5 border border-[#E2E8F0]">
-                      {/* Presets */}
-                      <div className="flex flex-wrap items-center gap-1.5 pb-1.5 border-b border-[#E2E8F0]">
-                        <span className="text-[9px] font-black uppercase text-[#64748B]">Plantillas:</span>
-                        <button
-                          id="btn-preset-ropa"
-                          type="button"
-                          onClick={() => {
-                            aplicarPresetTallas(['S', 'M', 'L', 'XL']);
-                          }}
-                          className="px-2 py-0.5 bg-white hover:bg-slate-100 border border-slate-300 text-[9px] font-black uppercase text-[var(--color-ink)] transition-colors cursor-pointer"
-                        >
-                          👕 Ropa (S-XL)
-                        </button>
-                        <button
-                          id="btn-preset-calzado"
-                          type="button"
-                          onClick={() => {
-                            aplicarPresetTallas(['36', '37', '38', '39', '40', '41', '42']);
-                          }}
-                          className="px-2 py-0.5 bg-white hover:bg-slate-100 border border-slate-300 text-[9px] font-black uppercase text-[var(--color-ink)] transition-colors cursor-pointer"
-                        >
-                          👟 Calzado (36-42)
-                        </button>
-                      </div>
-
-                      {/* Generador Combinado */}
-                      <div className="space-y-1.5 bg-white p-2 border border-[#E2E8F0]">
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-black uppercase text-[#64748B]">Tallas (separadas por coma):</label>
-                          <input
-                            id="input-tallas-generator"
-                            type="text"
-                            placeholder="EJ: S, M, L, XL"
-                            value={tallasInput}
-                            onChange={(e) => setTallasInput(e.target.value)}
-                            className="w-full bg-white border border-[#CBD5E1] p-1.5 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-black uppercase text-[#64748B]">Colores (separados por coma):</label>
-                          <input
-                            id="input-colores-generator"
-                            type="text"
-                            placeholder="EJ: NEGRO, BLANCO, AZUL"
-                            value={coloresInput}
-                            onChange={(e) => setColoresInput(e.target.value)}
-                            className="w-full bg-white border border-[#CBD5E1] p-1.5 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
-                          />
-                        </div>
-                        <button
-                          id="btn-generar-combinaciones"
-                          type="button"
-                          onClick={generarCombinaciones}
-                          className="w-full bg-[var(--color-ink)] text-white hover:bg-fuchsia-700 py-1.5 text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
-                        >
-                          ⚡ Generar Combinaciones
-                        </button>
-                      </div>
-
-                      {/* Tabla de Variantes */}
-                      {variantesLista.length > 0 && (
-                        <div className="space-y-1.5">
-                          <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1">
-                            {variantesLista.map((v, idx) => (
-                              <div key={idx} className="bg-white p-2 border border-[#E2E8F0] space-y-1.5 text-xs">
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="font-black text-[10px] uppercase text-[var(--color-ink)] truncate">
-                                    {v.nombre_variante || `Variante #${idx + 1}`}
-                                  </span>
-                                  <button
-                                    id={`var-quitar-${idx}`}
-                                    type="button"
-                                    onClick={() => eliminarVariante(idx)}
-                                    className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
-                                    title="Eliminar variante"
-                                  >
-                                    <Trash2 size={13} />
-                                  </button>
-                                </div>
-                                <div className="grid grid-cols-4 gap-1.5">
-                                  <input
-                                    id={`var-talla-${idx}`}
-                                    type="text"
-                                    placeholder="Talla"
-                                    value={v.talla}
-                                    onChange={(e) => actualizarVariante(idx, 'talla', e.target.value)}
-                                    className="bg-white border border-[#CBD5E1] p-1 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
-                                  />
-                                  <input
-                                    id={`var-color-${idx}`}
-                                    type="text"
-                                    placeholder="Color"
-                                    value={v.color}
-                                    onChange={(e) => actualizarVariante(idx, 'color', e.target.value)}
-                                    className="bg-white border border-[#CBD5E1] p-1 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
-                                  />
-                                  <input
-                                    id={`var-price-${idx}`}
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="Precio"
-                                    value={v.price}
-                                    onChange={(e) => actualizarVariante(idx, 'price', e.target.value)}
-                                    className="bg-white border border-[#CBD5E1] p-1 text-xs font-black text-right outline-none focus:border-fuchsia-600"
-                                    title="Precio de esta variante"
-                                  />
-                                  <input
-                                    id={`var-barcode-${idx}`}
-                                    type="text"
-                                    placeholder="Barras"
-                                    value={v.barcode}
-                                    onChange={(e) => actualizarVariante(idx, 'barcode', e.target.value)}
-                                    className="bg-white border border-[#CBD5E1] p-1 text-xs font-black outline-none focus:border-fuchsia-600"
-                                  />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <button
-                        id="btn-agregar-variante-manual"
-                        type="button"
-                        onClick={agregarVarianteVacia}
-                        className="w-full flex items-center justify-center gap-1 text-[10px] font-black uppercase text-fuchsia-700 bg-white hover:bg-fuchsia-50 py-1.5 border border-fuchsia-200 transition-colors cursor-pointer"
-                      >
-                        <Plus size={13} /> Agregar Variante Manual
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* FASE 8: TIPO DE PRODUCTO Y COMPOSICIÓN (COMBOS Y RECETAS) */}
-              {nature !== 'CONSUMO' && (
-                <div className="p-3 bg-white border border-[#E2E8F0] space-y-3">
-                  <div className="flex items-center gap-1.5">
-                    <Boxes className="text-amber-600" size={16} />
-                    <div>
-                      <h4 className="text-xs font-black text-[var(--color-ink)] uppercase tracking-wider">
-                        Tipo de Producto y Composición
-                      </h4>
-                      <p className="text-[9px] text-[#64748B]">
-                        Elige si es estándar, combo o receta elaborada
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* SELECTOR DE 3 MODOS */}
-                  <div className="grid grid-cols-3 gap-1.5">
-                    <button
-                      id="btn-tipo-estandar"
-                      type="button"
-                      onClick={() => setTipoCompuesto('ESTANDAR')}
-                      className={`p-2 border-2 text-left transition-all cursor-pointer ${
-                        tipoCompuesto === 'ESTANDAR'
-                          ? 'border-[var(--color-ink)] bg-slate-100 shadow-[2px_2px_0_0_var(--color-ink)]'
-                          : 'border-[#CBD5E1] bg-transparent opacity-60 hover:opacity-100'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1 font-black text-[10px] text-[var(--color-ink)] uppercase">
-                        <Package size={12} className="text-blue-600" />
-                        <span>Estándar</span>
-                      </div>
-                      <p className="text-[8px] text-[#64748B] mt-0.5">Compra y venta directa</p>
-                    </button>
-
-                    <button
-                      id="btn-tipo-combo"
-                      type="button"
-                      onClick={() => setTipoCompuesto('COMBO')}
-                      className={`p-2 border-2 text-left transition-all cursor-pointer ${
-                        tipoCompuesto === 'COMBO'
-                          ? 'border-amber-600 bg-amber-50 shadow-[2px_2px_0_0_rgb(217,119,6)]'
-                          : 'border-[#CBD5E1] bg-transparent opacity-60 hover:opacity-100'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1 font-black text-[10px] text-amber-700 uppercase">
-                        <Boxes size={12} className="text-amber-600" />
-                        <span>Combo</span>
-                      </div>
-                      <p className="text-[8px] text-[#64748B] mt-0.5">Descuenta al vender</p>
-                    </button>
-
-                    <button
-                      id="btn-tipo-receta"
-                      type="button"
-                      onClick={() => setTipoCompuesto('RECETA')}
-                      className={`p-2 border-2 text-left transition-all cursor-pointer ${
-                        tipoCompuesto === 'RECETA'
-                          ? 'border-emerald-600 bg-emerald-50 shadow-[2px_2px_0_0_rgb(5,150,105)]'
-                          : 'border-[#CBD5E1] bg-transparent opacity-60 hover:opacity-100'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1 font-black text-[10px] text-emerald-700 uppercase">
-                        <ChefHat size={12} className="text-emerald-600" />
-                        <span>Receta</span>
-                      </div>
-                      <p className="text-[8px] text-[#64748B] mt-0.5">Se fabrica en cocina/taller</p>
-                    </button>
-                  </div>
-
-                  {/* BLOQUE DE INSUMOS SI ES COMBO O RECETA */}
-                  {tipoCompuesto !== 'ESTANDAR' && (
-                    <div className="space-y-2.5 pt-2 border-t border-[#E2E8F0]">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase text-[var(--color-ink)]">
-                          {tipoCompuesto === 'COMBO' ? 'Componentes del Combo:' : 'Insumos que requiere cada unidad:'}
-                        </span>
-                        {tipoCompuesto === 'RECETA' && (
-                          <div className="flex items-center gap-1.5">
-                            <label className="text-[9px] font-bold text-[#64748B] uppercase">Costo adic.:</label>
-                            <input
-                              id="input-costo-adicional-prod"
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              placeholder="0.00"
-                              value={costoAdicionalProd}
-                              onChange={(e) => setCostoAdicionalProd(e.target.value)}
-                              className="w-16 p-1 text-xs font-black text-right border border-[#CBD5E1] bg-white outline-none focus:border-emerald-600"
-                              title="Mano de obra o costo indirecto por unidad"
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* BUSCADOR Y AGREGADOR DE INSUMOS */}
-                      <div className="flex gap-1.5 items-center relative">
-                        <div className="flex-1 relative">
-                          <input
-                            id="input-buscar-insumo"
-                            type="text"
-                            placeholder="Buscar insumo por nombre o código..."
-                            value={busquedaInsumo}
-                            onChange={(e) => {
-                              setBusquedaInsumo(e.target.value);
-                              setShowInsumoDropdown(true);
-                            }}
-                            onFocus={() => setShowInsumoDropdown(true)}
-                            className="w-full p-1.5 text-xs font-black uppercase border-2 border-[#CBD5E1] bg-white outline-none focus:border-amber-600"
-                          />
-
-                          {/* DROPDOWN DE INSUMOS */}
-                          {showInsumoDropdown && busquedaInsumo.trim().length > 0 && (
-                            <div className="absolute top-full left-0 right-0 mt-1 max-h-44 overflow-y-auto bg-white border-2 border-[var(--color-ink)] shadow-lg z-50 custom-scrollbar">
-                              {productosExistentes
-                                .filter((p: any) =>
-                                  p.name?.toLowerCase().includes(busquedaInsumo.toLowerCase()) ||
-                                  p.code?.toLowerCase().includes(busquedaInsumo.toLowerCase()) ||
-                                  p.barcode?.includes(busquedaInsumo)
-                                )
-                                .slice(0, 10)
-                                .map((p: any) => (
-                                  <div
-                                    key={p.id}
-                                    data-insumo-item="true"
-                                    onClick={() => {
-                                      setInsumoElegido(p);
-                                      setBusquedaInsumo(p.name);
-                                      setShowInsumoDropdown(false);
-                                      document.getElementById('input-cant-insumo')?.focus();
-                                    }}
-                                    className="p-2 border-b border-[#E2E8F0] hover:bg-amber-50 cursor-pointer flex justify-between items-center text-xs"
-                                  >
-                                    <div>
-                                      <p className="font-bold text-[var(--color-ink)] uppercase">{p.name}</p>
-                                      <p className="text-[9px] text-slate-500 font-mono">
-                                        Cód: {p.code || 'S/C'} · Stock: {p.quantity ?? 0} {p.unit || 'UND'}
-                                      </p>
-                                    </div>
-                                    <span className="text-emerald-700 font-bold font-mono text-[11px]">
-                                      Costo: S/ {Number(p.cost || 0).toFixed(2)}
-                                    </span>
-                                  </div>
-                                ))}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="w-16">
-                          <input
-                            id="input-cant-insumo"
-                            type="number"
-                            min="0.001"
-                            step="any"
-                            placeholder="Cant."
-                            value={cantInsumo}
-                            onChange={(e) => setCantInsumo(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                agregarInsumo();
-                                document.getElementById('input-buscar-insumo')?.focus();
-                              }
-                            }}
-                            className="w-full p-1.5 text-xs font-black text-right border-2 border-[#CBD5E1] bg-white outline-none focus:border-amber-600"
-                            title="Cantidad requerida por unidad"
-                          />
-                        </div>
-
-                        <button
-                          id="btn-agregar-insumo"
-                          type="button"
-                          onClick={agregarInsumo}
-                          className="px-2.5 py-1.5 bg-[var(--color-ink)] text-white text-xs font-black uppercase hover:bg-amber-600 transition-colors flex items-center gap-1 cursor-pointer"
-                        >
-                          <Plus size={13} />
-                        </button>
-                      </div>
-
-                      {/* TABLA DE INSUMOS CONFIGURADOS */}
-                      {recetaItems.length > 0 ? (
-                        <div className="border border-[#CBD5E1] overflow-hidden">
-                          <div className="grid grid-cols-12 gap-1 bg-slate-200 p-1 text-[8px] font-black uppercase text-[#64748B]">
-                            <span className="col-span-6">Insumo</span>
-                            <span className="col-span-2 text-right">Cant.</span>
-                            <span className="col-span-3 text-right">Costo Estim.</span>
-                            <span className="col-span-1 text-center">✕</span>
-                          </div>
-                          <div className="max-h-36 overflow-y-auto divide-y divide-slate-100">
-                            {recetaItems.map((item, idx) => (
-                              <div key={idx} className="grid grid-cols-12 gap-1 p-1.5 text-xs items-center hover:bg-slate-50">
-                                <span className="col-span-6 font-bold text-[var(--color-ink)] uppercase truncate text-[11px]">
-                                  {item.component_name || `Insumo #${item.component_product_id}`}
-                                </span>
-                                <span className="col-span-2 text-right font-black text-slate-700 text-[11px]">
-                                  {item.quantity} {item.component_unit || 'UND'}
-                                </span>
-                                <span className="col-span-3 text-right text-slate-500 font-mono text-[10px]">
-                                  S/ {(Number(item.component_cost || 0) * item.quantity).toFixed(2)}
-                                </span>
-                                <div className="col-span-1 flex justify-center">
-                                  <button
-                                    id={`btn-quitar-insumo-${idx}`}
-                                    type="button"
-                                    onClick={() => eliminarInsumo(idx)}
-                                    className="p-0.5 text-red-500 hover:text-red-700 transition-colors cursor-pointer"
-                                    title="Quitar de la receta"
-                                  >
-                                    <Trash2 size={12} />
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="p-1.5 bg-slate-100 flex justify-between items-center text-xs border-t border-slate-200">
-                            <span className="text-[9px] text-[#64748B] font-bold uppercase">
-                              Total: {recetaItems.length}
-                            </span>
-                            <span className="font-black text-[var(--color-ink)] text-[11px]">
-                              Costo estimado:{' '}
-                              <strong className="text-emerald-700">
-                                S/{' '}
-                                {(
-                                  recetaItems.reduce((acc, it) => acc + (Number(it.component_cost || 0) * it.quantity), 0) +
-                                  (tipoCompuesto === 'RECETA' ? (Number(costoAdicionalProd) || 0) : 0)
-                                ).toFixed(2)}
-                              </strong>
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-[9px] text-amber-700 bg-amber-50 p-1.5 border border-amber-200 font-bold">
-                          ⚠️ Aún no has agregado componentes a este combo o receta.
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-            </div>
-
-            {/* FOOTER DEL PANEL LATERAL */}
-            <div className="bg-[var(--color-surface)] px-4 py-2.5 border-t-2 border-[var(--color-ink)] flex items-center justify-between shrink-0">
-              <span className="text-[9px] font-bold text-[#64748B] uppercase">
-                {tieneOpcionesAvanzadasActivas ? '✓ Opciones avanzadas activas' : 'Opciones opcionales'}
-              </span>
-              <button
-                id="btn-listo-panel-avanzado"
-                type="button"
-                onClick={() => setShowAdvancedPanel(false)}
-                className="px-3 py-1.5 bg-[var(--color-ink)] text-white text-[10px] font-black uppercase tracking-wider hover:bg-[var(--color-success)] hover:text-[var(--color-ink)] transition-colors cursor-pointer flex items-center gap-1.5 shadow-[2px_2px_0_0_var(--color-ink)] hover:shadow-none"
-              >
-                <Check size={14} />
-                <span>Listo / Volver a Principal</span>
-              </button>
-            </div>
+            )}
           </div>
         )}
 

@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProducto.tsx": {
-    "mtime": 1793489975.6827028,
-    "seen": 1793490589.4622645,
-    "ast_hash": "8168615f417679780fcdcd40c1e4598b",
+    "mtime": 1793639118.8355508,
+    "seen": 1793639359.7799902,
+    "ast_hash": "8330ee02d1a355b049cacaf230a9decd",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaLotes.tsx": {
@@ -1458,9 +1458,9 @@
     "semantic_hash": ""
   },
   "servidor/sql/seguridad-sesion.sql": {
-    "mtime": 1793488729.9941764,
-    "seen": 1793490589.4622047,
-    "ast_hash": "6a20cda7494fb3e61421e60e7f299811",
+    "mtime": 1793590961.550416,
+    "seen": 1793637325.7299905,
+    "ast_hash": "141175b8808361e190f0e81e7df18981",
     "semantic_hash": ""
   },
   "servidor/activar-seguridad.sh": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793490452.998522,
-    "seen": 1793490589.4623349,
-    "ast_hash": "c47dd91dcec6c6df1f9cfb5e64895f1e",
+    "mtime": 1793639287.9989333,
+    "seen": 1793639359.780064,
+    "ast_hash": "eeb1dbb866454337082a886b4ec59a8e",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793490513.3238282,
-    "seen": 1793490589.4623358,
-    "ast_hash": "98e8a534f90ef502cd1a6942020d99d5",
+    "mtime": 1793639315.7246206,
+    "seen": 1793639359.7800648,
+    "ast_hash": "676b6b685ea3109ed51bd41bcfcde84d",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793490565.4099822,
-    "seen": 1793490589.4623365,
-    "ast_hash": "49df81359380d42c1edf222272cb97ca",
+    "mtime": 1793639339.8231323,
+    "seen": 1793639359.7800658,
+    "ast_hash": "949600e05a955aa34090d9e5becf6186",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793490475.788813,
-    "seen": 1793490589.4623375,
-    "ast_hash": "80ee361bcbd80774b8276f1c5a1a8692",
+    "mtime": 1793639299.2112985,
+    "seen": 1793639359.7800665,
+    "ast_hash": "dcc557a2a5028f6fa7cecef881042b8b",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2268,9 +2268,93 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProduccion.tsx": {
-    "mtime": 1793489958.9109972,
-    "seen": 1793490589.4622633,
-    "ast_hash": "f432b3de309c4723db298a648f20d441",
+    "mtime": 1793591021.270412,
+    "seen": 1793637325.7300868,
+    "ast_hash": "aaddf4d42d5f9a8959fc253c02b6e1c0",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/limpiar-siumax-total.cjs": {
+    "mtime": 1793633627.0462892,
+    "seen": 1793637325.7298203,
+    "ast_hash": "ea9bc2218d2131ccfa8d353aa59f90d0",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-modal-lateral.mjs": {
+    "mtime": 1793637121.7485898,
+    "seen": 1793637325.729861,
+    "ast_hash": "264c80554407e9e4aef952b2d777f046",
+    "semantic_hash": ""
+  },
+  "scratch/apply_fn_siumax.cjs": {
+    "mtime": 1793590976.6931562,
+    "seen": 1793637325.7299392,
+    "ast_hash": "3b99126fa5daa1245c88c9e07e7b185e",
+    "semantic_hash": ""
+  },
+  "scratch/check_sync_batches.cjs": {
+    "mtime": 1793590736.3054626,
+    "seen": 1793637325.729941,
+    "ast_hash": "3304e380ea9178e06c5eaeaec5e4dc54",
+    "semantic_hash": ""
+  },
+  "scratch/count_siumax.cjs": {
+    "mtime": 1793633452.141865,
+    "seen": 1793637325.7299428,
+    "ast_hash": "364c8dffd0b87a926ad65e2f98ee9165",
+    "semantic_hash": ""
+  },
+  "scratch/inspect_siumax_production.cjs": {
+    "mtime": 1793590526.182351,
+    "seen": 1793637325.7299445,
+    "ast_hash": "4cb308f40e80f6f2535c9d7c2072fa2b",
+    "semantic_hash": ""
+  },
+  "scratch/test_confirm_close.cjs": {
+    "mtime": 1793591103.4180276,
+    "seen": 1793637325.729946,
+    "ast_hash": "5aa31235b1fbbb3888146235b83f661c",
+    "semantic_hash": ""
+  },
+  "scratch/test_fn_76.cjs": {
+    "mtime": 1793590565.6887429,
+    "seen": 1793637325.729947,
+    "ast_hash": "ff3ba554497ce8fa0a2223c2872bb72b",
+    "semantic_hash": ""
+  },
+  "scratch/test_fn_fix.cjs": {
+    "mtime": 1793590882.4109018,
+    "seen": 1793637325.7299485,
+    "ast_hash": "d6b41aacbdde299ba6b313c7990754b1",
+    "semantic_hash": ""
+  },
+  "scratch/test_producir_con_receta.cjs": {
+    "mtime": 1793582927.795754,
+    "seen": 1793637325.7299495,
+    "ast_hash": "efc5172ec41ade076554c609369113ba",
+    "semantic_hash": ""
+  },
+  "scratch/test_producir_modal.cjs": {
+    "mtime": 1793582848.9904778,
+    "seen": 1793637325.7299507,
+    "ast_hash": "d05d2d7064f62bcc22cf3b0aa7656972",
+    "semantic_hash": ""
+  },
+  "scratch/test_user_production_click.cjs": {
+    "mtime": 1793590610.9494748,
+    "seen": 1793637325.729952,
+    "ast_hash": "8c0f328a9919888c869415dd96ade853",
+    "semantic_hash": ""
+  },
+  "scratch/verify_clean_ui.cjs": {
+    "mtime": 1793633678.290026,
+    "seen": 1793637325.7299533,
+    "ast_hash": "4a34a53f4802105909758efc00244acf",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-modal-opciones-abajo.mjs": {
+    "mtime": 1793639198.2200859,
+    "seen": 1793639359.7798424,
+    "ast_hash": "6c50b17453198035ef7e1af2462e316e",
     "semantic_hash": ""
   }
 }

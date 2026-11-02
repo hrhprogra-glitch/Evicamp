@@ -7,6 +7,33 @@
 
 ---
 
+## 02/11/2026 (tarde, 63) · Antigravity
+- **Opciones Avanzadas Desplegables Hacia Abajo y Botón Único en Modal de Producto:**
+  - **Petición del dueño:** *"no me gusto mejor que sea para abajo las opciones avanzadas y quitas los botones de opciones avanzadas que solo haiga uno porque 4 son incesarios"*.
+  - **Ajustes realizados en `src/sections/Inventario/components/ModalProducto.tsx`:**
+    1. **Eliminación de botones e interfaces innecesarias:**
+       - Se quitó la pestaña vertical flotante exterior (`#btn-toggle-avanzado-lateral`).
+       - Se quitó el botón de la cabecera (`#btn-header-toggle-avanzado`).
+       - Se quitó el botón en el footer (`#btn-footer-toggle-avanzado`).
+       - Se retiró el panel lateral derecho acoplado (`#panel-opciones-avanzadas-derecho`).
+    2. **Un Único Botón Claro y Central:**
+       - Se colocó un único botón interactivo `#btn-toggle-opciones-avanzadas` dentro del formulario, ubicado inmediatamente después de los datos básicos y precios.
+       - Muestra el texto *"▶ Más Opciones Avanzadas (Ubicación, Garantías, Escalas, Tallas, Recetas)"* y el control *"Desplegar ▼"* / *"Ocultar ▲"*.
+       - Si el producto ya tiene opciones avanzadas activas (variantes, recetas, escalas, presentaciones, etc.), muestra el distintivo verde *"✓ Activas"*.
+    3. **Despliegue Vertical Hacia Abajo:**
+       - Al pulsar el botón, las opciones avanzadas (Fase 3: Búsqueda y ubicación, Fase 6: Garantías y series, Fase 1.3: Escalas, Fase 1.2: Presentaciones, Fase 7: Variantes, Fase 8: Recetas y combos) se despliegan hacia abajo fluidamente dentro del cuerpo scrolleable del modal principal.
+       - No hay ventanas flotantes, no hay laterales, no hay saltos de pantalla.
+    4. **Footer Limpio:**
+       - El pie del modal queda exclusivamente para las acciones finales alineadas a la derecha: `[ Guardar ]` y `[ Guardar e ir a Lotes ]`.
+  - **Pruebas y Verificación:**
+    - `npm run build`: compilación limpia en 3.93s sin errores de TypeScript ni Vite.
+    - Desplegado a `https://siumax.duckdns.org` con `node ai-scripts/deploy.cjs siumax`.
+    - Script automatizado de pruebas `ai-scripts/pruebas/prueba-modal-opciones-abajo.mjs`: 4/4 checks aprobados ✅ (validado que no existen botones redundantes, existe un único botón `#btn-toggle-opciones-avanzadas`, las opciones se abren hacia abajo y se repliegan perfectamente).
+    - Capturas visuales inspeccionadas y verificadas (`modal_opciones_plegado.png` y `modal_opciones_desplegadas_abajo.png`).
+  - **Siguiente paso:** Notificar al dueño con capturas para que continúe sus pruebas generales en siumax.
+
+---
+
 ## 02/11/2026 (tarde, 62) · Antigravity
 - **Simplificación y Organización de Creación de Producto (Ventana Fija + Panel Lateral Derecho con Flecha):**
   - **Petición del dueño:** *"a ver me di cuenta de algo es muy complejo y confundo lo que se llena en cada producto los primeros pasos son faciles pero el resto confunde tiene tantas cosas mi pregunta es se puede ser mas intuitivo y facil de ingresar los producto porque con funde en lotes se ingresa lo que compraste y lo que te costo no? y productos ingresas el precio general eso esta bien creo pero ahi no hay algo que diga eso dice Precio de Venta Sugerido lo que haremos es colocar un flechita arriba de esa ventana de producto para separar lo de llenar los datos importante a los datos que se usan pero para diversas cosas... quiero que la flechita no esta abajo si no al costado al lado derecho pero ojo que la posición de la ventana principal se mantenga"*.

@@ -251,4 +251,9 @@
     3. El panel lateral de opciones avanzadas se posiciona adosado a la derecha mediante `fixed xl:absolute xl:left-[calc(100%+12px)] top-10 xl:top-0 bottom-10 xl:bottom-0 max-w-[490px]`.
     4. De esta manera, el modal central conserva su posición exacta a nivel de pixel (comprobado con `getBoundingClientRect` en Puppeteer: `x, y, width` idénticos antes y después de abrir el panel).
 
+## 15. Preferencia de Usuario: Despliegue Vertical vs Paneles Múltiples
+- **Un solo botón claro y directo:** Si una funcionalidad avanzada puede desplegarse en la misma vista, es preferible evitar saturar la interfaz con múltiples botones de acceso (por ejemplo en cabecera, lateral y footer simultáneamente). Cuatro botones para una misma acción se perciben redundantes e invasivos.
+- **Despliegue vertical hacia abajo (Acordeón):** Cuando el usuario prefiera no tener paneles flotantes o adosados, colocar un único botón banner al final de los datos básicos (`#btn-toggle-opciones-avanzadas`) que alterne entre `"Desplegar ▼"` y `"Ocultar ▲"`. Al desplegarse hacia abajo dentro del contenedor con scroll `.custom-scrollbar`, permite al usuario ingresar o saltarse las opciones avanzadas de manera natural y sin distracciones visuales.
+
+
 

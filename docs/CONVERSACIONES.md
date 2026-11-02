@@ -543,3 +543,13 @@
           4. Al hacer clic, se abre adosado a la derecha un panel lateral (`panel-opciones-avanzadas-derecho`) que contiene todas las configuraciones avanzadas (Ubicación, Garantías, Series, Escalas por cantidad, Presentaciones/Empaques, Variantes de ropa/calzado y Recetas/Combos), sin mover la ventana central.
         - Se verificó con Puppeteer en Edge que la posición del modal central `(x: 384, y: 111, width: 672)` es 100% idéntica antes y después de abrir el panel lateral.
         - Desplegado en `https://siumax.duckdns.org`. Evicamp y GitHub main intactos (Regla 4).
+      55. **Cambio a Despliegue Vertical Hacia Abajo con Botón Único (02/11 tarde):**
+        - El dueño revisó el panel lateral y solicitó: *"no me gusto mejor que sea para abajo las opciones avanzadas y quitas los botones de opciones avanzadas que solo haiga uno porque 4 son incesarios"*.
+        - Se ajustó `ModalProducto.tsx`:
+          1. Se retiró la pestaña lateral derecha, el botón del header, el botón del footer y el panel lateral adosado.
+          2. Se colocó un único botón limpio y central `#btn-toggle-opciones-avanzadas` dentro del modal, justo tras los datos básicos y precios.
+          3. Al hacer clic o presionar Enter, las opciones avanzadas (Ubicación en tienda, Garantías y series, Escalas de precios, Presentaciones de empaque, Variantes de ropa/calzado y Recetas/Combos) se despliegan directamente hacia abajo dentro del flujo del formulario con scroll fluido.
+          4. El footer quedó libre de botones extra, dejando solo `[ Guardar ]` y `[ Guardar e ir a Lotes ]`.
+        - Validado con Puppeteer (`ai-scripts/pruebas/prueba-modal-opciones-abajo.mjs`, 4/4 checks ✅).
+        - Desplegado en `https://siumax.duckdns.org`. Evicamp y GitHub permanecen intactos (Regla 4).
+

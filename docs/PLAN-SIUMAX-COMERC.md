@@ -4,7 +4,7 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 02/11/2026 (tarde, 62), Antigravity: Modal de creación de productos rediseñado para máxima intuición. Ventana principal fija y limpia en el centro con datos esenciales (Nombre, Categoría, Códigos, Foto, Precio de Venta en Caja PVP, Mayorista opcional, Stock Mínimo), y pestaña/flecha lateral en el borde derecho que despliega panel adosado con opciones avanzadas (Ubicación, Garantías, Escalas, Presentaciones, Variantes, Recetas) sin desplazar el modal central. Probado con Puppeteer y desplegado en `siumax.duckdns.org`. Evicamp y GitHub main intactos (Regla 4).
+- **Última actualización:** 02/11/2026 (tarde, 63), Antigravity: Modal de creación de productos optimizado según petición del dueño. Se retiraron el panel lateral y los 4 botones redundantes; ahora hay un único botón central `#btn-toggle-opciones-avanzadas` que despliega las opciones avanzadas (Ubicación, Garantías, Escalas, Presentaciones, Variantes, Recetas) verticalmente hacia abajo dentro del mismo modal con scroll limpio. Probado con Puppeteer (4/4 checks ✅) y desplegado en `siumax.duckdns.org`. Evicamp y GitHub main intactos (Regla 4).
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 3, 4, 5, 6 y 7 en producción en Evicamp (commits d36efca, bd3780f, 994bdca, 59538a0 y merge de Fase 7).
 - **Fase terminada en pruebas:** Fase 8 (Producción y Encargos).
 
