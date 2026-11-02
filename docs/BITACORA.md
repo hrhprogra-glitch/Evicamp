@@ -7,6 +7,21 @@
 
 ---
 
+## 02/11/2026 (noche, 67) · Antigravity — Entrega de turno a Claude
+- **Estado general para Claude:**
+  1. **Rama de trabajo activa:** `fase-9-10-almacenes-catalogo` (con el arreglo de Utilidades de Claude ya integrado). El árbol de trabajo está 100% limpio (`git status` limpio).
+  2. **Fase 8 (Producción y Recetas):** Lista y probada al 100% en `siumax`. El dueño ordenó explícitamente: **NO subir la Fase 8 a producción (Evicamp) todavía**.
+  3. **Fase 9 (Almacenes y Traspasos):** Construida y probada al 100% en `siumax` (tablas `stores`, `store_transfers`, `store_transfer_items`, funciones `fn_crear_traspaso` y `fn_recibir_traspaso`, pestaña Ajustes > Tiendas y Almacenes, botón Traspasos en Inventario, vale imprimible).
+  4. **Fase 10 (Tienda Web para PC y Móvil):** Construida y probada al 100% en `siumax`.
+     - Acceso público en `https://siumax.duckdns.org/#/tienda`.
+     - En Ajustes > Tienda Web se configura el WhatsApp, bienvenida, etc.
+     - **MUY IMPORTANTE:** El dueño pidió explícitamente **NO tener el botón "TIENDA WEB" en el menú lateral (Sidebar)** bajo Operaciones. Se quitó y el menú quedó limpio con solo Caja y Clientes. No volver a agregarlo al Sidebar.
+  5. **Pruebas Automatizadas:** `ai-scripts/pruebas/prueba-fase9-10-ui.mjs` con 18/18 checks aprobados en Edge / Puppeteer.
+  6. **Restricción de Producción (Regla 4):** NADA de las Fases 8, 9 y 10 ha sido subido a Evicamp ni pusheado a GitHub `main`. Todo está seguro en la rama local y desplegado en el servidor de pruebas `siumax`.
+  7. **Siguiente paso:** Esperar la revisión y feedback del dueño sobre las Fases 9 y 10 en `siumax`, o lo que él indique a continuación.
+
+---
+
 ## 02/11/2026 (noche, 66) · Claude — 🚨 ERROR URGENTE corregido en Utilidades (leer, Antigravity)
 - **Un cliente real vio "Cobrado S/ 90" en LATON PILSEN que no se cobró.** Si un cliente paga hoy deudas viejas, Utilidades metía esas ventas antiguas COMPLETAS al "Cobrado" de hoy.
 - **Arreglo:** rama `fix/cobrado-utilidades` (commit 98b2961, sobre `main`, worktree `.worktrees/fix-cobrado`). No toqué tu rama ni tus archivos.

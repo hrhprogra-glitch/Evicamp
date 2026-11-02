@@ -88,8 +88,8 @@ es **siumax** (https://siumax.duckdns.org).
 | **6** | **Devoluciones, cambios que devuelven stock y garantía con número de serie o IMEI** | ✅ Hecha y subida (31/10/2026, commit 59538a0) |
 | **7** | **Tallas y colores (variantes con stock propio)** | ✅ **Hecha y subida a Evicamp y GitHub (31/10/2026)** |
 | **8** | Producción y encargos (recetas e insumos, kits) | ⏭️ Listo en pruebas |
-| **9** | Varias tiendas o almacenes y traspasos | En propuesta |
-| **10** | Tienda Web (PC y celular, pedidos por WhatsApp, opción de ocultar precios) | En propuesta |
+| **9** | Varias tiendas o almacenes y traspasos | ⏭️ Listo en pruebas (02/11) |
+| **10** | Tienda Web (PC y celular, pedidos por WhatsApp, opción de ocultar precios) | ⏭️ Listo en pruebas (02/11) |
 | **11** | SUNAT: boleta y factura electrónica | **En pausa** hasta que el dueño lo pida (ver sección 7) |
 
 Orden acordado: 4 → luego 3 y 6 (importantes para ferreterías) → el resto. Para ferreterías que venden a empresas,

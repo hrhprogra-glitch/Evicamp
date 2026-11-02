@@ -260,5 +260,10 @@
 - **Un solo botón claro y directo:** Si una funcionalidad avanzada puede desplegarse en la misma vista, es preferible evitar saturar la interfaz con múltiples botones de acceso (por ejemplo en cabecera, lateral y footer simultáneamente). Cuatro botones para una misma acción se perciben redundantes e invasivos.
 - **Despliegue vertical hacia abajo (Acordeón):** Cuando el usuario prefiera no tener paneles flotantes o adosados, colocar un único botón banner al final de los datos básicos (`#btn-toggle-opciones-avanzadas`) que alterne entre `"Desplegar ▼"` y `"Ocultar ▲"`. Al desplegarse hacia abajo dentro del contenedor con scroll `.custom-scrollbar`, permite al usuario ingresar o saltarse las opciones avanzadas de manera natural y sin distracciones visuales.
 
-
+## 16. Lecciones Técnicas y Reglas de Diseño de Fases 9 y 10 (Almacenes y Tienda Web)
+- **Menú lateral de operaciones:** El dueño rechazó tajantemente tener el botón "TIENDA WEB" en el menú lateral bajo Operaciones ("no quiero eso"). El menú de operaciones debe mantenerse limpio y enfocado a la caja física (únicamente `Caja` y `Clientes`). La Tienda Web no es una sección operativa interna: se configura en **Ajustes > Tienda Web** y los clientes externos acceden mediante el enlace público `#/tienda`. **No volver a agregar Tienda Web al Sidebar.**
+- **Nombre de columna de costo en PostgREST:** En la tabla `products`, la columna se llama `cost_price`. Hacer `select=...,cost,...` devuelve error HTTP 400 Bad Request. Siempre usar `cost_price`.
+- **Estructura de la tabla `stores`:** Usa nombres de columnas en español: `nombre`, `codigo`, `direccion`, `telefono`, `whatsapp`, `es_almacen_principal`, `activo`.
+- **Acceso público sin JWT a funciones RPC de Tienda Web:** PostgREST valida sesiones mediante `fn_verificar_peticion()`. Toda función destinada a clientes externos anónimos (`fn_catalogo_publico`, `fn_crear_pedido_web`) debe ser explícitamente exceptuada (whitelist) en dicha función para permitir llamadas POST sin token `x-sesion`.
+- **Campo de dirección en checkout:** En el modal de pedidos de Tienda Web (`TiendaModalPedido`), el input de dirección (`#input-pedido-direccion`) solo se renderiza si la modalidad elegida es Delivery (`#btn-entrega-delivery`). Por defecto está en Recojo en tienda (`#btn-entrega-recojo`).
 
