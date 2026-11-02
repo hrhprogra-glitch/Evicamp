@@ -39,6 +39,10 @@ export interface VentaProductoDetalle {
   montoAbonado?: number;
   montoRestante?: number;
   fiadoCompleto?: boolean;
+  // Venta de OTRO período que aparece solo porque se abonó su deuda dentro de este rango.
+  ventaAnterior?: boolean;
+  // Lo que de esta línea se cobró DENTRO del período (es lo que suma al "Cobrado" del producto).
+  cobradoEnPeriodo?: number;
 }
 
 // NUEVA INTERFAZ PARA EL ANÁLISIS DE RENTABILIDAD

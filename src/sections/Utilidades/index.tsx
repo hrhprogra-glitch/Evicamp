@@ -68,6 +68,16 @@ export const Utilidades = () => {
 
       const facturasValidas = (sales || []).filter(s => s.sunat_status !== 'ANULADO');
       const salesById = new Map(facturasValidas.map((s: any) => [s.id, s]));
+      // Ventas que de verdad ocurrieron en el rango (las que se agregan abajo por abonos NO están aquí).
+      const idsVentasDelRango = new Set(facturasValidas.map((s: any) => s.id));
+
+      // 💵 ABONOS PAGADOS DENTRO DEL RANGO, por fiado: es lo único que una deuda aporta al
+      // "Cobrado" de este período (mismo criterio que el motor único utils/ingresos.ts).
+      const abonosEnRangoPorFiado: Record<string, number> = {};
+      (debts || []).forEach((d: any) => {
+        if (d.fiado_id == null) return;
+        abonosEnRangoPorFiado[d.fiado_id] = (abonosEnRangoPorFiado[d.fiado_id] || 0) + Number(d.amount || 0);
+      });
 
       // 🔄 FIADOS DE OTRO DÍA PAGADOS DENTRO DE ESTE RANGO: si hoy cobras una deuda de una
       // venta de OTRO día, esa venta no está en "facturasValidas" (quedó fuera por fecha) y su
@@ -131,7 +141,7 @@ export const Utilidades = () => {
           const chunk = idsConCredito.slice(i, i + chunkSize);
           const { data: fiadosChunk } = await supabase
             .from('fiados')
-            .select('sale_id, customer_name, amount, paid_amount')
+            .select('id, sale_id, customer_name, amount, paid_amount')
             .in('sale_id', chunk);
           (fiadosChunk || []).forEach((f: any) => { fiadosMap[f.sale_id] = f; });
         }
@@ -179,17 +189,25 @@ export const Utilidades = () => {
         const restante = esFiado ? Math.max(0, deudaTotal - (fiado ? Number(fiado.paid_amount || 0) : 0)) : 0;
         const abonado = esFiado ? Math.max(0, deudaTotal - restante) : 0;
 
-        // 💰 SOLO LO PAGADO: si la venta no es fiada, la línea entra al 100%. Si es fiada,
-        // prorrateamos kilos/unidades, ingreso Y costo por la fracción de ESA venta ya abonada
-        // (no hay forma de saber qué producto específico del carrito quedó fiado cuando la
-        // venta mezcla pagado + fiado, así que repartimos el abono proporcionalmente).
+        // 💰 SOLO LO COBRADO EN ESTE PERÍODO: si la venta no es fiada, la línea entra al 100%.
+        // Si es fiada, prorrateamos kilos/unidades, ingreso Y costo por la fracción de ESA venta
+        // cobrada DENTRO del rango: lo pagado al momento (solo si la venta es del rango) + los
+        // abonos hechos en el rango (no hay forma de saber qué producto del carrito quedó fiado,
+        // así que repartimos proporcionalmente).
+        // ⚠️ ERROR CORREGIDO (02/11/2026): antes se usaba TODO lo abonado del fiado (de cualquier
+        // fecha). Si un cliente pagaba hoy deudas viejas, sus ventas de otros días entraban
+        // completas al "Cobrado" de hoy (ej. LATON PILSEN mostraba S/ 90 que no se cobraron hoy).
         const totalVenta = Number(ventaOrigen?.total || 1);
-        const pagadoAlContado = Number(ventaOrigen?.amount_cash || 0) + 
-                                Number(ventaOrigen?.amount_yape || 0) + 
-                                Number(ventaOrigen?.amount_transfer || 0) + 
-                                Number(ventaOrigen?.amount_card || 0);
-        
-        const totalPagado = pagadoAlContado + abonado;
+        const esVentaDelRango = idsVentasDelRango.has(d.sale_id);
+        const pagadoAlContado = esVentaDelRango
+          ? Number(ventaOrigen?.amount_cash || 0) +
+            Number(ventaOrigen?.amount_yape || 0) +
+            Number(ventaOrigen?.amount_transfer || 0) +
+            Number(ventaOrigen?.amount_card || 0)
+          : 0;
+        const abonadoEnRango = fiado ? Number(abonosEnRangoPorFiado[fiado.id] || 0) : 0;
+
+        const totalPagado = pagadoAlContado + abonadoEnRango;
         const fraccionPagada = esFiado ? Math.min(1, Math.max(0, totalPagado / totalVenta)) : 1;
 
         // 🚀 PASO 2: LEER COSTO REAL
@@ -222,7 +240,9 @@ export const Utilidades = () => {
           clienteNombre: fiado?.customer_name || null,
           montoAbonado: esFiado ? abonado : undefined,
           montoRestante: esFiado ? restante : undefined,
-          fiadoCompleto: esFiado ? restante <= 0.009 : undefined
+          fiadoCompleto: esFiado ? restante <= 0.009 : undefined,
+          ventaAnterior: !esVentaDelRango,
+          cobradoEnPeriodo: ingresoLinea * fraccionPagada
         });
       });
 
