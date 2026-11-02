@@ -526,3 +526,11 @@
           3. `ModalProduccion.tsx` ahora invoca `onClose()` y `onSuccess()` de inmediato en el milisegundo de respuesta del backend, cerrando la ventana al instante y mostrando el aviso de éxito sobre la pantalla limpia de inventario.
         - Validado al 100% con Puppeteer en Edge ejecutando la orden real del producto `PAN` del dueño y comprobando el cierre automático del modal y la actualización de stock.
         - Desplegado a `siumax.duckdns.org`. Evicamp y GitHub permanecen intactos esperando la orden del dueño.
+      53. **Explicación de Tipos de Producto y Limpieza Total de `siumax` para Pruebas Generales (02/11 mañana):**
+        - El dueño pidió: *"otra cosa mas pero es mas para que me expliques como funciona Tipo de Producto y Composición"*. Se le detallaron con ejemplos peruanos las 3 modalidades: Estándar (compra y venta directa), Combo / Kit (descuento en Caja de insumos al momento de cobrar) y Elaborado / Receta (fabricación previa con `[ + Producir ]` antes de poner en vitrina).
+        - El dueño solicitó: *"perfecto ahora hare pruebas generales quiero que borres todos los prodcutos y el historial de finanzas y de cliente tambien que borres todo para yo probar cada cosa antes de avanzar hare pruebas generales"*.
+        - Se le solicitó confirmación mediante `ask_question` para definir el alcance, confirmando el vaciado de productos, ventas, finanzas, clientes y compras manteniendo intactos el usuario administrador y datos de empresa.
+        - Se creó respaldo previo en VPS (`/var/lib/postgresql/respaldo-siumax-antes-limpieza-2026-11-02T15-34-09-179Z.dump`, 435 KB).
+        - Se ejecutó el vaciado controlado en `siumax` (`ai-scripts/pruebas/limpiar-siumax-total.cjs`), reseteando secuencias a 1.
+        - Evicamp y GitHub main quedaron 100% intactos (Regla 4).
+        - Verificado por navegador: inventario y tablas listas en blanco para pruebas generales.

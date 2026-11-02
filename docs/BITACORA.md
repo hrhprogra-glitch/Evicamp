@@ -7,6 +7,27 @@
 
 ---
 
+## 02/11/2026 (mañana, 61) · Antigravity
+- **Limpieza Total y Puesta a Punto de la Base de Pruebas `siumax` para Pruebas Generales del Dueño:**
+  - **Petición del dueño:** *"perfecto ahora hare pruebas generales quiero que borres todos los prodcutos y el historial de finanzas y de cliente tambien que borres todo para yo probar cada cosa antes de avanzar hare pruebas generales"*.
+  - **Confirmación interactiva:** Mediante `ask_question`, el dueño confirmó la opción recomendada de vaciado integral manteniendo intacto el usuario administrador y la configuración de la empresa.
+  - **1. Respaldo de seguridad previo en VPS:**
+    - Creado respaldo completo con `pg_dump`: `/var/lib/postgresql/respaldo-siumax-antes-limpieza-2026-11-02T15-34-09-179Z.dump` (435 KB).
+  - **2. Vaciado controlado en base `siumax` (`ai-scripts/pruebas/limpiar-siumax-total.cjs`):**
+    - **Productos e Inventario:** `products`, `product_variants`, `product_recipes`, `batches`, `inventory_movements`, `waste` (todo a 0).
+    - **Ventas, Finanzas y Caja:** `sales`, `sale_details`, `cambios_productos`, `cash_sessions`, `cash_movements`, `fiados`, `debt_payments`, `yape_notifications` (todo a 0).
+    - **Clientes y Documentos:** `customers`, `grupos_clientes`, `cotizaciones`, `cotizacion_detalles`, `pedidos_clientes`, `pedido_detalles` (todo a 0).
+    - **Compras y Proveedores:** `compras`, `compras_detalle`, `compras_historial`, `providers` (todo a 0).
+    - **Secuencias reiniciadas:** `products_id_seq`, `customers_id_seq`, `sales_id_seq`, `product_recipes_id_seq`, etc. reiniciadas para empezar desde 1.
+    - **Intactos y preservados:** `empleados` (5), `sesiones` (36), `empresa_config` (1), `categories`.
+    - **Evicamp (producción):** Intacto y blindado al 100% (Regla 4).
+  - **3. Verificación:**
+    - Esquema de PostgREST recargado con `NOTIFY pgrst, 'reload schema'`.
+    - Verificación visual con Puppeteer en `https://siumax.duckdns.org`: Inventario abre 100% limpio y funcional ("No se registran productos con esos parámetros").
+  - **Siguiente paso:** Avisar al dueño para que realice sus pruebas generales desde cero.
+
+---
+
 ## 01/11/2026 (noche, 60) · Antigravity
 - **Corrección de Confirmación y Cierre en Modal de Producción:**
   - **Problema reportado por el dueño:** *"hay un error cuando confirmo la produccción no se cierra la ventan si mantiene ahi como si nunca lo hubiera confirmado"*.
