@@ -20,7 +20,6 @@ const PERMISOS_POR_MODULO: Record<string, ClavePermiso[]> = {
   finanzas: ['caja_abrir_cerrar_turno', 'caja_ingresos_egresos'],
   utilidades: ['gerencia_ver_utilidades'],
   configuracion: ['gerencia_configuracion_sistema', 'gerencia_gestionar_usuarios'],
-  tienda_web: [],
 };
 
 export const puedeVerModulo = (permisos: Partial<PermisosUsuario> | null | undefined, modulo: string) => {

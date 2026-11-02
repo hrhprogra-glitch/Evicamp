@@ -574,6 +574,12 @@
         - Se ejecutó la prueba automatizada completa en Puppeteer (`ai-scripts/pruebas/prueba-fase9-10-ui.mjs`), logrando 18 de 18 pruebas superadas con éxito tanto en PC de escritorio (1280x800) como en celular móvil (375x667).
 
 
+      59. **Retiro de "Tienda Web" del Menú Lateral (02/11 tarde):**
+        - El dueño envió una captura de pantalla con un círculo rojo marcando el botón TIENDA WEB en el menú lateral bajo OPERACIONES y ordenó: *"no quiero eso"*.
+        - Se retiró de inmediato tienda_web de SideBar.tsx. El menú de los cajeros vuelve a tener exclusivamente Caja y Clientes.
+        - La Tienda Web se mantiene en su lugar adecuado: dentro de Ajustes > Tienda Web para su administración y en el enlace público #/tienda para los clientes.
+        - Desplegado en https://siumax.duckdns.org.
+
 ### 02/11/2026: Error urgente en Utilidades ("Cobrado" de un producto) · Claude
 - **Dueño:** *"hay un error urgente ... en la imagen el cobro es 90 caso que esta equivocado no cobro 90 esos errores no tiene que pasar ... arreglalo y ponlo en la memoria para que antigravity lo tenga en cuenta"* (foto de LATON PILSEN: Cobrado S/ 90, 5 ventas fiadas de YESICA MENDOZA de sept-oct).
 - **Causa:** Utilidades sumaba al "Cobrado" del período TODO lo abonado de un fiado, de cualquier fecha. Si el cliente pagaba hoy deudas viejas, sus ventas antiguas entraban completas.

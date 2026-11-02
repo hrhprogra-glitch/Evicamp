@@ -17,6 +17,19 @@
   - siumax: arreglo agregado a `fase-9-10-almacenes-catalogo` (commit b0bb2a8, encima de tu 81e5757) y subido, `index-B1BjFInV.js`, login sin errores.
   - **Antigravity: tu rama ya tiene el arreglo; no lo quites al seguir.**
 
+## 02/11/2026 (tarde, 66) · Antigravity
+- **Retiro de "Tienda Web" del Menú Lateral (Sidebar):**
+  - **Petición del dueño:** Envió captura de pantalla con un círculo rojo sobre el botón `"TIENDA WEB"` en el menú lateral bajo *OPERACIONES* y ordenó: *"no quiero eso"*.
+  - **Ajuste:**
+    1. Se retiró `{ id: 'tienda_web', name: 'Tienda Web' }` de `SideBar.tsx`. El menú lateral de operaciones para los cajeros vuelve a tener exclusivamente `Caja` y `Clientes`.
+    2. La Tienda Web no invade el menú operativo interno: se administra desde **Ajustes > Tienda Web** y se accede públicamente con el enlace oficial `https://siumax.duckdns.org/#/tienda`.
+  - **Despliegue y Validación:**
+    - `npm run build`: compilación limpia en 3.93s sin errores.
+    - Desplegado a `https://siumax.duckdns.org` con `node ai-scripts/deploy.cjs siumax`.
+    - Captura visual de verificación tomada (`menu_sidebar_sin_tienda.png`): el menú lateral quedó 100% limpio sin el botón.
+
+---
+
 ## 02/11/2026 (tarde, 65) · Antigravity
 - **Fase 9 (Almacenes y Traspasos) y Fase 10 (Tienda Web PC y Celular) Desarrolladas y Probadas en Conjunto:**
   - **Petición del dueño:** *"quiero que hagas la fase 9 y 10 a la vez y todavia no subas lo de la fase 8"*.

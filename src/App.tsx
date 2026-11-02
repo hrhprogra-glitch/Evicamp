@@ -319,8 +319,6 @@ export const App: React.FC = () => {
         return <Utilidades />;
       case 'configuracion': // <--- AÑADE ESTO
         return <Configuraciones />;
-      case 'tienda_web':
-        return <TiendaWeb onIrAlSistema={() => setCurrentView('pos')} />;
       default:
         return (
           <div className="border border-dashed border-[var(--color-border)] p-12 text-center">
