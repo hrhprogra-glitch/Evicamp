@@ -9,11 +9,12 @@
 
 ## 02/11/2026 (tarde, 64) · Antigravity
 - **Consulta de Fases y Decisión de Avanzar Fases 9 y 10 (Fase 8 permanece en pruebas):**
-  - **Petición del dueño:** *"vamos hacer la fases 9 y 10 pero todavia no pases a la producción la fase 8"*.
+  - **Petición del dueño:** *"vamos hacer la fases 9 y 10 pero todavia no pases a la producción la fase 8"* y posteriormente *"perfecto pero que sea en vez de catagolo tienda web y otra cosa mas que no solo funcione en celular si no tambien pc ajusta eso atu propuesta"*.
   - **Acciones y Compromisos:**
     1. Se respeta rigurosamente la instrucción y la Regla 4: la Fase 8 (Producción, Recetas y Combos) no se sube a Evicamp (producción) ni a GitHub `main`. Permanece 100% probada y funcional en el entorno de pruebas (`siumax`).
-    2. Se elaboró la propuesta completa de la **Fase 9 (Múltiples tiendas, almacenes y traspasos)** y la **Fase 10 (Catálogo web con pedidos por WhatsApp)**.
-    3. Se presenta la propuesta al dueño en español sencillo para esperar su OK antes de escribir código nuevo en la rama de trabajo `fase-9-10-almacenes-catalogo`.
+    2. Se elaboró la propuesta completa de la **Fase 9 (Múltiples tiendas, almacenes y traspasos)**.
+    3. Se ajustó la propuesta de la **Fase 10**: pasa a llamarse oficialmente **"Tienda Web"** y se diseñará con experiencia completa y optimizada tanto para **PC de escritorio** (pantalla ancha, filtros, panel de carrito lateral cómodo y navegación ágil) como para **celular** (interfaz táctil rápida con pedidos por WhatsApp).
+    4. Se presenta la propuesta ajustada al dueño en español sencillo para esperar su OK antes de escribir código en la rama de trabajo `fase-9-10-almacenes-catalogo`.
   - **Siguiente paso:** Esperar la conformidad / OK del dueño para iniciar la implementación de las pantallas de la Fase 9.
 
 ---

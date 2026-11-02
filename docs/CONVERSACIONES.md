@@ -557,4 +557,11 @@
         - Se le detalló el estado del roadmap: 9 fases completadas (Fases 0 a 7 en producción Evicamp y GitHub, y Fase 8 terminada y probada al 100% en siumax), y las 3 fases pendientes (Fase 9: Almacenes y Traspasos, Fase 10: Catálogo Web WhatsApp, Fase 11: Facturación SUNAT).
         - El dueño instruyó expresamente: *"vamos hacer la fases 9 y 10 pero todavia no pases a la producción la fase 8"*.
         - Se respeta rigurosamente la instrucción y la Regla 4: la Fase 8 se mantiene intacta en pruebas (`siumax`) sin tocar Evicamp ni GitHub `main`, y se procede a presentar la propuesta detallada para las Fases 9 y 10 esperando su OK.
+      57. **Ajuste de Propuesta: Nombre "Tienda Web" y Optimización Total para PC y Celular (02/11 tarde):**
+        - El dueño instruyó: *"perfecto pero que sea en vez de catagolo tienda web y otra cosa mas que no solo funcione en celular si no tambien pc ajusta eso atu propuesta"*.
+        - Se actualizan las especificaciones:
+          1. Renombrar la Fase 10 a **"Tienda Web"** en lugar de "Catálogo".
+          2. En PC de escritorio: diseño amplio tipo e-commerce moderno con buscador inteligente, barra o pestañas de categorías, vitrina en cuadrícula de alta visibilidad, panel de carrito accesible y navegación fluida por teclado y mouse.
+          3. En celular: navegación táctil ágil con botón de carrito flotante y enlace directo a la app móvil de WhatsApp.
+          4. Integración unificada: pedidos enviados por WhatsApp (web en PC o app en móvil) y sincronizados en tiempo real con la pestaña de Pedidos del sistema (Fase 4.6).
 
