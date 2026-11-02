@@ -1,6 +1,6 @@
 // ai-scripts/pruebas/prueba-modal-lateral.mjs
-// Verifica que el modal de producto tenga la ventana principal fija en el centro
-// y que la flechita lateral derecha despliegue el panel de opciones avanzadas sin mover el modal central.
+// Verifica que el modal de producto tenga un ÚNICO botón de opciones avanzadas
+// y que al pulsarlo, las opciones se desplieguen HACIA ABAJO dentro del modal.
 
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -52,75 +52,40 @@ try {
   await page.waitForSelector('#input-nombre-producto', { timeout: 10000 });
   await pausa(500);
 
-  // Posición inicial del contenedor del modal central
-  const modalBoxInicial = await page.evaluate(() => {
-    const input = document.getElementById('input-nombre-producto');
-    const container = input ? input.closest('.border-2.border-\\[var\\(--color-ink\\)\\]') : null;
-    if (!container) return null;
-    const r = container.getBoundingClientRect();
-    return { x: Math.round(r.x), y: Math.round(r.y), width: Math.round(r.width), height: Math.round(r.height) };
-  });
-
-  ok('Modal central inicial encontrado', !!modalBoxInicial, JSON.stringify(modalBoxInicial));
-
-  // Verificar etiqueta de PVP en Caja y su placeholder
-  const inputPrecio = await page.evaluate(() => {
-    const inp = document.getElementById('input-precio-producto');
-    const label = inp?.closest('div')?.querySelector('label');
+  // Verificar que NO existan los botones extras eliminados
+  const botonesExtras = await page.evaluate(() => {
     return {
-      existe: !!inp,
-      placeholder: inp?.getAttribute('placeholder') || '',
-      textoLabel: label?.innerText.trim() || ''
+      lateral: !!document.getElementById('btn-toggle-avanzado-lateral'),
+      cabecera: !!document.getElementById('btn-header-toggle-avanzado'),
+      footer: !!document.getElementById('btn-footer-toggle-avanzado')
     };
   });
-  ok('Etiqueta y campo de PVP (Precio en Caja) presentes', 
-    inputPrecio.existe && inputPrecio.textoLabel.includes('PRECIO EN CAJA') && inputPrecio.textoLabel.includes('PVP'),
-    JSON.stringify(inputPrecio)
+  ok('Botones innecesarios eliminados (lateral, cabecera, footer)', 
+    !botonesExtras.lateral && !botonesExtras.cabecera && !botonesExtras.footer, 
+    JSON.stringify(botonesExtras)
   );
 
-  // Verificar botón lateral
-  const btnLateralExiste = await page.evaluate(() => {
-    const btn = document.getElementById('btn-toggle-avanzado-lateral');
-    return !!btn;
+  // Verificar que existe el ÚNICO botón de opciones avanzadas
+  const botonUnico = await page.evaluate(() => {
+    const btn = document.getElementById('btn-toggle-opciones-avanzadas');
+    return {
+      existe: !!btn,
+      texto: btn ? btn.innerText.trim() : ''
+    };
   });
-  ok('Botón / Flechita lateral derecha visible en el modal', btnLateralExiste);
+  ok('Existe un ÚNICO botón de opciones avanzadas bajo datos básicos', botonUnico.existe, botonUnico.texto);
 
-  // Tomar captura con panel cerrado
+  // Tomar captura con opciones avanzadas cerradas
   const scratchDir = 'C:/Users/User/.gemini/antigravity-ide/brain/77d05cda-194d-4130-9efd-5320385d62f6/.tempmediaStorage';
   if (!fs.existsSync(scratchDir)) fs.mkdirSync(scratchDir, { recursive: true });
-  await page.screenshot({ path: path.join(scratchDir, 'modal_cerrado.png') });
+  await page.screenshot({ path: path.join(scratchDir, 'modal_opciones_abajo_cerrado.png') });
 
-  console.log('4. Haciendo clic en la flechita lateral derecha para abrir panel de opciones avanzadas...');
-  await page.click('#btn-toggle-avanzado-lateral');
+  console.log('4. Haciendo clic en el botón único para desplegar opciones hacia abajo...');
+  await page.click('#btn-toggle-opciones-avanzadas');
   await pausa(500);
 
-  // Verificar que apareció el panel lateral
-  const panelDerechoVisible = await page.evaluate(() => {
-    const p = document.getElementById('panel-opciones-avanzadas-derecho');
-    return !!p;
-  });
-  ok('Panel lateral derecho de opciones avanzadas abierto', panelDerechoVisible);
-
-  // Comprobar que la ventana principal NO se movió (posición X e Y idénticas)
-  const modalBoxDespues = await page.evaluate(() => {
-    const input = document.getElementById('input-nombre-producto');
-    const container = input ? input.closest('.border-2.border-\\[var\\(--color-ink\\)\\]') : null;
-    if (!container) return null;
-    const r = container.getBoundingClientRect();
-    return { x: Math.round(r.x), y: Math.round(r.y), width: Math.round(r.width), height: Math.round(r.height) };
-  });
-
-  const seMantuvoPosicion = modalBoxInicial && modalBoxDespues &&
-    modalBoxInicial.x === modalBoxDespues.x &&
-    modalBoxInicial.y === modalBoxDespues.y &&
-    modalBoxInicial.width === modalBoxDespues.width;
-
-  ok('Ventana principal se mantuvo en su posición exacta sin moverse', seMantuvoPosicion, 
-    `Inicial: ${JSON.stringify(modalBoxInicial)} vs Después: ${JSON.stringify(modalBoxDespues)}`
-  );
-
-  // Verificar contenido del panel derecho
-  const opcionesEnPanel = await page.evaluate(() => {
+  // Verificar que se desplegó hacia abajo dentro del modal
+  const opcionesDesplegadas = await page.evaluate(() => {
     return {
       marca: !!document.getElementById('input-marca-producto'),
       garantia: !!document.getElementById('input-meses-garantia-producto'),
@@ -132,30 +97,47 @@ try {
       recetas: !!document.getElementById('btn-tipo-receta')
     };
   });
-  ok('Panel derecho contiene Fases 3, 6, 1.3, 1.2, 7 y 8 completas', 
-    opcionesEnPanel.marca && opcionesEnPanel.garantia && opcionesEnPanel.series && 
-    opcionesEnPanel.escalas && opcionesEnPanel.presentaciones && opcionesEnPanel.variantes && 
-    opcionesEnPanel.combos && opcionesEnPanel.recetas,
-    JSON.stringify(opcionesEnPanel)
+  ok('Opciones avanzadas desplegadas hacia abajo (Fases 3, 6, 1.3, 1.2, 7 y 8 completas)', 
+    opcionesDesplegadas.marca && opcionesDesplegadas.garantia && opcionesDesplegadas.series && 
+    opcionesDesplegadas.escalas && opcionesDesplegadas.presentaciones && opcionesDesplegadas.variantes && 
+    opcionesDesplegadas.combos && opcionesDesplegadas.recetas,
+    JSON.stringify(opcionesDesplegadas)
   );
 
-  // Tomar captura con panel abierto
-  await page.screenshot({ path: path.join(scratchDir, 'modal_panel_derecho_abierto.png') });
-
-  console.log('5. Cerrando panel lateral...');
-  await page.click('#btn-cerrar-panel-avanzado');
+  // Hacer scroll hacia abajo en el formulario para capturar las opciones avanzadas
+  await page.evaluate(() => {
+    const input = document.getElementById('input-marca-producto');
+    if (input) input.scrollIntoView({ behavior: 'instant', block: 'start' });
+  });
   await pausa(300);
 
-  const panelCerrado = await page.evaluate(() => {
-    return !document.getElementById('panel-opciones-avanzadas-derecho');
+  // Tomar captura con opciones avanzadas desplegadas
+  await page.screenshot({ path: path.join(scratchDir, 'modal_opciones_abajo_abierto.png') });
+
+  // Scroll más abajo hasta variantes / recetas
+  await page.evaluate(() => {
+    const btn = document.getElementById('btn-tipo-receta');
+    if (btn) btn.scrollIntoView({ behavior: 'instant', block: 'center' });
   });
-  ok('Panel lateral se cierra correctamente', panelCerrado);
+  await pausa(300);
+  await page.screenshot({ path: path.join(scratchDir, 'modal_opciones_abajo_scrolled.png') });
+
+  console.log('5. Haciendo clic nuevamente para ocultar opciones avanzadas...');
+  await page.click('#btn-toggle-opciones-avanzadas');
+  await pausa(400);
+
+  const opcionesOcultas = await page.evaluate(() => {
+    return !document.getElementById('input-marca-producto');
+  });
+  ok('Opciones avanzadas se ocultan correctamente al volver a hacer clic', opcionesOcultas);
 
 } catch (err) {
-  ok('Ejecución de prueba', false, err.message);
-  console.error(err);
+  console.error('Error durante la prueba:', err);
+  res.push(`❌ Excepción: ${err.message}`);
 } finally {
   await nav.close();
   console.log('\n--- RESULTADOS DE LA PRUEBA ---');
-  res.forEach(r => console.log(r));
+  res.forEach((r) => console.log(r));
+  const fallos = res.filter((r) => r.startsWith('❌')).length;
+  process.exit(fallos > 0 ? 1 : 0);
 }

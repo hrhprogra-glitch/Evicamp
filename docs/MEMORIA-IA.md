@@ -28,6 +28,7 @@
 - **Barras con fechas:** una sola fila; ← → recorre, ↓ baja a la lista y **Enter en una fecha abre el calendario**.
 - **Al cerrar cualquier ventana o submodal**, el selector debe volver explícitamente a lo que estaba elegido (regla global en `src/utils/ventanas.ts`). Si un submodal se desmonta (como la ficha de nuevo cliente dentro del selector del POS), el foco debe enviarse a un botón del modal padre (`btn-cliente-pos-nuevo`), de lo contrario el navegador envía el foco a `document.body` y el selector desaparece.
 - **Scrollbars estilizados:** todo contenedor con scroll (`overflow-y-auto` u `overflow-auto`) debe incluir la clase `.custom-scrollbar` (5px, sin botones de flechas) para evitar la barra gris nativa gruesa de Windows.
+- **Opciones avanzadas en modales complejos:** no poner múltiples botones, ni botones flotantes laterales, ni botones duplicados en cabecera o footer. Usar **un único botón desplegable claro** bajo los datos básicos que abra las opciones hacia abajo dentro del mismo cuerpo scrolleable del formulario.
 - **Exige usar graphify** (si está instalado) antes de leer código y `graphify update .` después de cambiarlo.
 
 ## 2. El producto
