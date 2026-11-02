@@ -1,6 +1,7 @@
-import React from 'react';
-import { X, Trash2, ShoppingBag, ArrowRight, ShoppingCart } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { X, Trash2, ShoppingBag, ArrowRight, Plus, Minus } from 'lucide-react';
 import type { ItemCarrito } from '../types';
+import { iniciales, nombreBonito, soles, tonoCategoria } from '../formato';
 
 interface TiendaCarritoDrawerProps {
   isOpen: boolean;
@@ -23,180 +24,121 @@ export const TiendaCarritoDrawer: React.FC<TiendaCarritoDrawerProps> = ({
   onProcederAlPago,
   ocultarPrecios,
 }) => {
+  // Escape cierra el carrito
+  useEffect(() => {
+    if (!isOpen) return;
+    const alTeclear = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', alTeclear);
+    return () => window.removeEventListener('keydown', alTeclear);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
-  const totalMonto = items.reduce(
-    (acc, it) => acc + (it.precioUnitario * it.cantidad),
-    0
-  );
+  const totalMonto = items.reduce((acc, it) => acc + it.precioUnitario * it.cantidad, 0);
   const totalArticulos = items.reduce((acc, it) => acc + it.cantidad, 0);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        className="absolute inset-0 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in"
-      />
+    <div className="fixed inset-0 z-50">
+      <div onClick={onClose} className="absolute inset-0 bg-gray-900/40 backdrop-blur-[2px]" />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div id="drawer-carrito-tienda" className="w-screen max-w-md bg-white shadow-2xl flex flex-col font-sans">
-          {/* Header Carrito */}
-          <div className="p-4 bg-gray-900 text-white flex items-center justify-between border-b border-gray-800">
-            <div className="flex items-center gap-2">
-              <ShoppingCart size={18} className="text-emerald-400" />
-              <h2 className="text-sm font-bold uppercase tracking-wider">
-                Tu Carrito de Compras ({totalArticulos})
-              </h2>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors cursor-pointer"
-            >
-              <X size={18} />
-            </button>
-          </div>
+      <aside id="drawer-carrito-tienda" className="absolute inset-y-0 right-0 w-full sm:max-w-md bg-white shadow-2xl flex flex-col tienda-entrar-derecha">
+        <div className="px-5 h-16 flex items-center justify-between border-b border-gray-100 shrink-0">
+          <h2 className="text-lg font-extrabold text-gray-900">
+            Tu pedido {totalArticulos > 0 && <span className="text-gray-400 font-semibold">· {totalArticulos}</span>}
+          </h2>
+          <button onClick={onClose} aria-label="Cerrar carrito" className="w-9 h-9 rounded-full hover:bg-gray-100 text-gray-500 flex items-center justify-center cursor-pointer">
+            <X size={20} />
+          </button>
+        </div>
 
-          {/* Lista de Items */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar divide-y divide-gray-100">
-            {items.length === 0 ? (
-              <div className="py-16 text-center space-y-3">
-                <div className="w-16 h-16 mx-auto rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
-                  <ShoppingBag size={28} />
-                </div>
-                <h3 className="text-sm font-bold text-gray-800 uppercase">
-                  Tu carrito está vacío
-                </h3>
-                <p className="text-xs text-gray-500 max-w-xs mx-auto">
-                  Agrega productos de nuestro catálogo para armar tu pedido y solicitarlo por WhatsApp.
-                </p>
-                <button
-                  onClick={onClose}
-                  className="mt-2 px-4 py-2 bg-emerald-600 text-white text-xs font-bold uppercase rounded-lg hover:bg-emerald-700 cursor-pointer"
-                >
-                  Ver Catálogo
-                </button>
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          {items.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center gap-3 py-12">
+              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                <ShoppingBag size={28} />
               </div>
-            ) : (
-              items.map((it, idx) => (
-                <div key={idx} className="pt-3 first:pt-0 flex items-start gap-3">
-                  {/* Foto miniatura o placeholder */}
-                  <div className="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 shrink-0 overflow-hidden flex items-center justify-center">
-                    {it.producto.image_url ? (
-                      <img
-                        src={it.producto.image_url}
-                        alt={it.producto.name}
-                        className="w-full h-full object-contain"
-                      />
-                    ) : (
-                      <ShoppingBag size={20} className="text-gray-400" />
-                    )}
-                  </div>
+              <h3 className="text-base font-bold text-gray-900">Tu carrito está vacío</h3>
+              <p className="text-sm text-gray-500 max-w-xs">Agrega productos del catálogo y envía tu pedido por WhatsApp.</p>
+              <button onClick={onClose} className="mt-1 px-5 h-10 rounded-full bg-gray-900 text-white text-sm font-semibold cursor-pointer">
+                Ver productos
+              </button>
+            </div>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+              {items.map((it, idx) => {
+                const tono = tonoCategoria(it.producto.category);
+                return (
+                  <li key={idx} className="py-3.5 first:pt-0 flex gap-3">
+                    <div className="w-16 h-16 rounded-xl shrink-0 overflow-hidden flex items-center justify-center border border-gray-100" style={{ background: it.producto.image_url ? '#fff' : tono.fondo }}>
+                      {it.producto.image_url ? (
+                        <img src={it.producto.image_url} alt={it.producto.name} className="w-full h-full object-contain p-1" />
+                      ) : (
+                        <span className="text-lg font-extrabold" style={{ color: tono.letra }}>{iniciales(it.producto.name)}</span>
+                      )}
+                    </div>
 
-                  {/* Detalle */}
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-xs font-bold text-gray-900 uppercase truncate">
-                      {it.producto.name}
-                    </h4>
-                    {it.variante && (
-                      <span className="text-[11px] text-gray-500 font-medium block">
-                        Opción: {it.variante.nombre_variante || it.variante.talla}
-                      </span>
-                    )}
-                    {!ocultarPrecios && (
-                      <span className="text-xs font-bold text-emerald-700 font-mono">
-                        S/ {it.precioUnitario.toFixed(2)} c/u
-                      </span>
-                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">{nombreBonito(it.producto.name)}</h4>
+                        {!ocultarPrecios && (
+                          <span className="text-sm font-bold text-gray-900 tabular-nums whitespace-nowrap">{soles(it.precioUnitario * it.cantidad)}</span>
+                        )}
+                      </div>
+                      {it.variante && (
+                        <p className="text-xs text-gray-500">{it.variante.nombre_variante || it.variante.talla}</p>
+                      )}
+                      {!ocultarPrecios && <p className="text-xs text-gray-400 tabular-nums">{soles(it.precioUnitario)} c/u</p>}
 
-                    {/* Controles de cantidad */}
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <div className="flex items-center border border-gray-200 rounded-md overflow-hidden bg-gray-50 text-xs font-mono">
-                        <button
-                          type="button"
-                          onClick={() => onCambiarCantidad(idx, -1)}
-                          className="w-5 h-5 flex items-center justify-center hover:bg-gray-200 text-gray-700 font-bold"
-                        >
-                          -
-                        </button>
-                        <span className="w-6 text-center font-bold">
-                          {it.cantidad}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => onCambiarCantidad(idx, 1)}
-                          className="w-5 h-5 flex items-center justify-center hover:bg-gray-200 text-gray-700 font-bold"
-                        >
-                          +
+                      <div className="mt-2 flex items-center gap-2">
+                        <div className="flex items-center h-8 rounded-full border border-gray-200">
+                          <button type="button" aria-label="Quitar uno" onClick={() => onCambiarCantidad(idx, -1)} className="w-8 h-8 flex items-center justify-center text-gray-600 cursor-pointer">
+                            <Minus size={14} />
+                          </button>
+                          <span className="min-w-6 text-center text-sm font-bold tabular-nums">{it.cantidad}</span>
+                          <button type="button" aria-label="Agregar uno" onClick={() => onCambiarCantidad(idx, 1)} className="w-8 h-8 flex items-center justify-center text-gray-600 cursor-pointer">
+                            <Plus size={14} />
+                          </button>
+                        </div>
+                        <button type="button" onClick={() => onEliminarItem(idx)} title="Quitar del carrito" aria-label="Quitar del carrito" className="w-8 h-8 rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center cursor-pointer">
+                          <Trash2 size={15} />
                         </button>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => onEliminarItem(idx)}
-                        className="text-gray-400 hover:text-red-600 transition-colors p-1"
-                        title="Quitar del carrito"
-                      >
-                        <Trash2 size={14} />
-                      </button>
                     </div>
-                  </div>
-
-                  {/* Subtotal del item */}
-                  {!ocultarPrecios && (
-                    <div className="text-right shrink-0 font-mono font-bold text-sm text-gray-900">
-                      S/ {(it.precioUnitario * it.cantidad).toFixed(2)}
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Footer con Resumen y Checkout */}
-          {items.length > 0 && (
-            <div className="p-4 bg-gray-50 border-t border-gray-200 space-y-3">
-              {!ocultarPrecios && (
-                <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between text-gray-600">
-                    <span>Subtotal</span>
-                    <span className="font-mono font-bold">S/ {totalMonto.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span>Envío</span>
-                    <span className="text-emerald-700 font-bold">A coordinar por WhatsApp</span>
-                  </div>
-                  <div className="flex justify-between text-base font-bold text-gray-900 pt-1.5 border-t border-gray-200">
-                    <span>Total Estimado</span>
-                    <span className="font-mono font-black text-lg text-emerald-700">
-                      S/ {totalMonto.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={onVaciarCarrito}
-                  className="px-3 py-2.5 text-xs text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-300 rounded-xl transition-colors cursor-pointer"
-                >
-                  Vaciar
-                </button>
-                <button
-                  id="btn-proceder-pedido-web"
-                  type="button"
-                  onClick={onProcederAlPago}
-                  className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-98"
-                >
-                  <span>Continuar Pedido</span>
-                  <ArrowRight size={16} />
-                </button>
-              </div>
-            </div>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
-      </div>
+
+        {items.length > 0 && (
+          <div className="px-5 pt-4 pb-5 border-t border-gray-100 bg-gray-50/80 space-y-3 shrink-0">
+            {!ocultarPrecios && (
+              <div className="space-y-1.5 text-sm">
+                <div className="flex justify-between text-gray-500">
+                  <span>Envío</span>
+                  <span>Se coordina por WhatsApp</span>
+                </div>
+                <div className="flex justify-between items-baseline">
+                  <span className="font-bold text-gray-900">Total</span>
+                  <span className="text-2xl font-extrabold text-gray-900 tabular-nums">{soles(totalMonto)}</span>
+                </div>
+              </div>
+            )}
+            <button
+              id="btn-proceder-pedido-web"
+              type="button"
+              onClick={onProcederAlPago}
+              className="w-full h-12 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base flex items-center justify-center gap-2 transition-colors cursor-pointer active:scale-[0.98]"
+            >
+              Continuar pedido <ArrowRight size={18} />
+            </button>
+            <button type="button" onClick={onVaciarCarrito} className="w-full text-sm text-gray-400 hover:text-red-600 cursor-pointer">
+              Vaciar carrito
+            </button>
+          </div>
+        )}
+      </aside>
     </div>
   );
 };

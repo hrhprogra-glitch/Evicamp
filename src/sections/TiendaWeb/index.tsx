@@ -7,11 +7,16 @@ import { TiendaProductoCard } from './components/TiendaProductoCard';
 import { TiendaCarritoDrawer } from './components/TiendaCarritoDrawer';
 import { TiendaModalPedido } from './components/TiendaModalPedido';
 import { coincideBusqueda } from '../../utils/busqueda';
-import { ShoppingBag, Loader2, AlertCircle, ShoppingCart, ArrowRight } from 'lucide-react';
+import { numeroWhatsapp, soles } from './formato';
+import { ShoppingBag, Loader2, AlertCircle, MapPin, Phone, MessageCircle, Lock, SearchX, ChevronRight } from 'lucide-react';
 
 interface TiendaWebProps {
   onIrAlSistema?: () => void;
 }
+
+// Stock máximo que se puede pedir de un producto (o de su opción elegida).
+const stockDe = (producto: TiendaProducto, variante: TiendaVariante | null | undefined) =>
+  variante ? Number(variante.stock || 0) : Number(producto.stock_disponible || 0);
 
 export const TiendaWeb: React.FC<TiendaWebProps> = ({ onIrAlSistema }) => {
   const [empresa, setEmpresa] = useState<TiendaEmpresaConfig>({
@@ -40,6 +45,26 @@ export const TiendaWeb: React.FC<TiendaWebProps> = ({ onIrAlSistema }) => {
 
   const [isCarritoOpen, setIsCarritoOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
+  // La tienda es una página para los CLIENTES del negocio: no usa el tema (oscuro, colores) que el
+  // dueño eligió para su sistema en esta computadora. Se quita mientras la tienda está abierta.
+  // Va en un setTimeout porque App aplica el tema guardado en su propio efecto, que corre DESPUÉS de este.
+  useEffect(() => {
+    const html = document.documentElement;
+    let tema: string | null = null;
+    let monocromo = false;
+    const t = setTimeout(() => {
+      tema = html.getAttribute('data-theme');
+      monocromo = html.classList.contains('theme-monochrome');
+      html.removeAttribute('data-theme');
+      html.classList.remove('theme-monochrome');
+    }, 0);
+    return () => {
+      clearTimeout(t);
+      if (tema) html.setAttribute('data-theme', tema);
+      if (monocromo) html.classList.add('theme-monochrome');
+    };
+  }, []);
 
   // Guardar carrito en localStorage
   useEffect(() => {
@@ -81,72 +106,51 @@ export const TiendaWeb: React.FC<TiendaWebProps> = ({ onIrAlSistema }) => {
     fetchCatalogo();
   }, []);
 
-  // Filtrado de productos
+  // Filtrado de productos (los destacados primero)
   const productosFiltrados = useMemo(() => {
-    return productos.filter((p) => {
-      // Filtro por categoría
-      if (categoriaSeleccionada !== 'TODOS' && p.category !== categoriaSeleccionada) {
-        return false;
-      }
-
-      // Filtro por búsqueda
-      if (busqueda.trim()) {
-        const textoBusqueda = `${p.name} ${p.marca || ''} ${p.modelo || ''} ${p.category} ${p.code || ''} ${p.barcode || ''}`;
-        if (!coincideBusqueda(textoBusqueda, busqueda)) {
-          return false;
+    return productos
+      .filter((p) => {
+        if (categoriaSeleccionada !== 'TODOS' && p.category !== categoriaSeleccionada) return false;
+        if (busqueda.trim()) {
+          const textoBusqueda = `${p.name} ${p.marca || ''} ${p.modelo || ''} ${p.category} ${p.code || ''} ${p.barcode || ''}`;
+          if (!coincideBusqueda(textoBusqueda, busqueda)) return false;
         }
-      }
-
-      return true;
-    });
+        return true;
+      })
+      .sort((a, b) => Number(b.destacado) - Number(a.destacado));
   }, [productos, categoriaSeleccionada, busqueda]);
 
   // Totales del carrito
   const totalArticulos = carrito.reduce((acc, it) => acc + it.cantidad, 0);
-  const totalMonto = carrito.reduce(
-    (acc, it) => acc + (it.precioUnitario * it.cantidad),
-    0
-  );
+  const totalMonto = carrito.reduce((acc, it) => acc + it.precioUnitario * it.cantidad, 0);
 
-  const handleAgregarAlCarrito = (
-    producto: TiendaProducto,
-    variante: TiendaVariante | null,
-    cantidad: number
-  ) => {
+  const cantidadEnCarrito = (productoId: number, varianteId: number | null) =>
+    carrito.find((it) => it.producto.id === productoId && (it.variante?.id ?? null) === varianteId)?.cantidad || 0;
+
+  // Suma o resta desde la tarjeta del producto (sin pasar el stock disponible).
+  const handleCambiarProducto = (producto: TiendaProducto, variante: TiendaVariante | null, delta: number) => {
     const precio = variante ? Number(variante.price || producto.price) : Number(producto.price);
-
+    const tope = stockDe(producto, variante);
     setCarrito((prev) => {
-      const idx = prev.findIndex(
-        (it) => it.producto.id === producto.id && it.variante?.id === variante?.id
-      );
-
-      if (idx >= 0) {
-        const nuevo = [...prev];
-        nuevo[idx] = {
-          ...nuevo[idx],
-          cantidad: nuevo[idx].cantidad + cantidad,
-        };
-        return nuevo;
-      } else {
-        return [
-          ...prev,
-          {
-            producto,
-            variante,
-            cantidad,
-            precioUnitario: precio,
-          },
-        ];
+      const idx = prev.findIndex((it) => it.producto.id === producto.id && (it.variante?.id ?? null) === (variante?.id ?? null));
+      if (idx < 0) {
+        return delta > 0 && tope > 0 ? [...prev, { producto, variante, cantidad: Math.min(delta, tope), precioUnitario: precio }] : prev;
       }
+      const nuevaCant = Math.min(prev[idx].cantidad + delta, tope);
+      if (nuevaCant <= 0) return prev.filter((_, i) => i !== idx);
+      const nuevo = [...prev];
+      nuevo[idx] = { ...nuevo[idx], cantidad: nuevaCant };
+      return nuevo;
     });
   };
 
+  // Suma o resta desde el carrito (por posición)
   const handleCambiarCantidad = (index: number, delta: number) => {
     setCarrito((prev) =>
       prev
         .map((it, idx) => {
           if (idx !== index) return it;
-          const nuevaCant = it.cantidad + delta;
+          const nuevaCant = Math.min(it.cantidad + delta, Math.max(stockDe(it.producto, it.variante), it.cantidad));
           return nuevaCant > 0 ? { ...it, cantidad: nuevaCant } : null;
         })
         .filter(Boolean) as ItemCarrito[]
@@ -161,14 +165,19 @@ export const TiendaWeb: React.FC<TiendaWebProps> = ({ onIrAlSistema }) => {
     setCarrito([]);
   };
 
+  const telefonoWhatsapp = numeroWhatsapp(empresa.catalogo_whatsapp, empresa.telefono);
+  const linkWhatsapp = telefonoWhatsapp
+    ? `https://api.whatsapp.com/send?phone=${telefonoWhatsapp}&text=${encodeURIComponent('¡Hola! Me gustaría hacer una consulta.')}`
+    : '';
+  const direccion = empresa.direccion || tiendas[0]?.direccion || '';
+  const telefonoVisible = empresa.telefono || tiendas[0]?.telefono || '';
+
   if (cargando) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <div className="flex items-center gap-3 font-sans text-gray-700">
-          <Loader2 size={24} className="animate-spin text-emerald-600" />
-          <span className="text-sm font-bold uppercase tracking-wider">
-            Cargando Tienda Web...
-          </span>
+      <div className="tienda-web min-h-screen bg-[#F6F7F9] flex items-center justify-center p-4">
+        <div className="flex items-center gap-3 text-gray-500">
+          <Loader2 size={22} className="animate-spin text-emerald-600" />
+          <span className="text-sm font-medium">Cargando tienda…</span>
         </div>
       </div>
     );
@@ -176,17 +185,12 @@ export const TiendaWeb: React.FC<TiendaWebProps> = ({ onIrAlSistema }) => {
 
   if (errorCarga) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white p-6 rounded-2xl shadow-lg border border-gray-200 text-center space-y-4">
+      <div className="tienda-web min-h-screen bg-[#F6F7F9] flex items-center justify-center p-4">
+        <div className="max-w-sm w-full bg-white p-8 rounded-3xl shadow-sm border border-gray-200 text-center space-y-4">
           <AlertCircle size={36} className="mx-auto text-amber-500" />
-          <h2 className="text-base font-bold text-gray-900 uppercase">
-            No se pudo cargar la Tienda
-          </h2>
-          <p className="text-xs text-gray-500">{errorCarga}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold uppercase cursor-pointer"
-          >
+          <h2 className="text-lg font-bold text-gray-900">No se pudo cargar la tienda</h2>
+          <p className="text-sm text-gray-500">{errorCarga}</p>
+          <button onClick={() => window.location.reload()} className="px-6 h-11 bg-gray-900 text-white rounded-full text-sm font-semibold cursor-pointer">
             Reintentar
           </button>
         </div>
@@ -194,9 +198,11 @@ export const TiendaWeb: React.FC<TiendaWebProps> = ({ onIrAlSistema }) => {
     );
   }
 
+  const hayFiltro = Boolean(busqueda.trim()) || categoriaSeleccionada !== 'TODOS';
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col text-gray-900 font-sans selection:bg-emerald-500 selection:text-white">
-      {/* 1. Header & Barra de Navegación */}
+    <div className="tienda-web min-h-screen bg-[#F6F7F9] flex flex-col text-gray-900 selection:bg-emerald-500 selection:text-white">
+      {/* 1. Barra superior: logo, buscador y carrito */}
       <TiendaNavbar
         empresa={empresa}
         busqueda={busqueda}
@@ -204,105 +210,129 @@ export const TiendaWeb: React.FC<TiendaWebProps> = ({ onIrAlSistema }) => {
         totalItemsCarrito={totalArticulos}
         totalMontoCarrito={totalMonto}
         onAbrirCarrito={() => setIsCarritoOpen(true)}
-        onIrAlSistema={onIrAlSistema}
         ocultarPrecios={empresa.catalogo_ocultar_precios}
       />
 
-      {/* 2. Hero Banner de Bienvenida */}
-      {empresa.catalogo_mensaje_bienvenida && (
-        <section className="bg-gradient-to-r from-emerald-800 to-teal-900 text-white py-6 px-4 sm:px-6">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <span className="text-emerald-300 text-xs font-bold uppercase tracking-widest block mb-1">
-                Catálogo en Línea y Pedidos Directos
-              </span>
-              <h2 className="text-lg sm:text-xl font-black tracking-tight leading-snug">
-                {empresa.catalogo_mensaje_bienvenida}
-              </h2>
+      {/* 2. Bienvenida (se oculta mientras el cliente busca, para que vea los resultados enseguida) */}
+      {!busqueda.trim() && (
+        <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 pt-4 sm:pt-6">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 to-emerald-800 text-white px-4 py-4 sm:px-8 sm:py-8">
+            <div className="absolute -right-10 -top-16 w-56 h-56 rounded-full bg-white/10" aria-hidden />
+            <div className="absolute right-24 -bottom-20 w-40 h-40 rounded-full bg-white/5" aria-hidden />
+            <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
+              <div className="min-w-0">
+                <h2 className="text-lg sm:text-3xl font-extrabold leading-tight tracking-tight">
+                  {empresa.catalogo_mensaje_bienvenida || `Bienvenido a ${empresa.nombre_empresa}`}
+                </h2>
+                <p className="hidden sm:block mt-1.5 text-base text-emerald-50/90">
+                  Elige tus productos y envía tu pedido por WhatsApp. Recojo en tienda o delivery.
+                </p>
+                {(direccion || telefonoVisible) && (
+                  <div className="mt-2 sm:mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs sm:text-sm text-emerald-50/90">
+                    {direccion && <span className="inline-flex items-center gap-1.5"><MapPin size={14} /> {direccion}</span>}
+                    {telefonoVisible && <span className="inline-flex items-center gap-1.5"><Phone size={14} /> {telefonoVisible}</span>}
+                  </div>
+                )}
+              </div>
+              {linkWhatsapp && (
+                <a
+                  href={linkWhatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 self-start sm:self-auto inline-flex items-center gap-2 h-9 sm:h-11 px-4 sm:px-5 rounded-full bg-white text-emerald-700 font-bold text-sm hover:bg-emerald-50 transition-colors"
+                >
+                  <MessageCircle size={18} /> Escríbenos
+                </a>
+              )}
             </div>
-            {empresa.catalogo_whatsapp && (
-              <a
-                href={`https://api.whatsapp.com/send?phone=51${empresa.catalogo_whatsapp.replace(/\D/g, '')}&text=${encodeURIComponent('¡Hola! Me gustaría hacer una consulta.')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold text-xs uppercase rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
-              >
-                <span>Consultar por WhatsApp</span>
-                <ArrowRight size={14} />
-              </a>
-            )}
           </div>
         </section>
       )}
 
-      {/* 3. Barra de Categorías */}
-      <TiendaCategorias
-        categorias={categorias}
-        categoriaSeleccionada={categoriaSeleccionada}
-        onSelectCategoria={setCategoriaSeleccionada}
-        totalProductos={productos.length}
-      />
+      {/* 3. Categorías */}
+      {productos.length > 0 && (
+        <div className="pt-4 sm:pt-6">
+          <TiendaCategorias
+            categorias={categorias}
+            categoriaSeleccionada={categoriaSeleccionada}
+            onSelectCategoria={setCategoriaSeleccionada}
+            totalProductos={productos.length}
+          />
+        </div>
+      )}
 
-      {/* 4. Vitrina de Productos (Catálogo) */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-6 flex-1 w-full">
-        {productosFiltrados.length === 0 ? (
-          <div className="py-16 text-center space-y-3 bg-white rounded-2xl border border-gray-200 p-8">
-            <ShoppingBag size={40} className="mx-auto text-gray-300" />
-            <h3 className="text-base font-bold text-gray-800 uppercase">
-              No se encontraron productos
-            </h3>
-            <p className="text-xs text-gray-500 max-w-sm mx-auto">
-              {busqueda
-                ? `No hay coincidencias para "${busqueda}". Prueba con otra palabra clave.`
-                : 'No hay productos disponibles en esta categoría por el momento.'}
-            </p>
-            {busqueda && (
-              <button
-                onClick={() => setBusqueda('')}
-                className="px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold uppercase cursor-pointer"
-              >
-                Limpiar Buscador
-              </button>
+      {/* 4. Vitrina de productos */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-28 md:pb-12 flex-1 w-full">
+        {productos.length === 0 ? (
+          <div className="py-16 px-6 text-center bg-white rounded-3xl border border-gray-200/80">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <ShoppingBag size={30} />
+            </div>
+            <h3 className="mt-4 text-lg font-bold text-gray-900">Muy pronto verás nuestros productos aquí</h3>
+            <p className="mt-1 text-sm text-gray-500 max-w-sm mx-auto">Mientras tanto, escríbenos y te ayudamos con tu pedido.</p>
+            {linkWhatsapp && (
+              <a href={linkWhatsapp} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 h-11 px-5 rounded-full bg-emerald-600 text-white font-bold text-sm">
+                <MessageCircle size={18} /> Escribir por WhatsApp
+              </a>
             )}
           </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-            {productosFiltrados.map((prod) => (
-              <TiendaProductoCard
-                key={prod.id}
-                producto={prod}
-                ocultarPrecios={empresa.catalogo_ocultar_precios}
-                onAgregarAlCarrito={handleAgregarAlCarrito}
-              />
-            ))}
+        ) : productosFiltrados.length === 0 ? (
+          <div className="py-14 px-6 text-center bg-white rounded-3xl border border-gray-200/80">
+            <SearchX size={36} className="mx-auto text-gray-300" />
+            <h3 className="mt-3 text-base font-bold text-gray-900">
+              {busqueda ? `No encontramos "${busqueda}"` : 'No hay productos en esta categoría'}
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">Prueba con otra palabra o mira todo el catálogo.</p>
+            <button
+              onClick={() => { setBusqueda(''); setCategoriaSeleccionada('TODOS'); }}
+              className="mt-4 h-10 px-5 rounded-full bg-gray-900 text-white text-sm font-semibold cursor-pointer"
+            >
+              Ver todo
+            </button>
           </div>
+        ) : (
+          <>
+            {hayFiltro && (
+              <p className="mb-3 text-sm text-gray-500">
+                {productosFiltrados.length} {productosFiltrados.length === 1 ? 'producto' : 'productos'}
+              </p>
+            )}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-5">
+              {productosFiltrados.map((prod) => (
+                <TiendaProductoCard
+                  key={prod.id}
+                  producto={prod}
+                  ocultarPrecios={empresa.catalogo_ocultar_precios}
+                  cantidadEnCarrito={(varianteId) => cantidadEnCarrito(prod.id, varianteId)}
+                  onCambiarCantidad={handleCambiarProducto}
+                />
+              ))}
+            </div>
+          </>
         )}
       </main>
 
-      {/* Barra Flotante Inferior en Móviles cuando hay items en carrito */}
-      {totalArticulos > 0 && (
-        <div className="md:hidden fixed bottom-3 left-3 right-3 z-40 animate-in slide-in-from-bottom-4 duration-200">
+      {/* Barra flotante del carrito en celulares */}
+      {totalArticulos > 0 && !isCarritoOpen && !isCheckoutOpen && (
+        <div className="md:hidden fixed bottom-4 left-4 right-4 z-40">
           <button
             id="btn-carrito-flotante-movil"
             onClick={() => setIsCarritoOpen(true)}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-3.5 rounded-2xl shadow-xl flex items-center justify-between font-bold text-sm cursor-pointer active:scale-98"
+            className="w-full h-14 pl-2 pr-5 bg-gray-900 text-white rounded-full shadow-xl shadow-gray-900/20 flex items-center justify-between cursor-pointer active:scale-[0.98]"
           >
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-amber-400 text-gray-950 flex items-center justify-center text-xs font-black">
-                {totalArticulos}
-              </div>
-              <span className="uppercase text-xs tracking-wider">Ver Mi Carrito</span>
-            </div>
-            {!empresa.catalogo_ocultar_precios && (
-              <span className="font-mono font-black text-base">
-                S/ {totalMonto.toFixed(2)}
-              </span>
-            )}
+            <span className="flex items-center gap-3">
+              <span className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-sm font-bold">{totalArticulos}</span>
+              <span className="text-sm font-semibold">Ver mi pedido</span>
+            </span>
+            <span className="flex items-center gap-1 font-bold tabular-nums">
+              {!empresa.catalogo_ocultar_precios && soles(totalMonto)}
+              <ChevronRight size={18} />
+            </span>
           </button>
         </div>
       )}
 
-      {/* 5. Cajón de Carrito (Sidebar Drawer) */}
+      {/* 5. Carrito */}
       <TiendaCarritoDrawer
         isOpen={isCarritoOpen}
         onClose={() => setIsCarritoOpen(false)}
@@ -317,7 +347,7 @@ export const TiendaWeb: React.FC<TiendaWebProps> = ({ onIrAlSistema }) => {
         ocultarPrecios={empresa.catalogo_ocultar_precios}
       />
 
-      {/* 6. Modal de Checkout / Envío por WhatsApp */}
+      {/* 6. Datos del cliente y envío por WhatsApp */}
       <TiendaModalPedido
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
@@ -329,16 +359,22 @@ export const TiendaWeb: React.FC<TiendaWebProps> = ({ onIrAlSistema }) => {
         ocultarPrecios={empresa.catalogo_ocultar_precios}
       />
 
-      {/* 7. Footer Oficial */}
-      <footer className="bg-white border-t border-gray-200 py-8 px-4 text-center text-xs text-gray-500 font-sans mt-auto">
-        <div className="max-w-7xl mx-auto space-y-2">
-          <p className="font-bold text-gray-700 uppercase">
-            {empresa.nombre_empresa} • Todos los derechos reservados
-          </p>
-          {empresa.direccion && <p>{empresa.direccion}</p>}
-          <p className="text-[11px] text-gray-400 pt-2 border-t border-gray-100">
-            Powered by SiuMax Comerc — Tienda Web Oficial
-          </p>
+      {/* 7. Pie de página */}
+      <footer className="bg-white border-t border-gray-200/80 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm">
+          <div className="space-y-1">
+            <p className="font-bold text-gray-900">{empresa.nombre_empresa}</p>
+            {direccion && <p className="text-gray-500 flex items-center gap-1.5"><MapPin size={14} /> {direccion}</p>}
+            {telefonoVisible && <p className="text-gray-500 flex items-center gap-1.5"><Phone size={14} /> {telefonoVisible}</p>}
+          </div>
+          <div className="flex flex-col sm:items-end gap-2 text-xs text-gray-400">
+            {onIrAlSistema && (
+              <button onClick={onIrAlSistema} title="Acceso para el personal de la tienda" className="inline-flex items-center gap-1 hover:text-gray-700 cursor-pointer">
+                <Lock size={12} /> Acceso del personal
+              </button>
+            )}
+            <span>Tienda hecha con SiuMax Comerc</span>
+          </div>
         </div>
       </footer>
     </div>
