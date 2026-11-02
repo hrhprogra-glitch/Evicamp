@@ -507,3 +507,10 @@
           4. Modo sin internet: precarga de `product_recipes` en IndexedDB y registro de IDs locales.
           5. Pruebas automáticas superadas al 100%: backend (`prueba-fase8-backend.mjs`, 11/11 OK) y navegador Edge (`prueba-fase8-ui.mjs`, 12/12 OK).
           6. Compilado y desplegado a `https://siumax.duckdns.org`. Producción Evicamp y GitHub main intactos (Regla 4).
+      51. **Corrección de Modal de Producción e Instrucciones de Uso (01/11 noche):**
+        - El dueño reportó: *"hay un erro cuando entro a producir sale como predeterminado esto"* compartiendo captura donde aparecía precargado un producto de prueba residual (`PANETON RECETA P8 772048`).
+        - Se investigó y solucionó de raíz:
+          1. Se depuraron de la base `siumax` todos los productos de prueba con prefijo `P8` que habían quedado de los tests automatizados.
+          2. Se modificó `ModalProduccion.tsx` para que si se abre desde el botón superior `[ + Producir ]` inicie limpio con `-- SELECCIONA UN PRODUCTO A FABRICAR --` y una tarjeta informativa con el ícono del chef, deshabilitando el botón de confirmar hasta que se elija un producto.
+          3. Solo preselecciona un producto si el usuario hace clic en el botón de chef de una fila específica de la tabla de inventario.
+        - Validado con prueba automatizada en Edge y desplegado en `siumax.duckdns.org`. Evicamp y GitHub permanecen intactos esperando la orden del dueño.

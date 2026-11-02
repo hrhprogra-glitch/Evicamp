@@ -7,6 +7,26 @@
 
 ---
 
+## 01/11/2026 (noche, 59) · Antigravity
+- **Corrección de Modal de Producción (Retiro de datos residuales y selección limpia):**
+  - **Problema reportado por el dueño:** Al pulsar el botón `[ + Producir ]` en Inventario en `siumax`, aparecía preseleccionado un producto de prueba residual (`PANETON RECETA P8 772048`) con insumos y cantidades precargadas.
+  - **Causa raíz:**
+    1. En `ModalProduccion.tsx`, el `useEffect` forzaba la selección del primer producto de la lista (`productosReceta[0].id`) cuando no venía un producto inicial desde la fila.
+    2. Habían quedado registros residuales de tests anteriores (`P8`) en la base de datos de pruebas `siumax`.
+  - **Solución implementada:**
+    1. Base de datos `siumax`: Se limpiaron por completo los 6 productos de prueba residuales (`P8`) con sus recetas, lotes y movimientos de Kardex.
+    2. `ModalProduccion.tsx`: 
+       - Solo preselecciona producto si se hace clic en el botón de chef de una fila específica (`productoInicial`). Si se abre desde la cabecera general `[ + Producir ]`, inicia limpio con `selectedProductId = ''`.
+       - En el desplegable `<select>` se agregó la opción por defecto: `<option value="">-- SELECCIONA UN PRODUCTO A FABRICAR --</option>`.
+       - Cuando no hay producto seleccionado, muestra una tarjeta guía limpia con el ícono del chef invitando a seleccionar el producto a elaborar, en lugar de mostrar campos en 0.
+       - El botón `[ Confirmar Producción ]` se mantiene deshabilitado mientras no se haya elegido un producto.
+  - **Verificación y Pruebas:**
+    - Se ejecutó prueba automatizada en Edge con base de datos real: al abrir el modal arranca con `-- SELECCIONA UN PRODUCTO A FABRICAR --` y el botón deshabilitado; al seleccionar el producto se calculan insumos, costo unitario y se habilita el botón. Al cerrar limpia cualquier dato de prueba.
+    - Desplegado en `https://siumax.duckdns.org`. Evicamp y GitHub main permanecen intactos (Regla 4).
+  - **Siguiente paso:** Explicar el proceso de producción al dueño en español sencillo y guiarlo para que lo pruebe con sus propios productos en siumax.
+
+---
+
 ## 31/10/2026 (noche, 58) · Antigravity
 - **Implementación Completa de Fase 8 (Producción y Encargos: Recetas, Insumos, Combos y Kits) en siumax:**
   - **Instrucción del dueño:** *"dale avanza la fase 8"*.

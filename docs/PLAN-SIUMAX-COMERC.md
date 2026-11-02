@@ -4,7 +4,7 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 31/10/2026 (noche, 58), Antigravity: **Fase 8 (Producción y Encargos: Recetas, Insumos, Combos y Kits)** implementada, desplegada y probada al 100% en `siumax` (backend con FIFO/Kardex y UI con puppeteer). Esperando revisión del dueño para pase a producción en Evicamp y GitHub.
+- **Última actualización:** 01/11/2026 (noche, 59), Antigravity: Modal de Producción ajustado para iniciar limpio con `-- SELECCIONA UN PRODUCTO A FABRICAR --`, datos de prueba residuales P8 depurados de la base `siumax`, validaciones y guía visual incorporadas. Fase 8 probada en `siumax` lista para revisión del dueño.
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 3, 4, 5, 6 y 7 en producción en Evicamp (commits d36efca, bd3780f, 994bdca, 59538a0 y merge de Fase 7).
 - **Fase terminada en pruebas:** Fase 8 (Producción y Encargos).
 

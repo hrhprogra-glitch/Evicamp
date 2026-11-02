@@ -38,22 +38,19 @@ export const ModalProduccion: React.FC<Props> = ({
     return productos.find(p => String(p.id) === String(selectedProductId)) || null;
   }, [productos, selectedProductId]);
 
-  // Cargar producto inicial o el primero disponible
+  // Cargar producto inicial si viene especificado
   useEffect(() => {
     if (isOpen) {
       if (productoInicial && productoInicial.tipoCompuesto === 'RECETA') {
         setSelectedProductId(String(productoInicial.id));
         setCostoAdicional(String(productoInicial.costoAdicionalProduccion || 0));
-      } else if (productosReceta.length > 0) {
-        setSelectedProductId(String(productosReceta[0].id));
-        setCostoAdicional(String(productosReceta[0].costoAdicionalProduccion || 0));
       } else {
         setSelectedProductId('');
         setCostoAdicional('0');
       }
       setCantidadProducir('1');
     }
-  }, [isOpen, productoInicial, productosReceta]);
+  }, [isOpen, productoInicial]);
 
   // Cargar insumos y receta cuando cambia el producto seleccionado
   useEffect(() => {
@@ -232,18 +229,26 @@ export const ModalProduccion: React.FC<Props> = ({
                   id="select-producto-produccion"
                   value={selectedProductId}
                   onChange={(e) => {
-                    setSelectedProductId(e.target.value);
-                    const prod = productos.find(p => String(p.id) === e.target.value);
-                    if (prod) setCostoAdicional(String(prod.costoAdicionalProduccion || 0));
+                    const id = e.target.value;
+                    setSelectedProductId(id);
+                    const prod = productos.find(p => String(p.id) === id);
+                    if (prod) {
+                      setCostoAdicional(String(prod.costoAdicionalProduccion || 0));
+                    } else {
+                      setCostoAdicional('0');
+                    }
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'ArrowDown' || e.key === 'Enter') {
                       e.preventDefault();
-                      document.getElementById('input-cantidad-produccion')?.focus();
+                      if (selectedProductId) {
+                        document.getElementById('input-cantidad-produccion')?.focus();
+                      }
                     }
                   }}
                   className="w-full p-2.5 text-xs font-black uppercase border-2 border-[#CBD5E1] bg-white dark:bg-slate-800 outline-none focus:border-emerald-600"
                 >
+                  <option value="">-- SELECCIONA UN PRODUCTO A FABRICAR --</option>
                   {productosReceta.map(p => (
                     <option key={p.id} value={p.id}>
                       {p.name} (Stock Actual: {p.quantity} {p.unit})
@@ -252,7 +257,19 @@ export const ModalProduccion: React.FC<Props> = ({
                 </select>
               </div>
 
-              {/* CAPACIDAD DE PRODUCCIÓN Y CANTIDAD */}
+              {!selectedProductId ? (
+                <div className="p-8 text-center border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 space-y-2">
+                  <ChefHat size={36} className="mx-auto text-emerald-600 opacity-60" />
+                  <p className="text-xs font-black uppercase text-[var(--color-ink)]">
+                    Selecciona un producto en la lista de arriba
+                  </p>
+                  <p className="text-[11px] text-[#64748B]">
+                    Aquí se cargarán automáticamente los insumos requeridos, la cantidad máxima que puedes fabricar y el costo unitario.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* CAPACIDAD DE PRODUCCIÓN Y CANTIDAD */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
                 <div className="space-y-1 sm:col-span-1">
                   <label className="text-[10px] font-black uppercase text-[var(--color-ink)] tracking-wider">
@@ -392,30 +409,32 @@ export const ModalProduccion: React.FC<Props> = ({
               </div>
             </>
           )}
-        </div>
+        </>
+      )}
+    </div>
 
-        {/* PIE Y BOTONES */}
-        <div className="p-4 bg-slate-100 dark:bg-slate-800 border-t-2 border-[var(--color-ink)] flex justify-between items-center">
+      {/* PIE Y BOTONES */}
+      <div className="p-4 bg-slate-100 dark:bg-slate-800 border-t-2 border-[var(--color-ink)] flex justify-between items-center">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 text-xs font-bold uppercase text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+        >
+          Cancelar (Esc)
+        </button>
+
+        {productosReceta.length > 0 && (
           <button
+            id="btn-confirmar-produccion"
             type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-xs font-bold uppercase text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+            onClick={handleConfirmar}
+            disabled={isSubmitting || !selectedProductId || insumosInsuficientes.length > 0 || !recetasInsumos.length}
+            className="px-6 py-2.5 bg-emerald-600 text-white font-black text-xs uppercase tracking-wider flex items-center gap-2 hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[3px_3px_0_0_var(--color-ink)] cursor-pointer"
           >
-            Cancelar (Esc)
+            {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <PackagePlus size={16} />}
+            <span>{isSubmitting ? 'Procesando...' : 'Confirmar Producción'}</span>
           </button>
-
-          {productosReceta.length > 0 && (
-            <button
-              id="btn-confirmar-produccion"
-              type="button"
-              onClick={handleConfirmar}
-              disabled={isSubmitting || insumosInsuficientes.length > 0 || !recetasInsumos.length}
-              className="px-6 py-2.5 bg-emerald-600 text-white font-black text-xs uppercase tracking-wider flex items-center gap-2 hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[3px_3px_0_0_var(--color-ink)] cursor-pointer"
-            >
-              {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <PackagePlus size={16} />}
-              <span>{isSubmitting ? 'Procesando...' : 'Confirmar Producción'}</span>
-            </button>
-          )}
+        )}
         </div>
       </div>
     </div>
