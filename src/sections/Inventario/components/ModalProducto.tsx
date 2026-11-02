@@ -1244,6 +1244,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           }
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
+            e.stopPropagation();
             setShowAdvancedPanel(prev => !prev);
             return;
           }
@@ -1458,7 +1459,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
     window.addEventListener('keydown', handleFormKeyDown, { capture: true });
     return () => window.removeEventListener('keydown', handleFormKeyDown, { capture: true });
-  }, [isOpen, step, nature, formData, escalas, presentacionesForm, tieneVariantes, variantesLista, tipoCompuesto, recetaItems, isSubmitting, categoriasLista, showImageResults, imageResults, imgResaltada]); // escalas: Guardar con Enter usa las de ahora (fase 1.3)
+  }, [isOpen, step, nature, formData, escalas, presentacionesForm, tieneVariantes, variantesLista, tipoCompuesto, recetaItems, isSubmitting, categoriasLista, showImageResults, imageResults, imgResaltada, showAdvancedPanel]);
 
   if (!isOpen) return null;
 
@@ -2281,33 +2282,6 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                   type="button"
                   tabIndex={0}
                   onClick={() => setShowAdvancedPanel(prev => !prev)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setShowAdvancedPanel(prev => !prev);
-                    } else if (e.key === 'ArrowUp') {
-                      e.preventDefault();
-                      const prev = document.getElementById('select-unidad-peso-producto') ||
-                                   document.getElementById('input-stock-minimo-producto') ||
-                                   document.getElementById('input-precio-mayorista-producto') ||
-                                   document.getElementById('input-precio-producto');
-                      prev?.focus();
-                    } else if (e.key === 'ArrowDown') {
-                      e.preventDefault();
-                      if (showAdvancedPanel) {
-                        const next = document.getElementById('input-marca-producto') ||
-                                     document.getElementById('input-meses-garantia-producto') ||
-                                     document.getElementById('escala-desde-0') ||
-                                     document.getElementById('pres-unidad-0') ||
-                                     document.getElementById('check-tiene-variantes') ||
-                                     document.getElementById('btn-tipo-estandar') ||
-                                     document.getElementById('btn-guardar-producto');
-                        next?.focus();
-                      } else {
-                        document.getElementById('btn-guardar-producto')?.focus();
-                      }
-                    }
-                  }}
                   className={`group w-full p-3.5 border-2 transition-all flex items-center justify-between cursor-pointer outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:border-[var(--color-ink)] focus:bg-[#E2E8F0] ${
                     showAdvancedPanel
                       ? 'border-[var(--color-ink)] bg-slate-100 text-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)]'
