@@ -11,7 +11,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
-| **Arreglo del aspecto de la Tienda Web** (celular: cabecera y banner gigantes, tarjetas apretadas; "Genérico" como marca; cajas grises sin foto; recuadro roto arriba) | **Propuesto 02/11 por Claude; esperando OK** |
+| **Nuevo aspecto de la Tienda Web** (PC y celular, libre del estilo de la caja) | **✅ Hecho y en siumax (02/11, commit c202ae8); falta revisión del dueño. siumax tiene 0 productos (pedir permiso para cargar de prueba)** |
 | **Fase 11 SUNAT: plan en 8 partes (11.1 servidor y datos → 11.8 directo a SUNAT)** | **Propuesto 02/11 por Claude; faltan decisiones del dueño (proveedor, RUC de prueba, contador)** |
 | **Fase 9 (Varias tiendas o almacenes y traspasos)** | **✅ Hecho y probado en siumax (02/11); listo para revisión del dueño** |
 | **Fase 10 (Tienda Web para PC y Celular con pedidos por WhatsApp)** | **✅ Hecho y probado en siumax (02/11); listo para revisión del dueño** |

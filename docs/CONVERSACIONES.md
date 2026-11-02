@@ -594,3 +594,6 @@
 ### 02/11/2026: Aspecto de la Tienda Web y Fase 11 (SUNAT) · Claude
 - **Dueño:** *"perfecto quiero que arregles el aspecto de la pagina web y avancemos a la ultima fase que es la 11 la ultima y mas compleja dime el plan"*.
 - Claude revisó la Tienda Web (siumax tiene 0 productos; se probó inyectando los de la demo solo en el navegador) y propuso arreglos de aspecto + el plan de la Fase 11 en 8 partes (camino A: proveedor PSE como "enchufe", con copia propia; B directo a SUNAT al final). Esperando OK y decisiones.
+- **Dueño:** *"yo lo veo igual sinceramente la tienda virtual para cada cliente esta feo"* (foto de la tienda vacía en siumax).
+  - Claude rediseñó la Tienda Web (commit c202ae8) y la subió solo a siumax. Causa: heredaba el estilo de la caja (esquinas rectas forzadas, letra grande, tema oscuro). Arregló 2 errores del link de WhatsApp. Evicamp intacto.
+  - Pendiente: revisión del dueño, permiso para cargar productos de prueba en siumax (tiene 0) y el OK + decisiones de la Fase 11.

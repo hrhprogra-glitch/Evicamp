@@ -7,6 +7,17 @@
 
 ---
 
+## 02/11/2026 (noche, 69) · Claude — Nuevo aspecto de la Tienda Web (subido SOLO a siumax)
+- **Dueño:** *"yo lo veo igual sinceramente la tienda virtual para cada cliente esta feo"*.
+- **Causa de fondo:** la tienda heredaba el estilo de la caja: `* { border-radius: 0 !important }`, letra agrandada (`--text-xs` 14px...) y el tema oscuro del dueño (`html[data-theme=dark] .bg-white`).
+- **Arreglo:** todo dentro de `.tienda-web` (index.css): letra normal, `border-radius: revert-layer !important` (devuelve el redondeo de Tailwind) y sin animación de botones. La tienda quita el tema del sistema mientras está abierta (con setTimeout, porque App lo aplica después).
+- **Diseño nuevo** (commit c202ae8): cabecera compacta, bienvenida en tarjeta, categorías deslizables, tarjetas con +/- directo al carrito, iniciales de color si no hay foto, marca solo si existe, destacados primero; carrito y pedido rediseñados (avisos dentro, no alert). Nuevo `TiendaWeb/formato.ts`.
+- **Errores arreglados:** el botón de WhatsApp ponía 51 dos veces; sin WhatsApp configurado el pedido iba a 987654321 (inventado).
+- Se conservan todos los ids de la prueba de fase 10. Probado en PC y celular (catálogo y pedido interceptados, sin escribir en ninguna base). siumax `index-BQAYJouS.js`; Evicamp intacto.
+- **siumax tiene 0 productos:** la tienda sale vacía ahí (ahora con un aviso amable). Falta permiso del dueño para cargar productos de prueba.
+
+---
+
 ## 02/11/2026 (noche, 68) · Claude — Propuestas: aspecto de la Tienda Web y plan de la Fase 11 (SUNAT)
 - Revisé la Tienda Web en PC y celular (con productos de la demo inyectados solo en el navegador). **siumax tiene 0 productos**, por eso la tienda sale vacía.
 - Propuse arreglos de aspecto y el plan de la Fase 11 en 8 partes. **Nada construido: esperando el OK del dueño.**
