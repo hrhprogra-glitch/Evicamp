@@ -4,7 +4,7 @@ import { presentacionesValidas } from '../../utils/presentaciones';
 import { traerTodo } from '../../utils/traerTodo';
 import { coincideBusqueda } from '../../utils/busqueda';
 import React, { useState, useEffect, useMemo } from 'react';
-import { Package, Layers, Box, AlertTriangle, LayoutGrid, Plus, Database, Activity, Users, ShoppingCart, ChefHat } from 'lucide-react';
+import { Package, Layers, Box, AlertTriangle, LayoutGrid, Plus, Database, Activity, Users, ShoppingCart, ChefHat, ArrowRightLeft } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import { usePermiso, avisarSinPermiso } from '../../utils/permisos';
 import { useConexion } from '../../layout/BarraConexion';
@@ -21,6 +21,7 @@ import { ModalHistorialLotes, type ProductoHistorial } from './components/ModalH
 import { ModalEtiqueta } from './components/ModalEtiqueta';
 import { PanelCompras, inicioCompras } from './components/PanelCompras';
 import { ModalProduccion } from './components/ModalProduccion';
+import { ModalTraspaso } from './components/ModalTraspaso';
 
 interface InventarioProps {
   onNavigate?: (view: string) => void;
@@ -61,6 +62,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const [refreshProductsKey, setRefreshProductsKey] = useState(0); // Recarga para producción y recetas
   const [isModalProduccionOpen, setIsModalProduccionOpen] = useState(false);
   const [productoParaProduccion, setProductoParaProduccion] = useState<Product | null>(null);
+  const [isModalTraspasoOpen, setIsModalTraspasoOpen] = useState(false);
 
   // ESTADOS DE LOS FILTROS
   const [searchQuery, setSearchQuery] = useState('');
@@ -604,7 +606,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             
 
             {/* Botones de Acción */}
-            <div className="grid grid-cols-4 gap-2 sm:flex sm:gap-3 shrink-0">
+            <div className="grid grid-cols-2 sm:flex sm:gap-3 shrink-0 gap-2">
               <button
                 id="btn-nuevo-producto"
                 onClick={() => (puedeEditarProductos ? setIsModalOpen(true) : avisarSinPermiso('crear productos'))}
@@ -664,7 +666,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('btn-ingresar-lote')?.focus();
                   } else if (e.key === 'ArrowRight') {
                     e.preventDefault();
-                    document.getElementById('btn-proveedores')?.focus();
+                    document.getElementById('btn-traspasos')?.focus();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
                     document.getElementById('filtro-orden-inventario')?.focus();
@@ -675,6 +677,28 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                 <ChefHat size={16} /> <span className="hidden sm:inline">Producir</span>
               </button>
               <button
+                id="btn-traspasos"
+                onClick={() => (puedeIngresarLotes ? setIsModalTraspasoOpen(true) : avisarSinPermiso('gestionar traspasos'))}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    document.getElementById('btn-header-producir')?.focus();
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    document.getElementById('btn-proveedores')?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    document.getElementById('filtro-orden-inventario')?.focus();
+                  }
+                }}
+                className="bg-indigo-600 text-white px-1 sm:px-4 lg:px-6 py-3 lg:py-4 min-w-0 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-widest flex items-center justify-center gap-1 sm:gap-2 hover:bg-indigo-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+              >
+                <ArrowRightLeft size={16} /> <span className="hidden sm:inline">Traspasos</span>
+              </button>
+              <button
                 id="btn-proveedores"
                 onClick={() => (puedeProveedores ? setIsModalProveedoresOpen(true) : avisarSinPermiso('gestionar proveedores'))}
                 onKeyDown={(e) => {
@@ -683,7 +707,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     e.stopPropagation();
                   } else if (e.key === 'ArrowLeft') {
                     e.preventDefault();
-                    document.getElementById('btn-header-producir')?.focus();
+                    document.getElementById('btn-traspasos')?.focus();
                   } else if (e.key === 'ArrowRight') {
                     e.preventDefault();
                     e.stopPropagation();
@@ -952,6 +976,16 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           setRefreshLotesKey((prev) => prev + 1);
         }}
       />
+      {/* MODAL DE TRASPASOS (FASE 9) */}
+      {isModalTraspasoOpen && (
+        <ModalTraspaso
+          onClose={() => setIsModalTraspasoOpen(false)}
+          onTraspasoExitoso={() => {
+            setRefreshProductsKey((k) => k + 1);
+            setRefreshLotesKey((k) => k + 1);
+          }}
+        />
+      )}
     </div>
   );
 };

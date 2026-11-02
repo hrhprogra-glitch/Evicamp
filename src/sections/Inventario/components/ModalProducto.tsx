@@ -154,6 +154,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   const [variantesLista, setVariantesLista] = useState<FilaVarianteForm[]>([]);
 
   // Fase 8: Recetas y Combos
+  const [mostrarEnCatalogo, setMostrarEnCatalogo] = useState(true);
+  const [destacadoCatalogo, setDestacadoCatalogo] = useState(false);
   const [tipoCompuesto, setTipoCompuesto] = useState<'ESTANDAR' | 'COMBO' | 'RECETA'>('ESTANDAR');
   const [costoAdicionalProd, setCostoAdicionalProd] = useState<string>('');
   const [recetaItems, setRecetaItems] = useState<ProductRecipeItem[]>([]);
@@ -426,6 +428,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         }
 
         // Fase 8: Carga de combo/receta
+        setMostrarEnCatalogo(initialData.mostrar_en_catalogo !== false && initialData.mostrarEnCatalogo !== false);
+        setDestacadoCatalogo(Boolean(initialData.destacado_catalogo ?? initialData.destacadoCatalogo));
         const tComp = (initialData.tipoCompuesto || initialData.tipo_compuesto || 'ESTANDAR') as 'ESTANDAR' | 'COMBO' | 'RECETA';
         setTipoCompuesto(tComp);
         setCostoAdicionalProd(initialData.costoAdicionalProduccion || initialData.costo_adicional_produccion ? String(initialData.costoAdicionalProduccion || initialData.costo_adicional_produccion) : '');
@@ -481,6 +485,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         setPresentacionesForm(filasPres());
         setTieneVariantes(false);
         setVariantesLista([]);
+        setMostrarEnCatalogo(true);
+        setDestacadoCatalogo(false);
         setTipoCompuesto('ESTANDAR');
         setCostoAdicionalProd('');
         setRecetaItems([]);
@@ -558,6 +564,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   });
 
   const resetAndClose = () => {
+    setMostrarEnCatalogo(true);
+    setDestacadoCatalogo(false);
     setIntegrityError(null);
     setCodigoParaBuscar('');
     setStep(1);
@@ -1555,6 +1563,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           ubicacion: safeUbicacion,
           controla_series: formData.controlaSeries,
           meses_garantia: Number(formData.mesesGarantia) || 0,
+          mostrar_en_catalogo: mostrarEnCatalogo,
+          destacado_catalogo: destacadoCatalogo,
           tiene_variantes: tieneVariantes,
           tipo_compuesto: tipoCompuesto,
           costo_adicional_produccion: tipoCompuesto === 'RECETA' ? (Number(costoAdicionalProd) || 0) : 0,
@@ -1590,6 +1600,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           ubicacion: safeUbicacion,
           controla_series: formData.controlaSeries,
           meses_garantia: Number(formData.mesesGarantia) || 0,
+          mostrar_en_catalogo: mostrarEnCatalogo,
+          destacado_catalogo: destacadoCatalogo,
           tiene_variantes: tieneVariantes,
           tipo_compuesto: tipoCompuesto,
           costo_adicional_produccion: tipoCompuesto === 'RECETA' ? (Number(costoAdicionalProd) || 0) : 0,
@@ -2877,6 +2889,54 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                       )}
                     </div>
                   )}
+                                  {/* FASE 10: TIENDA WEB / CATÁLOGO VIRTUAL (OPCIONAL) */}
+                  <div className="md:col-span-2 pt-4 border-t-2 border-[#CBD5E1] space-y-3" id="bloque-tienda-web-producto">
+                    <div className="flex items-center justify-between pb-1 border-b border-[#E2E8F0]">
+                      <span className="text-xs font-black text-[var(--color-ink)] uppercase tracking-wider flex items-center gap-1.5">
+                        <span>🌐 Tienda Web y Pedidos WhatsApp</span>
+                        <span className="text-[10px] text-[var(--color-muted)] font-bold">(OPCIONAL)</span>
+                      </span>
+                      <span className="text-[10px] text-[#64748B] font-bold">Visibilidad Online</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <label className="flex items-start gap-2.5 p-2.5 bg-[var(--color-surface)] border-2 border-[#CBD5E1] hover:border-[var(--color-success)] transition-colors cursor-pointer">
+                        <input
+                          id="input-mostrar-en-catalogo"
+                          type="checkbox"
+                          checked={mostrarEnCatalogo}
+                          onChange={(e) => setMostrarEnCatalogo(e.target.checked)}
+                          className="w-4 h-4 mt-0.5 text-[var(--color-success)] rounded-none border-2 border-[#CBD5E1] focus:ring-2 focus:ring-[var(--color-success)] cursor-pointer shrink-0"
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-xs font-black text-[var(--color-ink)] uppercase leading-tight">
+                            Publicar en Tienda Web
+                          </span>
+                          <span className="text-[10px] text-[#64748B] font-bold mt-0.5">
+                            Visible para clientes en PC y celular para armar pedidos.
+                          </span>
+                        </div>
+                      </label>
+
+                      <label className="flex items-start gap-2.5 p-2.5 bg-[var(--color-surface)] border-2 border-[#CBD5E1] hover:border-[var(--color-success)] transition-colors cursor-pointer">
+                        <input
+                          id="input-destacado-catalogo"
+                          type="checkbox"
+                          checked={destacadoCatalogo}
+                          onChange={(e) => setDestacadoCatalogo(e.target.checked)}
+                          className="w-4 h-4 mt-0.5 text-amber-500 rounded-none border-2 border-[#CBD5E1] focus:ring-2 focus:ring-amber-500 cursor-pointer shrink-0"
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-xs font-black text-[var(--color-ink)] uppercase leading-tight flex items-center gap-1">
+                            ⭐ Producto Destacado
+                          </span>
+                          <span className="text-[10px] text-[#64748B] font-bold mt-0.5">
+                            Aparece primero en la portada de la Tienda Web.
+                          </span>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
                 </>
               )}
 

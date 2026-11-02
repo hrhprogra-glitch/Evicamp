@@ -4,15 +4,15 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 02/11/2026 (tarde, 64), Antigravity: El dueño solicitó avanzar con las Fases 9 y 10 manteniendo la Fase 8 intacta en siumax (sin pase a producción en Evicamp aún, cumpliendo su orden explícita y la Regla 4). Propuesta de Fases 9 y 10 estructurada y presentada en espera de su OK.
+- **Última actualización:** 02/11/2026 (tarde, 65), Antigravity: Fases 9 (Almacenes y Traspasos) y 10 (Tienda Web para PC y Celular con pedidos WhatsApp) completadas y probadas 100% en conjunto en el entorno de pruebas siumax. La Fase 8 permanece lista en siumax sin tocar Evicamp ni hacer push a main.
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 3, 4, 5, 6 y 7 en producción en Evicamp (commits d36efca, bd3780f, 994bdca, 59538a0 y merge de Fase 7).
-- **Fase terminada en pruebas:** Fase 8 (Producción y Encargos, en siumax; se mantiene a la espera de la orden del dueño para subirla).
+- **Fases terminadas en pruebas (siumax):** Fase 8 (Producción y Recetas), Fase 9 (Múltiples Tiendas y Traspasos) y Fase 10 (Tienda Web para PC y Celular). Todas listas para revisión del dueño.
 
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
-| **Fase 9 (Varias tiendas o almacenes y traspasos)** | **Propuesta presentada al dueño; esperando su OK** |
-| **Fase 10 (Tienda Web para PC y Celular con pedidos por WhatsApp)** | **Propuesta ajustada y presentada al dueño; esperando su OK** |
+| **Fase 9 (Varias tiendas o almacenes y traspasos)** | **✅ Hecho y probado en siumax (02/11); listo para revisión del dueño** |
+| **Fase 10 (Tienda Web para PC y Celular con pedidos por WhatsApp)** | **✅ Hecho y probado en siumax (02/11); listo para revisión del dueño** |
 | **Fase 8 (Producción y Encargos: Recetas, Insumos, Combos y Kits)** | **✅ Hecho y probado en siumax (31/10); no pasar a producción aún (orden del dueño)** |
 | **Fase 7 (Tallas y Colores - Variantes con stock propio + Ingreso de Lotes por Variante)** | **✅ Hecho en producción y GitHub (31/10)** |
 | **Fase 6 (Cambios de Producto y Garantías / Series)** | **✅ Hecho en producción y GitHub (31/10, commit 59538a0)** |

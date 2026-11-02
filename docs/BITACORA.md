@@ -7,6 +7,38 @@
 
 ---
 
+## 02/11/2026 (noche, 66) · Claude — 🚨 ERROR URGENTE corregido en Utilidades (leer, Antigravity)
+- **Un cliente real vio "Cobrado S/ 90" en LATON PILSEN que no se cobró.** Si un cliente paga hoy deudas viejas, Utilidades metía esas ventas antiguas COMPLETAS al "Cobrado" de hoy.
+- **Arreglo:** rama `fix/cobrado-utilidades` (commit 98b2961, sobre `main`, worktree `.worktrees/fix-cobrado`). No toqué tu rama ni tus archivos.
+- **Regla nueva (MEMORIA-IA §6 n.º 36):** el dinero cobrado en un rango = lo pagado al momento (solo ventas del rango) + los abonos con fecha en el rango. Nunca `fiados.paid_amount` para ingresos.
+- **Falta:** mezclar la rama en `main` y en `fase-9-10-almacenes-catalogo`; subir a Evicamp SOLO con aviso del dueño.
+
+## 02/11/2026 (tarde, 65) · Antigravity
+- **Fase 9 (Almacenes y Traspasos) y Fase 10 (Tienda Web PC y Celular) Desarrolladas y Probadas en Conjunto:**
+  - **Petición del dueño:** *"quiero que hagas la fase 9 y 10 a la vez y todavia no subas lo de la fase 8"*.
+  - **Restricción cumplida estrictamente:** Evicamp (producción) no se tocó en absoluto y no se hizo push a `main` en GitHub. Todo el trabajo se mantuvo en la rama local `fase-9-10-almacenes-catalogo` y se desplegó únicamente a `siumax` (pruebas).
+  - **Componentes Construidos y Verificados:**
+    1. **Fase 9: Almacenes y Múltiples Tiendas:**
+       - Base de datos en `siumax`: Tablas `stores`, `store_transfers`, `store_transfer_items` y funciones RPC atómicas `fn_crear_traspaso` y `fn_recibir_traspaso`.
+       - Interfaz en Ajustes: Nueva pestaña `[ Tiendas y Almacenes ]` (`PestanaTiendas.tsx`) con navegación 100% por teclado, alta y edición de locales (`ModalTienda.tsx`).
+       - Traspasos en Inventario: Botón `[ 🔄 Traspasos ]` (`#btn-traspasos`) con selector de locales, buscador de productos con variantes y stock en origen, pestaña de Historial en tránsito/recibido y emisión de vale imprimible (`ModalValeTraspaso.tsx`).
+    2. **Fase 10: Tienda Web para PC y Celular:**
+       - Pantalla Pública: Accesible en `#/tienda` de forma abierta sin pedir login al cliente.
+       - Experiencia PC de Escritorio: Navbar completa con buscador en tiempo real, categorías en pills, vitrina de productos con fotos, badges de destacados y stock, cajón lateral (Drawer) de carrito y modal de checkout para solicitar nombre, teléfono WhatsApp y delivery o recojo.
+       - Experiencia Móvil: Adaptación responsive fluida (375px), buscador compacto y botón flotante de carrito inferior con monto total.
+       - Pedidos por WhatsApp: Genera número de orden `#PED-XXXX` en el POS mediante `fn_crear_pedido_web` y abre automáticamente WhatsApp con el pedido estructurado.
+       - Ajustes de Tienda Web: Pestaña en Ajustes (`PestanaTiendaWeb.tsx`) para activar/desactivar tienda, configurar WhatsApp, ocultar precios, personalizar bienvenida y copiar enlace directo.
+       - Modal de Producto: Checkboxes para "Publicar en Tienda Web" y "⭐ Producto Destacado" en el panel desplegable.
+  - **Pruebas y Verificación:**
+    - `npx tsc -b`: 0 errores de compilación TypeScript.
+    - `npm run build`: bundle de producción generado limpiamente en 3.79s.
+    - Despliegue: `node ai-scripts/deploy.cjs siumax` exitoso (20 archivos).
+    - Prueba automatizada Puppeteer (`ai-scripts/pruebas/prueba-fase9-10-ui.mjs`): **18 de 18 pruebas superadas con éxito** (creación de almacén, traspaso con vale, recepción, vitrina web en PC, carrito drawer, checkout WhatsApp y vista móvil).
+    - 9 capturas visuales generadas y verificadas.
+  - **Siguiente paso:** Presentar el reporte completo al dueño con capturas de pantalla para su revisión en `siumax`.
+
+---
+
 ## 02/11/2026 (tarde, 64) · Antigravity
 - **Consulta de Fases y Decisión de Avanzar Fases 9 y 10 (Fase 8 permanece en pruebas):**
   - **Petición del dueño:** *"vamos hacer la fases 9 y 10 pero todavia no pases a la producción la fase 8"* y posteriormente *"perfecto pero que sea en vez de catagolo tienda web y otra cosa mas que no solo funcione en celular si no tambien pc ajusta eso atu propuesta"*.

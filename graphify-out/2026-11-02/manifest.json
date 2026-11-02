@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProducto.tsx": {
-    "mtime": 1793640294.165958,
-    "seen": 1793640507.6964984,
-    "ast_hash": "33be0faacf7b8666991d89fc6fcd52d0",
+    "mtime": 1793642379.3713202,
+    "seen": 1793642581.7587774,
+    "ast_hash": "e6d255ee29d0bb9ccafa7860f118f958",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaLotes.tsx": {
@@ -2268,9 +2268,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProduccion.tsx": {
-    "mtime": 1793591021.270412,
-    "seen": 1793637325.7300868,
-    "ast_hash": "aaddf4d42d5f9a8959fc253c02b6e1c0",
+    "mtime": 1793642001.5223668,
+    "seen": 1793642581.7587748,
+    "ast_hash": "4c3336a106fc112cf9f2e56a40ef171a",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/limpiar-siumax-total.cjs": {

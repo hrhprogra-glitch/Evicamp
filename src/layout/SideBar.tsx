@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   ShoppingCart, Users, Package, 
   Truck, ClipboardCheck, Wallet, 
-  Settings, BarChart3, X, LogOut, Download, Monitor, CreditCard
+  Settings, BarChart3, X, LogOut, Download, Monitor, CreditCard, Globe
 } from 'lucide-react';
 import { usePuedeInstalar, instalarApp, useHayInstaladorPC, descargarInstaladorPC } from '../utils/instalarApp';
 import { useSuscripcion, fechaPe, abrirPago } from './AvisoSuscripcion';
@@ -251,6 +251,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
       items: [
         { id: 'pos', name: 'Caja', icon: ShoppingCart },
         { id: 'clientes', name: 'Clientes', icon: Users },
+        { id: 'tienda_web', name: 'Tienda Web', icon: Globe },
       ]
     },
     {

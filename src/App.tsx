@@ -15,6 +15,7 @@ import { Clientes } from './sections/Clientes'; // sección Clientes (antes Cré
 import { Finanzas } from './sections/Finanzas'; // <--- IMPORTAMOS FINANZAS
 import { Utilidades } from './sections/Utilidades';
 import Configuraciones from './sections/Configuraciones';
+import { TiendaWeb } from './sections/TiendaWeb';
 import { aplicarTamanoInterfaz, leerTamanoInterfaz } from './utils/tamanoInterfaz';
 import { AlertaYape } from './layout/AlertaYape';
 import { AvisoSuscripcion } from './layout/AvisoSuscripcion';
@@ -33,6 +34,7 @@ const NOMBRES_SESIONES: Record<string, string> = {
   utilidades: 'Utilidades',
   configuracion: 'Ajustes',
   proveedores: 'Proveedores',
+  tienda_web: 'Tienda Web',
 };
 
 // Cada cuánto se vuelve a leer el estado y los permisos del empleado desde la base
@@ -41,6 +43,30 @@ const REVALIDAR_CADA_MS = 60_000;
 export const App: React.FC = () => {
   // Empleado de la sesión actual (con permisos leídos de la base, nunca del navegador)
   const [empleado, setEmpleado] = useState<EmpleadoSesion | null>(null);
+
+  // Detección de ruta pública para la Tienda Web (PC y Celular)
+  const [modoTiendaWeb, setModoTiendaWeb] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const hash = window.location.hash.toLowerCase();
+    const path = window.location.pathname.toLowerCase();
+    const search = window.location.search.toLowerCase();
+    return hash.includes('tienda') || hash.includes('catalogo') || path.includes('/tienda') || path.includes('/catalogo') || search.includes('tienda=') || search.includes('catalogo=');
+  });
+
+  useEffect(() => {
+    const checkRuta = () => {
+      const hash = window.location.hash.toLowerCase();
+      const path = window.location.pathname.toLowerCase();
+      const search = window.location.search.toLowerCase();
+      setModoTiendaWeb(hash.includes('tienda') || hash.includes('catalogo') || path.includes('/tienda') || path.includes('/catalogo') || search.includes('tienda=') || search.includes('catalogo='));
+    };
+    window.addEventListener('hashchange', checkRuta);
+    window.addEventListener('popstate', checkRuta);
+    return () => {
+      window.removeEventListener('hashchange', checkRuta);
+      window.removeEventListener('popstate', checkRuta);
+    };
+  }, []);
 
   const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState<string>('pos');
@@ -239,6 +265,21 @@ export const App: React.FC = () => {
     };
   }, []);
 
+  if (modoTiendaWeb) {
+    return (
+      <TiendaWeb
+        onIrAlSistema={() => {
+          setModoTiendaWeb(false);
+          try {
+            history.pushState(null, '', window.location.pathname);
+          } catch {
+            window.location.hash = '';
+          }
+        }}
+      />
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-[var(--alto-pantalla)] bg-[var(--color-surface)] flex items-center justify-center">
@@ -277,7 +318,9 @@ export const App: React.FC = () => {
       case 'utilidades':
         return <Utilidades />;
       case 'configuracion': // <--- AÑADE ESTO
-      return <Configuraciones />;
+        return <Configuraciones />;
+      case 'tienda_web':
+        return <TiendaWeb onIrAlSistema={() => setCurrentView('pos')} />;
       default:
         return (
           <div className="border border-dashed border-[var(--color-border)] p-12 text-center">
