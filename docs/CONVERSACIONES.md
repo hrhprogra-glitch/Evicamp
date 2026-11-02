@@ -597,3 +597,4 @@
 - **Dueño:** *"yo lo veo igual sinceramente la tienda virtual para cada cliente esta feo"* (foto de la tienda vacía en siumax).
   - Claude rediseñó la Tienda Web (commit c202ae8) y la subió solo a siumax. Causa: heredaba el estilo de la caja (esquinas rectas forzadas, letra grande, tema oscuro). Arregló 2 errores del link de WhatsApp. Evicamp intacto.
   - Pendiente: revisión del dueño, permiso para cargar productos de prueba en siumax (tiene 0) y el OK + decisiones de la Fase 11.
+- **Dueño:** *"esta bien pero todo cuadrado recuerda no usamos nada con curvas en las esquinas"*. Claude quitó las curvas (la tienda vuelve a esquinas rectas como todo SiuMax) y los adornos redondos de la bienvenida; subido a siumax.

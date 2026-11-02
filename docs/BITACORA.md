@@ -10,7 +10,7 @@
 ## 02/11/2026 (noche, 69) · Claude — Nuevo aspecto de la Tienda Web (subido SOLO a siumax)
 - **Dueño:** *"yo lo veo igual sinceramente la tienda virtual para cada cliente esta feo"*.
 - **Causa de fondo:** la tienda heredaba el estilo de la caja: `* { border-radius: 0 !important }`, letra agrandada (`--text-xs` 14px...) y el tema oscuro del dueño (`html[data-theme=dark] .bg-white`).
-- **Arreglo:** todo dentro de `.tienda-web` (index.css): letra normal, `border-radius: revert-layer !important` (devuelve el redondeo de Tailwind) y sin animación de botones. La tienda quita el tema del sistema mientras está abierta (con setTimeout, porque App lo aplica después).
+- **Arreglo:** todo dentro de `.tienda-web` (index.css): letra normal, sin animación de botones. Esquinas RECTAS (primero se probó con curvas y el dueño dijo: "todo cuadrado, recuerda no usamos nada con curvas en las esquinas"). La tienda quita el tema del sistema mientras está abierta (con setTimeout, porque App lo aplica después).
 - **Diseño nuevo** (commit c202ae8): cabecera compacta, bienvenida en tarjeta, categorías deslizables, tarjetas con +/- directo al carrito, iniciales de color si no hay foto, marca solo si existe, destacados primero; carrito y pedido rediseñados (avisos dentro, no alert). Nuevo `TiendaWeb/formato.ts`.
 - **Errores arreglados:** el botón de WhatsApp ponía 51 dos veces; sin WhatsApp configurado el pedido iba a 987654321 (inventado).
 - Se conservan todos los ids de la prueba de fase 10. Probado en PC y celular (catálogo y pedido interceptados, sin escribir en ninguna base). siumax `index-BQAYJouS.js`; Evicamp intacto.
