@@ -195,6 +195,11 @@ Datos de Evicamp al 23/10/2026:
   - cola sin internet;
   - reporte para el contador y activación por cliente.
 - **Ya existe:** columnas en `sales` (doc_type, doc_serial, doc_number, taxable_amount, igv_amount, sunat_status, sunat_hash) y las unidades SUNAT (fase 1.1).
+- **Plan detallado propuesto por Claude (02/11/2026, esperando OK):**
+  - Flujo: Caja → servicio "facturador" en el VPS (la clave del proveedor y los datos fiscales solo ahí) → proveedor PSE/OSE (Nubefact) → SUNAT. Copia propia de PDF, XML y CDR en el VPS.
+  - **Ojo:** `sales.sunat_status` hoy se usa como estado INTERNO (ACEPTADO/ANULADO) y lo filtran todos los reportes. El estado real de SUNAT va en columnas NUEVAS (ej. `cpe_estado`, `cpe_enviado_at`, `cpe_respuesta`), sin tocar `sunat_status`.
+  - Partes: 11.1 datos fiscales + servicio facturador (modo prueba) · 11.2 IGV por producto e ICBPER · 11.3 Caja: Nota de venta / Boleta / Factura, DNI/RUC, ticket con serie-número, IGV y QR · 11.4 cola con reintentos y sin internet + pantalla Comprobantes · 11.5 nota de crédito y bajas · 11.6 reportes para el contador · 11.7 activar por cliente y planes · 11.8 directo a SUNAT.
+  - Faltan decisiones del dueño: proveedor (cuenta a su nombre), RUC de prueba, régimen (contador), series.
 
 ## 8. Pruebas
 Las pruebas automáticas con teclado (puppeteer-core + Edge, sobre siumax) están en `ai-scripts/pruebas/`. Ahí mismo, `LEEME.md` explica
