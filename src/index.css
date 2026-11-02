@@ -718,9 +718,9 @@ nav button {
 
 /* ==========================================================================
    TIENDA WEB PÚBLICA (#/tienda)
-   Es la página que ven los CLIENTES del negocio, no la caja: se libera del estilo
-   del sistema (esquinas rectas forzadas y letra agrandada) para verse como una
-   tienda en línea. Todo va dentro de .tienda-web; el resto del sistema no cambia.
+   Es la página que ven los CLIENTES del negocio, no la caja: usa letra de tamaño
+   normal (no la agrandada del sistema). Las esquinas siguen RECTAS como en todo
+   SiuMax (regla del dueño: nada con curvas). Todo va dentro de .tienda-web; el resto del sistema no cambia.
    ========================================================================== */
 .tienda-web {
   --text-xs: 0.75rem;
@@ -732,10 +732,6 @@ nav button {
   --text-lg: 1.125rem;
   --text-lg--line-height: calc(1.75 / 1.125);
   font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-}
-/* revert-layer devuelve el redondeo que pide cada clase de Tailwind (rounded-xl, rounded-full...) */
-.tienda-web * {
-  border-radius: revert-layer !important;
 }
 /* Sin la animación de aparición de botones del sistema (al sumar al carrito parpadeaban) */
 .tienda-web button {

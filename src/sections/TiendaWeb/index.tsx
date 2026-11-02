@@ -217,8 +217,6 @@ export const TiendaWeb: React.FC<TiendaWebProps> = ({ onIrAlSistema }) => {
       {!busqueda.trim() && (
         <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 pt-4 sm:pt-6">
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 to-emerald-800 text-white px-4 py-4 sm:px-8 sm:py-8">
-            <div className="absolute -right-10 -top-16 w-56 h-56 rounded-full bg-white/10" aria-hidden />
-            <div className="absolute right-24 -bottom-20 w-40 h-40 rounded-full bg-white/5" aria-hidden />
             <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
               <div className="min-w-0">
                 <h2 className="text-lg sm:text-3xl font-extrabold leading-tight tracking-tight">
