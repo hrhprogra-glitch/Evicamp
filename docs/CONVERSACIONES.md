@@ -557,11 +557,19 @@
         - Se le detalló el estado del roadmap: 9 fases completadas (Fases 0 a 7 en producción Evicamp y GitHub, y Fase 8 terminada y probada al 100% en siumax), y las 3 fases pendientes (Fase 9: Almacenes y Traspasos, Fase 10: Catálogo Web WhatsApp, Fase 11: Facturación SUNAT).
         - El dueño instruyó expresamente: *"vamos hacer la fases 9 y 10 pero todavia no pases a la producción la fase 8"*.
         - Se respeta rigurosamente la instrucción y la Regla 4: la Fase 8 se mantiene intacta en pruebas (`siumax`) sin tocar Evicamp ni GitHub `main`, y se procede a presentar la propuesta detallada para las Fases 9 y 10 esperando su OK.
-      57. **Ajuste de Propuesta: Nombre "Tienda Web" y Optimización Total para PC y Celular (02/11 tarde):**
-        - El dueño instruyó: *"perfecto pero que sea en vez de catagolo tienda web y otra cosa mas que no solo funcione en celular si no tambien pc ajusta eso atu propuesta"*.
-        - Se actualizan las especificaciones:
-          1. Renombrar la Fase 10 a **"Tienda Web"** en lugar de "Catálogo".
-          2. En PC de escritorio: diseño amplio tipo e-commerce moderno con buscador inteligente, barra o pestañas de categorías, vitrina en cuadrícula de alta visibilidad, panel de carrito accesible y navegación fluida por teclado y mouse.
-          3. En celular: navegación táctil ágil con botón de carrito flotante y enlace directo a la app móvil de WhatsApp.
-          4. Integración unificada: pedidos enviados por WhatsApp (web en PC o app en móvil) y sincronizados en tiempo real con la pestaña de Pedidos del sistema (Fase 4.6).
+      58. **Desarrollo y Prueba Conjunta de Fases 9 y 10 en siumax (02/11 tarde):**
+        - El dueño ordenó: *"perfecto entendi ahora sobre lo que dijistes Desarrollamos y probamos primero la Fase 9 (Almacenes y Traspasos) en el entorno de pruebas siumax. Luego construimos la Fase 10 (Tienda Web para PC y Móvil). Recuerda que la Fase 8 se queda segura en pruebas y no se tocará producción (Evicamp). quiero que hagas la fase 9 y 10 a la vez y todavia no subas lo de la fase 8"*.
+        - Se respetó estrictamente la Regla 4: cero toques a Evicamp, cero push a main.
+        - Se implementaron en simultáneo:
+          1. **Fase 9:** Múltiples tiendas y almacenes (`stores`), nueva pestaña en Ajustes con alta/edición de locales (`ModalTienda.tsx`), traspasos entre locales en Inventario (`ModalTraspaso.tsx`), historial de traspasos, recepción atómica (`fn_recibir_traspaso`) y vale de traspaso imprimible (`ModalValeTraspaso.tsx`).
+          2. **Fase 10:** Tienda Web pública (`#/tienda`), navbar desktop/móvil con buscador en tiempo real, vitrina con productos, fotos, badges de destacados y stock, selector de cantidades, drawer lateral de carrito, modal de checkout con modalidad Recojo/Delivery y despacho automático hacia WhatsApp conectando la orden con el POS mediante `fn_crear_pedido_web`. Pestaña de configuración de Tienda Web en Ajustes y checkboxes en el modal de producto.
+        - Se compiló con `npm run build` (0 errores) y se desplegó a `https://siumax.duckdns.org`.
+        - Se ejecutó la prueba automatizada completa en Puppeteer (`ai-scripts/pruebas/prueba-fase9-10-ui.mjs`), logrando 18 de 18 pruebas superadas con éxito tanto en PC de escritorio (1280x800) como en celular móvil (375x667).
 
+
+### 02/11/2026: Error urgente en Utilidades ("Cobrado" de un producto) · Claude
+- **Dueño:** *"hay un error urgente ... en la imagen el cobro es 90 caso que esta equivocado no cobro 90 esos errores no tiene que pasar ... arreglalo y ponlo en la memoria para que antigravity lo tenga en cuenta"* (foto de LATON PILSEN: Cobrado S/ 90, 5 ventas fiadas de YESICA MENDOZA de sept-oct).
+- **Causa:** Utilidades sumaba al "Cobrado" del período TODO lo abonado de un fiado, de cualquier fecha. Si el cliente pagaba hoy deudas viejas, sus ventas antiguas entraban completas.
+- **Arreglo (Claude, sin tocar el trabajo de Antigravity):** rama `fix/cobrado-utilidades` (commit 98b2961, desde `main`, en `.worktrees/fix-cobrado`). Ahora cuenta solo lo pagado al momento (si la venta es del rango) + los abonos hechos dentro del rango. Regla anotada en MEMORIA-IA §6 n.º 36.
+- **Prueba:** base demo `siudemo` (abonos de prueba, luego borrados): antes S/ 41.60, ahora S/ 21.60 (= lo abonado hoy). `npx tsc -b` sin errores.
+- **Pendiente:** el aviso del dueño para subirlo a Evicamp; mezclar la rama a `main` y a la rama de Antigravity.
