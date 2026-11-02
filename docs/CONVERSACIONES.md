@@ -580,3 +580,7 @@
 - **Arreglo (Claude, sin tocar el trabajo de Antigravity):** rama `fix/cobrado-utilidades` (commit 98b2961, desde `main`, en `.worktrees/fix-cobrado`). Ahora cuenta solo lo pagado al momento (si la venta es del rango) + los abonos hechos dentro del rango. Regla anotada en MEMORIA-IA §6 n.º 36.
 - **Prueba:** base demo `siudemo` (abonos de prueba, luego borrados): antes S/ 41.60, ahora S/ 21.60 (= lo abonado hoy). `npx tsc -b` sin errores.
 - **Pendiente:** el aviso del dueño para subirlo a Evicamp; mezclar la rama a `main` y a la rama de Antigravity.
+- **Dueño:** *"si subelo y actualizalo tambien a nuestros sistemas siumax y mis clientes que pagan"*.
+  - Evicamp y la carpeta de clientes: compilado desde `main` + arreglo (sin las fases 8-10 en prueba), solo pantallas, sin cortar ventas. `index-DgfBUqC6.js`, API 401, login sin errores.
+  - siumax: arreglo agregado a la rama de Antigravity (b0bb2a8) y subido (`index-B1BjFInV.js`, login sin errores).
+  - `main` local = 98b2961. Sin push a GitHub (no se pidió). El único cliente que paga es Evicamp; `evi.siumax` es otro sistema (Evidiary), no se tocó.

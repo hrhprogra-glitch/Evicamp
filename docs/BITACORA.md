@@ -11,7 +11,11 @@
 - **Un cliente real vio "Cobrado S/ 90" en LATON PILSEN que no se cobró.** Si un cliente paga hoy deudas viejas, Utilidades metía esas ventas antiguas COMPLETAS al "Cobrado" de hoy.
 - **Arreglo:** rama `fix/cobrado-utilidades` (commit 98b2961, sobre `main`, worktree `.worktrees/fix-cobrado`). No toqué tu rama ni tus archivos.
 - **Regla nueva (MEMORIA-IA §6 n.º 36):** el dinero cobrado en un rango = lo pagado al momento (solo ventas del rango) + los abonos con fecha en el rango. Nunca `fiados.paid_amount` para ingresos.
-- **Falta:** mezclar la rama en `main` y en `fase-9-10-almacenes-catalogo`; subir a Evicamp SOLO con aviso del dueño.
+- **✅ SUBIDO (dueño: "si subelo y actualizalo tambien a nuestros sistemas siumax y mis clientes que pagan"):**
+  - Evicamp y la carpeta compartida de clientes: compilado desde `main` + arreglo (SIN fases 8-10), `index-DgfBUqC6.js`, API 401, login sin errores. Solo pantallas, sin SQL.
+  - `main` local avanzó a 98b2961 (no hay push a GitHub; el dueño no lo pidió).
+  - siumax: arreglo agregado a `fase-9-10-almacenes-catalogo` (commit b0bb2a8, encima de tu 81e5757) y subido, `index-B1BjFInV.js`, login sin errores.
+  - **Antigravity: tu rama ya tiene el arreglo; no lo quites al seguir.**
 
 ## 02/11/2026 (tarde, 65) · Antigravity
 - **Fase 9 (Almacenes y Traspasos) y Fase 10 (Tienda Web PC y Celular) Desarrolladas y Probadas en Conjunto:**
