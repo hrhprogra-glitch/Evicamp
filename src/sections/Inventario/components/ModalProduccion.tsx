@@ -164,10 +164,13 @@ export const ModalProduccion: React.FC<Props> = ({
 
       if (error) throw error;
 
-      await avisar(`¡PRODUCCIÓN EXITOSA! 🎉\n\nProducto: ${selectedProduct.name}\nCantidad fabricada: ${cant} ${selectedProduct.unit}\nLote generado: ${data?.batch_code || 'PROD'}\nCosto unitario calculado: S/ ${Number(data?.cost_unit || calculoCosto.costoUnitario).toFixed(2)}`);
-
-      if (onSuccess) onSuccess();
+      // 1. Cerrar inmediatamente el modal para que desaparezca al instante
       onClose();
+      // 2. Notificar actualización de productos y lotes en Inventario
+      if (onSuccess) onSuccess();
+
+      // 3. Mostrar resumen de éxito al usuario
+      await avisar(`¡PRODUCCIÓN EXITOSA! 🎉\n\nProducto: ${selectedProduct.name}\nCantidad fabricada: ${cant} ${selectedProduct.unit}\nLote generado: ${data?.batch_code || 'PROD'}\nCosto unitario calculado: S/ ${Number(data?.cost_unit || calculoCosto.costoUnitario).toFixed(2)}`);
     } catch (err: any) {
       console.error('Error al producir:', err);
       await avisar(`Error en la orden de producción:\n${err.message || 'Error desconocido'}`);

@@ -514,3 +514,15 @@
           2. Se modificó `ModalProduccion.tsx` para que si se abre desde el botón superior `[ + Producir ]` inicie limpio con `-- SELECCIONA UN PRODUCTO A FABRICAR --` y una tarjeta informativa con el ícono del chef, deshabilitando el botón de confirmar hasta que se elija un producto.
           3. Solo preselecciona un producto si el usuario hace clic en el botón de chef de una fila específica de la tabla de inventario.
         - Validado con prueba automatizada en Edge y desplegado en `siumax.duckdns.org`. Evicamp y GitHub permanecen intactos esperando la orden del dueño.
+      52. **Ajuste de Confirmación y Cierre de Modal de Producción (01/11 noche):**
+        - El dueño reportó: *"hay un error cuando confirmo la produccción no se cierra la ventan si mantiene ahi como si nunca lo hubiera confirmado"*.
+        - Se investigó la causa:
+          1. En la base de datos `siumax`, `products.quantity` de los insumos seleccionados por el dueño estaba desfasado con `batches` debido a pruebas offline antiguas, provocando que la función `fn_producir_receta` lanzara error de "Stock insuficiente" al validar directamente contra `products.quantity`.
+          2. Al fallar la llamada a la base de datos, el modal no se cerraba.
+          3. Además, `onClose()` estaba ubicado después del diálogo `avisar()`, dejando el modal abierto de fondo hasta que se aceptara el aviso.
+        - Solución aplicada:
+          1. `fn_producir_receta` ahora valida contra la suma real de los lotes activos en `batches` y sincroniza `products.quantity` tras descontar.
+          2. Se cuadraron los lotes desfasados en `siumax`.
+          3. `ModalProduccion.tsx` ahora invoca `onClose()` y `onSuccess()` de inmediato en el milisegundo de respuesta del backend, cerrando la ventana al instante y mostrando el aviso de éxito sobre la pantalla limpia de inventario.
+        - Validado al 100% con Puppeteer en Edge ejecutando la orden real del producto `PAN` del dueño y comprobando el cierre automático del modal y la actualización de stock.
+        - Desplegado a `siumax.duckdns.org`. Evicamp y GitHub permanecen intactos esperando la orden del dueño.

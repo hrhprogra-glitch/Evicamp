@@ -7,6 +7,27 @@
 
 ---
 
+## 01/11/2026 (noche, 60) · Antigravity
+- **Corrección de Confirmación y Cierre en Modal de Producción:**
+  - **Problema reportado por el dueño:** *"hay un error cuando confirmo la produccción no se cierra la ventan si mantiene ahi como si nunca lo hubiera confirmado"*.
+  - **Causa raíz:**
+    1. En PostgreSQL (`fn_producir_receta`), la validación previa de stock de insumos leía la columna `products.quantity` en lugar de la suma de existencias en `batches` (lotes). En productos con lotes donde `products.quantity` estaba desfasado (o negativo por ventas offline antiguas en pruebas), la base de datos lanzaba excepción de "Stock insuficiente", cancelando la transacción.
+    2. En `ModalProduccion.tsx`, `onClose()` se encontraba ubicado después de `await avisar(...)`. Por tanto, si ocurría un error la ventana no se cerraba, e incluso en caso de éxito permanecía abierta de fondo hasta que el usuario cerrase manualmente el diálogo.
+  - **Solución implementada:**
+    1. `servidor/sql/seguridad-sesion.sql` (`fn_producir_receta`):
+       - Validación de stock de insumos adaptada: si el insumo tiene lotes en `batches`, toma la suma real de los lotes activos (`sum(batches.quantity)`), coincidiendo con lo mostrado en Inventario.
+       - Descuento de insumos sincronizado: tras descontar lotes por FIFO, actualiza `products.quantity` asegurando paridad exacta con `batches`.
+       - Aplicado a la base `siumax` y recargado el esquema de PostgREST.
+       - Sincronizados los productos con lotes desfasados en `siumax`.
+    2. `ModalProduccion.tsx`:
+       - `onClose()` y `onSuccess()` se ejecutan inmediatamente al recibir respuesta exitosa del servidor, cerrando el modal al instante y refrescando el catálogo antes de mostrar el mensaje resumen con `avisar()`.
+  - **Verificación y Pruebas:**
+    - Prueba automatizada en Edge con el producto real creado por el dueño (`PAN`, id 76): al pulsar `[ Confirmar Producción ]`, el modal se cerró de inmediato (`modalReceta: false`), apareció el diálogo de éxito con el costo y lote generado, y tras aceptar, el inventario mostró el stock actualizado.
+    - Compilado y desplegado a `https://siumax.duckdns.org`. Producción Evicamp y GitHub main intactos (Regla 4).
+  - **Siguiente paso:** Avisar al dueño para que vuelva a probar en siumax.
+
+---
+
 ## 01/11/2026 (noche, 59) · Antigravity
 - **Corrección de Modal de Producción (Retiro de datos residuales y selección limpia):**
   - **Problema reportado por el dueño:** Al pulsar el botón `[ + Producir ]` en Inventario en `siumax`, aparecía preseleccionado un producto de prueba residual (`PANETON RECETA P8 772048`) con insumos y cantidades precargadas.

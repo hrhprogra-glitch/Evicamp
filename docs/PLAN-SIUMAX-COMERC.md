@@ -4,7 +4,7 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 01/11/2026 (noche, 59), Antigravity: Modal de Producción ajustado para iniciar limpio con `-- SELECCIONA UN PRODUCTO A FABRICAR --`, datos de prueba residuales P8 depurados de la base `siumax`, validaciones y guía visual incorporadas. Fase 8 probada en `siumax` lista para revisión del dueño.
+- **Última actualización:** 01/11/2026 (noche, 60), Antigravity: Validación de stock en `fn_producir_receta` sincronizada con lotes (`batches`) y cierre instantáneo de `ModalProduccion` al confirmar producción con éxito. Probado y verificado en `siumax` con el producto real creado por el dueño.
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 3, 4, 5, 6 y 7 en producción en Evicamp (commits d36efca, bd3780f, 994bdca, 59538a0 y merge de Fase 7).
 - **Fase terminada en pruebas:** Fase 8 (Producción y Encargos).
 

@@ -1925,7 +1925,14 @@ BEGIN
   FOR v_receta_record IN
     SELECT pr.component_product_id, pr.component_variant_id, pr.quantity AS factor,
            p.name AS comp_product_name,
-           coalesce(pv.quantity, p.quantity, 0) AS comp_stock_disponible
+           CASE 
+             WHEN pr.component_variant_id IS NOT NULL THEN
+               coalesce(pv.quantity, 0)
+             WHEN EXISTS (SELECT 1 FROM public.batches b WHERE b.product_id = pr.component_product_id AND b.is_active = 1) THEN
+               coalesce((SELECT sum(b.quantity) FROM public.batches b WHERE b.product_id = pr.component_product_id AND b.is_active = 1 AND b.variant_id IS NULL AND b.quantity > 0), 0)
+             ELSE
+               GREATEST(0, coalesce(p.quantity, 0))
+           END AS comp_stock_disponible
     FROM public.product_recipes pr
     JOIN public.products p ON p.id = pr.component_product_id
     LEFT JOIN public.product_variants pv ON pv.id = pr.component_variant_id
@@ -1949,11 +1956,6 @@ BEGIN
     v_comp_qty_to_deduct := p_cantidad * v_receta_record.factor;
 
     IF v_receta_record.component_variant_id IS NOT NULL THEN
-      UPDATE public.product_variants
-      SET quantity = GREATEST(0, coalesce(quantity, 0) - v_comp_qty_to_deduct)
-      WHERE id = v_receta_record.component_variant_id
-      RETURNING coalesce(quantity, 0) INTO v_comp_current_stock;
-
       FOR v_comp_batch_record IN
         SELECT id, coalesce(quantity, 0) AS qty, coalesce(cost_unit, 0) AS cost
         FROM public.batches
@@ -1980,10 +1982,27 @@ BEGIN
         ) VALUES (
           v_comp_batch_record.id, v_receta_record.component_variant_id, v_receta_record.comp_variant_name,
           v_receta_record.component_product_id, v_receta_record.comp_product_name, -v_comp_deducted,
-          (v_comp_current_stock + v_comp_deducted), v_comp_current_stock,
+          v_comp_batch_record.qty, (v_comp_batch_record.qty - v_comp_deducted),
           'PRODUCCION', 'Insumo para producción de ' || v_parent_record.name, 'Lote producido ' || p_cantidad::text || ' und', now(), coalesce(p_usuario, 'Sistema'), 1
         );
       END LOOP;
+
+      -- Sincronizar stock de la variante
+      IF EXISTS (SELECT 1 FROM public.batches b WHERE b.product_id = v_receta_record.component_product_id AND b.variant_id = v_receta_record.component_variant_id AND b.is_active = 1) THEN
+        UPDATE public.product_variants
+        SET quantity = (
+          SELECT coalesce(sum(b.quantity), 0)
+          FROM public.batches b
+          WHERE b.product_id = v_receta_record.component_product_id AND b.variant_id = v_receta_record.component_variant_id AND b.is_active = 1
+        )
+        WHERE id = v_receta_record.component_variant_id
+        RETURNING coalesce(quantity, 0) INTO v_comp_current_stock;
+      ELSE
+        UPDATE public.product_variants
+        SET quantity = GREATEST(0, coalesce(quantity, 0) - (p_cantidad * v_receta_record.factor))
+        WHERE id = v_receta_record.component_variant_id
+        RETURNING coalesce(quantity, 0) INTO v_comp_current_stock;
+      END IF;
 
       IF v_comp_qty_to_deduct > 0 THEN
         SELECT coalesce(cost_price, 0) INTO v_comp_costo_unit FROM public.products WHERE id = v_receta_record.component_product_id;
@@ -2001,11 +2020,6 @@ BEGIN
       END IF;
 
     ELSE
-      UPDATE public.products
-      SET quantity = coalesce(quantity, 0) - v_comp_qty_to_deduct
-      WHERE id = v_receta_record.component_product_id
-      RETURNING coalesce(quantity, 0) INTO v_comp_current_stock;
-
       FOR v_comp_batch_record IN
         SELECT id, coalesce(quantity, 0) AS qty, coalesce(cost_unit, 0) AS cost
         FROM public.batches
@@ -2032,10 +2046,27 @@ BEGIN
         ) VALUES (
           v_comp_batch_record.id, NULL, NULL,
           v_receta_record.component_product_id, v_receta_record.comp_product_name, -v_comp_deducted,
-          (v_comp_current_stock + v_comp_deducted), v_comp_current_stock,
+          v_comp_batch_record.qty, (v_comp_batch_record.qty - v_comp_deducted),
           'PRODUCCION', 'Insumo para producción de ' || v_parent_record.name, 'Lote producido ' || p_cantidad::text || ' und', now(), coalesce(p_usuario, 'Sistema'), 1
         );
       END LOOP;
+
+      -- Sincronizar stock del producto con batches
+      IF EXISTS (SELECT 1 FROM public.batches b WHERE b.product_id = v_receta_record.component_product_id AND b.is_active = 1) THEN
+        UPDATE public.products
+        SET quantity = (
+          SELECT coalesce(sum(b.quantity), 0)
+          FROM public.batches b
+          WHERE b.product_id = v_receta_record.component_product_id AND b.is_active = 1
+        )
+        WHERE id = v_receta_record.component_product_id
+        RETURNING coalesce(quantity, 0) INTO v_comp_current_stock;
+      ELSE
+        UPDATE public.products
+        SET quantity = GREATEST(0, coalesce(quantity, 0) - (p_cantidad * v_receta_record.factor))
+        WHERE id = v_receta_record.component_product_id
+        RETURNING coalesce(quantity, 0) INTO v_comp_current_stock;
+      END IF;
 
       IF v_comp_qty_to_deduct > 0 THEN
         SELECT coalesce(cost_price, 0) INTO v_comp_costo_unit FROM public.products WHERE id = v_receta_record.component_product_id;
