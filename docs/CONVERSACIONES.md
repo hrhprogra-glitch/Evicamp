@@ -590,3 +590,7 @@
   - Evicamp y la carpeta de clientes: compilado desde `main` + arreglo (sin las fases 8-10 en prueba), solo pantallas, sin cortar ventas. `index-DgfBUqC6.js`, API 401, login sin errores.
   - siumax: arreglo agregado a la rama de Antigravity (b0bb2a8) y subido (`index-B1BjFInV.js`, login sin errores).
   - `main` local = 98b2961. Sin push a GitHub (no se pidió). El único cliente que paga es Evicamp; `evi.siumax` es otro sistema (Evidiary), no se tocó.
+
+### 02/11/2026: Aspecto de la Tienda Web y Fase 11 (SUNAT) · Claude
+- **Dueño:** *"perfecto quiero que arregles el aspecto de la pagina web y avancemos a la ultima fase que es la 11 la ultima y mas compleja dime el plan"*.
+- Claude revisó la Tienda Web (siumax tiene 0 productos; se probó inyectando los de la demo solo en el navegador) y propuso arreglos de aspecto + el plan de la Fase 11 en 8 partes (camino A: proveedor PSE como "enchufe", con copia propia; B directo a SUNAT al final). Esperando OK y decisiones.

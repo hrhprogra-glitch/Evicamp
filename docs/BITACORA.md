@@ -7,6 +7,12 @@
 
 ---
 
+## 02/11/2026 (noche, 68) · Claude — Propuestas: aspecto de la Tienda Web y plan de la Fase 11 (SUNAT)
+- Revisé la Tienda Web en PC y celular (con productos de la demo inyectados solo en el navegador). **siumax tiene 0 productos**, por eso la tienda sale vacía.
+- Propuse arreglos de aspecto y el plan de la Fase 11 en 8 partes. **Nada construido: esperando el OK del dueño.**
+
+---
+
 ## 02/11/2026 (noche, 67) · Antigravity — Entrega de turno a Claude
 - **Estado general para Claude:**
   1. **Rama de trabajo activa:** `fase-9-10-almacenes-catalogo` (con el arreglo de Utilidades de Claude ya integrado). El árbol de trabajo está 100% limpio (`git status` limpio).
