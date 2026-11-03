@@ -728,7 +728,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         </div>
 
       {!enLinea && (
-        <div role="status" className="mx-2 sm:mx-8 px-3 py-2 border-2 border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] font-mono text-xs font-bold">
+        <div role="status" className="mx-2 sm:mx-3 px-3 py-2 border-2 border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] font-mono text-xs font-bold">
           🔌 SIN INTERNET: puedes seguir trabajando en Inventario (productos, lotes, mermas, pedidos de Compras); todo se sube solo al volver la conexión. Solo el buscador de fotos y el autocompletar por código de barras necesitan internet.
         </div>
       )}
@@ -747,7 +747,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         onClearFilters={handleClearFilters}
       />}
 
-      <div className="px-3 sm:px-6 lg:px-8 flex flex-col relative pb-3 sm:pb-6 lg:pb-8">
+      <div className="px-2 sm:px-3 flex flex-col relative pb-3 sm:pb-6 lg:pb-8">
         <div className={`${vistaActiva === 'PRODUCTOS' ? 'flex flex-col' : 'hidden'}`}>
           {/* PASAMOS LOS DATOS PAGINADOS A LA TABLA */}
           <TablaProductos 
