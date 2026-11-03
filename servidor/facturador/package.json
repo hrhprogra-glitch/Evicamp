@@ -1,0 +1,11 @@
+{
+  "name": "siumax-facturador",
+  "version": "11.1.0",
+  "private": true,
+  "description": "Servicio del VPS que envía las boletas y facturas de SiuMax al proveedor (o las simula)",
+  "type": "module",
+  "main": "facturador.mjs",
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}

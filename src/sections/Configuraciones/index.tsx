@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Building2, Users, Palette, MessageSquare, Store as StoreIcon, ShoppingBag } from 'lucide-react';
+import { Settings, Building2, Users, Palette, MessageSquare, Store as StoreIcon, ShoppingBag, FileText } from 'lucide-react';
 import { FormularioEmpresa } from './components/FormularioEmpresa';
 import { TablaUsuarios } from './components/TablaUsuarios';
 import { ThemeSwitcher } from './components/ThemeSwitcher';
 import { SugerenciasSiumax } from './components/SugerenciasSiumax';
 import { PestanaTiendas } from './components/PestanaTiendas';
 import { PestanaTiendaWeb } from './components/PestanaTiendaWeb';
+import { PestanaFacturacion } from './components/PestanaFacturacion';
 import { usePermiso } from '../../utils/permisos';
 
-type Pestana = 'empresa' | 'tiendas' | 'tienda_web' | 'usuarios' | 'apariencia' | 'sugerencias';
+type Pestana = 'empresa' | 'tiendas' | 'tienda_web' | 'facturacion' | 'usuarios' | 'apariencia' | 'sugerencias';
 
 const Configuraciones: React.FC = () => {
   // Cada pestaña tiene su permiso; se abre en la primera permitida
@@ -20,6 +21,8 @@ const Configuraciones: React.FC = () => {
     ...(puedeEmpresa ? [{ id: 'empresa' as Pestana, nombre: 'Datos de la Empresa', Icono: Building2 }] : []),
     ...(puedeEmpresa ? [{ id: 'tiendas' as Pestana, nombre: 'Tiendas y Almacenes', Icono: StoreIcon }] : []),
     ...(puedeEmpresa ? [{ id: 'tienda_web' as Pestana, nombre: 'Tienda Web', Icono: ShoppingBag }] : []),
+    // Boletas y facturas electrónicas SUNAT (fase 11)
+    ...(puedeEmpresa ? [{ id: 'facturacion' as Pestana, nombre: 'Facturación', Icono: FileText }] : []),
     ...(puedeUsuarios ? [{ id: 'usuarios' as Pestana, nombre: 'Gestión de Usuarios', Icono: Users }] : []),
     { id: 'apariencia' as Pestana, nombre: 'Apariencia', Icono: Palette },
     // Le escriben directo a SiuMax (llega al Panel de Control)
@@ -43,6 +46,8 @@ const Configuraciones: React.FC = () => {
       document.getElementById('btn-nueva-tienda')?.focus();
     } else if (activeTab === 'tienda_web') {
       document.getElementById('input-tienda-web-whatsapp')?.focus();
+    } else if (activeTab === 'facturacion') {
+      document.getElementById('fact-activo')?.focus();
     } else if (activeTab === 'usuarios') {
       const buscador = document.getElementById('buscador-usuarios-ajustes') as HTMLInputElement | null;
       buscador?.focus();
@@ -185,6 +190,7 @@ const Configuraciones: React.FC = () => {
         {activeTab === 'empresa' && puedeEmpresa && <FormularioEmpresa />}
         {activeTab === 'tiendas' && puedeEmpresa && <PestanaTiendas />}
         {activeTab === 'tienda_web' && puedeEmpresa && <PestanaTiendaWeb />}
+        {activeTab === 'facturacion' && puedeEmpresa && <PestanaFacturacion />}
         {activeTab === 'usuarios' && puedeUsuarios && <TablaUsuarios />}
         {activeTab === 'apariencia' && <ThemeSwitcher />}
         {activeTab === 'sugerencias' && <SugerenciasSiumax />}

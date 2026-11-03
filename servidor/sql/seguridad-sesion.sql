@@ -105,6 +105,12 @@ AS $$
     WHEN 'POST /rpc/fn_crear_empleado'    THEN ARRAY['gerencia_gestionar_usuarios']
     WHEN 'POST /rpc/fn_editar_empleado'   THEN ARRAY['gerencia_gestionar_usuarios']
     WHEN 'POST /rpc/fn_eliminar_empleado' THEN ARRAY['gerencia_gestionar_usuarios']
+    -- FACTURACIÓN ELECTRÓNICA (fase 11): datos del emisor, clave del proveedor y numeración
+    WHEN 'PATCH /facturacion_config' THEN ARRAY['gerencia_configuracion_sistema']
+    WHEN 'POST /facturacion_config'  THEN ARRAY['gerencia_configuracion_sistema']
+    WHEN 'POST /rpc/fn_guardar_credenciales_facturacion' THEN ARRAY['gerencia_configuracion_sistema']
+    WHEN 'POST /rpc/fn_estado_credenciales_facturacion'  THEN ARRAY['gerencia_configuracion_sistema']
+    WHEN 'POST /rpc/fn_fijar_correlativo'                THEN ARRAY['gerencia_configuracion_sistema']
     -- Basta con la sesión
     WHEN 'PATCH /yape_notifications' THEN ARRAY[]::text[]
     WHEN 'POST /rpc/fn_sesion_activa' THEN ARRAY[]::text[]
@@ -2639,6 +2645,280 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.fn_crear_pedido_web(text, text, text, text, bigint, jsonb, text) TO anon;
+
+-- =====================================================================================
+-- FASE 11.1: FACTURACIÓN ELECTRÓNICA SUNAT (boletas y facturas)
+-- La Caja marca la venta como Boleta (doc_type 3) o Factura (doc_type 1); aquí se le pone la serie
+-- y el número correlativo y queda "PENDIENTE". El facturador del servidor (servidor/facturador,
+-- servicio siumax-facturador) la envía al proveedor (Nubefact) o la simula, y guarda la respuesta.
+-- OJO: sales.sunat_status NO es de SUNAT (es el estado interno ACEPTADO/ANULADO que filtran todos
+-- los reportes). El estado real del comprobante va en las columnas cpe_*.
+-- =====================================================================================
+
+-- Datos del emisor y del servicio (una sola fila). Se leen con la sesión; los cambia quien tiene
+-- "Configuración del sistema" (fn_permisos_requeridos).
+CREATE TABLE IF NOT EXISTS public.facturacion_config (
+  id                      integer PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  activo                  boolean NOT NULL DEFAULT false,
+  modo                    text NOT NULL DEFAULT 'SIMULADO' CHECK (modo IN ('SIMULADO', 'PRUEBA', 'REAL')),
+  proveedor               text NOT NULL DEFAULT 'NUBEFACT' CHECK (proveedor IN ('NUBEFACT')),
+  ruc                     text CHECK (ruc IS NULL OR ruc ~ '^(10|15|16|17|20)\d{9}$'),
+  razon_social            text,
+  nombre_comercial        text,
+  direccion_fiscal        text,
+  ubigeo                  text CHECK (ubigeo IS NULL OR ubigeo ~ '^\d{6}$'),
+  regimen                 text CHECK (regimen IS NULL OR regimen IN ('GENERAL', 'MYPE', 'RER', 'NRUS')),
+  serie_boleta            text NOT NULL DEFAULT 'B001' CHECK (serie_boleta ~ '^B[A-Z0-9]{3}$'),
+  serie_factura           text NOT NULL DEFAULT 'F001' CHECK (serie_factura ~ '^F[A-Z0-9]{3}$'),
+  serie_nc_boleta         text NOT NULL DEFAULT 'BC01' CHECK (serie_nc_boleta ~ '^B[A-Z0-9]{3}$'),
+  serie_nc_factura        text NOT NULL DEFAULT 'FC01' CHECK (serie_nc_factura ~ '^F[A-Z0-9]{3}$'),
+  igv_porcentaje          numeric(5,2) NOT NULL DEFAULT 18 CHECK (igv_porcentaje >= 0 AND igv_porcentaje < 100),
+  comprobante_por_defecto text NOT NULL DEFAULT 'NOTA' CHECK (comprobante_por_defecto IN ('NOTA', 'BOLETA', 'FACTURA')),
+  -- "Probar conexión": la pantalla pide (prueba_pedida_at) y el facturador responde (prueba_*)
+  prueba_pedida_at        timestamptz,
+  prueba_at               timestamptz,
+  prueba_ok               boolean,
+  prueba_mensaje          text,
+  -- El facturador escribe aquí cada pocos segundos: así la pantalla sabe si está funcionando
+  facturador_visto_at     timestamptz,
+  facturador_version      text,
+  updated_at              timestamptz DEFAULT now()
+);
+INSERT INTO public.facturacion_config (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+
+-- La clave del proveedor: en un esquema que la API NO publica ni puede leer. Solo la usa el facturador
+-- (que entra a la base como postgres) y se escribe con fn_guardar_credenciales_facturacion.
+CREATE SCHEMA IF NOT EXISTS privado;
+REVOKE ALL ON SCHEMA privado FROM PUBLIC;
+CREATE TABLE IF NOT EXISTS privado.facturacion_credenciales (
+  id              integer PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  ruta            text NOT NULL,
+  token           text NOT NULL,
+  actualizado_por text,
+  updated_at      timestamptz DEFAULT now()
+);
+REVOKE ALL ON privado.facturacion_credenciales FROM PUBLIC;
+
+-- Último número usado de cada serie (B001, F001...). Solo lo cambian las funciones de abajo.
+CREATE TABLE IF NOT EXISTS public.cpe_correlativos (
+  serie      text PRIMARY KEY,
+  ultimo     bigint NOT NULL DEFAULT 0 CHECK (ultimo >= 0),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Comprobante electrónico de la venta (doc_type: 1 factura, 3 boleta; NULL = nota de venta)
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS cpe_estado text;          -- PENDIENTE, ENVIANDO, ACEPTADO, OBSERVADO, RECHAZADO, ERROR
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS cpe_modo text;            -- SIMULADO / PRUEBA / REAL al emitir
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS cpe_intentos integer NOT NULL DEFAULT 0;
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS cpe_proximo_intento timestamptz;
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS cpe_mensaje text;         -- respuesta de SUNAT o del proveedor
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS cpe_enviado_at timestamptz;
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS cpe_pdf text;
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS cpe_xml text;
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS cpe_cdr text;
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS cpe_qr text;              -- texto del código QR del ticket
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS cpe_cliente_tipo_doc text; -- DNI, RUC, CE o SIN
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS cpe_cliente_num_doc text;
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS cpe_cliente_nombre text;
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS cpe_cliente_direccion text;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'sales_cpe_estado_valido') THEN
+    ALTER TABLE public.sales ADD CONSTRAINT sales_cpe_estado_valido
+      CHECK (cpe_estado IS NULL OR cpe_estado IN ('PENDIENTE', 'ENVIANDO', 'ACEPTADO', 'OBSERVADO', 'RECHAZADO', 'ERROR'));
+  END IF;
+END $$;
+CREATE INDEX IF NOT EXISTS sales_cpe_pendientes ON public.sales (cpe_proximo_intento)
+  WHERE cpe_estado IN ('PENDIENTE', 'ENVIANDO', 'ERROR');
+-- Nunca dos comprobantes con la misma serie y número
+CREATE UNIQUE INDEX IF NOT EXISTS sales_cpe_numero_unico ON public.sales (doc_serial, doc_number)
+  WHERE doc_serial IS NOT NULL AND doc_number IS NOT NULL;
+
+DO $$
+DECLARE r text;
+BEGIN
+  FOREACH r IN ARRAY ARRAY['anon', 'web_anon'] LOOP
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN
+      EXECUTE format('GRANT SELECT, INSERT, UPDATE ON public.facturacion_config TO %I', r);
+      EXECUTE format('GRANT SELECT ON public.cpe_correlativos TO %I', r);
+    END IF;
+  END LOOP;
+END $$;
+
+-- Siguiente número de una serie, sin saltos ni repetidos aunque vendan dos cajas a la vez.
+CREATE OR REPLACE FUNCTION public.fn_siguiente_correlativo(p_serie text)
+RETURNS bigint
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+  INSERT INTO public.cpe_correlativos (serie, ultimo) VALUES (p_serie, 1)
+  ON CONFLICT (serie) DO UPDATE SET ultimo = cpe_correlativos.ultimo + 1, updated_at = now()
+  RETURNING ultimo;
+$$;
+REVOKE EXECUTE ON FUNCTION public.fn_siguiente_correlativo(text) FROM PUBLIC;
+
+-- Al crear la venta: si es Boleta o Factura, revisa las reglas de SUNAT y le pone serie y número.
+CREATE OR REPLACE FUNCTION public.fn_asignar_comprobante()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  cfg public.facturacion_config%ROWTYPE;
+  v_doc text := upper(coalesce(trim(NEW.cpe_cliente_tipo_doc), 'SIN'));
+  v_num text := nullif(trim(coalesce(NEW.cpe_cliente_num_doc, '')), '');
+BEGIN
+  IF NEW.doc_type IS NULL OR NEW.doc_type NOT IN (1, 3) THEN
+    -- Nota de venta: nunca lleva datos de comprobante electrónico
+    NEW.doc_type := NULL; NEW.doc_serial := NULL; NEW.doc_number := NULL;
+    NEW.cpe_estado := NULL; NEW.cpe_modo := NULL;
+    RETURN NEW;
+  END IF;
+
+  SELECT * INTO cfg FROM public.facturacion_config WHERE id = 1;
+  IF NOT coalesce(cfg.activo, false) THEN
+    RAISE EXCEPTION 'La facturación electrónica no está activada'
+      USING HINT = 'Actívala en Ajustes > Facturación o cobra con Nota de venta.';
+  END IF;
+
+  IF NEW.doc_type = 1 THEN
+    IF cfg.regimen = 'NRUS' THEN
+      RAISE EXCEPTION 'En el Nuevo RUS solo se emiten boletas, no facturas';
+    END IF;
+    IF v_doc <> 'RUC' OR v_num IS NULL OR v_num !~ '^(10|15|16|17|20)\d{9}$' THEN
+      RAISE EXCEPTION 'La factura necesita el RUC del cliente (11 números)';
+    END IF;
+    IF nullif(trim(coalesce(NEW.cpe_cliente_nombre, '')), '') IS NULL THEN
+      RAISE EXCEPTION 'La factura necesita la razón social del cliente';
+    END IF;
+  ELSE
+    -- Boleta de más de S/ 700: SUNAT pide identificar al comprador
+    IF coalesce(NEW.total, 0) > 700 AND (v_doc = 'SIN' OR v_num IS NULL) THEN
+      RAISE EXCEPTION 'Una boleta de más de S/ 700 necesita el DNI (o documento) del cliente';
+    END IF;
+    IF v_doc = 'DNI' AND v_num IS NOT NULL AND v_num !~ '^\d{8}$' THEN
+      RAISE EXCEPTION 'El DNI tiene 8 números';
+    END IF;
+  END IF;
+
+  NEW.cpe_cliente_tipo_doc := CASE WHEN v_num IS NULL THEN 'SIN' ELSE v_doc END;
+  NEW.cpe_cliente_num_doc := v_num;
+  NEW.doc_serial := CASE WHEN NEW.doc_type = 1 THEN cfg.serie_factura ELSE cfg.serie_boleta END;
+  NEW.doc_number := public.fn_siguiente_correlativo(NEW.doc_serial)::text;
+  NEW.cpe_estado := 'PENDIENTE';
+  NEW.cpe_modo := cfg.modo;
+  NEW.cpe_intentos := 0;
+  NEW.cpe_mensaje := NULL; NEW.cpe_enviado_at := NULL;
+  NEW.cpe_pdf := NULL; NEW.cpe_xml := NULL; NEW.cpe_cdr := NULL; NEW.cpe_qr := NULL; NEW.sunat_hash := NULL;
+  -- La Caja guarda primero la venta y después sus productos: se espera un momento antes de enviarla
+  NEW.cpe_proximo_intento := now() + interval '4 seconds';
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS trg_asignar_comprobante ON public.sales;
+CREATE TRIGGER trg_asignar_comprobante BEFORE INSERT ON public.sales
+  FOR EACH ROW EXECUTE FUNCTION public.fn_asignar_comprobante();
+
+-- Desde la pantalla (API) no se puede tocar un comprobante ya emitido: solo el facturador (postgres).
+-- Una boleta/factura ACEPTADA no se anula ni se borra: se corrige con nota de crédito (fase 11.5).
+CREATE OR REPLACE FUNCTION public.fn_proteger_comprobante()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path TO 'public'
+AS $$
+BEGIN
+  IF current_setting('request.method', true) IS NULL OR OLD.doc_type IS NULL THEN
+    RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+  END IF;
+  IF TG_OP = 'DELETE' THEN
+    RAISE EXCEPTION 'Esta venta tiene boleta o factura electrónica: no se puede borrar';
+  END IF;
+  IF NEW.doc_type IS DISTINCT FROM OLD.doc_type OR NEW.doc_serial IS DISTINCT FROM OLD.doc_serial
+     OR NEW.doc_number IS DISTINCT FROM OLD.doc_number OR NEW.total IS DISTINCT FROM OLD.total
+     OR NEW.cpe_estado IS DISTINCT FROM OLD.cpe_estado OR NEW.cpe_cliente_num_doc IS DISTINCT FROM OLD.cpe_cliente_num_doc
+     OR NEW.cpe_cliente_nombre IS DISTINCT FROM OLD.cpe_cliente_nombre THEN
+    RAISE EXCEPTION 'Los datos de una boleta o factura electrónica no se pueden cambiar';
+  END IF;
+  IF NEW.sunat_status = 'ANULADO' AND OLD.sunat_status IS DISTINCT FROM 'ANULADO' AND OLD.cpe_estado IS DISTINCT FROM 'RECHAZADO' THEN
+    -- (una RECHAZADA no tiene valor ante SUNAT: esa sí se puede anular como una nota de venta)
+    RAISE EXCEPTION 'Esta venta tiene boleta o factura electrónica: se anula con una nota de crédito'
+      USING HINT = 'La nota de crédito llega en la fase 11.5.';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS trg_proteger_comprobante ON public.sales;
+CREATE TRIGGER trg_proteger_comprobante BEFORE UPDATE OR DELETE ON public.sales
+  FOR EACH ROW EXECUTE FUNCTION public.fn_proteger_comprobante();
+
+-- Guardar la ruta y la clave del proveedor (se escriben, nunca se vuelven a leer desde la pantalla)
+CREATE OR REPLACE FUNCTION public.fn_estado_credenciales_facturacion()
+RETURNS jsonb
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+  SELECT coalesce((
+    SELECT jsonb_build_object(
+      'tiene', true,
+      'ruta', regexp_replace(c.ruta, '^(https?://[^/]+/).*(.{4})$', '\1…\2'),
+      'token_final', '…' || right(c.token, 4),
+      'actualizado_por', c.actualizado_por,
+      'updated_at', c.updated_at)
+    FROM privado.facturacion_credenciales c WHERE c.id = 1
+  ), jsonb_build_object('tiene', false));
+$$;
+
+CREATE OR REPLACE FUNCTION public.fn_guardar_credenciales_facturacion(p_ruta text, p_token text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_quien text := (SELECT nombre FROM public.fn_empleado_de_sesion());
+BEGIN
+  IF coalesce(trim(p_ruta), '') !~ '^https://[^ ]+$' THEN
+    RAISE EXCEPTION 'La ruta del proveedor debe empezar con https://';
+  END IF;
+  IF length(coalesce(trim(p_token), '')) < 10 THEN
+    RAISE EXCEPTION 'La clave (token) del proveedor parece incompleta';
+  END IF;
+  INSERT INTO privado.facturacion_credenciales (id, ruta, token, actualizado_por, updated_at)
+  VALUES (1, trim(p_ruta), trim(p_token), v_quien, now())
+  ON CONFLICT (id) DO UPDATE SET ruta = EXCLUDED.ruta, token = EXCLUDED.token,
+    actualizado_por = EXCLUDED.actualizado_por, updated_at = now();
+  -- Con clave nueva, la prueba anterior ya no vale
+  UPDATE public.facturacion_config SET prueba_at = NULL, prueba_ok = NULL, prueba_mensaje = NULL WHERE id = 1;
+  RETURN public.fn_estado_credenciales_facturacion();
+END;
+$$;
+
+-- Empezar la numeración desde un número (si ya emitía boletas en otro sistema con la misma serie).
+-- Solo hacia arriba y nunca por debajo de lo ya emitido en SiuMax.
+CREATE OR REPLACE FUNCTION public.fn_fijar_correlativo(p_serie text, p_ultimo bigint)
+RETURNS bigint
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_usado bigint;
+BEGIN
+  IF p_serie !~ '^[BF][A-Z0-9]{3}$' THEN RAISE EXCEPTION 'Serie no válida: %', p_serie; END IF;
+  IF p_ultimo IS NULL OR p_ultimo < 0 OR p_ultimo > 99999999 THEN RAISE EXCEPTION 'Número no válido'; END IF;
+  SELECT coalesce(max(doc_number::bigint), 0) INTO v_usado FROM public.sales WHERE doc_serial = p_serie AND doc_number ~ '^\d+$';
+  IF p_ultimo < v_usado THEN
+    RAISE EXCEPTION 'SiuMax ya emitió hasta el % con la serie %: no se puede volver atrás', v_usado, p_serie;
+  END IF;
+  INSERT INTO public.cpe_correlativos (serie, ultimo) VALUES (p_serie, p_ultimo)
+  ON CONFLICT (serie) DO UPDATE SET ultimo = EXCLUDED.ultimo, updated_at = now();
+  RETURN p_ultimo;
+END;
+$$;
 
 NOTIFY pgrst, 'reload schema';
 
