@@ -437,7 +437,7 @@ export const Finanzas: React.FC = () => {
       // stock a cada lote según los movimientos de la venta, deja el movimiento ANULACION, anula la venta y su
       // fiado y registra el egreso de la devolución. Sin internet la cola lo imita y lo sube después
       // (src/utils/sinInternet.ts → IMITAR_RPC). El autor (quien autorizó) lo pone el servidor con la sesión.
-      const { error: errAnular } = await supabase.rpc('fn_anular_venta', {
+      const { data: resAnular, error: errAnular } = await supabase.rpc('fn_anular_venta', {
         p_sale_id: Number(id),
         p_sesion_caja: sessionActiva ? String(sessionActiva.id) : null,
         p_pidio: autorizo ? (empleado?.nombre || 'cajero') : null,
@@ -445,7 +445,9 @@ export const Finanzas: React.FC = () => {
       });
       if (errAnular) throw errAnular;
 
-      alert('✅ Ticket anulado. Stock devuelto y caja actualizada.');
+      // Fase 11.5: si la venta tenía boleta/factura electrónica, el servidor emitió la nota de crédito
+      const notaCredito = (resAnular as { nota_credito?: string | null } | null)?.nota_credito;
+      alert(`✅ Ticket anulado. Stock devuelto y caja actualizada.${notaCredito ? `\nSe emitió la nota de crédito ${notaCredito} (se envía a SUNAT sola).` : ''}`);
       cargarDatosCaja(true);
 
     } catch (err: any) {

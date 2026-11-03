@@ -30,3 +30,10 @@ ALTER TABLE public.sale_details DROP COLUMN IF EXISTS tipo_igv, DROP COLUMN IF E
 ALTER TABLE public.products DROP CONSTRAINT IF EXISTS products_tipo_igv_valido;
 ALTER TABLE public.products DROP COLUMN IF EXISTS tipo_igv, DROP COLUMN IF EXISTS es_bolsa;
 NOTIFY pgrst, 'reload schema';
+-- 11.5 (antes de DROP de facturacion_config: el trigger de notas la usa)
+DROP TRIGGER IF EXISTS trg_asignar_nota_credito ON public.notas_credito;
+DROP FUNCTION IF EXISTS public.fn_asignar_nota_credito();
+DROP FUNCTION IF EXISTS public.fn_devolver_con_nota_credito(bigint, jsonb, text, text);
+DROP FUNCTION IF EXISTS public.fn_reenviar_nota_credito(bigint);
+DROP TABLE IF EXISTS public.notas_credito;
+-- (fn_anular_venta queda con la parte de notas de crédito: si se deshace la fase 11, volver a aplicar la versión anterior del archivo)

@@ -113,6 +113,9 @@ AS $$
     WHEN 'POST /rpc/fn_fijar_correlativo'                THEN ARRAY['gerencia_configuracion_sistema']
     -- Volver a enviar un comprobante que quedó con error (pantalla "Comprobantes", fase 11.4)
     WHEN 'POST /rpc/fn_reenviar_comprobante'             THEN ARRAY['caja_abrir_cerrar_turno', 'reportes_ver_globales', 'gerencia_configuracion_sistema']
+    WHEN 'POST /rpc/fn_reenviar_nota_credito'            THEN ARRAY['caja_abrir_cerrar_turno', 'reportes_ver_globales', 'gerencia_configuracion_sistema']
+    -- Devolver parte de una venta con boleta/factura (nota de crédito, fase 11.5): como anular
+    WHEN 'POST /rpc/fn_devolver_con_nota_credito'        THEN ARRAY['reportes_anular_ventas']
     -- Basta con la sesión
     WHEN 'PATCH /yape_notifications' THEN ARRAY[]::text[]
     WHEN 'POST /rpc/fn_sesion_activa' THEN ARRAY[]::text[]
@@ -1072,6 +1075,7 @@ DECLARE
   v_fiados int;
   v_productos int := 0;
   v_cuando timestamptz := coalesce(p_cuando, now());   -- sin internet: la hora en que se anuló en la caja
+  v_nc text;
 BEGIN
   SELECT * INTO v_emp FROM fn_empleado_de_sesion();
   IF v_emp.id IS NULL THEN RAISE EXCEPTION 'Sesión no válida.'; END IF;
@@ -1082,6 +1086,22 @@ BEGIN
   SELECT * INTO v_venta FROM sales WHERE id = p_sale_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'No se encontró la venta.'; END IF;
   IF v_venta.sunat_status = 'ANULADO' THEN RETURN jsonb_build_object('ya_anulada', true); END IF;
+
+  -- Fase 11.5: con boleta/factura electrónica (no rechazada), anular emite la NOTA DE CRÉDITO por todo
+  IF v_venta.doc_type IS NOT NULL AND coalesce(v_venta.cpe_estado, '') <> 'RECHAZADO' THEN
+    IF EXISTS (SELECT 1 FROM notas_credito WHERE sale_id = p_sale_id) THEN
+      RAISE EXCEPTION 'Esta venta ya tiene devoluciones con nota de crédito: devuelve el resto con "Devolver productos" (Comprobantes).';
+    END IF;
+    INSERT INTO notas_credito (sale_id, motivo, descripcion, total, items, creado_por)
+    SELECT p_sale_id, '01', 'ANULACIÓN DE LA OPERACIÓN', v_venta.total,
+           coalesce(jsonb_agg(jsonb_build_object('detail_id', d.id, 'product_id', d.product_id, 'product_name', d.product_name,
+             'variant_id', d.variant_id, 'variant_name', d.variant_name, 'quantity', d.quantity, 'subtotal', d.subtotal,
+             'tipo_igv', coalesce(d.tipo_igv, 'GRAVADO'), 'es_bolsa', coalesce(d.es_bolsa, false)) ORDER BY d.id), '[]'::jsonb),
+           v_emp.nombre
+      FROM sale_details d WHERE d.sale_id = p_sale_id
+    RETURNING doc_serial || '-' || lpad(doc_number, 8, '0') INTO v_nc;
+    PERFORM set_config('siumax.cpe_interno', '1', true);   -- deja marcar la venta como ANULADO
+  END IF;
 
   FOR v_mov IN SELECT * FROM inventory_movements
                WHERE operation_type = 'VENTA' AND notes = 'Ticket #' || p_sale_id::text ORDER BY id LOOP
@@ -1128,7 +1148,7 @@ BEGIN
             'Devolución (Anulación Ticket #' || right(p_sale_id::text, 6) || ')' || coalesce(' · pidió ' || p_pidio, ''),
             'EFECTIVO', 'DEVOLUCION', v_cuando, 1);
   END IF;
-  RETURN jsonb_build_object('ya_anulada', false, 'productos', v_productos);
+  RETURN jsonb_build_object('ya_anulada', false, 'productos', v_productos, 'nota_credito', v_nc);
 END;
 $$;
 
@@ -2995,6 +3015,200 @@ BEGIN
   PERFORM set_config('siumax.cpe_interno', '1', true);   -- deja pasar el cambio (solo en esta transacción)
   UPDATE public.sales SET cpe_estado = 'PENDIENTE', cpe_intentos = 0, cpe_proximo_intento = now(), cpe_mensaje = 'Reenvío pedido desde la pantalla'
    WHERE id = p_sale_id;
+  RETURN 'PENDIENTE';
+END;
+$$;
+
+-- -------------------------------------------------------------------------------------
+-- FASE 11.5: NOTAS DE CRÉDITO (anular o devolver una venta con boleta/factura electrónica)
+-- La boleta/factura enviada a SUNAT no se cambia ni se borra: se corrige con una nota de crédito
+-- (serie BC01 para boletas, FC01 para facturas) que el facturador envía igual que los comprobantes.
+-- Motivos SUNAT usados: 01 anulación de la operación (anular la venta completa), 07 devolución por ítem.
+-- Se guarda aparte (no en sales) para no tocar los reportes de ventas.
+-- -------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.notas_credito (
+  id                  bigint PRIMARY KEY DEFAULT (extract(epoch FROM clock_timestamp()) * 1000)::bigint,
+  sale_id             bigint NOT NULL REFERENCES public.sales (id),
+  motivo              text NOT NULL CHECK (motivo IN ('01', '06', '07')),
+  descripcion         text,
+  total               numeric NOT NULL CHECK (total > 0),
+  items               jsonb NOT NULL,               -- [{detail_id, product_id, product_name, quantity, subtotal, tipo_igv, es_bolsa, ...}]
+  doc_type            integer NOT NULL DEFAULT 7,
+  doc_serial          text,
+  doc_number          text,
+  ref_doc_type        integer,                      -- comprobante que modifica: 1 factura, 3 boleta
+  ref_serial          text,
+  ref_number          text,
+  cpe_estado          text NOT NULL DEFAULT 'PENDIENTE'
+                      CHECK (cpe_estado IN ('PENDIENTE', 'ENVIANDO', 'ACEPTADO', 'OBSERVADO', 'RECHAZADO', 'ERROR')),
+  cpe_modo            text,
+  cpe_intentos        integer NOT NULL DEFAULT 0,
+  cpe_proximo_intento timestamptz,
+  cpe_mensaje         text,
+  cpe_enviado_at      timestamptz,
+  cpe_pdf             text,
+  cpe_xml             text,
+  cpe_cdr             text,
+  cpe_qr              text,
+  sunat_hash          text,
+  creado_por          text,
+  created_at          timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS notas_credito_venta ON public.notas_credito (sale_id);
+CREATE INDEX IF NOT EXISTS notas_credito_pendientes ON public.notas_credito (cpe_proximo_intento)
+  WHERE cpe_estado IN ('PENDIENTE', 'ENVIANDO', 'ERROR');
+CREATE UNIQUE INDEX IF NOT EXISTS notas_credito_numero_unico ON public.notas_credito (doc_serial, doc_number)
+  WHERE doc_serial IS NOT NULL;
+-- La pantalla solo LEE; se crean con fn_anular_venta y fn_devolver_con_nota_credito
+DO $$
+DECLARE r text;
+BEGIN
+  FOREACH r IN ARRAY ARRAY['anon', 'web_anon'] LOOP
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN
+      EXECUTE format('GRANT SELECT ON public.notas_credito TO %I', r);
+    END IF;
+  END LOOP;
+END $$;
+
+-- Al crear la nota: comprobante que modifica, serie (BC01/FC01), número y modo
+CREATE OR REPLACE FUNCTION public.fn_asignar_nota_credito()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_venta public.sales%ROWTYPE;
+  cfg public.facturacion_config%ROWTYPE;
+BEGIN
+  SELECT * INTO v_venta FROM public.sales WHERE id = NEW.sale_id;
+  IF v_venta.doc_type IS NULL OR v_venta.doc_type NOT IN (1, 3) THEN
+    RAISE EXCEPTION 'La nota de crédito solo corrige una boleta o una factura electrónica';
+  END IF;
+  IF v_venta.cpe_estado = 'RECHAZADO' THEN
+    RAISE EXCEPTION 'Esa boleta/factura fue rechazada por SUNAT: no necesita nota de crédito';
+  END IF;
+  SELECT * INTO cfg FROM public.facturacion_config WHERE id = 1;
+  NEW.doc_type := 7;
+  NEW.ref_doc_type := v_venta.doc_type;
+  NEW.ref_serial := v_venta.doc_serial;
+  NEW.ref_number := v_venta.doc_number;
+  NEW.doc_serial := CASE WHEN v_venta.doc_type = 1 THEN cfg.serie_nc_factura ELSE cfg.serie_nc_boleta END;
+  NEW.doc_number := public.fn_siguiente_correlativo(NEW.doc_serial)::text;
+  NEW.cpe_estado := 'PENDIENTE';
+  NEW.cpe_modo := coalesce(v_venta.cpe_modo, cfg.modo);
+  NEW.cpe_intentos := 0;
+  NEW.cpe_proximo_intento := now() + interval '2 seconds';
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS trg_asignar_nota_credito ON public.notas_credito;
+CREATE TRIGGER trg_asignar_nota_credito BEFORE INSERT ON public.notas_credito
+  FOR EACH ROW EXECUTE FUNCTION public.fn_asignar_nota_credito();
+
+-- Devolver PARTE de una venta con boleta/factura: nota de crédito por lo devuelto (motivo 07), el stock
+-- vuelve y, si se indica el turno de caja, se registra la devolución del dinero. Todo o nada.
+-- p_items: [{"detail_id": 123, "cantidad": 1}, ...]
+CREATE OR REPLACE FUNCTION public.fn_devolver_con_nota_credito(p_sale_id bigint, p_items jsonb, p_sesion_caja text DEFAULT NULL,
+                                                               p_motivo text DEFAULT NULL)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_emp record;
+  v_venta public.sales%ROWTYPE;
+  v_item record;
+  d public.sale_details%ROWTYPE;
+  v_devuelto numeric;
+  v_sub numeric;
+  v_total numeric := 0;
+  v_items jsonb := '[]'::jsonb;
+  v_mov record;
+  v_nuevo numeric;
+  v_nc public.notas_credito%ROWTYPE;
+BEGIN
+  SELECT * INTO v_emp FROM fn_empleado_de_sesion();
+  IF v_emp.id IS NULL THEN RAISE EXCEPTION 'Sesión no válida.'; END IF;
+  IF NOT fn_tiene_permiso(v_emp.permisos, ARRAY['reportes_anular_ventas']) THEN
+    RAISE EXCEPTION 'No tienes permiso para devoluciones.';
+  END IF;
+
+  SELECT * INTO v_venta FROM public.sales WHERE id = p_sale_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'No se encontró la venta.'; END IF;
+  IF v_venta.sunat_status = 'ANULADO' THEN RAISE EXCEPTION 'Esa venta ya está anulada.'; END IF;
+  IF v_venta.doc_type IS NULL THEN RAISE EXCEPTION 'Esa venta no tiene boleta ni factura: usa el cambio de producto de siempre.'; END IF;
+  IF coalesce(v_venta.amount_credit, 0) > 0 THEN
+    RAISE EXCEPTION 'Venta al crédito (fiado): para devolver, anúlala completa.';
+  END IF;
+  IF jsonb_typeof(p_items) <> 'array' OR jsonb_array_length(p_items) = 0 THEN
+    RAISE EXCEPTION 'Elige qué productos se devuelven.';
+  END IF;
+
+  FOR v_item IN SELECT * FROM jsonb_to_recordset(p_items) AS x(detail_id bigint, cantidad numeric) LOOP
+    IF coalesce(v_item.cantidad, 0) <= 0 THEN CONTINUE; END IF;
+    SELECT * INTO d FROM public.sale_details WHERE id = v_item.detail_id AND sale_id = p_sale_id;
+    IF NOT FOUND THEN RAISE EXCEPTION 'Ese producto no es de esta venta.'; END IF;
+    SELECT coalesce(sum((it ->> 'quantity')::numeric), 0) INTO v_devuelto
+      FROM public.notas_credito nc, jsonb_array_elements(nc.items) it
+     WHERE nc.sale_id = p_sale_id AND (it ->> 'detail_id')::bigint = d.id;
+    IF v_item.cantidad > coalesce(d.quantity, 0) - v_devuelto THEN
+      RAISE EXCEPTION 'De "%" solo quedan % por devolver.', d.product_name, coalesce(d.quantity, 0) - v_devuelto;
+    END IF;
+    v_sub := round(coalesce(d.subtotal, 0) * v_item.cantidad / nullif(d.quantity, 0), 2);
+    v_total := v_total + v_sub;
+    v_items := v_items || jsonb_build_object(
+      'detail_id', d.id, 'product_id', d.product_id, 'product_name', d.product_name, 'variant_id', d.variant_id,
+      'variant_name', d.variant_name, 'quantity', v_item.cantidad, 'subtotal', v_sub,
+      'tipo_igv', coalesce(d.tipo_igv, 'GRAVADO'), 'es_bolsa', coalesce(d.es_bolsa, false));
+
+    -- El stock vuelve (al lote de donde salió, si se sabe)
+    SELECT * INTO v_mov FROM public.inventory_movements
+     WHERE operation_type = 'VENTA' AND notes = 'Ticket #' || p_sale_id::text AND product_id = d.product_id
+       AND variant_id IS NOT DISTINCT FROM d.variant_id
+     ORDER BY id LIMIT 1;
+    IF d.variant_id IS NOT NULL THEN
+      UPDATE public.product_variants SET quantity = coalesce(quantity, 0) + v_item.cantidad WHERE id = d.variant_id RETURNING quantity INTO v_nuevo;
+    ELSE
+      UPDATE public.products SET quantity = coalesce(quantity, 0) + v_item.cantidad WHERE id = d.product_id RETURNING quantity INTO v_nuevo;
+    END IF;
+    IF v_mov.batch_id IS NOT NULL THEN
+      UPDATE public.batches SET quantity = coalesce(quantity, 0) + v_item.cantidad WHERE id = v_mov.batch_id;
+    END IF;
+    INSERT INTO public.inventory_movements (batch_id, variant_id, variant_name, product_id, product_name, change_amount, previous_quantity, new_quantity,
+                                            operation_type, reason, notes, created_at, "user", is_synced)
+    VALUES (v_mov.batch_id, d.variant_id, d.variant_name, d.product_id, d.product_name, v_item.cantidad, coalesce(v_nuevo, 0) - v_item.cantidad, coalesce(v_nuevo, 0),
+            'DEVOLUCION', 'Devolución con nota de crédito', 'Devolución Ticket #' || p_sale_id::text, now(), v_emp.nombre, 1);
+  END LOOP;
+
+  IF v_total <= 0 THEN RAISE EXCEPTION 'Elige qué productos se devuelven.'; END IF;
+
+  INSERT INTO public.notas_credito (sale_id, motivo, descripcion, total, items, creado_por)
+  VALUES (p_sale_id, '07', coalesce(nullif(trim(p_motivo), ''), 'DEVOLUCIÓN DE PRODUCTOS'), v_total, v_items, v_emp.nombre)
+  RETURNING * INTO v_nc;
+
+  IF p_sesion_caja IS NOT NULL THEN
+    INSERT INTO public.cash_movements (id, session_id, type, amount, description, payment_type, flujo, created_at, is_synced)
+    VALUES ((extract(epoch FROM clock_timestamp()) * 1000)::bigint, p_sesion_caja, 'EGRESO', v_total,
+            'Devolución con nota de crédito ' || v_nc.doc_serial || '-' || lpad(v_nc.doc_number, 8, '0') || ' (Ticket #' || right(p_sale_id::text, 6) || ')',
+            'EFECTIVO', 'DEVOLUCION', now(), 1);
+  END IF;
+  RETURN jsonb_build_object('nota_credito', v_nc.doc_serial || '-' || lpad(v_nc.doc_number, 8, '0'), 'total', v_total, 'id', v_nc.id);
+END;
+$$;
+
+-- Volver a enviar una nota de crédito que quedó con error (como fn_reenviar_comprobante)
+CREATE OR REPLACE FUNCTION public.fn_reenviar_nota_credito(p_id bigint)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+BEGIN
+  UPDATE public.notas_credito SET cpe_estado = 'PENDIENTE', cpe_intentos = 0, cpe_proximo_intento = now(), cpe_mensaje = 'Reenvío pedido desde la pantalla'
+   WHERE id = p_id AND cpe_estado IN ('ERROR', 'PENDIENTE');
+  IF NOT FOUND THEN RAISE EXCEPTION 'Solo se reenvía una nota de crédito con error o pendiente'; END IF;
   RETURN 'PENDIENTE';
 END;
 $$;

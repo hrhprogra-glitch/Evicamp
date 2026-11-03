@@ -98,7 +98,14 @@ export const calcularTotalesCPE = (lineas: LineaCPE[], igvPct = 18, icbperUnidad
 };
 
 export const nombreComprobante = (docType: number | null | undefined) =>
-  docType === 1 ? 'FACTURA ELECTRÓNICA' : docType === 3 ? 'BOLETA DE VENTA ELECTRÓNICA' : 'NOTA DE VENTA';
+  docType === 1 ? 'FACTURA ELECTRÓNICA' : docType === 3 ? 'BOLETA DE VENTA ELECTRÓNICA' : docType === 7 ? 'NOTA DE CRÉDITO ELECTRÓNICA' : 'NOTA DE VENTA';
+
+/** Motivos de nota de crédito que usa SiuMax (catálogo 09 de SUNAT). */
+export const MOTIVO_NOTA_CREDITO: Record<string, string> = {
+  '01': 'Anulación de la operación',
+  '06': 'Devolución total',
+  '07': 'Devolución por ítem',
+};
 
 export const numeroComprobante = (serie?: string | null, numero?: string | number | null) =>
   serie && numero != null && numero !== '' ? `${serie}-${String(numero).padStart(8, '0')}` : '';

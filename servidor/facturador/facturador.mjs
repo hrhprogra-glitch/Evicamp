@@ -4,6 +4,7 @@
 //   1. Avisa que está vivo (facturacion_config.facturador_visto_at) y atiende "Probar conexión".
 //   2. Toma las ventas con boleta/factura PENDIENTE (o con ERROR, para reintentar), arma el comprobante
 //      y lo manda al proveedor (Nubefact) o lo simula (modo SIMULADO), y guarda la respuesta en sales.cpe_*.
+//      Igual con las notas de crédito (tabla notas_credito), cuando su boleta/factura ya fue aceptada.
 //   3. Guarda una copia propia (JSON / PDF / XML / CDR) en /var/lib/siumax-cpe/<base>/<año-mes>/.
 // La clave del proveedor está en privado.facturacion_credenciales (la API no la puede leer).
 // Como trabaja sobre la base, las ventas hechas sin internet se envían solas cuando llegan al servidor.
@@ -12,7 +13,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-const VERSION = '11.2.0';
+const VERSION = '11.5.0';
 const ARCHIVO_BASES = process.env.FACTURADOR_BASES || '/opt/siuhub/facturador/bases.json';
 const CARPETA_COPIAS = process.env.FACTURADOR_COPIAS || '/var/lib/siumax-cpe';
 const PAUSA_MS = 5000;
@@ -25,6 +26,7 @@ const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 // ---------------------------------------------------------------- comprobante (independiente del proveedor)
 
 const CODIGO_DOC_CLIENTE = { RUC: '6', DNI: '1', CE: '4', SIN: '-' };
+const TIPO_NUBEFACT = (tipo) => (tipo === 1 ? 1 : tipo === 7 ? 3 : 2);
 
 /** Fecha de la venta en Perú (UTC-5, sin horario de verano). */
 const fechaPeru = (fecha) => new Date(new Date(fecha).getTime() - 5 * 3600 * 1000).toISOString().slice(0, 10);
@@ -132,7 +134,7 @@ const nubefact = {
     const sinDoc = doc.cliente.tipo === 'SIN';
     return {
       operacion: 'generar_comprobante',
-      tipo_de_comprobante: doc.tipo === 1 ? 1 : 2,
+      tipo_de_comprobante: TIPO_NUBEFACT(doc.tipo),
       serie: doc.serie,
       numero: doc.numero,
       sunat_transaction: 1,
@@ -141,6 +143,13 @@ const nubefact = {
       cliente_denominacion: sinDoc ? 'CLIENTES VARIOS' : doc.cliente.nombre,
       cliente_direccion: doc.cliente.direccion || '',
       cliente_email: '',
+      ...(doc.referencia ? {
+        documento_que_se_modifica_tipo: TIPO_NUBEFACT(doc.referencia.tipo),
+        documento_que_se_modifica_serie: doc.referencia.serie,
+        documento_que_se_modifica_numero: Number(doc.referencia.numero),
+        tipo_de_nota_de_credito: Number(doc.referencia.motivo),
+        observaciones: doc.referencia.descripcion || '',
+      } : {}),
       fecha_de_emision: doc.fecha.split('-').reverse().join('-'), // dd-mm-aaaa
       moneda: 1,
       porcentaje_de_igv: doc.igv_porcentaje.toFixed(2),
@@ -202,7 +211,7 @@ const nubefact = {
   },
   async consultar(doc, cred) {
     const { http, datos } = await this.llamar(cred, {
-      operacion: 'consultar_comprobante', tipo_de_comprobante: doc.tipo === 1 ? 1 : 2, serie: doc.serie, numero: doc.numero,
+      operacion: 'consultar_comprobante', tipo_de_comprobante: TIPO_NUBEFACT(doc.tipo), serie: doc.serie, numero: doc.numero,
     });
     if (datos.errors || http >= 400) return this.error(http, datos);
     return this.leer(datos, doc);
@@ -276,21 +285,69 @@ const procesarVenta = async (db, base, cfg, cred, venta) => {
     }
   }
 
+  await guardarResultado(db, base, 'sales', venta, doc, resultado);
+};
+
+// Guarda la respuesta en la fila (sales o notas_credito) y la copia propia
+const guardarResultado = async (db, base, tabla, fila, doc, resultado) => {
   const reintentar = resultado.estado === 'ERROR' || resultado.estado === 'PENDIENTE';
-  const segundos = resultado.estado === 'PENDIENTE' ? 600 : espera(venta.cpe_intentos);
+  const segundos = resultado.estado === 'PENDIENTE' ? 600 : espera(fila.cpe_intentos);
   await db.query(
-    `UPDATE public.sales SET cpe_estado = $2, cpe_mensaje = $3, sunat_hash = coalesce($4, sunat_hash), cpe_qr = coalesce($5, cpe_qr),
+    `UPDATE public.${tabla} SET cpe_estado = $2, cpe_mensaje = $3, sunat_hash = coalesce($4, sunat_hash), cpe_qr = coalesce($5, cpe_qr),
        cpe_pdf = coalesce($6, cpe_pdf), cpe_xml = coalesce($7, cpe_xml), cpe_cdr = coalesce($8, cpe_cdr),
        cpe_enviado_at = CASE WHEN $2 <> 'ERROR' THEN now() ELSE cpe_enviado_at END,
        cpe_proximo_intento = CASE WHEN $9 THEN now() + make_interval(secs => $10) ELSE NULL END
      WHERE id = $1`,
-    [venta.id, resultado.estado, resultado.mensaje || null, resultado.hash || null, resultado.qr || null,
+    [fila.id, resultado.estado, resultado.mensaje || null, resultado.hash || null, resultado.qr || null,
       resultado.pdf || null, resultado.xml || null, resultado.cdr || null, reintentar, segundos]);
   log(base, `${doc.serie}-${doc.numero} → ${resultado.estado}${resultado.mensaje ? ` (${resultado.mensaje})` : ''}`);
 
   if (resultado.estado !== 'ERROR') {
     try { await guardarCopias(base, doc, resultado); } catch (e) { log(base, 'copia no guardada:', e.message); }
   }
+};
+
+// Nota de crédito: se envía cuando la boleta/factura que corrige ya fue aceptada por SUNAT
+const procesarNota = async (db, base, cfg, cred, nota) => {
+  const { rows: [orig] } = await db.query(
+    `SELECT doc_type, doc_serial, doc_number, cpe_estado, cpe_cliente_tipo_doc, cpe_cliente_num_doc, cpe_cliente_nombre, cpe_cliente_direccion, customer_name
+       FROM public.sales WHERE id = $1`, [nota.sale_id]);
+  if (!orig || orig.cpe_estado === 'RECHAZADO') {
+    await guardarResultado(db, base, 'notas_credito', nota, { serie: nota.doc_serial, numero: nota.doc_number }, { estado: 'ERROR', mensaje: 'El comprobante que corrige fue rechazado por SUNAT: esta nota no se envía.' });
+    return;
+  }
+  if (!['ACEPTADO', 'OBSERVADO'].includes(orig.cpe_estado)) {
+    // Todavía no está aceptado: se espera sin gastar intento
+    await db.query(`UPDATE public.notas_credito SET cpe_estado = 'PENDIENTE', cpe_intentos = greatest(cpe_intentos - 1, 0),
+      cpe_mensaje = 'Esperando que SUNAT acepte el comprobante que corrige', cpe_proximo_intento = now() + interval '20 seconds' WHERE id = $1`, [nota.id]);
+    return;
+  }
+  const items = Array.isArray(nota.items) ? nota.items : [];
+  const ids = items.map((it) => it.product_id).filter(Boolean);
+  const { rows: productos } = ids.length
+    ? await db.query('SELECT id, code, barcode, sunat_unit_code, unit FROM public.products WHERE id = ANY($1::bigint[])', [ids])
+    : { rows: [] };
+  const detalles = items.map((it) => ({ ...(productos.find((p) => String(p.id) === String(it.product_id)) || {}), ...it, id: undefined }));
+  const doc = armarComprobante(cfg, {
+    doc_type: 7, doc_serial: nota.doc_serial, doc_number: nota.doc_number, created_at: nota.created_at,
+    cpe_cliente_tipo_doc: orig.cpe_cliente_tipo_doc, cpe_cliente_num_doc: orig.cpe_cliente_num_doc,
+    cpe_cliente_nombre: orig.cpe_cliente_nombre, cpe_cliente_direccion: orig.cpe_cliente_direccion, customer_name: orig.customer_name,
+  }, detalles);
+  doc.referencia = { tipo: Number(orig.doc_type), serie: orig.doc_serial, numero: orig.doc_number, motivo: nota.motivo, descripcion: nota.descripcion };
+
+  let resultado;
+  const problema = revisarComprobante(doc);
+  if (problema) resultado = { estado: 'ERROR', mensaje: problema };
+  else if (cfg.modo !== 'SIMULADO' && !cred) resultado = { estado: 'ERROR', mensaje: 'Falta guardar la ruta y la clave del proveedor (Ajustes > Facturación).' };
+  else {
+    const proveedor = proveedorDe(cfg);
+    try {
+      resultado = nota.cpe_pdf || nota.sunat_hash ? await proveedor.consultar(doc, cred) : await proveedor.emitir(doc, cred);
+    } catch (e) {
+      resultado = { estado: 'ERROR', mensaje: `Sin conexión con el proveedor: ${e.message}` };
+    }
+  }
+  await guardarResultado(db, base, 'notas_credito', nota, doc, resultado);
 };
 
 const avisados = new Set();
@@ -338,6 +395,22 @@ const ciclo = async (base) => {
       RETURNING *`);
   for (const venta of ventas) {
     try { await procesarVenta(db, base, cfg, cred, venta); } catch (e) { log(base, `venta ${venta.id}:`, e.message); }
+  }
+
+  // Notas de crédito (fase 11.5). Si la tabla aún no existe en esta base, se salta.
+  try {
+    await db.query(`UPDATE public.notas_credito SET cpe_estado = 'PENDIENTE' WHERE cpe_estado = 'ENVIANDO' AND cpe_proximo_intento < now()`);
+    const { rows: notas } = await db.query(
+      `UPDATE public.notas_credito SET cpe_estado = 'ENVIANDO', cpe_intentos = cpe_intentos + 1, cpe_proximo_intento = now() + interval '2 minutes'
+        WHERE id IN (SELECT id FROM public.notas_credito
+                      WHERE cpe_estado IN ('PENDIENTE', 'ERROR') AND coalesce(cpe_proximo_intento, created_at) <= now()
+                      ORDER BY created_at LIMIT ${POR_CICLO} FOR UPDATE SKIP LOCKED)
+        RETURNING *`);
+    for (const nota of notas) {
+      try { await procesarNota(db, base, cfg, cred, nota); } catch (e) { log(base, `nota de crédito ${nota.id}:`, e.message); }
+    }
+  } catch (e) {
+    if (!/notas_credito/.test(e.message)) throw e;
   }
 };
 

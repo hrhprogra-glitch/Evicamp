@@ -211,14 +211,15 @@ export const ModalCambioProducto: React.FC<Props> = ({
     setSelectedDetalleIndex(-1);
 
     try {
-      let venta: { id: number | string; customer_name?: string | null; created_at: string; sunat_status?: string | null } | null = null;
+      let venta: { id: number | string; customer_name?: string | null; created_at: string; sunat_status?: string | null;
+        doc_type?: number | null; doc_serial?: string | null; doc_number?: string | null; cpe_estado?: string | null } | null = null;
       const numInput = Number(rawDigits);
 
       // 1. Si tiene 10 o más dígitos, intentar primero búsqueda exacta por ID
       if (rawDigits.length >= 10 && !isNaN(numInput)) {
         const { data: vExact, error: errExact } = await supabase
           .from('sales')
-          .select('id, customer_name, created_at, sunat_status')
+          .select('*')
           .eq('id', numInput)
           .maybeSingle();
 
@@ -230,7 +231,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
       if (!venta) {
         const { data: ultimasVentas, error: errUltimas } = await supabase
           .from('sales')
-          .select('id, customer_name, created_at, sunat_status')
+          .select('*')
           .order('id', { ascending: false })
           .limit(300);
 
@@ -254,7 +255,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
       if (!venta && !isNaN(numInput)) {
         const { data: vFallback } = await supabase
           .from('sales')
-          .select('id, customer_name, created_at, sunat_status')
+          .select('*')
           .eq('id', numInput)
           .maybeSingle();
         if (vFallback) venta = vFallback;
@@ -267,6 +268,13 @@ export const ModalCambioProducto: React.FC<Props> = ({
 
       if (venta.sunat_status === 'ANULADO') {
         setTicketError(`El ticket #${String(venta.id).slice(-6)} está ANULADO. No se pueden realizar cambios sobre ventas anuladas.`);
+        return;
+      }
+
+      // Fase 11.5: una boleta/factura enviada a SUNAT no se cambia. Se devuelve con nota de crédito y se vende de nuevo.
+      if (venta.doc_type && venta.cpe_estado !== 'RECHAZADO') {
+        const numero = venta.doc_serial && venta.doc_number ? ` ${venta.doc_serial}-${String(venta.doc_number).padStart(8, '0')}` : '';
+        setTicketError(`El ticket #${String(venta.id).slice(-6)} tiene ${venta.doc_type === 1 ? 'FACTURA' : 'BOLETA'} electrónica${numero}: no se puede cambiar. Ve a Finanzas > Comprobantes, ábrelo y usa "Devolver productos" (emite la nota de crédito y devuelve el stock); luego vende el producto nuevo en la Caja.`);
         return;
       }
 

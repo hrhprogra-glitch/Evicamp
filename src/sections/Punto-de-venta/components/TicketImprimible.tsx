@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useState } from 'react';
 import { supabase } from '../../../db/supabase';
 import qrcode from 'qrcode-generator';
-import { nombreComprobante, textoQRComprobante, type TotalesCPE } from '../../../utils/comprobante';
+import { nombreComprobante, numeroComprobante, textoQRComprobante, type TotalesCPE } from '../../../utils/comprobante';
 
 // Datos del negocio para la cabecera del ticket (Ajustes > Empresa). Cada cliente tiene los suyos.
 interface DatosEmpresa {
@@ -26,6 +26,9 @@ export interface ComprobanteTicket {
   fecha?: string;
   totales: TotalesCPE;
   hash?: string | null;
+  // Nota de crédito (fase 11.5): comprobante que corrige y motivo
+  referencia?: { docType: number; serie: string | null; numero: string | null } | null;
+  motivo?: string | null;
 }
 
 export interface CartItem {
@@ -113,6 +116,12 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
             {esCpe ? nombreComprobante(comprobante!.docType) : fiadoData ? 'TICKET DE FIADO' : 'Nota de Venta'}
           </h3>
           {esCpe && fiadoData && <p className="text-[11px] font-black uppercase">Venta al crédito</p>}
+          {esCpe && comprobante!.referencia && (
+            <div className="text-[11px] font-bold uppercase mt-1">
+              <p>Corrige: {nombreComprobante(comprobante!.referencia.docType)} {numeroComprobante(comprobante!.referencia.serie, comprobante!.referencia.numero)}</p>
+              {comprobante!.motivo && <p>Motivo: {comprobante!.motivo}</p>}
+            </div>
+          )}
           <p className="font-black tracking-widest text-base">{nroBoleta}</p>
           <p className="text-[12px] font-bold mt-1">Fecha: {fecha}</p>
           {vendedor && <p className="text-[12px] font-bold uppercase">Atendido por: {vendedor}</p>}
@@ -203,6 +212,7 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
             <span>S/ {total.toFixed(2)}</span>
           </div>
           
+          {!(esCpe && comprobante!.docType === 7) && (<>
           <div className="border-t border-black pt-1 mb-1 text-[12px] text-gray-600">
             {fiadoData ? 'PAGOS PARCIALES:' : 'MÉTODOS DE PAGO:'}
           </div>
@@ -215,6 +225,7 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
             <span>{fiadoData ? 'POR PAGAR:' : 'VUELTO:'}</span>
             <span>S/ {fiadoData ? fiadoData.montoDeuda.toFixed(2) : vuelto.toFixed(2)}</span>
           </div>
+          </>)}
         </div>
 
         {/* COMPROBANTE ELECTRÓNICO: QR y leyenda */}
