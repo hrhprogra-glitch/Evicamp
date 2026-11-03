@@ -7,6 +7,16 @@
 
 ---
 
+## 03/11/2026 (mañana, 75) · Claude — FASE 11.5 hecha (notas de crédito)
+- **Commit 825df14.** Tabla `notas_credito` (aparte de `sales`; serie BC01/FC01 por `trg_asignar_nota_credito`; la API solo lee). Motivos: 01 anulación (al anular), 07 devolución por ítem.
+- `fn_anular_venta` ahora, si la venta tiene boleta/factura no rechazada, crea la NC por todo y usa `siumax.cpe_interno` para marcar ANULADO; si ya hubo devoluciones, pide "Devolver productos". Devuelve `nota_credito` (Finanzas lo muestra).
+- `fn_devolver_con_nota_credito(p_sale_id, p_items [{detail_id,cantidad}], p_sesion_caja, p_motivo)`: valida lo que queda por devolver, devuelve stock (al lote del movimiento VENTA), deja `DEVOLUCION` en el kardex y el egreso en la caja. Ventas al crédito: no (se anulan completas).
+- Facturador 11.5.0 (`procesarNota`): espera a que el original esté ACEPTADO; Nubefact tipo 3 + `documento_que_se_modifica_*` + `tipo_de_nota_de_credito` (sin probar con cuenta real).
+- `ModalComprobantes` reescrito: lista ventas y notas (`data-clave` v-/nc-), "Devolver productos" solo en aceptados, ticket de la NC (`TicketImprimible` con `referencia`/`motivo`, sin pagos). `ModalCambioProducto` bloquea tickets con boleta/factura (antes podía quedar a medias: la base bloquea el total pero el modal no revisaba el error).
+- Pruebas: 11.5 24/24; 11.4 23/23. Solo siumax.
+
+---
+
 ## 03/11/2026 (madrugada, 74) · Claude — FASE 11.4 hecha (Comprobantes, reenviar, reimprimir, sin internet)
 - **Commit 74d7e8f.** `src/components/ModalComprobantes.tsx` (lista con estado, filtros, detalle con Reimprimir/Reenviar/PDF/XML/CDR; `contarComprobantesConProblema`). Se abre desde Finanzas (`#btn-ver-comprobantes`, a la izquierda de Historial), Ajustes > Facturación (`#fact-btn-comprobantes`, fila propia sobre Guardar) y el aviso rojo de la Caja (`#btn-aviso-comprobantes`).
 - **SQL:** `fn_reenviar_comprobante` (solo ERROR/PENDIENTE; usa `set_config('siumax.cpe_interno','1',true)` para pasar `trg_proteger_comprobante`).

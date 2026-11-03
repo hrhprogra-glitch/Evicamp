@@ -609,3 +609,4 @@
 - Claude hizo la **11.2** (impuesto por producto y bolsas, 4ad13a0) y arregló 2 errores de la ficha del producto que también están en Evicamp (NO-SKU y comparación de ids). Sigue la 11.3 (Caja).
 - Claude hizo la **11.3** (Caja con Boleta y Factura, ticket con IGV y QR; f2303a2, 26/26). Sigue la 11.4.
 - Claude hizo la **11.4** (pantalla Comprobantes, reenviar, reimprimir con QR, boletas sin internet; 74d7e8f, 23/23). Sigue la 11.5 (nota de crédito).
+- Claude hizo la **11.5** (notas de crédito al anular y al devolver; 825df14, 24/24). Sigue la 11.6 (reportes para el contador).
