@@ -868,6 +868,9 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                         if (e.key === 'Enter') { e.preventDefault(); if (siguiente) ir(siguiente); else if (puedeConfirmar) handleCobrar(); else ir('cobro-btn-imprimir'); }
                         else if (e.key === 'ArrowDown') ir(siguiente || 'cobro-btn-imprimir');
                         else if (e.key === 'ArrowUp') ir(anterior);
+                        // Documento y nombre van lado a lado: ←/→ pasan de uno a otro en el borde del texto
+                        else if (e.key === 'ArrowRight' && i === 0 && e.currentTarget.selectionEnd === e.currentTarget.value.length) ir(campos[1][0]);
+                        else if (e.key === 'ArrowLeft' && i === 1 && e.currentTarget.selectionStart === 0) ir(campos[0][0]);
                         else if (e.key === 'Delete') { e.preventDefault(); if ((e.target as HTMLInputElement).value === '') onClose(); else cambiar(''); }
                       }}
                       className={`${i === 2 ? 'col-span-2 ' : ''}w-full bg-white border-2 border-[var(--color-border)] p-1.5 text-xs font-black uppercase text-[var(--color-ink)] outline-none focus:border-[var(--color-ink)] rounded-none`}
