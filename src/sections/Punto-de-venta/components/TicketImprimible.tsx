@@ -107,7 +107,9 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
         <div className="text-center border-b-2 border-black pb-2 mb-4">
           {empresa.logo_url && <img src={empresa.logo_url} alt="" className="mx-auto mb-2 max-h-[22mm] max-w-[50mm] object-contain grayscale" />}
           <h3 className="font-black text-lg uppercase tracking-widest">{empresa.nombre_empresa || 'Mi Negocio'}</h3>
-          {esCpe && empresa.razon_social && <p className="text-[12px] font-bold uppercase">{empresa.razon_social}</p>}
+          {esCpe && empresa.razon_social && empresa.razon_social.trim().toUpperCase() !== (empresa.nombre_empresa || '').trim().toUpperCase() && (
+            <p className="text-[12px] font-bold uppercase">{empresa.razon_social}</p>
+          )}
           {empresa.ruc && <p className="text-[12px] font-bold mt-1">RUC: {empresa.ruc}</p>}
           {empresa.direccion && <p className="text-[12px]">{empresa.direccion}</p>}
           {empresa.telefono && <p className="text-[12px]">Tel: {empresa.telefono}</p>}
@@ -177,7 +179,8 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
                 <td className="py-1.5 font-bold align-top">{item.cartQuantity}</td>
                 <td className="py-1.5 pr-1 uppercase align-top">
                   <span className="font-bold leading-tight block">{item.name}</span>
-                  <span className="text-[11px] text-gray-600 font-bold">S/ {item.price.toFixed(2)} c/u</span>
+                  {/* Con 1 unidad el precio c/u es igual al total de la línea: no se repite */}
+                  {Number(item.cartQuantity) !== 1 && <span className="text-[11px] text-gray-600 font-bold">S/ {item.price.toFixed(2)} c/u</span>}
                   {item.numeroSerie && (
                     <span className="text-[10px] text-black font-mono font-bold block">SERIE/IMEI: {item.numeroSerie}</span>
                   )}
@@ -221,10 +224,12 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
           {pagos.yape > 0 && <div className="flex justify-between"><span>Yape:</span><span>S/ {pagos.yape.toFixed(2)}</span></div>}
           {pagos.tarjeta > 0 && <div className="flex justify-between"><span>Tarjeta:</span><span>S/ {pagos.tarjeta.toFixed(2)}</span></div>}
           
-          <div className="flex justify-between border-t-2 border-black pt-1 text-base mt-2">
-            <span>{fiadoData ? 'POR PAGAR:' : 'VUELTO:'}</span>
-            <span>S/ {fiadoData ? fiadoData.montoDeuda.toFixed(2) : vuelto.toFixed(2)}</span>
-          </div>
+          {(fiadoData || vuelto > 0) && (
+            <div className="flex justify-between border-t-2 border-black pt-1 text-base mt-2">
+              <span>{fiadoData ? 'POR PAGAR:' : 'VUELTO:'}</span>
+              <span>S/ {fiadoData ? fiadoData.montoDeuda.toFixed(2) : vuelto.toFixed(2)}</span>
+            </div>
+          )}
           </>)}
         </div>
 
