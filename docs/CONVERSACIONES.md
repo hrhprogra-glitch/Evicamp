@@ -613,3 +613,4 @@
 - Claude hizo la **11.6** (reporte del mes para el contador: resumen e Excel; 18/18). Siguen 11.7 (Panel) y 11.8 (directo a SUNAT).
 - Claude hizo la **11.7** (habilitar facturación por cliente desde el Panel). Sigue la 11.8 (directo a SUNAT).
 - **Dueño:** *"continua lo que dejaste"*. Claude terminó la **11.8** (directo a SUNAT sin proveedor; 1838ed2, 20/20): el ambiente de pruebas de SUNAT aceptó boleta, factura y nota de crédito. **Fase 11 completa en siumax.** Evicamp intacto, sin push.
+- **Dueño (03/11):** ya cambió su Clave SOL y preguntó cómo crear un usuario SOL secundario. Claude lo guió con capturas: creó **FACTURA1** en su RUC 10760867697 con solo "Servicio de Envío de Documentos Electrónicos por Servicio Web" y "Consultar Envíos de CPE" (sin Certificado Digital ni nada más). SUNAT lo registró. La clave la guarda él (no se escribe en el chat). Sigue: registrarse en nubefact.com.
