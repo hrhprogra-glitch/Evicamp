@@ -611,3 +611,4 @@
 - Claude hizo la **11.4** (pantalla Comprobantes, reenviar, reimprimir con QR, boletas sin internet; 74d7e8f, 23/23). Sigue la 11.5 (nota de crédito).
 - Claude hizo la **11.5** (notas de crédito al anular y al devolver; 825df14, 24/24). Sigue la 11.6 (reportes para el contador).
 - Claude hizo la **11.6** (reporte del mes para el contador: resumen e Excel; 18/18). Siguen 11.7 (Panel) y 11.8 (directo a SUNAT).
+- Claude hizo la **11.7** (habilitar facturación por cliente desde el Panel). Sigue la 11.8 (directo a SUNAT).

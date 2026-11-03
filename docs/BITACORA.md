@@ -7,6 +7,14 @@
 
 ---
 
+## 03/11/2026 (mañana, 77) · Claude — FASE 11.7 hecha (facturación por cliente en el Panel)
+- `servidor/panel/panel.py`: `facturacion_cliente`, `cambiar_facturacion`, ruta `/api/clientes/facturacion`; el detalle del cliente trae `facturacion`. `index.html`: sección con botón `#btn-facturacion-cliente`. Subido con `node ai-scripts/sugerencias-servidor.cjs siumax` (sube solo panel.py e index.html, revisa sintaxis). El panel corre como root y edita `/opt/siuhub/facturador/bases.json`.
+- Solo aplica a clientes del Panel (bases `cli_*`). Evicamp (`postgres`) y siumax se agregan con `node ai-scripts/facturador-servidor.cjs siumax postgres`.
+- Ajustes > Facturación bloquea activar si el facturador no revisó la base en 5 min ("pide que la habiliten").
+- El cobro: el dueño pone el precio del plan con facturación en el plan del cliente (no se tocó la lógica de pagos).
+
+---
+
 ## 03/11/2026 (mañana, 76) · Claude — FASE 11.6 hecha (reporte para el contador)
 - `src/components/ReporteContador.tsx` (`armarRegistro(mes)`, `descargarRegistroCSV`), botón `#btn-comp-reporte` en Comprobantes. CSV con BOM (Excel lo abre directo), notas de crédito en negativo, notas de venta solo en el resumen. Sin librería de Excel (se evitó agregar una pesada).
 - El ZIP de PDF/XML del mes NO se hizo: las copias viven en el VPS (`/var/lib/siumax-cpe`) y con Nubefact cada fila trae el enlace del PDF; si el dueño lo pide, hace falta un servicio de descarga.
