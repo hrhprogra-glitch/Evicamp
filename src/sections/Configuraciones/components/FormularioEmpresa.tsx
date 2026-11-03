@@ -1,7 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Building2, FileText, MapPin, Phone, Upload, Save, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Building2, FileText, MapPin, Phone, Upload, Save, Image as ImageIcon, Loader2, Landmark } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { avisar } from '../../../utils/dialogos';
+import { errorRuc } from '../../../utils/documento';
+
+// Régimen tributario: lo usa la facturación electrónica (fase 11; en el Nuevo RUS no hay facturas)
+const REGIMENES = [
+  { id: 'NRUS', nombre: 'Nuevo RUS' },
+  { id: 'RER', nombre: 'RER' },
+  { id: 'MYPE', nombre: 'MYPE Tributario' },
+  { id: 'GENERAL', nombre: 'General' },
+];
 
 // El logo se guarda como imagen dentro de empresa_config (no hay servidor de archivos en el VPS):
 // se achica a 300 px como máximo para que pese poco (PNG conserva la transparencia; si pesa mucho, JPG)
@@ -39,8 +48,11 @@ export const FormularioEmpresa: React.FC = () => {
   
   const [empresa, setEmpresa] = useState({
     nombre_empresa: '',
+    razon_social: '',
     ruc: '',
     direccion: '',
+    ubigeo: '',
+    regimen: '',
     telefono: '',
     logo_url: '',
   });
@@ -85,9 +97,12 @@ export const FormularioEmpresa: React.FC = () => {
       if (e.key === 'Tab') {
         const order = [
           'input-empresa-nombre',
+          'input-empresa-razon',
           'input-empresa-ruc',
           'input-empresa-telefono',
           'input-empresa-direccion',
+          'input-empresa-ubigeo',
+          'btn-regimen-NRUS',
           'btn-guardar-empresa',
           'btn-subir-logo-empresa',
         ];
@@ -122,8 +137,11 @@ export const FormularioEmpresa: React.FC = () => {
           setEmpresaId(data.id);
           setEmpresa({
             nombre_empresa: data.nombre_empresa || '',
+            razon_social: data.razon_social || '',
             ruc: data.ruc || '',
             direccion: data.direccion || '',
+            ubigeo: data.ubigeo || '',
+            regimen: data.regimen || '',
             telefono: data.telefono || '',
             logo_url: data.logo_url || '',
           });
@@ -162,11 +180,21 @@ export const FormularioEmpresa: React.FC = () => {
   };
 
   const handleGuardar = async () => {
+    const problemaRuc = errorRuc(empresa.ruc);
+    if (problemaRuc) return avisar(problemaRuc);
+    if (empresa.ubigeo.trim() && !/^\d{6}$/.test(empresa.ubigeo.trim())) return avisar('El ubigeo tiene 6 números (o déjalo vacío).');
     setGuardando(true);
     try {
       // El logo va dentro de la base (ya achicado), no en un servidor de archivos
       const finalLogoUrl = archivoLogo ? logoPreview : empresa.logo_url;
-      const datosAGuardar = { ...empresa, logo_url: finalLogoUrl || '' };
+      const datosAGuardar = {
+        ...empresa,
+        ruc: empresa.ruc.trim(),
+        razon_social: empresa.razon_social.trim().toUpperCase() || null,
+        ubigeo: empresa.ubigeo.trim() || null,
+        regimen: empresa.regimen || null,
+        logo_url: finalLogoUrl || '',
+      };
 
       // Guardamos en la tabla
       if (empresaId) {
@@ -327,7 +355,7 @@ export const FormularioEmpresa: React.FC = () => {
           <div className="col-span-1 md:col-span-2">
             <label className="block text-xs font-bold text-[var(--color-ink)] uppercase tracking-wider mb-2 flex items-center gap-2">
               <Building2 size={14} className="text-[var(--color-muted)]" />
-              Razón Social / Nombre Comercial
+              Nombre Comercial (sale en el ticket)
             </label>
             <input 
               id="input-empresa-nombre"
@@ -341,7 +369,7 @@ export const FormularioEmpresa: React.FC = () => {
                 if (e.key === 'ArrowDown' || e.key === 'Enter') {
                   e.preventDefault();
                   e.stopPropagation();
-                  focusAndSelect('input-empresa-ruc');
+                  focusAndSelect('input-empresa-razon');
                 } else if (e.key === 'ArrowUp') {
                   e.preventDefault();
                   e.stopPropagation();
@@ -362,6 +390,47 @@ export const FormularioEmpresa: React.FC = () => {
               }}
               className="w-full border-2 border-[var(--color-border)] p-3 text-sm focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-amber-50/40 outline-none transition-all uppercase"
               placeholder="Ej. Mi Bodega S.A.C."
+            />
+          </div>
+
+          {/* Razón social (como figura en SUNAT; la usan las boletas y facturas) */}
+          <div className="col-span-1 md:col-span-2">
+            <label className="block text-xs font-bold text-[var(--color-ink)] uppercase tracking-wider mb-2 flex items-center gap-2">
+              <Landmark size={14} className="text-[var(--color-muted)]" />
+              Razón Social (como figura en SUNAT)
+            </label>
+            <input
+              id="input-empresa-razon"
+              autoComplete="off"
+              type="text"
+              name="razon_social"
+              value={empresa.razon_social}
+              onChange={handleChange}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  focusAndSelect('input-empresa-ruc');
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  focusAndSelect('input-empresa-nombre');
+                } else if (e.key === 'ArrowLeft') {
+                  if (canExitLeft(e.currentTarget)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('btn-subir-logo-empresa')?.focus();
+                  }
+                } else if (e.key === 'ArrowRight') {
+                  if (canExitRight(e.currentTarget)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('btn-guardar-empresa')?.focus();
+                  }
+                }
+              }}
+              className="w-full border-2 border-[var(--color-border)] p-3 text-sm focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-amber-50/40 outline-none transition-all uppercase"
+              placeholder="Ej. Inversiones Quispe E.I.R.L. (si es igual al nombre, repítelo)"
             />
           </div>
 
@@ -386,7 +455,7 @@ export const FormularioEmpresa: React.FC = () => {
                 } else if (e.key === 'ArrowUp') {
                   e.preventDefault();
                   e.stopPropagation();
-                  focusAndSelect('input-empresa-nombre');
+                  focusAndSelect('input-empresa-razon');
                 } else if (e.key === 'ArrowRight' || e.key === 'Enter') {
                   if (e.key === 'Enter' || canExitRight(e.currentTarget)) {
                     e.preventDefault();
@@ -469,7 +538,7 @@ export const FormularioEmpresa: React.FC = () => {
                 } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
                   e.preventDefault();
                   e.stopPropagation();
-                  document.getElementById('btn-guardar-empresa')?.focus();
+                  focusAndSelect('input-empresa-ubigeo');
                 } else if (e.key === 'ArrowLeft') {
                   if (canExitLeft(e.currentTarget)) {
                     e.preventDefault();
@@ -487,6 +556,74 @@ export const FormularioEmpresa: React.FC = () => {
               className="w-full border-2 border-[var(--color-border)] p-3 text-sm focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-amber-50/40 outline-none transition-all uppercase"
               placeholder="Ej. Av. Los Pinos 123, Distrito"
             />
+          </div>
+
+          {/* Ubigeo (opcional) */}
+          <div>
+            <label className="block text-xs font-bold text-[var(--color-ink)] uppercase tracking-wider mb-2 flex items-center gap-2">
+              <MapPin size={14} className="text-[var(--color-muted)]" />
+              Ubigeo (opcional)
+            </label>
+            <input
+              id="input-empresa-ubigeo"
+              autoComplete="off"
+              type="text"
+              inputMode="numeric"
+              name="ubigeo"
+              maxLength={6}
+              value={empresa.ubigeo}
+              onChange={(e) => setEmpresa({ ...empresa, ubigeo: e.target.value.replace(/\D/g, '') })}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowDown' || e.key === 'Enter' || (e.key === 'ArrowRight' && canExitRight(e.currentTarget))) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  document.getElementById(`btn-regimen-${empresa.regimen || 'NRUS'}`)?.focus();
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  focusAndSelect('input-empresa-direccion');
+                } else if (e.key === 'ArrowLeft') {
+                  if (canExitLeft(e.currentTarget)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('btn-subir-logo-empresa')?.focus();
+                  }
+                }
+              }}
+              className="w-full border-2 border-[var(--color-border)] p-3 text-sm focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-amber-50/40 outline-none transition-all font-mono"
+              placeholder="Ej. 150101"
+            />
+          </div>
+
+          {/* Régimen tributario */}
+          <div>
+            <span className="block text-xs font-bold text-[var(--color-ink)] uppercase tracking-wider mb-2">Régimen Tributario</span>
+            <div className="flex flex-wrap gap-2">
+              {REGIMENES.map((reg, i) => (
+                <button
+                  key={reg.id}
+                  id={`btn-regimen-${reg.id}`}
+                  type="button"
+                  aria-pressed={empresa.regimen === reg.id}
+                  onClick={() => setEmpresa({ ...empresa, regimen: empresa.regimen === reg.id ? '' : reg.id })}
+                  onKeyDown={(e) => {
+                    const ir = (id: string) => { e.preventDefault(); e.stopPropagation(); document.getElementById(id)?.focus(); };
+                    if (e.key === 'ArrowRight' && REGIMENES[i + 1]) ir(`btn-regimen-${REGIMENES[i + 1].id}`);
+                    else if (e.key === 'ArrowLeft') {
+                      if (REGIMENES[i - 1]) ir(`btn-regimen-${REGIMENES[i - 1].id}`);
+                      else { e.preventDefault(); e.stopPropagation(); focusAndSelect('input-empresa-ubigeo'); }
+                    } else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); focusAndSelect('input-empresa-ubigeo'); }
+                    else if (e.key === 'ArrowDown') ir('btn-guardar-empresa');
+                  }}
+                  className={`px-3 py-2 border-2 text-xs font-bold uppercase tracking-wider cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] ${
+                    empresa.regimen === reg.id ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]' : 'bg-white text-[var(--color-ink)] border-[var(--color-border)] hover:border-[var(--color-ink)]'
+                  }`}
+                >
+                  {reg.nombre}
+                </button>
+              ))}
+            </div>
+            <p className="text-[12px] text-[var(--color-muted)] font-mono mt-1">Pregúntalo a tu contador. Lo usa la facturación electrónica.</p>
           </div>
         </div>
       </div>

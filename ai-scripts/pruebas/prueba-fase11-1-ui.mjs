@@ -1,5 +1,6 @@
 // Prueba de la fase 11.1 en siumax, SOLO CON TECLADO: Ajustes > Facturación.
-// Llena los datos, activa en modo SIMULADO, guarda, prueba la conexión, guarda una clave falsa
+// Llena Datos de la empresa (RUC, razón social, ubigeo, régimen), activa Facturación en modo SIMULADO,
+// guarda, prueba la conexión, guarda una clave falsa
 // y revisa la seguridad (la clave no se puede leer por la API y un comprobante no se puede cambiar).
 // Al final deja la facturación desactivada y sin datos (es la base de pruebas).
 // Uso: node ai-scripts/pruebas/prueba-fase11-1-ui.mjs   (clave en .env.vps: SIUMAX_ADMIN_CLAVE)
@@ -29,6 +30,8 @@ const foco = () => page.evaluate(() => document.activeElement?.id || document.ac
 const tecla = async (k, veces = 1) => { for (let i = 0; i < veces; i++) { await page.keyboard.press(k); await pausa(120); } };
 const cerrarAviso = async () => { await page.waitForSelector('#dialogo-sistema-aceptar', { timeout: 8000 }); const t = await page.$eval('#dialogo-sistema-aceptar', (b) => b.closest('[role="dialog"], .fixed')?.innerText || ''); await tecla('Enter'); await pausa(300); return t; };
 
+const empresaOriginal = await sql("SELECT row_to_json(e) FROM (SELECT id, nombre_empresa, ruc, direccion, telefono, razon_social, ubigeo, regimen FROM empresa_config ORDER BY id LIMIT 1) e");
+
 try {
   await page.goto(SITIO, { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario');
@@ -38,36 +41,57 @@ try {
   await page.waitForSelector('#sidebar-btn-configuracion', { timeout: 20000 }); await pausa(2000);
   await page.click('#sidebar-btn-configuracion'); await pausa(1500);
 
-  // Llegar a la pestaña con flechas y abrirla con Enter
+  // ---- 1. Datos de la empresa (aquí van RUC, razón social, dirección, ubigeo y régimen)
+  ok('Ajustes abre en Datos de la empresa con el selector en el nombre', (await foco()) === 'input-empresa-nombre');
+  await tecla('ArrowDown'); ok('↓ del nombre baja a Razón social', (await foco()) === 'input-empresa-razon');
+  await page.keyboard.type('Prueba SiuMax SAC'); await tecla('Enter');
+  ok('Enter en Razón social pasa al RUC', (await foco()) === 'input-empresa-ruc');
+  await page.keyboard.type('20601234561'); await tecla('Enter'); // RUC con el último número mal
+  ok('Enter en el RUC pasa al teléfono', (await foco()) === 'input-empresa-telefono');
+  await tecla('Enter'); ok('Enter baja a la dirección fiscal', (await foco()) === 'input-empresa-direccion');
+  await page.keyboard.type('Av. Prueba 123, Lima'); await tecla('Enter');
+  ok('Enter en la dirección baja al Ubigeo', (await foco()) === 'input-empresa-ubigeo');
+  await page.keyboard.type('15a0101'); // la letra no entra
+  ok('El ubigeo solo acepta números', (await page.$eval('#input-empresa-ubigeo', (i) => i.value)) === '150101');
+  await tecla('Enter'); ok('Enter en el ubigeo pasa al Régimen', (await foco()) === 'btn-regimen-NRUS');
+  await tecla('ArrowRight', 2); ok('→ recorre los regímenes', (await foco()) === 'btn-regimen-MYPE');
+  await tecla('Enter');
+  ok('Enter marca el régimen', (await page.$eval('#btn-regimen-MYPE', (b) => b.getAttribute('aria-pressed'))) === 'true');
+  await tecla('ArrowUp'); ok('↑ del régimen vuelve al ubigeo', (await foco()) === 'input-empresa-ubigeo');
+  await tecla('Enter'); await tecla('ArrowDown'); ok('↓ del régimen llega a Guardar', (await foco()) === 'btn-guardar-empresa');
+  await tecla('Enter');
+  const avisoRuc = await cerrarAviso();
+  ok(`Un RUC mal escrito no se guarda (${avisoRuc.replace(/\s+/g, ' ').slice(0, 80)})`, /RUC no es válido/.test(avisoRuc));
+  await page.focus('#input-empresa-ruc'); await page.keyboard.down('Control'); await page.keyboard.press('a'); await page.keyboard.up('Control');
+  await page.keyboard.type('20601234565'); // RUC con dígito verificador correcto
+  await tecla('Enter'); await tecla('ArrowUp'); ok('↑ del teléfono llega a Guardar', (await foco()) === 'btn-guardar-empresa');
+  await tecla('Enter');
+  const avisoEmpresa = await cerrarAviso();
+  ok('Datos de la empresa guardados', /Datos guardados/.test(avisoEmpresa));
+  await page.waitForSelector('#sidebar-btn-configuracion', { timeout: 20000 }); await pausa(2000); // se recarga sola
+  const empresaGuardada = await sql("SELECT ruc||'|'||razon_social||'|'||direccion||'|'||ubigeo||'|'||regimen FROM empresa_config ORDER BY id LIMIT 1");
+  ok(`Quedó en la base (${empresaGuardada})`, empresaGuardada === '20601234565|PRUEBA SIUMAX SAC|AV. PRUEBA 123, LIMA|150101|MYPE' || empresaGuardada === '20601234565|PRUEBA SIUMAX SAC|Av. Prueba 123, Lima|150101|MYPE');
+
+  // ---- 2. Facturación: toma esos datos (no los vuelve a pedir)
+  await page.click('#sidebar-btn-configuracion'); await pausa(1500);
   await page.focus('#btn-tab-empresa');
   for (let i = 0; i < 8 && (await foco()) !== 'btn-tab-facturacion'; i++) await tecla('ArrowRight');
   ok('La pestaña Facturación se alcanza con flechas', (await foco()) === 'btn-tab-facturacion');
-  await tecla('Enter'); await pausa(1200);
+  await tecla('Enter'); await pausa(1500);
+  const textoFact = await page.evaluate(() => document.body.innerText);
+  ok('Facturación muestra los datos de la empresa (RUC y razón social)', textoFact.includes('20601234565') && textoFact.includes('PRUEBA SIUMAX SAC') && !/\bFalta\b/.test(textoFact));
+  ok('Facturación ya no tiene campos propios de RUC/razón social', !(await page.$('#fact-ruc')) && !(await page.$('#fact-razon')));
+  ok('Muestra el facturador del servidor funcionando', /Facturador del servidor: funcionando/i.test(textoFact));
   await tecla('ArrowDown');
   ok('↓ desde la pestaña entra al primer control (Activar)', (await foco()) === 'fact-activo');
-  const estado = await page.evaluate(() => document.body.innerText);
-  ok('Muestra el facturador del servidor funcionando', /Facturador del servidor: funcionando/i.test(estado));
-
-  // Activar con Enter y bajar llenando datos
   await tecla('Enter');
   ok('Enter activa la facturación', (await page.$eval('#fact-activo', (b) => b.getAttribute('aria-checked'))) === 'true');
-  await tecla('ArrowDown'); ok('↓ va al RUC', (await foco()) === 'fact-ruc');
-  await page.keyboard.type('20601234565'); await tecla('Enter'); // RUC con dígito verificador correcto
-  ok('Enter en el RUC baja a Razón social', (await foco()) === 'fact-razon');
-  await page.keyboard.type('Prueba SiuMax SAC'); await tecla('Enter');
-  ok('Enter baja a Nombre comercial', (await foco()) === 'fact-comercial');
-  await tecla('Enter'); ok('Enter baja a Dirección fiscal', (await foco()) === 'fact-direccion');
-  await page.keyboard.type('Av. Prueba 123, Lima'); await tecla('Enter');
-  ok('Enter pasa al Ubigeo (al lado)', (await foco()) === 'fact-ubigeo');
-  await tecla('Enter');
-  ok('Enter baja al Régimen', (await foco()) === 'fact-regimen-NRUS');
-  await tecla('ArrowRight', 2); ok('→ recorre los regímenes', (await foco()) === 'fact-regimen-MYPE');
-  await tecla('Enter');
+  await tecla('ArrowDown'); ok('↓ va a "Cambiar en Datos de la empresa"', (await foco()) === 'fact-btn-ir-empresa');
   await tecla('ArrowDown'); ok('↓ baja a las series', (await foco()) === 'fact-serie-boleta');
   await tecla('ArrowRight'); ok('→ al final del texto pasa a la serie de facturas', (await foco()) === 'fact-serie-factura');
   await tecla('Enter'); ok('Enter pasa a la serie de N. crédito', (await foco()) === 'fact-serie-nc-boleta');
-  await tecla('ArrowLeft'); await tecla('ArrowLeft'); await page.keyboard.press('Home'); await tecla('ArrowLeft'); ok('← al inicio del texto vuelve a la serie de boletas', (await foco()) === 'fact-serie-boleta');
-  await tecla('ArrowUp'); ok('↑ vuelve al régimen', (await foco()) === 'fact-regimen-NRUS');
+  await tecla('ArrowLeft'); await tecla('ArrowLeft'); ok('← vuelve a la serie de boletas', (await foco()) === 'fact-serie-boleta');
+  await tecla('ArrowUp'); ok('↑ vuelve a "Cambiar en Datos de la empresa"', (await foco()) === 'fact-btn-ir-empresa');
   // Bajar hasta Guardar
   for (let i = 0; i < 15 && (await foco()) !== 'fact-btn-guardar'; i++) await tecla('ArrowDown');
   ok('↓ llega hasta Guardar cambios', (await foco()) === 'fact-btn-guardar');
@@ -75,8 +99,8 @@ try {
   const aviso = await cerrarAviso();
   ok(`Guarda y avisa ACTIVA modo simulado (${aviso.replace(/\s+/g, ' ').slice(0, 120)})`, /ACTIVA/i.test(aviso) && /simulado/i.test(aviso));
   ok('Después del aviso el selector sigue en Guardar', (await foco()) === 'fact-btn-guardar');
-  const guardado = await sql("SELECT activo||'|'||modo||'|'||ruc||'|'||razon_social||'|'||regimen FROM facturacion_config");
-  ok(`Quedó en la base (${guardado})`, guardado === 'true|SIMULADO|20601234565|PRUEBA SIUMAX SAC|MYPE');
+  const guardado = await sql("SELECT activo||'|'||modo FROM facturacion_config");
+  ok(`Quedó en la base (${guardado})`, guardado === 'true|SIMULADO');
 
   // Probar conexión
   for (let i = 0; i < 6 && (await foco()) !== 'fact-btn-probar'; i++) { await tecla('ArrowUp'); if ((await foco()) === 'fact-btn-guardar-clave') await tecla('ArrowRight'); }
@@ -118,6 +142,8 @@ try {
   });
   ok(`No deja cambiar el total (HTTP ${cambio[0]})`, cambio[0] >= 400 && /no se pueden cambiar/.test(cambio[1]));
   ok(`No deja anular sin nota de crédito (HTTP ${cambio[2]})`, cambio[2] >= 400 && /nota de cr/.test(cambio[3]));
+  await page.focus('#fact-btn-ir-empresa'); await tecla('Enter'); await pausa(800);
+  ok('"Cambiar en Datos de la empresa" abre esa pestaña con el selector listo para escribir', ['btn-tab-empresa', 'input-empresa-nombre'].includes(await foco()) && !!(await page.$('#input-empresa-razon')));
   ok('Sin errores de JavaScript', errores.length === 0);
   if (errores.length) console.log(errores);
 } catch (e) {
@@ -127,7 +153,10 @@ try {
   // Dejar la base de pruebas como estaba
   await sql(`DELETE FROM sale_details WHERE sale_id = 9000000000011; DELETE FROM sales WHERE id = 9000000000011; DELETE FROM cpe_correlativos;
     DELETE FROM privado.facturacion_credenciales;
-    UPDATE facturacion_config SET activo=false, modo='SIMULADO', ruc=NULL, razon_social=NULL, nombre_comercial=NULL, direccion_fiscal=NULL, regimen=NULL,
+    UPDATE empresa_config e SET nombre_empresa = o.nombre_empresa, ruc = o.ruc, direccion = o.direccion, telefono = o.telefono,
+      razon_social = o.razon_social, ubigeo = o.ubigeo, regimen = o.regimen
+      FROM json_populate_record(NULL::empresa_config, '${empresaOriginal.replace(/'/g, "''")}'::json) o WHERE e.id = o.id;
+    UPDATE facturacion_config SET activo=false, modo='SIMULADO',
       prueba_pedida_at=NULL, prueba_at=NULL, prueba_ok=NULL, prueba_mensaje=NULL;`);
   await ssh.execCommand('rm -rf /var/lib/siumax-cpe/siumax');
   await nav.close(); ssh.dispose();

@@ -190,7 +190,7 @@ const Configuraciones: React.FC = () => {
         {activeTab === 'empresa' && puedeEmpresa && <FormularioEmpresa />}
         {activeTab === 'tiendas' && puedeEmpresa && <PestanaTiendas />}
         {activeTab === 'tienda_web' && puedeEmpresa && <PestanaTiendaWeb />}
-        {activeTab === 'facturacion' && puedeEmpresa && <PestanaFacturacion />}
+        {activeTab === 'facturacion' && puedeEmpresa && <PestanaFacturacion onIrEmpresa={() => switchTab('empresa')} />}
         {activeTab === 'usuarios' && puedeUsuarios && <TablaUsuarios />}
         {activeTab === 'apariencia' && <ThemeSwitcher />}
         {activeTab === 'sugerencias' && <SugerenciasSiumax />}

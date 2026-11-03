@@ -21,4 +21,6 @@ ALTER TABLE public.sales
 DROP TABLE IF EXISTS public.cpe_correlativos;
 DROP TABLE IF EXISTS public.facturacion_config;
 DROP TABLE IF EXISTS privado.facturacion_credenciales;
+ALTER TABLE public.empresa_config DROP CONSTRAINT IF EXISTS empresa_config_regimen_valido;
+ALTER TABLE public.empresa_config DROP COLUMN IF EXISTS razon_social, DROP COLUMN IF EXISTS ubigeo, DROP COLUMN IF EXISTS regimen;
 NOTIFY pgrst, 'reload schema';

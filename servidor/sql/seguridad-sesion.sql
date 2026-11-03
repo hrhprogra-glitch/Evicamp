@@ -2655,19 +2655,26 @@ GRANT EXECUTE ON FUNCTION public.fn_crear_pedido_web(text, text, text, text, big
 -- los reportes). El estado real del comprobante va en las columnas cpe_*.
 -- =====================================================================================
 
--- Datos del emisor y del servicio (una sola fila). Se leen con la sesión; los cambia quien tiene
--- "Configuración del sistema" (fn_permisos_requeridos).
+-- Los datos del negocio para SUNAT van en Ajustes > Datos de la empresa (empresa_config), junto al nombre,
+-- el RUC y la dirección que ya estaban ahí: así hay un solo lugar (pedido del dueño, 02/11/2026).
+ALTER TABLE public.empresa_config ADD COLUMN IF NOT EXISTS razon_social text;  -- como figura en SUNAT
+ALTER TABLE public.empresa_config ADD COLUMN IF NOT EXISTS ubigeo text;        -- 6 números (opcional)
+ALTER TABLE public.empresa_config ADD COLUMN IF NOT EXISTS regimen text;       -- GENERAL, MYPE, RER o NRUS
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'empresa_config_regimen_valido') THEN
+    ALTER TABLE public.empresa_config ADD CONSTRAINT empresa_config_regimen_valido
+      CHECK (regimen IS NULL OR regimen IN ('GENERAL', 'MYPE', 'RER', 'NRUS'));
+  END IF;
+END $$;
+
+-- Configuración de la facturación (una sola fila): series, modo y proveedor. Se lee con la sesión;
+-- la cambia quien tiene "Configuración del sistema" (fn_permisos_requeridos).
 CREATE TABLE IF NOT EXISTS public.facturacion_config (
   id                      integer PRIMARY KEY DEFAULT 1 CHECK (id = 1),
   activo                  boolean NOT NULL DEFAULT false,
   modo                    text NOT NULL DEFAULT 'SIMULADO' CHECK (modo IN ('SIMULADO', 'PRUEBA', 'REAL')),
   proveedor               text NOT NULL DEFAULT 'NUBEFACT' CHECK (proveedor IN ('NUBEFACT')),
-  ruc                     text CHECK (ruc IS NULL OR ruc ~ '^(10|15|16|17|20)\d{9}$'),
-  razon_social            text,
-  nombre_comercial        text,
-  direccion_fiscal        text,
-  ubigeo                  text CHECK (ubigeo IS NULL OR ubigeo ~ '^\d{6}$'),
-  regimen                 text CHECK (regimen IS NULL OR regimen IN ('GENERAL', 'MYPE', 'RER', 'NRUS')),
   serie_boleta            text NOT NULL DEFAULT 'B001' CHECK (serie_boleta ~ '^B[A-Z0-9]{3}$'),
   serie_factura           text NOT NULL DEFAULT 'F001' CHECK (serie_factura ~ '^F[A-Z0-9]{3}$'),
   serie_nc_boleta         text NOT NULL DEFAULT 'BC01' CHECK (serie_nc_boleta ~ '^B[A-Z0-9]{3}$'),
@@ -2685,6 +2692,10 @@ CREATE TABLE IF NOT EXISTS public.facturacion_config (
   updated_at              timestamptz DEFAULT now()
 );
 INSERT INTO public.facturacion_config (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+-- (la primera versión de la 11.1 tenía aquí los datos del negocio; ahora están en empresa_config)
+ALTER TABLE public.facturacion_config DROP COLUMN IF EXISTS ruc, DROP COLUMN IF EXISTS razon_social,
+  DROP COLUMN IF EXISTS nombre_comercial, DROP COLUMN IF EXISTS direccion_fiscal,
+  DROP COLUMN IF EXISTS ubigeo, DROP COLUMN IF EXISTS regimen;
 
 -- La clave del proveedor: en un esquema que la API NO publica ni puede leer. Solo la usa el facturador
 -- (que entra a la base como postgres) y se escribe con fn_guardar_credenciales_facturacion.
@@ -2767,6 +2778,7 @@ SET search_path TO 'public'
 AS $$
 DECLARE
   cfg public.facturacion_config%ROWTYPE;
+  v_regimen text := (SELECT regimen FROM public.empresa_config ORDER BY id LIMIT 1);
   v_doc text := upper(coalesce(trim(NEW.cpe_cliente_tipo_doc), 'SIN'));
   v_num text := nullif(trim(coalesce(NEW.cpe_cliente_num_doc, '')), '');
 BEGIN
@@ -2784,7 +2796,7 @@ BEGIN
   END IF;
 
   IF NEW.doc_type = 1 THEN
-    IF cfg.regimen = 'NRUS' THEN
+    IF v_regimen = 'NRUS' THEN
       RAISE EXCEPTION 'En el Nuevo RUS solo se emiten boletas, no facturas';
     END IF;
     IF v_doc <> 'RUC' OR v_num IS NULL OR v_num !~ '^(10|15|16|17|20)\d{9}$' THEN

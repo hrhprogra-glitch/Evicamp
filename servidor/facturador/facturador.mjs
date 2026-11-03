@@ -12,7 +12,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-const VERSION = '11.1.0';
+const VERSION = '11.1.1';
 const ARCHIVO_BASES = process.env.FACTURADOR_BASES || '/opt/siuhub/facturador/bases.json';
 const CARPETA_COPIAS = process.env.FACTURADOR_COPIAS || '/var/lib/siumax-cpe';
 const PAUSA_MS = 5000;
@@ -80,7 +80,7 @@ export const armarComprobante = (cfg, venta, detalles) => {
 
 /** Problemas que harían rechazar el comprobante (se revisan antes de enviarlo). */
 export const revisarComprobante = (doc) => {
-  if (!doc.emisor.ruc || !doc.emisor.razon_social) return 'Faltan el RUC o la razón social del negocio (Ajustes > Facturación).';
+  if (!doc.emisor.ruc || !doc.emisor.razon_social) return 'Faltan el RUC o la razón social del negocio (Ajustes > Datos de la empresa).';
   if (!doc.items.length) return 'La venta no tiene productos.';
   if (doc.items.some((it) => !(it.cantidad > 0))) return 'Hay un producto con cantidad 0.';
   if (!(doc.totales.total > 0)) return 'El total del comprobante es 0.';
@@ -298,6 +298,11 @@ const ciclo = async (base) => {
   }
   avisados.delete(base);
   if (!cfg) return;
+  // Los datos del negocio (RUC, razón social, dirección) están en Ajustes > Datos de la empresa
+  const { rows: [empresa] } = await db.query(
+    `SELECT ruc, coalesce(nullif(trim(razon_social), ''), nombre_empresa) AS razon_social, nombre_empresa, direccion, ubigeo, regimen
+       FROM public.empresa_config ORDER BY id LIMIT 1`);
+  cfg = { ...cfg, ...(empresa || {}) };
 
   const { rows: [cred] } = await db.query('SELECT ruta, token FROM privado.facturacion_credenciales WHERE id = 1');
 

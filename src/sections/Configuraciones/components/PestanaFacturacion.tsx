@@ -1,26 +1,20 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { FileText, Save, Loader2, KeyRound, PlugZap, CircleCheck, CircleAlert, Server } from 'lucide-react';
+import { FileText, Save, Loader2, KeyRound, PlugZap, CircleCheck, CircleAlert, Server, Building2 } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { avisar, confirmar } from '../../../utils/dialogos';
 import { rucValido } from '../../../utils/documento';
 
-// Ajustes > Facturación (fase 11.1): datos del emisor para SUNAT, series, numeración y el proveedor.
+// Ajustes > Facturación (fase 11.1): series, numeración, modo y proveedor. Los datos del negocio
+// (RUC, razón social, dirección, régimen) se toman de Ajustes > Datos de la empresa: un solo lugar.
 // Las boletas/facturas las envía el FACTURADOR del servidor (servidor/facturador); esta pantalla solo
 // guarda la configuración y muestra si el facturador está funcionando.
 
 type Modo = 'SIMULADO' | 'PRUEBA' | 'REAL';
-type Regimen = 'GENERAL' | 'MYPE' | 'RER' | 'NRUS';
 type PorDefecto = 'NOTA' | 'BOLETA' | 'FACTURA';
 
 interface Config {
   activo: boolean;
   modo: Modo;
-  ruc: string | null;
-  razon_social: string | null;
-  nombre_comercial: string | null;
-  direccion_fiscal: string | null;
-  ubigeo: string | null;
-  regimen: Regimen | null;
   serie_boleta: string;
   serie_factura: string;
   serie_nc_boleta: string;
@@ -32,6 +26,15 @@ interface Config {
   prueba_mensaje: string | null;
   facturador_visto_at: string | null;
   facturador_version: string | null;
+}
+
+// Lo que se lee de Datos de la empresa (empresa_config)
+interface Empresa {
+  nombre_empresa: string | null;
+  razon_social: string | null;
+  ruc: string | null;
+  direccion: string | null;
+  regimen: string | null;
 }
 
 interface EstadoClave {
@@ -47,12 +50,7 @@ const MODOS: { id: Modo; nombre: string; ayuda: string }[] = [
   { id: 'PRUEBA', nombre: 'Prueba', ayuda: 'Usa la cuenta de PRUEBA del proveedor: los comprobantes no tienen valor ante SUNAT.' },
   { id: 'REAL', nombre: 'Real', ayuda: 'Comprobantes REALES ante SUNAT con la cuenta de producción del proveedor.' },
 ];
-const REGIMENES: { id: Regimen; nombre: string }[] = [
-  { id: 'NRUS', nombre: 'Nuevo RUS' },
-  { id: 'RER', nombre: 'RER' },
-  { id: 'MYPE', nombre: 'MYPE Tributario' },
-  { id: 'GENERAL', nombre: 'General' },
-];
+const NOMBRE_REGIMEN: Record<string, string> = { NRUS: 'Nuevo RUS', RER: 'RER', MYPE: 'MYPE Tributario', GENERAL: 'General' };
 const POR_DEFECTO: { id: PorDefecto; nombre: string }[] = [
   { id: 'NOTA', nombre: 'Nota de venta' },
   { id: 'BOLETA', nombre: 'Boleta' },
@@ -73,8 +71,9 @@ const Etiqueta: React.FC<{ htmlFor?: string; children: React.ReactNode }> = ({ h
   <label htmlFor={htmlFor} className="block text-xs font-bold uppercase mb-1">{children}</label>
 );
 
-export const PestanaFacturacion: React.FC = () => {
+export const PestanaFacturacion: React.FC<{ onIrEmpresa: () => void }> = ({ onIrEmpresa }) => {
   const [cfg, setCfg] = useState<Config | null>(null);
+  const [empresa, setEmpresa] = useState<Empresa | null>(null);
   const [clave, setClave] = useState<EstadoClave>({ tiene: false });
   const [correlativos, setCorrelativos] = useState<Record<string, number>>({});
   const [ruta, setRuta] = useState('');
@@ -93,11 +92,13 @@ export const PestanaFacturacion: React.FC = () => {
       ? { ...previo, facturador_visto_at: data.facturador_visto_at, facturador_version: data.facturador_version, prueba_at: data.prueba_at, prueba_ok: data.prueba_ok, prueba_mensaje: data.prueba_mensaje }
       : data));
     if (soloEstado) return;
-    const [{ data: estado }, { data: series }] = await Promise.all([
+    const [{ data: estado }, { data: series }, { data: datosEmpresa }] = await Promise.all([
       supabase.rpc('fn_estado_credenciales_facturacion'),
       supabase.from('cpe_correlativos').select('serie, ultimo'),
+      supabase.from('empresa_config').select('nombre_empresa, razon_social, ruc, direccion, regimen').order('id').limit(1).maybeSingle(),
     ]);
     if (estado) setClave(estado as EstadoClave);
+    setEmpresa((datosEmpresa as Empresa) || { nombre_empresa: null, razon_social: null, ruc: null, direccion: null, regimen: null });
     setCorrelativos(Object.fromEntries((series || []).map((s: any) => [s.serie, Number(s.ultimo)])));
   }, []);
 
@@ -144,31 +145,30 @@ export const PestanaFacturacion: React.FC = () => {
   const visto = segundosDesde(cfg.facturador_visto_at);
   const facturadorVivo = visto !== null && visto < 30;
 
+  // Qué falta en Datos de la empresa para poder emitir
+  const faltanEmpresa = [
+    !empresa?.ruc || !rucValido(empresa.ruc.trim()) ? 'RUC válido' : '',
+    !empresa?.razon_social?.trim() ? 'razón social' : '',
+    !empresa?.direccion?.trim() ? 'dirección fiscal' : '',
+    !empresa?.regimen ? 'régimen' : '',
+  ].filter(Boolean);
+
   const guardar = async () => {
-    const ruc = (cfg.ruc || '').trim();
-    if (ruc && !rucValido(ruc)) return avisar('El RUC del negocio no es válido: revisa los 11 números.');
-    if (cfg.ubigeo && !/^\d{6}$/.test(cfg.ubigeo.trim())) return avisar('El ubigeo tiene 6 números (o déjalo vacío).');
     for (const [serie, letra, nombre] of [[cfg.serie_boleta, 'B', 'boletas'], [cfg.serie_factura, 'F', 'facturas'], [cfg.serie_nc_boleta, 'B', 'notas de crédito de boletas'], [cfg.serie_nc_factura, 'F', 'notas de crédito de facturas']] as const) {
       if (!new RegExp(`^${letra}[A-Z0-9]{3}$`).test(serie)) return avisar(`La serie de ${nombre} debe tener 4 caracteres y empezar con ${letra} (ej. ${letra}001).`);
     }
     if (cfg.activo) {
-      if (!ruc || !cfg.razon_social?.trim() || !cfg.direccion_fiscal?.trim() || !cfg.regimen) {
-        return avisar('Para activar la facturación completa el RUC, la razón social, la dirección fiscal y el régimen.');
+      if (faltanEmpresa.length) {
+        return avisar(`Para activar la facturación falta en Ajustes > Datos de la empresa: ${faltanEmpresa.join(', ')}.`);
       }
       if (cfg.modo !== 'SIMULADO' && !clave.tiene) return avisar('Para el modo Prueba o Real primero guarda la ruta y la clave del proveedor.');
-      if (cfg.comprobante_por_defecto === 'FACTURA' && cfg.regimen === 'NRUS') return avisar('En el Nuevo RUS solo se emiten boletas: elige otro comprobante por defecto.');
+      if (cfg.comprobante_por_defecto === 'FACTURA' && empresa?.regimen === 'NRUS') return avisar('En el Nuevo RUS solo se emiten boletas: elige otro comprobante por defecto.');
       if (cfg.modo === 'REAL' && !(await confirmar('Modo REAL: las boletas y facturas tendrán valor ante SUNAT. ¿Continuar?'))) return;
     }
     setGuardando(true);
     const { error } = await supabase.from('facturacion_config').update({
       activo: cfg.activo,
       modo: cfg.modo,
-      ruc: ruc || null,
-      razon_social: cfg.razon_social?.trim().toUpperCase() || null,
-      nombre_comercial: cfg.nombre_comercial?.trim() || null,
-      direccion_fiscal: cfg.direccion_fiscal?.trim().toUpperCase() || null,
-      ubigeo: cfg.ubigeo?.trim() || null,
-      regimen: cfg.regimen,
       serie_boleta: cfg.serie_boleta,
       serie_factura: cfg.serie_factura,
       serie_nc_boleta: cfg.serie_nc_boleta,
@@ -268,43 +268,33 @@ export const PestanaFacturacion: React.FC = () => {
         </button>
       </div>
 
-      {/* Datos del emisor */}
+      {/* Datos del negocio: se leen de Ajustes > Datos de la empresa (no se escriben aquí) */}
       <section className="space-y-3">
         <h3 className="text-xs font-black uppercase tracking-widest border-b border-[var(--color-border)] pb-1">Datos del negocio ante SUNAT</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-3">
-          <div>
-            <Etiqueta htmlFor="fact-ruc">RUC</Etiqueta>
-            <input id="fact-ruc" data-fila="ruc" inputMode="numeric" maxLength={11} value={cfg.ruc || ''} onChange={(e) => cambiar('ruc', e.target.value.replace(/\D/g, ''))} placeholder="20601234561" className={claseCampo} />
-          </div>
-          <div>
-            <Etiqueta htmlFor="fact-razon">Razón social</Etiqueta>
-            <input id="fact-razon" data-fila="razon" value={cfg.razon_social || ''} onChange={(e) => cambiar('razon_social', e.target.value)} placeholder="Como figura en SUNAT" className={claseCampo} />
-          </div>
+        <div className="p-3 border-2 border-[var(--color-border)] bg-[var(--color-bg)] text-xs font-sans space-y-1">
+          {([
+            ['Razón social', empresa?.razon_social],
+            ['Nombre comercial', empresa?.nombre_empresa],
+            ['RUC', empresa?.ruc],
+            ['Dirección fiscal', empresa?.direccion],
+            ['Régimen', empresa?.regimen ? NOMBRE_REGIMEN[empresa.regimen] || empresa.regimen : ''],
+          ] as const).map(([nombre, valor]) => (
+            <p key={nombre} className="flex gap-2">
+              <span className="w-32 shrink-0 font-bold font-mono uppercase text-[var(--color-muted)]">{nombre}</span>
+              {valor ? <span className="font-mono">{valor}</span> : <span className="text-red-700 font-bold">Falta</span>}
+            </p>
+          ))}
+          {empresa?.ruc && !rucValido(empresa.ruc.trim()) && <p className="text-red-700 font-bold">El RUC no es válido: revísalo.</p>}
+          {empresa?.regimen === 'NRUS' && <p className="text-amber-700">Nuevo RUS: solo boletas. La Caja no permitirá facturas.</p>}
         </div>
-        <div>
-          <Etiqueta htmlFor="fact-comercial">Nombre comercial (opcional)</Etiqueta>
-          <input id="fact-comercial" data-fila="comercial" value={cfg.nombre_comercial || ''} onChange={(e) => cambiar('nombre_comercial', e.target.value)} placeholder="Ej. Bodega La Esquina" className={claseCampo} />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-3">
-          <div>
-            <Etiqueta htmlFor="fact-direccion">Dirección fiscal</Etiqueta>
-            <input id="fact-direccion" data-fila="direccion" value={cfg.direccion_fiscal || ''} onChange={(e) => cambiar('direccion_fiscal', e.target.value)} placeholder="Como figura en la ficha RUC" className={claseCampo} />
-          </div>
-          <div>
-            <Etiqueta htmlFor="fact-ubigeo">Ubigeo (opcional)</Etiqueta>
-            <input id="fact-ubigeo" data-fila="ubigeo" inputMode="numeric" maxLength={6} value={cfg.ubigeo || ''} onChange={(e) => cambiar('ubigeo', e.target.value.replace(/\D/g, ''))} placeholder="150101" className={claseCampo} />
-          </div>
-        </div>
-        <div>
-          <Etiqueta>Régimen tributario (pregúntalo a tu contador)</Etiqueta>
-          <div className="flex flex-wrap gap-2">
-            {REGIMENES.map((r) => (
-              <button key={r.id} id={`fact-regimen-${r.id}`} data-fila="regimen" type="button" onClick={() => cambiar('regimen', r.id)} className={claseOpcion(cfg.regimen === r.id)}>{r.nombre}</button>
-            ))}
-          </div>
-          {cfg.regimen === 'NRUS' && <p className="text-xs text-amber-700 font-sans mt-1">Nuevo RUS: solo boletas. La Caja no permitirá facturas.</p>}
+        <div className="flex flex-wrap items-center gap-3">
+          <button id="fact-btn-ir-empresa" data-fila="empresa" type="button" onClick={onIrEmpresa} className={claseOpcion(false)}>
+            <span className="inline-flex items-center gap-1.5"><Building2 size={14} /> Cambiar en Datos de la empresa</span>
+          </button>
+          <span className="text-xs text-[var(--color-muted)] font-sans">Se escriben una sola vez ahí y salen en el ticket y en las boletas y facturas.</span>
         </div>
       </section>
+
 
       {/* Comprobantes y numeración */}
       <section className="space-y-3">
