@@ -6,6 +6,7 @@ DROP TRIGGER IF EXISTS trg_proteger_comprobante ON public.sales;
 DROP FUNCTION IF EXISTS public.fn_asignar_comprobante();
 DROP FUNCTION IF EXISTS public.fn_proteger_comprobante();
 DROP FUNCTION IF EXISTS public.fn_guardar_credenciales_facturacion(text, text);
+DROP FUNCTION IF EXISTS public.fn_guardar_credenciales_sunat(text, text, text, text);  -- 11.8
 DROP FUNCTION IF EXISTS public.fn_estado_credenciales_facturacion();
 DROP FUNCTION IF EXISTS public.fn_fijar_correlativo(text, bigint);
 DROP FUNCTION IF EXISTS public.fn_siguiente_correlativo(text);

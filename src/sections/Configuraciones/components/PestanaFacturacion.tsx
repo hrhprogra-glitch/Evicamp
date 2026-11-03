@@ -16,6 +16,7 @@ type PorDefecto = 'NOTA' | 'BOLETA' | 'FACTURA';
 interface Config {
   activo: boolean;
   modo: Modo;
+  proveedor: 'NUBEFACT' | 'SUNAT';
   serie_boleta: string;
   serie_factura: string;
   serie_nc_boleta: string;
@@ -41,6 +42,8 @@ interface Empresa {
 
 interface EstadoClave {
   tiene: boolean;
+  sunat_usuario?: string | null;    // fase 11.8: usuario SOL secundario guardado
+  sunat_certificado?: boolean;      // y si hay certificado (.pfx)
   ruta?: string;
   token_final?: string;
   actualizado_por?: string | null;
@@ -86,6 +89,11 @@ export const PestanaFacturacion: React.FC<{ onIrEmpresa: () => void }> = ({ onIr
   const [probando, setProbando] = useState(false);
   const [, setReloj] = useState(0);
   const [verComprobantes, setVerComprobantes] = useState(false);
+  // Fase 11.8: directo a SUNAT (usuario SOL secundario y certificado digital)
+  const [solUsuario, setSolUsuario] = useState('');
+  const [solClave, setSolClave] = useState('');
+  const [certArchivo, setCertArchivo] = useState<{ nombre: string; base64: string } | null>(null);
+  const [certClave, setCertClave] = useState('');
   const contenedor = useRef<HTMLDivElement>(null);
 
   const cargar = useCallback(async (soloEstado = false) => {
@@ -170,7 +178,10 @@ export const PestanaFacturacion: React.FC<{ onIrEmpresa: () => void }> = ({ onIr
       if (faltanEmpresa.length) {
         return avisar(`Para activar la facturación falta en Ajustes > Datos de la empresa: ${faltanEmpresa.join(', ')}.`);
       }
-      if (cfg.modo !== 'SIMULADO' && !clave.tiene) return avisar('Para el modo Prueba o Real primero guarda la ruta y la clave del proveedor.');
+      if (cfg.proveedor === 'NUBEFACT' && cfg.modo !== 'SIMULADO' && !clave.tiene) return avisar('Para el modo Prueba o Real primero guarda la ruta y la clave de Nubefact.');
+      if (cfg.proveedor === 'SUNAT' && cfg.modo === 'REAL' && !(clave.sunat_usuario && clave.sunat_certificado)) {
+        return avisar('Para enviar directo a SUNAT en modo Real guarda el usuario SOL secundario y el certificado digital (.pfx).');
+      }
       if (cfg.comprobante_por_defecto === 'FACTURA' && empresa?.regimen === 'NRUS') return avisar('En el Nuevo RUS solo se emiten boletas: elige otro comprobante por defecto.');
       if (cfg.modo === 'REAL' && !(await confirmar('Modo REAL: las boletas y facturas tendrán valor ante SUNAT. ¿Continuar?'))) return;
     }
@@ -178,6 +189,7 @@ export const PestanaFacturacion: React.FC<{ onIrEmpresa: () => void }> = ({ onIr
     const { error } = await supabase.from('facturacion_config').update({
       activo: cfg.activo,
       modo: cfg.modo,
+      proveedor: cfg.proveedor,
       serie_boleta: cfg.serie_boleta,
       serie_factura: cfg.serie_factura,
       serie_nc_boleta: cfg.serie_nc_boleta,
@@ -190,6 +202,24 @@ export const PestanaFacturacion: React.FC<{ onIrEmpresa: () => void }> = ({ onIr
     if (error) return avisar(`No se pudo guardar: ${error.message}`);
     await cargar();
     avisar(cfg.activo ? `Facturación guardada y ACTIVA (modo ${cfg.modo.toLowerCase()}).` : 'Facturación guardada (todavía desactivada).');
+  };
+
+  const elegirCertificado = (archivo?: File | null) => {
+    if (!archivo) return;
+    if (archivo.size > 140000) { avisar('Ese archivo es muy grande para ser un certificado (.pfx).'); return; }
+    const lector = new FileReader();
+    lector.onload = () => setCertArchivo({ nombre: archivo.name, base64: String(lector.result).split(',')[1] || '' });
+    lector.readAsDataURL(archivo);
+  };
+  const guardarCredencialesSunat = async () => {
+    if (!/^[A-Za-z0-9]{3,20}$/.test(solUsuario.trim())) return avisar('Escribe el usuario SOL SECUNDARIO (solo letras y números, sin el RUC delante).');
+    if (solClave.length < 4) return avisar('Escribe la clave del usuario SOL secundario.');
+    if (!certArchivo) return avisar('Elige el archivo del certificado digital (.pfx o .p12).');
+    const { data, error } = await supabase.rpc('fn_guardar_credenciales_sunat', { p_usuario: solUsuario.trim(), p_clave: solClave, p_pfx: certArchivo.base64, p_pfx_clave: certClave });
+    if (error) return avisar(`No se pudo guardar: ${error.message}`);
+    setClave(data as EstadoClave);
+    setSolClave(''); setCertArchivo(null); setCertClave('');
+    avisar('Usuario SOL y certificado guardados en el servidor. Ahora usa "Probar conexión" (revisa que el certificado abra con su contraseña).');
   };
 
   const guardarClave = async () => {
@@ -358,6 +388,16 @@ export const PestanaFacturacion: React.FC<{ onIrEmpresa: () => void }> = ({ onIr
       <section className="space-y-3">
         <h3 className="text-xs font-black uppercase tracking-widest border-b border-[var(--color-border)] pb-1">Proveedor y modo</h3>
         <div className="flex flex-wrap gap-2">
+          {([['NUBEFACT', 'Nubefact'], ['SUNAT', 'Directo a SUNAT']] as const).map(([id, nombre]) => (
+            <button key={id} id={`fact-prov-${id}`} data-fila="proveedor" type="button" onClick={() => cambiar('proveedor', id)} className={claseOpcion(cfg.proveedor === id)}>{nombre}</button>
+          ))}
+        </div>
+        <p className="text-xs font-sans text-[var(--color-muted)]">
+          {cfg.proveedor === 'SUNAT'
+            ? 'SiuMax arma, firma y envía cada comprobante directo a SUNAT, sin pagar proveedor. Necesita el usuario SOL secundario y el certificado digital del negocio (en modo Prueba usa el ambiente de pruebas de SUNAT y no los pide).'
+            : 'Nubefact (proveedor autorizado por SUNAT) recibe cada comprobante y lo envía a SUNAT. Necesita la ruta y el token de tu cuenta.'}
+        </p>
+        <div className="flex flex-wrap gap-2">
           {MODOS.map((m) => (
             <button key={m.id} id={`fact-modo-${m.id}`} data-fila="modo" type="button" onClick={() => cambiar('modo', m.id)} className={claseOpcion(cfg.modo === m.id)}>{m.nombre}</button>
           ))}
@@ -365,6 +405,41 @@ export const PestanaFacturacion: React.FC<{ onIrEmpresa: () => void }> = ({ onIr
         <p className={`text-xs font-sans ${cfg.modo === 'REAL' ? 'text-red-700 font-bold' : 'text-[var(--color-muted)]'}`}>{modoActual.ayuda}</p>
 
         <div className="p-3 border-2 border-[var(--color-border)] space-y-3">
+          {cfg.proveedor === 'SUNAT' ? (<>
+          <p className="text-xs font-sans flex items-center gap-2">
+            <KeyRound size={14} />
+            {clave.sunat_usuario && clave.sunat_certificado
+              ? <span>Guardado: usuario SOL secundario <b>{clave.sunat_usuario}</b> y certificado digital{clave.actualizado_por ? ` (por ${clave.actualizado_por})` : ''} {fechaCorta(clave.updated_at)}. No se pueden volver a ver.</span>
+              : <span>Todavía no hay usuario SOL secundario ni certificado. Créalos en SUNAT Operaciones en Línea (usuario secundario con permiso de comprobantes electrónicos) y en una entidad certificadora.</span>}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Etiqueta htmlFor="fact-sol-usuario">Usuario SOL secundario</Etiqueta>
+              <input id="fact-sol-usuario" data-fila="sunat-sol" value={solUsuario} onChange={(e) => setSolUsuario(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} placeholder="Sin el RUC: ej. FACTURA1" autoComplete="off" className={claseCampo} />
+            </div>
+            <div>
+              <Etiqueta htmlFor="fact-sol-clave">Clave del usuario SOL</Etiqueta>
+              <input id="fact-sol-clave" data-fila="sunat-sol" type="password" value={solClave} onChange={(e) => setSolClave(e.target.value)} autoComplete="new-password" className={claseCampo} />
+            </div>
+            <div>
+              <Etiqueta htmlFor="fact-cert">Certificado digital (.pfx / .p12)</Etiqueta>
+              <input id="fact-cert" data-fila="sunat-cert" type="file" accept=".pfx,.p12" onChange={(e) => elegirCertificado(e.target.files?.[0])} className={`${claseCampo} file:mr-2 file:border-0 file:bg-[var(--color-ink)] file:text-white file:px-2 file:py-1`} />
+              {certArchivo && <p className="text-[11px] font-sans mt-1">Elegido: {certArchivo.nombre}</p>}
+            </div>
+            <div>
+              <Etiqueta htmlFor="fact-cert-clave">Contraseña del certificado</Etiqueta>
+              <input id="fact-cert-clave" data-fila="sunat-cert" type="password" value={certClave} onChange={(e) => setCertClave(e.target.value)} autoComplete="new-password" className={claseCampo} />
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button id="fact-btn-guardar-sunat" data-fila="clave-btn" type="button" onClick={guardarCredencialesSunat} className={claseOpcion(false)}>
+              <span className="inline-flex items-center gap-1.5"><KeyRound size={14} /> Guardar usuario SOL y certificado</span>
+            </button>
+            <button id="fact-btn-probar" data-fila="clave-btn" type="button" aria-disabled={probando} onClick={() => !probando && probarConexion()} className={claseOpcion(false)}>
+              <span className="inline-flex items-center gap-1.5">{probando ? <Loader2 size={14} className="animate-spin" /> : <PlugZap size={14} />} {probando ? 'Probando…' : 'Probar conexión'}</span>
+            </button>
+          </div>
+          </>) : (<>
           <p className="text-xs font-sans flex items-center gap-2">
             <KeyRound size={14} />
             {clave.tiene
@@ -389,6 +464,7 @@ export const PestanaFacturacion: React.FC<{ onIrEmpresa: () => void }> = ({ onIr
               <span className="inline-flex items-center gap-1.5">{probando ? <Loader2 size={14} className="animate-spin" /> : <PlugZap size={14} />} {probando ? 'Probando…' : 'Probar conexión'}</span>
             </button>
           </div>
+          </>)}
           {cfg.prueba_at && (
             <p className={`text-xs font-sans flex items-center gap-1.5 ${cfg.prueba_ok ? 'text-emerald-700' : 'text-red-700'}`}>
               {cfg.prueba_ok ? <CircleCheck size={14} /> : <CircleAlert size={14} />} {cfg.prueba_mensaje} <span className="text-[var(--color-muted)]">({fechaCorta(cfg.prueba_at)})</span>

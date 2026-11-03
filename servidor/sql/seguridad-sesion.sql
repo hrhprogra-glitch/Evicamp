@@ -114,6 +114,7 @@ AS $$
     -- Volver a enviar un comprobante que quedó con error (pantalla "Comprobantes", fase 11.4)
     WHEN 'POST /rpc/fn_reenviar_comprobante'             THEN ARRAY['caja_abrir_cerrar_turno', 'reportes_ver_globales', 'gerencia_configuracion_sistema']
     WHEN 'POST /rpc/fn_reenviar_nota_credito'            THEN ARRAY['caja_abrir_cerrar_turno', 'reportes_ver_globales', 'gerencia_configuracion_sistema']
+    WHEN 'POST /rpc/fn_guardar_credenciales_sunat'       THEN ARRAY['gerencia_configuracion_sistema']
     -- Devolver parte de una venta con boleta/factura (nota de crédito, fase 11.5): como anular
     WHEN 'POST /rpc/fn_devolver_con_nota_credito'        THEN ARRAY['reportes_anular_ventas']
     -- Basta con la sesión
@@ -3210,6 +3211,67 @@ BEGIN
    WHERE id = p_id AND cpe_estado IN ('ERROR', 'PENDIENTE');
   IF NOT FOUND THEN RAISE EXCEPTION 'Solo se reenvía una nota de crédito con error o pendiente'; END IF;
   RETURN 'PENDIENTE';
+END;
+$$;
+
+-- -------------------------------------------------------------------------------------
+-- FASE 11.8: ENVÍO DIRECTO A SUNAT (sin proveedor)
+-- proveedor = 'SUNAT': el facturador arma, firma y envía el XML a SUNAT (servidor/facturador/sunat.mjs).
+-- Necesita el usuario SOL SECUNDARIO y el certificado digital (.pfx) del negocio; se guardan en el
+-- esquema privado (la API no los puede leer). En modo PRUEBA usa el ambiente beta de SUNAT y no los pide.
+-- -------------------------------------------------------------------------------------
+ALTER TABLE public.facturacion_config DROP CONSTRAINT IF EXISTS facturacion_config_proveedor_check;
+ALTER TABLE public.facturacion_config ADD CONSTRAINT facturacion_config_proveedor_check CHECK (proveedor IN ('NUBEFACT', 'SUNAT'));
+ALTER TABLE privado.facturacion_credenciales ALTER COLUMN ruta DROP NOT NULL;
+ALTER TABLE privado.facturacion_credenciales ALTER COLUMN token DROP NOT NULL;
+ALTER TABLE privado.facturacion_credenciales ADD COLUMN IF NOT EXISTS sol_usuario text;
+ALTER TABLE privado.facturacion_credenciales ADD COLUMN IF NOT EXISTS sol_clave text;
+ALTER TABLE privado.facturacion_credenciales ADD COLUMN IF NOT EXISTS cert_pfx text;     -- archivo .pfx en base64
+ALTER TABLE privado.facturacion_credenciales ADD COLUMN IF NOT EXISTS cert_clave text;
+
+CREATE OR REPLACE FUNCTION public.fn_estado_credenciales_facturacion()
+RETURNS jsonb
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+  SELECT coalesce((
+    SELECT jsonb_build_object(
+      'tiene', c.ruta IS NOT NULL AND c.token IS NOT NULL,
+      'ruta', CASE WHEN c.ruta IS NULL THEN NULL ELSE regexp_replace(c.ruta, '^(https?://[^/]+/).*(.{4})$', '\1…\2') END,
+      'token_final', CASE WHEN c.token IS NULL THEN NULL ELSE '…' || right(c.token, 4) END,
+      'sunat_usuario', c.sol_usuario,
+      'sunat_certificado', c.cert_pfx IS NOT NULL,
+      'actualizado_por', c.actualizado_por,
+      'updated_at', c.updated_at)
+    FROM privado.facturacion_credenciales c WHERE c.id = 1
+  ), jsonb_build_object('tiene', false, 'sunat_certificado', false));
+$$;
+
+-- Guardar el usuario SOL secundario y el certificado (.pfx en base64) para enviar directo a SUNAT
+CREATE OR REPLACE FUNCTION public.fn_guardar_credenciales_sunat(p_usuario text, p_clave text, p_pfx text, p_pfx_clave text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_quien text := (SELECT nombre FROM public.fn_empleado_de_sesion());
+BEGIN
+  IF coalesce(trim(p_usuario), '') !~ '^[A-Za-z0-9]{3,20}$' THEN
+    RAISE EXCEPTION 'El usuario SOL secundario tiene letras y números (sin el RUC delante)';
+  END IF;
+  IF length(coalesce(p_clave, '')) < 4 THEN RAISE EXCEPTION 'Escribe la clave SOL del usuario secundario'; END IF;
+  IF coalesce(p_pfx, '') = '' OR length(p_pfx) > 200000 OR p_pfx !~ '^[A-Za-z0-9+/=]+$' THEN
+    RAISE EXCEPTION 'Elige el archivo del certificado digital (.pfx o .p12)';
+  END IF;
+  INSERT INTO privado.facturacion_credenciales (id, sol_usuario, sol_clave, cert_pfx, cert_clave, actualizado_por, updated_at)
+  VALUES (1, upper(trim(p_usuario)), p_clave, p_pfx, coalesce(p_pfx_clave, ''), v_quien, now())
+  ON CONFLICT (id) DO UPDATE SET sol_usuario = EXCLUDED.sol_usuario, sol_clave = EXCLUDED.sol_clave,
+    cert_pfx = EXCLUDED.cert_pfx, cert_clave = EXCLUDED.cert_clave, actualizado_por = EXCLUDED.actualizado_por, updated_at = now();
+  UPDATE public.facturacion_config SET prueba_at = NULL, prueba_ok = NULL, prueba_mensaje = NULL WHERE id = 1;
+  RETURN public.fn_estado_credenciales_facturacion();
 END;
 $$;
 

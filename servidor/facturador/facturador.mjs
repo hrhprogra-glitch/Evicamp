@@ -12,8 +12,9 @@ import pg from 'pg';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { enviarASunat, URL_SUNAT, cargarCertificado } from './sunat.mjs';
 
-const VERSION = '11.5.0';
+const VERSION = '11.8.0';
 const ARCHIVO_BASES = process.env.FACTURADOR_BASES || '/opt/siuhub/facturador/bases.json';
 const CARPETA_COPIAS = process.env.FACTURADOR_COPIAS || '/var/lib/siumax-cpe';
 const PAUSA_MS = 5000;
@@ -30,6 +31,7 @@ const TIPO_NUBEFACT = (tipo) => (tipo === 1 ? 1 : tipo === 7 ? 3 : 2);
 
 /** Fecha de la venta en Perú (UTC-5, sin horario de verano). */
 const fechaPeru = (fecha) => new Date(new Date(fecha).getTime() - 5 * 3600 * 1000).toISOString().slice(0, 10);
+const horaPeru = (fecha) => new Date(new Date(fecha).getTime() - 5 * 3600 * 1000).toISOString().slice(11, 19);
 
 /** Arma el comprobante con montos SIN y CON IGV por línea. Los precios de SiuMax ya incluyen el IGV. */
 export const armarComprobante = (cfg, venta, detalles) => {
@@ -73,6 +75,7 @@ export const armarComprobante = (cfg, venta, detalles) => {
     serie: venta.doc_serial,
     numero: Number(venta.doc_number),
     fecha: fechaPeru(venta.created_at),
+    hora: horaPeru(venta.created_at),
     emisor: { ruc: cfg.ruc, razon_social: cfg.razon_social },
     cliente: {
       tipo: tipoCliente,
@@ -227,7 +230,38 @@ const nubefact = {
   },
 };
 
-const proveedorDe = (cfg) => (cfg.modo === 'SIMULADO' ? simulado : nubefact);
+// Directo a SUNAT (fase 11.8): arma, firma y envía el XML (servidor/facturador/sunat.mjs).
+// PRUEBA: ambiente beta con el usuario de prueba de SUNAT. REAL: usuario SOL secundario y certificado del negocio.
+const sunatDirecto = {
+  credenciales(cfg, cred) {
+    return cfg.modo === 'REAL'
+      ? { usuario: `${cfg.ruc}${cred?.sol_usuario || ''}`, clave: cred?.sol_clave || '' }
+      : { usuario: `${cfg.ruc}MODDATOS`, clave: 'moddatos' };
+  },
+  async emitir(doc, cred, cfg) {
+    const { usuario, clave } = this.credenciales(cfg, cred);
+    return enviarASunat({ doc, modo: cfg.modo, usuario, clave, carpeta: CARPETA_COPIAS, cred });
+  },
+  // SUNAT no tiene "consultar" en el ambiente de prueba: se vuelve a enviar (si ya estaba, SUNAT lo dice)
+  async consultar(doc, cred, cfg) { return this.emitir(doc, cred, cfg); },
+  async probar(cred, cfg) {
+    if (cfg.modo === 'REAL' && !(cred?.sol_usuario && cred?.cert_pfx)) return { ok: false, mensaje: 'Falta el usuario SOL secundario y el certificado digital (.pfx).' };
+    await cargarCertificado(CARPETA_COPIAS, cred, cfg.modo);
+    const res = await fetch(`${URL_SUNAT[cfg.modo === 'REAL' ? 'REAL' : 'PRUEBA']}?wsdl`, { signal: AbortSignal.timeout(20000) });
+    if (!res.ok) return { ok: false, mensaje: `SUNAT no responde bien (HTTP ${res.status}). Intenta más tarde.` };
+    return { ok: true, mensaje: cfg.modo === 'REAL' ? 'Conexión con SUNAT y certificado correctos.' : 'Conexión con el ambiente de PRUEBA de SUNAT correcta (usuario de prueba).' };
+  },
+};
+
+const proveedorDe = (cfg) => (cfg.modo === 'SIMULADO' ? simulado : cfg.proveedor === 'SUNAT' ? sunatDirecto : nubefact);
+// ¿Faltan credenciales para enviar? (directo a SUNAT en PRUEBA no las necesita)
+const faltanCredenciales = (cfg, cred) => {
+  if (cfg.modo === 'SIMULADO') return null;
+  if (cfg.proveedor === 'SUNAT') {
+    return cfg.modo === 'REAL' && !(cred?.sol_usuario && cred?.cert_pfx) ? 'Falta el usuario SOL secundario y el certificado digital (Ajustes > Facturación).' : null;
+  }
+  return cred?.ruta && cred?.token ? null : 'Falta guardar la ruta y la clave del proveedor (Ajustes > Facturación).';
+};
 
 // ---------------------------------------------------------------- copias propias
 
@@ -235,7 +269,10 @@ const guardarCopias = async (base, doc, resultado) => {
   const carpeta = path.join(CARPETA_COPIAS, base, doc.fecha.slice(0, 7));
   const nombre = `${doc.emisor.ruc}-${String(doc.tipo).padStart(2, '0')}-${doc.serie}-${doc.numero}`;
   await fs.mkdir(carpeta, { recursive: true });
-  await fs.writeFile(path.join(carpeta, `${nombre}.json`), JSON.stringify({ doc, resultado }, null, 2));
+  const { xmlFirmado, cdrZip, ...resumen } = resultado;
+  await fs.writeFile(path.join(carpeta, `${nombre}.json`), JSON.stringify({ doc, resultado: resumen }, null, 2));
+  if (xmlFirmado) await fs.writeFile(path.join(carpeta, `${nombre}.xml`), xmlFirmado);
+  if (cdrZip) await fs.writeFile(path.join(carpeta, `R-${nombre}.zip`), Buffer.from(cdrZip, 'base64'));
   for (const [clave, ext] of [['pdf', 'pdf'], ['xml', 'xml'], ['cdr', 'cdr.zip']]) {
     if (!resultado[clave]) continue;
     try {
@@ -274,12 +311,12 @@ const procesarVenta = async (db, base, cfg, cred, venta) => {
   let resultado = null;
   const problema = revisarComprobante(doc);
   if (problema) resultado = { estado: 'ERROR', mensaje: problema };
-  else if (cfg.modo !== 'SIMULADO' && !cred) resultado = { estado: 'ERROR', mensaje: 'Falta guardar la ruta y la clave del proveedor (Ajustes > Facturación).' };
+  else if (faltanCredenciales(cfg, cred)) resultado = { estado: 'ERROR', mensaje: faltanCredenciales(cfg, cred) };
   else {
     const proveedor = proveedorDe(cfg);
     try {
       // Si ya se generó antes (tiene PDF o hash) solo se consulta cómo va en SUNAT
-      resultado = venta.cpe_pdf || venta.sunat_hash ? await proveedor.consultar(doc, cred) : await proveedor.emitir(doc, cred);
+      resultado = venta.cpe_pdf || venta.sunat_hash ? await proveedor.consultar(doc, cred, cfg) : await proveedor.emitir(doc, cred, cfg);
     } catch (e) {
       resultado = { estado: 'ERROR', mensaje: `Sin conexión con el proveedor: ${e.message}` };
     }
@@ -338,11 +375,11 @@ const procesarNota = async (db, base, cfg, cred, nota) => {
   let resultado;
   const problema = revisarComprobante(doc);
   if (problema) resultado = { estado: 'ERROR', mensaje: problema };
-  else if (cfg.modo !== 'SIMULADO' && !cred) resultado = { estado: 'ERROR', mensaje: 'Falta guardar la ruta y la clave del proveedor (Ajustes > Facturación).' };
+  else if (faltanCredenciales(cfg, cred)) resultado = { estado: 'ERROR', mensaje: faltanCredenciales(cfg, cred) };
   else {
     const proveedor = proveedorDe(cfg);
     try {
-      resultado = nota.cpe_pdf || nota.sunat_hash ? await proveedor.consultar(doc, cred) : await proveedor.emitir(doc, cred);
+      resultado = nota.cpe_pdf || nota.sunat_hash ? await proveedor.consultar(doc, cred, cfg) : await proveedor.emitir(doc, cred, cfg);
     } catch (e) {
       resultado = { estado: 'ERROR', mensaje: `Sin conexión con el proveedor: ${e.message}` };
     }
@@ -369,12 +406,12 @@ const ciclo = async (base) => {
        FROM public.empresa_config ORDER BY id LIMIT 1`);
   cfg = { ...cfg, ...(empresa || {}) };
 
-  const { rows: [cred] } = await db.query('SELECT ruta, token FROM privado.facturacion_credenciales WHERE id = 1');
+  const { rows: [cred] } = await db.query('SELECT * FROM privado.facturacion_credenciales WHERE id = 1');
 
   // "Probar conexión" pedido desde Ajustes
   if (cfg.prueba_pedida_at && (!cfg.prueba_at || new Date(cfg.prueba_pedida_at) > new Date(cfg.prueba_at))) {
     let r;
-    if (cfg.modo !== 'SIMULADO' && !cred) r = { ok: false, mensaje: 'Primero guarda la ruta y la clave del proveedor.' };
+    if (cfg.proveedor !== 'SUNAT' && faltanCredenciales(cfg, cred)) r = { ok: false, mensaje: 'Primero guarda la ruta y la clave del proveedor.' };
     else {
       try { r = await proveedorDe(cfg).probar(cred, cfg); } catch (e) { r = { ok: false, mensaje: `Sin conexión: ${e.message}` }; }
     }

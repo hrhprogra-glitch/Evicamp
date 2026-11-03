@@ -47,11 +47,11 @@ WantedBy=multi-user.target
   };
   try {
     await ej(`mkdir -p ${DIR} /var/lib/siumax-cpe && chown postgres:postgres /var/lib/siumax-cpe && chmod 750 /var/lib/siumax-cpe`);
-    for (const archivo of ['facturador.mjs', 'package.json']) {
+    for (const archivo of ['facturador.mjs', 'sunat.mjs', 'package.json']) {
       await ssh.putFile(path.join(__dirname, '..', 'servidor', 'facturador', archivo), `${DIR}/nuevo.${archivo}`);
     }
-    await ej(`cd ${DIR} && ${NODE}/node --check nuevo.facturador.mjs`);
-    await ej(`cd ${DIR} && mv nuevo.facturador.mjs facturador.mjs && mv nuevo.package.json package.json && rm -f facturador.mjs.nuevo package.json.nuevo`);
+    await ej(`cd ${DIR} && ${NODE}/node --check nuevo.facturador.mjs && ${NODE}/node --check nuevo.sunat.mjs`);
+    await ej(`cd ${DIR} && mv nuevo.facturador.mjs facturador.mjs && mv nuevo.sunat.mjs sunat.mjs && mv nuevo.package.json package.json && rm -f facturador.mjs.nuevo package.json.nuevo`);
     console.log('1. Archivos subidos');
     await ej(`cd ${DIR} && PATH=${NODE}:$PATH npm install --omit=dev --no-audit --no-fund --loglevel=error`);
     console.log('2. Dependencias instaladas');
