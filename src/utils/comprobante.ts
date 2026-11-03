@@ -121,3 +121,33 @@ export const textoQRComprobante = (o: {
   return [o.ruc, String(o.docType).padStart(2, '0'), o.serie, o.numero, o.totales.igv.toFixed(2), o.totales.total.toFixed(2), fecha,
     CODIGO_DOC[o.clienteTipoDoc || 'SIN'] || '-', o.clienteNumDoc || '-', o.hash || ''].join('|') + '|';
 };
+
+/** Estado ante SUNAT (cpe_estado) para mostrarlo igual en todas las pantallas. */
+export const ESTADO_CPE: Record<string, { texto: string; clase: string }> = {
+  ACEPTADO: { texto: 'Aceptado', clase: 'border-[var(--color-accent-shadow)] text-[var(--color-accent-shadow)] bg-[var(--color-accent-bg)]' },
+  OBSERVADO: { texto: 'Aceptado con observación', clase: 'border-[var(--color-warning)] text-[var(--color-warning-dark)] bg-[var(--color-warning-bg)]' },
+  PENDIENTE: { texto: 'Enviando…', clase: 'border-[var(--color-info)] text-[var(--color-info)] bg-[var(--color-info-bg-2)]' },
+  ENVIANDO: { texto: 'Enviando…', clase: 'border-[var(--color-info)] text-[var(--color-info)] bg-[var(--color-info-bg-2)]' },
+  ERROR: { texto: 'Error (se reintenta)', clase: 'border-[var(--color-danger)] text-[var(--color-danger)] bg-[var(--color-danger-bg)]' },
+  RECHAZADO: { texto: 'Rechazado por SUNAT', clase: 'border-[var(--color-danger)] text-white bg-[var(--color-danger)]' },
+};
+export const PROBLEMA_CPE = ['ERROR', 'RECHAZADO'];
+
+/** Boleta/factura de una fila de `sales` (null = nota de venta), para las tablas de Finanzas. */
+export const comprobanteDeVenta = (v: { doc_type?: number | null; doc_serial?: string | null; doc_number?: string | number | null; cpe_estado?: string | null }) =>
+  v.doc_type ? { docType: Number(v.doc_type), numero: numeroComprobante(v.doc_serial, v.doc_number) || 'Por numerar', estado: v.cpe_estado || null } : null;
+
+/** ¿Hay comprobantes con problema? (error, rechazado, o pendiente hace más de 10 minutos). Para los avisos de la Caja y Finanzas. */
+export const contarComprobantesConProblema = async (): Promise<number> => {
+  try {
+    const hace10 = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const [{ count: malos }, { count: atascados }, { count: notasMal }] = await Promise.all([
+      supabase.from('sales').select('id', { count: 'exact', head: true }).in('cpe_estado', PROBLEMA_CPE),
+      supabase.from('sales').select('id', { count: 'exact', head: true }).in('cpe_estado', ['PENDIENTE', 'ENVIANDO']).lt('created_at', hace10),
+      supabase.from('notas_credito').select('id', { count: 'exact', head: true }).in('cpe_estado', PROBLEMA_CPE),
+    ]);
+    return (malos || 0) + (atascados || 0) + (notasMal || 0);
+  } catch {
+    return 0;
+  }
+};

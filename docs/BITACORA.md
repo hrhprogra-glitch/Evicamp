@@ -7,6 +7,18 @@
 
 ---
 
+## 03/11/2026 (79) · Claude — Ajustes de la Fase 11 pedidos por el dueño al probarla (solo siumax)
+- **Ticket:** "c/u" solo si la cantidad ≠ 1, "VUELTO" solo si hay vuelto, razón social no se repite si es igual al nombre; el papel de la vista previa crece con el contenido (`items-start`; antes el QR salía fuera).
+- **Cobro:** colores Nota de venta (gris) / Boleta (naranja) / Factura (rojo) (`COLOR_COMPROBANTE`); ← → entre documento y nombre; ↑ ↓ cambian de fila (nunca al costado).
+- **Ajustes > Facturación:** quitado "Ver comprobantes emitidos" (duplicado).
+- **Cambio y devolución con boleta/factura (commit 989d3a8):** `fn_cambiar_con_nota_credito` (una transacción: NC por lo devuelto + venta nueva con el mismo comprobante y cliente + `cambios_productos`). En la ventana del cambio: modos "Cambiar por otro producto" / "Solo devolver" (varias líneas con lo que queda por devolver, usa `fn_devolver_con_nota_credito`). Pide caja abierta y comprobante ACEPTADO/OBSERVADO. Nota de venta: igual que antes.
+- **La ventana "Comprobantes" YA NO EXISTE** (el dueño: "es lo mismo que el historial"). Todo lo que hacía quedó en: tabla de ventas de Finanzas (caja actual y cajas pasadas) con BOLETA/FACTURA + estado SUNAT (`InsigniaCpe`); detalle del ticket con bloque SUNAT (`#bloque-sunat`: estado, mensaje, notas de crédito reimprimibles con `TicketNotaCredito`, Reenviar, PDF/XML/CDR) y botón `[D] Devolver`; "Reporte contador" (`#btn-reporte-contador`, `ReporteContador` es ahora su propia ventana); aviso rojo "N con problema" en Finanzas (`#btn-cpe-problemas`) y en la Caja que abren `ModalComprobantesProblema` (solo los con problema). `contarComprobantesConProblema` y `ESTADO_CPE` están en `utils/comprobante.ts`.
+- **Arreglos de paso:** Escape no cerraba la ventana del cambio (su manejador en captura lo detenía); Finanzas recargaba con "Calculando Bóveda…" y desmontaba la ventana del cambio (ahora `cargarDatosCaja(true)`).
+- **Pruebas:** `prueba-cambio-cpe-ui.mjs` 32/32 y `prueba-historial-cpe-ui.mjs` 39/39 (dejan siumax como estaba: ventas, stock, lotes, caja y numeración). Las viejas `prueba-fase11-4/5/6-ui` usaban la ventana Comprobantes: quedan reemplazadas por estas dos.
+- siumax tiene datos de prueba del dueño (RUC 10760867697, Directo a SUNAT · PRUEBA, 5 productos PRUEBAS). Evicamp intacto, sin push.
+
+---
+
 ## 03/11/2026 (78) · Claude — FASE 11.8 hecha (directo a SUNAT) · FASE 11 COMPLETA en siumax
 - **Commit 1838ed2.** `servidor/facturador/sunat.mjs`: arma el XML UBL 2.1 (Invoice para boleta/factura, CreditNote para NC), lo firma (xml-crypto, RSA-SHA1, firma "enveloped" con Id `SignatureSP`), lo mete en un ZIP y lo manda por SOAP `sendBill`; lee la constancia (CDR). Código de error SUNAT 2000-3999 = RECHAZADO; lo demás = ERROR (se reintenta).
 - Facturador 11.8.0: `proveedor` = `NUBEFACT` o `SUNAT`. Directo en modo PRUEBA usa el ambiente beta de SUNAT con `{RUC}MODDATOS`/`moddatos` y un certificado de prueba autogenerado (`/var/lib/siumax-cpe/prueba-sunat.*`); en REAL usa el usuario SOL SECUNDARIO + certificado .pfx del negocio. Guarda copia del XML firmado y `R-*.zip` (CDR).

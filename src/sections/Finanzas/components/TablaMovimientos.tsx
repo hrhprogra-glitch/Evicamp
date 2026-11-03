@@ -3,6 +3,7 @@ import { ArrowDownToLine, ArrowUpFromLine, Trash2, Eye, RotateCcw, Receipt, Arro
 import type { UnifiedItem } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { usePermiso, avisar, avisarSinPermiso } from '../../../utils/permisos';
+import { InsigniaCpe } from '../../../components/InsigniaCpe';
 
 interface Props {
   movimientos: UnifiedItem[];
@@ -82,6 +83,14 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                         <span className="font-black tracking-wider text-xs sm:text-sm uppercase">
                           {item.isTicket ? '#' + String(item.id).slice(-6) : item.descripcion}
                         </span>
+                        {item.isTicket && item.comprobante && (
+                          <span data-comprobante-fila className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                            <span className="text-[10px] font-black tracking-wider uppercase px-1.5 py-0.5 border border-[var(--color-ink)]">
+                              {item.comprobante.docType === 1 ? 'FACTURA' : 'BOLETA'} {item.comprobante.numero}
+                            </span>
+                            <InsigniaCpe estado={item.comprobante.estado} chica />
+                          </span>
+                        )}
                         {item.isTicket && item.cliente_nombre && (
                           <span className="text-[10px] text-[var(--color-info)] font-bold tracking-widest uppercase bg-blue-50 px-1.5 py-0.5 border border-blue-200 whitespace-nowrap">
                             [CLIENTE: {item.cliente_nombre}]

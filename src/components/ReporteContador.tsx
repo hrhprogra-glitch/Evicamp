@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Download, ArrowLeft } from 'lucide-react';
+import { Download, FileSpreadsheet, X } from 'lucide-react';
 import { supabase } from '../db/supabase';
 import { fetchAllRango, rangoUTCPeru, fechaLocalPeru } from '../utils/ingresos';
+import { useCerrarConEscape } from '../utils/useCerrarConEscape';
 import { calcularTotalesCPE, MOTIVO_NOTA_CREDITO, numeroComprobante, type TotalesCPE } from '../utils/comprobante';
 
 // Reporte para el contador (fase 11.6): registro de ventas del mes (boletas, facturas y notas de crédito
@@ -146,7 +147,8 @@ const Linea: React.FC<{ nombre: string; n?: number; total: number; resaltar?: bo
   </div>
 );
 
-export const ReporteContador: React.FC<{ onVolver: () => void }> = ({ onVolver }) => {
+/** Ventana "Reporte para el contador" (botón de Finanzas). */
+export const ReporteContador: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [mes, setMes] = useState(() => fechaLocalPeru().slice(0, 7));
   const [datos, setDatos] = useState<{ filas: FilaRegistro[]; resumen: Resumen } | null>(null);
   const [cargando, setCargando] = useState(false);
@@ -164,22 +166,33 @@ export const ReporteContador: React.FC<{ onVolver: () => void }> = ({ onVolver }
     return () => { vigente = false; };
   }, [mes]);
 
+  useCerrarConEscape(true, onClose);
   const r = datos?.resumen;
   return (
-    <div className="overflow-y-auto p-4 flex-1 custom-scrollbar space-y-4">
-      <button
-        id="btn-rep-volver"
-        type="button"
-        onClick={onVolver}
-        onKeyDown={(e) => { if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('rep-mes')?.focus(); } }}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 border-2 border-[var(--color-border)] text-[12px] font-black uppercase cursor-pointer rounded-none focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] hover:border-[var(--color-ink)]"
-      >
-        <ArrowLeft size={14} /> Volver a la lista
-      </button>
-      <div>
-        <p className="text-[13px] font-black uppercase">Reporte para el contador</p>
-        <p className="text-[12px] font-bold text-[var(--color-muted)]">Registro de ventas del mes (boletas, facturas y notas de crédito) para Excel, y el resumen para declarar.</p>
+    <div role="dialog" aria-modal="true" aria-labelledby="titulo-reporte-contador" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
+    <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-2xl max-h-[calc(var(--alto-pantalla)*0.94)] flex flex-col rounded-none">
+      <div className="flex justify-between items-center border-b-2 border-[var(--color-ink)] p-4 bg-[var(--color-bg)] shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-[var(--color-accent-shadow)] flex items-center justify-center border border-[var(--color-ink)]">
+            <FileSpreadsheet size={18} className="text-white" />
+          </div>
+          <div>
+            <h3 id="titulo-reporte-contador" className="text-sm font-black uppercase tracking-widest text-[var(--color-ink)]">Reporte para el contador</h3>
+            <p className="text-[12px] font-bold text-[var(--color-muted)]">Registro de ventas del mes (boletas, facturas y notas de crédito) para Excel, y el resumen para declarar.</p>
+          </div>
+        </div>
+        <button
+          id="btn-rep-cerrar"
+          type="button"
+          onClick={onClose}
+          onKeyDown={(e) => { if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('rep-mes')?.focus(); } }}
+          className="text-[var(--color-muted)] hover:text-white hover:bg-red-600 border border-[var(--color-border)] p-1.5 rounded-none focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer"
+          title="Cerrar (Esc)"
+        >
+          <X size={18} />
+        </button>
       </div>
+    <div className="overflow-y-auto p-4 flex-1 custom-scrollbar space-y-4">
       <div className="flex flex-wrap items-end gap-3">
         <label className="text-[12px] font-black uppercase">
           Mes
@@ -192,7 +205,7 @@ export const ReporteContador: React.FC<{ onVolver: () => void }> = ({ onVolver }
               // Enter abre el calendario (como en el resto del sistema); ↓ / → van al botón de descarga
               if (e.key === 'Enter') { e.preventDefault(); try { (e.target as HTMLInputElement).showPicker(); } catch { /* sin calendario */ } }
               else if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('btn-rep-descargar')?.focus(); }
-              else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-rep-volver')?.focus(); }
+              else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-rep-cerrar')?.focus(); }
             }}
             className="block mt-1 border-2 border-[var(--color-ink)] p-2 text-sm font-black outline-none focus:ring-2 focus:ring-[var(--color-accent)] rounded-none"
           />
@@ -229,6 +242,8 @@ export const ReporteContador: React.FC<{ onVolver: () => void }> = ({ onVolver }
           <p className="mt-2 text-[11px] font-bold text-[var(--color-muted)]">Las notas de crédito restan. Los rechazados por SUNAT no se suman. Confirma con tu contador.</p>
         </div>
       )}
+    </div>
+    </div>
     </div>
   );
 };

@@ -11,7 +11,7 @@ interface Props {
   onPageChange: (page: number) => void;
   onAnular?: (id: string, isTicket?: boolean) => Promise<void>;
   onDelete?: (id: string, isTicket?: boolean) => Promise<void>;
-  onCambiarProducto?: (ticketId: string) => void;
+  onCambiarProducto?: (ticketId: string, modo?: 'CAMBIO' | 'DEVOLVER') => void;
 }
 
 export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, totalPaginas, onPageChange, onAnular, onDelete, onCambiarProducto }) => {

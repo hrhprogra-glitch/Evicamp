@@ -4,7 +4,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 03/11/2026 (78), Claude: **FASE 11 (SUNAT) COMPLETA EN SIUMAX** (11.1 → 11.8, rama `fase-11-sunat`, último commit 1838ed2). Directo a SUNAT probado contra el ambiente de pruebas de SUNAT: boleta, factura y nota de crédito ACEPTADAS. Evicamp intacto; nada subido a GitHub.
+- **Última actualización:** 03/11/2026 (79), Claude: el dueño está probando la Fase 11 en siumax y pidió ajustes, ya hechos: cambio y devolución con boleta/factura (nota de crédito + comprobante nuevo), la ventana "Comprobantes" se juntó con Finanzas (sin duplicados), colores y teclado del cobro, ticket sin repeticiones. Ver BITACORA (79).
+- (78) Claude: **FASE 11 (SUNAT) COMPLETA EN SIUMAX** (11.1 → 11.8, rama `fase-11-sunat`, último commit 1838ed2). Directo a SUNAT probado contra el ambiente de pruebas de SUNAT: boleta, factura y nota de crédito ACEPTADAS. Evicamp intacto; nada subido a GitHub.
 - **Siguiente:** el dueño revisa la Fase 11 en siumax. Pendientes del dueño: cuenta Nubefact (revendedor, varios RUC) y, para enviar directo en Real, usuario SOL secundario + certificado digital de cada negocio. Pasar a Evicamp (fases 8 a 11) SOLO cuando el dueño lo diga.
 - (02/11/2026, tarde, 65), Antigravity: Fases 9 (Almacenes y Traspasos) y 10 (Tienda Web para PC y Celular con pedidos WhatsApp) completadas y probadas 100% en conjunto en el entorno de pruebas siumax. La Fase 8 permanece lista en siumax sin tocar Evicamp ni hacer push a main.
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 3, 4, 5, 6 y 7 en producción en Evicamp (commits d36efca, bd3780f, 994bdca, 59538a0 y merge de Fase 7).

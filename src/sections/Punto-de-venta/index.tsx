@@ -23,8 +23,8 @@ import { ModalNombreEspera } from './components/ModalNombreEspera';
 import { ModalCotizacionPOS } from './components/ModalCotizacionPOS';
 import { ModalPedidoPOS } from './components/ModalPedidoPOS';
 import { traerTodo } from '../../utils/traerTodo';
-import { cargarFacturacionCaja, calcularTotalesCPE, numeroComprobante, DOC_TYPE, type DatosComprobante, type FacturacionCaja } from '../../utils/comprobante';
-import { ModalComprobantes, contarComprobantesConProblema } from '../../components/ModalComprobantes';
+import { cargarFacturacionCaja, calcularTotalesCPE, numeroComprobante, DOC_TYPE, contarComprobantesConProblema, type DatosComprobante, type FacturacionCaja } from '../../utils/comprobante';
+import { ModalComprobantesProblema } from '../../components/ModalComprobantesProblema';
 import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ EVICAMP: Mini Reporte en Tiempo Real
 
 export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
@@ -1164,7 +1164,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         </div>
       )}
       
-      {/* FASE 11.4: aviso de comprobantes con problema (abre la pantalla "Comprobantes") */}
+      {/* FASE 11.4: aviso de comprobantes con problema (abre la lista de los que tienen problema) */}
       {cpeConProblema > 0 && (
         <button
           id="btn-aviso-comprobantes"
@@ -1176,9 +1176,8 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           ⚠ {cpeConProblema} {cpeConProblema === 1 ? 'comprobante' : 'comprobantes'} con problema
         </button>
       )}
-      <ModalComprobantes
+      <ModalComprobantesProblema
         isOpen={verComprobantes}
-        filtroInicial="PROBLEMAS"
         onClose={() => {
           setVerComprobantes(false);
           contarComprobantesConProblema().then(setCpeConProblema);

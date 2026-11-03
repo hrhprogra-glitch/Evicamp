@@ -108,10 +108,13 @@ try {
   ok('→ llega a "Solo devolver"', (await foco()) === 'btn-modo-devolver');
   await tecla('Enter'); await pausa(400);
   ok('Solo devolver no pide producto nuevo', !(await page.$('#input-buscar-nuevo')));
+  ok('Muestra lo que queda: vendido 2, ya devuelto 1', /Vendido 2 · ya devuelto 1/i.test(await page.$eval('#modal-cambio-producto', (m) => m.innerText)));
+  await tecla('ArrowDown'); ok('↓ desde "Solo devolver" llega a la cantidad', (await foco()) === 'dev-cant-0');
+  await page.keyboard.type('1');
   const etiqueta2 = await page.$eval('#btn-confirmar-cambio', (b) => b.innerText);
   ok(`Botón: "${etiqueta2.trim()}"`, /nota de crédito y devolver S\/ 5\.00/i.test(etiqueta2));
-  await page.focus('#input-serie-devuelta'); await tecla('ArrowDown');
-  ok('↓ desde la serie baja al motivo (no hay producto nuevo)', (await foco()) === 'input-motivo-cambio');
+  await tecla('Enter');
+  ok('Enter en la cantidad baja al motivo (no hay producto nuevo)', (await foco()) === 'input-motivo-cambio');
   await tecla('ArrowDown'); await tecla('Enter');
   await page.waitForSelector('#resultado-cambio-cpe', { timeout: 15000 });
   ok('Muestra "Devolución realizada" con la nota de crédito', await page.evaluate(() => /Devolución realizada/i.test(document.getElementById('modal-cambio-producto').innerText)
@@ -123,11 +126,9 @@ try {
   // 4. Ya no queda nada
   await abrirCambio(venta);
   await page.focus('#btn-modo-devolver'); await tecla('Enter'); await pausa(300);
-  await page.focus('#btn-confirmar-cambio'); await tecla('Enter');
-  await page.waitForSelector('#dialogo-sistema-aceptar', { timeout: 8000 });
-  const aviso = await page.$eval('[data-dialogo-sistema]', (d) => d.innerText.replace(/\s+/g, ' '));
-  ok(`Sin nada por devolver avisa: "${aviso.slice(0, 80)}"`, /solo quedan 0/i.test(aviso));
-  await tecla('Enter'); await pausa(300);
+  ok('Sin nada por devolver: la cantidad queda bloqueada (máx. 0)', await page.$eval('#dev-cant-0', (i) => i.disabled) && /máx\. 0/i.test(await page.$eval('#modal-cambio-producto', (m) => m.innerText)));
+  ok('Y no deja emitir la nota de crédito', await page.$eval('#btn-confirmar-cambio', (b) => b.disabled));
+  await page.focus('#btn-confirmar-cambio'); await tecla('Enter'); await pausa(800);
   ok('No se creó una tercera nota', (await sql(`SELECT count(*) FROM notas_credito WHERE sale_id = ${venta}`)) === '2');
   ok('Sin errores de JavaScript', errores.length === 0);
   if (errores.length) console.log(errores);
