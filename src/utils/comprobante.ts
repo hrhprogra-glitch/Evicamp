@@ -15,25 +15,36 @@ export interface FacturacionCaja {
   regimen: string | null;
 }
 
+const CLAVE_COPIA = 'siumax_facturacion_caja';
+const copiaGuardada = (): FacturacionCaja | null => {
+  try { return JSON.parse(localStorage.getItem(CLAVE_COPIA) || 'null'); } catch { return null; }
+};
+
+// Con internet se lee de la base y se guarda una copia; sin internet se usa esa copia, así la Caja
+// sigue emitiendo boletas (quedan "por numerar" y la base les pone número al volver la conexión).
 export const cargarFacturacionCaja = async (): Promise<FacturacionCaja | null> => {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return copiaGuardada();
   try {
     const [{ data: cfg, error }, { data: empresa }] = await Promise.all([
       supabase.from('facturacion_config').select('activo, modo, comprobante_por_defecto, igv_porcentaje, icbper_monto').eq('id', 1).maybeSingle(),
       supabase.from('empresa_config').select('regimen').order('id').limit(1).maybeSingle(),
     ]);
-    if (error || !cfg?.activo) return null;
+    if (error) return copiaGuardada();
+    if (!cfg?.activo) { try { localStorage.removeItem(CLAVE_COPIA); } catch { /* sin almacenamiento */ } return null; }
     const regimen = (empresa as { regimen?: string } | null)?.regimen ?? null;
     let porDefecto = (cfg.comprobante_por_defecto || 'NOTA') as TipoComprobante;
     if (porDefecto === 'FACTURA' && regimen === 'NRUS') porDefecto = 'BOLETA';
-    return {
+    const resultado: FacturacionCaja = {
       modo: cfg.modo,
       porDefecto,
       igvPct: Number(cfg.igv_porcentaje ?? 18),
       icbperUnidad: Number(cfg.icbper_monto ?? 0.5),
       regimen,
     };
+    try { localStorage.setItem(CLAVE_COPIA, JSON.stringify(resultado)); } catch { /* sin almacenamiento */ }
+    return resultado;
   } catch {
-    return null; // sin la tabla (fase 11 no instalada) o sin conexión: la Caja sigue con Nota de venta
+    return copiaGuardada(); // sin conexión: la última configuración conocida (o null: Nota de venta)
   }
 };
 

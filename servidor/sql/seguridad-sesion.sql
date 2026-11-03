@@ -111,6 +111,8 @@ AS $$
     WHEN 'POST /rpc/fn_guardar_credenciales_facturacion' THEN ARRAY['gerencia_configuracion_sistema']
     WHEN 'POST /rpc/fn_estado_credenciales_facturacion'  THEN ARRAY['gerencia_configuracion_sistema']
     WHEN 'POST /rpc/fn_fijar_correlativo'                THEN ARRAY['gerencia_configuracion_sistema']
+    -- Volver a enviar un comprobante que quedó con error (pantalla "Comprobantes", fase 11.4)
+    WHEN 'POST /rpc/fn_reenviar_comprobante'             THEN ARRAY['caja_abrir_cerrar_turno', 'reportes_ver_globales', 'gerencia_configuracion_sistema']
     -- Basta con la sesión
     WHEN 'PATCH /yape_notifications' THEN ARRAY[]::text[]
     WHEN 'POST /rpc/fn_sesion_activa' THEN ARRAY[]::text[]
@@ -2841,7 +2843,9 @@ LANGUAGE plpgsql
 SET search_path TO 'public'
 AS $$
 BEGIN
-  IF current_setting('request.method', true) IS NULL OR OLD.doc_type IS NULL THEN
+  -- Sin pedido de la API (facturador, psql) o desde una función interna que lo permite (fn_reenviar_comprobante)
+  IF current_setting('request.method', true) IS NULL OR OLD.doc_type IS NULL
+     OR current_setting('siumax.cpe_interno', true) = '1' THEN
     RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
   END IF;
   IF TG_OP = 'DELETE' THEN
@@ -2969,6 +2973,31 @@ $$;
 DROP TRIGGER IF EXISTS trg_impuesto_linea_venta ON public.sale_details;
 CREATE TRIGGER trg_impuesto_linea_venta BEFORE INSERT ON public.sale_details
   FOR EACH ROW EXECUTE FUNCTION public.fn_impuesto_linea_venta();
+
+-- -------------------------------------------------------------------------------------
+-- FASE 11.4: volver a enviar un comprobante que quedó con ERROR (o atascado en PENDIENTE)
+-- Una RECHAZADA por SUNAT no se reenvía igual: hay que corregir y emitir otra (con nota de crédito).
+-- -------------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.fn_reenviar_comprobante(p_sale_id bigint)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_estado text;
+BEGIN
+  SELECT cpe_estado INTO v_estado FROM public.sales WHERE id = p_sale_id AND doc_type IS NOT NULL;
+  IF v_estado IS NULL THEN RAISE EXCEPTION 'Esa venta no tiene boleta ni factura electrónica'; END IF;
+  IF v_estado NOT IN ('ERROR', 'PENDIENTE') THEN
+    RAISE EXCEPTION 'Solo se reenvía un comprobante con error o pendiente (este está %)', lower(v_estado);
+  END IF;
+  PERFORM set_config('siumax.cpe_interno', '1', true);   -- deja pasar el cambio (solo en esta transacción)
+  UPDATE public.sales SET cpe_estado = 'PENDIENTE', cpe_intentos = 0, cpe_proximo_intento = now(), cpe_mensaje = 'Reenvío pedido desde la pantalla'
+   WHERE id = p_sale_id;
+  RETURN 'PENDIENTE';
+END;
+$$;
 
 NOTIFY pgrst, 'reload schema';
 

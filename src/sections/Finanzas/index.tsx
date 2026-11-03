@@ -2,7 +2,9 @@ import { coincideBusqueda } from '../../utils/busqueda';
 import { formatearCantidadDetalle } from '../../utils/formato';
 // src/sections/Finanzas/index.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { Wallet, ArrowDownToLine, Lock, CreditCard, Smartphone, Banknote, ReceiptText, Search, ArrowLeftRight, ShieldCheck } from 'lucide-react';
+import { Wallet, ArrowDownToLine, Lock, CreditCard, Smartphone, Banknote, ReceiptText, Search, ArrowLeftRight, ShieldCheck, FileText } from 'lucide-react';
+import { ModalComprobantes } from '../../components/ModalComprobantes';
+import { cargarFacturacionCaja } from '../../utils/comprobante';
 import { supabase } from '../../db/supabase';
 import type { CashSession, CashMovement, SuperMetricas, UnifiedItem } from './types';
 
@@ -49,6 +51,10 @@ export const Finanzas: React.FC = () => {
 
   // NUEVO: Estados y funciones para el Historial y Limpieza
   const [vistaActual, setVistaActual] = useState<'ACTUAL' | 'HISTORIAL'>('ACTUAL');
+  // Fase 11.4: pantalla "Comprobantes" (boletas y facturas), solo si la tienda tiene facturación
+  const [hayFacturacion, setHayFacturacion] = useState(false);
+  const [verComprobantes, setVerComprobantes] = useState(false);
+  useEffect(() => { cargarFacturacionCaja().then((f) => setHayFacturacion(Boolean(f))); }, []);
   const [pestañaFlujo, setPestañaFlujo] = useState<'INTERNO' | 'EXTERNO'>('INTERNO'); // <-- Control de Pestañas
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('TODOS');
@@ -745,6 +751,21 @@ export const Finanzas: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap gap-3">
+          {hayFacturacion && (
+            <button
+              id="btn-ver-comprobantes"
+              type="button"
+              onClick={() => setVerComprobantes(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('btn-ver-historial')?.focus(); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); (document.getElementById('buscador-finanzas') || document.getElementById('btn-aperturar-caja'))?.focus(); }
+              }}
+              className="flex-1 sm:flex-none justify-center bg-[var(--color-bg)] text-[var(--color-ink)] px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest sm:tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer flex items-center gap-2"
+            >
+              <FileText size={16} /> Comprobantes
+            </button>
+          )}
           <button 
             id="btn-ver-historial"
             onClick={() => {
@@ -763,6 +784,9 @@ export const Finanzas: React.FC = () => {
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
+              } else if (e.key === 'ArrowLeft' && document.getElementById('btn-ver-comprobantes')) {
+                e.preventDefault();
+                document.getElementById('btn-ver-comprobantes')?.focus();
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 const btnNext = document.getElementById('btn-nuevo-movimiento') || document.getElementById('btn-aperturar-caja');
@@ -1212,6 +1236,7 @@ export const Finanzas: React.FC = () => {
         isOpen={isGarantiaModalOpen}
         onClose={() => setIsGarantiaModalOpen(false)}
       />
+      <ModalComprobantes isOpen={verComprobantes} onClose={() => { setVerComprobantes(false); setTimeout(() => document.getElementById('btn-ver-comprobantes')?.focus(), 50); }} />
     </div>
   );
 };

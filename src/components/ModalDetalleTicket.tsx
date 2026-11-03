@@ -3,7 +3,8 @@ import { X, Printer, Receipt, ListFilter, ArrowLeftRight } from 'lucide-react';
 import { supabase } from '../db/supabase';
 import { formatearCantidadDetalle } from '../utils/formato';
 import { useImprimir } from '../utils/impresion';
-import { TicketImprimible } from '../sections/Punto-de-venta/components/TicketImprimible';
+import { TicketImprimible, type ComprobanteTicket } from '../sections/Punto-de-venta/components/TicketImprimible';
+import { calcularTotalesCPE, numeroComprobante } from '../utils/comprobante';
 
 interface Props {
   ticketId: string | null;
@@ -22,6 +23,8 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
     yape?: number;
     tarjeta?: number;
     fiadoData?: any | null;
+    comprobante?: ComprobanteTicket | null; // fase 11.4: boleta o factura electrónica de la venta
+    nroComprobante?: string;
   } | null>(null);
   const [isLoadingDetalles, setIsLoadingDetalles] = useState(false);
   const [vista, setVista] = useState<'TICKET' | 'TABLA'>('TICKET');
@@ -42,7 +45,7 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
           supabase.from('sale_details').select('*').eq('sale_id', ticketId),
           supabase
             .from('sales')
-            .select('customer_name, payment_type, created_at, seller_name, total, amount_cash, amount_yape, amount_card, amount_credit')
+            .select('*')
             .eq('id', ticketId)
             .maybeSingle()
         ]);
@@ -62,8 +65,8 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
         if (fiado) {
           clienteNombre = fiado.customer_name || clienteNombre;
           fiadoData = {
-            montoDeuda: Number(fiado.total || 0),
-            fechaVencimiento: fiado.due_date ? new Date(fiado.due_date).toLocaleDateString('es-PE') : 'Sin fecha',
+            montoDeuda: Number(fiado.amount ?? fiado.total ?? 0) - Number(fiado.paid_amount || 0),
+            fechaVencimiento: (fiado.expected_pay_date || fiado.due_date) ? new Date(fiado.expected_pay_date || fiado.due_date).toLocaleDateString('es-PE') : 'Sin fecha',
             clienteNombre: clienteNombre || 'CLIENTE',
             clienteDni: fiado.customer_dni || '',
             clienteTelefono: fiado.customer_phone || ''
@@ -71,6 +74,20 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
         }
 
         const totalCalc = detalles.reduce((acc, item) => acc + Number(item.subtotal || 0), 0);
+        const v: any = ventaRes.data || {};
+        const comprobante: ComprobanteTicket | null = v.doc_type ? {
+          docType: Number(v.doc_type),
+          serie: v.doc_serial || null,
+          numero: v.doc_number || null,
+          modo: v.cpe_modo || null,
+          clienteTipoDoc: v.cpe_cliente_tipo_doc || 'SIN',
+          clienteNumDoc: v.cpe_cliente_num_doc || '',
+          clienteNombre: v.cpe_cliente_nombre || '',
+          clienteDireccion: v.cpe_cliente_direccion || '',
+          fecha: v.created_at,
+          hash: v.sunat_hash || null,
+          totales: calcularTotalesCPE(detalles.map((d: any) => ({ subtotal: Number(d.subtotal), cantidad: Number(d.quantity), tipoIgv: d.tipo_igv, esBolsa: d.es_bolsa }))),
+        } : null;
 
         setVentaInfo({
           clienteNombre: clienteNombre || null,
@@ -80,7 +97,9 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
           efectivo: Number(ventaRes.data?.amount_cash || (ventaRes.data?.payment_type === 'EFECTIVO' ? totalCalc : 0)),
           yape: Number(ventaRes.data?.amount_yape || (ventaRes.data?.payment_type === 'YAPE' ? totalCalc : 0)),
           tarjeta: Number(ventaRes.data?.amount_card || (ventaRes.data?.payment_type === 'TARJETA' ? totalCalc : 0)),
-          fiadoData
+          fiadoData,
+          comprobante,
+          nroComprobante: comprobante ? (numeroComprobante(comprobante.serie, comprobante.numero) || 'POR NUMERAR') : undefined,
         });
       } catch (error) {
         console.error('Error fetching ticket details:', error);
@@ -361,10 +380,11 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
                   tarjeta: ventaInfo?.tarjeta || 0,
                 }}
                 vuelto={0}
-                nroBoleta={String(ticketId).slice(-6)}
+                nroBoleta={ventaInfo?.nroComprobante || String(ticketId).slice(-6)}
                 fiadoData={ventaInfo?.fiadoData}
                 cliente={ventaInfo?.clienteNombre ? { nombre: ventaInfo.clienteNombre } : null}
                 vendedor={ventaInfo?.vendedor}
+                comprobante={ventaInfo?.comprobante}
               />
             </div>
           ) : (
@@ -476,10 +496,11 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
                 tarjeta: ventaInfo?.tarjeta || 0,
               }}
               vuelto={0}
-              nroBoleta={String(ticketId).slice(-6)}
+              nroBoleta={ventaInfo?.nroComprobante || String(ticketId).slice(-6)}
               fiadoData={ventaInfo?.fiadoData}
               cliente={ventaInfo?.clienteNombre ? { nombre: ventaInfo.clienteNombre } : null}
               vendedor={ventaInfo?.vendedor}
+              comprobante={ventaInfo?.comprobante}
             />
           </div>
         )}

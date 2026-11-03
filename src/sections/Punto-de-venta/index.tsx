@@ -24,6 +24,7 @@ import { ModalCotizacionPOS } from './components/ModalCotizacionPOS';
 import { ModalPedidoPOS } from './components/ModalPedidoPOS';
 import { traerTodo } from '../../utils/traerTodo';
 import { cargarFacturacionCaja, calcularTotalesCPE, numeroComprobante, DOC_TYPE, type DatosComprobante, type FacturacionCaja } from '../../utils/comprobante';
+import { ModalComprobantes, contarComprobantesConProblema } from '../../components/ModalComprobantes';
 import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ EVICAMP: Mini Reporte en Tiempo Real
 
 export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
@@ -44,6 +45,8 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
   // 🚀 MEMORIA PERSISTENTE: Cliente seleccionado (opcional, por defecto Cliente Varios)
   // Fase 11.3: boletas y facturas (null = facturación apagada: la Caja cobra con Nota de venta como siempre)
   const [facturacion, setFacturacion] = useState<FacturacionCaja | null>(null);
+  const [cpeConProblema, setCpeConProblema] = useState(0);
+  const [verComprobantes, setVerComprobantes] = useState(false);
   const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(() => {
     const guardado = localStorage.getItem('evicamp_cliente_pos');
     return guardado ? JSON.parse(guardado) : null;
@@ -891,6 +894,14 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
   };
   // Fase 11.3: ¿esta tienda emite boletas/facturas? (Ajustes > Facturación)
   useEffect(() => { cargarFacturacionCaja().then(setFacturacion); }, []);
+  // Fase 11.4: ¿quedó algún comprobante con error o atascado? (se revisa al vender y cada 2 minutos)
+  useEffect(() => {
+    if (!facturacion) { setCpeConProblema(0); return; }
+    const revisar = () => contarComprobantesConProblema().then(setCpeConProblema);
+    revisar();
+    const t = setInterval(revisar, 120000);
+    return () => clearInterval(t);
+  }, [facturacion, refreshReport]);
 
   // 6. PROCESAR PAGO (GUARDA VENTA, REDUCE STOCK Y REGISTRA FIADOS)
   const handleConfirmPayment = async (
@@ -1153,6 +1164,28 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         </div>
       )}
       
+      {/* FASE 11.4: aviso de comprobantes con problema (abre la pantalla "Comprobantes") */}
+      {cpeConProblema > 0 && (
+        <button
+          id="btn-aviso-comprobantes"
+          type="button"
+          onClick={() => setVerComprobantes(true)}
+          className="absolute bottom-2 left-2 z-20 bg-[var(--color-danger)] text-white px-3 py-2 border-2 border-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)] text-[12px] font-black uppercase tracking-wider cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+          title="Ver los comprobantes con problema"
+        >
+          ⚠ {cpeConProblema} {cpeConProblema === 1 ? 'comprobante' : 'comprobantes'} con problema
+        </button>
+      )}
+      <ModalComprobantes
+        isOpen={verComprobantes}
+        filtroInicial="PROBLEMAS"
+        onClose={() => {
+          setVerComprobantes(false);
+          contarComprobantesConProblema().then(setCpeConProblema);
+          setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
+        }}
+      />
+
       {/* SELECTOR DE PANEL (solo tablet/celular) */}
       <div className="lg:hidden grid grid-cols-2 border-2 border-[var(--color-ink)] bg-white shrink-0">
         <button
