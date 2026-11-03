@@ -7,6 +7,16 @@
 
 ---
 
+## 03/11/2026 (80) · Claude — PASE de las fases 8, 9, 10 y 11 a EVICAMP, clientes y GitHub
+- **Dueño:** "súbelo todo a evicamp y siumax para mis clientes y a mi github". Aclaró: **EVICAMP NO PAGA** (primer cliente, ayudó a hacer SiuMax): NUNCA Mercado Pago / aviso de plan / "Pagar plan". Comprobado: Evicamp no tiene `/suscripcion.json` (devuelve el index), así que no ve nada de eso; el Panel solo lo escribe en clientes `cli_*` (hoy no hay ninguno).
+- **Ensayo primero** (`ai-scripts/pruebas/ensayo-fases8-11-evicamp.cjs`): respaldo → copia `evicamp_ensayo` → seguridad-sesion.sql completo → 0 errores → copia borrada.
+- **Pase real** (`aplicar-fases8-11-evicamp.cjs`): respaldo `/var/lib/postgresql/respaldo-evicamp-pase-fases8-11-2026-11-03T19-14-22-973Z.dump` → SQL completo con ON_ERROR_STOP y lock_timeout 5s, SIN reiniciar la API (3,4 s, 0 errores) → NOTIFY pgrst. 3544 ventas y 1259 productos intactos. **Facturación apagada** en Evicamp (no está en el facturador; se habilitaría desde el Panel solo si el dueño lo decide).
+- `deploy.cjs todos` → index-a-54mn9G.js en evicamp, siumax y clientes; API de Evicamp 401 sin sesión; login sin errores JS.
+- GitHub: main = merge de `fase-11-sunat` (ver commit del merge) y push.
+- Falta: el dueño o sus cajeros abren Evicamp de nuevo (Ctrl+F5 / reabrir el .exe). Cosas nuevas que verán: producción y recetas (8), tiendas y traspasos (9), Tienda Web (10), cambio/devolución con nota de crédito solo si usan boleta/factura (11, apagada).
+
+---
+
 ## 03/11/2026 (79) · Claude — Ajustes de la Fase 11 pedidos por el dueño al probarla (solo siumax)
 - **Ticket:** "c/u" solo si la cantidad ≠ 1, "VUELTO" solo si hay vuelto, razón social no se repite si es igual al nombre; el papel de la vista previa crece con el contenido (`items-start`; antes el QR salía fuera).
 - **Cobro:** colores Nota de venta (gris) / Boleta (naranja) / Factura (rojo) (`COLOR_COMPROBANTE`); ← → entre documento y nombre; ↑ ↓ cambian de fila (nunca al costado).
