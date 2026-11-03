@@ -7,6 +7,16 @@
 
 ---
 
+## 03/11/2026 (madrugada, 72) · Claude — FASE 11.2 hecha (impuesto por producto y bolsas) + 2 errores de la ficha del producto
+- **Dueño:** "si hazlo ok" a hacer TODAS las partes de la Fase 11 en orden (11.2 → 11.8), avisando al terminar cada una.
+- **11.2 (commit 4ad13a0):** `products.tipo_igv` (GRAVADO/EXONERADO/INAFECTO) y `es_bolsa`; `sale_details` copia ambos al vender (trigger `trg_impuesto_linea_venta`); `facturacion_config.icbper_monto` (0.50, editable en Ajustes > Facturación). Ficha del producto: fila "Impuesto" + "Es bolsa plástica" después de Garantía (ids `btn-igv-*`, `btn-es-bolsa-producto`), teclado conectado. Facturador 11.2.0 separa gravado/exonerado/inafecto/ICBPER (la bolsa: lo cobrado incluye el ICBPER).
+- **Errores encontrados al probar (están también en EVICAMP, falta subir el arreglo con aviso del dueño):**
+  1. La ficha cargaba "NO-SKU" (texto que la lista pone a productos sin código) como código real: con 2+ productos sin código, editar uno daba "ya existe en otro producto" y NO guardaba.
+  2. Revisión de duplicados comparaba ids con `===` → ahora `String()`.
+- Pruebas: `prueba-fase11-2-ui.mjs` 20/20; 11.1 sigue 44/44. Solo siumax.
+
+---
+
 ## 02/11/2026 (noche, 71) · Claude — Datos del negocio para SUNAT movidos a "Datos de la empresa"
 - **Dueño:** *"los datos de la empresa tienen que estar en datos de la empresa... que lo agarre de ahí para tener el orden"*.
 - **Hecho (commit 91e8276):** razón social, ubigeo y régimen ahora están en `empresa_config` (Ajustes > Datos de la empresa, junto al RUC y la dirección que ya estaban). `facturacion_config` ya no los tiene. El trigger (régimen) y el facturador 11.1.1 (RUC y razón social) los leen de `empresa_config`. Facturación solo los MUESTRA y tiene el botón "Cambiar en Datos de la empresa" (`#fact-btn-ir-empresa`).
