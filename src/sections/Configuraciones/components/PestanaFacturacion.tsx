@@ -3,7 +3,6 @@ import { FileText, Save, Loader2, KeyRound, PlugZap, CircleCheck, CircleAlert, S
 import { supabase } from '../../../db/supabase';
 import { avisar, confirmar } from '../../../utils/dialogos';
 import { rucValido } from '../../../utils/documento';
-import { ModalComprobantes } from '../../../components/ModalComprobantes';
 
 // Ajustes > Facturación (fase 11.1): series, numeración, modo y proveedor. Los datos del negocio
 // (RUC, razón social, dirección, régimen) se toman de Ajustes > Datos de la empresa: un solo lugar.
@@ -88,7 +87,6 @@ export const PestanaFacturacion: React.FC<{ onIrEmpresa: () => void }> = ({ onIr
   const [guardando, setGuardando] = useState(false);
   const [probando, setProbando] = useState(false);
   const [, setReloj] = useState(0);
-  const [verComprobantes, setVerComprobantes] = useState(false);
   // Fase 11.8: directo a SUNAT (usuario SOL secundario y certificado digital)
   const [solUsuario, setSolUsuario] = useState('');
   const [solClave, setSolClave] = useState('');
@@ -474,13 +472,6 @@ export const PestanaFacturacion: React.FC<{ onIrEmpresa: () => void }> = ({ onIr
         </div>
       </section>
 
-      {/* Comprobantes emitidos (fila propia: ↓ desde aquí llega a "Guardar", el botón principal) */}
-      <div>
-        <button id="fact-btn-comprobantes" data-fila="comprobantes" type="button" onClick={() => setVerComprobantes(true)} className={claseOpcion(false)}>
-          <span className="inline-flex items-center gap-1.5"><FileText size={14} /> Ver comprobantes emitidos</span>
-        </button>
-      </div>
-
       {/* Guardar */}
       <div className="flex justify-end pt-3 border-t-2 border-[var(--color-ink)]">
         <button
@@ -494,7 +485,6 @@ export const PestanaFacturacion: React.FC<{ onIrEmpresa: () => void }> = ({ onIr
           {guardando ? <><Loader2 size={16} className="animate-spin" /> Guardando…</> : <><Save size={16} /> Guardar cambios</>}
         </button>
       </div>
-      <ModalComprobantes isOpen={verComprobantes} onClose={() => { setVerComprobantes(false); setTimeout(() => document.getElementById('fact-btn-comprobantes')?.focus(), 50); }} />
     </div>
   );
 };

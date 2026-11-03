@@ -98,15 +98,14 @@ try {
   ok('Al cerrar el ticket, el selector vuelve a "Reimprimir"', (await foco()) === 'btn-comp-reimprimir');
   await tecla('Escape'); await tecla('Escape'); await pausa(500);
 
-  // 3. Ajustes > Facturación: botón "Ver comprobantes emitidos"
+  // 3. Comprobantes está SOLO en Finanzas (el dueño pidió no duplicarlo en Ajustes > Facturación)
   await page.click('#sidebar-btn-configuracion'); await pausa(1500);
   await page.focus('#btn-tab-empresa');
   for (let i = 0; i < 8 && (await foco()) !== 'btn-tab-facturacion'; i++) await tecla('ArrowRight');
   await tecla('Enter'); await pausa(1500);
-  await page.focus('#fact-btn-comprobantes'); await tecla('Enter'); await pausa(1200);
-  ok('Ajustes > Facturación abre "Comprobantes"', (await foco()) === 'comp-filtro-HOY');
-  await tecla('Escape'); await pausa(500);
-  ok('Al cerrar vuelve al botón', (await foco()) === 'fact-btn-comprobantes');
+  ok('Ajustes > Facturación ya no tiene "Ver comprobantes emitidos"', !(await page.$('#fact-btn-comprobantes')) && !/Ver comprobantes emitidos/i.test(await texto()));
+  await page.focus('#fact-btn-probar'); await tecla('ArrowDown');
+  ok('↓ desde "Probar conexión" llega directo a "Guardar cambios"', (await foco()) === 'fact-btn-guardar');
 
   // 4. SIN INTERNET: la Caja recuerda la facturación, cobra con boleta "por numerar" y se numera al volver
   await page.click('#sidebar-btn-pos'); await page.waitForSelector('#buscador-global-pos'); await pausa(2500);
