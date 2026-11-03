@@ -345,7 +345,7 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
         {/* CONTENEDOR CENTRAL */}
         <div 
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 bg-[var(--color-bg)] relative flex justify-center"
+          className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 bg-[var(--color-bg)] relative flex items-start justify-center"
         >
           {isLoadingDetalles ? (
             <div className="absolute inset-0 bg-[var(--color-surface)]/85 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -360,7 +360,7 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
             </div>
           ) : vista === 'TICKET' ? (
             /* 🧾 PREVISUALIZACIÓN VISUAL DEL TICKET REAL */
-            <div className="transform sm:scale-105 origin-top pb-6 w-full flex justify-center">
+            <div className="transform sm:scale-105 origin-top pb-6 w-full flex items-start justify-center">
               <TicketImprimible
                 ref={printContainerRef}
                 cart={detallesTicket.map((d) => ({

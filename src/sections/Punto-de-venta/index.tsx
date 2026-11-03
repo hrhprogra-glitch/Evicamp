@@ -1323,7 +1323,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
             </div>
             
             {/* CONTENEDOR DEL TICKET (Fondo gris y zoom automático) */}
-            <div className="flex-1 overflow-y-auto p-6 bg-[var(--color-bg)] flex justify-center custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 bg-[var(--color-bg)] flex items-start justify-center custom-scrollbar">
               {/* Le aplicamos un scale-110 para que en la PC se vea un poco más grande y nítido */}
               <div className="transform sm:scale-110 origin-top pb-10">
                 <TicketImprimible
