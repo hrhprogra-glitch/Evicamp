@@ -266,6 +266,7 @@
 - **La clave del proveedor** está en el esquema `privado` (sin permisos para la API). Se escribe con `fn_guardar_credenciales_facturacion` y se ve enmascarada con `fn_estado_credenciales_facturacion`. Nunca ponerla en una tabla de `public`: cualquier sesión puede LEER cualquier tabla de public (fn_verificar_peticion solo revisa permisos al escribir).
 - **Funciones internas** (ej. `fn_siguiente_correlativo`): `REVOKE EXECUTE ... FROM PUBLIC`, porque por defecto la API las puede llamar.
 - **El facturador** corre en el VPS como usuario postgres (por eso salta las protecciones de la API). Se actualiza con `node ai-scripts/facturador-servidor.cjs <bases...>` (no corta ventas). Ver sus mensajes: `journalctl -u siumax-facturador -f`.
+- **Los datos del negocio (RUC, razón social, dirección, ubigeo, régimen) están SOLO en `empresa_config` (Ajustes > Datos de la empresa)** (02/11/2026, pedido del dueño: "un solo lugar, para tener el orden"). Facturación los lee de ahí; no duplicar datos de la empresa en otras tablas o pestañas.
 - **RUC de prueba:** usar uno con dígito verificador correcto (ej. 20601234565); la pantalla valida con `rucValido()`.
 
 ## 16. Lecciones Técnicas y Reglas de Diseño de Fases 9 y 10 (Almacenes y Tienda Web)

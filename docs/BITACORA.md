@@ -7,6 +7,14 @@
 
 ---
 
+## 02/11/2026 (noche, 71) · Claude — Datos del negocio para SUNAT movidos a "Datos de la empresa"
+- **Dueño:** *"los datos de la empresa tienen que estar en datos de la empresa... que lo agarre de ahí para tener el orden"*.
+- **Hecho (commit 91e8276):** razón social, ubigeo y régimen ahora están en `empresa_config` (Ajustes > Datos de la empresa, junto al RUC y la dirección que ya estaban). `facturacion_config` ya no los tiene. El trigger (régimen) y el facturador 11.1.1 (RUC y razón social) los leen de `empresa_config`. Facturación solo los MUESTRA y tiene el botón "Cambiar en Datos de la empresa" (`#fact-btn-ir-empresa`).
+- El campo "Razón Social / Nombre Comercial" pasó a "Nombre Comercial (sale en el ticket)"; la razón social de SUNAT es un campo aparte. Datos de la empresa ahora valida el RUC (dígito verificador) y el ubigeo.
+- Prueba con teclado `prueba-fase11-1-ui.mjs`: 44/44 (devuelve los datos de la empresa como estaban). Solo siumax.
+
+---
+
 ## 02/11/2026 (noche, 70) · Claude — FASE 11.1 hecha (facturación electrónica: base + facturador + Ajustes)
 - **Dueño:** "ok" al plan de la Fase 11 (empezar por 11.1). Rama nueva **`fase-11-sunat`** (sale de `fase-9-10-almacenes-catalogo`, trae 8, 9 y 10). Commit 9e6d6fd.
 - **Base (siumax):** `facturacion_config` (emisor, series, modo SIMULADO/PRUEBA/REAL, por defecto NOTA), clave del proveedor en **`privado.facturacion_credenciales`** (la API no la lee: probado HTTP 404), `cpe_correlativos` (numeración atómica) y columnas **`cpe_*`** en `sales`. **`sunat_status` NO se toca** (es el estado interno ACEPTADO/ANULADO que filtran todos los reportes).

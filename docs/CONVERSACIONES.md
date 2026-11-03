@@ -603,3 +603,5 @@
 - **Dueño:** *"perfecto volvamos a la fase 11 dime tu plan como lo haremos como funcionara y como solucionara el problema de la sunat"*.
 - Claude explicó el plan completo (flujo Caja → facturador en el VPS → Nubefact → SUNAT, copia propia, 8 partes, pruebas en siumax en modo prueba, Evicamp solo con aviso) y las decisiones pendientes. Detalle en PLAN §7. Esperando OK.
 - **Dueño:** *"ok"* (al plan de la Fase 11). Claude hizo la **11.1** en la rama `fase-11-sunat`: base de datos (configuración, clave protegida, numeración, columnas cpe_*), el facturador del servidor (modo simulado probado; Nubefact listo para conectar) y Ajustes > Facturación con teclado (31/31). Solo siumax; Evicamp intacto.
+- **Dueño:** *"antes dime el ruc que probamos para crear la cuenta nubefact y explícame por qué en ajustes está en facturación los datos de la empresa; tienen que estar en datos de la empresa... que lo agarre de ahí para tener el orden"*.
+  - Claude movió razón social, ubigeo y régimen a Datos de la empresa; Facturación solo los muestra (commit 91e8276, prueba 44/44). Le explicó que el RUC de las pruebas (20601234565) es inventado y que Nubefact necesita un RUC real.
