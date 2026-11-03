@@ -7,6 +7,13 @@
 
 ---
 
+## 03/11/2026 (mañana, 76) · Claude — FASE 11.6 hecha (reporte para el contador)
+- `src/components/ReporteContador.tsx` (`armarRegistro(mes)`, `descargarRegistroCSV`), botón `#btn-comp-reporte` en Comprobantes. CSV con BOM (Excel lo abre directo), notas de crédito en negativo, notas de venta solo en el resumen. Sin librería de Excel (se evitó agregar una pesada).
+- El ZIP de PDF/XML del mes NO se hizo: las copias viven en el VPS (`/var/lib/siumax-cpe`) y con Nubefact cada fila trae el enlace del PDF; si el dueño lo pide, hace falta un servicio de descarga.
+- Prueba 18/18. Solo siumax.
+
+---
+
 ## 03/11/2026 (mañana, 75) · Claude — FASE 11.5 hecha (notas de crédito)
 - **Commit 825df14.** Tabla `notas_credito` (aparte de `sales`; serie BC01/FC01 por `trg_asignar_nota_credito`; la API solo lee). Motivos: 01 anulación (al anular), 07 devolución por ítem.
 - `fn_anular_venta` ahora, si la venta tiene boleta/factura no rechazada, crea la NC por todo y usa `siumax.cpe_interno` para marcar ANULADO; si ya hubo devoluciones, pide "Devolver productos". Devuelve `nota_credito` (Finanzas lo muestra).
