@@ -117,6 +117,7 @@ AS $$
     WHEN 'POST /rpc/fn_guardar_credenciales_sunat'       THEN ARRAY['gerencia_configuracion_sistema']
     -- Devolver parte de una venta con boleta/factura (nota de crédito, fase 11.5): como anular
     WHEN 'POST /rpc/fn_devolver_con_nota_credito'        THEN ARRAY['reportes_anular_ventas']
+    WHEN 'POST /rpc/fn_cambiar_con_nota_credito'         THEN ARRAY['reportes_anular_ventas']
     -- Basta con la sesión
     WHEN 'PATCH /yape_notifications' THEN ARRAY[]::text[]
     WHEN 'POST /rpc/fn_sesion_activa' THEN ARRAY[]::text[]
@@ -3272,6 +3273,109 @@ BEGIN
     cert_pfx = EXCLUDED.cert_pfx, cert_clave = EXCLUDED.cert_clave, actualizado_por = EXCLUDED.actualizado_por, updated_at = now();
   UPDATE public.facturacion_config SET prueba_at = NULL, prueba_ok = NULL, prueba_mensaje = NULL WHERE id = 1;
   RETURN public.fn_estado_credenciales_facturacion();
+END;
+$$;
+
+-- -------------------------------------------------------------------------------------
+-- CAMBIO DE PRODUCTO CON BOLETA/FACTURA (03/11/2026, pedido del dueño)
+-- Una boleta/factura aceptada no se modifica: en UNA transacción se emite la nota de crédito por lo
+-- devuelto (fn_devolver_con_nota_credito: stock de vuelta + egreso en la caja) y una venta nueva con el
+-- MISMO tipo de comprobante y cliente por lo que se lleva (los triggers numeran y descuentan el stock).
+-- Pagos de la venta nueva: lo devuelto cuenta como efectivo (el egreso de la nota lo compensa) + la diferencia.
+-- -------------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.fn_cambiar_con_nota_credito(p_sale_id bigint, p_detail_id bigint, p_cantidad numeric,
+                                                              p_producto_nuevo bigint, p_cantidad_nueva numeric,
+                                                              p_pago_efectivo numeric DEFAULT 0, p_pago_yape numeric DEFAULT 0,
+                                                              p_pago_tarjeta numeric DEFAULT 0, p_sesion_caja text DEFAULT NULL,
+                                                              p_motivo text DEFAULT NULL, p_serie_devuelta text DEFAULT NULL,
+                                                              p_serie_nueva text DEFAULT NULL)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_emp record;
+  v_venta public.sales%ROWTYPE;
+  v_det public.sale_details%ROWTYPE;
+  v_prod public.products%ROWTYPE;
+  v_nueva public.sales%ROWTYPE;
+  v_nc jsonb;
+  v_devuelto numeric;
+  v_total numeric;
+  v_dif numeric;
+  v_ef numeric := round(coalesce(p_pago_efectivo, 0), 2);
+  v_yape numeric := round(coalesce(p_pago_yape, 0), 2);
+  v_tarjeta numeric := round(coalesce(p_pago_tarjeta, 0), 2);
+  v_cash numeric;
+  v_metodos text[];
+  v_id bigint := (extract(epoch FROM clock_timestamp()) * 1000)::bigint;
+BEGIN
+  SELECT * INTO v_emp FROM fn_empleado_de_sesion();
+  IF v_emp.id IS NULL THEN RAISE EXCEPTION 'Sesión no válida.'; END IF;
+  IF NOT fn_tiene_permiso(v_emp.permisos, ARRAY['reportes_anular_ventas']) THEN
+    RAISE EXCEPTION 'No tienes permiso para cambios ni devoluciones.';
+  END IF;
+  IF p_sesion_caja IS NULL THEN RAISE EXCEPTION 'Abre la caja para hacer el cambio (el dinero entra y sale de la caja).'; END IF;
+
+  SELECT * INTO v_venta FROM public.sales WHERE id = p_sale_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'No se encontró la venta.'; END IF;
+  SELECT * INTO v_det FROM public.sale_details WHERE id = p_detail_id AND sale_id = p_sale_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Ese producto no es de esta venta.'; END IF;
+  SELECT * INTO v_prod FROM public.products WHERE id = p_producto_nuevo AND is_active = 1;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Elige el producto nuevo que se lleva el cliente.'; END IF;
+  IF coalesce(p_cantidad_nueva, 0) <= 0 THEN RAISE EXCEPTION 'La cantidad nueva debe ser mayor a cero.'; END IF;
+
+  -- 1. Nota de crédito por lo devuelto (valida cantidades, fiado, anulada, permiso; devuelve stock; egreso en caja)
+  v_nc := public.fn_devolver_con_nota_credito(p_sale_id,
+            jsonb_build_array(jsonb_build_object('detail_id', p_detail_id, 'cantidad', p_cantidad)),
+            p_sesion_caja, coalesce(nullif(trim(p_motivo), ''), 'CAMBIO DE PRODUCTO'));
+  v_devuelto := (v_nc ->> 'total')::numeric;
+
+  -- 2. Pagos de la venta nueva
+  v_total := round(coalesce(v_prod.price, 0) * p_cantidad_nueva, 2);
+  v_dif := v_total - v_devuelto;
+  IF v_dif > 0 THEN
+    IF v_ef < 0 OR v_yape < 0 OR v_tarjeta < 0 OR abs(v_ef + v_yape + v_tarjeta - v_dif) >= 0.01 THEN
+      RAISE EXCEPTION 'El pago de la diferencia (S/ %) no cuadra.', to_char(v_dif, 'FM999990.00');
+    END IF;
+    v_cash := v_devuelto + v_ef;
+  ELSE
+    v_cash := v_total; v_yape := 0; v_tarjeta := 0;   -- la tienda devuelve |diferencia| (ya salió todo en el egreso)
+  END IF;
+  v_metodos := array_remove(ARRAY[CASE WHEN v_cash > 0 THEN 'EFECTIVO' END, CASE WHEN v_yape > 0 THEN 'YAPE' END,
+                                  CASE WHEN v_tarjeta > 0 THEN 'TARJETA' END], NULL);
+
+  -- 3. Venta nueva con el mismo comprobante y cliente (trg_asignar_comprobante pone serie y número)
+  INSERT INTO public.sales (id, total, payment_type, amount_cash, amount_yape, amount_card, amount_credit, customer_id, customer_name,
+                            sunat_status, created_at, is_synced, doc_type, cpe_cliente_tipo_doc, cpe_cliente_num_doc,
+                            cpe_cliente_nombre, cpe_cliente_direccion)
+  VALUES (v_id, v_total, CASE WHEN cardinality(v_metodos) = 1 THEN v_metodos[1] WHEN cardinality(v_metodos) > 1 THEN 'MIXTO' ELSE 'EFECTIVO' END,
+          v_cash, v_yape, v_tarjeta, 0, v_venta.customer_id, v_venta.customer_name, 'ACEPTADO', now(), 1, v_venta.doc_type,
+          v_venta.cpe_cliente_tipo_doc, v_venta.cpe_cliente_num_doc, v_venta.cpe_cliente_nombre, v_venta.cpe_cliente_direccion)
+  RETURNING * INTO v_nueva;
+
+  -- El trigger de la venta descuenta el stock (lotes y kardex) como en la Caja
+  INSERT INTO public.sale_details (sale_id, product_id, product_name, quantity, price_at_moment, subtotal, numero_serie, garantia_hasta, is_synced)
+  VALUES (v_id, v_prod.id, v_prod.name, p_cantidad_nueva, v_prod.price, v_total, nullif(trim(p_serie_nueva), ''),
+          CASE WHEN coalesce(v_prod.meses_garantia, 0) > 0 THEN (current_date + make_interval(months => v_prod.meses_garantia))::date END, 1);
+
+  -- 4. Registro del cambio (historial de cambios)
+  INSERT INTO public.cambios_productos (id, sale_id, session_id, usuario, customer_id, customer_name, producto_devuelto_id,
+                                        producto_devuelto_nombre, cantidad_devuelta, precio_devuelto, serie_devuelta,
+                                        producto_nuevo_id, producto_nuevo_nombre, cantidad_nueva, precio_nuevo, serie_nueva,
+                                        diferencia, payment_type, motivo)
+  VALUES (v_id + 1, p_sale_id, p_sesion_caja, v_emp.nombre, v_venta.customer_id, v_venta.customer_name, v_det.product_id,
+          v_det.product_name, p_cantidad, round(v_devuelto / nullif(p_cantidad, 0), 2), nullif(trim(p_serie_devuelta), ''),
+          v_prod.id, v_prod.name, p_cantidad_nueva, v_prod.price, nullif(trim(p_serie_nueva), ''), v_dif,
+          CASE WHEN v_dif > 0 THEN (CASE WHEN cardinality(array_remove(ARRAY[CASE WHEN v_ef > 0 THEN 'EFECTIVO' END,
+            CASE WHEN v_yape > 0 THEN 'YAPE' END, CASE WHEN v_tarjeta > 0 THEN 'TARJETA' END], NULL)) > 1 THEN 'MIXTO'
+            WHEN v_yape > 0 THEN 'YAPE' WHEN v_tarjeta > 0 THEN 'TARJETA' ELSE 'EFECTIVO' END) ELSE 'EFECTIVO' END,
+          coalesce(nullif(trim(p_motivo), ''), 'CAMBIO DE PRODUCTO'));
+
+  RETURN jsonb_build_object('nota_credito', v_nc ->> 'nota_credito', 'devuelto', v_devuelto,
+    'comprobante', v_nueva.doc_serial || '-' || lpad(v_nueva.doc_number, 8, '0'), 'doc_type', v_nueva.doc_type,
+    'venta_nueva', v_id, 'total_nuevo', v_total, 'diferencia', v_dif, 'cambio_id', v_id + 1);
 END;
 $$;
 

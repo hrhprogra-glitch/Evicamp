@@ -1230,7 +1230,8 @@ export const Finanzas: React.FC = () => {
         initialSaleId={ticketIdParaCambio}
         sessionId={sessionActiva?.id}
         onCambioGuardado={() => {
-          void cargarDatosCaja();
+          // Silencioso: con la pantalla de carga se desmonta Finanzas y la ventana perdía el resultado del cambio
+          void cargarDatosCaja(true);
         }}
       />
 

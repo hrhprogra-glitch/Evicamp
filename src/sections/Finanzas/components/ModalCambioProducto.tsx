@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
+import { avisar } from '../../../utils/dialogos';
+import { nombreComprobante, numeroComprobante } from '../../../utils/comprobante';
 import type { CambioProducto } from '../types';
 import type { Product } from '../../Inventario/types';
 
@@ -68,12 +70,20 @@ export const ModalCambioProducto: React.FC<Props> = ({
   const [guardando, setGuardando] = useState<boolean>(false);
   const [cambioFinalizado, setCambioFinalizado] = useState<CambioProducto | null>(null);
 
+  // Ticket con boleta/factura aceptada: no se modifica; se emite nota de crédito (+ comprobante nuevo si es cambio)
+  const [cpe, setCpe] = useState<{ docType: number; numero: string; estado: string } | null>(null);
+  const [soloDevolver, setSoloDevolver] = useState(false);
+  const [resultadoCpe, setResultadoCpe] = useState<{ notaCredito: string; comprobante?: string } | null>(null);
+
   const printAreaRef = useRef<HTMLDivElement>(null);
 
   // Cargar ticket al abrir si hay initialSaleId
   useEffect(() => {
     if (isOpen) {
       setCambioFinalizado(null);
+      setCpe(null);
+      setSoloDevolver(false);
+      setResultadoCpe(null);
       setTicketError(null);
       setSelectedDetalleIndex(-1);
       setProductoNuevo(null);
@@ -102,12 +112,9 @@ export const ModalCambioProducto: React.FC<Props> = ({
   useEffect(() => {
     if (!isOpen) return;
 
+    // Escape NO se detiene aquí (antes sí, y la ventana no se cerraba nunca): lo maneja useCerrarConEscape;
+    // el buscador del catálogo lo detiene él mismo cuando solo cierra su lista.
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        return;
-      }
-
       if (e.key === 'Tab') {
         e.stopPropagation();
         const modal = document.getElementById('modal-cambio-producto');
@@ -271,11 +278,20 @@ export const ModalCambioProducto: React.FC<Props> = ({
         return;
       }
 
-      // Fase 11.5: una boleta/factura enviada a SUNAT no se cambia. Se devuelve con nota de crédito y se vende de nuevo.
+      // Una boleta/factura enviada a SUNAT no se modifica: el cambio o la devolución salen con nota de crédito
+      // (y un comprobante nuevo por lo que se lleva). SUNAT tiene que haberla aceptado antes.
+      setCpe(null);
       if (venta.doc_type && venta.cpe_estado !== 'RECHAZADO') {
-        const numero = venta.doc_serial && venta.doc_number ? ` ${venta.doc_serial}-${String(venta.doc_number).padStart(8, '0')}` : '';
-        setTicketError(`El ticket #${String(venta.id).slice(-6)} tiene ${venta.doc_type === 1 ? 'FACTURA' : 'BOLETA'} electrónica${numero}: no se puede cambiar. Ve a Finanzas > Comprobantes, ábrelo y usa "Devolver productos" (emite la nota de crédito y devuelve el stock); luego vende el producto nuevo en la Caja.`);
-        return;
+        const numero = numeroComprobante(venta.doc_serial, venta.doc_number) || 'POR NUMERAR';
+        if (!['ACEPTADO', 'OBSERVADO'].includes(String(venta.cpe_estado))) {
+          setTicketError(`La ${nombreComprobante(venta.doc_type).toLowerCase()} ${numero} todavía no fue aceptada por SUNAT (${venta.cpe_estado || 'PENDIENTE'}). Cuando la acepte podrás cambiar o devolver; si quedó con error, reenvíala desde el Historial.`);
+          return;
+        }
+        if (Number((venta as { amount_credit?: number }).amount_credit || 0) > 0) {
+          setTicketError(`La ${nombreComprobante(venta.doc_type).toLowerCase()} ${numero} es una venta al crédito (fiado): para devolver, anúlala completa.`);
+          return;
+        }
+        setCpe({ docType: venta.doc_type, numero, estado: String(venta.cpe_estado) });
       }
 
       // 4. Obtener detalles de productos vendidos usando el ID real de la venta
@@ -335,7 +351,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
 
   // Cálculos financieros
   const totalDevuelto = itemDevuelto ? Math.round(itemDevuelto.price_at_moment * cantDevolverNum * 100) / 100 : 0;
-  const totalNuevo = productoNuevo ? Math.round(productoNuevo.price * cantNuevaNum * 100) / 100 : 0;
+  const totalNuevo = productoNuevo && !soloDevolver ? Math.round(productoNuevo.price * cantNuevaNum * 100) / 100 : 0;
   const diferencia = Math.round((totalNuevo - totalDevuelto) * 100) / 100;
 
   // Montos ingresados en pago mixto
@@ -346,7 +362,8 @@ export const ModalCambioProducto: React.FC<Props> = ({
   const faltaCubrir = Math.round(Math.max(0, diferencia - totalCubierto) * 100) / 100;
   const sobrante = Math.round(Math.max(0, totalCubierto - diferencia) * 100) / 100;
   const pagoValido = diferencia <= 0 || (totalCubierto > 0 && Math.abs(diferencia - totalCubierto) < 0.01);
-  const puedeConfirmar = Boolean(ticketData && itemDevuelto && productoNuevo && !guardando && (diferencia <= 0 || pagoValido));
+  const puedeConfirmar = Boolean(ticketData && itemDevuelto && (productoNuevo || (cpe && soloDevolver)) && !guardando && (diferencia <= 0 || pagoValido));
+  const tipoCpe = cpe ? (cpe.docType === 1 ? 'factura' : 'boleta') : '';
 
   const partesMetodo: string[] = [];
   if (numEf > 0) partesMetodo.push(`Efectivo: S/ ${numEf.toFixed(2)}`);
@@ -387,7 +404,73 @@ export const ModalCambioProducto: React.FC<Props> = ({
     }
   }, [diferencia]);
 
+  // Boleta/factura: nota de crédito por lo devuelto (+ comprobante nuevo si se lleva otro producto), todo en la base
+  const confirmarConNotaCredito = async () => {
+    if (!ticketData || !itemDevuelto || !cpe || !puedeConfirmar) return;
+    if (!sessionId) { await avisar('Abre la caja para hacer cambios o devoluciones: el dinero entra y sale de la caja.'); return; }
+    setGuardando(true);
+    try {
+      let notaCredito = '';
+      let comprobante: string | undefined;
+      let dif = -totalDevuelto;
+      if (soloDevolver) {
+        const { data, error } = await supabase.rpc('fn_devolver_con_nota_credito', {
+          p_sale_id: Number(ticketData.id),
+          p_items: [{ detail_id: itemDevuelto.id, cantidad: cantDevolverNum }],
+          p_sesion_caja: sessionId,
+          p_motivo: motivo.trim() || 'DEVOLUCIÓN DE PRODUCTOS',
+        });
+        if (error) throw error;
+        notaCredito = data?.nota_credito || '';
+        dif = -Number(data?.total ?? totalDevuelto);
+      } else if (productoNuevo) {
+        const { data, error } = await supabase.rpc('fn_cambiar_con_nota_credito', {
+          p_sale_id: Number(ticketData.id),
+          p_detail_id: itemDevuelto.id,
+          p_cantidad: cantDevolverNum,
+          p_producto_nuevo: Number(productoNuevo.id),
+          p_cantidad_nueva: cantNuevaNum,
+          p_pago_efectivo: diferencia > 0 ? numEf : 0,
+          p_pago_yape: diferencia > 0 ? numYap : 0,
+          p_pago_tarjeta: diferencia > 0 ? numTar : 0,
+          p_sesion_caja: sessionId,
+          p_motivo: motivo.trim() || null,
+          p_serie_devuelta: serieDevuelta.trim() || null,
+          p_serie_nueva: serieNueva.trim() || null,
+        });
+        if (error) throw error;
+        notaCredito = data?.nota_credito || '';
+        comprobante = data?.comprobante || undefined;
+        dif = Number(data?.diferencia ?? diferencia);
+      }
+      setResultadoCpe({ notaCredito, comprobante });
+      setCambioFinalizado({
+        id: Date.now(),
+        sale_id: Number(ticketData.id),
+        fecha: new Date().toISOString(),
+        customer_name: ticketData.customer_name,
+        producto_devuelto_nombre: itemDevuelto.product_name,
+        cantidad_devuelta: cantDevolverNum,
+        precio_devuelto: itemDevuelto.price_at_moment,
+        serie_devuelta: serieDevuelta.trim() || null,
+        producto_nuevo_nombre: soloDevolver || !productoNuevo ? '' : productoNuevo.name,
+        cantidad_nueva: soloDevolver ? 0 : cantNuevaNum,
+        precio_nuevo: soloDevolver || !productoNuevo ? 0 : productoNuevo.price,
+        serie_nueva: soloDevolver ? null : serieNueva.trim() || null,
+        diferencia: dif,
+        payment_type: dif > 0 ? (partesMetodo.length > 1 ? `MIXTO (${partesMetodo.join(', ')})` : numYap > 0 ? 'YAPE' : numTar > 0 ? 'TARJETA' : 'EFECTIVO') : 'EFECTIVO',
+        motivo: motivo.trim() || (soloDevolver ? 'DEVOLUCIÓN DE PRODUCTOS' : 'CAMBIO DE PRODUCTO'),
+      });
+      onCambioGuardado?.();
+    } catch (err) {
+      await avisar(`No se pudo ${soloDevolver ? 'devolver' : 'hacer el cambio'}: ${err instanceof Error ? err.message : (err as { message?: string })?.message || String(err)}`);
+    } finally {
+      setGuardando(false);
+    }
+  };
+
   const handleConfirmarCambio = async () => {
+    if (cpe) { await confirmarConNotaCredito(); return; }
     if (!ticketData || !itemDevuelto || !productoNuevo || !puedeConfirmar) return;
     setGuardando(true);
 
@@ -626,7 +709,9 @@ export const ModalCambioProducto: React.FC<Props> = ({
             onKeyDown={(e) => {
               if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                if (document.getElementById('input-buscar-nuevo')) {
+                if (document.getElementById('btn-modo-cambio')) {
+                  document.getElementById(soloDevolver ? 'btn-modo-devolver' : 'btn-modo-cambio')?.focus();
+                } else if (document.getElementById('input-buscar-nuevo')) {
                   document.getElementById('input-buscar-nuevo')?.focus();
                 } else if (document.getElementById('select-producto-devuelto')) {
                   document.getElementById('select-producto-devuelto')?.focus();
@@ -648,10 +733,19 @@ export const ModalCambioProducto: React.FC<Props> = ({
               <div className="p-4 bg-emerald-50 border-2 border-emerald-600 text-emerald-950 flex items-center gap-3">
                 <Check size={28} className="text-emerald-600 shrink-0" />
                 <div>
-                  <h3 className="font-black text-sm uppercase">¡Cambio realizado con éxito!</h3>
+                  <h3 className="font-black text-sm uppercase">
+                    {cambioFinalizado.cantidad_nueva === 0 ? '¡Devolución realizada!' : '¡Cambio realizado con éxito!'}
+                  </h3>
                   <p className="text-xs">
                     El stock se ha actualizado y la diferencia financiera se registró en la caja.
                   </p>
+                  {resultadoCpe && (
+                    <p id="resultado-cambio-cpe" className="text-xs font-black mt-1">
+                      Nota de crédito {resultadoCpe.notaCredito}
+                      {resultadoCpe.comprobante ? ` · ${tipoCpe.toUpperCase()} nueva ${resultadoCpe.comprobante}` : ''}
+                      <span className="block font-normal">Se envían a SUNAT solas. Puedes reimprimirlas desde el Historial.</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -661,8 +755,13 @@ export const ModalCambioProducto: React.FC<Props> = ({
                 className="bg-white border-2 border-black p-4 text-xs font-mono max-w-md mx-auto shadow-md"
               >
                 <div className="text-center border-b-2 border-black pb-2 mb-2">
-                  <h4 className="font-black text-sm uppercase">VALE DE CAMBIO DE PRODUCTO</h4>
-                  <p className="text-[10px]">TICKET ORIGINAL: #{String(cambioFinalizado.sale_id).slice(-6)}</p>
+                  <h4 className="font-black text-sm uppercase">{cambioFinalizado.cantidad_nueva === 0 ? 'VALE DE DEVOLUCIÓN' : 'VALE DE CAMBIO DE PRODUCTO'}</h4>
+                  <p className="text-[10px]">TICKET ORIGINAL: #{String(cambioFinalizado.sale_id).slice(-6)}{cpe ? ` · ${tipoCpe.toUpperCase()} ${cpe.numero}` : ''}</p>
+                  {resultadoCpe && (
+                    <p className="text-[10px] font-bold">
+                      NOTA DE CRÉDITO: {resultadoCpe.notaCredito}{resultadoCpe.comprobante ? ` · ${tipoCpe.toUpperCase()} NUEVA: ${resultadoCpe.comprobante}` : ''}
+                    </p>
+                  )}
                   <p className="text-[10px]">FECHA: {new Date(cambioFinalizado.fecha || cambioFinalizado.created_at || Date.now()).toLocaleString('es-PE')}</p>
                   <p className="text-[10px]">CLIENTE: {cambioFinalizado.customer_name || 'CLIENTE'}</p>
                 </div>
@@ -675,12 +774,12 @@ export const ModalCambioProducto: React.FC<Props> = ({
                     {cambioFinalizado.serie_devuelta && <p className="text-[10px] font-mono">Serie/IMEI: {cambioFinalizado.serie_devuelta}</p>}
                   </div>
 
-                  <div className="p-1.5 bg-emerald-50 border border-emerald-200">
+                  {cambioFinalizado.cantidad_nueva > 0 && <div className="p-1.5 bg-emerald-50 border border-emerald-200">
                     <span className="text-[10px] font-black text-emerald-800 uppercase block">PRODUCTO NUEVO ENTREGADO (+)</span>
                     <p className="font-bold uppercase">{cambioFinalizado.cantidad_nueva} × {cambioFinalizado.producto_nuevo_nombre}</p>
                     <p className="text-[11px]">Valor: S/ {(cambioFinalizado.precio_nuevo * cambioFinalizado.cantidad_nueva).toFixed(2)}</p>
                     {cambioFinalizado.serie_nueva && <p className="text-[10px] font-mono">Serie/IMEI: {cambioFinalizado.serie_nueva}</p>}
-                  </div>
+                  </div>}
                 </div>
 
                 <div className="font-black text-xs space-y-1">
@@ -758,6 +857,39 @@ export const ModalCambioProducto: React.FC<Props> = ({
                 )}
               </div>
 
+              {/* BOLETA/FACTURA: cambiar por otro producto o solo devolver (siempre con nota de crédito) */}
+              {ticketData && cpe && (
+                <div className="border-2 border-[var(--color-ink)] bg-white p-3 shadow-[3px_3px_0_0_var(--color-ink)] space-y-2">
+                  <p className="text-[11px] font-bold text-[var(--color-ink)]">
+                    Este ticket tiene <b>{tipoCpe.toUpperCase()} {cpe.numero}</b> aceptada por SUNAT y no se puede modificar.
+                    Lo devuelto sale con una <b>nota de crédito</b>{soloDevolver ? ' y se devuelve el dinero en efectivo' : ` y lo nuevo con una ${tipoCpe} nueva para el mismo cliente`}.
+                  </p>
+                  <div className="flex gap-2">
+                    {([['cambio', 'Cambiar por otro producto', false], ['devolver', 'Solo devolver', true]] as const).map(([id, texto, solo], i) => (
+                      <button
+                        key={id}
+                        id={`btn-modo-${id}`}
+                        type="button"
+                        aria-pressed={soloDevolver === solo}
+                        onClick={() => { setSoloDevolver(solo); if (solo) setProductoNuevo(null); }}
+                        onKeyDown={(e) => {
+                          const ir = (destino: string) => { e.preventDefault(); document.getElementById(destino)?.focus(); };
+                          if (e.key === 'ArrowRight' && i === 0) ir('btn-modo-devolver');
+                          else if (e.key === 'ArrowLeft' && i === 1) ir('btn-modo-cambio');
+                          else if (e.key === 'ArrowUp') ir('btn-cerrar-modal-cambio');
+                          else if (e.key === 'ArrowDown') ir('select-producto-devuelto');
+                        }}
+                        className={`flex-1 py-2 border-2 text-[11px] font-black uppercase cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:ring-offset-1 ${
+                          soloDevolver === solo ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]' : 'bg-white text-[var(--color-ink)] border-[var(--color-border)] hover:border-[var(--color-ink)]'
+                        }`}
+                      >
+                        {texto}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* PASO 1: PRODUCTO A DEVOLVER (DEL TICKET) */}
               {ticketData && (
                 <div className="border-2 border-[var(--color-ink)] bg-white p-3 shadow-[3px_3px_0_0_var(--color-ink)]">
@@ -799,7 +931,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                           }
                         } else if (e.key === 'ArrowUp') {
                           e.preventDefault();
-                          document.getElementById('btn-cerrar-modal-cambio')?.focus();
+                          (document.getElementById(soloDevolver ? 'btn-modo-devolver' : 'btn-modo-cambio') || document.getElementById('btn-cerrar-modal-cambio'))?.focus();
                         }
                       }}
                       className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-ink)] text-xs font-bold p-2 focus:bg-white uppercase focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
@@ -873,7 +1005,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                                 document.getElementById('select-producto-devuelto')?.focus();
                               } else if (e.key === 'ArrowDown') {
                                 e.preventDefault();
-                                document.getElementById('input-buscar-nuevo')?.focus();
+                                (document.getElementById('input-buscar-nuevo') || document.getElementById('input-motivo-cambio'))?.focus();
                               }
                             }}
                             className="w-full bg-white border border-red-300 text-xs font-mono p-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 uppercase"
@@ -891,7 +1023,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
               )}
 
               {/* PASO 2: PRODUCTO NUEVO QUE SE LLEVA (CATÁLOGO) */}
-              {itemDevuelto && (
+              {itemDevuelto && !soloDevolver && (
                 <div className="border-2 border-[var(--color-ink)] bg-white p-3 shadow-[3px_3px_0_0_var(--color-ink)]">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-black">2</span>
@@ -1209,7 +1341,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
               )}
 
               {/* PASO 3: CÁLCULO DE DIFERENCIA Y CONFIRMACIÓN */}
-              {itemDevuelto && productoNuevo && (
+              {itemDevuelto && (productoNuevo || (cpe && soloDevolver)) && (
                 <div className="border-2 border-[var(--color-ink)] bg-white p-3 shadow-[3px_3px_0_0_var(--color-ink)] space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full bg-[var(--color-ink)] text-white flex items-center justify-center text-[10px] font-black">3</span>
@@ -1221,10 +1353,12 @@ export const ModalCambioProducto: React.FC<Props> = ({
                        <span>Valor devuelto:</span>
                       <span className="font-black text-red-600">- S/ {totalDevuelto.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span>Valor nuevo:</span>
-                      <span className="font-black text-emerald-700">+ S/ {totalNuevo.toFixed(2)}</span>
-                    </div>
+                    {!soloDevolver && (
+                      <div className="flex justify-between items-center text-xs">
+                        <span>Valor nuevo:</span>
+                        <span className="font-black text-emerald-700">+ S/ {totalNuevo.toFixed(2)}</span>
+                      </div>
+                    )}
 
                     <div className="border-t-2 border-black pt-2 flex justify-between items-center text-sm font-black">
                       <span>DIFERENCIA A LIQUIDAR:</span>
@@ -1488,8 +1622,10 @@ export const ModalCambioProducto: React.FC<Props> = ({
                             document.getElementById('pago-cambio-efectivo')?.focus();
                           } else if (document.getElementById('input-serie-nueva')) {
                             document.getElementById('input-serie-nueva')?.focus();
-                          } else {
+                          } else if (document.getElementById('input-cantidad-nueva')) {
                             document.getElementById('input-cantidad-nueva')?.focus();
+                          } else {
+                            document.getElementById('input-serie-devuelta')?.focus();
                           }
                         }
                       }}
@@ -1517,7 +1653,10 @@ export const ModalCambioProducto: React.FC<Props> = ({
                         : 'bg-[var(--color-ink)] text-white hover:bg-[var(--color-accent)] hover:text-black cursor-pointer'
                     }`}
                   >
-                    <Check size={18} /> {guardando ? 'Procesando Cambio...' : 'Confirmar y Realizar Cambio'}
+                    <Check size={18} /> {guardando ? 'Procesando...'
+                      : cpe && soloDevolver ? `Emitir nota de crédito y devolver S/ ${totalDevuelto.toFixed(2)}`
+                      : cpe ? `Emitir nota de crédito y ${tipoCpe} nueva`
+                      : 'Confirmar y Realizar Cambio'}
                   </button>
                 </div>
               )}
