@@ -2932,6 +2932,44 @@ BEGIN
 END;
 $$;
 
+-- -------------------------------------------------------------------------------------
+-- FASE 11.2: tipo de IGV por producto y bolsas plásticas (ICBPER)
+-- -------------------------------------------------------------------------------------
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS tipo_igv text NOT NULL DEFAULT 'GRAVADO';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS es_bolsa boolean NOT NULL DEFAULT false;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'products_tipo_igv_valido') THEN
+    ALTER TABLE public.products ADD CONSTRAINT products_tipo_igv_valido CHECK (tipo_igv IN ('GRAVADO', 'EXONERADO', 'INAFECTO'));
+  END IF;
+END $$;
+-- Cada línea guarda el impuesto que tenía el producto AL VENDER (cambiar el producto después no cambia ventas pasadas)
+ALTER TABLE public.sale_details ADD COLUMN IF NOT EXISTS tipo_igv text;
+ALTER TABLE public.sale_details ADD COLUMN IF NOT EXISTS es_bolsa boolean;
+-- Impuesto a las bolsas plásticas por unidad (S/ 0.50 desde 2023); editable por si la ley cambia
+ALTER TABLE public.facturacion_config ADD COLUMN IF NOT EXISTS icbper_monto numeric(6,2) NOT NULL DEFAULT 0.50;
+
+CREATE OR REPLACE FUNCTION public.fn_impuesto_linea_venta()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+BEGIN
+  IF NEW.tipo_igv IS NULL OR NEW.es_bolsa IS NULL THEN
+    SELECT coalesce(NEW.tipo_igv, p.tipo_igv, 'GRAVADO'), coalesce(NEW.es_bolsa, p.es_bolsa, false)
+      INTO NEW.tipo_igv, NEW.es_bolsa
+      FROM public.products p WHERE p.id = NEW.product_id;
+    NEW.tipo_igv := coalesce(NEW.tipo_igv, 'GRAVADO');
+    NEW.es_bolsa := coalesce(NEW.es_bolsa, false);
+  END IF;
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS trg_impuesto_linea_venta ON public.sale_details;
+CREATE TRIGGER trg_impuesto_linea_venta BEFORE INSERT ON public.sale_details
+  FOR EACH ROW EXECUTE FUNCTION public.fn_impuesto_linea_venta();
+
 NOTIFY pgrst, 'reload schema';
 
 

@@ -25,6 +25,9 @@ export interface Product {
   // Fase 6: control de series/IMEI y garantías
   controlaSeries?: boolean;
   mesesGarantia?: number;
+  // Fase 11.2: impuesto del producto para boletas/facturas y bolsas plásticas (ICBPER)
+  tipoIgv?: 'GRAVADO' | 'EXONERADO' | 'INAFECTO';
+  esBolsa?: boolean;
   // Fase 7: tallas y colores (variantes con stock propio)
   tieneVariantes?: boolean;
   variantes?: ProductVariant[];

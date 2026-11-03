@@ -23,4 +23,10 @@ DROP TABLE IF EXISTS public.facturacion_config;
 DROP TABLE IF EXISTS privado.facturacion_credenciales;
 ALTER TABLE public.empresa_config DROP CONSTRAINT IF EXISTS empresa_config_regimen_valido;
 ALTER TABLE public.empresa_config DROP COLUMN IF EXISTS razon_social, DROP COLUMN IF EXISTS ubigeo, DROP COLUMN IF EXISTS regimen;
+-- 11.2
+DROP TRIGGER IF EXISTS trg_impuesto_linea_venta ON public.sale_details;
+DROP FUNCTION IF EXISTS public.fn_impuesto_linea_venta();
+ALTER TABLE public.sale_details DROP COLUMN IF EXISTS tipo_igv, DROP COLUMN IF EXISTS es_bolsa;
+ALTER TABLE public.products DROP CONSTRAINT IF EXISTS products_tipo_igv_valido;
+ALTER TABLE public.products DROP COLUMN IF EXISTS tipo_igv, DROP COLUMN IF EXISTS es_bolsa;
 NOTIFY pgrst, 'reload schema';

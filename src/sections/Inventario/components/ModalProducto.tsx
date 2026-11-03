@@ -71,7 +71,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     const ir = (id: string) => { const el = document.getElementById(id) as HTMLElement | null; if (el) { el.focus(); if (el instanceof HTMLInputElement) el.select?.(); } return !!el; };
     const c = COLS_PRES.indexOf(col);
     if (e.key === 'ArrowDown') { e.preventDefault(); if (!ir(`pres-${col}-${fila + 1}`)) ir('check-tiene-variantes') || ir('btn-guardar-producto'); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); if (!ir(`pres-${col}-${fila - 1}`)) ir('escala-precio-2') || ir('input-ubicacion-producto') || ir('select-unidad-peso-producto'); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); if (!ir(`pres-${col}-${fila - 1}`)) ir('escala-precio-2') || ir('btn-es-bolsa-producto') || ir('input-ubicacion-producto') || ir('select-unidad-peso-producto'); }
     else if (e.key === 'ArrowRight' && c < COLS_PRES.length - 1) { e.preventDefault(); ir(`pres-${COLS_PRES[c + 1]}-${fila}`); }
     else if (e.key === 'ArrowLeft' && c > 0) { e.preventDefault(); ir(`pres-${COLS_PRES[c - 1]}-${fila}`); }
     else if (e.key === 'Enter') {
@@ -85,7 +85,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   const teclasEscala = (e: React.KeyboardEvent<HTMLInputElement>, fila: number, col: 'desde' | 'precio') => {
     const ir = (id: string) => { const el = document.getElementById(id) as HTMLElement | null; if (el) { el.focus(); if (el instanceof HTMLInputElement) el.select?.(); } return !!el; };
     if (e.key === 'ArrowDown') { e.preventDefault(); if (!ir(`escala-${col}-${fila + 1}`)) ir('pres-unidad-0') || ir('check-tiene-variantes') || ir('btn-guardar-producto'); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); if (!ir(`escala-${col}-${fila - 1}`)) ir('input-ubicacion-producto') || ir('select-unidad-peso-producto') || ir('input-stock-minimo-producto'); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); if (!ir(`escala-${col}-${fila - 1}`)) ir('btn-es-bolsa-producto') || ir('input-ubicacion-producto') || ir('select-unidad-peso-producto') || ir('input-stock-minimo-producto'); }
     else if (e.key === 'ArrowRight' && col === 'desde') { e.preventDefault(); ir(`escala-precio-${fila}`); }
     else if (e.key === 'ArrowLeft' && col === 'precio') { e.preventDefault(); ir(`escala-desde-${fila}`); }
     else if (e.key === 'Enter') { e.preventDefault(); if (col === 'desde') ir(`escala-precio-${fila}`); else if (!ir(`escala-desde-${fila + 1}`)) ir('pres-unidad-0') || ir('check-tiene-variantes') || ir('btn-guardar-producto'); }
@@ -384,7 +384,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         setFormData({
           name: initialData.name || '',
           category: initialData.category || '',
-          code: initialData.code || '',
+          // "NO-SKU" es solo lo que muestra la lista cuando el producto no tiene código: no es un código real
+          // (si se cargaba, chocaba con los demás productos sin código y no dejaba guardar; al guardar se genera uno)
+          code: initialData.code && initialData.code !== 'NO-SKU' ? initialData.code : '',
           barcode: initialData.barcode || '',
           price: initialData.price?.toString() || '',
           precioMayorista: initialData.precioMayorista?.toString() || '',
@@ -397,7 +399,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           laboratorio: initialData.laboratorio || '',
           ubicacion: initialData.ubicacion || '',
           controlaSeries: Boolean(initialData.controla_series ?? initialData.controlaSeries),
-          mesesGarantia: (initialData.meses_garantia ?? initialData.mesesGarantia ?? 0).toString()
+          mesesGarantia: (initialData.meses_garantia ?? initialData.mesesGarantia ?? 0).toString(),
+          tipoIgv: (initialData.tipo_igv ?? initialData.tipoIgv ?? 'GRAVADO') as 'GRAVADO' | 'EXONERADO' | 'INAFECTO',
+          esBolsa: Boolean(initialData.es_bolsa ?? initialData.esBolsa)
         });
         
         const tipoUnidad = unidadDe(initialData).tipo;
@@ -467,6 +471,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           initialData.ubicacion?.trim() ||
           Number(initialData.meses_garantia ?? initialData.mesesGarantia ?? 0) > 0 ||
           Boolean(initialData.controla_series ?? initialData.controlaSeries) ||
+          (initialData.tipo_igv ?? initialData.tipoIgv ?? 'GRAVADO') !== 'GRAVADO' ||
+          Boolean(initialData.es_bolsa ?? initialData.esBolsa) ||
           (initialData.preciosCantidad && initialData.preciosCantidad.length > 0) ||
           (initialData.presentaciones && initialData.presentaciones.length > 0) ||
           tieneVars ||
@@ -480,7 +486,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         setStep(1);
         setNature(null);
         setShowAdvancedPanel(false);
-        setFormData({ name: '', category: '', code: '', barcode: '', price: '', precioMayorista: '', minStock: '5', weightUnit: 'KG', image: '', marca: '', modelo: '', medida: '', laboratorio: '', ubicacion: '', controlaSeries: false, mesesGarantia: '0' });
+        setFormData({ name: '', category: '', code: '', barcode: '', price: '', precioMayorista: '', minStock: '5', weightUnit: 'KG', image: '', marca: '', modelo: '', medida: '', laboratorio: '', ubicacion: '', controlaSeries: false, mesesGarantia: '0', tipoIgv: 'GRAVADO', esBolsa: false });
         setEscalas(filasEscalas());
         setPresentacionesForm(filasPres());
         setTieneVariantes(false);
@@ -560,7 +566,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     laboratorio: '',
     ubicacion: '',
     controlaSeries: false,
-    mesesGarantia: '0'
+    mesesGarantia: '0',
+    tipoIgv: 'GRAVADO' as 'GRAVADO' | 'EXONERADO' | 'INAFECTO', // fase 11.2
+    esBolsa: false
   });
 
   const resetAndClose = () => {
@@ -570,7 +578,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     setCodigoParaBuscar('');
     setStep(1);
     setNature(null);
-    setFormData({ name: '', category: '', code: '', barcode: '', price: '', precioMayorista: '', minStock: '5', weightUnit: 'KG', image: '', marca: '', modelo: '', medida: '', laboratorio: '', ubicacion: '', controlaSeries: false, mesesGarantia: '0' });
+    setFormData({ name: '', category: '', code: '', barcode: '', price: '', precioMayorista: '', minStock: '5', weightUnit: 'KG', image: '', marca: '', modelo: '', medida: '', laboratorio: '', ubicacion: '', controlaSeries: false, mesesGarantia: '0', tipoIgv: 'GRAVADO', esBolsa: false });
     setEscalas(filasEscalas());
     setPresentacionesForm(filasPres());
     setTieneVariantes(false);
@@ -660,6 +668,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           'input-ubicacion-producto',
           'input-meses-garantia-producto',
           'input-controla-series-producto',
+          'btn-igv-GRAVADO', 'btn-igv-EXONERADO', 'btn-igv-INAFECTO', 'btn-es-bolsa-producto',
           'escala-desde-0', 'escala-precio-0', 'escala-desde-1', 'escala-precio-1', 'escala-desde-2', 'escala-precio-2',
           ...[0, 1, 2].flatMap((i) => [`pres-unidad-${i}`, `pres-factor-${i}`, `pres-precio-${i}`, `pres-barcode-${i}`]),
           'btn-guardar-producto',
@@ -1378,10 +1387,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           }
           if (e.key === 'ArrowDown' || e.key === 'Enter') {
             e.preventDefault();
-            const next = document.getElementById('escala-desde-0') ||
-                         document.getElementById('pres-unidad-0') ||
-                         document.getElementById('btn-guardar-producto');
-            next?.focus();
+            document.getElementById(`btn-igv-${formData.tipoIgv}`)?.focus();
             return;
           }
         }
@@ -1495,7 +1501,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
     // === VALIDACIÓN DE INTEGRIDAD ===
     const isDuplicate = productosExistentes.some((p: any) => {
-      if (initialData && p.id === initialData.id) return false;
+      // Con String(): el id puede llegar como número o como texto (copia sin internet) y el producto
+      // se tomaba a sí mismo como "duplicado" y no se guardaba (MEMORIA-IA §6 n.º 6)
+      if (initialData && String(p.id) === String(initialData.id)) return false;
       const mismoNombre = p.name.toUpperCase() === nombreLimpio;
       const mismoCodigoBarras = codigoBarrasLimpio !== '' && p.barcode === codigoBarrasLimpio;
       const mismoCodigo = codigoLimpio !== '' && String(p.code || '').toUpperCase() === codigoLimpio;
@@ -1563,6 +1571,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           ubicacion: safeUbicacion,
           controla_series: formData.controlaSeries,
           meses_garantia: Number(formData.mesesGarantia) || 0,
+          tipo_igv: formData.tipoIgv,
+          es_bolsa: formData.esBolsa,
           mostrar_en_catalogo: mostrarEnCatalogo,
           destacado_catalogo: destacadoCatalogo,
           tiene_variantes: tieneVariantes,
@@ -1600,6 +1610,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           ubicacion: safeUbicacion,
           controla_series: formData.controlaSeries,
           meses_garantia: Number(formData.mesesGarantia) || 0,
+          tipo_igv: formData.tipoIgv,
+          es_bolsa: formData.esBolsa,
           mostrar_en_catalogo: mostrarEnCatalogo,
           destacado_catalogo: destacadoCatalogo,
           tiene_variantes: tieneVariantes,
@@ -1720,6 +1732,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     formData.ubicacion?.trim() ||
     Number(formData.mesesGarantia || 0) > 0 ||
     formData.controlaSeries ||
+    formData.tipoIgv !== 'GRAVADO' ||
+    formData.esBolsa ||
     escalas.some(e => e.desde && e.precio) ||
     presentacionesForm.some(p => p.factor && p.precio) ||
     tieneVariantes ||
@@ -2475,6 +2489,68 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                         </label>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Fase 11.2: impuesto del producto (para boletas y facturas) y bolsas plásticas (ICBPER) */}
+                  <div className="md:col-span-2 pt-4 border-t-2 border-[#CBD5E1] space-y-2" id="bloque-impuesto-producto">
+                    <div className="pb-1 border-b border-[#E2E8F0] flex items-center justify-between gap-2">
+                      <span className="text-xs font-black text-[var(--color-ink)] uppercase tracking-wider">🧾 Impuesto (boletas y facturas)</span>
+                      <span className="text-[10px] text-[#64748B] font-bold">Si no sabes, déjalo "Con IGV"</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {([['GRAVADO', 'Con IGV'], ['EXONERADO', 'Exonerado'], ['INAFECTO', 'Inafecto']] as const).map(([valor, nombre], i, lista) => (
+                        <button
+                          key={valor}
+                          id={`btn-igv-${valor}`}
+                          type="button"
+                          aria-pressed={formData.tipoIgv === valor}
+                          onClick={() => setFormData({ ...formData, tipoIgv: valor })}
+                          onKeyDown={(e) => {
+                            const ir = (id: string) => { e.preventDefault(); e.stopPropagation(); document.getElementById(id)?.focus(); };
+                            if (e.key === 'ArrowRight') ir(lista[i + 1] ? `btn-igv-${lista[i + 1][0]}` : 'btn-es-bolsa-producto');
+                            else if (e.key === 'ArrowLeft') { if (lista[i - 1]) ir(`btn-igv-${lista[i - 1][0]}`); else { e.preventDefault(); e.stopPropagation(); } }
+                            else if (e.key === 'ArrowUp') ir('input-controla-series-producto');
+                            else if (e.key === 'ArrowDown') {
+                              e.preventDefault(); e.stopPropagation();
+                              (document.getElementById('escala-desde-0') || document.getElementById('pres-unidad-0') || document.getElementById('check-tiene-variantes') || document.getElementById('btn-guardar-producto'))?.focus();
+                            }
+                          }}
+                          className={`px-3 py-2 border-2 text-xs font-black uppercase tracking-wider cursor-pointer outline-none focus:ring-2 focus:ring-[var(--color-success)] ${
+                            formData.tipoIgv === valor ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]' : 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[#CBD5E1] hover:border-[var(--color-ink)]'
+                          }`}
+                        >
+                          {nombre}
+                        </button>
+                      ))}
+                      <button
+                        id="btn-es-bolsa-producto"
+                        type="button"
+                        role="switch"
+                        aria-checked={formData.esBolsa}
+                        onClick={() => setFormData({ ...formData, esBolsa: !formData.esBolsa })}
+                        onKeyDown={(e) => {
+                          const ir = (id: string) => { e.preventDefault(); e.stopPropagation(); document.getElementById(id)?.focus(); };
+                          if (e.key === 'ArrowLeft') ir('btn-igv-INAFECTO');
+                          else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); }
+                          else if (e.key === 'ArrowUp') ir('input-controla-series-producto');
+                          else if (e.key === 'ArrowDown') {
+                            e.preventDefault(); e.stopPropagation();
+                            (document.getElementById('escala-desde-0') || document.getElementById('pres-unidad-0') || document.getElementById('check-tiene-variantes') || document.getElementById('btn-guardar-producto'))?.focus();
+                          }
+                        }}
+                        className={`ml-0 sm:ml-3 px-3 py-2 border-2 text-xs font-black uppercase tracking-wider cursor-pointer outline-none focus:ring-2 focus:ring-[var(--color-success)] ${
+                          formData.esBolsa ? 'bg-amber-500 text-white border-amber-600' : 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[#CBD5E1] hover:border-[var(--color-ink)]'
+                        }`}
+                      >
+                        {formData.esBolsa ? '✔ Es bolsa plástica' : 'Es bolsa plástica'}
+                      </button>
+                    </div>
+                    <p className="text-[10px] font-bold text-[#64748B]">
+                      {formData.tipoIgv === 'EXONERADO' ? 'Exonerado: no paga IGV (ej. algunos productos agrícolas sin procesar, libros, ventas en la Amazonía).'
+                        : formData.tipoIgv === 'INAFECTO' ? 'Inafecto: está fuera del IGV por ley. Confírmalo con tu contador.'
+                        : 'Con IGV: el precio ya incluye el 18 % de IGV (la mayoría de productos).'}
+                      {formData.esBolsa ? ' Bolsa plástica: el precio debe incluir el impuesto a la bolsa (ICBPER, S/ 0.50 por bolsa).' : ''}
+                    </p>
                   </div>
 
                   {/* Fase 1.3: precios por cantidad (opcional) */}

@@ -12,7 +12,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-const VERSION = '11.1.1';
+const VERSION = '11.2.0';
 const ARCHIVO_BASES = process.env.FACTURADOR_BASES || '/opt/siuhub/facturador/bases.json';
 const CARPETA_COPIAS = process.env.FACTURADOR_COPIAS || '/var/lib/siumax-cpe';
 const PAUSA_MS = 5000;
@@ -32,10 +32,14 @@ const fechaPeru = (fecha) => new Date(new Date(fecha).getTime() - 5 * 3600 * 100
 /** Arma el comprobante con montos SIN y CON IGV por línea. Los precios de SiuMax ya incluyen el IGV. */
 export const armarComprobante = (cfg, venta, detalles) => {
   const tasa = Number(cfg.igv_porcentaje ?? 18) / 100;
+  const icbperUnidad = Number(cfg.icbper_monto ?? 0.5);
   const items = detalles.map((d) => {
     const cantidad = Number(d.quantity) || 0;
-    const total = r2(d.subtotal);
-    // Fase 11.2 agregará el tipo de IGV por producto; hasta entonces todo es GRAVADO.
+    const cobrado = r2(d.subtotal);
+    // Bolsa plástica: lo cobrado YA incluye el impuesto a la bolsa (ICBPER), que va aparte del IGV
+    const icbper = d.es_bolsa ? r2(Math.min(cobrado, cantidad * icbperUnidad)) : 0;
+    const total = r2(cobrado - icbper);
+    // Tipo de IGV que tenía el producto al vender (sale_details.tipo_igv, fase 11.2)
     const tipo = (d.tipo_igv || 'GRAVADO').toUpperCase();
     const gravado = tipo === 'GRAVADO';
     const base = gravado ? r2(total / (1 + tasa)) : total;
@@ -50,12 +54,14 @@ export const armarComprobante = (cfg, venta, detalles) => {
       precio_unitario: cantidad ? total / cantidad : 0,
       subtotal: base,
       igv,
-      total,
+      total,          // con IGV, sin el impuesto a la bolsa
+      icbper,
       tipo,
     };
   });
   const suma = (k, filtro = () => true) => r2(items.filter(filtro).reduce((t, it) => t + it[k], 0));
-  const total = suma('total');
+  const icbper = suma('icbper');
+  const total = r2(suma('total') + icbper);
   const igv = suma('igv');
   const exonerada = suma('subtotal', (it) => it.tipo === 'EXONERADO');
   const inafecta = suma('subtotal', (it) => it.tipo === 'INAFECTO');
@@ -73,7 +79,7 @@ export const armarComprobante = (cfg, venta, detalles) => {
       direccion: venta.cpe_cliente_direccion || '',
     },
     igv_porcentaje: Number(cfg.igv_porcentaje ?? 18),
-    totales: { gravada: r2(total - igv - exonerada - inafecta), exonerada, inafecta, igv, total },
+    totales: { gravada: r2(total - icbper - igv - exonerada - inafecta), exonerada, inafecta, igv, icbper, total },
     items,
   };
 };
@@ -142,6 +148,7 @@ const nubefact = {
       total_exonerada: doc.totales.exonerada || '',
       total_inafecta: doc.totales.inafecta || '',
       total_igv: doc.totales.igv,
+      total_impuestos_bolsas: doc.totales.icbper || '', // ICBPER (confirmar con el manual de Nubefact)
       total: doc.totales.total,
       enviar_automaticamente_a_la_sunat: true,
       enviar_automaticamente_al_cliente: false,
@@ -156,6 +163,7 @@ const nubefact = {
         tipo_de_igv: it.tipo === 'GRAVADO' ? 1 : it.tipo === 'EXONERADO' ? 8 : 9,
         igv: it.igv,
         total: it.total,
+        impuesto_bolsas: it.icbper || '',
         anticipo_regularizacion: false,
       })),
     };

@@ -20,6 +20,7 @@ interface Config {
   serie_nc_boleta: string;
   serie_nc_factura: string;
   comprobante_por_defecto: PorDefecto;
+  icbper_monto: number;
   prueba_pedida_at: string | null;
   prueba_at: string | null;
   prueba_ok: boolean | null;
@@ -154,6 +155,8 @@ export const PestanaFacturacion: React.FC<{ onIrEmpresa: () => void }> = ({ onIr
   ].filter(Boolean);
 
   const guardar = async () => {
+    const icbper = Number(cfg.icbper_monto);
+    if (!Number.isFinite(icbper) || icbper < 0 || icbper > 10) return avisar('El impuesto a la bolsa debe ser un monto entre 0 y 10 soles (hoy es 0.50).');
     for (const [serie, letra, nombre] of [[cfg.serie_boleta, 'B', 'boletas'], [cfg.serie_factura, 'F', 'facturas'], [cfg.serie_nc_boleta, 'B', 'notas de crédito de boletas'], [cfg.serie_nc_factura, 'F', 'notas de crédito de facturas']] as const) {
       if (!new RegExp(`^${letra}[A-Z0-9]{3}$`).test(serie)) return avisar(`La serie de ${nombre} debe tener 4 caracteres y empezar con ${letra} (ej. ${letra}001).`);
     }
@@ -174,6 +177,7 @@ export const PestanaFacturacion: React.FC<{ onIrEmpresa: () => void }> = ({ onIr
       serie_nc_boleta: cfg.serie_nc_boleta,
       serie_nc_factura: cfg.serie_nc_factura,
       comprobante_por_defecto: cfg.comprobante_por_defecto,
+      icbper_monto: Number(cfg.icbper_monto),
       updated_at: new Date().toISOString(),
     }).eq('id', 1);
     setGuardando(false);
@@ -336,6 +340,11 @@ export const PestanaFacturacion: React.FC<{ onIrEmpresa: () => void }> = ({ onIr
               <button key={p.id} id={`fact-defecto-${p.id}`} data-fila="defecto" type="button" onClick={() => cambiar('comprobante_por_defecto', p.id)} className={claseOpcion(cfg.comprobante_por_defecto === p.id)}>{p.nombre}</button>
             ))}
           </div>
+        </div>
+        <div>
+          <Etiqueta htmlFor="fact-icbper">Impuesto a la bolsa plástica (ICBPER), S/ por bolsa</Etiqueta>
+          <input id="fact-icbper" data-fila="icbper" inputMode="decimal" value={String(cfg.icbper_monto ?? '')} onChange={(e) => cambiar('icbper_monto', e.target.value.replace(/[^\d.]/g, '') as unknown as number)} className={`${claseCampo} w-32`} />
+          <p className="text-xs text-[var(--color-muted)] font-sans mt-1">Se aplica a los productos marcados como "Es bolsa plástica" (Inventario). Hoy es S/ 0.50; cámbialo solo si la ley cambia.</p>
         </div>
       </section>
 

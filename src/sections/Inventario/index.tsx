@@ -177,6 +177,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               ubicacion: p.ubicacion || null,
               controlaSeries: Boolean(p.controla_series),
               mesesGarantia: Number(p.meses_garantia || 0),
+              tipoIgv: p.tipo_igv || 'GRAVADO',
+              esBolsa: Boolean(p.es_bolsa),
               tieneVariantes: tieneVars,
               variantes: vars,
               vencimiento: lotesDelProducto
@@ -888,6 +890,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             ubicacion: nuevoProducto.ubicacion || null,
             controlaSeries: Boolean(nuevoProducto.controla_series ?? nuevoProducto.controlaSeries),
             mesesGarantia: Number(nuevoProducto.meses_garantia ?? nuevoProducto.mesesGarantia ?? 0),
+            tipoIgv: nuevoProducto.tipo_igv ?? nuevoProducto.tipoIgv ?? 'GRAVADO',
+            esBolsa: Boolean(nuevoProducto.es_bolsa ?? nuevoProducto.esBolsa),
             tieneVariantes: tieneVars,
             variantes: varsLista,
             tipoCompuesto: nuevoProducto.tipo_compuesto ?? nuevoProducto.tipoCompuesto ?? 'ESTANDAR',
