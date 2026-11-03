@@ -23,6 +23,7 @@ import { ModalNombreEspera } from './components/ModalNombreEspera';
 import { ModalCotizacionPOS } from './components/ModalCotizacionPOS';
 import { ModalPedidoPOS } from './components/ModalPedidoPOS';
 import { traerTodo } from '../../utils/traerTodo';
+import { cargarFacturacionCaja, calcularTotalesCPE, numeroComprobante, DOC_TYPE, type DatosComprobante, type FacturacionCaja } from '../../utils/comprobante';
 import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ EVICAMP: Mini Reporte en Tiempo Real
 
 export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
@@ -41,6 +42,8 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
   });
   
   // 🚀 MEMORIA PERSISTENTE: Cliente seleccionado (opcional, por defecto Cliente Varios)
+  // Fase 11.3: boletas y facturas (null = facturación apagada: la Caja cobra con Nota de venta como siempre)
+  const [facturacion, setFacturacion] = useState<FacturacionCaja | null>(null);
   const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(() => {
     const guardado = localStorage.getItem('evicamp_cliente_pos');
     return guardado ? JSON.parse(guardado) : null;
@@ -564,6 +567,8 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           ubicacion: p.ubicacion || null,
           controlaSeries: Boolean(p.controla_series),
           mesesGarantia: Number(p.meses_garantia || 0),
+          tipoIgv: p.tipo_igv || 'GRAVADO',
+          esBolsa: Boolean(p.es_bolsa),
           tieneVariantes: tieneVars,
           variantes: vars,
           tipoCompuesto: tipoComp,
@@ -884,11 +889,15 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
     setClienteSeleccionado(restoredCliente);
     setActiveTabIndex(index); // Actualizar el índice para que brille permanente
   };
+  // Fase 11.3: ¿esta tienda emite boletas/facturas? (Ajustes > Facturación)
+  useEffect(() => { cargarFacturacionCaja().then(setFacturacion); }, []);
+
   // 6. PROCESAR PAGO (GUARDA VENTA, REDUCE STOCK Y REGISTRA FIADOS)
   const handleConfirmPayment = async (
     pagos: { efectivo: number, yape: number, tarjeta: number },
     imprimirBoleta: boolean,
-    fiadoData?: any 
+    fiadoData?: any,
+    comprobante?: DatosComprobante
   ) => {
     if (isSubmitting) return; // 🛡️ BLOQUEO ANTI-DUPLICADOS
     
@@ -937,7 +946,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         : null;
       const finalCustomerName = fiadoData?.clienteNombre || clienteSeleccionado?.nombre || null;
 
-      const { error: saleError } = await supabase.from('sales').insert([{
+      const filaVenta = {
         id: trueSaleId,
         total: totalVenta,
         payment_type: tipoPago,
@@ -950,7 +959,26 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         sunat_status: 'ACEPTADO',
         created_at: new Date().toISOString(),
         is_synced: 1
-      }]);
+      };
+      // Fase 11.3: con Boleta o Factura, la base pone la serie y el número (trg_asignar_comprobante)
+      // y los devuelve para el ticket. Con Nota de venta la venta se guarda exactamente como antes.
+      const conComprobante = Boolean(comprobante && comprobante.tipo !== 'NOTA');
+      let datosCpe: { doc_type?: number | null; doc_serial?: string | null; doc_number?: string | null; cpe_modo?: string | null } | null = null;
+      let saleError: { message: string } | null = null;
+      if (conComprobante && comprobante) {
+        const { data, error } = await supabase.from('sales').insert([{
+          ...filaVenta,
+          doc_type: DOC_TYPE[comprobante.tipo],
+          cpe_cliente_tipo_doc: comprobante.clienteTipoDoc,
+          cpe_cliente_num_doc: comprobante.clienteNumDoc || null,
+          cpe_cliente_nombre: comprobante.clienteNombre || null,
+          cpe_cliente_direccion: comprobante.clienteDireccion || null,
+        }]).select('doc_type, doc_serial, doc_number, cpe_modo');
+        saleError = error;
+        datosCpe = Array.isArray(data) ? data[0] ?? null : null;
+      } else {
+        ({ error: saleError } = await supabase.from('sales').insert([filaVenta]));
+      }
 
       if (saleError) {
         alert('❌ No se pudo registrar la venta. No se guardó nada; el ticket sigue en caja para reintentar.\n\nDetalle: ' + saleError.message);
@@ -1060,7 +1088,23 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           total: totalVenta,
           pagos: { efectivo: pagos.efectivo, yape: pagos.yape, tarjeta: pagos.tarjeta },
           vuelto: vuelto,
-          nroBoleta: `B001-${String(trueSaleId).substring(0,8).padStart(8, '0')}`,
+          nroBoleta: conComprobante
+            ? (numeroComprobante(datosCpe?.doc_serial, datosCpe?.doc_number) || 'POR NUMERAR')
+            : `B001-${String(trueSaleId).substring(0,8).padStart(8, '0')}`,
+          comprobante: conComprobante && comprobante ? {
+            docType: DOC_TYPE[comprobante.tipo],
+            serie: datosCpe?.doc_serial || null,
+            numero: datosCpe?.doc_number || null,
+            modo: datosCpe?.cpe_modo || facturacion?.modo || null,
+            clienteTipoDoc: comprobante.clienteTipoDoc,
+            clienteNumDoc: comprobante.clienteNumDoc,
+            clienteNombre: comprobante.clienteNombre,
+            clienteDireccion: comprobante.clienteDireccion,
+            fecha: filaVenta.created_at,
+            totales: calcularTotalesCPE(
+              cart.map((i) => ({ subtotal: Number(i.subtotal), cantidad: Number(i.cartQuantity) * (i.presentacion?.factor ?? 1), tipoIgv: i.tipoIgv, esBolsa: i.esBolsa })),
+              facturacion?.igvPct ?? 18, facturacion?.icbperUnidad ?? 0.5),
+          } : null,
           fiadoData: fiadoData,
           cliente: clienteSeleccionado ? {
             nombre: clienteSeleccionado.nombre,
@@ -1073,7 +1117,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         });
         setIsVistaPreviaOpen(true);
       } else {
-        alert(`✅ Venta completada con éxito.\nVuelto: S/ ${vuelto.toFixed(2)}`);
+        alert(`✅ Venta completada con éxito.${conComprobante ? `\n${comprobante?.tipo === 'FACTURA' ? 'Factura' : 'Boleta'}: ${numeroComprobante(datosCpe?.doc_serial, datosCpe?.doc_number) || 'se numera al conectarse'}` : ''}\nVuelto: S/ ${vuelto.toFixed(2)}`);
         // El buscador queda listo para escanear el siguiente producto: ventas corridas sin pausas.
         setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
       }
@@ -1200,8 +1244,10 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       {/* MODAL DE COBRO */}
       <ModalCobro 
         isOpen={isCobroModalOpen}
+        facturacion={facturacion}
         onClose={() => {
           setIsCobroModalOpen(false);
+          cargarFacturacionCaja().then(setFacturacion);
           setSelectedIndex(-1); // 🛡️ AÑADIDO: Resetear estado del carrito para soltar el botón F4
           if (document.activeElement instanceof HTMLElement) {
             document.activeElement.blur();
@@ -1257,6 +1303,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
                   fiadoData={ultimaVenta.fiadoData}
                   cliente={ultimaVenta.cliente}
                   vendedor={ultimaVenta.vendedor}
+                  comprobante={ultimaVenta.comprobante}
                 />
               </div>
             </div>
