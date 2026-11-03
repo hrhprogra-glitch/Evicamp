@@ -757,3 +757,29 @@ nav button {
   from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ===== MOLDE ÚNICO DE TABLAS (03/11/2026, pedido del dueño) =====
+   Modelo: Inventario > Productos. La tabla resalta y el fondo no distrae: marco fino, sin sombra,
+   cabecera oscura con letra espaciada y filas separadas por una línea fina. Toda tabla de sección usa esto. */
+.tabla-marco {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: none !important;
+}
+.tabla-cabecera,
+.tabla-cabecera th {
+  background: var(--color-ink);
+  color: var(--color-surface);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.875rem;
+  border: 0;
+}
+.tabla-fila {
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 0.15s;
+}
+.tabla-fila:hover { background: var(--color-bg); }
+.tabla-fila:focus { outline: none; }
+.tabla-fila:focus-visible { background: var(--color-bg-2); box-shadow: inset 0 0 0 2px var(--color-ink); }

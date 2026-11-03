@@ -1055,7 +1055,7 @@ export const Finanzas: React.FC = () => {
             </div>
           )}
 
-          <div className="bg-white border-2 border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-border)] sm:shadow-[8px_8px_0_0_var(--color-border)] flex flex-col">
+          <div className="tabla-marco flex flex-col">
              
              <div className="p-3 sm:p-4 bg-[var(--color-bg)] border-b border-[var(--color-border)] flex flex-col sm:flex-row gap-3">
                <div className="relative flex-1">

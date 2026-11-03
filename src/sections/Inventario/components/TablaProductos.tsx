@@ -202,7 +202,7 @@ export const TablaProductos: React.FC<Props> = ({
   };
 
   return (
-    <div id="tabla-productos-inventario" className="border border-[var(--color-border)] flex flex-col bg-[var(--color-surface)] relative min-h-[200px]">
+    <div id="tabla-productos-inventario" className="tabla-marco flex flex-col relative min-h-[200px]">
       {loading && (
         <div className="absolute inset-0 bg-white/80 dark:bg-[var(--color-surface)]/80 backdrop-blur-sm z-10 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
@@ -220,7 +220,7 @@ export const TablaProductos: React.FC<Props> = ({
         <div className="md:min-w-[960px]">
 
       {/* CABECERAS DE LA TABLA REESTRUCTURADAS (CON COLUMNA DE IMAGEN) */}
-      <div className="hidden md:grid grid-cols-12 bg-[var(--color-ink)] text-white p-4 text-sm font-black uppercase tracking-[0.2em] items-center">
+      <div className="tabla-cabecera hidden md:grid grid-cols-12 p-4 items-center">
         <div className="col-span-1 text-center">Img</div>
         <div className="col-span-2">Códigos</div>
         <div className="col-span-3">Producto / Categoría</div>

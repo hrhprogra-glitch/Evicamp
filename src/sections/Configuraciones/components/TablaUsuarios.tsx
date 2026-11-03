@@ -257,7 +257,7 @@ export const TablaUsuarios: React.FC = () => {
   }, [modalAbierto, usuariosFiltrados]);
 
   return (
-    <div className="bg-white border border-[var(--color-border)] shadow-sm flex flex-col font-mono">
+    <div className="tabla-marco flex flex-col font-mono">
       {/* CABECERA Y FILTROS */}
       <div className="p-4 border-b border-[var(--color-border)] bg-[var(--color-bg)] flex flex-wrap gap-4 justify-between items-center shrink-0">
         <div>
@@ -381,7 +381,7 @@ export const TablaUsuarios: React.FC = () => {
         ) : (
           <table id="tabla-usuarios-ajustes" className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[var(--color-bg-2)] border-b border-[var(--color-border)] text-xs uppercase tracking-wider text-[var(--color-muted)] font-bold">
+              <tr className="tabla-cabecera">
                 <th className="p-4">Nombre / Email</th>
                 <th className="p-4">Rol Asignado</th>
                 <th className="p-4 text-center">Estado</th>

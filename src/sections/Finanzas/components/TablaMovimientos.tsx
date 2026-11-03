@@ -21,7 +21,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
     <div className="w-full bg-white flex flex-col font-mono">
       <div className="overflow-x-auto w-full custom-scrollbar">
         <table id="tabla-movimientos-caja" className="w-full text-left border-collapse min-w-full">
-          <thead className="bg-[var(--color-ink)] text-white sticky top-0 z-10">
+          <thead className="tabla-cabecera sticky top-0 z-10">
             <tr>
               <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)] md:whitespace-nowrap w-[90px] md:w-[150px]">Fecha y Hora</th>
               <th className="p-2.5 sm:p-3 text-[11px] font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Nro. Ticket / Detalle</th>

@@ -538,9 +538,9 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
         </div>
       ) : (
         // Tabla (mismo estilo que Lotes): una fila por lista; ↑ ↓ para moverse, Enter abre el detalle
-        <div className="w-full overflow-x-auto custom-scrollbar border-2 border-[var(--color-ink)] bg-white">
+        <div className="w-full overflow-x-auto custom-scrollbar tabla-marco">
           <div className="min-w-[900px]">
-            <div className="grid grid-cols-12 gap-3 bg-[var(--color-ink)] text-white px-4 py-3 text-xs font-black uppercase tracking-[0.1em]">
+            <div className="tabla-cabecera grid grid-cols-12 gap-3 p-4">
               <div className="col-span-2">Fecha / Pedido</div>
               <div className="col-span-3">Proveedor</div>
               <div className="col-span-1 text-center">Productos</div>

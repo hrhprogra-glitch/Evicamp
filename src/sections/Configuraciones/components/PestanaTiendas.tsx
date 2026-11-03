@@ -93,10 +93,10 @@ export const PestanaTiendas: React.FC = () => {
       </div>
 
       {/* Tabla de Tiendas */}
-      <div className="border-2 border-[var(--color-ink)] bg-[var(--color-surface)] shadow-[4px_4px_0_0_var(--color-ink)] overflow-x-auto">
+      <div className="tabla-marco overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="bg-[var(--color-ink)] text-white border-b-2 border-[var(--color-ink)]">
+            <tr className="tabla-cabecera">
               <th className="py-2.5 px-3 uppercase tracking-wider font-bold">Cód.</th>
               <th className="py-2.5 px-3 uppercase tracking-wider font-bold">Nombre del Local</th>
               <th className="py-2.5 px-3 uppercase tracking-wider font-bold">Tipo</th>

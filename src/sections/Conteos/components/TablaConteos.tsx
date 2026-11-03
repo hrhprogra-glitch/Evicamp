@@ -174,7 +174,7 @@ export const TablaConteos: React.FC<Props> = ({ mermas, products, onEdit, onDele
       <div className="flex-1 flex flex-col overflow-x-auto custom-scrollbar">
       <div className="flex-1 flex flex-col min-w-[900px]">
       {/* CABECERA */}
-      <div className="grid grid-cols-12 gap-3 bg-[var(--color-ink)] text-[var(--color-surface)] p-4 text-xs md:text-sm font-black uppercase tracking-[0.1em] shrink-0 rounded-none">
+      <div className="tabla-cabecera grid grid-cols-12 gap-3 p-4 shrink-0">
         <div className="col-span-2 min-w-0 truncate">Fecha / Usu.</div>
         <div className="col-span-2 min-w-0 truncate">Producto</div>
         <div className="col-span-2 min-w-0 truncate">Detalle</div>

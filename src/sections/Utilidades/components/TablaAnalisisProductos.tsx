@@ -274,7 +274,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
   };
 
   return (
-    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-none flex flex-col mt-4 font-mono">
+    <div className="tabla-marco flex flex-col mt-4 font-mono">
 
       {/* HEADER Y FILTROS */}
       <div className="p-4 bg-[var(--color-surface)] border-b border-[var(--color-border)] flex flex-wrap gap-4 items-center justify-between shrink-0">
@@ -607,7 +607,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
       {/* TABLA PRINCIPAL - DISEÑO TÉCNICO ESMERALDA LIGERO */}
       <div className="w-full overflow-x-auto">
         <table id="tabla-analisis-productos" className="w-full text-left border-collapse md:min-w-[1000px]">
-          <thead className="bg-[var(--color-ink)] text-[var(--color-surface)] sticky top-0 z-10 p-4 text-xs md:text-sm font-black uppercase tracking-[0.1em]">
+          <thead className="tabla-cabecera sticky top-0 z-10">
             <tr>
               <th className="p-3 md:p-4">Producto / Ref</th>
               <th className="hidden md:table-cell p-4 text-center">Stock Actual</th>

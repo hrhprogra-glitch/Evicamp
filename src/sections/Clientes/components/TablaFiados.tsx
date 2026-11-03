@@ -274,7 +274,7 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, on
   };
 
   return (
-    <div className="bg-white border-2 border-[var(--color-border)] shadow-[8px_8px_0_0_var(--color-border)] flex flex-col font-mono rounded-none">
+    <div className="tabla-marco flex flex-col font-mono">
 
       {/* BARRA DE FILTROS AUMENTADA */}
       <div className="p-6 border-b-2 border-[var(--color-border)] flex flex-wrap lg:flex-nowrap gap-4 shrink-0 bg-[var(--color-bg)]">
@@ -324,7 +324,7 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, on
       {/* TABLA SIN SCROLL VERTICAL INTERNO */}
       <div className="w-full overflow-x-auto bg-white">
         <table className="w-full text-left border-collapse min-w-[800px]">
-          <thead className="bg-[var(--color-ink)] text-white sticky top-0 z-10">
+          <thead className="tabla-cabecera sticky top-0 z-10">
             <tr>
               <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Cliente</th>
               <th className="p-4 text-xs font-black tracking-widest uppercase border-b-2 border-[var(--color-ink)]">Emisión</th>
@@ -347,7 +347,7 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, on
                 <tr
                   key={fiado.id}
                   {...clicConTeclado(() => onView(fiado))}
-                  className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] transition-colors cursor-pointer"
+                  className="tabla-fila cursor-pointer"
                   title="Click para ver detalle"
                 >
                   <td className="p-4">

@@ -150,7 +150,7 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
 
   return (
     // ELIMINADO: flex-1, overflow-hidden, h-full para permitir que crezca completo sin scroll interno
-    <div className="bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col animate-fade-in rounded-none mb-8">
+    <div className="tabla-marco flex flex-col animate-fade-in mb-8">
       
       {/* HEADER */}
       <div className="bg-[var(--color-ink)] text-[var(--color-surface)] p-3 sm:p-4 flex flex-wrap justify-between items-center gap-2 shrink-0 rounded-none">
@@ -202,7 +202,7 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
       {/* TABLA SIN SCROLL INTERNO (Se eliminó overflow-auto custom-scrollbar) */}
       <div className="w-full bg-[var(--color-surface)] overflow-x-auto">
         <table className="w-full text-left border-collapse">
-          <thead className="bg-[var(--color-surface)] text-[var(--color-ink)] border-b-2 border-[var(--color-ink)]">
+          <thead className="tabla-cabecera">
             <tr>
               <th className="p-2 sm:p-4 text-[11px] sm:text-[12px] font-black tracking-wider sm:tracking-widest uppercase border-r-2 border-[var(--color-border)] bg-[var(--color-surface)] whitespace-nowrap">Apertura</th>
               <th className="p-2 sm:p-4 text-[11px] sm:text-[12px] font-black tracking-wider sm:tracking-widest uppercase border-r-2 border-[var(--color-border)] bg-[var(--color-surface)] whitespace-nowrap hidden md:table-cell">Cierre</th>
