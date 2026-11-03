@@ -7,6 +7,15 @@
 
 ---
 
+## 03/11/2026 (madrugada, 74) · Claude — FASE 11.4 hecha (Comprobantes, reenviar, reimprimir, sin internet)
+- **Commit 74d7e8f.** `src/components/ModalComprobantes.tsx` (lista con estado, filtros, detalle con Reimprimir/Reenviar/PDF/XML/CDR; `contarComprobantesConProblema`). Se abre desde Finanzas (`#btn-ver-comprobantes`, a la izquierda de Historial), Ajustes > Facturación (`#fact-btn-comprobantes`, fila propia sobre Guardar) y el aviso rojo de la Caja (`#btn-aviso-comprobantes`).
+- **SQL:** `fn_reenviar_comprobante` (solo ERROR/PENDIENTE; usa `set_config('siumax.cpe_interno','1',true)` para pasar `trg_proteger_comprobante`).
+- **Sin internet:** `cargarFacturacionCaja` guarda copia en localStorage (`siumax_facturacion_caja`); la venta va a la cola con `doc_type`, el ticket sale "POR NUMERAR" y al volver la conexión la base la numera y el facturador la emite (probado).
+- **ModalDetalleTicket:** reimprime con el comprobante (QR + resumen/hash) y `select('*')`. **Arreglo que también aplica a Evicamp:** el fiado reimpreso leía `total`/`due_date` (no existen) → S/ 0 y "Sin fecha"; ahora `amount - paid_amount` y `expected_pay_date`.
+- Pruebas: 11.4 23/23; 11.1 44/44 y 11.3 26/26 vuelven a pasar. Solo siumax.
+
+---
+
 ## 03/11/2026 (madrugada, 73) · Claude — FASE 11.3 hecha (Caja con Boleta y Factura)
 - **Commit f2303a2.** Ventana de pago (`ModalCobro`): fila "Comprobante" (`#cobro-comp-NOTA/BOLETA/FACTURA`) solo si la facturación está activa (`cargarFacturacionCaja`, se relee al cerrar la ventana). Campos `#cobro-doc-num`, `#cobro-doc-nombre`, `#cobro-doc-direccion` (factura). Reglas en `src/utils/comprobante.ts` (`errorComprobante`). Teclado: Tarjeta ↓ comprobante ↓ datos ↓ Imprimir; Enter en el último campo cobra.
 - La Caja inserta con `doc_type` + `cpe_cliente_*` y `.select('doc_serial, doc_number...')`; con Nota de venta inserta EXACTAMENTE como antes (sin columnas nuevas: no rompe bases sin fase 11).
