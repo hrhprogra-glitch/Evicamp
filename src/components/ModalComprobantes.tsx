@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { X, FileText, RefreshCw, Printer, ArrowLeft, ExternalLink, Undo2 } from 'lucide-react';
+import { X, FileText, RefreshCw, Printer, ArrowLeft, ExternalLink, Undo2, FileSpreadsheet } from 'lucide-react';
 import { supabase } from '../db/supabase';
 import { avisar, confirmar } from '../utils/dialogos';
 import { useCerrarConEscape } from '../utils/useCerrarConEscape';
@@ -8,6 +8,7 @@ import { fechaLocalPeru, haceNDiasPeru, primerDiaMesPeru, rangoUTCPeru } from '.
 import { calcularTotalesCPE, MOTIVO_NOTA_CREDITO, nombreComprobante, numeroComprobante } from '../utils/comprobante';
 import { TicketImprimible } from '../sections/Punto-de-venta/components/TicketImprimible';
 import { ModalDetalleTicket } from './ModalDetalleTicket';
+import { ReporteContador } from './ReporteContador';
 
 // Pantalla "Comprobantes" (fases 11.4 y 11.5): boletas, facturas y notas de crédito con su estado ante
 // SUNAT, para revisar, reenviar las que quedaron con error, reimprimir y DEVOLVER productos (emite la
@@ -94,10 +95,12 @@ export const ModalComprobantes: React.FC<{ isOpen: boolean; onClose: () => void;
   const [devolver, setDevolver] = useState<LineaDevolver[] | null>(null);
   const [motivoDevolucion, setMotivoDevolucion] = useState('');
   const [guardando, setGuardando] = useState(false);
+  const [reporte, setReporte] = useState(false); // fase 11.6: reporte para el contador
   const refNota = useRef<HTMLDivElement>(null);
   const imprimirNota = useImprimir(refNota, 'Nota-de-credito');
 
-  useCerrarConEscape(isOpen && !detalle && !reimprimir && !notaParaImprimir, onClose);
+  useCerrarConEscape(isOpen && !detalle && !reporte && !reimprimir && !notaParaImprimir, onClose);
+  useCerrarConEscape(isOpen && reporte, () => { setReporte(false); setTimeout(() => document.getElementById('btn-comp-reporte')?.focus(), 50); });
   // En el detalle, Escape vuelve a la lista; en "Devolver productos", al detalle
   useCerrarConEscape(isOpen && !!detalle && !devolver && !reimprimir && !notaParaImprimir, () => setDetalle(null));
   useCerrarConEscape(isOpen && !!devolver && !guardando, () => { setDevolver(null); setTimeout(() => document.getElementById('btn-comp-devolver')?.focus(), 50); });
@@ -140,6 +143,7 @@ export const ModalComprobantes: React.FC<{ isOpen: boolean; onClose: () => void;
     setFiltro(filtroInicial);
     setDetalle(null);
     setDevolver(null);
+    setReporte(false);
     setTimeout(() => document.getElementById(`comp-filtro-${filtroInicial}`)?.focus(), 60);
   }, [isOpen, filtroInicial]);
 
@@ -217,7 +221,7 @@ export const ModalComprobantes: React.FC<{ isOpen: boolean; onClose: () => void;
 
   const teclasFiltro = (e: React.KeyboardEvent, i: number) => {
     const ir = (el?: HTMLElement | null) => { if (el) { e.preventDefault(); el.focus(); } };
-    if (e.key === 'ArrowRight') ir(document.getElementById(`comp-filtro-${FILTROS[i + 1]?.id}`));
+    if (e.key === 'ArrowRight') ir(document.getElementById(FILTROS[i + 1] ? `comp-filtro-${FILTROS[i + 1].id}` : 'btn-comp-reporte'));
     else if (e.key === 'ArrowLeft') ir(document.getElementById(`comp-filtro-${FILTROS[i - 1]?.id}`));
     else if (e.key === 'ArrowDown') ir(filas()[0] || null);
     else if (e.key === 'ArrowUp') ir(document.getElementById('btn-cerrar-comprobantes'));
@@ -266,7 +270,9 @@ export const ModalComprobantes: React.FC<{ isOpen: boolean; onClose: () => void;
           </button>
         </div>
 
-        {!detalle ? (
+        {!detalle && reporte ? (
+          <ReporteContador onVolver={() => { setReporte(false); setTimeout(() => document.getElementById('btn-comp-reporte')?.focus(), 50); }} />
+        ) : !detalle ? (
           <>
             {/* Filtros y resumen */}
             <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-3 shrink-0">
@@ -286,6 +292,19 @@ export const ModalComprobantes: React.FC<{ isOpen: boolean; onClose: () => void;
                     {f.nombre}
                   </button>
                 ))}
+                <button
+                  id="btn-comp-reporte"
+                  type="button"
+                  onClick={() => setReporte(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById(`comp-filtro-${FILTROS[FILTROS.length - 1].id}`)?.focus(); }
+                    else if (e.key === 'ArrowDown') { e.preventDefault(); filas()[0]?.focus(); }
+                    else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-cerrar-comprobantes')?.focus(); }
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 border-2 border-[var(--color-accent-shadow)] text-[var(--color-accent-shadow)] bg-white text-[12px] font-black uppercase tracking-wider cursor-pointer rounded-none focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:ring-offset-1"
+                >
+                  <FileSpreadsheet size={14} /> Reporte del mes
+                </button>
               </div>
               <p className="text-[12px] font-bold uppercase text-[var(--color-muted)]">
                 {lista.length} · <span className="text-[var(--color-accent-shadow)]">{contar(['ACEPTADO', 'OBSERVADO'])} aceptados</span>
