@@ -35,6 +35,21 @@ const COMPROBANTES: { id: TipoComprobante; nombre: string }[] = [
   { id: 'BOLETA', nombre: 'Boleta' },
   { id: 'FACTURA', nombre: 'Factura' },
 ];
+// Colores propios (como Efectivo/Yape/Tarjeta): gris = interna, naranja = boleta, rojo = factura
+const COLOR_COMPROBANTE: Record<TipoComprobante, { normal: string; elegido: string }> = {
+  NOTA: {
+    normal: 'bg-white text-[var(--color-muted)] border-[var(--color-muted)] hover:bg-[var(--color-muted)] hover:text-white',
+    elegido: 'bg-[var(--color-muted)] text-white border-[var(--color-muted)]',
+  },
+  BOLETA: {
+    normal: 'bg-white text-[var(--color-warning-dark)] border-[var(--color-warning-dark)] hover:bg-[var(--color-warning-dark)] hover:text-white',
+    elegido: 'bg-[var(--color-warning-dark)] text-white border-[var(--color-warning-dark)]',
+  },
+  FACTURA: {
+    normal: 'bg-white text-[var(--color-danger-dark)] border-[var(--color-danger-dark)] hover:bg-[var(--color-danger-dark)] hover:text-white',
+    elegido: 'bg-[var(--color-danger-dark)] text-white border-[var(--color-danger-dark)]',
+  },
+};
 
 export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSeleccionado, facturacion, onConfirm }) => {
       const [montoEfectivo, setMontoEfectivo] = useState<string>('');
@@ -836,8 +851,8 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                       else if (e.key === 'ArrowDown') ir(compTipo !== 'NOTA' ? 'cobro-doc-num' : 'cobro-btn-imprimir');
                       else if (e.key === 'Delete') { e.preventDefault(); onClose(); }
                     }}
-                    className={`flex-1 py-2 border-2 text-[12px] font-black uppercase cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:ring-offset-1 ${
-                      compTipo === c.id ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]' : 'bg-white text-[var(--color-ink)] border-[var(--color-border)] hover:border-[var(--color-ink)]'
+                    className={`flex-1 py-2 border-2 text-[12px] font-black uppercase cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:ring-offset-1 ${
+                      COLOR_COMPROBANTE[c.id][compTipo === c.id ? 'elegido' : 'normal']
                     }`}
                   >
                     {c.nombre}
