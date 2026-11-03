@@ -12,7 +12,7 @@
 | Propuesta | Estado |
 |---|---|
 | **Nuevo aspecto de la Tienda Web** (PC y celular, libre del estilo de la caja) | **✅ Hecho y en siumax (02/11, commit c202ae8); falta revisión del dueño. siumax tiene 0 productos (pedir permiso para cargar de prueba)** |
-| **Fase 11 SUNAT: plan en 8 partes (11.1 servidor y datos → 11.8 directo a SUNAT)** | **Propuesto 02/11 por Claude; faltan decisiones del dueño (proveedor, RUC de prueba, contador)** |
+| **Fase 11 SUNAT: plan en 8 partes (11.1 servidor y datos → 11.8 directo a SUNAT)** | **Aprobado 02/11. ✅ 11.1 hecha en siumax (rama fase-11-sunat, 9e6d6fd; modo SIMULADO probado). Sigue 11.2. Faltan del dueño: cuenta de prueba Nubefact, RUC, régimen** |
 | **Fase 9 (Varias tiendas o almacenes y traspasos)** | **✅ Hecho y probado en siumax (02/11); listo para revisión del dueño** |
 | **Fase 10 (Tienda Web para PC y Celular con pedidos por WhatsApp)** | **✅ Hecho y probado en siumax (02/11); listo para revisión del dueño** |
 | **Fase 8 (Producción y Encargos: Recetas, Insumos, Combos y Kits)** | **✅ Hecho y probado en siumax (31/10); no pasar a producción aún (orden del dueño)** |
@@ -92,7 +92,7 @@ es **siumax** (https://siumax.duckdns.org).
 | **8** | Producción y encargos (recetas e insumos, kits) | ⏭️ Listo en pruebas |
 | **9** | Varias tiendas o almacenes y traspasos | ⏭️ Listo en pruebas (02/11) |
 | **10** | Tienda Web (PC y celular, pedidos por WhatsApp, opción de ocultar precios) | ⏭️ Listo en pruebas (02/11) |
-| **11** | SUNAT: boleta y factura electrónica | **En pausa** hasta que el dueño lo pida (ver sección 7) |
+| **11** | SUNAT: boleta y factura electrónica | **En curso** (02/11): 11.1 hecha en siumax; sigue 11.2 (ver sección 7) |
 
 Orden acordado: 4 → luego 3 y 6 (importantes para ferreterías) → el resto. Para ferreterías que venden a empresas,
 la 11 es necesaria tarde o temprano.

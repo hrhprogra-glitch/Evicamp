@@ -7,6 +7,17 @@
 
 ---
 
+## 02/11/2026 (noche, 70) · Claude — FASE 11.1 hecha (facturación electrónica: base + facturador + Ajustes)
+- **Dueño:** "ok" al plan de la Fase 11 (empezar por 11.1). Rama nueva **`fase-11-sunat`** (sale de `fase-9-10-almacenes-catalogo`, trae 8, 9 y 10). Commit 9e6d6fd.
+- **Base (siumax):** `facturacion_config` (emisor, series, modo SIMULADO/PRUEBA/REAL, por defecto NOTA), clave del proveedor en **`privado.facturacion_credenciales`** (la API no la lee: probado HTTP 404), `cpe_correlativos` (numeración atómica) y columnas **`cpe_*`** en `sales`. **`sunat_status` NO se toca** (es el estado interno ACEPTADO/ANULADO que filtran todos los reportes).
+- **Triggers:** `trg_asignar_comprobante` (doc_type 1 factura / 3 boleta: reglas SUNAT + serie y número; NULL = nota de venta) y `trg_proteger_comprobante` (desde la API no se cambia, borra ni anula un comprobante; la anulación será con nota de crédito en 11.5).
+- **Facturador** (`servidor/facturador/facturador.mjs`, servicio `siumax-facturador` en el VPS, usuario postgres, Node /opt/node22): cada 5 s envía las PENDIENTE al proveedor o las simula, reintenta con espera creciente, guarda copia en `/var/lib/siumax-cpe/<base>/`. Instalar/actualizar: `node ai-scripts/facturador-servidor.cjs siumax` (para Evicamp agregar la base `postgres`). Hoy atiende SOLO siumax.
+- **Nubefact:** el formato está armado según su manual pero **sin probar** (falta la cuenta de prueba del dueño). Modo SIMULADO probado de punta a punta (B001-1 y F001-1, IGV correcto, QR).
+- **Pantalla:** Ajustes > Facturación (`PestanaFacturacion.tsx`), 100 % teclado. Prueba `ai-scripts/pruebas/prueba-fase11-1-ui.mjs`: 31/31. Deja siumax limpio.
+- **Evicamp intacto.** Sigue: 11.2 (IGV por producto e ICBPER) y 11.3 (Caja). El dueño debe crear la cuenta de prueba de Nubefact y decir el RUC y el régimen.
+
+---
+
 ## 02/11/2026 (noche, 69) · Claude — Nuevo aspecto de la Tienda Web (subido SOLO a siumax)
 - **Dueño:** *"yo lo veo igual sinceramente la tienda virtual para cada cliente esta feo"*.
 - **Causa de fondo:** la tienda heredaba el estilo de la caja: `* { border-radius: 0 !important }`, letra agrandada (`--text-xs` 14px...) y el tema oscuro del dueño (`html[data-theme=dark] .bg-white`).
