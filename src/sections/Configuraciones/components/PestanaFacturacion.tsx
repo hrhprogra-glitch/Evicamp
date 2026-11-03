@@ -163,6 +163,10 @@ export const PestanaFacturacion: React.FC<{ onIrEmpresa: () => void }> = ({ onIr
       if (!new RegExp(`^${letra}[A-Z0-9]{3}$`).test(serie)) return avisar(`La serie de ${nombre} debe tener 4 caracteres y empezar con ${letra} (ej. ${letra}001).`);
     }
     if (cfg.activo) {
+      // Fase 11.7: SiuMax habilita la facturación de cada tienda (Panel); sin eso el facturador no la atiende
+      if (visto === null || visto > 300) {
+        return avisar('La facturación de esta tienda todavía no está habilitada por SiuMax (el facturador no la atiende). Pide que la habiliten y vuelve a intentar.');
+      }
       if (faltanEmpresa.length) {
         return avisar(`Para activar la facturación falta en Ajustes > Datos de la empresa: ${faltanEmpresa.join(', ')}.`);
       }

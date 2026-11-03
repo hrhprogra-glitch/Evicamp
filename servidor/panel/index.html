@@ -611,6 +611,17 @@ async function modalCliente(slug, vista) {
     </div>
     ${d.plan && d.plan.notas ? `<div class="ayuda" style="margin-top:8px">Notas: ${esc(d.plan.notas)}</div>` : ''}
 
+    ${d.facturacion ? `<div class="sub"><span>Facturación electrónica (SUNAT)</span></div>
+    <div class="datos">
+      <div class="dato"><small>SiuMax</small><b><span class="chip ${d.facturacion.habilitada ? 'c-ok' : 'c-gris'}">${d.facturacion.habilitada ? 'Habilitada' : 'No habilitada'}</span></b></div>
+      <div class="dato"><small>En su sistema</small><b>${!d.facturacion.instalada ? 'Falta actualizar su sistema' : d.facturacion.activo ? `Activada (modo ${esc(String(d.facturacion.modo || '').toLowerCase())})` : 'Desactivada'}</b></div>
+      <div class="dato"><small>Comprobantes este mes</small><b>${d.facturacion.comprobantes_mes ?? '-'}</b></div>
+      <div class="dato"><small>RUC</small><b>${esc(d.facturacion.ruc) || '-'}</b></div>
+      <div class="dato"><small>Facturador revisó</small><b>${d.facturacion.visto ? esc(d.facturacion.visto.split(' ')[0].split('-').reverse().join('/') + ' ' + d.facturacion.visto.split(' ')[1]) : '-'}</b></div>
+    </div>
+    <div class="ayuda" style="margin:6px 0">Habilitar = el facturador atiende a este negocio y su administrador puede activar boletas y facturas en Ajustes &gt; Facturación. Deshabilitar = su Caja vuelve a Nota de venta. Cóbralo en su plan.</div>
+    <button type="button" class="btn btn-sm ${d.facturacion.habilitada ? 'btn-warn' : 'btn-ok'}" id="btn-facturacion-cliente">${d.facturacion.habilitada ? 'Deshabilitar facturación' : 'Habilitar facturación'}</button>` : ''}
+
     ${d.externo ? '' : `<div class="sub"><span>Usuarios (${d.usuarios.length})</span></div>
     <div class="ayuda" style="margin:-4px 0 8px">El dueño crea y maneja a sus trabajadores desde su sistema (Ajustes > Gestión de usuarios). Las contraseñas están encriptadas y no se pueden ver; aquí puedes poner una nueva si alguien la olvidó.</div>
     <table><thead><tr><th>Nombre</th><th>Usuario (correo)</th><th>Rol</th><th>Estado</th><th>Último ingreso</th><th></th></tr></thead><tbody>
@@ -623,6 +634,18 @@ async function modalCliente(slug, vista) {
     </tbody></table>`}
     <div id="bloque-reset"></div>
     <div id="modal-error" class="error oculto"></div>`;
+
+  const bFact = $('#btn-facturacion-cliente');
+  if (bFact) bFact.onclick = async () => {
+    const habilitar = !d.facturacion.habilitada;
+    if (!habilitar && !confirm(`¿Deshabilitar la facturación de ${d.nombre}? Su Caja vuelve a entregar Nota de venta.`)) return;
+    bFact.disabled = true;
+    try {
+      await api('/api/clientes/facturacion', { slug: d.slug, habilitar });
+      toast(habilitar ? 'Facturación habilitada: su administrador ya puede activarla en Ajustes > Facturación.' : 'Facturación deshabilitada.');
+      modalCliente(d.slug);
+    } catch (ex) { errorModal(ex.message); bFact.disabled = false; }
+  };
 
   $('#modales .modal-cuerpo').addEventListener('click', (e) => {
     const b = e.target.closest('button[data-reset]');
