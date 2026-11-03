@@ -7,6 +7,15 @@
 
 ---
 
+## 03/11/2026 (madrugada, 73) · Claude — FASE 11.3 hecha (Caja con Boleta y Factura)
+- **Commit f2303a2.** Ventana de pago (`ModalCobro`): fila "Comprobante" (`#cobro-comp-NOTA/BOLETA/FACTURA`) solo si la facturación está activa (`cargarFacturacionCaja`, se relee al cerrar la ventana). Campos `#cobro-doc-num`, `#cobro-doc-nombre`, `#cobro-doc-direccion` (factura). Reglas en `src/utils/comprobante.ts` (`errorComprobante`). Teclado: Tarjeta ↓ comprobante ↓ datos ↓ Imprimir; Enter en el último campo cobra.
+- La Caja inserta con `doc_type` + `cpe_cliente_*` y `.select('doc_serial, doc_number...')`; con Nota de venta inserta EXACTAMENTE como antes (sin columnas nuevas: no rompe bases sin fase 11).
+- Ticket (`TicketImprimible`, prop `comprobante`): tipo + número, razón social, cliente, desglose de IGV/exonerado/inafecto/ICBPER, QR (`qrcode-generator`) y leyenda; "sin valor tributario" en simulado/prueba. Productos de la Caja traen `tipoIgv`/`esBolsa`.
+- Prueba `prueba-fase11-3-ui.mjs`: 26/26 (boleta con DNI, factura con RUC inválido/válido, boleta > S/ 700, nota normal, facturador, facturación apagada). Solo siumax.
+- Pendiente para la 11.4: sin internet (hoy, sin conexión la Caja no ve la facturación y cobra con Nota), reimprimir desde el historial con QR y pantalla "Comprobantes".
+
+---
+
 ## 03/11/2026 (madrugada, 72) · Claude — FASE 11.2 hecha (impuesto por producto y bolsas) + 2 errores de la ficha del producto
 - **Dueño:** "si hazlo ok" a hacer TODAS las partes de la Fase 11 en orden (11.2 → 11.8), avisando al terminar cada una.
 - **11.2 (commit 4ad13a0):** `products.tipo_igv` (GRAVADO/EXONERADO/INAFECTO) y `es_bolsa`; `sale_details` copia ambos al vender (trigger `trg_impuesto_linea_venta`); `facturacion_config.icbper_monto` (0.50, editable en Ajustes > Facturación). Ficha del producto: fila "Impuesto" + "Es bolsa plástica" después de Garantía (ids `btn-igv-*`, `btn-es-bolsa-producto`), teclado conectado. Facturador 11.2.0 separa gravado/exonerado/inafecto/ICBPER (la bolsa: lo cobrado incluye el ICBPER).
