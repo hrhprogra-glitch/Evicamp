@@ -864,10 +864,11 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                       onKeyDown={(e) => {
                         const ir = (destino: string) => { e.preventDefault(); const el = document.getElementById(destino) as HTMLInputElement | null; el?.focus(); };
                         const siguiente = campos[i + 1]?.[0];
-                        const anterior = campos[i - 1]?.[0] || `cobro-comp-${compTipo}`;
+                        // Fila 1: documento y nombre (lado a lado). Fila 2: dirección (solo factura)
+                        const enFila1 = i < 2;
                         if (e.key === 'Enter') { e.preventDefault(); if (siguiente) ir(siguiente); else if (puedeConfirmar) handleCobrar(); else ir('cobro-btn-imprimir'); }
-                        else if (e.key === 'ArrowDown') ir(siguiente || 'cobro-btn-imprimir');
-                        else if (e.key === 'ArrowUp') ir(anterior);
+                        else if (e.key === 'ArrowDown') ir(enFila1 ? (campos[2]?.[0] || 'cobro-btn-imprimir') : 'cobro-btn-imprimir');
+                        else if (e.key === 'ArrowUp') ir(enFila1 ? `cobro-comp-${compTipo}` : campos[0][0]);
                         // Documento y nombre van lado a lado: ←/→ pasan de uno a otro en el borde del texto
                         else if (e.key === 'ArrowRight' && i === 0 && e.currentTarget.selectionEnd === e.currentTarget.value.length) ir(campos[1][0]);
                         else if (e.key === 'ArrowLeft' && i === 1 && e.currentTarget.selectionStart === 0) ir(campos[0][0]);
@@ -929,7 +930,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                 e.preventDefault();
                 const arriba = !facturacion ? 'pago-tarjeta'
                   : compTipo === 'NOTA' ? `cobro-comp-${compTipo}`
-                  : compTipo === 'FACTURA' ? 'cobro-doc-direccion' : 'cobro-doc-nombre';
+                  : compTipo === 'FACTURA' ? 'cobro-doc-direccion' : 'cobro-doc-num';
                 document.getElementById(arriba)?.focus();
               }
               if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('cobro-btn-confirm')?.focus(); }
