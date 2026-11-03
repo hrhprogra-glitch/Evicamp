@@ -4,7 +4,9 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 02/11/2026 (tarde, 65), Antigravity: Fases 9 (Almacenes y Traspasos) y 10 (Tienda Web para PC y Celular con pedidos WhatsApp) completadas y probadas 100% en conjunto en el entorno de pruebas siumax. La Fase 8 permanece lista en siumax sin tocar Evicamp ni hacer push a main.
+- **Última actualización:** 03/11/2026 (78), Claude: **FASE 11 (SUNAT) COMPLETA EN SIUMAX** (11.1 → 11.8, rama `fase-11-sunat`, último commit 1838ed2). Directo a SUNAT probado contra el ambiente de pruebas de SUNAT: boleta, factura y nota de crédito ACEPTADAS. Evicamp intacto; nada subido a GitHub.
+- **Siguiente:** el dueño revisa la Fase 11 en siumax. Pendientes del dueño: cuenta Nubefact (revendedor, varios RUC) y, para enviar directo en Real, usuario SOL secundario + certificado digital de cada negocio. Pasar a Evicamp (fases 8 a 11) SOLO cuando el dueño lo diga.
+- (02/11/2026, tarde, 65), Antigravity: Fases 9 (Almacenes y Traspasos) y 10 (Tienda Web para PC y Celular con pedidos WhatsApp) completadas y probadas 100% en conjunto en el entorno de pruebas siumax. La Fase 8 permanece lista en siumax sin tocar Evicamp ni hacer push a main.
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 3, 4, 5, 6 y 7 en producción en Evicamp (commits d36efca, bd3780f, 994bdca, 59538a0 y merge de Fase 7).
 - **Fases terminadas en pruebas (siumax):** Fase 8 (Producción y Recetas), Fase 9 (Múltiples Tiendas y Traspasos) y Fase 10 (Tienda Web para PC y Celular). Todas listas para revisión del dueño.
 
@@ -12,7 +14,7 @@
 | Propuesta | Estado |
 |---|---|
 | **Nuevo aspecto de la Tienda Web** (PC y celular, libre del estilo de la caja) | **✅ Hecho y en siumax (02/11, commit c202ae8); falta revisión del dueño. siumax tiene 0 productos (pedir permiso para cargar de prueba)** |
-| **Fase 11 SUNAT: plan en 8 partes (11.1 servidor y datos → 11.8 directo a SUNAT)** | **Aprobado 02/11. ✅ 11.1 hecha en siumax (rama fase-11-sunat, 9e6d6fd; modo SIMULADO probado). Sigue 11.2. Faltan del dueño: cuenta de prueba Nubefact, RUC, régimen** |
+| **Fase 11 SUNAT: plan en 8 partes (11.1 servidor y datos → 11.8 directo a SUNAT)** | **Aprobado 02/11. ✅ 11.1 a 11.8 hechas y probadas en siumax (03/11, rama fase-11-sunat, 1838ed2). Directo a SUNAT aceptado por el ambiente de pruebas de SUNAT. Falta: revisión del dueño, probar Nubefact con cuenta real (el dueño ya tiene RUC 10, la pide), y pasar a Evicamp solo con su aviso** |
 | **Fase 9 (Varias tiendas o almacenes y traspasos)** | **✅ Hecho y probado en siumax (02/11); listo para revisión del dueño** |
 | **Fase 10 (Tienda Web para PC y Celular con pedidos por WhatsApp)** | **✅ Hecho y probado en siumax (02/11); listo para revisión del dueño** |
 | **Fase 8 (Producción y Encargos: Recetas, Insumos, Combos y Kits)** | **✅ Hecho y probado en siumax (31/10); no pasar a producción aún (orden del dueño)** |

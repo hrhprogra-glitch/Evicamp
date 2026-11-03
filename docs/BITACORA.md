@@ -7,6 +7,16 @@
 
 ---
 
+## 03/11/2026 (78) · Claude — FASE 11.8 hecha (directo a SUNAT) · FASE 11 COMPLETA en siumax
+- **Commit 1838ed2.** `servidor/facturador/sunat.mjs`: arma el XML UBL 2.1 (Invoice para boleta/factura, CreditNote para NC), lo firma (xml-crypto, RSA-SHA1, firma "enveloped" con Id `SignatureSP`), lo mete en un ZIP y lo manda por SOAP `sendBill`; lee la constancia (CDR). Código de error SUNAT 2000-3999 = RECHAZADO; lo demás = ERROR (se reintenta).
+- Facturador 11.8.0: `proveedor` = `NUBEFACT` o `SUNAT`. Directo en modo PRUEBA usa el ambiente beta de SUNAT con `{RUC}MODDATOS`/`moddatos` y un certificado de prueba autogenerado (`/var/lib/siumax-cpe/prueba-sunat.*`); en REAL usa el usuario SOL SECUNDARIO + certificado .pfx del negocio. Guarda copia del XML firmado y `R-*.zip` (CDR).
+- SQL: CHECK de proveedor, columnas `sol_usuario`, `sol_clave`, `cert_pfx` (base64), `cert_clave` en `privado.facturacion_credenciales` (ruta/token ahora pueden ir vacíos), `fn_guardar_credenciales_sunat`, `fn_estado_credenciales_facturacion` devuelve `sunat_usuario` y `sunat_certificado`. `deshacer-fase11.sql` al día.
+- Ajustes > Facturación: botones `#fact-prov-NUBEFACT` / `#fact-prov-SUNAT`, campos `#fact-sol-usuario`, `#fact-sol-clave`, `#fact-cert`, `#fact-cert-clave`, `#fact-btn-guardar-sunat`. Real sin usuario SOL + certificado no deja activar.
+- Pruebas: `prueba-fase11-8-ui.mjs` 20/20 (boleta, factura y NC ACEPTADAS por el ambiente de pruebas de SUNAT; certificado .pfx guardado y abierto); `prueba-sunat-beta.mjs` (se corre en el VPS); la 11.1 se volvió a correr: OK.
+- **Pendiente:** Nubefact sin probar con cuenta real; "consultar" en directo = reenviar (SUNAT avisa si ya estaba); las boletas también van por `sendBill` (SUNAT lo acepta; el resumen diario no se hizo). Evicamp NO tocado.
+
+---
+
 ## 03/11/2026 (mañana, 77) · Claude — FASE 11.7 hecha (facturación por cliente en el Panel)
 - `servidor/panel/panel.py`: `facturacion_cliente`, `cambiar_facturacion`, ruta `/api/clientes/facturacion`; el detalle del cliente trae `facturacion`. `index.html`: sección con botón `#btn-facturacion-cliente`. Subido con `node ai-scripts/sugerencias-servidor.cjs siumax` (sube solo panel.py e index.html, revisa sintaxis). El panel corre como root y edita `/opt/siuhub/facturador/bases.json`.
 - Solo aplica a clientes del Panel (bases `cli_*`). Evicamp (`postgres`) y siumax se agregan con `node ai-scripts/facturador-servidor.cjs siumax postgres`.

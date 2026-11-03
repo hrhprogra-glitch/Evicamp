@@ -612,3 +612,4 @@
 - Claude hizo la **11.5** (notas de crédito al anular y al devolver; 825df14, 24/24). Sigue la 11.6 (reportes para el contador).
 - Claude hizo la **11.6** (reporte del mes para el contador: resumen e Excel; 18/18). Siguen 11.7 (Panel) y 11.8 (directo a SUNAT).
 - Claude hizo la **11.7** (habilitar facturación por cliente desde el Panel). Sigue la 11.8 (directo a SUNAT).
+- **Dueño:** *"continua lo que dejaste"*. Claude terminó la **11.8** (directo a SUNAT sin proveedor; 1838ed2, 20/20): el ambiente de pruebas de SUNAT aceptó boleta, factura y nota de crédito. **Fase 11 completa en siumax.** Evicamp intacto, sin push.
