@@ -23,6 +23,8 @@ import { ModalNombreEspera } from './components/ModalNombreEspera';
 import { ModalCotizacionPOS } from './components/ModalCotizacionPOS';
 import { ModalPedidoPOS } from './components/ModalPedidoPOS';
 import { traerTodo } from '../../utils/traerTodo';
+import { cargarFacturacionCaja, calcularTotalesCPE, numeroComprobante, DOC_TYPE, contarComprobantesConProblema, type DatosComprobante, type FacturacionCaja } from '../../utils/comprobante';
+import { ModalComprobantesProblema } from '../../components/ModalComprobantesProblema';
 import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ EVICAMP: Mini Reporte en Tiempo Real
 
 export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
@@ -41,6 +43,10 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
   });
   
   // 🚀 MEMORIA PERSISTENTE: Cliente seleccionado (opcional, por defecto Cliente Varios)
+  // Fase 11.3: boletas y facturas (null = facturación apagada: la Caja cobra con Nota de venta como siempre)
+  const [facturacion, setFacturacion] = useState<FacturacionCaja | null>(null);
+  const [cpeConProblema, setCpeConProblema] = useState(0);
+  const [verComprobantes, setVerComprobantes] = useState(false);
   const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(() => {
     const guardado = localStorage.getItem('evicamp_cliente_pos');
     return guardado ? JSON.parse(guardado) : null;
@@ -481,13 +487,14 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
     // (antes se bloqueaba la venta si la caja era del día anterior)
     setHasOpenSession(!!session);
     // Supabase devuelve máximo 1000 filas por consulta: traerTodo las pide por bloques
-    const [{ data: productsData }, { data: variantsData }] = await Promise.all([
+    const [{ data: productsData }, { data: variantsData }, { data: recipesData }] = await Promise.all([
       traerTodo(() => supabase.from('products')
         .select('*')
         .eq('is_active', 1) // 🛡️ EVICAMP: Bloqueo de productos fantasma directo en el motor de BD
         .order('name', { ascending: true })
         .order('id')),
       traerTodo(() => supabase.from('product_variants').select('*').eq('is_active', 1).order('id')),
+      traerTodo(() => supabase.from('product_recipes').select('*').order('id')),
     ]);
 
     const variantesPorProducto = new Map<number | string, any[]>();
@@ -496,12 +503,48 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       if (!variantesPorProducto.has(pid)) variantesPorProducto.set(pid, []);
       variantesPorProducto.get(pid)!.push(v);
     });
+
+    const recetasPorProducto = new Map<number | string, any[]>();
+    (recipesData || []).forEach((r: any) => {
+      const pid = r.parent_product_id;
+      if (!recetasPorProducto.has(pid)) recetasPorProducto.set(pid, []);
+      recetasPorProducto.get(pid)!.push(r);
+    });
+
+    const stockPorProducto = new Map<number | string, number>();
+    (productsData || []).forEach((p: any) => {
+      stockPorProducto.set(p.id, Number(p.quantity || 0));
+    });
+    const stockPorVariante = new Map<number | string, number>();
+    (variantsData || []).forEach((v: any) => {
+      stockPorVariante.set(v.id, Number(v.quantity || 0));
+    });
       
     if (productsData) {
       const mapeados: Product[] = productsData.map((p: any) => {
         const vars = variantesPorProducto.get(p.id) || [];
         const tieneVars = Boolean(p.tiene_variantes || vars.length > 0);
-        const stockVariantes = vars.reduce((acc: number, v: any) => acc + (Number(v.quantity) || 0), 0);
+        const tipoComp = p.tipo_compuesto || 'ESTANDAR';
+        const recetas = recetasPorProducto.get(p.id) || [];
+        let stockFinal = Number(p.quantity) || 0;
+
+        // Fase 8: Si es un COMBO / KIT, su stock disponible depende de sus insumos actuales
+        if (tipoComp === 'COMBO') {
+          if (recetas.length === 0) {
+            stockFinal = 0;
+          } else {
+            let maxCombos = Infinity;
+            for (const item of recetas) {
+              const cantReq = Number(item.quantity) || 1;
+              const stockInsumo = item.component_variant_id
+                ? (stockPorVariante.get(item.component_variant_id) ?? 0)
+                : (stockPorProducto.get(item.component_product_id) ?? 0);
+              const combosPosibles = Math.floor(stockInsumo / cantReq);
+              if (combosPosibles < maxCombos) maxCombos = combosPosibles;
+            }
+            stockFinal = maxCombos === Infinity ? 0 : Math.max(0, maxCombos);
+          }
+        }
 
         return {
           id: p.id,
@@ -509,7 +552,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           price: Number(p.price) || 0,
           precioMayorista: p.precio_mayorista != null && !isNaN(Number(p.precio_mayorista)) ? Number(p.precio_mayorista) : undefined,
           cost: Number(p.cost_price) || 0,
-          quantity: Number(p.quantity) || 0,
+          quantity: stockFinal,
           minStock: Number(p.min_stock) || 0,
           code: p.code || 'NO-SKU',
           barcode: p.barcode || '',
@@ -527,8 +570,13 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           ubicacion: p.ubicacion || null,
           controlaSeries: Boolean(p.controla_series),
           mesesGarantia: Number(p.meses_garantia || 0),
+          tipoIgv: p.tipo_igv || 'GRAVADO',
+          esBolsa: Boolean(p.es_bolsa),
           tieneVariantes: tieneVars,
-          variantes: vars
+          variantes: vars,
+          tipoCompuesto: tipoComp,
+          costoAdicionalProduccion: Number(p.costo_adicional_produccion || 0),
+          recetas: recetas,
         } as Product;
       });
       setProductos(mapeados);
@@ -844,11 +892,23 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
     setClienteSeleccionado(restoredCliente);
     setActiveTabIndex(index); // Actualizar el índice para que brille permanente
   };
+  // Fase 11.3: ¿esta tienda emite boletas/facturas? (Ajustes > Facturación)
+  useEffect(() => { cargarFacturacionCaja().then(setFacturacion); }, []);
+  // Fase 11.4: ¿quedó algún comprobante con error o atascado? (se revisa al vender y cada 2 minutos)
+  useEffect(() => {
+    if (!facturacion) { setCpeConProblema(0); return; }
+    const revisar = () => contarComprobantesConProblema().then(setCpeConProblema);
+    revisar();
+    const t = setInterval(revisar, 120000);
+    return () => clearInterval(t);
+  }, [facturacion, refreshReport]);
+
   // 6. PROCESAR PAGO (GUARDA VENTA, REDUCE STOCK Y REGISTRA FIADOS)
   const handleConfirmPayment = async (
     pagos: { efectivo: number, yape: number, tarjeta: number },
     imprimirBoleta: boolean,
-    fiadoData?: any 
+    fiadoData?: any,
+    comprobante?: DatosComprobante
   ) => {
     if (isSubmitting) return; // 🛡️ BLOQUEO ANTI-DUPLICADOS
     
@@ -897,7 +957,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         : null;
       const finalCustomerName = fiadoData?.clienteNombre || clienteSeleccionado?.nombre || null;
 
-      const { error: saleError } = await supabase.from('sales').insert([{
+      const filaVenta = {
         id: trueSaleId,
         total: totalVenta,
         payment_type: tipoPago,
@@ -910,7 +970,26 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         sunat_status: 'ACEPTADO',
         created_at: new Date().toISOString(),
         is_synced: 1
-      }]);
+      };
+      // Fase 11.3: con Boleta o Factura, la base pone la serie y el número (trg_asignar_comprobante)
+      // y los devuelve para el ticket. Con Nota de venta la venta se guarda exactamente como antes.
+      const conComprobante = Boolean(comprobante && comprobante.tipo !== 'NOTA');
+      let datosCpe: { doc_type?: number | null; doc_serial?: string | null; doc_number?: string | null; cpe_modo?: string | null } | null = null;
+      let saleError: { message: string } | null = null;
+      if (conComprobante && comprobante) {
+        const { data, error } = await supabase.from('sales').insert([{
+          ...filaVenta,
+          doc_type: DOC_TYPE[comprobante.tipo],
+          cpe_cliente_tipo_doc: comprobante.clienteTipoDoc,
+          cpe_cliente_num_doc: comprobante.clienteNumDoc || null,
+          cpe_cliente_nombre: comprobante.clienteNombre || null,
+          cpe_cliente_direccion: comprobante.clienteDireccion || null,
+        }]).select('doc_type, doc_serial, doc_number, cpe_modo');
+        saleError = error;
+        datosCpe = Array.isArray(data) ? data[0] ?? null : null;
+      } else {
+        ({ error: saleError } = await supabase.from('sales').insert([filaVenta]));
+      }
 
       if (saleError) {
         alert('❌ No se pudo registrar la venta. No se guardó nada; el ticket sigue en caja para reintentar.\n\nDetalle: ' + saleError.message);
@@ -1020,7 +1099,23 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           total: totalVenta,
           pagos: { efectivo: pagos.efectivo, yape: pagos.yape, tarjeta: pagos.tarjeta },
           vuelto: vuelto,
-          nroBoleta: `B001-${String(trueSaleId).substring(0,8).padStart(8, '0')}`,
+          nroBoleta: conComprobante
+            ? (numeroComprobante(datosCpe?.doc_serial, datosCpe?.doc_number) || 'POR NUMERAR')
+            : `B001-${String(trueSaleId).substring(0,8).padStart(8, '0')}`,
+          comprobante: conComprobante && comprobante ? {
+            docType: DOC_TYPE[comprobante.tipo],
+            serie: datosCpe?.doc_serial || null,
+            numero: datosCpe?.doc_number || null,
+            modo: datosCpe?.cpe_modo || facturacion?.modo || null,
+            clienteTipoDoc: comprobante.clienteTipoDoc,
+            clienteNumDoc: comprobante.clienteNumDoc,
+            clienteNombre: comprobante.clienteNombre,
+            clienteDireccion: comprobante.clienteDireccion,
+            fecha: filaVenta.created_at,
+            totales: calcularTotalesCPE(
+              cart.map((i) => ({ subtotal: Number(i.subtotal), cantidad: Number(i.cartQuantity) * (i.presentacion?.factor ?? 1), tipoIgv: i.tipoIgv, esBolsa: i.esBolsa })),
+              facturacion?.igvPct ?? 18, facturacion?.icbperUnidad ?? 0.5),
+          } : null,
           fiadoData: fiadoData,
           cliente: clienteSeleccionado ? {
             nombre: clienteSeleccionado.nombre,
@@ -1033,7 +1128,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         });
         setIsVistaPreviaOpen(true);
       } else {
-        alert(`✅ Venta completada con éxito.\nVuelto: S/ ${vuelto.toFixed(2)}`);
+        alert(`✅ Venta completada con éxito.${conComprobante ? `\n${comprobante?.tipo === 'FACTURA' ? 'Factura' : 'Boleta'}: ${numeroComprobante(datosCpe?.doc_serial, datosCpe?.doc_number) || 'se numera al conectarse'}` : ''}\nVuelto: S/ ${vuelto.toFixed(2)}`);
         // El buscador queda listo para escanear el siguiente producto: ventas corridas sin pausas.
         setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
       }
@@ -1069,6 +1164,27 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         </div>
       )}
       
+      {/* FASE 11.4: aviso de comprobantes con problema (abre la lista de los que tienen problema) */}
+      {cpeConProblema > 0 && (
+        <button
+          id="btn-aviso-comprobantes"
+          type="button"
+          onClick={() => setVerComprobantes(true)}
+          className="absolute bottom-2 left-2 z-20 bg-[var(--color-danger)] text-white px-3 py-2 border-2 border-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)] text-[12px] font-black uppercase tracking-wider cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+          title="Ver los comprobantes con problema"
+        >
+          ⚠ {cpeConProblema} {cpeConProblema === 1 ? 'comprobante' : 'comprobantes'} con problema
+        </button>
+      )}
+      <ModalComprobantesProblema
+        isOpen={verComprobantes}
+        onClose={() => {
+          setVerComprobantes(false);
+          contarComprobantesConProblema().then(setCpeConProblema);
+          setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
+        }}
+      />
+
       {/* SELECTOR DE PANEL (solo tablet/celular) */}
       <div className="lg:hidden grid grid-cols-2 border-2 border-[var(--color-ink)] bg-white shrink-0">
         <button
@@ -1160,8 +1276,10 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       {/* MODAL DE COBRO */}
       <ModalCobro 
         isOpen={isCobroModalOpen}
+        facturacion={facturacion}
         onClose={() => {
           setIsCobroModalOpen(false);
+          cargarFacturacionCaja().then(setFacturacion);
           setSelectedIndex(-1); // 🛡️ AÑADIDO: Resetear estado del carrito para soltar el botón F4
           if (document.activeElement instanceof HTMLElement) {
             document.activeElement.blur();
@@ -1204,7 +1322,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
             </div>
             
             {/* CONTENEDOR DEL TICKET (Fondo gris y zoom automático) */}
-            <div className="flex-1 overflow-y-auto p-6 bg-[var(--color-bg)] flex justify-center custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 bg-[var(--color-bg)] flex items-start justify-center custom-scrollbar">
               {/* Le aplicamos un scale-110 para que en la PC se vea un poco más grande y nítido */}
               <div className="transform sm:scale-110 origin-top pb-10">
                 <TicketImprimible
@@ -1217,6 +1335,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
                   fiadoData={ultimaVenta.fiadoData}
                   cliente={ultimaVenta.cliente}
                   vendedor={ultimaVenta.vendedor}
+                  comprobante={ultimaVenta.comprobante}
                 />
               </div>
             </div>

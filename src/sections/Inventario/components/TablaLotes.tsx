@@ -292,7 +292,7 @@ export const TablaLotes: React.FC<Props> = ({
         <div className="min-w-[960px]">
 
       {/* Cabecera de la Tabla (TEXTO AGRANDADO a text-sm) */}
-      <div className="grid grid-cols-12 bg-[var(--color-ink)] text-white p-4 text-sm font-black uppercase tracking-[0.1em]">
+      <div className="tabla-cabecera grid grid-cols-12 p-4">
         <div className="col-span-2">Fecha / Doc / Prov.</div>
         <div className="col-span-3">Producto</div>
         <div className="col-span-2 text-center">Estado / Vence</div>

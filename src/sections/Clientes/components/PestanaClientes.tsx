@@ -282,7 +282,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
   const claseSelect = 'w-full min-w-0 lg:w-48 border-2 border-[var(--color-border)] px-2 sm:px-4 py-3 text-xs sm:text-sm font-black uppercase outline-none focus:border-[var(--color-info)] bg-white cursor-pointer rounded-none';
 
   return (
-    <div className="flex flex-col border-2 border-[var(--color-ink)] bg-white">
+    <div className="flex flex-col tabla-marco">
       {/* BARRA */}
       <div className="p-3 border-b-2 border-[var(--color-border)] grid grid-cols-3 lg:flex gap-2 sm:gap-3 shrink-0">
         <input id="buscador-clientes" autoComplete="off" spellCheck={false} data-lpignore="true"
@@ -318,7 +318,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
       {/* TABLA: SIN SCROLL VERTICAL INTERNO (el scroll lo maneja la ventana general) */}
       <div className="w-full overflow-x-auto custom-scrollbar">
         <table className="w-full text-left border-collapse">
-          <thead className="sticky top-0 bg-[var(--color-ink)] text-white z-10">
+          <thead className="tabla-cabecera sticky top-0 z-10">
             <tr className="uppercase text-[11px] font-black tracking-widest">
               {/* DNI/RUC, teléfono, plazo y dirección se ven SIEMPRE */}
               <th className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6 border-r border-white/20">Cliente / Empresa</th>
@@ -336,7 +336,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
             {visibles.length ? visibles.map(({ c, grupo, deuda, ultimo, tieneVencido }) => (
               <tr key={c.id} role="button" tabIndex={0} data-row="true" data-fila-cliente="true" data-cliente-id={c.id}
                 onClick={() => onAbrir(c)} onKeyDown={teclasFila(c)}
-                className="hover:bg-[var(--color-surface)] focus:outline-none focus-visible:bg-[var(--color-bg-2)] cursor-pointer">
+                className="tabla-fila cursor-pointer">
                 <td className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-black text-[var(--color-ink)] uppercase text-base">{c.nombre}</span>

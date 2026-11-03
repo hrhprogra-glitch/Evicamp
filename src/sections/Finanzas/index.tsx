@@ -2,7 +2,10 @@ import { coincideBusqueda } from '../../utils/busqueda';
 import { formatearCantidadDetalle } from '../../utils/formato';
 // src/sections/Finanzas/index.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { Wallet, ArrowDownToLine, Lock, CreditCard, Smartphone, Banknote, ReceiptText, Search, ArrowLeftRight, ShieldCheck } from 'lucide-react';
+import { Wallet, ArrowDownToLine, Lock, CreditCard, Smartphone, Banknote, ReceiptText, Search, ArrowLeftRight, ShieldCheck, FileSpreadsheet, AlertTriangle } from 'lucide-react';
+import { ModalComprobantesProblema } from '../../components/ModalComprobantesProblema';
+import { ReporteContador } from '../../components/ReporteContador';
+import { cargarFacturacionCaja } from '../../utils/comprobante';
 import { supabase } from '../../db/supabase';
 import type { CashSession, CashMovement, SuperMetricas, UnifiedItem } from './types';
 
@@ -22,6 +25,7 @@ import { traerTodo } from '../../utils/traerTodo';
 import { numeroTicketDe, autorDe } from '../../utils/movimientosCaja';
 import { confirmar } from '../../utils/dialogos';
 import { conAutorizacion } from '../../utils/autorizacion';
+import { comprobanteDeVenta, contarComprobantesConProblema } from '../../utils/comprobante';
 
 export const Finanzas: React.FC = () => {
   // Abrir/cerrar caja y registrar ingresos/egresos son permisos distintos
@@ -45,10 +49,25 @@ export const Finanzas: React.FC = () => {
   const [isCierreModalOpen, setIsCierreModalOpen] = useState(false);
   const [isCambioModalOpen, setIsCambioModalOpen] = useState(false);
   const [ticketIdParaCambio, setTicketIdParaCambio] = useState<string | null>(null);
+  const [modoCambio, setModoCambio] = useState<'CAMBIO' | 'DEVOLVER'>('CAMBIO'); // "[D] Devolver" del ticket abre en Solo devolver
   const [isGarantiaModalOpen, setIsGarantiaModalOpen] = useState(false);
 
   // NUEVO: Estados y funciones para el Historial y Limpieza
   const [vistaActual, setVistaActual] = useState<'ACTUAL' | 'HISTORIAL'>('ACTUAL');
+  // Fase 11.4: pantalla "Comprobantes" (boletas y facturas), solo si la tienda tiene facturación
+  const [hayFacturacion, setHayFacturacion] = useState(false);
+  // Boletas/facturas: se ven en las tablas con su estado; aquí solo el reporte del contador y el aviso de problemas
+  const [verProblemas, setVerProblemas] = useState(false);
+  const [verReporte, setVerReporte] = useState(false);
+  const [cpeProblemas, setCpeProblemas] = useState(0);
+  useEffect(() => { cargarFacturacionCaja().then((f) => setHayFacturacion(Boolean(f))); }, []);
+  useEffect(() => {
+    if (!hayFacturacion) return;
+    const revisar = () => contarComprobantesConProblema().then(setCpeProblemas);
+    revisar();
+    const t = setInterval(revisar, 60000);
+    return () => clearInterval(t);
+  }, [hayFacturacion]);
   const [pestañaFlujo, setPestañaFlujo] = useState<'INTERNO' | 'EXTERNO'>('INTERNO'); // <-- Control de Pestañas
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('TODOS');
@@ -292,6 +311,7 @@ export const Finanzas: React.FC = () => {
             monto_pagado: Number(t.amount_cash || 0) + Number(t.amount_yape || 0) + Number(t.amount_card || 0) + Number(t.amount_transfer || 0),
             monto_deuda: esFiado && fiado ? Number(fiado.amount) - Number(fiado.paid_amount) : 0,
             total: Number(t.total) || 0,
+            comprobante: comprobanteDeVenta(t),
             productosStr: t.productosStr,
             vendedor: t.vendedor || null, // quién hizo la venta (lo guarda el servidor con la sesión)
             devolucion: esAnulada(t) ? devolucionesPorTicket.get(String(t.id).slice(-6)) || null : null
@@ -431,7 +451,7 @@ export const Finanzas: React.FC = () => {
       // stock a cada lote según los movimientos de la venta, deja el movimiento ANULACION, anula la venta y su
       // fiado y registra el egreso de la devolución. Sin internet la cola lo imita y lo sube después
       // (src/utils/sinInternet.ts → IMITAR_RPC). El autor (quien autorizó) lo pone el servidor con la sesión.
-      const { error: errAnular } = await supabase.rpc('fn_anular_venta', {
+      const { data: resAnular, error: errAnular } = await supabase.rpc('fn_anular_venta', {
         p_sale_id: Number(id),
         p_sesion_caja: sessionActiva ? String(sessionActiva.id) : null,
         p_pidio: autorizo ? (empleado?.nombre || 'cajero') : null,
@@ -439,7 +459,9 @@ export const Finanzas: React.FC = () => {
       });
       if (errAnular) throw errAnular;
 
-      alert('✅ Ticket anulado. Stock devuelto y caja actualizada.');
+      // Fase 11.5: si la venta tenía boleta/factura electrónica, el servidor emitió la nota de crédito
+      const notaCredito = (resAnular as { nota_credito?: string | null } | null)?.nota_credito;
+      alert(`✅ Ticket anulado. Stock devuelto y caja actualizada.${notaCredito ? `\nSe emitió la nota de crédito ${notaCredito} (se envía a SUNAT sola).` : ''}`);
       cargarDatosCaja(true);
 
     } catch (err: any) {
@@ -745,6 +767,38 @@ export const Finanzas: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap gap-3">
+          {hayFacturacion && cpeProblemas > 0 && (
+            <button
+              id="btn-cpe-problemas"
+              type="button"
+              onClick={() => setVerProblemas(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('btn-reporte-contador')?.focus(); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); (document.getElementById('buscador-finanzas') || document.getElementById('btn-aperturar-caja'))?.focus(); }
+              }}
+              className="flex-1 sm:flex-none justify-center bg-[var(--color-danger)] text-white px-4 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest shadow-[4px_4px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer flex items-center gap-2"
+              title="Boletas, facturas o notas de crédito con error o rechazadas"
+            >
+              <AlertTriangle size={16} /> {cpeProblemas} con problema
+            </button>
+          )}
+          {hayFacturacion && (
+            <button
+              id="btn-reporte-contador"
+              type="button"
+              onClick={() => setVerReporte(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('btn-ver-historial')?.focus(); }
+                else if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('btn-cpe-problemas')?.focus(); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); (document.getElementById('buscador-finanzas') || document.getElementById('btn-aperturar-caja'))?.focus(); }
+              }}
+              className="flex-1 sm:flex-none justify-center bg-[var(--color-bg)] text-[var(--color-ink)] px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest sm:tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer flex items-center gap-2"
+            >
+              <FileSpreadsheet size={16} /> Reporte contador
+            </button>
+          )}
           <button 
             id="btn-ver-historial"
             onClick={() => {
@@ -763,6 +817,9 @@ export const Finanzas: React.FC = () => {
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
+              } else if (e.key === 'ArrowLeft' && document.getElementById('btn-reporte-contador')) {
+                e.preventDefault();
+                document.getElementById('btn-reporte-contador')?.focus();
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 const btnNext = document.getElementById('btn-nuevo-movimiento') || document.getElementById('btn-aperturar-caja');
@@ -908,7 +965,8 @@ export const Finanzas: React.FC = () => {
             }}
             onAnular={handleAnularTicket}
             onDelete={handleDeleteMovimiento}
-            onCambiarProducto={(id) => {
+            onCambiarProducto={(id, modo) => {
+              setModoCambio(modo || 'CAMBIO');
               setTicketIdParaCambio(id);
               setIsCambioModalOpen(true);
             }}
@@ -997,7 +1055,7 @@ export const Finanzas: React.FC = () => {
             </div>
           )}
 
-          <div className="bg-white border-2 border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-border)] sm:shadow-[8px_8px_0_0_var(--color-border)] flex flex-col">
+          <div className="tabla-marco flex flex-col">
              
              <div className="p-3 sm:p-4 bg-[var(--color-bg)] border-b border-[var(--color-border)] flex flex-col sm:flex-row gap-3">
                <div className="relative flex-1">
@@ -1161,6 +1219,7 @@ export const Finanzas: React.FC = () => {
                onVerTicket={(id) => setTicketSeleccionadoParaVer(id)}
                onAnularTicket={handleAnularTicket}
                onCambiarProducto={(id) => {
+                 setModoCambio('CAMBIO');
                  setTicketIdParaCambio(id);
                  setIsCambioModalOpen(true);
                }}
@@ -1188,8 +1247,9 @@ export const Finanzas: React.FC = () => {
       <ModalDetalleTicket 
         ticketId={ticketSeleccionadoParaVer} 
         onClose={() => setTicketSeleccionadoParaVer(null)} 
-        onCambiarProducto={(id) => {
+        onCambiarProducto={(id, modo) => {
           setTicketSeleccionadoParaVer(null);
+          setModoCambio(modo || 'CAMBIO');
           setTicketIdParaCambio(id);
           setIsCambioModalOpen(true);
         }}
@@ -1202,9 +1262,11 @@ export const Finanzas: React.FC = () => {
           setTicketIdParaCambio(null);
         }}
         initialSaleId={ticketIdParaCambio}
+        modoInicial={modoCambio}
         sessionId={sessionActiva?.id}
         onCambioGuardado={() => {
-          void cargarDatosCaja();
+          // Silencioso: con la pantalla de carga se desmonta Finanzas y la ventana perdía el resultado del cambio
+          void cargarDatosCaja(true);
         }}
       />
 
@@ -1212,6 +1274,12 @@ export const Finanzas: React.FC = () => {
         isOpen={isGarantiaModalOpen}
         onClose={() => setIsGarantiaModalOpen(false)}
       />
+      <ModalComprobantesProblema isOpen={verProblemas} onClose={() => {
+        setVerProblemas(false);
+        contarComprobantesConProblema().then(setCpeProblemas);
+        setTimeout(() => (document.getElementById('btn-cpe-problemas') || document.getElementById('btn-reporte-contador'))?.focus(), 50);
+      }} />
+      {verReporte && <ReporteContador onClose={() => { setVerReporte(false); setTimeout(() => document.getElementById('btn-reporte-contador')?.focus(), 50); }} />}
     </div>
   );
 };

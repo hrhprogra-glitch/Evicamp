@@ -1,6 +1,6 @@
 import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
-import { Search, ScanLine, Package, Plus, AlertTriangle, CheckCircle2, Users, X, Scale, Tag } from 'lucide-react';
+import { Search, ScanLine, Package, Plus, AlertTriangle, CheckCircle2, Users, X, Scale, Tag, Boxes } from 'lucide-react';
 import { formatearCantidad } from '../../../utils/formato';
 import { esDecimal, unidadDe } from '../../../utils/unidades';
 import type { Product } from '../../Inventario/types';
@@ -389,6 +389,14 @@ export const TerminalBusqueda: React.FC<Props> = ({
                       <span className="block w-full text-center text-sm sm:text-base font-black text-black bg-[var(--color-warning)] px-2 py-1.5 uppercase tracking-widest whitespace-nowrap rounded-none">
                         CONSUMO
                       </span>
+                    ) : prod.tipoCompuesto === 'COMBO' ? (
+                      <span className={`block w-full text-center text-sm sm:text-base font-black px-2 py-1.5 rounded-none uppercase tracking-wide whitespace-nowrap ${
+                        estaAgotado
+                          ? 'text-red-700 bg-red-100 border border-red-300'
+                          : 'text-amber-900 bg-amber-200 border border-amber-400'
+                      }`}>
+                        {prod.quantity > 0 ? `📦 COMBO: ${prod.quantity}` : '📦 COMBO AGOTADO'}
+                      </span>
                     ) : (
                       <span className={`block w-full text-center text-sm sm:text-base font-black px-2 py-1.5 rounded-none uppercase tracking-wide whitespace-nowrap ${
                         estaAgotado
@@ -414,7 +422,9 @@ export const TerminalBusqueda: React.FC<Props> = ({
                         ? 'border-[var(--color-warning)]/40 bg-[var(--color-warning-bg)]'
                         : esDecimal(prod)
                           ? 'border-[var(--color-info)]/40 bg-[var(--color-info-bg-2)]'
-                          : 'border-[var(--color-border)] bg-[var(--color-bg)]';
+                          : prod.tipoCompuesto === 'COMBO'
+                            ? 'border-amber-400 bg-amber-50/60 dark:bg-amber-950/20'
+                            : 'border-[var(--color-border)] bg-[var(--color-bg)]';
 
                       return (
                         <div className={`flex-1 min-h-0 flex items-center justify-center border ${marcoColor} overflow-hidden ${estaAgotado ? 'grayscale' : ''}`}>
@@ -435,6 +445,11 @@ export const TerminalBusqueda: React.FC<Props> = ({
                             <div className="flex flex-col items-center justify-center gap-1 text-[var(--color-info)]">
                               <Scale size={26} />
                               <span className="text-[9px] font-black uppercase tracking-widest">Balanza/Kg</span>
+                            </div>
+                          ) : prod.tipoCompuesto === 'COMBO' ? (
+                            <div className="flex flex-col items-center justify-center gap-1 text-amber-700">
+                              <Boxes size={26} />
+                              <span className="text-[9px] font-black uppercase tracking-widest">Combo / Kit</span>
                             </div>
                           ) : (
                             <div className="flex flex-col items-center justify-center gap-1 text-[var(--color-muted)]">

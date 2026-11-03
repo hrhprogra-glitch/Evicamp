@@ -7,7 +7,349 @@
 
 ---
 
-## 31/10/2026 (noche, 57) · Antigravity
+## 03/11/2026 (80) · Claude — PASE de las fases 8, 9, 10 y 11 a EVICAMP, clientes y GitHub
+- **Dueño:** "súbelo todo a evicamp y siumax para mis clientes y a mi github". Aclaró: **EVICAMP NO PAGA** (primer cliente, ayudó a hacer SiuMax): NUNCA Mercado Pago / aviso de plan / "Pagar plan". Comprobado: Evicamp no tiene `/suscripcion.json` (devuelve el index), así que no ve nada de eso; el Panel solo lo escribe en clientes `cli_*` (hoy no hay ninguno).
+- **Ensayo primero** (`ai-scripts/pruebas/ensayo-fases8-11-evicamp.cjs`): respaldo → copia `evicamp_ensayo` → seguridad-sesion.sql completo → 0 errores → copia borrada.
+- **Pase real** (`aplicar-fases8-11-evicamp.cjs`): respaldo `/var/lib/postgresql/respaldo-evicamp-pase-fases8-11-2026-11-03T19-14-22-973Z.dump` → SQL completo con ON_ERROR_STOP y lock_timeout 5s, SIN reiniciar la API (3,4 s, 0 errores) → NOTIFY pgrst. 3544 ventas y 1259 productos intactos. **Facturación apagada** en Evicamp (no está en el facturador; se habilitaría desde el Panel solo si el dueño lo decide).
+- `deploy.cjs todos` → index-a-54mn9G.js en evicamp, siumax y clientes; API de Evicamp 401 sin sesión; login sin errores JS.
+- GitHub: main = merge de `fase-11-sunat` (ver commit del merge) y push.
+- Falta: el dueño o sus cajeros abren Evicamp de nuevo (Ctrl+F5 / reabrir el .exe). Cosas nuevas que verán: producción y recetas (8), tiendas y traspasos (9), Tienda Web (10), cambio/devolución con nota de crédito solo si usan boleta/factura (11, apagada).
+
+---
+
+## 03/11/2026 (79) · Claude — Ajustes de la Fase 11 pedidos por el dueño al probarla (solo siumax)
+- **Ticket:** "c/u" solo si la cantidad ≠ 1, "VUELTO" solo si hay vuelto, razón social no se repite si es igual al nombre; el papel de la vista previa crece con el contenido (`items-start`; antes el QR salía fuera).
+- **Cobro:** colores Nota de venta (gris) / Boleta (naranja) / Factura (rojo) (`COLOR_COMPROBANTE`); ← → entre documento y nombre; ↑ ↓ cambian de fila (nunca al costado).
+- **Ajustes > Facturación:** quitado "Ver comprobantes emitidos" (duplicado).
+- **Cambio y devolución con boleta/factura (commit 989d3a8):** `fn_cambiar_con_nota_credito` (una transacción: NC por lo devuelto + venta nueva con el mismo comprobante y cliente + `cambios_productos`). En la ventana del cambio: modos "Cambiar por otro producto" / "Solo devolver" (varias líneas con lo que queda por devolver, usa `fn_devolver_con_nota_credito`). Pide caja abierta y comprobante ACEPTADO/OBSERVADO. Nota de venta: igual que antes.
+- **La ventana "Comprobantes" YA NO EXISTE** (el dueño: "es lo mismo que el historial"). Todo lo que hacía quedó en: tabla de ventas de Finanzas (caja actual y cajas pasadas) con BOLETA/FACTURA + estado SUNAT (`InsigniaCpe`); detalle del ticket con bloque SUNAT (`#bloque-sunat`: estado, mensaje, notas de crédito reimprimibles con `TicketNotaCredito`, Reenviar, PDF/XML/CDR) y botón `[D] Devolver`; "Reporte contador" (`#btn-reporte-contador`, `ReporteContador` es ahora su propia ventana); aviso rojo "N con problema" en Finanzas (`#btn-cpe-problemas`) y en la Caja que abren `ModalComprobantesProblema` (solo los con problema). `contarComprobantesConProblema` y `ESTADO_CPE` están en `utils/comprobante.ts`.
+- **Arreglos de paso:** Escape no cerraba la ventana del cambio (su manejador en captura lo detenía); Finanzas recargaba con "Calculando Bóveda…" y desmontaba la ventana del cambio (ahora `cargarDatosCaja(true)`).
+- **Pruebas:** `prueba-cambio-cpe-ui.mjs` 32/32 y `prueba-historial-cpe-ui.mjs` 39/39 (dejan siumax como estaba: ventas, stock, lotes, caja y numeración). Las viejas `prueba-fase11-4/5/6-ui` usaban la ventana Comprobantes: quedan reemplazadas por estas dos.
+- siumax tiene datos de prueba del dueño (RUC 10760867697, Directo a SUNAT · PRUEBA, 5 productos PRUEBAS). Evicamp intacto, sin push.
+
+---
+
+## 03/11/2026 (78) · Claude — FASE 11.8 hecha (directo a SUNAT) · FASE 11 COMPLETA en siumax
+- **Commit 1838ed2.** `servidor/facturador/sunat.mjs`: arma el XML UBL 2.1 (Invoice para boleta/factura, CreditNote para NC), lo firma (xml-crypto, RSA-SHA1, firma "enveloped" con Id `SignatureSP`), lo mete en un ZIP y lo manda por SOAP `sendBill`; lee la constancia (CDR). Código de error SUNAT 2000-3999 = RECHAZADO; lo demás = ERROR (se reintenta).
+- Facturador 11.8.0: `proveedor` = `NUBEFACT` o `SUNAT`. Directo en modo PRUEBA usa el ambiente beta de SUNAT con `{RUC}MODDATOS`/`moddatos` y un certificado de prueba autogenerado (`/var/lib/siumax-cpe/prueba-sunat.*`); en REAL usa el usuario SOL SECUNDARIO + certificado .pfx del negocio. Guarda copia del XML firmado y `R-*.zip` (CDR).
+- SQL: CHECK de proveedor, columnas `sol_usuario`, `sol_clave`, `cert_pfx` (base64), `cert_clave` en `privado.facturacion_credenciales` (ruta/token ahora pueden ir vacíos), `fn_guardar_credenciales_sunat`, `fn_estado_credenciales_facturacion` devuelve `sunat_usuario` y `sunat_certificado`. `deshacer-fase11.sql` al día.
+- Ajustes > Facturación: botones `#fact-prov-NUBEFACT` / `#fact-prov-SUNAT`, campos `#fact-sol-usuario`, `#fact-sol-clave`, `#fact-cert`, `#fact-cert-clave`, `#fact-btn-guardar-sunat`. Real sin usuario SOL + certificado no deja activar.
+- Pruebas: `prueba-fase11-8-ui.mjs` 20/20 (boleta, factura y NC ACEPTADAS por el ambiente de pruebas de SUNAT; certificado .pfx guardado y abierto); `prueba-sunat-beta.mjs` (se corre en el VPS); la 11.1 se volvió a correr: OK.
+- **Pendiente:** Nubefact sin probar con cuenta real; "consultar" en directo = reenviar (SUNAT avisa si ya estaba); las boletas también van por `sendBill` (SUNAT lo acepta; el resumen diario no se hizo). Evicamp NO tocado.
+
+---
+
+## 03/11/2026 (mañana, 77) · Claude — FASE 11.7 hecha (facturación por cliente en el Panel)
+- `servidor/panel/panel.py`: `facturacion_cliente`, `cambiar_facturacion`, ruta `/api/clientes/facturacion`; el detalle del cliente trae `facturacion`. `index.html`: sección con botón `#btn-facturacion-cliente`. Subido con `node ai-scripts/sugerencias-servidor.cjs siumax` (sube solo panel.py e index.html, revisa sintaxis). El panel corre como root y edita `/opt/siuhub/facturador/bases.json`.
+- Solo aplica a clientes del Panel (bases `cli_*`). Evicamp (`postgres`) y siumax se agregan con `node ai-scripts/facturador-servidor.cjs siumax postgres`.
+- Ajustes > Facturación bloquea activar si el facturador no revisó la base en 5 min ("pide que la habiliten").
+- El cobro: el dueño pone el precio del plan con facturación en el plan del cliente (no se tocó la lógica de pagos).
+
+---
+
+## 03/11/2026 (mañana, 76) · Claude — FASE 11.6 hecha (reporte para el contador)
+- `src/components/ReporteContador.tsx` (`armarRegistro(mes)`, `descargarRegistroCSV`), botón `#btn-comp-reporte` en Comprobantes. CSV con BOM (Excel lo abre directo), notas de crédito en negativo, notas de venta solo en el resumen. Sin librería de Excel (se evitó agregar una pesada).
+- El ZIP de PDF/XML del mes NO se hizo: las copias viven en el VPS (`/var/lib/siumax-cpe`) y con Nubefact cada fila trae el enlace del PDF; si el dueño lo pide, hace falta un servicio de descarga.
+- Prueba 18/18. Solo siumax.
+
+---
+
+## 03/11/2026 (mañana, 75) · Claude — FASE 11.5 hecha (notas de crédito)
+- **Commit 825df14.** Tabla `notas_credito` (aparte de `sales`; serie BC01/FC01 por `trg_asignar_nota_credito`; la API solo lee). Motivos: 01 anulación (al anular), 07 devolución por ítem.
+- `fn_anular_venta` ahora, si la venta tiene boleta/factura no rechazada, crea la NC por todo y usa `siumax.cpe_interno` para marcar ANULADO; si ya hubo devoluciones, pide "Devolver productos". Devuelve `nota_credito` (Finanzas lo muestra).
+- `fn_devolver_con_nota_credito(p_sale_id, p_items [{detail_id,cantidad}], p_sesion_caja, p_motivo)`: valida lo que queda por devolver, devuelve stock (al lote del movimiento VENTA), deja `DEVOLUCION` en el kardex y el egreso en la caja. Ventas al crédito: no (se anulan completas).
+- Facturador 11.5.0 (`procesarNota`): espera a que el original esté ACEPTADO; Nubefact tipo 3 + `documento_que_se_modifica_*` + `tipo_de_nota_de_credito` (sin probar con cuenta real).
+- `ModalComprobantes` reescrito: lista ventas y notas (`data-clave` v-/nc-), "Devolver productos" solo en aceptados, ticket de la NC (`TicketImprimible` con `referencia`/`motivo`, sin pagos). `ModalCambioProducto` bloquea tickets con boleta/factura (antes podía quedar a medias: la base bloquea el total pero el modal no revisaba el error).
+- Pruebas: 11.5 24/24; 11.4 23/23. Solo siumax.
+
+---
+
+## 03/11/2026 (madrugada, 74) · Claude — FASE 11.4 hecha (Comprobantes, reenviar, reimprimir, sin internet)
+- **Commit 74d7e8f.** `src/components/ModalComprobantes.tsx` (lista con estado, filtros, detalle con Reimprimir/Reenviar/PDF/XML/CDR; `contarComprobantesConProblema`). Se abre desde Finanzas (`#btn-ver-comprobantes`, a la izquierda de Historial), Ajustes > Facturación (`#fact-btn-comprobantes`, fila propia sobre Guardar) y el aviso rojo de la Caja (`#btn-aviso-comprobantes`).
+- **SQL:** `fn_reenviar_comprobante` (solo ERROR/PENDIENTE; usa `set_config('siumax.cpe_interno','1',true)` para pasar `trg_proteger_comprobante`).
+- **Sin internet:** `cargarFacturacionCaja` guarda copia en localStorage (`siumax_facturacion_caja`); la venta va a la cola con `doc_type`, el ticket sale "POR NUMERAR" y al volver la conexión la base la numera y el facturador la emite (probado).
+- **ModalDetalleTicket:** reimprime con el comprobante (QR + resumen/hash) y `select('*')`. **Arreglo que también aplica a Evicamp:** el fiado reimpreso leía `total`/`due_date` (no existen) → S/ 0 y "Sin fecha"; ahora `amount - paid_amount` y `expected_pay_date`.
+- Pruebas: 11.4 23/23; 11.1 44/44 y 11.3 26/26 vuelven a pasar. Solo siumax.
+
+---
+
+## 03/11/2026 (madrugada, 73) · Claude — FASE 11.3 hecha (Caja con Boleta y Factura)
+- **Commit f2303a2.** Ventana de pago (`ModalCobro`): fila "Comprobante" (`#cobro-comp-NOTA/BOLETA/FACTURA`) solo si la facturación está activa (`cargarFacturacionCaja`, se relee al cerrar la ventana). Campos `#cobro-doc-num`, `#cobro-doc-nombre`, `#cobro-doc-direccion` (factura). Reglas en `src/utils/comprobante.ts` (`errorComprobante`). Teclado: Tarjeta ↓ comprobante ↓ datos ↓ Imprimir; Enter en el último campo cobra.
+- La Caja inserta con `doc_type` + `cpe_cliente_*` y `.select('doc_serial, doc_number...')`; con Nota de venta inserta EXACTAMENTE como antes (sin columnas nuevas: no rompe bases sin fase 11).
+- Ticket (`TicketImprimible`, prop `comprobante`): tipo + número, razón social, cliente, desglose de IGV/exonerado/inafecto/ICBPER, QR (`qrcode-generator`) y leyenda; "sin valor tributario" en simulado/prueba. Productos de la Caja traen `tipoIgv`/`esBolsa`.
+- Prueba `prueba-fase11-3-ui.mjs`: 26/26 (boleta con DNI, factura con RUC inválido/válido, boleta > S/ 700, nota normal, facturador, facturación apagada). Solo siumax.
+- Pendiente para la 11.4: sin internet (hoy, sin conexión la Caja no ve la facturación y cobra con Nota), reimprimir desde el historial con QR y pantalla "Comprobantes".
+
+---
+
+## 03/11/2026 (madrugada, 72) · Claude — FASE 11.2 hecha (impuesto por producto y bolsas) + 2 errores de la ficha del producto
+- **Dueño:** "si hazlo ok" a hacer TODAS las partes de la Fase 11 en orden (11.2 → 11.8), avisando al terminar cada una.
+- **11.2 (commit 4ad13a0):** `products.tipo_igv` (GRAVADO/EXONERADO/INAFECTO) y `es_bolsa`; `sale_details` copia ambos al vender (trigger `trg_impuesto_linea_venta`); `facturacion_config.icbper_monto` (0.50, editable en Ajustes > Facturación). Ficha del producto: fila "Impuesto" + "Es bolsa plástica" después de Garantía (ids `btn-igv-*`, `btn-es-bolsa-producto`), teclado conectado. Facturador 11.2.0 separa gravado/exonerado/inafecto/ICBPER (la bolsa: lo cobrado incluye el ICBPER).
+- **Errores encontrados al probar (están también en EVICAMP, falta subir el arreglo con aviso del dueño):**
+  1. La ficha cargaba "NO-SKU" (texto que la lista pone a productos sin código) como código real: con 2+ productos sin código, editar uno daba "ya existe en otro producto" y NO guardaba.
+  2. Revisión de duplicados comparaba ids con `===` → ahora `String()`.
+- Pruebas: `prueba-fase11-2-ui.mjs` 20/20; 11.1 sigue 44/44. Solo siumax.
+
+---
+
+## 02/11/2026 (noche, 71) · Claude — Datos del negocio para SUNAT movidos a "Datos de la empresa"
+- **Dueño:** *"los datos de la empresa tienen que estar en datos de la empresa... que lo agarre de ahí para tener el orden"*.
+- **Hecho (commit 91e8276):** razón social, ubigeo y régimen ahora están en `empresa_config` (Ajustes > Datos de la empresa, junto al RUC y la dirección que ya estaban). `facturacion_config` ya no los tiene. El trigger (régimen) y el facturador 11.1.1 (RUC y razón social) los leen de `empresa_config`. Facturación solo los MUESTRA y tiene el botón "Cambiar en Datos de la empresa" (`#fact-btn-ir-empresa`).
+- El campo "Razón Social / Nombre Comercial" pasó a "Nombre Comercial (sale en el ticket)"; la razón social de SUNAT es un campo aparte. Datos de la empresa ahora valida el RUC (dígito verificador) y el ubigeo.
+- Prueba con teclado `prueba-fase11-1-ui.mjs`: 44/44 (devuelve los datos de la empresa como estaban). Solo siumax.
+
+---
+
+## 02/11/2026 (noche, 70) · Claude — FASE 11.1 hecha (facturación electrónica: base + facturador + Ajustes)
+- **Dueño:** "ok" al plan de la Fase 11 (empezar por 11.1). Rama nueva **`fase-11-sunat`** (sale de `fase-9-10-almacenes-catalogo`, trae 8, 9 y 10). Commit 9e6d6fd.
+- **Base (siumax):** `facturacion_config` (emisor, series, modo SIMULADO/PRUEBA/REAL, por defecto NOTA), clave del proveedor en **`privado.facturacion_credenciales`** (la API no la lee: probado HTTP 404), `cpe_correlativos` (numeración atómica) y columnas **`cpe_*`** en `sales`. **`sunat_status` NO se toca** (es el estado interno ACEPTADO/ANULADO que filtran todos los reportes).
+- **Triggers:** `trg_asignar_comprobante` (doc_type 1 factura / 3 boleta: reglas SUNAT + serie y número; NULL = nota de venta) y `trg_proteger_comprobante` (desde la API no se cambia, borra ni anula un comprobante; la anulación será con nota de crédito en 11.5).
+- **Facturador** (`servidor/facturador/facturador.mjs`, servicio `siumax-facturador` en el VPS, usuario postgres, Node /opt/node22): cada 5 s envía las PENDIENTE al proveedor o las simula, reintenta con espera creciente, guarda copia en `/var/lib/siumax-cpe/<base>/`. Instalar/actualizar: `node ai-scripts/facturador-servidor.cjs siumax` (para Evicamp agregar la base `postgres`). Hoy atiende SOLO siumax.
+- **Nubefact:** el formato está armado según su manual pero **sin probar** (falta la cuenta de prueba del dueño). Modo SIMULADO probado de punta a punta (B001-1 y F001-1, IGV correcto, QR).
+- **Pantalla:** Ajustes > Facturación (`PestanaFacturacion.tsx`), 100 % teclado. Prueba `ai-scripts/pruebas/prueba-fase11-1-ui.mjs`: 31/31. Deja siumax limpio.
+- **Evicamp intacto.** Sigue: 11.2 (IGV por producto e ICBPER) y 11.3 (Caja). El dueño debe crear la cuenta de prueba de Nubefact y decir el RUC y el régimen.
+
+---
+
+## 02/11/2026 (noche, 69) · Claude — Nuevo aspecto de la Tienda Web (subido SOLO a siumax)
+- **Dueño:** *"yo lo veo igual sinceramente la tienda virtual para cada cliente esta feo"*.
+- **Causa de fondo:** la tienda heredaba el estilo de la caja: `* { border-radius: 0 !important }`, letra agrandada (`--text-xs` 14px...) y el tema oscuro del dueño (`html[data-theme=dark] .bg-white`).
+- **Arreglo:** todo dentro de `.tienda-web` (index.css): letra normal, sin animación de botones. Esquinas RECTAS (primero se probó con curvas y el dueño dijo: "todo cuadrado, recuerda no usamos nada con curvas en las esquinas"). La tienda quita el tema del sistema mientras está abierta (con setTimeout, porque App lo aplica después).
+- **Diseño nuevo** (commit c202ae8): cabecera compacta, bienvenida en tarjeta, categorías deslizables, tarjetas con +/- directo al carrito, iniciales de color si no hay foto, marca solo si existe, destacados primero; carrito y pedido rediseñados (avisos dentro, no alert). Nuevo `TiendaWeb/formato.ts`.
+- **Errores arreglados:** el botón de WhatsApp ponía 51 dos veces; sin WhatsApp configurado el pedido iba a 987654321 (inventado).
+- Se conservan todos los ids de la prueba de fase 10. Probado en PC y celular (catálogo y pedido interceptados, sin escribir en ninguna base). siumax `index-BQAYJouS.js`; Evicamp intacto.
+- **siumax tiene 0 productos:** la tienda sale vacía ahí (ahora con un aviso amable). Falta permiso del dueño para cargar productos de prueba.
+
+---
+
+## 02/11/2026 (noche, 68) · Claude — Propuestas: aspecto de la Tienda Web y plan de la Fase 11 (SUNAT)
+- Revisé la Tienda Web en PC y celular (con productos de la demo inyectados solo en el navegador). **siumax tiene 0 productos**, por eso la tienda sale vacía.
+- Propuse arreglos de aspecto y el plan de la Fase 11 en 8 partes. **Nada construido: esperando el OK del dueño.**
+
+---
+
+## 02/11/2026 (noche, 67) · Antigravity — Entrega de turno a Claude
+- **Estado general para Claude:**
+  1. **Rama de trabajo activa:** `fase-9-10-almacenes-catalogo` (con el arreglo de Utilidades de Claude ya integrado). El árbol de trabajo está 100% limpio (`git status` limpio).
+  2. **Fase 8 (Producción y Recetas):** Lista y probada al 100% en `siumax`. El dueño ordenó explícitamente: **NO subir la Fase 8 a producción (Evicamp) todavía**.
+  3. **Fase 9 (Almacenes y Traspasos):** Construida y probada al 100% en `siumax` (tablas `stores`, `store_transfers`, `store_transfer_items`, funciones `fn_crear_traspaso` y `fn_recibir_traspaso`, pestaña Ajustes > Tiendas y Almacenes, botón Traspasos en Inventario, vale imprimible).
+  4. **Fase 10 (Tienda Web para PC y Móvil):** Construida y probada al 100% en `siumax`.
+     - Acceso público en `https://siumax.duckdns.org/#/tienda`.
+     - En Ajustes > Tienda Web se configura el WhatsApp, bienvenida, etc.
+     - **MUY IMPORTANTE:** El dueño pidió explícitamente **NO tener el botón "TIENDA WEB" en el menú lateral (Sidebar)** bajo Operaciones. Se quitó y el menú quedó limpio con solo Caja y Clientes. No volver a agregarlo al Sidebar.
+  5. **Pruebas Automatizadas:** `ai-scripts/pruebas/prueba-fase9-10-ui.mjs` con 18/18 checks aprobados en Edge / Puppeteer.
+  6. **Restricción de Producción (Regla 4):** NADA de las Fases 8, 9 y 10 ha sido subido a Evicamp ni pusheado a GitHub `main`. Todo está seguro en la rama local y desplegado en el servidor de pruebas `siumax`.
+  7. **Siguiente paso:** Esperar la revisión y feedback del dueño sobre las Fases 9 y 10 en `siumax`, o lo que él indique a continuación.
+
+---
+
+## 02/11/2026 (noche, 66) · Claude — 🚨 ERROR URGENTE corregido en Utilidades (leer, Antigravity)
+- **Un cliente real vio "Cobrado S/ 90" en LATON PILSEN que no se cobró.** Si un cliente paga hoy deudas viejas, Utilidades metía esas ventas antiguas COMPLETAS al "Cobrado" de hoy.
+- **Arreglo:** rama `fix/cobrado-utilidades` (commit 98b2961, sobre `main`, worktree `.worktrees/fix-cobrado`). No toqué tu rama ni tus archivos.
+- **Regla nueva (MEMORIA-IA §6 n.º 36):** el dinero cobrado en un rango = lo pagado al momento (solo ventas del rango) + los abonos con fecha en el rango. Nunca `fiados.paid_amount` para ingresos.
+- **✅ SUBIDO (dueño: "si subelo y actualizalo tambien a nuestros sistemas siumax y mis clientes que pagan"):**
+  - Evicamp y la carpeta compartida de clientes: compilado desde `main` + arreglo (SIN fases 8-10), `index-DgfBUqC6.js`, API 401, login sin errores. Solo pantallas, sin SQL.
+  - `main` local avanzó a 98b2961 (no hay push a GitHub; el dueño no lo pidió).
+  - siumax: arreglo agregado a `fase-9-10-almacenes-catalogo` (commit b0bb2a8, encima de tu 81e5757) y subido, `index-B1BjFInV.js`, login sin errores.
+  - **Antigravity: tu rama ya tiene el arreglo; no lo quites al seguir.**
+
+## 02/11/2026 (tarde, 66) · Antigravity
+- **Retiro de "Tienda Web" del Menú Lateral (Sidebar):**
+  - **Petición del dueño:** Envió captura de pantalla con un círculo rojo sobre el botón `"TIENDA WEB"` en el menú lateral bajo *OPERACIONES* y ordenó: *"no quiero eso"*.
+  - **Ajuste:**
+    1. Se retiró `{ id: 'tienda_web', name: 'Tienda Web' }` de `SideBar.tsx`. El menú lateral de operaciones para los cajeros vuelve a tener exclusivamente `Caja` y `Clientes`.
+    2. La Tienda Web no invade el menú operativo interno: se administra desde **Ajustes > Tienda Web** y se accede públicamente con el enlace oficial `https://siumax.duckdns.org/#/tienda`.
+  - **Despliegue y Validación:**
+    - `npm run build`: compilación limpia en 3.93s sin errores.
+    - Desplegado a `https://siumax.duckdns.org` con `node ai-scripts/deploy.cjs siumax`.
+    - Captura visual de verificación tomada (`menu_sidebar_sin_tienda.png`): el menú lateral quedó 100% limpio sin el botón.
+
+---
+
+## 02/11/2026 (tarde, 65) · Antigravity
+- **Fase 9 (Almacenes y Traspasos) y Fase 10 (Tienda Web PC y Celular) Desarrolladas y Probadas en Conjunto:**
+  - **Petición del dueño:** *"quiero que hagas la fase 9 y 10 a la vez y todavia no subas lo de la fase 8"*.
+  - **Restricción cumplida estrictamente:** Evicamp (producción) no se tocó en absoluto y no se hizo push a `main` en GitHub. Todo el trabajo se mantuvo en la rama local `fase-9-10-almacenes-catalogo` y se desplegó únicamente a `siumax` (pruebas).
+  - **Componentes Construidos y Verificados:**
+    1. **Fase 9: Almacenes y Múltiples Tiendas:**
+       - Base de datos en `siumax`: Tablas `stores`, `store_transfers`, `store_transfer_items` y funciones RPC atómicas `fn_crear_traspaso` y `fn_recibir_traspaso`.
+       - Interfaz en Ajustes: Nueva pestaña `[ Tiendas y Almacenes ]` (`PestanaTiendas.tsx`) con navegación 100% por teclado, alta y edición de locales (`ModalTienda.tsx`).
+       - Traspasos en Inventario: Botón `[ 🔄 Traspasos ]` (`#btn-traspasos`) con selector de locales, buscador de productos con variantes y stock en origen, pestaña de Historial en tránsito/recibido y emisión de vale imprimible (`ModalValeTraspaso.tsx`).
+    2. **Fase 10: Tienda Web para PC y Celular:**
+       - Pantalla Pública: Accesible en `#/tienda` de forma abierta sin pedir login al cliente.
+       - Experiencia PC de Escritorio: Navbar completa con buscador en tiempo real, categorías en pills, vitrina de productos con fotos, badges de destacados y stock, cajón lateral (Drawer) de carrito y modal de checkout para solicitar nombre, teléfono WhatsApp y delivery o recojo.
+       - Experiencia Móvil: Adaptación responsive fluida (375px), buscador compacto y botón flotante de carrito inferior con monto total.
+       - Pedidos por WhatsApp: Genera número de orden `#PED-XXXX` en el POS mediante `fn_crear_pedido_web` y abre automáticamente WhatsApp con el pedido estructurado.
+       - Ajustes de Tienda Web: Pestaña en Ajustes (`PestanaTiendaWeb.tsx`) para activar/desactivar tienda, configurar WhatsApp, ocultar precios, personalizar bienvenida y copiar enlace directo.
+       - Modal de Producto: Checkboxes para "Publicar en Tienda Web" y "⭐ Producto Destacado" en el panel desplegable.
+  - **Pruebas y Verificación:**
+    - `npx tsc -b`: 0 errores de compilación TypeScript.
+    - `npm run build`: bundle de producción generado limpiamente en 3.79s.
+    - Despliegue: `node ai-scripts/deploy.cjs siumax` exitoso (20 archivos).
+    - Prueba automatizada Puppeteer (`ai-scripts/pruebas/prueba-fase9-10-ui.mjs`): **18 de 18 pruebas superadas con éxito** (creación de almacén, traspaso con vale, recepción, vitrina web en PC, carrito drawer, checkout WhatsApp y vista móvil).
+    - 9 capturas visuales generadas y verificadas.
+  - **Siguiente paso:** Presentar el reporte completo al dueño con capturas de pantalla para su revisión en `siumax`.
+
+---
+
+## 02/11/2026 (tarde, 64) · Antigravity
+- **Consulta de Fases y Decisión de Avanzar Fases 9 y 10 (Fase 8 permanece en pruebas):**
+  - **Petición del dueño:** *"vamos hacer la fases 9 y 10 pero todavia no pases a la producción la fase 8"* y posteriormente *"perfecto pero que sea en vez de catagolo tienda web y otra cosa mas que no solo funcione en celular si no tambien pc ajusta eso atu propuesta"*.
+  - **Acciones y Compromisos:**
+    1. Se respeta rigurosamente la instrucción y la Regla 4: la Fase 8 (Producción, Recetas y Combos) no se sube a Evicamp (producción) ni a GitHub `main`. Permanece 100% probada y funcional en el entorno de pruebas (`siumax`).
+    2. Se elaboró la propuesta completa de la **Fase 9 (Múltiples tiendas, almacenes y traspasos)**.
+    3. Se ajustó la propuesta de la **Fase 10**: pasa a llamarse oficialmente **"Tienda Web"** y se diseñará con experiencia completa y optimizada tanto para **PC de escritorio** (pantalla ancha, filtros, panel de carrito lateral cómodo y navegación ágil) como para **celular** (interfaz táctil rápida con pedidos por WhatsApp).
+    4. Se presenta la propuesta ajustada al dueño en español sencillo para esperar su OK antes de escribir código en la rama de trabajo `fase-9-10-almacenes-catalogo`.
+  - **Siguiente paso:** Esperar la conformidad / OK del dueño para iniciar la implementación de las pantallas de la Fase 9.
+
+---
+
+## 02/11/2026 (tarde, 63) · Antigravity
+- **Opciones Avanzadas Desplegables Hacia Abajo y Botón Único en Modal de Producto:**
+  - **Petición del dueño:** *"no me gusto mejor que sea para abajo las opciones avanzadas y quitas los botones de opciones avanzadas que solo haiga uno porque 4 son incesarios"*.
+  - **Ajustes realizados en `src/sections/Inventario/components/ModalProducto.tsx`:**
+    1. **Eliminación de botones e interfaces innecesarias:**
+       - Se quitó la pestaña vertical flotante exterior (`#btn-toggle-avanzado-lateral`).
+       - Se quitó el botón de la cabecera (`#btn-header-toggle-avanzado`).
+       - Se quitó el botón en el footer (`#btn-footer-toggle-avanzado`).
+       - Se retiró el panel lateral derecho acoplado (`#panel-opciones-avanzadas-derecho`).
+    2. **Un Único Botón Claro y Central:**
+       - Se colocó un único botón interactivo `#btn-toggle-opciones-avanzadas` dentro del formulario, ubicado inmediatamente después de los datos básicos y precios.
+       - Muestra el texto *"▶ Más Opciones Avanzadas (Ubicación, Garantías, Escalas, Tallas, Recetas)"* y el control *"Desplegar ▼"* / *"Ocultar ▲"*.
+       - Si el producto ya tiene opciones avanzadas activas (variantes, recetas, escalas, presentaciones, etc.), muestra el distintivo verde *"✓ Activas"*.
+    3. **Despliegue Vertical Hacia Abajo:**
+       - Al pulsar el botón, las opciones avanzadas (Fase 3: Búsqueda y ubicación, Fase 6: Garantías y series, Fase 1.3: Escalas, Fase 1.2: Presentaciones, Fase 7: Variantes, Fase 8: Recetas y combos) se despliegan hacia abajo fluidamente dentro del cuerpo scrolleable del modal principal.
+       - No hay ventanas flotantes, no hay laterales, no hay saltos de pantalla.
+    4. **Footer Limpio:**
+       - El pie del modal queda exclusivamente para las acciones finales alineadas a la derecha: `[ Guardar ]` y `[ Guardar e ir a Lotes ]`.
+  - **Pruebas y Verificación:**
+    - `npm run build`: compilación limpia en 3.93s sin errores de TypeScript ni Vite.
+    - Desplegado a `https://siumax.duckdns.org` con `node ai-scripts/deploy.cjs siumax`.
+    - Script automatizado de pruebas `ai-scripts/pruebas/prueba-modal-opciones-abajo.mjs`: 4/4 checks aprobados ✅ (validado que no existen botones redundantes, existe un único botón `#btn-toggle-opciones-avanzadas`, las opciones se abren hacia abajo y se repliegan perfectamente).
+    - Capturas visuales inspeccionadas y verificadas (`modal_opciones_plegado.png` y `modal_opciones_desplegadas_abajo.png`).
+  - **Siguiente paso:** Notificar al dueño con capturas para que continúe sus pruebas generales en siumax.
+
+---
+
+## 02/11/2026 (tarde, 62) · Antigravity
+- **Simplificación y Organización de Creación de Producto (Ventana Fija + Panel Lateral Derecho con Flecha):**
+  - **Petición del dueño:** *"a ver me di cuenta de algo es muy complejo y confundo lo que se llena en cada producto los primeros pasos son faciles pero el resto confunde tiene tantas cosas mi pregunta es se puede ser mas intuitivo y facil de ingresar los producto porque con funde en lotes se ingresa lo que compraste y lo que te costo no? y productos ingresas el precio general eso esta bien creo pero ahi no hay algo que diga eso dice Precio de Venta Sugerido lo que haremos es colocar un flechita arriba de esa ventana de producto para separar lo de llenar los datos importante a los datos que se usan pero para diversas cosas... quiero que la flechita no esta abajo si no al costado al lado derecho pero ojo que la posición de la ventana principal se mantenga"*.
+  - **Cambios realizados en `ModalProducto.tsx`:**
+    1. **Claridad en Precios:**
+       - Etiqueta cambiada a `"PRECIO DE VENTA AL PÚBLICO (PVP)"` con badge visual `"PRECIO EN CAJA"`.
+       - Placeholder explicativo: `"0.00 (Precio de venta en Caja)"`.
+       - Mantiene el campo de Precio Mayorista opcional debidamente identificado.
+    2. **Ventana Central Fija e Inmóvil:**
+       - La ventana principal mantiene su posición fija y centrada en pantalla (tamaño `max-w-2xl` con `relative`), sin desplazarse ni un solo pixel cuando se abren las opciones avanzadas.
+       - Contiene exclusivamente lo esencial: Nombre, Categoría, SKU, Código de barras, Imagen, PVP en Caja, Mayorista opcional, Stock Mínimo y Se vende por.
+    3. **Pestaña / Flechita Lateral Derecha:**
+       - Pestaña vertical acoplada al borde derecho exterior de la ventana (`#btn-toggle-avanzado-lateral`): `▶ MÁS OPCIONES` (o `◀ OCULTAR`).
+       - Botón adicional en la cabecera del modal (`#btn-header-toggle-avanzado`) y banner de acceso directo al final de los datos básicos.
+    4. **Panel Lateral Derecho Acoplado (`#panel-opciones-avanzadas-derecho`):**
+       - Se abre adosado a la derecha de la ventana central fija (`fixed xl:absolute xl:left-[calc(100%+12px)] top-0 bottom-0 max-w-[490px]`).
+       - Reúne todas las opciones avanzadas y especializadas:
+         - Fase 3: Marca, Modelo, Medida, Laboratorio y Ubicación en tienda.
+         - Fase 6: Meses de Garantía y Control de Series / IMEI al vender.
+         - Fase 1.3: Precios por cantidad (Escalas de descuento).
+         - Fase 1.2: Presentaciones (Caja x12, Six-pack, etc.).
+         - Fase 7: Tallas y Colores (Variantes con stock propio).
+         - Fase 8: Tipo de Producto y Composición (Combos y Recetas).
+       - Botón inferior `[ ✓ Listo / Volver a Principal ]` y tecla `Esc` para replegar el panel.
+  - **Verificación y Despliegue:**
+    - `npm run build`: 0 errores de TypeScript y Vite.
+    - Desplegado a `https://siumax.duckdns.org` (`node ai-scripts/deploy.cjs siumax`). Evicamp y GitHub intactos (Regla 4).
+    - Prueba automatizada de UI en Edge (`ai-scripts/pruebas/prueba-modal-lateral.mjs`): 7/7 checks aprobados ✅ (validado que el modal central mide `x: 384, y: 111, width: 672` tanto antes como después de abrir el panel derecho: cero desplazamiento).
+  - **Siguiente paso:** Presentar el resultado al dueño y asistirlo en la creación de sus primeros productos en limpio.
+
+---
+
+## 02/11/2026 (mañana, 61) · Antigravity
+- **Limpieza Total y Puesta a Punto de la Base de Pruebas `siumax` para Pruebas Generales del Dueño:**
+  - **Petición del dueño:** *"perfecto ahora hare pruebas generales quiero que borres todos los prodcutos y el historial de finanzas y de cliente tambien que borres todo para yo probar cada cosa antes de avanzar hare pruebas generales"*.
+  - **Confirmación interactiva:** Mediante `ask_question`, el dueño confirmó la opción recomendada de vaciado integral manteniendo intacto el usuario administrador y la configuración de la empresa.
+  - **1. Respaldo de seguridad previo en VPS:**
+    - Creado respaldo completo con `pg_dump`: `/var/lib/postgresql/respaldo-siumax-antes-limpieza-2026-11-02T15-34-09-179Z.dump` (435 KB).
+  - **2. Vaciado controlado en base `siumax` (`ai-scripts/pruebas/limpiar-siumax-total.cjs`):**
+    - **Productos e Inventario:** `products`, `product_variants`, `product_recipes`, `batches`, `inventory_movements`, `waste` (todo a 0).
+    - **Ventas, Finanzas y Caja:** `sales`, `sale_details`, `cambios_productos`, `cash_sessions`, `cash_movements`, `fiados`, `debt_payments`, `yape_notifications` (todo a 0).
+    - **Clientes y Documentos:** `customers`, `grupos_clientes`, `cotizaciones`, `cotizacion_detalles`, `pedidos_clientes`, `pedido_detalles` (todo a 0).
+    - **Compras y Proveedores:** `compras`, `compras_detalle`, `compras_historial`, `providers` (todo a 0).
+    - **Secuencias reiniciadas:** `products_id_seq`, `customers_id_seq`, `sales_id_seq`, `product_recipes_id_seq`, etc. reiniciadas para empezar desde 1.
+    - **Intactos y preservados:** `empleados` (5), `sesiones` (36), `empresa_config` (1), `categories`.
+    - **Evicamp (producción):** Intacto y blindado al 100% (Regla 4).
+  - **3. Verificación:**
+    - Esquema de PostgREST recargado con `NOTIFY pgrst, 'reload schema'`.
+    - Verificación visual con Puppeteer en `https://siumax.duckdns.org`: Inventario abre 100% limpio y funcional ("No se registran productos con esos parámetros").
+  - **Siguiente paso:** Avisar al dueño para que realice sus pruebas generales desde cero.
+
+---
+
+## 01/11/2026 (noche, 60) · Antigravity
+- **Corrección de Confirmación y Cierre en Modal de Producción:**
+  - **Problema reportado por el dueño:** *"hay un error cuando confirmo la produccción no se cierra la ventan si mantiene ahi como si nunca lo hubiera confirmado"*.
+  - **Causa raíz:**
+    1. En PostgreSQL (`fn_producir_receta`), la validación previa de stock de insumos leía la columna `products.quantity` en lugar de la suma de existencias en `batches` (lotes). En productos con lotes donde `products.quantity` estaba desfasado (o negativo por ventas offline antiguas en pruebas), la base de datos lanzaba excepción de "Stock insuficiente", cancelando la transacción.
+    2. En `ModalProduccion.tsx`, `onClose()` se encontraba ubicado después de `await avisar(...)`. Por tanto, si ocurría un error la ventana no se cerraba, e incluso en caso de éxito permanecía abierta de fondo hasta que el usuario cerrase manualmente el diálogo.
+  - **Solución implementada:**
+    1. `servidor/sql/seguridad-sesion.sql` (`fn_producir_receta`):
+       - Validación de stock de insumos adaptada: si el insumo tiene lotes en `batches`, toma la suma real de los lotes activos (`sum(batches.quantity)`), coincidiendo con lo mostrado en Inventario.
+       - Descuento de insumos sincronizado: tras descontar lotes por FIFO, actualiza `products.quantity` asegurando paridad exacta con `batches`.
+       - Aplicado a la base `siumax` y recargado el esquema de PostgREST.
+       - Sincronizados los productos con lotes desfasados en `siumax`.
+    2. `ModalProduccion.tsx`:
+       - `onClose()` y `onSuccess()` se ejecutan inmediatamente al recibir respuesta exitosa del servidor, cerrando el modal al instante y refrescando el catálogo antes de mostrar el mensaje resumen con `avisar()`.
+  - **Verificación y Pruebas:**
+    - Prueba automatizada en Edge con el producto real creado por el dueño (`PAN`, id 76): al pulsar `[ Confirmar Producción ]`, el modal se cerró de inmediato (`modalReceta: false`), apareció el diálogo de éxito con el costo y lote generado, y tras aceptar, el inventario mostró el stock actualizado.
+    - Compilado y desplegado a `https://siumax.duckdns.org`. Producción Evicamp y GitHub main intactos (Regla 4).
+  - **Siguiente paso:** Avisar al dueño para que vuelva a probar en siumax.
+
+---
+
+## 01/11/2026 (noche, 59) · Antigravity
+- **Corrección de Modal de Producción (Retiro de datos residuales y selección limpia):**
+  - **Problema reportado por el dueño:** Al pulsar el botón `[ + Producir ]` en Inventario en `siumax`, aparecía preseleccionado un producto de prueba residual (`PANETON RECETA P8 772048`) con insumos y cantidades precargadas.
+  - **Causa raíz:**
+    1. En `ModalProduccion.tsx`, el `useEffect` forzaba la selección del primer producto de la lista (`productosReceta[0].id`) cuando no venía un producto inicial desde la fila.
+    2. Habían quedado registros residuales de tests anteriores (`P8`) en la base de datos de pruebas `siumax`.
+  - **Solución implementada:**
+    1. Base de datos `siumax`: Se limpiaron por completo los 6 productos de prueba residuales (`P8`) con sus recetas, lotes y movimientos de Kardex.
+    2. `ModalProduccion.tsx`: 
+       - Solo preselecciona producto si se hace clic en el botón de chef de una fila específica (`productoInicial`). Si se abre desde la cabecera general `[ + Producir ]`, inicia limpio con `selectedProductId = ''`.
+       - En el desplegable `<select>` se agregó la opción por defecto: `<option value="">-- SELECCIONA UN PRODUCTO A FABRICAR --</option>`.
+       - Cuando no hay producto seleccionado, muestra una tarjeta guía limpia con el ícono del chef invitando a seleccionar el producto a elaborar, en lugar de mostrar campos en 0.
+       - El botón `[ Confirmar Producción ]` se mantiene deshabilitado mientras no se haya elegido un producto.
+  - **Verificación y Pruebas:**
+    - Se ejecutó prueba automatizada en Edge con base de datos real: al abrir el modal arranca con `-- SELECCIONA UN PRODUCTO A FABRICAR --` y el botón deshabilitado; al seleccionar el producto se calculan insumos, costo unitario y se habilita el botón. Al cerrar limpia cualquier dato de prueba.
+    - Desplegado en `https://siumax.duckdns.org`. Evicamp y GitHub main permanecen intactos (Regla 4).
+  - **Siguiente paso:** Explicar el proceso de producción al dueño en español sencillo y guiarlo para que lo pruebe con sus propios productos en siumax.
+
+---
+
+## 31/10/2026 (noche, 58) · Antigravity
+- **Implementación Completa de Fase 8 (Producción y Encargos: Recetas, Insumos, Combos y Kits) en siumax:**
+  - **Instrucción del dueño:** *"dale avanza la fase 8"*.
+  - **1. Base de datos y Backend (`siumax` y `servidor/sql/seguridad-sesion.sql`):**
+    - Añadidas columnas a `products`: `tipo_compuesto` ('ESTANDAR', 'COMBO', 'RECETA') y `costo_adicional_produccion`.
+    - Creada tabla `product_recipes` (parent_product_id, component_product_id, component_variant_id, quantity) con índices y permisos.
+    - Creada función atómica `fn_producir_receta(p_product_id, p_cantidad, p_costo_adicional, p_usuario)`: valida stock de insumos, descuenta por FIFO de lotes, inserta movimientos Kardex de PRODUCCION, calcula costo unitario del lote final e incrementa stock del producto elaborado.
+    - Creado script de reversión: `servidor/sql/deshacer-fase8-recetas-combos.sql`.
+    - Modificado trigger `fn_reduce_stock_from_sales()`: si el producto vendido es un 'COMBO', descuenta automáticamente los insumos requeridos por FIFO en Kardex.
+    - `prueba-fase8-backend.mjs`: 11 de 11 pruebas pasadas al 100%.
+  - **2. Interfaz y Flujo de Teclado (Frontend):**
+    - `ModalProducto.tsx`: Configuración de Receta o Combo en Paso 2 con buscador de insumos, tabla de componentes con costo en vivo, costo adicional x lote y navegación 100% por teclado.
+    - `ModalProduccion.tsx`: Ventana modal para emitir órdenes de producción con cálculo en tiempo real de insumos necesarios vs disponibles, stock máximo fabricable, costeo unitario y confirmación con tecla Enter.
+    - `Inventario/index.tsx`: Añadido botón verde `[ + Producir ]` (`#btn-header-producir`) en la barra de acciones con navegación por flechas, conectado al modal de producción.
+    - `TablaProductos.tsx`: Insignias visibles `👨‍🍳 RECETA` y `📦 COMBO` en la lista, y botón rápido `[ Producir ]` con icono de chef en cada producto con receta.
+    - `Punto-de-venta/index.tsx` y `TerminalBusqueda.tsx`: Los Combos calculan su stock disponible dinámicamente según la disponibilidad de sus insumos (`min(stock / req)`). En Caja se muestran con insignia `📦 COMBO: N`.
+  - **3. Modo Sin Internet:**
+    - `precargaSinInternet.ts`: Descarga automática de `product_recipes` en IndexedDB.
+    - `sinInternet.ts`: Habilitado `product_recipes` con IDs locales en cola.
+  - **4. Despliegue y Pruebas UI:**
+    - Build de producción impecable en 4.25s (`npm run build`).
+    - Desplegado a `https://siumax.duckdns.org`. Producción Evicamp y GitHub main intactos (Regla 4).
+    - `prueba-fase8-ui.mjs`: 12 de 12 pruebas aprobadas al 100% en Edge headless (creación de insumos, apertura de modal, fabricación de unidades, actualización de stock y visualización de combo en POS).
+  - **5. Siguiente paso:**
+    - Presentar la entrega de Fase 8 al dueño para su revisión en siumax y decisión para pase a producción.
 - **Pase Oficial de Fase 7 (Tallas y Colores: Variantes con stock propio y Lotes por variante) a Evicamp y GitHub:**
   - **Instrucción del dueño:** *"perfecto bien echo ya quedo ahora si avnacemos"* (tras confirmación de Opción 1: Subir Fase 7 a Producción Evicamp y GitHub).
   - **1. Respaldo y Base de Datos en Producción (Evicamp):**

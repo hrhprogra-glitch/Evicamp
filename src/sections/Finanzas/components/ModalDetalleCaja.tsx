@@ -14,6 +14,7 @@ import html2canvas from 'html2canvas-pro';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { ModalDetalleTicket } from '../../../components/ModalDetalleTicket';
 import { confirmar } from '../../../utils/dialogos';
+import { comprobanteDeVenta } from '../../../utils/comprobante';
 
 interface Props {
   isOpen: boolean;
@@ -21,7 +22,7 @@ interface Props {
   caja: any;
   onAnular?: (id: string, isTicket?: boolean) => Promise<void>;
   onDelete?: (id: string, isTicket?: boolean) => Promise<void>;
-  onCambiarProducto?: (ticketId: string) => void;
+  onCambiarProducto?: (ticketId: string, modo?: 'CAMBIO' | 'DEVOLVER') => void;
 }
 
 export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnular, onDelete, onCambiarProducto }) => {
@@ -576,6 +577,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
       monto_deuda: t.monto_deuda,
       total: t.total,
       vendedor: t.vendedor || null,
+      comprobante: comprobanteDeVenta(t),
       devolucion: esAnulada(t) ? devolucionesPorTicket.get(String(t.id).slice(-6)) || null : null
     });
   });

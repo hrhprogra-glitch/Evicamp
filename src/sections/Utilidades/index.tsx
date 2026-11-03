@@ -315,7 +315,7 @@ export const Utilidades = () => {
     .map(p => ({ nombre: p.nombre, utilidad: p.utilidadReal }));
 
   return (
-    <div className="flex flex-col gap-3 lg:gap-4 p-0 w-full font-mono bg-[var(--color-surface)]">
+    <div className="flex flex-col gap-3 lg:gap-4 p-0 w-full font-mono bg-[var(--color-bg)]">
 
 
       <div className="flex flex-col gap-4 sm:gap-6 shrink-0">

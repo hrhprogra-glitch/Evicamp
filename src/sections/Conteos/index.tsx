@@ -425,7 +425,7 @@ export const Conteos: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6 short:gap-3 w-full pb-10 text-[var(--color-ink)] font-mono min-h-full bg-[var(--color-surface)] relative rounded-none">
+    <div className="flex flex-col gap-6 short:gap-3 w-full pb-10 text-[var(--color-ink)] font-mono min-h-full bg-[var(--color-bg)] relative">
       
       <HeaderConteos onNuevoAjuste={abrirAjuste}>
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:flex gap-3 sm:gap-4 w-full xl:w-auto">

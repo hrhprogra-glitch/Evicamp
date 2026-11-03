@@ -53,6 +53,7 @@ export interface UnifiedItem {
   monto_deuda?: number;
   monto_pagado?: number;
   total?: number;
+  comprobante?: { docType: number; numero: string; estado: string | null } | null; // boleta/factura y su estado en SUNAT
 }
 export interface SuperMetricas {
   fondoInicial: number;

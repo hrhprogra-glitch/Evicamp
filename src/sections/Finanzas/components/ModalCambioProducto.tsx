@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
+import { avisar } from '../../../utils/dialogos';
+import { nombreComprobante, numeroComprobante } from '../../../utils/comprobante';
 import type { CambioProducto } from '../types';
 import type { Product } from '../../Inventario/types';
 
@@ -14,6 +16,8 @@ interface Props {
   initialSaleId?: number | string | null;
   sessionId?: string | null;
   onCambioGuardado?: () => void;
+  /** 'DEVOLVER': boleta/factura abre en "Solo devolver" (botón [D] del ticket) */
+  modoInicial?: 'CAMBIO' | 'DEVOLVER';
 }
 
 interface ItemDetalleVenta {
@@ -32,7 +36,8 @@ export const ModalCambioProducto: React.FC<Props> = ({
   onClose,
   initialSaleId = null,
   sessionId = null,
-  onCambioGuardado
+  onCambioGuardado,
+  modoInicial = 'CAMBIO'
 }) => {
   // Búsqueda y carga de ticket
   const [cargandoTicket, setCargandoTicket] = useState(false);
@@ -68,12 +73,21 @@ export const ModalCambioProducto: React.FC<Props> = ({
   const [guardando, setGuardando] = useState<boolean>(false);
   const [cambioFinalizado, setCambioFinalizado] = useState<CambioProducto | null>(null);
 
+  // Ticket con boleta/factura aceptada: no se modifica; se emite nota de crédito (+ comprobante nuevo si es cambio)
+  const [cpe, setCpe] = useState<{ docType: number; numero: string; estado: string } | null>(null);
+  const [soloDevolver, setSoloDevolver] = useState(false);
+  const [resultadoCpe, setResultadoCpe] = useState<{ notaCredito: string; comprobante?: string } | null>(null);
+  const [lineasDev, setLineasDev] = useState<{ detail_id: number; nombre: string; vendido: number; devuelto: number; precio: number; cantidad: string }[]>([]);
+
   const printAreaRef = useRef<HTMLDivElement>(null);
 
   // Cargar ticket al abrir si hay initialSaleId
   useEffect(() => {
     if (isOpen) {
       setCambioFinalizado(null);
+      setCpe(null);
+      setSoloDevolver(false);
+      setResultadoCpe(null);
       setTicketError(null);
       setSelectedDetalleIndex(-1);
       setProductoNuevo(null);
@@ -102,12 +116,9 @@ export const ModalCambioProducto: React.FC<Props> = ({
   useEffect(() => {
     if (!isOpen) return;
 
+    // Escape NO se detiene aquí (antes sí, y la ventana no se cerraba nunca): lo maneja useCerrarConEscape;
+    // el buscador del catálogo lo detiene él mismo cuando solo cierra su lista.
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        return;
-      }
-
       if (e.key === 'Tab') {
         e.stopPropagation();
         const modal = document.getElementById('modal-cambio-producto');
@@ -211,14 +222,15 @@ export const ModalCambioProducto: React.FC<Props> = ({
     setSelectedDetalleIndex(-1);
 
     try {
-      let venta: { id: number | string; customer_name?: string | null; created_at: string; sunat_status?: string | null } | null = null;
+      let venta: { id: number | string; customer_name?: string | null; created_at: string; sunat_status?: string | null;
+        doc_type?: number | null; doc_serial?: string | null; doc_number?: string | null; cpe_estado?: string | null } | null = null;
       const numInput = Number(rawDigits);
 
       // 1. Si tiene 10 o más dígitos, intentar primero búsqueda exacta por ID
       if (rawDigits.length >= 10 && !isNaN(numInput)) {
         const { data: vExact, error: errExact } = await supabase
           .from('sales')
-          .select('id, customer_name, created_at, sunat_status')
+          .select('*')
           .eq('id', numInput)
           .maybeSingle();
 
@@ -230,7 +242,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
       if (!venta) {
         const { data: ultimasVentas, error: errUltimas } = await supabase
           .from('sales')
-          .select('id, customer_name, created_at, sunat_status')
+          .select('*')
           .order('id', { ascending: false })
           .limit(300);
 
@@ -254,7 +266,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
       if (!venta && !isNaN(numInput)) {
         const { data: vFallback } = await supabase
           .from('sales')
-          .select('id, customer_name, created_at, sunat_status')
+          .select('*')
           .eq('id', numInput)
           .maybeSingle();
         if (vFallback) venta = vFallback;
@@ -270,6 +282,23 @@ export const ModalCambioProducto: React.FC<Props> = ({
         return;
       }
 
+      // Una boleta/factura enviada a SUNAT no se modifica: el cambio o la devolución salen con nota de crédito
+      // (y un comprobante nuevo por lo que se lleva). SUNAT tiene que haberla aceptado antes.
+      setCpe(null);
+      if (venta.doc_type && venta.cpe_estado !== 'RECHAZADO') {
+        const numero = numeroComprobante(venta.doc_serial, venta.doc_number) || 'POR NUMERAR';
+        if (!['ACEPTADO', 'OBSERVADO'].includes(String(venta.cpe_estado))) {
+          setTicketError(`La ${nombreComprobante(venta.doc_type).toLowerCase()} ${numero} todavía no fue aceptada por SUNAT (${venta.cpe_estado || 'PENDIENTE'}). Cuando la acepte podrás cambiar o devolver; si quedó con error, reenvíala desde el Historial.`);
+          return;
+        }
+        if (Number((venta as { amount_credit?: number }).amount_credit || 0) > 0) {
+          setTicketError(`La ${nombreComprobante(venta.doc_type).toLowerCase()} ${numero} es una venta al crédito (fiado): para devolver, anúlala completa.`);
+          return;
+        }
+        setCpe({ docType: venta.doc_type, numero, estado: String(venta.cpe_estado) });
+        setSoloDevolver(modoInicial === 'DEVOLVER');
+      }
+
       // 4. Obtener detalles de productos vendidos usando el ID real de la venta
       const { data: detalles, error: errDetalles } = await supabase
         .from('sale_details')
@@ -282,6 +311,21 @@ export const ModalCambioProducto: React.FC<Props> = ({
       if (!detalles || detalles.length === 0) {
         setTicketError(`El ticket #${String(venta.id).slice(-6)} no tiene productos registrados.`);
         return;
+      }
+
+      if (venta.doc_type && venta.cpe_estado !== 'RECHAZADO') {
+        const { data: notasVenta } = await supabase.from('notas_credito').select('items').eq('sale_id', venta.id);
+        const devueltoPor: Record<number, number> = {};
+        for (const n of (notasVenta as { items?: { detail_id: number; quantity: number }[] }[]) || []) {
+          for (const it of n.items || []) devueltoPor[it.detail_id] = (devueltoPor[it.detail_id] || 0) + Number(it.quantity || 0);
+        }
+        setLineasDev(detalles.map((d: any) => ({
+          detail_id: d.id, nombre: d.product_name, vendido: Number(d.quantity) || 0, devuelto: devueltoPor[d.id] || 0,
+          precio: Number(d.quantity) ? Number(d.subtotal) / Number(d.quantity) : 0, cantidad: '',
+        })));
+        if (modoInicial === 'DEVOLVER') setTimeout(() => (document.querySelector('[data-dev-cant]:not([disabled])') as HTMLInputElement | null)?.focus(), 120);
+      } else {
+        setLineasDev([]);
       }
 
       setTicketData({
@@ -301,7 +345,9 @@ export const ModalCambioProducto: React.FC<Props> = ({
       });
 
       // Seleccionar primer producto por defecto si hay uno solo y enfocar catálogo
-      if (detalles.length === 1) {
+      if (venta.doc_type && modoInicial === 'DEVOLVER') {
+        // el foco va a la primera cantidad a devolver (arriba)
+      } else if (detalles.length === 1) {
         setSelectedDetalleIndex(0);
         setCantidadDevolver('1');
         setSerieDevuelta(detalles[0].numero_serie || '');
@@ -326,8 +372,10 @@ export const ModalCambioProducto: React.FC<Props> = ({
   const cantNuevaNum = Math.max(1, Number(cantidadNueva) || 1);
 
   // Cálculos financieros
-  const totalDevuelto = itemDevuelto ? Math.round(itemDevuelto.price_at_moment * cantDevolverNum * 100) / 100 : 0;
-  const totalNuevo = productoNuevo ? Math.round(productoNuevo.price * cantNuevaNum * 100) / 100 : 0;
+  const modoSolo = Boolean(cpe && soloDevolver);
+  const totalSolo = Math.round(lineasDev.reduce((t, l) => t + Math.round(l.precio * (Number(l.cantidad) || 0) * 100) / 100, 0) * 100) / 100;
+  const totalDevuelto = modoSolo ? totalSolo : itemDevuelto ? Math.round(itemDevuelto.price_at_moment * cantDevolverNum * 100) / 100 : 0;
+  const totalNuevo = productoNuevo && !soloDevolver ? Math.round(productoNuevo.price * cantNuevaNum * 100) / 100 : 0;
   const diferencia = Math.round((totalNuevo - totalDevuelto) * 100) / 100;
 
   // Montos ingresados en pago mixto
@@ -338,7 +386,8 @@ export const ModalCambioProducto: React.FC<Props> = ({
   const faltaCubrir = Math.round(Math.max(0, diferencia - totalCubierto) * 100) / 100;
   const sobrante = Math.round(Math.max(0, totalCubierto - diferencia) * 100) / 100;
   const pagoValido = diferencia <= 0 || (totalCubierto > 0 && Math.abs(diferencia - totalCubierto) < 0.01);
-  const puedeConfirmar = Boolean(ticketData && itemDevuelto && productoNuevo && !guardando && (diferencia <= 0 || pagoValido));
+  const puedeConfirmar = Boolean(ticketData && !guardando && (modoSolo ? totalSolo > 0 : itemDevuelto && productoNuevo && (diferencia <= 0 || pagoValido)));
+  const tipoCpe = cpe ? (cpe.docType === 1 ? 'factura' : 'boleta') : '';
 
   const partesMetodo: string[] = [];
   if (numEf > 0) partesMetodo.push(`Efectivo: S/ ${numEf.toFixed(2)}`);
@@ -379,7 +428,77 @@ export const ModalCambioProducto: React.FC<Props> = ({
     }
   }, [diferencia]);
 
+  // Boleta/factura: nota de crédito por lo devuelto (+ comprobante nuevo si se lleva otro producto), todo en la base
+  const confirmarConNotaCredito = async () => {
+    if (!ticketData || !cpe || !puedeConfirmar || (!modoSolo && !itemDevuelto)) return;
+    const exceso = modoSolo ? lineasDev.find((l) => Number(l.cantidad) > l.vendido - l.devuelto) : null;
+    if (exceso) { await avisar(`De "${exceso.nombre}" solo quedan ${exceso.vendido - exceso.devuelto} por devolver.`); return; }
+    const devueltos = modoSolo ? lineasDev.filter((l) => Number(l.cantidad) > 0) : [];
+    if (!sessionId) { await avisar('Abre la caja para hacer cambios o devoluciones: el dinero entra y sale de la caja.'); return; }
+    setGuardando(true);
+    try {
+      let notaCredito = '';
+      let comprobante: string | undefined;
+      let dif = -totalDevuelto;
+      if (modoSolo) {
+        const { data, error } = await supabase.rpc('fn_devolver_con_nota_credito', {
+          p_sale_id: Number(ticketData.id),
+          p_items: devueltos.map((l) => ({ detail_id: l.detail_id, cantidad: Number(l.cantidad) })),
+          p_sesion_caja: sessionId,
+          p_motivo: motivo.trim() || 'DEVOLUCIÓN DE PRODUCTOS',
+        });
+        if (error) throw error;
+        notaCredito = data?.nota_credito || '';
+        dif = -Number(data?.total ?? totalDevuelto);
+      } else if (productoNuevo && itemDevuelto) {
+        const { data, error } = await supabase.rpc('fn_cambiar_con_nota_credito', {
+          p_sale_id: Number(ticketData.id),
+          p_detail_id: itemDevuelto.id,
+          p_cantidad: cantDevolverNum,
+          p_producto_nuevo: Number(productoNuevo.id),
+          p_cantidad_nueva: cantNuevaNum,
+          p_pago_efectivo: diferencia > 0 ? numEf : 0,
+          p_pago_yape: diferencia > 0 ? numYap : 0,
+          p_pago_tarjeta: diferencia > 0 ? numTar : 0,
+          p_sesion_caja: sessionId,
+          p_motivo: motivo.trim() || null,
+          p_serie_devuelta: serieDevuelta.trim() || null,
+          p_serie_nueva: serieNueva.trim() || null,
+        });
+        if (error) throw error;
+        notaCredito = data?.nota_credito || '';
+        comprobante = data?.comprobante || undefined;
+        dif = Number(data?.diferencia ?? diferencia);
+      }
+      setResultadoCpe({ notaCredito, comprobante });
+      setCambioFinalizado({
+        id: Date.now(),
+        sale_id: Number(ticketData.id),
+        fecha: new Date().toISOString(),
+        customer_name: ticketData.customer_name,
+        // Solo devolver (varias líneas): cantidad 0 = el nombre ya trae "2 × A, 1 × B" y el precio es el total
+        producto_devuelto_nombre: modoSolo ? devueltos.map((l) => `${l.cantidad} × ${l.nombre}`).join(', ') : itemDevuelto!.product_name,
+        cantidad_devuelta: modoSolo ? 0 : cantDevolverNum,
+        precio_devuelto: modoSolo ? totalSolo : itemDevuelto!.price_at_moment,
+        serie_devuelta: modoSolo ? null : serieDevuelta.trim() || null,
+        producto_nuevo_nombre: soloDevolver || !productoNuevo ? '' : productoNuevo.name,
+        cantidad_nueva: soloDevolver ? 0 : cantNuevaNum,
+        precio_nuevo: soloDevolver || !productoNuevo ? 0 : productoNuevo.price,
+        serie_nueva: soloDevolver ? null : serieNueva.trim() || null,
+        diferencia: dif,
+        payment_type: dif > 0 ? (partesMetodo.length > 1 ? `MIXTO (${partesMetodo.join(', ')})` : numYap > 0 ? 'YAPE' : numTar > 0 ? 'TARJETA' : 'EFECTIVO') : 'EFECTIVO',
+        motivo: motivo.trim() || (soloDevolver ? 'DEVOLUCIÓN DE PRODUCTOS' : 'CAMBIO DE PRODUCTO'),
+      });
+      onCambioGuardado?.();
+    } catch (err) {
+      await avisar(`No se pudo ${soloDevolver ? 'devolver' : 'hacer el cambio'}: ${err instanceof Error ? err.message : (err as { message?: string })?.message || String(err)}`);
+    } finally {
+      setGuardando(false);
+    }
+  };
+
   const handleConfirmarCambio = async () => {
+    if (cpe) { await confirmarConNotaCredito(); return; }
     if (!ticketData || !itemDevuelto || !productoNuevo || !puedeConfirmar) return;
     setGuardando(true);
 
@@ -618,7 +737,9 @@ export const ModalCambioProducto: React.FC<Props> = ({
             onKeyDown={(e) => {
               if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                if (document.getElementById('input-buscar-nuevo')) {
+                if (document.getElementById('btn-modo-cambio')) {
+                  document.getElementById(soloDevolver ? 'btn-modo-devolver' : 'btn-modo-cambio')?.focus();
+                } else if (document.getElementById('input-buscar-nuevo')) {
                   document.getElementById('input-buscar-nuevo')?.focus();
                 } else if (document.getElementById('select-producto-devuelto')) {
                   document.getElementById('select-producto-devuelto')?.focus();
@@ -640,10 +761,19 @@ export const ModalCambioProducto: React.FC<Props> = ({
               <div className="p-4 bg-emerald-50 border-2 border-emerald-600 text-emerald-950 flex items-center gap-3">
                 <Check size={28} className="text-emerald-600 shrink-0" />
                 <div>
-                  <h3 className="font-black text-sm uppercase">¡Cambio realizado con éxito!</h3>
+                  <h3 className="font-black text-sm uppercase">
+                    {cambioFinalizado.cantidad_nueva === 0 ? '¡Devolución realizada!' : '¡Cambio realizado con éxito!'}
+                  </h3>
                   <p className="text-xs">
                     El stock se ha actualizado y la diferencia financiera se registró en la caja.
                   </p>
+                  {resultadoCpe && (
+                    <p id="resultado-cambio-cpe" className="text-xs font-black mt-1">
+                      Nota de crédito {resultadoCpe.notaCredito}
+                      {resultadoCpe.comprobante ? ` · ${tipoCpe.toUpperCase()} nueva ${resultadoCpe.comprobante}` : ''}
+                      <span className="block font-normal">Se envían a SUNAT solas. Puedes reimprimirlas desde el Historial.</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -653,8 +783,13 @@ export const ModalCambioProducto: React.FC<Props> = ({
                 className="bg-white border-2 border-black p-4 text-xs font-mono max-w-md mx-auto shadow-md"
               >
                 <div className="text-center border-b-2 border-black pb-2 mb-2">
-                  <h4 className="font-black text-sm uppercase">VALE DE CAMBIO DE PRODUCTO</h4>
-                  <p className="text-[10px]">TICKET ORIGINAL: #{String(cambioFinalizado.sale_id).slice(-6)}</p>
+                  <h4 className="font-black text-sm uppercase">{cambioFinalizado.cantidad_nueva === 0 ? 'VALE DE DEVOLUCIÓN' : 'VALE DE CAMBIO DE PRODUCTO'}</h4>
+                  <p className="text-[10px]">TICKET ORIGINAL: #{String(cambioFinalizado.sale_id).slice(-6)}{cpe ? ` · ${tipoCpe.toUpperCase()} ${cpe.numero}` : ''}</p>
+                  {resultadoCpe && (
+                    <p className="text-[10px] font-bold">
+                      NOTA DE CRÉDITO: {resultadoCpe.notaCredito}{resultadoCpe.comprobante ? ` · ${tipoCpe.toUpperCase()} NUEVA: ${resultadoCpe.comprobante}` : ''}
+                    </p>
+                  )}
                   <p className="text-[10px]">FECHA: {new Date(cambioFinalizado.fecha || cambioFinalizado.created_at || Date.now()).toLocaleString('es-PE')}</p>
                   <p className="text-[10px]">CLIENTE: {cambioFinalizado.customer_name || 'CLIENTE'}</p>
                 </div>
@@ -662,17 +797,17 @@ export const ModalCambioProducto: React.FC<Props> = ({
                 <div className="space-y-2 border-b-2 border-black pb-2 mb-2">
                   <div className="p-1.5 bg-red-50 border border-red-200">
                     <span className="text-[10px] font-black text-red-800 uppercase block">PRODUCTO DEVUELTO (-)</span>
-                    <p className="font-bold uppercase">{cambioFinalizado.cantidad_devuelta} × {cambioFinalizado.producto_devuelto_nombre}</p>
-                    <p className="text-[11px]">Valor: S/ {(cambioFinalizado.precio_devuelto * cambioFinalizado.cantidad_devuelta).toFixed(2)}</p>
+                    <p className="font-bold uppercase">{cambioFinalizado.cantidad_devuelta ? `${cambioFinalizado.cantidad_devuelta} × ` : ''}{cambioFinalizado.producto_devuelto_nombre}</p>
+                    <p className="text-[11px]">Valor: S/ {(cambioFinalizado.precio_devuelto * (cambioFinalizado.cantidad_devuelta || 1)).toFixed(2)}</p>
                     {cambioFinalizado.serie_devuelta && <p className="text-[10px] font-mono">Serie/IMEI: {cambioFinalizado.serie_devuelta}</p>}
                   </div>
 
-                  <div className="p-1.5 bg-emerald-50 border border-emerald-200">
+                  {cambioFinalizado.cantidad_nueva > 0 && <div className="p-1.5 bg-emerald-50 border border-emerald-200">
                     <span className="text-[10px] font-black text-emerald-800 uppercase block">PRODUCTO NUEVO ENTREGADO (+)</span>
                     <p className="font-bold uppercase">{cambioFinalizado.cantidad_nueva} × {cambioFinalizado.producto_nuevo_nombre}</p>
                     <p className="text-[11px]">Valor: S/ {(cambioFinalizado.precio_nuevo * cambioFinalizado.cantidad_nueva).toFixed(2)}</p>
                     {cambioFinalizado.serie_nueva && <p className="text-[10px] font-mono">Serie/IMEI: {cambioFinalizado.serie_nueva}</p>}
-                  </div>
+                  </div>}
                 </div>
 
                 <div className="font-black text-xs space-y-1">
@@ -750,8 +885,83 @@ export const ModalCambioProducto: React.FC<Props> = ({
                 )}
               </div>
 
+              {/* BOLETA/FACTURA: cambiar por otro producto o solo devolver (siempre con nota de crédito) */}
+              {ticketData && cpe && (
+                <div className="border-2 border-[var(--color-ink)] bg-white p-3 shadow-[3px_3px_0_0_var(--color-ink)] space-y-2">
+                  <p className="text-[11px] font-bold text-[var(--color-ink)]">
+                    Este ticket tiene <b>{tipoCpe.toUpperCase()} {cpe.numero}</b> aceptada por SUNAT y no se puede modificar.
+                    Lo devuelto sale con una <b>nota de crédito</b>{soloDevolver ? ' y se devuelve el dinero en efectivo' : ` y lo nuevo con una ${tipoCpe} nueva para el mismo cliente`}.
+                  </p>
+                  <div className="flex gap-2">
+                    {([['cambio', 'Cambiar por otro producto', false], ['devolver', 'Solo devolver', true]] as const).map(([id, texto, solo], i) => (
+                      <button
+                        key={id}
+                        id={`btn-modo-${id}`}
+                        type="button"
+                        aria-pressed={soloDevolver === solo}
+                        onClick={() => { setSoloDevolver(solo); if (solo) setProductoNuevo(null); }}
+                        onKeyDown={(e) => {
+                          const ir = (destino: string) => { e.preventDefault(); document.getElementById(destino)?.focus(); };
+                          if (e.key === 'ArrowRight' && i === 0) ir('btn-modo-devolver');
+                          else if (e.key === 'ArrowLeft' && i === 1) ir('btn-modo-cambio');
+                          else if (e.key === 'ArrowUp') ir('btn-cerrar-modal-cambio');
+                          else if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            (soloDevolver ? document.querySelector('[data-dev-cant]:not([disabled])') as HTMLElement | null : document.getElementById('select-producto-devuelto'))?.focus();
+                          }
+                        }}
+                        className={`flex-1 py-2 border-2 text-[11px] font-black uppercase cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:ring-offset-1 ${
+                          soloDevolver === solo ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]' : 'bg-white text-[var(--color-ink)] border-[var(--color-border)] hover:border-[var(--color-ink)]'
+                        }`}
+                      >
+                        {texto}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* SOLO DEVOLVER (boleta/factura): todas las líneas del ticket, con lo que queda por devolver */}
+              {ticketData && modoSolo && (
+                <div className="border-2 border-[var(--color-ink)] bg-white p-3 shadow-[3px_3px_0_0_var(--color-ink)] space-y-2">
+                  <span className="text-xs font-black uppercase text-red-700">Productos que el cliente devuelve (-)</span>
+                  <p className="text-[11px] font-bold text-[var(--color-muted)]">Escribe cuántas unidades devuelve de cada producto.</p>
+                  {lineasDev.map((l, i) => {
+                    const queda = l.vendido - l.devuelto;
+                    const cantidades = () => Array.from(document.querySelectorAll<HTMLInputElement>('[data-dev-cant]:not([disabled])'));
+                    return (
+                      <div key={l.detail_id} className="border border-[var(--color-border)] p-2 grid grid-cols-[1fr_auto_5.5rem] items-center gap-2">
+                        <span className="text-[12px] font-black uppercase">{l.nombre}
+                          <span className="block text-[11px] font-bold text-[var(--color-muted)]">Vendido {l.vendido}{l.devuelto ? ` · ya devuelto ${l.devuelto}` : ''} · S/ {l.precio.toFixed(2)} c/u</span>
+                        </span>
+                        <span className="text-[11px] font-bold text-[var(--color-muted)]">máx. {queda}</span>
+                        <input
+                          id={`dev-cant-${i}`}
+                          data-dev-cant="true"
+                          type="text"
+                          inputMode="decimal"
+                          autoComplete="off"
+                          disabled={queda <= 0}
+                          value={l.cantidad}
+                          placeholder="0"
+                          onChange={(e) => setLineasDev(lineasDev.map((x, j) => (j === i ? { ...x, cantidad: e.target.value.replace(/[^0-9.]/g, '') } : x)))}
+                          onFocus={(e) => e.target.select()}
+                          onKeyDown={(e) => {
+                            const todas = cantidades();
+                            const k = todas.indexOf(e.currentTarget);
+                            if (e.key === 'ArrowDown' || e.key === 'Enter') { e.preventDefault(); (todas[k + 1] || document.getElementById('input-motivo-cambio'))?.focus(); }
+                            else if (e.key === 'ArrowUp') { e.preventDefault(); (todas[k - 1] || document.getElementById('btn-modo-devolver'))?.focus(); }
+                          }}
+                          className="w-full border-2 border-[var(--color-border)] p-1.5 text-sm font-black text-right outline-none focus:border-[var(--color-ink)] disabled:bg-[var(--color-bg)] rounded-none"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               {/* PASO 1: PRODUCTO A DEVOLVER (DEL TICKET) */}
-              {ticketData && (
+              {ticketData && !modoSolo && (
                 <div className="border-2 border-[var(--color-ink)] bg-white p-3 shadow-[3px_3px_0_0_var(--color-ink)]">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] font-black">1</span>
@@ -791,7 +1001,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                           }
                         } else if (e.key === 'ArrowUp') {
                           e.preventDefault();
-                          document.getElementById('btn-cerrar-modal-cambio')?.focus();
+                          (document.getElementById(soloDevolver ? 'btn-modo-devolver' : 'btn-modo-cambio') || document.getElementById('btn-cerrar-modal-cambio'))?.focus();
                         }
                       }}
                       className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-ink)] text-xs font-bold p-2 focus:bg-white uppercase focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
@@ -865,7 +1075,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                                 document.getElementById('select-producto-devuelto')?.focus();
                               } else if (e.key === 'ArrowDown') {
                                 e.preventDefault();
-                                document.getElementById('input-buscar-nuevo')?.focus();
+                                (document.getElementById('input-buscar-nuevo') || document.getElementById('input-motivo-cambio'))?.focus();
                               }
                             }}
                             className="w-full bg-white border border-red-300 text-xs font-mono p-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 uppercase"
@@ -883,7 +1093,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
               )}
 
               {/* PASO 2: PRODUCTO NUEVO QUE SE LLEVA (CATÁLOGO) */}
-              {itemDevuelto && (
+              {itemDevuelto && !soloDevolver && (
                 <div className="border-2 border-[var(--color-ink)] bg-white p-3 shadow-[3px_3px_0_0_var(--color-ink)]">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-black">2</span>
@@ -1201,7 +1411,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
               )}
 
               {/* PASO 3: CÁLCULO DE DIFERENCIA Y CONFIRMACIÓN */}
-              {itemDevuelto && productoNuevo && (
+              {((itemDevuelto && productoNuevo) || modoSolo) && (
                 <div className="border-2 border-[var(--color-ink)] bg-white p-3 shadow-[3px_3px_0_0_var(--color-ink)] space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full bg-[var(--color-ink)] text-white flex items-center justify-center text-[10px] font-black">3</span>
@@ -1213,10 +1423,12 @@ export const ModalCambioProducto: React.FC<Props> = ({
                        <span>Valor devuelto:</span>
                       <span className="font-black text-red-600">- S/ {totalDevuelto.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span>Valor nuevo:</span>
-                      <span className="font-black text-emerald-700">+ S/ {totalNuevo.toFixed(2)}</span>
-                    </div>
+                    {!soloDevolver && (
+                      <div className="flex justify-between items-center text-xs">
+                        <span>Valor nuevo:</span>
+                        <span className="font-black text-emerald-700">+ S/ {totalNuevo.toFixed(2)}</span>
+                      </div>
+                    )}
 
                     <div className="border-t-2 border-black pt-2 flex justify-between items-center text-sm font-black">
                       <span>DIFERENCIA A LIQUIDAR:</span>
@@ -1480,8 +1692,13 @@ export const ModalCambioProducto: React.FC<Props> = ({
                             document.getElementById('pago-cambio-efectivo')?.focus();
                           } else if (document.getElementById('input-serie-nueva')) {
                             document.getElementById('input-serie-nueva')?.focus();
-                          } else {
+                          } else if (document.getElementById('input-cantidad-nueva')) {
                             document.getElementById('input-cantidad-nueva')?.focus();
+                          } else if (modoSolo) {
+                            const todas = Array.from(document.querySelectorAll<HTMLElement>('[data-dev-cant]:not([disabled])'));
+                            (todas[todas.length - 1] || document.getElementById('btn-modo-devolver'))?.focus();
+                          } else {
+                            document.getElementById('input-serie-devuelta')?.focus();
                           }
                         }
                       }}
@@ -1509,7 +1726,10 @@ export const ModalCambioProducto: React.FC<Props> = ({
                         : 'bg-[var(--color-ink)] text-white hover:bg-[var(--color-accent)] hover:text-black cursor-pointer'
                     }`}
                   >
-                    <Check size={18} /> {guardando ? 'Procesando Cambio...' : 'Confirmar y Realizar Cambio'}
+                    <Check size={18} /> {guardando ? 'Procesando...'
+                      : cpe && soloDevolver ? `Emitir nota de crédito y devolver S/ ${totalDevuelto.toFixed(2)}`
+                      : cpe ? `Emitir nota de crédito y ${tipoCpe} nueva`
+                      : 'Confirmar y Realizar Cambio'}
                   </button>
                 </div>
               )}

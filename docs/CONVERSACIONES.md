@@ -496,3 +496,134 @@
           4. Compilación del bundle y despliegue del frontend a Evicamp (`node ai-scripts/deploy.cjs evicamp`). Verificado HTTP 200 OK.
           5. Fusión de la rama `fase-7-tallas-colores` en `main` y subida a GitHub (`git push origin main`).
         - Se procede a preparar la propuesta de la **Fase 8: Producción y Encargos (Recetas e Insumos, Combos / Kits)**.
+      50. **Implementación y Despliegue de Fase 8 (Producción, Recetas y Combos) en siumax (31/10 noche):**
+        - El dueño preguntó: *"dime antes cuantas fases nos falta"*.
+        - Se le explicó detalladamente el avance: 8 fases completadas (73% del roadmap) y las 4 fases restantes (Fase 8: Producción y Combos, Fase 9: Múltiples tiendas y almacenes, Fase 10: Catálogo web, Fase 11: Facturación electrónica SUNAT).
+        - El dueño instruyó: *"dale avanza la fase 8"*.
+        - Se desarrolló e implementó la Fase 8 completa:
+          1. Base de datos en `siumax`: columnas `tipo_compuesto` y `costo_adicional_produccion` en `products`, tabla `product_recipes`, función atómica `fn_producir_receta` (descuento FIFO de insumos, cálculo de costo unitario, creación de lote en Kardex) y trigger de venta de combos que descuenta insumos automáticamente.
+          2. Frontend Inventario: configuración de receta/combo en `ModalProducto.tsx`, nueva ventana modal `ModalProduccion.tsx` para órdenes de fabricación en vivo, y botón verde esmeralda `[ + Producir ]` en la cabecera de inventario y botón rápido por fila.
+          3. Frontend Caja (POS): cálculo dinámico de disponibilidad de Combos en función del insumo más limitante (`min(stock / req)`), y visualización con tarjeta `📦 COMBO: N`.
+          4. Modo sin internet: precarga de `product_recipes` en IndexedDB y registro de IDs locales.
+          5. Pruebas automáticas superadas al 100%: backend (`prueba-fase8-backend.mjs`, 11/11 OK) y navegador Edge (`prueba-fase8-ui.mjs`, 12/12 OK).
+          6. Compilado y desplegado a `https://siumax.duckdns.org`. Producción Evicamp y GitHub main intactos (Regla 4).
+      51. **Corrección de Modal de Producción e Instrucciones de Uso (01/11 noche):**
+        - El dueño reportó: *"hay un erro cuando entro a producir sale como predeterminado esto"* compartiendo captura donde aparecía precargado un producto de prueba residual (`PANETON RECETA P8 772048`).
+        - Se investigó y solucionó de raíz:
+          1. Se depuraron de la base `siumax` todos los productos de prueba con prefijo `P8` que habían quedado de los tests automatizados.
+          2. Se modificó `ModalProduccion.tsx` para que si se abre desde el botón superior `[ + Producir ]` inicie limpio con `-- SELECCIONA UN PRODUCTO A FABRICAR --` y una tarjeta informativa con el ícono del chef, deshabilitando el botón de confirmar hasta que se elija un producto.
+          3. Solo preselecciona un producto si el usuario hace clic en el botón de chef de una fila específica de la tabla de inventario.
+        - Validado con prueba automatizada en Edge y desplegado en `siumax.duckdns.org`. Evicamp y GitHub permanecen intactos esperando la orden del dueño.
+      52. **Ajuste de Confirmación y Cierre de Modal de Producción (01/11 noche):**
+        - El dueño reportó: *"hay un error cuando confirmo la produccción no se cierra la ventan si mantiene ahi como si nunca lo hubiera confirmado"*.
+        - Se investigó la causa:
+          1. En la base de datos `siumax`, `products.quantity` de los insumos seleccionados por el dueño estaba desfasado con `batches` debido a pruebas offline antiguas, provocando que la función `fn_producir_receta` lanzara error de "Stock insuficiente" al validar directamente contra `products.quantity`.
+          2. Al fallar la llamada a la base de datos, el modal no se cerraba.
+          3. Además, `onClose()` estaba ubicado después del diálogo `avisar()`, dejando el modal abierto de fondo hasta que se aceptara el aviso.
+        - Solución aplicada:
+          1. `fn_producir_receta` ahora valida contra la suma real de los lotes activos en `batches` y sincroniza `products.quantity` tras descontar.
+          2. Se cuadraron los lotes desfasados en `siumax`.
+          3. `ModalProduccion.tsx` ahora invoca `onClose()` y `onSuccess()` de inmediato en el milisegundo de respuesta del backend, cerrando la ventana al instante y mostrando el aviso de éxito sobre la pantalla limpia de inventario.
+        - Validado al 100% con Puppeteer en Edge ejecutando la orden real del producto `PAN` del dueño y comprobando el cierre automático del modal y la actualización de stock.
+        - Desplegado a `siumax.duckdns.org`. Evicamp y GitHub permanecen intactos esperando la orden del dueño.
+      53. **Explicación de Tipos de Producto y Limpieza Total de `siumax` para Pruebas Generales (02/11 mañana):**
+        - El dueño pidió: *"otra cosa mas pero es mas para que me expliques como funciona Tipo de Producto y Composición"*. Se le detallaron con ejemplos peruanos las 3 modalidades: Estándar (compra y venta directa), Combo / Kit (descuento en Caja de insumos al momento de cobrar) y Elaborado / Receta (fabricación previa con `[ + Producir ]` antes de poner en vitrina).
+        - El dueño solicitó: *"perfecto ahora hare pruebas generales quiero que borres todos los prodcutos y el historial de finanzas y de cliente tambien que borres todo para yo probar cada cosa antes de avanzar hare pruebas generales"*.
+        - Se le solicitó confirmación mediante `ask_question` para definir el alcance, confirmando el vaciado de productos, ventas, finanzas, clientes y compras manteniendo intactos el usuario administrador y datos de empresa.
+        - Se creó respaldo previo en VPS (`/var/lib/postgresql/respaldo-siumax-antes-limpieza-2026-11-02T15-34-09-179Z.dump`, 435 KB).
+        - Se ejecutó el vaciado controlado en `siumax` (`ai-scripts/pruebas/limpiar-siumax-total.cjs`), reseteando secuencias a 1.
+        - Evicamp y GitHub main quedaron 100% intactos (Regla 4).
+        - Verificado por navegador: inventario y tablas listas en blanco para pruebas generales.
+      54. **Simplificación del Modal de Creación de Productos con Flecha Lateral Fija (02/11 tarde):**
+        - El dueño observó al iniciar la creación de productos: *"a ver me di cuenta de algo es muy complejo y confundo lo que se llena en cada producto los primeros pasos son faciles pero el resto confunde tiene tantas cosas mi pregunta es se puede ser mas intuitivo y facil de ingresar los producto porque con funde en lotes se ingresa lo que compraste y lo que te costo no? y productos ingresas el precio general eso esta bien creo pero ahi no hay algo que diga eso dice Precio de Venta Sugerido lo que haremos es colocar un flechita arriba de esa ventana de producto para separar lo de llenar los datos importante a los datos que se usan pero para diversas cosas... quiero que la flechita no esta abajo si no al costado al lado derecho pero ojo que la posición de la ventana principal se mantenga"*.
+        - Se rediseñó `ModalProducto.tsx`:
+          1. El campo de precio se aclaró a "PRECIO DE VENTA AL PÚBLICO (PVP)" con distintivo "PRECIO EN CAJA" y placeholder "0.00 (Precio de venta en Caja)".
+          2. La ventana principal se mantiene fija y centrada en el medio de la pantalla (cero movimiento, cero saltos).
+          3. En el borde lateral derecho exterior se colocó una pestaña vertical fija `[ ▶ MÁS OPCIONES ]` (también accesible desde el header y un botón inferior).
+          4. Al hacer clic, se abre adosado a la derecha un panel lateral (`panel-opciones-avanzadas-derecho`) que contiene todas las configuraciones avanzadas (Ubicación, Garantías, Series, Escalas por cantidad, Presentaciones/Empaques, Variantes de ropa/calzado y Recetas/Combos), sin mover la ventana central.
+        - Se verificó con Puppeteer en Edge que la posición del modal central `(x: 384, y: 111, width: 672)` es 100% idéntica antes y después de abrir el panel lateral.
+        - Desplegado en `https://siumax.duckdns.org`. Evicamp y GitHub main intactos (Regla 4).
+      55. **Cambio a Despliegue Vertical Hacia Abajo con Botón Único (02/11 tarde):**
+        - El dueño revisó el panel lateral y solicitó: *"no me gusto mejor que sea para abajo las opciones avanzadas y quitas los botones de opciones avanzadas que solo haiga uno porque 4 son incesarios"*.
+        - Se ajustó `ModalProducto.tsx`:
+          1. Se retiró la pestaña lateral derecha, el botón del header, el botón del footer y el panel lateral adosado.
+          2. Se colocó un único botón limpio y central `#btn-toggle-opciones-avanzadas` dentro del modal, justo tras los datos básicos y precios.
+          3. Al hacer clic o presionar Enter, las opciones avanzadas (Ubicación en tienda, Garantías y series, Escalas de precios, Presentaciones de empaque, Variantes de ropa/calzado y Recetas/Combos) se despliegan directamente hacia abajo dentro del flujo del formulario con scroll fluido.
+          4. El footer quedó libre de botones extra, dejando solo `[ Guardar ]` y `[ Guardar e ir a Lotes ]`.
+        - Validado con Puppeteer (`ai-scripts/pruebas/prueba-modal-opciones-abajo.mjs`, 4/4 checks ✅).
+        - Desplegado en `https://siumax.duckdns.org`. Evicamp y GitHub permanecen intactos (Regla 4).
+      56. **Consulta de Fases Restantes y Decisión de Avanzar con Fases 9 y 10 (02/11 tarde):**
+        - El dueño consultó: *"dime la fase 9 y 10"*, seguido de *"perfecto dime las fases que ya completamos y los que nos falta"*.
+        - Se le detalló el estado del roadmap: 9 fases completadas (Fases 0 a 7 en producción Evicamp y GitHub, y Fase 8 terminada y probada al 100% en siumax), y las 3 fases pendientes (Fase 9: Almacenes y Traspasos, Fase 10: Catálogo Web WhatsApp, Fase 11: Facturación SUNAT).
+        - El dueño instruyó expresamente: *"vamos hacer la fases 9 y 10 pero todavia no pases a la producción la fase 8"*.
+        - Se respeta rigurosamente la instrucción y la Regla 4: la Fase 8 se mantiene intacta en pruebas (`siumax`) sin tocar Evicamp ni GitHub `main`, y se procede a presentar la propuesta detallada para las Fases 9 y 10 esperando su OK.
+      57. **Ajuste de Propuesta: Nombre "Tienda Web" y Optimización Total para PC y Celular (02/11 tarde):**
+        - El dueño instruyó: *"perfecto pero que sea en vez de catagolo tienda web y otra cosa mas que no solo funcione en celular si no tambien pc ajusta eso atu propuesta"*.
+        - Se actualizan las especificaciones:
+          1. Renombrar la Fase 10 a **"Tienda Web"** en lugar de "Catálogo".
+          2. En PC de escritorio: diseño amplio tipo e-commerce moderno con buscador inteligente, barra o pestañas de categorías, vitrina en cuadrícula de alta visibilidad, panel de carrito accesible y navegación fluida por teclado y mouse.
+          3. En celular: navegación táctil ágil con botón de carrito flotante y enlace directo a la app móvil de WhatsApp.
+          4. Integración unificada: pedidos enviados por WhatsApp (web en PC o app en móvil) y sincronizados en tiempo real con la pestaña de Pedidos del sistema (Fase 4.6).
+      58. **Desarrollo y Prueba Conjunta de Fases 9 y 10 en siumax (02/11 tarde):**
+        - El dueño ordenó: *"perfecto entendi ahora sobre lo que dijistes Desarrollamos y probamos primero la Fase 9 (Almacenes y Traspasos) en el entorno de pruebas siumax. Luego construimos la Fase 10 (Tienda Web para PC y Móvil). Recuerda que la Fase 8 se queda segura en pruebas y no se tocará producción (Evicamp). quiero que hagas la fase 9 y 10 a la vez y todavia no subas lo de la fase 8"*.
+        - Se respetó estrictamente la Regla 4: cero toques a Evicamp, cero push a main.
+        - Se implementaron en simultáneo:
+          1. **Fase 9:** Múltiples tiendas y almacenes (`stores`), nueva pestaña en Ajustes con alta/edición de locales (`ModalTienda.tsx`), traspasos entre locales en Inventario (`ModalTraspaso.tsx`), historial de traspasos, recepción atómica (`fn_recibir_traspaso`) y vale de traspaso imprimible (`ModalValeTraspaso.tsx`).
+          2. **Fase 10:** Tienda Web pública (`#/tienda`), navbar desktop/móvil con buscador en tiempo real, vitrina con productos, fotos, badges de destacados y stock, selector de cantidades, drawer lateral de carrito, modal de checkout con modalidad Recojo/Delivery y despacho automático hacia WhatsApp conectando la orden con el POS mediante `fn_crear_pedido_web`. Pestaña de configuración de Tienda Web en Ajustes y checkboxes en el modal de producto.
+        - Se compiló con `npm run build` (0 errores) y se desplegó a `https://siumax.duckdns.org`.
+        - Se ejecutó la prueba automatizada completa en Puppeteer (`ai-scripts/pruebas/prueba-fase9-10-ui.mjs`), logrando 18 de 18 pruebas superadas con éxito tanto en PC de escritorio (1280x800) como en celular móvil (375x667).
+
+
+      59. **Retiro de "Tienda Web" del Menú Lateral (02/11 tarde):**
+        - El dueño envió una captura de pantalla con un círculo rojo marcando el botón TIENDA WEB en el menú lateral bajo OPERACIONES y ordenó: *"no quiero eso"*.
+        - Se retiró de inmediato tienda_web de SideBar.tsx. El menú de los cajeros vuelve a tener exclusivamente Caja y Clientes.
+        - La Tienda Web se mantiene en su lugar adecuado: dentro de Ajustes > Tienda Web para su administración y en el enlace público #/tienda para los clientes.
+        - Desplegado en https://siumax.duckdns.org.
+
+### 02/11/2026: Error urgente en Utilidades ("Cobrado" de un producto) · Claude
+- **Dueño:** *"hay un error urgente ... en la imagen el cobro es 90 caso que esta equivocado no cobro 90 esos errores no tiene que pasar ... arreglalo y ponlo en la memoria para que antigravity lo tenga en cuenta"* (foto de LATON PILSEN: Cobrado S/ 90, 5 ventas fiadas de YESICA MENDOZA de sept-oct).
+- **Causa:** Utilidades sumaba al "Cobrado" del período TODO lo abonado de un fiado, de cualquier fecha. Si el cliente pagaba hoy deudas viejas, sus ventas antiguas entraban completas.
+- **Arreglo (Claude, sin tocar el trabajo de Antigravity):** rama `fix/cobrado-utilidades` (commit 98b2961, desde `main`, en `.worktrees/fix-cobrado`). Ahora cuenta solo lo pagado al momento (si la venta es del rango) + los abonos hechos dentro del rango. Regla anotada en MEMORIA-IA §6 n.º 36.
+- **Prueba:** base demo `siudemo` (abonos de prueba, luego borrados): antes S/ 41.60, ahora S/ 21.60 (= lo abonado hoy). `npx tsc -b` sin errores.
+- **Pendiente:** el aviso del dueño para subirlo a Evicamp; mezclar la rama a `main` y a la rama de Antigravity.
+- **Dueño:** *"si subelo y actualizalo tambien a nuestros sistemas siumax y mis clientes que pagan"*.
+  - Evicamp y la carpeta de clientes: compilado desde `main` + arreglo (sin las fases 8-10 en prueba), solo pantallas, sin cortar ventas. `index-DgfBUqC6.js`, API 401, login sin errores.
+  - siumax: arreglo agregado a la rama de Antigravity (b0bb2a8) y subido (`index-B1BjFInV.js`, login sin errores).
+  - `main` local = 98b2961. Sin push a GitHub (no se pidió). El único cliente que paga es Evicamp; `evi.siumax` es otro sistema (Evidiary), no se tocó.
+
+### 02/11/2026: Aspecto de la Tienda Web y Fase 11 (SUNAT) · Claude
+- **Dueño:** *"perfecto quiero que arregles el aspecto de la pagina web y avancemos a la ultima fase que es la 11 la ultima y mas compleja dime el plan"*.
+- Claude revisó la Tienda Web (siumax tiene 0 productos; se probó inyectando los de la demo solo en el navegador) y propuso arreglos de aspecto + el plan de la Fase 11 en 8 partes (camino A: proveedor PSE como "enchufe", con copia propia; B directo a SUNAT al final). Esperando OK y decisiones.
+- **Dueño:** *"yo lo veo igual sinceramente la tienda virtual para cada cliente esta feo"* (foto de la tienda vacía en siumax).
+  - Claude rediseñó la Tienda Web (commit c202ae8) y la subió solo a siumax. Causa: heredaba el estilo de la caja (esquinas rectas forzadas, letra grande, tema oscuro). Arregló 2 errores del link de WhatsApp. Evicamp intacto.
+  - Pendiente: revisión del dueño, permiso para cargar productos de prueba en siumax (tiene 0) y el OK + decisiones de la Fase 11.
+- **Dueño:** *"esta bien pero todo cuadrado recuerda no usamos nada con curvas en las esquinas"*. Claude quitó las curvas (la tienda vuelve a esquinas rectas como todo SiuMax) y los adornos redondos de la bienvenida; subido a siumax.
+
+### 02/11/2026: Fase 11 (SUNAT), plan explicado · Claude
+- **Dueño:** *"perfecto volvamos a la fase 11 dime tu plan como lo haremos como funcionara y como solucionara el problema de la sunat"*.
+- Claude explicó el plan completo (flujo Caja → facturador en el VPS → Nubefact → SUNAT, copia propia, 8 partes, pruebas en siumax en modo prueba, Evicamp solo con aviso) y las decisiones pendientes. Detalle en PLAN §7. Esperando OK.
+- **Dueño:** *"ok"* (al plan de la Fase 11). Claude hizo la **11.1** en la rama `fase-11-sunat`: base de datos (configuración, clave protegida, numeración, columnas cpe_*), el facturador del servidor (modo simulado probado; Nubefact listo para conectar) y Ajustes > Facturación con teclado (31/31). Solo siumax; Evicamp intacto.
+- **Dueño:** *"antes dime el ruc que probamos para crear la cuenta nubefact y explícame por qué en ajustes está en facturación los datos de la empresa; tienen que estar en datos de la empresa... que lo agarre de ahí para tener el orden"*.
+  - Claude movió razón social, ubigeo y régimen a Datos de la empresa; Facturación solo los muestra (commit 91e8276, prueba 44/44). Le explicó que el RUC de las pruebas (20601234565) es inventado y que Nubefact necesita un RUC real.
+- **Dueño:** *"la opción 2 y puedo hacerlo con un ruc personal?"* y *"y puede servir para varios negocios?"*. Claude: sí con RUC 10 (gratis, en línea con DNI; evitar Nuevo RUS para poder dar facturas, consultar al contador); requisitos de revendedor de Nubefact hay que pedírselos; una sola cuenta y un solo facturador sirven a todos los negocios, cada uno con su propio RUC.
+- Claude hizo la **11.2** (impuesto por producto y bolsas, 4ad13a0) y arregló 2 errores de la ficha del producto que también están en Evicamp (NO-SKU y comparación de ids). Sigue la 11.3 (Caja).
+- Claude hizo la **11.3** (Caja con Boleta y Factura, ticket con IGV y QR; f2303a2, 26/26). Sigue la 11.4.
+- Claude hizo la **11.4** (pantalla Comprobantes, reenviar, reimprimir con QR, boletas sin internet; 74d7e8f, 23/23). Sigue la 11.5 (nota de crédito).
+- Claude hizo la **11.5** (notas de crédito al anular y al devolver; 825df14, 24/24). Sigue la 11.6 (reportes para el contador).
+- Claude hizo la **11.6** (reporte del mes para el contador: resumen e Excel; 18/18). Siguen 11.7 (Panel) y 11.8 (directo a SUNAT).
+- Claude hizo la **11.7** (habilitar facturación por cliente desde el Panel). Sigue la 11.8 (directo a SUNAT).
+- **Dueño:** *"continua lo que dejaste"*. Claude terminó la **11.8** (directo a SUNAT sin proveedor; 1838ed2, 20/20): el ambiente de pruebas de SUNAT aceptó boleta, factura y nota de crédito. **Fase 11 completa en siumax.** Evicamp intacto, sin push.
+- **Dueño (03/11):** ya cambió su Clave SOL y preguntó cómo crear un usuario SOL secundario. Claude lo guió con capturas: creó **FACTURA1** en su RUC 10760867697 con solo "Servicio de Envío de Documentos Electrónicos por Servicio Web" y "Consultar Envíos de CPE" (sin Certificado Digital ni nada más). SUNAT lo registró. La clave la guarda él (no se escribe en el chat). Sigue: registrarse en nubefact.com.
+- **Dueño:** *"ya creame producto y llename los datos"*. Claude dejó siumax listo para que pruebe la Fase 11: empresa con RUC 10760867697 / RODRIGUEZ HUARCAYA HARRY / MYPE (dirección de prueba, ubigeo 150101), Facturación = Directo a SUNAT · PRUEBA · activa (Probar conexión OK) y 5 productos de categoría PRUEBAS con stock por lote (gaseosa, galletas, agua, papa EXONERADA y bolsa con ICBPER).
+- **Dueño:** *"veo que se repite algunas cosas arregla eso"* (ticket de su boleta B001-1, aceptada por SUNAT pruebas). Claude: el precio "c/u" solo sale si la cantidad no es 1, "VUELTO" solo si hay vuelto, y la razón social no se repite si es igual al nombre comercial. La leyenda "Representación impresa de la boleta..." se queda (la pide SUNAT). Subido a siumax.
+- **Dueño** (captura de la vista previa): el QR y la leyenda salían fuera del papel del ticket en pantallas bajas. Causa: el contenedor con scroll era `flex` y estiraba el ticket solo al alto de la ventana. Arreglo: `items-start` en la vista previa de la Caja y en el detalle del ticket. Subido a siumax. (Lo de "C/U" y "VUELTO 0.00" que aún veía era su navegador con la versión anterior: Ctrl+F5.)
+- **Dueño:** *"el selector no me permite moverme de izquierda a derecha"* (cobro con Factura: RUC y razón social lado a lado). Claude: en ModalCobro, → al final del documento pasa al nombre y ← al inicio del nombre vuelve al documento (misma regla que Ajustes > Facturación). Probado con teclado 15/15, sin cobrar. Subido a siumax.
+- **Dueño:** *"recuerda que bajar y subir haga eso porque cuando presiono arriba se va al costado"*. Claude: en el cobro, ↑/↓ desde documento o nombre ya no van al campo de al lado (↑ = botones del comprobante, ↓ = Dirección o Imprimir); Enter sigue pasando de campo en campo. Probado con teclado 24/24, sin cobrar. Subido a siumax. Preguntó por qué "Ver comprobantes emitidos" de Ajustes hace lo mismo que Finanzas: es un atajo a la misma ventana; se le ofreció quitarlo.
+- **Dueño:** *"agregarle colores a la nota de venta, boleta y factura como lo que hiciste con efectivo, yape y tarjeta"*. Claude: botones del comprobante con color propio (`COLOR_COMPROBANTE` en ModalCobro): Nota de venta gris (muted), Boleta naranja (warning-dark), Factura rojo (danger-dark); borde y letra de color, el elegido relleno. Subido a siumax.
+- **Dueño:** *"sigo viendo eso, está en finanzas y en facturas, no tiene que haber duplicados"*. Claude quitó "Ver comprobantes emitidos" de Ajustes > Facturación (solo abría la misma ventana de Comprobantes; queda SOLO en Finanzas). ↓ desde "Probar conexión" llega a "Guardar cambios". prueba-fase11-4-ui actualizada; probado solo lo cambiado (6/6) para no borrar los datos de prueba del dueño. Subido a siumax.
+- **Dueño:** *"cuando quiero cambiar producto no me permite, menos devolver"* + *"lo de comprobantes es lo mismo que el historial"* → *"haz los dos puntos y empieza"*.
+  - **Punto 2 hecho:** cambio de producto con boleta/factura = `fn_cambiar_con_nota_credito` (una transacción: nota de crédito por lo devuelto + venta nueva con el MISMO comprobante y cliente + registro en cambios_productos); "Solo devolver" usa `fn_devolver_con_nota_credito`. Pide caja abierta y que SUNAT haya aceptado el original. Arreglados de paso: Escape no cerraba la ventana del cambio (la detenía su propio manejador) y Finanzas recargaba con pantalla de carga y la ventana perdía el resultado (ahora recarga silenciosa). Prueba `prueba-cambio-cpe-ui.mjs` 29/29 (deja siumax como estaba).
+  - **Punto 1 hecho:** la ventana "Comprobantes" se quitó; su contenido quedó en las tablas de Finanzas (comprobante + estado SUNAT), en el detalle del ticket (bloque SUNAT, notas de crédito, reenviar, PDF/XML/CDR, [D] Devolver), en "Reporte contador" y en el aviso rojo de problemas (Finanzas y Caja). "Solo devolver" acepta varios productos a la vez. Pruebas 32/32 y 39/39. Solo siumax.
+- **Dueño:** *"la tabla tiene mucho espacio de sobra, ajústalo nomás"* (Inventario). Claude redujo el margen lateral del buscador/filtros y de la tabla (px-8 → px-3) para que usen todo el ancho. Subido a siumax. El dueño anunció más retoques estéticos y de selector.
+- **Dueño:** *"que las tablas, solo la tabla y el fondo, sean iguales para todas las sesiones; algunas tienen sombreado y son de diferente tipo"* → *"empieza"*. Claude creó el molde único (`tabla-marco` / `tabla-cabecera` / `tabla-fila` en index.css, modelo Inventario > Productos) y lo aplicó a Productos, Lotes, Compras, Clientes, Créditos (fiados y agrupados), Cotizaciones y Pedidos (marco), Movimientos e Historial de Finanzas, Conteos, Utilidades, Usuarios y Tiendas; fondo de Conteos y Utilidades igualado al gris claro. Sin sombras. Capturas revisadas, sin errores. Pendiente preguntar: tablas dentro de ventanas.
+- **Dueño:** *"no olvides también agregar siguiente página en cada sesión igual al de inventario"* → *"empieza pero antes súbelo todo a evicamp y siumax para mis clientes y a mi github"*. Luego: *"evicamp no paga, no le agregues el de pago"* → aclaró que se refería a **Mercado Pago** (Evicamp es su primer cliente y lo ayudó a desarrollar; nunca debe tener cobros). Claude comprobó que Evicamp no tiene /suscripcion.json (no ve avisos ni botón de pago), ensayó el SQL en una copia (0 errores), lo aplicó a Evicamp sin reiniciar la API (0 errores), subió las pantallas a todos los sitios y subió a GitHub.

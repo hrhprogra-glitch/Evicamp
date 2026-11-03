@@ -373,6 +373,69 @@ def psql_cliente(slug, sql, variables=None):
     return r.stdout.strip()
 
 
+# ===================== Facturación electrónica por cliente (fase 11.7) =====================
+# El facturador (servicio siumax-facturador) atiende las bases que están en bases.json. Habilitar a un
+# cliente = agregar su base; deshabilitar = quitarla y apagar la facturación en su sistema (su Caja
+# vuelve a Nota de venta). Sin habilitar, su administrador no puede activarla en Ajustes > Facturación.
+FACTURADOR_BASES = f"{DIR_SIUMAX}/facturador/bases.json"
+candado_facturador = threading.Lock()
+
+
+def leer_bases_facturador():
+    try:
+        with open(FACTURADOR_BASES) as f:
+            lista = json.load(f)
+        return [b for b in lista if isinstance(b, str)]
+    except (OSError, ValueError):
+        return []
+
+
+def guardar_bases_facturador(lista):
+    os.makedirs(os.path.dirname(FACTURADOR_BASES), exist_ok=True)
+    tmp = FACTURADOR_BASES + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(sorted(set(lista)), f)
+        f.write("\n")
+    os.chmod(tmp, 0o644)
+    os.replace(tmp, FACTURADOR_BASES)
+
+
+def facturacion_cliente(slug):
+    """Estado de la facturación de un cliente: si el facturador lo atiende y lo que dice su base."""
+    habilitada = base_cliente(slug) in leer_bases_facturador()
+    try:
+        fila = psql_cliente(slug, """
+            SELECT json_build_object(
+              'activo', c.activo, 'modo', c.modo,
+              'visto', to_char(c.facturador_visto_at AT TIME ZONE 'America/Lima', 'YYYY-MM-DD HH24:MI'),
+              'comprobantes_mes', (SELECT count(*) FROM sales WHERE doc_type IS NOT NULL
+                                    AND created_at >= (date_trunc('month', now() AT TIME ZONE 'America/Lima') AT TIME ZONE 'America/Lima')),
+              'ruc', (SELECT ruc FROM empresa_config ORDER BY id LIMIT 1))
+            FROM facturacion_config c WHERE c.id = 1;
+        """)
+        return {"habilitada": habilitada, "instalada": True, **(json.loads(fila) if fila else {})}
+    except ValueError:
+        # Su base todavía no tiene la fase 11 (falta actualizar su sistema)
+        return {"habilitada": habilitada, "instalada": False}
+
+
+def cambiar_facturacion(cuerpo):
+    slug = str(cuerpo.get("slug", ""))
+    cliente_registrado(slug)
+    habilitar = bool(cuerpo.get("habilitar"))
+    base = base_cliente(slug)
+    with candado_facturador:
+        lista = [b for b in leer_bases_facturador() if b != base]
+        if habilitar:
+            if not facturacion_cliente(slug)["instalada"]:
+                raise ValueError("Su sistema todavía no tiene la facturación instalada: actualiza su base primero (cliente.cjs seguridad clientes).")
+            lista.append(base)
+        guardar_bases_facturador(lista)
+    if not habilitar:
+        psql_cliente(slug, "UPDATE facturacion_config SET activo = false WHERE id = 1;")
+    return facturacion_cliente(slug)
+
+
 # ===================== Sugerencias y errores de los clientes =====================
 # El sistema de cada cliente (Ajustes > Sugerencias y errores) envía a SU propio link /api/sugerencias;
 # nginx lo reenvía aquí agregando de qué link viene y una contraseña interna (snippets/siumax-sugerencias.conf,
@@ -486,7 +549,8 @@ def detalle_cliente(slug):
     return {"slug": slug, "nombre": reg["nombre"], "link": f"https://{slug}.{DOMINIO_BASE}",
             "estado": reg["estado"], "alta": reg["alta"], "api": api_activa(slug),
             "plan": plan, "pago": estado_pago(plan), "pagos": pagos,
-            "total_pagado": round(sum(p["monto"] for p in pagos), 2), "usuarios": usuarios}
+            "total_pagado": round(sum(p["monto"] for p in pagos), 2), "usuarios": usuarios,
+            "facturacion": facturacion_cliente(slug)}
 
 
 def restablecer_clave(cuerpo):
@@ -995,6 +1059,8 @@ class Panel(BaseHTTPRequestHandler):
                 nuevo = str(cuerpo.get("nuevo", "")).strip().lower()
                 return self.responder(200, {"ok": True, "link": f"https://{nuevo}.{DOMINIO_BASE}", "detalle": salida[-2000:]})
 
+            if ruta == "/api/clientes/facturacion":
+                return self.responder(200, {"ok": True, "facturacion": cambiar_facturacion(cuerpo)})
             if ruta == "/api/clientes/borrar":
                 ok, salida = borrar_cliente(cuerpo)
                 if not ok:

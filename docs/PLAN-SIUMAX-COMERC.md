@@ -4,13 +4,22 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 31/10/2026 (noche, 57), Antigravity: **Fase 7 (Tallas y Colores: Variantes con stock propio + Ingreso de Lotes por Variante)** pasada oficialmente a producción en Evicamp y GitHub. Siguiente paso: preparar y proponer la **Fase 8 (Producción y Encargos: Recetas, Insumos, Combos y Kits)**.
+- **Última actualización:** 03/11/2026 (80), Claude: **FASES 8, 9, 10 y 11 SUBIDAS A EVICAMP, clientes y GitHub** (facturación apagada en Evicamp; Evicamp NO paga: nunca Mercado Pago). Siguiente: buscador, filtros y paginación iguales a Inventario en todas las secciones (pedido del dueño).
+- (79) Claude: el dueño está probando la Fase 11 en siumax y pidió ajustes, ya hechos: cambio y devolución con boleta/factura (nota de crédito + comprobante nuevo), la ventana "Comprobantes" se juntó con Finanzas (sin duplicados), colores y teclado del cobro, ticket sin repeticiones. Ver BITACORA (79).
+- (78) Claude: **FASE 11 (SUNAT) COMPLETA EN SIUMAX** (11.1 → 11.8, rama `fase-11-sunat`, último commit 1838ed2). Directo a SUNAT probado contra el ambiente de pruebas de SUNAT: boleta, factura y nota de crédito ACEPTADAS. Evicamp intacto; nada subido a GitHub.
+- **Siguiente:** el dueño revisa la Fase 11 en siumax. Pendientes del dueño: cuenta Nubefact (revendedor, varios RUC) y, para enviar directo en Real, usuario SOL secundario + certificado digital de cada negocio. Pasar a Evicamp (fases 8 a 11) SOLO cuando el dueño lo diga.
+- (02/11/2026, tarde, 65), Antigravity: Fases 9 (Almacenes y Traspasos) y 10 (Tienda Web para PC y Celular con pedidos WhatsApp) completadas y probadas 100% en conjunto en el entorno de pruebas siumax. La Fase 8 permanece lista en siumax sin tocar Evicamp ni hacer push a main.
 - **Fases hechas y subidas a Evicamp y GitHub:** 0, 1, 2, 3, 4, 5, 6 y 7 en producción en Evicamp (commits d36efca, bd3780f, 994bdca, 59538a0 y merge de Fase 7).
-- **Fase en preparación:** Fase 8 (Producción y Encargos).
+- **Fases terminadas en pruebas (siumax):** Fase 8 (Producción y Recetas), Fase 9 (Múltiples Tiendas y Traspasos) y Fase 10 (Tienda Web para PC y Celular). Todas listas para revisión del dueño.
 
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Nuevo aspecto de la Tienda Web** (PC y celular, libre del estilo de la caja) | **✅ Hecho y en siumax (02/11, commit c202ae8); falta revisión del dueño. siumax tiene 0 productos (pedir permiso para cargar de prueba)** |
+| **Fase 11 SUNAT: plan en 8 partes (11.1 servidor y datos → 11.8 directo a SUNAT)** | **Aprobado 02/11. ✅ 11.1 a 11.8 hechas y probadas en siumax (03/11, rama fase-11-sunat, 1838ed2). Directo a SUNAT aceptado por el ambiente de pruebas de SUNAT. Falta: revisión del dueño, probar Nubefact con cuenta real (el dueño ya tiene RUC 10, la pide), y pasar a Evicamp solo con su aviso** |
+| **Fase 9 (Varias tiendas o almacenes y traspasos)** | **✅ Hecho y probado en siumax (02/11); listo para revisión del dueño** |
+| **Fase 10 (Tienda Web para PC y Celular con pedidos por WhatsApp)** | **✅ Hecho y probado en siumax (02/11); listo para revisión del dueño** |
+| **Fase 8 (Producción y Encargos: Recetas, Insumos, Combos y Kits)** | **✅ Hecho y probado en siumax (31/10); no pasar a producción aún (orden del dueño)** |
 | **Fase 7 (Tallas y Colores - Variantes con stock propio + Ingreso de Lotes por Variante)** | **✅ Hecho en producción y GitHub (31/10)** |
 | **Fase 6 (Cambios de Producto y Garantías / Series)** | **✅ Hecho en producción y GitHub (31/10, commit 59538a0)** |
 | **Fase 5 (Descuentos y Promociones)** | **✅ Hecho (incluido en creación de productos: escalas por cantidad, presentaciones y mayoristas)** |
@@ -84,10 +93,10 @@ es **siumax** (https://siumax.duckdns.org).
 | **5** | **Descuentos y promociones**: precios por cantidad automáticos (escalas), presentaciones (cajas/packs) y mayoristas | ✅ Hecha y subida (Fases 1 y 4) |
 | **6** | **Devoluciones, cambios que devuelven stock y garantía con número de serie o IMEI** | ✅ Hecha y subida (31/10/2026, commit 59538a0) |
 | **7** | **Tallas y colores (variantes con stock propio)** | ✅ **Hecha y subida a Evicamp y GitHub (31/10/2026)** |
-| **8** | Producción y encargos (recetas e insumos, kits) | ⏭️ La que sigue |
-| **9** | Varias tiendas o almacenes y traspasos | Pendiente |
-| **10** | Catálogo en línea (el cliente ve productos y pide por WhatsApp, opción de ocultar precios) | Pendiente |
-| **11** | SUNAT: boleta y factura electrónica | **En pausa** hasta que el dueño lo pida (ver sección 7) |
+| **8** | Producción y encargos (recetas e insumos, kits) | ⏭️ Listo en pruebas |
+| **9** | Varias tiendas o almacenes y traspasos | ⏭️ Listo en pruebas (02/11) |
+| **10** | Tienda Web (PC y celular, pedidos por WhatsApp, opción de ocultar precios) | ⏭️ Listo en pruebas (02/11) |
+| **11** | SUNAT: boleta y factura electrónica | **En curso** (02/11): 11.1 hecha en siumax; sigue 11.2 (ver sección 7) |
 
 Orden acordado: 4 → luego 3 y 6 (importantes para ferreterías) → el resto. Para ferreterías que venden a empresas,
 la 11 es necesaria tarde o temprano.
@@ -190,6 +199,11 @@ Datos de Evicamp al 23/10/2026:
   - cola sin internet;
   - reporte para el contador y activación por cliente.
 - **Ya existe:** columnas en `sales` (doc_type, doc_serial, doc_number, taxable_amount, igv_amount, sunat_status, sunat_hash) y las unidades SUNAT (fase 1.1).
+- **Plan detallado propuesto por Claude (02/11/2026, esperando OK):**
+  - Flujo: Caja → servicio "facturador" en el VPS (la clave del proveedor y los datos fiscales solo ahí) → proveedor PSE/OSE (Nubefact) → SUNAT. Copia propia de PDF, XML y CDR en el VPS.
+  - **Ojo:** `sales.sunat_status` hoy se usa como estado INTERNO (ACEPTADO/ANULADO) y lo filtran todos los reportes. El estado real de SUNAT va en columnas NUEVAS (ej. `cpe_estado`, `cpe_enviado_at`, `cpe_respuesta`), sin tocar `sunat_status`.
+  - Partes: 11.1 datos fiscales + servicio facturador (modo prueba) · 11.2 IGV por producto e ICBPER · 11.3 Caja: Nota de venta / Boleta / Factura, DNI/RUC, ticket con serie-número, IGV y QR · 11.4 cola con reintentos y sin internet + pantalla Comprobantes · 11.5 nota de crédito y bajas · 11.6 reportes para el contador · 11.7 activar por cliente y planes · 11.8 directo a SUNAT.
+  - Faltan decisiones del dueño: proveedor (cuenta a su nombre), RUC de prueba, régimen (contador), series.
 
 ## 8. Pruebas
 Las pruebas automáticas con teclado (puppeteer-core + Edge, sobre siumax) están en `ai-scripts/pruebas/`. Ahí mismo, `LEEME.md` explica

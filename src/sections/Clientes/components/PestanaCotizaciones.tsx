@@ -566,7 +566,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-white border-2 border-[var(--color-ink)]">
+    <div className="flex-1 flex flex-col min-h-0 tabla-marco">
       
       {/* BARRA SUPERIOR: BUSCADOR Y FILTROS */}
       <div className="p-3 bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] flex flex-wrap gap-2 items-center justify-between">

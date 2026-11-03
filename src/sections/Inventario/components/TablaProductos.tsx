@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Database, ArrowUpDown, Search, Edit, Trash2, ChevronLeft, ChevronRight, Check, X, History, Barcode, Tag, Image as ImageIcon } from 'lucide-react';
+import { Database, ArrowUpDown, Search, Edit, Trash2, ChevronLeft, ChevronRight, Check, X, History, Barcode, Tag, Image as ImageIcon, ChefHat } from 'lucide-react';
 import { EtiquetaStock } from './EtiquetaStock';
 import type { Product } from '../types';
 import { usePermiso, avisarSinPermiso } from '../../../utils/permisos';
@@ -16,10 +16,11 @@ interface Props {
   onDeleteProduct?: (product: Product) => void; 
   onViewHistory?: (product: Product) => void; // <-- NUEVA PROP AQUÍ
   onEtiqueta?: (product: Product) => void; // fase 2.5: imprimir etiquetas (components/ModalEtiqueta.tsx)
+  onProducir?: (product: Product) => void; // fase 8: producir lote de producto con receta
 }
 
 export const TablaProductos: React.FC<Props> = ({ 
-  loading, productos, currentPage, totalPages, onPageChange, onUpdateProduct, onEditProduct, onDeleteProduct, onViewHistory, onEtiqueta // <-- AGREGAR AQUÍ
+  loading, productos, currentPage, totalPages, onPageChange, onUpdateProduct, onEditProduct, onDeleteProduct, onViewHistory, onEtiqueta, onProducir
 }) => {
   // Sin permiso, el botón de borrar avisa antes de pedir la confirmación
   const puedeEliminar = usePermiso('almacen_eliminar_productos');
@@ -201,7 +202,7 @@ export const TablaProductos: React.FC<Props> = ({
   };
 
   return (
-    <div id="tabla-productos-inventario" className="border border-[var(--color-border)] flex flex-col bg-[var(--color-surface)] relative min-h-[200px]">
+    <div id="tabla-productos-inventario" className="tabla-marco flex flex-col relative min-h-[200px]">
       {loading && (
         <div className="absolute inset-0 bg-white/80 dark:bg-[var(--color-surface)]/80 backdrop-blur-sm z-10 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
@@ -219,7 +220,7 @@ export const TablaProductos: React.FC<Props> = ({
         <div className="md:min-w-[960px]">
 
       {/* CABECERAS DE LA TABLA REESTRUCTURADAS (CON COLUMNA DE IMAGEN) */}
-      <div className="hidden md:grid grid-cols-12 bg-[var(--color-ink)] text-white p-4 text-sm font-black uppercase tracking-[0.2em] items-center">
+      <div className="tabla-cabecera hidden md:grid grid-cols-12 p-4 items-center">
         <div className="col-span-1 text-center">Img</div>
         <div className="col-span-2">Códigos</div>
         <div className="col-span-3">Producto / Categoría</div>
@@ -437,6 +438,16 @@ export const TablaProductos: React.FC<Props> = ({
                         🏷️ {item.variantes?.length || 0} {item.variantes?.length === 1 ? 'variante' : 'variantes'}
                       </span>
                     )}
+                    {item.tipoCompuesto === 'COMBO' && (
+                      <span className="text-[10px] font-bold text-amber-800 bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 px-1.5 py-0.5 border border-amber-300 dark:border-amber-700 uppercase" title="Combo / Kit (descuenta insumos al vender)">
+                        📦 COMBO
+                      </span>
+                    )}
+                    {item.tipoCompuesto === 'RECETA' && (
+                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 px-1.5 py-0.5 border border-emerald-300 dark:border-emerald-700 uppercase" title="Elaborado con Receta / Requiere producción">
+                        👨‍🍳 RECETA
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -502,6 +513,17 @@ export const TablaProductos: React.FC<Props> = ({
                       onClick={(e) => { e.stopPropagation(); onEtiqueta(item); }}
                     >
                       <Tag size={16} />
+                    </button>
+                  )}
+                  {item.tipoCompuesto === 'RECETA' && onProducir && (
+                    <button
+                      id={`btn-producir-fila-${item.id}`}
+                      data-accion="producir"
+                      className="text-[#94A3B8] hover:text-emerald-600 focus:text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600 p-1 transition-colors cursor-pointer"
+                      title="Producir / Elaborar lote de este producto"
+                      onClick={(e) => { e.stopPropagation(); onProducir(item); }}
+                    >
+                      <ChefHat size={16} />
                     </button>
                   )}
                   <button

@@ -336,6 +336,7 @@ const PERMITIDO_SIN_INTERNET = new Set([
   'POST /grupos_clientes', 'PATCH /grupos_clientes', 'DELETE /grupos_clientes', // grupos de clientes (fase 4.1)
   'POST /products', 'PATCH /products',                               // crear y editar productos
   'POST /product_variants', 'PATCH /product_variants', 'DELETE /product_variants', // variantes de productos (fase 7)
+  'POST /product_recipes', 'PATCH /product_recipes', 'DELETE /product_recipes',   // recetas y componentes (fase 8)
   'POST /categories', 'DELETE /categories',
   'POST /batches',                                                   // ingresar lotes
   'POST /providers', 'PATCH /providers', 'DELETE /providers',        // proveedores
@@ -360,7 +361,7 @@ const CON_STOCK = new Set(['PATCH /batches', 'PATCH /products', 'PATCH /product_
 // Tablas cuyo número (id) lo pone el servidor: sin internet lo pone la PC (el servidor lo acepta,
 // sus ids son "BY DEFAULT"). Basado en la hora: nunca choca con los del servidor (van por miles).
 const ID_DESDE_LA_PC: Record<string, 'numero' | 'uuid'> = {
-  products: 'numero', product_variants: 'numero', customers: 'numero', providers: 'uuid', compras_detalle: 'numero', empresa_config: 'numero',
+  products: 'numero', product_variants: 'numero', product_recipes: 'numero', customers: 'numero', providers: 'uuid', compras_detalle: 'numero', empresa_config: 'numero',
   grupos_clientes: 'numero',
 };
 let ultimoIdNumero = 0;

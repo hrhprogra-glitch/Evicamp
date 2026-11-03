@@ -5,6 +5,8 @@ import { supabase } from '../../../db/supabase';
 import type { CartItem, Cliente } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { traerTodo } from '../../../utils/traerTodo';
+import { rucValido } from '../../../utils/documento';
+import { errorComprobante, type DatosComprobante, type FacturacionCaja, type TipoComprobante } from '../../../utils/comprobante';
 
 // NUEVA INTERFAZ PARA LOS DATOS DEL FIADO
 export interface FiadoData {
@@ -22,11 +24,34 @@ interface Props {
   cart: CartItem[];
   total: number;
   clienteSeleccionado?: Cliente | null;
+  // Fase 11.3: boletas y facturas (null = facturación apagada: la ventana queda como siempre)
+  facturacion?: FacturacionCaja | null;
   // 🛡️ Actualizamos a Promesa para que el botón sepa cuándo terminó
-  onConfirm: (pagos: { efectivo: number, yape: number, tarjeta: number }, imprimirBoleta: boolean, fiadoData?: FiadoData) => Promise<void> | void;
+  onConfirm: (pagos: { efectivo: number, yape: number, tarjeta: number }, imprimirBoleta: boolean, fiadoData?: FiadoData, comprobante?: DatosComprobante) => Promise<void> | void;
 }
 
-export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSeleccionado, onConfirm }) => {
+const COMPROBANTES: { id: TipoComprobante; nombre: string }[] = [
+  { id: 'NOTA', nombre: 'Nota de venta' },
+  { id: 'BOLETA', nombre: 'Boleta' },
+  { id: 'FACTURA', nombre: 'Factura' },
+];
+// Colores propios (como Efectivo/Yape/Tarjeta): gris = interna, naranja = boleta, rojo = factura
+const COLOR_COMPROBANTE: Record<TipoComprobante, { normal: string; elegido: string }> = {
+  NOTA: {
+    normal: 'bg-white text-[var(--color-muted)] border-[var(--color-muted)] hover:bg-[var(--color-muted)] hover:text-white',
+    elegido: 'bg-[var(--color-muted)] text-white border-[var(--color-muted)]',
+  },
+  BOLETA: {
+    normal: 'bg-white text-[var(--color-warning-dark)] border-[var(--color-warning-dark)] hover:bg-[var(--color-warning-dark)] hover:text-white',
+    elegido: 'bg-[var(--color-warning-dark)] text-white border-[var(--color-warning-dark)]',
+  },
+  FACTURA: {
+    normal: 'bg-white text-[var(--color-danger-dark)] border-[var(--color-danger-dark)] hover:bg-[var(--color-danger-dark)] hover:text-white',
+    elegido: 'bg-[var(--color-danger-dark)] text-white border-[var(--color-danger-dark)]',
+  },
+};
+
+export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSeleccionado, facturacion, onConfirm }) => {
       const [montoEfectivo, setMontoEfectivo] = useState<string>('');
       const [montoYape, setMontoYape] = useState<string>('');
       const [montoTarjeta, setMontoTarjeta] = useState<string>('');
@@ -49,6 +74,13 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
   const [tieneDeudaVencida, setTieneDeudaVencida] = useState<boolean>(false);
 
   const [lastOpen, setLastOpen] = useState(false);
+
+  // === FASE 11.3: COMPROBANTE (Nota de venta / Boleta / Factura) ===
+  const [compTipo, setCompTipo] = useState<TipoComprobante>('NOTA');
+  const [docNum, setDocNum] = useState('');
+  const [docNombre, setDocNombre] = useState('');
+  const [docDireccion, setDocDireccion] = useState('');
+  const comprobantesVisibles = COMPROBANTES.filter((c) => c.id !== 'FACTURA' || facturacion?.regimen !== 'NRUS');
 
   const calcularFechaVencimiento = (dias?: number | null) => {
     const d = new Date();
@@ -117,6 +149,40 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
     setTimeout(() => document.getElementById('fiado-fecha')?.focus(), 50);
   };
 
+  // Datos del comprobante tomados de la ficha del cliente (RUC para factura, DNI para boleta)
+  function llenarDocDesdeCliente(tipo: TipoComprobante, c: any) {
+    if (tipo === 'FACTURA') {
+      setDocNum(c?.ruc || '');
+      setDocNombre(c?.ruc ? (c.nombre || c.name || '') : '');
+      setDocDireccion(c?.ruc ? (c.direccion || '') : '');
+    } else if (tipo === 'BOLETA') {
+      setDocNum(c?.dni || '');
+      setDocNombre(c ? (c.nombre || c.name || '') : '');
+      setDocDireccion('');
+    } else {
+      setDocNum(''); setDocNombre(''); setDocDireccion('');
+    }
+  }
+
+  const elegirComprobante = (tipo: TipoComprobante) => {
+    setCompTipo(tipo);
+    llenarDocDesdeCliente(tipo, clienteSeleccionado || clienteActual);
+    if (tipo !== 'NOTA') setTimeout(() => { const el = document.getElementById('cobro-doc-num') as HTMLInputElement | null; el?.focus(); el?.select(); }, 40);
+  };
+
+  // Al terminar de escribir el RUC o DNI, si ese cliente ya está registrado, se llenan su nombre y dirección
+  const cambiarDocNum = (valor: string) => {
+    const limpio = valor.replace(/\D/g, '').slice(0, compTipo === 'FACTURA' ? 11 : 8);
+    setDocNum(limpio);
+    const completo = compTipo === 'FACTURA' ? limpio.length === 11 : limpio.length === 8;
+    if (!completo) return;
+    const c = clientesDb.find((x) => String(compTipo === 'FACTURA' ? x.ruc : x.dni || '') === limpio);
+    if (c) {
+      setDocNombre(c.nombre || c.name || '');
+      if (compTipo === 'FACTURA' && c.direccion) setDocDireccion(c.direccion);
+    }
+  };
+
   // 🛡️ RESETEO SÍNCRONO: Evita que el panel de fiado parpadee al abrir la ventana
   if (isOpen !== lastOpen) {
     setLastOpen(isOpen);
@@ -143,6 +209,9 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
       }
       setIsDropdownOpen(false);
       setIsCreatingNew(false);
+      const tipoInicial = facturacion ? facturacion.porDefecto : 'NOTA';
+      setCompTipo(tipoInicial);
+      llenarDocDesdeCliente(tipoInicial, clienteSeleccionado);
     }
   }
 
@@ -209,7 +278,15 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
 
   const esPagoCompleto = totalIngresadoCents >= totalLimpioCents;
   const esFiadoValido = faltante > 0 && clienteNombre.trim() !== '' && fechaVencimiento !== '';
-  const puedeConfirmar = !digitalExcedeTotal && (esPagoCompleto || esFiadoValido);
+  const datosComprobante: DatosComprobante = {
+    tipo: facturacion ? compTipo : 'NOTA',
+    clienteTipoDoc: compTipo === 'FACTURA' ? 'RUC' : docNum.trim() ? 'DNI' : 'SIN',
+    clienteNumDoc: docNum.trim(),
+    clienteNombre: docNombre.trim().toUpperCase(),
+    clienteDireccion: docDireccion.trim().toUpperCase(),
+  };
+  const errorDelComprobante = facturacion && compTipo !== 'NOTA' ? errorComprobante(datosComprobante, total, rucValido) : null;
+  const puedeConfirmar = !digitalExcedeTotal && (esPagoCompleto || esFiadoValido) && !errorDelComprobante;
 
   const handleCobrar = async () => {
     // 🛡️ BLOQUEO: Ignorar múltiples clics
@@ -260,7 +337,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
       } : undefined;
 
       // 🛡️ Disparo de la transacción (AWAIT obliga a esperar)
-      await onConfirm({ efectivo: numEfectivo, yape: numYape, tarjeta: numTarjeta }, imprimirBoleta, fiadoData);
+      await onConfirm({ efectivo: numEfectivo, yape: numYape, tarjeta: numTarjeta }, imprimirBoleta, fiadoData, facturacion ? datosComprobante : undefined);
       
     } catch (error: any) {
       console.error("DEBUG TÉCNICO - FALLO EN COBRO:", error);
@@ -727,7 +804,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                     if (e.key === 'Enter' && puedeConfirmar) handleCobrar();
                     if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('pago-yape')?.focus(); }
                     if (e.key === 'ArrowRight') { e.preventDefault(); if (faltante > 0) { (document.getElementById('fiado-nombre') || document.getElementById('fiado-search'))?.focus(); } }
-                    if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('cobro-btn-imprimir')?.focus(); }
+                    if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById(facturacion ? `cobro-comp-${compTipo}` : 'cobro-btn-imprimir')?.focus(); }
                     if (e.key === 'Tab') {
                        e.preventDefault();
                        if (e.shiftKey) document.getElementById('pago-yape')?.focus();
@@ -746,6 +823,82 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
             </div>
           </div>
           </div>
+
+          {/* FASE 11.3: COMPROBANTE */}
+          {facturacion && (
+            <div className="bg-white border-2 border-[var(--color-ink)] p-2 flex flex-col gap-2 shrink-0">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[12px] font-black uppercase tracking-widest text-[var(--color-ink)]">Comprobante</span>
+                {facturacion.modo !== 'REAL' && (
+                  <span className="text-[10px] font-black uppercase px-1.5 py-0.5 bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] border border-[var(--color-warning-border)]">
+                    Modo {facturacion.modo === 'SIMULADO' ? 'simulado' : 'prueba'}: sin valor ante SUNAT
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-1">
+                {comprobantesVisibles.map((c, i, lista) => (
+                  <button
+                    key={c.id}
+                    id={`cobro-comp-${c.id}`}
+                    type="button"
+                    aria-pressed={compTipo === c.id}
+                    onClick={() => elegirComprobante(c.id)}
+                    onKeyDown={(e) => {
+                      const ir = (id: string) => { e.preventDefault(); document.getElementById(id)?.focus(); };
+                      if (e.key === 'ArrowRight' && lista[i + 1]) ir(`cobro-comp-${lista[i + 1].id}`);
+                      else if (e.key === 'ArrowLeft' && lista[i - 1]) ir(`cobro-comp-${lista[i - 1].id}`);
+                      else if (e.key === 'ArrowUp') ir('pago-tarjeta');
+                      else if (e.key === 'ArrowDown') ir(compTipo !== 'NOTA' ? 'cobro-doc-num' : 'cobro-btn-imprimir');
+                      else if (e.key === 'Delete') { e.preventDefault(); onClose(); }
+                    }}
+                    className={`flex-1 py-2 border-2 text-[12px] font-black uppercase cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:ring-offset-1 ${
+                      COLOR_COMPROBANTE[c.id][compTipo === c.id ? 'elegido' : 'normal']
+                    }`}
+                  >
+                    {c.nombre}
+                  </button>
+                ))}
+              </div>
+              {compTipo !== 'NOTA' && (
+                <div className="grid grid-cols-[7.5rem_1fr] gap-1">
+                  {([
+                    ['cobro-doc-num', docNum, cambiarDocNum, compTipo === 'FACTURA' ? 'RUC (11 números)' : 'DNI (opcional)', 'numeric'],
+                    ['cobro-doc-nombre', docNombre, (v: string) => setDocNombre(v.toUpperCase()), compTipo === 'FACTURA' ? 'RAZÓN SOCIAL' : 'NOMBRE (OPCIONAL)', 'text'],
+                    ...(compTipo === 'FACTURA' ? [['cobro-doc-direccion', docDireccion, (v: string) => setDocDireccion(v.toUpperCase()), 'DIRECCIÓN (OPCIONAL)', 'text']] : []),
+                  ] as [string, string, (v: string) => void, string, 'numeric' | 'text'][]).map(([id, valor, cambiar, texto, modo], i, campos) => (
+                    <input
+                      key={id}
+                      id={id}
+                      type="text"
+                      autoComplete="off"
+                      inputMode={modo}
+                      value={valor}
+                      onChange={(e) => cambiar(e.target.value)}
+                      onFocus={(e) => e.target.select()}
+                      placeholder={texto}
+                      onKeyDown={(e) => {
+                        const ir = (destino: string) => { e.preventDefault(); const el = document.getElementById(destino) as HTMLInputElement | null; el?.focus(); };
+                        const siguiente = campos[i + 1]?.[0];
+                        // Fila 1: documento y nombre (lado a lado). Fila 2: dirección (solo factura)
+                        const enFila1 = i < 2;
+                        if (e.key === 'Enter') { e.preventDefault(); if (siguiente) ir(siguiente); else if (puedeConfirmar) handleCobrar(); else ir('cobro-btn-imprimir'); }
+                        else if (e.key === 'ArrowDown') ir(enFila1 ? (campos[2]?.[0] || 'cobro-btn-imprimir') : 'cobro-btn-imprimir');
+                        else if (e.key === 'ArrowUp') ir(enFila1 ? `cobro-comp-${compTipo}` : campos[0][0]);
+                        // Documento y nombre van lado a lado: ←/→ pasan de uno a otro en el borde del texto
+                        else if (e.key === 'ArrowRight' && i === 0 && e.currentTarget.selectionEnd === e.currentTarget.value.length) ir(campos[1][0]);
+                        else if (e.key === 'ArrowLeft' && i === 1 && e.currentTarget.selectionStart === 0) ir(campos[0][0]);
+                        else if (e.key === 'Delete') { e.preventDefault(); if ((e.target as HTMLInputElement).value === '') onClose(); else cambiar(''); }
+                      }}
+                      className={`${i === 2 ? 'col-span-2 ' : ''}w-full bg-white border-2 border-[var(--color-border)] p-1.5 text-xs font-black uppercase text-[var(--color-ink)] outline-none focus:border-[var(--color-ink)] rounded-none`}
+                    />
+                  ))}
+                </div>
+              )}
+              {errorDelComprobante && (
+                <p role="alert" className="text-[11px] font-black uppercase text-[var(--color-danger)]">{errorDelComprobante}</p>
+              )}
+            </div>
+          )}
 
           {/* En celular va dentro de la ventana de pago y aparece bajando suave */}
           {!esPantallaMedia && faltante > 0 && <div className="aparecer-fiado">{panelFiado}</div>}
@@ -788,7 +941,13 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
             type="button"
             onClick={() => setImprimirBoleta(!imprimirBoleta)}
             onKeyDown={(e) => {
-              if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('pago-tarjeta')?.focus(); }
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const arriba = !facturacion ? 'pago-tarjeta'
+                  : compTipo === 'NOTA' ? `cobro-comp-${compTipo}`
+                  : compTipo === 'FACTURA' ? 'cobro-doc-direccion' : 'cobro-doc-num';
+                document.getElementById(arriba)?.focus();
+              }
               if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('cobro-btn-confirm')?.focus(); }
               if (e.key === 'Enter') { e.preventDefault(); setImprimirBoleta(!imprimirBoleta); }
             }}
@@ -823,7 +982,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
           >
             {/* ⚡ Respuesta inmediata: Solo cambia el ícono mientras procesa */}
             {isProcessing ? <CheckCircle2 size={20} className="animate-ping" /> : <CheckCircle2 size={20} />}
-            <span>{isProcessing ? 'GUARDANDO...' : (faltante > 0 ? `FIAR S/ ${faltante.toFixed(2)}` : 'CONFIRMAR PAGO')}</span>
+            <span>{isProcessing ? 'GUARDANDO...' : (faltante > 0 ? `FIAR S/ ${faltante.toFixed(2)}` : facturacion && compTipo !== 'NOTA' ? `CONFIRMAR Y EMITIR ${compTipo}` : 'CONFIRMAR PAGO')}</span>
           </button>
         </div>
 

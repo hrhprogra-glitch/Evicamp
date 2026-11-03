@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProducto.tsx": {
-    "mtime": 1793472246.0855482,
-    "seen": 1793472730.9102595,
-    "ast_hash": "6ba79ad2435eee68f85460be9541a832",
+    "mtime": 1793483079.133761,
+    "seen": 1793483320.1901157,
+    "ast_hash": "d1e1510842f039a8496cb246bf787587",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaLotes.tsx": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793478555.2504706,
-    "seen": 1793478676.2969806,
-    "ast_hash": "8f4485e30a078a8bbbe52836ba50d7ea",
+    "mtime": 1793483208.7521367,
+    "seen": 1793483320.1903577,
+    "ast_hash": "4313acd18825bbb806f04955ec6923cf",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793478600.1586154,
-    "seen": 1793478676.2969816,
-    "ast_hash": "d6b53b063a452323c57f4760b32f32ba",
+    "mtime": 1793483232.200983,
+    "seen": 1793483320.1903596,
+    "ast_hash": "8855f2bfe3da3785cda77ca0fdbba279",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793478648.1237893,
-    "seen": 1793478676.2969823,
-    "ast_hash": "cda7bdb8c96203a64fcd2c0a9abc498d",
+    "mtime": 1793483291.451059,
+    "seen": 1793483320.1903613,
+    "ast_hash": "b12736b89a7d803b872f49556fbaedee",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793478575.6998835,
-    "seen": 1793478676.2969832,
-    "ast_hash": "69b487eef1c50eb84222450630f259f9",
+    "mtime": 1793483282.3752692,
+    "seen": 1793483320.190363,
+    "ast_hash": "79abc6384c763aa9330a9ea2187df3d0",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2214,9 +2214,9 @@
     "semantic_hash": ""
   },
   "src/utils/variantes.ts": {
-    "mtime": 1793475578.2409325,
-    "seen": 1793476230.700854,
-    "ast_hash": "253170b1723ed3cb90435ba7d7599e04",
+    "mtime": 1793480178.2283423,
+    "seen": 1793483320.190327,
+    "ast_hash": "5a684eb56597eeac99c7acf3623b5ddc",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-fase7-hibrido.mjs": {
@@ -2229,6 +2229,12 @@
     "mtime": 1793478410.390517,
     "seen": 1793478676.2967782,
     "ast_hash": "2e52ab2b1cbc5da68408c702e7aff6a0",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-modal-variantes-teclado.mjs": {
+    "mtime": 1793483018.1900873,
+    "seen": 1793483320.1898015,
+    "ast_hash": "2e5c6107c94f6ce3cb1624d116c32c68",
     "semantic_hash": ""
   }
 }

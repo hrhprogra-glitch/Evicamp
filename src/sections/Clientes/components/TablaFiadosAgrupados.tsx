@@ -222,7 +222,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
   const hayFiltrosActivos = searchTerm.trim() !== '' || filtroEstado !== 'ACTIVOS' || ordenPor !== 'MAYOR_DEUDA';
 
   return (
-    <div className="bg-white border-2 border-[var(--color-border)] shadow-[8px_8px_0_0_var(--color-border)] flex flex-col font-mono rounded-none lg:h-full lg:min-h-0">
+    <div className="tabla-marco flex flex-col font-mono lg:h-full lg:min-h-0">
       
       <div className="p-3 sm:p-6 border-b-2 border-[var(--color-border)] grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:flex lg:flex-nowrap gap-2 sm:gap-4 shrink-0 bg-[var(--color-bg)]">
         <input autoComplete="off" type="text"
@@ -337,7 +337,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
 
       <div className="lg:flex-1 overflow-auto custom-scrollbar relative lg:min-h-0">
         <table className="w-full text-left relative border-collapse">
-          <thead className="sticky top-0 bg-[var(--color-ink)] text-white border-b-2 border-[var(--color-ink)] z-10">
+          <thead className="tabla-cabecera sticky top-0 z-10">
             <tr className="uppercase text-[11px] font-black tracking-widest">
               <th className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6 border-r border-white/20 sm:w-[45%]">Cliente / Empresa</th>
               <th className="hidden sm:table-cell py-4 px-4 border-r border-white/20 text-right">Monto Prestado</th>
@@ -351,7 +351,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
                 <tr key={i}
                   {...clicConTeclado(() => onView(cli))}
                   onClick={() => onView(cli)}
-                  className="hover:bg-[var(--color-surface)] transition-colors focus:outline-none focus-visible:bg-[var(--color-bg-2)] cursor-pointer"
+                  className="tabla-fila cursor-pointer"
                 >
                   <td className="py-3 sm:py-4 px-3 sm:px-4 sm:pl-6">
                     <span className="font-black text-[var(--color-ink)] uppercase text-base">{cli.clienteNombre}</span>
