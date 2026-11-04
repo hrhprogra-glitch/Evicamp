@@ -529,10 +529,11 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             </div>
 
             {/* Switch de Vista */}
-            <div className="flex border-2 border-[var(--color-ink)] bg-[var(--color-bg)] shadow-[4px_4px_0_0_var(--color-ink)] shrink-0 w-full md:w-auto">
+            <div className="pestanas-sobrias flex border-2 border-[var(--color-ink)] bg-[var(--color-bg)] shadow-[4px_4px_0_0_var(--color-ink)] shrink-0 w-full md:w-auto">
               {!soloCompras && (
               <button 
                 id="btn-tab-productos"
+                data-activa={vistaActiva === 'PRODUCTOS'}
                 onClick={() => setVistaActiva('PRODUCTOS')} 
                 onKeyDown={(e) => {
                   if (e.key === 'ArrowUp') {
@@ -554,6 +555,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               {!soloCompras && (
               <button 
                 id="btn-tab-lotes"
+                data-activa={vistaActiva === 'LOTES'}
                 onClick={() => setVistaActiva('LOTES')} 
                 onKeyDown={(e) => {
                   if (e.key === 'ArrowUp') {
@@ -578,6 +580,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               {/* Listas de compras a proveedores; al recibir el pedido se crean los lotes (components/PanelCompras.tsx) */}
               <button
                 id="btn-tab-compras"
+                data-activa={vistaActiva === 'COMPRAS'}
                 onClick={() => setVistaActiva('COMPRAS')}
                 onKeyDown={(e) => {
                   if (e.key === 'ArrowUp') {
