@@ -592,7 +592,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
         </div>
 
         {/* FILTRO DE ESTADO */}
-        <div className="pestanas-sobrias flex overflow-x-auto">
+        <div className="pestanas-sobrias pestanas-filtro flex overflow-x-auto w-full xl:w-auto shrink-0">
           {ESTADOS_COTI.map((est, index) => (
             <button
               key={est}

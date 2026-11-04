@@ -847,3 +847,7 @@ nav button {
 /* Tabla vacía como Inventario: lupa grande gris claro y texto chico gris (y la paginación no se dibuja) */
 .vacio-sobrio { padding: 3rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; text-align: center; color: #94A3B8; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em; }
 .vacio-sobrio svg { color: #E2E8F0; margin-bottom: 0.5rem; }
+
+/* Pestañas usadas como filtro junto al buscador (Cotizaciones, Pedidos): misma altura que el buscador y los filtros */
+.pestanas-filtro > button { height: 2.75rem !important; padding: 0 1rem !important; font-size: 10px !important; flex: 1 1 auto; white-space: nowrap; }
+@media (min-width: 640px) { .pestanas-filtro > button { height: 3.5rem !important; } }
