@@ -32,7 +32,7 @@ ejemplos para copiar). Por cada sección: graphify antes de leer → cambios →
 - Conservar todos los `id` y `onKeyDown` existentes; antes de quitar algo, listar lo que hacía (error "gravísimo" pasado).
 - Tablas compartidas: revisar quién más las usa (`graphify explain`). Ej.: `TablaMovimientos` también está en `ModalDetalleCaja`.
 - Inventario: las clases viejas del botón de pestañas siguen porque `FiltrosInventario` revisa `classList.contains('bg-[var(--color-ink)]')`. No quitarlas.
-- Editar con scripts escritos en archivo (no `node -e` ni heredoc con `\\`); normalizar CRLF; ojo con líneas solo de espacios (MEMORIA-IA n.º 40).
+- Editar con scripts escritos en archivo (no `node -e` ni heredoc con barras invertidas); normalizar CRLF; ojo con líneas solo de espacios (MEMORIA-IA n.º 40).
 
 **Otros pendientes (esperan respuesta del dueño, no hacer sin su OK):**
 - Convertir Cotizaciones y Pedidos (hoy tarjetas) en tablas con paginación.
