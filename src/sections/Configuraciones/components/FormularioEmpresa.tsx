@@ -256,7 +256,7 @@ export const FormularioEmpresa: React.FC = () => {
             } else if (e.key === 'ArrowDown') {
               e.preventDefault();
               e.stopPropagation();
-              focusAndSelect('input-empresa-telefono');
+              focusAndSelect('input-empresa-nombre'); // el primer campo debajo (sin saltarlo)
             }
           }}
           style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
@@ -499,7 +499,7 @@ export const FormularioEmpresa: React.FC = () => {
                 } else if (e.key === 'ArrowUp') {
                   e.preventDefault();
                   e.stopPropagation();
-                  document.getElementById('btn-guardar-empresa')?.focus();
+                  focusAndSelect('input-empresa-razon'); // el campo de arriba (sin saltarlo)
                 } else if (e.key === 'ArrowLeft') {
                   if (canExitLeft(e.currentTarget)) {
                     e.preventDefault();
@@ -536,7 +536,7 @@ export const FormularioEmpresa: React.FC = () => {
                 if (e.key === 'ArrowUp') {
                   e.preventDefault();
                   e.stopPropagation();
-                  focusAndSelect('input-empresa-telefono');
+                  focusAndSelect('input-empresa-ruc'); // arriba están RUC y Teléfono: el de la izquierda
                 } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
                   e.preventDefault();
                   e.stopPropagation();

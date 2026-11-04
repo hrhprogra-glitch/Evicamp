@@ -1092,7 +1092,7 @@ export const Finanzas: React.FC = () => {
                     } else if (e.key === 'ArrowUp') {
                       e.preventDefault();
                       e.stopPropagation();
-                      document.getElementById('btn-ver-historial')?.focus();
+                      ['btn-cpe-problemas', 'btn-reporte-contador', 'btn-ver-historial'].map((id) => document.getElementById(id)).find((b) => b && b.getClientRects().length)?.focus();
                     } else if (e.key === 'ArrowRight') {
                       const input = e.currentTarget;
                       if (input.selectionStart === input.value.length) {

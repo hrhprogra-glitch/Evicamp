@@ -214,7 +214,7 @@ try {
             const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
             const cruceH = (p, q) => Math.min(p.right, q.right) - Math.max(p.left, q.left);
             const cruceV = (p, q) => Math.min(p.bottom, q.bottom) - Math.max(p.top, q.top);
-            const otros = [...document.querySelectorAll('[data-sel]')].filter((c) => c !== a && c !== b && !/^[fx]/.test(c.getAttribute('data-sel')) && c.getClientRects().length && !c.disabled);
+            const otros = [...document.querySelectorAll('[data-sel]')].filter((c) => c !== a && c !== b && !/^[fx]/.test(c.getAttribute('data-sel')) && c.getClientRects().length && !c.disabled && c.getAttribute('aria-disabled') !== 'true');
             for (const c of otros) {
               const rc = c.getBoundingClientRect();
               let medio = false, izquierda = false;
@@ -224,6 +224,7 @@ try {
                 izquierda = Math.abs(rc.top - rb.top) < 8 && rc.left < rb.left && cruceH(rc, ra) >= 0.85 * cruceH(rb, ra) && cruceH(rb, ra) > 0; }
               if (k === 'ArrowRight') medio = rb.left > ra.right && rc.left >= ra.right - 4 && rc.right <= rb.left + 4 && cruceV(rc, ra) > 0 && cruceV(rc, rb) > 0;
               if (k === 'ArrowLeft') medio = rb.right < ra.left && rc.right <= ra.left + 4 && rc.left >= rb.right - 4 && cruceV(rc, ra) > 0 && cruceV(rc, rb) > 0;
+              if (b.getAttribute('role') === 'tab' && c.getAttribute('role') === 'tab') continue; // ↑ a la pestaña elegida (no a otra pestaña): es la regla de las pestañas
               if (medio || izquierda) return `${k.replace('Arrow', '')} desde ${window.__sel.nombre(a)} va a ${window.__sel.nombre(b)} y se salta ${window.__sel.nombre(c)}`;
             }
             return null;

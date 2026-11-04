@@ -105,7 +105,7 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
             onKeyDown={(e) => {
               if (e.key === 'Escape') { e.preventDefault(); setBusqueda(''); }
               else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); bajarDesdeArriba(); }
-              else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); document.getElementById('btn-ver-historial')?.focus(); }
+              else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); ['btn-cpe-problemas', 'btn-reporte-contador', 'btn-ver-historial'].map((id) => document.getElementById(id)).find((b) => b && b.getClientRects().length)?.focus(); }
               else if (e.key === 'ArrowRight' && e.currentTarget.selectionStart === e.currentTarget.value.length) {
                 e.preventDefault(); e.stopPropagation(); document.getElementById('filtro-fecha-desde-finanzas')?.focus();
               }

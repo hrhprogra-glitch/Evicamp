@@ -568,8 +568,7 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
                                 if (itemIdx === 0) focusAndSelect('input-nombre-usuario-modal');
                                 else if (itemIdx === 1) focusAndSelect('input-email-usuario-modal');
                                 else if (itemIdx === 2) focusAndSelect('input-password-usuario-modal');
-                                else if (itemIdx === 3) document.getElementById('select-rol-usuario-modal')?.focus();
-                                else document.getElementById('select-estado-usuario-modal')?.focus();
+                                else document.getElementById('select-estado-usuario-modal')?.focus(); // Estado está al lado; Rol queda a su izquierda
                               }
                             }
                           }}

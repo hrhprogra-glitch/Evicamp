@@ -1,4 +1,6 @@
 import { diasParaVencer, estaVencido, vencePronto } from '../../utils/vencimiento';
+import { filaEnMedio } from '../../utils/flechasEspaciales';
+import { BOTONES_INVENTARIO } from './tecladoInventario';
 import { escalasValidas } from '../../utils/preciosCantidad';
 import { presentacionesValidas } from '../../utils/presentaciones';
 import { traerTodo } from '../../utils/traerTodo';
@@ -452,7 +454,9 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           }
         }
       } else {
-        // 🛡️ RESCATE DE FOCO PERDIDO: Si el foco quedó en document.body o fuera de la grilla
+        // 🛡️ RESCATE DE FOCO PERDIDO: Si el foco quedó en document.body o fuera de la grilla.
+        // Si el control ya atendió la flecha (pestañas, botones, buscador…), no se pisa lo que hizo.
+        if (e.defaultPrevented) return;
         if (e.key === 'ArrowUp') {
           // 🛡️ TOPE: Si el foco está en un botón o control superior, actuar como límite y no devolver el foco abajo.
           // Pero si es un botón de paginación inferior, subir a la última fila visible.
@@ -544,7 +548,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('btn-tab-lotes')?.focus();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
-                    document.getElementById('buscador-global-inventario')?.focus();
+                    const destino = document.getElementById('buscador-global-inventario');
+                    (filaEnMedio(e.currentTarget, destino, BOTONES_INVENTARIO) || destino)?.focus();
                   }
                 }}
                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${vistaActiva === 'PRODUCTOS' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'}`}
@@ -569,7 +574,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('btn-tab-compras')?.focus();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
-                    document.getElementById('buscador-global-inventario')?.focus();
+                    const destino = document.getElementById('buscador-global-inventario');
+                    (filaEnMedio(e.currentTarget, destino, BOTONES_INVENTARIO) || destino)?.focus();
                   }
                 }}
                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer border-l-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${vistaActiva === 'LOTES' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'}`}
@@ -594,7 +600,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('btn-nuevo-producto')?.focus();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
-                    inicioCompras()?.focus(); // el cajero que solo recibe no tiene "Nueva lista"
+                    { const destino = inicioCompras(); (filaEnMedio(e.currentTarget, destino, BOTONES_INVENTARIO) || destino)?.focus(); } // el cajero que solo recibe no tiene "Nueva lista"
                   }
                 }}
                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer border-l-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${vistaActiva === 'COMPRAS' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'}`}

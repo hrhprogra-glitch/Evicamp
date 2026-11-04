@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { filaEnMedio } from '../../utils/flechasEspaciales';
 import { Coins, Users, BookOpen, FileText, Package, UserPlus, Plus } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import { TablaFiadosAgrupados } from './components/TablaFiadosAgrupados';
@@ -671,7 +672,8 @@ if (fiaData) {
                 setTimeout(() => document.getElementById(buscadorDe(p.id))?.focus(), 50);
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault(); e.stopPropagation();
-                document.getElementById(buscadorDe(pestana))?.focus();
+                const destino = document.getElementById(buscadorDe(pestana));
+                (filaEnMedio(e.currentTarget, destino, ['btn-nuevo-cliente', 'btn-ver-grupos']) || destino)?.focus();
               }
             }}
             className={claseBotonBarra(pestana === p.id)}>
@@ -688,7 +690,7 @@ if (fiaData) {
               if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById(PESTANAS[PESTANAS.length - 1].boton)?.focus(); }
               else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); document.getElementById('btn-ver-grupos')?.focus(); }
               else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); document.getElementById('buscador-clientes')?.focus(); }
-              else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); }
+              else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); const pest = document.getElementById(PESTANAS.find((p) => p.id === pestana)?.boton || ''); if (pest && pest.getBoundingClientRect().bottom <= e.currentTarget.getBoundingClientRect().top) pest.focus(); }
             }}
             className="boton-cabecera px-3 sm:px-4 lg:px-6 py-3 lg:py-4 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none flex-1 sm:flex-initial">
             <UserPlus size={16} /> Nuevo cliente
@@ -698,7 +700,8 @@ if (fiaData) {
             onKeyDown={(e) => {
               if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById('btn-nuevo-cliente')?.focus(); }
               else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); document.getElementById('buscador-clientes')?.focus(); }
-              else if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); }
+              else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); const pest = document.getElementById(PESTANAS.find((p) => p.id === pestana)?.boton || ''); if (pest && pest.getBoundingClientRect().bottom <= e.currentTarget.getBoundingClientRect().top) pest.focus(); }
+              else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); }
             }}
             className="boton-cabecera px-3 sm:px-4 lg:px-6 py-3 lg:py-4 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none flex-1 sm:flex-initial">
             <Users size={16} /> Grupos ({grupos.length})

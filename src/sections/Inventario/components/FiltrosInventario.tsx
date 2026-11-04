@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { filaEnMedio } from '../../../utils/flechasEspaciales';
+import { BOTONES_INVENTARIO } from '../tecladoInventario';
 import { Search, X, FilterX } from 'lucide-react';
 
 interface Props {
@@ -98,13 +100,12 @@ export const FiltrosInventario: React.FC<Props> = ({
                 e.stopPropagation();
                 const btnTabLotes = document.getElementById('btn-tab-lotes');
                 const btnTabProductos = document.getElementById('btn-tab-productos');
-                if (btnTabLotes && btnTabLotes.classList.contains('bg-[var(--color-ink)]')) {
-                  btnTabLotes.focus();
-                } else if (btnTabProductos && btnTabProductos.classList.contains('bg-[var(--color-ink)]')) {
-                  btnTabProductos.focus();
-                } else {
-                  document.getElementById('btn-nuevo-producto')?.focus();
-                }
+                const pestana = btnTabLotes && btnTabLotes.classList.contains('bg-[var(--color-ink)]') ? btnTabLotes
+                  : btnTabProductos && btnTabProductos.classList.contains('bg-[var(--color-ink)]') ? btnTabProductos : null;
+                const medio = filaEnMedio(e.currentTarget, pestana, BOTONES_INVENTARIO);
+                if (medio) medio.focus();
+                else if (pestana) pestana.focus();
+                else document.getElementById('btn-nuevo-producto')?.focus();
               } else if (e.key === 'ArrowRight') {
                 const input = e.currentTarget;
                 if (input.selectionStart === input.value.length) {

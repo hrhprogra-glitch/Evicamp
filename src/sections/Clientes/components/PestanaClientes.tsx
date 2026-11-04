@@ -3,6 +3,7 @@
 // "Directorio Clientes"). Lista en tabla con buscador (nombre, documento, teléfono o referencia), filtro de deuda y
 // orden; "Nuevo cliente"; en cada fila Editar y Eliminar (← → desde la fila). Enter en una fila abre su ficha.
 // Teclado propio (onKeyDown en cada control), sin oyentes globales: así no choca con la pestaña Créditos.
+import { filaEnMedio } from '../../../utils/flechasEspaciales';
 import React, { useMemo, useState } from 'react';
 import { Edit, Plus, Trash2, ChevronLeft, ChevronRight, FilterX, MapPin, Search, X } from 'lucide-react';
 import type { Cliente, Fiado, GrupoClientes } from '../types';
@@ -221,7 +222,11 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
         if (f0) { f0.focus(); f0.scrollIntoView({ block: 'nearest' }); }
       }
     }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); irA(idPestana); }
+    else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const medio = filaEnMedio(e.currentTarget, document.getElementById(idPestana), ['btn-nuevo-cliente', 'btn-ver-grupos']);
+      if (medio) medio.focus(); else irA(idPestana);
+    }
     else if (e.key === 'ArrowRight' && (!esTexto || input.selectionEnd === input.value.length)) { e.preventDefault(); irA(barra[Math.min(i + 1, barra.length - 1)]); }
     else if (e.key === 'ArrowLeft' && (!esTexto || input.selectionStart === 0)) { e.preventDefault(); irA(barra[Math.max(i - 1, 0)]); }
     else if (e.key === 'Enter' && e.currentTarget instanceof HTMLSelectElement) { e.preventDefault(); try { e.currentTarget.showPicker(); } catch { /* sin lista */ } }

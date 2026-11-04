@@ -45,7 +45,7 @@ const Configuraciones: React.FC = () => {
     } else if (activeTab === 'tiendas') {
       document.getElementById('btn-nueva-tienda')?.focus();
     } else if (activeTab === 'tienda_web') {
-      document.getElementById('input-tienda-web-whatsapp')?.focus();
+      document.getElementById('input-tienda-web-enlace')?.focus(); // lo primero de la pestaña: el enlace de la tienda
     } else if (activeTab === 'facturacion') {
       document.getElementById('fact-activo')?.focus();
     } else if (activeTab === 'usuarios') {
@@ -167,13 +167,14 @@ const Configuraciones: React.FC = () => {
                 type="button"
                 onClick={() => switchTab(id)}
                 onKeyDown={(e) => manejarTeclaPestana(e, id)}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 lg:px-4 py-2.5 lg:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 sm:px-2.5 2xl:px-4 py-2.5 lg:py-3 text-[10px] sm:text-[11px] 2xl:text-xs font-black uppercase tracking-wide 2xl:tracking-widest transition-all rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${
                   activeTab === id
                     ? 'bg-[var(--color-ink)] text-[var(--color-accent)]'
                     : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'
                 }`}
               >
-                <Icono size={14} />
+                {/* En laptops sin ícono, para que las 7 pestañas entren en una sola fila (no se saltan con las flechas) */}
+                <Icono size={14} className="sm:hidden 2xl:inline" />
                 <span className="hidden sm:inline">{nombre}</span>
               </button>
             ))}

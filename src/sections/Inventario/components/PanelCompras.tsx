@@ -11,6 +11,8 @@
 // cambian el valor sin querer; Enter pasa al siguiente campo. Esc cierra las ventanas.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { filaEnMedio } from '../../../utils/flechasEspaciales';
+import { BOTONES_INVENTARIO } from '../tecladoInventario';
 import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, Loader2, Ban, Undo2, FileText, Share2, Download, Printer, ArrowLeft, Receipt, Sparkles } from 'lucide-react';
 import { imprimirEnTicketera } from '../../../utils/impresion';
 import { supabase } from '../../../db/supabase';
@@ -495,7 +497,12 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
     // Las teclas dentro de una ventana (detalle, vista previa, editor...) las maneja esa ventana
     if (editando || recibiendo || viendo || previa || (e.target as HTMLElement).closest('[role="dialog"]')) return;
     const fila = Number((e.target as HTMLElement).dataset?.nav?.split(',')[0]);
-    if (e.key === 'ArrowUp' && fila === 0) { e.preventDefault(); enfocar(document.getElementById('btn-tab-compras')); return; }
+    if (e.key === 'ArrowUp' && fila === 0) {
+      e.preventDefault();
+      const pestana = document.getElementById('btn-tab-compras');
+      enfocar(filaEnMedio(e.target as HTMLElement, pestana, BOTONES_INVENTARIO) || pestana);
+      return;
+    }
     moverEnGrilla(e, panel.current);
   };
 

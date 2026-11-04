@@ -118,7 +118,7 @@ export const PestanaTiendaWeb: React.FC = () => {
           🌐 Enlace Público de tu Tienda Web
         </span>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <input
+          <input id="input-tienda-web-enlace"
             type="text"
             readOnly
             value={urlTienda}

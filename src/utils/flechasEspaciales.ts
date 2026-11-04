@@ -21,7 +21,16 @@ const ambitoDe = (el: HTMLElement): HTMLElement | null => {
 // ¿Esta flecha, en este control, puede pasar a otro control? (en un texto, solo si el cursor ya está en la orilla)
 const puedeSalir = (el: HTMLElement, k: Flecha): boolean => {
   if (el.closest(FILA)) return false;                  // las filas y sus botones tienen su propio teclado
-  if (el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) return false;
+  if (el instanceof HTMLSelectElement) return false;
+  // Texto largo: solo sale desde la orilla (↑ en la primera línea, ↓ en la última, ← al inicio, → al final)
+  if (el instanceof HTMLTextAreaElement) {
+    const ini = el.selectionStart ?? 0, fin = el.selectionEnd ?? 0, v = el.value;
+    if (ini !== fin) return false;
+    if (k === 'ArrowLeft') return ini === 0;
+    if (k === 'ArrowRight') return ini === v.length;
+    if (k === 'ArrowUp') return !v.slice(0, ini).includes('\n');
+    return !v.slice(ini).includes('\n');
+  }
   if (el instanceof HTMLInputElement) {
     const t = el.type;
     if (t === 'checkbox' || t === 'radio' || t === 'button' || t === 'submit') return true;
@@ -73,12 +82,27 @@ const masCercano = (desde: HTMLElement, k: Flecha, ambito: HTMLElement): HTMLEle
   return empatados[0].el;
 };
 
+// Cabeceras que bajan de fila en laptops (pestañas arriba, botones en medio, buscador abajo): si entre el selector y su
+// destino quedó una fila de esos botones, se pasa primero por ella (el de la izquierda) para no saltarla.
+export const filaEnMedio = (origen: Element | null, destino: Element | null, ids: string[]): HTMLElement | null => {
+  if (!origen || !destino) return null;
+  const a = origen.getBoundingClientRect(), b = destino.getBoundingClientRect();
+  const arriba = Math.min(a.bottom, b.bottom), abajo = Math.max(a.top, b.top);
+  const enMedio = ids
+    .map((id) => document.getElementById(id))
+    .filter((el): el is HTMLElement => !!el && el.getClientRects().length > 0 && !(el as HTMLButtonElement).disabled)
+    .filter((el) => { const r = el.getBoundingClientRect(); return r.top >= arriba - 4 && r.bottom <= abajo + 4; });
+  enMedio.sort((x, y) => x.getBoundingClientRect().left - y.getBoundingClientRect().left);
+  return enMedio[0] || null;
+};
+
 export const activarFlechasEspaciales = () => {
   const alTeclear = (e: KeyboardEvent) => {
     if (!(FLECHAS as readonly string[]).includes(e.key) || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
     const origen = document.activeElement as HTMLElement | null;
     if (!origen || origen === document.body || !puedeSalir(origen, e.key as Flecha)) return;
-    // Se espera a que cada pantalla atienda la tecla con su propio teclado (algunas mueven el selector un poco después)
+    // Justo después de que todas las pantallas atendieron la tecla (sin espera fija: con 90 ms el selector se sentía
+    // lento al moverse rápido, pedido del dueño 04/11/2026). Si alguna la usó o movió el selector, aquí no se hace nada.
     setTimeout(() => {
       if (e.defaultPrevented || document.activeElement !== origen || !origen.isConnected) return;
       const ambito = ambitoDe(origen);
@@ -88,7 +112,7 @@ export const activarFlechasEspaciales = () => {
       destino.focus();
       destino.scrollIntoView({ block: 'nearest' });
       if (destino instanceof HTMLInputElement && TEXTO.includes(destino.type)) destino.select();
-    }, 90);
+    }, 0);
   };
   document.addEventListener('keydown', alTeclear);
   return () => document.removeEventListener('keydown', alTeclear);
