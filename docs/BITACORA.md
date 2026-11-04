@@ -7,6 +7,16 @@
 
 ---
 
+## 04/11/2026 (81) · Claude — Nubefact conectado (cuenta demo) y anular comprobantes NO aceptados
+- El dueño creó su cuenta demo de Nubefact (RUC 10760867697) y guardó ruta + token en siumax (al principio los puso en Evicamp por error: quedaron allí inofensivos, facturación apagada). "Probar conexión": "Conexión correcta con Nubefact". Series de la demo: **BBB1** (boletas y sus NC) y **FFF1** (facturas y sus NC); B001/F001 dan "Serie No puedes emitir comprobantes con esta serie".
+- **Fallo encontrado con el caso real:** al ANULAR una boleta que nunca fue aceptada (serie mala), `fn_anular_venta` creaba una nota de crédito que quedaba "Enviando…" para siempre.
+- **Arreglo:** estados nuevos `ANULANDO` y `NO_EMITIDO`. Si el comprobante no fue aceptado y el proveedor NO lo generó (sin PDF ni CDR), anular deja `ANULANDO`; el facturador 11.9.0 (`procesarAnulacion`) consulta a Nubefact: no existe → `NO_EMITIDO` (sin NC); existe → `fn_confirmar_anulacion` (solo el facturador) emite la NC. Directo a SUNAT sin CDR → NO_EMITIDO. Un envío en curso no pisa la anulación (`guardarResultado` ignora ANULANDO).
+- **Nubefact y boletas:** Nubefact las genera al instante (PDF) y las manda a SUNAT en el resumen diario → quedan `PENDIENTE` con PDF = EMITIDAS ("Generada · SUNAT por confirmar"): se pueden anular (NC directa), cambiar y devolver (`comprobanteEmitido()`), su NC se envía sin esperar, y NO cuentan como problema.
+- Ticket de la nota de crédito en portal (se dibujaba cortado dentro del detalle).
+- Pruebas: `prueba-anular-no-emitido.mjs` 16/16 con Nubefact real; `prueba-historial-cpe-ui` OK. Solo siumax (Evicamp tiene la facturación apagada; este arreglo va en el próximo pase).
+
+---
+
 ## 03/11/2026 (80) · Claude — PASE de las fases 8, 9, 10 y 11 a EVICAMP, clientes y GitHub
 - **Dueño:** "súbelo todo a evicamp y siumax para mis clientes y a mi github". Aclaró: **EVICAMP NO PAGA** (primer cliente, ayudó a hacer SiuMax): NUNCA Mercado Pago / aviso de plan / "Pagar plan". Comprobado: Evicamp no tiene `/suscripcion.json` (devuelve el index), así que no ve nada de eso; el Panel solo lo escribe en clientes `cli_*` (hoy no hay ninguno).
 - **Ensayo primero** (`ai-scripts/pruebas/ensayo-fases8-11-evicamp.cjs`): respaldo → copia `evicamp_ensayo` → seguridad-sesion.sql completo → 0 errores → copia borrada.

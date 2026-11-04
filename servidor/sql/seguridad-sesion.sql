@@ -1089,8 +1089,19 @@ BEGIN
   IF NOT FOUND THEN RAISE EXCEPTION 'No se encontró la venta.'; END IF;
   IF v_venta.sunat_status = 'ANULADO' THEN RETURN jsonb_build_object('ya_anulada', true); END IF;
 
-  -- Fase 11.5: con boleta/factura electrónica (no rechazada), anular emite la NOTA DE CRÉDITO por todo
-  IF v_venta.doc_type IS NOT NULL AND coalesce(v_venta.cpe_estado, '') <> 'RECHAZADO' THEN
+  -- (03/11/2026) Boleta/factura que SUNAT todavía NO aceptó (pendiente o con error): NO lleva nota de crédito
+  -- (no hay nada que corregir). Queda 'ANULANDO' y el facturador confirma con el proveedor si llegó a emitirse:
+  -- si no existe → 'NO_EMITIDO'; si existe → recién ahí emite la nota de crédito (fn_confirmar_anulacion).
+  -- Si el proveedor YA lo generó (tiene PDF o constancia: Nubefact manda las boletas en el resumen diario), sí
+  -- está emitido: va por la nota de crédito de abajo.
+  IF v_venta.doc_type IS NOT NULL AND v_venta.cpe_estado IN ('PENDIENTE', 'ENVIANDO', 'ERROR')
+     AND v_venta.cpe_pdf IS NULL AND v_venta.cpe_cdr IS NULL THEN
+    PERFORM set_config('siumax.cpe_interno', '1', true);   -- deja marcar la venta como ANULADO
+    UPDATE sales SET cpe_estado = 'ANULANDO', cpe_proximo_intento = now(),
+           cpe_mensaje = 'Venta anulada antes de que SUNAT la aceptara: se confirma con el proveedor que no se emitió.'
+     WHERE id = p_sale_id;
+  -- Fase 11.5: con boleta/factura electrónica ya aceptada, anular emite la NOTA DE CRÉDITO por todo
+  ELSIF v_venta.doc_type IS NOT NULL AND coalesce(v_venta.cpe_estado, '') NOT IN ('RECHAZADO', 'NO_EMITIDO', 'ANULANDO') THEN
     IF EXISTS (SELECT 1 FROM notas_credito WHERE sale_id = p_sale_id) THEN
       RAISE EXCEPTION 'Esta venta ya tiene devoluciones con nota de crédito: devuelve el resto con "Devolver productos" (Comprobantes).';
     END IF;
@@ -1150,7 +1161,9 @@ BEGIN
             'Devolución (Anulación Ticket #' || right(p_sale_id::text, 6) || ')' || coalesce(' · pidió ' || p_pidio, ''),
             'EFECTIVO', 'DEVOLUCION', v_cuando, 1);
   END IF;
-  RETURN jsonb_build_object('ya_anulada', false, 'productos', v_productos, 'nota_credito', v_nc);
+  RETURN jsonb_build_object('ya_anulada', false, 'productos', v_productos, 'nota_credito', v_nc,
+    'sin_emitir', v_venta.doc_type IS NOT NULL AND v_venta.cpe_estado IN ('PENDIENTE', 'ENVIANDO', 'ERROR')
+                  AND v_venta.cpe_pdf IS NULL AND v_venta.cpe_cdr IS NULL);
 END;
 $$;
 
@@ -3378,6 +3391,53 @@ BEGIN
     'venta_nueva', v_id, 'total_nuevo', v_total, 'diferencia', v_dif, 'cambio_id', v_id + 1);
 END;
 $$;
+
+-- -------------------------------------------------------------------------------------
+-- ANULAR UN COMPROBANTE QUE SUNAT TODAVÍA NO ACEPTÓ (03/11/2026, caso real del dueño:
+-- boleta con una serie que Nubefact no permite → al anularla quedaba una nota de crédito colgada)
+-- Estados nuevos: ANULANDO (se confirma con el proveedor) y NO_EMITIDO (nunca existió para SUNAT: sin nota de crédito).
+-- -------------------------------------------------------------------------------------
+ALTER TABLE public.sales DROP CONSTRAINT IF EXISTS sales_cpe_estado_valido;
+ALTER TABLE public.sales ADD CONSTRAINT sales_cpe_estado_valido
+  CHECK (cpe_estado IS NULL OR cpe_estado IN ('PENDIENTE', 'ENVIANDO', 'ACEPTADO', 'OBSERVADO', 'RECHAZADO', 'ERROR', 'ANULANDO', 'NO_EMITIDO'));
+
+-- Lo llama SOLO el facturador del servidor (sin permiso para la API): p_estado = 'NO_EMITIDO' o el estado real
+-- que dio el proveedor (ACEPTADO / OBSERVADO / PENDIENTE). Si se emitió, hace la nota de crédito por todo.
+CREATE OR REPLACE FUNCTION public.fn_confirmar_anulacion(p_sale_id bigint, p_estado text, p_mensaje text DEFAULT NULL)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_venta public.sales%ROWTYPE;
+  v_nc text;
+BEGIN
+  SELECT * INTO v_venta FROM public.sales WHERE id = p_sale_id FOR UPDATE;
+  IF NOT FOUND OR v_venta.cpe_estado IS DISTINCT FROM 'ANULANDO' THEN RETURN 'SIN_CAMBIOS'; END IF;
+  PERFORM set_config('siumax.cpe_interno', '1', true);
+  IF p_estado = 'NO_EMITIDO' THEN
+    UPDATE public.sales SET cpe_estado = 'NO_EMITIDO', cpe_proximo_intento = NULL,
+           cpe_mensaje = coalesce(p_mensaje, 'No se emitió: la venta se anuló antes de que SUNAT la aceptara (no necesita nota de crédito).')
+     WHERE id = p_sale_id;
+    RETURN 'NO_EMITIDO';
+  END IF;
+  IF p_estado NOT IN ('ACEPTADO', 'OBSERVADO', 'PENDIENTE') THEN RAISE EXCEPTION 'Estado no válido: %', p_estado; END IF;
+  -- Sí llegó a emitirse: queda con su estado real y la anulación se hace con nota de crédito (motivo 01)
+  UPDATE public.sales SET cpe_estado = p_estado, cpe_proximo_intento = CASE WHEN p_estado = 'PENDIENTE' THEN now() + interval '10 minutes' END,
+         cpe_mensaje = p_mensaje WHERE id = p_sale_id;
+  INSERT INTO public.notas_credito (sale_id, motivo, descripcion, total, items, creado_por)
+  SELECT p_sale_id, '01', 'ANULACIÓN DE LA OPERACIÓN', v_venta.total,
+         coalesce(jsonb_agg(jsonb_build_object('detail_id', d.id, 'product_id', d.product_id, 'product_name', d.product_name,
+           'variant_id', d.variant_id, 'variant_name', d.variant_name, 'quantity', d.quantity, 'subtotal', d.subtotal,
+           'tipo_igv', coalesce(d.tipo_igv, 'GRAVADO'), 'es_bolsa', coalesce(d.es_bolsa, false)) ORDER BY d.id), '[]'::jsonb),
+         'SiuMax (anulación)'
+    FROM public.sale_details d WHERE d.sale_id = p_sale_id
+  RETURNING doc_serial || '-' || lpad(doc_number, 8, '0') INTO v_nc;
+  RETURN v_nc;
+END;
+$$;
+REVOKE EXECUTE ON FUNCTION public.fn_confirmar_anulacion(bigint, text, text) FROM PUBLIC;
 
 NOTIFY pgrst, 'reload schema';
 

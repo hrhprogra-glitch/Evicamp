@@ -40,7 +40,7 @@ export const ModalComprobantesProblema: React.FC<{ isOpen: boolean; onClose: () 
     const cols = 'id, created_at, doc_type, doc_serial, doc_number, cpe_cliente_num_doc, cpe_cliente_nombre, total, cpe_estado, cpe_mensaje';
     const [{ data: malas }, { data: atascadas }, { data: notas }] = await Promise.all([
       supabase.from('sales').select(cols).in('cpe_estado', PROBLEMA_CPE).order('created_at', { ascending: false }).limit(200),
-      supabase.from('sales').select(cols).in('cpe_estado', ['PENDIENTE', 'ENVIANDO']).lt('created_at', hace10).order('created_at', { ascending: false }).limit(200),
+      supabase.from('sales').select(cols).in('cpe_estado', ['PENDIENTE', 'ENVIANDO', 'ANULANDO']).is('cpe_pdf', null).lt('created_at', hace10).order('created_at', { ascending: false }).limit(200),
       supabase.from('notas_credito').select('id, sale_id, created_at, doc_serial, doc_number, ref_serial, ref_number, total, cpe_estado, cpe_mensaje').in('cpe_estado', PROBLEMA_CPE).order('created_at', { ascending: false }).limit(200),
     ]);
     const filas: FilaProblema[] = [

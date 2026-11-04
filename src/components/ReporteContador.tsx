@@ -102,7 +102,7 @@ export const armarRegistro = async (mes: string): Promise<{ filas: FilaRegistro[
   ].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime() || `${a.serie}${a.numero.padStart(8, '0')}`.localeCompare(`${b.serie}${b.numero.padStart(8, '0')}`));
 
   // Resumen: los rechazados por SUNAT no cuentan (no tienen valor)
-  const validos = filas.filter((f) => f.estado !== 'RECHAZADO');
+  const validos = filas.filter((f) => f.estado !== 'RECHAZADO' && f.estado !== 'NO_EMITIDO');
   const suma = (lista: FilaRegistro[]) => ({ n: lista.length, total: r2(lista.reduce((t, f) => t + f.totales.total, 0)) });
   const notasVenta = ventas.filter((v) => !v.doc_type && v.sunat_status !== 'ANULADO');
   return {
@@ -115,7 +115,7 @@ export const armarRegistro = async (mes: string): Promise<{ filas: FilaRegistro[
       neto: r2(validos.reduce((t, f) => t + f.totales.total, 0)),
       notasVenta: { n: notasVenta.length, total: r2(notasVenta.reduce((t, v) => t + Number(v.total || 0), 0)) },
       rechazados: filas.filter((f) => f.estado === 'RECHAZADO').length,
-      sinEnviar: filas.filter((f) => ['PENDIENTE', 'ENVIANDO', 'ERROR'].includes(f.estado)).length,
+      sinEnviar: filas.filter((f) => ['PENDIENTE', 'ENVIANDO', 'ERROR', 'ANULANDO'].includes(f.estado)).length,
     },
   };
 };

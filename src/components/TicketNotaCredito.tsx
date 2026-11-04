@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Printer } from 'lucide-react';
 import { supabase } from '../db/supabase';
 import { useImprimir } from '../utils/impresion';
@@ -39,7 +40,8 @@ export const TicketNotaCredito: React.FC<{ nota: NotaCredito; onClose: () => voi
     setTimeout(() => document.getElementById('btn-imprimir-nota')?.focus(), 80);
   }, [nota.sale_id]);
 
-  return (
+  // En un portal: dentro de otra ventana (con desenfoque de fondo) se dibujaba cortada a un costado
+  return createPortal(
     <div role="dialog" aria-modal="true" aria-label="Nota de crédito" className="fixed inset-0 bg-black/60 z-[260] flex items-center justify-center p-2 sm:p-4">
       <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-md max-h-[calc(var(--alto-pantalla)*0.94)] flex flex-col">
         <div className="overflow-y-auto p-4 flex-1 custom-scrollbar">
@@ -90,6 +92,7 @@ export const TicketNotaCredito: React.FC<{ nota: NotaCredito; onClose: () => voi
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

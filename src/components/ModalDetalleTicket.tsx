@@ -5,7 +5,7 @@ import { formatearCantidadDetalle } from '../utils/formato';
 import { useImprimir } from '../utils/impresion';
 import { avisar } from '../utils/dialogos';
 import { TicketImprimible, type ComprobanteTicket } from '../sections/Punto-de-venta/components/TicketImprimible';
-import { calcularTotalesCPE, nombreComprobante, numeroComprobante } from '../utils/comprobante';
+import { calcularTotalesCPE, comprobanteEmitido, nombreComprobante, numeroComprobante } from '../utils/comprobante';
 import { InsigniaCpe } from './InsigniaCpe';
 import { TicketNotaCredito, type NotaCredito } from './TicketNotaCredito';
 
@@ -159,11 +159,11 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
   };
 
   // Solo una boleta/factura ya ACEPTADA se corrige con nota de crédito (con error, primero se reenvía)
-  const puedeDevolver = Boolean(onCambiarProducto && sunat && ['ACEPTADO', 'OBSERVADO'].includes(sunat.estado || '') && !sunat.anulada && !sunat.fiado);
+  const puedeDevolver = Boolean(onCambiarProducto && sunat && comprobanteEmitido(sunat.estado, sunat.pdf) && !sunat.anulada && !sunat.fiado);
   const puedeDevolverRef = useRef(false);
   puedeDevolverRef.current = puedeDevolver;
   const accionesSunat = sunat ? [
-    ...(sunat.estado === 'ERROR' || sunat.estado === 'PENDIENTE' ? [{ id: 'btn-sunat-reenviar', texto: 'Reenviar a SUNAT', Icono: RefreshCw, hacer: () => reenviar() }] : []),
+    ...((sunat.estado === 'ERROR' || sunat.estado === 'PENDIENTE') && !sunat.anulada ? [{ id: 'btn-sunat-reenviar', texto: 'Reenviar a SUNAT', Icono: RefreshCw, hacer: () => reenviar() }] : []),
     ...(sunat.pdf ? [{ id: 'btn-sunat-pdf', texto: 'PDF', Icono: ExternalLink, hacer: () => window.open(sunat.pdf!, '_blank') }] : []),
     ...(sunat.xml ? [{ id: 'btn-sunat-xml', texto: 'XML', Icono: ExternalLink, hacer: () => window.open(sunat.xml!, '_blank') }] : []),
     ...(sunat.cdr ? [{ id: 'btn-sunat-cdr', texto: 'Constancia (CDR)', Icono: ExternalLink, hacer: () => window.open(sunat.cdr!, '_blank') }] : []),
@@ -401,11 +401,17 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
           <div id="bloque-sunat" className="border-b-2 border-[var(--color-ink)] p-3 bg-white space-y-2 shrink-0">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[12px] font-black uppercase text-[var(--color-ink)]">{nombreComprobante(sunat.docType)} {sunat.numero}</span>
-              <InsigniaCpe estado={sunat.estado} chica />
+              <InsigniaCpe estado={sunat.estado} generado={Boolean(sunat.pdf)} chica />
               {sunat.modo && sunat.modo !== 'REAL' && <span className="text-[10px] font-black uppercase text-[var(--color-warning-dark)]">Modo {sunat.modo.toLowerCase()}: sin valor ante SUNAT</span>}
               {sunat.anulada && <span className="text-[10px] font-black uppercase text-[var(--color-danger)]">Venta anulada</span>}
             </div>
             {sunat.mensaje && <p id="sunat-mensaje" className="text-[11px] font-bold text-[var(--color-ink)] bg-[var(--color-bg)] border border-[var(--color-border)] p-1.5">{sunat.mensaje}</p>}
+            {sunat.estado === 'NO_EMITIDO' && (
+              <p className="text-[11px] font-bold text-[var(--color-muted)]">La venta se anuló antes de que SUNAT aceptara este comprobante: no se emitió y no necesita nota de crédito.</p>
+            )}
+            {sunat.estado === 'ANULANDO' && (
+              <p className="text-[11px] font-bold text-[var(--color-info)]">Venta anulada: se está confirmando con el proveedor que el comprobante no se emitió (unos segundos).</p>
+            )}
             {sunat.estado === 'RECHAZADO' && (
               <p className="text-[11px] font-bold text-[var(--color-danger)]">SUNAT lo rechazó: revisa el mensaje. Este comprobante no tiene valor; corrige los datos y emite uno nuevo.</p>
             )}

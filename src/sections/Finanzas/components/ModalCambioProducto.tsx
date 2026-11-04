@@ -6,7 +6,7 @@ import {
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar } from '../../../utils/dialogos';
-import { nombreComprobante, numeroComprobante } from '../../../utils/comprobante';
+import { comprobanteEmitido, nombreComprobante, numeroComprobante } from '../../../utils/comprobante';
 import type { CambioProducto } from '../types';
 import type { Product } from '../../Inventario/types';
 
@@ -287,7 +287,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
       setCpe(null);
       if (venta.doc_type && venta.cpe_estado !== 'RECHAZADO') {
         const numero = numeroComprobante(venta.doc_serial, venta.doc_number) || 'POR NUMERAR';
-        if (!['ACEPTADO', 'OBSERVADO'].includes(String(venta.cpe_estado))) {
+        if (!comprobanteEmitido(venta.cpe_estado, (venta as { cpe_pdf?: string | null }).cpe_pdf)) {
           setTicketError(`La ${nombreComprobante(venta.doc_type).toLowerCase()} ${numero} todavía no fue aceptada por SUNAT (${venta.cpe_estado || 'PENDIENTE'}). Cuando la acepte podrás cambiar o devolver; si quedó con error, reenvíala desde el Historial.`);
           return;
         }

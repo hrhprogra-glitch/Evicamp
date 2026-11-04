@@ -461,7 +461,8 @@ export const Finanzas: React.FC = () => {
 
       // Fase 11.5: si la venta tenía boleta/factura electrónica, el servidor emitió la nota de crédito
       const notaCredito = (resAnular as { nota_credito?: string | null } | null)?.nota_credito;
-      alert(`✅ Ticket anulado. Stock devuelto y caja actualizada.${notaCredito ? `\nSe emitió la nota de crédito ${notaCredito} (se envía a SUNAT sola).` : ''}`);
+      const sinEmitir = (resAnular as { sin_emitir?: boolean } | null)?.sin_emitir;
+      alert(`✅ Ticket anulado. Stock devuelto y caja actualizada.${notaCredito ? `\nSe emitió la nota de crédito ${notaCredito} (se envía a SUNAT sola).` : ''}${sinEmitir ? '\nSu boleta/factura todavía no estaba aceptada por SUNAT: no lleva nota de crédito (el sistema confirma con el proveedor que no se emitió).' : ''}`);
       cargarDatosCaja(true);
 
     } catch (err: any) {

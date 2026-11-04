@@ -88,7 +88,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                             <span className="text-[10px] font-black tracking-wider uppercase px-1.5 py-0.5 border border-[var(--color-ink)]">
                               {item.comprobante.docType === 1 ? 'FACTURA' : 'BOLETA'} {item.comprobante.numero}
                             </span>
-                            <InsigniaCpe estado={item.comprobante.estado} chica />
+                            <InsigniaCpe estado={item.comprobante.estado} generado={item.comprobante.generado} chica />
                           </span>
                         )}
                         {item.isTicket && item.cliente_nombre && (
