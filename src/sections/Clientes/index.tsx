@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Coins, Users, BookOpen, FileText, Package, UserPlus } from 'lucide-react';
+import { Coins, Users, BookOpen, FileText, Package, UserPlus, Plus } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import { TablaFiadosAgrupados } from './components/TablaFiadosAgrupados';
 import { ModalFiado } from './components/ModalFiado';
@@ -68,6 +68,7 @@ export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNav
   const [agregarAGrupo, setAgregarAGrupo] = useState<string | null>(null);      // grupo al que se agregan clientes
   const [formGrupo, setFormGrupo] = useState<{ grupo: GrupoClientes | null; paraCliente?: string } | null>(null);
   const [cuentaGrupoId, setCuentaGrupoId] = useState<string | null>(null);      // "Cobrar al grupo"
+  const [verListaGrupos, setVerListaGrupos] = useState(false);                  // ver y administrar grupos
   // Crear deudas es como vender a crédito
   const [loading, setLoading] = useState(true);
   const [fiados, setFiados] = useState<Fiado[]>([]);
@@ -680,16 +681,40 @@ if (fiaData) {
       </div>
       </div>
       {pestana === 'CLIENTES' && (
-        <button id="btn-nuevo-cliente" type="button" onClick={() => abrirFicha(null)}
-          style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
-          onKeyDown={(e) => {
-            if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById(PESTANAS[PESTANAS.length - 1].boton)?.focus(); }
-            else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); document.getElementById('buscador-clientes')?.focus(); }
-            else if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); }
-          }}
-          className="boton-cabecera px-4 lg:px-6 py-3 lg:py-4 border-2 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none w-full 2xl:w-auto">
-          <UserPlus size={16} /> Nuevo cliente
-        </button>
+        <div className="flex flex-wrap items-center gap-2 w-full 2xl:w-auto">
+          <button id="btn-nuevo-cliente" type="button" onClick={() => abrirFicha(null)}
+            style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById(PESTANAS[PESTANAS.length - 1].boton)?.focus(); }
+              else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); document.getElementById('btn-nuevo-grupo')?.focus(); }
+              else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); document.getElementById('buscador-clientes')?.focus(); }
+              else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); }
+            }}
+            className="boton-cabecera px-3 sm:px-4 lg:px-6 py-3 lg:py-4 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none flex-1 sm:flex-initial">
+            <UserPlus size={16} /> Nuevo cliente
+          </button>
+          <button id="btn-nuevo-grupo" type="button" onClick={() => setFormGrupo({ grupo: null })}
+            style={{ '--icono': 'var(--color-info)' } as React.CSSProperties}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById('btn-nuevo-cliente')?.focus(); }
+              else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); document.getElementById('btn-ver-grupos')?.focus(); }
+              else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); document.getElementById('buscador-clientes')?.focus(); }
+              else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); }
+            }}
+            className="boton-cabecera px-3 sm:px-4 lg:px-6 py-3 lg:py-4 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none flex-1 sm:flex-initial">
+            <Plus size={16} /> Nuevo grupo
+          </button>
+          <button id="btn-ver-grupos" type="button" onClick={() => setVerListaGrupos(true)}
+            style={{ '--icono': 'var(--color-ink)' } as React.CSSProperties}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById('btn-nuevo-grupo')?.focus(); }
+              else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); document.getElementById('buscador-clientes')?.focus(); }
+              else if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); }
+            }}
+            className="boton-cabecera px-3 sm:px-4 lg:px-6 py-3 lg:py-4 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none flex-1 sm:flex-initial">
+            <Users size={16} /> Grupos ({grupos.length})
+          </button>
+        </div>
       )}
       </div>
 
@@ -763,7 +788,7 @@ if (fiaData) {
         grupo={grupoVerId ? grupos.find((g) => g.id === grupoVerId) || null : null}
         miembros={grupoVerId ? miembrosDe(grupoVerId) : []}
         fiados={fiados}
-        onClose={() => setGrupoVerId(null)}
+        onClose={() => { setGrupoVerId(null); if (!detalleId) setTimeout(() => document.getElementById('btn-ver-grupos')?.focus(), 50); }}
         onCobrar={cobrarAlGrupo}
         onAgregar={(g) => setAgregarAGrupo(g.id)}
         onEditar={(g) => setFormGrupo({ grupo: g })}
@@ -790,6 +815,16 @@ if (fiaData) {
         onElegir={async (cid) => { if (agregarAGrupo) await ponerEnGrupo(cid, agregarAGrupo); }}
         onClose={() => setAgregarAGrupo(null)}
       />
+      <ModalElegir
+        abierta={verListaGrupos}
+        titulo="Grupos de clientes"
+        ayuda="Selecciona un grupo para ver sus miembros o administrarlo, o crea uno nuevo"
+        opciones={grupos.map((g) => ({ id: g.id, titulo: g.nombre, subtitulo: `${g.tipo === 'EMPRESA' ? 'Empresa' : 'Familia'}${g.ruc ? ` · RUC ${g.ruc}` : ''} · ${miembrosDe(g.id).length} cliente(s)`, buscar: [g.ruc] }))}
+        vacia="Todavía no hay grupos creados."
+        extra={{ titulo: '+ Crear grupo nuevo', alElegir: () => { setVerListaGrupos(false); setFormGrupo({ grupo: null }); } }}
+        onElegir={(gid) => { setVerListaGrupos(false); setGrupoVerId(gid); }}
+        onClose={() => { setVerListaGrupos(false); setTimeout(() => document.getElementById('btn-ver-grupos')?.focus(), 50); }}
+      />
       <ModalFormGrupo
         abierta={!!formGrupo}
         grupo={formGrupo?.grupo || null}
@@ -801,7 +836,11 @@ if (fiaData) {
           if (formGrupo?.paraCliente && (await ponerEnGrupo(formGrupo.paraCliente, id))) setElegirGrupoPara(null);
           return true;
         }}
-        onClose={() => setFormGrupo(null)}
+        onClose={() => {
+          const volverBoton = !formGrupo?.paraCliente && !formGrupo?.grupo;
+          setFormGrupo(null);
+          if (volverBoton) setTimeout(() => document.getElementById('btn-nuevo-grupo')?.focus(), 50);
+        }}
       />
 
 

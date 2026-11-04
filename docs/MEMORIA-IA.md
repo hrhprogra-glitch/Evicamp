@@ -329,5 +329,6 @@ abajo. Conservar SIEMPRE los `id` y los `onKeyDown` que ya existían (otras part
 
 **Ejemplos para copiar:** `src/sections/Conteos/components/FiltrosConteos.tsx` (buscador + filtros + teclado con el
 helper `teclas(izq, der)`), `src/sections/Finanzas/components/TablaMovimientos.tsx` (paginación con `paginacion(pos)`),
-`src/sections/Finanzas/components/TablaHistorial.tsx` (filtros que llegan por la prop `filtros`).
+`src/sections/Finanzas/components/TablaHistorial.tsx` (filtros que llegan por la prop `filtros`), `src/sections/Clientes/index.tsx` (botones múltiples de cabecera: `btn-nuevo-cliente`, `btn-nuevo-grupo` y `btn-ver-grupos` conectados por ← → y ↓ al buscador; grupos no dependen de tener clientes creados).
 **Capturas y prueba de teclado:** `ai-scripts/pruebas/estilo/ver-*.mjs` (ver su LEEME).
+

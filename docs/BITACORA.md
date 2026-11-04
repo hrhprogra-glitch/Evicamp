@@ -7,6 +7,24 @@
 
 ---
 
+## 04/11/2026 (87) · Antigravity — Botones directos para crear y administrar Grupos en Clientes (solo siumax)
+- **Clientes (`src/sections/Clientes/index.tsx` y `ModalFormGrupo.tsx`):**
+  1. **Problema resuelto:** el dueño notó que no había forma de crear un grupo de clientes desde la pantalla principal; solo se permitía crear grupos si ya se tenía un cliente registrado (entrando a su detalle).
+  2. **Botones en cabecera:** se añadieron los botones `[+ Nuevo grupo]` y `[Grupos (N)]` al lado de `[+ Nuevo cliente]` con estilo oficial `boton-cabecera` (fondo blanco, borde fino 1px, ícono de color con acento, esquinas rectas sin sombras).
+  3. **Acciones directas:**
+     - `[+ Nuevo grupo]`: abre directo `ModalFormGrupo` para registrar una familia o empresa en cualquier momento, incluso con 0 clientes.
+     - `[Grupos (N)]`: abre `ModalElegir` mostrando la lista de grupos existentes con su conteo de miembros y tipo (Empresa/Familia). Al seleccionar un grupo abre `ModalGrupo` para ver miembros, cobrar al grupo, editarlo o eliminarlo; también incluye la opción `+ Crear grupo nuevo`.
+  4. **Navegación 100% por teclado:**
+     - Desde la pestaña Clientes (o última pestaña): `→` pasa a `btn-nuevo-cliente` → `btn-nuevo-grupo` → `btn-ver-grupos`.
+     - `←` retrocede entre ellos y vuelve a las pestañas.
+     - `↓` desde cualquiera de los tres botones baja directamente a `buscador-clientes`.
+     - Al cerrar o guardar el modal de grupo, el foco regresa suavemente al botón de cabecera.
+     - En `ModalFormGrupo.tsx`: se robusteció la función `mover` con teclado para que la transición entre Familia y Empresa mediante `← →` mantenga la secuencia correcta al presionar `Enter` hacia el RUC y descuento.
+  5. **Verificado en siumax:** prueba automatizada con Puppeteer / Edge (`ai-scripts/pruebas/prueba-botones-grupos-clientes.mjs`) validó toda la navegación de teclas, la creación directa en Postgres y el retorno de foco (17/17 checks ✅, 0 errores JS). Capturas guardadas: `clientes_cabecera_sobria.png` y `clientes_grupos_cabecera.png`.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
 ## 04/11/2026 (86) · Antigravity — Eliminación de sombras y ajuste al ras en Caja / Punto de Venta (solo siumax)
 - **Punto de Venta / Caja (`src/sections/Punto-de-venta/` y `App.tsx`):**
   1. **Espacio sobrante eliminado:** en `src/App.tsx` la sección principal ahora usa `p-0` cuando la vista activa es `pos` (en lugar de `p-2`), eliminando el marco blanco perimetral y dejando la caja al ras de la pantalla.

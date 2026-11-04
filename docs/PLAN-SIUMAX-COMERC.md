@@ -4,7 +4,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 04/11/2026 (86), Antigravity: **Eliminadas sombras y márgenes sobrantes en Caja (Punto de Venta)** en `siumax` (al ras de la pantalla, sin sombras de 6px en el marco ni en botones/buscador).
+- **Última actualización:** 04/11/2026 (87), Antigravity: **Botones directos para crear [+ Nuevo grupo] y ver [Grupos (n)] en Clientes** en `siumax` (estilo SiuMax Sobrio, creación sin depender de clientes existentes, navegación 100% por teclado).
+- (86) 04/11/2026, Antigravity: **Eliminadas sombras y márgenes sobrantes en Caja (Punto de Venta)** en `siumax` (al ras de la pantalla, sin sombras de 6px en el marco ni en botones/buscador).
 - (83) 04/11/2026, Claude: **entrega a Antigravity** (ver BITACORA 83: estado, siguiente paso y cuidados). Siguiente: estilo SiuMax Sobrio en Utilidades, Ajustes y Proveedores (receta en MEMORIA-IA §18).
 - (82) 04/11/2026, Claude: estilo oficial **"SiuMax Sobrio"** (modelo Inventario) ya en Inventario, Compras, Clientes, Conteos y **Finanzas + Ver historial** (solo siumax). Siguiente: Utilidades y Ajustes. Nada subido a Evicamp ni GitHub desde el pase (80).
 - (80) 03/11/2026, Claude: **FASES 8, 9, 10 y 11 SUBIDAS A EVICAMP, clientes y GitHub** (facturación apagada en Evicamp; Evicamp NO paga: nunca Mercado Pago). Siguiente: buscador, filtros y paginación iguales a Inventario en todas las secciones (pedido del dueño).
@@ -31,7 +32,7 @@
 | **Fase 3 (Marca, Laboratorio, Principio activo, Modelo, Medidas y Ubicación)** | **✅ Hecho en producción y GitHub (29/10, commit 994bdca)** |
 | **Videos tutoriales del sistema** (9 videos; grabados contra la base demo `siudemo`, fuera de Comerc) | **Muestra hecha (02 venta, 29/10); falta OK del dueño para los demás** |
 | **Modo Oscuro (Dark Mode)** reemplazando "Plata / Gris" en Apariencia | **Hecho en producción (29/10)** |
-| **Grupos de clientes (familia/empresa)** dentro de la 4.1 | **Hecho en producción (29/10)** |
+| **Grupos de clientes (familia/empresa)** dentro de la 4.1 | **Hecho en producción (29/10). En siumax: agregados botones directos en cabecera [+ Nuevo grupo] y [Grupos (n)] para gestión independiente (04/11)** |
 | Fase 11 SUNAT: camino A (proveedor PSE) → B (directo) | **En pausa** hasta que el dueño lo pida |
 | Cobros con QR (Yape/Plin) y aparato de tarjetas (Mercado Pago: QR en pantalla + aparato Point) | **En pausa**; faltan dos decisiones (qué procesador y si empezar por el QR) |
 | Importar facturas XML de compras | **En pausa** |

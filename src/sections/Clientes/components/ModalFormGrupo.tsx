@@ -41,10 +41,21 @@ export const ModalFormGrupo: React.FC<Props> = ({ abierta, grupo, grupos, onGuar
   }, [abierta, grupo]);
 
   if (!abierta) return null;
-  const campos = ['grupo-nombre', `grupo-tipo-${datos.tipo}`, 'grupo-ruc', 'grupo-descuento', 'btn-guardar-grupo'];
   const mover = (desde: string, paso: 1 | -1) => {
-    const destino = campos[campos.indexOf(desde) + paso];
-    if (destino) enfocar(destino); else if (paso === -1) document.getElementById('btn-cerrar-form-grupo')?.focus();
+    const orden = ['grupo-nombre', 'grupo-tipo', 'grupo-ruc', 'grupo-descuento', 'btn-guardar-grupo'];
+    const clave = desde.startsWith('grupo-tipo') ? 'grupo-tipo' : desde;
+    const idx = orden.indexOf(clave);
+    if (idx === -1) {
+      if (paso === -1) document.getElementById('btn-cerrar-form-grupo')?.focus();
+      return;
+    }
+    const destinoClave = orden[idx + paso];
+    if (destinoClave) {
+      const destinoId = destinoClave === 'grupo-tipo' ? `grupo-tipo-${datos.tipo}` : destinoClave;
+      enfocar(destinoId);
+    } else if (paso === -1) {
+      document.getElementById('btn-cerrar-form-grupo')?.focus();
+    }
   };
 
   const guardar = async () => {
