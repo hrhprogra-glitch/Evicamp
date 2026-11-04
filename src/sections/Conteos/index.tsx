@@ -467,7 +467,7 @@ export const Conteos: React.FC = () => {
         }}
       />
 
-      <div className="px-3 lg:px-4 flex-1 flex flex-col min-h-[calc(var(--alto-pantalla)*0.6)] relative pb-8 rounded-none">
+      <div className="px-2 sm:px-3 flex flex-col relative pb-8">
         {loading ? (
           <div className="absolute inset-0 bg-[var(--color-surface)]/85 backdrop-blur-sm z-50 flex items-center justify-center">
   <div className="flex flex-col items-center gap-4">

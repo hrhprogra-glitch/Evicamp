@@ -9,7 +9,7 @@ interface Props {
 
 export const TarjetaMetrica: React.FC<Props> = ({ label, value, icon, isAlert }) => {
   return (
-    <div className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 border-2 bg-white min-w-0 xl:min-w-[200px] shrink-0 transition-transform hover:-translate-y-1 cursor-default rounded-none ${
+    <div className={`tarjeta-sobria flex items-center gap-3 sm:gap-4 p-3 sm:p-4 border-2 bg-white min-w-0 xl:min-w-[200px] shrink-0 cursor-default rounded-none ${
       isAlert ? 'border-[var(--color-danger)] shadow-[4px_4px_0_0_var(--color-danger)]' : 'border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)]'
     }`}>
       <div className={`w-10 h-10 flex items-center justify-center border-2 rounded-none shrink-0 ${

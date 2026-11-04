@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, ChevronLeft, ChevronRight, Package, Edit, Trash2 } from 'lucide-react';
+import { Layers, ChevronLeft, ChevronRight, Package, Edit, Trash2, Search } from 'lucide-react';
 import { formatearCantidad } from '../../../utils/formato';
 import type { Merma } from '../types';
 import type { Product } from '../../Inventario/types';
@@ -30,7 +30,7 @@ export const TablaConteos: React.FC<Props> = ({ mermas, products, onEdit, onDele
   };
 
   const renderPagination = (position: 'top' | 'bottom') => {
-    if (totalPages <= 0) return null;
+    if (totalPages <= 0 || !mermas.length) return null;
     const prevId = position === 'top' ? 'btn-pag-prev-conteos' : 'btn-pag-bottom-prev-conteos';
     const nextId = position === 'top' ? 'btn-pag-next-conteos' : 'btn-pag-bottom-next-conteos';
 
@@ -38,8 +38,8 @@ export const TablaConteos: React.FC<Props> = ({ mermas, products, onEdit, onDele
     const isNextDisabled = currentPage >= totalPages;
 
     return (
-      <div className={`${position === 'top' ? 'border-b' : 'border-t'} border-[var(--color-border)] bg-[var(--color-surface)] p-4 flex items-center justify-between shrink-0 rounded-none`}>
-        <span className="text-xs font-black text-[var(--color-muted)] uppercase tracking-widest">
+      <div className={`paginacion-sobria ${position === 'top' ? 'border-b' : 'border-t'} shrink-0`}>
+        <span className="paginacion-sobria__texto">
           Página {currentPage} de {totalPages}
         </span>
         <div className="flex gap-2">
@@ -98,7 +98,7 @@ export const TablaConteos: React.FC<Props> = ({ mermas, products, onEdit, onDele
                 }
               }
             }}
-            className={`w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-[var(--color-surface)] ${
+            className={`paginacion-sobria__boton w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-[var(--color-surface)] ${
               isPrevDisabled ? 'opacity-40 cursor-not-allowed' : ''
             }`}
           >
@@ -154,7 +154,7 @@ export const TablaConteos: React.FC<Props> = ({ mermas, products, onEdit, onDele
                 }
               }
             }}
-            className={`w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-[var(--color-surface)] ${
+            className={`paginacion-sobria__boton w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-[var(--color-surface)] ${
               isNextDisabled ? 'opacity-40 cursor-not-allowed' : ''
             }`}
           >
@@ -166,7 +166,7 @@ export const TablaConteos: React.FC<Props> = ({ mermas, products, onEdit, onDele
   };
 
   return (
-    <div id="tabla-conteos-container" className="border border-[var(--color-border)] flex-1 flex flex-col bg-[var(--color-surface)] relative w-full rounded-none">
+    <div id="tabla-conteos-container" className="tabla-marco flex flex-col relative w-full">
       
       {renderPagination('top')}
 
@@ -186,11 +186,11 @@ export const TablaConteos: React.FC<Props> = ({ mermas, products, onEdit, onDele
       </div>
 
       {/* CUERPO */}
-      <div className="w-full flex-1 bg-[var(--color-surface)]">
+      <div className="w-full bg-[var(--color-surface)]">
         {paginatedData.length === 0 ? (
-          <div className="p-6 sm:p-12 text-center text-[var(--color-muted)] font-bold uppercase text-[12px] tracking-widest flex flex-col items-center justify-center h-full gap-2 bg-[var(--color-surface)]">
-            <Layers size={32} className="text-[var(--color-border)] mb-2" />
-            <p>No hay registros con estos filtros.</p>
+          <div className="vacio-sobrio">
+            <Search size={32} />
+            <p>No se registran ajustes con esos parámetros.</p>
           </div>
         ) : (
           paginatedData.map((merma, index) => (
