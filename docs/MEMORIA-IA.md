@@ -159,6 +159,8 @@
 38. **Escapes en `node -e "…"` desde bash** (03/11/2026): `\b` terminó como carácter "retroceso" invisible dentro de un archivo de prueba y la expresión nunca coincidía (y el Edit no encontraba la línea). Para editar código, escribir el script en un archivo con la herramienta Write (como dice el n.º 17), nunca dentro de `node -e`.
 37. **Cargar en un formulario el texto de relleno de la lista como si fuera un dato** (03/11/2026): Inventario/Caja/Conteos/Proveedores ponen `code: p.code || 'NO-SKU'` para mostrar. ModalProducto lo cargaba como código real y, con dos productos sin código, editar uno daba "ya existe en otro producto" y no guardaba. Al cargar un formulario, convertir los rellenos ('NO-SKU', 'SIN CATEGORÍA'…) en vacío.
 36. **🚨 URGENTE · Contar como "Cobrado" de un período todo lo abonado de un fiado, sin mirar CUÁNDO se abonó** (02/11/2026, lo encontró un cliente real): en Utilidades, si un cliente pagaba HOY deudas de ventas de otros días, esas ventas viejas entraban COMPLETAS al "Cobrado" de hoy. Ejemplo: LATON PILSEN mostraba S/ 90 cobrados (5 ventas fiadas de sept-oct) que no se cobraron en ese período. Causa: `fraccionPagada` usaba `fiado.paid_amount` (todo lo abonado, de cualquier fecha). **Regla de dinero cobrado en un rango (siempre, en cualquier pantalla):** = lo pagado al momento de la venta (efectivo + yape + tarjeta + transferencia) **solo si la venta es del rango** + los abonos (`debt_payments`) **con fecha dentro del rango**. Nunca usar `fiados.paid_amount` para ingresos de un período (sirve solo para saber cuánto debe hoy). Es el mismo criterio del motor único `utils/ingresos.ts`. Arreglo: rama `fix/cobrado-utilidades` (commit 98b2961, sobre `main`); la ventana del producto marca "Venta anterior · cobrado en el período". **Ya está en `main`, en Evicamp, en clientes y en siumax (rama `fase-9-10-almacenes-catalogo`, commit b0bb2a8), subido el 02/11/2026.** Probado en la base demo `siudemo`: antes S/ 41.60, ahora S/ 21.60 (lo abonado hoy).
+40. **Un script de edición que no encuentra el texto por espacios invisibles** (04/11/2026): algunos archivos tienen líneas "vacías" con espacios (ej. 13 espacios en Finanzas/index.tsx) y otros fin de línea CRLF; la herramienta Write puede quitar esos espacios del patrón y el reemplazo falla ("no encontré…"). Normalizar `\r\n` → `\n` en el archivo y en el patrón, y para líneas solo con espacios usar `' '.repeat(n)` o buscar desde un ancla única (`indexOf`) en vez del bloque completo. Si el script lanza error antes de `writeFileSync`, no se guardó nada: corregir y volver a correr.
+41. **Cambiar una tabla compartida sin mirar quién más la usa** (04/11/2026): `TablaMovimientos` la usan Finanzas (caja actual) y `ModalDetalleCaja` (detalle de una caja pasada). Al darle paginación hay que revisar el teclado en los dos lugares (`graphify explain "TablaMovimientos"` muestra quién la importa).
 
 - **Pruebas (28/10/2026):** el dueño quiere que se pruebe SOLO lo que se modificó. Las tandas de regresión, solo si él lo pide.
 
@@ -289,3 +291,44 @@
 - **Acceso público sin JWT a funciones RPC de Tienda Web:** PostgREST valida sesiones mediante `fn_verificar_peticion()`. Toda función destinada a clientes externos anónimos (`fn_catalogo_publico`, `fn_crear_pedido_web`) debe ser explícitamente exceptuada (whitelist) en dicha función para permitir llamadas POST sin token `x-sesion`.
 - **Campo de dirección en checkout:** En el modal de pedidos de Tienda Web (`TiendaModalPedido`), el input de dirección (`#input-pedido-direccion`) solo se renderiza si la modalidad elegida es Delivery (`#btn-entrega-delivery`). Por defecto está en Recojo en tienda (`#btn-entrega-recojo`).
 
+
+## 18. Estilo oficial "SiuMax Sobrio" (04/11/2026) — receta para continuar
+El dueño eligió el aspecto de **Inventario > Productos** y lo llamamos **SiuMax Sobrio** ("el contenido primero"). Sus
+palabras: *"la tabla la resaltan los botones y el buscador, y el fondo no me distrae"*. Revisa que sea **idéntico** a
+Inventario, no parecido, y manda capturas con lo distinto marcado en rojo.
+
+**Ya hecho (solo siumax):** Inventario (Productos, Lotes, Compras), Clientes (Clientes, Créditos, Cotizaciones, Pedidos),
+Conteos, Finanzas (caja actual) y Ver historial. **Falta:** Utilidades, Ajustes/Configuraciones (Usuarios, Tiendas, etc.),
+Proveedores y, si el dueño quiere, las tablas dentro de ventanas (preguntarle primero).
+
+**Piezas compartidas (en `src/index.css`, alrededor de la línea 760; no inventar estilos nuevos):**
+- Tabla: `tabla-marco` (contenedor), `tabla-cabecera` (thead oscuro), `tabla-fila`; filas con `border-b` fino, sin rayas verticales gruesas.
+- Cabecera de sección: `bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6`,
+  ícono w-10 h-10 verde (`--color-accent`) con su sombra, h1 `text-xl lg:text-2xl font-black uppercase tracking-widest`;
+  el subtítulo va como `title` del bloque, no como texto.
+- Botones de la cabecera: `boton-cabecera` (blanco, borde fino, letra oscura, sin sombra) y el color SOLO en el ícono:
+  `style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}`. "Nuevo X" va en la cabecera con `<Plus/>`.
+- Pestañas: contenedor `pestanas-sobrias` + `data-activa` en el botón elegido. Filtros de estado como pestañas: `pestanas-filtro`.
+- Tarjetas de métricas: `tarjeta-sobria` (sin sombra ni salto al pasar el mouse; nada de bloques negros o de color).
+- Buscador (FUERA del marco de la tabla):
+  `<div className="buscador-sobrio w-full xl:flex-1 shrink-0"><div className="buscador-sobrio__icono"><Search size={18}/></div><input …/>`
+  y, si hay texto, `<div className="buscador-sobrio__match"><span className="buscador-sobrio__conteo">{n} MATCH</span><button className="buscador-sobrio__borrar"><X size={14}/></button></div>`.
+  Escape borra la búsqueda.
+- Fila buscador + filtros: `flex flex-col xl:flex-row gap-3 sm:gap-4 shrink-0 items-stretch xl:items-center justify-between`;
+  filtros en `grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full xl:w-auto`, cada select/fecha con
+  `filtro-sobrio w-full sm:w-auto` y al final el botón `limpiar-sobrio` con `<FilterX size={16}/>`.
+- Paginación arriba Y abajo de la tabla: `paginacion-sobria` + `border-b`/`border-t`, texto `paginacion-sobria__texto`
+  ("Página X de Y") y flechas `paginacion-sobria__boton` con `aria-disabled`. **Sin filas no se dibuja.**
+- Tabla vacía: `<div className="vacio-sobrio"><Search size={32}/>No se registran … con esos parámetros.</div>`.
+- Margen lateral del contenido: `px-2 sm:px-3` (la tabla usa casi todo el ancho).
+- Las VENTANAS (modales) siguen con su borde 2 y sombra de 8 px: este estilo es para las secciones.
+
+**Teclado (obligatorio, probarlo con puppeteer):** ↑ desde buscador/filtros va a un botón de la cabecera; → recorre
+buscador → filtros → limpiar (en el buscador solo si el cursor está al final); ↓ baja a la paginación de arriba y de ahí a
+la primera fila; ↑ desde la primera fila vuelve a la paginación de arriba; ↓ desde la última fila va a la paginación de
+abajo. Conservar SIEMPRE los `id` y los `onKeyDown` que ya existían (otras partes y pruebas los usan).
+
+**Ejemplos para copiar:** `src/sections/Conteos/components/FiltrosConteos.tsx` (buscador + filtros + teclado con el
+helper `teclas(izq, der)`), `src/sections/Finanzas/components/TablaMovimientos.tsx` (paginación con `paginacion(pos)`),
+`src/sections/Finanzas/components/TablaHistorial.tsx` (filtros que llegan por la prop `filtros`).
+**Capturas y prueba de teclado:** `ai-scripts/pruebas/estilo/ver-*.mjs` (ver su LEEME).

@@ -7,6 +7,42 @@
 
 ---
 
+## 04/11/2026 (83) · Claude — ENTREGA A ANTIGRAVITY: cómo seguir con el estilo "SiuMax Sobrio"
+El dueño pidió: *"guarda todo para que Antigravity continúe con tu trabajo"*. Todo está guardado en la rama
+`fase-11-sunat` (sin push) y en siumax.
+
+**Estado exacto:**
+- Rama `fase-11-sunat`. Desde el último pase (80: Evicamp, clientes y GitHub) hay commits SOLO en siumax: Nubefact y
+  anulación NO_EMITIDO (81), Excel del contador y todo el estilo (82). **Nada de eso está en Evicamp ni en GitHub:** se sube
+  solo cuando el dueño lo diga en ese momento (y Evicamp NO paga: nunca Mercado Pago).
+- Estilo SiuMax Sobrio hecho en: Inventario (Productos, Lotes, Compras), Clientes (4 pestañas), Conteos, Finanzas (caja
+  actual) y Ver historial. Probado con teclado; el historial solo vacío (siumax no tiene cajas cerradas).
+
+**Siguiente paso (lo que el dueño espera):** el mismo estilo, idéntico a Inventario, en las secciones que faltan:
+1. **Utilidades** — `src/sections/Utilidades/` (`FiltrosUtilidades.tsx`, `TarjetasResumen.tsx`, `TablaAnalisisProductos.tsx`, `TablaRanking.tsx`).
+2. **Ajustes / Configuraciones** — `src/sections/Configuraciones/` (`TablaUsuarios.tsx`, `PestanaTiendas.tsx`, `PestanaFacturacion.tsx`, `PestanaTiendaWeb.tsx`, `FormularioEmpresa.tsx`).
+3. **Proveedores** — `src/sections/Proveedores/`.
+Antes de empezar cada sección: mostrar al dueño qué cambia y esperar su "empieza" (regla de OK explícito).
+
+**Cómo hacerlo:** receta completa en `docs/MEMORIA-IA.md` sección 18 (clases de `src/index.css`, estructura, teclado y
+ejemplos para copiar). Por cada sección: graphify antes de leer → cambios → `npx tsc -b` → `node ai-scripts/deploy.cjs siumax`
+→ capturas y teclado con `ai-scripts/pruebas/estilo/` (ver LEEME) → commit → docs → `graphify update .`.
+
+**Cuidado (aprendido aquí):**
+- Conservar todos los `id` y `onKeyDown` existentes; antes de quitar algo, listar lo que hacía (error "gravísimo" pasado).
+- Tablas compartidas: revisar quién más las usa (`graphify explain`). Ej.: `TablaMovimientos` también está en `ModalDetalleCaja`.
+- Inventario: las clases viejas del botón de pestañas siguen porque `FiltrosInventario` revisa `classList.contains('bg-[var(--color-ink)]')`. No quitarlas.
+- Editar con scripts escritos en archivo (no `node -e` ni heredoc con `\\`); normalizar CRLF; ojo con líneas solo de espacios (MEMORIA-IA n.º 40).
+
+**Otros pendientes (esperan respuesta del dueño, no hacer sin su OK):**
+- Convertir Cotizaciones y Pedidos (hoy tarjetas) en tablas con paginación.
+- Estilo en las tablas dentro de ventanas.
+- Borrar la ruta/token de Nubefact que quedó por error en Evicamp (facturación apagada allí; inofensivo).
+- Fase 11: modo real de Nubefact, plan revendedor y certificado digital (los consigue el dueño).
+- Pruebas viejas `prueba-fase11-4/5/6-ui` usaban la ventana Comprobantes (ya no existe): reemplazadas por `prueba-cambio-cpe-ui` y `prueba-historial-cpe-ui`.
+
+---
+
 ## 04/11/2026 (82) · Claude — Estilo oficial "SiuMax Sobrio" en Inventario, Compras, Clientes, Conteos y Finanzas (solo siumax)
 - El dueño eligió el estilo de Inventario > Productos ("la tabla la resaltan los botones y el buscador, y el fondo no me distrae") y lo llamamos **SiuMax Sobrio**. Piezas compartidas en `src/index.css`: `boton-cabecera` (+ `--icono`), `pestanas-sobrias` (+ `data-activa`), `pestanas-filtro`, `tarjeta-sobria`, `buscador-sobrio` (`__icono/__match/__conteo/__borrar`), `filtro-sobrio`, `limpiar-sobrio`, `paginacion-sobria` (`__texto/__boton`), `vacio-sobrio`, y el molde de tabla `tabla-marco/tabla-cabecera/tabla-fila`.
 - Aplicado en Inventario (Productos, Lotes, Compras), Clientes (4 pestañas), Conteos y **Finanzas**: cabecera como Inventario (título TESORERÍA, botones fantasma; el aviso rojo de comprobantes con problema sigue rojo pero sin sombra), tarjetas sobrias (Gran total ya no es bloque negro), buscador y filtros FUERA del marco + botón limpiar (`#btn-limpiar-filtros-finanzas`), tabla de movimientos con paginación de 25 arriba y abajo (`btn-pag-ant-mov-arriba`, `btn-pag-ant-mov`…) y vacío compartido; "Caja cerrada" con `vacio-sobrio`.

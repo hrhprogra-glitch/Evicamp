@@ -17,3 +17,9 @@
 6. Todo debe funcionar **100% con teclado** y **sin internet**. Prueba con las pruebas de `ai-scripts/pruebas/`.
 7. **SQL en Evicamp:** respaldo primero y `psql` con `lock_timeout`. **Nunca** reinicies la API (`activar-seguridad.sh`).
 8. **No compartas** el contenido de `.env.vps`.
+9. **Estilo oficial "SiuMax Sobrio"** (desde el 04/11/2026): toda sección nueva o retocada se hace IGUAL a Inventario >
+   Productos con las clases compartidas de `src/index.css`. La receta completa está en `docs/MEMORIA-IA.md`, sección 18.
+   El dueño revisa que sea idéntico, no parecido. Nunca esquinas redondeadas.
+10. **graphify antes de cada lectura o búsqueda de código** (`graphify query/explain/path`) y `graphify update .` después
+    de cada cambio. El dueño lo exige.
+11. **Evicamp NO paga:** nunca Mercado Pago, aviso de plan ni botón "Pagar plan" en Evicamp.
