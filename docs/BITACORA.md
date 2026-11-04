@@ -7,6 +7,23 @@
 
 ---
 
+## 04/11/2026 (89) · Claude — Todo se ve completo en cualquier tamaño de pantalla (solo siumax)
+- **Dueño:** *"el sistema tiene que ajustarse a cualquier tamaño de pantalla para que todos los botones, sesiones y ventanas aparezcan bien y completos, no topados por la ventana"* (captura de Ajustes) → propuesta → *"sí, empieza"*.
+- **Revisión automática** en 7 tamaños (1920×1080, 1600×900, 1366×768, 1280×720, 1024×768, tablet 768×1024, celular 390×844), con scripts nuevos en `ai-scripts/pruebas/estilo/`:
+  - `revisar-tamanos.mjs`: las 7 secciones y TODAS sus pestañas (Lotes, Compras, Créditos, Cotizaciones, Pedidos, Ver historial, cada pestaña de Ajustes). Marca página más ancha que la pantalla, botones/pestañas/campos fuera de la pantalla (sin scroll que los alcance) y títulos tapados.
+  - `revisar-ventanas.mjs`: 10 ventanas (nuevo producto, proveedores, nuevo cliente, grupos, nuevo ajuste, reporte contador, nuevo usuario, nueva tienda…).
+  - `revisar-ventanas-caja.mjs`: cobro, cliente, espera, cotización, pedido, nuevo movimiento y cierre de caja. Abre una caja y un producto de prueba por SQL (no vende nada) y los borra al final; si hay una caja abierta de verdad, no hace nada.
+- **Encontrado y arreglado:**
+  - Pestañas de **Ajustes** salían por la derecha desde 1600 px (en 1024 se perdían 4) y el título quedaba pegado; botón **Proveedores** de Inventario cortado en 1600; pestañas de **Clientes** fuera de la pantalla en tablet y celular.
+  - **Regla nueva (index.css `.pestanas-sobrias`):** si no caben, las pestañas bajan a otra fila formando una cuadrícula de bordes finos (el marco pone borde arriba/izquierda y cada pestaña derecha/abajo; `flex: 1 1 auto`). En pantallas grandes se ven igual que antes.
+  - **Cabeceras** de Ajustes, Clientes e Inventario: contenedor `flex flex-wrap justify-between items-center` (los botones pasan abajo si no entran al lado), título con `shrink-0`, pestañas y botones con `min-w-0` (sin `shrink-0`), botones de Inventario con `sm:flex-wrap`.
+  - **Cobro (ModalCobro):** el modo compacto se activaba solo con menos de 700 px de alto; ahora con menos de 820 px. En laptops de 720/768 de alto la fila Nota de venta / Boleta / Factura salía cortada a la mitad; ahora entra completo.
+- **Resultado:** 0 cosas cortadas en los 7 tamaños (secciones + pestañas + 17 ventanas), 0 errores JS, siumax quedó como estaba (caja y producto de prueba borrados). Capturas revisadas a ojo.
+- Ventanas largas (nuevo producto, pedido por encargo) en pantallas bajas se bajan con scroll dentro de la ventana: nada queda fuera.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub.
+
+---
+
 ## 04/11/2026 (88) · Antigravity — ENTREGA A CLAUDE: estado actual, lo avanzado y qué sigue
 El dueño pidió: *"perfecto alista todo porque nos pasaremos a claude"*. Todo queda guardado en la rama `fase-11-sunat` (sin push a GitHub ni Evicamp) y completamente desplegado y probado en el servidor de pruebas `siumax`.
 

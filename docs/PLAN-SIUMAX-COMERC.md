@@ -4,7 +4,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 04/11/2026 (88), Antigravity: **Entrega a Claude** (ver BITACORA 88). Hecho en siumax: Utilidades y Ajustes con estilo SiuMax Sobrio, Caja sin sombras ni márgenes sobrantes al ras, y Clientes con botón [Grupos (n)] y flujo con [Volver]. Siguiente: Proveedores con estilo SiuMax Sobrio.
+- **Última actualización:** 04/11/2026 (89), Claude: **todo se ve completo en cualquier tamaño de pantalla** (7 tamaños revisados: secciones, pestañas y 17 ventanas; arregladas cabeceras de Ajustes, Inventario y Clientes y el cobro en laptops). Solo siumax. Siguiente: lo que diga el dueño (pendiente de antes: Proveedores con estilo SiuMax Sobrio).
+- (88) 04/11/2026, Antigravity: **Entrega a Claude** (ver BITACORA 88). Hecho en siumax: Utilidades y Ajustes con estilo SiuMax Sobrio, Caja sin sombras ni márgenes sobrantes al ras, y Clientes con botón [Grupos (n)] y flujo con [Volver]. Siguiente: Proveedores con estilo SiuMax Sobrio.
 - (87) 04/11/2026, Antigravity: **Botón [Grupos (n)] en cabecera de Clientes y flujo con botón Volver al crear grupo** en `siumax` (eliminado [+ Nuevo grupo] de cabecera; creación centralizada en la lista de grupos; botón [Volver] y regreso automático tras crear).
 - (86) 04/11/2026, Antigravity: **Eliminadas sombras y márgenes sobrantes en Caja (Punto de Venta)** en `siumax` (al ras de la pantalla, sin sombras de 6px en el marco ni en botones/buscador).
 - (83) 04/11/2026, Claude: **entrega a Antigravity** (ver BITACORA 83: estado, siguiente paso y cuidados). Siguiente: estilo SiuMax Sobrio en Utilidades, Ajustes y Proveedores (receta en MEMORIA-IA §18).
@@ -20,6 +21,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Que todo se vea completo en cualquier tamaño de pantalla** (botones, pestañas y ventanas sin cortarse) | **Aprobado 04/11. ✅ Hecho en siumax (89): 7 tamaños, 0 cortes. Revisar de nuevo con `ai-scripts/pruebas/estilo/revisar-*.mjs` tras cambios de pantallas. Pasar a Evicamp solo con aviso** |
 | **Estilo "SiuMax Sobrio" en todas las secciones** (cabecera, buscador, filtros, paginación, vacío y tabla como Inventario) | **Aprobado 04/11. ✅ Inventario, Compras, Clientes, Conteos, Finanzas, Ver historial, Utilidades y Ajustes en siumax. Falta: Proveedores; tablas dentro de ventanas (preguntar); pasar a Evicamp solo con aviso** |
 | **Nuevo aspecto de la Tienda Web** (PC y celular, libre del estilo de la caja) | **✅ Hecho y en siumax (02/11, commit c202ae8); falta revisión del dueño. siumax tiene 0 productos (pedir permiso para cargar de prueba)** |
 | **Fase 11 SUNAT: plan en 8 partes (11.1 servidor y datos → 11.8 directo a SUNAT)** | **Aprobado 02/11. ✅ 11.1 a 11.8 hechas y probadas en siumax (03/11, rama fase-11-sunat, 1838ed2). Directo a SUNAT aceptado por el ambiente de pruebas de SUNAT. Falta: revisión del dueño, probar Nubefact con cuenta real (el dueño ya tiene RUC 10, la pide), y pasar a Evicamp solo con su aviso** |

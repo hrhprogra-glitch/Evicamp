@@ -144,9 +144,9 @@ const Configuraciones: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-[var(--color-bg)] text-[var(--color-ink)] font-mono">
       {/* CABECERA (como Inventario / Clientes): título y pestañas sobrias */}
-      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-col 2xl:flex-row justify-between items-start 2xl:items-center gap-4 shrink-0">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 lg:gap-8 w-full 2xl:w-auto">
-          <div className="flex items-center gap-3" title="Parámetros del Sistema · Gestiona tu empresa, usuarios, facturación y apariencia">
+      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-wrap justify-between items-center gap-4 shrink-0">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 lg:gap-8 min-w-0 max-w-full">
+          <div className="flex items-center gap-3 shrink-0" title="Parámetros del Sistema · Gestiona tu empresa, usuarios, facturación y apariencia">
             <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] rounded-none shrink-0">
               <Settings size={20} className="text-[var(--color-accent)]" />
             </div>
@@ -156,7 +156,7 @@ const Configuraciones: React.FC = () => {
           </div>
 
           {/* PESTAÑAS SOBRIAS: ← → mueven el selector, Enter cambia de pestaña, ↓ baja al contenido */}
-          <div role="tablist" aria-label="Ajustes" className="pestanas-sobrias flex shrink-0 w-full md:w-auto overflow-x-auto custom-scrollbar">
+          <div role="tablist" aria-label="Ajustes" className="pestanas-sobrias flex min-w-0 w-full md:w-auto">
             {pestanas.map(({ id, nombre, Icono }) => (
               <button
                 key={id}

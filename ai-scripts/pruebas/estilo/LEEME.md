@@ -10,3 +10,10 @@ buscador, los filtros, la paginación y las filas con el teclado, imprimiendo d�
 - `ver-clientes.mjs`, `ver-conteos.mjs`, `ver-finanzas.mjs` (caja actual + Ver historial).
 - Para una sección nueva, copiar `ver-conteos.mjs` y cambiar el botón del menú (`#sidebar-btn-…`) y los `id`.
 - Usan puppeteer-core con Microsoft Edge en modo headless. No despliegues mientras corren.
+
+## Tamaños de pantalla (que nada se corte)
+- `revisar-tamanos.mjs <carpeta>`: todas las secciones y pestañas en 7 tamaños (de 1920 a celular 390).
+- `revisar-ventanas.mjs <carpeta>`: las ventanas principales en 6 tamaños.
+- `revisar-ventanas-caja.mjs <carpeta>`: ventanas de la Caja y de la caja abierta. Abre una caja y un producto de prueba por
+  SQL (sin vender) y los borra al final; si hay una caja abierta de verdad, no hace nada.
+- Cada línea ❌ dice qué quedó fuera de la pantalla y guarda la captura en la carpeta.

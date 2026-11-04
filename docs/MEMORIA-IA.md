@@ -327,6 +327,16 @@ buscador → filtros → limpiar (en el buscador solo si el cursor está al fina
 la primera fila; ↑ desde la primera fila vuelve a la paginación de arriba; ↓ desde la última fila va a la paginación de
 abajo. Conservar SIEMPRE los `id` y los `onKeyDown` que ya existían (otras partes y pruebas los usan).
 
+**Que se vea completo en cualquier pantalla (04/11/2026, pedido del dueño):** nada puede quedar cortado por la ventana,
+de un celular a un monitor grande.
+- Cabecera: contenedor `flex flex-wrap justify-between items-center gap-4`; título con `shrink-0`; pestañas y grupos de
+  botones con `min-w-0` (NUNCA `shrink-0` ni `overflow-x-auto` en las pestañas) y `flex-wrap` en los botones. Las
+  `pestanas-sobrias` ya bajan solas a otra fila.
+- Ventanas: alto máximo con `--alto-pantalla`, cabecera y pie fijos (`shrink-0`) y el medio con `overflow-y-auto`. Si la
+  ventana debe verse entera en laptops (720-768 de alto), modo compacto con `[@media(max-height:820px)]:…`.
+- Después de tocar pantallas, correr `ai-scripts/pruebas/estilo/revisar-tamanos.mjs`, `revisar-ventanas.mjs` y
+  `revisar-ventanas-caja.mjs` (7 tamaños; ❌ = algo cortado, con captura).
+
 **Ejemplos para copiar:** `src/sections/Conteos/components/FiltrosConteos.tsx` (buscador + filtros + teclado con el
 helper `teclas(izq, der)`), `src/sections/Finanzas/components/TablaMovimientos.tsx` (paginación con `paginacion(pos)`),
 `src/sections/Finanzas/components/TablaHistorial.tsx` (filtros que llegan por la prop `filtros`), `src/sections/Clientes/index.tsx` (botones múltiples de cabecera: `btn-nuevo-cliente`, `btn-nuevo-grupo` y `btn-ver-grupos` conectados por ← → y ↓ al buscador; grupos no dependen de tener clientes creados).

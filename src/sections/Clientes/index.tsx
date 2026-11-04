@@ -643,16 +643,16 @@ if (fiaData) {
       )}
       
       {/* CABECERA (como Inventario): título, pestañas sobrias y "Nuevo cliente" a la derecha */}
-      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-col 2xl:flex-row justify-between items-start 2xl:items-center gap-4 shrink-0">
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 lg:gap-8 w-full 2xl:w-auto">
-        <div className="flex items-center gap-3">
+      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-wrap justify-between items-center gap-4 shrink-0">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 lg:gap-8 min-w-0 max-w-full">
+        <div className="flex items-center gap-3 shrink-0">
           <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] rounded-none shrink-0">
             <Users size={20} className="text-[var(--color-accent)]" />
           </div>
           <h1 className="text-xl lg:text-2xl font-black text-[var(--color-ink)] uppercase tracking-widest whitespace-nowrap">Clientes</h1>
         </div>
       {/* PESTAÑAS: ← → mueven el selector (desde la última llega a "Nuevo cliente"), Enter (o clic) cambia de pestaña, ↓ baja a su buscador */}
-      <div role="tablist" aria-label="Clientes" className="pestanas-sobrias flex shrink-0 w-full md:w-auto">
+      <div role="tablist" aria-label="Clientes" className="pestanas-sobrias flex min-w-0 w-full md:w-auto">
         {PESTANAS.map((p, i) => (
           <button key={p.id} id={p.boton} role="tab" aria-selected={pestana === p.id} data-activa={pestana === p.id} type="button"
             onClick={() => {
@@ -681,7 +681,7 @@ if (fiaData) {
       </div>
       </div>
       {pestana === 'CLIENTES' && (
-        <div className="flex flex-wrap items-center gap-2 w-full 2xl:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full 2xl:w-auto min-w-0">
           <button id="btn-nuevo-cliente" type="button" onClick={() => abrirFicha(null)}
             style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
             onKeyDown={(e) => {

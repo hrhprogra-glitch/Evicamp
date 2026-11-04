@@ -648,3 +648,4 @@
 
 
 
+- **Dueño** (captura de Ajustes): *"el sistema tiene que ajustarse a cualquier tamaño de pantalla para que todos los botones, sesiones y ventanas aparezcan bien y completos y no topados por la ventana"* → Claude revisó 7 tamaños y propuso el plan → *"sí, empieza"*. Arreglado: pestañas de Ajustes y Clientes y botones de Inventario ahora bajan a otra fila si no caben (título sin apretarse); el cobro entra completo en laptops de 720/768 de alto. Revisión final: 0 cortes en secciones, pestañas y 17 ventanas. Solo siumax.
