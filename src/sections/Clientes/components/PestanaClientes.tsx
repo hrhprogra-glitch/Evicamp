@@ -198,7 +198,8 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
     }
   };
   // Barra: buscador → filtro → orden → limpiar → nuevo (← →); ↓ baja a la lista; ↑ sube a la pestaña
-  const barra = ['buscador-clientes', 'filtro-deuda-clientes', 'orden-clientes', ...(hayFiltros ? ['btn-limpiar-clientes'] : []), 'btn-nuevo-cliente'];
+  // "Nuevo cliente" está en la cabecera de la sección (como "Nuevo producto" en Inventario)
+  const barra = ['buscador-clientes', 'filtro-deuda-clientes', 'orden-clientes', ...(hayFiltros ? ['btn-limpiar-clientes'] : [])];
   const teclasBarra = (id: string) => (e: React.KeyboardEvent<HTMLElement>) => {
     const i = barra.indexOf(id);
     const esTexto = e.currentTarget instanceof HTMLInputElement;
@@ -288,7 +289,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
         <input id="buscador-clientes" autoComplete="off" spellCheck={false} data-lpignore="true"
           placeholder="BUSCAR NOMBRE, GRUPO, DNI/RUC, TELÉFONO O REFERENCIA..." value={busqueda}
           onChange={(e) => { setBusqueda(e.target.value); setPagina(1); }} onKeyDown={teclasBarra('buscador-clientes')}
-          className="col-span-3 lg:flex-1 min-w-0 lg:min-w-[200px] border-2 border-[var(--color-border)] px-3 sm:px-4 py-3 text-sm font-black uppercase outline-none focus:border-[var(--color-info)] rounded-none" />
+          className="col-span-3 lg:flex-1 min-w-0 lg:min-w-[200px] border-2 border-[var(--color-border)] px-3 sm:px-4 py-3 text-sm font-black uppercase outline-none focus:border-[var(--color-ink)] rounded-none" />
         <select id="filtro-deuda-clientes" value={filtro} onChange={(e) => { setFiltro(e.target.value as typeof filtro); setPagina(1); }} onKeyDown={teclasBarra('filtro-deuda-clientes')} className={claseSelect}>
           <option value="TODOS">TODOS</option>
           <option value="CON_DEUDA">CON DEUDA</option>
@@ -302,14 +303,10 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
         {hayFiltros && (
           <button id="btn-limpiar-clientes" type="button" title="Limpiar filtros" onKeyDown={teclasBarra('btn-limpiar-clientes')}
             onClick={() => { setBusqueda(''); setFiltro('TODOS'); setOrden('DEUDA'); setPagina(1); setTimeout(() => irA('buscador-clientes'), 30); }}
-            className="p-3 border-2 bg-[var(--color-danger)] text-white border-[var(--color-danger)] hover:brightness-110 cursor-pointer flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-ink)]">
+            className="p-3 border border-[var(--color-border)] bg-[var(--color-bg-2)] text-[var(--color-muted)] hover:bg-[var(--color-ink)] hover:text-white cursor-pointer flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-ink)]">
             <FilterX size={20} strokeWidth={3} />
           </button>
         )}
-        <button id="btn-nuevo-cliente" type="button" onClick={onNuevo} onKeyDown={teclasBarra('btn-nuevo-cliente')}
-          className="col-span-3 lg:col-span-1 h-12 bg-[var(--color-accent)] text-[var(--color-ink)] px-4 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] cursor-pointer whitespace-nowrap">
-          <Plus size={16} /> Nuevo cliente
-        </button>
       </div>
 
       {/* PAGINACIÓN SUPERIOR */}

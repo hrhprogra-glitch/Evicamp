@@ -230,7 +230,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
           placeholder="BUSCAR CLIENTE..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="col-span-3 lg:flex-1 min-w-0 lg:min-w-[200px] border-2 border-[var(--color-border)] px-3 sm:px-4 py-3 text-sm font-black uppercase outline-none focus:border-[var(--color-info)] transition-colors rounded-none"
+          className="col-span-3 lg:flex-1 min-w-0 lg:min-w-[200px] border-2 border-[var(--color-border)] px-3 sm:px-4 py-3 text-sm font-black uppercase outline-none focus:border-[var(--color-ink)] transition-colors rounded-none"
         />
 
         <select 
@@ -263,7 +263,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
               document.getElementById('filtro-orden-fiados')?.focus();
             }
           }}
-          className="w-full min-w-0 lg:w-48 border-2 border-[var(--color-border)] px-2 sm:px-4 py-3 text-xs sm:text-sm font-black uppercase outline-none focus:border-[var(--color-info)] bg-white cursor-pointer rounded-none"
+          className="w-full min-w-0 lg:w-48 border-2 border-[var(--color-border)] px-2 sm:px-4 py-3 text-xs sm:text-sm font-black uppercase outline-none focus:border-[var(--color-ink)] bg-white cursor-pointer rounded-none"
         >
           <option value="ACTIVOS">DEUDORES</option>
           <option value="TODOS">TODOS</option>
@@ -300,7 +300,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
               document.getElementById('btn-limpiar-filtros-fiados')?.focus();
             }
           }}
-          className="w-full min-w-0 lg:w-48 border-2 border-[var(--color-border)] px-2 sm:px-4 py-3 text-xs sm:text-sm font-black uppercase outline-none focus:border-[var(--color-info)] bg-white cursor-pointer rounded-none"
+          className="w-full min-w-0 lg:w-48 border-2 border-[var(--color-border)] px-2 sm:px-4 py-3 text-xs sm:text-sm font-black uppercase outline-none focus:border-[var(--color-ink)] bg-white cursor-pointer rounded-none"
         >
           <option value="MAYOR_DEUDA">MAYOR DEUDA</option>
           <option value="ALFABETICO">ALFABÉTICO</option>

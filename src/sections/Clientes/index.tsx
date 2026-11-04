@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Coins, Users, BookOpen, FileText, Package } from 'lucide-react';
+import { Coins, Users, BookOpen, FileText, Package, UserPlus } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import { TablaFiadosAgrupados } from './components/TablaFiadosAgrupados';
 import { ModalFiado } from './components/ModalFiado';
@@ -641,10 +641,19 @@ if (fiaData) {
         </div>
       )}
       
-      {/* PESTAÑAS: ← → mueven el selector, Enter (o clic) cambia de pestaña, ↓ baja a su buscador */}
-      <div role="tablist" aria-label="Clientes" className="flex gap-2 shrink-0">
+      {/* CABECERA (como Inventario): título, pestañas sobrias y "Nuevo cliente" a la derecha */}
+      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-col 2xl:flex-row justify-between items-start 2xl:items-center gap-4 shrink-0">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 lg:gap-8 w-full 2xl:w-auto">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] rounded-none shrink-0">
+            <Users size={20} className="text-[var(--color-accent)]" />
+          </div>
+          <h1 className="text-xl lg:text-2xl font-black text-[var(--color-ink)] uppercase tracking-widest whitespace-nowrap">Clientes</h1>
+        </div>
+      {/* PESTAÑAS: ← → mueven el selector (desde la última llega a "Nuevo cliente"), Enter (o clic) cambia de pestaña, ↓ baja a su buscador */}
+      <div role="tablist" aria-label="Clientes" className="pestanas-sobrias flex shrink-0 w-full md:w-auto">
         {PESTANAS.map((p, i) => (
-          <button key={p.id} id={p.boton} role="tab" aria-selected={pestana === p.id} type="button"
+          <button key={p.id} id={p.boton} role="tab" aria-selected={pestana === p.id} data-activa={pestana === p.id} type="button"
             onClick={() => {
               setPestana(p.id);
               setTimeout(() => document.getElementById(buscadorDe(p.id))?.focus(), 50);
@@ -652,6 +661,8 @@ if (fiaData) {
             onKeyDown={(e) => {
               if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
                 e.preventDefault(); e.stopPropagation();
+                const nuevo = document.getElementById('btn-nuevo-cliente');
+                if (e.key === 'ArrowRight' && i === PESTANAS.length - 1 && nuevo) { nuevo.focus(); return; }
                 document.getElementById(PESTANAS[(i + (e.key === 'ArrowRight' ? 1 : -1) + PESTANAS.length) % PESTANAS.length].boton)?.focus();
               } else if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault(); e.stopPropagation();
@@ -666,6 +677,20 @@ if (fiaData) {
             {p.id === 'CLIENTES' ? <Users size={14} /> : p.id === 'CREDITOS' ? <BookOpen size={14} /> : p.id === 'COTIZACIONES' ? <FileText size={14} /> : <Package size={14} />} {p.nombre}
           </button>
         ))}
+      </div>
+      </div>
+      {pestana === 'CLIENTES' && (
+        <button id="btn-nuevo-cliente" type="button" onClick={() => abrirFicha(null)}
+          style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById(PESTANAS[PESTANAS.length - 1].boton)?.focus(); }
+            else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); document.getElementById('buscador-clientes')?.focus(); }
+            else if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); }
+          }}
+          className="boton-cabecera px-4 lg:px-6 py-3 lg:py-4 border-2 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none w-full 2xl:w-auto">
+          <UserPlus size={16} /> Nuevo cliente
+        </button>
+      )}
       </div>
 
       {pestana === 'CLIENTES' ? (

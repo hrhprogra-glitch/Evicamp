@@ -725,11 +725,12 @@ export const PestanaPedidos: React.FC = () => {
         </div>
 
         {/* FILTROS DE ESTADO */}
-        <div className="flex gap-1 overflow-x-auto">
+        <div className="pestanas-sobrias flex overflow-x-auto">
           {ESTADOS_PED.map((est, index) => (
             <button
               key={est}
               id={`btn-filtro-ped-${est}`}
+              data-activa={filtroEstado === est}
               type="button"
               onClick={() => setFiltroEstado(est)}
               onKeyDown={(e) => handleFiltroKeyDown(e, index, est)}

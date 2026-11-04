@@ -597,11 +597,12 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
         </div>
 
         {/* FILTRO DE ESTADO */}
-        <div className="flex gap-1 overflow-x-auto">
+        <div className="pestanas-sobrias flex overflow-x-auto">
           {ESTADOS_COTI.map((est, index) => (
             <button
               key={est}
               id={`btn-filtro-coti-${est}`}
+              data-activa={filtroEstado === est}
               type="button"
               onClick={() => setFiltroEstado(est)}
               onKeyDown={(e) => handleFiltroKeyDown(e, index, est)}
