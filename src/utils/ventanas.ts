@@ -126,12 +126,63 @@ export const recordarSeleccionEnVentanas = (fallbackRestaurar?: () => void) => {
   });
   const alTeclear = () => { if (!hayVentanaAbierta()) teclaDespues = true; };
 
+  // ---------------------------------------------------------------------------------------------------
+  // Con una ventana abierta, el selector NUNCA se pierde ni sale de ella (pedido del dueño 04/11/2026):
+  // - un clic en el fondo oscuro o en un espacio vacío, o volver al sistema desde otro programa → vuelve a lo
+  //   último que tenía seleccionado en esa ventana (o a su primer campo/botón);
+  // - si algo intenta llevarlo afuera (el imán de la sección, un setTimeout viejo…) → vuelve adentro;
+  // - si una ventana se abre y nadie pone el selector en ella → se pone en su primer campo/botón.
+  const EVITAR_PRIMERO = /^(cerrar|close|×|x|✕)\b|\(esc\)/i;
+  const primeroDe = (v: HTMLElement) => {
+    const els = enfocablesDe(v);
+    return els.find((el) => !EVITAR_PRIMERO.test((el.innerText || el.title || el.getAttribute('aria-label') || '').trim())) || els[0];
+  };
+  const asegurarEnVentana = () => {
+    const v = ventanaSuperior();
+    if (!v) return;
+    const a = document.activeElement as HTMLElement | null;
+    if (a && a !== document.body && (v.contains(a) || a.tagName === 'IFRAME')) return;
+    const guardado = enVentana.get(v);
+    const el = guardado && guardado.isConnected && visible(guardado) && v.contains(guardado) ? guardado : primeroDe(v);
+    el?.focus();
+  };
+  const luego = (ms = 0) => setTimeout(() => { if (hayVentanaAbierta()) asegurarEnVentana(); }, ms);
+  // El selector se fue al vacío (clic en el fondo o en un texto)
+  const alSalirFoco = () => { if (hayVentanaAbierta()) luego(0); };
+  // El selector se fue a algo fuera de la ventana de arriba
+  const alEntrarFoco = (e: FocusEvent) => {
+    const v = ventanaSuperior();
+    const el = e.target as HTMLElement | null;
+    if (!v || !el || el === document.body || el.tagName === 'IFRAME' || v.contains(el)) return;
+    luego(0);
+  };
+  // Volver al sistema desde otro programa o pestaña
+  const alVolverVentana = () => { if (hayVentanaAbierta()) luego(80); };
+  const alVisible = () => { if (document.visibilityState === 'visible' && hayVentanaAbierta()) luego(80); };
+  // Una ventana nueva: si en un momento el selector no está en ella, se pone en su primer campo/botón
+  let ventanasAntes = ventanasAbiertas().length;
+  const observadorNuevas = new MutationObserver(() => {
+    const n = ventanasAbiertas().length;
+    if (n > ventanasAntes) [150, 400].forEach((ms) => luego(ms));
+    ventanasAntes = n;
+  });
+
   document.addEventListener('focusin', alEnfocar, true);
+  document.addEventListener('focusin', alEntrarFoco, true);
+  document.addEventListener('focusout', alSalirFoco, true);
+  window.addEventListener('focus', alVolverVentana);
+  document.addEventListener('visibilitychange', alVisible);
   window.addEventListener('keydown', alTeclear, true);
   observador.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
+  observadorNuevas.observe(document.body, { childList: true, subtree: true });
   return () => {
     document.removeEventListener('focusin', alEnfocar, true);
+    document.removeEventListener('focusin', alEntrarFoco, true);
+    document.removeEventListener('focusout', alSalirFoco, true);
+    window.removeEventListener('focus', alVolverVentana);
+    document.removeEventListener('visibilitychange', alVisible);
     window.removeEventListener('keydown', alTeclear, true);
     observador.disconnect();
+    observadorNuevas.disconnect();
   };
 };

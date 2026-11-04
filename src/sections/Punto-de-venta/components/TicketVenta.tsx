@@ -3,6 +3,7 @@ import { ShoppingCart, Trash2, Banknote, Pause, Play, Plus, Minus, FileText, Pac
 import type { CartItem, Cliente, HeldCart } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { esDecimal, unidadDe } from '../../../utils/unidades';
+import { flechasCaja, irA } from '../tecladoCaja';
 
 interface Props {
   selectedIndex?: number;
@@ -216,6 +217,7 @@ export const TicketVenta: React.FC<Props> = ({
           <button 
             id="btn-pausar-ticket"
             onClick={holdCurrentCart}
+            onKeyDown={flechasCaja('btn-pausar-ticket')}
             disabled={cart.length === 0}
             className="h-7 flex items-center justify-center px-3 gap-1 bg-[var(--color-warning)] text-[var(--color-ink)] border-2 border-[var(--color-warning)] hover:bg-white hover:border-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
             title="Pausar y Guardar Ticket (Shift+Q)"
@@ -225,6 +227,7 @@ export const TicketVenta: React.FC<Props> = ({
           <button 
             id="btn-vaciar-ticket"
             onClick={() => setCart([])}
+            onKeyDown={flechasCaja('btn-vaciar-ticket')}
             className="w-7 h-7 flex items-center justify-center bg-[var(--color-danger)] text-white border-2 border-[var(--color-danger)] hover:bg-white hover:text-[var(--color-danger)] transition-colors cursor-pointer" 
             title="Vaciar Ticket (Shift+W)"
           >
@@ -276,8 +279,9 @@ export const TicketVenta: React.FC<Props> = ({
         ) : (
           <div className="flex flex-col gap-2">
             {cart.map((item, index) => (
-              <div 
-                key={item.id} 
+              <div
+                key={item.id}
+                data-fila-ticket="true"
                 {...clicConTeclado(() => {
                   setSelectedIndex(index); // 🛡️ SELECCIÓN AL CLIC EN LA FILA
                   setColIndex(0);
@@ -431,6 +435,15 @@ export const TicketVenta: React.FC<Props> = ({
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.stopPropagation(); // Evita que index.tsx lo confunda con borrar fila
+            } else if (e.key === 'ArrowDown') {
+              e.preventDefault(); e.stopPropagation(); e.nativeEvent.stopImmediatePropagation();
+              irA('btn-pos-cotizacion', 'btn-pos-pedido');
+            } else if (e.key === 'ArrowUp' && selectedIndex !== cart.length) {
+              // Si se llegó desde otro botón (no bajando por las líneas), ↑ va a la última línea del ticket
+              e.preventDefault(); e.stopPropagation(); e.nativeEvent.stopImmediatePropagation();
+              irA(`edit-input-${cart.length - 1}`, `edit-price-${cart.length - 1}`, 'btn-vaciar-ticket', 'btn-pausar-ticket');
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+              e.preventDefault(); e.stopPropagation(); e.nativeEvent.stopImmediatePropagation();
             }
           }}
           disabled={cart.length === 0}
@@ -448,6 +461,7 @@ export const TicketVenta: React.FC<Props> = ({
             id="btn-pos-cotizacion"
             type="button"
             onClick={onCotizar}
+            onKeyDown={flechasCaja('btn-pos-cotizacion')}
             disabled={cart.length === 0}
             className="py-1.5 px-2 border-2 border-[var(--color-ink)] bg-white hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
             title="Guardar como Cotización / Proforma (F7)"
@@ -458,6 +472,7 @@ export const TicketVenta: React.FC<Props> = ({
             id="btn-pos-pedido"
             type="button"
             onClick={onPedido}
+            onKeyDown={flechasCaja('btn-pos-pedido')}
             disabled={cart.length === 0}
             className="py-1.5 px-2 border-2 border-[var(--color-ink)] bg-white hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
             title="Guardar como Pedido por Encargo (F8)"

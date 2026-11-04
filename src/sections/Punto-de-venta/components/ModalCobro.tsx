@@ -625,7 +625,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                  if (e.key === 'Enter') {
                    e.preventDefault();
                    try { (e.target as HTMLInputElement).showPicker(); }
-                   catch { document.getElementById('cobro-btn-confirm')?.focus(); }
+                   catch { /* sin calendario: el selector se queda en la fecha (un Enter de más nunca cobra) */ }
                  }
                  if (e.key === 'ArrowUp') { e.preventDefault(); const target = document.getElementById('fiado-celular') || document.getElementById('fiado-search'); target?.focus(); }
                  if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('cobro-btn-confirm')?.focus(); }

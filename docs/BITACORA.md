@@ -7,6 +7,23 @@
 
 ---
 
+## 04/11/2026 (91) · Claude — Las 6 reglas del selector en todo el sistema (solo siumax)
+- **Dueño:** pidió confirmar si el sistema cumple sus reglas del selector y luego *"sí, empieza y hazlo todo de una"*. Reglas:
+  1. el selector llega a TODOS los botones, buscadores y campos; 2. calendario: Enter lo abre y al elegir el selector se queda en la fecha (Enter no pasa al siguiente cuadro); 3. moverse ← → (y ↑ ↓); 4. al salir del sistema y volver, algo queda seleccionado; 5. en una ventana el selector nunca se pierde; 6. con una ventana abierta, el selector nunca sale de ella.
+- **Revisión automática nueva** `ai-scripts/pruebas/estilo/revisar-selector.mjs` (37 pantallas: secciones, pestañas y ventanas; recorre con flechas desde donde arranca, prueba Tab, clic en el fondo, salir y volver, y cada calendario). Abre caja y producto de prueba por SQL y los borra; **frena si se crea una venta**.
+- **Antes:** 11 de 37 cumplían. **Arreglos:**
+  - `src/utils/ventanas.ts` (`recordarSeleccionEnVentanas`): con una ventana abierta, si el selector se pierde (clic en el fondo, volver de otro programa) vuelve a lo último que tenía en esa ventana; si intenta salir, vuelve adentro; si una ventana se abre con el selector afuera (Producir, Traspasos), se pone en su primer campo/botón.
+  - `src/utils/flechasEspaciales.ts` (nuevo, activado en App.tsx): **flechas de respaldo** — si una flecha no hizo nada (nadie la atendió y el selector sigue igual a los 90 ms), el selector pasa al control más cercano en esa dirección dentro de la ventana o sección. No actúa en filas de tablas, líneas del ticket, listas desplegables, fechas, horas, números ni textos largos. Las flechas propias de cada pantalla siempre mandan.
+  - Caja: `src/sections/Punto-de-venta/tecladoCaja.ts` (mapa de flechas): Cliente, ✕, Por cobrar, Caja actual, monto, ojo, barra de montos, Espera, Vaciar, Proceder (↓ Cotización), Cotización y Pedido. ↑ desde el buscador sube a Cliente.
+  - Calendarios: Cotización y Pedido de la Caja (fecha y hora) — Enter abre el calendario y se queda; ↓ sigue. Cobro: si el calendario del fiado no se puede abrir, el selector se queda en la fecha (antes saltaba a "Confirmar pago").
+  - Ingresar lote: con el formulario vacío la fecha y "Guardar" están desactivados; las flechas ahora saltan al primero activo (llega a "Cancelar").
+- **Resultado final:** 37 de 37 pantallas cumplen las 6 reglas, 0 errores (antes 11 de 37).
+- **Incidente:** la primera corrida de la revisión creó por accidente una venta de prueba de S/ 5 en siumax (Enter cayó en "Confirmar pago" porque el navegador de prueba no abre calendarios). Se borró (venta + movimiento de inventario); siumax quedó con sus 11 ventas. La revisión ahora frena si aparece una venta.
+- No probado con datos: ventanas que se abren desde filas (siumax casi vacío) y la Tienda Web pública.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub.
+
+---
+
 ## 04/11/2026 (90) · Claude — Ventanas: el botón Guardar siempre a la vista (solo siumax)
 - **Dueño** (captura de "Ingresar lote de stock"): *"¿adaptaste bien las ventanas flotantes? En la ventana de lote el botón guardar no sale"*.
 - **Causa:** el medio de `ModalLote` tenía `sm:overflow-visible` (en PC no hacía scroll), así que el contenido empujaba el pie con "Guardar lote" fuera de la pantalla. Esa ventana no estaba en la revisión (89), y la revisión daba por buena una ventana si el botón se alcanzaba bajando con scroll.

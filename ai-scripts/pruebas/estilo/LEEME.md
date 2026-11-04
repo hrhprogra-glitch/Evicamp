@@ -17,3 +17,8 @@ buscador, los filtros, la paginación y las filas con el teclado, imprimiendo d�
 - `revisar-ventanas-caja.mjs <carpeta>`: ventanas de la Caja y de la caja abierta. Abre una caja y un producto de prueba por
   SQL (sin vender) y los borra al final; si hay una caja abierta de verdad, no hace nada.
 - Cada línea ❌ dice qué quedó fuera de la pantalla y guarda la captura en la carpeta.
+
+## Selector (teclado)
+- `revisar-selector.mjs [filtro]`: las 6 reglas del dueño en 37 pantallas (flechas a todo, calendarios con Enter, Tab, clic en el fondo,
+  salir y volver). Abre caja y producto de prueba por SQL (sin vender) y los borra; si se crea una venta, se detiene.
+  Tarda ~15 min; con un filtro (ej. `inventario`) solo revisa esas pantallas.

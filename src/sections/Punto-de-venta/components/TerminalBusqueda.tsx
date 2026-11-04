@@ -1,4 +1,5 @@
 import { coincideBusqueda } from '../../../utils/busqueda';
+import { flechasCaja, irA } from '../tecladoCaja';
 import React, { useState, useEffect } from 'react';
 import { Search, ScanLine, Package, Plus, AlertTriangle, CheckCircle2, Users, X, Scale, Tag, Boxes } from 'lucide-react';
 import { formatearCantidad } from '../../../utils/formato';
@@ -158,6 +159,18 @@ export const TerminalBusqueda: React.FC<Props> = ({
       return;
     }
 
+    if (e.key === 'ArrowUp') {
+      const grilla = document.getElementById('productos-grid-pos');
+      const columnas = grilla ? (getComputedStyle(grilla).getPropertyValue('grid-template-columns').split(' ').filter((c) => c.trim() !== '').length || 1) : 1;
+      if (filteredProducts.length === 0 || selectedIndex < columnas) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.nativeEvent.stopImmediatePropagation();
+        irA('btn-pos-header-cliente', 'btn-por-cobrar-pos', 'btn-caja-actual-pos');
+        return;
+      }
+    }
+
     if (filteredProducts.length === 0) return;
 
     const getColumnsCount = () => {
@@ -251,6 +264,7 @@ export const TerminalBusqueda: React.FC<Props> = ({
                   id="btn-pos-header-cliente"
                   type="button"
                   onClick={onAbrirElegirCliente}
+                  onKeyDown={flechasCaja('btn-pos-header-cliente')}
                   title="Elegir o cambiar cliente para esta venta (F3 o clic)"
                   className={`flex items-center whitespace-nowrap border-2 border-[var(--color-ink)] px-2 sm:px-3 py-1 text-[12px] font-black uppercase tracking-widest bg-white text-[var(--color-ink)] hover:bg-[var(--color-accent)] transition-all cursor-pointer ${
                     clienteSeleccionado && onLimpiarCliente ? 'border-r-0' : ''
@@ -281,6 +295,7 @@ export const TerminalBusqueda: React.FC<Props> = ({
                     id="btn-limpiar-cliente-pos"
                     type="button"
                     onClick={onLimpiarCliente}
+                    onKeyDown={flechasCaja('btn-limpiar-cliente-pos')}
                     title="Quitar cliente (Shift+F3 o clic en ✕)"
                     className="border-2 border-[var(--color-ink)] bg-white hover:bg-[var(--color-danger)] hover:text-white px-2 py-1 text-[var(--color-muted)] transition-colors cursor-pointer flex items-center justify-center"
                   >
@@ -293,6 +308,9 @@ export const TerminalBusqueda: React.FC<Props> = ({
             {puedeVerFiados && (
               <button
                 // "Por cobrar" abre la sección Clientes directo en la pestaña Créditos
+                id="btn-por-cobrar-pos"
+                type="button"
+                onKeyDown={flechasCaja('btn-por-cobrar-pos')}
                 onClick={() => { try { sessionStorage.setItem('clientes_pestana', 'CREDITOS'); } catch { /* sin almacenamiento */ } onNavigate?.('clientes'); }}
                 title={fiadosCount > 0 ? 'Hay deudas pendientes por cobrar' : 'Nadie tiene deudas pendientes'}
                 className={`flex items-center shrink-0 whitespace-nowrap border-2 px-2 sm:px-3 py-1 text-[12px] font-black uppercase tracking-widest transition-all cursor-pointer ${

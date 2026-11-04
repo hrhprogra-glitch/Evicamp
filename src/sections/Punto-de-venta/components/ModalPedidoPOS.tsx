@@ -539,15 +539,25 @@ export const ModalPedidoPOS: React.FC<Props> = ({
                   id="input-pedido-fecha"
                   type="date"
                   value={fechaEntrega}
-                  onChange={(e) => setFechaEntrega(e.target.value)}
+                  title="Enter abre el calendario · ↓ sigue"
+                  onChange={(e) => {
+                    e.currentTarget.dataset.cambio = String(Date.now());
+                    setFechaEntrega(e.target.value);
+                    setTimeout(() => document.getElementById('input-pedido-fecha')?.focus(), 50);
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === 'ArrowUp') {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (Date.now() - Number(e.currentTarget.dataset.cambio || 0) < 500) return;
+                      try { e.currentTarget.showPicker?.(); } catch { /* sin calendario: se queda en la fecha */ }
+                    } else if (e.key === 'ArrowUp') {
                       e.preventDefault();
                       document.getElementById('input-pedido-doc')?.focus();
                     } else if (e.key === 'ArrowRight') {
                       e.preventDefault();
                       document.getElementById('input-pedido-hora')?.focus();
-                    } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                    } else if (e.key === 'ArrowDown') {
                       e.preventDefault();
                       document.getElementById('input-pedido-adelanto-ef')?.focus();
                     }
@@ -563,15 +573,25 @@ export const ModalPedidoPOS: React.FC<Props> = ({
                   id="input-pedido-hora"
                   type="time"
                   value={horaEntrega}
-                  onChange={(e) => setHoraEntrega(e.target.value)}
+                  title="Enter abre el reloj · ↓ sigue"
+                  onChange={(e) => {
+                    e.currentTarget.dataset.cambio = String(Date.now());
+                    setHoraEntrega(e.target.value);
+                    setTimeout(() => document.getElementById('input-pedido-hora')?.focus(), 50);
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === 'ArrowUp') {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (Date.now() - Number(e.currentTarget.dataset.cambio || 0) < 500) return;
+                      try { e.currentTarget.showPicker?.(); } catch { /* sin reloj: se queda en la hora */ }
+                    } else if (e.key === 'ArrowUp') {
                       e.preventDefault();
                       document.getElementById('input-pedido-tel')?.focus();
                     } else if (e.key === 'ArrowLeft') {
                       e.preventDefault();
                       document.getElementById('input-pedido-fecha')?.focus();
-                    } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                    } else if (e.key === 'ArrowDown') {
                       e.preventDefault();
                       document.getElementById('input-pedido-adelanto-yap')?.focus();
                     }

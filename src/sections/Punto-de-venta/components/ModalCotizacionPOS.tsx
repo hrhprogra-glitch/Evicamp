@@ -459,15 +459,25 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
                   id="input-coti-fecha"
                   type="date"
                   value={fechaVencimiento}
-                  onChange={(e) => setFechaVencimiento(e.target.value)}
+                  title="Enter abre el calendario · ↓ sigue"
+                  onChange={(e) => {
+                    e.currentTarget.dataset.cambio = String(Date.now());
+                    setFechaVencimiento(e.target.value);
+                    setTimeout(() => document.getElementById('input-coti-fecha')?.focus(), 50);
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === 'ArrowUp') {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (Date.now() - Number(e.currentTarget.dataset.cambio || 0) < 500) return;
+                      try { e.currentTarget.showPicker?.(); } catch { /* sin calendario: se queda en la fecha */ }
+                    } else if (e.key === 'ArrowUp') {
                       e.preventDefault();
                       document.getElementById('input-coti-doc')?.focus();
                     } else if (e.key === 'ArrowRight') {
                       e.preventDefault();
                       document.getElementById('input-coti-obs')?.focus();
-                    } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                    } else if (e.key === 'ArrowDown') {
                       e.preventDefault();
                       document.getElementById('btn-confirmar-cotizacion')?.focus();
                     }
