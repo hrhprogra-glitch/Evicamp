@@ -566,33 +566,28 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 tabla-marco">
-      
-      {/* BARRA SUPERIOR: BUSCADOR Y FILTROS */}
-      <div className="p-3 bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] flex flex-wrap gap-2 items-center justify-between">
-        <div className="flex items-center gap-2 flex-1 min-w-[240px]">
-          <div className="relative flex-1">
-            <Search size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
-            <input
-              id="buscador-cotizaciones"
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              placeholder="Buscar por Nro, Cliente, DNI, Teléfono..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs font-black uppercase border-2 border-[var(--color-ink)] outline-none bg-white focus:ring-4 focus:ring-[var(--color-ink)]"
-            />
-          </div>
+    <div className="flex-1 flex flex-col min-h-0 gap-4 sm:gap-6">
+
+      {/* BUSCADOR Y FILTROS (fuera del marco de la lista, como Inventario) */}
+      <div className="flex flex-col xl:flex-row gap-3 sm:gap-4 items-stretch xl:items-center justify-between shrink-0">
+        <div className="buscador-sobrio w-full xl:flex-1 shrink-0">
+          <div className="buscador-sobrio__icono"><Search size={18} /></div>
+          <input
+            id="buscador-cotizaciones"
+            type="text"
+            autoComplete="off"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape' && search) { e.preventDefault(); e.stopPropagation(); setSearch(''); return; } if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); document.getElementById('tab-clientes-cotizaciones')?.focus(); return; } handleSearchKeyDown(e); }}
+            placeholder="BUSCAR POR NRO, CLIENTE, DNI, TELÉFONO..."
+            style={{ paddingRight: search ? '8rem' : undefined }}
+          />
           {search && (
-            <button
-              onClick={() => {
-                setSearch('');
-                document.getElementById('buscador-cotizaciones')?.focus();
-              }}
-              className="px-2 py-1 text-xs font-bold border-2 border-[var(--color-ink)] bg-white hover:bg-gray-100 cursor-pointer"
-            >
-              Limpiar
-            </button>
+            <div className="buscador-sobrio__match">
+              <span className="buscador-sobrio__conteo">{cotizacionesFiltradas.length} MATCH</span>
+              <button type="button" tabIndex={-1} title="Borrar búsqueda" className="buscador-sobrio__borrar"
+                onClick={() => { setSearch(''); document.getElementById('buscador-cotizaciones')?.focus(); }}><X size={14} /></button>
+            </div>
           )}
         </div>
 
@@ -619,7 +614,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
       </div>
 
       {/* TABLA DE COTIZACIONES */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+      <div className="flex-1 overflow-y-auto custom-scrollbar tabla-marco">
         {loading ? (
           <div className="p-12 text-center text-xs font-bold text-[var(--color-muted)] uppercase tracking-widest">
             Cargando cotizaciones...
@@ -730,7 +725,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4"
         >
           <div className="bg-[var(--color-surface,#fff)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[92vh] w-full max-w-xl animate-fade-in text-[var(--color-ink)]">
-            
+
             {/* CABECERA */}
             <div className="bg-[var(--color-ink)] text-white p-3 sm:p-4 flex justify-between items-center border-b-2 border-[var(--color-ink)]">
               <div>
@@ -755,7 +750,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
 
             {/* CUERPO */}
             <div className="p-4 overflow-y-auto flex flex-col gap-4 custom-scrollbar">
-              
+
               {/* DATOS CLIENTE */}
               <div className="bg-[var(--color-bg)] p-3 border-2 border-[var(--color-border)] text-xs flex flex-col gap-1">
                 <div>Cliente: <strong className="uppercase">{cotiSeleccionada.cliente_nombre}</strong></div>
