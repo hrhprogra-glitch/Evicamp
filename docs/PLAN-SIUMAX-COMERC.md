@@ -4,7 +4,7 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 04/11/2026 (85), Antigravity: **Estilo oficial "SiuMax Sobrio" aplicado a Ajustes (Configuraciones)** en `siumax` (cabecera con pestañas sobrias, buscador y filtros fuera de la tabla, tarjeta-sobria, boton-cabecera y tabla-marco; teclado 100% probado en Edge). Siguiente: Proveedores.
+- **Última actualización:** 04/11/2026 (86), Antigravity: **Eliminadas sombras y márgenes sobrantes en Caja (Punto de Venta)** en `siumax` (al ras de la pantalla, sin sombras de 6px en el marco ni en botones/buscador).
 - (83) 04/11/2026, Claude: **entrega a Antigravity** (ver BITACORA 83: estado, siguiente paso y cuidados). Siguiente: estilo SiuMax Sobrio en Utilidades, Ajustes y Proveedores (receta en MEMORIA-IA §18).
 - (82) 04/11/2026, Claude: estilo oficial **"SiuMax Sobrio"** (modelo Inventario) ya en Inventario, Compras, Clientes, Conteos y **Finanzas + Ver historial** (solo siumax). Siguiente: Utilidades y Ajustes. Nada subido a Evicamp ni GitHub desde el pase (80).
 - (80) 03/11/2026, Claude: **FASES 8, 9, 10 y 11 SUBIDAS A EVICAMP, clientes y GitHub** (facturación apagada en Evicamp; Evicamp NO paga: nunca Mercado Pago). Siguiente: buscador, filtros y paginación iguales a Inventario en todas las secciones (pedido del dueño).

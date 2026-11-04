@@ -42,9 +42,9 @@
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/FormularioEmpresa.tsx": {
-    "mtime": 1793665282.6073747,
-    "seen": 1793665580.494817,
-    "ast_hash": "bfcb1917d3acea35c48ee69fc24a3882",
+    "mtime": 1793815530.769231,
+    "seen": 1793815920.6175969,
+    "ast_hash": "59e39cbd73d2f0549f75b529a148a657",
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/ModalUsuario.tsx": {
@@ -54,15 +54,15 @@
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/TablaUsuarios.tsx": {
-    "mtime": 1793731853.6709604,
-    "seen": 1793813025.666824,
-    "ast_hash": "17c5905383fd83d893f3e85fdf35cf22",
+    "mtime": 1793815456.485619,
+    "seen": 1793815920.617604,
+    "ast_hash": "f54cd2d9c75c3285e8ca323f3558b4a4",
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/index.tsx": {
-    "mtime": 1793665355.917539,
-    "seen": 1793665580.4948273,
-    "ast_hash": "db0d2a0c98b096fabe0ab13a60ca5249",
+    "mtime": 1793815355.8666043,
+    "seen": 1793815920.617606,
+    "ast_hash": "84d6bd278e875dfb76942d97a9913e06",
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/types.ts": {
@@ -414,9 +414,9 @@
     "semantic_hash": "ef724f8826888528764f5509cbbc7f21"
   },
   "src/sections/Configuraciones/components/ThemeSwitcher.tsx": {
-    "mtime": 1793289284.4701912,
-    "seen": 1793296973.0701427,
-    "ast_hash": "6a6865bd4314148f5d870998dfefa998",
+    "mtime": 1793815680.6331096,
+    "seen": 1793815920.617605,
+    "ast_hash": "d6d3cda0a3fec58b13ce76808d212530",
     "semantic_hash": ""
   },
   "src/utils/SesionProvider.tsx": {
@@ -1560,9 +1560,9 @@
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/SugerenciasSiumax.tsx": {
-    "mtime": 1793289284.4691882,
-    "seen": 1793296973.0701392,
-    "ast_hash": "96b58fabc0ea37e8d62f500a7b3df9bf",
+    "mtime": 1793815709.4478838,
+    "seen": 1793815920.617603,
+    "ast_hash": "96cbe44fc6e6e4aba8d62dada36f710a",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/PanelCompras.tsx": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793814762.1726825,
-    "seen": 1793814905.5498614,
-    "ast_hash": "939372ff164b11c2141e6bc23116a6dc",
+    "mtime": 1793815901.6063967,
+    "seen": 1793815920.6177185,
+    "ast_hash": "aa8ad292d83e00c3061915df552a6ef1",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793814863.2992342,
-    "seen": 1793814905.5498621,
-    "ast_hash": "3b20e17d2d89fed5fd4663712e09a85d",
+    "mtime": 1793815901.6090145,
+    "seen": 1793815920.6177194,
+    "ast_hash": "5f5d6d4db1c998a04b799d9e913857b7",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793814888.7973926,
-    "seen": 1793814905.5498629,
-    "ast_hash": "59dc0998b964109e1e135c13f6ad70d2",
+    "mtime": 1793815901.6095457,
+    "seen": 1793815920.6177201,
+    "ast_hash": "4041bdc195d0f78e6f9e0638fd53de78",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793814814.4968927,
-    "seen": 1793814905.549864,
-    "ast_hash": "1cdb3252687918293d44a426f2c3a6cc",
+    "mtime": 1793815901.608456,
+    "seen": 1793815920.617721,
+    "ast_hash": "ae417923308da8dbdc898c98184fa2aa",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2322,15 +2322,15 @@
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/PestanaTiendaWeb.tsx": {
-    "mtime": 1793657230.862708,
-    "seen": 1793658182.1193883,
-    "ast_hash": "c3317c4bcc4c9543044800096adb93dc",
+    "mtime": 1793815632.3320458,
+    "seen": 1793815920.6176014,
+    "ast_hash": "6c7ed40e7a4b13d958eca86c80eb3c38",
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/PestanaTiendas.tsx": {
-    "mtime": 1793731853.6709604,
-    "seen": 1793813025.6668222,
-    "ast_hash": "dc9248e434449308da5fa458bac790de",
+    "mtime": 1793815513.4769292,
+    "seen": 1793815920.6176023,
+    "ast_hash": "0e2467803e91b8833c4a6f0ef0963a5f",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalTraspaso.tsx": {
@@ -2436,9 +2436,9 @@
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/PestanaFacturacion.tsx": {
-    "mtime": 1793725656.6532176,
-    "seen": 1793813025.66682,
-    "ast_hash": "3fec57d6eeead4a7a8a47f95304e51ee",
+    "mtime": 1793815668.8382485,
+    "seen": 1793815920.6176,
+    "ast_hash": "eff24f42b8d961483a5b1b77b073de30",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-fase11-2-ui.mjs": {
@@ -2583,6 +2583,12 @@
     "mtime": 1793814689.2612486,
     "seen": 1793814905.5495894,
     "ast_hash": "5249520cdb5cd6eba6c230851a9e1539",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/ver-ajustes.mjs": {
+    "mtime": 1793815811.3765607,
+    "seen": 1793815920.6174448,
+    "ast_hash": "d33251914c79305a62130338fcc996da",
     "semantic_hash": ""
   }
 }

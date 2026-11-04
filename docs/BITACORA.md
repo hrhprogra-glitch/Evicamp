@@ -7,6 +7,18 @@
 
 ---
 
+## 04/11/2026 (86) · Antigravity — Eliminación de sombras y ajuste al ras en Caja / Punto de Venta (solo siumax)
+- **Punto de Venta / Caja (`src/sections/Punto-de-venta/` y `App.tsx`):**
+  1. **Espacio sobrante eliminado:** en `src/App.tsx` la sección principal ahora usa `p-0` cuando la vista activa es `pos` (en lugar de `p-2`), eliminando el marco blanco perimetral y dejando la caja al ras de la pantalla.
+  2. **Sombras eliminadas:**
+     - Eliminada la sombra exterior de 6px en el contenedor de caja (`lg:shadow-[6px_6px_0_0_var(--color-ink)]`).
+     - Eliminada la sombra inferior del banner de caja cerrada (`shadow-[0_4px_0_0_var(--color-ink)]`) y del botón de aviso de comprobantes.
+     - Eliminada la sombra del buscador (`shadow-[4px_4px_0_0_var(--color-ink)]`), botón de cliente, "Por cobrar", botón "Espera", "Proceder al pago", "Cotización" y "Pedido".
+  3. **Verificado en siumax:** prueba visual automatizada (`ai-scripts/pruebas/estilo/ver-pos.mjs`) ejecutada en Edge con 0 errores JS y captura guardada (`pos_limpio.png`).
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
 ## 04/11/2026 (85) · Antigravity — Estilo oficial "SiuMax Sobrio" aplicado en Ajustes (solo siumax)
 - **Ajustes / Configuraciones (`src/sections/Configuraciones/`):** adaptado idéntico al modelo de Inventario > Productos.
   1. **Cabecera sobria:** fondo liso con borde inferior de 2px, ícono verde con sombra sutil, título `AJUSTES`, y pestañas sobrias (`pestanas-sobrias` con borde fino, sin sombras, y pestaña activa subrayada con acento verde).

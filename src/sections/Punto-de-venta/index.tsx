@@ -1154,12 +1154,12 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           setSelectedIndex(-1);
         }
       }}
-      className={`flex flex-col lg:flex-row h-full w-full bg-transparent font-mono gap-2 lg:gap-0 lg:shadow-[6px_6px_0_0_var(--color-ink)] relative ${hasOpenSession === false ? 'pt-20 sm:pt-16' : ''}`}
+      className={`flex flex-col lg:flex-row h-full w-full bg-transparent font-mono gap-2 lg:gap-0 relative ${hasOpenSession === false ? 'pt-20 sm:pt-16' : ''}`}
     >
       
       {/* BARRA DE ADVERTENCIA - MODO CONSULTA */}
       {hasOpenSession === false && (
-        <div className="absolute top-0 left-0 w-full bg-[var(--color-danger)] text-white p-3 flex justify-center items-center text-center gap-2 font-black text-[12px] sm:text-xs uppercase tracking-widest sm:tracking-[0.2em] z-10 shadow-[0_4px_0_0_var(--color-ink)] border-b-2 border-[var(--color-ink)]">
+        <div className="absolute top-0 left-0 w-full bg-[var(--color-danger)] text-white p-3 flex justify-center items-center text-center gap-2 font-black text-[12px] sm:text-xs uppercase tracking-widest sm:tracking-[0.2em] z-10 border-b-2 border-[var(--color-ink)]">
           <Wallet size={16} /> Caja Cerrada: Modo de solo consulta. Ve a Finanzas para aperturar la caja.
         </div>
       )}
@@ -1170,7 +1170,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           id="btn-aviso-comprobantes"
           type="button"
           onClick={() => setVerComprobantes(true)}
-          className="absolute bottom-2 left-2 z-20 bg-[var(--color-danger)] text-white px-3 py-2 border-2 border-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)] text-[12px] font-black uppercase tracking-wider cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+          className="absolute bottom-2 left-2 z-20 bg-[var(--color-danger)] text-white px-3 py-2 border-2 border-[var(--color-ink)] text-[12px] font-black uppercase tracking-wider cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
           title="Ver los comprobantes con problema"
         >
           ⚠ {cpeConProblema} {cpeConProblema === 1 ? 'comprobante' : 'comprobantes'} con problema

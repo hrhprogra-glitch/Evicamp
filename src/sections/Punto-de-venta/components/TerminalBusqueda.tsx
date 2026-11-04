@@ -252,7 +252,7 @@ export const TerminalBusqueda: React.FC<Props> = ({
                   type="button"
                   onClick={onAbrirElegirCliente}
                   title="Elegir o cambiar cliente para esta venta (F3 o clic)"
-                  className={`flex items-center whitespace-nowrap border-2 border-[var(--color-ink)] px-2 sm:px-3 py-1 text-[12px] font-black uppercase tracking-widest bg-white text-[var(--color-ink)] hover:bg-[var(--color-accent)] transition-all cursor-pointer shadow-[2px_2px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] ${
+                  className={`flex items-center whitespace-nowrap border-2 border-[var(--color-ink)] px-2 sm:px-3 py-1 text-[12px] font-black uppercase tracking-widest bg-white text-[var(--color-ink)] hover:bg-[var(--color-accent)] transition-all cursor-pointer ${
                     clienteSeleccionado && onLimpiarCliente ? 'border-r-0' : ''
                   }`}
                 >
@@ -282,7 +282,7 @@ export const TerminalBusqueda: React.FC<Props> = ({
                     type="button"
                     onClick={onLimpiarCliente}
                     title="Quitar cliente (Shift+F3 o clic en ✕)"
-                    className="border-2 border-[var(--color-ink)] bg-white hover:bg-[var(--color-danger)] hover:text-white px-2 py-1 text-[var(--color-muted)] transition-colors cursor-pointer shadow-[2px_2px_0_0_var(--color-ink)] flex items-center justify-center active:translate-x-[2px] active:translate-y-[2px]"
+                    className="border-2 border-[var(--color-ink)] bg-white hover:bg-[var(--color-danger)] hover:text-white px-2 py-1 text-[var(--color-muted)] transition-colors cursor-pointer flex items-center justify-center"
                   >
                     <X size={13} />
                   </button>
@@ -295,10 +295,10 @@ export const TerminalBusqueda: React.FC<Props> = ({
                 // "Por cobrar" abre la sección Clientes directo en la pestaña Créditos
                 onClick={() => { try { sessionStorage.setItem('clientes_pestana', 'CREDITOS'); } catch { /* sin almacenamiento */ } onNavigate?.('clientes'); }}
                 title={fiadosCount > 0 ? 'Hay deudas pendientes por cobrar' : 'Nadie tiene deudas pendientes'}
-                className={`flex items-center shrink-0 whitespace-nowrap border-2 px-2 sm:px-3 py-1 text-[12px] font-black uppercase tracking-widest transition-all cursor-pointer hover:shadow-none active:translate-x-[2px] active:translate-y-[2px] ${
+                className={`flex items-center shrink-0 whitespace-nowrap border-2 px-2 sm:px-3 py-1 text-[12px] font-black uppercase tracking-widest transition-all cursor-pointer ${
                   fiadosCount > 0
-                    ? 'border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] hover:bg-[var(--color-warning)] hover:text-white animate-pulse shadow-[2px_2px_0_0_var(--color-warning-dark)]'
-                    : 'border-[var(--color-accent)] bg-[var(--color-accent-bg)] text-[var(--color-accent-dark)] hover:bg-[var(--color-accent)] hover:text-white shadow-[2px_2px_0_0_var(--color-accent-dark)]'
+                    ? 'border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] hover:bg-[var(--color-warning)] hover:text-white animate-pulse'
+                    : 'border-[var(--color-accent)] bg-[var(--color-accent-bg)] text-[var(--color-accent-dark)] hover:bg-[var(--color-accent)] hover:text-white'
                 }`}
               >
                 {fiadosCount > 0 ? <AlertTriangle size={12} className="mr-2" /> : <CheckCircle2 size={12} className="mr-2" />}
@@ -310,7 +310,7 @@ export const TerminalBusqueda: React.FC<Props> = ({
 
         <div className="flex gap-3">
           {/* Estricto diseño monocrático, sin sombras difuminadas ni redondeos */}
-          <div className={`flex-1 relative flex items-center border-2 border-[var(--color-ink)] bg-white transition-all shadow-[4px_4px_0_0_var(--color-ink)] rounded-none z-10 ${searchQuery.length === 0 ? 'focus-within:border-[var(--color-ink)] focus-within:ring-4 focus-within:ring-[var(--color-accent)]' : 'focus-within:ring-2 focus-within:ring-[var(--color-muted)]'}`}>
+          <div className={`flex-1 relative flex items-center border-2 border-[var(--color-ink)] bg-white transition-all rounded-none z-10 ${searchQuery.length === 0 ? 'focus-within:border-[var(--color-ink)] focus-within:ring-4 focus-within:ring-[var(--color-accent)]' : 'focus-within:ring-2 focus-within:ring-[var(--color-muted)]'}`}>
             <div className="w-10 h-10 flex items-center justify-center bg-[var(--color-ink)] text-white shrink-0 rounded-none">
               <Search size={20} />
             </div>

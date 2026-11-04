@@ -371,7 +371,7 @@ export const App: React.FC = () => {
           </span>
         </header>
 
-        <section className="p-2 flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
+        <section className={`${vista === 'pos' ? 'p-0' : 'p-2'} flex-1 min-w-0 overflow-y-auto overflow-x-hidden`}>
           {renderCurrentView()}
         </section>
       </main>
