@@ -505,7 +505,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
     <div id="panel-compras" ref={panel} onKeyDown={teclasPanel} className="flex flex-col gap-4 font-mono">
       {/* Cabecera (fila 0) */}
       {/* En laptops el texto va arriba y los botones abajo (en una fila no entran) */}
-      <div className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-3 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-3 sm:p-4">
+      <div className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-3 py-1">
         <div>
           <h2 className="text-sm sm:text-base font-black uppercase tracking-widest text-[var(--color-ink)] flex items-center gap-2"><ShoppingCart size={18} /> Listas de compras</h2>
           <p className="text-[11px] font-bold text-[var(--color-muted)] mt-1">
@@ -514,15 +514,18 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
           </p>
         </div>
         <div className="flex flex-nowrap gap-2 shrink-0 overflow-x-auto">{/* los 4 botones siempre en una fila ("Nueva lista" no baja) */}
+          <div className="pestanas-sobrias flex">
           {filtros.map(([f, nombre], i) => (
-            <button key={f} id={`btn-compras-filtro-${f}`} type="button" data-nav={`0,${i}`} onClick={() => setFiltro(f)} aria-pressed={filtro === f}
+            <button key={f} id={`btn-compras-filtro-${f}`} type="button" data-nav={`0,${i}`} onClick={() => setFiltro(f)} aria-pressed={filtro === f} data-activa={filtro === f}
               className={`${claseBoton} ${filtro === f ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'bg-white text-[var(--color-ink)]'}`}>
               {nombre}
             </button>
           ))}
+          </div>
           {!soloRecibe && (
           <button id="btn-nueva-compra" type="button" data-nav="0,3" onClick={() => conPermiso('armar listas de compras', () => setEditando('nueva'))}
-            className={`${claseBoton} bg-[var(--color-accent)] text-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)]`}>
+            style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+            className={`boton-cabecera ${claseBoton} bg-[var(--color-accent)] text-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)]`}>
             <Plus size={14} /> Nueva lista
           </button>
           )}
