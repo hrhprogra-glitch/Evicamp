@@ -181,7 +181,7 @@ try {
 
     // Reglas 1, 3, 5, 6: recorrido con flechas desde cada control; ¿se llega a todos?
     const total = await page.evaluate(() => window.__sel.marcar());
-    const alcanzados = new Set(); const malos = new Set();
+    const alcanzados = new Set(); const malos = new Set(); const saltos = new Set();
     const inicio = await page.evaluate(() => { const a = document.activeElement; return a?.getAttribute?.('data-sel') ?? null; });
     const cola = [inicio ?? '0']; const vistos = new Set(cola);
     alcanzados.add(cola[0]);
@@ -205,6 +205,31 @@ try {
         if (esVentana && !(await page.evaluate(() => !!window.__sel.ventana()))) { malos.add(`${k} en ${n} cerró la ventana`); await page.evaluate((id) => document.getElementById(id)?.click(), boton); await pausa(1200); await page.evaluate(PREP); await page.evaluate(() => window.__sel.marcar()); break; }
         if (r.perdido) malos.add(`${k} desde ${await page.evaluate((i) => window.__sel.nombre(document.querySelector(`[data-sel="${i}"]`)), n)} pierde el selector`);
         else if (esVentana && !r.dentro) malos.add(`${k} desde ${await page.evaluate((i) => window.__sel.nombre(document.querySelector(`[data-sel="${i}"]`)), n)} sale de la ventana a ${r.nombre}`);
+        // ¿Se saltó algo? (orden de lectura: no pasar por encima de un control que está en medio, ni ir al de la derecha
+        // cuando el de la izquierda está igual de alineado)
+        if (r.sel !== null && r.sel !== n && !r.perdido) {
+          const salto = await page.evaluate((origen, k) => {
+            const a = document.querySelector(`[data-sel="${origen}"]`), b = document.activeElement;
+            if (!a || !b) return null;
+            const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+            const cruceH = (p, q) => Math.min(p.right, q.right) - Math.max(p.left, q.left);
+            const cruceV = (p, q) => Math.min(p.bottom, q.bottom) - Math.max(p.top, q.top);
+            const otros = [...document.querySelectorAll('[data-sel]')].filter((c) => c !== a && c !== b && !/^[fx]/.test(c.getAttribute('data-sel')) && c.getClientRects().length && !c.disabled);
+            for (const c of otros) {
+              const rc = c.getBoundingClientRect();
+              let medio = false, izquierda = false;
+              if (k === 'ArrowDown') { medio = rb.top > ra.bottom && rc.top >= ra.bottom - 4 && rc.bottom <= rb.top + 4 && cruceH(rc, ra) > 0 && cruceH(rc, rb) > 0;
+                izquierda = Math.abs(rc.top - rb.top) < 8 && rc.left < rb.left && cruceH(rc, ra) >= 0.85 * cruceH(rb, ra) && cruceH(rb, ra) > 0; }
+              if (k === 'ArrowUp') { medio = rb.bottom < ra.top && rc.bottom <= ra.top + 4 && rc.top >= rb.bottom - 4 && cruceH(rc, ra) > 0 && cruceH(rc, rb) > 0;
+                izquierda = Math.abs(rc.top - rb.top) < 8 && rc.left < rb.left && cruceH(rc, ra) >= 0.85 * cruceH(rb, ra) && cruceH(rb, ra) > 0; }
+              if (k === 'ArrowRight') medio = rb.left > ra.right && rc.left >= ra.right - 4 && rc.right <= rb.left + 4 && cruceV(rc, ra) > 0 && cruceV(rc, rb) > 0;
+              if (k === 'ArrowLeft') medio = rb.right < ra.left && rc.right <= ra.left + 4 && rc.left >= rb.right - 4 && cruceV(rc, ra) > 0 && cruceV(rc, rb) > 0;
+              if (medio || izquierda) return `${k.replace('Arrow', '')} desde ${window.__sel.nombre(a)} va a ${window.__sel.nombre(b)} y se salta ${window.__sel.nombre(c)}`;
+            }
+            return null;
+          }, n, k);
+          if (salto) saltos.add(salto.replace('Right', '→').replace('Left', '←').replace('Down', '↓').replace('Up', '↑'));
+        }
         if (r.sel !== null && !vistos.has(r.sel)) { vistos.add(r.sel); alcanzados.add(r.sel); cola.push(r.sel); }
         // Si llegó a la primera fila, con ↓ se baja por todas: la última fila también cuenta como alcanzada
         if (r.sel === 'f0' && !vistos.has('f1')) { vistos.add('f1'); alcanzados.add('f1'); cola.push('f1'); }
@@ -213,6 +238,7 @@ try {
     const sinLlegar = await page.evaluate((ok) => [...document.querySelectorAll('[data-sel]')].filter((el) => !ok.includes(el.getAttribute('data-sel')) && !el.getAttribute('data-sel').startsWith('f') && el.getClientRects().length).map((el) => window.__sel.nombre(el)), [...alcanzados]);
     if (sinLlegar.length) fallas.push(`con flechas no se llega a ${sinLlegar.length} de ${total}: ${sinLlegar.slice(0, 6).join(', ')}${sinLlegar.length > 6 ? '…' : ''}`);
     for (const m of [...malos].slice(0, 3)) fallas.push(m);
+    if (saltos.size) fallas.push(`orden de lectura (${saltos.size} saltos): ${[...saltos].slice(0, 4).join(' · ')}${saltos.size > 4 ? '…' : ''}`);
 
     // Regla 2: calendarios
     const fechas = await page.evaluate(() => { const a = window.__sel.ambito(); document.querySelectorAll('[data-fecha]').forEach((el) => el.removeAttribute('data-fecha')); return [...a.querySelectorAll('input[type="date"]')].filter((el) => el.getClientRects().length).map((el, i) => { el.setAttribute('data-fecha', String(i)); return window.__sel.nombre(el); }); });

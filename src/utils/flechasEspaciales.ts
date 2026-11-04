@@ -34,26 +34,43 @@ const puedeSalir = (el: HTMLElement, k: Flecha): boolean => {
   return el.tagName === 'BUTTON' || el.tagName === 'A' || el.getAttribute('role') === 'tab' || el.tabIndex >= 0;
 };
 
+// El siguiente en ORDEN DE LECTURA en esa dirección (pedido del dueño 04/11/2026: "cuando estoy en el primero se pasa al
+// tercero, eso no tiene que pasar"): ↓ va a la fila de abajo más cercana y, en ella, al que está justo debajo; si varios lo
+// están por igual (desde un campo ancho), al de la IZQUIERDA. ↑ igual hacia arriba. ← → van al vecino de la misma fila.
 const masCercano = (desde: HTMLElement, k: Flecha, ambito: HTMLElement): HTMLElement | null => {
   const r = desde.getBoundingClientRect();
-  const cx = (r.left + r.right) / 2, cy = (r.top + r.bottom) / 2;
-  let mejor: HTMLElement | null = null, puntaje = Infinity;
+  const cy = (r.top + r.bottom) / 2;
+  const candidatos: { el: HTMLElement; q: DOMRect; distancia: number; cruce: number }[] = [];
   for (const el of enfocablesDe(ambito)) {
     if (el === desde || el.closest(FILA) || el.closest('#evicamp-sidebar')) continue;
     const q = el.getBoundingClientRect();
     if (!q.width || !q.height) continue;
-    const qx = (q.left + q.right) / 2, qy = (q.top + q.bottom) / 2;
-    let principal: number, lateral: number;
-    if (k === 'ArrowRight') { if (q.left < r.right - 4) continue; principal = q.left - r.right; lateral = Math.abs(qy - cy); }
-    else if (k === 'ArrowLeft') { if (q.right > r.left + 4) continue; principal = r.left - q.right; lateral = Math.abs(qy - cy); }
-    else if (k === 'ArrowDown') { if (q.top < r.bottom - 4) continue; principal = q.top - r.bottom; lateral = Math.abs(qx - cx); }
-    else { if (q.bottom > r.top + 4) continue; principal = r.top - q.bottom; lateral = Math.abs(qx - cx); }
-    // En horizontal tiene que estar más o menos en la misma fila; en vertical se prefiere la misma columna
-    if ((k === 'ArrowLeft' || k === 'ArrowRight') && (q.bottom < r.top - 8 || q.top > r.bottom + 8)) continue;
-    const p = principal + lateral * 2;
-    if (p < puntaje) { puntaje = p; mejor = el; }
+    let distancia: number;
+    if (k === 'ArrowRight') { if (q.left < r.right - 4) continue; distancia = q.left - r.right; }
+    else if (k === 'ArrowLeft') { if (q.right > r.left + 4) continue; distancia = r.left - q.right; }
+    else if (k === 'ArrowDown') { if (q.top < r.bottom - 4) continue; distancia = q.top - r.bottom; }
+    else { if (q.bottom > r.top + 4) continue; distancia = r.top - q.bottom; }
+    const horizontal = k === 'ArrowLeft' || k === 'ArrowRight';
+    // Cuánto se "cruzan" en el otro eje (misma fila para ← →, misma columna para ↑ ↓)
+    const cruce = horizontal
+      ? Math.min(r.bottom, q.bottom) - Math.max(r.top, q.top)
+      : Math.min(r.right, q.right) - Math.max(r.left, q.left);
+    if (horizontal && cruce <= 0 && Math.abs((q.top + q.bottom) / 2 - cy) > 12) continue;   // ← → solo en la misma fila
+    candidatos.push({ el, q, distancia, cruce });
   }
-  return mejor;
+  if (!candidatos.length) return null;
+  // Se prefieren los que están en la misma columna/fila; si no hay, cualquiera en esa dirección
+  const alineados = candidatos.filter((c) => c.cruce > 0);
+  const lista = alineados.length ? alineados : candidatos;
+  // La fila (o columna) más cercana…
+  const minima = Math.min(...lista.map((c) => c.distancia));
+  const cercanos = lista.filter((c) => c.distancia <= minima + 12);
+  // …y en ella, el que más se cruza; si empatan, el de la izquierda (↑ ↓) o el de arriba (← →)
+  const mayorCruce = Math.max(...cercanos.map((c) => c.cruce));
+  // (si nada está alineado, el cruce es negativo: gana el menos alejado)
+  const empatados = cercanos.filter((c) => c.cruce >= (mayorCruce > 0 ? mayorCruce * 0.85 : mayorCruce));
+  empatados.sort((a, b) => (k === 'ArrowLeft' || k === 'ArrowRight') ? a.q.top - b.q.top : a.q.left - b.q.left);
+  return empatados[0].el;
 };
 
 export const activarFlechasEspaciales = () => {
