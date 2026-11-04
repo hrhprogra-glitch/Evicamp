@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
     "@tailwindcss/vite": "^4.2.1",
+    "exceljs": "4.4.0",
     "html2canvas-pro": "^2.5.0",
     "jsbarcode": "3.11.6",
     "jspdf": "^2.5.2",
