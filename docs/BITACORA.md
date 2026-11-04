@@ -7,6 +7,15 @@
 
 ---
 
+## 04/11/2026 (82) · Claude — Estilo oficial "SiuMax Sobrio" en Inventario, Compras, Clientes, Conteos y Finanzas (solo siumax)
+- El dueño eligió el estilo de Inventario > Productos ("la tabla la resaltan los botones y el buscador, y el fondo no me distrae") y lo llamamos **SiuMax Sobrio**. Piezas compartidas en `src/index.css`: `boton-cabecera` (+ `--icono`), `pestanas-sobrias` (+ `data-activa`), `pestanas-filtro`, `tarjeta-sobria`, `buscador-sobrio` (`__icono/__match/__conteo/__borrar`), `filtro-sobrio`, `limpiar-sobrio`, `paginacion-sobria` (`__texto/__boton`), `vacio-sobrio`, y el molde de tabla `tabla-marco/tabla-cabecera/tabla-fila`.
+- Aplicado en Inventario (Productos, Lotes, Compras), Clientes (4 pestañas), Conteos y **Finanzas**: cabecera como Inventario (título TESORERÍA, botones fantasma; el aviso rojo de comprobantes con problema sigue rojo pero sin sombra), tarjetas sobrias (Gran total ya no es bloque negro), buscador y filtros FUERA del marco + botón limpiar (`#btn-limpiar-filtros-finanzas`), tabla de movimientos con paginación de 25 arriba y abajo (`btn-pag-ant-mov-arriba`, `btn-pag-ant-mov`…) y vacío compartido; "Caja cerrada" con `vacio-sobrio`.
+- **Ver historial:** sin la barra negra de título; buscador de cajas grande con "N MATCH" y las fechas Desde/Hasta + limpiar a su lado (`FiltroFechas` ahora va dentro de `TablaHistorial` por la prop `filtros`); **las fechas se aplican solas al elegirlas** (ya no hay botón "Buscar"); paginación compartida (mismos ids `btn-historial-anterior/siguiente(-bottom)`), filas finas, vacío compartido.
+- Teclado probado en siumax (caja actual: → por filtros hasta limpiar, ↓ paginación → fila, ↑ vuelve, Escape borra). siumax no tiene cajas cerradas: el historial solo se probó vacío.
+- Pendiente: Utilidades y Ajustes (Usuarios, Tiendas…). Nada subido a Evicamp ni GitHub.
+
+---
+
 ## 04/11/2026 (81) · Claude — Nubefact conectado (cuenta demo) y anular comprobantes NO aceptados
 - El dueño creó su cuenta demo de Nubefact (RUC 10760867697) y guardó ruta + token en siumax (al principio los puso en Evicamp por error: quedaron allí inofensivos, facturación apagada). "Probar conexión": "Conexión correcta con Nubefact". Series de la demo: **BBB1** (boletas y sus NC) y **FFF1** (facturas y sus NC); B001/F001 dan "Serie No puedes emitir comprobantes con esta serie".
 - **Fallo encontrado con el caso real:** al ANULAR una boleta que nunca fue aceptada (serie mala), `fn_anular_venta` creaba una nota de crédito que quedaba "Enviando…" para siempre.

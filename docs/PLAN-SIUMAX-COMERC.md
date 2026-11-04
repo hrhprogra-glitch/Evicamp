@@ -4,7 +4,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 03/11/2026 (80), Claude: **FASES 8, 9, 10 y 11 SUBIDAS A EVICAMP, clientes y GitHub** (facturación apagada en Evicamp; Evicamp NO paga: nunca Mercado Pago). Siguiente: buscador, filtros y paginación iguales a Inventario en todas las secciones (pedido del dueño).
+- **Última actualización:** 04/11/2026 (82), Claude: estilo oficial **"SiuMax Sobrio"** (modelo Inventario) ya en Inventario, Compras, Clientes, Conteos y **Finanzas + Ver historial** (solo siumax). Siguiente: Utilidades y Ajustes. Nada subido a Evicamp ni GitHub desde el pase (80).
+- (80) 03/11/2026, Claude: **FASES 8, 9, 10 y 11 SUBIDAS A EVICAMP, clientes y GitHub** (facturación apagada en Evicamp; Evicamp NO paga: nunca Mercado Pago). Siguiente: buscador, filtros y paginación iguales a Inventario en todas las secciones (pedido del dueño).
 - (79) Claude: el dueño está probando la Fase 11 en siumax y pidió ajustes, ya hechos: cambio y devolución con boleta/factura (nota de crédito + comprobante nuevo), la ventana "Comprobantes" se juntó con Finanzas (sin duplicados), colores y teclado del cobro, ticket sin repeticiones. Ver BITACORA (79).
 - (78) Claude: **FASE 11 (SUNAT) COMPLETA EN SIUMAX** (11.1 → 11.8, rama `fase-11-sunat`, último commit 1838ed2). Directo a SUNAT probado contra el ambiente de pruebas de SUNAT: boleta, factura y nota de crédito ACEPTADAS. Evicamp intacto; nada subido a GitHub.
 - **Siguiente:** el dueño revisa la Fase 11 en siumax. Pendientes del dueño: cuenta Nubefact (revendedor, varios RUC) y, para enviar directo en Real, usuario SOL secundario + certificado digital de cada negocio. Pasar a Evicamp (fases 8 a 11) SOLO cuando el dueño lo diga.
@@ -15,6 +16,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Estilo "SiuMax Sobrio" en todas las secciones** (cabecera, buscador, filtros, paginación, vacío y tabla como Inventario) | **Aprobado 04/11. ✅ Inventario, Compras, Clientes, Conteos, Finanzas y Ver historial en siumax. Falta: Utilidades y Ajustes; tablas dentro de ventanas (preguntar); pasar a Evicamp solo con aviso** |
 | **Nuevo aspecto de la Tienda Web** (PC y celular, libre del estilo de la caja) | **✅ Hecho y en siumax (02/11, commit c202ae8); falta revisión del dueño. siumax tiene 0 productos (pedir permiso para cargar de prueba)** |
 | **Fase 11 SUNAT: plan en 8 partes (11.1 servidor y datos → 11.8 directo a SUNAT)** | **Aprobado 02/11. ✅ 11.1 a 11.8 hechas y probadas en siumax (03/11, rama fase-11-sunat, 1838ed2). Directo a SUNAT aceptado por el ambiente de pruebas de SUNAT. Falta: revisión del dueño, probar Nubefact con cuenta real (el dueño ya tiene RUC 10, la pide), y pasar a Evicamp solo con su aviso** |
 | **Fase 9 (Varias tiendas o almacenes y traspasos)** | **✅ Hecho y probado en siumax (02/11); listo para revisión del dueño** |

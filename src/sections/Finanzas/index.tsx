@@ -2,7 +2,7 @@ import { coincideBusqueda } from '../../utils/busqueda';
 import { formatearCantidadDetalle } from '../../utils/formato';
 // src/sections/Finanzas/index.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { Wallet, ArrowDownToLine, Lock, CreditCard, Smartphone, Banknote, ReceiptText, Search, ArrowLeftRight, ShieldCheck, FileSpreadsheet, AlertTriangle } from 'lucide-react';
+import { Wallet, ArrowDownToLine, Lock, CreditCard, Smartphone, Banknote, ReceiptText, Search, ArrowLeftRight, ShieldCheck, FileSpreadsheet, AlertTriangle, Plus, X, FilterX } from 'lucide-react';
 import { ModalComprobantesProblema } from '../../components/ModalComprobantesProblema';
 import { ReporteContador } from '../../components/ReporteContador';
 import { cargarFacturacionCaja } from '../../utils/comprobante';
@@ -473,6 +473,11 @@ export const Finanzas: React.FC = () => {
     }
   };
 
+  const bajarATabla = () => {
+    const pag = document.getElementById('btn-pag-ant-mov-arriba');
+    if (pag) pag.focus(); else focusPrimerRegistro();
+  };
+
   const focusPrimerRegistro = () => {
     const visibleRows = Array.from(document.querySelectorAll('tr[data-row="true"][role="button"]'))
       .filter((el): el is HTMLElement => {
@@ -543,6 +548,9 @@ export const Finanzas: React.FC = () => {
             if (nextRow) {
               nextRow.focus();
               nextRow.scrollIntoView({ block: 'nearest' });
+            } else if (vistaActual === 'ACTUAL') {
+              const pagAbajo = document.getElementById('btn-pag-ant-mov');
+              if (pagAbajo) { pagAbajo.focus(); pagAbajo.scrollIntoView({ block: 'nearest' }); }
             } else if (vistaActual === 'HISTORIAL') {
               const btnAntBottom = document.getElementById('btn-historial-anterior-bottom');
               if (btnAntBottom) {
@@ -560,15 +568,23 @@ export const Finanzas: React.FC = () => {
             } else {
               // Fila 0: Subir a la interfaz superior
               if (vistaActual === 'ACTUAL') {
+                const pagArriba = document.getElementById('btn-pag-ant-mov-arriba');
                 const searchInput = document.getElementById('buscador-finanzas') as HTMLInputElement | null;
-                if (searchInput) {
+                if (pagArriba) {
+                  pagArriba.focus();
+                  pagArriba.scrollIntoView({ block: 'nearest' });
+                } else if (searchInput) {
                   searchInput.focus();
                   searchInput.select();
                   searchInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
               } else {
                 const buscadorHistorial = document.getElementById('buscador-historial-cajas') as HTMLInputElement | null;
-                if (buscadorHistorial) {
+                const pagHistArriba = document.getElementById('btn-historial-anterior');
+                if (pagHistArriba) {
+                  pagHistArriba.focus();
+                  pagHistArriba.scrollIntoView({ block: 'nearest' });
+                } else if (buscadorHistorial) {
                   buscadorHistorial.focus();
                   buscadorHistorial.select();
                   buscadorHistorial.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -752,19 +768,14 @@ export const Finanzas: React.FC = () => {
   return (
     <div className="flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono">
       
-      <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-end gap-4 shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] rounded-none shrink-0">
-            <Wallet size={24} className="text-[var(--color-accent)]" />
+      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-col 2xl:flex-row justify-between items-start 2xl:items-center gap-4 shrink-0">
+        <div className="flex items-center gap-3" title="Arqueo de Yape, efectivo y deudas en tiempo real">
+          <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] rounded-none shrink-0">
+            <Wallet size={20} className="text-[var(--color-accent)]" />
           </div>
-          <div>
-            <h1 className="text-xl sm:text-3xl font-black text-[var(--color-ink)] uppercase tracking-tighter">
-              Tesorería
-            </h1>
-            <p className="text-[var(--color-muted)] text-xs font-bold tracking-widest uppercase mt-1">
-              Arqueo de Yape, Efectivo y Deudas en tiempo real
-            </p>
-          </div>
+          <h1 className="text-xl lg:text-2xl font-black text-[var(--color-ink)] uppercase tracking-widest whitespace-nowrap">
+            Tesorería
+          </h1>
         </div>
 
         <div className="flex flex-wrap gap-3">
@@ -778,7 +789,7 @@ export const Finanzas: React.FC = () => {
                 else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); }
                 else if (e.key === 'ArrowDown') { e.preventDefault(); (document.getElementById('buscador-finanzas') || document.getElementById('btn-aperturar-caja'))?.focus(); }
               }}
-              className="flex-1 sm:flex-none justify-center bg-[var(--color-danger)] text-white px-4 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest shadow-[4px_4px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer flex items-center gap-2"
+              className="flex-1 sm:flex-none justify-center bg-[var(--color-danger)] text-white px-4 py-3 border border-[var(--color-danger)] font-black text-xs uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer flex items-center gap-2"
               title="Boletas, facturas o notas de crédito con error o rechazadas"
             >
               <AlertTriangle size={16} /> {cpeProblemas} con problema
@@ -795,7 +806,8 @@ export const Finanzas: React.FC = () => {
                 else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); }
                 else if (e.key === 'ArrowDown') { e.preventDefault(); (document.getElementById('buscador-finanzas') || document.getElementById('btn-aperturar-caja'))?.focus(); }
               }}
-              className="flex-1 sm:flex-none justify-center bg-[var(--color-bg)] text-[var(--color-ink)] px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest sm:tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer flex items-center gap-2"
+              style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+                  className="boton-cabecera flex-1 sm:flex-none justify-center bg-[var(--color-bg)] text-[var(--color-ink)] px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest sm:tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer flex items-center gap-2"
             >
               <FileSpreadsheet size={16} /> Reporte contador
             </button>
@@ -839,7 +851,8 @@ export const Finanzas: React.FC = () => {
                 }
               }
             }}
-            className="flex-1 sm:flex-none justify-center bg-[var(--color-bg)] text-[var(--color-ink)] px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest sm:tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer mr-2 flex items-center gap-2"
+            style={{ '--icono': 'var(--color-ink)' } as React.CSSProperties}
+                  className="boton-cabecera flex-1 sm:flex-none justify-center bg-[var(--color-bg)] text-[var(--color-ink)] px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest sm:tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer flex items-center gap-2"
           >
             <ReceiptText size={16} /> {vistaActual === 'ACTUAL' ? 'Ver Historial' : 'Volver a Caja'}
           </button>
@@ -862,9 +875,10 @@ export const Finanzas: React.FC = () => {
                     document.getElementById('btn-ver-historial')?.focus();
                   }
                 }}
-                className="flex-1 sm:flex-none bg-[var(--color-accent)] text-white px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
+                style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+                  className="boton-cabecera flex-1 sm:flex-none bg-[var(--color-accent)] text-white px-4 sm:px-6 py-3 flex items-center justify-center gap-2 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-[0.2em] shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
               >
-                Aperturar Caja
+                <Plus size={16} /> Aperturar caja
               </button>)
             ) : (
               <>
@@ -889,9 +903,10 @@ export const Finanzas: React.FC = () => {
                       else document.getElementById('buscador-finanzas')?.focus();
                     }
                   }}
-                  className="flex-1 sm:flex-none justify-center bg-white text-[var(--color-ink)] px-4 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
+                  style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+                  className="boton-cabecera flex-1 sm:flex-none justify-center bg-white text-[var(--color-ink)] px-4 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
                 >
-                  + Nuevo Movimiento
+                  <Plus size={16} /> Nuevo movimiento
                 </button>
                 )}
 
@@ -914,7 +929,8 @@ export const Finanzas: React.FC = () => {
                       document.getElementById('buscador-finanzas')?.focus();
                     }
                   }}
-                  className="flex-1 sm:flex-none justify-center bg-white text-emerald-800 border-2 border-[var(--color-ink)] px-3.5 py-3 font-black text-xs uppercase tracking-widest flex items-center gap-1.5 shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
+                  style={{ '--icono': '#059669' } as React.CSSProperties}
+                  className="boton-cabecera flex-1 sm:flex-none justify-center bg-white text-emerald-800 border-2 border-[var(--color-ink)] px-3.5 py-3 font-black text-xs uppercase tracking-widest flex items-center gap-1.5 shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
                   title="Consultar vigencia de garantía y serie/IMEI"
                 >
                   <ShieldCheck size={15} /> Garantías
@@ -942,7 +958,8 @@ export const Finanzas: React.FC = () => {
                       else document.getElementById('buscador-finanzas')?.focus();
                     }
                   }}
-                  className="flex-1 sm:flex-none justify-center bg-[var(--color-danger)] text-white px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-[0.2em] flex items-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
+                  style={{ '--icono': 'var(--color-danger)' } as React.CSSProperties}
+                  className="boton-cabecera flex-1 sm:flex-none justify-center bg-[var(--color-danger)] text-white px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-[0.2em] flex items-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
                 >
                   <Lock size={16} /> Cerrar Caja
                 </button>
@@ -954,9 +971,9 @@ export const Finanzas: React.FC = () => {
       </div>
 
       {vistaActual === 'HISTORIAL' ? (
-        <div className="flex flex-col h-full min-h-0">
-          <FiltroFechas onFilter={handleFilterChange} />
+        <div className="flex flex-col px-2 sm:px-3">
           <TablaHistorial 
+            filtros={(limpiarBusqueda) => <FiltroFechas onFilter={handleFilterChange} onLimpiar={limpiarBusqueda} />}
             historialCajas={historialCajas} 
             paginaActual={paginaActual}
             totalPaginas={totalPaginas}
@@ -974,18 +991,18 @@ export const Finanzas: React.FC = () => {
           />
         </div>
       ) : sessionActiva && superMetricas ? (
-        <div className="flex flex-col gap-4 sm:gap-6 pb-8 lg:pr-2">
+        <div className="flex flex-col gap-4 sm:gap-6 pb-8 px-2 sm:px-3">
 
           {veMontos ? (
           <div className="flex flex-col xl:flex-row gap-4 sm:gap-6 shrink-0">
 
             {/* PANEL MAESTRO DE RECAUDACIÓN (ESTILO EVICAMP) */}
 
-            <div className="xl:w-[25%] flex flex-col justify-center items-center bg-[var(--color-ink)] border border-[var(--color-ink)] rounded-none p-4 sm:p-6 text-center shadow-none">
+            <div className="tarjeta-sobria xl:w-[25%] flex flex-col justify-center items-center bg-[var(--color-surface)] rounded-none p-4 sm:p-6 text-center">
 
               <span className="text-[var(--color-muted)] text-xs sm:text-[10px] 2xl:text-xs uppercase tracking-widest font-bold">Gran Total de ESTA Caja</span>
 
-              <h1 className="text-white text-3xl sm:text-4xl 2xl:text-5xl font-mono font-black mt-2">
+              <h1 className="text-[var(--color-ink)] text-3xl sm:text-4xl 2xl:text-5xl font-mono font-black mt-2">
 
                 S/ {(superMetricas.efectivoEsperadoCaja + superMetricas.yapeEsperado + superMetricas.tarjetaEsperada).toFixed(2)}
 
@@ -999,7 +1016,7 @@ export const Finanzas: React.FC = () => {
             {/* SÚPER PANEL DE MÉTRICAS */}
 
             <div className="xl:w-[75%] grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <div className="bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-4 flex flex-col justify-between transition-transform hover:-translate-y-1">
+            <div className="tarjeta-sobria bg-white p-4 flex flex-col justify-between">
                <p className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest flex items-center gap-2">
                  <span className="w-6 h-6 flex items-center justify-center bg-[var(--color-bg)] border-2 border-[var(--color-ink)]"><Banknote size={12} className="text-[var(--color-ink)]"/></span> 
                  Efectivo Esperado
@@ -1008,7 +1025,7 @@ export const Finanzas: React.FC = () => {
                <p className="text-[11px] font-bold text-[var(--color-muted)] uppercase mt-2 border-t border-[var(--color-border)] pt-2">(Fondo + Ventas Físicas + Cobros - Gastos)</p>
             </div>
             
-            <div className="bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-4 transition-transform hover:-translate-y-1">
+            <div className="tarjeta-sobria bg-white p-4">
                <p className="text-[12px] font-black text-[var(--color-info)] uppercase tracking-widest flex items-center gap-2">
                  <span className="w-6 h-6 flex items-center justify-center bg-blue-50 border-2 border-[var(--color-info)]"><Smartphone size={12} className="text-[var(--color-info)]"/></span> 
                  Yape / Transf
@@ -1022,7 +1039,7 @@ export const Finanzas: React.FC = () => {
                </div>
             </div>
 
-            <div className="bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-4 transition-transform hover:-translate-y-1">
+            <div className="tarjeta-sobria bg-white p-4">
                <p className="text-[12px] font-black text-[var(--color-purple)] uppercase tracking-widest flex items-center gap-2">
                  <span className="w-6 h-6 flex items-center justify-center bg-purple-50 border-2 border-[var(--color-purple)]"><CreditCard size={12} className="text-[var(--color-purple)]"/></span> 
                  Pagos Tarjeta
@@ -1036,7 +1053,7 @@ export const Finanzas: React.FC = () => {
                </div>
             </div>
 
-            <div className="bg-[var(--color-danger-bg)] border-2 border-[var(--color-danger)] shadow-[4px_4px_0_0_var(--color-danger)] p-4 transition-transform hover:-translate-y-1">
+            <div className="tarjeta-sobria bg-white p-4">
                <p className="text-[12px] font-black text-[var(--color-danger)] uppercase tracking-widest flex items-center gap-2">
                  <span className="w-6 h-6 flex items-center justify-center bg-white border-2 border-[var(--color-danger)]"><ArrowDownToLine size={12} className="text-[var(--color-danger)]"/></span> 
                  Gastos y Retiros
@@ -1048,7 +1065,7 @@ export const Finanzas: React.FC = () => {
                </div>
           ) : (
             // Cierre a ciegas: el cajero no ve cuánto debería haber; lo cuenta al cerrar y recién ahí ve la diferencia
-            <div className="bg-[var(--color-bg)] border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-4 flex items-center gap-3 shrink-0">
+            <div className="tarjeta-sobria bg-[var(--color-surface)] p-4 flex items-center gap-3 shrink-0">
               <Lock size={18} className="text-[var(--color-ink)] shrink-0" />
               <p className="text-xs font-black uppercase tracking-widest text-[var(--color-ink)]">
                 Turno abierto · Los totales de caja los ve el administrador. Al cerrar, cuenta el dinero y el sistema te dirá si cuadra.
@@ -1056,13 +1073,11 @@ export const Finanzas: React.FC = () => {
             </div>
           )}
 
-          <div className="tabla-marco flex flex-col">
-             
-             <div className="p-3 sm:p-4 bg-[var(--color-bg)] border-b border-[var(--color-border)] flex flex-col sm:flex-row gap-3">
-               <div className="relative flex-1">
-                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none bg-[var(--color-ink)] text-white w-10 justify-center">
-                   <Search size={16} />
-                 </div>
+          <div className="flex flex-col gap-4 sm:gap-6">
+             {/* BUSCADOR Y FILTROS (fuera del marco de la tabla, como Inventario) */}
+             <div className="flex flex-col xl:flex-row gap-3 sm:gap-4 shrink-0 items-stretch xl:items-center justify-between">
+               <div className="buscador-sobrio w-full xl:flex-1 shrink-0">
+                 <div className="buscador-sobrio__icono"><Search size={18} /></div>
                 <input
                   id="buscador-finanzas"
                   type="text"
@@ -1073,7 +1088,7 @@ export const Finanzas: React.FC = () => {
                     if (e.key === 'ArrowDown') {
                       e.preventDefault();
                       e.stopPropagation();
-                      focusPrimerRegistro();
+                      bajarATabla();
                     } else if (e.key === 'ArrowUp') {
                       e.preventDefault();
                       e.stopPropagation();
@@ -1090,9 +1105,16 @@ export const Finanzas: React.FC = () => {
                       setSearchTerm('');
                     }
                   }}
-                  className="w-full pl-12 pr-3 py-2.5 text-xs font-bold uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+                  style={{ paddingRight: searchTerm ? '3.5rem' : undefined }}
                 />
+                {searchTerm && (
+                  <div className="buscador-sobrio__match">
+                    <button type="button" tabIndex={-1} title="Borrar búsqueda" className="buscador-sobrio__borrar"
+                      onClick={() => { setSearchTerm(''); document.getElementById('buscador-finanzas')?.focus(); }}><X size={14} /></button>
+                  </div>
+                )}
                </div>
+               <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full xl:w-auto">
                <select
                  id="filtro-categoria-finanzas"
                  value={filtroCategoria}
@@ -1105,7 +1127,7 @@ export const Finanzas: React.FC = () => {
                    } else if (e.key === 'ArrowDown') {
                      e.preventDefault();
                      e.stopPropagation();
-                     focusPrimerRegistro();
+                     bajarATabla();
                    } else if (e.key === 'ArrowLeft') {
                      e.preventDefault();
                      e.stopPropagation();
@@ -1116,7 +1138,7 @@ export const Finanzas: React.FC = () => {
                      document.getElementById('filtro-estado-finanzas')?.focus();
                    }
                  }}
-                 className="px-3 py-2.5 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer bg-white min-w-[140px]"
+                 className="filtro-sobrio w-full sm:w-auto"
                >
                  <option value="TODOS">Tipo: TODOS</option>
                  <option value="VENTA">Solo Ventas</option>
@@ -1137,7 +1159,7 @@ export const Finanzas: React.FC = () => {
                    } else if (e.key === 'ArrowDown') {
                      e.preventDefault();
                      e.stopPropagation();
-                     focusPrimerRegistro();
+                     bajarATabla();
                    } else if (e.key === 'ArrowLeft') {
                      e.preventDefault();
                      e.stopPropagation();
@@ -1148,7 +1170,7 @@ export const Finanzas: React.FC = () => {
                      document.getElementById('filtro-deuda-finanzas')?.focus();
                    }
                  }}
-                 className="px-3 py-2.5 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer bg-white min-w-[140px]"
+                 className="filtro-sobrio w-full sm:w-auto"
                >
                  <option value="TODOS">Estado: TODOS</option>
                  <option value="COMPLETADO">COMPLETADOS</option>
@@ -1168,25 +1190,42 @@ export const Finanzas: React.FC = () => {
                    } else if (e.key === 'ArrowDown') {
                      e.preventDefault();
                      e.stopPropagation();
-                     focusPrimerRegistro();
+                     bajarATabla();
                    } else if (e.key === 'ArrowLeft') {
                      e.preventDefault();
                      e.stopPropagation();
                      document.getElementById('filtro-estado-finanzas')?.focus();
+                   } else if (e.key === 'ArrowRight') {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     document.getElementById('btn-limpiar-filtros-finanzas')?.focus();
                    }
                  }}
-                 className="px-3 py-2.5 text-xs font-black uppercase tracking-widest border-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer bg-white min-w-[140px]"
+                 className="filtro-sobrio w-full sm:w-auto"
                >
                  <option value="TODOS">Deuda: TODAS</option>
                  <option value="CON_DEUDA">CON DEUDA</option>
                  <option value="SIN_DEUDA">SIN DEUDA</option>
                </select>
+               <button id="btn-limpiar-filtros-finanzas" type="button" title="Limpiar todos los filtros" className="limpiar-sobrio"
+                 onClick={() => { setSearchTerm(''); setFiltroCategoria('TODOS'); setFiltroEstado('TODOS'); setFiltroDeuda('TODOS'); document.getElementById('buscador-finanzas')?.focus(); }}
+                 onKeyDown={(e) => {
+                   if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById('filtro-deuda-finanzas')?.focus(); }
+                   else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); bajarATabla(); }
+                   else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); (document.getElementById('btn-cerrar-caja') || document.getElementById('btn-ver-historial'))?.focus(); }
+                   else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); }
+                 }}>
+                 <FilterX size={16} />
+               </button>
+               </div>
              </div>
+
              
              {!veVentasTurno && (
                <p className="p-3 text-xs font-black uppercase tracking-widest text-[var(--color-muted)] border-b border-[var(--color-border)]">🔒 Tu cuenta no tiene permiso para ver las ventas del turno.</p>
              )}
              {/* TABLA FILTRADA CON FUNCIÓN ONDELTE */}
+             <div className="tabla-marco flex flex-col">
              <TablaMovimientos 
                movimientos={(veVentasTurno ? movimientos : []).filter(m => {
                   // SEARCH
@@ -1226,12 +1265,13 @@ export const Finanzas: React.FC = () => {
                }}
                idsAnulando={idsAnulando}
              />
+             </div>
           </div>
         </div>
       ) : (
-        <div className="flex-1 border-4 border-dashed border-[var(--color-border)] flex flex-col items-center justify-center p-6">
-           <Wallet size={64} className="text-[var(--color-line-light)] mb-4" />
-           <h2 className="text-[var(--color-ink)] font-black text-xl uppercase tracking-widest mb-2">Caja Cerrada</h2>
+        <div className="vacio-sobrio mx-2 sm:mx-3 tabla-marco">
+           <Wallet size={64} />
+           <h2 className="text-[var(--color-ink)] font-black text-sm uppercase tracking-widest">Caja cerrada</h2>
         </div>
       )}
 

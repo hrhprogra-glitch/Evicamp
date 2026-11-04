@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowDownToLine, ArrowUpFromLine, Trash2, Eye, RotateCcw, Receipt, ArrowLeftRight } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, Trash2, Eye, RotateCcw, Receipt, ArrowLeftRight, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import type { UnifiedItem } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { usePermiso, avisar, avisarSinPermiso } from '../../../utils/permisos';
@@ -16,9 +16,43 @@ interface Props {
 
 export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVerTicket, onAnularTicket, onCambiarProducto, idsAnulando }) => {
   const esAdmin = usePermiso('sistema_acceso_total');
+  // Paginación como Inventario (25 por página); vuelve a la 1 si cambia la lista (filtros)
+  const POR_PAGINA = 25;
+  const [pagina, setPagina] = useState(1);
+  const totalPaginas = Math.max(1, Math.ceil(movimientos.length / POR_PAGINA));
+  const paginaReal = Math.min(pagina, totalPaginas);
+  React.useEffect(() => { setPagina(1); }, [movimientos.length]);
+  const visibles = movimientos.slice((paginaReal - 1) * POR_PAGINA, paginaReal * POR_PAGINA);
+  const filasDom = () => Array.from(document.querySelectorAll<HTMLElement>('#tabla-movimientos-caja tbody tr[data-row="true"]'));
+  const paginacion = (pos: 'arriba' | 'abajo') => {
+    if (!movimientos.length) return null;
+    const ant = pos === 'arriba' ? 'btn-pag-ant-mov-arriba' : 'btn-pag-ant-mov';
+    const sig = pos === 'arriba' ? 'btn-pag-sig-mov-arriba' : 'btn-pag-sig-mov';
+    const teclas = (soy: 'ant' | 'sig') => (e: React.KeyboardEvent<HTMLButtonElement>) => {
+      const acc: Record<string, () => void> = {
+        ArrowLeft: () => { if (soy === 'sig') document.getElementById(ant)?.focus(); },
+        ArrowRight: () => { if (soy === 'ant') document.getElementById(sig)?.focus(); },
+        ArrowUp: () => { if (pos === 'arriba') document.getElementById('buscador-finanzas')?.focus(); else { const l = filasDom(); l[l.length - 1]?.focus(); } },
+        ArrowDown: () => { if (pos === 'arriba') filasDom()[0]?.focus(); },
+      };
+      if (acc[e.key]) { e.preventDefault(); e.stopPropagation(); acc[e.key](); }
+    };
+    return (
+      <div className={`paginacion-sobria ${pos === 'arriba' ? 'border-b' : 'border-t'} shrink-0`}>
+        <span className="paginacion-sobria__texto">Página {paginaReal} de {totalPaginas}</span>
+        <div className="flex gap-2">
+          <button id={ant} type="button" title="Página anterior" aria-disabled={paginaReal <= 1} className="paginacion-sobria__boton"
+            onClick={() => paginaReal > 1 && setPagina(paginaReal - 1)} onKeyDown={teclas('ant')}><ChevronLeft size={16} /></button>
+          <button id={sig} type="button" title="Página siguiente" aria-disabled={paginaReal >= totalPaginas} className="paginacion-sobria__boton"
+            onClick={() => paginaReal < totalPaginas && setPagina(paginaReal + 1)} onKeyDown={teclas('sig')}><ChevronRight size={16} /></button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="w-full bg-white flex flex-col font-mono">
+      {paginacion('arriba')}
       <div className="overflow-x-auto w-full custom-scrollbar">
         <table id="tabla-movimientos-caja" className="w-full text-left border-collapse min-w-full">
           <thead className="tabla-cabecera sticky top-0 z-10">
@@ -36,12 +70,12 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
           <tbody>
             {movimientos.length === 0 ? (
               <tr>
-                <td colSpan={8} className="p-3 lg:p-4 text-center text-[var(--color-muted)] font-bold text-xs uppercase bg-[var(--color-surface)]">
-                  No hay datos registrados.
+                <td colSpan={8}>
+                  <div className="vacio-sobrio"><Search size={32} />No se registran movimientos con esos parámetros.</div>
                 </td>
               </tr>
             ) : (
-              movimientos.map((item) => (
+              visibles.map((item) => (
                 <tr 
                   key={item.id} 
                   data-row="true"
@@ -219,6 +253,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
           </tbody>
         </table>
       </div>
+      {paginacion('abajo')}
     </div>
   );
 };
