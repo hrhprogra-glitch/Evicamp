@@ -7,6 +7,19 @@
 
 ---
 
+## 04/11/2026 (84) · Antigravity — Estilo oficial "SiuMax Sobrio" aplicado en Utilidades (solo siumax)
+- **Utilidades (Inteligencia de Negocio):** adaptado idéntico al modelo de Inventario > Productos.
+  1. **Cabecera sobria:** ícono verde de acento con borde fino y sombra fija, título `INTELIGENCIA DE NEGOCIO`, y botón fantasma `boton-cabecera` `[ Top 5 Rentables ]` con ícono `TrendingUp`.
+  2. **Tarjetas de resumen:** cambiadas a `tarjeta-sobria` (borde fino 1px, fondo limpio, sin sombras pesadas ni saltos hover).
+  3. **Buscador y filtros:** colocados FUERA del marco de la tabla (`buscador-sobrio` con coincidencia "N MATCH" y tecla Escape para limpiar; selects de Categoría y Rotación con `filtro-sobrio`; fechas Desde y Hasta nativas que abren calendario con Enter; botón de limpiar con `limpiar-sobrio` e ícono `FilterX`).
+  4. **Tabla de rentabilidad y paginación:** envuelta en `tabla-marco`, thead `tabla-cabecera`, filas `tabla-fila` con cursor pointer y Enter para ver detalle del producto. Paginación superior e inferior con `paginacion-sobria` (oculta si no hay registros); estado `vacio-sobrio` con lupa gris si no hay filas.
+  5. **Teclado 100% probado:** recorrido fluido (cabecera → buscador → filtros → limpiar → paginación superior → filas → paginación inferior).
+  6. **Prueba automatizada** `ai-scripts/pruebas/estilo/ver-utilidades.mjs` ejecutada en Edge / Puppeteer contra `https://siumax.duckdns.org` con 0 errores JS y captura guardada (`utilidades_sobrio.png`).
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+- **Siguiente paso:** Ajustes / Configuraciones (`src/sections/Configuraciones/`) o Proveedores (`src/sections/Proveedores/`).
+
+---
+
 ## 04/11/2026 (83) · Claude — ENTREGA A ANTIGRAVITY: cómo seguir con el estilo "SiuMax Sobrio"
 El dueño pidió: *"guarda todo para que Antigravity continúe con tu trabajo"*. Todo está guardado en la rama
 `fase-11-sunat` (sin push) y en siumax.

@@ -21,8 +21,8 @@ export const TarjetasResumen: React.FC<Props> = ({ ingresos, costos, mermas, gas
         </div>
       )}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-        {/* 1. Ingreso Total (Green) */}
-        <div className="bg-white border-2 border-[var(--color-accent)] p-3 sm:p-5 flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center min-w-0 rounded-none shadow-[4px_4px_0_0_var(--color-accent)] transition-transform hover:-translate-y-1">
+        {/* 1. Ingreso Total Bruto (Green) */}
+        <div className="tarjeta-sobria bg-[var(--color-surface)] p-3 sm:p-5 flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center min-w-0 rounded-none">
           <div className="w-10 h-10 bg-[var(--color-accent-bg)] border border-[var(--color-accent)] flex items-center justify-center text-[var(--color-accent)] rounded-none shrink-0">
             <ArrowUpFromLine size={20} strokeWidth={2.5} />
           </div>
@@ -32,8 +32,9 @@ export const TarjetasResumen: React.FC<Props> = ({ ingresos, costos, mermas, gas
           </div>
         </div>
 
-        <div className="bg-white border-2 border-[var(--color-ink)] p-3 sm:p-5 flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center min-w-0 rounded-none shadow-[4px_4px_0_0_var(--color-ink)] transition-transform hover:-translate-y-1">
-          <div className="w-10 h-10 bg-slate-50 border border-[var(--color-ink)] flex items-center justify-center text-[var(--color-ink)] rounded-none shrink-0">
+        {/* 2. Inversión (Costo) */}
+        <div className="tarjeta-sobria bg-[var(--color-surface)] p-3 sm:p-5 flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center min-w-0 rounded-none">
+          <div className="w-10 h-10 bg-[var(--color-bg-2)] border border-[var(--color-border)] flex items-center justify-center text-[var(--color-ink)] rounded-none shrink-0">
             <ArrowDownToLine size={20} strokeWidth={2.5} />
           </div>
           <div className="min-w-0">
@@ -42,7 +43,8 @@ export const TarjetasResumen: React.FC<Props> = ({ ingresos, costos, mermas, gas
           </div>
         </div>
 
-        <div className="bg-white border-2 border-[var(--color-danger)] p-3 sm:p-5 flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center min-w-0 rounded-none shadow-[4px_4px_0_0_var(--color-danger)] transition-transform hover:-translate-y-1">
+        {/* 3. Pérdida Mermas (Danger/Red) */}
+        <div className="tarjeta-sobria bg-[var(--color-surface)] p-3 sm:p-5 flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center min-w-0 rounded-none">
           <div className="w-10 h-10 bg-[var(--color-danger-bg)] border border-[var(--color-danger)] flex items-center justify-center text-[var(--color-danger)] rounded-none shrink-0">
             <Activity size={20} strokeWidth={2.5} />
           </div>
@@ -53,8 +55,8 @@ export const TarjetasResumen: React.FC<Props> = ({ ingresos, costos, mermas, gas
         </div>
 
         {/* 4. Gastos Operativos (Orange) */}
-        <div className="bg-white border-2 border-orange-500 p-3 sm:p-5 flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center min-w-0 rounded-none shadow-[4px_4px_0_0_#f97316] transition-transform hover:-translate-y-1">
-          <div className="w-10 h-10 bg-orange-50 border border-orange-500 flex items-center justify-center text-orange-500 rounded-none shrink-0">
+        <div className="tarjeta-sobria bg-[var(--color-surface)] p-3 sm:p-5 flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center min-w-0 rounded-none">
+          <div className="w-10 h-10 bg-orange-50 dark:bg-orange-950/30 border border-orange-500 flex items-center justify-center text-orange-500 rounded-none shrink-0">
             <Wallet size={20} strokeWidth={2.5} />
           </div>
           <div className="min-w-0">
@@ -63,8 +65,8 @@ export const TarjetasResumen: React.FC<Props> = ({ ingresos, costos, mermas, gas
           </div>
         </div>
 
-        {/* 5. Utilidad Neta (Dark Green) */}
-        <div className="bg-white border-2 border-[var(--color-accent-shadow)] p-3 sm:p-5 flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center min-w-0 rounded-none shadow-[4px_4px_0_0_var(--color-accent-shadow)] transition-transform hover:-translate-y-1 hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] col-span-2 lg:col-span-1 cursor-default">
+        {/* 5. Utilidad Neta (Green shadow) */}
+        <div className="tarjeta-sobria bg-[var(--color-surface)] p-3 sm:p-5 flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center min-w-0 rounded-none col-span-2 lg:col-span-1">
           <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[var(--color-accent-bg)] border border-[var(--color-accent-shadow)] flex items-center justify-center text-[var(--color-accent-shadow)] rounded-none shrink-0">
             <DollarSign size={24} strokeWidth={3} />
           </div>

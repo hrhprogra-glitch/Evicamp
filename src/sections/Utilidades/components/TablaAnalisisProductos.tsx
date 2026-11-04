@@ -1,6 +1,6 @@
 // src/sections/Utilidades/components/TablaAnalisisProductos.tsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, Filter, TrendingDown, TrendingUp, RotateCcw, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+import { Search, X, FilterX, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { AnalisisProducto, StatsFiltro } from '../types';
 import { ModalDetalleProducto } from './ModalDetalleProducto';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
@@ -260,11 +260,12 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
   }, [productoSeleccionado, datosPaginados]);
 
   const focusPaginacionUtilidades = () => {
+    if (datosFiltrados.length === 0) return;
     const btnPrev = document.getElementById('btn-pag-prev-utilidades');
     const btnNext = document.getElementById('btn-pag-next-utilidades');
     if (btnPrev && btnPrev.getAttribute('aria-disabled') !== 'true') {
       btnPrev.focus();
-    } else if (btnNext) {
+    } else if (btnNext && btnNext.getAttribute('aria-disabled') !== 'true') {
       btnNext.focus();
     } else if (btnPrev) {
       btnPrev.focus();
@@ -273,52 +274,131 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
     }
   };
 
+  const paginacion = (pos: 'top' | 'bottom') => {
+    const isTop = pos === 'top';
+    const idPrev = isTop ? 'btn-pag-prev-utilidades' : 'btn-pag-bottom-prev-utilidades';
+    const idNext = isTop ? 'btn-pag-next-utilidades' : 'btn-pag-bottom-next-utilidades';
+
+    const teclas = (soy: 'ant' | 'sig') => (e: React.KeyboardEvent<HTMLButtonElement>) => {
+      const acc: Record<string, () => void> = {
+        ArrowLeft: () => {
+          if (soy === 'sig') document.getElementById(idPrev)?.focus();
+          else if (isTop) document.getElementById('btn-limpiar-filtros-utilidades')?.focus();
+        },
+        ArrowRight: () => {
+          if (soy === 'ant') document.getElementById(idNext)?.focus();
+        },
+        ArrowUp: () => {
+          if (isTop) {
+            searchInputRef.current?.focus();
+          } else {
+            const rows = Array.from(document.querySelectorAll('#tabla-analisis-productos tr[data-row="true"]')) as HTMLElement[];
+            if (rows.length > 0) rows[rows.length - 1].focus();
+          }
+        },
+        ArrowDown: () => {
+          if (isTop) {
+            focusPrimerRegistro();
+          }
+        },
+        Enter: () => {
+          if (soy === 'ant' && paginaActual > 1) setPaginaActual(p => Math.max(1, p - 1));
+          if (soy === 'sig' && paginaActual < totalPaginas) setPaginaActual(p => Math.min(totalPaginas, p + 1));
+        },
+      };
+      acc[' '] = acc.Enter;
+      if (acc[e.key]) { e.preventDefault(); e.stopPropagation(); acc[e.key](); }
+    };
+
+    return (
+      <div className={`paginacion-sobria ${isTop ? 'border-b' : 'border-t'} shrink-0`}>
+        <span className="paginacion-sobria__texto">Página {paginaActual} de {totalPaginas}</span>
+        <div className="flex gap-2">
+          <button
+            id={idPrev}
+            type="button"
+            title="Página anterior"
+            aria-disabled={paginaActual <= 1}
+            className="paginacion-sobria__boton"
+            onClick={() => { if (paginaActual > 1) setPaginaActual(p => Math.max(1, p - 1)); }}
+            onKeyDown={teclas('ant')}
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button
+            id={idNext}
+            type="button"
+            title="Página siguiente"
+            aria-disabled={paginaActual >= totalPaginas}
+            className="paginacion-sobria__boton"
+            onClick={() => { if (paginaActual < totalPaginas) setPaginaActual(p => Math.min(totalPaginas, p + 1)); }}
+            onKeyDown={teclas('sig')}
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="tabla-marco flex flex-col mt-4 font-mono">
+    <div className="flex flex-col gap-4 sm:gap-6 font-mono">
 
-      {/* HEADER Y FILTROS */}
-      <div className="p-4 bg-[var(--color-surface)] border-b border-[var(--color-border)] flex flex-wrap gap-4 items-center justify-between shrink-0">
-        <h2 className="text-[var(--color-ink)] font-black uppercase tracking-widest flex items-center gap-3 text-sm">
-          <Filter size={18} className="text-[var(--color-accent-shadow)]" strokeWidth={2.5} />
-          RENTABILIDAD DETALLADA DE PRODUCTOS
-        </h2>
-
-        <div className="flex flex-wrap gap-3 w-full lg:w-auto">
-          <div className="flex bg-[var(--color-surface)] border border-[var(--color-border)] rounded-none focus-within:border-[var(--color-accent-shadow)] flex-1 lg:w-64 transition-all">
-            <div className="p-2 flex items-center justify-center text-[var(--color-ink)] bg-[var(--color-bg)] border-r border-[var(--color-border)]">
-              <Search size={16} strokeWidth={2}/>
+      {/* BUSCADOR Y FILTROS FUERA DEL MARCO DE LA TABLA (COMO INVENTARIO, CONTEOS Y FINANZAS) */}
+      <div className="flex flex-col xl:flex-row gap-3 sm:gap-4 shrink-0 items-stretch xl:items-center justify-between">
+        <div className="buscador-sobrio w-full xl:flex-1 shrink-0">
+          <div className="buscador-sobrio__icono"><Search size={18} /></div>
+          <input 
+            id="buscador-global-utilidades"
+            ref={searchInputRef}
+            autoComplete="off" 
+            type="text" 
+            placeholder="BUSCAR PRODUCTO POR NOMBRE, CATEGORÍA O ROTACIÓN..."
+            value={busqueda} 
+            onChange={(e) => setBusqueda(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                setBusqueda('');
+                return;
+              }
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-tops-utilidades')?.focus();
+                return;
+              }
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                focusPaginacionUtilidades();
+                return;
+              }
+              if (e.key === 'ArrowRight' && e.currentTarget.selectionStart === e.currentTarget.value.length) {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('filtro-categoria-utilidades')?.focus();
+              }
+            }}
+            style={{ paddingRight: busqueda ? '8rem' : undefined }}
+          />
+          {busqueda && (
+            <div className="buscador-sobrio__match">
+              <span className="buscador-sobrio__conteo">{datosFiltrados.length} MATCH</span>
+              <button 
+                type="button" 
+                tabIndex={-1} 
+                title="Borrar búsqueda" 
+                className="buscador-sobrio__borrar"
+                onClick={() => { setBusqueda(''); searchInputRef.current?.focus(); }}
+              >
+                <X size={14} />
+              </button>
             </div>
-            <input 
-              id="buscador-global-utilidades"
-              ref={searchInputRef}
-              autoComplete="off" 
-              type="text" 
-              placeholder="BUSCAR PRODUCTO..."
-              value={busqueda} 
-              onChange={(e) => setBusqueda(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'ArrowDown') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  focusPaginacionUtilidades();
-                } else if (e.key === 'ArrowUp') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                } else if (e.key === 'ArrowRight') {
-                  const input = e.currentTarget;
-                  if (input.selectionStart === input.value.length) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    document.getElementById('filtro-categoria-utilidades')?.focus();
-                  }
-                } else if (e.key === 'Escape') {
-                  e.preventDefault();
-                  setBusqueda('');
-                }
-              }}
-              className="w-full text-xs font-black text-[var(--color-ink)] outline-none p-2 bg-transparent uppercase placeholder:text-[var(--color-subtle)] focus:ring-2 focus:ring-[var(--color-accent-shadow)]"
-            />
-          </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full xl:w-auto">
           <select
             id="filtro-categoria-utilidades"
             value={filtroCat} 
@@ -327,6 +407,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
+                document.getElementById('btn-tops-utilidades')?.focus();
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -341,11 +422,12 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                 document.getElementById('filtro-rotacion-utilidades')?.focus();
               }
             }}
-            className="bg-[var(--color-surface)] text-xs font-black text-[var(--color-ink)] outline-none p-2 border border-[var(--color-border)] rounded-none focus:border-[var(--color-accent-shadow)] focus:ring-2 focus:ring-[var(--color-accent-shadow)] cursor-pointer transition-all uppercase"
+            className="filtro-sobrio w-full sm:w-auto"
           >
             <option value="TODAS">CATEGORÍA: TODAS</option>
             {categoriasUnicas.map(cat => <option key={cat} value={cat}>{cat}</option>)}
           </select>
+
           <select
             id="filtro-rotacion-utilidades"
             value={filtroEstado} 
@@ -354,6 +436,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
+                document.getElementById('btn-tops-utilidades')?.focus();
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -368,7 +451,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                 document.getElementById('filtro-fecha-desde-utilidades')?.focus();
               }
             }}
-            className="bg-[var(--color-surface)] text-xs font-black text-[var(--color-ink)] outline-none p-2 border border-[var(--color-border)] rounded-none focus:border-[var(--color-accent-shadow)] focus:ring-2 focus:ring-[var(--color-accent-shadow)] cursor-pointer transition-all uppercase"
+            className="filtro-sobrio w-full sm:w-auto"
           >
             <option value="TODOS">ROTACIÓN: TODAS</option>
             <option value="BUENO">VENTA: BUENO</option>
@@ -377,133 +460,109 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
             <option value="SIN VENTAS">SIN VENTAS</option>
           </select>
 
-          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:flex sm:flex-wrap items-center gap-2 bg-[var(--color-surface)] border border-[var(--color-border)] p-1.5 rounded-none w-full sm:w-auto min-w-0">
-            <div className="flex flex-col px-1.5 min-w-0">
-              <label className="text-[11px] font-black text-[var(--color-muted)] uppercase tracking-wider">Desde</label>
-              <div className="flex items-center gap-1.5">
-                <CalendarDays size={12} className="text-[var(--color-ink)] shrink-0" />
-                <input 
-                  id="filtro-fecha-desde-utilidades"
-                  autoComplete="off" 
-                  type="date" 
-                  value={localInicio} 
-                  onChange={(e) => {
-                    lastDateChangeRef.current = Date.now();
-                    setLocalInicio(e.target.value);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'ArrowUp') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    } else if (e.key === 'ArrowDown') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      focusPaginacionUtilidades();
-                    } else if (e.key === 'ArrowLeft') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      document.getElementById('filtro-rotacion-utilidades')?.focus();
-                    } else if (e.key === 'ArrowRight') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      document.getElementById('filtro-fecha-hasta-utilidades')?.focus();
-                    } else if (e.key === 'Enter' || e.key === ' ') {
-                      if (Date.now() - lastDateChangeRef.current < 500) {
-                        e.preventDefault();
-                        return;
-                      }
-                      if ('showPicker' in e.currentTarget) {
-                        try {
-                          (e.currentTarget as any).showPicker();
-                        } catch {}
-                      }
-                    }
-                  }}
-                  className="w-full min-w-0 text-[13px] font-black text-[var(--color-ink)] outline-none bg-transparent cursor-pointer focus:ring-2 focus:ring-[var(--color-accent-shadow)]" 
-                />
-              </div>
-            </div>
-            <div className="hidden sm:block w-[1px] h-7 bg-[var(--color-border)]"></div>
-            <div className="flex flex-col px-1.5 min-w-0">
-              <label className="text-[11px] font-black text-[var(--color-muted)] uppercase tracking-wider">Hasta</label>
-              <div className="flex items-center gap-1.5">
-                <CalendarDays size={12} className="text-[var(--color-ink)] shrink-0" />
-                <input 
-                  id="filtro-fecha-hasta-utilidades"
-                  autoComplete="off" 
-                  type="date" 
-                  value={localFin} 
-                  onChange={(e) => {
-                    lastDateChangeRef.current = Date.now();
-                    setLocalFin(e.target.value);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'ArrowUp') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    } else if (e.key === 'ArrowDown') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      focusPaginacionUtilidades();
-                    } else if (e.key === 'ArrowLeft') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      document.getElementById('filtro-fecha-desde-utilidades')?.focus();
-                    } else if (e.key === 'ArrowRight') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      document.getElementById('btn-buscar-fechas-utilidades')?.focus();
-                    } else if (e.key === 'Enter' || e.key === ' ') {
-                      if (Date.now() - lastDateChangeRef.current < 500) {
-                        e.preventDefault();
-                        return;
-                      }
-                      if ('showPicker' in e.currentTarget) {
-                        try {
-                          (e.currentTarget as any).showPicker();
-                        } catch {}
-                      }
-                    }
-                  }}
-                  className="w-full min-w-0 text-[13px] font-black text-[var(--color-ink)] outline-none bg-transparent cursor-pointer focus:ring-2 focus:ring-[var(--color-accent-shadow)]" 
-                />
-              </div>
-            </div>
-            <button 
-              id="btn-buscar-fechas-utilidades"
-              onClick={handleBuscarFecha} 
-              onKeyDown={(e) => {
-                if (e.key === 'ArrowUp') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                } else if (e.key === 'ArrowDown') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  focusPaginacionUtilidades();
-                } else if (e.key === 'ArrowLeft') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  document.getElementById('filtro-fecha-hasta-utilidades')?.focus();
-                } else if (e.key === 'ArrowRight') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  document.getElementById('btn-limpiar-filtros-utilidades')?.focus();
-                }
-              }}
-              className="bg-[var(--color-ink)] hover:bg-[var(--color-accent-shadow)] text-[var(--color-surface)] p-1.5 rounded-none transition-colors cursor-pointer flex items-center justify-center border border-[var(--color-border)] hover:border-[var(--color-accent-shadow)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-shadow)]" 
-              title="Buscar por Fecha"
-            >
-              <Search size={14} strokeWidth={2} />
-            </button>
-          </div>
+          <input 
+            id="filtro-fecha-desde-utilidades"
+            autoComplete="off" 
+            type="date" 
+            title="Fecha desde"
+            value={localInicio} 
+            onChange={(e) => {
+              lastDateChangeRef.current = Date.now();
+              setLocalInicio(e.target.value);
+              setFechaInicio(e.target.value);
+              setTimeout(() => (document.getElementById('filtro-fecha-desde-utilidades') as HTMLInputElement | null)?.focus(), 50);
+            }}
+            onClick={(e) => { try { (e.currentTarget as HTMLInputElement).showPicker?.(); } catch {} }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (Date.now() - lastDateChangeRef.current < 500) { e.currentTarget.focus(); return; }
+                try { (e.currentTarget as HTMLInputElement).showPicker?.(); } catch {}
+                return;
+              }
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-tops-utilidades')?.focus();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                focusPaginacionUtilidades();
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('filtro-rotacion-utilidades')?.focus();
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('filtro-fecha-hasta-utilidades')?.focus();
+              }
+            }}
+            className="filtro-sobrio w-full sm:w-auto"
+          />
+
+          <input 
+            id="filtro-fecha-hasta-utilidades"
+            autoComplete="off" 
+            type="date" 
+            title="Fecha hasta"
+            value={localFin} 
+            onChange={(e) => {
+              lastDateChangeRef.current = Date.now();
+              setLocalFin(e.target.value);
+              setFechaFin(e.target.value);
+              setTimeout(() => (document.getElementById('filtro-fecha-hasta-utilidades') as HTMLInputElement | null)?.focus(), 50);
+            }}
+            onClick={(e) => { try { (e.currentTarget as HTMLInputElement).showPicker?.(); } catch {} }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (Date.now() - lastDateChangeRef.current < 500) { e.currentTarget.focus(); return; }
+                try { (e.currentTarget as HTMLInputElement).showPicker?.(); } catch {}
+                return;
+              }
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-tops-utilidades')?.focus();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                focusPaginacionUtilidades();
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('filtro-fecha-desde-utilidades')?.focus();
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-limpiar-filtros-utilidades')?.focus();
+              }
+            }}
+            className="filtro-sobrio w-full sm:w-auto"
+          />
+
+          {/* Botón oculto para compatibilidad con llamadas existentes a btn-buscar-fechas-utilidades */}
+          <button 
+            id="btn-buscar-fechas-utilidades"
+            type="button"
+            onClick={handleBuscarFecha} 
+            className="hidden"
+            tabIndex={-1}
+            aria-hidden="true"
+          />
 
           <button
             id="btn-limpiar-filtros-utilidades"
+            type="button"
             onClick={limpiarFiltrosTabla}
             onKeyDown={(e) => {
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
+                document.getElementById('btn-tops-utilidades')?.focus();
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -511,258 +570,126 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('btn-buscar-fechas-utilidades')?.focus();
+                document.getElementById('filtro-fecha-hasta-utilidades')?.focus();
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 e.stopPropagation();
                 focusPaginacionUtilidades();
               }
             }}
-            className="bg-[var(--color-ink)] hover:bg-[var(--color-accent-shadow)] text-[var(--color-surface)] px-3 py-2 rounded-none transition-colors cursor-pointer border border-[var(--color-border)] hover:border-[var(--color-accent-shadow)] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-shadow)]"
-            title="Limpiar Todos los Filtros"
+            className="limpiar-sobrio"
+            title={hayFiltrosActivos ? "Limpiar todos los filtros" : "Sin filtros"}
           >
-            <RotateCcw size={16} strokeWidth={2} />
+            <FilterX size={16} />
           </button>
         </div>
       </div>
 
-      {/* CONTROLES PAGINACIÓN SUPERIOR */}
-      <div className="border-b border-[var(--color-border)] bg-[var(--color-surface)] p-4 flex items-center justify-between shrink-0 rounded-none">
-        <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">
-          Página {paginaActual} de {totalPaginas}
-        </span>
-        <div className="flex gap-2">
-          <button 
-            id="btn-pag-prev-utilidades"
-            aria-disabled={paginaActual <= 1}
-            tabIndex={0}
-            onClick={() => {
-              if (paginaActual <= 1) return;
-              setPaginaActual(p => Math.max(1, p - 1));
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                e.stopPropagation();
-                const search = searchInputRef.current;
-                if (search) search.focus();
-                else document.getElementById('btn-limpiar-filtros-utilidades')?.focus();
-              } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                e.stopPropagation();
-                focusPrimerRegistro();
-              } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                e.stopPropagation();
-                document.getElementById('btn-limpiar-filtros-utilidades')?.focus();
-              } else if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                e.stopPropagation();
-                document.getElementById('btn-pag-next-utilidades')?.focus();
-              }
-            }}
-            className={`w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white ${
-              paginaActual <= 1 ? 'opacity-40 cursor-not-allowed' : ''
-            }`}
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <button 
-            id="btn-pag-next-utilidades"
-            aria-disabled={paginaActual >= totalPaginas}
-            tabIndex={0}
-            onClick={() => {
-              if (paginaActual >= totalPaginas) return;
-              setPaginaActual(p => Math.min(totalPaginas, p + 1));
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                e.stopPropagation();
-                const search = searchInputRef.current;
-                if (search) search.focus();
-                else document.getElementById('btn-limpiar-filtros-utilidades')?.focus();
-              } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                e.stopPropagation();
-                focusPrimerRegistro();
-              } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                e.stopPropagation();
-                document.getElementById('btn-pag-prev-utilidades')?.focus();
-              } else if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                e.stopPropagation();
-              }
-            }}
-            className={`w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white ${
-              paginaActual >= totalPaginas ? 'opacity-40 cursor-not-allowed' : ''
-            }`}
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
+      {/* MARCO DE LA TABLA */}
+      <div className="tabla-marco flex flex-col">
+        {/* PAGINACIÓN SUPERIOR: sólo se muestra si hay registros */}
+        {datosFiltrados.length > 0 && paginacion('top')}
 
-      {/* TABLA PRINCIPAL - DISEÑO TÉCNICO ESMERALDA LIGERO */}
-      <div className="w-full overflow-x-auto">
-        <table id="tabla-analisis-productos" className="w-full text-left border-collapse md:min-w-[1000px]">
-          <thead className="tabla-cabecera sticky top-0 z-10">
-            <tr>
-              <th className="p-3 md:p-4">Producto / Ref</th>
-              <th className="hidden md:table-cell p-4 text-center">Stock Actual</th>
-              <th className="p-2 md:p-4 text-center">U. Vendidas</th>
-              <th className="hidden md:table-cell p-4 text-right">Ingreso Cobrado</th>
-              <th className="hidden md:table-cell p-4 text-right">Costo Ventas</th>
-              <th className="hidden md:table-cell p-4 text-right">Mermas</th>
-              <th className="p-2 md:p-4 text-right">Utilidad</th>
-              <th className="p-2 md:p-4 text-center md:w-24">Margen</th>
-            </tr>
-          </thead>
-          <tbody className="bg-[var(--color-surface)]">
-            {datosPaginados.length === 0 ? (
-              <tr><td colSpan={8} className="p-3 lg:p-4 text-center text-[var(--color-muted)] font-black text-xs uppercase border-b border-[var(--color-border)]">NO SE ENCONTRARON REGISTROS.</td></tr>
-            ) : (
-              datosPaginados.map((prod) => (
-                <tr
-                  key={prod.id}
-                  data-row="true"
-                  data-prod-id={prod.id}
-                  {...clicConTeclado(() => abrirModalProducto(prod))}
-                  className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:outline-none focus-visible:bg-[var(--color-bg-2)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-ink)] transition-colors cursor-pointer group"
-                  title="Ver ventas de este producto (Enter o Clic)"
-                >
-                  <td className="p-2 md:p-3">
-                    <p className="text-xs font-black text-[var(--color-ink)] uppercase mb-1">{prod.nombre}</p>
-                    <div className="flex flex-wrap gap-1 md:gap-2">
-                      <span className="text-[12px] font-black text-[var(--color-muted)] border border-[var(--color-line-light)] bg-[var(--color-bg-2)] px-2 py-0.5 rounded-none uppercase tracking-widest">{prod.categoria}</span>
-
-                      <span className={`text-[12px] font-black px-2 py-0.5 rounded-none uppercase tracking-widest border ${
-                        prod.estado === 'BUENO' ? 'border-[var(--color-accent-shadow)] text-[var(--color-accent-shadow)] bg-[var(--color-accent-bg)]' :
-                        prod.estado === 'REGULAR' ? 'border-[var(--color-border)] text-[var(--color-ink)]' :
-                        prod.estado === 'BAJO' ? 'border-[var(--color-subtle)] text-[var(--color-subtle)]' :
-                        'border-[var(--color-line-light)] text-[var(--color-muted)] bg-[var(--color-bg-2)]'
-                      }`}>
-                        {prod.estado}
-                      </span>
-                    </div>
-                  </td>
-
-                  <td className="hidden md:table-cell p-3 text-center">
-                    {prod.tipoControl === 'CONSUMO' ? (
-                      <span className="text-[12px] font-black px-2 py-1 rounded-none border border-[var(--color-border)] text-[var(--color-ink)] uppercase tracking-widest">
-                        INTERNO
-                      </span>
-                    ) : (
-                      <span className={`text-[12px] font-black px-2 py-1 rounded-none border uppercase tracking-widest ${
-                        (prod.stockActual || 0) <= 5 ? 'border-[var(--color-danger)] text-[var(--color-surface)] bg-[var(--color-danger)]' :
-                        (prod.stockActual || 0) <= 15 ? 'border-[var(--color-warning)] text-[var(--color-surface)] bg-[var(--color-warning)]' :
-                        'border-[var(--color-border)] text-[var(--color-ink)] bg-[var(--color-bg)]'
-                      }`}>
-                        {(prod.stockActual || 0) <= 5 ? `CRÍTICO (${Number(prod.stockActual).toFixed(2)})` :
-                         (prod.stockActual || 0) <= 15 ? `BAJO (${Number(prod.stockActual).toFixed(2)})` :
-                         `OK (${Number(prod.stockActual).toFixed(2)})`}
-                      </span>
-                    )}
-                  </td>
-
-                  <td className="p-2 md:p-3 text-center">
-                    <div className="inline-flex items-center justify-center px-2 py-1 border-2 border-[var(--color-border)] bg-[var(--color-surface)] font-black text-[var(--color-ink)] text-xs min-w-[50px] truncate rounded-none">
-                      {Number(prod.unidadesVendidas).toFixed(2)}
-                    </div>
-                  </td>
-                  <td className="hidden md:table-cell p-3 text-right text-xs font-black text-[var(--color-muted)]">S/ {prod.ingresosTotales.toFixed(2)}</td>
-                  <td className="hidden md:table-cell p-3 text-right text-xs font-black text-[var(--color-muted)]">S/ {prod.costoTotalVentas.toFixed(2)}</td>
-                  <td className="hidden md:table-cell p-3 text-right text-xs font-black text-[var(--color-danger)]">
-                    {prod.perdidaMerma > 0 ? `- S/ ${prod.perdidaMerma.toFixed(2)}` : 'S/ 0.00'}
-                  </td>
-                  <td className="p-2 md:p-3 text-right text-sm font-black bg-[var(--color-accent-bg)] whitespace-nowrap">
-                    <span className={`${prod.utilidadReal >= 0 ? 'text-[var(--color-accent-shadow)]' : 'text-[var(--color-danger)]'}`}>
-                      S/ {prod.utilidadReal.toFixed(2)}
-                    </span>
-                  </td>
-                  <td className="p-2 md:p-3 text-center">
-                    <span className={`flex items-center justify-center gap-1 text-[12px] font-black px-1.5 py-1 rounded-none border tracking-widest ${
-                      prod.margen >= 30 ? 'border-[var(--color-accent-shadow)] text-[var(--color-accent-shadow)] bg-[var(--color-accent-bg)]' :
-                      prod.margen > 0 ? 'border-[var(--color-border)] text-[var(--color-ink)]' :
-                      'border-[var(--color-danger)] text-[var(--color-danger)] bg-[var(--color-danger-bg)]'
-                    }`}>
-                      {prod.margen >= 0 ? <TrendingUp size={12} strokeWidth={3}/> : <TrendingDown size={12} strokeWidth={3}/>}
-                      {prod.margen.toFixed(0)}%
-                    </span>
-                  </td>
+        {/* TABLA PRINCIPAL O ESTADO VACÍO */}
+        {datosFiltrados.length === 0 ? (
+          <div className="vacio-sobrio">
+            <Search size={32} />
+            No se encontraron productos con esos parámetros.
+          </div>
+        ) : (
+          <div className="w-full overflow-x-auto">
+            <table id="tabla-analisis-productos" className="w-full text-left border-collapse md:min-w-[1000px]">
+              <thead className="tabla-cabecera sticky top-0 z-10">
+                <tr>
+                  <th className="p-3 md:p-4">Producto / Ref</th>
+                  <th className="hidden md:table-cell p-4 text-center">Stock Actual</th>
+                  <th className="p-2 md:p-4 text-center">U. Vendidas</th>
+                  <th className="hidden md:table-cell p-4 text-right">Ingreso Cobrado</th>
+                  <th className="hidden md:table-cell p-4 text-right">Costo Ventas</th>
+                  <th className="hidden md:table-cell p-4 text-right">Mermas</th>
+                  <th className="p-2 md:p-4 text-right">Utilidad</th>
+                  <th className="p-2 md:p-4 text-center md:w-24">Margen</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody className="bg-[var(--color-surface)]">
+                {datosPaginados.map((prod) => (
+                  <tr
+                    key={prod.id}
+                    data-row="true"
+                    data-prod-id={prod.id}
+                    {...clicConTeclado(() => abrirModalProducto(prod))}
+                    className="tabla-fila cursor-pointer group"
+                    title="Ver ventas de este producto (Enter o Clic)"
+                  >
+                    <td className="p-2 md:p-3">
+                      <p className="text-xs font-black text-[var(--color-ink)] uppercase mb-1">{prod.nombre}</p>
+                      <div className="flex flex-wrap gap-1 md:gap-2">
+                        <span className="text-[12px] font-black text-[var(--color-muted)] border border-[var(--color-border)] bg-[var(--color-bg-2)] px-2 py-0.5 rounded-none uppercase tracking-widest">{prod.categoria}</span>
+                        <span className={`text-[12px] font-black px-2 py-0.5 rounded-none uppercase tracking-widest border ${
+                          prod.estado === 'BUENO' ? 'border-[var(--color-accent-shadow)] text-[var(--color-accent-shadow)] bg-[var(--color-accent-bg)]' :
+                          prod.estado === 'REGULAR' ? 'border-[var(--color-border)] text-[var(--color-ink)]' :
+                          prod.estado === 'BAJO' ? 'border-[var(--color-subtle)] text-[var(--color-subtle)]' :
+                          'border-[var(--color-border)] text-[var(--color-muted)] bg-[var(--color-bg-2)]'
+                        }`}>
+                          {prod.estado}
+                        </span>
+                      </div>
+                    </td>
 
-      {/* CONTROLES PAGINACIÓN INFERIOR */}
-      <div className="border-t border-[var(--color-border)] bg-[var(--color-surface)] p-4 flex items-center justify-between shrink-0 rounded-none">
-        <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">
-          Página {paginaActual} de {totalPaginas}
-        </span>
-        <div className="flex gap-2">
-          <button 
-            id="btn-pag-bottom-prev-utilidades"
-            aria-disabled={paginaActual <= 1}
-            tabIndex={0}
-            onClick={() => {
-              if (paginaActual <= 1) return;
-              setPaginaActual(p => Math.max(1, p - 1));
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                e.stopPropagation();
-                const rows = Array.from(document.querySelectorAll('#tabla-analisis-productos tr[data-row="true"]')) as HTMLElement[];
-                if (rows.length > 0) rows[rows.length - 1].focus();
-              } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                e.stopPropagation();
-              } else if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                e.stopPropagation();
-                document.getElementById('btn-pag-bottom-next-utilidades')?.focus();
-              }
-            }}
-            className={`w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white ${
-              paginaActual <= 1 ? 'opacity-40 cursor-not-allowed' : ''
-            }`}
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <button 
-            id="btn-pag-bottom-next-utilidades"
-            aria-disabled={paginaActual >= totalPaginas}
-            tabIndex={0}
-            onClick={() => {
-              if (paginaActual >= totalPaginas) return;
-              setPaginaActual(p => Math.min(totalPaginas, p + 1));
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                e.stopPropagation();
-                const rows = Array.from(document.querySelectorAll('#tabla-analisis-productos tr[data-row="true"]')) as HTMLElement[];
-                if (rows.length > 0) rows[rows.length - 1].focus();
-              } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                e.stopPropagation();
-              } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                e.stopPropagation();
-                document.getElementById('btn-pag-bottom-prev-utilidades')?.focus();
-              }
-            }}
-            className={`w-8 h-8 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] transition-colors rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white ${
-              paginaActual >= totalPaginas ? 'opacity-40 cursor-not-allowed' : ''
-            }`}
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
+                    <td className="hidden md:table-cell p-3 text-center">
+                      <span className="font-mono text-xs font-black text-[var(--color-ink)]">
+                        {prod.stockActual} {prod.tipoControl}
+                      </span>
+                    </td>
+
+                    <td className="p-2 md:p-3 text-center">
+                      <span className="font-mono text-xs font-black text-[var(--color-ink)]">
+                        {prod.unidadesVendidas} {prod.tipoControl}
+                      </span>
+                    </td>
+
+                    <td className="hidden md:table-cell p-3 text-right">
+                      <span className="font-mono text-xs font-black text-[var(--color-ink)]">
+                        S/ {prod.ingresosTotales.toFixed(2)}
+                      </span>
+                    </td>
+
+                    <td className="hidden md:table-cell p-3 text-right">
+                      <span className="font-mono text-xs font-black text-[var(--color-ink)]">
+                        S/ {prod.costoTotalVentas.toFixed(2)}
+                      </span>
+                    </td>
+
+                    <td className="hidden md:table-cell p-3 text-right">
+                      <span className="font-mono text-xs font-black text-[var(--color-danger)]">
+                        S/ {prod.perdidaMerma.toFixed(2)}
+                      </span>
+                    </td>
+
+                    <td className="p-2 md:p-3 text-right">
+                      <span className={`font-mono text-xs font-black ${prod.utilidadReal >= 0 ? 'text-[var(--color-accent-shadow)]' : 'text-[var(--color-danger)]'}`}>
+                        S/ {prod.utilidadReal.toFixed(2)}
+                      </span>
+                    </td>
+
+                    <td className="p-2 md:p-3 text-center">
+                      <span className={`inline-block font-mono text-xs font-black px-2 py-0.5 border rounded-none ${
+                        prod.margen >= 30 ? 'border-[var(--color-accent-shadow)] text-[var(--color-accent-shadow)] bg-[var(--color-accent-bg)]' :
+                        prod.margen > 0 ? 'border-[var(--color-border)] text-[var(--color-ink)]' :
+                        'border-[var(--color-danger)] text-[var(--color-danger)] bg-[var(--color-danger-bg)]'
+                      }`}>
+                        {prod.margen}%
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* PAGINACIÓN INFERIOR: sólo se muestra si hay registros */}
+        {datosFiltrados.length > 0 && paginacion('bottom')}
       </div>
 
       {productoSeleccionado && (
