@@ -843,3 +843,7 @@ nav button {
 .paginacion-sobria__boton:hover, .paginacion-sobria__boton:focus { outline: none; background: var(--color-ink); color: #fff; }
 .paginacion-sobria__boton:focus-visible { box-shadow: 0 0 0 2px var(--color-ink); }
 .paginacion-sobria__boton[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
+
+/* Tabla vacía como Inventario: lupa grande gris claro y texto chico gris (y la paginación no se dibuja) */
+.vacio-sobrio { padding: 3rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; text-align: center; color: #94A3B8; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em; }
+.vacio-sobrio svg { color: #E2E8F0; margin-bottom: 0.5rem; }

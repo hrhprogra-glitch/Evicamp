@@ -620,12 +620,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
             Cargando cotizaciones...
           </div>
         ) : cotizacionesFiltradas.length === 0 ? (
-          <div className="p-12 text-center flex flex-col items-center justify-center gap-2 text-[var(--color-muted)]">
-            <FileText size={32} />
-            <span className="text-xs font-black uppercase tracking-widest">
-              No hay cotizaciones con estos filtros
-            </span>
-          </div>
+          <div className="vacio-sobrio"><Search size={32} />No se registran cotizaciones con esos parámetros.</div>
         ) : (
           <div className="divide-y divide-[var(--color-border)]">
             {cotizacionesFiltradas.map((coti, idx) => {

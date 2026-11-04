@@ -748,12 +748,7 @@ export const PestanaPedidos: React.FC = () => {
             Cargando pedidos...
           </div>
         ) : pedidosFiltrados.length === 0 ? (
-          <div className="p-12 text-center flex flex-col items-center justify-center gap-2 text-[var(--color-muted)]">
-            <Package size={32} />
-            <span className="text-xs font-black uppercase tracking-widest">
-              No hay pedidos registrados con estos filtros
-            </span>
-          </div>
+          <div className="vacio-sobrio"><Search size={32} />No se registran pedidos con esos parámetros.</div>
         ) : (
           <div className="divide-y divide-[var(--color-border)]">
             {pedidosFiltrados.map((ped, idx) => {

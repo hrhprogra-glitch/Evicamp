@@ -72,6 +72,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
   const claseBotonPag = 'paginacion-sobria__boton'; // como la paginación de Inventario
 
   const renderPaginacion = (posicion: 'arriba' | 'abajo') => {
+    if (!filas.length) return null; // como Inventario: sin filas no hay paginación
     const prevId = posicion === 'arriba' ? 'btn-pagina-ant-clientes-arriba' : 'btn-pagina-ant-clientes';
     const sigId = posicion === 'arriba' ? 'btn-pagina-sig-clientes-arriba' : 'btn-pagina-sig-clientes';
     const bordeClase = posicion === 'arriba' ? 'border-b' : 'border-t';
@@ -416,8 +417,8 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
               </tr>
             )) : (
               <tr>
-                <td colSpan={9} className="py-12 text-center text-[var(--color-muted)] font-black uppercase tracking-widest text-sm bg-[var(--color-bg)]">
-                  <span className="inline-block border-2 border-[var(--color-muted)] p-4 border-dashed">{clientes.length ? 'No se encontraron clientes' : 'Todavía no hay clientes'}</span>
+                <td colSpan={9}>
+                  <div className="vacio-sobrio"><Search size={32} />{clientes.length ? 'No se encontraron clientes con esos parámetros.' : 'Todavía no hay clientes registrados.'}</div>
                 </td>
               </tr>
             )}

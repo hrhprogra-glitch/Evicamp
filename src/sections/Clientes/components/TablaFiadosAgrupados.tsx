@@ -235,6 +235,7 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
     if (k) { e.preventDefault(); e.stopPropagation(); k(); }
   };
   const paginacion = (pos: 'arriba' | 'abajo') => {
+    if (!clientesProcesados.length) return null; // como Inventario: sin filas no hay paginación
     const ant = pos === 'arriba' ? 'btn-pag-ant-fiados-arriba' : 'btn-pag-ant-fiados';
     const sig = pos === 'arriba' ? 'btn-pag-sig-fiados-arriba' : 'btn-pag-sig-fiados';
     const mover = (n: number) => setCurrentPage((p) => Math.min(totalPages, Math.max(1, p + n)));
@@ -344,8 +345,8 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="py-12 text-center text-[var(--color-muted)] font-black uppercase tracking-widest text-sm bg-[var(--color-bg)]">
-                  <span className="inline-block border-2 border-[var(--color-muted)] p-4 border-dashed">No se encontraron deudores</span>
+                <td colSpan={4}>
+                  <div className="vacio-sobrio"><Search size={32} />No se encontraron deudores con esos parámetros.</div>
                 </td>
               </tr>
             )}
