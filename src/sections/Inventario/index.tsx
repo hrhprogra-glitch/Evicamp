@@ -627,7 +627,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('filtro-categoria-inventario')?.focus();
                   }
                 }}
-                className="bg-[var(--color-accent)] text-[var(--color-ink)] px-1 sm:px-4 lg:px-6 py-3 lg:py-4 min-w-0 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-widest flex items-center justify-center gap-1 sm:gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+                style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+                className="boton-cabecera bg-[var(--color-accent)] text-[var(--color-ink)] px-1 sm:px-4 lg:px-6 py-3 lg:py-4 min-w-0 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-widest flex items-center justify-center gap-1 sm:gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
               >
                 <Plus size={16} /> <span className="hidden sm:inline">Nuevo</span> Producto
               </button>
@@ -649,7 +650,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('filtro-estado-inventario')?.focus();
                   }
                 }}
-                className="bg-[var(--color-ink)] text-[var(--color-accent)] px-1 sm:px-4 lg:px-6 py-3 lg:py-4 min-w-0 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-widest flex items-center justify-center gap-1 sm:gap-2 hover:bg-[var(--color-bg)] hover:text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-accent)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+                style={{ '--icono': 'var(--color-ink)' } as React.CSSProperties}
+                className="boton-cabecera bg-[var(--color-ink)] text-[var(--color-accent)] px-1 sm:px-4 lg:px-6 py-3 lg:py-4 min-w-0 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-widest flex items-center justify-center gap-1 sm:gap-2 hover:bg-[var(--color-bg)] hover:text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-accent)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
               >
                 <Database size={16} /> <span className="hidden sm:inline">Ingresar</span> Lote
               </button>
@@ -674,7 +676,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('filtro-orden-inventario')?.focus();
                   }
                 }}
-                className="bg-emerald-600 text-white px-1 sm:px-4 lg:px-6 py-3 lg:py-4 min-w-0 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-widest flex items-center justify-center gap-1 sm:gap-2 hover:bg-emerald-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+                style={{ '--icono': '#059669' } as React.CSSProperties}
+                className="boton-cabecera bg-emerald-600 text-white px-1 sm:px-4 lg:px-6 py-3 lg:py-4 min-w-0 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-widest flex items-center justify-center gap-1 sm:gap-2 hover:bg-emerald-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
               >
                 <ChefHat size={16} /> <span className="hidden sm:inline">Producir</span>
               </button>
@@ -696,7 +699,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('filtro-orden-inventario')?.focus();
                   }
                 }}
-                className="bg-indigo-600 text-white px-1 sm:px-4 lg:px-6 py-3 lg:py-4 min-w-0 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-widest flex items-center justify-center gap-1 sm:gap-2 hover:bg-indigo-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+                style={{ '--icono': '#4F46E5' } as React.CSSProperties}
+                className="boton-cabecera bg-indigo-600 text-white px-1 sm:px-4 lg:px-6 py-3 lg:py-4 min-w-0 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-widest flex items-center justify-center gap-1 sm:gap-2 hover:bg-indigo-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
               >
                 <ArrowRightLeft size={16} /> <span className="hidden sm:inline">Traspasos</span>
               </button>
@@ -718,7 +722,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('filtro-orden-inventario')?.focus();
                   }
                 }}
-                className="bg-[var(--color-bg)] text-[var(--color-info)] px-1 sm:px-4 lg:px-6 py-3 lg:py-4 min-w-0 border-2 border-[var(--color-info)] font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-widest flex items-center justify-center gap-1 sm:gap-2 hover:bg-[var(--color-info)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-info)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
+                style={{ '--icono': 'var(--color-info)' } as React.CSSProperties}
+                className="boton-cabecera bg-[var(--color-bg)] text-[var(--color-info)] px-1 sm:px-4 lg:px-6 py-3 lg:py-4 min-w-0 border-2 border-[var(--color-info)] font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-widest flex items-center justify-center gap-1 sm:gap-2 hover:bg-[var(--color-info)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-info)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
               >
                 <Users size={16} className="shrink-0" /> <span className="truncate">Proveedores</span>
               </button>
