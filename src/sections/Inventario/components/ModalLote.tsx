@@ -778,7 +778,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         </div>
 
         {/* CUERPO DEL FORMULARIO */}
-        <div className="p-4 sm:p-6 overflow-y-auto sm:overflow-visible custom-scrollbar bg-[#F8FAFC] space-y-6">
+        <div className="p-4 sm:p-6 flex-1 min-h-0 overflow-y-auto custom-scrollbar bg-[#F8FAFC] space-y-6">
           
           {/* 1. BUSCADOR DE PRODUCTO DESPLEGABLE */}
           <div ref={prodContainerRef} className="space-y-2 relative">

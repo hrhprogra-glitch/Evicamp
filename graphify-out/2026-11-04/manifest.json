@@ -60,9 +60,9 @@
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/index.tsx": {
-    "mtime": 1793815355.8666043,
-    "seen": 1793815920.617606,
-    "ast_hash": "84d6bd278e875dfb76942d97a9913e06",
+    "mtime": 1793826583.8364067,
+    "seen": 1793827717.4862037,
+    "ast_hash": "fd239352929a7d379e040368da293747",
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/types.ts": {
@@ -174,9 +174,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/index.tsx": {
-    "mtime": 1793810210.4431531,
-    "seen": 1793813025.6668608,
-    "ast_hash": "c0024e387823c59e2a439a93fa6220df",
+    "mtime": 1793826583.8374097,
+    "seen": 1793827717.486239,
+    "ast_hash": "0e04b861334d8c93cebfa745117fb097",
     "semantic_hash": ""
   },
   "src/sections/Inventario/types.ts": {
@@ -234,9 +234,9 @@
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalCobro.tsx": {
-    "mtime": 1793725555.3076115,
-    "seen": 1793813025.6668708,
-    "ast_hash": "496b285845bc950e5b6bd517022c4ee2",
+    "mtime": 1793827572.3760421,
+    "seen": 1793827717.4862487,
+    "ast_hash": "1729e9e5ed5db5b2cd67fe564d3fcb49",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalPrecioConsumo.tsx": {
@@ -1974,9 +1974,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/index.tsx": {
-    "mtime": 1793825145.996647,
-    "seen": 1793825466.7779555,
-    "ast_hash": "e73491d413b607f55107dba9ce5c4ee9",
+    "mtime": 1793826583.8374097,
+    "seen": 1793827717.4861915,
+    "ast_hash": "466745a38985e88b9fe50ec32f4ba563",
     "semantic_hash": ""
   },
   "src/sections/Clientes/types.ts": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793825391.7915254,
-    "seen": 1793825466.7780802,
-    "ast_hash": "831c7cff6cce0ff089ae91fb24cf58ec",
+    "mtime": 1793827708.4697156,
+    "seen": 1793827717.4863157,
+    "ast_hash": "88644bbaa452541eb24e6b7a96760a8a",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793825444.1059873,
-    "seen": 1793825466.778081,
-    "ast_hash": "151584a278a9380befc3564ad771bf84",
+    "mtime": 1793827708.478986,
+    "seen": 1793827717.4863167,
+    "ast_hash": "d5f7dd4dd506a482a6c572e2a5438bde",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793824595.0231175,
-    "seen": 1793824613.0628536,
-    "ast_hash": "0da2db2b765c1a305983c38efa681ece",
+    "mtime": 1793827708.4707186,
+    "seen": 1793827717.4863179,
+    "ast_hash": "a3a427cda8e9669b6413c7636a12bbe3",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793825419.1749902,
-    "seen": 1793825466.7780828,
-    "ast_hash": "8a629e39f7732d8a6f7a7280057ccffb",
+    "mtime": 1793827708.4697156,
+    "seen": 1793827717.4863186,
+    "ast_hash": "4285e7693a158cc662827b1bf3a2bbce",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2574,9 +2574,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/LEEME.md": {
-    "mtime": 1793813594.2067516,
-    "seen": 1793813637.719396,
-    "ast_hash": "dd0be0b2b555ee36f904177a2fe63bb0",
+    "mtime": 1793827708.478986,
+    "seen": 1793827717.4863148,
+    "ast_hash": "f543db77d80e50e639f180c9170e3290",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/ver-utilidades.mjs": {
@@ -2607,6 +2607,24 @@
     "mtime": 1793825226.5790155,
     "seen": 1793825466.777816,
     "ast_hash": "8662276f08fa6fdbb78af7c0d5af9cfc",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/revisar-tamanos.mjs": {
+    "mtime": 1793826603.4422424,
+    "seen": 1793827717.4860387,
+    "ast_hash": "90082c685e880d7861573b9c6797c5e9",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/revisar-ventanas-caja.mjs": {
+    "mtime": 1793827350.948691,
+    "seen": 1793827717.4860404,
+    "ast_hash": "ebab860bc4d529a9738fc5b29fc62587",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/revisar-ventanas.mjs": {
+    "mtime": 1793826233.824171,
+    "seen": 1793827717.486041,
+    "ast_hash": "a3e6bb8e23404c03cb8a1da634eb2f2f",
     "semantic_hash": ""
   }
 }

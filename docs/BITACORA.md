@@ -7,6 +7,20 @@
 
 ---
 
+## 04/11/2026 (90) · Claude — Ventanas: el botón Guardar siempre a la vista (solo siumax)
+- **Dueño** (captura de "Ingresar lote de stock"): *"¿adaptaste bien las ventanas flotantes? En la ventana de lote el botón guardar no sale"*.
+- **Causa:** el medio de `ModalLote` tenía `sm:overflow-visible` (en PC no hacía scroll), así que el contenido empujaba el pie con "Guardar lote" fuera de la pantalla. Esa ventana no estaba en la revisión (89), y la revisión daba por buena una ventana si el botón se alcanzaba bajando con scroll.
+- **Arreglos:**
+  - `ModalLote`: medio con `flex-1 min-h-0 overflow-y-auto`; cabecera y pie fijos → "Guardar lote" siempre visible (1280×720: y 628→672).
+  - `ModalAbono` y `ModalApertura`: antes hacía scroll TODA la ventana (el botón se escondía abajo en pantallas bajas); ahora cabecera y pie fijos y scroll solo en el medio.
+  - `ModalBalanza` y `ModalPrecioConsumo` siguen con scroll de toda la ventana (el botón va dentro del medio), pero son muy cortas.
+- **Revisión más estricta** (`revisar-ventanas.mjs` y `revisar-ventanas-caja.mjs`): el botón principal (Guardar, Registrar, Confirmar, Crear, Finalizar, Ingresar…) tiene que verse ENTERO sin bajar con el mouse. Ventanas nuevas en la revisión: Ingresar lote, Producir, Traspasos, Nueva compra, Aperturar caja. Nuevo producto revisado también en el formulario completo (paso 2: "Guardar" y "Guardar e ir a lotes" visibles).
+- **Resultado:** 0 fallas en 6 tamaños (1920 a celular), 0 errores JS, siumax como estaba.
+- **Revisión por código** de las 52 ventanas: las que se abren desde filas (detalle de cliente, grupos, historial de lotes, etiquetas, proveedores, corregir conteo…) usan `CuerpoVentana` de `ListaVentana` (ya con scroll en el medio); ModalFormGrupo, nombre de espera y autorización son de pocos campos. No se pudieron abrir con datos porque siumax está vacío.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub.
+
+---
+
 ## 04/11/2026 (89) · Claude — Todo se ve completo en cualquier tamaño de pantalla (solo siumax)
 - **Dueño:** *"el sistema tiene que ajustarse a cualquier tamaño de pantalla para que todos los botones, sesiones y ventanas aparezcan bien y completos, no topados por la ventana"* (captura de Ajustes) → propuesta → *"sí, empieza"*.
 - **Revisión automática** en 7 tamaños (1920×1080, 1600×900, 1366×768, 1280×720, 1024×768, tablet 768×1024, celular 390×844), con scripts nuevos en `ai-scripts/pruebas/estilo/`:

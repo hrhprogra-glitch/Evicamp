@@ -120,10 +120,10 @@ export const ModalApertura: React.FC<Props> = ({ isOpen, onClose, onSuccess }) =
     >
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[calc(var(--alto-pantalla)*0.94)] overflow-y-auto bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-sm flex flex-col rounded-none animate-fade-in"
+        className="max-h-[calc(var(--alto-pantalla)*0.94)] bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-sm flex flex-col rounded-none animate-fade-in"
       >
         
-        <div className="bg-[var(--color-accent)] p-4 border-b-2 border-[var(--color-ink)] flex justify-between items-center text-[var(--color-ink)]">
+        <div className="bg-[var(--color-accent)] p-4 border-b-2 border-[var(--color-ink)] flex justify-between items-center text-[var(--color-ink)] shrink-0">
           <h2 id="modal-apertura-title" className="font-black uppercase tracking-widest flex items-center gap-2 text-sm">
             <Wallet size={18} /> Aperturar Caja
           </h2>
@@ -151,7 +151,7 @@ export const ModalApertura: React.FC<Props> = ({ isOpen, onClose, onSuccess }) =
           </button>
         </div>
 
-        <div className="p-6 flex flex-col gap-4">
+        <div className="p-6 flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
           <p className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-widest text-center">
             Ingresa el dinero físico (sencillo) con el que inicia la caja hoy.
           </p>
@@ -186,7 +186,7 @@ export const ModalApertura: React.FC<Props> = ({ isOpen, onClose, onSuccess }) =
           </div>
         </div>
 
-        <div className="p-4 bg-[var(--color-bg)] border-t-2 border-[var(--color-ink)]">
+        <div className="p-4 bg-[var(--color-bg)] border-t-2 border-[var(--color-ink)] shrink-0">
           <button 
             ref={btnSubmitRef}
             id="btn-confirmar-apertura"

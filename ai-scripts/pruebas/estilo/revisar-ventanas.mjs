@@ -12,9 +12,15 @@ const TAMANOS = [[1920, 1080], [1366, 768], [1280, 720], [1024, 768], [768, 1024
 const VENTANAS = [
   ['inventario', null, 'btn-nuevo-producto'],
   ['inventario', null, 'btn-proveedores'],
+  ['inventario', null, 'btn-ingresar-lote'],
+  ['inventario', null, 'btn-header-producir'],
+  ['inventario', null, 'btn-traspasos'],
+  ['inventario', 'btn-tab-compras', 'btn-nueva-compra'],
+  ['utilidades', null, 'btn-tops-utilidades'],
   ['clientes', null, 'btn-nuevo-cliente'],
   ['clientes', null, 'btn-ver-grupos'],
   ['conteos', null, 'btn-nuevo-ajuste'],
+  ['finanzas', null, 'btn-aperturar-caja'],
   ['finanzas', null, 'btn-nuevo-movimiento'],
   ['finanzas', null, 'btn-reporte-contador'],
   ['finanzas', null, 'btn-cerrar-caja'],
@@ -41,6 +47,19 @@ const medir = () => page.evaluate(() => {
   for (const el of capa.querySelectorAll('button, input, select, textarea, [role="tab"]')) {
     const r = el.getBoundingClientRect(); if (!r.width || !r.height) continue;
     if ((r.bottom > H + 1 || r.top < -1 || r.right > W + 1 || r.left < -1) && !alcanzable(el)) fuera.push(nombre(el) + ` (y ${Math.round(r.top)}→${Math.round(r.bottom)}, x ${Math.round(r.left)}→${Math.round(r.right)})`);
+  }
+  // El botón principal (Guardar, Registrar, Confirmar…) se tiene que ver entero SIN bajar con el mouse
+  const PRINCIPAL = /^(guardar|registrar|confirmar|crear|finalizar|ingresar|aceptar|cobrar|grabar|procesar|emitir|actualizar|enviar)/i;
+  for (const el of capa.querySelectorAll('button')) {
+    const texto = (el.innerText || '').trim();
+    if (!PRINCIPAL.test(texto)) continue;
+    let r = el.getBoundingClientRect(); if (!r.width || !r.height) continue;
+    let top = Math.max(r.top, 0), bottom = Math.min(r.bottom, H), left = Math.max(r.left, 0), right = Math.min(r.right, W);
+    for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      const cs = getComputedStyle(p);
+      if (cs.overflowY !== 'visible' || cs.overflowX !== 'visible') { const q = p.getBoundingClientRect(); top = Math.max(top, q.top); bottom = Math.min(bottom, q.bottom); left = Math.max(left, q.left); right = Math.min(right, q.right); }
+    }
+    if (bottom - top < r.height * 0.9 || right - left < r.width * 0.9) fuera.push(`botón principal oculto: ${nombre(el)} (hay que bajar para verlo)`);
   }
   return [...new Set(fuera)].slice(0, 6);
 });

@@ -4,7 +4,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 04/11/2026 (89), Claude: **todo se ve completo en cualquier tamaño de pantalla** (7 tamaños revisados: secciones, pestañas y 17 ventanas; arregladas cabeceras de Ajustes, Inventario y Clientes y el cobro en laptops). Solo siumax. Siguiente: lo que diga el dueño (pendiente de antes: Proveedores con estilo SiuMax Sobrio).
+- **Última actualización:** 04/11/2026 (90), Claude: **ventanas con el botón Guardar siempre a la vista** (Ingresar lote, Abonar, Aperturar caja; revisión estricta del botón principal en 6 tamaños: 0 fallas). Solo siumax.
+- (89) 04/11/2026, Claude: **todo se ve completo en cualquier tamaño de pantalla** (7 tamaños revisados: secciones, pestañas y 17 ventanas; arregladas cabeceras de Ajustes, Inventario y Clientes y el cobro en laptops). Solo siumax. Siguiente: lo que diga el dueño (pendiente de antes: Proveedores con estilo SiuMax Sobrio).
 - (88) 04/11/2026, Antigravity: **Entrega a Claude** (ver BITACORA 88). Hecho en siumax: Utilidades y Ajustes con estilo SiuMax Sobrio, Caja sin sombras ni márgenes sobrantes al ras, y Clientes con botón [Grupos (n)] y flujo con [Volver]. Siguiente: Proveedores con estilo SiuMax Sobrio.
 - (87) 04/11/2026, Antigravity: **Botón [Grupos (n)] en cabecera de Clientes y flujo con botón Volver al crear grupo** en `siumax` (eliminado [+ Nuevo grupo] de cabecera; creación centralizada en la lista de grupos; botón [Volver] y regreso automático tras crear).
 - (86) 04/11/2026, Antigravity: **Eliminadas sombras y márgenes sobrantes en Caja (Punto de Venta)** en `siumax` (al ras de la pantalla, sin sombras de 6px en el marco ni en botones/buscador).
