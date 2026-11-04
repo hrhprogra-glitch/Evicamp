@@ -7,6 +7,29 @@
 
 ---
 
+## 04/11/2026 (88) · Antigravity — ENTREGA A CLAUDE: estado actual, lo avanzado y qué sigue
+El dueño pidió: *"perfecto alista todo porque nos pasaremos a claude"*. Todo queda guardado en la rama `fase-11-sunat` (sin push a GitHub ni Evicamp) y completamente desplegado y probado en el servidor de pruebas `siumax`.
+
+**Estado exacto de lo avanzado en esta sesión por Antigravity:**
+1. **Utilidades (84):** Estilo SiuMax Sobrio completo idéntico a Inventario (`boton-cabecera` en `[ Top 5 Rentables ]`, `tarjeta-sobria` sin saltos ni sombras 3D, buscador sobrio fuera del marco con MATCH y Escape, selects de categoría/rotación y fechas nativas con `filtro-sobrio`, botón `limpiar-sobrio`, `tabla-marco`, `paginacion-sobria` arriba y abajo que se oculta si no hay registros, `vacio-sobrio` y teclado 100%). Captura `utilidades_sobrio.png`.
+2. **Ajustes / Configuraciones (85):** Estilo SiuMax Sobrio completo (pestañas sobrias con acento verde inferior, `TablaUsuarios.tsx` con buscador fuera, filtro de rol, botón `[ + Nuevo Usuario ]` en `boton-cabecera`, tiendas en `boton-cabecera`, tarjetas sobrias en facturación, tienda web y empresa, sin sombras 3D, teclado 100%). Captura `ajustes_sobrio.png`.
+3. **Punto de Venta / Caja (86):** Eliminadas sombras y márgenes sobrantes a pedido del dueño (en `src/App.tsx` padding `p-0` cuando está en `pos` para quedar al ras sin marco perimetral blanco; eliminada la sombra exterior de 6px en el contenedor de Caja `lg:shadow-[6px_6px_0_0_var(--color-ink)]` y las sombras en buscador y botones de cobro/espera/ticket). Captura `pos_limpio.png`.
+4. **Clientes y Grupos (87):**
+   - El dueño notó que no había botón para gestionar o crear grupos sin tener un cliente previo.
+   - Se añadió el botón `[ Grupos ({grupos.length}) ]` en la cabecera al lado de `[ + Nuevo cliente ]` con estilo `boton-cabecera` (el dueño pidió eliminar `[ + Nuevo grupo ]` para centralizarlo dentro de la lista).
+   - En `ModalElegir` (lista de grupos), se limpió el texto a `Crear grupo nuevo` (sin duplicar el `+`).
+   - En `ModalFormGrupo` se agregó el botón `[ ← Volver ]` en el pie y la flecha en la cabecera.
+   - Si se cancela o pulsa Volver (o Escape), regresa suavemente a la lista de grupos.
+   - Al crear el grupo con `[ Crear grupo ]`, se guarda en PostgreSQL y **regresa automáticamente a la lista de grupos** mostrando el grupo recién creado.
+   - Teclado 100% probado en Edge (16/16 checks ✅). Capturas `clientes_cabecera_sobria.png`, `modal_form_grupo_con_volver.png` y `lista_grupos_tras_crear.png`.
+
+**Siguiente paso (lo que sigue en la lista del dueño):**
+1. **Proveedores** (`src/sections/Proveedores/`): aplicar la receta oficial de **SiuMax Sobrio** (cabecera con `boton-cabecera`, buscador grande fuera del marco de la tabla con "N MATCH" y Escape, filtros sobrios, paginación arriba y abajo, estado vacío compartido y navegación por teclado fluida). Receta completa en `docs/MEMORIA-IA.md` §18.
+2. Si el dueño lo pide: tablas dentro de ventanas emergentes (preguntarle siempre antes).
+3. **Regla 4 permanente:** NADA se sube a Evicamp (producción) ni a GitHub sin que el dueño lo ordene explícitamente en ese momento. Evicamp NO paga (nunca Mercado Pago).
+
+---
+
 ## 04/11/2026 (87) · Antigravity — Botón Grupos (n) en cabecera y flujo con botón Volver al crear grupo (solo siumax)
 - **Clientes (`src/sections/Clientes/index.tsx` y `ModalFormGrupo.tsx`):**
   1. **Ajuste pedido por el dueño:** eliminar el botón `[+ Nuevo grupo]` de la cabecera dejando únicamente `[Grupos (N)]` (al lado de `[+ Nuevo cliente]`), ya que dentro de la ventana de grupos ya existe la opción para crearlos.
