@@ -811,3 +811,35 @@ nav button {
 
 /* Tarjetas de métricas sobrias (estilo SiuMax Sobrio): borde fino, sin sombra; el color queda en el texto y el ícono */
 .tarjeta-sobria { border: 1px solid var(--color-border) !important; box-shadow: none !important; }
+
+/* ===== BUSCADOR, FILTROS Y PAGINACIÓN COMO INVENTARIO (04/11/2026, "SiuMax Sobrio") =====
+   Copia del aspecto de FiltrosInventario y de la paginación de TablaProductos, para usarlo en todas las secciones.
+   Uso: <div class="buscador-sobrio"><div class="buscador-sobrio__icono"><Search/></div><input/></div>,
+   <select class="filtro-sobrio">, <button class="limpiar-sobrio">, y la franja class="paginacion-sobria". */
+.buscador-sobrio { display: flex; position: relative; height: 3rem; border: 1px solid var(--color-border); background: var(--color-surface); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: all 0.15s; }
+.buscador-sobrio:focus-within { border-color: var(--color-ink); box-shadow: 0 0 0 2px var(--color-ink); }
+.buscador-sobrio__icono { width: 3rem; height: 100%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--color-bg-2); border-right: 1px solid var(--color-border); color: var(--color-muted); transition: background-color 0.15s, color 0.15s; }
+.buscador-sobrio:focus-within .buscador-sobrio__icono { background: var(--color-ink); color: var(--color-success); border-color: var(--color-ink); }
+.buscador-sobrio input { flex: 1; min-width: 0; height: 100%; padding: 0 0.75rem; background: transparent; border: 0; outline: none; font-weight: 900; font-size: 0.75rem; text-transform: uppercase; color: var(--color-ink); }
+.buscador-sobrio input::placeholder { color: #CBD5E1; }
+.buscador-sobrio__match { position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 0.5rem; }
+.buscador-sobrio__conteo { display: flex; align-items: center; height: 2rem; padding: 0 0.5rem; border: 1px solid var(--color-success); background: var(--color-ink); color: var(--color-success); font-size: 9px; font-weight: 900; letter-spacing: 0.1em; }
+.buscador-sobrio__borrar { width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); background: var(--color-bg-2); color: var(--color-muted); cursor: pointer; }
+.buscador-sobrio__borrar:hover { background: #DC2626; color: #fff; border-color: #DC2626; }
+.filtro-sobrio { height: 2.75rem; min-width: 0; padding: 0 0.75rem; background: var(--color-surface); border: 1px solid #E2E8F0; font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-ink); outline: none; cursor: pointer; transition: border-color 0.15s; border-radius: 0; }
+.filtro-sobrio:focus { border-color: var(--color-success); box-shadow: 0 0 0 1px var(--color-success); }
+.limpiar-sobrio { height: 2.75rem; padding: 0 1rem; display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); background: var(--color-bg-2); color: var(--color-muted); cursor: pointer; transition: all 0.15s; }
+.limpiar-sobrio:hover { background: var(--color-ink); color: #fff; border-color: var(--color-ink); }
+.limpiar-sobrio:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-ink); }
+@media (min-width: 640px) {
+  .buscador-sobrio { height: 3.5rem; }
+  .buscador-sobrio__icono { width: 3.5rem; }
+  .buscador-sobrio input { padding: 0 1rem; }
+  .filtro-sobrio, .limpiar-sobrio { height: 3.5rem; }
+}
+.paginacion-sobria { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.75rem; background: var(--color-surface); border-color: var(--color-border); }
+.paginacion-sobria__texto { font-size: 10px; font-weight: 700; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.paginacion-sobria__boton { width: 2rem; height: 2rem; padding: 0; display: flex; align-items: center; justify-content: center; background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-ink); cursor: pointer; transition: all 0.15s; }
+.paginacion-sobria__boton:hover, .paginacion-sobria__boton:focus { outline: none; background: var(--color-ink); color: #fff; }
+.paginacion-sobria__boton:focus-visible { box-shadow: 0 0 0 2px var(--color-ink); }
+.paginacion-sobria__boton[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
