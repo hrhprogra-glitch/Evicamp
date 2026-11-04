@@ -4,7 +4,7 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 04/11/2026 (87), Antigravity: **Botones directos para crear [+ Nuevo grupo] y ver [Grupos (n)] en Clientes** en `siumax` (estilo SiuMax Sobrio, creación sin depender de clientes existentes, navegación 100% por teclado).
+- **Última actualización:** 04/11/2026 (87), Antigravity: **Botón [Grupos (n)] en cabecera de Clientes y flujo con botón Volver al crear grupo** en `siumax` (eliminado [+ Nuevo grupo] de cabecera; creación centralizada en la lista de grupos; botón [Volver] y regreso automático tras crear).
 - (86) 04/11/2026, Antigravity: **Eliminadas sombras y márgenes sobrantes en Caja (Punto de Venta)** en `siumax` (al ras de la pantalla, sin sombras de 6px en el marco ni en botones/buscador).
 - (83) 04/11/2026, Claude: **entrega a Antigravity** (ver BITACORA 83: estado, siguiente paso y cuidados). Siguiente: estilo SiuMax Sobrio en Utilidades, Ajustes y Proveedores (receta en MEMORIA-IA §18).
 - (82) 04/11/2026, Claude: estilo oficial **"SiuMax Sobrio"** (modelo Inventario) ya en Inventario, Compras, Clientes, Conteos y **Finanzas + Ver historial** (solo siumax). Siguiente: Utilidades y Ajustes. Nada subido a Evicamp ni GitHub desde el pase (80).

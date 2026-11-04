@@ -66,7 +66,7 @@ export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNav
   const [grupoVerId, setGrupoVerId] = useState<string | null>(null);            // ventana del grupo
   const [elegirGrupoPara, setElegirGrupoPara] = useState<string | null>(null);  // cliente al que se le elige grupo
   const [agregarAGrupo, setAgregarAGrupo] = useState<string | null>(null);      // grupo al que se agregan clientes
-  const [formGrupo, setFormGrupo] = useState<{ grupo: GrupoClientes | null; paraCliente?: string } | null>(null);
+  const [formGrupo, setFormGrupo] = useState<{ grupo: GrupoClientes | null; paraCliente?: string; desdeLista?: boolean } | null>(null);
   const [cuentaGrupoId, setCuentaGrupoId] = useState<string | null>(null);      // "Cobrar al grupo"
   const [verListaGrupos, setVerListaGrupos] = useState(false);                  // ver y administrar grupos
   // Crear deudas es como vender a crédito
@@ -686,28 +686,17 @@ if (fiaData) {
             style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
             onKeyDown={(e) => {
               if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById(PESTANAS[PESTANAS.length - 1].boton)?.focus(); }
-              else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); document.getElementById('btn-nuevo-grupo')?.focus(); }
+              else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); document.getElementById('btn-ver-grupos')?.focus(); }
               else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); document.getElementById('buscador-clientes')?.focus(); }
               else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); }
             }}
             className="boton-cabecera px-3 sm:px-4 lg:px-6 py-3 lg:py-4 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none flex-1 sm:flex-initial">
             <UserPlus size={16} /> Nuevo cliente
           </button>
-          <button id="btn-nuevo-grupo" type="button" onClick={() => setFormGrupo({ grupo: null })}
-            style={{ '--icono': 'var(--color-info)' } as React.CSSProperties}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById('btn-nuevo-cliente')?.focus(); }
-              else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); document.getElementById('btn-ver-grupos')?.focus(); }
-              else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); document.getElementById('buscador-clientes')?.focus(); }
-              else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); }
-            }}
-            className="boton-cabecera px-3 sm:px-4 lg:px-6 py-3 lg:py-4 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none flex-1 sm:flex-initial">
-            <Plus size={16} /> Nuevo grupo
-          </button>
           <button id="btn-ver-grupos" type="button" onClick={() => setVerListaGrupos(true)}
             style={{ '--icono': 'var(--color-ink)' } as React.CSSProperties}
             onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById('btn-nuevo-grupo')?.focus(); }
+              if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById('btn-nuevo-cliente')?.focus(); }
               else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); document.getElementById('buscador-clientes')?.focus(); }
               else if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); }
             }}
@@ -802,7 +791,7 @@ if (fiaData) {
         ayuda="Elige su familia o empresa (un cliente está en un solo grupo)"
         opciones={grupos.map((g) => ({ id: g.id, titulo: g.nombre, subtitulo: `${g.tipo === 'EMPRESA' ? 'Empresa' : 'Familia'}${g.ruc ? ` · RUC ${g.ruc}` : ''} · ${miembrosDe(g.id).length} persona(s)`, buscar: [g.ruc] }))}
         vacia="Todavía no hay grupos: crea uno."
-        extra={{ titulo: '+ Crear grupo nuevo', alElegir: () => setFormGrupo({ grupo: null, paraCliente: elegirGrupoPara || undefined }) }}
+        extra={{ titulo: 'Crear grupo nuevo', alElegir: () => setFormGrupo({ grupo: null, paraCliente: elegirGrupoPara || undefined }) }}
         onElegir={async (gid) => { if (elegirGrupoPara && (await ponerEnGrupo(elegirGrupoPara, gid))) setElegirGrupoPara(null); }}
         onClose={() => setElegirGrupoPara(null)}
       />
@@ -821,7 +810,7 @@ if (fiaData) {
         ayuda="Selecciona un grupo para ver sus miembros o administrarlo, o crea uno nuevo"
         opciones={grupos.map((g) => ({ id: g.id, titulo: g.nombre, subtitulo: `${g.tipo === 'EMPRESA' ? 'Empresa' : 'Familia'}${g.ruc ? ` · RUC ${g.ruc}` : ''} · ${miembrosDe(g.id).length} cliente(s)`, buscar: [g.ruc] }))}
         vacia="Todavía no hay grupos creados."
-        extra={{ titulo: '+ Crear grupo nuevo', alElegir: () => { setVerListaGrupos(false); setFormGrupo({ grupo: null }); } }}
+        extra={{ titulo: 'Crear grupo nuevo', alElegir: () => { setVerListaGrupos(false); setFormGrupo({ grupo: null, desdeLista: true }); } }}
         onElegir={(gid) => { setVerListaGrupos(false); setGrupoVerId(gid); }}
         onClose={() => { setVerListaGrupos(false); setTimeout(() => document.getElementById('btn-ver-grupos')?.focus(), 50); }}
       />
@@ -836,10 +825,26 @@ if (fiaData) {
           if (formGrupo?.paraCliente && (await ponerEnGrupo(formGrupo.paraCliente, id))) setElegirGrupoPara(null);
           return true;
         }}
-        onClose={() => {
-          const volverBoton = !formGrupo?.paraCliente && !formGrupo?.grupo;
+        onVolver={() => {
+          const volvioALista = formGrupo?.desdeLista;
+          const paraCli = formGrupo?.paraCliente;
           setFormGrupo(null);
-          if (volverBoton) setTimeout(() => document.getElementById('btn-nuevo-grupo')?.focus(), 50);
+          if (volvioALista) {
+            setVerListaGrupos(true);
+          } else if (paraCli) {
+            setElegirGrupoPara(paraCli);
+          } else {
+            setTimeout(() => document.getElementById('btn-ver-grupos')?.focus(), 50);
+          }
+        }}
+        onClose={() => {
+          const volvioALista = formGrupo?.desdeLista;
+          setFormGrupo(null);
+          if (volvioALista) {
+            setVerListaGrupos(true);
+          } else {
+            setTimeout(() => document.getElementById('btn-ver-grupos')?.focus(), 50);
+          }
         }}
       />
 

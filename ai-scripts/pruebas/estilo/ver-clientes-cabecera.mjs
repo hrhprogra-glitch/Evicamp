@@ -23,7 +23,7 @@ await page.waitForSelector('#sidebar-btn-clientes', { timeout: 20000 });
 await new Promise(r => setTimeout(r, 1500));
 await page.evaluate(() => sessionStorage.removeItem('clientes_pestana'));
 await page.click('#sidebar-btn-clientes');
-await page.waitForSelector('#btn-nuevo-grupo', { timeout: 10000 });
+await page.waitForSelector('#btn-ver-grupos', { timeout: 10000 });
 await new Promise(r => setTimeout(r, 1000));
 
 const screenshotPath = 'C:/Users/User/.gemini/antigravity-ide/brain/a96188fc-0b77-4cdf-8c9c-73f7eb63bbb4/clientes_cabecera_sobria.png';

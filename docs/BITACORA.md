@@ -7,20 +7,20 @@
 
 ---
 
-## 04/11/2026 (87) · Antigravity — Botones directos para crear y administrar Grupos en Clientes (solo siumax)
+## 04/11/2026 (87) · Antigravity — Botón Grupos (n) en cabecera y flujo con botón Volver al crear grupo (solo siumax)
 - **Clientes (`src/sections/Clientes/index.tsx` y `ModalFormGrupo.tsx`):**
-  1. **Problema resuelto:** el dueño notó que no había forma de crear un grupo de clientes desde la pantalla principal; solo se permitía crear grupos si ya se tenía un cliente registrado (entrando a su detalle).
-  2. **Botones en cabecera:** se añadieron los botones `[+ Nuevo grupo]` y `[Grupos (N)]` al lado de `[+ Nuevo cliente]` con estilo oficial `boton-cabecera` (fondo blanco, borde fino 1px, ícono de color con acento, esquinas rectas sin sombras).
-  3. **Acciones directas:**
-     - `[+ Nuevo grupo]`: abre directo `ModalFormGrupo` para registrar una familia o empresa en cualquier momento, incluso con 0 clientes.
-     - `[Grupos (N)]`: abre `ModalElegir` mostrando la lista de grupos existentes con su conteo de miembros y tipo (Empresa/Familia). Al seleccionar un grupo abre `ModalGrupo` para ver miembros, cobrar al grupo, editarlo o eliminarlo; también incluye la opción `+ Crear grupo nuevo`.
+  1. **Ajuste pedido por el dueño:** eliminar el botón `[+ Nuevo grupo]` de la cabecera dejando únicamente `[Grupos (N)]` (al lado de `[+ Nuevo cliente]`), ya que dentro de la ventana de grupos ya existe la opción para crearlos.
+  2. **Botón "Volver" en creación de grupos:**
+     - En `ModalFormGrupo`: se agregó el botón `[ ← Volver ]` en el pie y la flecha `[ ← ]` en la cabecera.
+     - Si el usuario hace clic en Volver o presiona Escape, regresa suavemente a la lista de grupos (`ModalElegir`).
+     - Al crear el grupo con `[ Crear grupo ]`, se guarda en la base de datos y regresa automáticamente a la lista de grupos, mostrando el grupo recién creado de inmediato.
+  3. **Limpieza visual:** se corrigió la opción extra en `ModalElegir` para decir `Crear grupo nuevo` sin duplicar el símbolo `+` (antes salía `+ +`).
   4. **Navegación 100% por teclado:**
-     - Desde la pestaña Clientes (o última pestaña): `→` pasa a `btn-nuevo-cliente` → `btn-nuevo-grupo` → `btn-ver-grupos`.
-     - `←` retrocede entre ellos y vuelve a las pestañas.
-     - `↓` desde cualquiera de los tres botones baja directamente a `buscador-clientes`.
-     - Al cerrar o guardar el modal de grupo, el foco regresa suavemente al botón de cabecera.
-     - En `ModalFormGrupo.tsx`: se robusteció la función `mover` con teclado para que la transición entre Familia y Empresa mediante `← →` mantenga la secuencia correcta al presionar `Enter` hacia el RUC y descuento.
-  5. **Verificado en siumax:** prueba automatizada con Puppeteer / Edge (`ai-scripts/pruebas/prueba-botones-grupos-clientes.mjs`) validó toda la navegación de teclas, la creación directa en Postgres y el retorno de foco (17/17 checks ✅, 0 errores JS). Capturas guardadas: `clientes_cabecera_sobria.png` y `clientes_grupos_cabecera.png`.
+     - Desde la pestaña Clientes: `→` pasa a `btn-nuevo-cliente` → `btn-ver-grupos`.
+     - `←` regresa entre ellos y vuelve a las pestañas.
+     - `↓` desde cualquiera baja a `buscador-clientes`.
+     - En `ModalFormGrupo`: `ArrowLeft` desde "Crear grupo" pasa a "Volver", y `ArrowRight` regresa a "Crear grupo".
+  5. **Verificado en siumax:** prueba automatizada con Puppeteer / Edge (`ai-scripts/pruebas/prueba-botones-grupos-clientes.mjs`) pasó 16/16 checks con 0 errores JS. Capturas guardadas: `clientes_cabecera_sobria.png`, `modal_form_grupo_con_volver.png` y `lista_grupos_tras_crear.png`.
 - Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
 
 ---

@@ -1974,9 +1974,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/index.tsx": {
-    "mtime": 1793824185.4962897,
-    "seen": 1793824613.062711,
-    "ast_hash": "3c541e959a76c6c0b527829755208360",
+    "mtime": 1793825145.996647,
+    "seen": 1793825466.7779555,
+    "ast_hash": "e73491d413b607f55107dba9ce5c4ee9",
     "semantic_hash": ""
   },
   "src/sections/Clientes/types.ts": {
@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793824526.917728,
-    "seen": 1793824613.0628517,
-    "ast_hash": "dbf009940f4a8c8b913359b74e2bcd4f",
+    "mtime": 1793825391.7915254,
+    "seen": 1793825466.7780802,
+    "ast_hash": "831c7cff6cce0ff089ae91fb24cf58ec",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793824571.3853614,
-    "seen": 1793824613.0628526,
-    "ast_hash": "152c598580b803d0eb7c7c7435741f1f",
+    "mtime": 1793825444.1059873,
+    "seen": 1793825466.778081,
+    "ast_hash": "151584a278a9380befc3564ad771bf84",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793824554.1699097,
-    "seen": 1793824613.0628543,
-    "ast_hash": "58cdc1ae59b45d2d8981dd2bc3765b02",
+    "mtime": 1793825419.1749902,
+    "seen": 1793825466.7780828,
+    "ast_hash": "8a629e39f7732d8a6f7a7280057ccffb",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2064,9 +2064,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalFormGrupo.tsx": {
-    "mtime": 1793824354.3800392,
-    "seen": 1793824613.0627034,
-    "ast_hash": "5967fe08e5a8aaf3b0509885adfe948a",
+    "mtime": 1793825057.639463,
+    "seen": 1793825466.777949,
+    "ast_hash": "3e8325395f42620090e580bc776c12c7",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalGrupo.tsx": {
@@ -2598,15 +2598,15 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/ver-clientes-cabecera.mjs": {
-    "mtime": 1793824449.1499658,
-    "seen": 1793824613.0625365,
-    "ast_hash": "b68d1f54b41dfcd7324b7e81ee6f8240",
+    "mtime": 1793825335.4329643,
+    "seen": 1793825466.7778053,
+    "ast_hash": "8ea9aa1e7c45843da1a764699787157d",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-botones-grupos-clientes.mjs": {
-    "mtime": 1793824374.1719668,
-    "seen": 1793824613.06255,
-    "ast_hash": "9f262ce1463e41acb9ec33842a24b0e7",
+    "mtime": 1793825226.5790155,
+    "seen": 1793825466.777816,
+    "ast_hash": "8662276f08fa6fdbb78af7c0d5af9cfc",
     "semantic_hash": ""
   }
 }
