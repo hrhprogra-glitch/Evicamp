@@ -113,8 +113,8 @@ export const PestanaTiendaWeb: React.FC = () => {
       </div>
 
       {/* Tarjeta Enlace Público */}
-      <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-600 shadow-[4px_4px_0_0_#059669]">
-        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-800 block mb-1">
+      <div className="p-4 tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)]">
+        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-ink)] block mb-1">
           🌐 Enlace Público de tu Tienda Web
         </span>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -122,13 +122,14 @@ export const PestanaTiendaWeb: React.FC = () => {
             type="text"
             readOnly
             value={urlTienda}
-            className="flex-1 px-3 py-2 text-xs font-mono bg-white border border-emerald-500 select-all"
+            className="flex-1 px-3 py-2 text-xs font-mono bg-white border border-[var(--color-border)] select-all"
           />
           <button
             id="btn-copiar-enlace-tienda"
             type="button"
             onClick={handleCopiarEnlace}
-            className="flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider hover:bg-emerald-800 transition-colors cursor-pointer"
+            style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+            className="boton-cabecera flex items-center justify-center gap-1.5 px-4 py-2 border border-[var(--color-border)] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
           >
             {copiado ? <Check size={14} /> : <Copy size={14} />}
             {copiado ? '¡Copiado!' : 'Copiar Enlace'}
@@ -137,7 +138,7 @@ export const PestanaTiendaWeb: React.FC = () => {
             href={urlTienda}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1.5 px-4 py-2 bg-white text-emerald-900 border border-emerald-700 font-bold text-xs uppercase tracking-wider hover:bg-emerald-100 transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-1.5 px-4 py-2 bg-[var(--color-bg)] text-[var(--color-ink)] border border-[var(--color-border)] font-bold text-xs uppercase tracking-wider hover:bg-[var(--color-bg-2)] transition-colors cursor-pointer"
           >
             <ExternalLink size={14} /> Ver Tienda
           </a>
@@ -158,7 +159,7 @@ export const PestanaTiendaWeb: React.FC = () => {
       {/* Formulario de Ajustes */}
       <form onSubmit={handleGuardar} className="space-y-4">
         {/* Switch Tienda Activa */}
-        <div className="p-3 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] flex items-center justify-between">
+        <div className="p-3 tarjeta-sobria border border-[var(--color-border)] bg-[var(--color-surface)] flex items-center justify-between">
           <div>
             <span className="text-xs font-bold uppercase block">
               Estado de la Tienda Web
@@ -206,7 +207,7 @@ export const PestanaTiendaWeb: React.FC = () => {
         </div>
 
         {/* Modo Ocultar Precios */}
-        <div className="p-3 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] flex items-center justify-between">
+        <div className="p-3 tarjeta-sobria border border-[var(--color-border)] bg-[var(--color-surface)] flex items-center justify-between">
           <div>
             <span className="text-xs font-bold uppercase block">
               Ocultar Precios al Público (Modo Cotización / Mayorista)
@@ -247,7 +248,8 @@ export const PestanaTiendaWeb: React.FC = () => {
           <button
             type="submit"
             disabled={guardando}
-            className="flex items-center gap-2 px-6 py-2.5 bg-[var(--color-accent)] text-[var(--color-ink)] border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)] transition-all cursor-pointer shadow-[3px_3px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] disabled:opacity-50"
+            style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+            className="boton-cabecera flex items-center gap-2 px-6 py-2.5 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-50"
           >
             {guardando ? (
               <>

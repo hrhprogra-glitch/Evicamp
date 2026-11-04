@@ -228,7 +228,7 @@ export const FormularioEmpresa: React.FC = () => {
   }
 
   return (
-    <div className="bg-white border border-[var(--color-border)] shadow-sm">
+    <div className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)]">
       <div className="p-4 border-b border-[var(--color-border)] bg-[var(--color-bg)] flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
         <div>
           <h2 className="text-[var(--color-ink)] font-bold uppercase text-sm flex items-center gap-2">
@@ -241,6 +241,7 @@ export const FormularioEmpresa: React.FC = () => {
         </div>
         <button
           id="btn-guardar-empresa"
+          type="button"
           onClick={handleGuardar}
           disabled={guardando}
           onKeyDown={(e) => {
@@ -258,7 +259,8 @@ export const FormularioEmpresa: React.FC = () => {
               focusAndSelect('input-empresa-telefono');
             }
           }}
-          className={`${guardando ? 'bg-[var(--color-subtle)]' : 'bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)]'} text-white px-5 py-2.5 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 focus:outline-none focus:ring-4 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:shadow-[4px_4px_0_0_var(--color-accent)] cursor-pointer`}
+          style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+          className="boton-cabecera px-5 py-2.5 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
         >
           {guardando ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
           {guardando ? 'Guardando...' : 'Guardar Cambios'}

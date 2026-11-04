@@ -4,7 +4,7 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 04/11/2026 (84), Antigravity: **Estilo oficial "SiuMax Sobrio" aplicado a Utilidades (Inteligencia de Negocio)** en `siumax` (cabecera, tarjetas, buscador/filtros fuera de la tabla, tabla-marco y paginación arriba/abajo; teclado 100% probado en Edge). Siguiente: Ajustes (Usuarios, Tiendas, Facturación, etc.) o Proveedores.
+- **Última actualización:** 04/11/2026 (85), Antigravity: **Estilo oficial "SiuMax Sobrio" aplicado a Ajustes (Configuraciones)** en `siumax` (cabecera con pestañas sobrias, buscador y filtros fuera de la tabla, tarjeta-sobria, boton-cabecera y tabla-marco; teclado 100% probado en Edge). Siguiente: Proveedores.
 - (83) 04/11/2026, Claude: **entrega a Antigravity** (ver BITACORA 83: estado, siguiente paso y cuidados). Siguiente: estilo SiuMax Sobrio en Utilidades, Ajustes y Proveedores (receta en MEMORIA-IA §18).
 - (82) 04/11/2026, Claude: estilo oficial **"SiuMax Sobrio"** (modelo Inventario) ya en Inventario, Compras, Clientes, Conteos y **Finanzas + Ver historial** (solo siumax). Siguiente: Utilidades y Ajustes. Nada subido a Evicamp ni GitHub desde el pase (80).
 - (80) 03/11/2026, Claude: **FASES 8, 9, 10 y 11 SUBIDAS A EVICAMP, clientes y GitHub** (facturación apagada en Evicamp; Evicamp NO paga: nunca Mercado Pago). Siguiente: buscador, filtros y paginación iguales a Inventario en todas las secciones (pedido del dueño).
@@ -18,7 +18,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
-| **Estilo "SiuMax Sobrio" en todas las secciones** (cabecera, buscador, filtros, paginación, vacío y tabla como Inventario) | **Aprobado 04/11. ✅ Inventario, Compras, Clientes, Conteos, Finanzas, Ver historial y Utilidades en siumax. Falta: Ajustes (Usuarios, Tiendas, Facturación); Proveedores; tablas dentro de ventanas (preguntar); pasar a Evicamp solo con aviso** |
+| **Estilo "SiuMax Sobrio" en todas las secciones** (cabecera, buscador, filtros, paginación, vacío y tabla como Inventario) | **Aprobado 04/11. ✅ Inventario, Compras, Clientes, Conteos, Finanzas, Ver historial, Utilidades y Ajustes en siumax. Falta: Proveedores; tablas dentro de ventanas (preguntar); pasar a Evicamp solo con aviso** |
 | **Nuevo aspecto de la Tienda Web** (PC y celular, libre del estilo de la caja) | **✅ Hecho y en siumax (02/11, commit c202ae8); falta revisión del dueño. siumax tiene 0 productos (pedir permiso para cargar de prueba)** |
 | **Fase 11 SUNAT: plan en 8 partes (11.1 servidor y datos → 11.8 directo a SUNAT)** | **Aprobado 02/11. ✅ 11.1 a 11.8 hechas y probadas en siumax (03/11, rama fase-11-sunat, 1838ed2). Directo a SUNAT aceptado por el ambiente de pruebas de SUNAT. Falta: revisión del dueño, probar Nubefact con cuenta real (el dueño ya tiene RUC 10, la pide), y pasar a Evicamp solo con su aviso** |
 | **Fase 9 (Varias tiendas o almacenes y traspasos)** | **✅ Hecho y probado en siumax (02/11); listo para revisión del dueño** |

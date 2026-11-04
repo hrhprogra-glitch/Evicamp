@@ -480,7 +480,8 @@ export const PestanaFacturacion: React.FC<{ onIrEmpresa: () => void }> = ({ onIr
           type="button"
           aria-disabled={guardando}
           onClick={() => !guardando && guardar()}
-          className="flex items-center gap-2 px-6 py-2.5 bg-[var(--color-accent)] text-[var(--color-ink)] border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)] transition-all cursor-pointer shadow-[3px_3px_0_0_var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] rounded-none"
+          style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+          className="boton-cabecera flex items-center gap-2 px-6 py-2.5 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-50"
         >
           {guardando ? <><Loader2 size={16} className="animate-spin" /> Guardando…</> : <><Save size={16} /> Guardar cambios</>}
         </button>

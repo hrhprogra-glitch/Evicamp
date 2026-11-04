@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Users, Plus, Edit2, ShieldAlert, Trash2, Search, Filter } from 'lucide-react';
+import { Users, Plus, Edit2, ShieldAlert, Trash2, Search, X } from 'lucide-react';
 import type { Empleado } from '../types';
 import { ModalUsuario } from './ModalUsuario';
 import { supabase } from '../../../db/supabase';
@@ -257,57 +257,61 @@ export const TablaUsuarios: React.FC = () => {
   }, [modalAbierto, usuariosFiltrados]);
 
   return (
-    <div className="tabla-marco flex flex-col font-mono">
-      {/* CABECERA Y FILTROS */}
-      <div className="p-4 border-b border-[var(--color-border)] bg-[var(--color-bg)] flex flex-wrap gap-4 justify-between items-center shrink-0">
-        <div>
-          <h2 className="text-[var(--color-ink)] font-bold uppercase text-sm flex items-center gap-2">
-            <Users size={18} className="text-[var(--color-accent)]" />
-            Cuentas de Empleados
-          </h2>
-          <p className="text-[var(--color-muted)] font-mono text-xs mt-1">
-            Controla quién puede acceder al sistema y qué acciones pueden realizar.
-          </p>
+    <div className="flex flex-col gap-4 sm:gap-6 font-mono">
+      {/* BUSCADOR Y FILTROS FUERA DEL MARCO DE LA TABLA (COMO INVENTARIO, CLIENTES Y UTILIDADES) */}
+      <div className="flex flex-col xl:flex-row gap-3 sm:gap-4 shrink-0 items-stretch xl:items-center justify-between">
+        <div className="buscador-sobrio w-full xl:flex-1 shrink-0">
+          <div className="buscador-sobrio__icono"><Search size={18} /></div>
+          <input
+            id="buscador-usuarios-ajustes"
+            ref={searchInputRef}
+            type="text"
+            placeholder="BUSCAR EMPLEADO POR NOMBRE O EMAIL..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                setBusqueda('');
+                return;
+              }
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-tab-usuarios')?.focus();
+                return;
+              }
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                focusPrimerRegistro();
+                return;
+              }
+              if (e.key === 'ArrowRight' && e.currentTarget.selectionStart === e.currentTarget.value.length) {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('filtro-rol-usuarios-ajustes')?.focus();
+              }
+            }}
+            style={{ paddingRight: busqueda ? '8rem' : undefined }}
+          />
+          {busqueda && (
+            <div className="buscador-sobrio__match">
+              <span className="buscador-sobrio__conteo">{usuariosFiltrados.length} MATCH</span>
+              <button
+                type="button"
+                tabIndex={-1}
+                title="Borrar búsqueda"
+                className="buscador-sobrio__borrar"
+                onClick={() => { setBusqueda(''); searchInputRef.current?.focus(); }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
         </div>
 
-        <div className="flex flex-wrap gap-3 items-center w-full sm:w-auto">
-          {/* Buscador de usuarios */}
-          <div className="flex bg-white border border-[var(--color-border)] rounded-none focus-within:border-[var(--color-accent)] flex-1 sm:w-60 transition-all">
-            <div className="p-2 flex items-center justify-center text-[var(--color-muted)] bg-[var(--color-bg-2)] border-r border-[var(--color-border)]">
-              <Search size={15} />
-            </div>
-            <input
-              id="buscador-usuarios-ajustes"
-              ref={searchInputRef}
-              type="text"
-              placeholder="BUSCAR EMPLEADO..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'ArrowDown') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  focusPrimerRegistro();
-                } else if (e.key === 'ArrowUp') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  document.getElementById('btn-tab-usuarios')?.focus();
-                } else if (e.key === 'ArrowRight') {
-                  const input = e.currentTarget;
-                  if (input.selectionStart === input.value.length) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    document.getElementById('filtro-rol-usuarios-ajustes')?.focus();
-                  }
-                } else if (e.key === 'Escape') {
-                  e.preventDefault();
-                  setBusqueda('');
-                }
-              }}
-              className="w-full text-xs font-bold text-[var(--color-ink)] outline-none p-2 bg-transparent uppercase placeholder:text-[var(--color-subtle)] focus:ring-2 focus:ring-[var(--color-accent)]"
-            />
-          </div>
-
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full xl:w-auto">
           {/* Filtro por Rol */}
           <select
             id="filtro-rol-usuarios-ajustes"
@@ -332,7 +336,7 @@ export const TablaUsuarios: React.FC = () => {
                 document.getElementById('btn-nuevo-usuario-ajustes')?.focus();
               }
             }}
-            className="bg-white text-xs font-bold text-[var(--color-ink)] outline-none p-2 border border-[var(--color-border)] rounded-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)] cursor-pointer uppercase"
+            className="filtro-sobrio w-full sm:w-auto"
           >
             <option value="TODOS">ROL: TODOS</option>
             {rolesUnicos.map(rol => (
@@ -343,6 +347,7 @@ export const TablaUsuarios: React.FC = () => {
           {/* Botón Nuevo Usuario */}
           <button
             id="btn-nuevo-usuario-ajustes"
+            type="button"
             onClick={handleNuevoUsuario}
             onKeyDown={(e) => {
               if (e.key === 'ArrowDown') {
@@ -359,7 +364,8 @@ export const TablaUsuarios: React.FC = () => {
                 document.getElementById('btn-tab-usuarios')?.focus();
               }
             }}
-            className="bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] text-white px-4 py-2 font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-2 cursor-pointer rounded-none"
+            style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+            className="boton-cabecera flex-1 sm:flex-none justify-center bg-[var(--color-surface)] text-[var(--color-ink)] px-4 sm:px-6 py-3 border border-[var(--color-border)] font-black text-xs uppercase tracking-widest sm:tracking-[0.2em] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer flex items-center gap-2"
           >
             <Plus size={16} />
             Nuevo Usuario
@@ -367,28 +373,29 @@ export const TablaUsuarios: React.FC = () => {
         </div>
       </div>
 
-      {/* TABLA */}
-      <div className="overflow-x-auto min-h-[200px]">
+      {/* MARCO DE LA TABLA */}
+      <div className="tabla-marco overflow-x-auto min-h-[200px]">
         {loading ? (
           <div className="flex flex-col items-center justify-center p-12 gap-4">
             <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
             <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest font-mono">Cargando...</span>
           </div>
         ) : usuariosFiltrados.length === 0 ? (
-          <div className="flex justify-center items-center h-full p-8 text-[var(--color-muted)] font-mono text-xs uppercase font-bold">
+          <div className="vacio-sobrio">
+            <Search size={32} />
             {usuarios.length === 0 ? 'No hay empleados registrados todavía.' : 'No se encontraron empleados con los filtros aplicados.'}
           </div>
         ) : (
           <table id="tabla-usuarios-ajustes" className="w-full text-left border-collapse">
-            <thead>
-              <tr className="tabla-cabecera">
+            <thead className="tabla-cabecera sticky top-0 z-10">
+              <tr>
                 <th className="p-4">Nombre / Email</th>
                 <th className="p-4">Rol Asignado</th>
                 <th className="p-4 text-center">Estado</th>
                 <th className="p-4 text-center">Acciones</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="bg-[var(--color-surface)]">
               {usuariosFiltrados.map((usuario) => (
                 <tr
                   key={usuario.id}
@@ -403,7 +410,7 @@ export const TablaUsuarios: React.FC = () => {
                       handleEditar(usuario);
                     }
                   }}
-                  className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:outline-none focus-visible:bg-[var(--color-bg-2)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-ink)] transition-colors cursor-pointer group"
+                  className="tabla-fila cursor-pointer group"
                   title="Enter o Clic para editar este usuario"
                 >
                   <td className="p-4">

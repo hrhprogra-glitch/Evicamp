@@ -79,6 +79,7 @@ export const PestanaTiendas: React.FC = () => {
 
         <button
           id="btn-nueva-tienda"
+          type="button"
           onClick={abrirCrear}
           onKeyDown={(e) => {
             if (e.key === 'ArrowDown') {
@@ -86,7 +87,8 @@ export const PestanaTiendas: React.FC = () => {
               document.getElementById('fila-tienda-0')?.focus();
             }
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-[var(--color-ink)] border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)] transition-all cursor-pointer shadow-[3px_3px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]"
+          style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+          className="boton-cabecera flex items-center gap-2 bg-[var(--color-surface)] text-[var(--color-ink)] px-4 sm:px-6 py-2.5 border border-[var(--color-border)] font-black text-xs uppercase tracking-widest sm:tracking-[0.2em] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer"
         >
           <Plus size={16} /> Nueva Tienda / Almacén
         </button>
@@ -106,7 +108,7 @@ export const PestanaTiendas: React.FC = () => {
               <th className="py-2.5 px-3 uppercase tracking-wider font-bold text-right">Acción</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--color-border)]">
+          <tbody className="bg-[var(--color-surface)]">
             {cargando ? (
               <tr>
                 <td colSpan={7} className="py-8 text-center text-[var(--color-muted)] font-mono uppercase">
@@ -115,8 +117,11 @@ export const PestanaTiendas: React.FC = () => {
               </tr>
             ) : tiendas.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-[var(--color-muted)] font-mono uppercase">
-                  No hay tiendas registradas.
+                <td colSpan={7} className="p-0">
+                  <div className="vacio-sobrio">
+                    <StoreIcon size={32} />
+                    No hay tiendas registradas.
+                  </div>
                 </td>
               </tr>
             ) : (
@@ -127,7 +132,7 @@ export const PestanaTiendas: React.FC = () => {
                   tabIndex={0}
                   onKeyDown={(e) => handleKeyDown(e, idx, tienda)}
                   onClick={() => abrirEditar(tienda)}
-                  className="hover:bg-[var(--color-bg)] cursor-pointer focus:bg-[var(--color-ink)] focus:text-white transition-colors group"
+                  className="tabla-fila cursor-pointer group"
                 >
                   <td className="py-2.5 px-3 font-bold font-mono">
                     {tienda.codigo || `T${tienda.id}`}

@@ -7,6 +7,26 @@
 
 ---
 
+## 04/11/2026 (85) · Antigravity — Estilo oficial "SiuMax Sobrio" aplicado en Ajustes (solo siumax)
+- **Ajustes / Configuraciones (`src/sections/Configuraciones/`):** adaptado idéntico al modelo de Inventario > Productos.
+  1. **Cabecera sobria:** fondo liso con borde inferior de 2px, ícono verde con sombra sutil, título `AJUSTES`, y pestañas sobrias (`pestanas-sobrias` con borde fino, sin sombras, y pestaña activa subrayada con acento verde).
+  2. **Gestión de Usuarios (`TablaUsuarios.tsx`):**
+     - Buscador sobrio (`buscador-sobrio`) fuera del marco de la tabla con ícono verde al enfocar, conteo en vivo ("N MATCH") y borrado con tecla Escape.
+     - Selector de rol con `filtro-sobrio` (sin curvas).
+     - Botón `[ + Nuevo Usuario ]` con `boton-cabecera` (blanco, borde fino, sin sombras pesadas, ícono con acento).
+     - Tabla envuelta en `tabla-marco`, encabezado oscuro `tabla-cabecera`, filas `tabla-fila` y estado `vacio-sobrio`.
+  3. **Tiendas y Almacenes (`PestanaTiendas.tsx`):** botón `[ + Nueva Tienda / Almacén ]` estilizado con `boton-cabecera` (sin sombras 3D ni saltos hover), tabla con `tabla-marco`, `tabla-cabecera`, `tabla-fila` y `vacio-sobrio`.
+  4. **Tienda Web, Facturación, Empresa y Sugerencias:**
+     - Eliminados gradientes llamativos y sombras pesadas 3D (`shadow-[4px_4px_0_0_...]`).
+     - Reemplazados contenedores por `tarjeta-sobria` (borde fino 1px, esquinas rectas).
+     - Botones de guardar y enviar ajustados a `boton-cabecera` sobrios.
+  5. **Teclado 100% verificado:** navegación completa entre pestañas, buscador, filtro de rol, botón de acción y filas de usuarios.
+  6. **Prueba automatizada** `ai-scripts/pruebas/estilo/ver-ajustes.mjs` ejecutada en Edge / Puppeteer contra `https://siumax.duckdns.org` con 0 errores JS y captura guardada (`ajustes_sobrio.png`).
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+- **Siguiente paso:** Proveedores (`src/sections/Proveedores/`).
+
+---
+
 ## 04/11/2026 (84) · Antigravity — Estilo oficial "SiuMax Sobrio" aplicado en Utilidades (solo siumax)
 - **Utilidades (Inteligencia de Negocio):** adaptado idéntico al modelo de Inventario > Productos.
   1. **Cabecera sobria:** ícono verde de acento con borde fino y sombra fija, título `INTELIGENCIA DE NEGOCIO`, y botón fantasma `boton-cabecera` `[ Top 5 Rentables ]` con ícono `TrendingUp`.

@@ -276,10 +276,10 @@
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/FiltrosUtilidades.tsx": {
-    "mtime": 1791332990.0248866,
-    "seen": 1791938497.6553786,
-    "ast_hash": "555a1c17c50ff9e1e6c59b1340c3f6e9",
-    "semantic_hash": "555a1c17c50ff9e1e6c59b1340c3f6e9"
+    "mtime": 1793814347.8215382,
+    "seen": 1793814905.5498116,
+    "ast_hash": "25b79ea8451512bda376dd42b25dcbcd",
+    "semantic_hash": ""
   },
   "src/sections/Utilidades/components/ModalDetalleProducto.tsx": {
     "mtime": 1793658422.301291,
@@ -288,9 +288,9 @@
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/TablaAnalisisProductos.tsx": {
-    "mtime": 1793731853.6694527,
-    "seen": 1793813025.666891,
-    "ast_hash": "69ad2549b4ccf40e0ad2c9035b3ebdab",
+    "mtime": 1793814514.1861587,
+    "seen": 1793814905.5498135,
+    "ast_hash": "0361339c768c7866bee7a9ae028d3967",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/TablaRanking.tsx": {
@@ -300,10 +300,10 @@
     "semantic_hash": "241990860dd5e5d64bed6f7ff3b24e58"
   },
   "src/sections/Utilidades/components/TarjetasResumen.tsx": {
-    "mtime": 1791332990.02541,
-    "seen": 1791938497.6553829,
-    "ast_hash": "78312e22fa7d76166d9ed9131fdaf081",
-    "semantic_hash": "78312e22fa7d76166d9ed9131fdaf081"
+    "mtime": 1793814363.5357313,
+    "seen": 1793814905.5498152,
+    "ast_hash": "50b993b8468e30efef055f0305f0f89e",
+    "semantic_hash": ""
   },
   "src/sections/Utilidades/components/VentanaTopsFlotante.tsx": {
     "mtime": 1791332990.02541,
@@ -312,9 +312,9 @@
     "semantic_hash": "9f9074fcc5a83d6bcac8633479c556b9"
   },
   "src/sections/Utilidades/index.tsx": {
-    "mtime": 1793731976.968791,
-    "seen": 1793813025.6668947,
-    "ast_hash": "3abcf6a08099024bcf09c337ec9ec998",
+    "mtime": 1793814391.4925897,
+    "seen": 1793814905.5498173,
+    "ast_hash": "bda4f8c77eb5e08d3d53f5335c089c4a",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/types.ts": {
@@ -1992,9 +1992,9 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1793145563.2743924,
-    "seen": 1793205876.2446632,
-    "ast_hash": "ddac69c03fe67f8069e6b47282841e19",
+    "mtime": 1793813569.322506,
+    "seen": 1793813637.7193925,
+    "ast_hash": "96a8fc0c99736cfebdd423c78b1cccc6",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/LEEME.md": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793813015.7780528,
-    "seen": 1793813025.666937,
-    "ast_hash": "289e94cc0c0bd6ddcb800a99812ff661",
+    "mtime": 1793814762.1726825,
+    "seen": 1793814905.5498614,
+    "ast_hash": "939372ff164b11c2141e6bc23116a6dc",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793813015.7785666,
-    "seen": 1793813025.666938,
-    "ast_hash": "1db489f8fc8826e52c6134f1b23f4d99",
+    "mtime": 1793814863.2992342,
+    "seen": 1793814905.5498621,
+    "ast_hash": "3b20e17d2d89fed5fd4663712e09a85d",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793807514.2627819,
-    "seen": 1793813025.6669388,
-    "ast_hash": "af5780074e4ab9782deac5d53925e1cb",
+    "mtime": 1793814888.7973926,
+    "seen": 1793814905.5498629,
+    "ast_hash": "59dc0998b964109e1e135c13f6ad70d2",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793813015.7785666,
-    "seen": 1793813025.66694,
-    "ast_hash": "456ba66ffe8352a033c51f4e14e220eb",
+    "mtime": 1793814814.4968927,
+    "seen": 1793814905.549864,
+    "ast_hash": "1cdb3252687918293d44a426f2c3a6cc",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2547,6 +2547,42 @@
     "mtime": 1793806506.9430144,
     "seen": 1793813025.6667943,
     "ast_hash": "4826deee97b788b711da2ff4944a93f7",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/ver-clientes.mjs": {
+    "mtime": 1793813555.2969706,
+    "seen": 1793813637.7191083,
+    "ast_hash": "00402e6a64a0e27aced06d54804448de",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/ver-conteos.mjs": {
+    "mtime": 1793813555.2495167,
+    "seen": 1793813637.7191098,
+    "ast_hash": "b6d9469c0b61b55f970ed2fccbabf60f",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/ver-finanzas.mjs": {
+    "mtime": 1793813555.2319112,
+    "seen": 1793813637.719111,
+    "ast_hash": "b0298c719fde5e5c199d8e2feb27b4fc",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/ver-inventario.mjs": {
+    "mtime": 1793813555.2784142,
+    "seen": 1793813637.719112,
+    "ast_hash": "a4c43ca79d6ccb0e0ad996cf4254c4bf",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/LEEME.md": {
+    "mtime": 1793813594.2067516,
+    "seen": 1793813637.719396,
+    "ast_hash": "dd0be0b2b555ee36f904177a2fe63bb0",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/ver-utilidades.mjs": {
+    "mtime": 1793814689.2612486,
+    "seen": 1793814905.5495894,
+    "ast_hash": "5249520cdb5cd6eba6c230851a9e1539",
     "semantic_hash": ""
   }
 }

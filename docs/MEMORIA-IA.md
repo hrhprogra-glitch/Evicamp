@@ -298,8 +298,7 @@ palabras: *"la tabla la resaltan los botones y el buscador, y el fondo no me dis
 Inventario, no parecido, y manda capturas con lo distinto marcado en rojo.
 
 **Ya hecho (solo siumax):** Inventario (Productos, Lotes, Compras), Clientes (Clientes, Créditos, Cotizaciones, Pedidos),
-Conteos, Finanzas (caja actual), Ver historial y Utilidades. **Falta:** Ajustes/Configuraciones (Usuarios, Tiendas, Facturación, etc.),
-Proveedores y, si el dueño quiere, las tablas dentro de ventanas (preguntarle primero).
+Conteos, Finanzas (caja actual), Ver historial, Utilidades y Ajustes. **Falta:** Proveedores y, si el dueño quiere, las tablas dentro de ventanas (preguntarle primero).
 
 **Piezas compartidas (en `src/index.css`, alrededor de la línea 760; no inventar estilos nuevos):**
 - Tabla: `tabla-marco` (contenedor), `tabla-cabecera` (thead oscuro), `tabla-fila`; filas con `border-b` fino, sin rayas verticales gruesas.
