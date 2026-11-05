@@ -329,7 +329,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div id="modal-produccion-receta" role="dialog" aria-label="Producir" className="ventana-sobria bg-[var(--color-surface)] w-full max-w-3xl border-2 border-[var(--color-ink)] flex flex-col h-[calc(90dvh/var(--ui-zoom))]">
+      <div id="modal-produccion-receta" role="dialog" aria-label="Producir" className={`ventana-sobria bg-[var(--color-surface)] w-full max-w-3xl border-2 border-[var(--color-ink)] flex flex-col ${vista === 'LISTA' || cargando ? 'h-[calc(90dvh/var(--ui-zoom))]' : 'max-h-[calc(90dvh/var(--ui-zoom))]'}`}>
         {/* CABECERA */}
         <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3 min-w-0">
@@ -403,7 +403,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
               </CajaLista>
             </>
           ) : vista === 'FORM' ? (
-            <div className="border-2 border-[var(--color-border)] bg-white p-3 sm:p-4 flex flex-col gap-5 shrink-0">
+            <div className="flex flex-col gap-5 shrink-0">
               {/* 1. NOMBRE */}
               <div>
                 <label htmlFor="input-nombre-compuesto" className={etiquetaCampo}>1. Nombre</label>
@@ -518,7 +518,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
               </div>
             </div>
           ) : elegido && (
-            <div className="border-2 border-[var(--color-border)] bg-white p-3 sm:p-4 flex flex-col gap-4 shrink-0">
+            <div className="flex flex-col gap-4 shrink-0">
               <p id="tope-produccion" role="status" className={`p-3 border-2 text-xs font-black uppercase ${topeProd.max > 0 ? 'border-[var(--color-accent)] bg-[var(--color-accent-bg)] text-[var(--color-accent)]' : 'border-[var(--color-danger)] bg-[var(--color-danger-bg)] text-[var(--color-danger)]'}`}>
                 {topeProd.max > 0 ? `Puedes producir hasta ${topeProd.max} ${elegido.unit}` : 'No alcanza para producir'}
                 <span className="block text-[11px] font-bold normal-case">{textoLimita(topeProd)}</span>
@@ -554,7 +554,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
         {vista !== 'LISTA' && !cargando && (
           <div className="shrink-0 border-t-2 border-[var(--color-ink)] px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-end gap-3 bg-[var(--color-surface)]">
             <button id="btn-volver-produccion" type="button" onClick={() => { setVista('LISTA'); enfocar('btn-nuevo-compuesto'); }} className={`${claseBotonBarra(false)} sm:mr-auto`}>
-              ← Combos y recetas
+              ← Volver
             </button>
             {vista === 'FORM' ? (
               <>
