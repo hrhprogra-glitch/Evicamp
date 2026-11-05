@@ -878,7 +878,7 @@ nav button {
   background: var(--icono, var(--color-accent-shadow)); border: 1px solid var(--color-ink); color: #fff !important; }
 .ventana-cabecera h2, .ventana-cabecera h3 { color: var(--color-ink) !important; }
 .ventana-cabecera p, .ventana-cabecera small { color: var(--color-muted) !important; }
-.ventana-cabecera .text-white, .ventana-cabecera [class*="text-white/"] { color: var(--color-ink) !important; }
+.ventana-cabecera .text-white:not([class*="bg-"]), .ventana-cabecera [class*="text-white/"]:not([class*="bg-"]) { color: var(--color-ink) !important; }
 /* El ícono de la cabecera va en su cuadrito de color aunque no sea lo primero del título */
 .ventana-cabecera > svg:first-child,
 .ventana-cabecera > :first-child > svg:first-child,
@@ -899,9 +899,9 @@ nav button {
 .ventana-cabecera button:has(> svg.lucide-x):focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-ink) !important; }
 .ventana-cabecera button:has(> svg.lucide-x) svg { width: 18px !important; height: 18px !important; }
 /* Subtítulos de color (amarillo, verde…) en gris, como el modelo */
-.ventana-cabecera :not(h2):not(h3):not(svg)[class*="text-amber"], .ventana-cabecera :not(h2):not(h3):not(svg)[class*="text-yellow"],
-.ventana-cabecera :not(h2):not(h3):not(svg)[class*="text-emerald"], .ventana-cabecera :not(h2):not(h3):not(svg)[class*="text-[var(--color-accent"],
-.ventana-cabecera :not(h2):not(h3):not(svg)[class*="text-[var(--color-warning"] { color: var(--color-muted) !important; }
+.ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-amber"], .ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-yellow"],
+.ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-emerald"], .ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-[var(--color-accent"],
+.ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-[var(--color-warning"] { color: var(--color-muted) !important; }
 /* Toda zona con scroll dentro de una ventana usa la barra delgada del sistema (como .custom-scrollbar),
    aunque se le haya olvidado la clase (pedido del dueño 04/11/2026: vista previa del ticket) */
 .ventana-sobria, .ventana-sobria * { scrollbar-width: thin; scrollbar-color: #CBD5E1 #F8FAFC; }
@@ -919,3 +919,5 @@ html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-thumb, html[data-them
 @supports selector(::-webkit-scrollbar) {
   .custom-scrollbar, .ventana-sobria, .ventana-sobria * { scrollbar-width: auto !important; scrollbar-color: auto !important; }
 }
+/* Dentro de un botón o pastilla oscura de la cabecera (ej. "Ticket | Tabla" del detalle del ticket) la letra sigue clara */
+.ventana-cabecera [class*="bg-[var(--color-ink)]"] .text-white, .ventana-cabecera [class*="bg-[var(--color-ink)]"].text-white { color: #fff !important; }
