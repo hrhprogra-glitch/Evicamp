@@ -18,8 +18,9 @@ export const nombreBonito = (texto: string | null | undefined): string => {
 };
 
 /** Dos letras para el recuadro de un producto sin foto: "Inca Kola 1.5L" → "IK". */
-export const iniciales = (texto: string): string => {
-  const palabras = texto.trim().split(/\s+/).filter((p) => /[a-záéíóúñ]/i.test(p));
+// Sin texto (producto sin nombre o negocio sin nombre: pasó en Evicamp y la tienda no cargaba) → '•'
+export const iniciales = (texto: string | null | undefined): string => {
+  const palabras = (texto || '').trim().split(/\s+/).filter((p) => /[a-záéíóúñ]/i.test(p));
   return ((palabras[0]?.[0] || '') + (palabras[1]?.[0] || '')).toUpperCase() || '•';
 };
 
