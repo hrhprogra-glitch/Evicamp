@@ -7,6 +7,17 @@
 
 ---
 
+## 05/11/2026 (107) · Claude — PASE a Evicamp, clientes, siumax y GitHub (Utilidades › Gráficos y detalles y todo lo de 105–106)
+- **Dueño:** *"así súbelo todo a evicamp, a mi github y siumax para mis clientes que pagan"*.
+- **SQL:** solo Evicamp lo necesitaba (no existen bases cli_*; siumax ya lo tenía). Ensayo en copia (`ensayo-fases8-11-evicamp.cjs`): 0 errores, 3658 ventas y 1259 productos intactos. Real (`aplicar-fases8-11-evicamp.cjs`): respaldo `respaldo-evicamp-pase-fases8-11-2026-11-05T17-33-09-831Z.dump`, `seguridad-sesion.sql` código 0 en 1.8 s, 0 errores, sin reiniciar la API, la caja abierta siguió abierta. Nueva columna `empresa_config.gastos_fijos_mes` verificada. Facturación de Evicamp sigue apagada (SIMULADO).
+- **Deploy:** `deploy.cjs todos` (evicamp, siumax, clientes: 21 archivos c/u, `index-Dig5_IVd.js`).
+- **Verificado:** Evicamp y siumax HTTP 200, login sin errores JS, sin `/suscripcion.json` (Evicamp sin Mercado Pago), Tienda Web carga sin errores, API `/rest/v1` 401 sin sesión.
+- **GitHub:** merge `--no-ff` de `fase-11-sunat` a `main` y push.
+- Cajeros: Ctrl+F5 o volver a abrir el .exe para ver la versión nueva.
+- Pendiente del dueño: probar Gráficos y detalles y avisar errores; decidir el ↓ de "Exacto tarjeta/yape" en el cobro.
+
+---
+
 ## 05/11/2026 (105) · Claude — Dos reglas más del selector: las flechas nunca cambian una opción y Enter en una casilla = clic (solo siumax)
 - **Dueño** (capturas de Nuevo producto): *"con la flecha izquierda cambia la unidad… debería solo cambiar cuando presiono Enter para desplegarlo"* y *"al darle check al número de serie con Enter no se pone check, pasa al siguiente… el Enter es como un clic"*.
 - **Reglas universales** en `src/utils/flechasEspaciales.ts` (`alTeclearPrimero`, captura de window, registrada al abrir la app → corre antes que el teclado de cualquier ventana):
