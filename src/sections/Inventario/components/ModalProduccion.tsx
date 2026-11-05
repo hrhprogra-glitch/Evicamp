@@ -527,9 +527,11 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                     onKeyDown={(e) => {
                       const items = () => Array.from(document.querySelectorAll('[data-cat-prod="true"]')) as HTMLElement[];
                       if (e.key === 'Enter') {
-                        e.preventDefault(); // Enter no pasa al siguiente cuadro: abre la lista o elige la primera
-                        if (!catAbierta) setCatAbierta(true);
-                        else if (categoriasFiltradas[0]) { setCategoria(categoriasFiltradas[0]); setCatAbierta(false); }
+                        // Enter no pasa al siguiente cuadro. Con algo escrito y sin elegir de la lista: se guarda LO ESCRITO;
+                        // vacío: abre la lista para elegir (de la lista se elige con ↓ y Enter, o clic)
+                        e.preventDefault();
+                        if (categoria.trim()) { setCategoria(categoria.trim().toUpperCase()); setCatAbierta(false); }
+                        else setCatAbierta((v) => !v);
                       } else if (e.key === 'ArrowDown' && catAbierta && categoriasFiltradas.length) { e.preventDefault(); items()[0]?.focus(); }
                       else if (e.key === 'Escape' && catAbierta) { e.preventDefault(); e.stopPropagation(); setCatAbierta(false); }
                     }}

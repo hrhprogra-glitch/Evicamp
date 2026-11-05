@@ -35,7 +35,10 @@
   opciones, campos de texto y de número). Enter NUNCA pasa al siguiente cuadro; para moverse están las flechas. En un campo, Enter
   solo hace su acción si tiene una (elegir el primer resultado de un buscador, "Agregar" en la cantidad) y el selector no se mueve.
   Si el elemento desaparece (lista que se cierra, fila quitada), el selector vuelve a de donde salió o al vecino más cercano.
-  No programar `Enter → enfocar(siguiente)` en pantallas nuevas.
+  No programar `Enter → enfocar(siguiente)` en pantallas nuevas. **Ya lo garantiza `flechasEspaciales.ts` (guardiaEnter +
+  focusin) en TODAS las ventanas:** si tras un Enter en un campo el selector va a otro campo/botón de la misma ventana,
+  vuelve al de origen (no actúa si el Enter abrió/cerró una ventana, si el campo desapareció o entró a una lista).
+  **Categorías:** Enter sin elegir de la lista guarda LO ESCRITO (no la primera parecida); de la lista se elige con ↓ + Enter.
 - **Reglas 7 y 8 (05/11/2026):** las flechas NUNCA cambian una opción (listas desplegables, grupos de opciones tipo radio, unidades…):
   solo mueven el selector; **Enter despliega o elige**. **Enter en una casilla = clic** (se marca y el selector se queda). Lo garantiza
   `alTeclearPrimero` en `flechasEspaciales.ts`; no programar "← → cambia la opción" en ninguna pantalla. Vale también para

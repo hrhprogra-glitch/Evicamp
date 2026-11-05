@@ -216,6 +216,12 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   // Momento en que Escape cerró la lista de categorías: al volver el selector al campo, la lista NO se vuelve a abrir
   // (antes se reabría sola y parecía que el selector quedaba atrapado; pedido del dueño 05/11/2026)
   const catCerradaConEscape = useRef(0);
+  // Después de elegir o guardar la categoría, el selector se queda en Categoría (regla: Enter no pasa al siguiente)
+  // sin que su onFocus vuelva a abrir la lista
+  const volverACategoria = () => {
+    catCerradaConEscape.current = Date.now();
+    setTimeout(() => document.getElementById('input-categoria-producto')?.focus(), 30);
+  };
 
   // Cerrar dropdown al hacer clic fuera del contenedor de categoría
   useEffect(() => {
@@ -259,9 +265,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
     setFormData(prev => ({ ...prev, category: nuevaCat }));
     setShowCatDropdown(false);
-    setTimeout(() => {
-      document.getElementById('input-codigo-producto')?.focus();
-    }, 50);
+    volverACategoria();
   };
 
   const handleEliminarCategoria = async (cat: string) => {
@@ -773,22 +777,12 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
             }
           }
           if (e.key === 'Enter') {
+            // Enter sin elegir nada de la lista: se guarda LO ESCRITO (si no existe, se crea) y el selector se queda.
+            // Para tomar una de la lista: ↓ y Enter, o clic.
             e.preventDefault();
             const typedCat = formData.category?.trim().toUpperCase() || '';
-            if (typedCat) {
-              const matches = categoriasLista.filter(c => c.includes(typedCat));
-              if (matches.length > 0) {
-                const chosen = matches.find(c => c === typedCat) || matches[0];
-                setFormData(prev => ({ ...prev, category: chosen }));
-                setShowCatDropdown(false);
-                document.getElementById('input-codigo-producto')?.focus();
-              } else {
-                handleCrearCategoria(typedCat);
-              }
-            } else {
-              setShowCatDropdown(false);
-              document.getElementById('input-codigo-producto')?.focus();
-            }
+            if (typedCat) handleCrearCategoria(typedCat);
+            else setShowCatDropdown(false);
             return;
           }
         }
@@ -1899,14 +1893,14 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                             onClick={() => { 
                               setFormData(prev => ({...prev, category: cat})); 
                               setShowCatDropdown(false); 
-                              document.getElementById('input-codigo-producto')?.focus();
+                              volverACategoria();
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
                                 e.preventDefault();
                                 setFormData(prev => ({...prev, category: cat})); 
                                 setShowCatDropdown(false); 
-                                document.getElementById('input-codigo-producto')?.focus();
+                                volverACategoria();
                               }
                             }}
                             className="flex items-center justify-between p-3 bg-white hover:bg-[#1E293B] hover:text-white focus:!bg-[#1E293B] focus:!text-white border-b border-[#E2E8F0] last:border-0 cursor-pointer group outline-none transition-colors"

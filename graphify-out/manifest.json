@@ -174,9 +174,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/index.tsx": {
-    "mtime": 1793921946.8797417,
-    "seen": 1793921962.0906794,
-    "ast_hash": "ed7733df2524211cf54b09d26ce0ffc6",
+    "mtime": 1793922515.3864007,
+    "seen": 1793922616.482759,
+    "ast_hash": "a42414e089f58100ce755da4e3d40aeb",
     "semantic_hash": ""
   },
   "src/sections/Inventario/types.ts": {
@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793921946.8217175,
-    "seen": 1793921962.0907605,
-    "ast_hash": "e06cb360af36152092854b58743c540a",
+    "mtime": 1793922601.0344238,
+    "seen": 1793922616.4828982,
+    "ast_hash": "7bae912d20d8ceea4cfc48771fdc577b",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793921946.8222246,
-    "seen": 1793921962.0907612,
-    "ast_hash": "2f07ecfc6aa44c528c58a03adbdea436",
+    "mtime": 1793922601.0359318,
+    "seen": 1793922616.4828997,
+    "ast_hash": "ca5d409cf3d9784bab78cd3b008233eb",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793921946.823251,
-    "seen": 1793921962.0907629,
-    "ast_hash": "a1ff801d8de04bfc6bef7ee17d73855f",
+    "mtime": 1793922601.0349278,
+    "seen": 1793922616.4829028,
+    "ast_hash": "debeed603ea49ef4306a17bc18446529",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2268,9 +2268,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProduccion.tsx": {
-    "mtime": 1793921946.8787377,
-    "seen": 1793921962.0906715,
-    "ast_hash": "bf5063accd38af8900ba4719061a68ef",
+    "mtime": 1793922334.905399,
+    "seen": 1793922616.4827454,
+    "ast_hash": "603fa2154eb8d9d0cb6e9f9e56501026",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/limpiar-siumax-total.cjs": {

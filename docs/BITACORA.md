@@ -7,6 +7,15 @@
 
 ---
 
+## 05/11/2026 (116) · Claude — Regla 9 en TODAS las ventanas (Enter nunca pasa al siguiente) y Categoría guarda lo escrito (solo siumax)
+- **Dueño:** *"te faltó que si presiono Enter y no selecciono nada, se guarde eso; ponlo en todas las ventanas flotantes o las que tengan categoría; y que el Enter sea clic, nada de pasar a la siguiente selección"*.
+- **Regla general** (`src/utils/flechasEspaciales.ts`): `alTeclearPrimero` arma `guardiaEnter` al dar Enter en un campo (input/select) dentro de la ventana de arriba; un `focusin` (captura) devuelve el selector al campo si en los 400 ms siguientes una pantalla lo lleva a OTRO campo o botón de la misma ventana. No actúa si el Enter abrió/cerró una ventana, si el campo desapareció/se desactivó, ni si el selector entró a una lista (role option/listbox/menu). Así cubre las 40 ventanas sin tocarlas una por una (ModalProducto tenía 32 "Enter → siguiente").
+- **Categoría — Nuevo/Editar producto:** Enter guarda lo escrito (si no existe, la crea; antes tomaba la primera parecida y saltaba a Código); elegir de la lista sigue con ↓ + Enter o clic; después el selector se queda en Categoría sin reabrir la lista (`volverACategoria`). **Producir:** igual (Enter con texto lo guarda; vacío abre la lista).
+- Cambia en la Caja › Cobro: en los datos de boleta/factura (DNI, nombre…) Enter ya no pasa al siguiente campo (se mueve con flechas); Enter en Efectivo/Yape/Tarjeta sigue cobrando (cierra la ventana: la regla no actúa).
+- Probado en siumax: Producto › Nombre, Código, Precio, Stock mínimo, Categoría nueva ("PRUEBA REGLA NUEVE", guardada y borrada después) y escrita (BEBIDAS) → se quedan; Producir › Nombre, Precio, Categoría "pan" → se quedan y queda PAN; Nuevo ajuste › buscador elige y pasa al conteo (el buscador desaparece: permitido). 0 errores.
+
+---
+
 ## 05/11/2026 (115) · Claude — Parpadeo al cerrar Editar producto (Evicamp) y lista de Categoría en Producir (solo siumax)
 - **Dueño:** *"cuando entro a un producto y cierro, hace un parpadeo rápido; solo en Evicamp; ¿es porque tiene muchos productos con imágenes?"*
 - **Causa:** al cerrar, el selector hacía ida y vuelta: 46 ms a la fila del producto (correcto) → 130 ms `forceMountFocus` de Inventario lo llevaba al buscador → 180 ms la regla de `ventanas.ts` (no saltar al buscador) lo regresaba a la fila. En Evicamp, con la lista larga y con fotos, eso es un salto de pantalla arriba y abajo. Reproducido en siumax entregándole al navegador de prueba los productos de Evicamp (solo lectura, `ver-parpadeo-evicamp.mjs`): las fotos no se ponen en blanco; lo que cambia es el buscador iluminándose.

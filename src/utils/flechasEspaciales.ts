@@ -4,7 +4,7 @@
 // ventana (o de la sección si no hay ventana). Las flechas propias de cada pantalla siempre mandan: esto solo
 // actúa cuando ellas no hicieron nada.
 // No se usa en listas desplegables, calendarios, horas, números ni textos largos (ahí las flechas ya tienen uso).
-import { ventanaSuperior, enfocablesDe } from './ventanas';
+import { ventanaSuperior, enfocablesDe, ventanasAbiertas } from './ventanas';
 
 const FLECHAS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'] as const;
 type Flecha = typeof FLECHAS[number];
@@ -96,6 +96,17 @@ export const filaEnMedio = (origen: Element | null, destino: Element | null, ids
   return enMedio[0] || null;
 };
 
+// REGLA 9 (05/11/2026): "el Enter tiene que ser como el clic, nada de pasar a la siguiente selección", en TODAS las
+// ventanas flotantes. Tras un Enter en un campo de una ventana, durante un momento se vigila adónde va el selector: si
+// una pantalla lo lleva a OTRO campo o botón de la misma ventana, vuelve al campo de origen. No se toca si el Enter
+// abrió o cerró una ventana, si el campo de origen desapareció o se desactivó (cambió de paso), ni si el selector
+// entró a una lista que se abrió (opciones). Para moverse están las flechas.
+const ES_CAMPO_O_BOTON = 'input, select, textarea, button, [role="button"]';
+let guardiaEnter: { origen: HTMLElement; ventana: HTMLElement; ventanas: number; hasta: number } | null = null;
+const esCampoDeTexto = (el: HTMLElement | null): el is HTMLInputElement | HTMLSelectElement =>
+  (el instanceof HTMLInputElement && !['checkbox', 'radio', 'button', 'submit', 'reset', 'file', 'hidden'].includes(el.type)) ||
+  el instanceof HTMLSelectElement;
+
 // Eventos de listas desplegables cuyo "preventDefault" lo puso esta regla (no una pantalla): para saber si alguna
 // pantalla sí atendió la flecha
 const otraPantallaLoUso = new WeakMap<KeyboardEvent, () => boolean>();
@@ -113,6 +124,11 @@ export const activarFlechasEspaciales = () => {
       e.stopImmediatePropagation();
       el.click();
       return;
+    }
+    // Regla 9: Enter en un campo de una ventana → vigilar que el selector no pase al siguiente cuadro
+    if (e.key === 'Enter' && !e.shiftKey && esCampoDeTexto(el)) {
+      const v = ventanaSuperior();
+      guardiaEnter = v && v.contains(el) ? { origen: el, ventana: v, ventanas: ventanasAbiertas().length, hasta: performance.now() + 400 } : null;
     }
     // (también los campos de número: ↑ ↓ ya no suben/bajan la cantidad ni el precio; pedido del dueño 05/11/2026,
     // "en Precio de la variante y en la cantidad del combo el selector se queda atrapado")
@@ -153,12 +169,27 @@ export const activarFlechasEspaciales = () => {
       if (destino instanceof HTMLInputElement && TEXTO.includes(destino.type)) destino.select();
     }, 0);
   };
+  // Regla 9: si tras el Enter el selector se fue a otro campo o botón de la misma ventana, vuelve al de origen
+  const alEnfocar = (e: FocusEvent) => {
+    const g = guardiaEnter;
+    if (!g) return;
+    const destino = e.target as HTMLElement | null;
+    if (!destino || destino === g.origen) return;
+    const origen = g.origen as HTMLInputElement;
+    const sigueAhi = origen.isConnected && origen.getClientRects().length > 0 && !origen.disabled;
+    if (performance.now() > g.hasta || !sigueAhi || ventanasAbiertas().length !== g.ventanas) { guardiaEnter = null; return; }
+    if (!g.ventana.contains(destino) || !destino.matches(ES_CAMPO_O_BOTON)) return;   // otra ventana o una lista que se abrió
+    if (destino.closest('[role="listbox"], [role="option"], [role="menu"]')) return;
+    setTimeout(() => { if (origen.isConnected && !origen.disabled) origen.focus(); }, 0);
+  };
   window.addEventListener('keydown', alTeclearPrimero, true);
   document.addEventListener('keydown', alTeclear);
   document.addEventListener('keydown', alSoltarEnter);
+  document.addEventListener('focusin', alEnfocar, true);
   return () => {
     window.removeEventListener('keydown', alTeclearPrimero, true);
     document.removeEventListener('keydown', alTeclear);
     document.removeEventListener('keydown', alSoltarEnter);
+    document.removeEventListener('focusin', alEnfocar, true);
   };
 };
