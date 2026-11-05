@@ -107,7 +107,7 @@ try {
   // Verificar existencia del botón Volver
   const existeBtnVolver = await page.$('#btn-volver-form-grupo');
   const existeBtnVolverHdr = await page.$('#btn-header-volver-form-grupo');
-  ok('Existe botón [Volver] en el footer', !!existeBtnVolver);
+  ok('Ya NO hay botón [Volver] en el pie (el dueño pidió solo la flecha de arriba)', !existeBtnVolver);
   ok('Existe botón volver [←] en el header', !!existeBtnVolverHdr);
 
   // Tomar captura de ModalFormGrupo con botón Volver
@@ -115,10 +115,10 @@ try {
   await page.screenshot({ path: screenshotForm });
 
   // 5. Probar botón Volver (sin guardar, debe regresar a la lista de grupos)
-  await page.click('#btn-volver-form-grupo');
+  await page.click('#btn-header-volver-form-grupo');
   await page.waitForSelector('#buscar-elegir', { timeout: 5000 });
   await pausa(300);
-  ok('Clic en [Volver] regresa a la lista de grupos (ModalElegir)', !!(await page.$('#buscar-elegir')));
+  ok('Clic en la flecha [←] regresa a la lista de grupos (ModalElegir)', !!(await page.$('#buscar-elegir')));
 
   // 6. Volver a abrir Crear grupo y esta vez crearlo
   await page.keyboard.press('ArrowDown');

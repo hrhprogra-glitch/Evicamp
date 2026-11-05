@@ -687,11 +687,11 @@ const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.
   }, [cuerpo]);
   return (
     <div role="dialog" aria-modal="true" aria-label={titulo} className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div ref={cuerpo} className={`bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full ${ancho} max-h-[calc(var(--alto-pantalla,100vh)*0.94)] flex flex-col`}
+      <div ref={cuerpo} className={`ventana-sobria bg-white border-2 border-[var(--color-ink)] w-full ${ancho} max-h-[calc(var(--alto-pantalla,100vh)*0.94)] flex flex-col`}
         onKeyDown={(e) => moverEnGrilla(e, cuerpo.current)}>
-        <div className="bg-[var(--color-ink)] text-white px-4 py-3 flex justify-between items-center shrink-0">
-          <h3 className="text-sm font-black uppercase tracking-widest text-[var(--color-accent)]">{titulo}</h3>
-          <button type="button" data-nav="-1,0" onClick={onCerrar} aria-label="Cerrar (Esc)" title="Cerrar (Esc)" className="p-1 hover:text-[var(--color-accent)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] cursor-pointer"><X size={18} /></button>
+        <div className="ventana-cabecera">
+          <h3 className="ventana-cabecera__titulo"><ShoppingCart size={18} /> {titulo}</h3>
+          <button type="button" data-nav="-1,0" onClick={onCerrar} aria-label="Cerrar (Esc)" title="Cerrar (Esc)" className="ventana-cerrar"><X size={18} /></button>
         </div>
         <div className="p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3">{children}</div>
         <div className="p-3 border-t-2 border-[var(--color-ink)] bg-[var(--color-bg)] flex flex-wrap justify-end gap-2 shrink-0">{pie}</div>

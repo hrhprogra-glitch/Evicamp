@@ -325,10 +325,12 @@ export const ReporteContador: React.FC<{ onClose: () => void }> = ({ onClose }) 
             value={mes}
             onChange={(e) => setMes(e.target.value)}
             onKeyDown={(e) => {
-              // Enter abre el calendario (como en el resto del sistema); ↓ / → van al botón de descarga
+              // Enter abre el calendario (como en el resto del sistema); → al botón de descarga (está al lado), ↑ a la X.
+              // Las flechas no cambian el mes (eso se hace en el calendario)
               if (e.key === 'Enter') { e.preventDefault(); try { (e.target as HTMLInputElement).showPicker(); } catch { /* sin calendario */ } }
-              else if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('btn-rep-descargar')?.focus(); }
+              else if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('btn-rep-descargar')?.focus(); }
               else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-rep-cerrar')?.focus(); }
+              else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { e.preventDefault(); }
             }}
             className="block mt-1 border-2 border-[var(--color-ink)] p-2 text-sm font-black outline-none focus:ring-2 focus:ring-[var(--color-accent)] rounded-none"
           />
@@ -342,7 +344,12 @@ export const ReporteContador: React.FC<{ onClose: () => void }> = ({ onClose }) 
             setDescargando(true);
             try { await descargarRegistroExcel(datos.filas, datos.resumen, mes, empresa); } finally { setDescargando(false); }
           }}
-          onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('rep-mes')?.focus(); } }}
+          onKeyDown={(e) => {
+            // ← al mes (está al lado), ↑ a la X; → y ↓ no tienen nada más en esa dirección
+            if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('rep-mes')?.focus(); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-rep-cerrar')?.focus(); }
+            else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); }
+          }}
           className="inline-flex items-center gap-1.5 px-4 py-2.5 border-2 border-[var(--color-ink)] bg-[var(--color-ink)] text-white text-[12px] font-black uppercase tracking-wider cursor-pointer rounded-none shadow-[3px_3px_0_0_var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
         >
           <Download size={14} /> {descargando ? 'Preparando Excel…' : 'Descargar registro de ventas (Excel)'}

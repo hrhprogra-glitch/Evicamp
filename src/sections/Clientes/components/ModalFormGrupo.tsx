@@ -95,7 +95,7 @@ export const ModalFormGrupo: React.FC<Props> = ({ abierta, grupo, grupos, onGuar
             >
               <ArrowLeft size={20} />
             </button>
-            <Users size={22} className="text-[var(--color-info)] shrink-0" />
+            <div className="ventana-cabecera__icono"><Users size={18} /></div>
             <div>
               <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest">{grupo ? 'Editar grupo' : 'Nuevo grupo'}</h2>
               <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">Familia o empresa: junta las deudas de sus clientes</p>
@@ -191,26 +191,15 @@ export const ModalFormGrupo: React.FC<Props> = ({ abierta, grupo, grupos, onGuar
             </div>
           </div>
         </div>
-        <div className="px-4 sm:px-6 py-4 border-t-2 border-[var(--color-border)] flex items-center justify-between gap-3">
-          <button
-            id="btn-volver-form-grupo"
-            type="button"
-            onClick={accionCerrar}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('btn-guardar-grupo')?.focus(); }
-              else if (e.key === 'ArrowUp') { e.preventDefault(); mover('btn-guardar-grupo', -1); }
-            }}
-            className="h-[44px] px-4 sm:px-6 bg-white text-[var(--color-ink)] border-2 border-[var(--color-border)] hover:border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center gap-2 cursor-pointer outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors rounded-none"
-          >
-            <ArrowLeft size={16} /> Volver
-          </button>
+        {/* Solo "Crear grupo": para volver está la flecha ← de la cabecera (o Escape); el dueño pidió no repetir "Volver" */}
+        <div className="px-4 sm:px-6 py-4 border-t-2 border-[var(--color-border)] flex items-center justify-end gap-3">
           <button
             id="btn-guardar-grupo"
             type="button"
             aria-disabled={guardando}
             onClick={() => void guardar()}
             onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('btn-volver-form-grupo')?.focus(); }
+              if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); }
               else if (e.key === 'ArrowUp') { e.preventDefault(); mover('btn-guardar-grupo', -1); }
             }}
             className={claseBotonPrincipal}
