@@ -7,6 +7,14 @@
 
 ---
 
+## 05/11/2026 (110) · Claude — Nuevo ajuste sin escoger "Merma" o "Conteo" (solo siumax)
+- **Dueño:** *"no es necesario escoger merma o conteo; si es menos ya se sabe que es merma, si sobra es conteo"*. Claude avisó lo que Merma hacía y Conteo no (registrar unos pocos sin contar todo; consumo en soles) → el dueño eligió **enlace pequeño**.
+- **`ModalAjuste.tsx`:** quitada la pregunta "¿Qué pasó?" (y `MODOS`). Al elegir el producto se CUENTA (`input-contado`): falta → merma (motivos de faltante), sobra → sobrante, cuadra → se guarda solo (sin cambios en `fn_registrar_conteo`). Debajo del campo, enlace `btn-modo-salida` "↳ Solo salieron unos pocos (se rompió, venció, se usó…)" pasa a la salida de antes (lote + cuántos salieron + motivo); allí `btn-modo-conteo` "↳ Mejor contar lo que hay" vuelve. Productos de consumo y quien solo puede sacar van directo a la salida; quien solo puede contar no ve el enlace (conteo a ciegas igual). Subtítulo: "Cuenta lo que hay: si falta es merma, si sobra es sobrante".
+- Teclado: ↓ desde el campo o Continuar → enlace; ↑ vuelve; Enter cambia (en la salida el selector va al lote al cargar).
+- Probado en siumax con teclado (sin guardar): elegir → foco en ¿Cuántos hay?; sin "¿Qué pasó?"; ↓ enlace, Enter → lote; ↓ → ← … → "Mejor contar" → contar 1 → "Faltan 98" y foco en el motivo; 0 errores. Solo siumax.
+
+---
+
 ## 05/11/2026 (109) · Claude — Conteos y fiados: el buscador ya no muestra productos eliminados (solo siumax)
 - **Dueño** (captura de Conteos › Nuevo ajuste): *"en el buscador de productos me salen productos que ya han sido eliminados"*.
 - **Causa:** eliminar un producto lo deja con `is_active = 0`. Caja, Inventario, Traspasos y Cambio de producto filtran `is_active = 1`; Conteos (`fetchProducts`) y Clientes (lista para el fiado) cargaban todos.
