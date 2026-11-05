@@ -76,6 +76,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const [refreshProductsKey, setRefreshProductsKey] = useState(0); // Recarga para producción y recetas
   const [isModalProduccionOpen, setIsModalProduccionOpen] = useState(false);
   const [productoParaProduccion, setProductoParaProduccion] = useState<Product | null>(null);
+  const [produccionParaCambiar, setProduccionParaCambiar] = useState(false); // abierta desde Editar producto
   const [isModalTraspasoOpen, setIsModalTraspasoOpen] = useState(false);
 
   // ESTADOS DE LOS FILTROS
@@ -874,6 +875,14 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         isOpen={isModalOpen} 
         initialData={productToEdit}
         productosExistentes={products}
+        // Combos y recetas se arman en Producir (05/11/2026): desde Editar producto se abre esa ventana
+        onAbrirProduccion={(p) => {
+          setIsModalOpen(false);
+          setTimeout(() => setProductToEdit(null), 200);
+          setProductoParaProduccion(products.find((x) => String(x.id) === String(p.id)) || p);
+          setProduccionParaCambiar(true);
+          setIsModalProduccionOpen(true);
+        }}
         onClose={() => {
       setIsModalOpen(false);
       setTimeout(() => setProductToEdit(null), 200);
@@ -1000,13 +1009,17 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         onClose={() => {
           setIsModalProduccionOpen(false);
           setProductoParaProduccion(null);
+          setProduccionParaCambiar(false);
         }}
+        paraCambiar={produccionParaCambiar}
         productos={products}
         productoInicial={productoParaProduccion}
         onSuccess={() => {
           setRefreshProductsKey((prev) => prev + 1);
           setRefreshLotesKey((prev) => prev + 1);
         }}
+        // "Ir a Lotes": pestaña Lotes buscando ese producto
+        onIrALotes={(nombre) => { setVistaActiva('LOTES'); setSearchQuery(nombre); }}
       />
       {/* MODAL DE TRASPASOS (FASE 9) */}
       {isModalTraspasoOpen && (

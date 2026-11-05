@@ -765,3 +765,4 @@
 - **Dueño:** *"en Compras, con el selector en los botones, presiono para bajar y no baja; lo mismo con la pestaña Compras en otra vista"* → arreglado (111). Solo siumax.
 - **Dueño:** *"¿no sería mejor que lo de combo/receta esté en el botón Producir? entro, busco dos productos y los junto como combo o receta"* → Claude propone (pendiente de OK).
 - **Dueño:** *"primero sería el nombre, luego escoger los productos que vas a usar para producir el producto"* → Claude propuso Producir con "+ Nuevo combo o receta" (nombre → productos → combo/receta → precio) y lista de combos/recetas → dueño: quitar la sección de Nuevo producto. Falta su "empieza".
+- **Dueño:** *"y en base a eso ya creo el lote con el botón lote; ojo que también esté el guardar o ir a lotes; debe haber un tope: si tengo 1 kilo de harina y 2 huevos, el tope es por los huevos"* → Claude sumó al plan el tope y Guardar / Producir ahora / Ir a Lotes → *"empieza"* → hecho (112). Solo siumax.

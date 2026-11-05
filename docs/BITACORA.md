@@ -7,6 +7,16 @@
 
 ---
 
+## 05/11/2026 (112) · Claude — Combos y recetas se arman en el botón Producir, con tope por insumo (solo siumax)
+- **Dueño:** *"¿no sería mejor que combo/receta esté en el botón Producir? entro, busco los productos y los junto"*, *"primero el nombre, luego escoger los productos"*, *"que esté guardar o ir a lotes"* y *"debe haber un tope: si tengo 1 kilo de harina y 2 huevos, el tope lo pone la cantidad de huevos"* → eligió **quitar la sección de Nuevo producto** → *"empieza"*.
+- **`ModalProduccion.tsx` reescrita** (3 vistas): **Lista** de combos y recetas (cuántos alcanzan, Producir para recetas, Cambiar) · **Formulario** 1. nombre → 2. productos que usa (buscador + cantidad por unidad, tabla con costo y stock, "alcanza para N · lo limita X") → 3. Combo o Receta (+ costo adicional por unidad) → 4. precio y categoría (cuesta armarlo / ganancia y %) → Guardar · Guardar y producir ahora · Guardar e ir a Lotes (las dos últimas solo receta) · **Producir** con TOPE: "Puedes producir hasta N · lo limita X (hay S, cada uno usa F)"; escribir más lo deja en el tope y avisa; con tope 0 no produce. Al terminar pregunta "¿Ver sus lotes?" (pestaña Lotes buscando el producto).
+- **Arreglos de paso:** (1) el costo adicional se guardaba POR UNIDAD pero Producir lo mandaba como total del lote → ahora × cantidad. (2) Nuevo producto borraba y reescribía `product_recipes` al guardar (si se guardaba antes de que cargaran, la receta se perdía) → ya no los toca. (3) `p_usuario` era siempre "Administrador" → el nombre del empleado.
+- **`ModalProducto.tsx`:** quitada "Tipo de producto y composición" (estado, buscador de insumos y escritura de recetas). Los nuevos se crean ESTÁNDAR; al editar no se toca `tipo_compuesto`/`costo_adicional_produccion`. Si es combo/receta sale `btn-cambiar-composicion` "Cambiar sus productos en Producir" (abre el formulario, prop `paraCambiar`). Teclado: ↑ desde Guardar va a Tienda Web / ese botón.
+- **`Inventario/index.tsx`:** `onIrALotes` (pestaña Lotes + búsqueda), `onAbrirProduccion` y `produccionParaCambiar`.
+- Probado en siumax con productos de prueba (huevo 2, harina 5; receta 1+1, adicional 0.50, precio 5): tope "alcanza para 2 · lo limita HUEVO", resumen S/ 3.00 / 5.00 / 2.00 (40 %), escribir 5 → queda 2 con aviso, producido lote de 2 a S/ 3.00 (= (2×0.5 + 2×2 + 2×0.5)/2), huevo 0, harina 3; Editar receta → botón → abre "Cambiar combo o receta". 0 errores; datos de prueba borrados. En siumax y Evicamp no había combos ni recetas. Solo siumax.
+
+---
+
 ## 05/11/2026 (111) · Claude — Inventario › Compras: ↓ desde la cabecera ya baja (solo siumax)
 - **Dueño** (captura): en Compras, con el selector en Nuevo producto/Ingresar lote/Producir/Traspasos/Proveedores (o en la pestaña Compras estando en otra vista), ↓ no bajaba.
 - **Causa:** el ↓ de cada botón iba fijo a los filtros de Productos (`filtro-categoria/estado/orden-inventario`) y el de las pestañas al buscador, que no existen en la vista Compras; la pestaña Compras en Productos/Lotes iba a `inicioCompras()` (null).
