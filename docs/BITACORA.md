@@ -7,6 +7,76 @@
 
 ---
 
+## 05/11/2026 (114) · Claude — PASE a Evicamp, clientes, siumax y GitHub (108–113) sin perder fotos
+- **Dueño:** *"súbelo a evicamp y siumax para mis clientes y github; ojo, en evicamp ninguna foto se tiene que perder"*.
+- **SQL:** NO se tocó la base de Evicamp. El único cambio de SQL desde (107) es el GRANT de `fn_edit_batch`/`fn_soft_delete_batch`, y en Evicamp esos permisos ya estaban (revisado en 108).
+- **Fotos:** copia antes del pase `respaldo-fotos-evicamp-2026-11-05T23-37-11-572Z.csv` (240) → `deploy.cjs todos` → copia después `…23-38-48-176Z.csv` (240): **0 desaparecidas, 0 nuevas, mismo tamaño (6 070 897 bytes)**.
+- **Verificado:** Evicamp y siumax HTTP 200, login sin errores JS, sin `/suscripcion.json`, `index-CO5htApq.js`; Tienda Web de Evicamp carga en ~8 s con 240 fotos y 0 errores (la primera revisión de 3 s era corta).
+- **Sube:** 108 (401 que no es de sesión no saca), 109 (buscadores sin eliminados), 110 (Nuevo ajuste sin Merma/Conteo), 111 (↓ en Compras), 112 (Producir: combos y recetas, tope, unidad, Enter se queda), 113 (editar producto ya no borra la foto; X con flechas).
+- **GitHub:** merge `--no-ff` de `fase-11-sunat` a `main` y push.
+- Cajeros: Ctrl+F5 o volver a abrir el .exe (mientras tengan la versión vieja abierta, editar un producto con foto todavía la borra: por eso el aviso al cliente).
+
+---
+
+## 05/11/2026 (113) · Claude — Editar producto: la imagen ya se ve con su X y no se borra al guardar (solo siumax)
+- **Dueño:** *"agregué una imagen; si es la incorrecta, al volver a entrar al producto la X para quitarla desapareció; solo puedo reemplazarla"*.
+- **Causa (grave):** `ModalProducto` cargaba la foto de `initialData.image`, pero la lista de Inventario la trae en `imageUrl` → al editar la foto no se veía (ni su X) y **al guardar se enviaba `image_url: ` y se BORRABA**.
+- **Arreglo:** `image: initialData.imageUrl || initialData.image_url || initialData.image || `; la X tiene id `btn-quitar-imagen-producto`. De paso: el panel avanzado ya no dice "Recetas" (se arman en Producir).
+- **¿Se perdieron fotos en Evicamp?** Comparados los 14 respaldos de Evicamp (23/10 → 05/11 17:33) con la base actual (solo lectura, `/tmp/vps-imagenes-perdidas.cjs` con /opt/node22/bin/node): **0 productos** tenían imagen en un respaldo y hoy no. Hoy: 223 con imagen; las 523 vacías nunca tuvieron.
+- **Copias de las fotos de Evicamp** (solo lectura, `/var/lib/postgresql/respaldo-fotos-evicamp-*.csv`: id, name, image_url): 23:31 UTC → 238 fotos; **23:32 UTC → 240 fotos (la última, antes de que el dueño pida al cliente no subir más)**. Entre las dos: 0 desaparecidas, 2 nuevas. Para recuperar una foto perdida: leer su fila del CSV y `UPDATE products SET image_url = ... WHERE id = ...` (con aviso del dueño).
+- **Después:** *"el selector no selecciona la X de la foto"* → la X entra al mapa de flechas de ModalProducto (`step2Ids` y `handleFormKeyDown`): ↓ desde Subir local o el buscador de foto → X; ← → buscador; ↑ → Subir local; ↓ → Mayorista; ↑ desde Precio/Mayorista → X; Enter (o clic) quita la foto y el selector vuelve al buscador de foto. Probado con teclado 10/10 sin guardar; foto en la base igual.
+- Probado en siumax: editar COCA COLA ORIGINAL 500ML → vista previa y X visibles; guardar sin cambios → imagen igual (md5). 0 errores. Solo siumax; **Evicamp tiene el error hasta el próximo pase** (cada vez que editan y guardan un producto con foto, la foto se borra): recomendado subirlo pronto.
+
+---
+
+## 05/11/2026 (112) · Claude — Combos y recetas se arman en el botón Producir, con tope por insumo (solo siumax)
+- **Dueño:** *"¿no sería mejor que combo/receta esté en el botón Producir? entro, busco los productos y los junto"*, *"primero el nombre, luego escoger los productos"*, *"que esté guardar o ir a lotes"* y *"debe haber un tope: si tengo 1 kilo de harina y 2 huevos, el tope lo pone la cantidad de huevos"* → eligió **quitar la sección de Nuevo producto** → *"empieza"*.
+- **`ModalProduccion.tsx` reescrita** (3 vistas): **Lista** de combos y recetas (cuántos alcanzan, Producir para recetas, Cambiar) · **Formulario** 1. nombre → 2. productos que usa (buscador + cantidad por unidad, tabla con costo y stock, "alcanza para N · lo limita X") → 3. Combo o Receta (+ costo adicional por unidad) → 4. precio y categoría (cuesta armarlo / ganancia y %) → Guardar · Guardar y producir ahora · Guardar e ir a Lotes (las dos últimas solo receta) · **Producir** con TOPE: "Puedes producir hasta N · lo limita X (hay S, cada uno usa F)"; escribir más lo deja en el tope y avisa; con tope 0 no produce. Al terminar pregunta "¿Ver sus lotes?" (pestaña Lotes buscando el producto).
+- **Arreglos de paso:** (1) el costo adicional se guardaba POR UNIDAD pero Producir lo mandaba como total del lote → ahora × cantidad. (2) Nuevo producto borraba y reescribía `product_recipes` al guardar (si se guardaba antes de que cargaran, la receta se perdía) → ya no los toca. (3) `p_usuario` era siempre "Administrador" → el nombre del empleado.
+- **`ModalProducto.tsx`:** quitada "Tipo de producto y composición" (estado, buscador de insumos y escritura de recetas). Los nuevos se crean ESTÁNDAR; al editar no se toca `tipo_compuesto`/`costo_adicional_produccion`. Si es combo/receta sale `btn-cambiar-composicion` "Cambiar sus productos en Producir" (abre el formulario, prop `paraCambiar`). Teclado: ↑ desde Guardar va a Tienda Web / ese botón.
+- **`Inventario/index.tsx`:** `onIrALotes` (pestaña Lotes + búsqueda), `onAbrirProduccion` y `produccionParaCambiar`.
+- **Después** (captura): *"parece atrapado en un fondo dentro de otro fondo; se desaprovecha espacio; en vez de «Combos y recetas» que diga «Volver»"* → sin recuadro interior (el contenido va directo sobre el fondo de la ventana), la ventana se acomoda a su contenido (alto fijo solo en la lista) y el botón dice "← Volver". Revisado con captura en modo oscuro.
+- **Después:** *"agregué un producto por kilo y sale 1; no sé si es unidad o kilo"* → al lado de la cantidad sale la unidad del producto elegido (`unidad-cant-insumo-prod`, ej. KG) y debajo la frase "CADA PAN LLEVA 0.25 KG DE POLLO" (`frase-cant-insumo-prod`), con la ayuda de decimales si es KG/G/L/ML. Probado con POLLO (KG).
+- **Después:** *"hay 3 botones; mejor solo Guardar y Guardar e ir a Lotes"* → quitado "Guardar y producir ahora" (para hacer un lote: «Producir» en la lista; el aviso al guardar una receta lo dice). Botones sin partir el texto.
+- **Después:** *"aquí el selector no hace clic, pasa al siguiente; va contra las reglas"* (Combo/Receta) → Enter = clic: elige y el selector se queda (antes saltaba al costo adicional o al precio). De paso: quitar un producto con Enter dejaba el selector en Nombre → ahora queda en el producto que sigue o en el buscador. Probado con teclado: Enter Combo (se queda), → (no cambia), Enter Receta (se queda), ↓ costo adicional, quitar → buscador. 0 errores.
+- **Después** (captura, Precio/Categoría): *"cuando selecciono y presiono Enter pasa abajo; el Enter tiene que ser como el clic; sigue cometiendo el mismo error"* → en TODA la ventana Enter ya no mueve el selector: Nombre, Precio, Categoría, Costo adicional, ¿Cuántos? y su costo se quedan; el buscador con Enter elige el primero y se queda (→ a la cantidad); la cantidad con Enter agrega y se queda. Regla 9 escrita en MEMORIA-IA. Probado con teclado: 9/9 se quedan, 0 errores.
+- Probado en siumax con productos de prueba (huevo 2, harina 5; receta 1+1, adicional 0.50, precio 5): tope "alcanza para 2 · lo limita HUEVO", resumen S/ 3.00 / 5.00 / 2.00 (40 %), escribir 5 → queda 2 con aviso, producido lote de 2 a S/ 3.00 (= (2×0.5 + 2×2 + 2×0.5)/2), huevo 0, harina 3; Editar receta → botón → abre "Cambiar combo o receta". 0 errores; datos de prueba borrados. En siumax y Evicamp no había combos ni recetas. Solo siumax.
+
+---
+
+## 05/11/2026 (111) · Claude — Inventario › Compras: ↓ desde la cabecera ya baja (solo siumax)
+- **Dueño** (captura): en Compras, con el selector en Nuevo producto/Ingresar lote/Producir/Traspasos/Proveedores (o en la pestaña Compras estando en otra vista), ↓ no bajaba.
+- **Causa:** el ↓ de cada botón iba fijo a los filtros de Productos (`filtro-categoria/estado/orden-inventario`) y el de las pestañas al buscador, que no existen en la vista Compras; la pestaña Compras en Productos/Lotes iba a `inicioCompras()` (null).
+- **Arreglo** (`Inventario/index.tsx`): `bajarACompras(origen)` → en la vista Compras baja al botón de la fila Pendientes · Recibidas · Todas · Nueva lista más cercano en horizontal; la pestaña Compras en otra vista baja al buscador.
+- Probado (8 botones × 3 vistas): Productos y Lotes igual que antes; Compras: pestañas, Nuevo producto, Ingresar lote, Producir → Pendientes, Traspasos → Recibidas, Proveedores y pestaña Compras → Nueva lista. 0 errores. Solo siumax.
+
+---
+
+## 05/11/2026 (110) · Claude — Nuevo ajuste sin escoger "Merma" o "Conteo" (solo siumax)
+- **Dueño:** *"no es necesario escoger merma o conteo; si es menos ya se sabe que es merma, si sobra es conteo"*. Claude avisó lo que Merma hacía y Conteo no (registrar unos pocos sin contar todo; consumo en soles) → el dueño eligió **enlace pequeño**.
+- **`ModalAjuste.tsx`:** quitada la pregunta "¿Qué pasó?" (y `MODOS`). Al elegir el producto se CUENTA (`input-contado`): falta → merma (motivos de faltante), sobra → sobrante, cuadra → se guarda solo (sin cambios en `fn_registrar_conteo`). Debajo del campo, enlace `btn-modo-salida` "↳ Solo salieron unos pocos (se rompió, venció, se usó…)" pasa a la salida de antes (lote + cuántos salieron + motivo); allí `btn-modo-conteo` "↳ Mejor contar lo que hay" vuelve. Productos de consumo y quien solo puede sacar van directo a la salida; quien solo puede contar no ve el enlace (conteo a ciegas igual). Subtítulo: "Cuenta lo que hay: si falta es merma, si sobra es sobrante".
+- Teclado: ↓ desde el campo o Continuar → enlace; ↑ vuelve; Enter cambia (en la salida el selector va al lote al cargar).
+- Probado en siumax con teclado (sin guardar): elegir → foco en ¿Cuántos hay?; sin "¿Qué pasó?"; ↓ enlace, Enter → lote; ↓ → ← … → "Mejor contar" → contar 1 → "Faltan 98" y foco en el motivo; 0 errores. Solo siumax.
+
+---
+
+## 05/11/2026 (109) · Claude — Conteos y fiados: el buscador ya no muestra productos eliminados (solo siumax)
+- **Dueño** (captura de Conteos › Nuevo ajuste): *"en el buscador de productos me salen productos que ya han sido eliminados"*.
+- **Causa:** eliminar un producto lo deja con `is_active = 0`. Caja, Inventario, Traspasos y Cambio de producto filtran `is_active = 1`; Conteos (`fetchProducts`) y Clientes (lista para el fiado) cargaban todos.
+- **Arreglo:** se siguen cargando todos (el historial de ajustes usa la unidad del producto y "Editar salida" abre salidas viejas), pero llevan `activo` (nuevo campo opcional de `Product`) y los buscadores los ocultan: Nuevo ajuste (`elegibles`), Editar salida (`filteredProducts`) y Nuevo fiado (`prodFiltrados`).
+- Probado en siumax: buscar "COLA" en Nuevo ajuste → solo COCA COLA ORIGINAL 500ML (COCA COLA e INKA COLA, eliminados, ya no salen), 0 errores. Solo siumax; Evicamp/clientes/GitHub con aviso.
+
+---
+
+## 05/11/2026 (108) · Claude — Al guardar un lote el sistema sacaba al usuario (arreglado en siumax)
+- **Dueño:** *"guardé los datos de un producto recién creado y al presionar Guardar el sistema me botó… ya me sucedió como 2 veces"*.
+- **Causa:** en la base siumax, `fn_edit_batch` (editar lote, ModalLote) y `fn_soft_delete_batch` (retirar lote) no tenían permiso EXECUTE para `anon` (solo postgres; no se sabe quién lo quitó, el SQL nunca lo revoca). PostgREST respondió 401 (log nginx 20:22 y 20:27 UTC, log PostgreSQL "permission denied for function fn_edit_batch") y `supabase.ts` trata TODO 401 como sesión vencida → login. Evicamp revisado: todas las funciones que llama el sistema tienen permiso.
+- **Arreglo:** GRANT EXECUTE a `anon` aplicado en siumax y escrito en `seguridad-sesion.sql` (tras las dos funciones). `src/db/supabase.ts`: solo cierra la sesión si la respuesta trae `code: PT401` (o no se puede leer); otro 401 queda como error en la pantalla.
+- Probado en siumax con sesión real: editar y retirar lote → 204; sesión falsa → 401 PT401 (sigue funcionando la salida al login). Desplegado solo en siumax. **Evicamp/clientes/GitHub: esperar aviso** (el cambio de supabase.ts aún no está allí; Evicamp no tenía el problema de permisos).
+- Los 2 guardados que fallaron NO cambiaron el lote: volver a guardarlos.
+
+---
+
 ## 05/11/2026 (107) · Claude — PASE a Evicamp, clientes, siumax y GitHub (Utilidades › Gráficos y detalles y todo lo de 105–106)
 - **Dueño:** *"así súbelo todo a evicamp, a mi github y siumax para mis clientes que pagan"*.
 - **SQL:** solo Evicamp lo necesitaba (no existen bases cli_*; siumax ya lo tenía). Ensayo en copia (`ensayo-fases8-11-evicamp.cjs`): 0 errores, 3658 ventas y 1259 productos intactos. Real (`aplicar-fases8-11-evicamp.cjs`): respaldo `respaldo-evicamp-pase-fases8-11-2026-11-05T17-33-09-831Z.dump`, `seguridad-sesion.sql` código 0 en 1.8 s, 0 errores, sin reiniciar la API, la caja abierta siguió abierta. Nueva columna `empresa_config.gastos_fijos_mes` verificada. Facturación de Evicamp sigue apagada (SIMULADO).

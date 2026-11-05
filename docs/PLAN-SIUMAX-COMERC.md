@@ -4,7 +4,14 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 05/11/2026 (107), Claude: **PASE a Evicamp, clientes, siumax y GitHub** de 105–106 (Utilidades › Gráficos y detalles; SQL gastos_fijos_mes ensayado en copia y aplicado sin errores ni reinicio; Evicamp sin Mercado Pago).
+- **Última actualización:** 05/11/2026 (114), Claude: **PASE a Evicamp, clientes, siumax y GitHub** de 108–113, sin SQL y con las 240 fotos de Evicamp verificadas antes y después.
+- (113) 05/11/2026, Claude: editar producto ya no borra la foto (y se ve con su X). Evicamp sigue con el error hasta el pase. Solo siumax.
+- (112) 05/11/2026, Claude: combos y recetas se arman en Producir (nombre → productos → combo/receta → precio), tope por el insumo que se acaba primero; quitado de Nuevo producto. Solo siumax.
+- (111) 05/11/2026, Claude: Inventario › Compras, ↓ desde la cabecera baja a la fila de Compras. Solo siumax.
+- (110) 05/11/2026, Claude: Nuevo ajuste sin escoger Merma/Conteo (se cuenta; falta = merma, sobra = sobrante; enlace "Solo salieron unos pocos"). Solo siumax.
+- (109) 05/11/2026, Claude: Conteos y fiados ya no muestran productos eliminados en el buscador. Solo siumax.
+- (108) 05/11/2026, Claude: arreglado que al guardar un lote el sistema sacaba al usuario (permiso faltante en siumax + solo PT401 cierra la sesión). Solo siumax.
+- (107) 05/11/2026, Claude: **PASE a Evicamp, clientes, siumax y GitHub** de 105–106 (Utilidades › Gráficos y detalles; SQL gastos_fijos_mes ensayado en copia y aplicado sin errores ni reinicio; Evicamp sin Mercado Pago).
 - (106) 05/11/2026, Claude: Utilidades › Gráficos y detalles (tablero de ganancias y pérdidas con fórmulas de empresas, Desde/Hasta propio en la cabecera).
 - (105) 05/11/2026, Claude: reglas del selector 7 y 8 (las flechas nunca cambian una opción; Enter en casilla = clic) en todo el sistema. Solo siumax.
 - (104) 05/11/2026, Claude: arreglada la Tienda Web de Evicamp (un producto sin nombre la tumbaba); subido a Evicamp, clientes, siumax y GitHub.
@@ -39,6 +46,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Combos y recetas en el botón Producir** (nombre → productos que usa → combo o receta → precio y categoría → guardar y "¿producir ahora?"; lista para producir/cambiar; se QUITA "Tipo de producto y composición" de Nuevo producto y al editar uno existente sale el botón "Cambiar sus productos en Producir") | **✅ En siumax (112) y en Evicamp, clientes y GitHub (114)** |
 | **Utilidades › Gráficos y detalles** (tablero de ganancias/pérdidas: estado de resultados, punto de equilibrio, ABC, rotación, GMROI, merma, cartera) | **Aprobado 05/11. ✅ En siumax (106) y en Evicamp, clientes y GitHub (107). Pendiente: revisión del dueño** |
 | **Mismo estilo en todas las ventanas flotantes** (modelo: detalle de producto en Utilidades, sin sombra) | **Aprobado 04/11. ✅ 49 ventanas + avisos en siumax (92). Pasar a Evicamp solo con aviso** |
 | **Reglas del selector en todo el sistema** (llegar a todo con flechas, calendario con Enter, nunca perderse ni salir de una ventana, algo seleccionado al volver) | **Aprobado 04/11. ✅ En siumax (91): 37 de 37 pantallas cumplen las 6 reglas, 0 errores (antes 11 de 37). Revisar con `ai-scripts/pruebas/estilo/revisar-selector.mjs` tras cambiar pantallas. Pasar a Evicamp solo con aviso** |
@@ -58,7 +66,7 @@
 | **Modo Oscuro (Dark Mode)** reemplazando "Plata / Gris" en Apariencia | **Hecho en producción (29/10)** |
 | **Grupos de clientes (familia/empresa)** dentro de la 4.1 | **Hecho en producción (29/10). En siumax: agregados botones directos en cabecera [+ Nuevo grupo] y [Grupos (n)] para gestión independiente (04/11)** |
 | Fase 11 SUNAT: camino A (proveedor PSE) → B (directo) | **En pausa** hasta que el dueño lo pida |
-| Cobros con QR (Yape/Plin) y aparato de tarjetas (Mercado Pago: QR en pantalla + aparato Point) | **En pausa**; faltan dos decisiones (qué procesador y si empezar por el QR) |
+| Cobros con QR (Yape/Plin) y aparato de tarjetas (Mercado Pago: QR en pantalla + aparato Point) | **En pausa hasta que un cliente lo pida** (05/11). Propuesta: conectar la cuenta Mercado Pago del cliente (avisos de cada pago, sirve con Point Air) + leer la notificación del celular para otras marcas, como con Yape |
 | Importar facturas XML de compras | **En pausa** |
 | Estilo "Directorio de clientes" en 6 ventanas (Detalle de caja, Estado de cuenta, Detalle de ticket, Mini reporte, Detalle de producto, Detalle del pedido) | **Pendiente**; esperar los detalles del dueño |
 | Aviso al retirar un lote que todavía tiene stock | **Ofrecida, sin respuesta** |

@@ -1,6 +1,7 @@
 // src/sections/Conteos/components/ModalAjuste.tsx
 // NUEVO AJUSTE (sección Conteos): una sola ventana para todo lo que cambia el stock fuera de una venta o compra.
-// Se elige el producto y luego "¿Qué pasó?":
+// Se elige el producto y se CUENTA lo que hay (pedido del dueño 05/11/2026: ya no se escoge "Merma" o "Conteo";
+// si falta es merma y si sobra es sobrante). Debajo, el enlace "Solo salieron unos pocos" pasa a MERMA sin contar todo.
 //  - MERMA (antes "Salió del stock": se dañó, venció, se perdió o se usó): cuántos salieron y de qué lote. Se guarda
 //    igual que la antigua "Registrar merma" (waste + lote + kardex), así funciona igual sin internet.
 //    Los productos de consumo (bolsas, servicios) no tienen stock: se anota lo gastado en soles.
@@ -33,11 +34,6 @@ interface Props {
 }
 
 type Modo = 'SALIDA' | 'CONTEO';
-const MODOS: { modo: Modo; titulo: string; ayuda: string }[] = [
-  // Nombres claros para el cajero (pedido del dueño 28/10/2026): antes "Salió del stock" y "Conté lo que hay"
-  { modo: 'SALIDA', titulo: 'Merma', ayuda: 'Se dañó, venció, se perdió o se usó' },
-  { modo: 'CONTEO', titulo: 'Conteo', ayuda: 'Cuento lo que hay y el sistema ve si falta o sobra' },
-];
 
 interface Lote { id: number | string; quantity: number; cost_unit: number; created_at: string; expiration_date?: string | null }
 interface Hecho { producto: string; unidad: string; modo: Modo; cantidad: number; diferencia: number; motivo: string; hora: string; consumo: boolean }
@@ -69,7 +65,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
   // La lista aparece desde la 1ra letra (o con ↓ en vacío): al abrir no tapa el resto de la ventana
   const [abierta, setAbierta] = useState(false);
   const [producto, setProducto] = useState<Product | null>(null);
-  const [modo, setModo] = useState<Modo>('SALIDA');
+  const [modo, setModo] = useState<Modo>('CONTEO');
   // Salió del stock
   const [lotes, setLotes] = useState<Lote[]>([]);
   const [cargandoLotes, setCargandoLotes] = useState(false);
@@ -97,7 +93,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
     if (puedeContar && !esConsumo(p)) lista.push('CONTEO');
     return lista;
   };
-  const elegibles = useMemo(() => products.filter((p) => modosDe(p).length > 0), [products, puedeSalida, puedeContar]); // eslint-disable-line react-hooks/exhaustive-deps
+  const elegibles = useMemo(() => products.filter((p) => p.activo !== false &&modosDe(p).length > 0), [products, puedeSalida, puedeContar]); // eslint-disable-line react-hooks/exhaustive-deps
   const filtrados = useMemo(() => {
     const texto = busqueda.trim();
     if (!texto) return elegibles;
@@ -127,7 +123,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
   }, [producto, modo, puedeSalida]);
 
   // Al terminar de cargar los lotes (salida recién elegida sin pregunta), el foco pasa al lote
-  useEffectFocoLote(producto, modo, cargandoLotes, modosDe(producto).length);
+  useEffectFocoLote(producto, modo, cargandoLotes);
 
   if (!isOpen) return null;
 
@@ -161,10 +157,10 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
   const elegir = (p: Product) => {
     const posibles = modosDe(p);
     setProducto(p); setBusqueda(''); setAbierta(false); limpiarCampos();
-    setModo(posibles.includes(modo) ? modo : posibles[0]);
-    // Con dos opciones se pregunta "¿Qué pasó?"; con una sola se va directo a su primer campo
-    if (posibles.length > 1) enfocar(`modo-ajuste-${posibles.includes(modo) ? modo : posibles[0]}`);
-    else enfocar(posibles[0] === 'CONTEO' ? 'input-contado' : esConsumo(p) ? 'input-cantidad-ajuste' : 'btn-cambiar-producto-ajuste');
+    // Se empieza contando; sin permiso de contar (o producto de consumo, que no se cuenta) va directo a la salida
+    const inicial: Modo = posibles.includes('CONTEO') ? 'CONTEO' : posibles[0];
+    setModo(inicial);
+    enfocar(inicial === 'CONTEO' ? 'input-contado' : esConsumo(p) ? 'input-cantidad-ajuste' : 'btn-cambiar-producto-ajuste');
   };
 
   // Desplegable de lotes: al abrir, el selector va al lote elegido; al elegir, se cierra y pasa a la cantidad
@@ -182,6 +178,9 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
     if (m === modo) return;
     setModo(m); limpiarCampos();
   };
+  // Enlace debajo del campo: contar ⇄ "solo salieron unos pocos". A la salida, el foco va al lote cuando cargan
+  // (useEffectFocoLote); mientras, queda en la cantidad para no perderse
+  const pasarA = (m: Modo) => { cambiarModo(m); enfocar(m === 'CONTEO' ? 'input-contado' : 'input-cantidad-ajuste'); };
 
   const anotar = (h: Omit<Hecho, 'hora'>) => {
     setHechos((lista) => [{ ...h, hora: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) }, ...lista]);
@@ -201,7 +200,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
       enfocar('input-cantidad-ajuste'); return false;
     }
     if (consumo) return true;
-    if (!lote) { await avisar('Este producto no tiene lotes con stock: no hay de dónde sacar. Si en el estante hay, usa "Conteo".'); enfocar('input-cantidad-ajuste'); return false; }
+    if (!lote) { await avisar('Este producto no tiene lotes con stock: no hay de dónde sacar. Si en el estante hay, usa "Mejor contar lo que hay".'); enfocar('input-cantidad-ajuste'); return false; }
     if (!esDecimal(producto) && !Number.isInteger(cant)) { await avisar(`Este producto va por ${unidad}: escribe un número entero.`); enfocar('input-cantidad-ajuste'); return false; }
     if (cant > Number(lote.quantity)) { await avisar(`Ese lote solo tiene ${formatearCantidad(lote.quantity, unidad)} ${unidad}.`); enfocar('input-cantidad-ajuste'); return false; }
     return true;
@@ -327,7 +326,6 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
   // Campo de arriba de la cantidad (↑ desde la cantidad o el conteo)
   const campoAntesDeCantidad = () => {
     if (veLotes) return 'lote-ajuste-elegido';
-    if (modos.length > 1) return `modo-ajuste-${modo}`;
     return 'btn-cambiar-producto-ajuste';
   };
 
@@ -353,7 +351,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirLotes(); }
               else if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById(campoDespuesDelLote)?.focus(); }
-              else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(modos.length > 1 ? `modo-ajuste-${modo}` : 'btn-cambiar-producto-ajuste')?.focus(); }
+              else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-cambiar-producto-ajuste')?.focus(); }
             }}
             className="w-full flex items-center justify-between gap-3 p-3 border-2 border-[var(--color-ink)] bg-white text-[var(--color-ink)] text-left cursor-pointer outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-ink)]"
           >
@@ -394,7 +392,23 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
       )}
     </div>
   );
-  const n = modos.length > 1 ? 3 : 2; // numeración de los pasos: con "¿Qué pasó?" hay un paso más
+  const n = 2; // numeración de los pasos (el 1 es el producto)
+
+  // Enlace discreto debajo del campo para cambiar entre contar y "solo salieron unos pocos"
+  const enlaceModo = (a: Modo, texto: string, campo: string) => (
+    <button
+      id={a === 'SALIDA' ? 'btn-modo-salida' : 'btn-modo-conteo'}
+      type="button"
+      onClick={() => pasarA(a)}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(campo)?.focus(); }
+        else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.preventDefault();
+      }}
+      className="mt-2 self-start text-[11px] font-black uppercase tracking-widest text-[var(--color-muted)] underline underline-offset-4 hover:text-[var(--color-ink)] focus:text-[var(--color-ink)] cursor-pointer"
+    >
+      ↳ {texto}
+    </button>
+  );
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
@@ -406,7 +420,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
             <div>
               <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest text-[var(--color-warning)]">Nuevo ajuste</h2>
               <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">
-                {puedeSalida ? 'Lo que salió del stock o lo que contaste en el estante' : 'Conteo a ciegas: escribe lo que hay en el estante'}
+                {puedeSalida ? 'Cuenta lo que hay: si falta es merma, si sobra es sobrante' : 'Conteo a ciegas: escribe lo que hay en el estante'}
               </p>
             </div>
           </div>
@@ -440,7 +454,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                     onClick={reiniciar}
                     onKeyDown={(e) => {
                       if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-cerrar-ajuste')?.focus(); }
-                      else if (e.key === 'ArrowDown') { e.preventDefault(); if (modos.length > 1) document.getElementById(`modo-ajuste-${modo}`)?.focus(); else irAlPrimerCampo(modo); }
+                      else if (e.key === 'ArrowDown') { e.preventDefault(); irAlPrimerCampo(modo); }
                     }}
                     className="p-2 border-2 border-transparent text-[var(--color-danger)] hover:border-[var(--color-danger)] focus:bg-[var(--color-danger)] focus:text-white focus:outline-none cursor-pointer"
                     title="Cambiar producto (Enter)"
@@ -499,46 +513,6 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
               )}
             </div>
 
-            {/* 2. ¿QUÉ PASÓ? (solo si puede las dos cosas con este producto) */}
-            {producto && modos.length > 1 && (
-              <div>
-                <p className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest mb-2">2. ¿Qué pasó? (← →)</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="radiogroup" aria-label="¿Qué pasó?">
-                  {MODOS.filter((m) => modos.includes(m.modo)).map((m, i, lista) => (
-                    <button
-                      key={m.modo}
-                      id={`modo-ajuste-${m.modo}`}
-                      type="button"
-                      role="radio"
-                      aria-checked={modo === m.modo}
-                      onClick={() => { cambiarModo(m.modo); irAlPrimerCampo(m.modo); }}
-                      onKeyDown={(e) => {
-                        // ← → solo mueven el selector; Enter elige (regla del dueño 05/11/2026: las flechas no cambian una opción)
-                        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-                          e.preventDefault();
-                          const otro = lista[(i + (e.key === 'ArrowRight' ? 1 : -1) + lista.length) % lista.length].modo;
-                          document.getElementById(`modo-ajuste-${otro}`)?.focus();
-                        } else if (e.key === 'Enter') {
-                          e.preventDefault();
-                          cambiarModo(m.modo);
-                          irAlPrimerCampo(m.modo);
-                        } else if (e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          irAlPrimerCampo(modo);
-                        } else if (e.key === 'ArrowUp') {
-                          e.preventDefault(); document.getElementById('btn-cambiar-producto-ajuste')?.focus();
-                        }
-                      }}
-                      className={`text-left p-3 border-2 cursor-pointer outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] ${modo === m.modo ? 'border-[var(--color-ink)] bg-[var(--color-ink)] text-white' : 'border-[var(--color-border)] bg-white text-[var(--color-ink)] hover:border-[var(--color-ink)]'}`}
-                    >
-                      <span className="block text-xs font-black uppercase tracking-widest">{modo === m.modo ? '● ' : '○ '}{m.titulo}</span>
-                      <span className={`block text-[11px] font-bold ${modo === m.modo ? 'text-white/80' : 'text-[var(--color-muted)]'}`}>{m.ayuda}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* SALIÓ DEL STOCK: lote y cantidad */}
             {producto && modo === 'SALIDA' && (
               <>
@@ -584,6 +558,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                       onKeyDown={(e) => {
                         if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('input-cantidad-ajuste')?.focus(); }
                         else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(campoAntesDeCantidad())?.focus(); }
+                        else if (e.key === 'ArrowDown') { e.preventDefault(); (document.getElementById('btn-modo-conteo') || document.getElementById('motivo-ajuste-0'))?.focus(); }
                       }}
                       className="h-[46px] px-4 bg-[var(--color-ink)] text-[var(--color-bg)] hover:opacity-90 font-black text-xs uppercase flex items-center justify-center gap-2 border-2 border-[var(--color-ink)] cursor-pointer select-none shrink-0"
                     >
@@ -601,6 +576,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                     </span>
                   </div>
                   {consumo && <p className="text-[11px] font-bold text-[var(--color-muted)] mt-1">Es de consumo (no lleva stock): se anota como gasto.</p>}
+                  {modos.includes('CONTEO') && !motivo && enlaceModo('CONTEO', 'Mejor contar lo que hay', 'btn-confirmar-salida')}
                 </div>
               </>
             )}
@@ -637,6 +613,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                       else if (e.key === 'ArrowRight' && diferencia === null) { e.preventDefault(); document.getElementById('btn-confirmar-contado')?.focus(); }
                       else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(campoAntesDeCantidad())?.focus(); }
                       else if (e.key === 'ArrowDown' && diferencia !== null) { e.preventDefault(); document.getElementById('motivo-ajuste-0')?.focus(); }
+                      else if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('btn-modo-salida')?.focus(); }
                     }}
                     className="w-full sm:w-60 bg-white border-2 border-[var(--color-border)] p-3 text-sm font-black text-[var(--color-ink)] text-right outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] read-only:bg-[var(--color-bg)]"
                   />
@@ -649,6 +626,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                       onKeyDown={(e) => {
                         if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('input-contado')?.focus(); }
                         else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(campoAntesDeCantidad())?.focus(); }
+                        else if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('btn-modo-salida')?.focus(); }
                       }}
                       className="h-[46px] px-4 bg-[var(--color-ink)] text-[var(--color-bg)] hover:opacity-90 font-black text-xs uppercase flex items-center justify-center gap-2 border-2 border-[var(--color-ink)] cursor-pointer select-none shrink-0"
                     >
@@ -667,6 +645,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                     </span>
                   </div>
                 )}
+                {diferencia === null && modos.includes('SALIDA') && enlaceModo('SALIDA', 'Solo salieron unos pocos (se rompió, venció, se usó…)', 'input-contado')}
                 {diferencia !== null && (
                   <div id="ajuste-diferencia" role="status" className={`mt-3 p-3 border-2 font-black uppercase ${diferencia < 0 ? 'border-[var(--color-danger)] bg-[var(--color-danger-bg)] text-[var(--color-danger)]' : 'border-[var(--color-info)] bg-[var(--color-info-bg)] text-[var(--color-info)]'}`}>
                     {diferencia < 0 ? `Faltan ${formatearCantidad(-diferencia, unidad)} ${unidad}` : `Sobran ${formatearCantidad(diferencia, unidad)} ${unidad}`}
@@ -787,14 +766,14 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
   );
 };
 
-// Salida elegida sin la pregunta "¿Qué pasó?" (solo puede sacar): cuando llegan los lotes, el foco pasa al lote
-// (o a la cantidad si no hay lotes). Con la pregunta, el foco queda en ella hasta que el empleado elija.
-function useEffectFocoLote(producto: Product | null, modo: Modo, cargando: boolean, cuantosModos: number) {
+// En la salida (enlace "Solo salieron unos pocos" o quien solo puede sacar): cuando llegan los lotes, el foco pasa
+// al lote (o a la cantidad si no hay lotes)
+function useEffectFocoLote(producto: Product | null, modo: Modo, cargando: boolean) {
   const antes = useRef(cargando);
   useEffect(() => {
     const termino = antes.current && !cargando;
     antes.current = cargando;
-    if (!termino || !producto || modo !== 'SALIDA' || cuantosModos > 1) return;
+    if (!termino || !producto || modo !== 'SALIDA') return;
     setTimeout(() => (document.getElementById('lote-ajuste-elegido') || document.getElementById('input-cantidad-ajuste'))?.focus(), 30);
-  }, [producto, modo, cargando, cuantosModos]);
+  }, [producto, modo, cargando]);
 }

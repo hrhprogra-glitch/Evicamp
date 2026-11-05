@@ -300,6 +300,7 @@ export const ModalEditarSalida: React.FC<Props> = ({ isOpen, onClose, productos,
 
   // Filtro inteligente
   const filteredProducts = productos.filter(p => {
+    if (p.activo === false) return false;   // eliminado: no se puede elegir (su salida vieja sí se edita)
     return coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion], searchQuery);
   });
 

@@ -31,6 +31,11 @@
   `ventanas.ts` (ventanas) y `flechasEspaciales.ts` (flechas de respaldo); al hacer una pantalla nueva, poner flechas propias donde
   importe el orden y correr `ai-scripts/pruebas/estilo/revisar-selector.mjs`. Ojo: un control desactivado no recibe el selector:
   las flechas deben saltar al primero ACTIVO.
+- **Regla 9 (05/11/2026, el dueño la repitió dos veces en Producir):** **Enter = clic y el selector SE QUEDA, en TODO** (botones,
+  opciones, campos de texto y de número). Enter NUNCA pasa al siguiente cuadro; para moverse están las flechas. En un campo, Enter
+  solo hace su acción si tiene una (elegir el primer resultado de un buscador, "Agregar" en la cantidad) y el selector no se mueve.
+  Si el elemento desaparece (lista que se cierra, fila quitada), el selector vuelve a de donde salió o al vecino más cercano.
+  No programar `Enter → enfocar(siguiente)` en pantallas nuevas.
 - **Reglas 7 y 8 (05/11/2026):** las flechas NUNCA cambian una opción (listas desplegables, grupos de opciones tipo radio, unidades…):
   solo mueven el selector; **Enter despliega o elige**. **Enter en una casilla = clic** (se marca y el selector se queda). Lo garantiza
   `alTeclearPrimero` en `flechasEspaciales.ts`; no programar "← → cambia la opción" en ninguna pantalla. Vale también para
@@ -184,6 +189,10 @@
 41. **Cambiar una tabla compartida sin mirar quién más la usa** (04/11/2026): `TablaMovimientos` la usan Finanzas (caja actual) y `ModalDetalleCaja` (detalle de una caja pasada). Al darle paginación hay que revisar el teclado en los dos lugares (`graphify explain "TablaMovimientos"` muestra quién la importa).
 46. **La trampa de foco de ventanas bloqueaba el teclado en la ventana de impresión nativa (AnyDesk Printer / Chromium)** (04/11/2026): `ventanas.ts` escucha `focusout` y en `luego(0)` forzaba el foco a la web de SiuMax. Al abrirse la ventana de impresión, Chromium perdía el foco y el selector no dejaba presionar Imprimir o Cancelar. Solución: sincronizar flag `estaImprimiendo()` con `beforeprint` y `afterprint` para pausar la trampa de foco durante la impresión.
 47. **No usar `display: flex` directo sobre un `<td>` en tablas HTML (`hidden md:flex`)** (04/11/2026): convierte la celda en contenedor flex perdiendo su display `table-cell`, lo que desalinea la celda respecto al `<th>` de la cabecera (el botón de acciones salía pegado a la derecha). Usar siempre `hidden md:table-cell` y envolver el botón dentro de `<div className="flex items-center justify-center">`.
+48. **Un 401 que no era de sesión sacaba al usuario** (05/11/2026): en siumax `fn_edit_batch` y `fn_soft_delete_batch` no tenían EXECUTE para `anon` (en Evicamp sí); PostgREST responde 401 a "permission denied" del rol anon y `supabase.ts` cerraba la sesión con cualquier 401 → al guardar un lote el dueño salía al login. Arreglo: GRANT en `seguridad-sesion.sql` y solo el código `PT401` cierra la sesión. Para buscar algo así: `grep " 401 " /var/log/nginx/access.log` y `permission denied` en el log de PostgreSQL; revisar con `has_function_privilege('anon', oid, 'EXECUTE')` las funciones que llama el sistema.
+49. **Unidades de un costo: por unidad vs. por lote** (05/11/2026): `products.costo_adicional_produccion` es POR UNIDAD, pero `fn_producir_receta(p_costo_adicional)` lo recibe por TODO el lote; la ventana vieja mandaba el de una unidad. Al pasar un costo entre pantalla y función, revisar qué unidad espera cada lado.
+50. **No reescribir datos hijos que se cargan aparte** (05/11/2026): Nuevo producto borraba y volvía a insertar `product_recipes` con lo que tenía en memoria; si se guardaba antes de que terminaran de cargar, la receta quedaba vacía. Una pantalla solo debe escribir lo que de verdad edita.
+51. **Nombres de campos entre la lista y la ventana** (05/11/2026): la lista de Inventario arma el producto con `imageUrl` y Nuevo producto lo leía como `image` → al editar la foto quedaba vacía y al guardar se borraba. Al cargar `initialData`, aceptar los dos nombres (`imageUrl || image_url`) y probar que "editar y guardar sin cambios" deja la fila igual.
 
 - **Pruebas (28/10/2026):** el dueño quiere que se pruebe SOLO lo que se modificó. Las tandas de regresión, solo si él lo pide.
 

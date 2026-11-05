@@ -143,7 +143,8 @@ export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNav
       }
 
       // 1. Asignar Inventario
-      if (prods) setProductosInventario(prods as Product[]);
+      // (los eliminados vienen marcados activo=false: el buscador del fiado no los muestra)
+      if (prods) setProductosInventario(prods.map((p: any) => ({ ...p, activo: Number(p.is_active ?? 1) === 1 })) as Product[]);
 
       // 2. Asignar Clientes
 if (clis) {

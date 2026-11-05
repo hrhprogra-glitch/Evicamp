@@ -685,6 +685,9 @@ BEGIN
     );
 END;
 $$;
+-- 05/11/2026: en siumax les faltaba este permiso → al guardar un lote la API respondía 401 y el sistema sacaba al usuario
+GRANT EXECUTE ON FUNCTION public.fn_edit_batch(text, numeric, numeric, text) TO anon;
+GRANT EXECUTE ON FUNCTION public.fn_soft_delete_batch(text, text) TO anon;
 
 -- Al vender (cada línea de sale_details) se descuenta el stock del producto y de sus lotes, del más antiguo
 -- al más nuevo, y queda un movimiento VENTA por cada lote tocado. Es la misma regla de siempre (antes solo

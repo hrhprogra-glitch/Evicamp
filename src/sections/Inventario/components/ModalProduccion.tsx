@@ -1,444 +1,592 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { X, ChefHat, CheckCircle2, AlertTriangle, ArrowRight, Loader2, PackagePlus } from 'lucide-react';
+// src/sections/Inventario/components/ModalProduccion.tsx
+// PRODUCIR (botón de Inventario): todo lo de combos y recetas en un solo lugar (pedido del dueño 05/11/2026).
+//  - LISTA: los combos y recetas, cuántos alcanzan con el stock de hoy; Producir (recetas) y Cambiar.
+//  - FORMULARIO (nuevo o cambiar): 1. nombre → 2. productos que usa (cantidad por unidad) → 3. combo o receta →
+//    4. precio y categoría (con lo que cuesta armarlo y la ganancia) → Guardar / Producir ahora / Ir a Lotes.
+//  - PRODUCIR una receta: fn_producir_receta descuenta los insumos (lotes más antiguos primero) y crea el lote con el
+//    costo real. TOPE: no deja producir más de lo que alcanza el insumo que se acaba primero.
+// Combo = se descuentan sus partes al venderlo (no se produce). Receta = se prepara antes con Producir.
+// El costo adicional (gas, mano de obra) se guarda POR UNIDAD; al producir se manda por todo el lote (× cantidad).
+// Antes esto estaba en Nuevo producto › opciones avanzadas (ahí ahora solo queda un botón que abre esta ventana).
+import React, { useEffect, useMemo, useState } from 'react';
+import { ChefHat, Boxes, Plus, Trash2, X, Search } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
-import { avisar } from '../../../utils/dialogos';
+import { avisar, confirmar } from '../../../utils/dialogos';
+import { coincideBusqueda } from '../../../utils/busqueda';
+import { formatearCantidad } from '../../../utils/formato';
+import { useEmpleado, usePermiso } from '../../../utils/permisos';
+import { CuerpoVentana, CajaLista, FilaLista, LineaDato, Etiqueta, DatoFila, claseBotonBarra, claseBotonPrincipal } from '../../../components/ListaVentana';
 import type { Product } from '../types';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: () => void;               // recargar productos y lotes de Inventario
   productos: Product[];
-  productoInicial?: Product | null;
+  productoInicial?: Product | null;     // desde la fila (gorrito) o desde "Cambiar sus productos" de Nuevo producto
+  onIrALotes?: (nombre: string) => void; // pestaña Lotes buscando ese producto
+  paraCambiar?: boolean;                 // desde "Cambiar sus productos en Producir": abre el formulario, no Producir
 }
 
-export const ModalProduccion: React.FC<Props> = ({
-  isOpen,
-  onClose,
-  onSuccess,
-  productos,
-  productoInicial
-}) => {
+type Tipo = 'COMBO' | 'RECETA';
+type Vista = 'LISTA' | 'FORM' | 'PRODUCIR';
+interface Insumo { component_product_id: string; component_variant_id?: string | number | null; quantity: number }
+// Lo que se está produciendo (recién guardado o elegido de la lista)
+interface Elegido { id: string; name: string; unit: string; costoAdicional: number; insumos: Insumo[] }
+
+const enfocar = (id: string) => setTimeout(() => document.getElementById(id)?.focus(), 40);
+const soles = (n: number) => `S/ ${n.toFixed(2)}`;
+
+export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, productos, productoInicial, onIrALotes, paraCambiar }) => {
+  const empleado = useEmpleado();
+  const puedeCrear = usePermiso('almacen_crear_editar_productos');
+  const [vista, setVista] = useState<Vista>('LISTA');
+  const [recetas, setRecetas] = useState<Record<string, Insumo[]>>({});
+  const [cargando, setCargando] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  // Formulario
+  const [editId, setEditId] = useState<string | null>(null);
+  const [nombre, setNombre] = useState('');
+  const [insumos, setInsumos] = useState<Insumo[]>([]);
+  const [busqueda, setBusqueda] = useState('');
+  const [listaAbierta, setListaAbierta] = useState(false);
+  const [elegidoInsumo, setElegidoInsumo] = useState<Product | null>(null);
+  const [cantInsumo, setCantInsumo] = useState('1');
+  const [tipo, setTipo] = useState<Tipo | null>(null);
+  const [costoAdic, setCostoAdic] = useState('');
+  const [precio, setPrecio] = useState('');
+  const [categoria, setCategoria] = useState('');
+  // Producir
+  const [elegido, setElegido] = useState<Elegido | null>(null);
+  const [cantidad, setCantidad] = useState('1');
+  const [costoAdicProd, setCostoAdicProd] = useState('0');
+  const [avisoTope, setAvisoTope] = useState('');
+
   useCerrarConEscape(isOpen, onClose);
 
-  const [selectedProductId, setSelectedProductId] = useState<string>('');
-  const [recetasInsumos, setRecetasInsumos] = useState<any[]>([]);
-  const [loadingReceta, setLoadingReceta] = useState(false);
-  const [cantidadProducir, setCantidadProducir] = useState<string>('1');
-  const [costoAdicional, setCostoAdicional] = useState<string>('0');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const porId = useMemo(() => new Map(productos.map((p) => [String(p.id), p])), [productos]);
+  const compuestos = useMemo(() => productos.filter((p) => p.activo !== false && (p.tipoCompuesto === 'COMBO' || p.tipoCompuesto === 'RECETA')), [productos]);
+  const categorias = useMemo(() => Array.from(new Set(productos.map((p) => p.category).filter(Boolean))).sort(), [productos]);
 
-  // Filtrar solo productos con Receta/Elaborados
-  const productosReceta = useMemo(() => {
-    return productos.filter(p => p.tipoCompuesto === 'RECETA');
-  }, [productos]);
-
-  const selectedProduct = useMemo(() => {
-    return productos.find(p => String(p.id) === String(selectedProductId)) || null;
-  }, [productos, selectedProductId]);
-
-  // Cargar producto inicial si viene especificado
+  // Al abrir: se leen todas las recetas (es una tabla chica) y se va a donde corresponde
   useEffect(() => {
-    if (isOpen) {
-      if (productoInicial && productoInicial.tipoCompuesto === 'RECETA') {
-        setSelectedProductId(String(productoInicial.id));
-        setCostoAdicional(String(productoInicial.costoAdicionalProduccion || 0));
-      } else {
-        setSelectedProductId('');
-        setCostoAdicional('0');
-      }
-      setCantidadProducir('1');
+    if (!isOpen) return;
+    let vigente = true;
+    setCargando(true);
+    (async () => {
+      const { data } = await supabase.from('product_recipes').select('*');
+      if (!vigente) return;
+      const mapa: Record<string, Insumo[]> = {};
+      (data || []).forEach((r: any) => {
+        const k = String(r.parent_product_id);
+        (mapa[k] ||= []).push({ component_product_id: String(r.component_product_id), component_variant_id: r.component_variant_id, quantity: Number(r.quantity) || 1 });
+      });
+      setRecetas(mapa);
+      setCargando(false);
+      const p = productoInicial;
+      if (p && !paraCambiar && p.tipoCompuesto === 'RECETA' && (mapa[String(p.id)] || []).length) irAProducir(p, mapa[String(p.id)]);
+      else if (p && (p.tipoCompuesto === 'COMBO' || p.tipoCompuesto === 'RECETA')) abrirFormulario(p, mapa[String(p.id)] || []);
+      else { setVista('LISTA'); enfocar(compuestos.length ? 'fila-compuesto-0' : 'btn-nuevo-compuesto'); }
+    })();
+    return () => { vigente = false; };
+  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Stock de un insumo (si es una variante, el de la variante)
+  const stockDe = (i: Insumo) => {
+    const p = porId.get(String(i.component_product_id));
+    if (i.component_variant_id && p?.variantes) {
+      const v = (p.variantes as any[]).find((x) => String(x.id) === String(i.component_variant_id));
+      if (v) return Number(v.quantity) || 0;
     }
-  }, [isOpen, productoInicial]);
+    return Math.max(0, Number(p?.quantity) || 0);
+  };
+  const nombreDe = (i: Insumo) => {
+    const p = porId.get(String(i.component_product_id));
+    const v = i.component_variant_id && p?.variantes ? (p.variantes as any[]).find((x) => String(x.id) === String(i.component_variant_id)) : null;
+    return `${p?.name || `Producto #${i.component_product_id}`}${v ? ` (${v.nombre_variante || [v.talla, v.color].filter(Boolean).join(' ')})` : ''}`;
+  };
+  const unidadDe = (i: Insumo) => porId.get(String(i.component_product_id))?.unit || 'UND';
+  const costoDe = (i: Insumo) => (Number(porId.get(String(i.component_product_id))?.cost) || 0) * i.quantity;
 
-  // Cargar insumos y receta cuando cambia el producto seleccionado
-  useEffect(() => {
-    const fetchReceta = async () => {
-      if (!selectedProductId) {
-        setRecetasInsumos([]);
-        return;
-      }
-      setLoadingReceta(true);
-      try {
-        const { data, error } = await supabase
-          .from('product_recipes')
-          .select('*')
-          .eq('parent_product_id', selectedProductId);
+  // TOPE: cuántos alcanzan con el stock de hoy y qué insumo lo limita (el que se acaba primero)
+  const tope = (lista: Insumo[]) => {
+    if (!lista.length) return { max: 0, limita: null as Insumo | null };
+    let max = Infinity; let limita: Insumo | null = null;
+    for (const i of lista) {
+      const n = i.quantity > 0 ? Math.floor(stockDe(i) / i.quantity + 1e-9) : 0;
+      if (n < max) { max = n; limita = i; }
+    }
+    return { max: Math.max(0, max), limita };
+  };
+  const textoLimita = (t: ReturnType<typeof tope>) => t.limita
+    ? `lo limita ${nombreDe(t.limita)} (hay ${formatearCantidad(stockDe(t.limita), unidadDe(t.limita))} ${unidadDe(t.limita)}, cada uno usa ${formatearCantidad(t.limita.quantity, unidadDe(t.limita))})`
+    : '';
 
+  // ---------- FORMULARIO ----------
+  const abrirFormulario = (p: Product | null, lista: Insumo[] = []) => {
+    setEditId(p ? String(p.id) : null);
+    setNombre(p?.name || '');
+    setInsumos(lista.map((i) => ({ ...i })));
+    setTipo(p ? (p.tipoCompuesto as Tipo) : null);
+    setCostoAdic(p && Number(p.costoAdicionalProduccion) ? String(p.costoAdicionalProduccion) : '');
+    setPrecio(p && Number(p.price) ? String(p.price) : '');
+    setCategoria(p?.category || '');
+    setBusqueda(''); setElegidoInsumo(null); setCantInsumo('1'); setListaAbierta(false);
+    setVista('FORM');
+    enfocar('input-nombre-compuesto');
+  };
+
+  const candidatos = useMemo(() => {
+    const t = busqueda.trim();
+    if (!t) return [];
+    return productos
+      .filter((p) => p.activo !== false && String(p.id) !== editId && p.tipoCompuesto !== 'COMBO')
+      .filter((p) => coincideBusqueda([p.name, p.code, p.barcode, p.marca], t))
+      .slice(0, 12);
+  }, [productos, busqueda, editId]);
+
+  const elegirInsumo = (p: Product) => {
+    setElegidoInsumo(p); setBusqueda(p.name); setListaAbierta(false);
+    enfocar('input-buscar-insumo-prod'); // vuelve a donde salió; a la cantidad se pasa con →
+  };
+
+  const agregarInsumo = async () => {
+    const p = elegidoInsumo || candidatos[0];
+    const cant = Number(cantInsumo);
+    if (!p) { await avisar('Busca y elige un producto para agregar.'); enfocar('input-buscar-insumo-prod'); return; }
+    if (!(cant > 0)) { await avisar('Escribe cuánto usa cada unidad (más de 0).'); enfocar('input-cant-insumo-prod'); return; }
+    setInsumos((prev) => {
+      const ya = prev.find((i) => i.component_product_id === String(p.id) && !i.component_variant_id);
+      return ya ? prev.map((i) => (i === ya ? { ...i, quantity: i.quantity + cant } : i)) : [...prev, { component_product_id: String(p.id), quantity: cant }];
+    });
+    setElegidoInsumo(null); setBusqueda(''); setCantInsumo('1');
+  };
+
+  const costoArmar = insumos.reduce((a, i) => a + costoDe(i), 0) + (tipo === 'RECETA' ? Number(costoAdic) || 0 : 0);
+  const ganancia = (Number(precio) || 0) - costoArmar;
+  const topeForm = tope(insumos);
+
+  // Guarda el combo o receta; devuelve el id (o null si no se pudo)
+  const guardarCompuesto = async (): Promise<string | null> => {
+    const n = nombre.trim().toUpperCase();
+    if (n.length < 2) { await avisar('Escribe el nombre.'); enfocar('input-nombre-compuesto'); return null; }
+    if (!insumos.length) { await avisar('Agrega los productos que usa.'); enfocar('input-buscar-insumo-prod'); return null; }
+    if (!tipo) { await avisar('Elige cómo se vende: Combo o Receta.'); enfocar('btn-tipo-compuesto-COMBO'); return null; }
+    if (!(Number(precio) > 0)) { await avisar('Escribe el precio de venta.'); enfocar('input-precio-compuesto'); return null; }
+    setGuardando(true);
+    try {
+      const datos = {
+        name: n,
+        category: categoria.trim().toUpperCase() || 'GENERAL',
+        price: Number(precio),
+        tipo_compuesto: tipo,
+        costo_adicional_produccion: tipo === 'RECETA' ? Number(costoAdic) || 0 : 0,
+      };
+      let id = editId;
+      if (id) {
+        const { error } = await supabase.from('products').update(datos).eq('id', id);
         if (error) throw error;
-
-        if (data) {
-          const vinculados = data.map((r: any) => {
-            const comp = productos.find(p => String(p.id) === String(r.component_product_id));
-            return {
-              ...r,
-              component_name: comp?.name || 'Insumo #' + r.component_product_id,
-              component_unit: comp?.unit || 'UND',
-              component_stock: Number(comp?.quantity || 0),
-              component_cost: Number(comp?.cost || comp?.price || 0)
-            };
-          });
-          setRecetasInsumos(vinculados);
-        }
-      } catch (err) {
-        console.error('Error cargando receta:', err);
-      } finally {
-        setLoadingReceta(false);
+      } else {
+        const { data, error } = await supabase.from('products').insert([{
+          ...datos,
+          code: `SKU-${Math.floor(100000 + Math.random() * 900000)}`,
+          quantity: 0, min_stock: 0, control_type: 'UND', unit: 'UND', sunat_unit_code: 'NIU',
+          tipo_igv: 'GRAVADO', mostrar_en_catalogo: true, is_synced: '1', is_active: 1,
+        }]).select().single();
+        if (error) throw error;
+        id = String(data.id);
       }
-    };
-
-    if (isOpen && selectedProductId) {
-      fetchReceta();
+      // Sus productos: se reemplazan todos (como hacía Nuevo producto)
+      const { error: e1 } = await supabase.from('product_recipes').delete().eq('parent_product_id', id);
+      if (e1) throw e1;
+      const { error: e2 } = await supabase.from('product_recipes').insert(insumos.map((i) => ({
+        parent_product_id: id, component_product_id: i.component_product_id, component_variant_id: i.component_variant_id || null, quantity: i.quantity,
+      })));
+      if (e2) throw e2;
+      setRecetas((r) => ({ ...r, [id as string]: insumos }));
+      onSuccess?.();
+      return id;
+    } catch (e) {
+      const m = (e as { message?: string; code?: string });
+      await avisar(m.code === '23505' ? 'Ya existe un producto con ese código. Vuelve a guardar.' : `No se pudo guardar: ${m.message || e}`);
+      enfocar('btn-guardar-compuesto');
+      return null;
+    } finally {
+      setGuardando(false);
     }
-  }, [isOpen, selectedProductId, productos]);
+  };
 
-  // Calcular máximo producibles según stock actual de insumos
-  const maximoPosible = useMemo(() => {
-    if (!recetasInsumos.length) return 0;
-    const capacidades = recetasInsumos.map(item => {
-      const stock = Number(item.component_stock) || 0;
-      const factor = Number(item.quantity) || 1;
-      if (factor <= 0) return 0;
-      return Math.floor(stock / factor);
-    });
-    return Math.max(0, Math.min(...capacidades));
-  }, [recetasInsumos]);
-
-  // Cálculo de costo estimado resultante
-  const calculoCosto = useMemo(() => {
-    const cant = Number(cantidadProducir) || 0;
-    if (cant <= 0) return { totalInsumos: 0, costoUnitario: 0, totalGeneral: 0 };
-
-    const totalInsumos = recetasInsumos.reduce((acc, item) => {
-      const cantTotalInsumo = cant * Number(item.quantity || 1);
-      return acc + (cantTotalInsumo * Number(item.component_cost || 0));
-    }, 0);
-
-    const extra = Number(costoAdicional) || 0;
-    const totalGeneral = totalInsumos + extra;
-    const costoUnitario = cant > 0 ? (totalGeneral / cant) : 0;
-
-    return { totalInsumos, costoUnitario, totalGeneral };
-  }, [recetasInsumos, cantidadProducir, costoAdicional]);
-
-  // Validación de insumos para la cantidad ingresada
-  const insumosInsuficientes = useMemo(() => {
-    const cant = Number(cantidadProducir) || 0;
-    if (cant <= 0) return [];
-    return recetasInsumos.filter(item => {
-      const requerido = cant * Number(item.quantity || 1);
-      return Number(item.component_stock || 0) < requerido;
-    });
-  }, [recetasInsumos, cantidadProducir]);
-
-  const handleConfirmar = async () => {
-    const cant = Number(cantidadProducir);
-    if (!selectedProduct) {
-      await avisar('Por favor selecciona un producto a producir.');
-      return;
+  const alGuardar = async (luego: 'LISTA' | 'LOTES') => {
+    if (guardando) return;
+    const id = await guardarCompuesto();
+    if (!id) return;
+    const n = nombre.trim().toUpperCase();
+    if (luego === 'LOTES') {
+      onClose(); onIrALotes?.(n);
+    } else {
+      await avisar(`✔ ${n} guardado como ${tipo === 'COMBO' ? 'combo' : 'receta: para hacer un lote, presiona «Producir» en la lista'}.`);
+      setVista('LISTA'); enfocar('btn-nuevo-compuesto');
     }
-    if (isNaN(cant) || cant <= 0) {
-      await avisar('Ingresa una cantidad válida mayor a 0 para producir.');
-      document.getElementById('input-cantidad-produccion')?.focus();
-      return;
-    }
-    if (!recetasInsumos.length) {
-      await avisar('Este producto no tiene insumos configurados en su receta.');
-      return;
-    }
-    if (insumosInsuficientes.length > 0) {
-      const nombres = insumosInsuficientes.map(i => `${i.component_name} (Requiere: ${cant * i.quantity} ${i.component_unit}, Hay: ${i.component_stock})`).join('\n');
-      await avisar(`Stock insuficiente de insumos para producir ${cant} unidades:\n\n${nombres}`);
-      return;
-    }
+  };
 
-    setIsSubmitting(true);
+  // ---------- PRODUCIR ----------
+  const irAProducir = (p: Product, lista: Insumo[]) => {
+    setElegido({ id: String(p.id), name: p.name, unit: p.unit || 'UND', costoAdicional: Number(p.costoAdicionalProduccion) || 0, insumos: lista });
+    const t = tope(lista);
+    setCantidad(t.max > 0 ? '1' : '0');
+    setCostoAdicProd(String(Number(p.costoAdicionalProduccion) || 0));
+    setAvisoTope('');
+    setVista('PRODUCIR');
+    setTimeout(() => { const c = document.getElementById('input-cantidad-produccion') as HTMLInputElement | null; c?.focus(); c?.select(); }, 60);
+  };
+  const topeProd = elegido ? tope(elegido.insumos) : { max: 0, limita: null };
+  const cambiarCantidad = (v: string) => {
+    const n = Math.floor(Number(v));
+    if (v !== '' && n > topeProd.max) {
+      setCantidad(String(topeProd.max));
+      setAvisoTope(`Solo alcanza para ${topeProd.max}: ${textoLimita(topeProd)}.`);
+    } else { setCantidad(v); setAvisoTope(''); }
+  };
+  const cantProd = Math.floor(Number(cantidad) || 0);
+  const costoInsumosProd = elegido ? elegido.insumos.reduce((a, i) => a + costoDe(i), 0) * cantProd : 0;
+  const costoAdicTotal = (Number(costoAdicProd) || 0) * cantProd;
+  const costoUnitProd = cantProd > 0 ? (costoInsumosProd + costoAdicTotal) / cantProd : 0;
+
+  const producir = async () => {
+    if (!elegido || guardando) return;
+    if (topeProd.max <= 0) { await avisar(`No alcanza para producir ni 1: ${textoLimita(topeProd)}.`); return; }
+    if (!(cantProd > 0)) { await avisar('Escribe cuántos vas a producir (1 o más).'); enfocar('input-cantidad-produccion'); return; }
+    if (cantProd > topeProd.max) { cambiarCantidad(String(cantProd)); return; }
+    setGuardando(true);
     try {
       const { data, error } = await supabase.rpc('fn_producir_receta', {
-        p_product_id: Number(selectedProduct.id),
-        p_cantidad: cant,
-        p_costo_adicional: Number(costoAdicional) || 0,
-        p_usuario: 'Administrador'
+        p_product_id: Number(elegido.id),
+        p_cantidad: cantProd,
+        p_costo_adicional: costoAdicTotal,          // la función lo recibe por TODO el lote
+        p_usuario: empleado?.nombre || 'Sistema',
       });
-
       if (error) throw error;
-
-      // 1. Cerrar inmediatamente el modal para que desaparezca al instante
-      onClose();
-      // 2. Notificar actualización de productos y lotes en Inventario
-      if (onSuccess) onSuccess();
-
-      // 3. Mostrar resumen de éxito al usuario
-      await avisar(`¡PRODUCCIÓN EXITOSA! 🎉\n\nProducto: ${selectedProduct.name}\nCantidad fabricada: ${cant} ${selectedProduct.unit}\nLote generado: ${data?.batch_code || 'PROD'}\nCosto unitario calculado: S/ ${Number(data?.cost_unit || calculoCosto.costoUnitario).toFixed(2)}`);
-    } catch (err: any) {
-      console.error('Error al producir:', err);
-      await avisar(`Error en la orden de producción:\n${err.message || 'Error desconocido'}`);
+      onSuccess?.();
+      const ir = await confirmar(`✔ Producidos ${cantProd} ${elegido.unit} de ${elegido.name}.\nLote ${data?.batch_code || ''} · costo por unidad ${soles(Number(data?.cost_unit ?? costoUnitProd))}.\n\n¿Ver sus lotes?`);
+      if (ir) { onClose(); onIrALotes?.(elegido.name); }
+      else { setVista('LISTA'); enfocar('btn-nuevo-compuesto'); }
+    } catch (e) {
+      await avisar(`No se pudo producir: ${(e as Error).message}`);
+      enfocar('btn-producir-ahora');
     } finally {
-      setIsSubmitting(false);
+      setGuardando(false);
     }
   };
 
   if (!isOpen) return null;
 
+  const etiquetaCampo = 'text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest mb-2 block';
+  const claseCampo = 'w-full bg-white border-2 border-[var(--color-border)] p-3 text-xs font-black text-[var(--color-ink)] outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]';
+  const items = () => Array.from(document.querySelectorAll('[data-insumo-prod="true"]')) as HTMLElement[];
+
+  // Tabla de productos que usa (formulario y producir)
+  const tablaInsumos = (lista: Insumo[], cant: number | null, quitar?: (i: number) => void) => (
+    <div className="border-2 border-[var(--color-border)] bg-white">
+      <div className="grid grid-cols-12 gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[var(--color-muted)] border-b-2 border-[var(--color-border)]">
+        <span className="col-span-5">Producto</span>
+        <span className="col-span-2 text-right">Por unidad</span>
+        <span className="col-span-2 text-right">{cant !== null ? 'Necesitas' : 'Costo'}</span>
+        <span className={`${quitar ? 'col-span-2' : 'col-span-3'} text-right`}>Hay</span>
+        {quitar && <span className="col-span-1" />}
+      </div>
+      {lista.map((i, idx) => {
+        const u = unidadDe(i);
+        const necesita = cant !== null ? cant * i.quantity : 0;
+        const falta = cant !== null && stockDe(i) < necesita;
+        return (
+          <div key={`${i.component_product_id}-${i.component_variant_id ?? ''}`} className={`grid grid-cols-12 gap-2 px-3 py-2 items-center text-xs border-b border-[var(--color-border)] last:border-b-0 ${falta ? 'bg-[var(--color-danger-bg)]' : ''}`}>
+            <span className="col-span-5 font-black uppercase text-[var(--color-ink)] truncate" title={nombreDe(i)}>{nombreDe(i)}</span>
+            <span className="col-span-2 text-right font-bold text-[var(--color-ink)]">{formatearCantidad(i.quantity, u)} {u}</span>
+            <span className="col-span-2 text-right font-bold text-[var(--color-ink)]">{cant !== null ? `${formatearCantidad(necesita, u)} ${u}` : soles(costoDe(i))}</span>
+            <span className={`${quitar ? 'col-span-2' : 'col-span-3'} text-right font-black ${falta || stockDe(i) < i.quantity ? 'text-[var(--color-danger)]' : 'text-[var(--color-accent)]'}`}>{formatearCantidad(stockDe(i), u)} {u}</span>
+            {quitar && (
+              <span className="col-span-1 flex justify-end">
+                <button id={`btn-quitar-insumo-prod-${idx}`} type="button" onClick={() => quitar(idx)} title="Quitar"
+                  className="p-1.5 border-2 border-transparent text-[var(--color-danger)] hover:border-[var(--color-danger)] focus:outline-none focus:border-[var(--color-danger)] cursor-pointer">
+                  <Trash2 size={14} />
+                </button>
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  const titulo = vista === 'FORM' ? (editId ? 'Cambiar combo o receta' : 'Nuevo combo o receta') : vista === 'PRODUCIR' ? `Producir: ${elegido?.name || ''}` : 'Producir · combos y recetas';
+  const subtitulo = vista === 'FORM' ? 'Nombre → productos que usa → combo o receta → precio'
+    : vista === 'PRODUCIR' ? 'Descuenta los insumos y crea el lote con su costo real'
+    : 'Combo: se descuenta al vender · Receta: se prepara antes con Producir';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-      <div 
-        id="modal-produccion-receta"
-        className="ventana-sobria bg-[var(--color-surface)] border-2 border-[var(--color-ink)] w-full max-w-2xl max-h-[90vh] flex flex-col rounded-none overflow-hidden"
-      >
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
+      <div id="modal-produccion-receta" role="dialog" aria-label="Producir" className={`ventana-sobria bg-[var(--color-surface)] w-full max-w-3xl border-2 border-[var(--color-ink)] flex flex-col ${vista === 'LISTA' || cargando ? 'h-[calc(90dvh/var(--ui-zoom))]' : 'max-h-[calc(90dvh/var(--ui-zoom))]'}`}>
         {/* CABECERA */}
-        <div className="ventana-cabecera p-4 bg-emerald-600 text-white flex justify-between items-center border-b-2 border-[var(--color-ink)]">
-          <div className="flex items-center gap-2">
-            <ChefHat size={22} className="text-white" />
-            <div>
-              <h3 className="ventana-cabecera__titulo font-black text-sm tracking-wider uppercase">
-                Orden de Producción / Fabricación
-              </h3>
-              <p className="text-[10px] text-emerald-100">
-                Transforma insumos en productos terminados con cálculo de costo real y kardex
-              </p>
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <ChefHat size={24} className="text-[var(--color-warning)] shrink-0" />
+            <div className="min-w-0">
+              <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest text-[var(--color-warning)] truncate">{titulo}</h2>
+              <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">{subtitulo}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="ventana-cerrar p-1 hover:bg-emerald-700 text-white transition-colors cursor-pointer"
-            title="Cerrar (Esc)"
-          >
-            <X size={20} />
-          </button>
+          <button id="btn-cerrar-produccion" type="button" onClick={onClose} title="Cerrar (Escape)" className="ventana-cerrar p-1.5 cursor-pointer rounded-none"><X size={20} /></button>
         </div>
 
-        {/* CONTENIDO */}
-        <div className="p-5 overflow-y-auto custom-scrollbar space-y-4 flex-1 bg-[var(--color-surface)]">
-          {productosReceta.length === 0 ? (
-            <div className="p-6 text-center space-y-3 bg-amber-50 border-2 border-amber-300">
-              <AlertTriangle size={36} className="mx-auto text-amber-600" />
-              <h4 className="text-sm font-black text-[var(--color-ink)] uppercase">
-                No hay productos configurados con Receta
-              </h4>
-              <p className="text-xs text-[#64748B]">
-                Para fabricar un producto, primero edítalo o créalo en el inventario y marca la opción <strong>"Elaborado / Receta"</strong> con sus respectivos insumos.
-              </p>
-            </div>
-          ) : (
+        <CuerpoVentana>
+          {cargando ? (
+            <p className="text-xs font-black uppercase text-[var(--color-muted)]">Cargando…</p>
+          ) : vista === 'LISTA' ? (
             <>
-              {/* SELECCIÓN DE PRODUCTO A FABRICAR */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-[var(--color-ink)] tracking-wider">
-                  Producto a Fabricar / Elaborar
-                </label>
-                <select
-                  id="select-producto-produccion"
-                  value={selectedProductId}
-                  onChange={(e) => {
-                    const id = e.target.value;
-                    setSelectedProductId(id);
-                    const prod = productos.find(p => String(p.id) === id);
-                    if (prod) {
-                      setCostoAdicional(String(prod.costoAdicionalProduccion || 0));
-                    } else {
-                      setCostoAdicional('0');
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'ArrowDown' || e.key === 'Enter') {
-                      e.preventDefault();
-                      if (selectedProductId) {
-                        document.getElementById('input-cantidad-produccion')?.focus();
+              <div className="flex flex-wrap items-center justify-between gap-3 shrink-0">
+                <p className="text-[12px] font-black uppercase tracking-widest text-[var(--color-muted)]">Tus combos y recetas ({compuestos.length})</p>
+                <button id="btn-nuevo-compuesto" type="button" className={claseBotonBarra(false)}
+                  onClick={() => (puedeCrear ? abrirFormulario(null) : avisar('🔒 No tienes permiso para crear productos.'))}>
+                  <Plus size={16} /> Nuevo combo o receta
+                </button>
+              </div>
+              <CajaLista vacia={!compuestos.length} mensaje="Todavía no tienes combos ni recetas. Crea uno con «Nuevo combo o receta».">
+                {compuestos.map((p, idx) => {
+                  const lista = recetas[String(p.id)] || [];
+                  const t = tope(lista);
+                  const esReceta = p.tipoCompuesto === 'RECETA';
+                  return (
+                    <FilaLista
+                      key={p.id}
+                      id={`fila-compuesto-${idx}`}
+                      tabIndex={0}
+                      data-fila-compuesto="true"
+                      onKeyDown={(e) => {
+                        const filas = Array.from(document.querySelectorAll('[data-fila-compuesto="true"]')) as HTMLElement[];
+                        if (e.target !== e.currentTarget) return;
+                        if (e.key === 'ArrowDown') { e.preventDefault(); filas[idx + 1]?.focus(); }
+                        else if (e.key === 'ArrowUp') { e.preventDefault(); (filas[idx - 1] || document.getElementById('btn-nuevo-compuesto'))?.focus(); }
+                        else if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById(`btn-${esReceta ? 'producir' : 'cambiar'}-compuesto-${idx}`)?.focus(); }
+                        else if (e.key === 'Enter') { e.preventDefault(); if (esReceta && lista.length) irAProducir(p, lista); else abrirFormulario(p, lista); }
+                      }}
+                      titulo={p.name}
+                      subtitulo={<>
+                        <LineaDato>{lista.length} producto(s) · precio {soles(Number(p.price) || 0)}{esReceta ? ` · stock ${formatearCantidad(p.quantity, p.unit)} ${p.unit}` : ''}</LineaDato>
+                        <LineaDato>{lista.length ? (t.max > 0 ? `Alcanza para ${t.max}` : `No alcanza: ${textoLimita(t)}`) : 'Sin productos: agrégalos con Cambiar'}</LineaDato>
+                      </>}
+                      centro={<Etiqueta tono={esReceta ? 'verde' : 'ambar'}>{esReceta ? 'Receta' : 'Combo'}</Etiqueta>}
+                      derecha={
+                        <div className="flex items-center gap-2">
+                          {esReceta && (
+                            <button id={`btn-producir-compuesto-${idx}`} type="button" disabled={!lista.length}
+                              onClick={() => irAProducir(p, lista)}
+                              onKeyDown={(e) => { if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById(`btn-cambiar-compuesto-${idx}`)?.focus(); } else if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById(`fila-compuesto-${idx}`)?.focus(); } }}
+                              className={`${claseBotonBarra(true)} !h-[38px] !px-3 disabled:opacity-40`}>
+                              <ChefHat size={14} /> Producir
+                            </button>
+                          )}
+                          <button id={`btn-cambiar-compuesto-${idx}`} type="button"
+                            onClick={() => (puedeCrear ? abrirFormulario(p, lista) : avisar('🔒 No tienes permiso para cambiar productos.'))}
+                            onKeyDown={(e) => { if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById(esReceta ? `btn-producir-compuesto-${idx}` : `fila-compuesto-${idx}`)?.focus(); } else if (e.key === 'ArrowRight') e.preventDefault(); }}
+                            className={`${claseBotonBarra(false)} !h-[38px] !px-3`}>
+                            Cambiar
+                          </button>
+                        </div>
                       }
-                    }
-                  }}
-                  className="w-full p-2.5 text-xs font-black uppercase border-2 border-[#CBD5E1] bg-[var(--color-surface)] text-[var(--color-ink)] outline-none focus:border-emerald-600"
-                >
-                  <option value="">-- SELECCIONA UN PRODUCTO A FABRICAR --</option>
-                  {productosReceta.map(p => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} (Stock Actual: {p.quantity} {p.unit})
-                    </option>
-                  ))}
-                </select>
+                    />
+                  );
+                })}
+              </CajaLista>
+            </>
+          ) : vista === 'FORM' ? (
+            <div className="flex flex-col gap-5 shrink-0">
+              {/* 1. NOMBRE */}
+              <div>
+                <label htmlFor="input-nombre-compuesto" className={etiquetaCampo}>1. Nombre</label>
+                <input id="input-nombre-compuesto" type="text" autoComplete="off" spellCheck={false} value={nombre}
+                  placeholder="EJ.: JUGO DE NARANJA · COMBO HAMBURGUESA + GASEOSA"
+                  onChange={(e) => setNombre(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
+                  className={`${claseCampo} uppercase`} />
               </div>
 
-              {!selectedProductId ? (
-                <div className="p-8 text-center border-2 border-dashed border-slate-300 bg-slate-50 space-y-2">
-                  <ChefHat size={36} className="mx-auto text-emerald-600 opacity-60" />
-                  <p className="text-xs font-black uppercase text-[var(--color-ink)]">
-                    Selecciona un producto en la lista de arriba
-                  </p>
-                  <p className="text-[11px] text-[#64748B]">
-                    Aquí se cargarán automáticamente los insumos requeridos, la cantidad máxima que puedes fabricar y el costo unitario.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {/* CAPACIDAD DE PRODUCCIÓN Y CANTIDAD */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
-                <div className="space-y-1 sm:col-span-1">
-                  <label className="text-[10px] font-black uppercase text-[var(--color-ink)] tracking-wider">
-                    Cantidad a Fabricar
-                  </label>
-                  <input
-                    id="input-cantidad-produccion"
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={cantidadProducir}
-                    onChange={(e) => setCantidadProducir(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        document.getElementById('input-costo-adicional-produccion')?.focus();
-                      } else if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        document.getElementById('select-producto-produccion')?.focus();
-                      } else if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        document.getElementById('input-costo-adicional-produccion')?.focus();
-                      }
-                    }}
-                    className={`w-full p-2.5 text-xs font-black text-right border-2 bg-[var(--color-surface)] text-[var(--color-ink)] outline-none ${
-                      insumosInsuficientes.length > 0 ? 'border-red-500 text-red-600' : 'border-[#CBD5E1] focus:border-emerald-600'
-                    }`}
-                  />
-                </div>
-
-                <div className="space-y-1 sm:col-span-1">
-                  <label className="text-[10px] font-black uppercase text-[#64748B] tracking-wider" title="Mano de obra, gas, empaque o costo indirecto">
-                    Costo Adicional Lote (S/)
-                  </label>
-                  <input
-                    id="input-costo-adicional-produccion"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={costoAdicional}
-                    onChange={(e) => setCostoAdicional(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        document.getElementById('btn-confirmar-produccion')?.focus();
-                      } else if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        document.getElementById('input-cantidad-produccion')?.focus();
-                      } else if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        document.getElementById('btn-confirmar-produccion')?.focus();
-                      }
-                    }}
-                    className="w-full p-2.5 text-xs font-black text-right border-2 border-[#CBD5E1] bg-[var(--color-surface)] text-[var(--color-ink)] outline-none focus:border-emerald-600"
-                  />
-                </div>
-
-                <div className="p-2.5 border-2 border-slate-200 bg-slate-50 flex flex-col justify-center">
-                  <span className="text-[9px] font-black text-[#64748B] uppercase">Máximo con insumos actuales</span>
-                  <span className={`text-base font-black ${maximoPosible > 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                    {maximoPosible} {selectedProduct?.unit || 'UND'}
-                  </span>
-                </div>
-              </div>
-
-              {/* LISTA DE INSUMOS REQUERIDOS */}
-              <div className="space-y-2">
-                <span className="text-[10px] font-black uppercase text-[var(--color-ink)] tracking-wider">
-                  Insumos Requeridos vs. Existencias:
-                </span>
-
-                {loadingReceta ? (
-                  <div className="p-6 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
-                    <Loader2 size={16} className="animate-spin" /> Cargando receta...
-                  </div>
-                ) : recetasInsumos.length === 0 ? (
-                  <p className="p-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 font-bold">
-                    ⚠️ Este producto no tiene insumos asignados en su receta. Edita el producto en Inventario para agregarle insumos.
-                  </p>
-                ) : (
-                  <div className="border-2 border-[#CBD5E1] overflow-hidden">
-                    <div className="grid grid-cols-12 gap-1 bg-slate-100 p-2 text-[9px] font-black uppercase text-[#64748B] border-b border-[#CBD5E1]">
-                      <span className="col-span-5">Insumo</span>
-                      <span className="col-span-2 text-right">Por Unidad</span>
-                      <span className="col-span-2 text-right">Requerido</span>
-                      <span className="col-span-3 text-right">Disponible</span>
-                    </div>
-
-                    <div className="divide-y divide-slate-100 max-h-48 overflow-y-auto custom-scrollbar">
-                      {recetasInsumos.map((item, idx) => {
-                        const cantReq = (Number(cantidadProducir) || 0) * Number(item.quantity || 1);
-                        const disponible = Number(item.component_stock || 0);
-                        const alcanza = disponible >= cantReq;
-
-                        return (
-                          <div key={idx} className={`grid grid-cols-12 gap-1 p-2 text-xs items-center ${alcanza ? 'hover:bg-slate-50 bg-[var(--color-surface)]' : 'bg-red-50'}`}>
-                            <span className="col-span-5 font-bold text-[var(--color-ink)] uppercase truncate">
-                              {item.component_name}
-                            </span>
-                            <span className="col-span-2 text-right text-slate-600 font-mono text-[11px]">
-                              {item.quantity} {item.component_unit}
-                            </span>
-                            <span className={`col-span-2 text-right font-black font-mono text-[11px] ${alcanza ? 'text-slate-800' : 'text-red-600 font-black'}`}>
-                              {cantReq} {item.component_unit}
-                            </span>
-                            <span className={`col-span-3 text-right font-black font-mono text-[11px] ${alcanza ? 'text-emerald-700' : 'text-red-600 font-black'}`}>
-                              {disponible} {item.component_unit} {!alcanza && '⚠️'}
-                            </span>
+              {/* 2. PRODUCTOS QUE USA */}
+              <div>
+                <p className={etiquetaCampo}>2. Productos que usa (cuánto lleva cada unidad)</p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="relative flex-1" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setListaAbierta(false); }}>
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)] pointer-events-none" />
+                    <input id="input-buscar-insumo-prod" type="text" autoComplete="off" spellCheck={false} value={busqueda}
+                      placeholder="BUSCA EL PRODUCTO POR NOMBRE O CÓDIGO…"
+                      onChange={(e) => { setBusqueda(e.target.value); setElegidoInsumo(null); setListaAbierta(e.target.value.trim() !== ''); }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') { e.preventDefault(); if (candidatos[0]) elegirInsumo(elegidoInsumo || candidatos[0]); }
+                        else if (e.key === 'ArrowDown' && listaAbierta && candidatos.length) { e.preventDefault(); setTimeout(() => items()[0]?.focus(), 20); }
+                      }}
+                      className={`${claseCampo} pl-9 uppercase`} />
+                    {listaAbierta && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[var(--color-ink)] z-50 max-h-56 overflow-y-auto">
+                        {candidatos.length ? candidatos.map((p) => (
+                          <div key={p.id} role="option" tabIndex={0} data-insumo-prod="true"
+                            onClick={() => elegirInsumo(p)}
+                            onKeyDown={(e) => {
+                              const l = items(); const i = l.indexOf(e.currentTarget);
+                              if (e.key === 'ArrowDown') { e.preventDefault(); l[i + 1]?.focus(); }
+                              else if (e.key === 'ArrowUp') { e.preventDefault(); (i > 0 ? l[i - 1] : document.getElementById('input-buscar-insumo-prod'))?.focus(); }
+                              else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); elegirInsumo(p); }
+                              else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setListaAbierta(false); enfocar('input-buscar-insumo-prod'); }
+                            }}
+                            className="flex items-center justify-between gap-3 p-3 border-b border-[var(--color-border)] cursor-pointer outline-none text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white">
+                            <span className="text-xs font-black uppercase truncate">{p.name}</span>
+                            <span className="text-[11px] font-bold shrink-0">Hay {formatearCantidad(p.quantity, p.unit)} {p.unit} · {soles(Number(p.cost) || 0)}</span>
                           </div>
-                        );
-                      })}
-                    </div>
+                        )) : <div className="p-3 text-[11px] font-black uppercase text-[var(--color-muted)]">No se encontraron productos</div>}
+                      </div>
+                    )}
+                  </div>
+                  {/* La unidad del producto elegido al lado de la cantidad (pedido del dueño: "¿ese 1 es unidad o kilo?") */}
+                  <div className="relative sm:w-36">
+                    <input id="input-cant-insumo-prod" type="number" min="0" step="any" value={cantInsumo} title="Cuánto lleva cada unidad"
+                      onChange={(e) => setCantInsumo(e.target.value)}
+                      onFocus={(e) => e.currentTarget.select()}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void agregarInsumo(); } }}
+                      className={`${claseCampo} text-right pr-14`} />
+                    <span id="unidad-cant-insumo-prod" className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-black uppercase text-[var(--color-muted)] pointer-events-none">
+                      {elegidoInsumo?.unit || '—'}
+                    </span>
+                  </div>
+                  <button id="btn-agregar-insumo-prod" type="button" onClick={() => void agregarInsumo()} className={claseBotonBarra(false)}>
+                    <Plus size={16} /> Agregar
+                  </button>
+                </div>
+                {elegidoInsumo && (
+                  <p id="frase-cant-insumo-prod" className="mt-2 text-[11px] font-black uppercase text-[var(--color-ink)]">
+                    Cada {nombre.trim() || 'unidad'} lleva {Number(cantInsumo) > 0 ? formatearCantidad(Number(cantInsumo), elegidoInsumo.unit) : '…'} {elegidoInsumo.unit || 'UND'} de {elegidoInsumo.name}
+                    {/KG|G|GR|L|LT|ML/i.test(elegidoInsumo.unit || '') ? ' (puedes usar decimales: 0.25 = un cuarto)' : ''}
+                  </p>
+                )}
+                <div className="mt-3">
+                  {insumos.length ? tablaInsumos(insumos, null, (i) => {
+                    // Quitar: el selector queda en el producto que sigue (o en el buscador si ya no queda ninguno)
+                    const quedan = insumos.length - 1;
+                    setInsumos((l) => l.filter((_, k) => k !== i));
+                    enfocar(quedan > 0 ? `btn-quitar-insumo-prod-${Math.min(i, quedan - 1)}` : 'input-buscar-insumo-prod');
+                  }) : (
+                    <p className="text-[11px] font-bold text-[var(--color-muted)]">Busca el producto (Enter lo elige), pasa con → a la cantidad y presiona Enter o «Agregar».</p>
+                  )}
+                  {insumos.length > 0 && (
+                    <p id="tope-formulario" className={`mt-2 text-[11px] font-black uppercase ${topeForm.max > 0 ? 'text-[var(--color-accent)]' : 'text-[var(--color-danger)]'}`}>
+                      Con lo que tienes alcanza para {topeForm.max} · {textoLimita(topeForm)}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* 3. COMBO O RECETA */}
+              <div>
+                <p className={etiquetaCampo}>3. ¿Cómo se vende?</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="radiogroup" aria-label="¿Cómo se vende?">
+                  {([['COMBO', 'Combo', 'Sus partes se descuentan solas al venderlo', Boxes], ['RECETA', 'Receta', 'Se prepara antes con «Producir»', ChefHat]] as const).map(([t, tit, ayuda, Icono]) => (
+                    <button key={t} id={`btn-tipo-compuesto-${t}`} type="button" role="radio" aria-checked={tipo === t}
+                      onClick={() => setTipo(t)} // Enter = clic: elige y el selector se queda (regla del selector)
+                      className={`text-left p-3 border-2 cursor-pointer outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] ${tipo === t ? 'border-[var(--color-ink)] bg-[var(--color-ink)] text-white' : 'border-[var(--color-border)] bg-white text-[var(--color-ink)] hover:border-[var(--color-ink)]'}`}>
+                      <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest">{tipo === t ? '●' : '○'} <Icono size={14} /> {tit}</span>
+                      <span className={`block text-[11px] font-bold ${tipo === t ? 'text-white/80' : 'text-[var(--color-muted)]'}`}>{ayuda}</span>
+                    </button>
+                  ))}
+                </div>
+                {tipo === 'RECETA' && (
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <label htmlFor="input-costo-adic-compuesto" className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">Costo adicional por unidad (gas, mano de obra) S/</label>
+                    <input id="input-costo-adic-compuesto" type="number" min="0" step="0.01" placeholder="0.00" value={costoAdic}
+                      onChange={(e) => setCostoAdic(e.target.value)} onFocus={(e) => e.currentTarget.select()}
+                      onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
+                      className={`${claseCampo} !w-32 text-right`} />
                   </div>
                 )}
               </div>
 
-              {/* RESUMEN ECONÓMICO Y LOTE RESULTANTE */}
-              <div className="p-3 bg-emerald-50 border-2 border-emerald-300 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
+              {/* 4. PRECIO Y CATEGORÍA */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <span className="text-[10px] font-black text-emerald-900 uppercase">
-                    Costo unitario calculado:
-                  </span>
-                  <div className="text-base font-black text-emerald-800">
-                    S/ {calculoCosto.costoUnitario.toFixed(2)}{' '}
-                    <span className="text-[10px] font-normal text-emerald-700">x {selectedProduct?.unit || 'UND'}</span>
-                  </div>
+                  <label htmlFor="input-precio-compuesto" className={etiquetaCampo}>4. Precio de venta (S/)</label>
+                  <input id="input-precio-compuesto" type="number" min="0" step="0.01" placeholder="0.00" value={precio}
+                    onChange={(e) => setPrecio(e.target.value)} onFocus={(e) => e.currentTarget.select()}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
+                    className={`${claseCampo} text-right`} />
                 </div>
-
-                <div className="text-right">
-                  <span className="text-[10px] font-black text-emerald-900 uppercase">
-                    Inversión total del lote:
-                  </span>
-                  <div className="text-sm font-black text-emerald-800">
-                    S/ {calculoCosto.totalGeneral.toFixed(2)}
-                  </div>
+                <div>
+                  <label htmlFor="input-categoria-compuesto" className={etiquetaCampo}>Categoría</label>
+                  <input id="input-categoria-compuesto" type="text" list="lista-categorias-compuesto" autoComplete="off" placeholder="GENERAL" value={categoria}
+                    onChange={(e) => setCategoria(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
+                    className={`${claseCampo} uppercase`} />
+                  <datalist id="lista-categorias-compuesto">{categorias.map((c) => <option key={c} value={c} />)}</datalist>
                 </div>
               </div>
-            </>
+              <div id="resumen-compuesto" className="grid grid-cols-3 gap-2 border-2 border-[var(--color-border)] p-3">
+                <DatoFila etiqueta="Cuesta armarlo" valor={soles(costoArmar)} />
+                <DatoFila etiqueta="Precio" valor={soles(Number(precio) || 0)} />
+                <DatoFila etiqueta="Ganas por unidad" valor={`${soles(ganancia)}${Number(precio) > 0 ? ` (${Math.round((ganancia / Number(precio)) * 100)}%)` : ''}`} tono={ganancia > 0 ? 'verde' : ganancia < 0 ? 'rojo' : 'normal'} />
+              </div>
+            </div>
+          ) : elegido && (
+            <div className="flex flex-col gap-4 shrink-0">
+              <p id="tope-produccion" role="status" className={`p-3 border-2 text-xs font-black uppercase ${topeProd.max > 0 ? 'border-[var(--color-accent)] bg-[var(--color-accent-bg)] text-[var(--color-accent)]' : 'border-[var(--color-danger)] bg-[var(--color-danger-bg)] text-[var(--color-danger)]'}`}>
+                {topeProd.max > 0 ? `Puedes producir hasta ${topeProd.max} ${elegido.unit}` : 'No alcanza para producir'}
+                <span className="block text-[11px] font-bold normal-case">{textoLimita(topeProd)}</span>
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="input-cantidad-produccion" className={etiquetaCampo}>¿Cuántos vas a producir? ({elegido.unit})</label>
+                  <input id="input-cantidad-produccion" type="number" min="0" step="1" max={topeProd.max} value={cantidad} disabled={topeProd.max <= 0}
+                    onChange={(e) => cambiarCantidad(e.target.value)} onFocus={(e) => e.currentTarget.select()}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
+                    className={`${claseCampo} text-right disabled:opacity-50`} />
+                </div>
+                <div>
+                  <label htmlFor="input-costo-adicional-produccion" className={etiquetaCampo}>Costo adicional por unidad (S/)</label>
+                  <input id="input-costo-adicional-produccion" type="number" min="0" step="0.01" value={costoAdicProd}
+                    onChange={(e) => setCostoAdicProd(e.target.value)} onFocus={(e) => e.currentTarget.select()}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
+                    className={`${claseCampo} text-right`} />
+                </div>
+              </div>
+              {avisoTope && <p id="aviso-tope" role="alert" className="text-[11px] font-black uppercase text-[var(--color-danger)]">{avisoTope}</p>}
+              {tablaInsumos(elegido.insumos, cantProd)}
+              <div className="grid grid-cols-3 gap-2 border-2 border-[var(--color-border)] p-3">
+                <DatoFila etiqueta="Insumos" valor={soles(costoInsumosProd)} />
+                <DatoFila etiqueta="Adicional" valor={soles(costoAdicTotal)} />
+                <DatoFila etiqueta="Costo por unidad" valor={soles(costoUnitProd)} tono="verde" />
+              </div>
+            </div>
           )}
-        </>
-      )}
-    </div>
+        </CuerpoVentana>
 
-      {/* PIE Y BOTONES */}
-      <div className="p-4 bg-slate-100 border-t-2 border-[var(--color-ink)] flex justify-between items-center">
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-4 py-2 text-xs font-bold uppercase text-slate-700 hover:text-slate-900 hover:bg-slate-200 transition-colors cursor-pointer"
-        >
-          Cancelar (Esc)
-        </button>
-
-        {productosReceta.length > 0 && (
-          <button
-            id="btn-confirmar-produccion"
-            type="button"
-            onClick={handleConfirmar}
-            disabled={isSubmitting || !selectedProductId || insumosInsuficientes.length > 0 || !recetasInsumos.length}
-            className="px-6 py-2.5 bg-emerald-600 text-white font-black text-xs uppercase tracking-wider flex items-center gap-2 hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[3px_3px_0_0_var(--color-ink)] cursor-pointer"
-          >
-            {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <PackagePlus size={16} />}
-            <span>{isSubmitting ? 'Procesando...' : 'Confirmar Producción'}</span>
-          </button>
+        {/* PIE: siempre a la vista */}
+        {vista !== 'LISTA' && !cargando && (
+          <div className="shrink-0 border-t-2 border-[var(--color-ink)] px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-end gap-3 bg-[var(--color-surface)]">
+            <button id="btn-volver-produccion" type="button" onClick={() => { setVista('LISTA'); enfocar('btn-nuevo-compuesto'); }} className={`${claseBotonBarra(false)} sm:mr-auto whitespace-nowrap`}>
+              ← Volver
+            </button>
+            {vista === 'FORM' ? (
+              <>
+                {/* Solo Guardar y Guardar e ir a Lotes (pedido del dueño 05/11/2026); para producir: «Producir» en la lista */}
+                {tipo === 'RECETA' && (
+                  <button id="btn-guardar-ir-lotes-compuesto" type="button" disabled={guardando} onClick={() => void alGuardar('LOTES')} className={`${claseBotonBarra(false)} whitespace-nowrap`}>Guardar e ir a Lotes</button>
+                )}
+                <button id="btn-guardar-compuesto" type="button" disabled={guardando} onClick={() => void alGuardar('LISTA')} className={claseBotonPrincipal}>
+                  {guardando ? 'Guardando…' : 'Guardar'}
+                </button>
+              </>
+            ) : (
+              <button id="btn-producir-ahora" type="button" aria-disabled={guardando || topeProd.max <= 0} onClick={() => void producir()} className={`${claseBotonPrincipal} ${topeProd.max <= 0 ? 'opacity-50' : ''}`}>
+                <ChefHat size={14} /> {guardando ? 'Produciendo…' : `Producir ${cantProd > 0 ? cantProd : ''}`}
+              </button>
+            )}
+          </div>
         )}
-        </div>
       </div>
     </div>
   );
