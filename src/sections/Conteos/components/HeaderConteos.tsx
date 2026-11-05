@@ -22,7 +22,7 @@ export const HeaderConteos: React.FC<Props> = ({ onNuevoAjuste, children }) => {
         {children}
         <button
           id="btn-nuevo-ajuste"
-          style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+          style={{ '--icono': 'var(--color-warning)' } as React.CSSProperties}
           onClick={onNuevoAjuste}
           onKeyDown={(e) => {
             if (e.key === "ArrowUp" || e.key === "ArrowRight") {
@@ -37,7 +37,7 @@ export const HeaderConteos: React.FC<Props> = ({ onNuevoAjuste, children }) => {
               }
             }
           }}
-          className="boton-cabecera bg-[var(--color-warning)] text-[#030712] px-6 py-3 border-2 border-[var(--color-warning)] font-black text-[12px] uppercase tracking-widest flex items-center gap-2 hover:bg-[var(--color-ink)] hover:text-[var(--color-warning)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-warning)] transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_#000000] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] w-full md:w-auto justify-center whitespace-nowrap"
+          className="boton-cabecera px-4 sm:px-6 py-3 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none w-full md:w-auto whitespace-nowrap"
         >
           <Plus size={16} /> Nuevo ajuste
         </button>

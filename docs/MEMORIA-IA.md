@@ -385,5 +385,9 @@ En ventanas grandes (`max-w-4xl` o más) como `ModalGrupo.tsx`:
   4. Filtros y buscador: marco esmeralda brillante de 2px.
   5. Clic con el ratón: siempre limpiar con `:focus:not(:focus-visible)` para que no quede ningún resalte ni aro pegado.
 
+**Scrollbar y flechas nativas (04/11/2026):**
+- En Chrome/Edge de Windows, NUNCA poner `scrollbar-width: auto !important;` en elementos con scroll ni en ventanas; esto revierte al scrollbar nativo de Windows (barra gris gruesa con botones de flechas `▲` y `▼`).
+- Siempre usar `*::-webkit-scrollbar-button { display: none !important; width: 0 !important; height: 0 !important; }` y `scrollbar-width: thin;` para garantizar la barra delgada estilizada de 5px del sistema.
 
-
+**Navegación espacial en enlaces y formularios (04/11/2026):**
+- Cuando haya un campo de texto con botones a sus lados (ej. enlace público con `[ Copiar Enlace ]` y `[ Ver Tienda ]` en Tienda Web), implementar `onKeyDown`: `ArrowRight` salta del input a los botones; `ArrowLeft` regresa al input; y `ArrowDown` / `ArrowUp` se desplazan entre los campos del formulario.

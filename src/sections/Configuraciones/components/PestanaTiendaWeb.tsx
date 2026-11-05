@@ -122,12 +122,38 @@ export const PestanaTiendaWeb: React.FC = () => {
             type="text"
             readOnly
             value={urlTienda}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-copiar-enlace-tienda')?.focus();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('input-tienda-web-activo')?.focus();
+              }
+            }}
             className="flex-1 px-3 py-2 text-xs font-mono bg-white border border-[var(--color-border)] select-all"
           />
           <button
             id="btn-copiar-enlace-tienda"
             type="button"
             onClick={handleCopiarEnlace}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('input-tienda-web-enlace')?.focus();
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-ver-tienda-web')?.focus();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('input-tienda-web-activo')?.focus();
+              }
+            }}
             style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
             className="boton-cabecera flex items-center justify-center gap-1.5 px-4 py-2 border border-[var(--color-border)] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
           >
@@ -135,9 +161,21 @@ export const PestanaTiendaWeb: React.FC = () => {
             {copiado ? '¡Copiado!' : 'Copiar Enlace'}
           </button>
           <a
+            id="btn-ver-tienda-web"
             href={urlTienda}
             target="_blank"
             rel="noopener noreferrer"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-copiar-enlace-tienda')?.focus();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('input-tienda-web-activo')?.focus();
+              }
+            }}
             className="flex items-center justify-center gap-1.5 px-4 py-2 bg-[var(--color-bg)] text-[var(--color-ink)] border border-[var(--color-border)] font-bold text-xs uppercase tracking-wider hover:bg-[var(--color-bg-2)] transition-colors cursor-pointer"
           >
             <ExternalLink size={14} /> Ver Tienda
@@ -170,9 +208,21 @@ export const PestanaTiendaWeb: React.FC = () => {
           </div>
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <input
+              id="input-tienda-web-activo"
               type="checkbox"
               checked={activo}
               onChange={(e) => setActivo(e.target.checked)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  document.getElementById('input-tienda-web-enlace')?.focus();
+                } else if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  document.getElementById('input-tienda-web-whatsapp')?.focus();
+                }
+              }}
               className="w-5 h-5 text-[var(--color-accent)] focus:ring-[var(--color-accent)] border-[var(--color-ink)]"
             />
             <span className={`text-xs font-black uppercase ${activo ? 'text-emerald-600' : 'text-red-500'}`}>
@@ -195,6 +245,17 @@ export const PestanaTiendaWeb: React.FC = () => {
               type="text"
               value={whatsapp}
               onChange={(e) => setWhatsapp(e.target.value.replace(/\D/g, ''))}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  document.getElementById('input-tienda-web-activo')?.focus();
+                } else if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  document.getElementById('input-tienda-web-ocultar-precios')?.focus();
+                }
+              }}
               placeholder="Ej. 987654321"
               maxLength={12}
               required
@@ -218,9 +279,21 @@ export const PestanaTiendaWeb: React.FC = () => {
           </div>
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <input
+              id="input-tienda-web-ocultar-precios"
               type="checkbox"
               checked={ocultarPrecios}
               onChange={(e) => setOcultarPrecios(e.target.checked)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  document.getElementById('input-tienda-web-whatsapp')?.focus();
+                } else if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  document.getElementById('textarea-tienda-web-mensaje')?.focus();
+                }
+              }}
               className="w-5 h-5 text-[var(--color-accent)] focus:ring-[var(--color-accent)] border-[var(--color-ink)]"
             />
             <span className="text-xs font-bold uppercase">
@@ -235,9 +308,21 @@ export const PestanaTiendaWeb: React.FC = () => {
             Mensaje de Bienvenida o Indicaciones en la Tienda
           </label>
           <textarea
+            id="textarea-tienda-web-mensaje"
             rows={2}
             value={mensajeBienvenida}
             onChange={(e) => setMensajeBienvenida(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('input-tienda-web-ocultar-precios')?.focus();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-guardar-tienda-web')?.focus();
+              }
+            }}
             placeholder="Mensaje de bienvenida para los clientes que entran a la tienda web..."
             className="w-full px-3 py-2 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] text-xs font-sans focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] rounded-none"
           />
@@ -246,8 +331,16 @@ export const PestanaTiendaWeb: React.FC = () => {
         {/* Botón Guardar */}
         <div className="flex justify-end pt-3 border-t-2 border-[var(--color-ink)]">
           <button
+            id="btn-guardar-tienda-web"
             type="submit"
             disabled={guardando}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('textarea-tienda-web-mensaje')?.focus();
+              }
+            }}
             style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
             className="boton-cabecera flex items-center gap-2 px-6 py-2.5 font-black text-xs uppercase tracking-widest cursor-pointer disabled:opacity-50"
           >

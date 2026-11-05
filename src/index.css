@@ -431,16 +431,16 @@ html[data-theme="dark"] .bg-\[var\(--color-ink\)\] {
 }
 
 /* Botones o insignias con fondo amarillo/ámbar de advertencia: letras e íconos en negro puro para máximo contraste */
-.bg-\[var\(--color-warning\)\],
-button.bg-\[var\(--color-warning\)\],
-div.bg-\[var\(--color-warning\)\],
-span.bg-\[var\(--color-warning\)\] {
+.bg-\[var\(--color-warning\)\]:not(.boton-cabecera),
+button.bg-\[var\(--color-warning\)\]:not(.boton-cabecera),
+div.bg-\[var\(--color-warning\)\]:not(.boton-cabecera),
+span.bg-\[var\(--color-warning\)\]:not(.boton-cabecera) {
   color: #030712 !important;
 }
-.bg-\[var\(--color-warning\)\] svg,
-button.bg-\[var\(--color-warning\)\] svg,
-div.bg-\[var\(--color-warning\)\] svg,
-span.bg-\[var\(--color-warning\)\] svg {
+.bg-\[var\(--color-warning\)\]:not(.boton-cabecera) svg,
+button.bg-\[var\(--color-warning\)\]:not(.boton-cabecera) svg,
+div.bg-\[var\(--color-warning\)\]:not(.boton-cabecera) svg,
+span.bg-\[var\(--color-warning\)\]:not(.boton-cabecera) svg {
   color: #030712 !important;
 }
 
@@ -993,21 +993,24 @@ nav button {
 .ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-emerald"], .ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-[var(--color-accent"],
 .ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-[var(--color-warning"] { color: var(--color-muted) !important; }
 /* Toda zona con scroll dentro de una ventana usa la barra delgada del sistema (como .custom-scrollbar),
-   aunque se le haya olvidado la clase (pedido del dueño 04/11/2026: vista previa del ticket) */
-.ventana-sobria, .ventana-sobria * { scrollbar-width: thin; scrollbar-color: #CBD5E1 #F8FAFC; }
-.ventana-sobria::-webkit-scrollbar, .ventana-sobria *::-webkit-scrollbar { width: 5px; height: 5px; }
-.ventana-sobria::-webkit-scrollbar-track, .ventana-sobria *::-webkit-scrollbar-track { background: #F8FAFC; }
-.ventana-sobria::-webkit-scrollbar-thumb, .ventana-sobria *::-webkit-scrollbar-thumb { background: #CBD5E1; }
-.ventana-sobria *::-webkit-scrollbar-thumb:hover { background: var(--color-ink); }
-html.theme-monochrome .ventana-sobria, html.theme-monochrome .ventana-sobria *,
-html[data-theme="dark"] .ventana-sobria, html[data-theme="dark"] .ventana-sobria * { scrollbar-color: #334155 #0B0F17; }
-html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-track, html[data-theme="dark"] .ventana-sobria *::-webkit-scrollbar-track { background: #0B0F17; }
-html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-thumb, html[data-theme="dark"] .ventana-sobria *::-webkit-scrollbar-thumb { background: #334155; }
-/* Chrome/Edge 121+: si scrollbar-width o scrollbar-color tienen valor, IGNORAN ::-webkit-scrollbar y dibujan su barra
-   fina con flechas (la que no le gusta al dueño). En esos navegadores se dejan en "auto" para que se use el diseño
-   de siempre (5 px, sin flechas). Firefox no tiene ::-webkit-scrollbar y sigue usando scrollbar-width: thin. */
-@supports selector(::-webkit-scrollbar) {
-  .custom-scrollbar, .ventana-sobria, .ventana-sobria * { scrollbar-width: auto !important; scrollbar-color: auto !important; }
+   sin flechas nativas de Windows (pedido del dueño: estilo sobrio de 5px) */
+*::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
+.ventana-sobria, .ventana-sobria * { scrollbar-width: thin; scrollbar-color: #CBD5E1 #F8FAFC; }
+.ventana-sobria::-webkit-scrollbar, .ventana-sobria *::-webkit-scrollbar { width: 5px !important; height: 5px !important; }
+.ventana-sobria::-webkit-scrollbar-button, .ventana-sobria *::-webkit-scrollbar-button { display: none !important; width: 0 !important; height: 0 !important; }
+.ventana-sobria::-webkit-scrollbar-track, .ventana-sobria *::-webkit-scrollbar-track { background: #F8FAFC !important; }
+.ventana-sobria::-webkit-scrollbar-thumb, .ventana-sobria *::-webkit-scrollbar-thumb { background: #CBD5E1 !important; }
+.ventana-sobria *::-webkit-scrollbar-thumb:hover { background: var(--color-ink) !important; }
+html.theme-monochrome .ventana-sobria, html.theme-monochrome .ventana-sobria *,
+html[data-theme="dark"] .ventana-sobria, html[data-theme="dark"] .ventana-sobria * { scrollbar-color: #334155 #0B0F17 !important; }
+html.theme-monochrome .ventana-sobria::-webkit-scrollbar-track, html[data-theme="dark"] .ventana-sobria::-webkit-scrollbar-track,
+html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-track, html[data-theme="dark"] .ventana-sobria *::-webkit-scrollbar-track { background: #0B0F17 !important; }
+html.theme-monochrome .ventana-sobria::-webkit-scrollbar-thumb, html[data-theme="dark"] .ventana-sobria::-webkit-scrollbar-thumb,
+html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-thumb, html[data-theme="dark"] .ventana-sobria *::-webkit-scrollbar-thumb { background: #334155 !important; }
+html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-thumb:hover, html[data-theme="dark"] .ventana-sobria *::-webkit-scrollbar-thumb:hover { background: #475569 !important; }
 /* Dentro de un botón o pastilla oscura de la cabecera (ej. "Ticket | Tabla" del detalle del ticket) la letra sigue clara */
 .ventana-cabecera [class*="bg-[var(--color-ink)]"] .text-white, .ventana-cabecera [class*="bg-[var(--color-ink)]"].text-white { color: #fff !important; }

@@ -705,7 +705,11 @@
     - Filtros y buscador (`.filtro-sobrio:focus`, `.buscador-sobrio:focus-within`): marco verde esmeralda de 2px con resplandor suave.
     - Limpieza instantánea al hacer clic con mouse para evitar que queden aros pegados.
   - Verificado con Puppeteer/Edge en `siumax` (`selector_modo_oscuro_inventario.png`, `selector_modo_oscuro_tabla.png` y `selector_modo_oscuro_filtro.png`). Compilado con `npx tsc -b` y desplegado con éxito a `siumax`. Solo siumax.
-
-
+- **Dueño** (04/11/2026): *"en conteo lo marque con rojo la letra es negra no se puede ver que dice arregla eso"*, *"si te das cuenta donde marque el scrooll no es el estilo que siempre usamos cambia eso"* y *"cuando estoy seleccionando el enlace no me puedo mover de izquierda a derecha solo de arriba y abajo arregla eso"*.
+  - Antigravity solucionó los 3 puntos:
+    1. **Conteos**: en `HeaderConteos.tsx` y `src/index.css`, se limpiaron las clases de advertencia en `.boton-cabecera` para que adopte SiuMax Sobrio con letra clara `#CBD5E1` en modo oscuro (no negra).
+    2. **Scrollbar en ventanas**: en `src/index.css`, se eliminó la regla `scrollbar-width: auto` que hacía aparecer la barra nativa gruesa con flechas en Chrome/Edge, y se añadió `::-webkit-scrollbar-button { display: none !important; }` garantizando la barra sobria delgada de 5px.
+    3. **Tienda Web**: en `PestanaTiendaWeb.tsx`, se implementaron eventos `onKeyDown` para que el selector salte de izquierda a derecha (`input-tienda-web-enlace` ↔ `[ COPIAR ENLACE ]` ↔ `[ VER TIENDA ]`) y con arriba/abajo entre todo el formulario.
+  - Verificado con Edge/Puppeteer en `siumax` (`conteo_nuevo_ajuste_ok.png`, `ticket_scrollbar_sobrio_ok.png` y `tienda_web_teclado_enlace_ok.png`). Compilado con `npx tsc -b` y desplegado con éxito a `siumax`. Solo siumax.
 
 

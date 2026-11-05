@@ -7,6 +7,31 @@
 
 ---
 
+## 04/11/2026 (99) · Antigravity — Corrección de letra en Conteos, scrollbar nativo en ventanas y navegación teclado en Tienda Web (solo siumax)
+- **Problemas reportados por el dueño:**
+  1. *"en conteo lo marque con rojo la letra es negra no se puede ver que dice arregla eso"*: El botón `+ NUEVO AJUSTE` en Conteos tenía texto negro fijo (`#030712`) sobre fondo carbón `#111827` en modo oscuro.
+  2. *"si te das cuenta donde marque el scrooll no es el estilo que siempre usamos cambia eso"*: En `ModalDetalleTicket.tsx` aparecía la barra de desplazamiento nativa gruesa de Windows con flechas `▲` y `▼`.
+  3. *"cuando estoy seleccionando el enlace no me puedo mover de izquierda a derecha solo de arriba y abajo arregla eso"*: En Ajustes > Tienda Web, el input del enlace público no permitía moverse horizontalmente con `ArrowLeft` / `ArrowRight` a los botones `[ COPIAR ENLACE ]` y `[ VER TIENDA ]`.
+- **Soluciones aplicadas:**
+  1. **Conteos (`HeaderConteos.tsx` y `src/index.css`):**
+     - Se limpió el botón `#btn-nuevo-ajuste` adoptando el estándar SiuMax Sobrio (`.boton-cabecera` con `--icono: var(--color-warning)`).
+     - Se añadió `:not(.boton-cabecera)` en las reglas de `bg-[var(--color-warning)]` de `src/index.css` para evitar que se fuerce color negro `#030712` a botones sobrios. En modo oscuro ahora muestra letra blanco/plata nítida.
+  2. **Scrollbar en ventanas (`src/index.css`):**
+     - Se eliminó la regla que aplicaba `scrollbar-width: auto !important;` en Chrome/Edge.
+     - Se añadió `*::-webkit-scrollbar-button { display: none !important; width: 0 !important; height: 0 !important; }` para suprimir todas las flechas nativas de Windows.
+     - Se consolidó la barra oficial sobria de 5px (track `#0B0F17`, thumb `#334155` en modo oscuro; track `#F8FAFC`, thumb `#CBD5E1` en claro).
+  3. **Tienda Web (`PestanaTiendaWeb.tsx`):**
+     - Se implementó navegación espacial fluida con `onKeyDown` en toda la franja del enlace: `input-tienda-web-enlace` (ArrowRight → `btn-copiar-enlace-tienda` → `btn-ver-tienda-web`; ArrowLeft en sentido inverso).
+     - Se conectaron también los saltos con `ArrowDown` y `ArrowUp` hacia los checkboxes de estado, WhatsApp, precios, mensaje y botón guardar.
+- **Verificación:** validado con Edge/Puppeteer en `siumax` (script `ai-scripts/pruebas/verificar-3-ajustes.mjs`):
+  - Captura `conteo_nuevo_ajuste_ok.png`: botón `+ NUEVO AJUSTE` con letra plata nítida y legible.
+  - Captura `ticket_scrollbar_sobrio_ok.png`: ticket limpio sin barras gruesas ni flechas nativas.
+  - Captura `tienda_web_teclado_enlace_ok.png`: foco pasando de input a `[ COPIAR ENLACE ]` y `[ VER TIENDA ]`.
+- Compilado con `npx tsc -b` (0 errores) y desplegado a `siumax`.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
 ## 04/11/2026 (98) · Antigravity — Mejora de contraste y visibilidad del selector por teclado en Modo Oscuro (solo siumax)
 - **Problema reportado por el dueño:** *"bien echo ya quedo ahora me e dado cuenta que en el modo oscuro el selector no se aprecia bien arregla eso"* (captura de Inventario > Productos en Modo Oscuro encerrando en rojo los botones de la cabecera: `+ NUEVO PRODUCTO`, `INGRESAR LOTE`, `PRODUCIR`, `TRASPASOS`, `PROVEEDORES`). El botón seleccionado (`INGRESAR LOTE`) se perdía sobre el fondo oscuro y no se distinguía con claridad qué elemento tenía el foco del selector por teclado.
 - **Causas raíz detectadas en `src/index.css`:**
