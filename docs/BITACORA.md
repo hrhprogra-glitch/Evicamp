@@ -7,6 +7,17 @@
 
 ---
 
+## 05/11/2026 (114) · Claude — PASE a Evicamp, clientes, siumax y GitHub (108–113) sin perder fotos
+- **Dueño:** *"súbelo a evicamp y siumax para mis clientes y github; ojo, en evicamp ninguna foto se tiene que perder"*.
+- **SQL:** NO se tocó la base de Evicamp. El único cambio de SQL desde (107) es el GRANT de `fn_edit_batch`/`fn_soft_delete_batch`, y en Evicamp esos permisos ya estaban (revisado en 108).
+- **Fotos:** copia antes del pase `respaldo-fotos-evicamp-2026-11-05T23-37-11-572Z.csv` (240) → `deploy.cjs todos` → copia después `…23-38-48-176Z.csv` (240): **0 desaparecidas, 0 nuevas, mismo tamaño (6 070 897 bytes)**.
+- **Verificado:** Evicamp y siumax HTTP 200, login sin errores JS, sin `/suscripcion.json`, `index-CO5htApq.js`; Tienda Web de Evicamp carga en ~8 s con 240 fotos y 0 errores (la primera revisión de 3 s era corta).
+- **Sube:** 108 (401 que no es de sesión no saca), 109 (buscadores sin eliminados), 110 (Nuevo ajuste sin Merma/Conteo), 111 (↓ en Compras), 112 (Producir: combos y recetas, tope, unidad, Enter se queda), 113 (editar producto ya no borra la foto; X con flechas).
+- **GitHub:** merge `--no-ff` de `fase-11-sunat` a `main` y push.
+- Cajeros: Ctrl+F5 o volver a abrir el .exe (mientras tengan la versión vieja abierta, editar un producto con foto todavía la borra: por eso el aviso al cliente).
+
+---
+
 ## 05/11/2026 (113) · Claude — Editar producto: la imagen ya se ve con su X y no se borra al guardar (solo siumax)
 - **Dueño:** *"agregué una imagen; si es la incorrecta, al volver a entrar al producto la X para quitarla desapareció; solo puedo reemplazarla"*.
 - **Causa (grave):** `ModalProducto` cargaba la foto de `initialData.image`, pero la lista de Inventario la trae en `imageUrl` → al editar la foto no se veía (ni su X) y **al guardar se enviaba `image_url: ` y se BORRABA**.
