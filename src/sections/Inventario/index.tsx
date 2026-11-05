@@ -37,6 +37,18 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     setVistaActivaEstado(v);
     try { sessionStorage.setItem('inventario_vista', v); } catch { /* sin almacenamiento */ }
   };
+  // En la vista Compras no están el buscador ni los filtros de Productos: ↓ desde la cabecera baja al botón de la
+  // fila de Compras (Pendientes · Recibidas · Todas · Nueva lista) que queda justo debajo (pedido del dueño 05/11/2026)
+  const bajarACompras = (origen: HTMLElement) => {
+    if (vistaActiva !== 'COMPRAS') return false;
+    const fila = Array.from(document.querySelectorAll<HTMLElement>('#panel-compras [id^="btn-compras-filtro-"], #btn-nueva-compra'))
+      .filter((el) => el.getClientRects().length > 0);
+    if (!fila.length) return false;
+    const centro = (el: HTMLElement) => { const r = el.getBoundingClientRect(); return r.left + r.width / 2; };
+    const x = centro(origen);
+    fila.sort((a, b) => Math.abs(centro(a) - x) - Math.abs(centro(b) - x))[0].focus();
+    return true;
+  };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalProveedoresOpen, setIsModalProveedoresOpen] = useState(false);
   // Permisos de almacén (el servidor también los exige)
@@ -548,6 +560,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('btn-tab-lotes')?.focus();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
+                    if (bajarACompras(e.currentTarget)) return;
                     const destino = document.getElementById('buscador-global-inventario');
                     (filaEnMedio(e.currentTarget, destino, BOTONES_INVENTARIO) || destino)?.focus();
                   }
@@ -574,6 +587,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('btn-tab-compras')?.focus();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
+                    if (bajarACompras(e.currentTarget)) return;
                     const destino = document.getElementById('buscador-global-inventario');
                     (filaEnMedio(e.currentTarget, destino, BOTONES_INVENTARIO) || destino)?.focus();
                   }
@@ -600,7 +614,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('btn-nuevo-producto')?.focus();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
-                    { const destino = inicioCompras(); (filaEnMedio(e.currentTarget, destino, BOTONES_INVENTARIO) || destino)?.focus(); } // el cajero que solo recibe no tiene "Nueva lista"
+                    { const destino = inicioCompras() || document.getElementById('buscador-global-inventario'); (filaEnMedio(e.currentTarget, destino, BOTONES_INVENTARIO) || destino)?.focus(); } // el cajero que solo recibe no tiene "Nueva lista"
                   }
                 }}
                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer border-l-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${vistaActiva === 'COMPRAS' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'}`}
@@ -633,7 +647,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('btn-ingresar-lote')?.focus();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
-                    document.getElementById('filtro-categoria-inventario')?.focus();
+                    if (!bajarACompras(e.currentTarget)) document.getElementById('filtro-categoria-inventario')?.focus();
                   }
                 }}
                 style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
@@ -656,7 +670,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('btn-header-producir')?.focus();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
-                    document.getElementById('filtro-estado-inventario')?.focus();
+                    if (!bajarACompras(e.currentTarget)) document.getElementById('filtro-estado-inventario')?.focus();
                   }
                 }}
                 style={{ '--icono': 'var(--color-ink)' } as React.CSSProperties}
@@ -682,7 +696,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('btn-traspasos')?.focus();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
-                    document.getElementById('filtro-orden-inventario')?.focus();
+                    if (!bajarACompras(e.currentTarget)) document.getElementById('filtro-orden-inventario')?.focus();
                   }
                 }}
                 style={{ '--icono': '#059669' } as React.CSSProperties}
@@ -705,7 +719,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('btn-proveedores')?.focus();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
-                    document.getElementById('filtro-orden-inventario')?.focus();
+                    if (!bajarACompras(e.currentTarget)) document.getElementById('filtro-orden-inventario')?.focus();
                   }
                 }}
                 style={{ '--icono': '#4F46E5' } as React.CSSProperties}
@@ -728,7 +742,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     e.stopPropagation();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
-                    document.getElementById('filtro-orden-inventario')?.focus();
+                    if (!bajarACompras(e.currentTarget)) document.getElementById('filtro-orden-inventario')?.focus();
                   }
                 }}
                 style={{ '--icono': 'var(--color-info)' } as React.CSSProperties}

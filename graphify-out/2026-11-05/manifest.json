@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "src/db/supabase.ts": {
-    "mtime": 1792715870.192907,
-    "seen": 1792715879.5066648,
-    "ast_hash": "2b1b4ca1b072e60b9d6f3359aa7a9add",
+    "mtime": 1793910731.4401007,
+    "seen": 1793912032.8495388,
+    "ast_hash": "ff8a123977d2ba08d0e699fad7e7a05c",
     "semantic_hash": ""
   },
   "src/layout/SideBar.tsx": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/types.ts": {
-    "mtime": 1793668025.5515702,
-    "seen": 1793669425.9820116,
-    "ast_hash": "982ec8562259cc731019999c4bfe044c",
+    "mtime": 1793911924.648628,
+    "seen": 1793912032.8496037,
+    "ast_hash": "e35b1ea5542a700c7bf8181188990af4",
     "semantic_hash": ""
   },
   "src/sections/Login.tsx": {
@@ -1458,9 +1458,9 @@
     "semantic_hash": ""
   },
   "servidor/sql/seguridad-sesion.sql": {
-    "mtime": 1793900189.54045,
-    "seen": 1793900214.4595714,
-    "ast_hash": "28ec0cc09542d50056e88bda1108d098",
+    "mtime": 1793910718.1313968,
+    "seen": 1793912032.8495312,
+    "ast_hash": "28c1109a14e08d40469b87165f39589e",
     "semantic_hash": ""
   },
   "servidor/activar-seguridad.sh": {
@@ -1638,9 +1638,9 @@
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/ModalAjuste.tsx": {
-    "mtime": 1793900189.5823529,
-    "seen": 1793900214.4596453,
-    "ast_hash": "4ca46dd92e144ebec82d31c7fa32a1bc",
+    "mtime": 1793911926.2779315,
+    "seen": 1793912032.8495715,
+    "ast_hash": "2e13a9c4f88add038e49ef8e29020c89",
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/ModalEditarConteo.tsx": {
@@ -1650,9 +1650,9 @@
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/ModalEditarSalida.tsx": {
-    "mtime": 1793888934.2434347,
-    "seen": 1793889702.8563151,
-    "ast_hash": "aa133081008fb6354f7c9d921c7fb46b",
+    "mtime": 1793911927.1487298,
+    "seen": 1793912032.8495731,
+    "ast_hash": "dac292238584f97acfb2537a615cbff0",
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/TablaConteos.tsx": {
@@ -1668,9 +1668,9 @@
     "semantic_hash": ""
   },
   "src/sections/Conteos/index.tsx": {
-    "mtime": 1793888934.2444377,
-    "seen": 1793889702.8563175,
-    "ast_hash": "490dcea39ce858ee15024f033b42eec2",
+    "mtime": 1793911925.4667256,
+    "seen": 1793912032.8495758,
+    "ast_hash": "d0339791433392d5abf0c394e53e3149",
     "semantic_hash": ""
   },
   "src/sections/Conteos/motivos.ts": {
@@ -1944,9 +1944,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalFiado.tsx": {
-    "mtime": 1793888934.237907,
-    "seen": 1793889702.85629,
-    "ast_hash": "ffc173b714e367b625b68a1d6c385197",
+    "mtime": 1793911950.6010187,
+    "seen": 1793912032.8495498,
+    "ast_hash": "6cc9c6fee327483a552120330acb5456",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalFichaCliente.tsx": {
@@ -1974,9 +1974,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/index.tsx": {
-    "mtime": 1793888934.2394156,
-    "seen": 1793889702.856299,
-    "ast_hash": "c5e1b15a7b441db8444bad8d9019b4d5",
+    "mtime": 1793911949.7545855,
+    "seen": 1793912032.8495579,
+    "ast_hash": "f32299c24ee5ae40113f20bc57e4bc70",
     "semantic_hash": ""
   },
   "src/sections/Clientes/types.ts": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793900189.1905673,
-    "seen": 1793900214.4598413,
-    "ast_hash": "1cd4e89f3501bde436ea15abe28a1bf4",
+    "mtime": 1793912022.6044507,
+    "seen": 1793912032.8496814,
+    "ast_hash": "b5a825881ef3104192b14b0edde0b4eb",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793900189.204113,
-    "seen": 1793900214.459843,
-    "ast_hash": "9479295b7bf393af9ef3176487b868cc",
+    "mtime": 1793912022.6054554,
+    "seen": 1793912032.849682,
+    "ast_hash": "2e81ddce79f30aa6ebcb8eb4e3e65168",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793900189.2046204,
-    "seen": 1793900214.459844,
-    "ast_hash": "a86d7c42d61577521df1a6b602bcf7a6",
+    "mtime": 1793910796.5698478,
+    "seen": 1793912032.8496833,
+    "ast_hash": "0ae561b809a63c28a9765cc7d093e9b2",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793900189.2046204,
-    "seen": 1793900214.4598453,
-    "ast_hash": "a6cf4f552c7c0ddc4e6eaef668439204",
+    "mtime": 1793912022.6044507,
+    "seen": 1793912032.8496842,
+    "ast_hash": "5da326123e815eb7bd62d7ccb58772c0",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {

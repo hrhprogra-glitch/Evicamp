@@ -7,6 +7,14 @@
 
 ---
 
+## 05/11/2026 (111) · Claude — Inventario › Compras: ↓ desde la cabecera ya baja (solo siumax)
+- **Dueño** (captura): en Compras, con el selector en Nuevo producto/Ingresar lote/Producir/Traspasos/Proveedores (o en la pestaña Compras estando en otra vista), ↓ no bajaba.
+- **Causa:** el ↓ de cada botón iba fijo a los filtros de Productos (`filtro-categoria/estado/orden-inventario`) y el de las pestañas al buscador, que no existen en la vista Compras; la pestaña Compras en Productos/Lotes iba a `inicioCompras()` (null).
+- **Arreglo** (`Inventario/index.tsx`): `bajarACompras(origen)` → en la vista Compras baja al botón de la fila Pendientes · Recibidas · Todas · Nueva lista más cercano en horizontal; la pestaña Compras en otra vista baja al buscador.
+- Probado (8 botones × 3 vistas): Productos y Lotes igual que antes; Compras: pestañas, Nuevo producto, Ingresar lote, Producir → Pendientes, Traspasos → Recibidas, Proveedores y pestaña Compras → Nueva lista. 0 errores. Solo siumax.
+
+---
+
 ## 05/11/2026 (110) · Claude — Nuevo ajuste sin escoger "Merma" o "Conteo" (solo siumax)
 - **Dueño:** *"no es necesario escoger merma o conteo; si es menos ya se sabe que es merma, si sobra es conteo"*. Claude avisó lo que Merma hacía y Conteo no (registrar unos pocos sin contar todo; consumo en soles) → el dueño eligió **enlace pequeño**.
 - **`ModalAjuste.tsx`:** quitada la pregunta "¿Qué pasó?" (y `MODOS`). Al elegir el producto se CUENTA (`input-contado`): falta → merma (motivos de faltante), sobra → sobrante, cuadra → se guarda solo (sin cambios en `fn_registrar_conteo`). Debajo del campo, enlace `btn-modo-salida` "↳ Solo salieron unos pocos (se rompió, venció, se usó…)" pasa a la salida de antes (lote + cuántos salieron + motivo); allí `btn-modo-conteo` "↳ Mejor contar lo que hay" vuelve. Productos de consumo y quien solo puede sacar van directo a la salida; quien solo puede contar no ve el enlace (conteo a ciegas igual). Subtítulo: "Cuenta lo que hay: si falta es merma, si sobra es sobrante".

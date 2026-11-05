@@ -4,7 +4,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 05/11/2026 (110), Claude: Nuevo ajuste sin escoger Merma/Conteo (se cuenta; falta = merma, sobra = sobrante; enlace "Solo salieron unos pocos"). Solo siumax.
+- **Última actualización:** 05/11/2026 (111), Claude: Inventario › Compras, ↓ desde la cabecera baja a la fila de Compras. Solo siumax.
+- (110) 05/11/2026, Claude: Nuevo ajuste sin escoger Merma/Conteo (se cuenta; falta = merma, sobra = sobrante; enlace "Solo salieron unos pocos"). Solo siumax.
 - (109) 05/11/2026, Claude: Conteos y fiados ya no muestran productos eliminados en el buscador. Solo siumax.
 - (108) 05/11/2026, Claude: arreglado que al guardar un lote el sistema sacaba al usuario (permiso faltante en siumax + solo PT401 cierra la sesión). Solo siumax.
 - (107) 05/11/2026, Claude: **PASE a Evicamp, clientes, siumax y GitHub** de 105–106 (Utilidades › Gráficos y detalles; SQL gastos_fijos_mes ensayado en copia y aplicado sin errores ni reinicio; Evicamp sin Mercado Pago).
