@@ -756,3 +756,4 @@
 - **Dueño:** *"solo falta escoger días anteriores, calendario desde y hasta, predeterminado este mes"* → hecho en Gráficos y detalles (11/11). Solo siumax.
 - **Dueño:** *"el desde y hasta pueden estar al costado de la X"* → movidos a la cabecera (14/14). Solo siumax.
 - **Dueño:** *"así súbelo todo a evicamp, a mi github y siumax para mis clientes que pagan"* → Claude: ensayo del SQL en copia de Evicamp (0 errores) → respaldo y SQL real sin reiniciar la API (0 errores) → `deploy.cjs todos` → Evicamp y siumax verificados (login y Tienda Web sin errores, sin aviso de pago) → merge a `main` y push (107).
+- **Dueño:** *"guardé un producto recién creado y al presionar Guardar el sistema me botó… ya me sucedió como 2 veces"* → Claude: en siumax faltaba el permiso de editar/retirar lote; el servidor respondía 401 y el sistema lo tomaba como sesión vencida. Permiso devuelto y ahora solo "sesión no válida" saca al login (108). Solo siumax.

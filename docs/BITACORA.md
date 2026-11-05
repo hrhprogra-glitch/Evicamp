@@ -7,6 +7,15 @@
 
 ---
 
+## 05/11/2026 (108) · Claude — Al guardar un lote el sistema sacaba al usuario (arreglado en siumax)
+- **Dueño:** *"guardé los datos de un producto recién creado y al presionar Guardar el sistema me botó… ya me sucedió como 2 veces"*.
+- **Causa:** en la base siumax, `fn_edit_batch` (editar lote, ModalLote) y `fn_soft_delete_batch` (retirar lote) no tenían permiso EXECUTE para `anon` (solo postgres; no se sabe quién lo quitó, el SQL nunca lo revoca). PostgREST respondió 401 (log nginx 20:22 y 20:27 UTC, log PostgreSQL "permission denied for function fn_edit_batch") y `supabase.ts` trata TODO 401 como sesión vencida → login. Evicamp revisado: todas las funciones que llama el sistema tienen permiso.
+- **Arreglo:** GRANT EXECUTE a `anon` aplicado en siumax y escrito en `seguridad-sesion.sql` (tras las dos funciones). `src/db/supabase.ts`: solo cierra la sesión si la respuesta trae `code: PT401` (o no se puede leer); otro 401 queda como error en la pantalla.
+- Probado en siumax con sesión real: editar y retirar lote → 204; sesión falsa → 401 PT401 (sigue funcionando la salida al login). Desplegado solo en siumax. **Evicamp/clientes/GitHub: esperar aviso** (el cambio de supabase.ts aún no está allí; Evicamp no tenía el problema de permisos).
+- Los 2 guardados que fallaron NO cambiaron el lote: volver a guardarlos.
+
+---
+
 ## 05/11/2026 (107) · Claude — PASE a Evicamp, clientes, siumax y GitHub (Utilidades › Gráficos y detalles y todo lo de 105–106)
 - **Dueño:** *"así súbelo todo a evicamp, a mi github y siumax para mis clientes que pagan"*.
 - **SQL:** solo Evicamp lo necesitaba (no existen bases cli_*; siumax ya lo tenía). Ensayo en copia (`ensayo-fases8-11-evicamp.cjs`): 0 errores, 3658 ventas y 1259 productos intactos. Real (`aplicar-fases8-11-evicamp.cjs`): respaldo `respaldo-evicamp-pase-fases8-11-2026-11-05T17-33-09-831Z.dump`, `seguridad-sesion.sql` código 0 en 1.8 s, 0 errores, sin reiniciar la API, la caja abierta siguió abierta. Nueva columna `empresa_config.gastos_fijos_mes` verificada. Facturación de Evicamp sigue apagada (SIMULADO).

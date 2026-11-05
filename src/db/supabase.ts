@@ -65,7 +65,13 @@ const customFetch = (url: string | URL | Request, options?: RequestInit) => {
     avisarConexion(true);
     if (r.status === 503) mostrarSuspendido();
     // Sesión cerrada o empleado desactivado: volver al login (no aplica al propio inicio de sesión)
-    if (r.status === 401 && token && !urlString.includes('/rpc/fn_login')) sesionVencida();
+    // Solo el "Sesión no válida" del servidor (PT401) saca al login; otro 401 (ej. una función sin permiso)
+    // se muestra como error en la pantalla y no se pierde lo que se estaba escribiendo
+    if (r.status === 401 && token && !urlString.includes('/rpc/fn_login')) {
+      r.clone().json()
+        .then((b) => { if (!b?.code || b.code === 'PT401') sesionVencida(); })
+        .catch(() => sesionVencida());
+    }
     // Con cosas esperando en la cola NO se pisa la copia: la del servidor todavía no trae lo hecho sin internet
     // (ej. una lectura que salió con internet y llegó justo después del corte borraba en la copia la venta
     // recién hecha, y el stock se calculaba desde un número equivocado). Se refresca al vaciarse la cola.
