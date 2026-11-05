@@ -1089,3 +1089,14 @@ html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-thumb:hover, html[dat
 }
 /* Dentro de un botón o pastilla oscura de la cabecera (ej. "Ticket | Tabla" del detalle del ticket) la letra sigue clara */
 .ventana-cabecera [class*="bg-[var(--color-ink)]"] .text-white, .ventana-cabecera [class*="bg-[var(--color-ink)]"].text-white { color: #fff !important; }
+/* El selector SIEMPRE se ve dentro de las ventanas (pedido del dueño 05/11/2026: "en talla, combo o recetas el selector
+   no funciona": llegaba pero no se notaba). Se usa outline (no box-shadow) para no pisar los anillos que ya tenga cada
+   control; en campos va por dentro y en botones/casillas por fuera. */
+.ventana-sobria :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus {
+  outline: 2px solid var(--color-accent) !important; outline-offset: -2px; }
+.ventana-sobria :is(button, [role="button"], [role="radio"], [role="checkbox"], [role="tab"], a[href]):focus-visible {
+  outline: 2px solid var(--color-accent) !important; outline-offset: 2px; }
+.ventana-sobria :is(input[type="checkbox"], input[type="radio"]):focus-visible { outline: 2px solid var(--color-accent) !important; outline-offset: 2px; }
+/* La casilla seleccionada ilumina el recuadro que la contiene (ej. "Variantes activadas", "Exigir Nº de serie") */
+.ventana-sobria label:has(> input[type="checkbox"]:focus-visible, > input[type="radio"]:focus-visible) {
+  border-color: var(--color-accent) !important; box-shadow: 0 0 0 1px var(--color-accent) !important; }

@@ -15,6 +15,7 @@
   - Para saber si una pantalla atendió la flecha de una lista se envuelve `preventDefault` del evento (`otraPantallaLoUso`).
 - **Quitado lo que cambiaba opciones con flechas a propósito:** Nuevo producto (→ en Unidad de venta pasaba a la siguiente unidad), Conteos › Nuevo ajuste (← → cambiaban el tipo de ajuste), Nuevo grupo (Familia/Empresa) y Ajustes › Sugerencias (tipo). Ahora ← → solo mueven y Enter elige.
 - Probado con teclado en siumax: Nuevo producto 9/9 (unidad no cambia con ← → ↓, ↓ propia sigue, casilla de serie con Enter se marca/desmarca y el selector se queda, filtro de Inventario mueve sin cambiar), Nuevo grupo y Sugerencias 4/4, 0 errores. Nuevo ajuste revisado por código.
+- **Después:** *"en talla, combo o recetas el selector no funciona"* (Nuevo producto › opciones avanzadas). El selector SÍ llegaba (flechas de respaldo) pero no se veía: los campos de variantes y la casilla no cambiaban al seleccionarse y Combo/Receta solo tenían un brillo tenue. Regla en index.css para TODAS las ventanas: campo/lista/texto con foco → contorno verde por dentro; botón/casilla/opción con foco → contorno verde por fuera; la casilla ilumina su recuadro (`label:has(...)`). Capturas en modo oscuro: Talla, Variantes activadas y Combo se ven seleccionados.
 - Rama `fase-11-sunat`. NO subido a Evicamp ni GitHub (esperar aviso del dueño).
 
 ---
