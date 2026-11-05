@@ -764,3 +764,4 @@
 - **Dueño:** *"¿qué hace el botón Producir?"* → Claude: elabora lotes de un producto con receta (descuenta insumos, crea el lote con su costo real).
 - **Dueño:** *"en Compras, con el selector en los botones, presiono para bajar y no baja; lo mismo con la pestaña Compras en otra vista"* → arreglado (111). Solo siumax.
 - **Dueño:** *"¿no sería mejor que lo de combo/receta esté en el botón Producir? entro, busco dos productos y los junto como combo o receta"* → Claude propone (pendiente de OK).
+- **Dueño:** *"primero sería el nombre, luego escoger los productos que vas a usar para producir el producto"* → Claude propuso Producir con "+ Nuevo combo o receta" (nombre → productos → combo/receta → precio) y lista de combos/recetas → dueño: quitar la sección de Nuevo producto. Falta su "empieza".
