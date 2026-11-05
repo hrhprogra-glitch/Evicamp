@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Printer, Receipt, ListFilter, ArrowLeftRight, Undo2, RefreshCw, ExternalLink, FileMinus } from 'lucide-react';
 import { supabase } from '../db/supabase';
 import { formatearCantidadDetalle } from '../utils/formato';
-import { useImprimir } from '../utils/impresion';
+import { useImprimir, estaImprimiendo } from '../utils/impresion';
 import { avisar } from '../utils/dialogos';
 import { TicketImprimible, type ComprobanteTicket } from '../sections/Punto-de-venta/components/TicketImprimible';
 import { calcularTotalesCPE, comprobanteEmitido, nombreComprobante, numeroComprobante } from '../utils/comprobante';
@@ -210,6 +210,8 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
     if (!ticketId) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Mientras la ventana de impresion este abierta, el teclado es del dialogo de la impresora
+      if (estaImprimiendo()) return;
       // Con el ticket de una nota de crédito abierto encima, el teclado es de esa ventana
       if (notaAbiertaRef.current) return;
 
@@ -229,46 +231,25 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
         return;
       }
 
-      // Atajo 'c' o 'C': Cambiar producto
-      if ((e.key === 'c' || e.key === 'C') && onCambiarProducto) {
-        e.preventDefault();
-        e.stopPropagation();
-        onCambiarProducto(String(ticketId));
-        onClose();
-        return;
-      }
-
-      // Atajo 'd' o 'D': Devolver productos (boleta/factura aceptada: nota de crédito)
-      if ((e.key === 'd' || e.key === 'D') && onCambiarProducto && puedeDevolverRef.current) {
-        e.preventDefault();
-        e.stopPropagation();
-        onCambiarProducto(String(ticketId), 'DEVOLVER');
-        onClose();
-        return;
-      }
-
       // 2. TAB: Focus Trap
       if (e.key === 'Tab') {
         e.preventDefault();
         e.stopPropagation();
         const active = document.activeElement;
         const btnPrint = document.getElementById('btn-reimprimir-ticket');
-        const btnCambio = document.getElementById('btn-cambiar-producto-ticket');
         const btnCerrar = closeBtnRef.current;
         const tabTicket = document.getElementById('btn-tab-ticket');
         const tabTabla = document.getElementById('btn-tab-tabla');
 
         if (e.shiftKey) {
-          if (active === btnCambio) {
-            btnPrint?.focus();
-          } else if (active === btnPrint) {
+          if (active === btnPrint) {
             tabTabla?.focus();
           } else if (active === tabTabla) {
             tabTicket?.focus();
           } else if (active === tabTicket) {
             btnCerrar?.focus();
           } else {
-            (btnCambio || btnPrint)?.focus();
+            btnPrint?.focus();
           }
         } else {
           if (active === btnCerrar) {
@@ -277,8 +258,6 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
             tabTabla?.focus();
           } else if (active === tabTabla) {
             btnPrint?.focus();
-          } else if (active === btnPrint && btnCambio) {
-            btnCambio?.focus();
           } else {
             btnCerrar?.focus();
           }
@@ -554,37 +533,7 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
                  <Printer size={16} /> [ENTER / P] REIMPRIMIR
                </button>
 
-               {onCambiarProducto && (
-                 <button
-                   id="btn-cambiar-producto-ticket"
-                   type="button"
-                   data-pie-ticket="true"
-                   onClick={() => {
-                     onCambiarProducto(String(ticketId));
-                     onClose();
-                   }}
-                   className="flex items-center gap-1.5 bg-white text-[var(--color-info)] hover:bg-[var(--color-info)] hover:text-white focus:bg-[var(--color-info)] focus:text-white focus:outline-none focus:ring-4 focus:ring-blue-400 font-black text-xs uppercase px-3.5 py-2.5 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
-                   title="Realizar cambio de producto de este ticket (tecla C)"
-                 >
-                   <ArrowLeftRight size={15} /> [C] CAMBIAR PRODUCTO
-                 </button>
-               )}
-
-               {puedeDevolver && onCambiarProducto && (
-                 <button
-                   id="btn-devolver-ticket"
-                   type="button"
-                   data-pie-ticket="true"
-                   onClick={() => {
-                     onCambiarProducto(String(ticketId), 'DEVOLVER');
-                     onClose();
-                   }}
-                   className="flex items-center gap-1.5 bg-white text-[var(--color-danger-dark)] hover:bg-[var(--color-danger-dark)] hover:text-white focus:bg-[var(--color-danger-dark)] focus:text-white focus:outline-none focus:ring-4 focus:ring-red-300 font-black text-xs uppercase px-3.5 py-2.5 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
-                   title="Devolver productos con nota de crédito (tecla D)"
-                 >
-                   <Undo2 size={15} /> [D] DEVOLVER
-                 </button>
-               )}
+               
              </div>
              <div className="flex items-center gap-3">
                <span className="text-[var(--color-muted)] text-xs font-black uppercase tracking-widest">Total Facturado</span>

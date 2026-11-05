@@ -888,12 +888,11 @@ export const ModalCambioProducto: React.FC<Props> = ({
               {/* BOLETA/FACTURA: cambiar por otro producto o solo devolver (siempre con nota de crédito) */}
               {ticketData && cpe && (
                 <div className="border-2 border-[var(--color-ink)] bg-white p-3 shadow-[3px_3px_0_0_var(--color-ink)] space-y-2">
-                  <p className="text-[11px] font-bold text-[var(--color-ink)]">
-                    Este ticket tiene <b>{tipoCpe.toUpperCase()} {cpe.numero}</b> aceptada por SUNAT y no se puede modificar.
-                    Lo devuelto sale con una <b>nota de crédito</b>{soloDevolver ? ' y se devuelve el dinero en efectivo' : ` y lo nuevo con una ${tipoCpe} nueva para el mismo cliente`}.
+                  <p className="text-xs font-black uppercase text-[var(--color-ink)] tracking-wide">
+                    {tipoCpe.toUpperCase()} {cpe.numero} (SUNAT) · Se emitirá con nota de crédito
                   </p>
                   <div className="flex gap-2">
-                    {([['cambio', 'Cambiar por otro producto', false], ['devolver', 'Solo devolver', true]] as const).map(([id, texto, solo], i) => (
+                    {([['cambio', 'Cambiar', false], ['devolver', 'Devolver', true]] as const).map(([id, texto, solo], i) => (
                       <button
                         key={id}
                         id={`btn-modo-${id}`}

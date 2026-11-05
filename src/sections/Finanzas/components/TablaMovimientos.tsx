@@ -198,19 +198,9 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                               onClick={(e) => { e.stopPropagation(); onCambiarProducto(item.id); }}
                               disabled={idsAnulando?.has(item.id)}
                               className="p-1.5 bg-[var(--color-surface)] text-[var(--color-info)] border border-[var(--color-border)] hover:border-[var(--color-info)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] transition-colors cursor-pointer rounded-none disabled:opacity-40"
-                              title="Cambio de Producto"
+                              title="Cambio / Devolución"
                             >
                               <ArrowLeftRight size={14} />
-                            </button>
-                          )}
-                          {item.estado !== 'ANULADO' && ( /* sin permiso: pide la clave del administrador (Finanzas → conAutorizacion) */
-                            <button
-                              onClick={(e) => { e.stopPropagation(); onAnularTicket(item.id); }}
-                              disabled={idsAnulando?.has(item.id)}
-                              className="p-1.5 bg-[var(--color-surface)] text-[var(--color-muted)] border border-[var(--color-border)] hover:border-[var(--color-warning)] hover:text-[var(--color-warning)] focus:outline-none focus:ring-2 focus:ring-[var(--color-warning)] transition-colors cursor-pointer rounded-none disabled:opacity-40"
-                              title="Anular / Devolver"
-                            >
-                              <RotateCcw size={14} />
                             </button>
                           )}
                           <button

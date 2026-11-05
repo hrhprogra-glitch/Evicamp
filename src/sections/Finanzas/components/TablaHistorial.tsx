@@ -196,18 +196,19 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
                     <td className={`p-2 sm:p-4 text-sm font-black text-center whitespace-nowrap ${diferencia < 0 ? 'text-[var(--color-danger)]' : (diferencia > 0 ? 'text-[var(--color-info)]' : 'text-[var(--color-muted)]')}`}>
                       {diferencia !== 0 ? (diferencia > 0 ? `+ S/ ${diferencia.toFixed(2)}` : `- S/ ${Math.abs(diferencia).toFixed(2)}`) : 'CUADRE EXACTO'}
                     </td>
-                    <td className="p-2 sm:p-4 text-center hidden md:flex items-center justify-center gap-2 whitespace-nowrap">
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedCaja(caja);
-                        }}
-                        
-                        className="bg-[var(--color-surface)] border border-[var(--color-border)] p-2 text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] focus:outline-none transition-colors cursor-pointer rounded-none"
-                        title="Ver Detalles de la Caja"
-                      >
-                        <Eye size={14} />
-                      </button>
+                    <td className="p-2 sm:p-4 text-center hidden md:table-cell whitespace-nowrap">
+                      <div className="flex items-center justify-center">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCaja(caja);
+                          }}
+                          className="bg-[var(--color-surface)] border border-[var(--color-border)] p-2 text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors cursor-pointer rounded-none inline-flex items-center justify-center"
+                          title="Ver Detalles de la Caja"
+                        >
+                          <Eye size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

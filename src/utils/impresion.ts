@@ -34,13 +34,43 @@ const armarDocumento = (el: HTMLElement, titulo: string) => {
 </head><body>${el.outerHTML}</body></html>`;
 };
 
+let imprimiendo = false;
+export const estaImprimiendo = () => imprimiendo;
+export const setEstaImprimiendo = (val: boolean) => { imprimiendo = val; };
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeprint', () => {
+    imprimiendo = true;
+  });
+  window.addEventListener('afterprint', () => {
+    imprimiendo = false;
+    setTimeout(() => {
+      const btn = document.getElementById('btn-reimprimir-ticket') || document.getElementById('btn-imprimir-nota');
+      btn?.focus();
+    }, 80);
+  });
+}
+
 export const useImprimir = (ref: RefObject<HTMLElement | null>, titulo: string) => {
-  const imprimirNavegador = useReactToPrint({ contentRef: ref, documentTitle: titulo });
+  const imprimirNavegador = useReactToPrint({
+    contentRef: ref,
+    documentTitle: titulo,
+    onBeforePrint: async () => { imprimiendo = true; },
+    onAfterPrint: () => { imprimiendo = false; },
+  });
 
   return async () => {
     const escritorio = puente();
     if (!escritorio || !ref.current) {
-      imprimirNavegador();
+      imprimiendo = true;
+      try {
+        imprimirNavegador();
+      } finally {
+        setTimeout(() => {
+          // Respaldo de seguridad: si después de 2 minutos el diálogo cerró sin evento
+          if (imprimiendo) imprimiendo = false;
+        }, 120000);
+      }
       return;
     }
     const resultado = await escritorio.imprimir(armarDocumento(ref.current, titulo), titulo);

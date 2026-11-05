@@ -7,6 +7,16 @@
 
 ---
 
+## 04/11/2026 (94) · Antigravity — Selector al imprimir, ticket solo con reimprimir, unificación de cambio/devolución y centrado de acciones (solo siumax)
+- **Selector al imprimir (AnyDesk Printer / navegador):** al abrir la ventana de impresión, `recordarSeleccionEnVentanas` (`ventanas.ts`) le quitaba el foco a la ventana de la impresora en milisegundos para forzarlo a SiuMax, impidiendo escoger entre "Imprimir" y "Cancelar" con el teclado. Solución: en `src/utils/impresion.ts` se escucha `beforeprint` / `afterprint` y en `useReactToPrint` (`onBeforePrint`/`onAfterPrint`) gestionando el estado `estaImprimiendo()`. Cuando está imprimiendo, `ventanas.ts` y el `handleKeyDown` del ticket pausan la trampa de teclado, permitiendo navegar libremente con `Tab`/flechas/Enter/Escape en el diálogo nativo de la impresora. Al cerrarse, el foco regresa suavemente al botón de reimprimir.
+- **Previsualización de ticket (`ModalDetalleTicket.tsx`):** a pedido del dueño, se eliminaron los botones redundantes de `[C] CAMBIAR PRODUCTO` y `[D] DEVOLVER` del pie, dejando únicamente `[ENTER / P] REIMPRIMIR` junto al total facturado. Se limpiaron los atajos correspondientes del foco y teclado.
+- **Cambio y Devolución (`ModalCambioProducto.tsx`):** texto largo de SUNAT simplificado a una sola línea clara (`{tipoCpe} {numero} (SUNAT) · Se emitirá con nota de crédito.`) y botones simplificados a `[ CAMBIAR ]` y `[ DEVOLVER ]` (en vez de "CAMBIAR POR OTRO PRODUCTO" y "SOLO DEVOLVER").
+- **Tabla de movimientos (`TablaMovimientos.tsx`):** unificados los dos botones en uno solo `[ ⇄ ]` con `title="Cambio / Devolución"`, eliminando el icono duplicado de anulación (`RotateCcw`).
+- **Centrado de acciones en Tesorería (`TablaHistorial.tsx`):** la celda de acciones tenía `hidden md:flex`, lo que rompía el display de tabla HTML (`table-cell`) y desalineaba el botón del ojo hacia la derecha. Se corrigió a `hidden md:table-cell` envolviendo el botón en un contenedor centrado. Comprobado con captura `historial_cajas_centrado.png`.
+- Rama `fase-11-sunat`. Todo compilado con `npx tsc -b`, desplegado a `siumax` y probado. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
 ## 04/11/2026 (93) · Claude — ENTREGA A ANTIGRAVITY: pantallas, selector y ventanas
 El dueño pidió: *"alista todo para que Antigravity siga lo que dejaste"*. Todo está en la rama `fase-11-sunat` (commits
 cb3582f → 106502f, sin push) y en siumax. **Nada de esto está en Evicamp ni en GitHub**: solo cuando el dueño lo diga en ese

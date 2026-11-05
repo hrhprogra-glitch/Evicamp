@@ -4,7 +4,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 04/11/2026 (93), Claude: **entrega a Antigravity** (BITACORA 93: estado, pendientes, cómo revisar y cuidados). Pendiente del dueño: decidir el ↓ de "Exacto…" en el cobro; pasar a Evicamp/GitHub solo con su aviso.
+- **Última actualización:** 04/11/2026 (94), Antigravity: **selector en impresión liberado** (AnyDesk Printer), **ticket solo con Reimprimir**, texto y botones cortos de SUNAT en cambio/devolución (`[CAMBIAR]` / `[DEVOLVER]`), botón unificado en movimientos `[ ⇄ ]` (Cambio / Devolución) y **centrado de acciones en Tesorería**. Compilado y desplegado a siumax (rama `fase-11-sunat`, sin push).
+- (93) 04/11/2026, Claude: **entrega a Antigravity** (BITACORA 93: estado, pendientes, cómo revisar y cuidados). Pendiente del dueño: decidir el ↓ de "Exacto…" en el cobro; pasar a Evicamp/GitHub solo con su aviso.
 - (92) 04/11/2026, Claude: **todas las ventanas flotantes con el mismo estilo** (el del detalle de producto: sin sombra, cabecera clara con cuadrito de ícono) + selector sin espera y en orden de lectura. Solo siumax. Pendiente: el dueño decide el ↓ de "Exacto…" en el cobro.
 - (91) 04/11/2026, Claude: **las 6 reglas del selector en todo el sistema** (37 de 37 pantallas cumplen las 6 reglas, 0 errores (antes 11 de 37)). Solo siumax.
 - (90) 04/11/2026, Claude: **ventanas con el botón Guardar siempre a la vista** (Ingresar lote, Abonar, Aperturar caja; revisión estricta del botón principal en 6 tamaños: 0 fallas). Solo siumax.

@@ -1,3 +1,5 @@
+import { estaImprimiendo } from './impresion';
+
 // Ventanas flotantes abiertas (modales, avisos, autorización): cualquier capa "fixed inset-0" o con
 // role="dialog", sin importar su z-index. Sirve para que los atajos globales (Tab abre el menú lateral)
 // no actúen detrás de una ventana y para que el selector nunca se quede fuera de la ventana de arriba.
@@ -138,6 +140,7 @@ export const recordarSeleccionEnVentanas = (fallbackRestaurar?: () => void) => {
     return els.find((el) => !EVITAR_PRIMERO.test((el.innerText || el.title || el.getAttribute('aria-label') || '').trim())) || els[0];
   };
   const asegurarEnVentana = () => {
+    if (estaImprimiendo()) return;
     const v = ventanaSuperior();
     if (!v) return;
     const a = document.activeElement as HTMLElement | null;
@@ -146,19 +149,20 @@ export const recordarSeleccionEnVentanas = (fallbackRestaurar?: () => void) => {
     const el = guardado && guardado.isConnected && visible(guardado) && v.contains(guardado) ? guardado : primeroDe(v);
     el?.focus();
   };
-  const luego = (ms = 0) => setTimeout(() => { if (hayVentanaAbierta()) asegurarEnVentana(); }, ms);
+  const luego = (ms = 0) => setTimeout(() => { if (!estaImprimiendo() && hayVentanaAbierta()) asegurarEnVentana(); }, ms);
   // El selector se fue al vacío (clic en el fondo o en un texto)
-  const alSalirFoco = () => { if (hayVentanaAbierta()) luego(0); };
+  const alSalirFoco = () => { if (!estaImprimiendo() && hayVentanaAbierta()) luego(0); };
   // El selector se fue a algo fuera de la ventana de arriba
   const alEntrarFoco = (e: FocusEvent) => {
+    if (estaImprimiendo()) return;
     const v = ventanaSuperior();
     const el = e.target as HTMLElement | null;
     if (!v || !el || el === document.body || el.tagName === 'IFRAME' || v.contains(el)) return;
     luego(0);
   };
   // Volver al sistema desde otro programa o pestaña
-  const alVolverVentana = () => { if (hayVentanaAbierta()) luego(80); };
-  const alVisible = () => { if (document.visibilityState === 'visible' && hayVentanaAbierta()) luego(80); };
+  const alVolverVentana = () => { if (!estaImprimiendo() && hayVentanaAbierta()) luego(80); };
+  const alVisible = () => { if (!estaImprimiendo() && document.visibilityState === 'visible' && hayVentanaAbierta()) luego(80); };
   // Una ventana nueva: si en un momento el selector no está en ella, se pone en su primer campo/botón
   let ventanasAntes = ventanasAbiertas().length;
   const observadorNuevas = new MutationObserver(() => {
