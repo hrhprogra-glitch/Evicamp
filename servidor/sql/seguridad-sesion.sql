@@ -2697,6 +2697,9 @@ GRANT EXECUTE ON FUNCTION public.fn_crear_pedido_web(text, text, text, text, big
 ALTER TABLE public.empresa_config ADD COLUMN IF NOT EXISTS razon_social text;  -- como figura en SUNAT
 ALTER TABLE public.empresa_config ADD COLUMN IF NOT EXISTS ubigeo text;        -- 6 números (opcional)
 ALTER TABLE public.empresa_config ADD COLUMN IF NOT EXISTS regimen text;       -- GENERAL, MYPE, RER o NRUS
+-- (05/11/2026) Utilidades › Gráficos y detalles: gastos fijos del mes (alquiler, sueldos, luz…) para el punto de
+-- equilibrio. Lo cambia quien tiene 'gerencia_configuracion_sistema' (mismo permiso que PATCH /empresa_config).
+ALTER TABLE public.empresa_config ADD COLUMN IF NOT EXISTS gastos_fijos_mes numeric NOT NULL DEFAULT 0;
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'empresa_config_regimen_valido') THEN

@@ -315,6 +315,10 @@
 - **Campo de dirección en checkout:** En el modal de pedidos de Tienda Web (`TiendaModalPedido`), el input de dirección (`#input-pedido-direccion`) solo se renderiza si la modalidad elegida es Delivery (`#btn-entrega-delivery`). Por defecto está en Recojo en tienda (`#btn-entrega-recojo`).
 
 
+## 17b. Utilidades › Gráficos y detalles (05/11/2026)
+- El cálculo de Utilidades vive en `src/sections/Utilidades/calcularAnalisis.ts` (tabla y tablero usan el mismo). Fórmulas del tablero (en la cabecera de `TableroGanancias.tsx`): ganancia bruta = ingresos − costo; neta = bruta − gastos de caja − mermas; margen = ÷ ingresos; ticket = vendido ÷ n.º ventas; punto de equilibrio = gastos fijos del mes ÷ margen bruto; margen de seguridad = (ventas del mes − PE) ÷ ventas del mes; rotación = costo anualizado ÷ stock al costo; días de stock = 365 ÷ rotación; GMROI = ganancia bruta anualizada ÷ stock al costo (<1 = plata parada); merma % = mermas ÷ costo (>2 % alerta); ABC 80/15/5 por ganancia.
+- Gráficos: guía dataviz (cargar el skill antes), colores `.tablero-graficos` en index.css validados con su script; un solo eje; valores escritos; sin esquinas redondeadas.
+
 ## 18. Estilo oficial "SiuMax Sobrio" (04/11/2026) — receta para continuar
 El dueño eligió el aspecto de **Inventario > Productos** y lo llamamos **SiuMax Sobrio** ("el contenido primero"). Sus
 palabras: *"la tabla la resaltan los botones y el buscador, y el fondo no me distrae"*. Revisa que sea **idéntico** a

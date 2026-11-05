@@ -25,6 +25,17 @@
 
 ---
 
+## 05/11/2026 (106) · Claude — Utilidades: "Gráficos y detalles" (tablero de ganancias y pérdidas) en lugar de "Top 5 rentables" (solo siumax)
+- **Dueño:** pidió cambiar Top 5 por gráficos y detalles "como tienen las empresas para ver sus ganancias y pérdidas"; luego *"busca tesis o sistemas de empresas"* y *"fórmulas que usan"* → Claude investigó (tesis UOC/UNT/UPeU/TecNM, Shopify, Square, Odoo, guías de KPIs de retail) → *"mejora, ya empieza"*.
+- **Nuevo:** `src/sections/Utilidades/components/TableroGanancias.tsx` (ventana grande, estilo de ventanas, teclado por recuadros, Escape cierra y vuelve al botón). Secciones: cifras clave con ▲▼ vs. período anterior del mismo largo (ingresos, costo, ganancia bruta y margen, gastos de caja, ganancia neta y margen con referencia 5–15 %, mermas y % con alerta >2 %, n.º de ventas, ticket promedio, por cobrar, mercadería parada); cascada de cómo se forma la ganancia; punto de equilibrio y margen de seguridad (con los gastos fijos del mes); ventas y ganancia por día (línea de equilibrio diario); ganancia por categoría con tabla de margen, stock al costo, rotación/año, días de stock y GMROI; ABC 80/15/5; productos que más ganan y que hacen perder (bajo costo / mermas); cómo te pagan; cuándo vendes más (día de semana y hora); plata fuera de caja (fiados por antigüedad 0–30/31–60/>60 y mercadería parada).
+- **Mismos números que la tabla:** el cálculo de Utilidades se movió TAL CUAL a `src/sections/Utilidades/calcularAnalisis.ts` (index.tsx ahora lo llama); el tablero lo usa también para el período anterior.
+- **SQL (siumax aplicado, Evicamp PENDIENTE con ensayo):** `empresa_config.gastos_fijos_mes numeric default 0` (seguridad-sesion.sql; lo cambia quien tiene gerencia_configuracion_sistema).
+- **Gráficos:** Recharts; colores propios `.tablero-graficos` (--g-ventas azul, --g-resta naranja, --g-ganancia verde agua, rojo solo para pérdidas con texto) validados con la guía de gráficos (claro y oscuro PASS; en claro el verde agua pide valores escritos y tablas: los tiene). Sin esquinas redondeadas.
+- Probado en siumax: capturas claro y oscuro, teclado, 0 errores. `VentanaTopsFlotante.tsx` quedó sin uso.
+- Rama `fase-11-sunat`. NO subido a Evicamp ni GitHub.
+
+---
+
 ## 05/11/2026 (104) · Claude — Arreglo: la Tienda Web de Evicamp no cargaba (subido a todos)
 - **Dueño:** pegó el error de la consola (`Cannot read properties of null (reading 'trim')` en /#/tienda) → *"en evicamp no carga la tienda web"*.
 - **Causa:** el catálogo público de Evicamp tiene 1 producto SIN NOMBRE (de 1259) e `iniciales()` de `src/sections/TiendaWeb/formato.ts` hacía `.trim()` sobre null. En siumax no había ninguno así.

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, TrendingUp } from 'lucide-react';
+import { BarChart3, PieChart } from 'lucide-react';
 
 interface Props {
   onToggleTops?: () => void;
@@ -39,9 +39,9 @@ export const FiltrosUtilidades: React.FC<Props> = ({ onToggleTops }) => {
             }}
             style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
             className="boton-cabecera flex-1 sm:flex-none justify-center bg-[var(--color-bg)] text-[var(--color-ink)] px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest sm:tracking-[0.2em] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer flex items-center gap-2"
-            title="Ver los 5 productos más rentables"
+            title="Gráficos y detalles de tus ganancias y pérdidas"
           >
-            <TrendingUp size={16} /> Top 5 Rentables
+            <PieChart size={16} /> Gráficos y detalles
           </button>
         )}
       </div>

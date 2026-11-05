@@ -144,15 +144,15 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalLote.tsx": {
-    "mtime": 1793888934.2565298,
-    "seen": 1793889702.8563359,
-    "ast_hash": "08946f62b16582c31041eea2affad606",
+    "mtime": 1793895743.060112,
+    "seen": 1793897938.8204558,
+    "ast_hash": "e0f4307af2586a98e7195ecde9623b62",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProducto.tsx": {
-    "mtime": 1793894075.5963972,
-    "seen": 1793894889.9704473,
-    "ast_hash": "e68b90efe08ec638cce00c396aa3e23b",
+    "mtime": 1793896706.2520022,
+    "seen": 1793897938.8204577,
+    "ast_hash": "59d2142d002d1cab629c601096d20936",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaLotes.tsx": {
@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/FiltrosUtilidades.tsx": {
-    "mtime": 1793888934.26054,
-    "seen": 1793889702.8563726,
-    "ast_hash": "f7a58a6ba2f2fa85b301f3ac8e669ab0",
+    "mtime": 1793897308.2304037,
+    "seen": 1793897938.8204958,
+    "ast_hash": "4db2b70403d6a98e97e8152e92293765",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/ModalDetalleProducto.tsx": {
@@ -312,9 +312,9 @@
     "semantic_hash": "9f9074fcc5a83d6bcac8633479c556b9"
   },
   "src/sections/Utilidades/index.tsx": {
-    "mtime": 1793888934.26054,
-    "seen": 1793889702.8563778,
-    "ast_hash": "171f5801a9a45e7f3d5f5e61cbbfe421",
+    "mtime": 1793897296.262676,
+    "seen": 1793897938.820503,
+    "ast_hash": "cd1b8ffc1d0d2d7b29e83eea8f15e28e",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/types.ts": {
@@ -1458,9 +1458,9 @@
     "semantic_hash": ""
   },
   "servidor/sql/seguridad-sesion.sql": {
-    "mtime": 1793888934.193902,
-    "seen": 1793889702.8562715,
-    "ast_hash": "3e0ff4e8c8133cf984e03e25e6254d58",
+    "mtime": 1793897275.8728924,
+    "seen": 1793897938.8203883,
+    "ast_hash": "28ec0cc09542d50056e88bda1108d098",
     "semantic_hash": ""
   },
   "servidor/activar-seguridad.sh": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793895466.977866,
-    "seen": 1793895476.0049787,
-    "ast_hash": "893ef0121c36ca1e5497d1b27fedadf3",
+    "mtime": 1793897929.428153,
+    "seen": 1793897938.8205473,
+    "ast_hash": "3b1cf957376d32121af67eee46d7174f",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793895466.977866,
-    "seen": 1793895476.0049796,
-    "ast_hash": "f223fc414b81a0b762f1b8a79d3de055",
+    "mtime": 1793897929.4622195,
+    "seen": 1793897938.8205483,
+    "ast_hash": "bedf6ba6f902f199822aa69251fb612b",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793895191.1975346,
-    "seen": 1793895476.0049808,
-    "ast_hash": "2fa06e2a6bed157a47bdd3d98099c792",
+    "mtime": 1793897929.4622195,
+    "seen": 1793897938.820549,
+    "ast_hash": "a86d7c42d61577521df1a6b602bcf7a6",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793892037.4101877,
-    "seen": 1793892046.5416312,
-    "ast_hash": "376e0a65958d39f2731751a6913f84f7",
+    "mtime": 1793897929.4393458,
+    "seen": 1793897938.82055,
+    "ast_hash": "ab9f7381e32e50773a5d6afb382b02e9",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2679,6 +2679,18 @@
     "mtime": 1793888933.8430884,
     "seen": 1793889702.8562155,
     "ast_hash": "2e02c12c7115c7c3530b29184b4abfeb",
+    "semantic_hash": ""
+  },
+  "src/sections/Utilidades/calcularAnalisis.ts": {
+    "mtime": 1793897276.7185152,
+    "seen": 1793897938.8204947,
+    "ast_hash": "251fe7dfa1d96fa9d7d705e24ce125ac",
+    "semantic_hash": ""
+  },
+  "src/sections/Utilidades/components/TableroGanancias.tsx": {
+    "mtime": 1793897839.71321,
+    "seen": 1793897938.8204997,
+    "ast_hash": "a9c01bdbf39a22c1100f282d509c444a",
     "semantic_hash": ""
   }
 }

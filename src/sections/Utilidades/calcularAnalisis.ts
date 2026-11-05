@@ -1,0 +1,265 @@
+// Cálculo de Utilidades para un rango de fechas (antes vivía dentro del useEffect de Utilidades/index.tsx; se sacó
+// TAL CUAL el 05/11/2026 para que "Gráficos y detalles" use exactamente los mismos números y pueda calcular también
+// el período anterior). Si cambia una fórmula de Utilidades, se cambia aquí y vale para la tabla y para los gráficos.
+import { supabase } from '../../db/supabase';
+import type { AnalisisProducto } from './types';
+import { calcularIngresoTotal, rangoUTCPeru, fetchAllRango, fetchAllTabla } from '../../utils/ingresos';
+
+export interface VentaPeriodo {
+  id: string | number;
+  total: number;
+  amount_cash: number; amount_yape: number; amount_transfer: number; amount_card: number; amount_credit: number;
+  created_at: string;
+}
+
+export interface ResultadoAnalisis {
+  analisis: AnalisisProducto[];
+  gastos: number;                         // Egresos de caja del negocio (motor único)
+  ingresoTotal: number;                   // Ingreso total cobrado (motor único)
+  ventas: VentaPeriodo[];                 // Ventas válidas (no anuladas) que ocurrieron en el rango
+  costoUnitario: Record<string, number>;  // Costo del lote más reciente por producto (para valorizar el stock)
+}
+
+export async function calcularAnalisis(fechaInicio: string, fechaFin: string): Promise<ResultadoAnalisis> {
+  // 🛠️ MOTOR DE FECHAS PURO: Zona Horaria Perú (UTC-5), fijo sin importar el dispositivo.
+  // Ahora "Desde" y "Hasta" abarcan el día completo (00:00 a 23:59) sin importar los turnos de caja.
+  const { inicioUTC, finUTC } = rangoUTCPeru(fechaInicio, fechaFin);
+
+  // 🚀 DESCARGA MASIVA DE DATOS SIN LÍMITES (paginación automática, ver utils/ingresos.ts)
+  // 🎯 El Ingreso Total / Gastos ya NO se calculan aquí: se pide al motor único
+  // (calcularIngresoTotal) para que este monto SIEMPRE coincida con Resumen, Reportes,
+  // Finanzas y Punto de Venta.
+  const [ sales, products, waste, debts, batches, ingresoTotalRango ] = await Promise.all([
+    fetchAllRango('sales', 'id, total, amount_cash, amount_yape, amount_transfer, amount_card, amount_credit, payment_type, sunat_status, created_at', inicioUTC, finUTC),
+    fetchAllTabla('products', '*'),
+    fetchAllRango('waste', '*', inicioUTC, finUTC),
+    fetchAllRango('debt_payments', '*', inicioUTC, finUTC),
+    fetchAllTabla('batches', '*'),
+    calcularIngresoTotal(fechaInicio, fechaFin)
+  ]);
+
+  // 🚨 CORRECCIÓN: Costo de respaldo por LOTE MÁS RECIENTE (id numérico más alto), no el campo
+  // "cost_price" del producto, que no se actualiza al comprar mercadería nueva y queda desactualizado.
+  // Esto solo se usa cuando la venta no tiene guardado su propio costo exacto (cost_at_moment).
+  const idLoteMasRecientePorProducto: Record<string, number> = {};
+  const costoLoteMasReciente: Record<string, number> = {};
+  (batches || []).forEach((b: any) => {
+    const idLote = Number(b.id || 0);
+    if (idLoteMasRecientePorProducto[b.product_id] === undefined || idLote > idLoteMasRecientePorProducto[b.product_id]) {
+      idLoteMasRecientePorProducto[b.product_id] = idLote;
+      costoLoteMasReciente[b.product_id] = Number(b.cost_unit) || 0;
+    }
+  });
+
+  const facturasValidas = (sales || []).filter(s => s.sunat_status !== 'ANULADO');
+  const salesById = new Map(facturasValidas.map((s: any) => [s.id, s]));
+  // Ventas que de verdad ocurrieron en el rango (las que se agregan abajo por abonos NO están aquí).
+  const idsVentasDelRango = new Set(facturasValidas.map((s: any) => s.id));
+
+  // 💵 ABONOS PAGADOS DENTRO DEL RANGO, por fiado: es lo único que una deuda aporta al
+  // "Cobrado" de este período (mismo criterio que el motor único utils/ingresos.ts).
+  const abonosEnRangoPorFiado: Record<string, number> = {};
+  (debts || []).forEach((d: any) => {
+    if (d.fiado_id == null) return;
+    abonosEnRangoPorFiado[d.fiado_id] = (abonosEnRangoPorFiado[d.fiado_id] || 0) + Number(d.amount || 0);
+  });
+
+  // 🔄 FIADOS DE OTRO DÍA PAGADOS DENTRO DE ESTE RANGO: si hoy cobras una deuda de una
+  // venta de OTRO día, esa venta no está en "facturasValidas" (quedó fuera por fecha) y su
+  // producto nunca reflejaría el abono. La traemos aparte SOLO para el análisis por producto
+  // (nunca para "ventasRealesTotales" de abajo, porque el dinero pagado AL MOMENTO de esa
+  // venta ya se contó en el período en que ocurrió; aquí solo interesa el abono de hoy).
+  const ventasParaProductos = [...facturasValidas];
+  const fiadoIdsConAbonoEnRango = Array.from(new Set((debts || []).map((d: any) => d.fiado_id).filter(Boolean)));
+  if (fiadoIdsConAbonoEnRango.length > 0) {
+    const { data: fiadosDeAbonos } = await supabase
+      .from('fiados')
+      .select('id, sale_id, status')
+      .in('id', fiadoIdsConAbonoEnRango);
+
+    const saleIdsFaltantes = Array.from(new Set(
+      (fiadosDeAbonos || [])
+        .map((f: any) => f.sale_id)
+        .filter((sid: any) => sid && !salesById.has(sid))
+    ));
+
+    if (saleIdsFaltantes.length > 0) {
+      const { data: ventasExtra } = await supabase
+        .from('sales')
+        .select('id, total, amount_cash, amount_yape, amount_transfer, amount_card, amount_credit, payment_type, sunat_status, created_at')
+        .in('id', saleIdsFaltantes);
+
+      (ventasExtra || []).forEach((s: any) => {
+        if (s.sunat_status === 'ANULADO') return;
+        ventasParaProductos.push(s);
+        salesById.set(s.id, s);
+      });
+    }
+  }
+
+  // 🚀 3. DESCARGA MASIVA DE DETALLES DE VENTA (Chunk reducido a 50 para evitar límite)
+  let detalles: any[] = [];
+  if (ventasParaProductos.length > 0) {
+    const saleIds = ventasParaProductos.map(s => s.id);
+    const chunkSize = 50;
+    for (let i = 0; i < saleIds.length; i += chunkSize) {
+      const chunk = saleIds.slice(i, i + chunkSize);
+      let from = 0;
+      while (true) {
+        const { data: chunkDetails } = await supabase.from('sale_details').select('*').in('sale_id', chunk).range(from, from + 999);
+        if (!chunkDetails || chunkDetails.length === 0) break;
+        detalles = [...detalles, ...chunkDetails];
+        if (chunkDetails.length < 1000) break;
+        from += 1000;
+      }
+    }
+  }
+
+  // 🧾 FIADOS DE LAS VENTAS DEL RANGO: para poder mostrar, por producto, si la venta se pagó
+  // o quedó fiada, y cuánto se abonó / cuánto falta. Buscamos por sale_id exacto (no por fecha)
+  // para no perder el match si el fiado se registró unos milisegundos fuera de rango.
+  const idsConCredito = ventasParaProductos.filter((s: any) => Number(s.amount_credit || 0) > 0).map((s: any) => s.id);
+  const fiadosMap: Record<string, any> = {};
+  if (idsConCredito.length > 0) {
+    const chunkSize = 50;
+    for (let i = 0; i < idsConCredito.length; i += chunkSize) {
+      const chunk = idsConCredito.slice(i, i + chunkSize);
+      const { data: fiadosChunk } = await supabase
+        .from('fiados')
+        .select('id, sale_id, customer_name, amount, paid_amount')
+        .in('sale_id', chunk);
+      (fiadosChunk || []).forEach((f: any) => { fiadosMap[f.sale_id] = f; });
+    }
+  }
+
+  const catalogo = products || [];
+  const mermas = waste || [];
+
+  // --- 3. ANÁLISIS DE RENTABILIDAD POR PRODUCTO ---
+  const mapaAnalisis: Record<string, AnalisisProducto> = {};
+  catalogo.forEach(p => {
+    const esConsumo = `${p.control_type} ${p.unit} ${p.category} ${p.name}`.toLowerCase().includes('consumo');
+    const esPeso = String(p.unit || '').toUpperCase() === 'KG' || p.control_type === 'WEIGHT';
+    mapaAnalisis[p.id] = {
+      id: p.id, nombre: p.name, categoria: p.category || 'SIN CATEGORÍA', estado: '',
+      stockActual: Number(p.quantity) || 0, tipoControl: esConsumo ? 'CONSUMO' : 'STOCK',
+      unidadesVendidas: 0, ingresosTotales: 0, costoTotalVentas: 0, unidadesMerma: 0, perdidaMerma: 0, utilidadReal: 0, margen: 0,
+      unidadMedida: esConsumo ? 'CONSUMO' : (esPeso ? 'KG' : 'UND'),
+      ventasDetalle: []
+    };
+  });
+
+  detalles.forEach(d => {
+    if (!mapaAnalisis[d.product_id]) return;
+    const prod = mapaAnalisis[d.product_id];
+
+    const cantidadLinea = Number(d.quantity) || 0;
+    const ingresoLinea = Number(d.subtotal) || 0;
+
+    // 🧾 ESTADO DE PAGO DE LA VENTA (igual que Reportes/Resumen/Finanzas): una venta fiada
+    // no se marca a nivel de producto, sino a nivel de venta completa (así se guarda el crédito).
+    const ventaOrigen: any = salesById.get(d.sale_id);
+    const creditoOriginal = Number(ventaOrigen?.amount_credit || 0);
+    const esFiado = creditoOriginal > 0;
+    const fiado = fiadosMap[d.sale_id];
+    // Si el fiado ya no tiene registro (dato huérfano), usamos el crédito original como deuda de respaldo.
+    const deudaTotal = fiado ? Number(fiado.amount || 0) : creditoOriginal;
+    const restante = esFiado ? Math.max(0, deudaTotal - (fiado ? Number(fiado.paid_amount || 0) : 0)) : 0;
+    const abonado = esFiado ? Math.max(0, deudaTotal - restante) : 0;
+
+    // 💰 SOLO LO COBRADO EN ESTE PERÍODO: si la venta no es fiada, la línea entra al 100%.
+    // Si es fiada, prorrateamos kilos/unidades, ingreso Y costo por la fracción de ESA venta
+    // cobrada DENTRO del rango: lo pagado al momento (solo si la venta es del rango) + los
+    // abonos hechos en el rango (no hay forma de saber qué producto del carrito quedó fiado,
+    // así que repartimos proporcionalmente).
+    // ⚠️ ERROR CORREGIDO (02/11/2026): antes se usaba TODO lo abonado del fiado (de cualquier
+    // fecha). Si un cliente pagaba hoy deudas viejas, sus ventas de otros días entraban
+    // completas al "Cobrado" de hoy (ej. LATON PILSEN mostraba S/ 90 que no se cobraron hoy).
+    const totalVenta = Number(ventaOrigen?.total || 1);
+    const esVentaDelRango = idsVentasDelRango.has(d.sale_id);
+    const pagadoAlContado = esVentaDelRango
+      ? Number(ventaOrigen?.amount_cash || 0) +
+        Number(ventaOrigen?.amount_yape || 0) +
+        Number(ventaOrigen?.amount_transfer || 0) +
+        Number(ventaOrigen?.amount_card || 0)
+      : 0;
+    const abonadoEnRango = fiado ? Number(abonosEnRangoPorFiado[fiado.id] || 0) : 0;
+
+    const totalPagado = pagadoAlContado + abonadoEnRango;
+    const fraccionPagada = esFiado ? Math.min(1, Math.max(0, totalPagado / totalVenta)) : 1;
+
+    // 🚀 PASO 2: LEER COSTO REAL
+    // 1. Priorizamos el costo guardado por el trigger al momento de la venta (incluso si
+    //    es exactamente 0: un costo real de 0 no es lo mismo que "no hay dato", por eso
+    //    comparamos contra null/undefined y no con un simple if truthy).
+    // 2. Si no existe (venta sin ese registro), usamos el costo del LOTE MÁS RECIENTE del producto.
+    // 3. Como último recurso, el "cost_price" del catálogo (puede estar desactualizado).
+    const costoUnitario = d.cost_at_moment != null
+      ? Number(d.cost_at_moment)
+      : (costoLoteMasReciente[d.product_id] ?? Number(catalogo.find(c => c.id === d.product_id)?.cost_price || 0));
+    // 🔍 Mostramos el costo/margen REAL siempre, incluso si da pérdida (costo > ingreso):
+    // antes se "maquillaba" ese caso forzando un 20% de ganancia falsa, lo que ocultaba
+    // ventas con pérdida real además de errores de registro de costo. Mejor ver la
+    // pérdida real y poder investigarla, que no verla.
+    const costoLineaTotal = cantidadLinea * costoUnitario;
+
+    prod.unidadesVendidas += cantidadLinea * fraccionPagada;
+    prod.ingresosTotales += ingresoLinea * fraccionPagada;
+    prod.costoTotalVentas += costoLineaTotal * fraccionPagada;
+
+    // 🧾 DETALLE POR VENTA: para el modal "Ver ventas" del producto. Aquí sí mostramos la
+    // cantidad y el monto COMPLETOS del ticket (no prorrateados), junto con su estado de pago.
+    prod.ventasDetalle!.push({
+      saleId: String(d.sale_id),
+      fecha: ventaOrigen?.created_at || '',
+      cantidad: cantidadLinea,
+      monto: ingresoLinea,
+      esFiado,
+      clienteNombre: fiado?.customer_name || null,
+      montoAbonado: esFiado ? abonado : undefined,
+      montoRestante: esFiado ? restante : undefined,
+      fiadoCompleto: esFiado ? restante <= 0.009 : undefined,
+      ventaAnterior: !esVentaDelRango,
+      cobradoEnPeriodo: ingresoLinea * fraccionPagada
+    });
+  });
+
+  mermas.forEach(w => {
+    if (!mapaAnalisis[w.product_id]) return;
+    const prod = mapaAnalisis[w.product_id];
+    prod.unidadesMerma += Number(w.quantity);
+    prod.perdidaMerma += Number(w.total_loss); // Esto calcula Mermas
+  });
+
+  const resultadoAnalisis: AnalisisProducto[] = [];
+  Object.values(mapaAnalisis).forEach(prod => {
+    // 🚀 REDONDEO DE INGENIERÍA: Forzamos 2 decimales exactos en el cerebro del cálculo
+    prod.unidadesVendidas = Number(Number(prod.unidadesVendidas).toFixed(2));
+    prod.utilidadReal = Number((prod.ingresosTotales - prod.costoTotalVentas - prod.perdidaMerma).toFixed(2));
+    const calculadoMargen = prod.ingresosTotales > 0 ? (prod.utilidadReal / prod.ingresosTotales) * 100 : (prod.utilidadReal < 0 ? -100 : 0);
+    prod.margen = Number(calculadoMargen.toFixed(2));
+    prod.ventasDetalle?.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+
+    resultadoAnalisis.push(prod);
+  });
+
+  const maxVentas = Math.max(...resultadoAnalisis.map(p => p.unidadesVendidas), 1);
+  resultadoAnalisis.forEach(prod => {
+    if (prod.unidadesVendidas === 0) prod.estado = 'SIN VENTAS';
+    else if (prod.unidadesVendidas >= maxVentas * 0.4) prod.estado = 'BUENO';
+    else if (prod.unidadesVendidas >= maxVentas * 0.1) prod.estado = 'REGULAR';
+    else prod.estado = 'BAJO';
+  });
+
+  // Costo para valorizar el stock: el del lote más reciente o, si no hay lote, el del catálogo
+  const costoUnitario: Record<string, number> = {};
+  catalogo.forEach((p: any) => { costoUnitario[p.id] = costoLoteMasReciente[p.id] ?? Number(p.cost_price || 0); });
+
+  return {
+    analisis: resultadoAnalisis.sort((a, b) => b.utilidadReal - a.utilidadReal),
+    gastos: ingresoTotalRango.gastos,
+    ingresoTotal: ingresoTotalRango.ingresoTotal,
+    ventas: facturasValidas as VentaPeriodo[],
+    costoUnitario,
+  };
+}
