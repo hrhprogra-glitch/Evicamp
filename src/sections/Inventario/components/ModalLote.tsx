@@ -892,7 +892,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                           className="flex flex-col p-3 bg-white hover:bg-[#1E293B] hover:text-white focus:!bg-[#1E293B] focus:!text-white border-b border-[#E2E8F0] cursor-pointer group outline-none transition-colors"
                         >
                           <span className="text-[9px] font-bold text-[#64748B] group-hover:text-emerald-400 group-focus:!text-emerald-400">{p.code} | {p.category}</span>
-                          <span className="text-xs font-black text-[#1E293B] group-hover:text-white group-focus:!text-white uppercase">{p.name}</span>
+                          <span className="text-xs font-black text-[var(--color-ink)] group-hover:text-white group-focus:!text-white uppercase">{p.name}</span>
                         </div>
                       ))
                     ) : (
@@ -1235,7 +1235,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                         }}
                         className="p-3 bg-white hover:bg-[#1E293B] hover:text-white focus:!bg-[#1E293B] focus:!text-white border-b border-[#E2E8F0] cursor-pointer outline-none group transition-colors"
                       >
-                        <span className="text-xs font-black text-[#1E293B] group-hover:text-white group-focus:!text-white uppercase">{prov.razon_social}</span>
+                        <span className="text-xs font-black text-[var(--color-ink)] group-hover:text-white group-focus:!text-white uppercase">{prov.razon_social}</span>
                       </div>
                     ))}
                   </div>

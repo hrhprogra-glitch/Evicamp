@@ -1968,7 +1968,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                             }}
                             className="flex items-center justify-between p-3 bg-white hover:bg-[#1E293B] hover:text-white focus:!bg-[#1E293B] focus:!text-white border-b border-[#E2E8F0] last:border-0 cursor-pointer group outline-none transition-colors"
                           >
-                            <span className="flex-1 text-xs font-black text-[#1E293B] group-hover:text-white group-focus:!text-white">
+                            <span className="flex-1 text-xs font-black text-[var(--color-ink)] group-hover:text-white group-focus:!text-white">
                               {cat}
                             </span>
                             <button 
