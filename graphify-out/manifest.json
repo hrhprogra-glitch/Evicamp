@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793916783.226971,
-    "seen": 1793916797.7974153,
-    "ast_hash": "335cd4a9d2b699c2bfcc1566c10d2e70",
+    "mtime": 1793917189.7678978,
+    "seen": 1793917205.9023204,
+    "ast_hash": "e52da46854a5edc5ffd1c9d0550f1fcb",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793916783.227976,
-    "seen": 1793916797.7974164,
-    "ast_hash": "7276fc08bd06401db68175e98b551c60",
+    "mtime": 1793917189.7689025,
+    "seen": 1793917205.9023218,
+    "ast_hash": "a73aca8690226a319d203b5825d34439",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2268,9 +2268,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProduccion.tsx": {
-    "mtime": 1793916704.5070546,
-    "seen": 1793916797.7972624,
-    "ast_hash": "bf749dded314eb21fdf51bf1f26937fd",
+    "mtime": 1793917124.4034233,
+    "seen": 1793917205.902169,
+    "ast_hash": "d3cd63927358a28c59c4c534c437a151",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/limpiar-siumax-total.cjs": {

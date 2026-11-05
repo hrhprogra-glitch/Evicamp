@@ -448,15 +448,27 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                       </div>
                     )}
                   </div>
-                  <input id="input-cant-insumo-prod" type="number" min="0" step="any" value={cantInsumo} title="Cuánto lleva cada unidad"
-                    onChange={(e) => setCantInsumo(e.target.value)}
-                    onFocus={(e) => e.currentTarget.select()}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void agregarInsumo(); } }}
-                    className={`${claseCampo} sm:w-28 text-right`} />
+                  {/* La unidad del producto elegido al lado de la cantidad (pedido del dueño: "¿ese 1 es unidad o kilo?") */}
+                  <div className="relative sm:w-36">
+                    <input id="input-cant-insumo-prod" type="number" min="0" step="any" value={cantInsumo} title="Cuánto lleva cada unidad"
+                      onChange={(e) => setCantInsumo(e.target.value)}
+                      onFocus={(e) => e.currentTarget.select()}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void agregarInsumo(); } }}
+                      className={`${claseCampo} text-right pr-14`} />
+                    <span id="unidad-cant-insumo-prod" className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-black uppercase text-[var(--color-muted)] pointer-events-none">
+                      {elegidoInsumo?.unit || '—'}
+                    </span>
+                  </div>
                   <button id="btn-agregar-insumo-prod" type="button" onClick={() => void agregarInsumo()} className={claseBotonBarra(false)}>
                     <Plus size={16} /> Agregar
                   </button>
                 </div>
+                {elegidoInsumo && (
+                  <p id="frase-cant-insumo-prod" className="mt-2 text-[11px] font-black uppercase text-[var(--color-ink)]">
+                    Cada {nombre.trim() || 'unidad'} lleva {Number(cantInsumo) > 0 ? formatearCantidad(Number(cantInsumo), elegidoInsumo.unit) : '…'} {elegidoInsumo.unit || 'UND'} de {elegidoInsumo.name}
+                    {/KG|G|GR|L|LT|ML/i.test(elegidoInsumo.unit || '') ? ' (puedes usar decimales: 0.25 = un cuarto)' : ''}
+                  </p>
+                )}
                 <div className="mt-3">
                   {insumos.length ? tablaInsumos(insumos, null, (i) => setInsumos((l) => l.filter((_, k) => k !== i))) : (
                     <p className="text-[11px] font-bold text-[var(--color-muted)]">Busca un producto, escribe cuánto lleva cada unidad y presiona Enter.</p>

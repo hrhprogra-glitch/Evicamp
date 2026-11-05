@@ -1,7 +1,7 @@
 # Graph Report - comercio  (2026-11-05)
 
 ## Corpus Check
-- 432 files · ~1,045,258 words
+- 432 files · ~1,045,348 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 4 file(s) not represented in the graph (top: (none) 2, .css 2)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `cf37cfe2`
+- Built from commit: `b69137c9`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -1078,7 +1078,7 @@ Nodes (3): { conexionVps }, { NodeSSH }, path
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `node-ssh` connect `descargar-backups.cjs` to `build-escritorio.cjs`, `package.json`, `prueba-fase11-5-ui.mjs`, `prueba-historial-cpe-ui.mjs`, `revisar-ventanas-caja.mjs`, `cliente.cjs`, `imagenes-servidor.cjs`, `prueba-fase11-1-ui.mjs`, `aplicar-fase9-10-siumax.cjs`, `ver-ventanas.mjs`, `prueba-fase11-8-ui.mjs`, `ref_node_path`, `prueba-anular-no-emitido.mjs`, `prueba-fase11-2-ui.mjs`, `revisar-selector.mjs`, `prueba-fase11-6-ui.mjs`, `prueba-cambio-cpe-ui.mjs`, `prueba-fase11-4-ui.mjs`, `prueba-fase11-3-ui.mjs`?**
-  _High betweenness centrality (0.260) - this node is a cross-community bridge._
+  _High betweenness centrality (0.258) - this node is a cross-community bridge._
 - **Are the 3 inferred relationships involving `useCerrarConEscape()` (e.g. with `29/10/2026 (tarde) · Claude — Videos tutoriales` and `17. Facturación electrónica (Fase 11)`) actually correct?**
   _`useCerrarConEscape()` has 3 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `electron-builder`, `@tailwindcss/postcss`, `@types/node` to the rest of the system?**
@@ -1086,7 +1086,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `ModalHistorialLotes.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.07367641614216956 - nodes in this community are weakly interconnected._
 - **Why does `react` connect `react` to `scratch_inventario.tsx`, `ModalHistorialLotes.tsx`, `TiendaWeb/index.tsx`, `package.json`, `28/10/2026: Fase 4.2 (Cliente opcional en la Caja)`, `Finanzas/index.tsx`, `ModalCierre.tsx`, `TerminalBusqueda.tsx`, `useCerrarConEscape`, `impresion.ts`, `SideBar.tsx`, `4. El código (dónde está cada cosa)`, `comprobante.ts`, `Product`, `App.tsx`, `App.tsx`, `App.tsx`, `ModalAjuste.tsx`, `autorizacion.tsx`, `avisar`, `ReporteContador.tsx`, `ModalEtiqueta.tsx`, `Inventario/index.tsx`, `PestanaFacturacion.tsx`, `BarraConexion.tsx`, `Configuraciones/index.tsx`, `ReporteContador.tsx`, `ModalCobro.tsx`, `ModalFichaCliente.tsx`, `PanelCompras.tsx`, `Punto-de-venta/index.tsx`?**
-  _High betweenness centrality (0.130) - this node is a cross-community bridge._
+  _High betweenness centrality (0.129) - this node is a cross-community bridge._
 - **Should `escritorio/package.json` be split into smaller, more focused modules?**
   _Cohesion score 0.125 - nodes in this community are weakly interconnected._
 - **Why does `Bitácora compartida (Claude ↔ Antigravity ↔ cualquier IA)` connect `Bitácora compartida (Claude ↔ Antigravity ↔ cualquier IA)` to `ModalHistorialLotes.tsx`, `TiendaWeb/index.tsx`, `28/10/2026: Fase 4.2 (Cliente opcional en la Caja)`, `Finanzas/index.tsx`, `TerminalBusqueda.tsx`, `useCerrarConEscape`, `4. El código (dónde está cada cosa)`, `05/11/2026 (102) · Antigravity — ENTREGA A CLAUDE: resumen de sesión, estado y pendientes`, `comprobante.ts`, `Product`, `Navegación Espacial de Filtros y Botones`, `facturador.mjs`, `ventanas.ts`, `Inventario/index.tsx`, `ReporteContador.tsx`, `ModalCobro.tsx`, `ModalFichaCliente.tsx`, `encolar`, `Punto-de-venta/index.tsx`, `panel.py`?**
