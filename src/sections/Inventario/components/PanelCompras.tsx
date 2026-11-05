@@ -1,6 +1,6 @@
 // src/sections/Inventario/components/PanelCompras.tsx
 // Inventario > Compras: listas de lo que hay que pedir a cada proveedor.
-//  - Nueva lista: proveedor + productos (botón "Sugerir pedido": lo que se vende y lo que está bajo el mínimo) o búsqueda.
+//  - Nueva lista: proveedor + productos buscados (05/11/2026: se quitó "Sugerir pedido" a pedido del dueño).
 //  - Enviar / Imprimir: vista previa de la hoja del pedido con WhatsApp, PDF, Descargar e Imprimir.
 //  - Recibir pedido: se confirma lo que llegó y su costo, y se crean TODOS los lotes de una vez
 //    (igual que "Ingresar lote": lote + movimiento COMPRA + stock del producto recalculado).
@@ -1153,47 +1153,14 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
             aria-activedescendant={marcado >= 0 ? `compra-resultado-${marcado}` : undefined}
             className={`${claseInput} pl-7`} />
         </div>
-        {/* Fase 2.4: UN botón (antes "Agregar stock bajo" y "Sugerir pedido" por separado ocupaban mucho) */}
-        <div className="flex items-stretch border-2 border-[var(--color-info)] bg-[var(--color-info-bg)] shrink-0">
-          {/* Botón relleno (se nota que ahí se presiona); parpadea si cambiaste algo y falta presionarlo */}
-          <button id="btn-sugerir-pedido" type="button" data-nav="1,1" onClick={() => void sugerirPedido()}
-            title={sinAplicar ? 'Presiona para sugerir con lo que cambiaste' : 'Sugerir pedido'}
-            className={`px-3 py-2 flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest bg-[var(--color-info)] text-white hover:bg-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] cursor-pointer ${sinAplicar ? 'animate-pulse ring-4 ring-[var(--color-accent)]' : ''}`}>
-            <Sparkles size={14} /> Sugerir pedido
-          </button>
-          <label className="flex items-center gap-1 px-2 border-l-2 border-[var(--color-info)] text-[10px] font-black uppercase tracking-widest text-[var(--color-info)]">
-            para
-            <input id="compra-dias" data-nav="1,2" type="number" min="1" max="90" value={dias} onChange={(e) => { setDias(e.target.value); setSinAplicar(true); }}
-              onFocus={(e) => e.currentTarget.select()} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); enfocar(document.getElementById('btn-sugerir-pedido')); } }}
-              aria-label="Días que debe alcanzar el pedido" className={`${claseInput} w-12 text-right !p-1`} />
-            días
-          </label>
-        </div>
-      </div>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-info)] shrink-0">Sugerir de</span>
-        <select id="compra-sugerir-categoria" data-nav="2,0" value={categoriaSugerir} onChange={(e) => { setCategoriaSugerir(e.target.value); setSinAplicar(true); }} onKeyDown={abrirLista}
-          aria-label="Categoría a sugerir" className={`${claseInput} sm:w-56`}>
-          <option value="">Todas las categorías</option>
-          {categorias.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <select id="compra-sugerir-tipo" data-nav="2,1" value={queSugerir} onChange={(e) => { setQueSugerir(e.target.value as 'TODO' | 'VENTA' | 'MINIMO'); setSinAplicar(true); }} onKeyDown={abrirLista}
-          aria-label="Qué sugerir" className={`${claseInput} sm:w-64`}>
-          <option value="TODO">Todo lo que se acaba</option>
-          <option value="VENTA">Solo lo que se vende</option>
-          <option value="MINIMO">Solo lo que está bajo el mínimo</option>
-        </select>
-        <button id="btn-limpiar-compra" type="button" data-nav="2,2" onClick={() => void limpiarLista()} aria-disabled={!items.length}
-          className={`${claseBoton} sm:ml-auto ${items.length
+        {/* 05/11/2026: sin "Sugerir pedido" (el dueño quiere la ventana solo para armar el pedido). Limpiar lista al lado del buscador */}
+        <button id="btn-limpiar-compra" type="button" data-nav="1,1" onClick={() => void limpiarLista()} aria-disabled={!items.length}
+          className={`${claseBoton} shrink-0 ${items.length
             ? 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger)] hover:bg-[var(--color-danger)] hover:text-white focus:bg-[var(--color-danger)] focus:text-white'
             : 'bg-white text-[var(--color-muted)] border-[var(--color-border)] opacity-50 cursor-not-allowed'}`}>
           <Trash2 size={14} /> Limpiar lista
         </button>
       </div>
-      <p className="text-[11px] font-bold text-[var(--color-muted)] -mt-1">
-        <b>Sugerir pedido</b> agrega lo que se acaba: lo que se vende (según los últimos 30 días) en la cantidad que alcance para los días que elijas, y lo que está bajo el stock mínimo. Con "Sugerir de" eliges la categoría y qué agregar. Después puedes cambiar las cantidades o quitar productos.
-      </p>
-      {resumenSugerido && <p id="compra-resumen-sugerido" role="status" className="text-xs font-black text-[var(--color-info)]">{resumenSugerido}</p>}
       {abierto && posLista && createPortal(
         <ul id="compra-resultados" role="listbox" aria-label="Productos" style={{ position: 'fixed', ...posLista }} className="z-[60] font-mono bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] overflow-auto custom-scrollbar">
           {resultados.length === 0 ? (
@@ -1211,7 +1178,7 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
 
       {items.length === 0 ? (
         <p className="p-4 border-2 border-dashed border-[var(--color-border)] text-center text-xs font-black uppercase text-[var(--color-muted)]">
-          Busca productos o usa "Sugerir pedido".
+          Busca los productos del pedido arriba (escribe o presiona ↓ para ver todos).
         </p>
       ) : (
         // Sin la barra gruesa del navegador (como el Directorio de clientes); los títulos quedan fijos al desplazar
@@ -1223,7 +1190,7 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
             <tbody>
               {items.map((i, n) => {
                 const p = porId.get(i.product_id);
-                const fila = 3 + n; // 1: buscador · 2: filtros de "Sugerir pedido" · 3+: productos
+                const fila = 2 + n; // 0: proveedor y nota · 1: buscador y Limpiar lista · 2+: productos
                 return (
                   <tr key={i.product_id} data-producto={i.product_id} className="border-t border-[var(--color-border)]">
                     <td className="p-2 font-black">{i.product_name}</td>

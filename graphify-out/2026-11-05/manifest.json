@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProducto.tsx": {
-    "mtime": 1793891879.787782,
-    "seen": 1793892046.5415432,
-    "ast_hash": "769108d29476fc179da704723479cdd5",
+    "mtime": 1793894075.5963972,
+    "seen": 1793894889.9704473,
+    "ast_hash": "e68b90efe08ec638cce00c396aa3e23b",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaLotes.tsx": {
@@ -2004,21 +2004,21 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793892037.4101877,
-    "seen": 1793892046.5416288,
-    "ast_hash": "d1b6175cc7e0d1fbba62d693f205f92e",
+    "mtime": 1793894875.8711743,
+    "seen": 1793894889.9706025,
+    "ast_hash": "ee2d70c20abf607107e3df462a70a9a5",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793892037.4116957,
-    "seen": 1793892046.5416298,
-    "ast_hash": "d1bef7cd986d27d448b9fc90797fb933",
+    "mtime": 1793894875.871682,
+    "seen": 1793894889.970604,
+    "ast_hash": "6d9ed25ee8a0def7f871abce4f0648ae",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793892037.4116957,
-    "seen": 1793892046.5416305,
-    "ast_hash": "de480abca10dd0b33b6eb79041ec74a5",
+    "mtime": 1793894875.871682,
+    "seen": 1793894889.9706056,
+    "ast_hash": "09f64553d73a4af62ea969b5f0dac4ce",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
@@ -2628,9 +2628,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/revisar-selector.mjs": {
-    "mtime": 1793888933.828251,
-    "seen": 1793889702.8561418,
-    "ast_hash": "7089d541cfa827d51ede0424bf6fdaca",
+    "mtime": 1793894290.2719944,
+    "seen": 1793894889.9700608,
+    "ast_hash": "d8c2e3c4a56bb18ba886cbabe62f933d",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/tecladoCaja.ts": {
@@ -2640,9 +2640,9 @@
     "semantic_hash": ""
   },
   "src/utils/flechasEspaciales.ts": {
-    "mtime": 1793891794.646136,
-    "seen": 1793892046.541596,
-    "ast_hash": "6fbf1f178491d2778c57ba581a70922d",
+    "mtime": 1793894188.3269966,
+    "seen": 1793894889.9705436,
+    "ast_hash": "e514dfb9f5c7c733fa54bea0dcd66f14",
     "semantic_hash": ""
   },
   "ai-scripts/estilo-ventanas.cjs": {
