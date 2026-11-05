@@ -551,15 +551,15 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
 
   return createPortal(
     <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 animate-fade-in font-mono">
-      <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-6xl h-[90vh] flex flex-col rounded-none relative">
+      <div className="ventana-sobria bg-white border-2 border-[var(--color-ink)] w-full max-w-6xl h-[90vh] flex flex-col rounded-none relative">
         
         {/* HEADER */}
-        <div className="bg-[var(--color-ink)] text-white p-3 sm:p-4 flex justify-between items-center shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white p-3 sm:p-4 flex justify-between items-center shrink-0">
           <div>
-            <h2 className="font-black uppercase tracking-widest text-lg sm:text-2xl">ESTADO DE CUENTA</h2>
+            <h2 className="ventana-cabecera__titulo font-black uppercase tracking-widest text-lg sm:text-2xl">ESTADO DE CUENTA</h2>
             <p className="text-[var(--color-accent)] font-bold tracking-widest uppercase text-sm">CLIENTE: {cliente.clienteNombre}</p>
           </div>
-          <button id="btn-cerrar-modal-estado" onClick={onClose} className="hover:text-[var(--color-danger)] transition-colors cursor-pointer bg-white/10 p-1.5 focus:outline-none focus:ring-2 focus:ring-white">
+          <button id="btn-cerrar-modal-estado" onClick={onClose} className="ventana-cerrar hover:text-[var(--color-danger)] transition-colors cursor-pointer bg-white/10 p-1.5 focus:outline-none focus:ring-2 focus:ring-white">
             <X size={24} strokeWidth={3} />
           </button>
         </div>

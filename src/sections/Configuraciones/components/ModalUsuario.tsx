@@ -284,11 +284,11 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
       aria-labelledby="modal-usuario-title"
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4"
     >
-      <div className="bg-white border-2 border-[var(--color-ink)] w-full max-w-7xl max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)] flex flex-col shadow-[8px_8px_0_0_var(--color-ink)]">
+      <div className="ventana-sobria bg-white border-2 border-[var(--color-ink)] w-full max-w-7xl max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)] flex flex-col">
         
         {/* HEADER */}
-        <div className="bg-[var(--color-ink)] p-4 flex justify-between items-center shrink-0">
-          <h2 id="modal-usuario-title" className="text-white font-black tracking-widest uppercase text-sm flex items-center gap-2">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] p-4 flex justify-between items-center shrink-0">
+          <h2 id="modal-usuario-title" className="ventana-cabecera__titulo text-white font-black tracking-widest uppercase text-sm flex items-center gap-2">
             <Shield size={18} className="text-[var(--color-accent)]" />
             {isEditing ? `Editando Usuario: ${formData.nombre}` : 'Nueva Cuenta de Empleado'}
           </h2>
@@ -307,7 +307,7 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
                 document.getElementById('btn-toggle-todos-permisos')?.focus();
               }
             }}
-            className="text-[var(--color-subtle)] hover:text-white transition-colors p-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white rounded-none"
+            className="ventana-cerrar text-[var(--color-subtle)] hover:text-white transition-colors p-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white rounded-none"
             title="Cerrar modal (Esc)"
           >
             <X size={20} />

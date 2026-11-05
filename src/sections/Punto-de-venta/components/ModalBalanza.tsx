@@ -57,11 +57,11 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="max-h-[calc(var(--alto-pantalla)*0.94)] overflow-y-auto bg-white w-full max-w-md border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col overflow-hidden">
+      <div className="ventana-sobria max-h-[calc(var(--alto-pantalla)*0.94)] overflow-y-auto bg-white w-full max-w-md border-2 border-[var(--color-ink)] flex flex-col overflow-hidden">
         
         {/* Cabecera */}
-        <div className="bg-[var(--color-info)] text-white px-4 py-3 flex items-center justify-between border-b-2 border-[var(--color-ink)]">
-          <h2 className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+        <div style={{ '--icono': 'var(--color-info)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-info)] text-white px-4 py-3 flex items-center justify-between border-b-2 border-[var(--color-ink)]">
+          <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest flex items-center gap-2">
             <Scale size={20} /> {unidadDe(product).corto === 'KG' ? 'Balanza Digital' : 'Venta por medida'}
           </h2>
           <button 

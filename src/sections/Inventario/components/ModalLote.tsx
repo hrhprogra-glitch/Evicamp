@@ -761,21 +761,21 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="bg-[var(--color-surface)] w-full max-w-2xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))]">
+      <div className="ventana-sobria bg-[var(--color-surface)] w-full max-w-2xl border-2 border-[var(--color-ink)] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))]">
         
         {/* CABECERA */}
-        <div className="bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <Database size={24} className="text-[var(--color-success)]" />
             <div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-[var(--color-success)]">{initialLote ? 'Editar Lote de Stock' : 'Ingresar Lote de Stock'}</h2>
+              <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest text-[var(--color-success)]">{initialLote ? 'Editar Lote de Stock' : 'Ingresar Lote de Stock'}</h2>
               <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">{initialLote ? 'Modificar datos del lote registrado' : 'Añadir existencias al inventario'}</p>
             </div>
           </div>
           <button 
             id="btn-cerrar-modal-lote"
             onClick={onClose} 
-            className="hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white/20 p-1.5 transition-colors cursor-pointer rounded-none"
+            className="ventana-cerrar hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white/20 p-1.5 transition-colors cursor-pointer rounded-none"
             title="Cerrar ventana (Escape)"
           >
             <X size={20} />

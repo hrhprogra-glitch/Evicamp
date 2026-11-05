@@ -7,6 +7,18 @@
 
 ---
 
+## 04/11/2026 (92) · Claude — Todas las ventanas flotantes con el mismo estilo + selector más rápido y en orden (solo siumax)
+- **Selector:** el dueño notó que "cuando muevo rápido el selector es muy lento" → las flechas de respaldo (`flechasEspaciales.ts`) ya no esperan 90 ms (actúan apenas termina la tecla). Orden de lectura: `filaEnMedio()` hace que las flechas pasen por la fila de botones que baja entre pestañas y buscador en laptops (Inventario, Lotes, Compras, Clientes); Finanzas/Ver historial ↑ al primer botón; pestañas de Ajustes sin ícono en laptops para caber en una fila; Nuevo usuario ← a Estado; Empresa ↑/↓ sin saltos; Tienda web: el texto largo deja salir con ↓ en su última línea (llega a Guardar) y la pestaña entra por el enlace. El "rescate" de Inventario ya no pisa las flechas de las pestañas (`if (e.defaultPrevented) return`). Revisión de saltos: 34/37 sin saltos; los 3 restantes son a propósito (cobro: cada "Exacto" va a su campo — pendiente que el dueño decida; lista de sugerencias abierta en Ingresar lote; régimen tributario cae en la opción elegida).
+- **Ventana de empleado:** scroll delgado, panel izquierdo angosto, permisos en columnas que se acomodan (4 en pantalla grande, 3 en laptop) sin cortar palabras.
+- **Detalle de producto (Utilidades)** sin sombra → el dueño: *"me gustó, quiero ese estilo igual en todas las ventanas flotantes"* → plan → *"empieza"*.
+- **Estilo de ventanas** (piezas en `src/index.css`, sección "VENTANAS SiuMax Sobrio"): `ventana-sobria` (marco borde 2, SIN sombra; dentro también se apagan las sombras desplazadas sin tocar el resaltado del selector: `--tw-shadow`), `ventana-cabecera` (clara; `--icono` = color del cuadrito), `ventana-cabecera__titulo` (el primer ícono del título se vuelve el cuadrito de color), `ventana-cerrar` (X con borde fino; también se aplica sola a cualquier botón con la X en la cabecera), `ventana-cifras`, `ventana-recuadro`.
+- Aplicado a **49 ventanas** con `ai-scripts/estilo-ventanas.cjs` (agrega clases, NO toca teclado ni lógica; sin `--aplicar` solo informa) + a mano: cobro, avisos del sistema (`dialogos.tsx`: Aviso verde / Confirmar amarillo) y clave del administrador (`autorizacion.tsx`, candado amarillo). El color que tenía cada cabecera pasó al cuadrito: cierre de caja rojo, movimiento/detalle de caja/balanza azul, precio de consumo y editar salida amarillo, el resto verde. Sin tocar: Tienda Web pública y menú del celular.
+- Revisado: capturas de 19 ventanas + aviso; `revisar-ventanas.mjs` y `revisar-ventanas-caja.mjs` sin fallas (botón principal visible en 6 tamaños), 0 errores, siumax con sus 11 ventas.
+- No se pudieron abrir con datos (siumax vacío): las ventanas que salen de una fila (detalle de cliente, fiado, ticket, caja pasada, historial de lotes…); reciben el mismo estilo por las clases.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub.
+
+---
+
 ## 04/11/2026 (91) · Claude — Las 6 reglas del selector en todo el sistema (solo siumax)
 - **Dueño:** pidió confirmar si el sistema cumple sus reglas del selector y luego *"sí, empieza y hazlo todo de una"*. Reglas:
   1. el selector llega a TODOS los botones, buscadores y campos; 2. calendario: Enter lo abre y al elegir el selector se queda en la fecha (Enter no pasa al siguiente cuadro); 3. moverse ← → (y ↑ ↓); 4. al salir del sistema y volver, algo queda seleccionado; 5. en una ventana el selector nunca se pierde; 6. con una ventana abierta, el selector nunca sale de ella.

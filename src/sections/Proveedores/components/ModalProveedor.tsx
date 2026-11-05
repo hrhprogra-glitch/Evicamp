@@ -302,14 +302,14 @@ export const ModalProveedor: React.FC<Props> = ({ isOpen, onClose, onSave, prove
 
   return (
     <div id="modal-proveedor-container" className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[70] flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="bg-white w-full max-w-2xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
+      <div className="ventana-sobria bg-white w-full max-w-2xl border-2 border-[var(--color-ink)] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
         
         {/* HEADER */}
-        <div className="bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <Building2 size={20} className="text-[var(--color-info)]" />
             <div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-[var(--color-info)]">
+              <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest text-[var(--color-info)]">
                 {proveedorAEditar ? 'Editar Proveedor' : 'Nuevo Proveedor'}
               </h2>
               <p className="text-[12px] font-bold opacity-80 uppercase tracking-widest">
@@ -330,7 +330,7 @@ export const ModalProveedor: React.FC<Props> = ({ isOpen, onClose, onSave, prove
                 onClose();
               }
             }}
-            className="text-white hover:bg-[var(--color-danger)] hover:text-white focus:bg-[var(--color-danger)] focus:text-white focus:outline-none focus:ring-2 focus:ring-white p-1.5 transition-colors cursor-pointer border border-transparent focus:border-white rounded-none"
+            className="ventana-cerrar text-white hover:bg-[var(--color-danger)] hover:text-white focus:bg-[var(--color-danger)] focus:text-white focus:outline-none focus:ring-2 focus:ring-white p-1.5 transition-colors cursor-pointer border border-transparent focus:border-white rounded-none"
             title="Cerrar ventana (Escape)"
           >
             <X size={20} />

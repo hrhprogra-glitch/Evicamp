@@ -293,14 +293,14 @@ export const ReporteContador: React.FC<{ onClose: () => void }> = ({ onClose }) 
   const r = datos?.resumen;
   return (
     <div role="dialog" aria-modal="true" aria-labelledby="titulo-reporte-contador" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-    <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-2xl max-h-[calc(var(--alto-pantalla)*0.94)] flex flex-col rounded-none">
-      <div className="flex justify-between items-center border-b-2 border-[var(--color-ink)] p-4 bg-[var(--color-bg)] shrink-0">
+    <div className="ventana-sobria bg-white border-2 border-[var(--color-ink)] w-full max-w-2xl max-h-[calc(var(--alto-pantalla)*0.94)] flex flex-col rounded-none">
+      <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera flex justify-between items-center border-b-2 border-[var(--color-ink)] p-4 bg-[var(--color-bg)] shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-[var(--color-accent-shadow)] flex items-center justify-center border border-[var(--color-ink)]">
             <FileSpreadsheet size={18} className="text-white" />
           </div>
           <div>
-            <h3 id="titulo-reporte-contador" className="text-sm font-black uppercase tracking-widest text-[var(--color-ink)]">Reporte para el contador</h3>
+            <h3 id="titulo-reporte-contador" className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest text-[var(--color-ink)]">Reporte para el contador</h3>
             <p className="text-[12px] font-bold text-[var(--color-muted)]">Registro de ventas del mes (boletas, facturas y notas de crédito) para Excel, y el resumen para declarar.</p>
           </div>
         </div>
@@ -309,7 +309,7 @@ export const ReporteContador: React.FC<{ onClose: () => void }> = ({ onClose }) 
           type="button"
           onClick={onClose}
           onKeyDown={(e) => { if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('rep-mes')?.focus(); } }}
-          className="text-[var(--color-muted)] hover:text-white hover:bg-red-600 border border-[var(--color-border)] p-1.5 rounded-none focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer"
+          className="ventana-cerrar text-[var(--color-muted)] hover:text-white hover:bg-red-600 border border-[var(--color-border)] p-1.5 rounded-none focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer"
           title="Cerrar (Esc)"
         >
           <X size={18} />

@@ -247,15 +247,15 @@ export const ModalConsultarGarantia: React.FC<Props> = ({ isOpen, onClose, initi
       id="modal-consultar-garantia"
       aria-labelledby="modal-garantia-title"
     >
-      <div className="bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0px_0px_rgba(var(--color-ink-rgb),1)] rounded-none w-full max-w-lg flex flex-col font-mono">
+      <div className="ventana-sobria bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0px_0px_rgba(var(--color-ink-rgb),1)] rounded-none w-full max-w-lg flex flex-col font-mono">
         {/* CABECERA */}
-        <div className="flex justify-between items-center border-b-2 border-[var(--color-ink)] bg-[var(--color-bg)] p-3 sm:p-4">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera flex justify-between items-center border-b-2 border-[var(--color-ink)] bg-[var(--color-bg)] p-3 sm:p-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-emerald-100 border border-emerald-600 flex items-center justify-center text-emerald-800">
               <ShieldCheck size={18} />
             </div>
             <div>
-              <h2 id="modal-garantia-title" className="text-[var(--color-ink)] font-black text-sm sm:text-base uppercase tracking-wider">
+              <h2 id="modal-garantia-title" className="ventana-cabecera__titulo text-[var(--color-ink)] font-black text-sm sm:text-base uppercase tracking-wider">
                 Consultar Garantía y Serie
               </h2>
               <p className="text-[10px] text-[var(--color-muted)] font-bold uppercase tracking-widest">
@@ -268,7 +268,7 @@ export const ModalConsultarGarantia: React.FC<Props> = ({ isOpen, onClose, initi
             ref={closeBtnRef}
             onClick={onClose} 
             title="Cerrar ventana (Esc)"
-            className="p-1.5 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer"
+            className="ventana-cerrar p-1.5 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer"
           >
             <X size={16} />
           </button>

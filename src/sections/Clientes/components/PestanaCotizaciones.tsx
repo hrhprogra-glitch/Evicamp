@@ -719,12 +719,12 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
           }}
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4"
         >
-          <div className="bg-[var(--color-surface,#fff)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[92vh] w-full max-w-xl animate-fade-in text-[var(--color-ink)]">
+          <div className="ventana-sobria bg-[var(--color-surface,#fff)] border-2 border-[var(--color-ink)] flex flex-col max-h-[92vh] w-full max-w-xl animate-fade-in text-[var(--color-ink)]">
 
             {/* CABECERA */}
-            <div className="bg-[var(--color-ink)] text-white p-3 sm:p-4 flex justify-between items-center border-b-2 border-[var(--color-ink)]">
+            <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white p-3 sm:p-4 flex justify-between items-center border-b-2 border-[var(--color-ink)]">
               <div>
-                <h3 className="text-base font-black uppercase tracking-wider flex items-center gap-2">
+                <h3 className="ventana-cabecera__titulo text-base font-black uppercase tracking-wider flex items-center gap-2">
                   <FileText size={18} className="text-[var(--color-accent)]" />
                   {cotiSeleccionada.numero} · Detalle de Proforma
                 </h3>
@@ -736,7 +736,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
                 id="btn-coti-cerrar"
                 type="button"
                 onClick={cerrarDetalle}
-                className="p-1 hover:bg-[var(--color-danger)] transition-colors cursor-pointer text-white focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-[var(--color-danger)]"
+                className="ventana-cerrar p-1 hover:bg-[var(--color-danger)] transition-colors cursor-pointer text-white focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-[var(--color-danger)]"
                 title="Cerrar (Esc)"
               >
                 <X size={20} />

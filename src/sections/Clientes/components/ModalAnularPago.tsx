@@ -80,17 +80,17 @@ export const ModalAnularPago: React.FC<Props> = ({ isOpen, onClose, fiado, onAnu
 
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="bg-white w-full max-w-md border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.8)]">
+      <div className="ventana-sobria bg-white w-full max-w-md border-2 border-[var(--color-ink)] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.8)]">
         
         {/* HEADER */}
-        <div className="bg-[var(--color-ink)] text-white px-6 py-4 flex justify-between items-center shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-6 py-4 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
             <RotateCcw className="text-[var(--color-warning)]" size={20} />
-            <h2 className="text-sm font-black uppercase tracking-widest text-white">
+            <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest text-white">
               Historial de Pagos
             </h2>
           </div>
-          <button id="btn-cerrar-anular-pago" onClick={onClose} className="hover:text-[var(--color-danger)] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-warning)]"><X size={20} /></button>
+          <button id="btn-cerrar-anular-pago" onClick={onClose} className="ventana-cerrar hover:text-[var(--color-danger)] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-warning)]"><X size={20} /></button>
         </div>
 
         {/* BODY */}

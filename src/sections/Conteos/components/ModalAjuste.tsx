@@ -398,13 +398,13 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div role="dialog" aria-label="Nuevo ajuste" className="bg-[var(--color-surface)] w-full max-w-3xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col h-[calc(90dvh/var(--ui-zoom))]">
+      <div role="dialog" aria-label="Nuevo ajuste" className="ventana-sobria bg-[var(--color-surface)] w-full max-w-3xl border-2 border-[var(--color-ink)] flex flex-col h-[calc(90dvh/var(--ui-zoom))]">
         {/* CABECERA */}
-        <div className="bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <ClipboardCheck size={24} className="text-[var(--color-warning)]" />
             <div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-[var(--color-warning)]">Nuevo ajuste</h2>
+              <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest text-[var(--color-warning)]">Nuevo ajuste</h2>
               <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">
                 {puedeSalida ? 'Lo que salió del stock o lo que contaste en el estante' : 'Conteo a ciegas: escribe lo que hay en el estante'}
               </p>
@@ -414,7 +414,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
             id="btn-cerrar-ajuste"
             onClick={onClose}
             onKeyDown={(e) => { if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById(producto ? 'btn-cambiar-producto-ajuste' : 'input-buscar-ajuste')?.focus(); } }}
-            className="hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white/20 p-1.5 transition-colors cursor-pointer rounded-none"
+            className="ventana-cerrar hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white/20 p-1.5 transition-colors cursor-pointer rounded-none"
             title="Cerrar ventana (Escape)"
           >
             <X size={20} />

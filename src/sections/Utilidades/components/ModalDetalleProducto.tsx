@@ -138,16 +138,16 @@ export const ModalDetalleProducto: React.FC<Props> = ({ producto, onClose }) => 
       }}
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 font-mono"
     >
-      <div className="bg-white border-2 border-[var(--color-ink)] w-full max-w-3xl max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.85)] flex flex-col rounded-none animate-fade-in">
+      <div className="ventana-sobria bg-white border-2 border-[var(--color-ink)] w-full max-w-3xl max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.85)] flex flex-col rounded-none animate-fade-in">
 
         {/* CABECERA */}
-        <div className="flex justify-between items-center border-b-2 border-[var(--color-ink)] p-4 bg-[var(--color-bg)] shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera flex justify-between items-center border-b-2 border-[var(--color-ink)] p-4 bg-[var(--color-bg)] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[var(--color-accent-shadow)] flex items-center justify-center border border-[var(--color-ink)]">
               <Package size={18} className="text-white" />
             </div>
             <div>
-              <h3 id="modal-detalle-producto-title" className="text-sm font-black uppercase tracking-widest text-[var(--color-ink)]">{producto.nombre}</h3>
+              <h3 id="modal-detalle-producto-title" className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest text-[var(--color-ink)]">{producto.nombre}</h3>
               <p className="text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-wider">{producto.categoria}</p>
             </div>
           </div>
@@ -160,7 +160,7 @@ export const ModalDetalleProducto: React.FC<Props> = ({ producto, onClose }) => 
                 e.stopPropagation();
               }
             }}
-            className="text-[var(--color-muted)] hover:text-white hover:bg-red-600 transition-colors border border-[var(--color-border)] p-1.5 rounded-none focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer"
+            className="ventana-cerrar text-[var(--color-muted)] hover:text-white hover:bg-red-600 transition-colors border border-[var(--color-border)] p-1.5 rounded-none focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer"
             title="Cerrar modal (Esc)"
           >
             <X size={18} />

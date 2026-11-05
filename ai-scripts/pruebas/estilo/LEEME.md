@@ -22,3 +22,7 @@ buscador, los filtros, la paginación y las filas con el teclado, imprimiendo d�
 - `revisar-selector.mjs [filtro]`: las 6 reglas del dueño en 37 pantallas (flechas a todo, calendarios con Enter, Tab, clic en el fondo,
   salir y volver). Abre caja y producto de prueba por SQL (sin vender) y los borra; si se crea una venta, se detiene.
   Tarda ~15 min; con un filtro (ej. `inventario`) solo revisa esas pantallas.
+
+## Ventanas
+- `ver-ventanas.mjs <carpeta> [filtro]`: capturas de 19 ventanas (abre caja y producto de prueba por SQL y los borra; frena si se crea una venta).
+- `../../estilo-ventanas.cjs` (sin --aplicar): dice qué ventanas tienen o no las piezas del estilo.

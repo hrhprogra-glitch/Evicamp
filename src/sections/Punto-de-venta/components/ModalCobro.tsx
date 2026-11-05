@@ -641,7 +641,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
 
   return (
     <div role="dialog" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="relative bg-white w-full max-w-md border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
+      <div className="ventana-sobria relative bg-white w-full max-w-md border-2 border-[var(--color-ink)] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
         {/* Ventana de fiado (tablet/PC): pegada al lado derecho de la ventana de pago, en
             posición absoluta (relativa a esta misma ventana) para que NUNCA la mueva ni la
             recentre al aparecer/desaparecer — antes las dos se centraban juntas como grupo,
@@ -661,8 +661,8 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
           </div>
         )}
 
-        <div className="bg-[var(--color-accent)] text-[var(--color-ink)] px-4 py-2 flex items-center justify-between border-b-2 border-[var(--color-ink)] shrink-0">
-          <h2 className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
+        <div className="ventana-cabecera bg-[var(--color-accent)] text-[var(--color-ink)] px-4 py-2 flex items-center justify-between border-b-2 border-[var(--color-ink)] shrink-0">
+          <h2 className="ventana-cabecera__titulo text-lg font-black uppercase tracking-widest flex items-center gap-2">
             <Calculator size={20} /> Pago Mixto
           </h2>
           <button 
@@ -679,7 +679,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
               if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-confirm')?.focus(); }
               if (e.key === 'Delete') { e.preventDefault(); onClose(); }
             }}
-            className="hover:text-white focus:text-white focus:bg-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer p-1"
+            className="ventana-cerrar hover:text-white focus:text-white focus:bg-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer p-1"
           >
             <X size={20} strokeWidth={3} />
           </button>

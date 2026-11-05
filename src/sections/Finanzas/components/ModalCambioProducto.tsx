@@ -714,15 +714,15 @@ export const ModalCambioProducto: React.FC<Props> = ({
       id="modal-cambio-producto"
       aria-labelledby="modal-cambio-title"
     >
-      <div className="bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0px_0px_rgba(var(--color-ink-rgb),1)] rounded-none w-full max-w-2xl flex flex-col font-mono max-h-[92vh]">
+      <div className="ventana-sobria bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0px_0px_rgba(var(--color-ink-rgb),1)] rounded-none w-full max-w-2xl flex flex-col font-mono max-h-[92vh]">
         {/* CABECERA */}
-        <div className="flex justify-between items-center border-b-2 border-[var(--color-ink)] bg-[var(--color-bg)] p-3 sm:p-4 shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera flex justify-between items-center border-b-2 border-[var(--color-ink)] bg-[var(--color-bg)] p-3 sm:p-4 shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-blue-100 border border-blue-600 flex items-center justify-center text-blue-800">
               <ArrowLeftRight size={18} />
             </div>
             <div>
-              <h2 id="modal-cambio-title" className="text-[var(--color-ink)] font-black text-sm sm:text-base uppercase tracking-wider">
+              <h2 id="modal-cambio-title" className="ventana-cabecera__titulo text-[var(--color-ink)] font-black text-sm sm:text-base uppercase tracking-wider">
                 Cambio de Producto
               </h2>
               <p className="text-[10px] text-[var(--color-muted)] font-bold uppercase tracking-widest">
@@ -747,7 +747,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
               }
             }}
             title="Cerrar ventana (Esc)"
-            className="p-1.5 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white transition-colors cursor-pointer"
+            className="ventana-cerrar p-1.5 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white transition-colors cursor-pointer"
           >
             <X size={16} />
           </button>

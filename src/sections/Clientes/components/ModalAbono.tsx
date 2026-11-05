@@ -185,14 +185,14 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
 
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="max-h-[calc(var(--alto-pantalla)*0.94)] bg-white w-full max-w-md border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col rounded-none">
+      <div className="ventana-sobria max-h-[calc(var(--alto-pantalla)*0.94)] bg-white w-full max-w-md border-2 border-[var(--color-ink)] flex flex-col rounded-none">
         
         {/* HEADER */}
-        <div className="bg-[var(--color-accent)] text-[var(--color-ink)] px-6 py-4 flex justify-between items-center shrink-0 border-b-2 border-[var(--color-ink)]">
-          <h2 className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-accent)] text-[var(--color-ink)] px-6 py-4 flex justify-between items-center shrink-0 border-b-2 border-[var(--color-ink)]">
+          <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest flex items-center gap-2">
             <Calculator size={20} /> Abono Mixto
           </h2>
-          <button id="btn-cerrar-modal-abono" onClick={onClose} className="hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-white"><X size={20} /></button>
+          <button id="btn-cerrar-modal-abono" onClick={onClose} className="ventana-cerrar hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-white"><X size={20} /></button>
         </div>
 
         {/* BODY */}

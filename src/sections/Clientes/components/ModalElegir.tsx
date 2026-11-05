@@ -47,15 +47,15 @@ export const ModalElegir: React.FC<Props> = ({ abierta, titulo, ayuda, opciones,
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div role="dialog" aria-label={titulo} className="bg-[var(--color-surface)] w-full max-w-2xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.8)]">
-        <div className="bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
+      <div role="dialog" aria-label={titulo} className="ventana-sobria bg-[var(--color-surface)] w-full max-w-2xl border-2 border-[var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.8)]">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
           <div className="min-w-0">
-            <h2 id="titulo-elegir" className="text-sm font-black uppercase tracking-widest truncate">{titulo}</h2>
+            <h2 id="titulo-elegir" className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest truncate">{titulo}</h2>
             <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{ayuda}</p>
           </div>
           <button id="btn-cerrar-elegir" onClick={onClose} title="Cerrar (Escape)"
             onKeyDown={(e) => { if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('buscar-elegir')?.focus(); } }}
-            className="hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] p-1 cursor-pointer"><X size={20} /></button>
+            className="ventana-cerrar hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] p-1 cursor-pointer"><X size={20} /></button>
         </div>
         <CuerpoVentana>
           <div className="relative shrink-0">

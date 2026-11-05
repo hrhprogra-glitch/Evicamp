@@ -612,9 +612,9 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
       aria-labelledby="modal-detalle-caja-title"
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4 font-mono"
     >
-      <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-6xl h-[calc(var(--alto-pantalla)*0.95)] sm:h-[calc(var(--alto-pantalla)*0.92)] flex flex-col rounded-none animate-fade-in overflow-hidden">
+      <div className="ventana-sobria bg-white border-2 border-[var(--color-ink)] w-full max-w-6xl h-[calc(var(--alto-pantalla)*0.95)] sm:h-[calc(var(--alto-pantalla)*0.92)] flex flex-col rounded-none animate-fade-in overflow-hidden">
 
-        <div className="bg-[var(--color-info)] p-3 sm:p-4 border-b-2 border-[var(--color-ink)] flex justify-between items-center text-white gap-3 shrink-0">
+        <div style={{ '--icono': 'var(--color-info)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-info)] p-3 sm:p-4 border-b-2 border-[var(--color-ink)] flex justify-between items-center text-white gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             {vista === 'TICKET' && (
               <button
@@ -638,7 +638,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
             onClick={onClose} 
             title="Cerrar modal (Esc)"
             aria-label="Cerrar modal"
-            className="p-1 hover:text-[var(--color-ink)] focus:outline-none focus:ring-4 focus:ring-white focus:bg-[var(--color-ink)] focus:text-white transition-all cursor-pointer shrink-0 rounded-none"
+            className="ventana-cerrar p-1 hover:text-[var(--color-ink)] focus:outline-none focus:ring-4 focus:ring-white focus:bg-[var(--color-ink)] focus:text-white transition-all cursor-pointer shrink-0 rounded-none"
           >
             <X size={26} strokeWidth={3} />
           </button>

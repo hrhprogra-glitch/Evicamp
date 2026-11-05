@@ -335,6 +335,12 @@ buscador → filtros → limpiar (en el buscador solo si el cursor está al fina
 la primera fila; ↑ desde la primera fila vuelve a la paginación de arriba; ↓ desde la última fila va a la paginación de
 abajo. Conservar SIEMPRE los `id` y los `onKeyDown` que ya existían (otras partes y pruebas los usan).
 
+**Ventanas flotantes (04/11/2026):** TODAS con el estilo del detalle de producto de Utilidades: `ventana-sobria` en el marco (sin
+sombra), `ventana-cabecera` clara con `style={{ '--icono': color }}` (el color va solo en el cuadrito del ícono), `ventana-cabecera__titulo`
+en el h2 (su primer ícono se vuelve el cuadrito) y `ventana-cerrar` en la X; cifras en `ventana-cifras`, listas en `ventana-recuadro`.
+En una ventana nueva usar estas clases (ver `src/sections/Utilidades/components/ModalDetalleProducto.tsx`); nada de cabeceras de color ni
+sombras desplazadas. `ai-scripts/estilo-ventanas.cjs` (sin --aplicar) lista qué ventanas no las tienen.
+
 **Que se vea completo en cualquier pantalla (04/11/2026, pedido del dueño):** nada puede quedar cortado por la ventana,
 de un celular a un monitor grande.
 - Cabecera: contenedor `flex flex-wrap justify-between items-center gap-4`; título con `shrink-0`; pestañas y grupos de

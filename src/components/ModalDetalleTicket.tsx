@@ -332,10 +332,10 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
     >
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0px_0px_rgba(var(--color-ink-rgb),1)] rounded-none w-full max-w-lg flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.88)]"
+        className="ventana-sobria bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0px_0px_rgba(var(--color-ink-rgb),1)] rounded-none w-full max-w-lg flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.88)]"
       >
         {/* CABECERA */}
-        <div className="flex justify-between items-center border-b-2 border-[var(--color-ink)] bg-[var(--color-bg)] p-3 sm:p-4 shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera flex justify-between items-center border-b-2 border-[var(--color-ink)] bg-[var(--color-bg)] p-3 sm:p-4 shrink-0">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[var(--color-muted)] text-[11px] font-mono tracking-widest uppercase">
@@ -347,7 +347,7 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
                 </span>
               )}
             </div>
-            <h2 id="modal-ticket-title" className="text-[var(--color-ink)] font-black text-base sm:text-lg uppercase tracking-widest">
+            <h2 id="modal-ticket-title" className="ventana-cabecera__titulo text-[var(--color-ink)] font-black text-base sm:text-lg uppercase tracking-widest">
               TICKET #{String(ticketId).slice(-6)}
             </h2>
           </div>

@@ -34,10 +34,10 @@ export const ModalValeTraspaso: React.FC<ModalValeTraspasoProps> = ({ traspaso, 
       <div 
         role="dialog"
         aria-modal="true"
-        className="w-full max-w-xl bg-white text-black border-2 border-black shadow-[8px_8px_0_0_#000] flex flex-col max-h-[90vh] overflow-hidden font-mono"
+        className="ventana-sobria w-full max-w-xl bg-white text-black border-2 border-black shadow-[8px_8px_0_0_#000] flex flex-col max-h-[90vh] overflow-hidden font-mono"
       >
         {/* Cabecera modal */}
-        <div className="flex items-center justify-between px-4 py-2.5 bg-black text-white no-print">
+        <div className="ventana-cabecera flex items-center justify-between px-4 py-2.5 bg-black text-white no-print">
           <span className="text-xs font-black uppercase tracking-widest text-amber-400">
             Vale de Traspaso de Mercadería
           </span>
@@ -50,7 +50,7 @@ export const ModalValeTraspaso: React.FC<ModalValeTraspasoProps> = ({ traspaso, 
             </button>
             <button
               onClick={onClose}
-              className="p-1 hover:bg-white/20 text-white cursor-pointer"
+              className="ventana-cerrar p-1 hover:bg-white/20 text-white cursor-pointer"
               title="Cerrar (Esc)"
             >
               <X size={18} />

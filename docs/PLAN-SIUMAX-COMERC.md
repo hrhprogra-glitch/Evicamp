@@ -4,7 +4,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 04/11/2026 (91), Claude: **las 6 reglas del selector en todo el sistema** (37 de 37 pantallas cumplen las 6 reglas, 0 errores (antes 11 de 37)). Solo siumax.
+- **Última actualización:** 04/11/2026 (92), Claude: **todas las ventanas flotantes con el mismo estilo** (el del detalle de producto: sin sombra, cabecera clara con cuadrito de ícono) + selector sin espera y en orden de lectura. Solo siumax. Pendiente: el dueño decide el ↓ de "Exacto…" en el cobro.
+- (91) 04/11/2026, Claude: **las 6 reglas del selector en todo el sistema** (37 de 37 pantallas cumplen las 6 reglas, 0 errores (antes 11 de 37)). Solo siumax.
 - (90) 04/11/2026, Claude: **ventanas con el botón Guardar siempre a la vista** (Ingresar lote, Abonar, Aperturar caja; revisión estricta del botón principal en 6 tamaños: 0 fallas). Solo siumax.
 - (89) 04/11/2026, Claude: **todo se ve completo en cualquier tamaño de pantalla** (7 tamaños revisados: secciones, pestañas y 17 ventanas; arregladas cabeceras de Ajustes, Inventario y Clientes y el cobro en laptops). Solo siumax. Siguiente: lo que diga el dueño (pendiente de antes: Proveedores con estilo SiuMax Sobrio).
 - (88) 04/11/2026, Antigravity: **Entrega a Claude** (ver BITACORA 88). Hecho en siumax: Utilidades y Ajustes con estilo SiuMax Sobrio, Caja sin sombras ni márgenes sobrantes al ras, y Clientes con botón [Grupos (n)] y flujo con [Volver]. Siguiente: Proveedores con estilo SiuMax Sobrio.
@@ -23,6 +24,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Mismo estilo en todas las ventanas flotantes** (modelo: detalle de producto en Utilidades, sin sombra) | **Aprobado 04/11. ✅ 49 ventanas + avisos en siumax (92). Pasar a Evicamp solo con aviso** |
 | **Reglas del selector en todo el sistema** (llegar a todo con flechas, calendario con Enter, nunca perderse ni salir de una ventana, algo seleccionado al volver) | **Aprobado 04/11. ✅ En siumax (91): 37 de 37 pantallas cumplen las 6 reglas, 0 errores (antes 11 de 37). Revisar con `ai-scripts/pruebas/estilo/revisar-selector.mjs` tras cambiar pantallas. Pasar a Evicamp solo con aviso** |
 | **Que todo se vea completo en cualquier tamaño de pantalla** (botones, pestañas y ventanas sin cortarse) | **Aprobado 04/11. ✅ Hecho en siumax (89): 7 tamaños, 0 cortes. Revisar de nuevo con `ai-scripts/pruebas/estilo/revisar-*.mjs` tras cambios de pantallas. Pasar a Evicamp solo con aviso** |
 | **Estilo "SiuMax Sobrio" en todas las secciones** (cabecera, buscador, filtros, paginación, vacío y tabla como Inventario) | **Aprobado 04/11. ✅ Inventario, Compras, Clientes, Conteos, Finanzas, Ver historial, Utilidades y Ajustes en siumax. Falta: Proveedores; tablas dentro de ventanas (preguntar); pasar a Evicamp solo con aviso** |

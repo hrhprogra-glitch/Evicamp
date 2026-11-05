@@ -83,8 +83,8 @@ export const ModalFormGrupo: React.FC<Props> = ({ abierta, grupo, grupos, onGuar
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div role="dialog" aria-label={grupo ? 'Editar grupo' : 'Nuevo grupo'} className="bg-[var(--color-surface)] w-full max-w-md border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col">
-        <div className="bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex items-center justify-between">
+      <div role="dialog" aria-label={grupo ? 'Editar grupo' : 'Nuevo grupo'} className="ventana-sobria bg-[var(--color-surface)] w-full max-w-md border-2 border-[var(--color-ink)] flex flex-col">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               id="btn-header-volver-form-grupo"
@@ -97,13 +97,13 @@ export const ModalFormGrupo: React.FC<Props> = ({ abierta, grupo, grupos, onGuar
             </button>
             <Users size={22} className="text-[var(--color-info)] shrink-0" />
             <div>
-              <h2 className="text-sm font-black uppercase tracking-widest">{grupo ? 'Editar grupo' : 'Nuevo grupo'}</h2>
+              <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest">{grupo ? 'Editar grupo' : 'Nuevo grupo'}</h2>
               <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">Familia o empresa: junta las deudas de sus clientes</p>
             </div>
           </div>
           <button id="btn-cerrar-form-grupo" onClick={onClose} title="Cerrar (Escape)"
             onKeyDown={(e) => { if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('grupo-nombre'); } }}
-            className="hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-red-400 p-1.5 cursor-pointer"><X size={20} /></button>
+            className="ventana-cerrar hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-red-400 p-1.5 cursor-pointer"><X size={20} /></button>
         </div>
         <div className="p-4 sm:p-6 flex flex-col gap-4">
           <div>

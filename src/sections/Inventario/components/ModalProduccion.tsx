@@ -185,14 +185,14 @@ export const ModalProduccion: React.FC<Props> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
       <div 
         id="modal-produccion-receta"
-        className="bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-2xl max-h-[90vh] flex flex-col rounded-none overflow-hidden"
+        className="ventana-sobria bg-[var(--color-surface)] border-2 border-[var(--color-ink)] w-full max-w-2xl max-h-[90vh] flex flex-col rounded-none overflow-hidden"
       >
         {/* CABECERA */}
-        <div className="p-4 bg-emerald-600 text-white flex justify-between items-center border-b-2 border-[var(--color-ink)]">
+        <div className="ventana-cabecera p-4 bg-emerald-600 text-white flex justify-between items-center border-b-2 border-[var(--color-ink)]">
           <div className="flex items-center gap-2">
             <ChefHat size={22} className="text-white" />
             <div>
-              <h3 className="font-black text-sm tracking-wider uppercase">
+              <h3 className="ventana-cabecera__titulo font-black text-sm tracking-wider uppercase">
                 Orden de Producción / Fabricación
               </h3>
               <p className="text-[10px] text-emerald-100">
@@ -202,7 +202,7 @@ export const ModalProduccion: React.FC<Props> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-emerald-700 text-white transition-colors cursor-pointer"
+            className="ventana-cerrar p-1 hover:bg-emerald-700 text-white transition-colors cursor-pointer"
             title="Cerrar (Esc)"
           >
             <X size={20} />

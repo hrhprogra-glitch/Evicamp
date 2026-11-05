@@ -136,13 +136,13 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
 
   const modalContent = isModalOpen ? createPortal(
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-2 sm:p-8 animate-fade-in font-mono">
-      <div className="bg-white border-4 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] sm:shadow-[16px_16px_0_0_var(--color-ink)] w-full max-w-6xl flex flex-col h-[calc(var(--alto-pantalla)*0.9)] rounded-none">
+      <div className="ventana-sobria bg-white border-4 border-[var(--color-ink)] w-full max-w-6xl flex flex-col h-[calc(var(--alto-pantalla)*0.9)] rounded-none">
         
-        <div className="bg-[var(--color-ink)] text-white p-4 sm:p-6 flex justify-between items-center gap-3 shrink-0">
-          <h2 className="font-black uppercase tracking-widest text-sm sm:text-xl flex items-center gap-3">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white p-4 sm:p-6 flex justify-between items-center gap-3 shrink-0">
+          <h2 className="ventana-cabecera__titulo font-black uppercase tracking-widest text-sm sm:text-xl flex items-center gap-3">
             <Receipt size={28} className="text-[var(--color-accent)]" /> Rendimiento de Caja Actual
           </h2>
-          <button onClick={() => setIsModalOpen(false)} className="hover:text-[var(--color-danger)] transition-colors cursor-pointer bg-white/10 p-2 hover:bg-white/20">
+          <button onClick={() => setIsModalOpen(false)} className="ventana-cerrar hover:text-[var(--color-danger)] transition-colors cursor-pointer bg-white/10 p-2 hover:bg-white/20">
             <X size={32} strokeWidth={3} />
           </button>
         </div>

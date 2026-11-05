@@ -1301,11 +1301,11 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       {isVistaPreviaOpen && ultimaVenta && (
         // role="dialog": los atajos de la caja (flechas del carrito, imán del buscador) se apagan mientras está abierta
         <div role="dialog" aria-modal="true" aria-label="Vista previa del ticket" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4">
-          <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.95)] w-full max-w-md animate-fade-in">
+          <div className="ventana-sobria bg-white border-2 border-[var(--color-ink)] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.95)] w-full max-w-md animate-fade-in">
             
             {/* CABECERA */}
-            <div className="bg-[var(--color-info)] text-white p-4 flex justify-between items-center border-b-2 border-[var(--color-ink)] shrink-0">
-              <h2 className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
+            <div style={{ '--icono': 'var(--color-info)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-info)] text-white p-4 flex justify-between items-center border-b-2 border-[var(--color-ink)] shrink-0">
+              <h2 className="ventana-cabecera__titulo font-black uppercase tracking-widest text-sm flex items-center gap-2">
                 <Printer size={18} /> Vista Previa del Ticket
               </h2>
               <button
@@ -1315,7 +1315,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
                 onKeyDown={(e) => {
                   if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('vista-btn-nueva')?.focus(); }
                 }}
-                className="p-1 hover:rotate-90 transition-transform cursor-pointer outline-none focus:ring-4 focus:ring-white"
+                className="ventana-cerrar p-1 hover:rotate-90 transition-transform cursor-pointer outline-none focus:ring-4 focus:ring-white"
               >
                 <X size={20} strokeWidth={3} />
               </button>

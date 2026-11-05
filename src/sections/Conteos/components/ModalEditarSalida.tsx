@@ -514,14 +514,14 @@ export const ModalEditarSalida: React.FC<Props> = ({ isOpen, onClose, productos,
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="bg-[var(--color-surface)] w-full max-w-lg border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] relative flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(90dvh/var(--ui-zoom))]">
+      <div className="ventana-sobria bg-[var(--color-surface)] w-full max-w-lg border-2 border-[var(--color-ink)] relative flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(90dvh/var(--ui-zoom))]">
         
         {/* HEADER */}
-        <div className={`${isEdit ? 'bg-[var(--color-warning)]' : 'bg-[var(--color-danger)]'} text-white px-6 py-4 flex items-center justify-between border-b-2 border-[var(--color-ink)] shrink-0`}>
+        <div style={{ '--icono': 'var(--color-warning)' } as React.CSSProperties} className={`ventana-cabecera ${isEdit ? 'bg-[var(--color-warning)]' : 'bg-[var(--color-danger)]'} text-white px-6 py-4 flex items-center justify-between border-b-2 border-[var(--color-ink)] shrink-0`}>
           <div className="flex items-center gap-3">
             <AlertTriangle size={24} className="text-white" />
             <div>
-              <h2 className="text-sm font-black uppercase tracking-widest">{isEdit ? 'Editar Registro' : 'Registrar Merma'}</h2>
+              <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest">{isEdit ? 'Editar Registro' : 'Registrar Merma'}</h2>
               <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">{isEdit ? 'Corrección de cantidad o motivo' : 'Salida por daño o pérdida'}</p>
             </div>
           </div>

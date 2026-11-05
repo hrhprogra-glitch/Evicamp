@@ -10,6 +10,7 @@
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Lock } from 'lucide-react';
 import { supabase, usarSesionAutorizada } from '../db/supabase';
 import { normalizarEmail } from './sesion';
 import { tienePermiso, type ClavePermiso } from './permisos';
@@ -79,9 +80,12 @@ const VentanaAutorizacion: React.FC<{ pedido: Pedido; cerrar: () => void }> = ({
     <div data-dialogo-sistema role="dialog" aria-modal="true" aria-labelledby="autorizacion-titulo"
       // Encima de cualquier ventana (igual que los avisos de dialogos.tsx)
       className="fixed inset-0 z-[2147483000] flex items-center justify-center bg-black/50 p-4 font-mono">
-      <div className="w-full max-w-md border-2 border-[var(--color-ink)] bg-[var(--color-surface,#fff)] shadow-[6px_6px_0_0_var(--color-ink)]">
-        <div id="autorizacion-titulo" className="bg-[var(--color-ink)] px-4 py-2 text-[11px] font-black uppercase tracking-widest text-[var(--color-accent)]">
-          🔐 Autorización del administrador
+      <div className="ventana-sobria w-full max-w-md border-2 border-[var(--color-ink)] bg-[var(--color-surface,#fff)]">
+        {/* Cabecera como las demás ventanas (estilo SiuMax Sobrio) */}
+        <div className="ventana-cabecera" style={{ '--icono': 'var(--color-warning)' } as React.CSSProperties}>
+          <h2 id="autorizacion-titulo" className="ventana-cabecera__titulo">
+            <Lock size={18} /> Autorización del administrador
+          </h2>
         </div>
         <div className="space-y-3 px-5 py-5">
           <p className="text-sm font-bold text-[var(--color-ink)]">

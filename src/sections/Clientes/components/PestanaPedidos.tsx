@@ -868,12 +868,12 @@ export const PestanaPedidos: React.FC = () => {
           }}
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4"
         >
-          <div className="bg-[var(--color-surface,#fff)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[92vh] w-full max-w-xl animate-fade-in text-[var(--color-ink)]">
+          <div className="ventana-sobria bg-[var(--color-surface,#fff)] border-2 border-[var(--color-ink)] flex flex-col max-h-[92vh] w-full max-w-xl animate-fade-in text-[var(--color-ink)]">
 
             {/* CABECERA */}
-            <div className="bg-[var(--color-ink)] text-white p-3 sm:p-4 flex justify-between items-center border-b-2 border-[var(--color-ink)]">
+            <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white p-3 sm:p-4 flex justify-between items-center border-b-2 border-[var(--color-ink)]">
               <div>
-                <h3 className="text-base font-black uppercase tracking-wider flex items-center gap-2">
+                <h3 className="ventana-cabecera__titulo text-base font-black uppercase tracking-wider flex items-center gap-2">
                   <Package size={18} className="text-amber-400" />
                   {pedidoSeleccionado.numero} · Ficha de Pedido por Encargo
                 </h3>
@@ -885,7 +885,7 @@ export const PestanaPedidos: React.FC = () => {
                 id="btn-ped-cerrar"
                 type="button"
                 onClick={cerrarDetallePedido}
-                className="p-1 hover:bg-[var(--color-danger)] transition-colors cursor-pointer text-white focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-[var(--color-danger)]"
+                className="ventana-cerrar p-1 hover:bg-[var(--color-danger)] transition-colors cursor-pointer text-white focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-[var(--color-danger)]"
                 title="Cerrar (Esc)"
               >
                 <X size={20} />
@@ -1021,8 +1021,8 @@ export const PestanaPedidos: React.FC = () => {
           }}
           className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[10000] flex items-center justify-center p-3"
         >
-          <div className="bg-[var(--color-surface,#fff)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_black] p-5 w-full max-w-md flex flex-col gap-4 animate-fade-in text-[var(--color-ink)]">
-            <div className="flex justify-between items-center border-b-2 border-[var(--color-ink)] pb-2">
+          <div className="ventana-sobria bg-[var(--color-surface,#fff)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_black] p-5 w-full max-w-md flex flex-col gap-4 animate-fade-in text-[var(--color-ink)]">
+            <div className="ventana-cabecera flex justify-between items-center border-b-2 border-[var(--color-ink)] pb-2">
               <h4 className="font-black text-sm uppercase tracking-wider flex items-center gap-1.5">
                 <CheckCircle2 size={18} className="text-emerald-600" /> Confirmar Entrega de Mercadería
               </h4>
@@ -1030,7 +1030,7 @@ export const PestanaPedidos: React.FC = () => {
                 id="btn-entrega-cerrar"
                 type="button"
                 onClick={cerrarDetallePedido}
-                className="p-1 hover:bg-[var(--color-danger)] transition-colors cursor-pointer text-white focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-[var(--color-danger)]"
+                className="ventana-cerrar p-1 hover:bg-[var(--color-danger)] transition-colors cursor-pointer text-white focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-[var(--color-danger)]"
                 title="Cerrar (Esc)"
               >
                 <X size={18} />

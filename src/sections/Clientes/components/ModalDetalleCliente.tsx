@@ -307,18 +307,18 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono" onKeyDown={teclas}>
       <div role="dialog" aria-label={`Cliente ${cliente.nombre}`}
-        className="bg-[var(--color-surface)] w-full max-w-5xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.88)]">
+        className="ventana-sobria bg-[var(--color-surface)] w-full max-w-5xl border-2 border-[var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.88)]">
         {/* CABECERA */}
-        <div className="bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <UserCircle size={22} className="text-[var(--color-info)] shrink-0" />
             <div className="min-w-0">
-              <h2 id="titulo-detalle-cliente" className="text-sm font-black uppercase tracking-widest truncate">{cliente.nombre}</h2>
+              <h2 id="titulo-detalle-cliente" className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest truncate">{cliente.nombre}</h2>
               {cliente.referencia && <p className="text-[11px] font-bold opacity-80 truncate">{cliente.referencia}</p>}
             </div>
           </div>
           <button id="btn-cerrar-detalle-cliente" onClick={onClose} title="Cerrar (Escape)"
-            className="hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] p-1 cursor-pointer">
+            className="ventana-cerrar hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] p-1 cursor-pointer">
             <X size={20} />
           </button>
         </div>

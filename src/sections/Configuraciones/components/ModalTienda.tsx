@@ -83,19 +83,19 @@ export const ModalTienda: React.FC<ModalTiendaProps> = ({ tienda, onClose }) => 
         aria-modal="true"
         id="modal-tienda"
         aria-labelledby="titulo-modal-tienda"
-        className="w-full max-w-lg bg-[var(--color-bg)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[90vh] overflow-hidden"
+        className="ventana-sobria w-full max-w-lg bg-[var(--color-bg)] border-2 border-[var(--color-ink)] flex flex-col max-h-[90vh] overflow-hidden"
       >
         {/* Cabecera */}
-        <div className="flex items-center justify-between px-4 py-3 bg-[var(--color-ink)] text-white border-b-2 border-[var(--color-ink)] select-none">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera flex items-center justify-between px-4 py-3 bg-[var(--color-ink)] text-white border-b-2 border-[var(--color-ink)] select-none">
           <div className="flex items-center gap-2">
             <StoreIcon size={18} className="text-[var(--color-accent)]" />
-            <h2 id="titulo-modal-tienda" className="text-xs font-black uppercase tracking-widest text-[var(--color-accent)]">
+            <h2 id="titulo-modal-tienda" className="ventana-cabecera__titulo text-xs font-black uppercase tracking-widest text-[var(--color-accent)]">
               {tienda ? 'Editar Tienda / Almacén' : 'Nueva Tienda o Almacén'}
             </h2>
           </div>
           <button
             onClick={() => onClose()}
-            className="p-1 hover:bg-white/20 text-white rounded-none transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+            className="ventana-cerrar p-1 hover:bg-white/20 text-white rounded-none transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
             title="Cerrar (Esc)"
           >
             <X size={18} />
