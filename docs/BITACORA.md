@@ -7,6 +7,28 @@
 
 ---
 
+## 04/11/2026 (98) · Antigravity — Mejora de contraste y visibilidad del selector por teclado en Modo Oscuro (solo siumax)
+- **Problema reportado por el dueño:** *"bien echo ya quedo ahora me e dado cuenta que en el modo oscuro el selector no se aprecia bien arregla eso"* (captura de Inventario > Productos en Modo Oscuro encerrando en rojo los botones de la cabecera: `+ NUEVO PRODUCTO`, `INGRESAR LOTE`, `PRODUCIR`, `TRASPASOS`, `PROVEEDORES`). El botón seleccionado (`INGRESAR LOTE`) se perdía sobre el fondo oscuro y no se distinguía con claridad qué elemento tenía el foco del selector por teclado.
+- **Causas raíz detectadas en `src/index.css`:**
+  1. La regla `html[data-theme="dark"] [class*="focus:ring-[var(--color-ink)]"]:focus` forzaba `--tw-ring-color: #334155 !important;` (gris pizarra oscuro), lo cual apagaba los aros de foco sobre fondos carbón `#0B0F17` / `#111827`.
+  2. La regla `html[data-theme="dark"] button.bg-[var(--color-ink)]` aplicaba `border-color: var(--color-accent) !important;` de forma estática permanente a botones como `INGRESAR LOTE`, haciendo que pareciera tener borde verde incluso sin foco y confundiendo al usuario.
+  3. El foco general tenía apenas 1px con opacidad 0.35 (`rgba(..., 0.35)`), casi invisible en modo oscuro.
+- **Solución integral aplicada en `src/index.css`:**
+  1. **Botones de cabecera (`.boton-cabecera:focus-visible`):** doble anillo de alto contraste (borde verde esmeralda `#10B981` con anillo separador de 2px negro `#0B0F17`, aro exterior de 4px verde esmeralda y resplandor de 12px), fondo iluminado `#162438`, texto blanco `#FFFFFF` e ícono en verde esmeralda brillante.
+  2. **Exclusión de botones en reposo:** `button.bg-[var(--color-ink)]:not(.boton-cabecera)` para que todos los botones de la cabecera tengan su borde sobrio idéntico y homogéneo en reposo, y solo el enfocado resalte.
+  3. **Selector de Grilla / Filas de tabla (`.tabla-fila:focus-visible`, `tr:focus-visible`, `[data-row="true"]:focus-visible`):** fondo destacado `#162438`, barra lateral izquierda gruesa de 4px verde esmeralda (`#10B981`) y borde perimetral verde nítido.
+  4. **Filtros y Buscador (`.filtro-sobrio:focus`, `.buscador-sobrio:focus-within`, `.limpiar-sobrio:focus-visible`):** marco esmeralda brillante de 2px con sombra de acento.
+  5. **Pestañas y Paginación (`.pestanas-sobrias > button:focus-visible`, `.paginacion-sobria__boton:focus-visible`):** realce interior esmeralda de 2px y texto claro.
+  6. **Limpieza con mouse:** se añadió `.boton-cabecera:focus:not(:focus-visible)` a la regla de limpieza para que los clics con ratón no dejen ningún resalte ni aro pegado.
+- **Verificación:** validado con Edge/Puppeteer en `siumax` con 3 capturas:
+  - `selector_modo_oscuro_inventario.png`: botón `INGRESAR LOTE` brilla inconfundiblemente con doble anillo esmeralda.
+  - `selector_modo_oscuro_tabla.png`: fila de producto con barra esmeralda de 4px y resalte nítido.
+  - `selector_modo_oscuro_filtro.png`: select de categoría con borde esmeralda de 2px.
+- **Compilado:** `npx tsc -b` (0 errores) y desplegado con éxito a `siumax`.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
 ## 04/11/2026 (97) · Antigravity — Aprovechamiento de espacio y modo ultra compacto en acciones SUNAT de ModalDetalleTicket (solo siumax)
 - **Problema 1 reportado por el dueño:** *"TE FALTA COMODAR ESTO TAMBIEN"* (botones SUNAT rotos en 2 filas con espacio desperdiciado a la derecha).
 - **Problema 2 reportado por el dueño:** *"ESTA PERFECTO PERO ES MUY GRANDE TODO PODRIA OCUPAR MENOS ESPACIO PARA APRECIAR MEJOR EL TICKET"* (el bloque ocupaba casi la mitad de la pantalla, tapando los detalles del ticket térmico).

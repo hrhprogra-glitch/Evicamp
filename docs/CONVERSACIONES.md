@@ -696,6 +696,16 @@
     - Nota de Crédito en 1 sola franja delgada con datos a la izquierda y botones `[VER NOTA]` `[REENVIAR]` (24px) a la derecha.
     - La altura del bloque bajó de ~250px a ~65px (75% menos de altura), permitiendo que el ticket térmico se aprecie 100% completo (hasta el total, pago y código QR) sin necesidad de scroll.
     - Verificado con Puppeteer/Edge (`ticket_sunat_sobrio.png`), compilado y desplegado a siumax. Solo siumax.
+- **Dueño** (04/11/2026): *"bien echo ya quedo ahora me e dado cuenta que en el modo oscuro el selector no se aprecia bien arregla eso"* (captura de Inventario > Productos en Modo Oscuro encerrando en rojo los botones de cabecera: `+ NUEVO PRODUCTO`, `INGRESAR LOTE`, `PRODUCIR`, `TRASPASOS`, `PROVEEDORES`).
+  - Antigravity solucionó el contraste en `src/index.css`:
+    - Botones de cabecera (`.boton-cabecera:focus-visible`): doble anillo esmeralda de alto contraste (`box-shadow: 0 0 0 2px #0B0F17, 0 0 0 4px #10B981, 0 0 12px rgba(16, 185, 129, 0.55)`), fondo iluminado `#162438`, texto blanco `#FFFFFF` e ícono en verde esmeralda brillante.
+    - Quitó el borde verde estático que tenía `INGRESAR LOTE` en reposo (`button.bg-[var(--color-ink)]:not(.boton-cabecera)`) para que todos los botones de cabecera sean idénticos en reposo y solo el enfocado resalte.
+    - Restauró los anillos de Tailwind en modo oscuro de pizarra `#334155` a esmeralda `#10B981`.
+    - Selector de grilla en tablas (`.tabla-fila:focus-visible`, `tr:focus-visible`, `[data-row="true"]:focus-visible`): fondo `#162438`, barra lateral izquierda verde esmeralda de 4px y borde perimetral nítido.
+    - Filtros y buscador (`.filtro-sobrio:focus`, `.buscador-sobrio:focus-within`): marco verde esmeralda de 2px con resplandor suave.
+    - Limpieza instantánea al hacer clic con mouse para evitar que queden aros pegados.
+  - Verificado con Puppeteer/Edge en `siumax` (`selector_modo_oscuro_inventario.png`, `selector_modo_oscuro_tabla.png` y `selector_modo_oscuro_filtro.png`). Compilado con `npx tsc -b` y desplegado con éxito a `siumax`. Solo siumax.
+
 
 
 

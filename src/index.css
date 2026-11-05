@@ -461,8 +461,8 @@ html[data-theme="dark"] .border-b-2.border-\[var\(--color-ink\)\] {
 }
 
 /* Pestañas y botones activos con bg-[var(--color-ink)]: borde de acento verde */
-html.theme-monochrome button.bg-\[var\(--color-ink\)\],
-html[data-theme="dark"] button.bg-\[var\(--color-ink\)\] {
+html.theme-monochrome button.bg-\[var\(--color-ink\)\]:not(.boton-cabecera),
+html[data-theme="dark"] button.bg-\[var\(--color-ink\)\]:not(.boton-cabecera) {
   border-color: var(--color-accent) !important;
 }
 
@@ -482,10 +482,13 @@ html[data-theme="dark"] .hover\:shadow-none:hover {
   box-shadow: none !important;
 }
 
-/* Anillos de foco y selección */
+/* Anillos de foco y selección en modo oscuro: esmeralda brillante de alto contraste */
+html.theme-monochrome [class*="focus:ring-"]:focus,
+html[data-theme="dark"] [class*="focus:ring-"]:focus,
 html.theme-monochrome [class*="focus:ring-\[var\(--color-ink\)\]"]:focus,
 html[data-theme="dark"] [class*="focus:ring-\[var\(--color-ink\)\]"]:focus {
-  --tw-ring-color: #334155 !important;
+  --tw-ring-color: #10B981 !important;
+  --tw-ring-offset-color: #0B0F17 !important;
 }
 html.theme-monochrome .focus\:bg-amber-100\/50:focus,
 html[data-theme="dark"] .focus\:bg-amber-100\/50:focus {
@@ -534,25 +537,112 @@ html[data-theme="dark"] [data-row="true"]:hover {
   background-color: #161F30 !important;
 }
 
-/* Foco con teclado en modo oscuro */
+/* ==========================================================================
+   SELECTOR DE NAVEGACIÓN CON TECLADO EN MODO OSCURO (ALTO CONTRASTE Y NITIDEZ)
+   Resuelve el problema donde el foco no se apreciaba sobre fondo oscuro.
+   ========================================================================== */
+
+/* 1. Botones de cabecera (.boton-cabecera): doble anillo nítido verde esmeralda y realce */
+html.theme-monochrome .boton-cabecera:focus-visible,
+html[data-theme="dark"] .boton-cabecera:focus-visible {
+  outline: none !important;
+  border-color: #10B981 !important;
+  box-shadow: 0 0 0 2px #0B0F17, 0 0 0 4px #10B981, 0 0 12px rgba(16, 185, 129, 0.55) !important;
+  background-color: #162438 !important;
+  color: #FFFFFF !important;
+}
+html.theme-monochrome .boton-cabecera:focus-visible svg,
+html[data-theme="dark"] .boton-cabecera:focus-visible svg {
+  color: #10B981 !important;
+}
+
+/* 2. Botones generales, enlaces y elementos interactivos enfocados con teclado */
+html.theme-monochrome button:focus-visible:not(.boton-cabecera):not(.tabla-fila),
+html[data-theme="dark"] button:focus-visible:not(.boton-cabecera):not(.tabla-fila),
+html.theme-monochrome a:focus-visible,
+html[data-theme="dark"] a:focus-visible,
+html.theme-monochrome select:focus-visible:not(.filtro-sobrio),
+html[data-theme="dark"] select:focus-visible:not(.filtro-sobrio),
+html.theme-monochrome [tabindex]:focus-visible:not(.tabla-fila):not([data-row="true"]):not(tr) {
+  outline: 2px solid #10B981 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.45) !important;
+}
+
+/* 3. Filas de tablas y listas navegables por teclado (Selector de Grilla / Tabla) */
+html.theme-monochrome .tabla-fila:focus-visible,
+html[data-theme="dark"] .tabla-fila:focus-visible,
+html.theme-monochrome tr:focus-visible,
+html[data-theme="dark"] tr:focus-visible,
+html.theme-monochrome [data-row="true"]:focus-visible,
+html[data-theme="dark"] [data-row="true"]:focus-visible,
 html.theme-monochrome [role="button"]:not([role="option"]):not([data-cat-item]):not([data-lote-prod-item]):not([data-lote-prov-item]):focus-visible,
 html[data-theme="dark"] [role="button"]:not([role="option"]):not([data-cat-item]):not([data-lote-prod-item]):not([data-lote-prov-item]):focus-visible {
-  background-color: #1E293B !important;
-  outline-color: var(--color-accent) !important;
+  background-color: #162438 !important;
+  box-shadow: inset 4px 0 0 0 #10B981, inset 0 0 0 1px #10B981 !important;
+  outline: none !important;
+}
+
+/* 4. Pestañas sobrias en cabeceras y filtros */
+html.theme-monochrome .pestanas-sobrias > button:focus-visible,
+html[data-theme="dark"] .pestanas-sobrias > button:focus-visible,
+html.theme-monochrome .pestanas-filtro > button:focus-visible,
+html[data-theme="dark"] .pestanas-filtro > button:focus-visible {
+  outline: none !important;
+  box-shadow: inset 0 0 0 2px #10B981 !important;
+  color: #FFFFFF !important;
+  background-color: #162438 !important;
+}
+
+/* 5. Buscador sobrio y selects de filtro */
+html.theme-monochrome .buscador-sobrio:focus-within,
+html[data-theme="dark"] .buscador-sobrio:focus-within {
+  border-color: #10B981 !important;
+  box-shadow: 0 0 0 2px #10B981, 0 0 10px rgba(16, 185, 129, 0.35) !important;
+}
+html.theme-monochrome .filtro-sobrio:focus,
+html[data-theme="dark"] .filtro-sobrio:focus {
+  border-color: #10B981 !important;
+  box-shadow: 0 0 0 2px #10B981, 0 0 10px rgba(16, 185, 129, 0.35) !important;
+}
+html.theme-monochrome .limpiar-sobrio:focus-visible,
+html[data-theme="dark"] .limpiar-sobrio:focus-visible {
+  border-color: #10B981 !important;
+  box-shadow: 0 0 0 2px #10B981, 0 0 10px rgba(16, 185, 129, 0.35) !important;
+}
+
+/* 6. Paginación sobria */
+html.theme-monochrome .paginacion-sobria__boton:focus-visible,
+html[data-theme="dark"] .paginacion-sobria__boton:focus-visible {
+  outline: none !important;
+  border-color: #10B981 !important;
+  box-shadow: 0 0 0 2px #10B981, 0 0 8px rgba(16, 185, 129, 0.35) !important;
+}
+
+/* 7. Botones de cerrar modal y acciones de peligro con foco */
+html.theme-monochrome .ventana-cerrar:focus-visible,
+html[data-theme="dark"] .ventana-cerrar:focus-visible,
+html.theme-monochrome .ventana-cabecera button:has(> svg.lucide-x):focus-visible,
+html[data-theme="dark"] .ventana-cabecera button:has(> svg.lucide-x):focus-visible {
+  border-color: #EF4444 !important;
+  box-shadow: 0 0 0 2px #EF4444, 0 0 8px rgba(239, 68, 68, 0.4) !important;
 }
 
 /* Al hacer clic con el mouse, NO debe quedar ningún color, brillo, fondo ni aro pegado en ninguna fila ni elemento de ninguna sesión */
 tr:focus:not(:focus-visible),
 [data-row="true"]:focus:not(:focus-visible),
 [role="button"]:not(button):focus:not(:focus-visible),
+.boton-cabecera:focus:not(:focus-visible),
 tbody tr:focus:not(:focus-visible),
 table tr:focus:not(:focus-visible),
 html.theme-monochrome tr:focus:not(:focus-visible),
 html.theme-monochrome [data-row="true"]:focus:not(:focus-visible),
 html.theme-monochrome [role="button"]:not(button):focus:not(:focus-visible),
+html.theme-monochrome .boton-cabecera:focus:not(:focus-visible),
 html[data-theme="dark"] tr:focus:not(:focus-visible),
 html[data-theme="dark"] [data-row="true"]:focus:not(:focus-visible),
-html[data-theme="dark"] [role="button"]:not(button):focus:not(:focus-visible) {
+html[data-theme="dark"] [role="button"]:not(button):focus:not(:focus-visible),
+html[data-theme="dark"] .boton-cabecera:focus:not(:focus-visible) {
   background-color: transparent !important;
   outline: none !important;
   box-shadow: none !important;

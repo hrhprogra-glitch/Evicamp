@@ -376,5 +376,14 @@ En ventanas grandes (`max-w-4xl` o más) como `ModalGrupo.tsx`:
 - Patrón: Dos bloques separados claramente. Arriba, las acciones de la Boleta/Factura (`[ ↗ PDF ]`, `[ ↗ XML ]`) en cuadrícula simétrica (50% cada una). Abajo, la Nota de Crédito en recuadro sobrio punteado con su cabecera y sus 2 botones directos (`[ 🗎 VER NOTA ]`, `[ 🔄 REENVIAR ]`, 50% cada una, altura 36px, 100% de ancho).
 - Selector por teclado: `ArrowDown` baja en orden de lectura: Cabecera → Boleta → Nota de Crédito → Botón Reimprimir; `ArrowUp` sube en sentido inverso; `ArrowLeft` / `ArrowRight` navega entre los botones de cada fila.
 
+**Visibilidad del selector por teclado en Modo Oscuro (04/11/2026, orden del dueño):**
+- En Modo Oscuro (`html[data-theme="dark"]`, `html.theme-monochrome`), el selector por teclado NUNCA debe usar aros oscuros pizarra (`#334155`) ni opacidades tenues (`0.35`) que se camuflen con el fondo carbón `#0B0F17` / `#111827`.
+- Reglas obligatorias en `src/index.css`:
+  1. `.boton-cabecera:focus-visible`: Doble anillo esmeralda brillante (`box-shadow: 0 0 0 2px #0B0F17, 0 0 0 4px #10B981, 0 0 12px rgba(16, 185, 129, 0.55)`), fondo iluminado `#162438`, texto `#FFFFFF` e ícono verde.
+  2. Ningún botón en reposo debe tener bordes verdes que se confundan con el foco (usar `:not(.boton-cabecera)` en reglas que agreguen acentos fijos).
+  3. Filas de tabla (`.tabla-fila:focus-visible`, `[data-row="true"]:focus-visible`): fondo `#162438`, barra lateral izquierda gruesa de 4px verde esmeralda `#10B981` y marco perimetral esmeralda nítido.
+  4. Filtros y buscador: marco esmeralda brillante de 2px.
+  5. Clic con el ratón: siempre limpiar con `:focus:not(:focus-visible)` para que no quede ningún resalte ni aro pegado.
+
 
 
