@@ -33,7 +33,7 @@ const puedeSalir = (el: HTMLElement, k: Flecha): boolean => {
   }
   if (el instanceof HTMLInputElement) {
     const t = el.type;
-    if (t === 'checkbox' || t === 'radio' || t === 'button' || t === 'submit') return true;
+    if (t === 'checkbox' || t === 'radio' || t === 'button' || t === 'submit' || t === 'number') return true;
     if (!TEXTO.includes(t)) return false;              // fecha, hora, número, rango, color…
     const ini = el.selectionStart ?? 0, fin = el.selectionEnd ?? 0, largo = el.value.length;
     if (k === 'ArrowLeft') return ini === 0 && fin === 0;
@@ -68,10 +68,10 @@ const masCercano = (desde: HTMLElement, k: Flecha, ambito: HTMLElement): HTMLEle
     candidatos.push({ el, q, distancia, cruce });
   }
   if (!candidatos.length) return null;
-  // Se prefieren los que están en la misma columna/fila; si no hay, cualquiera en esa dirección
-  const alineados = candidatos.filter((c) => c.cruce > 0);
-  const lista = alineados.length ? alineados : candidatos;
-  // La fila (o columna) más cercana…
+  // ↑ ↓: la FILA más cercana aunque lo de esa fila esté corrido a un lado (antes se prefería lo alineado y desde la
+  // cantidad del combo ↓ saltaba hasta "Guardar" pasando por encima de las casillas de Tienda Web).
+  // ← →: los de la misma fila (ya filtrados arriba).
+  const lista = candidatos;
   const minima = Math.min(...lista.map((c) => c.distancia));
   const cercanos = lista.filter((c) => c.distancia <= minima + 12);
   // …y en ella, el que más se cruza; si empatan, el de la izquierda (↑ ↓) o el de arriba (← →)
@@ -114,7 +114,10 @@ export const activarFlechasEspaciales = () => {
       el.click();
       return;
     }
-    if (el instanceof HTMLSelectElement && (FLECHAS as readonly string[]).includes(e.key) && !e.shiftKey) {
+    // (también los campos de número: ↑ ↓ ya no suben/bajan la cantidad ni el precio; pedido del dueño 05/11/2026,
+    // "en Precio de la variante y en la cantidad del combo el selector se queda atrapado")
+    const esNumero = el instanceof HTMLInputElement && el.type === 'number';
+    if ((el instanceof HTMLSelectElement || esNumero) && (FLECHAS as readonly string[]).includes(e.key) && !e.shiftKey) {
       const evitar = e.preventDefault.bind(e);
       evitar();                                          // el navegador ya no cambia la opción
       let otra = false;
