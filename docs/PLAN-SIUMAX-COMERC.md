@@ -60,7 +60,7 @@
 | **Modo Oscuro (Dark Mode)** reemplazando "Plata / Gris" en Apariencia | **Hecho en producción (29/10)** |
 | **Grupos de clientes (familia/empresa)** dentro de la 4.1 | **Hecho en producción (29/10). En siumax: agregados botones directos en cabecera [+ Nuevo grupo] y [Grupos (n)] para gestión independiente (04/11)** |
 | Fase 11 SUNAT: camino A (proveedor PSE) → B (directo) | **En pausa** hasta que el dueño lo pida |
-| Cobros con QR (Yape/Plin) y aparato de tarjetas (Mercado Pago: QR en pantalla + aparato Point) | **En pausa**; faltan dos decisiones (qué procesador y si empezar por el QR) |
+| Cobros con QR (Yape/Plin) y aparato de tarjetas (Mercado Pago: QR en pantalla + aparato Point) | **En pausa hasta que un cliente lo pida** (05/11). Propuesta: conectar la cuenta Mercado Pago del cliente (avisos de cada pago, sirve con Point Air) + leer la notificación del celular para otras marcas, como con Yape |
 | Importar facturas XML de compras | **En pausa** |
 | Estilo "Directorio de clientes" en 6 ventanas (Detalle de caja, Estado de cuenta, Detalle de ticket, Mini reporte, Detalle de producto, Detalle del pedido) | **Pendiente**; esperar los detalles del dueño |
 | Aviso al retirar un lote que todavía tiene stock | **Ofrecida, sin respuesta** |
