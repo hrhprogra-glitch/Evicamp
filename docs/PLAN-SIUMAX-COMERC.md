@@ -4,7 +4,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 05/11/2026 (108), Claude: arreglado que al guardar un lote el sistema sacaba al usuario (permiso faltante en siumax + solo PT401 cierra la sesión). Solo siumax.
+- **Última actualización:** 05/11/2026 (109), Claude: Conteos y fiados ya no muestran productos eliminados en el buscador. Solo siumax.
+- (108) 05/11/2026, Claude: arreglado que al guardar un lote el sistema sacaba al usuario (permiso faltante en siumax + solo PT401 cierra la sesión). Solo siumax.
 - (107) 05/11/2026, Claude: **PASE a Evicamp, clientes, siumax y GitHub** de 105–106 (Utilidades › Gráficos y detalles; SQL gastos_fijos_mes ensayado en copia y aplicado sin errores ni reinicio; Evicamp sin Mercado Pago).
 - (106) 05/11/2026, Claude: Utilidades › Gráficos y detalles (tablero de ganancias y pérdidas con fórmulas de empresas, Desde/Hasta propio en la cabecera).
 - (105) 05/11/2026, Claude: reglas del selector 7 y 8 (las flechas nunca cambian una opción; Enter en casilla = clic) en todo el sistema. Solo siumax.

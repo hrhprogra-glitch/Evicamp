@@ -7,6 +7,14 @@
 
 ---
 
+## 05/11/2026 (109) · Claude — Conteos y fiados: el buscador ya no muestra productos eliminados (solo siumax)
+- **Dueño** (captura de Conteos › Nuevo ajuste): *"en el buscador de productos me salen productos que ya han sido eliminados"*.
+- **Causa:** eliminar un producto lo deja con `is_active = 0`. Caja, Inventario, Traspasos y Cambio de producto filtran `is_active = 1`; Conteos (`fetchProducts`) y Clientes (lista para el fiado) cargaban todos.
+- **Arreglo:** se siguen cargando todos (el historial de ajustes usa la unidad del producto y "Editar salida" abre salidas viejas), pero llevan `activo` (nuevo campo opcional de `Product`) y los buscadores los ocultan: Nuevo ajuste (`elegibles`), Editar salida (`filteredProducts`) y Nuevo fiado (`prodFiltrados`).
+- Probado en siumax: buscar "COLA" en Nuevo ajuste → solo COCA COLA ORIGINAL 500ML (COCA COLA e INKA COLA, eliminados, ya no salen), 0 errores. Solo siumax; Evicamp/clientes/GitHub con aviso.
+
+---
+
 ## 05/11/2026 (108) · Claude — Al guardar un lote el sistema sacaba al usuario (arreglado en siumax)
 - **Dueño:** *"guardé los datos de un producto recién creado y al presionar Guardar el sistema me botó… ya me sucedió como 2 veces"*.
 - **Causa:** en la base siumax, `fn_edit_batch` (editar lote, ModalLote) y `fn_soft_delete_batch` (retirar lote) no tenían permiso EXECUTE para `anon` (solo postgres; no se sabe quién lo quitó, el SQL nunca lo revoca). PostgREST respondió 401 (log nginx 20:22 y 20:27 UTC, log PostgreSQL "permission denied for function fn_edit_batch") y `supabase.ts` trata TODO 401 como sesión vencida → login. Evicamp revisado: todas las funciones que llama el sistema tienen permiso.

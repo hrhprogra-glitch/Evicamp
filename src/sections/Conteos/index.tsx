@@ -112,7 +112,9 @@ export const Conteos: React.FC = () => {
             barcode: p.barcode || '',
             category: p.category || 'GENERAL',
             unit: esConsumo ? 'CONSUMO' : (p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND')),
-            imageUrl: p.image_url || p.image_path || null
+            imageUrl: p.image_url || p.image_path || null,
+            // Los eliminados se cargan igual (el historial muestra su unidad) pero no salen en los buscadores
+            activo: Number(p.is_active ?? 1) === 1
           };
         });
         setProducts(mapeados);

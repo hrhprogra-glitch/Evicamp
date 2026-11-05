@@ -97,7 +97,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
     if (puedeContar && !esConsumo(p)) lista.push('CONTEO');
     return lista;
   };
-  const elegibles = useMemo(() => products.filter((p) => modosDe(p).length > 0), [products, puedeSalida, puedeContar]); // eslint-disable-line react-hooks/exhaustive-deps
+  const elegibles = useMemo(() => products.filter((p) => p.activo !== false &&modosDe(p).length > 0), [products, puedeSalida, puedeContar]); // eslint-disable-line react-hooks/exhaustive-deps
   const filtrados = useMemo(() => {
     const texto = busqueda.trim();
     if (!texto) return elegibles;
