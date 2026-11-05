@@ -36,9 +36,9 @@
     "semantic_hash": ""
   },
   "src/main.tsx": {
-    "mtime": 1792272555.8993955,
-    "seen": 1792272738.0698972,
-    "ast_hash": "5e6ee3415cf3bd1daac78bb89db5dd7a",
+    "mtime": 1793849150.3896928,
+    "seen": 1793849467.7361262,
+    "ast_hash": "2689910c99a44c9a188eb0916977c9b6",
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/FormularioEmpresa.tsx": {
@@ -90,9 +90,9 @@
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalDetalleCaja.tsx": {
-    "mtime": 1793843117.9565516,
-    "seen": 1793843490.3393178,
-    "ast_hash": "ccfc4fcf89e63d4ed94bb2d7e0f77b0a",
+    "mtime": 1793849136.7896953,
+    "seen": 1793849467.7361705,
+    "ast_hash": "41d6cea68a39d88bc1f4974844a84b6c",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalNuevoMovimiento.tsx": {

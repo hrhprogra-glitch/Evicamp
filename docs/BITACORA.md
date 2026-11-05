@@ -7,6 +7,26 @@
 
 ---
 
+## 04/11/2026 (100) · Antigravity — Eliminación global de autocompletado y forzado de scrollbars rectangulares 0px SiuMax Sobrio (solo siumax)
+- **Problemas reportados por el dueño:**
+  1. *"no quiero que haya un autocompletado"*: En los buscadores (como `#buscador-detalle-caja` en el modal de detalle de caja) aparecía el globo/burbuja flotante de sugerencias e historial del navegador (ej. '308') estorbando la selección con teclado y tapando filas de datos.
+  2. *"te ewnvie una imagen te marque con rojo el scrool se sigue viendo igual no es cuadrado tipo rectangulo"*: En el modal de previsualización de ticket (`ModalDetalleTicket.tsx`) la barra de desplazamiento vertical en Windows 11 / Edge seguía viéndose con el diseño redondeado Fluent (thumb tipo cápsula/pastilla con extremos curvos y botones de flecha en los extremos), sin respetar las esquinas cuadradas tipo rectángulo.
+- **Causas raíz detectadas:**
+  1. Los inputs de búsqueda carecían de atributos explícitos anti-autocompletado, permitiendo que el navegador ofrezca valores anteriores del historial.
+  2. En Chromium 121+ (Edge/Chrome en Windows 11), cuando un elemento tiene las propiedades CSS estándar `scrollbar-width` o `scrollbar-color`, el motor del navegador apaga los pseudoelementos `::-webkit-scrollbar*` y recurre a la barra nativa Fluent de Windows 11 (cápsula con bordes curvos y flechas).
+- **Soluciones aplicadas:**
+  1. **Autocompletado desactivado en todo el sistema (`src/main.tsx` y `ModalDetalleCaja.tsx`):**
+     - En `src/sections/Finanzas/components/ModalDetalleCaja.tsx`: se añadieron `autoComplete="off"`, `autoCorrect="off"`, `autoCapitalize="off"` y `spellCheck={false}` al input `#buscador-detalle-caja`.
+     - En `src/main.tsx`: se instaló un guard global en `document.addEventListener('focusin', ...)` que intercepta cualquier input/textarea del sistema y le aplica `autocomplete="off"`, `autocorrect="off"`, `autocapitalize="off"` y `spellcheck="false"`, erradicando por completo globos y burbujas de autocompletado del navegador en todo el POS.
+  2. **Scrollbars rectangulares y cuadrados (0 curvas, 0 flechas) (`src/index.css`):**
+     - Se eliminaron `scrollbar-width` y `scrollbar-color` para Chromium/WebKit y se envolvieron exclusivamente dentro de `@supports not selector(::-webkit-scrollbar)` como fallback de Firefox.
+     - Se forzó `border-radius: 0px !important;` y `border: none !important;` en `::-webkit-scrollbar-thumb` y `::-webkit-scrollbar-track` globalmente y dentro de `.ventana-sobria`, garantizando un rectángulo plano de 6px de ancho con esquinas 100% rectas/cuadradas, sin botones de flecha (`display: none !important; width: 0; height: 0;`).
+- **Verificación:** validado con Microsoft Edge en `siumax` (reglas CSS cargadas y comprobadas en vivo, atributo `autocomplete="off"` validado).
+- Compilado con `npx tsc -b` (0 errores) y desplegado en `siumax`.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
 ## 04/11/2026 (99) · Antigravity — Corrección de letra en Conteos, scrollbar nativo en ventanas y navegación teclado en Tienda Web (solo siumax)
 - **Problemas reportados por el dueño:**
   1. *"en conteo lo marque con rojo la letra es negra no se puede ver que dice arregla eso"*: El botón `+ NUEVO AJUSTE` en Conteos tenía texto negro fijo (`#030712`) sobre fondo carbón `#111827` en modo oscuro.

@@ -206,22 +206,36 @@ html, body {
   }
 }
 
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: #CBD5E1 #F8FAFC;
+/* Scrollbar sobrio y rectangular (sin curvas ni bordes redondeados, sin flechas nativas) */
+*::-webkit-scrollbar,
+::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
 }
-.custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+*::-webkit-scrollbar-button,
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #F8FAFC;
+*::-webkit-scrollbar-track,
+::-webkit-scrollbar-track {
+  background: #F8FAFC !important;
+  border-radius: 0px !important;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+*::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1 !important;
+  border-radius: 0px !important;
+  border: none !important;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-ink);
+*::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink) !important;
+}
+*::-webkit-scrollbar-corner,
+::-webkit-scrollbar-corner {
+  background: transparent !important;
 }
 
 .technical-panel {
@@ -511,21 +525,27 @@ html[data-theme="dark"] input::placeholder {
   color: #64748B !important;
 }
 
-/* Scrollbar en modo oscuro */
-html.theme-monochrome .custom-scrollbar,
-html[data-theme="dark"] .custom-scrollbar {
-  scrollbar-color: #334155 #0B0F17 !important;
-}
-html.theme-monochrome .custom-scrollbar::-webkit-scrollbar-track,
-html[data-theme="dark"] .custom-scrollbar::-webkit-scrollbar-track {
+/* Scrollbar en modo oscuro (100% rectangular, 0 radio, sin curvas) */
+html.theme-monochrome *::-webkit-scrollbar-track,
+html[data-theme="dark"] *::-webkit-scrollbar-track,
+html.theme-monochrome ::-webkit-scrollbar-track,
+html[data-theme="dark"] ::-webkit-scrollbar-track {
   background: #0B0F17 !important;
+  border-radius: 0px !important;
+  border: none !important;
 }
-html.theme-monochrome .custom-scrollbar::-webkit-scrollbar-thumb,
-html[data-theme="dark"] .custom-scrollbar::-webkit-scrollbar-thumb {
+html.theme-monochrome *::-webkit-scrollbar-thumb,
+html[data-theme="dark"] *::-webkit-scrollbar-thumb,
+html.theme-monochrome ::-webkit-scrollbar-thumb,
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
   background: #334155 !important;
+  border-radius: 0px !important;
+  border: none !important;
 }
-html.theme-monochrome .custom-scrollbar::-webkit-scrollbar-thumb:hover,
-html[data-theme="dark"] .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+html.theme-monochrome *::-webkit-scrollbar-thumb:hover,
+html[data-theme="dark"] *::-webkit-scrollbar-thumb:hover,
+html.theme-monochrome ::-webkit-scrollbar-thumb:hover,
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   background: #475569 !important;
 }
 
@@ -992,25 +1012,60 @@ nav button {
 .ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-amber"], .ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-yellow"],
 .ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-emerald"], .ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-[var(--color-accent"],
 .ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-[var(--color-warning"] { color: var(--color-muted) !important; }
-/* Toda zona con scroll dentro de una ventana usa la barra delgada del sistema (como .custom-scrollbar),
-   sin flechas nativas de Windows (pedido del dueño: estilo sobrio de 5px) */
-*::-webkit-scrollbar-button {
+/* Toda zona con scroll dentro de una ventana usa la barra delgada del sistema,
+   sin flechas nativas de Windows y 100% rectangular cuadrado (pedido del dueño: estilo SiuMax Sobrio) */
+.ventana-sobria::-webkit-scrollbar, .ventana-sobria *::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+.ventana-sobria::-webkit-scrollbar-button, .ventana-sobria *::-webkit-scrollbar-button {
   display: none !important;
   width: 0 !important;
   height: 0 !important;
 }
-.ventana-sobria, .ventana-sobria * { scrollbar-width: thin; scrollbar-color: #CBD5E1 #F8FAFC; }
-.ventana-sobria::-webkit-scrollbar, .ventana-sobria *::-webkit-scrollbar { width: 5px !important; height: 5px !important; }
-.ventana-sobria::-webkit-scrollbar-button, .ventana-sobria *::-webkit-scrollbar-button { display: none !important; width: 0 !important; height: 0 !important; }
-.ventana-sobria::-webkit-scrollbar-track, .ventana-sobria *::-webkit-scrollbar-track { background: #F8FAFC !important; }
-.ventana-sobria::-webkit-scrollbar-thumb, .ventana-sobria *::-webkit-scrollbar-thumb { background: #CBD5E1 !important; }
-.ventana-sobria *::-webkit-scrollbar-thumb:hover { background: var(--color-ink) !important; }
-html.theme-monochrome .ventana-sobria, html.theme-monochrome .ventana-sobria *,
-html[data-theme="dark"] .ventana-sobria, html[data-theme="dark"] .ventana-sobria * { scrollbar-color: #334155 #0B0F17 !important; }
+.ventana-sobria::-webkit-scrollbar-track, .ventana-sobria *::-webkit-scrollbar-track {
+  background: #F8FAFC !important;
+  border-radius: 0px !important;
+}
+.ventana-sobria::-webkit-scrollbar-thumb, .ventana-sobria *::-webkit-scrollbar-thumb {
+  background: #CBD5E1 !important;
+  border-radius: 0px !important;
+  border: none !important;
+}
+.ventana-sobria *::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink) !important;
+}
 html.theme-monochrome .ventana-sobria::-webkit-scrollbar-track, html[data-theme="dark"] .ventana-sobria::-webkit-scrollbar-track,
-html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-track, html[data-theme="dark"] .ventana-sobria *::-webkit-scrollbar-track { background: #0B0F17 !important; }
+html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-track, html[data-theme="dark"] .ventana-sobria *::-webkit-scrollbar-track {
+  background: #0B0F17 !important;
+  border-radius: 0px !important;
+}
 html.theme-monochrome .ventana-sobria::-webkit-scrollbar-thumb, html[data-theme="dark"] .ventana-sobria::-webkit-scrollbar-thumb,
-html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-thumb, html[data-theme="dark"] .ventana-sobria *::-webkit-scrollbar-thumb { background: #334155 !important; }
-html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-thumb:hover, html[data-theme="dark"] .ventana-sobria *::-webkit-scrollbar-thumb:hover { background: #475569 !important; }
+html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-thumb, html[data-theme="dark"] .ventana-sobria *::-webkit-scrollbar-thumb {
+  background: #334155 !important;
+  border-radius: 0px !important;
+  border: none !important;
+}
+html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-thumb:hover, html[data-theme="dark"] .ventana-sobria *::-webkit-scrollbar-thumb:hover {
+  background: #475569 !important;
+}
+
+/* Fallback exclusivo para Firefox (que no soporta ::-webkit-scrollbar).
+   NUNCA aplicar scrollbar-color ni scrollbar-width a navegadores Chromium (Chrome/Edge)
+   porque desactivaría ::-webkit-scrollbar y forzaría la barra redondeada Fluent de Windows 11 */
+@supports not selector(::-webkit-scrollbar) {
+  *, .ventana-sobria, .ventana-sobria * {
+    scrollbar-width: thin;
+    scrollbar-color: #CBD5E1 #F8FAFC;
+  }
+  html.theme-monochrome *,
+  html[data-theme="dark"] *,
+  html.theme-monochrome .ventana-sobria,
+  html.theme-monochrome .ventana-sobria *,
+  html[data-theme="dark"] .ventana-sobria,
+  html[data-theme="dark"] .ventana-sobria * {
+    scrollbar-color: #334155 #0B0F17 !important;
+  }
+}
 /* Dentro de un botón o pastilla oscura de la cabecera (ej. "Ticket | Tabla" del detalle del ticket) la letra sigue clara */
 .ventana-cabecera [class*="bg-[var(--color-ink)]"] .text-white, .ventana-cabecera [class*="bg-[var(--color-ink)]"].text-white { color: #fff !important; }

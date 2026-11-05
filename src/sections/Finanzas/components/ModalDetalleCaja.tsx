@@ -716,6 +716,10 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
                       id="buscador-detalle-caja"
                       ref={searchInputRef}
                       type="text"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
                       placeholder="BUSCAR POR CLIENTE, N° TICKET O DETALLE"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}

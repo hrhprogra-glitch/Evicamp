@@ -385,9 +385,15 @@ En ventanas grandes (`max-w-4xl` o más) como `ModalGrupo.tsx`:
   4. Filtros y buscador: marco esmeralda brillante de 2px.
   5. Clic con el ratón: siempre limpiar con `:focus:not(:focus-visible)` para que no quede ningún resalte ni aro pegado.
 
-**Scrollbar y flechas nativas (04/11/2026):**
-- En Chrome/Edge de Windows, NUNCA poner `scrollbar-width: auto !important;` en elementos con scroll ni en ventanas; esto revierte al scrollbar nativo de Windows (barra gris gruesa con botones de flechas `▲` y `▼`).
-- Siempre usar `*::-webkit-scrollbar-button { display: none !important; width: 0 !important; height: 0 !important; }` y `scrollbar-width: thin;` para garantizar la barra delgada estilizada de 5px del sistema.
+**Scrollbar 100% rectangular cuadrado SiuMax Sobrio y sin flechas (04/11/2026, orden del dueño):**
+- En Chromium 121+ (Edge y Chrome en Windows 11), si un elemento tiene declaradas las propiedades CSS estándar `scrollbar-width` o `scrollbar-color`, el navegador ignora por completo los pseudoelementos `::-webkit-scrollbar*` y recurre al motor nativo Fluent de Windows 11, mostrando una cápsula redondeada con flechas en los extremos.
+- Regla obligatoria: NUNCA aplicar `scrollbar-width` ni `scrollbar-color` directamente en Chromium. Esas propiedades deben ir ÚNICAMENTE dentro de `@supports not selector(::-webkit-scrollbar)` como fallback de Firefox.
+- Para WebKit/Blink: definir `*::-webkit-scrollbar` (6px), `*::-webkit-scrollbar-button { display: none !important; width: 0; height: 0; }` y `*::-webkit-scrollbar-thumb { border-radius: 0px !important; border: none !important; }`. La barra debe ser estrictamente rectangular plana, con esquinas en ángulo recto de 90° (cero curvas), sin botones de flechas.
+
+**Desactivación Global de Autocompletado y Sugerencias del Navegador (04/11/2026, orden del dueño):**
+- En un POS y sistema de tablas con teclado, los globos de sugerencias/historial del navegador (ej. '308') tapan las filas de datos.
+- En `src/main.tsx` se instaló un listener global en `document.addEventListener('focusin', ...)` que aplica automáticamente `autocomplete="off"`, `autocorrect="off"`, `autocapitalize="off"` y `spellcheck="false"` a todo input o textarea que reciba foco.
+- En inputs de búsqueda principales (como `#buscador-detalle-caja`) se agregan explícitamente estos 4 atributos en el JSX.
 
 **Navegación espacial en enlaces y formularios (04/11/2026):**
 - Cuando haya un campo de texto con botones a sus lados (ej. enlace público con `[ Copiar Enlace ]` y `[ Ver Tienda ]` en Tienda Web), implementar `onKeyDown`: `ArrowRight` salta del input a los botones; `ArrowLeft` regresa al input; y `ArrowDown` / `ArrowUp` se desplazan entre los campos del formulario.

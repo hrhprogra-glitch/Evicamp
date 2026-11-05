@@ -28,6 +28,25 @@ if (/[?&](collection_id|payment_id|preference_id)=/.test(window.location.search)
 // En celular/tablet: el teclado de la pantalla solo se abre cuando el usuario toca un campo
 instalarProteccionTecladoTactil()
 
+// Desactivar autocompletado y sugerencias del navegador en todo el sistema (SiuMax POS)
+if (typeof document !== 'undefined') {
+  const desactivarAutocompletado = (el: Element | null) => {
+    if (!el) return;
+    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+      if (el.getAttribute('autocomplete') !== 'off') {
+        el.setAttribute('autocomplete', 'off');
+      }
+      el.setAttribute('autocorrect', 'off');
+      el.setAttribute('autocapitalize', 'off');
+      el.setAttribute('spellcheck', 'false');
+    }
+  };
+
+  document.addEventListener('focusin', (e) => {
+    desactivarAutocompletado(e.target as Element);
+  }, true);
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

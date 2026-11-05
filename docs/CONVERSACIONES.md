@@ -711,5 +711,17 @@
     2. **Scrollbar en ventanas**: en `src/index.css`, se eliminó la regla `scrollbar-width: auto` que hacía aparecer la barra nativa gruesa con flechas en Chrome/Edge, y se añadió `::-webkit-scrollbar-button { display: none !important; }` garantizando la barra sobria delgada de 5px.
     3. **Tienda Web**: en `PestanaTiendaWeb.tsx`, se implementaron eventos `onKeyDown` para que el selector salte de izquierda a derecha (`input-tienda-web-enlace` ↔ `[ COPIAR ENLACE ]` ↔ `[ VER TIENDA ]`) y con arriba/abajo entre todo el formulario.
   - Verificado con Edge/Puppeteer en `siumax` (`conteo_nuevo_ajuste_ok.png`, `ticket_scrollbar_sobrio_ok.png` y `tienda_web_teclado_enlace_ok.png`). Compilado con `npx tsc -b` y desplegado con éxito a `siumax`. Solo siumax.
+- **Dueño** (04/11/2026): *"no quiero que haya un autocompletado otra cosa mas te ewnvie una imagen te marque con rojo el scrool se sigue viendo igual no es cuadrado tipo rectangulo"*.
+  - Antigravity resolvió ambos pedidos:
+    1. **Autocompletado desactivado en todo el sistema:**
+       - En `src/main.tsx`: guard global `focusin` que asigna automáticamente `autocomplete="off"`, `autocorrect="off"`, `autocapitalize="off"` y `spellcheck="false"` a cualquier input/textarea del sistema.
+       - En `ModalDetalleCaja.tsx`: atributos explícitos anti-sugerencias en `#buscador-detalle-caja` para que el navegador nunca despliegue globos o burbujas flotantes de búsquedas anteriores (ej. '308') que tapen las filas de la tabla.
+    2. **Scrollbars 100% rectangulares y cuadrados (sin esquinas redondeadas ni flechas):**
+       - Se detectó que Chromium 121+ (Edge/Chrome en Windows 11) cancela los pseudoelementos `::-webkit-scrollbar` si existe la propiedad estándar `scrollbar-width` o `scrollbar-color`, cayendo en el diseño nativo Fluent (cápsula redondeada y flechas).
+       - En `src/index.css`: se removieron `scrollbar-width` y `scrollbar-color` para navegadores WebKit/Chromium (aislándolos a un fallback exclusivo `@supports not selector(::-webkit-scrollbar)` para Firefox).
+       - Se forzó `border-radius: 0px !important;` y `border: none !important;` en `::-webkit-scrollbar-thumb` y `::-webkit-scrollbar-track` tanto en modo claro como en modo oscuro y en `.ventana-sobria`, garantizando una barra plana rectangular con esquinas rectas de 90° y sin botones de flechas (`::-webkit-scrollbar-button { display: none !important; width: 0; height: 0; }`).
+  - Verificado en vivo en `siumax` con Edge: reglas CSS aplicadas sin interferencia de Fluent y autocompletado apagado.
+  - Compilado con `npx tsc -b` (0 errores) y desplegado con éxito a `siumax`. Solo siumax.
+
 
 
