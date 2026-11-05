@@ -744,3 +744,4 @@
 
 
 - **Dueño** (05/11): *"perfecto, ya quedó todo; ahora sí quiero que lo subas todo a evicamp, a siumax, para mis clientes y para mi github"*. Claude: ensayo del SQL en copia de Evicamp (0 errores) → respaldo y SQL real sin reiniciar la API (0 errores, facturación apagada) → `deploy.cjs todos` → Evicamp verificado (login sin errores, sin aviso de pago) → merge a `main` y push.
+- **Dueño** (05/11): pegó el error de la consola, *"en evicamp no carga la tienda web"* → Claude: un producto sin nombre tumbaba la tienda; arreglado y probado con los datos de Evicamp sin subir → *"súbelo"* → subido a todos y a GitHub.

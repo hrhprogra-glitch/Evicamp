@@ -7,6 +7,14 @@
 
 ---
 
+## 05/11/2026 (104) · Claude — Arreglo: la Tienda Web de Evicamp no cargaba (subido a todos)
+- **Dueño:** pegó el error de la consola (`Cannot read properties of null (reading 'trim')` en /#/tienda) → *"en evicamp no carga la tienda web"*.
+- **Causa:** el catálogo público de Evicamp tiene 1 producto SIN NOMBRE (de 1259) e `iniciales()` de `src/sections/TiendaWeb/formato.ts` hacía `.trim()` sobre null. En siumax no había ninguno así.
+- **Arreglo:** `iniciales()` acepta vacío (muestra •). Probado ANTES de subir con los datos reales de Evicamp (el navegador de prueba cargó el build nuevo desde la PC): 1259 productos, 0 errores. Con el OK del dueño (*"súbelo"*): `deploy.cjs todos`, tienda y login de Evicamp sin errores, merge a main y push.
+- Recomendado al dueño: ponerle nombre a ese producto en el Inventario de Evicamp.
+
+---
+
 ## 05/11/2026 (103) · Claude — PASE a EVICAMP, clientes y GitHub (todo lo de las entradas 81 a 102)
 - **Dueño:** *"ya quedó todo, ahora sí quiero que lo subas todo a evicamp, a siumax, para mis clientes y para mi github"*.
 - **SQL** (solo cambió la anulación de comprobantes no aceptados, entrada 81: estados ANULANDO/NO_EMITIDO, `fn_confirmar_anulacion`, `fn_anular_venta` con `sin_emitir`):
