@@ -468,7 +468,12 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                   </p>
                 )}
                 <div className="mt-3">
-                  {insumos.length ? tablaInsumos(insumos, null, (i) => setInsumos((l) => l.filter((_, k) => k !== i))) : (
+                  {insumos.length ? tablaInsumos(insumos, null, (i) => {
+                    // Quitar: el selector queda en el producto que sigue (o en el buscador si ya no queda ninguno)
+                    const quedan = insumos.length - 1;
+                    setInsumos((l) => l.filter((_, k) => k !== i));
+                    enfocar(quedan > 0 ? `btn-quitar-insumo-prod-${Math.min(i, quedan - 1)}` : 'input-buscar-insumo-prod');
+                  }) : (
                     <p className="text-[11px] font-bold text-[var(--color-muted)]">Busca un producto, escribe cuánto lleva cada unidad y presiona Enter.</p>
                   )}
                   {insumos.length > 0 && (
@@ -485,7 +490,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="radiogroup" aria-label="¿Cómo se vende?">
                   {([['COMBO', 'Combo', 'Sus partes se descuentan solas al venderlo', Boxes], ['RECETA', 'Receta', 'Se prepara antes con «Producir»', ChefHat]] as const).map(([t, tit, ayuda, Icono]) => (
                     <button key={t} id={`btn-tipo-compuesto-${t}`} type="button" role="radio" aria-checked={tipo === t}
-                      onClick={() => { setTipo(t); enfocar(t === 'RECETA' ? 'input-costo-adic-compuesto' : 'input-precio-compuesto'); }}
+                      onClick={() => setTipo(t)} // Enter = clic: elige y el selector se queda (regla del selector)
                       className={`text-left p-3 border-2 cursor-pointer outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] ${tipo === t ? 'border-[var(--color-ink)] bg-[var(--color-ink)] text-white' : 'border-[var(--color-border)] bg-white text-[var(--color-ink)] hover:border-[var(--color-ink)]'}`}>
                       <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest">{tipo === t ? '●' : '○'} <Icono size={14} /> {tit}</span>
                       <span className={`block text-[11px] font-bold ${tipo === t ? 'text-white/80' : 'text-[var(--color-muted)]'}`}>{ayuda}</span>

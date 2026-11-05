@@ -770,3 +770,4 @@
 - **Dueño:** *"agregué un producto kilo y sale nomás 1; no sé si ese 1 es unidad o kilo"* → unidad al lado de la cantidad + frase "Cada PAN lleva 0.25 KG de POLLO" (112). Solo siumax.
 - **Dueño:** *"¿es necesario poner combo o receta? cada producto puede ser ingresado sin eso"* → Claude explicó la diferencia (combo descuenta sus partes al vender; receta se produce antes y tiene stock y costo real) y ofreció una regla automática o preguntar "¿lo preparas antes?" → *"si es así está bien, combo y receta está bien"*. Se queda como está.
 - **Dueño:** *"hay 3 botones; mejor solo el Guardar y Guardar e ir a Lotes"* → hecho (112). Solo siumax.
+- **Dueño** (captura, Receta seleccionada): *"aquí el selector no hace clic, pasa al siguiente; va en contra de las reglas"* → arreglado (Enter = clic y el selector se queda) + quitar producto ya no salta a Nombre (112). Solo siumax.
