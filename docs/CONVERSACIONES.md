@@ -681,4 +681,14 @@
     - En `ModalGrupo.tsx`: sustituida la `BarraFiltros` desaprovechada por un panel de 3 cifras en estilo SiuMax Sobrio (`Miembros`, `Descuento` y `Deuda del Grupo`) y una cuadrícula simétrica de 4 botones al 100% del ancho (`grid-cols-2 sm:grid-cols-4`: `[ Cobrar al grupo ]`, `[ Agregar cliente ]`, `[ Editar grupo ]`, `[ Eliminar grupo ]`).
     - Teclado: flechas de selector navegando fluidamente entre los 4 botones, la X de cierre y la lista de clientes.
     - Verificado con Puppeteer/Edge (`ai-scripts/pruebas/ver-modal-grupo.mjs`), captura guardada `grupo_cifras_sobrio.png`. Compilado con `npx tsc -b` y desplegado a siumax. Solo siumax.
+- **Dueño** (04/11/2026): *"TE FALTA COMODAR ESTO TAMBIEN"* (captura de `ModalDetalleTicket.tsx` con botones SUNAT `[PDF] [XML] [NOTA DE CRÉDITO BBB1-00000006]` y `[REENVIAR BBB1-00000006]` rompiéndose en 2 filas desparejas con espacio sobrante a la derecha).
+  - Antigravity propuso dos opciones con `ask_question`:
+    - Opción 1 (Recomendada): En 2 bloques ordenados: arriba los botones de la Boleta (`[PDF] [XML]` al 50% cada uno) y abajo la Nota de Crédito con sus botones (`[VER NOTA] [REENVIAR]` al 50% cada uno).
+    - Opción 2: Todos en 1 sola fila al 100% de ancho con textos cortos en 4 columnas parejas.
+    El dueño eligió la Opción 1.
+  - Hecho y probado en siumax:
+    - En `ModalDetalleTicket.tsx`: dividida la sección SUNAT en bloque de comprobante principal con cuadrícula al 50% (`[ ↗ PDF ]` y `[ ↗ XML ]`, 36px de alto, 100% de ancho) y bloque de notas de crédito en recuadro sobrio punteado con cabecera de la NC y sus dos botones al 50% (`[ 🗎 VER NOTA ]` y `[ 🔄 REENVIAR ]`).
+    - Teclado: selector que navega con `ArrowDown` de Cabecera → Boleta → Nota de Crédito → Botón Reimprimir; y con `ArrowUp` en sentido inverso. `ArrowLeft` / `ArrowRight` entre botones de cada fila.
+    - Verificado con Puppeteer/Edge en el ticket real 308406 de siumax (`ai-scripts/pruebas/ver-modal-ticket-sunat.mjs`), captura guardada `ticket_sunat_sobrio.png`. Compilado con `npx tsc -b` y desplegado a siumax. Solo siumax.
+
 

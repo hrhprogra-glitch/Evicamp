@@ -162,16 +162,11 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
   const puedeDevolver = Boolean(onCambiarProducto && sunat && comprobanteEmitido(sunat.estado, sunat.pdf) && !sunat.anulada && !sunat.fiado);
   const puedeDevolverRef = useRef(false);
   puedeDevolverRef.current = puedeDevolver;
-  const accionesSunat = sunat ? [
+  const accionesComprobante = sunat ? [
     ...((sunat.estado === 'ERROR' || sunat.estado === 'PENDIENTE') && !sunat.anulada ? [{ id: 'btn-sunat-reenviar', texto: 'Reenviar a SUNAT', Icono: RefreshCw, hacer: () => reenviar() }] : []),
     ...(sunat.pdf ? [{ id: 'btn-sunat-pdf', texto: 'PDF', Icono: ExternalLink, hacer: () => window.open(sunat.pdf!, '_blank') }] : []),
     ...(sunat.xml ? [{ id: 'btn-sunat-xml', texto: 'XML', Icono: ExternalLink, hacer: () => window.open(sunat.xml!, '_blank') }] : []),
-    ...(sunat.cdr ? [{ id: 'btn-sunat-cdr', texto: 'Constancia (CDR)', Icono: ExternalLink, hacer: () => window.open(sunat.cdr!, '_blank') }] : []),
-    ...notas.flatMap((n) => [
-      { id: `btn-sunat-nc-${n.id}`, texto: `Nota de crédito ${numeroComprobante(n.doc_serial, n.doc_number)}`, Icono: FileMinus, hacer: () => setNotaAbierta(n) },
-      ...(n.cpe_estado === 'ERROR' || n.cpe_estado === 'PENDIENTE'
-        ? [{ id: `btn-sunat-nc-reenviar-${n.id}`, texto: `Reenviar ${numeroComprobante(n.doc_serial, n.doc_number)}`, Icono: RefreshCw, hacer: () => reenviar(n) }] : []),
-    ]),
+    ...(sunat.cdr ? [{ id: 'btn-sunat-cdr', texto: 'CDR', Icono: ExternalLink, hacer: () => window.open(sunat.cdr!, '_blank') }] : []),
   ] : [];
 
   // Auto-Focus inmediato en el botón Reimprimir al abrir el modal (o botón cerrar si está cargando)
@@ -273,18 +268,21 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
       const tabTicket = document.getElementById('btn-tab-ticket');
       const tabTabla = document.getElementById('btn-tab-tabla');
       const cabecera = [tabTicket, tabTabla, btnCerrar].filter(Boolean) as HTMLElement[];
-      const filaSunat = Array.from(document.querySelectorAll<HTMLElement>('#bloque-sunat [data-sunat]'));
+      const filaSunatA = Array.from(document.querySelectorAll<HTMLElement>('#bloque-sunat-comprobante [data-sunat]'));
+      const filaSunatB = Array.from(document.querySelectorAll<HTMLElement>('#bloque-sunat-notas [data-sunat]'));
       const pie = Array.from(document.querySelectorAll<HTMLElement>('[data-pie-ticket]'));
-      const fila = [cabecera, filaSunat, pie].find((f) => active && f.includes(active));
+      const fila = [cabecera, filaSunatA, filaSunatB, pie].find((f) => active && f.includes(active));
       const ir = (el?: HTMLElement | null) => { e.preventDefault(); e.stopPropagation(); el?.focus(); };
 
       if (e.key === 'ArrowDown') {
-        if (fila === cabecera) ir(filaSunat[0] || btnPrint);
-        else if (fila === filaSunat) ir(btnPrint);
+        if (fila === cabecera) ir(filaSunatA[0] || filaSunatB[0] || btnPrint);
+        else if (fila === filaSunatA) ir(filaSunatB[0] || btnPrint);
+        else if (fila === filaSunatB) ir(btnPrint);
         else { e.preventDefault(); e.stopPropagation(); if (scrollContainerRef.current) scrollContainerRef.current.scrollTop += 60; }
       } else if (e.key === 'ArrowUp') {
-        if (fila === pie) ir(filaSunat[0] || tabTicket);
-        else if (fila === filaSunat) ir(tabTicket);
+        if (fila === pie) ir(filaSunatB[0] || filaSunatA[0] || tabTicket);
+        else if (fila === filaSunatB) ir(filaSunatA[0] || tabTicket);
+        else if (fila === filaSunatA) ir(tabTicket);
         else { e.preventDefault(); e.stopPropagation(); if (scrollContainerRef.current) scrollContainerRef.current.scrollTop -= 60; }
       } else if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && fila && active) {
         const destino = fila[fila.indexOf(active) + (e.key === 'ArrowRight' ? 1 : -1)];
@@ -375,50 +373,90 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
           </div>
         </div>
 
-        {/* BOLETA/FACTURA: estado ante SUNAT, sus notas de crédito y acciones (antes en la ventana "Comprobantes") */}
+        {/* BOLETA/FACTURA: estado ante SUNAT, sus notas de crédito y acciones */}
         {sunat && (
-          <div id="bloque-sunat" className="border-b-2 border-[var(--color-ink)] p-3 bg-white space-y-2 shrink-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[12px] font-black uppercase text-[var(--color-ink)]">{nombreComprobante(sunat.docType)} {sunat.numero}</span>
-              <InsigniaCpe estado={sunat.estado} generado={Boolean(sunat.pdf)} chica />
-              {sunat.modo && sunat.modo !== 'REAL' && <span className="text-[10px] font-black uppercase text-[var(--color-warning-dark)]">Modo {sunat.modo.toLowerCase()}: sin valor ante SUNAT</span>}
-              {sunat.anulada && <span className="text-[10px] font-black uppercase text-[var(--color-danger)]">Venta anulada</span>}
-            </div>
-            {sunat.mensaje && <p id="sunat-mensaje" className="text-[11px] font-bold text-[var(--color-ink)] bg-[var(--color-bg)] border border-[var(--color-border)] p-1.5">{sunat.mensaje}</p>}
-            {sunat.estado === 'NO_EMITIDO' && (
-              <p className="text-[11px] font-bold text-[var(--color-muted)]">La venta se anuló antes de que SUNAT aceptara este comprobante: no se emitió y no necesita nota de crédito.</p>
-            )}
-            {sunat.estado === 'ANULANDO' && (
-              <p className="text-[11px] font-bold text-[var(--color-info)]">Venta anulada: se está confirmando con el proveedor que el comprobante no se emitió (unos segundos).</p>
-            )}
-            {sunat.estado === 'RECHAZADO' && (
-              <p className="text-[11px] font-bold text-[var(--color-danger)]">SUNAT lo rechazó: revisa el mensaje. Este comprobante no tiene valor; corrige los datos y emite uno nuevo.</p>
-            )}
-            {notas.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold uppercase">
-                Notas de crédito:
-                {notas.map((n) => (
-                  <span key={n.id} className="inline-flex items-center gap-1">{numeroComprobante(n.doc_serial, n.doc_number)} · S/ {Number(n.total).toFixed(2)} <InsigniaCpe estado={n.cpe_estado} chica /></span>
-                ))}
+          <div id="bloque-sunat" className="border-b-2 border-[var(--color-ink)] p-3 bg-white space-y-3 shrink-0">
+            {/* 1. COMPROBANTE PRINCIPAL (BOLETA / FACTURA) */}
+            <div id="bloque-sunat-comprobante" className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[12px] font-black uppercase text-[var(--color-ink)]">{nombreComprobante(sunat.docType)} {sunat.numero}</span>
+                <InsigniaCpe estado={sunat.estado} generado={Boolean(sunat.pdf)} chica />
+                {sunat.modo && sunat.modo !== 'REAL' && <span className="text-[10px] font-black uppercase text-[var(--color-warning-dark)]">Modo {sunat.modo.toLowerCase()}: sin valor ante SUNAT</span>}
+                {sunat.anulada && <span className="text-[10px] font-black uppercase text-[var(--color-danger)]">Venta anulada</span>}
               </div>
-            )}
-            {sunat.fiado && !sunat.anulada && (
-              <p className="text-[11px] font-bold text-[var(--color-muted)]">Venta al crédito: para devolver, anúlala completa (emite la nota de crédito).</p>
-            )}
-            {accionesSunat.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {accionesSunat.map((a) => (
-                  <button
-                    key={a.id}
-                    id={a.id}
-                    type="button"
-                    data-sunat="true"
-                    onClick={a.hacer}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 border-2 border-[var(--color-ink)] bg-white text-[11px] font-black uppercase cursor-pointer rounded-none focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white hover:bg-[var(--color-bg)]"
-                  >
-                    <a.Icono size={13} /> {a.texto}
-                  </button>
-                ))}
+              {sunat.mensaje && <p id="sunat-mensaje" className="text-[11px] font-bold text-[var(--color-ink)] bg-[var(--color-bg)] border border-[var(--color-border)] p-1.5">{sunat.mensaje}</p>}
+              {sunat.estado === 'NO_EMITIDO' && (
+                <p className="text-[11px] font-bold text-[var(--color-muted)]">La venta se anuló antes de que SUNAT aceptara este comprobante: no se emitió y no necesita nota de crédito.</p>
+              )}
+              {sunat.estado === 'ANULANDO' && (
+                <p className="text-[11px] font-bold text-[var(--color-info)]">Venta anulada: se está confirmando con el proveedor que el comprobante no se emitió (unos segundos).</p>
+              )}
+              {sunat.estado === 'RECHAZADO' && (
+                <p className="text-[11px] font-bold text-[var(--color-danger)]">SUNAT lo rechazó: revisa el mensaje. Este comprobante no tiene valor; corrige los datos y emite uno nuevo.</p>
+              )}
+              {sunat.fiado && !sunat.anulada && (
+                <p className="text-[11px] font-bold text-[var(--color-muted)]">Venta al crédito: para devolver, anúlala completa (emite la nota de crédito).</p>
+              )}
+
+              {accionesComprobante.length > 0 && (
+                <div className={`grid gap-2 ${accionesComprobante.length === 1 ? 'grid-cols-1' : accionesComprobante.length === 2 ? 'grid-cols-2' : accionesComprobante.length === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'}`}>
+                  {accionesComprobante.map((a) => (
+                    <button
+                      key={a.id}
+                      id={a.id}
+                      type="button"
+                      data-sunat="true"
+                      onClick={a.hacer}
+                      className="h-[36px] px-3 border-2 border-[var(--color-ink)] bg-white text-[11px] font-black uppercase flex items-center justify-center gap-1.5 cursor-pointer rounded-none hover:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white transition-colors"
+                    >
+                      <a.Icono size={14} className="shrink-0" />
+                      <span className="truncate">{a.texto}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 2. NOTAS DE CRÉDITO ASOCIADAS */}
+            {notas.length > 0 && (
+              <div id="bloque-sunat-notas" className="border-t-2 border-dashed border-[var(--color-border)] pt-2.5 space-y-2">
+                {notas.map((n) => {
+                  const accionesNota = [
+                    { id: `btn-sunat-nc-${n.id}`, texto: 'Ver Nota', Icono: FileMinus, hacer: () => setNotaAbierta(n) },
+                    ...(n.cpe_estado === 'ERROR' || n.cpe_estado === 'PENDIENTE'
+                      ? [{ id: `btn-sunat-nc-reenviar-${n.id}`, texto: 'Reenviar', Icono: RefreshCw, hacer: () => reenviar(n) }]
+                      : []),
+                  ];
+
+                  return (
+                    <div key={n.id} className="space-y-2 bg-[var(--color-bg)] p-2.5 border border-[var(--color-border)]">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[11px] font-black uppercase text-[var(--color-ink)]">
+                          Nota de crédito {numeroComprobante(n.doc_serial, n.doc_number)} · S/ {Number(n.total).toFixed(2)}
+                        </span>
+                        <InsigniaCpe estado={n.cpe_estado} chica />
+                      </div>
+                      {n.cpe_mensaje && (
+                        <p className="text-[10px] font-bold text-[var(--color-muted)]">{n.cpe_mensaje}</p>
+                      )}
+                      <div className={`grid gap-2 ${accionesNota.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                        {accionesNota.map((a) => (
+                          <button
+                            key={a.id}
+                            id={a.id}
+                            type="button"
+                            data-sunat="true"
+                            onClick={a.hacer}
+                            className="h-[36px] px-3 border-2 border-[var(--color-ink)] bg-white text-[11px] font-black uppercase flex items-center justify-center gap-1.5 cursor-pointer rounded-none hover:bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white transition-colors"
+                          >
+                            <a.Icono size={14} className="shrink-0" />
+                            <span className="truncate">{a.texto}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -7,6 +7,18 @@
 
 ---
 
+## 04/11/2026 (97) · Antigravity — Aprovechamiento de espacio y orden en acciones de comprobante y notas de crédito en ModalDetalleTicket (solo siumax)
+- **Problema reportado por el dueño:** *"TE FALTA COMODAR ESTO TAMBIEN"* (captura del ticket con bloque SUNAT donde los botones `[ PDF ] [ XML ] [ NOTA DE CRÉDITO BBB1-00000006 ]` y `[ REENVIAR BBB1-00000006 ]` se rompían en 2 filas desparejas dejando un gran espacio en blanco a la derecha).
+- **Solución aplicada (Opción elegida por el dueño):**
+  1. **Separación lógica en 2 bloques limpios:**
+     - **Bloque Boleta/Factura:** estado, mensajes y sus acciones directas en cuadrícula al 50% (`[ ↗ PDF ]` y `[ ↗ XML ]` a la par, altura 36px, 100% de ancho).
+     - **Bloque Nota de Crédito:** recuadro sobrio con separación punteada, cabecera con el número de NC y su insignia de estado, y sus dos botones en cuadrícula al 50% (`[ 🗎 VER NOTA ]` y `[ 🔄 REENVIAR ]`, textos cortos y nítidos sin saturar la pantalla).
+  2. **Teclado:** selector con flechas que navega en orden natural de lectura: Cabecera → Botones de Boleta (`ArrowDown`) → Botones de Nota de Crédito (`ArrowDown`) → Botón Reimprimir en el pie (`ArrowDown`); y en sentido inverso con `ArrowUp`. `ArrowLeft` / `ArrowRight` recorre los botones de cada fila.
+- **Verificación:** validado con Edge/Puppeteer en ticket real (#308406 de siumax, script `ai-scripts/pruebas/ver-modal-ticket-sunat.mjs`), captura guardada `ticket_sunat_sobrio.png`. Compilado con `npx tsc -b` (0 errores) y desplegado a `siumax`.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
 ## 04/11/2026 (96) · Antigravity — Aprovechamiento de espacio en ModalGrupo y corrección de selector en detalle de caja (solo siumax)
 - **Problema 1 (Caja):** *"EL SELECTOR YA FUNCIONA DENTRO DE LA TABLA"*. Se detectó que un `return () => clearTimeout(timer);` colocado prematuramente dentro de un `useEffect` en `ModalDetalleCaja.tsx` dejaba inaccesible el registro de `handleModalKeyDown`. Se eliminó el retorno temprano manteniendo la limpieza al final del hook. El selector por teclado en la tabla de movimientos de caja navega ahora al 100%.
 - **Problema 2 (Grupos):** *"AQUI TIENE ESPACIO QUE NO APROVECHAN ajusta eso"* (captura de `ModalGrupo.tsx` con enorme espacio en blanco a la derecha).

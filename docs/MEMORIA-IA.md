@@ -371,4 +371,10 @@ En ventanas grandes (`max-w-4xl` o más) como `ModalGrupo.tsx`:
 - Nunca dejar botones sueltos en `BarraFiltros` que generen 50-60% de espacio en blanco lateral o botones huérfanos en segunda fila.
 - Patrón estándar: Cifras clave arriba en cuadrícula sobria (`grid grid-cols-2 sm:grid-cols-3 gap-px bg-[var(--color-border)]`) con números mono y estado claro, y debajo los botones de acción alineados al 100% en cuadrícula simétrica (`grid grid-cols-2 sm:grid-cols-4 gap-2`) con altura uniforme (44px) y navegación por teclado fluida.
 
+**Acciones de Comprobante y Notas de Crédito en ModalDetalleTicket (04/11/2026):**
+- Nunca mezclar botones de Boleta/Factura con los de Nota de Crédito en una sola franja desordenada con etiquetas largas (`Nota de crédito BBB1-...`) que se desbordan dejando botones solos en la fila 2.
+- Patrón: Dos bloques separados claramente. Arriba, las acciones de la Boleta/Factura (`[ ↗ PDF ]`, `[ ↗ XML ]`) en cuadrícula simétrica (50% cada una). Abajo, la Nota de Crédito en recuadro sobrio punteado con su cabecera y sus 2 botones directos (`[ 🗎 VER NOTA ]`, `[ 🔄 REENVIAR ]`, 50% cada una, altura 36px, 100% de ancho).
+- Selector por teclado: `ArrowDown` baja en orden de lectura: Cabecera → Boleta → Nota de Crédito → Botón Reimprimir; `ArrowUp` sube en sentido inverso; `ArrowLeft` / `ArrowRight` navega entre los botones de cada fila.
+
+
 
