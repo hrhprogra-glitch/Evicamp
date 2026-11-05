@@ -513,14 +513,18 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                       aria-checked={modo === m.modo}
                       onClick={() => { cambiarModo(m.modo); irAlPrimerCampo(m.modo); }}
                       onKeyDown={(e) => {
+                        // ← → solo mueven el selector; Enter elige (regla del dueño 05/11/2026: las flechas no cambian una opción)
                         if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
                           e.preventDefault();
                           const otro = lista[(i + (e.key === 'ArrowRight' ? 1 : -1) + lista.length) % lista.length].modo;
-                          cambiarModo(otro);
                           document.getElementById(`modo-ajuste-${otro}`)?.focus();
-                        } else if (e.key === 'Enter' || e.key === 'ArrowDown') {
+                        } else if (e.key === 'Enter') {
                           e.preventDefault();
+                          cambiarModo(m.modo);
                           irAlPrimerCampo(m.modo);
+                        } else if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          irAlPrimerCampo(modo);
                         } else if (e.key === 'ArrowUp') {
                           e.preventDefault(); document.getElementById('btn-cambiar-producto-ajuste')?.focus();
                         }

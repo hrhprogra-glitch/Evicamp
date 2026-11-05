@@ -21,7 +21,7 @@ const ambitoDe = (el: HTMLElement): HTMLElement | null => {
 // ¿Esta flecha, en este control, puede pasar a otro control? (en un texto, solo si el cursor ya está en la orilla)
 const puedeSalir = (el: HTMLElement, k: Flecha): boolean => {
   if (el.closest(FILA)) return false;                  // las filas y sus botones tienen su propio teclado
-  if (el instanceof HTMLSelectElement) return false;
+  if (el instanceof HTMLSelectElement) return true;     // sus flechas ya no cambian el valor (ver alTeclearPrimero)
   // Texto largo: solo sale desde la orilla (↑ en la primera línea, ↓ en la última, ← al inicio, → al final)
   if (el instanceof HTMLTextAreaElement) {
     const ini = el.selectionStart ?? 0, fin = el.selectionEnd ?? 0, v = el.value;
@@ -33,7 +33,7 @@ const puedeSalir = (el: HTMLElement, k: Flecha): boolean => {
   }
   if (el instanceof HTMLInputElement) {
     const t = el.type;
-    if (t === 'checkbox' || t === 'radio' || t === 'button' || t === 'submit') return true;
+    if (t === 'checkbox' || t === 'radio' || t === 'button' || t === 'submit' || t === 'number') return true;
     if (!TEXTO.includes(t)) return false;              // fecha, hora, número, rango, color…
     const ini = el.selectionStart ?? 0, fin = el.selectionEnd ?? 0, largo = el.value.length;
     if (k === 'ArrowLeft') return ini === 0 && fin === 0;
@@ -68,10 +68,10 @@ const masCercano = (desde: HTMLElement, k: Flecha, ambito: HTMLElement): HTMLEle
     candidatos.push({ el, q, distancia, cruce });
   }
   if (!candidatos.length) return null;
-  // Se prefieren los que están en la misma columna/fila; si no hay, cualquiera en esa dirección
-  const alineados = candidatos.filter((c) => c.cruce > 0);
-  const lista = alineados.length ? alineados : candidatos;
-  // La fila (o columna) más cercana…
+  // ↑ ↓: la FILA más cercana aunque lo de esa fila esté corrido a un lado (antes se prefería lo alineado y desde la
+  // cantidad del combo ↓ saltaba hasta "Guardar" pasando por encima de las casillas de Tienda Web).
+  // ← →: los de la misma fila (ya filtrados arriba).
+  const lista = candidatos;
   const minima = Math.min(...lista.map((c) => c.distancia));
   const cercanos = lista.filter((c) => c.distancia <= minima + 12);
   // …y en ella, el que más se cruza; si empatan, el de la izquierda (↑ ↓) o el de arriba (← →)
@@ -96,7 +96,45 @@ export const filaEnMedio = (origen: Element | null, destino: Element | null, ids
   return enMedio[0] || null;
 };
 
+// Eventos de listas desplegables cuyo "preventDefault" lo puso esta regla (no una pantalla): para saber si alguna
+// pantalla sí atendió la flecha
+const otraPantallaLoUso = new WeakMap<KeyboardEvent, () => boolean>();
+
 export const activarFlechasEspaciales = () => {
+  // REGLAS UNIVERSALES (pedido del dueño 05/11/2026). Va en la fase de captura de window y se registra al abrir la
+  // app, así corre ANTES que el teclado de cualquier ventana:
+  // 1) Lista desplegable cerrada: las flechas NUNCA cambian el valor (solo mueven el selector); Enter la despliega.
+  // 2) Enter en una casilla de marcar = clic: la marca o desmarca y el selector se queda ahí (no pasa al siguiente).
+  const alTeclearPrimero = (e: KeyboardEvent) => {
+    const el = e.target as HTMLElement | null;
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    if (e.key === 'Enter' && el instanceof HTMLInputElement && (el.type === 'checkbox' || el.type === 'radio') && !el.disabled) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      el.click();
+      return;
+    }
+    // (también los campos de número: ↑ ↓ ya no suben/bajan la cantidad ni el precio; pedido del dueño 05/11/2026,
+    // "en Precio de la variante y en la cantidad del combo el selector se queda atrapado")
+    const esNumero = el instanceof HTMLInputElement && el.type === 'number';
+    if ((el instanceof HTMLSelectElement || esNumero) && (FLECHAS as readonly string[]).includes(e.key) && !e.shiftKey) {
+      const evitar = e.preventDefault.bind(e);
+      evitar();                                          // el navegador ya no cambia la opción
+      let otra = false;
+      Object.defineProperty(e, 'preventDefault', { value: () => { otra = true; evitar(); } });
+      otraPantallaLoUso.set(e, () => otra);
+    }
+  };
+  // Enter en una lista desplegable que ninguna pantalla atendió: la despliega
+  const alSoltarEnter = (e: KeyboardEvent) => {
+    const el = e.target as HTMLElement | null;
+    if (e.key !== 'Enter' || !(el instanceof HTMLSelectElement) || e.ctrlKey || e.altKey || e.metaKey) return;
+    setTimeout(() => {
+      if (e.defaultPrevented || document.activeElement !== el) return;
+      try { (el as HTMLSelectElement & { showPicker?: () => void }).showPicker?.(); } catch { /* sin lista */ }
+    }, 0);
+  };
+
   const alTeclear = (e: KeyboardEvent) => {
     if (!(FLECHAS as readonly string[]).includes(e.key) || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
     const origen = document.activeElement as HTMLElement | null;
@@ -104,7 +142,8 @@ export const activarFlechasEspaciales = () => {
     // Justo después de que todas las pantallas atendieron la tecla (sin espera fija: con 90 ms el selector se sentía
     // lento al moverse rápido, pedido del dueño 04/11/2026). Si alguna la usó o movió el selector, aquí no se hace nada.
     setTimeout(() => {
-      if (e.defaultPrevented || document.activeElement !== origen || !origen.isConnected) return;
+      const usada = otraPantallaLoUso.has(e) ? otraPantallaLoUso.get(e)!() : e.defaultPrevented;
+      if (usada || document.activeElement !== origen || !origen.isConnected) return;
       const ambito = ambitoDe(origen);
       if (!ambito) return;
       const destino = masCercano(origen, e.key as Flecha, ambito);
@@ -114,6 +153,12 @@ export const activarFlechasEspaciales = () => {
       if (destino instanceof HTMLInputElement && TEXTO.includes(destino.type)) destino.select();
     }, 0);
   };
+  window.addEventListener('keydown', alTeclearPrimero, true);
   document.addEventListener('keydown', alTeclear);
-  return () => document.removeEventListener('keydown', alTeclear);
+  document.addEventListener('keydown', alSoltarEnter);
+  return () => {
+    window.removeEventListener('keydown', alTeclearPrimero, true);
+    document.removeEventListener('keydown', alTeclear);
+    document.removeEventListener('keydown', alSoltarEnter);
+  };
 };

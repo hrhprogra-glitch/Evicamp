@@ -4,7 +4,10 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 05/11/2026 (104), Claude: arreglada la Tienda Web de Evicamp (un producto sin nombre la tumbaba); subido a Evicamp, clientes, siumax y GitHub.
+- **Última actualización:** 05/11/2026 (107), Claude: **PASE a Evicamp, clientes, siumax y GitHub** de 105–106 (Utilidades › Gráficos y detalles; SQL gastos_fijos_mes ensayado en copia y aplicado sin errores ni reinicio; Evicamp sin Mercado Pago).
+- (106) 05/11/2026, Claude: Utilidades › Gráficos y detalles (tablero de ganancias y pérdidas con fórmulas de empresas, Desde/Hasta propio en la cabecera).
+- (105) 05/11/2026, Claude: reglas del selector 7 y 8 (las flechas nunca cambian una opción; Enter en casilla = clic) en todo el sistema. Solo siumax.
+- (104) 05/11/2026, Claude: arreglada la Tienda Web de Evicamp (un producto sin nombre la tumbaba); subido a Evicamp, clientes, siumax y GitHub.
 - (103) 05/11/2026, Claude: **PASE a Evicamp, clientes y GitHub** de todo lo hecho desde el pase (80): pantallas en cualquier tamaño, selector, estilo de ventanas, retoques de Antigravity y anulación NO_EMITIDO (SQL ensayado en copia, 0 errores, sin reiniciar la API; facturación apagada en Evicamp; Evicamp sin Mercado Pago).
 - (102) 05/11/2026, Antigravity: **entrega a Claude** (BITACORA 102: resumen de 94 a 101, estado limpio, 0 errores, siumax al día, pendientes y cuidados). Rama `fase-11-sunat` (commits `cb3582f` → `2e98a16`, sin push). Evicamp y GitHub intactos (Regla 4).
 - (101) 04/11/2026, Antigravity: **navegación por teclado completa al botón [ X ] de borrado en todos los buscadores** (acceso bidireccional con flechas izquierda/derecha entre buscador, botón [ X ] y filtros/selectores; activación con Enter/Espacio/Escape con borrado y retorno automático de foco al buscador; estilo de foco rojo vibrante `#DC2626` sin curvas en 10 buscadores del sistema). Compilado y desplegado a siumax (rama `fase-11-sunat`, sin push).
@@ -36,6 +39,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Utilidades › Gráficos y detalles** (tablero de ganancias/pérdidas: estado de resultados, punto de equilibrio, ABC, rotación, GMROI, merma, cartera) | **Aprobado 05/11. ✅ En siumax (106) y en Evicamp, clientes y GitHub (107). Pendiente: revisión del dueño** |
 | **Mismo estilo en todas las ventanas flotantes** (modelo: detalle de producto en Utilidades, sin sombra) | **Aprobado 04/11. ✅ 49 ventanas + avisos en siumax (92). Pasar a Evicamp solo con aviso** |
 | **Reglas del selector en todo el sistema** (llegar a todo con flechas, calendario con Enter, nunca perderse ni salir de una ventana, algo seleccionado al volver) | **Aprobado 04/11. ✅ En siumax (91): 37 de 37 pantallas cumplen las 6 reglas, 0 errores (antes 11 de 37). Revisar con `ai-scripts/pruebas/estilo/revisar-selector.mjs` tras cambiar pantallas. Pasar a Evicamp solo con aviso** |
 | **Que todo se vea completo en cualquier tamaño de pantalla** (botones, pestañas y ventanas sin cortarse) | **Aprobado 04/11. ✅ Hecho en siumax (89): 7 tamaños, 0 cortes. Revisar de nuevo con `ai-scripts/pruebas/estilo/revisar-*.mjs` tras cambios de pantallas. Pasar a Evicamp solo con aviso** |

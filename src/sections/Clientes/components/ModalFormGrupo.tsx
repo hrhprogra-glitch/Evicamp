@@ -122,11 +122,12 @@ export const ModalFormGrupo: React.FC<Props> = ({ abierta, grupo, grupos, onGuar
                   <button key={t.tipo} id={id} type="button" role="radio" aria-checked={elegido} tabIndex={elegido ? 0 : -1}
                     onClick={() => { setDatos((d) => ({ ...d, tipo: t.tipo })); enfocar('grupo-ruc'); }}
                     onKeyDown={(e) => {
+                      // ← → solo mueven el selector; Enter elige (como un clic). Regla del dueño 05/11/2026
                       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
                         e.preventDefault();
-                        const otro = TIPOS[(i + 1) % 2];
-                        setDatos((d) => ({ ...d, tipo: otro.tipo })); enfocar(`grupo-tipo-${otro.tipo}`);
-                      } else if (e.key === 'Enter' || e.key === 'ArrowDown') { e.preventDefault(); mover(id, 1); }
+                        enfocar(`grupo-tipo-${TIPOS[(i + 1) % 2].tipo}`);
+                      } else if (e.key === 'Enter') { e.preventDefault(); setDatos((d) => ({ ...d, tipo: t.tipo })); enfocar('grupo-ruc'); }
+                      else if (e.key === 'ArrowDown') { e.preventDefault(); mover(id, 1); }
                       else if (e.key === 'ArrowUp') { e.preventDefault(); mover(id, -1); }
                     }}
                     className={`p-2 border-2 text-xs font-black uppercase tracking-widest cursor-pointer outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-ink)] ${elegido ? 'border-[var(--color-ink)] bg-[var(--color-ink)] text-white' : 'border-[var(--color-border)] bg-white text-[var(--color-ink)]'}`}>

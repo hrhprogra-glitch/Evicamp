@@ -90,34 +90,43 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     else if (e.key === 'ArrowLeft' && col === 'precio') { e.preventDefault(); ir(`escala-desde-${fila}`); }
     else if (e.key === 'Enter') { e.preventDefault(); if (col === 'desde') ir(`escala-precio-${fila}`); else if (!ir(`escala-desde-${fila + 1}`)) ir('pres-unidad-0') || ir('check-tiene-variantes') || ir('btn-guardar-producto'); }
   };
-  // Fase 7: Navegación de Variantes con Teclado
-  const COLS_VAR = ['talla', 'color', 'nombre', 'barcode', 'price', 'quitar'] as const;
-  const teclasVar = (e: React.KeyboardEvent<HTMLElement>, fila: number, col: typeof COLS_VAR[number]) => {
+  // Fase 7: Navegación de Variantes con Teclado (05/11/2026: ahora sí conectada; antes el selector quedaba atrapado en
+  // "Precio" porque en un número las flechas suben/bajan el valor). Orden como se ve: Talla · Color · Precio · Barras, y
+  // el tachito de la variante arriba a la derecha. Las flechas nunca cambian el precio.
+  const COLS_VAR = ['talla', 'color', 'price', 'barcode'] as const;
+  type ColVar = typeof COLS_VAR[number] | 'quitar';
+  const teclasVar = (e: React.KeyboardEvent<HTMLElement>, fila: number, col: ColVar) => {
     const ir = (id: string) => {
       const el = document.getElementById(id) as HTMLElement | null;
       if (el) {
         el.focus();
-        if (el instanceof HTMLInputElement) el.select?.();
+        if (el instanceof HTMLInputElement && el.type === 'text') el.select?.();
       }
       return !!el;
     };
-    const c = COLS_VAR.indexOf(col);
+    const t = e.currentTarget as HTMLInputElement;
+    const esTexto = t instanceof HTMLInputElement && t.type === 'text';
+    const enOrilla = (lado: 'izq' | 'der') => !esTexto || (lado === 'izq' ? t.selectionStart === 0 && t.selectionEnd === 0 : t.selectionStart === t.value.length);
+    const c = col === 'quitar' ? -1 : COLS_VAR.indexOf(col);
+    const anterior = () => ir(`var-barcode-${fila - 1}`) || ir('check-tiene-variantes');
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (!ir(`var-${col}-${fila + 1}`)) {
-        ir('btn-agregar-variante-manual') || ir('btn-guardar-producto');
-      }
+      if (col === 'quitar') { ir(`var-barcode-${fila}`); return; }
+      if (!ir(`var-${col}-${fila + 1}`)) ir('btn-agregar-variante-manual') || ir('btn-guardar-producto');
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      if (!ir(`var-${col}-${fila - 1}`)) {
-        ir('check-tiene-variantes');
-      }
-    } else if (e.key === 'ArrowRight' && c < COLS_VAR.length - 1) {
+      if (col === 'quitar') { anterior(); return; }
+      ir(`var-quitar-${fila}`) || anterior();
+    } else if (e.key === 'ArrowRight') {
+      if (col === 'quitar') { e.preventDefault(); return; }
+      if (!enOrilla('der')) return;
       e.preventDefault();
-      ir(`var-${COLS_VAR[c + 1]}-${fila}`);
-    } else if (e.key === 'ArrowLeft' && c > 0) {
+      if (c < COLS_VAR.length - 1) ir(`var-${COLS_VAR[c + 1]}-${fila}`);
+    } else if (e.key === 'ArrowLeft') {
+      if (col === 'quitar') { e.preventDefault(); return; }
+      if (!enOrilla('izq')) return;
       e.preventDefault();
-      ir(`var-${COLS_VAR[c - 1]}-${fila}`);
+      if (c > 0) ir(`var-${COLS_VAR[c - 1]}-${fila}`);
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (col === 'quitar') {
@@ -242,6 +251,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   const [categoriasLista, setCategoriasLista] = useState<string[]>([]);
   const [showCatDropdown, setShowCatDropdown] = useState(false);
   const catContainerRef = useRef<HTMLDivElement>(null);
+  // Momento en que Escape cerró la lista de categorías: al volver el selector al campo, la lista NO se vuelve a abrir
+  // (antes se reabría sola y parecía que el selector quedaba atrapado; pedido del dueño 05/11/2026)
+  const catCerradaConEscape = useRef(0);
 
   // Cerrar dropdown al hacer clic fuera del contenedor de categoría
   useEffect(() => {
@@ -628,6 +640,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         e.stopPropagation();
         if (showCatDropdown) {
           setShowCatDropdown(false);
+          catCerradaConEscape.current = Date.now();
           document.getElementById('input-categoria-producto')?.focus();
           return;
         }
@@ -1220,14 +1233,11 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
             try { (active as HTMLSelectElement & { showPicker?: () => void }).showPicker?.(); } catch { /* navegador sin showPicker */ }
             return;
           }
-          // ← → pasan a la unidad anterior / siguiente de la lista sin abrirla (antes solo KG ↔ LT)
-          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          // → no tiene nada a la derecha: el selector se queda. Las flechas NUNCA cambian la unidad (pedido del dueño
+          // 05/11/2026: "solo cambiar cuando presiono Enter para desplegarlo")
+          if (e.key === 'ArrowRight') {
             e.preventDefault();
             e.stopPropagation();
-            const opciones = Array.from((active as HTMLSelectElement).options).map((o) => o.value);
-            const i = opciones.indexOf(formData.weightUnit);
-            const j = Math.max(0, Math.min(opciones.length - 1, i + (e.key === 'ArrowRight' ? 1 : -1)));
-            setFormData({ ...formData, weightUnit: opciones[j] });
             return;
           }
         }
@@ -1473,7 +1483,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
     window.addEventListener('keydown', handleFormKeyDown, { capture: true });
     return () => window.removeEventListener('keydown', handleFormKeyDown, { capture: true });
-  }, [isOpen, step, nature, formData, escalas, presentacionesForm, tieneVariantes, variantesLista, tipoCompuesto, recetaItems, isSubmitting, categoriasLista, showImageResults, imageResults, imgResaltada, showAdvancedPanel]);
+  }, [isOpen, step, nature, formData, escalas, presentacionesForm, tieneVariantes, variantesLista, tipoCompuesto, recetaItems, isSubmitting, categoriasLista, showImageResults, imageResults, imgResaltada, showAdvancedPanel, showCatDropdown]); // showCatDropdown: sin él, Escape veía la lista "cerrada" (estado viejo) y cerraba toda la ventana
 
   if (!isOpen) return null;
 
@@ -1913,7 +1923,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                       setFormData(prev => ({...prev, category: e.target.value.toUpperCase()}));
                       setShowCatDropdown(true);
                     }}
-                    onFocus={() => setShowCatDropdown(true)}
+                    onFocus={() => { if (Date.now() - catCerradaConEscape.current > 400) setShowCatDropdown(true); }}
                     className="w-full bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-2.5 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
                   />
                   
@@ -1962,7 +1972,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                             }}
                             className="flex items-center justify-between p-3 bg-white hover:bg-[#1E293B] hover:text-white focus:!bg-[#1E293B] focus:!text-white border-b border-[#E2E8F0] last:border-0 cursor-pointer group outline-none transition-colors"
                           >
-                            <span className="flex-1 text-xs font-black text-[#1E293B] group-hover:text-white group-focus:!text-white">
+                            <span className="flex-1 text-xs font-black text-[var(--color-ink)] group-hover:text-white group-focus:!text-white">
                               {cat}
                             </span>
                             <button 
@@ -2666,6 +2676,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                                       id={`var-quitar-${idx}`}
                                       type="button"
                                       onClick={() => eliminarVariante(idx)}
+                                      onKeyDown={(e) => teclasVar(e, idx, 'quitar')}
                                       className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
                                       title="Eliminar variante"
                                     >
@@ -2679,6 +2690,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                                       placeholder="Talla"
                                       value={v.talla}
                                       onChange={(e) => actualizarVariante(idx, 'talla', e.target.value)}
+                                      onKeyDown={(e) => teclasVar(e, idx, 'talla')}
                                       className="bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-1.5 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
                                     />
                                     <input
@@ -2687,6 +2699,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                                       placeholder="Color"
                                       value={v.color}
                                       onChange={(e) => actualizarVariante(idx, 'color', e.target.value)}
+                                      onKeyDown={(e) => teclasVar(e, idx, 'color')}
                                       className="bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-1.5 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
                                     />
                                     <input
@@ -2697,6 +2710,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                                       placeholder="Precio"
                                       value={v.price}
                                       onChange={(e) => actualizarVariante(idx, 'price', e.target.value)}
+                                      onKeyDown={(e) => teclasVar(e, idx, 'price')}
                                       className="bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-1.5 text-xs font-black text-right outline-none focus:border-fuchsia-600"
                                       title="Precio de esta variante"
                                     />
@@ -2706,6 +2720,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                                       placeholder="Barras"
                                       value={v.barcode}
                                       onChange={(e) => actualizarVariante(idx, 'barcode', e.target.value)}
+                                      onKeyDown={(e) => teclasVar(e, idx, 'barcode')}
                                       className="bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-1.5 text-xs font-black outline-none focus:border-fuchsia-600"
                                     />
                                   </div>

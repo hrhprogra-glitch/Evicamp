@@ -1089,3 +1089,31 @@ html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-thumb:hover, html[dat
 }
 /* Dentro de un botón o pastilla oscura de la cabecera (ej. "Ticket | Tabla" del detalle del ticket) la letra sigue clara */
 .ventana-cabecera [class*="bg-[var(--color-ink)]"] .text-white, .ventana-cabecera [class*="bg-[var(--color-ink)]"].text-white { color: #fff !important; }
+/* El selector SIEMPRE se ve dentro de las ventanas (pedido del dueño 05/11/2026: "en talla, combo o recetas el selector
+   no funciona": llegaba pero no se notaba). Se usa outline (no box-shadow) para no pisar los anillos que ya tenga cada
+   control; en campos va por dentro y en botones/casillas por fuera. */
+.ventana-sobria :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus {
+  outline: 2px solid var(--color-accent) !important; outline-offset: -2px; }
+.ventana-sobria :is(button, [role="button"], [role="radio"], [role="checkbox"], [role="tab"], a[href]):focus-visible {
+  outline: 2px solid var(--color-accent) !important; outline-offset: 2px; }
+.ventana-sobria :is(input[type="checkbox"], input[type="radio"]):focus-visible { outline: 2px solid var(--color-accent) !important; outline-offset: 2px; }
+/* La casilla seleccionada ilumina el recuadro que la contiene (ej. "Variantes activadas", "Exigir Nº de serie") */
+.ventana-sobria label:has(> input[type="checkbox"]:focus-visible, > input[type="radio"]:focus-visible) {
+  border-color: var(--color-accent) !important; box-shadow: 0 0 0 1px var(--color-accent) !important; }
+/* El selector SIEMPRE se ve también en las secciones (pedido del dueño 05/11/2026, Compras: "el selector ahí no se nota"):
+   contorno verde en pestañas, botones de cabecera, filtros, limpiar y paginación. outline para no pisar sus anillos. */
+/* html:root sube la fuerza de la regla para ganarle a las de modo oscuro que ponen outline: none */
+/* (clase repetida = más fuerza que la regla general de modo oscuro "button:focus-visible", que lo pone por fuera) */
+html:root .pestanas-sobrias.pestanas-sobrias.pestanas-sobrias > button:focus-visible, html:root .pestanas-filtro.pestanas-filtro.pestanas-filtro > button:focus-visible {
+  outline: 2px solid var(--color-accent) !important; outline-offset: -3px !important; }  /* por dentro: el contenedor puede recortar lo de afuera */
+html:root .boton-cabecera:focus-visible, html:root .limpiar-sobrio:focus-visible, html:root .paginacion-sobria__boton:focus-visible {
+  outline: 2px solid var(--color-accent) !important; outline-offset: 2px; }
+html:root .filtro-sobrio:focus, html:root .buscador-sobrio:focus-within { outline: 2px solid var(--color-accent) !important; outline-offset: -2px; }
+
+/* Utilidades › Gráficos y detalles: colores propios de los gráficos (no dependen del tema elegido en Apariencia).
+   Validados con la guía de gráficos (validate_palette.js): claro y oscuro pasan; en claro el verde agua tiene poco
+   contraste, por eso los gráficos llevan los valores escritos y hay tablas con los números. El rojo (pérdidas) es de
+   estado: siempre con texto. */
+.tablero-graficos { --g-ventas: #2a78d6; --g-resta: #eb6834; --g-ganancia: #1baf7a; --g-perdida: var(--color-danger); --g-rejilla: #E2E8F0; }
+html[data-theme="dark"] .tablero-graficos, html.theme-monochrome .tablero-graficos {
+  --g-ventas: #3987e5; --g-resta: #d95926; --g-ganancia: #199e70; --g-rejilla: #1F2937; }
