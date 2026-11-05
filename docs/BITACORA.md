@@ -7,6 +7,33 @@
 
 ---
 
+## 04/11/2026 (93) · Claude — ENTREGA A ANTIGRAVITY: pantallas, selector y ventanas
+El dueño pidió: *"alista todo para que Antigravity siga lo que dejaste"*. Todo está en la rama `fase-11-sunat` (commits
+cb3582f → 106502f, sin push) y en siumax. **Nada de esto está en Evicamp ni en GitHub**: solo cuando el dueño lo diga en ese
+momento (Evicamp NO paga: nunca Mercado Pago).
+
+**Lo hecho en esta sesión (ver entradas 89 a 92):**
+1. **Pantallas en cualquier tamaño (89-90):** cabeceras que bajan de fila (pestañas `pestanas-sobrias` en cuadrícula), cobro compacto en laptops (`[@media(max-height:820px)]`), botón Guardar siempre visible en ventanas (pie fijo, medio con `flex-1 min-h-0 overflow-y-auto`).
+2. **Las 6 reglas del selector (91-92):** `src/utils/ventanas.ts` (con una ventana abierta el selector nunca se pierde ni sale), `src/utils/flechasEspaciales.ts` (flechas de respaldo en orden de lectura, sin espera; `filaEnMedio()` para cabeceras que bajan de fila), `src/sections/Punto-de-venta/tecladoCaja.ts` (mapa de flechas de la Caja), calendarios con Enter que no saltan.
+3. **Estilo de TODAS las ventanas (92):** el del detalle de producto de Utilidades — piezas `ventana-sobria`, `ventana-cabecera` (+ `--icono`), `ventana-cabecera__titulo`, `ventana-cerrar`, `ventana-cifras`, `ventana-recuadro` en `src/index.css`. 49 ventanas + avisos (`dialogos.tsx`), clave del admin (`autorizacion.tsx`), Compras (molde `Ventana` de PanelCompras) y cobro.
+4. **Retoques pedidos después:** resaltado suave en Proceder/Cotización/Pedido; barra de scroll de siempre (5 px sin flechas) también en Chrome/Edge nuevos y en toda ventana; Nuevo grupo con una sola flecha de volver; Reporte contador con ← → entre Mes y Descargar; letra blanca de botones oscuros en cabeceras.
+
+**Pendientes (esperan al dueño, NO hacer sin su OK):**
+- **Cobro:** "Exacto tarjeta/yape" con ↓ baja a SU campo de pago (salta Efectivo). Se le preguntó si debe ir siempre a Efectivo; no respondió.
+- Ventanas que se abren desde filas (detalle de cliente, fiado, ticket, caja pasada, historial de lotes, etiquetas…) tienen el estilo por las clases pero no se pudieron revisar con datos (siumax casi vacío). Si el dueño manda captura de alguna distinta, arreglarla igual que las demás.
+- Pasar todo a Evicamp y GitHub solo con su aviso (hay SQL de la fase 11 ya en Evicamp; estos cambios son solo de pantallas: `deploy.cjs evicamp` + push).
+- Otros de antes: Cotizaciones/Pedidos como tablas; modo real de Nubefact; plan revendedor y certificado.
+
+**Cómo revisar después de tocar pantallas (todo en `ai-scripts/pruebas/estilo/`, ver LEEME):**
+- `revisar-tamanos.mjs`, `revisar-ventanas.mjs`, `revisar-ventanas-caja.mjs` (que nada se corte; botón principal visible).
+- `revisar-selector.mjs [filtro]` (~15 min; las 6 reglas + saltos de orden). Los 3 "saltos" que quedan son a propósito: Exacto→su campo (pendiente), lista de sugerencias abierta en Ingresar lote, régimen tributario cae en la opción elegida.
+- `ver-ventanas.mjs` (capturas de 19 ventanas) y `../../estilo-ventanas.cjs` (sin --aplicar: qué ventanas no tienen las piezas del estilo).
+- **OJO:** varias pruebas abren una caja y un producto de prueba por SQL y los borran; **se detienen solas si hay una caja abierta de verdad** (el dueño estaba probando ventas en siumax). No forzarlas. No correr dos pruebas a la vez (usan los mismos ids de prueba).
+
+**Cuidados aprendidos (también en MEMORIA-IA):** reglas CSS de "letra clara → oscura" deben excluir elementos con fondo propio; en Chrome/Edge 121+ `scrollbar-width`/`scrollbar-color` anulan el diseño `::-webkit-scrollbar`; un control desactivado no recibe el selector (saltar al primero activo); los "rescates" globales de teclado deben respetar `e.defaultPrevented`; nunca presionar Enter en una prueba sin saber dónde está el selector.
+
+---
+
 ## 04/11/2026 (92) · Claude — Todas las ventanas flotantes con el mismo estilo + selector más rápido y en orden (solo siumax)
 - **Selector:** el dueño notó que "cuando muevo rápido el selector es muy lento" → las flechas de respaldo (`flechasEspaciales.ts`) ya no esperan 90 ms (actúan apenas termina la tecla). Orden de lectura: `filaEnMedio()` hace que las flechas pasen por la fila de botones que baja entre pestañas y buscador en laptops (Inventario, Lotes, Compras, Clientes); Finanzas/Ver historial ↑ al primer botón; pestañas de Ajustes sin ícono en laptops para caber en una fila; Nuevo usuario ← a Estado; Empresa ↑/↓ sin saltos; Tienda web: el texto largo deja salir con ↓ en su última línea (llega a Guardar) y la pestaña entra por el enlace. El "rescate" de Inventario ya no pisa las flechas de las pestañas (`if (e.defaultPrevented) return`). Revisión de saltos: 34/37 sin saltos; los 3 restantes son a propósito (cobro: cada "Exacto" va a su campo — pendiente que el dueño decida; lista de sugerencias abierta en Ingresar lote; régimen tributario cae en la opción elegida).
 - **Ventana de empleado:** scroll delgado, panel izquierdo angosto, permisos en columnas que se acomodan (4 en pantalla grande, 3 en laptop) sin cortar palabras.
