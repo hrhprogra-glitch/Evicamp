@@ -9,7 +9,7 @@
 // El costo adicional (gas, mano de obra) se guarda POR UNIDAD; al producir se manda por todo el lote (× cantidad).
 // Antes esto estaba en Nuevo producto › opciones avanzadas (ahí ahora solo queda un botón que abre esta ventana).
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChefHat, Boxes, Plus, Trash2, X, Search } from 'lucide-react';
+import { ChefHat, Boxes, Plus, Trash2, X, Search, ChevronDown } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar, confirmar } from '../../../utils/dialogos';
@@ -57,6 +57,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
   const [costoAdic, setCostoAdic] = useState('');
   const [precio, setPrecio] = useState('');
   const [categoria, setCategoria] = useState('');
+  const [catAbierta, setCatAbierta] = useState(false);
   // Producir
   const [elegido, setElegido] = useState<Elegido | null>(null);
   const [cantidad, setCantidad] = useState('1');
@@ -67,7 +68,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
 
   const porId = useMemo(() => new Map(productos.map((p) => [String(p.id), p])), [productos]);
   const compuestos = useMemo(() => productos.filter((p) => p.activo !== false && (p.tipoCompuesto === 'COMBO' || p.tipoCompuesto === 'RECETA')), [productos]);
-  const categorias = useMemo(() => Array.from(new Set(productos.map((p) => p.category).filter(Boolean))).sort(), [productos]);
+  const categorias = useMemo(() => Array.from(new Set(productos.map((p) => String(p.category || '').toUpperCase()).filter(Boolean))).sort(), [productos]);
 
   // Al abrir: se leen todas las recetas (es una tabla chica) y se va a donde corresponde
   useEffect(() => {
@@ -163,6 +164,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
     setElegidoInsumo(null); setBusqueda(''); setCantInsumo('1');
   };
 
+  const categoriasFiltradas = categorias.filter((c) => !categoria.trim() || c.includes(categoria.trim().toUpperCase()));
   const costoArmar = insumos.reduce((a, i) => a + costoDe(i), 0) + (tipo === 'RECETA' ? Number(costoAdic) || 0 : 0);
   const ganancia = (Number(precio) || 0) - costoArmar;
   const topeForm = tope(insumos);
@@ -516,13 +518,41 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                     onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
                     className={`${claseCampo} text-right`} />
                 </div>
-                <div>
+                {/* Categoría: lista propia del sistema (como la de productos de arriba), no la del navegador */}
+                <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setCatAbierta(false); }}>
                   <label htmlFor="input-categoria-compuesto" className={etiquetaCampo}>Categoría</label>
-                  <input id="input-categoria-compuesto" type="text" list="lista-categorias-compuesto" autoComplete="off" placeholder="GENERAL" value={categoria}
-                    onChange={(e) => setCategoria(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
-                    className={`${claseCampo} uppercase`} />
-                  <datalist id="lista-categorias-compuesto">{categorias.map((c) => <option key={c} value={c} />)}</datalist>
+                  <input id="input-categoria-compuesto" type="text" autoComplete="off" spellCheck={false} placeholder="GENERAL" value={categoria}
+                    onChange={(e) => { setCategoria(e.target.value); setCatAbierta(true); }}
+                    onClick={() => setCatAbierta((v) => !v)}
+                    onKeyDown={(e) => {
+                      const items = () => Array.from(document.querySelectorAll('[data-cat-prod="true"]')) as HTMLElement[];
+                      if (e.key === 'Enter') {
+                        e.preventDefault(); // Enter no pasa al siguiente cuadro: abre la lista o elige la primera
+                        if (!catAbierta) setCatAbierta(true);
+                        else if (categoriasFiltradas[0]) { setCategoria(categoriasFiltradas[0]); setCatAbierta(false); }
+                      } else if (e.key === 'ArrowDown' && catAbierta && categoriasFiltradas.length) { e.preventDefault(); items()[0]?.focus(); }
+                      else if (e.key === 'Escape' && catAbierta) { e.preventDefault(); e.stopPropagation(); setCatAbierta(false); }
+                    }}
+                    className={`${claseCampo} uppercase pr-9`} />
+                  <ChevronDown size={16} className={`absolute right-3 top-[38px] text-[var(--color-muted)] pointer-events-none transition-transform ${catAbierta ? 'rotate-180' : ''}`} />
+                  {catAbierta && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[var(--color-ink)] z-50 max-h-56 overflow-y-auto">
+                      {categoriasFiltradas.length ? categoriasFiltradas.map((cat) => (
+                        <div key={cat} role="option" tabIndex={0} data-cat-prod="true" aria-selected={categoria.toUpperCase() === cat}
+                          onClick={() => { setCategoria(cat); setCatAbierta(false); enfocar('input-categoria-compuesto'); }}
+                          onKeyDown={(e) => {
+                            const l = Array.from(document.querySelectorAll('[data-cat-prod="true"]')) as HTMLElement[]; const i = l.indexOf(e.currentTarget);
+                            if (e.key === 'ArrowDown') { e.preventDefault(); l[i + 1]?.focus(); }
+                            else if (e.key === 'ArrowUp') { e.preventDefault(); (i > 0 ? l[i - 1] : document.getElementById('input-categoria-compuesto'))?.focus(); }
+                            else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCategoria(cat); setCatAbierta(false); enfocar('input-categoria-compuesto'); }
+                            else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setCatAbierta(false); enfocar('input-categoria-compuesto'); }
+                          }}
+                          className="p-3 border-b border-[var(--color-border)] cursor-pointer outline-none text-xs font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white">
+                          {cat}
+                        </div>
+                      )) : <div className="p-3 text-[11px] font-black uppercase text-[var(--color-muted)]">Nueva categoría: {categoria.toUpperCase()}</div>}
+                    </div>
+                  )}
                 </div>
               </div>
               <div id="resumen-compuesto" className="grid grid-cols-3 gap-2 border-2 border-[var(--color-border)] p-3">

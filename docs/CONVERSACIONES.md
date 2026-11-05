@@ -776,3 +776,5 @@
 - **Dueño:** *"Evicamp tiene como 150 fotos ingresadas; ¿se borrarán? tomó horas ponerlas"* → Claude: 238 fotos; no se borran solas, solo si editan y guardan un producto que ya tiene foto; copia de las fotos hecha → *"haz una última copia ahora para decirle a mi cliente que no ingrese fotos"* → copia de 240 fotos, 0 perdidas (113).
 - **Dueño** (captura): *"el selector no selecciona la X de la foto"* → arreglado (113). Solo siumax.
 - **Dueño:** *"súbelo a evicamp y siumax para mis clientes y github; ojo, en evicamp ninguna foto se tiene que perder"* → Claude: copia de las 240 fotos antes, deploy a todos sin tocar la base, copia después: 240, ninguna perdida; Tienda Web y login verificados; merge a main y push (114).
+- **Dueño:** *"cuando entro a un producto y luego cierro, hace un parpadeo rápido; solo en Evicamp; ¿es por las imágenes?"* → Claude: el selector iba al buscador y volvía a la fila (salto de pantalla en la lista larga de Evicamp); arreglado (115). Solo siumax.
+- **Dueño** (captura): *"en el desplegable de categoría sale así; ese no es el estilo que usamos"* → lista propia del sistema (115). Solo siumax.

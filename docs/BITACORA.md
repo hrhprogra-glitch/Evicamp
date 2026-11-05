@@ -7,6 +7,14 @@
 
 ---
 
+## 05/11/2026 (115) · Claude — Parpadeo al cerrar Editar producto (Evicamp) y lista de Categoría en Producir (solo siumax)
+- **Dueño:** *"cuando entro a un producto y cierro, hace un parpadeo rápido; solo en Evicamp; ¿es porque tiene muchos productos con imágenes?"*
+- **Causa:** al cerrar, el selector hacía ida y vuelta: 46 ms a la fila del producto (correcto) → 130 ms `forceMountFocus` de Inventario lo llevaba al buscador → 180 ms la regla de `ventanas.ts` (no saltar al buscador) lo regresaba a la fila. En Evicamp, con la lista larga y con fotos, eso es un salto de pantalla arriba y abajo. Reproducido en siumax entregándole al navegador de prueba los productos de Evicamp (solo lectura, `ver-parpadeo-evicamp.mjs`): las fotos no se ponen en blanco; lo que cambia es el buscador iluminándose.
+- **Arreglo** (`Inventario/index.tsx`): `forceMountFocus` solo pone el buscador si el selector no está en ningún lado (body). Probado: al cerrar, el selector queda en la fila y no se mueve; al entrar a Inventario sigue empezando en el buscador; cerrar Nuevo producto vuelve a su botón. 0 errores.
+- **Producir › Categoría** (*"ese no es el estilo de desplegable que usamos"*): era la lista del navegador (`datalist`) → lista propia del sistema (borde recto, colores del tema, flecha), filtra lo escrito, Enter abre/elige la primera y el selector se queda, ↓ entra, Escape cierra, avisa "Nueva categoría: …". Probado en modo oscuro.
+
+---
+
 ## 05/11/2026 (114) · Claude — PASE a Evicamp, clientes, siumax y GitHub (108–113) sin perder fotos
 - **Dueño:** *"súbelo a evicamp y siumax para mis clientes y github; ojo, en evicamp ninguna foto se tiene que perder"*.
 - **SQL:** NO se tocó la base de Evicamp. El único cambio de SQL desde (107) es el GRANT de `fn_edit_batch`/`fn_soft_delete_batch`, y en Evicamp esos permisos ya estaban (revisado en 108).

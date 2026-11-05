@@ -4,7 +4,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 05/11/2026 (114), Claude: **PASE a Evicamp, clientes, siumax y GitHub** de 108–113, sin SQL y con las 240 fotos de Evicamp verificadas antes y después.
+- **Última actualización:** 05/11/2026 (115), Claude: sin parpadeo al cerrar Editar producto (el selector ya no va al buscador) y lista de Categoría con el estilo del sistema en Producir. Solo siumax.
+- (114) 05/11/2026, Claude: **PASE a Evicamp, clientes, siumax y GitHub** de 108–113, sin SQL y con las 240 fotos de Evicamp verificadas antes y después.
 - (113) 05/11/2026, Claude: editar producto ya no borra la foto (y se ve con su X). Evicamp sigue con el error hasta el pase. Solo siumax.
 - (112) 05/11/2026, Claude: combos y recetas se arman en Producir (nombre → productos → combo/receta → precio), tope por el insumo que se acaba primero; quitado de Nuevo producto. Solo siumax.
 - (111) 05/11/2026, Claude: Inventario › Compras, ↓ desde la cabecera baja a la fila de Compras. Solo siumax.

@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProducto.tsx": {
-    "mtime": 1793921165.378518,
-    "seen": 1793921230.1457357,
-    "ast_hash": "41916c3639aab0fdf423975920287a30",
+    "mtime": 1793921654.2077453,
+    "seen": 1793921736.4892566,
+    "ast_hash": "adae127cc928998d6f6d54a5a2ebff69",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaLotes.tsx": {
@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793921214.1552298,
-    "seen": 1793921230.1459002,
-    "ast_hash": "e959a7900f46a5322f47a05652fc24a4",
+    "mtime": 1793921727.226759,
+    "seen": 1793921736.4893463,
+    "ast_hash": "1f98c910ae64ca62b1e29764392927d4",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793921214.1572416,
-    "seen": 1793921230.145902,
-    "ast_hash": "b6d9284f602e57ae330429e8327ef817",
+    "mtime": 1793921727.228297,
+    "seen": 1793921736.489347,
+    "ast_hash": "fe537022e01f49cb204f6e39844daa0c",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
