@@ -604,6 +604,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           'input-barcode-producto',
           'input-buscar-foto-producto',
           'btn-subir-local-producto',
+          'btn-quitar-imagen-producto',
           'input-precio-producto',
           'input-precio-mayorista-producto',
           'input-stock-minimo-producto',
@@ -1028,7 +1029,25 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           }
           if (e.key === 'ArrowDown' || e.key === 'Enter') {
             e.preventDefault();
-            document.getElementById('input-precio-producto')?.focus();
+            (document.getElementById('btn-quitar-imagen-producto') || document.getElementById('input-precio-producto'))?.focus();
+            return;
+          }
+        }
+
+        // X de la foto (quitarla): ← buscador, ↑ Subir local, ↓ la fila de precios; Enter = clic (la quita y vuelve al buscador)
+        if (active?.id === 'btn-quitar-imagen-producto') {
+          if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('input-buscar-foto-producto')?.focus(); return; }
+          if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-subir-local-producto')?.focus(); return; }
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            (document.getElementById('input-precio-mayorista-producto') || document.getElementById('input-precio-producto'))?.focus();
+            return;
+          }
+          if (e.key === 'ArrowRight') { e.preventDefault(); return; }
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setFormData((prev) => ({ ...prev, image: '' }));
+            setTimeout(() => document.getElementById('input-buscar-foto-producto')?.focus(), 30);
             return;
           }
         }
@@ -1042,7 +1061,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           }
           if (e.key === 'ArrowDown') {
             e.preventDefault();
-            document.getElementById('input-precio-producto')?.focus();
+            (document.getElementById('btn-quitar-imagen-producto') || document.getElementById('input-precio-producto'))?.focus();
             return;
           }
           if (e.key === 'ArrowUp') {
@@ -1056,7 +1075,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         if (active?.id === 'input-precio-producto') {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
-            document.getElementById('input-buscar-foto-producto')?.focus();
+            (document.getElementById('btn-quitar-imagen-producto') || document.getElementById('input-buscar-foto-producto'))?.focus();
             return;
           }
           if (e.key === 'ArrowDown' || e.key === 'Enter') {
@@ -1088,7 +1107,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         if (active?.id === 'input-precio-mayorista-producto') {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
-            const prev = document.getElementById('btn-subir-local-producto') || 
+            const prev = document.getElementById('btn-quitar-imagen-producto') ||
+                         document.getElementById('btn-subir-local-producto') ||
                          document.getElementById('input-buscar-foto-producto');
             prev?.focus();
             return;
@@ -2040,7 +2060,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                         document.getElementById('input-buscar-foto-producto')?.focus();
                       } else if (e.key === 'ArrowDown') {
                         e.preventDefault();
-                        document.getElementById('input-precio-producto')?.focus();
+                        (document.getElementById('btn-quitar-imagen-producto') || document.getElementById('input-precio-producto'))?.focus();
                       }
                     }}
                     className="bg-[var(--color-ink)] text-white px-5 py-2.5 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[var(--color-surface)] hover:text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-surface)] focus:text-[var(--color-ink)] transition-all cursor-pointer rounded-none shadow-[3px_3px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] shrink-0"
@@ -2117,7 +2137,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                     <button 
                       id="btn-quitar-imagen-producto"
                       type="button"
-                      onClick={() => setFormData({...formData, image: ''})}
+                      onClick={() => { setFormData({...formData, image: ''}); setTimeout(() => document.getElementById('input-buscar-foto-producto')?.focus(), 30); }}
                       className="text-[var(--color-danger)] hover:bg-[#FEF2F2] p-2 transition-colors border-2 border-transparent hover:border-[var(--color-danger)] cursor-pointer"
                       title="Quitar imagen"
                     >
