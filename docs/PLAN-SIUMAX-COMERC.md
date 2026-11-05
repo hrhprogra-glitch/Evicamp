@@ -4,7 +4,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 05/11/2026 (112), Claude: combos y recetas se arman en Producir (nombre → productos → combo/receta → precio), tope por el insumo que se acaba primero; quitado de Nuevo producto. Solo siumax.
+- **Última actualización:** 05/11/2026 (113), Claude: editar producto ya no borra la foto (y se ve con su X). Evicamp sigue con el error hasta el pase. Solo siumax.
+- (112) 05/11/2026, Claude: combos y recetas se arman en Producir (nombre → productos → combo/receta → precio), tope por el insumo que se acaba primero; quitado de Nuevo producto. Solo siumax.
 - (111) 05/11/2026, Claude: Inventario › Compras, ↓ desde la cabecera baja a la fila de Compras. Solo siumax.
 - (110) 05/11/2026, Claude: Nuevo ajuste sin escoger Merma/Conteo (se cuenta; falta = merma, sobra = sobrante; enlace "Solo salieron unos pocos"). Solo siumax.
 - (109) 05/11/2026, Claude: Conteos y fiados ya no muestran productos eliminados en el buscador. Solo siumax.

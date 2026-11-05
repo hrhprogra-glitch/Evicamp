@@ -772,3 +772,4 @@
 - **Dueño:** *"hay 3 botones; mejor solo el Guardar y Guardar e ir a Lotes"* → hecho (112). Solo siumax.
 - **Dueño** (captura, Receta seleccionada): *"aquí el selector no hace clic, pasa al siguiente; va en contra de las reglas"* → arreglado (Enter = clic y el selector se queda) + quitar producto ya no salta a Nombre (112). Solo siumax.
 - **Dueño** (captura, Precio y Categoría): *"cuando selecciono y presiono Enter pasa abajo; el Enter tiene que ser como el clic; sigue cometiendo el mismo error"* → en toda la ventana Producir Enter ya no mueve el selector; regla 9 escrita (112). Solo siumax.
+- **Dueño:** *"agregué una imagen; si es incorrecta, al volver a entrar al producto la X desapareció; solo puedo reemplazarla"* → Claude: la ventana leía la foto de un campo equivocado; al editar no se veía y al guardar se BORRABA. Arreglado; revisados los respaldos de Evicamp: ninguna foto perdida (113). Solo siumax.

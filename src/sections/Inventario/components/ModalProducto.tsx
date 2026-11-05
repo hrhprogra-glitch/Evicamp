@@ -366,7 +366,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           precioMayorista: initialData.precioMayorista?.toString() || '',
           minStock: initialData.minStock?.toString() || '5',
           weightUnit: unidadDe(initialData).corto, // fase 1.1: "Se vende por" (UND, BOLSA, KG, M…)
-          image: initialData.image || '',
+          // La lista de Inventario trae la foto en imageUrl (no en image): sin esto, al editar no se veía (ni su X para
+          // quitarla) y al guardar se BORRABA (image_url quedaba vacío). Arreglado 05/11/2026.
+          image: initialData.imageUrl || initialData.image_url || initialData.image || '',
           marca: initialData.marca || '',
           modelo: initialData.modelo || '',
           medida: initialData.medida || '',
@@ -2113,6 +2115,8 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                       <p className="text-[9px] text-[#64748B] truncate mt-1">{formData.image}</p>
                     </div>
                     <button 
+                      id="btn-quitar-imagen-producto"
+                      type="button"
                       onClick={() => setFormData({...formData, image: ''})}
                       className="text-[var(--color-danger)] hover:bg-[#FEF2F2] p-2 transition-colors border-2 border-transparent hover:border-[var(--color-danger)] cursor-pointer"
                       title="Quitar imagen"
@@ -2245,10 +2249,10 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                     <SlidersHorizontal size={18} className={`${showAdvancedPanel ? 'text-[var(--color-success)]' : 'text-slate-500'} group-focus:text-[var(--color-ink)]`} />
                     <div>
                       <span className="text-xs font-black uppercase tracking-wider block">
-                        {showAdvancedPanel ? '▼ Opciones Avanzadas (Ubicación, Garantías, Escalas, Tallas, Recetas)' : '▶ Más Opciones Avanzadas (Ubicación, Garantías, Escalas, Tallas, Recetas)'}
+                        {showAdvancedPanel ? '▼ Opciones Avanzadas (Ubicación, Garantías, Escalas, Tallas)' : '▶ Más Opciones Avanzadas (Ubicación, Garantías, Escalas, Tallas)'}
                       </span>
                       <span className="text-[10px] text-[#64748B] font-bold group-focus:text-[var(--color-ink)]">
-                        {showAdvancedPanel ? 'Haz clic para replegar las opciones avanzadas' : 'Empaques por caja, tallas de ropa/calzado, recetas o ubicación en tienda'}
+                        {showAdvancedPanel ? 'Haz clic para replegar las opciones avanzadas' : 'Empaques por caja, tallas de ropa/calzado o ubicación en tienda'}
                       </span>
                     </div>
                   </div>

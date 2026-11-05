@@ -7,6 +7,15 @@
 
 ---
 
+## 05/11/2026 (113) · Claude — Editar producto: la imagen ya se ve con su X y no se borra al guardar (solo siumax)
+- **Dueño:** *"agregué una imagen; si es la incorrecta, al volver a entrar al producto la X para quitarla desapareció; solo puedo reemplazarla"*.
+- **Causa (grave):** `ModalProducto` cargaba la foto de `initialData.image`, pero la lista de Inventario la trae en `imageUrl` → al editar la foto no se veía (ni su X) y **al guardar se enviaba `image_url: ` y se BORRABA**.
+- **Arreglo:** `image: initialData.imageUrl || initialData.image_url || initialData.image || `; la X tiene id `btn-quitar-imagen-producto`. De paso: el panel avanzado ya no dice "Recetas" (se arman en Producir).
+- **¿Se perdieron fotos en Evicamp?** Comparados los 14 respaldos de Evicamp (23/10 → 05/11 17:33) con la base actual (solo lectura, `/tmp/vps-imagenes-perdidas.cjs` con /opt/node22/bin/node): **0 productos** tenían imagen en un respaldo y hoy no. Hoy: 223 con imagen; las 523 vacías nunca tuvieron.
+- Probado en siumax: editar COCA COLA ORIGINAL 500ML → vista previa y X visibles; guardar sin cambios → imagen igual (md5). 0 errores. Solo siumax; **Evicamp tiene el error hasta el próximo pase** (cada vez que editan y guardan un producto con foto, la foto se borra): recomendado subirlo pronto.
+
+---
+
 ## 05/11/2026 (112) · Claude — Combos y recetas se arman en el botón Producir, con tope por insumo (solo siumax)
 - **Dueño:** *"¿no sería mejor que combo/receta esté en el botón Producir? entro, busco los productos y los junto"*, *"primero el nombre, luego escoger los productos"*, *"que esté guardar o ir a lotes"* y *"debe haber un tope: si tengo 1 kilo de harina y 2 huevos, el tope lo pone la cantidad de huevos"* → eligió **quitar la sección de Nuevo producto** → *"empieza"*.
 - **`ModalProduccion.tsx` reescrita** (3 vistas): **Lista** de combos y recetas (cuántos alcanzan, Producir para recetas, Cambiar) · **Formulario** 1. nombre → 2. productos que usa (buscador + cantidad por unidad, tabla con costo y stock, "alcanza para N · lo limita X") → 3. Combo o Receta (+ costo adicional por unidad) → 4. precio y categoría (cuesta armarlo / ganancia y %) → Guardar · Guardar y producir ahora · Guardar e ir a Lotes (las dos últimas solo receta) · **Producir** con TOPE: "Puedes producir hasta N · lo limita X (hay S, cada uno usa F)"; escribir más lo deja en el tope y avisa; con tope 0 no produce. Al terminar pregunta "¿Ver sus lotes?" (pestaña Lotes buscando el producto).
