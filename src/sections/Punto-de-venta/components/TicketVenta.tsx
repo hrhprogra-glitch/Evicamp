@@ -447,7 +447,7 @@ export const TicketVenta: React.FC<Props> = ({
             }
           }}
           disabled={cart.length === 0}
-          className={`w-full py-2 border-2 border-[var(--color-ink)] font-black text-sm uppercase tracking-[0.1em] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer ${
+          className={`w-full py-2 border-2 border-[var(--color-ink)] font-black text-sm uppercase tracking-[0.1em] flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-accent)] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer ${
             selectedIndex === cart.length 
               ? 'bg-[var(--color-ink)] text-[var(--color-accent)] ring-2 ring-offset-2 ring-[var(--color-ink)]' 
               : 'bg-[var(--color-accent)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)]'
@@ -463,7 +463,7 @@ export const TicketVenta: React.FC<Props> = ({
             onClick={onCotizar}
             onKeyDown={flechasCaja('btn-pos-cotizacion')}
             disabled={cart.length === 0}
-            className="py-1.5 px-2 border-2 border-[var(--color-ink)] bg-white hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
+            className="py-1.5 px-2 border-2 border-[var(--color-ink)] bg-white hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-accent)] disabled:opacity-50 disabled:cursor-not-allowed font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
             title="Guardar como Cotización / Proforma (F7)"
           >
             <FileText size={13} className="text-blue-600" /> Cotización (F7)
@@ -474,7 +474,7 @@ export const TicketVenta: React.FC<Props> = ({
             onClick={onPedido}
             onKeyDown={flechasCaja('btn-pos-pedido')}
             disabled={cart.length === 0}
-            className="py-1.5 px-2 border-2 border-[var(--color-ink)] bg-white hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
+            className="py-1.5 px-2 border-2 border-[var(--color-ink)] bg-white hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-accent)] disabled:opacity-50 disabled:cursor-not-allowed font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
             title="Guardar como Pedido por Encargo (F8)"
           >
             <Package size={13} className="text-amber-600" /> Pedido (F8)

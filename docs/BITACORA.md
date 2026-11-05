@@ -15,6 +15,7 @@
 - Aplicado a **49 ventanas** con `ai-scripts/estilo-ventanas.cjs` (agrega clases, NO toca teclado ni lógica; sin `--aplicar` solo informa) + a mano: cobro, avisos del sistema (`dialogos.tsx`: Aviso verde / Confirmar amarillo) y clave del administrador (`autorizacion.tsx`, candado amarillo). El color que tenía cada cabecera pasó al cuadrito: cierre de caja rojo, movimiento/detalle de caja/balanza azul, precio de consumo y editar salida amarillo, el resto verde. Sin tocar: Tienda Web pública y menú del celular.
 - Revisado: capturas de 19 ventanas + aviso; `revisar-ventanas.mjs` y `revisar-ventanas-caja.mjs` sin fallas (botón principal visible en 6 tamaños), 0 errores, siumax con sus 11 ventas.
 - No se pudieron abrir con datos (siumax vacío): las ventanas que salen de una fila (detalle de cliente, fiado, ticket, caja pasada, historial de lotes…); reciben el mismo estilo por las clases.
+- **Después (mismo día):** Caja: Proceder al pago, Cotización y Pedido con un resaltado suave (borde de acento) cuando el selector está en ellos. **Barra de scroll:** Chrome/Edge 121+ ignoran el diseño de 5 px sin flechas si hay `scrollbar-width`/`scrollbar-color` (salía la barra fina con flechas, p. ej. en la vista previa del ticket); en index.css se dejan en `auto` con `@supports selector(::-webkit-scrollbar)` y toda zona con scroll dentro de `.ventana-sobria` usa la barra del sistema aunque le falte `custom-scrollbar`.
 - Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub.
 
 ---

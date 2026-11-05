@@ -902,3 +902,20 @@ nav button {
 .ventana-cabecera :not(h2):not(h3):not(svg)[class*="text-amber"], .ventana-cabecera :not(h2):not(h3):not(svg)[class*="text-yellow"],
 .ventana-cabecera :not(h2):not(h3):not(svg)[class*="text-emerald"], .ventana-cabecera :not(h2):not(h3):not(svg)[class*="text-[var(--color-accent"],
 .ventana-cabecera :not(h2):not(h3):not(svg)[class*="text-[var(--color-warning"] { color: var(--color-muted) !important; }
+/* Toda zona con scroll dentro de una ventana usa la barra delgada del sistema (como .custom-scrollbar),
+   aunque se le haya olvidado la clase (pedido del dueño 04/11/2026: vista previa del ticket) */
+.ventana-sobria, .ventana-sobria * { scrollbar-width: thin; scrollbar-color: #CBD5E1 #F8FAFC; }
+.ventana-sobria::-webkit-scrollbar, .ventana-sobria *::-webkit-scrollbar { width: 5px; height: 5px; }
+.ventana-sobria::-webkit-scrollbar-track, .ventana-sobria *::-webkit-scrollbar-track { background: #F8FAFC; }
+.ventana-sobria::-webkit-scrollbar-thumb, .ventana-sobria *::-webkit-scrollbar-thumb { background: #CBD5E1; }
+.ventana-sobria *::-webkit-scrollbar-thumb:hover { background: var(--color-ink); }
+html.theme-monochrome .ventana-sobria, html.theme-monochrome .ventana-sobria *,
+html[data-theme="dark"] .ventana-sobria, html[data-theme="dark"] .ventana-sobria * { scrollbar-color: #334155 #0B0F17; }
+html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-track, html[data-theme="dark"] .ventana-sobria *::-webkit-scrollbar-track { background: #0B0F17; }
+html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-thumb, html[data-theme="dark"] .ventana-sobria *::-webkit-scrollbar-thumb { background: #334155; }
+/* Chrome/Edge 121+: si scrollbar-width o scrollbar-color tienen valor, IGNORAN ::-webkit-scrollbar y dibujan su barra
+   fina con flechas (la que no le gusta al dueño). En esos navegadores se dejan en "auto" para que se use el diseño
+   de siempre (5 px, sin flechas). Firefox no tiene ::-webkit-scrollbar y sigue usando scrollbar-width: thin. */
+@supports selector(::-webkit-scrollbar) {
+  .custom-scrollbar, .ventana-sobria, .ventana-sobria * { scrollbar-width: auto !important; scrollbar-color: auto !important; }
+}
