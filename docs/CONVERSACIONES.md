@@ -754,3 +754,4 @@
 - **Dueño:** *"en categoría pongo Escape y no se sale, se queda atrapado"* → arreglado (Escape cierra la lista, otro Escape cierra la ventana). Anunció mejoras en Utilidades › Top 5: esperar sus órdenes.
 - **Dueño:** *"que el botón Top 5 muestre gráficos y detalles como tienen las empresas para ver ganancias y pérdidas"* → *"busca tesis o sistemas de empresas… y fórmulas"* → Claude investigó y propuso → *"mejora, ya empieza"*. Hecho: Utilidades › Gráficos y detalles (cifras clave con comparación, cascada, punto de equilibrio con gastos fijos, por día, por categoría con rotación/GMROI, ABC, ganan/pierden, pagos, cuándo vendes, fiados por antigüedad y mercadería parada). Solo siumax.
 - **Dueño:** *"solo falta escoger días anteriores, calendario desde y hasta, predeterminado este mes"* → hecho en Gráficos y detalles (11/11). Solo siumax.
+- **Dueño:** *"el desde y hasta pueden estar al costado de la X"* → movidos a la cabecera (14/14). Solo siumax.

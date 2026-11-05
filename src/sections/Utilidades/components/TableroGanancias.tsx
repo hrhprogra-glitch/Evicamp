@@ -114,7 +114,7 @@ export const TableroGanancias: React.FC<Props> = ({ onClose }) => {
   const ventas: VentaPeriodo[] = datos?.ventas || [];
   const costoUnitario: Record<string, number> = datos?.costoUnitario || {};
 
-  // Calendarios: Enter lo abre y el selector se queda en la fecha; ← → entre Desde y Hasta; ↓ a los recuadros; ↑ a la X
+  // Calendarios (en la cabecera): Enter lo abre y el selector se queda en la fecha; ← → entre Desde, Hasta y la X; ↓ a los recuadros
   const ultimoCambio = React.useRef(0);
   const teclasFecha = (izq: string | null, der: string | null) => (e: React.KeyboardEvent<HTMLInputElement>) => {
     const ir = (id: string | null) => { if (id) document.getElementById(id)?.focus(); };
@@ -125,7 +125,7 @@ export const TableroGanancias: React.FC<Props> = ({ onClose }) => {
     } else if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); ir(izq); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); ir(der); }
     else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); ir('tablero-cifras'); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); ir('btn-cerrar-tablero'); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); }   // ya están arriba de todo
   };
   const alCambiarFecha = (id: string, poner: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
     ultimoCambio.current = Date.now();
@@ -306,37 +306,40 @@ export const TableroGanancias: React.FC<Props> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono" role="dialog" aria-modal="true" aria-label="Gráficos y detalles">
       <div className="ventana-sobria tablero-graficos w-full max-w-7xl h-[calc(var(--alto-pantalla)*0.94)] flex flex-col">
-        <div className="ventana-cabecera">
-          <div className="flex items-center gap-3 min-w-0">
+        <div className="ventana-cabecera flex-wrap">
+          <div className="flex items-center gap-3 min-w-0 shrink-0">
             <div className="ventana-cabecera__icono"><PieChart size={18} /></div>
             <div className="min-w-0">
               <h2 className="ventana-cabecera__titulo">Gráficos y detalles</h2>
               <p className="ventana-cabecera__subtitulo">Del {rangoTxt} · comparado con el {anteriorTxt}{cargando ? ' · calculando…' : ''}</p>
             </div>
           </div>
-          <button id="btn-cerrar-tablero" type="button" onClick={onClose} title="Cerrar (Esc)" className="ventana-cerrar"><X size={18} /></button>
-        </div>
-
-        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 sm:p-4 grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4 content-start bg-[var(--color-bg)]">
-          {/* RANGO DE FECHAS DEL TABLERO (por defecto este mes) */}
-          <div className="xl:col-span-2 flex flex-wrap items-end gap-3">
-            <label className="flex flex-col text-[11px] font-black uppercase tracking-widest text-[var(--color-muted)]">
+          {/* Rango del tablero (por defecto este mes), al lado de la X */}
+          <div className="flex flex-wrap items-center justify-end gap-2 ml-auto">
+            <label className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-[var(--color-muted)]">
               Desde
               <input id="tablero-desde" type="date" value={desde} max={hasta} title="Enter abre el calendario"
                 onChange={alCambiarFecha('tablero-desde', setDesde)} onKeyDown={teclasFecha(null, 'tablero-hasta')}
                 onClick={(e) => { try { e.currentTarget.showPicker?.(); } catch { /* sin calendario */ } }}
-                className="filtro-sobrio mt-1 w-44" />
+                className="filtro-sobrio w-40" />
             </label>
-            <label className="flex flex-col text-[11px] font-black uppercase tracking-widest text-[var(--color-muted)]">
+            <label className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-[var(--color-muted)]">
               Hasta
               <input id="tablero-hasta" type="date" value={hasta} min={desde} max={fechaLocalPeru()} title="Enter abre el calendario"
-                onChange={alCambiarFecha('tablero-hasta', setHasta)} onKeyDown={teclasFecha('tablero-desde', null)}
+                onChange={alCambiarFecha('tablero-hasta', setHasta)} onKeyDown={teclasFecha('tablero-desde', 'btn-cerrar-tablero')}
                 onClick={(e) => { try { e.currentTarget.showPicker?.(); } catch { /* sin calendario */ } }}
-                className="filtro-sobrio mt-1 w-44" />
+                className="filtro-sobrio w-40" />
             </label>
-            {cargando && <span className="text-[11px] font-black uppercase tracking-widest text-[var(--color-muted)] pb-3">Calculando…</span>}
+            <button id="btn-cerrar-tablero" type="button" onClick={onClose} title="Cerrar (Esc)" className="ventana-cerrar"
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById('tablero-hasta')?.focus(); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); document.getElementById('tablero-cifras')?.focus(); }
+                else if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); }
+              }}><X size={18} /></button>
           </div>
+        </div>
 
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 sm:p-4 grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4 content-start bg-[var(--color-bg)]">
           {/* 1. CIFRAS CLAVE */}
           <Seccion id="tablero-cifras" titulo="Cifras clave" ayuda="Comparadas con el período anterior del mismo largo." className="xl:col-span-2">
             <div className="ventana-cifras grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 border-b-0">

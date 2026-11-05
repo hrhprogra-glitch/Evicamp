@@ -32,7 +32,7 @@
 - **SQL (siumax aplicado, Evicamp PENDIENTE con ensayo):** `empresa_config.gastos_fijos_mes numeric default 0` (seguridad-sesion.sql; lo cambia quien tiene gerencia_configuracion_sistema).
 - **Gráficos:** Recharts; colores propios `.tablero-graficos` (--g-ventas azul, --g-resta naranja, --g-ganancia verde agua, rojo solo para pérdidas con texto) validados con la guía de gráficos (claro y oscuro PASS; en claro el verde agua pide valores escritos y tablas: los tiene). Sin esquinas redondeadas.
 - Probado en siumax: capturas claro y oscuro, teclado, 0 errores. `VentanaTopsFlotante.tsx` quedó sin uso.
-- **Después:** *"solo falta que me permita escoger días anteriores, un calendario desde y hasta, predeterminado para este mes"*. El tablero ahora tiene su propio rango (Desde/Hasta, por defecto del 1 del mes a hoy) y calcula sus datos con `calcularAnalisis` (ya no recibe los de la tabla). Calendarios con la regla: Enter abre, el selector se queda; ← → entre Desde y Hasta; ↓ a Cifras clave; ↑ a la X; las flechas no cambian la fecha. Probado 11/11.
+- **Después:** *"solo falta que me permita escoger días anteriores, un calendario desde y hasta, predeterminado para este mes"*. El tablero ahora tiene su propio rango (Desde/Hasta, por defecto del 1 del mes a hoy) y calcula sus datos con `calcularAnalisis` (ya no recibe los de la tabla). Calendarios con la regla: Enter abre, el selector se queda; ← → entre Desde y Hasta; ↓ a Cifras clave; ↑ a la X; las flechas no cambian la fecha. Probado 11/11. Luego, a pedido del dueño, Desde/Hasta pasaron a la cabecera al lado de la X (→ desde Hasta a la X, ← vuelve, ↓ a Cifras; 14/14).
 - Rama `fase-11-sunat`. NO subido a Evicamp ni GitHub.
 
 ---
