@@ -690,5 +690,12 @@
     - En `ModalDetalleTicket.tsx`: dividida la sección SUNAT en bloque de comprobante principal con cuadrícula al 50% (`[ ↗ PDF ]` y `[ ↗ XML ]`, 36px de alto, 100% de ancho) y bloque de notas de crédito en recuadro sobrio punteado con cabecera de la NC y sus dos botones al 50% (`[ 🗎 VER NOTA ]` y `[ 🔄 REENVIAR ]`).
     - Teclado: selector que navega con `ArrowDown` de Cabecera → Boleta → Nota de Crédito → Botón Reimprimir; y con `ArrowUp` en sentido inverso. `ArrowLeft` / `ArrowRight` entre botones de cada fila.
     - Verificado con Puppeteer/Edge en el ticket real 308406 de siumax (`ai-scripts/pruebas/ver-modal-ticket-sunat.mjs`), captura guardada `ticket_sunat_sobrio.png`. Compilado con `npx tsc -b` y desplegado a siumax. Solo siumax.
+- **Dueño** (04/11/2026): *"ESTA PERFECTO PERO ES MUY GRANDE TODO PODRIA OCUPAR MENOS ESPACIO PARA APRECIAR MEJOR EL TICKET"*.
+  - Antigravity compactó verticalmente el bloque SUNAT:
+    - Boleta en 1 sola línea con título corto (`Boleta {numero}`), estado e insignia, y botones `[PDF]` `[XML]` alineados a la derecha (24px de alto). Subtítulo mínimo con mensaje y modo prueba en 1 línea `text-[10px]`.
+    - Nota de Crédito en 1 sola franja delgada con datos a la izquierda y botones `[VER NOTA]` `[REENVIAR]` (24px) a la derecha.
+    - La altura del bloque bajó de ~250px a ~65px (75% menos de altura), permitiendo que el ticket térmico se aprecie 100% completo (hasta el total, pago y código QR) sin necesidad de scroll.
+    - Verificado con Puppeteer/Edge (`ticket_sunat_sobrio.png`), compilado y desplegado a siumax. Solo siumax.
+
 
 

@@ -373,53 +373,57 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
           </div>
         </div>
 
-        {/* BOLETA/FACTURA: estado ante SUNAT, sus notas de crédito y acciones */}
+        {/* BOLETA/FACTURA: estado ante SUNAT, sus notas de crédito y acciones (modo compacto) */}
         {sunat && (
-          <div id="bloque-sunat" className="border-b-2 border-[var(--color-ink)] p-3 bg-white space-y-3 shrink-0">
+          <div id="bloque-sunat" className="border-b-2 border-[var(--color-ink)] px-3 py-2 bg-white space-y-1.5 shrink-0">
             {/* 1. COMPROBANTE PRINCIPAL (BOLETA / FACTURA) */}
-            <div id="bloque-sunat-comprobante" className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[12px] font-black uppercase text-[var(--color-ink)]">{nombreComprobante(sunat.docType)} {sunat.numero}</span>
-                <InsigniaCpe estado={sunat.estado} generado={Boolean(sunat.pdf)} chica />
-                {sunat.modo && sunat.modo !== 'REAL' && <span className="text-[10px] font-black uppercase text-[var(--color-warning-dark)]">Modo {sunat.modo.toLowerCase()}: sin valor ante SUNAT</span>}
-                {sunat.anulada && <span className="text-[10px] font-black uppercase text-[var(--color-danger)]">Venta anulada</span>}
-              </div>
-              {sunat.mensaje && <p id="sunat-mensaje" className="text-[11px] font-bold text-[var(--color-ink)] bg-[var(--color-bg)] border border-[var(--color-border)] p-1.5">{sunat.mensaje}</p>}
-              {sunat.estado === 'NO_EMITIDO' && (
-                <p className="text-[11px] font-bold text-[var(--color-muted)]">La venta se anuló antes de que SUNAT aceptara este comprobante: no se emitió y no necesita nota de crédito.</p>
-              )}
-              {sunat.estado === 'ANULANDO' && (
-                <p className="text-[11px] font-bold text-[var(--color-info)]">Venta anulada: se está confirmando con el proveedor que el comprobante no se emitió (unos segundos).</p>
-              )}
-              {sunat.estado === 'RECHAZADO' && (
-                <p className="text-[11px] font-bold text-[var(--color-danger)]">SUNAT lo rechazó: revisa el mensaje. Este comprobante no tiene valor; corrige los datos y emite uno nuevo.</p>
-              )}
-              {sunat.fiado && !sunat.anulada && (
-                <p className="text-[11px] font-bold text-[var(--color-muted)]">Venta al crédito: para devolver, anúlala completa (emite la nota de crédito).</p>
-              )}
-
-              {accionesComprobante.length > 0 && (
-                <div className={`grid gap-2 ${accionesComprobante.length === 1 ? 'grid-cols-1' : accionesComprobante.length === 2 ? 'grid-cols-2' : accionesComprobante.length === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'}`}>
-                  {accionesComprobante.map((a) => (
-                    <button
-                      key={a.id}
-                      id={a.id}
-                      type="button"
-                      data-sunat="true"
-                      onClick={a.hacer}
-                      className="h-[36px] px-3 border-2 border-[var(--color-ink)] bg-white text-[11px] font-black uppercase flex items-center justify-center gap-1.5 cursor-pointer rounded-none hover:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white transition-colors"
-                    >
-                      <a.Icono size={14} className="shrink-0" />
-                      <span className="truncate">{a.texto}</span>
-                    </button>
-                  ))}
+            <div id="bloque-sunat-comprobante" className="space-y-0.5">
+              <div className="flex items-center justify-between gap-1.5">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-[11px] font-black uppercase text-[var(--color-ink)] truncate">
+                    {(sunat.docType === 1 ? 'Factura' : sunat.docType === 3 ? 'Boleta' : nombreComprobante(sunat.docType))} {sunat.numero}
+                  </span>
+                  <InsigniaCpe estado={sunat.estado} generado={Boolean(sunat.pdf)} chica />
                 </div>
-              )}
+
+                {/* Botones del comprobante compactos a la derecha */}
+                {accionesComprobante.length > 0 && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    {accionesComprobante.map((a) => (
+                      <button
+                        key={a.id}
+                        id={a.id}
+                        type="button"
+                        data-sunat="true"
+                        onClick={a.hacer}
+                        className="h-[24px] px-2 border-2 border-[var(--color-ink)] bg-white text-[10px] font-black uppercase inline-flex items-center gap-1 cursor-pointer rounded-none hover:bg-[var(--color-bg)] focus:outline-none focus:ring-1 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white transition-colors"
+                      >
+                        <a.Icono size={11} className="shrink-0" />
+                        <span>{a.texto}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Subtítulo informativo compacto */}
+              <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold text-[var(--color-muted)] leading-tight">
+                {sunat.modo && sunat.modo !== 'REAL' && (
+                  <span className="text-[var(--color-warning-dark)] uppercase">Modo prueba</span>
+                )}
+                {sunat.anulada && (
+                  <span className="text-[var(--color-danger)] uppercase">Venta anulada</span>
+                )}
+                {sunat.mensaje && <span>{sunat.mensaje}</span>}
+                {sunat.estado === 'NO_EMITIDO' && <span>No se emitió a SUNAT: no necesita nota de crédito.</span>}
+                {sunat.estado === 'RECHAZADO' && <span className="text-[var(--color-danger)]">SUNAT lo rechazó. Corrige los datos y emite uno nuevo.</span>}
+                {sunat.fiado && !sunat.anulada && <span>Venta al crédito: para devolver, anúlala completa.</span>}
+              </div>
             </div>
 
             {/* 2. NOTAS DE CRÉDITO ASOCIADAS */}
             {notas.length > 0 && (
-              <div id="bloque-sunat-notas" className="border-t-2 border-dashed border-[var(--color-border)] pt-2.5 space-y-2">
+              <div id="bloque-sunat-notas" className="border-t border-dashed border-[var(--color-border)] pt-1 space-y-1">
                 {notas.map((n) => {
                   const accionesNota = [
                     { id: `btn-sunat-nc-${n.id}`, texto: 'Ver Nota', Icono: FileMinus, hacer: () => setNotaAbierta(n) },
@@ -429,17 +433,15 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
                   ];
 
                   return (
-                    <div key={n.id} className="space-y-2 bg-[var(--color-bg)] p-2.5 border border-[var(--color-border)]">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-[11px] font-black uppercase text-[var(--color-ink)]">
+                    <div key={n.id} className="flex flex-wrap items-center justify-between gap-1.5 bg-[var(--color-bg)] px-2.5 py-1 border border-[var(--color-border)]">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-[10px] font-black uppercase text-[var(--color-ink)] truncate">
                           Nota de crédito {numeroComprobante(n.doc_serial, n.doc_number)} · S/ {Number(n.total).toFixed(2)}
                         </span>
                         <InsigniaCpe estado={n.cpe_estado} chica />
                       </div>
-                      {n.cpe_mensaje && (
-                        <p className="text-[10px] font-bold text-[var(--color-muted)]">{n.cpe_mensaje}</p>
-                      )}
-                      <div className={`grid gap-2 ${accionesNota.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+
+                      <div className="flex items-center gap-1 shrink-0">
                         {accionesNota.map((a) => (
                           <button
                             key={a.id}
@@ -447,10 +449,10 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
                             type="button"
                             data-sunat="true"
                             onClick={a.hacer}
-                            className="h-[36px] px-3 border-2 border-[var(--color-ink)] bg-white text-[11px] font-black uppercase flex items-center justify-center gap-1.5 cursor-pointer rounded-none hover:bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white transition-colors"
+                            className="h-[24px] px-2 border-2 border-[var(--color-ink)] bg-white text-[10px] font-black uppercase inline-flex items-center gap-1 cursor-pointer rounded-none hover:bg-[var(--color-surface)] focus:outline-none focus:ring-1 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white transition-colors"
                           >
-                            <a.Icono size={14} className="shrink-0" />
-                            <span className="truncate">{a.texto}</span>
+                            <a.Icono size={11} className="shrink-0" />
+                            <span>{a.texto}</span>
                           </button>
                         ))}
                       </div>

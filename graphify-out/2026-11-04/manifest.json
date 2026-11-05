@@ -1188,9 +1188,9 @@
     "semantic_hash": "300aa7d63cc8421dc097e6bfd49e1521"
   },
   "src/components/ModalDetalleTicket.tsx": {
-    "mtime": 1793840596.326689,
-    "seen": 1793840726.8377275,
-    "ast_hash": "fee040754d4b5eed3ea056fcd6418f36",
+    "mtime": 1793844621.5904233,
+    "seen": 1793844933.958882,
+    "ast_hash": "e6f84007917b4dd8a1e10f95d8cbb7f8",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalGestionProveedores.tsx": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793843823.610506,
-    "seen": 1793843883.458011,
-    "ast_hash": "919eb197c5e073659d1e41051b63fda6",
+    "mtime": 1793844842.9233806,
+    "seen": 1793844933.9590297,
+    "ast_hash": "dbd9da0f7ee51bf96d2202fd251fb91f",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793843847.9824123,
-    "seen": 1793843883.4580116,
-    "ast_hash": "09d1ced901e9f141035f95acf2101171",
+    "mtime": 1793844878.5430057,
+    "seen": 1793844933.9590306,
+    "ast_hash": "84fe181378bab8ae527cbebf1f94b3e5",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793843867.0073392,
-    "seen": 1793843883.4580126,
-    "ast_hash": "5e9e9b6e4bd8d883d26c7a8f168c44d9",
+    "mtime": 1793844912.8898022,
+    "seen": 1793844933.9590316,
+    "ast_hash": "72223dbe9b717ca674b2751c404ed67f",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793843833.937353,
-    "seen": 1793843883.4580138,
-    "ast_hash": "c28e8dcd32acb5dd75966724f9b09b1a",
+    "mtime": 1793844854.7765255,
+    "seen": 1793844933.9590323,
+    "ast_hash": "f810a32b569e08f392fe82f4af4d164f",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2673,6 +2673,12 @@
     "mtime": 1793843684.3140528,
     "seen": 1793843883.457801,
     "ast_hash": "82474cfac523be932679bcc977188bcc",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/ver-modal-ticket-sunat.mjs": {
+    "mtime": 1793844784.0307293,
+    "seen": 1793844933.9588192,
+    "ast_hash": "6e4ef9c1a3e132567c2a00a196f0be09",
     "semantic_hash": ""
   }
 }

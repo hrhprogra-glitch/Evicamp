@@ -7,14 +7,22 @@
 
 ---
 
-## 04/11/2026 (97) · Antigravity — Aprovechamiento de espacio y orden en acciones de comprobante y notas de crédito en ModalDetalleTicket (solo siumax)
-- **Problema reportado por el dueño:** *"TE FALTA COMODAR ESTO TAMBIEN"* (captura del ticket con bloque SUNAT donde los botones `[ PDF ] [ XML ] [ NOTA DE CRÉDITO BBB1-00000006 ]` y `[ REENVIAR BBB1-00000006 ]` se rompían en 2 filas desparejas dejando un gran espacio en blanco a la derecha).
-- **Solución aplicada (Opción elegida por el dueño):**
-  1. **Separación lógica en 2 bloques limpios:**
-     - **Bloque Boleta/Factura:** estado, mensajes y sus acciones directas en cuadrícula al 50% (`[ ↗ PDF ]` y `[ ↗ XML ]` a la par, altura 36px, 100% de ancho).
-     - **Bloque Nota de Crédito:** recuadro sobrio con separación punteada, cabecera con el número de NC y su insignia de estado, y sus dos botones en cuadrícula al 50% (`[ 🗎 VER NOTA ]` y `[ 🔄 REENVIAR ]`, textos cortos y nítidos sin saturar la pantalla).
-  2. **Teclado:** selector con flechas que navega en orden natural de lectura: Cabecera → Botones de Boleta (`ArrowDown`) → Botones de Nota de Crédito (`ArrowDown`) → Botón Reimprimir en el pie (`ArrowDown`); y en sentido inverso con `ArrowUp`. `ArrowLeft` / `ArrowRight` recorre los botones de cada fila.
-- **Verificación:** validado con Edge/Puppeteer en ticket real (#308406 de siumax, script `ai-scripts/pruebas/ver-modal-ticket-sunat.mjs`), captura guardada `ticket_sunat_sobrio.png`. Compilado con `npx tsc -b` (0 errores) y desplegado a `siumax`.
+## 04/11/2026 (97) · Antigravity — Aprovechamiento de espacio y modo ultra compacto en acciones SUNAT de ModalDetalleTicket (solo siumax)
+- **Problema 1 reportado por el dueño:** *"TE FALTA COMODAR ESTO TAMBIEN"* (botones SUNAT rotos en 2 filas con espacio desperdiciado a la derecha).
+- **Problema 2 reportado por el dueño:** *"ESTA PERFECTO PERO ES MUY GRANDE TODO PODRIA OCUPAR MENOS ESPACIO PARA APRECIAR MEJOR EL TICKET"* (el bloque ocupaba casi la mitad de la pantalla, tapando los detalles del ticket térmico).
+- **Solución ultra compacta aplicada:**
+  1. **Boleta en 1 línea con botones a la derecha:**
+     - Izquierda: `Boleta {numero}` con su insignia de estado.
+     - Derecha: `[ ↗ PDF ]` y `[ ↗ XML ]` compactos (24px de alto) en la misma fila horizontal.
+     - Subtítulo mínimo: modo prueba, estado de anulación y mensaje en una sola línea `text-[10px]`.
+  2. **Nota de Crédito en franja horizontal delgada:**
+     - Izquierda: `Nota de crédito {numero} · S/ {total}` con su insignia de estado.
+     - Derecha: `[ 🗎 VER NOTA ]` y `[ 🔄 REENVIAR ]` (24px de alto).
+  3. **Resultado visual:**
+     - La cabecera SUNAT se redujo de ~250px a ~65px (75% menos de altura).
+     - El ticket térmico ahora se aprecia completo en pantalla (incluyendo productos, importes, impuestos, método de pago y código QR) sin necesidad de scroll.
+  4. **Teclado:** selector fluido en orden de lectura: Cabecera → Botones de Boleta (`ArrowDown`) → Botones de Nota de Crédito (`ArrowDown`) → Botón Reimprimir (`ArrowDown`); y en sentido inverso con `ArrowUp`.
+- **Verificación:** validado con Edge/Puppeteer en ticket real (#308406 de siumax, script `ai-scripts/pruebas/ver-modal-ticket-sunat.mjs`), captura actualizada `ticket_sunat_sobrio.png`. Compilado con `npx tsc -b` (0 errores) y desplegado a `siumax`.
 - Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
 
 ---
