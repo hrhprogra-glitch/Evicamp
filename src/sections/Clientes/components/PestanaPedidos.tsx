@@ -133,7 +133,11 @@ export const PestanaPedidos: React.FC = () => {
       const input = e.currentTarget;
       if (input.selectionStart === input.value.length) {
         e.preventDefault();
-        document.getElementById(`btn-filtro-ped-${filtroEstado}`)?.focus();
+        if (search) {
+          document.getElementById('btn-borrar-buscador-pedidos')?.focus();
+        } else {
+          document.getElementById(`btn-filtro-ped-${filtroEstado}`)?.focus();
+        }
       }
     } else if (e.key === 'Enter') {
       e.preventDefault();
@@ -150,7 +154,11 @@ export const PestanaPedidos: React.FC = () => {
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
       if (index === 0) {
-        document.getElementById('buscador-pedidos')?.focus();
+        if (search) {
+          document.getElementById('btn-borrar-buscador-pedidos')?.focus();
+        } else {
+          document.getElementById('buscador-pedidos')?.focus();
+        }
       } else {
         document.getElementById(`btn-filtro-ped-${ESTADOS_PED[index - 1]}`)?.focus();
       }
@@ -713,8 +721,44 @@ export const PestanaPedidos: React.FC = () => {
           {search && (
             <div className="buscador-sobrio__match">
               <span className="buscador-sobrio__conteo">{pedidosFiltrados.length} MATCH</span>
-              <button type="button" tabIndex={-1} title="Borrar búsqueda" className="buscador-sobrio__borrar"
-                onClick={() => { setSearch(''); document.getElementById('buscador-pedidos')?.focus(); }}><X size={14} /></button>
+              <button 
+                id="btn-borrar-buscador-pedidos"
+                type="button" 
+                title="Borrar búsqueda" 
+                className="buscador-sobrio__borrar"
+                onClick={() => { setSearch(''); document.getElementById('buscador-pedidos')?.focus(); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSearch('');
+                    document.getElementById('buscador-pedidos')?.focus();
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const inp = document.getElementById('buscador-pedidos') as HTMLInputElement | null;
+                    if (inp) {
+                      inp.focus();
+                      inp.setSelectionRange(inp.value.length, inp.value.length);
+                    }
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById(`btn-filtro-ped-${filtroEstado}`)?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const row = document.getElementById('ped-row-0');
+                    row?.focus();
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('tab-clientes-pedidos')?.focus();
+                  }
+                }}
+              >
+                <X size={14} />
+              </button>
             </div>
           )}
         </div>

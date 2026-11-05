@@ -144,7 +144,11 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
       const input = e.currentTarget;
       if (input.selectionStart === input.value.length) {
         e.preventDefault();
-        document.getElementById(`btn-filtro-coti-${filtroEstado}`)?.focus();
+        if (search) {
+          document.getElementById('btn-borrar-buscador-cotizaciones')?.focus();
+        } else {
+          document.getElementById(`btn-filtro-coti-${filtroEstado}`)?.focus();
+        }
       }
     } else if (e.key === 'Enter') {
       e.preventDefault();
@@ -161,7 +165,11 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
       if (index === 0) {
-        document.getElementById('buscador-cotizaciones')?.focus();
+        if (search) {
+          document.getElementById('btn-borrar-buscador-cotizaciones')?.focus();
+        } else {
+          document.getElementById('buscador-cotizaciones')?.focus();
+        }
       } else {
         document.getElementById(`btn-filtro-coti-${ESTADOS_COTI[index - 1]}`)?.focus();
       }
@@ -585,8 +593,44 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
           {search && (
             <div className="buscador-sobrio__match">
               <span className="buscador-sobrio__conteo">{cotizacionesFiltradas.length} MATCH</span>
-              <button type="button" tabIndex={-1} title="Borrar búsqueda" className="buscador-sobrio__borrar"
-                onClick={() => { setSearch(''); document.getElementById('buscador-cotizaciones')?.focus(); }}><X size={14} /></button>
+              <button 
+                id="btn-borrar-buscador-cotizaciones"
+                type="button" 
+                title="Borrar búsqueda" 
+                className="buscador-sobrio__borrar"
+                onClick={() => { setSearch(''); document.getElementById('buscador-cotizaciones')?.focus(); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSearch('');
+                    document.getElementById('buscador-cotizaciones')?.focus();
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const inp = document.getElementById('buscador-cotizaciones') as HTMLInputElement | null;
+                    if (inp) {
+                      inp.focus();
+                      inp.setSelectionRange(inp.value.length, inp.value.length);
+                    }
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById(`btn-filtro-coti-${filtroEstado}`)?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const row = document.getElementById('coti-row-0');
+                    row?.focus();
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('tab-clientes-cotizaciones')?.focus();
+                  }
+                }}
+              >
+                <X size={14} />
+              </button>
             </div>
           )}
         </div>

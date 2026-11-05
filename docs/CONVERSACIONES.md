@@ -722,6 +722,19 @@
        - Se forzó `border-radius: 0px !important;` y `border: none !important;` en `::-webkit-scrollbar-thumb` y `::-webkit-scrollbar-track` tanto en modo claro como en modo oscuro y en `.ventana-sobria`, garantizando una barra plana rectangular con esquinas rectas de 90° y sin botones de flechas (`::-webkit-scrollbar-button { display: none !important; width: 0; height: 0; }`).
   - Verificado en vivo en `siumax` con Edge: reglas CSS aplicadas sin interferencia de Fluent y autocompletado apagado.
   - Compilado con `npx tsc -b` (0 errores) y desplegado con éxito a `siumax`. Solo siumax.
+- **Dueño** (04/11/2026): *"me di cuenta de algo que no seleciona cuando escribo algo en el buscador no se seleciona el x y eso en muchos busacadores arregla eso"* con captura de Inventario > Lotes encerrando en rojo la píldora `[ 0 MATCH ] [ X ]`.
+  - Antigravity analizó todos los buscadores y detectó que los botones `buscador-sobrio__borrar` tenían `tabIndex={-1}`, sin ID, sin manejador `onKeyDown` ni estilos `:focus-visible`, y que las flechas saltaban directamente entre el buscador y los filtros saltándose la X.
+  - Se solucionó en todo el sistema:
+    1. **Estilo visual de foco (`src/index.css`)**: `.buscador-sobrio__borrar:focus` y `:focus-visible` con fondo rojo `#DC2626`, texto blanco y doble anillo de foco, manteniendo esquinas 100% rectas (0px border-radius).
+    2. **Navegación espacial bidireccional**: implementada en los 10 buscadores del sistema (Inventario, Conteos, Clientes, Fiados, Pedidos, Cotizaciones, Finanzas, Historial de cajas, Usuarios y Utilidades).
+    3. **Comportamiento interactivo**:
+       - `ArrowRight` desde el final del buscador enfoca la `[ X ]`.
+       - `Enter` / `Espacio` / `Escape` en la `[ X ]` limpia el texto y regresa el foco al buscador.
+       - `ArrowLeft` en la `[ X ]` devuelve el cursor al final del buscador.
+       - `ArrowRight` en la `[ X ]` pasa al siguiente filtro.
+       - `ArrowLeft` en el primer filtro regresa a la `[ X ]` si hay texto en el buscador.
+  - Verificado en `siumax` con Edge/Puppeteer (`verificar-selector-x.mjs` y captura `buscador_x_enfocado.png`).
+  - Compilado con `npx tsc -b` (0 errores) y desplegado con éxito a `siumax`. Solo siumax.
 
 
 

@@ -1098,7 +1098,11 @@ export const Finanzas: React.FC = () => {
                       if (input.selectionStart === input.value.length) {
                         e.preventDefault();
                         e.stopPropagation();
-                        document.getElementById('filtro-categoria-finanzas')?.focus();
+                        if (searchTerm) {
+                          document.getElementById('btn-borrar-buscador-finanzas')?.focus();
+                        } else {
+                          document.getElementById('filtro-categoria-finanzas')?.focus();
+                        }
                       }
                     } else if (e.key === 'Escape') {
                       e.preventDefault();
@@ -1109,8 +1113,43 @@ export const Finanzas: React.FC = () => {
                 />
                 {searchTerm && (
                   <div className="buscador-sobrio__match">
-                    <button type="button" tabIndex={-1} title="Borrar búsqueda" className="buscador-sobrio__borrar"
-                      onClick={() => { setSearchTerm(''); document.getElementById('buscador-finanzas')?.focus(); }}><X size={14} /></button>
+                    <button 
+                      id="btn-borrar-buscador-finanzas"
+                      type="button" 
+                      title="Borrar búsqueda" 
+                      className="buscador-sobrio__borrar"
+                      onClick={() => { setSearchTerm(''); document.getElementById('buscador-finanzas')?.focus(); }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSearchTerm('');
+                          document.getElementById('buscador-finanzas')?.focus();
+                        } else if (e.key === 'ArrowLeft') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const inp = document.getElementById('buscador-finanzas') as HTMLInputElement | null;
+                          if (inp) {
+                            inp.focus();
+                            inp.setSelectionRange(inp.value.length, inp.value.length);
+                          }
+                        } else if (e.key === 'ArrowRight') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          document.getElementById('filtro-categoria-finanzas')?.focus();
+                        } else if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          bajarATabla();
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          ['btn-cpe-problemas', 'btn-reporte-contador', 'btn-ver-historial'].map((id) => document.getElementById(id)).find((b) => b && b.getClientRects().length)?.focus();
+                        }
+                      }}
+                    >
+                      <X size={14} />
+                    </button>
                   </div>
                 )}
                </div>
@@ -1131,7 +1170,11 @@ export const Finanzas: React.FC = () => {
                    } else if (e.key === 'ArrowLeft') {
                      e.preventDefault();
                      e.stopPropagation();
-                     document.getElementById('buscador-finanzas')?.focus();
+                     if (searchTerm) {
+                       document.getElementById('btn-borrar-buscador-finanzas')?.focus();
+                     } else {
+                       document.getElementById('buscador-finanzas')?.focus();
+                     }
                    } else if (e.key === 'ArrowRight') {
                      e.preventDefault();
                      e.stopPropagation();

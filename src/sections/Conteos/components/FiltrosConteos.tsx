@@ -80,6 +80,12 @@ export const FiltrosConteos: React.FC<Props> = ({
             if (e.key === 'Escape') { e.preventDefault(); setSearchQuery(''); return; }
             if (e.key === 'ArrowLeft') return;
             if (e.key === 'ArrowRight' && e.currentTarget.selectionStart !== e.currentTarget.value.length) return;
+            if (e.key === 'ArrowRight' && searchQuery) {
+              e.preventDefault();
+              e.stopPropagation();
+              document.getElementById('btn-borrar-buscador-conteos')?.focus();
+              return;
+            }
             teclas(null, 'filtro-motivo-conteos')(e);
           }}
           style={{ paddingRight: searchQuery ? '8rem' : undefined }}
@@ -87,15 +93,50 @@ export const FiltrosConteos: React.FC<Props> = ({
         {searchQuery && (
           <div className="buscador-sobrio__match">
             <span className="buscador-sobrio__conteo">{matchCount} MATCH</span>
-            <button type="button" tabIndex={-1} title="Borrar búsqueda" className="buscador-sobrio__borrar"
-              onClick={() => { setSearchQuery(''); document.getElementById('buscador-global-conteos')?.focus(); }}><X size={14} /></button>
+            <button 
+              id="btn-borrar-buscador-conteos"
+              type="button" 
+              title="Borrar búsqueda" 
+              className="buscador-sobrio__borrar"
+              onClick={() => { setSearchQuery(''); document.getElementById('buscador-global-conteos')?.focus(); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setSearchQuery('');
+                  document.getElementById('buscador-global-conteos')?.focus();
+                } else if (e.key === 'ArrowLeft') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const inp = document.getElementById('buscador-global-conteos') as HTMLInputElement | null;
+                  if (inp) {
+                    inp.focus();
+                    inp.setSelectionRange(inp.value.length, inp.value.length);
+                  }
+                } else if (e.key === 'ArrowRight') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  document.getElementById('filtro-motivo-conteos')?.focus();
+                } else if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  focusPaginacion();
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  document.getElementById('btn-nuevo-ajuste')?.focus();
+                }
+              }}
+            >
+              <X size={14} />
+            </button>
           </div>
         )}
       </div>
 
       <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full xl:w-auto">
         <select id="filtro-motivo-conteos" value={filtroMotivo} onChange={(e) => setFiltroMotivo(e.target.value)}
-          onKeyDown={teclas('buscador-global-conteos', 'filtro-orden-conteos')} className="filtro-sobrio w-full sm:w-auto">
+          onKeyDown={teclas(searchQuery ? 'btn-borrar-buscador-conteos' : 'buscador-global-conteos', 'filtro-orden-conteos')} className="filtro-sobrio w-full sm:w-auto">
           <option value="">TODOS LOS MOTIVOS</option>
           {motivosUnicos.map(m => (
             <option key={m} value={m}>{m}</option>

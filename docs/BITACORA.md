@@ -7,6 +7,42 @@
 
 ---
 
+## 04/11/2026 (101) · Antigravity — Navegación por teclado completa al botón [ X ] (borrar búsqueda) en todos los buscadores (solo siumax)
+- **Problema reportado por el dueño:** *"me di cuenta de algo que no seleciona cuando escribo algo en el buscador no se seleciona el x y eso en muchos busacadores arregla eso"* con captura de Inventario > Lotes con texto "AMOR" y píldora `[ 0 MATCH ] [ X ]` encerrada en rojo.
+- **Causas raíz detectadas:**
+  1. Todos los botones de borrado `buscador-sobrio__borrar` se renderizaban con `tabIndex={-1}`, sin ID único, sin manejador `onKeyDown` y sin estilos `:focus` / `:focus-visible`.
+  2. En el input del buscador, al pulsar `ArrowRight` al final del texto, el selector saltaba directamente al primer select/filtro (ej. `#filtro-categoria-inventario`), ignorando por completo el botón `[ X ]`.
+  3. En sentido inverso, pulsar `ArrowLeft` en el primer filtro saltaba de regreso al input de texto, ignorando también el botón `[ X ]`.
+- **Soluciones aplicadas:**
+  1. **Estilo visual de foco de borrado (`src/index.css`):**
+     - Se añadió `.buscador-sobrio__borrar:focus` y `:focus-visible` con fondo rojo vibrante `#DC2626`, texto blanco nítido, doble anillo de foco y bordes 100% rectos sin esquinas redondeadas (`border-radius: 0px`).
+  2. **Navegación espacial bidireccional por teclado en todos los buscadores del sistema:**
+     - **Inventario (Productos y Lotes):** `FiltrosInventario.tsx` (`#btn-borrar-buscador-inventario`).
+     - **Conteos (Ajustes de inventario):** `FiltrosConteos.tsx` (`#btn-borrar-buscador-conteos`).
+     - **Clientes:** `PestanaClientes.tsx` (`#btn-borrar-buscador-clientes`).
+     - **Créditos / Fiados agrupados:** `TablaFiadosAgrupados.tsx` (`#btn-borrar-buscador-fiados`).
+     - **Pedidos:** `PestanaPedidos.tsx` (`#btn-borrar-buscador-pedidos`).
+     - **Cotizaciones:** `PestanaCotizaciones.tsx` (`#btn-borrar-buscador-cotizaciones`).
+     - **Finanzas (Movimientos):** `Finanzas/index.tsx` (`#btn-borrar-buscador-finanzas`).
+     - **Finanzas (Historial de cajas):** `TablaHistorial.tsx` (`#btn-borrar-buscador-historial-cajas` y `FiltroFechas.tsx`).
+     - **Configuraciones (Usuarios):** `TablaUsuarios.tsx` (`#btn-borrar-buscador-usuarios-ajustes`).
+     - **Utilidades (Análisis de productos):** `TablaAnalisisProductos.tsx` (`#btn-borrar-buscador-utilidades`).
+  3. **Comportamiento interactivo de `[ X ]`:**
+     - `ArrowRight` (al final del texto) entra en `[ X ]`.
+     - `Enter` / `Espacio` / `Escape`: borra la búsqueda y regresa el foco al buscador.
+     - `ArrowLeft`: vuelve al buscador con el cursor al final del texto.
+     - `ArrowRight`: avanza al siguiente selector o filtro.
+     - `ArrowLeft` desde el primer filtro: regresa a `[ X ]` si hay texto escrito (o al input si está vacío).
+     - `ArrowDown` / `ArrowUp`: desciende a la tabla/paginación o asciende a las pestañas/cabecera.
+- **Verificación:** validado con Edge/Puppeteer en `siumax` (`ai-scripts/pruebas/verificar-selector-x.mjs`):
+  - Foco llega con `ArrowRight` a `btn-borrar-buscador-inventario`.
+  - Captura `buscador_x_enfocado.png` confirma fondo rojo de foco sin curvas.
+  - `ArrowRight` avanza a categoría, `ArrowLeft` regresa a `[ X ]`, `Enter` borra y devuelve el foco al buscador.
+- Compilado con `npx tsc -b` (0 errores) y desplegado a `siumax`.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
 ## 04/11/2026 (100) · Antigravity — Eliminación global de autocompletado y forzado de scrollbars rectangulares 0px SiuMax Sobrio (solo siumax)
 - **Problemas reportados por el dueño:**
   1. *"no quiero que haya un autocompletado"*: En los buscadores (como `#buscador-detalle-caja` en el modal de detalle de caja) aparecía el globo/burbuja flotante de sugerencias e historial del navegador (ej. '308') estorbando la selección con teclado y tapando filas de datos.

@@ -107,7 +107,12 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
               else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); bajarDesdeArriba(); }
               else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); ['btn-cpe-problemas', 'btn-reporte-contador', 'btn-ver-historial'].map((id) => document.getElementById(id)).find((b) => b && b.getClientRects().length)?.focus(); }
               else if (e.key === 'ArrowRight' && e.currentTarget.selectionStart === e.currentTarget.value.length) {
-                e.preventDefault(); e.stopPropagation(); document.getElementById('filtro-fecha-desde-finanzas')?.focus();
+                e.preventDefault(); e.stopPropagation();
+                if (busqueda) {
+                  document.getElementById('btn-borrar-buscador-historial-cajas')?.focus();
+                } else {
+                  document.getElementById('filtro-fecha-desde-finanzas')?.focus();
+                }
               }
             }}
             style={{ paddingRight: busqueda ? '8rem' : undefined }}
@@ -115,8 +120,43 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
           {busqueda && (
             <div className="buscador-sobrio__match">
               <span className="buscador-sobrio__conteo">{cajasFiltradas.length} MATCH</span>
-              <button type="button" tabIndex={-1} title="Borrar búsqueda" className="buscador-sobrio__borrar"
-                onClick={() => { setBusqueda(''); document.getElementById('buscador-historial-cajas')?.focus(); }}><X size={14} /></button>
+              <button 
+                id="btn-borrar-buscador-historial-cajas"
+                type="button" 
+                title="Borrar búsqueda" 
+                className="buscador-sobrio__borrar"
+                onClick={() => { setBusqueda(''); document.getElementById('buscador-historial-cajas')?.focus(); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setBusqueda('');
+                    document.getElementById('buscador-historial-cajas')?.focus();
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const inp = document.getElementById('buscador-historial-cajas') as HTMLInputElement | null;
+                    if (inp) {
+                      inp.focus();
+                      inp.setSelectionRange(inp.value.length, inp.value.length);
+                    }
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('filtro-fecha-desde-finanzas')?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    bajarDesdeArriba();
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    ['btn-cpe-problemas', 'btn-reporte-contador', 'btn-ver-historial'].map((id) => document.getElementById(id)).find((b) => b && b.getClientRects().length)?.focus();
+                  }
+                }}
+              >
+                <X size={14} />
+              </button>
             </div>
           )}
         </div>

@@ -190,9 +190,11 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
       el.scrollIntoView({ block: 'nearest' });
     }
   };
-  // Barra: buscador → filtro → orden → limpiar → nuevo (← →); ↓ baja a la lista; ↑ sube a la pestaña
+  // Barra: buscador → (borrar si hay texto) → filtro → orden → limpiar (← →); ↓ baja a la lista; ↑ sube a la pestaña
   // "Nuevo cliente" está en la cabecera de la sección (como "Nuevo producto" en Inventario)
-  const barra = ['buscador-clientes', 'filtro-deuda-clientes', 'orden-clientes', 'btn-limpiar-clientes'];
+  const barra = busqueda
+    ? ['buscador-clientes', 'btn-borrar-buscador-clientes', 'filtro-deuda-clientes', 'orden-clientes', 'btn-limpiar-clientes']
+    : ['buscador-clientes', 'filtro-deuda-clientes', 'orden-clientes', 'btn-limpiar-clientes'];
   const teclasBarra = (id: string) => (e: React.KeyboardEvent<HTMLElement>) => {
     const i = barra.indexOf(id);
     const esTexto = e.currentTarget instanceof HTMLInputElement;
@@ -293,8 +295,26 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
           {busqueda && (
             <div className="buscador-sobrio__match">
               <span className="buscador-sobrio__conteo">{filas.length} MATCH</span>
-              <button type="button" tabIndex={-1} title="Borrar búsqueda" className="buscador-sobrio__borrar"
-                onClick={() => { setBusqueda(''); setPagina(1); irA('buscador-clientes'); }}><X size={14} /></button>
+              <button 
+                id="btn-borrar-buscador-clientes"
+                type="button" 
+                title="Borrar búsqueda" 
+                className="buscador-sobrio__borrar"
+                onClick={() => { setBusqueda(''); setPagina(1); irA('buscador-clientes'); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setBusqueda('');
+                    setPagina(1);
+                    irA('buscador-clientes');
+                  } else {
+                    teclasBarra('btn-borrar-buscador-clientes')(e);
+                  }
+                }}
+              >
+                <X size={14} />
+              </button>
             </div>
           )}
         </div>

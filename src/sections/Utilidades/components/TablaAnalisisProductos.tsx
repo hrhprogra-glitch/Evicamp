@@ -377,7 +377,11 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               if (e.key === 'ArrowRight' && e.currentTarget.selectionStart === e.currentTarget.value.length) {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('filtro-categoria-utilidades')?.focus();
+                if (busqueda) {
+                  document.getElementById('btn-borrar-buscador-utilidades')?.focus();
+                } else {
+                  document.getElementById('filtro-categoria-utilidades')?.focus();
+                }
               }
             }}
             style={{ paddingRight: busqueda ? '8rem' : undefined }}
@@ -386,11 +390,39 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
             <div className="buscador-sobrio__match">
               <span className="buscador-sobrio__conteo">{datosFiltrados.length} MATCH</span>
               <button 
+                id="btn-borrar-buscador-utilidades"
                 type="button" 
-                tabIndex={-1} 
                 title="Borrar búsqueda" 
                 className="buscador-sobrio__borrar"
                 onClick={() => { setBusqueda(''); searchInputRef.current?.focus(); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setBusqueda('');
+                    searchInputRef.current?.focus();
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const inp = searchInputRef.current;
+                    if (inp) {
+                      inp.focus();
+                      inp.setSelectionRange(inp.value.length, inp.value.length);
+                    }
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('filtro-categoria-utilidades')?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    focusPaginacionUtilidades();
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('btn-tops-utilidades')?.focus();
+                  }
+                }}
               >
                 <X size={14} />
               </button>
@@ -415,7 +447,11 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
-                searchInputRef.current?.focus();
+                if (busqueda) {
+                  document.getElementById('btn-borrar-buscador-utilidades')?.focus();
+                } else {
+                  searchInputRef.current?.focus();
+                }
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 e.stopPropagation();

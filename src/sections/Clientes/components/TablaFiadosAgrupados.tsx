@@ -272,6 +272,12 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
             onKeyDown={(e) => {
               if (e.key === 'Escape' && searchTerm) { e.preventDefault(); e.stopPropagation(); setSearchTerm(''); return; }
               if (e.key === 'ArrowRight' && e.currentTarget.selectionEnd !== e.currentTarget.value.length) return;
+              if (e.key === 'ArrowRight' && searchTerm) {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-borrar-buscador-fiados')?.focus();
+                return;
+              }
               if (e.key === 'ArrowLeft') return;
               teclasFiltro(null, 'filtro-estado-fiados')(e);
             }}
@@ -279,14 +285,49 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
           {searchTerm && (
             <div className="buscador-sobrio__match">
               <span className="buscador-sobrio__conteo">{clientesProcesados.length} MATCH</span>
-              <button type="button" tabIndex={-1} title="Borrar búsqueda" className="buscador-sobrio__borrar"
-                onClick={() => { setSearchTerm(''); ir('buscador-global-fiados'); }}><X size={14} /></button>
+              <button 
+                id="btn-borrar-buscador-fiados"
+                type="button" 
+                title="Borrar búsqueda" 
+                className="buscador-sobrio__borrar"
+                onClick={() => { setSearchTerm(''); ir('buscador-global-fiados'); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSearchTerm('');
+                    ir('buscador-global-fiados');
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const inp = document.getElementById('buscador-global-fiados') as HTMLInputElement | null;
+                    if (inp) {
+                      inp.focus();
+                      inp.setSelectionRange(inp.value.length, inp.value.length);
+                    }
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    ir('filtro-estado-fiados');
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    ir('btn-pag-ant-fiados-arriba');
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    ir('tab-clientes-deudores');
+                  }
+                }}
+              >
+                <X size={14} />
+              </button>
             </div>
           )}
         </div>
         <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full xl:w-auto">
           <select id="filtro-estado-fiados" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value as any)}
-            onKeyDown={teclasFiltro('buscador-global-fiados', 'filtro-orden-fiados')} className="filtro-sobrio w-full sm:w-auto">
+            onKeyDown={teclasFiltro(searchTerm ? 'btn-borrar-buscador-fiados' : 'buscador-global-fiados', 'filtro-orden-fiados')} className="filtro-sobrio w-full sm:w-auto">
             <option value="ACTIVOS">DEUDORES</option>
             <option value="TODOS">TODOS</option>
             <option value="PAGADO">SIN DEUDA</option>

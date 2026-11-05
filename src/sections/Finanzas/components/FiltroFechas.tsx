@@ -43,7 +43,13 @@ export const FiltroFechas: React.FC<Props> = ({ onFilter, onLimpiar }) => {
     const acc: Record<string, () => void> = {
       ArrowUp: () => document.getElementById('btn-ver-historial')?.focus(),
       ArrowDown: () => focusPaginacionOPrimerRegistro(),
-      ArrowLeft: () => { if (izq) document.getElementById(izq)?.focus(); },
+      ArrowLeft: () => {
+        if (izq === 'buscador-historial-cajas') {
+          const btnX = document.getElementById('btn-borrar-buscador-historial-cajas');
+          if (btnX) { btnX.focus(); return; }
+        }
+        if (izq) document.getElementById(izq)?.focus();
+      },
       ArrowRight: () => { if (der) document.getElementById(der)?.focus(); },
     };
     if (acc[e.key]) { e.preventDefault(); e.stopPropagation(); acc[e.key](); }

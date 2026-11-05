@@ -290,7 +290,11 @@ export const TablaUsuarios: React.FC = () => {
               if (e.key === 'ArrowRight' && e.currentTarget.selectionStart === e.currentTarget.value.length) {
                 e.preventDefault();
                 e.stopPropagation();
-                document.getElementById('filtro-rol-usuarios-ajustes')?.focus();
+                if (busqueda) {
+                  document.getElementById('btn-borrar-buscador-usuarios-ajustes')?.focus();
+                } else {
+                  document.getElementById('filtro-rol-usuarios-ajustes')?.focus();
+                }
               }
             }}
             style={{ paddingRight: busqueda ? '8rem' : undefined }}
@@ -299,11 +303,39 @@ export const TablaUsuarios: React.FC = () => {
             <div className="buscador-sobrio__match">
               <span className="buscador-sobrio__conteo">{usuariosFiltrados.length} MATCH</span>
               <button
+                id="btn-borrar-buscador-usuarios-ajustes"
                 type="button"
-                tabIndex={-1}
                 title="Borrar búsqueda"
                 className="buscador-sobrio__borrar"
                 onClick={() => { setBusqueda(''); searchInputRef.current?.focus(); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setBusqueda('');
+                    searchInputRef.current?.focus();
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const inp = searchInputRef.current;
+                    if (inp) {
+                      inp.focus();
+                      inp.setSelectionRange(inp.value.length, inp.value.length);
+                    }
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('filtro-rol-usuarios-ajustes')?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    focusPrimerRegistro();
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('btn-tab-usuarios')?.focus();
+                  }
+                }}
               >
                 <X size={14} />
               </button>
@@ -329,7 +361,11 @@ export const TablaUsuarios: React.FC = () => {
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 e.stopPropagation();
-                searchInputRef.current?.focus();
+                if (busqueda) {
+                  document.getElementById('btn-borrar-buscador-usuarios-ajustes')?.focus();
+                } else {
+                  searchInputRef.current?.focus();
+                }
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 e.stopPropagation();

@@ -397,3 +397,17 @@ En ventanas grandes (`max-w-4xl` o más) como `ModalGrupo.tsx`:
 
 **Navegación espacial en enlaces y formularios (04/11/2026):**
 - Cuando haya un campo de texto con botones a sus lados (ej. enlace público con `[ Copiar Enlace ]` y `[ Ver Tienda ]` en Tienda Web), implementar `onKeyDown`: `ArrowRight` salta del input a los botones; `ArrowLeft` regresa al input; y `ArrowDown` / `ArrowUp` se desplazan entre los campos del formulario.
+
+**Navegación por teclado y foco al botón [ X ] de borrado en buscadores (04/11/2026, orden del dueño):**
+- En todo buscador del sistema que muestre el botón `[ X ]` (`buscador-sobrio__borrar`) cuando hay texto:
+  1. NUNCA ponerle `tabIndex={-1}` ni omitir un ID único. Siempre debe tener `id="btn-borrar-buscador-..."` para que el selector por teclado lo reconozca.
+  2. En el input de búsqueda, al pulsar `ArrowRight` (cuando el cursor está al final del texto), si hay texto, el foco debe pasar inmediatamente al botón `[ X ]` en lugar de saltarse directamente a los filtros.
+  3. En el botón `[ X ]`:
+     - `Enter`, `Espacio` o `Escape`: borra el texto de la búsqueda y devuelve el foco automáticamente al input del buscador.
+     - `ArrowLeft`: devuelve el foco al input del buscador con el cursor al final del texto (`setSelectionRange`).
+     - `ArrowRight`: avanza al primer select o filtro a la derecha.
+     - `ArrowDown`: desciende a la tabla de datos o controles inferiores.
+     - `ArrowUp`: asciende a las pestañas o botones de la cabecera.
+  4. En el primer filtro adyacente: al pulsar `ArrowLeft`, si el buscador tiene texto, el foco debe volver al botón `[ X ]`; si no tiene texto, vuelve directo al input del buscador.
+  5. Estilo visual de foco en `src/index.css`: `.buscador-sobrio__borrar:focus` y `:focus-visible` deben mostrar fondo rojo vibrante `#DC2626`, texto blanco, doble anillo de foco y bordes 100% rectos sin esquinas redondeadas (`border-radius: 0px`).
+
