@@ -15,6 +15,7 @@
 - **`Inventario/index.tsx`:** `onIrALotes` (pestaña Lotes + búsqueda), `onAbrirProduccion` y `produccionParaCambiar`.
 - **Después** (captura): *"parece atrapado en un fondo dentro de otro fondo; se desaprovecha espacio; en vez de «Combos y recetas» que diga «Volver»"* → sin recuadro interior (el contenido va directo sobre el fondo de la ventana), la ventana se acomoda a su contenido (alto fijo solo en la lista) y el botón dice "← Volver". Revisado con captura en modo oscuro.
 - **Después:** *"agregué un producto por kilo y sale 1; no sé si es unidad o kilo"* → al lado de la cantidad sale la unidad del producto elegido (`unidad-cant-insumo-prod`, ej. KG) y debajo la frase "CADA PAN LLEVA 0.25 KG DE POLLO" (`frase-cant-insumo-prod`), con la ayuda de decimales si es KG/G/L/ML. Probado con POLLO (KG).
+- **Después:** *"hay 3 botones; mejor solo Guardar y Guardar e ir a Lotes"* → quitado "Guardar y producir ahora" (para hacer un lote: «Producir» en la lista; el aviso al guardar una receta lo dice). Botones sin partir el texto.
 - Probado en siumax con productos de prueba (huevo 2, harina 5; receta 1+1, adicional 0.50, precio 5): tope "alcanza para 2 · lo limita HUEVO", resumen S/ 3.00 / 5.00 / 2.00 (40 %), escribir 5 → queda 2 con aviso, producido lote de 2 a S/ 3.00 (= (2×0.5 + 2×2 + 2×0.5)/2), huevo 0, harina 3; Editar receta → botón → abre "Cambiar combo o receta". 0 errores; datos de prueba borrados. En siumax y Evicamp no había combos ni recetas. Solo siumax.
 
 ---

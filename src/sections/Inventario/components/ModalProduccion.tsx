@@ -218,17 +218,15 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
     }
   };
 
-  const alGuardar = async (luego: 'LISTA' | 'PRODUCIR' | 'LOTES') => {
+  const alGuardar = async (luego: 'LISTA' | 'LOTES') => {
     if (guardando) return;
     const id = await guardarCompuesto();
     if (!id) return;
     const n = nombre.trim().toUpperCase();
-    if (luego === 'PRODUCIR') {
-      irAProducir({ id, name: n, unit: 'UND', costoAdicionalProduccion: tipo === 'RECETA' ? Number(costoAdic) || 0 : 0 } as unknown as Product, insumos);
-    } else if (luego === 'LOTES') {
+    if (luego === 'LOTES') {
       onClose(); onIrALotes?.(n);
     } else {
-      await avisar(`✔ ${n} guardado como ${tipo === 'COMBO' ? 'combo' : 'receta'}.`);
+      await avisar(`✔ ${n} guardado como ${tipo === 'COMBO' ? 'combo' : 'receta: para hacer un lote, presiona «Producir» en la lista'}.`);
       setVista('LISTA'); enfocar('btn-nuevo-compuesto');
     }
   };
@@ -565,18 +563,14 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
         {/* PIE: siempre a la vista */}
         {vista !== 'LISTA' && !cargando && (
           <div className="shrink-0 border-t-2 border-[var(--color-ink)] px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-end gap-3 bg-[var(--color-surface)]">
-            <button id="btn-volver-produccion" type="button" onClick={() => { setVista('LISTA'); enfocar('btn-nuevo-compuesto'); }} className={`${claseBotonBarra(false)} sm:mr-auto`}>
+            <button id="btn-volver-produccion" type="button" onClick={() => { setVista('LISTA'); enfocar('btn-nuevo-compuesto'); }} className={`${claseBotonBarra(false)} sm:mr-auto whitespace-nowrap`}>
               ← Volver
             </button>
             {vista === 'FORM' ? (
               <>
+                {/* Solo Guardar y Guardar e ir a Lotes (pedido del dueño 05/11/2026); para producir: «Producir» en la lista */}
                 {tipo === 'RECETA' && (
-                  <>
-                    <button id="btn-guardar-ir-lotes-compuesto" type="button" disabled={guardando} onClick={() => void alGuardar('LOTES')} className={claseBotonBarra(false)}>Guardar e ir a Lotes</button>
-                    <button id="btn-guardar-producir-compuesto" type="button" disabled={guardando} onClick={() => void alGuardar('PRODUCIR')} className={claseBotonBarra(false)}>
-                      <ChefHat size={14} /> Guardar y producir ahora
-                    </button>
-                  </>
+                  <button id="btn-guardar-ir-lotes-compuesto" type="button" disabled={guardando} onClick={() => void alGuardar('LOTES')} className={`${claseBotonBarra(false)} whitespace-nowrap`}>Guardar e ir a Lotes</button>
                 )}
                 <button id="btn-guardar-compuesto" type="button" disabled={guardando} onClick={() => void alGuardar('LISTA')} className={claseBotonPrincipal}>
                   {guardando ? 'Guardando…' : 'Guardar'}
