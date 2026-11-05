@@ -1100,3 +1100,12 @@ html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-thumb:hover, html[dat
 /* La casilla seleccionada ilumina el recuadro que la contiene (ej. "Variantes activadas", "Exigir Nº de serie") */
 .ventana-sobria label:has(> input[type="checkbox"]:focus-visible, > input[type="radio"]:focus-visible) {
   border-color: var(--color-accent) !important; box-shadow: 0 0 0 1px var(--color-accent) !important; }
+/* El selector SIEMPRE se ve también en las secciones (pedido del dueño 05/11/2026, Compras: "el selector ahí no se nota"):
+   contorno verde en pestañas, botones de cabecera, filtros, limpiar y paginación. outline para no pisar sus anillos. */
+/* html:root sube la fuerza de la regla para ganarle a las de modo oscuro que ponen outline: none */
+/* (clase repetida = más fuerza que la regla general de modo oscuro "button:focus-visible", que lo pone por fuera) */
+html:root .pestanas-sobrias.pestanas-sobrias.pestanas-sobrias > button:focus-visible, html:root .pestanas-filtro.pestanas-filtro.pestanas-filtro > button:focus-visible {
+  outline: 2px solid var(--color-accent) !important; outline-offset: -3px !important; }  /* por dentro: el contenedor puede recortar lo de afuera */
+html:root .boton-cabecera:focus-visible, html:root .limpiar-sobrio:focus-visible, html:root .paginacion-sobria__boton:focus-visible {
+  outline: 2px solid var(--color-accent) !important; outline-offset: 2px; }
+html:root .filtro-sobrio:focus, html:root .buscador-sobrio:focus-within { outline: 2px solid var(--color-accent) !important; outline-offset: -2px; }
