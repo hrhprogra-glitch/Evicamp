@@ -148,7 +148,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
 
   const elegirInsumo = (p: Product) => {
     setElegidoInsumo(p); setBusqueda(p.name); setListaAbierta(false);
-    setTimeout(() => { const c = document.getElementById('input-cant-insumo-prod') as HTMLInputElement | null; c?.focus(); c?.select(); }, 40);
+    enfocar('input-buscar-insumo-prod'); // vuelve a donde salió; a la cantidad se pasa con →
   };
 
   const agregarInsumo = async () => {
@@ -161,7 +161,6 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
       return ya ? prev.map((i) => (i === ya ? { ...i, quantity: i.quantity + cant } : i)) : [...prev, { component_product_id: String(p.id), quantity: cant }];
     });
     setElegidoInsumo(null); setBusqueda(''); setCantInsumo('1');
-    enfocar('input-buscar-insumo-prod');
   };
 
   const costoArmar = insumos.reduce((a, i) => a + costoDe(i), 0) + (tipo === 'RECETA' ? Number(costoAdic) || 0 : 0);
@@ -408,7 +407,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                 <input id="input-nombre-compuesto" type="text" autoComplete="off" spellCheck={false} value={nombre}
                   placeholder="EJ.: JUGO DE NARANJA · COMBO HAMBURGUESA + GASEOSA"
                   onChange={(e) => setNombre(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); enfocar('input-buscar-insumo-prod'); } }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
                   className={`${claseCampo} uppercase`} />
               </div>
 
@@ -474,7 +473,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                     setInsumos((l) => l.filter((_, k) => k !== i));
                     enfocar(quedan > 0 ? `btn-quitar-insumo-prod-${Math.min(i, quedan - 1)}` : 'input-buscar-insumo-prod');
                   }) : (
-                    <p className="text-[11px] font-bold text-[var(--color-muted)]">Busca un producto, escribe cuánto lleva cada unidad y presiona Enter.</p>
+                    <p className="text-[11px] font-bold text-[var(--color-muted)]">Busca el producto (Enter lo elige), pasa con → a la cantidad y presiona Enter o «Agregar».</p>
                   )}
                   {insumos.length > 0 && (
                     <p id="tope-formulario" className={`mt-2 text-[11px] font-black uppercase ${topeForm.max > 0 ? 'text-[var(--color-accent)]' : 'text-[var(--color-danger)]'}`}>
@@ -502,7 +501,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                     <label htmlFor="input-costo-adic-compuesto" className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest">Costo adicional por unidad (gas, mano de obra) S/</label>
                     <input id="input-costo-adic-compuesto" type="number" min="0" step="0.01" placeholder="0.00" value={costoAdic}
                       onChange={(e) => setCostoAdic(e.target.value)} onFocus={(e) => e.currentTarget.select()}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); enfocar('input-precio-compuesto'); } }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
                       className={`${claseCampo} !w-32 text-right`} />
                   </div>
                 )}
@@ -514,14 +513,14 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                   <label htmlFor="input-precio-compuesto" className={etiquetaCampo}>4. Precio de venta (S/)</label>
                   <input id="input-precio-compuesto" type="number" min="0" step="0.01" placeholder="0.00" value={precio}
                     onChange={(e) => setPrecio(e.target.value)} onFocus={(e) => e.currentTarget.select()}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); enfocar('input-categoria-compuesto'); } }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
                     className={`${claseCampo} text-right`} />
                 </div>
                 <div>
                   <label htmlFor="input-categoria-compuesto" className={etiquetaCampo}>Categoría</label>
                   <input id="input-categoria-compuesto" type="text" list="lista-categorias-compuesto" autoComplete="off" placeholder="GENERAL" value={categoria}
                     onChange={(e) => setCategoria(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); enfocar('btn-guardar-compuesto'); } }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
                     className={`${claseCampo} uppercase`} />
                   <datalist id="lista-categorias-compuesto">{categorias.map((c) => <option key={c} value={c} />)}</datalist>
                 </div>
@@ -543,14 +542,14 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                   <label htmlFor="input-cantidad-produccion" className={etiquetaCampo}>¿Cuántos vas a producir? ({elegido.unit})</label>
                   <input id="input-cantidad-produccion" type="number" min="0" step="1" max={topeProd.max} value={cantidad} disabled={topeProd.max <= 0}
                     onChange={(e) => cambiarCantidad(e.target.value)} onFocus={(e) => e.currentTarget.select()}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); enfocar('input-costo-adicional-produccion'); } }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
                     className={`${claseCampo} text-right disabled:opacity-50`} />
                 </div>
                 <div>
                   <label htmlFor="input-costo-adicional-produccion" className={etiquetaCampo}>Costo adicional por unidad (S/)</label>
                   <input id="input-costo-adicional-produccion" type="number" min="0" step="0.01" value={costoAdicProd}
                     onChange={(e) => setCostoAdicProd(e.target.value)} onFocus={(e) => e.currentTarget.select()}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); enfocar('btn-producir-ahora'); } }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
                     className={`${claseCampo} text-right`} />
                 </div>
               </div>

@@ -31,6 +31,11 @@
   `ventanas.ts` (ventanas) y `flechasEspaciales.ts` (flechas de respaldo); al hacer una pantalla nueva, poner flechas propias donde
   importe el orden y correr `ai-scripts/pruebas/estilo/revisar-selector.mjs`. Ojo: un control desactivado no recibe el selector:
   las flechas deben saltar al primero ACTIVO.
+- **Regla 9 (05/11/2026, el dueño la repitió dos veces en Producir):** **Enter = clic y el selector SE QUEDA, en TODO** (botones,
+  opciones, campos de texto y de número). Enter NUNCA pasa al siguiente cuadro; para moverse están las flechas. En un campo, Enter
+  solo hace su acción si tiene una (elegir el primer resultado de un buscador, "Agregar" en la cantidad) y el selector no se mueve.
+  Si el elemento desaparece (lista que se cierra, fila quitada), el selector vuelve a de donde salió o al vecino más cercano.
+  No programar `Enter → enfocar(siguiente)` en pantallas nuevas.
 - **Reglas 7 y 8 (05/11/2026):** las flechas NUNCA cambian una opción (listas desplegables, grupos de opciones tipo radio, unidades…):
   solo mueven el selector; **Enter despliega o elige**. **Enter en una casilla = clic** (se marca y el selector se queda). Lo garantiza
   `alTeclearPrimero` en `flechasEspaciales.ts`; no programar "← → cambia la opción" en ninguna pantalla. Vale también para
