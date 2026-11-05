@@ -7,6 +7,28 @@
 
 ---
 
+## 04/11/2026 (95) · Antigravity — Regla universal: memoria de fila al cerrar submodales y modales (sin saltos al buscador)
+- **Problema reportado por el dueño:** *"cuando selecciono una tabla y presiono enter entro ahi todo normal pero cuando pongo x el selector se va arriba al buscador y no se queda donde seleccioné obligándome a bajar y volver a seleccionar la tabla quiero que eso no pase como también que eso no pase en otras tablas que sea como una regla"*.
+- **Causas identificadas:**
+  1. En `ModalDetalleCaja.tsx`: el `useEffect` de auto-foco escuchaba `ticketSeleccionado`. Al cerrar el ticket (`ticketSeleccionado` pasando a `null`), a los 60ms ejecutaba forzosamente `searchInputRef.current?.focus()`, quitando el selector de la fila.
+  2. En `src/utils/ventanas.ts`: `enVentana` guardaba solo una referencia plana de elemento (`HTMLElement`) que no recordaba ID ni texto si la tabla re-renderizaba o si el foco estuvo en un botón de la fila; además `devolverEnVentana` abortaba si el foco ya estaba dentro de la ventana (`v.contains(a)`), sin notar que había caído erróneamente en el buscador. Y `filasVisibles` excluía elementos dentro de ventanas.
+- **Solución universal aplicada:**
+  1. `src/utils/ventanas.ts`:
+     - `FILA` selector ampliado con `[id^="mov-row-"]` y `[id^="caja-row-"]`.
+     - `filasVisibles(contenedor?)` ahora permite buscar filas dentro de cualquier ventana contenedora.
+     - `enVentana` ahora almacena `WeakMap<HTMLElement, Recuerdo>` con `{ el, id, fila, texto }` para cada nivel de ventana anidada.
+     - Regla universal: si el foco actual `a` es un buscador (`esBuscador`) y había una fila guardada, tanto `devolverEnVentana` como `devolver` no se conforman con el buscador y devuelven el selector a la fila seleccionada.
+     - En `alEnfocar`, un auto-focus incidental a un buscador no sobrescribe la fila recordada.
+  2. `ModalDetalleCaja.tsx`:
+     - Se añadieron `ultimoTicketRef` y `yaEnfocoInicialRef`. El auto-foco al buscador ocurre únicamente en la apertura inicial. Al cerrarse un ticket, se restaura inmediatamente el foco a la fila del ticket (`mov-row-${idTicket}`).
+  3. `TablaMovimientos.tsx` y `TablaHistorial.tsx`:
+     - Agregados `id={`mov-row-${item.id}`}` e `id={`caja-row-${caja.id}`}` a los `<tr>`, así como IDs a sus botones de acción.
+- **Verificación en siumax:** prueba automatizada con Puppeteer / Edge (`ai-scripts/pruebas/prueba-selector-cierre-submodal.mjs`):
+  - 5 de 5 checks aprobados con 0 errores: al cerrar ticket el selector se mantiene en la fila (`#mov-row-1793809269661`), y al cerrar caja regresa a la fila de caja (`#caja-row-1793633990774`). Captura guardada: `submodal_foco_fila_restaurado.png`.
+- Rama `fase-11-sunat`. Desplegado a `siumax`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
 ## 04/11/2026 (94) · Antigravity — Selector al imprimir, ticket solo con reimprimir, unificación de cambio/devolución y centrado de acciones (solo siumax)
 - **Selector al imprimir (AnyDesk Printer / navegador):** al abrir la ventana de impresión, `recordarSeleccionEnVentanas` (`ventanas.ts`) le quitaba el foco a la ventana de la impresora en milisegundos para forzarlo a SiuMax, impidiendo escoger entre "Imprimir" y "Cancelar" con el teclado. Solución: en `src/utils/impresion.ts` se escucha `beforeprint` / `afterprint` y en `useReactToPrint` (`onBeforePrint`/`onAfterPrint`) gestionando el estado `estaImprimiendo()`. Cuando está imprimiendo, `ventanas.ts` y el `handleKeyDown` del ticket pausan la trampa de teclado, permitiendo navegar libremente con `Tab`/flechas/Enter/Escape en el diálogo nativo de la impresora. Al cerrarse, el foco regresa suavemente al botón de reimprimir.
 - **Previsualización de ticket (`ModalDetalleTicket.tsx`):** a pedido del dueño, se eliminaron los botones redundantes de `[C] CAMBIAR PRODUCTO` y `[D] DEVOLVER` del pie, dejando únicamente `[ENTER / P] REIMPRIMIR` junto al total facturado. Se limpiaron los atajos correspondientes del foco y teclado.

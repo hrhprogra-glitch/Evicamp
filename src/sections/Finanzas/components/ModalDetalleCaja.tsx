@@ -27,6 +27,8 @@ interface Props {
 
 export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnular, onDelete, onCambiarProducto }) => {
   const [ticketSeleccionado, setTicketSeleccionado] = useState<string | null>(null);
+  const ultimoTicketRef = useRef<string | null>(null);
+  const yaEnfocoInicialRef = useRef<boolean>(false);
   const [idsProcesando, setIdsProcesando] = useState<Set<string>>(new Set());
   const searchInputRef = useRef<HTMLInputElement>(null);
   
@@ -107,9 +109,17 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
   useEffect(() => {
     if (isOpen && caja) {
       setVista('DETALLE'); // siempre arranca en la vista clara, no en el ticket
+      yaEnfocoInicialRef.current = false;
+      ultimoTicketRef.current = null;
       cargarResumenTicket();
     }
   }, [isOpen, caja]);
+
+  useEffect(() => {
+    if (ticketSeleccionado) {
+      ultimoTicketRef.current = ticketSeleccionado;
+    }
+  }, [ticketSeleccionado]);
 
   // ⌨️ NAVEGACIÓN TOTAL POR TECLADO DENTRO DE MODAL DETALLE DE CAJA
   useEffect(() => {
@@ -118,11 +128,26 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
     // Auto-enfocar según la vista activa
     const timer = setTimeout(() => {
       if (vista === 'DETALLE') {
-        searchInputRef.current?.focus();
+        if (ultimoTicketRef.current) {
+          const idTicket = ultimoTicketRef.current;
+          ultimoTicketRef.current = null;
+          const fila = document.getElementById(`mov-row-${idTicket}`);
+          if (fila) {
+            fila.focus();
+            fila.scrollIntoView({ block: 'nearest' });
+            return;
+          }
+        }
+        if (!yaEnfocoInicialRef.current) {
+          yaEnfocoInicialRef.current = true;
+          searchInputRef.current?.focus();
+        }
       } else if (vista === 'TICKET') {
         document.getElementById('btn-imprimir-ticket-caja')?.focus();
       }
     }, 60);
+
+    return () => clearTimeout(timer);
 
     const handleModalKeyDown = (e: KeyboardEvent) => {
       if (ticketSeleccionado || document.getElementById('modal-cambio-producto')) return;

@@ -163,6 +163,7 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
                 return (
                   <tr
                     key={caja.id}
+                    id={`caja-row-${caja.id}`}
                     data-row="true"
                     role="button"
                     tabIndex={0}
@@ -199,6 +200,7 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
                     <td className="p-2 sm:p-4 text-center hidden md:table-cell whitespace-nowrap">
                       <div className="flex items-center justify-center">
                         <button 
+                          id={`btn-ver-caja-${caja.id}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedCaja(caja);

@@ -359,6 +359,10 @@ de un celular a un monitor grande.
 
 **Ejemplos para copiar:** `src/sections/Conteos/components/FiltrosConteos.tsx` (buscador + filtros + teclado con el
 helper `teclas(izq, der)`), `src/sections/Finanzas/components/TablaMovimientos.tsx` (paginación con `paginacion(pos)`),
-`src/sections/Finanzas/components/TablaHistorial.tsx` (filtros que llegan por la prop `filtros`), `src/sections/Clientes/index.tsx` (botones múltiples de cabecera: `btn-nuevo-cliente`, `btn-nuevo-grupo` y `btn-ver-grupos` conectados por ← → y ↓ al buscador; grupos no dependen de tener clientes creados).
-**Capturas y prueba de teclado:** `ai-scripts/pruebas/estilo/ver-*.mjs` (ver su LEEME).
+**Regla universal de memoria de fila al cerrar ventanas o submodales (04/11/2026, orden del dueño):**
+Al presionar Escape o X para cerrar cualquier ventana o submodal (ej. detalle de ticket sobre detalle de caja, o detalle de caja sobre historial), el selector NUNCA debe saltar arriba al buscador ni a otro elemento. Siempre debe regresar exactamente a la fila que estaba seleccionada.
+Técnica obligatoria:
+1. En componentes con submodales (`ModalDetalleCaja.tsx`, etc.): NO poner auto-focus al buscador en `useEffect` que dependa del estado del submodal (`ticketSeleccionado`). Guardar el ID en `ultimoTicketRef` y, al cerrar, restaurar el foco directo a `mov-row-${id}`. El auto-foco al buscador solo debe ocurrir en la apertura inicial (`yaEnfocoInicialRef`).
+2. En `src/utils/ventanas.ts`: `enVentana` es un `WeakMap<HTMLElement, Recuerdo>` que guarda `{ el, id, fila, texto }` para cada nivel de ventana. Si el foco cayó en un buscador (`esBuscador`) por algún imán o efecto residual, `devolverEnVentana` y `devolver` detectan que había una fila recordada y la restauran inmediatamente.
+3. Todas las filas de tablas interactivas deben tener `data-row="true"` y su ID único (ej. `mov-row-${id}`, `caja-row-${id}`) para que el selector las localice sin ambigüedad.
 

@@ -665,4 +665,10 @@
     - Tabla de movimientos con un solo botón unificado `[ ⇄ ]` para "Cambio / Devolución".
     - Tabla de historial de cajas con el botón del ojo centrado perfectamente bajo "ACCIONES".
     - Verificado con Puppeteer/Edge y capturas `historial_cajas_centrado.png` y `ticket_modal_limpio.png`. Solo siumax.
+- **Dueño** (04/11/2026): *"me di cuenta de algo cuando selecciono una tabla y presiono enter entro ahi todo normal pero cuando pongo x el selector se va arriba al buscador y no se queda donde seleccioné obligándome a bajar y volver a seleccionar la tabla quiero que eso no pase como también que eso no pase en otras tablas que sea como una regla"*. Antigravity diagnosticó las causas: en `ModalDetalleCaja.tsx` el `useEffect` forzaba `searchInputRef.current?.focus()` a los 60ms al cerrarse el ticket (`ticketSeleccionado` pasando a `null`), y en `ventanas.ts` `enVentana` no guardaba la fila con su ID y texto ni permitía recuperar filas si el foco caía en un buscador. El dueño aprobó con *"EMPIEZA"*.
+  - Hecho y probado en siumax:
+    - En `src/utils/ventanas.ts`: ampliado selector `FILA` con `[id^="mov-row-"]` y `[id^="caja-row-"]`; `filasVisibles(contenedor)` para buscar dentro de modales; `enVentana` con memoria completa `{ el, id, fila, texto }`; y regla universal donde si el foco cayó en un buscador pero había una fila previa en esa ventana/página, `devolverEnVentana` y `devolver` devuelven el foco inmediatamente a la fila.
+    - En `ModalDetalleCaja.tsx`: refs `ultimoTicketRef` y `yaEnfocoInicialRef`; auto-foco al buscador solo al abrir por primera vez y restauración de foco a la fila del ticket cerrado.
+    - En `TablaMovimientos.tsx` y `TablaHistorial.tsx`: identificadores de fila y botones.
+    - Verificado con Puppeteer/Edge (`ai-scripts/pruebas/prueba-selector-cierre-submodal.mjs`): 5/5 checks superados con éxito y captura guardada (`submodal_foco_fila_restaurado.png`). Solo siumax.
 

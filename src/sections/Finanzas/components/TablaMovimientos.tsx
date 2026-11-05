@@ -78,6 +78,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
               visibles.map((item) => (
                 <tr 
                   key={item.id} 
+                  id={`mov-row-${item.id}`} 
                   data-row="true"
                   role="button"
                   tabIndex={0}
@@ -187,6 +188,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                       {item.isTicket ? (
                         <>
                           <button 
+                            id={`btn-ver-ticket-${item.id}`} 
                             onClick={(e) => { e.stopPropagation(); onVerTicket(item.id); }} 
                             className="p-1.5 bg-[var(--color-surface)] text-[var(--color-ink)] border border-[var(--color-border)] hover:border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors cursor-pointer rounded-none" 
                             title="Ver Detalles"
@@ -195,6 +197,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                           </button>
                           {item.estado !== 'ANULADO' && onCambiarProducto && (
                             <button
+                              id={`btn-cambio-${item.id}`}
                               onClick={(e) => { e.stopPropagation(); onCambiarProducto(item.id); }}
                               disabled={idsAnulando?.has(item.id)}
                               className="p-1.5 bg-[var(--color-surface)] text-[var(--color-info)] border border-[var(--color-border)] hover:border-[var(--color-info)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] transition-colors cursor-pointer rounded-none disabled:opacity-40"
@@ -204,6 +207,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                             </button>
                           )}
                           <button
+                            id={`btn-eliminar-venta-${item.id}`}
                             onClick={(e) => {
                               e.stopPropagation();
                               // Una venta no se borra: primero la devolución; y una anulada solo la borra el administrador
@@ -223,6 +227,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                         </>
                       ) : (
                         <button
+                          id={`btn-eliminar-mov-${item.id}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             // Borrar una devolución borra el registro de que salió dinero: solo el administrador
