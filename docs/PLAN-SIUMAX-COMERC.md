@@ -4,7 +4,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 05/11/2026 (104), Claude: arreglada la Tienda Web de Evicamp (un producto sin nombre la tumbaba); subido a Evicamp, clientes, siumax y GitHub.
+- **Última actualización:** 05/11/2026 (105), Claude: reglas del selector 7 y 8 (las flechas nunca cambian una opción; Enter en casilla = clic) en todo el sistema. Solo siumax.
+- (104) 05/11/2026, Claude: arreglada la Tienda Web de Evicamp (un producto sin nombre la tumbaba); subido a Evicamp, clientes, siumax y GitHub.
 - (103) 05/11/2026, Claude: **PASE a Evicamp, clientes y GitHub** de todo lo hecho desde el pase (80): pantallas en cualquier tamaño, selector, estilo de ventanas, retoques de Antigravity y anulación NO_EMITIDO (SQL ensayado en copia, 0 errores, sin reiniciar la API; facturación apagada en Evicamp; Evicamp sin Mercado Pago).
 - (102) 05/11/2026, Antigravity: **entrega a Claude** (BITACORA 102: resumen de 94 a 101, estado limpio, 0 errores, siumax al día, pendientes y cuidados). Rama `fase-11-sunat` (commits `cb3582f` → `2e98a16`, sin push). Evicamp y GitHub intactos (Regla 4).
 - (101) 04/11/2026, Antigravity: **navegación por teclado completa al botón [ X ] de borrado en todos los buscadores** (acceso bidireccional con flechas izquierda/derecha entre buscador, botón [ X ] y filtros/selectores; activación con Enter/Espacio/Escape con borrado y retorno automático de foco al buscador; estilo de foco rojo vibrante `#DC2626` sin curvas en 10 buscadores del sistema). Compilado y desplegado a siumax (rama `fase-11-sunat`, sin push).

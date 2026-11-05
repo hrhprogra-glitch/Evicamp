@@ -1220,14 +1220,11 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
             try { (active as HTMLSelectElement & { showPicker?: () => void }).showPicker?.(); } catch { /* navegador sin showPicker */ }
             return;
           }
-          // ← → pasan a la unidad anterior / siguiente de la lista sin abrirla (antes solo KG ↔ LT)
-          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          // → no tiene nada a la derecha: el selector se queda. Las flechas NUNCA cambian la unidad (pedido del dueño
+          // 05/11/2026: "solo cambiar cuando presiono Enter para desplegarlo")
+          if (e.key === 'ArrowRight') {
             e.preventDefault();
             e.stopPropagation();
-            const opciones = Array.from((active as HTMLSelectElement).options).map((o) => o.value);
-            const i = opciones.indexOf(formData.weightUnit);
-            const j = Math.max(0, Math.min(opciones.length - 1, i + (e.key === 'ArrowRight' ? 1 : -1)));
-            setFormData({ ...formData, weightUnit: opciones[j] });
             return;
           }
         }

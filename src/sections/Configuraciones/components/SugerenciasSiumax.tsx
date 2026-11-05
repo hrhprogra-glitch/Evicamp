@@ -79,8 +79,8 @@ export const SugerenciasSiumax: React.FC = () => {
             onKeyDown={(e) => {
               if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
                 e.preventDefault();
+                // ← → solo mueven el selector; Enter (clic) elige. Regla del dueño 05/11/2026
                 const otro = TIPOS[(i + (e.key === 'ArrowRight' ? 1 : TIPOS.length - 1)) % TIPOS.length];
-                setTipo(otro.id);
                 document.getElementById(`sug-tipo-${otro.id}`)?.focus();
               } else flechas('btn-tab-sugerencias', 'sug-seccion')(e);
             }}

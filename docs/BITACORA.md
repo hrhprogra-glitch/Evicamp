@@ -7,6 +7,18 @@
 
 ---
 
+## 05/11/2026 (105) · Claude — Dos reglas más del selector: las flechas nunca cambian una opción y Enter en una casilla = clic (solo siumax)
+- **Dueño** (capturas de Nuevo producto): *"con la flecha izquierda cambia la unidad… debería solo cambiar cuando presiono Enter para desplegarlo"* y *"al darle check al número de serie con Enter no se pone check, pasa al siguiente… el Enter es como un clic"*.
+- **Reglas universales** en `src/utils/flechasEspaciales.ts` (`alTeclearPrimero`, captura de window, registrada al abrir la app → corre antes que el teclado de cualquier ventana):
+  1. **Lista desplegable cerrada:** las flechas NUNCA cambian el valor (se anula lo del navegador); mueven el selector (las flechas propias de la pantalla mandan; si no hay, las de respaldo, que ahora también salen de las listas). **Enter la despliega** si la pantalla no lo atendió (`alSoltarEnter` → showPicker).
+  2. **Enter en una casilla (checkbox/radio) = clic:** la marca o desmarca y el selector se queda (stopImmediatePropagation para que el "Enter pasa al siguiente" de los formularios no la salte).
+  - Para saber si una pantalla atendió la flecha de una lista se envuelve `preventDefault` del evento (`otraPantallaLoUso`).
+- **Quitado lo que cambiaba opciones con flechas a propósito:** Nuevo producto (→ en Unidad de venta pasaba a la siguiente unidad), Conteos › Nuevo ajuste (← → cambiaban el tipo de ajuste), Nuevo grupo (Familia/Empresa) y Ajustes › Sugerencias (tipo). Ahora ← → solo mueven y Enter elige.
+- Probado con teclado en siumax: Nuevo producto 9/9 (unidad no cambia con ← → ↓, ↓ propia sigue, casilla de serie con Enter se marca/desmarca y el selector se queda, filtro de Inventario mueve sin cambiar), Nuevo grupo y Sugerencias 4/4, 0 errores. Nuevo ajuste revisado por código.
+- Rama `fase-11-sunat`. NO subido a Evicamp ni GitHub (esperar aviso del dueño).
+
+---
+
 ## 05/11/2026 (104) · Claude — Arreglo: la Tienda Web de Evicamp no cargaba (subido a todos)
 - **Dueño:** pegó el error de la consola (`Cannot read properties of null (reading 'trim')` en /#/tienda) → *"en evicamp no carga la tienda web"*.
 - **Causa:** el catálogo público de Evicamp tiene 1 producto SIN NOMBRE (de 1259) e `iniciales()` de `src/sections/TiendaWeb/formato.ts` hacía `.trim()` sobre null. En siumax no había ninguno así.
