@@ -743,3 +743,4 @@
 
 
 
+- **Dueño** (05/11): *"perfecto, ya quedó todo; ahora sí quiero que lo subas todo a evicamp, a siumax, para mis clientes y para mi github"*. Claude: ensayo del SQL en copia de Evicamp (0 errores) → respaldo y SQL real sin reiniciar la API (0 errores, facturación apagada) → `deploy.cjs todos` → Evicamp verificado (login sin errores, sin aviso de pago) → merge a `main` y push.

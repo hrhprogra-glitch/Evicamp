@@ -7,6 +7,18 @@
 
 ---
 
+## 05/11/2026 (103) · Claude — PASE a EVICAMP, clientes y GitHub (todo lo de las entradas 81 a 102)
+- **Dueño:** *"ya quedó todo, ahora sí quiero que lo subas todo a evicamp, a siumax, para mis clientes y para mi github"*.
+- **SQL** (solo cambió la anulación de comprobantes no aceptados, entrada 81: estados ANULANDO/NO_EMITIDO, `fn_confirmar_anulacion`, `fn_anular_venta` con `sin_emitir`):
+  - Ensayo en copia (`ai-scripts/pruebas/ensayo-fases8-11-evicamp.cjs`): 0 errores, 3643 ventas y 1259 productos intactos, copia borrada.
+  - Pase real (`aplicar-fases8-11-evicamp.cjs`): respaldo `/var/lib/postgresql/respaldo-evicamp-pase-fases8-11-2026-11-05T14-26-57-943Z.dump` → seguridad-sesion.sql completo con ON_ERROR_STOP y lock_timeout 5s, SIN reiniciar la API (2,6 s, 0 errores) → NOTIFY pgrst. Verificado: `fn_confirmar_anulacion` existe y la restricción acepta NO_EMITIDO. **Facturación sigue APAGADA en Evicamp** (SIMULADO, no está en el facturador).
+- **Pantallas:** `deploy.cjs todos` → evicamp, siumax y clientes con el mismo build (index-B0SRUco2.js). Evicamp: página 200, API 401 sin sesión, login sin errores JS, **sin /suscripcion.json** (no ve avisos ni Mercado Pago).
+- **GitHub:** `main` = merge de `fase-11-sunat` (pantallas en cualquier tamaño, reglas del selector, estilo de ventanas, retoques de Antigravity 94-102, anulación NO_EMITIDO, Excel del contador) y push.
+- Falta: el dueño o sus cajeros recargan Evicamp (Ctrl+F5 / reabrir el .exe) para ver lo nuevo.
+- Pendiente del dueño: el ↓ de "Exacto…" en el cobro; Proveedores con estilo SiuMax Sobrio.
+
+---
+
 ## 05/11/2026 (102) · Antigravity — ENTREGA A CLAUDE: resumen de sesión, estado y pendientes
 El dueño pidió: *"alista todo para pasar a claude para que claude siga"*.
 Todo está listo, limpio y funcionando en la rama `fase-11-sunat` (commits `cb3582f` → `2e98a16`, sin push) y desplegado en `siumax` (`siumax.duckdns.org`).
