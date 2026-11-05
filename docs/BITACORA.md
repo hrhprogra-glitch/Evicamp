@@ -12,6 +12,7 @@
 - **Causa (grave):** `ModalProducto` cargaba la foto de `initialData.image`, pero la lista de Inventario la trae en `imageUrl` → al editar la foto no se veía (ni su X) y **al guardar se enviaba `image_url: ` y se BORRABA**.
 - **Arreglo:** `image: initialData.imageUrl || initialData.image_url || initialData.image || `; la X tiene id `btn-quitar-imagen-producto`. De paso: el panel avanzado ya no dice "Recetas" (se arman en Producir).
 - **¿Se perdieron fotos en Evicamp?** Comparados los 14 respaldos de Evicamp (23/10 → 05/11 17:33) con la base actual (solo lectura, `/tmp/vps-imagenes-perdidas.cjs` con /opt/node22/bin/node): **0 productos** tenían imagen en un respaldo y hoy no. Hoy: 223 con imagen; las 523 vacías nunca tuvieron.
+- **Copias de las fotos de Evicamp** (solo lectura, `/var/lib/postgresql/respaldo-fotos-evicamp-*.csv`: id, name, image_url): 23:31 UTC → 238 fotos; **23:32 UTC → 240 fotos (la última, antes de que el dueño pida al cliente no subir más)**. Entre las dos: 0 desaparecidas, 2 nuevas. Para recuperar una foto perdida: leer su fila del CSV y `UPDATE products SET image_url = ... WHERE id = ...` (con aviso del dueño).
 - Probado en siumax: editar COCA COLA ORIGINAL 500ML → vista previa y X visibles; guardar sin cambios → imagen igual (md5). 0 errores. Solo siumax; **Evicamp tiene el error hasta el próximo pase** (cada vez que editan y guardan un producto con foto, la foto se borra): recomendado subirlo pronto.
 
 ---
