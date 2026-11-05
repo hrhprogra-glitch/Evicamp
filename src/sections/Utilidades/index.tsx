@@ -4,7 +4,7 @@ import { FiltrosUtilidades } from './components/FiltrosUtilidades';
 import { TarjetasResumen } from './components/TarjetasResumen';
 import { TablaAnalisisProductos } from './components/TablaAnalisisProductos';
 import { TableroGanancias } from './components/TableroGanancias';
-import { calcularAnalisis, type VentaPeriodo } from './calcularAnalisis';
+import { calcularAnalisis } from './calcularAnalisis';
 
 import type { AnalisisProducto, StatsFiltro } from './types';
 // 🎯 MOTOR ÚNICO DE INGRESO TOTAL: misma fórmula y mismas fechas que Resumen,
@@ -23,9 +23,6 @@ export const Utilidades = () => {
   const [ingresosTotalesExactos, setIngresosTotalesExactos] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [mostrarTablero, setMostrarTablero] = useState(false);
-  // Para "Gráficos y detalles": las ventas del período y el costo para valorizar el stock
-  const [ventasPeriodo, setVentasPeriodo] = useState<VentaPeriodo[]>([]);
-  const [costoUnitario, setCostoUnitario] = useState<Record<string, number>>({});
   const [statsFiltro, setStatsFiltro] = useState<StatsFiltro>({ ingresos: 0, costos: 0, mermas: 0, hayFiltros: false });
 
   const filtrarHoy = () => { setFechaInicio(hoyStr); setFechaFin(hoyStr); };
@@ -42,8 +39,6 @@ export const Utilidades = () => {
       const r = await calcularAnalisis(fechaInicio, fechaFin);
       setGastosCaja(r.gastos);
       setIngresosTotalesExactos(r.ingresoTotal);
-      setVentasPeriodo(r.ventas);
-      setCostoUnitario(r.costoUnitario);
       setAnalisisCompleto(r.analisis);
       if (!silencioso) setIsLoading(false);
     };
@@ -121,9 +116,6 @@ export const Utilidades = () => {
       {/* 05/11/2026: "Top 5 rentables" pasó a ser "Gráficos y detalles" (tablero de ganancias y pérdidas) */}
       {mostrarTablero && (
         <TableroGanancias
-          fechaInicio={fechaInicio} fechaFin={fechaFin}
-          analisis={analisisCompleto} gastos={gastosCaja} ingresoTotal={ingresosTotalesExactos}
-          ventas={ventasPeriodo} costoUnitario={costoUnitario} cargando={isLoading}
           onClose={() => { setMostrarTablero(false); setTimeout(() => document.getElementById('btn-tops-utilidades')?.focus(), 50); }}
         />
       )}

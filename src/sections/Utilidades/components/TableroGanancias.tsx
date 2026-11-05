@@ -18,13 +18,11 @@ import {
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { usePermiso, avisar } from '../../../utils/permisos';
-import { calcularAnalisis, type VentaPeriodo } from '../calcularAnalisis';
+import { calcularAnalisis, type VentaPeriodo, type ResultadoAnalisis } from '../calcularAnalisis';
 import type { AnalisisProducto } from '../types';
+import { fechaLocalPeru, primerDiaMesPeru } from '../../../utils/ingresos';
 
 interface Props {
-  fechaInicio: string; fechaFin: string;
-  analisis: AnalisisProducto[]; gastos: number; ingresoTotal: number;
-  ventas: VentaPeriodo[]; costoUnitario: Record<string, number>; cargando: boolean;
   onClose: () => void;
 }
 
@@ -90,9 +88,51 @@ const Seccion: React.FC<{ id: string; titulo: string; ayuda?: string; children: 
 const estiloTooltip = { background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 0, fontSize: 12, fontFamily: 'inherit', color: 'var(--color-ink)' };
 const ejes = { stroke: 'var(--color-muted)', fontSize: 11, tickLine: false };
 
-export const TableroGanancias: React.FC<Props> = ({ fechaInicio, fechaFin, analisis, gastos, ingresoTotal, ventas, costoUnitario, cargando, onClose }) => {
+export const TableroGanancias: React.FC<Props> = ({ onClose }) => {
   useCerrarConEscape(true, onClose);
   const puedeConfigurar = usePermiso('gerencia_configuracion_sistema');
+
+  // Rango propio del tablero (pedido del dueño 05/11/2026): por defecto ESTE MES (del 1 hasta hoy)
+  const [desde, setDesde] = useState(primerDiaMesPeru());
+  const [hasta, setHasta] = useState(fechaLocalPeru());
+  const [fechaInicio, fechaFin] = desde <= hasta ? [desde, hasta] : [hasta, desde];
+  const [datos, setDatos] = useState<ResultadoAnalisis | null>(null);
+  const [cargando, setCargando] = useState(true);
+  useEffect(() => {
+    let vivo = true;
+    setCargando(true);
+    const espera = setTimeout(() => {
+      void calcularAnalisis(fechaInicio, fechaFin)
+        .then((r) => { if (vivo) setDatos(r); })
+        .finally(() => { if (vivo) setCargando(false); });
+    }, 350);                                       // por si se escribe la fecha con el teclado
+    return () => { vivo = false; clearTimeout(espera); };
+  }, [fechaInicio, fechaFin]);
+  const analisis: AnalisisProducto[] = datos?.analisis || [];
+  const gastos = datos?.gastos || 0;
+  const ingresoTotal = datos?.ingresoTotal || 0;
+  const ventas: VentaPeriodo[] = datos?.ventas || [];
+  const costoUnitario: Record<string, number> = datos?.costoUnitario || {};
+
+  // Calendarios: Enter lo abre y el selector se queda en la fecha; ← → entre Desde y Hasta; ↓ a los recuadros; ↑ a la X
+  const ultimoCambio = React.useRef(0);
+  const teclasFecha = (izq: string | null, der: string | null) => (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const ir = (id: string | null) => { if (id) document.getElementById(id)?.focus(); };
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault(); e.stopPropagation();
+      if (Date.now() - ultimoCambio.current < 500) return;    // el Enter que eligió el día no lo vuelve a abrir
+      try { e.currentTarget.showPicker?.(); } catch { /* sin calendario */ }
+    } else if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); ir(izq); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); ir(der); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); ir('tablero-cifras'); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); ir('btn-cerrar-tablero'); }
+  };
+  const alCambiarFecha = (id: string, poner: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    ultimoCambio.current = Date.now();
+    if (e.target.value) poner(e.target.value);
+    setTimeout(() => document.getElementById(id)?.focus(), 50);
+  };
+
   const dias = diasEntre(fechaInicio, fechaFin);
   const prevFin = sumarDias(fechaInicio, -1);
   const prevInicio = sumarDias(fechaInicio, -dias);
@@ -132,7 +172,7 @@ export const TableroGanancias: React.FC<Props> = ({ fechaInicio, fechaFin, anali
   }, [prevInicio, prevFin]);
 
   // Al abrir, el selector va al primer recuadro
-  useEffect(() => { setTimeout(() => document.getElementById('tablero-cifras')?.focus(), 80); }, []);
+  useEffect(() => { setTimeout(() => document.getElementById('tablero-desde')?.focus(), 80); }, []);
 
   const t = useMemo(() => totales(analisis, ingresoTotal, gastos, ventas), [analisis, ingresoTotal, gastos, ventas]);
 
@@ -271,13 +311,32 @@ export const TableroGanancias: React.FC<Props> = ({ fechaInicio, fechaFin, anali
             <div className="ventana-cabecera__icono"><PieChart size={18} /></div>
             <div className="min-w-0">
               <h2 className="ventana-cabecera__titulo">Gráficos y detalles</h2>
-              <p className="ventana-cabecera__subtitulo">Del {rangoTxt} · comparado con el {anteriorTxt}{cargando ? ' · actualizando…' : ''}</p>
+              <p className="ventana-cabecera__subtitulo">Del {rangoTxt} · comparado con el {anteriorTxt}{cargando ? ' · calculando…' : ''}</p>
             </div>
           </div>
           <button id="btn-cerrar-tablero" type="button" onClick={onClose} title="Cerrar (Esc)" className="ventana-cerrar"><X size={18} /></button>
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 sm:p-4 grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4 content-start bg-[var(--color-bg)]">
+          {/* RANGO DE FECHAS DEL TABLERO (por defecto este mes) */}
+          <div className="xl:col-span-2 flex flex-wrap items-end gap-3">
+            <label className="flex flex-col text-[11px] font-black uppercase tracking-widest text-[var(--color-muted)]">
+              Desde
+              <input id="tablero-desde" type="date" value={desde} max={hasta} title="Enter abre el calendario"
+                onChange={alCambiarFecha('tablero-desde', setDesde)} onKeyDown={teclasFecha(null, 'tablero-hasta')}
+                onClick={(e) => { try { e.currentTarget.showPicker?.(); } catch { /* sin calendario */ } }}
+                className="filtro-sobrio mt-1 w-44" />
+            </label>
+            <label className="flex flex-col text-[11px] font-black uppercase tracking-widest text-[var(--color-muted)]">
+              Hasta
+              <input id="tablero-hasta" type="date" value={hasta} min={desde} max={fechaLocalPeru()} title="Enter abre el calendario"
+                onChange={alCambiarFecha('tablero-hasta', setHasta)} onKeyDown={teclasFecha('tablero-desde', null)}
+                onClick={(e) => { try { e.currentTarget.showPicker?.(); } catch { /* sin calendario */ } }}
+                className="filtro-sobrio mt-1 w-44" />
+            </label>
+            {cargando && <span className="text-[11px] font-black uppercase tracking-widest text-[var(--color-muted)] pb-3">Calculando…</span>}
+          </div>
+
           {/* 1. CIFRAS CLAVE */}
           <Seccion id="tablero-cifras" titulo="Cifras clave" ayuda="Comparadas con el período anterior del mismo largo." className="xl:col-span-2">
             <div className="ventana-cifras grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 border-b-0">
