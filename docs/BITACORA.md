@@ -7,6 +7,18 @@
 
 ---
 
+## 04/11/2026 (96) · Antigravity — Aprovechamiento de espacio en ModalGrupo y corrección de selector en detalle de caja (solo siumax)
+- **Problema 1 (Caja):** *"EL SELECTOR YA FUNCIONA DENTRO DE LA TABLA"*. Se detectó que un `return () => clearTimeout(timer);` colocado prematuramente dentro de un `useEffect` en `ModalDetalleCaja.tsx` dejaba inaccesible el registro de `handleModalKeyDown`. Se eliminó el retorno temprano manteniendo la limpieza al final del hook. El selector por teclado en la tabla de movimientos de caja navega ahora al 100%.
+- **Problema 2 (Grupos):** *"AQUI TIENE ESPACIO QUE NO APROVECHAN ajusta eso"* (captura de `ModalGrupo.tsx` con enorme espacio en blanco a la derecha).
+- **Solución aplicada (Opción 1 elegida por el dueño):**
+  1. **Panel de Cifras Clave (SiuMax Sobrio):** cuadrícula superior de 3 columnas (`Miembros`, `Descuento` y `Deuda del Grupo`) con números mono limpios y estado claro (`Al día · Sin deuda` o `Créditos pendientes` en rojo).
+  2. **Bolsa de 4 botones de acción al 100% de ancho:** los botones `[ 💼 Cobrar al grupo ]`, `[ 👤+ Agregar cliente ]`, `[ ✏️ Editar grupo ]` y `[ 🗑️ Eliminar grupo ]` organizados en `grid grid-cols-2 sm:grid-cols-4` con altura uniforme (44px), bordes nítidos y cero espacio desperdiciado.
+  3. **Teclado:** selector `teclas` funcionando entre los 4 botones, la X de cierre y la lista de clientes hacia abajo.
+- **Verificación:** validado con Puppeteer/Edge (`ai-scripts/pruebas/ver-modal-grupo.mjs`), captura generada `grupo_cifras_sobrio.png`. Compilado con `npx tsc -b` (0 errores) y desplegado a `siumax`.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
 ## 04/11/2026 (95) · Antigravity — Regla universal: memoria de fila al cerrar submodales y modales (sin saltos al buscador)
 - **Problema reportado por el dueño:** *"cuando selecciono una tabla y presiono enter entro ahi todo normal pero cuando pongo x el selector se va arriba al buscador y no se queda donde seleccioné obligándome a bajar y volver a seleccionar la tabla quiero que eso no pase como también que eso no pase en otras tablas que sea como una regla"*.
 - **Causas identificadas:**

@@ -366,3 +366,9 @@ Técnica obligatoria:
 2. En `src/utils/ventanas.ts`: `enVentana` es un `WeakMap<HTMLElement, Recuerdo>` que guarda `{ el, id, fila, texto }` para cada nivel de ventana. Si el foco cayó en un buscador (`esBuscador`) por algún imán o efecto residual, `devolverEnVentana` y `devolver` detectan que había una fila recordada y la restauran inmediatamente.
 3. Todas las filas de tablas interactivas deben tener `data-row="true"` y su ID único (ej. `mov-row-${id}`, `caja-row-${id}`) para que el selector las localice sin ambigüedad.
 
+**Aprovechamiento de espacio en ventanas flotantes anchas (04/11/2026):**
+En ventanas grandes (`max-w-4xl` o más) como `ModalGrupo.tsx`:
+- Nunca dejar botones sueltos en `BarraFiltros` que generen 50-60% de espacio en blanco lateral o botones huérfanos en segunda fila.
+- Patrón estándar: Cifras clave arriba en cuadrícula sobria (`grid grid-cols-2 sm:grid-cols-3 gap-px bg-[var(--color-border)]`) con números mono y estado claro, y debajo los botones de acción alineados al 100% en cuadrícula simétrica (`grid grid-cols-2 sm:grid-cols-4 gap-2`) con altura uniforme (44px) y navegación por teclado fluida.
+
+

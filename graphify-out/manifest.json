@@ -90,9 +90,9 @@
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalDetalleCaja.tsx": {
-    "mtime": 1793842411.0902019,
-    "seen": 1793842450.293692,
-    "ast_hash": "f8dee2f88b6517c04b8b46c1c01a6e18",
+    "mtime": 1793843117.9565516,
+    "seen": 1793843490.3393178,
+    "ast_hash": "ccfc4fcf89e63d4ed94bb2d7e0f77b0a",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalNuevoMovimiento.tsx": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793840999.4606018,
-    "seen": 1793841130.068661,
-    "ast_hash": "d81337f3a5f1a6ab27ef9b014e3cdb15",
+    "mtime": 1793843823.610506,
+    "seen": 1793843883.458011,
+    "ast_hash": "919eb197c5e073659d1e41051b63fda6",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793841068.0321102,
-    "seen": 1793841130.0686622,
-    "ast_hash": "578a2422bb767b98f3e274ec02b67c69",
+    "mtime": 1793843847.9824123,
+    "seen": 1793843883.4580116,
+    "ast_hash": "09d1ced901e9f141035f95acf2101171",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793841109.4862788,
-    "seen": 1793841130.0686634,
-    "ast_hash": "e72c6aa70ec4ae3b04f32f5ec4e4a1b4",
+    "mtime": 1793843867.0073392,
+    "seen": 1793843883.4580126,
+    "ast_hash": "5e9e9b6e4bd8d883d26c7a8f168c44d9",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793841026.6855927,
-    "seen": 1793841130.0686643,
-    "ast_hash": "e726dce4370303f9ebada5ad3d240e56",
+    "mtime": 1793843833.937353,
+    "seen": 1793843883.4580138,
+    "ast_hash": "c28e8dcd32acb5dd75966724f9b09b1a",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2070,9 +2070,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalGrupo.tsx": {
-    "mtime": 1793836601.5710065,
-    "seen": 1793837852.0568345,
-    "ast_hash": "4b31533060df7259499366b0f208d127",
+    "mtime": 1793843420.6648145,
+    "seen": 1793843490.339284,
+    "ast_hash": "c1e94d1b6abc6758d5589400f79f19fb",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalElegirClientePOS.tsx": {
@@ -2667,6 +2667,12 @@
     "mtime": 1793842741.5592544,
     "seen": 1793842789.304605,
     "ast_hash": "ffd3c9d770f53f27fe0d408ea7847097",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/ver-modal-grupo.mjs": {
+    "mtime": 1793843684.3140528,
+    "seen": 1793843883.457801,
+    "ast_hash": "82474cfac523be932679bcc977188bcc",
     "semantic_hash": ""
   }
 }

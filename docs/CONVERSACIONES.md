@@ -671,4 +671,14 @@
     - En `ModalDetalleCaja.tsx`: refs `ultimoTicketRef` y `yaEnfocoInicialRef`; auto-foco al buscador solo al abrir por primera vez y restauración de foco a la fila del ticket cerrado.
     - En `TablaMovimientos.tsx` y `TablaHistorial.tsx`: identificadores de fila y botones.
     - Verificado con Puppeteer/Edge (`ai-scripts/pruebas/prueba-selector-cierre-submodal.mjs`): 5/5 checks superados con éxito y captura guardada (`submodal_foco_fila_restaurado.png`). Solo siumax.
+- **Dueño** (04/11/2026):
+  1. *"EL SELECTOR YA FUNCIONA DENTRO DE LA TABLA"*: Antigravity revisó `ModalDetalleCaja.tsx` y encontró que un `return () => clearTimeout(timer);` colocado en medio del `useEffect` impedía registrar el `addEventListener('keydown', handleModalKeyDown, { capture: true })`. Se corrigió inmediatamente.
+  2. *"AQUI TIENE ESPACIO QUE NO APROVECHAN ajusta eso"* (captura de `ModalGrupo.tsx` con espacio en blanco desperdiciado en la cabecera del grupo). Antigravity presentó dos opciones:
+     - Opción 1 (Recomendada): Cifras arriba (Miembros, Descuento y Deuda en grande) y los 4 botones alineados en una fila pareja debajo.
+     - Opción 2: Todo en una sola franja compacta (Cifras a la izquierda y botones a la derecha).
+     El dueño eligió la Opción 1.
+  - Hecho y probado en siumax:
+    - En `ModalGrupo.tsx`: sustituida la `BarraFiltros` desaprovechada por un panel de 3 cifras en estilo SiuMax Sobrio (`Miembros`, `Descuento` y `Deuda del Grupo`) y una cuadrícula simétrica de 4 botones al 100% del ancho (`grid-cols-2 sm:grid-cols-4`: `[ Cobrar al grupo ]`, `[ Agregar cliente ]`, `[ Editar grupo ]`, `[ Eliminar grupo ]`).
+    - Teclado: flechas de selector navegando fluidamente entre los 4 botones, la X de cierre y la lista de clientes.
+    - Verificado con Puppeteer/Edge (`ai-scripts/pruebas/ver-modal-grupo.mjs`), captura guardada `grupo_cifras_sobrio.png`. Compilado con `npx tsc -b` y desplegado a siumax. Solo siumax.
 
