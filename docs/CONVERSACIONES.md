@@ -751,3 +751,4 @@
 - **Dueño:** *"el selector ahí no se nota bien"* (Compras: Pendientes/Recibidas/Todas/Nueva lista) → contorno verde visible en pestañas y botones de todas las secciones (en las pestañas, por dentro). Solo siumax.
 - **Dueño:** *"quita el sugerir pedido y el mensaje, que ahí se enfoque exclusivamente en el pedido"* (Nueva lista de compras) → quitado; Limpiar lista al lado del buscador. Solo siumax.
 - **Dueño:** *"en el desplegable las letras en negro no se ven bien"* (Categoría) → texto con el color del tema en las listas de categorías, productos y proveedores. Solo siumax.
+- **Dueño:** *"en categoría pongo Escape y no se sale, se queda atrapado"* → arreglado (Escape cierra la lista, otro Escape cierra la ventana). Anunció mejoras en Utilidades › Top 5: esperar sus órdenes.

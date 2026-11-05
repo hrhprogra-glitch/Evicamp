@@ -251,6 +251,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   const [categoriasLista, setCategoriasLista] = useState<string[]>([]);
   const [showCatDropdown, setShowCatDropdown] = useState(false);
   const catContainerRef = useRef<HTMLDivElement>(null);
+  // Momento en que Escape cerró la lista de categorías: al volver el selector al campo, la lista NO se vuelve a abrir
+  // (antes se reabría sola y parecía que el selector quedaba atrapado; pedido del dueño 05/11/2026)
+  const catCerradaConEscape = useRef(0);
 
   // Cerrar dropdown al hacer clic fuera del contenedor de categoría
   useEffect(() => {
@@ -637,6 +640,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         e.stopPropagation();
         if (showCatDropdown) {
           setShowCatDropdown(false);
+          catCerradaConEscape.current = Date.now();
           document.getElementById('input-categoria-producto')?.focus();
           return;
         }
@@ -1479,7 +1483,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
     window.addEventListener('keydown', handleFormKeyDown, { capture: true });
     return () => window.removeEventListener('keydown', handleFormKeyDown, { capture: true });
-  }, [isOpen, step, nature, formData, escalas, presentacionesForm, tieneVariantes, variantesLista, tipoCompuesto, recetaItems, isSubmitting, categoriasLista, showImageResults, imageResults, imgResaltada, showAdvancedPanel]);
+  }, [isOpen, step, nature, formData, escalas, presentacionesForm, tieneVariantes, variantesLista, tipoCompuesto, recetaItems, isSubmitting, categoriasLista, showImageResults, imageResults, imgResaltada, showAdvancedPanel, showCatDropdown]); // showCatDropdown: sin él, Escape veía la lista "cerrada" (estado viejo) y cerraba toda la ventana
 
   if (!isOpen) return null;
 
@@ -1919,7 +1923,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                       setFormData(prev => ({...prev, category: e.target.value.toUpperCase()}));
                       setShowCatDropdown(true);
                     }}
-                    onFocus={() => setShowCatDropdown(true)}
+                    onFocus={() => { if (Date.now() - catCerradaConEscape.current > 400) setShowCatDropdown(true); }}
                     className="w-full bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-2.5 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
                   />
                   
