@@ -33,7 +33,8 @@
   las flechas deben saltar al primero ACTIVO.
 - **Reglas 7 y 8 (05/11/2026):** las flechas NUNCA cambian una opción (listas desplegables, grupos de opciones tipo radio, unidades…):
   solo mueven el selector; **Enter despliega o elige**. **Enter en una casilla = clic** (se marca y el selector se queda). Lo garantiza
-  `alTeclearPrimero` en `flechasEspaciales.ts`; no programar "← → cambia la opción" en ninguna pantalla.
+  `alTeclearPrimero` en `flechasEspaciales.ts`; no programar "← → cambia la opción" en ninguna pantalla. Vale también para
+  campos de NÚMERO (↑↓ no suben/bajan la cantidad: el selector se queda atrapado si no).
 - **El selector tiene que VERSE** (05/11/2026): "no funciona" a veces es que llega pero no se nota. En ventanas lo garantiza
   index.css (contorno verde con outline en campos, botones y casillas); al revisar, sacar captura en MODO OSCURO (el dueño lo usa).
 - **Barras con fechas:** una sola fila; ← → recorre, ↓ baja a la lista y **Enter en una fecha abre el calendario**.

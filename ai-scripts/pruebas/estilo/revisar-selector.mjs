@@ -60,18 +60,24 @@ const CASOS = [
   ['Ajustes › Apariencia', 'configuracion', 'btn-tab-apariencia', null],
   ['Ajustes › Sugerencias', 'configuracion', 'btn-tab-sugerencias', null],
 ].filter((c) => !FILTRO || c[0].toLowerCase().includes(FILTRO.toLowerCase()));
+// Pantallas que necesitan una caja abierta (y un producto en el ticket)
+const DE_CAJA = (c) => c[1] === 'pos' || /Nuevo movimiento|Cierre de caja/.test(c[0]);
 
 const ssh = new NodeSSH(); await ssh.connect(conexionVps);
 const sql = async (q) => (await ssh.execCommand('runuser -u postgres -- psql -At -d siumax', { stdin: q })).stdout.trim();
-if (await sql("SELECT count(*) FROM cash_sessions WHERE status = 'OPEN' AND id <> " + CAJA) !== '0') { console.log('Hay una caja abierta de verdad en siumax: no hago nada.'); process.exit(1); }
+const cajaReal = (await sql("SELECT count(*) FROM cash_sessions WHERE status = 'OPEN' AND id <> " + CAJA)) !== '0';
+if (cajaReal) {
+  console.log('Hay una caja abierta de verdad en siumax: salto las pantallas de Caja y de caja abierta (no toco nada del dueño).');
+  for (let i = CASOS.length - 1; i >= 0; i--) if (DE_CAJA(CASOS[i])) CASOS.splice(i, 1);
+}
 const ventasAntes = Number(await sql('SELECT count(*) FROM sales'));
 // Si algo llegara a vender el producto de prueba, se borra esa venta y su movimiento (siumax queda como estaba)
 const limpiar = () => sql(`DELETE FROM inventory_movements WHERE product_id = ${PROD};
   DELETE FROM sales WHERE id IN (SELECT sale_id FROM sale_details WHERE product_id = ${PROD});
   DELETE FROM sale_details WHERE product_id = ${PROD};
   DELETE FROM products WHERE id = ${PROD}; DELETE FROM cash_sessions WHERE id = ${CAJA};`);
-await limpiar();
-await sql(`INSERT INTO cash_sessions (id, opening_balance, status, opened_at, is_synced) VALUES (${CAJA}, 0, 'OPEN', now(), 1);
+if (!cajaReal) await limpiar();
+if (!cajaReal) await sql(`INSERT INTO cash_sessions (id, opening_balance, status, opened_at, is_synced) VALUES (${CAJA}, 0, 'OPEN', now(), 1);
   INSERT INTO products (id, name, price, quantity, unit, category, is_active, control_type) VALUES (${PROD}, 'PRUEBA SELECTOR', 5, 50, 'UND', 'PRUEBAS', 1, 'UNIT');`);
 
 const nav = await puppeteer.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', headless: true, defaultViewport: { width: 1366, height: 768 } });
@@ -83,9 +89,11 @@ try {
   await page.type('#input-login-usuario', 'admin@siumax.com'); await page.type('#input-login-password', process.env.SIUMAX_ADMIN_CLAVE);
   await page.keyboard.press('Enter'); await page.waitForSelector('#sidebar-btn-pos', { timeout: 20000 }); await pausa(2500);
   // Un producto en el ticket (para el cobro)
+  if (!cajaReal) {
   await page.evaluate(() => document.getElementById('sidebar-btn-pos')?.click()); await pausa(1500);
   await page.focus('#buscador-global-pos'); await page.keyboard.type('PRUEBA SELECTOR', { delay: 20 }); await pausa(1000);
   await page.keyboard.press('Enter'); await pausa(1000);
+  }
 
   // Ámbito: la ventana de arriba si hay una; si no, el contenido de la sección (sin el menú lateral)
   const PREP = () => {
@@ -263,7 +271,7 @@ try {
   }
 } finally {
   await nav.close();
-  await limpiar();
+  if (!cajaReal) await limpiar();
   console.log(informe.join('\n'), '\nerrores JS:', errores.length, errores.slice(0, 3));
   console.log('Limpieza: caja de prueba', await sql(`SELECT count(*) FROM cash_sessions WHERE id = ${CAJA}`), '· producto de prueba', await sql(`SELECT count(*) FROM products WHERE id = ${PROD}`));
   ssh.dispose();
