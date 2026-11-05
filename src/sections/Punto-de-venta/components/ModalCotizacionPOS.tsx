@@ -259,14 +259,14 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
       id="modal-cotizacion-container"
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4"
     >
-      <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[95vh] w-full max-w-xl animate-fade-in font-mono">
+      <div className="ventana-sobria bg-white border-2 border-[var(--color-ink)] flex flex-col max-h-[95vh] w-full max-w-xl animate-fade-in font-mono">
         
         {/* CABECERA */}
-        <div className="bg-[var(--color-ink)] text-white p-3 sm:p-4 flex justify-between items-center border-b-2 border-[var(--color-ink)] shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white p-3 sm:p-4 flex justify-between items-center border-b-2 border-[var(--color-ink)] shrink-0">
           <div className="flex items-center gap-2">
             <FileText size={20} className="text-[var(--color-accent)]" />
             <div>
-              <h2 className="font-black uppercase tracking-widest text-sm sm:text-base leading-tight">
+              <h2 className="ventana-cabecera__titulo font-black uppercase tracking-widest text-sm sm:text-base leading-tight">
                 Nueva Cotización / Proforma
               </h2>
               <span className="text-[11px] font-bold text-amber-400">
@@ -284,7 +284,7 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
                 document.getElementById('input-coti-cliente')?.focus();
               }
             }}
-            className="p-1 hover:rotate-90 transition-transform cursor-pointer outline-none focus:ring-4 focus:ring-white text-white"
+            className="ventana-cerrar p-1 hover:rotate-90 transition-transform cursor-pointer outline-none focus:ring-4 focus:ring-white text-white"
             title="Cerrar (Esc)"
           >
             <X size={20} />
@@ -459,15 +459,25 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
                   id="input-coti-fecha"
                   type="date"
                   value={fechaVencimiento}
-                  onChange={(e) => setFechaVencimiento(e.target.value)}
+                  title="Enter abre el calendario · ↓ sigue"
+                  onChange={(e) => {
+                    e.currentTarget.dataset.cambio = String(Date.now());
+                    setFechaVencimiento(e.target.value);
+                    setTimeout(() => document.getElementById('input-coti-fecha')?.focus(), 50);
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === 'ArrowUp') {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (Date.now() - Number(e.currentTarget.dataset.cambio || 0) < 500) return;
+                      try { e.currentTarget.showPicker?.(); } catch { /* sin calendario: se queda en la fecha */ }
+                    } else if (e.key === 'ArrowUp') {
                       e.preventDefault();
                       document.getElementById('input-coti-doc')?.focus();
                     } else if (e.key === 'ArrowRight') {
                       e.preventDefault();
                       document.getElementById('input-coti-obs')?.focus();
-                    } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                    } else if (e.key === 'ArrowDown') {
                       e.preventDefault();
                       document.getElementById('btn-confirmar-cotizacion')?.focus();
                     }

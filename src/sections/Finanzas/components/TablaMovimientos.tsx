@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowDownToLine, ArrowUpFromLine, Trash2, Eye, RotateCcw, Receipt, ArrowLeftRight } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, Trash2, Eye, RotateCcw, Receipt, ArrowLeftRight, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import type { UnifiedItem } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { usePermiso, avisar, avisarSinPermiso } from '../../../utils/permisos';
@@ -16,9 +16,43 @@ interface Props {
 
 export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVerTicket, onAnularTicket, onCambiarProducto, idsAnulando }) => {
   const esAdmin = usePermiso('sistema_acceso_total');
+  // Paginación como Inventario (25 por página); vuelve a la 1 si cambia la lista (filtros)
+  const POR_PAGINA = 25;
+  const [pagina, setPagina] = useState(1);
+  const totalPaginas = Math.max(1, Math.ceil(movimientos.length / POR_PAGINA));
+  const paginaReal = Math.min(pagina, totalPaginas);
+  React.useEffect(() => { setPagina(1); }, [movimientos.length]);
+  const visibles = movimientos.slice((paginaReal - 1) * POR_PAGINA, paginaReal * POR_PAGINA);
+  const filasDom = () => Array.from(document.querySelectorAll<HTMLElement>('#tabla-movimientos-caja tbody tr[data-row="true"]'));
+  const paginacion = (pos: 'arriba' | 'abajo') => {
+    if (!movimientos.length) return null;
+    const ant = pos === 'arriba' ? 'btn-pag-ant-mov-arriba' : 'btn-pag-ant-mov';
+    const sig = pos === 'arriba' ? 'btn-pag-sig-mov-arriba' : 'btn-pag-sig-mov';
+    const teclas = (soy: 'ant' | 'sig') => (e: React.KeyboardEvent<HTMLButtonElement>) => {
+      const acc: Record<string, () => void> = {
+        ArrowLeft: () => { if (soy === 'sig') document.getElementById(ant)?.focus(); },
+        ArrowRight: () => { if (soy === 'ant') document.getElementById(sig)?.focus(); },
+        ArrowUp: () => { if (pos === 'arriba') document.getElementById('buscador-finanzas')?.focus(); else { const l = filasDom(); l[l.length - 1]?.focus(); } },
+        ArrowDown: () => { if (pos === 'arriba') filasDom()[0]?.focus(); },
+      };
+      if (acc[e.key]) { e.preventDefault(); e.stopPropagation(); acc[e.key](); }
+    };
+    return (
+      <div className={`paginacion-sobria ${pos === 'arriba' ? 'border-b' : 'border-t'} shrink-0`}>
+        <span className="paginacion-sobria__texto">Página {paginaReal} de {totalPaginas}</span>
+        <div className="flex gap-2">
+          <button id={ant} type="button" title="Página anterior" aria-disabled={paginaReal <= 1} className="paginacion-sobria__boton"
+            onClick={() => paginaReal > 1 && setPagina(paginaReal - 1)} onKeyDown={teclas('ant')}><ChevronLeft size={16} /></button>
+          <button id={sig} type="button" title="Página siguiente" aria-disabled={paginaReal >= totalPaginas} className="paginacion-sobria__boton"
+            onClick={() => paginaReal < totalPaginas && setPagina(paginaReal + 1)} onKeyDown={teclas('sig')}><ChevronRight size={16} /></button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="w-full bg-white flex flex-col font-mono">
+      {paginacion('arriba')}
       <div className="overflow-x-auto w-full custom-scrollbar">
         <table id="tabla-movimientos-caja" className="w-full text-left border-collapse min-w-full">
           <thead className="tabla-cabecera sticky top-0 z-10">
@@ -36,14 +70,15 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
           <tbody>
             {movimientos.length === 0 ? (
               <tr>
-                <td colSpan={8} className="p-3 lg:p-4 text-center text-[var(--color-muted)] font-bold text-xs uppercase bg-[var(--color-surface)]">
-                  No hay datos registrados.
+                <td colSpan={8}>
+                  <div className="vacio-sobrio"><Search size={32} />No se registran movimientos con esos parámetros.</div>
                 </td>
               </tr>
             ) : (
-              movimientos.map((item) => (
+              visibles.map((item) => (
                 <tr 
                   key={item.id} 
+                  id={`mov-row-${item.id}`} 
                   data-row="true"
                   role="button"
                   tabIndex={0}
@@ -88,7 +123,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                             <span className="text-[10px] font-black tracking-wider uppercase px-1.5 py-0.5 border border-[var(--color-ink)]">
                               {item.comprobante.docType === 1 ? 'FACTURA' : 'BOLETA'} {item.comprobante.numero}
                             </span>
-                            <InsigniaCpe estado={item.comprobante.estado} chica />
+                            <InsigniaCpe estado={item.comprobante.estado} generado={item.comprobante.generado} chica />
                           </span>
                         )}
                         {item.isTicket && item.cliente_nombre && (
@@ -153,6 +188,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                       {item.isTicket ? (
                         <>
                           <button 
+                            id={`btn-ver-ticket-${item.id}`} 
                             onClick={(e) => { e.stopPropagation(); onVerTicket(item.id); }} 
                             className="p-1.5 bg-[var(--color-surface)] text-[var(--color-ink)] border border-[var(--color-border)] hover:border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors cursor-pointer rounded-none" 
                             title="Ver Detalles"
@@ -161,25 +197,17 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                           </button>
                           {item.estado !== 'ANULADO' && onCambiarProducto && (
                             <button
+                              id={`btn-cambio-${item.id}`}
                               onClick={(e) => { e.stopPropagation(); onCambiarProducto(item.id); }}
                               disabled={idsAnulando?.has(item.id)}
                               className="p-1.5 bg-[var(--color-surface)] text-[var(--color-info)] border border-[var(--color-border)] hover:border-[var(--color-info)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] transition-colors cursor-pointer rounded-none disabled:opacity-40"
-                              title="Cambio de Producto"
+                              title="Cambio / Devolución"
                             >
                               <ArrowLeftRight size={14} />
                             </button>
                           )}
-                          {item.estado !== 'ANULADO' && ( /* sin permiso: pide la clave del administrador (Finanzas → conAutorizacion) */
-                            <button
-                              onClick={(e) => { e.stopPropagation(); onAnularTicket(item.id); }}
-                              disabled={idsAnulando?.has(item.id)}
-                              className="p-1.5 bg-[var(--color-surface)] text-[var(--color-muted)] border border-[var(--color-border)] hover:border-[var(--color-warning)] hover:text-[var(--color-warning)] focus:outline-none focus:ring-2 focus:ring-[var(--color-warning)] transition-colors cursor-pointer rounded-none disabled:opacity-40"
-                              title="Anular / Devolver"
-                            >
-                              <RotateCcw size={14} />
-                            </button>
-                          )}
                           <button
+                            id={`btn-eliminar-venta-${item.id}`}
                             onClick={(e) => {
                               e.stopPropagation();
                               // Una venta no se borra: primero la devolución; y una anulada solo la borra el administrador
@@ -199,6 +227,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                         </>
                       ) : (
                         <button
+                          id={`btn-eliminar-mov-${item.id}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             // Borrar una devolución borra el registro de que salió dinero: solo el administrador
@@ -219,6 +248,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
           </tbody>
         </table>
       </div>
+      {paginacion('abajo')}
     </div>
   );
 };

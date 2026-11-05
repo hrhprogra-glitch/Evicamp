@@ -130,12 +130,21 @@ export const ESTADO_CPE: Record<string, { texto: string; clase: string }> = {
   ENVIANDO: { texto: 'Enviando…', clase: 'border-[var(--color-info)] text-[var(--color-info)] bg-[var(--color-info-bg-2)]' },
   ERROR: { texto: 'Error (se reintenta)', clase: 'border-[var(--color-danger)] text-[var(--color-danger)] bg-[var(--color-danger-bg)]' },
   RECHAZADO: { texto: 'Rechazado por SUNAT', clase: 'border-[var(--color-danger)] text-white bg-[var(--color-danger)]' },
+  // Venta anulada antes de que SUNAT aceptara el comprobante: se confirma con el proveedor / no llegó a emitirse
+  // Nubefact ya la generó (PDF) y la manda a SUNAT en su resumen diario: está emitida, falta que SUNAT confirme
+  GENERADO: { texto: 'Generada · SUNAT por confirmar', clase: 'border-[var(--color-accent-shadow)] text-[var(--color-accent-shadow)] bg-[var(--color-bg)]' },
+  ANULANDO: { texto: 'Anulando…', clase: 'border-[var(--color-info)] text-[var(--color-info)] bg-[var(--color-info-bg-2)]' },
+  NO_EMITIDO: { texto: 'No emitido (anulada)', clase: 'border-[var(--color-border)] text-[var(--color-muted)] bg-[var(--color-bg)]' },
 };
 export const PROBLEMA_CPE = ['ERROR', 'RECHAZADO'];
 
+/** ¿El comprobante ya existe para SUNAT? Aceptado, o generado por Nubefact (tiene PDF) esperando el resumen diario. */
+export const comprobanteEmitido = (estado: string | null | undefined, pdf?: string | null) =>
+  ['ACEPTADO', 'OBSERVADO'].includes(estado || '') || (estado === 'PENDIENTE' && Boolean(pdf));
+
 /** Boleta/factura de una fila de `sales` (null = nota de venta), para las tablas de Finanzas. */
-export const comprobanteDeVenta = (v: { doc_type?: number | null; doc_serial?: string | null; doc_number?: string | number | null; cpe_estado?: string | null }) =>
-  v.doc_type ? { docType: Number(v.doc_type), numero: numeroComprobante(v.doc_serial, v.doc_number) || 'Por numerar', estado: v.cpe_estado || null } : null;
+export const comprobanteDeVenta = (v: { doc_type?: number | null; doc_serial?: string | null; doc_number?: string | number | null; cpe_estado?: string | null; cpe_pdf?: string | null }) =>
+  v.doc_type ? { docType: Number(v.doc_type), numero: numeroComprobante(v.doc_serial, v.doc_number) || 'Por numerar', estado: v.cpe_estado || null, generado: Boolean(v.cpe_pdf) } : null;
 
 /** ¿Hay comprobantes con problema? (error, rechazado, o pendiente hace más de 10 minutos). Para los avisos de la Caja y Finanzas. */
 export const contarComprobantesConProblema = async (): Promise<number> => {
@@ -143,7 +152,7 @@ export const contarComprobantesConProblema = async (): Promise<number> => {
     const hace10 = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const [{ count: malos }, { count: atascados }, { count: notasMal }] = await Promise.all([
       supabase.from('sales').select('id', { count: 'exact', head: true }).in('cpe_estado', PROBLEMA_CPE),
-      supabase.from('sales').select('id', { count: 'exact', head: true }).in('cpe_estado', ['PENDIENTE', 'ENVIANDO']).lt('created_at', hace10),
+      supabase.from('sales').select('id', { count: 'exact', head: true }).in('cpe_estado', ['PENDIENTE', 'ENVIANDO', 'ANULANDO']).is('cpe_pdf', null).lt('created_at', hace10),
       supabase.from('notas_credito').select('id', { count: 'exact', head: true }).in('cpe_estado', PROBLEMA_CPE),
     ]);
     return (malos || 0) + (atascados || 0) + (notasMal || 0);

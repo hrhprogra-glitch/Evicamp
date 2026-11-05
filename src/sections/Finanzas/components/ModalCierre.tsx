@@ -257,11 +257,11 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
     >
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-lg flex flex-col rounded-none animate-fade-in max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]"
+        className="ventana-sobria bg-white border-2 border-[var(--color-ink)] w-full max-w-lg flex flex-col rounded-none animate-fade-in max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]"
       >
 
-        <div className="bg-[var(--color-danger)] p-4 border-b-2 border-[var(--color-ink)] flex justify-between items-center text-white shrink-0">
-          <h2 id="modal-cierre-title" className="font-black uppercase tracking-widest flex items-center gap-2 text-sm">
+        <div style={{ '--icono': 'var(--color-danger)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-danger)] p-4 border-b-2 border-[var(--color-ink)] flex justify-between items-center text-white shrink-0">
+          <h2 id="modal-cierre-title" className="ventana-cabecera__titulo font-black uppercase tracking-widest flex items-center gap-2 text-sm">
             <Lock size={18} /> Arqueo y Cierre de Caja
           </h2>
           <button 
@@ -277,7 +277,7 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
                 efectivoRef.current?.select();
               }
             }}
-            className="p-1 hover:text-[var(--color-ink)] focus:outline-none focus:ring-4 focus:ring-white focus:bg-[var(--color-ink)] focus:text-white transition-all cursor-pointer rounded-none"
+            className="ventana-cerrar p-1 hover:text-[var(--color-ink)] focus:outline-none focus:ring-4 focus:ring-white focus:bg-[var(--color-ink)] focus:text-white transition-all cursor-pointer rounded-none"
           >
             <X size={20} strokeWidth={3} />
           </button>

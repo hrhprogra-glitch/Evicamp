@@ -193,10 +193,10 @@ export const ModalNuevoMovimiento: React.FC<Props> = ({ isOpen, onClose, onSucce
     >
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[calc(var(--alto-pantalla)*0.94)] bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-md flex flex-col rounded-none animate-fade-in overflow-hidden"
+        className="ventana-sobria max-h-[calc(var(--alto-pantalla)*0.94)] bg-white border-2 border-[var(--color-ink)] w-full max-w-md flex flex-col rounded-none animate-fade-in overflow-hidden"
       >
 
-        <div className="bg-[var(--color-info)] p-4 border-b-2 border-[var(--color-ink)] flex justify-between items-center text-white gap-3 shrink-0">
+        <div style={{ '--icono': 'var(--color-info)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-info)] p-4 border-b-2 border-[var(--color-ink)] flex justify-between items-center text-white gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             {flujo !== null && (
               <button

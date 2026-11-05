@@ -82,13 +82,13 @@ export const ModalNombreEspera: React.FC<Props> = ({
         role="dialog"
         aria-modal="true"
         aria-label="Pausar ticket en espera"
-        className="w-full max-w-md bg-[var(--color-surface,#fff)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col overflow-hidden animate-fade-in"
+        className="ventana-sobria w-full max-w-md bg-[var(--color-surface,#fff)] border-2 border-[var(--color-ink)] flex flex-col overflow-hidden animate-fade-in"
       >
         {/* Cabecera */}
-        <div className="bg-[var(--color-ink)] text-white px-4 py-3 flex items-center justify-between shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-4 py-3 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <Pause size={18} className="text-[var(--color-warning)]" />
-            <h2 className="text-sm font-black uppercase tracking-wider">Pausar Ticket en Espera</h2>
+            <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-wider">Pausar Ticket en Espera</h2>
           </div>
           <button
             id="btn-cerrar-espera"
@@ -100,7 +100,7 @@ export const ModalNombreEspera: React.FC<Props> = ({
                 document.getElementById('input-nombre-espera')?.focus();
               }
             }}
-            className="w-7 h-7 flex items-center justify-center hover:bg-[var(--color-danger)] text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-[var(--color-danger)]"
+            className="ventana-cerrar w-7 h-7 flex items-center justify-center hover:bg-[var(--color-danger)] text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-[var(--color-danger)]"
             title="Cerrar (Esc)"
           >
             <X size={18} />

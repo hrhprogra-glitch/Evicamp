@@ -336,14 +336,14 @@ export const ModalPedidoPOS: React.FC<Props> = ({
       id="modal-pedido-container"
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4 font-mono"
     >
-      <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[95vh] w-full max-w-xl animate-fade-in">
+      <div className="ventana-sobria bg-white border-2 border-[var(--color-ink)] flex flex-col max-h-[95vh] w-full max-w-xl animate-fade-in">
         
         {/* CABECERA */}
-        <div className="bg-[var(--color-ink)] text-white p-3 sm:p-4 flex justify-between items-center border-b-2 border-[var(--color-ink)] shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white p-3 sm:p-4 flex justify-between items-center border-b-2 border-[var(--color-ink)] shrink-0">
           <div className="flex items-center gap-2">
             <Package size={20} className="text-amber-400" />
             <div>
-              <h2 className="font-black uppercase tracking-widest text-sm sm:text-base leading-tight">
+              <h2 className="ventana-cabecera__titulo font-black uppercase tracking-widest text-sm sm:text-base leading-tight">
                 Nuevo Pedido por Encargo
               </h2>
               <span className="text-[11px] font-bold text-amber-300">
@@ -361,7 +361,7 @@ export const ModalPedidoPOS: React.FC<Props> = ({
                 document.getElementById('input-pedido-cliente')?.focus();
               }
             }}
-            className="p-1 hover:rotate-90 transition-transform cursor-pointer outline-none focus:ring-4 focus:ring-white text-white"
+            className="ventana-cerrar p-1 hover:rotate-90 transition-transform cursor-pointer outline-none focus:ring-4 focus:ring-white text-white"
             title="Cerrar (Esc)"
           >
             <X size={20} />
@@ -539,15 +539,25 @@ export const ModalPedidoPOS: React.FC<Props> = ({
                   id="input-pedido-fecha"
                   type="date"
                   value={fechaEntrega}
-                  onChange={(e) => setFechaEntrega(e.target.value)}
+                  title="Enter abre el calendario · ↓ sigue"
+                  onChange={(e) => {
+                    e.currentTarget.dataset.cambio = String(Date.now());
+                    setFechaEntrega(e.target.value);
+                    setTimeout(() => document.getElementById('input-pedido-fecha')?.focus(), 50);
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === 'ArrowUp') {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (Date.now() - Number(e.currentTarget.dataset.cambio || 0) < 500) return;
+                      try { e.currentTarget.showPicker?.(); } catch { /* sin calendario: se queda en la fecha */ }
+                    } else if (e.key === 'ArrowUp') {
                       e.preventDefault();
                       document.getElementById('input-pedido-doc')?.focus();
                     } else if (e.key === 'ArrowRight') {
                       e.preventDefault();
                       document.getElementById('input-pedido-hora')?.focus();
-                    } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                    } else if (e.key === 'ArrowDown') {
                       e.preventDefault();
                       document.getElementById('input-pedido-adelanto-ef')?.focus();
                     }
@@ -563,15 +573,25 @@ export const ModalPedidoPOS: React.FC<Props> = ({
                   id="input-pedido-hora"
                   type="time"
                   value={horaEntrega}
-                  onChange={(e) => setHoraEntrega(e.target.value)}
+                  title="Enter abre el reloj · ↓ sigue"
+                  onChange={(e) => {
+                    e.currentTarget.dataset.cambio = String(Date.now());
+                    setHoraEntrega(e.target.value);
+                    setTimeout(() => document.getElementById('input-pedido-hora')?.focus(), 50);
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === 'ArrowUp') {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (Date.now() - Number(e.currentTarget.dataset.cambio || 0) < 500) return;
+                      try { e.currentTarget.showPicker?.(); } catch { /* sin reloj: se queda en la hora */ }
+                    } else if (e.key === 'ArrowUp') {
                       e.preventDefault();
                       document.getElementById('input-pedido-tel')?.focus();
                     } else if (e.key === 'ArrowLeft') {
                       e.preventDefault();
                       document.getElementById('input-pedido-fecha')?.focus();
-                    } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                    } else if (e.key === 'ArrowDown') {
                       e.preventDefault();
                       document.getElementById('input-pedido-adelanto-yap')?.focus();
                     }

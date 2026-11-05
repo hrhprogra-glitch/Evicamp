@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { flechasCaja } from '../tecladoCaja';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../../db/supabase';
 import { Eye, EyeOff, BarChart3, X, Clock, Receipt, Coins, Smartphone, CreditCard, BookOpen, HandCoins } from 'lucide-react';
@@ -135,13 +136,13 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
 
   const modalContent = isModalOpen ? createPortal(
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-2 sm:p-8 animate-fade-in font-mono">
-      <div className="bg-white border-4 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] sm:shadow-[16px_16px_0_0_var(--color-ink)] w-full max-w-6xl flex flex-col h-[calc(var(--alto-pantalla)*0.9)] rounded-none">
+      <div className="ventana-sobria bg-white border-4 border-[var(--color-ink)] w-full max-w-6xl flex flex-col h-[calc(var(--alto-pantalla)*0.9)] rounded-none">
         
-        <div className="bg-[var(--color-ink)] text-white p-4 sm:p-6 flex justify-between items-center gap-3 shrink-0">
-          <h2 className="font-black uppercase tracking-widest text-sm sm:text-xl flex items-center gap-3">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white p-4 sm:p-6 flex justify-between items-center gap-3 shrink-0">
+          <h2 className="ventana-cabecera__titulo font-black uppercase tracking-widest text-sm sm:text-xl flex items-center gap-3">
             <Receipt size={28} className="text-[var(--color-accent)]" /> Rendimiento de Caja Actual
           </h2>
-          <button onClick={() => setIsModalOpen(false)} className="hover:text-[var(--color-danger)] transition-colors cursor-pointer bg-white/10 p-2 hover:bg-white/20">
+          <button onClick={() => setIsModalOpen(false)} className="ventana-cerrar hover:text-[var(--color-danger)] transition-colors cursor-pointer bg-white/10 p-2 hover:bg-white/20">
             <X size={32} strokeWidth={3} />
           </button>
         </div>
@@ -217,6 +218,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
         <div className="bg-[var(--color-ink)] text-white px-3 py-1.5 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <button 
+              id="btn-caja-actual-pos" type="button" onKeyDown={flechasCaja('btn-caja-actual-pos')}
               onMouseDown={(e) => e.preventDefault()} onClick={() => setIsModalOpen(true)}
               className="flex items-center gap-2 hover:text-[var(--color-accent)] transition-colors cursor-pointer"
               title="Ver Historial del Día"
@@ -225,6 +227,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
               <span className="text-[13px] font-black uppercase tracking-widest hidden sm:inline">Caja Actual:</span>
             </button>
             <button
+              id="btn-monto-caja-pos" type="button" onKeyDown={flechasCaja('btn-monto-caja-pos')}
               onMouseDown={(e) => e.preventDefault()} onClick={() => setIsVisible(!isVisible)}
               className="text-base font-black text-[var(--color-accent)] ml-1 hover:brightness-125 transition-all cursor-pointer"
               title="Mostrar/Ocultar Montos"
@@ -233,6 +236,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
             </button>
           </div>
           <button 
+            id="btn-ojo-caja-pos" type="button" title="Mostrar/Ocultar Montos (Shift+E)" onKeyDown={flechasCaja('btn-ojo-caja-pos')}
             onMouseDown={(e) => e.preventDefault()} onClick={() => setIsVisible(!isVisible)}
             className="text-[var(--color-subtle)] hover:text-white transition-colors cursor-pointer px-2"
           >
@@ -241,6 +245,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
         </div>
 
         <button 
+          id="btn-montos-caja-pos" type="button" onKeyDown={flechasCaja('btn-montos-caja-pos')}
           onMouseDown={(e) => e.preventDefault()} onClick={() => setIsVisible(!isVisible)}
           className="grid grid-cols-4 divide-x-2 divide-[var(--color-border)] bg-[var(--color-bg)] min-w-0 w-full hover:bg-[var(--color-surface)] transition-colors cursor-pointer"
           title="Mostrar/Ocultar Montos"

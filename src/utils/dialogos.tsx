@@ -11,6 +11,7 @@
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Info, HelpCircle } from 'lucide-react';
 import { programarRestauracionFoco } from './navegacionSesion';
 
 interface Dialogo { id: number; texto: string; conCancelar: boolean; responder: (si: boolean) => void }
@@ -112,9 +113,12 @@ const VentanaDialogo: React.FC = () => {
     <div data-dialogo-sistema role="dialog" aria-modal="true" aria-labelledby="dialogo-sistema-texto"
       // Capa más alta posible: los avisos siempre encima de cualquier ventana (Estado de cuenta usa z 999999)
       className="fixed inset-0 z-[2147483000] flex items-center justify-center bg-black/50 p-4 font-mono">
-      <div className="w-full max-w-md border-2 border-[var(--color-ink)] bg-[var(--color-surface,#fff)] shadow-[6px_6px_0_0_var(--color-ink)]">
-        <div className="bg-[var(--color-ink)] px-4 py-2 text-[11px] font-black uppercase tracking-widest text-[var(--color-accent)]">
-          {actual.conCancelar ? 'Confirmar' : 'Aviso'}
+      <div className="ventana-sobria w-full max-w-md border-2 border-[var(--color-ink)] bg-[var(--color-surface,#fff)]">
+        {/* Cabecera como las demás ventanas (estilo SiuMax Sobrio) */}
+        <div className="ventana-cabecera" style={{ '--icono': actual.conCancelar ? 'var(--color-warning)' : 'var(--color-accent-shadow)' } as React.CSSProperties}>
+          <h2 className="ventana-cabecera__titulo">
+            {actual.conCancelar ? <HelpCircle size={18} /> : <Info size={18} />} {actual.conCancelar ? 'Confirmar' : 'Aviso'}
+          </h2>
         </div>
         <p id="dialogo-sistema-texto" className="max-h-[60vh] overflow-y-auto whitespace-pre-line px-5 py-5 text-sm font-bold text-[var(--color-ink)]">
           {actual.texto}

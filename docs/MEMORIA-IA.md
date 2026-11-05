@@ -25,6 +25,12 @@
   - listas en TABLA (no tarjetas), letra de tamaño normal, ventanas con borde 2 y sombra de 8 px;
   - las ventanas con listas usan el estilo del "Directorio de clientes" (`src/components/ListaVentana.tsx`).
 - **Pestañas:** ← → solo mueven el selector; la pestaña cambia con Enter.
+- **Las 6 reglas del selector (04/11/2026, en todo el sistema):** llegar con flechas a TODO botón/buscador/campo; calendario: Enter
+  lo abre y el selector se queda (Enter NUNCA pasa al siguiente cuadro, ↓ sí); ← → ↑ ↓ siempre mueven; al volver de otro programa algo
+  queda seleccionado; en una ventana el selector nunca se pierde (ni con un clic en el fondo) y nunca sale de ella. Ya lo garantizan
+  `ventanas.ts` (ventanas) y `flechasEspaciales.ts` (flechas de respaldo); al hacer una pantalla nueva, poner flechas propias donde
+  importe el orden y correr `ai-scripts/pruebas/estilo/revisar-selector.mjs`. Ojo: un control desactivado no recibe el selector:
+  las flechas deben saltar al primero ACTIVO.
 - **Barras con fechas:** una sola fila; ← → recorre, ↓ baja a la lista y **Enter en una fecha abre el calendario**.
 - **Al cerrar cualquier ventana o submodal**, el selector debe volver explícitamente a lo que estaba elegido (regla global en `src/utils/ventanas.ts`). Si un submodal se desmonta (como la ficha de nuevo cliente dentro del selector del POS), el foco debe enviarse a un botón del modal padre (`btn-cliente-pos-nuevo`), de lo contrario el navegador envía el foco a `document.body` y el selector desaparece.
 - **Scrollbars estilizados:** todo contenedor con scroll (`overflow-y-auto` u `overflow-auto`) debe incluir la clase `.custom-scrollbar` (5px, sin botones de flechas) para evitar la barra gris nativa gruesa de Windows.
@@ -159,6 +165,14 @@
 38. **Escapes en `node -e "…"` desde bash** (03/11/2026): `\b` terminó como carácter "retroceso" invisible dentro de un archivo de prueba y la expresión nunca coincidía (y el Edit no encontraba la línea). Para editar código, escribir el script en un archivo con la herramienta Write (como dice el n.º 17), nunca dentro de `node -e`.
 37. **Cargar en un formulario el texto de relleno de la lista como si fuera un dato** (03/11/2026): Inventario/Caja/Conteos/Proveedores ponen `code: p.code || 'NO-SKU'` para mostrar. ModalProducto lo cargaba como código real y, con dos productos sin código, editar uno daba "ya existe en otro producto" y no guardaba. Al cargar un formulario, convertir los rellenos ('NO-SKU', 'SIN CATEGORÍA'…) en vacío.
 36. **🚨 URGENTE · Contar como "Cobrado" de un período todo lo abonado de un fiado, sin mirar CUÁNDO se abonó** (02/11/2026, lo encontró un cliente real): en Utilidades, si un cliente pagaba HOY deudas de ventas de otros días, esas ventas viejas entraban COMPLETAS al "Cobrado" de hoy. Ejemplo: LATON PILSEN mostraba S/ 90 cobrados (5 ventas fiadas de sept-oct) que no se cobraron en ese período. Causa: `fraccionPagada` usaba `fiado.paid_amount` (todo lo abonado, de cualquier fecha). **Regla de dinero cobrado en un rango (siempre, en cualquier pantalla):** = lo pagado al momento de la venta (efectivo + yape + tarjeta + transferencia) **solo si la venta es del rango** + los abonos (`debt_payments`) **con fecha dentro del rango**. Nunca usar `fiados.paid_amount` para ingresos de un período (sirve solo para saber cuánto debe hoy). Es el mismo criterio del motor único `utils/ingresos.ts`. Arreglo: rama `fix/cobrado-utilidades` (commit 98b2961, sobre `main`); la ventana del producto marca "Venta anterior · cobrado en el período". **Ya está en `main`, en Evicamp, en clientes y en siumax (rama `fase-9-10-almacenes-catalogo`, commit b0bb2a8), subido el 02/11/2026.** Probado en la base demo `siudemo`: antes S/ 41.60, ahora S/ 21.60 (lo abonado hoy).
+40. **Un script de edición que no encuentra el texto por espacios invisibles** (04/11/2026): algunos archivos tienen líneas "vacías" con espacios (ej. 13 espacios en Finanzas/index.tsx) y otros fin de línea CRLF; la herramienta Write puede quitar esos espacios del patrón y el reemplazo falla ("no encontré…"). Normalizar `\r\n` → `\n` en el archivo y en el patrón, y para líneas solo con espacios usar `' '.repeat(n)` o buscar desde un ancla única (`indexOf`) en vez del bloque completo. Si el script lanza error antes de `writeFileSync`, no se guardó nada: corregir y volver a correr.
+45. **Una regla CSS general que pinta de oscuro la letra blanca de las cabeceras** (04/11/2026): también tomó el botón oscuro "Ticket" del detalle del ticket y quedó letra oscura sobre fondo oscuro (el dueño: "no se ve la palabra ticket"). Toda regla general de colores debe excluir elementos con fondo propio (`:not([class*="bg-"])`) y revisarse con capturas.
+44. **La barra de scroll "de siempre" no salía en Chrome/Edge nuevos** (04/11/2026): desde Chrome 121, si un elemento tiene `scrollbar-width` o `scrollbar-color`, se ignora `::-webkit-scrollbar` y sale una barra fina CON flechas. En `index.css` se dejan en `auto` dentro de `@supports selector(::-webkit-scrollbar)`. No volver a poner `scrollbar-width: thin` sin ese cuidado.
+43. **Presionar Enter en una prueba automática sin saber dónde está el selector** (04/11/2026): la revisión del selector dio Enter en el calendario del cobro, el navegador de prueba no abre calendarios, el selector saltó a "Confirmar pago" y el siguiente Enter creó una venta real en siumax (se borró). En pruebas: después de cada tecla, comprobar dónde quedó el selector antes de dar Enter, y frenar si cambia el número de ventas.
+42. **Dar por buena una ventana porque el botón "se alcanza con scroll"** (04/11/2026): el dueño vio "Ingresar lote" sin su botón Guardar (el medio tenía `sm:overflow-visible` y el pie quedaba fuera de la pantalla). Para él la ventana está bien solo si el botón principal se ve sin bajar. Las revisiones `revisar-ventanas*.mjs` ya lo exigen; agregar a su lista cada ventana nueva.
+41. **Cambiar una tabla compartida sin mirar quién más la usa** (04/11/2026): `TablaMovimientos` la usan Finanzas (caja actual) y `ModalDetalleCaja` (detalle de una caja pasada). Al darle paginación hay que revisar el teclado en los dos lugares (`graphify explain "TablaMovimientos"` muestra quién la importa).
+46. **La trampa de foco de ventanas bloqueaba el teclado en la ventana de impresión nativa (AnyDesk Printer / Chromium)** (04/11/2026): `ventanas.ts` escucha `focusout` y en `luego(0)` forzaba el foco a la web de SiuMax. Al abrirse la ventana de impresión, Chromium perdía el foco y el selector no dejaba presionar Imprimir o Cancelar. Solución: sincronizar flag `estaImprimiendo()` con `beforeprint` y `afterprint` para pausar la trampa de foco durante la impresión.
+47. **No usar `display: flex` directo sobre un `<td>` en tablas HTML (`hidden md:flex`)** (04/11/2026): convierte la celda en contenedor flex perdiendo su display `table-cell`, lo que desalinea la celda respecto al `<th>` de la cabecera (el botón de acciones salía pegado a la derecha). Usar siempre `hidden md:table-cell` y envolver el botón dentro de `<div className="flex items-center justify-center">`.
 
 - **Pruebas (28/10/2026):** el dueño quiere que se pruebe SOLO lo que se modificó. Las tandas de regresión, solo si él lo pide.
 
@@ -276,6 +290,7 @@
 - **Una boleta/factura aceptada NUNCA se edita** (03/11/2026): cambio = `fn_cambiar_con_nota_credito` (NC + comprobante nuevo); devolución = `fn_devolver_con_nota_credito`. No hay ventana "Comprobantes": el estado SUNAT vive en las tablas de Finanzas y en el detalle del ticket (`#bloque-sunat`); los problemas, en `ModalComprobantesProblema` (el dueño no quiere ventanas que repitan datos).
 - **Finanzas: recargar SIEMPRE con `cargarDatosCaja(true)` mientras hay una ventana abierta**: sin `true` muestra "Calculando Bóveda…", desmonta todo y la ventana pierde su estado.
 - **Un manejador de teclado en captura que hace `stopPropagation()` de Escape mata `useCerrarConEscape`** (escucha en burbuja en window): la ventana del cambio nunca se cerraba con Escape. Dejar pasar Escape y que cada lista lo detenga solo cuando cierra algo suyo.
+- **Anular un comprobante NO aceptado (04/11/2026):** nunca nota de crédito si el proveedor no lo generó: `ANULANDO` → el facturador confirma → `NO_EMITIDO`. Con **Nubefact las boletas quedan PENDIENTE con PDF** hasta el resumen diario de SUNAT: eso es EMITIDO (no es problema; se anula con NC). Usar `comprobanteEmitido(estado, pdf)` para decidir. Series de la cuenta demo de Nubefact: BBB1 y FFF1 (también para sus NC).
 - **Molde único de tablas (03/11/2026, pedido del dueño: "todas iguales"):** toda tabla de sección usa las clases `tabla-marco` (borde fino, fondo blanco, SIN sombra), `tabla-cabecera` (oscura, letra 0.875rem, espaciado 0.2em) y `tabla-fila` de `src/index.css`. Modelo: Inventario > Productos. El fondo de cada sección es `bg-[var(--color-bg)]` (no `surface`). Una tabla nueva NO inventa sombras ni cabeceras propias.
 - **CRLF en este repo:** algunos .tsx tienen CRLF y `grep -c $'\r$'` en Git Bash dice 0 igual. Revisar con node (`texto.includes('\r\n')`), y en scripts de reemplazo normalizar con `.replace(/\r\n/g, '\n')` al leer y devolver CRLF al guardar. Los scripts escritos con Write pueden quedar con CRLF también.
 
@@ -287,4 +302,112 @@
 - **Estructura de la tabla `stores`:** Usa nombres de columnas en español: `nombre`, `codigo`, `direccion`, `telefono`, `whatsapp`, `es_almacen_principal`, `activo`.
 - **Acceso público sin JWT a funciones RPC de Tienda Web:** PostgREST valida sesiones mediante `fn_verificar_peticion()`. Toda función destinada a clientes externos anónimos (`fn_catalogo_publico`, `fn_crear_pedido_web`) debe ser explícitamente exceptuada (whitelist) en dicha función para permitir llamadas POST sin token `x-sesion`.
 - **Campo de dirección en checkout:** En el modal de pedidos de Tienda Web (`TiendaModalPedido`), el input de dirección (`#input-pedido-direccion`) solo se renderiza si la modalidad elegida es Delivery (`#btn-entrega-delivery`). Por defecto está en Recojo en tienda (`#btn-entrega-recojo`).
+
+
+## 18. Estilo oficial "SiuMax Sobrio" (04/11/2026) — receta para continuar
+El dueño eligió el aspecto de **Inventario > Productos** y lo llamamos **SiuMax Sobrio** ("el contenido primero"). Sus
+palabras: *"la tabla la resaltan los botones y el buscador, y el fondo no me distrae"*. Revisa que sea **idéntico** a
+Inventario, no parecido, y manda capturas con lo distinto marcado en rojo.
+
+**Ya hecho (solo siumax):** Inventario (Productos, Lotes, Compras), Clientes (Clientes, Créditos, Cotizaciones, Pedidos),
+Conteos, Finanzas (caja actual), Ver historial, Utilidades y Ajustes. **Falta:** Proveedores y, si el dueño quiere, las tablas dentro de ventanas (preguntarle primero).
+
+**Piezas compartidas (en `src/index.css`, alrededor de la línea 760; no inventar estilos nuevos):**
+- Tabla: `tabla-marco` (contenedor), `tabla-cabecera` (thead oscuro), `tabla-fila`; filas con `border-b` fino, sin rayas verticales gruesas.
+- Cabecera de sección: `bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6`,
+  ícono w-10 h-10 verde (`--color-accent`) con su sombra, h1 `text-xl lg:text-2xl font-black uppercase tracking-widest`;
+  el subtítulo va como `title` del bloque, no como texto.
+- Botones de la cabecera: `boton-cabecera` (blanco, borde fino, letra oscura, sin sombra) y el color SOLO en el ícono:
+  `style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}`. "Nuevo X" va en la cabecera con `<Plus/>`.
+- Pestañas: contenedor `pestanas-sobrias` + `data-activa` en el botón elegido. Filtros de estado como pestañas: `pestanas-filtro`.
+- Tarjetas de métricas: `tarjeta-sobria` (sin sombra ni salto al pasar el mouse; nada de bloques negros o de color).
+- Buscador (FUERA del marco de la tabla):
+  `<div className="buscador-sobrio w-full xl:flex-1 shrink-0"><div className="buscador-sobrio__icono"><Search size={18}/></div><input …/>`
+  y, si hay texto, `<div className="buscador-sobrio__match"><span className="buscador-sobrio__conteo">{n} MATCH</span><button className="buscador-sobrio__borrar"><X size={14}/></button></div>`.
+  Escape borra la búsqueda.
+- Fila buscador + filtros: `flex flex-col xl:flex-row gap-3 sm:gap-4 shrink-0 items-stretch xl:items-center justify-between`;
+  filtros en `grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full xl:w-auto`, cada select/fecha con
+  `filtro-sobrio w-full sm:w-auto` y al final el botón `limpiar-sobrio` con `<FilterX size={16}/>`.
+- Paginación arriba Y abajo de la tabla: `paginacion-sobria` + `border-b`/`border-t`, texto `paginacion-sobria__texto`
+  ("Página X de Y") y flechas `paginacion-sobria__boton` con `aria-disabled`. **Sin filas no se dibuja.**
+- Tabla vacía: `<div className="vacio-sobrio"><Search size={32}/>No se registran … con esos parámetros.</div>`.
+- Margen lateral del contenido: `px-2 sm:px-3` (la tabla usa casi todo el ancho).
+- Las VENTANAS (modales) siguen con su borde 2 y sombra de 8 px: este estilo es para las secciones.
+
+**Teclado (obligatorio, probarlo con puppeteer):** ↑ desde buscador/filtros va a un botón de la cabecera; → recorre
+buscador → filtros → limpiar (en el buscador solo si el cursor está al final); ↓ baja a la paginación de arriba y de ahí a
+la primera fila; ↑ desde la primera fila vuelve a la paginación de arriba; ↓ desde la última fila va a la paginación de
+abajo. Conservar SIEMPRE los `id` y los `onKeyDown` que ya existían (otras partes y pruebas los usan).
+
+**Ventanas flotantes (04/11/2026):** TODAS con el estilo del detalle de producto de Utilidades: `ventana-sobria` en el marco (sin
+sombra), `ventana-cabecera` clara con `style={{ '--icono': color }}` (el color va solo en el cuadrito del ícono), `ventana-cabecera__titulo`
+en el h2 (su primer ícono se vuelve el cuadrito) y `ventana-cerrar` en la X; cifras en `ventana-cifras`, listas en `ventana-recuadro`.
+En una ventana nueva usar estas clases (ver `src/sections/Utilidades/components/ModalDetalleProducto.tsx`); nada de cabeceras de color ni
+sombras desplazadas. `ai-scripts/estilo-ventanas.cjs` (sin --aplicar) lista qué ventanas no las tienen.
+
+**Que se vea completo en cualquier pantalla (04/11/2026, pedido del dueño):** nada puede quedar cortado por la ventana,
+de un celular a un monitor grande.
+- Cabecera: contenedor `flex flex-wrap justify-between items-center gap-4`; título con `shrink-0`; pestañas y grupos de
+  botones con `min-w-0` (NUNCA `shrink-0` ni `overflow-x-auto` en las pestañas) y `flex-wrap` en los botones. Las
+  `pestanas-sobrias` ya bajan solas a otra fila.
+- Ventanas: alto máximo con `--alto-pantalla`, cabecera y pie fijos (`shrink-0`) y el medio con `flex-1 min-h-0 overflow-y-auto`.
+  El botón principal (Guardar…) va en el PIE y se ve siempre sin bajar. NUNCA `overflow-visible` en el medio (aunque sea para que
+  un desplegable no se corte) ni `overflow-y-auto` en toda la ventana (el pie se va con el scroll). Si la
+  ventana debe verse entera en laptops (720-768 de alto), modo compacto con `[@media(max-height:820px)]:…`.
+- Después de tocar pantallas, correr `ai-scripts/pruebas/estilo/revisar-tamanos.mjs`, `revisar-ventanas.mjs` y
+  `revisar-ventanas-caja.mjs` (7 tamaños; ❌ = algo cortado, con captura).
+
+**Ejemplos para copiar:** `src/sections/Conteos/components/FiltrosConteos.tsx` (buscador + filtros + teclado con el
+helper `teclas(izq, der)`), `src/sections/Finanzas/components/TablaMovimientos.tsx` (paginación con `paginacion(pos)`),
+**Regla universal de memoria de fila al cerrar ventanas o submodales (04/11/2026, orden del dueño):**
+Al presionar Escape o X para cerrar cualquier ventana o submodal (ej. detalle de ticket sobre detalle de caja, o detalle de caja sobre historial), el selector NUNCA debe saltar arriba al buscador ni a otro elemento. Siempre debe regresar exactamente a la fila que estaba seleccionada.
+Técnica obligatoria:
+1. En componentes con submodales (`ModalDetalleCaja.tsx`, etc.): NO poner auto-focus al buscador en `useEffect` que dependa del estado del submodal (`ticketSeleccionado`). Guardar el ID en `ultimoTicketRef` y, al cerrar, restaurar el foco directo a `mov-row-${id}`. El auto-foco al buscador solo debe ocurrir en la apertura inicial (`yaEnfocoInicialRef`).
+2. En `src/utils/ventanas.ts`: `enVentana` es un `WeakMap<HTMLElement, Recuerdo>` que guarda `{ el, id, fila, texto }` para cada nivel de ventana. Si el foco cayó en un buscador (`esBuscador`) por algún imán o efecto residual, `devolverEnVentana` y `devolver` detectan que había una fila recordada y la restauran inmediatamente.
+3. Todas las filas de tablas interactivas deben tener `data-row="true"` y su ID único (ej. `mov-row-${id}`, `caja-row-${id}`) para que el selector las localice sin ambigüedad.
+
+**Aprovechamiento de espacio en ventanas flotantes anchas (04/11/2026):**
+En ventanas grandes (`max-w-4xl` o más) como `ModalGrupo.tsx`:
+- Nunca dejar botones sueltos en `BarraFiltros` que generen 50-60% de espacio en blanco lateral o botones huérfanos en segunda fila.
+- Patrón estándar: Cifras clave arriba en cuadrícula sobria (`grid grid-cols-2 sm:grid-cols-3 gap-px bg-[var(--color-border)]`) con números mono y estado claro, y debajo los botones de acción alineados al 100% en cuadrícula simétrica (`grid grid-cols-2 sm:grid-cols-4 gap-2`) con altura uniforme (44px) y navegación por teclado fluida.
+
+**Acciones de Comprobante y Notas de Crédito en ModalDetalleTicket (04/11/2026):**
+- Nunca mezclar botones de Boleta/Factura con los de Nota de Crédito en una sola franja desordenada con etiquetas largas (`Nota de crédito BBB1-...`) que se desbordan dejando botones solos en la fila 2.
+- Patrón: Dos bloques separados claramente. Arriba, las acciones de la Boleta/Factura (`[ ↗ PDF ]`, `[ ↗ XML ]`) en cuadrícula simétrica (50% cada una). Abajo, la Nota de Crédito en recuadro sobrio punteado con su cabecera y sus 2 botones directos (`[ 🗎 VER NOTA ]`, `[ 🔄 REENVIAR ]`, 50% cada una, altura 36px, 100% de ancho).
+- Selector por teclado: `ArrowDown` baja en orden de lectura: Cabecera → Boleta → Nota de Crédito → Botón Reimprimir; `ArrowUp` sube en sentido inverso; `ArrowLeft` / `ArrowRight` navega entre los botones de cada fila.
+
+**Visibilidad del selector por teclado en Modo Oscuro (04/11/2026, orden del dueño):**
+- En Modo Oscuro (`html[data-theme="dark"]`, `html.theme-monochrome`), el selector por teclado NUNCA debe usar aros oscuros pizarra (`#334155`) ni opacidades tenues (`0.35`) que se camuflen con el fondo carbón `#0B0F17` / `#111827`.
+- Reglas obligatorias en `src/index.css`:
+  1. `.boton-cabecera:focus-visible`: Doble anillo esmeralda brillante (`box-shadow: 0 0 0 2px #0B0F17, 0 0 0 4px #10B981, 0 0 12px rgba(16, 185, 129, 0.55)`), fondo iluminado `#162438`, texto `#FFFFFF` e ícono verde.
+  2. Ningún botón en reposo debe tener bordes verdes que se confundan con el foco (usar `:not(.boton-cabecera)` en reglas que agreguen acentos fijos).
+  3. Filas de tabla (`.tabla-fila:focus-visible`, `[data-row="true"]:focus-visible`): fondo `#162438`, barra lateral izquierda gruesa de 4px verde esmeralda `#10B981` y marco perimetral esmeralda nítido.
+  4. Filtros y buscador: marco esmeralda brillante de 2px.
+  5. Clic con el ratón: siempre limpiar con `:focus:not(:focus-visible)` para que no quede ningún resalte ni aro pegado.
+
+**Scrollbar 100% rectangular cuadrado SiuMax Sobrio y sin flechas (04/11/2026, orden del dueño):**
+- En Chromium 121+ (Edge y Chrome en Windows 11), si un elemento tiene declaradas las propiedades CSS estándar `scrollbar-width` o `scrollbar-color`, el navegador ignora por completo los pseudoelementos `::-webkit-scrollbar*` y recurre al motor nativo Fluent de Windows 11, mostrando una cápsula redondeada con flechas en los extremos.
+- Regla obligatoria: NUNCA aplicar `scrollbar-width` ni `scrollbar-color` directamente en Chromium. Esas propiedades deben ir ÚNICAMENTE dentro de `@supports not selector(::-webkit-scrollbar)` como fallback de Firefox.
+- Para WebKit/Blink: definir `*::-webkit-scrollbar` (6px), `*::-webkit-scrollbar-button { display: none !important; width: 0; height: 0; }` y `*::-webkit-scrollbar-thumb { border-radius: 0px !important; border: none !important; }`. La barra debe ser estrictamente rectangular plana, con esquinas en ángulo recto de 90° (cero curvas), sin botones de flechas.
+
+**Desactivación Global de Autocompletado y Sugerencias del Navegador (04/11/2026, orden del dueño):**
+- En un POS y sistema de tablas con teclado, los globos de sugerencias/historial del navegador (ej. '308') tapan las filas de datos.
+- En `src/main.tsx` se instaló un listener global en `document.addEventListener('focusin', ...)` que aplica automáticamente `autocomplete="off"`, `autocorrect="off"`, `autocapitalize="off"` y `spellcheck="false"` a todo input o textarea que reciba foco.
+- En inputs de búsqueda principales (como `#buscador-detalle-caja`) se agregan explícitamente estos 4 atributos en el JSX.
+
+**Navegación espacial en enlaces y formularios (04/11/2026):**
+- Cuando haya un campo de texto con botones a sus lados (ej. enlace público con `[ Copiar Enlace ]` y `[ Ver Tienda ]` en Tienda Web), implementar `onKeyDown`: `ArrowRight` salta del input a los botones; `ArrowLeft` regresa al input; y `ArrowDown` / `ArrowUp` se desplazan entre los campos del formulario.
+
+**Navegación por teclado y foco al botón [ X ] de borrado en buscadores (04/11/2026, orden del dueño):**
+- En todo buscador del sistema que muestre el botón `[ X ]` (`buscador-sobrio__borrar`) cuando hay texto:
+  1. NUNCA ponerle `tabIndex={-1}` ni omitir un ID único. Siempre debe tener `id="btn-borrar-buscador-..."` para que el selector por teclado lo reconozca.
+  2. En el input de búsqueda, al pulsar `ArrowRight` (cuando el cursor está al final del texto), si hay texto, el foco debe pasar inmediatamente al botón `[ X ]` en lugar de saltarse directamente a los filtros.
+  3. En el botón `[ X ]`:
+     - `Enter`, `Espacio` o `Escape`: borra el texto de la búsqueda y devuelve el foco automáticamente al input del buscador.
+     - `ArrowLeft`: devuelve el foco al input del buscador con el cursor al final del texto (`setSelectionRange`).
+     - `ArrowRight`: avanza al primer select o filtro a la derecha.
+     - `ArrowDown`: desciende a la tabla de datos o controles inferiores.
+     - `ArrowUp`: asciende a las pestañas o botones de la cabecera.
+  4. En el primer filtro adyacente: al pulsar `ArrowLeft`, si el buscador tiene texto, el foco debe volver al botón `[ X ]`; si no tiene texto, vuelve directo al input del buscador.
+  5. Estilo visual de foco en `src/index.css`: `.buscador-sobrio__borrar:focus` y `:focus-visible` deben mostrar fondo rojo vibrante `#DC2626`, texto blanco, doble anillo de foco y bordes 100% rectos sin esquinas redondeadas (`border-radius: 0px`).
 

@@ -45,7 +45,7 @@ const Configuraciones: React.FC = () => {
     } else if (activeTab === 'tiendas') {
       document.getElementById('btn-nueva-tienda')?.focus();
     } else if (activeTab === 'tienda_web') {
-      document.getElementById('input-tienda-web-whatsapp')?.focus();
+      document.getElementById('input-tienda-web-enlace')?.focus(); // lo primero de la pestaña: el enlace de la tienda
     } else if (activeTab === 'facturacion') {
       document.getElementById('fact-activo')?.focus();
     } else if (activeTab === 'usuarios') {
@@ -142,51 +142,48 @@ const Configuraciones: React.FC = () => {
   }, [activeTab]);
 
   return (
-    <div className="flex flex-col h-full bg-[var(--color-bg)]">
-      {/* HEADER */}
-      <div className="bg-white border-b border-[var(--color-border)] p-3 lg:p-4 shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-[var(--color-surface)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-ink)] rounded-none shrink-0">
-            <Settings size={24} className="text-[var(--color-accent)]" strokeWidth={2.5} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black text-[var(--color-ink)] uppercase tracking-wider font-mono">
-              Parámetros del Sistema
+    <div className="flex flex-col h-full bg-[var(--color-bg)] text-[var(--color-ink)] font-mono">
+      {/* CABECERA (como Inventario / Clientes): título y pestañas sobrias */}
+      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-wrap justify-between items-center gap-4 shrink-0">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 lg:gap-8 min-w-0 max-w-full">
+          <div className="flex items-center gap-3 shrink-0" title="Parámetros del Sistema · Gestiona tu empresa, usuarios, facturación y apariencia">
+            <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] rounded-none shrink-0">
+              <Settings size={20} className="text-[var(--color-accent)]" />
+            </div>
+            <h1 className="text-xl lg:text-2xl font-black text-[var(--color-ink)] uppercase tracking-widest whitespace-nowrap">
+              Ajustes
             </h1>
-            <p className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest font-mono mt-1">
-              Gestiona los datos de tu empresa, los accesos, la apariencia y escríbele a SiuMax.
-            </p>
           </div>
-        </div>
-      </div>
 
-      {/* TABS */}
-      <div className="px-3 lg:px-4 pt-3 border-b border-[var(--color-border)] bg-white shrink-0 overflow-x-auto custom-scrollbar">
-        <div className="flex gap-6 min-w-max">
-          {pestanas.map(({ id, nombre, Icono }) => (
-            <button
-              key={id}
-              id={`btn-tab-${id}`}
-              onClick={() => switchTab(id)}
-              onKeyDown={(e) => manejarTeclaPestana(e, id)}
-              className={`pb-3 font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-colors relative focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer ${
-                activeTab === id
-                  ? 'text-[var(--color-accent)]'
-                  : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
-              }`}
-            >
-              <Icono size={18} />
-              {nombre}
-              {activeTab === id && (
-                <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[var(--color-accent)]"></div>
-              )}
-            </button>
-          ))}
+          {/* PESTAÑAS SOBRIAS: ← → mueven el selector, Enter cambia de pestaña, ↓ baja al contenido */}
+          <div role="tablist" aria-label="Ajustes" className="pestanas-sobrias flex min-w-0 w-full md:w-auto">
+            {pestanas.map(({ id, nombre, Icono }) => (
+              <button
+                key={id}
+                id={`btn-tab-${id}`}
+                role="tab"
+                aria-selected={activeTab === id}
+                data-activa={activeTab === id}
+                type="button"
+                onClick={() => switchTab(id)}
+                onKeyDown={(e) => manejarTeclaPestana(e, id)}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 sm:px-2.5 2xl:px-4 py-2.5 lg:py-3 text-[10px] sm:text-[11px] 2xl:text-xs font-black uppercase tracking-wide 2xl:tracking-widest transition-all rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${
+                  activeTab === id
+                    ? 'bg-[var(--color-ink)] text-[var(--color-accent)]'
+                    : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'
+                }`}
+              >
+                {/* En laptops sin ícono, para que las 7 pestañas entren en una sola fila (no se saltan con las flechas) */}
+                <Icono size={14} className="sm:hidden 2xl:inline" />
+                <span className="hidden sm:inline">{nombre}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* CONTENIDO PRINCIPAL */}
-      <div className="flex-1 overflow-auto p-2 lg:p-4">
+      <div className="flex-1 overflow-auto p-2 sm:p-4">
         {activeTab === 'empresa' && puedeEmpresa && <FormularioEmpresa />}
         {activeTab === 'tiendas' && puedeEmpresa && <PestanaTiendas />}
         {activeTab === 'tienda_web' && puedeEmpresa && <PestanaTiendaWeb />}

@@ -23,6 +23,7 @@ import { BarraConexion } from './layout/BarraConexion';
 import { precargarParaSinInternet } from './utils/precargaSinInternet';
 import { programarRestauracionFoco } from './utils/navegacionSesion';
 import { hayVentanaAbierta, ventanaSuperior, enfocablesDe, recordarSeleccionEnVentanas } from './utils/ventanas';
+import { activarFlechasEspaciales } from './utils/flechasEspaciales';
 
 // Nombre visible de cada sesión en la barra superior de celular/tablet
 const NOMBRES_SESIONES: Record<string, string> = {
@@ -101,6 +102,8 @@ export const App: React.FC = () => {
 
   // Al cerrar cualquier ventana, el selector vuelve a lo que estaba seleccionado (src/utils/ventanas.ts)
   useEffect(() => recordarSeleccionEnVentanas(() => programarRestauracionFoco(currentViewRef.current)), []);
+  // Flechas de respaldo: si una flecha no hizo nada, el selector pasa al botón o campo más cercano (src/utils/flechasEspaciales.ts)
+  useEffect(() => activarFlechasEspaciales(), []);
 
   // Al entrar de nuevo a la ventana del navegador o al hacer clic fuera: asegurar que el selector no se pierda
   useEffect(() => {
@@ -371,7 +374,7 @@ export const App: React.FC = () => {
           </span>
         </header>
 
-        <section className="p-2 flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
+        <section className={`${vista === 'pos' ? 'p-0' : 'p-2'} flex-1 min-w-0 overflow-y-auto overflow-x-hidden`}>
           {renderCurrentView()}
         </section>
       </main>

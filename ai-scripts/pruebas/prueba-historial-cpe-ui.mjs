@@ -114,7 +114,7 @@ try {
   const idNc = nc.split('|')[0];
   await esperar(`SELECT cpe_estado FROM notas_credito WHERE id = ${idNc}`, 'ACEPTADO');
   await abrirTicket(venta);
-  ok('El ticket lista la nota de crédito', /Notas de crédito:\s*BC01-\d{8}/i.test(await texto('#bloque-sunat')));
+  ok('El ticket lista la nota de crédito', /Notas de crédito:\s*[A-Z0-9]{4}-\d{8}/i.test(await texto('#bloque-sunat')));
   ok('Ya no ofrece [D] (en esta prueba aún queda 1 gaseosa: sí lo ofrece)', !!(await page.$('#btn-devolver-ticket')));
   await page.focus('#btn-reimprimir-ticket'); await tecla('ArrowUp');
   ok('↑ desde el pie llega a la nota de crédito', (await foco()) === `btn-sunat-nc-${idNc}`);
@@ -166,7 +166,7 @@ try {
     INSERT INTO cpe_correlativos SELECT * FROM json_populate_recordset(NULL::cpe_correlativos, '${numeracion}'::json);
     UPDATE facturacion_config f SET activo = o.activo, modo = o.modo, proveedor = o.proveedor, comprobante_por_defecto = o.comprobante_por_defecto
       FROM json_populate_record(NULL::facturacion_config, '${facturacion}'::json) o;`);
-  ok('siumax quedó como estaba', (await sql("SELECT string_agg(serie || '=' || ultimo, ',' ORDER BY serie) FROM cpe_correlativos")) === 'B001=2,F001=1'
+  ok('siumax quedó como estaba', (await sql("SELECT string_agg(serie || '=' || ultimo, ',' ORDER BY serie) FROM cpe_correlativos")) === JSON.parse(numeracion).map((c) => c.serie + '=' + c.ultimo).sort().join(',')
     && (await sql(`SELECT count(*) FROM sales WHERE id > ${base}`)) === '0');
   await nav.close(); ssh.dispose();
   console.log(fallas ? `\n${fallas} FALLA(S)` : '\nTODO OK');

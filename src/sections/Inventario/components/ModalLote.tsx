@@ -16,6 +16,14 @@ interface Props {
   onLoteSaved?: (lote: any) => void;
 }
 
+// Pone el selector en el primero de la lista que esté activo (la fecha y "Guardar" se desactivan sin producto)
+const irAlPrimeroActivo = (...ids: string[]) => {
+  for (const id of ids) {
+    const el = document.getElementById(id) as HTMLInputElement | HTMLButtonElement | null;
+    if (el && !el.disabled) { el.focus(); return; }
+  }
+};
+
 export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initialProduct, initialLote, onLoteSaved }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -330,7 +338,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         }
         if (active?.id === 'btn-guardar-lote' || active?.id === 'btn-cancelar-lote') {
           e.preventDefault();
-          document.getElementById('input-vencimiento-lote')?.focus();
+          irAlPrimeroActivo('input-vencimiento-lote', 'input-sustento-lote', 'input-proveedor-lote', 'input-buscar-producto-lote');
           return;
         }
       }
@@ -390,17 +398,17 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
           }
           e.preventDefault();
           setShowProviderDropdown(false);
-          document.getElementById('input-vencimiento-lote')?.focus();
+          irAlPrimeroActivo('input-vencimiento-lote', 'btn-guardar-lote', 'btn-cancelar-lote');
           return;
         }
         if (active?.id === 'input-sustento-lote') {
           e.preventDefault();
-          document.getElementById('input-vencimiento-lote')?.focus();
+          irAlPrimeroActivo('input-vencimiento-lote', 'btn-guardar-lote', 'btn-cancelar-lote');
           return;
         }
         if (active?.id === 'input-vencimiento-lote') {
           e.preventDefault();
-          (document.getElementById('btn-guardar-lote') || document.getElementById('btn-cancelar-lote'))?.focus();
+          irAlPrimeroActivo('btn-guardar-lote', 'btn-cancelar-lote');
           return;
         }
       }
@@ -511,10 +519,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
       setTimeout(() => {
         const first = document.querySelector('[data-lote-prod-item="true"]') as HTMLElement;
         if (first) first.focus();
-        else {
-          if (tieneVariantes) document.getElementById('input-lote-var-0')?.focus();
-          else document.getElementById('input-cantidad-lote')?.focus();
-        }
+        else irAlPrimeroActivo('input-lote-var-0', 'input-cantidad-lote', 'btn-guardar-lote', 'btn-cancelar-lote');
       }, 30);
     }
   };
@@ -756,21 +761,21 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="bg-[var(--color-surface)] w-full max-w-2xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))]">
+      <div className="ventana-sobria bg-[var(--color-surface)] w-full max-w-2xl border-2 border-[var(--color-ink)] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))]">
         
         {/* CABECERA */}
-        <div className="bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <Database size={24} className="text-[var(--color-success)]" />
             <div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-[var(--color-success)]">{initialLote ? 'Editar Lote de Stock' : 'Ingresar Lote de Stock'}</h2>
+              <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest text-[var(--color-success)]">{initialLote ? 'Editar Lote de Stock' : 'Ingresar Lote de Stock'}</h2>
               <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">{initialLote ? 'Modificar datos del lote registrado' : 'Añadir existencias al inventario'}</p>
             </div>
           </div>
           <button 
             id="btn-cerrar-modal-lote"
             onClick={onClose} 
-            className="hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white/20 p-1.5 transition-colors cursor-pointer rounded-none"
+            className="ventana-cerrar hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white/20 p-1.5 transition-colors cursor-pointer rounded-none"
             title="Cerrar ventana (Escape)"
           >
             <X size={20} />
@@ -778,7 +783,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
         </div>
 
         {/* CUERPO DEL FORMULARIO */}
-        <div className="p-4 sm:p-6 overflow-y-auto sm:overflow-visible custom-scrollbar bg-[#F8FAFC] space-y-6">
+        <div className="p-4 sm:p-6 flex-1 min-h-0 overflow-y-auto custom-scrollbar bg-[#F8FAFC] space-y-6">
           
           {/* 1. BUSCADOR DE PRODUCTO DESPLEGABLE */}
           <div ref={prodContainerRef} className="space-y-2 relative">
@@ -862,6 +867,9 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                               const currentIdx = items.indexOf(e.currentTarget);
                               if (currentIdx !== -1 && currentIdx < items.length - 1) {
                                 items[currentIdx + 1].focus();
+                              } else {
+                                // Último producto de la lista: ↓ baja al formulario (o a Guardar/Cancelar si aún está desactivado)
+                                irAlPrimeroActivo('input-lote-var-0', 'input-cantidad-lote', 'btn-guardar-lote', 'btn-cancelar-lote');
                               }
                             } else if (e.key === 'ArrowUp') {
                               e.preventDefault();
@@ -1252,7 +1260,7 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    document.getElementById('input-vencimiento-lote')?.focus();
+                    irAlPrimeroActivo('input-vencimiento-lote', 'btn-guardar-lote', 'btn-cancelar-lote');
                   }
                 }}
                 disabled={!selectedProduct}

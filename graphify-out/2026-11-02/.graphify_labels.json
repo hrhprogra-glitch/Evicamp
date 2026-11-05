@@ -55,8 +55,6 @@
   "69": "fix.cjs",
   "73": "fix-global-anim.cjs",
   "74": "fix-header.cjs",
-  "80": "fix-inventario-index.cjs",
-  "83": "fix-layout-finanzas.cjs",
   "85": "fix-historial-tabs.cjs",
   "87": "fix-map.cjs",
   "88": "activar-seguridad.sh",
@@ -76,7 +74,6 @@
   "113": "limitar-login.sh",
   "114": "fix-delete.cjs",
   "115": "restore-lotes.cjs",
-  "116": "revert-badge.cjs",
   "117": "test-vps-insert.ts",
   "118": "fix-caja-tickets.cjs",
   "120": "fix-right-panel.cjs",
@@ -108,9 +105,7 @@
   "164": "migrar-dominio.sh",
   "165": "fix-pill-debug3.cjs",
   "170": "update.cjs",
-  "171": "imagenes-servidor.cjs",
   "172": "ajustar-conexiones.sh",
-  "175": "fix-filter.cjs",
   "176": "fix-pill-debug.cjs",
   "177": "fix-syntax-error.cjs"
 }

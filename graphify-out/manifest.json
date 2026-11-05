@@ -12,15 +12,15 @@
     "semantic_hash": "957218024dbfdaaccd46c509d5e3089f"
   },
   "package.json": {
-    "mtime": 1792777217.0535946,
-    "seen": 1792777890.589933,
-    "ast_hash": "b43d0ad187f8d8a0ba580f1954cca312",
+    "mtime": 1793809423.6421902,
+    "seen": 1793813025.6667583,
+    "ast_hash": "5e45813328ee06f479fe1c03292c6418",
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1793658469.677719,
-    "seen": 1793658509.3235354,
-    "ast_hash": "38d008149fb3fb5cd9ca5c576a6baf53",
+    "mtime": 1793831272.152715,
+    "seen": 1793833140.7067149,
+    "ast_hash": "e1632c2727bf90738933d9eb2b1bfef0",
     "semantic_hash": ""
   },
   "src/db/supabase.ts": {
@@ -36,33 +36,33 @@
     "semantic_hash": ""
   },
   "src/main.tsx": {
-    "mtime": 1792272555.8993955,
-    "seen": 1792272738.0698972,
-    "ast_hash": "5e6ee3415cf3bd1daac78bb89db5dd7a",
+    "mtime": 1793849150.3896928,
+    "seen": 1793849467.7361262,
+    "ast_hash": "2689910c99a44c9a188eb0916977c9b6",
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/FormularioEmpresa.tsx": {
-    "mtime": 1792272549.5170343,
-    "seen": 1792272738.0698988,
-    "ast_hash": "580888176a659016b0ac8b35445cd4c1",
+    "mtime": 1793836170.31391,
+    "seen": 1793837852.0568473,
+    "ast_hash": "03ef926d66f3932a24947832be07d1b8",
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/ModalUsuario.tsx": {
-    "mtime": 1792806551.1626365,
-    "seen": 1793205876.2445,
-    "ast_hash": "504879c380afeb4a7026118e861398e8",
+    "mtime": 1793836601.5735157,
+    "seen": 1793837852.0568504,
+    "ast_hash": "95ffad615db1aaa8e51e2d922d65a55f",
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/TablaUsuarios.tsx": {
-    "mtime": 1793289284.4691882,
-    "seen": 1793296973.0701408,
-    "ast_hash": "d0924de7956a631f6552ec5d85ab9936",
+    "mtime": 1793855580.0907748,
+    "seen": 1793855818.5770624,
+    "ast_hash": "8ae782f7119a6d5a1709b88330719b1f",
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/index.tsx": {
-    "mtime": 1793655620.260842,
-    "seen": 1793658182.1193933,
-    "ast_hash": "be16dff6040821c5ffed1b36458316b1",
+    "mtime": 1793836170.3149145,
+    "seen": 1793837852.0568628,
+    "ast_hash": "d8c149dbf38f7a722e17d94000124932",
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/types.ts": {
@@ -72,57 +72,57 @@
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/FiltroFechas.tsx": {
-    "mtime": 1791955603.1243448,
-    "seen": 1791956920.5689945,
-    "ast_hash": "526a61b5b903a5647b8b1a8419482b2f",
+    "mtime": 1793855520.896921,
+    "seen": 1793855818.5770857,
+    "ast_hash": "e2913b691911ea20bc7193ee2d9e971b",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalApertura.tsx": {
-    "mtime": 1791956731.2309687,
-    "seen": 1791956920.5689955,
-    "ast_hash": "dccc248579852ae5b68d1ee175491dac",
+    "mtime": 1793836601.5760224,
+    "seen": 1793837852.056884,
+    "ast_hash": "db5418a82a3d51268d1552ea1762f307",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalCierre.tsx": {
-    "mtime": 1792339250.7103636,
-    "seen": 1792339346.2800136,
-    "ast_hash": "25ba9df55003f35af4d6b6eb703eb3c9",
+    "mtime": 1793836601.5885656,
+    "seen": 1793837852.0568867,
+    "ast_hash": "fb02a4e2c86d0f7658f4aae2fa0d60eb",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalDetalleCaja.tsx": {
-    "mtime": 1793465972.4214182,
-    "seen": 1793466099.8756795,
-    "ast_hash": "6adc2e831422dbb88b8321a0a10e03a8",
+    "mtime": 1793849136.7896953,
+    "seen": 1793849467.7361705,
+    "ast_hash": "41d6cea68a39d88bc1f4974844a84b6c",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalNuevoMovimiento.tsx": {
-    "mtime": 1791955603.1253443,
-    "seen": 1791956920.568998,
-    "ast_hash": "5f1be26fa13b736b4c8295f36a3c843d",
+    "mtime": 1793836601.5900798,
+    "seen": 1793837852.056892,
+    "ast_hash": "dcbcf17ed806401c8c068b050e527074",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/TablaHistorial.tsx": {
-    "mtime": 1793465972.4368982,
-    "seen": 1793466099.8756828,
-    "ast_hash": "07654dd0e249574a2d55d75de7133604",
+    "mtime": 1793855498.5822349,
+    "seen": 1793855818.577097,
+    "ast_hash": "8aa87eefbb535748bd56696cdb2ca99e",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/TablaMovimientos.tsx": {
-    "mtime": 1793465972.4384043,
-    "seen": 1793466099.8756843,
-    "ast_hash": "31ca574b8451237fa8a2555549e611ef",
+    "mtime": 1793842335.472157,
+    "seen": 1793842450.2936957,
+    "ast_hash": "a02c1e764e8336588e4e9cc0e75f31c8",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/index.tsx": {
-    "mtime": 1793465972.4736905,
-    "seen": 1793466099.875686,
-    "ast_hash": "5bd784c0aeed3ed652e03f9d4457caca",
+    "mtime": 1793855455.426564,
+    "seen": 1793855818.5771003,
+    "ast_hash": "024275bdc23fb25e2aedf8889dc8cee4",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/types.ts": {
-    "mtime": 1793465972.4736905,
-    "seen": 1793466099.8756871,
-    "ast_hash": "b536c8e98aab3fa667a2b4f843df12ab",
+    "mtime": 1793806940.5586016,
+    "seen": 1793813025.6668465,
+    "ast_hash": "b9d79703c17270a576b44632f1c57022",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/EtiquetaStock.tsx": {
@@ -132,9 +132,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/FiltrosInventario.tsx": {
-    "mtime": 1793321368.278367,
-    "seen": 1793324961.3548272,
-    "ast_hash": "f8f2c99e6e8c892a0a62bbe9aad54718",
+    "mtime": 1793855182.2498271,
+    "seen": 1793855818.5771048,
+    "ast_hash": "e04524aabcf06e4132a478fe72873cbd",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/HeaderInventario.tsx": {
@@ -144,45 +144,45 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalLote.tsx": {
-    "mtime": 1793485941.7389314,
-    "seen": 1793490589.4622626,
-    "ast_hash": "9c5838490f214579f8a8c5813491812a",
+    "mtime": 1793836601.5936666,
+    "seen": 1793837852.0569088,
+    "ast_hash": "92baa927b5aa03476afb96db11072048",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProducto.tsx": {
-    "mtime": 1793656776.7707212,
-    "seen": 1793658182.1194227,
-    "ast_hash": "8689db0539fab091e146b9106a0e09fa",
+    "mtime": 1793836601.595175,
+    "seen": 1793837852.0569117,
+    "ast_hash": "024246581e02a4942dfc5e6926c08d72",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaLotes.tsx": {
-    "mtime": 1793485941.7495742,
-    "seen": 1793490589.4622667,
-    "ast_hash": "993460709b1f8906a4a88100259301e4",
+    "mtime": 1793731853.6663947,
+    "seen": 1793813025.6668584,
+    "ast_hash": "3910ca29b8f27754d931870def0551aa",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaProductos.tsx": {
-    "mtime": 1793489770.669392,
-    "seen": 1793490589.4622676,
-    "ast_hash": "5dfadb479f91b290ddae7886518dc60a",
+    "mtime": 1793731853.665395,
+    "seen": 1793813025.6668596,
+    "ast_hash": "27ee8fc8ae7fd124c23e1f8c1048bcfc",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TarjetaMetrica.tsx": {
-    "mtime": 1791997301.1096249,
-    "seen": 1791997430.1846454,
-    "ast_hash": "0ff1377082f58521c45317b63b42075c",
+    "mtime": 1793810844.1484332,
+    "seen": 1793813025.66686,
+    "ast_hash": "036c0f83722e5d51f5ec0fd831c39191",
     "semantic_hash": ""
   },
   "src/sections/Inventario/index.tsx": {
-    "mtime": 1793655726.4979846,
-    "seen": 1793658182.1194289,
-    "ast_hash": "04263d237fb77de7ec0a9f0739ad405e",
+    "mtime": 1793836143.1363082,
+    "seen": 1793837852.056923,
+    "ast_hash": "4127840247265e9595be113e93387037",
     "semantic_hash": ""
   },
   "src/sections/Inventario/types.ts": {
-    "mtime": 1793488914.3188426,
-    "seen": 1793490589.4622703,
-    "ast_hash": "ae8e0dcdf3f7fe9d04de7251412b52fd",
+    "mtime": 1793668025.5515702,
+    "seen": 1793669425.9820116,
+    "ast_hash": "982ec8562259cc731019999c4bfe044c",
     "semantic_hash": ""
   },
   "src/sections/Login.tsx": {
@@ -198,9 +198,9 @@
     "semantic_hash": ""
   },
   "src/sections/Proveedores/components/ModalProveedor.tsx": {
-    "mtime": 1792465536.7017257,
-    "seen": 1792465979.9665515,
-    "ast_hash": "a4efc065c3ac9fa07d01c9230e41ab73",
+    "mtime": 1793836601.597203,
+    "seen": 1793837852.056931,
+    "ast_hash": "e5364eeb128640f04090d526a3572716",
     "semantic_hash": ""
   },
   "src/sections/Proveedores/components/TablaProveedores.tsx": {
@@ -222,51 +222,51 @@
     "semantic_hash": "0f1b041d54bbc245f821b95c8ac809b5"
   },
   "src/sections/Punto-de-venta/components/MiniReporteDiario.tsx": {
-    "mtime": 1791510558.0676491,
-    "seen": 1791938497.6552093,
-    "ast_hash": "238d463f01e04196718642db63eb0a0c",
-    "semantic_hash": "238d463f01e04196718642db63eb0a0c"
+    "mtime": 1793836601.5982032,
+    "seen": 1793837852.0569372,
+    "ast_hash": "59fa429ab56c94c242a655f9ee562856",
+    "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalBalanza.tsx": {
-    "mtime": 1792806551.1693294,
-    "seen": 1793205876.2445753,
-    "ast_hash": "120ef0c1f9f6f08b6aef3cd40629b785",
+    "mtime": 1793836601.5982032,
+    "seen": 1793837852.0569386,
+    "ast_hash": "00f867a1006c47dc4dbd118eb2d93750",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalCobro.tsx": {
-    "mtime": 1793300327.1257226,
-    "seen": 1793302715.3278308,
-    "ast_hash": "bcd80c7978f4ad6773bc7f1d0f4ba5f2",
+    "mtime": 1793836824.775379,
+    "seen": 1793837852.05694,
+    "ast_hash": "6514c63d01fcbee80b7671c4e270b066",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalPrecioConsumo.tsx": {
-    "mtime": 1791510558.0687454,
-    "seen": 1791938497.655212,
-    "ast_hash": "1883283f7fdd4654e55b2782aab17e8e",
-    "semantic_hash": "1883283f7fdd4654e55b2782aab17e8e"
+    "mtime": 1793836601.6003385,
+    "seen": 1793837852.0569477,
+    "ast_hash": "c3556f715d870e8a7b397023b4c98135",
+    "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/TerminalBusqueda.tsx": {
-    "mtime": 1793489876.7161424,
-    "seen": 1793490589.462285,
-    "ast_hash": "3c6f06d0f74df41af53e59df8234343c",
+    "mtime": 1793831178.5954738,
+    "seen": 1793833140.7068198,
+    "ast_hash": "83f4327fa67a7e9d89c0b6d79d331c52",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/TicketImprimible.tsx": {
-    "mtime": 1793465972.4741938,
-    "seen": 1793466099.8757346,
-    "ast_hash": "77267861eb29ac51b550aa2f0d6bbd69",
+    "mtime": 1793723038.879168,
+    "seen": 1793813025.6668782,
+    "ast_hash": "abe2fbf761f2640e06ae0f05d5b5b7d1",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/TicketVenta.tsx": {
-    "mtime": 1793465972.4741938,
-    "seen": 1793466099.875736,
-    "ast_hash": "cab8294aa25f831084215f426f13216f",
+    "mtime": 1793838305.7963364,
+    "seen": 1793839409.3673248,
+    "ast_hash": "ac4bf2b86c2a7d40b476d253f3ebd9c3",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/index.tsx": {
-    "mtime": 1793489843.0876613,
-    "seen": 1793490589.462288,
-    "ast_hash": "ba4ac644ac21c4d93564493054bc897d",
+    "mtime": 1793836601.601851,
+    "seen": 1793837852.0569541,
+    "ast_hash": "29809a32c80a072547c1b99ce83109ea",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/types.ts": {
@@ -276,21 +276,21 @@
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/FiltrosUtilidades.tsx": {
-    "mtime": 1791332990.0248866,
-    "seen": 1791938497.6553786,
-    "ast_hash": "555a1c17c50ff9e1e6c59b1340c3f6e9",
-    "semantic_hash": "555a1c17c50ff9e1e6c59b1340c3f6e9"
+    "mtime": 1793814347.8215382,
+    "seen": 1793814905.5498116,
+    "ast_hash": "25b79ea8451512bda376dd42b25dcbcd",
+    "semantic_hash": ""
   },
   "src/sections/Utilidades/components/ModalDetalleProducto.tsx": {
-    "mtime": 1793658422.301291,
-    "seen": 1793658509.3237505,
-    "ast_hash": "39f28d42184299bed00d714ccb6b76a1",
+    "mtime": 1793836601.601851,
+    "seen": 1793837852.0569735,
+    "ast_hash": "558e72bb7966a1a1cb920b22b5de9d93",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/TablaAnalisisProductos.tsx": {
-    "mtime": 1793289284.60869,
-    "seen": 1793296973.0702267,
-    "ast_hash": "d3c01191f0762dd626c2f1261a8f47dc",
+    "mtime": 1793855610.971373,
+    "seen": 1793855818.577193,
+    "ast_hash": "3480a2e413e5f5c8ec898fe18695ed22",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/TablaRanking.tsx": {
@@ -300,10 +300,10 @@
     "semantic_hash": "241990860dd5e5d64bed6f7ff3b24e58"
   },
   "src/sections/Utilidades/components/TarjetasResumen.tsx": {
-    "mtime": 1791332990.02541,
-    "seen": 1791938497.6553829,
-    "ast_hash": "78312e22fa7d76166d9ed9131fdaf081",
-    "semantic_hash": "78312e22fa7d76166d9ed9131fdaf081"
+    "mtime": 1793814363.5357313,
+    "seen": 1793814905.5498152,
+    "ast_hash": "50b993b8468e30efef055f0305f0f89e",
+    "semantic_hash": ""
   },
   "src/sections/Utilidades/components/VentanaTopsFlotante.tsx": {
     "mtime": 1791332990.02541,
@@ -312,9 +312,9 @@
     "semantic_hash": "9f9074fcc5a83d6bcac8633479c556b9"
   },
   "src/sections/Utilidades/index.tsx": {
-    "mtime": 1793658422.3022914,
-    "seen": 1793658509.323761,
-    "ast_hash": "e65793bd27ff743195ae3048e689e54c",
+    "mtime": 1793814391.4925897,
+    "seen": 1793814905.5498173,
+    "ast_hash": "bda4f8c77eb5e08d3d53f5335c089c4a",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/types.ts": {
@@ -414,9 +414,9 @@
     "semantic_hash": "ef724f8826888528764f5509cbbc7f21"
   },
   "src/sections/Configuraciones/components/ThemeSwitcher.tsx": {
-    "mtime": 1793289284.4701912,
-    "seen": 1793296973.0701427,
-    "ast_hash": "6a6865bd4314148f5d870998dfefa998",
+    "mtime": 1793815680.6331096,
+    "seen": 1793815920.617605,
+    "ast_hash": "d6d3cda0a3fec58b13ce76808d212530",
     "semantic_hash": ""
   },
   "src/utils/SesionProvider.tsx": {
@@ -1188,15 +1188,15 @@
     "semantic_hash": "300aa7d63cc8421dc097e6bfd49e1521"
   },
   "src/components/ModalDetalleTicket.tsx": {
-    "mtime": 1793465972.3454301,
-    "seen": 1793466099.8756068,
-    "ast_hash": "4c3e2e0b32afe1f8095938cf4cec6e04",
+    "mtime": 1793845546.2388713,
+    "seen": 1793845729.7606258,
+    "ast_hash": "0f34c3170ba9235744eee95d895b3344",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalGestionProveedores.tsx": {
-    "mtime": 1793289284.4969215,
-    "seen": 1793296973.0701816,
-    "ast_hash": "399b6e870bd02631850676b10f3b8f65",
+    "mtime": 1793836601.5926623,
+    "seen": 1793837852.0569057,
+    "ast_hash": "7d8fe70bd99f7c7834f1d2fef144e088",
     "semantic_hash": ""
   },
   "src/utils/busqueda.ts": {
@@ -1350,9 +1350,9 @@
     "semantic_hash": ""
   },
   "src/utils/impresion.ts": {
-    "mtime": 1792513813.0287476,
-    "seen": 1792514109.2539966,
-    "ast_hash": "ce011e0236e17a9d61dcc17abc62b585",
+    "mtime": 1793840694.7710369,
+    "seen": 1793840726.8378468,
+    "ast_hash": "47e06d769a4841266d96cb467bb6f6e1",
     "semantic_hash": ""
   },
   "escritorio/sin-conexion.html": {
@@ -1416,9 +1416,9 @@
     "semantic_hash": ""
   },
   "servidor/panel/panel.py": {
-    "mtime": 1792361725.2663405,
-    "seen": 1792361751.3668203,
-    "ast_hash": "dae8866e384b0149352f3e4e60a66ffd",
+    "mtime": 1793677776.7628589,
+    "seen": 1793677959.3869996,
+    "ast_hash": "b6a88faf9b6bfa706c5cc6d8025186cb",
     "semantic_hash": ""
   },
   "src/layout/AvisoSuscripcion.tsx": {
@@ -1434,9 +1434,9 @@
     "semantic_hash": ""
   },
   "servidor/panel/index.html": {
-    "mtime": 1792361544.0592878,
-    "seen": 1792361751.3670576,
-    "ast_hash": "9b9c0034fe07bf34364a6892217a9dce",
+    "mtime": 1793677758.7950585,
+    "seen": 1793677959.3871663,
+    "ast_hash": "d85df8dfb34dd6e9d9eada3bcfbef741",
     "semantic_hash": ""
   },
   "servidor/migrar-dominio.sh": {
@@ -1458,9 +1458,9 @@
     "semantic_hash": ""
   },
   "servidor/sql/seguridad-sesion.sql": {
-    "mtime": 1793647350.5626051,
-    "seen": 1793658182.1193595,
-    "ast_hash": "2da5f4e7136925c0cad0e226c7fec9e2",
+    "mtime": 1793806911.4587095,
+    "seen": 1793813025.6667876,
+    "ast_hash": "08c9479127c3a1510bc04a94e5b2af68",
     "semantic_hash": ""
   },
   "servidor/activar-seguridad.sh": {
@@ -1536,15 +1536,15 @@
     "semantic_hash": ""
   },
   "src/utils/dialogos.tsx": {
-    "mtime": 1792520340.8887565,
-    "seen": 1792520408.4361546,
-    "ast_hash": "7faf062e293e7c29ed0ebdfe02d7c6a0",
+    "mtime": 1793837250.5650811,
+    "seen": 1793837852.0569978,
+    "ast_hash": "fb3c20e56a835abf4755de105f02abdb",
     "semantic_hash": ""
   },
   "src/utils/autorizacion.tsx": {
-    "mtime": 1792520342.0047674,
-    "seen": 1792520408.4361503,
-    "ast_hash": "56fa5cbf4fae222307cab1d09c786f17",
+    "mtime": 1793837250.5650811,
+    "seen": 1793837852.0569897,
+    "ast_hash": "c277ac064ebdc3fcd3041d5324e05c47",
     "semantic_hash": ""
   },
   "ai-scripts/imagenes-servidor.cjs": {
@@ -1560,27 +1560,27 @@
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/SugerenciasSiumax.tsx": {
-    "mtime": 1793289284.4691882,
-    "seen": 1793296973.0701392,
-    "ast_hash": "96b58fabc0ea37e8d62f500a7b3df9bf",
+    "mtime": 1793815709.4478838,
+    "seen": 1793815920.617603,
+    "ast_hash": "96cbe44fc6e6e4aba8d62dada36f710a",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/PanelCompras.tsx": {
-    "mtime": 1793325977.5905392,
-    "seen": 1793331636.3625329,
-    "ast_hash": "7456310829ea38569b4da8bf90499cb7",
+    "mtime": 1793838884.430646,
+    "seen": 1793839409.367289,
+    "ast_hash": "a0741370c5cdc5f6058b94217778a276",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalHistorialLotes.tsx": {
-    "mtime": 1793485941.7379313,
-    "seen": 1793490589.4622614,
-    "ast_hash": "60ad407d735eb45924c7126290e9a2e5",
+    "mtime": 1793836601.5926623,
+    "seen": 1793837852.0569074,
+    "ast_hash": "16ce3601cd97f07f8a5f5bde664b4026",
     "semantic_hash": ""
   },
   "src/utils/ventanas.ts": {
-    "mtime": 1793321368.282872,
-    "seen": 1793324961.3548894,
-    "ast_hash": "328b1e2511f159c5538eda3302008680",
+    "mtime": 1793842297.3600879,
+    "seen": 1793842450.2937796,
+    "ast_hash": "25731307569c4114da970901464d1996",
     "semantic_hash": ""
   },
   "src/components/ListaVentana.tsx": {
@@ -1596,9 +1596,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalEtiqueta.tsx": {
-    "mtime": 1792806551.1663296,
-    "seen": 1793205876.244546,
-    "ast_hash": "3c3c43c20c6b76704541afeee482ab95",
+    "mtime": 1793836601.5921504,
+    "seen": 1793837852.056904,
+    "ast_hash": "b9d57ca2175da950c4880dca59a2f733",
     "semantic_hash": ""
   },
   "servidor/sql/deshacer-fase1.sql": {
@@ -1626,51 +1626,51 @@
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/FiltrosConteos.tsx": {
-    "mtime": 1792806551.1643121,
-    "seen": 1793205876.2445102,
-    "ast_hash": "d2d9ff7e1b41050f01292568fcff5903",
+    "mtime": 1793855214.7467046,
+    "seen": 1793855818.5770695,
+    "ast_hash": "9add2da68d6f227fc4fad50452018850",
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/HeaderConteos.tsx": {
-    "mtime": 1793289284.476558,
-    "seen": 1793296973.070149,
-    "ast_hash": "62516a75cf97170ac0aa77de2745f1ba",
+    "mtime": 1793847483.7356703,
+    "seen": 1793847946.3967035,
+    "ast_hash": "769b0490b041c56e41218bac3a8a1773",
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/ModalAjuste.tsx": {
-    "mtime": 1793325977.589539,
-    "seen": 1793331636.362507,
-    "ast_hash": "fb38dc0886fbd2ea23884468aa912436",
+    "mtime": 1793836601.5750184,
+    "seen": 1793837852.0568693,
+    "ast_hash": "27aa6737a28a863ac76a4bbba42d5f59",
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/ModalEditarConteo.tsx": {
-    "mtime": 1792806551.1643121,
-    "seen": 1793205876.2445145,
-    "ast_hash": "af88d7743282b54827d061a72a4a374a",
+    "mtime": 1793836601.5750184,
+    "seen": 1793837852.056871,
+    "ast_hash": "e065ea887520b82eda545f016aea5870",
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/ModalEditarSalida.tsx": {
-    "mtime": 1793325977.589539,
-    "seen": 1793331636.362509,
-    "ast_hash": "c6797d09ef9a01f7d9686d122d27b542",
+    "mtime": 1793836601.5750184,
+    "seen": 1793837852.0568721,
+    "ast_hash": "aa133081008fb6354f7c9d921c7fb46b",
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/TablaConteos.tsx": {
-    "mtime": 1793289284.476558,
-    "seen": 1793296973.0701544,
-    "ast_hash": "da23256967fe16b4e87ba003ddd0c79b",
+    "mtime": 1793812277.09876,
+    "seen": 1793813025.6668324,
+    "ast_hash": "57eaab9586259e626e486f1c45099490",
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/TarjetaMetrica.tsx": {
-    "mtime": 1792806551.165327,
-    "seen": 1793205876.244519,
-    "ast_hash": "51bac0faea626489ce5d4d36f1a78e18",
+    "mtime": 1793812277.0982566,
+    "seen": 1793813025.6668334,
+    "ast_hash": "1f19d92f6181d5973c231ed2727188aa",
     "semantic_hash": ""
   },
   "src/sections/Conteos/index.tsx": {
-    "mtime": 1793289284.4815838,
-    "seen": 1793296973.0701573,
-    "ast_hash": "2a2ca732c83bedbda5d86f42406ecd34",
+    "mtime": 1793812277.09876,
+    "seen": 1793813025.666834,
+    "ast_hash": "4874dfcf9dd1ec8360788c0075366067",
     "semantic_hash": ""
   },
   "src/sections/Conteos/motivos.ts": {
@@ -1920,63 +1920,63 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalAbono.tsx": {
-    "mtime": 1793289284.412601,
-    "seen": 1793296973.0701144,
-    "ast_hash": "80115aeb01336939d0f862b447722f71",
+    "mtime": 1793836601.5684948,
+    "seen": 1793837852.056821,
+    "ast_hash": "9a1523b85ff0c010c3cadb85c1011783",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalAnularPago.tsx": {
-    "mtime": 1793289284.414369,
-    "seen": 1793296973.0701158,
-    "ast_hash": "22ecc8730912f6b22a5e32710bfe31b1",
+    "mtime": 1793836601.5684948,
+    "seen": 1793837852.0568225,
+    "ast_hash": "aea2163cc35dbe4f0b46f7fd9091917b",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalDetalleFiado.tsx": {
-    "mtime": 1793289284.414369,
-    "seen": 1793296973.0701187,
-    "ast_hash": "a767bf1cfd1f68444f717411a2616290",
+    "mtime": 1793836601.570002,
+    "seen": 1793837852.0568256,
+    "ast_hash": "dc6b21fbecec69849f8e616a068e8c5a",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalEstadoCuenta.tsx": {
-    "mtime": 1793289284.4161165,
-    "seen": 1793296973.0701215,
-    "ast_hash": "2e006f3e0af50465a82cd4d75550aaf2",
+    "mtime": 1793836601.570002,
+    "seen": 1793837852.056829,
+    "ast_hash": "9d33368d3ec6493637331fcbf43dd953",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalFiado.tsx": {
-    "mtime": 1793325977.5885348,
-    "seen": 1793331636.3624876,
-    "ast_hash": "991efbd033d1ed3757a4a21a1e7c0ff1",
+    "mtime": 1793836601.5710065,
+    "seen": 1793837852.0568302,
+    "ast_hash": "ffc173b714e367b625b68a1d6c385197",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalFichaCliente.tsx": {
-    "mtime": 1793321368.276862,
-    "seen": 1793324961.3547919,
-    "ast_hash": "edd74278f5e432958bfe42d319e6dcf6",
+    "mtime": 1793836601.5710065,
+    "seen": 1793837852.0568316,
+    "ast_hash": "e49836f76003696a93a015a1512af475",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/PestanaClientes.tsx": {
-    "mtime": 1793321368.2773643,
-    "seen": 1793324961.3547945,
-    "ast_hash": "a39d859179fd7f1d58c19f7bd951138c",
+    "mtime": 1793855255.9015665,
+    "seen": 1793855818.5770373,
+    "ast_hash": "63279b4ac82f5d9176f0a2439e6ab35a",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/TablaFiados.tsx": {
-    "mtime": 1793289284.440814,
-    "seen": 1793296973.07013,
-    "ast_hash": "e627fbdcbc64e97949c031069180c27b",
+    "mtime": 1793731853.6679473,
+    "seen": 1793813025.6668131,
+    "ast_hash": "efeee340ae9851ab5ee0a095b04d5af3",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/TablaFiadosAgrupados.tsx": {
-    "mtime": 1793289284.4597313,
-    "seen": 1793296973.0701318,
-    "ast_hash": "da922d3f8371698df66be950ce8e632d",
+    "mtime": 1793855284.1460662,
+    "seen": 1793855818.5770452,
+    "ast_hash": "5a848c0d0fc475b85d7561d24328095d",
     "semantic_hash": ""
   },
   "src/sections/Clientes/index.tsx": {
-    "mtime": 1793321368.278367,
-    "seen": 1793324961.354799,
-    "ast_hash": "34cb20f1a940263ae6f9a13dc2d2a053",
+    "mtime": 1793836213.7572565,
+    "seen": 1793837852.056844,
+    "ast_hash": "6960d94670c40cdf182b805294eef3a9",
     "semantic_hash": ""
   },
   "src/sections/Clientes/types.ts": {
@@ -1992,9 +1992,9 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1793145563.2743924,
-    "seen": 1793205876.2446632,
-    "ast_hash": "ddac69c03fe67f8069e6b47282841e19",
+    "mtime": 1793813569.322506,
+    "seen": 1793813637.7193925,
+    "ast_hash": "96a8fc0c99736cfebdd423c78b1cccc6",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/LEEME.md": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793658493.9296236,
-    "seen": 1793658509.3238678,
-    "ast_hash": "d7be4265fe3a0224e2dc8a6f92a6c833",
+    "mtime": 1793849561.336415,
+    "seen": 1793855818.5772734,
+    "ast_hash": "b946df7723c1920039820d51cd3f5237",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793658493.9526107,
-    "seen": 1793658509.3238697,
-    "ast_hash": "6356e96dc71ec0e4470ce1927e62690f",
+    "mtime": 1793849637.287654,
+    "seen": 1793855818.5772746,
+    "ast_hash": "8c4e7d327d4c8ce5b12d1cc34c86c09e",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793658493.9296236,
-    "seen": 1793658509.3238719,
-    "ast_hash": "d01968fc875d8863cb35c5c5831674a7",
+    "mtime": 1793849539.0730982,
+    "seen": 1793855818.5772762,
+    "ast_hash": "37f854596ae860790b6eef02ea37b151",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793658065.2907405,
-    "seen": 1793658182.119505,
-    "ast_hash": "e59afb0a32e2e7510911cacdfec7fb92",
+    "mtime": 1793849579.454195,
+    "seen": 1793855818.5772777,
+    "ast_hash": "936c3cbccd95d70fc27a2906e399a92e",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2034,9 +2034,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalDetalleCliente.tsx": {
-    "mtime": 1793321368.2758646,
-    "seen": 1793324961.3547873,
-    "ast_hash": "da45dd97f0561cf69cb42de5e5329e9a",
+    "mtime": 1793836601.5694993,
+    "seen": 1793837852.0568242,
+    "ast_hash": "ee3e60657094741881f2733934957635",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-conteo-lote.mjs": {
@@ -2058,33 +2058,33 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalElegir.tsx": {
-    "mtime": 1793289284.414369,
-    "seen": 1793296973.07012,
-    "ast_hash": "916e7ef854fc73134571230cb6e1bc6a",
+    "mtime": 1793836601.570002,
+    "seen": 1793837852.056827,
+    "ast_hash": "a5068942d8ef0fe9ca91c59669ab468f",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalFormGrupo.tsx": {
-    "mtime": 1793321368.276862,
-    "seen": 1793324961.354793,
-    "ast_hash": "6dd8bbcdddc132d9bdb6354c012606ce",
+    "mtime": 1793838846.1943645,
+    "seen": 1793839409.367204,
+    "ast_hash": "064b69a3fdd14bf658e669b74440e4c1",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalGrupo.tsx": {
-    "mtime": 1793321368.2773643,
-    "seen": 1793324961.3547938,
-    "ast_hash": "804d39446f5476250fb1ea27a7b3698d",
+    "mtime": 1793843420.6648145,
+    "seen": 1793843490.339284,
+    "ast_hash": "c1e94d1b6abc6758d5589400f79f19fb",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalElegirClientePOS.tsx": {
-    "mtime": 1793321368.2803683,
-    "seen": 1793324961.3548493,
-    "ast_hash": "370687678c023bcd30a13a01d67a5cec",
+    "mtime": 1793836601.599203,
+    "seen": 1793837852.0569432,
+    "ast_hash": "408f92ce4bd702a5457a10588e84d6ae",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalNombreEspera.tsx": {
-    "mtime": 1793321368.2813685,
-    "seen": 1793324961.3548505,
-    "ast_hash": "4520786aad909ace79bd234d36ab5c62",
+    "mtime": 1793836601.6003385,
+    "seen": 1793837852.0569448,
+    "ast_hash": "d080d3362e8342880529e935007f04b2",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-fase4-evicamp.cjs": {
@@ -2112,27 +2112,27 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/PestanaCotizaciones.tsx": {
-    "mtime": 1793321368.2773643,
-    "seen": 1793324961.3547955,
-    "ast_hash": "266e21608223d974d29a13c089934183",
+    "mtime": 1793855419.0431142,
+    "seen": 1793855818.5770402,
+    "ast_hash": "7219cf4895a26c035c51eb3591829f07",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/PestanaPedidos.tsx": {
-    "mtime": 1793321368.2773643,
-    "seen": 1793324961.3547962,
-    "ast_hash": "0fb8c4244ac2b717ebded4b6a141b75d",
+    "mtime": 1793855367.2525542,
+    "seen": 1793855818.5770419,
+    "ast_hash": "056e8dff280b83fb9c20adf57fc83b65",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalCotizacionPOS.tsx": {
-    "mtime": 1793321368.2803683,
-    "seen": 1793324961.3548481,
-    "ast_hash": "00cb9aff30046bb49bd95440bc48579a",
+    "mtime": 1793836601.599203,
+    "seen": 1793837852.0569415,
+    "ast_hash": "6415ab76a666c2c16842d62ec09c48bb",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalPedidoPOS.tsx": {
-    "mtime": 1793321368.2813685,
-    "seen": 1793324961.3548512,
-    "ast_hash": "1200ccb90750a66de5b1d3b94727a00d",
+    "mtime": 1793836601.6003385,
+    "seen": 1793837852.0569463,
+    "ast_hash": "5499173a4f8e360cbceb804c3b4fb257",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-fase3-siumax.cjs": {
@@ -2172,15 +2172,15 @@
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalCambioProducto.tsx": {
-    "mtime": 1793465972.3718479,
-    "seen": 1793466099.8756747,
-    "ast_hash": "8ba7ef86d71607accd6b88fc381f27db",
+    "mtime": 1793840553.9786997,
+    "seen": 1793840726.8377748,
+    "ast_hash": "6753640e514b4d93f0961f58d364c208",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalConsultarGarantia.tsx": {
-    "mtime": 1793465972.3943684,
-    "seen": 1793466099.875678,
-    "ast_hash": "429d52e432a296b1e81cf3e1ecc04f02",
+    "mtime": 1793836601.5885656,
+    "seen": 1793837852.0568886,
+    "ast_hash": "187bf88764b18a9bcd2818ddad2ce2d4",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-fase6-evicamp.cjs": {
@@ -2268,9 +2268,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProduccion.tsx": {
-    "mtime": 1793642001.5223668,
-    "seen": 1793642581.7587748,
-    "ast_hash": "4c3336a106fc112cf9f2e56a40ef171a",
+    "mtime": 1793836601.5941703,
+    "seen": 1793837852.0569103,
+    "ast_hash": "bb54ac4d587568932761ffd340dc7f07",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/limpiar-siumax-total.cjs": {
@@ -2316,69 +2316,69 @@
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/ModalTienda.tsx": {
-    "mtime": 1793657050.5685692,
-    "seen": 1793658182.1193867,
-    "ast_hash": "688e5a0f3bb85e0c8fe5b4bb79d18075",
+    "mtime": 1793836601.5735157,
+    "seen": 1793837852.056849,
+    "ast_hash": "2b69fe8410ebadc938729c01c0895cbc",
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/PestanaTiendaWeb.tsx": {
-    "mtime": 1793657230.862708,
-    "seen": 1793658182.1193883,
-    "ast_hash": "c3317c4bcc4c9543044800096adb93dc",
+    "mtime": 1793847614.2772388,
+    "seen": 1793847946.3966942,
+    "ast_hash": "a3294d887ee55c2473d5f75be801d001",
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/PestanaTiendas.tsx": {
-    "mtime": 1793655411.250423,
-    "seen": 1793658182.1193893,
-    "ast_hash": "f04e15a1ef0573cb799386edf7983967",
+    "mtime": 1793815513.4769292,
+    "seen": 1793815920.6176023,
+    "ast_hash": "0e2467803e91b8833c4a6f0ef0963a5f",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalTraspaso.tsx": {
-    "mtime": 1793657562.883324,
-    "seen": 1793658182.1194234,
-    "ast_hash": "a830007dae5a9e626c00c333a2aa0842",
+    "mtime": 1793836601.595175,
+    "seen": 1793837852.0569134,
+    "ast_hash": "5513dfadd4487c34d9214cac580daa20",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalValeTraspaso.tsx": {
-    "mtime": 1793655791.0815585,
-    "seen": 1793658182.1194246,
-    "ast_hash": "554281092717bfebd0ba5b628f5469c0",
+    "mtime": 1793836601.596175,
+    "seen": 1793837852.0569153,
+    "ast_hash": "a6f17b872f9afe00b6ef67677fd2ee4e",
     "semantic_hash": ""
   },
   "src/sections/TiendaWeb/components/TiendaCarritoDrawer.tsx": {
-    "mtime": 1793657831.1819246,
-    "seen": 1793658182.1194494,
-    "ast_hash": "e3682f994bcc379b2d8e36de36e170e9",
+    "mtime": 1793660026.5725124,
+    "seen": 1793660371.355421,
+    "ast_hash": "e7f06224aed0e69f1e36f5b17e42bb00",
     "semantic_hash": ""
   },
   "src/sections/TiendaWeb/components/TiendaCategorias.tsx": {
-    "mtime": 1793655927.4726415,
-    "seen": 1793658182.1194503,
-    "ast_hash": "8459d844924215ba05d6e07c6b71cb86",
+    "mtime": 1793659971.601781,
+    "seen": 1793660371.3554235,
+    "ast_hash": "afd7cb06f93c5caf8cfbf77f298d39bd",
     "semantic_hash": ""
   },
   "src/sections/TiendaWeb/components/TiendaModalPedido.tsx": {
-    "mtime": 1793657929.4930058,
-    "seen": 1793658182.1194508,
-    "ast_hash": "80a4566d5accaa4e11a1760f9fd568f0",
+    "mtime": 1793660065.3259888,
+    "seen": 1793660371.3554254,
+    "ast_hash": "f11f8f5f306a1a46692b273e869ddc32",
     "semantic_hash": ""
   },
   "src/sections/TiendaWeb/components/TiendaNavbar.tsx": {
-    "mtime": 1793657730.7209935,
-    "seen": 1793658182.119452,
-    "ast_hash": "4dd9d38b388bb429348104a7c66f1569",
+    "mtime": 1793659964.3697078,
+    "seen": 1793660371.3554268,
+    "ast_hash": "d7d41716c7091643c742e1d99844b83f",
     "semantic_hash": ""
   },
   "src/sections/TiendaWeb/components/TiendaProductoCard.tsx": {
-    "mtime": 1793657050.5709288,
-    "seen": 1793658182.1194527,
-    "ast_hash": "21fba48cfd9c338d2e26b00e4c9a17e6",
+    "mtime": 1793660270.8473248,
+    "seen": 1793660371.355429,
+    "ast_hash": "ca7c6545b78958052866f86d41447a89",
     "semantic_hash": ""
   },
   "src/sections/TiendaWeb/index.tsx": {
-    "mtime": 1793657739.257133,
-    "seen": 1793658182.1194534,
-    "ast_hash": "0472880d0e5d897e74cd3c604a29df79",
+    "mtime": 1793660583.0101485,
+    "seen": 1793660660.295897,
+    "ast_hash": "d84644dd2623622fd05741bac25a0178",
     "semantic_hash": ""
   },
   "src/sections/TiendaWeb/types.ts": {
@@ -2391,6 +2391,294 @@
     "mtime": 1793655358.219447,
     "seen": 1793658182.119463,
     "ast_hash": "e4ebecb0b39690c1c5f5cc6d3f4bcf78",
+    "semantic_hash": ""
+  },
+  "src/sections/TiendaWeb/formato.ts": {
+    "mtime": 1793659948.3448625,
+    "seen": 1793660371.3554306,
+    "ast_hash": "ccacbc7ff557454b45dd095f4f9483a0",
+    "semantic_hash": ""
+  },
+  "ai-scripts/facturador-servidor.cjs": {
+    "mtime": 1793678145.2454662,
+    "seen": 1793719554.4946067,
+    "ast_hash": "6476184f99618b726b512e2c15a9d76a",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/aplicar-fase11-siumax.cjs": {
+    "mtime": 1793663504.795757,
+    "seen": 1793664294.2763634,
+    "ast_hash": "c8b5854edd1ffe0f083d5fac1f5ffc4a",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-fase11-1-ui.mjs": {
+    "mtime": 1793665520.1281128,
+    "seen": 1793665580.494685,
+    "ast_hash": "caca09e1c0e7bda7e499fb0f592e5268",
+    "semantic_hash": ""
+  },
+  "servidor/facturador/facturador.mjs": {
+    "mtime": 1793806900.2332196,
+    "seen": 1793813025.666767,
+    "ast_hash": "8a9370c4ffabf17745dbad64c5906311",
+    "semantic_hash": ""
+  },
+  "servidor/facturador/package.json": {
+    "mtime": 1793678145.2444615,
+    "seen": 1793719554.4949439,
+    "ast_hash": "8b3ad61828ba98366b4d3fdad636aa8b",
+    "semantic_hash": ""
+  },
+  "servidor/sql/deshacer-fase11.sql": {
+    "mtime": 1793806422.7256749,
+    "seen": 1793813025.6667788,
+    "ast_hash": "e284677dea38decca7cc4121a209720a",
+    "semantic_hash": ""
+  },
+  "src/sections/Configuraciones/components/PestanaFacturacion.tsx": {
+    "mtime": 1793815668.8382485,
+    "seen": 1793815920.6176,
+    "ast_hash": "eff24f42b8d961483a5b1b77b073de30",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-fase11-2-ui.mjs": {
+    "mtime": 1793669200.9410002,
+    "seen": 1793669425.9818537,
+    "ast_hash": "0f6d858f3d307d2c24e88a6fb266e63d",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-fase11-3-ui.mjs": {
+    "mtime": 1793670009.9405253,
+    "seen": 1793670087.6332219,
+    "ast_hash": "e72e66ae419e834e9bd021df938e0d0c",
+    "semantic_hash": ""
+  },
+  "src/utils/comprobante.ts": {
+    "mtime": 1793806940.5570989,
+    "seen": 1793813025.6669033,
+    "ast_hash": "e9b4e0206c139d5581b1d5bd566ff98f",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-fase11-4-ui.mjs": {
+    "mtime": 1793725674.470467,
+    "seen": 1793813025.666694,
+    "ast_hash": "5814b14e4e42c6c9df6f2cf9a5bcfa36",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-fase11-5-ui.mjs": {
+    "mtime": 1793676916.6797924,
+    "seen": 1793677261.4442022,
+    "ast_hash": "0eb64c1ec9972824164bcb32ba488a1f",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-fase11-6-ui.mjs": {
+    "mtime": 1793677576.5467987,
+    "seen": 1793677654.0222216,
+    "ast_hash": "3859ec3e18a64bc12841043adc389055",
+    "semantic_hash": ""
+  },
+  "src/components/ReporteContador.tsx": {
+    "mtime": 1793838934.1090362,
+    "seen": 1793839409.3671768,
+    "ast_hash": "e31f8ddbbc190f0482266f81f079d77e",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-fase11-8-ui.mjs": {
+    "mtime": 1793719307.0231926,
+    "seen": 1793719554.4948275,
+    "ast_hash": "08f5b289308f9774f4f840f9aba90e05",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-sunat-beta.mjs": {
+    "mtime": 1793678191.9888723,
+    "seen": 1793719554.4948726,
+    "ast_hash": "8453ce9c2fbd4e05e60fb18350139c0d",
+    "semantic_hash": ""
+  },
+  "servidor/facturador/sunat.mjs": {
+    "mtime": 1793678145.2444615,
+    "seen": 1793719554.494945,
+    "ast_hash": "a1f080d20e41842031884f7b0713ac8d",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/aplicar-fases8-11-evicamp.cjs": {
+    "mtime": 1793733260.7727404,
+    "seen": 1793813025.6666663,
+    "ast_hash": "8c58c834f4068e8f6fedee626a782934",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/ensayo-fases8-11-evicamp.cjs": {
+    "mtime": 1793733126.5126474,
+    "seen": 1793813025.6666722,
+    "ast_hash": "223a5d99a99ba952f7d9badf184ff246",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-anular-no-emitido.mjs": {
+    "mtime": 1793807264.1248443,
+    "seen": 1793813025.6666749,
+    "ast_hash": "37058efbbdf8900fa02c65ed6edff529",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-cambio-cpe-ui.mjs": {
+    "mtime": 1793729814.0695367,
+    "seen": 1793813025.666676,
+    "ast_hash": "702329a5bb3ea09d73beb7c5121098d4",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-historial-cpe-ui.mjs": {
+    "mtime": 1793807420.2973123,
+    "seen": 1793813025.666707,
+    "ast_hash": "c054b8716450a60ddc9567d8d43cad54",
+    "semantic_hash": ""
+  },
+  "src/components/InsigniaCpe.tsx": {
+    "mtime": 1793806940.5570989,
+    "seen": 1793813025.6667898,
+    "ast_hash": "150720a9d75617c1e9f3157152228ac7",
+    "semantic_hash": ""
+  },
+  "src/components/ModalComprobantesProblema.tsx": {
+    "mtime": 1793836601.5669847,
+    "seen": 1793837852.0568042,
+    "ast_hash": "4a9362b5b86a4136a4cd3b6523f36eab",
+    "semantic_hash": ""
+  },
+  "src/components/TicketNotaCredito.tsx": {
+    "mtime": 1793836601.5669847,
+    "seen": 1793837852.0568092,
+    "ast_hash": "1323e56f35f6b54e24383b855f041485",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/ver-clientes.mjs": {
+    "mtime": 1793813555.2969706,
+    "seen": 1793813637.7191083,
+    "ast_hash": "00402e6a64a0e27aced06d54804448de",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/ver-conteos.mjs": {
+    "mtime": 1793813555.2495167,
+    "seen": 1793813637.7191098,
+    "ast_hash": "b6d9469c0b61b55f970ed2fccbabf60f",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/ver-finanzas.mjs": {
+    "mtime": 1793813555.2319112,
+    "seen": 1793813637.719111,
+    "ast_hash": "b0298c719fde5e5c199d8e2feb27b4fc",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/ver-inventario.mjs": {
+    "mtime": 1793813555.2784142,
+    "seen": 1793813637.719112,
+    "ast_hash": "a4c43ca79d6ccb0e0ad996cf4254c4bf",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/LEEME.md": {
+    "mtime": 1793837838.8688662,
+    "seen": 1793837852.0570552,
+    "ast_hash": "281804d2541b27fadefb95b2a3be280a",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/ver-utilidades.mjs": {
+    "mtime": 1793814689.2612486,
+    "seen": 1793814905.5495894,
+    "ast_hash": "5249520cdb5cd6eba6c230851a9e1539",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/ver-ajustes.mjs": {
+    "mtime": 1793815811.3765607,
+    "seen": 1793815920.6174448,
+    "ast_hash": "d33251914c79305a62130338fcc996da",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/ver-pos.mjs": {
+    "mtime": 1793819267.4979327,
+    "seen": 1793819360.5952158,
+    "ast_hash": "de6e4858bc75405abc95d58f3e9df339",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/ver-clientes-cabecera.mjs": {
+    "mtime": 1793825335.4329643,
+    "seen": 1793825466.7778053,
+    "ast_hash": "8ea9aa1e7c45843da1a764699787157d",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-botones-grupos-clientes.mjs": {
+    "mtime": 1793838846.1943645,
+    "seen": 1793839409.366976,
+    "ast_hash": "86240ff5dd1c78a18077cfa35c7349b6",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/revisar-tamanos.mjs": {
+    "mtime": 1793826603.4422424,
+    "seen": 1793827717.4860387,
+    "ast_hash": "90082c685e880d7861573b9c6797c5e9",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/revisar-ventanas-caja.mjs": {
+    "mtime": 1793828549.6759632,
+    "seen": 1793829804.3788824,
+    "ast_hash": "5394dafa11b2018a446e40562fd91a12",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/revisar-ventanas.mjs": {
+    "mtime": 1793829023.2199893,
+    "seen": 1793829804.3788838,
+    "ast_hash": "0fe25c298479368af79a36787d9983c3",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/revisar-selector.mjs": {
+    "mtime": 1793836228.4116528,
+    "seen": 1793837852.0565662,
+    "ast_hash": "c2efd1915a78f0c02ed665cd31a8a58e",
+    "semantic_hash": ""
+  },
+  "src/sections/Punto-de-venta/tecladoCaja.ts": {
+    "mtime": 1793831134.919195,
+    "seen": 1793833140.7068236,
+    "ast_hash": "a7484155119acc6ab3980029e5e85867",
+    "semantic_hash": ""
+  },
+  "src/utils/flechasEspaciales.ts": {
+    "mtime": 1793835320.6487536,
+    "seen": 1793837852.0570006,
+    "ast_hash": "6a0315f40f5f067520ba5841840d01c3",
+    "semantic_hash": ""
+  },
+  "ai-scripts/estilo-ventanas.cjs": {
+    "mtime": 1793836587.922472,
+    "seen": 1793837852.0563657,
+    "ast_hash": "7a1ab5d9b1f69bbd6108f2b2873daa74",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estilo/ver-ventanas.mjs": {
+    "mtime": 1793836636.206874,
+    "seen": 1793837852.0565894,
+    "ast_hash": "248661092b054711c82574f5b97956d7",
+    "semantic_hash": ""
+  },
+  "src/sections/Inventario/tecladoInventario.ts": {
+    "mtime": 1793835355.0344548,
+    "seen": 1793837852.0569243,
+    "ast_hash": "5319fb9a3002e08901f49095ef930733",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-selector-cierre-submodal.mjs": {
+    "mtime": 1793842741.5592544,
+    "seen": 1793842789.304605,
+    "ast_hash": "ffd3c9d770f53f27fe0d408ea7847097",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/ver-modal-grupo.mjs": {
+    "mtime": 1793843684.3140528,
+    "seen": 1793843883.457801,
+    "ast_hash": "82474cfac523be932679bcc977188bcc",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/ver-modal-ticket-sunat.mjs": {
+    "mtime": 1793844784.0307293,
+    "seen": 1793844933.9588192,
+    "ast_hash": "6e4ef9c1a3e132567c2a00a196f0be09",
     "semantic_hash": ""
   }
 }

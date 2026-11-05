@@ -7,6 +7,444 @@
 
 ---
 
+## 05/11/2026 (103) · Claude — PASE a EVICAMP, clientes y GitHub (todo lo de las entradas 81 a 102)
+- **Dueño:** *"ya quedó todo, ahora sí quiero que lo subas todo a evicamp, a siumax, para mis clientes y para mi github"*.
+- **SQL** (solo cambió la anulación de comprobantes no aceptados, entrada 81: estados ANULANDO/NO_EMITIDO, `fn_confirmar_anulacion`, `fn_anular_venta` con `sin_emitir`):
+  - Ensayo en copia (`ai-scripts/pruebas/ensayo-fases8-11-evicamp.cjs`): 0 errores, 3643 ventas y 1259 productos intactos, copia borrada.
+  - Pase real (`aplicar-fases8-11-evicamp.cjs`): respaldo `/var/lib/postgresql/respaldo-evicamp-pase-fases8-11-2026-11-05T14-26-57-943Z.dump` → seguridad-sesion.sql completo con ON_ERROR_STOP y lock_timeout 5s, SIN reiniciar la API (2,6 s, 0 errores) → NOTIFY pgrst. Verificado: `fn_confirmar_anulacion` existe y la restricción acepta NO_EMITIDO. **Facturación sigue APAGADA en Evicamp** (SIMULADO, no está en el facturador).
+- **Pantallas:** `deploy.cjs todos` → evicamp, siumax y clientes con el mismo build (index-B0SRUco2.js). Evicamp: página 200, API 401 sin sesión, login sin errores JS, **sin /suscripcion.json** (no ve avisos ni Mercado Pago).
+- **GitHub:** `main` = merge de `fase-11-sunat` (pantallas en cualquier tamaño, reglas del selector, estilo de ventanas, retoques de Antigravity 94-102, anulación NO_EMITIDO, Excel del contador) y push.
+- Falta: el dueño o sus cajeros recargan Evicamp (Ctrl+F5 / reabrir el .exe) para ver lo nuevo.
+- Pendiente del dueño: el ↓ de "Exacto…" en el cobro; Proveedores con estilo SiuMax Sobrio.
+
+---
+
+## 05/11/2026 (102) · Antigravity — ENTREGA A CLAUDE: resumen de sesión, estado y pendientes
+El dueño pidió: *"alista todo para pasar a claude para que claude siga"*.
+Todo está listo, limpio y funcionando en la rama `fase-11-sunat` (commits `cb3582f` → `2e98a16`, sin push) y desplegado en `siumax` (`siumax.duckdns.org`).
+**IMPORTANTE (Regla 4):** Nada de esto está subido a Evicamp ni a GitHub. Evicamp NO paga (nunca Mercado Pago). Solo subir cuando el dueño lo ordene explícitamente en el momento.
+
+### 1. Resumen de lo realizado en este turno por Antigravity (entradas 94 a 101):
+1. **(94) AnyDesk Printer, ticket y textos SUNAT:** Selector liberado para impresoras virtuales; modal de ticket simplificado a solo "Reimprimir"; textos de cambio/devolución simplificados a `[ CAMBIAR ]` y `[ DEVOLVER ]`; botón único unificado `[ ⇄ ]` en la tabla de movimientos; centrado del botón del ojo en Tesorería.
+2. **(95) Regla universal de memoria de fila al cerrar modales/submodales:** Implementado WeakMap `enVentana` en `src/utils/ventanas.ts` que memoriza la fila activa previa de cada nivel; al presionar Escape o cerrar un submodal (ej. ticket sobre detalle de caja, o detalle de caja sobre historial), el foco regresa exactamente a la fila que estaba seleccionada y NUNCA salta al buscador.
+3. **(96) Aprovechamiento de espacio en ModalGrupo y tabla detalle de caja:** Cifras clave de grupo en 3 columnas y 4 botones alineados al 100% en cuadrícula simétrica `grid-cols-2 sm:grid-cols-4` con altura uniforme (44px) y selector fluido; corregido return prematuro en el selector de la tabla de detalle de caja.
+4. **(97) Acciones SUNAT ultra compactas en ModalDetalleTicket:** Altura de cabecera reducida de ~250px a ~65px con botones en línea a la derecha de 24px (`[ ↗ PDF ]`, `[ ↗ XML ]`, `[ 🗎 NOTA ]`, `[ 🔄 REENVIAR ]`); el ticket térmico ahora se visualiza completo en pantalla sin scroll innecesario.
+5. **(98) Contraste y visibilidad del selector por teclado en Modo Oscuro:** Doble anillo esmeralda `#10B981` y fondo `#162438` en `.boton-cabecera:focus-visible`; anillos de Tailwind en modo oscuro restaurados de pizarra `#334155` a esmeralda `#10B981`; filas de tabla seleccionadas con fondo `#162438` y barra lateral izquierda verde de 4px; buscador y filtros con recuadro esmeralda de 2px; exclusión de borde verde estático permanente en reposo; limpieza instantánea de foco con clic de mouse.
+6. **(99) Letra legible en Conteos, scrollbar sin flechas y teclado en Tienda Web:** Botón `+ NUEVO AJUSTE` con letra plata clara `#CBD5E1` en modo oscuro (no negra); eliminación de `::-webkit-scrollbar-button` para erradicar flechas nativas de Windows; navegación horizontal con flechas `ArrowLeft`/`ArrowRight` entre `input-tienda-web-enlace` ↔ `[ COPIAR ENLACE ]` ↔ `[ VER TIENDA ]` y vertical con `ArrowDown`/`ArrowUp` hacia el resto del formulario.
+7. **(100) Desactivación global de autocompletado y scrollbars rectangulares 0px SiuMax Sobrio:** Guard global en `focusin` (`src/main.tsx`) que aplica automáticamente `autocomplete="off"`, `autocorrect="off"`, `autocapitalize="off"` y `spellcheck="false"` a todo input o textarea del sistema (evita globos flotantes de sugerencias anteriores como '308'); en `src/index.css`, se removió `scrollbar-width` de Chromium (Windows 11) para evitar que el navegador use la barra redondeada Fluent con flechas, forzando `::-webkit-scrollbar` plano con `border-radius: 0px` (esquinas 100% rectas a 90°).
+8. **(101) Acceso por teclado al botón `[ X ]` (borrado) en todos los buscadores:** Ahora cuando se escribe en cualquier buscador del sistema, presionar `ArrowRight` al final del texto posa el selector en el botón `[ X ]` (`#btn-borrar-buscador-...`), iluminándolo con fondo rojo vivo `#DC2626` sin curvas; `Enter`/`Space`/`Escape` borra la búsqueda y regresa el foco al buscador; `ArrowLeft` devuelve el cursor al texto; `ArrowRight` avanza al primer filtro; y `ArrowLeft` desde el primer filtro regresa a la `[ X ]` si hay texto. Aplicado a los 10 buscadores del sistema.
+
+### 2. Estado técnico actual:
+- Rama: `fase-11-sunat`.
+- Compilación: `npx tsc -b` pasa limpio con 0 errores.
+- Servidor de pruebas: `siumax` actualizado con el último build (`node ai-scripts/deploy.cjs siumax`).
+- Base de conocimiento: `graphify` actualizado (`graphify update .`).
+- Documentación: `BITACORA.md`, `PLAN-SIUMAX-COMERC.md`, `CONVERSACIONES.md` y `MEMORIA-IA.md` 100% al día.
+
+### 3. Qué sigue / Pendientes para Claude:
+1. **Atender el siguiente pedido que traiga el dueño:** El dueño está probando exhaustivamente en `siumax` y suele enviar capturas marcando detalles visuales o de teclado con flechas rojas.
+2. **Pendiente del dueño:** Decidir el comportamiento de la tecla ↓ en "Exacto tarjeta/yape" dentro del cobro (si debe ir a Efectivo o a su campo de pago).
+3. **Proveedores:** Llevar la sección Proveedores al estilo oficial SiuMax Sobrio (cuando el dueño lo indique).
+4. **Subir a Evicamp / GitHub:** **SOLO cuando el dueño lo diga expresamente en ese momento.**
+
+---
+
+## 04/11/2026 (101) · Antigravity — Navegación por teclado completa al botón [ X ] (borrar búsqueda) en todos los buscadores (solo siumax)
+- **Problema reportado por el dueño:** *"me di cuenta de algo que no seleciona cuando escribo algo en el buscador no se seleciona el x y eso en muchos busacadores arregla eso"* con captura de Inventario > Lotes con texto "AMOR" y píldora `[ 0 MATCH ] [ X ]` encerrada en rojo.
+- **Causas raíz detectadas:**
+  1. Todos los botones de borrado `buscador-sobrio__borrar` se renderizaban con `tabIndex={-1}`, sin ID único, sin manejador `onKeyDown` y sin estilos `:focus` / `:focus-visible`.
+  2. En el input del buscador, al pulsar `ArrowRight` al final del texto, el selector saltaba directamente al primer select/filtro (ej. `#filtro-categoria-inventario`), ignorando por completo el botón `[ X ]`.
+  3. En sentido inverso, pulsar `ArrowLeft` en el primer filtro saltaba de regreso al input de texto, ignorando también el botón `[ X ]`.
+- **Soluciones aplicadas:**
+  1. **Estilo visual de foco de borrado (`src/index.css`):**
+     - Se añadió `.buscador-sobrio__borrar:focus` y `:focus-visible` con fondo rojo vibrante `#DC2626`, texto blanco nítido, doble anillo de foco y bordes 100% rectos sin esquinas redondeadas (`border-radius: 0px`).
+  2. **Navegación espacial bidireccional por teclado en todos los buscadores del sistema:**
+     - **Inventario (Productos y Lotes):** `FiltrosInventario.tsx` (`#btn-borrar-buscador-inventario`).
+     - **Conteos (Ajustes de inventario):** `FiltrosConteos.tsx` (`#btn-borrar-buscador-conteos`).
+     - **Clientes:** `PestanaClientes.tsx` (`#btn-borrar-buscador-clientes`).
+     - **Créditos / Fiados agrupados:** `TablaFiadosAgrupados.tsx` (`#btn-borrar-buscador-fiados`).
+     - **Pedidos:** `PestanaPedidos.tsx` (`#btn-borrar-buscador-pedidos`).
+     - **Cotizaciones:** `PestanaCotizaciones.tsx` (`#btn-borrar-buscador-cotizaciones`).
+     - **Finanzas (Movimientos):** `Finanzas/index.tsx` (`#btn-borrar-buscador-finanzas`).
+     - **Finanzas (Historial de cajas):** `TablaHistorial.tsx` (`#btn-borrar-buscador-historial-cajas` y `FiltroFechas.tsx`).
+     - **Configuraciones (Usuarios):** `TablaUsuarios.tsx` (`#btn-borrar-buscador-usuarios-ajustes`).
+     - **Utilidades (Análisis de productos):** `TablaAnalisisProductos.tsx` (`#btn-borrar-buscador-utilidades`).
+  3. **Comportamiento interactivo de `[ X ]`:**
+     - `ArrowRight` (al final del texto) entra en `[ X ]`.
+     - `Enter` / `Espacio` / `Escape`: borra la búsqueda y regresa el foco al buscador.
+     - `ArrowLeft`: vuelve al buscador con el cursor al final del texto.
+     - `ArrowRight`: avanza al siguiente selector o filtro.
+     - `ArrowLeft` desde el primer filtro: regresa a `[ X ]` si hay texto escrito (o al input si está vacío).
+     - `ArrowDown` / `ArrowUp`: desciende a la tabla/paginación o asciende a las pestañas/cabecera.
+- **Verificación:** validado con Edge/Puppeteer en `siumax` (`ai-scripts/pruebas/verificar-selector-x.mjs`):
+  - Foco llega con `ArrowRight` a `btn-borrar-buscador-inventario`.
+  - Captura `buscador_x_enfocado.png` confirma fondo rojo de foco sin curvas.
+  - `ArrowRight` avanza a categoría, `ArrowLeft` regresa a `[ X ]`, `Enter` borra y devuelve el foco al buscador.
+- Compilado con `npx tsc -b` (0 errores) y desplegado a `siumax`.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
+## 04/11/2026 (100) · Antigravity — Eliminación global de autocompletado y forzado de scrollbars rectangulares 0px SiuMax Sobrio (solo siumax)
+- **Problemas reportados por el dueño:**
+  1. *"no quiero que haya un autocompletado"*: En los buscadores (como `#buscador-detalle-caja` en el modal de detalle de caja) aparecía el globo/burbuja flotante de sugerencias e historial del navegador (ej. '308') estorbando la selección con teclado y tapando filas de datos.
+  2. *"te ewnvie una imagen te marque con rojo el scrool se sigue viendo igual no es cuadrado tipo rectangulo"*: En el modal de previsualización de ticket (`ModalDetalleTicket.tsx`) la barra de desplazamiento vertical en Windows 11 / Edge seguía viéndose con el diseño redondeado Fluent (thumb tipo cápsula/pastilla con extremos curvos y botones de flecha en los extremos), sin respetar las esquinas cuadradas tipo rectángulo.
+- **Causas raíz detectadas:**
+  1. Los inputs de búsqueda carecían de atributos explícitos anti-autocompletado, permitiendo que el navegador ofrezca valores anteriores del historial.
+  2. En Chromium 121+ (Edge/Chrome en Windows 11), cuando un elemento tiene las propiedades CSS estándar `scrollbar-width` o `scrollbar-color`, el motor del navegador apaga los pseudoelementos `::-webkit-scrollbar*` y recurre a la barra nativa Fluent de Windows 11 (cápsula con bordes curvos y flechas).
+- **Soluciones aplicadas:**
+  1. **Autocompletado desactivado en todo el sistema (`src/main.tsx` y `ModalDetalleCaja.tsx`):**
+     - En `src/sections/Finanzas/components/ModalDetalleCaja.tsx`: se añadieron `autoComplete="off"`, `autoCorrect="off"`, `autoCapitalize="off"` y `spellCheck={false}` al input `#buscador-detalle-caja`.
+     - En `src/main.tsx`: se instaló un guard global en `document.addEventListener('focusin', ...)` que intercepta cualquier input/textarea del sistema y le aplica `autocomplete="off"`, `autocorrect="off"`, `autocapitalize="off"` y `spellcheck="false"`, erradicando por completo globos y burbujas de autocompletado del navegador en todo el POS.
+  2. **Scrollbars rectangulares y cuadrados (0 curvas, 0 flechas) (`src/index.css`):**
+     - Se eliminaron `scrollbar-width` y `scrollbar-color` para Chromium/WebKit y se envolvieron exclusivamente dentro de `@supports not selector(::-webkit-scrollbar)` como fallback de Firefox.
+     - Se forzó `border-radius: 0px !important;` y `border: none !important;` en `::-webkit-scrollbar-thumb` y `::-webkit-scrollbar-track` globalmente y dentro de `.ventana-sobria`, garantizando un rectángulo plano de 6px de ancho con esquinas 100% rectas/cuadradas, sin botones de flecha (`display: none !important; width: 0; height: 0;`).
+- **Verificación:** validado con Microsoft Edge en `siumax` (reglas CSS cargadas y comprobadas en vivo, atributo `autocomplete="off"` validado).
+- Compilado con `npx tsc -b` (0 errores) y desplegado en `siumax`.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
+## 04/11/2026 (99) · Antigravity — Corrección de letra en Conteos, scrollbar nativo en ventanas y navegación teclado en Tienda Web (solo siumax)
+- **Problemas reportados por el dueño:**
+  1. *"en conteo lo marque con rojo la letra es negra no se puede ver que dice arregla eso"*: El botón `+ NUEVO AJUSTE` en Conteos tenía texto negro fijo (`#030712`) sobre fondo carbón `#111827` en modo oscuro.
+  2. *"si te das cuenta donde marque el scrooll no es el estilo que siempre usamos cambia eso"*: En `ModalDetalleTicket.tsx` aparecía la barra de desplazamiento nativa gruesa de Windows con flechas `▲` y `▼`.
+  3. *"cuando estoy seleccionando el enlace no me puedo mover de izquierda a derecha solo de arriba y abajo arregla eso"*: En Ajustes > Tienda Web, el input del enlace público no permitía moverse horizontalmente con `ArrowLeft` / `ArrowRight` a los botones `[ COPIAR ENLACE ]` y `[ VER TIENDA ]`.
+- **Soluciones aplicadas:**
+  1. **Conteos (`HeaderConteos.tsx` y `src/index.css`):**
+     - Se limpió el botón `#btn-nuevo-ajuste` adoptando el estándar SiuMax Sobrio (`.boton-cabecera` con `--icono: var(--color-warning)`).
+     - Se añadió `:not(.boton-cabecera)` en las reglas de `bg-[var(--color-warning)]` de `src/index.css` para evitar que se fuerce color negro `#030712` a botones sobrios. En modo oscuro ahora muestra letra blanco/plata nítida.
+  2. **Scrollbar en ventanas (`src/index.css`):**
+     - Se eliminó la regla que aplicaba `scrollbar-width: auto !important;` en Chrome/Edge.
+     - Se añadió `*::-webkit-scrollbar-button { display: none !important; width: 0 !important; height: 0 !important; }` para suprimir todas las flechas nativas de Windows.
+     - Se consolidó la barra oficial sobria de 5px (track `#0B0F17`, thumb `#334155` en modo oscuro; track `#F8FAFC`, thumb `#CBD5E1` en claro).
+  3. **Tienda Web (`PestanaTiendaWeb.tsx`):**
+     - Se implementó navegación espacial fluida con `onKeyDown` en toda la franja del enlace: `input-tienda-web-enlace` (ArrowRight → `btn-copiar-enlace-tienda` → `btn-ver-tienda-web`; ArrowLeft en sentido inverso).
+     - Se conectaron también los saltos con `ArrowDown` y `ArrowUp` hacia los checkboxes de estado, WhatsApp, precios, mensaje y botón guardar.
+- **Verificación:** validado con Edge/Puppeteer en `siumax` (script `ai-scripts/pruebas/verificar-3-ajustes.mjs`):
+  - Captura `conteo_nuevo_ajuste_ok.png`: botón `+ NUEVO AJUSTE` con letra plata nítida y legible.
+  - Captura `ticket_scrollbar_sobrio_ok.png`: ticket limpio sin barras gruesas ni flechas nativas.
+  - Captura `tienda_web_teclado_enlace_ok.png`: foco pasando de input a `[ COPIAR ENLACE ]` y `[ VER TIENDA ]`.
+- Compilado con `npx tsc -b` (0 errores) y desplegado a `siumax`.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
+## 04/11/2026 (98) · Antigravity — Mejora de contraste y visibilidad del selector por teclado en Modo Oscuro (solo siumax)
+- **Problema reportado por el dueño:** *"bien echo ya quedo ahora me e dado cuenta que en el modo oscuro el selector no se aprecia bien arregla eso"* (captura de Inventario > Productos en Modo Oscuro encerrando en rojo los botones de la cabecera: `+ NUEVO PRODUCTO`, `INGRESAR LOTE`, `PRODUCIR`, `TRASPASOS`, `PROVEEDORES`). El botón seleccionado (`INGRESAR LOTE`) se perdía sobre el fondo oscuro y no se distinguía con claridad qué elemento tenía el foco del selector por teclado.
+- **Causas raíz detectadas en `src/index.css`:**
+  1. La regla `html[data-theme="dark"] [class*="focus:ring-[var(--color-ink)]"]:focus` forzaba `--tw-ring-color: #334155 !important;` (gris pizarra oscuro), lo cual apagaba los aros de foco sobre fondos carbón `#0B0F17` / `#111827`.
+  2. La regla `html[data-theme="dark"] button.bg-[var(--color-ink)]` aplicaba `border-color: var(--color-accent) !important;` de forma estática permanente a botones como `INGRESAR LOTE`, haciendo que pareciera tener borde verde incluso sin foco y confundiendo al usuario.
+  3. El foco general tenía apenas 1px con opacidad 0.35 (`rgba(..., 0.35)`), casi invisible en modo oscuro.
+- **Solución integral aplicada en `src/index.css`:**
+  1. **Botones de cabecera (`.boton-cabecera:focus-visible`):** doble anillo de alto contraste (borde verde esmeralda `#10B981` con anillo separador de 2px negro `#0B0F17`, aro exterior de 4px verde esmeralda y resplandor de 12px), fondo iluminado `#162438`, texto blanco `#FFFFFF` e ícono en verde esmeralda brillante.
+  2. **Exclusión de botones en reposo:** `button.bg-[var(--color-ink)]:not(.boton-cabecera)` para que todos los botones de la cabecera tengan su borde sobrio idéntico y homogéneo en reposo, y solo el enfocado resalte.
+  3. **Selector de Grilla / Filas de tabla (`.tabla-fila:focus-visible`, `tr:focus-visible`, `[data-row="true"]:focus-visible`):** fondo destacado `#162438`, barra lateral izquierda gruesa de 4px verde esmeralda (`#10B981`) y borde perimetral verde nítido.
+  4. **Filtros y Buscador (`.filtro-sobrio:focus`, `.buscador-sobrio:focus-within`, `.limpiar-sobrio:focus-visible`):** marco esmeralda brillante de 2px con sombra de acento.
+  5. **Pestañas y Paginación (`.pestanas-sobrias > button:focus-visible`, `.paginacion-sobria__boton:focus-visible`):** realce interior esmeralda de 2px y texto claro.
+  6. **Limpieza con mouse:** se añadió `.boton-cabecera:focus:not(:focus-visible)` a la regla de limpieza para que los clics con ratón no dejen ningún resalte ni aro pegado.
+- **Verificación:** validado con Edge/Puppeteer en `siumax` con 3 capturas:
+  - `selector_modo_oscuro_inventario.png`: botón `INGRESAR LOTE` brilla inconfundiblemente con doble anillo esmeralda.
+  - `selector_modo_oscuro_tabla.png`: fila de producto con barra esmeralda de 4px y resalte nítido.
+  - `selector_modo_oscuro_filtro.png`: select de categoría con borde esmeralda de 2px.
+- **Compilado:** `npx tsc -b` (0 errores) y desplegado con éxito a `siumax`.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
+## 04/11/2026 (97) · Antigravity — Aprovechamiento de espacio y modo ultra compacto en acciones SUNAT de ModalDetalleTicket (solo siumax)
+- **Problema 1 reportado por el dueño:** *"TE FALTA COMODAR ESTO TAMBIEN"* (botones SUNAT rotos en 2 filas con espacio desperdiciado a la derecha).
+- **Problema 2 reportado por el dueño:** *"ESTA PERFECTO PERO ES MUY GRANDE TODO PODRIA OCUPAR MENOS ESPACIO PARA APRECIAR MEJOR EL TICKET"* (el bloque ocupaba casi la mitad de la pantalla, tapando los detalles del ticket térmico).
+- **Solución ultra compacta aplicada:**
+  1. **Boleta en 1 línea con botones a la derecha:**
+     - Izquierda: `Boleta {numero}` con su insignia de estado.
+     - Derecha: `[ ↗ PDF ]` y `[ ↗ XML ]` compactos (24px de alto) en la misma fila horizontal.
+     - Subtítulo mínimo: modo prueba, estado de anulación y mensaje en una sola línea `text-[10px]`.
+  2. **Nota de Crédito en franja horizontal delgada:**
+     - Izquierda: `Nota de crédito {numero} · S/ {total}` con su insignia de estado.
+     - Derecha: `[ 🗎 VER NOTA ]` y `[ 🔄 REENVIAR ]` (24px de alto).
+  3. **Resultado visual:**
+     - La cabecera SUNAT se redujo de ~250px a ~65px (75% menos de altura).
+     - El ticket térmico ahora se aprecia completo en pantalla (incluyendo productos, importes, impuestos, método de pago y código QR) sin necesidad de scroll.
+  4. **Teclado:** selector fluido en orden de lectura: Cabecera → Botones de Boleta (`ArrowDown`) → Botones de Nota de Crédito (`ArrowDown`) → Botón Reimprimir (`ArrowDown`); y en sentido inverso con `ArrowUp`.
+- **Verificación:** validado con Edge/Puppeteer en ticket real (#308406 de siumax, script `ai-scripts/pruebas/ver-modal-ticket-sunat.mjs`), captura actualizada `ticket_sunat_sobrio.png`. Compilado con `npx tsc -b` (0 errores) y desplegado a `siumax`.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
+## 04/11/2026 (96) · Antigravity — Aprovechamiento de espacio en ModalGrupo y corrección de selector en detalle de caja (solo siumax)
+- **Problema 1 (Caja):** *"EL SELECTOR YA FUNCIONA DENTRO DE LA TABLA"*. Se detectó que un `return () => clearTimeout(timer);` colocado prematuramente dentro de un `useEffect` en `ModalDetalleCaja.tsx` dejaba inaccesible el registro de `handleModalKeyDown`. Se eliminó el retorno temprano manteniendo la limpieza al final del hook. El selector por teclado en la tabla de movimientos de caja navega ahora al 100%.
+- **Problema 2 (Grupos):** *"AQUI TIENE ESPACIO QUE NO APROVECHAN ajusta eso"* (captura de `ModalGrupo.tsx` con enorme espacio en blanco a la derecha).
+- **Solución aplicada (Opción 1 elegida por el dueño):**
+  1. **Panel de Cifras Clave (SiuMax Sobrio):** cuadrícula superior de 3 columnas (`Miembros`, `Descuento` y `Deuda del Grupo`) con números mono limpios y estado claro (`Al día · Sin deuda` o `Créditos pendientes` en rojo).
+  2. **Bolsa de 4 botones de acción al 100% de ancho:** los botones `[ 💼 Cobrar al grupo ]`, `[ 👤+ Agregar cliente ]`, `[ ✏️ Editar grupo ]` y `[ 🗑️ Eliminar grupo ]` organizados en `grid grid-cols-2 sm:grid-cols-4` con altura uniforme (44px), bordes nítidos y cero espacio desperdiciado.
+  3. **Teclado:** selector `teclas` funcionando entre los 4 botones, la X de cierre y la lista de clientes hacia abajo.
+- **Verificación:** validado con Puppeteer/Edge (`ai-scripts/pruebas/ver-modal-grupo.mjs`), captura generada `grupo_cifras_sobrio.png`. Compilado con `npx tsc -b` (0 errores) y desplegado a `siumax`.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
+## 04/11/2026 (95) · Antigravity — Regla universal: memoria de fila al cerrar submodales y modales (sin saltos al buscador)
+- **Problema reportado por el dueño:** *"cuando selecciono una tabla y presiono enter entro ahi todo normal pero cuando pongo x el selector se va arriba al buscador y no se queda donde seleccioné obligándome a bajar y volver a seleccionar la tabla quiero que eso no pase como también que eso no pase en otras tablas que sea como una regla"*.
+- **Causas identificadas:**
+  1. En `ModalDetalleCaja.tsx`: el `useEffect` de auto-foco escuchaba `ticketSeleccionado`. Al cerrar el ticket (`ticketSeleccionado` pasando a `null`), a los 60ms ejecutaba forzosamente `searchInputRef.current?.focus()`, quitando el selector de la fila.
+  2. En `src/utils/ventanas.ts`: `enVentana` guardaba solo una referencia plana de elemento (`HTMLElement`) que no recordaba ID ni texto si la tabla re-renderizaba o si el foco estuvo en un botón de la fila; además `devolverEnVentana` abortaba si el foco ya estaba dentro de la ventana (`v.contains(a)`), sin notar que había caído erróneamente en el buscador. Y `filasVisibles` excluía elementos dentro de ventanas.
+- **Solución universal aplicada:**
+  1. `src/utils/ventanas.ts`:
+     - `FILA` selector ampliado con `[id^="mov-row-"]` y `[id^="caja-row-"]`.
+     - `filasVisibles(contenedor?)` ahora permite buscar filas dentro de cualquier ventana contenedora.
+     - `enVentana` ahora almacena `WeakMap<HTMLElement, Recuerdo>` con `{ el, id, fila, texto }` para cada nivel de ventana anidada.
+     - Regla universal: si el foco actual `a` es un buscador (`esBuscador`) y había una fila guardada, tanto `devolverEnVentana` como `devolver` no se conforman con el buscador y devuelven el selector a la fila seleccionada.
+     - En `alEnfocar`, un auto-focus incidental a un buscador no sobrescribe la fila recordada.
+  2. `ModalDetalleCaja.tsx`:
+     - Se añadieron `ultimoTicketRef` y `yaEnfocoInicialRef`. El auto-foco al buscador ocurre únicamente en la apertura inicial. Al cerrarse un ticket, se restaura inmediatamente el foco a la fila del ticket (`mov-row-${idTicket}`).
+  3. `TablaMovimientos.tsx` y `TablaHistorial.tsx`:
+     - Agregados `id={`mov-row-${item.id}`}` e `id={`caja-row-${caja.id}`}` a los `<tr>`, así como IDs a sus botones de acción.
+- **Verificación en siumax:** prueba automatizada con Puppeteer / Edge (`ai-scripts/pruebas/prueba-selector-cierre-submodal.mjs`):
+  - 5 de 5 checks aprobados con 0 errores: al cerrar ticket el selector se mantiene en la fila (`#mov-row-1793809269661`), y al cerrar caja regresa a la fila de caja (`#caja-row-1793633990774`). Captura guardada: `submodal_foco_fila_restaurado.png`.
+- Rama `fase-11-sunat`. Desplegado a `siumax`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
+## 04/11/2026 (94) · Antigravity — Selector al imprimir, ticket solo con reimprimir, unificación de cambio/devolución y centrado de acciones (solo siumax)
+- **Selector al imprimir (AnyDesk Printer / navegador):** al abrir la ventana de impresión, `recordarSeleccionEnVentanas` (`ventanas.ts`) le quitaba el foco a la ventana de la impresora en milisegundos para forzarlo a SiuMax, impidiendo escoger entre "Imprimir" y "Cancelar" con el teclado. Solución: en `src/utils/impresion.ts` se escucha `beforeprint` / `afterprint` y en `useReactToPrint` (`onBeforePrint`/`onAfterPrint`) gestionando el estado `estaImprimiendo()`. Cuando está imprimiendo, `ventanas.ts` y el `handleKeyDown` del ticket pausan la trampa de teclado, permitiendo navegar libremente con `Tab`/flechas/Enter/Escape en el diálogo nativo de la impresora. Al cerrarse, el foco regresa suavemente al botón de reimprimir.
+- **Previsualización de ticket (`ModalDetalleTicket.tsx`):** a pedido del dueño, se eliminaron los botones redundantes de `[C] CAMBIAR PRODUCTO` y `[D] DEVOLVER` del pie, dejando únicamente `[ENTER / P] REIMPRIMIR` junto al total facturado. Se limpiaron los atajos correspondientes del foco y teclado.
+- **Cambio y Devolución (`ModalCambioProducto.tsx`):** texto largo de SUNAT simplificado a una sola línea clara (`{tipoCpe} {numero} (SUNAT) · Se emitirá con nota de crédito.`) y botones simplificados a `[ CAMBIAR ]` y `[ DEVOLVER ]` (en vez de "CAMBIAR POR OTRO PRODUCTO" y "SOLO DEVOLVER").
+- **Tabla de movimientos (`TablaMovimientos.tsx`):** unificados los dos botones en uno solo `[ ⇄ ]` con `title="Cambio / Devolución"`, eliminando el icono duplicado de anulación (`RotateCcw`).
+- **Centrado de acciones en Tesorería (`TablaHistorial.tsx`):** la celda de acciones tenía `hidden md:flex`, lo que rompía el display de tabla HTML (`table-cell`) y desalineaba el botón del ojo hacia la derecha. Se corrigió a `hidden md:table-cell` envolviendo el botón en un contenedor centrado. Comprobado con captura `historial_cajas_centrado.png`.
+- Rama `fase-11-sunat`. Todo compilado con `npx tsc -b`, desplegado a `siumax` y probado. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
+## 04/11/2026 (93) · Claude — ENTREGA A ANTIGRAVITY: pantallas, selector y ventanas
+El dueño pidió: *"alista todo para que Antigravity siga lo que dejaste"*. Todo está en la rama `fase-11-sunat` (commits
+cb3582f → 106502f, sin push) y en siumax. **Nada de esto está en Evicamp ni en GitHub**: solo cuando el dueño lo diga en ese
+momento (Evicamp NO paga: nunca Mercado Pago).
+
+**Lo hecho en esta sesión (ver entradas 89 a 92):**
+1. **Pantallas en cualquier tamaño (89-90):** cabeceras que bajan de fila (pestañas `pestanas-sobrias` en cuadrícula), cobro compacto en laptops (`[@media(max-height:820px)]`), botón Guardar siempre visible en ventanas (pie fijo, medio con `flex-1 min-h-0 overflow-y-auto`).
+2. **Las 6 reglas del selector (91-92):** `src/utils/ventanas.ts` (con una ventana abierta el selector nunca se pierde ni sale), `src/utils/flechasEspaciales.ts` (flechas de respaldo en orden de lectura, sin espera; `filaEnMedio()` para cabeceras que bajan de fila), `src/sections/Punto-de-venta/tecladoCaja.ts` (mapa de flechas de la Caja), calendarios con Enter que no saltan.
+3. **Estilo de TODAS las ventanas (92):** el del detalle de producto de Utilidades — piezas `ventana-sobria`, `ventana-cabecera` (+ `--icono`), `ventana-cabecera__titulo`, `ventana-cerrar`, `ventana-cifras`, `ventana-recuadro` en `src/index.css`. 49 ventanas + avisos (`dialogos.tsx`), clave del admin (`autorizacion.tsx`), Compras (molde `Ventana` de PanelCompras) y cobro.
+4. **Retoques pedidos después:** resaltado suave en Proceder/Cotización/Pedido; barra de scroll de siempre (5 px sin flechas) también en Chrome/Edge nuevos y en toda ventana; Nuevo grupo con una sola flecha de volver; Reporte contador con ← → entre Mes y Descargar; letra blanca de botones oscuros en cabeceras.
+
+**Pendientes (esperan al dueño, NO hacer sin su OK):**
+- **Cobro:** "Exacto tarjeta/yape" con ↓ baja a SU campo de pago (salta Efectivo). Se le preguntó si debe ir siempre a Efectivo; no respondió.
+- Ventanas que se abren desde filas (detalle de cliente, fiado, ticket, caja pasada, historial de lotes, etiquetas…) tienen el estilo por las clases pero no se pudieron revisar con datos (siumax casi vacío). Si el dueño manda captura de alguna distinta, arreglarla igual que las demás.
+- Pasar todo a Evicamp y GitHub solo con su aviso (hay SQL de la fase 11 ya en Evicamp; estos cambios son solo de pantallas: `deploy.cjs evicamp` + push).
+- Otros de antes: Cotizaciones/Pedidos como tablas; modo real de Nubefact; plan revendedor y certificado.
+
+**Cómo revisar después de tocar pantallas (todo en `ai-scripts/pruebas/estilo/`, ver LEEME):**
+- `revisar-tamanos.mjs`, `revisar-ventanas.mjs`, `revisar-ventanas-caja.mjs` (que nada se corte; botón principal visible).
+- `revisar-selector.mjs [filtro]` (~15 min; las 6 reglas + saltos de orden). Los 3 "saltos" que quedan son a propósito: Exacto→su campo (pendiente), lista de sugerencias abierta en Ingresar lote, régimen tributario cae en la opción elegida.
+- `ver-ventanas.mjs` (capturas de 19 ventanas) y `../../estilo-ventanas.cjs` (sin --aplicar: qué ventanas no tienen las piezas del estilo).
+- **OJO:** varias pruebas abren una caja y un producto de prueba por SQL y los borran; **se detienen solas si hay una caja abierta de verdad** (el dueño estaba probando ventas en siumax). No forzarlas. No correr dos pruebas a la vez (usan los mismos ids de prueba).
+
+**Cuidados aprendidos (también en MEMORIA-IA):** reglas CSS de "letra clara → oscura" deben excluir elementos con fondo propio; en Chrome/Edge 121+ `scrollbar-width`/`scrollbar-color` anulan el diseño `::-webkit-scrollbar`; un control desactivado no recibe el selector (saltar al primero activo); los "rescates" globales de teclado deben respetar `e.defaultPrevented`; nunca presionar Enter en una prueba sin saber dónde está el selector.
+
+---
+
+## 04/11/2026 (92) · Claude — Todas las ventanas flotantes con el mismo estilo + selector más rápido y en orden (solo siumax)
+- **Selector:** el dueño notó que "cuando muevo rápido el selector es muy lento" → las flechas de respaldo (`flechasEspaciales.ts`) ya no esperan 90 ms (actúan apenas termina la tecla). Orden de lectura: `filaEnMedio()` hace que las flechas pasen por la fila de botones que baja entre pestañas y buscador en laptops (Inventario, Lotes, Compras, Clientes); Finanzas/Ver historial ↑ al primer botón; pestañas de Ajustes sin ícono en laptops para caber en una fila; Nuevo usuario ← a Estado; Empresa ↑/↓ sin saltos; Tienda web: el texto largo deja salir con ↓ en su última línea (llega a Guardar) y la pestaña entra por el enlace. El "rescate" de Inventario ya no pisa las flechas de las pestañas (`if (e.defaultPrevented) return`). Revisión de saltos: 34/37 sin saltos; los 3 restantes son a propósito (cobro: cada "Exacto" va a su campo — pendiente que el dueño decida; lista de sugerencias abierta en Ingresar lote; régimen tributario cae en la opción elegida).
+- **Ventana de empleado:** scroll delgado, panel izquierdo angosto, permisos en columnas que se acomodan (4 en pantalla grande, 3 en laptop) sin cortar palabras.
+- **Detalle de producto (Utilidades)** sin sombra → el dueño: *"me gustó, quiero ese estilo igual en todas las ventanas flotantes"* → plan → *"empieza"*.
+- **Estilo de ventanas** (piezas en `src/index.css`, sección "VENTANAS SiuMax Sobrio"): `ventana-sobria` (marco borde 2, SIN sombra; dentro también se apagan las sombras desplazadas sin tocar el resaltado del selector: `--tw-shadow`), `ventana-cabecera` (clara; `--icono` = color del cuadrito), `ventana-cabecera__titulo` (el primer ícono del título se vuelve el cuadrito de color), `ventana-cerrar` (X con borde fino; también se aplica sola a cualquier botón con la X en la cabecera), `ventana-cifras`, `ventana-recuadro`.
+- Aplicado a **49 ventanas** con `ai-scripts/estilo-ventanas.cjs` (agrega clases, NO toca teclado ni lógica; sin `--aplicar` solo informa) + a mano: cobro, avisos del sistema (`dialogos.tsx`: Aviso verde / Confirmar amarillo) y clave del administrador (`autorizacion.tsx`, candado amarillo). El color que tenía cada cabecera pasó al cuadrito: cierre de caja rojo, movimiento/detalle de caja/balanza azul, precio de consumo y editar salida amarillo, el resto verde. Sin tocar: Tienda Web pública y menú del celular.
+- Revisado: capturas de 19 ventanas + aviso; `revisar-ventanas.mjs` y `revisar-ventanas-caja.mjs` sin fallas (botón principal visible en 6 tamaños), 0 errores, siumax con sus 11 ventas.
+- No se pudieron abrir con datos (siumax vacío): las ventanas que salen de una fila (detalle de cliente, fiado, ticket, caja pasada, historial de lotes…); reciben el mismo estilo por las clases.
+- **Después (mismo día):** Caja: Proceder al pago, Cotización y Pedido con un resaltado suave (borde de acento) cuando el selector está en ellos. **Barra de scroll:** Chrome/Edge 121+ ignoran el diseño de 5 px sin flechas si hay `scrollbar-width`/`scrollbar-color` (salía la barra fina con flechas, p. ej. en la vista previa del ticket); en index.css se dejan en `auto` con `@supports selector(::-webkit-scrollbar)` y toda zona con scroll dentro de `.ventana-sobria` usa la barra del sistema aunque le falte `custom-scrollbar`.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub.
+
+---
+
+## 04/11/2026 (91) · Claude — Las 6 reglas del selector en todo el sistema (solo siumax)
+- **Dueño:** pidió confirmar si el sistema cumple sus reglas del selector y luego *"sí, empieza y hazlo todo de una"*. Reglas:
+  1. el selector llega a TODOS los botones, buscadores y campos; 2. calendario: Enter lo abre y al elegir el selector se queda en la fecha (Enter no pasa al siguiente cuadro); 3. moverse ← → (y ↑ ↓); 4. al salir del sistema y volver, algo queda seleccionado; 5. en una ventana el selector nunca se pierde; 6. con una ventana abierta, el selector nunca sale de ella.
+- **Revisión automática nueva** `ai-scripts/pruebas/estilo/revisar-selector.mjs` (37 pantallas: secciones, pestañas y ventanas; recorre con flechas desde donde arranca, prueba Tab, clic en el fondo, salir y volver, y cada calendario). Abre caja y producto de prueba por SQL y los borra; **frena si se crea una venta**.
+- **Antes:** 11 de 37 cumplían. **Arreglos:**
+  - `src/utils/ventanas.ts` (`recordarSeleccionEnVentanas`): con una ventana abierta, si el selector se pierde (clic en el fondo, volver de otro programa) vuelve a lo último que tenía en esa ventana; si intenta salir, vuelve adentro; si una ventana se abre con el selector afuera (Producir, Traspasos), se pone en su primer campo/botón.
+  - `src/utils/flechasEspaciales.ts` (nuevo, activado en App.tsx): **flechas de respaldo** — si una flecha no hizo nada (nadie la atendió y el selector sigue igual a los 90 ms), el selector pasa al control más cercano en esa dirección dentro de la ventana o sección. No actúa en filas de tablas, líneas del ticket, listas desplegables, fechas, horas, números ni textos largos. Las flechas propias de cada pantalla siempre mandan.
+  - Caja: `src/sections/Punto-de-venta/tecladoCaja.ts` (mapa de flechas): Cliente, ✕, Por cobrar, Caja actual, monto, ojo, barra de montos, Espera, Vaciar, Proceder (↓ Cotización), Cotización y Pedido. ↑ desde el buscador sube a Cliente.
+  - Calendarios: Cotización y Pedido de la Caja (fecha y hora) — Enter abre el calendario y se queda; ↓ sigue. Cobro: si el calendario del fiado no se puede abrir, el selector se queda en la fecha (antes saltaba a "Confirmar pago").
+  - Ingresar lote: con el formulario vacío la fecha y "Guardar" están desactivados; las flechas ahora saltan al primero activo (llega a "Cancelar").
+- **Resultado final:** 37 de 37 pantallas cumplen las 6 reglas, 0 errores (antes 11 de 37).
+- **Incidente:** la primera corrida de la revisión creó por accidente una venta de prueba de S/ 5 en siumax (Enter cayó en "Confirmar pago" porque el navegador de prueba no abre calendarios). Se borró (venta + movimiento de inventario); siumax quedó con sus 11 ventas. La revisión ahora frena si aparece una venta.
+- No probado con datos: ventanas que se abren desde filas (siumax casi vacío) y la Tienda Web pública.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub.
+
+---
+
+## 04/11/2026 (90) · Claude — Ventanas: el botón Guardar siempre a la vista (solo siumax)
+- **Dueño** (captura de "Ingresar lote de stock"): *"¿adaptaste bien las ventanas flotantes? En la ventana de lote el botón guardar no sale"*.
+- **Causa:** el medio de `ModalLote` tenía `sm:overflow-visible` (en PC no hacía scroll), así que el contenido empujaba el pie con "Guardar lote" fuera de la pantalla. Esa ventana no estaba en la revisión (89), y la revisión daba por buena una ventana si el botón se alcanzaba bajando con scroll.
+- **Arreglos:**
+  - `ModalLote`: medio con `flex-1 min-h-0 overflow-y-auto`; cabecera y pie fijos → "Guardar lote" siempre visible (1280×720: y 628→672).
+  - `ModalAbono` y `ModalApertura`: antes hacía scroll TODA la ventana (el botón se escondía abajo en pantallas bajas); ahora cabecera y pie fijos y scroll solo en el medio.
+  - `ModalBalanza` y `ModalPrecioConsumo` siguen con scroll de toda la ventana (el botón va dentro del medio), pero son muy cortas.
+- **Revisión más estricta** (`revisar-ventanas.mjs` y `revisar-ventanas-caja.mjs`): el botón principal (Guardar, Registrar, Confirmar, Crear, Finalizar, Ingresar…) tiene que verse ENTERO sin bajar con el mouse. Ventanas nuevas en la revisión: Ingresar lote, Producir, Traspasos, Nueva compra, Aperturar caja. Nuevo producto revisado también en el formulario completo (paso 2: "Guardar" y "Guardar e ir a lotes" visibles).
+- **Resultado:** 0 fallas en 6 tamaños (1920 a celular), 0 errores JS, siumax como estaba.
+- **Revisión por código** de las 52 ventanas: las que se abren desde filas (detalle de cliente, grupos, historial de lotes, etiquetas, proveedores, corregir conteo…) usan `CuerpoVentana` de `ListaVentana` (ya con scroll en el medio); ModalFormGrupo, nombre de espera y autorización son de pocos campos. No se pudieron abrir con datos porque siumax está vacío.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub.
+
+---
+
+## 04/11/2026 (89) · Claude — Todo se ve completo en cualquier tamaño de pantalla (solo siumax)
+- **Dueño:** *"el sistema tiene que ajustarse a cualquier tamaño de pantalla para que todos los botones, sesiones y ventanas aparezcan bien y completos, no topados por la ventana"* (captura de Ajustes) → propuesta → *"sí, empieza"*.
+- **Revisión automática** en 7 tamaños (1920×1080, 1600×900, 1366×768, 1280×720, 1024×768, tablet 768×1024, celular 390×844), con scripts nuevos en `ai-scripts/pruebas/estilo/`:
+  - `revisar-tamanos.mjs`: las 7 secciones y TODAS sus pestañas (Lotes, Compras, Créditos, Cotizaciones, Pedidos, Ver historial, cada pestaña de Ajustes). Marca página más ancha que la pantalla, botones/pestañas/campos fuera de la pantalla (sin scroll que los alcance) y títulos tapados.
+  - `revisar-ventanas.mjs`: 10 ventanas (nuevo producto, proveedores, nuevo cliente, grupos, nuevo ajuste, reporte contador, nuevo usuario, nueva tienda…).
+  - `revisar-ventanas-caja.mjs`: cobro, cliente, espera, cotización, pedido, nuevo movimiento y cierre de caja. Abre una caja y un producto de prueba por SQL (no vende nada) y los borra al final; si hay una caja abierta de verdad, no hace nada.
+- **Encontrado y arreglado:**
+  - Pestañas de **Ajustes** salían por la derecha desde 1600 px (en 1024 se perdían 4) y el título quedaba pegado; botón **Proveedores** de Inventario cortado en 1600; pestañas de **Clientes** fuera de la pantalla en tablet y celular.
+  - **Regla nueva (index.css `.pestanas-sobrias`):** si no caben, las pestañas bajan a otra fila formando una cuadrícula de bordes finos (el marco pone borde arriba/izquierda y cada pestaña derecha/abajo; `flex: 1 1 auto`). En pantallas grandes se ven igual que antes.
+  - **Cabeceras** de Ajustes, Clientes e Inventario: contenedor `flex flex-wrap justify-between items-center` (los botones pasan abajo si no entran al lado), título con `shrink-0`, pestañas y botones con `min-w-0` (sin `shrink-0`), botones de Inventario con `sm:flex-wrap`.
+  - **Cobro (ModalCobro):** el modo compacto se activaba solo con menos de 700 px de alto; ahora con menos de 820 px. En laptops de 720/768 de alto la fila Nota de venta / Boleta / Factura salía cortada a la mitad; ahora entra completo.
+- **Resultado:** 0 cosas cortadas en los 7 tamaños (secciones + pestañas + 17 ventanas), 0 errores JS, siumax quedó como estaba (caja y producto de prueba borrados). Capturas revisadas a ojo.
+- Ventanas largas (nuevo producto, pedido por encargo) en pantallas bajas se bajan con scroll dentro de la ventana: nada queda fuera.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub.
+
+---
+
+## 04/11/2026 (88) · Antigravity — ENTREGA A CLAUDE: estado actual, lo avanzado y qué sigue
+El dueño pidió: *"perfecto alista todo porque nos pasaremos a claude"*. Todo queda guardado en la rama `fase-11-sunat` (sin push a GitHub ni Evicamp) y completamente desplegado y probado en el servidor de pruebas `siumax`.
+
+**Estado exacto de lo avanzado en esta sesión por Antigravity:**
+1. **Utilidades (84):** Estilo SiuMax Sobrio completo idéntico a Inventario (`boton-cabecera` en `[ Top 5 Rentables ]`, `tarjeta-sobria` sin saltos ni sombras 3D, buscador sobrio fuera del marco con MATCH y Escape, selects de categoría/rotación y fechas nativas con `filtro-sobrio`, botón `limpiar-sobrio`, `tabla-marco`, `paginacion-sobria` arriba y abajo que se oculta si no hay registros, `vacio-sobrio` y teclado 100%). Captura `utilidades_sobrio.png`.
+2. **Ajustes / Configuraciones (85):** Estilo SiuMax Sobrio completo (pestañas sobrias con acento verde inferior, `TablaUsuarios.tsx` con buscador fuera, filtro de rol, botón `[ + Nuevo Usuario ]` en `boton-cabecera`, tiendas en `boton-cabecera`, tarjetas sobrias en facturación, tienda web y empresa, sin sombras 3D, teclado 100%). Captura `ajustes_sobrio.png`.
+3. **Punto de Venta / Caja (86):** Eliminadas sombras y márgenes sobrantes a pedido del dueño (en `src/App.tsx` padding `p-0` cuando está en `pos` para quedar al ras sin marco perimetral blanco; eliminada la sombra exterior de 6px en el contenedor de Caja `lg:shadow-[6px_6px_0_0_var(--color-ink)]` y las sombras en buscador y botones de cobro/espera/ticket). Captura `pos_limpio.png`.
+4. **Clientes y Grupos (87):**
+   - El dueño notó que no había botón para gestionar o crear grupos sin tener un cliente previo.
+   - Se añadió el botón `[ Grupos ({grupos.length}) ]` en la cabecera al lado de `[ + Nuevo cliente ]` con estilo `boton-cabecera` (el dueño pidió eliminar `[ + Nuevo grupo ]` para centralizarlo dentro de la lista).
+   - En `ModalElegir` (lista de grupos), se limpió el texto a `Crear grupo nuevo` (sin duplicar el `+`).
+   - En `ModalFormGrupo` se agregó el botón `[ ← Volver ]` en el pie y la flecha en la cabecera.
+   - Si se cancela o pulsa Volver (o Escape), regresa suavemente a la lista de grupos.
+   - Al crear el grupo con `[ Crear grupo ]`, se guarda en PostgreSQL y **regresa automáticamente a la lista de grupos** mostrando el grupo recién creado.
+   - Teclado 100% probado en Edge (16/16 checks ✅). Capturas `clientes_cabecera_sobria.png`, `modal_form_grupo_con_volver.png` y `lista_grupos_tras_crear.png`.
+
+**Siguiente paso (lo que sigue en la lista del dueño):**
+1. **Proveedores** (`src/sections/Proveedores/`): aplicar la receta oficial de **SiuMax Sobrio** (cabecera con `boton-cabecera`, buscador grande fuera del marco de la tabla con "N MATCH" y Escape, filtros sobrios, paginación arriba y abajo, estado vacío compartido y navegación por teclado fluida). Receta completa en `docs/MEMORIA-IA.md` §18.
+2. Si el dueño lo pide: tablas dentro de ventanas emergentes (preguntarle siempre antes).
+3. **Regla 4 permanente:** NADA se sube a Evicamp (producción) ni a GitHub sin que el dueño lo ordene explícitamente en ese momento. Evicamp NO paga (nunca Mercado Pago).
+
+---
+
+## 04/11/2026 (87) · Antigravity — Botón Grupos (n) en cabecera y flujo con botón Volver al crear grupo (solo siumax)
+- **Clientes (`src/sections/Clientes/index.tsx` y `ModalFormGrupo.tsx`):**
+  1. **Ajuste pedido por el dueño:** eliminar el botón `[+ Nuevo grupo]` de la cabecera dejando únicamente `[Grupos (N)]` (al lado de `[+ Nuevo cliente]`), ya que dentro de la ventana de grupos ya existe la opción para crearlos.
+  2. **Botón "Volver" en creación de grupos:**
+     - En `ModalFormGrupo`: se agregó el botón `[ ← Volver ]` en el pie y la flecha `[ ← ]` en la cabecera.
+     - Si el usuario hace clic en Volver o presiona Escape, regresa suavemente a la lista de grupos (`ModalElegir`).
+     - Al crear el grupo con `[ Crear grupo ]`, se guarda en la base de datos y regresa automáticamente a la lista de grupos, mostrando el grupo recién creado de inmediato.
+  3. **Limpieza visual:** se corrigió la opción extra en `ModalElegir` para decir `Crear grupo nuevo` sin duplicar el símbolo `+` (antes salía `+ +`).
+  4. **Navegación 100% por teclado:**
+     - Desde la pestaña Clientes: `→` pasa a `btn-nuevo-cliente` → `btn-ver-grupos`.
+     - `←` regresa entre ellos y vuelve a las pestañas.
+     - `↓` desde cualquiera baja a `buscador-clientes`.
+     - En `ModalFormGrupo`: `ArrowLeft` desde "Crear grupo" pasa a "Volver", y `ArrowRight` regresa a "Crear grupo".
+  5. **Verificado en siumax:** prueba automatizada con Puppeteer / Edge (`ai-scripts/pruebas/prueba-botones-grupos-clientes.mjs`) pasó 16/16 checks con 0 errores JS. Capturas guardadas: `clientes_cabecera_sobria.png`, `modal_form_grupo_con_volver.png` y `lista_grupos_tras_crear.png`.
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
+## 04/11/2026 (86) · Antigravity — Eliminación de sombras y ajuste al ras en Caja / Punto de Venta (solo siumax)
+- **Punto de Venta / Caja (`src/sections/Punto-de-venta/` y `App.tsx`):**
+  1. **Espacio sobrante eliminado:** en `src/App.tsx` la sección principal ahora usa `p-0` cuando la vista activa es `pos` (en lugar de `p-2`), eliminando el marco blanco perimetral y dejando la caja al ras de la pantalla.
+  2. **Sombras eliminadas:**
+     - Eliminada la sombra exterior de 6px en el contenedor de caja (`lg:shadow-[6px_6px_0_0_var(--color-ink)]`).
+     - Eliminada la sombra inferior del banner de caja cerrada (`shadow-[0_4px_0_0_var(--color-ink)]`) y del botón de aviso de comprobantes.
+     - Eliminada la sombra del buscador (`shadow-[4px_4px_0_0_var(--color-ink)]`), botón de cliente, "Por cobrar", botón "Espera", "Proceder al pago", "Cotización" y "Pedido".
+  3. **Verificado en siumax:** prueba visual automatizada (`ai-scripts/pruebas/estilo/ver-pos.mjs`) ejecutada en Edge con 0 errores JS y captura guardada (`pos_limpio.png`).
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+
+---
+
+## 04/11/2026 (85) · Antigravity — Estilo oficial "SiuMax Sobrio" aplicado en Ajustes (solo siumax)
+- **Ajustes / Configuraciones (`src/sections/Configuraciones/`):** adaptado idéntico al modelo de Inventario > Productos.
+  1. **Cabecera sobria:** fondo liso con borde inferior de 2px, ícono verde con sombra sutil, título `AJUSTES`, y pestañas sobrias (`pestanas-sobrias` con borde fino, sin sombras, y pestaña activa subrayada con acento verde).
+  2. **Gestión de Usuarios (`TablaUsuarios.tsx`):**
+     - Buscador sobrio (`buscador-sobrio`) fuera del marco de la tabla con ícono verde al enfocar, conteo en vivo ("N MATCH") y borrado con tecla Escape.
+     - Selector de rol con `filtro-sobrio` (sin curvas).
+     - Botón `[ + Nuevo Usuario ]` con `boton-cabecera` (blanco, borde fino, sin sombras pesadas, ícono con acento).
+     - Tabla envuelta en `tabla-marco`, encabezado oscuro `tabla-cabecera`, filas `tabla-fila` y estado `vacio-sobrio`.
+  3. **Tiendas y Almacenes (`PestanaTiendas.tsx`):** botón `[ + Nueva Tienda / Almacén ]` estilizado con `boton-cabecera` (sin sombras 3D ni saltos hover), tabla con `tabla-marco`, `tabla-cabecera`, `tabla-fila` y `vacio-sobrio`.
+  4. **Tienda Web, Facturación, Empresa y Sugerencias:**
+     - Eliminados gradientes llamativos y sombras pesadas 3D (`shadow-[4px_4px_0_0_...]`).
+     - Reemplazados contenedores por `tarjeta-sobria` (borde fino 1px, esquinas rectas).
+     - Botones de guardar y enviar ajustados a `boton-cabecera` sobrios.
+  5. **Teclado 100% verificado:** navegación completa entre pestañas, buscador, filtro de rol, botón de acción y filas de usuarios.
+  6. **Prueba automatizada** `ai-scripts/pruebas/estilo/ver-ajustes.mjs` ejecutada en Edge / Puppeteer contra `https://siumax.duckdns.org` con 0 errores JS y captura guardada (`ajustes_sobrio.png`).
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+- **Siguiente paso:** Proveedores (`src/sections/Proveedores/`).
+
+---
+
+## 04/11/2026 (84) · Antigravity — Estilo oficial "SiuMax Sobrio" aplicado en Utilidades (solo siumax)
+- **Utilidades (Inteligencia de Negocio):** adaptado idéntico al modelo de Inventario > Productos.
+  1. **Cabecera sobria:** ícono verde de acento con borde fino y sombra fija, título `INTELIGENCIA DE NEGOCIO`, y botón fantasma `boton-cabecera` `[ Top 5 Rentables ]` con ícono `TrendingUp`.
+  2. **Tarjetas de resumen:** cambiadas a `tarjeta-sobria` (borde fino 1px, fondo limpio, sin sombras pesadas ni saltos hover).
+  3. **Buscador y filtros:** colocados FUERA del marco de la tabla (`buscador-sobrio` con coincidencia "N MATCH" y tecla Escape para limpiar; selects de Categoría y Rotación con `filtro-sobrio`; fechas Desde y Hasta nativas que abren calendario con Enter; botón de limpiar con `limpiar-sobrio` e ícono `FilterX`).
+  4. **Tabla de rentabilidad y paginación:** envuelta en `tabla-marco`, thead `tabla-cabecera`, filas `tabla-fila` con cursor pointer y Enter para ver detalle del producto. Paginación superior e inferior con `paginacion-sobria` (oculta si no hay registros); estado `vacio-sobrio` con lupa gris si no hay filas.
+  5. **Teclado 100% probado:** recorrido fluido (cabecera → buscador → filtros → limpiar → paginación superior → filas → paginación inferior).
+  6. **Prueba automatizada** `ai-scripts/pruebas/estilo/ver-utilidades.mjs` ejecutada en Edge / Puppeteer contra `https://siumax.duckdns.org` con 0 errores JS y captura guardada (`utilidades_sobrio.png`).
+- Rama `fase-11-sunat`. Nada subido a Evicamp ni a GitHub (Regla 4).
+- **Siguiente paso:** Ajustes / Configuraciones (`src/sections/Configuraciones/`) o Proveedores (`src/sections/Proveedores/`).
+
+---
+
+## 04/11/2026 (83) · Claude — ENTREGA A ANTIGRAVITY: cómo seguir con el estilo "SiuMax Sobrio"
+El dueño pidió: *"guarda todo para que Antigravity continúe con tu trabajo"*. Todo está guardado en la rama
+`fase-11-sunat` (sin push) y en siumax.
+
+**Estado exacto:**
+- Rama `fase-11-sunat`. Desde el último pase (80: Evicamp, clientes y GitHub) hay commits SOLO en siumax: Nubefact y
+  anulación NO_EMITIDO (81), Excel del contador y todo el estilo (82). **Nada de eso está en Evicamp ni en GitHub:** se sube
+  solo cuando el dueño lo diga en ese momento (y Evicamp NO paga: nunca Mercado Pago).
+- Estilo SiuMax Sobrio hecho en: Inventario (Productos, Lotes, Compras), Clientes (4 pestañas), Conteos, Finanzas (caja
+  actual) y Ver historial. Probado con teclado; el historial solo vacío (siumax no tiene cajas cerradas).
+
+**Siguiente paso (lo que el dueño espera):** el mismo estilo, idéntico a Inventario, en las secciones que faltan:
+1. **Utilidades** — `src/sections/Utilidades/` (`FiltrosUtilidades.tsx`, `TarjetasResumen.tsx`, `TablaAnalisisProductos.tsx`, `TablaRanking.tsx`).
+2. **Ajustes / Configuraciones** — `src/sections/Configuraciones/` (`TablaUsuarios.tsx`, `PestanaTiendas.tsx`, `PestanaFacturacion.tsx`, `PestanaTiendaWeb.tsx`, `FormularioEmpresa.tsx`).
+3. **Proveedores** — `src/sections/Proveedores/`.
+Antes de empezar cada sección: mostrar al dueño qué cambia y esperar su "empieza" (regla de OK explícito).
+
+**Cómo hacerlo:** receta completa en `docs/MEMORIA-IA.md` sección 18 (clases de `src/index.css`, estructura, teclado y
+ejemplos para copiar). Por cada sección: graphify antes de leer → cambios → `npx tsc -b` → `node ai-scripts/deploy.cjs siumax`
+→ capturas y teclado con `ai-scripts/pruebas/estilo/` (ver LEEME) → commit → docs → `graphify update .`.
+
+**Cuidado (aprendido aquí):**
+- Conservar todos los `id` y `onKeyDown` existentes; antes de quitar algo, listar lo que hacía (error "gravísimo" pasado).
+- Tablas compartidas: revisar quién más las usa (`graphify explain`). Ej.: `TablaMovimientos` también está en `ModalDetalleCaja`.
+- Inventario: las clases viejas del botón de pestañas siguen porque `FiltrosInventario` revisa `classList.contains('bg-[var(--color-ink)]')`. No quitarlas.
+- Editar con scripts escritos en archivo (no `node -e` ni heredoc con barras invertidas); normalizar CRLF; ojo con líneas solo de espacios (MEMORIA-IA n.º 40).
+
+**Otros pendientes (esperan respuesta del dueño, no hacer sin su OK):**
+- Convertir Cotizaciones y Pedidos (hoy tarjetas) en tablas con paginación.
+- Estilo en las tablas dentro de ventanas.
+- Borrar la ruta/token de Nubefact que quedó por error en Evicamp (facturación apagada allí; inofensivo).
+- Fase 11: modo real de Nubefact, plan revendedor y certificado digital (los consigue el dueño).
+- Pruebas viejas `prueba-fase11-4/5/6-ui` usaban la ventana Comprobantes (ya no existe): reemplazadas por `prueba-cambio-cpe-ui` y `prueba-historial-cpe-ui`.
+
+---
+
+## 04/11/2026 (82) · Claude — Estilo oficial "SiuMax Sobrio" en Inventario, Compras, Clientes, Conteos y Finanzas (solo siumax)
+- El dueño eligió el estilo de Inventario > Productos ("la tabla la resaltan los botones y el buscador, y el fondo no me distrae") y lo llamamos **SiuMax Sobrio**. Piezas compartidas en `src/index.css`: `boton-cabecera` (+ `--icono`), `pestanas-sobrias` (+ `data-activa`), `pestanas-filtro`, `tarjeta-sobria`, `buscador-sobrio` (`__icono/__match/__conteo/__borrar`), `filtro-sobrio`, `limpiar-sobrio`, `paginacion-sobria` (`__texto/__boton`), `vacio-sobrio`, y el molde de tabla `tabla-marco/tabla-cabecera/tabla-fila`.
+- Aplicado en Inventario (Productos, Lotes, Compras), Clientes (4 pestañas), Conteos y **Finanzas**: cabecera como Inventario (título TESORERÍA, botones fantasma; el aviso rojo de comprobantes con problema sigue rojo pero sin sombra), tarjetas sobrias (Gran total ya no es bloque negro), buscador y filtros FUERA del marco + botón limpiar (`#btn-limpiar-filtros-finanzas`), tabla de movimientos con paginación de 25 arriba y abajo (`btn-pag-ant-mov-arriba`, `btn-pag-ant-mov`…) y vacío compartido; "Caja cerrada" con `vacio-sobrio`.
+- **Ver historial:** sin la barra negra de título; buscador de cajas grande con "N MATCH" y las fechas Desde/Hasta + limpiar a su lado (`FiltroFechas` ahora va dentro de `TablaHistorial` por la prop `filtros`); **las fechas se aplican solas al elegirlas** (ya no hay botón "Buscar"); paginación compartida (mismos ids `btn-historial-anterior/siguiente(-bottom)`), filas finas, vacío compartido.
+- Teclado probado en siumax (caja actual: → por filtros hasta limpiar, ↓ paginación → fila, ↑ vuelve, Escape borra). siumax no tiene cajas cerradas: el historial solo se probó vacío.
+- Pendiente: Utilidades y Ajustes (Usuarios, Tiendas…). Nada subido a Evicamp ni GitHub.
+
+---
+
+## 04/11/2026 (81) · Claude — Nubefact conectado (cuenta demo) y anular comprobantes NO aceptados
+- El dueño creó su cuenta demo de Nubefact (RUC 10760867697) y guardó ruta + token en siumax (al principio los puso en Evicamp por error: quedaron allí inofensivos, facturación apagada). "Probar conexión": "Conexión correcta con Nubefact". Series de la demo: **BBB1** (boletas y sus NC) y **FFF1** (facturas y sus NC); B001/F001 dan "Serie No puedes emitir comprobantes con esta serie".
+- **Fallo encontrado con el caso real:** al ANULAR una boleta que nunca fue aceptada (serie mala), `fn_anular_venta` creaba una nota de crédito que quedaba "Enviando…" para siempre.
+- **Arreglo:** estados nuevos `ANULANDO` y `NO_EMITIDO`. Si el comprobante no fue aceptado y el proveedor NO lo generó (sin PDF ni CDR), anular deja `ANULANDO`; el facturador 11.9.0 (`procesarAnulacion`) consulta a Nubefact: no existe → `NO_EMITIDO` (sin NC); existe → `fn_confirmar_anulacion` (solo el facturador) emite la NC. Directo a SUNAT sin CDR → NO_EMITIDO. Un envío en curso no pisa la anulación (`guardarResultado` ignora ANULANDO).
+- **Nubefact y boletas:** Nubefact las genera al instante (PDF) y las manda a SUNAT en el resumen diario → quedan `PENDIENTE` con PDF = EMITIDAS ("Generada · SUNAT por confirmar"): se pueden anular (NC directa), cambiar y devolver (`comprobanteEmitido()`), su NC se envía sin esperar, y NO cuentan como problema.
+- Ticket de la nota de crédito en portal (se dibujaba cortado dentro del detalle).
+- Pruebas: `prueba-anular-no-emitido.mjs` 16/16 con Nubefact real; `prueba-historial-cpe-ui` OK. Solo siumax (Evicamp tiene la facturación apagada; este arreglo va en el próximo pase).
+
+---
+
 ## 03/11/2026 (80) · Claude — PASE de las fases 8, 9, 10 y 11 a EVICAMP, clientes y GitHub
 - **Dueño:** "súbelo todo a evicamp y siumax para mis clientes y a mi github". Aclaró: **EVICAMP NO PAGA** (primer cliente, ayudó a hacer SiuMax): NUNCA Mercado Pago / aviso de plan / "Pagar plan". Comprobado: Evicamp no tiene `/suscripcion.json` (devuelve el index), así que no ve nada de eso; el Panel solo lo escribe en clientes `cli_*` (hoy no hay ninguno).
 - **Ensayo primero** (`ai-scripts/pruebas/ensayo-fases8-11-evicamp.cjs`): respaldo → copia `evicamp_ensayo` → seguridad-sesion.sql completo → 0 errores → copia borrada.

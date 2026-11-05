@@ -14,7 +14,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { enviarASunat, URL_SUNAT, cargarCertificado } from './sunat.mjs';
 
-const VERSION = '11.8.0';
+const VERSION = '11.9.0';
 const ARCHIVO_BASES = process.env.FACTURADOR_BASES || '/opt/siuhub/facturador/bases.json';
 const CARPETA_COPIAS = process.env.FACTURADOR_COPIAS || '/var/lib/siumax-cpe';
 const PAUSA_MS = 5000;
@@ -334,7 +334,8 @@ const guardarResultado = async (db, base, tabla, fila, doc, resultado) => {
        cpe_pdf = coalesce($6, cpe_pdf), cpe_xml = coalesce($7, cpe_xml), cpe_cdr = coalesce($8, cpe_cdr),
        cpe_enviado_at = CASE WHEN $2 <> 'ERROR' THEN now() ELSE cpe_enviado_at END,
        cpe_proximo_intento = CASE WHEN $9 THEN now() + make_interval(secs => $10) ELSE NULL END
-     WHERE id = $1`,
+     WHERE id = $1 AND cpe_estado IS DISTINCT FROM 'ANULANDO'`, // si la anularon mientras se enviaba, manda la anulación
+
     [fila.id, resultado.estado, resultado.mensaje || null, resultado.hash || null, resultado.qr || null,
       resultado.pdf || null, resultado.xml || null, resultado.cdr || null, reintentar, segundos]);
   log(base, `${doc.serie}-${doc.numero} → ${resultado.estado}${resultado.mensaje ? ` (${resultado.mensaje})` : ''}`);
@@ -347,13 +348,16 @@ const guardarResultado = async (db, base, tabla, fila, doc, resultado) => {
 // Nota de crédito: se envía cuando la boleta/factura que corrige ya fue aceptada por SUNAT
 const procesarNota = async (db, base, cfg, cred, nota) => {
   const { rows: [orig] } = await db.query(
-    `SELECT doc_type, doc_serial, doc_number, cpe_estado, cpe_cliente_tipo_doc, cpe_cliente_num_doc, cpe_cliente_nombre, cpe_cliente_direccion, customer_name
+    `SELECT doc_type, doc_serial, doc_number, cpe_estado, cpe_pdf, cpe_cliente_tipo_doc, cpe_cliente_num_doc, cpe_cliente_nombre, cpe_cliente_direccion, customer_name
        FROM public.sales WHERE id = $1`, [nota.sale_id]);
-  if (!orig || orig.cpe_estado === 'RECHAZADO') {
-    await guardarResultado(db, base, 'notas_credito', nota, { serie: nota.doc_serial, numero: nota.doc_number }, { estado: 'ERROR', mensaje: 'El comprobante que corrige fue rechazado por SUNAT: esta nota no se envía.' });
+  if (!orig || orig.cpe_estado === 'RECHAZADO' || orig.cpe_estado === 'NO_EMITIDO') {
+    await guardarResultado(db, base, 'notas_credito', nota, { serie: nota.doc_serial, numero: nota.doc_number }, { estado: 'ERROR', mensaje: 'El comprobante que corrige fue rechazado o no se emitió: esta nota no se envía.' });
     return;
   }
-  if (!['ACEPTADO', 'OBSERVADO'].includes(orig.cpe_estado)) {
+  // Con Nubefact, una boleta ya generada (tiene PDF) espera el resumen diario de SUNAT: la nota va igual
+  // (Nubefact las envía juntas). Directo a SUNAT: solo cuando el original ya fue aceptado.
+  const generadoEnNubefact = orig.cpe_estado === 'PENDIENTE' && orig.cpe_pdf && proveedorDe(cfg) === nubefact;
+  if (!['ACEPTADO', 'OBSERVADO'].includes(orig.cpe_estado) && !generadoEnNubefact) {
     // Todavía no está aceptado: se espera sin gastar intento
     await db.query(`UPDATE public.notas_credito SET cpe_estado = 'PENDIENTE', cpe_intentos = greatest(cpe_intentos - 1, 0),
       cpe_mensaje = 'Esperando que SUNAT acepte el comprobante que corrige', cpe_proximo_intento = now() + interval '20 seconds' WHERE id = $1`, [nota.id]);
@@ -385,6 +389,38 @@ const procesarNota = async (db, base, cfg, cred, nota) => {
     }
   }
   await guardarResultado(db, base, 'notas_credito', nota, doc, resultado);
+};
+
+// Venta anulada ANTES de que SUNAT aceptara su comprobante (cpe_estado 'ANULANDO'): ¿llegó a emitirse?
+// No existe → NO_EMITIDO (sin nota de crédito). Existe → su estado real + nota de crédito (fn_confirmar_anulacion).
+const procesarAnulacion = async (db, base, cfg, cred, venta) => {
+  const numero = `${venta.doc_serial}-${venta.doc_number}`;
+  const confirmar = async (estado, mensaje) => {
+    const { rows: [r] } = await db.query('SELECT public.fn_confirmar_anulacion($1, $2, $3) AS r', [venta.id, estado, mensaje || null]);
+    log(base, `${numero} anulada → ${estado}${r?.r && !['NO_EMITIDO', 'SIN_CAMBIOS'].includes(r.r) ? ` · nota de crédito ${r.r}` : ''}`);
+  };
+  const reintentar = () => db.query(`UPDATE public.sales SET cpe_proximo_intento = now() + make_interval(secs => $2) WHERE id = $1`,
+    [venta.id, espera(venta.cpe_intentos)]);
+
+  if (cfg.modo === 'SIMULADO') return confirmar('NO_EMITIDO', null);
+  if (proveedorDe(cfg) === nubefact) {
+    if (faltanCredenciales(cfg, cred)) return reintentar();
+    const { rows: detalles } = await db.query(
+      `SELECT d.*, p.name AS p_name, p.code, p.barcode, p.sunat_unit_code, p.unit
+         FROM public.sale_details d LEFT JOIN public.products p ON p.id = d.product_id WHERE d.sale_id = $1 ORDER BY d.id`, [venta.id]);
+    const doc = armarComprobante(cfg, venta, detalles);
+    let r;
+    try { r = await nubefact.consultar(doc, cred); } catch { return reintentar(); }   // sin conexión: se vuelve a preguntar
+    if (['ACEPTADO', 'OBSERVADO', 'PENDIENTE'].includes(r.estado)) {
+      await confirmar(r.estado, r.mensaje);
+      await guardarResultado(db, base, 'sales', venta, doc, r);   // PDF, XML y constancia del que sí existe
+      return;
+    }
+    if (/token|clave/i.test(r.mensaje || '')) return reintentar();
+    return confirmar('NO_EMITIDO', `No se emitió: Nubefact no tiene este comprobante (${(r.mensaje || '').replace(/^Proveedor:\s*/, '')}). La venta quedó anulada sin nota de crédito.`);
+  }
+  // Directo a SUNAT: no tiene constancia (CDR) de aceptación, así que SUNAT no lo registró
+  return confirmar('NO_EMITIDO', 'No se emitió: SUNAT no lo aceptó antes de anular la venta (no hay constancia). La venta quedó anulada sin nota de crédito.');
 };
 
 const avisados = new Set();
@@ -432,6 +468,17 @@ const ciclo = async (base) => {
       RETURNING *`);
   for (const venta of ventas) {
     try { await procesarVenta(db, base, cfg, cred, venta); } catch (e) { log(base, `venta ${venta.id}:`, e.message); }
+  }
+
+  // Ventas anuladas antes de que SUNAT aceptara su comprobante
+  const { rows: anulando } = await db.query(
+    `UPDATE public.sales SET cpe_intentos = cpe_intentos + 1, cpe_proximo_intento = now() + interval '2 minutes'
+      WHERE id IN (SELECT id FROM public.sales
+                    WHERE cpe_estado = 'ANULANDO' AND coalesce(cpe_proximo_intento, created_at) <= now()
+                    ORDER BY created_at LIMIT ${POR_CICLO} FOR UPDATE SKIP LOCKED)
+      RETURNING *`);
+  for (const venta of anulando) {
+    try { await procesarAnulacion(db, base, cfg, cred, venta); } catch (e) { log(base, `anulación ${venta.id}:`, e.message); }
   }
 
   // Notas de crédito (fase 11.5). Si la tabla aún no existe en esta base, se salta.

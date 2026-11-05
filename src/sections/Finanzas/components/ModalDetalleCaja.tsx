@@ -27,6 +27,8 @@ interface Props {
 
 export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnular, onDelete, onCambiarProducto }) => {
   const [ticketSeleccionado, setTicketSeleccionado] = useState<string | null>(null);
+  const ultimoTicketRef = useRef<string | null>(null);
+  const yaEnfocoInicialRef = useRef<boolean>(false);
   const [idsProcesando, setIdsProcesando] = useState<Set<string>>(new Set());
   const searchInputRef = useRef<HTMLInputElement>(null);
   
@@ -107,9 +109,17 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
   useEffect(() => {
     if (isOpen && caja) {
       setVista('DETALLE'); // siempre arranca en la vista clara, no en el ticket
+      yaEnfocoInicialRef.current = false;
+      ultimoTicketRef.current = null;
       cargarResumenTicket();
     }
   }, [isOpen, caja]);
+
+  useEffect(() => {
+    if (ticketSeleccionado) {
+      ultimoTicketRef.current = ticketSeleccionado;
+    }
+  }, [ticketSeleccionado]);
 
   // ⌨️ NAVEGACIÓN TOTAL POR TECLADO DENTRO DE MODAL DETALLE DE CAJA
   useEffect(() => {
@@ -118,7 +128,20 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
     // Auto-enfocar según la vista activa
     const timer = setTimeout(() => {
       if (vista === 'DETALLE') {
-        searchInputRef.current?.focus();
+        if (ultimoTicketRef.current) {
+          const idTicket = ultimoTicketRef.current;
+          ultimoTicketRef.current = null;
+          const fila = document.getElementById(`mov-row-${idTicket}`);
+          if (fila) {
+            fila.focus();
+            fila.scrollIntoView({ block: 'nearest' });
+            return;
+          }
+        }
+        if (!yaEnfocoInicialRef.current) {
+          yaEnfocoInicialRef.current = true;
+          searchInputRef.current?.focus();
+        }
       } else if (vista === 'TICKET') {
         document.getElementById('btn-imprimir-ticket-caja')?.focus();
       }
@@ -612,9 +635,9 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
       aria-labelledby="modal-detalle-caja-title"
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4 font-mono"
     >
-      <div className="bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full max-w-6xl h-[calc(var(--alto-pantalla)*0.95)] sm:h-[calc(var(--alto-pantalla)*0.92)] flex flex-col rounded-none animate-fade-in overflow-hidden">
+      <div className="ventana-sobria bg-white border-2 border-[var(--color-ink)] w-full max-w-6xl h-[calc(var(--alto-pantalla)*0.95)] sm:h-[calc(var(--alto-pantalla)*0.92)] flex flex-col rounded-none animate-fade-in overflow-hidden">
 
-        <div className="bg-[var(--color-info)] p-3 sm:p-4 border-b-2 border-[var(--color-ink)] flex justify-between items-center text-white gap-3 shrink-0">
+        <div style={{ '--icono': 'var(--color-info)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-info)] p-3 sm:p-4 border-b-2 border-[var(--color-ink)] flex justify-between items-center text-white gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             {vista === 'TICKET' && (
               <button
@@ -638,7 +661,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
             onClick={onClose} 
             title="Cerrar modal (Esc)"
             aria-label="Cerrar modal"
-            className="p-1 hover:text-[var(--color-ink)] focus:outline-none focus:ring-4 focus:ring-white focus:bg-[var(--color-ink)] focus:text-white transition-all cursor-pointer shrink-0 rounded-none"
+            className="ventana-cerrar p-1 hover:text-[var(--color-ink)] focus:outline-none focus:ring-4 focus:ring-white focus:bg-[var(--color-ink)] focus:text-white transition-all cursor-pointer shrink-0 rounded-none"
           >
             <X size={26} strokeWidth={3} />
           </button>
@@ -693,6 +716,10 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
                       id="buscador-detalle-caja"
                       ref={searchInputRef}
                       type="text"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
                       placeholder="BUSCAR POR CLIENTE, N° TICKET O DETALLE"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}

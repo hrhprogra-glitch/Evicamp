@@ -2,7 +2,7 @@
 // CREAR O EDITAR UN GRUPO DE CLIENTES (fase 4.1): nombre (obligatorio), tipo Familia o Empresa (← →) y RUC opcional
 // (revisado en src/utils/documento.ts). Teclado: Enter o ↓ al siguiente campo, ↑ al anterior; Esc cierra.
 import React, { useEffect, useState } from 'react';
-import { Users, X } from 'lucide-react';
+import { Users, X, ArrowLeft } from 'lucide-react';
 import type { GrupoClientes } from '../types';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar } from '../../../utils/dialogos';
@@ -16,16 +16,18 @@ interface Props {
   grupo: GrupoClientes | null;          // null = nuevo
   grupos: GrupoClientes[];              // para no repetir el nombre
   onGuardar: (datos: DatosGrupo) => Promise<boolean>;
+  onVolver?: () => void;
   onClose: () => void;
 }
 
 const TIPOS: { tipo: 'FAMILIA' | 'EMPRESA'; nombre: string }[] = [{ tipo: 'FAMILIA', nombre: 'Familia' }, { tipo: 'EMPRESA', nombre: 'Empresa' }];
 const enfocar = (id: string) => setTimeout(() => { const el = document.getElementById(id) as HTMLInputElement | null; el?.focus(); el?.select?.(); }, 30);
 
-export const ModalFormGrupo: React.FC<Props> = ({ abierta, grupo, grupos, onGuardar, onClose }) => {
+export const ModalFormGrupo: React.FC<Props> = ({ abierta, grupo, grupos, onGuardar, onVolver, onClose }) => {
   const [datos, setDatos] = useState<DatosGrupo>({ nombre: '', tipo: 'FAMILIA', ruc: '', descuento_porcentaje: '' });
   const [guardando, setGuardando] = useState(false);
-  useCerrarConEscape(abierta, onClose);
+  const accionCerrar = onVolver || onClose;
+  useCerrarConEscape(abierta, accionCerrar);
 
   useEffect(() => {
     if (!abierta) return;
@@ -41,10 +43,21 @@ export const ModalFormGrupo: React.FC<Props> = ({ abierta, grupo, grupos, onGuar
   }, [abierta, grupo]);
 
   if (!abierta) return null;
-  const campos = ['grupo-nombre', `grupo-tipo-${datos.tipo}`, 'grupo-ruc', 'grupo-descuento', 'btn-guardar-grupo'];
   const mover = (desde: string, paso: 1 | -1) => {
-    const destino = campos[campos.indexOf(desde) + paso];
-    if (destino) enfocar(destino); else if (paso === -1) document.getElementById('btn-cerrar-form-grupo')?.focus();
+    const orden = ['grupo-nombre', 'grupo-tipo', 'grupo-ruc', 'grupo-descuento', 'btn-guardar-grupo'];
+    const clave = desde.startsWith('grupo-tipo') ? 'grupo-tipo' : desde;
+    const idx = orden.indexOf(clave);
+    if (idx === -1) {
+      if (paso === -1) document.getElementById('btn-cerrar-form-grupo')?.focus();
+      return;
+    }
+    const destinoClave = orden[idx + paso];
+    if (destinoClave) {
+      const destinoId = destinoClave === 'grupo-tipo' ? `grupo-tipo-${datos.tipo}` : destinoClave;
+      enfocar(destinoId);
+    } else if (paso === -1) {
+      document.getElementById('btn-cerrar-form-grupo')?.focus();
+    }
   };
 
   const guardar = async () => {
@@ -57,8 +70,11 @@ export const ModalFormGrupo: React.FC<Props> = ({ abierta, grupo, grupos, onGuar
     if (repetido) { await avisar(`Ya hay un grupo llamado "${repetido.nombre}".`); enfocar('grupo-nombre'); return; }
     setGuardando(true);
     try {
-      if (await onGuardar({ nombre, tipo: datos.tipo, ruc: datos.ruc.trim(), descuento_porcentaje: datos.descuento_porcentaje.trim() })) onClose();
-      else enfocar('btn-guardar-grupo');
+      if (await onGuardar({ nombre, tipo: datos.tipo, ruc: datos.ruc.trim(), descuento_porcentaje: datos.descuento_porcentaje.trim() })) {
+        accionCerrar();
+      } else {
+        enfocar('btn-guardar-grupo');
+      }
     } finally { setGuardando(false); }
   };
 
@@ -67,18 +83,27 @@ export const ModalFormGrupo: React.FC<Props> = ({ abierta, grupo, grupos, onGuar
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div role="dialog" aria-label={grupo ? 'Editar grupo' : 'Nuevo grupo'} className="bg-[var(--color-surface)] w-full max-w-md border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col">
-        <div className="bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between">
+      <div role="dialog" aria-label={grupo ? 'Editar grupo' : 'Nuevo grupo'} className="ventana-sobria bg-[var(--color-surface)] w-full max-w-md border-2 border-[var(--color-ink)] flex flex-col">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Users size={22} className="text-[var(--color-info)]" />
+            <button
+              id="btn-header-volver-form-grupo"
+              type="button"
+              onClick={accionCerrar}
+              title="Volver (Escape)"
+              className="hover:text-[var(--color-accent)] focus:text-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] p-1 cursor-pointer mr-1"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <div className="ventana-cabecera__icono"><Users size={18} /></div>
             <div>
-              <h2 className="text-sm font-black uppercase tracking-widest">{grupo ? 'Editar grupo' : 'Nuevo grupo'}</h2>
+              <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest">{grupo ? 'Editar grupo' : 'Nuevo grupo'}</h2>
               <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">Familia o empresa: junta las deudas de sus clientes</p>
             </div>
           </div>
           <button id="btn-cerrar-form-grupo" onClick={onClose} title="Cerrar (Escape)"
             onKeyDown={(e) => { if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('grupo-nombre'); } }}
-            className="hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-red-400 p-1.5 cursor-pointer"><X size={20} /></button>
+            className="ventana-cerrar hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-red-400 p-1.5 cursor-pointer"><X size={20} /></button>
         </div>
         <div className="p-4 sm:p-6 flex flex-col gap-4">
           <div>
@@ -166,10 +191,21 @@ export const ModalFormGrupo: React.FC<Props> = ({ abierta, grupo, grupos, onGuar
             </div>
           </div>
         </div>
-        <div className="px-4 sm:px-6 py-4 border-t-2 border-[var(--color-border)] flex justify-end">
-          <button id="btn-guardar-grupo" type="button" aria-disabled={guardando} onClick={() => void guardar()}
-            onKeyDown={(e) => { if (e.key === 'ArrowUp') { e.preventDefault(); mover('btn-guardar-grupo', -1); } }}
-            className={claseBotonPrincipal}>{guardando ? 'Guardando...' : grupo ? 'Guardar cambios' : 'Crear grupo'}</button>
+        {/* Solo "Crear grupo": para volver está la flecha ← de la cabecera (o Escape); el dueño pidió no repetir "Volver" */}
+        <div className="px-4 sm:px-6 py-4 border-t-2 border-[var(--color-border)] flex items-center justify-end gap-3">
+          <button
+            id="btn-guardar-grupo"
+            type="button"
+            aria-disabled={guardando}
+            onClick={() => void guardar()}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); }
+              else if (e.key === 'ArrowUp') { e.preventDefault(); mover('btn-guardar-grupo', -1); }
+            }}
+            className={claseBotonPrincipal}
+          >
+            {guardando ? 'Guardando...' : grupo ? 'Guardar cambios' : 'Crear grupo'}
+          </button>
         </div>
       </div>
     </div>

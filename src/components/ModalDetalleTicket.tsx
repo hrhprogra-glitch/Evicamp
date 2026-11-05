@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Printer, Receipt, ListFilter, ArrowLeftRight, Undo2, RefreshCw, ExternalLink, FileMinus } from 'lucide-react';
 import { supabase } from '../db/supabase';
 import { formatearCantidadDetalle } from '../utils/formato';
-import { useImprimir } from '../utils/impresion';
+import { useImprimir, estaImprimiendo } from '../utils/impresion';
 import { avisar } from '../utils/dialogos';
 import { TicketImprimible, type ComprobanteTicket } from '../sections/Punto-de-venta/components/TicketImprimible';
-import { calcularTotalesCPE, nombreComprobante, numeroComprobante } from '../utils/comprobante';
+import { calcularTotalesCPE, comprobanteEmitido, nombreComprobante, numeroComprobante } from '../utils/comprobante';
 import { InsigniaCpe } from './InsigniaCpe';
 import { TicketNotaCredito, type NotaCredito } from './TicketNotaCredito';
 
@@ -159,19 +159,14 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
   };
 
   // Solo una boleta/factura ya ACEPTADA se corrige con nota de crédito (con error, primero se reenvía)
-  const puedeDevolver = Boolean(onCambiarProducto && sunat && ['ACEPTADO', 'OBSERVADO'].includes(sunat.estado || '') && !sunat.anulada && !sunat.fiado);
+  const puedeDevolver = Boolean(onCambiarProducto && sunat && comprobanteEmitido(sunat.estado, sunat.pdf) && !sunat.anulada && !sunat.fiado);
   const puedeDevolverRef = useRef(false);
   puedeDevolverRef.current = puedeDevolver;
-  const accionesSunat = sunat ? [
-    ...(sunat.estado === 'ERROR' || sunat.estado === 'PENDIENTE' ? [{ id: 'btn-sunat-reenviar', texto: 'Reenviar a SUNAT', Icono: RefreshCw, hacer: () => reenviar() }] : []),
+  const accionesComprobante = sunat ? [
+    ...((sunat.estado === 'ERROR' || sunat.estado === 'PENDIENTE') && !sunat.anulada ? [{ id: 'btn-sunat-reenviar', texto: 'Reenviar a SUNAT', Icono: RefreshCw, hacer: () => reenviar() }] : []),
     ...(sunat.pdf ? [{ id: 'btn-sunat-pdf', texto: 'PDF', Icono: ExternalLink, hacer: () => window.open(sunat.pdf!, '_blank') }] : []),
     ...(sunat.xml ? [{ id: 'btn-sunat-xml', texto: 'XML', Icono: ExternalLink, hacer: () => window.open(sunat.xml!, '_blank') }] : []),
-    ...(sunat.cdr ? [{ id: 'btn-sunat-cdr', texto: 'Constancia (CDR)', Icono: ExternalLink, hacer: () => window.open(sunat.cdr!, '_blank') }] : []),
-    ...notas.flatMap((n) => [
-      { id: `btn-sunat-nc-${n.id}`, texto: `Nota de crédito ${numeroComprobante(n.doc_serial, n.doc_number)}`, Icono: FileMinus, hacer: () => setNotaAbierta(n) },
-      ...(n.cpe_estado === 'ERROR' || n.cpe_estado === 'PENDIENTE'
-        ? [{ id: `btn-sunat-nc-reenviar-${n.id}`, texto: `Reenviar ${numeroComprobante(n.doc_serial, n.doc_number)}`, Icono: RefreshCw, hacer: () => reenviar(n) }] : []),
-    ]),
+    ...(sunat.cdr ? [{ id: 'btn-sunat-cdr', texto: 'CDR', Icono: ExternalLink, hacer: () => window.open(sunat.cdr!, '_blank') }] : []),
   ] : [];
 
   // Auto-Focus inmediato en el botón Reimprimir al abrir el modal (o botón cerrar si está cargando)
@@ -210,6 +205,8 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
     if (!ticketId) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Mientras la ventana de impresion este abierta, el teclado es del dialogo de la impresora
+      if (estaImprimiendo()) return;
       // Con el ticket de una nota de crédito abierto encima, el teclado es de esa ventana
       if (notaAbiertaRef.current) return;
 
@@ -229,46 +226,25 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
         return;
       }
 
-      // Atajo 'c' o 'C': Cambiar producto
-      if ((e.key === 'c' || e.key === 'C') && onCambiarProducto) {
-        e.preventDefault();
-        e.stopPropagation();
-        onCambiarProducto(String(ticketId));
-        onClose();
-        return;
-      }
-
-      // Atajo 'd' o 'D': Devolver productos (boleta/factura aceptada: nota de crédito)
-      if ((e.key === 'd' || e.key === 'D') && onCambiarProducto && puedeDevolverRef.current) {
-        e.preventDefault();
-        e.stopPropagation();
-        onCambiarProducto(String(ticketId), 'DEVOLVER');
-        onClose();
-        return;
-      }
-
       // 2. TAB: Focus Trap
       if (e.key === 'Tab') {
         e.preventDefault();
         e.stopPropagation();
         const active = document.activeElement;
         const btnPrint = document.getElementById('btn-reimprimir-ticket');
-        const btnCambio = document.getElementById('btn-cambiar-producto-ticket');
         const btnCerrar = closeBtnRef.current;
         const tabTicket = document.getElementById('btn-tab-ticket');
         const tabTabla = document.getElementById('btn-tab-tabla');
 
         if (e.shiftKey) {
-          if (active === btnCambio) {
-            btnPrint?.focus();
-          } else if (active === btnPrint) {
+          if (active === btnPrint) {
             tabTabla?.focus();
           } else if (active === tabTabla) {
             tabTicket?.focus();
           } else if (active === tabTicket) {
             btnCerrar?.focus();
           } else {
-            (btnCambio || btnPrint)?.focus();
+            btnPrint?.focus();
           }
         } else {
           if (active === btnCerrar) {
@@ -277,8 +253,6 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
             tabTabla?.focus();
           } else if (active === tabTabla) {
             btnPrint?.focus();
-          } else if (active === btnPrint && btnCambio) {
-            btnCambio?.focus();
           } else {
             btnCerrar?.focus();
           }
@@ -294,18 +268,21 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
       const tabTicket = document.getElementById('btn-tab-ticket');
       const tabTabla = document.getElementById('btn-tab-tabla');
       const cabecera = [tabTicket, tabTabla, btnCerrar].filter(Boolean) as HTMLElement[];
-      const filaSunat = Array.from(document.querySelectorAll<HTMLElement>('#bloque-sunat [data-sunat]'));
+      const filaSunatA = Array.from(document.querySelectorAll<HTMLElement>('#bloque-sunat-comprobante [data-sunat]'));
+      const filaSunatB = Array.from(document.querySelectorAll<HTMLElement>('#bloque-sunat-notas [data-sunat]'));
       const pie = Array.from(document.querySelectorAll<HTMLElement>('[data-pie-ticket]'));
-      const fila = [cabecera, filaSunat, pie].find((f) => active && f.includes(active));
+      const fila = [cabecera, filaSunatA, filaSunatB, pie].find((f) => active && f.includes(active));
       const ir = (el?: HTMLElement | null) => { e.preventDefault(); e.stopPropagation(); el?.focus(); };
 
       if (e.key === 'ArrowDown') {
-        if (fila === cabecera) ir(filaSunat[0] || btnPrint);
-        else if (fila === filaSunat) ir(btnPrint);
+        if (fila === cabecera) ir(filaSunatA[0] || filaSunatB[0] || btnPrint);
+        else if (fila === filaSunatA) ir(filaSunatB[0] || btnPrint);
+        else if (fila === filaSunatB) ir(btnPrint);
         else { e.preventDefault(); e.stopPropagation(); if (scrollContainerRef.current) scrollContainerRef.current.scrollTop += 60; }
       } else if (e.key === 'ArrowUp') {
-        if (fila === pie) ir(filaSunat[0] || tabTicket);
-        else if (fila === filaSunat) ir(tabTicket);
+        if (fila === pie) ir(filaSunatB[0] || filaSunatA[0] || tabTicket);
+        else if (fila === filaSunatB) ir(filaSunatA[0] || tabTicket);
+        else if (fila === filaSunatA) ir(tabTicket);
         else { e.preventDefault(); e.stopPropagation(); if (scrollContainerRef.current) scrollContainerRef.current.scrollTop -= 60; }
       } else if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && fila && active) {
         const destino = fila[fila.indexOf(active) + (e.key === 'ArrowRight' ? 1 : -1)];
@@ -332,10 +309,10 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
     >
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0px_0px_rgba(var(--color-ink-rgb),1)] rounded-none w-full max-w-lg flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.88)]"
+        className="ventana-sobria bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0px_0px_rgba(var(--color-ink-rgb),1)] rounded-none w-full max-w-lg flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.88)]"
       >
         {/* CABECERA */}
-        <div className="flex justify-between items-center border-b-2 border-[var(--color-ink)] bg-[var(--color-bg)] p-3 sm:p-4 shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera flex justify-between items-center border-b-2 border-[var(--color-ink)] bg-[var(--color-bg)] p-3 sm:p-4 shrink-0">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[var(--color-muted)] text-[11px] font-mono tracking-widest uppercase">
@@ -347,7 +324,7 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
                 </span>
               )}
             </div>
-            <h2 id="modal-ticket-title" className="text-[var(--color-ink)] font-black text-base sm:text-lg uppercase tracking-widest">
+            <h2 id="modal-ticket-title" className="ventana-cabecera__titulo text-[var(--color-ink)] font-black text-base sm:text-lg uppercase tracking-widest">
               TICKET #{String(ticketId).slice(-6)}
             </h2>
           </div>
@@ -396,44 +373,92 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
           </div>
         </div>
 
-        {/* BOLETA/FACTURA: estado ante SUNAT, sus notas de crédito y acciones (antes en la ventana "Comprobantes") */}
+        {/* BOLETA/FACTURA: estado ante SUNAT, sus notas de crédito y acciones (modo compacto) */}
         {sunat && (
-          <div id="bloque-sunat" className="border-b-2 border-[var(--color-ink)] p-3 bg-white space-y-2 shrink-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[12px] font-black uppercase text-[var(--color-ink)]">{nombreComprobante(sunat.docType)} {sunat.numero}</span>
-              <InsigniaCpe estado={sunat.estado} chica />
-              {sunat.modo && sunat.modo !== 'REAL' && <span className="text-[10px] font-black uppercase text-[var(--color-warning-dark)]">Modo {sunat.modo.toLowerCase()}: sin valor ante SUNAT</span>}
-              {sunat.anulada && <span className="text-[10px] font-black uppercase text-[var(--color-danger)]">Venta anulada</span>}
-            </div>
-            {sunat.mensaje && <p id="sunat-mensaje" className="text-[11px] font-bold text-[var(--color-ink)] bg-[var(--color-bg)] border border-[var(--color-border)] p-1.5">{sunat.mensaje}</p>}
-            {sunat.estado === 'RECHAZADO' && (
-              <p className="text-[11px] font-bold text-[var(--color-danger)]">SUNAT lo rechazó: revisa el mensaje. Este comprobante no tiene valor; corrige los datos y emite uno nuevo.</p>
-            )}
-            {notas.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold uppercase">
-                Notas de crédito:
-                {notas.map((n) => (
-                  <span key={n.id} className="inline-flex items-center gap-1">{numeroComprobante(n.doc_serial, n.doc_number)} · S/ {Number(n.total).toFixed(2)} <InsigniaCpe estado={n.cpe_estado} chica /></span>
-                ))}
+          <div id="bloque-sunat" className="border-b-2 border-[var(--color-ink)] px-3 py-2 bg-white space-y-1.5 shrink-0">
+            {/* 1. COMPROBANTE PRINCIPAL (BOLETA / FACTURA) */}
+            <div id="bloque-sunat-comprobante" className="space-y-0.5">
+              <div className="flex items-center justify-between gap-1.5">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-[11px] font-black uppercase text-[var(--color-ink)] truncate">
+                    {(sunat.docType === 1 ? 'Factura' : sunat.docType === 3 ? 'Boleta' : nombreComprobante(sunat.docType))} {sunat.numero}
+                  </span>
+                  <InsigniaCpe estado={sunat.estado} generado={Boolean(sunat.pdf)} chica />
+                </div>
+
+                {/* Botones del comprobante compactos a la derecha */}
+                {accionesComprobante.length > 0 && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    {accionesComprobante.map((a) => (
+                      <button
+                        key={a.id}
+                        id={a.id}
+                        type="button"
+                        data-sunat="true"
+                        onClick={a.hacer}
+                        className="h-[24px] px-2 border-2 border-[var(--color-ink)] bg-white text-[10px] font-black uppercase inline-flex items-center gap-1 cursor-pointer rounded-none hover:bg-[var(--color-bg)] focus:outline-none focus:ring-1 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white transition-colors"
+                      >
+                        <a.Icono size={11} className="shrink-0" />
+                        <span>{a.texto}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-            {sunat.fiado && !sunat.anulada && (
-              <p className="text-[11px] font-bold text-[var(--color-muted)]">Venta al crédito: para devolver, anúlala completa (emite la nota de crédito).</p>
-            )}
-            {accionesSunat.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {accionesSunat.map((a) => (
-                  <button
-                    key={a.id}
-                    id={a.id}
-                    type="button"
-                    data-sunat="true"
-                    onClick={a.hacer}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 border-2 border-[var(--color-ink)] bg-white text-[11px] font-black uppercase cursor-pointer rounded-none focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white hover:bg-[var(--color-bg)]"
-                  >
-                    <a.Icono size={13} /> {a.texto}
-                  </button>
-                ))}
+
+              {/* Subtítulo informativo compacto */}
+              <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold text-[var(--color-muted)] leading-tight">
+                {sunat.modo && sunat.modo !== 'REAL' && (
+                  <span className="text-[var(--color-warning-dark)] uppercase">Modo prueba</span>
+                )}
+                {sunat.anulada && (
+                  <span className="text-[var(--color-danger)] uppercase">Venta anulada</span>
+                )}
+                {sunat.mensaje && <span>{sunat.mensaje}</span>}
+                {sunat.estado === 'NO_EMITIDO' && <span>No se emitió a SUNAT: no necesita nota de crédito.</span>}
+                {sunat.estado === 'RECHAZADO' && <span className="text-[var(--color-danger)]">SUNAT lo rechazó. Corrige los datos y emite uno nuevo.</span>}
+                {sunat.fiado && !sunat.anulada && <span>Venta al crédito: para devolver, anúlala completa.</span>}
+              </div>
+            </div>
+
+            {/* 2. NOTAS DE CRÉDITO ASOCIADAS */}
+            {notas.length > 0 && (
+              <div id="bloque-sunat-notas" className="border-t border-dashed border-[var(--color-border)] pt-1 space-y-1">
+                {notas.map((n) => {
+                  const accionesNota = [
+                    { id: `btn-sunat-nc-${n.id}`, texto: 'Ver Nota', Icono: FileMinus, hacer: () => setNotaAbierta(n) },
+                    ...(n.cpe_estado === 'ERROR' || n.cpe_estado === 'PENDIENTE'
+                      ? [{ id: `btn-sunat-nc-reenviar-${n.id}`, texto: 'Reenviar', Icono: RefreshCw, hacer: () => reenviar(n) }]
+                      : []),
+                  ];
+
+                  return (
+                    <div key={n.id} className="flex flex-wrap items-center justify-between gap-1.5 bg-[var(--color-bg)] px-2.5 py-1 border border-[var(--color-border)]">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-[10px] font-black uppercase text-[var(--color-ink)] truncate">
+                          Nota de crédito {numeroComprobante(n.doc_serial, n.doc_number)} · S/ {Number(n.total).toFixed(2)}
+                        </span>
+                        <InsigniaCpe estado={n.cpe_estado} chica />
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        {accionesNota.map((a) => (
+                          <button
+                            key={a.id}
+                            id={a.id}
+                            type="button"
+                            data-sunat="true"
+                            onClick={a.hacer}
+                            className="h-[24px] px-2 border-2 border-[var(--color-ink)] bg-white text-[10px] font-black uppercase inline-flex items-center gap-1 cursor-pointer rounded-none hover:bg-[var(--color-surface)] focus:outline-none focus:ring-1 focus:ring-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white transition-colors"
+                          >
+                            <a.Icono size={11} className="shrink-0" />
+                            <span>{a.texto}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -548,37 +573,7 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
                  <Printer size={16} /> [ENTER / P] REIMPRIMIR
                </button>
 
-               {onCambiarProducto && (
-                 <button
-                   id="btn-cambiar-producto-ticket"
-                   type="button"
-                   data-pie-ticket="true"
-                   onClick={() => {
-                     onCambiarProducto(String(ticketId));
-                     onClose();
-                   }}
-                   className="flex items-center gap-1.5 bg-white text-[var(--color-info)] hover:bg-[var(--color-info)] hover:text-white focus:bg-[var(--color-info)] focus:text-white focus:outline-none focus:ring-4 focus:ring-blue-400 font-black text-xs uppercase px-3.5 py-2.5 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
-                   title="Realizar cambio de producto de este ticket (tecla C)"
-                 >
-                   <ArrowLeftRight size={15} /> [C] CAMBIAR PRODUCTO
-                 </button>
-               )}
-
-               {puedeDevolver && onCambiarProducto && (
-                 <button
-                   id="btn-devolver-ticket"
-                   type="button"
-                   data-pie-ticket="true"
-                   onClick={() => {
-                     onCambiarProducto(String(ticketId), 'DEVOLVER');
-                     onClose();
-                   }}
-                   className="flex items-center gap-1.5 bg-white text-[var(--color-danger-dark)] hover:bg-[var(--color-danger-dark)] hover:text-white focus:bg-[var(--color-danger-dark)] focus:text-white focus:outline-none focus:ring-4 focus:ring-red-300 font-black text-xs uppercase px-3.5 py-2.5 border-2 border-[var(--color-ink)] shadow-[2px_2px_0_0_var(--color-ink)] active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
-                   title="Devolver productos con nota de crédito (tecla D)"
-                 >
-                   <Undo2 size={15} /> [D] DEVOLVER
-                 </button>
-               )}
+               
              </div>
              <div className="flex items-center gap-3">
                <span className="text-[var(--color-muted)] text-xs font-black uppercase tracking-widest">Total Facturado</span>

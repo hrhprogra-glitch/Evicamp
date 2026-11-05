@@ -355,16 +355,16 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
 
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="bg-white w-full max-w-4xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.85)]">
+      <div className="ventana-sobria bg-white w-full max-w-4xl border-2 border-[var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.85)]">
         
-        <div className="bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
           <div className="flex items-center gap-3">
             <UserPlus className="text-[var(--color-warning)]" size={20} />
-            <h2 className="text-sm font-black uppercase tracking-widest text-white">
+            <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest text-white">
               {isEdit ? 'Renegociar Fecha de Vencimiento' : 'Nueva Deuda desde Inventario'}
             </h2>
           </div>
-          <button id="btn-cerrar-modal-fiado" onClick={onClose} className="hover:text-[var(--color-danger)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-warning)]"><X size={20} /></button>
+          <button id="btn-cerrar-modal-fiado" onClick={onClose} className="ventana-cerrar hover:text-[var(--color-danger)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-warning)]"><X size={20} /></button>
         </div>
 
         <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-visible">

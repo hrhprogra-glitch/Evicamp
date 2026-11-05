@@ -198,14 +198,14 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
         role="dialog"
         aria-modal="true"
         aria-label="Seleccionar cliente para la venta"
-        className="w-full max-w-xl bg-[var(--color-surface,#fff)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[85vh] overflow-hidden"
+        className="ventana-sobria w-full max-w-xl bg-[var(--color-surface,#fff)] border-2 border-[var(--color-ink)] flex flex-col max-h-[85vh] overflow-hidden"
       >
         {/* Cabecera */}
-        <div className="bg-[var(--color-ink)] text-white px-4 py-3 flex items-center justify-between shrink-0 border-b-2 border-[var(--color-ink)]">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-4 py-3 flex items-center justify-between shrink-0 border-b-2 border-[var(--color-ink)]">
           <div className="flex items-center gap-2">
             <Users size={18} className="text-[var(--color-accent)]" />
             <div>
-              <h2 className="text-sm font-black uppercase tracking-wider">Cliente de la Venta</h2>
+              <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-wider">Cliente de la Venta</h2>
               <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
                 {clienteActual
                   ? 'F2 nuevo · Supr quita cliente · Esc o clic en ✕ salir'
@@ -225,7 +225,7 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
                 onClose();
               }
             }}
-            className="w-7 h-7 flex items-center justify-center hover:bg-[var(--color-danger)] focus:bg-[var(--color-danger)] focus:ring-2 focus:ring-white focus:outline-none text-white transition-colors cursor-pointer"
+            className="ventana-cerrar w-7 h-7 flex items-center justify-center hover:bg-[var(--color-danger)] focus:bg-[var(--color-danger)] focus:ring-2 focus:ring-white focus:outline-none text-white transition-colors cursor-pointer"
             title="Cerrar (Esc)"
           >
             <X size={18} />

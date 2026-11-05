@@ -284,11 +284,11 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
       aria-labelledby="modal-usuario-title"
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4"
     >
-      <div className="bg-white border-2 border-[var(--color-ink)] w-full max-w-5xl max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)] flex flex-col shadow-[8px_8px_0_0_var(--color-ink)]">
+      <div className="ventana-sobria bg-white border-2 border-[var(--color-ink)] w-full max-w-7xl max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)] flex flex-col">
         
         {/* HEADER */}
-        <div className="bg-[var(--color-ink)] p-4 flex justify-between items-center shrink-0">
-          <h2 id="modal-usuario-title" className="text-white font-black tracking-widest uppercase text-sm flex items-center gap-2">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] p-4 flex justify-between items-center shrink-0">
+          <h2 id="modal-usuario-title" className="ventana-cabecera__titulo text-white font-black tracking-widest uppercase text-sm flex items-center gap-2">
             <Shield size={18} className="text-[var(--color-accent)]" />
             {isEditing ? `Editando Usuario: ${formData.nombre}` : 'Nueva Cuenta de Empleado'}
           </h2>
@@ -307,7 +307,7 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
                 document.getElementById('btn-toggle-todos-permisos')?.focus();
               }
             }}
-            className="text-[var(--color-subtle)] hover:text-white transition-colors p-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white rounded-none"
+            className="ventana-cerrar text-[var(--color-subtle)] hover:text-white transition-colors p-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white rounded-none"
             title="Cerrar modal (Esc)"
           >
             <X size={20} />
@@ -315,9 +315,9 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
         </div>
 
         {/* BODY */}
-        <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
+        <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-y-auto md:overflow-hidden custom-scrollbar">
           {/* IZQUIERDA: DATOS */}
-          <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-[var(--color-border)] p-4 sm:p-6 bg-[var(--color-bg)] md:overflow-y-auto shrink-0">
+          <div className="w-full md:w-72 lg:w-80 border-b md:border-b-0 md:border-r border-[var(--color-border)] p-4 sm:p-6 bg-[var(--color-bg)] md:overflow-y-auto custom-scrollbar shrink-0">
             <h3 className="text-[var(--color-ink)] font-bold uppercase text-xs mb-4 border-b border-[var(--color-border)] pb-2 flex items-center gap-2">
               <User size={14} /> Datos de Acceso
             </h3>
@@ -480,7 +480,7 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
           </div>
 
           {/* DERECHA: PERMISOS */}
-          <div className="w-full md:w-2/3 p-4 sm:p-6 md:overflow-y-auto bg-white flex flex-col">
+          <div className="w-full md:flex-1 min-w-0 p-4 sm:p-6 md:overflow-y-auto custom-scrollbar bg-white flex flex-col">
             <div className="flex justify-between items-center mb-4 border-b border-[var(--color-border)] pb-2 shrink-0">
               <h3 className="text-[var(--color-ink)] font-bold uppercase text-xs">Asignación de Permisos</h3>
               <button 
@@ -507,9 +507,9 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
               </button>
             </div>
             
-            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 transition-opacity flex-1 ${permisos.sistema_acceso_total ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+            <div className={`columns-[12.5rem] gap-3 xl:columns-auto xl:grid xl:grid-cols-4 xl:items-start transition-opacity ${permisos.sistema_acceso_total ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
               {COLUMNAS_PERMISOS.map((col, colIdx) => (
-                <div key={col.titulo} className="bg-[var(--color-bg)] p-3 border border-[var(--color-border)] flex flex-col">
+                <div key={col.titulo} className="bg-[var(--color-bg)] p-3 border border-[var(--color-border)] flex flex-col break-inside-avoid mb-3">
                   <h4 className="text-[12px] font-black text-[var(--color-accent)] uppercase tracking-widest mb-3 shrink-0">
                     {col.titulo}
                   </h4>
@@ -568,21 +568,20 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
                                 if (itemIdx === 0) focusAndSelect('input-nombre-usuario-modal');
                                 else if (itemIdx === 1) focusAndSelect('input-email-usuario-modal');
                                 else if (itemIdx === 2) focusAndSelect('input-password-usuario-modal');
-                                else if (itemIdx === 3) document.getElementById('select-rol-usuario-modal')?.focus();
-                                else document.getElementById('select-estado-usuario-modal')?.focus();
+                                else document.getElementById('select-estado-usuario-modal')?.focus(); // Estado está al lado; Rol queda a su izquierda
                               }
                             }
                           }}
-                          className={`flex items-center gap-2 p-1.5 rounded transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-amber-100/70 hover:bg-slate-100 select-none ${
+                          className={`flex items-center gap-2 p-1.5 rounded-none transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-amber-100/70 hover:bg-slate-100 select-none ${
                             isChecked ? 'bg-amber-50/50' : ''
                           }`}
                         >
-                          <div className={`flex items-center justify-center w-4 h-4 shrink-0 rounded-sm border ${
+                          <div className={`flex items-center justify-center w-4 h-4 shrink-0 rounded-none border ${
                             isChecked ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-white' : 'border-[var(--color-line-light)] bg-white'
                           }`}>
                             {isChecked && <CheckSquare size={14} className="text-white" />}
                           </div>
-                          <span className={`text-xs font-mono break-words min-w-0 ${
+                          <span className={`text-xs font-mono min-w-0 leading-snug ${
                             isChecked ? 'text-[var(--color-ink)] font-black' : 'text-[var(--color-muted)] font-semibold'
                           }`}>
                             {item.label}

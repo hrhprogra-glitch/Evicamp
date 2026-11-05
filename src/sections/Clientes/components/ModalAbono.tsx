@@ -185,18 +185,18 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
 
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="max-h-[calc(var(--alto-pantalla)*0.94)] overflow-y-auto bg-white w-full max-w-md border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col rounded-none">
+      <div className="ventana-sobria max-h-[calc(var(--alto-pantalla)*0.94)] bg-white w-full max-w-md border-2 border-[var(--color-ink)] flex flex-col rounded-none">
         
         {/* HEADER */}
-        <div className="bg-[var(--color-accent)] text-[var(--color-ink)] px-6 py-4 flex justify-between items-center shrink-0 border-b-2 border-[var(--color-ink)]">
-          <h2 className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-accent)] text-[var(--color-ink)] px-6 py-4 flex justify-between items-center shrink-0 border-b-2 border-[var(--color-ink)]">
+          <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest flex items-center gap-2">
             <Calculator size={20} /> Abono Mixto
           </h2>
-          <button id="btn-cerrar-modal-abono" onClick={onClose} className="hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-white"><X size={20} /></button>
+          <button id="btn-cerrar-modal-abono" onClick={onClose} className="ventana-cerrar hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-white"><X size={20} /></button>
         </div>
 
         {/* BODY */}
-        <div className="p-6 bg-[var(--color-bg)] flex flex-col gap-4">
+        <div className="p-6 bg-[var(--color-bg)] flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
           <div className="bg-[var(--color-ink)] text-white p-4 text-center border-2 border-[var(--color-ink)] rounded-none">
             <p className="text-[12px] font-bold text-[var(--color-subtle)] uppercase tracking-widest">Saldo Actual de la Deuda</p>
             <p className="text-xl sm:text-3xl font-black text-[var(--color-danger)]">S/ {saldoPendiente.toFixed(2)}</p>
@@ -269,7 +269,7 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
         </div>
 
         {/* FOOTER */}
-        <div className="p-4 bg-white border-t-2 border-[var(--color-border)] flex justify-end gap-3 rounded-none">
+        <div className="p-4 bg-white border-t-2 border-[var(--color-border)] flex justify-end gap-3 rounded-none shrink-0">
           <button onClick={onClose} className="px-4 py-2 bg-white border-2 border-[var(--color-border)] text-[var(--color-muted)] text-[12px] font-black uppercase hover:border-[var(--color-ink)] hover:text-[var(--color-ink)] transition-colors cursor-pointer rounded-none">Cancelar</button>
           <button 
             onClick={handleConfirm} 

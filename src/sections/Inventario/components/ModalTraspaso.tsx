@@ -339,19 +339,19 @@ export const ModalTraspaso: React.FC<ModalTraspasoProps> = ({ onClose, onTraspas
         role="dialog"
         aria-modal="true"
         id="modal-traspasos"
-        className="w-full max-w-4xl bg-[var(--color-bg)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[92vh] overflow-hidden text-[var(--color-ink)] font-mono"
+        className="ventana-sobria w-full max-w-4xl bg-[var(--color-bg)] border-2 border-[var(--color-ink)] flex flex-col max-h-[92vh] overflow-hidden text-[var(--color-ink)] font-mono"
       >
         {/* Cabecera */}
-        <div className="flex items-center justify-between px-4 py-3 bg-[var(--color-ink)] text-white border-b-2 border-[var(--color-ink)] select-none">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera flex items-center justify-between px-4 py-3 bg-[var(--color-ink)] text-white border-b-2 border-[var(--color-ink)] select-none">
           <div className="flex items-center gap-2">
             <ArrowRightLeft size={18} className="text-[var(--color-accent)]" />
-            <h2 className="text-xs sm:text-sm font-black uppercase tracking-widest text-[var(--color-accent)]">
+            <h2 className="ventana-cabecera__titulo text-xs sm:text-sm font-black uppercase tracking-widest text-[var(--color-accent)]">
               Traspaso de Mercadería entre Almacenes / Tiendas (Fase 9)
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-white/20 text-white rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+            className="ventana-cerrar p-1 hover:bg-white/20 text-white rounded-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
             title="Cerrar (Esc)"
           >
             <X size={18} />

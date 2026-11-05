@@ -77,12 +77,12 @@ export const ModalGrupo: React.FC<Props> = ({ grupo, miembros, fiados, onClose, 
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono" onKeyDown={teclas}>
-      <div role="dialog" aria-label={`Grupo ${grupo.nombre}`} className="bg-[var(--color-surface)] w-full max-w-4xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.85)]">
-        <div className="bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
+      <div role="dialog" aria-label={`Grupo ${grupo.nombre}`} className="ventana-sobria bg-[var(--color-surface)] w-full max-w-4xl border-2 border-[var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.85)]">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <Users size={22} className="text-[var(--color-info)] shrink-0" />
             <div className="min-w-0">
-              <h2 id="titulo-grupo" className="text-sm font-black uppercase tracking-widest truncate">{grupo.nombre}</h2>
+              <h2 id="titulo-grupo" className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest truncate">{grupo.nombre}</h2>
               <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest">
                 {grupo.tipo === 'EMPRESA' ? 'Empresa' : 'Familia'}{grupo.ruc ? ` · RUC ${grupo.ruc}` : ''}
                 {grupo.descuentoPorcentaje != null && grupo.descuentoPorcentaje > 0 ? ` · 🏷️ ${grupo.descuentoPorcentaje}% DCTO` : ''} · {miembros.length} persona{miembros.length === 1 ? '' : 's'}
@@ -90,18 +90,84 @@ export const ModalGrupo: React.FC<Props> = ({ grupo, miembros, fiados, onClose, 
             </div>
           </div>
           <button id="btn-cerrar-grupo" onClick={onClose} title="Cerrar (Escape)"
-            className="hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] p-1 cursor-pointer"><X size={20} /></button>
+            className="ventana-cerrar hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] p-1 cursor-pointer"><X size={20} /></button>
         </div>
         <CuerpoVentana>
-          <BarraFiltros>
-            <div className="flex flex-wrap gap-2">
-              <button id={BOTONES[0]} type="button" onClick={() => onCobrar(grupo)} className={claseBotonBarra(false)}><Wallet size={14} /> Cobrar al grupo</button>
-              <button id={BOTONES[1]} type="button" onClick={() => onAgregar(grupo)} className={claseBotonBarra(false)}><UserPlus size={14} /> Agregar cliente</button>
-              <button id={BOTONES[2]} type="button" onClick={() => onEditar(grupo)} className={claseBotonBarra(false)}><Edit size={14} /> Editar grupo</button>
-              <button id={BOTONES[3]} type="button" onClick={() => onEliminar(grupo)} className={claseBotonBarra(false)}><Trash2 size={14} /> Eliminar grupo</button>
+          {/* CIFRAS DEL GRUPO (ESTILO SIUMAX SOBRIO) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-[var(--color-border)] border-2 border-[var(--color-ink)] shrink-0">
+            <div className="bg-white p-3 sm:p-4 text-center flex flex-col justify-center items-center">
+              <span className="text-[11px] font-black uppercase tracking-widest text-[var(--color-muted)]">Miembros</span>
+              <span className="text-sm sm:text-base font-black font-mono text-[var(--color-ink)] mt-0.5">
+                {miembros.length} PERSONA{miembros.length === 1 ? '' : 'S'}
+              </span>
+              <span className="text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-wider mt-0.5">
+                {grupo.tipo === 'EMPRESA' ? 'Empresa' : 'Familia'}
+              </span>
             </div>
-            <TextoBarra>Deuda del grupo: <span id="deuda-grupo" className={deudaTotal > 0.05 ? 'text-[var(--color-danger)]' : 'text-[var(--color-ink)]'}>{soles(deudaTotal)}</span></TextoBarra>
-          </BarraFiltros>
+            <div className="bg-white p-3 sm:p-4 text-center flex flex-col justify-center items-center">
+              <span className="text-[11px] font-black uppercase tracking-widest text-[var(--color-muted)]">Descuento</span>
+              <span className="text-sm sm:text-base font-black font-mono text-[var(--color-ink)] mt-0.5">
+                {grupo.descuentoPorcentaje != null && grupo.descuentoPorcentaje > 0 ? `🏷️ ${grupo.descuentoPorcentaje}% DCTO` : 'SIN DCTO'}
+              </span>
+              <span className="text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-wider mt-0.5">
+                {grupo.descuentoPorcentaje != null && grupo.descuentoPorcentaje > 0 ? 'Aplicado en cada venta' : 'Tarifa estándar'}
+              </span>
+            </div>
+            <div className="col-span-2 sm:col-span-1 bg-white p-3 sm:p-4 text-center flex flex-col justify-center items-center">
+              <span className="text-[11px] font-black uppercase tracking-widest text-[var(--color-muted)]">Deuda del Grupo</span>
+              <span id="deuda-grupo" className={`text-base sm:text-lg font-black font-mono mt-0.5 ${deudaTotal > 0.05 ? 'text-[var(--color-danger)]' : 'text-[var(--color-ink)]'}`}>
+                {soles(deudaTotal)}
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-wider mt-0.5">
+                {deudaTotal > 0.05 ? (
+                  <span className="text-[var(--color-danger)] font-black">Créditos pendientes</span>
+                ) : (
+                  <span className="text-[var(--color-muted)]">Al día · Sin deuda</span>
+                )}
+              </span>
+            </div>
+          </div>
+
+          {/* BARRA DE ACCIONES (4 BOTONES ALINEADOS EN FILA SIMÉTRICA) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 shrink-0">
+            <button
+              id={BOTONES[0]}
+              type="button"
+              onClick={() => onCobrar(grupo)}
+              className="h-[44px] px-3 sm:px-4 border-2 border-[var(--color-border)] hover:border-[var(--color-ink)] bg-white text-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none transition-colors outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)]"
+            >
+              <Wallet size={15} className="shrink-0" />
+              <span className="truncate">Cobrar al grupo</span>
+            </button>
+            <button
+              id={BOTONES[1]}
+              type="button"
+              onClick={() => onAgregar(grupo)}
+              className="h-[44px] px-3 sm:px-4 border-2 border-[var(--color-border)] hover:border-[var(--color-ink)] bg-white text-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none transition-colors outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)]"
+            >
+              <UserPlus size={15} className="shrink-0" />
+              <span className="truncate">Agregar cliente</span>
+            </button>
+            <button
+              id={BOTONES[2]}
+              type="button"
+              onClick={() => onEditar(grupo)}
+              className="h-[44px] px-3 sm:px-4 border-2 border-[var(--color-border)] hover:border-[var(--color-ink)] bg-white text-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none transition-colors outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)]"
+            >
+              <Edit size={15} className="shrink-0" />
+              <span className="truncate">Editar grupo</span>
+            </button>
+            <button
+              id={BOTONES[3]}
+              type="button"
+              onClick={() => onEliminar(grupo)}
+              className="h-[44px] px-3 sm:px-4 border-2 border-[var(--color-border)] hover:border-[var(--color-danger)] hover:text-[var(--color-danger)] bg-white text-[var(--color-muted)] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none transition-colors outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-danger)]"
+            >
+              <Trash2 size={15} className="shrink-0" />
+              <span className="truncate">Eliminar grupo</span>
+            </button>
+          </div>
+
           <CajaLista vacia={!filasDatos.length} mensaje="Este grupo todavía no tiene clientes: usa 'Agregar cliente'.">
             {filasDatos.map(({ c, deuda, creditos }) => (
               <FilaLista key={c.id} tabIndex={0} data-miembro-grupo="true" data-row="true" data-cliente-id={c.id}

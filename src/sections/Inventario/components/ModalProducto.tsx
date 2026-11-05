@@ -1743,10 +1743,10 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono overflow-hidden">
-      <div className={`bg-[var(--color-surface)] w-full border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(88dvh/var(--ui-zoom))] sm:mt-2 transition-all duration-300 ${step === 1 ? 'max-w-4xl' : 'max-w-4xl'}`}>
+      <div className={`ventana-sobria bg-[var(--color-surface)] w-full border-2 border-[var(--color-ink)] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(88dvh/var(--ui-zoom))] sm:mt-2 transition-all duration-300 ${step === 1 ? 'max-w-4xl' : 'max-w-4xl'}`}>
 
         {/* HEADER */}
-        <div className="bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             {step === 2 && (
               <button 
@@ -1759,7 +1759,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               </button>
             )}
             <div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-[var(--color-success)]">
+              <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest text-[var(--color-success)]">
                 {step === 1 ? 'Paso 1: Naturaleza del Producto' : 'Paso 2: Detalles del Producto'}
               </h2>
               <p className="text-[10px] font-bold opacity-80 uppercase tracking-wider">
@@ -1771,7 +1771,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
             <button 
               id="btn-cerrar-modal-producto"
               onClick={resetAndClose} 
-              className="hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white/20 p-1.5 transition-colors cursor-pointer rounded-none"
+              className="ventana-cerrar hover:text-[var(--color-danger)] focus:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white/20 p-1.5 transition-colors cursor-pointer rounded-none"
               title="Cerrar ventana (Escape)"
             >
               <X size={20} />

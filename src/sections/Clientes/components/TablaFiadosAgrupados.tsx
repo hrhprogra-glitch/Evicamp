@@ -1,6 +1,6 @@
 import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
-import { Eye, ChevronLeft, ChevronRight, FilterX } from 'lucide-react';
+import { Eye, ChevronLeft, ChevronRight, FilterX, Search, X } from 'lucide-react';
 import type { ClienteFiadoAgrupado } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 
@@ -221,120 +221,132 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
 
   const hayFiltrosActivos = searchTerm.trim() !== '' || filtroEstado !== 'ACTIVOS' || ordenPor !== 'MAYOR_DEUDA';
 
+  // Teclado (como Inventario): ↑ a la pestaña, ↓ a la paginación de arriba, ← → entre buscador y filtros
+  const ir = (id: string) => { const el = document.getElementById(id); el?.focus(); el?.scrollIntoView({ block: 'nearest' }); };
+  const filas = () => Array.from(document.querySelectorAll<HTMLElement>('#tabla-fiados-agrupados tbody tr[role="button"]'));
+  const primeraFila = () => { const f0 = filas()[0]; if (f0) { f0.focus(); f0.scrollIntoView({ block: 'nearest' }); } };
+  const ultimaFila = () => { const l = filas(); const u = l[l.length - 1]; if (u) { u.focus(); u.scrollIntoView({ block: 'nearest' }); } };
+  const teclasFiltro = (izq: string | null, der: string | null) => (e: React.KeyboardEvent<HTMLElement>) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.currentTarget instanceof HTMLSelectElement) {
+      e.preventDefault(); try { e.currentTarget.showPicker(); } catch { /* sin lista */ } return;
+    }
+    const k = { ArrowUp: () => ir('tab-clientes-creditos'), ArrowDown: () => ir('btn-pag-ant-fiados-arriba'),
+      ArrowLeft: () => izq && ir(izq), ArrowRight: () => der && ir(der) }[e.key as 'ArrowUp'];
+    if (k) { e.preventDefault(); e.stopPropagation(); k(); }
+  };
+  const paginacion = (pos: 'arriba' | 'abajo') => {
+    if (!clientesProcesados.length) return null; // como Inventario: sin filas no hay paginación
+    const ant = pos === 'arriba' ? 'btn-pag-ant-fiados-arriba' : 'btn-pag-ant-fiados';
+    const sig = pos === 'arriba' ? 'btn-pag-sig-fiados-arriba' : 'btn-pag-sig-fiados';
+    const mover = (n: number) => setCurrentPage((p) => Math.min(totalPages, Math.max(1, p + n)));
+    const teclas = (soy: 'ant' | 'sig') => (e: React.KeyboardEvent<HTMLButtonElement>) => {
+      const acc: Record<string, () => void> = {
+        ArrowLeft: () => (soy === 'sig' ? ir(ant) : pos === 'arriba' && ir('btn-limpiar-filtros-fiados')),
+        ArrowRight: () => soy === 'ant' && ir(sig),
+        ArrowUp: () => (pos === 'arriba' ? ir('buscador-global-fiados') : ultimaFila()),
+        ArrowDown: () => pos === 'arriba' && primeraFila(),
+      };
+      if (acc[e.key]) { e.preventDefault(); e.stopPropagation(); acc[e.key](); }
+    };
+    return (
+      <div className={`paginacion-sobria ${pos === 'arriba' ? 'border-b' : 'border-t'} shrink-0`}>
+        <span className="paginacion-sobria__texto">Página {currentPage} de {totalPages}</span>
+        <div className="flex gap-2">
+          <button id={ant} type="button" title="Página anterior" aria-disabled={currentPage <= 1} className="paginacion-sobria__boton"
+            onClick={() => currentPage > 1 && mover(-1)} onKeyDown={teclas('ant')}><ChevronLeft size={16} /></button>
+          <button id={sig} type="button" title="Página siguiente" aria-disabled={currentPage >= totalPages} className="paginacion-sobria__boton"
+            onClick={() => currentPage < totalPages && mover(1)} onKeyDown={teclas('sig')}><ChevronRight size={16} /></button>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="tabla-marco flex flex-col font-mono lg:h-full lg:min-h-0">
-      
-      <div className="p-3 sm:p-6 border-b-2 border-[var(--color-border)] grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:flex lg:flex-nowrap gap-2 sm:gap-4 shrink-0 bg-[var(--color-bg)]">
-        <input autoComplete="off" type="text"
-          id="buscador-global-fiados"
-          placeholder="BUSCAR CLIENTE..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="col-span-3 lg:flex-1 min-w-0 lg:min-w-[200px] border-2 border-[var(--color-border)] px-3 sm:px-4 py-3 text-sm font-black uppercase outline-none focus:border-[var(--color-info)] transition-colors rounded-none"
-        />
-
-        <select 
-          id="filtro-estado-fiados"
-          value={filtroEstado} 
-          onChange={(e) => setFiltroEstado(e.target.value as any)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              try {
-                (e.currentTarget as HTMLSelectElement).showPicker();
-              } catch {}
-              return;
-            }
-            if (e.key === 'ArrowUp') {
-              e.preventDefault();
-              e.stopPropagation();
-              document.getElementById('tab-clientes-creditos')?.focus();
-            } else if (e.key === 'ArrowDown') {
-              e.preventDefault();
-              e.stopPropagation();
-              (document.querySelector('tr[role="button"]') as HTMLElement)?.focus();
-            } else if (e.key === 'ArrowLeft') {
-              e.preventDefault();
-              e.stopPropagation();
-              document.getElementById('buscador-global-fiados')?.focus();
-            } else if (e.key === 'ArrowRight') {
-              e.preventDefault();
-              e.stopPropagation();
-              document.getElementById('filtro-orden-fiados')?.focus();
-            }
-          }}
-          className="w-full min-w-0 lg:w-48 border-2 border-[var(--color-border)] px-2 sm:px-4 py-3 text-xs sm:text-sm font-black uppercase outline-none focus:border-[var(--color-info)] bg-white cursor-pointer rounded-none"
-        >
-          <option value="ACTIVOS">DEUDORES</option>
-          <option value="TODOS">TODOS</option>
-          <option value="PAGADO">SIN DEUDA</option>
-        </select>
-
-        <select 
-          id="filtro-orden-fiados"
-          value={ordenPor} 
-          onChange={(e) => setOrdenPor(e.target.value as any)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              try {
-                (e.currentTarget as HTMLSelectElement).showPicker();
-              } catch {}
-              return;
-            }
-            if (e.key === 'ArrowUp') {
-              e.preventDefault();
-              e.stopPropagation();
-              document.getElementById('tab-clientes-creditos')?.focus();
-            } else if (e.key === 'ArrowDown') {
-              e.preventDefault();
-              e.stopPropagation();
-              (document.querySelector('tr[role="button"]') as HTMLElement)?.focus();
-            } else if (e.key === 'ArrowLeft') {
-              e.preventDefault();
-              e.stopPropagation();
-              document.getElementById('filtro-estado-fiados')?.focus();
-            } else if (e.key === 'ArrowRight') {
-              e.preventDefault();
-              e.stopPropagation();
-              document.getElementById('btn-limpiar-filtros-fiados')?.focus();
-            }
-          }}
-          className="w-full min-w-0 lg:w-48 border-2 border-[var(--color-border)] px-2 sm:px-4 py-3 text-xs sm:text-sm font-black uppercase outline-none focus:border-[var(--color-info)] bg-white cursor-pointer rounded-none"
-        >
-          <option value="MAYOR_DEUDA">MAYOR DEUDA</option>
-          <option value="ALFABETICO">ALFABÉTICO</option>
-        </select>
-
-        <button 
-          id="btn-limpiar-filtros-fiados"
-          onClick={limpiarFiltros} 
-          onKeyDown={(e) => {
-            if (e.key === 'ArrowLeft') {
-              e.preventDefault();
-              e.stopPropagation();
-              document.getElementById('filtro-orden-fiados')?.focus();
-            } else if (e.key === 'ArrowDown') {
-              e.preventDefault();
-              e.stopPropagation();
-              (document.querySelector('tr[role="button"]') as HTMLElement)?.focus();
-            } else if (e.key === 'ArrowUp') {
-              e.preventDefault();
-              e.stopPropagation();
-              document.getElementById('tab-clientes-creditos')?.focus();
-            }
-          }}
-          className={`p-3 font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center cursor-pointer border-2 rounded-none shrink-0 ${
-            hayFiltrosActivos 
-              ? 'bg-[var(--color-danger)] text-white border-[var(--color-danger)] hover:brightness-110 shadow-[2px_2px_0_0_var(--color-ink)]' 
-              : 'bg-[var(--color-surface)] text-[var(--color-subtle)] border-[var(--color-border)] opacity-60 hover:opacity-100 hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]'
-          }`}
-          title="Limpiar Filtros"
-        >
-          <FilterX size={20} strokeWidth={3} />
-        </button>
+    <div className="flex flex-col gap-4 sm:gap-6 font-mono lg:h-full lg:min-h-0">
+      {/* BUSCADOR Y FILTROS (fuera del marco de la tabla, como Inventario) */}
+      <div className="flex flex-col xl:flex-row gap-3 sm:gap-4 shrink-0 items-stretch xl:items-center justify-between">
+        <div className="buscador-sobrio w-full xl:flex-1 shrink-0">
+          <div className="buscador-sobrio__icono"><Search size={18} /></div>
+          <input autoComplete="off" type="text" id="buscador-global-fiados" placeholder="BUSCAR CLIENTE..." value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape' && searchTerm) { e.preventDefault(); e.stopPropagation(); setSearchTerm(''); return; }
+              if (e.key === 'ArrowRight' && e.currentTarget.selectionEnd !== e.currentTarget.value.length) return;
+              if (e.key === 'ArrowRight' && searchTerm) {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-borrar-buscador-fiados')?.focus();
+                return;
+              }
+              if (e.key === 'ArrowLeft') return;
+              teclasFiltro(null, 'filtro-estado-fiados')(e);
+            }}
+            style={{ paddingRight: searchTerm ? '8rem' : undefined }} />
+          {searchTerm && (
+            <div className="buscador-sobrio__match">
+              <span className="buscador-sobrio__conteo">{clientesProcesados.length} MATCH</span>
+              <button 
+                id="btn-borrar-buscador-fiados"
+                type="button" 
+                title="Borrar búsqueda" 
+                className="buscador-sobrio__borrar"
+                onClick={() => { setSearchTerm(''); ir('buscador-global-fiados'); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSearchTerm('');
+                    ir('buscador-global-fiados');
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const inp = document.getElementById('buscador-global-fiados') as HTMLInputElement | null;
+                    if (inp) {
+                      inp.focus();
+                      inp.setSelectionRange(inp.value.length, inp.value.length);
+                    }
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    ir('filtro-estado-fiados');
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    ir('btn-pag-ant-fiados-arriba');
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    ir('tab-clientes-deudores');
+                  }
+                }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full xl:w-auto">
+          <select id="filtro-estado-fiados" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value as any)}
+            onKeyDown={teclasFiltro(searchTerm ? 'btn-borrar-buscador-fiados' : 'buscador-global-fiados', 'filtro-orden-fiados')} className="filtro-sobrio w-full sm:w-auto">
+            <option value="ACTIVOS">DEUDORES</option>
+            <option value="TODOS">TODOS</option>
+            <option value="PAGADO">SIN DEUDA</option>
+          </select>
+          <select id="filtro-orden-fiados" value={ordenPor} onChange={(e) => setOrdenPor(e.target.value as any)}
+            onKeyDown={teclasFiltro('filtro-estado-fiados', 'btn-limpiar-filtros-fiados')} className="filtro-sobrio w-full sm:w-auto">
+            <option value="MAYOR_DEUDA">MAYOR DEUDA</option>
+            <option value="ALFABETICO">ALFABÉTICO</option>
+          </select>
+          <button id="btn-limpiar-filtros-fiados" type="button" onClick={limpiarFiltros} onKeyDown={teclasFiltro('filtro-orden-fiados', 'btn-pag-ant-fiados-arriba')}
+            className="limpiar-sobrio" title={hayFiltrosActivos ? 'Limpiar todos los filtros' : 'Sin filtros'}>
+            <FilterX size={16} />
+          </button>
+        </div>
       </div>
 
+      {/* TABLA con su paginación arriba y abajo (como Inventario) */}
+      <div id="tabla-fiados-agrupados" className="tabla-marco flex flex-col lg:flex-1 lg:min-h-0">
+      {paginacion('arriba')}
       <div className="lg:flex-1 overflow-auto custom-scrollbar relative lg:min-h-0">
         <table className="w-full text-left relative border-collapse">
           <thead className="tabla-cabecera sticky top-0 z-10">
@@ -366,32 +378,23 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
                     </span>
                   </td>
                   <td className="py-3 sm:py-4 px-2 sm:px-4 sm:pr-6 text-center">
-                    <button data-btn-detalle tabIndex={-1} onClick={(e) => { e.stopPropagation(); onView(cli); }} className="p-2 border-2 border-[var(--color-ink)] bg-[var(--color-bg)] hover:bg-[var(--color-ink)] hover:text-white transition-all cursor-pointer inline-flex shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-1 hover:translate-y-1">
-                      <Eye size={20} strokeWidth={3} />
+                    <button data-btn-detalle tabIndex={-1} onClick={(e) => { e.stopPropagation(); onView(cli); }} className="p-2 border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-ink)] hover:text-white transition-colors cursor-pointer inline-flex">
+                      <Eye size={18} />
                     </button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="py-12 text-center text-[var(--color-muted)] font-black uppercase tracking-widest text-sm bg-[var(--color-bg)]">
-                  <span className="inline-block border-2 border-[var(--color-muted)] p-4 border-dashed">No se encontraron deudores</span>
+                <td colSpan={4}>
+                  <div className="vacio-sobrio"><Search size={32} />No se encontraron deudores con esos parámetros.</div>
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
-
-      <div className="p-3 border-t-2 border-[var(--color-border)] bg-[var(--color-bg)] flex justify-between items-center gap-2 shrink-0">
-        <p className="text-[11px] sm:text-[12px] font-black text-[var(--color-muted)] uppercase">
-          Mostrando {startIndex + 1} - {Math.min(startIndex + ITEMS_PER_PAGE, clientesProcesados.length)} de {clientesProcesados.length}
-        </p>
-        <div className="flex gap-2">
-          <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-bg)] cursor-pointer rounded-none"><ChevronLeft size={16} /></button>
-          <span className="flex items-center justify-center px-2 sm:px-4 whitespace-nowrap border-2 border-[var(--color-border)] bg-white text-xs font-black text-[var(--color-ink)] rounded-none">Pág {currentPage} / {totalPages}</span>
-          <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-bg)] cursor-pointer rounded-none"><ChevronRight size={16} /></button>
-        </div>
+      {paginacion('abajo')}
       </div>
     </div>
   );

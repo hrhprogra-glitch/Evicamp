@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { filaEnMedio } from '../../../utils/flechasEspaciales';
+import { BOTONES_INVENTARIO } from '../tecladoInventario';
 import { Search, X, FilterX } from 'lucide-react';
 
 interface Props {
@@ -98,19 +100,22 @@ export const FiltrosInventario: React.FC<Props> = ({
                 e.stopPropagation();
                 const btnTabLotes = document.getElementById('btn-tab-lotes');
                 const btnTabProductos = document.getElementById('btn-tab-productos');
-                if (btnTabLotes && btnTabLotes.classList.contains('bg-[var(--color-ink)]')) {
-                  btnTabLotes.focus();
-                } else if (btnTabProductos && btnTabProductos.classList.contains('bg-[var(--color-ink)]')) {
-                  btnTabProductos.focus();
-                } else {
-                  document.getElementById('btn-nuevo-producto')?.focus();
-                }
+                const pestana = btnTabLotes && btnTabLotes.classList.contains('bg-[var(--color-ink)]') ? btnTabLotes
+                  : btnTabProductos && btnTabProductos.classList.contains('bg-[var(--color-ink)]') ? btnTabProductos : null;
+                const medio = filaEnMedio(e.currentTarget, pestana, BOTONES_INVENTARIO);
+                if (medio) medio.focus();
+                else if (pestana) pestana.focus();
+                else document.getElementById('btn-nuevo-producto')?.focus();
               } else if (e.key === 'ArrowRight') {
                 const input = e.currentTarget;
                 if (input.selectionStart === input.value.length) {
                   e.preventDefault();
                   e.stopPropagation();
-                  document.getElementById('filtro-categoria-inventario')?.focus();
+                  if (localQuery) {
+                    document.getElementById('btn-borrar-buscador-inventario')?.focus();
+                  } else {
+                    document.getElementById('filtro-categoria-inventario')?.focus();
+                  }
                 }
               } else if (e.key === 'Escape') {
                 e.preventDefault();
@@ -129,11 +134,51 @@ export const FiltrosInventario: React.FC<Props> = ({
                 </span>
               </div>
               <button 
+                id="btn-borrar-buscador-inventario"
+                type="button"
+                title="Borrar búsqueda"
                 onClick={() => {
                   setLocalQuery('');
                   setSearchQuery('');
+                  document.getElementById('buscador-global-inventario')?.focus();
                 }}
-                className="w-8 h-8 flex items-center justify-center border border-[var(--color-border)] bg-[var(--color-bg-2)] text-[var(--color-muted)] hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors cursor-pointer rounded-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setLocalQuery('');
+                    setSearchQuery('');
+                    document.getElementById('buscador-global-inventario')?.focus();
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const inp = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
+                    if (inp) {
+                      inp.focus();
+                      inp.setSelectionRange(inp.value.length, inp.value.length);
+                    }
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('filtro-categoria-inventario')?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    focusPaginacionInventario();
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const btnTabLotes = document.getElementById('btn-tab-lotes');
+                    const btnTabProductos = document.getElementById('btn-tab-productos');
+                    const pestana = btnTabLotes && btnTabLotes.classList.contains('bg-[var(--color-ink)]') ? btnTabLotes
+                      : btnTabProductos && btnTabProductos.classList.contains('bg-[var(--color-ink)]') ? btnTabProductos : null;
+                    const medio = filaEnMedio(e.currentTarget, pestana, BOTONES_INVENTARIO);
+                    if (medio) medio.focus();
+                    else if (pestana) pestana.focus();
+                    else document.getElementById('btn-nuevo-producto')?.focus();
+                  }
+                }}
+                className="buscador-sobrio__borrar"
               >
                 <X size={14} />
               </button>
@@ -162,7 +207,11 @@ export const FiltrosInventario: React.FC<Props> = ({
             } else if (e.key === 'ArrowLeft') {
               e.preventDefault();
               e.stopPropagation();
-              document.getElementById('buscador-global-inventario')?.focus();
+              if (localQuery) {
+                document.getElementById('btn-borrar-buscador-inventario')?.focus();
+              } else {
+                document.getElementById('buscador-global-inventario')?.focus();
+              }
             } else if (e.key === 'ArrowRight') {
               e.preventDefault();
               e.stopPropagation();

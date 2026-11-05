@@ -1,3 +1,5 @@
+import { estaImprimiendo } from './impresion';
+
 // Ventanas flotantes abiertas (modales, avisos, autorización): cualquier capa "fixed inset-0" o con
 // role="dialog", sin importar su z-index. Sirve para que los atajos globales (Tab abre el menú lateral)
 // no actúen detrás de una ventana y para que el selector nunca se quede fuera de la ventana de arriba.
@@ -34,12 +36,21 @@ export const enfocablesDe = (contenedor: HTMLElement): HTMLElement[] =>
 // lista se volvió a dibujar (al guardar), se busca la misma fila por su texto o por su posición.
 interface Recuerdo { el: HTMLElement; id: string; fila: number; texto: string }
 // Filas de las listas: casi todas llevan data-row; las de Créditos son <tr role="button">
-const FILA = '[data-row="true"], [data-row-prov="true"], [data-fila-cliente="true"], tr[role="button"], [id^="coti-row-"], [id^="ped-row-"]';
-const filasVisibles = () => (Array.from(document.querySelectorAll(FILA)) as HTMLElement[])
-  .filter((f) => visible(f) && !ventanasAbiertas().some((v) => v.contains(f)));
+const FILA = '[data-row="true"], [data-row-prov="true"], [data-fila-cliente="true"], tr[role="button"], [id^="coti-row-"], [id^="ped-row-"], [id^="mov-row-"], [id^="caja-row-"]';
+const filasVisibles = (contenedor?: HTMLElement) => {
+  const base = contenedor ? Array.from(contenedor.querySelectorAll(FILA)) : Array.from(document.querySelectorAll(FILA));
+  return (base as HTMLElement[]).filter((f) => visible(f) && (contenedor ? true : !ventanasAbiertas().some((v) => v.contains(f))));
+};
 const textoDe = (el: HTMLElement) => (el.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 120);
-const perdido = (activo: Element | null) => !activo || activo === document.body
-  || (activo instanceof HTMLElement && activo.id.startsWith('buscador'));
+const esBuscador = (el: Element | null): boolean => {
+  if (!el || !(el instanceof HTMLElement)) return false;
+  if (el.tagName === 'INPUT') {
+    const type = (el.getAttribute('type') || 'text').toLowerCase();
+    if (type === 'text' || type === 'search') return true;
+  }
+  return el.id.startsWith('buscador') || el.classList.contains('buscador-sobrio__input');
+};
+const perdido = (activo: Element | null) => !activo || activo === document.body || esBuscador(activo);
 
 export const recordarSeleccionEnVentanas = (fallbackRestaurar?: () => void) => {
   let recuerdo: Recuerdo | null = null;
@@ -49,26 +60,63 @@ export const recordarSeleccionEnVentanas = (fallbackRestaurar?: () => void) => {
   let pendiente = false;
   // Ventanas una sobre otra (ej. el detalle del cliente y encima Editar, Estado de cuenta o Unir): cada ventana
   // recuerda dónde estaba el selector; al cerrarse la de arriba, vuelve ahí (pedido del dueño 28/10/2026)
-  const enVentana = new WeakMap<HTMLElement, HTMLElement>();
+  const enVentana = new WeakMap<HTMLElement, Recuerdo>();
 
   const alEnfocar = (e: FocusEvent) => {
     const el = e.target as HTMLElement | null;
     if (!el || !(el instanceof HTMLElement) || el === document.body) return;
+    if (el.classList.contains('ventana-cerrar') || el.id.startsWith('btn-cerrar-')) return;
+
     if (hayVentanaAbierta()) {
       const v = ventanasAbiertas().find((x) => x.contains(el));
-      if (v) enVentana.set(v, el);
+      if (v) {
+        const filaEl = (el.matches(FILA) ? el : el.closest(FILA)) as HTMLElement | null;
+        const target = filaEl || el;
+        const filas = filasVisibles(v);
+        const idx = filaEl ? filas.indexOf(filaEl) : -1;
+        const anterior = enVentana.get(v);
+        // Si el elemento enfocado es un buscador pero ya teníamos guardada una fila en esta ventana,
+        // no dejamos que un auto-focus automático pise la fila
+        if (esBuscador(el) && anterior && anterior.fila >= 0 && anterior.el !== el) {
+          return;
+        }
+        enVentana.set(v, {
+          el: target,
+          id: target.id || filaEl?.id || '',
+          fila: idx,
+          texto: filaEl ? textoDe(filaEl) : (el.innerText || '').slice(0, 120),
+        });
+      }
       return;
     }
     if (el.closest('#evicamp-sidebar')) return;
-    const fila = el.matches(FILA) ? filasVisibles().indexOf(el) : -1;
-    recuerdo = { el, id: el.id, fila, texto: fila >= 0 ? textoDe(el) : '' };
+    const filaEl = (el.matches(FILA) ? el : el.closest(FILA)) as HTMLElement | null;
+    const target = filaEl || el;
+    const filas = filasVisibles();
+    const idx = filaEl ? filas.indexOf(filaEl) : -1;
+
+    // Si el elemento enfocado es un buscador pero ya teníamos guardada una fila en la página,
+    // no dejamos que el imán de la sección pise la fila inmediatamente
+    if (esBuscador(el) && recuerdo && recuerdo.fila >= 0 && recuerdo.el !== el && !teclaDespues) {
+      return;
+    }
+
+    recuerdo = {
+      el: target,
+      id: target.id || filaEl?.id || '',
+      fila: idx,
+      texto: filaEl ? textoDe(filaEl) : (el.innerText || '').slice(0, 120),
+    };
   };
 
-  const destino = (r: Recuerdo): HTMLElement | null => {
-    if (r.el.isConnected && visible(r.el)) return r.el;
-    if (r.id) { const porId = document.getElementById(r.id); if (porId && visible(porId)) return porId; }
+  const destino = (r: Recuerdo, contenedor?: HTMLElement): HTMLElement | null => {
+    if (r.el.isConnected && visible(r.el) && (!contenedor || contenedor.contains(r.el))) return r.el;
+    if (r.id) {
+      const porId = document.getElementById(r.id);
+      if (porId && visible(porId) && (!contenedor || contenedor.contains(porId))) return porId;
+    }
     if (r.fila >= 0) {
-      const filas = filasVisibles();
+      const filas = filasVisibles(contenedor);
       return filas.find((f) => textoDe(f) === r.texto) || filas[Math.min(r.fila, filas.length - 1)] || null;
     }
     return null;
@@ -77,14 +125,22 @@ export const recordarSeleccionEnVentanas = (fallbackRestaurar?: () => void) => {
   // Se usa lo guardado AL CERRAR (el imán de la sesión enfoca su buscador justo después y eso no cuenta)
   const devolver = (r: Recuerdo | null) => {
     if (teclaDespues || hayVentanaAbierta()) return;
+    const a = document.activeElement;
     const el = r ? destino(r) : null;
-    if (el && el.isConnected && visible(el)) {
+    // Si el foco quedó en el body, en la nada, o cayó en un buscador habiendo una fila guardada:
+    if (!a || a === document.body || (esBuscador(a) && r && (r.fila >= 0 || r.id.includes('row')))) {
+      if (el && el.isConnected && visible(el)) {
+        el.focus();
+        el.scrollIntoView({ block: 'nearest' });
+        return;
+      }
+    }
+    if (el && el.isConnected && visible(el) && (!a || a === document.body)) {
       el.focus();
       el.scrollIntoView({ block: 'nearest' });
       return;
     }
     // Si no había elemento guardado o ya no existe, asegurar que el selector no se quede en el vacío
-    const a = document.activeElement;
     if (!a || a === document.body) {
       if (fallbackRestaurar) {
         fallbackRestaurar();
@@ -96,10 +152,27 @@ export const recordarSeleccionEnVentanas = (fallbackRestaurar?: () => void) => {
   const devolverEnVentana = (v: HTMLElement | null) => {
     if (!v || !v.isConnected || ventanaSuperior() !== v) return;
     const a = document.activeElement;
-    if (a && a !== document.body && v.contains(a)) return;   // ya está dentro (la ventana lo puso)
     const guardado = enVentana.get(v);
-    const el = guardado && guardado.isConnected && visible(guardado) ? guardado : enfocablesDe(v)[0];
-    el?.focus();
+
+    if (a && a !== document.body && v.contains(a)) {
+      // Si el foco cayó en un buscador pero teníamos una fila de tabla guardada,
+      // no nos conformamos con el buscador: devolvemos el foco a la fila seleccionada.
+      if (esBuscador(a) && guardado && (guardado.fila >= 0 || guardado.id.includes('row') || (guardado.el && guardado.el.matches && guardado.el.matches(FILA)))) {
+        const elFila = destino(guardado, v);
+        if (elFila && elFila !== a) {
+          elFila.focus();
+          elFila.scrollIntoView({ block: 'nearest' });
+          return;
+        }
+      }
+      return;   // ya está dentro en un elemento legítimo
+    }
+    const el = guardado ? destino(guardado, v) : null;
+    const objetivo = el || enfocablesDe(v)[0];
+    if (objetivo) {
+      objetivo.focus();
+      objetivo.scrollIntoView({ block: 'nearest' });
+    }
   };
 
   const revisar = () => {
@@ -126,12 +199,66 @@ export const recordarSeleccionEnVentanas = (fallbackRestaurar?: () => void) => {
   });
   const alTeclear = () => { if (!hayVentanaAbierta()) teclaDespues = true; };
 
+  // ---------------------------------------------------------------------------------------------------
+  // Con una ventana abierta, el selector NUNCA se pierde ni sale de ella (pedido del dueño 04/11/2026):
+  // - un clic en el fondo oscuro o en un espacio vacío, o volver al sistema desde otro programa → vuelve a lo
+  //   último que tenía seleccionado en esa ventana (o a su primer campo/botón);
+  // - si algo intenta llevarlo afuera (el imán de la sección, un setTimeout viejo…) → vuelve adentro;
+  // - si una ventana se abre y nadie pone el selector en ella → se pone en su primer campo/botón.
+  const EVITAR_PRIMERO = /^(cerrar|close|×|x|✕)\b|\(esc\)/i;
+  const primeroDe = (v: HTMLElement) => {
+    const els = enfocablesDe(v);
+    return els.find((el) => !EVITAR_PRIMERO.test((el.innerText || el.title || el.getAttribute('aria-label') || '').trim())) || els[0];
+  };
+  const asegurarEnVentana = () => {
+    if (estaImprimiendo()) return;
+    const v = ventanaSuperior();
+    if (!v) return;
+    const a = document.activeElement as HTMLElement | null;
+    if (a && a !== document.body && (v.contains(a) || a.tagName === 'IFRAME')) return;
+    const guardado = enVentana.get(v);
+    const el = guardado ? destino(guardado, v) : null;
+    const objetivo = el || primeroDe(v);
+    objetivo?.focus();
+  };
+  const luego = (ms = 0) => setTimeout(() => { if (!estaImprimiendo() && hayVentanaAbierta()) asegurarEnVentana(); }, ms);
+  // El selector se fue al vacío (clic en el fondo o en un texto)
+  const alSalirFoco = () => { if (!estaImprimiendo() && hayVentanaAbierta()) luego(0); };
+  // El selector se fue a algo fuera de la ventana de arriba
+  const alEntrarFoco = (e: FocusEvent) => {
+    if (estaImprimiendo()) return;
+    const v = ventanaSuperior();
+    const el = e.target as HTMLElement | null;
+    if (!v || !el || el === document.body || el.tagName === 'IFRAME' || v.contains(el)) return;
+    luego(0);
+  };
+  // Volver al sistema desde otro programa o pestaña
+  const alVolverVentana = () => { if (!estaImprimiendo() && hayVentanaAbierta()) luego(80); };
+  const alVisible = () => { if (!estaImprimiendo() && document.visibilityState === 'visible' && hayVentanaAbierta()) luego(80); };
+  // Una ventana nueva: si en un momento el selector no está en ella, se pone en su primer campo/botón
+  let ventanasAntes = ventanasAbiertas().length;
+  const observadorNuevas = new MutationObserver(() => {
+    const n = ventanasAbiertas().length;
+    if (n > ventanasAntes) [150, 400].forEach((ms) => luego(ms));
+    ventanasAntes = n;
+  });
+
   document.addEventListener('focusin', alEnfocar, true);
+  document.addEventListener('focusin', alEntrarFoco, true);
+  document.addEventListener('focusout', alSalirFoco, true);
+  window.addEventListener('focus', alVolverVentana);
+  document.addEventListener('visibilitychange', alVisible);
   window.addEventListener('keydown', alTeclear, true);
   observador.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
+  observadorNuevas.observe(document.body, { childList: true, subtree: true });
   return () => {
     document.removeEventListener('focusin', alEnfocar, true);
+    document.removeEventListener('focusin', alEntrarFoco, true);
+    document.removeEventListener('focusout', alSalirFoco, true);
+    window.removeEventListener('focus', alVolverVentana);
+    document.removeEventListener('visibilitychange', alVisible);
     window.removeEventListener('keydown', alTeclear, true);
     observador.disconnect();
+    observadorNuevas.disconnect();
   };
 };

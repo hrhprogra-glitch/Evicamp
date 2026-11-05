@@ -206,22 +206,36 @@ html, body {
   }
 }
 
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: #CBD5E1 #F8FAFC;
+/* Scrollbar sobrio y rectangular (sin curvas ni bordes redondeados, sin flechas nativas) */
+*::-webkit-scrollbar,
+::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
 }
-.custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+*::-webkit-scrollbar-button,
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #F8FAFC;
+*::-webkit-scrollbar-track,
+::-webkit-scrollbar-track {
+  background: #F8FAFC !important;
+  border-radius: 0px !important;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+*::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1 !important;
+  border-radius: 0px !important;
+  border: none !important;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-ink);
+*::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink) !important;
+}
+*::-webkit-scrollbar-corner,
+::-webkit-scrollbar-corner {
+  background: transparent !important;
 }
 
 .technical-panel {
@@ -431,16 +445,16 @@ html[data-theme="dark"] .bg-\[var\(--color-ink\)\] {
 }
 
 /* Botones o insignias con fondo amarillo/ámbar de advertencia: letras e íconos en negro puro para máximo contraste */
-.bg-\[var\(--color-warning\)\],
-button.bg-\[var\(--color-warning\)\],
-div.bg-\[var\(--color-warning\)\],
-span.bg-\[var\(--color-warning\)\] {
+.bg-\[var\(--color-warning\)\]:not(.boton-cabecera),
+button.bg-\[var\(--color-warning\)\]:not(.boton-cabecera),
+div.bg-\[var\(--color-warning\)\]:not(.boton-cabecera),
+span.bg-\[var\(--color-warning\)\]:not(.boton-cabecera) {
   color: #030712 !important;
 }
-.bg-\[var\(--color-warning\)\] svg,
-button.bg-\[var\(--color-warning\)\] svg,
-div.bg-\[var\(--color-warning\)\] svg,
-span.bg-\[var\(--color-warning\)\] svg {
+.bg-\[var\(--color-warning\)\]:not(.boton-cabecera) svg,
+button.bg-\[var\(--color-warning\)\]:not(.boton-cabecera) svg,
+div.bg-\[var\(--color-warning\)\]:not(.boton-cabecera) svg,
+span.bg-\[var\(--color-warning\)\]:not(.boton-cabecera) svg {
   color: #030712 !important;
 }
 
@@ -461,8 +475,8 @@ html[data-theme="dark"] .border-b-2.border-\[var\(--color-ink\)\] {
 }
 
 /* Pestañas y botones activos con bg-[var(--color-ink)]: borde de acento verde */
-html.theme-monochrome button.bg-\[var\(--color-ink\)\],
-html[data-theme="dark"] button.bg-\[var\(--color-ink\)\] {
+html.theme-monochrome button.bg-\[var\(--color-ink\)\]:not(.boton-cabecera),
+html[data-theme="dark"] button.bg-\[var\(--color-ink\)\]:not(.boton-cabecera) {
   border-color: var(--color-accent) !important;
 }
 
@@ -482,10 +496,13 @@ html[data-theme="dark"] .hover\:shadow-none:hover {
   box-shadow: none !important;
 }
 
-/* Anillos de foco y selección */
+/* Anillos de foco y selección en modo oscuro: esmeralda brillante de alto contraste */
+html.theme-monochrome [class*="focus:ring-"]:focus,
+html[data-theme="dark"] [class*="focus:ring-"]:focus,
 html.theme-monochrome [class*="focus:ring-\[var\(--color-ink\)\]"]:focus,
 html[data-theme="dark"] [class*="focus:ring-\[var\(--color-ink\)\]"]:focus {
-  --tw-ring-color: #334155 !important;
+  --tw-ring-color: #10B981 !important;
+  --tw-ring-offset-color: #0B0F17 !important;
 }
 html.theme-monochrome .focus\:bg-amber-100\/50:focus,
 html[data-theme="dark"] .focus\:bg-amber-100\/50:focus {
@@ -508,21 +525,27 @@ html[data-theme="dark"] input::placeholder {
   color: #64748B !important;
 }
 
-/* Scrollbar en modo oscuro */
-html.theme-monochrome .custom-scrollbar,
-html[data-theme="dark"] .custom-scrollbar {
-  scrollbar-color: #334155 #0B0F17 !important;
-}
-html.theme-monochrome .custom-scrollbar::-webkit-scrollbar-track,
-html[data-theme="dark"] .custom-scrollbar::-webkit-scrollbar-track {
+/* Scrollbar en modo oscuro (100% rectangular, 0 radio, sin curvas) */
+html.theme-monochrome *::-webkit-scrollbar-track,
+html[data-theme="dark"] *::-webkit-scrollbar-track,
+html.theme-monochrome ::-webkit-scrollbar-track,
+html[data-theme="dark"] ::-webkit-scrollbar-track {
   background: #0B0F17 !important;
+  border-radius: 0px !important;
+  border: none !important;
 }
-html.theme-monochrome .custom-scrollbar::-webkit-scrollbar-thumb,
-html[data-theme="dark"] .custom-scrollbar::-webkit-scrollbar-thumb {
+html.theme-monochrome *::-webkit-scrollbar-thumb,
+html[data-theme="dark"] *::-webkit-scrollbar-thumb,
+html.theme-monochrome ::-webkit-scrollbar-thumb,
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
   background: #334155 !important;
+  border-radius: 0px !important;
+  border: none !important;
 }
-html.theme-monochrome .custom-scrollbar::-webkit-scrollbar-thumb:hover,
-html[data-theme="dark"] .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+html.theme-monochrome *::-webkit-scrollbar-thumb:hover,
+html[data-theme="dark"] *::-webkit-scrollbar-thumb:hover,
+html.theme-monochrome ::-webkit-scrollbar-thumb:hover,
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   background: #475569 !important;
 }
 
@@ -534,25 +557,124 @@ html[data-theme="dark"] [data-row="true"]:hover {
   background-color: #161F30 !important;
 }
 
-/* Foco con teclado en modo oscuro */
+/* ==========================================================================
+   SELECTOR DE NAVEGACIÓN CON TECLADO EN MODO OSCURO (ALTO CONTRASTE Y NITIDEZ)
+   Resuelve el problema donde el foco no se apreciaba sobre fondo oscuro.
+   ========================================================================== */
+
+/* 1. Botones de cabecera (.boton-cabecera): doble anillo nítido verde esmeralda y realce */
+html.theme-monochrome .boton-cabecera:focus-visible,
+html[data-theme="dark"] .boton-cabecera:focus-visible {
+  outline: none !important;
+  border-color: #10B981 !important;
+  box-shadow: 0 0 0 2px #0B0F17, 0 0 0 4px #10B981, 0 0 12px rgba(16, 185, 129, 0.55) !important;
+  background-color: #162438 !important;
+  color: #FFFFFF !important;
+}
+html.theme-monochrome .boton-cabecera:focus-visible svg,
+html[data-theme="dark"] .boton-cabecera:focus-visible svg {
+  color: #10B981 !important;
+}
+
+/* 2. Botones generales, enlaces y elementos interactivos enfocados con teclado */
+html.theme-monochrome button:focus-visible:not(.boton-cabecera):not(.tabla-fila),
+html[data-theme="dark"] button:focus-visible:not(.boton-cabecera):not(.tabla-fila),
+html.theme-monochrome a:focus-visible,
+html[data-theme="dark"] a:focus-visible,
+html.theme-monochrome select:focus-visible:not(.filtro-sobrio),
+html[data-theme="dark"] select:focus-visible:not(.filtro-sobrio),
+html.theme-monochrome [tabindex]:focus-visible:not(.tabla-fila):not([data-row="true"]):not(tr) {
+  outline: 2px solid #10B981 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.45) !important;
+}
+
+/* 3. Filas de tablas y listas navegables por teclado (Selector de Grilla / Tabla) */
+html.theme-monochrome .tabla-fila:focus-visible,
+html[data-theme="dark"] .tabla-fila:focus-visible,
+html.theme-monochrome tr:focus-visible,
+html[data-theme="dark"] tr:focus-visible,
+html.theme-monochrome [data-row="true"]:focus-visible,
+html[data-theme="dark"] [data-row="true"]:focus-visible,
 html.theme-monochrome [role="button"]:not([role="option"]):not([data-cat-item]):not([data-lote-prod-item]):not([data-lote-prov-item]):focus-visible,
 html[data-theme="dark"] [role="button"]:not([role="option"]):not([data-cat-item]):not([data-lote-prod-item]):not([data-lote-prov-item]):focus-visible {
-  background-color: #1E293B !important;
-  outline-color: var(--color-accent) !important;
+  background-color: #162438 !important;
+  box-shadow: inset 4px 0 0 0 #10B981, inset 0 0 0 1px #10B981 !important;
+  outline: none !important;
+}
+
+/* 4. Pestañas sobrias en cabeceras y filtros */
+html.theme-monochrome .pestanas-sobrias > button:focus-visible,
+html[data-theme="dark"] .pestanas-sobrias > button:focus-visible,
+html.theme-monochrome .pestanas-filtro > button:focus-visible,
+html[data-theme="dark"] .pestanas-filtro > button:focus-visible {
+  outline: none !important;
+  box-shadow: inset 0 0 0 2px #10B981 !important;
+  color: #FFFFFF !important;
+  background-color: #162438 !important;
+}
+
+/* 5. Buscador sobrio y selects de filtro */
+html.theme-monochrome .buscador-sobrio:focus-within,
+html[data-theme="dark"] .buscador-sobrio:focus-within {
+  border-color: #10B981 !important;
+  box-shadow: 0 0 0 2px #10B981, 0 0 10px rgba(16, 185, 129, 0.35) !important;
+}
+html.theme-monochrome .filtro-sobrio:focus,
+html[data-theme="dark"] .filtro-sobrio:focus {
+  border-color: #10B981 !important;
+  box-shadow: 0 0 0 2px #10B981, 0 0 10px rgba(16, 185, 129, 0.35) !important;
+}
+html.theme-monochrome .limpiar-sobrio:focus-visible,
+html[data-theme="dark"] .limpiar-sobrio:focus-visible {
+  border-color: #10B981 !important;
+  box-shadow: 0 0 0 2px #10B981, 0 0 10px rgba(16, 185, 129, 0.35) !important;
+}
+html.theme-monochrome .buscador-sobrio__borrar:hover,
+html.theme-monochrome .buscador-sobrio__borrar:focus,
+html.theme-monochrome .buscador-sobrio__borrar:focus-visible,
+html[data-theme="dark"] .buscador-sobrio__borrar:hover,
+html[data-theme="dark"] .buscador-sobrio__borrar:focus,
+html[data-theme="dark"] .buscador-sobrio__borrar:focus-visible {
+  outline: none !important;
+  background: #DC2626 !important;
+  color: #FFFFFF !important;
+  border-color: #DC2626 !important;
+  box-shadow: 0 0 0 2px #0B0F17, 0 0 0 4px #DC2626, 0 0 10px rgba(239, 68, 68, 0.5) !important;
+}
+
+/* 6. Paginación sobria */
+html.theme-monochrome .paginacion-sobria__boton:focus-visible,
+html[data-theme="dark"] .paginacion-sobria__boton:focus-visible {
+  outline: none !important;
+  border-color: #10B981 !important;
+  box-shadow: 0 0 0 2px #10B981, 0 0 8px rgba(16, 185, 129, 0.35) !important;
+}
+
+/* 7. Botones de cerrar modal y acciones de peligro con foco */
+html.theme-monochrome .ventana-cerrar:focus-visible,
+html[data-theme="dark"] .ventana-cerrar:focus-visible,
+html.theme-monochrome .ventana-cabecera button:has(> svg.lucide-x):focus-visible,
+html[data-theme="dark"] .ventana-cabecera button:has(> svg.lucide-x):focus-visible {
+  border-color: #EF4444 !important;
+  box-shadow: 0 0 0 2px #EF4444, 0 0 8px rgba(239, 68, 68, 0.4) !important;
 }
 
 /* Al hacer clic con el mouse, NO debe quedar ningún color, brillo, fondo ni aro pegado en ninguna fila ni elemento de ninguna sesión */
 tr:focus:not(:focus-visible),
 [data-row="true"]:focus:not(:focus-visible),
 [role="button"]:not(button):focus:not(:focus-visible),
+.boton-cabecera:focus:not(:focus-visible),
 tbody tr:focus:not(:focus-visible),
 table tr:focus:not(:focus-visible),
 html.theme-monochrome tr:focus:not(:focus-visible),
 html.theme-monochrome [data-row="true"]:focus:not(:focus-visible),
 html.theme-monochrome [role="button"]:not(button):focus:not(:focus-visible),
+html.theme-monochrome .boton-cabecera:focus:not(:focus-visible),
 html[data-theme="dark"] tr:focus:not(:focus-visible),
 html[data-theme="dark"] [data-row="true"]:focus:not(:focus-visible),
-html[data-theme="dark"] [role="button"]:not(button):focus:not(:focus-visible) {
+html[data-theme="dark"] [role="button"]:not(button):focus:not(:focus-visible),
+html[data-theme="dark"] .boton-cabecera:focus:not(:focus-visible) {
   background-color: transparent !important;
   outline: none !important;
   box-shadow: none !important;
@@ -783,3 +905,187 @@ nav button {
 .tabla-fila:hover { background: var(--color-bg); }
 .tabla-fila:focus { outline: none; }
 .tabla-fila:focus-visible { background: var(--color-bg-2); box-shadow: inset 0 0 0 2px var(--color-ink); }
+
+/* ===== BOTONES DE LA CABECERA SOBRIOS (04/11/2026, prueba del dueño: "los botones llaman más la atención que la tabla") =====
+   Fondo blanco, borde fino y letra oscura; el color de cada botón queda solo en su ícono (--icono).
+   Para volver al estilo anterior basta quitar la clase boton-cabecera del botón. */
+.boton-cabecera {
+  background: var(--color-surface) !important;
+  color: var(--color-ink) !important;
+  border: 1px solid var(--color-border) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.boton-cabecera svg { color: var(--icono, var(--color-ink)); }
+.boton-cabecera:hover { border-color: var(--color-ink) !important; background: var(--color-bg) !important; }
+.boton-cabecera:focus-visible { outline: none; border-color: var(--color-ink) !important; box-shadow: 0 0 0 2px var(--color-ink) !important; }
+
+/* Pestañas de la cabecera sobrias (con los botones): marco fino, sin sombra; la elegida en letra oscura con línea verde abajo.
+   Las clases de color originales se quedan (el teclado las usa para saber cuál está elegida). */
+/* Si no caben, las pestañas bajan a otra fila (nunca se salen de la pantalla): el marco pone arriba/izquierda y cada pestaña derecha/abajo */
+.pestanas-sobrias { flex-wrap: wrap; border-style: solid !important; border-color: var(--color-border) !important; border-width: 1px 0 0 1px !important; background: var(--color-surface) !important; box-shadow: none !important; }
+.pestanas-sobrias > button { flex: 1 1 auto; justify-content: center; white-space: nowrap; background: transparent !important; color: var(--color-muted) !important; border-style: solid !important; border-width: 0 1px 1px 0 !important; border-color: var(--color-border) !important; }
+.pestanas-sobrias > button:hover { color: var(--color-ink) !important; background: var(--color-bg) !important; }
+.pestanas-sobrias > button[data-activa="true"] { color: var(--color-ink) !important; box-shadow: inset 0 -3px 0 var(--color-accent) !important; }
+.pestanas-sobrias > button[data-activa="true"] svg { color: var(--color-accent-shadow); }
+.pestanas-sobrias > button:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--color-ink) !important; }
+.pestanas-sobrias > button[data-activa="true"]:focus-visible { box-shadow: inset 0 -3px 0 var(--color-accent), inset 0 0 0 2px var(--color-ink) !important; }
+
+/* Tarjetas de métricas sobrias (estilo SiuMax Sobrio): borde fino, sin sombra; el color queda en el texto y el ícono */
+.tarjeta-sobria { border: 1px solid var(--color-border) !important; box-shadow: none !important; }
+
+/* ===== BUSCADOR, FILTROS Y PAGINACIÓN COMO INVENTARIO (04/11/2026, "SiuMax Sobrio") =====
+   Copia del aspecto de FiltrosInventario y de la paginación de TablaProductos, para usarlo en todas las secciones.
+   Uso: <div class="buscador-sobrio"><div class="buscador-sobrio__icono"><Search/></div><input/></div>,
+   <select class="filtro-sobrio">, <button class="limpiar-sobrio">, y la franja class="paginacion-sobria". */
+.buscador-sobrio { display: flex; position: relative; height: 3rem; border: 1px solid var(--color-border); background: var(--color-surface); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: all 0.15s; }
+.buscador-sobrio:focus-within { border-color: var(--color-ink); box-shadow: 0 0 0 2px var(--color-ink); }
+.buscador-sobrio__icono { width: 3rem; height: 100%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--color-bg-2); border-right: 1px solid var(--color-border); color: var(--color-muted); transition: background-color 0.15s, color 0.15s; }
+.buscador-sobrio:focus-within .buscador-sobrio__icono { background: var(--color-ink); color: var(--color-success); border-color: var(--color-ink); }
+.buscador-sobrio input { flex: 1; min-width: 0; height: 100%; padding: 0 0.75rem; background: transparent; border: 0; outline: none; font-weight: 900; font-size: 0.75rem; text-transform: uppercase; color: var(--color-ink); }
+.buscador-sobrio input::placeholder { color: #CBD5E1; }
+.buscador-sobrio__match { position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 0.5rem; }
+.buscador-sobrio__conteo { display: flex; align-items: center; height: 2rem; padding: 0 0.5rem; border: 1px solid var(--color-success); background: var(--color-ink); color: var(--color-success); font-size: 9px; font-weight: 900; letter-spacing: 0.1em; }
+.buscador-sobrio__borrar { width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); background: var(--color-bg-2); color: var(--color-muted); cursor: pointer; transition: all 0.15s; }
+.buscador-sobrio__borrar:hover,
+.buscador-sobrio__borrar:focus,
+.buscador-sobrio__borrar:focus-visible {
+  outline: none !important;
+  background: #DC2626 !important;
+  color: #fff !important;
+  border-color: #DC2626 !important;
+  box-shadow: 0 0 0 2px var(--color-ink), 0 0 0 4px #DC2626 !important;
+}
+.filtro-sobrio { height: 2.75rem; min-width: 0; padding: 0 0.75rem; background: var(--color-surface); border: 1px solid #E2E8F0; font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-ink); outline: none; cursor: pointer; transition: border-color 0.15s; border-radius: 0; }
+.filtro-sobrio:focus { border-color: var(--color-success); box-shadow: 0 0 0 1px var(--color-success); }
+.limpiar-sobrio { height: 2.75rem; padding: 0 1rem; display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); background: var(--color-bg-2); color: var(--color-muted); cursor: pointer; transition: all 0.15s; }
+.limpiar-sobrio:hover { background: var(--color-ink); color: #fff; border-color: var(--color-ink); }
+.limpiar-sobrio:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-ink); }
+@media (min-width: 640px) {
+  .buscador-sobrio { height: 3.5rem; }
+  .buscador-sobrio__icono { width: 3.5rem; }
+  .buscador-sobrio input { padding: 0 1rem; }
+  .filtro-sobrio, .limpiar-sobrio { height: 3.5rem; }
+}
+.paginacion-sobria { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.75rem; background: var(--color-surface); border-color: var(--color-border); }
+.paginacion-sobria__texto { font-size: 10px; font-weight: 700; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.paginacion-sobria__boton { width: 2rem; height: 2rem; padding: 0; display: flex; align-items: center; justify-content: center; background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-ink); cursor: pointer; transition: all 0.15s; }
+.paginacion-sobria__boton:hover, .paginacion-sobria__boton:focus { outline: none; background: var(--color-ink); color: #fff; }
+.paginacion-sobria__boton:focus-visible { box-shadow: 0 0 0 2px var(--color-ink); }
+.paginacion-sobria__boton[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
+
+/* Tabla vacía como Inventario: lupa grande gris claro y texto chico gris (y la paginación no se dibuja) */
+.vacio-sobrio { padding: 3rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; text-align: center; color: #94A3B8; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em; }
+.vacio-sobrio svg { color: #E2E8F0; margin-bottom: 0.5rem; }
+
+/* Pestañas usadas como filtro junto al buscador (Cotizaciones, Pedidos): misma altura que el buscador y los filtros */
+.pestanas-filtro > button { height: 2.75rem !important; padding: 0 1rem !important; font-size: 10px !important; flex: 1 1 auto; white-space: nowrap; }
+@media (min-width: 640px) { .pestanas-filtro > button { height: 3.5rem !important; } }
+
+/* ===================================================================================================
+   VENTANAS "SiuMax Sobrio" (pedido del dueño 04/11/2026; modelo: detalle de producto en Utilidades)
+   Marco con borde oscuro y SIN sombra; cabecera clara con cuadrito de ícono (el color va solo en el
+   cuadrito, con style={{ '--icono': color }}), título en mayúsculas espaciadas, subtítulo gris y X con
+   borde fino; cifras en una franja de casillas con líneas finas; listas en recuadros de borde fino.
+   =================================================================================================== */
+.ventana-sobria { background: var(--color-surface) !important; border: 2px solid var(--color-ink) !important; box-shadow: none !important; border-radius: 0 !important; }
+.ventana-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 1rem; flex-shrink: 0;
+  background: var(--color-bg) !important; color: var(--color-ink) !important; border: 0 !important; border-bottom: 2px solid var(--color-ink) !important; }
+.ventana-cabecera__icono { width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  background: var(--icono, var(--color-accent-shadow)); border: 1px solid var(--color-ink); color: #fff; }
+.ventana-cabecera__icono svg { color: #fff !important; }
+.ventana-cabecera__titulo { font-size: 0.875rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-ink) !important; line-height: 1.25; }
+.ventana-cabecera__subtitulo { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted) !important; }
+.ventana-cerrar { color: var(--color-muted) !important; background: transparent !important; border: 1px solid var(--color-border) !important; padding: 0.375rem; border-radius: 0 !important; box-shadow: none !important; cursor: pointer; flex-shrink: 0; }
+.ventana-cerrar:hover { color: #fff !important; background: var(--color-danger) !important; border-color: var(--color-danger) !important; }
+.ventana-cerrar:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-ink) !important; }
+.ventana-cifras { display: grid; gap: 1px; background: var(--color-border); border-bottom: 2px solid var(--color-ink); flex-shrink: 0; }
+.ventana-cifras > * { background: var(--color-surface); padding: 0.75rem; text-align: center; }
+.ventana-recuadro { border: 1px solid var(--color-border) !important; box-shadow: none !important; border-radius: 0 !important; }
+/* Cabeceras antiguas convertidas: el primer ícono del título se vuelve el cuadrito de color y los textos claros pasan a oscuros */
+.ventana-cabecera__titulo { display: flex; align-items: center; gap: 0.75rem; }
+.ventana-cabecera__titulo > svg:first-child { box-sizing: content-box; width: 1.125rem; height: 1.125rem; padding: 0.6875rem; flex-shrink: 0;
+  background: var(--icono, var(--color-accent-shadow)); border: 1px solid var(--color-ink); color: #fff !important; }
+.ventana-cabecera h2, .ventana-cabecera h3 { color: var(--color-ink) !important; }
+.ventana-cabecera p, .ventana-cabecera small { color: var(--color-muted) !important; }
+.ventana-cabecera .text-white:not([class*="bg-"]), .ventana-cabecera [class*="text-white/"]:not([class*="bg-"]) { color: var(--color-ink) !important; }
+/* El ícono de la cabecera va en su cuadrito de color aunque no sea lo primero del título */
+.ventana-cabecera > svg:first-child,
+.ventana-cabecera > :first-child > svg:first-child,
+.ventana-cabecera h2 > svg:first-child, .ventana-cabecera h3 > svg:first-child {
+  box-sizing: content-box; width: 1.125rem; height: 1.125rem; padding: 0.6875rem; flex-shrink: 0;
+  background: var(--icono, var(--color-accent-shadow)); border: 1px solid var(--color-ink); color: #fff !important; }
+.ventana-cabecera h2:has(> svg:first-child), .ventana-cabecera h3:has(> svg:first-child) { display: flex; align-items: center; gap: 0.75rem; }
+.ventana-cabecera > :first-child { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+/* La X igual en todas */
+.ventana-cerrar svg { width: 18px !important; height: 18px !important; stroke-width: 2.5; }
+/* Sin sombras desplazadas dentro de las ventanas (tarjetas y botones). Solo se apaga la sombra: el resaltado
+   del selector (ring) sigue funcionando porque usa su propia variable */
+.ventana-sobria [class*="shadow-["] { --tw-shadow: 0 0 #0000 !important; }
+/* La X de cualquier cabecera de ventana (aunque no tenga la clase ventana-cerrar) */
+.ventana-cabecera button:has(> svg.lucide-x) { color: var(--color-muted) !important; background: transparent !important; border: 1px solid var(--color-border) !important;
+  padding: 0.375rem !important; border-radius: 0 !important; box-shadow: none !important; flex-shrink: 0; }
+.ventana-cabecera button:has(> svg.lucide-x):hover { color: #fff !important; background: var(--color-danger) !important; border-color: var(--color-danger) !important; }
+.ventana-cabecera button:has(> svg.lucide-x):focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-ink) !important; }
+.ventana-cabecera button:has(> svg.lucide-x) svg { width: 18px !important; height: 18px !important; }
+/* Subtítulos de color (amarillo, verde…) en gris, como el modelo */
+.ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-amber"], .ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-yellow"],
+.ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-emerald"], .ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-[var(--color-accent"],
+.ventana-cabecera :not(h2):not(h3):not(svg):not([class*="bg-"])[class*="text-[var(--color-warning"] { color: var(--color-muted) !important; }
+/* Toda zona con scroll dentro de una ventana usa la barra delgada del sistema,
+   sin flechas nativas de Windows y 100% rectangular cuadrado (pedido del dueño: estilo SiuMax Sobrio) */
+.ventana-sobria::-webkit-scrollbar, .ventana-sobria *::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+.ventana-sobria::-webkit-scrollbar-button, .ventana-sobria *::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.ventana-sobria::-webkit-scrollbar-track, .ventana-sobria *::-webkit-scrollbar-track {
+  background: #F8FAFC !important;
+  border-radius: 0px !important;
+}
+.ventana-sobria::-webkit-scrollbar-thumb, .ventana-sobria *::-webkit-scrollbar-thumb {
+  background: #CBD5E1 !important;
+  border-radius: 0px !important;
+  border: none !important;
+}
+.ventana-sobria *::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink) !important;
+}
+html.theme-monochrome .ventana-sobria::-webkit-scrollbar-track, html[data-theme="dark"] .ventana-sobria::-webkit-scrollbar-track,
+html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-track, html[data-theme="dark"] .ventana-sobria *::-webkit-scrollbar-track {
+  background: #0B0F17 !important;
+  border-radius: 0px !important;
+}
+html.theme-monochrome .ventana-sobria::-webkit-scrollbar-thumb, html[data-theme="dark"] .ventana-sobria::-webkit-scrollbar-thumb,
+html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-thumb, html[data-theme="dark"] .ventana-sobria *::-webkit-scrollbar-thumb {
+  background: #334155 !important;
+  border-radius: 0px !important;
+  border: none !important;
+}
+html.theme-monochrome .ventana-sobria *::-webkit-scrollbar-thumb:hover, html[data-theme="dark"] .ventana-sobria *::-webkit-scrollbar-thumb:hover {
+  background: #475569 !important;
+}
+
+/* Fallback exclusivo para Firefox (que no soporta ::-webkit-scrollbar).
+   NUNCA aplicar scrollbar-color ni scrollbar-width a navegadores Chromium (Chrome/Edge)
+   porque desactivaría ::-webkit-scrollbar y forzaría la barra redondeada Fluent de Windows 11 */
+@supports not selector(::-webkit-scrollbar) {
+  *, .ventana-sobria, .ventana-sobria * {
+    scrollbar-width: thin;
+    scrollbar-color: #CBD5E1 #F8FAFC;
+  }
+  html.theme-monochrome *,
+  html[data-theme="dark"] *,
+  html.theme-monochrome .ventana-sobria,
+  html.theme-monochrome .ventana-sobria *,
+  html[data-theme="dark"] .ventana-sobria,
+  html[data-theme="dark"] .ventana-sobria * {
+    scrollbar-color: #334155 #0B0F17 !important;
+  }
+}
+/* Dentro de un botón o pastilla oscura de la cabecera (ej. "Ticket | Tabla" del detalle del ticket) la letra sigue clara */
+.ventana-cabecera [class*="bg-[var(--color-ink)]"] .text-white, .ventana-cabecera [class*="bg-[var(--color-ink)]"].text-white { color: #fff !important; }

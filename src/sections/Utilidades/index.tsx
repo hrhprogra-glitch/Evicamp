@@ -315,14 +315,12 @@ export const Utilidades = () => {
     .map(p => ({ nombre: p.nombre, utilidad: p.utilidadReal }));
 
   return (
-    <div className="flex flex-col gap-3 lg:gap-4 p-0 w-full font-mono bg-[var(--color-bg)]">
+    <div className="flex flex-col gap-4 sm:gap-6 pb-10 text-[var(--color-ink)] font-mono h-full bg-[var(--color-bg)] relative">
+      <FiltrosUtilidades
+        onToggleTops={() => setMostrarTops(v => !v)}
+      />
 
-
-      <div className="flex flex-col gap-4 sm:gap-6 shrink-0">
-        <FiltrosUtilidades
-          filtrarHoy={filtrarHoy} filtrarSemana={filtrarSemana}
-          filtrarMes={filtrarMes}
-        />
+      <div className="flex flex-col gap-4 sm:gap-6 px-2 sm:px-3">
         <TarjetasResumen
           ingresos={globalIngresos}
           costos={globalCostos}
@@ -331,26 +329,26 @@ export const Utilidades = () => {
           utilidad={globalUtilidad}
           filtrado={statsFiltro.hayFiltros}
         />
-      </div>
 
-      {/* La tabla permanece siempre montada (aunque esté cargando) para no perder
-          la categoría, rotación, búsqueda y página que el usuario ya eligió. */}
-      <div className="relative pb-6">
-        {isLoading && (
-          <div className="absolute inset-0 bg-[var(--color-surface)]/85 backdrop-blur-sm z-50 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
-              <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest font-mono">Cargando...</span>
+        {/* La tabla permanece siempre montada (aunque esté cargando) para no perder
+            la categoría, rotación, búsqueda y página que el usuario ya eligió. */}
+        <div className="relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-[var(--color-surface)]/85 backdrop-blur-sm z-50 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
+                <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest font-mono">Cargando...</span>
+              </div>
             </div>
-          </div>
-        )}
-        <TablaAnalisisProductos
-          datos={analisisCompleto}
-          fechaInicio={fechaInicio} fechaFin={fechaFin}
-          setFechaInicio={setFechaInicio} setFechaFin={setFechaFin}
-          limpiarFechas={limpiarFiltros}
-          onStatsFiltradasChange={setStatsFiltro}
-        />
+          )}
+          <TablaAnalisisProductos
+            datos={analisisCompleto}
+            fechaInicio={fechaInicio} fechaFin={fechaFin}
+            setFechaInicio={setFechaInicio} setFechaFin={setFechaFin}
+            limpiarFechas={limpiarFiltros}
+            onStatsFiltradasChange={setStatsFiltro}
+          />
+        </div>
       </div>
 
       {mostrarTops && !isLoading && (

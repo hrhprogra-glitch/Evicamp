@@ -6,7 +6,7 @@ import {
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar } from '../../../utils/dialogos';
-import { nombreComprobante, numeroComprobante } from '../../../utils/comprobante';
+import { comprobanteEmitido, nombreComprobante, numeroComprobante } from '../../../utils/comprobante';
 import type { CambioProducto } from '../types';
 import type { Product } from '../../Inventario/types';
 
@@ -287,7 +287,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
       setCpe(null);
       if (venta.doc_type && venta.cpe_estado !== 'RECHAZADO') {
         const numero = numeroComprobante(venta.doc_serial, venta.doc_number) || 'POR NUMERAR';
-        if (!['ACEPTADO', 'OBSERVADO'].includes(String(venta.cpe_estado))) {
+        if (!comprobanteEmitido(venta.cpe_estado, (venta as { cpe_pdf?: string | null }).cpe_pdf)) {
           setTicketError(`La ${nombreComprobante(venta.doc_type).toLowerCase()} ${numero} todavía no fue aceptada por SUNAT (${venta.cpe_estado || 'PENDIENTE'}). Cuando la acepte podrás cambiar o devolver; si quedó con error, reenvíala desde el Historial.`);
           return;
         }
@@ -714,15 +714,15 @@ export const ModalCambioProducto: React.FC<Props> = ({
       id="modal-cambio-producto"
       aria-labelledby="modal-cambio-title"
     >
-      <div className="bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0px_0px_rgba(var(--color-ink-rgb),1)] rounded-none w-full max-w-2xl flex flex-col font-mono max-h-[92vh]">
+      <div className="ventana-sobria bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[8px_8px_0px_0px_rgba(var(--color-ink-rgb),1)] rounded-none w-full max-w-2xl flex flex-col font-mono max-h-[92vh]">
         {/* CABECERA */}
-        <div className="flex justify-between items-center border-b-2 border-[var(--color-ink)] bg-[var(--color-bg)] p-3 sm:p-4 shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera flex justify-between items-center border-b-2 border-[var(--color-ink)] bg-[var(--color-bg)] p-3 sm:p-4 shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-blue-100 border border-blue-600 flex items-center justify-center text-blue-800">
               <ArrowLeftRight size={18} />
             </div>
             <div>
-              <h2 id="modal-cambio-title" className="text-[var(--color-ink)] font-black text-sm sm:text-base uppercase tracking-wider">
+              <h2 id="modal-cambio-title" className="ventana-cabecera__titulo text-[var(--color-ink)] font-black text-sm sm:text-base uppercase tracking-wider">
                 Cambio de Producto
               </h2>
               <p className="text-[10px] text-[var(--color-muted)] font-bold uppercase tracking-widest">
@@ -747,7 +747,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
               }
             }}
             title="Cerrar ventana (Esc)"
-            className="p-1.5 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white transition-colors cursor-pointer"
+            className="ventana-cerrar p-1.5 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white transition-colors cursor-pointer"
           >
             <X size={16} />
           </button>
@@ -888,12 +888,11 @@ export const ModalCambioProducto: React.FC<Props> = ({
               {/* BOLETA/FACTURA: cambiar por otro producto o solo devolver (siempre con nota de crédito) */}
               {ticketData && cpe && (
                 <div className="border-2 border-[var(--color-ink)] bg-white p-3 shadow-[3px_3px_0_0_var(--color-ink)] space-y-2">
-                  <p className="text-[11px] font-bold text-[var(--color-ink)]">
-                    Este ticket tiene <b>{tipoCpe.toUpperCase()} {cpe.numero}</b> aceptada por SUNAT y no se puede modificar.
-                    Lo devuelto sale con una <b>nota de crédito</b>{soloDevolver ? ' y se devuelve el dinero en efectivo' : ` y lo nuevo con una ${tipoCpe} nueva para el mismo cliente`}.
+                  <p className="text-xs font-black uppercase text-[var(--color-ink)] tracking-wide">
+                    {tipoCpe.toUpperCase()} {cpe.numero} (SUNAT) · Se emitirá con nota de crédito
                   </p>
                   <div className="flex gap-2">
-                    {([['cambio', 'Cambiar por otro producto', false], ['devolver', 'Solo devolver', true]] as const).map(([id, texto, solo], i) => (
+                    {([['cambio', 'Cambiar', false], ['devolver', 'Devolver', true]] as const).map(([id, texto, solo], i) => (
                       <button
                         key={id}
                         id={`btn-modo-${id}`}

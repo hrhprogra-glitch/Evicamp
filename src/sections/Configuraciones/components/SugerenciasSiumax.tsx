@@ -58,7 +58,7 @@ export const SugerenciasSiumax: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-4 lg:p-6 font-mono space-y-5">
+    <div className="max-w-3xl tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] p-4 lg:p-6 font-mono space-y-5">
       <div>
         <h2 className="text-lg font-black uppercase tracking-wider text-[var(--color-ink)]">Escríbele a SiuMax</h2>
         <p className="text-xs font-bold text-[var(--color-muted)] mt-1">
@@ -134,7 +134,8 @@ export const SugerenciasSiumax: React.FC = () => {
 
       <button id="btn-enviar-sugerencia" type="button" onClick={() => void enviar()} disabled={enviando}
         onKeyDown={flechas('sug-contacto', null)}
-        className="w-full sm:w-auto bg-[var(--color-ink)] text-white px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] disabled:opacity-60 cursor-pointer shadow-[4px_4px_0_0_var(--color-accent)]">
+        style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+        className="boton-cabecera w-full sm:w-auto px-6 py-3 border border-[var(--color-border)] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer">
         {enviando ? <><Loader2 size={16} className="animate-spin" /> Enviando...</> : <><Send size={16} /> Enviar a SiuMax</>}
       </button>
     </div>

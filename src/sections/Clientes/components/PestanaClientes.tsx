@@ -3,8 +3,9 @@
 // "Directorio Clientes"). Lista en tabla con buscador (nombre, documento, teléfono o referencia), filtro de deuda y
 // orden; "Nuevo cliente"; en cada fila Editar y Eliminar (← → desde la fila). Enter en una fila abre su ficha.
 // Teclado propio (onKeyDown en cada control), sin oyentes globales: así no choca con la pestaña Créditos.
+import { filaEnMedio } from '../../../utils/flechasEspaciales';
 import React, { useMemo, useState } from 'react';
-import { Edit, Plus, Trash2, ChevronLeft, ChevronRight, FilterX, MapPin } from 'lucide-react';
+import { Edit, Plus, Trash2, ChevronLeft, ChevronRight, FilterX, MapPin, Search, X } from 'lucide-react';
 import type { Cliente, Fiado, GrupoClientes } from '../types';
 import { coincideBusqueda } from '../../../utils/busqueda';
 
@@ -69,22 +70,17 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
   const visibles = filas.slice((paginaReal - 1) * POR_PAGINA, paginaReal * POR_PAGINA);
   const hayFiltros = !!busqueda || filtro !== 'TODOS' || orden !== 'DEUDA';
 
-  const claseBotonPag =
-    'p-2 border-2 border-[var(--color-ink)] bg-white text-[var(--color-ink)] transition-all cursor-pointer select-none ' +
-    'aria-disabled:opacity-30 aria-disabled:cursor-not-allowed hover:bg-[var(--color-bg)] ' +
-    'focus:outline-none focus:bg-[var(--color-accent)] focus:text-[var(--color-ink)] focus:border-[var(--color-ink)] ' +
-    'focus:ring-2 focus:ring-[var(--color-ink)] focus:shadow-[2px_2px_0_0_var(--color-ink)]';
+  const claseBotonPag = 'paginacion-sobria__boton'; // como la paginación de Inventario
 
   const renderPaginacion = (posicion: 'arriba' | 'abajo') => {
+    if (!filas.length) return null; // como Inventario: sin filas no hay paginación
     const prevId = posicion === 'arriba' ? 'btn-pagina-ant-clientes-arriba' : 'btn-pagina-ant-clientes';
     const sigId = posicion === 'arriba' ? 'btn-pagina-sig-clientes-arriba' : 'btn-pagina-sig-clientes';
-    const bordeClase = posicion === 'arriba' ? 'border-b-2' : 'border-t-2';
+    const bordeClase = posicion === 'arriba' ? 'border-b' : 'border-t';
 
     return (
-      <div className={`p-3 ${bordeClase} border-[var(--color-border)] bg-[var(--color-bg)] flex justify-between items-center gap-2 shrink-0`}>
-        <p className="text-[11px] sm:text-[12px] font-black text-[var(--color-muted)] uppercase">
-          {filas.length ? `Mostrando ${(paginaReal - 1) * POR_PAGINA + 1} - ${Math.min(paginaReal * POR_PAGINA, filas.length)} de ${filas.length} clientes` : '0 clientes'}
-        </p>
+      <div className={`paginacion-sobria ${bordeClase} shrink-0`}>
+        <span className="paginacion-sobria__texto">Página {paginaReal} de {totalPaginas}</span>
         <div className="flex gap-2">
           <button
             id={prevId}
@@ -134,9 +130,6 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
           >
             <ChevronLeft size={16} />
           </button>
-          <span className="flex items-center px-2 sm:px-4 whitespace-nowrap border-2 border-[var(--color-ink)] bg-white text-xs font-black text-[var(--color-ink)]">
-            Pág {paginaReal} / {totalPaginas}
-          </span>
           <button
             id={sigId}
             type="button"
@@ -165,7 +158,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
               } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 if (posicion === 'arriba') {
-                  irA('btn-nuevo-cliente');
+                  irA('buscador-clientes');
                 } else {
                   const list = filasDom();
                   const ult = list[list.length - 1];
@@ -197,8 +190,11 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
       el.scrollIntoView({ block: 'nearest' });
     }
   };
-  // Barra: buscador → filtro → orden → limpiar → nuevo (← →); ↓ baja a la lista; ↑ sube a la pestaña
-  const barra = ['buscador-clientes', 'filtro-deuda-clientes', 'orden-clientes', ...(hayFiltros ? ['btn-limpiar-clientes'] : []), 'btn-nuevo-cliente'];
+  // Barra: buscador → (borrar si hay texto) → filtro → orden → limpiar (← →); ↓ baja a la lista; ↑ sube a la pestaña
+  // "Nuevo cliente" está en la cabecera de la sección (como "Nuevo producto" en Inventario)
+  const barra = busqueda
+    ? ['buscador-clientes', 'btn-borrar-buscador-clientes', 'filtro-deuda-clientes', 'orden-clientes', 'btn-limpiar-clientes']
+    : ['buscador-clientes', 'filtro-deuda-clientes', 'orden-clientes', 'btn-limpiar-clientes'];
   const teclasBarra = (id: string) => (e: React.KeyboardEvent<HTMLElement>) => {
     const i = barra.indexOf(id);
     const esTexto = e.currentTarget instanceof HTMLInputElement;
@@ -228,7 +224,11 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
         if (f0) { f0.focus(); f0.scrollIntoView({ block: 'nearest' }); }
       }
     }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); irA(idPestana); }
+    else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const medio = filaEnMedio(e.currentTarget, document.getElementById(idPestana), ['btn-nuevo-cliente', 'btn-ver-grupos']);
+      if (medio) medio.focus(); else irA(idPestana);
+    }
     else if (e.key === 'ArrowRight' && (!esTexto || input.selectionEnd === input.value.length)) { e.preventDefault(); irA(barra[Math.min(i + 1, barra.length - 1)]); }
     else if (e.key === 'ArrowLeft' && (!esTexto || input.selectionStart === 0)) { e.preventDefault(); irA(barra[Math.max(i - 1, 0)]); }
     else if (e.key === 'Enter' && e.currentTarget instanceof HTMLSelectElement) { e.preventDefault(); try { e.currentTarget.showPicker(); } catch { /* sin lista */ } }
@@ -279,16 +279,46 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
     else if (e.key === 'Enter' && e.target === fila) { e.preventDefault(); onAbrir(cliente); }
   };
 
-  const claseSelect = 'w-full min-w-0 lg:w-48 border-2 border-[var(--color-border)] px-2 sm:px-4 py-3 text-xs sm:text-sm font-black uppercase outline-none focus:border-[var(--color-info)] bg-white cursor-pointer rounded-none';
+  const claseSelect = 'filtro-sobrio w-full sm:w-auto'; // como los filtros de Inventario
 
   return (
-    <div className="flex flex-col tabla-marco">
-      {/* BARRA */}
-      <div className="p-3 border-b-2 border-[var(--color-border)] grid grid-cols-3 lg:flex gap-2 sm:gap-3 shrink-0">
-        <input id="buscador-clientes" autoComplete="off" spellCheck={false} data-lpignore="true"
-          placeholder="BUSCAR NOMBRE, GRUPO, DNI/RUC, TELÉFONO O REFERENCIA..." value={busqueda}
-          onChange={(e) => { setBusqueda(e.target.value); setPagina(1); }} onKeyDown={teclasBarra('buscador-clientes')}
-          className="col-span-3 lg:flex-1 min-w-0 lg:min-w-[200px] border-2 border-[var(--color-border)] px-3 sm:px-4 py-3 text-sm font-black uppercase outline-none focus:border-[var(--color-info)] rounded-none" />
+    <div className="flex flex-col gap-4 sm:gap-6">
+      {/* BUSCADOR Y FILTROS (fuera del marco de la tabla, como Inventario) */}
+      <div className="flex flex-col xl:flex-row gap-3 sm:gap-4 shrink-0 items-stretch xl:items-center justify-between">
+        <div className="buscador-sobrio w-full xl:flex-1 shrink-0">
+          <div className="buscador-sobrio__icono"><Search size={18} /></div>
+          <input id="buscador-clientes" autoComplete="off" spellCheck={false} data-lpignore="true"
+            placeholder="BUSCAR NOMBRE, GRUPO, DNI/RUC, TELÉFONO O REFERENCIA..." value={busqueda}
+            onChange={(e) => { setBusqueda(e.target.value); setPagina(1); }}
+            onKeyDown={(e) => { if (e.key === 'Escape' && busqueda) { e.preventDefault(); e.stopPropagation(); setBusqueda(''); setPagina(1); return; } teclasBarra('buscador-clientes')(e); }}
+            style={{ paddingRight: busqueda ? '8rem' : undefined }} />
+          {busqueda && (
+            <div className="buscador-sobrio__match">
+              <span className="buscador-sobrio__conteo">{filas.length} MATCH</span>
+              <button 
+                id="btn-borrar-buscador-clientes"
+                type="button" 
+                title="Borrar búsqueda" 
+                className="buscador-sobrio__borrar"
+                onClick={() => { setBusqueda(''); setPagina(1); irA('buscador-clientes'); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setBusqueda('');
+                    setPagina(1);
+                    irA('buscador-clientes');
+                  } else {
+                    teclasBarra('btn-borrar-buscador-clientes')(e);
+                  }
+                }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full xl:w-auto">
         <select id="filtro-deuda-clientes" value={filtro} onChange={(e) => { setFiltro(e.target.value as typeof filtro); setPagina(1); }} onKeyDown={teclasBarra('filtro-deuda-clientes')} className={claseSelect}>
           <option value="TODOS">TODOS</option>
           <option value="CON_DEUDA">CON DEUDA</option>
@@ -299,19 +329,16 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
           <option value="DEUDA">MAYOR DEUDA</option>
           <option value="A-Z">A - Z</option>
         </select>
-        {hayFiltros && (
-          <button id="btn-limpiar-clientes" type="button" title="Limpiar filtros" onKeyDown={teclasBarra('btn-limpiar-clientes')}
+          <button id="btn-limpiar-clientes" type="button" title="Limpiar todos los filtros" onKeyDown={teclasBarra('btn-limpiar-clientes')}
             onClick={() => { setBusqueda(''); setFiltro('TODOS'); setOrden('DEUDA'); setPagina(1); setTimeout(() => irA('buscador-clientes'), 30); }}
-            className="p-3 border-2 bg-[var(--color-danger)] text-white border-[var(--color-danger)] hover:brightness-110 cursor-pointer flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-ink)]">
-            <FilterX size={20} strokeWidth={3} />
+            className="limpiar-sobrio">
+            <FilterX size={16} />
           </button>
-        )}
-        <button id="btn-nuevo-cliente" type="button" onClick={onNuevo} onKeyDown={teclasBarra('btn-nuevo-cliente')}
-          className="col-span-3 lg:col-span-1 h-12 bg-[var(--color-accent)] text-[var(--color-ink)] px-4 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] cursor-pointer whitespace-nowrap">
-          <Plus size={16} /> Nuevo cliente
-        </button>
+        </div>
       </div>
 
+      {/* TABLA (con su paginación arriba y abajo), como Inventario */}
+      <div className="tabla-marco flex flex-col">
       {/* PAGINACIÓN SUPERIOR */}
       {renderPaginacion('arriba')}
 
@@ -415,8 +442,8 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
               </tr>
             )) : (
               <tr>
-                <td colSpan={9} className="py-12 text-center text-[var(--color-muted)] font-black uppercase tracking-widest text-sm bg-[var(--color-bg)]">
-                  <span className="inline-block border-2 border-[var(--color-muted)] p-4 border-dashed">{clientes.length ? 'No se encontraron clientes' : 'Todavía no hay clientes'}</span>
+                <td colSpan={9}>
+                  <div className="vacio-sobrio"><Search size={32} />{clientes.length ? 'No se encontraron clientes con esos parámetros.' : 'Todavía no hay clientes registrados.'}</div>
                 </td>
               </tr>
             )}
@@ -426,6 +453,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
 
       {/* PAGINACIÓN INFERIOR */}
       {renderPaginacion('abajo')}
+      </div>
     </div>
   );
 };

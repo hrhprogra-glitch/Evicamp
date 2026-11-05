@@ -11,6 +11,8 @@
 // cambian el valor sin querer; Enter pasa al siguiente campo. Esc cierra las ventanas.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { filaEnMedio } from '../../../utils/flechasEspaciales';
+import { BOTONES_INVENTARIO } from '../tecladoInventario';
 import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, Loader2, Ban, Undo2, FileText, Share2, Download, Printer, ArrowLeft, Receipt, Sparkles } from 'lucide-react';
 import { imprimirEnTicketera } from '../../../utils/impresion';
 import { supabase } from '../../../db/supabase';
@@ -495,7 +497,12 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
     // Las teclas dentro de una ventana (detalle, vista previa, editor...) las maneja esa ventana
     if (editando || recibiendo || viendo || previa || (e.target as HTMLElement).closest('[role="dialog"]')) return;
     const fila = Number((e.target as HTMLElement).dataset?.nav?.split(',')[0]);
-    if (e.key === 'ArrowUp' && fila === 0) { e.preventDefault(); enfocar(document.getElementById('btn-tab-compras')); return; }
+    if (e.key === 'ArrowUp' && fila === 0) {
+      e.preventDefault();
+      const pestana = document.getElementById('btn-tab-compras');
+      enfocar(filaEnMedio(e.target as HTMLElement, pestana, BOTONES_INVENTARIO) || pestana);
+      return;
+    }
     moverEnGrilla(e, panel.current);
   };
 
@@ -505,7 +512,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
     <div id="panel-compras" ref={panel} onKeyDown={teclasPanel} className="flex flex-col gap-4 font-mono">
       {/* Cabecera (fila 0) */}
       {/* En laptops el texto va arriba y los botones abajo (en una fila no entran) */}
-      <div className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-3 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] p-3 sm:p-4">
+      <div className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-3 py-1">
         <div>
           <h2 className="text-sm sm:text-base font-black uppercase tracking-widest text-[var(--color-ink)] flex items-center gap-2"><ShoppingCart size={18} /> Listas de compras</h2>
           <p className="text-[11px] font-bold text-[var(--color-muted)] mt-1">
@@ -514,15 +521,18 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
           </p>
         </div>
         <div className="flex flex-nowrap gap-2 shrink-0 overflow-x-auto">{/* los 4 botones siempre en una fila ("Nueva lista" no baja) */}
+          <div className="pestanas-sobrias flex">
           {filtros.map(([f, nombre], i) => (
-            <button key={f} id={`btn-compras-filtro-${f}`} type="button" data-nav={`0,${i}`} onClick={() => setFiltro(f)} aria-pressed={filtro === f}
+            <button key={f} id={`btn-compras-filtro-${f}`} type="button" data-nav={`0,${i}`} onClick={() => setFiltro(f)} aria-pressed={filtro === f} data-activa={filtro === f}
               className={`${claseBoton} ${filtro === f ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'bg-white text-[var(--color-ink)]'}`}>
               {nombre}
             </button>
           ))}
+          </div>
           {!soloRecibe && (
           <button id="btn-nueva-compra" type="button" data-nav="0,3" onClick={() => conPermiso('armar listas de compras', () => setEditando('nueva'))}
-            className={`${claseBoton} bg-[var(--color-accent)] text-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)]`}>
+            style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+            className={`boton-cabecera ${claseBoton} bg-[var(--color-accent)] text-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)]`}>
             <Plus size={14} /> Nueva lista
           </button>
           )}
@@ -677,11 +687,11 @@ const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.
   }, [cuerpo]);
   return (
     <div role="dialog" aria-modal="true" aria-label={titulo} className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div ref={cuerpo} className={`bg-white border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] w-full ${ancho} max-h-[calc(var(--alto-pantalla,100vh)*0.94)] flex flex-col`}
+      <div ref={cuerpo} className={`ventana-sobria bg-white border-2 border-[var(--color-ink)] w-full ${ancho} max-h-[calc(var(--alto-pantalla,100vh)*0.94)] flex flex-col`}
         onKeyDown={(e) => moverEnGrilla(e, cuerpo.current)}>
-        <div className="bg-[var(--color-ink)] text-white px-4 py-3 flex justify-between items-center shrink-0">
-          <h3 className="text-sm font-black uppercase tracking-widest text-[var(--color-accent)]">{titulo}</h3>
-          <button type="button" data-nav="-1,0" onClick={onCerrar} aria-label="Cerrar (Esc)" title="Cerrar (Esc)" className="p-1 hover:text-[var(--color-accent)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] cursor-pointer"><X size={18} /></button>
+        <div className="ventana-cabecera">
+          <h3 className="ventana-cabecera__titulo"><ShoppingCart size={18} /> {titulo}</h3>
+          <button type="button" data-nav="-1,0" onClick={onCerrar} aria-label="Cerrar (Esc)" title="Cerrar (Esc)" className="ventana-cerrar"><X size={18} /></button>
         </div>
         <div className="p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3">{children}</div>
         <div className="p-3 border-t-2 border-[var(--color-ink)] bg-[var(--color-bg)] flex flex-wrap justify-end gap-2 shrink-0">{pie}</div>

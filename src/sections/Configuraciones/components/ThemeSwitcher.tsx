@@ -90,7 +90,7 @@ export const ThemeSwitcher: React.FC = () => {
   }, []);
 
   return (
-    <div className="bg-white border-2 border-[var(--color-border)] p-4 lg:p-6 w-full max-w-4xl font-mono">
+    <div className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] p-4 lg:p-6 w-full max-w-4xl font-mono">
       <div className="flex items-center gap-3 border-b-2 border-[var(--color-ink)] pb-4 mb-6">
         <Palette className="text-[var(--color-accent)]" size={24} />
         <h2 className="text-lg font-black uppercase text-[var(--color-ink)]">Apariencia y Colores</h2>

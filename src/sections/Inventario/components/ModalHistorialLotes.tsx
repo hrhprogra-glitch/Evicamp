@@ -402,20 +402,20 @@ Ya no tiene stock; el historial de ventas y movimientos no se toca.`;
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-fade-in flex items-center justify-center p-2 sm:p-4 font-mono">
       <div role="dialog" aria-modal="true" aria-labelledby="titulo-historial-lotes"
-        className="bg-[var(--color-surface)] animate-slide-up w-full max-w-6xl border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.85)]">
+        className="ventana-sobria bg-[var(--color-surface)] animate-slide-up w-full max-w-6xl border-2 border-[var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.85)]">
 
         {/* CABECERA (igual que el Directorio de clientes) */}
-        <div className="bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
+        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <History size={20} className="text-[var(--color-info)] shrink-0" />
-            <h2 id="titulo-historial-lotes" className="text-sm font-black uppercase tracking-widest truncate">
+            <h2 id="titulo-historial-lotes" className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest truncate">
               Historial · {producto.nombre}
             </h2>
           </div>
           <button
             id="btn-cerrar-historial-lotes"
             onClick={onClose}
-            className="hover:text-[var(--color-danger)] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] p-1"
+            className="ventana-cerrar hover:text-[var(--color-danger)] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] p-1"
             title="Cerrar (Escape)"
           >
             <X size={20} />
