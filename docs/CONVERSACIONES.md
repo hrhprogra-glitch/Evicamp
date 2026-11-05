@@ -735,6 +735,11 @@
        - `ArrowLeft` en el primer filtro regresa a la `[ X ]` si hay texto en el buscador.
   - Verificado en `siumax` con Edge/Puppeteer (`verificar-selector-x.mjs` y captura `buscador_x_enfocado.png`).
   - Compilado con `npx tsc -b` (0 errores) y desplegado con éxito a `siumax`. Solo siumax.
+- **Dueño** (05/11/2026): *"alista todo para pasar a claude para que claude siga"*.
+  - Antigravity preparó el traspaso completo en `docs/BITACORA.md` (entrada 102), `docs/PLAN-SIUMAX-COMERC.md`, `docs/CONVERSACIONES.md` y `docs/MEMORIA-IA.md`.
+  - Resumen de lo trabajado: entradas 94 a 101 (AnyDesk printer, ticket solo Reimprimir, textos SUNAT cortos, memoria de fila al cerrar submodales sin saltar a buscador, cifras clave y botones simétricos en ModalGrupo, ModalDetalleTicket ultra compacto a 65px, contraste del selector en modo oscuro, botón de Conteos con letra plata, scrollbars rectangulares 0px sin flechas, desactivación global de autocompletado en el POS y botón [ X ] accesible con teclado en todos los buscadores).
+  - Estado: rama `fase-11-sunat`, compilación limpia (`npx tsc -b`), siumax al día. Evicamp y GitHub intactos (Regla 4).
+
 
 
 

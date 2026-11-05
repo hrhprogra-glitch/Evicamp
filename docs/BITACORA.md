@@ -7,6 +7,36 @@
 
 ---
 
+## 05/11/2026 (102) · Antigravity — ENTREGA A CLAUDE: resumen de sesión, estado y pendientes
+El dueño pidió: *"alista todo para pasar a claude para que claude siga"*.
+Todo está listo, limpio y funcionando en la rama `fase-11-sunat` (commits `cb3582f` → `2e98a16`, sin push) y desplegado en `siumax` (`siumax.duckdns.org`).
+**IMPORTANTE (Regla 4):** Nada de esto está subido a Evicamp ni a GitHub. Evicamp NO paga (nunca Mercado Pago). Solo subir cuando el dueño lo ordene explícitamente en el momento.
+
+### 1. Resumen de lo realizado en este turno por Antigravity (entradas 94 a 101):
+1. **(94) AnyDesk Printer, ticket y textos SUNAT:** Selector liberado para impresoras virtuales; modal de ticket simplificado a solo "Reimprimir"; textos de cambio/devolución simplificados a `[ CAMBIAR ]` y `[ DEVOLVER ]`; botón único unificado `[ ⇄ ]` en la tabla de movimientos; centrado del botón del ojo en Tesorería.
+2. **(95) Regla universal de memoria de fila al cerrar modales/submodales:** Implementado WeakMap `enVentana` en `src/utils/ventanas.ts` que memoriza la fila activa previa de cada nivel; al presionar Escape o cerrar un submodal (ej. ticket sobre detalle de caja, o detalle de caja sobre historial), el foco regresa exactamente a la fila que estaba seleccionada y NUNCA salta al buscador.
+3. **(96) Aprovechamiento de espacio en ModalGrupo y tabla detalle de caja:** Cifras clave de grupo en 3 columnas y 4 botones alineados al 100% en cuadrícula simétrica `grid-cols-2 sm:grid-cols-4` con altura uniforme (44px) y selector fluido; corregido return prematuro en el selector de la tabla de detalle de caja.
+4. **(97) Acciones SUNAT ultra compactas en ModalDetalleTicket:** Altura de cabecera reducida de ~250px a ~65px con botones en línea a la derecha de 24px (`[ ↗ PDF ]`, `[ ↗ XML ]`, `[ 🗎 NOTA ]`, `[ 🔄 REENVIAR ]`); el ticket térmico ahora se visualiza completo en pantalla sin scroll innecesario.
+5. **(98) Contraste y visibilidad del selector por teclado en Modo Oscuro:** Doble anillo esmeralda `#10B981` y fondo `#162438` en `.boton-cabecera:focus-visible`; anillos de Tailwind en modo oscuro restaurados de pizarra `#334155` a esmeralda `#10B981`; filas de tabla seleccionadas con fondo `#162438` y barra lateral izquierda verde de 4px; buscador y filtros con recuadro esmeralda de 2px; exclusión de borde verde estático permanente en reposo; limpieza instantánea de foco con clic de mouse.
+6. **(99) Letra legible en Conteos, scrollbar sin flechas y teclado en Tienda Web:** Botón `+ NUEVO AJUSTE` con letra plata clara `#CBD5E1` en modo oscuro (no negra); eliminación de `::-webkit-scrollbar-button` para erradicar flechas nativas de Windows; navegación horizontal con flechas `ArrowLeft`/`ArrowRight` entre `input-tienda-web-enlace` ↔ `[ COPIAR ENLACE ]` ↔ `[ VER TIENDA ]` y vertical con `ArrowDown`/`ArrowUp` hacia el resto del formulario.
+7. **(100) Desactivación global de autocompletado y scrollbars rectangulares 0px SiuMax Sobrio:** Guard global en `focusin` (`src/main.tsx`) que aplica automáticamente `autocomplete="off"`, `autocorrect="off"`, `autocapitalize="off"` y `spellcheck="false"` a todo input o textarea del sistema (evita globos flotantes de sugerencias anteriores como '308'); en `src/index.css`, se removió `scrollbar-width` de Chromium (Windows 11) para evitar que el navegador use la barra redondeada Fluent con flechas, forzando `::-webkit-scrollbar` plano con `border-radius: 0px` (esquinas 100% rectas a 90°).
+8. **(101) Acceso por teclado al botón `[ X ]` (borrado) en todos los buscadores:** Ahora cuando se escribe en cualquier buscador del sistema, presionar `ArrowRight` al final del texto posa el selector en el botón `[ X ]` (`#btn-borrar-buscador-...`), iluminándolo con fondo rojo vivo `#DC2626` sin curvas; `Enter`/`Space`/`Escape` borra la búsqueda y regresa el foco al buscador; `ArrowLeft` devuelve el cursor al texto; `ArrowRight` avanza al primer filtro; y `ArrowLeft` desde el primer filtro regresa a la `[ X ]` si hay texto. Aplicado a los 10 buscadores del sistema.
+
+### 2. Estado técnico actual:
+- Rama: `fase-11-sunat`.
+- Compilación: `npx tsc -b` pasa limpio con 0 errores.
+- Servidor de pruebas: `siumax` actualizado con el último build (`node ai-scripts/deploy.cjs siumax`).
+- Base de conocimiento: `graphify` actualizado (`graphify update .`).
+- Documentación: `BITACORA.md`, `PLAN-SIUMAX-COMERC.md`, `CONVERSACIONES.md` y `MEMORIA-IA.md` 100% al día.
+
+### 3. Qué sigue / Pendientes para Claude:
+1. **Atender el siguiente pedido que traiga el dueño:** El dueño está probando exhaustivamente en `siumax` y suele enviar capturas marcando detalles visuales o de teclado con flechas rojas.
+2. **Pendiente del dueño:** Decidir el comportamiento de la tecla ↓ en "Exacto tarjeta/yape" dentro del cobro (si debe ir a Efectivo o a su campo de pago).
+3. **Proveedores:** Llevar la sección Proveedores al estilo oficial SiuMax Sobrio (cuando el dueño lo indique).
+4. **Subir a Evicamp / GitHub:** **SOLO cuando el dueño lo diga expresamente en ese momento.**
+
+---
+
 ## 04/11/2026 (101) · Antigravity — Navegación por teclado completa al botón [ X ] (borrar búsqueda) en todos los buscadores (solo siumax)
 - **Problema reportado por el dueño:** *"me di cuenta de algo que no seleciona cuando escribo algo en el buscador no se seleciona el x y eso en muchos busacadores arregla eso"* con captura de Inventario > Lotes con texto "AMOR" y píldora `[ 0 MATCH ] [ X ]` encerrada en rojo.
 - **Causas raíz detectadas:**
