@@ -7,6 +7,15 @@
 
 ---
 
+## 06/11/2026 (125) · Claude — Nuevo ajuste: sin "Automático", lista de lotes sin taparse y alto que cambia suave (solo siumax)
+- **Dueño** (captura con la lista de lotes encima de la cantidad): *"nada de automático; así sigue siendo muy brusco la aparición del producto, se ve cómo se acomoda todo rápido; y hay un problema estético en la imagen, corrige eso"*.
+- **"Automático" fuera:** en el conteo (quien tiene Conteos completo) ya no está esa opción; queda elegido el lote más antiguo y se puede cambiar (`conAutomatico = false`, `setLote(conStock[0])`).
+- **Problema estético (causa):** la animación `.aparecer` con `both` dejaba cada parte en su propia capa al terminar, y la parte de abajo (cantidad) tapaba la lista flotante de lotes. Arreglo: `backwards` (al terminar no deja capa) y la lista de lotes va DENTRO de la ventana (no flotando), como la de productos.
+- **Brusco (causa):** la ventana cambiaba de alto de golpe. Nuevo `src/components/AlturaSuave.tsx` (mide con ResizeObserver y anima el alto en 260 ms; solo recorta mientras se anima; sin animación si el equipo pide reducir movimiento). En Nuevo ajuste envuelve el recuadro principal.
+- Probado en siumax (PAN, modo claro): al elegir el producto la ventana pasa de 301 a 521 px en ~470 ms paso a paso (antes de golpe); lote elegido "Lote del 5/11/2026"; la lista de lotes abierta no tapa la cantidad; 0 errores.
+
+---
+
 ## 06/11/2026 (124) · Claude — El ticket impreso sale igual que la vista previa; Nuevo ajuste con animación suave (solo siumax)
 - **Dueño:** *"imprimí un ticket pero no sale bien ni completo como la previsualización; analiza por qué y arréglalo"* y *"agrega una animación al conteo; se ve muy brusco cuando se agrega un producto o cantidades y aparece la causa"*.
 - **Causa 1 — sin diseño (app de escritorio):** `impresion.ts › armarDocumento` mandaba a la ventana invisible de impresión los `<link>` del CSS; el CSS del sistema se carga con `crossorigin` y nginx no manda `Access-Control-Allow-Origin`, así que desde esa ventana (otra procedencia) el navegador lo BLOQUEABA y el ticket salía sin estilos (letra común, nada centrado, totales sin alinear). Comprobado generando el PDF del mismo documento. **Arreglo:** los estilos van COPIADOS dentro del documento (`cssDeLaPagina()` lee `document.styleSheets`).

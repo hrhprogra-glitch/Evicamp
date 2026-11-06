@@ -4,7 +4,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 06/11/2026 (124), Claude: ticket impreso igual que la vista previa (estilos copiados, 72 mm; largo en la app de escritorio con el próximo instalador) y animación suave en Nuevo ajuste. Solo siumax.
+- **Última actualización:** 06/11/2026 (125), Claude: Nuevo ajuste sin "Automático", lista de lotes sin taparse y alto suave (AlturaSuave). Solo siumax.
+- (124) 06/11/2026, Claude: ticket impreso igual que la vista previa (estilos copiados, 72 mm; largo en la app de escritorio con el próximo instalador) y animación suave en Nuevo ajuste. Solo siumax.
 - (123) 06/11/2026, Claude: sin listas de abajo en Armar producto y Nuevo ajuste (ventanas a la medida). Solo siumax.
 - (122) 06/11/2026, Claude: cabeceras en una fila desde 1366 px en todas las secciones; tarjetas de Armar producto como botones; lista de Categoría pegada. Solo siumax.
 - (121) 06/11/2026, Claude: "Producir" pasa a "Armar producto" (Tallas y colores o Combos y recetas); tallas quitadas de Nuevo producto. Solo siumax.

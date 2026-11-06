@@ -22,6 +22,7 @@ import { avisar } from '../../../utils/dialogos';
 import {formatearCantidad, formatearMonto } from '../../../utils/formato';
 import { esDecimal } from '../../../utils/unidades';
 import { MOTIVOS_FALTA, MOTIVOS_SALIDA, MOTIVOS_SOBRA } from '../motivos';
+import { AlturaSuave } from '../../../components/AlturaSuave';
 import { CuerpoVentana, CajaLista, FilaLista, LineaDato, Etiqueta, DatoFila, claseBotonBarra, claseBotonPrincipal } from '../../../components/ListaVentana';
 
 interface Props {
@@ -116,7 +117,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
       if (!vigente) return;
       const conStock = ((data || []) as Lote[]).filter((l) => Number(l.quantity) > 0);
       setLotes(conStock);
-      setLote(modo === 'SALIDA' ? conStock[0] || null : null);
+      setLote(conStock[0] || null); // sin "Automático" (pedido del dueño 06/11/2026): el más antiguo, se puede cambiar
       setCargandoLotes(false);
     })();
     return () => { vigente = false; };
@@ -135,7 +136,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
   const pideMotivo = producto && (modo === 'SALIDA' || (diferencia !== null && diferencia !== 0));
   // ¿Se muestra el desplegable de lotes? MERMA siempre (salvo consumo); CONTEO solo con Conteos completo
   const veLotes = !!producto && !consumo && lotes.length > 0 && (modo === 'SALIDA' || puedeSalida);
-  const conAutomatico = modo === 'CONTEO';
+  const conAutomatico = false; // la opción "Automático" se quitó (06/11/2026)
   const opcionesLote: (Lote | null)[] = conAutomatico ? [null, ...lotes] : lotes;
   const campoDespuesDelLote = modo === 'SALIDA' ? 'input-cantidad-ajuste' : 'input-contado';
 
@@ -359,7 +360,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
             <ChevronDown size={16} className={`shrink-0 transition-transform ${lotesAbierto ? 'rotate-180' : ''}`} />
           </button>
           {lotesAbierto && (
-            <div role="listbox" aria-label="Lotes" className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] z-50 max-h-56 overflow-y-auto">
+            <div role="listbox" aria-label="Lotes" className="aparecer mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-56 overflow-y-auto">
               {opcionesLote.map((l, i) => {
                 const elegido = (lote?.id ?? null) === (l?.id ?? null);
                 return (
@@ -436,7 +437,9 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
         </div>
 
         <CuerpoVentana>
-          <div className="border-2 border-[var(--color-border)] bg-white p-3 sm:p-4 flex flex-col gap-4 shrink-0">
+          {/* El alto cambia suave cuando aparecen o se van partes (la ventana ya no "salta") */}
+          <AlturaSuave className="shrink-0">
+          <div className="border-2 border-[var(--color-border)] bg-white p-3 sm:p-4 flex flex-col gap-4">
             {/* 1. PRODUCTO — si el selector sale del buscador y de su lista (ej. ↑ a la X), la lista se cierra */}
             <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setAbierta(false); }}>
               <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2 mb-2">
@@ -743,6 +746,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
             )}
             {ultimo && <p id="ajuste-ultimo" role="status" key={ultimo} className="aparecer text-xs font-black text-[var(--color-accent)] uppercase">{ultimo}</p>}
           </div>
+          </AlturaSuave>
 
           {/* Sin la lista "Hechos ahora" (pedido del dueño 06/11/2026): al guardar queda el aviso de arriba y todo sale
               en la tabla de Conteos al cerrar */}

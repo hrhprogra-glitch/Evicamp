@@ -937,7 +937,7 @@ nav button {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: none; }
 }
-.aparecer { animation: aparecer 0.22s ease-out both; }
+.aparecer { animation: aparecer 0.22s ease-out backwards; } /* backwards: al terminar no deja capa propia (tapaba listas) */
 @media (prefers-reduced-motion: reduce) { .aparecer { animation: none; } }
 
 /* Laptops y tablets grandes (1024–1700 px): botones y pestañas de la cabecera más compactos para que el título, las

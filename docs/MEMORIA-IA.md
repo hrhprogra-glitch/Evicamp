@@ -199,6 +199,7 @@
 52. **Montos en pantalla: `formatearMonto()`** (06/11/2026): todo monto que se MUESTRA con "S/" usa `formatearMonto(x)` de `src/utils/formato.ts` (S/ 16,200.00), no `x.toFixed(2)`. Para cálculos, campos de número y SUNAT, números sin formato.
 53. **Cabeceras: nunca forzar una segunda fila** (06/11/2026): no usar `w-full 2xl:w-auto` ni `flex-col 2xl:flex-row` en la cabecera de una sección (el dueño quiere UNA fila en laptops); usar `flex-wrap` + `max-w-full` para que baje solo cuando no entra. Los botones/pestañas se compactan solos de 1024 a 1700 px (`index.css`). Medir con `scratchpad/medir-cabeceras.mjs`.
 54. **Imprimir en otra ventana: copiar los estilos, no enlazarlos** (06/11/2026): el CSS de Vite lleva `crossorigin` y el servidor no manda CORS; un documento armado aparte (data:, about:blank) NO carga ese `<link>` y sale sin diseño. Copiar `document.styleSheets` en un `<style>`. Y en tickets: imprimir a 72 mm (lo que imprime una ticketera de 80 mm). Para revisar: el PDF del documento en modo impresión.
+55. **Animaciones de aparecer y alto suave** (06/11/2026): `.aparecer` (index.css, con `backwards`: nunca `both`/`forwards`, porque deja capa propia y tapa listas flotantes) y `<AlturaSuave>` (src/components) para que una ventana no salte de tamaño. Dentro de AlturaSuave, las listas van en el flujo (no `absolute`).
 
 - **Pruebas (28/10/2026):** el dueño quiere que se pruebe SOLO lo que se modificó. Las tandas de regresión, solo si él lo pide.
 
