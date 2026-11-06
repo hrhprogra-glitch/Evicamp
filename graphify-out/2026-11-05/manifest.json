@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793925304.8991437,
-    "seen": 1793925320.7877421,
-    "ast_hash": "3f41a5817f680d39a58fc475b205dd52",
+    "mtime": 1793926047.7343578,
+    "seen": 1793926063.3595042,
+    "ast_hash": "61c1d2c13e6ddf4b5f3599f6486ae6f8",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793925304.9011567,
-    "seen": 1793925320.7877438,
-    "ast_hash": "dfdaaadb477cd28a6e68015f47971768",
+    "mtime": 1793926047.7363594,
+    "seen": 1793926063.3595061,
+    "ast_hash": "2a8054ead83baa9a8cc93a34c4cd2aae",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793924357.648589,
-    "seen": 1793924378.586177,
-    "ast_hash": "3274d8044c1b9fb7daa1d60a635f92ea",
+    "mtime": 1793926047.7343578,
+    "seen": 1793926063.359508,
+    "ast_hash": "6780c0a15325e6bb2c977aa3f573e012",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793925304.8991437,
-    "seen": 1793925320.787747,
-    "ast_hash": "40215610d207c7791a06aeb16fc4528d",
+    "mtime": 1793926047.7343578,
+    "seen": 1793926063.3595095,
+    "ast_hash": "955811831927d0b0feb6ede7f5b4f0fc",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2268,9 +2268,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProduccion.tsx": {
-    "mtime": 1793925208.141804,
-    "seen": 1793925320.787587,
-    "ast_hash": "1a7fd936b1a58f16b9bfb9b5e86a2f97",
+    "mtime": 1793925815.0803392,
+    "seen": 1793926063.3593392,
+    "ast_hash": "e6e4aaf35161d9984bbd6b4b178b40cd",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/limpiar-siumax-total.cjs": {
@@ -2640,9 +2640,9 @@
     "semantic_hash": ""
   },
   "src/utils/flechasEspaciales.ts": {
-    "mtime": 1793924357.6742907,
-    "seen": 1793924378.586118,
-    "ast_hash": "2ef130d1ea6513c3df0cac718a8a6e59",
+    "mtime": 1793925965.6759148,
+    "seen": 1793926063.359443,
+    "ast_hash": "651c3395b623687ba0d3e2d129704607",
     "semantic_hash": ""
   },
   "ai-scripts/estilo-ventanas.cjs": {

@@ -46,7 +46,7 @@ export const HeaderInventario: React.FC<Props> = ({ onIngresoStock, onNuevoSKU, 
             onClick={onProducirReceta}
             className="bg-emerald-600 text-white px-3 sm:px-5 lg:px-6 py-2.5 sm:py-3 lg:py-4 border-2 border-[var(--color-ink)] font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center justify-center gap-2 lg:gap-3 hover:bg-[var(--color-ink)] hover:text-emerald-400 hover:border-emerald-400 transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
           >
-            <ChefHat size={18} /> <span className="whitespace-nowrap">Producir</span>
+            <ChefHat size={18} /> <span className="whitespace-nowrap">Armar producto</span>
           </button>
         )}
 

@@ -707,7 +707,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                 style={{ '--icono': '#059669' } as React.CSSProperties}
                 className="boton-cabecera bg-emerald-600 text-white px-1 sm:px-4 lg:px-6 py-3 lg:py-4 min-w-0 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-widest flex items-center justify-center gap-1 sm:gap-2 hover:bg-emerald-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
               >
-                <ChefHat size={16} /> <span className="hidden sm:inline">Producir</span>
+                <Layers size={16} /> <span className="hidden sm:inline">Armar producto</span>
               </button>
               <button
                 id="btn-traspasos"
@@ -1016,6 +1016,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           setProduccionParaCambiar(false);
         }}
         paraCambiar={produccionParaCambiar}
+        // Tallas y colores › "Guardar e ir a Lotes" (o "Ingresar lote" de la lista): pestaña Lotes + Ingresar lote con ese producto
+        onIngresarLote={(p) => { setVistaActiva('LOTES'); setPreselectedLoteProduct(p); setIsModalLoteOpen(true); }}
         productos={products}
         productoInicial={productoParaProduccion}
         onSuccess={() => {

@@ -785,3 +785,5 @@
 - **Dueño** (captura de Producir): *"en categoría no crea categorías o borra como en producto; ajustar eso"* → hecho (118). Solo siumax.
 - **Dueño** (captura): *"Guardar e ir a Lotes literalmente me lleva a Lotes; debería llevarme a la ventana de lotes para ponerle la cantidad; y Guardar debe cerrar la ventana"* → hecho; de paso, arreglo de la regla 9 (119). Solo siumax.
 - **Dueño:** *"con adicional ¿a qué se refiere?"* → *"pero ahí no dice 16.200, dice 16200"* → *"sí también; pero ¿está bien, es correcto que es 16200?"* → Claude: el cálculo era correcto para "por unidad" (180 × 90), pero lo real es por tanda; hecho: gastos extra por todo el lote + separador de miles en todo el sistema (120). Solo siumax.
+- **Dueño** (captura de Activar variantes): *"tallas y colores dentro de Producir; escoger entre tallas y colores o producir, como unidad/kilos/consumo; que el botón tenga otro nombre"* → plan → nombre "Armar producto" → hecho (121). Solo siumax.
+- **Dueño:** *"con adicional ¿te refieres a que ganaré esa cantidad?"* → Claude: no, es un gasto; ganancia = precio − costo.

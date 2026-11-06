@@ -1,5 +1,8 @@
 // src/sections/Inventario/components/ModalProduccion.tsx
-// PRODUCIR (botón de Inventario): todo lo de combos y recetas en un solo lugar (pedido del dueño 05/11/2026).
+// ARMAR PRODUCTO (botón de Inventario, antes "Producir"; pedido del dueño 06/11/2026): al abrir se elige
+//  - TALLAS Y COLORES: un producto con varias tallas/colores (product_variants), cada una con su precio y código de
+//    barras opcionales. "Guardar e ir a Lotes" abre Ingresar lote (pide cuántas llegaron de cada talla).
+//  - COMBOS Y RECETAS (desde el 05/11/2026; antes en Nuevo producto):
 //  - LISTA: los combos y recetas, cuántos alcanzan con el stock de hoy; Producir (recetas) y Cambiar.
 //  - FORMULARIO (nuevo o cambiar): 1. nombre → 2. productos que usa (cantidad por unidad) → 3. combo o receta →
 //    4. precio y categoría (con lo que cuesta armarlo y la ganancia) → Guardar / Producir ahora / Ir a Lotes.
@@ -9,7 +12,7 @@
 // El costo adicional (gas, mano de obra) se guarda POR UNIDAD; al producir se manda por todo el lote (× cantidad).
 // Antes esto estaba en Nuevo producto › opciones avanzadas (ahí ahora solo queda un botón que abre esta ventana).
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChefHat, Boxes, Plus, Trash2, X, Search, ChevronDown } from 'lucide-react';
+import { ChefHat, Boxes, Plus, Trash2, X, Search, ChevronDown, Layers } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar, confirmar } from '../../../utils/dialogos';
@@ -27,10 +30,13 @@ interface Props {
   productoInicial?: Product | null;     // desde la fila (gorrito) o desde "Cambiar sus productos" de Nuevo producto
   onIrALotes?: (nombre: string) => void; // pestaña Lotes buscando ese producto
   paraCambiar?: boolean;                 // desde "Cambiar sus productos en Producir": abre el formulario, no Producir
+  onIngresarLote?: (producto: Product) => void; // "Guardar e ir a Lotes" de Tallas y colores: abre Ingresar lote
 }
 
 type Tipo = 'COMBO' | 'RECETA';
-type Vista = 'LISTA' | 'FORM' | 'PRODUCIR';
+type Vista = 'LISTA' | 'FORM' | 'PRODUCIR' | 'TALLAS';
+// Una fila de Tallas y colores (id = la variante ya guardada)
+interface FilaTalla { id?: string | number; talla: string; color: string; precio: string; barcode: string; stock?: number }
 interface Insumo { component_product_id: string; component_variant_id?: string | number | null; quantity: number }
 // Lo que se está produciendo (recién guardado o elegido de la lista)
 interface Elegido { id: string; name: string; unit: string; costoAdicional: number; insumos: Insumo[] }
@@ -38,7 +44,7 @@ interface Elegido { id: string; name: string; unit: string; costoAdicional: numb
 const enfocar = (id: string) => setTimeout(() => document.getElementById(id)?.focus(), 40);
 const soles = (n: number) => `S/ ${(Number(n) || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, productos, productoInicial, onIrALotes, paraCambiar }) => {
+export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, productos, productoInicial, onIrALotes, paraCambiar, onIngresarLote }) => {
   const empleado = useEmpleado();
   const puedeCrear = usePermiso('almacen_crear_editar_productos');
   const [vista, setVista] = useState<Vista>('LISTA');
@@ -66,11 +72,18 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
   const [costoAdicProd, setCostoAdicProd] = useState('0');
   const [adicEditado, setAdicEditado] = useState(false);
   const [avisoTope, setAvisoTope] = useState('');
+  // Tallas y colores
+  const [tallas, setTallas] = useState<FilaTalla[]>([]);
+  const [tallasQuitadas, setTallasQuitadas] = useState<(string | number)[]>([]);
 
   useCerrarConEscape(isOpen, onClose);
 
   const porId = useMemo(() => new Map(productos.map((p) => [String(p.id), p])), [productos]);
   const compuestos = useMemo(() => productos.filter((p) => p.activo !== false && (p.tipoCompuesto === 'COMBO' || p.tipoCompuesto === 'RECETA')), [productos]);
+  const tieneTallas = (p: Product) => Boolean(p.tieneVariantes || (p.variantes && p.variantes.length > 0));
+  const conTallas = useMemo(() => productos.filter((p) => p.activo !== false && tieneTallas(p) && p.tipoCompuesto !== 'COMBO' && p.tipoCompuesto !== 'RECETA'), [productos]); // eslint-disable-line react-hooks/exhaustive-deps
+  // La lista de abajo: primero los de tallas, luego combos y recetas
+  const armados = useMemo(() => [...conTallas.map((p) => ({ p, clase: 'TALLAS' as const })), ...compuestos.map((p) => ({ p, clase: p.tipoCompuesto as Tipo }))], [conTallas, compuestos]);
   // Categorías: la misma tabla que Nuevo producto (categories), para crear y borrar igual que ahí
   const [categorias, setCategorias] = useState<string[]>([]);
   useEffect(() => {
@@ -116,7 +129,8 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
       const p = productoInicial;
       if (p && !paraCambiar && p.tipoCompuesto === 'RECETA' && (mapa[String(p.id)] || []).length) irAProducir(p, mapa[String(p.id)]);
       else if (p && (p.tipoCompuesto === 'COMBO' || p.tipoCompuesto === 'RECETA')) abrirFormulario(p, mapa[String(p.id)] || []);
-      else { setVista('LISTA'); enfocar(compuestos.length ? 'fila-compuesto-0' : 'btn-nuevo-compuesto'); }
+      else if (p && tieneTallas(p)) abrirTallas(p);
+      else { setVista('LISTA'); enfocar('btn-nuevo-tallas'); }
     })();
     return () => { vigente = false; };
   }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -269,6 +283,110 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
     }
   };
 
+  // ---------- TALLAS Y COLORES ----------
+  const filaVacia = (): FilaTalla => ({ talla: '', color: '', precio: '', barcode: '' });
+  const abrirTallas = (p: Product | null) => {
+    setDesdeGuardar(false);
+    setEditId(p ? String(p.id) : null);
+    setNombre(p?.name || '');
+    setPrecio(p && Number(p.price) ? String(p.price) : '');
+    setCategoria(p?.category || '');
+    setCatAbierta(false);
+    const vars = (p?.variantes || []) as any[];
+    setTallas(vars.length ? vars.map((v) => ({ id: v.id, talla: v.talla || '', color: v.color || '', precio: v.price != null && v.price !== '' ? String(v.price) : '', barcode: v.barcode || '', stock: Number(v.quantity) || 0 })) : [filaVacia()]);
+    setTallasQuitadas([]);
+    setVista('TALLAS');
+    enfocar('input-nombre-tallas');
+  };
+  const cambiarFila = (idx: number, campo: keyof FilaTalla, valor: string) => setTallas((l) => l.map((t, k) => (k === idx ? { ...t, [campo]: valor } : t)));
+  const agregarFila = () => { const n = tallas.length; setTallas((l) => [...l, filaVacia()]); enfocar(`talla-talla-${n}`); };
+  const quitarFila = (idx: number) => {
+    const t = tallas[idx];
+    if (t?.id != null) setTallasQuitadas((q) => [...q, t.id as string | number]);
+    const quedan = tallas.length - 1;
+    setTallas((l) => l.filter((_, k) => k !== idx));
+    enfocar(quedan > 0 ? `btn-quitar-talla-${Math.min(idx, quedan - 1)}` : 'btn-agregar-talla');
+  };
+
+  // Guarda el producto con sus tallas y colores; devuelve el producto (o null)
+  const guardarTallas = async (): Promise<Product | null> => {
+    const n = nombre.trim().toUpperCase();
+    const filas = tallas.filter((t) => t.talla.trim() || t.color.trim() || t.barcode.trim() || t.precio.trim());
+    if (n.length < 2) { await avisar('Escribe el nombre.'); enfocar('input-nombre-tallas'); return null; }
+    if (!(Number(precio) > 0)) { await avisar('Escribe el precio de venta.'); enfocar('input-precio-tallas'); return null; }
+    if (!filas.length) { await avisar('Agrega al menos una talla o color.'); enfocar('talla-talla-0'); return null; }
+    const sinNombre = filas.findIndex((t) => !t.talla.trim() && !t.color.trim());
+    if (sinNombre >= 0) { await avisar('Cada fila necesita su talla o su color.'); enfocar(`talla-talla-${tallas.indexOf(filas[sinNombre])}`); return null; }
+    const claves = filas.map((t) => `${t.talla.trim().toUpperCase()}|${t.color.trim().toUpperCase()}`);
+    if (new Set(claves).size !== claves.length) { await avisar('Hay dos filas con la misma talla y color.'); return null; }
+    setGuardando(true);
+    try {
+      const cat = categoria.trim().toUpperCase();
+      if (cat && !categorias.includes(cat)) {
+        setCategorias((l) => [...l, cat].sort());
+        await supabase.from('categories').insert([{ id: Date.now(), name: cat, is_synced: 1 }]);
+      }
+      const datos = { name: n, category: cat || 'GENERAL', price: Number(precio), tiene_variantes: true };
+      let id = editId;
+      if (id) {
+        const { error } = await supabase.from('products').update(datos).eq('id', id);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase.from('products').insert([{
+          ...datos,
+          code: `SKU-${Math.floor(100000 + Math.random() * 900000)}`,
+          quantity: 0, min_stock: 0, control_type: 'UND', unit: 'UND', sunat_unit_code: 'NIU',
+          tipo_igv: 'GRAVADO', mostrar_en_catalogo: true, tipo_compuesto: 'ESTANDAR', is_synced: '1', is_active: 1,
+        }]).select().single();
+        if (error) throw error;
+        id = String(data.id);
+      }
+      // Cada talla/color: las nuevas se crean con stock 0 (el stock entra por Ingresar lote); a las ya guardadas
+      // solo se les cambian sus datos (nunca el stock); las quitadas quedan inactivas (su historial no se pierde)
+      const guardadas: any[] = [];
+      for (const t of filas) {
+        const datosVar = {
+          product_id: id,
+          nombre_variante: `${t.talla.trim()} ${t.color.trim()}`.trim().toUpperCase(),
+          talla: t.talla.trim().toUpperCase() || null,
+          color: t.color.trim().toUpperCase() || null,
+          barcode: t.barcode.trim() || null,
+          price: t.precio.trim() !== '' ? Number(t.precio) : null,
+          is_active: 1, is_synced: 1,
+        };
+        if (t.id != null) {
+          const { data, error } = await supabase.from('product_variants').update(datosVar).eq('id', t.id).select().single();
+          if (error) throw error;
+          guardadas.push(data);
+        } else {
+          const { data, error } = await supabase.from('product_variants').insert([{ ...datosVar, quantity: 0, min_stock: 2 }]).select().single();
+          if (error) throw error;
+          guardadas.push(data);
+        }
+      }
+      for (const q of tallasQuitadas) {
+        const { error } = await supabase.from('product_variants').update({ is_active: 0 }).eq('id', q);
+        if (error) throw error;
+      }
+      onSuccess?.();
+      return { id, name: n, price: Number(precio), cost: 0, quantity: 0, minStock: 0, code: '', barcode: '', category: cat || 'GENERAL', unit: 'UND', tieneVariantes: true, variantes: guardadas } as unknown as Product;
+    } catch (e) {
+      const m = (e as { message?: string; code?: string });
+      await avisar(m.code === '23505' ? 'Ese código de barras ya lo tiene otro producto o talla.' : `No se pudo guardar: ${m.message || e}`);
+      return null;
+    } finally {
+      setGuardando(false);
+    }
+  };
+  const alGuardarTallas = async (luego: 'CERRAR' | 'LOTES') => {
+    if (guardando) return;
+    const p = await guardarTallas();
+    if (!p) return;
+    onClose();
+    if (luego === 'LOTES') onIngresarLote?.(p);
+    else void avisar(`✔ ${p.name} guardado con ${(p.variantes || []).length} talla(s) / color(es).`);
+  };
+
   // ---------- PRODUCIR ----------
   const irAProducir = (p: Product, lista: Insumo[]) => {
     setDesdeGuardar(false);
@@ -365,18 +483,94 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
     </div>
   );
 
-  const titulo = vista === 'FORM' ? (editId ? 'Cambiar combo o receta' : 'Nuevo combo o receta') : vista === 'PRODUCIR' ? `${desdeGuardar ? 'Crear lote' : 'Producir'}: ${elegido?.name || ''}` : 'Producir · combos y recetas';
+  // Categoría (Combos/recetas y Tallas y colores): lista del sistema; crea y borra categorías como Nuevo producto
+  const campoCategoria = (
+                <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setCatAbierta(false); }}>
+                  <label htmlFor="input-categoria-compuesto" className={etiquetaCampo}>Categoría</label>
+                  <input id="input-categoria-compuesto" type="text" autoComplete="off" spellCheck={false} placeholder="GENERAL" value={categoria}
+                    onChange={(e) => { setCategoria(e.target.value); setCatAbierta(true); }}
+                    onClick={() => setCatAbierta((v) => !v)}
+                    onKeyDown={(e) => {
+                      const items = () => Array.from(document.querySelectorAll('[data-cat-prod="true"]')) as HTMLElement[];
+                      if (e.key === 'Enter') {
+                        // Enter no pasa al siguiente cuadro. Con algo escrito y sin elegir de la lista: se guarda LO ESCRITO;
+                        // vacío: abre la lista para elegir (de la lista se elige con ↓ y Enter, o clic)
+                        e.preventDefault();
+                        if (!catAbierta) setCatAbierta(true);
+                        else if (categoria.trim()) void crearCategoria(categoria);
+                        else setCatAbierta(false);
+                      } else if (e.key === 'ArrowDown' && catAbierta && items().length) { e.preventDefault(); items()[0]?.focus(); }
+                      else if (e.key === 'Escape' && catAbierta) { e.preventDefault(); e.stopPropagation(); setCatAbierta(false); }
+                    }}
+                    className={`${claseCampo} uppercase pr-9`} />
+                  <ChevronDown size={16} className={`absolute right-3 top-[38px] text-[var(--color-muted)] pointer-events-none transition-transform ${catAbierta ? 'rotate-180' : ''}`} />
+                  {catAbierta && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[var(--color-ink)] z-50 max-h-56 overflow-y-auto">
+                      {/* Lo escrito no existe: opción para crearla (como en Nuevo producto) */}
+                      {categoria.trim() && !categorias.includes(categoria.trim().toUpperCase()) && (
+                        <div role="option" tabIndex={0} data-cat-prod="true" id="cat-prod-crear"
+                          onClick={() => void crearCategoria(categoria)}
+                          onKeyDown={(e) => {
+                            const l = Array.from(document.querySelectorAll('[data-cat-prod="true"]')) as HTMLElement[]; const i = l.indexOf(e.currentTarget);
+                            if (e.key === 'ArrowDown') { e.preventDefault(); l[i + 1]?.focus(); }
+                            else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('input-categoria-compuesto')?.focus(); }
+                            else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); void crearCategoria(categoria); }
+                            else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setCatAbierta(false); enfocar('input-categoria-compuesto'); }
+                          }}
+                          className="flex items-center gap-2 p-3 border-b-2 border-[var(--color-ink)] cursor-pointer outline-none text-xs font-black uppercase text-[var(--color-accent)] hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white">
+                          <Plus size={14} className="shrink-0" /> Crear nueva categoría «{categoria.trim().toUpperCase()}»
+                        </div>
+                      )}
+                      {categoriasFiltradas.map((cat) => (
+                        <div key={cat} role="option" tabIndex={0} data-cat-prod="true" aria-selected={categoria.toUpperCase() === cat}
+                          onClick={() => { setCategoria(cat); setCatAbierta(false); enfocar('input-categoria-compuesto'); }}
+                          onKeyDown={(e) => {
+                            if (e.target !== e.currentTarget) return;
+                            const l = Array.from(document.querySelectorAll('[data-cat-prod="true"]')) as HTMLElement[]; const i = l.indexOf(e.currentTarget);
+                            if (e.key === 'ArrowDown') { e.preventDefault(); l[i + 1]?.focus(); }
+                            else if (e.key === 'ArrowUp') { e.preventDefault(); (i > 0 ? l[i - 1] : document.getElementById('input-categoria-compuesto'))?.focus(); }
+                            else if (e.key === 'ArrowRight') { e.preventDefault(); (e.currentTarget.querySelector('[data-borrar-cat]') as HTMLElement | null)?.focus(); }
+                            else if (e.key === 'Delete') { e.preventDefault(); void eliminarCategoria(cat); }
+                            else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCategoria(cat); setCatAbierta(false); enfocar('input-categoria-compuesto'); }
+                            else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setCatAbierta(false); enfocar('input-categoria-compuesto'); }
+                          }}
+                          className="group flex items-center justify-between gap-3 p-3 border-b border-[var(--color-border)] cursor-pointer outline-none text-xs font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white">
+                          <span className="truncate">{cat}</span>
+                          <button type="button" data-borrar-cat="true" title={`Eliminar categoría ${cat} (Supr)`}
+                            onClick={(e) => { e.stopPropagation(); void eliminarCategoria(cat); }}
+                            onKeyDown={(e) => {
+                              e.stopPropagation();
+                              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); void eliminarCategoria(cat); }
+                              else if (e.key === 'ArrowLeft') { e.preventDefault(); (e.currentTarget.closest('[data-cat-prod="true"]') as HTMLElement | null)?.focus(); }
+                              else if (e.key === 'Escape') { e.preventDefault(); setCatAbierta(false); enfocar('input-categoria-compuesto'); }
+                              else if (['ArrowUp', 'ArrowDown', 'ArrowRight'].includes(e.key)) e.preventDefault();
+                            }}
+                            className="shrink-0 p-1 border-2 border-transparent text-[var(--color-muted)] group-hover:text-white group-focus:text-white hover:!text-[var(--color-danger)] focus:outline-none focus:!bg-[var(--color-danger)] focus:!text-white cursor-pointer">
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                      {!categoriasFiltradas.length && !categoria.trim() && (
+                        <div className="p-3 text-[11px] font-black uppercase text-[var(--color-muted)]">Todavía no hay categorías: escribe una y presiona Enter</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+  );
+
+  const titulo = vista === 'FORM' ? (editId ? 'Cambiar combo o receta' : 'Nuevo combo o receta') : vista === 'PRODUCIR' ? `${desdeGuardar ? 'Crear lote' : 'Producir'}: ${elegido?.name || ''}` : vista === 'TALLAS' ? (editId ? 'Cambiar tallas y colores' : 'Nuevo producto con tallas y colores') : 'Armar producto';
   const subtitulo = vista === 'FORM' ? 'Nombre → productos que usa → combo o receta → precio'
     : vista === 'PRODUCIR' ? 'Descuenta los insumos y crea el lote con su costo real'
-    : 'Combo: se descuenta al vender · Receta: se prepara antes con Producir';
+    : vista === 'TALLAS' ? 'Nombre → precio y categoría → tallas y colores'
+    : 'Elige qué vas a armar';
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div id="modal-produccion-receta" role="dialog" aria-label="Producir" className={`ventana-sobria bg-[var(--color-surface)] w-full max-w-3xl border-2 border-[var(--color-ink)] flex flex-col ${vista === 'LISTA' || cargando ? 'h-[calc(90dvh/var(--ui-zoom))]' : 'max-h-[calc(90dvh/var(--ui-zoom))]'}`}>
+      <div id="modal-produccion-receta" role="dialog" aria-label="Armar producto" className={`ventana-sobria bg-[var(--color-surface)] w-full max-w-3xl border-2 border-[var(--color-ink)] flex flex-col ${vista === 'LISTA' || cargando ? 'h-[calc(90dvh/var(--ui-zoom))]' : 'max-h-[calc(90dvh/var(--ui-zoom))]'}`}>
         {/* CABECERA */}
         <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <ChefHat size={24} className="text-[var(--color-warning)] shrink-0" />
+            {vista === 'FORM' || vista === 'PRODUCIR' ? <ChefHat size={24} className="text-[var(--color-warning)] shrink-0" /> : <Layers size={24} className="text-[var(--color-warning)] shrink-0" />}
             <div className="min-w-0">
               <h2 className="ventana-cabecera__titulo text-sm font-black uppercase tracking-widest text-[var(--color-warning)] truncate">{titulo}</h2>
               <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">{subtitulo}</p>
@@ -390,21 +584,45 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
             <p className="text-xs font-black uppercase text-[var(--color-muted)]">Cargando…</p>
           ) : vista === 'LISTA' ? (
             <>
-              <div className="flex flex-wrap items-center justify-between gap-3 shrink-0">
-                <p className="text-[12px] font-black uppercase tracking-widest text-[var(--color-muted)]">Tus combos y recetas ({compuestos.length})</p>
-                <button id="btn-nuevo-compuesto" type="button" className={claseBotonBarra(false)}
-                  onClick={() => (puedeCrear ? abrirFormulario(null) : avisar('🔒 No tienes permiso para crear productos.'))}>
-                  <Plus size={16} /> Nuevo combo o receta
+              {/* ¿Qué vas a armar? (como el paso 1 de Nuevo producto) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 shrink-0">
+                <button id="btn-nuevo-tallas" type="button"
+                  onClick={() => (puedeCrear ? abrirTallas(null) : avisar('🔒 No tienes permiso para crear productos.'))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('btn-nuevo-compuesto')?.focus(); }
+                    else if (e.key === 'ArrowLeft') { e.preventDefault();  }
+                    else if (e.key === 'ArrowDown') { e.preventDefault(); (document.querySelector('[data-fila-compuesto="true"]') as HTMLElement | null)?.focus(); }
+                  }}
+                  className="text-left p-4 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] hover:border-[var(--color-ink)] cursor-pointer outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)]">
+                  <span className="flex items-center gap-2 text-sm font-black uppercase tracking-widest"><Layers size={18} /> Tallas y colores</span>
+                  <span className="block mt-1 text-[11px] font-bold text-[var(--color-muted)]">Un producto con varias tallas o colores (ropa, calzado…), cada uno con su stock</span>
+                </button>
+                <button id="btn-nuevo-compuesto" type="button"
+                  onClick={() => (puedeCrear ? abrirFormulario(null) : avisar('🔒 No tienes permiso para crear productos.'))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowRight') { e.preventDefault();  }
+                    else if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('btn-nuevo-tallas')?.focus(); }
+                    else if (e.key === 'ArrowDown') { e.preventDefault(); (document.querySelector('[data-fila-compuesto="true"]') as HTMLElement | null)?.focus(); }
+                  }}
+                  className="text-left p-4 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] hover:border-[var(--color-ink)] cursor-pointer outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)]">
+                  <span className="flex items-center gap-2 text-sm font-black uppercase tracking-widest"><ChefHat size={18} /> Combos y recetas</span>
+                  <span className="block mt-1 text-[11px] font-bold text-[var(--color-muted)]">Juntar productos: combo (se descuenta al vender) o receta (se prepara antes)</span>
                 </button>
               </div>
-              <CajaLista vacia={!compuestos.length} mensaje="Todavía no tienes combos ni recetas. Crea uno con «Nuevo combo o receta».">
-                {compuestos.map((p, idx) => {
+              <p className="text-[12px] font-black uppercase tracking-widest text-[var(--color-muted)] shrink-0">Lo que ya armaste ({armados.length})</p>
+              <CajaLista vacia={!armados.length} mensaje="Todavía no armaste nada. Elige arriba qué vas a armar.">
+                {armados.map(({ p, clase }, idx) => {
                   const lista = recetas[String(p.id)] || [];
                   const t = tope(lista);
-                  const esReceta = p.tipoCompuesto === 'RECETA';
+                  const esReceta = clase === 'RECETA';
+                  const esTallas = clase === 'TALLAS';
+                  const nVar = (p.variantes || []).length;
+                  const abrir = () => (esTallas ? abrirTallas(p) : esReceta && lista.length ? irAProducir(p, lista) : abrirFormulario(p, lista));
+                  const cambiar = () => (puedeCrear ? (esTallas ? abrirTallas(p) : abrirFormulario(p, lista)) : avisar('🔒 No tienes permiso para cambiar productos.'));
+                  const primerBoton = esTallas ? `btn-lote-tallas-${idx}` : esReceta ? `btn-producir-compuesto-${idx}` : `btn-cambiar-compuesto-${idx}`;
                   return (
                     <FilaLista
-                      key={p.id}
+                      key={`${clase}-${p.id}`}
                       id={`fila-compuesto-${idx}`}
                       tabIndex={0}
                       data-fila-compuesto="true"
@@ -412,18 +630,29 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                         const filas = Array.from(document.querySelectorAll('[data-fila-compuesto="true"]')) as HTMLElement[];
                         if (e.target !== e.currentTarget) return;
                         if (e.key === 'ArrowDown') { e.preventDefault(); filas[idx + 1]?.focus(); }
-                        else if (e.key === 'ArrowUp') { e.preventDefault(); (filas[idx - 1] || document.getElementById('btn-nuevo-compuesto'))?.focus(); }
-                        else if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById(`btn-${esReceta ? 'producir' : 'cambiar'}-compuesto-${idx}`)?.focus(); }
-                        else if (e.key === 'Enter') { e.preventDefault(); if (esReceta && lista.length) irAProducir(p, lista); else abrirFormulario(p, lista); }
+                        else if (e.key === 'ArrowUp') { e.preventDefault(); (filas[idx - 1] || document.getElementById('btn-nuevo-tallas'))?.focus(); }
+                        else if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById(primerBoton)?.focus(); }
+                        else if (e.key === 'Enter') { e.preventDefault(); abrir(); }
                       }}
                       titulo={p.name}
-                      subtitulo={<>
+                      subtitulo={esTallas ? <>
+                        <LineaDato>{nVar} talla(s) / color(es) · precio {soles(Number(p.price) || 0)}</LineaDato>
+                        <LineaDato>Stock {formatearCantidad(p.quantity, p.unit)} {p.unit}</LineaDato>
+                      </> : <>
                         <LineaDato>{lista.length} producto(s) · precio {soles(Number(p.price) || 0)}{esReceta ? ` · stock ${formatearCantidad(p.quantity, p.unit)} ${p.unit}` : ''}</LineaDato>
                         <LineaDato>{lista.length ? (t.max > 0 ? `Alcanza para ${t.max}` : `No alcanza: ${textoLimita(t)}`) : 'Sin productos: agrégalos con Cambiar'}</LineaDato>
                       </>}
-                      centro={<Etiqueta tono={esReceta ? 'verde' : 'ambar'}>{esReceta ? 'Receta' : 'Combo'}</Etiqueta>}
+                      centro={<Etiqueta tono={esTallas ? 'azul' : esReceta ? 'verde' : 'ambar'}>{esTallas ? 'Tallas' : esReceta ? 'Receta' : 'Combo'}</Etiqueta>}
                       derecha={
                         <div className="flex items-center gap-2">
+                          {esTallas && (
+                            <button id={`btn-lote-tallas-${idx}`} type="button"
+                              onClick={() => { onClose(); onIngresarLote?.(p); }}
+                              onKeyDown={(e) => { if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById(`btn-cambiar-compuesto-${idx}`)?.focus(); } else if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById(`fila-compuesto-${idx}`)?.focus(); } }}
+                              className={`${claseBotonBarra(true)} !h-[38px] !px-3`}>
+                              Ingresar lote
+                            </button>
+                          )}
                           {esReceta && (
                             <button id={`btn-producir-compuesto-${idx}`} type="button" disabled={!lista.length}
                               onClick={() => irAProducir(p, lista)}
@@ -433,8 +662,8 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                             </button>
                           )}
                           <button id={`btn-cambiar-compuesto-${idx}`} type="button"
-                            onClick={() => (puedeCrear ? abrirFormulario(p, lista) : avisar('🔒 No tienes permiso para cambiar productos.'))}
-                            onKeyDown={(e) => { if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById(esReceta ? `btn-producir-compuesto-${idx}` : `fila-compuesto-${idx}`)?.focus(); } else if (e.key === 'ArrowRight') e.preventDefault(); }}
+                            onClick={cambiar}
+                            onKeyDown={(e) => { if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById(primerBoton === `btn-cambiar-compuesto-${idx}` ? `fila-compuesto-${idx}` : primerBoton)?.focus(); } else if (e.key === 'ArrowRight') e.preventDefault(); }}
                             className={`${claseBotonBarra(false)} !h-[38px] !px-3`}>
                             Cambiar
                           </button>
@@ -445,6 +674,67 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                 })}
               </CajaLista>
             </>
+          ) : vista === 'TALLAS' ? (
+            <div className="flex flex-col gap-5 shrink-0">
+              <div>
+                <label htmlFor="input-nombre-tallas" className={etiquetaCampo}>1. Nombre</label>
+                <input id="input-nombre-tallas" type="text" autoComplete="off" spellCheck={false} value={nombre}
+                  placeholder="EJ.: ZAPATILLA URBANA · POLO BÁSICO"
+                  onChange={(e) => setNombre(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
+                  className={`${claseCampo} uppercase`} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="input-precio-tallas" className={etiquetaCampo}>2. Precio de venta (S/)</label>
+                  <input id="input-precio-tallas" type="number" min="0" step="0.01" placeholder="0.00" value={precio}
+                    onChange={(e) => setPrecio(e.target.value)} onFocus={(e) => e.currentTarget.select()}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
+                    className={`${claseCampo} text-right`} />
+                  <p className="mt-1 text-[11px] font-bold text-[var(--color-muted)]">Si una talla o color cuesta distinto, ponle su precio abajo.</p>
+                </div>
+                {campoCategoria}
+              </div>
+              <div>
+                <p className={etiquetaCampo}>3. Tallas y colores</p>
+                <div className="border-2 border-[var(--color-border)] bg-white">
+                  <div className="grid grid-cols-12 gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[var(--color-muted)] border-b-2 border-[var(--color-border)]">
+                    <span className="col-span-3">Talla</span>
+                    <span className="col-span-3">Color</span>
+                    <span className="col-span-2">Precio</span>
+                    <span className="col-span-3">Código de barras</span>
+                    <span className="col-span-1" />
+                  </div>
+                  {tallas.map((t, idx) => (
+                    <div key={idx} className="grid grid-cols-12 gap-2 px-3 py-2 items-center border-b border-[var(--color-border)] last:border-b-0">
+                      <input id={`talla-talla-${idx}`} type="text" autoComplete="off" spellCheck={false} placeholder="EJ.: 38 · M" value={t.talla}
+                        onChange={(e) => cambiarFila(idx, 'talla', e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
+                        className={`${claseCampo} col-span-3 uppercase !p-2`} />
+                      <input id={`talla-color-${idx}`} type="text" autoComplete="off" spellCheck={false} placeholder="EJ.: NEGRO" value={t.color}
+                        onChange={(e) => cambiarFila(idx, 'color', e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
+                        className={`${claseCampo} col-span-3 uppercase !p-2`} />
+                      <input id={`talla-precio-${idx}`} type="number" min="0" step="0.01" placeholder={precio || '0.00'} value={t.precio} title="Vacío = el precio de arriba"
+                        onChange={(e) => cambiarFila(idx, 'precio', e.target.value)} onFocus={(e) => e.currentTarget.select()} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
+                        className={`${claseCampo} col-span-2 text-right !p-2`} />
+                      <input id={`talla-barcode-${idx}`} type="text" autoComplete="off" spellCheck={false} placeholder="OPCIONAL" value={t.barcode}
+                        onChange={(e) => cambiarFila(idx, 'barcode', e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
+                        className={`${claseCampo} col-span-3 !p-2`} />
+                      <span className="col-span-1 flex flex-col items-end">
+                        <button id={`btn-quitar-talla-${idx}`} type="button" onClick={() => quitarFila(idx)} title="Quitar esta talla o color"
+                          className="p-1.5 border-2 border-transparent text-[var(--color-danger)] hover:border-[var(--color-danger)] focus:outline-none focus:border-[var(--color-danger)] cursor-pointer">
+                          <Trash2 size={14} />
+                        </button>
+                        {t.id != null && <span className="text-[10px] font-black text-[var(--color-muted)] whitespace-nowrap">hay {t.stock ?? 0}</span>}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <button id="btn-agregar-talla" type="button" onClick={agregarFila} className={`${claseBotonBarra(false)} mt-2`}>
+                  <Plus size={16} /> Agregar talla o color
+                </button>
+                <p className="mt-2 text-[11px] font-bold text-[var(--color-muted)]">El stock de cada talla entra con «Guardar e ir a Lotes» (Ingresar lote pide cuántas llegaron de cada una).</p>
+              </div>
+            </div>
           ) : vista === 'FORM' ? (
             <div className="flex flex-col gap-5 shrink-0">
               {/* 1. NOMBRE */}
@@ -562,78 +852,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                     onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
                     className={`${claseCampo} text-right`} />
                 </div>
-                {/* Categoría: lista propia del sistema (como la de productos de arriba), no la del navegador */}
-                <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setCatAbierta(false); }}>
-                  <label htmlFor="input-categoria-compuesto" className={etiquetaCampo}>Categoría</label>
-                  <input id="input-categoria-compuesto" type="text" autoComplete="off" spellCheck={false} placeholder="GENERAL" value={categoria}
-                    onChange={(e) => { setCategoria(e.target.value); setCatAbierta(true); }}
-                    onClick={() => setCatAbierta((v) => !v)}
-                    onKeyDown={(e) => {
-                      const items = () => Array.from(document.querySelectorAll('[data-cat-prod="true"]')) as HTMLElement[];
-                      if (e.key === 'Enter') {
-                        // Enter no pasa al siguiente cuadro. Con algo escrito y sin elegir de la lista: se guarda LO ESCRITO;
-                        // vacío: abre la lista para elegir (de la lista se elige con ↓ y Enter, o clic)
-                        e.preventDefault();
-                        if (!catAbierta) setCatAbierta(true);
-                        else if (categoria.trim()) void crearCategoria(categoria);
-                        else setCatAbierta(false);
-                      } else if (e.key === 'ArrowDown' && catAbierta && items().length) { e.preventDefault(); items()[0]?.focus(); }
-                      else if (e.key === 'Escape' && catAbierta) { e.preventDefault(); e.stopPropagation(); setCatAbierta(false); }
-                    }}
-                    className={`${claseCampo} uppercase pr-9`} />
-                  <ChevronDown size={16} className={`absolute right-3 top-[38px] text-[var(--color-muted)] pointer-events-none transition-transform ${catAbierta ? 'rotate-180' : ''}`} />
-                  {catAbierta && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[var(--color-ink)] z-50 max-h-56 overflow-y-auto">
-                      {/* Lo escrito no existe: opción para crearla (como en Nuevo producto) */}
-                      {categoria.trim() && !categorias.includes(categoria.trim().toUpperCase()) && (
-                        <div role="option" tabIndex={0} data-cat-prod="true" id="cat-prod-crear"
-                          onClick={() => void crearCategoria(categoria)}
-                          onKeyDown={(e) => {
-                            const l = Array.from(document.querySelectorAll('[data-cat-prod="true"]')) as HTMLElement[]; const i = l.indexOf(e.currentTarget);
-                            if (e.key === 'ArrowDown') { e.preventDefault(); l[i + 1]?.focus(); }
-                            else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('input-categoria-compuesto')?.focus(); }
-                            else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); void crearCategoria(categoria); }
-                            else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setCatAbierta(false); enfocar('input-categoria-compuesto'); }
-                          }}
-                          className="flex items-center gap-2 p-3 border-b-2 border-[var(--color-ink)] cursor-pointer outline-none text-xs font-black uppercase text-[var(--color-accent)] hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white">
-                          <Plus size={14} className="shrink-0" /> Crear nueva categoría «{categoria.trim().toUpperCase()}»
-                        </div>
-                      )}
-                      {categoriasFiltradas.map((cat) => (
-                        <div key={cat} role="option" tabIndex={0} data-cat-prod="true" aria-selected={categoria.toUpperCase() === cat}
-                          onClick={() => { setCategoria(cat); setCatAbierta(false); enfocar('input-categoria-compuesto'); }}
-                          onKeyDown={(e) => {
-                            if (e.target !== e.currentTarget) return;
-                            const l = Array.from(document.querySelectorAll('[data-cat-prod="true"]')) as HTMLElement[]; const i = l.indexOf(e.currentTarget);
-                            if (e.key === 'ArrowDown') { e.preventDefault(); l[i + 1]?.focus(); }
-                            else if (e.key === 'ArrowUp') { e.preventDefault(); (i > 0 ? l[i - 1] : document.getElementById('input-categoria-compuesto'))?.focus(); }
-                            else if (e.key === 'ArrowRight') { e.preventDefault(); (e.currentTarget.querySelector('[data-borrar-cat]') as HTMLElement | null)?.focus(); }
-                            else if (e.key === 'Delete') { e.preventDefault(); void eliminarCategoria(cat); }
-                            else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCategoria(cat); setCatAbierta(false); enfocar('input-categoria-compuesto'); }
-                            else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setCatAbierta(false); enfocar('input-categoria-compuesto'); }
-                          }}
-                          className="group flex items-center justify-between gap-3 p-3 border-b border-[var(--color-border)] cursor-pointer outline-none text-xs font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white">
-                          <span className="truncate">{cat}</span>
-                          <button type="button" data-borrar-cat="true" title={`Eliminar categoría ${cat} (Supr)`}
-                            onClick={(e) => { e.stopPropagation(); void eliminarCategoria(cat); }}
-                            onKeyDown={(e) => {
-                              e.stopPropagation();
-                              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); void eliminarCategoria(cat); }
-                              else if (e.key === 'ArrowLeft') { e.preventDefault(); (e.currentTarget.closest('[data-cat-prod="true"]') as HTMLElement | null)?.focus(); }
-                              else if (e.key === 'Escape') { e.preventDefault(); setCatAbierta(false); enfocar('input-categoria-compuesto'); }
-                              else if (['ArrowUp', 'ArrowDown', 'ArrowRight'].includes(e.key)) e.preventDefault();
-                            }}
-                            className="shrink-0 p-1 border-2 border-transparent text-[var(--color-muted)] group-hover:text-white group-focus:text-white hover:!text-[var(--color-danger)] focus:outline-none focus:!bg-[var(--color-danger)] focus:!text-white cursor-pointer">
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                      {!categoriasFiltradas.length && !categoria.trim() && (
-                        <div className="p-3 text-[11px] font-black uppercase text-[var(--color-muted)]">Todavía no hay categorías: escribe una y presiona Enter</div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                {campoCategoria}
               </div>
               <div id="resumen-compuesto" className="grid grid-cols-3 gap-2 border-2 border-[var(--color-border)] p-3">
                 <DatoFila etiqueta="Cuesta armarlo" valor={soles(costoArmar)} />
@@ -681,10 +900,17 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
         {/* PIE: siempre a la vista */}
         {vista !== 'LISTA' && !cargando && (
           <div className="shrink-0 border-t-2 border-[var(--color-ink)] px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-end gap-3 bg-[var(--color-surface)]">
-            <button id="btn-volver-produccion" type="button" onClick={() => { setVista('LISTA'); enfocar('btn-nuevo-compuesto'); }} className={`${claseBotonBarra(false)} sm:mr-auto whitespace-nowrap`}>
+            <button id="btn-volver-produccion" type="button" onClick={() => { setVista('LISTA'); enfocar('btn-nuevo-tallas'); }} className={`${claseBotonBarra(false)} sm:mr-auto whitespace-nowrap`}>
               ← Volver
             </button>
-            {vista === 'FORM' ? (
+            {vista === 'TALLAS' ? (
+              <>
+                <button id="btn-guardar-ir-lotes-tallas" type="button" disabled={guardando} onClick={() => void alGuardarTallas('LOTES')} className={`${claseBotonBarra(false)} whitespace-nowrap`}>Guardar e ir a Lotes</button>
+                <button id="btn-guardar-tallas" type="button" disabled={guardando} onClick={() => void alGuardarTallas('CERRAR')} className={claseBotonPrincipal}>
+                  {guardando ? 'Guardando…' : 'Guardar'}
+                </button>
+              </>
+            ) : vista === 'FORM' ? (
               <>
                 {/* Solo Guardar y Guardar e ir a Lotes (pedido del dueño 05/11/2026); para producir: «Producir» en la lista */}
                 {tipo === 'RECETA' && (

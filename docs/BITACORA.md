@@ -7,6 +7,15 @@
 
 ---
 
+## 06/11/2026 (121) · Claude — "Producir" pasa a "Armar producto": Tallas y colores o Combos y recetas (solo siumax)
+- **Dueño** (captura de Nuevo producto › Activar variantes): *"me gustaría que tallas y colores esté dentro de Producir; que escoja entre tallas y colores o producir, y que el botón tenga otro nombre; como al crear un producto escojo unidad, kilos o consumo"* → Claude propuso el plan → eligió el nombre **"Armar producto"** (y "empieza").
+- **`ModalProduccion.tsx`**: al abrir, dos tarjetas (`btn-nuevo-tallas` "Tallas y colores" · `btn-nuevo-compuesto` "Combos y recetas") y abajo "Lo que ya armaste" (productos con tallas + combos + recetas, con etiqueta Tallas/Combo/Receta; los de tallas con "Ingresar lote" y "Cambiar"). Nueva vista **TALLAS**: 1. nombre → 2. precio y categoría (la misma lista de categorías que crea/borra, ahora `campoCategoria`) → 3. tabla talla · color · precio (vacío = el de arriba) · código de barras, con "Agregar talla o color" y tacho por fila (las ya guardadas muestran "hay N"). **Guardar** guarda y cierra; **Guardar e ir a Lotes** guarda y abre Ingresar lote con el producto (pide cuántas llegaron de cada talla; `onIngresarLote` en Inventario). Variantes nuevas con stock 0; a las guardadas solo se les cambian sus datos (nunca el stock); las quitadas quedan inactivas. Avisa filas sin talla ni color y repetidas.
+- **`ModalProducto.tsx`**: quitada "Tallas y colores (variantes)"; al editar ya no escribe `tiene_variantes` ni `product_variants` (antes las borraba/reescribía); si el producto tiene tallas sale `btn-cambiar-tallas` "Cambiar tallas y colores" (abre Armar producto en esa vista). Textos del panel avanzado sin "Tallas"; textos de combos/recetas dicen "Armar producto".
+- **Inventario**: el botón (id `btn-header-producir`) se llama "Armar producto" (ícono de capas). En siumax y Evicamp no había productos con tallas.
+- Probado en siumax (modo oscuro, producto de prueba borrado): abre en Tallas, → Combos; Enter → formulario; 38 NEGRO (precio base) + 39 NEGRO (S/ 130); Guardar e ir a Lotes → "Ingresar lote de stock" con las dos tallas; en la lista con etiqueta Tallas; Cambiar → quitar la 39 → Guardar (39 inactiva); Editar producto muestra el botón y guardar sin cambios no toca las tallas. 0 errores.
+
+---
+
 ## 06/11/2026 (120) · Claude — Crear lote: gastos extra por TODO el lote + montos con separador de miles en todo el sistema (solo siumax)
 - **Dueño** (captura de Crear lote, "Adicional S/ 16200.00"): *"¿con adicional a qué se refiere?"* → Claude: el campo era POR UNIDAD (180 × 90 = 16200; el cálculo era correcto, pero él pensó en toda la tanda) → *"pero ahí no dice 16.200, dice 16200"* → Claude propuso separador de miles y adicional por lote → *"sí, también"*.
 - **Crear lote** (`ModalProduccion.tsx`): el campo ahora es "Gastos extra de todo el lote (gas, mano de obra)"; debajo "= S/ 2.00 por unidad (S/ 180.00 ÷ 90)". Sin tocarlo, propone lo guardado por unidad × cantidad. Al producir, lo que salió por unidad se guarda en `products.costo_adicional_produccion` para la próxima tanda. La función sigue recibiendo el total del lote.

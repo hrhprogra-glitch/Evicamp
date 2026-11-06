@@ -70,25 +70,25 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   const teclasPres = (e: React.KeyboardEvent<HTMLElement>, fila: number, col: typeof COLS_PRES[number]) => {
     const ir = (id: string) => { const el = document.getElementById(id) as HTMLElement | null; if (el) { el.focus(); if (el instanceof HTMLInputElement) el.select?.(); } return !!el; };
     const c = COLS_PRES.indexOf(col);
-    if (e.key === 'ArrowDown') { e.preventDefault(); if (!ir(`pres-${col}-${fila + 1}`)) ir('check-tiene-variantes') || ir('btn-guardar-producto'); }
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (!ir(`pres-${col}-${fila + 1}`)) ir('btn-cambiar-tallas') || ir('btn-guardar-producto'); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); if (!ir(`pres-${col}-${fila - 1}`)) ir('escala-precio-2') || ir('btn-es-bolsa-producto') || ir('input-ubicacion-producto') || ir('select-unidad-peso-producto'); }
     else if (e.key === 'ArrowRight' && c < COLS_PRES.length - 1) { e.preventDefault(); ir(`pres-${COLS_PRES[c + 1]}-${fila}`); }
     else if (e.key === 'ArrowLeft' && c > 0) { e.preventDefault(); ir(`pres-${COLS_PRES[c - 1]}-${fila}`); }
     else if (e.key === 'Enter') {
       e.preventDefault();
       if (col === 'unidad') { try { (e.currentTarget as HTMLSelectElement & { showPicker?: () => void }).showPicker?.(); } catch { /* sin showPicker */ } return; }
-      if (c < COLS_PRES.length - 1) ir(`pres-${COLS_PRES[c + 1]}-${fila}`); else if (!ir(`pres-unidad-${fila + 1}`)) ir('check-tiene-variantes') || ir('btn-guardar-producto');
+      if (c < COLS_PRES.length - 1) ir(`pres-${COLS_PRES[c + 1]}-${fila}`); else if (!ir(`pres-unidad-${fila + 1}`)) ir('btn-cambiar-tallas') || ir('btn-guardar-producto');
     }
   };
   const cambiarEscala = (i: number, campo: keyof FilaEscala, valor: string) => setEscalas((prev) => prev.map((f, j) => (j === i ? { ...f, [campo]: valor } : f)));
   // ↑ ↓ entre filas, ← → entre "desde" y "precio", Enter al siguiente; al terminar, Guardar o Variantes
   const teclasEscala = (e: React.KeyboardEvent<HTMLInputElement>, fila: number, col: 'desde' | 'precio') => {
     const ir = (id: string) => { const el = document.getElementById(id) as HTMLElement | null; if (el) { el.focus(); if (el instanceof HTMLInputElement) el.select?.(); } return !!el; };
-    if (e.key === 'ArrowDown') { e.preventDefault(); if (!ir(`escala-${col}-${fila + 1}`)) ir('pres-unidad-0') || ir('check-tiene-variantes') || ir('btn-guardar-producto'); }
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (!ir(`escala-${col}-${fila + 1}`)) ir('pres-unidad-0') || ir('btn-cambiar-tallas') || ir('btn-guardar-producto'); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); if (!ir(`escala-${col}-${fila - 1}`)) ir('btn-es-bolsa-producto') || ir('input-ubicacion-producto') || ir('select-unidad-peso-producto') || ir('input-stock-minimo-producto'); }
     else if (e.key === 'ArrowRight' && col === 'desde') { e.preventDefault(); ir(`escala-precio-${fila}`); }
     else if (e.key === 'ArrowLeft' && col === 'precio') { e.preventDefault(); ir(`escala-desde-${fila}`); }
-    else if (e.key === 'Enter') { e.preventDefault(); if (col === 'desde') ir(`escala-precio-${fila}`); else if (!ir(`escala-desde-${fila + 1}`)) ir('pres-unidad-0') || ir('check-tiene-variantes') || ir('btn-guardar-producto'); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (col === 'desde') ir(`escala-precio-${fila}`); else if (!ir(`escala-desde-${fila + 1}`)) ir('pres-unidad-0') || ir('btn-cambiar-tallas') || ir('btn-guardar-producto'); }
   };
   // Fase 7: Navegación de Variantes con Teclado (05/11/2026: ahora sí conectada; antes el selector quedaba atrapado en
   // "Precio" porque en un número las flechas suben/bajan el valor). Orden como se ve: Talla · Color · Precio · Barras, y
@@ -108,7 +108,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
     const esTexto = t instanceof HTMLInputElement && t.type === 'text';
     const enOrilla = (lado: 'izq' | 'der') => !esTexto || (lado === 'izq' ? t.selectionStart === 0 && t.selectionEnd === 0 : t.selectionStart === t.value.length);
     const c = col === 'quitar' ? -1 : COLS_VAR.indexOf(col);
-    const anterior = () => ir(`var-barcode-${fila - 1}`) || ir('check-tiene-variantes');
+    const anterior = () => ir(`var-barcode-${fila - 1}`) || ir('btn-cambiar-tallas');
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       if (col === 'quitar') { ir(`var-barcode-${fila}`); return; }
@@ -134,7 +134,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         setTimeout(() => {
           (document.getElementById(`var-talla-${Math.min(fila, Math.max(0, variantesLista.length - 2))}`) ||
            document.getElementById('btn-agregar-variante-manual') ||
-           document.getElementById('check-tiene-variantes'))?.focus();
+           document.getElementById('btn-cambiar-tallas'))?.focus();
         }, 30);
         return;
       }
@@ -1219,7 +1219,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                            document.getElementById('input-meses-garantia-producto') ||
                            document.getElementById('escala-desde-0') ||
                            document.getElementById('pres-unidad-0') ||
-                           document.getElementById('check-tiene-variantes') ||
+                           document.getElementById('btn-cambiar-tallas') ||
                            document.getElementById('btn-cambiar-composicion') ||
                            document.getElementById('btn-guardar-producto');
               next?.focus();
@@ -1365,14 +1365,14 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         if (active?.id === 'btn-guardar-producto') {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
-            const checkEl = document.getElementById('check-tiene-variantes') as HTMLInputElement | null;
+            const checkEl = document.getElementById('btn-cambiar-tallas') as HTMLInputElement | null;
             const tieneVarsActivas = checkEl?.checked || tieneVariantes;
             const ultimasVars = Array.from(document.querySelectorAll('[id^="var-price-"]'));
             const ultimaVar = ultimasVars.length > 0 ? (ultimasVars[ultimasVars.length - 1] as HTMLElement) : null;
             const prev = document.getElementById('input-mostrar-en-catalogo') ||
                          document.getElementById('btn-cambiar-composicion') ||
                          (tieneVarsActivas ? (document.getElementById('btn-agregar-variante-manual') || ultimaVar) : null) ||
-                         document.getElementById('check-tiene-variantes') ||
+                         document.getElementById('btn-cambiar-tallas') ||
                          document.getElementById('pres-barcode-2') ||
                          document.getElementById('pres-barcode-1') ||
                          document.getElementById('pres-barcode-0') ||
@@ -1404,14 +1404,14 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         if (active?.id === 'btn-guardar-ir-lotes') {
           if (e.key === 'ArrowUp') {
             e.preventDefault();
-            const checkEl = document.getElementById('check-tiene-variantes') as HTMLInputElement | null;
+            const checkEl = document.getElementById('btn-cambiar-tallas') as HTMLInputElement | null;
             const tieneVarsActivas = checkEl?.checked || tieneVariantes;
             const ultimasVars = Array.from(document.querySelectorAll('[id^="var-price-"]'));
             const ultimaVar = ultimasVars.length > 0 ? (ultimasVars[ultimasVars.length - 1] as HTMLElement) : null;
             const prev = document.getElementById('input-mostrar-en-catalogo') ||
                          document.getElementById('btn-cambiar-composicion') ||
                          (tieneVarsActivas ? (document.getElementById('btn-agregar-variante-manual') || ultimaVar) : null) ||
-                         document.getElementById('check-tiene-variantes') ||
+                         document.getElementById('btn-cambiar-tallas') ||
                          document.getElementById('pres-barcode-2') ||
                          document.getElementById('pres-barcode-1') ||
                          document.getElementById('pres-barcode-0') ||
@@ -1542,9 +1542,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           es_bolsa: formData.esBolsa,
           mostrar_en_catalogo: mostrarEnCatalogo,
           destacado_catalogo: destacadoCatalogo,
-          tiene_variantes: tieneVariantes,
-          // tipo_compuesto y costo_adicional_produccion: no se tocan (se cambian en Producir)
-          ...(tieneVariantes && totalStockVariantes !== null ? { quantity: totalStockVariantes } : {}),
+          // tiene_variantes, tipo_compuesto y costo_adicional_produccion: no se tocan (se cambian en Armar producto)
           is_active: 1
         }).eq('id', initialData.id).select().single();
 
@@ -1592,51 +1590,9 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         alert(`PRODUCTO CREADO CORRECTAMENTE.\nNombre: ${nombreLimpio}`);
       }
 
-      // FASE 7: Guardar y sincronizar variantes en product_variants
-      let variantesGuardadasFinales: any[] = [];
-      if (tieneVariantes && variantesLista.length > 0) {
-        const idsConservados: any[] = [];
-        for (const v of variantesLista) {
-          const varPayload: any = {
-            product_id: productoGuardado.id,
-            nombre_variante: (v.nombre_variante.trim() || `${v.talla} ${v.color}`).trim().toUpperCase() || 'VAR',
-            talla: v.talla.trim().toUpperCase() || null,
-            color: v.color.trim().toUpperCase() || null,
-            barcode: v.barcode.trim() || null,
-            code: v.code.trim().toUpperCase() || null,
-            price: v.price !== '' ? Number(v.price) : null,
-            precio_mayorista: v.precioMayorista !== '' ? Number(v.precioMayorista) : null,
-            cost_price: v.cost_price !== '' ? Number(v.cost_price) : null,
-            quantity: v.id ? Math.max(0, Number(v.quantity) || 0) : 0,
-            min_stock: Number(v.min_stock) || 2,
-            is_active: 1,
-            is_synced: 1
-          };
-
-          if (v.id) {
-            const { data: vUpd } = await supabase.from('product_variants').update(varPayload).eq('id', v.id).select().single();
-            idsConservados.push(v.id);
-            variantesGuardadasFinales.push(vUpd || { ...varPayload, id: v.id });
-          } else {
-            const { data: vNew } = await supabase.from('product_variants').insert([varPayload]).select().single();
-            if (vNew) {
-              idsConservados.push(vNew.id);
-              variantesGuardadasFinales.push(vNew);
-            }
-          }
-        }
-
-        // Si se editaron y algunas variantes se quitaron de la lista: marcarlas is_active = 0
-        if (initialData?.variantes && Array.isArray(initialData.variantes)) {
-          const eliminadas = initialData.variantes.filter((ov: any) => !idsConservados.includes(ov.id));
-          for (const elim of eliminadas) {
-            await supabase.from('product_variants').update({ is_active: 0 }).eq('id', elim.id);
-          }
-        }
-      } else if (initialData?.variantes && initialData.variantes.length > 0 && !tieneVariantes) {
-        // Se desactivaron las variantes del producto
-        await supabase.from('product_variants').update({ is_active: 0 }).eq('product_id', productoGuardado.id);
-      }
+      // FASE 7: las tallas y colores (product_variants) ya no se escriben aquí: se arman en Inventario › Armar producto
+      // (06/11/2026). Así, editar el producto nunca las borra ni las cambia.
+      const variantesGuardadasFinales: any[] = Array.isArray(initialData?.variantes) ? initialData.variantes : [];
 
       // FASE 8: los productos de un combo o receta (product_recipes) ya no se tocan aquí (Producir los cambia).
       // Antes se borraban y volvían a escribir: si se guardaba antes de que cargaran, la receta se perdía.
@@ -2273,10 +2229,10 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                     <SlidersHorizontal size={18} className={`${showAdvancedPanel ? 'text-[var(--color-success)]' : 'text-slate-500'} group-focus:text-[var(--color-ink)]`} />
                     <div>
                       <span className="text-xs font-black uppercase tracking-wider block">
-                        {showAdvancedPanel ? '▼ Opciones Avanzadas (Ubicación, Garantías, Escalas, Tallas)' : '▶ Más Opciones Avanzadas (Ubicación, Garantías, Escalas, Tallas)'}
+                        {showAdvancedPanel ? '▼ Opciones Avanzadas (Ubicación, Garantías, Escalas, Presentaciones)' : '▶ Más Opciones Avanzadas (Ubicación, Garantías, Escalas, Presentaciones)'}
                       </span>
                       <span className="text-[10px] text-[#64748B] font-bold group-focus:text-[var(--color-ink)]">
-                        {showAdvancedPanel ? 'Haz clic para replegar las opciones avanzadas' : 'Empaques por caja, tallas de ropa/calzado o ubicación en tienda'}
+                        {showAdvancedPanel ? 'Haz clic para replegar las opciones avanzadas' : 'Empaques por caja, precios por cantidad o ubicación en tienda'}
                       </span>
                     </div>
                   </div>
@@ -2467,7 +2423,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                             else if (e.key === 'ArrowUp') ir('input-controla-series-producto');
                             else if (e.key === 'ArrowDown') {
                               e.preventDefault(); e.stopPropagation();
-                              (document.getElementById('escala-desde-0') || document.getElementById('pres-unidad-0') || document.getElementById('check-tiene-variantes') || document.getElementById('btn-guardar-producto'))?.focus();
+                              (document.getElementById('escala-desde-0') || document.getElementById('pres-unidad-0') || document.getElementById('btn-cambiar-tallas') || document.getElementById('btn-guardar-producto'))?.focus();
                             }
                           }}
                           className={`px-3 py-2 border-2 text-xs font-black uppercase tracking-wider cursor-pointer outline-none focus:ring-2 focus:ring-[var(--color-success)] ${
@@ -2490,7 +2446,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                           else if (e.key === 'ArrowUp') ir('input-controla-series-producto');
                           else if (e.key === 'ArrowDown') {
                             e.preventDefault(); e.stopPropagation();
-                            (document.getElementById('escala-desde-0') || document.getElementById('pres-unidad-0') || document.getElementById('check-tiene-variantes') || document.getElementById('btn-guardar-producto'))?.focus();
+                            (document.getElementById('escala-desde-0') || document.getElementById('pres-unidad-0') || document.getElementById('btn-cambiar-tallas') || document.getElementById('btn-guardar-producto'))?.focus();
                           }
                         }}
                         className={`ml-0 sm:ml-3 px-3 py-2 border-2 text-xs font-black uppercase tracking-wider cursor-pointer outline-none focus:ring-2 focus:ring-[var(--color-success)] ${
@@ -2573,127 +2529,33 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                     </div>
                   )}
 
-                  {/* FASE 7: TALLAS Y COLORES (VARIANTES CON STOCK PROPIO) */}
-                  {(nature === 'UNIDAD' || nature === 'PESO') && (
-                    <div className="md:col-span-2 pt-4 border-t-2 border-[#CBD5E1] space-y-3" id="bloque-variantes-producto">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#E2E8F0]">
-                        <div className="flex items-center gap-2">
-                          <Layers size={18} className="text-fuchsia-600 shrink-0" />
-                          <div>
-                            <span className="text-xs font-black text-[var(--color-ink)] uppercase tracking-wider block">
-                              Tallas y Colores (Variantes)
-                            </span>
-                            <span className="text-[10px] text-[#64748B] font-bold">
-                              Permite gestionar stock y precios independientes por cada talla o color
-                            </span>
-                          </div>
-                        </div>
-                        <label className="flex items-center gap-2 cursor-pointer self-start sm:self-auto bg-[var(--color-surface)] px-3 py-1.5 border-2 border-[var(--color-ink)] font-black text-xs uppercase hover:bg-fuchsia-50 transition-colors shadow-[2px_2px_0_0_var(--color-ink)]">
-                          <input
-                            id="check-tiene-variantes"
-                            type="checkbox"
-                            checked={tieneVariantes}
-                            onChange={(e) => {
-                              const val = e.target.checked;
-                              setTieneVariantes(val);
-                              if (val && variantesLista.length === 0) {
-                                agregarVarianteVacia();
-                              }
-                            }}
-                            className="w-4 h-4 text-fuchsia-600 rounded-none border-2 border-[var(--color-ink)] cursor-pointer"
-                          />
-                          <span>{tieneVariantes ? 'Variantes Activadas' : 'Activar Variantes'}</span>
-                        </label>
+                  {/* TALLAS Y COLORES: se arman en Inventario › Armar producto (pedido del dueño 06/11/2026) */}
+                  {initialData && tieneVariantes && (
+                    <div id="bloque-tallas-producto" className="md:col-span-2 pt-4 border-t-2 border-[#CBD5E1] flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Layers size={18} className="text-[var(--color-info)] shrink-0" />
+                        <p className="text-xs font-black text-[var(--color-ink)] uppercase">
+                          Tiene {variantesLista.length} talla(s) / color(es): se cambian en Armar producto
+                        </p>
                       </div>
-
-                      {tieneVariantes && (
-                        <div className="space-y-3">
-                          {/* Tabla de Variantes (fluye con el modal principal) */}
-                          {variantesLista.length > 0 && (
-                            <div className="space-y-2">
-                              {variantesLista.map((v, idx) => (
-                                <div key={idx} className="bg-[var(--color-surface)] p-2.5 border-2 border-[#CBD5E1] space-y-2 text-xs">
-                                  <div className="flex items-center justify-between gap-2">
-                                    <span className="font-black text-xs uppercase text-[var(--color-ink)] truncate">
-                                      {v.nombre_variante || `Variante #${idx + 1}`}
-                                    </span>
-                                    <button
-                                      id={`var-quitar-${idx}`}
-                                      type="button"
-                                      onClick={() => eliminarVariante(idx)}
-                                      onKeyDown={(e) => teclasVar(e, idx, 'quitar')}
-                                      className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
-                                      title="Eliminar variante"
-                                    >
-                                      <Trash2 size={14} />
-                                    </button>
-                                  </div>
-                                  <div className="grid grid-cols-4 gap-2">
-                                    <input
-                                      id={`var-talla-${idx}`}
-                                      type="text"
-                                      placeholder="Talla"
-                                      value={v.talla}
-                                      onChange={(e) => actualizarVariante(idx, 'talla', e.target.value)}
-                                      onKeyDown={(e) => teclasVar(e, idx, 'talla')}
-                                      className="bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-1.5 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
-                                    />
-                                    <input
-                                      id={`var-color-${idx}`}
-                                      type="text"
-                                      placeholder="Color"
-                                      value={v.color}
-                                      onChange={(e) => actualizarVariante(idx, 'color', e.target.value)}
-                                      onKeyDown={(e) => teclasVar(e, idx, 'color')}
-                                      className="bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-1.5 text-xs font-black uppercase outline-none focus:border-fuchsia-600"
-                                    />
-                                    <input
-                                      id={`var-price-${idx}`}
-                                      type="number"
-                                      min="0"
-                                      step="0.01"
-                                      placeholder="Precio"
-                                      value={v.price}
-                                      onChange={(e) => actualizarVariante(idx, 'price', e.target.value)}
-                                      onKeyDown={(e) => teclasVar(e, idx, 'price')}
-                                      className="bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-1.5 text-xs font-black text-right outline-none focus:border-fuchsia-600"
-                                      title="Precio de esta variante"
-                                    />
-                                    <input
-                                      id={`var-barcode-${idx}`}
-                                      type="text"
-                                      placeholder="Barras"
-                                      value={v.barcode}
-                                      onChange={(e) => actualizarVariante(idx, 'barcode', e.target.value)}
-                                      onKeyDown={(e) => teclasVar(e, idx, 'barcode')}
-                                      className="bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-1.5 text-xs font-black outline-none focus:border-fuchsia-600"
-                                    />
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                          <button
-                            id="btn-agregar-variante-manual"
-                            type="button"
-                            onClick={agregarVarianteVacia}
-                            className="w-full flex items-center justify-center gap-1.5 text-xs font-black uppercase text-fuchsia-700 bg-[var(--color-surface)] hover:bg-fuchsia-50 py-2.5 border-2 border-dashed border-fuchsia-400 transition-colors cursor-pointer"
-                          >
-                            <Plus size={15} /> Agregar Variante Manual
-                          </button>
-                        </div>
-                      )}
+                      <button
+                        id="btn-cambiar-tallas"
+                        type="button"
+                        onClick={() => onAbrirProduccion?.(initialData)}
+                        className="px-4 py-2.5 border-2 border-[var(--color-ink)] text-[var(--color-ink)] text-xs font-black uppercase tracking-widest hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] focus:outline-none cursor-pointer"
+                      >
+                        Cambiar tallas y colores
+                      </button>
                     </div>
                   )}
 
-                  {/* COMBOS Y RECETAS: se arman en Inventario › Producir (pedido del dueño 05/11/2026) */}
+                  {/* COMBOS Y RECETAS: se arman en Inventario › Armar producto (pedido del dueño 05/11/2026) */}
                   {initialData && tipoCompuesto !== 'ESTANDAR' && (
                     <div id="bloque-composicion-producto" className="md:col-span-2 pt-4 border-t-2 border-[#CBD5E1] flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-2 min-w-0">
                         {tipoCompuesto === 'RECETA' ? <ChefHat size={18} className="text-[var(--color-accent)] shrink-0" /> : <Boxes size={18} className="text-[var(--color-warning)] shrink-0" />}
                         <p className="text-xs font-black text-[var(--color-ink)] uppercase">
-                          Es {tipoCompuesto === 'RECETA' ? 'una receta' : 'un combo'}: sus productos se cambian en Producir
+                          Es {tipoCompuesto === 'RECETA' ? 'una receta' : 'un combo'}: sus productos se cambian en Armar producto
                         </p>
                       </div>
                       <button
@@ -2702,7 +2564,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                         onClick={() => onAbrirProduccion?.(initialData)}
                         className="px-4 py-2.5 border-2 border-[var(--color-ink)] text-[var(--color-ink)] text-xs font-black uppercase tracking-widest hover:bg-[var(--color-ink)] hover:text-[var(--color-surface)] focus:outline-none cursor-pointer"
                       >
-                        Cambiar sus productos en Producir
+                        Cambiar sus productos
                       </button>
                     </div>
                   )}
