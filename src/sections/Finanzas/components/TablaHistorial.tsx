@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Eye, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { ModalDetalleCaja } from './ModalDetalleCaja';
 import type { CashSession } from '../types';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   historialCajas: CashSession[];
@@ -227,15 +228,15 @@ export const TablaHistorial: React.FC<Props> = ({ historialCajas, paginaActual, 
                       {caja.cerrada_por && <p className="text-[11px] font-black text-[var(--color-ink)] uppercase">Cerró: {caja.cerrada_por}</p>}
                     </td>
                     <td className="p-2 sm:p-4 text-sm font-black text-[var(--color-ink)] text-center whitespace-nowrap hidden md:table-cell">
-                      S/ {Number(caja.opening_balance).toFixed(2)}
+                      S/ {formatearMonto(Number(caja.opening_balance))}
                     </td>
                     <td className="p-2 sm:p-4 text-xs font-black text-[var(--color-accent)] text-center space-y-0.5 whitespace-nowrap">
-                      <p>S/ {realEfectivo.toFixed(2)}</p>
-                      <p className="text-[var(--color-info)]">S/ {realYape.toFixed(2)}</p>
-                      <p className="text-[var(--color-purple)]">S/ {realTarjeta.toFixed(2)}</p>
+                      <p>S/ {formatearMonto(realEfectivo)}</p>
+                      <p className="text-[var(--color-info)]">S/ {formatearMonto(realYape)}</p>
+                      <p className="text-[var(--color-purple)]">S/ {formatearMonto(realTarjeta)}</p>
                     </td>
                     <td className={`p-2 sm:p-4 text-sm font-black text-center whitespace-nowrap ${diferencia < 0 ? 'text-[var(--color-danger)]' : (diferencia > 0 ? 'text-[var(--color-info)]' : 'text-[var(--color-muted)]')}`}>
-                      {diferencia !== 0 ? (diferencia > 0 ? `+ S/ ${diferencia.toFixed(2)}` : `- S/ ${Math.abs(diferencia).toFixed(2)}`) : 'CUADRE EXACTO'}
+                      {diferencia !== 0 ? (diferencia > 0 ? `+ S/ ${formatearMonto(diferencia)}` : `- S/ ${formatearMonto(Math.abs(diferencia))}`) : 'CUADRE EXACTO'}
                     </td>
                     <td className="p-2 sm:p-4 text-center hidden md:table-cell whitespace-nowrap">
                       <div className="flex items-center justify-center">

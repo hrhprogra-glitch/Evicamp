@@ -5,6 +5,7 @@ import { supabase } from '../../../db/supabase';
 import { Eye, EyeOff, BarChart3, X, Clock, Receipt, Coins, Smartphone, CreditCard, BookOpen, HandCoins } from 'lucide-react';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { traerTodo } from '../../../utils/traerTodo';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   refreshTrigger: number;
@@ -153,29 +154,29 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
             <div className="flex flex-col gap-4 sm:gap-6 lg:overflow-y-auto custom-scrollbar lg:pr-4 min-h-0">
               <div className="bg-[var(--color-ink)] p-5 sm:p-8 text-center border-4 border-[var(--color-ink)] shrink-0 shadow-[8px_8px_0_0_var(--color-line-light)]">
                 <p className="text-[var(--color-subtle)] text-xs font-black uppercase tracking-widest mb-2">Total Ingresado a Caja (Ventas + Abonos)</p>
-                <p className="text-2xl sm:text-4xl sm:text-6xl lg:text-7xl font-black text-white mt-2 drop-shadow-lg break-all">S/ {totales.totalReal.toFixed(2)}</p>
+                <p className="text-2xl sm:text-4xl sm:text-6xl lg:text-7xl font-black text-white mt-2 drop-shadow-lg break-all">S/ {formatearMonto(totales.totalReal)}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 sm:gap-5 shrink-0">
                 <div className="bg-white border-4 border-[var(--color-border)] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_var(--color-border)]">
                   <Coins size={32} className="text-[var(--color-accent)] mb-2" />
                   <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">Efectivo Físico</span>
-                  <span className="text-lg sm:text-3xl font-black text-[var(--color-ink)] mt-1 break-all">S/ {totales.efectivo.toFixed(2)}</span>
+                  <span className="text-lg sm:text-3xl font-black text-[var(--color-ink)] mt-1 break-all">S/ {formatearMonto(totales.efectivo)}</span>
                 </div>
                 <div className="bg-white border-4 border-[var(--color-border)] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_var(--color-border)]">
                   <Smartphone size={32} className="text-[var(--color-purple)] mb-2" />
                   <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">Yape / Plin / Transf.</span>
-                  <span className="text-lg sm:text-3xl font-black text-[var(--color-ink)] mt-1 break-all">S/ {(totales.yape + totales.transferencia).toFixed(2)}</span>
+                  <span className="text-lg sm:text-3xl font-black text-[var(--color-ink)] mt-1 break-all">S/ {formatearMonto((totales.yape + totales.transferencia))}</span>
                 </div>
                 <div className="bg-white border-4 border-[var(--color-border)] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_var(--color-border)]">
                   <CreditCard size={32} className="text-[var(--color-info)] mb-2" />
                   <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">Tarjeta (POS)</span>
-                  <span className="text-lg sm:text-3xl font-black text-[var(--color-ink)] mt-1 break-all">S/ {totales.tarjeta.toFixed(2)}</span>
+                  <span className="text-lg sm:text-3xl font-black text-[var(--color-ink)] mt-1 break-all">S/ {formatearMonto(totales.tarjeta)}</span>
                 </div>
                 <div className="bg-white border-4 border-[var(--color-border)] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_var(--color-border)]">
                   <BookOpen size={32} className="text-[var(--color-danger)] mb-2" />
                   <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">Deuda (Fiados Emitidos)</span>
-                  <span className="text-lg sm:text-3xl font-black text-[var(--color-ink)] mt-1 break-all">S/ {totales.fiado.toFixed(2)}</span>
+                  <span className="text-lg sm:text-3xl font-black text-[var(--color-ink)] mt-1 break-all">S/ {formatearMonto(totales.fiado)}</span>
                 </div>
               </div>
             </div>
@@ -196,7 +197,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
                       </span>
                     </div>
                     <span className={`text-lg sm:text-2xl font-black shrink-0 ${v.metodo === 'FIADO' ? 'text-[var(--color-danger)]' : 'text-[var(--color-accent)]'}`}>
-                       S/ {v.total.toFixed(2)}
+                       S/ {formatearMonto(v.total)}
                     </span>
                   </div>
                 )) : (
@@ -232,7 +233,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
               className="text-base font-black text-[var(--color-accent)] ml-1 hover:brightness-125 transition-all cursor-pointer"
               title="Mostrar/Ocultar Montos"
             >
-              {isVisible ? `S/ ${totales.totalReal.toFixed(2)}` : 'S/ ***.**'}
+              {isVisible ? `S/ ${formatearMonto(totales.totalReal)}` : 'S/ ***.**'}
             </button>
           </div>
           <button 

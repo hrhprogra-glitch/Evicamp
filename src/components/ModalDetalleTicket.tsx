@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Printer, Receipt, ListFilter, ArrowLeftRight, Undo2, RefreshCw, ExternalLink, FileMinus } from 'lucide-react';
 import { supabase } from '../db/supabase';
-import { formatearCantidadDetalle } from '../utils/formato';
+import {formatearCantidadDetalle, formatearMonto } from '../utils/formato';
 import { useImprimir, estaImprimiendo } from '../utils/impresion';
 import { avisar } from '../utils/dialogos';
 import { TicketImprimible, type ComprobanteTicket } from '../sections/Punto-de-venta/components/TicketImprimible';
@@ -436,7 +436,7 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
                     <div key={n.id} className="flex flex-wrap items-center justify-between gap-1.5 bg-[var(--color-bg)] px-2.5 py-1 border border-[var(--color-border)]">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <span className="text-[10px] font-black uppercase text-[var(--color-ink)] truncate">
-                          Nota de crédito {numeroComprobante(n.doc_serial, n.doc_number)} · S/ {Number(n.total).toFixed(2)}
+                          Nota de crédito {numeroComprobante(n.doc_serial, n.doc_number)} · S/ {formatearMonto(Number(n.total))}
                         </span>
                         <InsigniaCpe estado={n.cpe_estado} chica />
                       </div>
@@ -533,7 +533,7 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
                         )}
                         {item.precio_lista != null && Number(item.precio_lista) !== Number(item.price_at_moment) && (
                           <span data-precio-cambiado className="block normal-case text-[11px] text-[var(--color-warning-text)]">
-                            Precio cambiado: S/ {Number(item.precio_lista).toFixed(2)} → S/ {Number(item.price_at_moment).toFixed(2)}{item.precio_cambiado_por ? ` · ${item.precio_cambiado_por}` : ''}
+                            Precio cambiado: S/ {formatearMonto(Number(item.precio_lista))} → S/ {formatearMonto(Number(item.price_at_moment))}{item.precio_cambiado_por ? ` · ${item.precio_cambiado_por}` : ''}
                           </span>
                         )}
                         {item.numero_serie && (
@@ -547,8 +547,8 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
                           </span>
                         )}
                       </td>
-                      <td className="p-2 text-xs font-mono text-[var(--color-muted)] text-right">S/ {Number(item.price_at_moment).toFixed(2)}</td>
-                      <td className="p-2 text-sm font-black font-mono text-[var(--color-ink)] text-right">S/ {Number(item.subtotal).toFixed(2)}</td>
+                      <td className="p-2 text-xs font-mono text-[var(--color-muted)] text-right">S/ {formatearMonto(Number(item.price_at_moment))}</td>
+                      <td className="p-2 text-sm font-black font-mono text-[var(--color-ink)] text-right">S/ {formatearMonto(Number(item.subtotal))}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -578,7 +578,7 @@ export const ModalDetalleTicket: React.FC<Props> = ({ ticketId, onClose, onCambi
              <div className="flex items-center gap-3">
                <span className="text-[var(--color-muted)] text-xs font-black uppercase tracking-widest">Total Facturado</span>
                <span className="text-[var(--color-ink)] text-xl font-black font-mono">
-                 S/ {totalCalculado.toFixed(2)}
+                 S/ {formatearMonto(totalCalculado)}
                </span>
              </div>
           </div>

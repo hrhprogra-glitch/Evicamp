@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Layers, ChevronLeft, ChevronRight, Package, Edit, Trash2, Search } from 'lucide-react';
-import { formatearCantidad } from '../../../utils/formato';
+import {formatearCantidad, formatearMonto } from '../../../utils/formato';
 import type { Merma } from '../types';
 import type { Product } from '../../Inventario/types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
@@ -273,16 +273,16 @@ export const TablaConteos: React.FC<Props> = ({ mermas, products, onEdit, onDele
 
               {/* COSTO */}
               <div className="col-span-1 min-w-0 text-right">
-                <p className="font-black text-[var(--color-muted)] text-xs truncate" title={`S/ ${merma.cost_unit.toFixed(2)}`}>
-                  S/{merma.cost_unit.toFixed(2)}
+                <p className="font-black text-[var(--color-muted)] text-xs truncate" title={`S/ ${formatearMonto(merma.cost_unit)}`}>
+                  S/{formatearMonto(merma.cost_unit)}
                 </p>
               </div>
 
               {/* TOTAL */}
               <div className="col-span-1 min-w-0 text-right">
                 {/* Un sobrante resta de lo perdido (en la base su total va en negativo) */}
-                <p className={`font-black text-sm truncate ${merma.sobrante ? 'text-[var(--color-accent)]' : 'text-[var(--color-ink)]'}`} title={`S/ ${merma.total_loss.toFixed(2)}`}>
-                  {merma.sobrante ? `+S/${Math.abs(merma.total_loss).toFixed(2)}` : `S/${merma.total_loss.toFixed(2)}`}
+                <p className={`font-black text-sm truncate ${merma.sobrante ? 'text-[var(--color-accent)]' : 'text-[var(--color-ink)]'}`} title={`S/ ${formatearMonto(merma.total_loss)}`}>
+                  {merma.sobrante ? `+S/${formatearMonto(Math.abs(merma.total_loss))}` : `S/${formatearMonto(merma.total_loss)}`}
                 </p>
               </div>
 

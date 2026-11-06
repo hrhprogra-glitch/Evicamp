@@ -19,7 +19,7 @@ import type { Product } from '../../Inventario/types';
 import { coincideBusqueda } from '../../../utils/busqueda';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar } from '../../../utils/dialogos';
-import { formatearCantidad } from '../../../utils/formato';
+import {formatearCantidad, formatearMonto } from '../../../utils/formato';
 import { esDecimal } from '../../../utils/unidades';
 import { MOTIVOS_FALTA, MOTIVOS_SALIDA, MOTIVOS_SOBRA } from '../motivos';
 import { CuerpoVentana, CajaLista, FilaLista, LineaDato, Etiqueta, DatoFila, claseBotonBarra, claseBotonPrincipal } from '../../../components/ListaVentana';
@@ -55,7 +55,7 @@ const LoteAutomatico: React.FC<{ marca?: string }> = ({ marca = '' }) => (
 const DatosLote: React.FC<{ l: Lote; unidad: string; marca?: string }> = ({ l, unidad, marca = '' }) => (
   <span className="flex flex-1 flex-wrap items-center justify-between gap-x-4 gap-y-1 min-w-0">
     <span className="text-xs font-black uppercase">{marca}Lote del {fechaCorta(l.created_at)} {horaCorta(l.created_at)}{l.expiration_date ? ` · vence ${fechaCorta(l.expiration_date)}` : ''}</span>
-    <span className="text-[11px] font-black">Quedan {formatearCantidad(l.quantity, unidad)} {unidad} · S/ {Number(l.cost_unit || 0).toFixed(2)} c/u</span>
+    <span className="text-[11px] font-black">Quedan {formatearCantidad(l.quantity, unidad)} {unidad} · S/ {formatearMonto(Number(l.cost_unit || 0))} c/u</span>
   </span>
 );
 const esConsumo = (p: Product | null) => String(p?.unit || '').toUpperCase() === 'CONSUMO';
@@ -251,7 +251,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
         if (e3) throw e3;
       }
       anotar({ producto: producto.name, unidad, modo: 'SALIDA', cantidad: cant, diferencia: consumo ? 0 : -cant, motivo, consumo });
-      setUltimo(consumo ? `✔ ${producto.name}: gasto de S/ ${cant.toFixed(2)} guardado (${motivo}).` : `✔ ${producto.name}: merma guardada (${motivo}).`);
+      setUltimo(consumo ? `✔ ${producto.name}: gasto de S/ ${formatearMonto(cant)} guardado (${motivo}).` : `✔ ${producto.name}: merma guardada (${motivo}).`);
       onGuardado?.();
       reiniciar();
     } catch (e) {
@@ -752,7 +752,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                 data-ajuste-fila="true"
                 titulo={h.producto}
                 subtitulo={<>
-                  <LineaDato>{h.modo === 'CONTEO' ? `Contó ${formatearCantidad(h.cantidad, h.unidad)} ${h.unidad}` : h.consumo ? `Gasto de S/ ${h.cantidad.toFixed(2)}` : `Salieron ${formatearCantidad(h.cantidad, h.unidad)} ${h.unidad}`} · {h.hora}</LineaDato>
+                  <LineaDato>{h.modo === 'CONTEO' ? `Contó ${formatearCantidad(h.cantidad, h.unidad)} ${h.unidad}` : h.consumo ? `Gasto de S/ ${formatearMonto(h.cantidad)}` : `Salieron ${formatearCantidad(h.cantidad, h.unidad)} ${h.unidad}`} · {h.hora}</LineaDato>
                   {h.motivo && <LineaDato>Motivo: {h.motivo}</LineaDato>}
                 </>}
                 centro={h.modo === 'SALIDA' ? <Etiqueta tono="rojo">{h.consumo ? 'Gasto' : 'Merma'}</Etiqueta> : h.diferencia === 0 ? <Etiqueta tono="verde">Cuadra</Etiqueta> : h.diferencia < 0 ? <Etiqueta tono="rojo">Merma</Etiqueta> : <Etiqueta tono="azul">Sobrante</Etiqueta>}

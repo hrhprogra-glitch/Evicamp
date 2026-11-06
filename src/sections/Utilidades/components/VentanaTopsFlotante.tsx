@@ -1,4 +1,5 @@
 import { X, TrendingUp } from 'lucide-react';
+import { formatearMonto } from '../../../utils/formato';
 
 interface TopProduct {
   nombre: string;
@@ -41,7 +42,7 @@ export const VentanaTopsFlotante = ({ tops, onClose }: Props) => {
             </span>
             
             <span className="text-sm font-mono font-black text-[var(--color-accent-shadow)] bg-[var(--color-accent-bg)] px-2 py-0.5 border border-[var(--color-accent)] rounded-none">
-              +S/{item.utilidad.toFixed(2)}
+              +S/{formatearMonto(item.utilidad)}
             </span>
           </div>
         ))}

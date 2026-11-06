@@ -7,6 +7,7 @@ import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { traerTodo } from '../../../utils/traerTodo';
 import { rucValido } from '../../../utils/documento';
 import { errorComprobante, type DatosComprobante, type FacturacionCaja, type TipoComprobante } from '../../../utils/comprobante';
+import { formatearMonto } from '../../../utils/formato';
 
 // NUEVA INTERFAZ PARA LOS DATOS DEL FIADO
 export interface FiadoData {
@@ -454,7 +455,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                   )}
                   {deudaPendiente > 0.05 && (
                     <span className="bg-white/80 px-1.5 py-0.5 border border-[var(--color-warning-border)]">
-                      Deuda actual: <strong className="text-[var(--color-danger)]">S/ {deudaPendiente.toFixed(2)}</strong>
+                      Deuda actual: <strong className="text-[var(--color-danger)]">S/ {formatearMonto(deudaPendiente)}</strong>
                     </span>
                   )}
                   {tieneDeudaVencida && (
@@ -690,7 +691,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
           <div className="flex flex-col gap-2 w-full">
           <div className="bg-[var(--color-ink)] text-white p-3 [@media(max-height:820px)]:py-1.5 text-center border-2 border-[var(--color-ink)] shadow-inner relative shrink-0">
             <p className="text-[12px] font-bold text-[var(--color-subtle)] uppercase tracking-[0.2em] mb-1">Total a Pagar</p>
-            <p className="text-2xl sm:text-4xl [@media(max-height:820px)]:text-2xl font-black text-[var(--color-accent)]">S/ {total.toFixed(2)}</p>
+            <p className="text-2xl sm:text-4xl [@media(max-height:820px)]:text-2xl font-black text-[var(--color-accent)]">S/ {formatearMonto(total)}</p>
           </div>
 
           <div className="flex gap-2 shrink-0">
@@ -910,17 +911,17 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
         <div className="bg-white border-2 border-[var(--color-border)] px-3 py-2 flex flex-col gap-1 [@media(max-height:820px)]:flex-row [@media(max-height:820px)]:items-center [@media(max-height:820px)]:justify-between [@media(max-height:820px)]:gap-4 shrink-0">
           <div className="flex justify-between items-center gap-2 text-[12px] font-black uppercase text-[var(--color-muted)]">
             <span>Ingresado:</span>
-            <span>S/ {totalIngresado.toFixed(2)}</span>
+            <span>S/ {formatearMonto(totalIngresado)}</span>
           </div>
           {faltante > 0 ? (
             <div className="flex justify-between items-center border-t-2 border-dashed border-[var(--color-border)] pt-1 [@media(max-height:820px)]:border-t-0 [@media(max-height:820px)]:pt-0 [@media(max-height:820px)]:gap-3">
               <span className="text-[12px] font-black uppercase text-[var(--color-warning)]">Falta cobrar:</span>
-              <span className="text-lg font-black text-[var(--color-warning)]">S/ {faltante.toFixed(2)}</span>
+              <span className="text-lg font-black text-[var(--color-warning)]">S/ {formatearMonto(faltante)}</span>
             </div>
           ) : (
             <div className="flex justify-between items-center border-t-2 border-dashed border-[var(--color-border)] pt-1 [@media(max-height:820px)]:border-t-0 [@media(max-height:820px)]:pt-0 [@media(max-height:820px)]:gap-3">
               <span className="text-[12px] font-black uppercase text-[var(--color-info)]">Vuelto:</span>
-              <span className="text-xl font-black text-[var(--color-info)]">S/ {vuelto.toFixed(2)}</span>
+              <span className="text-xl font-black text-[var(--color-info)]">S/ {formatearMonto(vuelto)}</span>
             </div>
           )}
         </div>
@@ -982,7 +983,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
           >
             {/* ⚡ Respuesta inmediata: Solo cambia el ícono mientras procesa */}
             {isProcessing ? <CheckCircle2 size={20} className="animate-ping" /> : <CheckCircle2 size={20} />}
-            <span>{isProcessing ? 'GUARDANDO...' : (faltante > 0 ? `FIAR S/ ${faltante.toFixed(2)}` : facturacion && compTipo !== 'NOTA' ? `CONFIRMAR Y EMITIR ${compTipo}` : 'CONFIRMAR PAGO')}</span>
+            <span>{isProcessing ? 'GUARDANDO...' : (faltante > 0 ? `FIAR S/ ${formatearMonto(faltante)}` : facturacion && compTipo !== 'NOTA' ? `CONFIRMAR Y EMITIR ${compTipo}` : 'CONFIRMAR PAGO')}</span>
           </button>
         </div>
 

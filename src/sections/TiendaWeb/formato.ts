@@ -1,3 +1,4 @@
+import { formatearMonto } from '../../utils/formato';
 // Ayudas de presentación de la Tienda Web (solo cambian cómo se VE el texto, nunca el dato guardado).
 
 const MINUSCULAS = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'y', 'e', 'o', 'con', 'sin', 'para', 'por', 'en', 'a', 'x']);
@@ -42,7 +43,7 @@ export const tonoCategoria = (categoria: string) => {
   return TONOS[h % TONOS.length];
 };
 
-export const soles = (monto: number) => `S/ ${Number(monto || 0).toFixed(2)}`;
+export const soles = (monto: number) => `S/ ${formatearMonto(Number(monto || 0))}`;
 
 /** Número de WhatsApp listo para el link (con 51 adelante una sola vez). Vacío si no hay número. */
 export const numeroWhatsapp = (...numeros: (string | null | undefined)[]): string => {

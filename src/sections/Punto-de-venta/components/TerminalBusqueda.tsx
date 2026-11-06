@@ -2,7 +2,7 @@ import { coincideBusqueda } from '../../../utils/busqueda';
 import { flechasCaja, irA } from '../tecladoCaja';
 import React, { useState, useEffect } from 'react';
 import { Search, ScanLine, Package, Plus, AlertTriangle, CheckCircle2, Users, X, Scale, Tag, Boxes } from 'lucide-react';
-import { formatearCantidad } from '../../../utils/formato';
+import {formatearCantidad, formatearMonto } from '../../../utils/formato';
 import { esDecimal, unidadDe } from '../../../utils/unidades';
 import type { Product } from '../../Inventario/types';
 import type { Cliente } from '../types';
@@ -509,17 +509,17 @@ export const TerminalBusqueda: React.FC<Props> = ({
                         return (
                           <div className="flex items-baseline gap-1.5 flex-wrap">
                             <span className="text-base sm:text-lg font-black text-[var(--color-success)] font-mono">
-                              S/ {precioEfectivo.toFixed(2)}
+                              S/ {formatearMonto(precioEfectivo)}
                             </span>
                             <span className="text-[11px] line-through text-[var(--color-muted)] font-mono">
-                              S/ {prod.price.toFixed(2)}
+                              S/ {formatearMonto(prod.price)}
                             </span>
                           </div>
                         );
                       }
                       return (
                         <span className="text-lg sm:text-xl font-black text-[var(--color-ink)] font-mono">
-                          S/ {prod.price.toFixed(2)}
+                          S/ {formatearMonto(prod.price)}
                         </span>
                       );
                     })()}

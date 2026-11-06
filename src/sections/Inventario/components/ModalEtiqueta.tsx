@@ -14,6 +14,7 @@ import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { useImprimir } from '../../../utils/impresion';
 import { avisar } from '../../../utils/dialogos';
 import { CuerpoVentana, claseBotonBarra, claseBotonPrincipal } from '../../../components/ListaVentana';
+import { formatearMonto } from '../../../utils/formato';
 
 type Tipo = 'PRECIO' | 'STICKER';
 type Papel = '80' | '58' | 'A4';
@@ -43,7 +44,7 @@ const CodigoBarras: React.FC<{ valor: string; alto: number; grosor: number }> = 
 // Una etiqueta (la misma en la vista previa y en la impresión)
 const Etiqueta: React.FC<{ producto: Product; tipo: Tipo; papel: Papel }> = ({ producto: p, tipo, papel }) => {
   const codigo = codigoDeEtiqueta(p);
-  const precio = `S/ ${Number(p.price || 0).toFixed(2)}${esPeso(p) ? ` x ${unidadDe(p).corto}` : ''}`;
+  const precio = `S/ ${formatearMonto(Number(p.price || 0))}${esPeso(p) ? ` x ${unidadDe(p).corto}` : ''}`;
   const chico = papel === '58';
   const caja: React.CSSProperties = {
     width: ANCHO[papel], boxSizing: 'border-box', padding: '2mm', fontFamily: 'Arial, Helvetica, sans-serif', color: '#000', background: '#fff',

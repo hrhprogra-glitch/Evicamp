@@ -4,6 +4,7 @@ import { EtiquetaStock } from './EtiquetaStock';
 import type { Product } from '../types';
 import { usePermiso, avisarSinPermiso } from '../../../utils/permisos';
 import { confirmar } from '../../../utils/dialogos';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   loading: boolean;
@@ -454,7 +455,7 @@ export const TablaProductos: React.FC<Props> = ({
                 {/* 3. INVERSIÓN (COSTO Y TOTAL CLAROS) */}
                 <div className="col-start-1 col-span-2 row-start-3 md:col-start-auto md:row-start-auto md:col-span-2 flex flex-row flex-wrap md:flex-col gap-x-4 gap-y-1 md:gap-1 justify-start md:justify-center">
                   <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
-                    Costo U: <strong className="text-[var(--color-ink)] text-sm">S/ {(item.cost || 0).toFixed(2)}</strong>
+                    Costo U: <strong className="text-[var(--color-ink)] text-sm">S/ {formatearMonto((item.cost || 0))}</strong>
                   </span>
                   <span className="text-xs font-bold text-[var(--color-success)] uppercase tracking-wider">
                     Total: <strong className="text-[var(--color-ink)] text-sm">S/ {totalCompra}</strong>
@@ -464,18 +465,18 @@ export const TablaProductos: React.FC<Props> = ({
                 {/* 4. PRECIO DE VENTA Y TODAS LAS ESCALAS/PRESENTACIONES */}
                 <div className="col-start-3 row-start-1 md:col-start-auto md:row-start-auto md:col-span-1 font-black text-right md:pr-2">
                   <div className="text-base md:text-lg text-[var(--color-success)] whitespace-nowrap">
-                    S/ {(item.price || 0).toFixed(2)}
+                    S/ {formatearMonto((item.price || 0))}
                   </div>
                   {item.precioMayorista != null && item.precioMayorista > 0 && (
                     <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400 leading-tight mt-0.5 whitespace-nowrap" title="Precio Mayorista">
-                      ⭐ May: S/ {item.precioMayorista.toFixed(2)}
+                      ⭐ May: S/ {formatearMonto(item.precioMayorista)}
                     </div>
                   )}
                   {!!item.preciosCantidad?.length && (
                     <div className="flex flex-col items-end gap-0.5 mt-0.5" title="Precios por cantidad (escalas)">
                       {item.preciosCantidad.map((esc, i) => (
                         <span key={i} className="text-[10px] font-bold text-blue-600 dark:text-blue-400 leading-none whitespace-nowrap bg-blue-50 dark:bg-blue-950/40 px-1 py-0.5 border border-blue-200 dark:border-blue-900">
-                          x{esc.desde}+ S/ {Number(esc.precio).toFixed(2)}
+                          x{esc.desde}+ S/ {formatearMonto(Number(esc.precio))}
                         </span>
                       ))}
                     </div>
@@ -484,7 +485,7 @@ export const TablaProductos: React.FC<Props> = ({
                     <div className="flex flex-col items-end gap-0.5 mt-0.5" title="Presentaciones">
                       {item.presentaciones.map((pres, i) => (
                         <span key={i} className="text-[10px] font-bold text-purple-600 dark:text-purple-400 leading-none whitespace-nowrap bg-purple-50 dark:bg-purple-950/40 px-1 py-0.5 border border-purple-200 dark:border-purple-900">
-                          {pres.unidad} x{pres.factor} S/ {Number(pres.precio).toFixed(2)}
+                          {pres.unidad} x{pres.factor} S/ {formatearMonto(Number(pres.precio))}
                         </span>
                       ))}
                     </div>

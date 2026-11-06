@@ -36,7 +36,7 @@ interface Insumo { component_product_id: string; component_variant_id?: string |
 interface Elegido { id: string; name: string; unit: string; costoAdicional: number; insumos: Insumo[] }
 
 const enfocar = (id: string) => setTimeout(() => document.getElementById(id)?.focus(), 40);
-const soles = (n: number) => `S/ ${n.toFixed(2)}`;
+const soles = (n: number) => `S/ ${(Number(n) || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, productos, productoInicial, onIrALotes, paraCambiar }) => {
   const empleado = useEmpleado();
@@ -62,7 +62,9 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
   const [elegido, setElegido] = useState<Elegido | null>(null);
   const [desdeGuardar, setDesdeGuardar] = useState(false); // llegó a Producir desde "Guardar e ir a Lotes"
   const [cantidad, setCantidad] = useState('1');
+  // Gasto extra de TODO el lote (lo que se escribe). Mientras no se toque, se propone: lo guardado por unidad × cantidad
   const [costoAdicProd, setCostoAdicProd] = useState('0');
+  const [adicEditado, setAdicEditado] = useState(false);
   const [avisoTope, setAvisoTope] = useState('');
 
   useCerrarConEscape(isOpen, onClose);
@@ -273,7 +275,8 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
     setElegido({ id: String(p.id), name: p.name, unit: p.unit || 'UND', costoAdicional: Number(p.costoAdicionalProduccion) || 0, insumos: lista });
     const t = tope(lista);
     setCantidad(t.max > 0 ? '1' : '0');
-    setCostoAdicProd(String(Number(p.costoAdicionalProduccion) || 0));
+    setCostoAdicProd('0');
+    setAdicEditado(false);
     setAvisoTope('');
     setVista('PRODUCIR');
     setTimeout(() => { const c = document.getElementById('input-cantidad-produccion') as HTMLInputElement | null; c?.focus(); c?.select(); }, 60);
@@ -288,7 +291,8 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
   };
   const cantProd = Math.floor(Number(cantidad) || 0);
   const costoInsumosProd = elegido ? elegido.insumos.reduce((a, i) => a + costoDe(i), 0) * cantProd : 0;
-  const costoAdicTotal = (Number(costoAdicProd) || 0) * cantProd;
+  const costoAdicTotal = adicEditado ? (Number(costoAdicProd) || 0) : Math.round((elegido?.costoAdicional || 0) * cantProd * 100) / 100;
+  const adicPorUnidad = cantProd > 0 ? costoAdicTotal / cantProd : 0;
   const costoUnitProd = cantProd > 0 ? (costoInsumosProd + costoAdicTotal) / cantProd : 0;
 
   const producir = async () => {
@@ -305,6 +309,10 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
         p_usuario: empleado?.nombre || 'Sistema',
       });
       if (error) throw error;
+      if (adicEditado && cantProd > 0) {
+        // (si no hay permiso para cambiar productos, no pasa nada: solo no se recuerda)
+        await supabase.from('products').update({ costo_adicional_produccion: Math.round(adicPorUnidad * 100) / 100 }).eq('id', elegido.id);
+      }
       onSuccess?.();
       const ir = await confirmar(`✔ Producidos ${cantProd} ${elegido.unit} de ${elegido.name}.\nLote ${data?.batch_code || ''} · costo por unidad ${soles(Number(data?.cost_unit ?? costoUnitProd))}.\n\n¿Ver sus lotes?`);
       if (ir) { onClose(); onIrALotes?.(elegido.name); }
@@ -648,18 +656,22 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                     className={`${claseCampo} text-right disabled:opacity-50`} />
                 </div>
                 <div>
-                  <label htmlFor="input-costo-adicional-produccion" className={etiquetaCampo}>Costo adicional por unidad (S/)</label>
-                  <input id="input-costo-adicional-produccion" type="number" min="0" step="0.01" value={costoAdicProd}
-                    onChange={(e) => setCostoAdicProd(e.target.value)} onFocus={(e) => e.currentTarget.select()}
+                  <label htmlFor="input-costo-adicional-produccion" className={etiquetaCampo}>Gastos extra de todo el lote (gas, mano de obra) S/</label>
+                  <input id="input-costo-adicional-produccion" type="number" min="0" step="0.01"
+                    value={adicEditado ? costoAdicProd : String(costoAdicTotal)}
+                    onChange={(e) => { setAdicEditado(true); setCostoAdicProd(e.target.value); }} onFocus={(e) => e.currentTarget.select()}
                     onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter no pasa al siguiente cuadro
                     className={`${claseCampo} text-right`} />
+                  <p id="adicional-por-unidad" className="mt-1 text-[11px] font-black uppercase text-[var(--color-muted)]">
+                    {cantProd > 0 ? `= ${soles(adicPorUnidad)} por unidad (${soles(costoAdicTotal)} ÷ ${cantProd})` : 'Se reparte entre las unidades'}
+                  </p>
                 </div>
               </div>
               {avisoTope && <p id="aviso-tope" role="alert" className="text-[11px] font-black uppercase text-[var(--color-danger)]">{avisoTope}</p>}
               {tablaInsumos(elegido.insumos, cantProd)}
               <div className="grid grid-cols-3 gap-2 border-2 border-[var(--color-border)] p-3">
                 <DatoFila etiqueta="Insumos" valor={soles(costoInsumosProd)} />
-                <DatoFila etiqueta="Adicional" valor={soles(costoAdicTotal)} />
+                <DatoFila etiqueta="Gastos extra (lote)" valor={soles(costoAdicTotal)} />
                 <DatoFila etiqueta="Costo por unidad" valor={soles(costoUnitProd)} tono="verde" />
               </div>
             </div>

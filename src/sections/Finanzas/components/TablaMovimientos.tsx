@@ -4,6 +4,7 @@ import type { UnifiedItem } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { usePermiso, avisar, avisarSinPermiso } from '../../../utils/permisos';
 import { InsigniaCpe } from '../../../components/InsigniaCpe';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   movimientos: UnifiedItem[];
@@ -139,7 +140,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                       )}
                       {item.isTicket && item.devolucion && (
                         <p className="text-[11px] font-bold text-[var(--color-danger)] uppercase tracking-wide leading-tight">
-                          ↩ Devuelto S/ {item.devolucion.monto.toFixed(2)}{item.devolucion.autor ? ` · por ${item.devolucion.autor}` : ''}
+                          ↩ Devuelto S/ {formatearMonto(item.devolucion.monto)}{item.devolucion.autor ? ` · por ${item.devolucion.autor}` : ''}
                         </p>
                       )}
                       {item.isTicket && item.productosStr && (
@@ -171,16 +172,16 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
 
                   {/* PAGADO */}
                   <td className="hidden md:table-cell p-2.5 sm:p-3 text-right text-xs sm:text-sm font-bold text-[var(--color-muted)] whitespace-nowrap">
-                    {item.isTicket ? `S/ ${Number(item.monto_pagado || 0).toFixed(2)}` : '-'}
+                    {item.isTicket ? `S/ ${formatearMonto(Number(item.monto_pagado || 0))}` : '-'}
                   </td>
 
                   {/* DEUDA */}
                   <td className={`hidden md:table-cell p-2.5 sm:p-3 text-right text-xs sm:text-sm font-black whitespace-nowrap ${Number(item.monto_deuda) > 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>
-                    {item.isTicket && Number(item.monto_deuda) > 0 ? `S/ ${Number(item.monto_deuda).toFixed(2)}` : '-'}
+                    {item.isTicket && Number(item.monto_deuda) > 0 ? `S/ ${formatearMonto(Number(item.monto_deuda))}` : '-'}
                   </td>
 
                   <td className={`p-2.5 sm:p-3 text-right text-xs sm:text-sm font-black tracking-tight whitespace-nowrap ${item.tipo === 'INGRESO' ? 'text-[var(--color-accent)]' : item.tipo === 'EGRESO' ? 'text-[var(--color-danger)]' : 'text-[var(--color-ink)]'}`}>
-                    {item.tipo === 'INGRESO' ? '+' : item.tipo === 'EGRESO' ? '-' : ''} S/ {Number(item.monto).toFixed(2)}
+                    {item.tipo === 'INGRESO' ? '+' : item.tipo === 'EGRESO' ? '-' : ''} S/ {formatearMonto(Number(item.monto))}
                   </td>
                   
                   <td className="p-2.5 sm:p-3 whitespace-nowrap text-center">

@@ -1,5 +1,5 @@
 import { coincideBusqueda } from '../../../utils/busqueda';
-import { formatearCantidadDetalle } from '../../../utils/formato';
+import {formatearCantidadDetalle, formatearMonto } from '../../../utils/formato';
 // src/sections/Finanzas/components/ModalDetalleCaja.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Printer, Receipt, Download, FileText, ChevronLeft, Eye, RotateCcw, Trash2, Search } from 'lucide-react';
@@ -689,11 +689,11 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
                   </div>
                   <div className="border-2 border-[var(--color-border)] p-2.5 bg-[var(--color-bg)]">
                     <p className="text-[10px] font-black text-[var(--color-muted)] uppercase tracking-wider">Fondo Inicial</p>
-                    <p className="text-xs sm:text-sm font-black text-[var(--color-ink)] whitespace-nowrap">S/ {Number(caja.opening_balance).toFixed(2)}</p>
+                    <p className="text-xs sm:text-sm font-black text-[var(--color-ink)] whitespace-nowrap">S/ {formatearMonto(Number(caja.opening_balance))}</p>
                   </div>
                   <div className="border-2 border-[var(--color-border)] p-2.5 bg-[var(--color-bg)]">
                     <p className="text-[10px] font-black text-[var(--color-muted)] uppercase tracking-wider">Saldo Final Contado</p>
-                    <p className="text-xs sm:text-sm font-black text-[var(--color-ink)] whitespace-nowrap">S/ {(Number(caja.closing_balance || 0) + Number(caja.closing_yape || 0) + Number(caja.closing_card || 0)).toFixed(2)}</p>
+                    <p className="text-xs sm:text-sm font-black text-[var(--color-ink)] whitespace-nowrap">S/ {formatearMonto((Number(caja.closing_balance || 0) + Number(caja.closing_yape || 0) + Number(caja.closing_card || 0)))}</p>
                   </div>
                 </div>
 
@@ -837,7 +837,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
                       <tr key={t.id}>
                         <td className="py-1">{new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                         <td className="uppercase">{t.payment_type}</td>
-                        <td className="text-right">S/ {Number(t.total).toFixed(2)}</td>
+                        <td className="text-right">S/ {formatearMonto(Number(t.total))}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -858,7 +858,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
                             {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {m.description}
                           </td>
                           <td className={`text-right ${m.type === 'INGRESO' ? 'text-green-700' : 'text-red-700'}`}>
-                            {m.type === 'INGRESO' ? '+' : '-'} S/ {Number(m.amount).toFixed(2)}
+                            {m.type === 'INGRESO' ? '+' : '-'} S/ {formatearMonto(Number(m.amount))}
                           </td>
                         </tr>
                       ))}
@@ -867,19 +867,19 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
                 )}
 
                 <div className="border-t-2 border-black pt-2 space-y-1 font-black text-xs uppercase">
-                  <div className="flex justify-between"><span>Base:</span><span>S/ {Number(caja.opening_balance).toFixed(2)}</span></div>
-                  <div className="flex justify-between text-green-600"><span>Efectivo:</span><span>S/ {ventasValidas.reduce((a, b) => a + Number(b.amount_cash || 0), 0).toFixed(2)}</span></div>
-                  <div className="flex justify-between text-blue-600"><span>Yape:</span><span>S/ {ventasValidas.reduce((a, b) => a + Number(b.amount_yape || 0), 0).toFixed(2)}</span></div>
-                  <div className="flex justify-between text-purple-600"><span>Tarjeta:</span><span>S/ {ventasValidas.reduce((a, b) => a + Number(b.amount_card || 0), 0).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span>Base:</span><span>S/ {formatearMonto(Number(caja.opening_balance))}</span></div>
+                  <div className="flex justify-between text-green-600"><span>Efectivo:</span><span>S/ {formatearMonto(ventasValidas.reduce((a, b) => a + Number(b.amount_cash || 0), 0))}</span></div>
+                  <div className="flex justify-between text-blue-600"><span>Yape:</span><span>S/ {formatearMonto(ventasValidas.reduce((a, b) => a + Number(b.amount_yape || 0), 0))}</span></div>
+                  <div className="flex justify-between text-purple-600"><span>Tarjeta:</span><span>S/ {formatearMonto(ventasValidas.reduce((a, b) => a + Number(b.amount_card || 0), 0))}</span></div>
                   {movimientos.length > 0 && (
                     <div className="flex justify-between text-[var(--color-ink)]">
                       <span>Movimientos (Ingresos - Gastos):</span>
-                      <span>S/ {totalMovimientos.toFixed(2)}</span>
+                      <span>S/ {formatearMonto(totalMovimientos)}</span>
                     </div>
                   )}
                   <div className="flex justify-between border-t border-black pt-1 text-lg">
                     <span>Final:</span>
-                    <span>S/ {Number(caja.closing_balance).toFixed(2)}</span>
+                    <span>S/ {formatearMonto(Number(caja.closing_balance))}</span>
                   </div>
                 </div>
               </div>

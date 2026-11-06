@@ -32,13 +32,14 @@ const cantidadPedida = (d: { presentacion?: string | null; presentacion_factor?:
   d.presentacion && Number(d.presentacion_factor) > 1
     ? `${Math.round((cant / Number(d.presentacion_factor)) * 100) / 100} ${d.presentacion} (${cant} ${unidad})`
     : `${cant} ${unidad}`;
+import { formatearMonto } from '../../../utils/formato';
 interface Compra {
   id: number; provider_id: string | null; proveedor: string | null; estado: 'PENDIENTE' | 'RECIBIDO' | 'ANULADO';
   notas: string | null; documento: string | null; autor: string | null; recibido_por: string | null; recibido_por_id: string | null;
   created_at: string; recibido_at: string | null; compras_detalle: (Item & { id: number; cantidad_recibida: number | null; batch_id: number | null; presentacion_factor?: number | null })[];
 }
 
-const soles = (n: number) => `S/ ${(Number(n) || 0).toFixed(2)}`;
+const soles = (n: number) => `S/ ${formatearMonto((Number(n) || 0))}`;
 const fecha = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-');
 // Fase 1.1: con decimales = cualquier unidad decimal (kilo, litro, metro…; src/utils/unidades.ts)
 const esPeso = (p?: Pick<Product, 'unit' | 'control_type'>) => esDecimal(p);
@@ -412,7 +413,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
     const recibida = c.estado === 'RECIBIDO';
     const lineas = c.compras_detalle.map((d) => {
       const cant = recibida ? (d.cantidad_recibida ?? 0) : d.cantidad;
-      return `- ${cantidadPedida(d, Number(cant), unidadPorId.get(String(d.product_id)) || '')} x ${d.product_name}${conPrecios ? ` (S/ ${(Number(d.costo_unit) || 0).toFixed(2)} c/u)` : ''}`;
+      return `- ${cantidadPedida(d, Number(cant), unidadPorId.get(String(d.product_id)) || '')} x ${d.product_name}${conPrecios ? ` (S/ ${formatearMonto((Number(d.costo_unit) || 0))} c/u)` : ''}`;
     }).join('\n');
     const total = totalDe(c.compras_detalle.map((d) => ({ cantidad: recibida ? Number(d.cantidad_recibida ?? 0) : d.cantidad, costo_unit: d.costo_unit })));
     const texto = [

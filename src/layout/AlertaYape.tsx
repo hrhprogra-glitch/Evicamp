@@ -6,6 +6,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, Smartphone } from 'lucide-react';
 import { supabase } from '../db/supabase';
+import { formatearMonto } from '../utils/formato';
 
 interface NotificacionYape {
   id: number;
@@ -91,7 +92,7 @@ export const AlertaYape: React.FC = () => {
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-black uppercase tracking-widest text-[var(--color-accent-bg)]">Yape recibido</p>
               {n.monto != null ? (
-                <p className="text-2xl font-black text-white leading-tight">S/ {Number(n.monto).toFixed(2)}</p>
+                <p className="text-2xl font-black text-white leading-tight">S/ {formatearMonto(Number(n.monto))}</p>
               ) : (
                 // No se pudo detectar el monto del texto de la notificación: mostramos el
                 // texto tal cual para que igual se sepa que llegó un pago.

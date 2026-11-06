@@ -5,6 +5,7 @@ import type { Fiado } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 
 import { usePermiso } from '../../../utils/permisos';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   fiados: Fiado[];
@@ -368,8 +369,8 @@ export const TablaFiados: React.FC<Props> = ({ fiados, onView, onEdit, onPay, on
                       {fiado.estado}
                     </span>
                   </td>
-                  <td className="p-4 text-right text-base font-black text-[var(--color-muted)]">S/ {fiado.montoOriginal.toFixed(2)}</td>
-                  <td className="p-4 text-right text-lg font-black text-[var(--color-danger)]">S/ {fiado.saldoPendiente.toFixed(2)}</td>
+                  <td className="p-4 text-right text-base font-black text-[var(--color-muted)]">S/ {formatearMonto(fiado.montoOriginal)}</td>
+                  <td className="p-4 text-right text-lg font-black text-[var(--color-danger)]">S/ {formatearMonto(fiado.saldoPendiente)}</td>
 
                   {/* ACCIONES */}
                   <td className="p-4">

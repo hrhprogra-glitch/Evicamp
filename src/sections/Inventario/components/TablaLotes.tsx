@@ -3,7 +3,7 @@ import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
 import { Database,Layers, Edit, Trash2, History, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
-import { formatearCantidad } from '../../../utils/formato';
+import {formatearCantidad, formatearMonto } from '../../../utils/formato';
 import { usePermiso, avisarSinPermiso } from '../../../utils/permisos';
 import { confirmar } from '../../../utils/dialogos';
 import { diasParaVencer, estaVencido, vencePronto } from '../../../utils/vencimiento';
@@ -394,7 +394,7 @@ export const TablaLotes: React.FC<Props> = ({
 
       {/* 4. COSTO UNITARIO */}
       <div className="col-span-1 text-right">
-        <p className="font-black text-[#64748B]">S/ {lote.cost_unit.toFixed(2)}</p>
+        <p className="font-black text-[#64748B]">S/ {formatearMonto(lote.cost_unit)}</p>
       </div>
 
       {/* 5. TOTAL COMPRA */}

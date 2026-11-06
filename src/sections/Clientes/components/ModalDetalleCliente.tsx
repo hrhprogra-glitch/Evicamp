@@ -10,6 +10,7 @@ import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { ventanaSuperior } from '../../../utils/ventanas';
 import { CuerpoVentana, BarraFiltros, TextoBarra, CajaLista, FilaLista, LineaDato, Etiqueta, DatoFila, claseBotonBarra, claseCampoBarra } from '../../../components/ListaVentana';
+import { formatearMonto } from '../../../utils/formato';
 
 export interface CompraCliente {
   id: string;
@@ -41,7 +42,7 @@ interface Props {
 
 type PestanaHistorial = 'PENDIENTES' | 'PAGADOS' | 'COMPRAS';
 const fecha = (f?: string) => (f ? new Date(f).toLocaleDateString('es-PE') : '—');
-const soles = (n: number) => `S/ ${n.toFixed(2)}`;
+const soles = (n: number) => `S/ ${formatearMonto(n)}`;
 const estaPagado = (f: Fiado) => f.estado === 'PAGADO' || (Number(f.saldoPendiente) || 0) <= 0.05;
 // Fecha como AAAA-MM-DD en hora local (para el filtro de fecha)
 const diaLocal = (f: string) => { const d = new Date(f); return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-CA'); };

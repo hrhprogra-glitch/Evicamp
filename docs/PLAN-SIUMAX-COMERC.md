@@ -4,7 +4,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 06/11/2026 (119), Claude: Producir: Guardar cierra; Guardar e ir a Lotes abre la pantalla del lote; arreglo de la regla 9 (una flecha rápida tras Enter ya no se deshace). Solo siumax.
+- **Última actualización:** 06/11/2026 (120), Claude: Crear lote con gastos extra por todo el lote (se reparte por unidad) y montos con separador de miles en todo el sistema (226 montos). Solo siumax.
+- (119) 06/11/2026, Claude: Producir: Guardar cierra; Guardar e ir a Lotes abre la pantalla del lote; arreglo de la regla 9 (una flecha rápida tras Enter ya no se deshace). Solo siumax.
 - (118) 06/11/2026, Claude: Producir › Categoría crea y borra categorías como Nuevo producto. Solo siumax.
 - (117) 06/11/2026, Claude: **PASE a Evicamp, clientes, siumax y GitHub** de 115–116, sin SQL; fotos de Evicamp 318 → 320, ninguna perdida.
 - (116) 05/11/2026, Claude: regla 9 (Enter nunca pasa al siguiente) en TODAS las ventanas por una regla general; Categoría guarda lo escrito. Solo siumax.

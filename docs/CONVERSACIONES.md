@@ -784,3 +784,4 @@
 - **Dueño:** *"sí, súbelo"* → Claude: copia de fotos (318), deploy a todos sin tocar la base, copia después (320, ninguna perdida), sitios y Tienda Web verificados, merge a main y push (117).
 - **Dueño** (captura de Producir): *"en categoría no crea categorías o borra como en producto; ajustar eso"* → hecho (118). Solo siumax.
 - **Dueño** (captura): *"Guardar e ir a Lotes literalmente me lleva a Lotes; debería llevarme a la ventana de lotes para ponerle la cantidad; y Guardar debe cerrar la ventana"* → hecho; de paso, arreglo de la regla 9 (119). Solo siumax.
+- **Dueño:** *"con adicional ¿a qué se refiere?"* → *"pero ahí no dice 16.200, dice 16200"* → *"sí también; pero ¿está bien, es correcto que es 16200?"* → Claude: el cálculo era correcto para "por unidad" (180 × 90), pero lo real es por tanda; hecho: gastos extra por todo el lote + separador de miles en todo el sistema (120). Solo siumax.

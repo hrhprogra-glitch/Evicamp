@@ -16,6 +16,7 @@ import { TarjetaMetrica } from './components/TarjetaMetrica';
 import { TablaConteos } from './components/TablaConteos';
 import { traerTodo } from '../../utils/traerTodo';
 import { confirmar, avisar } from '../../utils/dialogos';
+import { formatearMonto } from '../../utils/formato';
 
 // Sección CONTEOS (antes Mermas): lo que salió del stock y lo contado en el estante (faltantes y sobrantes).
 // Un solo botón, "Nuevo ajuste" (components/ModalAjuste.tsx), para las dos cosas.
@@ -180,7 +181,7 @@ export const Conteos: React.FC = () => {
     const mensajeConfirmacion = merma.sobrante
       ? `¿Eliminar el sobrante de ${merma.product_name}? Se quitarán ${Math.abs(Number(merma.quantity))} unidades del inventario.`
       : esConsumo
-      ?`OPERACIÓN FINANCIERA: ¿Anular el registro de gasto de S/ ${merma.total_loss.toFixed(2)} en ${merma.product_name}?`
+      ?`OPERACIÓN FINANCIERA: ¿Anular el registro de gasto de S/ ${formatearMonto(merma.total_loss)} en ${merma.product_name}?`
       : `OPERACIÓN CRÍTICA: ¿Eliminar merma de ${merma.product_name}? Se restaurarán ${Math.abs(Number(merma.quantity))} unidades al inventario.`;
 
     if (!await confirmar(mensajeConfirmacion)) return;
@@ -448,7 +449,7 @@ export const Conteos: React.FC = () => {
           />
           <TarjetaMetrica 
             label="Pérdida Económica" 
-            value={`S/ ${totalPerdidaEconómica.toFixed(2)}`} 
+            value={`S/ ${formatearMonto(totalPerdidaEconómica)}`} 
             icon={<TrendingDown size={16}/>} 
             isAlert={totalPerdidaEconómica > 0} 
           />

@@ -3,6 +3,7 @@ import { X, Banknote, CreditCard, Smartphone, Calculator } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import type { Fiado } from '../types';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   isOpen: boolean;
@@ -199,7 +200,7 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
         <div className="p-6 bg-[var(--color-bg)] flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
           <div className="bg-[var(--color-ink)] text-white p-4 text-center border-2 border-[var(--color-ink)] rounded-none">
             <p className="text-[12px] font-bold text-[var(--color-subtle)] uppercase tracking-widest">Saldo Actual de la Deuda</p>
-            <p className="text-xl sm:text-3xl font-black text-[var(--color-danger)]">S/ {saldoPendiente.toFixed(2)}</p>
+            <p className="text-xl sm:text-3xl font-black text-[var(--color-danger)]">S/ {formatearMonto(saldoPendiente)}</p>
             <p className="text-[12px] font-bold uppercase mt-1">Cliente: {fiado.clienteNombre}</p>
           </div>
 
@@ -259,11 +260,11 @@ export const ModalAbono: React.FC<Props> = ({ isOpen, onClose, onConfirm, fiado 
           <div className="mt-2 bg-[var(--color-danger-bg)] border-2 border-[var(--color-danger)] p-3 flex justify-between items-center rounded-none">
             <div>
               <p className="text-[12px] font-black uppercase text-[var(--color-danger)]">Total a Abonar</p>
-              <p className="text-sm font-black text-[var(--color-ink)]">S/ {totalAbono.toFixed(2)}</p>
+              <p className="text-sm font-black text-[var(--color-ink)]">S/ {formatearMonto(totalAbono)}</p>
             </div>
             <div className="text-right">
               <p className="text-[12px] font-black uppercase text-[var(--color-danger)]">Deuda Restante</p>
-              <p className="text-lg font-black text-[var(--color-danger)] leading-none">S/ {Math.max(0, nuevoSaldo).toFixed(2)}</p>
+              <p className="text-lg font-black text-[var(--color-danger)] leading-none">S/ {formatearMonto(Math.max(0, nuevoSaldo))}</p>
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Lock, Calculator, AlertTriangle, Banknote, Smartphone, CreditCard } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import type { CashSession, SuperMetricas } from '../types';
+import { formatearMonto } from '../../../utils/formato';
 
 const redondearCentavos = (n: number) => Math.round(n * 100) / 100;
 
@@ -17,7 +18,7 @@ interface Props {
   aCiegas?: boolean;
 }
 
-const textoDiferencia = (d: number) => (d === 0 ? '✅ Cuadra' : d > 0 ? `Sobra S/ ${d.toFixed(2)}` : `Falta S/ ${Math.abs(d).toFixed(2)}`);
+const textoDiferencia = (d: number) => (d === 0 ? '✅ Cuadra' : d > 0 ? `Sobra S/ ${formatearMonto(d)}` : `Falta S/ ${formatearMonto(Math.abs(d))}`);
 
 interface BloqueArqueoProps {
   id: string;
@@ -42,7 +43,7 @@ const BloqueArqueo: React.FC<BloqueArqueoProps> = ({ id, inputRef, icono, color,
         <label htmlFor={id} className="text-[12px] font-black uppercase tracking-widest flex items-center gap-2 cursor-pointer" style={{ color }}>
           {icono} {titulo}
         </label>
-        {!aCiegas && <span className="text-xs font-bold text-[var(--color-muted)] whitespace-nowrap">Espera: S/ {esperado.toFixed(2)}</span>}
+        {!aCiegas && <span className="text-xs font-bold text-[var(--color-muted)] whitespace-nowrap">Espera: S/ {formatearMonto(esperado)}</span>}
       </div>
       <input 
         id={id}
@@ -62,7 +63,7 @@ const BloqueArqueo: React.FC<BloqueArqueoProps> = ({ id, inputRef, icono, color,
       {hayDescuadre && (
         <p className="text-[12px] font-black uppercase text-[var(--color-warning-dark)] flex items-center gap-1">
           <AlertTriangle size={12} />
-          {diferencia > 0 ? `Sobra S/ ${Math.abs(diferencia).toFixed(2)}` : `Falta S/ ${Math.abs(diferencia).toFixed(2)}`}
+          {diferencia > 0 ? `Sobra S/ ${formatearMonto(Math.abs(diferencia))}` : `Falta S/ ${formatearMonto(Math.abs(diferencia))}`}
         </p>
       )}
     </div>
@@ -237,9 +238,9 @@ export const ModalCierre: React.FC<Props> = ({ isOpen, onClose, onSuccess, sessi
       setResultado({ efectivo: diferenciaEfectivo, yape: diferenciaYape, tarjeta: diferenciaTarjeta });
     } else {
       const resumen = [
-        `Efectivo: ${diferenciaEfectivo === 0 ? 'CUADRADO' : (diferenciaEfectivo > 0 ? `+S/ ${diferenciaEfectivo.toFixed(2)}` : `-S/ ${Math.abs(diferenciaEfectivo).toFixed(2)}`)}`,
-        `Yape: ${diferenciaYape === 0 ? 'CUADRADO' : (diferenciaYape > 0 ? `+S/ ${diferenciaYape.toFixed(2)}` : `-S/ ${Math.abs(diferenciaYape).toFixed(2)}`)}`,
-        `Tarjeta: ${diferenciaTarjeta === 0 ? 'CUADRADO' : (diferenciaTarjeta > 0 ? `+S/ ${diferenciaTarjeta.toFixed(2)}` : `-S/ ${Math.abs(diferenciaTarjeta).toFixed(2)}`)}`,
+        `Efectivo: ${diferenciaEfectivo === 0 ? 'CUADRADO' : (diferenciaEfectivo > 0 ? `+S/ ${formatearMonto(diferenciaEfectivo)}` : `-S/ ${formatearMonto(Math.abs(diferenciaEfectivo))}`)}`,
+        `Yape: ${diferenciaYape === 0 ? 'CUADRADO' : (diferenciaYape > 0 ? `+S/ ${formatearMonto(diferenciaYape)}` : `-S/ ${formatearMonto(Math.abs(diferenciaYape))}`)}`,
+        `Tarjeta: ${diferenciaTarjeta === 0 ? 'CUADRADO' : (diferenciaTarjeta > 0 ? `+S/ ${formatearMonto(diferenciaTarjeta)}` : `-S/ ${formatearMonto(Math.abs(diferenciaTarjeta))}`)}`,
       ].join('\n');
       alert(`✅ Caja Cerrada Exitosamente.\n${resumen}`);
       onSuccess();

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Pause, X, Check } from 'lucide-react';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   isOpen: boolean;
@@ -110,7 +111,7 @@ export const ModalNombreEspera: React.FC<Props> = ({
         {/* Resumen */}
         <div className="bg-[var(--color-bg)] px-4 py-2.5 border-b-2 border-[var(--color-border)] flex items-center justify-between text-xs font-black uppercase text-[var(--color-ink)]">
           <span>{itemsCount} {itemsCount === 1 ? 'producto' : 'productos'}</span>
-          <span className="text-[var(--color-accent)] font-black text-sm">S/ {total.toFixed(2)}</span>
+          <span className="text-[var(--color-accent)] font-black text-sm">S/ {formatearMonto(total)}</span>
         </div>
 
         {/* Formulario */}

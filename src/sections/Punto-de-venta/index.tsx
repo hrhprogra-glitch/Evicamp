@@ -26,6 +26,7 @@ import { traerTodo } from '../../utils/traerTodo';
 import { cargarFacturacionCaja, calcularTotalesCPE, numeroComprobante, DOC_TYPE, contarComprobantesConProblema, type DatosComprobante, type FacturacionCaja } from '../../utils/comprobante';
 import { ModalComprobantesProblema } from '../../components/ModalComprobantesProblema';
 import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ EVICAMP: Mini Reporte en Tiempo Real
+import { formatearMonto } from '../../utils/formato';
 
 export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
   const empleado = useEmpleado(); // quién vende: sale en el ticket ("Atendido por")
@@ -1128,7 +1129,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         });
         setIsVistaPreviaOpen(true);
       } else {
-        alert(`✅ Venta completada con éxito.${conComprobante ? `\n${comprobante?.tipo === 'FACTURA' ? 'Factura' : 'Boleta'}: ${numeroComprobante(datosCpe?.doc_serial, datosCpe?.doc_number) || 'se numera al conectarse'}` : ''}\nVuelto: S/ ${vuelto.toFixed(2)}`);
+        alert(`✅ Venta completada con éxito.${conComprobante ? `\n${comprobante?.tipo === 'FACTURA' ? 'Factura' : 'Boleta'}: ${numeroComprobante(datosCpe?.doc_serial, datosCpe?.doc_number) || 'se numera al conectarse'}` : ''}\nVuelto: S/ ${formatearMonto(vuelto)}`);
         // El buscador queda listo para escanear el siguiente producto: ventas corridas sin pausas.
         setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
       }
@@ -1201,7 +1202,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           <span className={`min-w-6 px-1.5 py-0.5 text-[12px] ${cart.length > 0 ? 'bg-[var(--color-accent)] text-[var(--color-ink)]' : 'bg-[var(--color-border)] text-[var(--color-muted)]'}`}>
             {cart.length}
           </span>
-          <span className="text-[var(--color-accent)]">S/ {(Math.round(cart.reduce((acc, item) => acc + item.subtotal, 0) * 100) / 100).toFixed(2)}</span>
+          <span className="text-[var(--color-accent)]">S/ {formatearMonto((Math.round(cart.reduce((acc, item) => acc + item.subtotal, 0) * 100) / 100))}</span>
         </button>
       </div>
 

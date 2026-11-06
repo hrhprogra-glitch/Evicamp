@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useState } from 'react';
 import { supabase } from '../../../db/supabase';
 import qrcode from 'qrcode-generator';
 import { nombreComprobante, numeroComprobante, textoQRComprobante, type TotalesCPE } from '../../../utils/comprobante';
+import { formatearMonto } from '../../../utils/formato';
 
 // Datos del negocio para la cabecera del ticket (Ajustes > Empresa). Cada cliente tiene los suyos.
 interface DatosEmpresa {
@@ -180,7 +181,7 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
                 <td className="py-1.5 pr-1 uppercase align-top">
                   <span className="font-bold leading-tight block">{item.name}</span>
                   {/* Con 1 unidad el precio c/u es igual al total de la línea: no se repite */}
-                  {Number(item.cartQuantity) !== 1 && <span className="text-[11px] text-gray-600 font-bold">S/ {item.price.toFixed(2)} c/u</span>}
+                  {Number(item.cartQuantity) !== 1 && <span className="text-[11px] text-gray-600 font-bold">S/ {formatearMonto(item.price)} c/u</span>}
                   {item.numeroSerie && (
                     <span className="text-[10px] text-black font-mono font-bold block">SERIE/IMEI: {item.numeroSerie}</span>
                   )}
@@ -203,16 +204,16 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
         <div className="border-t-2 border-black pt-2 space-y-1 font-black text-xs uppercase">
           {esCpe && (
             <div className="space-y-0.5 text-[12px] font-bold mb-1">
-              {comprobante!.totales.gravada > 0 && <div className="flex justify-between"><span>Op. gravada:</span><span>S/ {comprobante!.totales.gravada.toFixed(2)}</span></div>}
-              {comprobante!.totales.exonerada > 0 && <div className="flex justify-between"><span>Op. exonerada:</span><span>S/ {comprobante!.totales.exonerada.toFixed(2)}</span></div>}
-              {comprobante!.totales.inafecta > 0 && <div className="flex justify-between"><span>Op. inafecta:</span><span>S/ {comprobante!.totales.inafecta.toFixed(2)}</span></div>}
-              <div className="flex justify-between"><span>IGV (18%):</span><span>S/ {comprobante!.totales.igv.toFixed(2)}</span></div>
-              {comprobante!.totales.icbper > 0 && <div className="flex justify-between"><span>ICBPER (bolsas):</span><span>S/ {comprobante!.totales.icbper.toFixed(2)}</span></div>}
+              {comprobante!.totales.gravada > 0 && <div className="flex justify-between"><span>Op. gravada:</span><span>S/ {formatearMonto(comprobante!.totales.gravada)}</span></div>}
+              {comprobante!.totales.exonerada > 0 && <div className="flex justify-between"><span>Op. exonerada:</span><span>S/ {formatearMonto(comprobante!.totales.exonerada)}</span></div>}
+              {comprobante!.totales.inafecta > 0 && <div className="flex justify-between"><span>Op. inafecta:</span><span>S/ {formatearMonto(comprobante!.totales.inafecta)}</span></div>}
+              <div className="flex justify-between"><span>IGV (18%):</span><span>S/ {formatearMonto(comprobante!.totales.igv)}</span></div>
+              {comprobante!.totales.icbper > 0 && <div className="flex justify-between"><span>ICBPER (bolsas):</span><span>S/ {formatearMonto(comprobante!.totales.icbper)}</span></div>}
             </div>
           )}
           <div className="flex justify-between text-lg mb-2">
             <span>Total:</span>
-            <span>S/ {total.toFixed(2)}</span>
+            <span>S/ {formatearMonto(total)}</span>
           </div>
           
           {!(esCpe && comprobante!.docType === 7) && (<>
@@ -220,14 +221,14 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
             {fiadoData ? 'PAGOS PARCIALES:' : 'MÉTODOS DE PAGO:'}
           </div>
 
-          {pagos.efectivo > 0 && <div className="flex justify-between"><span>Efectivo:</span><span>S/ {pagos.efectivo.toFixed(2)}</span></div>}
-          {pagos.yape > 0 && <div className="flex justify-between"><span>Yape:</span><span>S/ {pagos.yape.toFixed(2)}</span></div>}
-          {pagos.tarjeta > 0 && <div className="flex justify-between"><span>Tarjeta:</span><span>S/ {pagos.tarjeta.toFixed(2)}</span></div>}
+          {pagos.efectivo > 0 && <div className="flex justify-between"><span>Efectivo:</span><span>S/ {formatearMonto(pagos.efectivo)}</span></div>}
+          {pagos.yape > 0 && <div className="flex justify-between"><span>Yape:</span><span>S/ {formatearMonto(pagos.yape)}</span></div>}
+          {pagos.tarjeta > 0 && <div className="flex justify-between"><span>Tarjeta:</span><span>S/ {formatearMonto(pagos.tarjeta)}</span></div>}
           
           {(fiadoData || vuelto > 0) && (
             <div className="flex justify-between border-t-2 border-black pt-1 text-base mt-2">
               <span>{fiadoData ? 'POR PAGAR:' : 'VUELTO:'}</span>
-              <span>S/ {fiadoData ? fiadoData.montoDeuda.toFixed(2) : vuelto.toFixed(2)}</span>
+              <span>S/ {formatearMonto(fiadoData ? fiadoData.montoDeuda.toFixed(2) : vuelto)}</span>
             </div>
           )}
           </>)}

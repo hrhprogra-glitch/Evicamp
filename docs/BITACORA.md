@@ -7,6 +7,14 @@
 
 ---
 
+## 06/11/2026 (120) · Claude — Crear lote: gastos extra por TODO el lote + montos con separador de miles en todo el sistema (solo siumax)
+- **Dueño** (captura de Crear lote, "Adicional S/ 16200.00"): *"¿con adicional a qué se refiere?"* → Claude: el campo era POR UNIDAD (180 × 90 = 16200; el cálculo era correcto, pero él pensó en toda la tanda) → *"pero ahí no dice 16.200, dice 16200"* → Claude propuso separador de miles y adicional por lote → *"sí, también"*.
+- **Crear lote** (`ModalProduccion.tsx`): el campo ahora es "Gastos extra de todo el lote (gas, mano de obra)"; debajo "= S/ 2.00 por unidad (S/ 180.00 ÷ 90)". Sin tocarlo, propone lo guardado por unidad × cantidad. Al producir, lo que salió por unidad se guarda en `products.costo_adicional_produccion` para la próxima tanda. La función sigue recibiendo el total del lote.
+- **Montos con separador de miles** (como en Perú, S/ 16,200.00): nuevo `formatearMonto()` en `src/utils/formato.ts` (toLocaleString es-PE, 2 decimales). Codemod (`scratchpad/montos-miles.cjs`): solo lo que se MUESTRA con "S/" delante (`S/ {X.toFixed(2)}` y la misma forma dentro de textos con `${...}`) → 226 montos en 49 archivos (Caja, ticket impreso, Cobro, Clientes, Finanzas, Utilidades, Inventario, Conteos, Tienda Web, etiquetas). No toca cálculos, campos ni lo que va a SUNAT. Los campos donde se escribe un número siguen sin coma (el navegador no lo permite). En la Caja (`Punto-de-venta/index.tsx`) el import quedó mal ubicado por el codemod y se movió a mano.
+- Probado en siumax: 90 panes con S/ 180 de gastos → S/ 2.00 por unidad, lote a S/ 2.50, receta recuerda 2.00; con 16200 se ve "S/ 16,200.00"; todas las secciones y pestañas sin errores JS. Datos de prueba borrados.
+
+---
+
 ## 06/11/2026 (119) · Claude — Producir: Guardar cierra; Guardar e ir a Lotes abre la pantalla del lote; arreglo de la regla 9 (solo siumax)
 - **Dueño** (captura): *"Guardar e ir a Lotes literalmente me lleva a Lotes; debería llevarme a la ventana del lote para ponerle la cantidad; y Guardar debe cerrar la ventana; solo se guarda ese producto"*.
 - `ModalProduccion.tsx`: **Guardar** → guarda, cierra la ventana y avisa "✔ X guardado como receta/combo". **Guardar e ir a Lotes** (receta) → guarda y abre "Crear lote: X" (la pantalla de Producir: ¿cuántos? con el tope; producir descuenta los insumos y crea el lote con su costo). `desdeGuardar` solo cambia el título.

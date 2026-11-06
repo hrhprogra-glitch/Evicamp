@@ -3,6 +3,7 @@ import { X, Package, Receipt, TrendingUp, TrendingDown } from 'lucide-react';
 import type { AnalisisProducto } from '../types';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { ModalDetalleTicket } from '../../../components/ModalDetalleTicket';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   producto: AnalisisProducto;
@@ -177,16 +178,16 @@ export const ModalDetalleProducto: React.FC<Props> = ({ producto, onClose }) => 
           </div>
           <div className="bg-white p-3 text-center">
             <p className="text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-widest">Cobrado</p>
-            <p className="text-sm font-black text-[var(--color-ink)] font-mono">S/ {producto.ingresosTotales.toFixed(2)}</p>
+            <p className="text-sm font-black text-[var(--color-ink)] font-mono">S/ {formatearMonto(producto.ingresosTotales)}</p>
           </div>
           <div className="bg-white p-3 text-center">
             <p className="text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-widest">Costo</p>
-            <p className="text-sm font-black text-[var(--color-ink)] font-mono">S/ {producto.costoTotalVentas.toFixed(2)}</p>
+            <p className="text-sm font-black text-[var(--color-ink)] font-mono">S/ {formatearMonto(producto.costoTotalVentas)}</p>
           </div>
           <div className="bg-white p-3 text-center">
             <p className="text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-widest">Utilidad</p>
             <p className={`text-sm font-black font-mono ${producto.utilidadReal >= 0 ? 'text-[var(--color-accent-shadow)]' : 'text-[var(--color-danger)]'}`}>
-              S/ {producto.utilidadReal.toFixed(2)}
+              S/ {formatearMonto(producto.utilidadReal)}
             </p>
           </div>
           <div className="bg-white p-3 text-center">
@@ -240,13 +241,13 @@ export const ModalDetalleProducto: React.FC<Props> = ({ producto, onClose }) => 
                     {/* Venta de otro período: solo cuenta lo abonado dentro del período, no el ticket completo */}
                     {v.ventaAnterior && (
                       <p className="text-[12px] font-black text-[var(--color-warning)] uppercase tracking-wider">
-                        Venta anterior · cobrado en el período: S/ {Number(v.cobradoEnPeriodo || 0).toFixed(2)}
+                        Venta anterior · cobrado en el período: S/ {formatearMonto(Number(v.cobradoEnPeriodo || 0))}
                       </p>
                     )}
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-[var(--color-ink)] font-mono">S/ {v.monto.toFixed(2)}</span>
+                    <span className="text-xs font-black text-[var(--color-ink)] font-mono">S/ {formatearMonto(v.monto)}</span>
 
                     {!v.esFiado ? (
                       <span className="text-[12px] font-black px-2 py-1 rounded-none border border-[var(--color-accent-shadow)] text-[var(--color-accent-shadow)] bg-[var(--color-accent-bg)] uppercase tracking-widest">
@@ -254,15 +255,15 @@ export const ModalDetalleProducto: React.FC<Props> = ({ producto, onClose }) => 
                       </span>
                     ) : v.fiadoCompleto ? (
                       <span className="text-[12px] font-black px-2 py-1 rounded-none border border-[var(--color-accent-shadow)] text-[var(--color-accent-shadow)] bg-[var(--color-accent-bg)] uppercase tracking-widest">
-                        Abono completo S/ {Number(v.montoAbonado || 0).toFixed(2)}
+                        Abono completo S/ {formatearMonto(Number(v.montoAbonado || 0))}
                       </span>
                     ) : (
                       <div className="flex gap-1.5">
                         <span className="text-[12px] font-black px-2 py-1 rounded-none border border-[var(--color-warning)] text-[var(--color-warning)] bg-[var(--color-warning-bg)] uppercase tracking-widest">
-                          Abonó S/ {Number(v.montoAbonado || 0).toFixed(2)}
+                          Abonó S/ {formatearMonto(Number(v.montoAbonado || 0))}
                         </span>
                         <span className="text-[12px] font-black px-2 py-1 rounded-none border border-[var(--color-danger)] text-[var(--color-danger)] bg-[var(--color-danger-bg)] uppercase tracking-widest">
-                          Resta S/ {Number(v.montoRestante || 0).toFixed(2)}
+                          Resta S/ {formatearMonto(Number(v.montoRestante || 0))}
                         </span>
                       </div>
                     )}

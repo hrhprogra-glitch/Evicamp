@@ -1,6 +1,7 @@
 // src/sections/Utilidades/components/TarjetasResumen.tsx
 import React from 'react';
 import { DollarSign, ArrowDownToLine, ArrowUpFromLine, Activity, Wallet, Filter } from 'lucide-react';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   ingresos: number;
@@ -28,7 +29,7 @@ export const TarjetasResumen: React.FC<Props> = ({ ingresos, costos, mermas, gas
           </div>
           <div className="min-w-0">
             <p className="text-[12px] font-black text-[var(--color-accent)] uppercase tracking-wider truncate">Ingreso Total Bruto</p>
-            <p className="text-lg xl:text-2xl font-black whitespace-nowrap text-[var(--color-accent)]">S/ {ingresos.toFixed(2)}</p>
+            <p className="text-lg xl:text-2xl font-black whitespace-nowrap text-[var(--color-accent)]">S/ {formatearMonto(ingresos)}</p>
           </div>
         </div>
 
@@ -39,7 +40,7 @@ export const TarjetasResumen: React.FC<Props> = ({ ingresos, costos, mermas, gas
           </div>
           <div className="min-w-0">
             <p className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest truncate">Inversión (Costo)</p>
-            <p className="text-lg xl:text-2xl font-black whitespace-nowrap text-[var(--color-ink)]">S/ {costos.toFixed(2)}</p>
+            <p className="text-lg xl:text-2xl font-black whitespace-nowrap text-[var(--color-ink)]">S/ {formatearMonto(costos)}</p>
           </div>
         </div>
 
@@ -50,7 +51,7 @@ export const TarjetasResumen: React.FC<Props> = ({ ingresos, costos, mermas, gas
           </div>
           <div className="min-w-0">
             <p className="text-[12px] font-black text-[var(--color-danger)] uppercase tracking-widest truncate">Pérdida Mermas</p>
-            <p className="text-lg xl:text-2xl font-black whitespace-nowrap text-[var(--color-danger)]">S/ {mermas.toFixed(2)}</p>
+            <p className="text-lg xl:text-2xl font-black whitespace-nowrap text-[var(--color-danger)]">S/ {formatearMonto(mermas)}</p>
           </div>
         </div>
 
@@ -61,7 +62,7 @@ export const TarjetasResumen: React.FC<Props> = ({ ingresos, costos, mermas, gas
           </div>
           <div className="min-w-0">
             <p className="text-[12px] font-black text-orange-500 uppercase tracking-widest truncate">Gastos Operativos</p>
-            <p className="text-lg xl:text-2xl font-black whitespace-nowrap text-orange-500">S/ {gastosOperativos.toFixed(2)}</p>
+            <p className="text-lg xl:text-2xl font-black whitespace-nowrap text-orange-500">S/ {formatearMonto(gastosOperativos)}</p>
           </div>
         </div>
 
@@ -72,7 +73,7 @@ export const TarjetasResumen: React.FC<Props> = ({ ingresos, costos, mermas, gas
           </div>
           <div className="min-w-0">
             <p className="text-[12px] font-black text-[var(--color-accent-shadow)] uppercase tracking-widest truncate">Utilidad Neta</p>
-            <p className="text-xl xl:text-3xl font-black text-[var(--color-accent-shadow)] whitespace-nowrap">S/ {utilidad.toFixed(2)}</p>
+            <p className="text-xl xl:text-3xl font-black text-[var(--color-accent-shadow)] whitespace-nowrap">S/ {formatearMonto(utilidad)}</p>
           </div>
         </div>
       </div>

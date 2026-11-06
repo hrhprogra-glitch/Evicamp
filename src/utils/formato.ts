@@ -27,3 +27,8 @@ export const formatearCantidadDetalle = (qty: number | string | undefined | null
   const redondeado = Math.round(valor * 1000) / 1000;
   return String(redondeado);
 };
+
+// Monto con separador de miles como en Perú: 16200 → "16,200.00" (pedido del dueño 06/11/2026). Solo para MOSTRAR;
+// los cálculos y lo que va a SUNAT siguen con números sin formato.
+export const formatearMonto = (monto: number | string | undefined | null): string =>
+  (Number(monto) || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

@@ -3,6 +3,7 @@ import { X, Send, CheckCircle2, MapPin, Phone, User, Bike, Store as StoreIcon, L
 import type { ItemCarrito, TiendaEmpresaConfig } from '../types';
 import { supabase } from '../../../db/supabase';
 import { nombreBonito, numeroWhatsapp, soles } from '../formato';
+import { formatearMonto } from '../../../utils/formato';
 
 interface TiendaModalPedidoProps {
   isOpen: boolean;
@@ -86,10 +87,10 @@ export const TiendaModalPedido: React.FC<TiendaModalPedidoProps> = ({
       msg += `📋 *Productos solicitados:*\n`;
       items.forEach((it) => {
         const descVariante = it.variante ? ` (${it.variante.nombre_variante || it.variante.talla})` : '';
-        const precioTxt = !ocultarPrecios ? ` - S/ ${(it.precioUnitario * it.cantidad).toFixed(2)}` : '';
+        const precioTxt = !ocultarPrecios ? ` - S/ ${formatearMonto((it.precioUnitario * it.cantidad))}` : '';
         msg += `• ${it.cantidad}x ${it.producto.name}${descVariante}${precioTxt}\n`;
       });
-      if (!ocultarPrecios) msg += `\n💰 *Total Estimado:* S/ ${totalMonto.toFixed(2)}\n`;
+      if (!ocultarPrecios) msg += `\n💰 *Total Estimado:* S/ ${formatearMonto(totalMonto)}\n`;
       if (notas.trim()) msg += `📝 *Nota:* ${notas.trim()}\n`;
       msg += `\n¡Quedo a la espera de su confirmación! Muchas gracias.`;
 

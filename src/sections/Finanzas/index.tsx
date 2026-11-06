@@ -1,5 +1,5 @@
 import { coincideBusqueda } from '../../utils/busqueda';
-import { formatearCantidadDetalle } from '../../utils/formato';
+import {formatearCantidadDetalle, formatearMonto } from '../../utils/formato';
 // src/sections/Finanzas/index.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Wallet, ArrowDownToLine, Lock, CreditCard, Smartphone, Banknote, ReceiptText, Search, ArrowLeftRight, ShieldCheck, FileSpreadsheet, AlertTriangle, Plus, X, FilterX } from 'lucide-react';
@@ -1004,7 +1004,7 @@ export const Finanzas: React.FC = () => {
 
               <h1 className="text-[var(--color-ink)] text-3xl sm:text-4xl 2xl:text-5xl font-mono font-black mt-2">
 
-                S/ {(superMetricas.efectivoEsperadoCaja + superMetricas.yapeEsperado + superMetricas.tarjetaEsperada).toFixed(2)}
+                S/ {formatearMonto((superMetricas.efectivoEsperadoCaja + superMetricas.yapeEsperado + superMetricas.tarjetaEsperada))}
 
               </h1>
 
@@ -1021,7 +1021,7 @@ export const Finanzas: React.FC = () => {
                  <span className="w-6 h-6 flex items-center justify-center bg-[var(--color-bg)] border-2 border-[var(--color-ink)]"><Banknote size={12} className="text-[var(--color-ink)]"/></span> 
                  Efectivo Esperado
                </p>
-               <p className="text-xl sm:text-3xl font-black text-[var(--color-accent)] mt-2">S/ {superMetricas.efectivoEsperadoCaja.toFixed(2)}</p>
+               <p className="text-xl sm:text-3xl font-black text-[var(--color-accent)] mt-2">S/ {formatearMonto(superMetricas.efectivoEsperadoCaja)}</p>
                <p className="text-[11px] font-bold text-[var(--color-muted)] uppercase mt-2 border-t border-[var(--color-border)] pt-2">(Fondo + Ventas Físicas + Cobros - Gastos)</p>
             </div>
             
@@ -1030,12 +1030,12 @@ export const Finanzas: React.FC = () => {
                  <span className="w-6 h-6 flex items-center justify-center bg-blue-50 border-2 border-[var(--color-info)]"><Smartphone size={12} className="text-[var(--color-info)]"/></span> 
                  Yape / Transf
                </p>
-               <p className="text-xl sm:text-2xl font-black text-[var(--color-ink)] mt-1">S/ {superMetricas.yapeEsperado.toFixed(2)}</p>
+               <p className="text-xl sm:text-2xl font-black text-[var(--color-ink)] mt-1">S/ {formatearMonto(superMetricas.yapeEsperado)}</p>
                <div className="text-[11px] font-bold text-[var(--color-muted)] uppercase mt-2 space-y-1 border-t border-[var(--color-border)] pt-2">
-                 <p>Ventas: S/ {superMetricas.ventasYape.toFixed(2)}</p>
-                 <p>Cobros: S/ {superMetricas.cobroDeudasYape.toFixed(2)}</p>
-                 {superMetricas.ingresosExtraYape > 0 && <p>Ingresos: S/ {superMetricas.ingresosExtraYape.toFixed(2)}</p>}
-                 {superMetricas.gastosYape > 0 && <p className="text-[var(--color-danger)]">Egresos: -S/ {superMetricas.gastosYape.toFixed(2)}</p>}
+                 <p>Ventas: S/ {formatearMonto(superMetricas.ventasYape)}</p>
+                 <p>Cobros: S/ {formatearMonto(superMetricas.cobroDeudasYape)}</p>
+                 {superMetricas.ingresosExtraYape > 0 && <p>Ingresos: S/ {formatearMonto(superMetricas.ingresosExtraYape)}</p>}
+                 {superMetricas.gastosYape > 0 && <p className="text-[var(--color-danger)]">Egresos: -S/ {formatearMonto(superMetricas.gastosYape)}</p>}
                </div>
             </div>
 
@@ -1044,12 +1044,12 @@ export const Finanzas: React.FC = () => {
                  <span className="w-6 h-6 flex items-center justify-center bg-purple-50 border-2 border-[var(--color-purple)]"><CreditCard size={12} className="text-[var(--color-purple)]"/></span> 
                  Pagos Tarjeta
                </p>
-               <p className="text-xl sm:text-2xl font-black text-[var(--color-ink)] mt-1">S/ {superMetricas.tarjetaEsperada.toFixed(2)}</p>
+               <p className="text-xl sm:text-2xl font-black text-[var(--color-ink)] mt-1">S/ {formatearMonto(superMetricas.tarjetaEsperada)}</p>
                <div className="text-[11px] font-bold text-[var(--color-muted)] uppercase mt-2 space-y-1 border-t border-[var(--color-border)] pt-2">
-                 <p>Ventas: S/ {superMetricas.ventasTarjeta.toFixed(2)}</p>
-                 {superMetricas.cobroDeudasTarjeta > 0 && <p>Cobros: S/ {superMetricas.cobroDeudasTarjeta.toFixed(2)}</p>}
-                 {superMetricas.ingresosExtraTarjeta > 0 && <p>Ingresos: S/ {superMetricas.ingresosExtraTarjeta.toFixed(2)}</p>}
-                 {superMetricas.gastosTarjeta > 0 && <p className="text-[var(--color-danger)]">Egresos: -S/ {superMetricas.gastosTarjeta.toFixed(2)}</p>}
+                 <p>Ventas: S/ {formatearMonto(superMetricas.ventasTarjeta)}</p>
+                 {superMetricas.cobroDeudasTarjeta > 0 && <p>Cobros: S/ {formatearMonto(superMetricas.cobroDeudasTarjeta)}</p>}
+                 {superMetricas.ingresosExtraTarjeta > 0 && <p>Ingresos: S/ {formatearMonto(superMetricas.ingresosExtraTarjeta)}</p>}
+                 {superMetricas.gastosTarjeta > 0 && <p className="text-[var(--color-danger)]">Egresos: -S/ {formatearMonto(superMetricas.gastosTarjeta)}</p>}
                </div>
             </div>
 
@@ -1058,7 +1058,7 @@ export const Finanzas: React.FC = () => {
                  <span className="w-6 h-6 flex items-center justify-center bg-white border-2 border-[var(--color-danger)]"><ArrowDownToLine size={12} className="text-[var(--color-danger)]"/></span> 
                  Gastos y Retiros
                </p>
-               <p className="text-xl sm:text-2xl font-black text-[var(--color-danger)] mt-1">S/ {superMetricas.gastos.toFixed(2)}</p>
+               <p className="text-xl sm:text-2xl font-black text-[var(--color-danger)] mt-1">S/ {formatearMonto(superMetricas.gastos)}</p>
                <p className="text-[11px] font-bold text-[var(--color-danger)] uppercase mt-2 border-t border-[var(--color-danger)]/20 pt-2">Salió del cajón</p>
                  </div>
                </div>

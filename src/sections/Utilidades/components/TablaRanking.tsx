@@ -1,6 +1,7 @@
 // src/sections/Utilidades/components/TablaRanking.tsx
 import React from 'react';
 import { Trophy } from 'lucide-react';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   titulo: string;
@@ -32,7 +33,7 @@ export const TablaRanking: React.FC<Props> = ({ titulo, items }) => {
                     {index + 1}. {item.nombre}
                   </span>
                   <span className="text-[13px] font-bold text-[var(--color-ink)] font-mono">
-                    S/ {item.total.toFixed(2)}
+                    S/ {formatearMonto(item.total)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">

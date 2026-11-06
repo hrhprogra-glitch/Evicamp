@@ -196,6 +196,7 @@
 49. **Unidades de un costo: por unidad vs. por lote** (05/11/2026): `products.costo_adicional_produccion` es POR UNIDAD, pero `fn_producir_receta(p_costo_adicional)` lo recibe por TODO el lote; la ventana vieja mandaba el de una unidad. Al pasar un costo entre pantalla y función, revisar qué unidad espera cada lado.
 50. **No reescribir datos hijos que se cargan aparte** (05/11/2026): Nuevo producto borraba y volvía a insertar `product_recipes` con lo que tenía en memoria; si se guardaba antes de que terminaran de cargar, la receta quedaba vacía. Una pantalla solo debe escribir lo que de verdad edita.
 51. **Nombres de campos entre la lista y la ventana** (05/11/2026): la lista de Inventario arma el producto con `imageUrl` y Nuevo producto lo leía como `image` → al editar la foto quedaba vacía y al guardar se borraba. Al cargar `initialData`, aceptar los dos nombres (`imageUrl || image_url`) y probar que "editar y guardar sin cambios" deja la fila igual.
+52. **Montos en pantalla: `formatearMonto()`** (06/11/2026): todo monto que se MUESTRA con "S/" usa `formatearMonto(x)` de `src/utils/formato.ts` (S/ 16,200.00), no `x.toFixed(2)`. Para cálculos, campos de número y SUNAT, números sin formato.
 
 - **Pruebas (28/10/2026):** el dueño quiere que se pruebe SOLO lo que se modificó. Las tandas de regresión, solo si él lo pide.
 

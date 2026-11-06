@@ -26,6 +26,7 @@ import { ModalElegir } from './components/ModalElegir';
 import { ModalFormGrupo, type DatosGrupo } from './components/ModalFormGrupo';
 import { resumenDeCliente } from './components/PestanaClientes';
 import { claseBotonBarra } from '../../components/ListaVentana';
+import { formatearMonto } from '../../utils/formato';
 
 // Sección CLIENTES (fases 4.1 a 4.6): Clientes, Créditos, Cotizaciones y Pedidos.
 type Pestana = 'CLIENTES' | 'CREDITOS' | 'COTIZACIONES' | 'PEDIDOS';
@@ -366,7 +367,7 @@ if (fiaData) {
   const handleAnularPagoEspecifico = async (pagoId: string, montoRestaurar: number) => {
     if (!fiadoAAnular) return;
     
-    if (await confirmar(`⚠️ ANULACIÓN TÉCNICA: ¿Seguro que deseas anular este pago de S/ ${montoRestaurar.toFixed(2)}?`)) {
+    if (await confirmar(`⚠️ ANULACIÓN TÉCNICA: ¿Seguro que deseas anular este pago de S/ ${formatearMonto(montoRestaurar)}?`)) {
       try {
         // 1. Releemos el pago completo: necesitamos session_id/amount/created_at exactos
         // para poder encontrar y borrar su movimiento de caja gemelo (ver revertirAbono.ts).
@@ -504,7 +505,7 @@ if (fiaData) {
       .reduce((acc, f) => acc + f.saldoPendiente, 0);
 
     if (deudaActiva > 0) {
-      return alert(`⚠️ No se puede eliminar: este cliente tiene una deuda activa de S/ ${deudaActiva.toFixed(2)}. Primero debe saldarla o anular el fiado correspondiente.`);
+      return alert(`⚠️ No se puede eliminar: este cliente tiene una deuda activa de S/ ${formatearMonto(deudaActiva)}. Primero debe saldarla o anular el fiado correspondiente.`);
     }
 
     if (await confirmar('⚠️ ¿Estás seguro de ELIMINAR a este cliente del directorio?')) {
@@ -730,12 +731,12 @@ if (fiaData) {
           <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full xl:w-1/2 shrink-0">
             <TarjetaMetrica
               label="Por Cobrar"
-              value={`S/ ${totalPorCobrar.toFixed(2)}`}
+              value={`S/ ${formatearMonto(totalPorCobrar)}`}
               icon={<Coins size={16} />}
             />
             <TarjetaMetrica
               label="Recuperado Hoy"
-              value={`S/ ${totalRecuperadoHoy.toFixed(2)}`}
+              value={`S/ ${formatearMonto(totalRecuperadoHoy)}`}
               icon={<Coins size={16} />}
               isGreen={true}
             />
