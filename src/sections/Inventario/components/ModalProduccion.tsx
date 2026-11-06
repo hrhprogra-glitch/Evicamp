@@ -68,7 +68,32 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
 
   const porId = useMemo(() => new Map(productos.map((p) => [String(p.id), p])), [productos]);
   const compuestos = useMemo(() => productos.filter((p) => p.activo !== false && (p.tipoCompuesto === 'COMBO' || p.tipoCompuesto === 'RECETA')), [productos]);
-  const categorias = useMemo(() => Array.from(new Set(productos.map((p) => String(p.category || '').toUpperCase()).filter(Boolean))).sort(), [productos]);
+  // Categorías: la misma tabla que Nuevo producto (categories), para crear y borrar igual que ahí
+  const [categorias, setCategorias] = useState<string[]>([]);
+  useEffect(() => {
+    if (!isOpen) return;
+    void supabase.from('categories').select('name').then(({ data }) => {
+      setCategorias(Array.from(new Set((data || []).map((x: { name?: string }) => String(x.name || '').trim().toUpperCase()).filter(Boolean))).sort());
+    });
+  }, [isOpen]);
+  const crearCategoria = async (nombreCat: string) => {
+    const nueva = nombreCat.trim().toUpperCase();
+    if (!nueva) return;
+    if (!categorias.includes(nueva)) {
+      setCategorias((l) => [...l, nueva].sort());
+      const { error } = await supabase.from('categories').insert([{ id: Date.now(), name: nueva, is_synced: 1 }]);
+      if (error) console.error('No se pudo crear la categoría:', error);
+    }
+    setCategoria(nueva); setCatAbierta(false); enfocar('input-categoria-compuesto');
+  };
+  const eliminarCategoria = async (cat: string) => {
+    if (!(await confirmar(`¿Eliminar la categoría "${cat}" DEFINITIVAMENTE?\n(Los productos que ya la tienen no cambian.)`))) { enfocar('input-categoria-compuesto'); return; }
+    setCategorias((l) => l.filter((x) => x !== cat));
+    if (categoria.trim().toUpperCase() === cat) setCategoria('');
+    const { error } = await supabase.from('categories').delete().eq('name', cat);
+    if (error) console.error('No se pudo eliminar la categoría:', error);
+    enfocar('input-categoria-compuesto');
+  };
 
   // Al abrir: se leen todas las recetas (es una tabla chica) y se va a donde corresponde
   useEffect(() => {
@@ -185,6 +210,11 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
         tipo_compuesto: tipo,
         costo_adicional_produccion: tipo === 'RECETA' ? Number(costoAdic) || 0 : 0,
       };
+      const cat = categoria.trim().toUpperCase();
+      if (cat && !categorias.includes(cat)) {
+        setCategorias((l) => [...l, cat].sort());
+        await supabase.from('categories').insert([{ id: Date.now(), name: cat, is_synced: 1 }]);
+      }
       let id = editId;
       if (id) {
         const { error } = await supabase.from('products').update(datos).eq('id', id);
@@ -531,29 +561,62 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                         // vacío: abre la lista para elegir (de la lista se elige con ↓ y Enter, o clic)
                         e.preventDefault();
                         if (!catAbierta) setCatAbierta(true);
-                        else if (categoria.trim()) { setCategoria(categoria.trim().toUpperCase()); setCatAbierta(false); }
+                        else if (categoria.trim()) void crearCategoria(categoria);
                         else setCatAbierta(false);
-                      } else if (e.key === 'ArrowDown' && catAbierta && categoriasFiltradas.length) { e.preventDefault(); items()[0]?.focus(); }
+                      } else if (e.key === 'ArrowDown' && catAbierta && items().length) { e.preventDefault(); items()[0]?.focus(); }
                       else if (e.key === 'Escape' && catAbierta) { e.preventDefault(); e.stopPropagation(); setCatAbierta(false); }
                     }}
                     className={`${claseCampo} uppercase pr-9`} />
                   <ChevronDown size={16} className={`absolute right-3 top-[38px] text-[var(--color-muted)] pointer-events-none transition-transform ${catAbierta ? 'rotate-180' : ''}`} />
                   {catAbierta && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[var(--color-ink)] z-50 max-h-56 overflow-y-auto">
-                      {categoriasFiltradas.length ? categoriasFiltradas.map((cat) => (
-                        <div key={cat} role="option" tabIndex={0} data-cat-prod="true" aria-selected={categoria.toUpperCase() === cat}
-                          onClick={() => { setCategoria(cat); setCatAbierta(false); enfocar('input-categoria-compuesto'); }}
+                      {/* Lo escrito no existe: opción para crearla (como en Nuevo producto) */}
+                      {categoria.trim() && !categorias.includes(categoria.trim().toUpperCase()) && (
+                        <div role="option" tabIndex={0} data-cat-prod="true" id="cat-prod-crear"
+                          onClick={() => void crearCategoria(categoria)}
                           onKeyDown={(e) => {
                             const l = Array.from(document.querySelectorAll('[data-cat-prod="true"]')) as HTMLElement[]; const i = l.indexOf(e.currentTarget);
                             if (e.key === 'ArrowDown') { e.preventDefault(); l[i + 1]?.focus(); }
+                            else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('input-categoria-compuesto')?.focus(); }
+                            else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); void crearCategoria(categoria); }
+                            else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setCatAbierta(false); enfocar('input-categoria-compuesto'); }
+                          }}
+                          className="flex items-center gap-2 p-3 border-b-2 border-[var(--color-ink)] cursor-pointer outline-none text-xs font-black uppercase text-[var(--color-accent)] hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white">
+                          <Plus size={14} className="shrink-0" /> Crear nueva categoría «{categoria.trim().toUpperCase()}»
+                        </div>
+                      )}
+                      {categoriasFiltradas.map((cat) => (
+                        <div key={cat} role="option" tabIndex={0} data-cat-prod="true" aria-selected={categoria.toUpperCase() === cat}
+                          onClick={() => { setCategoria(cat); setCatAbierta(false); enfocar('input-categoria-compuesto'); }}
+                          onKeyDown={(e) => {
+                            if (e.target !== e.currentTarget) return;
+                            const l = Array.from(document.querySelectorAll('[data-cat-prod="true"]')) as HTMLElement[]; const i = l.indexOf(e.currentTarget);
+                            if (e.key === 'ArrowDown') { e.preventDefault(); l[i + 1]?.focus(); }
                             else if (e.key === 'ArrowUp') { e.preventDefault(); (i > 0 ? l[i - 1] : document.getElementById('input-categoria-compuesto'))?.focus(); }
+                            else if (e.key === 'ArrowRight') { e.preventDefault(); (e.currentTarget.querySelector('[data-borrar-cat]') as HTMLElement | null)?.focus(); }
+                            else if (e.key === 'Delete') { e.preventDefault(); void eliminarCategoria(cat); }
                             else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCategoria(cat); setCatAbierta(false); enfocar('input-categoria-compuesto'); }
                             else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setCatAbierta(false); enfocar('input-categoria-compuesto'); }
                           }}
-                          className="p-3 border-b border-[var(--color-border)] cursor-pointer outline-none text-xs font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white">
-                          {cat}
+                          className="group flex items-center justify-between gap-3 p-3 border-b border-[var(--color-border)] cursor-pointer outline-none text-xs font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white focus:bg-[var(--color-ink)] focus:text-white">
+                          <span className="truncate">{cat}</span>
+                          <button type="button" data-borrar-cat="true" title={`Eliminar categoría ${cat} (Supr)`}
+                            onClick={(e) => { e.stopPropagation(); void eliminarCategoria(cat); }}
+                            onKeyDown={(e) => {
+                              e.stopPropagation();
+                              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); void eliminarCategoria(cat); }
+                              else if (e.key === 'ArrowLeft') { e.preventDefault(); (e.currentTarget.closest('[data-cat-prod="true"]') as HTMLElement | null)?.focus(); }
+                              else if (e.key === 'Escape') { e.preventDefault(); setCatAbierta(false); enfocar('input-categoria-compuesto'); }
+                              else if (['ArrowUp', 'ArrowDown', 'ArrowRight'].includes(e.key)) e.preventDefault();
+                            }}
+                            className="shrink-0 p-1 border-2 border-transparent text-[var(--color-muted)] group-hover:text-white group-focus:text-white hover:!text-[var(--color-danger)] focus:outline-none focus:!bg-[var(--color-danger)] focus:!text-white cursor-pointer">
+                            <X size={14} />
+                          </button>
                         </div>
-                      )) : <div className="p-3 text-[11px] font-black uppercase text-[var(--color-muted)]">Nueva categoría: {categoria.toUpperCase()}</div>}
+                      ))}
+                      {!categoriasFiltradas.length && !categoria.trim() && (
+                        <div className="p-3 text-[11px] font-black uppercase text-[var(--color-muted)]">Todavía no hay categorías: escribe una y presiona Enter</div>
+                      )}
                     </div>
                   )}
                 </div>

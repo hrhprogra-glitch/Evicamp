@@ -7,6 +7,13 @@
 
 ---
 
+## 06/11/2026 (118) · Claude — Producir › Categoría crea y borra categorías como Nuevo producto (solo siumax)
+- **Dueño** (captura): *"en Categoría no crea categorías ni borra como en Producto; ajustar eso"*.
+- `ModalProduccion.tsx`: las categorías salen de la tabla `categories` (la misma de Nuevo producto; antes, de los productos). Escribir una que no existe → opción "+ Crear nueva categoría «X»" (Enter o clic la crea en la base, como Enter con lo escrito). Cada categoría tiene su X: → llega a ella (← vuelve), Enter o clic pregunta "¿Eliminar… DEFINITIVAMENTE? (los productos que ya la tienen no cambian)" y la borra; Supr sobre la fila también. Al guardar el combo/receta, si la categoría escrita no existe se crea.
+- Probado en siumax (modo oscuro): escribir "prueba cat producir" → sale "Crear nueva categoría", Enter → queda y está en la base (1); abrir lista → ↓ a ella → → a la X → Enter → pregunta → aceptar → borrada (0), selector en Categoría. 0 errores.
+
+---
+
 ## 06/11/2026 (117) · Claude — PASE a Evicamp, clientes, siumax y GitHub (115–116) sin perder fotos
 - **Dueño:** *"sí, súbelo"* (parpadeo, regla 9 en todas las ventanas, Categoría, SKU, Conteos).
 - **SQL:** ninguno (no hubo cambios en `servidor/` desde 114). No se tocó la base de Evicamp.

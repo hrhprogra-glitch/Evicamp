@@ -782,3 +782,4 @@
 - **Dueño** (captura de Nuevo producto): *"en Categoría, Enter la oculta, pero al presionar de nuevo no se despliega; en el SKU la flecha abajo no baja, se va al costado"* → arreglado (116). Solo siumax.
 - **Dueño:** *"¿recuerdas lo que pasaba al cerrar una ventana en Evicamp?"* + *"las primeras páginas están bien, a partir de la 6 pasa lo mismo en Inventario; verifica las otras secciones"* → Claude: es el parpadeo (arreglado en siumax, falta subirlo); probado en páginas 6 y 15 con la lista de Evicamp; Conteos tenía lo mismo (arreglado); las demás secciones bien (115).
 - **Dueño:** *"sí, súbelo"* → Claude: copia de fotos (318), deploy a todos sin tocar la base, copia después (320, ninguna perdida), sitios y Tienda Web verificados, merge a main y push (117).
+- **Dueño** (captura de Producir): *"en categoría no crea categorías o borra como en producto; ajustar eso"* → hecho (118). Solo siumax.

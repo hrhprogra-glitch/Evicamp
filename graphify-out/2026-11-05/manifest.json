@@ -1668,9 +1668,9 @@
     "semantic_hash": ""
   },
   "src/sections/Conteos/index.tsx": {
-    "mtime": 1793921946.8787377,
-    "seen": 1793921962.0906518,
-    "ast_hash": "d0339791433392d5abf0c394e53e3149",
+    "mtime": 1793923919.403878,
+    "seen": 1793924162.2450967,
+    "ast_hash": "259c96c9fa3080d87e21c7c11f629ee3",
     "semantic_hash": ""
   },
   "src/sections/Conteos/motivos.ts": {
@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793923727.2090063,
-    "seen": 1793923743.7282522,
-    "ast_hash": "c5998902c7346660f23821311e6f4d2e",
+    "mtime": 1793924147.7307463,
+    "seen": 1793924162.245285,
+    "ast_hash": "3b50704323d2ab187ba4e1aea354dd53",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793923727.2105136,
-    "seen": 1793923743.7282536,
-    "ast_hash": "db6b8876badc809776cd8c0e60a43221",
+    "mtime": 1793924147.7317462,
+    "seen": 1793924162.2452865,
+    "ast_hash": "706c529b94e42164e3de20182c850d09",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
