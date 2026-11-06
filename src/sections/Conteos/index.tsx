@@ -32,7 +32,9 @@ export const Conteos: React.FC = () => {
   const soloConteo = puedeContar && !veMermas;
   const [isModalAjusteOpen, setIsModalAjusteOpen] = useState(false);
   const [conteoAEditar, setConteoAEditar] = useState<Merma | null>(null);
-  const cerrarEdicionConteo = () => { setConteoAEditar(null); setTimeout(() => document.getElementById('buscador-global-conteos')?.focus(), 30); };
+  // Al cerrar, el selector vuelve solo a la fila de donde salió (ventanas.ts); antes se mandaba al buscador y luego
+  // regresaba a la fila: un "parpadeo" (reporte del dueño 05/11/2026)
+  const cerrarEdicionConteo = () => { setConteoAEditar(null); };
   const abrirAjuste = () => (puedeContar || veMermas ? setIsModalAjusteOpen(true) : avisarSinPermiso('registrar ajustes'));
   const cerrarAjuste = () => { setIsModalAjusteOpen(false); setTimeout(() => document.getElementById('btn-nuevo-ajuste')?.focus(), 30); };
 
@@ -249,7 +251,10 @@ export const Conteos: React.FC = () => {
       const sidebar = document.getElementById('evicamp-sidebar');
       if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
 
-      if (!isEditarSalidaOpen && !document.querySelector('.fixed.inset-0.z-50')) {
+      // Solo si el selector no está en ningún lado (como en Inventario, 05/11/2026): al cerrar una ventana ya volvió a su
+      // fila, y llevarlo al buscador hacía un "parpadeo" (la pantalla subía y otra regla lo regresaba)
+      const libre = !document.activeElement || document.activeElement === document.body;
+      if (libre && !isEditarSalidaOpen && !document.querySelector('.fixed.inset-0.z-50')) {
         const searchInput = document.getElementById('buscador-global-conteos') as HTMLInputElement | null;
         if (searchInput) {
           searchInput.focus();

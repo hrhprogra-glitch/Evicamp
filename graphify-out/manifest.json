@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProducto.tsx": {
-    "mtime": 1793922916.2869143,
-    "seen": 1793923111.154179,
-    "ast_hash": "826191e36b8e2911d12473ab987bf5b6",
+    "mtime": 1793923648.573061,
+    "seen": 1793923743.7281003,
+    "ast_hash": "dc667798530afea6a1d378a687313dfb",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaLotes.tsx": {
@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793923095.720097,
-    "seen": 1793923111.1543298,
-    "ast_hash": "5114d1246c61df453d2fcb43cba2bb11",
+    "mtime": 1793923727.2090063,
+    "seen": 1793923743.7282522,
+    "ast_hash": "c5998902c7346660f23821311e6f4d2e",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793923095.7223344,
-    "seen": 1793923111.1543314,
-    "ast_hash": "cf33a32c8255a0f604f4b029fbb05a61",
+    "mtime": 1793923727.2105136,
+    "seen": 1793923743.7282536,
+    "ast_hash": "db6b8876badc809776cd8c0e60a43221",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2268,9 +2268,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProduccion.tsx": {
-    "mtime": 1793922936.5864904,
-    "seen": 1793923111.1541765,
-    "ast_hash": "ed74f252d7d1a097c01d2022336bd1ff",
+    "mtime": 1793923648.5745642,
+    "seen": 1793923743.7280977,
+    "ast_hash": "3f86bb7ed2a19713c2928a17a3e33c88",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/limpiar-siumax-total.cjs": {
