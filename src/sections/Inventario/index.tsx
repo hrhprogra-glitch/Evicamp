@@ -631,8 +631,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
           {!soloCompras && (<>
           {/* LADO DERECHO: METRICAS Y BOTONES DE ACCIÓN */}
-          {/* Laptops (menos de 1536 px): los botones van en una segunda fila para que no se salgan de la pantalla */}
-          <div className="flex flex-col 2xl:flex-row items-stretch 2xl:items-center gap-4 lg:gap-6 w-full 2xl:w-auto min-w-0 pb-1 pr-1">
+          {/* Una sola fila con el título y las pestañas si entra; si no entra, los botones bajan solos (06/11/2026) */}
+          <div className="flex items-center gap-4 lg:gap-6 max-w-full min-w-0 pb-1 pr-1">
             
 
             {/* Botones de Acción */}

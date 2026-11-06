@@ -485,7 +485,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
 
   // Categoría (Combos/recetas y Tallas y colores): lista del sistema; crea y borra categorías como Nuevo producto
   const campoCategoria = (
-                <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setCatAbierta(false); }}>
+                <div className="relative self-start" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setCatAbierta(false); }}>
                   <label htmlFor="input-categoria-compuesto" className={etiquetaCampo}>Categoría</label>
                   <input id="input-categoria-compuesto" type="text" autoComplete="off" spellCheck={false} placeholder="GENERAL" value={categoria}
                     onChange={(e) => { setCategoria(e.target.value); setCatAbierta(true); }}
@@ -593,9 +593,12 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                     else if (e.key === 'ArrowLeft') { e.preventDefault();  }
                     else if (e.key === 'ArrowDown') { e.preventDefault(); (document.querySelector('[data-fila-compuesto="true"]') as HTMLElement | null)?.focus(); }
                   }}
-                  className="text-left p-4 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] hover:border-[var(--color-ink)] cursor-pointer outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)]">
-                  <span className="flex items-center gap-2 text-sm font-black uppercase tracking-widest"><Layers size={18} /> Tallas y colores</span>
-                  <span className="block mt-1 text-[11px] font-bold text-[var(--color-muted)]">Un producto con varias tallas o colores (ropa, calzado…), cada uno con su stock</span>
+                  className="group flex flex-col items-center text-center gap-3 p-5 border-2 border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink)] cursor-pointer outline-none transition-all rounded-none hover:border-[var(--color-accent)] hover:shadow-[4px_4px_0_0_var(--color-accent)] hover:-translate-y-1 focus:border-[var(--color-accent)] focus:shadow-[4px_4px_0_0_var(--color-accent)] focus:-translate-y-1">
+                  <span className="w-14 h-14 flex items-center justify-center border-2 border-[var(--color-border)] bg-[var(--color-bg)] group-hover:border-[var(--color-accent)] group-focus:border-[var(--color-accent)] transition-colors">
+                    <Layers size={28} className="text-[var(--color-muted)] group-hover:text-[var(--color-accent)] group-focus:text-[var(--color-accent)] transition-colors" />
+                  </span>
+                  <span className="text-sm font-black uppercase tracking-widest">Tallas y colores</span>
+                  <span className="block text-[11px] font-bold text-[var(--color-muted)]">Un producto con varias tallas o colores (ropa, calzado…), cada uno con su stock</span>
                 </button>
                 <button id="btn-nuevo-compuesto" type="button"
                   onClick={() => (puedeCrear ? abrirFormulario(null) : avisar('🔒 No tienes permiso para crear productos.'))}
@@ -604,9 +607,12 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                     else if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('btn-nuevo-tallas')?.focus(); }
                     else if (e.key === 'ArrowDown') { e.preventDefault(); (document.querySelector('[data-fila-compuesto="true"]') as HTMLElement | null)?.focus(); }
                   }}
-                  className="text-left p-4 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] hover:border-[var(--color-ink)] cursor-pointer outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)]">
-                  <span className="flex items-center gap-2 text-sm font-black uppercase tracking-widest"><ChefHat size={18} /> Combos y recetas</span>
-                  <span className="block mt-1 text-[11px] font-bold text-[var(--color-muted)]">Juntar productos: combo (se descuenta al vender) o receta (se prepara antes)</span>
+                  className="group flex flex-col items-center text-center gap-3 p-5 border-2 border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink)] cursor-pointer outline-none transition-all rounded-none hover:border-[var(--color-accent)] hover:shadow-[4px_4px_0_0_var(--color-accent)] hover:-translate-y-1 focus:border-[var(--color-accent)] focus:shadow-[4px_4px_0_0_var(--color-accent)] focus:-translate-y-1">
+                  <span className="w-14 h-14 flex items-center justify-center border-2 border-[var(--color-border)] bg-[var(--color-bg)] group-hover:border-[var(--color-accent)] group-focus:border-[var(--color-accent)] transition-colors">
+                    <ChefHat size={28} className="text-[var(--color-muted)] group-hover:text-[var(--color-accent)] group-focus:text-[var(--color-accent)] transition-colors" />
+                  </span>
+                  <span className="text-sm font-black uppercase tracking-widest">Combos y recetas</span>
+                  <span className="block text-[11px] font-bold text-[var(--color-muted)]">Juntar productos: combo (se descuenta al vender) o receta (se prepara antes)</span>
                 </button>
               </div>
               <p className="text-[12px] font-black uppercase tracking-widest text-[var(--color-muted)] shrink-0">Lo que ya armaste ({armados.length})</p>

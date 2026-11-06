@@ -685,7 +685,7 @@ if (fiaData) {
       </div>
       </div>
       {pestana === 'CLIENTES' && (
-        <div className="flex flex-wrap items-center gap-2 w-full 2xl:w-auto min-w-0">
+        <div className="flex flex-wrap items-center gap-2 max-w-full min-w-0">
           <button id="btn-nuevo-cliente" type="button" onClick={() => abrirFicha(null)}
             style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
             onKeyDown={(e) => {

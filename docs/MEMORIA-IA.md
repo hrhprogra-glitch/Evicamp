@@ -197,6 +197,7 @@
 50. **No reescribir datos hijos que se cargan aparte** (05/11/2026): Nuevo producto borraba y volvía a insertar `product_recipes` con lo que tenía en memoria; si se guardaba antes de que terminaran de cargar, la receta quedaba vacía. Una pantalla solo debe escribir lo que de verdad edita.
 51. **Nombres de campos entre la lista y la ventana** (05/11/2026): la lista de Inventario arma el producto con `imageUrl` y Nuevo producto lo leía como `image` → al editar la foto quedaba vacía y al guardar se borraba. Al cargar `initialData`, aceptar los dos nombres (`imageUrl || image_url`) y probar que "editar y guardar sin cambios" deja la fila igual.
 52. **Montos en pantalla: `formatearMonto()`** (06/11/2026): todo monto que se MUESTRA con "S/" usa `formatearMonto(x)` de `src/utils/formato.ts` (S/ 16,200.00), no `x.toFixed(2)`. Para cálculos, campos de número y SUNAT, números sin formato.
+53. **Cabeceras: nunca forzar una segunda fila** (06/11/2026): no usar `w-full 2xl:w-auto` ni `flex-col 2xl:flex-row` en la cabecera de una sección (el dueño quiere UNA fila en laptops); usar `flex-wrap` + `max-w-full` para que baje solo cuando no entra. Los botones/pestañas se compactan solos de 1024 a 1700 px (`index.css`). Medir con `scratchpad/medir-cabeceras.mjs`.
 
 - **Pruebas (28/10/2026):** el dueño quiere que se pruebe SOLO lo que se modificó. Las tandas de regresión, solo si él lo pide.
 
