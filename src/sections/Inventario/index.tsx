@@ -333,7 +333,11 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
       const sidebar = document.getElementById('evicamp-sidebar');
       if (sidebar?.getAttribute('data-sidebar-open') === 'true') return;
 
-      if (!isModalOpenActive && !document.querySelector('.fixed.inset-0.z-50')) {
+      // Solo si el selector no está en ningún lado: al cerrar una ventana ya volvió a la fila del producto, y llevarlo al
+      // buscador hacía un "parpadeo" (la pantalla subía al buscador y otra regla lo regresaba a la fila; se notaba en
+      // Evicamp, con la lista larga y con fotos — reporte del dueño 05/11/2026)
+      const libre = !document.activeElement || document.activeElement === document.body;
+      if (libre && !isModalOpenActive && !document.querySelector('.fixed.inset-0.z-50')) {
         const searchInput = document.getElementById('buscador-global-inventario') as HTMLInputElement | null;
         if (searchInput) {
           searchInput.focus();
