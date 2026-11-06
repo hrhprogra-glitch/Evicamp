@@ -530,8 +530,9 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                         // Enter no pasa al siguiente cuadro. Con algo escrito y sin elegir de la lista: se guarda LO ESCRITO;
                         // vacío: abre la lista para elegir (de la lista se elige con ↓ y Enter, o clic)
                         e.preventDefault();
-                        if (categoria.trim()) { setCategoria(categoria.trim().toUpperCase()); setCatAbierta(false); }
-                        else setCatAbierta((v) => !v);
+                        if (!catAbierta) setCatAbierta(true);
+                        else if (categoria.trim()) { setCategoria(categoria.trim().toUpperCase()); setCatAbierta(false); }
+                        else setCatAbierta(false);
                       } else if (e.key === 'ArrowDown' && catAbierta && categoriasFiltradas.length) { e.preventDefault(); items()[0]?.focus(); }
                       else if (e.key === 'Escape' && catAbierta) { e.preventDefault(); e.stopPropagation(); setCatAbierta(false); }
                     }}

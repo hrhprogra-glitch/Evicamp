@@ -779,9 +779,11 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           if (e.key === 'Enter') {
             // Enter sin elegir nada de la lista: se guarda LO ESCRITO (si no existe, se crea) y el selector se queda.
             // Para tomar una de la lista: ↓ y Enter, o clic.
+            // Lista cerrada: Enter la abre. Abierta: guarda lo escrito (o la cierra si no hay nada escrito)
             e.preventDefault();
             const typedCat = formData.category?.trim().toUpperCase() || '';
-            if (typedCat) handleCrearCategoria(typedCat);
+            if (!showCatDropdown) setShowCatDropdown(true);
+            else if (typedCat) handleCrearCategoria(typedCat);
             else setShowCatDropdown(false);
             return;
           }
@@ -943,7 +945,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
           }
         }
 
-        // Código (SKU): Enter/↓ pasa al código de barras
+        // Código (SKU): ↓ baja a la foto (está justo debajo); → pasa al código de barras; Enter se queda (regla 9)
         if (active?.id === 'input-codigo-producto') {
           const input = active as HTMLInputElement;
           if (e.key === 'ArrowUp') {
@@ -951,7 +953,13 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
             document.getElementById('input-nombre-producto')?.focus();
             return;
           }
-          if (e.key === 'ArrowDown' || e.key === 'Enter' || (e.key === 'ArrowRight' && input.selectionEnd === input.value.length)) {
+          if (e.key === 'Enter') { e.preventDefault(); return; }
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            document.getElementById('input-buscar-foto-producto')?.focus();
+            return;
+          }
+          if (e.key === 'ArrowRight' && input.selectionEnd === input.value.length) {
             e.preventDefault();
             document.getElementById('input-barcode-producto')?.focus();
             return;
@@ -970,9 +978,11 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
             document.getElementById('input-nombre-producto')?.focus();
             return;
           }
-          if (e.key === 'ArrowDown' || e.key === 'Enter') {
+          // ↓ baja a Subir local (está justo debajo); Enter se queda (el lector de barras manda Enter al final)
+          if (e.key === 'Enter') { e.preventDefault(); return; }
+          if (e.key === 'ArrowDown') {
             e.preventDefault();
-            document.getElementById('input-buscar-foto-producto')?.focus();
+            (document.getElementById('btn-subir-local-producto') || document.getElementById('input-buscar-foto-producto'))?.focus();
             return;
           }
           if (e.key === 'ArrowLeft') {

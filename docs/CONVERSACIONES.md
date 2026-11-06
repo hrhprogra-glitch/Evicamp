@@ -779,3 +779,4 @@
 - **Dueño:** *"cuando entro a un producto y luego cierro, hace un parpadeo rápido; solo en Evicamp; ¿es por las imágenes?"* → Claude: el selector iba al buscador y volvía a la fila (salto de pantalla en la lista larga de Evicamp); arreglado (115). Solo siumax.
 - **Dueño** (captura): *"en el desplegable de categoría sale así; ese no es el estilo que usamos"* → lista propia del sistema (115). Solo siumax.
 - **Dueño:** *"te faltó que si presiono Enter y no selecciono nada, se guarde eso; ponlo en todas las ventanas flotantes o las que tengan categoría; y que el Enter sea clic, nada de pasar a la siguiente selección; ¿entendiste?"* → Claude: regla general en todas las ventanas + Categoría guarda lo escrito (116). Solo siumax.
+- **Dueño** (captura de Nuevo producto): *"en Categoría, Enter la oculta, pero al presionar de nuevo no se despliega; en el SKU la flecha abajo no baja, se va al costado"* → arreglado (116). Solo siumax.
