@@ -788,3 +788,4 @@
 - **Dueño** (captura de Activar variantes): *"tallas y colores dentro de Producir; escoger entre tallas y colores o producir, como unidad/kilos/consumo; que el botón tenga otro nombre"* → plan → nombre "Armar producto" → hecho (121). Solo siumax.
 - **Dueño:** *"con adicional ¿te refieres a que ganaré esa cantidad?"* → Claude: no, es un gasto; ganancia = precio − costo.
 - **Dueño** (5 capturas): *"que parezcan más como botones; el espacio entre el desplegable y el buscador es demasiado; que se acomode en una fila en pantallas más pequeñas (Inventario, Finanzas, Utilidades)"* → hecho; medido: una fila desde 1366 px en todas las secciones (122). Solo siumax.
+- **Dueño** (capturas): *"no es necesario eso"* (Lo que ya armaste) + *"también lo de conteo no es necesario"* (Hechos ahora) → quitadas, ventanas a la medida; la lista del buscador de Nuevo ajuste ya no se corta (123). Solo siumax.

@@ -412,7 +412,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div role="dialog" aria-label="Nuevo ajuste" className="ventana-sobria bg-[var(--color-surface)] w-full max-w-3xl border-2 border-[var(--color-ink)] flex flex-col h-[calc(90dvh/var(--ui-zoom))]">
+      <div role="dialog" aria-label="Nuevo ajuste" className="ventana-sobria bg-[var(--color-surface)] w-full max-w-3xl border-2 border-[var(--color-ink)] flex flex-col max-h-[calc(90dvh/var(--ui-zoom))]">
         {/* CABECERA */}
         <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -483,8 +483,9 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                     }}
                     className="w-full bg-white border-2 border-[var(--color-border)] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]"
                   />
+                  {/* La lista va dentro de la ventana (no flotando): la ventana se acomoda a su contenido y una lista flotante se cortaba */}
                   {abierta && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] z-50 max-h-56 overflow-y-auto">
+                    <div className="mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-56 overflow-y-auto">
                       {filtrados.length ? filtrados.slice(0, 50).map((p) => (
                         <div
                           key={p.id}
@@ -743,23 +744,8 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
             {ultimo && <p id="ajuste-ultimo" role="status" className="text-xs font-black text-[var(--color-accent)] uppercase">{ultimo}</p>}
           </div>
 
-          {/* LO HECHO EN ESTA VENTANA */}
-          <p className="text-[12px] font-black uppercase tracking-widest text-[var(--color-muted)] shrink-0">Hechos ahora ({hechos.length})</p>
-          <CajaLista vacia={!hechos.length} mensaje="Todavía no hiciste ningún ajuste.">
-            {hechos.map((h, i) => (
-              <FilaLista
-                key={i}
-                data-ajuste-fila="true"
-                titulo={h.producto}
-                subtitulo={<>
-                  <LineaDato>{h.modo === 'CONTEO' ? `Contó ${formatearCantidad(h.cantidad, h.unidad)} ${h.unidad}` : h.consumo ? `Gasto de S/ ${formatearMonto(h.cantidad)}` : `Salieron ${formatearCantidad(h.cantidad, h.unidad)} ${h.unidad}`} · {h.hora}</LineaDato>
-                  {h.motivo && <LineaDato>Motivo: {h.motivo}</LineaDato>}
-                </>}
-                centro={h.modo === 'SALIDA' ? <Etiqueta tono="rojo">{h.consumo ? 'Gasto' : 'Merma'}</Etiqueta> : h.diferencia === 0 ? <Etiqueta tono="verde">Cuadra</Etiqueta> : h.diferencia < 0 ? <Etiqueta tono="rojo">Merma</Etiqueta> : <Etiqueta tono="azul">Sobrante</Etiqueta>}
-                derecha={<DatoFila etiqueta="Diferencia" valor={h.consumo ? '—' : `${h.diferencia > 0 ? '+' : ''}${formatearCantidad(h.diferencia, h.unidad)} ${h.unidad}`} tono={h.diferencia < 0 ? 'rojo' : h.diferencia > 0 ? 'verde' : 'normal'} />}
-              />
-            ))}
-          </CajaLista>
+          {/* Sin la lista "Hechos ahora" (pedido del dueño 06/11/2026): al guardar queda el aviso de arriba y todo sale
+              en la tabla de Conteos al cerrar */}
         </CuerpoVentana>
       </div>
     </div>

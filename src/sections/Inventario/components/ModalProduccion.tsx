@@ -81,9 +81,6 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
   const porId = useMemo(() => new Map(productos.map((p) => [String(p.id), p])), [productos]);
   const compuestos = useMemo(() => productos.filter((p) => p.activo !== false && (p.tipoCompuesto === 'COMBO' || p.tipoCompuesto === 'RECETA')), [productos]);
   const tieneTallas = (p: Product) => Boolean(p.tieneVariantes || (p.variantes && p.variantes.length > 0));
-  const conTallas = useMemo(() => productos.filter((p) => p.activo !== false && tieneTallas(p) && p.tipoCompuesto !== 'COMBO' && p.tipoCompuesto !== 'RECETA'), [productos]); // eslint-disable-line react-hooks/exhaustive-deps
-  // La lista de abajo: primero los de tallas, luego combos y recetas
-  const armados = useMemo(() => [...conTallas.map((p) => ({ p, clase: 'TALLAS' as const })), ...compuestos.map((p) => ({ p, clase: p.tipoCompuesto as Tipo }))], [conTallas, compuestos]);
   // Categorías: la misma tabla que Nuevo producto (categories), para crear y borrar igual que ahí
   const [categorias, setCategorias] = useState<string[]>([]);
   useEffect(() => {
@@ -566,7 +563,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div id="modal-produccion-receta" role="dialog" aria-label="Armar producto" className={`ventana-sobria bg-[var(--color-surface)] w-full max-w-3xl border-2 border-[var(--color-ink)] flex flex-col ${vista === 'LISTA' || cargando ? 'h-[calc(90dvh/var(--ui-zoom))]' : 'max-h-[calc(90dvh/var(--ui-zoom))]'}`}>
+      <div id="modal-produccion-receta" role="dialog" aria-label="Armar producto" className={`ventana-sobria bg-[var(--color-surface)] w-full max-w-3xl border-2 border-[var(--color-ink)] flex flex-col max-h-[calc(90dvh/var(--ui-zoom))]`}>
         {/* CABECERA */}
         <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3 min-w-0">
@@ -591,7 +588,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                   onKeyDown={(e) => {
                     if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('btn-nuevo-compuesto')?.focus(); }
                     else if (e.key === 'ArrowLeft') { e.preventDefault();  }
-                    else if (e.key === 'ArrowDown') { e.preventDefault(); (document.querySelector('[data-fila-compuesto="true"]') as HTMLElement | null)?.focus(); }
+                    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') e.preventDefault();
                   }}
                   className="group flex flex-col items-center text-center gap-3 p-5 border-2 border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink)] cursor-pointer outline-none transition-all rounded-none hover:border-[var(--color-accent)] hover:shadow-[4px_4px_0_0_var(--color-accent)] hover:-translate-y-1 focus:border-[var(--color-accent)] focus:shadow-[4px_4px_0_0_var(--color-accent)] focus:-translate-y-1">
                   <span className="w-14 h-14 flex items-center justify-center border-2 border-[var(--color-border)] bg-[var(--color-bg)] group-hover:border-[var(--color-accent)] group-focus:border-[var(--color-accent)] transition-colors">
@@ -615,70 +612,8 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                   <span className="block text-[11px] font-bold text-[var(--color-muted)]">Juntar productos: combo (se descuenta al vender) o receta (se prepara antes)</span>
                 </button>
               </div>
-              <p className="text-[12px] font-black uppercase tracking-widest text-[var(--color-muted)] shrink-0">Lo que ya armaste ({armados.length})</p>
-              <CajaLista vacia={!armados.length} mensaje="Todavía no armaste nada. Elige arriba qué vas a armar.">
-                {armados.map(({ p, clase }, idx) => {
-                  const lista = recetas[String(p.id)] || [];
-                  const t = tope(lista);
-                  const esReceta = clase === 'RECETA';
-                  const esTallas = clase === 'TALLAS';
-                  const nVar = (p.variantes || []).length;
-                  const abrir = () => (esTallas ? abrirTallas(p) : esReceta && lista.length ? irAProducir(p, lista) : abrirFormulario(p, lista));
-                  const cambiar = () => (puedeCrear ? (esTallas ? abrirTallas(p) : abrirFormulario(p, lista)) : avisar('🔒 No tienes permiso para cambiar productos.'));
-                  const primerBoton = esTallas ? `btn-lote-tallas-${idx}` : esReceta ? `btn-producir-compuesto-${idx}` : `btn-cambiar-compuesto-${idx}`;
-                  return (
-                    <FilaLista
-                      key={`${clase}-${p.id}`}
-                      id={`fila-compuesto-${idx}`}
-                      tabIndex={0}
-                      data-fila-compuesto="true"
-                      onKeyDown={(e) => {
-                        const filas = Array.from(document.querySelectorAll('[data-fila-compuesto="true"]')) as HTMLElement[];
-                        if (e.target !== e.currentTarget) return;
-                        if (e.key === 'ArrowDown') { e.preventDefault(); filas[idx + 1]?.focus(); }
-                        else if (e.key === 'ArrowUp') { e.preventDefault(); (filas[idx - 1] || document.getElementById('btn-nuevo-tallas'))?.focus(); }
-                        else if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById(primerBoton)?.focus(); }
-                        else if (e.key === 'Enter') { e.preventDefault(); abrir(); }
-                      }}
-                      titulo={p.name}
-                      subtitulo={esTallas ? <>
-                        <LineaDato>{nVar} talla(s) / color(es) · precio {soles(Number(p.price) || 0)}</LineaDato>
-                        <LineaDato>Stock {formatearCantidad(p.quantity, p.unit)} {p.unit}</LineaDato>
-                      </> : <>
-                        <LineaDato>{lista.length} producto(s) · precio {soles(Number(p.price) || 0)}{esReceta ? ` · stock ${formatearCantidad(p.quantity, p.unit)} ${p.unit}` : ''}</LineaDato>
-                        <LineaDato>{lista.length ? (t.max > 0 ? `Alcanza para ${t.max}` : `No alcanza: ${textoLimita(t)}`) : 'Sin productos: agrégalos con Cambiar'}</LineaDato>
-                      </>}
-                      centro={<Etiqueta tono={esTallas ? 'azul' : esReceta ? 'verde' : 'ambar'}>{esTallas ? 'Tallas' : esReceta ? 'Receta' : 'Combo'}</Etiqueta>}
-                      derecha={
-                        <div className="flex items-center gap-2">
-                          {esTallas && (
-                            <button id={`btn-lote-tallas-${idx}`} type="button"
-                              onClick={() => { onClose(); onIngresarLote?.(p); }}
-                              onKeyDown={(e) => { if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById(`btn-cambiar-compuesto-${idx}`)?.focus(); } else if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById(`fila-compuesto-${idx}`)?.focus(); } }}
-                              className={`${claseBotonBarra(true)} !h-[38px] !px-3`}>
-                              Ingresar lote
-                            </button>
-                          )}
-                          {esReceta && (
-                            <button id={`btn-producir-compuesto-${idx}`} type="button" disabled={!lista.length}
-                              onClick={() => irAProducir(p, lista)}
-                              onKeyDown={(e) => { if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById(`btn-cambiar-compuesto-${idx}`)?.focus(); } else if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById(`fila-compuesto-${idx}`)?.focus(); } }}
-                              className={`${claseBotonBarra(true)} !h-[38px] !px-3 disabled:opacity-40`}>
-                              <ChefHat size={14} /> Producir
-                            </button>
-                          )}
-                          <button id={`btn-cambiar-compuesto-${idx}`} type="button"
-                            onClick={cambiar}
-                            onKeyDown={(e) => { if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById(primerBoton === `btn-cambiar-compuesto-${idx}` ? `fila-compuesto-${idx}` : primerBoton)?.focus(); } else if (e.key === 'ArrowRight') e.preventDefault(); }}
-                            className={`${claseBotonBarra(false)} !h-[38px] !px-3`}>
-                            Cambiar
-                          </button>
-                        </div>
-                      }
-                    />
-                  );
-                })}
-              </CajaLista>
+              {/* Sin lista abajo (pedido del dueño 06/11/2026): producir una receta = gorrito de su fila en Inventario;
+                  cambiar = Editar producto › Cambiar sus productos / Cambiar tallas y colores; stock de tallas = Ingresar lote */}
             </>
           ) : vista === 'TALLAS' ? (
             <div className="flex flex-col gap-5 shrink-0">

@@ -7,6 +7,14 @@
 
 ---
 
+## 06/11/2026 (123) · Claude — Sin listas de abajo en Armar producto y Nuevo ajuste (solo siumax)
+- **Dueño** (capturas): *"no es necesario eso"* ("Lo que ya armaste" en Armar producto) y *"también lo de conteo no es necesario"* ("Hechos ahora" en Nuevo ajuste).
+- Antes de quitar, lo que hacían y dónde sigue: **Armar producto** — producir una receta = gorrito de su fila en Inventario (abre Producir); cambiar = Editar producto › "Cambiar sus productos" / "Cambiar tallas y colores"; stock de tallas = Ingresar lote. **Nuevo ajuste** — al guardar queda el aviso "✔ …" y todo sale en la tabla de Conteos al cerrar.
+- `ModalProduccion.tsx`: quitada la lista (y `armados`/`conTallas`); la ventana a la medida (solo las dos tarjetas, 306 px). `ModalAjuste.tsx`: quitada "Hechos ahora"; la ventana a la medida (234 px). Como la ventana ahora es baja, la lista de resultados del buscador de productos (flotante) se cortaba: ahora va DENTRO de la ventana (la ventana crece mientras se busca).
+- Probado en siumax (modo oscuro): alturas 306 y 234 px; escribir "C" → la lista entra completa (termina en 490, la ventana en 534); elegir producto → selector en el conteo; 0 errores.
+
+---
+
 ## 06/11/2026 (122) · Claude — Cabeceras en UNA fila en laptops; tarjetas de Armar producto como botones; lista de Categoría pegada (solo siumax)
 - **Dueño** (5 capturas): *"haz que parezcan más como botones"* (tarjetas de Armar producto), *"el espacio entre el desplegable y el buscador es demasiado"* (Categoría) y *"quiero que eso se acomode en una fila en pantallas más pequeñas (PC, tablet, laptop); si necesita acomodarse, normal; pasa en Inventario, Finanzas y Utilidades"*.
 - **Cabeceras**: el contenedor de los botones tenía `w-full 2xl:w-auto` / `flex-col 2xl:flex-row` (siempre a una segunda fila bajo 1536 px). Ahora `flex-wrap` / `max-w-full`: una fila si entra, baja solo si no. Archivos: `Inventario/index.tsx`, `Finanzas/index.tsx`, `Utilidades/components/FiltrosUtilidades.tsx`, `Clientes/index.tsx`, `Conteos/components/HeaderConteos.tsx`. Además en `index.css`, de 1024 a 1700 px, `main .boton-cabecera` y `main .pestanas-sobrias > button` más compactos (relleno 0.7rem, 10 px, letra menos espaciada). Medido (`scratchpad/medir-cabeceras.mjs`): desde 1366 px TODAS las secciones en una fila (Inventario, Finanzas, Utilidades, Clientes, Conteos, Ajustes); a 1280 solo Inventario en dos (3 pestañas + 5 botones); a 1024 algunas en dos; nada se sale de la pantalla.
