@@ -93,13 +93,15 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
       <div 
         ref={ref} 
         // 🚀 AHORA ES VISIBLE: Le damos diseño de papel real con sombra
-        className="bg-white p-4 text-[var(--color-ink)] w-[80mm] mx-auto border-2 border-dashed border-gray-400 font-mono shadow-2xl print:shadow-none print:border-0 print:p-0 print:m-0"
+        className="bg-white p-4 text-[var(--color-ink)] w-[80mm] mx-auto border-2 border-dashed border-gray-400 font-mono shadow-2xl break-words print:shadow-none print:border-0 print:p-0 print:m-0 print:w-[72mm]"
       >
         {/* REGLAS ESTRICTAS SOLO PARA LA IMPRESORA FÍSICA */}
         <style type="text/css" media="print">
           {`
             @page { margin: 0; }
-            body { width: 80mm !important; margin: 0 !important; color: black !important; background: white !important; }
+            /* 72 mm: lo que de verdad imprime una ticketera de 80 mm (y el mismo ancho del texto en la vista previa).
+               Con 80 mm el ticket salía más ancho que la vista previa y se perdía el costado derecho (precios). 06/11/2026 */
+            body { width: 72mm !important; margin: 0 !important; color: black !important; background: white !important; }
             * { box-sizing: border-box; }
           `}
         </style>

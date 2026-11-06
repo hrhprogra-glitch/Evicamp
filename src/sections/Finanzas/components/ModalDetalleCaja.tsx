@@ -816,7 +816,7 @@ export const ModalDetalleCaja: React.FC<Props> = ({ isOpen, onClose, caja, onAnu
           <>
             {/* VISTA TICKET: formato angosto 80mm, vista previa antes de imprimir o descargar */}
             <div className="flex-1 overflow-auto p-6 custom-scrollbar bg-[var(--color-bg-2)]">
-              <div ref={printRef} className="bg-white p-4 text-[var(--color-ink)] w-[80mm] mx-auto border border-dashed border-gray-300 shadow-md print:border-0 print:p-0 print:shadow-none">
+              <div ref={printRef} className="bg-white p-4 text-[var(--color-ink)] w-[80mm] mx-auto border border-dashed border-gray-300 shadow-md break-words print:border-0 print:p-0 print:shadow-none print:w-[72mm]">
                 <div className="text-center border-b-2 border-black pb-2 mb-4">
                   <h3 className="font-black text-lg uppercase">Resumen de Caja</h3>
                   <p className="text-[12px] font-bold">ID: {caja.id}</p>

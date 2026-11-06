@@ -334,7 +334,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
   // Desplegable de lotes (MERMA: de qué lote sale; CONTEO con Conteos completo: a qué lote va, con "Automático").
   // Cerrado muestra el elegido; Enter lo abre, ↑ ↓ recorre, Enter elige (se cierra y pasa al campo siguiente), Esc lo cierra.
   const selectorLote = (titulo: string) => (
-    <div>
+    <div className="aparecer">
       <p className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest mb-2">{titulo}</p>
       {cargandoLotes ? (
         <p className="text-[11px] font-bold text-[var(--color-muted)]">Cargando lotes...</p>
@@ -443,7 +443,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                 <Search size={14} /> 1. Producto
               </label>
               {producto ? (
-                <div className="flex items-center justify-between border-2 border-[var(--color-ink)] p-3">
+                <div className="aparecer flex items-center justify-between border-2 border-[var(--color-ink)] p-3">
                   <div className="min-w-0">
                     <p className="text-[11px] font-bold text-[var(--color-muted)] uppercase">{producto.code} · {producto.category}</p>
                     <p id="ajuste-producto-elegido" className="font-black text-[var(--color-ink)] uppercase truncate">{producto.name}</p>
@@ -485,7 +485,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                   />
                   {/* La lista va dentro de la ventana (no flotando): la ventana se acomoda a su contenido y una lista flotante se cortaba */}
                   {abierta && (
-                    <div className="mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-56 overflow-y-auto">
+                    <div className="aparecer mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-56 overflow-y-auto">
                       {filtrados.length ? filtrados.slice(0, 50).map((p) => (
                         <div
                           key={p.id}
@@ -518,7 +518,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
             {producto && modo === 'SALIDA' && (
               <>
                 {!consumo && selectorLote(`${n}. ¿De qué lote? ${lotes.length > 1 ? `(Enter: ver los ${lotes.length})` : ''}`)}
-                <div>
+                <div className="aparecer">
                   <div className="flex items-center justify-between mb-2">
                     <label htmlFor="input-cantidad-ajuste" className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest block">
                       {consumo ? `${n}. ¿Cuánto se gastó? (S/)` : `${n + 1}. ¿Cuántos salieron? (${unidad})`}
@@ -585,7 +585,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
             {/* CONTÉ LO QUE HAY */}
             {producto && modo === 'CONTEO' && veLotes && selectorLote(`${n}. ¿A qué lote va la diferencia? (Enter: elegir)`)}
             {producto && modo === 'CONTEO' && (
-              <div>
+              <div className="aparecer">
                 <div className="flex items-center justify-between mb-2">
                   <label htmlFor="input-contado" className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest block">
                     {veLotes ? n + 1 : n}. ¿Cuántos hay? ({unidad})
@@ -648,7 +648,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                 )}
                 {diferencia === null && modos.includes('SALIDA') && enlaceModo('SALIDA', 'Solo salieron unos pocos (se rompió, venció, se usó…)', 'input-contado')}
                 {diferencia !== null && (
-                  <div id="ajuste-diferencia" role="status" className={`mt-3 p-3 border-2 font-black uppercase ${diferencia < 0 ? 'border-[var(--color-danger)] bg-[var(--color-danger-bg)] text-[var(--color-danger)]' : 'border-[var(--color-info)] bg-[var(--color-info-bg)] text-[var(--color-info)]'}`}>
+                  <div id="ajuste-diferencia" role="status" className={`aparecer mt-3 p-3 border-2 font-black uppercase ${diferencia < 0 ? 'border-[var(--color-danger)] bg-[var(--color-danger-bg)] text-[var(--color-danger)]' : 'border-[var(--color-info)] bg-[var(--color-info-bg)] text-[var(--color-info)]'}`}>
                     {diferencia < 0 ? `Faltan ${formatearCantidad(-diferencia, unidad)} ${unidad}` : `Sobran ${formatearCantidad(diferencia, unidad)} ${unidad}`}
                     <span className="block text-[11px] font-bold normal-case">
                       {diferencia < 0
@@ -662,7 +662,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
 
             {/* MOTIVO Y JUSTIFICACIÓN (los dos casos) */}
             {pideMotivo && (
-              <div className="flex flex-col gap-4 border-t-2 border-[var(--color-border)] pt-4">
+              <div className="aparecer flex flex-col gap-4 border-t-2 border-[var(--color-border)] pt-4">
                 <div>
                   <p className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest mb-2">Motivo *</p>
                   <div className="flex flex-wrap gap-2" role="listbox" aria-label="Motivo">
@@ -741,7 +741,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                 </div>
               </div>
             )}
-            {ultimo && <p id="ajuste-ultimo" role="status" className="text-xs font-black text-[var(--color-accent)] uppercase">{ultimo}</p>}
+            {ultimo && <p id="ajuste-ultimo" role="status" key={ultimo} className="aparecer text-xs font-black text-[var(--color-accent)] uppercase">{ultimo}</p>}
           </div>
 
           {/* Sin la lista "Hechos ahora" (pedido del dueño 06/11/2026): al guardar queda el aviso de arriba y todo sale

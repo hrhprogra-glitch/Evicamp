@@ -7,6 +7,16 @@
 
 ---
 
+## 06/11/2026 (124) · Claude — El ticket impreso sale igual que la vista previa; Nuevo ajuste con animación suave (solo siumax)
+- **Dueño:** *"imprimí un ticket pero no sale bien ni completo como la previsualización; analiza por qué y arréglalo"* y *"agrega una animación al conteo; se ve muy brusco cuando se agrega un producto o cantidades y aparece la causa"*.
+- **Causa 1 — sin diseño (app de escritorio):** `impresion.ts › armarDocumento` mandaba a la ventana invisible de impresión los `<link>` del CSS; el CSS del sistema se carga con `crossorigin` y nginx no manda `Access-Control-Allow-Origin`, así que desde esa ventana (otra procedencia) el navegador lo BLOQUEABA y el ticket salía sin estilos (letra común, nada centrado, totales sin alinear). Comprobado generando el PDF del mismo documento. **Arreglo:** los estilos van COPIADOS dentro del documento (`cssDeLaPagina()` lee `document.styleSheets`).
+- **Causa 2 — más ancho que la vista previa:** al imprimir el ticket ocupaba 80 mm (en pantalla el texto ocupa ~72 mm por el relleno) y una ticketera de 80 mm solo imprime ~72 mm: se perdía el costado derecho (precios). **Arreglo:** al imprimir mide 72 mm (`print:w-[72mm]` y `body { width: 72mm }`) en `TicketImprimible.tsx` y en el ticket del cierre (`ModalDetalleCaja.tsx`).
+- **Causa 3 — largo (app de escritorio):** `escritorio/main.js` imprimía sin tamaño de hoja (la de la impresora por defecto: un ticket largo podía cortarse). **Arreglo:** mide el alto del ticket y pasa `pageSize` (80 mm × alto + 5 mm). ⚠️ Este cambio es del programa instalado: llega solo con un instalador nuevo (`build-escritorio`), no con el deploy.
+- Verificado: el mismo documento que se manda a la impresora, en modo impresión → PDF de 80 mm: 72 mm de ancho, nada se sale, con su diseño, igual que la vista previa (`scratchpad/ticket-impreso-arreglado.pdf`).
+- **Animación:** `.aparecer` en `index.css` (se desvanece y baja 6 px en 0,22 s; sin animación si el equipo pide reducir movimiento). En Nuevo ajuste: lista de resultados, producto elegido, lote, cantidad/conteo, aviso Faltan/Sobran, motivo y el mensaje de guardado. Probado (`document.getAnimations()`): cada parte se anima al aparecer y termina en menos de medio segundo; el flujo sigue igual; 0 errores.
+
+---
+
 ## 06/11/2026 (123) · Claude — Sin listas de abajo en Armar producto y Nuevo ajuste (solo siumax)
 - **Dueño** (capturas): *"no es necesario eso"* ("Lo que ya armaste" en Armar producto) y *"también lo de conteo no es necesario"* ("Hechos ahora" en Nuevo ajuste).
 - Antes de quitar, lo que hacían y dónde sigue: **Armar producto** — producir una receta = gorrito de su fila en Inventario (abre Producir); cambiar = Editar producto › "Cambiar sus productos" / "Cambiar tallas y colores"; stock de tallas = Ingresar lote. **Nuevo ajuste** — al guardar queda el aviso "✔ …" y todo sale en la tabla de Conteos al cerrar.
