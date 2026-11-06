@@ -7,6 +7,15 @@
 
 ---
 
+## 06/11/2026 (117) · Claude — PASE a Evicamp, clientes, siumax y GitHub (115–116) sin perder fotos
+- **Dueño:** *"sí, súbelo"* (parpadeo, regla 9 en todas las ventanas, Categoría, SKU, Conteos).
+- **SQL:** ninguno (no hubo cambios en `servidor/` desde 114). No se tocó la base de Evicamp.
+- **Fotos de Evicamp:** antes `respaldo-fotos-evicamp-2026-11-06T00-17-39-019Z.csv` (318) → `deploy.cjs todos` → después `…00-19-02-244Z.csv` (320): **0 desaparecidas, 2 nuevas** (el cliente seguía subiendo).
+- **Verificado:** Evicamp y siumax HTTP 200, login sin errores JS, sin `/suscripcion.json`, `index-JzD021Lb.js`; Tienda Web de Evicamp en ~6 s con todas las fotos, 0 errores.
+- **GitHub:** merge `--no-ff` a `main` y push. Cajeros: Ctrl+F5 o volver a abrir el .exe.
+
+---
+
 ## 05/11/2026 (116) · Claude — Regla 9 en TODAS las ventanas (Enter nunca pasa al siguiente) y Categoría guarda lo escrito (solo siumax)
 - **Dueño:** *"te faltó que si presiono Enter y no selecciono nada, se guarde eso; ponlo en todas las ventanas flotantes o las que tengan categoría; y que el Enter sea clic, nada de pasar a la siguiente selección"*.
 - **Regla general** (`src/utils/flechasEspaciales.ts`): `alTeclearPrimero` arma `guardiaEnter` al dar Enter en un campo (input/select) dentro de la ventana de arriba; un `focusin` (captura) devuelve el selector al campo si en los 400 ms siguientes una pantalla lo lleva a OTRO campo o botón de la misma ventana. No actúa si el Enter abrió/cerró una ventana, si el campo desapareció/se desactivó, ni si el selector entró a una lista (role option/listbox/menu). Así cubre las 40 ventanas sin tocarlas una por una (ModalProducto tenía 32 "Enter → siguiente").
