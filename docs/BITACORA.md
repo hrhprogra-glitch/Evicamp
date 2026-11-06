@@ -7,6 +7,14 @@
 
 ---
 
+## 06/11/2026 (119) · Claude — Producir: Guardar cierra; Guardar e ir a Lotes abre la pantalla del lote; arreglo de la regla 9 (solo siumax)
+- **Dueño** (captura): *"Guardar e ir a Lotes literalmente me lleva a Lotes; debería llevarme a la ventana del lote para ponerle la cantidad; y Guardar debe cerrar la ventana; solo se guarda ese producto"*.
+- `ModalProduccion.tsx`: **Guardar** → guarda, cierra la ventana y avisa "✔ X guardado como receta/combo". **Guardar e ir a Lotes** (receta) → guarda y abre "Crear lote: X" (la pantalla de Producir: ¿cuántos? con el tope; producir descuenta los insumos y crea el lote con su costo). `desdeGuardar` solo cambia el título.
+- **Arreglo de la regla 9 (116):** la vigilancia del Enter (400 ms) también deshacía una flecha del usuario dada justo después (Enter en el buscador y → enseguida volvía al buscador). Ahora cualquier otra tecla termina la vigilancia al instante (`guardiaEnter = null` en `alTeclearPrimero`).
+- Probado en siumax (productos de prueba, borrados): buscador Enter → → llega a la cantidad; Guardar e ir a Lotes → "CREAR LOTE: …" con tope 4, producir 2 → lote creado, insumo 4 → 2; Guardar → ventana cerrada + aviso, guardado como RECETA. 0 errores.
+
+---
+
 ## 06/11/2026 (118) · Claude — Producir › Categoría crea y borra categorías como Nuevo producto (solo siumax)
 - **Dueño** (captura): *"en Categoría no crea categorías ni borra como en Producto; ajustar eso"*.
 - `ModalProduccion.tsx`: las categorías salen de la tabla `categories` (la misma de Nuevo producto; antes, de los productos). Escribir una que no existe → opción "+ Crear nueva categoría «X»" (Enter o clic la crea en la base, como Enter con lo escrito). Cada categoría tiene su X: → llega a ella (← vuelve), Enter o clic pregunta "¿Eliminar… DEFINITIVAMENTE? (los productos que ya la tienen no cambian)" y la borra; Supr sobre la fila también. Al guardar el combo/receta, si la categoría escrita no existe se crea.

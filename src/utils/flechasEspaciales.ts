@@ -118,6 +118,9 @@ export const activarFlechasEspaciales = () => {
   // 2) Enter en una casilla de marcar = clic: la marca o desmarca y el selector se queda ahí (no pasa al siguiente).
   const alTeclearPrimero = (e: KeyboardEvent) => {
     const el = e.target as HTMLElement | null;
+    // Regla 9: cualquier otra tecla (una flecha del usuario, escribir…) termina la vigilancia del Enter al instante:
+    // el selector que mueve el USUARIO nunca se devuelve (antes, una flecha rápida tras el Enter se deshacía)
+    if (e.key !== 'Enter') guardiaEnter = null;
     if (e.ctrlKey || e.altKey || e.metaKey) return;
     if (e.key === 'Enter' && el instanceof HTMLInputElement && (el.type === 'checkbox' || el.type === 'radio') && !el.disabled) {
       e.preventDefault();

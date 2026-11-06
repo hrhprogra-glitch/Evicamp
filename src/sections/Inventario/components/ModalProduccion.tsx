@@ -60,6 +60,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
   const [catAbierta, setCatAbierta] = useState(false);
   // Producir
   const [elegido, setElegido] = useState<Elegido | null>(null);
+  const [desdeGuardar, setDesdeGuardar] = useState(false); // llegó a Producir desde "Guardar e ir a Lotes"
   const [cantidad, setCantidad] = useState('1');
   const [costoAdicProd, setCostoAdicProd] = useState('0');
   const [avisoTope, setAvisoTope] = useState('');
@@ -151,6 +152,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
 
   // ---------- FORMULARIO ----------
   const abrirFormulario = (p: Product | null, lista: Insumo[] = []) => {
+    setDesdeGuardar(false);
     setEditId(p ? String(p.id) : null);
     setNombre(p?.name || '');
     setInsumos(lista.map((i) => ({ ...i })));
@@ -255,15 +257,19 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
     if (!id) return;
     const n = nombre.trim().toUpperCase();
     if (luego === 'LOTES') {
-      onClose(); onIrALotes?.(n);
+      // A la pantalla del lote: "¿Cuántos vas a producir?" con el tope (descuenta los insumos y crea el lote con su costo)
+      irAProducir({ id, name: n, unit: 'UND', costoAdicionalProduccion: tipo === 'RECETA' ? Number(costoAdic) || 0 : 0 } as unknown as Product, insumos);
+      setDesdeGuardar(true);
     } else {
-      await avisar(`✔ ${n} guardado como ${tipo === 'COMBO' ? 'combo' : 'receta: para hacer un lote, presiona «Producir» en la lista'}.`);
-      setVista('LISTA'); enfocar('btn-nuevo-compuesto');
+      // Guardar: solo guarda y cierra la ventana
+      onClose();
+      void avisar(`✔ ${n} guardado como ${tipo === 'COMBO' ? 'combo' : 'receta'}.`);
     }
   };
 
   // ---------- PRODUCIR ----------
   const irAProducir = (p: Product, lista: Insumo[]) => {
+    setDesdeGuardar(false);
     setElegido({ id: String(p.id), name: p.name, unit: p.unit || 'UND', costoAdicional: Number(p.costoAdicionalProduccion) || 0, insumos: lista });
     const t = tope(lista);
     setCantidad(t.max > 0 ? '1' : '0');
@@ -351,7 +357,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
     </div>
   );
 
-  const titulo = vista === 'FORM' ? (editId ? 'Cambiar combo o receta' : 'Nuevo combo o receta') : vista === 'PRODUCIR' ? `Producir: ${elegido?.name || ''}` : 'Producir · combos y recetas';
+  const titulo = vista === 'FORM' ? (editId ? 'Cambiar combo o receta' : 'Nuevo combo o receta') : vista === 'PRODUCIR' ? `${desdeGuardar ? 'Crear lote' : 'Producir'}: ${elegido?.name || ''}` : 'Producir · combos y recetas';
   const subtitulo = vista === 'FORM' ? 'Nombre → productos que usa → combo o receta → precio'
     : vista === 'PRODUCIR' ? 'Descuenta los insumos y crea el lote con su costo real'
     : 'Combo: se descuenta al vender · Receta: se prepara antes con Producir';

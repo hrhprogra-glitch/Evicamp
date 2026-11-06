@@ -37,7 +37,7 @@
   Si el elemento desaparece (lista que se cierra, fila quitada), el selector vuelve a de donde salió o al vecino más cercano.
   No programar `Enter → enfocar(siguiente)` en pantallas nuevas. **Ya lo garantiza `flechasEspaciales.ts` (guardiaEnter +
   focusin) en TODAS las ventanas:** si tras un Enter en un campo el selector va a otro campo/botón de la misma ventana,
-  vuelve al de origen (no actúa si el Enter abrió/cerró una ventana, si el campo desapareció o entró a una lista).
+  vuelve al de origen (no actúa si el Enter abrió/cerró una ventana, si el campo desapareció o entró a una lista; cualquier otra tecla del usuario termina la vigilancia al instante).
   **Categorías:** Enter sin elegir de la lista guarda LO ESCRITO (no la primera parecida); de la lista se elige con ↓ + Enter.
 - **Reglas 7 y 8 (05/11/2026):** las flechas NUNCA cambian una opción (listas desplegables, grupos de opciones tipo radio, unidades…):
   solo mueven el selector; **Enter despliega o elige**. **Enter en una casilla = clic** (se marca y el selector se queda). Lo garantiza

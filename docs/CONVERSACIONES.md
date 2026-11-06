@@ -783,3 +783,4 @@
 - **Dueño:** *"¿recuerdas lo que pasaba al cerrar una ventana en Evicamp?"* + *"las primeras páginas están bien, a partir de la 6 pasa lo mismo en Inventario; verifica las otras secciones"* → Claude: es el parpadeo (arreglado en siumax, falta subirlo); probado en páginas 6 y 15 con la lista de Evicamp; Conteos tenía lo mismo (arreglado); las demás secciones bien (115).
 - **Dueño:** *"sí, súbelo"* → Claude: copia de fotos (318), deploy a todos sin tocar la base, copia después (320, ninguna perdida), sitios y Tienda Web verificados, merge a main y push (117).
 - **Dueño** (captura de Producir): *"en categoría no crea categorías o borra como en producto; ajustar eso"* → hecho (118). Solo siumax.
+- **Dueño** (captura): *"Guardar e ir a Lotes literalmente me lleva a Lotes; debería llevarme a la ventana de lotes para ponerle la cantidad; y Guardar debe cerrar la ventana"* → hecho; de paso, arreglo de la regla 9 (119). Solo siumax.
