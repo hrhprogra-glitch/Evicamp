@@ -46,7 +46,7 @@ page.on('dialog', async (d) => {
 
 try {
   console.log('1. Iniciando sesión en siumax...');
-  await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario');
   await page.focus('#input-login-usuario');
   await page.keyboard.type('admin@siumax.com');

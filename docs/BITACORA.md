@@ -7,6 +7,21 @@
 
 ---
 
+## 06/11/2026 (128) · Claude — Links ordenados: siumax.duckdns.org = Panel; pruebas en comerc.siumax y servic.siumax
+- **Dueño:** *"transformamos siumax.duckdns.org en el panel de control y usamos comerc siumax y servic siumax como pruebas, y para mis clientes primero el nombre de tienda y luego comerc siumax o servic siumax"*; *"panel.siumax.duckdns.org lo puedes desaparecer"*; *"sí, empieza"*.
+- **Hecho en el VPS** con `node ai-scripts/cliente.cjs ordenar-links` (nuevo `servidor/ordenar-links.sh`; respaldo de nginx en `/root/backups/ordenar-links-20261107-022103`; vuelve solo atrás si algo falla):
+  - `comerc.siumax.duckdns.org` = sistema de pruebas de Comerc (copia exacta de la config de antes: misma carpeta, base `siumax`, API 3001, límite de login, fotos y sugerencias). Mismos datos y usuarios.
+  - `servic.siumax.duckdns.org` = página "SiuMax Servic — en preparación" (`/var/www/servic/html`).
+  - `siumax.duckdns.org` = **Panel de Control** (+ "Mis sitios": Comerc, Servic, EviDiary). Sigue sirviendo `/actualizaciones/` y `/descargas/` (las apps de PC instaladas, también las de Evicamp, se actualizan desde ahí) y un `sw.js` que borra la copia sin internet que el navegador guardó del sistema de pruebas.
+  - `panel.siumax.duckdns.org` eliminado (config y certificado). Ese día el panel tenía 0 planes y 0 pagos: nada pendiente de Mercado Pago. Los avisos de pago ahora van a `siumax.duckdns.org/api/mercadopago/webhook` (el panel lo manda en cada cobro).
+  - Clientes nuevos: `<negocio>.comerc.siumax.duckdns.org` (`siuhub-lib.sh` `host_cliente`, `panel.py` `DOMINIO_CLIENTES`). Reservadas: `comerc servic evi evidiary`. No había ningún cliente creado.
+- **Código:** `siuhub-lib.sh` (TIPO_SISTEMA, host_cliente, certificado/sitio_con_certificado/ssl_de), `instalar-panel.sh`, `limitar-login.sh` y `activar-seguridad.sh` (archivo nginx `comerc`), `migrar-dominio.sh` bloqueado (deshacía el orden), `panel.py`/`index.html`, `cliente.cjs` (acción `ordenar-links`), `destinos.cjs` (`comerc` = alias de `siumax`), `escritorio/main.js` y `configurar.html` (sufijo `.comerc.siumax…`, **llega con el próximo instalador**), Tienda Web (link por defecto) y 68 pruebas apuntan a `comerc.siumax`.
+- **Verificado:** las 7 revisiones del script (Comerc abre y su API pide sesión 401, Servic, Panel, actualizaciones, Evicamp 200, EviDiary 200); desde la PC: `panel.siumax` ya no responde; Edge con teclado: login en comerc.siumax, Inventario con sus productos, panel pide su contraseña y muestra "Mis sitios"; 0 errores. **Evicamp, su base y su API no se tocaron; ninguna API se reinició** (solo recarga de nginx y reinicio del panel).
+- **El dueño debe saber:** iniciar sesión de nuevo en `comerc.siumax.duckdns.org`; si su app de PC de pruebas apuntaba a `siumax.duckdns.org`, ahora abre el panel (cambiarle el link). En Mercado Pago no hace falta cambiar nada (revisar Webhooks solo si alguna vez se configuró a mano).
+- **Sigue:** Fase 0 de SiuMax Servic en `D:/Programación/siumax/servicios` (con propuesta y OK). Pendientes de antes sin cambios: subir 118–126 con aviso; instalador nuevo de la app de PC (ahora también para el sufijo `.comerc.siumax`).
+
+---
+
 ## 06/11/2026 (127) · Claude — La visión de SiuMax pasa a la carpeta madre; Comerc terminado; sigue Servicios
 - **Dueño:** *"eso tendría que estar en la carpeta siumax, no dentro de comercio, porque comercio es una parte; voy a conectarme dentro de la carpeta siumax; crearé otra carpeta, servicios, que es la que haremos, ya que comercio terminamos (tiene para mejorar, pero lo importante ya está y ya haré producción, así que no habrá cambios significativos); avanzaremos con servicios"*.
 - **Movido:** `docs/TIPOS-DE-NEGOCIO.md` → `D:/Programación/siumax/TIPOS-DE-NEGOCIO.md` (con Servicios CONFIRMADO como el siguiente).

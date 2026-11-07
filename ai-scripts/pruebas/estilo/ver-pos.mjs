@@ -9,7 +9,7 @@ const nav = await puppeteer.launch({ executablePath: 'C:/Program Files (x86)/Mic
 const page = await nav.newPage(); const errores = []; page.on('pageerror', (e) => errores.push(e.message));
 
 console.log('Navegando a siumax...');
-await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
 await page.waitForSelector('#input-login-usuario');
 await page.type('#input-login-usuario', 'admin@siumax.com');
 await page.type('#input-login-password', process.env.SIUMAX_ADMIN_CLAVE);

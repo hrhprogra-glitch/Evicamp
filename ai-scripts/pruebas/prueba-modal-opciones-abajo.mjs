@@ -30,8 +30,8 @@ const nav = await puppeteer.launch({
 const page = await nav.newPage();
 
 try {
-  console.log('1. Abriendo siumax.duckdns.org...');
-  await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  console.log('1. Abriendo comerc.siumax.duckdns.org...');
+  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario', { timeout: 10000 });
   await page.focus('#input-login-usuario');
   await page.keyboard.type('admin@siumax.com');

@@ -1,8 +1,8 @@
 // Compila el sistema UNA vez y lo publica.
 // Uso:
-//   node ai-scripts/deploy.cjs siumax      -> solo SiuMax, tu sistema de pruebas (también acepta "siuhub")
+//   node ai-scripts/deploy.cjs siumax      -> solo tu sistema de pruebas de Comerc, comerc.siumax.duckdns.org (también acepta "comerc" y "siuhub")
 //   node ai-scripts/deploy.cjs evicamp     -> solo Evicamp
-//   node ai-scripts/deploy.cjs clientes    -> todos los clientes nuevos (*.siumax.duckdns.org)
+//   node ai-scripts/deploy.cjs clientes    -> todos los clientes nuevos (*.comerc.siumax.duckdns.org)
 //   node ai-scripts/deploy.cjs todos       -> Evicamp + SiuMax + clientes
 //   (sin argumento = evicamp, como antes)
 const { NodeSSH } = require('node-ssh');

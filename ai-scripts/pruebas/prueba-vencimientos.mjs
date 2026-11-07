@@ -26,7 +26,7 @@ const nombresVisibles = () => page.evaluate((tag) => [...document.querySelectorA
 const filtrar = async (valor) => { await page.select('#filtro-estado-inventario', valor); await pausa(800); };
 const buscar = async () => { await page.focus('#buscador-global-inventario'); await page.keyboard.down('Control'); await page.keyboard.press('a'); await page.keyboard.up('Control'); await page.keyboard.type(TAG); await pausa(800); };
 try {
-  await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario'); await page.focus('#input-login-usuario'); await page.keyboard.type('admin@siumax.com');
   await page.focus('#input-login-password'); await page.keyboard.type(process.env.SIUMAX_ADMIN_CLAVE); await page.keyboard.press('Enter');
   await page.waitForSelector('#sidebar-btn-inventario', { timeout: 20000 }); await pausa(18000); // precarga

@@ -1,12 +1,15 @@
 #!/bin/bash
-# Instala o actualiza el Panel de Control en panel.siumax.duckdns.org. Se puede repetir sin problema.
+# Instala o actualiza el Panel de Control en siumax.duckdns.org. Se puede repetir sin problema.
+# (Hasta el 06/11/2026 estaba en panel.siumax.duckdns.org y siumax.duckdns.org era el sistema de pruebas.)
 # Los archivos del panel ya fueron copiados a /opt/siuhub/panel por ai-scripts/cliente.cjs.
 # La primera vez: PANEL_CLAVE='...' instalar-panel.sh   (después la clave no hace falta)
 set -euo pipefail
 source /opt/siuhub/siuhub-lib.sh
 
-HOST="panel.$DOMINIO_BASE"
+HOST="$DOMINIO_BASE"
 PANEL="$DIR_SIUMAX/panel"
+WEB_PANEL="/var/www/siumax-panel"     # archivos sueltos que nginx sirve en el link del panel
+WEB_PRUEBAS="/var/www/siuhub/html"     # sistema de pruebas de Comerc: ahí viven actualizaciones/ y descargas/
 chmod 700 "$PANEL"
 
 if [ -n "${PANEL_CLAVE:-}" ]; then
@@ -37,31 +40,46 @@ systemctl is-active --quiet siuhub-panel
 
 echo "== Link $HOST con HTTPS"
 ARCHIVO=/etc/nginx/sites-available/siuhub-panel
-if [ ! -f "/etc/letsencrypt/live/$HOST/fullchain.pem" ]; then
-  cat > "$ARCHIVO" <<EOF
-server {
-    listen 80;
-    server_name $HOST;
-    root /var/www/html;
-}
+sitio_con_certificado siuhub-panel "$HOST"
+
+# Antes, en este link estaba el sistema de pruebas, que el navegador guardó para usarlo sin internet
+# (service worker). Este sw.js lo borra solo la próxima vez que se abra el link, para que se vea el panel.
+mkdir -p "$WEB_PANEL"
+cat > "$WEB_PANEL/sw.js" <<'EOF'
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    for (const nombre of await caches.keys()) await caches.delete(nombre);
+    await self.registration.unregister();
+    for (const cliente of await self.clients.matchAll({ type: 'window' })) cliente.navigate(cliente.url);
+  })());
+});
 EOF
-  ln -sf "$ARCHIVO" /etc/nginx/sites-enabled/siuhub-panel
-  recargar_nginx
-  certbot certonly --nginx -d "$HOST" --non-interactive --agree-tos --keep-until-expiring > /dev/null
-fi
+chown -R www-data:www-data "$WEB_PANEL"
+
 cat > "$ARCHIVO" <<EOF
 # SiuMax - Panel de Control (generado por instalar-panel.sh)
 server {
     listen 443 ssl;
     server_name $HOST;
 
-    ssl_certificate /etc/letsencrypt/live/$HOST/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/$HOST/privkey.pem;
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+$(ssl_de "$HOST")
 
     client_max_body_size 32k;
     add_header Strict-Transport-Security "max-age=31536000" always;
+
+    # Las apps de escritorio instaladas (también las de Evicamp) buscan aquí sus actualizaciones: NO QUITAR
+    location /actualizaciones/ {
+        alias $WEB_PRUEBAS/actualizaciones/;
+    }
+    location /descargas/ {
+        alias $WEB_PRUEBAS/descargas/;
+    }
+    location = /sw.js {
+        alias $WEB_PANEL/sw.js;
+        default_type application/javascript;
+        add_header Cache-Control "no-store" always;
+    }
 
     location / {
         proxy_pass http://127.0.0.1:3090;

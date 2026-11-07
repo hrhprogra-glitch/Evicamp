@@ -7,7 +7,7 @@ const require = createRequire(path.join(tools, 'x.js'));
 const puppeteer = require('puppeteer-core');
 process.loadEnvFile(envVps);
 const CLAVE = process.env.SIUMAX_ADMIN_CLAVE;
-const URL = 'https://siumax.duckdns.org';
+const URL = 'https://comerc.siumax.duckdns.org';
 const DOC = 'F001-PRUEBALOTE-' + Date.now().toString().slice(-5);
 
 const resultados = [];

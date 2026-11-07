@@ -1,7 +1,7 @@
 // Activa el buscador de fotos (Pixabay) en el servidor, para el formulario de producto.
 // Uso:
-//   node ai-scripts/imagenes-servidor.cjs siumax            -> solo el sitio de pruebas
-//   node ai-scripts/imagenes-servidor.cjs siumax evicamp    -> varios sitios (nombres de /etc/nginx/sites-available)
+//   node ai-scripts/imagenes-servidor.cjs comerc            -> solo el sitio de pruebas de Comerc
+//   node ai-scripts/imagenes-servidor.cjs comerc evicamp    -> varios sitios (nombres de /etc/nginx/sites-available)
 //
 // La clave se lee de .env.vps (PIXABAY_KEY=...) y se escribe SOLO en el servidor
 // (/etc/nginx/snippets/siumax-imagenes.conf, permisos 600): nunca va al navegador, al código ni a git.
@@ -14,7 +14,7 @@ const { conexionVps } = require('./vps.cjs');
 
 const sitios = process.argv.slice(2);
 if (!sitios.length || sitios.some((s) => !/^[a-z0-9-]+$/.test(s))) {
-  console.error('Uso: node ai-scripts/imagenes-servidor.cjs <sitio> [sitio...]   (ej: siumax)');
+  console.error('Uso: node ai-scripts/imagenes-servidor.cjs <sitio> [sitio...]   (ej: comerc)');
   process.exit(1);
 }
 

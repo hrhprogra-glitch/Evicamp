@@ -15,7 +15,7 @@ const { conexionVps } = require('../vps.cjs');
 process.loadEnvFile(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../.env.vps'));
 
 const PFX = process.argv[2];
-const SITIO = 'https://siumax.duckdns.org';
+const SITIO = 'https://comerc.siumax.duckdns.org';
 const PROD = 9100000000051;
 const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
 let fallas = 0;

@@ -63,9 +63,17 @@
   - **La visión completa (los 7 tipos con todos sus negocios) está en la carpeta madre: `D:/Programación/siumax/TIPOS-DE-NEGOCIO.md`** (y las reglas comunes a todos los sistemas en `D:/Programación/siumax/CLAUDE.md`). El dueño: *"en sí SiuMax va a ser eso"*.
   - No proponer el selector de familia en el panel hasta que exista una segunda familia.
 - **Evicamp** es la primera clienta (no es el nombre del producto). Sitio: `evicamp.duckdns.org`.
-- **siumax** es el sistema de pruebas: `siumax.duckdns.org`, usuario `admin@siumax.com`. La clave está en `.env.vps` (`SIUMAX_ADMIN_CLAVE`).
-- **Clientes nuevos:** `<slug>.siumax.duckdns.org`, cada uno con su base `cli_<slug>`. Al 27/10/2026 no hay ninguno.
-- **Panel de control:** `panel.siumax.duckdns.org` (`servidor/panel/panel.py`).
+- **Orden de los links (desde el 06/11/2026, `servidor/ordenar-links.sh`):** `siumax.duckdns.org` = Panel de Control;
+  `<tipo>.siumax.duckdns.org` = pruebas de cada sistema; `<negocio>.<tipo>.siumax.duckdns.org` = clientes. `panel.siumax`
+  ya NO existe. `evi.siumax.duckdns.org` es EviDiary (proyecto aparte del dueño, `D:\Programación\evi`): no tocarlo.
+- **siumax** es el sistema de pruebas: **`comerc.siumax.duckdns.org`** (base `siumax`, API 3001, carpeta `/var/www/siuhub/html`,
+  nginx `sites-available/comerc`), usuario `admin@siumax.com`. La clave está en `.env.vps` (`SIUMAX_ADMIN_CLAVE`).
+  En los scripts se sigue llamando `siumax` (también acepta `comerc`): `deploy.cjs siumax`.
+- **Pruebas de SiuMax Servic:** `servic.siumax.duckdns.org` (por ahora solo una página "en preparación", `/var/www/servic/html`).
+- **Clientes nuevos:** `<slug>.comerc.siumax.duckdns.org`, cada uno con su base `cli_<slug>`. Al 06/11/2026 no hay ninguno.
+- **Panel de control:** `siumax.duckdns.org` (`servidor/panel/panel.py`; nginx `sites-available/siuhub-panel`).
+  - **`siumax.duckdns.org/actualizaciones/` debe seguir sirviéndose SIEMPRE:** las apps de PC instaladas (también las de
+    Evicamp) buscan ahí sus actualizaciones. Lo sirve el bloque del panel (`instalar-panel.sh`).
   - Da de alta clientes y cobra con **Mercado Pago (cobro REAL activado)**.
   - Suspende a los 5 días de vencido. No tocarlo por ahora.
 - **App de PC:** Electron (`escritorio/`), con actualización automática (`node ai-scripts/build-escritorio.cjs generico --nueva-version`). Carga el sistema desde el servidor, así que los cambios de pantalla no necesitan un .exe nuevo. No cambiar el `name` del manifest ("SiuMax"): la app lo verifica.
@@ -193,6 +201,10 @@
 41. **Cambiar una tabla compartida sin mirar quién más la usa** (04/11/2026): `TablaMovimientos` la usan Finanzas (caja actual) y `ModalDetalleCaja` (detalle de una caja pasada). Al darle paginación hay que revisar el teclado en los dos lugares (`graphify explain "TablaMovimientos"` muestra quién la importa).
 46. **La trampa de foco de ventanas bloqueaba el teclado en la ventana de impresión nativa (AnyDesk Printer / Chromium)** (04/11/2026): `ventanas.ts` escucha `focusout` y en `luego(0)` forzaba el foco a la web de SiuMax. Al abrirse la ventana de impresión, Chromium perdía el foco y el selector no dejaba presionar Imprimir o Cancelar. Solución: sincronizar flag `estaImprimiendo()` con `beforeprint` y `afterprint` para pausar la trampa de foco durante la impresión.
 47. **No usar `display: flex` directo sobre un `<td>` en tablas HTML (`hidden md:flex`)** (04/11/2026): convierte la celda en contenedor flex perdiendo su display `table-cell`, lo que desalinea la celda respecto al `<th>` de la cabecera (el botón de acciones salía pegado a la derecha). Usar siempre `hidden md:table-cell` y envolver el botón dentro de `<div className="flex items-center justify-center">`.
+49. **Cambiar de link un sitio que tenía la app guardada sin internet** (06/11/2026): el navegador guarda el sistema
+    (service worker `sw.js`) por link; si en ese link se pone otra cosa, seguiría mostrando la copia vieja. Al pasar
+    `siumax.duckdns.org` a Panel se sirve un `sw.js` que borra esa copia y se da de baja solo (`instalar-panel.sh`).
+    El navegador también pide iniciar sesión de nuevo en el link nuevo (las sesiones y copias van por link).
 48. **Un 401 que no era de sesión sacaba al usuario** (05/11/2026): en siumax `fn_edit_batch` y `fn_soft_delete_batch` no tenían EXECUTE para `anon` (en Evicamp sí); PostgREST responde 401 a "permission denied" del rol anon y `supabase.ts` cerraba la sesión con cualquier 401 → al guardar un lote el dueño salía al login. Arreglo: GRANT en `seguridad-sesion.sql` y solo el código `PT401` cierra la sesión. Para buscar algo así: `grep " 401 " /var/log/nginx/access.log` y `permission denied` en el log de PostgreSQL; revisar con `has_function_privilege('anon', oid, 'EXECUTE')` las funciones que llama el sistema.
 49. **Unidades de un costo: por unidad vs. por lote** (05/11/2026): `products.costo_adicional_produccion` es POR UNIDAD, pero `fn_producir_receta(p_costo_adicional)` lo recibe por TODO el lote; la ventana vieja mandaba el de una unidad. Al pasar un costo entre pantalla y función, revisar qué unidad espera cada lado.
 50. **No reescribir datos hijos que se cargan aparte** (05/11/2026): Nuevo producto borraba y volvía a insertar `product_recipes` con lo que tenía en memoria; si se guardaba antes de que terminaran de cargar, la receta quedaba vacía. Una pantalla solo debe escribir lo que de verdad edita.

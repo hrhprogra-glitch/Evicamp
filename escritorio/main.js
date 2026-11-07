@@ -9,7 +9,7 @@ const { autoUpdater } = require('electron-updater');
 
 const REVISAR_ACTUALIZACION_MS = 6 * 60 * 60 * 1000;
 
-const DOMINIO_CLIENTES = 'siumax.duckdns.org';
+const DOMINIO_CLIENTES = 'comerc.siumax.duckdns.org';   // clientes: <negocio>.comerc.siumax.duckdns.org (desde el 06/11/2026)
 
 // Preferencias de la PC (link del negocio e impresora). Se guardan en la carpeta de datos del usuario.
 const archivoConfig = () => path.join(app.getPath('userData'), 'config.json');

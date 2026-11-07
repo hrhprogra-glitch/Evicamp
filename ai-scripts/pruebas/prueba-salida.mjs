@@ -30,7 +30,7 @@ const aviso = () => page.evaluate(() => document.getElementById('dialogo-sistema
 const buscar = async (codigo) => { await page.waitForSelector('#input-buscar-ajuste'); await page.focus('#input-buscar-ajuste'); await page.keyboard.type(codigo, { delay: 15 }); await pausa(300); await tecla('Enter'); await pausa(900); };
 const borrarYEscribir = async (t) => { await page.keyboard.down('Control'); await page.keyboard.press('a'); await page.keyboard.up('Control'); await page.keyboard.type(t); };
 try {
-  await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario'); await page.focus('#input-login-usuario'); await page.keyboard.type('admin@siumax.com');
   await page.focus('#input-login-password'); await page.keyboard.type(process.env.SIUMAX_ADMIN_CLAVE); await page.keyboard.press('Enter');
   await page.waitForSelector('#sidebar-btn-conteos', { timeout: 20000 }); await pausa(20000); // precarga

@@ -1,6 +1,6 @@
 // ai-scripts/pruebas/prueba-fase8-ui.mjs
 // Prueba UI completa Fase 8 en siumax con Puppeteer:
-// 1. Iniciar sesión en siumax.duckdns.org
+// 1. Iniciar sesión en comerc.siumax.duckdns.org
 // 2. Crear datos de prueba (Insumo con lote, Producto Receta y Producto Combo)
 // 3. Ir a Inventario y verificar botón [ + Producir ] en el header
 // 4. Abrir ModalProduccion con el botón o con el icono de chef en la fila de un producto con receta
@@ -102,7 +102,7 @@ try {
   ok('Datos de prueba creados (Insumo Harina 50kg, Paneton Receta, Combo Desayuno)', true);
 
   console.log('2. Iniciando sesión en siumax...');
-  await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario', { timeout: 15000 });
   await page.focus('#input-login-usuario');
   await page.keyboard.type('admin@siumax.com');

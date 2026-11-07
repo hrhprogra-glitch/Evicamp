@@ -1,6 +1,6 @@
 # Pruebas con teclado (siumax)
 
-Pruebas automáticas que usan solo el teclado sobre https://siumax.duckdns.org (nunca sobre Evicamp).
+Pruebas automáticas que usan solo el teclado sobre https://comerc.siumax.duckdns.org (nunca sobre Evicamp).
 
 - **Requisitos:** Node, Microsoft Edge y `puppeteer-core` instalado en una carpeta "tools" (`npm i puppeteer-core` dentro de ella).
 - **Uso típico:** `node ai-scripts/pruebas/prueba-salida.mjs <carpeta tools> <carpeta del proyecto>`

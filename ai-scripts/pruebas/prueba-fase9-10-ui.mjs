@@ -90,7 +90,7 @@ try {
   ok('Datos de prueba creados (Arroz Costeño 100 unds en Tienda Principal, Catálogo Activo)', true);
 
   console.log('--- 2. INICIANDO SESIÓN EN SIUMAX ---');
-  await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario', { timeout: 15000 });
   await page.focus('#input-login-usuario');
   await page.keyboard.type('admin@siumax.com');
@@ -223,7 +223,7 @@ try {
 
   console.log('--- 6. FASE 10: TIENDA WEB PÚBLICA (PC DESKTOP VIEW) ---');
   // Navegar a la Tienda Web pública como cliente (pantalla de 1280x800)
-  await page.goto('https://siumax.duckdns.org/#/tienda', { waitUntil: 'networkidle2' });
+  await page.goto('https://comerc.siumax.duckdns.org/#/tienda', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#tienda-navbar', { timeout: 15000 });
   ok('Tienda Web carga en modo público (#/tienda)', true);
   await pausa(1500);
@@ -287,7 +287,7 @@ try {
 
   console.log('--- 7. FASE 10: TIENDA WEB EN MÓVIL (MOBILE VIEW 375x667) ---');
   await page.setViewport({ width: 375, height: 667, isMobile: true });
-  await page.goto('https://siumax.duckdns.org/#/tienda', { waitUntil: 'networkidle2' });
+  await page.goto('https://comerc.siumax.duckdns.org/#/tienda', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#tienda-navbar', { timeout: 15000 });
   await pausa(1500);
 

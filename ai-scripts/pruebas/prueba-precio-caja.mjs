@@ -31,7 +31,7 @@ const errores = [];
 const entrar = async (correo, clave) => {
   const ctx = await nav.createBrowserContext(); const page = await ctx.newPage();
   page.on('pageerror', (e) => errores.push(e.message));
-  await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario'); await page.focus('#input-login-usuario'); await page.keyboard.type(correo);
   await page.focus('#input-login-password'); await page.keyboard.type(clave); await page.keyboard.press('Enter');
   await page.waitForSelector('#sidebar-btn-pos', { timeout: 20000 }); await pausa(2500);

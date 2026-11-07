@@ -10,6 +10,8 @@
 //   node ai-scripts/cliente.cjs panel                                      -> instala/actualiza el Panel de Control
 //     (la primera vez usa PANEL_CLAVE de .env.vps como contraseña del panel)
 //     Mercado Pago: modo prueba con MP_ACCESS_TOKEN_PRUEBA; cobro real SOLO si .env.vps tiene MP_COBRAR=si
+//   node ai-scripts/cliente.cjs ordenar-links                              -> panel en siumax.duckdns.org, pruebas en
+//     comerc.siumax / servic.siumax y borra panel.siumax (06/11/2026; repetir no daña; no toca Evicamp ni bases)
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
@@ -45,8 +47,19 @@ const subirScripts = async (ssh) => {
   }
 };
 
+const subirPanel = async (ssh) => {
+  const dirPanel = path.join(DIR_LOCAL, 'panel');
+  await ssh.execCommand(`mkdir -p ${DIR_REMOTO}/panel`);
+  for (const archivo of fs.readdirSync(dirPanel)) {
+    const contenido = fs.readFileSync(path.join(dirPanel, archivo), 'utf8').replace(/\r\n/g, '\n');
+    await ssh.execCommand(`cat > ${DIR_REMOTO}/panel/${archivo}`, { stdin: contenido });
+  }
+  // Logo de SiuMax: se sube en binario desde la misma imagen que usa el sistema
+  await ssh.putFile(path.join(__dirname, '..', 'src', 'assets', 'logo.png'), `${DIR_REMOTO}/panel/logo.png`);
+};
+
 (async () => {
-  const validos = ['instalar', 'nuevo', 'listar', 'suspender', 'activar', 'backup', 'panel', 'seguridad'];
+  const validos = ['instalar', 'nuevo', 'listar', 'suspender', 'activar', 'backup', 'panel', 'seguridad', 'ordenar-links'];
   if (!validos.includes(accion)) {
     console.error(fs.readFileSync(__filename, 'utf8').split('\n').filter((l) => l.startsWith('//')).join('\n'));
     process.exit(1);
@@ -74,20 +87,19 @@ const subirScripts = async (ssh) => {
       // La clave va como variable de entorno, no como argumento del script
       // El instalador de PC genérico se copia solo dentro de nuevo-cliente.sh
       await ejecutar(ssh, `CLAVE_ADMIN=${q(clave)} ${DIR_REMOTO}/nuevo-cliente.sh ${q(slug)} ${q(negocio)} ${q(correo)}`);
-      console.log(`\nCliente listo: https://${slug}.siumax.duckdns.org  |  usuario: ${correo.toLowerCase()}`);
+      console.log(`\nCliente listo: https://${slug}.comerc.siumax.duckdns.org  |  usuario: ${correo.toLowerCase()}`);
+      return;
+    }
+
+    if (accion === 'ordenar-links') {
+      await subirPanel(ssh);
+      await ejecutar(ssh, `${DIR_REMOTO}/ordenar-links.sh`);
       return;
     }
 
     if (accion === 'panel') {
-      const dirPanel = path.join(DIR_LOCAL, 'panel');
-      await ssh.execCommand(`mkdir -p ${DIR_REMOTO}/panel`);
-      for (const archivo of fs.readdirSync(dirPanel)) {
-        const contenido = fs.readFileSync(path.join(dirPanel, archivo), 'utf8').replace(/\r\n/g, '\n');
-        await ssh.execCommand(`cat > ${DIR_REMOTO}/panel/${archivo}`, { stdin: contenido });
-      }
+      await subirPanel(ssh);
       // Contraseña del panel: solo hace falta la primera vez (o para cambiarla). Vive en .env.vps.
-      // Logo de SiuMax: se sube en binario desde la misma imagen que usa el sistema
-      await ssh.putFile(path.join(__dirname, '..', 'src', 'assets', 'logo.png'), `${DIR_REMOTO}/panel/logo.png`);
       const clave = process.env.PANEL_CLAVE;
       await ejecutar(ssh, `${clave ? `PANEL_CLAVE=${q(clave)} ` : ''}${DIR_REMOTO}/instalar-panel.sh`);
       // Mercado Pago: el cobro REAL solo se activa a propósito, con MP_COBRAR=si en .env.vps

@@ -2,6 +2,7 @@
 # Activa la protección por sesión en la API de un sistema: cada pedido debe traer una sesión válida
 # (ver sql/seguridad-sesion.sql). Antes hace un backup de la base.
 # Uso: activar-seguridad.sh <evicamp|siumax|clientes|link-cliente> [--quitar]
+#   siumax (o comerc) -> el sistema de pruebas de Comerc (comerc.siumax.duckdns.org, base siumax)
 #   clientes  -> todos los clientes del registro
 #   --quitar  -> vuelve atrás al instante (la API deja de exigir sesión)
 set -euo pipefail
@@ -40,7 +41,7 @@ uno() { # uno <nombre> <base> <conf> <servicio> <nginx>
 
 case "$OBJETIVO" in
   evicamp) uno Evicamp postgres /etc/postgrest.conf postgrest /etc/nginx/sites-available/evicamp ;;
-  siumax)  uno SiuMax siumax /etc/postgrest_siuhub.conf postgrest_siuhub /etc/nginx/sites-available/siumax ;;
+  siumax|comerc) uno SiuMax siumax /etc/postgrest_siuhub.conf postgrest_siuhub /etc/nginx/sites-available/comerc ;;
   clientes)
     while IFS=$'\t' read -r slug _ _ _ _; do
       [ -n "$slug" ] && uno "$slug" "$(base_cliente "$slug")" "$DIR_CONF_CLIENTES/$slug.conf" "postgrest-cliente@$slug" "/etc/nginx/sites-available/cli-$slug"

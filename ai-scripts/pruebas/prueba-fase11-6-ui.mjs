@@ -13,7 +13,7 @@ const { NodeSSH } = require('node-ssh');
 const { conexionVps } = require('../vps.cjs');
 process.loadEnvFile(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../.env.vps'));
 
-const SITIO = 'https://siumax.duckdns.org';
+const SITIO = 'https://comerc.siumax.duckdns.org';
 const P = [9100000000041, 9100000000042, 9100000000043];
 const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
 let fallas = 0;

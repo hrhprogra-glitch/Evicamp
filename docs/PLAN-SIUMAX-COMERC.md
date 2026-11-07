@@ -5,7 +5,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 06/11/2026 (127), Claude: la visión de SiuMax pasó a la carpeta madre (`siumax/TIPOS-DE-NEGOCIO.md` + `siumax/CLAUDE.md`); Comerc terminado en lo importante; sigue Servicios. Pendiente subir 118–126 con aviso.
+- **Última actualización:** 06/11/2026 (128), Claude: **links ordenados en el VPS**: `siumax.duckdns.org` = Panel de Control; pruebas de Comerc en **`comerc.siumax.duckdns.org`** (mismos datos); `servic.siumax.duckdns.org` reservado para Servic; clientes `<negocio>.comerc.siumax.duckdns.org`; `panel.siumax` eliminado. Evicamp intacto. Pendiente subir 118–126 con aviso.
+- (127) 06/11/2026, Claude: la visión de SiuMax pasó a la carpeta madre (`siumax/TIPOS-DE-NEGOCIO.md` + `siumax/CLAUDE.md`); Comerc terminado en lo importante; sigue Servicios.
 - (126) 06/11/2026, Claude: Nuevo ajuste, Enter hace su acción y el selector se queda. Solo siumax.
 - (125) 06/11/2026, Claude: Nuevo ajuste sin "Automático", lista de lotes sin taparse y alto suave (AlturaSuave). Solo siumax.
 - (124) 06/11/2026, Claude: ticket impreso igual que la vista previa (estilos copiados, 72 mm; largo en la app de escritorio con el próximo instalador) y animación suave en Nuevo ajuste. Solo siumax.
@@ -95,7 +96,7 @@
 ## 1. Qué es
 SiuMax Comerc es un sistema de punto de venta para minoristas (bodegas, ferreterías, librerías, farmacias…) y negocios
 que venden a empresas. El primer cliente en producción es **Evicamp** (https://evicamp.duckdns.org). El sitio de pruebas
-es **siumax** (https://siumax.duckdns.org).
+es **siumax** (https://comerc.siumax.duckdns.org; hasta el 06/11/2026 era siumax.duckdns.org, que ahora es el Panel de Control).
 
 - **Pantallas:** React + Vite + TypeScript (`src/`).
 - **Servidor:** PostgREST + PostgreSQL en un VPS.
