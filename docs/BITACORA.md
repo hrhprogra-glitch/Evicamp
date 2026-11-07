@@ -7,6 +7,15 @@
 
 ---
 
+## 06/11/2026 (127) · Claude — La visión de SiuMax pasa a la carpeta madre; Comerc terminado; sigue Servicios
+- **Dueño:** *"eso tendría que estar en la carpeta siumax, no dentro de comercio, porque comercio es una parte; voy a conectarme dentro de la carpeta siumax; crearé otra carpeta, servicios, que es la que haremos, ya que comercio terminamos (tiene para mejorar, pero lo importante ya está y ya haré producción, así que no habrá cambios significativos); avanzaremos con servicios"*.
+- **Movido:** `docs/TIPOS-DE-NEGOCIO.md` → `D:ProgramaciónsiumaxTIPOS-DE-NEGOCIO.md` (con Servicios CONFIRMADO como el siguiente).
+- **Nuevo `D:ProgramaciónsiumaxCLAUDE.md`:** una sesión abierta en la carpeta madre NO tiene la memoria de Claude de `comercio` (la memoria va por carpeta). Ese archivo le da: qué es cada carpeta (comercio, servicios, bot-whatsapp, videos), las reglas del dueño que valen para todos los sistemas (español, OK explícito, no subir/push sin aviso, Evicamp no paga, seguridad, SiuMax Sobrio sin curvas, reglas del selector, no quitar sin revisar, memoria compartida con Antigravity, graphify) y dónde están las reglas y la memoria de Comerc.
+- **Estado de Comerc:** terminado en lo importante y en producción; mejoras pequeñas cuando el dueño las pida. La carpeta `servicios` la crea el dueño. Base de Servicios: `D:Programacióneco-sistema`.
+- Pendiente de subir a Evicamp/clientes/GitHub (esperar aviso): 118–126 (categorías en Producir, Guardar/Ir a Lotes, gastos extra por lote, separador de miles, Armar producto, cabeceras en una fila, sin listas de abajo, ticket impreso, animaciones, Enter en Nuevo ajuste). El arreglo del largo del ticket en `escritorio/main.js` requiere instalador nuevo.
+
+---
+
 ## 06/11/2026 (126) · Claude — Nuevo ajuste: Enter hace su acción y el selector se queda (solo siumax)
 - **Dueño:** *"perfecto, bien hecho, pero el Enter pasa al siguiente selector; arregla eso"*. (La regla general de 116 no alcanzaba: los saltos ocurrían después de esperar al servidor, fuera de los 400 ms, o desde botones.)
 - `ModalAjuste.tsx`: elegir lote → vuelve al selector de lote (antes a la cantidad); Enter en el conteo / Continuar → calcula y se queda en el conteo (antes al motivo); Enter en la cantidad de la salida / Continuar → revisa y se queda (↓ sigue bajando al motivo); Enter en un motivo → lo marca y se queda (antes a la justificación); Enter en la justificación → se queda (antes a Guardar). Elegir el producto sí pasa al conteo porque el buscador desaparece.

@@ -1,11 +1,12 @@
 # Plan de SiuMax Comerc: estado, fases y forma de trabajo
 
 > Documento para continuar el trabajo con **cualquier IA o programador**. Léelo completo antes de tocar el código.
-> **Visión de SiuMax (los 7 tipos de negocio, un sistema por tipo):** `docs/TIPOS-DE-NEGOCIO.md`. Este plan es solo del tipo 1, Comercio.
+> **Visión de SiuMax (los 7 tipos de negocio, un sistema por tipo):** `D:ProgramaciónsiumaxTIPOS-DE-NEGOCIO.md` (carpeta madre). Este plan es solo del tipo 1, Comercio. **Comerc está terminado en lo importante y en producción (06/11/2026); lo siguiente es SiuMax Servicios en `D:Programaciónsiumaxservicios`.**
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 06/11/2026 (126), Claude: Nuevo ajuste, Enter hace su acción y el selector se queda. Solo siumax.
+- **Última actualización:** 06/11/2026 (127), Claude: la visión de SiuMax pasó a la carpeta madre (`siumax/TIPOS-DE-NEGOCIO.md` + `siumax/CLAUDE.md`); Comerc terminado en lo importante; sigue Servicios. Pendiente subir 118–126 con aviso.
+- (126) 06/11/2026, Claude: Nuevo ajuste, Enter hace su acción y el selector se queda. Solo siumax.
 - (125) 06/11/2026, Claude: Nuevo ajuste sin "Automático", lista de lotes sin taparse y alto suave (AlturaSuave). Solo siumax.
 - (124) 06/11/2026, Claude: ticket impreso igual que la vista previa (estilos copiados, 72 mm; largo en la app de escritorio con el próximo instalador) y animación suave en Nuevo ajuste. Solo siumax.
 - (123) 06/11/2026, Claude: sin listas de abajo en Armar producto y Nuevo ajuste (ventanas a la medida). Solo siumax.
