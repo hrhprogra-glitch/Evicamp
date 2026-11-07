@@ -1,7 +1,7 @@
 # Plan de SiuMax Comerc: estado, fases y forma de trabajo
 
 > Documento para continuar el trabajo con **cualquier IA o programador**. Léelo completo antes de tocar el código.
-> **Visión de SiuMax (los 7 tipos de negocio, un sistema por tipo):** `D:ProgramaciónsiumaxTIPOS-DE-NEGOCIO.md` (carpeta madre). Este plan es solo del tipo 1, Comercio. **Comerc está terminado en lo importante y en producción (06/11/2026); lo siguiente es SiuMax Servicios en `D:Programaciónsiumaxservicios`.**
+> **Visión de SiuMax (los 7 tipos de negocio, un sistema por tipo):** `D:/Programación/siumax/TIPOS-DE-NEGOCIO.md` (carpeta madre). Este plan es solo del tipo 1, Comercio. **Comerc está terminado en lo importante y en producción (06/11/2026); lo siguiente es SiuMax Servicios en `D:/Programación/siumax/servicios`.**
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)

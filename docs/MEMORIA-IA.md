@@ -60,7 +60,7 @@
 ## 2. El producto
 - **SiuMax** es la marca. Este sistema es **SiuMax Comerc** (minoristas + venta a empresas).
   - Habrá un sistema separado por familia: Restaurantes, Talleres, Citas, Membresías, Alquileres y Hospedaje.
-  - **La visión completa (los 7 tipos con todos sus negocios) está en la carpeta madre: `D:ProgramaciónsiumaxTIPOS-DE-NEGOCIO.md`** (y las reglas comunes a todos los sistemas en `D:ProgramaciónsiumaxCLAUDE.md`). El dueño: *"en sí SiuMax va a ser eso"*.
+  - **La visión completa (los 7 tipos con todos sus negocios) está en la carpeta madre: `D:/Programación/siumax/TIPOS-DE-NEGOCIO.md`** (y las reglas comunes a todos los sistemas en `D:/Programación/siumax/CLAUDE.md`). El dueño: *"en sí SiuMax va a ser eso"*.
   - No proponer el selector de familia en el panel hasta que exista una segunda familia.
 - **Evicamp** es la primera clienta (no es el nombre del producto). Sitio: `evicamp.duckdns.org`.
 - **siumax** es el sistema de pruebas: `siumax.duckdns.org`, usuario `admin@siumax.com`. La clave está en `.env.vps` (`SIUMAX_ADMIN_CLAVE`).
