@@ -172,7 +172,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
   };
   const elegirLote = (l: Lote | null) => {
     setLote(l); setLotesAbierto(false);
-    enfocar(campoDespuesDelLote);
+    enfocar('lote-ajuste-elegido'); // Enter = clic: el selector vuelve al lote (no pasa a la cantidad)
   };
 
   const cambiarModo = (m: Modo) => {
@@ -308,7 +308,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
       if (dif === 0) { await guardarConteo(0); return; }
       setDiferencia(dif);
       setMotivo('');
-      enfocar('motivo-ajuste-0');
+      enfocar('input-contado'); // se queda en el conteo (Continuar desaparece); al motivo se baja con ↓
     } finally {
       calculando.current = false;
       setCalculandoEstado(false);
@@ -543,7 +543,8 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                       onChange={(e) => setCantidad(e.target.value)}
                       onFocus={(e) => e.currentTarget.select()}
                       onKeyDown={async (e) => {
-                        if (e.key === 'Enter' || e.key === 'ArrowDown') {
+                        if (e.key === 'Enter') { e.preventDefault(); await revisarCantidad(); } // revisa y se queda
+                        else if (e.key === 'ArrowDown') {
                           e.preventDefault();
                           if (await revisarCantidad()) enfocar(`motivo-ajuste-${Math.max(0, motivos.indexOf(motivo))}`);
                         } else if (e.key === 'ArrowRight') {
@@ -556,9 +557,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                     <button
                       id="btn-confirmar-salida"
                       type="button"
-                      onClick={async () => {
-                        if (await revisarCantidad()) enfocar(`motivo-ajuste-${Math.max(0, motivos.indexOf(motivo))}`);
-                      }}
+                      onClick={() => void revisarCantidad()} // revisa y el selector se queda en Continuar
                       onKeyDown={(e) => {
                         if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('input-cantidad-ajuste')?.focus(); }
                         else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(campoAntesDeCantidad())?.focus(); }
@@ -613,7 +612,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                     onChange={(e) => setContado(e.target.value)}
                     onFocus={(e) => e.currentTarget.select()}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') { e.preventDefault(); if (diferencia === null) void calcular(); else enfocar('motivo-ajuste-0'); }
+                      if (e.key === 'Enter') { e.preventDefault(); if (diferencia === null) void calcular(); }
                       else if (e.key === 'ArrowRight' && diferencia === null) { e.preventDefault(); document.getElementById('btn-confirmar-contado')?.focus(); }
                       else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(campoAntesDeCantidad())?.focus(); }
                       else if (e.key === 'ArrowDown' && diferencia !== null) { e.preventDefault(); document.getElementById('motivo-ajuste-0')?.focus(); }
@@ -677,7 +676,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                         role="option"
                         aria-selected={motivo === m}
                         data-motivo-ajuste="true"
-                        onClick={() => { setMotivo(m); enfocar('input-justificacion-ajuste'); }}
+                        onClick={() => setMotivo(m)} // Enter = clic: lo marca y el selector se queda
                         onKeyDown={(e) => {
                           if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById(`motivo-ajuste-${(i + 1) % motivos.length}`)?.focus(); }
                           else if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById(`motivo-ajuste-${(i - 1 + motivos.length) % motivos.length}`)?.focus(); }
@@ -700,7 +699,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                     value={justificacion}
                     onChange={(e) => setJustificacion(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('btn-guardar-ajuste')?.focus(); }
+                      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); } // Enter no pasa a Guardar (se baja con ↓)
                       else if (e.key === 'ArrowUp' && e.currentTarget.selectionStart === 0) {
                         e.preventDefault();
                         document.getElementById(`motivo-ajuste-${Math.max(0, motivos.indexOf(motivo))}`)?.focus();

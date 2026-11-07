@@ -7,6 +7,13 @@
 
 ---
 
+## 06/11/2026 (126) · Claude — Nuevo ajuste: Enter hace su acción y el selector se queda (solo siumax)
+- **Dueño:** *"perfecto, bien hecho, pero el Enter pasa al siguiente selector; arregla eso"*. (La regla general de 116 no alcanzaba: los saltos ocurrían después de esperar al servidor, fuera de los 400 ms, o desde botones.)
+- `ModalAjuste.tsx`: elegir lote → vuelve al selector de lote (antes a la cantidad); Enter en el conteo / Continuar → calcula y se queda en el conteo (antes al motivo); Enter en la cantidad de la salida / Continuar → revisa y se queda (↓ sigue bajando al motivo); Enter en un motivo → lo marca y se queda (antes a la justificación); Enter en la justificación → se queda (antes a Guardar). Elegir el producto sí pasa al conteo porque el buscador desaparece.
+- Probado con teclado (PAN, sin guardar): lote → se queda; conteo 1 + Enter → "Faltan 89" y se queda; ↓ motivo; Enter marca ROBO y se queda; justificación + Enter se queda; ↓ Guardar. 0 errores.
+
+---
+
 ## 06/11/2026 (125) · Claude — Nuevo ajuste: sin "Automático", lista de lotes sin taparse y alto que cambia suave (solo siumax)
 - **Dueño** (captura con la lista de lotes encima de la cantidad): *"nada de automático; así sigue siendo muy brusco la aparición del producto, se ve cómo se acomoda todo rápido; y hay un problema estético en la imagen, corrige eso"*.
 - **"Automático" fuera:** en el conteo (quien tiene Conteos completo) ya no está esa opción; queda elegido el lote más antiguo y se puede cambiar (`conAutomatico = false`, `setLote(conStock[0])`).

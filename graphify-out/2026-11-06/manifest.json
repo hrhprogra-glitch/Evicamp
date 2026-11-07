@@ -90,9 +90,9 @@
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalDetalleCaja.tsx": {
-    "mtime": 1793929568.0268557,
-    "seen": 1793929825.8374605,
-    "ast_hash": "2e63759d8edf1a8136a60f3abab52943",
+    "mtime": 1793995483.188186,
+    "seen": 1793995846.4301846,
+    "ast_hash": "e4a21500ba5431379b941fdd9b838d6e",
     "semantic_hash": ""
   },
   "src/sections/Finanzas/components/ModalNuevoMovimiento.tsx": {
@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/TicketImprimible.tsx": {
-    "mtime": 1793929568.0399003,
-    "seen": 1793929825.8375428,
-    "ast_hash": "1d03941e8033ed0a958a7926478f46f1",
+    "mtime": 1793995483.188186,
+    "seen": 1793995846.4302495,
+    "ast_hash": "eb8fe611141ff127f90a694eb8513939",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/TicketVenta.tsx": {
@@ -1332,9 +1332,9 @@
     "semantic_hash": ""
   },
   "escritorio/main.js": {
-    "mtime": 1792272555.9574718,
-    "seen": 1792272738.069853,
-    "ast_hash": "f48f6dc6389a31a2d9a490b4dc653d0f",
+    "mtime": 1793995494.5722013,
+    "seen": 1793995846.4300265,
+    "ast_hash": "55cdbc5c72f9330660c761a0dc381b4c",
     "semantic_hash": ""
   },
   "escritorio/package.json": {
@@ -1350,9 +1350,9 @@
     "semantic_hash": ""
   },
   "src/utils/impresion.ts": {
-    "mtime": 1793888934.2620418,
-    "seen": 1793889702.856391,
-    "ast_hash": "857ac8b4186bbc4782d03fd2382953dc",
+    "mtime": 1793995609.528808,
+    "seen": 1793995846.4303055,
+    "ast_hash": "4c2f1dc17ccf444c7d085879cca4881e",
     "semantic_hash": ""
   },
   "escritorio/sin-conexion.html": {
@@ -1638,9 +1638,9 @@
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/ModalAjuste.tsx": {
-    "mtime": 1793994918.007794,
-    "seen": 1793995001.8801765,
-    "ast_hash": "59ca84e5f2a9bbc966e9bdeec0e74352",
+    "mtime": 1793995707.0574958,
+    "seen": 1793995846.4301631,
+    "ast_hash": "fbf947422a9be91df3f48858a21f621a",
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/ModalEditarConteo.tsx": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1793994987.1773603,
-    "seen": 1793995001.8803914,
-    "ast_hash": "f1f744dafd6b21b6b4e5d166f1b893be",
+    "mtime": 1793995830.7846327,
+    "seen": 1793995846.430359,
+    "ast_hash": "6fc858d6af8f0debb14269d1206b1b1d",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1793994987.178362,
-    "seen": 1793995001.880393,
-    "ast_hash": "7597d4d2465b4fc6df1bb666e5ba9843",
+    "mtime": 1793995830.78714,
+    "seen": 1793995846.4303603,
+    "ast_hash": "9e24a7233cf3a82678a79e5692226d58",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1793980080.42566,
-    "seen": 1793980095.3935895,
-    "ast_hash": "f42f15499d9a730dc35fe70a016b594a",
+    "mtime": 1793995830.7846327,
+    "seen": 1793995846.4303615,
+    "ast_hash": "d396d1f011a41ecebac4d88623a1ff4c",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1793994987.1773603,
-    "seen": 1793995001.8803968,
-    "ast_hash": "df54cf12d59531953d4f2c4eedf07be5",
+    "mtime": 1793995830.7856362,
+    "seen": 1793995846.4303632,
+    "ast_hash": "560b2075bfe008e15183b40818a6d95e",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
