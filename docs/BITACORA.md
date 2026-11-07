@@ -2018,7 +2018,7 @@ ejemplos para copiar). Por cada sección: graphify antes de leer → cambios →
   - desplegado a siumax (`node ai-scripts/deploy.cjs siumax`).
 
 ## 28/10/2026 (noche, 7) · Claude (Claude Code)
-- **El bot de WhatsApp ("chat de SiuMax para encontrar clientes") se movió FUERA del proyecto** a `D:Programaciónsiumaxot-whatsapp` (antes estaba en `comercio/bot-whatsapp` con un acceso directo afuera).
+- **El bot de WhatsApp ("chat de SiuMax para encontrar clientes") se movió FUERA del proyecto** a `D:/Programación/siumax/bot-whatsapp` (antes estaba en `comercio/bot-whatsapp` con un acceso directo afuera).
   - Su carpeta `auth_info` (la sesión de WhatsApp: secreta) ya no está dentro del repo de Comerc.
   - No es parte de SiuMax Comerc: es un proyecto aparte del dueño.
 
