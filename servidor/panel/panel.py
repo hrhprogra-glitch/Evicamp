@@ -43,7 +43,11 @@ DIR_CLIENTES = "/var/www/clientes"
 DIR_BACKUPS = "/var/backups/siuhub"
 INDEX_HTML = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
 DOMINIO_BASE = "siumax.duckdns.org"           # aquí vive el panel
-DOMINIO_CLIENTES = f"comerc.{DOMINIO_BASE}"   # clientes: <negocio>.comerc.siumax.duckdns.org
+DOMINIO_CLIENTES = f"comerc.{DOMINIO_BASE}"   # clientes por defecto
+
+def link_cliente(slug, tipo="comerc"):
+    t = tipo if tipo in ("comerc", "servic") else "comerc"
+    return f"https://{slug}.{t}.{DOMINIO_BASE}"
 
 PUERTO = 3090
 DURACION_SESION = 12 * 3600
@@ -94,8 +98,9 @@ def leer_registro():
             for linea in f:
                 partes = linea.rstrip("\n").split("\t")
                 if len(partes) >= 5 and partes[0]:
+                    tipo = partes[5] if len(partes) >= 6 and partes[5] else "comerc"
                     clientes.append({"slug": partes[0], "nombre": partes[1], "puerto": partes[2],
-                                     "estado": partes[3], "alta": partes[4]})
+                                     "estado": partes[3], "alta": partes[4], "tipo": tipo})
     except FileNotFoundError:
         pass
     return clientes
@@ -310,11 +315,13 @@ def resumen():
     for slug in slugs:
         reg = registro.get(slug)
         plan = datos["planes"].get(slug)
+        tipo = reg.get("tipo", "comerc") if reg else (plan or {}).get("tipo_sistema", "comerc")
         clientes.append({
             "slug": slug,
             "nombre": reg["nombre"] if reg else (plan or {}).get("nombre", slug),
             "externo": reg is None,  # Evicamp: tiene su propia instalación, no se suspende desde aquí
-            "link": f"https://{slug}.{DOMINIO_CLIENTES}" if reg else (plan or {}).get("link", ""),
+            "tipo": tipo,
+            "link": link_cliente(slug, tipo) if reg else (plan or {}).get("link", ""),
             "estado": reg["estado"] if reg else "EXTERNO",
             "alta": reg["alta"] if reg else "",
             "api": api_activa(slug) if reg else None,
@@ -540,6 +547,7 @@ def detalle_cliente(slug):
                 "estado": "EXTERNO", "alta": "", "api": None, "plan": plan, "pago": estado_pago(plan), "pagos": pagos,
                 "total_pagado": round(sum(p["monto"] for p in pagos), 2), "usuarios": []}
     reg = cliente_registrado(slug)
+    tipo = reg.get("tipo", "comerc")
     usuarios = json.loads(psql_cliente(slug, """
         SELECT coalesce(json_agg(json_build_object(
                  'nombre', e.nombre, 'email', e.email, 'rol', e.rol, 'estado', e.estado,
@@ -548,7 +556,7 @@ def detalle_cliente(slug):
                ) ORDER BY (e.rol = 'Administrador') DESC, e.created_at), '[]')
         FROM empleados e;
     """) or "[]")
-    return {"slug": slug, "nombre": reg["nombre"], "link": f"https://{slug}.{DOMINIO_CLIENTES}",
+    return {"slug": slug, "nombre": reg["nombre"], "tipo": tipo, "link": link_cliente(slug, tipo),
             "estado": reg["estado"], "alta": reg["alta"], "api": api_activa(slug),
             "plan": plan, "pago": estado_pago(plan), "pagos": pagos,
             "total_pagado": round(sum(p["monto"] for p in pagos), 2), "usuarios": usuarios,
@@ -1020,6 +1028,9 @@ class Panel(BaseHTTPRequestHandler):
                 nombre = str(cuerpo.get("nombre", "")).strip()[:60]
                 correo = str(cuerpo.get("correo", "")).strip().lower()
                 clave = str(cuerpo.get("clave", ""))
+                tipo_sistema = str(cuerpo.get("tipo_sistema", "comerc")).strip().lower()
+                if tipo_sistema not in ("comerc", "servic"):
+                    tipo_sistema = "comerc"
                 if not RE_SLUG.match(slug):
                     raise ValueError("Link inválido: usa minúsculas, números y guiones (3 a 30).")
                 if not nombre:
@@ -1028,13 +1039,15 @@ class Panel(BaseHTTPRequestHandler):
                     raise ValueError("Correo inválido.")
                 if len(clave) < 6:
                     raise ValueError("La contraseña debe tener al menos 6 caracteres.")
-                ok, salida = ejecutar([f"{DIR_SIUMAX}/nuevo-cliente.sh", slug, nombre, correo],
+                ok, salida = ejecutar([f"{DIR_SIUMAX}/nuevo-cliente.sh", slug, nombre, correo, tipo_sistema],
                                       entorno={"CLAVE_ADMIN": clave}, espera=600)
                 if not ok:
                     return self.responder(500, {"error": "No se pudo crear el cliente.", "detalle": salida[-2000:]})
                 if cuerpo.get("plan"):
-                    guardar_plan(dict(cuerpo["plan"], slug=slug))
-                return self.responder(200, {"ok": True, "link": f"https://{slug}.{DOMINIO_CLIENTES}",
+                    plan_data = dict(cuerpo["plan"], slug=slug, tipo_sistema=tipo_sistema)
+                    guardar_plan(plan_data)
+                link_nuevo = link_cliente(slug, tipo_sistema)
+                return self.responder(200, {"ok": True, "link": link_nuevo, "tipo": tipo_sistema,
                                             "correo": correo, "detalle": salida[-2000:]})
 
             if ruta in ("/api/clientes/suspender", "/api/clientes/activar"):
