@@ -6,9 +6,10 @@
  *  - "pendientes": lo que se hizo sin internet y falta subir (ventas, abonos...) — fases 3 y 4
  */
 const NOMBRE_BD = 'siumax-local';
-const VERSION_BD = 1;
+const VERSION_BD = 2;
 export const ALMACEN_RESPUESTAS = 'respuestas';
 export const ALMACEN_PENDIENTES = 'pendientes';
+export const ALMACEN_FOTOS = 'fotos';
 
 let abierta: Promise<IDBDatabase> | null = null;
 
@@ -20,6 +21,7 @@ const abrir = () => {
         const bd = pedido.result;
         if (!bd.objectStoreNames.contains(ALMACEN_RESPUESTAS)) bd.createObjectStore(ALMACEN_RESPUESTAS);
         if (!bd.objectStoreNames.contains(ALMACEN_PENDIENTES)) bd.createObjectStore(ALMACEN_PENDIENTES, { keyPath: 'id' });
+        if (!bd.objectStoreNames.contains(ALMACEN_FOTOS)) bd.createObjectStore(ALMACEN_FOTOS);
       };
       pedido.onsuccess = () => resolver(pedido.result);
       pedido.onerror = () => { abierta = null; rechazar(pedido.error); };

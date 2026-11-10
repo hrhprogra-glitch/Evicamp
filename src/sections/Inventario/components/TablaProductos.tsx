@@ -5,6 +5,7 @@ import type { Product } from '../types';
 import { usePermiso, avisarSinPermiso } from '../../../utils/permisos';
 import { confirmar } from '../../../utils/dialogos';
 import { formatearMonto } from '../../../utils/formato';
+import { fotoDeCache } from '../../../utils/cacheFotos';
 
 interface Props {
   loading: boolean;
@@ -252,18 +253,21 @@ export const TablaProductos: React.FC<Props> = ({
                 <div key={item.id} className="grid grid-cols-12 items-center p-4 border-b-2 border-[var(--color-ink)] bg-[var(--color-bg-2)] shadow-inner">
                   {/* IMAGEN (NO EDITABLE DESDE AQUÍ) */}
                   <div className="col-span-1 flex justify-center pr-2">
-                    {item.imageUrl && (item.imageUrl.startsWith('http') || item.imageUrl.startsWith('data:')) ? (
-                      <img 
-                        src={item.imageUrl} 
-                        alt="img" 
-                        className="w-10 h-10 object-cover rounded border border-[var(--color-border)]"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      />
-                    ) : (
-                      <div className="w-10 h-10 bg-[var(--color-surface)] rounded border border-[var(--color-border)] flex items-center justify-center text-[var(--color-muted)]" title={item.imageUrl?.startsWith('media') ? 'Formato de App móvil no compatible en web' : 'Sin imagen'}>
-                        <ImageIcon size={16}/>
-                      </div>
-                    )}
+                    {(() => {
+                      const foto = item.imageUrl || fotoDeCache(item.id);
+                      return foto && (foto.startsWith('http') || foto.startsWith('data:')) ? (
+                        <img 
+                          src={foto} 
+                          alt="img" 
+                          className="w-10 h-10 object-cover rounded border border-[var(--color-border)]"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-[var(--color-surface)] rounded border border-[var(--color-border)] flex items-center justify-center text-[var(--color-muted)]" title={foto?.startsWith('media') ? 'Formato de App móvil no compatible en web' : 'Sin imagen'}>
+                          <ImageIcon size={16}/>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   <div className="col-span-2 flex flex-col gap-1 items-start pr-2">
@@ -370,18 +374,21 @@ export const TablaProductos: React.FC<Props> = ({
                 
                 {/* 0. IMAGEN (BLINDADA CONTRA MEDIA://) */}
                 <div className="col-start-1 row-start-1 row-span-2 md:col-start-auto md:row-start-auto md:row-span-1 md:col-span-1 flex items-center justify-center md:pr-2">
-                  {item.imageUrl && (item.imageUrl.startsWith('http') || item.imageUrl.startsWith('data:')) ? (
-                    <img 
-                      src={item.imageUrl} 
-                      alt={item.name} 
-                      className="w-10 h-10 object-cover rounded-md border border-[var(--color-border)] shadow-sm" 
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                    />
-                  ) : (
-                    <div className="w-10 h-10 bg-[var(--color-bg-2)] rounded-md border border-[var(--color-border)] flex items-center justify-center text-[var(--color-muted)]" title={item.imageUrl?.startsWith('media') ? 'Formato de App móvil no compatible en web' : 'Sin Imagen'}>
-                      <ImageIcon size={18} />
-                    </div>
-                  )}
+                  {(() => {
+                    const foto = item.imageUrl || fotoDeCache(item.id);
+                    return foto && (foto.startsWith('http') || foto.startsWith('data:')) ? (
+                      <img 
+                        src={foto} 
+                        alt={item.name} 
+                        className="w-10 h-10 object-cover rounded-md border border-[var(--color-border)] shadow-sm" 
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 bg-[var(--color-bg-2)] rounded-md border border-[var(--color-border)] flex items-center justify-center text-[var(--color-muted)]" title={foto?.startsWith('media') ? 'Formato de App móvil no compatible en web' : 'Sin Imagen'}>
+                        <ImageIcon size={18} />
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* 1. CÓDIGOS */}

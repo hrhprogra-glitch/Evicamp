@@ -11,6 +11,7 @@ import { supabase } from '../../db/supabase';
 import { usePermiso, avisarSinPermiso } from '../../utils/permisos';
 import { useConexion } from '../../layout/BarraConexion';
 import type { Product } from './types';
+import { COLUMNAS_PRODUCTO, fotoDeCache, sincronizarFotosFaltantes } from '../../utils/cacheFotos';
 
 // Componentes importados
 import { FiltrosInventario } from './components/FiltrosInventario';
@@ -107,7 +108,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           { data: ventasData } // fase 2.4: lo vendido en 30 días (filtro "Sin ventas" y "Sugerir pedido" de Compras)
         ] = await Promise.all([
           // 🛡️ EVICAMP: Solo descargar productos activos para evitar productos fantasma (últimos primero)
-          traerTodo(() => supabase.from('products').select('*').eq('is_active', 1).order('id', { ascending: false })),
+          traerTodo(() => supabase.from('products').select(COLUMNAS_PRODUCTO).eq('is_active', 1).order('id', { ascending: false })),
           // Con la fecha de vencimiento (filtros Vencidos / Vencen en 30 días)
           traerTodo(() => supabase.from('batches').select('id, product_id, quantity, cost_unit, expiration_date').order('id', { ascending: false })),
           traerTodo(() => supabase.from('product_variants').select('*').eq('is_active', 1).order('id', { ascending: true })),
@@ -137,14 +138,10 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         
         if (productsData) {
           const mapeados: Product[] = productsData.map((p: any) => {
-            // RADAR ABSOLUTO: Convierte TODA la fila del producto (todas sus columnas) a texto mayúscula
-            const registroCompleto = JSON.stringify(p).toUpperCase();
-            
-            // Si en cualquier rincón del producto dice alguna de estas palabras, es Consumo.
-            const esConsumo = registroCompleto.includes('"CONSUMO"') || 
-                              registroCompleto.includes('"SERVICE"') || 
-                              registroCompleto.includes('"USO INTERNO"') ||
-                              registroCompleto.includes('"CONSUMPTION"');
+            // Detección directa y rápida de Consumo sin congelar la pantalla procesando texto
+            const TIPOS_CONSUMO = ['CONSUMO', 'SERVICE', 'USO INTERNO', 'CONSUMPTION'];
+            const esConsumo = [p.unit, p.control_type, p.weight_unit]
+              .some(v => TIPOS_CONSUMO.includes(String(v ?? '').trim().toUpperCase()));
 
             // [ SUMA GLOBAL ]: Filtramos los lotes de este producto
             const lotesDelProducto = batchesData?.filter(b => b.product_id === p.id) || [];
@@ -180,7 +177,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               category: p.category || 'GENERAL',
               // Si el radar detectó consumo, fuerza la etiqueta, sino usa la que traiga de BD
               unit: esConsumo ? 'CONSUMO' : (p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND')),
-              imageUrl: p.image_url || p.image_path || null,
+              imageUrl: fotoDeCache(p.id) || p.image_path || null,
               preciosCantidad: escalasValidas(p.precios_cantidad), // fase 1.3
               presentaciones: presentacionesValidas(p.presentaciones), // fase 1.2
               vendido30: ventasData ? Number(ventas.get(String(p.id))?.vendido || 0) : undefined,
@@ -205,6 +202,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             };
           });
           setProducts(mapeados);
+          // Descargar en segundo plano solo las fotos que falten en la PC
+          void sincronizarFotosFaltantes(productsData);
         }
       } catch (error) {
         console.error("Error cargando inventario:", error);
@@ -214,6 +213,21 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     };
     fetchInventory();
   }, [refreshProductsKey]);
+
+  // Al llegar fotos nuevas en segundo plano, actualizamos la tabla visible
+  useEffect(() => {
+    const alActualizarFotos = () => {
+      setProducts((prev) => prev.map((p) => {
+        const foto = fotoDeCache(p.id);
+        if (foto && foto !== p.imageUrl) {
+          return { ...p, imageUrl: foto };
+        }
+        return p;
+      }));
+    };
+    window.addEventListener('siumax-fotos-actualizadas', alActualizarFotos);
+    return () => window.removeEventListener('siumax-fotos-actualizadas', alActualizarFotos);
+  }, []);
 
   const categoriasUnicas = useMemo(() => {
     const cats = products.map(p => p.category).filter(Boolean);

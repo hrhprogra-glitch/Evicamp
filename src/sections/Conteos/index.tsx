@@ -94,7 +94,9 @@ export const Conteos: React.FC = () => {
 
   const fetchProducts = async () => {
     try {
-      const { data, error } = await traerTodo(() => supabase.from('products').select('*').order('id'));
+      const { data, error } = await traerTodo(() => supabase.from('products')
+        .select('id, name, price, cost_price, quantity, min_stock, code, barcode, category, unit, weight_unit, control_type, is_active')
+        .order('id'));
       if (error) throw error;
       if (data) {
         const mapeados: Product[] = data.map((p: any) => {
@@ -115,7 +117,7 @@ export const Conteos: React.FC = () => {
             barcode: p.barcode || '',
             category: p.category || 'GENERAL',
             unit: esConsumo ? 'CONSUMO' : (p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND')),
-            imageUrl: p.image_url || p.image_path || null,
+            imageUrl: null,
             // Los eliminados se cargan igual (el historial muestra su unidad) pero no salen en los buscadores
             activo: Number(p.is_active ?? 1) === 1
           };

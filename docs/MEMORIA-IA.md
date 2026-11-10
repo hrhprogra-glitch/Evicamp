@@ -55,6 +55,7 @@
 - **Tienda Web (Fase 10):** el dueño indicó expresamente llamarla **"Tienda Web"** (en vez de "Catálogo") y que su diseño esté totalmente adaptado tanto para **PC** (pantalla completa, filtros visuales y carrito accesible) como para **celular**.
 - **Modelos de Base de Datos y Columnas:** en la tabla `products`, la columna de costo es `cost_price` (no `cost`). La tabla de locales es `stores` con columnas `nombre`, `codigo`, `direccion`, `telefono`, `whatsapp`, `es_almacen_principal`, `activo`.
 - **Avisos internos del sistema (`avisar`):** `avisar()` despliega un diálogo propio en pantalla con el botón `#dialogo-sistema-aceptar` que atrapa el foco y los clics para evitar pérdida de teclado en la app de escritorio; siempre debe ser descartado con Enter o clic para que las pantallas detrás respondan.
+- **Imágenes de productos y caja local (10/11/2026):** las fotos de productos se guardan en `products.image_url` en formato Base64. Al haber 1,000+ fotos, la tabla pesa 27 MB (24 MB de fotos). **Nunca hacer `products.select('*')` en listas masivas**: una sola consulta descarga 25 MB y tumba el rendimiento. Usar `COLUMNAS_PRODUCTO` de `src/utils/cacheFotos.ts` (~600 KB). Las fotos se guardan en la PC (IndexedDB `fotos`) con `guardarFotoEnCache()` y memoria RAM (0 ms); solo se descargan faltantes en segundo plano en bloques de 30. En `Inventario`, nunca usar `JSON.stringify(p).toUpperCase()` en cada fila porque congela la CPU.
 - **Exige usar graphify** (si está instalado) antes de leer código y `graphify update .` después de cambiarlo.
 
 ## 2. El producto

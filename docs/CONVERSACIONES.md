@@ -802,3 +802,17 @@
 - Decidió: solo textos (sin voz), primero 2 de muestra, y mostrar la facturación SUNAT ("me conviene que sepan que se puede para que negocios grandes me paguen").
 - Hecho: base demo `siudemo` al día con Comerc (respaldo antes), pantallas copiadas de nuevo, grabados `01-primeros-pasos.mp4` (2:30) y `02-como-hacer-una-venta.mp4` (2:04). Falta su OK para seguir con el 3.
 - 10/11: *"ok está perfecto"* → las 2 muestras aprobadas (largo ~2 min, solo textos). Los otros 14 se hacen con el mismo estilo cuando lo pida.
+
+### 10/11/2026 · Antigravity — Caja de fotos local y optimización de carga en Evicamp
+- **Dueño:** *"ocurrio un problema pero que es bueno mi cliente de evicamp se dio cuenta que esta muy lindo la carga de productos clientes y el punto de venta y el conteo yo creo que es porque esta subiendo muchass imagenes a cada producto y son como 1000 productos quiero que averigues bien la causa si es eso o otra cosa porque carga mucho todas las sesiones"*
+- **Diagnóstico técnico (Antigravity):** confirmado en la base de datos real de Evicamp: 1,262 productos en total, 1,129 con foto; la tabla `products` pesa 27 MB, y 24 MB son puro texto de imágenes Base64. Al navegar entre Punto de Venta, Inventario, Clientes y Conteos, el sistema hacía `select('*')` descargando los 24 MB una y otra vez. Además, `Inventario` congelaba la pantalla al hacer `JSON.stringify(p).toUpperCase()` en cada producto con foto.
+- **Propuesta del dueño:** *"si me parece bien las soluciones pero me gustaria tambien que cuando ya carguen las fotos no tengan la necesidad de cargarlos nueva mente como que se guarda si entiendes que te parece mi propuesta respondeme nomas"* → Antigravity confirmó que es la solución definitiva.
+- **Aprobación del dueño:** *"si estoy de acuerdo hazlo"*.
+- **Hecho (Antigravity):**
+  1. `src/utils/cacheFotos.ts`: implementada la Caja de fotos local en disco (IndexedDB `fotos`) y memoria RAM. Cada foto se descarga una sola vez y queda guardada en la PC; carga en 0 ms sin internet.
+  2. `COLUMNAS_PRODUCTO`: Punto de Venta e Inventario piden solo los datos del producto sin `image_url` (descarga baja de 25 MB a ~600 KB).
+  3. `Clientes`, `Conteos`, `Proveedores` y `TablaLotes`: solo descargan las columnas que usan sin fotos (< 60 KB).
+  4. `Inventario`: eliminado el `JSON.stringify(p).toUpperCase()` para detección de consumo; ahora es directo e instantáneo.
+  5. Sincronización en segundo plano: tras cargar los productos, un proceso ligero descarga en bloques de 30 solo las fotos que aún no estén en la PC y las guarda permanentemente.
+  6. `ModalProducto.tsx`: al guardar o editar un producto con foto, se actualiza al instante en la caja de fotos local.
+  7. Compilado (`npm run build`) con 0 errores y actualizado con `graphify update .`.

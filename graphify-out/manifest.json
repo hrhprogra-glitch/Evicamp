@@ -36,9 +36,9 @@
     "semantic_hash": ""
   },
   "src/main.tsx": {
-    "mtime": 1793888934.235903,
-    "seen": 1793889702.8562837,
-    "ast_hash": "1bb8d25a9669e8ea94c65ec0f203f59c",
+    "mtime": 1794321463.2223978,
+    "seen": 1794321644.0030136,
+    "ast_hash": "f7f7fb503d62fa53117cadd06bed325c",
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/FormularioEmpresa.tsx": {
@@ -150,21 +150,21 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/ModalProducto.tsx": {
-    "mtime": 1793978395.1595442,
-    "seen": 1793978763.894546,
-    "ast_hash": "6b226a64a5f565f5661029f9e87f6037",
+    "mtime": 1794321279.514891,
+    "seen": 1794321644.0030777,
+    "ast_hash": "114a9dc0a0da8571a06debac35bff65d",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaLotes.tsx": {
-    "mtime": 1793929568.0313778,
-    "seen": 1793929825.8374941,
-    "ast_hash": "68ae9c18f3f5156b10ff19f1bdbb126b",
+    "mtime": 1794321304.1040027,
+    "seen": 1794321644.003082,
+    "ast_hash": "61f41b4c39001c2f4595ec7b4d609a6c",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaProductos.tsx": {
-    "mtime": 1793929568.0368874,
-    "seen": 1793929825.8374956,
-    "ast_hash": "761d3684ba333ad01cd6b8d139320444",
+    "mtime": 1794321212.5456958,
+    "seen": 1794321644.003083,
+    "ast_hash": "2fc153798b9d95de195ec5a1433fa971",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TarjetaMetrica.tsx": {
@@ -174,15 +174,15 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/index.tsx": {
-    "mtime": 1793979582.7421722,
-    "seen": 1793980095.393489,
-    "ast_hash": "2ad49ad56f77db6899e63b50c129e710",
+    "mtime": 1794321091.5119762,
+    "seen": 1794321644.0030854,
+    "ast_hash": "cbb65b27128dee5b5091b1c688c7c082",
     "semantic_hash": ""
   },
   "src/sections/Inventario/types.ts": {
-    "mtime": 1793921946.8797417,
-    "seen": 1793921962.090681,
-    "ast_hash": "e35b1ea5542a700c7bf8181188990af4",
+    "mtime": 1794321543.1418228,
+    "seen": 1794321644.0030873,
+    "ast_hash": "b62b95323f0c6a402da07e109b611ffb",
     "semantic_hash": ""
   },
   "src/sections/Login.tsx": {
@@ -210,9 +210,9 @@
     "semantic_hash": ""
   },
   "src/sections/Proveedores/index.tsx": {
-    "mtime": 1793289284.527178,
-    "seen": 1793296973.070203,
-    "ast_hash": "004fba34a9ce79fa82d8403765f7784d",
+    "mtime": 1794321388.7017624,
+    "seen": 1794321644.0030928,
+    "ast_hash": "5a26b890ce6ea5fbf8855dcfe46512ac",
     "semantic_hash": ""
   },
   "src/sections/Proveedores/types.ts": {
@@ -246,9 +246,9 @@
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/TerminalBusqueda.tsx": {
-    "mtime": 1793929568.0399003,
-    "seen": 1793929825.8375409,
-    "ast_hash": "7512b4fe3a664d8ad40a6c65583e9115",
+    "mtime": 1794321032.0525177,
+    "seen": 1794321644.0031035,
+    "ast_hash": "f86f18d51f17c619eb2e630db0c91382",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/TicketImprimible.tsx": {
@@ -264,9 +264,9 @@
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/index.tsx": {
-    "mtime": 1793929607.7364616,
-    "seen": 1793929825.8375459,
-    "ast_hash": "1fdd7b1eb09593dccc7216999846ddf5",
+    "mtime": 1794320996.8359497,
+    "seen": 1794321644.003107,
+    "ast_hash": "a1a8adb184f92521e03cac89b4bc7a31",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/types.ts": {
@@ -1398,15 +1398,15 @@
     "semantic_hash": ""
   },
   "servidor/nuevo-cliente.sh": {
-    "mtime": 1793321368.274862,
-    "seen": 1793324961.3547683,
-    "ast_hash": "4c1c759c22e21b3a45d9ee4889d27b3f",
+    "mtime": 1794090149.0477843,
+    "seen": 1794321644.0029824,
+    "ast_hash": "b50f9a2474aaceb563dae8e3abda7c45",
     "semantic_hash": ""
   },
   "servidor/siuhub-lib.sh": {
-    "mtime": 1794017641.869389,
-    "seen": 1794018244.1873264,
-    "ast_hash": "fa43addd7d755234e547f08e0eb9f535",
+    "mtime": 1794090121.581137,
+    "seen": 1794321644.0029862,
+    "ast_hash": "48cd1d4eded54921cc7b7c86e8cf4b3e",
     "semantic_hash": ""
   },
   "servidor/instalar-panel.sh": {
@@ -1416,9 +1416,9 @@
     "semantic_hash": ""
   },
   "servidor/panel/panel.py": {
-    "mtime": 1794017826.231682,
-    "seen": 1794018244.1873255,
-    "ast_hash": "742520dde5dd08ed228d0e2c4f4148fd",
+    "mtime": 1794090200.6368573,
+    "seen": 1794321644.0029852,
+    "ast_hash": "48535671861b4b93e54528dc1f73e1c7",
     "semantic_hash": ""
   },
   "src/layout/AvisoSuscripcion.tsx": {
@@ -1434,9 +1434,9 @@
     "semantic_hash": ""
   },
   "servidor/panel/index.html": {
-    "mtime": 1794017834.0370107,
-    "seen": 1794018244.187501,
-    "ast_hash": "7c77a6e4d9a8a1b934ce03794e69faa3",
+    "mtime": 1794090236.1163228,
+    "seen": 1794321644.0031908,
+    "ast_hash": "6fce32df3d277078937905d6079833e3",
     "semantic_hash": ""
   },
   "servidor/migrar-dominio.sh": {
@@ -1512,9 +1512,9 @@
     "semantic_hash": ""
   },
   "src/utils/almacenLocal.ts": {
-    "mtime": 1792253788.7004697,
-    "seen": 1792253993.4567177,
-    "ast_hash": "87ac76bf11249344e7adaafe8afd94fa",
+    "mtime": 1794320916.863076,
+    "seen": 1794321644.0031323,
+    "ast_hash": "31c3363cec2d7e65aa9f3a0f7e7dfab0",
     "semantic_hash": ""
   },
   "src/utils/sinInternet.ts": {
@@ -1530,9 +1530,9 @@
     "semantic_hash": ""
   },
   "src/utils/precargaSinInternet.ts": {
-    "mtime": 1793489889.5139477,
-    "seen": 1793490589.462311,
-    "ast_hash": "4ea6cbdb9589148fe9d350a43d418427",
+    "mtime": 1794321424.467712,
+    "seen": 1794321644.0031514,
+    "ast_hash": "c2ad0506bb154366a407fc82e540b0d0",
     "semantic_hash": ""
   },
   "src/utils/dialogos.tsx": {
@@ -1668,9 +1668,9 @@
     "semantic_hash": ""
   },
   "src/sections/Conteos/index.tsx": {
-    "mtime": 1793929568.0253518,
-    "seen": 1793929825.8374457,
-    "ast_hash": "e95dbbc448d8386124397d9019a7db48",
+    "mtime": 1794321358.8948138,
+    "seen": 1794321644.003054,
+    "ast_hash": "37f6c8eab35ee2976cf3bc27c5513193",
     "semantic_hash": ""
   },
   "src/sections/Conteos/motivos.ts": {
@@ -1974,9 +1974,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/index.tsx": {
-    "mtime": 1793979886.6346345,
-    "seen": 1793980095.3934326,
-    "ast_hash": "811f97ea9aecfa97aca5354daa75d800",
+    "mtime": 1794321332.3873773,
+    "seen": 1794321644.0030317,
+    "ast_hash": "cac2140df830661f3f633aadc5a37df1",
     "semantic_hash": ""
   },
   "src/sections/Clientes/types.ts": {
@@ -2010,9 +2010,9 @@
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1794018205.0540414,
-    "seen": 1794018244.187494,
-    "ast_hash": "4663129ad023e02b97f28ac2d70713dc",
+    "mtime": 1794320701.3049417,
+    "seen": 1794321644.0031822,
+    "ast_hash": "27559dda64da6c66717833490fcaf877",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1794018211.2045872,
-    "seen": 1794018244.1874957,
-    "ast_hash": "cf69770254512d2b6e8b7e1210ea01b7",
+    "mtime": 1794252552.6366315,
+    "seen": 1794321644.0031843,
+    "ast_hash": "124a1e42a2441c255729ff7f7558b7dd",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2703,6 +2703,12 @@
     "mtime": 1794017756.1387105,
     "seen": 1794018244.1873245,
     "ast_hash": "2b419487c1a71d6a5f5aa67f3b6211a3",
+    "semantic_hash": ""
+  },
+  "src/utils/cacheFotos.ts": {
+    "mtime": 1794320937.328398,
+    "seen": 1794321644.003137,
+    "ast_hash": "852376de8cd89fbeea0eec83bf17ef05",
     "semantic_hash": ""
   }
 }

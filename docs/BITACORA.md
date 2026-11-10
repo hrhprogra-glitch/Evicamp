@@ -7,6 +7,29 @@
 
 ---
 
+## 10/11/2026 (129) · Antigravity — Caja de fotos local y optimización de carga masiva en Evicamp
+- **Dueño:** *"ocurrio un problema pero que es bueno mi cliente de evicamp se dio cuenta que esta muy lindo la carga de productos clientes y el punto de venta y el conteo yo creo que es porque esta subiendo muchass imagenes a cada producto y son como 1000 productos quiero que averigues bien la causa si es eso o otra cosa porque carga mucho todas las sesiones"*; propuesta: *"me gustaria tambien que cuando ya carguen las fotos no tengan la necesidad de cargarlos nueva mente como que se guarda"*; *"si estoy de acuerdo hazlo"*.
+- **Diagnóstico en producción (Evicamp):** 1,262 productos en total, 1,129 con foto. Tabla `products` pesa 27 MB (24 MB de fotos en Base64). `Punto-de-venta`, `Inventario`, `Clientes`, `Conteos`, `Proveedores` y `precargaSinInternet` ejecutaban `select('*')` descargando los 24 MB en cada cambio de sección. En `Inventario`, `JSON.stringify(p).toUpperCase()` procesaba 50 MB en CPU congelando la pantalla.
+- **Implementado:**
+  - `src/utils/almacenLocal.ts`: nueva versión 2 de IndexedDB con almacén `fotos` (`ALMACEN_FOTOS`).
+  - `src/utils/cacheFotos.ts`: módulo maestro de caja de fotos local. Define `COLUMNAS_PRODUCTO` (omite `image_url`), maneja caché en memoria RAM (`memoriaFotos`) para acceso en 0 ms y guarda en IndexedDB permanentemente.
+  - Sincronización en segundo plano (`sincronizarFotosFaltantes`): descarga en bloques de 30 solo las fotos que no existan en la PC y despacha `siumax-fotos-actualizadas`. Una vez guardada una foto, NUNCA más se vuelve a pedir por internet.
+  - `Punto-de-venta/index.tsx`: usa `COLUMNAS_PRODUCTO`, asigna `image_url: fotoDeCache(p.id) || p.image_path || null`, sincroniza faltantes y escucha actualizaciones.
+  - `Punto-de-venta/components/TerminalBusqueda.tsx`: utiliza `fotoDeCache(prod.id)` como respaldo instantáneo en las tarjetas.
+  - `Inventario/index.tsx`: usa `COLUMNAS_PRODUCTO`, eliminada la conversión con `JSON.stringify` (ahora usa validación directa de unidad), asigna `fotoDeCache(p.id)` y sincroniza faltantes.
+  - `Inventario/components/TablaProductos.tsx`: renderiza fotos usando `fotoDeCache(item.id)`.
+  - `Inventario/components/ModalProducto.tsx`: al guardar producto nuevo o editado, actualiza `guardarFotoEnCache(id, foto)` al instante.
+  - `Inventario/components/TablaLotes.tsx`: omite fotos en el join con lotes (`products!batches_product_id_fkey (id, name, category, unit, control_type, weight_unit)`).
+  - `Clientes/index.tsx`: pide solo `id, name, price, quantity, barcode, code, category, unit, is_active` (< 50 KB).
+  - `Conteos/index.tsx`: pide solo datos de producto sin imágenes (< 60 KB).
+  - `Proveedores/index.tsx`: pide solo datos de producto sin imágenes (< 50 KB).
+  - `precargaSinInternet.ts`: usa `COLUMNAS_PRODUCTO` y omite consultas duplicadas.
+  - `main.tsx`: inicializa `iniciarCacheFotos()` al arrancar la app.
+- **Verificado:** `npm run build` exitoso (0 errores TS/Vite), `graphify update .` actualizado. Tamaño de descarga por sesión bajó de 25 MB a 627 KB (97.5% más liviano).
+- **Pendiente:** Subir a Evicamp / siumax cuando el dueño lo autorice explícitamente.
+
+---
+
 ## 06/11/2026 (128) · Claude — Links ordenados: siumax.duckdns.org = Panel; pruebas en comerc.siumax y servic.siumax
 - **Dueño:** *"transformamos siumax.duckdns.org en el panel de control y usamos comerc siumax y servic siumax como pruebas, y para mis clientes primero el nombre de tienda y luego comerc siumax o servic siumax"*; *"panel.siumax.duckdns.org lo puedes desaparecer"*; *"sí, empieza"*.
 - **Hecho en el VPS** con `node ai-scripts/cliente.cjs ordenar-links` (nuevo `servidor/ordenar-links.sh`; respaldo de nginx en `/root/backups/ordenar-links-20261107-022103`; vuelve solo atrás si algo falla):

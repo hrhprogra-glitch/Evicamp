@@ -8,6 +8,7 @@ import type { Product } from '../../Inventario/types';
 import type { Cliente } from '../types';
 import { supabase } from '../../../db/supabase';
 import { useEmpleado, usePermiso } from '../../../utils/permisos';
+import { fotoDeCache } from '../../../utils/cacheFotos';
 
 interface Props {
   searchQuery: string;
@@ -434,7 +435,7 @@ export const TerminalBusqueda: React.FC<Props> = ({
                   {/* BLOQUE IMAGEN + NOMBRE: contenedor de foto con color distintivo según Kilo / Consumo / Unidad */}
                   <div className="w-full flex flex-col gap-1 sm:gap-1.5 h-[122px] sm:h-[146px] mb-1.5 sm:mb-2">
                     {(() => {
-                      const img = (prod as any).image_url || (prod as any).image_path || '';
+                      const img = (prod as any).image_url || fotoDeCache(prod.id) || (prod as any).image_path || '';
                       const valida = img.startsWith('http') || img.startsWith('data:');
                       const marcoColor = esConsumo
                         ? 'border-[var(--color-warning)]/40 bg-[var(--color-warning-bg)]'

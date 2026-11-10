@@ -27,6 +27,7 @@ import { cargarFacturacionCaja, calcularTotalesCPE, numeroComprobante, DOC_TYPE,
 import { ModalComprobantesProblema } from '../../components/ModalComprobantesProblema';
 import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ EVICAMP: Mini Reporte en Tiempo Real
 import { formatearMonto } from '../../utils/formato';
+import { COLUMNAS_PRODUCTO, fotoDeCache, sincronizarFotosFaltantes } from '../../utils/cacheFotos';
 
 export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
   const empleado = useEmpleado(); // quién vende: sale en el ticket ("Atendido por")
@@ -490,7 +491,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
     // Supabase devuelve máximo 1000 filas por consulta: traerTodo las pide por bloques
     const [{ data: productsData }, { data: variantsData }, { data: recipesData }] = await Promise.all([
       traerTodo(() => supabase.from('products')
-        .select('*')
+        .select(COLUMNAS_PRODUCTO)
         .eq('is_active', 1) // 🛡️ EVICAMP: Bloqueo de productos fantasma directo en el motor de BD
         .order('name', { ascending: true })
         .order('id')),
@@ -563,7 +564,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           control_type: p.control_type, // Añadimos esto para validaciones estrictas
           preciosCantidad: escalasValidas(p.precios_cantidad), // fase 1.3: precios por cantidad
           presentaciones: presentacionesValidas(p.presentaciones), // fase 1.2: caja, paquete…
-          image_url: p.image_url || p.image_path || null, // imagen para identificar el producto en las tarjetas
+          image_url: fotoDeCache(p.id) || p.image_path || null, // imagen de la caja local en la PC
           marca: p.marca || null,
           modelo: p.modelo || null,
           medida: p.medida || null,
@@ -581,12 +582,29 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         } as Product;
       });
       setProductos(mapeados);
+      // Descargar en segundo plano solo las fotos que falten en el disco local
+      void sincronizarFotosFaltantes(productsData);
     }
   }, []);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
+  // Al llegar fotos nuevas en segundo plano, actualizamos las tarjetas visibles
+  useEffect(() => {
+    const alActualizarFotos = () => {
+      setProductos((prev) => prev.map((p) => {
+        const foto = fotoDeCache(p.id);
+        if (foto && foto !== p.image_url) {
+          return { ...p, image_url: foto };
+        }
+        return p;
+      }));
+    };
+    window.addEventListener('siumax-fotos-actualizadas', alActualizarFotos);
+    return () => window.removeEventListener('siumax-fotos-actualizadas', alActualizarFotos);
+  }, []);
 
   // Fase 1.3 y 4.4: la línea con su cantidad y el precio que le toca (descuento % fijo, mayorista o escala "desde N").
   // Si el precio se cambió a mano (fase 1.4) no se toca. precioBase = el precio normal.

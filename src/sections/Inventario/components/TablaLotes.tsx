@@ -61,7 +61,7 @@ export const TablaLotes: React.FC<Props> = ({
           .from('batches')
           .select(`
             *,
-            products!batches_product_id_fkey (*)
+            products!batches_product_id_fkey (id, name, category, unit, control_type, weight_unit)
           `)
           .neq('is_active', 0) // 🔥 EL ESCUDO: Ya no descarga los eliminados
           .order('created_at', { ascending: false });

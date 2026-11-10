@@ -110,7 +110,7 @@ export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNav
         { data: pagosData },
         { data: grupData }
       ] = await Promise.all([
-        traerTodo(() => supabase.from('products').select('*').order('id', { ascending: false })),
+        traerTodo(() => supabase.from('products').select('id, name, price, quantity, barcode, code, category, unit, is_active').order('id', { ascending: false })),
         traerTodo(() => supabase.from('customers').select('*').order('id', { ascending: false })),
         // Filtro Ampliado: Descarga también los CANCELADOS para poder visualizarlos en la tabla como 'PAGADOS'
         traerTodo(() => supabase.from('fiados').select('*').in('status', ['PENDIENTE', 'VENCIDO', 'CANCELADO']).order('id')),

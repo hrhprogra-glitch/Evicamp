@@ -69,7 +69,10 @@ export const Proveedores: React.FC<Props> = ({ onNavigate }) => {
           { data: productsData, error: productsError }, 
           { data: batchesData, error: batchesError }
         ] = await Promise.all([
-          traerTodo(() => supabase.from('products').select('*').eq('is_active', 1).order('id')),
+          traerTodo(() => supabase.from('products')
+            .select('id, name, price, cost_price, quantity, min_stock, code, barcode, category, unit, weight_unit, control_type, is_active')
+            .eq('is_active', 1)
+            .order('id')),
           traerTodo(() => supabase.from('batches').select('id, product_id, quantity, cost_unit').order('id'))
         ]);
 
@@ -102,7 +105,7 @@ export const Proveedores: React.FC<Props> = ({ onNavigate }) => {
               barcode: p.barcode || '',
               category: p.category || 'GENERAL',
               unit: esConsumo ? 'CONSUMO' : (p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND')),
-              imageUrl: p.image_url || p.image_path || null
+              imageUrl: null
             };
           });
           setProducts(mapeados);

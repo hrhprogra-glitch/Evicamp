@@ -4,6 +4,7 @@ import { supabase } from '../../../db/supabase'; // RETORNO TÉCNICO: Conexión 
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { usePermiso } from '../../../utils/permisos';
 import { buscarImagenes, fotoParaGuardar, achicarImagen } from '../../../utils/buscarImagenes';
+import { guardarFotoEnCache } from '../../../utils/cacheFotos';
 import { confirmar } from '../../../utils/dialogos';
 import { UNIDADES, unidadDe } from '../../../utils/unidades';
 import { escalasValidas } from '../../../utils/preciosCantidad';
@@ -1588,6 +1589,11 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
         if (error) throw error;
         productoGuardado = data;
         alert(`PRODUCTO CREADO CORRECTAMENTE.\nNombre: ${nombreLimpio}`);
+      }
+
+      // Guardamos la foto en la caja de fotos local de la PC al instante
+      if (productoGuardado?.id) {
+        void guardarFotoEnCache(productoGuardado.id, formData.image || null);
       }
 
       // FASE 7: las tallas y colores (product_variants) ya no se escriben aquí: se arman en Inventario › Armar producto
