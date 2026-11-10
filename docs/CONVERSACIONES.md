@@ -801,3 +801,4 @@
 - *"quiero que me crees videos tutoriales de varios minutos... de cada sesión hasta ajustes"* → propuesta de 16 capítulos (`siumax/videos/CAPITULOS.md`).
 - Decidió: solo textos (sin voz), primero 2 de muestra, y mostrar la facturación SUNAT ("me conviene que sepan que se puede para que negocios grandes me paguen").
 - Hecho: base demo `siudemo` al día con Comerc (respaldo antes), pantallas copiadas de nuevo, grabados `01-primeros-pasos.mp4` (2:30) y `02-como-hacer-una-venta.mp4` (2:04). Falta su OK para seguir con el 3.
+- 10/11: *"ok está perfecto"* → las 2 muestras aprobadas (largo ~2 min, solo textos). Los otros 14 se hacen con el mismo estilo cuando lo pida.
