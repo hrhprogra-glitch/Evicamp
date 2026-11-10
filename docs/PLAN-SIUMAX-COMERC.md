@@ -78,7 +78,7 @@
 | **Fase 5 (Descuentos y Promociones)** | **✅ Hecho (incluido en creación de productos: escalas por cantidad, presentaciones y mayoristas)** |
 | **Fase 4 (Clientes, Empresas, Mayoristas, Cotizaciones y Pedidos/Separados)** | **✅ Hecho en producción y GitHub (29/10, commit bd3780f)** |
 | **Fase 3 (Marca, Laboratorio, Principio activo, Modelo, Medidas y Ubicación)** | **✅ Hecho en producción y GitHub (29/10, commit 994bdca)** |
-| **Videos tutoriales del sistema** (16 capítulos hasta Ajustes, solo textos; base demo `siudemo`; lista en `siumax/videos/CAPITULOS.md`) | **01 a 06 hechos (01–02 aprobados el 10/11); siguen del 07 al 16, de 2–3 por vez** |
+| **Videos tutoriales del sistema** (16 capítulos hasta Ajustes, solo textos; base demo `siudemo`; lista en `siumax/videos/CAPITULOS.md`) | **01 a 07 hechos (01–02 aprobados el 10/11); siguen del 08 al 16, de 2–3 por vez** |
 | **Modo Oscuro (Dark Mode)** reemplazando "Plata / Gris" en Apariencia | **Hecho en producción (29/10)** |
 | **Grupos de clientes (familia/empresa)** dentro de la 4.1 | **Hecho en producción (29/10). En siumax: agregados botones directos en cabecera [+ Nuevo grupo] y [Grupos (n)] para gestión independiente (04/11)** |
 | Fase 11 SUNAT: camino A (proveedor PSE) → B (directo) | **En pausa** hasta que el dueño lo pida |
