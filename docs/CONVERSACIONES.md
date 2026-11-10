@@ -816,3 +816,4 @@
   5. Sincronización en segundo plano: tras cargar los productos, un proceso ligero descarga en bloques de 30 solo las fotos que aún no estén en la PC y las guarda permanentemente.
   6. `ModalProducto.tsx`: al guardar o editar un producto con foto, se actualiza al instante en la caja de fotos local.
   7. Compilado (`npm run build`) con 0 errores y actualizado con `graphify update .`.
+- 10/11: *"si hazlo"* → grabados el **3 (abrir y cerrar la caja, 1:51)** y el **4 (vender al crédito, 1:20)**. Mayorista y descuentos pasan al capítulo 5 (Clientes I). Sigue el 5.
