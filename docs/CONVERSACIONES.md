@@ -818,3 +818,4 @@
   7. Compilado (`npm run build`) con 0 errores y actualizado con `graphify update .`.
 - 10/11: *"si hazlo"* → grabados el **3 (abrir y cerrar la caja, 1:51)** y el **4 (vender al crédito, 1:20)**. Mayorista y descuentos pasan al capítulo 5 (Clientes I). Sigue el 5.
 - 10/11: *"si hazlo el capitulo 5"* → grabado el **5 (tus clientes, 2:42)**: directorio, buscar, cliente nuevo mayorista (BODEGA DON PEPE), cómo se ve en caja (⭐ MAY, aceite 9.60 en vez de 10.50), grupo FAMILIA ROJAS con deuda junta. Se pusieron precios por mayor a 12 productos de la demo. Sigue el 6.
+- 10/11: *"si hazlo"* → grabado el **6 (cobrar los créditos, 2:12)**: pestaña Créditos, estado de cuenta de María (abono de S/ 20), Pedro paga todo con S/ 20 (vuelto 9.20), historial, Familia Rojas paga S/ 88.80 por Yape (deuda en cero). Sigue el 7.
