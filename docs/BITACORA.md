@@ -26,7 +26,7 @@
   - `precargaSinInternet.ts`: usa `COLUMNAS_PRODUCTO` y omite consultas duplicadas.
   - `main.tsx`: inicializa `iniciarCacheFotos()` al arrancar la app.
 - **Verificado:** `npm run build` exitoso (0 errores TS/Vite), `graphify update .` actualizado. Tamaño de descarga por sesión bajó de 25 MB a 627 KB (97.5% más liviano).
-- **Pendiente:** Subir a Evicamp / siumax cuando el dueño lo autorice explícitamente.
+- **Desplegado con autorización del dueño (10/11/2026):** `node ai-scripts/deploy.cjs todos` subió a Evicamp (`evicamp.duckdns.org`), SiuMax Pruebas (`comerc.siumax.duckdns.org`) y Clientes (`/var/www/siuhub-app/html`). Nginx recargado, ambos sitios respondiendo 200 OK. Base de datos y APIs intactas.
 
 ---
 
