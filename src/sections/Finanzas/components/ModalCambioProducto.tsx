@@ -649,11 +649,15 @@ export const ModalCambioProducto: React.FC<Props> = ({
           .eq('id', ticketData.id);
       }
 
-      // 5. Limpiar cualquier movimiento previo de diferencia para este ticket, manteniendo la tabla 100% limpia
-      await supabase
-        .from('cash_movements')
-        .delete()
-        .ilike('description', `%${String(ticketData.id).slice(-6)}%`);
+      // 5. Limpiar las filas de diferencia que hacía una versión anterior del cambio ("DIFERENCIA POR CAMBIO (TICKET
+      // #123456) [EFECTIVO]", "DEVOLUCIÓN POR CAMBIO DE PRODUCTO (TICKET #<número>)"): la diferencia ya va en la venta.
+      // Solo esas: antes se borraba todo movimiento con los 6 últimos dígitos del ticket en el texto (11/11/2026).
+      for (const numero of [String(ticketData.id), String(ticketData.id).slice(-6)]) {
+        await supabase
+          .from('cash_movements')
+          .delete()
+          .ilike('description', `%POR CAMBIO%TICKET #${numero})%`);
+      }
 
       setCambioFinalizado(cambioInsertado as CambioProducto);
       onCambioGuardado?.();

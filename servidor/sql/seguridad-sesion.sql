@@ -1089,6 +1089,9 @@ DECLARE
   v_productos int := 0;
   v_cuando timestamptz := coalesce(p_cuando, now());   -- sin internet: la hora en que se anuló en la caja
   v_nc text;
+  v_resta jsonb := '{}'::jsonb;   -- por producto: lo que ya volvió al stock por un cambio de producto
+  v_clave text;
+  v_quita numeric;
 BEGIN
   SELECT * INTO v_emp FROM fn_empleado_de_sesion();
   IF v_emp.id IS NULL THEN RAISE EXCEPTION 'Sesión no válida.'; END IF;
@@ -1127,9 +1130,29 @@ BEGIN
     PERFORM set_config('siumax.cpe_interno', '1', true);   -- deja marcar la venta como ANULADO
   END IF;
 
+  -- Cambio de producto (11/11/2026): lo entregado también vuelve (antes de fn_mover_stock_cambio su salida decía
+  -- "Salida por cambio de producto (Ticket #123456)") y lo que el cliente ya devolvió en el cambio NO vuelve otra vez.
+  -- Se recorre del último al primero: el cambio devuelve primero al último lote del que salió.
   FOR v_mov IN SELECT * FROM inventory_movements
-               WHERE operation_type = 'VENTA' AND notes = 'Ticket #' || p_sale_id::text ORDER BY id LOOP
+               WHERE operation_type = 'VENTA'
+                 AND (notes = 'Ticket #' || p_sale_id::text
+                      OR (reason = 'CAMBIO_PRODUCTO' AND notes LIKE 'Salida por cambio de producto (Ticket #' || right(p_sale_id::text, 6) || ')%'))
+               ORDER BY id DESC LOOP
     v_cant := abs(coalesce(v_mov.change_amount, 0));
+    IF v_cant <= 0 THEN CONTINUE; END IF;
+    v_clave := v_mov.product_id::text || '|' || coalesce(v_mov.variant_id::text, '');
+    IF NOT v_resta ? v_clave THEN
+      v_resta := v_resta || jsonb_build_object(v_clave, (
+        SELECT coalesce(sum(change_amount), 0) FROM inventory_movements
+         WHERE operation_type = 'DEVOLUCION' AND reason = 'CAMBIO_PRODUCTO' AND product_id = v_mov.product_id
+           AND variant_id IS NOT DISTINCT FROM v_mov.variant_id
+           AND (notes LIKE '%(Ticket #' || p_sale_id::text || ')%' OR notes LIKE '%(Ticket #' || right(p_sale_id::text, 6) || ')%')));
+    END IF;
+    v_quita := least(v_cant, (v_resta ->> v_clave)::numeric);
+    IF v_quita > 0 THEN
+      v_cant := v_cant - v_quita;
+      v_resta := jsonb_set(v_resta, ARRAY[v_clave], to_jsonb((v_resta ->> v_clave)::numeric - v_quita));
+    END IF;
     IF v_cant <= 0 THEN CONTINUE; END IF;
     IF v_mov.variant_id IS NOT NULL THEN
       -- Restaurar stock a la variante específica
@@ -3464,7 +3487,8 @@ BEGIN
   IF coalesce(p_cantidad_nueva, 0) <= 0 THEN RAISE EXCEPTION 'La cantidad nueva debe ser mayor a cero.'; END IF;
 
   -- 1. Lo devuelto vuelve a los lotes de donde salió (el último primero); lo que no se sepa, al último lote
-  v_nota := 'Ingreso por cambio de producto (Ticket #' || right(p_sale_id::text, 6) || ')'
+  -- (con el número completo: fn_anular_venta la reconoce para no devolver dos veces)
+  v_nota := 'Ingreso por cambio de producto (Ticket #' || p_sale_id::text || ')'
             || coalesce(' · Serie: ' || nullif(trim(p_serie_devuelta), ''), '');
   IF d.variant_id IS NOT NULL THEN
     UPDATE public.product_variants SET quantity = coalesce(quantity, 0) + p_cantidad WHERE id = d.variant_id;
@@ -3472,10 +3496,15 @@ BEGIN
   UPDATE public.products SET quantity = coalesce(quantity, 0) + p_cantidad WHERE id = d.product_id RETURNING quantity INTO v_nuevo;
   v_nuevo := coalesce(v_nuevo, 0);
   v_falta := p_cantidad;
-  FOR v_mov IN SELECT batch_id, sum(-change_amount) AS salio FROM public.inventory_movements
-                WHERE operation_type = 'VENTA' AND notes = 'Ticket #' || p_sale_id::text AND product_id = d.product_id
-                  AND variant_id IS NOT DISTINCT FROM d.variant_id AND batch_id IS NOT NULL
-                GROUP BY batch_id ORDER BY max(id) DESC LOOP
+  -- (lo que salió de cada lote menos lo que ya volvió a ese lote en un cambio anterior del mismo ticket)
+  FOR v_mov IN SELECT m.batch_id, sum(-m.change_amount) - coalesce((
+                        SELECT sum(r.change_amount) FROM public.inventory_movements r
+                         WHERE r.operation_type = 'DEVOLUCION' AND r.reason = 'CAMBIO_PRODUCTO' AND r.batch_id = m.batch_id
+                           AND r.product_id = d.product_id AND r.notes LIKE '%(Ticket #' || p_sale_id::text || ')%'), 0) AS salio
+                 FROM public.inventory_movements m
+                WHERE m.operation_type = 'VENTA' AND m.notes = 'Ticket #' || p_sale_id::text AND m.product_id = d.product_id
+                  AND m.variant_id IS NOT DISTINCT FROM d.variant_id AND m.batch_id IS NOT NULL
+                GROUP BY m.batch_id ORDER BY max(m.id) DESC LOOP
     EXIT WHEN v_falta <= 0;
     v_pone := least(v_falta, greatest(v_mov.salio, 0));
     CONTINUE WHEN v_pone <= 0;

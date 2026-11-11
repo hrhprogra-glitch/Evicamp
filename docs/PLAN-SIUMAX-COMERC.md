@@ -78,7 +78,7 @@
 | **Fase 5 (Descuentos y Promociones)** | **✅ Hecho (incluido en creación de productos: escalas por cantidad, presentaciones y mayoristas)** |
 | **Fase 4 (Clientes, Empresas, Mayoristas, Cotizaciones y Pedidos/Separados)** | **✅ Hecho en producción y GitHub (29/10, commit bd3780f)** |
 | **Fase 3 (Marca, Laboratorio, Principio activo, Modelo, Medidas y Ubicación)** | **✅ Hecho en producción y GitHub (29/10, commit 994bdca)** |
-| **6 fallas vistas al grabar los videos** (STK 9999 en cotización, vencimiento un día antes, costo al recibir compra, cambio de producto: lotes, costo y descuento doble, ticket simple sin devolución) | **Arregladas y probadas en siudemo (11/11, bitácora 130). Falta subir con aviso del dueño** |
+| **8 fallas vistas al grabar los videos** (anular después de un cambio, borrado de caja del cambio, STK 9999 en cotización, vencimiento un día antes, costo al recibir compra, cambio de producto: lotes, costo y descuento doble, ticket simple sin devolución) | **Arregladas (11/11, bitácora 130–131) y subidas al sitio de PRUEBAS con costos corregidos. Falta Evicamp/clientes/GitHub con aviso del dueño** |
 | **Videos tutoriales del sistema** (16 capítulos hasta Ajustes, solo textos; base demo `siudemo`; lista en `siumax/videos/CAPITULOS.md`) | **Los 16 hechos (01–02 aprobados el 10/11; 03–16 grabados del 10 al 11/11). Falta que el dueño los revise** |
 | **Modo Oscuro (Dark Mode)** reemplazando "Plata / Gris" en Apariencia | **Hecho en producción (29/10)** |
 | **Grupos de clientes (familia/empresa)** dentro de la 4.1 | **Hecho en producción (29/10). En siumax: agregados botones directos en cabecera [+ Nuevo grupo] y [Grupos (n)] para gestión independiente (04/11)** |
