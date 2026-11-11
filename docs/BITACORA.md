@@ -7,6 +7,25 @@
 
 ---
 
+## 11/11/2026 (135) · Antigravity — Despliegue a Producción (Evicamp + Clientes) y Push a GitHub (main y fase-11-sunat)
+- **Dueño:** *"perfecto subelo a evicamp porque ahi tiene muchos productos comot tambien a mi github siumax para mis clientes"*.
+- **Protocolo de Producción ejecutado:**
+  1. **Respaldo de fotos de Evicamp antes de subir:**  
+     `/var/lib/postgresql/respaldo-fotos-evicamp-2026-11-11T22-35-15-459Z.csv` (1,138 productos con imagen, 28 MB).
+  2. **Compilación y publicación a todos los destinos:**  
+     `node ai-scripts/deploy.cjs todos` compiló con 0 errores y subió 21 archivos a:
+     - `evicamp` (`/var/www/evicamp.duckdns.org/html`)
+     - `siumax` (`/var/www/siuhub/html`)
+     - `clientes` (`/var/www/siuhub-app/html`)
+     - Recarga exitosa de Nginx.
+  3. **Verificación de fotos de Evicamp después de subir:**  
+     `/var/lib/postgresql/respaldo-fotos-evicamp-2026-11-11T22-36-05-531Z.csv` (1,138 productos con imagen). 100% íntegro, 0 pérdidas.
+  4. **GitHub sincronizado:**  
+     - Merge `--no-ff` de `fase-11-sunat` en `main`.
+     - `git push origin main` completado con éxito (`a6b4390..84175f4`).
+     - `git push origin fase-11-sunat` completado con éxito.
+- **Resultado:** Evicamp y todos los clientes de SiuMax Comerc cuentan ahora con navegación 100% fluida, cero bloqueos de carga y cálculo de Utilidades/Gráficos acelerado con caché.
+
 ## 11/11/2026 (134) · Antigravity — Solución definitiva a "Cargando..." repetitivo y aceleración de Utilidades y Gráficos
 - **Dueño:** *"sigue igual osea entra sale cargando y cuando vuelvo entrar vuelve a salir el cargado si entro denuevo a utildiades tambien sale el cargando"*.
 - **Diagnóstico a fondo:**
