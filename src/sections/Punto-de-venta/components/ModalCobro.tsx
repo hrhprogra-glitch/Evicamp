@@ -691,7 +691,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
           <div className="flex flex-col gap-2 w-full">
           <div className="bg-[var(--color-ink)] text-white p-3 [@media(max-height:820px)]:py-1.5 text-center border-2 border-[var(--color-ink)] shadow-inner relative shrink-0">
             <p className="text-[12px] font-bold text-[var(--color-subtle)] uppercase tracking-[0.2em] mb-1">Total a Pagar</p>
-            <p className="text-2xl sm:text-4xl [@media(max-height:820px)]:text-2xl font-black text-[var(--color-accent)]">S/ {formatearMonto(total)}</p>
+            <p className="text-2xl sm:text-4xl [@media(max-height:820px)]:text-2xl font-black text-white">S/ {formatearMonto(total)}</p>
           </div>
 
           <div className="flex gap-2 shrink-0">

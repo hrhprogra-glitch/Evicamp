@@ -26,6 +26,11 @@ import { PanelCompras, inicioCompras } from './components/PanelCompras';
 import { ModalProduccion } from './components/ModalProduccion';
 import { ModalTraspaso } from './components/ModalTraspaso';
 
+let cacheInventarioMemoria: {
+  products: Product[];
+  dbCategories: string[];
+} | null = null;
+
 interface InventarioProps {
   onNavigate?: (view: string) => void;
 }
@@ -70,9 +75,9 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const [preselectedLoteProduct, setPreselectedLoteProduct] = useState<Product | null>(null);
   const [nuevoLoteRealtime, setNuevoLoteRealtime] = useState<any>(null);
   const [loteToEdit, setLoteToEdit] = useState<any>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dbCategories, setDbCategories] = useState<string[]>([]); // 🔥 NUEVO: Memoria para tu tabla categories
+  const [products, setProducts] = useState<Product[]>(() => cacheInventarioMemoria?.products || []);
+  const [loading, setLoading] = useState(() => !cacheInventarioMemoria);
+  const [dbCategories, setDbCategories] = useState<string[]>(() => cacheInventarioMemoria?.dbCategories || []);
   const [refreshLotesKey, setRefreshLotesKey] = useState(0); // 🛡️ EVICAMP: Llave maestra para forzar actualización de Lotes
   const [refreshProductsKey, setRefreshProductsKey] = useState(0); // Recarga para producción y recetas
   const [isModalProduccionOpen, setIsModalProduccionOpen] = useState(false);
@@ -97,7 +102,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
   useEffect(() => {
     const fetchInventory = async () => {
-      setLoading(true);
+      if (!cacheInventarioMemoria) setLoading(true);
       try {
         // [ RETORNO TÉCNICO ]: Consultas paralelas independientes para blindar la carga de datos y evitar colisiones SQL
         const [ 
@@ -201,6 +206,10 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               costoAdicionalProduccion: Number(p.costo_adicional_produccion || 0),
             };
           });
+          cacheInventarioMemoria = {
+            products: mapeados,
+            dbCategories: catData ? catData.map((c: any) => c.name?.trim().toUpperCase()).filter(Boolean) : (cacheInventarioMemoria?.dbCategories || []),
+          };
           setProducts(mapeados);
           // Descargar en segundo plano solo las fotos que falten en la PC
           void sincronizarFotosFaltantes(productsData);

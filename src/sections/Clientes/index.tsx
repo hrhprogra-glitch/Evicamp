@@ -46,6 +46,13 @@ const pestanaGuardada = (): Pestana => {
   }
 };
 
+let cacheClientesMemoria: {
+  fiados: Fiado[];
+  clientes: Cliente[];
+  grupos: GrupoClientes[];
+  productos: Product[];
+} | null = null;
+
 export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
   const [pestana, setPestanaEstado] = useState<Pestana>(pestanaGuardada);
   const setPestana = (p: Pestana) => { setPestanaEstado(p); try { sessionStorage.setItem('clientes_pestana', p); } catch { /* sin almacenamiento */ } };
@@ -64,7 +71,7 @@ export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNav
   // Detalle del cliente (4.1b): por id, así muestra siempre los datos al día
   const [detalleId, setDetalleId] = useState<string | null>(null);
   // Grupos de clientes (fase 4.1): familia o empresa
-  const [grupos, setGrupos] = useState<GrupoClientes[]>([]);
+  const [grupos, setGrupos] = useState<GrupoClientes[]>(() => cacheClientesMemoria?.grupos || []);
   const [grupoVerId, setGrupoVerId] = useState<string | null>(null);            // ventana del grupo
   const [elegirGrupoPara, setElegirGrupoPara] = useState<string | null>(null);  // cliente al que se le elige grupo
   const [agregarAGrupo, setAgregarAGrupo] = useState<string | null>(null);      // grupo al que se agregan clientes
@@ -72,10 +79,10 @@ export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNav
   const [cuentaGrupoId, setCuentaGrupoId] = useState<string | null>(null);      // "Cobrar al grupo"
   const [verListaGrupos, setVerListaGrupos] = useState(false);                  // ver y administrar grupos
   // Crear deudas es como vender a crédito
-  const [loading, setLoading] = useState(true);
-  const [fiados, setFiados] = useState<Fiado[]>([]);
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [productosInventario, setProductosInventario] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(() => !cacheClientesMemoria);
+  const [fiados, setFiados] = useState<Fiado[]>(() => cacheClientesMemoria?.fiados || []);
+  const [clientes, setClientes] = useState<Cliente[]>(() => cacheClientesMemoria?.clientes || []);
+  const [productosInventario, setProductosInventario] = useState<Product[]>(() => cacheClientesMemoria?.productos || []);
   
   const [isModalFiadoOpen, setIsModalFiadoOpen] = useState(false);
   const [fiadoAEditar, setFiadoAEditar] = useState<Fiado | null>(null);
@@ -99,7 +106,7 @@ export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNav
 
   // Cargar datos desde Supabase al iniciar
   const cargarDatos = async (silencioso = false) => {
-    if (!silencioso) setLoading(true);
+    if (!silencioso && !cacheClientesMemoria) setLoading(true);
     // En qué fila estaba el selector (ej. el cliente al que se le cobró, que al quedar sin deuda sale de Créditos)
     const filaAntes = filasDeLaPestana().indexOf(document.activeElement as HTMLElement);
       // 🔥 OPTIMIZACIÓN: Lanzamos todas las consultas al mismo tiempo (Paralelo)
@@ -117,13 +124,17 @@ export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNav
         traerTodo(() => supabase.from('debt_payments').select('*').order('id')),
         traerTodo(() => supabase.from('grupos_clientes').select('*').order('id'))
       ]);
-      if (grupData) setGrupos(grupData.map((g: any) => ({
-        id: String(g.id),
-        nombre: g.nombre || 'SIN NOMBRE',
-        tipo: g.tipo === 'EMPRESA' ? 'EMPRESA' : 'FAMILIA',
-        ruc: g.ruc || '',
-        descuentoPorcentaje: g.descuento_porcentaje != null && !Number.isNaN(Number(g.descuento_porcentaje)) ? Number(g.descuento_porcentaje) : undefined
-      })));
+      let gruposMapeados: GrupoClientes[] = cacheClientesMemoria?.grupos || [];
+      if (grupData) {
+        gruposMapeados = grupData.map((g: any) => ({
+          id: String(g.id),
+          nombre: g.nombre || 'SIN NOMBRE',
+          tipo: g.tipo === 'EMPRESA' ? 'EMPRESA' : 'FAMILIA',
+          ruc: g.ruc || '',
+          descuentoPorcentaje: g.descuento_porcentaje != null && !Number.isNaN(Number(g.descuento_porcentaje)) ? Number(g.descuento_porcentaje) : undefined
+        }));
+        setGrupos(gruposMapeados);
+      }
 
       // OPTIMIZACIÓN: Solo descargar detalles de las ventas que corresponden a fiados
       let detailsData: any[] = [];
@@ -145,9 +156,14 @@ export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNav
 
       // 1. Asignar Inventario
       // (los eliminados vienen marcados activo=false: el buscador del fiado no los muestra)
-      if (prods) setProductosInventario(prods.map((p: any) => ({ ...p, activo: Number(p.is_active ?? 1) === 1 })) as Product[]);
+      let prodsMapeados: Product[] = cacheClientesMemoria?.productos || [];
+      if (prods) {
+        prodsMapeados = prods.map((p: any) => ({ ...p, activo: Number(p.is_active ?? 1) === 1 })) as Product[];
+        setProductosInventario(prodsMapeados);
+      }
 
       // 2. Asignar Clientes
+      let clientesFinales: Cliente[] = cacheClientesMemoria?.clientes || [];
 if (clis) {
   const clientesMapeados: Cliente[] = clis.map(c => ({
     id: c.id?.toString() ?? 'ID_NULO', // <-- PROTECCIÓN AQUÍ
@@ -200,6 +216,7 @@ if (clis) {
   }
 
   setClientes(clientesMapeados);
+  clientesFinales = clientesMapeados;
 }
 
 // 3. Procesar Fiados y Pagos
@@ -265,12 +282,18 @@ if (fiaData) {
     } as any;
   });
   
-  // <-- PROTECCIÓN EN EL SORT (Asegura que fechaEmision exista)
-  setFiados(fiadosMapeados.sort((a, b) => {
+  const fiadosOrdenados = fiadosMapeados.sort((a, b) => {
       const timeA = a.fechaEmision ? new Date(a.fechaEmision).getTime() : 0;
       const timeB = b.fechaEmision ? new Date(b.fechaEmision).getTime() : 0;
       return timeB - timeA;
-    }));
+    });
+  setFiados(fiadosOrdenados);
+  cacheClientesMemoria = {
+    fiados: fiadosOrdenados,
+    clientes: clientesFinales,
+    grupos: gruposMapeados,
+    productos: prodsMapeados,
+  };
   }
   setLoading(false);
   // Si la fila donde estaba el selector desapareció (o el selector se perdió), va a la fila que quedó en su lugar
@@ -285,7 +308,7 @@ if (fiaData) {
     };
 
   useEffect(() => {
-    cargarDatos();
+    cargarDatos(!!cacheClientesMemoria);
   }, []);
 
   // 🔥 RESTAURAR FOCO AL CERRAR MODALES O TERMINAR DE CARGAR

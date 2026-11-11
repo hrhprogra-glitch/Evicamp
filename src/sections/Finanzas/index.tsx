@@ -27,6 +27,12 @@ import { confirmar } from '../../utils/dialogos';
 import { conAutorizacion } from '../../utils/autorizacion';
 import { comprobanteDeVenta, contarComprobantesConProblema } from '../../utils/comprobante';
 
+let cacheFinanzasMemoria: {
+  sessionActiva: CashSession | null;
+  movimientos: UnifiedItem[];
+  superMetricas: SuperMetricas | null;
+} | null = null;
+
 export const Finanzas: React.FC = () => {
   // Abrir/cerrar caja y registrar ingresos/egresos son permisos distintos
   const puedeTurno = usePermiso('caja_abrir_cerrar_turno');
@@ -37,12 +43,12 @@ export const Finanzas: React.FC = () => {
   const veMontos = usePermiso('reportes_ver_globales');
   const veVentasTurno = usePermiso('reportes_ver_historial_ventas') || veMontos;
   const empleado = useEmpleado();
-  const [sessionActiva, setSessionActiva] = useState<CashSession | null>(null);
-  const [movimientos, setMovimientos] = useState<UnifiedItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [sessionActiva, setSessionActiva] = useState<CashSession | null>(() => cacheFinanzasMemoria?.sessionActiva || null);
+  const [movimientos, setMovimientos] = useState<UnifiedItem[]>(() => cacheFinanzasMemoria?.movimientos || []);
+  const [isLoading, setIsLoading] = useState(() => !cacheFinanzasMemoria);
 
   // Estados Clásicos y Nuevos
-  const [superMetricas, setSuperMetricas] = useState<SuperMetricas | null>(null);
+  const [superMetricas, setSuperMetricas] = useState<SuperMetricas | null>(() => cacheFinanzasMemoria?.superMetricas || null);
 
   const [isAperturaModalOpen, setIsAperturaModalOpen] = useState(false);
   const [isMovimientoModalOpen, setIsMovimientoModalOpen] = useState(false);
@@ -124,7 +130,7 @@ export const Finanzas: React.FC = () => {
   };
 
   useEffect(() => {
-    cargarDatosCaja();
+    cargarDatosCaja(!!cacheFinanzasMemoria);
 
     // 🛡️ EVICAMP: Si la pestaña estuvo inactiva (u otra caja/dispositivo registró ventas),
     // al volver a mirarla se refrescan los totales para no quedar con datos viejos.
@@ -142,7 +148,7 @@ export const Finanzas: React.FC = () => {
   }, []);
 
   const cargarDatosCaja = async (silencioso = false) => {
-    if (!silencioso) setIsLoading(true);
+    if (!silencioso && !cacheFinanzasMemoria) setIsLoading(true);
     try {
       const { data: sessionData } = await supabase
         .from('cash_sessions')
@@ -269,7 +275,7 @@ export const Finanzas: React.FC = () => {
         const yapeEsperado = vYape + dYape + ingresosExtraYape - gastosYape;
         const tarjetaEsperada = vTarjeta + dTarjeta + ingresosExtraTarjeta - gastosTarjeta;
 
-        setSuperMetricas({
+        const metricasCalculadas: SuperMetricas = {
           fondoInicial, ingresosExtra, gastos,
           ingresosExtraYape, ingresosExtraTarjeta, gastosYape, gastosTarjeta,
           ventasEfectivo: vEfectivo, ventasYape: vYape, ventasTarjeta: vTarjeta,
@@ -277,7 +283,8 @@ export const Finanzas: React.FC = () => {
           efectivoEsperadoCaja: efectivoFisicoQueDebeHaber,
           yapeEsperado, tarjetaEsperada,
           totalFacturado: vEfectivo + vYape + vTarjeta
-        });
+        };
+        setSuperMetricas(metricasCalculadas);
 
         // 🔥 ARQUITECTURA TÉCNICA: Ya no necesitamos inyectar datos falsos.
         // El Trigger de la BD nos trajo los abonos reales en 'movData'.
@@ -366,13 +373,23 @@ export const Finanzas: React.FC = () => {
         unificados.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
         setMovimientos(unificados);
+        cacheFinanzasMemoria = {
+          sessionActiva: sessionData as CashSession,
+          movimientos: unificados,
+          superMetricas: metricasCalculadas
+        };
       } else {
         setSessionActiva(null);
+        cacheFinanzasMemoria = {
+          sessionActiva: null,
+          movimientos: [],
+          superMetricas: null
+        };
       }
     } catch (error) {
       console.error(error);
     } finally {
-      if (!silencioso) setIsLoading(false);
+      setIsLoading(false);
     }
   };
 

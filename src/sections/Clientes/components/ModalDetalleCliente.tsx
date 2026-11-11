@@ -46,6 +46,13 @@ const soles = (n: number) => `S/ ${formatearMonto(n)}`;
 const estaPagado = (f: Fiado) => f.estado === 'PAGADO' || (Number(f.saldoPendiente) || 0) <= 0.05;
 // Fecha como AAAA-MM-DD en hora local (para el filtro de fecha)
 const diaLocal = (f: string) => { const d = new Date(f); return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-CA'); };
+const fechaUltimoPago = (f: Fiado) => {
+  if (f.pagos && f.pagos.length > 0) {
+    const fechas = f.pagos.map((p) => String(p.fecha)).filter(Boolean).sort();
+    if (fechas.length > 0) return fechas[fechas.length - 1];
+  }
+  return f.fechaEmision;
+};
 
 export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose, onEditar, onEstadoCuenta, grupo, miembrosGrupo = 0, deudaGrupo = 0, onGrupo, onSacarDeGrupo }) => {
   // Botones de arriba (← →): con grupo aparece también "Sacar del grupo"
@@ -180,12 +187,25 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
   }, [creditos, compras]);
 
   const pendientes = creditos.filter((f) => !estaPagado(f));
-  const pagados = creditos.filter(estaPagado);
+  const pagados = useMemo(() => {
+    return creditos
+      .filter(estaPagado)
+      .sort((a, b) => String(fechaUltimoPago(b)).localeCompare(String(fechaUltimoPago(a))));
+  }, [creditos]);
 
   // Historial: la pestaña elegida + buscador (producto, monto o estado) + fecha
   const historial = useMemo(() => {
     let lista = pestana === 'PENDIENTES' ? pendientes : pagados;
-    if (dia) lista = lista.filter((f) => diaLocal(f.fechaEmision) === dia);
+    if (dia) {
+      if (pestana === 'PAGADOS') {
+        lista = lista.filter((f) => {
+          if (diaLocal(fechaUltimoPago(f)) === dia) return true;
+          return (f.pagos || []).some((p) => diaLocal(p.fecha) === dia);
+        });
+      } else {
+        lista = lista.filter((f) => diaLocal(f.fechaEmision) === dia);
+      }
+    }
     const q = busqueda.trim().toLowerCase();
     if (q) {
       lista = lista.filter((f) => String(f.montoOriginal).includes(q) || String(f.saldoPendiente).includes(q)
@@ -308,7 +328,7 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono" onKeyDown={teclas}>
       <div role="dialog" aria-label={`Cliente ${cliente.nombre}`}
-        className="ventana-sobria bg-[var(--color-surface)] w-full max-w-5xl border-2 border-[var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.94)] sm:h-[calc(var(--alto-pantalla)*0.88)]">
+        className="ventana-sobria bg-[var(--color-surface)] w-full max-w-6xl border-2 border-[var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.96)] max-h-[96vh]">
         {/* CABECERA */}
         <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
@@ -359,7 +379,7 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
               ['Última compra', fecha(resumen.ultimaFecha), 'text-[var(--color-ink)]'],
               ['Viene cada', resumen.cada === null ? '—' : `${resumen.cada} día${resumen.cada === 1 ? '' : 's'}`, 'text-[var(--color-ink)]'],
             ].map(([t, v, c]) => (
-              <div key={t} className="border-2 border-[var(--color-border)] bg-white p-3">
+              <div key={t} className="border-2 border-[var(--color-border)] bg-white p-2 sm:p-2.5">
                 <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-muted)]">{t}</p>
                 <p className={`font-black ${c}`}>{v}</p>
               </div>
@@ -408,7 +428,7 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
           </BarraFiltros>
 
           {/* LISTA DE REGISTROS (Enter despliega productos y abonos) */}
-          <CajaLista
+          <CajaLista className="min-h-[300px] sm:min-h-[380px] flex-1"
             vacia={pestana === 'COMPRAS' ? !comprasFiltradas.length : !historial.length}
             mensaje={
               hayFiltros
@@ -476,10 +496,10 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
                     <FilaLista tabIndex={0} data-credito-cliente="true" data-row="true" aria-expanded={abierto}
                       onClick={() => alternar(f.id)}
                       icono={<ReceiptText size={28} />}
-                      titulo={`Crédito del ${fecha(f.fechaEmision)}`}
-                      subtitulo={<><LineaDato titulo={productos}>{productos || 'Sin detalle de productos'}</LineaDato><LineaDato>Monto {soles(Number(f.montoOriginal) || 0)} · abonado {soles(Number(f.montoPagado) || 0)} · {abierto ? 'Enter: ocultar' : 'Enter: ver productos y abonos'}</LineaDato></>}
+                      titulo={pagado ? `Pagado el ${fecha(fechaUltimoPago(f))} · Crédito del ${fecha(f.fechaEmision)}` : `Crédito del ${fecha(f.fechaEmision)}`}
+                      subtitulo={<><LineaDato titulo={productos}>{productos || 'Sin detalle de productos'}</LineaDato><LineaDato>{pagado ? `Cancelado el ${fecha(fechaUltimoPago(f))} · Total ${soles(Number(f.montoOriginal) || 0)} · ${abierto ? 'Enter: ocultar' : 'Enter: ver productos y abonos'}` : `Monto ${soles(Number(f.montoOriginal) || 0)} · abonado ${soles(Number(f.montoPagado) || 0)} · ${abierto ? 'Enter: ocultar' : 'Enter: ver productos y abonos'}`}</LineaDato></>}
                       centro={<Etiqueta tono={pagado ? 'verde' : 'rojo'}>{pagado ? 'Pagado' : 'Debe'}</Etiqueta>}
-                      derecha={<DatoFila etiqueta="Debe" valor={soles(Number(f.saldoPendiente) || 0)} tono={pagado ? 'normal' : 'rojo'} />}
+                      derecha={<DatoFila etiqueta={pagado ? 'Total' : 'Debe'} valor={soles(Number(pagado ? f.montoOriginal : f.saldoPendiente) || 0)} tono={pagado ? 'normal' : 'rojo'} />}
                     />
                     {abierto && (
                       <div data-credito-abierto="true" className="px-4 sm:px-16 pb-4 pt-1 flex flex-col gap-3 bg-[var(--color-bg)] text-sm">

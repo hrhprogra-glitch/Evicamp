@@ -54,8 +54,8 @@ export const TextoBarra: React.FC<{ children: React.ReactNode }> = ({ children }
 
 // Caja blanca de la lista. Sin filas muestra el mensaje centrado. La última fila también lleva su línea
 // (border-b-2): si no, el espacio blanco de abajo parece parte de ella.
-export const CajaLista: React.FC<{ children?: React.ReactNode; vacia?: boolean; mensaje?: React.ReactNode }> = ({ children, vacia, mensaje }) => (
-  <div className="flex-1 overflow-y-auto min-h-0 border-2 border-[var(--color-border)] bg-white [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+export const CajaLista: React.FC<{ children?: React.ReactNode; vacia?: boolean; mensaje?: React.ReactNode; className?: string }> = ({ children, vacia, mensaje, className = '' }) => (
+  <div className={`flex-1 overflow-y-auto min-h-[220px] border-2 border-[var(--color-border)] bg-white [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${className}`}>
     {vacia ? (
       <div className="flex items-center justify-center gap-2 h-full min-h-[120px] p-6 text-center text-[var(--color-subtle)] font-bold text-sm uppercase">
         {mensaje}
@@ -88,7 +88,7 @@ type PropsFila = Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> & {
 export const FilaLista: React.FC<PropsFila> = ({ icono, titulo, subtitulo, centro, derecha, atenuada, tono = 'normal', className = '', ...resto }) => (
   <div
     {...resto}
-    className={`p-3 sm:p-4 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 sm:gap-0 hover:bg-[var(--color-bg)] focus:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors group ${
+    className={`p-2.5 sm:p-3 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 sm:gap-0 hover:bg-[var(--color-bg)] focus:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] transition-colors group ${
       tono === 'error' ? 'bg-[var(--color-danger-bg)]' : ''
     } ${className}`}
   >

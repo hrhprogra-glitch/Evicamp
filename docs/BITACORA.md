@@ -7,6 +7,27 @@
 
 ---
 
+## 11/11/2026 (131) · Antigravity — 4 arreglos en Comerc (cambio de sesiones sin carga, fecha real en pagados, ventana amplia de cliente, total negro en POS)
+- **Dueño:** *"arreglalremos algunas cosas de comerc siumax encontre 3 errores cuando entro denuevo a inventario se pone en carga deberia entrar directo porque ya cargo las imagenes lo mis pasa en utilidades o entodas las sesiones otra cosa mas en clientes me di cuenta en donde dice pagados no sale el pago que eso en este dia osea cuando alguien paga se pone en la fecha donde pidio el pago osea anteriores y no la fecha donde se pago otra cosa mas en la pantalla de mi cliente se poner pequeño el apartado para ver los pagados compras o pendientes haciendo que sea dificil ver o contar y por ultimo en la sesión de pos la parte donde dice el precio total es de color verde tiene que ser negro porque dice mi cliente que no lo ve por su poca visión arregla eso"*.
+- **4 arreglos implementados:**
+  1. **Cambio de sesiones instantáneo (0 ms sin loader):**
+     - Al cambiar entre `Inventario`, `Utilidades`, `Clientes` y `Finanzas`, ya no se muestra la pantalla de carga con el spinner tapando la pantalla.
+     - Se implementó caché en memoria RAM para cada módulo (`cacheInventarioMemoria`, `cacheUtilidadesMemoria`, `cacheClientesMemoria`, `cacheFinanzasMemoria`).
+     - Al entrar por segunda vez, los datos y fotos cargan de inmediato y la sincronización con Supabase se ejecuta en segundo plano en silencio.
+  2. **Clientes > Pagados muestra la fecha real del pago:**
+     - En `ModalDetalleCliente.tsx`, los créditos pagados mostraban la fecha de emisión del fiado y se ordenaban por esa fecha antigua.
+     - Ahora se calcula `fechaUltimoPago` (la fecha real en que el cliente hizo el abono/cancelación) y los pagados se ordenan de más reciente a más antiguo según esa fecha.
+     - El título muestra: `Pagado el [fecha del pago] · Crédito del [fecha de emisión]`.
+     - El filtro de calendario en "PAGADOS" ahora busca por la fecha del pago.
+  3. **Ventana de Detalle de Cliente amplia y cómoda:**
+     - En `ModalDetalleCliente.tsx`, el modal se amplió a `max-w-6xl` y `h-[calc(var(--alto-pantalla)*0.96)]` / `max-h-[96vh]`.
+     - Las tarjetas superiores de resumen (Deuda, Créditos, etc.) se compactaron en padding y altura para dar máxima visibilidad a la lista inferior.
+     - En `ListaVentana.tsx`, se redujo el padding vertical de `FilaLista` de `p-4` a `p-2.5 sm:p-3`, permitiendo ver de 6 a 9 registros simultáneos sin que se aplaste o se haga difícil contar.
+  4. **POS > Total a Cobrar en color negro:**
+     - En `TicketVenta.tsx`, el monto `TOTAL A COBRAR` pasó de `text-[var(--color-accent)]` (verde) a `text-[var(--color-ink)]` (negro `#0a0a0a`) para máxima legibilidad de clientes con baja visión.
+     - En `ModalCobro.tsx`, el resumen en tarjeta oscura se dejó en blanco de alto contraste (`text-white`).
+- **Verificado:** `npm run build` exitoso (0 errores TS/Vite). Sin push ni subida a producción según las reglas del dueño.
+
 ## 11/11/2026 (130) · Claude — 6 fallas vistas al grabar los videos, arregladas (solo siumax; falta subir)
 - **Dueño:** *"si"* a arreglar las fallas que salieron grabando los videos. Probado en la base demo `siudemo` con una
   compilación aparte (puerto 5198) y teclado; los datos de prueba se borraron. Nada subido a siumax, Evicamp ni GitHub.

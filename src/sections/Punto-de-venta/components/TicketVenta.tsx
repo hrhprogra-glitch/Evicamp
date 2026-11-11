@@ -422,7 +422,7 @@ export const TicketVenta: React.FC<Props> = ({
 
         <div className="flex justify-between items-end mt-0">
           <span className="text-xs font-black uppercase tracking-[0.1em] text-[var(--color-ink)]">TOTAL A COBRAR</span>
-          <span className="text-2xl sm:text-3xl font-black text-[var(--color-accent)] tracking-tighter leading-none">
+          <span className="text-2xl sm:text-3xl font-black text-[var(--color-ink)] tracking-tighter leading-none">
             <span className="text-xl">S/</span> {total.toFixed(2)}
           </span>
         </div>
