@@ -835,5 +835,5 @@
     2. En Clientes > Pagados, ordenamiento por `fechaUltimoPago` de más reciente a más antiguo, título `Pagado el [fecha] · Crédito del [fecha]`, y filtro de fecha por pago.
     3. Ventana de Detalle de Cliente ampliada (`max-w-6xl`, `max-h-[96vh]`), tarjetas superiores compactadas y lista con altura cómoda para ver de 6 a 9 filas sin aplastarse.
     4. En POS, precio de "TOTAL A COBRAR" cambiado de verde a negro para facilitar la lectura a clientes con baja visión.
-  - Compilado con 0 errores (TS/Vite). Ver bitácora 131.
+  - Compilado con 0 errores (TS/Vite). Ver bitácora 132.
 - 11/11: el dueño respondió las 3 preguntas: corregir los costos viejos al subir, arreglar las 2 fallas más (anular después de un cambio devolvía el producto dos veces; el cambio podía borrar un movimiento de caja equivocado) y subir a pruebas. Hecho y probado; subido solo al sitio de pruebas con respaldo (2 costos corregidos: Pollo y Coca Cola Original). Ver bitácora 131.

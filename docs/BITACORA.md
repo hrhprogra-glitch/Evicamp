@@ -28,22 +28,24 @@
      - En `ModalCobro.tsx`, el resumen en tarjeta oscura se dejó en blanco de alto contraste (`text-white`).
 - **Verificado:** `npm run build` exitoso (0 errores TS/Vite). Sin push ni subida a producción según las reglas del dueño.
 
-## 11/11/2026 (131) · Claude — 2 fallas más del cambio de producto + todo subido al sitio de PRUEBAS (costos corregidos)
+## 11/11/2026 (132) · Claude — 2 fallas más del cambio de producto + todo subido al sitio de PRUEBAS (costos corregidos)
 - **Dueño** (respondiendo las 3 preguntas): costos viejos *"Sí, al subir"*, las 2 fallas *"Sí, las dos"*, y *"Sí, súbelo a pruebas"*.
 1. **Anular una venta que tuvo un cambio de producto devolvía otra vez el producto original** (y, en cambios hechos antes
-   de hoy, no devolvía el nuevo):  ahora resta, por producto, lo que ya volvió en el cambio (DEVOLUCION
-   CAMBIO_PRODUCTO con  completo o con los 6 últimos dígitos) y también devuelve las salidas viejas
-   . Recorre del último movimiento al primero.    ahora anota el número completo y, si hay dos cambios del mismo producto en un ticket, no devuelve dos veces al mismo lote.
-2. **El cambio borraba cualquier movimiento de caja con los 6 últimos dígitos del ticket** ( paso 5):
-   ahora solo las filas viejas  que hacía una versión anterior. Probado con un señuelo.
+   de hoy, no devolvía el nuevo): `fn_anular_venta` ahora resta, por producto, lo que ya volvió en el cambio (DEVOLUCION
+   CAMBIO_PRODUCTO con `(Ticket #<número completo>)` o con los 6 últimos dígitos) y también devuelve las salidas viejas
+   `Salida por cambio de producto (Ticket #123456)`. Recorre del último movimiento al primero. `fn_mover_stock_cambio`
+   ahora anota el número completo y, si hay dos cambios del mismo producto en un ticket, no devuelve dos veces al mismo lote.
+2. **El cambio borraba cualquier movimiento de caja con los 6 últimos dígitos del ticket** (`ModalCambioProducto` paso 5):
+   ahora solo las filas viejas `…POR CAMBIO…TICKET #<número>)` que hacía una versión anterior. Probado con un señuelo.
 - Probado en siudemo: venta 2 Inca Kola → cambio 1 por 2 Cua Cua → anular con el tacho: Inca 41, Cua Cua 27, lotes =
-  producto, caja devolvió S/ 4.50 (el total después del cambio). Datos de prueba borrados.
-- **Sitio de PRUEBAS** (, base ):   (respaldo  + CSV de costos →
-   con lock_timeout → costos viejos = costo del último lote: POLLO 5 y COCA COLA ORIGINAL 2, que no
-  tenían → verificación) y .  sigue respondiendo.
+  producto, la caja devolvió S/ 4.50 (el total después del cambio). Datos de prueba borrados.
+- **Sitio de PRUEBAS** (`comerc.siumax.duckdns.org`, base `siumax`): `ai-scripts/pruebas/aplicar-arreglos-videos-siumax.cjs`
+  (respaldo `/var/lib/postgresql/respaldo-siumax-antes-arreglos-videos-2026-11-11T18-48-54-017Z.dump` + CSV de costos →
+  `seguridad-sesion.sql` con lock_timeout → costos viejos = costo del último lote: POLLO 5 y COCA COLA ORIGINAL 2, que no
+  tenían → verificación) y `deploy.cjs siumax`. `siumax.duckdns.org/actualizaciones/latest.yml` sigue respondiendo.
+  La subida incluyó también los 4 arreglos de Antigravity (131, commit 5c4baf8), que ya estaban guardados.
 - **Falta:** que el dueño revise en pruebas. Para Evicamp/clientes (solo con su aviso): el mismo script con su base
-  (respaldo, costos) y ; luego merge y push.
-
+  (respaldo, costos) y `deploy.cjs`; luego merge y push.
 ## 11/11/2026 (130) · Claude — 6 fallas vistas al grabar los videos, arregladas (solo siumax; falta subir)
 - **Dueño:** *"si"* a arreglar las fallas que salieron grabando los videos. Probado en la base demo `siudemo` con una
   compilación aparte (puerto 5198) y teclado; los datos de prueba se borraron. Nada subido a siumax, Evicamp ni GitHub.
