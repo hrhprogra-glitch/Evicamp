@@ -42,11 +42,13 @@ interface Props {
   sinVentas?: Set<string>; // fase 2.4: productos con stock y sin ventas en 30 días (filtro "Sin ventas")
 }
 
+let cacheLotesMemoria: Lote[] | null = null;
+
 export const TablaLotes: React.FC<Props> = ({ 
   searchQuery, filtroCategoria, filtroEstado, filtroOrden, nuevoLoteInyectado, onViewMermas, onViewHistory, onEditLote, onLoteDeleted, sinVentas // <-- AÑADIR AQUÍ
 }) => {
-  const [lotes, setLotes] = useState<Lote[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [lotes, setLotes] = useState<Lote[]>(() => cacheLotesMemoria || []);
+  const [loading, setLoading] = useState(() => !cacheLotesMemoria);
   // Retirar un lote: permiso de ingresar lotes o de eliminar productos (el servidor también lo exige)
   const puedeIngresarLotes = usePermiso('almacen_ingresar_lotes');
   const puedeEliminarProductos = usePermiso('almacen_eliminar_productos');
@@ -54,7 +56,7 @@ export const TablaLotes: React.FC<Props> = ({
 
   useEffect(() => {
     const fetchLotes = async () => {
-      setLoading(true);
+      if (!cacheLotesMemoria) setLoading(true);
       try {
         // 🛡️ OPTIMIZACIÓN: Ocultamos los lotes que fueron eliminados (is_active: 0)
         const { data, error } = await supabase
@@ -87,6 +89,7 @@ export const TablaLotes: React.FC<Props> = ({
             category: b.products?.category || 'GENERAL',
             unit: b.products?.unit === 'CONSUMO' || b.products?.control_type === 'CONSUMO' || b.products?.control_type === 'SERVICE' ? 'CONSUMO' : (b.products?.unit || b.products?.weight_unit || (b.products?.control_type === 'WEIGHT' ? 'KG' : 'UND'))
           }));
+          cacheLotesMemoria = mapeados;
           setLotes(mapeados);
         }
       } catch (error: any) {
@@ -275,7 +278,7 @@ export const TablaLotes: React.FC<Props> = ({
 
   return (
     <div id="tabla-lotes-inventario" className="border border-[var(--color-border)] flex flex-col bg-[var(--color-surface)] relative min-h-[200px]">
-      {loading && (
+      {loading && lotes.length === 0 && (
         <div className="absolute inset-0 bg-white/80 dark:bg-[var(--color-surface)]/80 backdrop-blur-sm z-10 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>

@@ -205,7 +205,7 @@ export const TablaProductos: React.FC<Props> = ({
 
   return (
     <div id="tabla-productos-inventario" className="tabla-marco flex flex-col relative min-h-[200px]">
-      {loading && (
+      {loading && productos.length === 0 && (
         <div className="absolute inset-0 bg-white/80 dark:bg-[var(--color-surface)]/80 backdrop-blur-sm z-10 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>

@@ -19,19 +19,21 @@ interface Props {
   onNavigate?: (view: string) => void;
 }
 
+import { cacheProveedoresMemoria, setCacheProveedores } from '../../utils/cacheModulos';
+
 export const Proveedores: React.FC<Props> = ({ onNavigate }) => {
   const [vistaActiva, setVistaActiva] = useState<'PROVEEDORES' | 'LOTES'>('LOTES');
 
   // ===================== ESTADOS PROVEEDORES =====================
-  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
-  const [loadingProv, setLoadingProv] = useState(true);
+  const [proveedores, setProveedores] = useState<Proveedor[]>(() => cacheProveedoresMemoria?.proveedores || []);
+  const [loadingProv, setLoadingProv] = useState(() => !cacheProveedoresMemoria);
   const [searchQueryProv, setSearchQueryProv] = useState('');
   const [filtroEstadoProv, setFiltroEstadoProv] = useState('');
   const [isModalProvOpen, setIsModalProvOpen] = useState(false);
   const [proveedorAEditar, setProveedorAEditar] = useState<Proveedor | null>(null);
 
   // ===================== ESTADOS LOTES =====================
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>(() => cacheProveedoresMemoria?.products || []);
   const [refreshLotesKey, setRefreshLotesKey] = useState(0);
   const [isModalLoteOpen, setIsModalLoteOpen] = useState(false);
   const [loteToEdit, setLoteToEdit] = useState<any>(null);
@@ -42,7 +44,7 @@ export const Proveedores: React.FC<Props> = ({ onNavigate }) => {
   const [filtroOrdenLotes, setFiltroOrdenLotes] = useState('NOMBRE_ASC');
 
   const fetchProveedores = async () => {
-    setLoadingProv(true);
+    if (!cacheProveedoresMemoria) setLoadingProv(true);
     try {
       const { data, error } = await supabase
         .from('providers')
@@ -50,7 +52,12 @@ export const Proveedores: React.FC<Props> = ({ onNavigate }) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setProveedores(data || []);
+      const provs = data || [];
+      setProveedores(provs);
+      setCacheProveedores({
+        proveedores: provs,
+        products: cacheProveedoresMemoria?.products || [],
+      });
     } catch (error) {
       console.error("Error cargando proveedores:", error);
     } finally {
@@ -109,6 +116,10 @@ export const Proveedores: React.FC<Props> = ({ onNavigate }) => {
             };
           });
           setProducts(mapeados);
+          setCacheProveedores({
+            proveedores: cacheProveedoresMemoria?.proveedores || [],
+            products: mapeados,
+          });
         }
       } catch (error) {
         console.error("Error cargando inventario:", error);
@@ -259,7 +270,7 @@ export const Proveedores: React.FC<Props> = ({ onNavigate }) => {
         
         {/* VISTA PROVEEDORES */}
         <div className={`flex-1 min-h-0 flex-col ${vistaActiva === 'PROVEEDORES' ? 'flex' : 'hidden'}`}>
-          {loadingProv ? (
+          {loadingProv && filteredProveedores.length === 0 ? (
             <div className="absolute inset-0 bg-[var(--color-surface)]/85 backdrop-blur-sm z-10 flex items-center justify-center border-2 border-[var(--color-border)]">
               <div className="flex flex-col items-center gap-3">
                 <Loader2 size={24} className="text-[var(--color-info)] animate-spin" />

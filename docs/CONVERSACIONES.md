@@ -837,3 +837,11 @@
     4. En POS, precio de "TOTAL A COBRAR" cambiado de verde a negro para facilitar la lectura a clientes con baja visión.
   - Compilado con 0 errores (TS/Vite). Ver bitácora 132.
 - 11/11: el dueño respondió las 3 preguntas: corregir los costos viejos al subir, arreglar las 2 fallas más (anular después de un cambio devolvía el producto dos veces; el cambio podía borrar un movimiento de caja equivocado) y subir a pruebas. Hecho y probado; subido solo al sitio de pruebas con respaldo (2 costos corregidos: Pollo y Coca Cola Original). Ver bitácora 131.
+- 11/11: *"cada vez que entro a inventario o clientes o conteos o finanzas o utilidades sale el cargando yo no quiero eso solo quiero que cargue una vez se guarde lo qu cargo y todo entre fluido entiendes???"* (con captura de pantalla).
+  - Identificado y resuelto por Antigravity:
+    - Las tablas tenían un overlay `backdrop-blur-sm` con spinner y texto "Cargando..." que bloqueaba la pantalla.
+    - Se condicionó cada overlay para que solo se muestre si no hay registros (`items.length === 0`).
+    - Al abrir la app, POS pre-pobla `cacheInventarioMemoria` en `src/utils/cacheModulos.ts`.
+    - Cada módulo guarda en memoria sus datos, logrando cambio entre pestañas en 0 ms sin pantallas de carga.
+    - Compilación 0 errores. Ver bitácora 133.
+

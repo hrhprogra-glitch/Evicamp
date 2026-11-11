@@ -11,13 +11,7 @@ import type { AnalisisProducto, StatsFiltro } from './types';
 // Reportes, Finanzas y Punto de Venta, para que el monto SIEMPRE coincida entre pantallas.
 import { fechaLocalPeru, primerDiaMesPeru, haceNDiasPeru } from '../../utils/ingresos';
 
-let cacheUtilidadesMemoria: {
-  fechaInicio: string;
-  fechaFin: string;
-  gastos: number;
-  ingresoTotal: number;
-  analisis: AnalisisProducto[];
-} | null = null;
+import { cacheUtilidadesMemoria, setCacheUtilidades } from '../../utils/cacheModulos';
 
 export const Utilidades = () => {
   const hoyStr = fechaLocalPeru();
@@ -52,13 +46,13 @@ export const Utilidades = () => {
       const r = await calcularAnalisis(fechaInicio, fechaFin);
       setGastosCaja(r.gastos);
       setIngresosTotalesExactos(r.ingresoTotal);
-      cacheUtilidadesMemoria = {
+      setCacheUtilidades({
         fechaInicio,
         fechaFin,
         gastos: r.gastos,
         ingresoTotal: r.ingresoTotal,
         analisis: r.analisis,
-      };
+      });
       setAnalisisCompleto(r.analisis);
       setIsLoading(false);
     };
@@ -116,7 +110,7 @@ export const Utilidades = () => {
         {/* La tabla permanece siempre montada (aunque esté cargando) para no perder
             la categoría, rotación, búsqueda y página que el usuario ya eligió. */}
         <div className="relative">
-          {isLoading && (
+          {isLoading && analisisCompleto.length === 0 && (
             <div className="absolute inset-0 bg-[var(--color-surface)]/85 backdrop-blur-sm z-50 flex items-center justify-center">
               <div className="flex flex-col items-center gap-4">
                 <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>

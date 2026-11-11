@@ -46,12 +46,7 @@ const pestanaGuardada = (): Pestana => {
   }
 };
 
-let cacheClientesMemoria: {
-  fiados: Fiado[];
-  clientes: Cliente[];
-  grupos: GrupoClientes[];
-  productos: Product[];
-} | null = null;
+import { cacheClientesMemoria, setCacheClientes } from '../../utils/cacheModulos';
 
 export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
   const [pestana, setPestanaEstado] = useState<Pestana>(pestanaGuardada);
@@ -288,12 +283,12 @@ if (fiaData) {
       return timeB - timeA;
     });
   setFiados(fiadosOrdenados);
-  cacheClientesMemoria = {
+  setCacheClientes({
     fiados: fiadosOrdenados,
     clientes: clientesFinales,
     grupos: gruposMapeados,
     productos: prodsMapeados,
-  };
+  });
   }
   setLoading(false);
   // Si la fila donde estaba el selector desapareció (o el selector se perdió), va a la fila que quedó en su lugar

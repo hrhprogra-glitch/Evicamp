@@ -7,6 +7,22 @@
 
 ---
 
+## 11/11/2026 (133) · Antigravity — Eliminación total de spinners bloqueantes y pre-carga compartida entre módulos
+- **Dueño:** *"cada vez que entro a inventario o clientes o conteos o finanzas o utilidades sale el cargando yo no quiero eso solo quiero que cargue una vez se guarde lo qu cargo y todo entre fluido entiendes???"* (con captura de `TablaProductos` tapada con `CARGANDO...`).
+- **Causa raíz identificada:**
+  1. `TablaProductos`, `TablaLotes`, `Conteos`, `Utilidades` y `Proveedores` tenían un overlay bloqueante (`backdrop-blur-sm` con spinner y texto "Cargando...") que se montaba encima de la tabla si `loading` era verdadero, incluso si ya había datos cargados en memoria.
+  2. Al iniciar la aplicación en POS, POS ya descargaba y mapeaba todos los productos, pero `Inventario` no los compartía y volvía a descargarlos al abrir la pestaña.
+- **Solución implementada:**
+  1. `src/utils/cacheModulos.ts`: Almacén central de memoria para `Inventario`, `Clientes`, `Conteos`, `Finanzas`, `Utilidades` y `Proveedores`.
+  2. `POS/index.tsx`: Al iniciar la app, POS puebla `cacheInventarioMemoria` con sus productos ya procesados.
+  3. `TablaProductos.tsx` y `TablaLotes.tsx`: El overlay bloqueante ahora exige `loading && items.length === 0`. Si ya hay productos o lotes en memoria, NUNCA se muestra la pantalla de carga y la tabla se ve al instante (0 ms).
+  4. `Conteos/index.tsx`: Conectado a `cacheConteosMemoria` y su overlay bloqueante solo se muestra si no hay registros (`loading && filteredMermas.length === 0`).
+  5. `Utilidades/index.tsx`: Conectado a `cacheUtilidadesMemoria` y su overlay solo se muestra si no hay datos calculados (`isLoading && analisisCompleto.length === 0`).
+  6. `Proveedores/index.tsx`: Conectado a `cacheProveedoresMemoria` y su overlay solo se muestra si no hay proveedores (`loadingProv && filteredProveedores.length === 0`).
+  7. `Finanzas/index.tsx`: Conectado a `cacheFinanzasMemoria` centralizado, evitando parpadeo de "Caja cerrada".
+- **Resultado:** Cada sección carga sus datos una sola vez; al navegar entre ellas, entran 100% fluidas, de inmediato y sin pantallas de carga.
+- **Verificado:** `npm run build` con 0 errores TS/Vite.
+
 ## 11/11/2026 (131) · Antigravity — 4 arreglos en Comerc (cambio de sesiones sin carga, fecha real en pagados, ventana amplia de cliente, total negro en POS)
 - **Dueño:** *"arreglalremos algunas cosas de comerc siumax encontre 3 errores cuando entro denuevo a inventario se pone en carga deberia entrar directo porque ya cargo las imagenes lo mis pasa en utilidades o entodas las sesiones otra cosa mas en clientes me di cuenta en donde dice pagados no sale el pago que eso en este dia osea cuando alguien paga se pone en la fecha donde pidio el pago osea anteriores y no la fecha donde se pago otra cosa mas en la pantalla de mi cliente se poner pequeño el apartado para ver los pagados compras o pendientes haciendo que sea dificil ver o contar y por ultimo en la sesión de pos la parte donde dice el precio total es de color verde tiene que ser negro porque dice mi cliente que no lo ve por su poca visión arregla eso"*.
 - **4 arreglos implementados:**

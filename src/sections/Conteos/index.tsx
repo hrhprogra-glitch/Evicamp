@@ -18,12 +18,14 @@ import { traerTodo } from '../../utils/traerTodo';
 import { confirmar, avisar } from '../../utils/dialogos';
 import { formatearMonto } from '../../utils/formato';
 
+import { cacheConteosMemoria, setCacheConteos } from '../../utils/cacheModulos';
+
 // Sección CONTEOS (antes Mermas): lo que salió del stock y lo contado en el estante (faltantes y sobrantes).
 // Un solo botón, "Nuevo ajuste" (components/ModalAjuste.tsx), para las dos cosas.
 export const Conteos: React.FC = () => {
-  const [mermas, setMermas] = useState<Merma[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [mermas, setMermas] = useState<Merma[]>(() => cacheConteosMemoria?.mermas || []);
+  const [loading, setLoading] = useState(() => !cacheConteosMemoria);
+  const [products, setProducts] = useState<Product[]>(() => cacheConteosMemoria?.products || []);
   const [isEditarSalidaOpen, setIsEditarSalidaOpen] = useState(false);
   const [mermaAEditar, setMermaAEditar] = useState<any>(null);
   // Quien solo tiene "Conteos: solo contar" ve únicamente el botón: la lista muestra lo que decía el
@@ -46,7 +48,7 @@ export const Conteos: React.FC = () => {
   const [filtroFecha, setFiltroFecha] = useState('');
 
   const fetchMermas = async () => {
-    setLoading(true);
+    if (!cacheConteosMemoria) setLoading(true);
     try {
       const [{ data, error }, { data: cajas }] = await Promise.all([
         traerTodo(() => supabase
@@ -84,6 +86,10 @@ export const Conteos: React.FC = () => {
           raw_date: w.created_at,
         })) as any[];
         setMermas(mapeados);
+        setCacheConteos({
+          mermas: mapeados,
+          products: cacheConteosMemoria?.products || [],
+        });
       }
     } catch (error) {
       console.error("DEBUG TÉCNICO - Error cargando conteos:", error);
@@ -123,6 +129,10 @@ export const Conteos: React.FC = () => {
           };
         });
         setProducts(mapeados);
+        setCacheConteos({
+          mermas: cacheConteosMemoria?.mermas || [],
+          products: mapeados,
+        });
       }
     } catch (error) {
       console.error("DEBUG TÉCNICO - Error cargando productos:", error);
@@ -478,7 +488,7 @@ export const Conteos: React.FC = () => {
       />
 
       <div className="px-2 sm:px-3 flex flex-col relative pb-8">
-        {loading ? (
+        {loading && filteredMermas.length === 0 ? (
           <div className="absolute inset-0 bg-[var(--color-surface)]/85 backdrop-blur-sm z-50 flex items-center justify-center">
   <div className="flex flex-col items-center gap-4">
     <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>

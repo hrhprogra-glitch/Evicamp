@@ -27,11 +27,7 @@ import { confirmar } from '../../utils/dialogos';
 import { conAutorizacion } from '../../utils/autorizacion';
 import { comprobanteDeVenta, contarComprobantesConProblema } from '../../utils/comprobante';
 
-let cacheFinanzasMemoria: {
-  sessionActiva: CashSession | null;
-  movimientos: UnifiedItem[];
-  superMetricas: SuperMetricas | null;
-} | null = null;
+import { cacheFinanzasMemoria, setCacheFinanzas } from '../../utils/cacheModulos';
 
 export const Finanzas: React.FC = () => {
   // Abrir/cerrar caja y registrar ingresos/egresos son permisos distintos
@@ -373,18 +369,18 @@ export const Finanzas: React.FC = () => {
         unificados.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
         setMovimientos(unificados);
-        cacheFinanzasMemoria = {
+        setCacheFinanzas({
           sessionActiva: sessionData as CashSession,
           movimientos: unificados,
           superMetricas: metricasCalculadas
-        };
+        });
       } else {
         setSessionActiva(null);
-        cacheFinanzasMemoria = {
+        setCacheFinanzas({
           sessionActiva: null,
           movimientos: [],
           superMetricas: null
-        };
+        });
       }
     } catch (error) {
       console.error(error);

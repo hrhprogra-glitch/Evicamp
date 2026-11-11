@@ -26,10 +26,7 @@ import { PanelCompras, inicioCompras } from './components/PanelCompras';
 import { ModalProduccion } from './components/ModalProduccion';
 import { ModalTraspaso } from './components/ModalTraspaso';
 
-let cacheInventarioMemoria: {
-  products: Product[];
-  dbCategories: string[];
-} | null = null;
+import { cacheInventarioMemoria, setCacheInventario } from '../../utils/cacheModulos';
 
 interface InventarioProps {
   onNavigate?: (view: string) => void;
@@ -206,10 +203,10 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               costoAdicionalProduccion: Number(p.costo_adicional_produccion || 0),
             };
           });
-          cacheInventarioMemoria = {
+          setCacheInventario({
             products: mapeados,
-            dbCategories: catData ? catData.map((c: any) => c.name?.trim().toUpperCase()).filter(Boolean) : (cacheInventarioMemoria?.dbCategories || []),
-          };
+            dbCategories: catData ? catData.map((c: any) => c.name?.trim().toUpperCase()).filter(Boolean) : undefined,
+          });
           setProducts(mapeados);
           // Descargar en segundo plano solo las fotos que falten en la PC
           void sincronizarFotosFaltantes(productsData);

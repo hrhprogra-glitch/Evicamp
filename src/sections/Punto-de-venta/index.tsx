@@ -28,6 +28,7 @@ import { ModalComprobantesProblema } from '../../components/ModalComprobantesPro
 import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ EVICAMP: Mini Reporte en Tiempo Real
 import { formatearMonto } from '../../utils/formato';
 import { COLUMNAS_PRODUCTO, fotoDeCache, sincronizarFotosFaltantes } from '../../utils/cacheFotos';
+import { cacheInventarioMemoria, setCacheInventario } from '../../utils/cacheModulos';
 
 export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
   const empleado = useEmpleado(); // quién vende: sale en el ticket ("Atendido por")
@@ -582,6 +583,9 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         } as Product;
       });
       setProductos(mapeados);
+      if (!cacheInventarioMemoria) {
+        setCacheInventario({ products: mapeados });
+      }
       // Cotización convertida en venta (PestanaCotizaciones): sus líneas llegan sin los datos del producto (stock 9999,
       // costo 0, unidad UND, código PROD). Se completan con los del producto, conservando cantidad, precio y subtotal
       const porId = new Map(mapeados.map((p) => [String(p.id), p]));
