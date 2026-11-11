@@ -8,6 +8,7 @@
 import { supabase } from '../db/supabase';
 import { traerTodo } from './traerTodo';
 import { hayConexion } from './sinInternet';
+import { COLUMNAS_PRODUCTO } from './cacheFotos';
 
 let hecha = false;
 
@@ -19,8 +20,8 @@ export const precargarParaSinInternet = () => {
     if (!hayConexion()) { hecha = false; return; }
     try {
       await Promise.all([
-        // Inventario (src/sections/Inventario/index.tsx)
-        traerTodo(() => supabase.from('products').select('*').eq('is_active', 1).order('id')),
+        // Inventario (src/sections/Inventario/index.tsx) - Solo columnas livianas sin imágenes pesadas
+        traerTodo(() => supabase.from('products').select(COLUMNAS_PRODUCTO).eq('is_active', 1).order('id')),
         traerTodo(() => supabase.from('product_variants').select('*').eq('is_active', 1).order('id')),
         traerTodo(() => supabase.from('product_recipes').select('*').order('id')), // fase 8: recetas, combos y producción
         traerTodo(() => supabase.from('batches').select('id, product_id, quantity, cost_unit, expiration_date').order('id')),
@@ -32,7 +33,6 @@ export const precargarParaSinInternet = () => {
         traerTodo(() => supabase.from('waste').select('*').order('created_at', { ascending: false }).order('id')),
         traerTodo(() => supabase.from('batches').select('*').order('id')),
         // Clientes y Créditos (src/sections/Clientes/index.tsx), con los grupos de clientes (fase 4.1)
-        traerTodo(() => supabase.from('products').select('*').order('id')),
         traerTodo(() => supabase.from('customers').select('*').order('id')),
         traerTodo(() => supabase.from('grupos_clientes').select('*').order('id')),
         traerTodo(() => supabase.from('fiados').select('*').in('status', ['PENDIENTE', 'VENCIDO', 'CANCELADO']).order('id')),
@@ -40,7 +40,7 @@ export const precargarParaSinInternet = () => {
         // Proveedores (Inventario > Proveedores e Ingresar lote, src/sections/Inventario/components/ModalGestionProveedores.tsx)
         traerTodo(() => supabase.from('providers').select('*').neq('estado', 'ELIMINADO').order('created_at', { ascending: false })),
         // Pestaña Lotes: lotes con su producto (src/sections/Inventario/components/TablaLotes.tsx → fetchLotes)
-        supabase.from('batches').select('*, products!batches_product_id_fkey (*)').neq('is_active', 0).order('created_at', { ascending: false }),
+        supabase.from('batches').select('*, products!batches_product_id_fkey (id, name, category, unit, control_type, weight_unit)').neq('is_active', 0).order('created_at', { ascending: false }),
         // Pedidos de Compras con sus productos (src/sections/Inventario/components/PanelCompras.tsx → cargar)
         supabase.from('compras').select('*, compras_detalle(*)').order('created_at', { ascending: false }).limit(200),
         // Ajustes > Datos de la empresa (src/sections/Configuraciones/components/FormularioEmpresa.tsx)

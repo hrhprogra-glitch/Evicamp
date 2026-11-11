@@ -6,7 +6,7 @@ import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Save, AlertTriangle, Database, Loader2, ChevronDown } from 'lucide-react';
 import { supabase } from '../../../db/supabase.ts';
-import { formatearCantidad } from '../../../utils/formato';
+import {formatearCantidad, formatearMonto } from '../../../utils/formato';
 import { esDecimal, nombreUnidad } from '../../../utils/unidades';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import type { Product } from '../../Inventario/types';
@@ -489,9 +489,9 @@ export const ModalEditarSalida: React.FC<Props> = ({ isOpen, onClose, productos,
 
       // Alerta adaptada
       if (esConsumo) {
-        alert(`✅ GASTO ${isEdit ? 'ACTUALIZADO' : 'REGISTRADO'}\n\nSe ha registrado un gasto interno de S/ ${totalLoss.toFixed(2)} sin afectar el stock físico.`);
+        alert(`✅ GASTO ${isEdit ? 'ACTUALIZADO' : 'REGISTRADO'}\n\nSe ha registrado un gasto interno de S/ ${formatearMonto(totalLoss)} sin afectar el stock físico.`);
       } else {
-        alert(`✅ MERMA ${isEdit ? 'ACTUALIZADA' : 'EXITOSA'}\n\nTotal reportado: ${cantNum.toFixed(3)} unidades (S/ ${totalLoss.toFixed(2)}) de ${selectedProduct.name}.`);
+        alert(`✅ MERMA ${isEdit ? 'ACTUALIZADA' : 'EXITOSA'}\n\nTotal reportado: ${cantNum.toFixed(3)} unidades (S/ ${formatearMonto(totalLoss)}) de ${selectedProduct.name}.`);
       }
       
       // [ SALIDA ]: Notificamos el cambio al Inventario General y al Control de Lotes
@@ -818,7 +818,7 @@ export const ModalEditarSalida: React.FC<Props> = ({ isOpen, onClose, productos,
                       : lotes.length === 0
                       ? 'SIN LOTES CON STOCK'
                       : selectedLote
-                      ? `F. INGRESO: ${new Date(selectedLote.created_at).toLocaleDateString()} | STOCK: ${formatearCantidad(selectedLote.quantity, selectedProduct?.unit)} | COSTO: S/${Number(selectedLote.cost_unit || 0).toFixed(2)}`
+                      ? `F. INGRESO: ${new Date(selectedLote.created_at).toLocaleDateString()} | STOCK: ${formatearCantidad(selectedLote.quantity, selectedProduct?.unit)} | COSTO: S/${formatearMonto(Number(selectedLote.cost_unit || 0))}`
                       : '-- SELECCIONAR LOTE DISPONIBLE --'}
                   </span>
                   <ChevronDown size={16} className={`text-[var(--color-ink)] shrink-0 transition-transform duration-150 ${openLoteDropdown ? 'rotate-180' : ''}`} />
@@ -856,7 +856,7 @@ export const ModalEditarSalida: React.FC<Props> = ({ isOpen, onClose, productos,
                             <span>F. INGRESO: {new Date(l.created_at).toLocaleDateString()}</span>
                             <span className="text-[10px] opacity-80">STOCK: {formatearCantidad(l.quantity, selectedProduct?.unit)}</span>
                           </div>
-                          <span className="text-[11px] font-black shrink-0">COSTO: S/{Number(l.cost_unit || 0).toFixed(2)}</span>
+                          <span className="text-[11px] font-black shrink-0">COSTO: S/{formatearMonto(Number(l.cost_unit || 0))}</span>
                         </div>
                       );
                     })}

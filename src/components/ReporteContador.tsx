@@ -4,6 +4,7 @@ import { supabase } from '../db/supabase';
 import { fetchAllRango, rangoUTCPeru, fechaLocalPeru } from '../utils/ingresos';
 import { useCerrarConEscape } from '../utils/useCerrarConEscape';
 import { calcularTotalesCPE, MOTIVO_NOTA_CREDITO, numeroComprobante, type TotalesCPE } from '../utils/comprobante';
+import { formatearMonto } from '../utils/formato';
 
 // Reporte para el contador (fase 11.6): registro de ventas del mes (boletas, facturas y notas de crédito
 // con base, IGV, exonerado, inafecto e ICBPER) para descargar en Excel (CSV), y el resumen del mes.
@@ -264,7 +265,7 @@ export const descargarRegistroExcel = async (filas: FilaRegistro[], resumen: Res
 const Linea: React.FC<{ nombre: string; n?: number; total: number; resaltar?: boolean }> = ({ nombre, n, total, resaltar }) => (
   <div className={`flex justify-between gap-3 py-1 border-b border-[var(--color-border)] ${resaltar ? 'font-black text-[var(--color-ink)]' : 'font-bold'}`}>
     <span>{nombre}{n !== undefined ? ` (${n})` : ''}</span>
-    <span className="tabular-nums">S/ {total.toFixed(2)}</span>
+    <span className="tabular-nums">S/ {formatearMonto(total)}</span>
   </div>
 );
 

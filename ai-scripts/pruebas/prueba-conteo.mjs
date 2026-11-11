@@ -45,7 +45,7 @@ const contar = async (codigo, cantidad) => {
   return { f1, f2, f3, f4 };
 };
 try {
-  await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario'); await page.focus('#input-login-usuario'); await page.keyboard.type('admin@siumax.com');
   await page.focus('#input-login-password'); await page.keyboard.type(process.env.SIUMAX_ADMIN_CLAVE); await page.keyboard.press('Enter');
   await page.waitForSelector('#sidebar-btn-inventario', { timeout: 20000 }); await pausa(20000); // precarga

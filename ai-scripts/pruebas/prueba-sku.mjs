@@ -24,7 +24,7 @@ const foco = (page) => page.evaluate(() => document.activeElement?.id || documen
 try {
   const ctx = await nav.createBrowserContext(); const p = await ctx.newPage();
   p.on('pageerror', (e) => errores.push(e.message)); p.on('dialog', (d) => d.accept());
-  await p.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await p.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await p.waitForSelector('#input-login-usuario'); await p.focus('#input-login-usuario'); await p.keyboard.type('admin@siumax.com');
   await p.focus('#input-login-password'); await p.keyboard.type(process.env.SIUMAX_ADMIN_CLAVE); await p.keyboard.press('Enter');
   await p.waitForSelector('#sidebar-btn-pos', { timeout: 20000 }); await pausa(2500);

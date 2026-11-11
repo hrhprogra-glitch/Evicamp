@@ -18,7 +18,7 @@ export const HeaderConteos: React.FC<Props> = ({ onNuevoAjuste, children }) => {
         </h1>
       </div>
 
-      <div className="flex flex-col md:flex-row items-end md:items-center gap-3 sm:gap-4 w-full xl:w-auto justify-end">
+      <div className="flex flex-col md:flex-row items-end md:items-center gap-3 sm:gap-4 max-w-full justify-end">
         {children}
         <button
           id="btn-nuevo-ajuste"

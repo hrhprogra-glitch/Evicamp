@@ -3,6 +3,7 @@ import { X, Package, Calendar, Clock, User, Phone, CheckCircle2, Printer, Messag
 import { supabase } from '../../../db/supabase';
 import type { CartItem, Cliente } from '../types';
 import { useEmpleado } from '../../../utils/permisos';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   isOpen: boolean;
@@ -176,7 +177,7 @@ export const ModalPedidoPOS: React.FC<Props> = ({
     }
 
     if (adelantoTotal > total) {
-      alert(`El adelanto total (S/ ${adelantoTotal.toFixed(2)}) no puede ser mayor al total del pedido (S/ ${total.toFixed(2)}).`);
+      alert(`El adelanto total (S/ ${formatearMonto(adelantoTotal)}) no puede ser mayor al total del pedido (S/ ${formatearMonto(total)}).`);
       return;
     }
 
@@ -188,9 +189,9 @@ export const ModalPedidoPOS: React.FC<Props> = ({
     // Determinar descripción del método de pago del adelanto
     let metodoFinal: string | null = null;
     const partes: string[] = [];
-    if (montoEf > 0) partes.push(`Efectivo: S/ ${montoEf.toFixed(2)}`);
-    if (montoYap > 0) partes.push(`Yape: S/ ${montoYap.toFixed(2)}`);
-    if (montoTar > 0) partes.push(`Tarjeta: S/ ${montoTar.toFixed(2)}`);
+    if (montoEf > 0) partes.push(`Efectivo: S/ ${formatearMonto(montoEf)}`);
+    if (montoYap > 0) partes.push(`Yape: S/ ${formatearMonto(montoYap)}`);
+    if (montoTar > 0) partes.push(`Tarjeta: S/ ${formatearMonto(montoTar)}`);
 
     if (partes.length === 1) {
       if (montoEf > 0) metodoFinal = 'EFECTIVO';
@@ -306,7 +307,7 @@ export const ModalPedidoPOS: React.FC<Props> = ({
     const telefonoDestino = tel.length === 9 ? `51${tel}` : tel;
 
     const lineas = guardadoExitoso.detalles
-      .map((d: any) => `• ${d.quantity}x ${d.product_name} - S/ ${d.subtotal.toFixed(2)}`)
+      .map((d: any) => `• ${d.quantity}x ${d.product_name} - S/ ${formatearMonto(d.subtotal)}`)
       .join('\n');
 
     const mensaje = encodeURIComponent(
@@ -314,9 +315,9 @@ export const ModalPedidoPOS: React.FC<Props> = ({
       `Estimado(a) ${clienteNombre}:\n` +
       `Se ha registrado y separado la mercadería de su pedido:\n\n` +
       `${lineas}\n\n` +
-      `*TOTAL:* S/ ${guardadoExitoso.total.toFixed(2)}\n` +
-      `*ADELANTO:* S/ ${guardadoExitoso.adelanto.toFixed(2)}${guardadoExitoso.metodoFinal ? ` (${guardadoExitoso.metodoFinal})` : ''}\n` +
-      `*SALDO PENDIENTE:* S/ ${guardadoExitoso.saldoPendiente.toFixed(2)}\n` +
+      `*TOTAL:* S/ ${formatearMonto(guardadoExitoso.total)}\n` +
+      `*ADELANTO:* S/ ${formatearMonto(guardadoExitoso.adelanto)}${guardadoExitoso.metodoFinal ? ` (${guardadoExitoso.metodoFinal})` : ''}\n` +
+      `*SALDO PENDIENTE:* S/ ${formatearMonto(guardadoExitoso.saldoPendiente)}\n` +
       `📅 *Fecha de Entrega:* ${fechaEntrega} a las ${horaEntrega}\n\n` +
       `¡Su mercadería ya está separada y guardada para usted!`
     );
@@ -382,10 +383,10 @@ export const ModalPedidoPOS: React.FC<Props> = ({
                 Registrado como <strong className="text-[var(--color-ink)]">{numero}</strong> para <strong className="text-[var(--color-ink)]">{clienteNombre}</strong>.
               </p>
               <div className="bg-amber-50 border-2 border-amber-300 p-3 mt-3 flex flex-col gap-1 text-xs font-bold text-[var(--color-ink)]">
-                <div>Total Pedido: <strong>S/ {guardadoExitoso.total.toFixed(2)}</strong></div>
-                <div>Adelanto Dejado: <strong>S/ {guardadoExitoso.adelanto.toFixed(2)}</strong> {guardadoExitoso.metodoFinal && `(${guardadoExitoso.metodoFinal})`}</div>
+                <div>Total Pedido: <strong>S/ {formatearMonto(guardadoExitoso.total)}</strong></div>
+                <div>Adelanto Dejado: <strong>S/ {formatearMonto(guardadoExitoso.adelanto)}</strong> {guardadoExitoso.metodoFinal && `(${guardadoExitoso.metodoFinal})`}</div>
                 <div className="text-base font-black text-amber-700">
-                  Saldo a Pagar al Recoger: S/ {guardadoExitoso.saldoPendiente.toFixed(2)}
+                  Saldo a Pagar al Recoger: S/ {formatearMonto(guardadoExitoso.saldoPendiente)}
                 </div>
                 <div className="text-[11px] text-[var(--color-muted)] mt-1">
                   📅 Entrega: {fechaEntrega} - {horaEntrega}
@@ -608,7 +609,7 @@ export const ModalPedidoPOS: React.FC<Props> = ({
                   <AlertCircle size={14} /> Adelanto / Pago Inicial (Permite Pago Mixto)
                 </span>
                 <span className="text-xs font-black text-amber-900">
-                  Total Adelanto: S/ {adelantoTotal.toFixed(2)}
+                  Total Adelanto: S/ {formatearMonto(adelantoTotal)}
                 </span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -701,7 +702,7 @@ export const ModalPedidoPOS: React.FC<Props> = ({
                   Saldo pendiente al momento de la entrega:
                 </span>
                 <span className="text-base font-black text-amber-900">
-                  S/ {saldoPendiente.toFixed(2)}
+                  S/ {formatearMonto(saldoPendiente)}
                 </span>
               </div>
             </div>
@@ -737,7 +738,7 @@ export const ModalPedidoPOS: React.FC<Props> = ({
                   Mercadería a Reservar ({cart.length})
                 </span>
                 <span className="text-xs font-black text-[var(--color-ink)]">
-                  TOTAL: S/ {total.toFixed(2)}
+                  TOTAL: S/ {formatearMonto(total)}
                 </span>
               </div>
               <div className="border-2 border-[var(--color-ink)] max-h-36 overflow-y-auto bg-white custom-scrollbar divide-y divide-[var(--color-border)]">
@@ -748,12 +749,12 @@ export const ModalPedidoPOS: React.FC<Props> = ({
                         {item.name}
                       </span>
                       <span className="text-[10px] text-[var(--color-muted)] font-bold">
-                        {item.cartQuantity} {item.unit || 'UND'} x S/ {item.price.toFixed(2)}
+                        {item.cartQuantity} {item.unit || 'UND'} x S/ {formatearMonto(item.price)}
                         {item.esMayoristaAplicado && <span className="ml-1 text-amber-600 font-black">⭐ MAYORISTA</span>}
                       </span>
                     </div>
                     <span className="font-black text-[var(--color-ink)] shrink-0">
-                      S/ {item.subtotal.toFixed(2)}
+                      S/ {formatearMonto(item.subtotal)}
                     </span>
                   </div>
                 ))}

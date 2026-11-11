@@ -11,6 +11,7 @@ import { supabase } from '../../db/supabase';
 import { usePermiso, avisarSinPermiso } from '../../utils/permisos';
 import { useConexion } from '../../layout/BarraConexion';
 import type { Product } from './types';
+import { COLUMNAS_PRODUCTO, fotoDeCache, sincronizarFotosFaltantes } from '../../utils/cacheFotos';
 
 // Componentes importados
 import { FiltrosInventario } from './components/FiltrosInventario';
@@ -24,6 +25,8 @@ import { ModalEtiqueta } from './components/ModalEtiqueta';
 import { PanelCompras, inicioCompras } from './components/PanelCompras';
 import { ModalProduccion } from './components/ModalProduccion';
 import { ModalTraspaso } from './components/ModalTraspaso';
+
+import { cacheInventarioMemoria, setCacheInventario } from '../../utils/cacheModulos';
 
 interface InventarioProps {
   onNavigate?: (view: string) => void;
@@ -69,9 +72,9 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   const [preselectedLoteProduct, setPreselectedLoteProduct] = useState<Product | null>(null);
   const [nuevoLoteRealtime, setNuevoLoteRealtime] = useState<any>(null);
   const [loteToEdit, setLoteToEdit] = useState<any>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dbCategories, setDbCategories] = useState<string[]>([]); // 🔥 NUEVO: Memoria para tu tabla categories
+  const [products, setProducts] = useState<Product[]>(() => cacheInventarioMemoria?.products || []);
+  const [loading, setLoading] = useState(() => !cacheInventarioMemoria);
+  const [dbCategories, setDbCategories] = useState<string[]>(() => cacheInventarioMemoria?.dbCategories || []);
   const [refreshLotesKey, setRefreshLotesKey] = useState(0); // 🛡️ EVICAMP: Llave maestra para forzar actualización de Lotes
   const [refreshProductsKey, setRefreshProductsKey] = useState(0); // Recarga para producción y recetas
   const [isModalProduccionOpen, setIsModalProduccionOpen] = useState(false);
@@ -96,7 +99,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
   useEffect(() => {
     const fetchInventory = async () => {
-      setLoading(true);
+      if (!cacheInventarioMemoria) setLoading(true);
       try {
         // [ RETORNO TÉCNICO ]: Consultas paralelas independientes para blindar la carga de datos y evitar colisiones SQL
         const [ 
@@ -107,7 +110,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           { data: ventasData } // fase 2.4: lo vendido en 30 días (filtro "Sin ventas" y "Sugerir pedido" de Compras)
         ] = await Promise.all([
           // 🛡️ EVICAMP: Solo descargar productos activos para evitar productos fantasma (últimos primero)
-          traerTodo(() => supabase.from('products').select('*').eq('is_active', 1).order('id', { ascending: false })),
+          traerTodo(() => supabase.from('products').select(COLUMNAS_PRODUCTO).eq('is_active', 1).order('id', { ascending: false })),
           // Con la fecha de vencimiento (filtros Vencidos / Vencen en 30 días)
           traerTodo(() => supabase.from('batches').select('id, product_id, quantity, cost_unit, expiration_date').order('id', { ascending: false })),
           traerTodo(() => supabase.from('product_variants').select('*').eq('is_active', 1).order('id', { ascending: true })),
@@ -137,14 +140,10 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         
         if (productsData) {
           const mapeados: Product[] = productsData.map((p: any) => {
-            // RADAR ABSOLUTO: Convierte TODA la fila del producto (todas sus columnas) a texto mayúscula
-            const registroCompleto = JSON.stringify(p).toUpperCase();
-            
-            // Si en cualquier rincón del producto dice alguna de estas palabras, es Consumo.
-            const esConsumo = registroCompleto.includes('"CONSUMO"') || 
-                              registroCompleto.includes('"SERVICE"') || 
-                              registroCompleto.includes('"USO INTERNO"') ||
-                              registroCompleto.includes('"CONSUMPTION"');
+            // Detección directa y rápida de Consumo sin congelar la pantalla procesando texto
+            const TIPOS_CONSUMO = ['CONSUMO', 'SERVICE', 'USO INTERNO', 'CONSUMPTION'];
+            const esConsumo = [p.unit, p.control_type, p.weight_unit]
+              .some(v => TIPOS_CONSUMO.includes(String(v ?? '').trim().toUpperCase()));
 
             // [ SUMA GLOBAL ]: Filtramos los lotes de este producto
             const lotesDelProducto = batchesData?.filter(b => b.product_id === p.id) || [];
@@ -180,7 +179,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               category: p.category || 'GENERAL',
               // Si el radar detectó consumo, fuerza la etiqueta, sino usa la que traiga de BD
               unit: esConsumo ? 'CONSUMO' : (p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND')),
-              imageUrl: p.image_url || p.image_path || null,
+              imageUrl: fotoDeCache(p.id) || p.image_path || null,
               preciosCantidad: escalasValidas(p.precios_cantidad), // fase 1.3
               presentaciones: presentacionesValidas(p.presentaciones), // fase 1.2
               vendido30: ventasData ? Number(ventas.get(String(p.id))?.vendido || 0) : undefined,
@@ -204,7 +203,13 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               costoAdicionalProduccion: Number(p.costo_adicional_produccion || 0),
             };
           });
+          setCacheInventario({
+            products: mapeados,
+            dbCategories: catData ? catData.map((c: any) => c.name?.trim().toUpperCase()).filter(Boolean) : undefined,
+          });
           setProducts(mapeados);
+          // Descargar en segundo plano solo las fotos que falten en la PC
+          void sincronizarFotosFaltantes(productsData);
         }
       } catch (error) {
         console.error("Error cargando inventario:", error);
@@ -214,6 +219,21 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     };
     fetchInventory();
   }, [refreshProductsKey]);
+
+  // Al llegar fotos nuevas en segundo plano, actualizamos la tabla visible
+  useEffect(() => {
+    const alActualizarFotos = () => {
+      setProducts((prev) => prev.map((p) => {
+        const foto = fotoDeCache(p.id);
+        if (foto && foto !== p.imageUrl) {
+          return { ...p, imageUrl: foto };
+        }
+        return p;
+      }));
+    };
+    window.addEventListener('siumax-fotos-actualizadas', alActualizarFotos);
+    return () => window.removeEventListener('siumax-fotos-actualizadas', alActualizarFotos);
+  }, []);
 
   const categoriasUnicas = useMemo(() => {
     const cats = products.map(p => p.category).filter(Boolean);
@@ -524,7 +544,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
   return (
     <div className="flex flex-col gap-6 pb-10 text-[var(--color-ink)] font-mono h-full bg-[var(--color-bg)] relative">
-      {loading && (
+      {loading && products.length === 0 && (
         <div className="absolute inset-0 bg-white/80 dark:bg-[var(--color-surface)]/80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
@@ -631,8 +651,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
           {!soloCompras && (<>
           {/* LADO DERECHO: METRICAS Y BOTONES DE ACCIÓN */}
-          {/* Laptops (menos de 1536 px): los botones van en una segunda fila para que no se salgan de la pantalla */}
-          <div className="flex flex-col 2xl:flex-row items-stretch 2xl:items-center gap-4 lg:gap-6 w-full 2xl:w-auto min-w-0 pb-1 pr-1">
+          {/* Una sola fila con el título y las pestañas si entra; si no entra, los botones bajan solos (06/11/2026) */}
+          <div className="flex items-center gap-4 lg:gap-6 max-w-full min-w-0 pb-1 pr-1">
             
 
             {/* Botones de Acción */}
@@ -707,7 +727,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                 style={{ '--icono': '#059669' } as React.CSSProperties}
                 className="boton-cabecera bg-emerald-600 text-white px-1 sm:px-4 lg:px-6 py-3 lg:py-4 min-w-0 border-2 border-[var(--color-ink)] font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-widest flex items-center justify-center gap-1 sm:gap-2 hover:bg-emerald-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all cursor-pointer rounded-none shadow-[4px_4px_0_0_var(--color-ink)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
               >
-                <ChefHat size={16} /> <span className="hidden sm:inline">Producir</span>
+                <Layers size={16} /> <span className="hidden sm:inline">Armar producto</span>
               </button>
               <button
                 id="btn-traspasos"
@@ -1016,6 +1036,8 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
           setProduccionParaCambiar(false);
         }}
         paraCambiar={produccionParaCambiar}
+        // Tallas y colores › "Guardar e ir a Lotes" (o "Ingresar lote" de la lista): pestaña Lotes + Ingresar lote con ese producto
+        onIngresarLote={(p) => { setVistaActiva('LOTES'); setPreselectedLoteProduct(p); setIsModalLoteOpen(true); }}
         productos={products}
         productoInicial={productoParaProduccion}
         onSuccess={() => {

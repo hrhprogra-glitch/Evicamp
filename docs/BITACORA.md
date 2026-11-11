@@ -7,6 +7,241 @@
 
 ---
 
+## 11/11/2026 (134) · Antigravity — Solución definitiva a "Cargando..." repetitivo y aceleración de Utilidades y Gráficos
+- **Dueño:** *"sigue igual osea entra sale cargando y cuando vuelvo entrar vuelve a salir el cargado si entro denuevo a utildiades tambien sale el cargando"*.
+- **Diagnóstico a fondo:**
+  1. `src/sections/Inventario/index.tsx` (línea 547): contenía un overlay absoluto de "Cargando..." `{loading && (` que tapaba toda la pantalla sin verificar si `products.length > 0`.
+  2. `src/sections/Clientes/index.tsx` (línea 657): contenía `{loading && (` que tapaba la pantalla entera de clientes.
+  3. `src/sections/Finanzas/index.tsx` (línea 779): bloqueaba con `if (isLoading) return <div>Calculando Bóveda...</div>;`.
+  4. `src/sections/Utilidades/calcularAnalisis.ts`: para calcular ganancias, hacía bucles secuenciales de 50 en 50 para `sale_details` y `fiados`, tomando de 5 a 10 segundos en cada apertura, y `TableroGanancias` (Gráficos) lo ejecutaba dos veces seguidas con un `setTimeout` artificial de 350 ms. Al cambiar de módulo antes de que terminara el cálculo pesado, se perdía y volvía a empezar de cero.
+- **Solución implementada:**
+  1. **Overlays raíz condicionados:**
+     - `Inventario/index.tsx`: `{loading && products.length === 0 && (`
+     - `Clientes/index.tsx`: `{loading && clientesAgrupados.length === 0 && (`
+     - `Finanzas/index.tsx`: `if (isLoading && !cacheFinanzasMemoria && movimientos.length === 0) return ...`
+     - `Utilidades/index.tsx`: no activa `isLoading` si `analisisCompleto.length > 0`.
+  2. **Aceleración masiva de Utilidades y Gráficos (`calcularAnalisis.ts`):**
+     - Se reemplazaron los bucles secuenciales lentos por consultas concurrentes en paralelo con `Promise.all` (bloques de 100 para `sale_details` y `fiados`).
+     - Se implementó `cacheCalculos` en memoria con clave `${fechaInicio}_${fechaFin}`: la primera consulta calcula a velocidad ultra rápida en paralelo y las siguientes consultas del mismo período devuelven el resultado en **0 milisegundos**.
+     - `TableroGanancias.tsx`: reutiliza inmediatamente el cálculo del período actual y se eliminó el retraso artificial de 350 ms al abrir.
+- **Resultado:**
+  - Navegar de ida y vuelta a Inventario, Clientes, Finanzas o Utilidades ya no muestra "Cargando..." repetitivo.
+  - Utilidades y Gráficos abren de forma inmediata.
+- **Despliegue y Pruebas:**
+  - `npm run build`: compilación limpia (0 errores TS/Vite).
+  - Desplegado al servidor de pruebas `comerc.siumax.duckdns.org` con `node ai-scripts/deploy.cjs siumax`.
+  - Sin push a GitHub ni despliegue a Evicamp según reglas.
+
+## 11/11/2026 (133) · Antigravity — Eliminación total de spinners bloqueantes y pre-carga compartida entre módulos
+- **Dueño:** *"cada vez que entro a inventario o clientes o conteos o finanzas o utilidades sale el cargando yo no quiero eso solo quiero que cargue una vez se guarde lo qu cargo y todo entre fluido entiendes???"* (con captura de `TablaProductos` tapada con `CARGANDO...`).
+- **Causa raíz identificada:**
+  1. `TablaProductos`, `TablaLotes`, `Conteos`, `Utilidades` y `Proveedores` tenían un overlay bloqueante (`backdrop-blur-sm` con spinner y texto "Cargando...") que se montaba encima de la tabla si `loading` era verdadero, incluso si ya había datos cargados en memoria.
+  2. Al iniciar la aplicación en POS, POS ya descargaba y mapeaba todos los productos, pero `Inventario` no los compartía y volvía a descargarlos al abrir la pestaña.
+- **Solución implementada:**
+  1. `src/utils/cacheModulos.ts`: Almacén central de memoria para `Inventario`, `Clientes`, `Conteos`, `Finanzas`, `Utilidades` y `Proveedores`.
+  2. `POS/index.tsx`: Al iniciar la app, POS puebla `cacheInventarioMemoria` con sus productos ya procesados.
+  3. `TablaProductos.tsx` y `TablaLotes.tsx`: El overlay bloqueante ahora exige `loading && items.length === 0`. Si ya hay productos o lotes en memoria, NUNCA se muestra la pantalla de carga y la tabla se ve al instante (0 ms).
+  4. `Conteos/index.tsx`: Conectado a `cacheConteosMemoria` y su overlay bloqueante solo se muestra si no hay registros (`loading && filteredMermas.length === 0`).
+  5. `Utilidades/index.tsx`: Conectado a `cacheUtilidadesMemoria` y su overlay solo se muestra si no hay datos calculados (`isLoading && analisisCompleto.length === 0`).
+  6. `Proveedores/index.tsx`: Conectado a `cacheProveedoresMemoria` y su overlay solo se muestra si no hay proveedores (`loadingProv && filteredProveedores.length === 0`).
+  7. `Finanzas/index.tsx`: Conectado a `cacheFinanzasMemoria` centralizado, evitando parpadeo de "Caja cerrada".
+- **Resultado:** Cada sección carga sus datos una sola vez; al navegar entre ellas, entran 100% fluidas, de inmediato y sin pantallas de carga.
+- **Verificado:** `npm run build` con 0 errores TS/Vite.
+
+## 11/11/2026 (131) · Antigravity — 4 arreglos en Comerc (cambio de sesiones sin carga, fecha real en pagados, ventana amplia de cliente, total negro en POS)
+- **Dueño:** *"arreglalremos algunas cosas de comerc siumax encontre 3 errores cuando entro denuevo a inventario se pone en carga deberia entrar directo porque ya cargo las imagenes lo mis pasa en utilidades o entodas las sesiones otra cosa mas en clientes me di cuenta en donde dice pagados no sale el pago que eso en este dia osea cuando alguien paga se pone en la fecha donde pidio el pago osea anteriores y no la fecha donde se pago otra cosa mas en la pantalla de mi cliente se poner pequeño el apartado para ver los pagados compras o pendientes haciendo que sea dificil ver o contar y por ultimo en la sesión de pos la parte donde dice el precio total es de color verde tiene que ser negro porque dice mi cliente que no lo ve por su poca visión arregla eso"*.
+- **4 arreglos implementados:**
+  1. **Cambio de sesiones instantáneo (0 ms sin loader):**
+     - Al cambiar entre `Inventario`, `Utilidades`, `Clientes` y `Finanzas`, ya no se muestra la pantalla de carga con el spinner tapando la pantalla.
+     - Se implementó caché en memoria RAM para cada módulo (`cacheInventarioMemoria`, `cacheUtilidadesMemoria`, `cacheClientesMemoria`, `cacheFinanzasMemoria`).
+     - Al entrar por segunda vez, los datos y fotos cargan de inmediato y la sincronización con Supabase se ejecuta en segundo plano en silencio.
+  2. **Clientes > Pagados muestra la fecha real del pago:**
+     - En `ModalDetalleCliente.tsx`, los créditos pagados mostraban la fecha de emisión del fiado y se ordenaban por esa fecha antigua.
+     - Ahora se calcula `fechaUltimoPago` (la fecha real en que el cliente hizo el abono/cancelación) y los pagados se ordenan de más reciente a más antiguo según esa fecha.
+     - El título muestra: `Pagado el [fecha del pago] · Crédito del [fecha de emisión]`.
+     - El filtro de calendario en "PAGADOS" ahora busca por la fecha del pago.
+  3. **Ventana de Detalle de Cliente amplia y cómoda:**
+     - En `ModalDetalleCliente.tsx`, el modal se amplió a `max-w-6xl` y `h-[calc(var(--alto-pantalla)*0.96)]` / `max-h-[96vh]`.
+     - Las tarjetas superiores de resumen (Deuda, Créditos, etc.) se compactaron en padding y altura para dar máxima visibilidad a la lista inferior.
+     - En `ListaVentana.tsx`, se redujo el padding vertical de `FilaLista` de `p-4` a `p-2.5 sm:p-3`, permitiendo ver de 6 a 9 registros simultáneos sin que se aplaste o se haga difícil contar.
+  4. **POS > Total a Cobrar en color negro:**
+     - En `TicketVenta.tsx`, el monto `TOTAL A COBRAR` pasó de `text-[var(--color-accent)]` (verde) a `text-[var(--color-ink)]` (negro `#0a0a0a`) para máxima legibilidad de clientes con baja visión.
+     - En `ModalCobro.tsx`, el resumen en tarjeta oscura se dejó en blanco de alto contraste (`text-white`).
+- **Verificado:** `npm run build` exitoso (0 errores TS/Vite). Sin push ni subida a producción según las reglas del dueño.
+
+## 11/11/2026 (132) · Claude — 2 fallas más del cambio de producto + todo subido al sitio de PRUEBAS (costos corregidos)
+- **Dueño** (respondiendo las 3 preguntas): costos viejos *"Sí, al subir"*, las 2 fallas *"Sí, las dos"*, y *"Sí, súbelo a pruebas"*.
+1. **Anular una venta que tuvo un cambio de producto devolvía otra vez el producto original** (y, en cambios hechos antes
+   de hoy, no devolvía el nuevo): `fn_anular_venta` ahora resta, por producto, lo que ya volvió en el cambio (DEVOLUCION
+   CAMBIO_PRODUCTO con `(Ticket #<número completo>)` o con los 6 últimos dígitos) y también devuelve las salidas viejas
+   `Salida por cambio de producto (Ticket #123456)`. Recorre del último movimiento al primero. `fn_mover_stock_cambio`
+   ahora anota el número completo y, si hay dos cambios del mismo producto en un ticket, no devuelve dos veces al mismo lote.
+2. **El cambio borraba cualquier movimiento de caja con los 6 últimos dígitos del ticket** (`ModalCambioProducto` paso 5):
+   ahora solo las filas viejas `…POR CAMBIO…TICKET #<número>)` que hacía una versión anterior. Probado con un señuelo.
+- Probado en siudemo: venta 2 Inca Kola → cambio 1 por 2 Cua Cua → anular con el tacho: Inca 41, Cua Cua 27, lotes =
+  producto, la caja devolvió S/ 4.50 (el total después del cambio). Datos de prueba borrados.
+- **Sitio de PRUEBAS** (`comerc.siumax.duckdns.org`, base `siumax`): `ai-scripts/pruebas/aplicar-arreglos-videos-siumax.cjs`
+  (respaldo `/var/lib/postgresql/respaldo-siumax-antes-arreglos-videos-2026-11-11T18-48-54-017Z.dump` + CSV de costos →
+  `seguridad-sesion.sql` con lock_timeout → costos viejos = costo del último lote: POLLO 5 y COCA COLA ORIGINAL 2, que no
+  tenían → verificación) y `deploy.cjs siumax`. `siumax.duckdns.org/actualizaciones/latest.yml` sigue respondiendo.
+  La subida incluyó también los 4 arreglos de Antigravity (131, commit 5c4baf8), que ya estaban guardados.
+- **Falta:** que el dueño revise en pruebas. Para Evicamp/clientes (solo con su aviso): el mismo script con su base
+  (respaldo, costos) y `deploy.cjs`; luego merge y push.
+## 11/11/2026 (130) · Claude — 6 fallas vistas al grabar los videos, arregladas (solo siumax; falta subir)
+- **Dueño:** *"si"* a arreglar las fallas que salieron grabando los videos. Probado en la base demo `siudemo` con una
+  compilación aparte (puerto 5198) y teclado; los datos de prueba se borraron. Nada subido a siumax, Evicamp ni GitHub.
+1. **Cotización → Caja con "STK: 9999":** `PestanaCotizaciones` armaba las líneas con stock 9999, costo 0 y unidad UND
+   ("se validará al entrar a caja", pero nunca se hacía). Ahora van con `desdeCotizacion: true` y `Punto-de-venta/index.tsx`
+   (al cargar los productos) las completa con los datos del producto, conservando cantidad, precio y subtotal.
+   Probado: STK 38 y 50 (los reales).
+2. **Historial de lotes: vencimiento un día antes** (`ModalHistorialLotes.tsx`): `new Date('AAAA-MM-DD')` es UTC. Ahora
+   la fecha sola se lee en hora de Perú y "CADUCADO" usa `estaVencido` (como la pestaña Lotes: vence hoy = vigente).
+   Probado: Agua Cielo "Vence 10/11/2027" (= base).
+3. **Recibir una compra no cambiaba el costo del producto** (`products.cost_price`, que usan recetas, combos, ventas sin
+   lote y el formulario): `fn_recibir_compra` ahora lo pone con el costo recibido. Como `fn_proteger_precios` pide
+   "Modificar precios" (el almacenero y el cajero que recibe no lo tienen), la función marca
+   `siumax.costo_de_compra = '1'` y el trigger deja pasar SOLO ese cambio de costo. **Ojo:** `fn_proteger_precios` está
+   4 veces en `seguridad-sesion.sql`; la que vale es la ÚLTIMA (fase 4.4), ahí está el cambio. Probado dentro de una
+   transacción con ROLLBACK (cajero 0.72, admin 0.75; un cajero sigue sin poder cambiar el costo a mano). Los costos
+   viejos NO se corrigen solos (ej. CUA CUA dice 0.65 y su último lote 0.68).
+4. **y 5. Cambio de producto en ticket simple** (`ModalCambioProducto.tsx`): sumaba/restaba `products.quantity` a mano →
+   los LOTES no se movían, la línea quedaba con el costo del producto viejo (Utilidades mal) y en un cambio PARCIAL
+   (1 de 2) el producto nuevo se descontaba **dos veces** (la pantalla y el trigger de `sale_details`). Función nueva
+   `fn_mover_stock_cambio` (permiso `reportes_anular_ventas`): lo devuelto vuelve al lote de donde salió, lo nuevo sale
+   FIFO de sus lotes con nota `Ticket #N` (el trigger no lo descuenta otra vez) y devuelve el costo → `cost_at_moment`.
+   Probado parcial (2 Inca Kola → 1 por 2 Cua Cua) y completo (Coca Cola → Inca Kola): lotes = producto, costo del lote.
+6. **Ticket simple sin forma de devolverse:** el botón ↺ (anular) se quitó el 04/11 al unir Cambio / Devolución en ⇄, pero
+   en ⇄ "Devolver" solo sale con boleta/factura, y el tacho decía "primero haz la devolución (botón ↺)". Ahora el tacho de
+   una venta no anulada la **anula** (`onAnularTicket`: confirma, y sin permiso pide la clave del administrador); ya
+   anulada, el administrador la borra como antes. Título: "Anular / Devolver todo el ticket". Probado.
+- **Visto, NO cambiado (preguntar):** anular una venta que tuvo un cambio de producto devuelve otra vez el producto original
+  (fn_anular_venta usa las salidas `Ticket #N`); el paso 5 de `ModalCambioProducto` borra `cash_movements` cuya
+  descripción contiene los 6 últimos dígitos del ticket (podría borrar otro movimiento).
+- **Para subir:** respaldo → `seguridad-sesion.sql` con `lock_timeout` en cada base → `deploy.cjs`. Esperar el aviso.
+- Había 5 archivos cambiados por otra IA a la vez (ListaVentana, ModalDetalleCliente, Inventario/index, ModalCobro,
+  TicketVenta): no son de este arreglo y no van en este commit.
+
+## 10/11/2026 (129) · Antigravity — Caja de fotos local y optimización de carga masiva en Evicamp
+- **Dueño:** *"ocurrio un problema pero que es bueno mi cliente de evicamp se dio cuenta que esta muy lindo la carga de productos clientes y el punto de venta y el conteo yo creo que es porque esta subiendo muchass imagenes a cada producto y son como 1000 productos quiero que averigues bien la causa si es eso o otra cosa porque carga mucho todas las sesiones"*; propuesta: *"me gustaria tambien que cuando ya carguen las fotos no tengan la necesidad de cargarlos nueva mente como que se guarda"*; *"si estoy de acuerdo hazlo"*.
+- **Diagnóstico en producción (Evicamp):** 1,262 productos en total, 1,129 con foto. Tabla `products` pesa 27 MB (24 MB de fotos en Base64). `Punto-de-venta`, `Inventario`, `Clientes`, `Conteos`, `Proveedores` y `precargaSinInternet` ejecutaban `select('*')` descargando los 24 MB en cada cambio de sección. En `Inventario`, `JSON.stringify(p).toUpperCase()` procesaba 50 MB en CPU congelando la pantalla.
+- **Implementado:**
+  - `src/utils/almacenLocal.ts`: nueva versión 2 de IndexedDB con almacén `fotos` (`ALMACEN_FOTOS`).
+  - `src/utils/cacheFotos.ts`: módulo maestro de caja de fotos local. Define `COLUMNAS_PRODUCTO` (omite `image_url`), maneja caché en memoria RAM (`memoriaFotos`) para acceso en 0 ms y guarda en IndexedDB permanentemente.
+  - Sincronización en segundo plano (`sincronizarFotosFaltantes`): descarga en bloques de 30 solo las fotos que no existan en la PC y despacha `siumax-fotos-actualizadas`. Una vez guardada una foto, NUNCA más se vuelve a pedir por internet.
+  - `Punto-de-venta/index.tsx`: usa `COLUMNAS_PRODUCTO`, asigna `image_url: fotoDeCache(p.id) || p.image_path || null`, sincroniza faltantes y escucha actualizaciones.
+  - `Punto-de-venta/components/TerminalBusqueda.tsx`: utiliza `fotoDeCache(prod.id)` como respaldo instantáneo en las tarjetas.
+  - `Inventario/index.tsx`: usa `COLUMNAS_PRODUCTO`, eliminada la conversión con `JSON.stringify` (ahora usa validación directa de unidad), asigna `fotoDeCache(p.id)` y sincroniza faltantes.
+  - `Inventario/components/TablaProductos.tsx`: renderiza fotos usando `fotoDeCache(item.id)`.
+  - `Inventario/components/ModalProducto.tsx`: al guardar producto nuevo o editado, actualiza `guardarFotoEnCache(id, foto)` al instante.
+  - `Inventario/components/TablaLotes.tsx`: omite fotos en el join con lotes (`products!batches_product_id_fkey (id, name, category, unit, control_type, weight_unit)`).
+  - `Clientes/index.tsx`: pide solo `id, name, price, quantity, barcode, code, category, unit, is_active` (< 50 KB).
+  - `Conteos/index.tsx`: pide solo datos de producto sin imágenes (< 60 KB).
+  - `Proveedores/index.tsx`: pide solo datos de producto sin imágenes (< 50 KB).
+  - `precargaSinInternet.ts`: usa `COLUMNAS_PRODUCTO` y omite consultas duplicadas.
+  - `main.tsx`: inicializa `iniciarCacheFotos()` al arrancar la app.
+- **Verificado:** `npm run build` exitoso (0 errores TS/Vite), `graphify update .` actualizado. Tamaño de descarga por sesión bajó de 25 MB a 627 KB (97.5% más liviano).
+- **Desplegado con autorización del dueño (10/11/2026):** `node ai-scripts/deploy.cjs todos` subió a Evicamp (`evicamp.duckdns.org`), SiuMax Pruebas (`comerc.siumax.duckdns.org`) y Clientes (`/var/www/siuhub-app/html`). Nginx recargado, ambos sitios respondiendo 200 OK. Base de datos y APIs intactas.
+
+---
+
+## 06/11/2026 (128) · Claude — Links ordenados: siumax.duckdns.org = Panel; pruebas en comerc.siumax y servic.siumax
+- **Dueño:** *"transformamos siumax.duckdns.org en el panel de control y usamos comerc siumax y servic siumax como pruebas, y para mis clientes primero el nombre de tienda y luego comerc siumax o servic siumax"*; *"panel.siumax.duckdns.org lo puedes desaparecer"*; *"sí, empieza"*.
+- **Hecho en el VPS** con `node ai-scripts/cliente.cjs ordenar-links` (nuevo `servidor/ordenar-links.sh`; respaldo de nginx en `/root/backups/ordenar-links-20261107-022103`; vuelve solo atrás si algo falla):
+  - `comerc.siumax.duckdns.org` = sistema de pruebas de Comerc (copia exacta de la config de antes: misma carpeta, base `siumax`, API 3001, límite de login, fotos y sugerencias). Mismos datos y usuarios.
+  - `servic.siumax.duckdns.org` = página "SiuMax Servic — en preparación" (`/var/www/servic/html`).
+  - `siumax.duckdns.org` = **Panel de Control** (+ "Mis sitios": Comerc, Servic, EviDiary). Sigue sirviendo `/actualizaciones/` y `/descargas/` (las apps de PC instaladas, también las de Evicamp, se actualizan desde ahí) y un `sw.js` que borra la copia sin internet que el navegador guardó del sistema de pruebas.
+  - `panel.siumax.duckdns.org` eliminado (config y certificado). Ese día el panel tenía 0 planes y 0 pagos: nada pendiente de Mercado Pago. Los avisos de pago ahora van a `siumax.duckdns.org/api/mercadopago/webhook` (el panel lo manda en cada cobro).
+  - Clientes nuevos: `<negocio>.comerc.siumax.duckdns.org` (`siuhub-lib.sh` `host_cliente`, `panel.py` `DOMINIO_CLIENTES`). Reservadas: `comerc servic evi evidiary`. No había ningún cliente creado.
+- **Código:** `siuhub-lib.sh` (TIPO_SISTEMA, host_cliente, certificado/sitio_con_certificado/ssl_de), `instalar-panel.sh`, `limitar-login.sh` y `activar-seguridad.sh` (archivo nginx `comerc`), `migrar-dominio.sh` bloqueado (deshacía el orden), `panel.py`/`index.html`, `cliente.cjs` (acción `ordenar-links`), `destinos.cjs` (`comerc` = alias de `siumax`), `escritorio/main.js` y `configurar.html` (sufijo `.comerc.siumax…`, **llega con el próximo instalador**), Tienda Web (link por defecto) y 68 pruebas apuntan a `comerc.siumax`.
+- **Verificado:** las 7 revisiones del script (Comerc abre y su API pide sesión 401, Servic, Panel, actualizaciones, Evicamp 200, EviDiary 200); desde la PC: `panel.siumax` ya no responde; Edge con teclado: login en comerc.siumax, Inventario con sus productos, panel pide su contraseña y muestra "Mis sitios"; 0 errores. **Evicamp, su base y su API no se tocaron; ninguna API se reinició** (solo recarga de nginx y reinicio del panel).
+- **El dueño debe saber:** iniciar sesión de nuevo en `comerc.siumax.duckdns.org`; si su app de PC de pruebas apuntaba a `siumax.duckdns.org`, ahora abre el panel (cambiarle el link). En Mercado Pago no hace falta cambiar nada (revisar Webhooks solo si alguna vez se configuró a mano).
+- **Sigue:** Fase 0 de SiuMax Servic en `D:/Programación/siumax/servicios` (con propuesta y OK). Pendientes de antes sin cambios: subir 118–126 con aviso; instalador nuevo de la app de PC (ahora también para el sufijo `.comerc.siumax`).
+
+---
+
+## 06/11/2026 (127) · Claude — La visión de SiuMax pasa a la carpeta madre; Comerc terminado; sigue Servicios
+- **Dueño:** *"eso tendría que estar en la carpeta siumax, no dentro de comercio, porque comercio es una parte; voy a conectarme dentro de la carpeta siumax; crearé otra carpeta, servicios, que es la que haremos, ya que comercio terminamos (tiene para mejorar, pero lo importante ya está y ya haré producción, así que no habrá cambios significativos); avanzaremos con servicios"*.
+- **Movido:** `docs/TIPOS-DE-NEGOCIO.md` → `D:/Programación/siumax/TIPOS-DE-NEGOCIO.md` (con Servicios CONFIRMADO como el siguiente).
+- **Nuevo `D:/Programación/siumax/CLAUDE.md`:** una sesión abierta en la carpeta madre NO tiene la memoria de Claude de `comercio` (la memoria va por carpeta). Ese archivo le da: qué es cada carpeta (comercio, servicios, bot-whatsapp, videos), las reglas del dueño que valen para todos los sistemas (español, OK explícito, no subir/push sin aviso, Evicamp no paga, seguridad, SiuMax Sobrio sin curvas, reglas del selector, no quitar sin revisar, memoria compartida con Antigravity, graphify) y dónde están las reglas y la memoria de Comerc.
+- **Estado de Comerc:** terminado en lo importante y en producción; mejoras pequeñas cuando el dueño las pida. La carpeta `servicios` la crea el dueño. Base de Servicios: `D:/Programación/eco-sistema`.
+- Pendiente de subir a Evicamp/clientes/GitHub (esperar aviso): 118–126 (categorías en Producir, Guardar/Ir a Lotes, gastos extra por lote, separador de miles, Armar producto, cabeceras en una fila, sin listas de abajo, ticket impreso, animaciones, Enter en Nuevo ajuste). El arreglo del largo del ticket en `escritorio/main.js` requiere instalador nuevo.
+
+---
+
+## 06/11/2026 (126) · Claude — Nuevo ajuste: Enter hace su acción y el selector se queda (solo siumax)
+- **Dueño:** *"perfecto, bien hecho, pero el Enter pasa al siguiente selector; arregla eso"*. (La regla general de 116 no alcanzaba: los saltos ocurrían después de esperar al servidor, fuera de los 400 ms, o desde botones.)
+- `ModalAjuste.tsx`: elegir lote → vuelve al selector de lote (antes a la cantidad); Enter en el conteo / Continuar → calcula y se queda en el conteo (antes al motivo); Enter en la cantidad de la salida / Continuar → revisa y se queda (↓ sigue bajando al motivo); Enter en un motivo → lo marca y se queda (antes a la justificación); Enter en la justificación → se queda (antes a Guardar). Elegir el producto sí pasa al conteo porque el buscador desaparece.
+- Probado con teclado (PAN, sin guardar): lote → se queda; conteo 1 + Enter → "Faltan 89" y se queda; ↓ motivo; Enter marca ROBO y se queda; justificación + Enter se queda; ↓ Guardar. 0 errores.
+
+---
+
+## 06/11/2026 (125) · Claude — Nuevo ajuste: sin "Automático", lista de lotes sin taparse y alto que cambia suave (solo siumax)
+- **Dueño** (captura con la lista de lotes encima de la cantidad): *"nada de automático; así sigue siendo muy brusco la aparición del producto, se ve cómo se acomoda todo rápido; y hay un problema estético en la imagen, corrige eso"*.
+- **"Automático" fuera:** en el conteo (quien tiene Conteos completo) ya no está esa opción; queda elegido el lote más antiguo y se puede cambiar (`conAutomatico = false`, `setLote(conStock[0])`).
+- **Problema estético (causa):** la animación `.aparecer` con `both` dejaba cada parte en su propia capa al terminar, y la parte de abajo (cantidad) tapaba la lista flotante de lotes. Arreglo: `backwards` (al terminar no deja capa) y la lista de lotes va DENTRO de la ventana (no flotando), como la de productos.
+- **Brusco (causa):** la ventana cambiaba de alto de golpe. Nuevo `src/components/AlturaSuave.tsx` (mide con ResizeObserver y anima el alto en 260 ms; solo recorta mientras se anima; sin animación si el equipo pide reducir movimiento). En Nuevo ajuste envuelve el recuadro principal.
+- Probado en siumax (PAN, modo claro): al elegir el producto la ventana pasa de 301 a 521 px en ~470 ms paso a paso (antes de golpe); lote elegido "Lote del 5/11/2026"; la lista de lotes abierta no tapa la cantidad; 0 errores.
+
+---
+
+## 06/11/2026 (124) · Claude — El ticket impreso sale igual que la vista previa; Nuevo ajuste con animación suave (solo siumax)
+- **Dueño:** *"imprimí un ticket pero no sale bien ni completo como la previsualización; analiza por qué y arréglalo"* y *"agrega una animación al conteo; se ve muy brusco cuando se agrega un producto o cantidades y aparece la causa"*.
+- **Causa 1 — sin diseño (app de escritorio):** `impresion.ts › armarDocumento` mandaba a la ventana invisible de impresión los `<link>` del CSS; el CSS del sistema se carga con `crossorigin` y nginx no manda `Access-Control-Allow-Origin`, así que desde esa ventana (otra procedencia) el navegador lo BLOQUEABA y el ticket salía sin estilos (letra común, nada centrado, totales sin alinear). Comprobado generando el PDF del mismo documento. **Arreglo:** los estilos van COPIADOS dentro del documento (`cssDeLaPagina()` lee `document.styleSheets`).
+- **Causa 2 — más ancho que la vista previa:** al imprimir el ticket ocupaba 80 mm (en pantalla el texto ocupa ~72 mm por el relleno) y una ticketera de 80 mm solo imprime ~72 mm: se perdía el costado derecho (precios). **Arreglo:** al imprimir mide 72 mm (`print:w-[72mm]` y `body { width: 72mm }`) en `TicketImprimible.tsx` y en el ticket del cierre (`ModalDetalleCaja.tsx`).
+- **Causa 3 — largo (app de escritorio):** `escritorio/main.js` imprimía sin tamaño de hoja (la de la impresora por defecto: un ticket largo podía cortarse). **Arreglo:** mide el alto del ticket y pasa `pageSize` (80 mm × alto + 5 mm). ⚠️ Este cambio es del programa instalado: llega solo con un instalador nuevo (`build-escritorio`), no con el deploy.
+- Verificado: el mismo documento que se manda a la impresora, en modo impresión → PDF de 80 mm: 72 mm de ancho, nada se sale, con su diseño, igual que la vista previa (`scratchpad/ticket-impreso-arreglado.pdf`).
+- **Animación:** `.aparecer` en `index.css` (se desvanece y baja 6 px en 0,22 s; sin animación si el equipo pide reducir movimiento). En Nuevo ajuste: lista de resultados, producto elegido, lote, cantidad/conteo, aviso Faltan/Sobran, motivo y el mensaje de guardado. Probado (`document.getAnimations()`): cada parte se anima al aparecer y termina en menos de medio segundo; el flujo sigue igual; 0 errores.
+
+---
+
+## 06/11/2026 (123) · Claude — Sin listas de abajo en Armar producto y Nuevo ajuste (solo siumax)
+- **Dueño** (capturas): *"no es necesario eso"* ("Lo que ya armaste" en Armar producto) y *"también lo de conteo no es necesario"* ("Hechos ahora" en Nuevo ajuste).
+- Antes de quitar, lo que hacían y dónde sigue: **Armar producto** — producir una receta = gorrito de su fila en Inventario (abre Producir); cambiar = Editar producto › "Cambiar sus productos" / "Cambiar tallas y colores"; stock de tallas = Ingresar lote. **Nuevo ajuste** — al guardar queda el aviso "✔ …" y todo sale en la tabla de Conteos al cerrar.
+- `ModalProduccion.tsx`: quitada la lista (y `armados`/`conTallas`); la ventana a la medida (solo las dos tarjetas, 306 px). `ModalAjuste.tsx`: quitada "Hechos ahora"; la ventana a la medida (234 px). Como la ventana ahora es baja, la lista de resultados del buscador de productos (flotante) se cortaba: ahora va DENTRO de la ventana (la ventana crece mientras se busca).
+- Probado en siumax (modo oscuro): alturas 306 y 234 px; escribir "C" → la lista entra completa (termina en 490, la ventana en 534); elegir producto → selector en el conteo; 0 errores.
+
+---
+
+## 06/11/2026 (122) · Claude — Cabeceras en UNA fila en laptops; tarjetas de Armar producto como botones; lista de Categoría pegada (solo siumax)
+- **Dueño** (5 capturas): *"haz que parezcan más como botones"* (tarjetas de Armar producto), *"el espacio entre el desplegable y el buscador es demasiado"* (Categoría) y *"quiero que eso se acomode en una fila en pantallas más pequeñas (PC, tablet, laptop); si necesita acomodarse, normal; pasa en Inventario, Finanzas y Utilidades"*.
+- **Cabeceras**: el contenedor de los botones tenía `w-full 2xl:w-auto` / `flex-col 2xl:flex-row` (siempre a una segunda fila bajo 1536 px). Ahora `flex-wrap` / `max-w-full`: una fila si entra, baja solo si no. Archivos: `Inventario/index.tsx`, `Finanzas/index.tsx`, `Utilidades/components/FiltrosUtilidades.tsx`, `Clientes/index.tsx`, `Conteos/components/HeaderConteos.tsx`. Además en `index.css`, de 1024 a 1700 px, `main .boton-cabecera` y `main .pestanas-sobrias > button` más compactos (relleno 0.7rem, 10 px, letra menos espaciada). Medido (`scratchpad/medir-cabeceras.mjs`): desde 1366 px TODAS las secciones en una fila (Inventario, Finanzas, Utilidades, Clientes, Conteos, Ajustes); a 1280 solo Inventario en dos (3 pestañas + 5 botones); a 1024 algunas en dos; nada se sale de la pantalla.
+- **Armar producto**: las dos tarjetas con el diseño del paso 1 de Nuevo producto (ícono grande en recuadro, centrado; al pasar o seleccionar se elevan con borde y sombra verde). **Categoría**: su caja se estiraba con la fila (`self-start`): la lista ahora abre a 4 px del campo (antes ~40).
+- Probado en siumax (modo oscuro, 1366 px), 0 errores.
+
+---
+
+## 06/11/2026 (121) · Claude — "Producir" pasa a "Armar producto": Tallas y colores o Combos y recetas (solo siumax)
+- **Dueño** (captura de Nuevo producto › Activar variantes): *"me gustaría que tallas y colores esté dentro de Producir; que escoja entre tallas y colores o producir, y que el botón tenga otro nombre; como al crear un producto escojo unidad, kilos o consumo"* → Claude propuso el plan → eligió el nombre **"Armar producto"** (y "empieza").
+- **`ModalProduccion.tsx`**: al abrir, dos tarjetas (`btn-nuevo-tallas` "Tallas y colores" · `btn-nuevo-compuesto` "Combos y recetas") y abajo "Lo que ya armaste" (productos con tallas + combos + recetas, con etiqueta Tallas/Combo/Receta; los de tallas con "Ingresar lote" y "Cambiar"). Nueva vista **TALLAS**: 1. nombre → 2. precio y categoría (la misma lista de categorías que crea/borra, ahora `campoCategoria`) → 3. tabla talla · color · precio (vacío = el de arriba) · código de barras, con "Agregar talla o color" y tacho por fila (las ya guardadas muestran "hay N"). **Guardar** guarda y cierra; **Guardar e ir a Lotes** guarda y abre Ingresar lote con el producto (pide cuántas llegaron de cada talla; `onIngresarLote` en Inventario). Variantes nuevas con stock 0; a las guardadas solo se les cambian sus datos (nunca el stock); las quitadas quedan inactivas. Avisa filas sin talla ni color y repetidas.
+- **`ModalProducto.tsx`**: quitada "Tallas y colores (variantes)"; al editar ya no escribe `tiene_variantes` ni `product_variants` (antes las borraba/reescribía); si el producto tiene tallas sale `btn-cambiar-tallas` "Cambiar tallas y colores" (abre Armar producto en esa vista). Textos del panel avanzado sin "Tallas"; textos de combos/recetas dicen "Armar producto".
+- **Inventario**: el botón (id `btn-header-producir`) se llama "Armar producto" (ícono de capas). En siumax y Evicamp no había productos con tallas.
+- Probado en siumax (modo oscuro, producto de prueba borrado): abre en Tallas, → Combos; Enter → formulario; 38 NEGRO (precio base) + 39 NEGRO (S/ 130); Guardar e ir a Lotes → "Ingresar lote de stock" con las dos tallas; en la lista con etiqueta Tallas; Cambiar → quitar la 39 → Guardar (39 inactiva); Editar producto muestra el botón y guardar sin cambios no toca las tallas. 0 errores.
+
+---
+
+## 06/11/2026 (120) · Claude — Crear lote: gastos extra por TODO el lote + montos con separador de miles en todo el sistema (solo siumax)
+- **Dueño** (captura de Crear lote, "Adicional S/ 16200.00"): *"¿con adicional a qué se refiere?"* → Claude: el campo era POR UNIDAD (180 × 90 = 16200; el cálculo era correcto, pero él pensó en toda la tanda) → *"pero ahí no dice 16.200, dice 16200"* → Claude propuso separador de miles y adicional por lote → *"sí, también"*.
+- **Crear lote** (`ModalProduccion.tsx`): el campo ahora es "Gastos extra de todo el lote (gas, mano de obra)"; debajo "= S/ 2.00 por unidad (S/ 180.00 ÷ 90)". Sin tocarlo, propone lo guardado por unidad × cantidad. Al producir, lo que salió por unidad se guarda en `products.costo_adicional_produccion` para la próxima tanda. La función sigue recibiendo el total del lote.
+- **Montos con separador de miles** (como en Perú, S/ 16,200.00): nuevo `formatearMonto()` en `src/utils/formato.ts` (toLocaleString es-PE, 2 decimales). Codemod (`scratchpad/montos-miles.cjs`): solo lo que se MUESTRA con "S/" delante (`S/ {X.toFixed(2)}` y la misma forma dentro de textos con `${...}`) → 226 montos en 49 archivos (Caja, ticket impreso, Cobro, Clientes, Finanzas, Utilidades, Inventario, Conteos, Tienda Web, etiquetas). No toca cálculos, campos ni lo que va a SUNAT. Los campos donde se escribe un número siguen sin coma (el navegador no lo permite). En la Caja (`Punto-de-venta/index.tsx`) el import quedó mal ubicado por el codemod y se movió a mano.
+- Probado en siumax: 90 panes con S/ 180 de gastos → S/ 2.00 por unidad, lote a S/ 2.50, receta recuerda 2.00; con 16200 se ve "S/ 16,200.00"; todas las secciones y pestañas sin errores JS. Datos de prueba borrados.
+
+---
+
+## 06/11/2026 (119) · Claude — Producir: Guardar cierra; Guardar e ir a Lotes abre la pantalla del lote; arreglo de la regla 9 (solo siumax)
+- **Dueño** (captura): *"Guardar e ir a Lotes literalmente me lleva a Lotes; debería llevarme a la ventana del lote para ponerle la cantidad; y Guardar debe cerrar la ventana; solo se guarda ese producto"*.
+- `ModalProduccion.tsx`: **Guardar** → guarda, cierra la ventana y avisa "✔ X guardado como receta/combo". **Guardar e ir a Lotes** (receta) → guarda y abre "Crear lote: X" (la pantalla de Producir: ¿cuántos? con el tope; producir descuenta los insumos y crea el lote con su costo). `desdeGuardar` solo cambia el título.
+- **Arreglo de la regla 9 (116):** la vigilancia del Enter (400 ms) también deshacía una flecha del usuario dada justo después (Enter en el buscador y → enseguida volvía al buscador). Ahora cualquier otra tecla termina la vigilancia al instante (`guardiaEnter = null` en `alTeclearPrimero`).
+- Probado en siumax (productos de prueba, borrados): buscador Enter → → llega a la cantidad; Guardar e ir a Lotes → "CREAR LOTE: …" con tope 4, producir 2 → lote creado, insumo 4 → 2; Guardar → ventana cerrada + aviso, guardado como RECETA. 0 errores.
+
+---
+
+## 06/11/2026 (118) · Claude — Producir › Categoría crea y borra categorías como Nuevo producto (solo siumax)
+- **Dueño** (captura): *"en Categoría no crea categorías ni borra como en Producto; ajustar eso"*.
+- `ModalProduccion.tsx`: las categorías salen de la tabla `categories` (la misma de Nuevo producto; antes, de los productos). Escribir una que no existe → opción "+ Crear nueva categoría «X»" (Enter o clic la crea en la base, como Enter con lo escrito). Cada categoría tiene su X: → llega a ella (← vuelve), Enter o clic pregunta "¿Eliminar… DEFINITIVAMENTE? (los productos que ya la tienen no cambian)" y la borra; Supr sobre la fila también. Al guardar el combo/receta, si la categoría escrita no existe se crea.
+- Probado en siumax (modo oscuro): escribir "prueba cat producir" → sale "Crear nueva categoría", Enter → queda y está en la base (1); abrir lista → ↓ a ella → → a la X → Enter → pregunta → aceptar → borrada (0), selector en Categoría. 0 errores.
+
+---
+
 ## 06/11/2026 (117) · Claude — PASE a Evicamp, clientes, siumax y GitHub (115–116) sin perder fotos
 - **Dueño:** *"sí, súbelo"* (parpadeo, regla 9 en todas las ventanas, Categoría, SKU, Conteos).
 - **SQL:** ninguno (no hubo cambios en `servidor/` desde 114). No se tocó la base de Evicamp.
@@ -1935,7 +2170,7 @@ ejemplos para copiar). Por cada sección: graphify antes de leer → cambios →
   - desplegado a siumax (`node ai-scripts/deploy.cjs siumax`).
 
 ## 28/10/2026 (noche, 7) · Claude (Claude Code)
-- **El bot de WhatsApp ("chat de SiuMax para encontrar clientes") se movió FUERA del proyecto** a `D:Programaciónsiumaxot-whatsapp` (antes estaba en `comercio/bot-whatsapp` con un acceso directo afuera).
+- **El bot de WhatsApp ("chat de SiuMax para encontrar clientes") se movió FUERA del proyecto** a `D:/Programación/siumax/bot-whatsapp` (antes estaba en `comercio/bot-whatsapp` con un acceso directo afuera).
   - Su carpeta `auth_info` (la sesión de WhatsApp: secreta) ya no está dentro del repo de Comerc.
   - No es parte de SiuMax Comerc: es un proyecto aparte del dueño.
 

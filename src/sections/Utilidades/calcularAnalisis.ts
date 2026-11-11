@@ -20,7 +20,20 @@ export interface ResultadoAnalisis {
   costoUnitario: Record<string, number>;  // Costo del lote más reciente por producto (para valorizar el stock)
 }
 
-export async function calcularAnalisis(fechaInicio: string, fechaFin: string): Promise<ResultadoAnalisis> {
+// Caché en memoria para reutilización instantánea entre Utilidades y Gráficos (0 ms)
+const cacheCalculos = new Map<string, { resultado: ResultadoAnalisis; ts: number }>();
+
+export function limpiarCacheAnalisis() {
+  cacheCalculos.clear();
+}
+
+export async function calcularAnalisis(fechaInicio: string, fechaFin: string, forzarRecarga = false): Promise<ResultadoAnalisis> {
+  const cacheKey = `${fechaInicio}_${fechaFin}`;
+  const enCache = cacheCalculos.get(cacheKey);
+  if (!forzarRecarga && enCache && (Date.now() - enCache.ts < 120_000)) {
+    return enCache.resultado;
+  }
+
   // 🛠️ MOTOR DE FECHAS PURO: Zona Horaria Perú (UTC-5), fijo sin importar el dispositivo.
   // Ahora "Desde" y "Hasta" abarcan el día completo (00:00 a 23:59) sin importar los turnos de caja.
   const { inicioUTC, finUTC } = rangoUTCPeru(fechaInicio, fechaFin);
@@ -97,39 +110,43 @@ export async function calcularAnalisis(fechaInicio: string, fechaFin: string): P
     }
   }
 
-  // 🚀 3. DESCARGA MASIVA DE DETALLES DE VENTA (Chunk reducido a 50 para evitar límite)
+  // 🚀 3. DESCARGA MASIVA Y PARALELA DE DETALLES DE VENTA (Promise.all en bloques de 100)
   let detalles: any[] = [];
   if (ventasParaProductos.length > 0) {
     const saleIds = ventasParaProductos.map(s => s.id);
-    const chunkSize = 50;
+    const chunkSize = 100;
+    const chunks: (string | number)[][] = [];
     for (let i = 0; i < saleIds.length; i += chunkSize) {
-      const chunk = saleIds.slice(i, i + chunkSize);
-      let from = 0;
-      while (true) {
-        const { data: chunkDetails } = await supabase.from('sale_details').select('*').in('sale_id', chunk).range(from, from + 999);
-        if (!chunkDetails || chunkDetails.length === 0) break;
-        detalles = [...detalles, ...chunkDetails];
-        if (chunkDetails.length < 1000) break;
-        from += 1000;
-      }
+      chunks.push(saleIds.slice(i, i + chunkSize));
     }
+    const chunksResults = await Promise.all(
+      chunks.map(async (chunk) => {
+        const { data } = await supabase.from('sale_details').select('*').in('sale_id', chunk).limit(5000);
+        return data || [];
+      })
+    );
+    detalles = chunksResults.flat();
   }
 
-  // 🧾 FIADOS DE LAS VENTAS DEL RANGO: para poder mostrar, por producto, si la venta se pagó
-  // o quedó fiada, y cuánto se abonó / cuánto falta. Buscamos por sale_id exacto (no por fecha)
-  // para no perder el match si el fiado se registró unos milisegundos fuera de rango.
+  // 🧾 FIADOS DE LAS VENTAS DEL RANGO EN PARALELO
   const idsConCredito = ventasParaProductos.filter((s: any) => Number(s.amount_credit || 0) > 0).map((s: any) => s.id);
   const fiadosMap: Record<string, any> = {};
   if (idsConCredito.length > 0) {
-    const chunkSize = 50;
+    const chunkSize = 100;
+    const fiadosChunks: (string | number)[][] = [];
     for (let i = 0; i < idsConCredito.length; i += chunkSize) {
-      const chunk = idsConCredito.slice(i, i + chunkSize);
-      const { data: fiadosChunk } = await supabase
-        .from('fiados')
-        .select('id, sale_id, customer_name, amount, paid_amount')
-        .in('sale_id', chunk);
-      (fiadosChunk || []).forEach((f: any) => { fiadosMap[f.sale_id] = f; });
+      fiadosChunks.push(idsConCredito.slice(i, i + chunkSize));
     }
+    const fiadosResults = await Promise.all(
+      fiadosChunks.map(async (chunk) => {
+        const { data } = await supabase
+          .from('fiados')
+          .select('id, sale_id, customer_name, amount, paid_amount')
+          .in('sale_id', chunk);
+        return data || [];
+      })
+    );
+    fiadosResults.flat().forEach((f: any) => { fiadosMap[f.sale_id] = f; });
   }
 
   const catalogo = products || [];
@@ -255,11 +272,13 @@ export async function calcularAnalisis(fechaInicio: string, fechaFin: string): P
   const costoUnitario: Record<string, number> = {};
   catalogo.forEach((p: any) => { costoUnitario[p.id] = costoLoteMasReciente[p.id] ?? Number(p.cost_price || 0); });
 
-  return {
+  const resultadoFinal: ResultadoAnalisis = {
     analisis: resultadoAnalisis.sort((a, b) => b.utilidadReal - a.utilidadReal),
     gastos: ingresoTotalRango.gastos,
     ingresoTotal: ingresoTotalRango.ingresoTotal,
     ventas: facturasValidas as VentaPeriodo[],
     costoUnitario,
   };
+  cacheCalculos.set(cacheKey, { resultado: resultadoFinal, ts: Date.now() });
+  return resultadoFinal;
 }

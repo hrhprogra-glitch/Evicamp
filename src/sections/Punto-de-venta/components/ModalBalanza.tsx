@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Scale, Banknote, Calculator, ShoppingCart } from 'lucide-react';
 import type { Product } from '../../Inventario/types';
 import { unidadDe, nombreUnidad } from '../../../utils/unidades';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   isOpen: boolean;
@@ -97,7 +98,7 @@ export const ModalBalanza: React.FC<Props> = ({ isOpen, onClose, product, onConf
             <h3 className="text-lg font-black text-[var(--color-ink)] uppercase mb-2 leading-tight">{product.name}</h3>
             <div className="flex justify-between items-center pt-2 border-t border-dashed border-[var(--color-border)]">
               <span className="text-xs font-bold text-[var(--color-muted)] uppercase">Precio x {unidadDe(product).corto}:</span>
-              <span className="text-xl font-black text-[var(--color-accent)]">S/ {precioUnitario.toFixed(2)}</span>
+              <span className="text-xl font-black text-[var(--color-accent)]">S/ {formatearMonto(precioUnitario)}</span>
             </div>
           </div>
 

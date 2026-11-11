@@ -37,7 +37,7 @@
   Si el elemento desaparece (lista que se cierra, fila quitada), el selector vuelve a de donde salió o al vecino más cercano.
   No programar `Enter → enfocar(siguiente)` en pantallas nuevas. **Ya lo garantiza `flechasEspaciales.ts` (guardiaEnter +
   focusin) en TODAS las ventanas:** si tras un Enter en un campo el selector va a otro campo/botón de la misma ventana,
-  vuelve al de origen (no actúa si el Enter abrió/cerró una ventana, si el campo desapareció o entró a una lista).
+  vuelve al de origen (no actúa si el Enter abrió/cerró una ventana, si el campo desapareció o entró a una lista; cualquier otra tecla del usuario termina la vigilancia al instante).
   **Categorías:** Enter sin elegir de la lista guarda LO ESCRITO (no la primera parecida); de la lista se elige con ↓ + Enter.
 - **Reglas 7 y 8 (05/11/2026):** las flechas NUNCA cambian una opción (listas desplegables, grupos de opciones tipo radio, unidades…):
   solo mueven el selector; **Enter despliega o elige**. **Enter en una casilla = clic** (se marca y el selector se queda). Lo garantiza
@@ -55,16 +55,28 @@
 - **Tienda Web (Fase 10):** el dueño indicó expresamente llamarla **"Tienda Web"** (en vez de "Catálogo") y que su diseño esté totalmente adaptado tanto para **PC** (pantalla completa, filtros visuales y carrito accesible) como para **celular**.
 - **Modelos de Base de Datos y Columnas:** en la tabla `products`, la columna de costo es `cost_price` (no `cost`). La tabla de locales es `stores` con columnas `nombre`, `codigo`, `direccion`, `telefono`, `whatsapp`, `es_almacen_principal`, `activo`.
 - **Avisos internos del sistema (`avisar`):** `avisar()` despliega un diálogo propio en pantalla con el botón `#dialogo-sistema-aceptar` que atrapa el foco y los clics para evitar pérdida de teclado en la app de escritorio; siempre debe ser descartado con Enter o clic para que las pantallas detrás respondan.
+- **Caché en memoria entre sesiones (11/11/2026):** al cambiar de sección (Punto de Venta, Inventario, Clientes, Finanzas, Utilidades), nunca poner `loading = true` bloqueando la pantalla si ya se descargaron los datos en la sesión actual. Mantener una variable `cache[Modulo]Memoria` fuera del componente, iniciar el estado con ella y recargar en segundo plano silencioso para entrada instantánea (0 ms).
+- **Créditos pagados de un cliente (11/11/2026):** en el detalle del cliente, la pestaña "PAGADOS" debe ordenarse por la fecha del último pago (`fechaUltimoPago`), no por la fecha antigua de emisión, y el filtro de fecha debe buscar por la fecha del abono.
+- **Accesibilidad y visión (11/11/2026):** el "TOTAL A COBRAR" en POS debe ser negro (`text-[var(--color-ink)]`), nunca verde claro, para clientes con baja visión.
 - **Exige usar graphify** (si está instalado) antes de leer código y `graphify update .` después de cambiarlo.
 
 ## 2. El producto
 - **SiuMax** es la marca. Este sistema es **SiuMax Comerc** (minoristas + venta a empresas).
   - Habrá un sistema separado por familia: Restaurantes, Talleres, Citas, Membresías, Alquileres y Hospedaje.
+  - **La visión completa (los 7 tipos con todos sus negocios) está en la carpeta madre: `D:/Programación/siumax/TIPOS-DE-NEGOCIO.md`** (y las reglas comunes a todos los sistemas en `D:/Programación/siumax/CLAUDE.md`). El dueño: *"en sí SiuMax va a ser eso"*.
   - No proponer el selector de familia en el panel hasta que exista una segunda familia.
 - **Evicamp** es la primera clienta (no es el nombre del producto). Sitio: `evicamp.duckdns.org`.
-- **siumax** es el sistema de pruebas: `siumax.duckdns.org`, usuario `admin@siumax.com`. La clave está en `.env.vps` (`SIUMAX_ADMIN_CLAVE`).
-- **Clientes nuevos:** `<slug>.siumax.duckdns.org`, cada uno con su base `cli_<slug>`. Al 27/10/2026 no hay ninguno.
-- **Panel de control:** `panel.siumax.duckdns.org` (`servidor/panel/panel.py`).
+- **Orden de los links (desde el 06/11/2026, `servidor/ordenar-links.sh`):** `siumax.duckdns.org` = Panel de Control;
+  `<tipo>.siumax.duckdns.org` = pruebas de cada sistema; `<negocio>.<tipo>.siumax.duckdns.org` = clientes. `panel.siumax`
+  ya NO existe. `evi.siumax.duckdns.org` es EviDiary (proyecto aparte del dueño, `D:\Programación\evi`): no tocarlo.
+- **siumax** es el sistema de pruebas: **`comerc.siumax.duckdns.org`** (base `siumax`, API 3001, carpeta `/var/www/siuhub/html`,
+  nginx `sites-available/comerc`), usuario `admin@siumax.com`. La clave está en `.env.vps` (`SIUMAX_ADMIN_CLAVE`).
+  En los scripts se sigue llamando `siumax` (también acepta `comerc`): `deploy.cjs siumax`.
+- **Pruebas de SiuMax Servic:** `servic.siumax.duckdns.org` (por ahora solo una página "en preparación", `/var/www/servic/html`).
+- **Clientes nuevos:** `<slug>.comerc.siumax.duckdns.org`, cada uno con su base `cli_<slug>`. Al 06/11/2026 no hay ninguno.
+- **Panel de control:** `siumax.duckdns.org` (`servidor/panel/panel.py`; nginx `sites-available/siuhub-panel`).
+  - **`siumax.duckdns.org/actualizaciones/` debe seguir sirviéndose SIEMPRE:** las apps de PC instaladas (también las de
+    Evicamp) buscan ahí sus actualizaciones. Lo sirve el bloque del panel (`instalar-panel.sh`).
   - Da de alta clientes y cobra con **Mercado Pago (cobro REAL activado)**.
   - Suspende a los 5 días de vencido. No tocarlo por ahora.
 - **App de PC:** Electron (`escritorio/`), con actualización automática (`node ai-scripts/build-escritorio.cjs generico --nueva-version`). Carga el sistema desde el servidor, así que los cambios de pantalla no necesitan un .exe nuevo. No cambiar el `name` del manifest ("SiuMax"): la app lo verifica.
@@ -192,10 +204,20 @@
 41. **Cambiar una tabla compartida sin mirar quién más la usa** (04/11/2026): `TablaMovimientos` la usan Finanzas (caja actual) y `ModalDetalleCaja` (detalle de una caja pasada). Al darle paginación hay que revisar el teclado en los dos lugares (`graphify explain "TablaMovimientos"` muestra quién la importa).
 46. **La trampa de foco de ventanas bloqueaba el teclado en la ventana de impresión nativa (AnyDesk Printer / Chromium)** (04/11/2026): `ventanas.ts` escucha `focusout` y en `luego(0)` forzaba el foco a la web de SiuMax. Al abrirse la ventana de impresión, Chromium perdía el foco y el selector no dejaba presionar Imprimir o Cancelar. Solución: sincronizar flag `estaImprimiendo()` con `beforeprint` y `afterprint` para pausar la trampa de foco durante la impresión.
 47. **No usar `display: flex` directo sobre un `<td>` en tablas HTML (`hidden md:flex`)** (04/11/2026): convierte la celda en contenedor flex perdiendo su display `table-cell`, lo que desalinea la celda respecto al `<th>` de la cabecera (el botón de acciones salía pegado a la derecha). Usar siempre `hidden md:table-cell` y envolver el botón dentro de `<div className="flex items-center justify-center">`.
+49. **Cambiar de link un sitio que tenía la app guardada sin internet** (06/11/2026): el navegador guarda el sistema
+    (service worker `sw.js`) por link; si en ese link se pone otra cosa, seguiría mostrando la copia vieja. Al pasar
+    `siumax.duckdns.org` a Panel se sirve un `sw.js` que borra esa copia y se da de baja solo (`instalar-panel.sh`).
+    El navegador también pide iniciar sesión de nuevo en el link nuevo (las sesiones y copias van por link).
 48. **Un 401 que no era de sesión sacaba al usuario** (05/11/2026): en siumax `fn_edit_batch` y `fn_soft_delete_batch` no tenían EXECUTE para `anon` (en Evicamp sí); PostgREST responde 401 a "permission denied" del rol anon y `supabase.ts` cerraba la sesión con cualquier 401 → al guardar un lote el dueño salía al login. Arreglo: GRANT en `seguridad-sesion.sql` y solo el código `PT401` cierra la sesión. Para buscar algo así: `grep " 401 " /var/log/nginx/access.log` y `permission denied` en el log de PostgreSQL; revisar con `has_function_privilege('anon', oid, 'EXECUTE')` las funciones que llama el sistema.
 49. **Unidades de un costo: por unidad vs. por lote** (05/11/2026): `products.costo_adicional_produccion` es POR UNIDAD, pero `fn_producir_receta(p_costo_adicional)` lo recibe por TODO el lote; la ventana vieja mandaba el de una unidad. Al pasar un costo entre pantalla y función, revisar qué unidad espera cada lado.
 50. **No reescribir datos hijos que se cargan aparte** (05/11/2026): Nuevo producto borraba y volvía a insertar `product_recipes` con lo que tenía en memoria; si se guardaba antes de que terminaran de cargar, la receta quedaba vacía. Una pantalla solo debe escribir lo que de verdad edita.
 51. **Nombres de campos entre la lista y la ventana** (05/11/2026): la lista de Inventario arma el producto con `imageUrl` y Nuevo producto lo leía como `image` → al editar la foto quedaba vacía y al guardar se borraba. Al cargar `initialData`, aceptar los dos nombres (`imageUrl || image_url`) y probar que "editar y guardar sin cambios" deja la fila igual.
+52. **Montos en pantalla: `formatearMonto()`** (06/11/2026): todo monto que se MUESTRA con "S/" usa `formatearMonto(x)` de `src/utils/formato.ts` (S/ 16,200.00), no `x.toFixed(2)`. Para cálculos, campos de número y SUNAT, números sin formato.
+53. **Cabeceras: nunca forzar una segunda fila** (06/11/2026): no usar `w-full 2xl:w-auto` ni `flex-col 2xl:flex-row` en la cabecera de una sección (el dueño quiere UNA fila en laptops); usar `flex-wrap` + `max-w-full` para que baje solo cuando no entra. Los botones/pestañas se compactan solos de 1024 a 1700 px (`index.css`). Medir con `scratchpad/medir-cabeceras.mjs`.
+54. **Imprimir en otra ventana: copiar los estilos, no enlazarlos** (06/11/2026): el CSS de Vite lleva `crossorigin` y el servidor no manda CORS; un documento armado aparte (data:, about:blank) NO carga ese `<link>` y sale sin diseño. Copiar `document.styleSheets` en un `<style>`. Y en tickets: imprimir a 72 mm (lo que imprime una ticketera de 80 mm). Para revisar: el PDF del documento en modo impresión.
+55. **Animaciones de aparecer y alto suave** (06/11/2026): `.aparecer` (index.css, con `backwards`: nunca `both`/`forwards`, porque deja capa propia y tapa listas flotantes) y `<AlturaSuave>` (src/components) para que una ventana no salte de tamaño. Dentro de AlturaSuave, las listas van en el flujo (no `absolute`).
+56. **Funciones SQL repetidas: vale la ÚLTIMA** (11/11/2026): `fn_proteger_precios` está 4 veces en `seguridad-sesion.sql` (la de la fase 4.4 es la que queda). Antes de cambiar una función: `grep -n "FUNCTION public.<nombre>"` y cambiar la última; comprobar en la base con `prosrc like '%...%'`. Para que el servidor cambie algo que el trigger protege, marcar el permiso con `set_config('siumax.<algo>', '1', true)` dentro de la función (como `siumax.cpe_interno` y `siumax.costo_de_compra`).
+57. **Stock de ventas: siempre por el servidor y con la nota `Ticket #N`** (11/11/2026): el trigger de `sale_details` descuenta FIFO salvo que ya haya salidas `VENTA` con nota exacta `Ticket #<id completo>`. Si una pantalla mueve stock a mano (`products.quantity`), los lotes no cuadran y una línea nueva se descuenta dos veces. Usar funciones como `fn_mover_stock_cambio`.
 
 - **Pruebas (28/10/2026):** el dueño quiere que se pruebe SOLO lo que se modificó. Las tandas de regresión, solo si él lo pide.
 

@@ -3,6 +3,7 @@ import { X, RotateCcw, Trash2 } from 'lucide-react';
 import type { Fiado } from '../types';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { usePermiso } from '../../../utils/permisos';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   isOpen: boolean;
@@ -111,7 +112,7 @@ export const ModalAnularPago: React.FC<Props> = ({ isOpen, onClose, fiado, onAnu
                     <p className="text-[12px] font-bold text-[var(--color-muted)]">{new Date(pago.fecha).toLocaleString()}</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-black text-[var(--color-accent)]">S/ {pago.monto.toFixed(2)}</span>
+                    <span className="text-sm font-black text-[var(--color-accent)]">S/ {formatearMonto(pago.monto)}</span>
                     {puedeCobrar && (
                     <button 
                       onClick={() => onAnularPago(pago.id, pago.monto)} 

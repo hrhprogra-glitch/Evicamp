@@ -14,7 +14,8 @@ import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { usePermiso, avisarSinPermiso } from '../../../utils/permisos';
 import { confirmar, avisar } from '../../../utils/dialogos';
 import { ventanaSuperior } from '../../../utils/ventanas';
-import { formatearCantidad } from '../../../utils/formato';
+import {formatearCantidad, formatearMonto } from '../../../utils/formato';
+import { estaVencido } from '../../../utils/vencimiento';
 import { CuerpoVentana, BarraFiltros, claseBotonBarra, claseCampoBarra, TextoBarra, CajaLista, SeparadorLista, FilaLista, LineaDato, Etiqueta, DatoFila, type TonoEtiqueta } from '../../../components/ListaVentana';
 
 export interface ProductoHistorial {
@@ -58,7 +59,8 @@ interface Movimiento {
 type Pestana = 'LOTES' | 'MOVIMIENTOS';
 const LIMITE_MOVIMIENTOS = 300;
 
-const fecha = (valor: string | null) => (valor ? new Date(valor).toLocaleDateString('es-PE') : '—');
+// Una fecha sola (AAAA-MM-DD, como el vencimiento) se lee en hora de Perú: new Date('AAAA-MM-DD') la toma en UTC y sale un día antes
+const fecha = (valor: string | null) => (valor ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(valor) ? `${valor}T00:00:00` : valor).toLocaleDateString('es-PE') : '—');
 const fechaHora = (valor: string) => new Date(valor).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' });
 const hoyISO = () => new Date().toLocaleDateString('en-CA'); // AAAA-MM-DD en hora local
 const haceDiasISO = (dias: number) => { const d = new Date(); d.setDate(d.getDate() - dias); return d.toLocaleDateString('en-CA'); };
@@ -329,10 +331,10 @@ Ya no tiene stock; el historial de ventas y movimientos no se toca.`;
   const claseAccion = 'p-1.5 border-2 border-transparent text-[var(--color-muted)] cursor-pointer focus:outline-none';
 
   const filaLote = (l: LoteHistorial) => {
-    const vencido = !!l.expiration_date && new Date(l.expiration_date) < new Date();
+    const vencido = estaVencido(l.expiration_date); // como la pestaña Lotes: vence hoy = todavía vigente
     const estado = l.quantity <= 0 ? 'AGOTADO' : vencido ? 'CADUCADO' : 'VIGENTE';
     const linea1 = `Doc: ${l.document_ref || '—'} | Prov: ${l.supplier || '—'}`;
-    const linea2 = `Costo U.: S/ ${l.cost_unit.toFixed(2)} | Vence: ${l.expiration_date ? fecha(l.expiration_date) : '—'}`;
+    const linea2 = `Costo U.: S/ ${formatearMonto(l.cost_unit)} | Vence: ${l.expiration_date ? fecha(l.expiration_date) : '—'}`;
     const datos = <><LineaDato titulo={linea1}>{linea1}</LineaDato><LineaDato>{linea2}</LineaDato></>;
     return (
       <FilaLista

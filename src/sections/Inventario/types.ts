@@ -10,6 +10,7 @@ export interface Product {
   category: string;
   unit: string;
   imageUrl?: string | null;
+  image_url?: string | null;
   control_type?: string;
   vencimiento?: string | null; // el más cercano de sus lotes con stock (filtros Vencidos / Vencen en 30 días)
   vendido30?: number;           // fase 2.4: unidades vendidas en 30 días (undefined = no se pudo saber)

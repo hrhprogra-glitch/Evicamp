@@ -15,7 +15,7 @@ export const PestanaTiendaWeb: React.FC = () => {
 
   const urlTienda = typeof window !== 'undefined' 
     ? `${window.location.origin}/#/tienda` 
-    : 'https://siumax.duckdns.org/#/tienda';
+    : 'https://comerc.siumax.duckdns.org/#/tienda';
 
   useEffect(() => {
     const fetchConfig = async () => {

@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { ArrowDownToLine, ArrowUpFromLine, Trash2, Eye, RotateCcw, Receipt, ArrowLeftRight, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import type { UnifiedItem } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
-import { usePermiso, avisar, avisarSinPermiso } from '../../../utils/permisos';
+import { usePermiso, avisarSinPermiso } from '../../../utils/permisos';
 import { InsigniaCpe } from '../../../components/InsigniaCpe';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   movimientos: UnifiedItem[];
@@ -139,7 +140,7 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                       )}
                       {item.isTicket && item.devolucion && (
                         <p className="text-[11px] font-bold text-[var(--color-danger)] uppercase tracking-wide leading-tight">
-                          ↩ Devuelto S/ {item.devolucion.monto.toFixed(2)}{item.devolucion.autor ? ` · por ${item.devolucion.autor}` : ''}
+                          ↩ Devuelto S/ {formatearMonto(item.devolucion.monto)}{item.devolucion.autor ? ` · por ${item.devolucion.autor}` : ''}
                         </p>
                       )}
                       {item.isTicket && item.productosStr && (
@@ -171,16 +172,16 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
 
                   {/* PAGADO */}
                   <td className="hidden md:table-cell p-2.5 sm:p-3 text-right text-xs sm:text-sm font-bold text-[var(--color-muted)] whitespace-nowrap">
-                    {item.isTicket ? `S/ ${Number(item.monto_pagado || 0).toFixed(2)}` : '-'}
+                    {item.isTicket ? `S/ ${formatearMonto(Number(item.monto_pagado || 0))}` : '-'}
                   </td>
 
                   {/* DEUDA */}
                   <td className={`hidden md:table-cell p-2.5 sm:p-3 text-right text-xs sm:text-sm font-black whitespace-nowrap ${Number(item.monto_deuda) > 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>
-                    {item.isTicket && Number(item.monto_deuda) > 0 ? `S/ ${Number(item.monto_deuda).toFixed(2)}` : '-'}
+                    {item.isTicket && Number(item.monto_deuda) > 0 ? `S/ ${formatearMonto(Number(item.monto_deuda))}` : '-'}
                   </td>
 
                   <td className={`p-2.5 sm:p-3 text-right text-xs sm:text-sm font-black tracking-tight whitespace-nowrap ${item.tipo === 'INGRESO' ? 'text-[var(--color-accent)]' : item.tipo === 'EGRESO' ? 'text-[var(--color-danger)]' : 'text-[var(--color-ink)]'}`}>
-                    {item.tipo === 'INGRESO' ? '+' : item.tipo === 'EGRESO' ? '-' : ''} S/ {Number(item.monto).toFixed(2)}
+                    {item.tipo === 'INGRESO' ? '+' : item.tipo === 'EGRESO' ? '-' : ''} S/ {formatearMonto(Number(item.monto))}
                   </td>
                   
                   <td className="p-2.5 sm:p-3 whitespace-nowrap text-center">
@@ -210,16 +211,19 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                             id={`btn-eliminar-venta-${item.id}`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              // Una venta no se borra: primero la devolución; y una anulada solo la borra el administrador
+                              // Una venta no se borra: primero se anula (devolución de todo el ticket: el stock vuelve y el
+                              // dinero sale de la caja; pide confirmar y, sin permiso, la clave del administrador). El botón ↺
+                              // que lo hacía se quitó al unir Cambio / Devolución (04/11) y el ticket simple no tenía cómo.
+                              // Una anulada solo la borra el administrador.
                               if (item.estado !== 'ANULADO') {
-                                avisar('🔁 Primero haz la devolución de esta venta (botón ↺). Una venta no se borra: se anula para que el stock y la caja cuadren.');
+                                onAnularTicket(item.id);
                                 return;
                               }
                               if (!esAdmin) { avisarSinPermiso('borrar ventas (solo el administrador)'); return; }
                               onDelete(item.id, true);
                             }}
                             className="p-1.5 bg-[var(--color-surface)] text-[var(--color-muted)] border border-[var(--color-border)] hover:border-[var(--color-danger)] hover:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-danger)] transition-colors cursor-pointer rounded-none disabled:opacity-40"
-                            title="Eliminar Venta"
+                            title={item.estado === 'ANULADO' ? 'Eliminar Venta' : 'Anular / Devolver todo el ticket'}
                             disabled={idsAnulando?.has(item.id)}
                           >
                             <Trash2 size={14} />

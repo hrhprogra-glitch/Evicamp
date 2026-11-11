@@ -1,21 +1,34 @@
 #!/bin/bash
 # Funciones comunes de los scripts de SiuMax en el VPS (se instalan en /opt/siuhub).
-# Cada cliente: base cli_<slug>, API PostgREST propia (puerto 3100+), link <slug>.siumax.duckdns.org.
+# Cada cliente: base cli_<slug>, API PostgREST propia (puerto 3100+), link <slug>.comerc.siumax.duckdns.org.
+# Orden de los links (06/11/2026): siumax.duckdns.org = Panel de Control; <tipo>.siumax.duckdns.org = pruebas
+# de cada sistema (comerc, servic); <negocio>.<tipo>.siumax.duckdns.org = clientes.
 
 DOMINIO_BASE="siumax.duckdns.org"
+TIPO_SISTEMA="comerc"                         # estos scripts crean clientes de SiuMax Comerc
+HOST_PRUEBAS="$TIPO_SISTEMA.$DOMINIO_BASE"   # sistema de pruebas de Comerc (base siumax, API puerto 3001)
 DIR_SIUMAX="/opt/siuhub"
-REGISTRO="$DIR_SIUMAX/clientes.tsv"           # slug  nombre  puerto  estado  fecha_alta
-APP_COMPARTIDA="/var/www/siuhub-app/html"     # una sola copia del sistema para todos los clientes
+REGISTRO="$DIR_SIUMAX/clientes.tsv"           # slug  nombre  puerto  estado  fecha_alta  tipo
+APP_COMPARTIDA="/var/www/siuhub-app/html"     # copia compartida de Comerc
+APP_SERVIC_COMPARTIDA="/var/www/servic/html"   # copia compartida de Servic
 DIR_CLIENTES="/var/www/clientes"              # por cliente: descargas (instalador de PC)
 CONF_POSTGREST_BASE="/etc/postgrest_siuhub.conf"
 DIR_CONF_CLIENTES="/etc/postgrest/clientes"
 PUERTO_INICIAL=3100
 
-host_cliente() { echo "$1.$DOMINIO_BASE"; }
+host_cliente() {
+  local slug="$1"
+  local tipo="${2:-}"
+  if [ -z "$tipo" ]; then
+    tipo=$(dato_registro "$slug" 6)
+  fi
+  [ -n "$tipo" ] || tipo="$TIPO_SISTEMA"
+  echo "$slug.$tipo.$DOMINIO_BASE"
+}
 base_cliente() { echo "cli_${1//-/_}"; }
 
 # slug: solo minúsculas, números y guion; 3 a 30 caracteres; no empieza ni termina en guion
-LINKS_RESERVADOS=" panel www api admin app mail ftp siuhub siumax evicamp creditaltoque descargas actualizaciones "
+LINKS_RESERVADOS=" panel www api admin app mail ftp siuhub siumax evicamp creditaltoque descargas actualizaciones comerc servic evi evidiary "
 
 validar_slug() {
   [[ "$1" =~ ^[a-z0-9]([a-z0-9-]{1,28})[a-z0-9]$ ]] || {
@@ -52,9 +65,17 @@ cambiar_estado_registro() { # cambiar_estado_registro <slug> <ACTIVO|SUSPENDIDO>
 #   modo "activo"     -> HTTPS con sistema + API + descargas
 #   modo "suspendido" -> HTTPS mostrando la página de servicio suspendido
 escribir_nginx() {
-  local slug="$1" puerto="$2" modo="$3"
-  local host; host=$(host_cliente "$slug")
+  local slug="$1" puerto="$2" modo="$3" tipo="${4:-}"
+  if [ -z "$tipo" ]; then
+    tipo=$(dato_registro "$slug" 6)
+  fi
+  [ -n "$tipo" ] || tipo="$TIPO_SISTEMA"
+  local host; host=$(host_cliente "$slug" "$tipo")
   local archivo="/etc/nginx/sites-available/cli-$slug"
+  local app_dir="$APP_COMPARTIDA"
+  if [ "$tipo" = "servic" ]; then
+    app_dir="$APP_SERVIC_COMPARTIDA"
+  fi
 
   local cors='
         add_header Access-Control-Allow-Origin * always;
@@ -65,7 +86,7 @@ escribir_nginx() {
   local cuerpo
   if [ "$modo" = "suspendido" ]; then
     cuerpo="
-    root $APP_COMPARTIDA;
+    root $app_dir;
     location / {
         try_files /suspendido.html =503;
         add_header Cache-Control \"no-store\" always;
@@ -81,12 +102,12 @@ escribir_nginx() {
     }"
   else
     cuerpo="
-    root $APP_COMPARTIDA;
+    root $app_dir;
     index index.html;
 
     location / {
         try_files \$uri \$uri/ /index.html;
-    }
+    }"
 
     # Instalador de PC propio de este cliente (se conecta a su link)
     location /descargas/ {
@@ -158,6 +179,34 @@ EOF
 
 recargar_nginx() {
   nginx -t 2>/dev/null && systemctl reload nginx
+}
+
+certificado() { # certificado <host>: pide el certificado HTTPS si aún no existe (el host ya debe responder en el puerto 80)
+  [ -f "/etc/letsencrypt/live/$1/fullchain.pem" ] && return 0
+  certbot certonly --nginx -d "$1" --non-interactive --agree-tos --keep-until-expiring > /dev/null
+}
+
+sitio_con_certificado() { # sitio_con_certificado <archivo> <host>: lo publica en el puerto 80 y pide su certificado
+  [ -f "/etc/letsencrypt/live/$2/fullchain.pem" ] && return 0
+  cat > "/etc/nginx/sites-available/$1" <<EOF
+server {
+    listen 80;
+    server_name $2;
+    root /var/www/html;
+}
+EOF
+  ln -sf "/etc/nginx/sites-available/$1" "/etc/nginx/sites-enabled/$1"
+  recargar_nginx
+  certificado "$2"
+}
+
+ssl_de() { # ssl_de <host>: líneas del certificado para un bloque "listen 443"
+  cat <<EOF
+    ssl_certificate /etc/letsencrypt/live/$1/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$1/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+EOF
 }
 
 # === Links viejos que redirigen al nuevo (cuando se cambia el link de un cliente) ===

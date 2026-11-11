@@ -4,6 +4,7 @@ import { supabase } from '../../../db/supabase';
 import type { Cotizacion, DetalleCotizacion } from '../types';
 import { traerTodo } from '../../../utils/traerTodo';
 import { coincideBusqueda } from '../../../utils/busqueda';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   onNavigatePOS?: () => void;
@@ -486,7 +487,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
       name: it.product_name,
       price: it.price,
       cost: 0,
-      quantity: 9999, // se validará con el stock real al entrar a caja
+      quantity: 9999, // la Caja lo cambia por el stock real al cargar los productos (desdeCotizacion)
       minStock: 0,
       code: 'PROD',
       barcode: '',
@@ -494,7 +495,8 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
       unit: 'UND',
       cartQuantity: it.quantity,
       subtotal: it.subtotal,
-      esMayoristaAplicado: it.es_mayorista
+      esMayoristaAplicado: it.es_mayorista,
+      desdeCotizacion: true
     }));
 
     // Guardar en almacenamiento de la caja
@@ -551,7 +553,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
     const telefonoDestino = tel.length === 9 ? `51${tel}` : tel;
 
     const lineas = items
-      .map((d) => `• ${d.quantity}x ${d.product_name} - S/ ${d.subtotal.toFixed(2)}`)
+      .map((d) => `• ${d.quantity}x ${d.product_name} - S/ ${formatearMonto(d.subtotal)}`)
       .join('\n');
 
     const venceStr = coti.fecha_vencimiento ? new Date(coti.fecha_vencimiento).toLocaleDateString() : '7 días';
@@ -561,7 +563,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
       `Estimado(a) ${coti.cliente_nombre}:\n` +
       `Le recordamos el detalle de su cotización:\n\n` +
       `${lineas}\n\n` +
-      `*TOTAL: S/ ${coti.total.toFixed(2)}*\n` +
+      `*TOTAL: S/ ${formatearMonto(coti.total)}*\n` +
       `Validez hasta: ${venceStr}\n\n` +
       `Si desea concretar su pedido o resolver dudas, estamos a su completa disposición.`
     );
@@ -727,7 +729,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
                         Total Cotizado
                       </span>
                       <span className="text-base sm:text-lg font-black text-[var(--color-ink)]">
-                        S/ {coti.total.toFixed(2)}
+                        S/ {formatearMonto(coti.total)}
                       </span>
                     </div>
 
@@ -824,12 +826,12 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
                             {det.product_name}
                           </p>
                           <span className="text-[10px] text-[var(--color-muted)] font-bold">
-                            {det.quantity} x S/ {det.price.toFixed(2)}
+                            {det.quantity} x S/ {formatearMonto(det.price)}
                             {det.es_mayorista && <span className="ml-1 text-amber-500 font-black">⭐ MAYORISTA</span>}
                           </span>
                         </div>
                         <span className="font-black text-sm text-[var(--color-ink)] shrink-0">
-                          S/ {det.subtotal.toFixed(2)}
+                          S/ {formatearMonto(det.subtotal)}
                         </span>
                       </div>
                     ))}
@@ -843,7 +845,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
                   Total de la Cotización:
                 </span>
                 <span className="text-xl font-black text-[var(--color-accent)]">
-                  S/ {cotiSeleccionada.total.toFixed(2)}
+                  S/ {formatearMonto(cotiSeleccionada.total)}
                 </span>
               </div>
 

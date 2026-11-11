@@ -14,8 +14,8 @@ map $request_uri $siumax_clave_login {
 limit_req_zone $siumax_clave_login zone=siumax_login:10m rate=10r/m;
 EOF
 
-# Sitios con su propia configuración (Evicamp y SiuMax): una línea dentro de su bloque HTTPS
-for sitio in /etc/nginx/sites-available/evicamp /etc/nginx/sites-available/siumax; do
+# Sitios con su propia configuración (Evicamp y las pruebas de Comerc): una línea dentro de su bloque HTTPS
+for sitio in /etc/nginx/sites-available/evicamp /etc/nginx/sites-available/comerc; do
   [ -f "$sitio" ] || continue
   grep -q "zone=siumax_login" "$sitio" && continue
   cp "$sitio" "$sitio.antes-limite-login"
@@ -36,7 +36,7 @@ if nginx -t 2>/dev/null; then
   echo "Límite de login activo."
 else
   echo "ERROR en la configuración; se vuelve atrás." >&2
-  for sitio in /etc/nginx/sites-available/evicamp /etc/nginx/sites-available/siumax; do
+  for sitio in /etc/nginx/sites-available/evicamp /etc/nginx/sites-available/comerc; do
     [ -f "$sitio.antes-limite-login" ] && cp "$sitio.antes-limite-login" "$sitio"
   done
   rm -f /etc/nginx/conf.d/siumax-login.conf

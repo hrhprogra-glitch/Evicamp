@@ -9,7 +9,7 @@ const { autoUpdater } = require('electron-updater');
 
 const REVISAR_ACTUALIZACION_MS = 6 * 60 * 60 * 1000;
 
-const DOMINIO_CLIENTES = 'siumax.duckdns.org';
+const DOMINIO_CLIENTES = 'comerc.siumax.duckdns.org';   // clientes: <negocio>.comerc.siumax.duckdns.org (desde el 06/11/2026)
 
 // Preferencias de la PC (link del negocio e impresora). Se guardan en la carpeta de datos del usuario.
 const archivoConfig = () => path.join(app.getPath('userData'), 'config.json');
@@ -118,6 +118,10 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
   const oculta = new BrowserWindow({ show: false, webPreferences: { sandbox: true } });
   try {
     await oculta.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+    // El papel mide lo que mide el ticket (06/11/2026): sin esto la impresora usa su hoja por defecto y un ticket
+    // largo (muchos productos + QR) se cortaba abajo. 1 px = 25400/96 micras; 80 mm de ancho; +5 mm al final.
+    const altoPx = await oculta.webContents.executeJavaScript('Math.ceil(document.body.scrollHeight)').catch(() => 0);
+    const pageSize = altoPx > 0 ? { width: 80000, height: Math.max(Math.round((altoPx * 25400) / 96) + 5000, 50000) } : undefined;
     return await new Promise((resolve) => {
       oculta.webContents.print(
         {
@@ -125,6 +129,7 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
           printBackground: true,
           deviceName: impresora || undefined, // sin elegir: usa la impresora predeterminada de Windows
           margins: { marginType: 'none' },
+          ...(pageSize ? { pageSize } : {}),
         },
         (ok, motivo) => resolve({ ok, motivo: ok ? null : motivo || 'No se pudo imprimir' })
       );

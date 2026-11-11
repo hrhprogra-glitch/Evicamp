@@ -101,11 +101,12 @@ export const TableroGanancias: React.FC<Props> = ({ onClose }) => {
   useEffect(() => {
     let vivo = true;
     setCargando(true);
+    const tiempoEspera = datos ? 350 : 0;
     const espera = setTimeout(() => {
       void calcularAnalisis(fechaInicio, fechaFin)
         .then((r) => { if (vivo) setDatos(r); })
         .finally(() => { if (vivo) setCargando(false); });
-    }, 350);                                       // por si se escribe la fecha con el teclado
+    }, tiempoEspera);                                       // inmediato al abrir; 350ms solo al tipear fecha
     return () => { vivo = false; clearTimeout(espera); };
   }, [fechaInicio, fechaFin]);
   const analisis: AnalisisProducto[] = datos?.analisis || [];

@@ -10,6 +10,7 @@ import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { ventanaSuperior } from '../../../utils/ventanas';
 import { resumenDeCliente } from './PestanaClientes';
 import { CuerpoVentana, BarraFiltros, TextoBarra, CajaLista, FilaLista, LineaDato, DatoFila, claseBotonBarra } from '../../../components/ListaVentana';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   grupo: GrupoClientes | null;     // null = cerrada
@@ -24,7 +25,7 @@ interface Props {
   onVerCliente: (c: Cliente) => void;
 }
 
-const soles = (n: number) => `S/ ${n.toFixed(2)}`;
+const soles = (n: number) => `S/ ${formatearMonto(n)}`;
 const BOTONES = ['btn-grupo-cobrar', 'btn-grupo-agregar', 'btn-grupo-editar', 'btn-grupo-eliminar'];
 
 export const ModalGrupo: React.FC<Props> = ({ grupo, miembros, fiados, onClose, onCobrar, onAgregar, onEditar, onEliminar, onSacar, onVerCliente }) => {

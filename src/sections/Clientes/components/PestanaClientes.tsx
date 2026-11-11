@@ -8,6 +8,7 @@ import React, { useMemo, useState } from 'react';
 import { Edit, Plus, Trash2, ChevronLeft, ChevronRight, FilterX, MapPin, Search, X } from 'lucide-react';
 import type { Cliente, Fiado, GrupoClientes } from '../types';
 import { coincideBusqueda } from '../../../utils/busqueda';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   clientes: Cliente[];
@@ -417,7 +418,7 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
                   </span>
                 </td>
                 <td className="py-3 sm:py-4 px-3 sm:px-4 text-right whitespace-nowrap">
-                  <span className={`font-black ${deuda > 0.05 ? 'text-[var(--color-danger)]' : 'text-[var(--color-subtle)]'}`}>S/ {deuda.toFixed(2)}</span>
+                  <span className={`font-black ${deuda > 0.05 ? 'text-[var(--color-danger)]' : 'text-[var(--color-subtle)]'}`}>S/ {formatearMonto(deuda)}</span>
                   {tieneVencido && (
                     <span className="block text-[10px] font-black text-[var(--color-danger)] uppercase tracking-wider">
                       Vencido

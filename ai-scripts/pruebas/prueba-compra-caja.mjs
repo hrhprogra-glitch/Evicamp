@@ -18,7 +18,7 @@ const page = await nav.newPage(); const errores = []; page.on('pageerror', (e) =
 const tecla = async (k) => { await page.keyboard.press(k); await pausa(200); };
 const fila = `[data-producto="${PROD}"]`;
 try {
-  await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario'); await page.focus('#input-login-usuario'); await page.keyboard.type('admin@siumax.com');
   await page.focus('#input-login-password'); await page.keyboard.type(process.env.SIUMAX_ADMIN_CLAVE); await page.keyboard.press('Enter');
   await page.waitForSelector('#sidebar-btn-inventario', { timeout: 20000 }); await pausa(2500);

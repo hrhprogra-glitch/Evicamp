@@ -2,7 +2,7 @@ import React from 'react';
 import { X, ShoppingCart } from 'lucide-react';
 import type { Fiado } from '../types';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
-import { formatearCantidadDetalle } from '../../../utils/formato';
+import {formatearCantidadDetalle, formatearMonto } from '../../../utils/formato';
 
 interface Props {
   isOpen: boolean;
@@ -110,9 +110,9 @@ export const ModalDetalleFiado: React.FC<Props> = ({ isOpen, onClose, fiado }) =
                 <div key={d.productoId} className="flex justify-between items-center border-2 border-[var(--color-border)] p-3 hover:border-[var(--color-info)] transition-colors bg-[var(--color-bg)]">
                   <div className="flex-1">
                     <p className="text-xs font-black text-[var(--color-ink)] uppercase">{d.name}</p>
-                    <p className="text-[12px] font-bold text-[var(--color-muted)]">{formatearCantidadDetalle(d.qty)} unid. x S/ {d.price.toFixed(2)}</p>
+                    <p className="text-[12px] font-bold text-[var(--color-muted)]">{formatearCantidadDetalle(d.qty)} unid. x S/ {formatearMonto(d.price)}</p>
                   </div>
-                  <span className="text-sm font-black text-[var(--color-ink)]">S/ {Number(d.subtotal || 0).toFixed(2)}</span>
+                  <span className="text-sm font-black text-[var(--color-ink)]">S/ {formatearMonto(Number(d.subtotal || 0))}</span>
                 </div>
               ))
             )}
@@ -121,7 +121,7 @@ export const ModalDetalleFiado: React.FC<Props> = ({ isOpen, onClose, fiado }) =
           {/* FOOTER - TOTAL */}
           <div className="shrink-0 border-t-2 border-[var(--color-border)] pt-4 mt-2 flex justify-between items-center">
             <span className="text-sm font-black uppercase text-[var(--color-muted)]">Monto Total:</span>
-            <span className="text-xl font-black text-[var(--color-ink)]">S/ {fiado.montoOriginal.toFixed(2)}</span>
+            <span className="text-xl font-black text-[var(--color-ink)]">S/ {formatearMonto(fiado.montoOriginal)}</span>
           </div>
         </div>
 

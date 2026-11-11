@@ -16,7 +16,7 @@ const TAMANOS = [[1920, 1080], [1600, 900], [1366, 768], [1280, 720], [1024, 768
 const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
 const nav = await puppeteer.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', headless: true, defaultViewport: { width: 1920, height: 1080 } });
 const page = await nav.newPage(); const errores = []; page.on('pageerror', (e) => errores.push(e.message));
-await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
 await page.waitForSelector('#input-login-usuario');
 await page.type('#input-login-usuario', 'admin@siumax.com'); await page.type('#input-login-password', process.env.SIUMAX_ADMIN_CLAVE);
 await page.keyboard.press('Enter'); await page.waitForSelector('#sidebar-btn-pos', { timeout: 20000 }); await pausa(1500);

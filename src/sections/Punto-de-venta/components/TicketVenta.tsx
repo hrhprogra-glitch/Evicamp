@@ -4,6 +4,7 @@ import type { CartItem, Cliente, HeldCart } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { esDecimal, unidadDe } from '../../../utils/unidades';
 import { flechasCaja, irA } from '../tecladoCaja';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   selectedIndex?: number;
@@ -357,7 +358,7 @@ export const TicketVenta: React.FC<Props> = ({
                       );
                     })()}
                     {item.precioLista !== undefined && (
-                      <span data-precio-cambiado className="text-[11px] font-bold text-[var(--color-muted)] line-through whitespace-nowrap" title={`Precio cambiado por ${item.precioCambiadoPor || ''}`}>S/ {item.precioLista.toFixed(2)}</span>
+                      <span data-precio-cambiado className="text-[11px] font-bold text-[var(--color-muted)] line-through whitespace-nowrap" title={`Precio cambiado por ${item.precioCambiadoPor || ''}`}>S/ {formatearMonto(item.precioLista)}</span>
                     )}
                     
                     {/* 🛡️ EVICAMP: STOCK VISIBLE EN LA CAJA ACTUAL */}
@@ -421,7 +422,7 @@ export const TicketVenta: React.FC<Props> = ({
 
         <div className="flex justify-between items-end mt-0">
           <span className="text-xs font-black uppercase tracking-[0.1em] text-[var(--color-ink)]">TOTAL A COBRAR</span>
-          <span className="text-2xl sm:text-3xl font-black text-[var(--color-accent)] tracking-tighter leading-none">
+          <span className="text-2xl sm:text-3xl font-black text-[var(--color-ink)] tracking-tighter leading-none">
             <span className="text-xl">S/</span> {total.toFixed(2)}
           </span>
         </div>

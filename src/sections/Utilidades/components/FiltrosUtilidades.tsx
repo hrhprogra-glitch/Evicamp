@@ -10,7 +10,7 @@ interface Props {
 
 export const FiltrosUtilidades: React.FC<Props> = ({ onToggleTops }) => {
   return (
-    <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-col 2xl:flex-row justify-between items-start 2xl:items-center gap-4 shrink-0">
+    <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-wrap justify-between items-center gap-x-6 gap-y-4 shrink-0">
       <div className="flex items-center gap-3" title="Análisis de Utilidad y Rendimiento">
         <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] rounded-none shrink-0">
           <BarChart3 size={20} className="text-[var(--color-accent)]" />

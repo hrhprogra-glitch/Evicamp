@@ -4,6 +4,8 @@ import { EtiquetaStock } from './EtiquetaStock';
 import type { Product } from '../types';
 import { usePermiso, avisarSinPermiso } from '../../../utils/permisos';
 import { confirmar } from '../../../utils/dialogos';
+import { formatearMonto } from '../../../utils/formato';
+import { fotoDeCache } from '../../../utils/cacheFotos';
 
 interface Props {
   loading: boolean;
@@ -203,7 +205,7 @@ export const TablaProductos: React.FC<Props> = ({
 
   return (
     <div id="tabla-productos-inventario" className="tabla-marco flex flex-col relative min-h-[200px]">
-      {loading && (
+      {loading && productos.length === 0 && (
         <div className="absolute inset-0 bg-white/80 dark:bg-[var(--color-surface)]/80 backdrop-blur-sm z-10 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
@@ -251,18 +253,21 @@ export const TablaProductos: React.FC<Props> = ({
                 <div key={item.id} className="grid grid-cols-12 items-center p-4 border-b-2 border-[var(--color-ink)] bg-[var(--color-bg-2)] shadow-inner">
                   {/* IMAGEN (NO EDITABLE DESDE AQUÍ) */}
                   <div className="col-span-1 flex justify-center pr-2">
-                    {item.imageUrl && (item.imageUrl.startsWith('http') || item.imageUrl.startsWith('data:')) ? (
-                      <img 
-                        src={item.imageUrl} 
-                        alt="img" 
-                        className="w-10 h-10 object-cover rounded border border-[var(--color-border)]"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      />
-                    ) : (
-                      <div className="w-10 h-10 bg-[var(--color-surface)] rounded border border-[var(--color-border)] flex items-center justify-center text-[var(--color-muted)]" title={item.imageUrl?.startsWith('media') ? 'Formato de App móvil no compatible en web' : 'Sin imagen'}>
-                        <ImageIcon size={16}/>
-                      </div>
-                    )}
+                    {(() => {
+                      const foto = item.imageUrl || fotoDeCache(item.id);
+                      return foto && (foto.startsWith('http') || foto.startsWith('data:')) ? (
+                        <img 
+                          src={foto} 
+                          alt="img" 
+                          className="w-10 h-10 object-cover rounded border border-[var(--color-border)]"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-[var(--color-surface)] rounded border border-[var(--color-border)] flex items-center justify-center text-[var(--color-muted)]" title={foto?.startsWith('media') ? 'Formato de App móvil no compatible en web' : 'Sin imagen'}>
+                          <ImageIcon size={16}/>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   <div className="col-span-2 flex flex-col gap-1 items-start pr-2">
@@ -369,18 +374,21 @@ export const TablaProductos: React.FC<Props> = ({
                 
                 {/* 0. IMAGEN (BLINDADA CONTRA MEDIA://) */}
                 <div className="col-start-1 row-start-1 row-span-2 md:col-start-auto md:row-start-auto md:row-span-1 md:col-span-1 flex items-center justify-center md:pr-2">
-                  {item.imageUrl && (item.imageUrl.startsWith('http') || item.imageUrl.startsWith('data:')) ? (
-                    <img 
-                      src={item.imageUrl} 
-                      alt={item.name} 
-                      className="w-10 h-10 object-cover rounded-md border border-[var(--color-border)] shadow-sm" 
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                    />
-                  ) : (
-                    <div className="w-10 h-10 bg-[var(--color-bg-2)] rounded-md border border-[var(--color-border)] flex items-center justify-center text-[var(--color-muted)]" title={item.imageUrl?.startsWith('media') ? 'Formato de App móvil no compatible en web' : 'Sin Imagen'}>
-                      <ImageIcon size={18} />
-                    </div>
-                  )}
+                  {(() => {
+                    const foto = item.imageUrl || fotoDeCache(item.id);
+                    return foto && (foto.startsWith('http') || foto.startsWith('data:')) ? (
+                      <img 
+                        src={foto} 
+                        alt={item.name} 
+                        className="w-10 h-10 object-cover rounded-md border border-[var(--color-border)] shadow-sm" 
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 bg-[var(--color-bg-2)] rounded-md border border-[var(--color-border)] flex items-center justify-center text-[var(--color-muted)]" title={foto?.startsWith('media') ? 'Formato de App móvil no compatible en web' : 'Sin Imagen'}>
+                        <ImageIcon size={18} />
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* 1. CÓDIGOS */}
@@ -454,7 +462,7 @@ export const TablaProductos: React.FC<Props> = ({
                 {/* 3. INVERSIÓN (COSTO Y TOTAL CLAROS) */}
                 <div className="col-start-1 col-span-2 row-start-3 md:col-start-auto md:row-start-auto md:col-span-2 flex flex-row flex-wrap md:flex-col gap-x-4 gap-y-1 md:gap-1 justify-start md:justify-center">
                   <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
-                    Costo U: <strong className="text-[var(--color-ink)] text-sm">S/ {(item.cost || 0).toFixed(2)}</strong>
+                    Costo U: <strong className="text-[var(--color-ink)] text-sm">S/ {formatearMonto((item.cost || 0))}</strong>
                   </span>
                   <span className="text-xs font-bold text-[var(--color-success)] uppercase tracking-wider">
                     Total: <strong className="text-[var(--color-ink)] text-sm">S/ {totalCompra}</strong>
@@ -464,18 +472,18 @@ export const TablaProductos: React.FC<Props> = ({
                 {/* 4. PRECIO DE VENTA Y TODAS LAS ESCALAS/PRESENTACIONES */}
                 <div className="col-start-3 row-start-1 md:col-start-auto md:row-start-auto md:col-span-1 font-black text-right md:pr-2">
                   <div className="text-base md:text-lg text-[var(--color-success)] whitespace-nowrap">
-                    S/ {(item.price || 0).toFixed(2)}
+                    S/ {formatearMonto((item.price || 0))}
                   </div>
                   {item.precioMayorista != null && item.precioMayorista > 0 && (
                     <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400 leading-tight mt-0.5 whitespace-nowrap" title="Precio Mayorista">
-                      ⭐ May: S/ {item.precioMayorista.toFixed(2)}
+                      ⭐ May: S/ {formatearMonto(item.precioMayorista)}
                     </div>
                   )}
                   {!!item.preciosCantidad?.length && (
                     <div className="flex flex-col items-end gap-0.5 mt-0.5" title="Precios por cantidad (escalas)">
                       {item.preciosCantidad.map((esc, i) => (
                         <span key={i} className="text-[10px] font-bold text-blue-600 dark:text-blue-400 leading-none whitespace-nowrap bg-blue-50 dark:bg-blue-950/40 px-1 py-0.5 border border-blue-200 dark:border-blue-900">
-                          x{esc.desde}+ S/ {Number(esc.precio).toFixed(2)}
+                          x{esc.desde}+ S/ {formatearMonto(Number(esc.precio))}
                         </span>
                       ))}
                     </div>
@@ -484,7 +492,7 @@ export const TablaProductos: React.FC<Props> = ({
                     <div className="flex flex-col items-end gap-0.5 mt-0.5" title="Presentaciones">
                       {item.presentaciones.map((pres, i) => (
                         <span key={i} className="text-[10px] font-bold text-purple-600 dark:text-purple-400 leading-none whitespace-nowrap bg-purple-50 dark:bg-purple-950/40 px-1 py-0.5 border border-purple-200 dark:border-purple-900">
-                          {pres.unidad} x{pres.factor} S/ {Number(pres.precio).toFixed(2)}
+                          {pres.unidad} x{pres.factor} S/ {formatearMonto(Number(pres.precio))}
                         </span>
                       ))}
                     </div>

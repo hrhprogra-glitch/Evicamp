@@ -5,6 +5,7 @@ import { X, Calendar, Edit, Banknote, ShoppingCart, CheckCircle, Calculator, Che
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import type { ClienteFiadoAgrupado } from '../types';
 import { avisar } from '../../../utils/dialogos';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   isOpen: boolean;
@@ -162,7 +163,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
     // Antes se recargaba aquí, ANTES de guardar: la deuda seguía apareciendo y, si se cobraba otra vez, el crédito
     // quedaba pagado dos veces.
     onClose();
-    if (vueltoAEntregar > 0) void avisar(`✅ Abono registrado: S/ ${totalAbono.toFixed(2)}\n\n💵 VUELTO A ENTREGAR: S/ ${vueltoAEntregar.toFixed(2)}`);
+    if (vueltoAEntregar > 0) void avisar(`✅ Abono registrado: S/ ${formatearMonto(totalAbono)}\n\n💵 VUELTO A ENTREGAR: S/ ${formatearMonto(vueltoAEntregar)}`);
 
     // El guardado va por detrás (la caja no espera)
     (async () => {
@@ -595,7 +596,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                       )}
                       <div className="flex flex-col">
                         {mostrarNombre && <span data-nombre-credito="true" className="text-xs font-black uppercase text-[var(--color-info)]">{fiado.clienteNombre}</span>}
-                        <span className={`font-black text-lg ${selectedIds.has(fiado.id) ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)]'}`}>S/ {fiado.saldoPendiente.toFixed(2)}</span>
+                        <span className={`font-black text-lg ${selectedIds.has(fiado.id) ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)]'}`}>S/ {formatearMonto(fiado.saldoPendiente)}</span>
                         
                         <div className="text-xs font-bold text-[var(--color-muted)] flex flex-wrap items-center gap-2 mt-1">
                           {(() => {
@@ -659,7 +660,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                                   if (totalAbonosHistorico > 0.05) {
                                     return (
                                       <span style={{ marginLeft: '8px', backgroundColor: '#22c55e', color: 'white', border: '1px solid #16a34a', padding: '3px 10px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '900', fontSize: '11px', borderRadius: '4px' }}>
-                                        ABONOS: S/ {totalAbonosHistorico.toFixed(2)}
+                                        ABONOS: S/ {formatearMonto(totalAbonosHistorico)}
                                       </span>
                                     );
                                   }
@@ -680,7 +681,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                       {fiado.detalles.map((det, i) => (
                       <div key={i} className="flex justify-between text-sm font-black text-[var(--color-muted)]">
                         <span>{det.qty} x {det.name}</span>
-                        <span>S/ {Number(det.subtotal).toFixed(2)}</span>
+                        <span>S/ {formatearMonto(Number(det.subtotal))}</span>
                       </div>
                     ))}
                   </div>
@@ -695,7 +696,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-[var(--color-danger)] font-black uppercase tracking-widest text-xs">Deuda Total Pendiente</p>
-                    <h1 className="text-3xl sm:text-4xl font-black text-[var(--color-danger)] drop-shadow-md leading-none mt-1">S/ {cliente.totalPendiente.toFixed(2)}</h1>
+                    <h1 className="text-3xl sm:text-4xl font-black text-[var(--color-danger)] drop-shadow-md leading-none mt-1">S/ {formatearMonto(cliente.totalPendiente)}</h1>
                   </div>
                   {/* En "Cobrar al grupo" no hay historial de una sola persona */}
                   {onVerHistorial && (
@@ -721,7 +722,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                  
                  <div className="flex justify-between items-center bg-[var(--color-surface)] p-3 border-2 border-[var(--color-ink)]">
                     <span className="font-black text-xs uppercase text-[var(--color-subtle)] tracking-widest">Total Seleccionado</span>
-                    <span className="font-black text-xl text-[var(--color-ink)]">S/ {totalSeleccionado.toFixed(2)}</span>
+                    <span className="font-black text-xl text-[var(--color-ink)]">S/ {formatearMonto(totalSeleccionado)}</span>
                  </div>
 
                  <div className="flex flex-col gap-3">
@@ -747,7 +748,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
 
                  <div className="flex justify-between items-center pt-3 border-t-2 border-dashed border-[var(--color-line-light)]">
                     <span className="font-black text-xs uppercase text-[var(--color-subtle)] tracking-widest">Total a Abonar</span>
-                    <span className={`font-black text-2xl ${excedeSinEfectivo ? 'text-[var(--color-danger)]' : 'text-[var(--color-success)]'}`}>S/ {totalAbono.toFixed(2)}</span>
+                    <span className={`font-black text-2xl ${excedeSinEfectivo ? 'text-[var(--color-danger)]' : 'text-[var(--color-success)]'}`}>S/ {formatearMonto(totalAbono)}</span>
                  </div>
                  {sinSeleccion && (
                    <p className="text-[11px] font-bold text-[var(--color-muted)] -mt-2">Selecciona primero la deuda que va a pagar.</p>
@@ -759,7 +760,7 @@ export const ModalEstadoCuenta: React.FC<Props> = ({ isOpen, onClose, cliente, o
                  {vuelto > 0 && (
                    <div id="vuelto-abono" className="flex justify-between items-center bg-[var(--color-warning-bg,#FEF3C7)] border-2 border-[var(--color-ink)] px-3 py-1.5 -mt-2">
                      <span className="font-black text-xs uppercase tracking-widest text-[var(--color-ink)] flex items-center gap-1.5"><Banknote size={14} /> Vuelto</span>
-                     <span className="font-black text-lg text-[var(--color-ink)]">S/ {vuelto.toFixed(2)}</span>
+                     <span className="font-black text-lg text-[var(--color-ink)]">S/ {formatearMonto(vuelto)}</span>
                    </div>
                  )}
 

@@ -1,5 +1,5 @@
 import { coincideBusqueda } from '../../utils/busqueda';
-import { formatearCantidadDetalle } from '../../utils/formato';
+import {formatearCantidadDetalle, formatearMonto } from '../../utils/formato';
 // src/sections/Finanzas/index.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Wallet, ArrowDownToLine, Lock, CreditCard, Smartphone, Banknote, ReceiptText, Search, ArrowLeftRight, ShieldCheck, FileSpreadsheet, AlertTriangle, Plus, X, FilterX } from 'lucide-react';
@@ -27,6 +27,8 @@ import { confirmar } from '../../utils/dialogos';
 import { conAutorizacion } from '../../utils/autorizacion';
 import { comprobanteDeVenta, contarComprobantesConProblema } from '../../utils/comprobante';
 
+import { cacheFinanzasMemoria, setCacheFinanzas } from '../../utils/cacheModulos';
+
 export const Finanzas: React.FC = () => {
   // Abrir/cerrar caja y registrar ingresos/egresos son permisos distintos
   const puedeTurno = usePermiso('caja_abrir_cerrar_turno');
@@ -37,12 +39,12 @@ export const Finanzas: React.FC = () => {
   const veMontos = usePermiso('reportes_ver_globales');
   const veVentasTurno = usePermiso('reportes_ver_historial_ventas') || veMontos;
   const empleado = useEmpleado();
-  const [sessionActiva, setSessionActiva] = useState<CashSession | null>(null);
-  const [movimientos, setMovimientos] = useState<UnifiedItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [sessionActiva, setSessionActiva] = useState<CashSession | null>(() => cacheFinanzasMemoria?.sessionActiva || null);
+  const [movimientos, setMovimientos] = useState<UnifiedItem[]>(() => cacheFinanzasMemoria?.movimientos || []);
+  const [isLoading, setIsLoading] = useState(() => !cacheFinanzasMemoria);
 
   // Estados Clásicos y Nuevos
-  const [superMetricas, setSuperMetricas] = useState<SuperMetricas | null>(null);
+  const [superMetricas, setSuperMetricas] = useState<SuperMetricas | null>(() => cacheFinanzasMemoria?.superMetricas || null);
 
   const [isAperturaModalOpen, setIsAperturaModalOpen] = useState(false);
   const [isMovimientoModalOpen, setIsMovimientoModalOpen] = useState(false);
@@ -124,7 +126,7 @@ export const Finanzas: React.FC = () => {
   };
 
   useEffect(() => {
-    cargarDatosCaja();
+    cargarDatosCaja(!!cacheFinanzasMemoria);
 
     // 🛡️ EVICAMP: Si la pestaña estuvo inactiva (u otra caja/dispositivo registró ventas),
     // al volver a mirarla se refrescan los totales para no quedar con datos viejos.
@@ -142,7 +144,7 @@ export const Finanzas: React.FC = () => {
   }, []);
 
   const cargarDatosCaja = async (silencioso = false) => {
-    if (!silencioso) setIsLoading(true);
+    if (!silencioso && !cacheFinanzasMemoria) setIsLoading(true);
     try {
       const { data: sessionData } = await supabase
         .from('cash_sessions')
@@ -269,7 +271,7 @@ export const Finanzas: React.FC = () => {
         const yapeEsperado = vYape + dYape + ingresosExtraYape - gastosYape;
         const tarjetaEsperada = vTarjeta + dTarjeta + ingresosExtraTarjeta - gastosTarjeta;
 
-        setSuperMetricas({
+        const metricasCalculadas: SuperMetricas = {
           fondoInicial, ingresosExtra, gastos,
           ingresosExtraYape, ingresosExtraTarjeta, gastosYape, gastosTarjeta,
           ventasEfectivo: vEfectivo, ventasYape: vYape, ventasTarjeta: vTarjeta,
@@ -277,7 +279,8 @@ export const Finanzas: React.FC = () => {
           efectivoEsperadoCaja: efectivoFisicoQueDebeHaber,
           yapeEsperado, tarjetaEsperada,
           totalFacturado: vEfectivo + vYape + vTarjeta
-        });
+        };
+        setSuperMetricas(metricasCalculadas);
 
         // 🔥 ARQUITECTURA TÉCNICA: Ya no necesitamos inyectar datos falsos.
         // El Trigger de la BD nos trajo los abonos reales en 'movData'.
@@ -366,13 +369,23 @@ export const Finanzas: React.FC = () => {
         unificados.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
         setMovimientos(unificados);
+        setCacheFinanzas({
+          sessionActiva: sessionData as CashSession,
+          movimientos: unificados,
+          superMetricas: metricasCalculadas
+        });
       } else {
         setSessionActiva(null);
+        setCacheFinanzas({
+          sessionActiva: null,
+          movimientos: [],
+          superMetricas: null
+        });
       }
     } catch (error) {
       console.error(error);
     } finally {
-      if (!silencioso) setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -763,12 +776,12 @@ export const Finanzas: React.FC = () => {
     };
   }, [vistaActual, sessionActiva, isLoading]);
 
-  if (isLoading) return <div className="flex h-full items-center justify-center font-mono">Calculando Bóveda...</div>;
+  if (isLoading && !cacheFinanzasMemoria && movimientos.length === 0) return <div className="flex h-full items-center justify-center font-mono">Calculando Bóveda...</div>;
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono">
       
-      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-col 2xl:flex-row justify-between items-start 2xl:items-center gap-4 shrink-0">
+      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-wrap justify-between items-center gap-x-6 gap-y-4 shrink-0">
         <div className="flex items-center gap-3" title="Arqueo de Yape, efectivo y deudas en tiempo real">
           <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] rounded-none shrink-0">
             <Wallet size={20} className="text-[var(--color-accent)]" />
@@ -1004,7 +1017,7 @@ export const Finanzas: React.FC = () => {
 
               <h1 className="text-[var(--color-ink)] text-3xl sm:text-4xl 2xl:text-5xl font-mono font-black mt-2">
 
-                S/ {(superMetricas.efectivoEsperadoCaja + superMetricas.yapeEsperado + superMetricas.tarjetaEsperada).toFixed(2)}
+                S/ {formatearMonto((superMetricas.efectivoEsperadoCaja + superMetricas.yapeEsperado + superMetricas.tarjetaEsperada))}
 
               </h1>
 
@@ -1021,7 +1034,7 @@ export const Finanzas: React.FC = () => {
                  <span className="w-6 h-6 flex items-center justify-center bg-[var(--color-bg)] border-2 border-[var(--color-ink)]"><Banknote size={12} className="text-[var(--color-ink)]"/></span> 
                  Efectivo Esperado
                </p>
-               <p className="text-xl sm:text-3xl font-black text-[var(--color-accent)] mt-2">S/ {superMetricas.efectivoEsperadoCaja.toFixed(2)}</p>
+               <p className="text-xl sm:text-3xl font-black text-[var(--color-accent)] mt-2">S/ {formatearMonto(superMetricas.efectivoEsperadoCaja)}</p>
                <p className="text-[11px] font-bold text-[var(--color-muted)] uppercase mt-2 border-t border-[var(--color-border)] pt-2">(Fondo + Ventas Físicas + Cobros - Gastos)</p>
             </div>
             
@@ -1030,12 +1043,12 @@ export const Finanzas: React.FC = () => {
                  <span className="w-6 h-6 flex items-center justify-center bg-blue-50 border-2 border-[var(--color-info)]"><Smartphone size={12} className="text-[var(--color-info)]"/></span> 
                  Yape / Transf
                </p>
-               <p className="text-xl sm:text-2xl font-black text-[var(--color-ink)] mt-1">S/ {superMetricas.yapeEsperado.toFixed(2)}</p>
+               <p className="text-xl sm:text-2xl font-black text-[var(--color-ink)] mt-1">S/ {formatearMonto(superMetricas.yapeEsperado)}</p>
                <div className="text-[11px] font-bold text-[var(--color-muted)] uppercase mt-2 space-y-1 border-t border-[var(--color-border)] pt-2">
-                 <p>Ventas: S/ {superMetricas.ventasYape.toFixed(2)}</p>
-                 <p>Cobros: S/ {superMetricas.cobroDeudasYape.toFixed(2)}</p>
-                 {superMetricas.ingresosExtraYape > 0 && <p>Ingresos: S/ {superMetricas.ingresosExtraYape.toFixed(2)}</p>}
-                 {superMetricas.gastosYape > 0 && <p className="text-[var(--color-danger)]">Egresos: -S/ {superMetricas.gastosYape.toFixed(2)}</p>}
+                 <p>Ventas: S/ {formatearMonto(superMetricas.ventasYape)}</p>
+                 <p>Cobros: S/ {formatearMonto(superMetricas.cobroDeudasYape)}</p>
+                 {superMetricas.ingresosExtraYape > 0 && <p>Ingresos: S/ {formatearMonto(superMetricas.ingresosExtraYape)}</p>}
+                 {superMetricas.gastosYape > 0 && <p className="text-[var(--color-danger)]">Egresos: -S/ {formatearMonto(superMetricas.gastosYape)}</p>}
                </div>
             </div>
 
@@ -1044,12 +1057,12 @@ export const Finanzas: React.FC = () => {
                  <span className="w-6 h-6 flex items-center justify-center bg-purple-50 border-2 border-[var(--color-purple)]"><CreditCard size={12} className="text-[var(--color-purple)]"/></span> 
                  Pagos Tarjeta
                </p>
-               <p className="text-xl sm:text-2xl font-black text-[var(--color-ink)] mt-1">S/ {superMetricas.tarjetaEsperada.toFixed(2)}</p>
+               <p className="text-xl sm:text-2xl font-black text-[var(--color-ink)] mt-1">S/ {formatearMonto(superMetricas.tarjetaEsperada)}</p>
                <div className="text-[11px] font-bold text-[var(--color-muted)] uppercase mt-2 space-y-1 border-t border-[var(--color-border)] pt-2">
-                 <p>Ventas: S/ {superMetricas.ventasTarjeta.toFixed(2)}</p>
-                 {superMetricas.cobroDeudasTarjeta > 0 && <p>Cobros: S/ {superMetricas.cobroDeudasTarjeta.toFixed(2)}</p>}
-                 {superMetricas.ingresosExtraTarjeta > 0 && <p>Ingresos: S/ {superMetricas.ingresosExtraTarjeta.toFixed(2)}</p>}
-                 {superMetricas.gastosTarjeta > 0 && <p className="text-[var(--color-danger)]">Egresos: -S/ {superMetricas.gastosTarjeta.toFixed(2)}</p>}
+                 <p>Ventas: S/ {formatearMonto(superMetricas.ventasTarjeta)}</p>
+                 {superMetricas.cobroDeudasTarjeta > 0 && <p>Cobros: S/ {formatearMonto(superMetricas.cobroDeudasTarjeta)}</p>}
+                 {superMetricas.ingresosExtraTarjeta > 0 && <p>Ingresos: S/ {formatearMonto(superMetricas.ingresosExtraTarjeta)}</p>}
+                 {superMetricas.gastosTarjeta > 0 && <p className="text-[var(--color-danger)]">Egresos: -S/ {formatearMonto(superMetricas.gastosTarjeta)}</p>}
                </div>
             </div>
 
@@ -1058,7 +1071,7 @@ export const Finanzas: React.FC = () => {
                  <span className="w-6 h-6 flex items-center justify-center bg-white border-2 border-[var(--color-danger)]"><ArrowDownToLine size={12} className="text-[var(--color-danger)]"/></span> 
                  Gastos y Retiros
                </p>
-               <p className="text-xl sm:text-2xl font-black text-[var(--color-danger)] mt-1">S/ {superMetricas.gastos.toFixed(2)}</p>
+               <p className="text-xl sm:text-2xl font-black text-[var(--color-danger)] mt-1">S/ {formatearMonto(superMetricas.gastos)}</p>
                <p className="text-[11px] font-bold text-[var(--color-danger)] uppercase mt-2 border-t border-[var(--color-danger)]/20 pt-2">Salió del cajón</p>
                  </div>
                </div>

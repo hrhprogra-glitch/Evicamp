@@ -5,6 +5,7 @@ import type { PedidoCliente, DetallePedido } from '../types';
 import { traerTodo } from '../../../utils/traerTodo';
 import { coincideBusqueda } from '../../../utils/busqueda';
 import { useEmpleado } from '../../../utils/permisos';
+import { formatearMonto } from '../../../utils/formato';
 
 export const PestanaPedidos: React.FC = () => {
   const empleado = useEmpleado();
@@ -576,7 +577,7 @@ export const PestanaPedidos: React.FC = () => {
       );
       setModalEntregaAbierto(false);
 
-      alert(`✅ Pedido ${pedidoSeleccionado.numero} entregado exitosamente.${saldo > 0 ? ` Se registró el cobro de S/ ${saldo.toFixed(2)} (${metodoCobroSaldo}).` : ''}`);
+      alert(`✅ Pedido ${pedidoSeleccionado.numero} entregado exitosamente.${saldo > 0 ? ` Se registró el cobro de S/ ${formatearMonto(saldo)} (${metodoCobroSaldo}).` : ''}`);
     } catch (err: any) {
       console.error('Error al entregar pedido:', err);
       alert(`No se pudo procesar la entrega: ${err.message || 'Error desconocido'}`);
@@ -688,9 +689,9 @@ export const PestanaPedidos: React.FC = () => {
       `Estimado(a) ${ped.cliente_nombre}:\n` +
       `${textoEstado}\n\n` +
       `Artículos:\n${lineas}\n\n` +
-      `*Total:* S/ ${ped.total.toFixed(2)}\n` +
-      `*Adelanto registrado:* S/ ${ped.adelanto.toFixed(2)}\n` +
-      `*Saldo pendiente:* S/ ${ped.saldo_pendiente.toFixed(2)}\n` +
+      `*Total:* S/ ${formatearMonto(ped.total)}\n` +
+      `*Adelanto registrado:* S/ ${formatearMonto(ped.adelanto)}\n` +
+      `*Saldo pendiente:* S/ ${formatearMonto(ped.saldo_pendiente)}\n` +
       `Fecha acordada: ${fechaStr} a las ${horaStr}`
     );
 
@@ -873,10 +874,10 @@ export const PestanaPedidos: React.FC = () => {
                   <div className="flex items-center gap-4 self-end sm:self-center">
                     <div className="text-right">
                       <div className="text-[10px] font-bold uppercase text-[var(--color-muted)] flex items-center gap-1 justify-end">
-                        Total: S/ {ped.total.toFixed(2)} · Adelanto: S/ {ped.adelanto.toFixed(2)}
+                        Total: S/ {formatearMonto(ped.total)} · Adelanto: S/ {formatearMonto(ped.adelanto)}
                       </div>
                       <div className={`text-base font-black ${ped.saldo_pendiente > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
-                        {ped.saldo_pendiente > 0 ? `Saldo: S/ ${ped.saldo_pendiente.toFixed(2)}` : 'PAGADO COMPLETO'}
+                        {ped.saldo_pendiente > 0 ? `Saldo: S/ ${formatearMonto(ped.saldo_pendiente)}` : 'PAGADO COMPLETO'}
                       </div>
                     </div>
 
@@ -975,12 +976,12 @@ export const PestanaPedidos: React.FC = () => {
                             {det.product_name}
                           </p>
                           <span className="text-[10px] text-[var(--color-muted)] font-bold">
-                            {det.quantity} x S/ {det.price.toFixed(2)}
+                            {det.quantity} x S/ {formatearMonto(det.price)}
                             {det.es_mayorista && <span className="ml-1 text-amber-500 font-black">⭐ MAYORISTA</span>}
                           </span>
                         </div>
                         <span className="font-black text-sm text-[var(--color-ink)] shrink-0">
-                          S/ {det.subtotal.toFixed(2)}
+                          S/ {formatearMonto(det.subtotal)}
                         </span>
                       </div>
                     ))}
@@ -992,15 +993,15 @@ export const PestanaPedidos: React.FC = () => {
               <div className="bg-[var(--color-bg-2)] p-3 border-2 border-[var(--color-border)] flex flex-col gap-1 text-xs text-[var(--color-ink)]">
                 <div className="flex justify-between">
                   <span>Total Pedido:</span>
-                  <strong className="text-sm">S/ {pedidoSeleccionado.total.toFixed(2)}</strong>
+                  <strong className="text-sm">S/ {formatearMonto(pedidoSeleccionado.total)}</strong>
                 </div>
                 <div className="flex justify-between text-[var(--color-accent)]">
                   <span>Adelanto Pagado:</span>
-                  <strong>S/ {pedidoSeleccionado.adelanto.toFixed(2)} {pedidoSeleccionado.metodo_adelanto ? `(${pedidoSeleccionado.metodo_adelanto})` : ''}</strong>
+                  <strong>S/ {formatearMonto(pedidoSeleccionado.adelanto)} {pedidoSeleccionado.metodo_adelanto ? `(${pedidoSeleccionado.metodo_adelanto})` : ''}</strong>
                 </div>
                 <div className="flex justify-between text-base font-black text-[var(--color-warning)] pt-1 border-t border-[var(--color-border)]">
                   <span>Saldo Pendiente al Recoger:</span>
-                  <span>S/ {pedidoSeleccionado.saldo_pendiente.toFixed(2)}</span>
+                  <span>S/ {formatearMonto(pedidoSeleccionado.saldo_pendiente)}</span>
                 </div>
               </div>
 
@@ -1090,7 +1091,7 @@ export const PestanaPedidos: React.FC = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-black uppercase text-[var(--color-muted)]">Saldo a Cobrar:</span>
                   <span className="text-lg font-black text-[var(--color-warning)]">
-                    S/ {pedidoSeleccionado.saldo_pendiente.toFixed(2)}
+                    S/ {formatearMonto(pedidoSeleccionado.saldo_pendiente)}
                   </span>
                 </div>
                 <label className="block text-[10px] font-black uppercase text-[var(--color-muted)]">

@@ -26,6 +26,9 @@ import { traerTodo } from '../../utils/traerTodo';
 import { cargarFacturacionCaja, calcularTotalesCPE, numeroComprobante, DOC_TYPE, contarComprobantesConProblema, type DatosComprobante, type FacturacionCaja } from '../../utils/comprobante';
 import { ModalComprobantesProblema } from '../../components/ModalComprobantesProblema';
 import { MiniReporteDiario } from './components/MiniReporteDiario'; // 🛡️ EVICAMP: Mini Reporte en Tiempo Real
+import { formatearMonto } from '../../utils/formato';
+import { COLUMNAS_PRODUCTO, fotoDeCache, sincronizarFotosFaltantes } from '../../utils/cacheFotos';
+import { cacheInventarioMemoria, setCacheInventario } from '../../utils/cacheModulos';
 
 export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
   const empleado = useEmpleado(); // quién vende: sale en el ticket ("Atendido por")
@@ -489,7 +492,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
     // Supabase devuelve máximo 1000 filas por consulta: traerTodo las pide por bloques
     const [{ data: productsData }, { data: variantsData }, { data: recipesData }] = await Promise.all([
       traerTodo(() => supabase.from('products')
-        .select('*')
+        .select(COLUMNAS_PRODUCTO)
         .eq('is_active', 1) // 🛡️ EVICAMP: Bloqueo de productos fantasma directo en el motor de BD
         .order('name', { ascending: true })
         .order('id')),
@@ -562,7 +565,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           control_type: p.control_type, // Añadimos esto para validaciones estrictas
           preciosCantidad: escalasValidas(p.precios_cantidad), // fase 1.3: precios por cantidad
           presentaciones: presentacionesValidas(p.presentaciones), // fase 1.2: caja, paquete…
-          image_url: p.image_url || p.image_path || null, // imagen para identificar el producto en las tarjetas
+          image_url: fotoDeCache(p.id) || p.image_path || null, // imagen de la caja local en la PC
           marca: p.marca || null,
           modelo: p.modelo || null,
           medida: p.medida || null,
@@ -580,12 +583,40 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         } as Product;
       });
       setProductos(mapeados);
+      if (!cacheInventarioMemoria) {
+        setCacheInventario({ products: mapeados });
+      }
+      // Cotización convertida en venta (PestanaCotizaciones): sus líneas llegan sin los datos del producto (stock 9999,
+      // costo 0, unidad UND, código PROD). Se completan con los del producto, conservando cantidad, precio y subtotal
+      const porId = new Map(mapeados.map((p) => [String(p.id), p]));
+      setCart((prev) => prev.some((it) => it.desdeCotizacion) ? prev.map((it) => {
+        const prod = it.desdeCotizacion ? porId.get(String(it.id)) : undefined;
+        if (!prod) return it;
+        return { ...prod, cartQuantity: it.cartQuantity, price: it.price, subtotal: it.subtotal, esMayoristaAplicado: it.esMayoristaAplicado };
+      }) : prev);
+      // Descargar en segundo plano solo las fotos que falten en el disco local
+      void sincronizarFotosFaltantes(productsData);
     }
   }, []);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
+  // Al llegar fotos nuevas en segundo plano, actualizamos las tarjetas visibles
+  useEffect(() => {
+    const alActualizarFotos = () => {
+      setProductos((prev) => prev.map((p) => {
+        const foto = fotoDeCache(p.id);
+        if (foto && foto !== p.image_url) {
+          return { ...p, image_url: foto };
+        }
+        return p;
+      }));
+    };
+    window.addEventListener('siumax-fotos-actualizadas', alActualizarFotos);
+    return () => window.removeEventListener('siumax-fotos-actualizadas', alActualizarFotos);
+  }, []);
 
   // Fase 1.3 y 4.4: la línea con su cantidad y el precio que le toca (descuento % fijo, mayorista o escala "desde N").
   // Si el precio se cambió a mano (fase 1.4) no se toca. precioBase = el precio normal.
@@ -1128,7 +1159,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         });
         setIsVistaPreviaOpen(true);
       } else {
-        alert(`✅ Venta completada con éxito.${conComprobante ? `\n${comprobante?.tipo === 'FACTURA' ? 'Factura' : 'Boleta'}: ${numeroComprobante(datosCpe?.doc_serial, datosCpe?.doc_number) || 'se numera al conectarse'}` : ''}\nVuelto: S/ ${vuelto.toFixed(2)}`);
+        alert(`✅ Venta completada con éxito.${conComprobante ? `\n${comprobante?.tipo === 'FACTURA' ? 'Factura' : 'Boleta'}: ${numeroComprobante(datosCpe?.doc_serial, datosCpe?.doc_number) || 'se numera al conectarse'}` : ''}\nVuelto: S/ ${formatearMonto(vuelto)}`);
         // El buscador queda listo para escanear el siguiente producto: ventas corridas sin pausas.
         setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
       }
@@ -1201,7 +1232,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           <span className={`min-w-6 px-1.5 py-0.5 text-[12px] ${cart.length > 0 ? 'bg-[var(--color-accent)] text-[var(--color-ink)]' : 'bg-[var(--color-border)] text-[var(--color-muted)]'}`}>
             {cart.length}
           </span>
-          <span className="text-[var(--color-accent)]">S/ {(Math.round(cart.reduce((acc, item) => acc + item.subtotal, 0) * 100) / 100).toFixed(2)}</span>
+          <span className="text-[var(--color-accent)]">S/ {formatearMonto((Math.round(cart.reduce((acc, item) => acc + item.subtotal, 0) * 100) / 100))}</span>
         </button>
       </div>
 

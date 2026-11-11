@@ -2,7 +2,7 @@ import { coincideBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
 import { X, Save, UserPlus, Package, Search, Plus, Trash2, ChevronDown } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
-import { formatearCantidad } from '../../../utils/formato';
+import {formatearCantidad, formatearMonto } from '../../../utils/formato';
 import type { Fiado, FiadoDetalle, Cliente } from '../types';
 import type { Product } from '../../Inventario/types';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
@@ -492,7 +492,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                   <div key={d.productoId} className="flex justify-between items-center border-2 border-[var(--color-border)] p-2">
                     <div className="flex-1">
                       <p className="text-xs font-black text-[var(--color-ink)] uppercase leading-tight line-clamp-1">{d.name}</p>
-                      <p className="text-[12px] font-bold text-[var(--color-muted)]">S/ {d.price.toFixed(2)} c/u</p>
+                      <p className="text-[12px] font-bold text-[var(--color-muted)]">S/ {formatearMonto(d.price)} c/u</p>
                     </div>
                     
                     <div className="flex items-center gap-3">
@@ -539,7 +539,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
                         </div>
                       ) : (
                         <span className="text-xs font-black text-[var(--color-ink)] w-20 text-right">
-                          S/ {Number(d.subtotal).toFixed(2)}
+                          S/ {formatearMonto(Number(d.subtotal))}
                         </span>
                       )}
 
@@ -557,7 +557,7 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
             <div className="mt-4 pt-4 border-t-2 border-[var(--color-border)]">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-sm font-black uppercase">Total Deuda:</span>
-                <span className="text-2xl font-black text-[var(--color-warning)]">S/ {totalCalculado.toFixed(2)}</span>
+                <span className="text-2xl font-black text-[var(--color-warning)]">S/ {formatearMonto(totalCalculado)}</span>
               </div>
               <div className="flex justify-end gap-3">
                 <button id="btn-cancelar-fiado" onClick={onClose} disabled={isSaving} className="px-4 py-3 border-2 border-[var(--color-border)] text-[var(--color-muted)] text-[12px] font-black uppercase hover:border-[var(--color-ink)] disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--color-warning)]">Cancelar</button>

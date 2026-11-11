@@ -1,10 +1,23 @@
 # Plan de SiuMax Comerc: estado, fases y forma de trabajo
 
 > Documento para continuar el trabajo con **cualquier IA o programador**. Léelo completo antes de tocar el código.
+> **Visión de SiuMax (los 7 tipos de negocio, un sistema por tipo):** `D:/Programación/siumax/TIPOS-DE-NEGOCIO.md` (carpeta madre). Este plan es solo del tipo 1, Comercio. **Comerc está terminado en lo importante y en producción (06/11/2026); lo siguiente es SiuMax Servicios en `D:/Programación/siumax/servicios`.**
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 06/11/2026 (117), Claude: **PASE a Evicamp, clientes, siumax y GitHub** de 115–116, sin SQL; fotos de Evicamp 318 → 320, ninguna perdida.
+- **Última actualización:** 10/11/2026 (129), Antigravity: **Caja de fotos local y optimización de carga masiva en Evicamp**. Consultas de productos omiten `image_url` reduciendo la carga de 25 MB a ~600 KB (97.5% más liviano); fotos guardadas localmente en disco (IndexedDB `fotos`) y memoria (0 ms); descarga de faltantes en segundo plano en bloques de 30; `Inventario` sin bloqueo de CPU; `Clientes`, `Conteos`, `Proveedores` y `TablaLotes` sin imágenes pesadas. **Desplegado a todos los destinos** (`evicamp`, `siumax` pruebas y `clientes`). Compilado con 0 errores. Status 200 OK.
+- (128) 06/11/2026, Claude: **links ordenados en el VPS**: `siumax.duckdns.org` = Panel de Control; pruebas de Comerc en **`comerc.siumax.duckdns.org`** (mismos datos); `servic.siumax.duckdns.org` reservado para Servic; clientes `<negocio>.comerc.siumax.duckdns.org`; `panel.siumax` eliminado. Evicamp intacto. Pendiente subir 118–126 con aviso.
+- (127) 06/11/2026, Claude: la visión de SiuMax pasó a la carpeta madre (`siumax/TIPOS-DE-NEGOCIO.md` + `siumax/CLAUDE.md`); Comerc terminado en lo importante; sigue Servicios.
+- (126) 06/11/2026, Claude: Nuevo ajuste, Enter hace su acción y el selector se queda. Solo siumax.
+- (125) 06/11/2026, Claude: Nuevo ajuste sin "Automático", lista de lotes sin taparse y alto suave (AlturaSuave). Solo siumax.
+- (124) 06/11/2026, Claude: ticket impreso igual que la vista previa (estilos copiados, 72 mm; largo en la app de escritorio con el próximo instalador) y animación suave en Nuevo ajuste. Solo siumax.
+- (123) 06/11/2026, Claude: sin listas de abajo en Armar producto y Nuevo ajuste (ventanas a la medida). Solo siumax.
+- (122) 06/11/2026, Claude: cabeceras en una fila desde 1366 px en todas las secciones; tarjetas de Armar producto como botones; lista de Categoría pegada. Solo siumax.
+- (121) 06/11/2026, Claude: "Producir" pasa a "Armar producto" (Tallas y colores o Combos y recetas); tallas quitadas de Nuevo producto. Solo siumax.
+- (120) 06/11/2026, Claude: Crear lote con gastos extra por todo el lote (se reparte por unidad) y montos con separador de miles en todo el sistema (226 montos). Solo siumax.
+- (119) 06/11/2026, Claude: Producir: Guardar cierra; Guardar e ir a Lotes abre la pantalla del lote; arreglo de la regla 9 (una flecha rápida tras Enter ya no se deshace). Solo siumax.
+- (118) 06/11/2026, Claude: Producir › Categoría crea y borra categorías como Nuevo producto. Solo siumax.
+- (117) 06/11/2026, Claude: **PASE a Evicamp, clientes, siumax y GitHub** de 115–116, sin SQL; fotos de Evicamp 318 → 320, ninguna perdida.
 - (116) 05/11/2026, Claude: regla 9 (Enter nunca pasa al siguiente) en TODAS las ventanas por una regla general; Categoría guarda lo escrito. Solo siumax.
 - (115) 05/11/2026, Claude: sin parpadeo al cerrar Editar producto (el selector ya no va al buscador) y lista de Categoría con el estilo del sistema en Producir. Solo siumax.
 - (114) 05/11/2026, Claude: **PASE a Evicamp, clientes, siumax y GitHub** de 108–113, sin SQL y con las 240 fotos de Evicamp verificadas antes y después.
@@ -65,7 +78,8 @@
 | **Fase 5 (Descuentos y Promociones)** | **✅ Hecho (incluido en creación de productos: escalas por cantidad, presentaciones y mayoristas)** |
 | **Fase 4 (Clientes, Empresas, Mayoristas, Cotizaciones y Pedidos/Separados)** | **✅ Hecho en producción y GitHub (29/10, commit bd3780f)** |
 | **Fase 3 (Marca, Laboratorio, Principio activo, Modelo, Medidas y Ubicación)** | **✅ Hecho en producción y GitHub (29/10, commit 994bdca)** |
-| **Videos tutoriales del sistema** (9 videos; grabados contra la base demo `siudemo`, fuera de Comerc) | **Muestra hecha (02 venta, 29/10); falta OK del dueño para los demás** |
+| **8 fallas vistas al grabar los videos** (anular después de un cambio, borrado de caja del cambio, STK 9999 en cotización, vencimiento un día antes, costo al recibir compra, cambio de producto: lotes, costo y descuento doble, ticket simple sin devolución) | **Arregladas (11/11, bitácora 130–131) y subidas al sitio de PRUEBAS con costos corregidos. Falta Evicamp/clientes/GitHub con aviso del dueño** |
+| **Videos tutoriales del sistema** (16 capítulos hasta Ajustes, solo textos; base demo `siudemo`; lista en `siumax/videos/CAPITULOS.md`) | **Los 16 hechos (01–02 aprobados el 10/11; 03–16 grabados del 10 al 11/11). Falta que el dueño los revise** |
 | **Modo Oscuro (Dark Mode)** reemplazando "Plata / Gris" en Apariencia | **Hecho en producción (29/10)** |
 | **Grupos de clientes (familia/empresa)** dentro de la 4.1 | **Hecho en producción (29/10). En siumax: agregados botones directos en cabecera [+ Nuevo grupo] y [Grupos (n)] para gestión independiente (04/11)** |
 | Fase 11 SUNAT: camino A (proveedor PSE) → B (directo) | **En pausa** hasta que el dueño lo pida |
@@ -84,7 +98,7 @@
 ## 1. Qué es
 SiuMax Comerc es un sistema de punto de venta para minoristas (bodegas, ferreterías, librerías, farmacias…) y negocios
 que venden a empresas. El primer cliente en producción es **Evicamp** (https://evicamp.duckdns.org). El sitio de pruebas
-es **siumax** (https://siumax.duckdns.org).
+es **siumax** (https://comerc.siumax.duckdns.org; hasta el 06/11/2026 era siumax.duckdns.org, que ahora es el Panel de Control).
 
 - **Pantallas:** React + Vite + TypeScript (`src/`).
 - **Servidor:** PostgREST + PostgreSQL en un VPS.

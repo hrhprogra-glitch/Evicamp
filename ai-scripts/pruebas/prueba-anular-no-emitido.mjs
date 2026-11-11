@@ -44,7 +44,7 @@ const anular = (id) => page.evaluate(async (venta) => {
 const fila = (id) => sql(`SELECT doc_serial || '-' || doc_number || ' | ' || coalesce(sunat_status, '-') || ' | ' || cpe_estado || ' | ' || coalesce(cpe_mensaje, '') FROM sales WHERE id = ${id}`);
 
 try {
-  await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario');
   await page.type('#input-login-usuario', 'admin@siumax.com'); await page.type('#input-login-password', process.env.SIUMAX_ADMIN_CLAVE);
   await tecla('Enter'); await page.waitForSelector('#sidebar-btn-pos', { timeout: 20000 }); await pausa(1500);

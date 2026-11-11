@@ -11,6 +11,8 @@ import type { AnalisisProducto, StatsFiltro } from './types';
 // Reportes, Finanzas y Punto de Venta, para que el monto SIEMPRE coincida entre pantallas.
 import { fechaLocalPeru, primerDiaMesPeru, haceNDiasPeru } from '../../utils/ingresos';
 
+import { cacheUtilidadesMemoria, setCacheUtilidades } from '../../utils/cacheModulos';
+
 export const Utilidades = () => {
   const hoyStr = fechaLocalPeru();
   const primerDiaMes = primerDiaMesPeru();
@@ -18,9 +20,13 @@ export const Utilidades = () => {
   const [fechaInicio, setFechaInicio] = useState<string>(hoyStr);
   const [fechaFin, setFechaFin] = useState<string>(hoyStr);
 
-  const [analisisCompleto, setAnalisisCompleto] = useState<AnalisisProducto[]>([]);
-  const [gastosCaja, setGastosCaja] = useState<number>(0); // Estado para Finanzas
-  const [ingresosTotalesExactos, setIngresosTotalesExactos] = useState<number>(0);
+  const tieneCacheInicial = cacheUtilidadesMemoria &&
+    cacheUtilidadesMemoria.fechaInicio === hoyStr &&
+    cacheUtilidadesMemoria.fechaFin === hoyStr;
+
+  const [analisisCompleto, setAnalisisCompleto] = useState<AnalisisProducto[]>(() => tieneCacheInicial ? cacheUtilidadesMemoria!.analisis : []);
+  const [gastosCaja, setGastosCaja] = useState<number>(() => tieneCacheInicial ? cacheUtilidadesMemoria!.gastos : 0);
+  const [ingresosTotalesExactos, setIngresosTotalesExactos] = useState<number>(() => tieneCacheInicial ? cacheUtilidadesMemoria!.ingresoTotal : 0);
   const [isLoading, setIsLoading] = useState(false);
   const [mostrarTablero, setMostrarTablero] = useState(false);
   const [statsFiltro, setStatsFiltro] = useState<StatsFiltro>({ ingresos: 0, costos: 0, mermas: 0, hayFiltros: false });
@@ -32,18 +38,27 @@ export const Utilidades = () => {
 
   useEffect(() => {
     const procesarEstadisticas = async (silencioso = false) => {
-      if (!silencioso) setIsLoading(true);
+      const tieneCacheValido = cacheUtilidadesMemoria && cacheUtilidadesMemoria.fechaInicio === fechaInicio && cacheUtilidadesMemoria.fechaFin === fechaFin;
+      if (!silencioso && !tieneCacheValido && analisisCompleto.length === 0) setIsLoading(true);
 
 
       // Todo el cálculo vive en calcularAnalisis.ts (lo comparte "Gráficos y detalles"; mismas fórmulas de siempre)
       const r = await calcularAnalisis(fechaInicio, fechaFin);
       setGastosCaja(r.gastos);
       setIngresosTotalesExactos(r.ingresoTotal);
+      setCacheUtilidades({
+        fechaInicio,
+        fechaFin,
+        gastos: r.gastos,
+        ingresoTotal: r.ingresoTotal,
+        analisis: r.analisis,
+      });
       setAnalisisCompleto(r.analisis);
-      if (!silencioso) setIsLoading(false);
+      setIsLoading(false);
     };
 
-    procesarEstadisticas();
+    const tieneCacheValido = cacheUtilidadesMemoria && cacheUtilidadesMemoria.fechaInicio === fechaInicio && cacheUtilidadesMemoria.fechaFin === fechaFin;
+    procesarEstadisticas(!!tieneCacheValido);
 
     // 🛡️ EVICAMP: Si la pestaña estuvo inactiva (u otra caja/dispositivo registró ventas),
     // al volver a mirarla se refrescan los totales en silencio, sin tapar la tabla con el loader.
@@ -95,7 +110,7 @@ export const Utilidades = () => {
         {/* La tabla permanece siempre montada (aunque esté cargando) para no perder
             la categoría, rotación, búsqueda y página que el usuario ya eligió. */}
         <div className="relative">
-          {isLoading && (
+          {isLoading && analisisCompleto.length === 0 && (
             <div className="absolute inset-0 bg-[var(--color-surface)]/85 backdrop-blur-sm z-50 flex items-center justify-center">
               <div className="flex flex-col items-center gap-4">
                 <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>

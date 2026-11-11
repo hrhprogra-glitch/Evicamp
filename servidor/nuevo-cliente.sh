@@ -5,14 +5,15 @@
 set -euo pipefail
 source /opt/siuhub/siuhub-lib.sh
 
-SLUG="${1:-}"; NOMBRE="${2:-}"; CORREO="${3:-}"
+SLUG="${1:-}"; NOMBRE="${2:-}"; CORREO="${3:-}"; TIPO="${4:-comerc}"
 [ -n "$SLUG" ] && [ -n "$NOMBRE" ] && [ -n "$CORREO" ] && [ -n "${CLAVE_ADMIN:-}" ] || {
-  echo "Uso: CLAVE_ADMIN='...' $0 <slug> \"<Nombre del negocio>\" <correo-admin>" >&2; exit 1; }
+  echo "Uso: CLAVE_ADMIN='...' $0 <slug> \"<Nombre del negocio>\" <correo-admin> [comerc|servic]" >&2; exit 1; }
 validar_slug "$SLUG"
 [[ "$CORREO" =~ ^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$ ]] || { echo "ERROR: correo inválido." >&2; exit 1; }
 [ ${#CLAVE_ADMIN} -ge 6 ] || { echo "ERROR: la contraseña debe tener al menos 6 caracteres." >&2; exit 1; }
+[ "$TIPO" = "servic" ] || TIPO="comerc"
 
-HOST=$(host_cliente "$SLUG")
+HOST=$(host_cliente "$SLUG" "$TIPO")
 BASE=$(base_cliente "$SLUG")
 [ -z "$(dato_registro "$SLUG" 1)" ] || { echo "ERROR: el cliente '$SLUG' ya existe." >&2; exit 1; }
 [ -z "$(redireccion_de "$SLUG")" ] || { echo "ERROR: el link '$SLUG' era de otro cliente y hoy redirige a su link nuevo. Elige otro." >&2; exit 1; }
@@ -32,13 +33,19 @@ deshacer() {
 }
 trap deshacer ERR
 
-echo "== 1/6 Base de datos $BASE (estructura copiada de SiuMax, sin datos)"
+if [ "$TIPO" = "servic" ]; then
+  BASE_ORIGEN="servic"
+else
+  BASE_ORIGEN="siumax"
+fi
+
+echo "== 1/6 Base de datos $BASE (estructura copiada de $BASE_ORIGEN [$TIPO], sin datos)"
 sudo -u postgres createdb "$BASE"
 CREADO_BASE=1
-sudo -u postgres pg_dump --schema-only siumax | sudo -u postgres psql -q -v ON_ERROR_STOP=1 -d "$BASE" > /dev/null
+sudo -u postgres pg_dump --schema-only "$BASE_ORIGEN" | sudo -u postgres psql -q -v ON_ERROR_STOP=1 -d "$BASE" > /dev/null
 
 echo "== 2/6 Empresa y usuario administrador"
-PERMISOS=$(sudo -u postgres psql -At -d siumax -c "select permisos from empleados where rol='Administrador' order by created_at limit 1")
+PERMISOS=$(sudo -u postgres psql -At -d "$BASE_ORIGEN" -c "select permisos from empleados where rol='Administrador' order by created_at limit 1")
 [ -n "$PERMISOS" ] || PERMISOS='{}'
 # Valores pasados como variables de psql (:'x') para que comillas en el nombre no rompan nada
 sudo -u postgres psql -q -v ON_ERROR_STOP=1 -d "$BASE" \
@@ -63,20 +70,20 @@ mkdir -p "$DIR_CLIENTES/$SLUG/descargas"
 if [ -f "$APP_COMPARTIDA/../descargas/SiuMax-Setup.exe" ]; then
   cp "$APP_COMPARTIDA/../descargas/SiuMax-Setup.exe" "$DIR_CLIENTES/$SLUG/descargas/"
 fi
-escribir_nginx "$SLUG" "$PUERTO" http
+escribir_nginx "$SLUG" "$PUERTO" http "$TIPO"
 CREADO_NGINX=1
 recargar_nginx
 certbot certonly --nginx -d "$HOST" --non-interactive --agree-tos --keep-until-expiring > /dev/null
-escribir_nginx "$SLUG" "$PUERTO" activo
+escribir_nginx "$SLUG" "$PUERTO" activo "$TIPO"
 recargar_nginx
 
 echo "== 5/6 Registro"
 mkdir -p "$DIR_SIUMAX"
-printf '%s\t%s\t%s\t%s\t%s\n' "$SLUG" "$NOMBRE" "$PUERTO" "ACTIVO" "$(date +%F)" >> "$REGISTRO"
+printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$SLUG" "$NOMBRE" "$PUERTO" "ACTIVO" "$(date +%F)" "$TIPO" >> "$REGISTRO"
 trap - ERR
 
 echo "== 6/6 Verificación"
 WEB=$(curl -s -o /dev/null -w '%{http_code}' "https://$HOST/")
 API=$(curl -s -o /dev/null -w '%{http_code}' "https://$HOST/rest/v1/empresa_config?select=nombre_empresa")
 echo "Web: $WEB  |  API: $API"
-echo "LISTO: https://$HOST  (admin: ${CORREO,,})"
+echo "LISTO: https://$HOST  (admin: ${CORREO,,} | tipo: $TIPO)"

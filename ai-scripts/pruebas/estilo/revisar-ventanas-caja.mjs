@@ -28,7 +28,7 @@ const nav = await puppeteer.launch({ executablePath: 'C:/Program Files (x86)/Mic
 const informe = []; const errores = [];
 try {
   const page = await nav.newPage(); page.on('pageerror', (e) => errores.push(e.message));
-  await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario');
   await page.type('#input-login-usuario', 'admin@siumax.com'); await page.type('#input-login-password', process.env.SIUMAX_ADMIN_CLAVE);
   await page.keyboard.press('Enter'); await page.waitForSelector('#sidebar-btn-pos', { timeout: 20000 }); await pausa(2500);

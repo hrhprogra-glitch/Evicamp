@@ -1,5 +1,5 @@
 // Prueba automatizada para Fase 9 (Múltiples Tiendas) y Fase 10 (Catálogo Web)
-const BASE_URL = 'https://siumax.duckdns.org';
+const BASE_URL = 'https://comerc.siumax.duckdns.org';
 
 async function test() {
   console.log('--- Iniciando prueba de API para Fase 9 y 10 en siumax ---');

@@ -4,6 +4,7 @@ import { supabase } from '../../../db/supabase';
 import type { CartItem, Cliente } from '../types';
 import { useEmpleado } from '../../../utils/permisos';
 import { TicketImprimible } from './TicketImprimible';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   isOpen: boolean;
@@ -231,7 +232,7 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
     const telefonoDestino = tel.length === 9 ? `51${tel}` : tel;
 
     const lineas = guardadoExitoso.detalles
-      .map((d: any) => `• ${d.quantity}x ${d.product_name} - S/ ${d.subtotal.toFixed(2)}`)
+      .map((d: any) => `• ${d.quantity}x ${d.product_name} - S/ ${formatearMonto(d.subtotal)}`)
       .join('\n');
 
     const mensaje = encodeURIComponent(
@@ -239,7 +240,7 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
       `Estimado(a) ${clienteNombre}:\n` +
       `Adjuntamos el detalle de su cotización formal:\n\n` +
       `${lineas}\n\n` +
-      `*TOTAL: S/ ${guardadoExitoso.total.toFixed(2)}*\n` +
+      `*TOTAL: S/ ${formatearMonto(guardadoExitoso.total)}*\n` +
       `Validez hasta: ${fechaVencimiento || '7 días'}\n\n` +
       `¡Muchas gracias por su preferencia!`
     );
@@ -306,7 +307,7 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
                 Registrada como <strong className="text-[var(--color-ink)]">{numero}</strong> para <strong className="text-[var(--color-ink)]">{clienteNombre}</strong>.
               </p>
               <p className="text-2xl font-black text-[var(--color-accent-dark)] mt-2">
-                Total: S/ {guardadoExitoso.total.toFixed(2)}
+                Total: S/ {formatearMonto(guardadoExitoso.total)}
               </p>
             </div>
 
@@ -519,7 +520,7 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
                   Productos a Cotizar ({cart.length})
                 </span>
                 <span className="text-xs font-black text-[var(--color-ink)]">
-                  TOTAL: S/ {total.toFixed(2)}
+                  TOTAL: S/ {formatearMonto(total)}
                 </span>
               </div>
               <div className="border-2 border-[var(--color-ink)] max-h-40 overflow-y-auto bg-white custom-scrollbar divide-y divide-[var(--color-border)]">
@@ -530,12 +531,12 @@ export const ModalCotizacionPOS: React.FC<Props> = ({
                         {item.name}
                       </span>
                       <span className="text-[10px] text-[var(--color-muted)] font-bold">
-                        {item.cartQuantity} {item.unit || 'UND'} x S/ {item.price.toFixed(2)}
+                        {item.cartQuantity} {item.unit || 'UND'} x S/ {formatearMonto(item.price)}
                         {item.esMayoristaAplicado && <span className="ml-1 text-amber-600 font-black">⭐ MAYORISTA</span>}
                       </span>
                     </div>
                     <span className="font-black text-[var(--color-ink)] shrink-0">
-                      S/ {item.subtotal.toFixed(2)}
+                      S/ {formatearMonto(item.subtotal)}
                     </span>
                   </div>
                 ))}

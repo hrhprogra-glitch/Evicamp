@@ -143,6 +143,22 @@ td a { color: var(--info); font-size: 12px; word-break: break-all; }
   <main>
     <div class="tarjetas" id="tarjetas"></div>
 
+    <!-- Orden de los links (06/11/2026): <tipo>.siumax = pruebas de cada sistema; <negocio>.<tipo>.siumax = clientes -->
+    <div class="seccion">
+      <div class="seccion-cab"><h2>Mis sitios</h2><span class="ayuda" style="margin:0">Pruebas de cada sistema y proyectos aparte</span></div>
+      <table>
+        <thead><tr><th>Sitio</th><th>Qué es</th><th>Link</th></tr></thead>
+        <tbody>
+          <tr><td data-t="Sitio"><span class="nombre">SiuMax Comerc</span></td><td data-t="Qué es">Pruebas de Comerc (venta de productos)</td>
+            <td data-t="Link"><a href="https://comerc.siumax.duckdns.org" target="_blank" rel="noopener">comerc.siumax.duckdns.org</a></td></tr>
+          <tr><td data-t="Sitio"><span class="nombre">SiuMax Servic</span></td><td data-t="Qué es">Pruebas de Servic (talleres y servicios)</td>
+            <td data-t="Link"><a href="https://servic.siumax.duckdns.org" target="_blank" rel="noopener">servic.siumax.duckdns.org</a></td></tr>
+          <tr><td data-t="Sitio"><span class="nombre">EviDiary</span></td><td data-t="Qué es">Agenda y notas (proyecto aparte)</td>
+            <td data-t="Link"><a href="https://evi.siumax.duckdns.org" target="_blank" rel="noopener">evi.siumax.duckdns.org</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
     <div class="seccion">
       <div class="seccion-cab">
         <h2>Clientes</h2>
@@ -320,7 +336,7 @@ function pintar() {
   $('#tabla-clientes').innerHTML = !clientes.length ? '<div class="vacio">Aún no tienes clientes. Crea el primero con "+ Nuevo cliente".</div>' : `
     <table><thead><tr><th>Negocio</th><th>Servicio</th><th>Plan</th><th>Próximo pago</th><th>Pago</th><th>Acciones</th></tr></thead><tbody>
     ${clientes.map((c) => `<tr class="fila-clic" data-fila="${esc(c.slug)}" title="Ver datos y usuarios">
-      <td><button type="button" class="link-negocio" data-accion="detalle" data-slug="${esc(c.slug)}" title="Ver datos y usuarios">${esc(c.nombre)}</button><br>${c.link ? `<a href="${esc(c.link)}" target="_blank" rel="noopener">${esc(c.link.replace('https://', ''))}</a>` : ''}</td>
+      <td><button type="button" class="link-negocio" data-accion="detalle" data-slug="${esc(c.slug)}" title="Ver datos y usuarios">${esc(c.nombre)}</button> <span class="chip ${c.tipo === 'servic' ? 'c-ok' : 'c-info'}" style="font-size:9px;padding:2px 4px">${c.tipo === 'servic' ? 'SERVIC' : 'COMERC'}</span><br>${c.link ? `<a href="${esc(c.link)}" target="_blank" rel="noopener">${esc(c.link.replace('https://', ''))}</a>` : ''}</td>
       <td data-t="Servicio">${chipServicio(c)}</td>
       <td data-t="Plan">${c.plan ? textoPlan(c.plan) : '-'}</td>
       <td data-t="Próximo pago">${c.plan ? fechaPe(c.plan.proximo_pago) : '-'}</td>
@@ -453,18 +469,29 @@ const mensajeBienvenida = (link, correo, clave) =>
 
 function modalNuevo() {
   const f = abrirModal('Nuevo cliente', `
-    <label>Nombre del negocio</label><input name="nombre" required maxlength="60" placeholder="Bodega Rosa">
-    <label>Link</label><input name="slug" required pattern="[a-z0-9][a-z0-9-]{1,28}[a-z0-9]" placeholder="bodegarosa">
-    <div class="ayuda" id="vista-link">Quedará en: https://______.${estado.config.dominio}</div>
+    <label>Tipo de negocio / Sistema</label>
+    <select name="tipo_sistema" id="nuevo-tipo-sistema" style="margin-bottom:8px">
+      <option value="comerc">SiuMax Comerc (Comercio, bodegas, tiendas, ferreterías)</option>
+      <option value="servic">SiuMax Servic (Servicios, talleres, mantenimiento, obras)</option>
+    </select>
+    <label>Nombre del negocio</label><input name="nombre" required maxlength="60" placeholder="Bodega Rosa o Taller Gómez">
+    <label>Link</label><input name="slug" required pattern="[a-z0-9][a-z0-9-]{1,28}[a-z0-9]" placeholder="tallergomez">
+    <div class="ayuda" id="vista-link">Quedará en: https://______.comerc.${estado.config.dominio.replace(/^(comerc|servic)\./, '')}</div>
     <div class="fila">
-      <div><label>Correo del dueño (usuario)</label><input name="correo" type="email" required placeholder="dueno@bodegarosa.com"></div>
+      <div><label>Correo del dueño (usuario)</label><input name="correo" type="email" required placeholder="dueno@negocio.com"></div>
       <div><label>Contraseña inicial</label><input name="clave" type="text" required minlength="6" autocomplete="off"></div>
     </div>
     <label style="display:flex;align-items:center;gap:8px;margin-top:16px;color:var(--ink)"><input type="checkbox" name="con_plan" checked style="width:auto"> Configurar plan de cobro ahora</label>
     <div id="bloque-plan">${camposPlan()}</div>`,
     '<button type="button" class="btn" data-cerrar2>Cancelar</button><button class="btn btn-ok" id="btn-crear">Crear cliente</button>');
 
-  const slug = f.slug, nombre = f.nombre;
+  const slug = f.slug, nombre = f.nombre, tipo = f.tipo_sistema;
+  const domLimpio = (estado.config.dominio || 'siumax.duckdns.org').replace(/^(comerc|servic)\./, '');
+  const actualizarVistaLink = () => {
+    const t = tipo.value || 'comerc';
+    $('#vista-link').textContent = `Quedará en: https://${slug.value || '______'}.${t}.${domLimpio}`;
+  };
+  tipo.addEventListener('change', actualizarVistaLink);
   nombre.addEventListener('input', () => {
     if (slug.dataset.tocado) return;
     slug.value = nombre.value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '').slice(0, 30);
@@ -473,7 +500,7 @@ function modalNuevo() {
   slug.addEventListener('input', (e) => {
     if (e.isTrusted) slug.dataset.tocado = '1';
     slug.value = slug.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-    $('#vista-link').textContent = `Quedará en: https://${slug.value || '______'}.${estado.config.dominio}`;
+    actualizarVistaLink();
   });
   f.con_plan.onchange = () => $('#bloque-plan').classList.toggle('oculto', !f.con_plan.checked);
   verPrecioAnual(f);
@@ -483,7 +510,13 @@ function modalNuevo() {
     e.preventDefault();
     const b = $('#btn-crear'); b.disabled = true; b.textContent = 'Creando (1 a 2 min)...';
     $('#modal-error').classList.add('oculto');
-    const datos = { nombre: f.nombre.value, slug: f.slug.value, correo: f.correo.value, clave: f.clave.value };
+    const datos = {
+      nombre: f.nombre.value,
+      slug: f.slug.value,
+      correo: f.correo.value,
+      clave: f.clave.value,
+      tipo_sistema: f.tipo_sistema.value,
+    };
     if (f.con_plan.checked) datos.plan = { tipo: f.tipo.value, precio: f.precio.value, precio_anual: f.precio_anual.value, proximo_pago: f.proximo_pago.value, telefono: f.telefono.value, notas: f.notas.value };
     try {
       const r = await api('/api/clientes/nuevo', datos);

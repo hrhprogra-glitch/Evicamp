@@ -7,6 +7,7 @@ import { iniciarAppInstalable } from './utils/instalarApp'
 import { vigilarSuspension } from './db/supabase'
 import { iniciarSubidaAutomatica } from './utils/sinInternet'
 import { instalarDialogos } from './utils/dialogos'
+import { iniciarCacheFotos } from './utils/cacheFotos'
 
 // App instalable (PWA): service worker + aviso "Instalar app"
 iniciarAppInstalable()
@@ -18,6 +19,9 @@ vigilarSuspension()
 iniciarSubidaAutomatica()
 // Avisos y confirmaciones dentro del sistema (no ventanas de Windows): el selector de teclado no se pierde
 instalarDialogos()
+
+// Caja de fotos local: carga las fotos guardadas en el disco de la PC a la memoria (0 ms)
+void iniciarCacheFotos()
 
 // Al volver de Mercado Pago el link trae datos del pago (?collection_id=...&status=approved...):
 // no se usan (el pago se registra por el aviso verificado), así que se limpian para que el link quede limpio

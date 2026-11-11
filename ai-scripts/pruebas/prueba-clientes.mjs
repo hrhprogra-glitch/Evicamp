@@ -30,7 +30,7 @@ const aviso = () => page.evaluate(() => document.getElementById('dialogo-sistema
 const escribir = async (t) => { await page.keyboard.down('Control'); await page.keyboard.press('a'); await page.keyboard.up('Control'); await page.keyboard.type(t, { delay: 10 }); };
 const cliente = (nombre) => sql(`select coalesce(tipo_doc,'')||'|'||coalesce(dni,'')||'|'||coalesce(telefono,'')||'|'||coalesce(direccion,'')||'|'||coalesce(referencia,'') from customers where name='${nombre}';`);
 try {
-  await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario'); await page.focus('#input-login-usuario'); await page.keyboard.type('admin@siumax.com');
   await page.focus('#input-login-password'); await page.keyboard.type(process.env.SIUMAX_ADMIN_CLAVE); await page.keyboard.press('Enter');
   await page.waitForSelector('#sidebar-btn-clientes', { timeout: 20000 }); await pausa(2500);

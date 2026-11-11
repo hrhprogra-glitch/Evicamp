@@ -4,6 +4,7 @@ import { Search, X, FilterX, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { AnalisisProducto, StatsFiltro } from '../types';
 import { ModalDetalleProducto } from './ModalDetalleProducto';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   datos: AnalisisProducto[];
@@ -686,25 +687,25 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
 
                     <td className="hidden md:table-cell p-3 text-right">
                       <span className="font-mono text-xs font-black text-[var(--color-ink)]">
-                        S/ {prod.ingresosTotales.toFixed(2)}
+                        S/ {formatearMonto(prod.ingresosTotales)}
                       </span>
                     </td>
 
                     <td className="hidden md:table-cell p-3 text-right">
                       <span className="font-mono text-xs font-black text-[var(--color-ink)]">
-                        S/ {prod.costoTotalVentas.toFixed(2)}
+                        S/ {formatearMonto(prod.costoTotalVentas)}
                       </span>
                     </td>
 
                     <td className="hidden md:table-cell p-3 text-right">
                       <span className="font-mono text-xs font-black text-[var(--color-danger)]">
-                        S/ {prod.perdidaMerma.toFixed(2)}
+                        S/ {formatearMonto(prod.perdidaMerma)}
                       </span>
                     </td>
 
                     <td className="p-2 md:p-3 text-right">
                       <span className={`font-mono text-xs font-black ${prod.utilidadReal >= 0 ? 'text-[var(--color-accent-shadow)]' : 'text-[var(--color-danger)]'}`}>
-                        S/ {prod.utilidadReal.toFixed(2)}
+                        S/ {formatearMonto(prod.utilidadReal)}
                       </span>
                     </td>
 

@@ -3,6 +3,9 @@
 # Mueve el sistema de pruebas y todos los clientes a sus links nuevos con HTTPS.
 # Solo toca configuraciones de Nginx y certificados: las bases de datos y los datos NO cambian.
 set -euo pipefail
+# YA SE USÓ (29/10/2026) y quedó superado por ordenar-links.sh (06/11/2026): siumax.duckdns.org ahora es el
+# Panel de Control. Volver a ejecutarlo deshace ese orden, por eso se detiene aquí.
+echo "migrar-dominio.sh es historia: usa ordenar-links.sh." >&2; exit 1
 source /opt/siuhub/siuhub-lib.sh
 
 VIEJO="siuhub.duckdns.org"

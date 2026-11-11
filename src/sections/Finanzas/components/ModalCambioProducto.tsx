@@ -9,6 +9,7 @@ import { avisar } from '../../../utils/dialogos';
 import { comprobanteEmitido, nombreComprobante, numeroComprobante } from '../../../utils/comprobante';
 import type { CambioProducto } from '../types';
 import type { Product } from '../../Inventario/types';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   isOpen: boolean;
@@ -390,9 +391,9 @@ export const ModalCambioProducto: React.FC<Props> = ({
   const tipoCpe = cpe ? (cpe.docType === 1 ? 'factura' : 'boleta') : '';
 
   const partesMetodo: string[] = [];
-  if (numEf > 0) partesMetodo.push(`Efectivo: S/ ${numEf.toFixed(2)}`);
-  if (numYap > 0) partesMetodo.push(`Yape: S/ ${numYap.toFixed(2)}`);
-  if (numTar > 0) partesMetodo.push(`Tarjeta: S/ ${numTar.toFixed(2)}`);
+  if (numEf > 0) partesMetodo.push(`Efectivo: S/ ${formatearMonto(numEf)}`);
+  if (numYap > 0) partesMetodo.push(`Yape: S/ ${formatearMonto(numYap)}`);
+  if (numTar > 0) partesMetodo.push(`Tarjeta: S/ ${formatearMonto(numTar)}`);
 
   const pagoExacto = (metodo: 'EFECTIVO' | 'YAPE' | 'TARJETA') => {
     if (diferencia <= 0) return;
@@ -519,7 +520,22 @@ export const ModalCambioProducto: React.FC<Props> = ({
         metodoFinal = 'EFECTIVO';
       }
 
-      // 1. Registrar en cambios_productos
+      // 1. El stock lo mueve el SERVIDOR (fn_mover_stock_cambio): lo devuelto vuelve a su lote y lo nuevo sale de sus
+      // lotes; devuelve el costo de lo entregado. Antes se sumaba y restaba products.quantity aquí: los lotes no se
+      // movían, la línea quedaba con el costo del producto viejo y un cambio parcial descontaba dos veces.
+      const { data: costoNuevo, error: errStock } = await supabase.rpc('fn_mover_stock_cambio', {
+        p_sale_id: Number(ticketData.id),
+        p_detail_id: Number(itemDevuelto.id),
+        p_cantidad: cantDevolverNum,
+        p_producto_nuevo: Number(productoNuevo.id),
+        p_cantidad_nueva: cantNuevaNum,
+        p_serie_devuelta: serieDevuelta.trim() || null,
+        p_serie_nueva: serieNueva.trim() || null,
+      });
+      if (errStock) throw errStock;
+      const costoLinea = Number(costoNuevo) || 0;
+
+      // 2. Registrar en cambios_productos
       const nuevoCambio: Partial<CambioProducto> = {
         id: Date.now(),
         sale_id: Number(ticketData.id),
@@ -549,59 +565,6 @@ export const ModalCambioProducto: React.FC<Props> = ({
 
       if (errCambio) throw errCambio;
 
-      // 2. Ajuste de stock en inventory_movements y actualización directa en products
-      // + Stock del producto devuelto
-      await supabase.from('inventory_movements').insert([{
-        product_id: itemDevuelto.product_id,
-        product_name: itemDevuelto.product_name,
-        change_amount: cantDevolverNum,
-        operation_type: 'DEVOLUCION',
-        reason: 'CAMBIO_PRODUCTO',
-        notes: `Ingreso por cambio de producto (Ticket #${String(ticketData.id).slice(-6)})${serieDevuelta ? ` · Serie: ${serieDevuelta}` : ''}`,
-        user: 'Caja',
-        is_synced: 1
-      }]);
-
-      if (itemDevuelto.product_id) {
-        const { data: pDev } = await supabase
-          .from('products')
-          .select('quantity')
-          .eq('id', itemDevuelto.product_id)
-          .maybeSingle();
-        if (pDev) {
-          await supabase
-            .from('products')
-            .update({ quantity: Number(pDev.quantity || 0) + cantDevolverNum })
-            .eq('id', itemDevuelto.product_id);
-        }
-      }
-
-      // - Stock del producto nuevo que se entrega
-      await supabase.from('inventory_movements').insert([{
-        product_id: Number(productoNuevo.id),
-        product_name: productoNuevo.name,
-        change_amount: -cantNuevaNum,
-        operation_type: 'VENTA',
-        reason: 'CAMBIO_PRODUCTO',
-        notes: `Salida por cambio de producto (Ticket #${String(ticketData.id).slice(-6)})${serieNueva ? ` · Serie: ${serieNueva}` : ''}`,
-        user: 'Caja',
-        is_synced: 1
-      }]);
-
-      if (productoNuevo.id) {
-        const { data: pNue } = await supabase
-          .from('products')
-          .select('quantity')
-          .eq('id', Number(productoNuevo.id))
-          .maybeSingle();
-        if (pNue) {
-          await supabase
-            .from('products')
-            .update({ quantity: Number(pNue.quantity || 0) - cantNuevaNum })
-            .eq('id', Number(productoNuevo.id));
-        }
-      }
-
       // 3. Actualizar directamente el ticket con el producto nuevo
       if (cantDevolverNum >= itemDevuelto.quantity) {
         // Se reemplaza la línea del producto devuelto por el producto nuevo
@@ -613,6 +576,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
             quantity: cantNuevaNum,
             price_at_moment: productoNuevo.price,
             subtotal: Math.round(productoNuevo.price * cantNuevaNum * 100) / 100,
+            cost_at_moment: costoLinea,
             numero_serie: serieNueva.trim() || null
           })
           .eq('id', itemDevuelto.id);
@@ -636,6 +600,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
             quantity: cantNuevaNum,
             price_at_moment: productoNuevo.price,
             subtotal: Math.round(productoNuevo.price * cantNuevaNum * 100) / 100,
+            cost_at_moment: costoLinea, // el stock ya salió (fn_mover_stock_cambio): el trigger no lo descuenta otra vez
             numero_serie: serieNueva.trim() || null,
             is_synced: 1
           }]);
@@ -684,11 +649,15 @@ export const ModalCambioProducto: React.FC<Props> = ({
           .eq('id', ticketData.id);
       }
 
-      // 5. Limpiar cualquier movimiento previo de diferencia para este ticket, manteniendo la tabla 100% limpia
-      await supabase
-        .from('cash_movements')
-        .delete()
-        .ilike('description', `%${String(ticketData.id).slice(-6)}%`);
+      // 5. Limpiar las filas de diferencia que hacía una versión anterior del cambio ("DIFERENCIA POR CAMBIO (TICKET
+      // #123456) [EFECTIVO]", "DEVOLUCIÓN POR CAMBIO DE PRODUCTO (TICKET #<número>)"): la diferencia ya va en la venta.
+      // Solo esas: antes se borraba todo movimiento con los 6 últimos dígitos del ticket en el texto (11/11/2026).
+      for (const numero of [String(ticketData.id), String(ticketData.id).slice(-6)]) {
+        await supabase
+          .from('cash_movements')
+          .delete()
+          .ilike('description', `%POR CAMBIO%TICKET #${numero})%`);
+      }
 
       setCambioFinalizado(cambioInsertado as CambioProducto);
       onCambioGuardado?.();
@@ -798,14 +767,14 @@ export const ModalCambioProducto: React.FC<Props> = ({
                   <div className="p-1.5 bg-red-50 border border-red-200">
                     <span className="text-[10px] font-black text-red-800 uppercase block">PRODUCTO DEVUELTO (-)</span>
                     <p className="font-bold uppercase">{cambioFinalizado.cantidad_devuelta ? `${cambioFinalizado.cantidad_devuelta} × ` : ''}{cambioFinalizado.producto_devuelto_nombre}</p>
-                    <p className="text-[11px]">Valor: S/ {(cambioFinalizado.precio_devuelto * (cambioFinalizado.cantidad_devuelta || 1)).toFixed(2)}</p>
+                    <p className="text-[11px]">Valor: S/ {formatearMonto((cambioFinalizado.precio_devuelto * (cambioFinalizado.cantidad_devuelta || 1)))}</p>
                     {cambioFinalizado.serie_devuelta && <p className="text-[10px] font-mono">Serie/IMEI: {cambioFinalizado.serie_devuelta}</p>}
                   </div>
 
                   {cambioFinalizado.cantidad_nueva > 0 && <div className="p-1.5 bg-emerald-50 border border-emerald-200">
                     <span className="text-[10px] font-black text-emerald-800 uppercase block">PRODUCTO NUEVO ENTREGADO (+)</span>
                     <p className="font-bold uppercase">{cambioFinalizado.cantidad_nueva} × {cambioFinalizado.producto_nuevo_nombre}</p>
-                    <p className="text-[11px]">Valor: S/ {(cambioFinalizado.precio_nuevo * cambioFinalizado.cantidad_nueva).toFixed(2)}</p>
+                    <p className="text-[11px]">Valor: S/ {formatearMonto((cambioFinalizado.precio_nuevo * cambioFinalizado.cantidad_nueva))}</p>
                     {cambioFinalizado.serie_nueva && <p className="text-[10px] font-mono">Serie/IMEI: {cambioFinalizado.serie_nueva}</p>}
                   </div>}
                 </div>
@@ -815,9 +784,9 @@ export const ModalCambioProducto: React.FC<Props> = ({
                     <span>DIFERENCIA:</span>
                     <span>
                       {cambioFinalizado.diferencia > 0 
-                        ? `CLIENTE PAGÓ: S/ ${cambioFinalizado.diferencia.toFixed(2)} (${cambioFinalizado.payment_type})`
+                        ? `CLIENTE PAGÓ: S/ ${formatearMonto(cambioFinalizado.diferencia)} (${cambioFinalizado.payment_type})`
                         : cambioFinalizado.diferencia < 0
-                          ? `TIENDA DEVOLVIÓ: S/ ${Math.abs(cambioFinalizado.diferencia).toFixed(2)} (EFECTIVO)`
+                          ? `TIENDA DEVOLVIÓ: S/ ${formatearMonto(Math.abs(cambioFinalizado.diferencia))} (EFECTIVO)`
                           : 'S/ 0.00 (CAMBIO EXACTO)'}
                     </span>
                   </div>
@@ -931,7 +900,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                     return (
                       <div key={l.detail_id} className="border border-[var(--color-border)] p-2 grid grid-cols-[1fr_auto_5.5rem] items-center gap-2">
                         <span className="text-[12px] font-black uppercase">{l.nombre}
-                          <span className="block text-[11px] font-bold text-[var(--color-muted)]">Vendido {l.vendido}{l.devuelto ? ` · ya devuelto ${l.devuelto}` : ''} · S/ {l.precio.toFixed(2)} c/u</span>
+                          <span className="block text-[11px] font-bold text-[var(--color-muted)]">Vendido {l.vendido}{l.devuelto ? ` · ya devuelto ${l.devuelto}` : ''} · S/ {formatearMonto(l.precio)} c/u</span>
                         </span>
                         <span className="text-[11px] font-bold text-[var(--color-muted)]">máx. {queda}</span>
                         <input
@@ -1008,7 +977,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                       <option value={-1}>-- Seleccione el producto a devolver --</option>
                       {ticketData.detalles.map((item, idx) => (
                         <option key={item.id} value={idx}>
-                          {item.product_name} (Cant. comprada: {item.quantity} · S/ {item.price_at_moment.toFixed(2)} c/u)
+                          {item.product_name} (Cant. comprada: {item.quantity} · S/ {formatearMonto(item.price_at_moment)} c/u)
                         </option>
                       ))}
                     </select>
@@ -1083,7 +1052,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
 
                         <div className="sm:col-span-2 flex justify-between items-center pt-1 border-t border-red-200 text-xs font-black text-red-950">
                           <span>Monto a favor del cliente:</span>
-                          <span className="text-sm">S/ {totalDevuelto.toFixed(2)}</span>
+                          <span className="text-sm">S/ {formatearMonto(totalDevuelto)}</span>
                         </div>
                       </div>
                     )}
@@ -1272,7 +1241,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                               </div>
                               <div className="flex items-center gap-2 shrink-0">
                                 <span className={`font-black font-mono text-xs ${isSelected ? 'text-[var(--color-accent)] font-black' : 'text-emerald-700'}`}>
-                                  S/ {prod.price.toFixed(2)}
+                                  S/ {formatearMonto(prod.price)}
                                 </span>
                                 {isSelected && (
                                   <span className="text-[10px] font-black uppercase bg-[var(--color-accent)] text-black px-2 py-0.5 border border-black shadow-[1px_1px_0_0_black] flex items-center gap-1">
@@ -1294,7 +1263,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                             <span className="text-[10px] font-black text-emerald-900 uppercase">Seleccionado:</span>
                             <p className="text-xs font-black uppercase text-emerald-950">{productoNuevo.name}</p>
                             <span className="text-[10px] text-gray-600">
-                              Precio: S/ {productoNuevo.price.toFixed(2)} c/u · Stock Disp.: {productoNuevo.quantity}
+                              Precio: S/ {formatearMonto(productoNuevo.price)} c/u · Stock Disp.: {productoNuevo.quantity}
                             </span>
                           </div>
                           <button
@@ -1401,7 +1370,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
 
                         <div className="flex justify-between items-center pt-1 border-t border-emerald-200 text-xs font-black text-emerald-950">
                           <span>Valor nuevo producto:</span>
-                          <span className="text-sm">S/ {totalNuevo.toFixed(2)}</span>
+                          <span className="text-sm">S/ {formatearMonto(totalNuevo)}</span>
                         </div>
                       </div>
                     )}
@@ -1420,20 +1389,20 @@ export const ModalCambioProducto: React.FC<Props> = ({
                   <div className="p-3 border-2 border-[var(--color-ink)] bg-[var(--color-bg)] space-y-2">
                     <div className="flex justify-between items-center text-xs">
                        <span>Valor devuelto:</span>
-                      <span className="font-black text-red-600">- S/ {totalDevuelto.toFixed(2)}</span>
+                      <span className="font-black text-red-600">- S/ {formatearMonto(totalDevuelto)}</span>
                     </div>
                     {!soloDevolver && (
                       <div className="flex justify-between items-center text-xs">
                         <span>Valor nuevo:</span>
-                        <span className="font-black text-emerald-700">+ S/ {totalNuevo.toFixed(2)}</span>
+                        <span className="font-black text-emerald-700">+ S/ {formatearMonto(totalNuevo)}</span>
                       </div>
                     )}
 
                     <div className="border-t-2 border-black pt-2 flex justify-between items-center text-sm font-black">
                       <span>DIFERENCIA A LIQUIDAR:</span>
                       <span className={diferencia > 0 ? 'text-blue-700 text-base' : diferencia < 0 ? 'text-amber-700 text-base' : 'text-gray-700 text-base'}>
-                        {diferencia > 0 && `+ S/ ${diferencia.toFixed(2)} (COBRAR)`}
-                        {diferencia < 0 && `- S/ ${Math.abs(diferencia).toFixed(2)} (DEVOLVER)`}
+                        {diferencia > 0 && `+ S/ ${formatearMonto(diferencia)} (COBRAR)`}
+                        {diferencia < 0 && `- S/ ${formatearMonto(Math.abs(diferencia))} (DEVOLVER)`}
                         {diferencia === 0 && 'S/ 0.00 (EXACTO)'}
                       </span>
                     </div>
@@ -1636,21 +1605,21 @@ export const ModalCambioProducto: React.FC<Props> = ({
 
                         {/* RESUMEN DE COBERTURA Y AVISOS */}
                         <div className="flex flex-wrap justify-between items-center text-xs p-2 bg-slate-100 border border-slate-300">
-                          <span className="font-bold text-gray-700">Diferencia requerida: <b>S/ {diferencia.toFixed(2)}</b></span>
-                          <span className="font-bold text-gray-700">Total cubierto: <b className={pagoValido ? 'text-emerald-700' : 'text-red-600'}>S/ {totalCubierto.toFixed(2)}</b></span>
+                          <span className="font-bold text-gray-700">Diferencia requerida: <b>S/ {formatearMonto(diferencia)}</b></span>
+                          <span className="font-bold text-gray-700">Total cubierto: <b className={pagoValido ? 'text-emerald-700' : 'text-red-600'}>S/ {formatearMonto(totalCubierto)}</b></span>
                         </div>
 
                         {faltaCubrir > 0.009 && (
                           <p className="text-[11px] font-black text-amber-900 bg-amber-50 p-2 border border-amber-300 flex items-center gap-1.5">
                             <AlertTriangle size={15} className="shrink-0 text-amber-600" />
-                            <span>Falta cubrir <b>S/ {faltaCubrir.toFixed(2)}</b> para liquidar la diferencia.</span>
+                            <span>Falta cubrir <b>S/ {formatearMonto(faltaCubrir)}</b> para liquidar la diferencia.</span>
                           </p>
                         )}
 
                         {sobrante > 0.009 && (
                           <p className="text-[11px] font-black text-red-900 bg-red-50 p-2 border border-red-300 flex items-center gap-1.5">
                             <AlertTriangle size={15} className="shrink-0 text-red-600" />
-                            <span>El total ingresado supera la diferencia por <b>S/ {sobrante.toFixed(2)}</b>. Ajusta los montos.</span>
+                            <span>El total ingresado supera la diferencia por <b>S/ {formatearMonto(sobrante)}</b>. Ajusta los montos.</span>
                           </p>
                         )}
 
@@ -1666,7 +1635,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                     {/* SI LA TIENDA DEVUELVE PLATA */}
                     {diferencia < 0 && (
                       <p className="mt-2 text-[11px] font-bold text-amber-900 bg-amber-50 p-2 border border-amber-200">
-                        ⚠️ El negocio debe entregar <b>S/ {Math.abs(diferencia).toFixed(2)}</b> en efectivo al cliente. Se registrará como EGRESO en la caja.
+                        ⚠️ El negocio debe entregar <b>S/ {formatearMonto(Math.abs(diferencia))}</b> en efectivo al cliente. Se registrará como EGRESO en la caja.
                       </p>
                     )}
                   </div>
@@ -1726,7 +1695,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                     }`}
                   >
                     <Check size={18} /> {guardando ? 'Procesando...'
-                      : cpe && soloDevolver ? `Emitir nota de crédito y devolver S/ ${totalDevuelto.toFixed(2)}`
+                      : cpe && soloDevolver ? `Emitir nota de crédito y devolver S/ ${formatearMonto(totalDevuelto)}`
                       : cpe ? `Emitir nota de crédito y ${tipoCpe} nueva`
                       : 'Confirmar y Realizar Cambio'}
                   </button>

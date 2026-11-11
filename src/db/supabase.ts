@@ -5,7 +5,7 @@ import {
 } from '../utils/sinInternet';
 
 // En producción la API de cada cliente vive en su mismo link (/rest/v1/ detrás de Nginx),
-// así UNA sola compilación sirve para todos: evicamp.duckdns.org, bodega.siumax.duckdns.org...
+// así UNA sola compilación sirve para todos: evicamp.duckdns.org, bodega.comerc.siumax.duckdns.org...
 // En desarrollo (npm run dev) se usa VITE_SUPABASE_URL del .env.
 const supabaseUrl = import.meta.env.PROD ? window.location.origin : import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'public-anon-key';

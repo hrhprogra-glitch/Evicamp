@@ -19,9 +19,10 @@ import type { Product } from '../../Inventario/types';
 import { coincideBusqueda } from '../../../utils/busqueda';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar } from '../../../utils/dialogos';
-import { formatearCantidad } from '../../../utils/formato';
+import {formatearCantidad, formatearMonto } from '../../../utils/formato';
 import { esDecimal } from '../../../utils/unidades';
 import { MOTIVOS_FALTA, MOTIVOS_SALIDA, MOTIVOS_SOBRA } from '../motivos';
+import { AlturaSuave } from '../../../components/AlturaSuave';
 import { CuerpoVentana, CajaLista, FilaLista, LineaDato, Etiqueta, DatoFila, claseBotonBarra, claseBotonPrincipal } from '../../../components/ListaVentana';
 
 interface Props {
@@ -55,7 +56,7 @@ const LoteAutomatico: React.FC<{ marca?: string }> = ({ marca = '' }) => (
 const DatosLote: React.FC<{ l: Lote; unidad: string; marca?: string }> = ({ l, unidad, marca = '' }) => (
   <span className="flex flex-1 flex-wrap items-center justify-between gap-x-4 gap-y-1 min-w-0">
     <span className="text-xs font-black uppercase">{marca}Lote del {fechaCorta(l.created_at)} {horaCorta(l.created_at)}{l.expiration_date ? ` · vence ${fechaCorta(l.expiration_date)}` : ''}</span>
-    <span className="text-[11px] font-black">Quedan {formatearCantidad(l.quantity, unidad)} {unidad} · S/ {Number(l.cost_unit || 0).toFixed(2)} c/u</span>
+    <span className="text-[11px] font-black">Quedan {formatearCantidad(l.quantity, unidad)} {unidad} · S/ {formatearMonto(Number(l.cost_unit || 0))} c/u</span>
   </span>
 );
 const esConsumo = (p: Product | null) => String(p?.unit || '').toUpperCase() === 'CONSUMO';
@@ -116,7 +117,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
       if (!vigente) return;
       const conStock = ((data || []) as Lote[]).filter((l) => Number(l.quantity) > 0);
       setLotes(conStock);
-      setLote(modo === 'SALIDA' ? conStock[0] || null : null);
+      setLote(conStock[0] || null); // sin "Automático" (pedido del dueño 06/11/2026): el más antiguo, se puede cambiar
       setCargandoLotes(false);
     })();
     return () => { vigente = false; };
@@ -135,7 +136,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
   const pideMotivo = producto && (modo === 'SALIDA' || (diferencia !== null && diferencia !== 0));
   // ¿Se muestra el desplegable de lotes? MERMA siempre (salvo consumo); CONTEO solo con Conteos completo
   const veLotes = !!producto && !consumo && lotes.length > 0 && (modo === 'SALIDA' || puedeSalida);
-  const conAutomatico = modo === 'CONTEO';
+  const conAutomatico = false; // la opción "Automático" se quitó (06/11/2026)
   const opcionesLote: (Lote | null)[] = conAutomatico ? [null, ...lotes] : lotes;
   const campoDespuesDelLote = modo === 'SALIDA' ? 'input-cantidad-ajuste' : 'input-contado';
 
@@ -171,7 +172,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
   };
   const elegirLote = (l: Lote | null) => {
     setLote(l); setLotesAbierto(false);
-    enfocar(campoDespuesDelLote);
+    enfocar('lote-ajuste-elegido'); // Enter = clic: el selector vuelve al lote (no pasa a la cantidad)
   };
 
   const cambiarModo = (m: Modo) => {
@@ -251,7 +252,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
         if (e3) throw e3;
       }
       anotar({ producto: producto.name, unidad, modo: 'SALIDA', cantidad: cant, diferencia: consumo ? 0 : -cant, motivo, consumo });
-      setUltimo(consumo ? `✔ ${producto.name}: gasto de S/ ${cant.toFixed(2)} guardado (${motivo}).` : `✔ ${producto.name}: merma guardada (${motivo}).`);
+      setUltimo(consumo ? `✔ ${producto.name}: gasto de S/ ${formatearMonto(cant)} guardado (${motivo}).` : `✔ ${producto.name}: merma guardada (${motivo}).`);
       onGuardado?.();
       reiniciar();
     } catch (e) {
@@ -307,7 +308,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
       if (dif === 0) { await guardarConteo(0); return; }
       setDiferencia(dif);
       setMotivo('');
-      enfocar('motivo-ajuste-0');
+      enfocar('input-contado'); // se queda en el conteo (Continuar desaparece); al motivo se baja con ↓
     } finally {
       calculando.current = false;
       setCalculandoEstado(false);
@@ -334,7 +335,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
   // Desplegable de lotes (MERMA: de qué lote sale; CONTEO con Conteos completo: a qué lote va, con "Automático").
   // Cerrado muestra el elegido; Enter lo abre, ↑ ↓ recorre, Enter elige (se cierra y pasa al campo siguiente), Esc lo cierra.
   const selectorLote = (titulo: string) => (
-    <div>
+    <div className="aparecer">
       <p className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest mb-2">{titulo}</p>
       {cargandoLotes ? (
         <p className="text-[11px] font-bold text-[var(--color-muted)]">Cargando lotes...</p>
@@ -359,7 +360,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
             <ChevronDown size={16} className={`shrink-0 transition-transform ${lotesAbierto ? 'rotate-180' : ''}`} />
           </button>
           {lotesAbierto && (
-            <div role="listbox" aria-label="Lotes" className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] z-50 max-h-56 overflow-y-auto">
+            <div role="listbox" aria-label="Lotes" className="aparecer mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-56 overflow-y-auto">
               {opcionesLote.map((l, i) => {
                 const elegido = (lote?.id ?? null) === (l?.id ?? null);
                 return (
@@ -412,7 +413,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div role="dialog" aria-label="Nuevo ajuste" className="ventana-sobria bg-[var(--color-surface)] w-full max-w-3xl border-2 border-[var(--color-ink)] flex flex-col h-[calc(90dvh/var(--ui-zoom))]">
+      <div role="dialog" aria-label="Nuevo ajuste" className="ventana-sobria bg-[var(--color-surface)] w-full max-w-3xl border-2 border-[var(--color-ink)] flex flex-col max-h-[calc(90dvh/var(--ui-zoom))]">
         {/* CABECERA */}
         <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -436,14 +437,16 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
         </div>
 
         <CuerpoVentana>
-          <div className="border-2 border-[var(--color-border)] bg-white p-3 sm:p-4 flex flex-col gap-4 shrink-0">
+          {/* El alto cambia suave cuando aparecen o se van partes (la ventana ya no "salta") */}
+          <AlturaSuave className="shrink-0">
+          <div className="border-2 border-[var(--color-border)] bg-white p-3 sm:p-4 flex flex-col gap-4">
             {/* 1. PRODUCTO — si el selector sale del buscador y de su lista (ej. ↑ a la X), la lista se cierra */}
             <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setAbierta(false); }}>
               <label className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2 mb-2">
                 <Search size={14} /> 1. Producto
               </label>
               {producto ? (
-                <div className="flex items-center justify-between border-2 border-[var(--color-ink)] p-3">
+                <div className="aparecer flex items-center justify-between border-2 border-[var(--color-ink)] p-3">
                   <div className="min-w-0">
                     <p className="text-[11px] font-bold text-[var(--color-muted)] uppercase">{producto.code} · {producto.category}</p>
                     <p id="ajuste-producto-elegido" className="font-black text-[var(--color-ink)] uppercase truncate">{producto.name}</p>
@@ -483,8 +486,9 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                     }}
                     className="w-full bg-white border-2 border-[var(--color-border)] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]"
                   />
+                  {/* La lista va dentro de la ventana (no flotando): la ventana se acomoda a su contenido y una lista flotante se cortaba */}
                   {abierta && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] z-50 max-h-56 overflow-y-auto">
+                    <div className="aparecer mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-56 overflow-y-auto">
                       {filtrados.length ? filtrados.slice(0, 50).map((p) => (
                         <div
                           key={p.id}
@@ -517,7 +521,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
             {producto && modo === 'SALIDA' && (
               <>
                 {!consumo && selectorLote(`${n}. ¿De qué lote? ${lotes.length > 1 ? `(Enter: ver los ${lotes.length})` : ''}`)}
-                <div>
+                <div className="aparecer">
                   <div className="flex items-center justify-between mb-2">
                     <label htmlFor="input-cantidad-ajuste" className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest block">
                       {consumo ? `${n}. ¿Cuánto se gastó? (S/)` : `${n + 1}. ¿Cuántos salieron? (${unidad})`}
@@ -539,7 +543,8 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                       onChange={(e) => setCantidad(e.target.value)}
                       onFocus={(e) => e.currentTarget.select()}
                       onKeyDown={async (e) => {
-                        if (e.key === 'Enter' || e.key === 'ArrowDown') {
+                        if (e.key === 'Enter') { e.preventDefault(); await revisarCantidad(); } // revisa y se queda
+                        else if (e.key === 'ArrowDown') {
                           e.preventDefault();
                           if (await revisarCantidad()) enfocar(`motivo-ajuste-${Math.max(0, motivos.indexOf(motivo))}`);
                         } else if (e.key === 'ArrowRight') {
@@ -552,9 +557,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                     <button
                       id="btn-confirmar-salida"
                       type="button"
-                      onClick={async () => {
-                        if (await revisarCantidad()) enfocar(`motivo-ajuste-${Math.max(0, motivos.indexOf(motivo))}`);
-                      }}
+                      onClick={() => void revisarCantidad()} // revisa y el selector se queda en Continuar
                       onKeyDown={(e) => {
                         if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('input-cantidad-ajuste')?.focus(); }
                         else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(campoAntesDeCantidad())?.focus(); }
@@ -584,7 +587,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
             {/* CONTÉ LO QUE HAY */}
             {producto && modo === 'CONTEO' && veLotes && selectorLote(`${n}. ¿A qué lote va la diferencia? (Enter: elegir)`)}
             {producto && modo === 'CONTEO' && (
-              <div>
+              <div className="aparecer">
                 <div className="flex items-center justify-between mb-2">
                   <label htmlFor="input-contado" className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest block">
                     {veLotes ? n + 1 : n}. ¿Cuántos hay? ({unidad})
@@ -609,7 +612,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                     onChange={(e) => setContado(e.target.value)}
                     onFocus={(e) => e.currentTarget.select()}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') { e.preventDefault(); if (diferencia === null) void calcular(); else enfocar('motivo-ajuste-0'); }
+                      if (e.key === 'Enter') { e.preventDefault(); if (diferencia === null) void calcular(); }
                       else if (e.key === 'ArrowRight' && diferencia === null) { e.preventDefault(); document.getElementById('btn-confirmar-contado')?.focus(); }
                       else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById(campoAntesDeCantidad())?.focus(); }
                       else if (e.key === 'ArrowDown' && diferencia !== null) { e.preventDefault(); document.getElementById('motivo-ajuste-0')?.focus(); }
@@ -647,7 +650,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                 )}
                 {diferencia === null && modos.includes('SALIDA') && enlaceModo('SALIDA', 'Solo salieron unos pocos (se rompió, venció, se usó…)', 'input-contado')}
                 {diferencia !== null && (
-                  <div id="ajuste-diferencia" role="status" className={`mt-3 p-3 border-2 font-black uppercase ${diferencia < 0 ? 'border-[var(--color-danger)] bg-[var(--color-danger-bg)] text-[var(--color-danger)]' : 'border-[var(--color-info)] bg-[var(--color-info-bg)] text-[var(--color-info)]'}`}>
+                  <div id="ajuste-diferencia" role="status" className={`aparecer mt-3 p-3 border-2 font-black uppercase ${diferencia < 0 ? 'border-[var(--color-danger)] bg-[var(--color-danger-bg)] text-[var(--color-danger)]' : 'border-[var(--color-info)] bg-[var(--color-info-bg)] text-[var(--color-info)]'}`}>
                     {diferencia < 0 ? `Faltan ${formatearCantidad(-diferencia, unidad)} ${unidad}` : `Sobran ${formatearCantidad(diferencia, unidad)} ${unidad}`}
                     <span className="block text-[11px] font-bold normal-case">
                       {diferencia < 0
@@ -661,7 +664,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
 
             {/* MOTIVO Y JUSTIFICACIÓN (los dos casos) */}
             {pideMotivo && (
-              <div className="flex flex-col gap-4 border-t-2 border-[var(--color-border)] pt-4">
+              <div className="aparecer flex flex-col gap-4 border-t-2 border-[var(--color-border)] pt-4">
                 <div>
                   <p className="text-[10px] font-black text-[var(--color-ink)] uppercase tracking-widest mb-2">Motivo *</p>
                   <div className="flex flex-wrap gap-2" role="listbox" aria-label="Motivo">
@@ -673,7 +676,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                         role="option"
                         aria-selected={motivo === m}
                         data-motivo-ajuste="true"
-                        onClick={() => { setMotivo(m); enfocar('input-justificacion-ajuste'); }}
+                        onClick={() => setMotivo(m)} // Enter = clic: lo marca y el selector se queda
                         onKeyDown={(e) => {
                           if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById(`motivo-ajuste-${(i + 1) % motivos.length}`)?.focus(); }
                           else if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById(`motivo-ajuste-${(i - 1 + motivos.length) % motivos.length}`)?.focus(); }
@@ -696,7 +699,7 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                     value={justificacion}
                     onChange={(e) => setJustificacion(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('btn-guardar-ajuste')?.focus(); }
+                      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); } // Enter no pasa a Guardar (se baja con ↓)
                       else if (e.key === 'ArrowUp' && e.currentTarget.selectionStart === 0) {
                         e.preventDefault();
                         document.getElementById(`motivo-ajuste-${Math.max(0, motivos.indexOf(motivo))}`)?.focus();
@@ -740,26 +743,12 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                 </div>
               </div>
             )}
-            {ultimo && <p id="ajuste-ultimo" role="status" className="text-xs font-black text-[var(--color-accent)] uppercase">{ultimo}</p>}
+            {ultimo && <p id="ajuste-ultimo" role="status" key={ultimo} className="aparecer text-xs font-black text-[var(--color-accent)] uppercase">{ultimo}</p>}
           </div>
+          </AlturaSuave>
 
-          {/* LO HECHO EN ESTA VENTANA */}
-          <p className="text-[12px] font-black uppercase tracking-widest text-[var(--color-muted)] shrink-0">Hechos ahora ({hechos.length})</p>
-          <CajaLista vacia={!hechos.length} mensaje="Todavía no hiciste ningún ajuste.">
-            {hechos.map((h, i) => (
-              <FilaLista
-                key={i}
-                data-ajuste-fila="true"
-                titulo={h.producto}
-                subtitulo={<>
-                  <LineaDato>{h.modo === 'CONTEO' ? `Contó ${formatearCantidad(h.cantidad, h.unidad)} ${h.unidad}` : h.consumo ? `Gasto de S/ ${h.cantidad.toFixed(2)}` : `Salieron ${formatearCantidad(h.cantidad, h.unidad)} ${h.unidad}`} · {h.hora}</LineaDato>
-                  {h.motivo && <LineaDato>Motivo: {h.motivo}</LineaDato>}
-                </>}
-                centro={h.modo === 'SALIDA' ? <Etiqueta tono="rojo">{h.consumo ? 'Gasto' : 'Merma'}</Etiqueta> : h.diferencia === 0 ? <Etiqueta tono="verde">Cuadra</Etiqueta> : h.diferencia < 0 ? <Etiqueta tono="rojo">Merma</Etiqueta> : <Etiqueta tono="azul">Sobrante</Etiqueta>}
-                derecha={<DatoFila etiqueta="Diferencia" valor={h.consumo ? '—' : `${h.diferencia > 0 ? '+' : ''}${formatearCantidad(h.diferencia, h.unidad)} ${h.unidad}`} tono={h.diferencia < 0 ? 'rojo' : h.diferencia > 0 ? 'verde' : 'normal'} />}
-              />
-            ))}
-          </CajaLista>
+          {/* Sin la lista "Hechos ahora" (pedido del dueño 06/11/2026): al guardar queda el aviso de arriba y todo sale
+              en la tabla de Conteos al cerrar */}
         </CuerpoVentana>
       </div>
     </div>

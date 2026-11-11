@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Eye, ChevronLeft, ChevronRight, FilterX, Search, X } from 'lucide-react';
 import type { ClienteFiadoAgrupado } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   clientes: ClienteFiadoAgrupado[];
@@ -370,11 +371,11 @@ export const TablaFiadosAgrupados: React.FC<Props> = ({ clientes, onView }) => {
                     {(cli.clienteDni || cli.clienteTelefono || cli.grupoNombre) && <span className="block text-xs text-[var(--color-muted)] mt-1 tracking-widest">{[cli.clienteDni && `DNI/RUC: ${cli.clienteDni}`, cli.clienteTelefono && `TEL.: ${cli.clienteTelefono}`, cli.grupoNombre && `GRUPO: ${cli.grupoNombre}`].filter(Boolean).join(" · ")}</span>}
                   </td>
                   <td className="hidden sm:table-cell py-4 px-4 text-right font-black text-[var(--color-muted)]">
-                    S/ {cli.totalOriginal.toFixed(2)}
+                    S/ {formatearMonto(cli.totalOriginal)}
                   </td>
                   <td className="py-3 sm:py-4 px-3 sm:px-4 text-right whitespace-nowrap">
                     <span className={`font-black text-base sm:text-lg ${cli.totalPendiente > 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-success)]'}`}>
-                      S/ {cli.totalPendiente.toFixed(2)}
+                      S/ {formatearMonto(cli.totalPendiente)}
                     </span>
                   </td>
                   <td className="py-3 sm:py-4 px-2 sm:px-4 sm:pr-6 text-center">

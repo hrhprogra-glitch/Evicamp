@@ -1,6 +1,6 @@
 // ai-scripts/pruebas/prueba-fase7-ui.mjs
 // Prueba UI completa Fase 7 en siumax con Puppeteer:
-// 1. Iniciar sesión en siumax.duckdns.org
+// 1. Iniciar sesión en comerc.siumax.duckdns.org
 // 2. Ir a Inventario -> Nuevo Producto -> Activar Variantes -> Plantilla Ropa (S, M, L, XL)
 // 3. Poner nombre "POLO ALGODON VARTEST", precio 50, stock a talla M (5) y talla L (3)
 // 4. Guardar producto y verificar que aparezca la insignia "4 variantes" en la tabla
@@ -53,7 +53,7 @@ page.on('dialog', async (d) => {
 try {
   console.log('Iniciando prueba UI en navegador para Fase 7...');
 
-  await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario');
   await page.focus('#input-login-usuario');
   await page.keyboard.type('admin@siumax.com');

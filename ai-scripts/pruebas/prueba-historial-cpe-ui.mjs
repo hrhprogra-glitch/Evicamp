@@ -48,7 +48,7 @@ const abrirTicket = async (venta) => { const fila = await filaDe(venta); await f
 
 let venta = '';
 try {
-  await page.goto('https://siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario');
   await page.type('#input-login-usuario', 'admin@siumax.com');
   await page.type('#input-login-password', process.env.SIUMAX_ADMIN_CLAVE);

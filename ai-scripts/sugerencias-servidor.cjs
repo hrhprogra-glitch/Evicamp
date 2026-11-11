@@ -1,7 +1,7 @@
 // Activa "Ajustes > Sugerencias y errores": los mensajes de cada cliente llegan al Panel de Control.
 // Uso:
-//   node ai-scripts/sugerencias-servidor.cjs siumax            -> panel actualizado + solo el sitio de pruebas
-//   node ai-scripts/sugerencias-servidor.cjs siumax evicamp    -> varios sitios (nombres de /etc/nginx/sites-available)
+//   node ai-scripts/sugerencias-servidor.cjs comerc            -> panel actualizado + solo el sitio de pruebas de Comerc
+//   node ai-scripts/sugerencias-servidor.cjs comerc evicamp    -> varios sitios (nombres de /etc/nginx/sites-available)
 //
 // Qué hace:
 //  1. Sube SOLO servidor/panel/panel.py e index.html (no toca la contraseña del panel ni Mercado Pago,
@@ -19,7 +19,7 @@ const { conexionVps } = require('./vps.cjs');
 
 const sitios = process.argv.slice(2);
 if (!sitios.length || sitios.some((s) => !/^[a-z0-9-]+$/.test(s))) {
-  console.error('Uso: node ai-scripts/sugerencias-servidor.cjs <sitio> [sitio...]   (ej: siumax)');
+  console.error('Uso: node ai-scripts/sugerencias-servidor.cjs <sitio> [sitio...]   (ej: comerc)');
   process.exit(1);
 }
 const DIR_PANEL = '/opt/siuhub/panel';

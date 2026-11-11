@@ -6,6 +6,7 @@ import { useCerrarConEscape } from '../utils/useCerrarConEscape';
 import { PROBLEMA_CPE, numeroComprobante } from '../utils/comprobante';
 import { InsigniaCpe } from './InsigniaCpe';
 import { ModalDetalleTicket } from './ModalDetalleTicket';
+import { formatearMonto } from '../utils/formato';
 
 // "Comprobantes con problema": SOLO las boletas, facturas y notas de crédito con error, rechazadas o
 // atascadas (las demás se ven en las tablas de Finanzas, con su estado). Se abre desde el aviso rojo
@@ -135,7 +136,7 @@ export const ModalComprobantesProblema: React.FC<{ isOpen: boolean; onClose: () 
                       {c.esNota ? 'NC' : c.doc_type === 1 ? 'F' : 'B'} · {numeroComprobante(c.doc_serial, c.doc_number) || 'Por numerar'}
                     </span>
                     <span className="hidden sm:block text-[12px] font-bold uppercase truncate">{c.cliente}</span>
-                    <span className="hidden sm:block text-[12px] font-black text-right">S/ {c.total.toFixed(2)}</span>
+                    <span className="hidden sm:block text-[12px] font-black text-right">S/ {formatearMonto(c.total)}</span>
                     <InsigniaCpe estado={c.cpe_estado} />
                   </div>
                   {c.cpe_mensaje && <p className="text-[11px] font-bold text-[var(--color-muted)] mt-1 truncate">{c.cpe_mensaje}</p>}

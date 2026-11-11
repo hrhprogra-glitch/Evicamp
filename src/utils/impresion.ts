@@ -23,11 +23,15 @@ export const imprimirEnTicketera = async (html: string, titulo: string) => {
   return escritorio ? escritorio.imprimir(html, titulo) : null;
 };
 
-// Documento completo con los estilos de la página, para que el ticket salga igual que en pantalla
+// Documento completo con los estilos de la página, para que el ticket salga igual que en pantalla.
+// Los estilos van COPIADOS dentro (no como <link>): el CSS del sistema se carga con crossorigin y el servidor no manda
+// permiso CORS, así que desde la ventana invisible de impresión (otra "procedencia") el navegador lo bloqueaba y el
+// ticket salía sin diseño (letra común, nada centrado, totales desordenados). Arreglado 06/11/2026.
+const cssDeLaPagina = () => Array.from(document.styleSheets).map((hoja) => {
+  try { return Array.from(hoja.cssRules).map((regla) => regla.cssText).join('\n'); } catch { return ''; }
+}).join('\n');
 const armarDocumento = (el: HTMLElement, titulo: string) => {
-  const estilos = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-    .map((n) => n.outerHTML)
-    .join('\n');
+  const estilos = `<style>${cssDeLaPagina()}</style>`;
   return `<!doctype html><html lang="es"><head><meta charset="UTF-8"><base href="${location.origin}/">
 <title>${titulo}</title>${estilos}
 <style>@page { margin: 0; } html, body { margin: 0; background: #fff; }</style>
