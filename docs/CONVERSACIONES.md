@@ -844,4 +844,16 @@
     - Al abrir la app, POS pre-pobla `cacheInventarioMemoria` en `src/utils/cacheModulos.ts`.
     - Cada módulo guarda en memoria sus datos, logrando cambio entre pestañas en 0 ms sin pantallas de carga.
     - Compilación 0 errores. Ver bitácora 133.
+- 11/11: El dueño preguntó por qué seguía cargando y por qué Utilidades y sus gráficos tardaban.
+  - Antigravity explicó la caché de archivos viejos del navegador, los bucles de consultas de tickets de 50 en 50 y el doble cálculo que hacían los gráficos.
+- 11/11: *"sigue igual osea entra sale cargando y cuando vuelvo entrar vuelve a salir el cargado si entro denuevo a utildiades tambien sale el cargando"*.
+  - Antigravity detectó overlays raíz bloqueantes restantes en `Inventario/index.tsx`, `Clientes/index.tsx` y `Finanzas/index.tsx` y los condicionó para que nunca tapen si ya hay datos en memoria.
+  - Aceleró `calcularAnalisis.ts` con consultas paralelas (`Promise.all`) y un caché en memoria `cacheCalculos` (0 ms para reentradas y gráficos).
+  - Eliminó el retraso artificial de 350 ms en el modal de gráficos. Ver bitácora 134.
+- 11/11: *"perfecto subelo a evicamp porque ahi tiene muchos productos comot tambien a mi github siumax para mis clientes"*.
+  - El dueño dio la orden explícita de subir a producción y hacer push a GitHub.
+  - Se respaldaron las fotos de Evicamp antes de subir (`respaldo-fotos-evicamp-*.csv`, 1,138 fotos).
+  - Se compiló y desplegó a Evicamp, SiuMax y Clientes (`node ai-scripts/deploy.cjs todos`).
+  - Se verificaron las fotos post-despliegue (1,138 fotos intactas).
+  - Se hizo merge `--no-ff` de `fase-11-sunat` a `main` y push a GitHub (`main` y `fase-11-sunat`). Ver bitácora 135.
 
