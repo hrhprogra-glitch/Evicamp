@@ -39,7 +39,7 @@ export const Utilidades = () => {
   useEffect(() => {
     const procesarEstadisticas = async (silencioso = false) => {
       const tieneCacheValido = cacheUtilidadesMemoria && cacheUtilidadesMemoria.fechaInicio === fechaInicio && cacheUtilidadesMemoria.fechaFin === fechaFin;
-      if (!silencioso && !tieneCacheValido) setIsLoading(true);
+      if (!silencioso && !tieneCacheValido && analisisCompleto.length === 0) setIsLoading(true);
 
 
       // Todo el cálculo vive en calcularAnalisis.ts (lo comparte "Gráficos y detalles"; mismas fórmulas de siempre)

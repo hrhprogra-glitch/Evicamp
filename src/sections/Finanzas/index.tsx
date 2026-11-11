@@ -776,7 +776,7 @@ export const Finanzas: React.FC = () => {
     };
   }, [vistaActual, sessionActiva, isLoading]);
 
-  if (isLoading) return <div className="flex h-full items-center justify-center font-mono">Calculando Bóveda...</div>;
+  if (isLoading && !cacheFinanzasMemoria && movimientos.length === 0) return <div className="flex h-full items-center justify-center font-mono">Calculando Bóveda...</div>;
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono">

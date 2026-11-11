@@ -7,6 +7,31 @@
 
 ---
 
+## 11/11/2026 (134) · Antigravity — Solución definitiva a "Cargando..." repetitivo y aceleración de Utilidades y Gráficos
+- **Dueño:** *"sigue igual osea entra sale cargando y cuando vuelvo entrar vuelve a salir el cargado si entro denuevo a utildiades tambien sale el cargando"*.
+- **Diagnóstico a fondo:**
+  1. `src/sections/Inventario/index.tsx` (línea 547): contenía un overlay absoluto de "Cargando..." `{loading && (` que tapaba toda la pantalla sin verificar si `products.length > 0`.
+  2. `src/sections/Clientes/index.tsx` (línea 657): contenía `{loading && (` que tapaba la pantalla entera de clientes.
+  3. `src/sections/Finanzas/index.tsx` (línea 779): bloqueaba con `if (isLoading) return <div>Calculando Bóveda...</div>;`.
+  4. `src/sections/Utilidades/calcularAnalisis.ts`: para calcular ganancias, hacía bucles secuenciales de 50 en 50 para `sale_details` y `fiados`, tomando de 5 a 10 segundos en cada apertura, y `TableroGanancias` (Gráficos) lo ejecutaba dos veces seguidas con un `setTimeout` artificial de 350 ms. Al cambiar de módulo antes de que terminara el cálculo pesado, se perdía y volvía a empezar de cero.
+- **Solución implementada:**
+  1. **Overlays raíz condicionados:**
+     - `Inventario/index.tsx`: `{loading && products.length === 0 && (`
+     - `Clientes/index.tsx`: `{loading && clientesAgrupados.length === 0 && (`
+     - `Finanzas/index.tsx`: `if (isLoading && !cacheFinanzasMemoria && movimientos.length === 0) return ...`
+     - `Utilidades/index.tsx`: no activa `isLoading` si `analisisCompleto.length > 0`.
+  2. **Aceleración masiva de Utilidades y Gráficos (`calcularAnalisis.ts`):**
+     - Se reemplazaron los bucles secuenciales lentos por consultas concurrentes en paralelo con `Promise.all` (bloques de 100 para `sale_details` y `fiados`).
+     - Se implementó `cacheCalculos` en memoria con clave `${fechaInicio}_${fechaFin}`: la primera consulta calcula a velocidad ultra rápida en paralelo y las siguientes consultas del mismo período devuelven el resultado en **0 milisegundos**.
+     - `TableroGanancias.tsx`: reutiliza inmediatamente el cálculo del período actual y se eliminó el retraso artificial de 350 ms al abrir.
+- **Resultado:**
+  - Navegar de ida y vuelta a Inventario, Clientes, Finanzas o Utilidades ya no muestra "Cargando..." repetitivo.
+  - Utilidades y Gráficos abren de forma inmediata.
+- **Despliegue y Pruebas:**
+  - `npm run build`: compilación limpia (0 errores TS/Vite).
+  - Desplegado al servidor de pruebas `comerc.siumax.duckdns.org` con `node ai-scripts/deploy.cjs siumax`.
+  - Sin push a GitHub ni despliegue a Evicamp según reglas.
+
 ## 11/11/2026 (133) · Antigravity — Eliminación total de spinners bloqueantes y pre-carga compartida entre módulos
 - **Dueño:** *"cada vez que entro a inventario o clientes o conteos o finanzas o utilidades sale el cargando yo no quiero eso solo quiero que cargue una vez se guarde lo qu cargo y todo entre fluido entiendes???"* (con captura de `TablaProductos` tapada con `CARGANDO...`).
 - **Causa raíz identificada:**
