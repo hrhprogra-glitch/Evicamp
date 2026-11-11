@@ -487,7 +487,7 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
       name: it.product_name,
       price: it.price,
       cost: 0,
-      quantity: 9999, // se validará con el stock real al entrar a caja
+      quantity: 9999, // la Caja lo cambia por el stock real al cargar los productos (desdeCotizacion)
       minStock: 0,
       code: 'PROD',
       barcode: '',
@@ -495,7 +495,8 @@ export const PestanaCotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
       unit: 'UND',
       cartQuantity: it.quantity,
       subtotal: it.subtotal,
-      esMayoristaAplicado: it.es_mayorista
+      esMayoristaAplicado: it.es_mayorista,
+      desdeCotizacion: true
     }));
 
     // Guardar en almacenamiento de la caja

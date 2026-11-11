@@ -18,6 +18,7 @@ export interface CartItem extends Product {
   descuentoPorcentajeAplicado?: number; // fase 4.4: descuento porcentual del cliente o empresa aplicado
   numeroSerie?: string;               // fase 6: número de serie / IMEI para productos que lo requieran
   garantiaHasta?: string;             // fase 6: fecha calculada de vencimiento de garantía (YYYY-MM-DD)
+  desdeCotizacion?: boolean;          // vino de una cotización: la Caja le completa los datos del producto (stock, costo…)
 }
 
 export interface HeldCart {

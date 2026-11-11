@@ -582,6 +582,14 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         } as Product;
       });
       setProductos(mapeados);
+      // Cotización convertida en venta (PestanaCotizaciones): sus líneas llegan sin los datos del producto (stock 9999,
+      // costo 0, unidad UND, código PROD). Se completan con los del producto, conservando cantidad, precio y subtotal
+      const porId = new Map(mapeados.map((p) => [String(p.id), p]));
+      setCart((prev) => prev.some((it) => it.desdeCotizacion) ? prev.map((it) => {
+        const prod = it.desdeCotizacion ? porId.get(String(it.id)) : undefined;
+        if (!prod) return it;
+        return { ...prod, cartQuantity: it.cartQuantity, price: it.price, subtotal: it.subtotal, esMayoristaAplicado: it.esMayoristaAplicado };
+      }) : prev);
       // Descargar en segundo plano solo las fotos que falten en el disco local
       void sincronizarFotosFaltantes(productsData);
     }

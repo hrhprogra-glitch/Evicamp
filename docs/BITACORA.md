@@ -7,6 +7,40 @@
 
 ---
 
+## 11/11/2026 (130) · Claude — 6 fallas vistas al grabar los videos, arregladas (solo siumax; falta subir)
+- **Dueño:** *"si"* a arreglar las fallas que salieron grabando los videos. Probado en la base demo `siudemo` con una
+  compilación aparte (puerto 5198) y teclado; los datos de prueba se borraron. Nada subido a siumax, Evicamp ni GitHub.
+1. **Cotización → Caja con "STK: 9999":** `PestanaCotizaciones` armaba las líneas con stock 9999, costo 0 y unidad UND
+   ("se validará al entrar a caja", pero nunca se hacía). Ahora van con `desdeCotizacion: true` y `Punto-de-venta/index.tsx`
+   (al cargar los productos) las completa con los datos del producto, conservando cantidad, precio y subtotal.
+   Probado: STK 38 y 50 (los reales).
+2. **Historial de lotes: vencimiento un día antes** (`ModalHistorialLotes.tsx`): `new Date('AAAA-MM-DD')` es UTC. Ahora
+   la fecha sola se lee en hora de Perú y "CADUCADO" usa `estaVencido` (como la pestaña Lotes: vence hoy = vigente).
+   Probado: Agua Cielo "Vence 10/11/2027" (= base).
+3. **Recibir una compra no cambiaba el costo del producto** (`products.cost_price`, que usan recetas, combos, ventas sin
+   lote y el formulario): `fn_recibir_compra` ahora lo pone con el costo recibido. Como `fn_proteger_precios` pide
+   "Modificar precios" (el almacenero y el cajero que recibe no lo tienen), la función marca
+   `siumax.costo_de_compra = '1'` y el trigger deja pasar SOLO ese cambio de costo. **Ojo:** `fn_proteger_precios` está
+   4 veces en `seguridad-sesion.sql`; la que vale es la ÚLTIMA (fase 4.4), ahí está el cambio. Probado dentro de una
+   transacción con ROLLBACK (cajero 0.72, admin 0.75; un cajero sigue sin poder cambiar el costo a mano). Los costos
+   viejos NO se corrigen solos (ej. CUA CUA dice 0.65 y su último lote 0.68).
+4. **y 5. Cambio de producto en ticket simple** (`ModalCambioProducto.tsx`): sumaba/restaba `products.quantity` a mano →
+   los LOTES no se movían, la línea quedaba con el costo del producto viejo (Utilidades mal) y en un cambio PARCIAL
+   (1 de 2) el producto nuevo se descontaba **dos veces** (la pantalla y el trigger de `sale_details`). Función nueva
+   `fn_mover_stock_cambio` (permiso `reportes_anular_ventas`): lo devuelto vuelve al lote de donde salió, lo nuevo sale
+   FIFO de sus lotes con nota `Ticket #N` (el trigger no lo descuenta otra vez) y devuelve el costo → `cost_at_moment`.
+   Probado parcial (2 Inca Kola → 1 por 2 Cua Cua) y completo (Coca Cola → Inca Kola): lotes = producto, costo del lote.
+6. **Ticket simple sin forma de devolverse:** el botón ↺ (anular) se quitó el 04/11 al unir Cambio / Devolución en ⇄, pero
+   en ⇄ "Devolver" solo sale con boleta/factura, y el tacho decía "primero haz la devolución (botón ↺)". Ahora el tacho de
+   una venta no anulada la **anula** (`onAnularTicket`: confirma, y sin permiso pide la clave del administrador); ya
+   anulada, el administrador la borra como antes. Título: "Anular / Devolver todo el ticket". Probado.
+- **Visto, NO cambiado (preguntar):** anular una venta que tuvo un cambio de producto devuelve otra vez el producto original
+  (fn_anular_venta usa las salidas `Ticket #N`); el paso 5 de `ModalCambioProducto` borra `cash_movements` cuya
+  descripción contiene los 6 últimos dígitos del ticket (podría borrar otro movimiento).
+- **Para subir:** respaldo → `seguridad-sesion.sql` con `lock_timeout` en cada base → `deploy.cjs`. Esperar el aviso.
+- Había 5 archivos cambiados por otra IA a la vez (ListaVentana, ModalDetalleCliente, Inventario/index, ModalCobro,
+  TicketVenta): no son de este arreglo y no van en este commit.
+
 ## 10/11/2026 (129) · Antigravity — Caja de fotos local y optimización de carga masiva en Evicamp
 - **Dueño:** *"ocurrio un problema pero que es bueno mi cliente de evicamp se dio cuenta que esta muy lindo la carga de productos clientes y el punto de venta y el conteo yo creo que es porque esta subiendo muchass imagenes a cada producto y son como 1000 productos quiero que averigues bien la causa si es eso o otra cosa porque carga mucho todas las sesiones"*; propuesta: *"me gustaria tambien que cuando ya carguen las fotos no tengan la necesidad de cargarlos nueva mente como que se guarda"*; *"si estoy de acuerdo hazlo"*.
 - **Diagnóstico en producción (Evicamp):** 1,262 productos en total, 1,129 con foto. Tabla `products` pesa 27 MB (24 MB de fotos en Base64). `Punto-de-venta`, `Inventario`, `Clientes`, `Conteos`, `Proveedores` y `precargaSinInternet` ejecutaban `select('*')` descargando los 24 MB en cada cambio de sección. En `Inventario`, `JSON.stringify(p).toUpperCase()` procesaba 50 MB en CPU congelando la pantalla.

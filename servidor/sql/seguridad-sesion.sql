@@ -118,6 +118,7 @@ AS $$
     -- Devolver parte de una venta con boleta/factura (nota de crédito, fase 11.5): como anular
     WHEN 'POST /rpc/fn_devolver_con_nota_credito'        THEN ARRAY['reportes_anular_ventas']
     WHEN 'POST /rpc/fn_cambiar_con_nota_credito'         THEN ARRAY['reportes_anular_ventas']
+    WHEN 'POST /rpc/fn_mover_stock_cambio'               THEN ARRAY['reportes_anular_ventas']
     -- Basta con la sesión
     WHEN 'PATCH /yape_notifications' THEN ARRAY[]::text[]
     WHEN 'POST /rpc/fn_sesion_activa' THEN ARRAY[]::text[]
@@ -521,6 +522,13 @@ BEGIN
               'Doc: ' || v_doc || ' · Pedido #' || right(v_compra.id::text, 6), v_emp.nombre, 1);
       SELECT coalesce(sum(quantity), 0) INTO v_stock FROM batches WHERE product_id = v_det.product_id AND is_active = 1;
       UPDATE products SET quantity = v_stock WHERE id = v_det.product_id;
+      -- El costo del producto pasa a ser el de esta compra (11/11/2026: se quedaba con el viejo). Lo usan las recetas,
+      -- los combos, las ventas sin lote y el formulario del producto
+      IF v_costo > 0 THEN
+        PERFORM set_config('siumax.costo_de_compra', '1', true);
+        UPDATE products SET cost_price = v_costo WHERE id = v_det.product_id AND cost_price IS DISTINCT FROM v_costo;
+        PERFORM set_config('siumax.costo_de_compra', '', true);
+      END IF;
       UPDATE compras_detalle SET cantidad_recibida = v_cant, costo_unit = v_costo, batch_id = v_lote WHERE id = v_det.id;
       v_lotes := v_lotes + 1;
       v_cambios := v_cambios || jsonb_build_object('id', v_det.product_id::text, 'quantity', v_stock);
@@ -1711,6 +1719,15 @@ DECLARE
 BEGIN
   IF NEW.price IS NOT DISTINCT FROM OLD.price
      AND NEW.cost_price IS NOT DISTINCT FROM OLD.cost_price
+     AND NEW.discount_percent IS NOT DISTINCT FROM OLD.discount_percent
+     AND NEW.precios_cantidad IS NOT DISTINCT FROM OLD.precios_cantidad
+     AND NEW.presentaciones IS NOT DISTINCT FROM OLD.presentaciones
+     AND NEW.precio_mayorista IS NOT DISTINCT FROM OLD.precio_mayorista THEN
+    RETURN NEW;
+  END IF;
+  -- Solo el costo, puesto por fn_recibir_compra (el costo de lo que llegó, 11/11/2026): no es "cambiar precios"
+  IF current_setting('siumax.costo_de_compra', true) = '1'
+     AND NEW.price IS NOT DISTINCT FROM OLD.price
      AND NEW.discount_percent IS NOT DISTINCT FROM OLD.discount_percent
      AND NEW.precios_cantidad IS NOT DISTINCT FROM OLD.precios_cantidad
      AND NEW.presentaciones IS NOT DISTINCT FROM OLD.presentaciones
@@ -3395,6 +3412,121 @@ BEGIN
   RETURN jsonb_build_object('nota_credito', v_nc ->> 'nota_credito', 'devuelto', v_devuelto,
     'comprobante', v_nueva.doc_serial || '-' || lpad(v_nueva.doc_number, 8, '0'), 'doc_type', v_nueva.doc_type,
     'venta_nueva', v_id, 'total_nuevo', v_total, 'diferencia', v_dif, 'cambio_id', v_id + 1);
+END;
+$$;
+
+-- -------------------------------------------------------------------------------------
+-- CAMBIO DE PRODUCTO EN UN TICKET SIMPLE: el stock (11/11/2026). Antes la pantalla sumaba y restaba
+-- products.quantity a mano: los LOTES no se movían, la línea se quedaba con el costo del producto viejo
+-- (Utilidades mal) y en un cambio parcial (1 de 2) el producto nuevo se descontaba dos veces (la pantalla y
+-- el trigger de sale_details). Ahora: lo devuelto vuelve al lote de donde salió (como la nota de crédito) y lo
+-- nuevo sale de sus lotes, el más antiguo primero (como la Caja). El movimiento de salida lleva la nota
+-- 'Ticket #N' como una venta: así el trigger no lo descuenta otra vez y anular la venta lo devuelve.
+-- Devuelve el costo unitario de lo que se entregó (para cost_at_moment de la línea). La pantalla hace lo demás
+-- (cambios_productos, la línea y el total del ticket) en ModalCambioProducto.tsx.
+-- -------------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.fn_mover_stock_cambio(p_sale_id bigint, p_detail_id bigint, p_cantidad numeric,
+                                                        p_producto_nuevo bigint, p_cantidad_nueva numeric,
+                                                        p_serie_devuelta text DEFAULT NULL, p_serie_nueva text DEFAULT NULL)
+RETURNS numeric
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_emp record;
+  d public.sale_details%ROWTYPE;
+  v_prod public.products%ROWTYPE;
+  v_mov record;
+  v_lote record;
+  v_ultimo bigint;
+  v_falta numeric;
+  v_pone numeric;
+  v_saca numeric;
+  v_nuevo numeric;
+  v_nota text;
+  v_costo_total numeric := 0;
+  v_con_costo numeric := 0;
+  v_consumo boolean;
+BEGIN
+  SELECT * INTO v_emp FROM fn_empleado_de_sesion();
+  IF v_emp.id IS NULL THEN RAISE EXCEPTION 'Sesión no válida.'; END IF;
+  IF NOT fn_tiene_permiso(v_emp.permisos, ARRAY['reportes_anular_ventas']) THEN
+    RAISE EXCEPTION 'No tienes permiso para cambios ni devoluciones.';
+  END IF;
+  SELECT * INTO d FROM public.sale_details WHERE id = p_detail_id AND sale_id = p_sale_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Ese producto no es de esta venta.'; END IF;
+  IF coalesce(p_cantidad, 0) <= 0 OR p_cantidad > abs(coalesce(d.quantity, 0)) THEN
+    RAISE EXCEPTION 'La cantidad que se devuelve no cuadra con la venta.';
+  END IF;
+  SELECT * INTO v_prod FROM public.products WHERE id = p_producto_nuevo;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Elige el producto nuevo que se lleva el cliente.'; END IF;
+  IF coalesce(p_cantidad_nueva, 0) <= 0 THEN RAISE EXCEPTION 'La cantidad nueva debe ser mayor a cero.'; END IF;
+
+  -- 1. Lo devuelto vuelve a los lotes de donde salió (el último primero); lo que no se sepa, al último lote
+  v_nota := 'Ingreso por cambio de producto (Ticket #' || right(p_sale_id::text, 6) || ')'
+            || coalesce(' · Serie: ' || nullif(trim(p_serie_devuelta), ''), '');
+  IF d.variant_id IS NOT NULL THEN
+    UPDATE public.product_variants SET quantity = coalesce(quantity, 0) + p_cantidad WHERE id = d.variant_id;
+  END IF;
+  UPDATE public.products SET quantity = coalesce(quantity, 0) + p_cantidad WHERE id = d.product_id RETURNING quantity INTO v_nuevo;
+  v_nuevo := coalesce(v_nuevo, 0);
+  v_falta := p_cantidad;
+  FOR v_mov IN SELECT batch_id, sum(-change_amount) AS salio FROM public.inventory_movements
+                WHERE operation_type = 'VENTA' AND notes = 'Ticket #' || p_sale_id::text AND product_id = d.product_id
+                  AND variant_id IS NOT DISTINCT FROM d.variant_id AND batch_id IS NOT NULL
+                GROUP BY batch_id ORDER BY max(id) DESC LOOP
+    EXIT WHEN v_falta <= 0;
+    v_pone := least(v_falta, greatest(v_mov.salio, 0));
+    CONTINUE WHEN v_pone <= 0;
+    UPDATE public.batches SET quantity = coalesce(quantity, 0) + v_pone WHERE id = v_mov.batch_id;
+    INSERT INTO public.inventory_movements (batch_id, variant_id, variant_name, product_id, product_name, change_amount,
+                                            previous_quantity, new_quantity, operation_type, reason, notes, "user", is_synced)
+    VALUES (v_mov.batch_id, d.variant_id, d.variant_name, d.product_id, d.product_name, v_pone,
+            v_nuevo - v_falta, v_nuevo - v_falta + v_pone, 'DEVOLUCION', 'CAMBIO_PRODUCTO', v_nota, v_emp.nombre, 1);
+    v_falta := v_falta - v_pone;
+  END LOOP;
+  IF v_falta > 0 THEN
+    SELECT id INTO v_ultimo FROM public.batches WHERE product_id = d.product_id AND variant_id IS NOT DISTINCT FROM d.variant_id
+     ORDER BY created_at DESC, id DESC LIMIT 1;
+    IF v_ultimo IS NOT NULL THEN
+      UPDATE public.batches SET quantity = coalesce(quantity, 0) + v_falta WHERE id = v_ultimo;
+    END IF;
+    INSERT INTO public.inventory_movements (batch_id, variant_id, variant_name, product_id, product_name, change_amount,
+                                            previous_quantity, new_quantity, operation_type, reason, notes, "user", is_synced)
+    VALUES (v_ultimo, d.variant_id, d.variant_name, d.product_id, d.product_name, v_falta, v_nuevo - v_falta, v_nuevo,
+            'DEVOLUCION', 'CAMBIO_PRODUCTO', v_nota, v_emp.nombre, 1);
+  END IF;
+
+  -- 2. Lo nuevo sale de sus lotes, el más antiguo primero (un producto de CONSUMO no lleva stock, como en la Caja)
+  v_consumo := coalesce(v_prod.unit, '') = 'CONSUMO' OR coalesce(v_prod.control_type, '') = 'CONSUMPTION';
+  IF NOT v_consumo THEN
+    UPDATE public.products SET quantity = coalesce(quantity, 0) - p_cantidad_nueva WHERE id = v_prod.id RETURNING quantity INTO v_nuevo;
+    v_nuevo := coalesce(v_nuevo, 0);
+    v_falta := p_cantidad_nueva;
+    FOR v_lote IN SELECT id, coalesce(quantity, 0) AS qty, coalesce(cost_unit, 0) AS cost FROM public.batches
+                   WHERE product_id = v_prod.id AND variant_id IS NULL AND coalesce(quantity, 0) > 0
+                   ORDER BY created_at ASC, id ASC FOR UPDATE LOOP
+      EXIT WHEN v_falta <= 0;
+      v_saca := least(v_falta, v_lote.qty);
+      UPDATE public.batches SET quantity = v_lote.qty - v_saca WHERE id = v_lote.id;
+      INSERT INTO public.inventory_movements (batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
+                                              operation_type, reason, notes, "user", is_synced)
+      VALUES (v_lote.id, v_prod.id, v_prod.name, -v_saca, v_nuevo + v_falta, v_nuevo + v_falta - v_saca,
+              'VENTA', 'CAMBIO_PRODUCTO', 'Ticket #' || p_sale_id::text, v_emp.nombre, 1);
+      IF v_lote.cost > 0 THEN v_costo_total := v_costo_total + v_saca * v_lote.cost; v_con_costo := v_con_costo + v_saca; END IF;
+      v_falta := v_falta - v_saca;
+    END LOOP;
+    IF v_falta > 0 THEN
+      INSERT INTO public.inventory_movements (batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
+                                              operation_type, reason, notes, "user", is_synced)
+      VALUES (NULL, v_prod.id, v_prod.name, -v_falta, v_nuevo + v_falta, v_nuevo,
+              'VENTA', 'CAMBIO_PRODUCTO', 'Ticket #' || p_sale_id::text, v_emp.nombre, 1);
+    END IF;
+  END IF;
+
+  -- 3. Costo de lo entregado: el de sus lotes; si no tienen costo, el del producto
+  RETURN CASE WHEN v_con_costo > 0 THEN round(v_costo_total / v_con_costo, 4) ELSE coalesce(v_prod.cost_price, 0) END;
 END;
 $$;
 

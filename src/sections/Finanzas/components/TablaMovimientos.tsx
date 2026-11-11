@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowDownToLine, ArrowUpFromLine, Trash2, Eye, RotateCcw, Receipt, ArrowLeftRight, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import type { UnifiedItem } from '../types';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
-import { usePermiso, avisar, avisarSinPermiso } from '../../../utils/permisos';
+import { usePermiso, avisarSinPermiso } from '../../../utils/permisos';
 import { InsigniaCpe } from '../../../components/InsigniaCpe';
 import { formatearMonto } from '../../../utils/formato';
 
@@ -211,16 +211,19 @@ export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVer
                             id={`btn-eliminar-venta-${item.id}`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              // Una venta no se borra: primero la devolución; y una anulada solo la borra el administrador
+                              // Una venta no se borra: primero se anula (devolución de todo el ticket: el stock vuelve y el
+                              // dinero sale de la caja; pide confirmar y, sin permiso, la clave del administrador). El botón ↺
+                              // que lo hacía se quitó al unir Cambio / Devolución (04/11) y el ticket simple no tenía cómo.
+                              // Una anulada solo la borra el administrador.
                               if (item.estado !== 'ANULADO') {
-                                avisar('🔁 Primero haz la devolución de esta venta (botón ↺). Una venta no se borra: se anula para que el stock y la caja cuadren.');
+                                onAnularTicket(item.id);
                                 return;
                               }
                               if (!esAdmin) { avisarSinPermiso('borrar ventas (solo el administrador)'); return; }
                               onDelete(item.id, true);
                             }}
                             className="p-1.5 bg-[var(--color-surface)] text-[var(--color-muted)] border border-[var(--color-border)] hover:border-[var(--color-danger)] hover:text-[var(--color-danger)] focus:outline-none focus:ring-2 focus:ring-[var(--color-danger)] transition-colors cursor-pointer rounded-none disabled:opacity-40"
-                            title="Eliminar Venta"
+                            title={item.estado === 'ANULADO' ? 'Eliminar Venta' : 'Anular / Devolver todo el ticket'}
                             disabled={idsAnulando?.has(item.id)}
                           >
                             <Trash2 size={14} />

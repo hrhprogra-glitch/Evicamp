@@ -520,7 +520,22 @@ export const ModalCambioProducto: React.FC<Props> = ({
         metodoFinal = 'EFECTIVO';
       }
 
-      // 1. Registrar en cambios_productos
+      // 1. El stock lo mueve el SERVIDOR (fn_mover_stock_cambio): lo devuelto vuelve a su lote y lo nuevo sale de sus
+      // lotes; devuelve el costo de lo entregado. Antes se sumaba y restaba products.quantity aquí: los lotes no se
+      // movían, la línea quedaba con el costo del producto viejo y un cambio parcial descontaba dos veces.
+      const { data: costoNuevo, error: errStock } = await supabase.rpc('fn_mover_stock_cambio', {
+        p_sale_id: Number(ticketData.id),
+        p_detail_id: Number(itemDevuelto.id),
+        p_cantidad: cantDevolverNum,
+        p_producto_nuevo: Number(productoNuevo.id),
+        p_cantidad_nueva: cantNuevaNum,
+        p_serie_devuelta: serieDevuelta.trim() || null,
+        p_serie_nueva: serieNueva.trim() || null,
+      });
+      if (errStock) throw errStock;
+      const costoLinea = Number(costoNuevo) || 0;
+
+      // 2. Registrar en cambios_productos
       const nuevoCambio: Partial<CambioProducto> = {
         id: Date.now(),
         sale_id: Number(ticketData.id),
@@ -550,59 +565,6 @@ export const ModalCambioProducto: React.FC<Props> = ({
 
       if (errCambio) throw errCambio;
 
-      // 2. Ajuste de stock en inventory_movements y actualización directa en products
-      // + Stock del producto devuelto
-      await supabase.from('inventory_movements').insert([{
-        product_id: itemDevuelto.product_id,
-        product_name: itemDevuelto.product_name,
-        change_amount: cantDevolverNum,
-        operation_type: 'DEVOLUCION',
-        reason: 'CAMBIO_PRODUCTO',
-        notes: `Ingreso por cambio de producto (Ticket #${String(ticketData.id).slice(-6)})${serieDevuelta ? ` · Serie: ${serieDevuelta}` : ''}`,
-        user: 'Caja',
-        is_synced: 1
-      }]);
-
-      if (itemDevuelto.product_id) {
-        const { data: pDev } = await supabase
-          .from('products')
-          .select('quantity')
-          .eq('id', itemDevuelto.product_id)
-          .maybeSingle();
-        if (pDev) {
-          await supabase
-            .from('products')
-            .update({ quantity: Number(pDev.quantity || 0) + cantDevolverNum })
-            .eq('id', itemDevuelto.product_id);
-        }
-      }
-
-      // - Stock del producto nuevo que se entrega
-      await supabase.from('inventory_movements').insert([{
-        product_id: Number(productoNuevo.id),
-        product_name: productoNuevo.name,
-        change_amount: -cantNuevaNum,
-        operation_type: 'VENTA',
-        reason: 'CAMBIO_PRODUCTO',
-        notes: `Salida por cambio de producto (Ticket #${String(ticketData.id).slice(-6)})${serieNueva ? ` · Serie: ${serieNueva}` : ''}`,
-        user: 'Caja',
-        is_synced: 1
-      }]);
-
-      if (productoNuevo.id) {
-        const { data: pNue } = await supabase
-          .from('products')
-          .select('quantity')
-          .eq('id', Number(productoNuevo.id))
-          .maybeSingle();
-        if (pNue) {
-          await supabase
-            .from('products')
-            .update({ quantity: Number(pNue.quantity || 0) - cantNuevaNum })
-            .eq('id', Number(productoNuevo.id));
-        }
-      }
-
       // 3. Actualizar directamente el ticket con el producto nuevo
       if (cantDevolverNum >= itemDevuelto.quantity) {
         // Se reemplaza la línea del producto devuelto por el producto nuevo
@@ -614,6 +576,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
             quantity: cantNuevaNum,
             price_at_moment: productoNuevo.price,
             subtotal: Math.round(productoNuevo.price * cantNuevaNum * 100) / 100,
+            cost_at_moment: costoLinea,
             numero_serie: serieNueva.trim() || null
           })
           .eq('id', itemDevuelto.id);
@@ -637,6 +600,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
             quantity: cantNuevaNum,
             price_at_moment: productoNuevo.price,
             subtotal: Math.round(productoNuevo.price * cantNuevaNum * 100) / 100,
+            cost_at_moment: costoLinea, // el stock ya salió (fn_mover_stock_cambio): el trigger no lo descuenta otra vez
             numero_serie: serieNueva.trim() || null,
             is_synced: 1
           }]);
