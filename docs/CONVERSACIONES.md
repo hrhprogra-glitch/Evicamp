@@ -856,4 +856,11 @@
   - Se compiló y desplegó a Evicamp, SiuMax y Clientes (`node ai-scripts/deploy.cjs todos`).
   - Se verificaron las fotos post-despliegue (1,138 fotos intactas).
   - Se hizo merge `--no-ff` de `fase-11-sunat` a `main` y push a GitHub (`main` y `fase-11-sunat`). Ver bitácora 135.
+- 11/11: *"perfecto ahora haremos un ultimo cambio en la ventana de clientes para ver sus pendientes pagados y compras me e dado cuenta que la ventana que muestra los pendientes y pagados es muy pequeño quiero que acomodes bien que cuando presione enter a uno de ellos osea pendiente pagados o compras salga una ventana flotante para visualizarlo bien"*.
+  - Hecho por Antigravity:
+    - Se creó la ventana flotante `ModalDetalleRegistroCliente.tsx` para ver con amplitud cualquier crédito pendiente, pagado o compra al presionar Enter o hacer clic.
+    - Muestra desglose detallado con tabla de productos (cantidad, nombre, precio unitario y subtotal), estado, saldos, método de pago, cajero e historial de abonos.
+    - Se amplió el espacio vertical de la lista de registros en `ModalDetalleCliente.tsx` (`min-h-[350px] sm:min-h-[440px] flex-1`).
+    - Teclado 100% fluido: `Escape` cierra la ventana flotante y devuelve el foco inmediatamente a la fila seleccionada.
+    - Compilación 0 errores TS/Vite y subido al servidor de pruebas (`siumax`). Ver bitácora 136.
 

@@ -3,7 +3,7 @@
 // Muestra sus datos, un resumen (deuda, créditos, total comprado, última compra, cada cuánto viene), lo que más lleva y
 // su HISTORIAL con 3 pestañas: Pendientes (deudas), Pagados (créditos cancelados) y Compras (ventas al contado en caja).
 // Buscador de producto o monto, filtro por fecha, y Enter despliega los productos y abonos.
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { BookOpen, Edit, UserCircle, X, ReceiptText, FilterX, Search, MapPin, Users, UserMinus } from 'lucide-react';
 import type { Cliente, Fiado, GrupoClientes } from '../types';
 import { supabase } from '../../../db/supabase';
@@ -11,6 +11,7 @@ import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { ventanaSuperior } from '../../../utils/ventanas';
 import { CuerpoVentana, BarraFiltros, TextoBarra, CajaLista, FilaLista, LineaDato, Etiqueta, DatoFila, claseBotonBarra, claseCampoBarra } from '../../../components/ListaVentana';
 import { formatearMonto } from '../../../utils/formato';
+import { ModalDetalleRegistroCliente, type RegistroDetalleCliente } from './ModalDetalleRegistroCliente';
 
 export interface CompraCliente {
   id: string;
@@ -64,6 +65,57 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
   const [abiertos, setAbiertos] = useState<Set<string>>(new Set());
   const [compras, setCompras] = useState<CompraCliente[]>([]);
   const [, setCargandoCompras] = useState(false);
+  const [registroSeleccionado, setRegistroSeleccionado] = useState<RegistroDetalleCliente | null>(null);
+  const ultimoFocoFilaRef = useRef<number | null>(null);
+
+  const abrirDetalleCompra = (c: CompraCliente, idx: number) => {
+    if (!cliente) return;
+    ultimoFocoFilaRef.current = idx;
+    setRegistroSeleccionado({
+      tipo: 'COMPRA',
+      id: c.id,
+      clienteNombre: cliente.nombre,
+      fecha: c.fecha,
+      total: c.total,
+      metodoPago: c.metodoPago,
+      vendedor: c.vendedor,
+      detalles: c.detalles,
+    });
+  };
+
+  const abrirDetalleCredito = (f: Fiado, idx: number) => {
+    if (!cliente) return;
+    ultimoFocoFilaRef.current = idx;
+    const pagado = estaPagado(f);
+    setRegistroSeleccionado({
+      tipo: pagado ? 'PAGADO' : 'PENDIENTE',
+      id: String(f.id),
+      clienteNombre: cliente.nombre,
+      fecha: f.fechaEmision,
+      total: Number(f.montoOriginal) || 0,
+      montoOriginal: Number(f.montoOriginal) || 0,
+      montoPagado: Number(f.montoPagado) || 0,
+      saldoPendiente: Number(f.saldoPendiente) || 0,
+      fechaEmision: f.fechaEmision,
+      fechaUltimoPago: fechaUltimoPago(f),
+      pagos: f.pagos,
+      detalles: (f.detalles || []).map((d) => ({
+        name: d.name,
+        qty: d.qty,
+        price: d.price,
+        subtotal: d.subtotal,
+      })),
+    });
+  };
+
+  const cerrarDetalleRegistro = () => {
+    setRegistroSeleccionado(null);
+    setTimeout(() => {
+      const lista = filas();
+      const idx = ultimoFocoFilaRef.current ?? 0;
+      if (lista[idx]) lista[idx].focus();
+    }, 60);
+  };
 
   // Cargar compras al contado hechas en caja
   useEffect(() => {
@@ -269,6 +321,7 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
 
   // Teclado de toda la ventana
   const teclas = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (registroSeleccionado) return; // Si la ventana flotante de detalle está abierta, ella maneja su propio teclado
     const arriba = ventanaSuperior();
     if (arriba && !arriba.contains(document.getElementById('btn-cerrar-detalle-cliente'))) return;
     const a = document.activeElement as HTMLElement | null;
@@ -308,8 +361,13 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
       e.preventDefault(); lista[0]?.focus();
     } else if ((e.key === 'Enter' || e.key === ' ') && i >= 0) {
       e.preventDefault();
-      const idActual = pestana === 'COMPRAS' ? comprasFiltradas[i]?.id : historial[i]?.id;
-      if (idActual) alternar(idActual);
+      if (pestana === 'COMPRAS') {
+        const c = comprasFiltradas[i];
+        if (c) abrirDetalleCompra(c, i);
+      } else {
+        const f = historial[i];
+        if (f) abrirDetalleCredito(f, i);
+      }
     }
   };
 
@@ -427,8 +485,8 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
             </div>
           </BarraFiltros>
 
-          {/* LISTA DE REGISTROS (Enter despliega productos y abonos) */}
-          <CajaLista className="min-h-[300px] sm:min-h-[380px] flex-1"
+          {/* LISTA DE REGISTROS (Enter o Clic abre la ventana flotante de detalle completo) */}
+          <CajaLista className="min-h-[350px] sm:min-h-[440px] flex-1"
             vacia={pestana === 'COMPRAS' ? !comprasFiltradas.length : !historial.length}
             mensaje={
               hayFiltros
@@ -441,8 +499,7 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
             }
           >
             {pestana === 'COMPRAS' ? (
-              comprasFiltradas.map((c) => {
-                const abierto = abiertos.has(c.id);
+              comprasFiltradas.map((c, idx) => {
                 const productos = c.detalles.map((d) => d.name).slice(0, 3).join(', ') + (c.detalles.length > 3 ? '…' : '');
                 return (
                   <div key={c.id} className="border-b-2 border-[var(--color-border)] last:border-b-0">
@@ -450,84 +507,70 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
                       tabIndex={0}
                       data-compra-cliente="true"
                       data-row="true"
-                      aria-expanded={abierto}
-                      onClick={() => alternar(c.id)}
+                      onClick={() => abrirDetalleCompra(c, idx)}
                       icono={<ReceiptText size={28} />}
                       titulo={`Ticket #${c.id.slice(-6)} · ${fecha(c.fecha)} ${new Date(c.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                       subtitulo={
                         <>
                           <LineaDato titulo={productos}>{productos || 'Sin detalle de productos'}</LineaDato>
-                          <LineaDato>Total {soles(c.total)} · Pago: {c.metodoPago} · {abierto ? 'Enter: ocultar' : 'Enter: ver productos'}</LineaDato>
+                          <LineaDato>Total {soles(c.total)} · Pago: {c.metodoPago} · <span className="font-bold text-[var(--color-info)]">Enter o Clic: ver detalle en ventana</span></LineaDato>
                         </>
                       }
                       centro={<Etiqueta tono="azul">{c.metodoPago}</Etiqueta>}
                       derecha={<DatoFila etiqueta="Total" valor={soles(c.total)} tono="normal" />}
                     />
-                    {abierto && (
-                      <div data-compra-abierta="true" className="px-4 sm:px-16 pb-4 pt-1 flex flex-col gap-2 bg-[var(--color-bg)] text-sm">
-                        <p className="text-[11px] font-black uppercase tracking-widest text-[var(--color-muted)] mb-0.5">Productos comprados</p>
-                        {c.detalles.length ? (
-                          c.detalles.map((d, k) => (
-                            <div key={k} className="flex justify-between font-bold text-[var(--color-ink)]">
-                              <span>{d.qty} x {d.name} {d.price ? `(c/u ${soles(d.price)})` : ''}</span>
-                              <span>{soles(d.subtotal)}</span>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-[var(--color-muted)] font-bold">Sin detalle de productos.</p>
-                        )}
-                        {c.vendedor && (
-                          <p className="text-[11px] font-bold text-[var(--color-muted)] mt-1 border-t border-[var(--color-border)] pt-1">
-                            Atendido por: <span className="text-[var(--color-ink)] font-black uppercase">{c.vendedor}</span>
-                          </p>
-                        )}
-                      </div>
-                    )}
                   </div>
                 );
               })
             ) : (
-              historial.map((f) => {
+              historial.map((f, idx) => {
                 const pagado = estaPagado(f);
-                const abierto = abiertos.has(f.id);
                 const productos = (f.detalles || []).map((d) => d.name).slice(0, 3).join(', ') + ((f.detalles || []).length > 3 ? '…' : '');
                 return (
                   <div key={f.id} className="border-b-2 border-[var(--color-border)] last:border-b-0">
-                    <FilaLista tabIndex={0} data-credito-cliente="true" data-row="true" aria-expanded={abierto}
-                      onClick={() => alternar(f.id)}
+                    <FilaLista
+                      tabIndex={0}
+                      data-credito-cliente="true"
+                      data-row="true"
+                      onClick={() => abrirDetalleCredito(f, idx)}
                       icono={<ReceiptText size={28} />}
                       titulo={pagado ? `Pagado el ${fecha(fechaUltimoPago(f))} · Crédito del ${fecha(f.fechaEmision)}` : `Crédito del ${fecha(f.fechaEmision)}`}
-                      subtitulo={<><LineaDato titulo={productos}>{productos || 'Sin detalle de productos'}</LineaDato><LineaDato>{pagado ? `Cancelado el ${fecha(fechaUltimoPago(f))} · Total ${soles(Number(f.montoOriginal) || 0)} · ${abierto ? 'Enter: ocultar' : 'Enter: ver productos y abonos'}` : `Monto ${soles(Number(f.montoOriginal) || 0)} · abonado ${soles(Number(f.montoPagado) || 0)} · ${abierto ? 'Enter: ocultar' : 'Enter: ver productos y abonos'}`}</LineaDato></>}
+                      subtitulo={
+                        <>
+                          <LineaDato titulo={productos}>{productos || 'Sin detalle de productos'}</LineaDato>
+                          <LineaDato>
+                            {pagado
+                              ? `Cancelado el ${fecha(fechaUltimoPago(f))} · Total ${soles(Number(f.montoOriginal) || 0)}`
+                              : `Monto ${soles(Number(f.montoOriginal) || 0)} · abonado ${soles(Number(f.montoPagado) || 0)}`}
+                            {' · '}
+                            <span className="font-bold text-[var(--color-info)]">Enter o Clic: ver detalle en ventana</span>
+                          </LineaDato>
+                        </>
+                      }
                       centro={<Etiqueta tono={pagado ? 'verde' : 'rojo'}>{pagado ? 'Pagado' : 'Debe'}</Etiqueta>}
-                      derecha={<DatoFila etiqueta={pagado ? 'Total' : 'Debe'} valor={soles(Number(pagado ? f.montoOriginal : f.saldoPendiente) || 0)} tono={pagado ? 'normal' : 'rojo'} />}
+                      derecha={
+                        <DatoFila
+                          etiqueta={pagado ? 'Total' : 'Debe'}
+                          valor={soles(Number(pagado ? f.montoOriginal : f.saldoPendiente) || 0)}
+                          tono={pagado ? 'normal' : 'rojo'}
+                        />
+                      }
                     />
-                    {abierto && (
-                      <div data-credito-abierto="true" className="px-4 sm:px-16 pb-4 pt-1 flex flex-col gap-3 bg-[var(--color-bg)] text-sm">
-                        <div>
-                          <p className="text-[11px] font-black uppercase tracking-widest text-[var(--color-muted)] mb-1">Productos sacados</p>
-                          {(f.detalles || []).length ? (f.detalles || []).map((d, k) => (
-                            <div key={k} className="flex justify-between font-bold text-[var(--color-ink)]">
-                              <span>{d.qty} x {d.name}</span><span>{soles(Number(d.subtotal) || 0)}</span>
-                            </div>
-                          )) : <p className="text-[var(--color-muted)] font-bold">Sin detalle de productos.</p>}
-                        </div>
-                        <div className="border-t border-[var(--color-border)] pt-2">
-                          <p className="text-[11px] font-black uppercase tracking-widest text-[var(--color-success)] mb-1">Abonos a esta deuda</p>
-                          {(f.pagos || []).length ? (f.pagos || []).map((p, k) => (
-                            <div key={k} className="flex justify-between items-center font-bold text-[var(--color-muted)]">
-                              <span>{new Date(p.fecha).toLocaleString('es-PE')} · <span className="uppercase">{p.metodo}</span></span>
-                              <span className="text-[var(--color-success)] font-black">+ {soles(Number(p.monto) || 0)}</span>
-                            </div>
-                          )) : <p className="text-[var(--color-muted)] font-bold">No se registraron abonos para esta deuda.</p>}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 );
               })
             )}
           </CajaLista>
         </CuerpoVentana>
+
+        {/* VENTANA FLOTANTE DE DETALLE COMPLETO (Enter o Clic en fila) */}
+        {registroSeleccionado && (
+          <ModalDetalleRegistroCliente
+            isOpen={!!registroSeleccionado}
+            onClose={cerrarDetalleRegistro}
+            registro={registroSeleccionado}
+          />
+        )}
       </div>
     </div>
   );

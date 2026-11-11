@@ -7,6 +7,30 @@
 
 ---
 
+## 11/11/2026 (136) · Antigravity — Ventana flotante de detalle para Pendientes, Pagados y Compras en Clientes
+- **Dueño:** *"perfecto ahora haremos un ultimo cambio en la ventana de clientes para ver sus pendientes pagados y compras me e dado cuenta que la ventana que muestra los pendientes y pagados es muy pequeño quiero que acomodes bien que cuando presione enter a uno de ellos osea pendiente pagados o compras salga una ventana flotante para visualizarlo bien"*.
+- **Problema previo:**
+  - En la ventana de detalle del cliente (`ModalDetalleCliente.tsx`), presionar Enter o hacer clic sobre un crédito o compra desplegaba un pequeño acordeón incrustado dentro de la misma fila, comprimiendo la lista y haciendo incómodo ver productos sacados, montos y abonos.
+  - El contenedor de la lista tenía altura limitada.
+- **Solución implementada:**
+  1. **Nuevo componente ventana flotante:** `src/sections/Clientes/components/ModalDetalleRegistroCliente.tsx`.
+     - Ventana modal limpia con estilo SiuMax Sobrio (sin esquinas redondeadas, borde de 2px, tipografía monoespaciada).
+     - Visualiza con total claridad cualquier registro seleccionado:
+       - **PENDIENTE:** cabecera con alerta de deuda roja, saldo adeudado, fecha de emisión y resumen de abonos.
+       - **PAGADO:** cabecera verde con fecha de cancelación, crédito del día, e historial detallado de abonos.
+       - **COMPRA:** cabecera azul con número de ticket, fecha/hora, método de pago y cajero/vendedor.
+     - **Tabla completa de productos:** Cantidad formateada, Nombre del producto, Precio Unitario y Subtotal exacto, más fila de Monto Total.
+     - **Historial de Abonos:** tabla con fecha/hora de cada abono, método de pago (Efectivo/Yape/etc.) y monto abonado.
+     - **Manejo de teclado:** `Escape` o `Enter` en botón cerrar cierran la ventana y devuelven el foco exacto a la fila donde estaba el usuario.
+  2. **Actualización de `ModalDetalleCliente.tsx`:**
+     - Se reemplazó el acordeón incrustado en cada fila por la apertura de la ventana flotante (`abrirDetalleCompra` y `abrirDetalleCredito`).
+     - Cada fila indica con claridad: `Enter o Clic: ver detalle en ventana`.
+     - Se aumentó la altura mínima de la lista a `min-h-[350px] sm:min-h-[440px] flex-1` para que aproveche todo el alto disponible en pantalla.
+- **Pruebas y Despliegue:**
+  - Compilación `npm run build` limpia (0 errores TS/Vite).
+  - Desplegado al servidor de pruebas `comerc.siumax.duckdns.org` con `node ai-scripts/deploy.cjs siumax` (21 archivos subidos con éxito).
+  - Pendiente del aviso del dueño para desplegar a Evicamp y hacer push a GitHub.
+
 ## 11/11/2026 (135) · Antigravity — Despliegue a Producción (Evicamp + Clientes) y Push a GitHub (main y fase-11-sunat)
 - **Dueño:** *"perfecto subelo a evicamp porque ahi tiene muchos productos comot tambien a mi github siumax para mis clientes"*.
 - **Protocolo de Producción ejecutado:**
