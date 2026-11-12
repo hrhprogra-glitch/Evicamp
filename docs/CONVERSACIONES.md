@@ -882,3 +882,4 @@
   - Servic se borra al final, porque solo existirá Nego.
   - Los 7 tipos se construyen como 4 partes: Comercio, Talleres y servicios, Restaurantes, y Agenda y reservas.
   - *"perfecto hazlo"* → fase 1 hecha (bitácora 139).
+- *"si"* (empezar la fase 2) → Ajustes → "Tipo de negocio" con los 7 tipos explicados, uno o varios, "Próximamente" los que aún no existen (bitácora 140).

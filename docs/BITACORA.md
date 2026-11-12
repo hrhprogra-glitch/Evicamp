@@ -7,6 +7,27 @@
 
 ---
 
+## 12/11/2026 (140) · Claude — SiuMax Nego, fase 2: Ajustes → "Tipo de negocio"
+- **Dueño:** "si" a la fase 2.
+- **Nueva pestaña de Ajustes** "Tipo de negocio" (`Configuraciones/components/PestanaTipoNegocio.tsx`), entre Datos de la empresa y Tiendas. Permiso `gerencia_configuracion_sistema`.
+  - Muestra los 7 tipos con su número, qué hace y los negocios que **incluye**, tomados de `siumax/TIPOS-DE-NEGOCIO.md`.
+  - Se puede marcar **uno o varios** (negocios mixtos), pero siempre al menos uno.
+  - **Disponible:** solo Comercio. Los demás salen como **"Próximamente"**: al presionar Enter avisan y no se marcan.
+  - Talleres y servicios lleva la nota "Se está trayendo desde SiuMax Servic" (fase 3).
+  - Guardar muestra el aviso con los tipos elegidos.
+- **Datos:** `src/utils/tiposNegocio.ts` tiene `TIPOS_NEGOCIO` (los 7, con su parte y si está disponible) y `leerTiposNegocio()` (sin nada guardado = comercio). Lo usarán las fases siguientes para prender o apagar secciones.
+- **Base:** columna nueva `empresa_config.tipos_negocio text[] NOT NULL DEFAULT ARRAY['comercio']`, al final de `servidor/sql/seguridad-sesion.sql` (repetible).
+  - **Aplicada SOLO en la base siumax** (pruebas), con `lock_timeout`.
+  - Para Evicamp y los clientes hay que aplicarla antes de subir el código (respaldo primero), con el aviso del dueño.
+- **Teclado:**
+  - ↓ desde la pestaña baja a Comercio. ↑ ↓ recorren los tipos; ↑ desde el primero sube a la pestaña; ↓ desde el último va a Guardar.
+  - Enter o Espacio marca o desmarca, y el selector se queda.
+  - Después del aviso de Guardar, el selector se queda en Guardar.
+- **Arreglo en el camino:** el botón Guardar tenía `disabled` mientras guardaba, y el selector se perdía y aparecía en "Datos de la empresa". Ahora usa `aria-disabled` + guarda una sola vez (memoria 58).
+- **Probado:** `ai-scripts/pruebas/prueba-tipo-negocio.mjs`, 15 de 15 OK, 0 errores (incluye recargar y que siga guardado).
+- **Todavía no hace:** prender o apagar secciones según el tipo. Hoy solo existe Comercio; se hará cuando lleguen las partes de Servic (fase 3).
+- **Siguiente (espera OK):** fase 3, traer a Nego las partes de Servic.
+
 ## 12/11/2026 (139) · Claude — SiuMax Nego, fase 1: el nombre "SiuMax Comerc" pasa a "SiuMax Nego"
 - **Plan nuevo del dueño (12/11/2026):** Comerc se convierte en **SiuMax Nego**, un solo sistema para los 7 tipos de negocio.
   - Plan completo: final de `siumax/TIPOS-DE-NEGOCIO.md`.

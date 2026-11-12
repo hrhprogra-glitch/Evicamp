@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Building2, Users, Palette, MessageSquare, Store as StoreIcon, ShoppingBag, FileText } from 'lucide-react';
+import { Settings, Building2, Users, Palette, MessageSquare, Store as StoreIcon, ShoppingBag, FileText, Briefcase } from 'lucide-react';
 import { FormularioEmpresa } from './components/FormularioEmpresa';
 import { TablaUsuarios } from './components/TablaUsuarios';
 import { ThemeSwitcher } from './components/ThemeSwitcher';
@@ -7,9 +7,10 @@ import { SugerenciasSiumax } from './components/SugerenciasSiumax';
 import { PestanaTiendas } from './components/PestanaTiendas';
 import { PestanaTiendaWeb } from './components/PestanaTiendaWeb';
 import { PestanaFacturacion } from './components/PestanaFacturacion';
+import { PestanaTipoNegocio } from './components/PestanaTipoNegocio';
 import { usePermiso } from '../../utils/permisos';
 
-type Pestana = 'empresa' | 'tiendas' | 'tienda_web' | 'facturacion' | 'usuarios' | 'apariencia' | 'sugerencias';
+type Pestana = 'empresa' | 'tipo_negocio' | 'tiendas' | 'tienda_web' | 'facturacion' | 'usuarios' | 'apariencia' | 'sugerencias';
 
 const Configuraciones: React.FC = () => {
   // Cada pestaña tiene su permiso; se abre en la primera permitida
@@ -19,6 +20,8 @@ const Configuraciones: React.FC = () => {
 
   const pestanas = [
     ...(puedeEmpresa ? [{ id: 'empresa' as Pestana, nombre: 'Datos de la Empresa', Icono: Building2 }] : []),
+    // SiuMax Nego: qué tipo (o tipos) de negocio es (12/11/2026)
+    ...(puedeEmpresa ? [{ id: 'tipo_negocio' as Pestana, nombre: 'Tipo de negocio', Icono: Briefcase }] : []),
     ...(puedeEmpresa ? [{ id: 'tiendas' as Pestana, nombre: 'Tiendas y Almacenes', Icono: StoreIcon }] : []),
     ...(puedeEmpresa ? [{ id: 'tienda_web' as Pestana, nombre: 'Tienda Web', Icono: ShoppingBag }] : []),
     // Boletas y facturas electrónicas SUNAT (fase 11)
@@ -42,6 +45,8 @@ const Configuraciones: React.FC = () => {
       const input = document.getElementById('input-empresa-nombre') as HTMLInputElement | null;
       input?.focus();
       input?.select();
+    } else if (activeTab === 'tipo_negocio') {
+      document.getElementById('tipo-negocio-comercio')?.focus();
     } else if (activeTab === 'tiendas') {
       document.getElementById('btn-nueva-tienda')?.focus();
     } else if (activeTab === 'tienda_web') {
@@ -173,7 +178,7 @@ const Configuraciones: React.FC = () => {
                     : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'
                 }`}
               >
-                {/* En laptops sin ícono, para que las 7 pestañas entren en una sola fila (no se saltan con las flechas) */}
+                {/* En laptops sin ícono, para que las 8 pestañas entren en una sola fila (no se saltan con las flechas) */}
                 <Icono size={14} className="sm:hidden 2xl:inline" />
                 <span className="hidden sm:inline">{nombre}</span>
               </button>
@@ -185,6 +190,7 @@ const Configuraciones: React.FC = () => {
       {/* CONTENIDO PRINCIPAL */}
       <div className="flex-1 overflow-auto p-2 sm:p-4">
         {activeTab === 'empresa' && puedeEmpresa && <FormularioEmpresa />}
+        {activeTab === 'tipo_negocio' && puedeEmpresa && <PestanaTipoNegocio />}
         {activeTab === 'tiendas' && puedeEmpresa && <PestanaTiendas />}
         {activeTab === 'tienda_web' && puedeEmpresa && <PestanaTiendaWeb />}
         {activeTab === 'facturacion' && puedeEmpresa && <PestanaFacturacion onIrEmpresa={() => switchTab('empresa')} />}

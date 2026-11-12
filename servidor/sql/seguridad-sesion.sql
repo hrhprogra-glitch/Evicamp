@@ -3606,6 +3606,13 @@ END;
 $$;
 REVOKE EXECUTE ON FUNCTION public.fn_confirmar_anulacion(bigint, text, text) FROM PUBLIC;
 
+
+-- =====================================================================================================
+-- SiuMax Nego, fase 2 (12/11/2026): tipo o tipos de negocio (Ajustes → Tipo de negocio). Valores:
+-- comercio, restaurantes, servicios, citas, membresias, alquileres, hospedaje. Sin nada guardado = comercio.
+-- Lo cambia quien tiene 'gerencia_configuracion_sistema' (mismo permiso que PATCH /empresa_config).
+ALTER TABLE public.empresa_config ADD COLUMN IF NOT EXISTS tipos_negocio text[] NOT NULL DEFAULT ARRAY['comercio']::text[];
+
 NOTIFY pgrst, 'reload schema';
 
 
