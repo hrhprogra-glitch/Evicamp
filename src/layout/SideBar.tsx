@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   ShoppingCart, Users, Package, 
   Truck, ClipboardCheck, Wallet, 
-  Settings, BarChart3, X, LogOut, Download, Monitor, CreditCard
+  Settings, BarChart3, X, LogOut, Download, Monitor, CreditCard,
+  CalendarDays, PackageMinus, Repeat, Wrench, FileText
 } from 'lucide-react';
 import { usePuedeInstalar, instalarApp, useHayInstaladorPC, descargarInstaladorPC } from '../utils/instalarApp';
 import { useSuscripcion, fechaPe, abrirPago } from './AvisoSuscripcion';
@@ -10,7 +11,8 @@ import { useSuscripcion, fechaPe, abrirPago } from './AvisoSuscripcion';
 // IMPORTAMOS EL LOGO Y SUPABASE
 import logoEvicamp from '../assets/logo.png';
 import { supabase } from '../db/supabase';
-import { puedeVerModulo, tienePermiso, useEmpleado } from '../utils/permisos';
+import { puedeVerSeccion, tienePermiso, useEmpleado } from '../utils/permisos';
+import { seccionDelNegocio, useTiposNegocio, type IdTipoNegocio } from '../utils/tiposNegocio';
 import { cerrarSesion } from '../utils/sesion';
 import { programarRestauracionFoco } from '../utils/navegacionSesion';
 
@@ -23,8 +25,51 @@ interface SideBarProps {
   permisos?: any; // <--- AÑADIMOS LOS PERMISOS
 }
 
-// Orden de los atajos Alt + 1…7 para entrar directo a cada sesión
-export const ATAJOS_SESIONES = ['pos', 'clientes', 'inventario', 'conteos', 'finanzas', 'utilidades', 'configuracion'];
+// Secciones del menú, en orden. El grupo "Servicios" (SiuMax Nego, paso 3b) solo sale si el negocio eligió
+// "Talleres y servicios" en Ajustes → Tipo de negocio; Caja y Finanzas solo si eligió Comercio.
+export const MENU_SECCIONES = [
+  {
+    category: 'Operaciones',
+    items: [
+      { id: 'pos', name: 'Caja', icon: ShoppingCart },
+      { id: 'clientes', name: 'Clientes', icon: Users },
+    ]
+  },
+  {
+    category: 'Servicios',
+    items: [
+      { id: 'agenda', name: 'Agenda', icon: CalendarDays },
+      { id: 'salidas', name: 'Salidas', icon: PackageMinus },
+      { id: 'contratos', name: 'Contratos', icon: Repeat },
+      { id: 'taller', name: 'Taller', icon: Wrench },
+      { id: 'cotizaciones', name: 'Cotizaciones', icon: FileText },
+    ]
+  },
+  {
+    category: 'Almacén',
+    items: [
+      { id: 'inventario', name: 'Inventario', icon: Package },
+      { id: 'conteos', name: 'Conteos', icon: ClipboardCheck },
+    ]
+  },
+  {
+    category: 'Gestión',
+    items: [
+      { id: 'finanzas', name: 'Finanzas', icon: Wallet },
+      { id: 'utilidades', name: 'Utilidades', icon: BarChart3 },
+      { id: 'configuracion', name: 'Ajustes', icon: Settings },
+    ]
+  }
+];
+
+// Atajos Alt + 1…9 y Alt + 0 (la décima): las secciones del tipo de negocio, en el orden del menú. Solo Comercio:
+// Caja 1, Clientes 2, Inventario 3, Conteos 4, Finanzas 5, Utilidades 6, Ajustes 7 (igual que antes de Nego).
+export const atajosSesiones = (tipos?: IdTipoNegocio[]) =>
+  MENU_SECCIONES.flatMap((g) => g.items.map((i) => i.id)).filter((id) => seccionDelNegocio(id, tipos)).slice(0, 10);
+export const teclaAtajo = (id: string, tipos?: IdTipoNegocio[]) => {
+  const i = atajosSesiones(tipos).indexOf(id);
+  return i < 0 ? '' : String((i + 1) % 10);
+};
 
 // Tiempo sin usar el menú abierto antes de que se contraiga solo
 const AUTO_OCULTAR_MS = 8000;
@@ -242,33 +287,11 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
   }, []);
 
   // Qué módulos puede ver: la regla vive en utils/permisos (la misma que usa App para bloquear el acceso)
-  const tieneAcceso = (modulo: string) => puedeVerModulo(permisos, modulo);
+  const tipos = useTiposNegocio(); // al cambiar el tipo en Ajustes, el menú cambia al instante
+  const tieneAcceso = (modulo: string) => seccionDelNegocio(modulo, tipos) && puedeVerSeccion(permisos, modulo);
 
   // Modulos divididos por Categorías Lógicas con sus Iconos asignados
-  const menuGroupsRaw = [
-    {
-      category: 'Operaciones',
-      items: [
-        { id: 'pos', name: 'Caja', icon: ShoppingCart },
-        { id: 'clientes', name: 'Clientes', icon: Users },
-      ]
-    },
-    {
-      category: 'Almacén',
-      items: [
-        { id: 'inventario', name: 'Inventario', icon: Package },
-        { id: 'conteos', name: 'Conteos', icon: ClipboardCheck },
-      ]
-    },
-    {
-      category: 'Gestión',
-      items: [
-        { id: 'finanzas', name: 'Finanzas', icon: Wallet },
-        { id: 'utilidades', name: 'Utilidades', icon: BarChart3 },
-        { id: 'configuracion', name: 'Ajustes', icon: Settings },
-      ]
-    }
-  ];
+  const menuGroupsRaw = MENU_SECCIONES;
 
   // Filtramos los items según los permisos. Si una categoría entera (ej. Administración) se queda sin items, se oculta.
   const menuGroups = menuGroupsRaw
@@ -386,7 +409,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
                         onNavigate(item.id);
                         onClose();
                       }}
-                    title={`${item.name} (Alt + ${ATAJOS_SESIONES.indexOf(item.id) + 1})`}
+                    title={teclaAtajo(item.id, tipos) ? `${item.name} (Alt + ${teclaAtajo(item.id, tipos)})` : item.name}
                     className={`w-full text-left py-3 short:py-2 text-xs font-black uppercase tracking-wider transition-all border rounded-none flex items-center cursor-pointer ${
                       isOpen ? 'pl-3 pr-2 gap-3 justify-between' : 'justify-center px-0'
                     } ${

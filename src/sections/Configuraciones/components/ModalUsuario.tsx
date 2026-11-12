@@ -6,6 +6,7 @@ import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { useEmpleado } from '../../../utils/permisos';
 import { normalizarEmail, leerToken } from '../../../utils/sesion';
+import { useTiposNegocio } from '../../../utils/tiposNegocio';
 
 interface ModalUsuarioProps {
   usuario: Empleado | null;
@@ -18,6 +19,14 @@ const PERMISOS_DEFAULT: PermisosUsuario = {
   reportes_ver_historial_ventas: false, reportes_anular_ventas: false, reportes_ver_globales: false,
   gerencia_ver_utilidades: false, gerencia_gestionar_usuarios: false, gerencia_configuracion_sistema: false,
   sistema_acceso_total: false,
+  // Talleres y servicios (SiuMax Nego, paso 3b)
+  clientes_ver: false, clientes_editar: false, trabajadores_ver: false, trabajadores_editar: false,
+  salidas_ver: false, salidas_crear: false, salidas_editar: false,
+  herramientas_ver: false, herramientas_crear: false, herramientas_editar: false,
+  agenda_ver: false, agenda_crear: false, agenda_editar: false,
+  contratos_ver: false, contratos_crear: false, contratos_editar: false,
+  cobros_ver: false, cobros_crear: false, cobros_editar: false,
+  taller_ver: false, taller_crear: false, taller_editar: false,
 };
 
 // Al elegir el rol se marcan solos sus permisos (después se pueden ajustar a mano)
@@ -49,8 +58,32 @@ const ROLES: { nombre: string; descripcion: string; permisos: (keyof PermisosUsu
   },
 ];
 
+// Roles de "Talleres y servicios" (los de SiuMax Servic). Sin Caja ni Finanzas: un negocio solo de servicios no las ve.
+const ROLES_SERVICIOS: typeof ROLES = [
+  {
+    nombre: 'Encargado de servicios',
+    descripcion: 'Maneja el día a día de los servicios: agenda, salidas, contratos, taller, cotizaciones, clientes, trabajadores, almacén, herramientas y vehículos. No maneja usuarios ni la configuración.',
+    permisos: [
+      'agenda_ver', 'agenda_crear', 'agenda_editar',
+      'contratos_ver', 'contratos_crear', 'contratos_editar',
+      'cobros_ver', 'cobros_crear', 'cobros_editar',
+      'clientes_ver', 'clientes_editar', 'trabajadores_ver', 'trabajadores_editar',
+      'almacen_ver_stock', 'almacen_crear_editar_productos', 'almacen_ingresar_lotes',
+      'almacen_gestionar_proveedores', 'compras_recibir', 'compras_enviar', 'inventario_contar',
+      'salidas_ver', 'salidas_crear', 'salidas_editar',
+      'herramientas_ver', 'herramientas_crear', 'herramientas_editar',
+      'taller_ver', 'taller_crear', 'taller_editar',
+    ],
+  },
+  {
+    nombre: 'Técnico',
+    descripcion: 'Trabajador de campo o del taller: ve su agenda, contratos, cotizaciones, clientes y stock; registra salidas, consulta herramientas y atiende reparaciones en el taller.',
+    permisos: ['agenda_ver', 'contratos_ver', 'cobros_ver', 'clientes_ver', 'almacen_ver_stock', 'salidas_ver', 'salidas_crear', 'herramientas_ver', 'taller_ver', 'taller_editar'],
+  },
+];
+
 const permisosDeRol = (nombre: string): PermisosUsuario => {
-  const rol = ROLES.find((r) => r.nombre === nombre);
+  const rol = [...ROLES, ...ROLES_SERVICIOS].find((r) => r.nombre === nombre);
   if (!rol) return { ...PERMISOS_DEFAULT };
   if (rol.permisos.includes('sistema_acceso_total')) {
     return Object.fromEntries(Object.keys(PERMISOS_DEFAULT).map((k) => [k, true])) as unknown as PermisosUsuario;
@@ -106,10 +139,75 @@ const COLUMNAS_PERMISOS: {
   },
 ];
 
+// Columnas de "Talleres y servicios" (las de SiuMax Servic): solo si el negocio eligió ese tipo
+const COLUMNAS_SERVICIOS: typeof COLUMNAS_PERMISOS = [
+  {
+    titulo: 'Agenda',
+    items: [
+      { key: 'agenda_ver', label: 'Ver Trabajos y Calendario' },
+      { key: 'agenda_crear', label: 'Crear / Programar Trabajos' },
+      { key: 'agenda_editar', label: 'Editar, Cambiar Estado y Reasignar' },
+    ],
+  },
+  {
+    titulo: 'Salidas',
+    items: [
+      { key: 'salidas_ver', label: 'Ver Salidas y Comprobantes' },
+      { key: 'salidas_crear', label: 'Crear Salidas a Obras/Servicios' },
+      { key: 'salidas_editar', label: 'Devolver Materiales y Finalizar/Reactivar' },
+    ],
+  },
+  {
+    titulo: 'Contratos y Períodos',
+    items: [
+      { key: 'contratos_ver', label: 'Ver Contratos, Visitas y Cobros' },
+      { key: 'contratos_crear', label: 'Crear Contratos y Generar Visitas' },
+      { key: 'contratos_editar', label: 'Editar Contratos, Registrar Consumos y Pagos' },
+    ],
+  },
+  {
+    titulo: 'Taller',
+    items: [
+      { key: 'taller_ver', label: 'Ver Órdenes de Taller y Reparaciones' },
+      { key: 'taller_crear', label: 'Crear Órdenes de Reparación y Tickets' },
+      { key: 'taller_editar', label: 'Diagnosticar, Cambiar Estados y Registrar Pagos' },
+    ],
+  },
+  {
+    titulo: 'Cotizaciones de Servicios',
+    items: [
+      { key: 'cobros_ver', label: 'Ver Cotizaciones' },
+      { key: 'cobros_crear', label: 'Crear Cotizaciones y Convertir a Trabajo' },
+      { key: 'cobros_editar', label: 'Editar Cotizaciones y Registrar Pagos/Adelantos' },
+    ],
+  },
+  {
+    titulo: 'Clientes y Trabajadores',
+    items: [
+      { key: 'clientes_ver', label: 'Ver Clientes y lo que se atiende' },
+      { key: 'clientes_editar', label: 'Crear/Editar Clientes y lo que se atiende' },
+      { key: 'trabajadores_ver', label: 'Ver Trabajadores' },
+      { key: 'trabajadores_editar', label: 'Crear/Editar/Desactivar Trabajadores' },
+    ],
+  },
+  {
+    titulo: 'Herramientas y Vehículos',
+    items: [
+      { key: 'herramientas_ver', label: 'Ver Herramientas, Préstamos y Vehículos' },
+      { key: 'herramientas_crear', label: 'Crear Activos, Prestar y Mantenimientos' },
+      { key: 'herramientas_editar', label: 'Editar/Eliminar Activos y Registrar Devoluciones' },
+    ],
+  },
+];
+
 export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) => {
   useCerrarConEscape(true, () => onClose()); // Escape (o "Atrás" del control de TV) cierra la ventana
   const isEditing = !!usuario;
   const yo = useEmpleado();
+  // Con "Talleres y servicios" (Ajustes → Tipo de negocio) salen también sus roles y permisos
+  const conServicios = useTiposNegocio().includes('servicios');
+  const roles = conServicios ? [...ROLES, ...ROLES_SERVICIOS] : ROLES;
+  const columnas = conServicios ? [...COLUMNAS_PERMISOS, ...COLUMNAS_SERVICIOS] : COLUMNAS_PERMISOS;
   const [guardando, setGuardando] = useState(false);
   const nombreInputRef = useRef<HTMLInputElement>(null);
 
@@ -435,12 +533,12 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
                     }}
                     className="w-full border border-[var(--color-border)] p-2 text-sm focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] focus:bg-amber-50/40 outline-none bg-white font-bold cursor-pointer"
                   >
-                    {ROLES.map((r) => <option key={r.nombre} value={r.nombre}>{r.nombre}</option>)}
+                    {roles.map((r) => <option key={r.nombre} value={r.nombre}>{r.nombre}</option>)}
                     {/* Un rol antiguo que no está en la lista se conserva tal cual */}
-                    {!ROLES.some((r) => r.nombre === formData.rol) && <option value={formData.rol}>{formData.rol}</option>}
+                    {!roles.some((r) => r.nombre === formData.rol) && <option value={formData.rol}>{formData.rol}</option>}
                   </select>
                   <p className="text-[11px] text-[var(--color-muted)] mt-1 leading-snug">
-                    {ROLES.find((r) => r.nombre === formData.rol)?.descripcion || 'Rol personalizado.'} Sus permisos se marcan solos; puedes ajustarlos abajo.
+                    {roles.find((r) => r.nombre === formData.rol)?.descripcion || 'Rol personalizado.'} Sus permisos se marcan solos; puedes ajustarlos abajo.
                   </p>
                 </div>
                 <div>
@@ -508,7 +606,7 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
             </div>
             
             <div className={`columns-[12.5rem] gap-3 xl:columns-auto xl:grid xl:grid-cols-4 xl:items-start transition-opacity ${permisos.sistema_acceso_total ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-              {COLUMNAS_PERMISOS.map((col, colIdx) => (
+              {columnas.map((col, colIdx) => (
                 <div key={col.titulo} className="bg-[var(--color-bg)] p-3 border border-[var(--color-border)] flex flex-col break-inside-avoid mb-3">
                   <h4 className="text-[12px] font-black text-[var(--color-accent)] uppercase tracking-widest mb-3 shrink-0">
                     {col.titulo}
@@ -550,8 +648,8 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
                             } else if (e.key === 'ArrowRight') {
                               e.preventDefault();
                               e.stopPropagation();
-                              if (colIdx < COLUMNAS_PERMISOS.length - 1) {
-                                const nextCol = COLUMNAS_PERMISOS[colIdx + 1];
+                              if (colIdx < columnas.length - 1) {
+                                const nextCol = columnas[colIdx + 1];
                                 const nextIdx = Math.min(itemIdx, nextCol.items.length - 1);
                                 document.getElementById(`permiso-${nextCol.items[nextIdx].key}`)?.focus();
                               } else {
@@ -561,7 +659,7 @@ export const ModalUsuario: React.FC<ModalUsuarioProps> = ({ usuario, onClose }) 
                               e.preventDefault();
                               e.stopPropagation();
                               if (colIdx > 0) {
-                                const prevCol = COLUMNAS_PERMISOS[colIdx - 1];
+                                const prevCol = columnas[colIdx - 1];
                                 const prevIdx = Math.min(itemIdx, prevCol.items.length - 1);
                                 document.getElementById(`permiso-${prevCol.items[prevIdx].key}`)?.focus();
                               } else {

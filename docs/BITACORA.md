@@ -7,6 +7,39 @@
 
 ---
 
+## 12/11/2026 (142) · Claude — SiuMax Nego, paso 3b: secciones según el tipo de negocio
+- **Dueño:** "si hazlo".
+- **Tipo de negocio del negocio abierto** (`utils/tiposNegocio.ts`):
+  - `cargarTiposNegocio()` lo lee de `empresa_config.tipos_negocio` al entrar y cada minuto. Se recuerda en el navegador (`nego_tipos_negocio`) para que el menú salga al instante.
+  - Si la base todavía no tiene la columna (un negocio sin el SQL nuevo), queda **Comercio**: subir el código antes que el SQL no rompe nada.
+  - `useTiposNegocio()` vuelve a dibujar al guardar en Ajustes (`fijarTiposNegocio`).
+- **Qué sección es de qué tipo** (`seccionDelNegocio`):
+  - Caja y Finanzas: solo Comercio.
+  - Agenda, Salidas, Contratos, Taller y Cotizaciones: solo Servicios.
+  - El resto es de todos.
+  - `permisos.ts`: `puedeVerSeccion` = tipo + permiso. Lo usan el menú, los atajos, `handleNavigate` y la sección abierta en App.
+- **Menú** (`SideBar.tsx`): `MENU_SECCIONES`, con el grupo nuevo **"Servicios"** entre Operaciones y Almacén.
+  - **Atajos:** `atajosSesiones(tipos)` / `teclaAtajo`, Alt + 1…9 y 0 en el orden del menú.
+  - **Solo Comercio:** el menú y los atajos quedan **iguales que antes** (Caja 1 … Ajustes 7).
+  - **Comercio + Servicios:** Agenda 3 … Finanzas 0; Utilidades y Ajustes, sin atajo.
+  - **Solo Servicios:** Clientes 1, sin Caja ni Finanzas.
+- **App:** si la sección abierta no es del tipo o no hay permiso, abre la primera que se pueda (Caja en Comercio, como siempre). Lo mismo al iniciar sesión.
+- **Secciones "Pronto"** (`sections/Pronto.tsx`): Agenda, Salidas, Contratos, Taller y Cotizaciones muestran qué harán y en qué paso llegan (3e a 3h). El recuadro se puede seleccionar.
+- **Usuarios** (`ModalUsuario.tsx`), con "Talleres y servicios" elegido:
+  - 7 columnas de permisos de servicios: Agenda, Salidas, Contratos, Taller, Cotizaciones de servicios, Clientes y trabajadores, Herramientas y vehículos.
+  - Roles **Encargado de servicios** y **Técnico** (los de Servic, sin Caja ni Finanzas).
+  - Las claves son las mismas que en Servic; en `types.ts` son opcionales.
+- **Ajustes → Tipo de negocio:** "Talleres y servicios" ahora está **Disponible**, con la nota de que algunas secciones dicen "Pronto".
+- **Probado:** `prueba-secciones-por-tipo.mjs`, 16 de 16 OK, 0 errores.
+  - Comercio solo: menú y Alt de siempre.
+  - Comercio + Servicios: menú, atajos, Pronto, roles y permisos.
+  - Solo Servicios: sin Caja ni Finanzas, también al recargar.
+  - Vuelta a Comercio.
+  - El negocio de pruebas quedó en **solo Comercio**.
+  - `prueba-tipo-negocio` sigue 15/15.
+- **Pendiente para 3c:** la base pide `caja_realizar_ventas`/`caja_ver_fiados` para crear clientes. Un "Técnico" o "Encargado de servicios" con `clientes_editar` todavía no puede crear clientes; se ajusta al traer Clientes.
+- **Siguiente (3c):** Clientes, con la pestaña Trabajadores y "lo que se atiende".
+
 ## 12/11/2026 (141) · Claude — SiuMax Nego, paso 3a: la base de datos de Servic entra en Nego
 - **Dueño:** "si empieza con la parte 3".
   - Decidió: un negocio que elige **solo** "Talleres y servicios" **no ve Caja ni Finanzas** ("son servicios y talleres, no tienda"). Si algún día se necesitan, se adaptan para talleres.

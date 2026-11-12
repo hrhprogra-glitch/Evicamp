@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Menu } from 'lucide-react';
 import { Login } from './sections/Login';
-import { SideBar, ATAJOS_SESIONES } from './layout/SideBar';
+import { SideBar, atajosSesiones, MENU_SECCIONES } from './layout/SideBar';
 import { validarSesion, type EmpleadoSesion } from './utils/sesion';
-import { puedeVerModulo } from './utils/permisos';
+import { puedeVerSeccion } from './utils/permisos';
+import { cargarTiposNegocio, tiposActuales, useTiposNegocio } from './utils/tiposNegocio';
+import { Pronto } from './sections/Pronto';
 import { SesionProvider } from './utils/SesionProvider';
 
 // Importación de Módulos (Secciones)
@@ -36,6 +38,19 @@ const NOMBRES_SESIONES: Record<string, string> = {
   configuracion: 'Ajustes',
   proveedores: 'Proveedores',
   tienda_web: 'Tienda Web',
+  // Talleres y servicios (SiuMax Nego, paso 3b)
+  agenda: 'Agenda',
+  salidas: 'Salidas',
+  contratos: 'Contratos',
+  taller: 'Taller',
+  cotizaciones: 'Cotizaciones',
+};
+
+// Primera sección que el empleado puede ver con el tipo de negocio elegido (Caja si es Comercio, como siempre)
+const seccionInicial = (permisos: EmpleadoSesion['permisos'] | undefined) => {
+  if (puedeVerSeccion(permisos, 'pos')) return 'pos';
+  const todas = MENU_SECCIONES.flatMap((g) => g.items.map((i) => i.id));
+  return todas.find((id) => puedeVerSeccion(permisos, id)) || 'configuracion';
 };
 
 // Cada cuánto se vuelve a leer el estado y los permisos del empleado desde la base
@@ -71,6 +86,7 @@ export const App: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState<string>('pos');
+  useTiposNegocio(); // al cambiar el tipo de negocio en Ajustes se vuelve a dibujar (menú, atajos, sección abierta)
   const currentViewRef = useRef(currentView);
   useEffect(() => {
     currentViewRef.current = currentView;
@@ -191,7 +207,7 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleGlobalTab, { capture: true });
   }, [isSidebarOpen]);
 
-  // Atajo global: Alt (o Alt Gr) + 1…7 entra directo a cada sesión del menú
+  // Atajo global: Alt (o Alt Gr) + 1…9 y 0 entra directo a cada sesión del menú (según el tipo de negocio)
   const permisosRef = useRef(empleado?.permisos);
   useEffect(() => {
     permisosRef.current = empleado?.permisos;
@@ -204,13 +220,13 @@ export const App: React.FC = () => {
       const esAlt = e.altKey && !e.ctrlKey;
       if (!(esAlt || esAltGr) || e.shiftKey || e.metaKey) return;
       // e.code es la tecla física: acepta los números de arriba y los del teclado numérico
-      const match = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
+      const match = /^(?:Digit|Numpad)([0-9])$/.exec(e.code);
       if (!match) return;
-      const view = ATAJOS_SESIONES[Number(match[1]) - 1];
+      const view = atajosSesiones(tiposActuales())[(Number(match[1]) + 9) % 10]; // 1…9 y el 0 = décima
       if (!view) return;
       // Respetar modales abiertos
       if (document.querySelector('[role="dialog"]') || document.querySelector('.fixed.inset-0.z-50')) return;
-      if (!permisosRef.current || !puedeVerModulo(permisosRef.current, view)) return;
+      if (!permisosRef.current || !puedeVerSeccion(permisosRef.current, view)) return;
 
       e.preventDefault();
       e.stopPropagation();
@@ -252,6 +268,7 @@ export const App: React.FC = () => {
         setIsLoading(false);
         return;
       }
+      if (resultado) void cargarTiposNegocio(); // tipo de negocio (Ajustes → Tipo de negocio); mientras, el recordado
       setEmpleado(resultado);
       setIsLoading(false);
       // Con sesión y con internet: dejar listas las copias para trabajar sin internet
@@ -297,11 +314,12 @@ export const App: React.FC = () => {
   if (!empleado) {
     // Recién iniciada la sesión también se dejan listas las copias para trabajar sin internet (antes
     // esperaba a la revisión de sesión del minuto siguiente: un corte en ese minuto dejaba la PC sin copias)
-    return <Login onLoginSuccess={(nuevo) => { setCurrentView('pos'); setEmpleado(nuevo); if (nuevo) precargarParaSinInternet(); }} />;
+    return <Login onLoginSuccess={async (nuevo) => { if (nuevo) await cargarTiposNegocio(); setCurrentView(seccionInicial(nuevo?.permisos)); setEmpleado(nuevo); if (nuevo) precargarParaSinInternet(); }} />;
   }
 
-  // Si le quitaron el permiso del módulo que tenía abierto, se muestra el POS
-  const vista = puedeVerModulo(empleado.permisos, currentView) ? currentView : 'pos';
+  // Si le quitaron el permiso del módulo que tenía abierto (o no es de su tipo de negocio), se muestra la primera
+  // sección que puede ver (Caja en un negocio de Comercio, como siempre)
+  const vista = puedeVerSeccion(empleado.permisos, currentView) ? currentView : seccionInicial(empleado.permisos);
 
   // Motor de Renderizado Condicional
   const renderCurrentView = () => {
@@ -322,6 +340,13 @@ export const App: React.FC = () => {
         return <Utilidades />;
       case 'configuracion': // <--- AÑADE ESTO
         return <Configuraciones />;
+      // Talleres y servicios: se están trayendo desde SiuMax Servic (pasos 3e a 3h)
+      case 'agenda':
+      case 'salidas':
+      case 'contratos':
+      case 'taller':
+      case 'cotizaciones':
+        return <Pronto seccion={vista} />;
       default:
         return (
           <div className="border border-dashed border-[var(--color-border)] p-12 text-center">
@@ -333,7 +358,7 @@ export const App: React.FC = () => {
 
   // En pantallas menores a 1024px (tablet/celular), al elegir un módulo se cierra el menú deslizable
   function handleNavigate(view: string) {
-    if (!puedeVerModulo(empleado?.permisos, view)) return;
+    if (!puedeVerSeccion(empleado?.permisos, view)) return;
     setCurrentView(view);
     if (window.innerWidth < 1024) setIsSidebarOpen(false);
   }

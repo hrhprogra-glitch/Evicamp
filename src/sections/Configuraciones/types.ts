@@ -37,6 +37,31 @@ export interface PermisosUsuario {
 
   // SISTEMA
   sistema_acceso_total: boolean;
+
+  // TALLERES Y SERVICIOS (SiuMax Nego, paso 3b, 12/11/2026; mismas claves que SiuMax Servic). Opcionales: los
+  // empleados guardados antes no las tienen. Solo se ven en Usuarios si el negocio eligió "Talleres y servicios".
+  clientes_ver?: boolean;
+  clientes_editar?: boolean;      // crear, editar, desactivar y lo que se atiende
+  trabajadores_ver?: boolean;
+  trabajadores_editar?: boolean;
+  salidas_ver?: boolean;
+  salidas_crear?: boolean;
+  salidas_editar?: boolean;
+  herramientas_ver?: boolean;
+  herramientas_crear?: boolean;
+  herramientas_editar?: boolean;
+  agenda_ver?: boolean;
+  agenda_crear?: boolean;
+  agenda_editar?: boolean;
+  contratos_ver?: boolean;
+  contratos_crear?: boolean;
+  contratos_editar?: boolean;
+  cobros_ver?: boolean;           // cotizaciones de servicios
+  cobros_crear?: boolean;
+  cobros_editar?: boolean;
+  taller_ver?: boolean;
+  taller_crear?: boolean;
+  taller_editar?: boolean;
 }
 
 export interface Empleado {

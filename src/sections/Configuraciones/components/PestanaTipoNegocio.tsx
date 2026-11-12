@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { Briefcase, Check, Save, Loader2 } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { avisar } from '../../../utils/dialogos';
-import { TIPOS_NEGOCIO, leerTiposNegocio, type IdTipoNegocio } from '../../../utils/tiposNegocio';
+import { TIPOS_NEGOCIO, leerTiposNegocio, fijarTiposNegocio, type IdTipoNegocio } from '../../../utils/tiposNegocio';
 
 export const PestanaTipoNegocio: React.FC = () => {
   const [elegidos, setElegidos] = useState<IdTipoNegocio[]>(['comercio']);
@@ -50,6 +50,7 @@ export const PestanaTipoNegocio: React.FC = () => {
         : await supabase.from('empresa_config').insert([{ tipos_negocio: elegidos }]);
       if (error) throw error;
       setGuardados(elegidos);
+      fijarTiposNegocio(elegidos); // el menú cambia al instante (secciones de cada tipo: utils/tiposNegocio.ts)
       const nombres = TIPOS_NEGOCIO.filter((t) => elegidos.includes(t.id)).map((t) => t.nombre).join(', ');
       void avisar(`✅ Tipo de negocio guardado: ${nombres}.`);
     } catch (err: any) {

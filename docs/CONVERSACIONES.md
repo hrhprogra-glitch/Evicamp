@@ -886,3 +886,4 @@
 - *"mejor no porque son servicios y talleres no tienda o seria adaptarlo bien y si empieza con la parte 3"*
   - **Decidió:** solo-servicios **sin Caja ni Finanzas**.
   - Empezar la fase 3 → paso 3a hecho (bitácora 141).
+- *"si hazlo"* (paso 3b) → el menú cambia según el tipo de negocio (bitácora 142).

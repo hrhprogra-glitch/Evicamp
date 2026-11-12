@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { PermisosUsuario } from '../sections/Configuraciones/types';
 import type { EmpleadoSesion } from './sesion';
+import { seccionDelNegocio } from './tiposNegocio';
 
 export type ClavePermiso = keyof PermisosUsuario;
 
@@ -10,7 +11,7 @@ export const tienePermiso = (permisos: Partial<PermisosUsuario> | null | undefin
 // Qué permiso abre cada módulo del menú (uno basta)
 const PERMISOS_POR_MODULO: Record<string, ClavePermiso[]> = {
   pos: ['caja_realizar_ventas'],
-  clientes: ['caja_ver_fiados'], // sección Clientes (antes Créditos)
+  clientes: ['caja_ver_fiados', 'clientes_ver'], // sección Clientes (antes Créditos); 'clientes_ver' de servicios
   // 'compras_recibir': entra a Inventario pero solo ve la pestaña Compras (recibir / devolver)
   // 'compras_enviar': igual, solo Compras, para enviar por WhatsApp / descargar / imprimir los pedidos
   inventario: ['almacen_ver_stock', 'compras_recibir', 'compras_enviar'],
@@ -20,6 +21,12 @@ const PERMISOS_POR_MODULO: Record<string, ClavePermiso[]> = {
   finanzas: ['caja_abrir_cerrar_turno', 'caja_ingresos_egresos'],
   utilidades: ['gerencia_ver_utilidades'],
   configuracion: ['gerencia_configuracion_sistema', 'gerencia_gestionar_usuarios'],
+  // Talleres y servicios (SiuMax Nego, paso 3b): solo se ven si el negocio eligió ese tipo (ver puedeVerSeccion)
+  agenda: ['agenda_ver'],
+  salidas: ['salidas_ver'],
+  contratos: ['contratos_ver'],
+  taller: ['taller_ver'],
+  cotizaciones: ['cobros_ver'],
 };
 
 export const puedeVerModulo = (permisos: Partial<PermisosUsuario> | null | undefined, modulo: string) => {
@@ -28,6 +35,11 @@ export const puedeVerModulo = (permisos: Partial<PermisosUsuario> | null | undef
   if (requeridos.length === 0) return !!permisos;
   return requeridos.some((clave) => tienePermiso(permisos, clave));
 };
+
+// Permiso del empleado Y que la sección sea del tipo de negocio elegido en Ajustes → Tipo de negocio
+// (ej. un negocio solo de servicios no ve Caja ni Finanzas). Es lo que usan el menú, los atajos y App.
+export const puedeVerSeccion = (permisos: Partial<PermisosUsuario> | null | undefined, modulo: string) =>
+  seccionDelNegocio(modulo) && puedeVerModulo(permisos, modulo);
 
 // El empleado de la sesión actual, disponible en toda la app sin pasar props (lo llena SesionProvider)
 export const SesionContext = createContext<EmpleadoSesion | null>(null);

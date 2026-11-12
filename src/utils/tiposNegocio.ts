@@ -2,6 +2,10 @@
 // Se construyen como 4 partes: Comercio · Talleres y servicios · Restaurantes · Agenda y reservas (citas, membresías,
 // alquileres y hospedaje usan el mismo calendario). Un negocio puede elegir varios tipos (Ajustes → Tipo de negocio).
 // `disponible`: ya tiene sus secciones en Nego; los demás salen como "Próximamente" y no se pueden elegir.
+// Abajo: los tipos guardados del negocio (recordados en el navegador para que el menú salga al instante) y qué
+// secciones del menú son de cada tipo (paso 3b, 12/11/2026).
+import { useSyncExternalStore } from 'react';
+import { supabase } from '../db/supabase';
 
 export type IdTipoNegocio = 'comercio' | 'restaurantes' | 'servicios' | 'citas' | 'membresias' | 'alquileres' | 'hospedaje';
 
@@ -40,8 +44,8 @@ export const TIPOS_NEGOCIO: TipoNegocio[] = [
     ],
   },
   {
-    id: 'servicios', numero: 3, nombre: 'Talleres y servicios', parte: 'Talleres y servicios', disponible: false,
-    nota: 'Se está trayendo desde SiuMax Servic.',
+    id: 'servicios', numero: 3, nombre: 'Talleres y servicios', parte: 'Talleres y servicios', disponible: true,
+    nota: 'Algunas de sus secciones todavía dicen "Pronto": se están trayendo desde SiuMax Servic.',
     queHace: 'Recibe algo o sale a trabajar y lo entrega; la orden pasa por estados (recibido → en proceso → listo → entregado).',
     negocios: [
       'Taller mecánico, mototaller, llantería, lavado de autos',
@@ -97,4 +101,54 @@ export const leerTiposNegocio = (valor: unknown): IdTipoNegocio[] => {
   const ids = new Set(TIPOS_NEGOCIO.map((t) => t.id));
   const lista = Array.isArray(valor) ? valor.filter((v): v is IdTipoNegocio => ids.has(v as IdTipoNegocio)) : [];
   return lista.length ? lista : ['comercio'];
+};
+
+// ---------------------------------------------------------------------------------------------------
+// Tipos del negocio abierto. Se leen de empresa_config al entrar (si la columna todavía no existe en esa base,
+// por ejemplo un negocio al que aún no se le aplicó el SQL, queda Comercio) y se recuerdan en el navegador.
+const CLAVE = 'nego_tipos_negocio';
+const leerGuardados = (): IdTipoNegocio[] => {
+  try { return leerTiposNegocio(JSON.parse(localStorage.getItem(CLAVE) || 'null')); } catch { return ['comercio']; }
+};
+let actuales: IdTipoNegocio[] = leerGuardados();
+const oyentes = new Set<() => void>();
+
+export const tiposActuales = () => actuales;
+
+export const fijarTiposNegocio = (lista: IdTipoNegocio[]) => {
+  const nueva = leerTiposNegocio(lista);
+  if (nueva.join() === actuales.join()) return;
+  actuales = nueva;
+  try { localStorage.setItem(CLAVE, JSON.stringify(nueva)); } catch { /* sin almacenamiento */ }
+  oyentes.forEach((f) => f());
+};
+
+export const cargarTiposNegocio = async () => {
+  try {
+    const { data, error } = await supabase.from('empresa_config').select('tipos_negocio').order('id').limit(1).maybeSingle();
+    if (error) return; // sin la columna o sin internet: se queda con lo recordado
+    fijarTiposNegocio(leerTiposNegocio(data?.tipos_negocio));
+  } catch { /* sin internet */ }
+};
+
+export const useTiposNegocio = () => useSyncExternalStore(
+  (f) => { oyentes.add(f); return () => { oyentes.delete(f); }; },
+  () => actuales,
+);
+
+// Secciones del menú que son de un tipo. Las que no están aquí son de todos (Clientes, Inventario, Conteos,
+// Proveedores, Utilidades, Ajustes). Un negocio solo de servicios NO ve Caja ni Finanzas (decidido 12/11/2026).
+const SECCIONES_DE_TIPO: Record<string, IdTipoNegocio[]> = {
+  pos: ['comercio'],
+  finanzas: ['comercio'],
+  agenda: ['servicios'],
+  salidas: ['servicios'],
+  contratos: ['servicios'],
+  taller: ['servicios'],
+  cotizaciones: ['servicios'],
+};
+
+export const seccionDelNegocio = (seccion: string, tipos: IdTipoNegocio[] = actuales) => {
+  const de = SECCIONES_DE_TIPO[seccion];
+  return !de || de.some((t) => tipos.includes(t));
 };
