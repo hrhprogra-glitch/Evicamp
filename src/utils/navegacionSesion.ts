@@ -29,6 +29,7 @@ export const restaurarFocoSesion = (view?: string): boolean => {
     const b = (
       document.getElementById('buscador-cotizaciones') ||
       document.getElementById('buscador-pedidos') ||
+      document.getElementById('buscador-trabajadores') || // Talleres y servicios (SiuMax Nego, paso 3c)
       document.getElementById('buscador-clientes') ||
       document.getElementById('buscador-global-fiados')
     ) as HTMLInputElement | null;

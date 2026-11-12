@@ -4,6 +4,8 @@
 // (los dos opcionales, revisados en src/utils/documento.ts), teléfono, dirección, link de ubicación (Google Maps) y
 // referencia. Antes de guardar avisa si ya hay un cliente con nombre parecido ("¿Es esta Rosa?") y no deja repetir un
 // DNI o RUC. Teclado: Enter o ↓ pasan al siguiente campo, ↑ al anterior.
+// SiuMax Nego (paso 3c): con "Talleres y servicios" salen correo, persona de contacto y notas (de SiuMax Servic); sin
+// "Comercio" no salen los datos de tienda (días de plazo, descuento y mayorista).
 import React, { useEffect, useState } from 'react';
 import { UserCircle, X } from 'lucide-react';
 import type { Cliente } from '../types';
@@ -11,8 +13,9 @@ import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar, confirmar } from '../../../utils/dialogos';
 import { errorDni, errorRuc, errorUbicacion, normalizarNombre } from '../../../utils/documento';
 import { claseBotonPrincipal } from '../../../components/ListaVentana';
+import { useTiposNegocio } from '../../../utils/tiposNegocio';
 
-export interface DatosCliente { nombre: string; dni: string; ruc: string; telefono: string; direccion: string; ubicacion: string; referencia: string; dias_plazo: string; es_mayorista: boolean; descuento_porcentaje: string }
+export interface DatosCliente { nombre: string; dni: string; ruc: string; telefono: string; direccion: string; ubicacion: string; referencia: string; dias_plazo: string; es_mayorista: boolean; descuento_porcentaje: string; correo: string; persona_contacto: string; notas: string }
 
 interface Props {
   abierta: boolean;
@@ -22,7 +25,7 @@ interface Props {
   onClose: () => void;
 }
 
-const vacio: DatosCliente = { nombre: '', dni: '', ruc: '', telefono: '', direccion: '', ubicacion: '', referencia: '', dias_plazo: '', es_mayorista: false, descuento_porcentaje: '' };
+const vacio: DatosCliente = { nombre: '', dni: '', ruc: '', telefono: '', direccion: '', ubicacion: '', referencia: '', dias_plazo: '', es_mayorista: false, descuento_porcentaje: '', correo: '', persona_contacto: '', notas: '' };
 const enfocar = (id: string) => setTimeout(() => { const el = document.getElementById(id) as HTMLInputElement | null; el?.focus(); el?.select?.(); }, 30);
 
 // "ROSA" y "ROSA PEREZ" son parecidos; "ROSA" y "ROSARIO" no
@@ -36,6 +39,9 @@ const parecidos = (a: string, b: string) => {
 export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes, onGuardar, onClose }) => {
   const [datos, setDatos] = useState<DatosCliente>(vacio);
   const [guardando, setGuardando] = useState(false);
+  const tipos = useTiposNegocio();
+  const conComercio = tipos.includes('comercio');
+  const conServicios = tipos.includes('servicios');
   useCerrarConEscape(abierta, onClose);
 
   useEffect(() => {
@@ -81,7 +87,10 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
           referencia: cliente.referencia || '',
           dias_plazo: cliente.diasPlazo != null ? String(cliente.diasPlazo) : '',
           es_mayorista: !!cliente.esMayorista,
-          descuento_porcentaje: cliente.descuentoPorcentaje != null && cliente.descuentoPorcentaje > 0 ? String(cliente.descuentoPorcentaje) : ''
+          descuento_porcentaje: cliente.descuentoPorcentaje != null && cliente.descuentoPorcentaje > 0 ? String(cliente.descuentoPorcentaje) : '',
+          correo: cliente.correo || '',
+          persona_contacto: cliente.personaContacto || '',
+          notas: cliente.notas || '',
         }
       : vacio);
     enfocar('ficha-nombre');
@@ -91,49 +100,45 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
 
   const poner = (campo: keyof DatosCliente, valor: string | boolean) => setDatos((d) => ({ ...d, [campo]: valor }));
 
-  const teclasCampo = (id: string) => (e: React.KeyboardEvent<HTMLInputElement>) => {
+  // Filas de la ficha, en el orden de la pantalla (cambian según el tipo de negocio)
+  const filas: string[][] = [
+    ['ficha-nombre'],
+    ['ficha-dni', 'ficha-ruc'],
+    ['ficha-telefono', 'ficha-direccion'],
+    ['ficha-ubicacion'],
+    conComercio ? ['ficha-referencia', 'ficha-dias-plazo'] : ['ficha-referencia'],
+    ...(conServicios ? [['ficha-correo', 'ficha-contacto'], ['ficha-notas']] : []),
+    ...(conComercio ? [['ficha-descuento'], ['ficha-es-mayorista']] : []),
+    ['btn-guardar-ficha'],
+  ];
+  const ir = (id: string) => {
+    if (id === 'btn-guardar-ficha' || id === 'ficha-es-mayorista') document.getElementById(id)?.focus();
+    else enfocar(id);
+  };
+
+  const teclasCampo = (id: string) => (e: React.KeyboardEvent<HTMLInputElement | HTMLButtonElement>) => {
+    const fila = filas.findIndex((f) => f.includes(id));
+    const col = fila >= 0 ? filas[fila].indexOf(id) : -1;
+    if (fila < 0) return;
     if (e.key === 'Enter') {
+      if (id === 'ficha-es-mayorista') return; // Enter cambia el SÍ / NO (lo maneja el botón)
       e.preventDefault();
-      const orden = ['ficha-nombre', 'ficha-dni', 'ficha-ruc', 'ficha-telefono', 'ficha-direccion', 'ficha-ubicacion', 'ficha-referencia', 'ficha-dias-plazo', 'ficha-descuento', 'ficha-es-mayorista', 'btn-guardar-ficha'];
+      const orden = filas.flat();
       const sig = orden[orden.indexOf(id) + 1];
-      if (sig === 'btn-guardar-ficha') document.getElementById('btn-guardar-ficha')?.focus();
-      else if (sig === 'ficha-es-mayorista') document.getElementById('ficha-es-mayorista')?.focus();
-      else if (sig) enfocar(sig);
+      if (sig) ir(sig);
       return;
     }
-
-    if (id === 'ficha-nombre') {
-      if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-dni'); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-cerrar-ficha')?.focus(); }
-    } else if (id === 'ficha-dni') {
-      if (e.key === 'ArrowRight') { e.preventDefault(); enfocar('ficha-ruc'); }
-      else if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-telefono'); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-nombre'); }
-    } else if (id === 'ficha-ruc') {
-      if (e.key === 'ArrowLeft') { e.preventDefault(); enfocar('ficha-dni'); }
-      else if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-direccion'); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-nombre'); }
-    } else if (id === 'ficha-telefono') {
-      if (e.key === 'ArrowRight') { e.preventDefault(); enfocar('ficha-direccion'); }
-      else if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-ubicacion'); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-dni'); }
-    } else if (id === 'ficha-direccion') {
-      if (e.key === 'ArrowLeft') { e.preventDefault(); enfocar('ficha-telefono'); }
-      else if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-ubicacion'); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-ruc'); }
-    } else if (id === 'ficha-ubicacion') {
-      if (e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-referencia'); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-telefono'); }
-    } else if (id === 'ficha-referencia') {
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); enfocar('ficha-dias-plazo'); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-ubicacion'); }
-    } else if (id === 'ficha-dias-plazo') {
-      if (e.key === 'ArrowLeft') { e.preventDefault(); enfocar('ficha-referencia'); }
-      else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); enfocar('ficha-descuento'); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-ubicacion'); }
-    } else if (id === 'ficha-descuento') {
-      if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('ficha-es-mayorista')?.focus(); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); enfocar('ficha-dias-plazo'); }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      if (id === 'ficha-nombre' && e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-cerrar-ficha')?.focus(); return; }
+      const otra = filas[fila + (e.key === 'ArrowDown' ? 1 : -1)];
+      if (!otra) return;
+      e.preventDefault();
+      ir(otra[Math.min(col, otra.length - 1)]);
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      const al = filas[fila][col + (e.key === 'ArrowRight' ? 1 : -1)];
+      if (!al) return;
+      e.preventDefault();
+      ir(al);
     }
   };
 
@@ -142,6 +147,8 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
     const nombre = datos.nombre.trim().replace(/\s+/g, ' ');
     if (nombre.length < 2) { await avisar('Escribe el nombre del cliente.'); enfocar('ficha-nombre'); return; }
     const dni = datos.dni.trim(); const ruc = datos.ruc.trim();
+    const correo = datos.correo.trim().toLowerCase();
+    if (correo && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(correo)) { await avisar('El correo no parece válido (ej.: nombre@gmail.com).'); enfocar('ficha-correo'); return; }
     for (const [problema, campo] of [[errorDni(dni), 'ficha-dni'], [errorRuc(ruc), 'ficha-ruc'], [errorUbicacion(datos.ubicacion), 'ficha-ubicacion']] as const) {
       if (problema) { await avisar(problema); enfocar(campo); return; }
     }
@@ -162,7 +169,7 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
     }
     setGuardando(true);
     try {
-      const ok = await onGuardar({ nombre, dni, ruc, telefono: datos.telefono.trim(), direccion: datos.direccion.trim(), ubicacion: datos.ubicacion.trim(), referencia: datos.referencia.trim(), dias_plazo: datos.dias_plazo.trim(), es_mayorista: datos.es_mayorista, descuento_porcentaje: datos.descuento_porcentaje.trim() });
+      const ok = await onGuardar({ nombre, dni, ruc, telefono: datos.telefono.trim(), direccion: datos.direccion.trim(), ubicacion: datos.ubicacion.trim(), referencia: datos.referencia.trim(), dias_plazo: datos.dias_plazo.trim(), es_mayorista: datos.es_mayorista, descuento_porcentaje: datos.descuento_porcentaje.trim(), correo, persona_contacto: datos.persona_contacto.trim(), notas: datos.notas.trim() });
       if (ok) onClose();
       else enfocar('btn-guardar-ficha');
     } finally {
@@ -212,11 +219,20 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
             {campo('ficha-direccion', 'Dirección', datos.direccion, (v) => poner('direccion', v), { placeholder: 'OPCIONAL' })}
           </div>
           {campo('ficha-ubicacion', 'Link de ubicación (Google Maps)', datos.ubicacion, (v) => poner('ubicacion', v), { placeholder: 'OPCIONAL · PEGA EL LINK DE GOOGLE MAPS (COMPARTIR)', inputMode: 'url' })}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className={`grid grid-cols-1 gap-4 ${conComercio ? 'sm:grid-cols-2' : ''}`}>
             {campo('ficha-referencia', 'Referencia (para distinguirlo)', datos.referencia, (v) => poner('referencia', v), { placeholder: 'EJ.: VECINA DEL 2DO PISO · MAESTRO DE OBRA' })}
-            {campo('ficha-dias-plazo', 'Días de plazo para pagar', datos.dias_plazo, (v) => poner('dias_plazo', v.replace(/\D/g, '').slice(0, 3)), { inputMode: 'numeric', placeholder: 'OPCIONAL · EJ.: 7, 15, 30 DÍAS' })}
+            {conComercio && campo('ficha-dias-plazo', 'Días de plazo para pagar', datos.dias_plazo, (v) => poner('dias_plazo', v.replace(/\D/g, '').slice(0, 3)), { inputMode: 'numeric', placeholder: 'OPCIONAL · EJ.: 7, 15, 30 DÍAS' })}
           </div>
+          {/* Talleres y servicios (SiuMax Nego, paso 3c; de SiuMax Servic) */}
+          {conServicios && (<>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {campo('ficha-correo', 'Correo', datos.correo, (v) => poner('correo', v), { inputMode: 'email', placeholder: 'OPCIONAL' })}
+              {campo('ficha-contacto', 'Persona de contacto', datos.persona_contacto, (v) => poner('persona_contacto', v), { placeholder: 'EJ.: SR. JUAN, ADMINISTRADOR' })}
+            </div>
+            {campo('ficha-notas', 'Notas', datos.notas, (v) => poner('notas', v), { placeholder: 'OPCIONAL · HORARIOS, LLAVES, PERRO, ETC.' })}
+          </>)}
           {/* FASE 4.4: Descuento % fijo / especial */}
+          {conComercio && (<>
           <div className="border-2 border-[var(--color-border)] p-3 bg-white">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
               <div>
@@ -294,11 +310,12 @@ export const ModalFichaCliente: React.FC<Props> = ({ abierta, cliente, clientes,
               {datos.es_mayorista ? 'SÍ (MAYORISTA)' : 'NO (REGULAR)'}
             </button>
           </div>
+          </>)}
         </div>
 
         <div className="px-4 sm:px-6 py-4 border-t-2 border-[var(--color-border)] flex justify-end shrink-0">
           <button id="btn-guardar-ficha" type="button" aria-disabled={guardando} onClick={() => void guardar()}
-            onKeyDown={(e) => { if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('ficha-es-mayorista')?.focus(); } }}
+            onKeyDown={(e) => { if (e.key === 'ArrowUp') { e.preventDefault(); ir(filas[filas.length - 2][0]); } }}
             className={claseBotonPrincipal}>
             {guardando ? 'Guardando...' : cliente ? 'Guardar cambios' : 'Guardar cliente'}
           </button>

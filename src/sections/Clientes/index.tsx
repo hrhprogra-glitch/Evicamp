@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { filaEnMedio } from '../../utils/flechasEspaciales';
-import { Coins, Users, BookOpen, FileText, Package, UserPlus, Plus } from 'lucide-react';
+import { Coins, Users, BookOpen, FileText, Package, UserPlus, Plus, HardHat } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import { TablaFiadosAgrupados } from './components/TablaFiadosAgrupados';
 import { ModalFiado } from './components/ModalFiado';
@@ -9,7 +9,7 @@ import { ModalDetalleFiado } from './components/ModalDetalleFiado';
 import { ModalAnularPago } from './components/ModalAnularPago';
 import { ModalEstadoCuenta } from './components/ModalEstadoCuenta';
 import type { ClienteFiadoAgrupado } from './types'; // <-- Nuevo modal
-import type { Fiado, Cliente, PagoAbono, GrupoClientes } from './types'; // <-- Importamos PagoAbono
+import type { Fiado, Cliente, PagoAbono, GrupoClientes, BienCliente } from './types'; // <-- Importamos PagoAbono
 import type { Product } from '../Inventario/types';
 import { usePermiso } from '../../utils/permisos';
 import { traerTodo } from '../../utils/traerTodo';
@@ -27,19 +27,42 @@ import { ModalFormGrupo, type DatosGrupo } from './components/ModalFormGrupo';
 import { resumenDeCliente } from './components/PestanaClientes';
 import { claseBotonBarra } from '../../components/ListaVentana';
 import { formatearMonto } from '../../utils/formato';
+import { useTiposNegocio } from '../../utils/tiposNegocio';
+import { PestanaTrabajadores } from './components/PestanaTrabajadores';
+import { ModalBien, type DatosBien } from './components/ModalBien';
 
 // Sección CLIENTES (fases 4.1 a 4.6): Clientes, Créditos, Cotizaciones y Pedidos.
-type Pestana = 'CLIENTES' | 'CREDITOS' | 'COTIZACIONES' | 'PEDIDOS';
-const PESTANAS: { id: Pestana; nombre: string; boton: string }[] = [
+// SiuMax Nego (paso 3c): con "Talleres y servicios" también la pestaña Trabajadores y, en el detalle de cada cliente,
+// lo que se atiende (de SiuMax Servic). Créditos, Cotizaciones y Pedidos son de Comercio (vienen de Caja).
+type Pestana = 'CLIENTES' | 'CREDITOS' | 'COTIZACIONES' | 'PEDIDOS' | 'TRABAJADORES';
+const PESTANAS: { id: Pestana; nombre: string; boton: string; tipo?: 'comercio' | 'servicios' }[] = [
   { id: 'CLIENTES', nombre: 'Clientes', boton: 'tab-clientes-clientes' },
-  { id: 'CREDITOS', nombre: 'Créditos', boton: 'tab-clientes-creditos' },
-  { id: 'COTIZACIONES', nombre: 'Cotizaciones', boton: 'tab-clientes-cotizaciones' },
-  { id: 'PEDIDOS', nombre: 'Pedidos', boton: 'tab-clientes-pedidos' },
+  { id: 'CREDITOS', nombre: 'Créditos', boton: 'tab-clientes-creditos', tipo: 'comercio' },
+  { id: 'COTIZACIONES', nombre: 'Cotizaciones', boton: 'tab-clientes-cotizaciones', tipo: 'comercio' },
+  { id: 'PEDIDOS', nombre: 'Pedidos', boton: 'tab-clientes-pedidos', tipo: 'comercio' },
+  { id: 'TRABAJADORES', nombre: 'Trabajadores', boton: 'tab-clientes-trabajadores', tipo: 'servicios' },
 ];
+// Fila de la base → lo que se atiende (de SiuMax Servic)
+const aBien = (b: any): BienCliente => ({
+  id: String(b.id),
+  clienteId: String(b.customer_id),
+  tipo: b.tipo,
+  nombre: b.nombre ?? '',
+  direccion: b.direccion ?? '',
+  ubicacion: b.ubicacion ?? '',
+  volumenM3: b.volumen_m3 != null ? Number(b.volumen_m3) : undefined,
+  placa: b.placa ?? '',
+  marca: b.marca ?? '',
+  modelo: b.modelo ?? '',
+  anio: b.anio != null ? Number(b.anio) : undefined,
+  serie: b.serie ?? '',
+  estado: b.estado || 'ACTIVO',
+  notas: b.notas ?? '',
+});
 const pestanaGuardada = (): Pestana => {
   try {
     const val = sessionStorage.getItem('clientes_pestana');
-    if (val === 'CREDITOS' || val === 'COTIZACIONES' || val === 'PEDIDOS') return val;
+    if (val === 'CREDITOS' || val === 'COTIZACIONES' || val === 'PEDIDOS' || val === 'TRABAJADORES') return val;
     return 'CLIENTES';
   } catch {
     return 'CLIENTES';
@@ -49,7 +72,12 @@ const pestanaGuardada = (): Pestana => {
 import { cacheClientesMemoria, setCacheClientes } from '../../utils/cacheModulos';
 
 export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate }) => {
-  const [pestana, setPestanaEstado] = useState<Pestana>(pestanaGuardada);
+  const tipos = useTiposNegocio();
+  const conServicios = tipos.includes('servicios');
+  // Pestañas del tipo de negocio; si la guardada no es de este tipo, se abre Clientes
+  const pestanas = PESTANAS.filter((p) => !p.tipo || tipos.includes(p.tipo));
+  const [pestanaElegida, setPestanaEstado] = useState<Pestana>(pestanaGuardada);
+  const pestana: Pestana = pestanas.some((p) => p.id === pestanaElegida) ? pestanaElegida : 'CLIENTES';
   const setPestana = (p: Pestana) => { setPestanaEstado(p); try { sessionStorage.setItem('clientes_pestana', p); } catch { /* sin almacenamiento */ } };
   const buscadorDe = (p: Pestana) => {
     switch (p) {
@@ -57,6 +85,7 @@ export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNav
       case 'CREDITOS': return 'buscador-global-fiados';
       case 'COTIZACIONES': return 'buscador-cotizaciones';
       case 'PEDIDOS': return 'buscador-pedidos';
+      case 'TRABAJADORES': return 'buscador-trabajadores';
     }
   };
   // Ficha del cliente (nuevo o editar)
@@ -73,6 +102,11 @@ export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNav
   const [formGrupo, setFormGrupo] = useState<{ grupo: GrupoClientes | null; paraCliente?: string; desdeLista?: boolean } | null>(null);
   const [cuentaGrupoId, setCuentaGrupoId] = useState<string | null>(null);      // "Cobrar al grupo"
   const [verListaGrupos, setVerListaGrupos] = useState(false);                  // ver y administrar grupos
+  // Talleres y servicios: lo que se atiende de cada cliente y "Nuevo trabajador" (la pestaña abre su ventana
+  // cuando este número cambia)
+  const [bienes, setBienes] = useState<BienCliente[]>([]);
+  const [bienAbierto, setBienAbierto] = useState<{ cliente: Cliente; bien: BienCliente | null } | null>(null);
+  const [pedirNuevoTrabajador, setPedirNuevoTrabajador] = useState(0);
   // Crear deudas es como vender a crédito
   const [loading, setLoading] = useState(() => !cacheClientesMemoria);
   const [fiados, setFiados] = useState<Fiado[]>(() => cacheClientesMemoria?.fiados || []);
@@ -175,6 +209,9 @@ if (clis) {
     diasPlazo: c.dias_plazo != null && !Number.isNaN(Number(c.dias_plazo)) ? Number(c.dias_plazo) : undefined,
     esMayorista: !!c.es_mayorista,
     descuentoPorcentaje: c.descuento_porcentaje != null && !Number.isNaN(Number(c.descuento_porcentaje)) ? Number(c.descuento_porcentaje) : undefined,
+    correo: c.correo ?? '',
+    personaContacto: c.persona_contacto ?? '',
+    notas: c.notas ?? '',
   }));
 
   // 🛡️ PROTECCIÓN: Si hay fiados de clientes que no están en customers (antiguos o borrados con saldo)
@@ -305,6 +342,39 @@ if (fiaData) {
   useEffect(() => {
     cargarDatos(!!cacheClientesMemoria);
   }, []);
+
+  // Lo que se atiende (solo con "Talleres y servicios")
+  useEffect(() => {
+    if (!conServicios) return;
+    void traerTodo(() => supabase.from('bienes_cliente').select('*').order('id')).then(({ data }) => setBienes((data || []).map(aBien)));
+  }, [conServicios]);
+
+  const guardarBien = async (d: DatosBien): Promise<boolean> => {
+    if (!bienAbierto) return false;
+    const num = (v: string) => (v.trim() && Number.isFinite(Number(v)) ? Number(v) : null);
+    const propio = (campo: string) => ({
+      PISCINA: ['volumen_m3'], VEHICULO: ['placa', 'marca', 'modelo', 'anio'], EQUIPO: ['marca', 'modelo', 'serie'],
+    } as Record<string, string[]>)[d.tipo]?.includes(campo);
+    const fila = {
+      customer_id: idNum(bienAbierto.cliente.id), tipo: d.tipo, nombre: d.nombre, direccion: d.direccion.trim() || null,
+      ubicacion: d.ubicacion.trim() || null, estado: d.estado, notas: d.notas.trim() || null,
+      // Solo se guardan los datos del tipo elegido (si cambió de tipo, lo del anterior se borra)
+      volumen_m3: propio('volumen_m3') ? num(d.volumen_m3) : null,
+      placa: propio('placa') ? d.placa.trim() || null : null,
+      marca: propio('marca') ? d.marca.trim() || null : null,
+      modelo: propio('modelo') ? d.modelo.trim() || null : null,
+      anio: propio('anio') ? num(d.anio) : null,
+      serie: propio('serie') ? d.serie.trim() || null : null,
+    };
+    const { bien } = bienAbierto;
+    const { data, error } = bien
+      ? await supabase.from('bienes_cliente').update(fila).eq('id', bien.id).select().single()
+      : await supabase.from('bienes_cliente').insert([fila]).select().single();
+    if (error) { await avisar('No se pudo guardar: ' + error.message); return false; }
+    const nuevo = aBien(data);
+    setBienes((l) => (bien ? l.map((b) => (b.id === bien.id ? nuevo : b)) : [...l, nuevo]));
+    return true;
+  };
 
   // 🔥 RESTAURAR FOCO AL CERRAR MODALES O TERMINAR DE CARGAR
   useEffect(() => {
@@ -486,6 +556,7 @@ if (fiaData) {
       dias_plazo: diasPlazoNum && Number.isFinite(diasPlazoNum) ? diasPlazoNum : null,
       es_mayorista: !!d.es_mayorista,
       descuento_porcentaje: descNum > 0 ? descNum : 0,
+      ...(conServicios ? { correo: d.correo || null, persona_contacto: d.persona_contacto || null, notas: d.notas || null } : {}),
     };
     const nuevo: Omit<Cliente, 'id'> = {
       nombre: d.nombre,
@@ -498,6 +569,7 @@ if (fiaData) {
       diasPlazo: diasPlazoNum && Number.isFinite(diasPlazoNum) ? diasPlazoNum : undefined,
       esMayorista: !!d.es_mayorista,
       descuentoPorcentaje: descNum > 0 ? descNum : undefined,
+      ...(conServicios ? { correo: d.correo, personaContacto: d.persona_contacto, notas: d.notas } : {}),
     };
     if (id) {
       const { error } = await supabase.from('customers').update(fila).eq('id', id);
@@ -674,7 +746,7 @@ if (fiaData) {
         </div>
       {/* PESTAÑAS: ← → mueven el selector (desde la última llega a "Nuevo cliente"), Enter (o clic) cambia de pestaña, ↓ baja a su buscador */}
       <div role="tablist" aria-label="Clientes" className="pestanas-sobrias flex min-w-0 w-full md:w-auto">
-        {PESTANAS.map((p, i) => (
+        {pestanas.map((p, i) => (
           <button key={p.id} id={p.boton} role="tab" aria-selected={pestana === p.id} data-activa={pestana === p.id} type="button"
             onClick={() => {
               setPestana(p.id);
@@ -684,8 +756,9 @@ if (fiaData) {
               if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
                 e.preventDefault(); e.stopPropagation();
                 const nuevo = document.getElementById('btn-nuevo-cliente');
-                if (e.key === 'ArrowRight' && i === PESTANAS.length - 1 && nuevo) { nuevo.focus(); return; }
-                document.getElementById(PESTANAS[(i + (e.key === 'ArrowRight' ? 1 : -1) + PESTANAS.length) % PESTANAS.length].boton)?.focus();
+                const nuevoTrab = document.getElementById('btn-nuevo-trabajador');
+                if (e.key === 'ArrowRight' && i === pestanas.length - 1 && (nuevo || nuevoTrab)) { (nuevo || nuevoTrab)?.focus(); return; }
+                document.getElementById(pestanas[(i + (e.key === 'ArrowRight' ? 1 : -1) + pestanas.length) % pestanas.length].boton)?.focus();
               } else if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault(); e.stopPropagation();
                 setPestana(p.id);
@@ -693,11 +766,11 @@ if (fiaData) {
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault(); e.stopPropagation();
                 const destino = document.getElementById(buscadorDe(pestana));
-                (filaEnMedio(e.currentTarget, destino, ['btn-nuevo-cliente', 'btn-ver-grupos']) || destino)?.focus();
+                (filaEnMedio(e.currentTarget, destino, ['btn-nuevo-cliente', 'btn-ver-grupos', 'btn-nuevo-trabajador']) || destino)?.focus();
               }
             }}
             className={claseBotonBarra(pestana === p.id)}>
-            {p.id === 'CLIENTES' ? <Users size={14} /> : p.id === 'CREDITOS' ? <BookOpen size={14} /> : p.id === 'COTIZACIONES' ? <FileText size={14} /> : <Package size={14} />} {p.nombre}
+            {p.id === 'CLIENTES' ? <Users size={14} /> : p.id === 'CREDITOS' ? <BookOpen size={14} /> : p.id === 'COTIZACIONES' ? <FileText size={14} /> : p.id === 'TRABAJADORES' ? <HardHat size={14} /> : <Package size={14} />} {p.nombre}
           </button>
         ))}
       </div>
@@ -707,10 +780,10 @@ if (fiaData) {
           <button id="btn-nuevo-cliente" type="button" onClick={() => abrirFicha(null)}
             style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
             onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById(PESTANAS[PESTANAS.length - 1].boton)?.focus(); }
+              if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById(pestanas[pestanas.length - 1].boton)?.focus(); }
               else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); document.getElementById('btn-ver-grupos')?.focus(); }
               else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); document.getElementById('buscador-clientes')?.focus(); }
-              else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); const pest = document.getElementById(PESTANAS.find((p) => p.id === pestana)?.boton || ''); if (pest && pest.getBoundingClientRect().bottom <= e.currentTarget.getBoundingClientRect().top) pest.focus(); }
+              else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); const pest = document.getElementById(pestanas.find((p) => p.id === pestana)?.boton || ''); if (pest && pest.getBoundingClientRect().bottom <= e.currentTarget.getBoundingClientRect().top) pest.focus(); }
             }}
             className="boton-cabecera px-3 sm:px-4 lg:px-6 py-3 lg:py-4 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none flex-1 sm:flex-initial">
             <UserPlus size={16} /> Nuevo cliente
@@ -720,11 +793,26 @@ if (fiaData) {
             onKeyDown={(e) => {
               if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById('btn-nuevo-cliente')?.focus(); }
               else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); document.getElementById('buscador-clientes')?.focus(); }
-              else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); const pest = document.getElementById(PESTANAS.find((p) => p.id === pestana)?.boton || ''); if (pest && pest.getBoundingClientRect().bottom <= e.currentTarget.getBoundingClientRect().top) pest.focus(); }
+              else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); const pest = document.getElementById(pestanas.find((p) => p.id === pestana)?.boton || ''); if (pest && pest.getBoundingClientRect().bottom <= e.currentTarget.getBoundingClientRect().top) pest.focus(); }
               else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); }
             }}
             className="boton-cabecera px-3 sm:px-4 lg:px-6 py-3 lg:py-4 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none flex-1 sm:flex-initial">
             <Users size={16} /> Grupos ({grupos.length})
+          </button>
+        </div>
+      )}
+      {pestana === 'TRABAJADORES' && (
+        <div className="flex flex-wrap items-center gap-2 max-w-full min-w-0">
+          <button id="btn-nuevo-trabajador" type="button" onClick={() => setPedirNuevoTrabajador((n) => n + 1)}
+            style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); document.getElementById(pestanas[pestanas.length - 1].boton)?.focus(); }
+              else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); }
+              else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); document.getElementById('buscador-trabajadores')?.focus(); }
+              else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); const pest = document.getElementById('tab-clientes-trabajadores'); if (pest && pest.getBoundingClientRect().bottom <= e.currentTarget.getBoundingClientRect().top) pest.focus(); }
+            }}
+            className="boton-cabecera px-3 sm:px-4 lg:px-6 py-3 lg:py-4 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none flex-1 sm:flex-initial">
+            <HardHat size={16} /> Nuevo trabajador
           </button>
         </div>
       )}
@@ -764,6 +852,10 @@ if (fiaData) {
             <TablaFiadosAgrupados clientes={clientesAgrupados} onView={(cli) => { setClienteEstadoCuenta(cli); setIsModalEstadoCuentaOpen(true); }} />
           </div>
         </>
+      ) : pestana === 'TRABAJADORES' ? (
+        <div className="lg:flex-1 lg:min-h-0">
+          <PestanaTrabajadores idPestana="tab-clientes-trabajadores" pedirNuevo={pedirNuevoTrabajador} />
+        </div>
       ) : pestana === 'COTIZACIONES' ? (
         <div className="lg:flex-1 lg:min-h-0">
           <PestanaCotizaciones onNavigatePOS={() => onNavigate ? onNavigate('pos') : (window.location.hash = '#pos')} />
@@ -785,6 +877,16 @@ if (fiaData) {
         deudaGrupo={(() => { const c = clientes.find((x) => x.id === detalleId); return c?.grupoId ? miembrosDe(c.grupoId).reduce((t, m) => t + resumenDeCliente(m, fiados).deuda, 0) : 0; })()}
         onGrupo={(c) => (c.grupoId && grupos.some((g) => g.id === c.grupoId) ? setGrupoVerId(c.grupoId) : setElegirGrupoPara(c.id))}
         onSacarDeGrupo={(c) => void sacarDeGrupo(c)}
+        bienes={detalleId ? bienes.filter((b) => b.clienteId === detalleId) : []}
+        onNuevoBien={(c) => setBienAbierto({ cliente: c, bien: null })}
+        onEditarBien={(b) => { const c = clientes.find((x) => x.id === b.clienteId); if (c) setBienAbierto({ cliente: c, bien: b }); }}
+      />
+      <ModalBien
+        abierta={!!bienAbierto}
+        cliente={bienAbierto?.cliente || null}
+        bien={bienAbierto?.bien || null}
+        onGuardar={guardarBien}
+        onClose={() => setBienAbierto(null)}
       />
 
       <ModalFichaCliente

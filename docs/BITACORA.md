@@ -7,6 +7,39 @@
 
 ---
 
+## 12/11/2026 (143) · Claude — SiuMax Nego, paso 3c: Clientes con Trabajadores y "lo que se atiende"
+- **Dueño:** "si".
+- **Traído de SiuMax Servic, tal cual** (`Clientes/components/`):
+  - `PestanaTrabajadores.tsx` y `ModalTrabajador.tsx`: técnicos y ayudantes, usen o no el sistema.
+  - `ModalBien.tsx`: lo que se atiende de un cliente (piscina, jardín, vehículo, equipo, local u otro, cada uno con sus datos).
+  - Sus tipos (`BienCliente`, `TIPOS_BIEN`, `Trabajador`) están en `Clientes/types.ts`.
+- **Sección Clientes** (`index.tsx`):
+  - Las pestañas dependen del tipo de negocio. Créditos, Cotizaciones y Pedidos son de Comercio; **Trabajadores** es de Servicios.
+    - Solo Comercio: igual que antes.
+    - Comercio + Servicios: las 5.
+    - Solo Servicios: Clientes y Trabajadores.
+    - Si la pestaña guardada no es del tipo, abre Clientes.
+  - Con la pestaña Trabajadores, la cabecera muestra "Nuevo trabajador". → desde la última pestaña llega a ese botón.
+  - Carga `bienes_cliente` solo con Servicios.
+  - Guarda correo, persona de contacto y notas solo con Servicios: una base sin el SQL nuevo no tiene esas columnas.
+- **Ficha del cliente** (`ModalFichaCliente`):
+  - Con Servicios: Correo y Persona de contacto (en una fila) y Notas.
+  - Sin Comercio no salen Días de plazo, Descuento ni Mayorista.
+  - El teclado va **por filas** (↑ ↓ a la fila de arriba o abajo, en la misma columna; ← → dentro de la fila). Así sirve con o sin los campos nuevos; con solo Comercio se mueve igual que antes.
+  - ↑ desde Guardar va al último campo que se vea (antes siempre a Mayorista).
+  - Revisa que el correo sea válido.
+- **Detalle del cliente** (`ModalDetalleCliente`):
+  - Con Servicios: correo y contacto en sus datos, las notas y la sección **"Lo que se atiende (n)"** con "Agregar" y la lista (Enter edita).
+  - Sin Comercio: sin "Estado de cuenta", sin resumen de deudas y compras, sin los botones Pendientes, Pagados y Compras, y sin deuda del grupo.
+  - Teclado: Editar ↓ historial (con Comercio) ↓ Agregar ↓ lista; ↑ de vuelta.
+- **Base:** escribir en `/customers` y `/grupos_clientes` acepta también `clientes_editar`, para el Técnico y el Encargado de servicios. `bienes_cliente` ya estaba (paso 3a).
+  - Aplicado **solo en siumax** (respaldo `respaldo-siumax-antes-nego-3c-202611122158.sql`), 0 errores.
+- `navegacionSesion.ts`: al volver a Clientes, el selector también busca `buscador-trabajadores`.
+- **Probado:** `prueba-clientes-servicios.mjs`, 23 de 23 OK, 0 errores.
+  - Crea un trabajador, un cliente con correo, contacto y notas, y una piscina; al final los borra y deja el negocio en solo Comercio.
+  - Siguen pasando `prueba-historial-cliente-ventanas` 21/21 y `prueba-secciones-por-tipo` 16/16.
+- **Siguiente (3d):** Inventario, con Herramientas y vehículos, y Marca/Modelo/Ubicación en Nuevo producto.
+
 ## 12/11/2026 (142) · Claude — SiuMax Nego, paso 3b: secciones según el tipo de negocio
 - **Dueño:** "si hazlo".
 - **Tipo de negocio del negocio abierto** (`utils/tiposNegocio.ts`):

@@ -54,12 +54,13 @@ AS $$
     WHEN 'POST /sale_details'        THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
     WHEN 'POST /fiados'              THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
     WHEN 'PATCH /fiados'             THEN ARRAY['caja_realizar_ventas', 'caja_cobrar_deudas']
-    WHEN 'POST /customers'           THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
-    WHEN 'PATCH /customers'          THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados', 'caja_cobrar_deudas']
-    WHEN 'DELETE /customers'         THEN ARRAY['caja_ver_fiados']
+    -- 'clientes_editar': el de Talleres y servicios (SiuMax Nego, paso 3c)
+    WHEN 'POST /customers'           THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados', 'clientes_editar']
+    WHEN 'PATCH /customers'          THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados', 'caja_cobrar_deudas', 'clientes_editar']
+    WHEN 'DELETE /customers'         THEN ARRAY['caja_ver_fiados', 'clientes_editar']
     -- Grupos de clientes (familia o empresa, fase 4.1): quien entra a Clientes los maneja
-    WHEN 'POST /grupos_clientes'     THEN ARRAY['caja_ver_fiados']
-    WHEN 'PATCH /grupos_clientes'    THEN ARRAY['caja_ver_fiados']
+    WHEN 'POST /grupos_clientes'     THEN ARRAY['caja_ver_fiados', 'clientes_editar']
+    WHEN 'PATCH /grupos_clientes'    THEN ARRAY['caja_ver_fiados', 'clientes_editar']
     WHEN 'POST /debt_payments'       THEN ARRAY['caja_cobrar_deudas']
     -- Cotizaciones (proformas, fase 4.5): quien hace ventas o ve clientes puede cotizar
     WHEN 'POST /cotizaciones'        THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']

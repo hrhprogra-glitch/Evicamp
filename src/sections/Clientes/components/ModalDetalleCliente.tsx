@@ -3,13 +3,18 @@
 // Muestra sus datos, un resumen (deuda, créditos, total comprado, última compra, cada cuánto viene), lo que más lleva y
 // su HISTORIAL: Pendientes (deudas), Pagados (créditos cancelados) y Compras (ventas al contado en caja).
 // Desde el 12/11/2026 son 3 botones; cada uno abre su ventana con la lista, el buscador y la fecha (ModalHistorialCliente).
+// SiuMax Nego (paso 3c): con "Talleres y servicios" muestra también LO QUE SE ATIENDE del cliente (piscina, jardín,
+// vehículo, equipo..., de SiuMax Servic), su correo, persona de contacto y notas. Sin "Comercio" no salen el estado de
+// cuenta, el resumen de deudas y compras ni los botones del historial.
 import React, { useEffect, useMemo, useState } from 'react';
-import { BookOpen, Edit, UserCircle, X, MapPin, Users, UserMinus, Clock, CheckCircle2, ShoppingBag } from 'lucide-react';
-import type { Cliente, Fiado, GrupoClientes } from '../types';
+import { BookOpen, Edit, UserCircle, X, MapPin, Users, UserMinus, Clock, CheckCircle2, ShoppingBag, Plus, Waves, Trees, Car, Cpu, Building2, Box } from 'lucide-react';
+import type { Cliente, Fiado, GrupoClientes, BienCliente, TipoBien } from '../types';
+import { TIPOS_BIEN } from '../types';
+import { useTiposNegocio } from '../../../utils/tiposNegocio';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { ventanaSuperior } from '../../../utils/ventanas';
-import { CuerpoVentana, BarraFiltros, TextoBarra, claseBotonBarra } from '../../../components/ListaVentana';
+import { CuerpoVentana, BarraFiltros, TextoBarra, CajaLista, FilaLista, LineaDato, Etiqueta, claseBotonBarra } from '../../../components/ListaVentana';
 import { formatearMonto } from '../../../utils/formato';
 import { ModalHistorialCliente, fechaUltimoPago, type TipoHistorial } from './ModalHistorialCliente';
 
@@ -39,16 +44,38 @@ interface Props {
   deudaGrupo?: number;
   onGrupo: (c: Cliente) => void;          // sin grupo: elegir uno; con grupo: ver el grupo
   onSacarDeGrupo: (c: Cliente) => void;
+  // Talleres y servicios: lo que se atiende de ESTE cliente
+  bienes?: BienCliente[];
+  onNuevoBien?: (c: Cliente) => void;
+  onEditarBien?: (b: BienCliente) => void;
 }
+
+// Lo que se atiende (de SiuMax Servic)
+export const ICONO_BIEN: Record<TipoBien, React.ReactNode> = {
+  PISCINA: <Waves size={20} />, JARDIN: <Trees size={20} />, VEHICULO: <Car size={20} />,
+  EQUIPO: <Cpu size={20} />, LOCAL: <Building2 size={20} />, OTRO: <Box size={20} />,
+};
+export const nombreTipoBien = (t: TipoBien) => TIPOS_BIEN.find((x) => x.id === t)?.nombre || t;
+const ESTADOS_BIEN = { ACTIVO: ['verde', 'Activo'], MANTENIMIENTO: ['ambar', 'En mantenimiento'], BAJA: ['gris', 'De baja'] } as const;
+// Datos propios de cada tipo, en una línea ("Placa ABC-123 · Toyota Hilux 2019")
+export const datosDeBien = (b: BienCliente) => [
+  b.volumenM3 ? `${b.volumenM3} m³` : null,
+  b.placa ? `Placa ${b.placa}` : null,
+  [b.marca, b.modelo, b.anio].filter(Boolean).join(' ') || null,
+  b.serie ? `Serie ${b.serie}` : null,
+].filter(Boolean).join(' · ');
 
 // Botones del historial (cada uno abre su ventana)
 const HISTORIAL: Record<TipoHistorial, string> = { PENDIENTES: 'btn-historial-cliente-pendientes', PAGADOS: 'btn-historial-cliente-pagados', COMPRAS: 'btn-historial-cliente-compras' };
 const fecha = (f?: string) => (f ? new Date(f).toLocaleDateString('es-PE') : '—');
 const soles = (n: number) => `S/ ${formatearMonto(n)}`;
 const estaPagado = (f: Fiado) => f.estado === 'PAGADO' || (Number(f.saldoPendiente) || 0) <= 0.05;
-export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose, onEditar, onEstadoCuenta, grupo, miembrosGrupo = 0, deudaGrupo = 0, onGrupo, onSacarDeGrupo }) => {
-  // Botones de arriba (← →): con grupo aparece también "Sacar del grupo"
-  const BOTONES = ['btn-detalle-cliente-editar', 'btn-detalle-cliente-cuenta', 'btn-detalle-cliente-grupo', ...(grupo ? ['btn-detalle-cliente-sacar'] : [])];
+export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose, onEditar, onEstadoCuenta, grupo, miembrosGrupo = 0, deudaGrupo = 0, onGrupo, onSacarDeGrupo, bienes = [], onNuevoBien, onEditarBien }) => {
+  const tipos = useTiposNegocio();
+  const conComercio = tipos.includes('comercio');
+  const conServicios = tipos.includes('servicios');
+  // Botones de arriba (← →): con grupo aparece también "Sacar del grupo"; "Estado de cuenta" solo con Comercio
+  const BOTONES = ['btn-detalle-cliente-editar', ...(conComercio ? ['btn-detalle-cliente-cuenta'] : []), 'btn-detalle-cliente-grupo', ...(grupo ? ['btn-detalle-cliente-sacar'] : [])];
   useCerrarConEscape(!!cliente, onClose);
   // Ventana del historial abierta (Pendientes, Pagados o Compras); null = ninguna
   const [historial, setHistorial] = useState<TipoHistorial | null>(null);
@@ -200,8 +227,10 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
 
   if (!cliente) return null;
 
-  const BOTONES_HISTORIAL = [HISTORIAL.PENDIENTES, HISTORIAL.PAGADOS, HISTORIAL.COMPRAS];
-  // Teclado de toda la ventana: ← → en cada fila de botones; ↓ de los de arriba a los del historial y ↑ de vuelta
+  const BOTONES_HISTORIAL = conComercio ? [HISTORIAL.PENDIENTES, HISTORIAL.PAGADOS, HISTORIAL.COMPRAS] : [];
+  const filasBienes = () => Array.from(document.querySelectorAll('[data-bien-cliente="true"]')) as HTMLElement[];
+  // Teclado de toda la ventana: ← → en cada fila de botones; ↓ de los de arriba a los del historial, de ahí a
+  // "Agregar" (lo que se atiende) y a su lista; ↑ de vuelta. Enter en una cosa atendida la edita.
   const teclas = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const arriba = ventanaSuperior();
     if (arriba && !arriba.contains(document.getElementById('btn-cerrar-detalle-cliente'))) return;
@@ -209,6 +238,9 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
     if (!a) return;
     const enBoton = BOTONES.includes(a.id);
     const enHistorial = BOTONES_HISTORIAL.includes(a.id);
+    const lista = filasBienes();
+    const i = lista.indexOf(a);
+    const despuesDeArriba = BOTONES_HISTORIAL[0] || (conServicios ? 'btn-nuevo-bien' : '');
     if ((enBoton || enHistorial) && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
       e.preventDefault();
       const fila = enBoton ? BOTONES : BOTONES_HISTORIAL;
@@ -217,11 +249,21 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       if (a.id === 'btn-cerrar-detalle-cliente') document.getElementById(BOTONES[0])?.focus();
-      else if (enBoton) document.getElementById(BOTONES_HISTORIAL[0])?.focus();
+      else if (enBoton) document.getElementById(despuesDeArriba)?.focus();
+      else if (enHistorial && conServicios) document.getElementById('btn-nuevo-bien')?.focus();
+      else if (a.id === 'btn-nuevo-bien') lista[0]?.focus();
+      else if (i >= 0 && lista[i + 1]) { lista[i + 1].focus(); lista[i + 1].scrollIntoView({ block: 'nearest' }); }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       if (enBoton) document.getElementById('btn-cerrar-detalle-cliente')?.focus();
       else if (enHistorial) document.getElementById(BOTONES[0])?.focus();
+      else if (a.id === 'btn-nuevo-bien') document.getElementById(BOTONES_HISTORIAL[0] || BOTONES[0])?.focus();
+      else if (i > 0) { lista[i - 1].focus(); lista[i - 1].scrollIntoView({ block: 'nearest' }); }
+      else if (i === 0) document.getElementById('btn-nuevo-bien')?.focus();
+    } else if (e.key === 'Enter' && i >= 0) {
+      e.preventDefault();
+      const b = bienes[i];
+      if (b) onEditarBien?.(b);
     }
   };
 
@@ -233,7 +275,9 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
     cliente.ruc ? `RUC: ${cliente.ruc}` : null,
     !cliente.dni && !cliente.ruc ? 'Sin DNI ni RUC' : null,
     cliente.telefono ? `Tel.: ${cliente.telefono}` : null,
+    cliente.correo ? cliente.correo : null,
     cliente.direccion ? `Dirección: ${cliente.direccion}` : null,
+    cliente.personaContacto ? `Contacto: ${cliente.personaContacto}` : null,
     cliente.diasPlazo ? `Plazo acordado: ${cliente.diasPlazo} días` : null,
   ].filter(Boolean).join(' · ');
 
@@ -262,7 +306,7 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
           <BarraFiltros>
             <div className="flex flex-wrap gap-2">
               <button id={BOTONES[0]} type="button" onClick={() => onEditar(cliente)} className={claseBotonBarra(false)}><Edit size={14} /> Editar</button>
-              <button id={BOTONES[1]} type="button" onClick={() => onEstadoCuenta(cliente)} className={claseBotonBarra(false)}><BookOpen size={14} /> Estado de cuenta</button>
+              {conComercio && <button id="btn-detalle-cliente-cuenta" type="button" onClick={() => onEstadoCuenta(cliente)} className={claseBotonBarra(false)}><BookOpen size={14} /> Estado de cuenta</button>}
               <button id="btn-detalle-cliente-grupo" type="button" onClick={() => onGrupo(cliente)} className={claseBotonBarra(false)}>
                 <Users size={14} /> {grupo ? `Grupo: ${grupo.nombre}` : 'Agregar a un grupo'}
               </button>
@@ -278,11 +322,17 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
           {grupo && (
             <p id="info-grupo-cliente" className="text-[12px] font-bold text-[var(--color-muted)] shrink-0">
               <span className="font-black uppercase tracking-widest text-[var(--color-ink)]">Grupo: </span>
-              {grupo.nombre} ({grupo.tipo === 'EMPRESA' ? 'Empresa' : 'Familia'} · {miembrosGrupo} persona{miembrosGrupo === 1 ? '' : 's'}) · Deuda del grupo:{' '}
-              <span className={deudaGrupo > 0.05 ? 'text-[var(--color-danger)] font-black' : 'text-[var(--color-ink)] font-black'}>{soles(deudaGrupo)}</span>
+              {grupo.nombre} ({grupo.tipo === 'EMPRESA' ? 'Empresa' : 'Familia'} · {miembrosGrupo} persona{miembrosGrupo === 1 ? '' : 's'}){conComercio && <> · Deuda del grupo:{' '}
+              <span className={deudaGrupo > 0.05 ? 'text-[var(--color-danger)] font-black' : 'text-[var(--color-ink)] font-black'}>{soles(deudaGrupo)}</span></>}
+            </p>
+          )}
+          {cliente.notas && (
+            <p id="notas-detalle-cliente" className="text-[12px] font-bold text-[var(--color-muted)] shrink-0 whitespace-pre-line">
+              <span className="font-black uppercase tracking-widest text-[var(--color-ink)]">Notas: </span>{cliente.notas}
             </p>
           )}
 
+          {conComercio && (<>
           {/* RESUMEN MEJORADO CON COMPRAS */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2 shrink-0" id="resumen-detalle-cliente">
             {[
@@ -322,6 +372,44 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
               </button>
             ))}
           </div>
+          </>)}
+
+          {/* LO QUE SE ATIENDE (Talleres y servicios, de SiuMax Servic) */}
+          {conServicios && (<>
+            <BarraFiltros>
+              <TextoBarra>Lo que se atiende ({bienes.length})</TextoBarra>
+              <button id="btn-nuevo-bien" type="button" onClick={() => onNuevoBien?.(cliente)} className={claseBotonBarra(true)}>
+                <Plus size={14} /> Agregar
+              </button>
+            </BarraFiltros>
+            <CajaLista className="min-h-[160px]" vacia={!bienes.length} mensaje="Todavía no hay nada registrado: piscina, jardín, vehículo, equipo...">
+              {bienes.map((b) => {
+                const [tono, texto] = ESTADOS_BIEN[b.estado] || ESTADOS_BIEN.ACTIVO;
+                const extra = datosDeBien(b);
+                return (
+                  <div key={b.id} className="border-b-2 border-[var(--color-border)] last:border-b-0">
+                    <FilaLista tabIndex={0} data-bien-cliente="true" data-bien-id={b.id}
+                      onClick={() => onEditarBien?.(b)} className="cursor-pointer" atenuada={b.estado === 'BAJA'}
+                      icono={ICONO_BIEN[b.tipo]}
+                      titulo={b.nombre}
+                      subtitulo={<>
+                        <LineaDato>{nombreTipoBien(b.tipo)}{extra ? ` · ${extra}` : ''}</LineaDato>
+                        {b.direccion && <LineaDato titulo={b.direccion}>{b.direccion}</LineaDato>}
+                      </>}
+                      centro={<Etiqueta tono={tono}>{texto}</Etiqueta>}
+                      derecha={<>
+                        {b.ubicacion && (
+                          <a href={b.ubicacion} target="_blank" rel="noopener noreferrer" tabIndex={-1} onClick={(e) => e.stopPropagation()}
+                            title="Ver ubicación" className="p-2 text-[var(--color-info)] hover:text-[var(--color-ink)]"><MapPin size={18} /></a>
+                        )}
+                        <Edit size={18} className="text-[var(--color-subtle)]" />
+                      </>}
+                    />
+                  </div>
+                );
+              })}
+            </CajaLista>
+          </>)}
         </CuerpoVentana>
 
       </div>

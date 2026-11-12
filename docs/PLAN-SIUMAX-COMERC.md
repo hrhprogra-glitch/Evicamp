@@ -5,7 +5,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 12/11/2026 (142), Claude: **SiuMax Nego, paso 3b**: menú, atajos y permisos según el tipo de negocio (grupo Servicios con secciones "Pronto"; solo-servicios sin Caja ni Finanzas; solo Comercio queda igual). Siguiente: 3c, Clientes con Trabajadores. Solo siumax.
+- **Última actualización:** 12/11/2026 (143), Claude: **SiuMax Nego, paso 3c**: Clientes con pestaña Trabajadores, lo que se atiende en el detalle y correo/contacto/notas en la ficha (solo con Servicios); sin Comercio no salen las cosas de tienda. Siguiente: 3d, Inventario. Solo siumax.
+- (142) 12/11/2026, Claude: **SiuMax Nego, paso 3b**: menú, atajos y permisos según el tipo de negocio (grupo Servicios con secciones "Pronto"; solo-servicios sin Caja ni Finanzas; solo Comercio queda igual). Siguiente: 3c, Clientes con Trabajadores. Solo siumax.
 - (141) 12/11/2026, Claude: **SiuMax Nego, paso 3a**: la base de Servic (20 tablas, 13 funciones) entra en `seguridad-sesion.sql`, con permisos propios que no tocan los de Comerc; aplicada solo en siumax. Solo-servicios no ve Caja ni Finanzas. Siguiente: 3b, prender y apagar secciones por tipo. Solo siumax.
 - (140) 12/11/2026, Claude: **SiuMax Nego, fase 2**: Ajustes → "Tipo de negocio" (7 tipos, uno o varios, "Próximamente" los que no existen; columna `empresa_config.tipos_negocio` solo en la base siumax). Siguiente: fase 3, partes de Servic (espera OK). Solo siumax.
 - (139) 12/11/2026, Claude: **SiuMax Nego, fase 1**: el nombre visible "SiuMax Comerc" pasa a "SiuMax Nego" (plan: final de `siumax/TIPOS-DE-NEGOCIO.md`). Siguiente: fase 2, "Tipo de negocio" en Ajustes (espera OK). Solo siumax.

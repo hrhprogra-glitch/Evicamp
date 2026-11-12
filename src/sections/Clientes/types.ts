@@ -12,6 +12,10 @@ export interface Cliente {
   diasPlazo?: number;     // fase 4.3: días de plazo para pagar (ej. 7, 15, 30 días; vacío = fecha por defecto)
   esMayorista?: boolean;   // fase 4.4: si es true, paga precio mayorista en caja automáticamente
   descuentoPorcentaje?: number; // fase 4.4: descuento porcentual especial (ej. 10%)
+  // Talleres y servicios (SiuMax Nego, paso 3c; vienen de SiuMax Servic): se ven si el negocio eligió ese tipo
+  correo?: string;
+  personaContacto?: string; // con quién se habla: "Sr. Juan, administrador"
+  notas?: string;
 }
 
 // Grupo de clientes (fase 4.1): familia o empresa. Cada cliente conserva su cuenta; el grupo junta sus deudas
@@ -126,4 +130,45 @@ export interface PedidoCliente {
   observaciones?: string;
   vendedor?: string;
   detalles?: DetallePedido[];
+}
+
+// ---------- Talleres y servicios (SiuMax Nego, paso 3c; tipos de SiuMax Servic) ----------
+// Lo que se atiende de un cliente (tabla bienes_cliente): piscina, jardín, vehículo, equipo...
+export type TipoBien = 'PISCINA' | 'JARDIN' | 'VEHICULO' | 'EQUIPO' | 'LOCAL' | 'OTRO';
+export const TIPOS_BIEN: { id: TipoBien; nombre: string }[] = [
+  { id: 'PISCINA', nombre: 'Piscina' },
+  { id: 'JARDIN', nombre: 'Jardín o riego' },
+  { id: 'VEHICULO', nombre: 'Vehículo' },
+  { id: 'EQUIPO', nombre: 'Equipo' },
+  { id: 'LOCAL', nombre: 'Local u obra' },
+  { id: 'OTRO', nombre: 'Otro' },
+];
+export interface BienCliente {
+  id: string;
+  clienteId: string;
+  tipo: TipoBien;
+  nombre: string;
+  direccion?: string;
+  ubicacion?: string;
+  volumenM3?: number;
+  placa?: string;
+  marca?: string;
+  modelo?: string;
+  anio?: number;
+  serie?: string;
+  estado: 'ACTIVO' | 'MANTENIMIENTO' | 'BAJA';
+  notas?: string;
+}
+
+// Trabajador (tabla trabajadores): técnico o ayudante, use o no el sistema
+export interface Trabajador {
+  id: string;
+  nombre: string;
+  dni?: string;
+  cargo?: string;
+  telefono?: string;
+  fechaIngreso?: string;   // AAAA-MM-DD
+  estado: 'ACTIVO' | 'INACTIVO';
+  empleadoId?: string;     // su usuario del sistema (Ajustes > Usuarios), si tiene
+  notas?: string;
 }
