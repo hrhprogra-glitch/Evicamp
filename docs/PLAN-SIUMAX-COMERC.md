@@ -5,7 +5,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 12/11/2026 (144), Claude: **SiuMax Nego, paso 3d**: Inventario con la pestaña Herramientas y vehículos (de Servic, solo con Servicios); Nuevo producto ya tenía Marca/Modelo/Ubicación. Siguiente: 3e, Salidas. Solo siumax.
+- **Última actualización:** 12/11/2026 (145), Claude: cabecera de Inventario en una fila con la pestaña Herramientas (medido en todas las secciones a 1920 y 1366 con `medir-cabeceras-nego.mjs`). Siguiente: 3e, Salidas. Solo siumax.
+- (144) 12/11/2026, Claude: **SiuMax Nego, paso 3d**: Inventario con la pestaña Herramientas y vehículos (de Servic, solo con Servicios); Nuevo producto ya tenía Marca/Modelo/Ubicación. Siguiente: 3e, Salidas. Solo siumax.
 - (143) 12/11/2026, Claude: **SiuMax Nego, paso 3c**: Clientes con pestaña Trabajadores, lo que se atiende en el detalle y correo/contacto/notas en la ficha (solo con Servicios); sin Comercio no salen las cosas de tienda. Siguiente: 3d, Inventario. Solo siumax.
 - (142) 12/11/2026, Claude: **SiuMax Nego, paso 3b**: menú, atajos y permisos según el tipo de negocio (grupo Servicios con secciones "Pronto"; solo-servicios sin Caja ni Finanzas; solo Comercio queda igual). Siguiente: 3c, Clientes con Trabajadores. Solo siumax.
 - (141) 12/11/2026, Claude: **SiuMax Nego, paso 3a**: la base de Servic (20 tablas, 13 funciones) entra en `seguridad-sesion.sql`, con permisos propios que no tocan los de Comerc; aplicada solo en siumax. Solo-servicios no ve Caja ni Finanzas. Siguiente: 3b, prender y apagar secciones por tipo. Solo siumax.

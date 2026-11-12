@@ -7,6 +7,19 @@
 
 ---
 
+## 12/11/2026 (145) · Claude — Cabecera de Inventario en una sola fila (con la pestaña Herramientas y vehículos)
+- **Dueño** (foto, Inventario a 1920 con la pestaña nueva y los botones en otra fila): *"no te olvides que tiene que estar en una fila lo marque con rojo en todas las pantallas recuerda que ya lo configuramos una vez"*.
+- **Inventario** (`index.tsx`), lo mismo que se hizo en Servic:
+  - Cabecera con el margen de las demás secciones (`px-3 sm:px-4 lg:px-4 2xl:px-6`).
+  - Pestañas y botones sin partir el texto (`whitespace-nowrap`) y más compactos: relleno `px-3 2xl:px-4`, letra `tracking-wider`, botones con `gap-2 2xl:gap-3` y `2xl:flex-nowrap`.
+  - Debajo de 1536 px la pestaña dice solo **"Herramientas"** (a 1920: "Herramientas y vehículos").
+- **Medido** con `ai-scripts/pruebas/medir-cabeceras-nego.mjs` (nuevo), con el negocio en Comercio + Servicios:
+  - A 1920 y 1366: **todas** las secciones y pestañas en una fila (44 de 44).
+  - Caja no tiene esa cabecera.
+  - El script cuenta una fila nueva solo si un elemento queda entero debajo de otro.
+  - Usarlo con cada sección que se traiga de Servic.
+- Solo siumax.
+
 ## 12/11/2026 (144) · Claude — SiuMax Nego, paso 3d: Inventario con Herramientas y vehículos
 - **Dueño:** "si".
 - **Traído de SiuMax Servic, tal cual:** la carpeta `Inventario/components/Activos/` (Activos, tablas, ventanas de herramienta, préstamo, historial, vehículo y mantenimiento).

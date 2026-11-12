@@ -889,3 +889,4 @@
 - *"si hazlo"* (paso 3b) → el menú cambia según el tipo de negocio (bitácora 142).
 - *"si"* (paso 3c) → Clientes con Trabajadores y "lo que se atiende" (bitácora 143).
 - *"si"* (paso 3d) → Inventario con Herramientas y vehículos (bitácora 144).
+- *"perfecto sigamos al 3e solo no te olvides que tiene que estar en una fila lo marque con rojo en todas las pantallas recuerda que ya lo configuramos una vez"* → Inventario en una fila y medido en todas las secciones (bitácora 145); luego 3e.
