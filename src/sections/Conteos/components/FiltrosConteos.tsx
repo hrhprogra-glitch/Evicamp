@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { Search, X, FilterX } from 'lucide-react';
+import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 
 interface Props {
   searchQuery: string;
@@ -132,6 +133,12 @@ export const FiltrosConteos: React.FC<Props> = ({
             </button>
           </div>
         )}
+        <BotonEscanerCelular
+          id="btn-escaner-conteos"
+          variante="sobrio"
+          onScan={(codigo) => setSearchQuery(codigo)}
+          titulo="Escanear código de barras para buscar en conteos"
+        />
       </div>
 
       <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full xl:w-auto">

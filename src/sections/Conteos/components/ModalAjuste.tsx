@@ -17,6 +17,8 @@ import { ChevronDown, ClipboardCheck, Search, X } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import type { Product } from '../../Inventario/types';
 import { coincideBusqueda } from '../../../utils/busqueda';
+import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
+import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar } from '../../../utils/dialogos';
 import {formatearCantidad, formatearMonto } from '../../../utils/formato';
@@ -467,25 +469,41 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
                 </div>
               ) : (
                 <>
-                  <input
-                    id="input-buscar-ajuste"
-                    type="text"
-                    autoFocus
-                    autoComplete="off"
-                    spellCheck={false}
-                    data-lpignore="true"
-                    data-form-type="other"
-                    placeholder="ESCANEA O ESCRIBE CÓDIGO / NOMBRE..."
-                    value={busqueda}
-                    onChange={(e) => { setBusqueda(e.target.value); setAbierta(e.target.value.trim() !== ''); }}
-                    onFocus={() => setAbierta(busqueda.trim() !== '')}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') { e.preventDefault(); if (filtrados.length) elegir(filtrados[0]); }
-                      else if (e.key === 'ArrowDown') { e.preventDefault(); setAbierta(true); setTimeout(() => items()[0]?.focus(), 30); }
-                      else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-cerrar-ajuste')?.focus(); }
-                    }}
-                    className="w-full bg-white border-2 border-[var(--color-border)] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]"
-                  />
+                  <div className="flex items-stretch gap-1.5">
+                    <input
+                      id="input-buscar-ajuste"
+                      type="text"
+                      autoFocus
+                      autoComplete="off"
+                      spellCheck={false}
+                      data-lpignore="true"
+                      data-form-type="other"
+                      placeholder="ESCANEA O ESCRIBE CÓDIGO / NOMBRE..."
+                      value={busqueda}
+                      onChange={(e) => { setBusqueda(e.target.value); setAbierta(e.target.value.trim() !== ''); }}
+                      onFocus={() => setAbierta(busqueda.trim() !== '')}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') { e.preventDefault(); if (filtrados.length) elegir(filtrados[0]); }
+                        else if (e.key === 'ArrowDown') { e.preventDefault(); setAbierta(true); setTimeout(() => items()[0]?.focus(), 30); }
+                        else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-cerrar-ajuste')?.focus(); }
+                      }}
+                      className="flex-1 min-w-0 bg-white border-2 border-[var(--color-border)] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]"
+                    />
+                    <BotonEscanerCelular
+                      id="btn-escaner-ajuste"
+                      onScan={(codigo) => {
+                        const encontrado = buscarProductoPorCodigo(elegibles, codigo);
+                        if (encontrado) {
+                          elegir(encontrado);
+                        } else {
+                          setBusqueda(codigo);
+                          setAbierta(true);
+                        }
+                      }}
+                      titulo="Escanear producto con la cámara para contar"
+                      className="!h-auto px-3.5"
+                    />
+                  </div>
                   {/* La lista va dentro de la ventana (no flotando): la ventana se acomoda a su contenido y una lista flotante se cortaba */}
                   {abierta && (
                     <div className="aparecer mt-1 bg-white border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-56 overflow-y-auto">

@@ -7,6 +7,33 @@
 
 ---
 
+## 12/11/2026 (138) · Antigravity — Escáner de códigos de barras por cámara EXCLUSIVO para celular en todos los buscadores y registros de productos
+- **Dueño:** *"perfecto entiendo ahora quiero que en comerc.siumax agregues el escaner por celular pero ojo que solo este en celular ahi agregalo para todos los buscador para escanear el codigo del producto y se agregue con la camara del celular asi cuando quieran registrar o contar un producto solo tengan que escanearlo con la camara y se ingresa"* → aprobado con *"si me parece bien"*.
+- **Nuevo motor y componente reutilizable:**
+  1. `src/utils/decodificarBarras.ts`:
+     - Lector de códigos de barras 100 % sin internet: usa primero `BarcodeDetector` nativo del navegador (Android Chrome/Edge/Samsung e iOS 17+) y, si el celular no lo trae, decodifica en TypeScript puro sobre `<canvas>` (`EAN-13`, `UPC-A`, `EAN-8` y `CODE-128`).
+     - `buscarProductoPorCodigo(productos, codigo)`: busca coincidencia exacta por `barcode`, `code`, códigos de presentaciones (`presentaciones[].barcode`), códigos de variantes (`variantes[].barcode`) y equivalencia UPC-A/EAN-13 (cero inicial), con respaldo a `coincideBusqueda`.
+     - `sonarConfirmacionEscaneo()`: pitido corto + vibración al detectar el código.
+  2. `src/components/BotonEscanerCelular.tsx` + estilos en `src/index.css`:
+     - Clase `.solo-celular-escaner`: visible **SOLO en celular (`< 768px`)** y oculta al 100 % (`display: none !important`) en PC, laptop y televisor.
+     - Ventana flotante `#modal-escaner-celular` con estilo SiuMax Sobrio (`0px` de redondeo, borde de 2px), cámara trasera en vivo (`facingMode: 'environment'`), marco guía rectangular, botón de linterna (`torch`) si el celular la soporta y botón de respaldo `"Tomar foto del código"`.
+- **Integrado en todas las secciones de productos de SiuMax Comerc:**
+  - **Punto de Venta / Caja** (`TerminalBusqueda.tsx`, `#btn-escaner-pos`): escanea y agrega el producto directo al carrito (o abre balanza si es a granel).
+  - **Conteos** (`ModalAjuste.tsx`, `FiltrosConteos.tsx`, `Conteos/index.tsx`, `ModalEditarSalida.tsx`):
+    - En **Nuevo ajuste** (`#btn-escaner-ajuste`): escanea, selecciona el producto al instante y lleva el cursor a *"¿Cuántos hay?"*.
+    - En el buscador de la tabla de Conteos (`#btn-escaner-conteos`): filtra por código de barras, SKU o nombre.
+    - En **Editar salida** (`#btn-escaner-merma`): cambia el producto escaneado.
+  - **Inventario** (`FiltrosInventario.tsx`, `TablaLotes.tsx`, `ModalProducto.tsx`, `ModalLote.tsx`, `PanelCompras.tsx`, `ModalProduccion.tsx`, `ModalTraspaso.tsx`):
+    - Buscador general (`#btn-escaner-inventario`): filtra tanto la pestaña **Productos** como **Lotes** por código de barras o SKU.
+    - **Nuevo / Editar producto** (`#btn-escaner-barcode-producto` y `#btn-escaner-pres-barcode-i`): rellena el código de barras y dispara la búsqueda automática de nombre y foto.
+    - **Ingresar lote** (`#btn-escaner-lote`): selecciona automáticamente el producto escaneado.
+    - **Compras › Nueva lista** (`#btn-escaner-compra`): agrega el producto directo a la lista de compras.
+    - **Armar producto** (`#btn-escaner-talla-barcode-i` y `#btn-escaner-insumo-prod`): llena el código de barras de una variante o elige el insumo de receta/combo.
+    - **Traspasos** (`#btn-escaner-traspaso`): agrega el producto a la lista de envío.
+  - **Utilidades** (`TablaAnalisisProductos.tsx`, `calcularAnalisis.ts`, `types.ts`, `#btn-escaner-utilidades`): busca la ganancia del producto por código de barras o SKU.
+  - **Clientes › Créditos** (`ModalFiado.tsx`, `#btn-escaner-fiado`) y **Tienda Web** (`TiendaNavbar.tsx`).
+- **Probado y publicado en pruebas:** compilado con `npx tsc -b && vite build` (0 errores), desplegado en `comerc.siumax.duckdns.org` (`deploy.cjs siumax`) y verificado con `ai-scripts/pruebas/prueba-escaner-celular.mjs`. Evicamp y GitHub no se tocaron (esperando aviso del dueño).
+
 ## 12/11/2026 (137) · Claude — Pendientes, Pagados y Compras del cliente: botones que abren su propia ventana
 - **Dueño** (foto del detalle de NICOLAY): *"en pendientes pagados compras abajo sale todo quiero que solo sean botones que habran ventanas donde sale la lista con su buscador y fecha asi para apreciarlo mejor"*.
 - **Detalle del cliente** (`ModalDetalleCliente.tsx`): ya no tiene pestañas ni lista abajo. Ahora tiene 3 botones grandes:

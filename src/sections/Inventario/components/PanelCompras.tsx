@@ -19,6 +19,8 @@ import { supabase } from '../../../db/supabase';
 import { usePermiso, useEmpleado, avisarSinPermiso } from '../../../utils/permisos';
 import { avisar, confirmar } from '../../../utils/dialogos';
 import { coincideBusqueda } from '../../../utils/busqueda';
+import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
+import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import type { Product } from '../types';
 import { esDecimal, unidadDe as unidadDeProducto } from '../../../utils/unidades';
 import { presentacionesValidas, nombrePresentacion } from '../../../utils/presentaciones';
@@ -1144,15 +1146,31 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2">
-        <div className="relative flex-1">
-          <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
-          <input id="compra-buscar" data-nav="1,0" data-esc-limpia={abierto || busqueda ? '1' : undefined} value={busqueda}
-            onChange={(e) => { setBusqueda(e.target.value); setAbierto(true); }}
-            onBlur={() => setTimeout(() => setAbierto(false), 150)}
-            placeholder="Escribe para buscar o ↓ para ver todos..." onKeyDown={teclasBuscador} autoComplete="off"
-            role="combobox" aria-expanded={abierto} aria-controls="compra-resultados"
-            aria-activedescendant={marcado >= 0 ? `compra-resultado-${marcado}` : undefined}
-            className={`${claseInput} pl-7`} />
+        <div className="relative flex-1 flex items-stretch gap-1.5">
+          <div className="relative flex-1 min-w-0">
+            <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
+            <input id="compra-buscar" data-nav="1,0" data-esc-limpia={abierto || busqueda ? '1' : undefined} value={busqueda}
+              onChange={(e) => { setBusqueda(e.target.value); setAbierto(true); }}
+              onBlur={() => setTimeout(() => setAbierto(false), 150)}
+              placeholder="Escribe para buscar o ↓ para ver todos..." onKeyDown={teclasBuscador} autoComplete="off"
+              role="combobox" aria-expanded={abierto} aria-controls="compra-resultados"
+              aria-activedescendant={marcado >= 0 ? `compra-resultado-${marcado}` : undefined}
+              className={`${claseInput} pl-7`} />
+          </div>
+          <BotonEscanerCelular
+            id="btn-escaner-compra"
+            onScan={(codigo) => {
+              const prod = buscarProductoPorCodigo(disponibles, codigo);
+              if (prod) {
+                elegir(prod);
+              } else {
+                setBusqueda(codigo);
+                setAbierto(true);
+              }
+            }}
+            titulo="Escanear producto para la lista de compra"
+            className="!h-auto px-3"
+          />
         </div>
         {/* 05/11/2026: sin "Sugerir pedido" (el dueño quiere la ventana solo para armar el pedido). Limpiar lista al lado del buscador */}
         <button id="btn-limpiar-compra" type="button" data-nav="1,1" onClick={() => void limpiarLista()} aria-disabled={!items.length}

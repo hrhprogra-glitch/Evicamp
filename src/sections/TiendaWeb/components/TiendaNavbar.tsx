@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, ShoppingBag, X } from 'lucide-react';
 import type { TiendaEmpresaConfig } from '../types';
 import { iniciales, soles } from '../formato';
+import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 
 interface TiendaNavbarProps {
   empresa: TiendaEmpresaConfig;
@@ -15,26 +16,34 @@ interface TiendaNavbarProps {
 
 // Buscador reutilizado en PC (dentro de la barra) y en celular (debajo de ella).
 const Buscador: React.FC<{ id: string; valor: string; onCambio: (v: string) => void; texto: string }> = ({ id, valor, onCambio, texto }) => (
-  <div className="relative">
-    <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-    <input
-      id={id}
-      type="search"
-      value={valor}
-      onChange={(e) => onCambio(e.target.value)}
-      placeholder={texto}
-      className="w-full pl-10 pr-9 py-2.5 bg-gray-100 focus:bg-white text-gray-900 placeholder-gray-400 rounded-full border border-transparent focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 text-sm transition-all outline-none"
+  <div className="flex items-stretch gap-1.5">
+    <div className="relative flex-1 min-w-0">
+      <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+      <input
+        id={id}
+        type="search"
+        value={valor}
+        onChange={(e) => onCambio(e.target.value)}
+        placeholder={texto}
+        className="w-full pl-10 pr-9 py-2.5 bg-gray-100 focus:bg-white text-gray-900 placeholder-gray-400 rounded-full border border-transparent focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 text-sm transition-all outline-none"
+      />
+      {valor && (
+        <button
+          type="button"
+          onClick={() => onCambio('')}
+          aria-label="Limpiar búsqueda"
+          className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-300/70 text-gray-700 flex items-center justify-center cursor-pointer"
+        >
+          <X size={13} />
+        </button>
+      )}
+    </div>
+    <BotonEscanerCelular
+      id={`${id}-escaner`}
+      onScan={(codigo) => onCambio(codigo)}
+      titulo="Escanear producto con la cámara"
+      className="!h-auto px-3"
     />
-    {valor && (
-      <button
-        type="button"
-        onClick={() => onCambio('')}
-        aria-label="Limpiar búsqueda"
-        className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-300/70 text-gray-700 flex items-center justify-center cursor-pointer"
-      >
-        <X size={13} />
-      </button>
-    )}
   </div>
 );
 

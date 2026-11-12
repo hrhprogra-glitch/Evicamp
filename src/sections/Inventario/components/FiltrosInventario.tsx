@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { filaEnMedio } from '../../../utils/flechasEspaciales';
 import { BOTONES_INVENTARIO } from '../tecladoInventario';
 import { Search, X, FilterX } from 'lucide-react';
+import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 
 interface Props {
   searchQuery: string;
@@ -185,6 +186,15 @@ export const FiltrosInventario: React.FC<Props> = ({
             </div>
           )}
         </div>
+        <BotonEscanerCelular
+          id="btn-escaner-inventario"
+          variante="sobrio"
+          onScan={(codigo) => {
+            setLocalQuery(codigo);
+            setSearchQuery(codigo);
+          }}
+          titulo="Escanear código de barras para buscar en inventario"
+        />
       </div>
 
       {/* BLOQUE DE FILTROS Y ORDENAMIENTO (A la derecha) */}

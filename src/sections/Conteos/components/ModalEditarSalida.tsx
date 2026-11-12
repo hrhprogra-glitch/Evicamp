@@ -3,6 +3,8 @@
 // registran en "Nuevo ajuste" (ModalAjuste.tsx); los conteos se corrigen en ModalEditarConteo.tsx.
 // (Antes era la ventana "Registrar merma" de Inventario; su modo "nuevo" ya no se abre.)
 import { coincideBusqueda } from '../../../utils/busqueda';
+import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
+import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Save, AlertTriangle, Database, Loader2, ChevronDown } from 'lucide-react';
 import { supabase } from '../../../db/supabase.ts';
@@ -644,27 +646,43 @@ export const ModalEditarSalida: React.FC<Props> = ({ isOpen, onClose, productos,
               </div>
             ) : (
               <div className="relative">
-                <input
-                  type="text"
-                  autoFocus
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  id="merma-input-search"
-                  name="merma_search_no_history"
-                  data-lpignore="true"
-                  data-form-type="other"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setShowDropdown(true);
-                  }}
-                  onFocus={() => setShowDropdown(true)}
-                  onKeyDown={handleSearchKeyDown}
-                  className="w-full bg-[#F8FAFC] border-2 border-[#E2E8F0] p-3 text-xs font-bold text-[var(--color-ink)] outline-none focus:border-[var(--color-danger)] transition-colors"
-                  placeholder="Escanea o escribe nombre / código del producto..."
-                />
+                <div className="flex items-stretch gap-1.5">
+                  <input
+                    type="text"
+                    autoFocus
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    id="merma-input-search"
+                    name="merma_search_no_history"
+                    data-lpignore="true"
+                    data-form-type="other"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setShowDropdown(true);
+                    }}
+                    onFocus={() => setShowDropdown(true)}
+                    onKeyDown={handleSearchKeyDown}
+                    className="flex-1 min-w-0 bg-[#F8FAFC] border-2 border-[#E2E8F0] p-3 text-xs font-bold text-[var(--color-ink)] outline-none focus:border-[var(--color-danger)] transition-colors"
+                    placeholder="Escanea o escribe nombre / código del producto..."
+                  />
+                  <BotonEscanerCelular
+                    id="btn-escaner-merma"
+                    onScan={(codigo) => {
+                      const prod = buscarProductoPorCodigo(productos, codigo);
+                      if (prod) {
+                        handleSeleccionarProducto(prod);
+                      } else {
+                        setSearchQuery(codigo);
+                        setShowDropdown(true);
+                      }
+                    }}
+                    titulo="Escanear producto con la cámara"
+                    className="!h-auto px-3.5"
+                  />
+                </div>
                 {showDropdown && searchQuery && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] z-50 max-h-48 overflow-y-auto custom-scrollbar">
                     {filteredProducts.length > 0 ? (

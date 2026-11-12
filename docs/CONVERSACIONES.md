@@ -867,3 +867,9 @@
 ## 12/11/2026
 - *"en comerc.siumax quiero que agregues este cambio en pendientes pagados compras abajo sale todo quiero que solo sean botones que habran ventanas donde sale la lista con su buscador y fecha asi para apreciarlo mejor"*
   - **Hecho (bitácora 137):** 3 botones en el detalle del cliente; cada uno abre su ventana con la lista, el buscador y la fecha.
+- *"perfecto entiendo ahora quiero que en comerc.siumax agregues el escaner por celular pero ojo que solo este en celular ahi agregalo para todos los buscador para escanear el codigo del producto y se agregue con la camara del celular asi cuando quieran registrar o contar un producto solo tengan que escanearlo con la camara y se ingresa"* → aprobado con *"si me parece bien"*.
+  - **Hecho por Antigravity (bitácora 138):**
+    - Botón `[ 📷 ]` (`BotonEscanerCelular.tsx`, `.solo-celular-escaner`) visible **solo en celular (`< 768px`)** y oculto al 100 % en PC/laptop/televisor.
+    - Lector 100 % sin internet (`src/utils/decodificarBarras.ts`) con `BarcodeDetector` nativo + decodificador propio `EAN-13`/`UPC-A`/`EAN-8`/`CODE-128`, linterna y opción de tomar foto.
+    - Integrado en Caja, Conteos (`Nuevo ajuste`, buscador de tabla y `Editar salida`), Inventario (`Productos`, `Lotes`, `Nuevo/Editar producto`, `Ingresar lote`, `Compras`, `Armar producto`, `Traspasos`), Utilidades, Clientes › Créditos y Tienda Web.
+    - Publicado en el sitio de pruebas (`comerc.siumax.duckdns.org`) y probado con `prueba-escaner-celular.mjs`.

@@ -17,6 +17,8 @@ interface Lote {
   created_at: string;
   cost_unit: number;
   product_name: string;
+  product_code?: string;
+  product_barcode?: string;
   document_ref: string;
   category: string;
   mermas_count?: number; // Cantidad de veces que se registró merma
@@ -63,7 +65,7 @@ export const TablaLotes: React.FC<Props> = ({
           .from('batches')
           .select(`
             *,
-            products!batches_product_id_fkey (id, name, category, unit, control_type, weight_unit)
+            products!batches_product_id_fkey (id, name, code, barcode, category, unit, control_type, weight_unit)
           `)
           .neq('is_active', 0) // 🔥 EL ESCUDO: Ya no descarga los eliminados
           .order('created_at', { ascending: false });
@@ -81,6 +83,8 @@ export const TablaLotes: React.FC<Props> = ({
             created_ts: new Date(b.created_at).getTime(),
             cost_unit: Number(b.cost_unit) || 0,
             product_name: b.products?.name || 'PRODUCTO DESCONOCIDO',
+            product_code: b.products?.code || '',
+            product_barcode: b.products?.barcode || '',
             document_ref: b.document_ref || 'INT-S/R',
             supplier: b.supplier || '',
             provider_id: b.provider_id ?? null,
@@ -146,9 +150,9 @@ export const TablaLotes: React.FC<Props> = ({
       return false;
     }
 
-    // 1. Filtro de Búsqueda de Texto Inteligente (coincidencia flexible)
+    // 1. Filtro de Búsqueda de Texto Inteligente (coincidencia flexible + código/barras del producto)
     if (searchQuery && searchQuery.trim()) {
-      if (!coincideBusqueda([lote.product_name, lote.variant_name, lote.document_ref, lote.supplier], searchQuery)) {
+      if (!coincideBusqueda([lote.product_name, lote.product_code, lote.product_barcode, lote.variant_name, lote.document_ref, lote.supplier], searchQuery)) {
         return false;
       }
     }

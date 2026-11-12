@@ -17,6 +17,8 @@ import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar, confirmar } from '../../../utils/dialogos';
 import { coincideBusqueda } from '../../../utils/busqueda';
+import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
+import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import { formatearCantidad } from '../../../utils/formato';
 import { useEmpleado, usePermiso } from '../../../utils/permisos';
 import { CuerpoVentana, CajaLista, FilaLista, LineaDato, Etiqueta, DatoFila, claseBotonBarra, claseBotonPrincipal } from '../../../components/ListaVentana';
@@ -657,9 +659,18 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                       <input id={`talla-precio-${idx}`} type="number" min="0" step="0.01" placeholder={precio || '0.00'} value={t.precio} title="Vacío = el precio de arriba"
                         onChange={(e) => cambiarFila(idx, 'precio', e.target.value)} onFocus={(e) => e.currentTarget.select()} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                         className={`${claseCampo} col-span-2 text-right !p-2`} />
-                      <input id={`talla-barcode-${idx}`} type="text" autoComplete="off" spellCheck={false} placeholder="OPCIONAL" value={t.barcode}
-                        onChange={(e) => cambiarFila(idx, 'barcode', e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
-                        className={`${claseCampo} col-span-3 !p-2`} />
+                      <div className="col-span-3 flex items-stretch gap-1">
+                        <input id={`talla-barcode-${idx}`} type="text" autoComplete="off" spellCheck={false} placeholder="OPCIONAL" value={t.barcode}
+                          onChange={(e) => cambiarFila(idx, 'barcode', e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
+                          className={`${claseCampo} flex-1 min-w-0 !p-2`} />
+                        <BotonEscanerCelular
+                          id={`btn-escaner-talla-barcode-${idx}`}
+                          onScan={(codigo) => cambiarFila(idx, 'barcode', codigo)}
+                          titulo="Escanear código de barras de esta talla/color"
+                          variante="compacto"
+                          className="!h-auto"
+                        />
+                      </div>
                       <span className="col-span-1 flex flex-col items-end">
                         <button id={`btn-quitar-talla-${idx}`} type="button" onClick={() => quitarFila(idx)} title="Quitar esta talla o color"
                           className="p-1.5 border-2 border-transparent text-[var(--color-danger)] hover:border-[var(--color-danger)] focus:outline-none focus:border-[var(--color-danger)] cursor-pointer">
@@ -693,15 +704,37 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
                 <p className={etiquetaCampo}>2. Productos que usa (cuánto lleva cada unidad)</p>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <div className="relative flex-1" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setListaAbierta(false); }}>
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)] pointer-events-none" />
-                    <input id="input-buscar-insumo-prod" type="text" autoComplete="off" spellCheck={false} value={busqueda}
-                      placeholder="BUSCA EL PRODUCTO POR NOMBRE O CÓDIGO…"
-                      onChange={(e) => { setBusqueda(e.target.value); setElegidoInsumo(null); setListaAbierta(e.target.value.trim() !== ''); }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') { e.preventDefault(); if (candidatos[0]) elegirInsumo(elegidoInsumo || candidatos[0]); }
-                        else if (e.key === 'ArrowDown' && listaAbierta && candidatos.length) { e.preventDefault(); setTimeout(() => items()[0]?.focus(), 20); }
-                      }}
-                      className={`${claseCampo} pl-9 uppercase`} />
+                    <div className="flex items-stretch gap-1.5">
+                      <div className="relative flex-1 min-w-0">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)] pointer-events-none" />
+                        <input id="input-buscar-insumo-prod" type="text" autoComplete="off" spellCheck={false} value={busqueda}
+                          placeholder="BUSCA EL PRODUCTO POR NOMBRE O CÓDIGO…"
+                          onChange={(e) => { setBusqueda(e.target.value); setElegidoInsumo(null); setListaAbierta(e.target.value.trim() !== ''); }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') { e.preventDefault(); if (candidatos[0]) elegirInsumo(elegidoInsumo || candidatos[0]); }
+                            else if (e.key === 'ArrowDown' && listaAbierta && candidatos.length) { e.preventDefault(); setTimeout(() => items()[0]?.focus(), 20); }
+                          }}
+                          className={`${claseCampo} pl-9 uppercase`} />
+                      </div>
+                      <BotonEscanerCelular
+                        id="btn-escaner-insumo-prod"
+                        onScan={(codigo) => {
+                          const prod = buscarProductoPorCodigo(
+                            productos.filter((p) => p.activo !== false && String(p.id) !== String(editId)),
+                            codigo
+                          );
+                          if (prod) {
+                            elegirInsumo(prod);
+                          } else {
+                            setBusqueda(codigo);
+                            setElegidoInsumo(null);
+                            setListaAbierta(true);
+                          }
+                        }}
+                        titulo="Escanear insumo con la cámara"
+                        className="!h-auto px-3"
+                      />
+                    </div>
                     {listaAbierta && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[var(--color-ink)] z-50 max-h-56 overflow-y-auto">
                         {candidatos.length ? candidatos.map((p) => (

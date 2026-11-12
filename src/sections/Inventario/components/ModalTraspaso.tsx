@@ -6,6 +6,7 @@ import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar, confirmar } from '../../../utils/dialogos';
 import { ModalValeTraspaso } from './ModalValeTraspaso';
 import { coincideBusqueda } from '../../../utils/busqueda';
+import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 
 interface ModalTraspasoProps {
   onClose: () => void;
@@ -443,19 +444,41 @@ export const ModalTraspaso: React.FC<ModalTraspasoProps> = ({ onClose, onTraspas
                   <label className="block text-xs font-black uppercase mb-1">
                     Buscar Producto a Traspasar (con stock en origen)
                   </label>
-                  <input
-                    id="buscador-producto-traspaso"
-                    type="text"
-                    value={busqueda}
-                    onChange={(e) => {
-                      setBusqueda(e.target.value);
-                      setBusquedaAbierta(true);
-                      setIndiceSugerencia(0);
-                    }}
-                    onFocus={() => setBusquedaAbierta(true)}
-                    placeholder="Escribe el nombre del producto, código de barras o variante..."
-                    className="w-full px-3 py-2 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] text-sm font-sans focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                  />
+                  <div className="flex items-stretch gap-1.5">
+                    <input
+                      id="buscador-producto-traspaso"
+                      type="text"
+                      value={busqueda}
+                      onChange={(e) => {
+                        setBusqueda(e.target.value);
+                        setBusquedaAbierta(true);
+                        setIndiceSugerencia(0);
+                      }}
+                      onFocus={() => setBusquedaAbierta(true)}
+                      placeholder="Escribe el nombre del producto, código de barras o variante..."
+                      className="flex-1 min-w-0 px-3 py-2 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] text-sm font-sans focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                    />
+                    <BotonEscanerCelular
+                      id="btn-escaner-traspaso"
+                      onScan={(codigo) => {
+                        const q = codigo.trim().toUpperCase();
+                        const exacto = productosDisponibles.find(
+                          (it) =>
+                            String(it.product.barcode || '').trim().toUpperCase() === q ||
+                            String(it.product.code || '').trim().toUpperCase() === q
+                        );
+                        if (exacto) {
+                          agregarProductoAlTraspaso(exacto);
+                        } else {
+                          setBusqueda(codigo);
+                          setBusquedaAbierta(true);
+                          setIndiceSugerencia(0);
+                        }
+                      }}
+                      titulo="Escanear producto para traspaso"
+                      className="!h-auto px-3"
+                    />
+                  </div>
 
                   {/* Dropdown de sugerencias */}
                   {busquedaAbierta && sugerencias.length > 0 && (

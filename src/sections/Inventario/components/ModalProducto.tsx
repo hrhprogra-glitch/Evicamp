@@ -9,6 +9,7 @@ import { confirmar } from '../../../utils/dialogos';
 import { UNIDADES, unidadDe } from '../../../utils/unidades';
 import { escalasValidas } from '../../../utils/preciosCantidad';
 import { presentacionesValidas } from '../../../utils/presentaciones';
+import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 
 // Componente de Notificación de Errores (Diseño Geométrico y Alto Contraste)
 const TechnicalAlert = ({ message }: { message: string }) => {
@@ -1936,21 +1937,32 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
               </div>
               <div className="space-y-1.5">
                 <label htmlFor="input-barcode-producto" className="block text-xs font-black text-[var(--color-ink)] uppercase tracking-wider">Código de Barras</label>
-                <input
-                  id="input-barcode-producto"
-                  type="text"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  name="prod_barcode_no_history"
-                  data-lpignore="true"
-                  data-form-type="other"
-                  placeholder="ESCANEAR O ESCRIBIR..."
-                  value={formData.barcode}
-                  onChange={(e) => { setFormData({...formData, barcode: e.target.value}); setCodigoParaBuscar(e.target.value); }}
-                  className="w-full bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-2.5 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
-                />
+                <div className="flex items-stretch gap-1.5">
+                  <input
+                    id="input-barcode-producto"
+                    type="text"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    name="prod_barcode_no_history"
+                    data-lpignore="true"
+                    data-form-type="other"
+                    placeholder="ESCANEAR O ESCRIBIR..."
+                    value={formData.barcode}
+                    onChange={(e) => { setFormData({...formData, barcode: e.target.value}); setCodigoParaBuscar(e.target.value); }}
+                    className="flex-1 min-w-0 bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-2.5 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] transition-colors"
+                  />
+                  <BotonEscanerCelular
+                    id="btn-escaner-barcode-producto"
+                    onScan={(codigo) => {
+                      setFormData((prev) => ({ ...prev, barcode: codigo }));
+                      setCodigoParaBuscar(codigo);
+                    }}
+                    titulo="Escanear código de barras del producto con la cámara"
+                    className="!h-auto px-3"
+                  />
+                </div>
               </div>
                 {estadoCodigo && (
                   <p role="status" className={`col-span-2 text-xs font-black uppercase tracking-wide ${
@@ -2525,10 +2537,20 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                               value={f.precio} onChange={(e) => cambiarPres(i, 'precio', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'precio')}
                               readOnly={precioBloqueado} aria-label={`Presentación ${i + 1}: precio`}
                               className="w-24 bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-2 text-xs font-black text-right outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
-                            <input id={`pres-barcode-${i}`} type="text" autoComplete="off" data-lpignore="true" placeholder="Código de barras (opcional)"
-                              value={f.barcode} onChange={(e) => cambiarPres(i, 'barcode', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'barcode')}
-                              readOnly={precioBloqueado} aria-label={`Presentación ${i + 1}: código de barras`}
-                              className="w-full sm:flex-1 min-w-[140px] bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-2 text-xs font-black outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
+                            <div className="w-full sm:flex-1 min-w-[140px] flex items-stretch gap-1">
+                              <input id={`pres-barcode-${i}`} type="text" autoComplete="off" data-lpignore="true" placeholder="Código de barras (opcional)"
+                                value={f.barcode} onChange={(e) => cambiarPres(i, 'barcode', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'barcode')}
+                                readOnly={precioBloqueado} aria-label={`Presentación ${i + 1}: código de barras`}
+                                className="flex-1 min-w-0 bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-2 text-xs font-black outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
+                              <BotonEscanerCelular
+                                id={`btn-escaner-pres-barcode-${i}`}
+                                disabled={precioBloqueado}
+                                onScan={(codigo) => cambiarPres(i, 'barcode', codigo)}
+                                titulo={`Escanear código de barras de ${f.unidad}`}
+                                variante="compacto"
+                                className="!h-auto"
+                              />
+                            </div>
                           </div>
                         ))}
                       </div>

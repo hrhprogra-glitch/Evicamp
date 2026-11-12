@@ -5,6 +5,7 @@ import type { AnalisisProducto, StatsFiltro } from '../types';
 import { ModalDetalleProducto } from './ModalDetalleProducto';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { formatearMonto } from '../../../utils/formato';
+import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 
 interface Props {
   datos: AnalisisProducto[];
@@ -48,7 +49,7 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
   };
 
   const datosFiltrados = useMemo(() => datos.filter(prod => {
-    const indiceOmni = normalizarTexto(`${prod.nombre || ''} ${prod.categoria || ''} ${prod.estado || ''} ${prod.tipoControl || ''}`);
+    const indiceOmni = normalizarTexto(`${prod.nombre || ''} ${prod.code || ''} ${prod.barcode || ''} ${prod.categoria || ''} ${prod.estado || ''} ${prod.tipoControl || ''}`);
     const busquedaNormalizada = normalizarTexto(busqueda || '');
 
     const terminosBusqueda = busquedaNormalizada.split(/\s+/).filter(Boolean);
@@ -429,6 +430,12 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
               </button>
             </div>
           )}
+          <BotonEscanerCelular
+            id="btn-escaner-utilidades"
+            variante="sobrio"
+            onScan={(codigo) => setBusqueda(codigo)}
+            titulo="Escanear producto con la cámara"
+          />
         </div>
 
         <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full xl:w-auto">

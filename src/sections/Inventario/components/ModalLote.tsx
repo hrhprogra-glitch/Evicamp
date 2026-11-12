@@ -1,4 +1,6 @@
 import { coincideBusqueda } from '../../../utils/busqueda';
+import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
+import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Save, Database, Search, Calculator, FileText, Calendar, Loader2, Truck, Layers } from 'lucide-react';
 import type { Product, ProductVariant } from '../types';
@@ -829,27 +831,43 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
               </div>
             ) : (
               <div className="relative">
-                <input
-                  id="input-buscar-producto-lote"
-                  type="text"
-                  autoFocus
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  name="search_query_lote_no_history"
-                  data-lpignore="true"
-                  data-form-type="other"
-                  placeholder="ESCANEA O ESCRIBE CÓDIGO / NOMBRE DEL PRODUCTO..."
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setShowDropdown(true);
-                  }}
-                  onFocus={() => setShowDropdown(true)}
-                  onKeyDown={handleSearchKeyDown}
-                  className="w-full bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] transition-colors"
-                />
+                <div className="flex items-stretch gap-1.5">
+                  <input
+                    id="input-buscar-producto-lote"
+                    type="text"
+                    autoFocus
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    name="search_query_lote_no_history"
+                    data-lpignore="true"
+                    data-form-type="other"
+                    placeholder="ESCANEA O ESCRIBE CÓDIGO / NOMBRE DEL PRODUCTO..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setShowDropdown(true);
+                    }}
+                    onFocus={() => setShowDropdown(true)}
+                    onKeyDown={handleSearchKeyDown}
+                    className="flex-1 min-w-0 bg-[var(--color-surface)] border-2 border-[#E2E8F0] p-3 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-success)] transition-colors"
+                  />
+                  <BotonEscanerCelular
+                    id="btn-escaner-lote"
+                    onScan={(codigo) => {
+                      const prod = buscarProductoPorCodigo(productos, codigo);
+                      if (prod) {
+                        seleccionarProducto(prod);
+                      } else {
+                        setSearchQuery(codigo);
+                        setShowDropdown(true);
+                      }
+                    }}
+                    titulo="Escanear código de barras del producto"
+                    className="!h-auto px-3.5"
+                  />
+                </div>
                 {showDropdown && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-ink)] z-50 max-h-48 overflow-y-auto custom-scrollbar">
                     {filteredProducts.length > 0 ? (

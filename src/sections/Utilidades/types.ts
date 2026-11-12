@@ -49,6 +49,8 @@ export interface VentaProductoDetalle {
 export interface AnalisisProducto {
   id: string;
   nombre: string;
+  code?: string;
+  barcode?: string;
   categoria: string;
   estado: string;
   stockActual?: number;

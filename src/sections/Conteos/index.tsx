@@ -165,7 +165,11 @@ export const Conteos: React.FC = () => {
     }
 
     if (searchQuery && searchQuery.trim()) {
-      result = result.filter(m => coincideBusqueda([m.product_name, m.notes], searchQuery));
+      const prodPorId = new Map(products.map(p => [String(p.id), p]));
+      result = result.filter(m => {
+        const prod = prodPorId.get(String((m as any).product_id)) || products.find(p => p.name === m.product_name);
+        return coincideBusqueda([m.product_name, m.notes, prod?.code, prod?.barcode], searchQuery);
+      });
     }
 
     if (filtroMotivo) {

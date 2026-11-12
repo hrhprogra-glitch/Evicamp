@@ -1,4 +1,6 @@
 import { coincideBusqueda } from '../../../utils/busqueda';
+import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
+import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import React, { useState, useEffect } from 'react';
 import { X, Save, UserPlus, Package, Search, Plus, Trash2, ChevronDown } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
@@ -437,21 +439,37 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
             {!isEdit && (
               <div className="mt-4 border-t-2 border-dashed border-[var(--color-border)] pt-4">
                 <label className="text-[12px] font-black uppercase text-[var(--color-muted)] flex items-center gap-2 mb-2"><Package size={14}/> Buscar en Inventario</label>
-                <div className="relative">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-subtle)]" />
-                  <input autoComplete="off" type="text"
-                    value={searchProd}
-                    onChange={e => setSearchProd(e.target.value)}
-                    onKeyDown={e => {
-                      // 📡 SOPORTE DE ESCÁNER: el lector escribe el código y envía "Enter" automáticamente.
-                      if (e.key === 'Enter' && prodFiltrados.length > 0) {
-                        e.preventDefault();
-                        agregarProducto(prodFiltrados[0]);
+                <div className="flex items-stretch gap-1.5">
+                  <div className="relative flex-1 min-w-0">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-subtle)]" />
+                    <input autoComplete="off" type="text"
+                      value={searchProd}
+                      onChange={e => setSearchProd(e.target.value)}
+                      onKeyDown={e => {
+                        // 📡 SOPORTE DE ESCÁNER: el lector escribe el código y envía "Enter" automáticamente.
+                        if (e.key === 'Enter' && prodFiltrados.length > 0) {
+                          e.preventDefault();
+                          agregarProducto(prodFiltrados[0]);
+                          setSearchProd('');
+                        }
+                      }}
+                      placeholder="ESCANEA O ESCRIBE UN PRODUCTO..."
+                      className="w-full bg-white border-2 border-[var(--color-border)] p-2 pl-9 text-xs font-black uppercase outline-none focus:border-[var(--color-info)]"
+                    />
+                  </div>
+                  <BotonEscanerCelular
+                    id="btn-escaner-fiado"
+                    onScan={(codigo) => {
+                      const prod = buscarProductoPorCodigo(productos, codigo);
+                      if (prod) {
+                        agregarProducto(prod);
                         setSearchProd('');
+                      } else {
+                        setSearchProd(codigo);
                       }
                     }}
-                    placeholder="ESCANEA O ESCRIBE UN PRODUCTO..."
-                    className="w-full bg-white border-2 border-[var(--color-border)] p-2 pl-9 text-xs font-black uppercase outline-none focus:border-[var(--color-info)]"
+                    titulo="Escanear producto con la cámara"
+                    className="!h-auto px-3"
                   />
                 </div>
                 {prodFiltrados.length > 0 && (

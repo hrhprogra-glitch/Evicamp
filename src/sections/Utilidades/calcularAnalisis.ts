@@ -158,7 +158,7 @@ export async function calcularAnalisis(fechaInicio: string, fechaFin: string, fo
     const esConsumo = `${p.control_type} ${p.unit} ${p.category} ${p.name}`.toLowerCase().includes('consumo');
     const esPeso = String(p.unit || '').toUpperCase() === 'KG' || p.control_type === 'WEIGHT';
     mapaAnalisis[p.id] = {
-      id: p.id, nombre: p.name, categoria: p.category || 'SIN CATEGORÍA', estado: '',
+      id: p.id, nombre: p.name, code: p.code || '', barcode: p.barcode || '', categoria: p.category || 'SIN CATEGORÍA', estado: '',
       stockActual: Number(p.quantity) || 0, tipoControl: esConsumo ? 'CONSUMO' : 'STOCK',
       unidadesVendidas: 0, ingresosTotales: 0, costoTotalVentas: 0, unidadesMerma: 0, perdidaMerma: 0, utilidadReal: 0, margen: 0,
       unidadMedida: esConsumo ? 'CONSUMO' : (esPeso ? 'KG' : 'UND'),

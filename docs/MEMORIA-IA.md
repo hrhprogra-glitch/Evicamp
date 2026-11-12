@@ -460,3 +460,11 @@ En ventanas grandes (`max-w-4xl` o más) como `ModalGrupo.tsx`:
   4. En el primer filtro adyacente: al pulsar `ArrowLeft`, si el buscador tiene texto, el foco debe volver al botón `[ X ]`; si no tiene texto, vuelve directo al input del buscador.
   5. Estilo visual de foco en `src/index.css`: `.buscador-sobrio__borrar:focus` y `:focus-visible` deben mostrar fondo rojo vibrante `#DC2626`, texto blanco, doble anillo de foco y bordes 100% rectos sin esquinas redondeadas (`border-radius: 0px`).
 
+**Escáner de códigos de barras por cámara EXCLUSIVO para celular (`BotonEscanerCelular.tsx` + `decodificarBarras.ts`, 12/11/2026):**
+- El dueño pidió un botón `[ 📷 ]` que solo aparezca en celular (`< 768px`, clase `.solo-celular-escaner` con `display: none !important` en `>= 768px`) y nunca en PC, laptop ni televisor.
+- Funciona 100 % sin internet: combina `BarcodeDetector` nativo del navegador con un decodificador propio en TypeScript (`EAN-13`, `UPC-A`, `EAN-8`, `CODE-128`) sobre `<canvas>`, más opción de linterna (`torch`) y botón de respaldo `"Tomar foto del código"`.
+- Cuando se escanea en un buscador de selección de producto (`ModalAjuste`, `ModalLote`, `PanelCompras`, `ModalProduccion`, `ModalTraspaso`, `ModalFiado`, `ModalEditarSalida` o `TerminalBusqueda` en Caja), `buscarProductoPorCodigo(productos, codigo)` busca coincidencia exacta por `barcode`, `code`, presentaciones y variantes y **elige o agrega el producto al instante** sin que el usuario tenga que tocar la lista.
+- En pruebas con Puppeteer: al cambiar de vista de PC a celular con `page.setViewport({ width: 390, height: 844 })`, NO alternar `isMobile: true` en caliente porque Chromium recarga la página automáticamente y reinicia `App.tsx` a la vista inicial (`pos`).
+- Al editar archivos desde la IA: hacer siempre todos los cambios de un mismo archivo en **un solo paso** (una sola llamada de edición por archivo) para evitar que el editor del dueño muestre conflicto de guardado (*"El contenido del archivo en el disco es más reciente"*) si tiene esas pestañas abiertas.
+
+

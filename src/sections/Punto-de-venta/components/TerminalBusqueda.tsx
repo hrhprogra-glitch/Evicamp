@@ -1,4 +1,6 @@
 import { coincideBusqueda } from '../../../utils/busqueda';
+import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
+import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import { flechasCaja, irA } from '../tecladoCaja';
 import React, { useState, useEffect } from 'react';
 import { Search, ScanLine, Package, Plus, AlertTriangle, CheckCircle2, Users, X, Scale, Tag, Boxes } from 'lucide-react';
@@ -233,6 +235,21 @@ export const TerminalBusqueda: React.FC<Props> = ({
     }
   };
 
+  // Escáner con cámara del celular: si encuentra el producto con stock, lo agrega directo al ticket
+  const handleScanCamara = (codigo: string) => {
+    const prod = buscarProductoPorCodigo(productos, codigo);
+    if (prod) {
+      const esConsumo = prod.unit === 'CONSUMO' || (prod as any).control_type === 'CONSUMPTION';
+      const estaAgotado = !esConsumo && prod.quantity <= 0;
+      if (!estaAgotado) {
+        onAddToCart({ ...prod, unit: esConsumo ? 'CONSUMO' : prod.unit });
+        setSearchQuery('');
+        return;
+      }
+    }
+    setSearchQuery(codigo);
+  };
+
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] relative rounded-none">
       {/* Barra superior de acento (Plano Técnico) */}
@@ -347,6 +364,12 @@ export const TerminalBusqueda: React.FC<Props> = ({
                 className="w-full h-10 bg-transparent text-base font-black text-[var(--color-ink)] uppercase outline-none placeholder:text-[var(--color-muted)]/50 rounded-none"
               />
             </div>
+            <BotonEscanerCelular
+              id="btn-escaner-pos"
+              onScan={handleScanCamara}
+              titulo="Escanear producto con la cámara del celular"
+              className="w-10 h-10 !px-0 !border-0 !border-l-2 !border-[var(--color-ink)]"
+            />
           </div>
         </div>
       </div>
