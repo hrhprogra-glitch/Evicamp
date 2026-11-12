@@ -371,7 +371,7 @@ export const TiendaWeb: React.FC<TiendaWebProps> = ({ onIrAlSistema }) => {
                 <Lock size={12} /> Acceso del personal
               </button>
             )}
-            <span>Tienda hecha con SiuMax Comerc</span>
+            <span>Tienda hecha con SiuMax Nego</span>
           </div>
         </div>
       </footer>

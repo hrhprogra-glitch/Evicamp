@@ -796,7 +796,7 @@ export const ModalCambioProducto: React.FC<Props> = ({
                 </div>
 
                 <div className="text-center border-t border-dashed border-gray-400 mt-3 pt-2 text-[10px] text-gray-500">
-                  *** SIUMAX COMERC · COMPROBANTE OFICIAL ***
+                  *** SIUMAX NEGO · COMPROBANTE OFICIAL ***
                 </div>
               </div>
 

@@ -7,6 +7,29 @@
 
 ---
 
+## 12/11/2026 (139) · Claude — SiuMax Nego, fase 1: el nombre "SiuMax Comerc" pasa a "SiuMax Nego"
+- **Plan nuevo del dueño (12/11/2026):** Comerc se convierte en **SiuMax Nego**, un solo sistema para los 7 tipos de negocio.
+  - Plan completo: final de `siumax/TIPOS-DE-NEGOCIO.md`.
+  - En Ajustes se elige el tipo, o varios, y se pueden sumar partes de otro tipo.
+  - Las partes de Servic se pasan aquí; después Servic se borra.
+  - Los links nuevos dirán `nego`.
+  - El dueño dijo *"perfecto hazlo"*. Cada fase se presenta y espera su OK.
+- **Fase 1, hecha:** el nombre visible "SiuMax Comerc" pasa a "SiuMax Nego" en:
+  - `index.html` (título de la pestaña y nombre al instalar en el celular).
+  - `public/offline.html`.
+  - Login y SideBar: nombre por defecto si la empresa no tiene nombre.
+  - Pie del ticket (`TicketImprimible`) y comprobante de cambio (`ModalCambioProducto`).
+  - Pie de los PDF de compras (`PanelCompras`).
+  - Pie de la Tienda web.
+- **NO se cambió a propósito** (son links o cosas de producción; solo con aviso del dueño):
+  - Los dominios `comerc.siumax.duckdns.org` en `PestanaTiendaWeb`, `escritorio/main.js` y `configurar.html`.
+  - El Panel (`servidor/panel`, crea los links de clientes): va en la fase 4.
+  - La carpeta `comercio/`, el nombre del repositorio y GitHub.
+  - El instalador de la app de PC.
+  - Evicamp: sigue con su propio nombre de empresa; el cambio solo se nota donde decía "SiuMax Comerc".
+- `npx tsc -b` sin errores. Publicado solo en siumax (`comerc.siumax.duckdns.org`): el título de la pestaña ya dice "SiuMax Nego", 0 errores.
+- **Siguiente (espera OK):** fase 2. Ajustes → "Tipo de negocio" con los 7 tipos explicados; elegir uno o varios; los que no existen, "Próximamente".
+
 ## 12/11/2026 (138) · Antigravity — Escáner de códigos de barras por cámara EXCLUSIVO para celular en todos los buscadores y registros de productos
 - **Dueño:** *"perfecto entiendo ahora quiero que en comerc.siumax agregues el escaner por celular pero ojo que solo este en celular ahi agregalo para todos los buscador para escanear el codigo del producto y se agregue con la camara del celular asi cuando quieran registrar o contar un producto solo tengan que escanearlo con la camara y se ingresa"* → aprobado con *"si me parece bien"*.
 - **Nuevo motor y componente reutilizable:**

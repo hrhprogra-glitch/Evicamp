@@ -873,3 +873,12 @@
     - Lector 100 % sin internet (`src/utils/decodificarBarras.ts`) con `BarcodeDetector` nativo + decodificador propio `EAN-13`/`UPC-A`/`EAN-8`/`CODE-128`, linterna y opción de tomar foto.
     - Integrado en Caja, Conteos (`Nuevo ajuste`, buscador de tabla y `Editar salida`), Inventario (`Productos`, `Lotes`, `Nuevo/Editar producto`, `Ingresar lote`, `Compras`, `Armar producto`, `Traspasos`), Utilidades, Clientes › Créditos y Tienda Web.
     - Publicado en el sitio de pruebas (`comerc.siumax.duckdns.org`) y probado con `prueba-escaner-celular.mjs`.
+- **Idea SiuMax Nego.**
+  - El dueño propuso *"un solo sistema pero con partes diferentes"*.
+  - Después decidió que Comerc pasa a llamarse **SiuMax Nego**.
+  - Los links nuevos dirán `nego`.
+  - Aprobó las listas de los tipos 2 a 7.
+  - Negocios mixtos: se pueden elegir varios tipos y sumar partes de otro.
+  - Servic se borra al final, porque solo existirá Nego.
+  - Los 7 tipos se construyen como 4 partes: Comercio, Talleres y servicios, Restaurantes, y Agenda y reservas.
+  - *"perfecto hazlo"* → fase 1 hecha (bitácora 139).
