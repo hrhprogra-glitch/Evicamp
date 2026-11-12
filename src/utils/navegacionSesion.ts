@@ -16,6 +16,41 @@ export const restaurarFocoSesion = (view?: string): boolean => {
   }
   const activeView = view || localStorage.getItem('evicamp_last_view') || 'pos';
 
+  // ---- Talleres y servicios (SiuMax Nego, paso 3e; reglas de SiuMax Servic) ----
+  // 0. AGENDA
+  if (activeView === 'agenda') {
+    const b = document.getElementById('buscador-agenda') as HTMLInputElement | null;
+    if (b && b.offsetParent !== null) { b.focus(); b.select(); return true; }
+    const btnNuevo = document.getElementById('btn-nuevo-trabajo') as HTMLElement | null;
+    if (btnNuevo && btnNuevo.offsetParent !== null) { btnNuevo.focus(); return true; }
+  }
+
+  // 1. SALIDAS
+  if (activeView === 'salidas') {
+    const b = document.getElementById('buscador-salidas') as HTMLInputElement | null;
+    if (b && b.offsetParent !== null) { b.focus(); b.select(); return true; }
+    const btnNuevo = document.getElementById('btn-nueva-salida') as HTMLElement | null;
+    if (btnNuevo && btnNuevo.offsetParent !== null) { btnNuevo.focus(); return true; }
+  }
+
+  // 1.5. CONTRATOS
+  if (activeView === 'contratos') {
+    const b = document.getElementById('buscador-contratos') as HTMLInputElement | null;
+    if (b && b.offsetParent !== null) { b.focus(); b.select(); return true; }
+    const btnNuevo = document.getElementById('btn-nuevo-contrato') as HTMLElement | null;
+    if (btnNuevo && btnNuevo.offsetParent !== null) { btnNuevo.focus(); return true; }
+  }
+
+  // 1.10. TALLER (RECEPCIÓN Y REPARACIÓN DE EQUIPOS)
+  if (activeView === 'taller') {
+    const b = (document.getElementById('buscador-taller') || document.getElementById('btn-nueva-orden-taller')) as HTMLElement | null;
+    if (b && b.offsetParent !== null) {
+      b.focus();
+      if (b instanceof HTMLInputElement) b.select();
+      return true;
+    }
+  }
+
   // 1. POS
   if (activeView === 'pos') {
     const b = document.getElementById('buscador-global-pos') as HTMLInputElement | null;

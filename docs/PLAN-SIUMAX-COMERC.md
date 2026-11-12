@@ -5,7 +5,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 12/11/2026 (145), Claude: cabecera de Inventario en una fila con la pestaña Herramientas (medido en todas las secciones a 1920 y 1366 con `medir-cabeceras-nego.mjs`). Siguiente: 3e, Salidas. Solo siumax.
+- **Última actualización:** 12/11/2026 (146), Claude: **SiuMax Nego, paso 3e**: Salidas a obras y servicios (de Servic), probada con material externo y con producto del inventario (descuenta stock). Pendiente de decidir: Enter en sus formularios (regla de Nego vs. la de Servic). Siguiente: 3f, Agenda y Taller. Solo siumax.
+- (145) 12/11/2026, Claude: cabecera de Inventario en una fila con la pestaña Herramientas (medido en todas las secciones a 1920 y 1366 con `medir-cabeceras-nego.mjs`). Siguiente: 3e, Salidas. Solo siumax.
 - (144) 12/11/2026, Claude: **SiuMax Nego, paso 3d**: Inventario con la pestaña Herramientas y vehículos (de Servic, solo con Servicios); Nuevo producto ya tenía Marca/Modelo/Ubicación. Siguiente: 3e, Salidas. Solo siumax.
 - (143) 12/11/2026, Claude: **SiuMax Nego, paso 3c**: Clientes con pestaña Trabajadores, lo que se atiende en el detalle y correo/contacto/notas en la ficha (solo con Servicios); sin Comercio no salen las cosas de tienda. Siguiente: 3d, Inventario. Solo siumax.
 - (142) 12/11/2026, Claude: **SiuMax Nego, paso 3b**: menú, atajos y permisos según el tipo de negocio (grupo Servicios con secciones "Pronto"; solo-servicios sin Caja ni Finanzas; solo Comercio queda igual). Siguiente: 3c, Clientes con Trabajadores. Solo siumax.

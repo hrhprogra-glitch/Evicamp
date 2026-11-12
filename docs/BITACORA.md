@@ -7,6 +7,23 @@
 
 ---
 
+## 12/11/2026 (146) · Claude — SiuMax Nego, paso 3e: Salidas a obras y servicios
+- **Dueño:** "perfecto sigamos al 3e".
+- **Traída de SiuMax Servic, tal cual:** `src/sections/Salidas/` (cabecera con filtros y cuadros, tabla, nueva salida, detalle, devolución, comprobante).
+  - En `App.tsx` reemplaza el aviso "Pronto". Se quitó de `Pronto.tsx`.
+  - Sale solo con "Talleres y servicios" (paso 3b).
+- `navegacionSesion.ts`: reglas de Servic para poner el selector al entrar a Salidas, Agenda, Contratos y Taller. Las tres últimas aún no existen y no hacen nada.
+- **Base:** sus tablas y funciones (`fn_registrar_salida`, devoluciones, estados) ya estaban desde el paso 3a.
+- **Probado:**
+  - `prueba-salidas-nego.mjs` (la `prueba-fase3` de Servic adaptada), 14 de 14 OK: Alt + 4 con Comercio + Servicios; crear con trabajador y material externo; buscar; detalle; devolver 2 de 5; finalizar.
+  - `prueba-salida-stock-nego.mjs`: una salida con un producto **del inventario** descuenta 1 del stock en la base de Nego. Al final deja stock, lotes y tipo de negocio como estaban.
+  - `medir-cabeceras-nego.mjs`: Salidas en una fila a 1920 y 1366. Ahora salta solo las pantallas que aún dicen "Pronto".
+- **Diferencia con Servic, a decidir por el dueño:**
+  - En Servic, Enter en el formulario de nueva salida **pasaba al siguiente campo**; el dueño lo prefería así (memoria "Enter en formularios de Servic").
+  - En Nego rige la regla general de Comerc (CLAUDE.md, regla 7): Enter abre la lista o hace clic y **el selector se queda**; las flechas mueven.
+  - No se cambió nada a mano: quedó la regla de Nego. **Preguntado al dueño.**
+- **Siguiente (3f):** Agenda y Taller.
+
 ## 12/11/2026 (145) · Claude — Cabecera de Inventario en una sola fila (con la pestaña Herramientas y vehículos)
 - **Dueño** (foto, Inventario a 1920 con la pestaña nueva y los botones en otra fila): *"no te olvides que tiene que estar en una fila lo marque con rojo en todas las pantallas recuerda que ya lo configuramos una vez"*.
 - **Inventario** (`index.tsx`), lo mismo que se hizo en Servic:

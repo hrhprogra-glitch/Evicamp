@@ -6,6 +6,7 @@ import { validarSesion, type EmpleadoSesion } from './utils/sesion';
 import { puedeVerSeccion } from './utils/permisos';
 import { cargarTiposNegocio, tiposActuales, useTiposNegocio } from './utils/tiposNegocio';
 import { Pronto } from './sections/Pronto';
+import { Salidas } from './sections/Salidas'; // Talleres y servicios (SiuMax Nego, paso 3e; de SiuMax Servic)
 import { SesionProvider } from './utils/SesionProvider';
 
 // Importación de Módulos (Secciones)
@@ -341,8 +342,9 @@ export const App: React.FC = () => {
       case 'configuracion': // <--- AÑADE ESTO
         return <Configuraciones />;
       // Talleres y servicios: se están trayendo desde SiuMax Servic (pasos 3e a 3h)
-      case 'agenda':
       case 'salidas':
+        return <Salidas />;
+      case 'agenda':
       case 'contratos':
       case 'taller':
       case 'cotizaciones':

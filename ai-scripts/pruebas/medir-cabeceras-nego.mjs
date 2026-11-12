@@ -44,8 +44,8 @@ try {
   for (const ancho of [1920, 1366]) {
     await page.setViewport({ width: ancho, height: ancho === 1920 ? 950 : 768 });
     for (const sec of secciones) {
-      if (['agenda', 'salidas', 'contratos', 'taller', 'cotizaciones'].includes(sec)) continue; // todavía "Pronto"
       await page.evaluate((s) => document.getElementById(`sidebar-btn-${s}`)?.click(), sec); await pausa(1800);
+      if (await page.evaluate(() => !!document.querySelector('[id^="pronto-"]'))) continue; // todavía "Pronto"
       const pestanas = await page.$$eval('main [role="tab"], main .pestanas-sobrias > button', (b) => b.map((x) => x.id).filter(Boolean));
       const lista = [null, ...pestanas.slice(0, 6)];
       for (const tab of lista) {
