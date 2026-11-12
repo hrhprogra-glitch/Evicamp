@@ -7,6 +7,24 @@
 
 ---
 
+## 12/11/2026 (144) · Claude — SiuMax Nego, paso 3d: Inventario con Herramientas y vehículos
+- **Dueño:** "si".
+- **Traído de SiuMax Servic, tal cual:** la carpeta `Inventario/components/Activos/` (Activos, tablas, ventanas de herramienta, préstamo, historial, vehículo y mantenimiento).
+  - Es la versión con el estilo sobrio del 12/11 en Servic: sin cuadros en Herramientas, botón Historial, cuadros sobrios en Vehículos y tablas sin sombra.
+- **Inventario** (`index.tsx`):
+  - Pestaña **"Herramientas y vehículos"** (`btn-tab-activos`) después de Compras.
+    - Solo sale con "Talleres y servicios" y el permiso `herramientas_ver`.
+    - Si estaba guardada y el negocio ya no es de servicios, abre Productos.
+  - En esa pestaña no salen los botones de productos ni los filtros de Inventario: Activos trae su propia barra.
+  - Teclado: Compras → Herramientas → Nuevo producto (o la sub-pestaña Herramientas); ↓ baja al buscador de activos.
+- **Nuevo producto:** Nego **ya tenía** Marca, Modelo y Ubicación/estante (en "Más opciones avanzadas", columnas `products.marca/modelo/ubicacion`). No hubo que agregar nada: un negocio de servicios usa esta ventana completa (lo que el dueño pidió al ver la de Servic).
+- **Base:** las tablas de herramientas y vehículos y sus permisos ya estaban desde el paso 3a.
+- **Probado:** `prueba-herramientas-nego.mjs`, 13 de 13 OK, 0 errores.
+  - Se probó: solo Comercio sin la pestaña; con Servicios, la pestaña, el teclado, crear una herramienta (se guarda en la base), el historial de préstamos, Vehículos y la vuelta a Productos.
+  - Borra lo creado y deja el negocio en solo Comercio.
+  - Guardar un lote sigue funcionando.
+- **Siguiente (3e):** Salidas a obras y servicios.
+
 ## 12/11/2026 (143) · Claude — SiuMax Nego, paso 3c: Clientes con Trabajadores y "lo que se atiende"
 - **Dueño:** "si".
 - **Traído de SiuMax Servic, tal cual** (`Clientes/components/`):

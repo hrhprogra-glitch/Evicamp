@@ -888,3 +888,4 @@
   - Empezar la fase 3 → paso 3a hecho (bitácora 141).
 - *"si hazlo"* (paso 3b) → el menú cambia según el tipo de negocio (bitácora 142).
 - *"si"* (paso 3c) → Clientes con Trabajadores y "lo que se atiende" (bitácora 143).
+- *"si"* (paso 3d) → Inventario con Herramientas y vehículos (bitácora 144).

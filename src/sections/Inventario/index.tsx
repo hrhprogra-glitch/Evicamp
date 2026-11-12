@@ -6,7 +6,7 @@ import { presentacionesValidas } from '../../utils/presentaciones';
 import { traerTodo } from '../../utils/traerTodo';
 import { coincideBusqueda } from '../../utils/busqueda';
 import React, { useState, useEffect, useMemo } from 'react';
-import { Package, Layers, Box, AlertTriangle, LayoutGrid, Plus, Database, Activity, Users, ShoppingCart, ChefHat, ArrowRightLeft } from 'lucide-react';
+import { Package, Layers, Box, AlertTriangle, LayoutGrid, Plus, Database, Activity, Users, ShoppingCart, ChefHat, ArrowRightLeft, Wrench } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import { usePermiso, avisarSinPermiso } from '../../utils/permisos';
 import { useConexion } from '../../layout/BarraConexion';
@@ -25,6 +25,9 @@ import { ModalEtiqueta } from './components/ModalEtiqueta';
 import { PanelCompras, inicioCompras } from './components/PanelCompras';
 import { ModalProduccion } from './components/ModalProduccion';
 import { ModalTraspaso } from './components/ModalTraspaso';
+// Talleres y servicios (SiuMax Nego, paso 3d; de SiuMax Servic): herramientas que se prestan y vehículos
+import { Activos } from './components/Activos/Activos';
+import { useTiposNegocio } from '../../utils/tiposNegocio';
 
 import { cacheInventarioMemoria, setCacheInventario } from '../../utils/cacheModulos';
 
@@ -33,10 +36,14 @@ interface InventarioProps {
 }
 export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   // Pestaña abierta: se recuerda al ir a otra sección y volver (mientras dure la sesión del navegador)
-  const [vistaActiva, setVistaActivaEstado] = useState<'PRODUCTOS' | 'LOTES' | 'COMPRAS'>(() => {
-    try { const v = sessionStorage.getItem('inventario_vista'); return v === 'LOTES' || v === 'COMPRAS' ? v : 'PRODUCTOS'; } catch { return 'PRODUCTOS'; }
+  // 'ACTIVOS' = Herramientas y vehículos: solo con "Talleres y servicios" (si no, se ve Productos)
+  const conServicios = useTiposNegocio().includes('servicios');
+  const verHerramientas = usePermiso('herramientas_ver') && conServicios;
+  const [vistaElegida, setVistaActivaEstado] = useState<'PRODUCTOS' | 'LOTES' | 'COMPRAS' | 'ACTIVOS'>(() => {
+    try { const v = sessionStorage.getItem('inventario_vista'); return v === 'LOTES' || v === 'COMPRAS' || v === 'ACTIVOS' ? v : 'PRODUCTOS'; } catch { return 'PRODUCTOS'; }
   });
-  const setVistaActiva = (v: 'PRODUCTOS' | 'LOTES' | 'COMPRAS') => {
+  const vistaActiva = vistaElegida === 'ACTIVOS' && !verHerramientas ? 'PRODUCTOS' : vistaElegida;
+  const setVistaActiva = (v: 'PRODUCTOS' | 'LOTES' | 'COMPRAS' | 'ACTIVOS') => {
     setVistaActivaEstado(v);
     try { sessionStorage.setItem('inventario_vista', v); } catch { /* sin almacenamiento */ }
   };
@@ -636,7 +643,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     document.getElementById('btn-tab-lotes')?.focus();
                   } else if (e.key === 'ArrowRight') {
                     e.preventDefault();
-                    document.getElementById('btn-nuevo-producto')?.focus();
+                    (document.getElementById('btn-tab-activos') || document.getElementById('btn-nuevo-producto'))?.focus();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
                     { const destino = inicioCompras() || document.getElementById('buscador-global-inventario'); (filaEnMedio(e.currentTarget, destino, BOTONES_INVENTARIO) || destino)?.focus(); } // el cajero que solo recibe no tiene "Nueva lista"
@@ -646,11 +653,37 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
               >
                 <ShoppingCart size={14} /> Compras
               </button>
+              {/* Talleres y servicios (SiuMax Nego, paso 3d): herramientas que se prestan, vehículos con SOAT y mantenimientos */}
+              {verHerramientas && !soloCompras && (
+              <button
+                id="btn-tab-activos"
+                data-activa={vistaActiva === 'ACTIVOS'}
+                onClick={() => setVistaActiva('ACTIVOS')}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    document.getElementById('btn-tab-compras')?.focus();
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    (document.getElementById('btn-nuevo-producto') || document.getElementById('btn-subtab-herramientas'))?.focus();
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    (vistaActiva === 'ACTIVOS' ? document.getElementById('buscador-activos') : document.getElementById('buscador-global-inventario'))?.focus();
+                  }
+                }}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-2.5 lg:py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer border-l-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] whitespace-nowrap ${vistaActiva === 'ACTIVOS' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'}`}
+              >
+                <Wrench size={14} /> Herramientas y vehículos
+              </button>
+              )}
             </div>
           </div>
 
-          {!soloCompras && (<>
-          {/* LADO DERECHO: METRICAS Y BOTONES DE ACCIÓN */}
+          {!soloCompras && vistaActiva !== 'ACTIVOS' && (<>
+          {/* LADO DERECHO: METRICAS Y BOTONES DE ACCIÓN (en Herramientas y vehículos van los suyos, abajo) */}
           {/* Una sola fila con el título y las pestañas si entra; si no entra, los botones bajan solos (06/11/2026) */}
           <div className="flex items-center gap-4 lg:gap-6 max-w-full min-w-0 pb-1 pr-1">
             
@@ -786,7 +819,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         </div>
       )}
 
-      {vistaActiva !== 'COMPRAS' && <FiltrosInventario
+      {vistaActiva !== 'COMPRAS' && vistaActiva !== 'ACTIVOS' && <FiltrosInventario
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         matchCount={filteredProducts.length}
@@ -849,6 +882,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
   // ===========================
 />
         </div>
+        {vistaActiva === 'ACTIVOS' && <Activos />}
         {vistaActiva === 'COMPRAS' && (
           <PanelCompras
             productos={products}
