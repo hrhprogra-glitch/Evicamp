@@ -7,6 +7,36 @@
 
 ---
 
+## 12/11/2026 (141) · Claude — SiuMax Nego, paso 3a: la base de datos de Servic entra en Nego
+- **Dueño:** "si empieza con la parte 3".
+  - Decidió: un negocio que elige **solo** "Talleres y servicios" **no ve Caja ni Finanzas** ("son servicios y talleres, no tienda"). Si algún día se necesitan, se adaptan para talleres.
+- **Plan de la fase 3**, en pasos, cada uno probado en siumax:
+  - 3a: base de datos.
+  - 3b: prender y apagar secciones según el tipo.
+  - 3c: Clientes, con Trabajadores y "lo que se atiende".
+  - 3d: Inventario, con Herramientas y vehículos, y Marca/Modelo/Ubicación en Nuevo producto.
+  - 3e: Salidas.
+  - 3f: Agenda y Taller.
+  - 3g: Contratos.
+  - 3h: Cotizaciones juntas y reportes de servicios en Utilidades.
+- **Hecho (3a):** `servidor/sql/seguridad-sesion.sql` ahora trae al final la sección **"SiuMax Nego · TALLERES Y SERVICIOS"**.
+  - Es `servicios/servidor/sql/servic.sql`: 20 tablas (bienes_cliente, trabajadores, salidas…, herramientas…, vehiculos…, agenda…, contratos…, cotizacion_pagos, taller…) y 13 funciones nuevas.
+  - Todas las bases las tendrán; las secciones solo se verán si el negocio elige "Talleres y servicios" (paso 3b).
+- **Cambios frente a servic.sql** (revisados para no romper Comerc):
+  - **Permisos:** Servic renombraba `fn_permisos_requeridos` a `fn_permisos_comerc` y ponía sus reglas primero, por ruta y para cualquier método. Con eso, escribir en `/customers` pedía `clientes_editar` y en `/cash_sessions` y `/cotizaciones` pedía `cobros_ver`: **un cajero de Comerc no habría podido crear clientes ni abrir caja**.
+    - Ahora hay `fn_permisos_servicios` con **solo las tablas y funciones nuevas**, consultada primero dentro de `fn_permisos_requeridos` (`coalesce`).
+    - Las tablas compartidas siguen con las reglas de Comerc.
+    - `cotizacion_pagos` acepta `cobros_ver` o los de caja.
+  - Sin la secuencia de `compras.id`: Nego manda el id desde el sistema.
+  - Almacén "Almacén Central" por defecto solo si la base no tiene ningún almacén. Antes lo creaba si faltaba el id 1, y en un negocio con almacenes habría quedado un segundo "principal".
+- **Aplicado SOLO en la base siumax** (pruebas):
+  - Respaldo antes: `/var/lib/postgresql/respaldo-siumax-antes-nego-3a-202611122136.sql`.
+  - `psql -v ON_ERROR_STOP=1 -c "SET lock_timeout = '5s'" -f`, 0 errores.
+  - Comprobado: las 20 tablas existen; POST /customers sigue pidiendo `caja_realizar_ventas|caja_ver_fiados`; POST /cash_sessions sigue con `caja_abrir_cerrar_turno`; POST /salidas pide `salidas_ver`; sigue habiendo 1 almacén.
+- **Comerc sigue igual:** guardar lote OK; `prueba-historial-cliente-ventanas` 21/21; `prueba-tipo-negocio` 15/15.
+- **Para Evicamp y los clientes**, cuando el dueño lo diga: aplicar este `seguridad-sesion.sql` crea las tablas de servicios vacías (no cambia nada de lo que ya usan). Respaldo primero.
+- **Siguiente (3b):** prender y apagar secciones según el tipo. "Talleres y servicios" pasa a Disponible.
+
 ## 12/11/2026 (140) · Claude — SiuMax Nego, fase 2: Ajustes → "Tipo de negocio"
 - **Dueño:** "si" a la fase 2.
 - **Nueva pestaña de Ajustes** "Tipo de negocio" (`Configuraciones/components/PestanaTipoNegocio.tsx`), entre Datos de la empresa y Tiendas. Permiso `gerencia_configuracion_sistema`.

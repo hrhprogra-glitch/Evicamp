@@ -16,6 +16,31 @@ AS $$
       OR EXISTS (SELECT 1 FROM unnest(p_claves) c WHERE coalesce(p_permisos ->> c, '') = 'true');
 $$;
 
+-- SiuMax Nego (12/11/2026): reglas de las partes de "Talleres y servicios" (traídas de Servic). Solo tablas y
+-- funciones NUEVAS: las compartidas (clientes, caja, cotizaciones) siguen con las reglas de abajo.
+CREATE OR REPLACE FUNCTION public.fn_permisos_servicios(p_metodo text, p_ruta text)
+RETURNS text[]
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT CASE
+    WHEN p_ruta = '/bienes_cliente' THEN ARRAY['clientes_editar', 'caja_ver_fiados']
+    WHEN p_ruta = '/trabajadores' THEN ARRAY['trabajadores_editar']
+    WHEN p_ruta IN ('/salidas', '/salida_trabajadores', '/salida_items', '/salida_devoluciones') THEN ARRAY['salidas_ver']
+    WHEN p_ruta IN ('/rpc/fn_registrar_salida', '/rpc/fn_registrar_devolucion', '/rpc/fn_cambiar_estado_salida') THEN ARRAY['salidas_crear']
+    WHEN p_ruta IN ('/herramientas', '/herramientas_prestamos', '/vehiculos', '/vehiculos_mantenimientos') THEN ARRAY['herramientas_ver']
+    WHEN p_ruta IN ('/rpc/fn_prestar_herramienta', '/rpc/fn_devolver_herramienta') THEN ARRAY['herramientas_crear']
+    WHEN p_ruta IN ('/agenda_trabajos', '/agenda_trabajadores') THEN ARRAY['agenda_ver']
+    WHEN p_ruta IN ('/contratos', '/contrato_visitas', '/contrato_consumos', '/contrato_cobros') THEN ARRAY['contratos_ver']
+    WHEN p_ruta IN ('/rpc/fn_generar_visitas_contrato', '/rpc/fn_registrar_consumo_visita', '/rpc/fn_registrar_pago_contrato') THEN ARRAY['contratos_editar']
+    WHEN p_ruta = '/cotizacion_pagos' THEN ARRAY['cobros_ver', 'caja_realizar_ventas', 'caja_ver_fiados']
+    WHEN p_ruta IN ('/rpc/fn_convertir_cotizacion_a_trabajo', '/rpc/fn_registrar_pago_cotizacion') THEN ARRAY['cobros_editar']
+    WHEN p_ruta IN ('/taller_ordenes', '/taller_repuestos', '/taller_pagos') THEN ARRAY['taller_ver']
+    WHEN p_ruta IN ('/rpc/fn_cambiar_estado_taller', '/rpc/fn_registrar_pago_taller') THEN ARRAY['taller_editar']
+    ELSE NULL
+  END;
+$$;
+
 -- Qué permiso pide cada acción que cambia datos (una de la lista basta).
 -- NULL = acción desconocida: solo un administrador con acceso total.
 CREATE OR REPLACE FUNCTION public.fn_permisos_requeridos(p_metodo text, p_ruta text)
@@ -23,7 +48,7 @@ RETURNS text[]
 LANGUAGE sql
 IMMUTABLE
 AS $$
-  SELECT CASE p_metodo || ' ' || p_ruta
+  SELECT coalesce(public.fn_permisos_servicios(p_metodo, p_ruta), CASE p_metodo || ' ' || p_ruta
     -- CAJA
     WHEN 'POST /sales'               THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
     WHEN 'POST /sale_details'        THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
@@ -123,7 +148,7 @@ AS $$
     WHEN 'PATCH /yape_notifications' THEN ARRAY[]::text[]
     WHEN 'POST /rpc/fn_sesion_activa' THEN ARRAY[]::text[]
     ELSE NULL
-  END;
+  END);
 $$;
 
 CREATE OR REPLACE FUNCTION public.fn_verificar_peticion()
@@ -3612,6 +3637,1329 @@ REVOKE EXECUTE ON FUNCTION public.fn_confirmar_anulacion(bigint, text, text) FRO
 -- comercio, restaurantes, servicios, citas, membresias, alquileres, hospedaje. Sin nada guardado = comercio.
 -- Lo cambia quien tiene 'gerencia_configuracion_sistema' (mismo permiso que PATCH /empresa_config).
 ALTER TABLE public.empresa_config ADD COLUMN IF NOT EXISTS tipos_negocio text[] NOT NULL DEFAULT ARRAY['comercio']::text[];
+
+
+-- #####################################################################################################
+-- SiuMax Nego · TALLERES Y SERVICIOS (paso 3a, 12/11/2026)
+-- Las tablas y funciones de SiuMax Servic (servicios/servidor/sql/servic.sql), para que un solo sistema sirva a
+-- los dos tipos. Todas las bases las tienen; las secciones solo se ven si el negocio elige "Talleres y servicios"
+-- (Ajustes → Tipo de negocio). Repetible. Cambios frente a servic.sql:
+--   · sin su bloque de permisos (cambiaba reglas de clientes, caja y cotizaciones): ver fn_permisos_servicios arriba;
+--   · sin la secuencia de compras.id (Nego manda el id);
+--   · el almacén por defecto solo se crea si la base no tiene ninguno.
+-- #####################################################################################################
+-- ===================================================================================================
+-- FASE 1: Clientes, "lo que se atiende" y trabajadores (07/11/2026)
+-- ===================================================================================================
+
+-- Clientes: la tabla `customers` de Comerc + lo que trae Eco-Sistema (correo, persona de contacto, notas).
+-- Un cliente con historial no se borra: se desactiva (activo = false).
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS correo text;
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS persona_contacto text;
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS notas text;
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS activo boolean NOT NULL DEFAULT true;
+
+-- Lo que se atiende de cada cliente (generaliza "Piscinas" de Eco-Sistema): piscina, jardín, vehículo, equipo...
+-- Tiene su propia dirección y ubicación (puede no ser la del cliente). Lo usarán Salidas, Agenda, Contratos y Taller.
+CREATE TABLE IF NOT EXISTS public.bienes_cliente (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  customer_id bigint NOT NULL REFERENCES public.customers (id) ON DELETE CASCADE,
+  tipo text NOT NULL CHECK (tipo IN ('PISCINA', 'JARDIN', 'VEHICULO', 'EQUIPO', 'LOCAL', 'OTRO')),
+  nombre text NOT NULL,
+  direccion text,
+  ubicacion text,              -- link de Google Maps
+  volumen_m3 numeric(10,2),    -- piscina
+  placa text,                  -- vehículo
+  marca text,                  -- vehículo o equipo
+  modelo text,                 -- vehículo o equipo
+  anio integer,                -- vehículo
+  serie text,                  -- equipo
+  estado text NOT NULL DEFAULT 'ACTIVO' CHECK (estado IN ('ACTIVO', 'MANTENIMIENTO', 'BAJA')),
+  notas text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_bienes_cliente_customer ON public.bienes_cliente (customer_id);
+
+-- Trabajadores (de "Empleados" de Eco-Sistema): técnicos y ayudantes, usen o no el sistema.
+-- empleado_id = su usuario del sistema (tabla empleados de Ajustes), si tiene uno.
+CREATE TABLE IF NOT EXISTS public.trabajadores (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  nombre text NOT NULL,
+  dni text,
+  cargo text,
+  telefono text,
+  fecha_ingreso date,
+  estado text NOT NULL DEFAULT 'ACTIVO' CHECK (estado IN ('ACTIVO', 'INACTIVO')),
+  empleado_id uuid REFERENCES public.empleados (id) ON DELETE SET NULL,
+  notas text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+-- El DNI no se repite (los que no tienen DNI no cuentan)
+CREATE UNIQUE INDEX IF NOT EXISTS uq_trabajadores_dni ON public.trabajadores (dni) WHERE coalesce(dni, '') <> '';
+
+GRANT ALL ON public.bienes_cliente TO anon;
+GRANT ALL ON public.trabajadores TO anon;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon;
+
+-- ===================================================================================================
+-- FASE 3: Salidas a obras y servicios (07/11/2026)
+-- ===================================================================================================
+
+CREATE SEQUENCE IF NOT EXISTS public.seq_salidas_codigo START WITH 1;
+
+CREATE TABLE IF NOT EXISTS public.salidas (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  codigo text NOT NULL DEFAULT ('SAL-' || lpad(nextval('public.seq_salidas_codigo')::text, 4, '0')) UNIQUE,
+  tipo text NOT NULL CHECK (tipo IN ('SERVICIO', 'OBRA')),
+  customer_id bigint NOT NULL REFERENCES public.customers (id) ON DELETE RESTRICT,
+  bien_id bigint REFERENCES public.bienes_cliente (id) ON DELETE SET NULL,
+  direccion text,
+  ubicacion text,
+  fecha date NOT NULL DEFAULT CURRENT_DATE,
+  estado text NOT NULL DEFAULT 'EN_PROCESO' CHECK (estado IN ('EN_PROCESO', 'FINALIZADO', 'CANCELADO')),
+  salida_raiz_id bigint REFERENCES public.salidas (id) ON DELETE SET NULL,
+  observaciones text,
+  usuario text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_salidas_customer ON public.salidas (customer_id);
+CREATE INDEX IF NOT EXISTS idx_salidas_fecha ON public.salidas (fecha);
+CREATE INDEX IF NOT EXISTS idx_salidas_estado ON public.salidas (estado);
+CREATE INDEX IF NOT EXISTS idx_salidas_raiz ON public.salidas (salida_raiz_id);
+
+CREATE TABLE IF NOT EXISTS public.salida_trabajadores (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  salida_id bigint NOT NULL REFERENCES public.salidas (id) ON DELETE CASCADE,
+  trabajador_id bigint NOT NULL REFERENCES public.trabajadores (id) ON DELETE RESTRICT,
+  rol text NOT NULL DEFAULT 'RESPONSABLE',
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_salida_trabajadores_salida ON public.salida_trabajadores (salida_id);
+
+CREATE TABLE IF NOT EXISTS public.salida_items (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  salida_id bigint NOT NULL REFERENCES public.salidas (id) ON DELETE CASCADE,
+  product_id bigint REFERENCES public.products (id) ON DELETE SET NULL,
+  batch_id bigint REFERENCES public.batches (id) ON DELETE SET NULL,
+  descripcion text NOT NULL,
+  unidad text NOT NULL DEFAULT 'UNID',
+  cantidad numeric(12,3) NOT NULL CHECK (cantidad > 0),
+  cantidad_devuelta numeric(12,3) NOT NULL DEFAULT 0 CHECK (cantidad_devuelta >= 0),
+  costo_unitario numeric(14,6) NOT NULL DEFAULT 0,
+  es_externo boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_salida_items_salida ON public.salida_items (salida_id);
+
+CREATE TABLE IF NOT EXISTS public.salida_devoluciones (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  salida_id bigint NOT NULL REFERENCES public.salidas (id) ON DELETE CASCADE,
+  salida_item_id bigint NOT NULL REFERENCES public.salida_items (id) ON DELETE CASCADE,
+  product_id bigint REFERENCES public.products (id) ON DELETE SET NULL,
+  batch_id bigint REFERENCES public.batches (id) ON DELETE SET NULL,
+  cantidad numeric(12,3) NOT NULL CHECK (cantidad > 0),
+  fecha timestamptz NOT NULL DEFAULT now(),
+  motivo text,
+  usuario text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_salida_devoluciones_salida ON public.salida_devoluciones (salida_id);
+
+GRANT ALL ON public.salidas TO anon;
+GRANT ALL ON public.salida_trabajadores TO anon;
+GRANT ALL ON public.salida_items TO anon;
+GRANT ALL ON public.salida_devoluciones TO anon;
+GRANT USAGE, SELECT ON SEQUENCE public.seq_salidas_codigo TO anon;
+
+CREATE OR REPLACE FUNCTION public.fn_registrar_salida(p_datos jsonb)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_salida_id bigint;
+  v_codigo text;
+  v_customer_id bigint;
+  v_bien_id bigint;
+  v_tipo text;
+  v_direccion text;
+  v_ubicacion text;
+  v_fecha date;
+  v_obs text;
+  v_raiz_id bigint;
+  v_usuario text;
+  v_trab_elem jsonb;
+  v_item_elem jsonb;
+  v_prod_id bigint;
+  v_batch_id bigint;
+  v_desc text;
+  v_unidad text;
+  v_qty numeric;
+  v_costo numeric;
+  v_externo boolean;
+  v_lote record;
+  v_toma numeric;
+  v_falta numeric;
+  v_stock numeric;
+  v_item_id bigint;
+BEGIN
+  v_tipo := upper(coalesce(p_datos->>'tipo', 'SERVICIO'));
+  v_customer_id := (p_datos->>'customer_id')::bigint;
+  v_bien_id := (p_datos->>'bien_id')::bigint;
+  v_direccion := p_datos->>'direccion';
+  v_ubicacion := p_datos->>'ubicacion';
+  v_fecha := coalesce((p_datos->>'fecha')::date, CURRENT_DATE);
+  v_obs := p_datos->>'observaciones';
+  v_raiz_id := (p_datos->>'salida_raiz_id')::bigint;
+  v_usuario := coalesce(p_datos->>'usuario', 'Sistema');
+
+  IF v_customer_id IS NULL THEN
+    RAISE EXCEPTION 'Debe seleccionar un cliente.';
+  END IF;
+
+  INSERT INTO public.salidas (
+    tipo, customer_id, bien_id, direccion, ubicacion, fecha,
+    estado, salida_raiz_id, observaciones, usuario
+  ) VALUES (
+    v_tipo, v_customer_id, v_bien_id, v_direccion, v_ubicacion, v_fecha,
+    'EN_PROCESO', v_raiz_id, v_obs, v_usuario
+  ) RETURNING id, codigo INTO v_salida_id, v_codigo;
+
+  -- Trabajadores
+  IF p_datos ? 'trabajadores' THEN
+    FOR v_trab_elem IN SELECT * FROM jsonb_array_elements(p_datos->'trabajadores') LOOP
+      INSERT INTO public.salida_trabajadores (salida_id, trabajador_id, rol)
+      VALUES (
+        v_salida_id,
+        (v_trab_elem->>'trabajador_id')::bigint,
+        coalesce(v_trab_elem->>'rol', 'RESPONSABLE')
+      );
+    END LOOP;
+  END IF;
+
+  -- Items / Materiales
+  IF p_datos ? 'items' THEN
+    FOR v_item_elem IN SELECT * FROM jsonb_array_elements(p_datos->'items') LOOP
+      v_prod_id := (v_item_elem->>'product_id')::bigint;
+      v_batch_id := (v_item_elem->>'batch_id')::bigint;
+      v_desc := trim(coalesce(v_item_elem->>'descripcion', 'Material'));
+      v_unidad := coalesce(v_item_elem->>'unidad', 'UNID');
+      v_qty := coalesce((v_item_elem->>'cantidad')::numeric, 0);
+      v_costo := coalesce((v_item_elem->>'costo_unitario')::numeric, 0);
+      v_externo := coalesce((v_item_elem->>'es_externo')::boolean, false);
+
+      IF v_qty <= 0 THEN CONTINUE; END IF;
+
+      INSERT INTO public.salida_items (
+        salida_id, product_id, batch_id, descripcion, unidad,
+        cantidad, cantidad_devuelta, costo_unitario, es_externo
+      ) VALUES (
+        v_salida_id, v_prod_id, v_batch_id, v_desc, v_unidad,
+        v_qty, 0, v_costo, v_externo
+      ) RETURNING id INTO v_item_id;
+
+      -- Si es del inventario propio, descontar stock por FIFO o lote elegido
+      IF NOT v_externo AND v_prod_id IS NOT NULL THEN
+        SELECT coalesce(quantity, 0) INTO v_stock FROM public.products WHERE id = v_prod_id FOR UPDATE;
+        
+        IF v_batch_id IS NOT NULL THEN
+          -- Lote específico
+          UPDATE public.batches SET quantity = greatest(0, coalesce(quantity, 0) - v_qty) WHERE id = v_batch_id;
+          UPDATE public.products SET quantity = coalesce(quantity, 0) - v_qty WHERE id = v_prod_id;
+          INSERT INTO public.inventory_movements (
+            batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
+            operation_type, reason, notes, created_at, "user", is_synced
+          ) VALUES (
+            v_batch_id, v_prod_id, v_desc, -v_qty, v_stock, v_stock - v_qty,
+            'SALIDA', 'Salida ' || v_codigo, 'Obra/Servicio: ' || v_tipo, now(), v_usuario, 1
+          );
+        ELSE
+          -- FIFO automático de lotes
+          v_falta := v_qty;
+          FOR v_lote IN
+            SELECT id, coalesce(quantity, 0) AS qty, coalesce(cost_unit, 0) AS cost
+            FROM public.batches
+            WHERE product_id = v_prod_id AND coalesce(quantity, 0) > 0 AND coalesce(is_active, 1) <> 0
+            ORDER BY created_at ASC, id ASC FOR UPDATE
+          LOOP
+            EXIT WHEN v_falta <= 0;
+            v_toma := least(v_lote.qty, v_falta);
+            UPDATE public.batches SET quantity = v_lote.qty - v_toma WHERE id = v_lote.id;
+            INSERT INTO public.inventory_movements (
+              batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
+              operation_type, reason, notes, created_at, "user", is_synced
+            ) VALUES (
+              v_lote.id, v_prod_id, v_desc, -v_toma, v_stock, v_stock - v_toma,
+              'SALIDA', 'Salida ' || v_codigo, 'Lote ' || v_lote.id::text, now(), v_usuario, 1
+            );
+            v_stock := v_stock - v_toma;
+            v_falta := v_falta - v_toma;
+          END LOOP;
+
+          -- Si faltó por falta de lotes, descontar del producto
+          IF v_falta > 0 THEN
+            INSERT INTO public.inventory_movements (
+              product_id, product_name, change_amount, previous_quantity, new_quantity,
+              operation_type, reason, notes, created_at, "user", is_synced
+            ) VALUES (
+              v_prod_id, v_desc, -v_falta, v_stock, v_stock - v_falta,
+              'SALIDA', 'Salida ' || v_codigo, 'Sin lote suficiente', now(), v_usuario, 1
+            );
+            v_stock := v_stock - v_falta;
+          END IF;
+          UPDATE public.products SET quantity = v_stock WHERE id = v_prod_id;
+        END IF;
+      END IF;
+    END LOOP;
+  END IF;
+
+  RETURN jsonb_build_object('id', v_salida_id, 'codigo', v_codigo);
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.fn_registrar_devolucion(
+  p_salida_id bigint,
+  p_item_id bigint,
+  p_cantidad numeric,
+  p_motivo text,
+  p_usuario text DEFAULT 'Sistema'
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_salida record;
+  v_item record;
+  v_stock numeric;
+  v_lote_id bigint;
+BEGIN
+  IF p_cantidad <= 0 THEN
+    RAISE EXCEPTION 'La cantidad devuelta debe ser mayor a 0.';
+  END IF;
+
+  SELECT * INTO v_salida FROM public.salidas WHERE id = p_salida_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Salida no encontrada.'; END IF;
+
+  SELECT * INTO v_item FROM public.salida_items WHERE id = p_item_id AND salida_id = p_salida_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Item de salida no encontrado.'; END IF;
+
+  IF p_cantidad > (v_item.cantidad - v_item.cantidad_devuelta) THEN
+    RAISE EXCEPTION 'No puedes devolver más de lo que salió (Disponible: %).', (v_item.cantidad - v_item.cantidad_devuelta);
+  END IF;
+
+  UPDATE public.salida_items
+  SET cantidad_devuelta = cantidad_devuelta + p_cantidad
+  WHERE id = p_item_id;
+
+  -- Reincorporar stock si no es externo
+  IF NOT v_item.es_externo AND v_item.product_id IS NOT NULL THEN
+    SELECT coalesce(quantity, 0) INTO v_stock FROM public.products WHERE id = v_item.product_id FOR UPDATE;
+    
+    v_lote_id := v_item.batch_id;
+    IF v_lote_id IS NOT NULL THEN
+      UPDATE public.batches SET quantity = coalesce(quantity, 0) + p_cantidad WHERE id = v_lote_id;
+    ELSE
+      -- Devolver al último lote activo del producto
+      SELECT id INTO v_lote_id FROM public.batches
+      WHERE product_id = v_item.product_id AND coalesce(is_active, 1) <> 0
+      ORDER BY created_at DESC, id DESC LIMIT 1;
+
+      IF v_lote_id IS NOT NULL THEN
+        UPDATE public.batches SET quantity = coalesce(quantity, 0) + p_cantidad WHERE id = v_lote_id;
+      END IF;
+    END IF;
+
+    UPDATE public.products SET quantity = coalesce(quantity, 0) + p_cantidad WHERE id = v_item.product_id;
+
+    INSERT INTO public.inventory_movements (
+      batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
+      operation_type, reason, notes, created_at, "user", is_synced
+    ) VALUES (
+      v_lote_id, v_item.product_id, v_item.descripcion, p_cantidad, v_stock, v_stock + p_cantidad,
+      'DEVOLUCION', 'Devolución de Salida ' || v_salida.codigo, coalesce(p_motivo, 'Material no utilizado'), now(), p_usuario, 1
+    );
+  END IF;
+
+  INSERT INTO public.salida_devoluciones (
+    salida_id, salida_item_id, product_id, batch_id, cantidad, motivo, usuario
+  ) VALUES (
+    p_salida_id, p_item_id, v_item.product_id, v_item.batch_id, p_cantidad, p_motivo, p_usuario
+  );
+
+  RETURN jsonb_build_object('success', true, 'cantidad_devuelta', v_item.cantidad_devuelta + p_cantidad);
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.fn_cambiar_estado_salida(
+  p_salida_id bigint,
+  p_nuevo_estado text,
+  p_usuario text DEFAULT 'Sistema'
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_salida record;
+  v_item record;
+  v_restante numeric;
+BEGIN
+  SELECT * INTO v_salida FROM public.salidas WHERE id = p_salida_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Salida no encontrada.'; END IF;
+
+  IF p_nuevo_estado NOT IN ('EN_PROCESO', 'FINALIZADO', 'CANCELADO') THEN
+    RAISE EXCEPTION 'Estado no válido.';
+  END IF;
+
+  -- Si se cancela, devolver todo lo no devuelto al stock
+  IF p_nuevo_estado = 'CANCELADO' AND v_salida.estado <> 'CANCELADO' THEN
+    FOR v_item IN SELECT * FROM public.salida_items WHERE salida_id = p_salida_id LOOP
+      v_restante := v_item.cantidad - v_item.cantidad_devuelta;
+      IF v_restante > 0 THEN
+        PERFORM public.fn_registrar_devolucion(
+          p_salida_id, v_item.id, v_restante, 'Cancelación de Salida', p_usuario
+        );
+      END IF;
+    END LOOP;
+  END IF;
+
+  UPDATE public.salidas SET estado = p_nuevo_estado WHERE id = p_salida_id;
+  RETURN jsonb_build_object('success', true, 'estado', p_nuevo_estado);
+END;
+$function$;
+
+-- ===================================================================================================
+-- FASE 4: HERRAMIENTAS Y VEHÍCULOS (ACTIVOS)
+-- ===================================================================================================
+
+CREATE TABLE IF NOT EXISTS public.herramientas (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  codigo text,
+  nombre text NOT NULL,
+  categoria text NOT NULL DEFAULT 'GENERAL',
+  marca text,
+  modelo text,
+  serie text,
+  cantidad_total integer NOT NULL DEFAULT 1 CHECK (cantidad_total >= 0),
+  cantidad_en_uso integer NOT NULL DEFAULT 0 CHECK (cantidad_en_uso >= 0 AND cantidad_en_uso <= cantidad_total),
+  estado text NOT NULL DEFAULT 'OPERATIVO' CHECK (estado IN ('OPERATIVO', 'EN_MANTENIMIENTO', 'DE_BAJA')),
+  ubicacion text,
+  observaciones text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_herramientas_nombre ON public.herramientas (nombre);
+
+CREATE TABLE IF NOT EXISTS public.herramientas_prestamos (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  herramienta_id bigint NOT NULL REFERENCES public.herramientas (id) ON DELETE CASCADE,
+  trabajador_id bigint REFERENCES public.trabajadores (id) ON DELETE SET NULL,
+  trabajador_nombre text NOT NULL,
+  cantidad integer NOT NULL DEFAULT 1 CHECK (cantidad > 0),
+  fecha_prestamo timestamptz NOT NULL DEFAULT now(),
+  fecha_esperada_devolucion date,
+  fecha_devolucion timestamptz,
+  estado text NOT NULL DEFAULT 'PRESTADO' CHECK (estado IN ('PRESTADO', 'DEVUELTO')),
+  notas text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_herramientas_prestamos_herramienta ON public.herramientas_prestamos (herramienta_id);
+CREATE INDEX IF NOT EXISTS idx_herramientas_prestamos_estado ON public.herramientas_prestamos (estado);
+
+CREATE TABLE IF NOT EXISTS public.vehiculos (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  placa text NOT NULL UNIQUE,
+  marca text,
+  modelo text,
+  anio integer,
+  color text,
+  kilometraje integer NOT NULL DEFAULT 0,
+  vencimiento_soat date,
+  vencimiento_revision_tecnica date,
+  trabajador_asignado_id bigint REFERENCES public.trabajadores (id) ON DELETE SET NULL,
+  estado text NOT NULL DEFAULT 'OPERATIVO' CHECK (estado IN ('OPERATIVO', 'EN_TALLER', 'DE_BAJA')),
+  observaciones text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_vehiculos_placa ON public.vehiculos (placa);
+
+CREATE TABLE IF NOT EXISTS public.vehiculos_mantenimientos (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  vehiculo_id bigint NOT NULL REFERENCES public.vehiculos (id) ON DELETE CASCADE,
+  fecha date NOT NULL DEFAULT CURRENT_DATE,
+  tipo text NOT NULL DEFAULT 'PREVENTIVO' CHECK (tipo IN ('PREVENTIVO', 'CORRECTIVO')),
+  kilometraje integer,
+  costo numeric(12,2) NOT NULL DEFAULT 0,
+  taller_proveedor text,
+  descripcion text NOT NULL,
+  observaciones text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_vehiculos_mantenimientos_vehiculo ON public.vehiculos_mantenimientos (vehiculo_id);
+
+GRANT ALL ON public.herramientas TO anon;
+GRANT ALL ON public.herramientas_prestamos TO anon;
+GRANT ALL ON public.vehiculos TO anon;
+GRANT ALL ON public.vehiculos_mantenimientos TO anon;
+
+-- RPC para prestar herramienta
+CREATE OR REPLACE FUNCTION public.fn_prestar_herramienta(
+  p_herramienta_id bigint,
+  p_trabajador_id bigint,
+  p_trabajador_nombre text,
+  p_cantidad integer,
+  p_fecha_esperada date DEFAULT NULL,
+  p_notas text DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_herr record;
+  v_prestamo_id bigint;
+BEGIN
+  SELECT * INTO v_herr FROM public.herramientas WHERE id = p_herramienta_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Herramienta no encontrada.'; END IF;
+
+  IF (v_herr.cantidad_total - v_herr.cantidad_en_uso) < p_cantidad THEN
+    RAISE EXCEPTION 'Stock insuficiente disponible para préstamo (Disponibles: %)', (v_herr.cantidad_total - v_herr.cantidad_en_uso);
+  END IF;
+
+  INSERT INTO public.herramientas_prestamos (
+    herramienta_id, trabajador_id, trabajador_nombre, cantidad,
+    fecha_prestamo, fecha_esperada_devolucion, estado, notas
+  ) VALUES (
+    p_herramienta_id, p_trabajador_id, p_trabajador_nombre, p_cantidad,
+    now(), p_fecha_esperada, 'PRESTADO', p_notas
+  ) RETURNING id INTO v_prestamo_id;
+
+  UPDATE public.herramientas
+  SET cantidad_en_uso = cantidad_en_uso + p_cantidad, updated_at = now()
+  WHERE id = p_herramienta_id;
+
+  RETURN jsonb_build_object('success', true, 'prestamo_id', v_prestamo_id);
+END;
+$function$;
+
+-- RPC para devolver herramienta
+CREATE OR REPLACE FUNCTION public.fn_devolver_herramienta(
+  p_prestamo_id bigint,
+  p_cantidad_devuelta integer DEFAULT NULL,
+  p_notas text DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_prestamo record;
+  v_cant integer;
+BEGIN
+  SELECT * INTO v_prestamo FROM public.herramientas_prestamos WHERE id = p_prestamo_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Préstamo no encontrado.'; END IF;
+
+  IF v_prestamo.estado = 'DEVUELTO' THEN
+    RAISE EXCEPTION 'Este préstamo ya fue devuelto.';
+  END IF;
+
+  v_cant := coalesce(p_cantidad_devuelta, v_prestamo.cantidad);
+  IF v_cant > v_prestamo.cantidad THEN
+    v_cant := v_prestamo.cantidad;
+  END IF;
+
+  UPDATE public.herramientas_prestamos
+  SET estado = 'DEVUELTO', fecha_devolucion = now(),
+      notas = CASE WHEN p_notas IS NOT NULL AND p_notas <> '' THEN coalesce(notas || ' | ', '') || p_notas ELSE notas END
+  WHERE id = p_prestamo_id;
+
+  UPDATE public.herramientas
+  SET cantidad_en_uso = greatest(0, cantidad_en_uso - v_cant), updated_at = now()
+  WHERE id = v_prestamo.herramienta_id;
+
+  RETURN jsonb_build_object('success', true);
+END;
+$function$;
+
+GRANT EXECUTE ON FUNCTION public.fn_prestar_herramienta TO anon;
+GRANT EXECUTE ON FUNCTION public.fn_devolver_herramienta TO anon;
+
+-- Permisos por defecto para Administradores
+UPDATE public.empleados
+SET permisos = jsonb_set(
+  jsonb_set(
+    jsonb_set(coalesce(permisos, '{}'::jsonb), '{herramientas_ver}', 'true'::jsonb),
+    '{herramientas_crear}', 'true'::jsonb
+  ),
+  '{herramientas_editar}', 'true'::jsonb
+)
+WHERE rol = 'Administrador' OR permisos->>'sistema_acceso_total' = 'true';
+
+-- ===================================================================================================
+-- FASE 5: AGENDA DE TRABAJOS Y CALENDARIO
+-- ===================================================================================================
+CREATE TABLE IF NOT EXISTS public.agenda_trabajos (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  titulo text NOT NULL,
+  customer_id bigint REFERENCES public.customers(id) ON DELETE CASCADE,
+  bien_id bigint REFERENCES public.bienes_cliente(id) ON DELETE SET NULL,
+  direccion text,
+  ubicacion text,
+  fecha date NOT NULL,
+  hora_inicio time,
+  hora_fin time,
+  estado text NOT NULL DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'COMPLETADO', 'SEGUIMIENTO', 'CANCELADO')),
+  prioridad text NOT NULL DEFAULT 'NORMAL' CHECK (prioridad IN ('BAJA', 'NORMAL', 'ALTA', 'URGENTE')),
+  descripcion text,
+  notas text,
+  salida_id bigint REFERENCES public.salidas(id) ON DELETE SET NULL,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.agenda_trabajadores (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  trabajo_id bigint NOT NULL REFERENCES public.agenda_trabajos(id) ON DELETE CASCADE,
+  trabajador_id bigint NOT NULL REFERENCES public.trabajadores(id) ON DELETE CASCADE,
+  UNIQUE(trabajo_id, trabajador_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_agenda_trabajos_fecha ON public.agenda_trabajos(fecha);
+CREATE INDEX IF NOT EXISTS idx_agenda_trabajos_customer ON public.agenda_trabajos(customer_id);
+CREATE INDEX IF NOT EXISTS idx_agenda_trabajos_estado ON public.agenda_trabajos(estado);
+CREATE INDEX IF NOT EXISTS idx_agenda_trabajadores_trabajo ON public.agenda_trabajadores(trabajo_id);
+CREATE INDEX IF NOT EXISTS idx_agenda_trabajadores_trabajador ON public.agenda_trabajadores(trabajador_id);
+
+GRANT ALL ON TABLE public.agenda_trabajos TO anon;
+GRANT ALL ON TABLE public.agenda_trabajadores TO anon;
+
+-- Permisos de agenda para Administradores
+UPDATE public.empleados
+SET permisos = jsonb_set(
+  jsonb_set(
+    jsonb_set(coalesce(permisos, '{}'::jsonb), '{agenda_ver}', 'true'::jsonb),
+    '{agenda_crear}', 'true'::jsonb
+  ),
+  '{agenda_editar}', 'true'::jsonb
+)
+WHERE rol = 'Administrador' OR permisos->>'sistema_acceso_total' = 'true';
+
+-- ===================================================================================================
+-- FASE 6: CONTRATOS Y COBRO POR PERÍODO
+-- ===================================================================================================
+CREATE SEQUENCE IF NOT EXISTS seq_contrato_codigo START 1;
+
+CREATE TABLE IF NOT EXISTS public.contratos (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  codigo text NOT NULL UNIQUE DEFAULT ('CON-' || lpad(nextval('seq_contrato_codigo')::text, 4, '0')),
+  customer_id bigint NOT NULL REFERENCES public.customers(id) ON DELETE RESTRICT,
+  bien_id bigint REFERENCES public.bienes_cliente(id) ON DELETE SET NULL,
+  titulo text NOT NULL,
+  frecuencia text NOT NULL DEFAULT 'MENSUAL' CHECK (frecuencia IN ('SEMANAL', 'QUINCENAL', 'MENSUAL', 'BIMESTRAL')),
+  dias_semana jsonb DEFAULT '[]'::jsonb,
+  dia_cobro int DEFAULT 1 CHECK (dia_cobro >= 1 AND dia_cobro <= 31),
+  precio_periodo numeric(14,2) NOT NULL DEFAULT 0.00,
+  moneda text NOT NULL DEFAULT 'PEN',
+  fecha_inicio date NOT NULL,
+  fecha_fin date,
+  estado text NOT NULL DEFAULT 'ACTIVO' CHECK (estado IN ('ACTIVO', 'PAUSADO', 'FINALIZADO')),
+  direccion text,
+  ubicacion text,
+  tecnico_principal_id bigint REFERENCES public.trabajadores(id) ON DELETE SET NULL,
+  notas text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.contrato_visitas (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  contrato_id bigint NOT NULL REFERENCES public.contratos(id) ON DELETE CASCADE,
+  agenda_trabajo_id bigint REFERENCES public.agenda_trabajos(id) ON DELETE SET NULL,
+  fecha_programada date NOT NULL,
+  fecha_ejecutada date,
+  hora_inicio time,
+  hora_fin time,
+  tecnico_id bigint REFERENCES public.trabajadores(id) ON DELETE SET NULL,
+  estado text NOT NULL DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'REALIZADO', 'CANCELADO', 'REPROGRAMADO')),
+  observaciones text,
+  parametros jsonb DEFAULT '{}'::jsonb,
+  fotos jsonb DEFAULT '[]'::jsonb,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.contrato_consumos (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  visita_id bigint NOT NULL REFERENCES public.contrato_visitas(id) ON DELETE CASCADE,
+  product_id bigint REFERENCES public.products(id) ON DELETE SET NULL,
+  batch_id bigint REFERENCES public.batches(id) ON DELETE SET NULL,
+  descripcion text NOT NULL,
+  cantidad numeric(14,4) NOT NULL DEFAULT 1,
+  unidad text DEFAULT 'UND',
+  costo_unitario numeric(14,4) DEFAULT 0.00,
+  subtotal_costo numeric(14,4) DEFAULT 0.00,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.contrato_cobros (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  contrato_id bigint NOT NULL REFERENCES public.contratos(id) ON DELETE CASCADE,
+  customer_id bigint NOT NULL REFERENCES public.customers(id) ON DELETE RESTRICT,
+  periodo text NOT NULL,
+  monto numeric(14,2) NOT NULL DEFAULT 0.00,
+  moneda text NOT NULL DEFAULT 'PEN',
+  fecha_emision date NOT NULL,
+  fecha_vencimiento date NOT NULL,
+  estado text NOT NULL DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'PAGADO', 'PARCIAL', 'ANULADO')),
+  monto_pagado numeric(14,2) DEFAULT 0.00,
+  fecha_pago date,
+  metodo_pago text,
+  referencia_pago text,
+  notas text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_contratos_customer ON public.contratos(customer_id);
+CREATE INDEX IF NOT EXISTS idx_contratos_estado ON public.contratos(estado);
+CREATE INDEX IF NOT EXISTS idx_contrato_visitas_contrato ON public.contrato_visitas(contrato_id);
+CREATE INDEX IF NOT EXISTS idx_contrato_visitas_fecha ON public.contrato_visitas(fecha_programada);
+CREATE INDEX IF NOT EXISTS idx_contrato_cobros_contrato ON public.contrato_cobros(contrato_id);
+CREATE INDEX IF NOT EXISTS idx_contrato_cobros_customer ON public.contrato_cobros(customer_id);
+CREATE INDEX IF NOT EXISTS idx_contrato_cobros_estado ON public.contrato_cobros(estado);
+
+GRANT ALL ON TABLE public.contratos TO anon;
+GRANT ALL ON TABLE public.contrato_visitas TO anon;
+GRANT ALL ON TABLE public.contrato_consumos TO anon;
+GRANT ALL ON TABLE public.contrato_cobros TO anon;
+GRANT USAGE, SELECT ON SEQUENCE seq_contrato_codigo TO anon;
+
+-- Permisos de contratos para Administradores
+UPDATE public.empleados
+SET permisos = jsonb_set(
+  jsonb_set(
+    jsonb_set(coalesce(permisos, '{}'::jsonb), '{contratos_ver}', 'true'::jsonb),
+    '{contratos_crear}', 'true'::jsonb
+  ),
+  '{contratos_editar}', 'true'::jsonb
+)
+WHERE rol = 'Administrador' OR permisos->>'sistema_acceso_total' = 'true';
+
+-- RPC: Generar visitas automáticas para un contrato en un mes/año
+CREATE OR REPLACE FUNCTION public.fn_generar_visitas_contrato(
+  p_contrato_id bigint,
+  p_anio int,
+  p_mes int
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_con record;
+  v_dias int[];
+  v_inicio date;
+  v_fin date;
+  v_curr date;
+  v_visitas_creadas int := 0;
+  v_trabajo_id bigint;
+  v_visita_id bigint;
+  v_dow int;
+  v_step int;
+BEGIN
+  SELECT * INTO v_con FROM public.contratos WHERE id = p_contrato_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Contrato no encontrado.'; END IF;
+
+  v_inicio := make_date(p_anio, p_mes, 1);
+  v_fin := (v_inicio + interval '1 month - 1 day')::date;
+
+  IF v_con.fecha_inicio > v_inicio THEN
+    v_inicio := v_con.fecha_inicio;
+  END IF;
+
+  IF v_con.fecha_fin IS NOT NULL AND v_con.fecha_fin < v_fin THEN
+    v_fin := v_con.fecha_fin;
+  END IF;
+
+  IF v_inicio > v_fin THEN
+    RETURN jsonb_build_object('ok', true, 'visitas_creadas', 0);
+  END IF;
+
+  -- Interpretar frecuencia
+  IF v_con.frecuencia = 'MENSUAL' THEN
+    v_curr := make_date(p_anio, p_mes, least(coalesce(v_con.dia_cobro, 1), extract(day from v_fin)::int));
+    IF v_curr >= v_inicio AND v_curr <= v_fin THEN
+      IF NOT EXISTS (SELECT 1 FROM public.contrato_visitas WHERE contrato_id = p_contrato_id AND fecha_programada = v_curr) THEN
+        INSERT INTO public.agenda_trabajos (
+          titulo, customer_id, bien_id, direccion, ubicacion, fecha, estado, prioridad, descripcion
+        ) VALUES (
+          v_con.titulo, v_con.customer_id, v_con.bien_id, v_con.direccion, v_con.ubicacion,
+          v_curr, 'PENDIENTE', 'NORMAL', 'Visita mensual programada por contrato ' || v_con.codigo
+        ) RETURNING id INTO v_trabajo_id;
+
+        IF v_con.tecnico_principal_id IS NOT NULL THEN
+          INSERT INTO public.agenda_trabajadores (trabajo_id, trabajador_id)
+          VALUES (v_trabajo_id, v_con.tecnico_principal_id) ON CONFLICT DO NOTHING;
+        END IF;
+
+        INSERT INTO public.contrato_visitas (
+          contrato_id, agenda_trabajo_id, fecha_programada, tecnico_id, estado
+        ) VALUES (
+          p_contrato_id, v_trabajo_id, v_curr, v_con.tecnico_principal_id, 'PENDIENTE'
+        );
+        v_visitas_creadas := v_visitas_creadas + 1;
+      END IF;
+    END IF;
+  ELSIF v_con.frecuencia = 'QUINCENAL' THEN
+    FOREACH v_step IN ARRAY ARRAY[1, 15] LOOP
+      v_curr := make_date(p_anio, p_mes, least(v_step, extract(day from v_fin)::int));
+      IF v_curr >= v_inicio AND v_curr <= v_fin THEN
+        IF NOT EXISTS (SELECT 1 FROM public.contrato_visitas WHERE contrato_id = p_contrato_id AND fecha_programada = v_curr) THEN
+          INSERT INTO public.agenda_trabajos (
+            titulo, customer_id, bien_id, direccion, ubicacion, fecha, estado, prioridad, descripcion
+          ) VALUES (
+            v_con.titulo || ' (Quincenal)', v_con.customer_id, v_con.bien_id, v_con.direccion, v_con.ubicacion,
+            v_curr, 'PENDIENTE', 'NORMAL', 'Visita quincenal programada por contrato ' || v_con.codigo
+          ) RETURNING id INTO v_trabajo_id;
+
+          IF v_con.tecnico_principal_id IS NOT NULL THEN
+            INSERT INTO public.agenda_trabajadores (trabajo_id, trabajador_id)
+            VALUES (v_trabajo_id, v_con.tecnico_principal_id) ON CONFLICT DO NOTHING;
+          END IF;
+
+          INSERT INTO public.contrato_visitas (
+            contrato_id, agenda_trabajo_id, fecha_programada, tecnico_id, estado
+          ) VALUES (
+            p_contrato_id, v_trabajo_id, v_curr, v_con.tecnico_principal_id, 'PENDIENTE'
+          );
+          v_visitas_creadas := v_visitas_creadas + 1;
+        END IF;
+      END IF;
+    END LOOP;
+  ELSE -- SEMANAL o días específicos
+    SELECT array_agg(value::int) INTO v_dias
+    FROM jsonb_array_elements_text(coalesce(v_con.dias_semana, '[]'::jsonb));
+    IF v_dias IS NULL OR array_length(v_dias, 1) = 0 THEN
+      v_dias := ARRAY[1];
+    END IF;
+
+    v_curr := v_inicio;
+    WHILE v_curr <= v_fin LOOP
+      v_dow := extract(isodow from v_curr)::int;
+      IF v_dow = ANY(v_dias) THEN
+        IF NOT EXISTS (SELECT 1 FROM public.contrato_visitas WHERE contrato_id = p_contrato_id AND fecha_programada = v_curr) THEN
+          INSERT INTO public.agenda_trabajos (
+            titulo, customer_id, bien_id, direccion, ubicacion, fecha, estado, prioridad, descripcion
+          ) VALUES (
+            v_con.titulo, v_con.customer_id, v_con.bien_id, v_con.direccion, v_con.ubicacion,
+            v_curr, 'PENDIENTE', 'NORMAL', 'Visita semanal programada por contrato ' || v_con.codigo
+          ) RETURNING id INTO v_trabajo_id;
+
+          IF v_con.tecnico_principal_id IS NOT NULL THEN
+            INSERT INTO public.agenda_trabajadores (trabajo_id, trabajador_id)
+            VALUES (v_trabajo_id, v_con.tecnico_principal_id) ON CONFLICT DO NOTHING;
+          END IF;
+
+          INSERT INTO public.contrato_visitas (
+            contrato_id, agenda_trabajo_id, fecha_programada, tecnico_id, estado
+          ) VALUES (
+            p_contrato_id, v_trabajo_id, v_curr, v_con.tecnico_principal_id, 'PENDIENTE'
+          );
+          v_visitas_creadas := v_visitas_creadas + 1;
+        END IF;
+      END IF;
+      v_curr := v_curr + 1;
+    END LOOP;
+  END IF;
+
+  RETURN jsonb_build_object('ok', true, 'visitas_creadas', v_visitas_creadas);
+END;
+$function$;
+
+-- RPC: Registrar consumo de químicos / materiales en una visita
+CREATE OR REPLACE FUNCTION public.fn_registrar_consumo_visita(
+  p_visita_id bigint,
+  p_product_id bigint,
+  p_batch_id bigint,
+  p_cantidad numeric,
+  p_notas text DEFAULT '',
+  p_usuario text DEFAULT 'Sistema'
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_visita record;
+  v_prod record;
+  v_costo numeric := 0;
+  v_stock numeric := 0;
+  v_consumo_id bigint;
+BEGIN
+  IF p_cantidad <= 0 THEN RAISE EXCEPTION 'La cantidad debe ser mayor a 0.'; END IF;
+
+  SELECT v.*, c.codigo AS contrato_codigo, c.titulo AS contrato_titulo
+  INTO v_visita
+  FROM public.contrato_visitas v
+  JOIN public.contratos c ON c.id = v.contrato_id
+  WHERE v.id = p_visita_id;
+
+  IF NOT FOUND THEN RAISE EXCEPTION 'Visita no encontrada.'; END IF;
+
+  IF p_product_id IS NOT NULL THEN
+    SELECT * INTO v_prod FROM public.products WHERE id = p_product_id;
+    IF NOT FOUND THEN RAISE EXCEPTION 'Producto no encontrado.'; END IF;
+    v_costo := coalesce(v_prod.cost, 0);
+    v_stock := coalesce(v_prod.quantity, 0);
+
+    IF p_batch_id IS NOT NULL THEN
+      UPDATE public.batches SET quantity = greatest(0, coalesce(quantity, 0) - p_cantidad) WHERE id = p_batch_id;
+      SELECT coalesce(cost_unit, v_costo) INTO v_costo FROM public.batches WHERE id = p_batch_id;
+    END IF;
+
+    UPDATE public.products SET quantity = coalesce(quantity, 0) - p_cantidad WHERE id = p_product_id;
+
+    INSERT INTO public.inventory_movements (
+      batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
+      operation_type, reason, notes, created_at, "user", is_synced
+    ) VALUES (
+      p_batch_id, p_product_id, v_prod.name, -p_cantidad, v_stock, v_stock - p_cantidad,
+      'SALIDA', 'Consumo Contrato ' || v_visita.contrato_codigo, coalesce(p_notas, 'Visita ID: ' || p_visita_id), now(), p_usuario, 1
+    );
+
+    INSERT INTO public.contrato_consumos (
+      visita_id, product_id, batch_id, descripcion, cantidad, unidad, costo_unitario, subtotal_costo
+    ) VALUES (
+      p_visita_id, p_product_id, p_batch_id, v_prod.name, p_cantidad, coalesce(v_prod.unit, 'UND'),
+      v_costo, v_costo * p_cantidad
+    ) RETURNING id INTO v_consumo_id;
+  ELSE
+    INSERT INTO public.contrato_consumos (
+      visita_id, product_id, batch_id, descripcion, cantidad, unidad, costo_unitario, subtotal_costo
+    ) VALUES (
+      p_visita_id, NULL, NULL, coalesce(p_notas, 'Insumo externo'), p_cantidad, 'UND', 0, 0
+    ) RETURNING id INTO v_consumo_id;
+  END IF;
+
+  RETURN jsonb_build_object('ok', true, 'consumo_id', v_consumo_id);
+END;
+$function$;
+
+-- RPC: Registrar pago / abono a un período de contrato
+CREATE OR REPLACE FUNCTION public.fn_registrar_pago_contrato(
+  p_cobro_id bigint,
+  p_monto numeric,
+  p_metodo text,
+  p_referencia text DEFAULT '',
+  p_fecha date DEFAULT CURRENT_DATE,
+  p_notas text DEFAULT ''
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_cobro record;
+  v_nuevo_pagado numeric;
+  v_nuevo_estado text;
+BEGIN
+  IF p_monto <= 0 THEN RAISE EXCEPTION 'El monto a pagar debe ser mayor a 0.'; END IF;
+
+  SELECT * INTO v_cobro FROM public.contrato_cobros WHERE id = p_cobro_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Cobro no encontrado.'; END IF;
+
+  v_nuevo_pagado := coalesce(v_cobro.monto_pagado, 0) + p_monto;
+  IF v_nuevo_pagado >= v_cobro.monto THEN
+    v_nuevo_estado := 'PAGADO';
+  ELSE
+    v_nuevo_estado := 'PARCIAL';
+  END IF;
+
+  UPDATE public.contrato_cobros
+  SET monto_pagado = v_nuevo_pagado,
+      estado = v_nuevo_estado,
+      fecha_pago = p_fecha,
+      metodo_pago = coalesce(p_metodo, v_cobro.metodo_pago),
+      referencia_pago = coalesce(p_referencia, v_cobro.referencia_pago),
+      notas = case when p_notas <> '' then concat_ws(' | ', v_cobro.notas, p_notas) else v_cobro.notas end,
+      updated_at = now()
+  WHERE id = p_cobro_id;
+
+  RETURN jsonb_build_object('ok', true, 'monto_pagado', v_nuevo_pagado, 'estado', v_nuevo_estado);
+END;
+$function$;
+
+GRANT EXECUTE ON FUNCTION public.fn_generar_visitas_contrato TO anon;
+GRANT EXECUTE ON FUNCTION public.fn_registrar_consumo_visita TO anon;
+GRANT EXECUTE ON FUNCTION public.fn_registrar_pago_contrato TO anon;
+
+-- ===================================================================================================
+-- FASE 7: COTIZACIONES, COBROS Y CAJA
+-- ===================================================================================================
+CREATE SEQUENCE IF NOT EXISTS seq_cotizaciones_numero START 1;
+
+-- Asegurar columnas en cotizaciones
+ALTER TABLE public.cotizaciones ADD COLUMN IF NOT EXISTS moneda text DEFAULT 'PEN';
+ALTER TABLE public.cotizaciones ADD COLUMN IF NOT EXISTS bien_id bigint REFERENCES public.bienes_cliente(id) ON DELETE SET NULL;
+ALTER TABLE public.cotizaciones ADD COLUMN IF NOT EXISTS adelanto numeric(14,2) DEFAULT 0.00;
+ALTER TABLE public.cotizaciones ADD COLUMN IF NOT EXISTS saldo numeric(14,2) DEFAULT 0.00;
+ALTER TABLE public.cotizaciones ADD COLUMN IF NOT EXISTS banco_info text;
+ALTER TABLE public.cotizaciones ADD COLUMN IF NOT EXISTS condiciones text;
+ALTER TABLE public.cotizaciones ADD COLUMN IF NOT EXISTS trabajo_id bigint REFERENCES public.agenda_trabajos(id) ON DELETE SET NULL;
+ALTER TABLE public.cotizaciones ADD COLUMN IF NOT EXISTS salida_id bigint REFERENCES public.salidas(id) ON DELETE SET NULL;
+
+-- Asegurar columnas en cotizacion_detalles
+ALTER TABLE public.cotizacion_detalles ADD COLUMN IF NOT EXISTS seccion text;
+ALTER TABLE public.cotizacion_detalles ADD COLUMN IF NOT EXISTS unidad text DEFAULT 'UND';
+
+-- Tabla de pagos/adelantos a cotizaciones
+CREATE TABLE IF NOT EXISTS public.cotizacion_pagos (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  cotizacion_id integer NOT NULL REFERENCES public.cotizaciones(id) ON DELETE CASCADE,
+  monto numeric(14,2) NOT NULL,
+  fecha date NOT NULL DEFAULT CURRENT_DATE,
+  metodo text DEFAULT 'TRANSFERENCIA',
+  referencia text,
+  notas text,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_cotizaciones_cliente ON public.cotizaciones(cliente_id);
+CREATE INDEX IF NOT EXISTS idx_cotizaciones_estado ON public.cotizaciones(estado);
+CREATE INDEX IF NOT EXISTS idx_cotizacion_pagos_coti ON public.cotizacion_pagos(cotizacion_id);
+
+GRANT ALL ON TABLE public.cotizaciones TO anon;
+GRANT ALL ON TABLE public.cotizacion_detalles TO anon;
+GRANT ALL ON TABLE public.cotizacion_pagos TO anon;
+GRANT ALL ON TABLE public.cash_sessions TO anon;
+GRANT ALL ON TABLE public.cash_movements TO anon;
+GRANT USAGE, SELECT ON SEQUENCE seq_cotizaciones_numero TO anon;
+
+-- Permisos de cobros y caja para Administradores
+UPDATE public.empleados
+SET permisos = jsonb_set(
+  jsonb_set(
+    jsonb_set(coalesce(permisos, '{}'::jsonb), '{cobros_ver}', 'true'::jsonb),
+    '{cobros_crear}', 'true'::jsonb
+  ),
+  '{cobros_editar}', 'true'::jsonb
+)
+WHERE rol = 'Administrador' OR permisos->>'sistema_acceso_total' = 'true';
+
+-- RPC: Convertir Cotización a Trabajo en la Agenda
+CREATE OR REPLACE FUNCTION public.fn_convertir_cotizacion_a_trabajo(
+  p_cotizacion_id int,
+  p_fecha date,
+  p_tecnico_id bigint DEFAULT NULL,
+  p_usuario text DEFAULT 'Sistema'
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_coti record;
+  v_trabajo_id bigint;
+  v_cust_id bigint := NULL;
+BEGIN
+  SELECT * INTO v_coti FROM public.cotizaciones WHERE id = p_cotizacion_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada.'; END IF;
+
+  IF v_coti.cliente_id ~ '^[0-9]+$' THEN
+    v_cust_id := v_coti.cliente_id::bigint;
+  END IF;
+
+  INSERT INTO public.agenda_trabajos (
+    titulo, customer_id, bien_id, direccion, fecha, estado, prioridad, descripcion
+  ) VALUES (
+    'Trabajo: ' || coalesce(v_coti.observaciones, 'Cotización ' || coalesce(v_coti.numero, v_coti.id::text)),
+    v_cust_id,
+    v_coti.bien_id,
+    NULL,
+    coalesce(p_fecha, CURRENT_DATE),
+    'PENDIENTE',
+    'NORMAL',
+    'Generado a partir de la Cotización ' || coalesce(v_coti.numero, v_coti.id::text) || ' (Monto: ' || v_coti.total || ' ' || coalesce(v_coti.moneda, 'PEN') || ')'
+  ) RETURNING id INTO v_trabajo_id;
+
+  IF p_tecnico_id IS NOT NULL THEN
+    INSERT INTO public.agenda_trabajadores (trabajo_id, trabajador_id)
+    VALUES (v_trabajo_id, p_tecnico_id) ON CONFLICT DO NOTHING;
+  END IF;
+
+  UPDATE public.cotizaciones
+  SET trabajo_id = v_trabajo_id,
+      estado = 'CONVERTIDA'
+  WHERE id = p_cotizacion_id;
+
+  RETURN jsonb_build_object('ok', true, 'trabajo_id', v_trabajo_id);
+END;
+$function$;
+
+-- RPC: Registrar Abono o Pago de Cotización
+CREATE OR REPLACE FUNCTION public.fn_registrar_pago_cotizacion(
+  p_cotizacion_id int,
+  p_monto numeric,
+  p_metodo text,
+  p_referencia text DEFAULT '',
+  p_fecha date DEFAULT CURRENT_DATE,
+  p_notas text DEFAULT '',
+  p_usuario text DEFAULT 'Sistema'
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_coti record;
+  v_nuevo_adelanto numeric;
+  v_nuevo_saldo numeric;
+  v_nuevo_estado text;
+  v_pago_id bigint;
+  v_session_id text := NULL;
+BEGIN
+  IF p_monto <= 0 THEN RAISE EXCEPTION 'El monto debe ser mayor a 0.'; END IF;
+
+  SELECT * INTO v_coti FROM public.cotizaciones WHERE id = p_cotizacion_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada.'; END IF;
+
+  v_nuevo_adelanto := coalesce(v_coti.adelanto, 0) + p_monto;
+  v_nuevo_saldo := greatest(0, coalesce(v_coti.total, 0) - v_nuevo_adelanto);
+
+  IF v_nuevo_saldo = 0 THEN
+    v_nuevo_estado := 'APROBADA';
+  ELSE
+    v_nuevo_estado := v_coti.estado;
+  END IF;
+
+  INSERT INTO public.cotizacion_pagos (
+    cotizacion_id, monto, fecha, metodo, referencia, notas
+  ) VALUES (
+    p_cotizacion_id, p_monto, p_fecha, p_metodo, p_referencia, p_notas
+  ) RETURNING id INTO v_pago_id;
+
+  UPDATE public.cotizaciones
+  SET adelanto = v_nuevo_adelanto,
+      saldo = v_nuevo_saldo,
+      estado = v_nuevo_estado
+  WHERE id = p_cotizacion_id;
+
+  SELECT id::text INTO v_session_id FROM public.cash_sessions WHERE status = 'open' ORDER BY opened_at DESC LIMIT 1;
+  IF v_session_id IS NOT NULL THEN
+    INSERT INTO public.cash_movements (
+      session_id, type, amount, description, payment_type, flujo, ref_local
+    ) VALUES (
+      v_session_id, 'INGRESO', p_monto,
+      'Cobro Cotización ' || coalesce(v_coti.numero, v_coti.id::text) || ' - ' || coalesce(v_coti.cliente_nombre, ''),
+      coalesce(p_metodo, 'EFECTIVO'), 'COBRO_COTIZACION', v_coti.numero
+    );
+  END IF;
+
+  RETURN jsonb_build_object('ok', true, 'pago_id', v_pago_id, 'adelanto', v_nuevo_adelanto, 'saldo', v_nuevo_saldo);
+END;
+$function$;
+
+GRANT EXECUTE ON FUNCTION public.fn_convertir_cotizacion_a_trabajo TO anon;
+GRANT EXECUTE ON FUNCTION public.fn_registrar_pago_cotizacion TO anon;
+
+-- Sede central / almacén principal por defecto (requerido por foreign keys de sesiones y almacén)
+INSERT INTO public.stores (id, nombre, codigo, es_almacen_principal, activo)
+SELECT 1, 'Almacén Central', 'SEDE-01', true, true
+WHERE NOT EXISTS (SELECT 1 FROM public.stores);
+
+-- ===================================================================================================
+-- FASE 12: TALLER (RECEPCIÓN Y REPARACIÓN DE EQUIPOS)
+-- ===================================================================================================
+CREATE SEQUENCE IF NOT EXISTS public.seq_taller_orden_codigo START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE IF NOT EXISTS public.taller_ordenes (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  codigo text NOT NULL UNIQUE DEFAULT ('ORD-' || lpad(nextval('public.seq_taller_orden_codigo')::text, 4, '0')),
+  customer_id bigint NOT NULL REFERENCES public.customers(id) ON DELETE CASCADE,
+  bien_id bigint REFERENCES public.bienes_cliente(id) ON DELETE SET NULL,
+  tipo_equipo text NOT NULL DEFAULT 'Equipo',
+  marca text,
+  modelo text,
+  serie text,
+  color text,
+  accesorios text,
+  falla_reportada text NOT NULL,
+  diagnostico text,
+  solucion_aplicada text,
+  tecnico_id bigint REFERENCES public.trabajadores(id) ON DELETE SET NULL,
+  estado text NOT NULL DEFAULT 'RECIBIDO' CHECK (estado IN ('RECIBIDO', 'DIAGNOSTICO', 'PRESUPUESTADO', 'EN_PROCESO', 'LISTO', 'ENTREGADO', 'CANCELADO')),
+  prioridad text NOT NULL DEFAULT 'NORMAL' CHECK (prioridad IN ('BAJA', 'NORMAL', 'ALTA', 'URGENTE')),
+  costo_mano_obra numeric(12,2) NOT NULL DEFAULT 0,
+  costo_repuestos numeric(12,2) NOT NULL DEFAULT 0,
+  total numeric(12,2) NOT NULL DEFAULT 0,
+  adelanto numeric(12,2) NOT NULL DEFAULT 0,
+  saldo numeric(12,2) NOT NULL DEFAULT 0,
+  fecha_ingreso timestamptz NOT NULL DEFAULT now(),
+  fecha_prometida date,
+  fecha_listo timestamptz,
+  fecha_entrega timestamptz,
+  meses_garantia integer NOT NULL DEFAULT 1,
+  garantia_vence date,
+  notas text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.taller_repuestos (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  orden_id bigint NOT NULL REFERENCES public.taller_ordenes(id) ON DELETE CASCADE,
+  product_id bigint REFERENCES public.products(id) ON DELETE SET NULL,
+  descripcion text NOT NULL,
+  cantidad numeric(10,2) NOT NULL DEFAULT 1,
+  costo_unitario numeric(12,2) NOT NULL DEFAULT 0,
+  precio_unitario numeric(12,2) NOT NULL DEFAULT 0,
+  subtotal numeric(12,2) NOT NULL DEFAULT 0,
+  es_externo boolean NOT NULL DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.taller_pagos (
+  id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  orden_id bigint NOT NULL REFERENCES public.taller_ordenes(id) ON DELETE CASCADE,
+  monto numeric(12,2) NOT NULL,
+  fecha date NOT NULL DEFAULT current_date,
+  metodo text NOT NULL DEFAULT 'EFECTIVO' CHECK (metodo IN ('EFECTIVO', 'YAPE', 'PLIN', 'TARJETA', 'TRANSFERENCIA', 'OTRO')),
+  referencia text,
+  tipo text NOT NULL DEFAULT 'ADELANTO' CHECK (tipo IN ('ADELANTO', 'PAGO_FINAL', 'ABONO')),
+  notas text,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_taller_ordenes_customer ON public.taller_ordenes(customer_id);
+CREATE INDEX IF NOT EXISTS idx_taller_ordenes_estado ON public.taller_ordenes(estado);
+CREATE INDEX IF NOT EXISTS idx_taller_ordenes_tecnico ON public.taller_ordenes(tecnico_id);
+CREATE INDEX IF NOT EXISTS idx_taller_repuestos_orden ON public.taller_repuestos(orden_id);
+CREATE INDEX IF NOT EXISTS idx_taller_pagos_orden ON public.taller_pagos(orden_id);
+
+GRANT ALL ON TABLE public.taller_ordenes TO anon;
+GRANT ALL ON TABLE public.taller_repuestos TO anon;
+GRANT ALL ON TABLE public.taller_pagos TO anon;
+GRANT USAGE, SELECT ON SEQUENCE public.seq_taller_orden_codigo TO anon;
+
+-- RPC: Cambiar estado de orden de taller
+CREATE OR REPLACE FUNCTION public.fn_cambiar_estado_taller(
+  p_orden_id bigint,
+  p_nuevo_estado text,
+  p_diagnostico text DEFAULT NULL,
+  p_solucion text DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_orden record;
+  v_garantia_vence date := null;
+BEGIN
+  SELECT * INTO v_orden FROM public.taller_ordenes WHERE id = p_orden_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Orden de taller no encontrada';
+  END IF;
+
+  IF p_nuevo_estado = 'ENTREGADO' THEN
+    IF v_orden.meses_garantia > 0 THEN
+      v_garantia_vence := (current_date + (v_orden.meses_garantia || ' months')::interval)::date;
+    END IF;
+    UPDATE public.taller_ordenes
+    SET estado = p_nuevo_estado,
+        diagnostico = coalesce(p_diagnostico, diagnostico),
+        solucion_aplicada = coalesce(p_solucion, solucion_aplicada),
+        fecha_entrega = now(),
+        garantia_vence = v_garantia_vence,
+        updated_at = now()
+    WHERE id = p_orden_id;
+  ELSIF p_nuevo_estado = 'LISTO' THEN
+    UPDATE public.taller_ordenes
+    SET estado = p_nuevo_estado,
+        diagnostico = coalesce(p_diagnostico, diagnostico),
+        solucion_aplicada = coalesce(p_solucion, solucion_aplicada),
+        fecha_listo = now(),
+        updated_at = now()
+    WHERE id = p_orden_id;
+  ELSE
+    UPDATE public.taller_ordenes
+    SET estado = p_nuevo_estado,
+        diagnostico = coalesce(p_diagnostico, diagnostico),
+        solucion_aplicada = coalesce(p_solucion, solucion_aplicada),
+        updated_at = now()
+    WHERE id = p_orden_id;
+  END IF;
+
+  RETURN jsonb_build_object('ok', true, 'nuevo_estado', p_nuevo_estado);
+END;
+$$;
+GRANT EXECUTE ON FUNCTION public.fn_cambiar_estado_taller TO anon;
+
+-- RPC: Registrar pago / adelanto de taller
+CREATE OR REPLACE FUNCTION public.fn_registrar_pago_taller(
+  p_orden_id bigint,
+  p_monto numeric,
+  p_metodo text,
+  p_referencia text DEFAULT NULL,
+  p_tipo text DEFAULT 'ABONO',
+  p_notas text DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_orden record;
+  v_nuevo_adelanto numeric;
+  v_nuevo_saldo numeric;
+  v_session_id text;
+BEGIN
+  IF p_monto <= 0 THEN
+    RAISE EXCEPTION 'El monto debe ser mayor a 0';
+  END IF;
+
+  SELECT * INTO v_orden FROM public.taller_ordenes WHERE id = p_orden_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Orden de taller no encontrada';
+  END IF;
+
+  -- Registrar en taller_pagos
+  INSERT INTO public.taller_pagos (orden_id, monto, fecha, metodo, referencia, tipo, notas)
+  VALUES (p_orden_id, p_monto, current_date, p_metodo, p_referencia, p_tipo, p_notas);
+
+  -- Recalcular adelanto y saldo
+  SELECT coalesce(sum(monto), 0) INTO v_nuevo_adelanto FROM public.taller_pagos WHERE orden_id = p_orden_id;
+  v_nuevo_saldo := greatest(0, v_orden.total - v_nuevo_adelanto);
+
+  UPDATE public.taller_ordenes
+  SET adelanto = v_nuevo_adelanto,
+      saldo = v_nuevo_saldo,
+      updated_at = now()
+  WHERE id = p_orden_id;
+
+  -- Si hay caja abierta, registrar movimiento de ingreso
+  SELECT id::text INTO v_session_id FROM public.cash_sessions WHERE closed_at IS NULL ORDER BY id DESC LIMIT 1;
+  IF v_session_id IS NOT NULL THEN
+    INSERT INTO public.cash_movements (session_id, type, amount, description, payment_type)
+    VALUES (v_session_id, 'INGRESO', p_monto, 'Pago Taller ' || v_orden.codigo || ' - ' || coalesce(v_orden.tipo_equipo, 'Equipo'), p_metodo);
+  END IF;
+
+  RETURN jsonb_build_object('ok', true, 'adelanto', v_nuevo_adelanto, 'saldo', v_nuevo_saldo);
+END;
+$$;
+GRANT EXECUTE ON FUNCTION public.fn_registrar_pago_taller TO anon;
 
 NOTIFY pgrst, 'reload schema';
 

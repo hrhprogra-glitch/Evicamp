@@ -883,3 +883,6 @@
   - Los 7 tipos se construyen como 4 partes: Comercio, Talleres y servicios, Restaurantes, y Agenda y reservas.
   - *"perfecto hazlo"* → fase 1 hecha (bitácora 139).
 - *"si"* (empezar la fase 2) → Ajustes → "Tipo de negocio" con los 7 tipos explicados, uno o varios, "Próximamente" los que aún no existen (bitácora 140).
+- *"mejor no porque son servicios y talleres no tienda o seria adaptarlo bien y si empieza con la parte 3"*
+  - **Decidió:** solo-servicios **sin Caja ni Finanzas**.
+  - Empezar la fase 3 → paso 3a hecho (bitácora 141).

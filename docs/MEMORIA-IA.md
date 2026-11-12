@@ -219,6 +219,667 @@
 56. **Funciones SQL repetidas: vale la ÚLTIMA** (11/11/2026): `fn_proteger_precios` está 4 veces en `seguridad-sesion.sql` (la de la fase 4.4 es la que queda). Antes de cambiar una función: `grep -n "FUNCTION public.<nombre>"` y cambiar la última; comprobar en la base con `prosrc like '%...%'`. Para que el servidor cambie algo que el trigger protege, marcar el permiso con `set_config('siumax.<algo>', '1', true)` dentro de la función (como `siumax.cpe_interno` y `siumax.costo_de_compra`).
 57. **Stock de ventas: siempre por el servidor y con la nota `Ticket #N`** (11/11/2026): el trigger de `sale_details` descuenta FIFO salvo que ya haya salidas `VENTA` con nota exacta `Ticket #<id completo>`. Si una pantalla mueve stock a mano (`products.quantity`), los lotes no cuadran y una línea nueva se descuenta dos veces. Usar funciones como `fn_mover_stock_cambio`.
 58. **Botón Guardar con `disabled` mientras guarda = el selector se pierde** (12/11/2026, Tipo de negocio). Al desactivarse, el navegador saca el foco del botón. Al cerrar el aviso, el sistema lo devuelve a otro lado (la primera pestaña). Usar `aria-disabled` + `if (guardando) return;` en la función. Probar siempre: después del aviso, el selector sigue en Guardar.
+59. **Al armar SQL con JavaScript, `String.replace` convierte `$` en `# Memoria del proyecto para cualquier IA
+
+> Esto es lo que Claude aprendió trabajando con el dueño desde octubre de 2026: cómo es él, cómo está armado todo,
+> cómo se trabaja, cómo se prueba y **los errores que ya se cometieron, para no repetirlos**.
+> Léelo junto con `AGENTS.md`, `docs/BITACORA.md` y `docs/PLAN-SIUMAX-COMERC.md`.
+> Si aprendes algo nuevo importante, agrégalo aquí.
+> **Nunca escribas aquí contraseñas ni claves:** viven en `.env.vps`, que no se sube a git.
+
+---
+
+## 1. El dueño y cómo le gusta trabajar
+- **Español siempre**, también en los avances cortos y los resúmenes de pruebas. Se molesta mucho si respondes en inglés.
+- **No es programador:** explica simple, sin jerga y con tablas cortas. Si dice "respóndeme nomás", contesta directo y corto.
+- **Muestra la propuesta antes de construir** (qué pantallas cambian) y espera su OK. Si da varias opciones, recomienda una.
+- **Nunca subas a Evicamp ni hagas push a GitHub sin que lo diga EN ESE MOMENTO.** Un "súbelo" anterior no vale para los
+  cambios siguientes. siumax (pruebas) sí se puede actualizar.
+- **Prueba él mismo en siumax** y manda capturas con los errores marcados en rojo. Lee la captura con calma: lo marcado
+  es lo que hay que arreglar.
+- **Cambia de idea, y está bien:** si dice "olvídalo" o "déjalo como está", no lo hagas y no insistas.
+- **Su cliente Evicamp vende todos los días:** nada debe cortar sus ventas (ver la sección 3).
+- **Estándar de pantallas:**
+  - 100% teclado (← → ↑ ↓, Enter, Esc) y el selector nunca desaparece;
+  - sin botón "Cancelar" (bastan la X y Esc);
+  - avisos propios (`avisar` / `confirmar`);
+  - listas en TABLA (no tarjetas), letra de tamaño normal, ventanas con borde 2 y sombra de 8 px;
+  - las ventanas con listas usan el estilo del "Directorio de clientes" (`src/components/ListaVentana.tsx`).
+- **Pestañas:** ← → solo mueven el selector; la pestaña cambia con Enter.
+- **Las 6 reglas del selector (04/11/2026, en todo el sistema):** llegar con flechas a TODO botón/buscador/campo; calendario: Enter
+  lo abre y el selector se queda (Enter NUNCA pasa al siguiente cuadro, ↓ sí); ← → ↑ ↓ siempre mueven; al volver de otro programa algo
+  queda seleccionado; en una ventana el selector nunca se pierde (ni con un clic en el fondo) y nunca sale de ella. Ya lo garantizan
+  `ventanas.ts` (ventanas) y `flechasEspaciales.ts` (flechas de respaldo); al hacer una pantalla nueva, poner flechas propias donde
+  importe el orden y correr `ai-scripts/pruebas/estilo/revisar-selector.mjs`. Ojo: un control desactivado no recibe el selector:
+  las flechas deben saltar al primero ACTIVO.
+- **Regla 9 (05/11/2026, el dueño la repitió dos veces en Producir):** **Enter = clic y el selector SE QUEDA, en TODO** (botones,
+  opciones, campos de texto y de número). Enter NUNCA pasa al siguiente cuadro; para moverse están las flechas. En un campo, Enter
+  solo hace su acción si tiene una (elegir el primer resultado de un buscador, "Agregar" en la cantidad) y el selector no se mueve.
+  Si el elemento desaparece (lista que se cierra, fila quitada), el selector vuelve a de donde salió o al vecino más cercano.
+  No programar `Enter → enfocar(siguiente)` en pantallas nuevas. **Ya lo garantiza `flechasEspaciales.ts` (guardiaEnter +
+  focusin) en TODAS las ventanas:** si tras un Enter en un campo el selector va a otro campo/botón de la misma ventana,
+  vuelve al de origen (no actúa si el Enter abrió/cerró una ventana, si el campo desapareció o entró a una lista; cualquier otra tecla del usuario termina la vigilancia al instante).
+  **Categorías:** Enter sin elegir de la lista guarda LO ESCRITO (no la primera parecida); de la lista se elige con ↓ + Enter.
+- **Reglas 7 y 8 (05/11/2026):** las flechas NUNCA cambian una opción (listas desplegables, grupos de opciones tipo radio, unidades…):
+  solo mueven el selector; **Enter despliega o elige**. **Enter en una casilla = clic** (se marca y el selector se queda). Lo garantiza
+  `alTeclearPrimero` en `flechasEspaciales.ts`; no programar "← → cambia la opción" en ninguna pantalla. Vale también para
+  campos de NÚMERO (↑↓ no suben/bajan la cantidad: el selector se queda atrapado si no).
+- **El selector tiene que VERSE** (05/11/2026): "no funciona" a veces es que llega pero no se nota. En ventanas lo garantiza
+  index.css (contorno verde con outline en campos, botones y casillas); al revisar, sacar captura en MODO OSCURO (el dueño lo usa).
+  Ojo: un contorno POR FUERA se recorta si el contenedor tiene overflow (pasó en las pestañas de Compras); y las reglas de
+  modo oscuro de `index.css` (sección "SELECTOR DE NAVEGACIÓN CON TECLADO EN MODO OSCURO") tienen mucha fuerza: revisar el
+  estilo calculado (getComputedStyle) si un cambio "no se ve".
+- **Barras con fechas:** una sola fila; ← → recorre, ↓ baja a la lista y **Enter en una fecha abre el calendario**.
+- **Al cerrar cualquier ventana o submodal**, el selector debe volver explícitamente a lo que estaba elegido (regla global en `src/utils/ventanas.ts`). Si un submodal se desmonta (como la ficha de nuevo cliente dentro del selector del POS), el foco debe enviarse a un botón del modal padre (`btn-cliente-pos-nuevo`), de lo contrario el navegador envía el foco a `document.body` y el selector desaparece.
+- **Scrollbars estilizados:** todo contenedor con scroll (`overflow-y-auto` u `overflow-auto`) debe incluir la clase `.custom-scrollbar` (5px, sin botones de flechas) para evitar la barra gris nativa gruesa de Windows.
+- **Opciones avanzadas en modales complejos:** no poner múltiples botones, ni botones flotantes laterales, ni botones duplicados en cabecera o footer. Usar **un único botón desplegable claro** bajo los datos básicos que abra las opciones hacia abajo dentro del mismo cuerpo scrolleable del formulario.
+- **Tienda Web (Fase 10):** el dueño indicó expresamente llamarla **"Tienda Web"** (en vez de "Catálogo") y que su diseño esté totalmente adaptado tanto para **PC** (pantalla completa, filtros visuales y carrito accesible) como para **celular**.
+- **Modelos de Base de Datos y Columnas:** en la tabla `products`, la columna de costo es `cost_price` (no `cost`). La tabla de locales es `stores` con columnas `nombre`, `codigo`, `direccion`, `telefono`, `whatsapp`, `es_almacen_principal`, `activo`.
+- **Avisos internos del sistema (`avisar`):** `avisar()` despliega un diálogo propio en pantalla con el botón `#dialogo-sistema-aceptar` que atrapa el foco y los clics para evitar pérdida de teclado en la app de escritorio; siempre debe ser descartado con Enter o clic para que las pantallas detrás respondan.
+- **Caché en memoria entre sesiones (11/11/2026):** al cambiar de sección (Punto de Venta, Inventario, Clientes, Finanzas, Utilidades), nunca poner `loading = true` bloqueando la pantalla si ya se descargaron los datos en la sesión actual. Mantener una variable `cache[Modulo]Memoria` fuera del componente, iniciar el estado con ella y recargar en segundo plano silencioso para entrada instantánea (0 ms).
+- **Créditos pagados de un cliente (11/11/2026):** en el detalle del cliente, la pestaña "PAGADOS" debe ordenarse por la fecha del último pago (`fechaUltimoPago`), no por la fecha antigua de emisión, y el filtro de fecha debe buscar por la fecha del abono.
+- **Accesibilidad y visión (11/11/2026):** el "TOTAL A COBRAR" en POS debe ser negro (`text-[var(--color-ink)]`), nunca verde claro, para clientes con baja visión.
+- **Exige usar graphify** (si está instalado) antes de leer código y `graphify update .` después de cambiarlo.
+
+## 2. El producto
+- **SiuMax** es la marca. Este sistema es **SiuMax Comerc** (minoristas + venta a empresas).
+  - Habrá un sistema separado por familia: Restaurantes, Talleres, Citas, Membresías, Alquileres y Hospedaje.
+  - **La visión completa (los 7 tipos con todos sus negocios) está en la carpeta madre: `D:/Programación/siumax/TIPOS-DE-NEGOCIO.md`** (y las reglas comunes a todos los sistemas en `D:/Programación/siumax/CLAUDE.md`). El dueño: *"en sí SiuMax va a ser eso"*.
+  - No proponer el selector de familia en el panel hasta que exista una segunda familia.
+- **Evicamp** es la primera clienta (no es el nombre del producto). Sitio: `evicamp.duckdns.org`.
+- **Orden de los links (desde el 06/11/2026, `servidor/ordenar-links.sh`):** `siumax.duckdns.org` = Panel de Control;
+  `<tipo>.siumax.duckdns.org` = pruebas de cada sistema; `<negocio>.<tipo>.siumax.duckdns.org` = clientes. `panel.siumax`
+  ya NO existe. `evi.siumax.duckdns.org` es EviDiary (proyecto aparte del dueño, `D:\Programación\evi`): no tocarlo.
+- **siumax** es el sistema de pruebas: **`comerc.siumax.duckdns.org`** (base `siumax`, API 3001, carpeta `/var/www/siuhub/html`,
+  nginx `sites-available/comerc`), usuario `admin@siumax.com`. La clave está en `.env.vps` (`SIUMAX_ADMIN_CLAVE`).
+  En los scripts se sigue llamando `siumax` (también acepta `comerc`): `deploy.cjs siumax`.
+- **Pruebas de SiuMax Servic:** `servic.siumax.duckdns.org` (por ahora solo una página "en preparación", `/var/www/servic/html`).
+- **Clientes nuevos:** `<slug>.comerc.siumax.duckdns.org`, cada uno con su base `cli_<slug>`. Al 06/11/2026 no hay ninguno.
+- **Panel de control:** `siumax.duckdns.org` (`servidor/panel/panel.py`; nginx `sites-available/siuhub-panel`).
+  - **`siumax.duckdns.org/actualizaciones/` debe seguir sirviéndose SIEMPRE:** las apps de PC instaladas (también las de
+    Evicamp) buscan ahí sus actualizaciones. Lo sirve el bloque del panel (`instalar-panel.sh`).
+  - Da de alta clientes y cobra con **Mercado Pago (cobro REAL activado)**.
+  - Suspende a los 5 días de vencido. No tocarlo por ahora.
+- **App de PC:** Electron (`escritorio/`), con actualización automática (`node ai-scripts/build-escritorio.cjs generico --nueva-version`). Carga el sistema desde el servidor, así que los cambios de pantalla no necesitan un .exe nuevo. No cambiar el `name` del manifest ("SiuMax"): la app lo verifica.
+- **También existe como app instalable (PWA)** y funciona en una pestaña normal del navegador.
+- **Ticket:** dice "Nota de Venta". **No hay facturación SUNAT todavía** (fase 11, en pausa).
+
+## 3. El servidor (VPS) y cómo tocarlo sin romper nada
+- **Un VPS (Hostinger)** con varias apps:
+
+| Sitio | Base de datos | API |
+|---|---|---|
+| Evicamp | `postgres` | PostgREST en el puerto 3000 |
+| siumax (pruebas) | `siumax` | PostgREST en el puerto 3001 |
+| CreditAltoque (otro sistema de la clienta, .NET) | `creditaltoque` | Docker. **No tocarlo** |
+
+- **Nombres internos en el servidor:** `/opt/siuhub`, servicios `postgrest_siuhub` y `siuhub-panel` (la base de datos de pruebas ahora se llama `siumax`, renombrada desde `siuhub` el 29/10/2026 por pedido del dueño).
+- **Conexión:** `ai-scripts/vps.cjs` + `.env.vps`. Para SQL desde Node: `node-ssh` → `runuser -u postgres -- psql -d <base>`.
+- **Seguridad de la API:**
+  - Cada pedido lleva la cabecera `x-sesion` (`src/db/supabase.ts`) y el servidor la revisa con `fn_verificar_peticion`.
+  - **Permisos por acción:** `fn_permisos_requeridos(método, ruta)` + `fn_tiene_permiso`, y triggers como `fn_proteger_precios` y `fn_proteger_borrados`.
+  - Las sesiones vencen a los 30 días sin uso; hay límite de logins y fail2ban.
+- **Respaldos:**
+  - cron diario de todas las bases a las 3:00 (`/var/backups/siuhub`, 14 días) + la configuración;
+  - copia a la PC del dueño (`D:\Backups-SiuMax`, tarea de Windows a las 8:00);
+  - antes de cada pase: `pg_dump -Fc` a `/var/lib/postgresql/respaldo-evicamp-antes-<fase>-<fecha>.dump`.
+- **Comandos:**
+  - pantallas: `node ai-scripts/deploy.cjs siumax | evicamp | todos`;
+  - clientes: `node ai-scripts/cliente.cjs listar | nuevo | backup | panel | seguridad <sitio>`.
+- **⚠️ La regla más importante con Evicamp:**
+  - `cliente.cjs seguridad evicamp` y `activar-seguridad.sh` **reinician la API** y cortan la caja. **NO usarlos en Evicamp.**
+  - Para cambios de base: respaldo → subir `servidor/sql/seguridad-sesion.sql` → `psql -c "SET lock_timeout = '5s'" -f archivo.sql` (repetible) → revisar columnas y funciones → recién ahí `deploy.cjs`.
+  - Script modelo: `ai-scripts/pruebas/aplicar-fase1-evicamp.cjs`.
+- **Orden de un pase:** SQL primero, luego las pantallas (si la pantalla nueva llega antes que las columnas, las ventas fallan).
+  Al final: revisar que el sitio sirve el `index-XXXX.js` nuevo, que la API responde 401 sin sesión y que el login abre sin errores.
+
+## 4. El código (dónde está cada cosa)
+- **Pantallas:** React + Vite + TypeScript, en `src/sections/`:
+
+| Carpeta | Qué es |
+|---|---|
+| `Punto-de-venta` | La Caja (`index.tsx` con el carrito y el teclado; `TicketVenta`, `TerminalBusqueda`, `ModalCobro`, `ModalBalanza`) |
+| `Inventario` | Productos, Lotes, Compras (`PanelCompras`), `ModalProducto`, `ModalLote`, `ModalHistorialLotes` (reloj: lotes + kardex), `ModalEtiqueta` |
+| `Conteos` | Antes "Mermas". `ModalAjuste` = "Nuevo ajuste": Salió del stock / Conté lo que hay; `ModalEditarSalida`, `ModalEditarConteo` |
+| `Fiados` | Créditos. En la fase 4 pasa a `Clientes` |
+| `Finanzas` | Cajas, movimientos, anular |
+| `Utilidades` | Ganancias por producto |
+| `Configuraciones` | Usuarios y permisos (`ModalUsuario.tsx`, `types.ts`), empresa |
+
+- **Utilidades clave** (`src/utils/`):
+  - `sinInternet.ts`, `precargaSinInternet.ts`, `almacenLocal.ts`: todo el modo sin internet.
+  - `dialogos.tsx`: `avisar` y `confirmar`. **`window.alert` está redirigido a `avisar`, NO es nativo.**
+  - `ventanas.ts`: `ventanaSuperior`, `enfocablesDe`, `recordarSeleccionEnVentanas`.
+  - `navegacionSesion.ts`: a dónde vuelve el foco. Con una ventana abierta se queda en ella.
+  - `permisos.ts`: `usePermiso`, `avisarSinPermiso` y qué permiso abre cada sección.
+  - `autorizacion.tsx` (`conAutorizacion`): pide la clave del admin.
+  - `unidades.ts` (`unidadDe`, `esDecimal`, `nombreUnidad`), `presentaciones.ts`, `preciosCantidad.ts`, `vencimiento.ts` y `formato.ts`.
+- **Modelo de stock:**
+  - `products.quantity` es el total y `batches` son los lotes.
+  - **La venta descuenta sola** por un trigger (`fn_reduce_stock_from_sales`), del lote **más antiguo**. FEFO fue rechazado por el dueño.
+  - **Registrar una merma o salida en `waste` baja el stock del producto sola** (trigger `tr_waste_reduce`). **No mandes además "stock = X".**
+  - Borrar una merma lo devuelve (`fn_restore_stock_on_waste_delete`, con signo: borrar un sobrante resta).
+  - Kardex: `inventory_movements`. El autor lo pone el servidor (`trg_autor_movimiento`, `trg_autor_merma`).
+- **Funciones del servidor que se usan:** `fn_registrar_conteo`, `fn_editar_conteo`, `fn_anular_venta`, `fn_edit_batch`,
+  `fn_soft_delete_batch`, `fn_soft_delete_product`, `fn_recibir_compra`, `fn_devolver_compra`, `fn_ventas_por_producto`
+  y `fn_empleado_de_sesion()`. Esta última ya existe: **no crear otra con el mismo nombre**.
+
+## 5. Modo sin internet (cómo funciona)
+- **Las copias:** cada lectura se guarda como "copia" en IndexedDB. Sin internet se responde con la copia.
+  - `copiaFiltrada` arma el resultado desde copias más grandes que tengan las columnas de los filtros.
+  - `filaEnCopias` usa la copia **más reciente**.
+- **La cola:** lo hecho sin internet entra en una cola en disco y se sube en orden al volver la conexión, sin duplicar (`ref_local` o ids hechos en la PC).
+- **Stock:** en cualquier PATCH de stock se guarda como **diferencia** (`CON_STOCK`), para no pisar ventas de otra caja.
+- **Funciones del servidor sin internet:** se imitan en la PC (`IMITAR_RPC`) y se preparan al subir (`PREPARAR_RPC`).
+- **La precarga** (`precargaSinInternet.ts`) debe hacer **exactamente las mismas consultas** que las pantallas; si no, no hay copia.
+- **Regla de choque:** gana el último en subirse.
+- **Autorizar con la clave del admin necesita internet** (decidido; no volver a proponerlo).
+
+## 6. Errores que ya se cometieron (NO repetir)
+1. **Responder en inglés.** El dueño no entiende. Siempre en español.
+2. **Subir a Evicamp o GitHub sin un aviso nuevo**, tras un "súbelo" anterior. Siempre preguntar.
+3. **Saltarse graphify** antes de leer código. El dueño lo exige.
+4. **Reiniciar la API de Evicamp** con `activar-seguridad.sh`. Corta ventas. Usar `psql` con `lock_timeout`.
+5. **Handler de teclado con closure viejo:** en `ModalProducto` el teclado (window, capture) usa `handleSave` de su closure. Todo estado nuevo que use `handleSave` debe ir en las dependencias del efecto; si no, guarda valores viejos (pasó con las escalas: se guardaba null).
+6. **Comparar ids con `===`:** un id que llega como texto ("123") no es igual al número 123. Comparar con `String(a) === String(b)`. Pasó al editar un lote desde el Historial: no encontraba el producto.
+7. **Mandar "stock = X" después de registrar una salida.** El trigger ya baja el stock; además, sin internet la copia vieja dejaba un stock equivocado y en línea podía pisar una venta simultánea.
+8. **Leer stock de una consulta estrecha sin internet** (`select('id, quantity').eq('id')`). Esa copia puede estar vieja aunque otra esté al día.
+9. **Tomar una copia VACÍA como "no hay copia"** en `copiaFiltrada`. Una caja recién abierta dejaba de verse sin internet.
+10. **Revisar el stock línea por línea en la Caja.** Hay que sumar las sueltas y los paquetes del mismo producto: antes 8 paquetes x25 + 200 sueltas pasaban con 200 en stock.
+11. **Poner un hook después de un `return null`.** Todos los hooks (useState, useEffect, propios) van antes del `if (!isOpen) return null`.
+12. **Llamar un hook dentro de `a || usePermiso(...)`.** Es un hook condicional: llamarlos siempre.
+13. **Selector CSS inválido:** `querySelector('.bg-[var(--x)]')` lanza error en cada tecla. Usar `CSS.escape(...)`.
+14. **Clases `dark:` de Tailwind:** con Windows en modo oscuro dejaban las filas oscuras e ilegibles. No usar `dark:focus:bg-...` en filas.
+15. **JsBarcode** pisa el estilo del svg: centrarlo con `Object.assign(svg.style, {...})` después de dibujar.
+16. **Unidades de presentaciones:** se guardan con el código CORTO (`PAQ`, `CAJA`), no con el nombre ("PAQUETE"). Si no, se ignoran.
+17. **Editar archivos con comandos de shell que tienen `\`, `$` o comillas** (heredoc, `node -e`, `sed`). Se pierden caracteres. Usar el editor de archivos. Los archivos pueden tener fin de línea CRLF.
+18. **Un `restaurarFocoSesion` que mandaba el foco a la sección de atrás con una ventana abierta.** Ya corregido: se queda en la ventana.
+23. **Revisar tipos con `npx tsc --noEmit -p .`** (28/10/2026): en este proyecto NO revisa nada, porque tsconfig.json solo tiene "references". Usar **`npx tsc -b`**. El build de Vite tampoco revisa tipos.
+22. **Quitar una ventana vieja sin revisar todo lo que hacía** (28/10/2026): al reemplazar el "Directorio de clientes" se perdió su historial de créditos Pendientes | Pagados y el dueño lo reportó como error grave. Antes de borrar algo, listar cada función que tiene y comprobar que sigue en otro lado.
+20. **Tomar "continuemos" o "seguimos" como el OK de una fase con propuesta pendiente** (28/10/2026). El OK tiene que ser explícito. Ante la duda, primero muestra el plan de esa parte y pregunta "¿empiezo?".
+21. **Poner `onKeyDown` en un botón dentro de una fila que también tiene `onKeyDown`:** la tecla se atiende dos veces (Enter en Eliminar abría la ficha). Un solo oyente en la fila, usando `e.target`.
+19. **Asumir que Escape en un desplegable no cierra la ventana:** `useCerrarConEscape` escucha en `window`. En el desplegable hay que hacer `e.stopPropagation()` en su `onKeyDown`.
+24. **Fiados huérfanos sin cliente en `customers`** (28/10/2026): si un cliente fue borrado o fiado sin ficha previa en `customers`, su deuda no salía en la lista de Clientes aunque sí en Créditos. Al mapear clientes, incluir automáticamente a cualquiera que tenga fiados en la base, y al vincular fiados comparar siempre tanto por ID (`String(f.clienteId) === String(c.id)`) como por nombre normalizado (mayúsculas/trim).
+25. **Pérdida de foco al eliminar filas de forma asíncrona** (28/10/2026): al borrar una fila (proveedor, cliente, etc.), `confirmar()` intenta restaurar el foco al botón original a los 80ms mientras la petición al servidor aún está en curso. Luego, cuando React elimina el elemento del DOM, el navegador pasa el foco a `document.body` y el selector desaparece. Para evitarlo: guardar el índice de la fila antes del borrado y, tras actualizar el estado de React, programar el foco (`setTimeout ~120ms`) hacia la fila contigua (`rows[Math.min(idx, rows.length - 1)]`) o al buscador si la lista quedó vacía.
+26. **Selector atrapado en la paginación inferior (< y >)** (28/10/2026): buscar filas con `document.querySelectorAll('div[data-row="true"]')` sin acotar por el ID del contenedor o sin filtrar `.hidden` incluye filas de pestañas o tablas inactivas (ej. TablaLotes cuando está abierta la pestaña Productos). Como el último elemento encontrado está oculto (`display: none`), `rows[rows.length - 1].focus()` falla silenciosamente y el selector queda atrapado en el botón inferior. Siempre acotar al contenedor (`#tabla-productos-inventario`) y filtrar `!el.closest('.hidden') && el.offsetParent !== null`. Además, proteger cualquier listener global para que `id?.includes('bottom')` no sea bloqueado como control superior.
+27. **En modales con búsqueda, separar las filas de resultados de las acciones superiores** (28/10/2026): si botones de acción (como "Cliente Varios" o "Crear nuevo") comparten el selector genérico con las filas de resultados, presionar Flecha Abajo o Enter tras escribir un término de búsqueda enfoca el botón de acción en lugar del primer resultado coincidente. Separar las acciones superiores (`data-cliente-accion="true"`) de los resultados (`data-fila-cliente="true"`), y hacer que presionar Flecha Abajo o Enter desde el buscador salte directamente a la primera coincidencia.
+28. **Selectores CSS con subcadena `[class*="..."]` en estilos globales** (29/10/2026): un selector como `[class*="bg-[var(--color-warning)]"]` coincide con clases de pseudo-estados como `hover:bg-[var(--color-warning)]` o `focus:bg-[var(--color-warning)]` porque `class*=` busca la subcadena en todo el atributo `class` de HTML. Esto forzaba texto negro permanente (`color: #030712 !important`) en botones o ítems de clientes sin estar en hover. Siempre usar selectores de clase exactos con punto (`.bg-\[var\(--color-warning\)\], button.bg-...`).
+29. **Oyente de teclado en modales con múltiples vistas (ej. ModalDetalleCaja)** (29/10/2026): si el `useEffect` de navegación por teclado tiene un guardia `if (vista !== 'DETALLE') return;`, cuando el modal cambia de vista a `TICKET` el efecto no escucha teclas y el selector queda congelado en el botón. El listener debe escuchar en todas las vistas del modal (`DETALLE` y `TICKET`), controlando flechas y Escape para moverse libremente entre los botones activos (`btn-imprimir-ticket-caja`, `btn-descargar-ticket-caja`, etc.).
+30. **Colores de texto en Modo Oscuro (`text-[#475569]` o `text-[var(--color-surface)]`)** (29/10/2026): en modo oscuro, `--color-surface` es pizarra oscuro (`#111827`), por lo que poner `text-[var(--color-surface)]` en tarjetas o modales oscuros produce texto casi negro sobre fondo negro. Igualmente, colores hardcodeados como `text-[#475569]` en etiquetas de roles quedan ilegibles. Siempre usar `text-[var(--color-ink)]` (que en modo oscuro es plata suave `#CBD5E1`), o definir fondos y bordes con `bg-[var(--color-bg-2)]` y `border-[var(--color-border)]`.
+31. **Fondos claros y pasteles en tablas en Modo Oscuro (`bg-[#F8FAFC]`, `bg-[#F1F5F9]`, `bg-[#ECFDF5]`, `bg-red-50`)** (29/10/2026): el dueño rechaza cualquier contraste blanco en tablas ("en las tablas hay mucho blanco arregla eso"). Clases utilitarias como `bg-[#F8FAFC]` en paginación o `bg-[#ECFDF5]` / `bg-red-50` en pastillas de stock quedaban como cajas blancas llamativas. Siempre usar variables semánticas (`bg-[var(--color-surface)]`, `bg-[var(--color-bg-2)]`, `bg-[var(--color-accent-bg)]`, `bg-[var(--color-danger-bg)]`) y proteger en `index.css` mapeando cualquier fondo neutro o pastel suave a superficies oscuras con acentos translúcidos y bordes definidos.
+32. **Campos que requieren Enter para validar o calcular (ej. ModalAjuste)** (29/10/2026): si un paso requiere presionar Enter para calcular la diferencia o avanzar, un texto pequeño y gris ('Enter para revisar la diferencia') no es suficiente y el usuario piensa que el sistema está roto o no responde. Siempre incluir: (a) texto indicador en ámbar en la cabecera ('ENTER PARA CONTINUAR'), (b) un botón visible y clickeable al lado del campo ('[ CONTINUAR | ENTER ↵ ]') para usuarios de mouse o pantalla táctil, y (c) un banner de aviso visual claro debajo del campo ('[AVISO] Escribe la cantidad contada y presiona ENTER ↵ o el botón Continuar para revisar la diferencia').
+33. **Búsqueda de tickets por ID vs. Número mostrado (6 dígitos) y columnas de ventas (`sunat_status`)** (30/10/2026): En `sales`, el `id` es un timestamp de 13 dígitos (`Date.now()`, ej: `1793398623154`), pero en tickets impresos y tablas se muestra solo los últimos 6 dígitos (`String(id).slice(-6)`, ej: `623154` o `#623154`). Al crear buscadores de tickets o cambios, NUNCA buscar solo con `eq('id', Number(input))`, porque el usuario escribe lo que ve en su ticket impreso (6 dígitos). La búsqueda debe coincidir sufijos (`endsWith` o `slice(-6) === input`). Además, en `sales` el estado se llama `sunat_status`, NO `status` (pedir `status` causa error 400 Bad Request en PostgREST).
+34. **Columnas reales en PostgreSQL (`batches`, `sales`, `sale_details`)** (31/10/2026): La tabla `batches` NO tiene columna `batch_code`; el código del lote se guarda en `document_ref`. En `sales`, el total cobrado se almacena en la columna `total` (no `total_amount`), y en `sale_details` el precio se almacena en `price_at_moment` (no `unit_price`).
+35. **Manejo de Stock de Combos y Kits (Fase 8)** (31/10/2026): Un producto de tipo 'COMBO' no almacena stock físico propio en lotes; su disponibilidad en la Caja se calcula dinámicamente según el insumo más limitante: `min(stock_insumo / cant_requerida)`. Al venderse en Caja, el trigger `fn_reduce_stock_from_sales` descuenta automáticamente de los lotes de sus insumos por FIFO y registra los movimientos en el Kardex (`movement_type = 'VENTA'`).
+39. **`String.replace` con un texto que tiene `$$`** (03/11/2026): en JavaScript `$$` en el reemplazo se vuelve UN `$`, y rompió las funciones SQL (`$$` → `$`: "unterminated dollar-quoted string"). Al insertar SQL o cualquier texto con `$` usar `s.replace(a, () => b)`.
+38. **Escapes en `node -e "…"` desde bash** (03/11/2026): `\b` terminó como carácter "retroceso" invisible dentro de un archivo de prueba y la expresión nunca coincidía (y el Edit no encontraba la línea). Para editar código, escribir el script en un archivo con la herramienta Write (como dice el n.º 17), nunca dentro de `node -e`.
+37. **Cargar en un formulario el texto de relleno de la lista como si fuera un dato** (03/11/2026): Inventario/Caja/Conteos/Proveedores ponen `code: p.code || 'NO-SKU'` para mostrar. ModalProducto lo cargaba como código real y, con dos productos sin código, editar uno daba "ya existe en otro producto" y no guardaba. Al cargar un formulario, convertir los rellenos ('NO-SKU', 'SIN CATEGORÍA'…) en vacío.
+36. **🚨 URGENTE · Contar como "Cobrado" de un período todo lo abonado de un fiado, sin mirar CUÁNDO se abonó** (02/11/2026, lo encontró un cliente real): en Utilidades, si un cliente pagaba HOY deudas de ventas de otros días, esas ventas viejas entraban COMPLETAS al "Cobrado" de hoy. Ejemplo: LATON PILSEN mostraba S/ 90 cobrados (5 ventas fiadas de sept-oct) que no se cobraron en ese período. Causa: `fraccionPagada` usaba `fiado.paid_amount` (todo lo abonado, de cualquier fecha). **Regla de dinero cobrado en un rango (siempre, en cualquier pantalla):** = lo pagado al momento de la venta (efectivo + yape + tarjeta + transferencia) **solo si la venta es del rango** + los abonos (`debt_payments`) **con fecha dentro del rango**. Nunca usar `fiados.paid_amount` para ingresos de un período (sirve solo para saber cuánto debe hoy). Es el mismo criterio del motor único `utils/ingresos.ts`. Arreglo: rama `fix/cobrado-utilidades` (commit 98b2961, sobre `main`); la ventana del producto marca "Venta anterior · cobrado en el período". **Ya está en `main`, en Evicamp, en clientes y en siumax (rama `fase-9-10-almacenes-catalogo`, commit b0bb2a8), subido el 02/11/2026.** Probado en la base demo `siudemo`: antes S/ 41.60, ahora S/ 21.60 (lo abonado hoy).
+40. **Un script de edición que no encuentra el texto por espacios invisibles** (04/11/2026): algunos archivos tienen líneas "vacías" con espacios (ej. 13 espacios en Finanzas/index.tsx) y otros fin de línea CRLF; la herramienta Write puede quitar esos espacios del patrón y el reemplazo falla ("no encontré…"). Normalizar `\r\n` → `\n` en el archivo y en el patrón, y para líneas solo con espacios usar `' '.repeat(n)` o buscar desde un ancla única (`indexOf`) en vez del bloque completo. Si el script lanza error antes de `writeFileSync`, no se guardó nada: corregir y volver a correr.
+47. **Colores de texto fijos (`text-[#1E293B]`, `text-black`…) en listas o tarjetas** (05/11/2026): en modo oscuro quedan oscuros sobre fondo oscuro (el dueño no leía las categorías). Usar siempre las variables del tema (`text-[var(--color-ink)]`, `text-[var(--color-muted)]`).
+46. **Confiar en que los datos de siumax son como los de Evicamp** (05/11/2026): la Tienda Web andaba en siumax pero en Evicamp se caía por UN producto sin nombre. Todo texto que viene de la base puede ser null: nunca `.trim()`/`.split()` sin `(x || '')`. Para probar un arreglo con datos reales de Evicamp sin subirlo: puppeteer con intercepción de `/` y `/assets/*` sirviendo el `dist` local.
+45. **Una regla CSS general que pinta de oscuro la letra blanca de las cabeceras** (04/11/2026): también tomó el botón oscuro "Ticket" del detalle del ticket y quedó letra oscura sobre fondo oscuro (el dueño: "no se ve la palabra ticket"). Toda regla general de colores debe excluir elementos con fondo propio (`:not([class*="bg-"])`) y revisarse con capturas.
+44. **La barra de scroll "de siempre" no salía en Chrome/Edge nuevos** (04/11/2026): desde Chrome 121, si un elemento tiene `scrollbar-width` o `scrollbar-color`, se ignora `::-webkit-scrollbar` y sale una barra fina CON flechas. En `index.css` se dejan en `auto` dentro de `@supports selector(::-webkit-scrollbar)`. No volver a poner `scrollbar-width: thin` sin ese cuidado.
+43. **Presionar Enter en una prueba automática sin saber dónde está el selector** (04/11/2026): la revisión del selector dio Enter en el calendario del cobro, el navegador de prueba no abre calendarios, el selector saltó a "Confirmar pago" y el siguiente Enter creó una venta real en siumax (se borró). En pruebas: después de cada tecla, comprobar dónde quedó el selector antes de dar Enter, y frenar si cambia el número de ventas.
+42. **Dar por buena una ventana porque el botón "se alcanza con scroll"** (04/11/2026): el dueño vio "Ingresar lote" sin su botón Guardar (el medio tenía `sm:overflow-visible` y el pie quedaba fuera de la pantalla). Para él la ventana está bien solo si el botón principal se ve sin bajar. Las revisiones `revisar-ventanas*.mjs` ya lo exigen; agregar a su lista cada ventana nueva.
+41. **Cambiar una tabla compartida sin mirar quién más la usa** (04/11/2026): `TablaMovimientos` la usan Finanzas (caja actual) y `ModalDetalleCaja` (detalle de una caja pasada). Al darle paginación hay que revisar el teclado en los dos lugares (`graphify explain "TablaMovimientos"` muestra quién la importa).
+46. **La trampa de foco de ventanas bloqueaba el teclado en la ventana de impresión nativa (AnyDesk Printer / Chromium)** (04/11/2026): `ventanas.ts` escucha `focusout` y en `luego(0)` forzaba el foco a la web de SiuMax. Al abrirse la ventana de impresión, Chromium perdía el foco y el selector no dejaba presionar Imprimir o Cancelar. Solución: sincronizar flag `estaImprimiendo()` con `beforeprint` y `afterprint` para pausar la trampa de foco durante la impresión.
+47. **No usar `display: flex` directo sobre un `<td>` en tablas HTML (`hidden md:flex`)** (04/11/2026): convierte la celda en contenedor flex perdiendo su display `table-cell`, lo que desalinea la celda respecto al `<th>` de la cabecera (el botón de acciones salía pegado a la derecha). Usar siempre `hidden md:table-cell` y envolver el botón dentro de `<div className="flex items-center justify-center">`.
+49. **Cambiar de link un sitio que tenía la app guardada sin internet** (06/11/2026): el navegador guarda el sistema
+    (service worker `sw.js`) por link; si en ese link se pone otra cosa, seguiría mostrando la copia vieja. Al pasar
+    `siumax.duckdns.org` a Panel se sirve un `sw.js` que borra esa copia y se da de baja solo (`instalar-panel.sh`).
+    El navegador también pide iniciar sesión de nuevo en el link nuevo (las sesiones y copias van por link).
+48. **Un 401 que no era de sesión sacaba al usuario** (05/11/2026): en siumax `fn_edit_batch` y `fn_soft_delete_batch` no tenían EXECUTE para `anon` (en Evicamp sí); PostgREST responde 401 a "permission denied" del rol anon y `supabase.ts` cerraba la sesión con cualquier 401 → al guardar un lote el dueño salía al login. Arreglo: GRANT en `seguridad-sesion.sql` y solo el código `PT401` cierra la sesión. Para buscar algo así: `grep " 401 " /var/log/nginx/access.log` y `permission denied` en el log de PostgreSQL; revisar con `has_function_privilege('anon', oid, 'EXECUTE')` las funciones que llama el sistema.
+49. **Unidades de un costo: por unidad vs. por lote** (05/11/2026): `products.costo_adicional_produccion` es POR UNIDAD, pero `fn_producir_receta(p_costo_adicional)` lo recibe por TODO el lote; la ventana vieja mandaba el de una unidad. Al pasar un costo entre pantalla y función, revisar qué unidad espera cada lado.
+50. **No reescribir datos hijos que se cargan aparte** (05/11/2026): Nuevo producto borraba y volvía a insertar `product_recipes` con lo que tenía en memoria; si se guardaba antes de que terminaran de cargar, la receta quedaba vacía. Una pantalla solo debe escribir lo que de verdad edita.
+51. **Nombres de campos entre la lista y la ventana** (05/11/2026): la lista de Inventario arma el producto con `imageUrl` y Nuevo producto lo leía como `image` → al editar la foto quedaba vacía y al guardar se borraba. Al cargar `initialData`, aceptar los dos nombres (`imageUrl || image_url`) y probar que "editar y guardar sin cambios" deja la fila igual.
+52. **Montos en pantalla: `formatearMonto()`** (06/11/2026): todo monto que se MUESTRA con "S/" usa `formatearMonto(x)` de `src/utils/formato.ts` (S/ 16,200.00), no `x.toFixed(2)`. Para cálculos, campos de número y SUNAT, números sin formato.
+53. **Cabeceras: nunca forzar una segunda fila** (06/11/2026): no usar `w-full 2xl:w-auto` ni `flex-col 2xl:flex-row` en la cabecera de una sección (el dueño quiere UNA fila en laptops); usar `flex-wrap` + `max-w-full` para que baje solo cuando no entra. Los botones/pestañas se compactan solos de 1024 a 1700 px (`index.css`). Medir con `scratchpad/medir-cabeceras.mjs`.
+54. **Imprimir en otra ventana: copiar los estilos, no enlazarlos** (06/11/2026): el CSS de Vite lleva `crossorigin` y el servidor no manda CORS; un documento armado aparte (data:, about:blank) NO carga ese `<link>` y sale sin diseño. Copiar `document.styleSheets` en un `<style>`. Y en tickets: imprimir a 72 mm (lo que imprime una ticketera de 80 mm). Para revisar: el PDF del documento en modo impresión.
+55. **Animaciones de aparecer y alto suave** (06/11/2026): `.aparecer` (index.css, con `backwards`: nunca `both`/`forwards`, porque deja capa propia y tapa listas flotantes) y `<AlturaSuave>` (src/components) para que una ventana no salte de tamaño. Dentro de AlturaSuave, las listas van en el flujo (no `absolute`).
+56. **Funciones SQL repetidas: vale la ÚLTIMA** (11/11/2026): `fn_proteger_precios` está 4 veces en `seguridad-sesion.sql` (la de la fase 4.4 es la que queda). Antes de cambiar una función: `grep -n "FUNCTION public.<nombre>"` y cambiar la última; comprobar en la base con `prosrc like '%...%'`. Para que el servidor cambie algo que el trigger protege, marcar el permiso con `set_config('siumax.<algo>', '1', true)` dentro de la función (como `siumax.cpe_interno` y `siumax.costo_de_compra`).
+57. **Stock de ventas: siempre por el servidor y con la nota `Ticket #N`** (11/11/2026): el trigger de `sale_details` descuenta FIFO salvo que ya haya salidas `VENTA` con nota exacta `Ticket #<id completo>`. Si una pantalla mueve stock a mano (`products.quantity`), los lotes no cuadran y una línea nueva se descuenta dos veces. Usar funciones como `fn_mover_stock_cambio`.
+** (12/11/2026, paso 3a de Nego). El texto de reemplazo trata `$` como un `# Memoria del proyecto para cualquier IA
+
+> Esto es lo que Claude aprendió trabajando con el dueño desde octubre de 2026: cómo es él, cómo está armado todo,
+> cómo se trabaja, cómo se prueba y **los errores que ya se cometieron, para no repetirlos**.
+> Léelo junto con `AGENTS.md`, `docs/BITACORA.md` y `docs/PLAN-SIUMAX-COMERC.md`.
+> Si aprendes algo nuevo importante, agrégalo aquí.
+> **Nunca escribas aquí contraseñas ni claves:** viven en `.env.vps`, que no se sube a git.
+
+---
+
+## 1. El dueño y cómo le gusta trabajar
+- **Español siempre**, también en los avances cortos y los resúmenes de pruebas. Se molesta mucho si respondes en inglés.
+- **No es programador:** explica simple, sin jerga y con tablas cortas. Si dice "respóndeme nomás", contesta directo y corto.
+- **Muestra la propuesta antes de construir** (qué pantallas cambian) y espera su OK. Si da varias opciones, recomienda una.
+- **Nunca subas a Evicamp ni hagas push a GitHub sin que lo diga EN ESE MOMENTO.** Un "súbelo" anterior no vale para los
+  cambios siguientes. siumax (pruebas) sí se puede actualizar.
+- **Prueba él mismo en siumax** y manda capturas con los errores marcados en rojo. Lee la captura con calma: lo marcado
+  es lo que hay que arreglar.
+- **Cambia de idea, y está bien:** si dice "olvídalo" o "déjalo como está", no lo hagas y no insistas.
+- **Su cliente Evicamp vende todos los días:** nada debe cortar sus ventas (ver la sección 3).
+- **Estándar de pantallas:**
+  - 100% teclado (← → ↑ ↓, Enter, Esc) y el selector nunca desaparece;
+  - sin botón "Cancelar" (bastan la X y Esc);
+  - avisos propios (`avisar` / `confirmar`);
+  - listas en TABLA (no tarjetas), letra de tamaño normal, ventanas con borde 2 y sombra de 8 px;
+  - las ventanas con listas usan el estilo del "Directorio de clientes" (`src/components/ListaVentana.tsx`).
+- **Pestañas:** ← → solo mueven el selector; la pestaña cambia con Enter.
+- **Las 6 reglas del selector (04/11/2026, en todo el sistema):** llegar con flechas a TODO botón/buscador/campo; calendario: Enter
+  lo abre y el selector se queda (Enter NUNCA pasa al siguiente cuadro, ↓ sí); ← → ↑ ↓ siempre mueven; al volver de otro programa algo
+  queda seleccionado; en una ventana el selector nunca se pierde (ni con un clic en el fondo) y nunca sale de ella. Ya lo garantizan
+  `ventanas.ts` (ventanas) y `flechasEspaciales.ts` (flechas de respaldo); al hacer una pantalla nueva, poner flechas propias donde
+  importe el orden y correr `ai-scripts/pruebas/estilo/revisar-selector.mjs`. Ojo: un control desactivado no recibe el selector:
+  las flechas deben saltar al primero ACTIVO.
+- **Regla 9 (05/11/2026, el dueño la repitió dos veces en Producir):** **Enter = clic y el selector SE QUEDA, en TODO** (botones,
+  opciones, campos de texto y de número). Enter NUNCA pasa al siguiente cuadro; para moverse están las flechas. En un campo, Enter
+  solo hace su acción si tiene una (elegir el primer resultado de un buscador, "Agregar" en la cantidad) y el selector no se mueve.
+  Si el elemento desaparece (lista que se cierra, fila quitada), el selector vuelve a de donde salió o al vecino más cercano.
+  No programar `Enter → enfocar(siguiente)` en pantallas nuevas. **Ya lo garantiza `flechasEspaciales.ts` (guardiaEnter +
+  focusin) en TODAS las ventanas:** si tras un Enter en un campo el selector va a otro campo/botón de la misma ventana,
+  vuelve al de origen (no actúa si el Enter abrió/cerró una ventana, si el campo desapareció o entró a una lista; cualquier otra tecla del usuario termina la vigilancia al instante).
+  **Categorías:** Enter sin elegir de la lista guarda LO ESCRITO (no la primera parecida); de la lista se elige con ↓ + Enter.
+- **Reglas 7 y 8 (05/11/2026):** las flechas NUNCA cambian una opción (listas desplegables, grupos de opciones tipo radio, unidades…):
+  solo mueven el selector; **Enter despliega o elige**. **Enter en una casilla = clic** (se marca y el selector se queda). Lo garantiza
+  `alTeclearPrimero` en `flechasEspaciales.ts`; no programar "← → cambia la opción" en ninguna pantalla. Vale también para
+  campos de NÚMERO (↑↓ no suben/bajan la cantidad: el selector se queda atrapado si no).
+- **El selector tiene que VERSE** (05/11/2026): "no funciona" a veces es que llega pero no se nota. En ventanas lo garantiza
+  index.css (contorno verde con outline en campos, botones y casillas); al revisar, sacar captura en MODO OSCURO (el dueño lo usa).
+  Ojo: un contorno POR FUERA se recorta si el contenedor tiene overflow (pasó en las pestañas de Compras); y las reglas de
+  modo oscuro de `index.css` (sección "SELECTOR DE NAVEGACIÓN CON TECLADO EN MODO OSCURO") tienen mucha fuerza: revisar el
+  estilo calculado (getComputedStyle) si un cambio "no se ve".
+- **Barras con fechas:** una sola fila; ← → recorre, ↓ baja a la lista y **Enter en una fecha abre el calendario**.
+- **Al cerrar cualquier ventana o submodal**, el selector debe volver explícitamente a lo que estaba elegido (regla global en `src/utils/ventanas.ts`). Si un submodal se desmonta (como la ficha de nuevo cliente dentro del selector del POS), el foco debe enviarse a un botón del modal padre (`btn-cliente-pos-nuevo`), de lo contrario el navegador envía el foco a `document.body` y el selector desaparece.
+- **Scrollbars estilizados:** todo contenedor con scroll (`overflow-y-auto` u `overflow-auto`) debe incluir la clase `.custom-scrollbar` (5px, sin botones de flechas) para evitar la barra gris nativa gruesa de Windows.
+- **Opciones avanzadas en modales complejos:** no poner múltiples botones, ni botones flotantes laterales, ni botones duplicados en cabecera o footer. Usar **un único botón desplegable claro** bajo los datos básicos que abra las opciones hacia abajo dentro del mismo cuerpo scrolleable del formulario.
+- **Tienda Web (Fase 10):** el dueño indicó expresamente llamarla **"Tienda Web"** (en vez de "Catálogo") y que su diseño esté totalmente adaptado tanto para **PC** (pantalla completa, filtros visuales y carrito accesible) como para **celular**.
+- **Modelos de Base de Datos y Columnas:** en la tabla `products`, la columna de costo es `cost_price` (no `cost`). La tabla de locales es `stores` con columnas `nombre`, `codigo`, `direccion`, `telefono`, `whatsapp`, `es_almacen_principal`, `activo`.
+- **Avisos internos del sistema (`avisar`):** `avisar()` despliega un diálogo propio en pantalla con el botón `#dialogo-sistema-aceptar` que atrapa el foco y los clics para evitar pérdida de teclado en la app de escritorio; siempre debe ser descartado con Enter o clic para que las pantallas detrás respondan.
+- **Caché en memoria entre sesiones (11/11/2026):** al cambiar de sección (Punto de Venta, Inventario, Clientes, Finanzas, Utilidades), nunca poner `loading = true` bloqueando la pantalla si ya se descargaron los datos en la sesión actual. Mantener una variable `cache[Modulo]Memoria` fuera del componente, iniciar el estado con ella y recargar en segundo plano silencioso para entrada instantánea (0 ms).
+- **Créditos pagados de un cliente (11/11/2026):** en el detalle del cliente, la pestaña "PAGADOS" debe ordenarse por la fecha del último pago (`fechaUltimoPago`), no por la fecha antigua de emisión, y el filtro de fecha debe buscar por la fecha del abono.
+- **Accesibilidad y visión (11/11/2026):** el "TOTAL A COBRAR" en POS debe ser negro (`text-[var(--color-ink)]`), nunca verde claro, para clientes con baja visión.
+- **Exige usar graphify** (si está instalado) antes de leer código y `graphify update .` después de cambiarlo.
+
+## 2. El producto
+- **SiuMax** es la marca. Este sistema es **SiuMax Comerc** (minoristas + venta a empresas).
+  - Habrá un sistema separado por familia: Restaurantes, Talleres, Citas, Membresías, Alquileres y Hospedaje.
+  - **La visión completa (los 7 tipos con todos sus negocios) está en la carpeta madre: `D:/Programación/siumax/TIPOS-DE-NEGOCIO.md`** (y las reglas comunes a todos los sistemas en `D:/Programación/siumax/CLAUDE.md`). El dueño: *"en sí SiuMax va a ser eso"*.
+  - No proponer el selector de familia en el panel hasta que exista una segunda familia.
+- **Evicamp** es la primera clienta (no es el nombre del producto). Sitio: `evicamp.duckdns.org`.
+- **Orden de los links (desde el 06/11/2026, `servidor/ordenar-links.sh`):** `siumax.duckdns.org` = Panel de Control;
+  `<tipo>.siumax.duckdns.org` = pruebas de cada sistema; `<negocio>.<tipo>.siumax.duckdns.org` = clientes. `panel.siumax`
+  ya NO existe. `evi.siumax.duckdns.org` es EviDiary (proyecto aparte del dueño, `D:\Programación\evi`): no tocarlo.
+- **siumax** es el sistema de pruebas: **`comerc.siumax.duckdns.org`** (base `siumax`, API 3001, carpeta `/var/www/siuhub/html`,
+  nginx `sites-available/comerc`), usuario `admin@siumax.com`. La clave está en `.env.vps` (`SIUMAX_ADMIN_CLAVE`).
+  En los scripts se sigue llamando `siumax` (también acepta `comerc`): `deploy.cjs siumax`.
+- **Pruebas de SiuMax Servic:** `servic.siumax.duckdns.org` (por ahora solo una página "en preparación", `/var/www/servic/html`).
+- **Clientes nuevos:** `<slug>.comerc.siumax.duckdns.org`, cada uno con su base `cli_<slug>`. Al 06/11/2026 no hay ninguno.
+- **Panel de control:** `siumax.duckdns.org` (`servidor/panel/panel.py`; nginx `sites-available/siuhub-panel`).
+  - **`siumax.duckdns.org/actualizaciones/` debe seguir sirviéndose SIEMPRE:** las apps de PC instaladas (también las de
+    Evicamp) buscan ahí sus actualizaciones. Lo sirve el bloque del panel (`instalar-panel.sh`).
+  - Da de alta clientes y cobra con **Mercado Pago (cobro REAL activado)**.
+  - Suspende a los 5 días de vencido. No tocarlo por ahora.
+- **App de PC:** Electron (`escritorio/`), con actualización automática (`node ai-scripts/build-escritorio.cjs generico --nueva-version`). Carga el sistema desde el servidor, así que los cambios de pantalla no necesitan un .exe nuevo. No cambiar el `name` del manifest ("SiuMax"): la app lo verifica.
+- **También existe como app instalable (PWA)** y funciona en una pestaña normal del navegador.
+- **Ticket:** dice "Nota de Venta". **No hay facturación SUNAT todavía** (fase 11, en pausa).
+
+## 3. El servidor (VPS) y cómo tocarlo sin romper nada
+- **Un VPS (Hostinger)** con varias apps:
+
+| Sitio | Base de datos | API |
+|---|---|---|
+| Evicamp | `postgres` | PostgREST en el puerto 3000 |
+| siumax (pruebas) | `siumax` | PostgREST en el puerto 3001 |
+| CreditAltoque (otro sistema de la clienta, .NET) | `creditaltoque` | Docker. **No tocarlo** |
+
+- **Nombres internos en el servidor:** `/opt/siuhub`, servicios `postgrest_siuhub` y `siuhub-panel` (la base de datos de pruebas ahora se llama `siumax`, renombrada desde `siuhub` el 29/10/2026 por pedido del dueño).
+- **Conexión:** `ai-scripts/vps.cjs` + `.env.vps`. Para SQL desde Node: `node-ssh` → `runuser -u postgres -- psql -d <base>`.
+- **Seguridad de la API:**
+  - Cada pedido lleva la cabecera `x-sesion` (`src/db/supabase.ts`) y el servidor la revisa con `fn_verificar_peticion`.
+  - **Permisos por acción:** `fn_permisos_requeridos(método, ruta)` + `fn_tiene_permiso`, y triggers como `fn_proteger_precios` y `fn_proteger_borrados`.
+  - Las sesiones vencen a los 30 días sin uso; hay límite de logins y fail2ban.
+- **Respaldos:**
+  - cron diario de todas las bases a las 3:00 (`/var/backups/siuhub`, 14 días) + la configuración;
+  - copia a la PC del dueño (`D:\Backups-SiuMax`, tarea de Windows a las 8:00);
+  - antes de cada pase: `pg_dump -Fc` a `/var/lib/postgresql/respaldo-evicamp-antes-<fase>-<fecha>.dump`.
+- **Comandos:**
+  - pantallas: `node ai-scripts/deploy.cjs siumax | evicamp | todos`;
+  - clientes: `node ai-scripts/cliente.cjs listar | nuevo | backup | panel | seguridad <sitio>`.
+- **⚠️ La regla más importante con Evicamp:**
+  - `cliente.cjs seguridad evicamp` y `activar-seguridad.sh` **reinician la API** y cortan la caja. **NO usarlos en Evicamp.**
+  - Para cambios de base: respaldo → subir `servidor/sql/seguridad-sesion.sql` → `psql -c "SET lock_timeout = '5s'" -f archivo.sql` (repetible) → revisar columnas y funciones → recién ahí `deploy.cjs`.
+  - Script modelo: `ai-scripts/pruebas/aplicar-fase1-evicamp.cjs`.
+- **Orden de un pase:** SQL primero, luego las pantallas (si la pantalla nueva llega antes que las columnas, las ventas fallan).
+  Al final: revisar que el sitio sirve el `index-XXXX.js` nuevo, que la API responde 401 sin sesión y que el login abre sin errores.
+
+## 4. El código (dónde está cada cosa)
+- **Pantallas:** React + Vite + TypeScript, en `src/sections/`:
+
+| Carpeta | Qué es |
+|---|---|
+| `Punto-de-venta` | La Caja (`index.tsx` con el carrito y el teclado; `TicketVenta`, `TerminalBusqueda`, `ModalCobro`, `ModalBalanza`) |
+| `Inventario` | Productos, Lotes, Compras (`PanelCompras`), `ModalProducto`, `ModalLote`, `ModalHistorialLotes` (reloj: lotes + kardex), `ModalEtiqueta` |
+| `Conteos` | Antes "Mermas". `ModalAjuste` = "Nuevo ajuste": Salió del stock / Conté lo que hay; `ModalEditarSalida`, `ModalEditarConteo` |
+| `Fiados` | Créditos. En la fase 4 pasa a `Clientes` |
+| `Finanzas` | Cajas, movimientos, anular |
+| `Utilidades` | Ganancias por producto |
+| `Configuraciones` | Usuarios y permisos (`ModalUsuario.tsx`, `types.ts`), empresa |
+
+- **Utilidades clave** (`src/utils/`):
+  - `sinInternet.ts`, `precargaSinInternet.ts`, `almacenLocal.ts`: todo el modo sin internet.
+  - `dialogos.tsx`: `avisar` y `confirmar`. **`window.alert` está redirigido a `avisar`, NO es nativo.**
+  - `ventanas.ts`: `ventanaSuperior`, `enfocablesDe`, `recordarSeleccionEnVentanas`.
+  - `navegacionSesion.ts`: a dónde vuelve el foco. Con una ventana abierta se queda en ella.
+  - `permisos.ts`: `usePermiso`, `avisarSinPermiso` y qué permiso abre cada sección.
+  - `autorizacion.tsx` (`conAutorizacion`): pide la clave del admin.
+  - `unidades.ts` (`unidadDe`, `esDecimal`, `nombreUnidad`), `presentaciones.ts`, `preciosCantidad.ts`, `vencimiento.ts` y `formato.ts`.
+- **Modelo de stock:**
+  - `products.quantity` es el total y `batches` son los lotes.
+  - **La venta descuenta sola** por un trigger (`fn_reduce_stock_from_sales`), del lote **más antiguo**. FEFO fue rechazado por el dueño.
+  - **Registrar una merma o salida en `waste` baja el stock del producto sola** (trigger `tr_waste_reduce`). **No mandes además "stock = X".**
+  - Borrar una merma lo devuelve (`fn_restore_stock_on_waste_delete`, con signo: borrar un sobrante resta).
+  - Kardex: `inventory_movements`. El autor lo pone el servidor (`trg_autor_movimiento`, `trg_autor_merma`).
+- **Funciones del servidor que se usan:** `fn_registrar_conteo`, `fn_editar_conteo`, `fn_anular_venta`, `fn_edit_batch`,
+  `fn_soft_delete_batch`, `fn_soft_delete_product`, `fn_recibir_compra`, `fn_devolver_compra`, `fn_ventas_por_producto`
+  y `fn_empleado_de_sesion()`. Esta última ya existe: **no crear otra con el mismo nombre**.
+
+## 5. Modo sin internet (cómo funciona)
+- **Las copias:** cada lectura se guarda como "copia" en IndexedDB. Sin internet se responde con la copia.
+  - `copiaFiltrada` arma el resultado desde copias más grandes que tengan las columnas de los filtros.
+  - `filaEnCopias` usa la copia **más reciente**.
+- **La cola:** lo hecho sin internet entra en una cola en disco y se sube en orden al volver la conexión, sin duplicar (`ref_local` o ids hechos en la PC).
+- **Stock:** en cualquier PATCH de stock se guarda como **diferencia** (`CON_STOCK`), para no pisar ventas de otra caja.
+- **Funciones del servidor sin internet:** se imitan en la PC (`IMITAR_RPC`) y se preparan al subir (`PREPARAR_RPC`).
+- **La precarga** (`precargaSinInternet.ts`) debe hacer **exactamente las mismas consultas** que las pantallas; si no, no hay copia.
+- **Regla de choque:** gana el último en subirse.
+- **Autorizar con la clave del admin necesita internet** (decidido; no volver a proponerlo).
+
+## 6. Errores que ya se cometieron (NO repetir)
+1. **Responder en inglés.** El dueño no entiende. Siempre en español.
+2. **Subir a Evicamp o GitHub sin un aviso nuevo**, tras un "súbelo" anterior. Siempre preguntar.
+3. **Saltarse graphify** antes de leer código. El dueño lo exige.
+4. **Reiniciar la API de Evicamp** con `activar-seguridad.sh`. Corta ventas. Usar `psql` con `lock_timeout`.
+5. **Handler de teclado con closure viejo:** en `ModalProducto` el teclado (window, capture) usa `handleSave` de su closure. Todo estado nuevo que use `handleSave` debe ir en las dependencias del efecto; si no, guarda valores viejos (pasó con las escalas: se guardaba null).
+6. **Comparar ids con `===`:** un id que llega como texto ("123") no es igual al número 123. Comparar con `String(a) === String(b)`. Pasó al editar un lote desde el Historial: no encontraba el producto.
+7. **Mandar "stock = X" después de registrar una salida.** El trigger ya baja el stock; además, sin internet la copia vieja dejaba un stock equivocado y en línea podía pisar una venta simultánea.
+8. **Leer stock de una consulta estrecha sin internet** (`select('id, quantity').eq('id')`). Esa copia puede estar vieja aunque otra esté al día.
+9. **Tomar una copia VACÍA como "no hay copia"** en `copiaFiltrada`. Una caja recién abierta dejaba de verse sin internet.
+10. **Revisar el stock línea por línea en la Caja.** Hay que sumar las sueltas y los paquetes del mismo producto: antes 8 paquetes x25 + 200 sueltas pasaban con 200 en stock.
+11. **Poner un hook después de un `return null`.** Todos los hooks (useState, useEffect, propios) van antes del `if (!isOpen) return null`.
+12. **Llamar un hook dentro de `a || usePermiso(...)`.** Es un hook condicional: llamarlos siempre.
+13. **Selector CSS inválido:** `querySelector('.bg-[var(--x)]')` lanza error en cada tecla. Usar `CSS.escape(...)`.
+14. **Clases `dark:` de Tailwind:** con Windows en modo oscuro dejaban las filas oscuras e ilegibles. No usar `dark:focus:bg-...` en filas.
+15. **JsBarcode** pisa el estilo del svg: centrarlo con `Object.assign(svg.style, {...})` después de dibujar.
+16. **Unidades de presentaciones:** se guardan con el código CORTO (`PAQ`, `CAJA`), no con el nombre ("PAQUETE"). Si no, se ignoran.
+17. **Editar archivos con comandos de shell que tienen `\`, `$` o comillas** (heredoc, `node -e`, `sed`). Se pierden caracteres. Usar el editor de archivos. Los archivos pueden tener fin de línea CRLF.
+18. **Un `restaurarFocoSesion` que mandaba el foco a la sección de atrás con una ventana abierta.** Ya corregido: se queda en la ventana.
+23. **Revisar tipos con `npx tsc --noEmit -p .`** (28/10/2026): en este proyecto NO revisa nada, porque tsconfig.json solo tiene "references". Usar **`npx tsc -b`**. El build de Vite tampoco revisa tipos.
+22. **Quitar una ventana vieja sin revisar todo lo que hacía** (28/10/2026): al reemplazar el "Directorio de clientes" se perdió su historial de créditos Pendientes | Pagados y el dueño lo reportó como error grave. Antes de borrar algo, listar cada función que tiene y comprobar que sigue en otro lado.
+20. **Tomar "continuemos" o "seguimos" como el OK de una fase con propuesta pendiente** (28/10/2026). El OK tiene que ser explícito. Ante la duda, primero muestra el plan de esa parte y pregunta "¿empiezo?".
+21. **Poner `onKeyDown` en un botón dentro de una fila que también tiene `onKeyDown`:** la tecla se atiende dos veces (Enter en Eliminar abría la ficha). Un solo oyente en la fila, usando `e.target`.
+19. **Asumir que Escape en un desplegable no cierra la ventana:** `useCerrarConEscape` escucha en `window`. En el desplegable hay que hacer `e.stopPropagation()` en su `onKeyDown`.
+24. **Fiados huérfanos sin cliente en `customers`** (28/10/2026): si un cliente fue borrado o fiado sin ficha previa en `customers`, su deuda no salía en la lista de Clientes aunque sí en Créditos. Al mapear clientes, incluir automáticamente a cualquiera que tenga fiados en la base, y al vincular fiados comparar siempre tanto por ID (`String(f.clienteId) === String(c.id)`) como por nombre normalizado (mayúsculas/trim).
+25. **Pérdida de foco al eliminar filas de forma asíncrona** (28/10/2026): al borrar una fila (proveedor, cliente, etc.), `confirmar()` intenta restaurar el foco al botón original a los 80ms mientras la petición al servidor aún está en curso. Luego, cuando React elimina el elemento del DOM, el navegador pasa el foco a `document.body` y el selector desaparece. Para evitarlo: guardar el índice de la fila antes del borrado y, tras actualizar el estado de React, programar el foco (`setTimeout ~120ms`) hacia la fila contigua (`rows[Math.min(idx, rows.length - 1)]`) o al buscador si la lista quedó vacía.
+26. **Selector atrapado en la paginación inferior (< y >)** (28/10/2026): buscar filas con `document.querySelectorAll('div[data-row="true"]')` sin acotar por el ID del contenedor o sin filtrar `.hidden` incluye filas de pestañas o tablas inactivas (ej. TablaLotes cuando está abierta la pestaña Productos). Como el último elemento encontrado está oculto (`display: none`), `rows[rows.length - 1].focus()` falla silenciosamente y el selector queda atrapado en el botón inferior. Siempre acotar al contenedor (`#tabla-productos-inventario`) y filtrar `!el.closest('.hidden') && el.offsetParent !== null`. Además, proteger cualquier listener global para que `id?.includes('bottom')` no sea bloqueado como control superior.
+27. **En modales con búsqueda, separar las filas de resultados de las acciones superiores** (28/10/2026): si botones de acción (como "Cliente Varios" o "Crear nuevo") comparten el selector genérico con las filas de resultados, presionar Flecha Abajo o Enter tras escribir un término de búsqueda enfoca el botón de acción en lugar del primer resultado coincidente. Separar las acciones superiores (`data-cliente-accion="true"`) de los resultados (`data-fila-cliente="true"`), y hacer que presionar Flecha Abajo o Enter desde el buscador salte directamente a la primera coincidencia.
+28. **Selectores CSS con subcadena `[class*="..."]` en estilos globales** (29/10/2026): un selector como `[class*="bg-[var(--color-warning)]"]` coincide con clases de pseudo-estados como `hover:bg-[var(--color-warning)]` o `focus:bg-[var(--color-warning)]` porque `class*=` busca la subcadena en todo el atributo `class` de HTML. Esto forzaba texto negro permanente (`color: #030712 !important`) en botones o ítems de clientes sin estar en hover. Siempre usar selectores de clase exactos con punto (`.bg-\[var\(--color-warning\)\], button.bg-...`).
+29. **Oyente de teclado en modales con múltiples vistas (ej. ModalDetalleCaja)** (29/10/2026): si el `useEffect` de navegación por teclado tiene un guardia `if (vista !== 'DETALLE') return;`, cuando el modal cambia de vista a `TICKET` el efecto no escucha teclas y el selector queda congelado en el botón. El listener debe escuchar en todas las vistas del modal (`DETALLE` y `TICKET`), controlando flechas y Escape para moverse libremente entre los botones activos (`btn-imprimir-ticket-caja`, `btn-descargar-ticket-caja`, etc.).
+30. **Colores de texto en Modo Oscuro (`text-[#475569]` o `text-[var(--color-surface)]`)** (29/10/2026): en modo oscuro, `--color-surface` es pizarra oscuro (`#111827`), por lo que poner `text-[var(--color-surface)]` en tarjetas o modales oscuros produce texto casi negro sobre fondo negro. Igualmente, colores hardcodeados como `text-[#475569]` en etiquetas de roles quedan ilegibles. Siempre usar `text-[var(--color-ink)]` (que en modo oscuro es plata suave `#CBD5E1`), o definir fondos y bordes con `bg-[var(--color-bg-2)]` y `border-[var(--color-border)]`.
+31. **Fondos claros y pasteles en tablas en Modo Oscuro (`bg-[#F8FAFC]`, `bg-[#F1F5F9]`, `bg-[#ECFDF5]`, `bg-red-50`)** (29/10/2026): el dueño rechaza cualquier contraste blanco en tablas ("en las tablas hay mucho blanco arregla eso"). Clases utilitarias como `bg-[#F8FAFC]` en paginación o `bg-[#ECFDF5]` / `bg-red-50` en pastillas de stock quedaban como cajas blancas llamativas. Siempre usar variables semánticas (`bg-[var(--color-surface)]`, `bg-[var(--color-bg-2)]`, `bg-[var(--color-accent-bg)]`, `bg-[var(--color-danger-bg)]`) y proteger en `index.css` mapeando cualquier fondo neutro o pastel suave a superficies oscuras con acentos translúcidos y bordes definidos.
+32. **Campos que requieren Enter para validar o calcular (ej. ModalAjuste)** (29/10/2026): si un paso requiere presionar Enter para calcular la diferencia o avanzar, un texto pequeño y gris ('Enter para revisar la diferencia') no es suficiente y el usuario piensa que el sistema está roto o no responde. Siempre incluir: (a) texto indicador en ámbar en la cabecera ('ENTER PARA CONTINUAR'), (b) un botón visible y clickeable al lado del campo ('[ CONTINUAR | ENTER ↵ ]') para usuarios de mouse o pantalla táctil, y (c) un banner de aviso visual claro debajo del campo ('[AVISO] Escribe la cantidad contada y presiona ENTER ↵ o el botón Continuar para revisar la diferencia').
+33. **Búsqueda de tickets por ID vs. Número mostrado (6 dígitos) y columnas de ventas (`sunat_status`)** (30/10/2026): En `sales`, el `id` es un timestamp de 13 dígitos (`Date.now()`, ej: `1793398623154`), pero en tickets impresos y tablas se muestra solo los últimos 6 dígitos (`String(id).slice(-6)`, ej: `623154` o `#623154`). Al crear buscadores de tickets o cambios, NUNCA buscar solo con `eq('id', Number(input))`, porque el usuario escribe lo que ve en su ticket impreso (6 dígitos). La búsqueda debe coincidir sufijos (`endsWith` o `slice(-6) === input`). Además, en `sales` el estado se llama `sunat_status`, NO `status` (pedir `status` causa error 400 Bad Request en PostgREST).
+34. **Columnas reales en PostgreSQL (`batches`, `sales`, `sale_details`)** (31/10/2026): La tabla `batches` NO tiene columna `batch_code`; el código del lote se guarda en `document_ref`. En `sales`, el total cobrado se almacena en la columna `total` (no `total_amount`), y en `sale_details` el precio se almacena en `price_at_moment` (no `unit_price`).
+35. **Manejo de Stock de Combos y Kits (Fase 8)** (31/10/2026): Un producto de tipo 'COMBO' no almacena stock físico propio en lotes; su disponibilidad en la Caja se calcula dinámicamente según el insumo más limitante: `min(stock_insumo / cant_requerida)`. Al venderse en Caja, el trigger `fn_reduce_stock_from_sales` descuenta automáticamente de los lotes de sus insumos por FIFO y registra los movimientos en el Kardex (`movement_type = 'VENTA'`).
+39. **`String.replace` con un texto que tiene `$$`** (03/11/2026): en JavaScript `$$` en el reemplazo se vuelve UN `$`, y rompió las funciones SQL (`$$` → `$`: "unterminated dollar-quoted string"). Al insertar SQL o cualquier texto con `$` usar `s.replace(a, () => b)`.
+38. **Escapes en `node -e "…"` desde bash** (03/11/2026): `\b` terminó como carácter "retroceso" invisible dentro de un archivo de prueba y la expresión nunca coincidía (y el Edit no encontraba la línea). Para editar código, escribir el script en un archivo con la herramienta Write (como dice el n.º 17), nunca dentro de `node -e`.
+37. **Cargar en un formulario el texto de relleno de la lista como si fuera un dato** (03/11/2026): Inventario/Caja/Conteos/Proveedores ponen `code: p.code || 'NO-SKU'` para mostrar. ModalProducto lo cargaba como código real y, con dos productos sin código, editar uno daba "ya existe en otro producto" y no guardaba. Al cargar un formulario, convertir los rellenos ('NO-SKU', 'SIN CATEGORÍA'…) en vacío.
+36. **🚨 URGENTE · Contar como "Cobrado" de un período todo lo abonado de un fiado, sin mirar CUÁNDO se abonó** (02/11/2026, lo encontró un cliente real): en Utilidades, si un cliente pagaba HOY deudas de ventas de otros días, esas ventas viejas entraban COMPLETAS al "Cobrado" de hoy. Ejemplo: LATON PILSEN mostraba S/ 90 cobrados (5 ventas fiadas de sept-oct) que no se cobraron en ese período. Causa: `fraccionPagada` usaba `fiado.paid_amount` (todo lo abonado, de cualquier fecha). **Regla de dinero cobrado en un rango (siempre, en cualquier pantalla):** = lo pagado al momento de la venta (efectivo + yape + tarjeta + transferencia) **solo si la venta es del rango** + los abonos (`debt_payments`) **con fecha dentro del rango**. Nunca usar `fiados.paid_amount` para ingresos de un período (sirve solo para saber cuánto debe hoy). Es el mismo criterio del motor único `utils/ingresos.ts`. Arreglo: rama `fix/cobrado-utilidades` (commit 98b2961, sobre `main`); la ventana del producto marca "Venta anterior · cobrado en el período". **Ya está en `main`, en Evicamp, en clientes y en siumax (rama `fase-9-10-almacenes-catalogo`, commit b0bb2a8), subido el 02/11/2026.** Probado en la base demo `siudemo`: antes S/ 41.60, ahora S/ 21.60 (lo abonado hoy).
+40. **Un script de edición que no encuentra el texto por espacios invisibles** (04/11/2026): algunos archivos tienen líneas "vacías" con espacios (ej. 13 espacios en Finanzas/index.tsx) y otros fin de línea CRLF; la herramienta Write puede quitar esos espacios del patrón y el reemplazo falla ("no encontré…"). Normalizar `\r\n` → `\n` en el archivo y en el patrón, y para líneas solo con espacios usar `' '.repeat(n)` o buscar desde un ancla única (`indexOf`) en vez del bloque completo. Si el script lanza error antes de `writeFileSync`, no se guardó nada: corregir y volver a correr.
+47. **Colores de texto fijos (`text-[#1E293B]`, `text-black`…) en listas o tarjetas** (05/11/2026): en modo oscuro quedan oscuros sobre fondo oscuro (el dueño no leía las categorías). Usar siempre las variables del tema (`text-[var(--color-ink)]`, `text-[var(--color-muted)]`).
+46. **Confiar en que los datos de siumax son como los de Evicamp** (05/11/2026): la Tienda Web andaba en siumax pero en Evicamp se caía por UN producto sin nombre. Todo texto que viene de la base puede ser null: nunca `.trim()`/`.split()` sin `(x || '')`. Para probar un arreglo con datos reales de Evicamp sin subirlo: puppeteer con intercepción de `/` y `/assets/*` sirviendo el `dist` local.
+45. **Una regla CSS general que pinta de oscuro la letra blanca de las cabeceras** (04/11/2026): también tomó el botón oscuro "Ticket" del detalle del ticket y quedó letra oscura sobre fondo oscuro (el dueño: "no se ve la palabra ticket"). Toda regla general de colores debe excluir elementos con fondo propio (`:not([class*="bg-"])`) y revisarse con capturas.
+44. **La barra de scroll "de siempre" no salía en Chrome/Edge nuevos** (04/11/2026): desde Chrome 121, si un elemento tiene `scrollbar-width` o `scrollbar-color`, se ignora `::-webkit-scrollbar` y sale una barra fina CON flechas. En `index.css` se dejan en `auto` dentro de `@supports selector(::-webkit-scrollbar)`. No volver a poner `scrollbar-width: thin` sin ese cuidado.
+43. **Presionar Enter en una prueba automática sin saber dónde está el selector** (04/11/2026): la revisión del selector dio Enter en el calendario del cobro, el navegador de prueba no abre calendarios, el selector saltó a "Confirmar pago" y el siguiente Enter creó una venta real en siumax (se borró). En pruebas: después de cada tecla, comprobar dónde quedó el selector antes de dar Enter, y frenar si cambia el número de ventas.
+42. **Dar por buena una ventana porque el botón "se alcanza con scroll"** (04/11/2026): el dueño vio "Ingresar lote" sin su botón Guardar (el medio tenía `sm:overflow-visible` y el pie quedaba fuera de la pantalla). Para él la ventana está bien solo si el botón principal se ve sin bajar. Las revisiones `revisar-ventanas*.mjs` ya lo exigen; agregar a su lista cada ventana nueva.
+41. **Cambiar una tabla compartida sin mirar quién más la usa** (04/11/2026): `TablaMovimientos` la usan Finanzas (caja actual) y `ModalDetalleCaja` (detalle de una caja pasada). Al darle paginación hay que revisar el teclado en los dos lugares (`graphify explain "TablaMovimientos"` muestra quién la importa).
+46. **La trampa de foco de ventanas bloqueaba el teclado en la ventana de impresión nativa (AnyDesk Printer / Chromium)** (04/11/2026): `ventanas.ts` escucha `focusout` y en `luego(0)` forzaba el foco a la web de SiuMax. Al abrirse la ventana de impresión, Chromium perdía el foco y el selector no dejaba presionar Imprimir o Cancelar. Solución: sincronizar flag `estaImprimiendo()` con `beforeprint` y `afterprint` para pausar la trampa de foco durante la impresión.
+47. **No usar `display: flex` directo sobre un `<td>` en tablas HTML (`hidden md:flex`)** (04/11/2026): convierte la celda en contenedor flex perdiendo su display `table-cell`, lo que desalinea la celda respecto al `<th>` de la cabecera (el botón de acciones salía pegado a la derecha). Usar siempre `hidden md:table-cell` y envolver el botón dentro de `<div className="flex items-center justify-center">`.
+49. **Cambiar de link un sitio que tenía la app guardada sin internet** (06/11/2026): el navegador guarda el sistema
+    (service worker `sw.js`) por link; si en ese link se pone otra cosa, seguiría mostrando la copia vieja. Al pasar
+    `siumax.duckdns.org` a Panel se sirve un `sw.js` que borra esa copia y se da de baja solo (`instalar-panel.sh`).
+    El navegador también pide iniciar sesión de nuevo en el link nuevo (las sesiones y copias van por link).
+48. **Un 401 que no era de sesión sacaba al usuario** (05/11/2026): en siumax `fn_edit_batch` y `fn_soft_delete_batch` no tenían EXECUTE para `anon` (en Evicamp sí); PostgREST responde 401 a "permission denied" del rol anon y `supabase.ts` cerraba la sesión con cualquier 401 → al guardar un lote el dueño salía al login. Arreglo: GRANT en `seguridad-sesion.sql` y solo el código `PT401` cierra la sesión. Para buscar algo así: `grep " 401 " /var/log/nginx/access.log` y `permission denied` en el log de PostgreSQL; revisar con `has_function_privilege('anon', oid, 'EXECUTE')` las funciones que llama el sistema.
+49. **Unidades de un costo: por unidad vs. por lote** (05/11/2026): `products.costo_adicional_produccion` es POR UNIDAD, pero `fn_producir_receta(p_costo_adicional)` lo recibe por TODO el lote; la ventana vieja mandaba el de una unidad. Al pasar un costo entre pantalla y función, revisar qué unidad espera cada lado.
+50. **No reescribir datos hijos que se cargan aparte** (05/11/2026): Nuevo producto borraba y volvía a insertar `product_recipes` con lo que tenía en memoria; si se guardaba antes de que terminaran de cargar, la receta quedaba vacía. Una pantalla solo debe escribir lo que de verdad edita.
+51. **Nombres de campos entre la lista y la ventana** (05/11/2026): la lista de Inventario arma el producto con `imageUrl` y Nuevo producto lo leía como `image` → al editar la foto quedaba vacía y al guardar se borraba. Al cargar `initialData`, aceptar los dos nombres (`imageUrl || image_url`) y probar que "editar y guardar sin cambios" deja la fila igual.
+52. **Montos en pantalla: `formatearMonto()`** (06/11/2026): todo monto que se MUESTRA con "S/" usa `formatearMonto(x)` de `src/utils/formato.ts` (S/ 16,200.00), no `x.toFixed(2)`. Para cálculos, campos de número y SUNAT, números sin formato.
+53. **Cabeceras: nunca forzar una segunda fila** (06/11/2026): no usar `w-full 2xl:w-auto` ni `flex-col 2xl:flex-row` en la cabecera de una sección (el dueño quiere UNA fila en laptops); usar `flex-wrap` + `max-w-full` para que baje solo cuando no entra. Los botones/pestañas se compactan solos de 1024 a 1700 px (`index.css`). Medir con `scratchpad/medir-cabeceras.mjs`.
+54. **Imprimir en otra ventana: copiar los estilos, no enlazarlos** (06/11/2026): el CSS de Vite lleva `crossorigin` y el servidor no manda CORS; un documento armado aparte (data:, about:blank) NO carga ese `<link>` y sale sin diseño. Copiar `document.styleSheets` en un `<style>`. Y en tickets: imprimir a 72 mm (lo que imprime una ticketera de 80 mm). Para revisar: el PDF del documento en modo impresión.
+55. **Animaciones de aparecer y alto suave** (06/11/2026): `.aparecer` (index.css, con `backwards`: nunca `both`/`forwards`, porque deja capa propia y tapa listas flotantes) y `<AlturaSuave>` (src/components) para que una ventana no salte de tamaño. Dentro de AlturaSuave, las listas van en el flujo (no `absolute`).
+56. **Funciones SQL repetidas: vale la ÚLTIMA** (11/11/2026): `fn_proteger_precios` está 4 veces en `seguridad-sesion.sql` (la de la fase 4.4 es la que queda). Antes de cambiar una función: `grep -n "FUNCTION public.<nombre>"` y cambiar la última; comprobar en la base con `prosrc like '%...%'`. Para que el servidor cambie algo que el trigger protege, marcar el permiso con `set_config('siumax.<algo>', '1', true)` dentro de la función (como `siumax.cpe_interno` y `siumax.costo_de_compra`).
+57. **Stock de ventas: siempre por el servidor y con la nota `Ticket #N`** (11/11/2026): el trigger de `sale_details` descuenta FIFO salvo que ya haya salidas `VENTA` con nota exacta `Ticket #<id completo>`. Si una pantalla mueve stock a mano (`products.quantity`), los lotes no cuadran y una línea nueva se descuenta dos veces. Usar funciones como `fn_mover_stock_cambio`.
+ y las funciones quedaron con `AS # Memoria del proyecto para cualquier IA
+
+> Esto es lo que Claude aprendió trabajando con el dueño desde octubre de 2026: cómo es él, cómo está armado todo,
+> cómo se trabaja, cómo se prueba y **los errores que ya se cometieron, para no repetirlos**.
+> Léelo junto con `AGENTS.md`, `docs/BITACORA.md` y `docs/PLAN-SIUMAX-COMERC.md`.
+> Si aprendes algo nuevo importante, agrégalo aquí.
+> **Nunca escribas aquí contraseñas ni claves:** viven en `.env.vps`, que no se sube a git.
+
+---
+
+## 1. El dueño y cómo le gusta trabajar
+- **Español siempre**, también en los avances cortos y los resúmenes de pruebas. Se molesta mucho si respondes en inglés.
+- **No es programador:** explica simple, sin jerga y con tablas cortas. Si dice "respóndeme nomás", contesta directo y corto.
+- **Muestra la propuesta antes de construir** (qué pantallas cambian) y espera su OK. Si da varias opciones, recomienda una.
+- **Nunca subas a Evicamp ni hagas push a GitHub sin que lo diga EN ESE MOMENTO.** Un "súbelo" anterior no vale para los
+  cambios siguientes. siumax (pruebas) sí se puede actualizar.
+- **Prueba él mismo en siumax** y manda capturas con los errores marcados en rojo. Lee la captura con calma: lo marcado
+  es lo que hay que arreglar.
+- **Cambia de idea, y está bien:** si dice "olvídalo" o "déjalo como está", no lo hagas y no insistas.
+- **Su cliente Evicamp vende todos los días:** nada debe cortar sus ventas (ver la sección 3).
+- **Estándar de pantallas:**
+  - 100% teclado (← → ↑ ↓, Enter, Esc) y el selector nunca desaparece;
+  - sin botón "Cancelar" (bastan la X y Esc);
+  - avisos propios (`avisar` / `confirmar`);
+  - listas en TABLA (no tarjetas), letra de tamaño normal, ventanas con borde 2 y sombra de 8 px;
+  - las ventanas con listas usan el estilo del "Directorio de clientes" (`src/components/ListaVentana.tsx`).
+- **Pestañas:** ← → solo mueven el selector; la pestaña cambia con Enter.
+- **Las 6 reglas del selector (04/11/2026, en todo el sistema):** llegar con flechas a TODO botón/buscador/campo; calendario: Enter
+  lo abre y el selector se queda (Enter NUNCA pasa al siguiente cuadro, ↓ sí); ← → ↑ ↓ siempre mueven; al volver de otro programa algo
+  queda seleccionado; en una ventana el selector nunca se pierde (ni con un clic en el fondo) y nunca sale de ella. Ya lo garantizan
+  `ventanas.ts` (ventanas) y `flechasEspaciales.ts` (flechas de respaldo); al hacer una pantalla nueva, poner flechas propias donde
+  importe el orden y correr `ai-scripts/pruebas/estilo/revisar-selector.mjs`. Ojo: un control desactivado no recibe el selector:
+  las flechas deben saltar al primero ACTIVO.
+- **Regla 9 (05/11/2026, el dueño la repitió dos veces en Producir):** **Enter = clic y el selector SE QUEDA, en TODO** (botones,
+  opciones, campos de texto y de número). Enter NUNCA pasa al siguiente cuadro; para moverse están las flechas. En un campo, Enter
+  solo hace su acción si tiene una (elegir el primer resultado de un buscador, "Agregar" en la cantidad) y el selector no se mueve.
+  Si el elemento desaparece (lista que se cierra, fila quitada), el selector vuelve a de donde salió o al vecino más cercano.
+  No programar `Enter → enfocar(siguiente)` en pantallas nuevas. **Ya lo garantiza `flechasEspaciales.ts` (guardiaEnter +
+  focusin) en TODAS las ventanas:** si tras un Enter en un campo el selector va a otro campo/botón de la misma ventana,
+  vuelve al de origen (no actúa si el Enter abrió/cerró una ventana, si el campo desapareció o entró a una lista; cualquier otra tecla del usuario termina la vigilancia al instante).
+  **Categorías:** Enter sin elegir de la lista guarda LO ESCRITO (no la primera parecida); de la lista se elige con ↓ + Enter.
+- **Reglas 7 y 8 (05/11/2026):** las flechas NUNCA cambian una opción (listas desplegables, grupos de opciones tipo radio, unidades…):
+  solo mueven el selector; **Enter despliega o elige**. **Enter en una casilla = clic** (se marca y el selector se queda). Lo garantiza
+  `alTeclearPrimero` en `flechasEspaciales.ts`; no programar "← → cambia la opción" en ninguna pantalla. Vale también para
+  campos de NÚMERO (↑↓ no suben/bajan la cantidad: el selector se queda atrapado si no).
+- **El selector tiene que VERSE** (05/11/2026): "no funciona" a veces es que llega pero no se nota. En ventanas lo garantiza
+  index.css (contorno verde con outline en campos, botones y casillas); al revisar, sacar captura en MODO OSCURO (el dueño lo usa).
+  Ojo: un contorno POR FUERA se recorta si el contenedor tiene overflow (pasó en las pestañas de Compras); y las reglas de
+  modo oscuro de `index.css` (sección "SELECTOR DE NAVEGACIÓN CON TECLADO EN MODO OSCURO") tienen mucha fuerza: revisar el
+  estilo calculado (getComputedStyle) si un cambio "no se ve".
+- **Barras con fechas:** una sola fila; ← → recorre, ↓ baja a la lista y **Enter en una fecha abre el calendario**.
+- **Al cerrar cualquier ventana o submodal**, el selector debe volver explícitamente a lo que estaba elegido (regla global en `src/utils/ventanas.ts`). Si un submodal se desmonta (como la ficha de nuevo cliente dentro del selector del POS), el foco debe enviarse a un botón del modal padre (`btn-cliente-pos-nuevo`), de lo contrario el navegador envía el foco a `document.body` y el selector desaparece.
+- **Scrollbars estilizados:** todo contenedor con scroll (`overflow-y-auto` u `overflow-auto`) debe incluir la clase `.custom-scrollbar` (5px, sin botones de flechas) para evitar la barra gris nativa gruesa de Windows.
+- **Opciones avanzadas en modales complejos:** no poner múltiples botones, ni botones flotantes laterales, ni botones duplicados en cabecera o footer. Usar **un único botón desplegable claro** bajo los datos básicos que abra las opciones hacia abajo dentro del mismo cuerpo scrolleable del formulario.
+- **Tienda Web (Fase 10):** el dueño indicó expresamente llamarla **"Tienda Web"** (en vez de "Catálogo") y que su diseño esté totalmente adaptado tanto para **PC** (pantalla completa, filtros visuales y carrito accesible) como para **celular**.
+- **Modelos de Base de Datos y Columnas:** en la tabla `products`, la columna de costo es `cost_price` (no `cost`). La tabla de locales es `stores` con columnas `nombre`, `codigo`, `direccion`, `telefono`, `whatsapp`, `es_almacen_principal`, `activo`.
+- **Avisos internos del sistema (`avisar`):** `avisar()` despliega un diálogo propio en pantalla con el botón `#dialogo-sistema-aceptar` que atrapa el foco y los clics para evitar pérdida de teclado en la app de escritorio; siempre debe ser descartado con Enter o clic para que las pantallas detrás respondan.
+- **Caché en memoria entre sesiones (11/11/2026):** al cambiar de sección (Punto de Venta, Inventario, Clientes, Finanzas, Utilidades), nunca poner `loading = true` bloqueando la pantalla si ya se descargaron los datos en la sesión actual. Mantener una variable `cache[Modulo]Memoria` fuera del componente, iniciar el estado con ella y recargar en segundo plano silencioso para entrada instantánea (0 ms).
+- **Créditos pagados de un cliente (11/11/2026):** en el detalle del cliente, la pestaña "PAGADOS" debe ordenarse por la fecha del último pago (`fechaUltimoPago`), no por la fecha antigua de emisión, y el filtro de fecha debe buscar por la fecha del abono.
+- **Accesibilidad y visión (11/11/2026):** el "TOTAL A COBRAR" en POS debe ser negro (`text-[var(--color-ink)]`), nunca verde claro, para clientes con baja visión.
+- **Exige usar graphify** (si está instalado) antes de leer código y `graphify update .` después de cambiarlo.
+
+## 2. El producto
+- **SiuMax** es la marca. Este sistema es **SiuMax Comerc** (minoristas + venta a empresas).
+  - Habrá un sistema separado por familia: Restaurantes, Talleres, Citas, Membresías, Alquileres y Hospedaje.
+  - **La visión completa (los 7 tipos con todos sus negocios) está en la carpeta madre: `D:/Programación/siumax/TIPOS-DE-NEGOCIO.md`** (y las reglas comunes a todos los sistemas en `D:/Programación/siumax/CLAUDE.md`). El dueño: *"en sí SiuMax va a ser eso"*.
+  - No proponer el selector de familia en el panel hasta que exista una segunda familia.
+- **Evicamp** es la primera clienta (no es el nombre del producto). Sitio: `evicamp.duckdns.org`.
+- **Orden de los links (desde el 06/11/2026, `servidor/ordenar-links.sh`):** `siumax.duckdns.org` = Panel de Control;
+  `<tipo>.siumax.duckdns.org` = pruebas de cada sistema; `<negocio>.<tipo>.siumax.duckdns.org` = clientes. `panel.siumax`
+  ya NO existe. `evi.siumax.duckdns.org` es EviDiary (proyecto aparte del dueño, `D:\Programación\evi`): no tocarlo.
+- **siumax** es el sistema de pruebas: **`comerc.siumax.duckdns.org`** (base `siumax`, API 3001, carpeta `/var/www/siuhub/html`,
+  nginx `sites-available/comerc`), usuario `admin@siumax.com`. La clave está en `.env.vps` (`SIUMAX_ADMIN_CLAVE`).
+  En los scripts se sigue llamando `siumax` (también acepta `comerc`): `deploy.cjs siumax`.
+- **Pruebas de SiuMax Servic:** `servic.siumax.duckdns.org` (por ahora solo una página "en preparación", `/var/www/servic/html`).
+- **Clientes nuevos:** `<slug>.comerc.siumax.duckdns.org`, cada uno con su base `cli_<slug>`. Al 06/11/2026 no hay ninguno.
+- **Panel de control:** `siumax.duckdns.org` (`servidor/panel/panel.py`; nginx `sites-available/siuhub-panel`).
+  - **`siumax.duckdns.org/actualizaciones/` debe seguir sirviéndose SIEMPRE:** las apps de PC instaladas (también las de
+    Evicamp) buscan ahí sus actualizaciones. Lo sirve el bloque del panel (`instalar-panel.sh`).
+  - Da de alta clientes y cobra con **Mercado Pago (cobro REAL activado)**.
+  - Suspende a los 5 días de vencido. No tocarlo por ahora.
+- **App de PC:** Electron (`escritorio/`), con actualización automática (`node ai-scripts/build-escritorio.cjs generico --nueva-version`). Carga el sistema desde el servidor, así que los cambios de pantalla no necesitan un .exe nuevo. No cambiar el `name` del manifest ("SiuMax"): la app lo verifica.
+- **También existe como app instalable (PWA)** y funciona en una pestaña normal del navegador.
+- **Ticket:** dice "Nota de Venta". **No hay facturación SUNAT todavía** (fase 11, en pausa).
+
+## 3. El servidor (VPS) y cómo tocarlo sin romper nada
+- **Un VPS (Hostinger)** con varias apps:
+
+| Sitio | Base de datos | API |
+|---|---|---|
+| Evicamp | `postgres` | PostgREST en el puerto 3000 |
+| siumax (pruebas) | `siumax` | PostgREST en el puerto 3001 |
+| CreditAltoque (otro sistema de la clienta, .NET) | `creditaltoque` | Docker. **No tocarlo** |
+
+- **Nombres internos en el servidor:** `/opt/siuhub`, servicios `postgrest_siuhub` y `siuhub-panel` (la base de datos de pruebas ahora se llama `siumax`, renombrada desde `siuhub` el 29/10/2026 por pedido del dueño).
+- **Conexión:** `ai-scripts/vps.cjs` + `.env.vps`. Para SQL desde Node: `node-ssh` → `runuser -u postgres -- psql -d <base>`.
+- **Seguridad de la API:**
+  - Cada pedido lleva la cabecera `x-sesion` (`src/db/supabase.ts`) y el servidor la revisa con `fn_verificar_peticion`.
+  - **Permisos por acción:** `fn_permisos_requeridos(método, ruta)` + `fn_tiene_permiso`, y triggers como `fn_proteger_precios` y `fn_proteger_borrados`.
+  - Las sesiones vencen a los 30 días sin uso; hay límite de logins y fail2ban.
+- **Respaldos:**
+  - cron diario de todas las bases a las 3:00 (`/var/backups/siuhub`, 14 días) + la configuración;
+  - copia a la PC del dueño (`D:\Backups-SiuMax`, tarea de Windows a las 8:00);
+  - antes de cada pase: `pg_dump -Fc` a `/var/lib/postgresql/respaldo-evicamp-antes-<fase>-<fecha>.dump`.
+- **Comandos:**
+  - pantallas: `node ai-scripts/deploy.cjs siumax | evicamp | todos`;
+  - clientes: `node ai-scripts/cliente.cjs listar | nuevo | backup | panel | seguridad <sitio>`.
+- **⚠️ La regla más importante con Evicamp:**
+  - `cliente.cjs seguridad evicamp` y `activar-seguridad.sh` **reinician la API** y cortan la caja. **NO usarlos en Evicamp.**
+  - Para cambios de base: respaldo → subir `servidor/sql/seguridad-sesion.sql` → `psql -c "SET lock_timeout = '5s'" -f archivo.sql` (repetible) → revisar columnas y funciones → recién ahí `deploy.cjs`.
+  - Script modelo: `ai-scripts/pruebas/aplicar-fase1-evicamp.cjs`.
+- **Orden de un pase:** SQL primero, luego las pantallas (si la pantalla nueva llega antes que las columnas, las ventas fallan).
+  Al final: revisar que el sitio sirve el `index-XXXX.js` nuevo, que la API responde 401 sin sesión y que el login abre sin errores.
+
+## 4. El código (dónde está cada cosa)
+- **Pantallas:** React + Vite + TypeScript, en `src/sections/`:
+
+| Carpeta | Qué es |
+|---|---|
+| `Punto-de-venta` | La Caja (`index.tsx` con el carrito y el teclado; `TicketVenta`, `TerminalBusqueda`, `ModalCobro`, `ModalBalanza`) |
+| `Inventario` | Productos, Lotes, Compras (`PanelCompras`), `ModalProducto`, `ModalLote`, `ModalHistorialLotes` (reloj: lotes + kardex), `ModalEtiqueta` |
+| `Conteos` | Antes "Mermas". `ModalAjuste` = "Nuevo ajuste": Salió del stock / Conté lo que hay; `ModalEditarSalida`, `ModalEditarConteo` |
+| `Fiados` | Créditos. En la fase 4 pasa a `Clientes` |
+| `Finanzas` | Cajas, movimientos, anular |
+| `Utilidades` | Ganancias por producto |
+| `Configuraciones` | Usuarios y permisos (`ModalUsuario.tsx`, `types.ts`), empresa |
+
+- **Utilidades clave** (`src/utils/`):
+  - `sinInternet.ts`, `precargaSinInternet.ts`, `almacenLocal.ts`: todo el modo sin internet.
+  - `dialogos.tsx`: `avisar` y `confirmar`. **`window.alert` está redirigido a `avisar`, NO es nativo.**
+  - `ventanas.ts`: `ventanaSuperior`, `enfocablesDe`, `recordarSeleccionEnVentanas`.
+  - `navegacionSesion.ts`: a dónde vuelve el foco. Con una ventana abierta se queda en ella.
+  - `permisos.ts`: `usePermiso`, `avisarSinPermiso` y qué permiso abre cada sección.
+  - `autorizacion.tsx` (`conAutorizacion`): pide la clave del admin.
+  - `unidades.ts` (`unidadDe`, `esDecimal`, `nombreUnidad`), `presentaciones.ts`, `preciosCantidad.ts`, `vencimiento.ts` y `formato.ts`.
+- **Modelo de stock:**
+  - `products.quantity` es el total y `batches` son los lotes.
+  - **La venta descuenta sola** por un trigger (`fn_reduce_stock_from_sales`), del lote **más antiguo**. FEFO fue rechazado por el dueño.
+  - **Registrar una merma o salida en `waste` baja el stock del producto sola** (trigger `tr_waste_reduce`). **No mandes además "stock = X".**
+  - Borrar una merma lo devuelve (`fn_restore_stock_on_waste_delete`, con signo: borrar un sobrante resta).
+  - Kardex: `inventory_movements`. El autor lo pone el servidor (`trg_autor_movimiento`, `trg_autor_merma`).
+- **Funciones del servidor que se usan:** `fn_registrar_conteo`, `fn_editar_conteo`, `fn_anular_venta`, `fn_edit_batch`,
+  `fn_soft_delete_batch`, `fn_soft_delete_product`, `fn_recibir_compra`, `fn_devolver_compra`, `fn_ventas_por_producto`
+  y `fn_empleado_de_sesion()`. Esta última ya existe: **no crear otra con el mismo nombre**.
+
+## 5. Modo sin internet (cómo funciona)
+- **Las copias:** cada lectura se guarda como "copia" en IndexedDB. Sin internet se responde con la copia.
+  - `copiaFiltrada` arma el resultado desde copias más grandes que tengan las columnas de los filtros.
+  - `filaEnCopias` usa la copia **más reciente**.
+- **La cola:** lo hecho sin internet entra en una cola en disco y se sube en orden al volver la conexión, sin duplicar (`ref_local` o ids hechos en la PC).
+- **Stock:** en cualquier PATCH de stock se guarda como **diferencia** (`CON_STOCK`), para no pisar ventas de otra caja.
+- **Funciones del servidor sin internet:** se imitan en la PC (`IMITAR_RPC`) y se preparan al subir (`PREPARAR_RPC`).
+- **La precarga** (`precargaSinInternet.ts`) debe hacer **exactamente las mismas consultas** que las pantallas; si no, no hay copia.
+- **Regla de choque:** gana el último en subirse.
+- **Autorizar con la clave del admin necesita internet** (decidido; no volver a proponerlo).
+
+## 6. Errores que ya se cometieron (NO repetir)
+1. **Responder en inglés.** El dueño no entiende. Siempre en español.
+2. **Subir a Evicamp o GitHub sin un aviso nuevo**, tras un "súbelo" anterior. Siempre preguntar.
+3. **Saltarse graphify** antes de leer código. El dueño lo exige.
+4. **Reiniciar la API de Evicamp** con `activar-seguridad.sh`. Corta ventas. Usar `psql` con `lock_timeout`.
+5. **Handler de teclado con closure viejo:** en `ModalProducto` el teclado (window, capture) usa `handleSave` de su closure. Todo estado nuevo que use `handleSave` debe ir en las dependencias del efecto; si no, guarda valores viejos (pasó con las escalas: se guardaba null).
+6. **Comparar ids con `===`:** un id que llega como texto ("123") no es igual al número 123. Comparar con `String(a) === String(b)`. Pasó al editar un lote desde el Historial: no encontraba el producto.
+7. **Mandar "stock = X" después de registrar una salida.** El trigger ya baja el stock; además, sin internet la copia vieja dejaba un stock equivocado y en línea podía pisar una venta simultánea.
+8. **Leer stock de una consulta estrecha sin internet** (`select('id, quantity').eq('id')`). Esa copia puede estar vieja aunque otra esté al día.
+9. **Tomar una copia VACÍA como "no hay copia"** en `copiaFiltrada`. Una caja recién abierta dejaba de verse sin internet.
+10. **Revisar el stock línea por línea en la Caja.** Hay que sumar las sueltas y los paquetes del mismo producto: antes 8 paquetes x25 + 200 sueltas pasaban con 200 en stock.
+11. **Poner un hook después de un `return null`.** Todos los hooks (useState, useEffect, propios) van antes del `if (!isOpen) return null`.
+12. **Llamar un hook dentro de `a || usePermiso(...)`.** Es un hook condicional: llamarlos siempre.
+13. **Selector CSS inválido:** `querySelector('.bg-[var(--x)]')` lanza error en cada tecla. Usar `CSS.escape(...)`.
+14. **Clases `dark:` de Tailwind:** con Windows en modo oscuro dejaban las filas oscuras e ilegibles. No usar `dark:focus:bg-...` en filas.
+15. **JsBarcode** pisa el estilo del svg: centrarlo con `Object.assign(svg.style, {...})` después de dibujar.
+16. **Unidades de presentaciones:** se guardan con el código CORTO (`PAQ`, `CAJA`), no con el nombre ("PAQUETE"). Si no, se ignoran.
+17. **Editar archivos con comandos de shell que tienen `\`, `$` o comillas** (heredoc, `node -e`, `sed`). Se pierden caracteres. Usar el editor de archivos. Los archivos pueden tener fin de línea CRLF.
+18. **Un `restaurarFocoSesion` que mandaba el foco a la sección de atrás con una ventana abierta.** Ya corregido: se queda en la ventana.
+23. **Revisar tipos con `npx tsc --noEmit -p .`** (28/10/2026): en este proyecto NO revisa nada, porque tsconfig.json solo tiene "references". Usar **`npx tsc -b`**. El build de Vite tampoco revisa tipos.
+22. **Quitar una ventana vieja sin revisar todo lo que hacía** (28/10/2026): al reemplazar el "Directorio de clientes" se perdió su historial de créditos Pendientes | Pagados y el dueño lo reportó como error grave. Antes de borrar algo, listar cada función que tiene y comprobar que sigue en otro lado.
+20. **Tomar "continuemos" o "seguimos" como el OK de una fase con propuesta pendiente** (28/10/2026). El OK tiene que ser explícito. Ante la duda, primero muestra el plan de esa parte y pregunta "¿empiezo?".
+21. **Poner `onKeyDown` en un botón dentro de una fila que también tiene `onKeyDown`:** la tecla se atiende dos veces (Enter en Eliminar abría la ficha). Un solo oyente en la fila, usando `e.target`.
+19. **Asumir que Escape en un desplegable no cierra la ventana:** `useCerrarConEscape` escucha en `window`. En el desplegable hay que hacer `e.stopPropagation()` en su `onKeyDown`.
+24. **Fiados huérfanos sin cliente en `customers`** (28/10/2026): si un cliente fue borrado o fiado sin ficha previa en `customers`, su deuda no salía en la lista de Clientes aunque sí en Créditos. Al mapear clientes, incluir automáticamente a cualquiera que tenga fiados en la base, y al vincular fiados comparar siempre tanto por ID (`String(f.clienteId) === String(c.id)`) como por nombre normalizado (mayúsculas/trim).
+25. **Pérdida de foco al eliminar filas de forma asíncrona** (28/10/2026): al borrar una fila (proveedor, cliente, etc.), `confirmar()` intenta restaurar el foco al botón original a los 80ms mientras la petición al servidor aún está en curso. Luego, cuando React elimina el elemento del DOM, el navegador pasa el foco a `document.body` y el selector desaparece. Para evitarlo: guardar el índice de la fila antes del borrado y, tras actualizar el estado de React, programar el foco (`setTimeout ~120ms`) hacia la fila contigua (`rows[Math.min(idx, rows.length - 1)]`) o al buscador si la lista quedó vacía.
+26. **Selector atrapado en la paginación inferior (< y >)** (28/10/2026): buscar filas con `document.querySelectorAll('div[data-row="true"]')` sin acotar por el ID del contenedor o sin filtrar `.hidden` incluye filas de pestañas o tablas inactivas (ej. TablaLotes cuando está abierta la pestaña Productos). Como el último elemento encontrado está oculto (`display: none`), `rows[rows.length - 1].focus()` falla silenciosamente y el selector queda atrapado en el botón inferior. Siempre acotar al contenedor (`#tabla-productos-inventario`) y filtrar `!el.closest('.hidden') && el.offsetParent !== null`. Además, proteger cualquier listener global para que `id?.includes('bottom')` no sea bloqueado como control superior.
+27. **En modales con búsqueda, separar las filas de resultados de las acciones superiores** (28/10/2026): si botones de acción (como "Cliente Varios" o "Crear nuevo") comparten el selector genérico con las filas de resultados, presionar Flecha Abajo o Enter tras escribir un término de búsqueda enfoca el botón de acción en lugar del primer resultado coincidente. Separar las acciones superiores (`data-cliente-accion="true"`) de los resultados (`data-fila-cliente="true"`), y hacer que presionar Flecha Abajo o Enter desde el buscador salte directamente a la primera coincidencia.
+28. **Selectores CSS con subcadena `[class*="..."]` en estilos globales** (29/10/2026): un selector como `[class*="bg-[var(--color-warning)]"]` coincide con clases de pseudo-estados como `hover:bg-[var(--color-warning)]` o `focus:bg-[var(--color-warning)]` porque `class*=` busca la subcadena en todo el atributo `class` de HTML. Esto forzaba texto negro permanente (`color: #030712 !important`) en botones o ítems de clientes sin estar en hover. Siempre usar selectores de clase exactos con punto (`.bg-\[var\(--color-warning\)\], button.bg-...`).
+29. **Oyente de teclado en modales con múltiples vistas (ej. ModalDetalleCaja)** (29/10/2026): si el `useEffect` de navegación por teclado tiene un guardia `if (vista !== 'DETALLE') return;`, cuando el modal cambia de vista a `TICKET` el efecto no escucha teclas y el selector queda congelado en el botón. El listener debe escuchar en todas las vistas del modal (`DETALLE` y `TICKET`), controlando flechas y Escape para moverse libremente entre los botones activos (`btn-imprimir-ticket-caja`, `btn-descargar-ticket-caja`, etc.).
+30. **Colores de texto en Modo Oscuro (`text-[#475569]` o `text-[var(--color-surface)]`)** (29/10/2026): en modo oscuro, `--color-surface` es pizarra oscuro (`#111827`), por lo que poner `text-[var(--color-surface)]` en tarjetas o modales oscuros produce texto casi negro sobre fondo negro. Igualmente, colores hardcodeados como `text-[#475569]` en etiquetas de roles quedan ilegibles. Siempre usar `text-[var(--color-ink)]` (que en modo oscuro es plata suave `#CBD5E1`), o definir fondos y bordes con `bg-[var(--color-bg-2)]` y `border-[var(--color-border)]`.
+31. **Fondos claros y pasteles en tablas en Modo Oscuro (`bg-[#F8FAFC]`, `bg-[#F1F5F9]`, `bg-[#ECFDF5]`, `bg-red-50`)** (29/10/2026): el dueño rechaza cualquier contraste blanco en tablas ("en las tablas hay mucho blanco arregla eso"). Clases utilitarias como `bg-[#F8FAFC]` en paginación o `bg-[#ECFDF5]` / `bg-red-50` en pastillas de stock quedaban como cajas blancas llamativas. Siempre usar variables semánticas (`bg-[var(--color-surface)]`, `bg-[var(--color-bg-2)]`, `bg-[var(--color-accent-bg)]`, `bg-[var(--color-danger-bg)]`) y proteger en `index.css` mapeando cualquier fondo neutro o pastel suave a superficies oscuras con acentos translúcidos y bordes definidos.
+32. **Campos que requieren Enter para validar o calcular (ej. ModalAjuste)** (29/10/2026): si un paso requiere presionar Enter para calcular la diferencia o avanzar, un texto pequeño y gris ('Enter para revisar la diferencia') no es suficiente y el usuario piensa que el sistema está roto o no responde. Siempre incluir: (a) texto indicador en ámbar en la cabecera ('ENTER PARA CONTINUAR'), (b) un botón visible y clickeable al lado del campo ('[ CONTINUAR | ENTER ↵ ]') para usuarios de mouse o pantalla táctil, y (c) un banner de aviso visual claro debajo del campo ('[AVISO] Escribe la cantidad contada y presiona ENTER ↵ o el botón Continuar para revisar la diferencia').
+33. **Búsqueda de tickets por ID vs. Número mostrado (6 dígitos) y columnas de ventas (`sunat_status`)** (30/10/2026): En `sales`, el `id` es un timestamp de 13 dígitos (`Date.now()`, ej: `1793398623154`), pero en tickets impresos y tablas se muestra solo los últimos 6 dígitos (`String(id).slice(-6)`, ej: `623154` o `#623154`). Al crear buscadores de tickets o cambios, NUNCA buscar solo con `eq('id', Number(input))`, porque el usuario escribe lo que ve en su ticket impreso (6 dígitos). La búsqueda debe coincidir sufijos (`endsWith` o `slice(-6) === input`). Además, en `sales` el estado se llama `sunat_status`, NO `status` (pedir `status` causa error 400 Bad Request en PostgREST).
+34. **Columnas reales en PostgreSQL (`batches`, `sales`, `sale_details`)** (31/10/2026): La tabla `batches` NO tiene columna `batch_code`; el código del lote se guarda en `document_ref`. En `sales`, el total cobrado se almacena en la columna `total` (no `total_amount`), y en `sale_details` el precio se almacena en `price_at_moment` (no `unit_price`).
+35. **Manejo de Stock de Combos y Kits (Fase 8)** (31/10/2026): Un producto de tipo 'COMBO' no almacena stock físico propio en lotes; su disponibilidad en la Caja se calcula dinámicamente según el insumo más limitante: `min(stock_insumo / cant_requerida)`. Al venderse en Caja, el trigger `fn_reduce_stock_from_sales` descuenta automáticamente de los lotes de sus insumos por FIFO y registra los movimientos en el Kardex (`movement_type = 'VENTA'`).
+39. **`String.replace` con un texto que tiene `$$`** (03/11/2026): en JavaScript `$$` en el reemplazo se vuelve UN `$`, y rompió las funciones SQL (`$$` → `$`: "unterminated dollar-quoted string"). Al insertar SQL o cualquier texto con `$` usar `s.replace(a, () => b)`.
+38. **Escapes en `node -e "…"` desde bash** (03/11/2026): `\b` terminó como carácter "retroceso" invisible dentro de un archivo de prueba y la expresión nunca coincidía (y el Edit no encontraba la línea). Para editar código, escribir el script en un archivo con la herramienta Write (como dice el n.º 17), nunca dentro de `node -e`.
+37. **Cargar en un formulario el texto de relleno de la lista como si fuera un dato** (03/11/2026): Inventario/Caja/Conteos/Proveedores ponen `code: p.code || 'NO-SKU'` para mostrar. ModalProducto lo cargaba como código real y, con dos productos sin código, editar uno daba "ya existe en otro producto" y no guardaba. Al cargar un formulario, convertir los rellenos ('NO-SKU', 'SIN CATEGORÍA'…) en vacío.
+36. **🚨 URGENTE · Contar como "Cobrado" de un período todo lo abonado de un fiado, sin mirar CUÁNDO se abonó** (02/11/2026, lo encontró un cliente real): en Utilidades, si un cliente pagaba HOY deudas de ventas de otros días, esas ventas viejas entraban COMPLETAS al "Cobrado" de hoy. Ejemplo: LATON PILSEN mostraba S/ 90 cobrados (5 ventas fiadas de sept-oct) que no se cobraron en ese período. Causa: `fraccionPagada` usaba `fiado.paid_amount` (todo lo abonado, de cualquier fecha). **Regla de dinero cobrado en un rango (siempre, en cualquier pantalla):** = lo pagado al momento de la venta (efectivo + yape + tarjeta + transferencia) **solo si la venta es del rango** + los abonos (`debt_payments`) **con fecha dentro del rango**. Nunca usar `fiados.paid_amount` para ingresos de un período (sirve solo para saber cuánto debe hoy). Es el mismo criterio del motor único `utils/ingresos.ts`. Arreglo: rama `fix/cobrado-utilidades` (commit 98b2961, sobre `main`); la ventana del producto marca "Venta anterior · cobrado en el período". **Ya está en `main`, en Evicamp, en clientes y en siumax (rama `fase-9-10-almacenes-catalogo`, commit b0bb2a8), subido el 02/11/2026.** Probado en la base demo `siudemo`: antes S/ 41.60, ahora S/ 21.60 (lo abonado hoy).
+40. **Un script de edición que no encuentra el texto por espacios invisibles** (04/11/2026): algunos archivos tienen líneas "vacías" con espacios (ej. 13 espacios en Finanzas/index.tsx) y otros fin de línea CRLF; la herramienta Write puede quitar esos espacios del patrón y el reemplazo falla ("no encontré…"). Normalizar `\r\n` → `\n` en el archivo y en el patrón, y para líneas solo con espacios usar `' '.repeat(n)` o buscar desde un ancla única (`indexOf`) en vez del bloque completo. Si el script lanza error antes de `writeFileSync`, no se guardó nada: corregir y volver a correr.
+47. **Colores de texto fijos (`text-[#1E293B]`, `text-black`…) en listas o tarjetas** (05/11/2026): en modo oscuro quedan oscuros sobre fondo oscuro (el dueño no leía las categorías). Usar siempre las variables del tema (`text-[var(--color-ink)]`, `text-[var(--color-muted)]`).
+46. **Confiar en que los datos de siumax son como los de Evicamp** (05/11/2026): la Tienda Web andaba en siumax pero en Evicamp se caía por UN producto sin nombre. Todo texto que viene de la base puede ser null: nunca `.trim()`/`.split()` sin `(x || '')`. Para probar un arreglo con datos reales de Evicamp sin subirlo: puppeteer con intercepción de `/` y `/assets/*` sirviendo el `dist` local.
+45. **Una regla CSS general que pinta de oscuro la letra blanca de las cabeceras** (04/11/2026): también tomó el botón oscuro "Ticket" del detalle del ticket y quedó letra oscura sobre fondo oscuro (el dueño: "no se ve la palabra ticket"). Toda regla general de colores debe excluir elementos con fondo propio (`:not([class*="bg-"])`) y revisarse con capturas.
+44. **La barra de scroll "de siempre" no salía en Chrome/Edge nuevos** (04/11/2026): desde Chrome 121, si un elemento tiene `scrollbar-width` o `scrollbar-color`, se ignora `::-webkit-scrollbar` y sale una barra fina CON flechas. En `index.css` se dejan en `auto` dentro de `@supports selector(::-webkit-scrollbar)`. No volver a poner `scrollbar-width: thin` sin ese cuidado.
+43. **Presionar Enter en una prueba automática sin saber dónde está el selector** (04/11/2026): la revisión del selector dio Enter en el calendario del cobro, el navegador de prueba no abre calendarios, el selector saltó a "Confirmar pago" y el siguiente Enter creó una venta real en siumax (se borró). En pruebas: después de cada tecla, comprobar dónde quedó el selector antes de dar Enter, y frenar si cambia el número de ventas.
+42. **Dar por buena una ventana porque el botón "se alcanza con scroll"** (04/11/2026): el dueño vio "Ingresar lote" sin su botón Guardar (el medio tenía `sm:overflow-visible` y el pie quedaba fuera de la pantalla). Para él la ventana está bien solo si el botón principal se ve sin bajar. Las revisiones `revisar-ventanas*.mjs` ya lo exigen; agregar a su lista cada ventana nueva.
+41. **Cambiar una tabla compartida sin mirar quién más la usa** (04/11/2026): `TablaMovimientos` la usan Finanzas (caja actual) y `ModalDetalleCaja` (detalle de una caja pasada). Al darle paginación hay que revisar el teclado en los dos lugares (`graphify explain "TablaMovimientos"` muestra quién la importa).
+46. **La trampa de foco de ventanas bloqueaba el teclado en la ventana de impresión nativa (AnyDesk Printer / Chromium)** (04/11/2026): `ventanas.ts` escucha `focusout` y en `luego(0)` forzaba el foco a la web de SiuMax. Al abrirse la ventana de impresión, Chromium perdía el foco y el selector no dejaba presionar Imprimir o Cancelar. Solución: sincronizar flag `estaImprimiendo()` con `beforeprint` y `afterprint` para pausar la trampa de foco durante la impresión.
+47. **No usar `display: flex` directo sobre un `<td>` en tablas HTML (`hidden md:flex`)** (04/11/2026): convierte la celda en contenedor flex perdiendo su display `table-cell`, lo que desalinea la celda respecto al `<th>` de la cabecera (el botón de acciones salía pegado a la derecha). Usar siempre `hidden md:table-cell` y envolver el botón dentro de `<div className="flex items-center justify-center">`.
+49. **Cambiar de link un sitio que tenía la app guardada sin internet** (06/11/2026): el navegador guarda el sistema
+    (service worker `sw.js`) por link; si en ese link se pone otra cosa, seguiría mostrando la copia vieja. Al pasar
+    `siumax.duckdns.org` a Panel se sirve un `sw.js` que borra esa copia y se da de baja solo (`instalar-panel.sh`).
+    El navegador también pide iniciar sesión de nuevo en el link nuevo (las sesiones y copias van por link).
+48. **Un 401 que no era de sesión sacaba al usuario** (05/11/2026): en siumax `fn_edit_batch` y `fn_soft_delete_batch` no tenían EXECUTE para `anon` (en Evicamp sí); PostgREST responde 401 a "permission denied" del rol anon y `supabase.ts` cerraba la sesión con cualquier 401 → al guardar un lote el dueño salía al login. Arreglo: GRANT en `seguridad-sesion.sql` y solo el código `PT401` cierra la sesión. Para buscar algo así: `grep " 401 " /var/log/nginx/access.log` y `permission denied` en el log de PostgreSQL; revisar con `has_function_privilege('anon', oid, 'EXECUTE')` las funciones que llama el sistema.
+49. **Unidades de un costo: por unidad vs. por lote** (05/11/2026): `products.costo_adicional_produccion` es POR UNIDAD, pero `fn_producir_receta(p_costo_adicional)` lo recibe por TODO el lote; la ventana vieja mandaba el de una unidad. Al pasar un costo entre pantalla y función, revisar qué unidad espera cada lado.
+50. **No reescribir datos hijos que se cargan aparte** (05/11/2026): Nuevo producto borraba y volvía a insertar `product_recipes` con lo que tenía en memoria; si se guardaba antes de que terminaran de cargar, la receta quedaba vacía. Una pantalla solo debe escribir lo que de verdad edita.
+51. **Nombres de campos entre la lista y la ventana** (05/11/2026): la lista de Inventario arma el producto con `imageUrl` y Nuevo producto lo leía como `image` → al editar la foto quedaba vacía y al guardar se borraba. Al cargar `initialData`, aceptar los dos nombres (`imageUrl || image_url`) y probar que "editar y guardar sin cambios" deja la fila igual.
+52. **Montos en pantalla: `formatearMonto()`** (06/11/2026): todo monto que se MUESTRA con "S/" usa `formatearMonto(x)` de `src/utils/formato.ts` (S/ 16,200.00), no `x.toFixed(2)`. Para cálculos, campos de número y SUNAT, números sin formato.
+53. **Cabeceras: nunca forzar una segunda fila** (06/11/2026): no usar `w-full 2xl:w-auto` ni `flex-col 2xl:flex-row` en la cabecera de una sección (el dueño quiere UNA fila en laptops); usar `flex-wrap` + `max-w-full` para que baje solo cuando no entra. Los botones/pestañas se compactan solos de 1024 a 1700 px (`index.css`). Medir con `scratchpad/medir-cabeceras.mjs`.
+54. **Imprimir en otra ventana: copiar los estilos, no enlazarlos** (06/11/2026): el CSS de Vite lleva `crossorigin` y el servidor no manda CORS; un documento armado aparte (data:, about:blank) NO carga ese `<link>` y sale sin diseño. Copiar `document.styleSheets` en un `<style>`. Y en tickets: imprimir a 72 mm (lo que imprime una ticketera de 80 mm). Para revisar: el PDF del documento en modo impresión.
+55. **Animaciones de aparecer y alto suave** (06/11/2026): `.aparecer` (index.css, con `backwards`: nunca `both`/`forwards`, porque deja capa propia y tapa listas flotantes) y `<AlturaSuave>` (src/components) para que una ventana no salte de tamaño. Dentro de AlturaSuave, las listas van en el flujo (no `absolute`).
+56. **Funciones SQL repetidas: vale la ÚLTIMA** (11/11/2026): `fn_proteger_precios` está 4 veces en `seguridad-sesion.sql` (la de la fase 4.4 es la que queda). Antes de cambiar una función: `grep -n "FUNCTION public.<nombre>"` y cambiar la última; comprobar en la base con `prosrc like '%...%'`. Para que el servidor cambie algo que el trigger protege, marcar el permiso con `set_config('siumax.<algo>', '1', true)` dentro de la función (como `siumax.cpe_interno` y `siumax.costo_de_compra`).
+57. **Stock de ventas: siempre por el servidor y con la nota `Ticket #N`** (11/11/2026): el trigger de `sale_details` descuenta FIFO salvo que ya haya salidas `VENTA` con nota exacta `Ticket #<id completo>`. Si una pantalla mueve stock a mano (`products.quantity`), los lotes no cuadran y una línea nueva se descuenta dos veces. Usar funciones como `fn_mover_stock_cambio`.
+ (error de sintaxis). Usar `slice` o una función como reemplazo (`s.replace(a, () => b)`). Aplicar siempre con `-v ON_ERROR_STOP=1` para ver el primer error.
 
 - **Pruebas (28/10/2026):** el dueño quiere que se pruebe SOLO lo que se modificó. Las tandas de regresión, solo si él lo pide.
 
