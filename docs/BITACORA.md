@@ -7,6 +7,25 @@
 
 ---
 
+## 12/11/2026 (137) · Claude — Pendientes, Pagados y Compras del cliente: botones que abren su propia ventana
+- **Dueño** (foto del detalle de NICOLAY): *"en pendientes pagados compras abajo sale todo quiero que solo sean botones que habran ventanas donde sale la lista con su buscador y fecha asi para apreciarlo mejor"*.
+- **Detalle del cliente** (`ModalDetalleCliente.tsx`): ya no tiene pestañas ni lista abajo. Ahora tiene 3 botones grandes:
+  - **Pendientes (n):** "Debe S/ …" en rojo.
+  - **Pagados (n):** suma de los créditos cancelados.
+  - **Compras (n):** suma de lo comprado al contado en caja.
+  - La ventana del cliente ahora es del alto de su contenido.
+  - Teclado: ↓ desde Editar baja a los botones; ← → los recorre; ↑ vuelve a Editar; Enter abre.
+- **Ventana nueva** `ModalHistorialCliente.tsx`, una por botón: cabecera con ícono y título (ej. "PAGADOS · NICOLAY", con cuántos registros), buscador (producto o monto) + fecha + limpiar filtros, y la lista en grande.
+  - Enter o clic en una fila abre el detalle completo (`ModalDetalleRegistroCliente`, de la entrada 136).
+  - Teclado: abre con el selector en el buscador; ↑ sube a la X y ↓ desde la X baja; → va a la fecha; ↓ baja a la lista; ↑ desde la primera fila vuelve al buscador.
+  - Escape cierra de a una ventana y el selector vuelve a donde estaba (la fila, o el botón que la abrió).
+  - Se dibuja aparte de la ventana del cliente (no dentro), para que cada una maneje su teclado.
+- Se conservó todo: mismo filtro por fecha (Pagados también busca por la fecha de los abonos), mismo buscador, mismo orden, mismos textos de "sin registros".
+- **Probado:** `ai-scripts/pruebas/prueba-historial-cliente-ventanas.mjs`, 21 de 21 OK, 0 errores.
+  - Crea un cliente de prueba con 1 pendiente y 2 pagados y lo borra al final. La base de siumax no tenía créditos.
+  - La prueba vieja `prueba-clientes-detalle.mjs` ya estaba desactualizada (esperaba el acordeón de antes de la 136).
+- **Solo en el sitio de pruebas** (comerc.siumax). Para Evicamp, clientes y GitHub hay que esperar el aviso del dueño.
+
 ## 11/11/2026 (136) · Antigravity — Ventana flotante de detalle para Pendientes, Pagados y Compras en Clientes
 - **Dueño:** *"perfecto ahora haremos un ultimo cambio en la ventana de clientes para ver sus pendientes pagados y compras me e dado cuenta que la ventana que muestra los pendientes y pagados es muy pequeño quiero que acomodes bien que cuando presione enter a uno de ellos osea pendiente pagados o compras salga una ventana flotante para visualizarlo bien"*.
 - **Problema previo:**

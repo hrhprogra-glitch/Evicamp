@@ -1,17 +1,17 @@
 // src/sections/Clientes/components/ModalDetalleCliente.tsx
 // DETALLE DEL CLIENTE (fase 4.1b y 4.2): Enter en un cliente de la pestaña Clientes (o "Ver historial" del estado de cuenta).
 // Muestra sus datos, un resumen (deuda, créditos, total comprado, última compra, cada cuánto viene), lo que más lleva y
-// su HISTORIAL con 3 pestañas: Pendientes (deudas), Pagados (créditos cancelados) y Compras (ventas al contado en caja).
-// Buscador de producto o monto, filtro por fecha, y Enter despliega los productos y abonos.
-import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { BookOpen, Edit, UserCircle, X, ReceiptText, FilterX, Search, MapPin, Users, UserMinus } from 'lucide-react';
+// su HISTORIAL: Pendientes (deudas), Pagados (créditos cancelados) y Compras (ventas al contado en caja).
+// Desde el 12/11/2026 son 3 botones; cada uno abre su ventana con la lista, el buscador y la fecha (ModalHistorialCliente).
+import React, { useEffect, useMemo, useState } from 'react';
+import { BookOpen, Edit, UserCircle, X, MapPin, Users, UserMinus, Clock, CheckCircle2, ShoppingBag } from 'lucide-react';
 import type { Cliente, Fiado, GrupoClientes } from '../types';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { ventanaSuperior } from '../../../utils/ventanas';
-import { CuerpoVentana, BarraFiltros, TextoBarra, CajaLista, FilaLista, LineaDato, Etiqueta, DatoFila, claseBotonBarra, claseCampoBarra } from '../../../components/ListaVentana';
+import { CuerpoVentana, BarraFiltros, TextoBarra, claseBotonBarra } from '../../../components/ListaVentana';
 import { formatearMonto } from '../../../utils/formato';
-import { ModalDetalleRegistroCliente, type RegistroDetalleCliente } from './ModalDetalleRegistroCliente';
+import { ModalHistorialCliente, fechaUltimoPago, type TipoHistorial } from './ModalHistorialCliente';
 
 export interface CompraCliente {
   id: string;
@@ -41,80 +41,25 @@ interface Props {
   onSacarDeGrupo: (c: Cliente) => void;
 }
 
-type PestanaHistorial = 'PENDIENTES' | 'PAGADOS' | 'COMPRAS';
+// Botones del historial (cada uno abre su ventana)
+const HISTORIAL: Record<TipoHistorial, string> = { PENDIENTES: 'btn-historial-cliente-pendientes', PAGADOS: 'btn-historial-cliente-pagados', COMPRAS: 'btn-historial-cliente-compras' };
 const fecha = (f?: string) => (f ? new Date(f).toLocaleDateString('es-PE') : '—');
 const soles = (n: number) => `S/ ${formatearMonto(n)}`;
 const estaPagado = (f: Fiado) => f.estado === 'PAGADO' || (Number(f.saldoPendiente) || 0) <= 0.05;
-// Fecha como AAAA-MM-DD en hora local (para el filtro de fecha)
-const diaLocal = (f: string) => { const d = new Date(f); return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-CA'); };
-const fechaUltimoPago = (f: Fiado) => {
-  if (f.pagos && f.pagos.length > 0) {
-    const fechas = f.pagos.map((p) => String(p.fecha)).filter(Boolean).sort();
-    if (fechas.length > 0) return fechas[fechas.length - 1];
-  }
-  return f.fechaEmision;
-};
-
 export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose, onEditar, onEstadoCuenta, grupo, miembrosGrupo = 0, deudaGrupo = 0, onGrupo, onSacarDeGrupo }) => {
   // Botones de arriba (← →): con grupo aparece también "Sacar del grupo"
   const BOTONES = ['btn-detalle-cliente-editar', 'btn-detalle-cliente-cuenta', 'btn-detalle-cliente-grupo', ...(grupo ? ['btn-detalle-cliente-sacar'] : [])];
   useCerrarConEscape(!!cliente, onClose);
-  const [pestana, setPestana] = useState<PestanaHistorial>('PENDIENTES');
-  const [busqueda, setBusqueda] = useState('');
-  const [dia, setDia] = useState('');
-  const [abiertos, setAbiertos] = useState<Set<string>>(new Set());
+  // Ventana del historial abierta (Pendientes, Pagados o Compras); null = ninguna
+  const [historial, setHistorial] = useState<TipoHistorial | null>(null);
   const [compras, setCompras] = useState<CompraCliente[]>([]);
   const [, setCargandoCompras] = useState(false);
-  const [registroSeleccionado, setRegistroSeleccionado] = useState<RegistroDetalleCliente | null>(null);
-  const ultimoFocoFilaRef = useRef<number | null>(null);
 
-  const abrirDetalleCompra = (c: CompraCliente, idx: number) => {
-    if (!cliente) return;
-    ultimoFocoFilaRef.current = idx;
-    setRegistroSeleccionado({
-      tipo: 'COMPRA',
-      id: c.id,
-      clienteNombre: cliente.nombre,
-      fecha: c.fecha,
-      total: c.total,
-      metodoPago: c.metodoPago,
-      vendedor: c.vendedor,
-      detalles: c.detalles,
-    });
-  };
-
-  const abrirDetalleCredito = (f: Fiado, idx: number) => {
-    if (!cliente) return;
-    ultimoFocoFilaRef.current = idx;
-    const pagado = estaPagado(f);
-    setRegistroSeleccionado({
-      tipo: pagado ? 'PAGADO' : 'PENDIENTE',
-      id: String(f.id),
-      clienteNombre: cliente.nombre,
-      fecha: f.fechaEmision,
-      total: Number(f.montoOriginal) || 0,
-      montoOriginal: Number(f.montoOriginal) || 0,
-      montoPagado: Number(f.montoPagado) || 0,
-      saldoPendiente: Number(f.saldoPendiente) || 0,
-      fechaEmision: f.fechaEmision,
-      fechaUltimoPago: fechaUltimoPago(f),
-      pagos: f.pagos,
-      detalles: (f.detalles || []).map((d) => ({
-        name: d.name,
-        qty: d.qty,
-        price: d.price,
-        subtotal: d.subtotal,
-      })),
-    });
-  };
-
-  const cerrarDetalleRegistro = () => {
-    setRegistroSeleccionado(null);
-    setTimeout(() => {
-      const lista = filas();
-      const idx = ultimoFocoFilaRef.current ?? 0;
-      if (lista[idx]) lista[idx].focus();
-    }, 60);
+  // Al cerrar la ventana del historial, el selector vuelve al botón que la abrió
+  const cerrarHistorial = () => {
+    const id = historial ? HISTORIAL[historial] : null;
+    setHistorial(null);
+    if (id) setTimeout(() => document.getElementById(id)?.focus(), 60);
   };
 
   // Cargar compras al contado hechas en caja
@@ -245,129 +190,38 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
       .sort((a, b) => String(fechaUltimoPago(b)).localeCompare(String(fechaUltimoPago(a))));
   }, [creditos]);
 
-  // Historial: la pestaña elegida + buscador (producto, monto o estado) + fecha
-  const historial = useMemo(() => {
-    let lista = pestana === 'PENDIENTES' ? pendientes : pagados;
-    if (dia) {
-      if (pestana === 'PAGADOS') {
-        lista = lista.filter((f) => {
-          if (diaLocal(fechaUltimoPago(f)) === dia) return true;
-          return (f.pagos || []).some((p) => diaLocal(p.fecha) === dia);
-        });
-      } else {
-        lista = lista.filter((f) => diaLocal(f.fechaEmision) === dia);
-      }
-    }
-    const q = busqueda.trim().toLowerCase();
-    if (q) {
-      lista = lista.filter((f) => String(f.montoOriginal).includes(q) || String(f.saldoPendiente).includes(q)
-        || (f.detalles || []).some((d) => String(d.name).toLowerCase().includes(q) || String(d.subtotal).includes(q)));
-    }
-    return lista;
-  }, [pestana, pendientes, pagados, dia, busqueda]);
-
-  const comprasFiltradas = useMemo(() => {
-    let lista = compras;
-    if (dia) lista = lista.filter((c) => diaLocal(c.fecha) === dia);
-    const q = busqueda.trim().toLowerCase();
-    if (q) {
-      lista = lista.filter((c) =>
-        c.id.includes(q) ||
-        String(c.total).includes(q) ||
-        c.metodoPago.toLowerCase().includes(q) ||
-        c.detalles.some((d) => d.name.toLowerCase().includes(q))
-      );
-    }
-    return lista;
-  }, [compras, dia, busqueda]);
-
-  // Al abrir: pestaña Pendientes si debe algo, sino Pagados o Compras
+  // Al abrir: el selector en "Editar"
   useEffect(() => {
     if (!cliente) return;
-    const tienePendientes = creditos.some((f) => !estaPagado(f));
-    if (tienePendientes) {
-      setPestana('PENDIENTES');
-    } else if (pagados.length > 0) {
-      setPestana('PAGADOS');
-    } else {
-      setPestana('COMPRAS');
-    }
-    setBusqueda(''); setDia(''); setAbiertos(new Set());
+    setHistorial(null);
     const t = setTimeout(() => document.getElementById(BOTONES[0])?.focus(), 50);
     return () => clearTimeout(t);
   }, [cliente?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Si no tenía créditos pero se cargan compras, cambiar a COMPRAS para no ver vacío
-  useEffect(() => {
-    if (compras.length > 0 && pagados.length === 0 && pendientes.length === 0) {
-      setPestana('COMPRAS');
-    }
-  }, [compras.length, pagados.length, pendientes.length]);
-
   if (!cliente) return null;
 
-  const hayFiltros = !!busqueda || !!dia;
-  const barra = [
-    'tab-historial-cliente-pendientes',
-    'tab-historial-cliente-pagados',
-    'tab-historial-cliente-compras',
-    'buscar-historial-cliente',
-    'fecha-historial-cliente',
-    ...(hayFiltros ? ['btn-limpiar-historial-cliente'] : [])
-  ];
-  const idPestana = pestana === 'PENDIENTES' ? barra[0] : pestana === 'PAGADOS' ? barra[1] : barra[2];
-  const filas = () => Array.from(document.querySelectorAll('[data-credito-cliente="true"], [data-compra-cliente="true"]')) as HTMLElement[];
-  const alternar = (id: string) => setAbiertos((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
-
-  // Teclado de toda la ventana
+  const BOTONES_HISTORIAL = [HISTORIAL.PENDIENTES, HISTORIAL.PAGADOS, HISTORIAL.COMPRAS];
+  // Teclado de toda la ventana: ← → en cada fila de botones; ↓ de los de arriba a los del historial y ↑ de vuelta
   const teclas = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (registroSeleccionado) return; // Si la ventana flotante de detalle está abierta, ella maneja su propio teclado
     const arriba = ventanaSuperior();
     if (arriba && !arriba.contains(document.getElementById('btn-cerrar-detalle-cliente'))) return;
     const a = document.activeElement as HTMLElement | null;
     if (!a) return;
     const enBoton = BOTONES.includes(a.id);
-    const enBarra = barra.includes(a.id);
-    const lista = filas();
-    const i = lista.indexOf(a);
-    const esTexto = a instanceof HTMLInputElement && a.type === 'text';
-    if ((enBoton || enBarra) && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
-      if (esTexto && (e.key === 'ArrowRight' ? a.selectionEnd !== a.value.length : a.selectionStart !== 0)) return;
+    const enHistorial = BOTONES_HISTORIAL.includes(a.id);
+    if ((enBoton || enHistorial) && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
       e.preventDefault();
-      const fila = enBoton ? BOTONES : barra;
+      const fila = enBoton ? BOTONES : BOTONES_HISTORIAL;
       const k = fila.indexOf(a.id);
       document.getElementById(fila[Math.min(Math.max(k + (e.key === 'ArrowRight' ? 1 : -1), 0), fila.length - 1)])?.focus();
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       if (a.id === 'btn-cerrar-detalle-cliente') document.getElementById(BOTONES[0])?.focus();
-      else if (enBoton) document.getElementById(idPestana)?.focus();
-      else if (enBarra) lista[0]?.focus();
-      else if (i >= 0 && lista[i + 1]) { lista[i + 1].focus(); lista[i + 1].scrollIntoView({ block: 'nearest' }); }
+      else if (enBoton) document.getElementById(BOTONES_HISTORIAL[0])?.focus();
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       if (enBoton) document.getElementById('btn-cerrar-detalle-cliente')?.focus();
-      else if (enBarra) document.getElementById(BOTONES[0])?.focus();
-      else if (i > 0) { lista[i - 1].focus(); lista[i - 1].scrollIntoView({ block: 'nearest' }); }
-      else if (i === 0) document.getElementById(idPestana)?.focus();
-    } else if ((e.key === 'Enter' || e.key === ' ') && (a.id === barra[0] || a.id === barra[1] || a.id === barra[2])) {
-      e.preventDefault();
-      if (a.id === barra[0]) setPestana('PENDIENTES');
-      else if (a.id === barra[1]) setPestana('PAGADOS');
-      else if (a.id === barra[2]) setPestana('COMPRAS');
-    } else if ((e.key === 'Enter' || e.key === ' ') && a.id === 'fecha-historial-cliente') {
-      e.preventDefault();
-      try { (a as HTMLInputElement).showPicker(); } catch { /* sin calendario */ }
-    } else if (e.key === 'Enter' && a.id === 'buscar-historial-cliente') {
-      e.preventDefault(); lista[0]?.focus();
-    } else if ((e.key === 'Enter' || e.key === ' ') && i >= 0) {
-      e.preventDefault();
-      if (pestana === 'COMPRAS') {
-        const c = comprasFiltradas[i];
-        if (c) abrirDetalleCompra(c, i);
-      } else {
-        const f = historial[i];
-        if (f) abrirDetalleCredito(f, i);
-      }
+      else if (enHistorial) document.getElementById(BOTONES[0])?.focus();
     }
   };
 
@@ -384,9 +238,10 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
   ].filter(Boolean).join(' · ');
 
   return (
+    <>
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono" onKeyDown={teclas}>
       <div role="dialog" aria-label={`Cliente ${cliente.nombre}`}
-        className="ventana-sobria bg-[var(--color-surface)] w-full max-w-6xl border-2 border-[var(--color-ink)] flex flex-col h-[calc(var(--alto-pantalla)*0.96)] max-h-[96vh]">
+        className="ventana-sobria bg-[var(--color-surface)] w-full max-w-6xl border-2 border-[var(--color-ink)] flex flex-col max-h-[96vh]">
         {/* CABECERA */}
         <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white px-4 sm:px-6 py-4 flex justify-between items-center gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
@@ -450,129 +305,31 @@ export const ModalDetalleCliente: React.FC<Props> = ({ cliente, fiados, onClose,
             </p>
           )}
 
-          {/* HISTORIAL: PENDIENTES | PAGADOS | COMPRAS + BUSCADOR + FECHA */}
-          <BarraFiltros>
-            <div className="flex items-center gap-2 shrink-0" role="tablist" aria-label="Historial de compras y créditos">
-              <button id={barra[0]} type="button" role="tab" aria-selected={pestana === 'PENDIENTES'} onClick={() => setPestana('PENDIENTES')}
-                className={`h-[40px] px-3 sm:px-4 border-2 font-black text-xs uppercase tracking-widest flex items-center gap-2 cursor-pointer rounded-none transition-colors outline-none shrink-0 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] ${pestana === 'PENDIENTES' ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]' : 'bg-white text-[var(--color-ink)] border-[var(--color-border)] hover:border-[var(--color-ink)]'}`}>
-                Pendientes ({pendientes.length})
+          {/* HISTORIAL: 3 botones; cada uno abre su ventana con la lista, el buscador y la fecha (12/11/2026) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 shrink-0" id="botones-historial-cliente">
+            {([
+              ['PENDIENTES', 'Pendientes', pendientes.length, <Clock size={20} />, pendientes.length ? `Debe ${soles(resumen.deuda)}` : 'No debe nada', pendientes.length ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'],
+              ['PAGADOS', 'Pagados', pagados.length, <CheckCircle2 size={20} />, `Créditos cancelados · ${soles(pagados.reduce((t, f) => t + (Number(f.montoOriginal) || 0), 0))}`, 'text-[var(--color-muted)]'],
+              ['COMPRAS', 'Compras', compras.length, <ShoppingBag size={20} />, `Al contado en caja · ${soles(resumen.totalCompras)}`, 'text-[var(--color-muted)]'],
+            ] as const).map(([t, nombre, n, icono, detalle, color]) => (
+              <button key={t} id={HISTORIAL[t]} type="button" onClick={() => setHistorial(t)} title={`Ver ${nombre.toLowerCase()} (Enter)`}
+                className="group flex items-center gap-3 p-3 sm:p-4 border-2 border-[var(--color-border)] bg-white text-[var(--color-ink)] text-left cursor-pointer rounded-none outline-none transition-colors hover:border-[var(--color-ink)] focus:border-[var(--color-ink)] focus:bg-[var(--color-ink)] focus:text-white">
+                <span className="w-10 h-10 shrink-0 flex items-center justify-center border-2 border-[var(--color-ink)] bg-[var(--color-bg)] text-[var(--color-ink)] shadow-[4px_4px_0_0_var(--color-accent)]">{icono}</span>
+                <span className="min-w-0">
+                  <span className="block text-xs font-black uppercase tracking-widest">{nombre} ({n})</span>
+                  <span className={`block text-[11px] font-bold truncate group-focus:text-white/80 ${color}`}>{detalle}</span>
+                </span>
               </button>
-              <button id={barra[1]} type="button" role="tab" aria-selected={pestana === 'PAGADOS'} onClick={() => setPestana('PAGADOS')}
-                className={`h-[40px] px-3 sm:px-4 border-2 font-black text-xs uppercase tracking-widest flex items-center gap-2 cursor-pointer rounded-none transition-colors outline-none shrink-0 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] ${pestana === 'PAGADOS' ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]' : 'bg-white text-[var(--color-ink)] border-[var(--color-border)] hover:border-[var(--color-ink)]'}`}>
-                Pagados ({pagados.length})
-              </button>
-              <button id={barra[2]} type="button" role="tab" aria-selected={pestana === 'COMPRAS'} onClick={() => setPestana('COMPRAS')}
-                className={`h-[40px] px-3 sm:px-4 border-2 font-black text-xs uppercase tracking-widest flex items-center gap-2 cursor-pointer rounded-none transition-colors outline-none shrink-0 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-ink)] ${pestana === 'COMPRAS' ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]' : 'bg-white text-[var(--color-ink)] border-[var(--color-border)] hover:border-[var(--color-ink)]'}`}>
-                Compras ({compras.length})
-              </button>
-            </div>
-            <div className="flex items-center gap-2 flex-1 justify-end flex-nowrap min-w-0">
-              <div className="relative flex-1 min-w-[150px] max-w-[240px]">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-subtle)]" />
-                <input id="buscar-historial-cliente" type="text" autoComplete="off" spellCheck={false} data-lpignore="true" value={busqueda}
-                  onChange={(e) => setBusqueda(e.target.value)} placeholder="PRODUCTO O MONTO..."
-                  className="w-full h-[40px] border-2 border-[var(--color-border)] pl-8 pr-3 text-xs font-black uppercase text-[var(--color-ink)] outline-none bg-white rounded-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)]" />
-              </div>
-              <input id="fecha-historial-cliente" type="date" value={dia} onChange={(e) => setDia(e.target.value)} title="Filtrar por fecha (Enter abre el calendario)"
-                className="h-[40px] w-[145px] sm:w-[155px] border-2 border-[var(--color-border)] px-3 text-xs font-black uppercase text-[var(--color-ink)] outline-none bg-white rounded-none focus:border-[var(--color-ink)] focus:ring-2 focus:ring-[var(--color-ink)] shrink-0 cursor-pointer" />
-              {hayFiltros && (
-                <button id="btn-limpiar-historial-cliente" type="button" title="Limpiar filtros"
-                  onClick={() => { setBusqueda(''); setDia(''); setTimeout(() => document.getElementById('buscar-historial-cliente')?.focus(), 30); }}
-                  className="h-[40px] w-[40px] flex items-center justify-center border-2 border-[var(--color-border)] bg-[var(--color-danger-bg)] text-[var(--color-danger)] hover:bg-[var(--color-danger)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] cursor-pointer shrink-0">
-                  <FilterX size={16} />
-                </button>
-              )}
-            </div>
-          </BarraFiltros>
-
-          {/* LISTA DE REGISTROS (Enter o Clic abre la ventana flotante de detalle completo) */}
-          <CajaLista className="min-h-[350px] sm:min-h-[440px] flex-1"
-            vacia={pestana === 'COMPRAS' ? !comprasFiltradas.length : !historial.length}
-            mensaje={
-              hayFiltros
-                ? 'No hay registros con esos filtros.'
-                : pestana === 'PENDIENTES'
-                ? 'No debe nada: no tiene créditos pendientes.'
-                : pestana === 'PAGADOS'
-                ? 'Todavía no tiene créditos pagados.'
-                : 'Todavía no tiene compras registradas en caja.'
-            }
-          >
-            {pestana === 'COMPRAS' ? (
-              comprasFiltradas.map((c, idx) => {
-                const productos = c.detalles.map((d) => d.name).slice(0, 3).join(', ') + (c.detalles.length > 3 ? '…' : '');
-                return (
-                  <div key={c.id} className="border-b-2 border-[var(--color-border)] last:border-b-0">
-                    <FilaLista
-                      tabIndex={0}
-                      data-compra-cliente="true"
-                      data-row="true"
-                      onClick={() => abrirDetalleCompra(c, idx)}
-                      icono={<ReceiptText size={28} />}
-                      titulo={`Ticket #${c.id.slice(-6)} · ${fecha(c.fecha)} ${new Date(c.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-                      subtitulo={
-                        <>
-                          <LineaDato titulo={productos}>{productos || 'Sin detalle de productos'}</LineaDato>
-                          <LineaDato>Total {soles(c.total)} · Pago: {c.metodoPago} · <span className="font-bold text-[var(--color-info)]">Enter o Clic: ver detalle en ventana</span></LineaDato>
-                        </>
-                      }
-                      centro={<Etiqueta tono="azul">{c.metodoPago}</Etiqueta>}
-                      derecha={<DatoFila etiqueta="Total" valor={soles(c.total)} tono="normal" />}
-                    />
-                  </div>
-                );
-              })
-            ) : (
-              historial.map((f, idx) => {
-                const pagado = estaPagado(f);
-                const productos = (f.detalles || []).map((d) => d.name).slice(0, 3).join(', ') + ((f.detalles || []).length > 3 ? '…' : '');
-                return (
-                  <div key={f.id} className="border-b-2 border-[var(--color-border)] last:border-b-0">
-                    <FilaLista
-                      tabIndex={0}
-                      data-credito-cliente="true"
-                      data-row="true"
-                      onClick={() => abrirDetalleCredito(f, idx)}
-                      icono={<ReceiptText size={28} />}
-                      titulo={pagado ? `Pagado el ${fecha(fechaUltimoPago(f))} · Crédito del ${fecha(f.fechaEmision)}` : `Crédito del ${fecha(f.fechaEmision)}`}
-                      subtitulo={
-                        <>
-                          <LineaDato titulo={productos}>{productos || 'Sin detalle de productos'}</LineaDato>
-                          <LineaDato>
-                            {pagado
-                              ? `Cancelado el ${fecha(fechaUltimoPago(f))} · Total ${soles(Number(f.montoOriginal) || 0)}`
-                              : `Monto ${soles(Number(f.montoOriginal) || 0)} · abonado ${soles(Number(f.montoPagado) || 0)}`}
-                            {' · '}
-                            <span className="font-bold text-[var(--color-info)]">Enter o Clic: ver detalle en ventana</span>
-                          </LineaDato>
-                        </>
-                      }
-                      centro={<Etiqueta tono={pagado ? 'verde' : 'rojo'}>{pagado ? 'Pagado' : 'Debe'}</Etiqueta>}
-                      derecha={
-                        <DatoFila
-                          etiqueta={pagado ? 'Total' : 'Debe'}
-                          valor={soles(Number(pagado ? f.montoOriginal : f.saldoPendiente) || 0)}
-                          tono={pagado ? 'normal' : 'rojo'}
-                        />
-                      }
-                    />
-                  </div>
-                );
-              })
-            )}
-          </CajaLista>
+            ))}
+          </div>
         </CuerpoVentana>
 
-        {/* VENTANA FLOTANTE DE DETALLE COMPLETO (Enter o Clic en fila) */}
-        {registroSeleccionado && (
-          <ModalDetalleRegistroCliente
-            isOpen={!!registroSeleccionado}
-            onClose={cerrarDetalleRegistro}
-            registro={registroSeleccionado}
-          />
-        )}
       </div>
     </div>
+
+    {/* Ventana del historial: aparte, sobre esta (Escape la cierra primero) */}
+    <ModalHistorialCliente tipo={historial} clienteNombre={cliente.nombre} pendientes={pendientes} pagados={pagados} compras={compras} onClose={cerrarHistorial} />
+    </>
   );
 };
 

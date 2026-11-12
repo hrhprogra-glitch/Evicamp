@@ -864,3 +864,6 @@
     - Teclado 100% fluido: `Escape` cierra la ventana flotante y devuelve el foco inmediatamente a la fila seleccionada.
     - Compilación 0 errores TS/Vite y subido al servidor de pruebas (`siumax`). Ver bitácora 136.
 
+## 12/11/2026
+- *"en comerc.siumax quiero que agregues este cambio en pendientes pagados compras abajo sale todo quiero que solo sean botones que habran ventanas donde sale la lista con su buscador y fecha asi para apreciarlo mejor"*
+  - **Hecho (bitácora 137):** 3 botones en el detalle del cliente; cada uno abre su ventana con la lista, el buscador y la fecha.
