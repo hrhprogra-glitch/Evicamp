@@ -4,6 +4,7 @@
 import { supabase } from '../../db/supabase';
 import type { AnalisisProducto } from './types';
 import { calcularIngresoTotal, rangoUTCPeru, fetchAllRango, fetchAllTabla } from '../../utils/ingresos';
+import { COLUMNAS_PRODUCTO } from '../../utils/cacheFotos';
 
 export interface VentaPeriodo {
   id: string | number;
@@ -44,10 +45,12 @@ export async function calcularAnalisis(fechaInicio: string, fechaFin: string, fo
   // Finanzas y Punto de Venta.
   const [ sales, products, waste, debts, batches, ingresoTotalRango ] = await Promise.all([
     fetchAllRango('sales', 'id, total, amount_cash, amount_yape, amount_transfer, amount_card, amount_credit, payment_type, sunat_status, created_at', inicioUTC, finUTC),
-    fetchAllTabla('products', '*'),
+    // (13/11/2026) Sin la foto (image_url): en Evicamp las fotos van dentro de la tabla y pesaban 27 MB en cada carga
+    fetchAllTabla('products', COLUMNAS_PRODUCTO),
     fetchAllRango('waste', '*', inicioUTC, finUTC),
     fetchAllRango('debt_payments', '*', inicioUTC, finUTC),
-    fetchAllTabla('batches', '*'),
+    // Solo lo que se usa: el costo del lote más reciente de cada producto
+    fetchAllTabla('batches', 'id, product_id, cost_unit'),
     calcularIngresoTotal(fechaInicio, fechaFin)
   ]);
 

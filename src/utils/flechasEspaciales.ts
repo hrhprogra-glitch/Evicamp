@@ -13,6 +13,9 @@ const TEXTO = ['text', 'search', 'email', 'tel', 'password', 'url', ''];
 // Una fila de lista (cliente, ticket…) tiene su propio teclado. Pero las tablas de CAMPOS para escribir (líneas de una
 // cotización, materiales de una salida) se marcan con data-tabla-campos: ahí las flechas se mueven como en cualquier
 // formulario (dueño, 13/11/2026: "cuando selecciono el buscador o la cantidad no puedo subir arriba").
+// Fechas y horas (calendario): las flechas mueven el selector, no cambian el valor (13/11/2026)
+const TIPOS_FECHA = ['date', 'time', 'datetime-local', 'month', 'week'];
+const esCampoFecha = (el: EventTarget | null): el is HTMLInputElement => el instanceof HTMLInputElement && TIPOS_FECHA.includes(el.type);
 const enFila = (el: HTMLElement) => { const f = el.closest(FILA); return !!f && !f.closest('[data-tabla-campos]'); };
 
 const ambitoDe = (el: HTMLElement): HTMLElement | null => {
@@ -37,7 +40,7 @@ const puedeSalir = (el: HTMLElement, k: Flecha): boolean => {
   }
   if (el instanceof HTMLInputElement) {
     const t = el.type;
-    if (t === 'checkbox' || t === 'radio' || t === 'button' || t === 'submit' || t === 'number') return true;
+    if (t === 'checkbox' || t === 'radio' || t === 'button' || t === 'submit' || t === 'number' || TIPOS_FECHA.includes(t)) return true;
     if (!TEXTO.includes(t)) return false;              // fecha, hora, número, rango, color…
     const ini = el.selectionStart ?? 0, fin = el.selectionEnd ?? 0, largo = el.value.length;
     if (k === 'ArrowLeft') return ini === 0 && fin === 0;
@@ -140,7 +143,10 @@ export const activarFlechasEspaciales = () => {
     // (también los campos de número: ↑ ↓ ya no suben/bajan la cantidad ni el precio; pedido del dueño 05/11/2026,
     // "en Precio de la variante y en la cantidad del combo el selector se queda atrapado")
     const esNumero = el instanceof HTMLInputElement && el.type === 'number';
-    if ((el instanceof HTMLSelectElement || esNumero) && (FLECHAS as readonly string[]).includes(e.key) && !e.shiftKey) {
+    // (y las fechas y horas: las flechas cambiaban día / mes / año y el selector quedaba atrapado; la fecha se escribe
+    // con números o se elige en el calendario con Enter. Dueño, 13/11/2026)
+    const esFecha = esCampoFecha(el);
+    if ((el instanceof HTMLSelectElement || esNumero || esFecha) && (FLECHAS as readonly string[]).includes(e.key) && !e.shiftKey) {
       const evitar = e.preventDefault.bind(e);
       evitar();                                          // el navegador ya no cambia la opción
       let otra = false;
@@ -151,6 +157,15 @@ export const activarFlechasEspaciales = () => {
   // Enter en una lista desplegable que ninguna pantalla atendió: la despliega
   const alSoltarEnter = (e: KeyboardEvent) => {
     const el = e.target as HTMLElement | null;
+    if (e.key === 'Enter' && esCampoFecha(el) && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      // Enter en una fecha u hora: abre el calendario aunque la pantalla haya frenado el Enter (para que no pase al
+      // siguiente campo). Si la pantalla ya lo abrió, abrirlo otra vez no hace nada.
+      setTimeout(() => {
+        if (document.activeElement !== el) return;
+        try { (el as HTMLInputElement).showPicker(); } catch { /* ya abierto o sin calendario */ }
+      }, 0);
+      return;
+    }
     if (e.key !== 'Enter' || !(el instanceof HTMLSelectElement) || e.ctrlKey || e.altKey || e.metaKey) return;
     setTimeout(() => {
       if (e.defaultPrevented || document.activeElement !== el) return;

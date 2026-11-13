@@ -330,10 +330,10 @@
     "semantic_hash": ""
   },
   "src/utils/ingresos.ts": {
-    "mtime": 1790180658.910987,
-    "seen": 1790794348.2473075,
-    "ast_hash": "731cfc0a7460b7945d148309ea4052c3",
-    "semantic_hash": "731cfc0a7460b7945d148309ea4052c3"
+    "mtime": 1794596376.5962975,
+    "seen": 1794596641.9842763,
+    "ast_hash": "9c4abfa216deafe7b48e1d0c05670efe",
+    "semantic_hash": ""
   },
   "tsconfig.app.json": {
     "mtime": 1791297476.4977663,
@@ -456,10 +456,10 @@
     "semantic_hash": "6226197d3c97db5da7292084a3071834"
   },
   "src/utils/traerTodo.ts": {
-    "mtime": 1790442385.7783308,
-    "seen": 1790954408.848548,
-    "ast_hash": "2ebcb143f7ad523b828691b972df7b0f",
-    "semantic_hash": "2ebcb143f7ad523b828691b972df7b0f"
+    "mtime": 1794596359.9130354,
+    "seen": 1794596641.9842885,
+    "ast_hash": "87a18141354a8c7cd57fafb236043363",
+    "semantic_hash": ""
   },
   "src/utils/useCerrarConEscape.ts": {
     "mtime": 1790434730.050251,
@@ -1368,9 +1368,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/cliente.cjs": {
-    "mtime": 1794548764.6552353,
-    "seen": 1794549056.8833208,
-    "ast_hash": "bcdf95be0003db2469155686b0689a97",
+    "mtime": 1794596429.302791,
+    "seen": 1794596641.9838006,
+    "ast_hash": "bd8753f73a3dc8bc3131105c831dcccb",
     "semantic_hash": ""
   },
   "servidor/backup.sh": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1794593379.0939648,
-    "seen": 1794593397.1313086,
-    "ast_hash": "bd4dadb360672d916b0e4d814b125aa1",
+    "mtime": 1794596632.0450456,
+    "seen": 1794596641.984307,
+    "ast_hash": "9efdde7052a90b94aea7cfb0b4f5af61",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1794593379.0979643,
-    "seen": 1794593397.1313097,
-    "ast_hash": "b68a6490ccb5b0fa168382155a4ef19d",
+    "mtime": 1794596632.0480456,
+    "seen": 1794596641.9843078,
+    "ast_hash": "61d424f8521e9189ecc8d683d73c37ce",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1794593379.098966,
-    "seen": 1794593397.1313114,
-    "ast_hash": "82b1e14e9671542c9593a6478ca36133",
+    "mtime": 1794596632.0480456,
+    "seen": 1794596641.9843085,
+    "ast_hash": "de9d91bd2f652714046b218bd67dc64d",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1794593379.0959654,
-    "seen": 1794593397.1313126,
-    "ast_hash": "57d06919a3c6bb8215332b6adc6a1d4f",
+    "mtime": 1794596632.0460458,
+    "seen": 1794596641.9843094,
+    "ast_hash": "177c4b5e7bd4c2648e38205ed951f9a0",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2634,9 +2634,9 @@
     "semantic_hash": ""
   },
   "src/utils/flechasEspaciales.ts": {
-    "mtime": 1794593181.955293,
-    "seen": 1794593397.131249,
-    "ast_hash": "bc1cd42471ed1d97f5d8094491745e40",
+    "mtime": 1794596188.2511375,
+    "seen": 1794596641.9842734,
+    "ast_hash": "f396b6ae2360582779c33c6bcdb2c766",
     "semantic_hash": ""
   },
   "ai-scripts/estilo-ventanas.cjs": {
@@ -2676,9 +2676,9 @@
     "semantic_hash": ""
   },
   "src/sections/Utilidades/calcularAnalisis.ts": {
-    "mtime": 1794515246.0192375,
-    "seen": 1794517886.9473677,
-    "ast_hash": "0569f8bd687f86b53dd94d81133c714c",
+    "mtime": 1794596376.5962975,
+    "seen": 1794596641.9842446,
+    "ast_hash": "f01e8bb5488a54186621d2273449664b",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/TableroGanancias.tsx": {
@@ -3411,6 +3411,24 @@
     "mtime": 1794593330.2255986,
     "seen": 1794593397.1307223,
     "ast_hash": "38baa6dc046f426b93e63eb265f1b0ca",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/medir-carga-secciones.mjs": {
+    "mtime": 1794596247.0990877,
+    "seen": 1794596641.9839408,
+    "ast_hash": "81b4a75faa9a9e4246053221ac779857",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-calendario-y-carga.mjs": {
+    "mtime": 1794596558.0303774,
+    "seen": 1794596641.983945,
+    "ast_hash": "2fa8c7fb4304898b16335eb70bd46864",
+    "semantic_hash": ""
+  },
+  "servidor/compresion.sh": {
+    "mtime": 1794596428.2508888,
+    "seen": 1794596641.9840558,
+    "ast_hash": "33c6e6a6367eaf3ebbbbf62779f36338",
     "semantic_hash": ""
   }
 }

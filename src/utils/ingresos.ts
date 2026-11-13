@@ -1,4 +1,5 @@
 import { supabase } from '../db/supabase';
+import { traerTodo } from './traerTodo';
 
 /**
  * 🎯 MOTOR ÚNICO DE INGRESO TOTAL (EVICAMP)
@@ -68,30 +69,16 @@ export function rangoUTCPeru(fechaInicio: string, fechaFin: string) {
  *  de 1000). `columnaFecha` es la columna sobre la que se filtra
  *  (por defecto 'created_at'; algunas tablas usan otro nombre). */
 export async function fetchAllRango(tabla: string, cols: string, inicioUTC: string, finUTC: string, columnaFecha = 'created_at'): Promise<any[]> {
-  let datos: any[] = [];
-  let from = 0;
-  while (true) {
-    const { data } = await supabase.from(tabla).select(cols).gte(columnaFecha, inicioUTC).lt(columnaFecha, finUTC).range(from, from + 999);
-    if (!data || data.length === 0) break;
-    datos = [...datos, ...data];
-    if (data.length < 1000) break;
-    from += 1000;
-  }
-  return datos;
+  // (13/11/2026) Ordenado por id para que los bloques no se crucen (sin orden, la base podía repetir o saltarse filas
+  // entre un bloque y otro) y con los bloques en paralelo (traerTodo): carga más rápida con muchos datos.
+  const { data } = await traerTodo(() => supabase.from(tabla).select(cols).gte(columnaFecha, inicioUTC).lt(columnaFecha, finUTC).order('id'));
+  return data || [];
 }
 
-/** Trae TODA una tabla sin filtro de fecha (paginado en bloques de 1000). */
+/** Trae TODA una tabla sin filtro de fecha (paginado en bloques de 1000, en paralelo; ordenado por id). */
 export async function fetchAllTabla(tabla: string, cols: string): Promise<any[]> {
-  let datos: any[] = [];
-  let from = 0;
-  while (true) {
-    const { data } = await supabase.from(tabla).select(cols).range(from, from + 999);
-    if (!data || data.length === 0) break;
-    datos = [...datos, ...data];
-    if (data.length < 1000) break;
-    from += 1000;
-  }
-  return datos;
+  const { data } = await traerTodo(() => supabase.from(tabla).select(cols).order('id'));
+  return data || [];
 }
 
 export interface IngresoTotalResult {

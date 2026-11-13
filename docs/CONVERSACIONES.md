@@ -904,3 +904,4 @@
 - 13/11: preguntó si ya puede probar en nego.siumax (sí; comerc.siumax y servic.siumax siguen existiendo, no se borraron sin su aviso). Aclaró: "ecosistema esperará, ni siquiera te dije que pasaríamos algo de ecosistemas". Se corrigió el plan y la memoria.
 - Pidió borrar comerc.siumax y servic.siumax, un buscador con filtro en Compras y poder seleccionar productos en las líneas de la cotización. Hecho (bitácora 154).
 - "cuando selecciono el buscador o la cantidad no puedo subir arriba" (cotización y salida): arreglado (bitácora 155).
+- Calendario que atrapaba el selector y carga lenta en Evicamp: arreglado en nego (bitácora 156). Para Evicamp se le pidió el OK para la compresión y para subir el sistema.

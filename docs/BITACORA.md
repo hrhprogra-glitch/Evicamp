@@ -7,6 +7,24 @@
 
 ---
 
+## 13/11/2026 (156) · Claude — Calendario sin atrapar el selector; carga más rápida (Utilidades sin fotos, tablas en paralelo, compresión)
+- **Dueño:** "cuando selecciono el calendario me quedo atrapado, no puedo ni subir ni ir a los costados" (Nueva salida). "En Utilidades cuando entro demora mucho en cargar, también en Inventario y en todas las sesiones; eso pasa en Evicamp; quiero que sea más rápida la carga. Cuando ya carga se mantiene y eso está bien, déjalo normal".
+- **Calendario** (`flechasEspaciales.ts`, vale para todo el sistema):
+  - En fechas y horas, las flechas ya no cambian día / mes / año: mueven el selector (como en las listas y los números). La fecha se escribe con números.
+  - Enter abre el calendario aunque la pantalla frene el Enter.
+- **Por qué cargaba lento** (medido en el VPS, solo leyendo):
+  1. **La tabla de productos de Evicamp pesa 27 MB**: 1.140 productos tienen la foto guardada dentro (`image_url` con `data:`). Las listas ya la evitaban (`COLUMNAS_PRODUCTO`), pero **Utilidades pedía `products` con `*`**: 27 MB en cada carga. Ahora pide `COLUMNAS_PRODUCTO` (nunca usó las fotos). De los lotes pedía `*`; ahora solo `id, product_id, cost_unit`.
+  2. **Las tablas grandes se pedían de a 1.000 filas, una tanda detrás de otra** (Evicamp: 5.120 lotes, 29.672 detalles de venta, 44.177 movimientos). `traerTodo` ahora pide el primer bloque y, si viene lleno, los siguientes de a 4 al mismo tiempo. `fetchAllRango` y `fetchAllTabla` (Utilidades, ingresos, reporte del contador) usan `traerTodo` y van **ordenados por id** (antes sin orden: los bloques podían repetir o saltarse filas).
+  3. **El servidor no comprimía nada salvo el HTML**: el programa (3 MB) y los datos JSON viajaban enteros (en nginx.conf, `gzip_types` y `gzip_proxied` están comentados). Nuevo `servidor/compresion.sh <sitio>` (`node ai-scripts/cliente.cjs compresion <sitio>`): agrega `snippets/compresion.conf` SOLO a ese sitio. No se llama `siumax-*.conf` porque Evicamp incluye `snippets/siumax-*.conf`.
+- **Activado solo en `nego.siumax`:** el programa bajó de 3.059.264 a 762.971 bytes (de 10,7 s a 1,7 s desde la PC). **En Evicamp NO**, hasta que el dueño lo diga. Ahí el programa pesa 2,6 MB sin comprimir.
+- **Probado:**
+  - `traerTodo` con datos simulados de 0, 1, 999, 1.000, 1.001, 4.000, 5.000, 5.120, 9.999 y 12.000 filas: siempre las mismas filas, en el mismo orden, y hasta 4 pedidos a la vez. Un bloque con error devuelve el error.
+  - `prueba-calendario-y-carga.mjs`, 19 de 19: ↑ ↓ ← salen de la fecha sin cambiarla y Enter se queda; Utilidades › Productos y las demás secciones abren sin errores. Deja el tipo de negocio como estaba (el dueño lo tenía en comercio y servicios).
+  - `medir-carga-secciones.mjs` (nuevo): mide cada sección la primera vez (tiempo, pedidos a la API, KB y los más lentos).
+- **Para que Evicamp vaya más rápido falta, con su aviso:**
+  - (a) Compresión en Evicamp: `compresion.sh evicamp`, solo Nginx. Sirve de inmediato sin subir el sistema.
+  - (b) Subir el sistema a Evicamp, que trae lo de Utilidades y lo de las tablas en paralelo, junto con todo Nego. Antes hay que aplicar el SQL.
+
 ## 13/11/2026 (155) · Claude — ↑ no subía en las líneas de la cotización ni en el buscador / la cantidad de la salida
 - **Dueño** (capturas de Nueva cotización y Nueva salida): "cuando selecciono el buscador o la cantidad no puedo subir arriba".
 - **Causas:**

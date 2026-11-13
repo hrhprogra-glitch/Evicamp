@@ -12,6 +12,8 @@
 //     Mercado Pago: modo prueba con MP_ACCESS_TOKEN_PRUEBA; cobro real SOLO si .env.vps tiene MP_COBRAR=si
 //   node ai-scripts/cliente.cjs ordenar-links                              -> (OBSOLETO desde el 13/11/2026: comerc.siumax y
 //     servic.siumax se borraron; el script ya no hace nada)
+//   node ai-scripts/cliente.cjs compresion <sitio>                         -> comprime (gzip) el programa y los datos de ese sitio
+//     (13/11/2026; ej. nego. Evicamp solo con el aviso del dueño)
 //   node ai-scripts/cliente.cjs borrar-links-viejos                        -> borra comerc.siumax y servic.siumax (13/11/2026; copia
 //     de Servic en /root/backups; no toca Evicamp, el Panel ni nego.siumax)
 //   node ai-scripts/cliente.cjs nego                                       -> SiuMax Nego, fase 4: link de pruebas
@@ -64,7 +66,7 @@ const subirPanel = async (ssh) => {
 };
 
 (async () => {
-  const validos = ['instalar', 'nuevo', 'listar', 'suspender', 'activar', 'backup', 'panel', 'seguridad', 'ordenar-links', 'nego', 'borrar-links-viejos'];
+  const validos = ['instalar', 'nuevo', 'listar', 'suspender', 'activar', 'backup', 'panel', 'seguridad', 'ordenar-links', 'nego', 'borrar-links-viejos', 'compresion'];
   if (!validos.includes(accion)) {
     console.error(fs.readFileSync(__filename, 'utf8').split('\n').filter((l) => l.startsWith('//')).join('\n'));
     process.exit(1);
@@ -99,6 +101,13 @@ const subirPanel = async (ssh) => {
     if (accion === 'ordenar-links') {
       await subirPanel(ssh);
       await ejecutar(ssh, `${DIR_REMOTO}/ordenar-links.sh`);
+      return;
+    }
+
+    if (accion === 'compresion') {
+      // Compresión gzip de un sitio (ej. nego). Evicamp solo con el aviso del dueño.
+      if (!args[0]) throw new Error('Uso: node ai-scripts/cliente.cjs compresion <sitio>');
+      await ejecutar(ssh, `${DIR_REMOTO}/compresion.sh ${q(args[0])}`);
       return;
     }
 
