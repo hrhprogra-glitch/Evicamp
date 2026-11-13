@@ -7,6 +7,14 @@
 
 ---
 
+## 13/11/2026 (157) · Claude — Compresión activada en Evicamp (solo Nginx)
+- **Dueño:** "si" a activar la compresión en Evicamp (opción a). La subida del sistema nuevo (b) queda para cuando la confirme aparte.
+- `node ai-scripts/cliente.cjs compresion evicamp`: se agregó `include snippets/compresion.conf;` al bloque principal de `/etc/nginx/sites-available/evicamp` (el que atiende la web y la API). Respaldo del archivo en `/root/backups/evicamp-antes-compresion-*`; `nginx -t` OK y recarga sin cortar nada. No se tocó el sistema, la base ni la API.
+- **Resultado:** el programa de Evicamp bajó de 2.600.592 a 664.313 bytes. La web abre (200), la API sin sesión responde 401 como antes, las actualizaciones de la app de PC siguen (200) y nego abre (200).
+- Revisado en nego (misma configuración): 21 de 21 pedidos a la API llegan comprimidos (gzip).
+- **Para deshacer:** borrar la línea `include snippets/compresion.conf;   # compresion.sh` de `sites-available/evicamp`, `nginx -t` y `systemctl reload nginx`.
+- Sigue pendiente, con su aviso: subir el sistema a Evicamp (trae Utilidades sin fotos, tablas en paralelo y todo Nego).
+
 ## 13/11/2026 (156) · Claude — Calendario sin atrapar el selector; carga más rápida (Utilidades sin fotos, tablas en paralelo, compresión)
 - **Dueño:** "cuando selecciono el calendario me quedo atrapado, no puedo ni subir ni ir a los costados" (Nueva salida). "En Utilidades cuando entro demora mucho en cargar, también en Inventario y en todas las sesiones; eso pasa en Evicamp; quiero que sea más rápida la carga. Cuando ya carga se mantiene y eso está bien, déjalo normal".
 - **Calendario** (`flechasEspaciales.ts`, vale para todo el sistema):

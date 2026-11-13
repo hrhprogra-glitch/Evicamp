@@ -905,3 +905,4 @@
 - Pidió borrar comerc.siumax y servic.siumax, un buscador con filtro en Compras y poder seleccionar productos en las líneas de la cotización. Hecho (bitácora 154).
 - "cuando selecciono el buscador o la cantidad no puedo subir arriba" (cotización y salida): arreglado (bitácora 155).
 - Calendario que atrapaba el selector y carga lenta en Evicamp: arreglado en nego (bitácora 156). Para Evicamp se le pidió el OK para la compresión y para subir el sistema.
+- "si" → compresión activada en Evicamp (bitácora 157). La subida del sistema nuevo a Evicamp espera su confirmación.
