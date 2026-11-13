@@ -34,7 +34,9 @@ AS $$
     WHEN p_ruta IN ('/contratos', '/contrato_visitas', '/contrato_consumos', '/contrato_cobros') THEN ARRAY['contratos_ver']
     WHEN p_ruta IN ('/rpc/fn_generar_visitas_contrato', '/rpc/fn_registrar_consumo_visita', '/rpc/fn_registrar_pago_contrato') THEN ARRAY['contratos_editar']
     WHEN p_ruta = '/cotizacion_pagos' THEN ARRAY['cobros_ver', 'caja_realizar_ventas', 'caja_ver_fiados']
-    WHEN p_ruta IN ('/rpc/fn_convertir_cotizacion_a_trabajo', '/rpc/fn_registrar_pago_cotizacion') THEN ARRAY['cobros_editar']
+    WHEN p_ruta = '/rpc/fn_convertir_cotizacion_a_trabajo' THEN ARRAY['cobros_editar']
+    -- Paso 3h: una sola pantalla de Cotizaciones; quien cobra en la Caja también registra abonos
+    WHEN p_ruta = '/rpc/fn_registrar_pago_cotizacion' THEN ARRAY['cobros_editar', 'caja_realizar_ventas', 'caja_ver_fiados']
     WHEN p_ruta IN ('/taller_ordenes', '/taller_repuestos', '/taller_pagos') THEN ARRAY['taller_ver']
     WHEN p_ruta IN ('/rpc/fn_cambiar_estado_taller', '/rpc/fn_registrar_pago_taller') THEN ARRAY['taller_editar']
     ELSE NULL
@@ -63,12 +65,13 @@ AS $$
     WHEN 'PATCH /grupos_clientes'    THEN ARRAY['caja_ver_fiados', 'clientes_editar']
     WHEN 'POST /debt_payments'       THEN ARRAY['caja_cobrar_deudas']
     -- Cotizaciones (proformas, fase 4.5): quien hace ventas o ve clientes puede cotizar
-    WHEN 'POST /cotizaciones'        THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
-    WHEN 'PATCH /cotizaciones'       THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
-    WHEN 'DELETE /cotizaciones'      THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
-    WHEN 'POST /cotizacion_detalles' THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
-    WHEN 'PATCH /cotizacion_detalles' THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
-    WHEN 'DELETE /cotizacion_detalles' THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
+    -- (SiuMax Nego, paso 3h: también los permisos de cotizaciones de Talleres y servicios)
+    WHEN 'POST /cotizaciones'        THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados', 'cobros_crear']
+    WHEN 'PATCH /cotizaciones'       THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados', 'cobros_crear', 'cobros_editar']
+    WHEN 'DELETE /cotizaciones'      THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados', 'cobros_crear', 'cobros_editar']
+    WHEN 'POST /cotizacion_detalles' THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados', 'cobros_crear', 'cobros_editar']
+    WHEN 'PATCH /cotizacion_detalles' THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados', 'cobros_crear', 'cobros_editar']
+    WHEN 'DELETE /cotizacion_detalles' THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados', 'cobros_crear', 'cobros_editar']
     -- Pedidos por encargo (fase 4.6): quien hace ventas o ve clientes maneja pedidos
     WHEN 'POST /pedidos_clientes'    THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
     WHEN 'PATCH /pedidos_clientes'   THEN ARRAY['caja_realizar_ventas', 'caja_ver_fiados']
@@ -4841,7 +4844,8 @@ BEGIN
   v_nuevo_adelanto := coalesce(v_coti.adelanto, 0) + p_monto;
   v_nuevo_saldo := greatest(0, coalesce(v_coti.total, 0) - v_nuevo_adelanto);
 
-  IF v_nuevo_saldo = 0 THEN
+  -- Pagada completa → APROBADA, salvo que ya sea un trabajo (CONVERTIDA): esa se queda así (Nego 3h)
+  IF v_nuevo_saldo = 0 AND coalesce(v_coti.estado, '') <> 'CONVERTIDA' THEN
     v_nuevo_estado := 'APROBADA';
   ELSE
     v_nuevo_estado := v_coti.estado;
@@ -4859,14 +4863,17 @@ BEGIN
       estado = v_nuevo_estado
   WHERE id = p_cotizacion_id;
 
-  SELECT id::text INTO v_session_id FROM public.cash_sessions WHERE status = 'open' ORDER BY opened_at DESC LIMIT 1;
+  -- (Nego 3h: en Comerc el estado se guarda 'OPEN'; con 'open' nunca encontraba la caja abierta)
+  SELECT id::text INTO v_session_id FROM public.cash_sessions WHERE upper(status) = 'OPEN' AND closed_at IS NULL ORDER BY opened_at DESC LIMIT 1;
   IF v_session_id IS NOT NULL THEN
     INSERT INTO public.cash_movements (
       session_id, type, amount, description, payment_type, flujo, ref_local
     ) VALUES (
       v_session_id, 'INGRESO', p_monto,
       'Cobro Cotización ' || coalesce(v_coti.numero, v_coti.id::text) || ' - ' || coalesce(v_coti.cliente_nombre, ''),
-      coalesce(p_metodo, 'EFECTIVO'), 'COBRO_COTIZACION', v_coti.numero
+      -- ref_local es único (sirve para no repetir al sincronizar): uno por abono, no el número de la cotización
+      -- (con el número, el segundo abono de la misma cotización fallaba; Nego 3h)
+      coalesce(p_metodo, 'EFECTIVO'), 'COBRO_COTIZACION', 'COTIPAGO-' || v_pago_id
     );
   END IF;
 

@@ -45,7 +45,6 @@ export const TIPOS_NEGOCIO: TipoNegocio[] = [
   },
   {
     id: 'servicios', numero: 3, nombre: 'Talleres y servicios', parte: 'Talleres y servicios', disponible: true,
-    nota: 'Algunas de sus secciones todavía dicen "Pronto": se están trayendo desde SiuMax Servic.',
     queHace: 'Recibe algo o sale a trabajar y lo entrega; la orden pasa por estados (recibido → en proceso → listo → entregado).',
     negocios: [
       'Taller mecánico, mototaller, llantería, lavado de autos',
@@ -145,7 +144,7 @@ const SECCIONES_DE_TIPO: Record<string, IdTipoNegocio[]> = {
   salidas: ['servicios'],
   contratos: ['servicios'],
   taller: ['servicios'],
-  cotizaciones: ['servicios'],
+  cotizaciones: ['comercio', 'servicios'], // paso 3h: una sola pantalla para los dos (antes Clientes › Cotizaciones)
 };
 
 export const seccionDelNegocio = (seccion: string, tipos: IdTipoNegocio[] = actuales) => {

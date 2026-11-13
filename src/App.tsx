@@ -5,11 +5,11 @@ import { SideBar, atajosSesiones, MENU_SECCIONES } from './layout/SideBar';
 import { validarSesion, type EmpleadoSesion } from './utils/sesion';
 import { puedeVerSeccion } from './utils/permisos';
 import { cargarTiposNegocio, tiposActuales, useTiposNegocio } from './utils/tiposNegocio';
-import { Pronto } from './sections/Pronto';
 import { Salidas } from './sections/Salidas'; // Talleres y servicios (SiuMax Nego, paso 3e; de SiuMax Servic)
 import { Agenda } from './sections/Agenda'; // paso 3f, de SiuMax Servic
 import { Taller } from './sections/Taller'; // paso 3f, de SiuMax Servic
 import { Contratos } from './sections/Contratos'; // paso 3g, de SiuMax Servic
+import { Cotizaciones } from './sections/Cotizaciones'; // paso 3h: una sola pantalla (Comerc + Servic)
 import { SesionProvider } from './utils/SesionProvider';
 
 // Importación de Módulos (Secciones)
@@ -354,7 +354,7 @@ export const App: React.FC = () => {
       case 'contratos':
         return <Contratos />;
       case 'cotizaciones':
-        return <Pronto seccion={vista} />;
+        return <Cotizaciones onNavigatePOS={() => handleNavigate('pos')} />;
       default:
         return (
           <div className="border border-dashed border-[var(--color-border)] p-12 text-center">

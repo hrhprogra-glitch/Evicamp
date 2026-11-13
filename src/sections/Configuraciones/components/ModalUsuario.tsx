@@ -174,7 +174,7 @@ const COLUMNAS_SERVICIOS: typeof COLUMNAS_PERMISOS = [
     ],
   },
   {
-    titulo: 'Cotizaciones de Servicios',
+    titulo: 'Cotizaciones',
     items: [
       { key: 'cobros_ver', label: 'Ver Cotizaciones' },
       { key: 'cobros_crear', label: 'Crear Cotizaciones y Convertir a Trabajo' },

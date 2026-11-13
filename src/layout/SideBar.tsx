@@ -33,6 +33,7 @@ export const MENU_SECCIONES = [
     items: [
       { id: 'pos', name: 'Caja', icon: ShoppingCart },
       { id: 'clientes', name: 'Clientes', icon: Users },
+      { id: 'cotizaciones', name: 'Cotizaciones', icon: FileText }, // paso 3h: para Comercio y Servicios
     ]
   },
   {
@@ -42,7 +43,6 @@ export const MENU_SECCIONES = [
       { id: 'salidas', name: 'Salidas', icon: PackageMinus },
       { id: 'contratos', name: 'Contratos', icon: Repeat },
       { id: 'taller', name: 'Taller', icon: Wrench },
-      { id: 'cotizaciones', name: 'Cotizaciones', icon: FileText },
     ]
   },
   {
@@ -64,8 +64,11 @@ export const MENU_SECCIONES = [
 
 // Atajos Alt + 1…9 y Alt + 0 (la décima): las secciones del tipo de negocio, en el orden del menú. Solo Comercio:
 // Caja 1, Clientes 2, Inventario 3, Conteos 4, Finanzas 5, Utilidades 6, Ajustes 7 (igual que antes de Nego).
-export const atajosSesiones = (tipos?: IdTipoNegocio[]) =>
-  MENU_SECCIONES.flatMap((g) => g.items.map((i) => i.id)).filter((id) => seccionDelNegocio(id, tipos)).slice(0, 10);
+// Cotizaciones (paso 3h) va al final de los atajos para que los números de siempre no cambien.
+export const atajosSesiones = (tipos?: IdTipoNegocio[]) => {
+  const ids = MENU_SECCIONES.flatMap((g) => g.items.map((i) => i.id)).filter((id) => seccionDelNegocio(id, tipos));
+  return [...ids.filter((id) => id !== 'cotizaciones'), ...ids.filter((id) => id === 'cotizaciones')].slice(0, 10);
+};
 export const teclaAtajo = (id: string, tipos?: IdTipoNegocio[]) => {
   const i = atajosSesiones(tipos).indexOf(id);
   return i < 0 ? '' : String((i + 1) % 10);

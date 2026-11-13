@@ -7,6 +7,34 @@
 
 ---
 
+## 12/11/2026 (150) · Claude — SiuMax Nego, paso 3h (parte 1): una sola pantalla de Cotizaciones
+- **Dueño:** "si hazlo" (3h) y, preguntado cómo juntarlas, eligió **"Una sola pantalla (Recomendado)"**: una sección Cotizaciones en el menú para todos; se quita la pestaña de Clientes (también en Evicamp cuando se le suba).
+- **Nueva sección `src/sections/Cotizaciones/`** (base: la de Servic, rehecha para Nego):
+  - **De Servic:** nueva y editar con secciones, soles o dólares, condiciones y datos del banco; abonos; aprobar, rechazar; convertir en trabajo de la Agenda (solo con Servicios); "lo que se atiende" (solo con Servicios); eliminar borradores.
+  - **De Comerc (`PestanaCotizaciones`, borrada):** convertir en venta (lleva las líneas a la Caja; al cobrar queda CONVERTIDA), WhatsApp, anular, VENCIDA automática, imprimir, buscador y filtro de estado, filas con ↑ ↓ y Enter.
+  - Estados de Nego: BORRADOR, VIGENTE, VENCIDA (calculada), APROBADA, CONVERTIDA, RECHAZADA, ANULADA. La ENVIADA de Servic se ve como VIGENTE. Las de la Caja nacen VIGENTE.
+  - Número correlativo COT-0001 (como la Caja), no el número al azar de Servic.
+  - El saldo se calcula (total − pagado): las de la Caja no guardaban saldo.
+  - Al editar, las líneas conservan su producto (si no, ya no se podían vender).
+  - Convertir en venta solo si está en soles, sin abonos y con todas sus líneas del inventario; si no, avisa por qué.
+  - Enter con `enterSeQueda`; ninguna sombra pesada; encabezados de tabla negros.
+- **Menú:** Cotizaciones va en Operaciones (Caja, Clientes, Cotizaciones) para Comercio y Servicios. En los atajos Alt va al final, para que los números de siempre no cambien (solo Comercio: Alt 1–7 igual que antes; Cotizaciones Alt 8).
+- **Permisos:** la ven `cobros_ver` (servicios) o `caja_ver_fiados` (quien veía Clientes › Cotizaciones en Comerc).
+- **Base** (`seguridad-sesion.sql`, solo siumax; respaldos `respaldo-siumax-antes-nego-3h-202611130144.sql` y `…-202611130148.sql`):
+  - Cotizaciones y sus líneas aceptan también `cobros_crear` / `cobros_editar`; los abonos, también a quien cobra en la Caja.
+  - **Errores de Servic corregidos en `fn_registrar_pago_cotizacion`:**
+    - Buscaba la caja abierta con `status = 'open'`; en Comerc es `'OPEN'`, así que el abono nunca entraba a la caja.
+    - Usaba el número de la cotización como `ref_local` (único): el segundo abono de la misma cotización fallaba (409). Ahora es `COTIPAGO-<id del pago>`.
+    - Pagada completa la pasaba a APROBADA aunque ya fuera un trabajo; ahora una CONVERTIDA se queda CONVERTIDA.
+- **Probado:** `prueba-cotizaciones-nego.mjs`, 40 de 40, 0 errores.
+  - Solo Comercio: Cotizaciones en el menú, Clientes sin esa pestaña, Alt 3 = Inventario, Alt 7 = Ajustes, Alt 8 = Cotizaciones.
+  - Una "de la Caja": editar conserva el producto; "Convertir en venta" llega a la Caja con el producto y la cantidad.
+  - Con Servicios: nueva (borrador COT-0002, total 120), marcar enviada, abono 40, no deja llevarla a la Caja con abonos, convertir en trabajo, abono del saldo (sigue CONVERTIDA), eliminar un borrador, buscador, filtro, ↑ ↓.
+  - Enter deja el selector en su sitio en todos los campos. Al final borra lo creado y deja el negocio en solo Comercio.
+  - `medir-cabeceras-nego.mjs`: Cotizaciones y Clientes en una fila a 1920 y 1366.
+- **Falta (parte 2):** informes de servicios en Utilidades.
+- **De paso, el dueño preguntó por el escáner por cámara en el celular:** en el sitio de pruebas sí sale (Caja e Inventario, `revisar-escaner-celular.mjs`); solo existe en siumax (bitácora 138), no en Evicamp. Se le preguntó dónde lo vio.
+
 ## 12/11/2026 (149) · Claude — SiuMax Nego, paso 3g: Contratos, y el stock en Taller y Contratos
 - **Dueño:** "si sigue". Se tomó como sí a las dos preguntas: seguir con el 3g y que los repuestos del taller descuenten stock.
 - **Contratos, traída de SiuMax Servic:** `src/sections/Contratos/`.

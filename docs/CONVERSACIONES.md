@@ -896,3 +896,5 @@
 - "si" → paso 3f hecho: Agenda y Taller en Nego (bitácora 148).
   - Se le preguntó si los repuestos del inventario que se ponen en una orden del taller deben descontar stock (en Servic no lo hacían).
 - "si sigue" → paso 3g hecho: Contratos en Nego y los repuestos del taller descuentan stock (bitácora 149).
+- "si hazlo" (3h) → eligió "Una sola pantalla" para Cotizaciones. Hecha la parte 1 (bitácora 150).
+- Preguntó por qué no sale el escáner por cámara en el celular: en el sitio de pruebas sí sale; se le preguntó en qué link o app lo vio (en Evicamp todavía no está).

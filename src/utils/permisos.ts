@@ -26,7 +26,8 @@ const PERMISOS_POR_MODULO: Record<string, ClavePermiso[]> = {
   salidas: ['salidas_ver'],
   contratos: ['contratos_ver'],
   taller: ['taller_ver'],
-  cotizaciones: ['cobros_ver'],
+  // Paso 3h: quien veía Clientes › Cotizaciones en Comerc (caja_ver_fiados) la sigue viendo
+  cotizaciones: ['cobros_ver', 'caja_ver_fiados'],
 };
 
 export const puedeVerModulo = (permisos: Partial<PermisosUsuario> | null | undefined, modulo: string) => {
