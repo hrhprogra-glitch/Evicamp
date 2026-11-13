@@ -1368,9 +1368,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/cliente.cjs": {
-    "mtime": 1794436614.224661,
-    "seen": 1794507021.6956494,
-    "ast_hash": "8e0028c6cc75ba4be788b789786b1d01",
+    "mtime": 1794540715.31133,
+    "seen": 1794541112.381914,
+    "ast_hash": "fab2deb24b691bf787ab6de48827a991",
     "semantic_hash": ""
   },
   "servidor/backup.sh": {
@@ -1398,15 +1398,15 @@
     "semantic_hash": ""
   },
   "servidor/nuevo-cliente.sh": {
-    "mtime": 1794436614.6778502,
-    "seen": 1794507021.6960616,
-    "ast_hash": "b50f9a2474aaceb563dae8e3abda7c45",
+    "mtime": 1794540529.251463,
+    "seen": 1794541112.3824272,
+    "ast_hash": "d47f4dad1013c7aabf190d1766f9b93a",
     "semantic_hash": ""
   },
   "servidor/siuhub-lib.sh": {
-    "mtime": 1794436614.6788528,
-    "seen": 1794507021.6960669,
-    "ast_hash": "a5813b9d4d6a411934e2be9ab8f33f3e",
+    "mtime": 1794540901.0833545,
+    "seen": 1794541112.3824325,
+    "ast_hash": "d6131a51697706ab42c39582e1d543ad",
     "semantic_hash": ""
   },
   "servidor/instalar-panel.sh": {
@@ -1416,9 +1416,9 @@
     "semantic_hash": ""
   },
   "servidor/panel/panel.py": {
-    "mtime": 1794436614.6788528,
-    "seen": 1794507021.696065,
-    "ast_hash": "33640820a45a00de1f8c1e000e495b84",
+    "mtime": 1794540602.1659884,
+    "seen": 1794541112.3824308,
+    "ast_hash": "649f516e5e893b312e7599a6a9e974d7",
     "semantic_hash": ""
   },
   "src/layout/AvisoSuscripcion.tsx": {
@@ -1434,9 +1434,9 @@
     "semantic_hash": ""
   },
   "servidor/panel/index.html": {
-    "mtime": 1794436614.6788528,
-    "seen": 1794507021.696365,
-    "ast_hash": "22c101bdd6662caf8041a865733e3ea5",
+    "mtime": 1794540596.7801437,
+    "seen": 1794541112.382897,
+    "ast_hash": "09464656b4087b150843b3a9a9951a9d",
     "semantic_hash": ""
   },
   "servidor/migrar-dominio.sh": {
@@ -1446,15 +1446,15 @@
     "semantic_hash": ""
   },
   "servidor/borrar-cliente.sh": {
-    "mtime": 1792177120.9010334,
-    "seen": 1792177275.9526412,
-    "ast_hash": "558c4aff6a188f6260749c4af5a591aa",
+    "mtime": 1794540907.54793,
+    "seen": 1794541112.3824039,
+    "ast_hash": "f4a63c7059be7d268a35582a059e507f",
     "semantic_hash": ""
   },
   "servidor/cambiar-link.sh": {
-    "mtime": 1792177099.506956,
-    "seen": 1792177275.9526424,
-    "ast_hash": "5b405570da35ac01be70e5f03694f5dd",
+    "mtime": 1794540519.9501803,
+    "seen": 1794541112.3824053,
+    "ast_hash": "6bad3f8d9073f4d63c0502c1d41e7a61",
     "semantic_hash": ""
   },
   "servidor/sql/seguridad-sesion.sql": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1794537436.3577552,
-    "seen": 1794537463.3351936,
-    "ast_hash": "28ff6a82019aace2f41f8758f9ca9181",
+    "mtime": 1794541092.556064,
+    "seen": 1794541112.3828824,
+    "ast_hash": "6f26dffb883011296bcab715009f38af",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1794537436.3607633,
-    "seen": 1794537463.3351948,
-    "ast_hash": "f6a888c8b7390c7dca0cd71522ef60e1",
+    "mtime": 1794541092.5595813,
+    "seen": 1794541112.3828838,
+    "ast_hash": "35e0db4f480aebb8c95784e02c9da7fd",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1794533532.330295,
-    "seen": 1794533562.8891044,
-    "ast_hash": "7e887ef6760ab76d9595cb4cf43c2a70",
+    "mtime": 1794541092.5605757,
+    "seen": 1794541112.3828855,
+    "ast_hash": "e5688210e0e5522ab4ea91277c491b69",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1794537436.3597636,
-    "seen": 1794537463.335198,
-    "ast_hash": "7596ec1a1f4691297a08def892d04c9c",
+    "mtime": 1794541092.558582,
+    "seen": 1794541112.3828871,
+    "ast_hash": "1740c798f326eb84c0a7b372b4323e71",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -3363,6 +3363,24 @@
     "mtime": 1794537042.0874622,
     "seen": 1794537463.335215,
     "ast_hash": "f1f7974b718ba10000265130cd052fd7",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/revisar-panel-nego.mjs": {
+    "mtime": 1794541039.719724,
+    "seen": 1794541112.3823297,
+    "ast_hash": "7bc339b3e89708be3f19812a6c65b9ab",
+    "semantic_hash": ""
+  },
+  "servidor/link-pruebas-nego.sh": {
+    "mtime": 1794540686.2116084,
+    "seen": 1794541112.3824217,
+    "ast_hash": "c36160a58b0d9acfc66359e0673c0070",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/captura-panel-nego.png": {
+    "mtime": 1794541045.7571566,
+    "seen": 1794541112.3829277,
+    "ast_hash": "f81f0061a1159b328c63c155f8048006",
     "semantic_hash": ""
   }
 }

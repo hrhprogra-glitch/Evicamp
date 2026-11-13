@@ -1,12 +1,16 @@
 #!/bin/bash
 # Funciones comunes de los scripts de SiuMax en el VPS (se instalan en /opt/siuhub).
-# Cada cliente: base cli_<slug>, API PostgREST propia (puerto 3100+), link <slug>.comerc.siumax.duckdns.org.
+# Cada cliente: base cli_<slug>, API PostgREST propia (puerto 3100+), link <slug>.<tipo>.siumax.duckdns.org.
 # Orden de los links (06/11/2026): siumax.duckdns.org = Panel de Control; <tipo>.siumax.duckdns.org = pruebas
-# de cada sistema (comerc, servic); <negocio>.<tipo>.siumax.duckdns.org = clientes.
+# de cada sistema; <negocio>.<tipo>.siumax.duckdns.org = clientes.
+# SiuMax Nego (fase 4, 12/11/2026): los clientes nuevos son "nego" (<negocio>.nego.siumax.duckdns.org) y eligen sus
+# tipos de negocio. Los que ya existían sin tipo en el registro siguen siendo "comerc" (sus links no cambian).
 
 DOMINIO_BASE="siumax.duckdns.org"
-TIPO_SISTEMA="comerc"                         # estos scripts crean clientes de SiuMax Comerc
-HOST_PRUEBAS="$TIPO_SISTEMA.$DOMINIO_BASE"   # sistema de pruebas de Comerc (base siumax, API puerto 3001)
+TIPO_SISTEMA="nego"                           # clientes nuevos: SiuMax Nego
+TIPO_LEGADO="comerc"                          # filas del registro sin tipo (creadas antes de Nego)
+HOST_PRUEBAS="comerc.$DOMINIO_BASE"           # sistema de pruebas de siempre (base siumax, API puerto 3001)
+HOST_PRUEBAS_NEGO="nego.$DOMINIO_BASE"        # el mismo sistema de pruebas con el link de Nego
 DIR_SIUMAX="/opt/siuhub"
 REGISTRO="$DIR_SIUMAX/clientes.tsv"           # slug  nombre  puerto  estado  fecha_alta  tipo
 APP_COMPARTIDA="/var/www/siuhub-app/html"     # copia compartida de Comerc
@@ -16,19 +20,28 @@ CONF_POSTGREST_BASE="/etc/postgrest_siuhub.conf"
 DIR_CONF_CLIENTES="/etc/postgrest/clientes"
 PUERTO_INICIAL=3100
 
+# Tipo de un cliente: el del registro; si el link es viejo (redirige), el de su link nuevo; si no tiene, comerc
+tipo_cliente() {
+  local slug="$1" tipo
+  tipo=$(dato_registro "$slug" 6)
+  if [ -z "$tipo" ]; then
+    local destino; destino=$(redireccion_de "$slug")
+    [ -n "$destino" ] && tipo=$(dato_registro "$destino" 6)
+  fi
+  [ -n "$tipo" ] || tipo="$TIPO_LEGADO"
+  echo "$tipo"
+}
+
 host_cliente() {
   local slug="$1"
   local tipo="${2:-}"
-  if [ -z "$tipo" ]; then
-    tipo=$(dato_registro "$slug" 6)
-  fi
-  [ -n "$tipo" ] || tipo="$TIPO_SISTEMA"
+  [ -n "$tipo" ] || tipo=$(tipo_cliente "$slug")
   echo "$slug.$tipo.$DOMINIO_BASE"
 }
 base_cliente() { echo "cli_${1//-/_}"; }
 
 # slug: solo minúsculas, números y guion; 3 a 30 caracteres; no empieza ni termina en guion
-LINKS_RESERVADOS=" panel www api admin app mail ftp siuhub siumax evicamp creditaltoque descargas actualizaciones comerc servic evi evidiary "
+LINKS_RESERVADOS=" panel www api admin app mail ftp siuhub siumax evicamp creditaltoque descargas actualizaciones comerc servic nego evi evidiary "
 
 validar_slug() {
   [[ "$1" =~ ^[a-z0-9]([a-z0-9-]{1,28})[a-z0-9]$ ]] || {
@@ -66,13 +79,10 @@ cambiar_estado_registro() { # cambiar_estado_registro <slug> <ACTIVO|SUSPENDIDO>
 #   modo "suspendido" -> HTTPS mostrando la página de servicio suspendido
 escribir_nginx() {
   local slug="$1" puerto="$2" modo="$3" tipo="${4:-}"
-  if [ -z "$tipo" ]; then
-    tipo=$(dato_registro "$slug" 6)
-  fi
-  [ -n "$tipo" ] || tipo="$TIPO_SISTEMA"
+  [ -n "$tipo" ] || tipo=$(tipo_cliente "$slug")
   local host; host=$(host_cliente "$slug" "$tipo")
   local archivo="/etc/nginx/sites-available/cli-$slug"
-  local app_dir="$APP_COMPARTIDA"
+  local app_dir="$APP_COMPARTIDA"   # comerc y nego: la misma copia del sistema (Nego es Comerc con otro nombre)
   if [ "$tipo" = "servic" ]; then
     app_dir="$APP_SERVIC_COMPARTIDA"
   fi
@@ -107,7 +117,7 @@ escribir_nginx() {
 
     location / {
         try_files \$uri \$uri/ /index.html;
-    }"
+    }
 
     # Instalador de PC propio de este cliente (se conecta a su link)
     location /descargas/ {
@@ -219,7 +229,10 @@ redireccion_de() { # redireccion_de <link_viejo>: a qué link redirige (vacío s
 }
 
 escribir_nginx_redireccion() { # <viejo> <nuevo>: usa el certificado que ya tenía el link viejo
-  local host_viejo; host_viejo=$(host_cliente "$1")
+  # Los dos links tienen el tipo del cliente (nego, comerc…): el nuevo puede no estar aún en el registro (Nego, fase 4)
+  local tipo; tipo=$(tipo_cliente "$1")
+  local host_viejo; host_viejo=$(host_cliente "$1" "$tipo")
+  local host_nuevo; host_nuevo=$(host_cliente "$2" "$tipo")
   local archivo="/etc/nginx/sites-available/redir-$1"
   cat > "$archivo" <<EOF
 # SiuMax - el link $1 cambió a $2 (generado por /opt/siuhub, no editar a mano)
@@ -232,13 +245,13 @@ server {
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
-    return 301 https://$(host_cliente "$2")\$request_uri;
+    return 301 https://$host_nuevo\$request_uri;
 }
 
 server {
     listen 80;
     server_name $host_viejo;
-    return 301 https://$(host_cliente "$2")\$request_uri;
+    return 301 https://$host_nuevo\$request_uri;
 }
 EOF
   ln -sf "$archivo" "/etc/nginx/sites-enabled/redir-$1"
@@ -261,4 +274,4 @@ quitar_redireccion() { # <viejo>: el link deja de redirigir (su certificado se b
   rm -f "/etc/nginx/sites-enabled/redir-$1" "/etc/nginx/sites-available/redir-$1"
 }
 
-borrar_certificado() { certbot delete --cert-name "$(host_cliente "$1")" --non-interactive > /dev/null 2>&1 || true; }
+borrar_certificado() { certbot delete --cert-name "$(host_cliente "$1" "${2:-}")" --non-interactive > /dev/null 2>&1 || true; } # <slug> [tipo]

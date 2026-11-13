@@ -1,17 +1,20 @@
 #!/bin/bash
 # Crea un cliente nuevo de SiuMax en un solo paso.
-# Uso: CLAVE_ADMIN='secreta' nuevo-cliente.sh <slug> "<Nombre del negocio>" <correo-admin>
+# Uso: CLAVE_ADMIN='secreta' nuevo-cliente.sh <slug> "<Nombre del negocio>" <correo-admin> [nego|comerc|servic] [tipos]
+#   tipos (solo nego): tipos de negocio separados por coma, ej. "comercio" o "comercio,servicios" (por defecto comercio)
 # La contraseña va por variable de entorno para que no quede en el historial de comandos.
 set -euo pipefail
 source /opt/siuhub/siuhub-lib.sh
 
-SLUG="${1:-}"; NOMBRE="${2:-}"; CORREO="${3:-}"; TIPO="${4:-comerc}"
+SLUG="${1:-}"; NOMBRE="${2:-}"; CORREO="${3:-}"; TIPO="${4:-$TIPO_SISTEMA}"; TIPOS_NEGOCIO="${5:-comercio}"
 [ -n "$SLUG" ] && [ -n "$NOMBRE" ] && [ -n "$CORREO" ] && [ -n "${CLAVE_ADMIN:-}" ] || {
-  echo "Uso: CLAVE_ADMIN='...' $0 <slug> \"<Nombre del negocio>\" <correo-admin> [comerc|servic]" >&2; exit 1; }
+  echo "Uso: CLAVE_ADMIN='...' $0 <slug> \"<Nombre del negocio>\" <correo-admin> [nego|comerc|servic] [tipos]" >&2; exit 1; }
 validar_slug "$SLUG"
 [[ "$CORREO" =~ ^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$ ]] || { echo "ERROR: correo inválido." >&2; exit 1; }
 [ ${#CLAVE_ADMIN} -ge 6 ] || { echo "ERROR: la contraseña debe tener al menos 6 caracteres." >&2; exit 1; }
-[ "$TIPO" = "servic" ] || TIPO="comerc"
+case "$TIPO" in nego|comerc|servic) ;; *) TIPO="$TIPO_SISTEMA" ;; esac
+# Tipos de negocio de Nego que ya se pueden elegir (Ajustes → Tipo de negocio): comercio, servicios
+[[ "$TIPOS_NEGOCIO" =~ ^(comercio|servicios)(,(comercio|servicios))*$ ]] || { echo "ERROR: tipos de negocio inválidos: $TIPOS_NEGOCIO" >&2; exit 1; }
 
 HOST=$(host_cliente "$SLUG" "$TIPO")
 BASE=$(base_cliente "$SLUG")
@@ -44,7 +47,7 @@ sudo -u postgres createdb "$BASE"
 CREADO_BASE=1
 sudo -u postgres pg_dump --schema-only "$BASE_ORIGEN" | sudo -u postgres psql -q -v ON_ERROR_STOP=1 -d "$BASE" > /dev/null
 
-echo "== 2/6 Empresa y usuario administrador"
+echo "== 2/6 Empresa y usuario administrador${TIPO:+ ($TIPO)}"
 PERMISOS=$(sudo -u postgres psql -At -d "$BASE_ORIGEN" -c "select permisos from empleados where rol='Administrador' order by created_at limit 1")
 [ -n "$PERMISOS" ] || PERMISOS='{}'
 # Valores pasados como variables de psql (:'x') para que comillas en el nombre no rompan nada
@@ -54,6 +57,13 @@ INSERT INTO empresa_config (nombre_empresa) VALUES (upper(:'nombre'));
 INSERT INTO empleados (nombre, email, password, password_hash, rol, permisos, estado)
 VALUES ('Administrador', :'correo', '', crypt(:'clave', gen_salt('bf')), 'Administrador', :'permisos'::jsonb, 'ACTIVO');
 SQL
+
+if [ "$TIPO" = "nego" ]; then
+  # Tipos de negocio elegidos en el Panel (se pueden cambiar después en Ajustes → Tipo de negocio)
+  sudo -u postgres psql -q -v ON_ERROR_STOP=1 -d "$BASE" -v tipos="{$TIPOS_NEGOCIO}" <<'SQL'
+UPDATE empresa_config SET tipos_negocio = :'tipos'::text[];
+SQL
+fi
 
 echo "== 3/6 API propia (PostgREST, puerto $PUERTO)"
 mkdir -p "$DIR_CONF_CLIENTES"
@@ -86,4 +96,5 @@ echo "== 6/6 Verificación"
 WEB=$(curl -s -o /dev/null -w '%{http_code}' "https://$HOST/")
 API=$(curl -s -o /dev/null -w '%{http_code}' "https://$HOST/rest/v1/empresa_config?select=nombre_empresa")
 echo "Web: $WEB  |  API: $API"
-echo "LISTO: https://$HOST  (admin: ${CORREO,,} | tipo: $TIPO)"
+EXTRA=""; [ "$TIPO" = "nego" ] && EXTRA=" | negocio: $TIPOS_NEGOCIO"
+echo "LISTO: https://$HOST  (admin: ${CORREO,,} | tipo: $TIPO$EXTRA)"

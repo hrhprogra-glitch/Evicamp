@@ -43,10 +43,12 @@ DIR_CLIENTES = "/var/www/clientes"
 DIR_BACKUPS = "/var/backups/siuhub"
 INDEX_HTML = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
 DOMINIO_BASE = "siumax.duckdns.org"           # aquí vive el panel
-DOMINIO_CLIENTES = f"comerc.{DOMINIO_BASE}"   # clientes por defecto
+DOMINIO_CLIENTES = f"nego.{DOMINIO_BASE}"     # clientes nuevos: SiuMax Nego (fase 4, 12/11/2026)
+TIPOS_NEGOCIO = ("comercio", "servicios")      # tipos de negocio de Nego que ya se pueden elegir
 
 def link_cliente(slug, tipo="comerc"):
-    t = tipo if tipo in ("comerc", "servic") else "comerc"
+    # comerc: clientes de antes (filas del registro sin tipo); nego: los nuevos; servic: de SiuMax Servic
+    t = tipo if tipo in ("nego", "comerc", "servic") else "comerc"
     return f"https://{slug}.{t}.{DOMINIO_BASE}"
 
 PUERTO = 3090
@@ -458,7 +460,8 @@ candado_sugerencias = threading.Lock()
 
 
 # Sistemas que no se crearon desde el panel (no están en clientes.tsv)
-NEGOCIOS_FIJOS = {"evicamp.duckdns.org": "Evicamp", "comerc.siumax.duckdns.org": "SiuMax Comerc (pruebas)",
+NEGOCIOS_FIJOS = {"evicamp.duckdns.org": "Evicamp", "nego.siumax.duckdns.org": "SiuMax Nego (pruebas)",
+                  "comerc.siumax.duckdns.org": "SiuMax Nego (pruebas, link anterior)",
                   "servic.siumax.duckdns.org": "SiuMax Servic (pruebas)"}
 
 
@@ -751,7 +754,7 @@ def crear_link_pago(slug, cerrar_al_volver=False, meses=None):
     plan = leer_datos()["planes"].get(slug)
     if not plan or not plan.get("precio"):
         raise ValueError("Este cliente no tiene un plan con precio.")
-    link_cliente = f"{URL_PANEL}/pago-listo" if cerrar_al_volver else f"https://{slug}.{DOMINIO_CLIENTES}"
+    link_cliente_vuelta = f"{URL_PANEL}/pago-listo" if cerrar_al_volver else link_cliente(slug, (reg or {}).get("tipo", "comerc"))
     # Meses elegidos por el cliente (1 a 12); sin elegir, un periodo del plan a su precio
     if meses is None:
         meses, total, titulo = MESES_PLAN[plan["tipo"]], float(plan["precio"]), f"Plan {plan['tipo'].lower()}"
@@ -766,7 +769,7 @@ def crear_link_pago(slug, cerrar_al_volver=False, meses=None):
         # slug | vencimiento que paga | meses que cubre (lo lee el aviso de pago para avanzar el plan)
         "external_reference": f"{slug}|{plan['proximo_pago']}|{meses}",
         "notification_url": f"{URL_PANEL}/api/mercadopago/webhook",
-        "back_urls": {"success": link_cliente, "pending": link_cliente, "failure": link_cliente},
+        "back_urls": {"success": link_cliente_vuelta, "pending": link_cliente_vuelta, "failure": link_cliente_vuelta},
         "auto_return": "approved",
         "statement_descriptor": "SIUMAX",
     })
@@ -1028,9 +1031,12 @@ class Panel(BaseHTTPRequestHandler):
                 nombre = str(cuerpo.get("nombre", "")).strip()[:60]
                 correo = str(cuerpo.get("correo", "")).strip().lower()
                 clave = str(cuerpo.get("clave", ""))
-                tipo_sistema = str(cuerpo.get("tipo_sistema", "comerc")).strip().lower()
-                if tipo_sistema not in ("comerc", "servic"):
-                    tipo_sistema = "comerc"
+                # SiuMax Nego (fase 4): todos los clientes nuevos son "nego"; se eligen sus tipos de negocio
+                tipo_sistema = "nego"
+                tipos = cuerpo.get("tipos_negocio") or ["comercio"]
+                if not isinstance(tipos, list) or not tipos or any(t not in TIPOS_NEGOCIO for t in tipos):
+                    raise ValueError("Elige al menos un tipo de negocio (Comercio o Talleres y servicios).")
+                tipos = [t for t in TIPOS_NEGOCIO if t in tipos]   # sin repetidos y en orden
                 if not RE_SLUG.match(slug):
                     raise ValueError("Link inválido: usa minúsculas, números y guiones (3 a 30).")
                 if not nombre:
@@ -1039,7 +1045,7 @@ class Panel(BaseHTTPRequestHandler):
                     raise ValueError("Correo inválido.")
                 if len(clave) < 6:
                     raise ValueError("La contraseña debe tener al menos 6 caracteres.")
-                ok, salida = ejecutar([f"{DIR_SIUMAX}/nuevo-cliente.sh", slug, nombre, correo, tipo_sistema],
+                ok, salida = ejecutar([f"{DIR_SIUMAX}/nuevo-cliente.sh", slug, nombre, correo, tipo_sistema, ",".join(tipos)],
                                       entorno={"CLAVE_ADMIN": clave}, espera=600)
                 if not ok:
                     return self.responder(500, {"error": "No se pudo crear el cliente.", "detalle": salida[-2000:]})
@@ -1047,7 +1053,7 @@ class Panel(BaseHTTPRequestHandler):
                     plan_data = dict(cuerpo["plan"], slug=slug, tipo_sistema=tipo_sistema)
                     guardar_plan(plan_data)
                 link_nuevo = link_cliente(slug, tipo_sistema)
-                return self.responder(200, {"ok": True, "link": link_nuevo, "tipo": tipo_sistema,
+                return self.responder(200, {"ok": True, "link": link_nuevo, "tipo": tipo_sistema, "tipos_negocio": tipos,
                                             "correo": correo, "detalle": salida[-2000:]})
 
             if ruta in ("/api/clientes/suspender", "/api/clientes/activar"):
@@ -1072,7 +1078,8 @@ class Panel(BaseHTTPRequestHandler):
                 if not ok:
                     return self.responder(500, {"error": "No se pudo cambiar el link.", "detalle": salida[-2000:]})
                 nuevo = str(cuerpo.get("nuevo", "")).strip().lower()
-                return self.responder(200, {"ok": True, "link": f"https://{nuevo}.{DOMINIO_CLIENTES}", "detalle": salida[-2000:]})
+                reg_nuevo = cliente_registrado(nuevo) or {}
+                return self.responder(200, {"ok": True, "link": link_cliente(nuevo, reg_nuevo.get("tipo", "comerc")), "detalle": salida[-2000:]})
 
             if ruta == "/api/clientes/facturacion":
                 return self.responder(200, {"ok": True, "facturacion": cambiar_facturacion(cuerpo)})

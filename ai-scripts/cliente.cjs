@@ -12,6 +12,9 @@
 //     Mercado Pago: modo prueba con MP_ACCESS_TOKEN_PRUEBA; cobro real SOLO si .env.vps tiene MP_COBRAR=si
 //   node ai-scripts/cliente.cjs ordenar-links                              -> panel en siumax.duckdns.org, pruebas en
 //     comerc.siumax / servic.siumax y borra panel.siumax (06/11/2026; repetir no daña; no toca Evicamp ni bases)
+//   node ai-scripts/cliente.cjs nego                                       -> SiuMax Nego, fase 4: link de pruebas
+//     nego.siumax y Panel con clientes nuevos <negocio>.nego.siumax (respalda el panel; NO toca Mercado Pago;
+//     repetir no daña; no toca Evicamp ni bases)
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
@@ -59,7 +62,7 @@ const subirPanel = async (ssh) => {
 };
 
 (async () => {
-  const validos = ['instalar', 'nuevo', 'listar', 'suspender', 'activar', 'backup', 'panel', 'seguridad', 'ordenar-links'];
+  const validos = ['instalar', 'nuevo', 'listar', 'suspender', 'activar', 'backup', 'panel', 'seguridad', 'ordenar-links', 'nego'];
   if (!validos.includes(accion)) {
     console.error(fs.readFileSync(__filename, 'utf8').split('\n').filter((l) => l.startsWith('//')).join('\n'));
     process.exit(1);
@@ -94,6 +97,16 @@ const subirPanel = async (ssh) => {
     if (accion === 'ordenar-links') {
       await subirPanel(ssh);
       await ejecutar(ssh, `${DIR_REMOTO}/ordenar-links.sh`);
+      return;
+    }
+
+    if (accion === 'nego') {
+      // Respaldo del panel antes de cambiarlo (los scripts ya se subieron arriba; sus versiones anteriores están en git)
+      await ejecutar(ssh, `mkdir -p /root/backups && cp -a ${DIR_REMOTO}/panel /root/backups/panel-antes-nego-$(date +%Y%m%d-%H%M%S) && echo 'Respaldo del panel listo'`);
+      await subirPanel(ssh);
+      await ejecutar(ssh, `${DIR_REMOTO}/link-pruebas-nego.sh`);
+      // Solo se reinicia el servicio del panel: su configuración de Mercado Pago no se toca
+      await ejecutar(ssh, `systemctl restart siuhub-panel && sleep 3 && systemctl is-active --quiet siuhub-panel && curl -s --max-time 20 https://siumax.duckdns.org/ | grep -q 'nego.siumax.duckdns.org' && echo '   OK  Panel con la versión de Nego'`);
       return;
     }
 

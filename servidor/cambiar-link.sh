@@ -19,7 +19,8 @@ DESTINO_REDIR=$(redireccion_de "$NUEVO")
   echo "ERROR: el link '$NUEVO' está reservado (redirige a otro cliente)." >&2; exit 1; }
 
 BASE_VIEJA=$(base_cliente "$VIEJO"); BASE_NUEVA=$(base_cliente "$NUEVO")
-HOST_NUEVO=$(host_cliente "$NUEVO")
+TIPO=$(tipo_cliente "$VIEJO")           # el link nuevo conserva el tipo (nego, comerc…)
+HOST_NUEVO=$(host_cliente "$NUEVO" "$TIPO")
 if sudo -u postgres psql -Atc "select 1 from pg_database where datname='$BASE_NUEVA'" | grep -q 1; then
   echo "ERROR: ya existe la base $BASE_NUEVA." >&2; exit 1
 fi
@@ -34,7 +35,7 @@ echo "   $COPIA"
 
 echo "== 2/6 Certificado HTTPS de $HOST_NUEVO"
 [ "$DESTINO_REDIR" = "$VIEJO" ] && quitar_redireccion "$NUEVO"   # vuelve a un link que ya tuvo
-escribir_nginx "$NUEVO" "$PUERTO" http
+escribir_nginx "$NUEVO" "$PUERTO" http "$TIPO"
 recargar_nginx
 if ! certbot certonly --nginx -d "$HOST_NUEVO" --non-interactive --agree-tos --keep-until-expiring > /dev/null; then
   rm -f "/etc/nginx/sites-enabled/cli-$NUEVO" "/etc/nginx/sites-available/cli-$NUEVO"; recargar_nginx || true
@@ -75,7 +76,7 @@ rm -f "$DIR_CONF_CLIENTES/$VIEJO.conf"
 
 echo "== 5/6 Link nuevo y redirección del viejo"
 mv "$DIR_CLIENTES/$VIEJO" "$DIR_CLIENTES/$NUEVO"
-if [ "$ESTADO" = "SUSPENDIDO" ]; then escribir_nginx "$NUEVO" "$PUERTO" suspendido; else escribir_nginx "$NUEVO" "$PUERTO" activo; fi
+if [ "$ESTADO" = "SUSPENDIDO" ]; then escribir_nginx "$NUEVO" "$PUERTO" suspendido "$TIPO"; else escribir_nginx "$NUEVO" "$PUERTO" activo "$TIPO"; fi
 rm -f "/etc/nginx/sites-enabled/cli-$VIEJO" "/etc/nginx/sites-available/cli-$VIEJO"
 agregar_redireccion "$VIEJO" "$NUEVO"
 recargar_nginx

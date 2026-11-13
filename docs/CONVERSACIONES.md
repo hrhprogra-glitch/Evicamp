@@ -900,3 +900,4 @@
 - Preguntó por qué no sale el escáner por cámara en el celular: en el sitio de pruebas sí sale; se le preguntó en qué link o app lo vio (en Evicamp todavía no está).
 - El escáner lo buscó en Evicamp (aún no está ahí); "todavía no lo subas". Parte 2 del 3h hecha: Utilidades de servicios (bitácora 151). Se le explicó la parte 1 en simple. Fase 3 terminada.
 - Pidió combinar Cotizaciones con Pedidos con un nombre general y avisos en la Caja que se acomoden en el celular. Eligió el nombre "Encargos". Hecho (bitácora 152).
+- "si hazlo" → fase 4 hecha: `nego.siumax.duckdns.org` y clientes nuevos `.nego` desde el Panel, con casillas de tipo de negocio (bitácora 153).

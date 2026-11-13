@@ -14,7 +14,8 @@ ESTADO=$(dato_registro "$SLUG" 4)
 [ -n "$ESTADO" ] || { echo "ERROR: no existe el cliente '$SLUG'." >&2; exit 1; }
 [ "$ESTADO" = "SUSPENDIDO" ] || { echo "ERROR: primero suspende al cliente '$SLUG'." >&2; exit 1; }
 
-HOST=$(host_cliente "$SLUG")
+TIPO=$(tipo_cliente "$SLUG")   # nego, comerc… (los links viejos que redirigían tienen el mismo; Nego, fase 4)
+HOST=$(host_cliente "$SLUG" "$TIPO")
 BASE=$(base_cliente "$SLUG")
 FECHA=$(date +%Y%m%d-%H%M)
 
@@ -42,11 +43,11 @@ rm -f "/etc/nginx/sites-enabled/cli-$SLUG" "/etc/nginx/sites-available/cli-$SLUG
 if [ -f "$REDIRECCIONES" ]; then
   for viejo in $(awk -F'\t' -v s="$SLUG" '$2==s {print $1}' "$REDIRECCIONES"); do
     quitar_redireccion "$viejo"
-    borrar_certificado "$viejo"
+    borrar_certificado "$viejo" "$TIPO"
   done
 fi
 recargar_nginx
-borrar_certificado "$SLUG"
+borrar_certificado "$SLUG" "$TIPO"
 
 echo "== 4/5 Base de datos y archivos"
 sudo -u postgres dropdb --if-exists "$BASE"

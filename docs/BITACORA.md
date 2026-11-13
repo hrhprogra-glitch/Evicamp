@@ -7,6 +7,36 @@
 
 ---
 
+## 12/11/2026 (153) · Claude — SiuMax Nego, fase 4: link de pruebas nego.siumax y clientes nuevos <negocio>.nego.siumax
+- **Dueño:** "si hazlo" (fase 4: Panel y links nego).
+- **Hecho en el VPS** (no es Evicamp ni un cliente; Evicamp no se tocó). Comando: `node ai-scripts/cliente.cjs nego`, que se puede repetir:
+  - **`nego.siumax.duckdns.org`**: el mismo sistema de pruebas (carpeta `/var/www/siuhub/html`, base `siumax`, API 3001). Es una copia de la configuración de Nginx de `comerc` con otro link y su certificado (`servidor/link-pruebas-nego.sh`). Guarda copia de Nginx y, si algo falla, vuelve sola a como estaba.
+  - `comerc.siumax.duckdns.org` sigue igual (link anterior; no se cambia sin aviso del dueño).
+  - **Panel**: se respaldó (`/root/backups/panel-antes-nego-*`), se subió y se reinició solo su servicio. **Mercado Pago no se tocó**: sigue "Cobrando".
+- **Cambios:**
+  - `siuhub-lib.sh`:
+    - Clientes nuevos de tipo `nego`; las filas del registro sin tipo siguen siendo `comerc` (`tipo_cliente`).
+    - `HOST_PRUEBAS` fijo en `comerc` (para no romper `ordenar-links.sh`) y `HOST_PRUEBAS_NEGO` nuevo.
+    - `nego` es un link reservado.
+  - `nuevo-cliente.sh`: `[nego|comerc|servic] [tipos]`. Con nego guarda los tipos de negocio elegidos en `empresa_config.tipos_negocio`.
+  - `cambiar-link.sh` y `borrar-cliente.sh`: usan el tipo del cliente (antes un cliente nego habría quedado como `.comerc`).
+  - Panel:
+    - "Nuevo cliente": casillas **Comercio** y **Talleres y servicios** en vez del selector Comerc/Servic; el link que muestra es `<negocio>.nego.siumax.duckdns.org`.
+    - "Mis sitios": "SiuMax Nego" y "SiuMax Nego (link anterior)". En la lista, la etiqueta NEGO.
+    - Los links de pago y de "cambiar link" usan el tipo de cada cliente.
+- **Errores encontrados al revisar:**
+  - **`siuhub-lib.sh` del repositorio estaba roto** (una comilla de más en `escribir_nginx`, del commit 896a7a7 "Fase 9", que nunca se subió). En el VPS seguía la versión vieja, que sí funcionaba. Arreglado.
+  - `cliente.cjs panel` reconfigura Mercado Pago (con MP_ACCESS_TOKEN_PRUEBA si no hay MP_COBRAR=si): no se usó. Ver MEMORIA-IA 61.
+- **Probado en el VPS** con un cliente temporal (`pruebanegoauto`), sin tocar a nadie más:
+  - Se creó con comercio y servicios: base con `{comercio,servicios}`, link `.nego` con HTTPS, web 200, API sin sesión 401.
+  - Se le cambió el link (el viejo redirige al nuevo `.nego`), se suspendió y se borró.
+  - No quedó nada: ni base, ni API, ni link, ni certificado. Sus respaldos quedan en `/var/backups` los 30 días de siempre.
+  - La primera vez la redirección iba a `.comerc` y quedaba un certificado suelto. Corregido y probado de nuevo.
+  - `revisar-panel-nego.mjs`, 7 de 7: Mis sitios, casillas, link `.nego`, la ventana se cierra sin crear nada, `nego.siumax` entra al sistema ("SiuMax Nego").
+  - Revisión del script: `nego.siumax` abre y su API pide sesión; siguen abriendo `comerc.siumax`, el Panel, las actualizaciones de la app de PC, Evicamp y EviDiary.
+- **Ojo antes del primer cliente de Nego:** los clientes usan la copia compartida `/var/www/siuhub-app/html`, que todavía tiene la versión de Comerc del 11/11. Antes de crear un cliente real, hay que subir Nego a producción (con el aviso del dueño).
+- **Siguiente:** pasar ECO SISTEMAS URH a Nego y, después, borrar Servic (guardando una copia). Cada paso, con el OK del dueño.
+
 ## 12/11/2026 (152) · Claude — SiuMax Nego: sección ENCARGOS (Cotizaciones + Pedidos) y avisos en la Caja
 - **Dueño:** "combinar cotizaciones con pedidos", "en caja agrega botones de alertar de cotizaciones y pedidos" que se acomoden bien en celular y otros dispositivos, y un nombre general para la sección. Se le propuso el plan con 4 nombres; eligió **"Encargos"**.
 - **Sección ENCARGOS** (`src/sections/Encargos/`; id `encargos`, reemplaza a `cotizaciones`):
