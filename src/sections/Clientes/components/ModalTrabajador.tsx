@@ -2,7 +2,7 @@
 // CREAR O EDITAR UN TRABAJADOR (SiuMax Servic, fase 1). Solo el nombre es obligatorio; el DNI no se puede repetir.
 // "Usuario del sistema": si el trabajador también entra a SiuMax, se une a su usuario de Ajustes > Usuarios.
 // Mismo estilo que la ficha del cliente. Teclado: ↓ ↑ entre campos en orden de lectura; las flechas nunca cambian una
-// opción de las listas (Enter las abre); Enter en un campo pasa al siguiente.
+// opción de las listas (Enter las abre); Enter en un campo no pasa al siguiente (el selector se queda; se mueve con flechas).
 import React, { useEffect, useState } from 'react';
 import { HardHat, X } from 'lucide-react';
 import type { Trabajador } from '../types';
@@ -61,7 +61,7 @@ export const ModalTrabajador: React.FC<Props> = ({ abierta, trabajador, trabajad
       else if (e.key === 'Enter') { e.preventDefault(); try { (el as HTMLInputElement).showPicker(); } catch { /* sin lista */ } }
       return;
     }
-    if (e.key === 'Enter' && !(el instanceof HTMLTextAreaElement)) { e.preventDefault(); mover(id, 1); return; }
+    if (e.key === 'Enter' && !(el instanceof HTMLTextAreaElement)) { e.preventDefault(); return; } // Enter: el selector se queda (regla de Nego)
     if (el instanceof HTMLTextAreaElement) {
       if (e.key === 'ArrowUp' && el.value.slice(0, el.selectionStart).includes('\n')) return;
       if (e.key === 'ArrowDown' && el.value.slice(el.selectionEnd).includes('\n')) return;

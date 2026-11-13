@@ -2,7 +2,7 @@
 // AGREGAR O EDITAR "LO QUE SE ATIENDE" de un cliente (SiuMax Servic, fase 1): piscina, jardín, vehículo, equipo...
 // Los datos cambian según el tipo (piscina: volumen; vehículo: placa, marca, modelo, año; equipo: marca, modelo, serie).
 // Mismo estilo que la ficha del cliente. Teclado: ↓ ↑ entre campos, en orden de lectura; las flechas nunca cambian
-// una opción de las listas (Enter las abre); Enter en un campo pasa al siguiente.
+// una opción de las listas (Enter las abre); Enter en un campo no pasa al siguiente (el selector se queda; se mueve con flechas).
 import React, { useEffect, useState } from 'react';
 import { Box, X } from 'lucide-react';
 import type { BienCliente, Cliente, TipoBien } from '../types';
@@ -62,7 +62,7 @@ export const ModalBien: React.FC<Props> = ({ abierta, cliente, bien, onGuardar, 
   if (!abierta || !cliente) return null;
 
   const poner = (campo: keyof DatosBien, valor: string) => setDatos((d) => ({ ...d, [campo]: valor }));
-  // Orden de lectura (cambia con el tipo): ↓ ↑ y Enter siguen este orden
+  // Orden de lectura (cambia con el tipo): ↓ ↑ siguen este orden
   const orden = ['btn-cerrar-bien', 'bien-tipo', 'bien-nombre', ...PROPIOS[datos.tipo], 'bien-direccion', 'bien-ubicacion', 'bien-estado', 'bien-notas', 'btn-guardar-bien'];
   const mover = (id: string, paso: 1 | -1) => {
     const sig = orden[orden.indexOf(id) + paso];
@@ -80,7 +80,7 @@ export const ModalBien: React.FC<Props> = ({ abierta, cliente, bien, onGuardar, 
       else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); try { el.showPicker(); } catch { /* sin lista */ } }
       return;
     }
-    if (e.key === 'Enter' && !(el instanceof HTMLTextAreaElement)) { e.preventDefault(); mover(id, 1); return; }
+    if (e.key === 'Enter' && !(el instanceof HTMLTextAreaElement)) { e.preventDefault(); return; } // Enter: el selector se queda (regla de Nego)
     if (el instanceof HTMLTextAreaElement) {
       if (e.key === 'ArrowUp' && el.value.slice(0, el.selectionStart).includes('\n')) return;
       if (e.key === 'ArrowDown' && el.value.slice(el.selectionEnd).includes('\n')) return;

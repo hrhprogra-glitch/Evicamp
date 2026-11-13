@@ -55,10 +55,14 @@ export const ModalMantenimiento: React.FC<ModalMantenimientoProps> = ({
 
   if (!isOpen) return null;
 
-  const handleKeyDownEnter = (e: React.KeyboardEvent, nextId: string) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      document.getElementById(nextId)?.focus();
+  // Regla de SiuMax Nego: Enter nunca pasa al siguiente campo (el selector se queda; se mueve con flechas).
+  // En una lista o una fecha, Enter la abre.
+  const handleKeyDownEnter = (e: React.KeyboardEvent, _siguiente?: string) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const el = e.currentTarget as HTMLElement;
+    if (el instanceof HTMLSelectElement || (el instanceof HTMLInputElement && el.type === 'date')) {
+      try { (el as HTMLInputElement).showPicker(); } catch { /* sin lista */ }
     }
   };
 

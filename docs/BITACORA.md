@@ -7,6 +7,17 @@
 
 ---
 
+## 12/11/2026 (147) · Claude — SiuMax Nego: Enter se queda también en lo traído de Servic
+- **Dueño:** "yo te dije que siempre tiene que ser así: Enter abre la lista o hace clic, y el selector se queda… no quiero que esté así como en Servic".
+  - Queda decidido para siempre: la regla 7 vale en TODO Nego, también en las ventanas que vienen de Servic. No volver a preguntarlo.
+- **Cambiado** (antes Enter mandaba el selector al siguiente campo; la vigilancia general del Enter lo devolvía, pero el código lo intentaba):
+  - `Clientes/components/ModalBien.tsx` y `ModalTrabajador.tsx`: Enter en un campo ya no llama a `mover(id, 1)`.
+  - `Inventario/components/Activos/` (Nueva herramienta, Prestar, Nuevo vehículo, Mantenimiento): `handleKeyDownEnter` ya no salta al siguiente. En una lista o una fecha, Enter la abre (antes la saltaba).
+  - `Salidas/components/ModalNuevaSalida.tsx`: Enter en la descripción del material externo ya no salta a la cantidad.
+  - Sin cambios: Enter en la cantidad agrega el material (es el "clic" de Agregar) y Enter en la lista de productos elige el producto.
+- **Probado:** `prueba-enter-se-queda-nego.mjs`, 35 de 35 OK: Enter en cada campo de esas 7 ventanas deja el selector en su sitio, 0 errores. Al final deja el negocio en solo Comercio.
+- Solo siumax.
+
 ## 12/11/2026 (146) · Claude — SiuMax Nego, paso 3e: Salidas a obras y servicios
 - **Dueño:** "perfecto sigamos al 3e".
 - **Traída de SiuMax Servic, tal cual:** `src/sections/Salidas/` (cabecera con filtros y cuadros, tabla, nueva salida, detalle, devolución, comprobante).
@@ -21,7 +32,7 @@
 - **Diferencia con Servic, a decidir por el dueño:**
   - En Servic, Enter en el formulario de nueva salida **pasaba al siguiente campo**; el dueño lo prefería así (memoria "Enter en formularios de Servic").
   - En Nego rige la regla general de Comerc (CLAUDE.md, regla 7): Enter abre la lista o hace clic y **el selector se queda**; las flechas mueven.
-  - No se cambió nada a mano: quedó la regla de Nego. **Preguntado al dueño.**
+  - No se cambió nada a mano: quedó la regla de Nego. **El dueño decidió: siempre la regla de Nego (ver 147).**
 - **Siguiente (3f):** Agenda y Taller.
 
 ## 12/11/2026 (145) · Claude — Cabecera de Inventario en una sola fila (con la pestaña Herramientas y vehículos)

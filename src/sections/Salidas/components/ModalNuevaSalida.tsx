@@ -732,12 +732,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                     type="text"
                     value={descExterno}
                     onChange={(e) => setDescExterno(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        document.getElementById('input-cant-item-externo')?.focus();
-                      }
-                    }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} // Enter: el selector se queda
                     placeholder="Descripción del material o compra directa..."
                     className="w-full p-2 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] uppercase font-bold outline-none rounded-none bg-[var(--color-surface)]"
                   />

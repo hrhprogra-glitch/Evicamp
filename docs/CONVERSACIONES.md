@@ -892,3 +892,4 @@
 - *"perfecto sigamos al 3e solo no te olvides que tiene que estar en una fila lo marque con rojo en todas las pantallas recuerda que ya lo configuramos una vez"* → Inventario en una fila y medido en todas las secciones (bitácora 145); luego 3e.
 - Paso 3e hecho: Salidas en Nego (bitácora 146).
   - Se le preguntó si Enter en los formularios de servicios debe pasar al siguiente campo (como en Servic) o quedarse (regla de Nego).
+- El dueño respondió: Enter SIEMPRE se queda (regla de Nego), también en lo de Servic; no quiere el Enter de Servic. Arreglado en 7 ventanas (bitácora 147).
