@@ -144,7 +144,7 @@ const SECCIONES_DE_TIPO: Record<string, IdTipoNegocio[]> = {
   salidas: ['servicios'],
   contratos: ['servicios'],
   taller: ['servicios'],
-  cotizaciones: ['comercio', 'servicios'], // paso 3h: una sola pantalla para los dos (antes Clientes › Cotizaciones)
+  encargos: ['comercio', 'servicios'], // Cotizaciones (los dos) + Pedidos (solo Comercio); antes en Clientes
 };
 
 export const seccionDelNegocio = (seccion: string, tipos: IdTipoNegocio[] = actuales) => {

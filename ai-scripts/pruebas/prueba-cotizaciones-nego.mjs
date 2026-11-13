@@ -1,4 +1,5 @@
-// Prueba del 12/11/2026 (SiuMax Nego, paso 3h), con teclado: UNA sola pantalla de Cotizaciones (Comercio + Servicios).
+// Prueba del 12/11/2026 (SiuMax Nego, paso 3h), con teclado: UNA sola pantalla de Cotizaciones (Comercio + Servicios),
+// hoy la pestaña Cotizaciones de la sección ENCARGOS.
 // - Solo Comercio: Cotizaciones en el menú, sin la pestaña en Clientes, y los atajos Alt de siempre.
 // - Una cotización "de la Caja" (con productos) se convierte en venta: la Caja recibe sus líneas.
 // - Nueva cotización (borrador) → enviada → abono → convertir en trabajo → abono final (sigue CONVERTIDA).
@@ -59,14 +60,15 @@ try {
 
   // ---------- Solo Comercio ----------
   await elegir(['comercio']);
-  ok('Solo Comercio: Cotizaciones en el menú', await hay('#sidebar-btn-cotizaciones'));
+  ok('Solo Comercio: Encargos (cotizaciones y pedidos) en el menú', await hay('#sidebar-btn-encargos'));
   await ir('clientes');
   const tabs = await page.$$eval('main [role="tab"], main .pestanas-sobrias > button', (b) => b.map((x) => x.innerText.trim().toUpperCase()).join(','));
   ok('Clientes ya no tiene la pestaña Cotizaciones', !/COTIZACIONES/.test(tabs), tabs);
   await page.focus('#sidebar-btn-clientes');
   await alt(3); ok('Alt + 3 sigue siendo Inventario', (await vista()) === 'inventario', await vista());
   await alt(7); ok('Alt + 7 sigue siendo Ajustes', (await vista()) === 'configuracion', await vista());
-  await alt(8); ok('Alt + 8 abre Cotizaciones (al final de los atajos)', (await vista()) === 'cotizaciones', await vista());
+  await page.evaluate(() => sessionStorage.removeItem('encargos_pestana'));
+  await alt(8); ok('Alt + 8 abre Encargos en Cotizaciones (al final de los atajos)', (await vista()) === 'encargos', await vista());
   ok('El selector entra al buscador de Cotizaciones', (await foco()) === 'buscador-cotizaciones', await foco());
   ok('La de la Caja sale en la lista', await hay(`#fila-coti-${idCaja}`));
   ok('Sin columna "Lo que se atiende" (solo Comercio)', !(await page.evaluate(() => /LO QUE SE ATIENDE/i.test(document.querySelector('#tabla-cotizaciones thead')?.innerText || ''))));
@@ -92,7 +94,7 @@ try {
 
   // ---------- Comercio + Servicios ----------
   await elegir(['comercio', 'servicios']);
-  await ir('cotizaciones');
+  await page.evaluate(() => sessionStorage.setItem('encargos_pestana', 'cotizaciones')); await ir('encargos');
   ok('Con Servicios: columna "Lo que se atiende"', await page.evaluate(() => /LO QUE SE ATIENDE/i.test(document.querySelector('#tabla-cotizaciones thead')?.innerText || '')));
   await page.focus('#btn-nueva-cotizacion'); await tecla('Enter'); await pausa(1200);
   ok('Enter en "Nueva cotización" abre la ventana con el selector en Asunto', (await foco()) === 'input-asunto-cotizacion', await foco());
@@ -122,7 +124,7 @@ try {
   await page.focus('#btn-guardar-abono-coti'); await tecla('Enter'); await aceptar(); await pausa(900);
   ok('Abono de 40: pagado 40', /\|40(\.00)?$/.test(await coti(`id = ${idNueva}`)), await coti(`id = ${idNueva}`));
   await page.focus('#btn-convertir-venta'); await tecla('Enter'); const av = await aceptar(3000);
-  ok('Con abonos no se lleva a la Caja (avisa)', /abonos/i.test(av) && (await vista()) === 'cotizaciones', av);
+  ok('Con abonos no se lleva a la Caja (avisa)', /abonos/i.test(av) && (await vista()) === 'encargos', av);
   await page.focus('#btn-convertir-trabajo'); await tecla('Enter'); await aceptar(3000); await aceptar(); await pausa(900);
   const trab = await sql(`select estado, trabajo_id is not null from cotizaciones where id = ${idNueva}`);
   ok('"Convertir en trabajo" → CONVERTIDA con su trabajo en la Agenda', trab === 'CONVERTIDA|t', trab);

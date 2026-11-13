@@ -22,6 +22,7 @@ import { ModalElegirClientePOS } from './components/ModalElegirClientePOS';
 import { ModalNombreEspera } from './components/ModalNombreEspera';
 import { ModalCotizacionPOS } from './components/ModalCotizacionPOS';
 import { ModalPedidoPOS } from './components/ModalPedidoPOS';
+import { avisarCambioEncargos } from './components/AvisosEncargos';
 import { traerTodo } from '../../utils/traerTodo';
 import { cargarFacturacionCaja, calcularTotalesCPE, numeroComprobante, DOC_TYPE, contarComprobantesConProblema, type DatosComprobante, type FacturacionCaja } from '../../utils/comprobante';
 import { ModalComprobantesProblema } from '../../components/ModalComprobantesProblema';
@@ -1447,6 +1448,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         onCotizacionGuardada={() => {
           setCart([]);
           setClienteSeleccionado(null);
+          avisarCambioEncargos(); // el aviso "Cotizaciones: N" se actualiza
         }}
       />
 
@@ -1464,6 +1466,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           setCart([]);
           setClienteSeleccionado(null);
           fetchProducts();
+          avisarCambioEncargos(); // el aviso "Pedidos: N" se actualiza
         }}
       />
     </div>

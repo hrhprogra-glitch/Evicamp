@@ -41,9 +41,9 @@ export const restaurarFocoSesion = (view?: string): boolean => {
     if (btnNuevo && btnNuevo.offsetParent !== null) { btnNuevo.focus(); return true; }
   }
 
-  // 1.20. COTIZACIONES (paso 3h): el buscador o "Nueva cotización"
-  if (activeView === 'cotizaciones') {
-    const b = document.getElementById('buscador-cotizaciones') as HTMLInputElement | null;
+  // 1.20. ENCARGOS (Cotizaciones + Pedidos): el buscador de la pestaña abierta o "Nueva cotización"
+  if (activeView === 'encargos') {
+    const b = (document.getElementById('buscador-cotizaciones') || document.getElementById('buscador-pedidos')) as HTMLInputElement | null;
     if (b && b.offsetParent !== null) { b.focus(); b.select(); return true; }
     const btnNuevo = document.getElementById('btn-nueva-cotizacion') as HTMLElement | null;
     if (btnNuevo && btnNuevo.offsetParent !== null) { btnNuevo.focus(); return true; }
@@ -67,10 +67,9 @@ export const restaurarFocoSesion = (view?: string): boolean => {
     if (btnCobrar && btnCobrar.offsetParent !== null) { btnCobrar.focus(); return true; }
   }
 
-  // 2. CLIENTES: el buscador de la pestaña activa (Clientes, Créditos, Pedidos o Trabajadores)
+  // 2. CLIENTES: el buscador de la pestaña activa (Clientes, Créditos o Trabajadores)
   if (activeView === 'clientes') {
     const b = (
-      document.getElementById('buscador-pedidos') ||
       document.getElementById('buscador-trabajadores') || // Talleres y servicios (SiuMax Nego, paso 3c)
       document.getElementById('buscador-clientes') ||
       document.getElementById('buscador-global-fiados')
@@ -78,7 +77,6 @@ export const restaurarFocoSesion = (view?: string): boolean => {
     if (b && b.offsetParent !== null) { b.focus(); b.select(); return true; }
 
     const primeraFila = (
-      document.querySelector('[id="ped-row-0"]') ||
       document.querySelector('tr[data-fila-cliente="true"]') ||
       document.querySelector('tr[role="button"]')
     ) as HTMLElement | null;

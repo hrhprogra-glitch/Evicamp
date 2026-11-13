@@ -29,14 +29,17 @@ export const irA = (...ids: string[]): boolean => {
   return false;
 };
 
-const CABECERA_IZQ = ['btn-por-cobrar-pos', 'btn-limpiar-cliente-pos', 'btn-pos-header-cliente'];
+// (12/11/2026: avisos de Encargos a la derecha de "Por cobrar")
+const CABECERA_IZQ = ['btn-pos-aviso-pedidos', 'btn-pos-aviso-cotizaciones', 'btn-por-cobrar-pos', 'btn-limpiar-cliente-pos', 'btn-pos-header-cliente'];
 const TICKET_ARRIBA = ['btn-pausar-ticket', 'btn-vaciar-ticket'];
 const TICKET_ABAJO = ['edit-input-0', 'edit-price-0', 'btn-proceder-pago'];
 
 export const MAPA_CAJA: Record<string, Mapa> = {
-  'btn-pos-header-cliente': { ArrowRight: ['btn-limpiar-cliente-pos', 'btn-por-cobrar-pos', 'btn-caja-actual-pos', ...TICKET_ARRIBA], ArrowDown: ['buscador-global-pos'] },
-  'btn-limpiar-cliente-pos': { ArrowLeft: ['btn-pos-header-cliente'], ArrowRight: ['btn-por-cobrar-pos', 'btn-caja-actual-pos', ...TICKET_ARRIBA], ArrowDown: ['buscador-global-pos'] },
-  'btn-por-cobrar-pos': { ArrowLeft: ['btn-limpiar-cliente-pos', 'btn-pos-header-cliente'], ArrowRight: ['btn-caja-actual-pos', ...TICKET_ARRIBA], ArrowDown: ['buscador-global-pos'] },
+  'btn-pos-header-cliente': { ArrowRight: ['btn-limpiar-cliente-pos', 'btn-por-cobrar-pos', 'btn-pos-aviso-cotizaciones', 'btn-caja-actual-pos', ...TICKET_ARRIBA], ArrowDown: ['buscador-global-pos'] },
+  'btn-limpiar-cliente-pos': { ArrowLeft: ['btn-pos-header-cliente'], ArrowRight: ['btn-por-cobrar-pos', 'btn-pos-aviso-cotizaciones', 'btn-caja-actual-pos', ...TICKET_ARRIBA], ArrowDown: ['buscador-global-pos'] },
+  'btn-por-cobrar-pos': { ArrowLeft: ['btn-limpiar-cliente-pos', 'btn-pos-header-cliente'], ArrowRight: ['btn-pos-aviso-cotizaciones', 'btn-caja-actual-pos', ...TICKET_ARRIBA], ArrowDown: ['buscador-global-pos'] },
+  'btn-pos-aviso-cotizaciones': { ArrowLeft: ['btn-por-cobrar-pos', 'btn-limpiar-cliente-pos', 'btn-pos-header-cliente'], ArrowRight: ['btn-pos-aviso-pedidos', 'btn-caja-actual-pos', ...TICKET_ARRIBA], ArrowDown: ['buscador-global-pos'] },
+  'btn-pos-aviso-pedidos': { ArrowLeft: ['btn-pos-aviso-cotizaciones'], ArrowRight: ['btn-caja-actual-pos', ...TICKET_ARRIBA], ArrowDown: ['buscador-global-pos'] },
   'btn-caja-actual-pos': { ArrowLeft: [...CABECERA_IZQ, 'buscador-global-pos'], ArrowRight: ['btn-monto-caja-pos'], ArrowDown: ['btn-montos-caja-pos', ...TICKET_ARRIBA] },
   'btn-monto-caja-pos': { ArrowLeft: ['btn-caja-actual-pos'], ArrowRight: ['btn-ojo-caja-pos'], ArrowDown: ['btn-montos-caja-pos', ...TICKET_ARRIBA] },
   'btn-ojo-caja-pos': { ArrowLeft: ['btn-monto-caja-pos'], ArrowDown: ['btn-montos-caja-pos', ...TICKET_ARRIBA] },

@@ -9,7 +9,7 @@ import { Salidas } from './sections/Salidas'; // Talleres y servicios (SiuMax Ne
 import { Agenda } from './sections/Agenda'; // paso 3f, de SiuMax Servic
 import { Taller } from './sections/Taller'; // paso 3f, de SiuMax Servic
 import { Contratos } from './sections/Contratos'; // paso 3g, de SiuMax Servic
-import { Cotizaciones } from './sections/Cotizaciones'; // paso 3h: una sola pantalla (Comerc + Servic)
+import { Encargos } from './sections/Encargos'; // Cotizaciones (paso 3h) + Pedidos, 12/11/2026
 import { SesionProvider } from './utils/SesionProvider';
 
 // Importación de Módulos (Secciones)
@@ -47,7 +47,7 @@ const NOMBRES_SESIONES: Record<string, string> = {
   salidas: 'Salidas',
   contratos: 'Contratos',
   taller: 'Taller',
-  cotizaciones: 'Cotizaciones',
+  encargos: 'Encargos',
 };
 
 // Primera sección que el empleado puede ver con el tipo de negocio elegido (Caja si es Comercio, como siempre)
@@ -353,8 +353,8 @@ export const App: React.FC = () => {
         return <Taller />;
       case 'contratos':
         return <Contratos />;
-      case 'cotizaciones':
-        return <Cotizaciones onNavigatePOS={() => handleNavigate('pos')} />;
+      case 'encargos':
+        return <Encargos onNavigatePOS={() => handleNavigate('pos')} />;
       default:
         return (
           <div className="border border-dashed border-[var(--color-border)] p-12 text-center">

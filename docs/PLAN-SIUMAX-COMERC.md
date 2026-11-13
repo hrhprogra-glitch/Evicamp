@@ -5,7 +5,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 12/11/2026 (151), Claude: **SiuMax Nego, paso 3h (parte 2)**: Utilidades de servicios (Rentabilidad, Técnicos, Materiales, Cobranzas, con el Taller) junto a Productos; cálculos de Servic corregidos. Probado 19/19. **Fase 3 terminada.** Siguiente: fase 4 (Panel y links nego), esperando su OK. Solo siumax.
+- **Última actualización:** 12/11/2026 (152), Claude: sección **Encargos** (Cotizaciones + Pedidos; nombre elegido por el dueño) y avisos "Cotizaciones" y "Pedidos" en la Caja, acomodados en celular, tablet, laptop y PC. Probado 28/28 y 40/40. Siguiente: fase 4 (Panel y links nego), esperando su OK. Solo siumax.
+- (151) 12/11/2026, Claude: **SiuMax Nego, paso 3h (parte 2)**: Utilidades de servicios (Rentabilidad, Técnicos, Materiales, Cobranzas, con el Taller) junto a Productos; cálculos de Servic corregidos. Probado 19/19. **Fase 3 terminada.** Siguiente: fase 4 (Panel y links nego), esperando su OK. Solo siumax.
 - (150) 12/11/2026, Claude: **SiuMax Nego, paso 3h (parte 1)**: una sola pantalla de Cotizaciones (Comercio + Servicios; se quitó la pestaña de Clientes), con 3 errores de Servic corregidos en los abonos. Probado 40/40. Falta la parte 2: informes de servicios en Utilidades. Solo siumax.
 - (149) 12/11/2026, Claude: **SiuMax Nego, paso 3g**: Contratos (de Servic) y stock: los repuestos del taller y los consumos de contratos descuentan stock por lotes (se corrigió un error de Servic con el costo). Probado 30/30 y 41/41. Siguiente: 3h, Cotizaciones y Utilidades (esperando su OK). Solo siumax.
 - (148) 12/11/2026, Claude: **SiuMax Nego, paso 3f**: Agenda y Taller (de Servic), probadas con teclado (38/38) y con Enter que se queda. Pendiente de decidir: que los repuestos del taller descuenten stock. Siguiente: 3g, Contratos (esperando su OK). Solo siumax.

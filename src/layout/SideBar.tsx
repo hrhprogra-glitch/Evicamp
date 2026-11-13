@@ -3,7 +3,7 @@ import {
   ShoppingCart, Users, Package, 
   Truck, ClipboardCheck, Wallet, 
   Settings, BarChart3, X, LogOut, Download, Monitor, CreditCard,
-  CalendarDays, PackageMinus, Repeat, Wrench, FileText
+  CalendarDays, PackageMinus, Repeat, Wrench, ClipboardList
 } from 'lucide-react';
 import { usePuedeInstalar, instalarApp, useHayInstaladorPC, descargarInstaladorPC } from '../utils/instalarApp';
 import { useSuscripcion, fechaPe, abrirPago } from './AvisoSuscripcion';
@@ -33,7 +33,7 @@ export const MENU_SECCIONES = [
     items: [
       { id: 'pos', name: 'Caja', icon: ShoppingCart },
       { id: 'clientes', name: 'Clientes', icon: Users },
-      { id: 'cotizaciones', name: 'Cotizaciones', icon: FileText }, // paso 3h: para Comercio y Servicios
+      { id: 'encargos', name: 'Encargos', icon: ClipboardList }, // Cotizaciones + Pedidos (12/11/2026), Comercio y Servicios
     ]
   },
   {
@@ -64,10 +64,10 @@ export const MENU_SECCIONES = [
 
 // Atajos Alt + 1…9 y Alt + 0 (la décima): las secciones del tipo de negocio, en el orden del menú. Solo Comercio:
 // Caja 1, Clientes 2, Inventario 3, Conteos 4, Finanzas 5, Utilidades 6, Ajustes 7 (igual que antes de Nego).
-// Cotizaciones (paso 3h) va al final de los atajos para que los números de siempre no cambien.
+// Encargos (antes Cotizaciones, paso 3h) va al final de los atajos para que los números de siempre no cambien.
 export const atajosSesiones = (tipos?: IdTipoNegocio[]) => {
   const ids = MENU_SECCIONES.flatMap((g) => g.items.map((i) => i.id)).filter((id) => seccionDelNegocio(id, tipos));
-  return [...ids.filter((id) => id !== 'cotizaciones'), ...ids.filter((id) => id === 'cotizaciones')].slice(0, 10);
+  return [...ids.filter((id) => id !== 'encargos'), ...ids.filter((id) => id === 'encargos')].slice(0, 10);
 };
 export const teclaAtajo = (id: string, tipos?: IdTipoNegocio[]) => {
   const i = atajosSesiones(tipos).indexOf(id);

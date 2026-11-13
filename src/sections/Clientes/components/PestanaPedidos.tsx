@@ -178,7 +178,7 @@ export const PestanaPedidos: React.FC = () => {
       }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      document.getElementById('tab-clientes-pedidos')?.focus();
+      document.getElementById('tab-encargos-pedidos')?.focus();
     } else if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       setFiltroEstado(est);
@@ -715,7 +715,7 @@ export const PestanaPedidos: React.FC = () => {
             autoComplete="off"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Escape' && search) { e.preventDefault(); e.stopPropagation(); setSearch(''); return; } if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); document.getElementById('tab-clientes-pedidos')?.focus(); return; } handleSearchKeyDown(e); }}
+            onKeyDown={(e) => { if (e.key === 'Escape' && search) { e.preventDefault(); e.stopPropagation(); setSearch(''); return; } if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); document.getElementById('tab-encargos-pedidos')?.focus(); return; } handleSearchKeyDown(e); }}
             placeholder="BUSCAR POR NRO, CLIENTE, DNI, TELÉFONO..."
             style={{ paddingRight: search ? '8rem' : undefined }}
           />
@@ -754,7 +754,7 @@ export const PestanaPedidos: React.FC = () => {
                   } else if (e.key === 'ArrowUp') {
                     e.preventDefault();
                     e.stopPropagation();
-                    document.getElementById('tab-clientes-pedidos')?.focus();
+                    document.getElementById('tab-encargos-pedidos')?.focus();
                   }
                 }}
               >

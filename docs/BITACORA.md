@@ -7,6 +7,29 @@
 
 ---
 
+## 12/11/2026 (152) · Claude — SiuMax Nego: sección ENCARGOS (Cotizaciones + Pedidos) y avisos en la Caja
+- **Dueño:** "combinar cotizaciones con pedidos", "en caja agrega botones de alertar de cotizaciones y pedidos" que se acomoden bien en celular y otros dispositivos, y un nombre general para la sección. Se le propuso el plan con 4 nombres; eligió **"Encargos"**.
+- **Sección ENCARGOS** (`src/sections/Encargos/`; id `encargos`, reemplaza a `cotizaciones`):
+  - Pestañas **COTIZACIONES** (la pantalla única del paso 3h) y **PEDIDOS** (los pedidos por encargo de la Caja, F8; antes Clientes › Pedidos, misma pantalla `PestanaPedidos`). Pedidos solo con Comercio; con una sola pestaña no se muestran.
+  - Cabecera en una fila (`CabeceraEncargos`): título, pestañas y "Nueva cotización" (solo en Cotizaciones). Los cuadros de totales de cotizaciones pasaron debajo, en su fila.
+  - Clientes queda con Clientes, Créditos (y Trabajadores con servicios).
+  - Menú: "Encargos" en Operaciones; atajo Alt al final (solo Comercio: Alt 8). Permisos: `cobros_ver` o `caja_ver_fiados`.
+- **Avisos en la Caja** (`Punto-de-venta/components/AvisosEncargos.tsx`), junto a "Por cobrar":
+  - **Cotizaciones: N** (borrador, vigente o aprobada sin convertir; no las vencidas). En alerta si alguna vence hoy.
+  - **Pedidos: N** (pendientes de entregar). En alerta si alguno es para hoy o está atrasado.
+  - Cada uno abre Encargos en su pestaña, con el selector en su buscador. Se actualizan al guardar una cotización (F7) o un pedido (F8) en la Caja y al volver a la ventana.
+  - Teclado: → ← entre Cliente, Por cobrar, Cotizaciones y Pedidos (`tecladoCaja.ts`); ↓ al buscador de la Caja.
+- **Acomodo:**
+  - Celular: los 3 avisos en una fila, del mismo ancho, con nombre corto ("Cobrar", "Cotiz", "Pedidos").
+  - Tablet y laptop: título, hora y Cliente arriba; los avisos debajo, a la derecha.
+  - PC grande (2xl): todo en una sola fila.
+- **Probado:**
+  - `prueba-encargos-nego.mjs`, 28 de 28: Clientes sin Pedidos; avisos en alerta; teclado; Enter abre cada pestaña; ↑ ← entre pestañas; sin ventanas abiertas solas; solo Servicios sin Pedidos.
+  - Medido a 390, 768, 1366 y 1920: los botones se ven, sin salirse ni taparse y sin desplazamiento de costado; los 3 avisos juntos; a 1920 todo en una fila.
+  - `prueba-cotizaciones-nego.mjs` (ajustada a Encargos): 40 de 40.
+  - `medir-cabeceras-nego.mjs`: Encargos y Clientes en una fila a 1920 y 1366.
+- Solo siumax.
+
 ## 12/11/2026 (151) · Claude — SiuMax Nego, paso 3h (parte 2): Utilidades de servicios
 - **Dueño:** el escáner por cámara lo buscó en Evicamp (ahí aún no está): "todavía no lo subas". "Sube la parte 2 y explícame la parte 1".
 - **Utilidades con "Talleres y servicios":** pestañas al lado del título: **Productos** (lo de Comerc, igual que siempre) · **Rentabilidad · Técnicos · Materiales · Cobranzas** (de los "Gráficos" de Servic). Las mismas pestañas en las dos vistas.

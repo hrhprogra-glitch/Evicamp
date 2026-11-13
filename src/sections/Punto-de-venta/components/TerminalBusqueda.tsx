@@ -9,7 +9,9 @@ import { esDecimal, unidadDe } from '../../../utils/unidades';
 import type { Product } from '../../Inventario/types';
 import type { Cliente } from '../types';
 import { supabase } from '../../../db/supabase';
-import { useEmpleado, usePermiso } from '../../../utils/permisos';
+import { useEmpleado, usePermiso, puedeVerSeccion } from '../../../utils/permisos';
+import { useTiposNegocio } from '../../../utils/tiposNegocio';
+import { AvisosEncargos } from './AvisosEncargos';
 import { fotoDeCache } from '../../../utils/cacheFotos';
 
 interface Props {
@@ -38,6 +40,8 @@ export const TerminalBusqueda: React.FC<Props> = ({
   const puedeVerFiados = usePermiso('caja_ver_fiados');
   const [time, setTime] = useState<string>('');
   const [fiadosCount, setFiadosCount] = useState<number>(0);
+  const tiposNegocio = useTiposNegocio();
+  const puedeVerEncargos = puedeVerSeccion(useEmpleado()?.permisos, 'encargos');
 
   useEffect(() => {
     // 1. Reloj
@@ -257,14 +261,17 @@ export const TerminalBusqueda: React.FC<Props> = ({
 
       {/* HEADER DE BÚSQUEDA TIPO TERMINAL */}
       <div className="bg-[var(--color-surface)] px-3 py-2 sm:px-4 border-b border-[var(--color-border)] shrink-0 rounded-none">
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <h1 className="text-sm sm:text-base font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2">
+        {/* Fila 1: título, usuario, hora y Cliente. Fila 2: avisos (Por cobrar, Cotizaciones, Pedidos): en el celular
+            tres botones iguales; desde tablet en línea a la derecha; en PC grande (2xl) todo en UNA fila. */}
+        <div className="flex flex-col 2xl:flex-row 2xl:items-center 2xl:justify-between gap-2 mb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 min-w-0 2xl:flex-1">
+          <div className="shrink-0">
+            <h1 className="text-sm sm:text-base font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2 whitespace-nowrap">
               <ScanLine className="text-[var(--color-ink)]" size={18} /> Punto de Venta
             </h1>
           </div>
           
-          <div className="flex items-center gap-2 lg:gap-3">
+          <div className="flex flex-wrap items-center justify-end gap-2 lg:gap-3 min-w-0">
             <div className="hidden md:flex items-center min-w-0 border border-[var(--color-border)] pl-2 pr-3 py-1 bg-white">
               <div className="h-2 w-2 bg-[var(--color-accent)] animate-pulse mr-2"></div>
               <span className="text-xs font-black text-[var(--color-ink)] uppercase tracking-[0.1em] truncate">
@@ -322,7 +329,11 @@ export const TerminalBusqueda: React.FC<Props> = ({
                 )}
               </div>
             )}
+          </div>
+        </div>
 
+          {(puedeVerFiados || puedeVerEncargos) && (
+          <div id="avisos-caja" className="grid grid-flow-col auto-cols-fr gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end 2xl:shrink-0">
             {puedeVerFiados && (
               <button
                 // "Por cobrar" abre la sección Clientes directo en la pestaña Créditos
@@ -331,17 +342,26 @@ export const TerminalBusqueda: React.FC<Props> = ({
                 onKeyDown={flechasCaja('btn-por-cobrar-pos')}
                 onClick={() => { try { sessionStorage.setItem('clientes_pestana', 'CREDITOS'); } catch { /* sin almacenamiento */ } onNavigate?.('clientes'); }}
                 title={fiadosCount > 0 ? 'Hay deudas pendientes por cobrar' : 'Nadie tiene deudas pendientes'}
-                className={`flex items-center shrink-0 whitespace-nowrap border-2 px-2 sm:px-3 py-1 text-[12px] font-black uppercase tracking-widest transition-all cursor-pointer ${
+                className={`flex items-center justify-center shrink-0 whitespace-nowrap border-2 px-1.5 sm:px-3 py-1.5 sm:py-1 text-[11px] sm:text-[12px] font-black uppercase tracking-normal sm:tracking-widest transition-all cursor-pointer rounded-none ${
                   fiadosCount > 0
                     ? 'border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] hover:bg-[var(--color-warning)] hover:text-white animate-pulse'
                     : 'border-[var(--color-accent)] bg-[var(--color-accent-bg)] text-[var(--color-accent-dark)] hover:bg-[var(--color-accent)] hover:text-white'
                 }`}
               >
-                {fiadosCount > 0 ? <AlertTriangle size={12} className="mr-2" /> : <CheckCircle2 size={12} className="mr-2" />}
-                Por cobrar: {fiadosCount}
+                {fiadosCount > 0 ? <AlertTriangle size={12} className="mr-1.5 sm:mr-2" /> : <CheckCircle2 size={12} className="mr-1.5 sm:mr-2" />}
+                <span className="sm:hidden">Cobrar:&nbsp;</span><span className="hidden sm:inline">Por cobrar:&nbsp;</span>{fiadosCount}
               </button>
             )}
+
+            {/* Encargos (12/11/2026): avisos de cotizaciones y pedidos; abren su pestaña */}
+            {puedeVerEncargos && (
+              <AvisosEncargos
+                conPedidos={tiposNegocio.includes('comercio')}
+                onAbrir={(p) => { try { sessionStorage.setItem('encargos_pestana', p); } catch { /* sin almacenamiento */ } onNavigate?.('encargos'); }}
+              />
+            )}
           </div>
+          )}
         </div>
 
         <div className="flex gap-3">

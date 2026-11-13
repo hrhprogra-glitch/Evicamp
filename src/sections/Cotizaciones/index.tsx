@@ -1,4 +1,5 @@
-// Sección COTIZACIONES de SiuMax Nego (paso 3h, 12/11/2026). Una sola pantalla para Comercio y Servicios (decidido
+// Pestaña COTIZACIONES de la sección ENCARGOS de SiuMax Nego (paso 3h, 12/11/2026; desde el mismo día dentro de
+// Encargos, con Pedidos, pedido del dueño). Una sola pantalla para Comercio y Servicios (decidido
 // por el dueño): reemplaza la pestaña Cotizaciones de Clientes (Comerc) y la sección Cotizaciones de SiuMax Servic.
 // Las cotizaciones de la Caja (ModalCotizacionPOS) también salen aquí.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -15,9 +16,10 @@ import { ModalDetalleCotizacion } from './components/ModalDetalleCotizacion';
 
 interface Props {
   onNavigatePOS?: () => void;
+  pedirNueva?: number; // cada vez que sube, abre "Nueva cotización" (el botón está en la cabecera de Encargos)
 }
 
-export const Cotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
+export const Cotizaciones: React.FC<Props> = ({ onNavigatePOS, pedirNueva = 0 }) => {
   const tipos = useTiposNegocio();
   const conComercio = tipos.includes('comercio');
   const conServicios = tipos.includes('servicios');
@@ -48,6 +50,7 @@ export const Cotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
   }, [conServicios]);
 
   useEffect(() => { cargar(); }, [cargar]);
+  useEffect(() => { if (pedirNueva > 0) setNueva({ coti: null }); }, [pedirNueva]);
 
   const filtradas = useMemo(() => cotizaciones.filter((c) =>
     (filtroEstado === 'TODOS' || c.estado === filtroEstado) &&
@@ -61,7 +64,7 @@ export const Cotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
   }, 80);
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono relative">
+    <div className="flex flex-col gap-4 p-0 w-full font-mono relative">
       <HeaderCotizaciones
         busqueda={busqueda}
         onBusquedaChange={setBusqueda}
@@ -69,7 +72,6 @@ export const Cotizaciones: React.FC<Props> = ({ onNavigatePOS }) => {
         onFiltroEstadoChange={setFiltroEstado}
         cotizaciones={cotizaciones}
         encontradas={filtradas.length}
-        onNueva={() => setNueva({ coti: null })}
       />
       <div className="px-3 sm:px-4 lg:px-6 pb-6">
         {cargando ? (

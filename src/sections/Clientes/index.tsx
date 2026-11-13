@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { filaEnMedio } from '../../utils/flechasEspaciales';
-import { Coins, Users, BookOpen, Package, UserPlus, Plus, HardHat } from 'lucide-react';
+import { Coins, Users, BookOpen, UserPlus, Plus, HardHat } from 'lucide-react';
 import { supabase } from '../../db/supabase';
 import { TablaFiadosAgrupados } from './components/TablaFiadosAgrupados';
 import { ModalFiado } from './components/ModalFiado';
@@ -17,7 +17,6 @@ import { eliminarAbonoYRevertirCaja } from '../../utils/revertirAbono';
 import { TarjetaMetrica } from '../Inventario/components/TarjetaMetrica';
 import { confirmar, avisar } from '../../utils/dialogos';
 import { PestanaClientes } from './components/PestanaClientes';
-import { PestanaPedidos } from './components/PestanaPedidos';
 import { ModalFichaCliente, type DatosCliente } from './components/ModalFichaCliente';
 import { ModalDetalleCliente } from './components/ModalDetalleCliente';
 import { ModalGrupo } from './components/ModalGrupo';
@@ -30,15 +29,14 @@ import { useTiposNegocio } from '../../utils/tiposNegocio';
 import { PestanaTrabajadores } from './components/PestanaTrabajadores';
 import { ModalBien, type DatosBien } from './components/ModalBien';
 
-// Sección CLIENTES (fases 4.1 a 4.6): Clientes, Créditos y Pedidos. Cotizaciones pasó a su propia sección del menú
-// (SiuMax Nego, paso 3h: una sola pantalla para Comercio y Servicios).
+// Sección CLIENTES (fases 4.1 a 4.6): Clientes y Créditos. Cotizaciones y Pedidos pasaron a la sección ENCARGOS del
+// menú (SiuMax Nego, 12/11/2026).
 // SiuMax Nego (paso 3c): con "Talleres y servicios" también la pestaña Trabajadores y, en el detalle de cada cliente,
-// lo que se atiende (de SiuMax Servic). Créditos y Pedidos son de Comercio (vienen de Caja).
-type Pestana = 'CLIENTES' | 'CREDITOS' | 'PEDIDOS' | 'TRABAJADORES';
+// lo que se atiende (de SiuMax Servic). Créditos es de Comercio (viene de Caja).
+type Pestana = 'CLIENTES' | 'CREDITOS' | 'TRABAJADORES';
 const PESTANAS: { id: Pestana; nombre: string; boton: string; tipo?: 'comercio' | 'servicios' }[] = [
   { id: 'CLIENTES', nombre: 'Clientes', boton: 'tab-clientes-clientes' },
   { id: 'CREDITOS', nombre: 'Créditos', boton: 'tab-clientes-creditos', tipo: 'comercio' },
-  { id: 'PEDIDOS', nombre: 'Pedidos', boton: 'tab-clientes-pedidos', tipo: 'comercio' },
   { id: 'TRABAJADORES', nombre: 'Trabajadores', boton: 'tab-clientes-trabajadores', tipo: 'servicios' },
 ];
 // Fila de la base → lo que se atiende (de SiuMax Servic)
@@ -61,7 +59,7 @@ const aBien = (b: any): BienCliente => ({
 const pestanaGuardada = (): Pestana => {
   try {
     const val = sessionStorage.getItem('clientes_pestana');
-    if (val === 'CREDITOS' || val === 'PEDIDOS' || val === 'TRABAJADORES') return val;
+    if (val === 'CREDITOS' || val === 'TRABAJADORES') return val;
     return 'CLIENTES';
   } catch {
     return 'CLIENTES';
@@ -83,7 +81,6 @@ export const Clientes: React.FC<{ onNavigate?: (v: string) => void }> = () => {
     switch (p) {
       case 'CLIENTES': return 'buscador-clientes';
       case 'CREDITOS': return 'buscador-global-fiados';
-      case 'PEDIDOS': return 'buscador-pedidos';
       case 'TRABAJADORES': return 'buscador-trabajadores';
     }
   };
@@ -769,7 +766,7 @@ if (fiaData) {
               }
             }}
             className={claseBotonBarra(pestana === p.id)}>
-            {p.id === 'CLIENTES' ? <Users size={14} /> : p.id === 'CREDITOS' ? <BookOpen size={14} /> : p.id === 'TRABAJADORES' ? <HardHat size={14} /> : <Package size={14} />} {p.nombre}
+            {p.id === 'CLIENTES' ? <Users size={14} /> : p.id === 'CREDITOS' ? <BookOpen size={14} /> : <HardHat size={14} />} {p.nombre}
           </button>
         ))}
       </div>
@@ -851,13 +848,9 @@ if (fiaData) {
             <TablaFiadosAgrupados clientes={clientesAgrupados} onView={(cli) => { setClienteEstadoCuenta(cli); setIsModalEstadoCuentaOpen(true); }} />
           </div>
         </>
-      ) : pestana === 'TRABAJADORES' ? (
-        <div className="lg:flex-1 lg:min-h-0">
-          <PestanaTrabajadores idPestana="tab-clientes-trabajadores" pedirNuevo={pedirNuevoTrabajador} />
-        </div>
       ) : (
         <div className="lg:flex-1 lg:min-h-0">
-          <PestanaPedidos />
+          <PestanaTrabajadores idPestana="tab-clientes-trabajadores" pedirNuevo={pedirNuevoTrabajador} />
         </div>
       )}
 
