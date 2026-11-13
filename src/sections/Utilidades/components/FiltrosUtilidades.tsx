@@ -6,12 +6,14 @@ interface Props {
   filtrarHoy?: () => void;
   filtrarSemana?: () => void;
   filtrarMes?: () => void;
+  pestanas?: React.ReactNode; // SiuMax Nego (3h): Productos + las de servicios, al lado del título
 }
 
-export const FiltrosUtilidades: React.FC<Props> = ({ onToggleTops }) => {
+export const FiltrosUtilidades: React.FC<Props> = ({ onToggleTops, pestanas }) => {
   return (
     <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-wrap justify-between items-center gap-x-6 gap-y-4 shrink-0">
-      <div className="flex items-center gap-3" title="Análisis de Utilidad y Rendimiento">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 lg:gap-8 min-w-0 max-w-full">
+      <div className="flex items-center gap-3 shrink-0" title="Análisis de Utilidad y Rendimiento">
         <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] rounded-none shrink-0">
           <BarChart3 size={20} className="text-[var(--color-accent)]" />
         </div>
@@ -20,6 +22,8 @@ export const FiltrosUtilidades: React.FC<Props> = ({ onToggleTops }) => {
             Inteligencia de Negocio
           </h1>
         </div>
+      </div>
+      {pestanas}
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -32,6 +36,10 @@ export const FiltrosUtilidades: React.FC<Props> = ({ onToggleTops }) => {
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 e.stopPropagation();
+              } else if (e.key === 'ArrowLeft') {
+                // ← a la última pestaña (Nego 3h, con servicios)
+                const tabs = document.querySelectorAll<HTMLElement>('[id^="btn-tab-util-"]');
+                if (tabs.length) { e.preventDefault(); tabs[tabs.length - 1].focus(); }
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 document.getElementById('buscador-global-utilidades')?.focus();

@@ -1,0 +1,140 @@
+// src/sections/Graficos/components/TabMateriales.tsx
+// Insumos y materiales más usados en estilo SiuMax Sobrio
+
+import React from 'react';
+import { Package } from 'lucide-react';
+import type { ItemMaterialTop } from './types';
+
+interface TabMaterialesProps {
+  materiales: ItemMaterialTop[];
+  busqueda: string;
+}
+
+// Filas: ↑ ↓ se mueven entre filas; ↑ desde la primera sube al buscador de la cabecera (Nego 3h)
+const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>) => {
+  if (e.key === 'ArrowDown') { e.preventDefault(); (e.currentTarget.nextElementSibling as HTMLElement | null)?.focus(); }
+  else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    const ant = e.currentTarget.previousElementSibling as HTMLElement | null;
+    if (ant) ant.focus(); else (document.querySelector('[id^="buscador-reporte-"]') as HTMLElement | null)?.focus();
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.preventDefault();
+};
+
+export const TabMateriales: React.FC<TabMaterialesProps> = ({ materiales, busqueda }) => {
+  const filtrados = materiales.filter((m) =>
+    m.nombre.toLowerCase().includes(busqueda.toLowerCase().trim())
+  );
+
+  const top10 = [...filtrados].slice(0, 10);
+  const maxCosto = top10.length > 0 ? Math.max(...top10.map((m) => m.costoTotal), 1) : 1;
+
+  const totalCosto = filtrados.reduce((s, m) => s + m.costoTotal, 0);
+
+  return (
+    <div className="flex flex-col gap-4 font-mono">
+      {/* Gráfico Ranking de Insumos por Costo Valorizado */}
+      {top10.length > 0 && (
+        <div className="tarjeta-sobria p-4 bg-[var(--color-surface)] border-2 border-[var(--color-ink)]">
+          <div className="flex items-center justify-between mb-3 border-b border-[var(--color-border)] pb-2">
+            <span className="text-xs font-black text-[var(--color-ink)] uppercase tracking-wider flex items-center gap-1.5">
+              <Package size={16} className="text-[var(--color-accent-shadow)]" />
+              Top 10 Materiales e Insumos Más Consumidos (Valorizados en S/)
+            </span>
+            <span className="text-[10px] text-[var(--color-muted)] font-black uppercase">
+              Costo total consumido
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {top10.map((m) => {
+              const ancho = Math.min(100, Math.max(6, (m.costoTotal / maxCosto) * 100));
+
+              return (
+                <div key={m.productoId} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="text-[var(--color-ink)]">
+                      {m.nombre}{' '}
+                      <span className="text-[10px] text-[var(--color-muted)] font-bold">
+                        ({m.cantidadConsumida.toFixed(2)} {m.unidad})
+                      </span>
+                    </span>
+                    <span className="font-mono font-black text-[var(--color-accent-shadow)]">
+                      S/ {m.costoTotal.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="w-full bg-[var(--color-border)] h-2.5 overflow-hidden">
+                    <div
+                      className="bg-[var(--color-accent)] h-full transition-all duration-500"
+                      style={{ width: `${ancho}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Tabla de Insumos */}
+      <div className="border border-[var(--color-border)] bg-[var(--color-surface)] overflow-x-auto">
+        {filtrados.length === 0 ? (
+          <div className="vacio-sobrio p-12">
+            <Package size={32} />
+            <p className="text-xs font-black uppercase tracking-wider text-[var(--color-ink)]">
+              No se han consumido insumos ni materiales en el período seleccionado
+            </p>
+          </div>
+        ) : (
+          <>
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[var(--color-ink)] text-white uppercase font-black border-b-2 border-[var(--color-ink)] tracking-widest text-[10px]">
+                <tr>
+                  <th className="py-2.5 px-3">Insumo / Material</th>
+                  <th className="py-2.5 px-3 text-center">Unidad</th>
+                  <th className="py-2.5 px-3 text-right">En salidas y taller</th>
+                  <th className="py-2.5 px-3 text-right">En contratos</th>
+                  <th className="py-2.5 px-3 text-right">Total Consumido</th>
+                  <th className="py-2.5 px-3 text-right">Costo Total Valorizado</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--color-border)]">
+                {filtrados.map((m) => (
+                  <tr key={m.productoId} data-fila-grafico="true" tabIndex={0} onKeyDown={teclaFila} className="hover:bg-[var(--color-bg)] focus:bg-[var(--color-accent-bg)] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-accent)] transition-colors text-[var(--color-ink)]">
+                    <td className="py-2.5 px-3 font-black">
+                      {m.nombre}
+                    </td>
+                    <td className="py-2.5 px-3 text-center text-[var(--color-muted)] font-mono font-bold text-[11px]">
+                      {m.unidad}
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono font-bold text-[var(--color-muted)]">
+                      {m.usadoEnObras > 0 ? m.usadoEnObras.toFixed(2) : '-'}
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono font-bold text-[var(--color-muted)]">
+                      {m.usadoEnContratos > 0 ? m.usadoEnContratos.toFixed(2) : '-'}
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono font-black text-[var(--color-ink)]">
+                      {m.cantidadConsumida.toFixed(2)}
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono font-black text-[var(--color-accent-shadow)]">
+                      S/ {m.costoTotal.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Totales */}
+            <div className="px-4 py-3 bg-[var(--color-surface)] border-t border-[var(--color-border)] flex items-center justify-between text-xs font-mono font-black">
+              <span className="text-[var(--color-muted)] uppercase">
+                Total Materiales Consumidos ({filtrados.length} productos)
+              </span>
+              <span className="text-[var(--color-accent-shadow)]">
+                Costo Total: S/ {totalCosto.toFixed(2)}
+              </span>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};

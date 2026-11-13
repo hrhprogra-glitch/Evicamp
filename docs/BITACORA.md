@@ -7,6 +7,29 @@
 
 ---
 
+## 12/11/2026 (151) · Claude — SiuMax Nego, paso 3h (parte 2): Utilidades de servicios
+- **Dueño:** el escáner por cámara lo buscó en Evicamp (ahí aún no está): "todavía no lo subas". "Sube la parte 2 y explícame la parte 1".
+- **Utilidades con "Talleres y servicios":** pestañas al lado del título: **Productos** (lo de Comerc, igual que siempre) · **Rentabilidad · Técnicos · Materiales · Cobranzas** (de los "Gráficos" de Servic). Las mismas pestañas en las dos vistas.
+  - Solo Comercio (Evicamp): sin pestañas, igual que siempre.
+  - Solo Servicios: sin Productos; abre en Rentabilidad.
+  - Archivos: `Utilidades/PestanasUtilidades.tsx` y `Utilidades/servicios/` (`UtilidadesServicios`, `HeaderServicios` y las 4 pestañas de Servic, sin sombras pesadas y con filas que se recorren con ↑ ↓).
+- **Errores de Servic corregidos en los cálculos** (leía columnas que no existen, así que varios números salían en 0):
+  - Salidas: el código es `codigo` y la cancelada es CANCELADO.
+  - Consumos de contratos: costo en `subtotal_costo` y nombre en `descripcion`.
+  - Visitas hechas: estado REALIZADO y `fecha_ejecutada`.
+  - Saldos calculados (total − pagado): las cuotas de contratos no guardan saldo.
+  - Fechas en la hora de Perú: antes salían en UTC y de noche ya mostraban "mañana".
+- **Nuevo frente a Servic:** el **Taller** cuenta en Rentabilidad (total de la orden menos sus repuestos), en Técnicos (órdenes asignadas y entregadas), en Materiales (repuestos) y en Cobranzas (órdenes con saldo).
+- Las cotizaciones vendidas en la Caja NO cuentan aquí: ya están en Productos. Tampoco las que están en dólares, para no sumar monedas distintas.
+- **Probado:** `prueba-utilidades-servicios-nego.mjs`, 19 de 19, dos veces seguidas, con datos de ejemplo de valores conocidos:
+  - Cotización aprobada 500 (debe 300).
+  - Orden del taller 300 con repuesto de 40 (utilidad 260; pagada, no sale en Cobranzas).
+  - Contrato con cuota 320 (debe 170) y consumo de 25 (utilidad 295).
+  - Salida sin cotización con costo 20.
+  - También: técnico, materiales, filtro TALLER, ↑ ↓, solo Comercio igual que siempre y solo Servicios sin Productos. Borra los datos al final.
+  - `medir-cabeceras-nego.mjs`: Utilidades en una fila a 1920 y 1366 en todas sus pestañas.
+- **Con esto termina la fase 3** (todo lo de Servic ya está en Nego). Siguiente: fase 4 (Panel y links `nego`), con el OK del dueño.
+
 ## 12/11/2026 (150) · Claude — SiuMax Nego, paso 3h (parte 1): una sola pantalla de Cotizaciones
 - **Dueño:** "si hazlo" (3h) y, preguntado cómo juntarlas, eligió **"Una sola pantalla (Recomendado)"**: una sección Cotizaciones en el menú para todos; se quita la pestaña de Clientes (también en Evicamp cuando se le suba).
 - **Nueva sección `src/sections/Cotizaciones/`** (base: la de Servic, rehecha para Nego):

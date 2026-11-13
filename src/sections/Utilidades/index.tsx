@@ -12,8 +12,29 @@ import type { AnalisisProducto, StatsFiltro } from './types';
 import { fechaLocalPeru, primerDiaMesPeru, haceNDiasPeru } from '../../utils/ingresos';
 
 import { cacheUtilidadesMemoria, setCacheUtilidades } from '../../utils/cacheModulos';
+import { useTiposNegocio } from '../../utils/tiposNegocio';
+// SiuMax Nego, paso 3h: con "Talleres y servicios" también las Utilidades de servicios (de SiuMax Servic)
+import { PestanasUtilidades, pestanasDe, type PestanaUtilidades } from './PestanasUtilidades';
+import { UtilidadesServicios } from './servicios/UtilidadesServicios';
+
+const pestanaGuardada = (): PestanaUtilidades | null => {
+  try { return (sessionStorage.getItem('utilidades_pestana') as PestanaUtilidades) || null; } catch { return null; }
+};
 
 export const Utilidades = () => {
+  const tipos = useTiposNegocio();
+  const conComercio = tipos.includes('comercio');
+  const conServicios = tipos.includes('servicios');
+  // Pestaña elegida; si no es del tipo de negocio, la primera que sí lo sea (Productos con Comercio)
+  const [pestanaElegida, setPestanaElegida] = useState<PestanaUtilidades | null>(pestanaGuardada);
+  const permitidas = pestanasDe(conComercio, conServicios).map((t) => t.id);
+  const pestana: PestanaUtilidades = pestanaElegida && permitidas.includes(pestanaElegida) ? pestanaElegida : (permitidas[0] || 'productos');
+  const cambiarPestana = (p: PestanaUtilidades) => {
+    setPestanaElegida(p);
+    try { sessionStorage.setItem('utilidades_pestana', p); } catch { /* sin almacenamiento */ }
+    setTimeout(() => document.getElementById(`btn-tab-util-${p}`)?.focus(), 60);
+  };
+  const verProductos = pestana === 'productos';
   const hoyStr = fechaLocalPeru();
   const primerDiaMes = primerDiaMesPeru();
 
@@ -37,6 +58,7 @@ export const Utilidades = () => {
   const limpiarFiltros = () => { setFechaInicio(hoyStr); setFechaFin(hoyStr); };
 
   useEffect(() => {
+    if (!verProductos) return; // en las pestañas de servicios no se calcula lo de productos
     const procesarEstadisticas = async (silencioso = false) => {
       const tieneCacheValido = cacheUtilidadesMemoria && cacheUtilidadesMemoria.fechaInicio === fechaInicio && cacheUtilidadesMemoria.fechaFin === fechaFin;
       if (!silencioso && !tieneCacheValido && analisisCompleto.length === 0) setIsLoading(true);
@@ -72,7 +94,7 @@ export const Utilidades = () => {
       window.removeEventListener('focus', refrescarSilencioso);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [fechaInicio, fechaFin]);
+  }, [fechaInicio, fechaFin, verProductos]);
 
   // 🟢 CÁLCULO MAESTRO SINCRONIZADO (FINANZAS + POS + UTILIDAD)
   // Sin filtros en la tabla: se usa el total exacto del período (Finanzas).
@@ -91,10 +113,15 @@ export const Utilidades = () => {
     ? (globalIngresos - globalCostos - globalMermas)
     : (globalIngresos - globalCostos - globalMermas - gastosCaja);
 
+  if (!verProductos) {
+    return <UtilidadesServicios pestana={pestana} onCambiarPestana={cambiarPestana} conComercio={conComercio} />;
+  }
+
   return (
     <div className="flex flex-col gap-4 sm:gap-6 pb-10 text-[var(--color-ink)] font-mono h-full bg-[var(--color-bg)] relative">
       <FiltrosUtilidades
         onToggleTops={() => setMostrarTablero(true)}
+        pestanas={<PestanasUtilidades activa="productos" conComercio={conComercio} conServicios={conServicios} onCambiar={cambiarPestana} idDerecha="btn-tops-utilidades" idAbajo="buscador-global-utilidades" />}
       />
 
       <div className="flex flex-col gap-4 sm:gap-6 px-2 sm:px-3">

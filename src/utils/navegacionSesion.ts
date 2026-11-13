@@ -129,7 +129,8 @@ export const restaurarFocoSesion = (view?: string): boolean => {
 
   // 6. UTILIDADES
   if (activeView === 'utilidades') {
-    const b = (document.getElementById('buscador-global-utilidades') || document.getElementById('buscador-utilidades')) as HTMLInputElement | null;
+    // (Nego 3h: en las pestañas de servicios, su buscador)
+    const b = (document.getElementById('buscador-global-utilidades') || document.getElementById('buscador-utilidades') || document.querySelector('[id^="buscador-reporte-"]')) as HTMLInputElement | null;
     if (b && b.offsetParent !== null) { b.focus(); b.select(); return true; }
 
     const filtroCat = (document.getElementById('filtro-categoria-utilidades') || document.getElementById('filtro-cat-utilidades')) as HTMLElement | null;

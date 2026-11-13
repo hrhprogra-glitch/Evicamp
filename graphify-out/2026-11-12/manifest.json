@@ -18,9 +18,9 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1794532350.1813078,
-    "seen": 1794533562.8888862,
-    "ast_hash": "3cecc0dbc743f5460df29826237ba22a",
+    "mtime": 1794534153.4171615,
+    "seen": 1794534965.1329954,
+    "ast_hash": "8217a1d285f5711bd3573da09303a91d",
     "semantic_hash": ""
   },
   "src/db/supabase.ts": {
@@ -30,9 +30,9 @@
     "semantic_hash": ""
   },
   "src/layout/SideBar.tsx": {
-    "mtime": 1794520080.2943447,
-    "seen": 1794520377.374757,
-    "ast_hash": "9f5400bc0cb6d1c68c1f7641cd42f190",
+    "mtime": 1794534153.4171615,
+    "seen": 1794534965.1330175,
+    "ast_hash": "7924821ca58c95a133d7f6181eaafbc2",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -48,9 +48,9 @@
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/ModalUsuario.tsx": {
-    "mtime": 1794520176.2399807,
-    "seen": 1794520377.3747804,
-    "ast_hash": "628c1e1f2d62726cfe46978d3a276c75",
+    "mtime": 1794534153.4182198,
+    "seen": 1794534965.1330724,
+    "ast_hash": "d7c2a15cf7013533de02237f52faeaed",
     "semantic_hash": ""
   },
   "src/sections/Configuraciones/components/TablaUsuarios.tsx": {
@@ -264,9 +264,9 @@
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/index.tsx": {
-    "mtime": 1794436614.7922711,
-    "seen": 1794507021.6962438,
-    "ast_hash": "4c2a254cb5e2d01d5d368adbc19d1e82",
+    "mtime": 1794534190.3202698,
+    "seen": 1794534965.133222,
+    "ast_hash": "ffcb3f8e66f89d5365f3f93d59fb7eeb",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/types.ts": {
@@ -438,9 +438,9 @@
     "semantic_hash": "39afcb92c9b5f07f1913e447b0f6c5b3"
   },
   "src/utils/permisos.ts": {
-    "mtime": 1794520053.0875528,
-    "seen": 1794520377.374886,
-    "ast_hash": "a9863af57b2278b29d91dc30876ef9d3",
+    "mtime": 1794534153.4171615,
+    "seen": 1794534965.1333117,
+    "ast_hash": "a0a330ab209984ca217bfc0790b97da9",
     "semantic_hash": ""
   },
   "src/utils/sesion.ts": {
@@ -1236,9 +1236,9 @@
     "semantic_hash": ""
   },
   "src/utils/navegacionSesion.ts": {
-    "mtime": 1794524222.0256207,
-    "seen": 1794524736.478765,
-    "ast_hash": "a89c9ba8ea1f9ea1a65897fe8ad17905",
+    "mtime": 1794534153.4171615,
+    "seen": 1794534965.1333106,
+    "ast_hash": "054bbad46900067f5df39880a283680c",
     "semantic_hash": ""
   },
   "src/utils/tecladoTactil.ts": {
@@ -1458,9 +1458,9 @@
     "semantic_hash": ""
   },
   "servidor/sql/seguridad-sesion.sql": {
-    "mtime": 1794532307.8777978,
-    "seen": 1794533562.888885,
-    "ast_hash": "77dff3a005372ff9e2875fde6a85edb7",
+    "mtime": 1794534504.2464833,
+    "seen": 1794534965.1329935,
+    "ast_hash": "aad424007a641d53442148ecf669d729",
     "semantic_hash": ""
   },
   "servidor/activar-seguridad.sh": {
@@ -1974,9 +1974,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/index.tsx": {
-    "mtime": 1794520661.1923091,
-    "seen": 1794521051.5937667,
-    "ast_hash": "ba47c709b0b2e31212096b9ffd96a197",
+    "mtime": 1794534186.5322053,
+    "seen": 1794534965.133066,
+    "ast_hash": "8cdc31c4efc5917e1a36691d0443a4a8",
     "semantic_hash": ""
   },
   "src/sections/Clientes/types.ts": {
@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1794533543.9011855,
-    "seen": 1794533562.8891027,
-    "ast_hash": "d36db7d18d2f1bc0b4f7aa106dea4df8",
+    "mtime": 1794534946.6130567,
+    "seen": 1794534965.1333568,
+    "ast_hash": "c7ffe613abbba517194a1841163e81b4",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1794533532.3750193,
-    "seen": 1794533562.8891037,
-    "ast_hash": "beb2ce4b398274072ad468dd63917f9d",
+    "mtime": 1794534946.6155703,
+    "seen": 1794534965.133358,
+    "ast_hash": "baaf4ee994180803fad26211e072a537",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1794533532.374011,
-    "seen": 1794533562.8891053,
-    "ast_hash": "f77ee280d2fead00dea6737ca52d27e6",
+    "mtime": 1794534946.6155703,
+    "seen": 1794534965.1333609,
+    "ast_hash": "0059bb11043fc6f2fa6abb9fb9987451",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2109,12 +2109,6 @@
     "mtime": 1793321368.274862,
     "seen": 1793324961.354774,
     "ast_hash": "7e9acbbc2b04a7286cd48b8d5fe28c42",
-    "semantic_hash": ""
-  },
-  "src/sections/Clientes/components/PestanaCotizaciones.tsx": {
-    "mtime": 1794436614.7407446,
-    "seen": 1794507021.6961298,
-    "ast_hash": "6d3b3206eaf551a869ef8c910e2bf0a9",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/PestanaPedidos.tsx": {
@@ -2772,9 +2766,9 @@
     "semantic_hash": ""
   },
   "src/utils/tiposNegocio.ts": {
-    "mtime": 1794520033.7591946,
-    "seen": 1794520377.3748944,
-    "ast_hash": "e954bc72afb806443a002f48f5a0ce9c",
+    "mtime": 1794534153.41566,
+    "seen": 1794534965.1333249,
+    "ast_hash": "dab84bb58ccb1beb07be618e07a8b2a9",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/captura-tipo-negocio.png": {
@@ -3183,6 +3177,84 @@
     "mtime": 1794533332.9134908,
     "seen": 1794533562.8891132,
     "ast_hash": "f770a73ef92cd1bd64a6761b89cbcde9",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-cotizaciones-nego.mjs": {
+    "mtime": 1794534505.3190339,
+    "seen": 1794534965.132791,
+    "ast_hash": "7c5b943a92850a7728d6fb7331f6e110",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/revisar-escaner-celular.mjs": {
+    "mtime": 1794534894.5568755,
+    "seen": 1794534965.132885,
+    "ast_hash": "c0b18e2d7bdb0f81b234a7de0ba3ca9d",
+    "semantic_hash": ""
+  },
+  "src/sections/Cotizaciones/components/HeaderCotizaciones.tsx": {
+    "mtime": 1794533941.7423983,
+    "seen": 1794534965.13312,
+    "ast_hash": "b22fa81991d37ad3fab4b2faebd5ac7c",
+    "semantic_hash": ""
+  },
+  "src/sections/Cotizaciones/components/ModalDetalleCotizacion.tsx": {
+    "mtime": 1794534236.713642,
+    "seen": 1794534965.1331215,
+    "ast_hash": "5778c98f2e3d4184a14a932f348243d7",
+    "semantic_hash": ""
+  },
+  "src/sections/Cotizaciones/components/ModalNuevaCotizacion.tsx": {
+    "mtime": 1794534505.3190339,
+    "seen": 1794534965.1331232,
+    "ast_hash": "afa1cc898f3c7640633b8d5acaa91fad",
+    "semantic_hash": ""
+  },
+  "src/sections/Cotizaciones/components/TablaCotizaciones.tsx": {
+    "mtime": 1794533959.3162415,
+    "seen": 1794534965.1331246,
+    "ast_hash": "959b9ff0d2bca4bfb0ffa9c6592f8f1f",
+    "semantic_hash": ""
+  },
+  "src/sections/Cotizaciones/index.tsx": {
+    "mtime": 1794534505.3190339,
+    "seen": 1794534965.1331258,
+    "ast_hash": "90d635eda99ec6464e01aa27c041b7fd",
+    "semantic_hash": ""
+  },
+  "src/sections/Cotizaciones/types.ts": {
+    "mtime": 1794533905.5278063,
+    "seen": 1794534965.1331275,
+    "ast_hash": "1dc528f5a84cdd8c8df4084bbbebe21a",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/captura-cotizacion-nego.png": {
+    "mtime": 1794534658.2760546,
+    "seen": 1794534965.1333747,
+    "ast_hash": "c7c66f3a7ce762245060c392fff5211d",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/captura-escaner-1366-caja.png": {
+    "mtime": 1794534912.2968123,
+    "seen": 1794534965.1333797,
+    "ast_hash": "864e01f02f6d34f68e2257e579b20cfe",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/captura-escaner-1366-inventario.png": {
+    "mtime": 1794534914.9235392,
+    "seen": 1794534965.1333811,
+    "ast_hash": "d16fd99c4ecb1ce8276afb4decadaecd",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/captura-escaner-390-caja.png": {
+    "mtime": 1794534901.5471852,
+    "seen": 1794534965.1333823,
+    "ast_hash": "644268e4c9c6acb0eebea5bfc8c3378a",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/captura-escaner-390-inventario.png": {
+    "mtime": 1794534904.2247825,
+    "seen": 1794534965.1333835,
+    "ast_hash": "83a4857c79e7721879482b8adc3a04f3",
     "semantic_hash": ""
   }
 }

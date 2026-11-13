@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/FiltrosUtilidades.tsx": {
-    "mtime": 1794436614.8058364,
-    "seen": 1794507021.6962626,
-    "ast_hash": "88468613204c819cf0c22c63a8613728",
+    "mtime": 1794535311.2250242,
+    "seen": 1794535855.7436147,
+    "ast_hash": "fc325ef05693e17765af2f6440ff751b",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/ModalDetalleProducto.tsx": {
@@ -312,9 +312,9 @@
     "semantic_hash": ""
   },
   "src/sections/Utilidades/index.tsx": {
-    "mtime": 1794436614.8083436,
-    "seen": 1794507021.6962729,
-    "ast_hash": "c3b3af85aa10874aace7e0d9643ed5d8",
+    "mtime": 1794535311.2244983,
+    "seen": 1794535855.7436218,
+    "ast_hash": "372542ba00f6edd28c8d9959e8f5e07e",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/types.ts": {
@@ -1236,9 +1236,9 @@
     "semantic_hash": ""
   },
   "src/utils/navegacionSesion.ts": {
-    "mtime": 1794534153.4171615,
-    "seen": 1794534965.1333106,
-    "ast_hash": "054bbad46900067f5df39880a283680c",
+    "mtime": 1794535311.2250242,
+    "seen": 1794535855.7436507,
+    "ast_hash": "e39a01dd597a61b2c1a2734b360d4cf3",
     "semantic_hash": ""
   },
   "src/utils/tecladoTactil.ts": {
@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1794534946.6130567,
-    "seen": 1794534965.1333568,
-    "ast_hash": "c7ffe613abbba517194a1841163e81b4",
+    "mtime": 1794535843.2982643,
+    "seen": 1794535855.7436802,
+    "ast_hash": "1b0eebba7f514f60cc75cea65b0a3da8",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1794534946.6155703,
-    "seen": 1794534965.133358,
-    "ast_hash": "baaf4ee994180803fad26211e072a537",
+    "mtime": 1794535843.301269,
+    "seen": 1794535855.7436812,
+    "ast_hash": "6e29cc017869f861743260ed6aa934f5",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1794534946.6155703,
-    "seen": 1794534965.1333609,
-    "ast_hash": "0059bb11043fc6f2fa6abb9fb9987451",
+    "mtime": 1794535843.300269,
+    "seen": 1794535855.743683,
+    "ast_hash": "b3d8fdda7fecd70ce530d5ed28b67473",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -3255,6 +3255,66 @@
     "mtime": 1794534904.2247825,
     "seen": 1794534965.1333835,
     "ast_hash": "83a4857c79e7721879482b8adc3a04f3",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-utilidades-servicios-nego.mjs": {
+    "mtime": 1794535379.3503344,
+    "seen": 1794535855.7433538,
+    "ast_hash": "0f7d41e3a69ed6441a0c313a9c48b246",
+    "semantic_hash": ""
+  },
+  "src/sections/Utilidades/PestanasUtilidades.tsx": {
+    "mtime": 1794535192.1944451,
+    "seen": 1794535855.7436128,
+    "ast_hash": "328013d3c11a1a14f47229c3f26df828",
+    "semantic_hash": ""
+  },
+  "src/sections/Utilidades/servicios/HeaderServicios.tsx": {
+    "mtime": 1794535209.2173014,
+    "seen": 1794535855.743623,
+    "ast_hash": "193592dd3f98f30fb088ab7dce173297",
+    "semantic_hash": ""
+  },
+  "src/sections/Utilidades/servicios/TabCobranzas.tsx": {
+    "mtime": 1794535618.889808,
+    "seen": 1794535855.7436237,
+    "ast_hash": "8b109648d726c8ee21661f8b0d1ee9f1",
+    "semantic_hash": ""
+  },
+  "src/sections/Utilidades/servicios/TabMateriales.tsx": {
+    "mtime": 1794535168.9856296,
+    "seen": 1794535855.7436247,
+    "ast_hash": "167c2e901a94e2bb0e527ba5b5acfe1c",
+    "semantic_hash": ""
+  },
+  "src/sections/Utilidades/servicios/TabRentabilidad.tsx": {
+    "mtime": 1794535481.4448862,
+    "seen": 1794535855.7436254,
+    "ast_hash": "f7c34c57798e629155eee8b8d68f6246",
+    "semantic_hash": ""
+  },
+  "src/sections/Utilidades/servicios/TabTecnicos.tsx": {
+    "mtime": 1794535168.9846294,
+    "seen": 1794535855.7436266,
+    "ast_hash": "19595abf91aa07e5a9e99e53c8080f1e",
+    "semantic_hash": ""
+  },
+  "src/sections/Utilidades/servicios/UtilidadesServicios.tsx": {
+    "mtime": 1794535281.175029,
+    "seen": 1794535855.7436273,
+    "ast_hash": "0ba265f7c3d037fb686a5846bf168a46",
+    "semantic_hash": ""
+  },
+  "src/sections/Utilidades/servicios/types.ts": {
+    "mtime": 1794535501.0292268,
+    "seen": 1794535855.743628,
+    "ast_hash": "251a325c32f3a9107999e26a42800147",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/captura-utilidades-servicios.png": {
+    "mtime": 1794535690.5105336,
+    "seen": 1794535855.7437043,
+    "ast_hash": "93414809f46f811c0f3afdde83766c66",
     "semantic_hash": ""
   }
 }
