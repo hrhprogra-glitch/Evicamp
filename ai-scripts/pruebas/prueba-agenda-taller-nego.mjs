@@ -126,6 +126,23 @@ try {
   ok('Enter en los campos del repuesto no lo agrega solo', (await sql(`select count(*) from taller_repuestos r join taller_ordenes o on o.id = r.orden_id where o.tipo_equipo ilike '%${sello}%'`)) === '0');
   await page.focus('#btn-agregar-repuesto-taller'); await tecla('Enter'); await pausa(1200); await cerrarAviso();
   ok('Enter en "Agregar" agrega el repuesto y suma al total', /^230(\.00)?\|/.test(await sql(`select total, saldo from taller_ordenes where tipo_equipo ilike '%${sello}%'`)), await sql(`select total, saldo from taller_ordenes where tipo_equipo ilike '%${sello}%'`));
+  // Repuesto DEL INVENTARIO (paso 3g, pedido del dueño): descuenta stock y, al quitarlo de la orden, vuelve
+  const prod = await sql(`select p.id, p.quantity from products p where p.is_active = 1 and exists (select 1 from batches b where b.product_id = p.id and coalesce(b.quantity,0) >= 2 and coalesce(b.is_active,1) <> 0) order by p.id limit 1`);
+  if (prod) {
+    const [pid, cant] = prod.split('|'); const stock = () => sql(`select quantity, (select sum(quantity) from batches where product_id = ${pid}) from products where id = ${pid}`);
+    const antes = await stock();
+    await page.select('#taller-select-repuesto-prod', pid); await pausa(400);
+    await escribirEn('#taller-input-repuesto-cant', '1');
+    await page.focus('#btn-agregar-repuesto-taller'); await tecla('Enter'); await pausa(1200); await cerrarAviso();
+    const tras = await stock();
+    ok('Repuesto del inventario: el stock y los lotes bajan 1', tras.split('|').every((v, k) => Number(v) === Number(antes.split('|')[k]) - 1), `${antes} → ${tras}`);
+    const quitar = await page.evaluate(() => { const b = [...document.querySelectorAll('button[id^="btn-eliminar-repuesto-"]')]; return b.length ? b[b.length - 1].id : ''; });
+    if (quitar) { await page.focus('#' + quitar); await tecla('Enter'); await esperarAviso(3000); await tecla('Enter'); await pausa(1300); await cerrarAviso(); }
+    for (let i = 0; i < 20 && (await stock()) !== antes; i++) await pausa(250); // espera a que termine de quitarse
+    ok('Al quitarlo de la orden, el stock vuelve', (await stock()) === antes, await stock());
+    ok('El total vuelve a 230', Number(await sql(`select total from taller_ordenes where tipo_equipo ilike '%${sello}%'`)) === 230);
+    void cant;
+  } else ok('Hay un producto con lotes para probar el repuesto del inventario', false);
   await page.focus('#btn-tab-taller-pagos'); await tecla('Enter'); await pausa(700);
   await page.focus('#btn-abrir-pago-taller'); await tecla('Enter'); await pausa(900);
   await escribirEn('#pago-taller-monto', '50'); await enterSeQueda('Cobro', 'pago-taller-monto');
@@ -144,10 +161,12 @@ try {
   try { for (let i = 0; i < 3; i++) { await page.keyboard.press('Escape'); await pausa(300); } await cerrarAviso(); await elegir(['comercio']); } catch { /* */ }
   await nav.close();
   try {
-    await sql(`delete from cash_movements where description ilike '%${sello}%';
+    await sql(`create temp table o as select codigo from taller_ordenes where tipo_equipo ilike '%${sello}%';
+      delete from cash_movements where description ilike '%${sello}%';
       delete from taller_pagos where orden_id in (select id from taller_ordenes where tipo_equipo ilike '%${sello}%');
       delete from taller_repuestos where orden_id in (select id from taller_ordenes where tipo_equipo ilike '%${sello}%');
       delete from taller_ordenes where tipo_equipo ilike '%${sello}%';
+      delete from inventory_movements where reason in (select 'Repuesto Taller ' || codigo from o union select 'Repuesto quitado Taller ' || codigo from o);
       delete from agenda_trabajadores where trabajo_id in (select id from agenda_trabajos where titulo ilike '%${sello}%');
       delete from agenda_trabajos where titulo ilike '%${sello}%';
       delete from trabajadores where nombre = '${TRAB}';

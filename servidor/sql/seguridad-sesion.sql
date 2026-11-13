@@ -4485,7 +4485,122 @@ BEGIN
 END;
 $function$;
 
+-- SiuMax Nego, paso 3g (12/11/2026): descontar y devolver stock como lo hace la salida (fn_registrar_salida): del lote
+-- elegido o por FIFO de lotes; lo que falte, del producto. Deja el movimiento en inventory_movements.
+-- Devuelve el costo unitario promedio de lo que se sacó (para el costo del consumo).
+CREATE OR REPLACE FUNCTION public.fn_nego_descontar_stock(
+  p_product_id bigint, p_cantidad numeric, p_batch_id bigint, p_razon text, p_nota text, p_usuario text DEFAULT 'Sistema'
+)
+RETURNS numeric
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_prod record;
+  v_lote record;
+  v_stock numeric;
+  v_falta numeric;
+  v_toma numeric;
+  v_costo numeric;
+  v_costo_total numeric := 0;
+BEGIN
+  IF coalesce(p_cantidad, 0) <= 0 THEN RETURN 0; END IF;
+  SELECT * INTO v_prod FROM public.products WHERE id = p_product_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Producto no encontrado.'; END IF;
+  v_stock := coalesce(v_prod.quantity, 0);
+
+  IF p_batch_id IS NOT NULL THEN
+    SELECT coalesce(nullif(cost_unit, 0), v_prod.cost_price, 0) INTO v_costo FROM public.batches WHERE id = p_batch_id;
+    UPDATE public.batches SET quantity = greatest(0, coalesce(quantity, 0) - p_cantidad) WHERE id = p_batch_id;
+    INSERT INTO public.inventory_movements (
+      batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
+      operation_type, reason, notes, created_at, "user", is_synced
+    ) VALUES (
+      p_batch_id, p_product_id, v_prod.name, -p_cantidad, v_stock, v_stock - p_cantidad,
+      'SALIDA', p_razon, p_nota, now(), p_usuario, 1
+    );
+    v_stock := v_stock - p_cantidad;
+    v_costo_total := coalesce(v_costo, 0) * p_cantidad;
+  ELSE
+    v_falta := p_cantidad;
+    FOR v_lote IN
+      SELECT id, coalesce(quantity, 0) AS qty, coalesce(nullif(cost_unit, 0), v_prod.cost_price, 0) AS cost
+      FROM public.batches
+      WHERE product_id = p_product_id AND coalesce(quantity, 0) > 0 AND coalesce(is_active, 1) <> 0
+      ORDER BY created_at ASC, id ASC FOR UPDATE
+    LOOP
+      EXIT WHEN v_falta <= 0;
+      v_toma := least(v_lote.qty, v_falta);
+      UPDATE public.batches SET quantity = v_lote.qty - v_toma WHERE id = v_lote.id;
+      INSERT INTO public.inventory_movements (
+        batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
+        operation_type, reason, notes, created_at, "user", is_synced
+      ) VALUES (
+        v_lote.id, p_product_id, v_prod.name, -v_toma, v_stock, v_stock - v_toma,
+        'SALIDA', p_razon, p_nota, now(), p_usuario, 1
+      );
+      v_stock := v_stock - v_toma;
+      v_falta := v_falta - v_toma;
+      v_costo_total := v_costo_total + v_toma * v_lote.cost;
+    END LOOP;
+    IF v_falta > 0 THEN
+      INSERT INTO public.inventory_movements (
+        product_id, product_name, change_amount, previous_quantity, new_quantity,
+        operation_type, reason, notes, created_at, "user", is_synced
+      ) VALUES (
+        p_product_id, v_prod.name, -v_falta, v_stock, v_stock - v_falta,
+        'SALIDA', p_razon, coalesce(p_nota, '') || ' (sin lote suficiente)', now(), p_usuario, 1
+      );
+      v_stock := v_stock - v_falta;
+      v_costo_total := v_costo_total + v_falta * coalesce(v_prod.cost_price, 0);
+    END IF;
+  END IF;
+
+  UPDATE public.products SET quantity = v_stock WHERE id = p_product_id;
+  RETURN round(v_costo_total / p_cantidad, 4);
+END;
+$function$;
+
+-- Devuelve stock al lote más nuevo del producto (o solo al producto si no tiene lotes)
+CREATE OR REPLACE FUNCTION public.fn_nego_devolver_stock(
+  p_product_id bigint, p_cantidad numeric, p_razon text, p_nota text, p_usuario text DEFAULT 'Sistema'
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_prod record;
+  v_lote_id bigint;
+  v_stock numeric;
+BEGIN
+  IF coalesce(p_cantidad, 0) <= 0 THEN RETURN; END IF;
+  SELECT * INTO v_prod FROM public.products WHERE id = p_product_id FOR UPDATE;
+  IF NOT FOUND THEN RETURN; END IF;
+  v_stock := coalesce(v_prod.quantity, 0);
+  SELECT id INTO v_lote_id FROM public.batches
+  WHERE product_id = p_product_id AND coalesce(is_active, 1) <> 0
+  ORDER BY created_at DESC, id DESC LIMIT 1;
+  IF v_lote_id IS NOT NULL THEN
+    UPDATE public.batches SET quantity = coalesce(quantity, 0) + p_cantidad WHERE id = v_lote_id;
+  END IF;
+  INSERT INTO public.inventory_movements (
+    batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
+    operation_type, reason, notes, created_at, "user", is_synced
+  ) VALUES (
+    v_lote_id, p_product_id, v_prod.name, p_cantidad, v_stock, v_stock + p_cantidad,
+    'DEVOLUCION', p_razon, p_nota, now(), p_usuario, 1
+  );
+  UPDATE public.products SET quantity = v_stock + p_cantidad WHERE id = p_product_id;
+END;
+$function$;
+REVOKE ALL ON FUNCTION public.fn_nego_descontar_stock(bigint, numeric, bigint, text, text, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.fn_nego_devolver_stock(bigint, numeric, text, text, text) FROM PUBLIC, anon;
+
 -- RPC: Registrar consumo de químicos / materiales en una visita
+-- (Nego 3g: el costo sale de cost_price y de los lotes; sin lote elegido, descuenta por FIFO como la salida)
 CREATE OR REPLACE FUNCTION public.fn_registrar_consumo_visita(
   p_visita_id bigint,
   p_product_id bigint,
@@ -4519,22 +4634,9 @@ BEGIN
   IF p_product_id IS NOT NULL THEN
     SELECT * INTO v_prod FROM public.products WHERE id = p_product_id;
     IF NOT FOUND THEN RAISE EXCEPTION 'Producto no encontrado.'; END IF;
-    v_costo := coalesce(v_prod.cost, 0);
-    v_stock := coalesce(v_prod.quantity, 0);
-
-    IF p_batch_id IS NOT NULL THEN
-      UPDATE public.batches SET quantity = greatest(0, coalesce(quantity, 0) - p_cantidad) WHERE id = p_batch_id;
-      SELECT coalesce(cost_unit, v_costo) INTO v_costo FROM public.batches WHERE id = p_batch_id;
-    END IF;
-
-    UPDATE public.products SET quantity = coalesce(quantity, 0) - p_cantidad WHERE id = p_product_id;
-
-    INSERT INTO public.inventory_movements (
-      batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
-      operation_type, reason, notes, created_at, "user", is_synced
-    ) VALUES (
-      p_batch_id, p_product_id, v_prod.name, -p_cantidad, v_stock, v_stock - p_cantidad,
-      'SALIDA', 'Consumo Contrato ' || v_visita.contrato_codigo, coalesce(p_notas, 'Visita ID: ' || p_visita_id), now(), p_usuario, 1
+    v_costo := public.fn_nego_descontar_stock(
+      p_product_id, p_cantidad, p_batch_id, 'Consumo Contrato ' || v_visita.contrato_codigo,
+      coalesce(nullif(p_notas, ''), 'Visita ID: ' || p_visita_id), p_usuario
     );
 
     INSERT INTO public.contrato_consumos (
@@ -4961,6 +5063,35 @@ BEGIN
 END;
 $$;
 GRANT EXECUTE ON FUNCTION public.fn_registrar_pago_taller TO anon;
+
+-- SiuMax Nego, paso 3g (12/11/2026, pedido del dueño): un repuesto DEL INVENTARIO puesto en una orden del taller
+-- descuenta stock (como la salida); si se quita de la orden (o se borra la orden), el stock vuelve.
+CREATE OR REPLACE FUNCTION public.fn_taller_repuesto_stock()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_codigo text;
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.product_id IS NOT NULL AND NOT coalesce(NEW.es_externo, false) AND coalesce(NEW.cantidad, 0) > 0 THEN
+      SELECT codigo INTO v_codigo FROM public.taller_ordenes WHERE id = NEW.orden_id;
+      PERFORM public.fn_nego_descontar_stock(NEW.product_id, NEW.cantidad, NULL, 'Repuesto Taller ' || coalesce(v_codigo, ''), coalesce(NEW.descripcion, ''), 'Taller');
+    END IF;
+    RETURN NEW;
+  END IF;
+  IF OLD.product_id IS NOT NULL AND NOT coalesce(OLD.es_externo, false) AND coalesce(OLD.cantidad, 0) > 0 THEN
+    SELECT codigo INTO v_codigo FROM public.taller_ordenes WHERE id = OLD.orden_id;
+    PERFORM public.fn_nego_devolver_stock(OLD.product_id, OLD.cantidad, 'Repuesto quitado Taller ' || coalesce(v_codigo, ''), coalesce(OLD.descripcion, ''), 'Taller');
+  END IF;
+  RETURN OLD;
+END;
+$function$;
+DROP TRIGGER IF EXISTS trg_taller_repuesto_stock ON public.taller_repuestos;
+CREATE TRIGGER trg_taller_repuesto_stock AFTER INSERT OR DELETE ON public.taller_repuestos
+FOR EACH ROW EXECUTE FUNCTION public.fn_taller_repuesto_stock();
 
 NOTIFY pgrst, 'reload schema';
 

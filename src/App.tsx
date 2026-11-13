@@ -9,6 +9,7 @@ import { Pronto } from './sections/Pronto';
 import { Salidas } from './sections/Salidas'; // Talleres y servicios (SiuMax Nego, paso 3e; de SiuMax Servic)
 import { Agenda } from './sections/Agenda'; // paso 3f, de SiuMax Servic
 import { Taller } from './sections/Taller'; // paso 3f, de SiuMax Servic
+import { Contratos } from './sections/Contratos'; // paso 3g, de SiuMax Servic
 import { SesionProvider } from './utils/SesionProvider';
 
 // Importación de Módulos (Secciones)
@@ -351,6 +352,7 @@ export const App: React.FC = () => {
       case 'taller':
         return <Taller />;
       case 'contratos':
+        return <Contratos />;
       case 'cotizaciones':
         return <Pronto seccion={vista} />;
       default:

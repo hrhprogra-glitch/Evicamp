@@ -895,3 +895,4 @@
 - El dueño respondió: Enter SIEMPRE se queda (regla de Nego), también en lo de Servic; no quiere el Enter de Servic. Arreglado en 7 ventanas (bitácora 147).
 - "si" → paso 3f hecho: Agenda y Taller en Nego (bitácora 148).
   - Se le preguntó si los repuestos del inventario que se ponen en una orden del taller deben descontar stock (en Servic no lo hacían).
+- "si sigue" → paso 3g hecho: Contratos en Nego y los repuestos del taller descuentan stock (bitácora 149).

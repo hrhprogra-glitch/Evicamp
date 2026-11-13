@@ -18,9 +18,9 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1794524203.5697396,
-    "seen": 1794524736.478605,
-    "ast_hash": "5befe7513cc95355f75c656804991bd9",
+    "mtime": 1794529357.29259,
+    "seen": 1794530287.104302,
+    "ast_hash": "f315a2cd295064aee18fd9c23e4f5662",
     "semantic_hash": ""
   },
   "src/db/supabase.ts": {
@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1794529199.1484108,
-    "seen": 1794529221.8495414,
-    "ast_hash": "f884edc2dae93fa5356a227ed7bf1916",
+    "mtime": 1794530258.0740426,
+    "seen": 1794530287.104661,
+    "ast_hash": "927124801ceb2ac6294b63be31b7a7a3",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1794529199.1504025,
-    "seen": 1794529221.8495429,
-    "ast_hash": "cec40ca91209a2ee41486c5ee1a19673",
+    "mtime": 1794530258.077551,
+    "seen": 1794530287.1046622,
+    "ast_hash": "7a986b2ff80ab53ea5456261e125ac81",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1794529199.1494107,
-    "seen": 1794529221.8495464,
-    "ast_hash": "c0a727fcdd98812b540b7d699fb78be1",
+    "mtime": 1794530258.0755463,
+    "seen": 1794530287.1046655,
+    "ast_hash": "ce978d69d616f28f70fe81d7a8877720",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2790,9 +2790,9 @@
     "semantic_hash": ""
   },
   "src/sections/Pronto.tsx": {
-    "mtime": 1794524203.5707395,
-    "seen": 1794524736.4787028,
-    "ast_hash": "92d4864f5fe3f83ec2eafda9b85c6c40",
+    "mtime": 1794529357.327603,
+    "seen": 1794530287.1044896,
+    "ast_hash": "14f6994b59471efed78ce44b5bc36c72",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/captura-detalle-cliente.png": {
@@ -2985,6 +2985,132 @@
     "mtime": 1794529084.7011096,
     "seen": 1794529221.848973,
     "ast_hash": "a51f0f5b0a5828b9a1f655fa20b0f630",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-agenda-taller-nego.mjs": {
+    "mtime": 1794529914.2924223,
+    "seen": 1794530287.1038206,
+    "ast_hash": "a6e7dfc1a6f7a80216c2563b8a6d2488",
+    "semantic_hash": ""
+  },
+  "src/sections/Agenda/components/HeaderAgenda.tsx": {
+    "mtime": 1794529348.0440986,
+    "seen": 1794530287.1043303,
+    "ast_hash": "9b5efa5e82426bd9a79c96216dba67a0",
+    "semantic_hash": ""
+  },
+  "src/sections/Agenda/components/ModalDetalleTrabajo.tsx": {
+    "mtime": 1794529348.0461028,
+    "seen": 1794530287.104332,
+    "ast_hash": "0267412852980162338b6dd1f07903cb",
+    "semantic_hash": ""
+  },
+  "src/sections/Agenda/components/ModalNuevoTrabajo.tsx": {
+    "mtime": 1794529416.8005104,
+    "seen": 1794530287.104334,
+    "ast_hash": "d08e35d66bd6d8034cb0d59ec5454fc8",
+    "semantic_hash": ""
+  },
+  "src/sections/Agenda/components/TarjetaTrabajo.tsx": {
+    "mtime": 1794529348.0440986,
+    "seen": 1794530287.1043355,
+    "ast_hash": "5260ca618dc013c419309723668ccf2c",
+    "semantic_hash": ""
+  },
+  "src/sections/Agenda/components/VistaDia.tsx": {
+    "mtime": 1794529348.0440986,
+    "seen": 1794530287.1043372,
+    "ast_hash": "a14aab49d3ecf3e96dbc3fc9666fb7a5",
+    "semantic_hash": ""
+  },
+  "src/sections/Agenda/components/VistaMes.tsx": {
+    "mtime": 1794529348.0440986,
+    "seen": 1794530287.1043384,
+    "ast_hash": "bb72ef922cf09d6c95be320c8316c096",
+    "semantic_hash": ""
+  },
+  "src/sections/Agenda/components/VistaSemana.tsx": {
+    "mtime": 1794529348.0440986,
+    "seen": 1794530287.10434,
+    "ast_hash": "16c761bc33ff1e17db3ad1a704c8490b",
+    "semantic_hash": ""
+  },
+  "src/sections/Agenda/index.tsx": {
+    "mtime": 1794529348.0461028,
+    "seen": 1794530287.1043415,
+    "ast_hash": "50e1eb49764220bc3978ed026f9e3230",
+    "semantic_hash": ""
+  },
+  "src/sections/Agenda/types.ts": {
+    "mtime": 1794529348.0461028,
+    "seen": 1794530287.1043427,
+    "ast_hash": "ae291dae11419a3c40ae2d92a0719864",
+    "semantic_hash": ""
+  },
+  "src/sections/Taller/components/HeaderTaller.tsx": {
+    "mtime": 1794529348.048111,
+    "seen": 1794530287.104537,
+    "ast_hash": "4b8ddba6aa1ab089bd5eed628ecae5d4",
+    "semantic_hash": ""
+  },
+  "src/sections/Taller/components/ModalDetalleOrden.tsx": {
+    "mtime": 1794529416.7985008,
+    "seen": 1794530287.1045387,
+    "ast_hash": "34a96339313dd42f56e1b5f8d22a4642",
+    "semantic_hash": ""
+  },
+  "src/sections/Taller/components/ModalNuevaOrden.tsx": {
+    "mtime": 1794529416.8005104,
+    "seen": 1794530287.1045399,
+    "ast_hash": "bcee681bb063b2ccb98a3754b8a7fb33",
+    "semantic_hash": ""
+  },
+  "src/sections/Taller/components/ModalRegistrarPagoTaller.tsx": {
+    "mtime": 1794529416.8005104,
+    "seen": 1794530287.1045415,
+    "ast_hash": "1b23329110ea714a64c1c91d0f4ac04d",
+    "semantic_hash": ""
+  },
+  "src/sections/Taller/components/TablaTaller.tsx": {
+    "mtime": 1794529348.0471084,
+    "seen": 1794530287.1045427,
+    "ast_hash": "e4e9a0f228f83af0d8ccefa5518420a7",
+    "semantic_hash": ""
+  },
+  "src/sections/Taller/components/TicketTaller.tsx": {
+    "mtime": 1794529348.0461028,
+    "seen": 1794530287.1045442,
+    "ast_hash": "967c5c8f4151c45d29006cbf199cdf08",
+    "semantic_hash": ""
+  },
+  "src/sections/Taller/index.tsx": {
+    "mtime": 1794529348.048111,
+    "seen": 1794530287.1045456,
+    "ast_hash": "1dc50ba59c128f7d966ae10f0202d9cd",
+    "semantic_hash": ""
+  },
+  "src/sections/Taller/types.ts": {
+    "mtime": 1794529348.048111,
+    "seen": 1794530287.1045468,
+    "ast_hash": "43d01160d9015ef0bcb12b0768e46000",
+    "semantic_hash": ""
+  },
+  "src/utils/enterSeQueda.ts": {
+    "mtime": 1794529394.742794,
+    "seen": 1794530287.1046004,
+    "ast_hash": "06be059cccd9dcd1cef2519e856a175e",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/captura-agenda-nego.png": {
+    "mtime": 1794530058.346905,
+    "seen": 1794530287.1046772,
+    "ast_hash": "9b412a903029bd86aafafcf2ef5202ec",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/captura-taller-nego.png": {
+    "mtime": 1794530104.8654304,
+    "seen": 1794530287.1046872,
+    "ast_hash": "4388d8db9655179326829c804eb9f13f",
     "semantic_hash": ""
   }
 }

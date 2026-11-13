@@ -18,9 +18,9 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1794529357.29259,
-    "seen": 1794530287.104302,
-    "ast_hash": "f315a2cd295064aee18fd9c23e4f5662",
+    "mtime": 1794532350.1813078,
+    "seen": 1794533562.8888862,
+    "ast_hash": "3cecc0dbc743f5460df29826237ba22a",
     "semantic_hash": ""
   },
   "src/db/supabase.ts": {
@@ -1458,9 +1458,9 @@
     "semantic_hash": ""
   },
   "servidor/sql/seguridad-sesion.sql": {
-    "mtime": 1794520681.1834917,
-    "seen": 1794521051.5936985,
-    "ast_hash": "c9e6bc45a828a70aed6901c322b0e61d",
+    "mtime": 1794532307.8777978,
+    "seen": 1794533562.888885,
+    "ast_hash": "77dff3a005372ff9e2875fde6a85edb7",
     "semantic_hash": ""
   },
   "servidor/activar-seguridad.sh": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1794530258.0740426,
-    "seen": 1794530287.104661,
-    "ast_hash": "927124801ceb2ac6294b63be31b7a7a3",
+    "mtime": 1794533543.9011855,
+    "seen": 1794533562.8891027,
+    "ast_hash": "d36db7d18d2f1bc0b4f7aa106dea4df8",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1794530258.077551,
-    "seen": 1794530287.1046622,
-    "ast_hash": "7a986b2ff80ab53ea5456261e125ac81",
+    "mtime": 1794533532.3750193,
+    "seen": 1794533562.8891037,
+    "ast_hash": "beb2ce4b398274072ad468dd63917f9d",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1794519467.036941,
-    "seen": 1794520377.3749151,
-    "ast_hash": "ca57471b715d35fb69167a79f43537e6",
+    "mtime": 1794533532.330295,
+    "seen": 1794533562.8891044,
+    "ast_hash": "7e887ef6760ab76d9595cb4cf43c2a70",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1794530258.0755463,
-    "seen": 1794530287.1046655,
-    "ast_hash": "ce978d69d616f28f70fe81d7a8877720",
+    "mtime": 1794533532.374011,
+    "seen": 1794533562.8891053,
+    "ast_hash": "f77ee280d2fead00dea6737ca52d27e6",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2790,9 +2790,9 @@
     "semantic_hash": ""
   },
   "src/sections/Pronto.tsx": {
-    "mtime": 1794529357.327603,
-    "seen": 1794530287.1044896,
-    "ast_hash": "14f6994b59471efed78ce44b5bc36c72",
+    "mtime": 1794532350.182307,
+    "seen": 1794533562.8890014,
+    "ast_hash": "98d8d1050414a950690e0453348afb4a",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/captura-detalle-cliente.png": {
@@ -2988,9 +2988,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-agenda-taller-nego.mjs": {
-    "mtime": 1794529914.2924223,
-    "seen": 1794530287.1038206,
-    "ast_hash": "a6e7dfc1a6f7a80216c2563b8a6d2488",
+    "mtime": 1794532914.2935963,
+    "seen": 1794533562.8887532,
+    "ast_hash": "283d9c2aa7ac7c7e7ed5fdb1df1eb25f",
     "semantic_hash": ""
   },
   "src/sections/Agenda/components/HeaderAgenda.tsx": {
@@ -3102,15 +3102,87 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/captura-agenda-nego.png": {
-    "mtime": 1794530058.346905,
-    "seen": 1794530287.1046772,
-    "ast_hash": "9b412a903029bd86aafafcf2ef5202ec",
+    "mtime": 1794533189.960531,
+    "seen": 1794533562.8891122,
+    "ast_hash": "17265e0ac47399837583ec3efefd8a7d",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/captura-taller-nego.png": {
-    "mtime": 1794530104.8654304,
-    "seen": 1794530287.1046872,
-    "ast_hash": "4388d8db9655179326829c804eb9f13f",
+    "mtime": 1794533253.395303,
+    "seen": 1794533562.8891194,
+    "ast_hash": "c62e28769944f90d86d6d3c550012188",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-contratos-nego.mjs": {
+    "mtime": 1794532556.1970725,
+    "seen": 1794533562.8887675,
+    "ast_hash": "6a6b0956611f2fa297c88f816ff15819",
+    "semantic_hash": ""
+  },
+  "src/sections/Contratos/components/HeaderContratos.tsx": {
+    "mtime": 1794532350.1462948,
+    "seen": 1794533562.888953,
+    "ast_hash": "2d116a2e0322a0b47d12950d19375636",
+    "semantic_hash": ""
+  },
+  "src/sections/Contratos/components/ModalDetalleContrato.tsx": {
+    "mtime": 1794532350.1443026,
+    "seen": 1794533562.8889542,
+    "ast_hash": "c845a49bd797ce03dd2a4d1a3ec321f8",
+    "semantic_hash": ""
+  },
+  "src/sections/Contratos/components/ModalNuevoContrato.tsx": {
+    "mtime": 1794532363.7154164,
+    "seen": 1794533562.8889549,
+    "ast_hash": "775150ac3396dec6e8a3f50e9f6d1825",
+    "semantic_hash": ""
+  },
+  "src/sections/Contratos/components/ModalRegistrarConsumo.tsx": {
+    "mtime": 1794532363.7164164,
+    "seen": 1794533562.8889556,
+    "ast_hash": "9bd65d478e986e89aa0703f9a212e4d0",
+    "semantic_hash": ""
+  },
+  "src/sections/Contratos/components/ModalRegistrarPago.tsx": {
+    "mtime": 1794532363.717416,
+    "seen": 1794533562.888957,
+    "ast_hash": "d550373e848cb9ba02e29908baba5546",
+    "semantic_hash": ""
+  },
+  "src/sections/Contratos/components/TablaCobros.tsx": {
+    "mtime": 1794532350.1452935,
+    "seen": 1794533562.888958,
+    "ast_hash": "1ba93b370a8b85fe9ef84341397be239",
+    "semantic_hash": ""
+  },
+  "src/sections/Contratos/components/TablaContratos.tsx": {
+    "mtime": 1794532350.1452935,
+    "seen": 1794533562.8889587,
+    "ast_hash": "4535deacd26f57c4c0436697e27bfdb2",
+    "semantic_hash": ""
+  },
+  "src/sections/Contratos/components/TablaVisitas.tsx": {
+    "mtime": 1794532350.1452935,
+    "seen": 1794533562.8889594,
+    "ast_hash": "2c298d6056ccd2af7b3aa73b57497cfc",
+    "semantic_hash": ""
+  },
+  "src/sections/Contratos/index.tsx": {
+    "mtime": 1794532350.1462948,
+    "seen": 1794533562.8889604,
+    "ast_hash": "57b55648dc382995ff7daf8c1958646c",
+    "semantic_hash": ""
+  },
+  "src/sections/Contratos/types.ts": {
+    "mtime": 1794532350.1468,
+    "seen": 1794533562.888961,
+    "ast_hash": "d011a3574ef6e21fdc63f3faed8e98a2",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/captura-contratos-nego.png": {
+    "mtime": 1794533332.9134908,
+    "seen": 1794533562.8891132,
+    "ast_hash": "f770a73ef92cd1bd64a6761b89cbcde9",
     "semantic_hash": ""
   }
 }

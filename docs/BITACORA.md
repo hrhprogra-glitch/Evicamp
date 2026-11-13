@@ -7,6 +7,23 @@
 
 ---
 
+## 12/11/2026 (149) · Claude — SiuMax Nego, paso 3g: Contratos, y el stock en Taller y Contratos
+- **Dueño:** "si sigue". Se tomó como sí a las dos preguntas: seguir con el 3g y que los repuestos del taller descuenten stock.
+- **Contratos, traída de SiuMax Servic:** `src/sections/Contratos/`.
+  - En `App.tsx` reemplaza el aviso "Pronto"; se quitó de `Pronto.tsx` (solo queda Cotizaciones, paso 3h).
+  - Enter con `enterSeQueda` en Nuevo contrato, Registrar consumo y Registrar pago (antes bloqueaba también abrir las listas).
+- **Base** (`servidor/sql/seguridad-sesion.sql`, aplicado SOLO en siumax; respaldo `respaldo-siumax-antes-nego-3g-202611130111.sql`):
+  - `fn_nego_descontar_stock` y `fn_nego_devolver_stock`: sacan stock como la salida (del lote elegido o por FIFO de lotes, lo que falte del producto) y lo devuelven al lote más nuevo, con su movimiento de inventario.
+  - **Error de Servic corregido:** `fn_registrar_consumo_visita` leía `products.cost`, que en Nego se llama `cost_price`; un consumo del inventario habría fallado. Ahora usa `fn_nego_descontar_stock` (también descuenta los lotes, antes solo el producto).
+  - **Taller (pedido del dueño):** trigger `trg_taller_repuesto_stock`: un repuesto DEL INVENTARIO puesto en una orden descuenta stock; si se quita de la orden (o se borra la orden), el stock vuelve. Los repuestos externos no tocan nada.
+  - Probado primero en la base, dentro de una transacción deshecha: 10 → 8 al poner 2 y de vuelta a 10 al quitarlos, igual en los lotes.
+- **Probado:**
+  - `prueba-contratos-nego.mjs` (adapta la `prueba-fase6` de Servic), 30 de 30 OK. Con teclado: crear contrato, buscar, generar visitas, un consumo del inventario (stock y lotes −1, guarda su costo), uno externo (no toca stock), emitir período, abono de 150 (PARCIAL), vistas Visitas y Cobros. Enter deja el selector en su sitio. Al final deja stock, lotes y negocio como estaban.
+  - `prueba-agenda-taller-nego.mjs` ahora también pone un repuesto del inventario (stock y lotes −1) y lo quita (vuelve): 41 de 41, tres veces seguidas.
+  - `medir-cabeceras-nego.mjs`: Contratos en una fila a 1920 y 1366.
+- **Arreglado `docs/MEMORIA-IA.md`:** desde el paso 3a (commit 720b952) tenía 661 líneas repetidas: al escribir la nota 59 con `String.replace`, un `$` seguido de comilla invertida metió una copia del archivo. Se rehízo desde la versión sana (b6fe0b1), con la nota 59 bien escrita y la nueva 60 (columnas de Servic en el SQL).
+- **Siguiente (3h):** Cotizaciones (unir con las de Comerc) e informes de servicios en Utilidades.
+
 ## 12/11/2026 (148) · Claude — SiuMax Nego, paso 3f: Agenda y Taller
 - **Dueño:** "si" (empezar el 3f).
 - **Traídas de SiuMax Servic:** `src/sections/Agenda/` y `src/sections/Taller/`.
