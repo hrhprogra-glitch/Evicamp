@@ -373,16 +373,15 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
 
   // Manejo de teclado en el buscador de productos (flechas, Enter, escáner)
   const handleKeyDownBuscador = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'ArrowDown') {
+    // ↑ ↓ eligen en la lista solo si está abierta; si no, mueven el selector a los campos de arriba / abajo
+    // (antes se quedaban siempre en el buscador: dueño, 13/11/2026)
+    const listaAbierta = prodsFiltrados.length > 0 && !prodSeleccionado;
+    if (e.key === 'ArrowDown' && listaAbierta) {
       e.preventDefault();
-      if (prodsFiltrados.length > 0) {
-        setIndiceSugerencia((prev) => (prev + 1) % prodsFiltrados.length);
-      }
-    } else if (e.key === 'ArrowUp') {
+      setIndiceSugerencia((prev) => (prev + 1) % prodsFiltrados.length);
+    } else if (e.key === 'ArrowUp' && listaAbierta) {
       e.preventDefault();
-      if (prodsFiltrados.length > 0) {
-        setIndiceSugerencia((prev) => (prev - 1 + prodsFiltrados.length) % prodsFiltrados.length);
-      }
+      setIndiceSugerencia((prev) => (prev - 1 + prodsFiltrados.length) % prodsFiltrados.length);
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (prodsFiltrados.length > 0) {
@@ -713,10 +712,11 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                 )}
                 <label className="flex items-center gap-1.5 cursor-pointer font-bold text-[11px]">
                   <input
+                    id="check-material-externo-salida"
                     type="checkbox"
                     checked={esExterno}
                     onChange={(e) => setEsExterno(e.target.checked)}
-                    className="w-4 h-4 rounded-none"
+                    className="w-4 h-4 rounded-none accent-[var(--color-ink)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)] focus:ring-offset-1"
                   />
                   <span>Material fuera de almacén</span>
                 </label>
@@ -888,7 +888,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
             {/* TABLA DE MATERIALES AGREGADOS CON EDICIÓN DIRECTA */}
             {items.length > 0 ? (
               <div className="border-2 border-[var(--color-ink)] bg-[var(--color-surface)] overflow-x-auto">
-                <table className="w-full text-left text-[11px] font-mono">
+                {/* data-tabla-campos: cantidades que se escriben; las flechas se mueven entre ellas (flechasEspaciales) */}
+                <table data-tabla-campos className="w-full text-left text-[11px] font-mono">
                   <thead className="bg-[var(--color-ink)] text-white font-black uppercase">
                     <tr>
                       <th className="p-2 w-10 text-center">#</th>

@@ -7,6 +7,22 @@
 
 ---
 
+## 13/11/2026 (155) · Claude — ↑ no subía en las líneas de la cotización ni en el buscador / la cantidad de la salida
+- **Dueño** (capturas de Nueva cotización y Nueva salida): "cuando selecciono el buscador o la cantidad no puedo subir arriba".
+- **Causas:**
+  - `flechasEspaciales.ts` trata toda fila de tabla (`tbody tr`) como una lista con su propio teclado: no deja salir con flechas ni entrar a ella. Las líneas de la cotización son campos para escribir, así que ↑ se quedaba en el mismo campo.
+  - Salida: el buscador de materiales se quedaba con ↑ ↓ aunque no hubiera lista abierta.
+  - Salida: desde la cantidad, ↑ iba a la casilla "Material fuera de almacén", que no tenía id ni borde, y parecía que el selector se perdía.
+- **Arreglo:**
+  - Las tablas de CAMPOS se marcan con `data-tabla-campos` (líneas de la cotización y materiales de la salida). Ahí las flechas se mueven como en un formulario. Las listas (clientes, tickets, filas que se abren con Enter) siguen igual.
+  - El buscador de la salida usa ↑ ↓ solo con su lista abierta.
+  - La casilla tiene id (`check-material-externo-salida`) y borde al estar seleccionada.
+- **Probado:** `prueba-flechas-coti-salida.mjs`, 25 de 25.
+  - Cotización: ↑ desde cada campo de la línea 1 sube al buscador; entre líneas, ↑ ↓ en la misma columna; las flechas no cambian la cantidad.
+  - Salida: ↑ desde el buscador y desde la cantidad suben a la casilla, que se ve; con la lista abierta, ↓ sigue eligiendo en ella.
+  - No se corrieron las pruebas que cambian el tipo de negocio: el dueño lo tiene en "solo Talleres y servicios".
+- Regla para lo que venga: una tabla con campos para escribir lleva `data-tabla-campos` (MEMORIA-IA 62).
+
 ## 13/11/2026 (154) · Claude — Se borran comerc.siumax y servic.siumax; Compras con buscador; productos en Nueva cotización
 - **Dueño:** "comerc.siumax y servic.siumax borrarlo". En Compras, quitar lo marcado en rojo (título "Listas de compras" con su explicación) y poner un buscador, el filtro (Pendientes / Recibidas / Todas, con "Todas" de entrada) y al costado "Nueva lista". En Nueva cotización, "falta poner seleccionar" en las líneas.
 - **Links borrados** (`servidor/borrar-links-viejos.sh`, comando `node ai-scripts/cliente.cjs borrar-links-viejos`):

@@ -10,6 +10,10 @@ const FLECHAS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'] as const;
 type Flecha = typeof FLECHAS[number];
 const FILA = 'tbody tr, [data-row="true"], [data-row-prov="true"], [data-fila-cliente="true"], [data-fila-ticket="true"], tr[role="button"], [id^="coti-row-"], [id^="ped-row-"]';
 const TEXTO = ['text', 'search', 'email', 'tel', 'password', 'url', ''];
+// Una fila de lista (cliente, ticket…) tiene su propio teclado. Pero las tablas de CAMPOS para escribir (líneas de una
+// cotización, materiales de una salida) se marcan con data-tabla-campos: ahí las flechas se mueven como en cualquier
+// formulario (dueño, 13/11/2026: "cuando selecciono el buscador o la cantidad no puedo subir arriba").
+const enFila = (el: HTMLElement) => { const f = el.closest(FILA); return !!f && !f.closest('[data-tabla-campos]'); };
 
 const ambitoDe = (el: HTMLElement): HTMLElement | null => {
   const v = ventanaSuperior();
@@ -20,7 +24,7 @@ const ambitoDe = (el: HTMLElement): HTMLElement | null => {
 
 // ¿Esta flecha, en este control, puede pasar a otro control? (en un texto, solo si el cursor ya está en la orilla)
 const puedeSalir = (el: HTMLElement, k: Flecha): boolean => {
-  if (el.closest(FILA)) return false;                  // las filas y sus botones tienen su propio teclado
+  if (enFila(el)) return false;                        // las filas y sus botones tienen su propio teclado
   if (el instanceof HTMLSelectElement) return true;     // sus flechas ya no cambian el valor (ver alTeclearPrimero)
   // Texto largo: solo sale desde la orilla (↑ en la primera línea, ↓ en la última, ← al inicio, → al final)
   if (el instanceof HTMLTextAreaElement) {
@@ -51,7 +55,7 @@ const masCercano = (desde: HTMLElement, k: Flecha, ambito: HTMLElement): HTMLEle
   const cy = (r.top + r.bottom) / 2;
   const candidatos: { el: HTMLElement; q: DOMRect; distancia: number; cruce: number }[] = [];
   for (const el of enfocablesDe(ambito)) {
-    if (el === desde || el.closest(FILA) || el.closest('#evicamp-sidebar')) continue;
+    if (el === desde || enFila(el) || el.closest('#evicamp-sidebar')) continue;
     const q = el.getBoundingClientRect();
     if (!q.width || !q.height) continue;
     let distancia: number;

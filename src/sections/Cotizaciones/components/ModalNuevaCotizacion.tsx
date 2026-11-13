@@ -346,7 +346,8 @@ export const ModalNuevaCotizacion: React.FC<Props> = ({ cotizacionEditar, detall
               </button>
             </div>
             <div className="border border-[var(--color-border)] overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
+              {/* data-tabla-campos: son campos para escribir; las flechas se mueven entre ellos (flechasEspaciales) */}
+              <table data-tabla-campos className="w-full text-left text-xs border-collapse">
                 <thead className="bg-[var(--color-ink)] text-white text-[10px] font-black uppercase tracking-widest">
                   <tr>
                     <th className="p-2 w-40">Sección</th>
