@@ -35,7 +35,7 @@
   - `revisar-panel-nego.mjs`, 7 de 7: Mis sitios, casillas, link `.nego`, la ventana se cierra sin crear nada, `nego.siumax` entra al sistema ("SiuMax Nego").
   - Revisión del script: `nego.siumax` abre y su API pide sesión; siguen abriendo `comerc.siumax`, el Panel, las actualizaciones de la app de PC, Evicamp y EviDiary.
 - **Ojo antes del primer cliente de Nego:** los clientes usan la copia compartida `/var/www/siuhub-app/html`, que todavía tiene la versión de Comerc del 11/11. Antes de crear un cliente real, hay que subir Nego a producción (con el aviso del dueño).
-- **Siguiente:** pasar ECO SISTEMAS URH a Nego y, después, borrar Servic (guardando una copia). Cada paso, con el OK del dueño.
+- **Siguiente:** lo que diga el dueño. **ECO SISTEMAS URH espera**: el 13/11/2026 aclaró que nunca dijo que se pasaría algo de ECO ("ecosistema esperará"). No proponerlo.
 
 ## 12/11/2026 (152) · Claude — SiuMax Nego: sección ENCARGOS (Cotizaciones + Pedidos) y avisos en la Caja
 - **Dueño:** "combinar cotizaciones con pedidos", "en caja agrega botones de alertar de cotizaciones y pedidos" que se acomoden bien en celular y otros dispositivos, y un nombre general para la sección. Se le propuso el plan con 4 nombres; eligió **"Encargos"**.
