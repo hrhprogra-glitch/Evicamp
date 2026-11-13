@@ -1,5 +1,5 @@
 // Prueba de SiuMax Nego, paso 3e (12/11/2026): Salidas a obras y servicios (traída de SiuMax Servic, su prueba-fase3)
-// con teclado, sobre https://comerc.siumax.duckdns.org con el negocio en Comercio + Servicios.
+// con teclado, sobre https://nego.siumax.duckdns.org con el negocio en Comercio + Servicios.
 // Uso: node ai-scripts/pruebas/prueba-salidas-nego.mjs <carpeta tools con puppeteer-core>
 // Crea datos "PRUEBA AUTO ..." y al final los borra y deja el negocio en solo Comercio.
 import { createRequire } from 'node:module'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
@@ -28,7 +28,7 @@ try {
     INSERT INTO trabajadores (nombre, cargo, estado) VALUES ('${NOMBRE_TRAB}', 'TECNICO', 'ACTIVO');
     UPDATE empresa_config SET tipos_negocio = '{comercio,servicios}';`);
 
-  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://nego.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario'); await page.focus('#input-login-usuario'); await escribir('admin@siumax.com');
   await page.focus('#input-login-password'); await escribir(process.env.SIUMAX_ADMIN_CLAVE); await tecla('Enter');
   await page.waitForSelector('#sidebar-btn-salidas', { timeout: 20000 }); await pausa(1500);

@@ -10,8 +10,10 @@
 //   node ai-scripts/cliente.cjs panel                                      -> instala/actualiza el Panel de Control
 //     (la primera vez usa PANEL_CLAVE de .env.vps como contraseña del panel)
 //     Mercado Pago: modo prueba con MP_ACCESS_TOKEN_PRUEBA; cobro real SOLO si .env.vps tiene MP_COBRAR=si
-//   node ai-scripts/cliente.cjs ordenar-links                              -> panel en siumax.duckdns.org, pruebas en
-//     comerc.siumax / servic.siumax y borra panel.siumax (06/11/2026; repetir no daña; no toca Evicamp ni bases)
+//   node ai-scripts/cliente.cjs ordenar-links                              -> (OBSOLETO desde el 13/11/2026: comerc.siumax y
+//     servic.siumax se borraron; el script ya no hace nada)
+//   node ai-scripts/cliente.cjs borrar-links-viejos                        -> borra comerc.siumax y servic.siumax (13/11/2026; copia
+//     de Servic en /root/backups; no toca Evicamp, el Panel ni nego.siumax)
 //   node ai-scripts/cliente.cjs nego                                       -> SiuMax Nego, fase 4: link de pruebas
 //     nego.siumax y Panel con clientes nuevos <negocio>.nego.siumax (respalda el panel; NO toca Mercado Pago;
 //     repetir no daña; no toca Evicamp ni bases)
@@ -62,7 +64,7 @@ const subirPanel = async (ssh) => {
 };
 
 (async () => {
-  const validos = ['instalar', 'nuevo', 'listar', 'suspender', 'activar', 'backup', 'panel', 'seguridad', 'ordenar-links', 'nego'];
+  const validos = ['instalar', 'nuevo', 'listar', 'suspender', 'activar', 'backup', 'panel', 'seguridad', 'ordenar-links', 'nego', 'borrar-links-viejos'];
   if (!validos.includes(accion)) {
     console.error(fs.readFileSync(__filename, 'utf8').split('\n').filter((l) => l.startsWith('//')).join('\n'));
     process.exit(1);
@@ -90,13 +92,18 @@ const subirPanel = async (ssh) => {
       // La clave va como variable de entorno, no como argumento del script
       // El instalador de PC genérico se copia solo dentro de nuevo-cliente.sh
       await ejecutar(ssh, `CLAVE_ADMIN=${q(clave)} ${DIR_REMOTO}/nuevo-cliente.sh ${q(slug)} ${q(negocio)} ${q(correo)}`);
-      console.log(`\nCliente listo: https://${slug}.comerc.siumax.duckdns.org  |  usuario: ${correo.toLowerCase()}`);
+      console.log(`\nCliente listo: https://${slug}.nego.siumax.duckdns.org  |  usuario: ${correo.toLowerCase()}`);
       return;
     }
 
     if (accion === 'ordenar-links') {
       await subirPanel(ssh);
       await ejecutar(ssh, `${DIR_REMOTO}/ordenar-links.sh`);
+      return;
+    }
+
+    if (accion === 'borrar-links-viejos') {
+      await ejecutar(ssh, `${DIR_REMOTO}/borrar-links-viejos.sh`);
       return;
     }
 

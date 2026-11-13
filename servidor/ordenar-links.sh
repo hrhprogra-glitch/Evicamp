@@ -7,6 +7,11 @@
 # Solo toca configuraciones de Nginx y certificados: ninguna base de datos ni API. Evicamp no se toca.
 # Si algo falla, vuelve sola a la configuración de antes.
 set -Eeuo pipefail   # -E: la vuelta atrás también corre si algo falla dentro de una función
+
+# OBSOLETO desde el 13/11/2026: el dueño pidió borrar comerc.siumax y servic.siumax (borrar-links-viejos.sh); las
+# pruebas están en nego.siumax (link-pruebas-nego.sh). Correr esto los volvería a crear: por eso ya no hace nada.
+echo "ordenar-links.sh está obsoleto (13/11/2026): las pruebas están en nego.siumax.duckdns.org. No se cambió nada." >&2
+exit 1
 source /opt/siuhub/siuhub-lib.sh
 
 FECHA=$(date +%Y%m%d-%H%M%S)

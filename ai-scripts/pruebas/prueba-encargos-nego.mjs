@@ -19,7 +19,7 @@ const CLI = `PRUEBA AUTO CLIENTE ENCARGO ${sello}`;
 
 // Entrar (en modo celular el teclado simulado vaciaba el usuario: se llena como lo haría React)
 const entrar = async (page) => {
-  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://nego.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario'); await pausa(600);
   await page.evaluate((u, c) => {
     const poner = (id, v) => { const el = document.getElementById(id); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })); };

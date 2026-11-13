@@ -11,7 +11,7 @@ const salida = [];
 for (const vp of [{ width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 3 }, { width: 1366, height: 860 }]) {
   const nav = await puppeteer.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', headless: true, defaultViewport: vp });
   const page = await nav.newPage();
-  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://nego.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario'); await pausa(800);
   // (en modo celular el campo de usuario se vaciaba al escribir con el teclado simulado: se llena como lo haría React)
   await page.evaluate((u, c) => {

@@ -27,7 +27,7 @@ const foco = () => page.evaluate(() => { const a = document.activeElement; if (!
 const hay = (sel) => page.evaluate((s) => !!document.querySelector(s), sel);
 
 try {
-  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://nego.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario'); await page.focus('#input-login-usuario'); await page.keyboard.type('admin@siumax.com');
   await page.focus('#input-login-password'); await page.keyboard.type(process.env.SIUMAX_ADMIN_CLAVE); await page.keyboard.press('Enter');
   await page.waitForSelector('#sidebar-btn-clientes', { timeout: 20000 }); await pausa(2500);

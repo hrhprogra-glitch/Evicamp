@@ -47,11 +47,11 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     setVistaActivaEstado(v);
     try { sessionStorage.setItem('inventario_vista', v); } catch { /* sin almacenamiento */ }
   };
-  // En la vista Compras no están el buscador ni los filtros de Productos: ↓ desde la cabecera baja al botón de la
-  // fila de Compras (Pendientes · Recibidas · Todas · Nueva lista) que queda justo debajo (pedido del dueño 05/11/2026)
+  // En la vista Compras no están el buscador ni los filtros de Productos: ↓ desde la cabecera baja a lo de la fila de
+  // Compras (buscador · filtro · Nueva lista, 13/11/2026) que queda justo debajo (pedido del dueño 05/11/2026)
   const bajarACompras = (origen: HTMLElement) => {
     if (vistaActiva !== 'COMPRAS') return false;
-    const fila = Array.from(document.querySelectorAll<HTMLElement>('#panel-compras [id^="btn-compras-filtro-"], #btn-nueva-compra'))
+    const fila = Array.from(document.querySelectorAll<HTMLElement>('#buscador-compras, #filtro-compras, #btn-nueva-compra'))
       .filter((el) => el.getClientRects().length > 0);
     if (!fila.length) return false;
     const centro = (el: HTMLElement) => { const r = el.getBoundingClientRect(); return r.left + r.width / 2; };
@@ -646,7 +646,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
                     (document.getElementById('btn-tab-activos') || document.getElementById('btn-nuevo-producto'))?.focus();
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
-                    { const destino = inicioCompras() || document.getElementById('buscador-global-inventario'); (filaEnMedio(e.currentTarget, destino, BOTONES_INVENTARIO) || destino)?.focus(); } // el cajero que solo recibe no tiene "Nueva lista"
+                    { const destino = inicioCompras() || document.getElementById('buscador-global-inventario'); (filaEnMedio(e.currentTarget, destino, BOTONES_INVENTARIO) || destino)?.focus(); } // ↓ al buscador de Compras
                   }
                 }}
                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 2xl:px-4 py-2.5 lg:py-3 whitespace-nowrap text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer border-l-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${vistaActiva === 'COMPRAS' ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'}`}

@@ -2,7 +2,7 @@
 # Activa la protección por sesión en la API de un sistema: cada pedido debe traer una sesión válida
 # (ver sql/seguridad-sesion.sql). Antes hace un backup de la base.
 # Uso: activar-seguridad.sh <evicamp|siumax|clientes|link-cliente> [--quitar]
-#   siumax (o comerc) -> el sistema de pruebas de Comerc (comerc.siumax.duckdns.org, base siumax)
+#   siumax (o comerc) -> el sistema de pruebas (nego.siumax.duckdns.org, base siumax)
 #   clientes  -> todos los clientes del registro
 #   --quitar  -> vuelve atrás al instante (la API deja de exigir sesión)
 set -euo pipefail

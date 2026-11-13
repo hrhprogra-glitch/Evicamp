@@ -9,7 +9,7 @@
 DOMINIO_BASE="siumax.duckdns.org"
 TIPO_SISTEMA="nego"                           # clientes nuevos: SiuMax Nego
 TIPO_LEGADO="comerc"                          # filas del registro sin tipo (creadas antes de Nego)
-HOST_PRUEBAS="comerc.$DOMINIO_BASE"           # sistema de pruebas de siempre (base siumax, API puerto 3001)
+HOST_PRUEBAS="comerc.$DOMINIO_BASE"           # link VIEJO de pruebas (borrado el 13/11/2026; solo lo usan scripts viejos)
 HOST_PRUEBAS_NEGO="nego.$DOMINIO_BASE"        # el mismo sistema de pruebas con el link de Nego
 DIR_SIUMAX="/opt/siuhub"
 REGISTRO="$DIR_SIUMAX/clientes.tsv"           # slug  nombre  puerto  estado  fecha_alta  tipo

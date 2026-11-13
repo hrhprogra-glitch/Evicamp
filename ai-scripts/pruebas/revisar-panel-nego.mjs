@@ -18,7 +18,8 @@ try {
   await page.type('#clave', process.env.PANEL_CLAVE); await page.keyboard.press('Enter'); await pausa(3000);
   const sitios = await page.evaluate(() => document.body.innerText);
   ok('Mis sitios: SiuMax Nego (nego.siumax.duckdns.org)', /SiuMax Nego/i.test(sitios) && sitios.includes('nego.siumax.duckdns.org'));
-  ok('Mis sitios: el link anterior (comerc.siumax) sigue', sitios.includes('comerc.siumax.duckdns.org'));
+  // comerc.siumax y servic.siumax se borraron (dueño, 13/11/2026)
+  ok('Mis sitios: ya no están comerc.siumax ni servic.siumax', !sitios.includes('comerc.siumax') && !sitios.includes('servic.siumax'));
   await page.click('#btn-nuevo'); await pausa(800);
   const m = await page.evaluate(() => {
     const f = document.querySelector('input[name="tipo_comercio"]')?.form; // el formulario de la ventana (no el de entrar)

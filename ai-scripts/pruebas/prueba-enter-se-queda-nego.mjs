@@ -43,7 +43,7 @@ const enterSeQueda = async (ventana, campos, textoAntes = true) => {
 const cerrar = async (idCerrar) => { await page.focus('#' + idCerrar); await tecla('Enter'); await pausa(500); await cerrarAviso(); };
 
 try {
-  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://nego.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario'); await page.focus('#input-login-usuario'); await page.keyboard.type('admin@siumax.com');
   await page.focus('#input-login-password'); await page.keyboard.type(process.env.SIUMAX_ADMIN_CLAVE); await page.keyboard.press('Enter');
   await page.waitForSelector('#sidebar-btn-configuracion', { timeout: 20000 }); await pausa(2500);

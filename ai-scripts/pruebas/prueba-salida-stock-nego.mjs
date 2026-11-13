@@ -19,7 +19,7 @@ await sql(`INSERT INTO customers (id, name, activo, created_at, is_synced) VALUE
 const nav = await puppeteer.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', headless: true, defaultViewport: { width: 1366, height: 860 } });
 const page = await nav.newPage(); const errores = []; page.on('pageerror', (e) => errores.push(e.message));
 try {
-  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://nego.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario'); await page.type('#input-login-usuario', 'admin@siumax.com');
   await page.type('#input-login-password', process.env.SIUMAX_ADMIN_CLAVE); await page.keyboard.press('Enter');
   await page.waitForSelector('#sidebar-btn-salidas', { timeout: 20000 }); await pausa(2000);

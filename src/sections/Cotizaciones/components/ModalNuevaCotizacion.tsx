@@ -4,7 +4,12 @@
 // de la Caja (para poder convertirla en venta), Enter nunca pasa al siguiente campo (enterSeQueda) y sin datos de
 // banco inventados por defecto.
 import React, { useEffect, useState } from 'react';
-import { X, Save, Plus, Trash2, FileText } from 'lucide-react';
+import { X, Save, Plus, Trash2, FileText, Search } from 'lucide-react';
+import { traerTodo } from '../../../utils/traerTodo';
+import { coincideBusqueda } from '../../../utils/busqueda';
+import { unidadDe } from '../../../utils/unidades';
+import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
+import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar } from '../../../utils/dialogos';
@@ -19,6 +24,13 @@ interface Props {
   detallesEditar?: CotizacionItem[];
   conServicios: boolean;
   onClose: (guardado?: boolean, id?: number) => void;
+}
+
+// Producto del inventario que se puede seleccionar en una línea
+interface ProductoCoti {
+  id: number; name: string; code?: string | null; barcode?: string | null; price: number; quantity: number;
+  unit?: string | null; control_type?: string | null; sunat_unit_code?: string | null;
+  marca?: string | null; modelo?: string | null; is_active?: number | null; presentaciones?: unknown;
 }
 
 const lineaNueva = (seccion = ''): CotizacionItem => ({ product_name: '', seccion, unidad: 'UND', quantity: 1, price: 0, subtotal: 0 });
@@ -61,8 +73,15 @@ export const ModalNuevaCotizacion: React.FC<Props> = ({ cotizacionEditar, detall
   const [bienes, setBienes] = useState<{ id: number; customer_id: number; nombre: string; tipo: string }[]>([]);
   const [guardando, setGuardando] = useState(false);
   const [numero, setNumero] = useState(ed?.numero || 'COT-....');
+  const [productos, setProductos] = useState<ProductoCoti[]>([]);
+  const [busProd, setBusProd] = useState('');
+  const [marcado, setMarcado] = useState(0);
 
   useEffect(() => {
+    // Productos del inventario (para "Seleccionar producto"); los inactivos no salen
+    traerTodo(() => supabase.from('products').select('id, name, code, barcode, price, quantity, unit, control_type, sunat_unit_code, marca, modelo, is_active, presentaciones').order('id'))
+      .then(({ data }) => setProductos(((data || []) as ProductoCoti[]).filter((p) => p.is_active !== 0)))
+      .catch((e) => console.error('Cotización: productos', e));
     (async () => {
       const [rc, rb] = await Promise.all([
         supabase.from('customers').select('id, name, dni, ruc, telefono').order('name'),
@@ -95,6 +114,24 @@ export const ModalNuevaCotizacion: React.FC<Props> = ({ cotizacionEditar, detall
   const agregarLinea = () => {
     setItems((prev) => [...prev, lineaNueva(conServicios ? 'Materiales y repuestos' : prev[prev.length - 1]?.seccion || '')]);
     setTimeout(() => document.getElementById(`input-desc-item-${items.length}`)?.focus(), 40);
+  };
+  // Productos del inventario para seleccionar en las líneas (los activos; hasta 8 resultados)
+  const resultados = busProd.trim()
+    ? productos.filter((p) => coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo], busProd)).slice(0, 8)
+    : [];
+  const agregarProducto = (p: ProductoCoti) => {
+    const linea: CotizacionItem = {
+      product_id: Number(p.id), es_mayorista: false, product_name: p.name, seccion: '',
+      unidad: unidadDe(p).corto || 'UND', quantity: 1, price: Number(p.price) || 0, subtotal: Number(p.price) || 0,
+    };
+    setItems((prev) => {
+      // Si la única línea está vacía (la del inicio), se reemplaza; si no, se agrega al final
+      const vacia = prev.length === 1 && !prev[0].product_name.trim() && !prev[0].product_id;
+      return vacia ? [{ ...linea, seccion: prev[0].seccion || '' }] : [...prev, linea];
+    });
+    setBusProd(''); setMarcado(0);
+    // El selector se queda en el buscador para seguir agregando productos
+    setTimeout(() => document.getElementById('buscador-producto-coti')?.focus(), 30);
   };
   const quitarLinea = (i: number) => {
     if (items.length <= 1) { avisar('La cotización debe tener al menos una línea.'); return; }
@@ -243,9 +280,68 @@ export const ModalNuevaCotizacion: React.FC<Props> = ({ cotizacionEditar, detall
           </div>
 
           <div className="space-y-2 pt-2 border-t border-[var(--color-border)]">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-black uppercase tracking-wider text-[var(--color-ink)]">Líneas de la cotización</span>
-              <button id="btn-agregar-item-coti" type="button" onClick={agregarLinea} className="h-8 px-3 bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[var(--color-ink)] text-xs font-black uppercase text-[var(--color-ink)] flex items-center gap-1.5 cursor-pointer rounded-none">
+            <span className="block text-xs font-black uppercase tracking-wider text-[var(--color-ink)]">Líneas de la cotización</span>
+            {/* Seleccionar productos del inventario (dueño, 13/11/2026): escribir, elegir con ↑ ↓ y Enter agrega la línea
+                con su precio y unidad (y su producto, para poder venderla en la Caja). "Agregar línea" sigue para escribir
+                a mano un servicio o algo que no está en el inventario. */}
+            <div className="flex flex-col sm:flex-row gap-2 items-stretch">
+              <div className="relative flex-1">
+                <div className="buscador-sobrio">
+                  <div className="buscador-sobrio__icono"><Search size={16} /></div>
+                  <input
+                    id="buscador-producto-coti"
+                    type="text"
+                    autoComplete="off"
+                    spellCheck={false}
+                    data-lpignore="true"
+                    role="combobox"
+                    aria-expanded={resultados.length > 0}
+                    aria-controls="lista-productos-coti"
+                    value={busProd}
+                    onChange={(e) => { setBusProd(e.target.value); setMarcado(0); }}
+                    onKeyDown={(e) => {
+                      if (resultados.length && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+                        e.preventDefault(); e.stopPropagation();
+                        setMarcado((m) => (e.key === 'ArrowDown' ? Math.min(m + 1, resultados.length - 1) : Math.max(m - 1, 0)));
+                      } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (resultados[marcado]) agregarProducto(resultados[marcado]);
+                      } else if (e.key === 'Escape' && busProd) {
+                        e.preventDefault(); e.stopPropagation(); setBusProd('');
+                      }
+                    }}
+                    placeholder="SELECCIONAR PRODUCTO DEL INVENTARIO (NOMBRE O CÓDIGO)..."
+                  />
+                  <BotonEscanerCelular
+                    id="btn-escaner-cotizacion"
+                    variante="sobrio"
+                    titulo="Escanear el código del producto con la cámara"
+                    onScan={(codigo) => {
+                      const p = buscarProductoPorCodigo(productos as any[], codigo);
+                      if (p) agregarProducto(p as any); else { setBusProd(codigo); setMarcado(0); }
+                    }}
+                  />
+                </div>
+                {resultados.length > 0 && (
+                  <ul id="lista-productos-coti" role="listbox" className="absolute z-20 left-0 right-0 top-full mt-1 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] max-h-64 overflow-y-auto">
+                    {resultados.map((p, i) => (
+                      <li
+                        key={p.id}
+                        id={`opcion-producto-coti-${i}`}
+                        role="option"
+                        aria-selected={i === marcado}
+                        onMouseDown={(e) => { e.preventDefault(); agregarProducto(p); }}
+                        onMouseEnter={() => setMarcado(i)}
+                        className={`px-3 py-2 flex items-center justify-between gap-3 cursor-pointer text-xs font-bold ${i === marcado ? 'bg-[var(--color-ink)] text-white' : 'text-[var(--color-ink)]'}`}
+                      >
+                        <span className="truncate">{p.name}{p.code ? <span className="opacity-60"> · {p.code}</span> : null}</span>
+                        <span className="shrink-0 whitespace-nowrap">{simbolo(moneda)} {formatearMonto(Number(p.price) || 0)} · stock {Number(p.quantity) || 0} {unidadDe(p).corto}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <button id="btn-agregar-item-coti" type="button" onClick={agregarLinea} className="h-10 px-3 bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[var(--color-ink)] text-xs font-black uppercase text-[var(--color-ink)] flex items-center justify-center gap-1.5 cursor-pointer rounded-none whitespace-nowrap">
                 <Plus size={14} /> Agregar línea
               </button>
             </div>

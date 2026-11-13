@@ -60,9 +60,8 @@ const claseBoton ='px-3 py-2 border-2 border-[var(--color-ink)] text-[10px] sm:t
 
 // ======================================================= Navegación con flechas
 const FILA_PIE = 1000; // los botones de abajo de cada ventana siempre son la última fila
-// Primer lugar del selector en Compras: "Nueva lista" o, para el cajero que solo recibe (no tiene ese botón), el filtro marcado
-export const inicioCompras = () =>
-  document.getElementById('btn-nueva-compra') || document.querySelector<HTMLElement>('#panel-compras [id^="btn-compras-filtro-"][aria-pressed="true"]');
+// Primer lugar del selector en Compras: su buscador (13/11/2026; antes "Nueva lista" o el filtro marcado)
+export const inicioCompras = () => document.getElementById('buscador-compras');
 
 const enfocar = (el: HTMLElement | null | undefined) => {
   if (!el) return false;
@@ -331,7 +330,9 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   const [compras, setCompras] = useState<Compra[]>([]);
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [cargando, setCargando] = useState(true);
-  const [filtro, setFiltro] = useState<'PENDIENTE' | 'RECIBIDO' | 'TODAS'>('PENDIENTE');
+  // "Todas" de entrada (pedido del dueño, 13/11/2026)
+  const [filtro, setFiltro] = useState<'PENDIENTE' | 'RECIBIDO' | 'TODAS'>('TODAS');
+  const [busqueda, setBusqueda] = useState('');
   const [editando, setEditando] = useState<Compra | 'nueva' | null>(null);
   const [recibiendo, setRecibiendo] = useState<Compra | null>(null);
   const [viendo, setViendo] = useState<Compra | null>(null); // detalle abierto (Enter sobre una lista)
@@ -384,7 +385,9 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   const focoDetalle = useRef<string | undefined>(undefined);
   useEffect(() => { if (!viendo && !previa) focoDetalle.current = undefined; }, [viendo, previa]);
 
-  const visibles = compras.filter((c) => filtro === 'TODAS' || c.estado === filtro);
+  // Buscador: número de pedido, proveedor, quién la hizo o recibió, factura, fecha o un producto de la lista
+  const visibles = compras.filter((c) => (filtro === 'TODAS' || c.estado === filtro) && coincideBusqueda(
+    [`#${String(c.id).slice(-6)}`, c.proveedor, c.autor, c.recibido_por, c.documento, c.notas, fecha(c.created_at), ...c.compras_detalle.map((d) => d.product_name)], busqueda));
   const stockBajo = productos.filter((p) => p.unit !== 'CONSUMO' && Number(p.quantity) <= Number(p.minStock));
 
   const unidadPorId = useMemo(() => new Map(productos.map((p) => [String(p.id), unidadDe(p)])), [productos]);
@@ -510,36 +513,49 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   };
 
   const filtros = [['PENDIENTE', 'Pendientes'], ['RECIBIDO', 'Recibidas'], ['TODAS', 'Todas']] as const;
+  const nombreFiltro = filtros.find(([f]) => f === filtro)?.[1] || '';
 
   return (
     <div id="panel-compras" ref={panel} onKeyDown={teclasPanel} className="flex flex-col gap-4 font-mono">
-      {/* Cabecera (fila 0) */}
-      {/* En laptops el texto va arriba y los botones abajo (en una fila no entran) */}
-      <div className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-3 py-1">
-        <div>
-          <h2 className="text-sm sm:text-base font-black uppercase tracking-widest text-[var(--color-ink)] flex items-center gap-2"><ShoppingCart size={18} /> Listas de compras</h2>
-          <p className="text-[11px] font-bold text-[var(--color-muted)] mt-1">
-            Arma el pedido para tu proveedor y, cuando llegue, recíbelo: los lotes se crean solos. Enter sobre una lista para ver su detalle.
-            {!soloRecibe && stockBajo.length > 0 && <span className="text-[var(--color-danger)]"> · {stockBajo.length} producto(s) con stock bajo.</span>}
-          </p>
-        </div>
-        <div className="flex flex-nowrap gap-2 shrink-0 overflow-x-auto">{/* los 4 botones siempre en una fila ("Nueva lista" no baja) */}
-          <div className="pestanas-sobrias flex">
-          {filtros.map(([f, nombre], i) => (
-            <button key={f} id={`btn-compras-filtro-${f}`} type="button" data-nav={`0,${i}`} onClick={() => setFiltro(f)} aria-pressed={filtro === f} data-activa={filtro === f}
-              className={`${claseBoton} ${filtro === f ? 'bg-[var(--color-ink)] text-[var(--color-accent)]' : 'bg-white text-[var(--color-ink)]'}`}>
-              {nombre}
-            </button>
-          ))}
-          </div>
-          {!soloRecibe && (
-          <button id="btn-nueva-compra" type="button" data-nav="0,3" onClick={() => conPermiso('armar listas de compras', () => setEditando('nueva'))}
-            style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
-            className={`boton-cabecera ${claseBoton} bg-[var(--color-accent)] text-[var(--color-ink)] shadow-[3px_3px_0_0_var(--color-ink)]`}>
-            <Plus size={14} /> Nueva lista
-          </button>
+      {/* Fila 0 (dueño, 13/11/2026): buscador, filtro (Pendientes · Recibidas · Todas; "Todas" de entrada) y "Nueva lista",
+          en UNA fila. Antes: título "Listas de compras" con su explicación y los filtros como botones. El aviso de stock
+          bajo que estaba en ese texto queda en el botón (al pasar el mouse) y en "Sugerir pedido" de la lista. */}
+      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+        <div className="buscador-sobrio flex-1 shrink-0">
+          <div className="buscador-sobrio__icono"><Search size={18} /></div>
+          <input
+            id="buscador-compras"
+            type="text"
+            data-nav="0,0"
+            autoComplete="off"
+            spellCheck={false}
+            data-lpignore="true"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape' && busqueda) { e.preventDefault(); e.stopPropagation(); setBusqueda(''); } }}
+            placeholder="BUSCAR PEDIDO, PROVEEDOR, PRODUCTO O FACTURA..."
+          />
+          {busqueda && (
+            <div className="buscador-sobrio__match">
+              <span className="buscador-sobrio__conteo">{visibles.length} MATCH</span>
+              <button id="btn-borrar-buscador-compras" type="button" data-nav="0,1" className="buscador-sobrio__borrar" title="Borrar búsqueda"
+                onClick={() => { setBusqueda(''); document.getElementById('buscador-compras')?.focus(); }}>
+                <X size={14} />
+              </button>
+            </div>
           )}
         </div>
+        <select id="filtro-compras" data-nav="0,2" value={filtro} onChange={(e) => setFiltro(e.target.value as typeof filtro)} className="filtro-sobrio w-full md:w-auto">
+          {filtros.map(([f, nombre]) => <option key={f} value={f}>{nombre.toUpperCase()}</option>)}
+        </select>
+        {!soloRecibe && (
+          <button id="btn-nueva-compra" type="button" data-nav="0,3" onClick={() => conPermiso('armar listas de compras', () => setEditando('nueva'))}
+            title={stockBajo.length > 0 ? `${stockBajo.length} producto(s) con stock bajo: "Sugerir pedido" los agrega a la lista` : 'Armar una lista de compras para un proveedor'}
+            style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+            className="boton-cabecera px-4 py-3 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none whitespace-nowrap shrink-0">
+            <Plus size={14} /> Nueva lista
+          </button>
+        )}
       </div>
 
       {/* Listas en tabla; Enter abre el detalle */}
@@ -547,7 +563,8 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
         <div className="p-6 text-center text-xs font-black uppercase text-[var(--color-muted)]"><Loader2 className="inline animate-spin" size={16} /> Cargando...</div>
       ) : visibles.length === 0 ? (
         <div className="p-6 bg-white border-2 border-dashed border-[var(--color-border)] text-center text-xs font-black uppercase text-[var(--color-muted)]">
-          {filtro === 'PENDIENTE' ? (soloRecibe ? 'No hay pedidos por recibir.' : 'No hay pedidos pendientes. Crea una lista con "Nueva lista".') : 'No hay listas aquí.'}
+          {busqueda ? `Ninguna lista coincide con "${busqueda}"${filtro !== 'TODAS' ? ` en ${nombreFiltro.toLowerCase()}` : ''}.`
+            : filtro === 'PENDIENTE' ? (soloRecibe ? 'No hay pedidos por recibir.' : 'No hay pedidos pendientes. Crea una lista con "Nueva lista".') : 'No hay listas aquí.'}
         </div>
       ) : (
         // Tabla (mismo estilo que Lotes): una fila por lista; ↑ ↓ para moverse, Enter abre el detalle

@@ -1,4 +1,4 @@
-// Prueba del escáner de código de barras por cámara para celular en comerc.siumax.duckdns.org:
+// Prueba del escáner de código de barras por cámara para celular en nego.siumax.duckdns.org:
 // 1. En PC/laptop (1366x860): el botón [ 📷 ] NO se ve en ningún buscador (oculto al 100 %).
 // 2. En celular (390x844): el botón [ 📷 ] SÍ aparece, sin esquinas redondeadas (0px).
 // 3. Funciona en Caja (agrega al carrito), Conteos › Nuevo ajuste (elige producto y pasa a "¿Cuántos hay?"),
@@ -76,7 +76,7 @@ const simularEscaneo = async (btnSelector, codigo) => {
 };
 
 try {
-  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://nego.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario');
   await page.focus('#input-login-usuario');
   await page.keyboard.type('admin@siumax.com');

@@ -460,9 +460,7 @@ candado_sugerencias = threading.Lock()
 
 
 # Sistemas que no se crearon desde el panel (no están en clientes.tsv)
-NEGOCIOS_FIJOS = {"evicamp.duckdns.org": "Evicamp", "nego.siumax.duckdns.org": "SiuMax Nego (pruebas)",
-                  "comerc.siumax.duckdns.org": "SiuMax Nego (pruebas, link anterior)",
-                  "servic.siumax.duckdns.org": "SiuMax Servic (pruebas)"}
+NEGOCIOS_FIJOS = {"evicamp.duckdns.org": "Evicamp", "nego.siumax.duckdns.org": "SiuMax Nego (pruebas)"}  # comerc.siumax y servic.siumax se borraron (13/11/2026)
 
 
 def negocio_de_link(host):

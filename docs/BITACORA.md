@@ -7,6 +7,34 @@
 
 ---
 
+## 13/11/2026 (154) · Claude — Se borran comerc.siumax y servic.siumax; Compras con buscador; productos en Nueva cotización
+- **Dueño:** "comerc.siumax y servic.siumax borrarlo". En Compras, quitar lo marcado en rojo (título "Listas de compras" con su explicación) y poner un buscador, el filtro (Pendientes / Recibidas / Todas, con "Todas" de entrada) y al costado "Nueva lista". En Nueva cotización, "falta poner seleccionar" en las líneas.
+- **Links borrados** (`servidor/borrar-links-viejos.sh`, comando `node ai-scripts/cliente.cjs borrar-links-viejos`):
+  - Se quitaron los sitios de Nginx y los certificados de `comerc.siumax` y `servic.siumax`. Las pruebas siguen en **`nego.siumax.duckdns.org`**: misma carpeta, base `siumax` y API 3001, sin tocar.
+  - Servic: se apagó su API (`postgrest-cliente@servic`, puerto 3002). **Copia:** su base `servic` y su carpeta `/var/www/servic` siguen en el servidor, y además hay un respaldo en `/root/backups/links-viejos-20261113-054643/servic` (base 780K, carpeta 121M). El repositorio `servicios/` en la PC no se tocó.
+  - Nuevo `000-desconocidos` en Nginx: un link que no existe ya no muestra ningún sitio. Antes caía en el primero de la lista, que era `comerc`; sin él habría sido CreditAlToque.
+  - Revisado: `nego.siumax` abre y su API pide sesión; abren el Panel, las actualizaciones de la app de PC, Evicamp, EviDiary (sus dos links) y CreditAlToque; `comerc.siumax` y `servic.siumax` ya no abren.
+  - El aviso "conflicting server name evicamp.duckdns.org on 0.0.0.0:80" ya existía antes; no es de este cambio.
+  - Lo que apuntaba a `comerc.siumax` pasó a `nego.siumax`:
+    - El link por defecto de la Tienda Web.
+    - La app de PC (`escritorio/main.js` y `configurar.html`): **solo vale para un instalador nuevo, que se publica con aviso del dueño**.
+    - Los mensajes y comentarios de `cliente.cjs`, `deploy.cjs` y `activar-seguridad.sh`.
+    - El Panel: se quitaron esas dos filas de "Mis sitios".
+    - 71 pruebas automáticas.
+  - `ordenar-links.sh` queda **obsoleto** (si se corriera, volvería a crear los dos links: ahora solo avisa y sale). `link-pruebas-nego.sh` ya no necesita la configuración de `comerc`.
+- **Inventario › Compras** (`PanelCompras.tsx`):
+  - Sin el título ni el texto. En UNA fila: buscador (`buscador-compras`: número de pedido, proveedor, quién la hizo o recibió, factura, fecha o un producto), filtro (`filtro-compras`, "Todas" de entrada) y "Nueva lista".
+  - El selector entra al buscador.
+  - El aviso "N productos con stock bajo" que estaba en ese texto queda en el botón "Nueva lista" (al pasar el mouse). "Sugerir pedido", dentro de la lista, los sigue proponiendo.
+- **Nueva cotización** (`ModalNuevaCotizacion.tsx`):
+  - Buscador "Seleccionar producto del inventario" (nombre o código, con escáner en el celular). ↑ ↓ eligen en la lista, que es propia (sin `datalist`).
+  - Enter agrega la línea con su precio, su unidad y su producto, así se puede vender en la Caja. El selector se queda en el buscador.
+  - "Agregar línea" sigue para escribir a mano.
+- **Probado:**
+  - `prueba-compras-y-productos-coti.mjs`, 22 de 22: sin el título; los tres en una fila; "Todas" de entrada; teclado; buscador por proveedor; sin resultados; Escape; filtro "Pendientes"; elegir 2 productos con teclado; se guardan con su producto.
+  - `revisar-panel-nego.mjs`, 7 de 7: "Mis sitios" ya sin `comerc` ni `servic`.
+- Nota: el negocio de pruebas estaba en "solo Talleres y servicios" (no lo dejó así ninguna prueba; se le avisó al dueño, sin cambiarlo).
+
 ## 12/11/2026 (153) · Claude — SiuMax Nego, fase 4: link de pruebas nego.siumax y clientes nuevos <negocio>.nego.siumax
 - **Dueño:** "si hazlo" (fase 4: Panel y links nego).
 - **Hecho en el VPS** (no es Evicamp ni un cliente; Evicamp no se tocó). Comando: `node ai-scripts/cliente.cjs nego`, que se puede repetir:

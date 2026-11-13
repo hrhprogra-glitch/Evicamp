@@ -53,7 +53,7 @@ try {
     values ('COT-PRUEBA-${sello}', '${CLI} CAJA', '987654321', now(), now() + interval '7 days', 'VIGENTE', ${Number(pprecio) * 2}, 'Caja', 'PRUEBA AUTO DESDE CAJA ${sello}') returning id`).then((r) => r.split('\n')[0]);
   await sql(`insert into cotizacion_detalles (cotizacion_id, product_id, product_name, quantity, price, subtotal, es_mayorista) values (${idCaja}, ${pid}, '${pname.replace(/'/g, "''")}', 2, ${pprecio}, ${Number(pprecio) * 2}, false)`);
 
-  await page.goto('https://comerc.siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto('https://nego.siumax.duckdns.org', { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario'); await page.focus('#input-login-usuario'); await page.keyboard.type('admin@siumax.com');
   await page.focus('#input-login-password'); await page.keyboard.type(process.env.SIUMAX_ADMIN_CLAVE); await page.keyboard.press('Enter');
   await page.waitForSelector('#sidebar-btn-configuracion', { timeout: 20000 }); await pausa(2500);
