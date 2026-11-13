@@ -7,6 +7,27 @@
 
 ---
 
+## 12/11/2026 (148) · Claude — SiuMax Nego, paso 3f: Agenda y Taller
+- **Dueño:** "si" (empezar el 3f).
+- **Traídas de SiuMax Servic:** `src/sections/Agenda/` y `src/sections/Taller/`.
+  - En `App.tsx` reemplazan el aviso "Pronto"; se quitaron de `Pronto.tsx`. Salen solo con "Talleres y servicios".
+  - No se copió `Agenda/components/VistaMiDia.tsx`: Servic ya no lo usaba (el dueño quitó "Mi día" porque era lo mismo que "Día").
+  - **Base:** sus tablas y funciones ya estaban desde el paso 3a. Se revisó que las columnas que leen (clientes, productos, datos de la empresa) existen en la base de Nego.
+- **Enter (regla de Nego, bitácora 147):** las ventanas de Servic aún pasaban al siguiente campo o bloqueaban la lista.
+  - Nuevo `src/utils/enterSeQueda.ts`: Enter en un campo no se mueve ni envía el formulario; en una lista, fecha u hora la abre; en un botón es clic.
+  - Se usa en Nuevo trabajo, Recibir equipo, el detalle de la orden (repuestos) y Registrar cobro.
+- **Probado:**
+  - `prueba-agenda-taller-nego.mjs` (adapta las `prueba-fase5` y `prueba-fase12` de Servic), 38 de 38 OK, dos veces seguidas.
+    - Agenda: crear un trabajo con cliente y técnico (Enter en el chip), verlo en Día, Semana y Mes, abrir su detalle con Enter, "Generar salida" con el cliente ya puesto, eliminar.
+    - Taller: recibir un equipo con adelanto (180 / 60 / 120), cambiar el estado y el diagnóstico, agregar un repuesto (total 230), registrar un cobro (abonado 110, saldo 120), buscar.
+    - Enter en los campos deja el selector en su sitio y no guarda nada solo.
+    - Borra todo lo que creó, incluido el movimiento de caja, y deja el negocio en solo Comercio.
+  - `medir-cabeceras-nego.mjs`: Agenda (con sus 3 vistas) y Taller en una fila a 1920 y 1366.
+- **Igual que en Servic, a decidir por el dueño:**
+  - Un repuesto del inventario agregado a una orden **no descuenta stock** (las salidas sí).
+  - Un cobro del taller entra a la **caja abierta** como ingreso, si hay una.
+- **Siguiente (3g):** Contratos.
+
 ## 12/11/2026 (147) · Claude — SiuMax Nego: Enter se queda también en lo traído de Servic
 - **Dueño:** "yo te dije que siempre tiene que ser así: Enter abre la lista o hace clic, y el selector se queda… no quiero que esté así como en Servic".
   - Queda decidido para siempre: la regla 7 vale en TODO Nego, también en las ventanas que vienen de Servic. No volver a preguntarlo.

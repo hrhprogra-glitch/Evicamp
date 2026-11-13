@@ -2004,15 +2004,15 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1794524727.0835698,
-    "seen": 1794524736.4787943,
-    "ast_hash": "d5eaffbe06c484db1eda08fdf39318b3",
+    "mtime": 1794529199.1484108,
+    "seen": 1794529221.8495414,
+    "ast_hash": "f884edc2dae93fa5356a227ed7bf1916",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1794524727.0860963,
-    "seen": 1794524736.4787953,
-    "ast_hash": "a69f0775153d35824abf7698df3e2709",
+    "mtime": 1794529199.1504025,
+    "seen": 1794529221.8495429,
+    "ast_hash": "cec40ca91209a2ee41486c5ee1a19673",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1794524727.0850844,
-    "seen": 1794524736.478797,
-    "ast_hash": "182f4e98ae4ba1210776e9cef4637692",
+    "mtime": 1794529199.1494107,
+    "seen": 1794529221.8495464,
+    "ast_hash": "c0a727fcdd98812b540b7d699fb78be1",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2814,15 +2814,15 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalBien.tsx": {
-    "mtime": 1794520463.9085476,
-    "seen": 1794521051.5937324,
-    "ast_hash": "f1d533baa54fa33ade06dbbe7c82093c",
+    "mtime": 1794528882.2082574,
+    "seen": 1794529221.8492224,
+    "ast_hash": "ec7237f910d2eab02dcd2a5fa6d27679",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/ModalTrabajador.tsx": {
-    "mtime": 1794520463.921749,
-    "seen": 1794521051.5937536,
-    "ast_hash": "d3e345310066aaee2a3d2c3feed4e6bc",
+    "mtime": 1794528882.2092576,
+    "seen": 1794529221.8492415,
+    "ast_hash": "c03dccccd12d85c76395ef8a86074262",
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/PestanaTrabajadores.tsx": {
@@ -2868,27 +2868,27 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/Activos/ModalMantenimiento.tsx": {
-    "mtime": 1794522828.284927,
-    "seen": 1794523050.07275,
-    "ast_hash": "61a2cefbb81b625724c3508d06432a0d",
+    "mtime": 1794528882.21026,
+    "seen": 1794529221.8493211,
+    "ast_hash": "2176a0d9b4bbd38428b2390ad1572d5e",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/Activos/ModalNuevaHerramienta.tsx": {
-    "mtime": 1794522828.2839274,
-    "seen": 1794523050.0727513,
-    "ast_hash": "841869b45186e6469749910e6fd300f3",
+    "mtime": 1794528882.21026,
+    "seen": 1794529221.849323,
+    "ast_hash": "8ef61502ad04a469bbb4bf525dade8b6",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/Activos/ModalNuevoVehiculo.tsx": {
-    "mtime": 1794522828.284927,
-    "seen": 1794523050.072753,
-    "ast_hash": "913890641d9b47dffbed2cfb55657e92",
+    "mtime": 1794528882.21026,
+    "seen": 1794529221.8493242,
+    "ast_hash": "aaff0a3ab5e899d6ac4c6c9d67cc4711",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/Activos/ModalPrestarHerramienta.tsx": {
-    "mtime": 1794522828.284927,
-    "seen": 1794523050.072754,
-    "ast_hash": "7cf2ae90430af6abe2c877691b2f691b",
+    "mtime": 1794528882.21026,
+    "seen": 1794529221.8493261,
+    "ast_hash": "29c006ff78c99245057409f68390486c",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/Activos/TablaHerramientas.tsx": {
@@ -2958,9 +2958,9 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalNuevaSalida.tsx": {
-    "mtime": 1794524203.5337174,
-    "seen": 1794524736.4787254,
-    "ast_hash": "33609dcaf5fce7a100017600298b7355",
+    "mtime": 1794528882.21026,
+    "seen": 1794529221.8494093,
+    "ast_hash": "25fd1c56fa9264728250cd82339fdffb",
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/TablaSalidas.tsx": {
@@ -2979,6 +2979,12 @@
     "mtime": 1794524203.5327177,
     "seen": 1794524736.4787276,
     "ast_hash": "e1bce037b3abb519e5155051b1a6ef08",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-enter-se-queda-nego.mjs": {
+    "mtime": 1794529084.7011096,
+    "seen": 1794529221.848973,
+    "ast_hash": "a51f0f5b0a5828b9a1f655fa20b0f630",
     "semantic_hash": ""
   }
 }

@@ -5,7 +5,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 12/11/2026 (147), Claude: Enter en las ventanas traídas de Servic ahora deja el selector en su sitio (regla 7; decidido por el dueño, para siempre). Siguiente: 3f, Agenda y Taller (esperando su OK). Solo siumax.
+- **Última actualización:** 12/11/2026 (148), Claude: **SiuMax Nego, paso 3f**: Agenda y Taller (de Servic), probadas con teclado (38/38) y con Enter que se queda. Pendiente de decidir: que los repuestos del taller descuenten stock. Siguiente: 3g, Contratos (esperando su OK). Solo siumax.
+- (147) 12/11/2026, Claude: Enter en las ventanas traídas de Servic ahora deja el selector en su sitio (regla 7; decidido por el dueño, para siempre). Siguiente: 3f, Agenda y Taller (esperando su OK). Solo siumax.
 - (146) 12/11/2026, Claude: **SiuMax Nego, paso 3e**: Salidas a obras y servicios (de Servic), probada con material externo y con producto del inventario (descuenta stock). Pendiente de decidir: Enter en sus formularios (regla de Nego vs. la de Servic). Siguiente: 3f, Agenda y Taller. Solo siumax.
 - (145) 12/11/2026, Claude: cabecera de Inventario en una fila con la pestaña Herramientas (medido en todas las secciones a 1920 y 1366 con `medir-cabeceras-nego.mjs`). Siguiente: 3e, Salidas. Solo siumax.
 - (144) 12/11/2026, Claude: **SiuMax Nego, paso 3d**: Inventario con la pestaña Herramientas y vehículos (de Servic, solo con Servicios); Nuevo producto ya tenía Marca/Modelo/Ubicación. Siguiente: 3e, Salidas. Solo siumax.

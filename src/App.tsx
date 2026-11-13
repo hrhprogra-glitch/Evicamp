@@ -7,6 +7,8 @@ import { puedeVerSeccion } from './utils/permisos';
 import { cargarTiposNegocio, tiposActuales, useTiposNegocio } from './utils/tiposNegocio';
 import { Pronto } from './sections/Pronto';
 import { Salidas } from './sections/Salidas'; // Talleres y servicios (SiuMax Nego, paso 3e; de SiuMax Servic)
+import { Agenda } from './sections/Agenda'; // paso 3f, de SiuMax Servic
+import { Taller } from './sections/Taller'; // paso 3f, de SiuMax Servic
 import { SesionProvider } from './utils/SesionProvider';
 
 // Importación de Módulos (Secciones)
@@ -345,8 +347,10 @@ export const App: React.FC = () => {
       case 'salidas':
         return <Salidas />;
       case 'agenda':
-      case 'contratos':
+        return <Agenda />;
       case 'taller':
+        return <Taller />;
+      case 'contratos':
       case 'cotizaciones':
         return <Pronto seccion={vista} />;
       default:

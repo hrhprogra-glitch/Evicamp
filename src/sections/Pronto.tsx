@@ -5,9 +5,7 @@ import { Clock } from 'lucide-react';
 // SiuMax Servic. Dice qué hará cada una y en qué paso de la fase 3 llega. El recuadro se puede seleccionar para
 // que el selector del teclado nunca se pierda.
 export const SECCIONES_PRONTO: Record<string, { nombre: string; paso: string; texto: string }> = {
-  agenda: { nombre: 'Agenda', paso: '3f', texto: 'Calendario de trabajos: qué se hace cada día, a qué cliente y con qué trabajadores.' },
   contratos: { nombre: 'Contratos', paso: '3g', texto: 'Mantenimientos por período: visitas programadas, lo que se gasta en cada visita y el cobro de cada mes.' },
-  taller: { nombre: 'Taller', paso: '3f', texto: 'Equipos que dejan para reparar: recibido → diagnóstico → en proceso → listo → entregado, con repuestos y pagos.' },
   cotizaciones: { nombre: 'Cotizaciones', paso: '3h', texto: 'Cotizaciones en soles o dólares con secciones, datos del banco y pagos parciales; se pueden convertir en trabajo.' },
 };
 
