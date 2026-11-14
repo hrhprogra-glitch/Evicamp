@@ -5,7 +5,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 13/11/2026 (157), Claude: compresión (gzip) activada en Evicamp con el OK del dueño (solo Nginx; programa de 2,6 MB a 0,66 MB). Sigue pendiente, con su aviso, subir el sistema a Evicamp.
+- **Última actualización:** 14/11/2026 (158), Claude: Nueva salida muestra la foto de cada material y letras más grandes (lista con foto, elegida por el dueño). Solo siumax.
+- (157) 13/11/2026, Claude: compresión (gzip) activada en Evicamp con el OK del dueño (solo Nginx; programa de 2,6 MB a 0,66 MB). Sigue pendiente, con su aviso, subir el sistema a Evicamp.
 - (156) 13/11/2026, Claude: calendario sin atrapar el selector; carga más rápida: Utilidades sin las fotos (en Evicamp pesaban 27 MB), tablas grandes en paralelo y compresión en nego.siumax (de 3 MB a 0,76 MB). Para Evicamp falta su aviso: compresión (solo Nginx) y subir el sistema. Solo siumax.
 - (155) 13/11/2026, Claude: ↑ ↓ ya se mueven en las líneas de la cotización y en el buscador / la cantidad de la salida (tablas de campos con `data-tabla-campos`). Probado 25/25. Siguiente: lo que diga el dueño.
 - (154) 13/11/2026, Claude: se borraron `comerc.siumax` y `servic.siumax` (pruebas solo en `nego.siumax`; copia de Servic guardada); Compras con buscador y filtro en una fila; Nueva cotización con "Seleccionar producto del inventario". Probado 22/22 y 7/7. Siguiente: lo que diga el dueño.

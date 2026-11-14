@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Truck, X, Plus, Trash2, Search, Check, RotateCcw, Zap } from 'lucide-react';
+import { Truck, X, Plus, Trash2, Search, Check, RotateCcw, Zap, Package } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
+import { fotoDeCache, sincronizarFotosFaltantes } from '../../../utils/cacheFotos';
+import { traerTodo } from '../../../utils/traerTodo';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar } from '../../../utils/dialogos';
 import type { TipoSalida, Salida } from '../types';
@@ -20,6 +22,24 @@ interface ModalNuevaSalidaProps {
   onClose: () => void;
   onSuccess: (salidaCreada: any) => void;
 }
+
+// Foto referencial del producto, como en la Caja (14/11/2026, dueño: "que se parezca al de la caja en ver una imagen
+// referencial o ver bien las letras"). Las fotos vienen de la memoria de fotos (cacheFotos), nunca de la lista.
+const fotoProducto = (id: number | null | undefined, imagePath?: string | null): string => {
+  const img = (id != null ? fotoDeCache(id) : null) || imagePath || '';
+  return img.startsWith('http') || img.startsWith('data:') ? img : '';
+};
+
+const FotoMiniatura: React.FC<{ src: string; tamano: string; nombre: string }> = ({ src, tamano, nombre }) => (
+  <div className={`${tamano} shrink-0 flex items-center justify-center border border-[var(--color-border)] bg-[var(--color-bg)] overflow-hidden`}>
+    {src ? (
+      <img src={src} alt={nombre} loading="lazy" className="max-w-full max-h-full object-contain"
+        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+    ) : (
+      <Package size={18} className="text-[var(--color-muted)]" />
+    )}
+  </div>
+);
 
 // Caché en memoria para carga en 0 ms
 let _cacheCatalogosServic: {
@@ -70,6 +90,17 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   const [busquedaProd, setBusquedaProd] = useState('');
   const [prodSeleccionado, setProdSeleccionado] = useState<any | null>(null);
   const [indiceSugerencia, setIndiceSugerencia] = useState(0);
+  // Cuando llegan fotos nuevas a la memoria, volver a dibujar las miniaturas
+  const [, setFotosVersion] = useState(0);
+  useEffect(() => {
+    const alLlegar = () => setFotosVersion((v) => v + 1);
+    window.addEventListener('siumax-fotos-actualizadas', alLlegar);
+    return () => window.removeEventListener('siumax-fotos-actualizadas', alLlegar);
+  }, []);
+  // La sugerencia elegida con ↑ ↓ siempre a la vista (las filas con foto son más altas)
+  useEffect(() => {
+    document.getElementById(`sugerencia-salida-${indiceSugerencia}`)?.scrollIntoView({ block: 'nearest' });
+  }, [indiceSugerencia]);
   const [cantItem, setCantItem] = useState('1');
   const [esExterno, setEsExterno] = useState(false);
   const [descExterno, setDescExterno] = useState('');
@@ -202,7 +233,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       const [resCli, resTrab, resProd] = await Promise.all([
         supabase.from('customers').select('id, name, dni, ruc, direccion').eq('activo', true).order('name'),
         supabase.from('trabajadores').select('id, nombre, cargo').eq('estado', 'ACTIVO').order('nombre'),
-        supabase.from('products').select('id, name, code, unit, quantity, cost_price').order('name'),
+        // Sin la foto (image_url pesa mucho: MEMORIA-IA 63) y en bloques, para no cortarse en 1.000 productos
+        traerTodo(() => supabase.from('products').select('id, name, code, unit, quantity, cost_price, image_path').order('name').order('id')),
       ]);
 
       if (resCli.data) {
@@ -216,6 +248,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       if (resProd.data) {
         setProductos(resProd.data);
         _cacheCatalogosServic.productos = resProd.data;
+        void sincronizarFotosFaltantes(resProd.data); // baja solo las fotos que aún no están en la PC
       }
       _cacheCatalogosServic.timestamp = Date.now();
     } catch (err) {
@@ -823,41 +856,42 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
 
                 {/* Lista flotante de sugerencias con flechas teclado */}
                 {prodsFiltrados.length > 0 && !prodSeleccionado && (
-                  <div className="border-2 border-[var(--color-ink)] bg-[var(--color-surface)] shadow-[4px_4px_0_0_var(--color-ink)] divide-y divide-[var(--color-border)] max-h-48 overflow-y-auto">
+                  <div className="border-2 border-[var(--color-ink)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)] max-h-72 overflow-y-auto">
                     {prodsFiltrados.map((p, idx) => {
                       const activo = idx === indiceSugerencia;
                       return (
                         <div
                           key={p.id}
+                          id={`sugerencia-salida-${idx}`}
                           onClick={() => seleccionarProducto(p)}
-                          className={`p-2 cursor-pointer flex justify-between items-center transition-colors ${
+                          className={`p-2 cursor-pointer flex items-center gap-3 transition-colors ${
                             activo
-                              ? 'bg-[var(--color-accent)] text-[var(--color-ink)] font-black'
+                              ? 'bg-[var(--color-accent)] text-[var(--color-ink)]'
                               : 'hover:bg-[var(--color-bg)]'
                           }`}
                         >
-                          <div>
-                            <p className="font-bold uppercase flex items-center gap-2">
-                              <span>{p.name}</span>
+                          {/* Foto referencial como en la Caja */}
+                          <FotoMiniatura src={fotoProducto(p.id, p.image_path)} tamano="w-14 h-14" nombre={p.name} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-black uppercase leading-tight text-[var(--color-ink)] break-words">
+                              {p.name}
+                            </p>
+                            <p className={`mt-1 text-[11px] font-bold flex flex-wrap items-center gap-2 ${activo ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)]'}`}>
                               {p.code && (
-                                <span className="text-[10px] px-1 py-0.5 bg-black/10 border border-black/20">
-                                  {p.code}
-                                </span>
+                                <span className="px-1 py-0.5 bg-black/10 border border-black/20 text-[var(--color-ink)]">{p.code}</span>
                               )}
-                            </p>
-                            <p className="text-[10px] text-[var(--color-muted)]">
-                              Unidad: {p.unit || 'UNID'} · Costo: S/ {Number(p.cost_price || 0).toFixed(2)}
+                              <span>Unidad: {p.unit || 'UNID'} · Costo: S/ {Number(p.cost_price || 0).toFixed(2)}</span>
                             </p>
                           </div>
-                          <div className="text-right">
-                            <span
-                              className={`font-black text-xs ${
-                                p.quantity <= 0 ? 'text-[var(--color-error)]' : 'text-[var(--color-ink)]'
-                              }`}
-                            >
-                              Stock: {p.quantity} {p.unit}
-                            </span>
-                          </div>
+                          <span
+                            className={`shrink-0 px-2 py-1 text-xs font-black uppercase tracking-wide whitespace-nowrap border ${
+                              p.quantity <= 0
+                                ? 'text-[var(--color-error)] border-[var(--color-error)] bg-[var(--color-surface)]'
+                                : 'text-[var(--color-ink)] border-[var(--color-border)] bg-[var(--color-surface)]'
+                            }`}
+                          >
+                            {p.quantity <= 0 ? 'Agotado' : `Stock: ${p.quantity} ${p.unit || ''}`}
+                          </span>
                         </div>
                       );
                     })}
@@ -865,9 +899,10 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                 )}
 
                 {prodSeleccionado && (
-                  <div className="p-1.5 bg-[var(--color-accent-bg)] border border-[var(--color-accent)] flex justify-between items-center text-[11px] font-bold">
-                    <span className="text-[var(--color-ink)]">
-                      ✓ Seleccionado: <strong className="uppercase">{prodSeleccionado.name}</strong> (Stock: {prodSeleccionado.quantity} {prodSeleccionado.unit})
+                  <div className="p-1.5 bg-[var(--color-accent-bg)] border border-[var(--color-accent)] flex justify-between items-center gap-2 text-xs font-bold">
+                    <span className="text-[var(--color-ink)] flex items-center gap-2 min-w-0">
+                      <FotoMiniatura src={fotoProducto(prodSeleccionado.id, prodSeleccionado.image_path)} tamano="w-10 h-10" nombre={prodSeleccionado.name} />
+                      <span>✓ Seleccionado: <strong className="uppercase">{prodSeleccionado.name}</strong> (Stock: {prodSeleccionado.quantity} {prodSeleccionado.unit})</span>
                     </span>
                     <button
                       type="button"
@@ -889,10 +924,11 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
             {items.length > 0 ? (
               <div className="border-2 border-[var(--color-ink)] bg-[var(--color-surface)] overflow-x-auto">
                 {/* data-tabla-campos: cantidades que se escriben; las flechas se mueven entre ellas (flechasEspaciales) */}
-                <table data-tabla-campos className="w-full text-left text-[11px] font-mono">
-                  <thead className="bg-[var(--color-ink)] text-white font-black uppercase">
+                <table data-tabla-campos className="w-full text-left text-xs font-mono">
+                  <thead className="bg-[var(--color-ink)] text-white text-[10px] font-black uppercase tracking-widest">
                     <tr>
                       <th className="p-2 w-10 text-center">#</th>
+                      <th className="p-2 w-14 text-center">Foto</th>
                       <th className="p-2">Material / Repuesto</th>
                       <th className="p-2 w-20 text-center">Unidad</th>
                       <th className="p-2 w-36 text-center">Cantidad</th>
@@ -907,7 +943,16 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                         <td className="p-2 text-center font-bold text-[var(--color-muted)]">
                           {idx + 1}
                         </td>
-                        <td className="p-2 font-bold uppercase">
+                        <td className="p-1.5">
+                          <div className="flex justify-center">
+                            <FotoMiniatura
+                              src={it.es_externo ? '' : fotoProducto(it.product_id, productos.find((p) => p.id === it.product_id)?.image_path)}
+                              tamano="w-10 h-10"
+                              nombre={it.descripcion}
+                            />
+                          </div>
+                        </td>
+                        <td className="p-2 text-sm font-black uppercase leading-tight">
                           {it.descripcion}
                           {it.es_externo && (
                             <span className="ml-2 text-[9px] bg-amber-100 text-amber-800 px-1 py-0.5 border border-amber-300">
@@ -965,7 +1010,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                   {/* Fila de Totales */}
                   <tfoot className="bg-[var(--color-bg)] border-t-2 border-[var(--color-ink)] font-black">
                     <tr>
-                      <td colSpan={3} className="p-2 text-[var(--color-ink)] uppercase">
+                      <td colSpan={4} className="p-2 text-[var(--color-ink)] uppercase">
                         TOTAL: {items.length} tipo(s) de material
                       </td>
                       <td className="p-2 text-center font-black">

@@ -906,3 +906,4 @@
 - "cuando selecciono el buscador o la cantidad no puedo subir arriba" (cotización y salida): arreglado (bitácora 155).
 - Calendario que atrapaba el selector y carga lenta en Evicamp: arreglado en nego (bitácora 156). Para Evicamp se le pidió el OK para la compresión y para subir el sistema.
 - "si" → compresión activada en Evicamp (bitácora 157). La subida del sistema nuevo a Evicamp espera su confirmación.
+- 14/11/2026: pidió ver la foto del producto y letras claras en Nueva salida, como en la Caja; eligió "Lista con foto" → hecho en nego (bitácora 158).

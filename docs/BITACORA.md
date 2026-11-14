@@ -7,6 +7,16 @@
 
 ---
 
+## 14/11/2026 (158) · Claude — Nueva salida: materiales con foto y letras grandes (como la Caja)
+- **Dueño:** "me gustaría que la imagen del producto se muestre... cómo haríamos que se parezca al de la caja en tema de ver una imagen referencial o ver bien las letras". Eligió "Lista con foto" (en vez de tarjetas como la Caja).
+- `ModalNuevaSalida.tsx`:
+  - Cada sugerencia del buscador de materiales lleva la foto (56 px) a la izquierda, el nombre en letra grande (14 px, negrita), el código, unidad y costo, y el stock en un recuadro ("AGOTADO" en rojo). Sin foto: ícono de caja. La lista es más alta (`max-h-72`) y la elegida con ↑ ↓ siempre queda a la vista (`scrollIntoView`).
+  - "Seleccionado" muestra la foto chica.
+  - Tabla de materiales agregados: nueva columna FOTO (los externos, ícono), nombre más grande, encabezado según la regla de tablas (10 px, mayúsculas espaciadas). El total ocupa una columna más (`colSpan` 4).
+  - Las fotos salen de `cacheFotos` (`fotoDeCache`), NO se piden con la lista (MEMORIA-IA 63); al abrir se llama `sincronizarFotosFaltantes` y se redibuja con el aviso `siumax-fotos-actualizadas`.
+  - Los productos se piden con `traerTodo` (antes una sola consulta: se cortaba en 1.000 productos).
+- Teclado sin cambios. **Probado:** `prueba-salida-fotos.mjs` (nuevo) 11 de 11; `prueba-flechas-coti-salida.mjs` 25 de 25. Solo siumax (nego).
+
 ## 13/11/2026 (157) · Claude — Compresión activada en Evicamp (solo Nginx)
 - **Dueño:** "si" a activar la compresión en Evicamp (opción a). La subida del sistema nuevo (b) queda para cuando la confirme aparte.
 - `node ai-scripts/cliente.cjs compresion evicamp`: se agregó `include snippets/compresion.conf;` al bloque principal de `/etc/nginx/sites-available/evicamp` (el que atiende la web y la API). Respaldo del archivo en `/root/backups/evicamp-antes-compresion-*`; `nginx -t` OK y recarga sin cortar nada. No se tocó el sistema, la base ni la API.
