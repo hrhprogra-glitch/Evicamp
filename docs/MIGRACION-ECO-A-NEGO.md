@@ -13,7 +13,7 @@
 | Respaldo completo (esquema + datos) | `D:\Programación\siumax\respaldo-ecosistema-2026-11-16.sql` (28 MB, UTF-16LE) |
 | Scripts y reportes | `D:\Programación\siumax\migracion-eco\` (fuera de los repositorios) |
 
-**Estado:** Fase 1 ✅ (16/11) · Fase 2 ✅ (17/11) · Fase 3 ✅ cargada y comprobada (17/11) · Fase 4 (fotos y PDF) pendiente de propuesta.
+**Estado:** Fase 1 ✅ (16/11) · Fase 2 ✅ (17/11) · Fase 3 ✅ cargada y comprobada (17/11) · Fase 4 **decidida y NO empezada** (17/11, el dueño pidió esperar).
 
 - El respaldo incluye los esquemas `public`, `auth`, `storage` y `realtime` de Supabase. **Contiene datos sensibles**
   (usuarios/tokens): no compartirlo ni subirlo a git.
@@ -125,11 +125,35 @@
   **`migracion-eco/reporte-carga.md`**.
 - **Repetible:** `migrar-eco.cjs rollback-nego.sql borrar` borra exactamente las 7.328 filas y deja `siumax` como estaba.
 
-## Fase 4 · Fotos y PDF (pendiente de propuesta)
+## Fase 4 · Archivos de compras (fotos y PDF) — DECIDIDA, aún NO empezada (17/11/2026)
 
-- El dueño pidió (pregunta 7) **copiar los archivos** de Eco (`/api/uploads/...`: fotos de productos y PDF de
-  facturas/documentos) **y agregar la opción en el sistema** para verlos y subir nuevos. Falta mostrar la propuesta
-  y esperar su OK antes de tocar código.
+**Lo que pidió el dueño (pregunta 7):** copiar los archivos de Eco y **agregar la opción en el sistema** para verlos y
+subir nuevos. **Respuestas del dueño a la propuesta (17/11/2026):**
+
+| # | Pregunta | Respuesta del dueño |
+|---|---|---|
+| 1 | ¿Dónde guardar los archivos? | **En nuestro VPS** (recomendado). |
+| 2 | ¿Qué copiar? | **Solo los archivos de compras** (no las fotos de productos ni nada más). |
+| 3 | ¿Comprimir las fotos? | **Sí, comprimirlas** (se ven igual). |
+
+> **El dueño dijo expresamente: NO empezar la Fase 4 todavía.** Solo quedó registrada la decisión.
+
+### Qué archivos hay en Eco (medido solo lectura, 17/11/2026)
+
+- Columnas de archivos en Eco: `entradas.factura_pdf_url`, `entradas.fotos_urls`, `productos.foto_url`,
+  `empleados.foto_url` / `dni_foto_url`, `contactos.ubicacion_url`, `ventas.documento_original_url` / `archivo_origen`.
+- **De compras (`entradas`): 35 entradas → 33 con PDF de factura y 1 con foto (1 foto).** Eso es lo que se copiará.
+- Los enlaces son **relativos** (`/api/uploads/factura/<uuid>.pdf`). **Pendiente comprobar** en qué host responde
+  `/api/uploads/...` (probablemente el sitio de Eco, no Supabase) antes de descargar.
+- **No se copiarán** los documentos de `ventas` (estados de cuenta) ni fotos de productos: el dueño pidió solo compras.
+
+### Plan propuesto (para cuando el dueño diga "empieza")
+
+- **A. Traer los archivos:** descargar de Eco los 33 PDF + 1 foto (solo lectura), **comprimir las fotos**, y guardarlos
+  en el VPS de Nego (carpeta propia, servida por nginx en `/api/uploads/...`). Anotar en Nego el enlace de cada compra.
+- **B. Opción en el sistema:** en el detalle de una **compra**, poder **ver y adjuntar** el PDF y las fotos de la factura
+  del proveedor (con teclado y sin internet).
+- **C. Verificación:** que las 33 compras muestren su PDF y que la app siga funcionando.
 
 ## Fase 5 · Ajustes, veredicto y paso oficial (solo con aviso del dueño)
 

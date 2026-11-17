@@ -534,4 +534,19 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - **Los "Metro" de Eco** se guardan como unidad `M` en Nego (el original queda en `products.presentaciones`). Nego no
   tiene esa unidad, pero no hay restricción que lo impida.
 
+## 22. Migración Eco → Nego: dónde quedó (17/11/2026)
+
+- **Estado:** Fase 1 (inventario/respaldo), Fase 2 (mapeo) y **Fase 3 (carga de prueba en `siumax`) HECHAS**. Fase 4
+  **decidida pero NO empezada** (el dueño pidió esperar). Fase 5 (veredicto y paso oficial) pendiente.
+- **La Fase 3 cargó 7.328 filas** en `siumax` y se comprobó que cuadran. Reporte: `migracion-eco/reporte-carga.md`.
+  Documento maestro y decisiones: `docs/MIGRACION-ECO-A-NEGO.md`. Paso a paso: bitácora 159–162.
+- **Herramientas:** `migracion-eco/etl.mjs` (lee Eco y genera el SQL) y `ai-scripts/migrar-eco.cjs` (`dry` = prueba en
+  seco, `real` = carga, `borrar` = deshace). Lo privado vive en `D:\Programación\siumax\migracion-eco\` y en
+  `.env.ecosistema` / `.env.vps` (nunca a git).
+- **Fase 4 (archivos), decidida por el dueño:** guardar **en el VPS**, copiar **solo lo de compras** (33 PDF de factura
+  + 1 foto), **comprimir** las fotos, y agregar en el detalle de **Compra** la opción de ver/adjuntar el PDF y las fotos.
+  **No empezar hasta su "empieza".**
+- **Regla que el dueño repite:** guardar **todo** en la memoria (bitácora, plan, conversaciones, memoria-IA) después de
+  cada paso, para que si se borra la IA se sepa cuál fue lo último hecho.
+
 

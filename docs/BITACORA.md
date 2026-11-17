@@ -7,6 +7,23 @@
 
 ---
 
+## 17/11/2026 (162) · Claude — Migración Eco → Nego: Fase 4 DECIDIDA y NO empezada (a pedido del dueño)
+
+- **Dueño respondió** las 3 preguntas de la Fase 4 (archivos): (1) guardarlos **en nuestro VPS**; (2) copiar
+  **solo los archivos de compras** (no fotos de productos ni nada más); (3) **sí comprimir** las fotos.
+- **Y ordenó:** *"antes quiero que guardes todo en tu memoria todo lo que hicimos … pero no empieces la fase 4 todavía"*.
+  Por eso esta entrada es **solo memoria**: **no se tocó nada de código** ni el servidor.
+- **Medido en Eco (solo lectura):** de compras hay **35 entradas → 33 con PDF de factura y 1 con foto (1 foto)**. Los
+  enlaces son relativos (`/api/uploads/factura/<uuid>.pdf`); falta comprobar en qué host responde `/api/uploads/...`.
+  También existen `productos.foto_url`, `empleados.foto_url`, `ventas.documento_original_url`, pero **no se copiarán**.
+- **Plan anotado** (en `docs/MIGRACION-ECO-A-NEGO.md`, Fase 4): traer los 33 PDF + 1 foto y comprimir, guardarlos en el
+  VPS servidos por nginx, anotar el enlace en cada compra, y **agregar en el detalle de Compra** la opción de **ver y
+  adjuntar** el PDF/fotos del proveedor. Con teclado y sin internet.
+- **Siguiente paso:** esperar el **"empieza"** del dueño para la Fase 4. (Opcional antes: que entre a
+  `nego.siumax.duckdns.org` con los usuarios nuevos y vea los datos de la Fase 3.)
+
+---
+
 ## 17/11/2026 (161) · Claude — Migración Eco → Nego, FASE 3: carga de prueba en `siumax` ✅
 
 - **Dueño:** *"empieza fase 3"* + sus 7 respuestas (base `siumax`; mismos 3 usuarios con clave nueva; las 62 ventas

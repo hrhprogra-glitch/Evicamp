@@ -944,3 +944,17 @@
   - **Nada se tocó en Eco** (solo lectura) y **nada se pasó a producción**.
   - **Siguiente:** mostrar al dueño la propuesta de **fotos/PDF** (Fase 4) y esperar su OK; después, el veredicto
     "listo o no para lanzar Nego".
+
+## 17/11/2026 (Fase 4 - decisiones, sin empezar)
+- El dueño respondió las 3 preguntas de la Fase 4 (archivos):
+  1. Guardar los archivos **en nuestro VPS** (recomendado).
+  2. Copiar **solo los archivos de compras** (no fotos de productos ni nada más).
+  3. **Sí comprimir** las fotos.
+- Y ordenó: *"antes quiero que guardes todo en tu memoria todo lo que hicimos porque si te borras poder recordar lo
+  último que hicimos pero no empieces la fase 4 todavía"*.
+  - **Hecho:** se registró la decisión y el plan completo en `docs/MIGRACION-ECO-A-NEGO.md` (Fase 4), en la bitácora
+    (162), en el plan ("Dónde estamos") y aquí. **No se tocó código ni el servidor.**
+  - **Dato medido en Eco (solo lectura):** de compras hay **33 PDF de factura + 1 foto** (de 35 entradas). Los enlaces
+    son relativos (`/api/uploads/factura/<uuid>.pdf`); falta ver en qué host responden.
+  - **Siguiente:** esperar el **"empieza"** del dueño para la Fase 4 (o que primero entre a `nego.siumax.duckdns.org`
+    con los usuarios nuevos y vea los datos cargados en la Fase 3).
