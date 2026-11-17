@@ -928,3 +928,19 @@
     ventas/estados de cuenta, préstamos de herramientas abiertos, kardex completo o solo stock final, entradas en USD,
     copiar fotos/PDF). Todo en `docs/MIGRACION-ECO-A-NEGO.md`.
   - **Siguiente:** que responda las preguntas y diga "empieza fase 3" (carga de prueba en Nego).
+
+- *"empieza fase 3"* + respuestas a las 7 preguntas: (1) base de prueba **`siumax`**; (2) crear **los mismos 3 usuarios**
+  con **clave nueva**; (3) las 62 ventas (estados de cuenta) van a **Cotizaciones**; (4) sí, crear **préstamos abiertos**
+  para las herramientas en uso; (5) migrar **los 4.355 movimientos** completos; (6) sí, **anotar USD** en las notas de
+  esas 11 compras; (7) **copiar también las fotos y PDF** y **agregar la opción en el sistema** para que existan o se
+  puedan agregar nuevos.
+  - **Fase 3 hecha (carga de prueba):** respaldo previo de `siumax`; se generó el SQL con `migracion-eco/etl.mjs` y se
+    lanzó con `ai-scripts/migrar-eco.cjs`. Primero **prueba en seco** (ejecuta todo y deshace) que encontró y corrigió
+    4 errores; después **carga real**: **7.328 filas** en 21 tablas + tabla de control. Comprobado: stock de productos =
+    stock de lotes = 25.394,10; 374 salidas; 2.745 ítems; 1.606 movimientos de kardex; 53 herramientas; 28 préstamos;
+    63 cotizaciones; 8 usuarios. Detalle: `migracion-eco/reporte-carga.md` y bitácora 161.
+  - **Usuarios:** `billy@siumax.com` (Administrador) y `jhon@siumax.com` (Técnico) creados; `harry@siumax.com`
+    actualizado. Clave nueva de los 3 en `.env.vps` (`SIUMAX_USUARIOS_CLAVE`). `admin@siumax.com` no se tocó.
+  - **Nada se tocó en Eco** (solo lectura) y **nada se pasó a producción**.
+  - **Siguiente:** mostrar al dueño la propuesta de **fotos/PDF** (Fase 4) y esperar su OK; después, el veredicto
+    "listo o no para lanzar Nego".

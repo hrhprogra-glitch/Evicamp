@@ -511,4 +511,27 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - El esquema de Nego (`siumax`) tiene **55 tablas**; el de Eco-Sistemas, **24**. El cuadro de mapeo de la migración
   está en `docs/MIGRACION-ECO-A-NEGO.md`.
 
+## 21. Cargar datos de Eco a Nego: trampas que ya aparecieron (17/11/2026)
+
+- **Siempre prueba en seco primero.** El SQL de la carga va en una transacción; para probar sin dejar nada, se cambia el
+  `COMMIT` final por `ROLLBACK` y se corre. Así aparecieron 4 errores antes de tocar la base. Está en
+  `ai-scripts/migrar-eco.cjs` (modo `dry`). Para cargar de verdad, modo `real`; para deshacer, `borrar`.
+- **Errores que ya salieron (y hay que evitar):**
+  - `INSERT has more target columns than expressions` → contar los valores de cada fila; el ETL ahora **lanza error** si
+    una fila no tiene tantos valores como columnas.
+  - Un `null` de JavaScript dentro de un array que se une con comas se convierte en **vacío** y rompe el SQL
+    (`... , 1.0, , NULL ...`). Hay que convertirlo a la palabra `NULL`.
+  - `user` es **palabra reservada** en PostgreSQL: las columnas del `INSERT` van entre comillas dobles (`"user"`).
+  - Un cliente nuevo que se crea **después** de insertar `customers` no existe para la foránea. Hay que crear **todos**
+    los clientes (incluido el genérico "sin nombre") **antes** de insertar salidas/cotizaciones.
+- **`setval` y `nextval` NO se deshacen** al hacer `ROLLBACK` (las secuencias no son transaccionales). Por eso la prueba
+  en seco deja el contador de `salidas.codigo` corrido; es inofensivo, pero hay que saberlo.
+- **El trigger `trg_historial_compras`** escribe historial al insertar `compras`. Para no crear historial falso de las
+  compras importadas, se **desactiva** al inicio de la carga y se **reactiva** al final (dentro de la transacción).
+- **`products.id`, `customers.id`, `stores.id`, `trabajadores.id`, `salidas.id`… no tienen default**: la app genera esos
+  ids sola (tipo marca de tiempo). Los ids migrados se sacan de `max(id)+1` y no chocan con los futuros de la app.
+  Las que sí usan secuencia (`cotizaciones`, `compras_detalle`, `salida_items`…) se ajustan con `setval` al terminar.
+- **Los "Metro" de Eco** se guardan como unidad `M` en Nego (el original queda en `products.presentaciones`). Nego no
+  tiene esa unidad, pero no hay restricción que lo impida.
+
 

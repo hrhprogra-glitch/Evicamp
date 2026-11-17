@@ -13,7 +13,7 @@
 | Respaldo completo (esquema + datos) | `D:\Programación\siumax\respaldo-ecosistema-2026-11-16.sql` (28 MB, UTF-16LE) |
 | Scripts y reportes | `D:\Programación\siumax\migracion-eco\` (fuera de los repositorios) |
 
-**Estado:** Fase 1 ✅ (16/11) · Fase 2 ✅ (17/11) · Fase 3 pendiente de "empieza" del dueño.
+**Estado:** Fase 1 ✅ (16/11) · Fase 2 ✅ (17/11) · Fase 3 ✅ cargada y comprobada (17/11) · Fase 4 (fotos y PDF) pendiente de propuesta.
 
 - El respaldo incluye los esquemas `public`, `auth`, `storage` y `realtime` de Supabase. **Contiene datos sensibles**
   (usuarios/tokens): no compartirlo ni subirlo a git.
@@ -86,32 +86,52 @@
 
 **Volumen real a migrar: unos 6.000 registros** (22.985 − 16.985 de `sync_*`).
 
-### Preguntas para el dueño (antes de la Fase 3)
+### Respuestas del dueño (17/11/2026)
 
-1. **¿La base de prueba es `siumax`** (la que usa `nego.siumax.duckdns.org`)? ¿O prefieres otra?
-2. **Usuarios:** Eco tiene 3 usuarios con sus permisos (incluye menús de "piscina" que Nego no tiene). ¿Creamos los
-   mismos usuarios en Nego (con clave nueva) o se empieza con usuarios nuevos?
-3. **`ventas` (62 "estados de cuenta"):** ¿van a **Cotizaciones** (con sus pagos) o a **Pedidos de clientes**?
-4. **Herramientas en uso:** 26 activos están `en_uso` con un trabajador asignado. ¿Se crean **préstamos abiertos**
-   en Nego (Herramientas > Préstamos) o solo se deja el estado?
-5. **Kardex histórico:** ¿migramos los 4.355 movimientos completos (para que el historial cuadre) o solo el **stock
-   final** (`productos.stock` + `lotes.cantidad_actual`)?
-6. **Entradas en dólares (11 de 35):** Nego no guarda moneda en las compras. ¿Se anota en `notas`?
-7. **Fotos y PDF:** las fotos de productos y los PDF (facturas, documentos de venta) están dentro de Eco
-   (`/api/uploads/...`). ¿También copiamos esos archivos, o solo los datos por ahora?
+| # | Pregunta | Respuesta del dueño |
+|---|---|---|
+| 1 | Base de prueba | **`nego.siumax`** → base de datos **`siumax`**. |
+| 2 | Usuarios | Crear **los mismos 3 usuarios** en Nego, **con clave nueva**. |
+| 3 | `ventas` (62 estados de cuenta) | Van a **Cotizaciones**. |
+| 4 | Herramientas en uso (26) | Crear **préstamos abiertos** (`herramientas_prestamos`). |
+| 5 | Kardex | Migrar **los 4.355 movimientos completos**. |
+| 6 | Entradas en dólares (11) | **Sí, anotarlo** en las notas de la compra. |
+| 7 | Fotos y PDF | **Copiarlos también** y **agregar la opción en el sistema** para que existan o se puedan agregar nuevos. |
 
-Nada se cargó en Nego todavía.
+### Puntos que faltan resolver al cargar (decididos por el sistema, no por el dueño)
 
-## Fase 3 · Carga de prueba en Nego (después)
+- **Ids:** se reservan ids nuevos desde `max(id)+1` de cada tabla de Nego (los ids de Nego son tipo marca de tiempo).
+- **Orden de carga (por dependencias):** `stores` → `categories` → `providers` → `customers` → `trabajadores` →
+  `empleados` (usuarios) → `products` → `batches` → `compras` + `compras_detalle` → `inventory_movements` →
+  `herramientas` + `vehiculos` + `vehiculos_mantenimientos` → `herramientas_prestamos` →
+  `salidas` + `salida_items` + `salida_trabajadores` → `cotizaciones` + `cotizacion_detalles`.
+- **Rollback exacto:** cada fila migrada se anota en una tabla `migracion_eco_log` (tabla destino + id destino +
+  tabla de origen + id origen) para poder borrar exactamente lo cargado y volver a empezar.
 
-- Cargar en el entorno de pruebas de Nego (a confirmar por el dueño) y comparar números clave: clientes, stock por
-  producto/lote, saldos/deudas, ventas, activos, mantenimientos.
-- Repetible: se puede limpiar y volver a cargar.
+## Fase 3 · Carga de prueba en Nego ✅ (17/11/2026)
 
-## Fase 4 · Ajustes y veredicto
+- **Dueño:** *"empieza fase 3"* + las 7 respuestas de arriba.
+- **Antes de tocar nada:** respaldo de `siumax` en el VPS
+  `/root/backups/siumax-antes-migracion-eco-20261117-013054.dump` (838 KB).
+- Se leyó cómo estaba `siumax` (`migracion-eco/nego-actual.txt`) para no chocar con sus ids ni sus valores.
+- **Herramientas creadas:** `migracion-eco/etl.mjs` (genera el SQL), `negocios/comercio/ai-scripts/migrar-eco.cjs`
+  (lanza la prueba en seco, la carga real o el borrado). Todo el SQL va en **una transacción**.
+- **Prueba en seco primero:** `migrar-eco.cjs carga-nego.sql dry` ejecuta todo y termina en `ROLLBACK`. Encontró 4
+  errores reales antes de tocar la base (un valor de menos en `products`, un `null` suelto, la palabra reservada
+  `user`, y un cliente que se creaba después de insertar los clientes). Todos corregidos.
+- **Carga real:** 17/11/2026, `COMMIT` correcto. **7.328 filas** cargadas en 21 tablas + `migracion_eco_log`.
+- **Comprobado:** `sum(products.quantity)` = `sum(batches.quantity)` = **25.394,10**; 374 salidas; 2.745 ítems;
+  1.606 movimientos de kardex; 53 herramientas; 28 préstamos; 62 cotizaciones. Cuadro completo y decisiones en
+  **`migracion-eco/reporte-carga.md`**.
+- **Repetible:** `migrar-eco.cjs rollback-nego.sql borrar` borra exactamente las 7.328 filas y deja `siumax` como estaba.
+
+## Fase 4 · Fotos y PDF (pendiente de propuesta)
+
+- El dueño pidió (pregunta 7) **copiar los archivos** de Eco (`/api/uploads/...`: fotos de productos y PDF de
+  facturas/documentos) **y agregar la opción en el sistema** para verlos y subir nuevos. Falta mostrar la propuesta
+  y esperar su OK antes de tocar código.
+
+## Fase 5 · Ajustes, veredicto y paso oficial (solo con aviso del dueño)
 
 - Corregir diferencias, repetir hasta tener un reporte claro: **listo para lanzar** o **falta X**.
-
-## Fase 5 · Paso oficial (solo con aviso del dueño)
-
 - Destino oficial de Nego / ECO SISTEMAS URH. Respaldo previo, validación y aviso explícito.

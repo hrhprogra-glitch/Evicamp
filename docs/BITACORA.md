@@ -7,6 +7,32 @@
 
 ---
 
+## 17/11/2026 (161) · Claude — Migración Eco → Nego, FASE 3: carga de prueba en `siumax` ✅
+
+- **Dueño:** *"empieza fase 3"* + sus 7 respuestas (base `siumax`; mismos 3 usuarios con clave nueva; las 62 ventas
+  van a Cotizaciones; préstamos abiertos para herramientas en uso; migrar los 4.355 movimientos; anotar USD en notas;
+  copiar fotos/PDF y agregar la opción en el sistema).
+- **Respaldo antes de tocar:** `/root/backups/siumax-antes-migracion-eco-20261117-013054.dump` (838 KB). **Eco nunca
+  se tocó** (solo lectura).
+- **Herramientas nuevas:** `migracion-eco/etl.mjs` (genera el SQL) y `negocios/comercio/ai-scripts/migrar-eco.cjs`
+  (prueba en seco `dry`, carga `real`, borrado `borrar`). Todo el SQL va en **una transacción**.
+- **Prueba en seco primero:** ejecuta todo y termina en `ROLLBACK`. Encontró y se corrigieron **4 errores reales**
+  antes de tocar la base: un valor de menos en `products`, un `null` suelto que rompía el SQL, la palabra reservada
+  `user` sin comillas, y un cliente que se creaba después de insertar los clientes.
+- **Carga real hecha y comprobada: 7.328 filas** en 21 tablas + `migracion_eco_log`. Ahora `siumax` tiene
+  493 clientes, 519 productos, 603 lotes, 17 proveedores, 36 compras, 1.680 movimientos, 374 salidas con 2.745 ítems,
+  53 herramientas, 28 préstamos abiertos, 63 cotizaciones y 8 usuarios. `sum(products.quantity)` =
+  `sum(batches.quantity)` = **25.394,10**. Todo el detalle en **`migracion-eco/reporte-carga.md`**.
+- **Usuarios:** se crearon `billy@siumax.com` (Administrador) y `jhon@siumax.com` (Técnico); se actualizó
+  `harry@siumax.com` (Administrador). Los 3 con clave nueva en `.env.vps` (`SIUMAX_USUARIOS_CLAVE`).
+  `admin@siumax.com` no se tocó.
+- **Se puede deshacer:** `node ai-scripts/migrar-eco.cjs migracion-eco/rollback-nego.sql borrar` borra exactamente
+  las 7.328 filas y deja `siumax` como estaba.
+- **Siguiente paso:** mostrar al dueño la **propuesta de fotos/PDF** (Fase 4): copiar los archivos de Eco y agregar la
+  opción en el sistema para verlos y subir nuevos. Esperar su OK antes de tocar código.
+
+---
+
 ## 17/11/2026 (160) · Claude — Migración Eco → Nego, FASE 2: comparación y mapeo (solo análisis)
 
 - **Dueño:** *"empieza fase 2"*. No se cargó nada en Nego ni se tocó Eco (todo solo lectura).
