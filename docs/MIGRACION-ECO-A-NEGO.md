@@ -173,6 +173,10 @@ subir nuevos. **Respuestas del dueño a la propuesta (17/11/2026):**
   **Adjuntar PDF o foto**. Los archivos nuevos se guardan dentro de la base (base64) porque el VPS no tiene servidor
   de archivos; los migrados se abren desde nuestro VPS. Todo con teclado (`data-nav`) y sin internet.
 - **Prueba:** 11/11 correctas con Puppeteer/Edge. La base quedó limpia: 36 compras, 34 archivos, 0 archivos de prueba.
+- **Error visto al revisar (17/11, arreglado):** al recargar Nego y abrir el sidebar con Tab, el selector iba al primer
+  botón del menú en vez de a la sesión abierta. Causa: `currentView` se reiniciaba en `'pos'` (sesión que Nego no tiene)
+  y se guardaba como última sesión. `App.tsx` ahora lee la sesión guardada al iniciar y sincroniza el foco con la sesión
+  visible. Probado con teclado y sin internet: 9/9; la Fase 4 sigue 11/11. Detalle: bitácora (165).
 - **Pendiente:** revisión del dueño en Nego. La pasada oficial y la Fase 5 **no** se tocan sin su aviso.
 
 ## Fase 5 · Ajustes, veredicto y paso oficial (solo con aviso del dueño)
