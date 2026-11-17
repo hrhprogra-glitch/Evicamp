@@ -624,7 +624,11 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - **Expectativas viejas en pruebas:** tras cambiar Encargos y las secciones de "Pronto" a reales, el menú incluye
   `encargos`, Finanzas es Alt + 9 (no Alt + 0), Salidas/Taller abren de verdad, y Clientes tiene
   `CLIENTES,CRÉDITOS` (más `TRABAJADORES` con Servicios). Actualizar la prueba, nunca los ids ni los atajos reales.
-- **Fuera de alcance, pendiente de OK:** contratos genera 0 visitas del mes (y no abre Insumos) y el taller no devuelve
-  el stock al quitar un repuesto. No tocar sin propuesta y OK del dueño.
+- **Contratos con fecha_inicio a mitad de mes:** `fn_generar_visitas_contrato` solo prueba los días 1 y 15
+  (QUINCENAL) o `dia_cobro` (MENSUAL). Con fecha_inicio = hoy (17) devuelve 0 visitas y no aparece el botón
+  "Insumos". Arreglar la función para elegir la primera fecha válida desde fecha_inicio, no los fijos del mes.
+- **Taller, MAL que no se reproduce:** `trg_taller_repuesto_stock` sí descuenta y devuelve el stock; comprobado
+  directo en SQL con ROLLBACK y la prueba UI pasó 41/41 dos veces. Antes de cambiar lógica de stock, repetir la
+  prueba y revisar si fue solo espera/tiempo en la prueba.
 
 

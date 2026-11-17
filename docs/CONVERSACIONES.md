@@ -1047,3 +1047,14 @@
 - Quedaron dos hallazgos **sin arreglar** por estar fuera de lo aprobado: contratos genera 0 visitas del mes y al
   quitar un repuesto del taller el stock no vuelve. Hay que mostrar la propuesta y esperar el OK antes de tocarlos.
 - Solo Nego; sin Evicamp, sin push, sin pasada oficial ni Fase 5.
+
+## 17/11/2026 (propuesta de los 2 fallos nuevos)
+- El dueño pidió: *"Contratos no genera las visitas del mes y por eso no abre 'Insumos'. Al quitar un repuesto de una
+  orden del Taller, el stock no vuelve. A ver dime tu propuesta."*
+- Se investigó sin cambiar código. Contratos: la función SQL solo calcula visitas los días 1 y 15 (QUINCENAL) o el
+  día de cobro (MENSUAL); si el contrato empieza el 17, esos días ya pasaron y no crea ninguna visita. Sin visita no
+  hay botón "Insumos".
+- Taller: el trigger de stock sí está y funciona; la prueba pasó 41/41 dos veces y una comprobación directa en SQL
+  confirmó que el stock baja y vuelve. El fallo anterior parece de espera en la prueba, no del sistema.
+- Se entregó la propuesta: arreglar solo lo de Contratos, reforzar la espera en la prueba del Taller y esperar el
+  "empieza" del dueño antes de tocar nada.

@@ -7,6 +7,26 @@
 
 ---
 
+## 17/11/2026 (170) · OpenCode (Big Pickle) — Diagnosticados los 2 fallos nuevos; propuesta esperando el OK del dueño
+- **Dueño:** *"Contratos no genera las visitas del mes y por eso no abre 'Insumos'. Al quitar un repuesto de una orden
+  del Taller, el stock no vuelve. A ver dime tu propuesta."* No se cambió código ni se desplegó nada: solo se investigó.
+- **Contratos (causa confirmada):** `fn_generar_visitas_contrato` solo mira el día 1 y el 15 (QUINCENAL) o `dia_cobro`
+  (MENSUAL). Si el contrato empieza a mitad de mes (la prueba lo crea hoy, 17/11), esos días ya pasaron y la función
+  devuelve `{"visitas_creadas": 0}` sin crear nada. Al no haber visita, no aparece el botón **Insumos** y la prueba
+  se detiene en `#select-producto-consumo`. Confirmado con una prueba en transacción (fecha_inicio 17/11 → 0 visitas).
+- **Taller (no se reproduce):** la función y el trigger `trg_taller_repuesto_stock` sí están en la base; probando
+  directo en SQL (transparentado, dentro de transacción y con ROLLBACK) el stock baja 1 al agregar el repuesto y
+  vuelve a 10.00|10.000 al quitarlo. `prueba-agenda-taller-nego.mjs` pasó **41/41** dos veces seguidas. El MAL anterior
+  parece haber sido de espera/tiempo en la prueba, no del sistema. Queda propuesto reforzar esa espera, sin tocar
+  la lógica de stock.
+- **Propuesta entregada al dueño (esperando "empieza"):** arreglar solo la generación de visitas para contratos que
+  empiezan a mitad de mes; no tocar Stock, Taller, ids, atajos ni estilo; volver a probar con teclado y sin internet;
+  aplicar SQL en Nego con respaldo y `lock_timeout`. Sin Evicamp, sin push, sin pasada oficial ni Fase 5.
+- **Pruebas de diagnóstico ejecutadas:** `prueba-contratos-nego.mjs` 3 MAL confirmados;
+  `prueba-agenda-taller-nego.mjs` 41/41 (2 veces). Base final `{servicios}`.
+
+---
+
 ## 17/11/2026 (169) · OpenCode (Big Pickle) — Se respeta solo Servicios y las pruebas devuelven la elección del dueño
 - **Dueño:** está probando **solo Servicios** en Nego y pidió que se respete: *"no quiero que se mantenga comercio, estoy
   probando servicios"*. Aprobó con **"Sí, empieza"** corregir el tipo y las 4 tablas. **No volver a preguntar** por el
