@@ -624,11 +624,14 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - **Expectativas viejas en pruebas:** tras cambiar Encargos y las secciones de "Pronto" a reales, el menú incluye
   `encargos`, Finanzas es Alt + 9 (no Alt + 0), Salidas/Taller abren de verdad, y Clientes tiene
   `CLIENTES,CRÉDITOS` (más `TRABAJADORES` con Servicios). Actualizar la prueba, nunca los ids ni los atajos reales.
-- **Contratos con fecha_inicio a mitad de mes:** `fn_generar_visitas_contrato` solo prueba los días 1 y 15
-  (QUINCENAL) o `dia_cobro` (MENSUAL). Con fecha_inicio = hoy (17) devuelve 0 visitas y no aparece el botón
-  "Insumos". Arreglar la función para elegir la primera fecha válida desde fecha_inicio, no los fijos del mes.
-- **Taller, MAL que no se reproduce:** `trg_taller_repuesto_stock` sí descuenta y devuelve el stock; comprobado
-  directo en SQL con ROLLBACK y la prueba UI pasó 41/41 dos veces. Antes de cambiar lógica de stock, repetir la
-  prueba y revisar si fue solo espera/tiempo en la prueba.
+- **Contratos con fecha_inicio a mitad de mes (arreglado 17/11):** `fn_generar_visitas_contrato` solo miraba los días
+  1 y 15 (QUINCENAL) o `dia_cobro` (MENSUAL); con inicio el 17 devolvía 0 visitas y no aparecía "Insumos". Ahora arma
+  una lista de fechas y usa la primera válida desde `fecha_inicio`. Copia en
+  `servidor/sql/arreglo-visitas-contrato-medio-mes.sql` y aplicador con respaldo en
+  `ai-scripts/pruebas/aplicar-arreglo-visitas-contratos.cjs`.
+- **Taller, MAL que no se reproducía (17/11):** `trg_taller_repuesto_stock` sí descuenta y devuelve el stock. La
+  prueba ahora compara por número (10.00|10.000 = 10|10), espera hasta 10 s y verifica que exista el botón de quitar.
+  No se cambió la lógica de stock. Lección: antes de culpar al trigger, comparar valores numéricos y esperar a que
+  termine la operación; una prueba puede dar un MAL falso por formato o por tiempo.
 
 

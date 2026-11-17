@@ -139,9 +139,14 @@ try {
     const tras = await stock();
     ok('Repuesto del inventario: el stock y los lotes bajan 1', tras.split('|').every((v, k) => Number(v) === Number(antes.split('|')[k]) - 1), `${antes} → ${tras}`);
     const quitar = await page.evaluate(() => { const b = [...document.querySelectorAll('button[id^="btn-eliminar-repuesto-"]')]; return b.length ? b[b.length - 1].id : ''; });
+    ok('El repuesto del inventario se puede quitar con Enter', !!quitar, quitar);
     if (quitar) { await page.focus('#' + quitar); await tecla('Enter'); await esperarAviso(3000); await tecla('Enter'); await pausa(1300); await cerrarAviso(); }
-    for (let i = 0; i < 20 && (await stock()) !== antes; i++) await pausa(250); // espera a que termine de quitarse
-    ok('Al quitarlo de la orden, el stock vuelve', (await stock()) === antes, await stock());
+    // 17/11/2026: comparar por número (10.00|10.000 y 10|10 son lo mismo) y esperar de verdad
+    // a que termine la devolución del trigger antes de medir.
+    const mismoStock = (a, b) => a.split('|').every((v, k) => Number(v) === Number(b.split('|')[k]));
+    for (let i = 0; i < 40 && !mismoStock(await stock(), antes); i++) await pausa(250);
+    const vuelto = await stock();
+    ok('Al quitarlo de la orden, el stock vuelve', mismoStock(vuelto, antes), `${antes} → ${vuelto}`);
     ok('El total vuelve a 230', Number(await sql(`select total from taller_ordenes where tipo_equipo ilike '%${sello}%'`)) === 230);
     void cant;
   } else ok('Hay un producto con lotes para probar el repuesto del inventario', false);

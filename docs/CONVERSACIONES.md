@@ -1058,3 +1058,7 @@
   confirmó que el stock baja y vuelve. El fallo anterior parece de espera en la prueba, no del sistema.
 - Se entregó la propuesta: arreglar solo lo de Contratos, reforzar la espera en la prueba del Taller y esperar el
   "empieza" del dueño antes de tocar nada.
+- El dueño dijo **"empieza"**. Se arregló la función de visitas para contratos que empiezan a mitad de mes (SQL solo
+  en Nego, con respaldo y `lock_timeout`) y se reforzó la prueba del Taller sin tocar la lógica de stock.
+- Pruebas con teclado y sin internet: Contratos todo OK (30/30), Taller todo OK (42/42); base final `{servicios}`.
+  No se desplegó frontend porque no cambió código de la app. Sin Evicamp, sin push, sin pasada oficial ni Fase 5.

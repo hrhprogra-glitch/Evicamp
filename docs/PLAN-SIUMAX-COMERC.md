@@ -7,6 +7,11 @@
 > Última actualización: 17/11/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
+- **17/11/2026 (171) — Visitas de Contratos arregladas y prueba del Taller reforzada:** con el "empieza" del dueño,
+  `fn_generar_visitas_contrato` ya crea visitas cuando el contrato empieza a mitad de mes; SQL aplicado solo en Nego
+  con respaldo y `lock_timeout`. Pruebas con teclado y sin internet: Contratos todo OK (30/30) y Taller todo OK
+  (42/42). No se tocó la lógica de stock ni se desplegó frontend. Base `{servicios}`. Sin Evicamp, sin push, sin
+  pasada oficial ni Fase 5.
 - **17/11/2026 (170) — Diagnosticados los 2 fallos nuevos, propuesta esperando el OK:** Contratos genera 0 visitas
   porque la función SQL solo mira días 1 y 15 (o `dia_cobro`) y el contrato empieza el 17; por eso no aparece
   "Insumos". Taller sí devuelve el stock: el trigger está en la base y la prueba pasó 41/41 dos veces. No se cambió
@@ -130,7 +135,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
-| **Corrección: visitas de Contratos cuando el contrato empieza a mitad de mes** (para que se generen visitas y aparezca "Insumos"); **Taller: solo reforzar la espera de la prueba**, sin tocar la lógica de stock | **Propuesta entregada 17/11 (170), esperando el OK del dueño. No tocar nada hasta que diga "empieza"** |
+| **Corrección: visitas de Contratos cuando el contrato empieza a mitad de mes** (para que se generen visitas y aparezca "Insumos"); **Taller: solo reforzar la espera de la prueba**, sin tocar la lógica de stock | **Aprobada con "empieza" y hecha solo en Nego (171): SQL con respaldo y `lock_timeout`, Contratos todo OK (30/30) y Taller todo OK (42/42). Sin Evicamp, sin push, sin pasada oficial ni Fase 5** |
 | **Que se respete el tipo de negocio elegido (solo Servicios) y tablas al molde** | **Aprobada con "Sí, empieza" y hecha solo en Nego (169): 7/7, 16/16, 6/6, 29/29 y el resto de pruebas OK; base `{servicios}`. Sin Evicamp, sin push, sin pasada oficial ni Fase 5** |
 | **Paginación siempre visible y tablas iguales a Inventario en 6 secciones** (franja aunque sea "Página 1 de 1"; Salidas, Contratos, Taller, Utilidades y Pedidos al molde) | **Aprobada con "Sí, empieza" y hecha solo en Nego (168): 29/29 de paginación/estilo, 13/13, 17/17, 9/9, 11/11, 50/50 y 28/28. Sin Evicamp, sin push, sin pasada oficial ni Fase 5** |
 | **Tablas de Herramientas y Vehículos iguales a Inventario** (estilo y tamaño; sin cuadros de resumen en Vehículos) | **Hecha y probada solo en Nego (167): 50/50 medidas idénticas, 13/13 con teclado y sin internet. No toca Evicamp** |

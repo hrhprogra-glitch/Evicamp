@@ -7,6 +7,28 @@
 
 ---
 
+## 17/11/2026 (171) · OpenCode (Big Pickle) — Arregladas las visitas de Contratos y reforzada la prueba del Taller
+- **Dueño:** dijo **"empieza"** a la propuesta de los 2 fallos nuevos.
+- **Contratos (arreglado):** `fn_generar_visitas_contrato` ahora arma primero la lista de fechas y, si el contrato
+  empieza a mitad de mes, usa la primera fecha válida desde `fecha_inicio` (día de cobro para MENSUAL; día 1 y 15
+  para QUINCENAL, o el inicio si ya pasaron). Sigue creando la visita y la tarea de Agenda igual que antes; no cambia
+  ids, atajos ni estilo. Código en `servidor/sql/seguridad-sesion.sql` y copia repetible en
+  `servidor/sql/arreglo-visitas-contrato-medio-mes.sql`.
+- **Aplicado solo en Nego:** nuevo `ai-scripts/pruebas/aplicar-arreglo-visitas-contratos.cjs` (respaldo, `ON_ERROR_STOP`,
+  `lock_timeout` de 5 s y verificación). Respaldo:
+  `/var/lib/postgresql/respaldo-siumax-antes-visitas-contratos-2026-11-17T20-13-32-175Z.dump`. Función verificada
+  en la base y `anon` conserva permiso de ejecución. No se reinició la API.
+- **Taller (sin cambio de lógica):** el trigger de stock ya estaba bien. Solo se reforzó
+  `prueba-agenda-taller-nego.mjs`: compara el stock por número (10.00|10.000 = 10|10), espera hasta 10 s a que
+  termine la devolución y revisa que el botón de quitar exista. Se agregó una comprobación nueva.
+- **Pruebas (teclado y sin internet):** `prueba-contratos-nego.mjs` **todo OK (30/30)** — ahora genera 1 visita y
+  abre Insumos — y `prueba-agenda-taller-nego.mjs` **todo OK (42/42)**, incluido el stock que vuelve. `node --check`
+  en los 2 archivos JS nuevos/modificados, sin salida. Base final `{servicios}`.
+- **No se desplegó frontend** porque no cambió código de la app (solo SQL, pruebas y documentación). Sin Evicamp,
+  sin push, sin pasada oficial ni Fase 5.
+
+---
+
 ## 17/11/2026 (170) · OpenCode (Big Pickle) — Diagnosticados los 2 fallos nuevos; propuesta esperando el OK del dueño
 - **Dueño:** *"Contratos no genera las visitas del mes y por eso no abre 'Insumos'. Al quitar un repuesto de una orden
   del Taller, el stock no vuelve. A ver dime tu propuesta."* No se cambió código ni se desplegó nada: solo se investigó.
