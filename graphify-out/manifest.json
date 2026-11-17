@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1794877973.7602012,
-    "seen": 1794877997.6490245,
-    "ast_hash": "5b9e7803b6310e00e299c189bd6a26c1",
+    "mtime": 1794878759.1164691,
+    "seen": 1794878795.3003154,
+    "ast_hash": "2424684962dec36bf3b7520749b9ac8a",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1794877737.5418353,
-    "seen": 1794877997.6490257,
-    "ast_hash": "6b2cd130ec141a9873dfee978610fd9d",
+    "mtime": 1794878766.6423197,
+    "seen": 1794878795.3003175,
+    "ast_hash": "75500460306807be05ddd43613db9b97",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1794877970.921293,
-    "seen": 1794877997.649027,
-    "ast_hash": "7e156392b666682ccf7739b9dfd60f34",
+    "mtime": 1794878773.917205,
+    "seen": 1794878795.300319,
+    "ast_hash": "2e1dfe2b827d3adb462e3b4a1524c92b",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1794877742.020577,
-    "seen": 1794877997.6490302,
-    "ast_hash": "afbd49b6015cf83f0af0f5938fc3be43",
+    "mtime": 1794878761.8544798,
+    "seen": 1794878795.3003218,
+    "ast_hash": "81eba6fc4da6be624b5681e0bc3c4398",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -3444,9 +3444,9 @@
     "semantic_hash": ""
   },
   "docs/MIGRACION-ECO-A-NEGO.md": {
-    "mtime": 1794877698.04109,
-    "seen": 1794877997.6490285,
-    "ast_hash": "b9e44912ad0d726d9191da3177fb64b4",
+    "mtime": 1794878752.0439587,
+    "seen": 1794878795.3003206,
+    "ast_hash": "ab691f0a2171ab40469132dbcdccbde6",
     "semantic_hash": ""
   }
 }
