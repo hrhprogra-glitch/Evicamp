@@ -7,6 +7,27 @@
 
 ---
 
+## 17/11/2026 (160) · Claude — Migración Eco → Nego, FASE 2: comparación y mapeo (solo análisis)
+
+- **Dueño:** *"empieza fase 2"*. No se cargó nada en Nego ni se tocó Eco (todo solo lectura).
+- **Esquemas reales leídos:** Eco tiene **24 tablas** de negocio; Nego (base de pruebas **`siumax`** del VPS, la que
+  usa `nego.siumax.duckdns.org`) tiene **55 tablas**. Se confirmó que la API `postgrest_siuhub` apunta a `siumax` y
+  que la base `servic` tiene el mismo esquema.
+- **Cuadro Eco → Nego** (completo en `docs/MIGRACION-ECO-A-NEGO.md`): `contactos`(228)→`customers`,
+  `proveedores`(16)→`providers`, `productos`(508)→`products`, `lotes`(589)→`batches`, `entradas`(35)+
+  `entrada_lineas`(137)→`compras`+`compras_detalle`, `almacenes`(1)→`stores`, `empleados`(11)→`trabajadores`,
+  `usuarios`(3)→`empleados` (acceso), `activos`(54)→`herramientas`(53)+`vehiculos`(1),
+  `mantenimientos_activos`(1)→`vehiculos_mantenimientos`, `ventas`(62 estados de cuenta)→`cotizaciones`.
+- **Lo importante de `movimientos_stock` (4.355):** los 2.749 que tienen `grupo_id` son en realidad **374 salidas**
+  (servicio/obra, con cliente, trabajador y `materiales` = herramientas) → van a `salidas` + `salida_items`; los 1.606
+  restantes (entradas/ajustes) → `inventory_movements`. **Volumen real a migrar: ~6.000 registros.**
+- **No se migran:** `sync_outbox` (16.977), `sync_state` y `sync_tombstones` (cola técnica de la app de Eco).
+- **Vacías en Eco** (nada que migrar): calendario (2 tablas), notas de crédito (2), piscinas (4).
+- **7 preguntas para el dueño** antes de la Fase 3 (destino de prueba, usuarios/claves, destino de las 62 ventas,
+  préstamos de herramientas abiertos, kardex completo o solo stock final, entradas en USD, copiar fotos/PDF).
+- **Memoria:** `docs/MIGRACION-ECO-A-NEGO.md` (Fase 2 completa). Reportes y muestras en `D:\Programación\siumax\migracion-eco\`.
+- **Siguiente:** responder las 7 preguntas y dar "empieza fase 3" (carga de prueba en Nego).
+
 ## 16/11/2026 (159) · Claude — Migración Eco-Sistemas → Nego, FASE 1: inventario y respaldo verificados
 - **Dueño:** *"conectarnos al supabase de ecosistemas, copiaremos cada tabla de ecosistemas y sus datos, haremos prueba,
   pasaremos todos sus datos a Nego siuMax para ver si ya está listo para lanzarlo oficial"*. Aprobó la Fase 1.

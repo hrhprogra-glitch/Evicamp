@@ -916,3 +916,15 @@
   - **Aprobó la Fase 1** (inventario y respaldo, solo lectura). Hecha: 24 tablas, 22.985 filas; respaldo de 28 MB
     verificado con 0 diferencias. Detalle en `docs/MIGRACION-ECO-A-NEGO.md` y bitácora 159.
   - **Siguiente:** Fase 2 (comparar y mapear Eco → Nego), esperando su "empieza".
+
+## 17/11/2026
+- *"empieza fase 2"*
+  - **Fase 2 hecha (solo análisis):** se leyeron los esquemas reales. Eco tiene **24 tablas**; Nego (base de pruebas
+    **`siumax`**, la de `nego.siumax.duckdns.org`) tiene **55 tablas**. Se armó el cuadro Eco → Nego completo
+    (clientes, proveedores, productos, lotes, compras, almacenes, trabajadores, herramientas, vehículos, ventas) y se
+    descubrió que `movimientos_stock` esconde **374 salidas** (servicio/obra con herramientas) dentro de sus 4.355 filas.
+    **Volumen real a migrar: ~6.000 registros** (no se migra la cola técnica `sync_*` de 16.977).
+  - **Quedaron 7 preguntas** para el dueño antes de la Fase 3 (destino de prueba, usuarios y claves, destino de las 62
+    ventas/estados de cuenta, préstamos de herramientas abiertos, kardex completo o solo stock final, entradas en USD,
+    copiar fotos/PDF). Todo en `docs/MIGRACION-ECO-A-NEGO.md`.
+  - **Siguiente:** que responda las preguntas y diga "empieza fase 3" (carga de prueba en Nego).

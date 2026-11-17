@@ -496,4 +496,19 @@ Las carpetas físicas siguen en el disco; se pueden borrar cuando el dueño lo d
 worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `git ls-files -s` en busca de entradas
 `160000` que no correspondan.
 
+## 20. Bases de datos del VPS y cómo leer un esquema (17/11/2026)
+
+- El VPS (ver `ai-scripts/vps.cjs` + `.env.vps`) tiene estas bases: **`siumax`** (14 MB) = **Nego, entorno de pruebas**
+  (`nego.siumax.duckdns.org`, la API `postgrest_siuhub` apunta ahí), **`servic`** (12 MB, mismo esquema que Nego),
+  `siudemo`, `creditaltoque`, `evidiary`, `evidiary_prueba`, `postgres`. **No existen** bases llamadas `evicamp` ni
+  `siuhub` (la de Evicamp es `postgres`, servida por `/etc/postgrest.conf`).
+- **Para leer un esquema sin tocar nada:** el endpoint OpenAPI de PostgREST (`/rest/v1/`) **no está disponible**
+  (devuelve 500/401), así que se usa SSH con `node ai-scripts/run-remote.cjs <script.sh>` y dentro un
+  `sudo -u postgres psql -d <base> -At -F'|' -c "select ... from information_schema.columns ..."` (solo SELECT).
+- **Cuidado con la codificación:** `comando > archivo.txt` en PowerShell escribe **UTF-16LE** y Node lo lee como basura;
+  usar `| Set-Content -Encoding utf8` (y quitar el BOM al leer). También cuidado con `| Select-Object -First N`: corta
+  la tubería y mata a Node con EPIPE antes de que guarde su archivo.
+- El esquema de Nego (`siumax`) tiene **55 tablas**; el de Eco-Sistemas, **24**. El cuadro de mapeo de la migración
+  está en `docs/MIGRACION-ECO-A-NEGO.md`.
+
 

@@ -5,7 +5,8 @@
 > Última actualización: 27/10/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 16/11/2026 (159), Claude: migración Eco-Sistemas → Nego, **Fase 1 hecha** (inventario y respaldo, solo lectura): 24 tablas, 22.985 filas, respaldo de 28 MB verificado con 0 diferencias. Detalle: `docs/MIGRACION-ECO-A-NEGO.md`.
+- **Última actualización:** 17/11/2026 (160), Claude: migración Eco → Nego, **Fase 2 hecha** (comparación y mapeo, solo análisis): Eco 24 tablas → Nego 55; cuadro completo y 7 preguntas para el dueño en `docs/MIGRACION-ECO-A-NEGO.md`. Volumen real a migrar: ~6.000 registros.
+- (159) 16/11/2026, Claude: migración Eco-Sistemas → Nego, **Fase 1 hecha** (inventario y respaldo, solo lectura): 24 tablas, 22.985 filas, respaldo de 28 MB verificado con 0 diferencias. Detalle: `docs/MIGRACION-ECO-A-NEGO.md`.
 - (158) 14/11/2026, Claude: Nueva salida muestra la foto de cada material y letras más grandes (lista con foto, elegida por el dueño). Solo siumax.
 - (157) 13/11/2026, Claude: compresión (gzip) activada en Evicamp con el OK del dueño (solo Nginx; programa de 2,6 MB a 0,66 MB). Sigue pendiente, con su aviso, subir el sistema a Evicamp.
 - (156) 13/11/2026, Claude: calendario sin atrapar el selector; carga más rápida: Utilidades sin las fotos (en Evicamp pesaban 27 MB), tablas grandes en paralelo y compresión en nego.siumax (de 3 MB a 0,76 MB). Para Evicamp falta su aviso: compresión (solo Nginx) y subir el sistema. Solo siumax.
