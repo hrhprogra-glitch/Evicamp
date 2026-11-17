@@ -7,11 +7,15 @@
 > Última actualización: 17/11/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
+- **17/11/2026 (164) — Fase 4 de la migración Eco → Nego HECHA SOLO EN PRUEBAS (nego.siumax.duckdns.org):** 33 PDF + 1
+  foto comprimida en el VPS; 34 enlaces en `compras.archivos` (base `siumax`, con respaldo previo); el detalle de Compra
+  ya tiene **Ver factura / Ver foto** y **Adjuntar PDF o foto**. Probado con teclado y sin internet: **11/11**.
+  **NO es la pasada oficial**: sin Evicamp, sin push y sin Fase 5 hasta que el dueño lo diga.
 - **⚠️ 17/11/2026 (163) — CAMBIO DE PLAN:** el dueño decidió que **no habrá sistemas separados**: todo es
   **negosiumax**. Comerc y Servic son referencia histórica. La copia de Eco a la VPS **ya se hizo como prueba**
   (7.328 filas en `siumax`); la pasada oficial y la Fase 4 (PDF/fotos) siguen esperando su OK. El **500 de Eco de hoy**
   (clave vieja en Vercel) ya está resuelto. No volver a preguntar ni decir que está desactualizado.
-- **Última actualización anterior:** 17/11/2026 (162), Claude: migración Eco → Nego. **Fase 3 hecha** (7.328 filas cargadas y comprobadas en `siumax`; detalle en `migracion-eco/reporte-carga.md`). **Fase 4 DECIDIDA pero NO empezada** a pedido del dueño: copiar **solo los archivos de compras** (33 PDF + 1 foto) al VPS, comprimir las fotos, y agregar en el detalle de Compra la opción de ver/adjuntar el PDF y las fotos. **Espera el "empieza" del dueño.**
+- **Última actualización anterior:** 17/11/2026 (162), Claude: migración Eco → Nego. **Fase 3 hecha** (7.328 filas cargadas y comprobadas en `siumax`; detalle en `migracion-eco/reporte-carga.md`). **Fase 4 DECIDIDA** (antecedente; ver (164), ya hecha en pruebas): copiar **solo los archivos de compras** (33 PDF + 1 foto) al VPS, comprimir las fotos, y agregar en el detalle de Compra la opción de ver/adjuntar el PDF y las fotos.
 - (161) 17/11/2026, Claude: migración Eco → Nego, **Fase 3 hecha** (carga de prueba en la base `siumax`): **7.328 filas** cargadas y comprobadas (493 clientes, 519 productos, 603 lotes, 374 salidas con 2.745 ítems, 1.680 movimientos, 53 herramientas, 28 préstamos, 63 cotizaciones, 8 usuarios). Se puede deshacer con `ai-scripts/migrar-eco.cjs`.
 - (160) 17/11/2026, Claude: migración Eco → Nego, **Fase 2 hecha** (comparación y mapeo, solo análisis): Eco 24 tablas → Nego 55; cuadro completo y 7 preguntas para el dueño en `docs/MIGRACION-ECO-A-NEGO.md`. Volumen real a migrar: ~6.000 registros.
 - (159) 16/11/2026, Claude: migración Eco-Sistemas → Nego, **Fase 1 hecha** (inventario y respaldo, solo lectura): 24 tablas, 22.985 filas, respaldo de 28 MB verificado con 0 diferencias. Detalle: `docs/MIGRACION-ECO-A-NEGO.md`.
@@ -99,6 +103,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Migración Eco → Nego, Fase 4: PDF y fotos de compras** (33 PDF + 1 foto comprimida en el VPS, botones Ver/Adjuntar en el detalle de Compra) | **Aprobada y hecha solo en pruebas (164), 11/11 con teclado y sin internet. Falta la revisión del dueño. NO pasada oficial ni Evicamp sin su aviso** |
 | **Combos y recetas en el botón Producir** (nombre → productos que usa → combo o receta → precio y categoría → guardar y "¿producir ahora?"; lista para producir/cambiar; se QUITA "Tipo de producto y composición" de Nuevo producto y al editar uno existente sale el botón "Cambiar sus productos en Producir") | **✅ En siumax (112) y en Evicamp, clientes y GitHub (114)** |
 | **Utilidades › Gráficos y detalles** (tablero de ganancias/pérdidas: estado de resultados, punto de equilibrio, ABC, rotación, GMROI, merma, cartera) | **Aprobado 05/11. ✅ En siumax (106) y en Evicamp, clientes y GitHub (107). Pendiente: revisión del dueño** |
 | **Mismo estilo en todas las ventanas flotantes** (modelo: detalle de producto en Utilidades, sin sombra) | **Aprobado 04/11. ✅ 49 ventanas + avisos en siumax (92). Pasar a Evicamp solo con aviso** |

@@ -7,6 +7,30 @@
 
 ---
 
+## 17/11/2026 (164) · OpenCode (Big Pickle) — Fase 4 de la migración Eco → Nego HECHA EN PRUEBAS (no oficial)
+- **Dueño:** preguntó *"¿por qué no se puede compactar?"* y luego *"sí pero ojo todavía no es el oficial"*. Autorizó seguir
+  **solo en Nego**, sin pasada oficial, sin Evicamp y sin push.
+- **Compresión:** sí se pudo. No había PIL/ImageMagick/cwebp/sharp en el VPS ni en la PC; se usó Edge + Puppeteer con un
+  `canvas`. Foto: 42.128 → 26.881 bytes, 737 x 543.
+- **Hecho:**
+  - 33 PDF + 1 foto descargados de Supabase Storage (solo lectura en Eco) y subidos a
+    `/var/www/siuhub/html/archivos/compras` del VPS (34 archivos; nginx sirve 200 PDF y JPEG).
+  - Respaldo primero: `/root/backups/compras-antes-fase4-<fecha>.dump` (5,7 KB, tabla `compras`).
+  - Columna nueva `compras.archivos jsonb` (en la base `siumax` y en `servidor/sql/seguridad-sesion.sql` para bases
+    futuras), con los 34 enlaces `/archivos/compras/...`. Quedó `NOTIFY pgrst, 'reload schema'`.
+  - `PanelCompras.tsx`: en el detalle de Compra, sección "Archivos de la compra" con botones **Ver factura / Ver foto**
+    (teclado: `data-nav`) y **Adjuntar PDF o foto**. Los archivos nuevos se guardan dentro de la base (`datos` en base64)
+    porque el VPS **no tiene servidor de archivos** (igual que el logo de empresa). Los migrados apuntan al VPS.
+  - Las notas ya no muestran los enlaces viejos de Eco como texto: salen como botones.
+  - Compilado con 0 errores y desplegado **solo** con `node ai-scripts/deploy.cjs siumax`.
+- **Prueba (Puppeteer/Edge, con teclado y sin internet): 11/11 correctas.** Ver PDF y foto desde el detalle, navegación con
+  →, adjuntar con Enter (file chooser), foco que vuelve al botón, y base limpia al final (36 compras, 34 archivos, 0
+  archivos de prueba). URL probe: `https://nego.siumax.duckdns.org/archivos/compras/<uuid>.pdf` → 200.
+- **Quedó a medias:** nada técnico. Falta que el dueño revise en Nego. **No hacer** la pasada oficial ni la Fase 5 sin su aviso.
+- **Sigue:** esperar su revisión. Commits sin push; no tocar Evicamp.
+
+---
+
 ## 17/11/2026 (163) · OpenCode (Big Pickle) — Memoria principal con el cambio de plan a negosiumax (solo memoria)
 - **Dueño:** *"ya me canse que siempre revisen eso y que me digan que está desactualizado … ahora todo el sistema será
   uno solo que es negosiumax"*. Pidió actualizar Servic y Comerc y **juntar todo en la memoria principal**.

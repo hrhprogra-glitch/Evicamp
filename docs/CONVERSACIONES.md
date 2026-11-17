@@ -970,3 +970,14 @@
 - También se resolvió hoy el **500 de Eco-Sistema** en Vercel: clave desactualizada en `SUPABASE_DATABASE_URL`, el
   dueño actualizó el Value e hizo Redeploy → *"LISTO YA FUNCIONA"*.
 - **No autorizó** la pasada oficial ni la Fase 4 de fotos/PDF. Sin claves ni cadenas de conexión en la memoria.
+
+## 17/11/2026 (Fase 4 en pruebas, NO oficial)
+- El dueño preguntó **"¿por qué no se puede compactar?"**: sí se pudo. No había librerías de imágenes en el VPS ni en la PC
+  (ni PIL, ImageMagick, `cwebp` ni `sharp`), así que se comprimió con el navegador (Edge + Puppeteer, usando un `canvas`):
+  la foto pasó de 42.128 a 26.881 bytes (737 x 543), sin instalar nada.
+- Dijo **"sí pero ojo todavía no es el oficial"**: autorizó seguir con la Fase 4 **solo como prueba en Nego**.
+  **No** es la pasada oficial: nada de Evicamp, nada de push, nada de Fase 5.
+- **Hecho:** 33 PDF + 1 foto subidos al VPS; 34 enlaces guardados en la base de pruebas; detalle de Compra con botones
+  **Ver factura / Ver foto** y **Adjuntar PDF o foto**; desplegado solo en `nego.siumax.duckdns.org`.
+- **Prueba con teclado y sin internet:** 11/11 correctas (PDF y foto se abren, adjuntar funciona y el selector vuelve).
+- **Sigue:** el dueño revisa en Nego. La pasada oficial y la Fase 5 esperan su aviso.

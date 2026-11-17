@@ -13,7 +13,8 @@
   **referencia histórica**. Fuente de verdad: `D:/Programación/siumax/CLAUDE.md`. Si otra IA dice que la memoria está
   desactualizada, se equivoca: el dueño ya lo explicó varias veces.
 - **Copia Eco → VPS: HECHA como prueba el 17/11** (base `siumax`, 7.328 filas, respaldo y rollback disponibles).
-  Detalle canónico: `docs/MIGRACION-ECO-A-NEGO.md`. **Pasada oficial y Fase 4 (33 PDF + 1 foto): pendientes del OK.**
+  Detalle canónico: `docs/MIGRACION-ECO-A-NEGO.md`. **Fase 4 hecha en pruebas el 17/11** (33 PDF + 1 foto en el VPS y
+  botones Ver/Adjuntar en el detalle de Compra; 11/11 con teclado y sin internet). **Pasada oficial y Fase 5: pendientes del OK.**
 - **500 de Eco-Sistema resuelto el 17/11:** clave desactualizada en `SUPABASE_DATABASE_URL` en Vercel; el dueño
   actualizó el Value, hizo Redeploy y confirmó *"LISTO YA FUNCIONA"*. No era Supabase ni el código.
 - Nunca escribir claves ni cadenas de conexión aquí (viven en `.env.vps` / `.env.ecosistema`, fuera de git).
@@ -104,6 +105,14 @@
 
 - **Nombres internos en el servidor:** `/opt/siuhub`, servicios `postgrest_siuhub` y `siuhub-panel` (la base de datos de pruebas ahora se llama `siumax`, renombrada desde `siuhub` el 29/10/2026 por pedido del dueño).
 - **Conexión:** `ai-scripts/vps.cjs` + `.env.vps`. Para SQL desde Node: `node-ssh` → `runuser -u postgres -- psql -d <base>`.
+- **No hay servidor de archivos en el VPS** (el logo de empresa se guarda dentro de la base). Por eso en la Fase 4 los
+  archivos migrados se sirven como estáticos desde `/var/www/siuhub/html/archivos/compras`, pero los **adjuntos nuevos**
+  se guardan como base64 dentro de `compras.archivos` (columna `jsonb`, agregada con `ADD COLUMN IF NOT EXISTS`).
+- **Comprimir imágenes sin librerías:** en el VPS/PC no hay PIL, ImageMagick, `cwebp` ni `sharp`. Se logró con
+  **Edge + Puppeteer**: abrir la imagen en un `canvas` y guardarla como JPEG con calidad reducida (42.128 → 26.881 bytes).
+  No hace falta instalar nada.
+- **Respaldo antes de tocar `compras`:** `pg_dump` lo escribe el usuario `postgres` en `/tmp` y se copia a `/root/backups`
+  con el usuario del VPS (postgres no puede escribir directo en `/root/backups`).
 - **Seguridad de la API:**
   - Cada pedido lleva la cabecera `x-sesion` (`src/db/supabase.ts`) y el servidor la revisa con `fn_verificar_peticion`.
   - **Permisos por acción:** `fn_permisos_requeridos(método, ruta)` + `fn_tiene_permiso`, y triggers como `fn_proteger_precios` y `fn_proteger_borrados`.

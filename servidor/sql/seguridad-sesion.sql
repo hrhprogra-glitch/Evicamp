@@ -397,7 +397,8 @@ CREATE TABLE IF NOT EXISTS public.compras (
   autor         text,                                   -- quién la armó
   recibido_por  text,
   created_at    timestamptz NOT NULL DEFAULT now(),
-  recibido_at   timestamptz
+  recibido_at   timestamptz,
+  archivos      jsonb NOT NULL DEFAULT '[]'::jsonb              -- Fase 4: PDF/fotos (url en el VPS o datos en la base)
 );
 CREATE TABLE IF NOT EXISTS public.compras_detalle (
   id                bigserial PRIMARY KEY,
@@ -424,6 +425,8 @@ END $$;
 -- COMPRAS: recibir y devolver se hacen EN EL SERVIDOR, todo o nada (si se corta, no quedan lotes a medias).
 -- Quién lo hizo lo pone el servidor con la sesión: la pantalla no puede mandar otro nombre.
 ALTER TABLE public.compras ADD COLUMN IF NOT EXISTS recibido_por_id text;
+-- Migración Eco (Fase 4): archivos PDF/fotos de la compra, agregado sin borrar nada en bases existentes.
+ALTER TABLE public.compras ADD COLUMN IF NOT EXISTS archivos jsonb NOT NULL DEFAULT '[]'::jsonb;
 
 -- Registro de modificaciones de cada pedido (solo lectura para la pantalla: lo escriben el trigger y las funciones)
 CREATE TABLE IF NOT EXISTS public.compras_historial (

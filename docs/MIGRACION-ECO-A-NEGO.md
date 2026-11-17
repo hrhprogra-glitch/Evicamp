@@ -7,7 +7,8 @@
 
 > ⭐ **MEMORIA PRINCIPAL (17/11/2026): el dueño decidió que todo será un solo sistema, SiuMax Nego (`negosiumax`).**
 > Comerc y Servic son **referencia histórica**; la fuente de verdad es `D:/Programación/siumax/CLAUDE.md`. Esta
-> migración ya se hizo como **prueba** (7.328 filas en `siumax`); la pasada oficial y la Fase 4 esperan el OK del dueño.
+> migración ya se hizo como **prueba** (7.328 filas en `siumax`); la **Fase 4 también se hizo en pruebas** (17/11).
+> La pasada oficial y la Fase 5 esperan el OK del dueño.
 > El 500 de Eco en Vercel (clave vieja en `SUPABASE_DATABASE_URL`) ya está resuelto. No digan que está desactualizado.
 
 ## Datos de trabajo (privados, NO se suben a git)
@@ -18,7 +19,7 @@
 | Respaldo completo (esquema + datos) | `D:\Programación\siumax\respaldo-ecosistema-2026-11-16.sql` (28 MB, UTF-16LE) |
 | Scripts y reportes | `D:\Programación\siumax\migracion-eco\` (fuera de los repositorios) |
 
-**Estado:** Fase 1 ✅ (16/11) · Fase 2 ✅ (17/11) · Fase 3 ✅ cargada y comprobada (17/11) · Fase 4 **decidida y NO empezada** (17/11, el dueño pidió esperar).
+**Estado:** Fase 1 ✅ (16/11) · Fase 2 ✅ (17/11) · Fase 3 ✅ cargada y comprobada (17/11) · Fase 4 ✅ **hecha SOLO EN PRUEBAS** (17/11, 11/11 con teclado y sin internet) · Fase 5 ⏸ pendiente del dueño.
 
 - El respaldo incluye los esquemas `public`, `auth`, `storage` y `realtime` de Supabase. **Contiene datos sensibles**
   (usuarios/tokens): no compartirlo ni subirlo a git.
@@ -130,7 +131,7 @@
   **`migracion-eco/reporte-carga.md`**.
 - **Repetible:** `migrar-eco.cjs rollback-nego.sql borrar` borra exactamente las 7.328 filas y deja `siumax` como estaba.
 
-## Fase 4 · Archivos de compras (fotos y PDF) — DECIDIDA, aún NO empezada (17/11/2026)
+## Fase 4 · Archivos de compras (fotos y PDF) — HECHA EN PRUEBAS (17/11/2026, NO oficial)
 
 **Lo que pidió el dueño (pregunta 7):** copiar los archivos de Eco y **agregar la opción en el sistema** para verlos y
 subir nuevos. **Respuestas del dueño a la propuesta (17/11/2026):**
@@ -141,7 +142,8 @@ subir nuevos. **Respuestas del dueño a la propuesta (17/11/2026):**
 | 2 | ¿Qué copiar? | **Solo los archivos de compras** (no las fotos de productos ni nada más). |
 | 3 | ¿Comprimir las fotos? | **Sí, comprimirlas** (se ven igual). |
 
-> **El dueño dijo expresamente: NO empezar la Fase 4 todavía.** Solo quedó registrada la decisión.
+> El dueño pidió esperar al principio y después autorizó: **"sí pero ojo todavía no es el oficial"**. Por eso la Fase 4 se
+> hizo **solo en Nego** (`nego.siumax.duckdns.org`): sin pasada oficial, sin Evicamp y sin push.
 
 ### Qué archivos hay en Eco (medido solo lectura, 17/11/2026)
 
@@ -155,10 +157,23 @@ subir nuevos. **Respuestas del dueño a la propuesta (17/11/2026):**
 ### Plan propuesto (para cuando el dueño diga "empieza")
 
 - **A. Traer los archivos:** descargar de Eco los 33 PDF + 1 foto (solo lectura), **comprimir las fotos**, y guardarlos
-  en el VPS de Nego (carpeta propia, servida por nginx en `/api/uploads/...`). Anotar en Nego el enlace de cada compra.
+  en el VPS de Nego (carpeta propia, servida por nginx en `/archivos/compras/...`). Anotar en Nego el enlace de cada compra.
 - **B. Opción en el sistema:** en el detalle de una **compra**, poder **ver y adjuntar** el PDF y las fotos de la factura
   del proveedor (con teclado y sin internet).
 - **C. Verificación:** que las 33 compras muestren su PDF y que la app siga funcionando.
+
+### Resultado (hecho el 17/11, solo en la base de pruebas `siumax`)
+- **Archivos:** 33 PDF + 1 foto en `/var/www/siuhub/html/archivos/compras` (34 archivos; HTTP 200 en PDF y JPEG).
+- **Foto comprimida:** 42.128 → 26.881 bytes (737 x 543). No había PIL/ImageMagick/cwebp/sharp: se comprimió con
+  Edge + Puppeteer usando un `canvas`, sin instalar nada.
+- **Base:** respaldo previo de `compras` en `/root/backups/compras-antes-fase4-<fecha>.dump`. Columna nueva
+  `compras.archivos jsonb` (también agregada a `servidor/sql/seguridad-sesion.sql` con `ADD COLUMN IF NOT EXISTS`):
+  34 enlaces guardados, 34 compras con archivos, `NOTIFY pgrst, 'reload schema'`.
+- **Pantalla:** el detalle de Compra muestra "Archivos de la compra" con botones **Ver factura / Ver foto** y
+  **Adjuntar PDF o foto**. Los archivos nuevos se guardan dentro de la base (base64) porque el VPS no tiene servidor
+  de archivos; los migrados se abren desde nuestro VPS. Todo con teclado (`data-nav`) y sin internet.
+- **Prueba:** 11/11 correctas con Puppeteer/Edge. La base quedó limpia: 36 compras, 34 archivos, 0 archivos de prueba.
+- **Pendiente:** revisión del dueño en Nego. La pasada oficial y la Fase 5 **no** se tocan sin su aviso.
 
 ## Fase 5 · Ajustes, veredicto y paso oficial (solo con aviso del dueño)
 

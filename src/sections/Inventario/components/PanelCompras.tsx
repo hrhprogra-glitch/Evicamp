@@ -13,7 +13,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { filaEnMedio } from '../../../utils/flechasEspaciales';
 import { BOTONES_INVENTARIO } from '../tecladoInventario';
-import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, Loader2, Ban, Undo2, FileText, Share2, Download, Printer, ArrowLeft, Receipt, Sparkles } from 'lucide-react';
+import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, Loader2, Ban, Undo2, FileText, Share2, Download, Printer, ArrowLeft, Receipt, Sparkles, Paperclip, Eye, Upload } from 'lucide-react';
 import { imprimirEnTicketera } from '../../../utils/impresion';
 import { supabase } from '../../../db/supabase';
 import { usePermiso, useEmpleado, avisarSinPermiso } from '../../../utils/permisos';
@@ -39,7 +39,28 @@ interface Compra {
   id: number; provider_id: string | null; proveedor: string | null; estado: 'PENDIENTE' | 'RECIBIDO' | 'ANULADO';
   notas: string | null; documento: string | null; autor: string | null; recibido_por: string | null; recibido_por_id: string | null;
   created_at: string; recibido_at: string | null; compras_detalle: (Item & { id: number; cantidad_recibida: number | null; batch_id: number | null; presentacion_factor?: number | null })[];
+  // Fase 4 (migración Eco): PDF y fotos de la compra. Los migrados tienen url (en nuestro VPS); los nuevos, datos (dentro de la base).
+  archivos?: ArchivoCompra[] | null;
 }
+interface ArchivoCompra { tipo?: 'PDF' | 'FOTO'; nombre: string; url?: string; datos?: string }
+
+/** Abre un archivo adjunto: el migration va a nuestro VPS y el nuevo se arma desde la base (sin internet). */
+const abrirArchivoCompra = (a: ArchivoCompra) => {
+  if (a.url) { window.open(a.url, '_blank', 'noopener'); return; }
+  if (!a.datos) return;
+  try {
+    const [cabecera, base64] = a.datos.split(',');
+    const mime = /:(.*?);/.exec(cabecera)?.[1] || 'application/octet-stream';
+    const binario = atob(base64);
+    const bytes = new Uint8Array(binario.length);
+    for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+    const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+    window.open(url, '_blank', 'noopener');
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  } catch {
+    void avisar('No se pudo abrir el archivo adjunto.');
+  }
+};
 
 const soles = (n: number) => `S/ ${formatearMonto((Number(n) || 0))}`;
 const fecha = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-');
@@ -354,6 +375,12 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   };
   useEffect(() => { void cargar(); }, []);
 
+  // Un adjunto nuevo se guarda en la base y se ve enseguida en el detalle y en la lista
+  const guardarAdjuntos = (id: number, lista: ArchivoCompra[]) => {
+    setCompras((prev) => prev.map((x) => (x.id === id ? { ...x, archivos: lista } : x)));
+    setViendo((prev) => (prev && prev.id === id ? { ...prev, archivos: lista } : prev));
+  };
+
   // El selector no se pierde al volver de otra ventana (p. ej. WhatsApp) ni al hacer clic en un espacio vacío:
   // se vuelve a marcar el último elemento elegido de Compras (o "Nueva lista")
   const ultimo = useRef<HTMLElement | null>(null);
@@ -630,6 +657,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
           onAnular={() => conPermiso('anular listas de compras', () => { const c = viendo; void anular(c).then((ok) => { if (ok) setViendo(null); }); })}
           onRecibir={() => conPermisoRecibir('recibir pedidos', () => { const c = viendo; setViendo(null); setRecibiendo(c); })}
           onDevolver={() => conPermisoRecibir('devolver compras', () => { const c = viendo; void devolver(c).then((ok) => { if (ok) setViendo(null); }); })}
+          onAdjuntosCambio={(lista) => guardarAdjuntos(viendo.id, lista)}
         />
       )}
 
@@ -728,8 +756,31 @@ const ACCIONES: Record<string, string> = { CREADA: 'Creó la lista', EDITADA: 'E
 const DetalleCompra: React.FC<{
   compra: Compra; unidades: Map<string, string>; soloRecibe: boolean; puedeEnviar: boolean; puedeRecibir: boolean; puedeDevolver: boolean; foco?: string;
   onCerrar: () => void; onCompartir: () => void; onEditar: () => void; onAnular: () => void; onRecibir: () => void; onDevolver: () => void;
-}> = ({ compra: c, unidades, soloRecibe, puedeEnviar, puedeRecibir, puedeDevolver, foco, onCerrar, onCompartir, onEditar, onAnular, onRecibir, onDevolver }) => {
+  onAdjuntosCambio?: (lista: ArchivoCompra[]) => void;
+}> = ({ compra: c, unidades, soloRecibe, puedeEnviar, puedeRecibir, puedeDevolver, foco, onCerrar, onCompartir, onEditar, onAnular, onRecibir, onDevolver, onAdjuntosCambio }) => {
   const cuerpo = useRef<HTMLDivElement>(null);
+  const archivoRef = useRef<HTMLInputElement>(null);
+  const [subiendo, setSubiendo] = useState(false);
+  const adjuntos = Array.isArray(c.archivos) ? c.archivos : [];
+  // Los enlaces viejos de Eco ya salen como botones, no como texto dentro de las notas
+  const notasVisibles = (c.notas || '').split('\n').filter((l) => !/^\s*(PDF|Fotos)\s*:/i.test(l)).join('\n').trim();
+  const adjuntar = (archivo?: File) => {
+    if (!archivo || subiendo) return;
+    if (archivo.size > 4 * 1024 * 1024) { void avisar('El archivo es muy grande (máximo 4 MB).'); return; }
+    setSubiendo(true);
+    const lector = new FileReader();
+    lector.onload = async () => {
+      const nuevo: ArchivoCompra = { tipo: /^image\//i.test(archivo.type) ? 'FOTO' : 'PDF', nombre: archivo.name, datos: String(lector.result || '') };
+      const lista = [...adjuntos, nuevo];
+      const { error } = await supabase.from('compras').update({ archivos: lista }).eq('id', c.id);
+      setSubiendo(false);
+      if (error) { void avisar('No se pudo guardar el archivo: ' + error.message); return; }
+      onAdjuntosCambio?.(lista);
+      setTimeout(() => enfocar(document.getElementById('btn-detalle-adjuntar')), 40);
+    };
+    lector.onerror = () => { setSubiendo(false); void avisar('No se pudo leer el archivo.'); };
+    lector.readAsDataURL(archivo);
+  };
   const recibida = c.estado === 'RECIBIDO';
   const parcial = c.compras_detalle.some((d) => d.batch_id != null);
   const filas = c.compras_detalle.map((d) => ({ ...d, mostrar: recibida ? Number(d.cantidad_recibida ?? 0) : Number(d.cantidad) }));
@@ -781,8 +832,36 @@ const DetalleCompra: React.FC<{
           {fecha(c.created_at)}{c.autor ? ` · armado por ${c.autor}` : ''}
           {recibida && ` · recibido ${fecha(c.recibido_at)}${c.recibido_por ? ` por ${c.recibido_por}` : ''}${c.documento ? ` · ${c.documento}` : ''}`}
         </p>
-        {c.notas && <p className="text-xs font-bold text-[var(--color-ink)] mt-1">📝 {c.notas}</p>}
+        {notasVisibles && <p className="text-xs font-bold text-[var(--color-ink)] mt-1">📝 {notasVisibles}</p>}
       </div>
+      {/* Fase 4: PDF y fotos de la compra (los migrados se abren desde nuestro VPS; los nuevos se guardan en la base) */}
+      {(adjuntos.length > 0 || !soloRecibe) && (
+        <div className="border-y-2 border-[var(--color-border)] py-2">
+          <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-muted)] mb-1 flex items-center gap-1"><Paperclip size={12} /> Archivos de la compra</p>
+          {adjuntos.length === 0
+            ? <p className="text-[11px] font-bold text-[var(--color-muted)]">Sin archivos adjuntos.</p>
+            : <div className="flex flex-wrap gap-2">
+              {adjuntos.map((a, i) => {
+                const imagen = a.tipo === 'FOTO' || /\.(jpe?g|png|gif|webp)$/i.test(a.nombre);
+                return (
+                  <button key={i} id={`btn-detalle-archivo-${i}`} type="button" data-nav={`1,${i}`}
+                    onClick={() => abrirArchivoCompra(a)} title={`Abrir ${a.nombre}`}
+                    className={`${claseBoton} bg-white text-[var(--color-ink)]`}>
+                    {imagen ? <Eye size={14} /> : <FileText size={14} />} {imagen ? 'Ver foto' : 'Ver factura'}
+                  </button>
+                );
+              })}
+            </div>}
+          {!soloRecibe && <>
+            <input ref={archivoRef} type="file" accept=".pdf,image/*" className="hidden" aria-label="Elegir PDF o foto para adjuntar"
+              onChange={(e) => { adjuntar(e.target.files?.[0]); e.target.value = ''; }} />
+            <button id="btn-detalle-adjuntar" type="button" data-nav={`1,${adjuntos.length}`} disabled={subiendo}
+              onClick={() => archivoRef.current?.click()} className={`${claseBoton} bg-white text-[var(--color-ink)] mt-2`}>
+              {subiendo ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Adjuntar PDF o foto
+            </button>
+          </>}
+        </div>
+      )}
       <table className="w-full text-xs">
         <thead><tr className="text-left text-[10px] uppercase tracking-widest text-[var(--color-muted)] border-b-2 border-[var(--color-ink)]">
           <th className="py-2 pr-2">Producto</th><th className="py-2 px-2 text-right">{recibida ? 'Llegó' : 'Pedir'}</th>
