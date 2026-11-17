@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar, CheckCircle, FlaskConical, Clock } from 'lucide-react';
+import { ModalDetalleFila } from '../../../components/ModalDetalleFila';
 import type { VisitaContrato } from '../types';
 
 interface TablaVisitasProps {
@@ -13,6 +14,8 @@ export const TablaVisitas: React.FC<TablaVisitasProps> = ({
   onRegistrarConsumo,
   onMarcarRealizada,
 }) => {
+  const [detalle, setDetalle] = useState<VisitaContrato | null>(null);
+
   if (visitas.length === 0) {
     return (
       <div className="p-12 text-center border-2 border-dashed border-[var(--color-border)] font-mono bg-[var(--color-surface)]">
@@ -40,7 +43,19 @@ export const TablaVisitas: React.FC<TablaVisitasProps> = ({
         </thead>
         <tbody className="divide-y divide-[var(--color-border)]">
           {visitas.map((v) => (
-            <tr key={v.id} className="hover:bg-[var(--color-bg)] transition-colors">
+            <tr
+              key={v.id}
+              data-fila-visita="true"
+              role="button"
+              tabIndex={0}
+              title="Presione Enter o haga clic para ver el detalle"
+              onClick={() => setDetalle(v)}
+              onKeyDown={(e) => {
+                if (e.target !== e.currentTarget) return;
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetalle(v); }
+              }}
+              className="hover:bg-[var(--color-bg)] transition-colors cursor-pointer focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[var(--color-ink)]"
+            >
               <td className="py-2.5 px-3 font-bold text-[var(--color-ink)] whitespace-nowrap">
                 {v.fecha_programada}
               </td>
@@ -87,7 +102,7 @@ export const TablaVisitas: React.FC<TablaVisitasProps> = ({
                 <div className="flex items-center justify-center gap-1.5">
                   <button
                     id={`btn-consumo-visita-${v.id}`}
-                    onClick={() => onRegistrarConsumo(v)}
+                    onClick={(e) => { e.stopPropagation(); onRegistrarConsumo(v); }}
                     title="Registrar o agregar insumos usados"
                     className="h-7 px-2 border border-[var(--color-border)] hover:border-[var(--color-ink)] font-mono text-[11px] font-bold text-[var(--color-ink)] flex items-center gap-1 transition-colors"
                   >
@@ -98,7 +113,7 @@ export const TablaVisitas: React.FC<TablaVisitasProps> = ({
                   {v.estado === 'PENDIENTE' && (
                     <button
                       id={`btn-realizar-visita-${v.id}`}
-                      onClick={() => onMarcarRealizada(v.id)}
+                      onClick={(e) => { e.stopPropagation(); onMarcarRealizada(v.id); }}
                       title="Marcar visita como realizada"
                       className="h-7 px-2 bg-green-700 text-white hover:bg-green-800 font-mono text-[11px] font-bold flex items-center gap-1 transition-colors"
                     >
@@ -112,6 +127,24 @@ export const TablaVisitas: React.FC<TablaVisitasProps> = ({
           ))}
         </tbody>
       </table>
+
+      {detalle && (
+        <ModalDetalleFila
+          titulo="Detalle de la visita"
+          subtitulo={`${detalle.contrato?.codigo || 'Contrato'} · ${detalle.fecha_programada}`}
+          onClose={() => setDetalle(null)}
+          campos={[
+            { etiqueta: 'Contrato', valor: detalle.contrato ? `${detalle.contrato.codigo} - ${detalle.contrato.titulo}` : 'Contrato' },
+            { etiqueta: 'Cliente', valor: detalle.contrato?.customer?.name || '—' },
+            { etiqueta: 'Fecha programada', valor: detalle.fecha_programada },
+            { etiqueta: 'Fecha ejecutada', valor: detalle.fecha_ejecutada || 'Pendiente' },
+            { etiqueta: 'Técnico', valor: detalle.tecnico?.nombre || 'Sin asignar' },
+            { etiqueta: 'Estado', valor: detalle.estado },
+            { etiqueta: 'Insumos consumidos', valor: detalle.consumos?.length ? detalle.consumos.map((c) => `${c.descripcion} (${c.cantidad} ${c.unidad})`).join(', ') : 'Ninguno' },
+            { etiqueta: 'Observaciones', valor: detalle.observaciones || '—' },
+          ]}
+        />
+      )}
     </div>
   );
 };

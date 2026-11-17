@@ -1,8 +1,9 @@
 // src/sections/Graficos/components/TabTecnicos.tsx
 // Productividad por técnico en estilo SiuMax Sobrio
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Users } from 'lucide-react';
+import { ModalDetalleFila } from '../../../components/ModalDetalleFila';
 import type { ItemTecnico } from './types';
 
 interface TabTecnicosProps {
@@ -11,16 +12,18 @@ interface TabTecnicosProps {
 }
 
 // Filas: ↑ ↓ se mueven entre filas; ↑ desde la primera sube al buscador de la cabecera (Nego 3h)
-const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>) => {
+const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>, abrir: () => void) => {
   if (e.key === 'ArrowDown') { e.preventDefault(); (e.currentTarget.nextElementSibling as HTMLElement | null)?.focus(); }
   else if (e.key === 'ArrowUp') {
     e.preventDefault();
     const ant = e.currentTarget.previousElementSibling as HTMLElement | null;
     if (ant) ant.focus(); else (document.querySelector('[id^="buscador-reporte-"]') as HTMLElement | null)?.focus();
   } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.preventDefault();
+  else if (e.key === 'Enter') { e.preventDefault(); abrir(); }
 };
 
 export const TabTecnicos: React.FC<TabTecnicosProps> = ({ tecnicos, busqueda = '' }) => {
+  const [detalle, setDetalle] = useState<ItemTecnico | null>(null);
   const tecnicosFiltrados = tecnicos.filter((t) => {
     if (!busqueda.trim()) return true;
     const q = busqueda.toLowerCase().trim();
@@ -114,7 +117,16 @@ export const TabTecnicos: React.FC<TabTecnicosProps> = ({ tecnicos, busqueda = '
             </thead>
             <tbody className="bg-[var(--color-surface)]">
               {tecnicosOrdenados.map((t) => (
-                <tr key={t.id} data-fila-grafico="true" tabIndex={0} onKeyDown={teclaFila} className="tabla-fila h-[79px] cursor-pointer">
+                <tr
+                  key={t.id}
+                  data-fila-grafico="true"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => teclaFila(e, () => setDetalle(t))}
+                  onClick={() => setDetalle(t)}
+                  title="Presione Enter o haga clic para ver el detalle"
+                  className="tabla-fila h-[79px] cursor-pointer"
+                >
                   <td className="p-4 font-black whitespace-nowrap">
                     {t.nombre}
                   </td>
@@ -155,6 +167,24 @@ export const TabTecnicos: React.FC<TabTecnicosProps> = ({ tecnicos, busqueda = '
           </table>
         )}
       </div>
+
+      {detalle && (
+        <ModalDetalleFila
+          titulo="Detalle del técnico"
+          subtitulo={detalle.cargo || 'Técnico de Servicios'}
+          onClose={() => setDetalle(null)}
+          campos={[
+            { etiqueta: 'Técnico', valor: detalle.nombre },
+            { etiqueta: 'Especialidad / Cargo', valor: detalle.cargo || 'Técnico de Servicios' },
+            { etiqueta: 'Asignados en Agenda', valor: detalle.trabajosAsignados },
+            { etiqueta: 'Completados', valor: detalle.trabajosCompletados },
+            { etiqueta: 'En seguimiento', valor: detalle.trabajosSeguimiento },
+            { etiqueta: 'Salidas a obras', valor: detalle.salidasParticipadas },
+            { etiqueta: 'Visitas de contratos', valor: detalle.visitasRealizadas },
+            { etiqueta: 'Efectividad', valor: `${detalle.eficiencia.toFixed(0)}%` },
+          ]}
+        />
+      )}
     </div>
   );
 };

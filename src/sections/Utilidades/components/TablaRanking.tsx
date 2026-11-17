@@ -1,7 +1,8 @@
 // src/sections/Utilidades/components/TablaRanking.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Trophy } from 'lucide-react';
 import { formatearMonto } from '../../../utils/formato';
+import { ModalDetalleFila } from '../../../components/ModalDetalleFila';
 
 interface Props {
   titulo: string;
@@ -11,6 +12,7 @@ interface Props {
 
 export const TablaRanking: React.FC<Props> = ({ titulo, items }) => {
   const maxTotal = Math.max(...items.map(i => i.total), 1);
+  const [detalle, setDetalle] = useState<{ nombre: string; cantidad: number; total: number; puesto: number } | null>(null);
 
   return (
     <div className="flex-1 bg-[var(--color-surface)] border border-[var(--color-border)] flex flex-col min-w-[300px] max-h-[220px] overflow-hidden rounded-none font-sans">
@@ -27,7 +29,21 @@ export const TablaRanking: React.FC<Props> = ({ titulo, items }) => {
             const porcentaje = (item.total / maxTotal) * 100;
 
             return (
-              <div key={index} className="flex flex-col gap-1">
+              <div
+                key={index}
+                data-fila-ranking="true"
+                role="button"
+                tabIndex={0}
+                onClick={() => setDetalle({ ...item, puesto: index + 1 })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setDetalle({ ...item, puesto: index + 1 });
+                  }
+                }}
+                title="Presione Enter o haga clic para ver el detalle"
+                className="flex flex-col gap-1 cursor-pointer focus:outline-none focus:ring-1 focus:ring-[var(--color-ink)]"
+              >
                 <div className="flex justify-between items-end">
                   <span className="text-[12px] font-bold text-[var(--color-ink)] uppercase tracking-wider truncate pr-2">
                     {index + 1}. {item.nombre}
@@ -49,6 +65,21 @@ export const TablaRanking: React.FC<Props> = ({ titulo, items }) => {
           })
         )}
       </div>
+
+      {detalle && (
+        <ModalDetalleFila
+          titulo="Detalle del ranking"
+          subtitulo={`${titulo} · Puesto ${detalle.puesto}`}
+          onClose={() => setDetalle(null)}
+          campos={[
+            { etiqueta: 'Ranking', valor: titulo },
+            { etiqueta: 'Puesto', valor: detalle.puesto },
+            { etiqueta: 'Nombre', valor: detalle.nombre },
+            { etiqueta: 'Cantidad', valor: `${detalle.cantidad} U.` },
+            { etiqueta: 'Total', valor: `S/ ${formatearMonto(detalle.total)}` },
+          ]}
+        />
+      )}
     </div>
   );
 };

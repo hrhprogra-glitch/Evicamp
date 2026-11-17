@@ -7,6 +7,19 @@
 
 ---
 
+## 17/11/2026 (174) · OpenCode (Big Pickle) — Clic en cualquier fila abre el detalle, como Inventario > Productos
+- **Dueño:** *"agrega eso cuando le hago click a la tabla debe abrirse como en inventario en producto eso tiene que pasar en todas las tablas"*; aprobado con *"hazlo"*.
+- **Hecho (solo Nego):** se aplicó el molde de Inventario > Productos (clic o Enter en la fila → abre detalle) a las tablas que no lo tenían:
+  - **Herramientas, Vehículos y Salidas:** Enter ya abría el detalle pero faltaba el clic; se agregó `onClick` en la fila.
+  - **Utilidades (Rentabilidad, Técnicos, Materiales, Cobranzas) y Ranking:** no tenían detalle; se creó `src/components/ModalDetalleFila.tsx`, un modal sobrio de solo lectura (sin esquinas redondeadas, cabecera oscura, cierre con Escape) con los datos de cada fila.
+  - **Contratos (Visitas y Cobros):** también usan el modal nuevo; los botones "Insumo", "Listo" y "Cobrar" llevan `stopPropagation` para NO abrir el detalle.
+- **Sin tocar:** ids, atajos, flechas, paginación siempre visible, estilo SiuMax Sobrio, SQL ni la base. `ModalDetalleFila` usa `z-[100]` y la pila de `useCerrarConEscape` para que Escape cierre primero la ventana de arriba.
+- **Prueba nueva:** `ai-scripts/pruebas/prueba-clic-filas-detalle.mjs`, con teclado y clic: **12 correctas, 0 fallos**; 3 tablas (Cobranzas, Visitas y Cobros) están vacías en Nego, se marcan "sin datos", no como fallo. Confirmado que el modal es sobrio (border radius 0) y que Escape lo cierra. `npm run build` limpio.
+- **Desplegado solo en Nego** con `node ai-scripts/deploy.cjs siumax` (21 archivos). Sin Evicamp, sin push, sin pasada oficial ni Fase 5. Base sin verificar de nuevo (última `{servicios}` en el paso 171).
+- **No hecho:** el pedido pospuesto de salidas pendientes en Agenda (172/173) sigue en espera; no se retomó.
+
+---
+
 ## 17/11/2026 (173) · OpenCode (Big Pickle) — Dueño dejó en espera lo de salidas pendientes en Agenda
 - **Dueño:** *"mejor olvidalo ya tengo otra dia para eso"*, después de ver la propuesta del punto 172.
 - **Decisión:** NO implementar nada de ese pedido hoy. No se tocó código, no se corrió ninguna prueba, no se desplegó

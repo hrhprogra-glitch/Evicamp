@@ -1,8 +1,9 @@
 // src/sections/Graficos/components/TabCobranzas.tsx
 // Cuentas por cobrar en estilo SiuMax Sobrio
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Clock, AlertCircle, CheckCircle } from 'lucide-react';
+import { ModalDetalleFila } from '../../../components/ModalDetalleFila';
 import type { ItemCuentaPorCobrar } from './types';
 import { verFechaLocal } from './types';
 
@@ -13,16 +14,18 @@ interface TabCobranzasProps {
 }
 
 // Filas: ↑ ↓ se mueven entre filas; ↑ desde la primera sube al buscador de la cabecera (Nego 3h)
-const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>) => {
+const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>, abrir: () => void) => {
   if (e.key === 'ArrowDown') { e.preventDefault(); (e.currentTarget.nextElementSibling as HTMLElement | null)?.focus(); }
   else if (e.key === 'ArrowUp') {
     e.preventDefault();
     const ant = e.currentTarget.previousElementSibling as HTMLElement | null;
     if (ant) ant.focus(); else (document.querySelector('[id^="buscador-reporte-"]') as HTMLElement | null)?.focus();
   } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.preventDefault();
+  else if (e.key === 'Enter') { e.preventDefault(); abrir(); }
 };
 
 export const TabCobranzas: React.FC<TabCobranzasProps> = ({ cuentas, busqueda, filtroTipo }) => {
+  const [detalle, setDetalle] = useState<ItemCuentaPorCobrar | null>(null);
   // Hoy en la hora local (antes en UTC: de noche ya era 'mañana')
   const ahora = new Date();
   const hoyStr = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`;
@@ -107,7 +110,16 @@ export const TabCobranzas: React.FC<TabCobranzasProps> = ({ cuentas, busqueda, f
                 const esVencido = c.fechaVencimiento && c.fechaVencimiento < hoyStr;
 
                 return (
-                  <tr key={`${c.tipo}-${c.id}`} data-fila-grafico="true" tabIndex={0} onKeyDown={teclaFila} className="tabla-fila h-[79px] cursor-pointer">
+                  <tr
+                    key={`${c.tipo}-${c.id}`}
+                    data-fila-grafico="true"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => teclaFila(e, () => setDetalle(c))}
+                    onClick={() => setDetalle(c)}
+                    title="Presione Enter o haga clic para ver el detalle"
+                    className="tabla-fila h-[79px] cursor-pointer"
+                  >
                     <td className="p-4 font-mono font-black whitespace-nowrap">
                       {c.codigo}
                     </td>
@@ -166,6 +178,25 @@ export const TabCobranzas: React.FC<TabCobranzasProps> = ({ cuentas, busqueda, f
           </table>
         )}
       </div>
+
+      {detalle && (
+        <ModalDetalleFila
+          titulo="Detalle de cobranza"
+          subtitulo={`${detalle.codigo} · ${detalle.cliente}`}
+          onClose={() => setDetalle(null)}
+          campos={[
+            { etiqueta: 'Código', valor: detalle.codigo },
+            { etiqueta: 'Origen', valor: detalle.tipo },
+            { etiqueta: 'Cliente', valor: detalle.cliente },
+            { etiqueta: 'Emisión', valor: verFechaLocal(detalle.fechaEmision) },
+            { etiqueta: 'Vencimiento', valor: verFechaLocal(detalle.fechaVencimiento) },
+            { etiqueta: 'Total inicial', valor: `S/ ${detalle.total.toFixed(2)}` },
+            { etiqueta: 'Pagado / Adelanto', valor: `S/ ${detalle.pagado.toFixed(2)}` },
+            { etiqueta: 'Saldo de deuda', valor: `S/ ${detalle.saldo.toFixed(2)}` },
+            { etiqueta: 'Estado', valor: detalle.estado },
+          ]}
+        />
+      )}
     </div>
   );
 };

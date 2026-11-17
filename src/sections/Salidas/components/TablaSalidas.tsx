@@ -108,6 +108,8 @@ export const TablaSalidas: React.FC<TablaSalidasProps> = ({
                     data-row="true"
                     tabIndex={0}
                     onKeyDown={(e) => alTeclearFila(e, idx, s)}
+                    onClick={() => onVerDetalle(s)}
+                    title="Presione Enter o haga clic para ver el detalle"
                     className="tabla-fila h-[79px] cursor-pointer"
                   >
                     <td className="p-4">

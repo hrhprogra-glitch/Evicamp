@@ -7,6 +7,7 @@
 > Última actualización: 17/11/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
+- **17/11/2026 (174) — Clic en cualquier fila abre el detalle, como Inventario > Productos:** con el "hazlo" del dueño, las tablas que no lo tenían ya abren detalle con clic o Enter: Herramientas, Vehículos y Salidas (se agregó el clic), Utilidades (Rentabilidad, Técnicos, Materiales, Cobranzas y Ranking) y Contratos (Visitas y Cobros), con un modal sobrio de solo lectura nuevo (`ModalDetalleFila.tsx`). Botones internos no abren el detalle; ids, atajos, flechas y paginación intactos. Prueba con teclado y sin internet **12/12, 0 fallos** (3 tablas vacías en Nego, "sin datos"). `npm run build` limpio y desplegado solo en Nego. Sin Evicamp, sin push, sin pasada oficial ni Fase 5. Base sin tocar (`{servicios}`).
 - **17/11/2026 (173) — Dueño dejó en espera lo de salidas pendientes en Agenda:** dijo *"mejor olvidalo ya tengo otra dia
   para eso"*. No se implementó nada, no se probó nada y no se desplegó nada. La propuesta sigue guardada (172) por si la
   pide otro día; no adelantarla. Sin Evicamp, sin push, sin pasada oficial ni Fase 5.
@@ -143,6 +144,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Clic en cualquier fila abre el detalle, como Inventario > Productos** (Herramientas, Vehículos, Salidas, Utilidades y Contratos; modal sobrio de solo lectura donde no había detalle) | **Aprobada con "hazlo" y hecha solo en Nego (174): 12/12 con teclado y sin internet, 0 fallos (3 tablas vacías = sin datos). `build` limpio. Sin Evicamp, sin push, sin pasada oficial ni Fase 5** |
 | **Corrección: visitas de Contratos cuando el contrato empieza a mitad de mes** (para que se generen visitas y aparezca "Insumos"); **Taller: solo reforzar la espera de la prueba**, sin tocar la lógica de stock | **Aprobada con "empieza" y hecha solo en Nego (171): SQL con respaldo y `lock_timeout`, Contratos todo OK (30/30) y Taller todo OK (42/42). Sin Evicamp, sin push, sin pasada oficial ni Fase 5** |
 | **Que se respete el tipo de negocio elegido (solo Servicios) y tablas al molde** | **Aprobada con "Sí, empieza" y hecha solo en Nego (169): 7/7, 16/16, 6/6, 29/29 y el resto de pruebas OK; base `{servicios}`. Sin Evicamp, sin push, sin pasada oficial ni Fase 5** |
 | **Paginación siempre visible y tablas iguales a Inventario en 6 secciones** (franja aunque sea "Página 1 de 1"; Salidas, Contratos, Taller, Utilidades y Pedidos al molde) | **Aprobada con "Sí, empieza" y hecha solo en Nego (168): 29/29 de paginación/estilo, 13/13, 17/17, 9/9, 11/11, 50/50 y 28/28. Sin Evicamp, sin push, sin pasada oficial ni Fase 5** |

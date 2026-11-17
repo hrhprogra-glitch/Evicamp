@@ -101,7 +101,9 @@ export const TablaHerramientas: React.FC<TablaHerramientasProps> = ({
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => handleKeyDownRow(e, idx, h)}
-                    className="grid grid-cols-12 items-center min-h-[79px] p-3 md:p-4 border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:outline-none focus-visible:bg-[var(--color-bg-2)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-ink)] transition-colors"
+                    onClick={() => onEditar(h)}
+                    title="Presione Enter o haga clic para ver el detalle"
+                    className="grid grid-cols-12 items-center min-h-[79px] p-3 md:p-4 border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:outline-none focus-visible:bg-[var(--color-bg-2)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-ink)] transition-colors cursor-pointer"
                   >
                     {/* Código */}
                     <div className="col-span-2 pr-2 min-w-0">

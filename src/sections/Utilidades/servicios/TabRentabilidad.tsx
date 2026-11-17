@@ -1,8 +1,9 @@
 // src/sections/Graficos/components/TabRentabilidad.tsx
 // Pestaña Rentabilidad por Obra y Contrato en estilo SiuMax Sobrio
 
-import React from 'react';
+import React, { useState } from 'react';
 import { TrendingUp } from 'lucide-react';
+import { ModalDetalleFila } from '../../../components/ModalDetalleFila';
 import type { ItemRentabilidad } from './types';
 import { verFechaLocal } from './types';
 
@@ -13,16 +14,18 @@ interface TabRentabilidadProps {
 }
 
 // Filas: ↑ ↓ se mueven entre filas; ↑ desde la primera sube al buscador de la cabecera (Nego 3h)
-const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>) => {
+const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>, abrir: () => void) => {
   if (e.key === 'ArrowDown') { e.preventDefault(); (e.currentTarget.nextElementSibling as HTMLElement | null)?.focus(); }
   else if (e.key === 'ArrowUp') {
     e.preventDefault();
     const ant = e.currentTarget.previousElementSibling as HTMLElement | null;
     if (ant) ant.focus(); else (document.querySelector('[id^="buscador-reporte-"]') as HTMLElement | null)?.focus();
   } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.preventDefault();
+  else if (e.key === 'Enter') { e.preventDefault(); abrir(); }
 };
 
 export const TabRentabilidad: React.FC<TabRentabilidadProps> = ({ items, busqueda, filtroTipo }) => {
+  const [detalle, setDetalle] = useState<ItemRentabilidad | null>(null);
   const itemsFiltrados = items.filter((it) => {
     if (filtroTipo !== 'TODOS' && it.tipo !== filtroTipo) return false;
     if (busqueda.trim()) {
@@ -119,7 +122,16 @@ export const TabRentabilidad: React.FC<TabRentabilidadProps> = ({ items, busqued
               </thead>
               <tbody className="bg-[var(--color-surface)]">
                 {itemsFiltrados.map((it) => (
-                  <tr key={`${it.tipo}-${it.id}`} data-fila-grafico="true" tabIndex={0} onKeyDown={teclaFila} className="tabla-fila h-[79px] cursor-pointer">
+                  <tr
+                    key={`${it.tipo}-${it.id}`}
+                    data-fila-grafico="true"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => teclaFila(e, () => setDetalle(it))}
+                    onClick={() => setDetalle(it)}
+                    title="Presione Enter o haga clic para ver el detalle"
+                    className="tabla-fila h-[79px] cursor-pointer"
+                  >
                     <td className="p-4 font-mono font-black whitespace-nowrap">
                       {it.codigo}
                     </td>
@@ -178,6 +190,25 @@ export const TabRentabilidad: React.FC<TabRentabilidadProps> = ({ items, busqued
           </>
         )}
       </div>
+
+      {detalle && (
+        <ModalDetalleFila
+          titulo="Detalle de rentabilidad"
+          subtitulo={`${detalle.codigo} · ${detalle.tipo}`}
+          onClose={() => setDetalle(null)}
+          campos={[
+            { etiqueta: 'Código', valor: detalle.codigo },
+            { etiqueta: 'Tipo', valor: detalle.tipo },
+            { etiqueta: 'Trabajo', valor: detalle.nombre },
+            { etiqueta: 'Cliente', valor: detalle.cliente },
+            { etiqueta: 'Fecha', valor: verFechaLocal(detalle.fecha) },
+            { etiqueta: 'Ingreso facturado', valor: `S/ ${detalle.ingreso.toFixed(2)}` },
+            { etiqueta: 'Costo de insumos', valor: `S/ ${detalle.costoMateriales.toFixed(2)}` },
+            { etiqueta: 'Utilidad bruta', valor: `S/ ${detalle.utilidad.toFixed(2)}` },
+            { etiqueta: 'Margen', valor: `${detalle.margen.toFixed(1)}%` },
+          ]}
+        />
+      )}
     </div>
   );
 };

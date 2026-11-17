@@ -1075,3 +1075,14 @@
 - El dueño todavía no dice "empieza": **no se cambió código ni se desplegó nada**.
 - Después de ver la propuesta dijo: *"mejor olvidalo ya tengo otra dia para eso"*. **Queda en espera, sin hacer.**
   No volver a preguntar ni a adelantar el cambio; solo retomarlo si el dueño lo pide en otro momento.
+
+## 17/11/2026 (clic en las tablas abre el detalle)
+- El dueño pidió: *"agrega eso cuando le hago click a la tabla debe abrirse como en inventario en producto eso tiene que
+  pasar en todas las tablas"*, refiriéndose a que antes en varias tablas solo abría el detalle con Enter, no con clic.
+- Se le explicó que se aplicaría el mismo molde de Inventario > Productos a las tablas que no lo tenían y dijo **"hazlo"**.
+- Hecho solo en Nego: clic (y Enter) abre el detalle en Herramientas, Vehículos, Salidas, Utilidades (Rentabilidad,
+  Técnicos, Materiales, Cobranzas y Ranking) y Contratos (Visitas y Cobros). Donde no había detalle se creó un modal
+  sobrio de solo lectura; los botones internos (Insumo, Listo, Cobrar) siguen haciendo lo suyo sin abrir el detalle.
+- Prueba con teclado y sin internet: 12 correctas, 0 fallos; Cobranzas, Visitas y Cobros están vacías en Nego y se
+  marcan "sin datos". `build` limpio y despliegue solo en Nego. Sin Evicamp, sin push, sin pasada oficial ni Fase 5.
+- El pedido de salidas pendientes en Agenda sigue en espera; no se retomó.

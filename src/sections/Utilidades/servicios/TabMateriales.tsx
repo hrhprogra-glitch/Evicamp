@@ -1,8 +1,9 @@
 // src/sections/Graficos/components/TabMateriales.tsx
 // Insumos y materiales más usados en estilo SiuMax Sobrio
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Package } from 'lucide-react';
+import { ModalDetalleFila } from '../../../components/ModalDetalleFila';
 import type { ItemMaterialTop } from './types';
 
 interface TabMaterialesProps {
@@ -11,16 +12,18 @@ interface TabMaterialesProps {
 }
 
 // Filas: ↑ ↓ se mueven entre filas; ↑ desde la primera sube al buscador de la cabecera (Nego 3h)
-const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>) => {
+const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>, abrir: () => void) => {
   if (e.key === 'ArrowDown') { e.preventDefault(); (e.currentTarget.nextElementSibling as HTMLElement | null)?.focus(); }
   else if (e.key === 'ArrowUp') {
     e.preventDefault();
     const ant = e.currentTarget.previousElementSibling as HTMLElement | null;
     if (ant) ant.focus(); else (document.querySelector('[id^="buscador-reporte-"]') as HTMLElement | null)?.focus();
   } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.preventDefault();
+  else if (e.key === 'Enter') { e.preventDefault(); abrir(); }
 };
 
 export const TabMateriales: React.FC<TabMaterialesProps> = ({ materiales, busqueda }) => {
+  const [detalle, setDetalle] = useState<ItemMaterialTop | null>(null);
   const filtrados = materiales.filter((m) =>
     m.nombre.toLowerCase().includes(busqueda.toLowerCase().trim())
   );
@@ -99,7 +102,16 @@ export const TabMateriales: React.FC<TabMaterialesProps> = ({ materiales, busque
               </thead>
               <tbody className="bg-[var(--color-surface)]">
                 {filtrados.map((m) => (
-                  <tr key={m.productoId} data-fila-grafico="true" tabIndex={0} onKeyDown={teclaFila} className="tabla-fila h-[79px] cursor-pointer">
+                  <tr
+                    key={m.productoId}
+                    data-fila-grafico="true"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => teclaFila(e, () => setDetalle(m))}
+                    onClick={() => setDetalle(m)}
+                    title="Presione Enter o haga clic para ver el detalle"
+                    className="tabla-fila h-[79px] cursor-pointer"
+                  >
                     <td className="p-4 font-black">
                       {m.nombre}
                     </td>
@@ -135,6 +147,22 @@ export const TabMateriales: React.FC<TabMaterialesProps> = ({ materiales, busque
           </>
         )}
       </div>
+
+      {detalle && (
+        <ModalDetalleFila
+          titulo="Detalle del insumo"
+          subtitulo={`Unidad: ${detalle.unidad}`}
+          onClose={() => setDetalle(null)}
+          campos={[
+            { etiqueta: 'Insumo / Material', valor: detalle.nombre },
+            { etiqueta: 'Unidad', valor: detalle.unidad },
+            { etiqueta: 'En salidas y taller', valor: detalle.usadoEnObras.toFixed(2) },
+            { etiqueta: 'En contratos', valor: detalle.usadoEnContratos.toFixed(2) },
+            { etiqueta: 'Total consumido', valor: detalle.cantidadConsumida.toFixed(2) },
+            { etiqueta: 'Costo total valorizado', valor: `S/ ${detalle.costoTotal.toFixed(2)}` },
+          ]}
+        />
+      )}
     </div>
   );
 };

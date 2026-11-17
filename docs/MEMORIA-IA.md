@@ -647,4 +647,19 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - **Decisión del dueño (17/11, bitácora 173):** *"mejor olvidalo ya tengo otra dia para eso"*. El cambio quedó **en
   espera, no aprobado**. No preguntar otra vez ni adelantarlo; solo hacerlo si él lo pide en otro momento.
 
+## 26. Clic en la fila abre el detalle, en todo el sistema (17/11/2026, bitácora 174)
+- El molde es **Inventario > Productos**: la fila (div o tr) lleva `onClick` → abre el modal del registro, además del
+  `onKeyDown` con Enter/Espacio que ya existía. El dueño quiere que eso pase en **todas** las tablas, no solo en Productos.
+- **Ojo:** en Herramientas, Vehículos y Salidas Enter ya abría el detalle pero **faltaba el clic**; en otras tablas
+  (Utilidades, visitas/cobros de Contratos) no había detalle alguno. Para el segundo caso se creó
+  `src/components/ModalDetalleFila.tsx`: modal de solo lectura, `rounded-none`, cabecera oscura, campos etiqueta/valor,
+  cierre con `useCerrarConEscape` y `z-[100]` para poder abrirse encima del detalle de Contratos.
+- **Regla importante:** los botones dentro de la fila (Insumo, Listo, Cobrar, Prestar, etc.) deben llevar
+  `e.stopPropagation()` en su `onClick`, si no, al pulsarlos se abre también el detalle de la fila.
+- Las tablas de Utilidades ya tenían flechas ↑↓ y ↑ al buscador en `teclaFila`; se agregó Enter al mismo handler sin
+  quitar las flechas. Cobranzas, Visitas y Cobros están vacíos en Nego: una prueba que espere filas ahí dará "sin datos",
+  no es un fallo del código; el modal genérico se verificó con Rentabilidad (413 filas), Técnicos y Materiales.
+- Si el detalle se abre dentro de otro modal, la pila de `useCerrarConEscape.ts` hace que Escape cierre primero el de
+  arriba; por eso el modal nuevo usa ese hook y no un `useEffect` propio de Escape.
+
 
