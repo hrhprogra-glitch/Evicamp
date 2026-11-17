@@ -8,6 +8,16 @@
 
 ---
 
+## 0. ⭐ Memoria principal y cambio de plan (17/11/2026) — LEER PRIMERO
+- **El dueño decidió: todo será un solo sistema, SiuMax Nego (`negosiumax`).** Comerc y Servic pasan a ser
+  **referencia histórica**. Fuente de verdad: `D:/Programación/siumax/CLAUDE.md`. Si otra IA dice que la memoria está
+  desactualizada, se equivoca: el dueño ya lo explicó varias veces.
+- **Copia Eco → VPS: HECHA como prueba el 17/11** (base `siumax`, 7.328 filas, respaldo y rollback disponibles).
+  Detalle canónico: `docs/MIGRACION-ECO-A-NEGO.md`. **Pasada oficial y Fase 4 (33 PDF + 1 foto): pendientes del OK.**
+- **500 de Eco-Sistema resuelto el 17/11:** clave desactualizada en `SUPABASE_DATABASE_URL` en Vercel; el dueño
+  actualizó el Value, hizo Redeploy y confirmó *"LISTO YA FUNCIONA"*. No era Supabase ni el código.
+- Nunca escribir claves ni cadenas de conexión aquí (viven en `.env.vps` / `.env.ecosistema`, fuera de git).
+
 ## 1. El dueño y cómo le gusta trabajar
 - **Español siempre**, también en los avances cortos y los resúmenes de pruebas. Se molesta mucho si respondes en inglés.
 - **No es programador:** explica simple, sin jerga y con tablas cortas. Si dice "respóndeme nomás", contesta directo y corto.

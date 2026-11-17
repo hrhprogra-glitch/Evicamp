@@ -958,3 +958,15 @@
     son relativos (`/api/uploads/factura/<uuid>.pdf`); falta ver en qué host responden.
   - **Siguiente:** esperar el **"empieza"** del dueño para la Fase 4 (o que primero entre a `nego.siumax.duckdns.org`
     con los usuarios nuevos y vea los datos cargados en la Fase 3).
+
+## 17/11/2026 (cambio de plan — memoria principal)
+- **Cambió el plan:** *"ya me canse que siempre revisen eso y que me digan que está desactualizado cuando ya expliqué
+  varias veces que se cambió el plan, ahora todo el sistema será uno solo que es negosiumax"*. Decidió que **no habrá
+  sistemas separados**: SiuMax Nego será el único; Comerc y Servic pasan a ser **referencia histórica**.
+- Pidió **juntar todo en la memoria principal** (`D:/Programación/siumax/CLAUDE.md`) y actualizar Servic y Comerc,
+  para que ninguna IA vuelva a decir que está desactualizado.
+- Recordó que lo último que hizo fue **pasar la base de Eco a su VPS como copia y para pruebas**, antes de hacerlo
+  oficial. Confirmado: **hecho el 17/11 como prueba** (base `siumax`, 7.328 filas); falta lo oficial y la Fase 4.
+- También se resolvió hoy el **500 de Eco-Sistema** en Vercel: clave desactualizada en `SUPABASE_DATABASE_URL`, el
+  dueño actualizó el Value e hizo Redeploy → *"LISTO YA FUNCIONA"*.
+- **No autorizó** la pasada oficial ni la Fase 4 de fotos/PDF. Sin claves ni cadenas de conexión en la memoria.

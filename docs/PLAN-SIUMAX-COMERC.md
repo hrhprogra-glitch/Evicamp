@@ -1,11 +1,17 @@
 # Plan de SiuMax Comerc: estado, fases y forma de trabajo
 
 > Documento para continuar el trabajo con **cualquier IA o programador**. Léelo completo antes de tocar el código.
-> **Visión de SiuMax (los 7 tipos de negocio, un sistema por tipo):** `D:/Programación/siumax/TIPOS-DE-NEGOCIO.md` (carpeta madre). Este plan es solo del tipo 1, Comercio. **Comerc está terminado en lo importante y en producción (06/11/2026); lo siguiente es SiuMax Servicios en `D:/Programación/siumax/negocios/servicios`.**
-> Última actualización: 27/10/2026.
+> **⚠️ Cambio de plan (17/11/2026): todo será un solo sistema, SiuMax Nego (`negosiumax`).** La visión original de
+> "un sistema por tipo" está en `D:/Programación/siumax/TIPOS-DE-NEGOCIO.md` y hoy es **histórica**. Memoria principal
+> y fuente de verdad: `D:/Programación/siumax/CLAUDE.md`. Este plan queda como referencia del origen de Nego.
+> Última actualización: 17/11/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
-- **Última actualización:** 17/11/2026 (162), Claude: migración Eco → Nego. **Fase 3 hecha** (7.328 filas cargadas y comprobadas en `siumax`; detalle en `migracion-eco/reporte-carga.md`). **Fase 4 DECIDIDA pero NO empezada** a pedido del dueño: copiar **solo los archivos de compras** (33 PDF + 1 foto) al VPS, comprimir las fotos, y agregar en el detalle de Compra la opción de ver/adjuntar el PDF y las fotos. **Espera el "empieza" del dueño.**
+- **⚠️ 17/11/2026 (163) — CAMBIO DE PLAN:** el dueño decidió que **no habrá sistemas separados**: todo es
+  **negosiumax**. Comerc y Servic son referencia histórica. La copia de Eco a la VPS **ya se hizo como prueba**
+  (7.328 filas en `siumax`); la pasada oficial y la Fase 4 (PDF/fotos) siguen esperando su OK. El **500 de Eco de hoy**
+  (clave vieja en Vercel) ya está resuelto. No volver a preguntar ni decir que está desactualizado.
+- **Última actualización anterior:** 17/11/2026 (162), Claude: migración Eco → Nego. **Fase 3 hecha** (7.328 filas cargadas y comprobadas en `siumax`; detalle en `migracion-eco/reporte-carga.md`). **Fase 4 DECIDIDA pero NO empezada** a pedido del dueño: copiar **solo los archivos de compras** (33 PDF + 1 foto) al VPS, comprimir las fotos, y agregar en el detalle de Compra la opción de ver/adjuntar el PDF y las fotos. **Espera el "empieza" del dueño.**
 - (161) 17/11/2026, Claude: migración Eco → Nego, **Fase 3 hecha** (carga de prueba en la base `siumax`): **7.328 filas** cargadas y comprobadas (493 clientes, 519 productos, 603 lotes, 374 salidas con 2.745 ítems, 1.680 movimientos, 53 herramientas, 28 préstamos, 63 cotizaciones, 8 usuarios). Se puede deshacer con `ai-scripts/migrar-eco.cjs`.
 - (160) 17/11/2026, Claude: migración Eco → Nego, **Fase 2 hecha** (comparación y mapeo, solo análisis): Eco 24 tablas → Nego 55; cuadro completo y 7 preguntas para el dueño en `docs/MIGRACION-ECO-A-NEGO.md`. Volumen real a migrar: ~6.000 registros.
 - (159) 16/11/2026, Claude: migración Eco-Sistemas → Nego, **Fase 1 hecha** (inventario y respaldo, solo lectura): 24 tablas, 22.985 filas, respaldo de 28 MB verificado con 0 diferencias. Detalle: `docs/MIGRACION-ECO-A-NEGO.md`.

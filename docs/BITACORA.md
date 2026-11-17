@@ -7,6 +7,26 @@
 
 ---
 
+## 17/11/2026 (163) · OpenCode (Big Pickle) — Memoria principal con el cambio de plan a negosiumax (solo memoria)
+- **Dueño:** *"ya me canse que siempre revisen eso y que me digan que está desactualizado … ahora todo el sistema será
+  uno solo que es negosiumax"*. Pidió actualizar Servic y Comerc y **juntar todo en la memoria principal**.
+- **Hecho (solo memoria; no se tocó código, servidor ni producción):**
+  - `D:/Programación/siumax/CLAUDE.md` es la **memoria principal**: cambio de plan a **negosiumax**, copia de Eco a la
+    VPS hecha como prueba (7.328 filas en `siumax`), pasada oficial y Fase 4 pendientes de su OK, y 500 de Eco
+    resuelto hoy.
+  - Comerc y Servic quedan marcadas como **referencia histórica**; `docs/MIGRACION-ECO-A-NEGO.md` sigue siendo el
+    documento canónico de la migración.
+  - Se agregó una nota en `D:/Programación/siumax/TIPOS-DE-NEGOCIO.md` para que la visión vieja ("un sistema por
+    tipo") no se lea como vigente.
+  - **500 de Eco-Sistema (Vercel):** era la clave desactualizada en `SUPABASE_DATABASE_URL`; el dueño actualizó el
+    Value e hizo Redeploy; confirmó *"LISTO YA FUNCIONA"*. Registrado en `D:/Programación/eco-sistema/docs/`
+    (commit `e666369`, sin push).
+- **Quedó a medias:** nada de código ni deploy. Siguen pendientes la pasada oficial y la Fase 4 (33 PDF + 1 foto).
+- **Sigue:** esperar el OK del dueño. No escribir claves ni cadenas de conexión en la memoria. Commits **solo de los
+  archivos de memoria** editados (hay cambios de código ajenos sin commitear en este repo): **sin push**.
+
+---
+
 ## 17/11/2026 (162) · Claude — Migración Eco → Nego: Fase 4 DECIDIDA y NO empezada (a pedido del dueño)
 
 - **Dueño respondió** las 3 preguntas de la Fase 4 (archivos): (1) guardarlos **en nuestro VPS**; (2) copiar

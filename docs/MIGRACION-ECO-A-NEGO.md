@@ -5,6 +5,11 @@
 > Cada paso se anota aquí y en la bitácora. **Nunca** se escribe en el Supabase de Eco (lo usan en vivo) y **nada**
 > se pasa a producción sin el aviso del dueño en ese momento.
 
+> ⭐ **MEMORIA PRINCIPAL (17/11/2026): el dueño decidió que todo será un solo sistema, SiuMax Nego (`negosiumax`).**
+> Comerc y Servic son **referencia histórica**; la fuente de verdad es `D:/Programación/siumax/CLAUDE.md`. Esta
+> migración ya se hizo como **prueba** (7.328 filas en `siumax`); la pasada oficial y la Fase 4 esperan el OK del dueño.
+> El 500 de Eco en Vercel (clave vieja en `SUPABASE_DATABASE_URL`) ya está resuelto. No digan que está desactualizado.
+
 ## Datos de trabajo (privados, NO se suben a git)
 
 | Qué | Dónde |
