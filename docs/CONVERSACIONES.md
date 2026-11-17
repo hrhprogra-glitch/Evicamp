@@ -27,7 +27,7 @@
 - **Regla que nació aquí (19/10):** se subió algo sin volver a preguntar y el dueño pidió **"siempre espera a que te avise para subir"**.
 
 ## 21/10/2026: SiuMax Comerc y el plan de fases
-- **Carpeta:** el proyecto se movió a `D:\Programación\siumax\comercio`.
+- **Carpeta:** el proyecto se movió a `D:\Programación\siumax\negocios\comercio`.
 - **Nombre:** el sistema pasa a llamarse **SiuMax Comerc**. El dueño probó "Siumaxcomer" y "comers"; se desaconsejaron porque se leen como "comer".
 - **Visión:**
   - **un sistema separado por cada familia de negocio** (7 familias: Comercio, Restaurantes, Talleres, Citas, Membresías, Alquileres, Hospedaje);
@@ -907,3 +907,12 @@
 - Calendario que atrapaba el selector y carga lenta en Evicamp: arreglado en nego (bitácora 156). Para Evicamp se le pidió el OK para la compresión y para subir el sistema.
 - "si" → compresión activada en Evicamp (bitácora 157). La subida del sistema nuevo a Evicamp espera su confirmación.
 - 14/11/2026: pidió ver la foto del producto y letras claras en Nueva salida, como en la Caja; eligió "Lista con foto" → hecho en nego (bitácora 158).
+
+## 16/11/2026
+- *"no ya esta todo eso ahora lo que haremos es algo sencillo es conectarnos al supabase de ecosistemas copiaremos cada tabla de ecosistemas y sus datos haremos prueba pasaremos todos sus datos a negosiumax para ver si ya esta listo para lanzarlo oficial quiero que cada modificación lo guardes todo en nuestra memoria para que sepamos si te borro o algo que sepas cual fue lo ultimo que hicimos"*
+  - **Decidió:** dejar el replanteo del plan (Nego ya está encaminado) y empezar la **migración de datos de Eco-Sistemas
+    (Supabase) a SiuMax Nego**: copiar cada tabla con sus datos, probar y, si calza, pasar todo a Nego para ver si está
+    listo para lanzarlo oficial. Cada paso debe quedar en la memoria.
+  - **Aprobó la Fase 1** (inventario y respaldo, solo lectura). Hecha: 24 tablas, 22.985 filas; respaldo de 28 MB
+    verificado con 0 diferencias. Detalle en `docs/MIGRACION-ECO-A-NEGO.md` y bitácora 159.
+  - **Siguiente:** Fase 2 (comparar y mapear Eco → Nego), esperando su "empieza".

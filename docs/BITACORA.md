@@ -7,6 +7,23 @@
 
 ---
 
+## 16/11/2026 (159) · Claude — Migración Eco-Sistemas → Nego, FASE 1: inventario y respaldo verificados
+- **Dueño:** *"conectarnos al supabase de ecosistemas, copiaremos cada tabla de ecosistemas y sus datos, haremos prueba,
+  pasaremos todos sus datos a Nego siuMax para ver si ya está listo para lanzarlo oficial"*. Aprobó la Fase 1.
+- **Solo lectura.** No se escribió nada en el Supabase de Eco y no se tocó Nego ni Evicamp.
+- **Inventario** (`D:\Programación\siumax\migracion-eco\inventario.mjs`): **24 tablas en `public`**, **22.985 filas**.
+  Reporte: `migracion-eco/reporte-tablas.md`. Las tablas grandes son `sync_outbox` (16.977, técnica), `movimientos_stock`
+  (4.355), `lotes` (589), `productos` (508), `contactos` (228), `ventas` (62), `activos` (54).
+- **Respaldo:** `D:\Programación\siumax\respaldo-ecosistema-2026-11-16.sql` (28 MB; esquema + datos, incluye `auth`,
+  `storage` y `realtime`). Contiene datos sensibles: no se comparte ni se sube a git.
+- **Verificación** (`migracion-eco/verificar-respaldo.mjs`): comparó el respaldo con la base en vivo.
+  **24 de 24 tablas con las mismas filas · 0 diferencias.** Reporte: `migracion-eco/reporte-verificacion.md`.
+- **Dato para la Fase 2:** las 4 tablas de piscinas están vacías; en Eco las piscinas parecen estar en
+  `activos`/`contactos`. `sync_*` es técnica (sincronización), no dato de negocio.
+- **Memoria:** detalle y plan de fases en `docs/MIGRACION-ECO-A-NEGO.md`.
+- **Siguiente:** Fase 2, comparar y mapear cada tabla de Eco con las tablas de Nego (sin cargar nada todavía).
+  Esperando el "empieza" del dueño.
+
 ## 14/11/2026 (158) · Claude — Nueva salida: materiales con foto y letras grandes (como la Caja)
 - **Dueño:** "me gustaría que la imagen del producto se muestre... cómo haríamos que se parezca al de la caja en tema de ver una imagen referencial o ver bien las letras". Eligió "Lista con foto" (en vez de tarjetas como la Caja).
 - `ModalNuevaSalida.tsx`:
@@ -665,7 +682,7 @@
 - **Código:** `siuhub-lib.sh` (TIPO_SISTEMA, host_cliente, certificado/sitio_con_certificado/ssl_de), `instalar-panel.sh`, `limitar-login.sh` y `activar-seguridad.sh` (archivo nginx `comerc`), `migrar-dominio.sh` bloqueado (deshacía el orden), `panel.py`/`index.html`, `cliente.cjs` (acción `ordenar-links`), `destinos.cjs` (`comerc` = alias de `siumax`), `escritorio/main.js` y `configurar.html` (sufijo `.comerc.siumax…`, **llega con el próximo instalador**), Tienda Web (link por defecto) y 68 pruebas apuntan a `comerc.siumax`.
 - **Verificado:** las 7 revisiones del script (Comerc abre y su API pide sesión 401, Servic, Panel, actualizaciones, Evicamp 200, EviDiary 200); desde la PC: `panel.siumax` ya no responde; Edge con teclado: login en comerc.siumax, Inventario con sus productos, panel pide su contraseña y muestra "Mis sitios"; 0 errores. **Evicamp, su base y su API no se tocaron; ninguna API se reinició** (solo recarga de nginx y reinicio del panel).
 - **El dueño debe saber:** iniciar sesión de nuevo en `comerc.siumax.duckdns.org`; si su app de PC de pruebas apuntaba a `siumax.duckdns.org`, ahora abre el panel (cambiarle el link). En Mercado Pago no hace falta cambiar nada (revisar Webhooks solo si alguna vez se configuró a mano).
-- **Sigue:** Fase 0 de SiuMax Servic en `D:/Programación/siumax/servicios` (con propuesta y OK). Pendientes de antes sin cambios: subir 118–126 con aviso; instalador nuevo de la app de PC (ahora también para el sufijo `.comerc.siumax`).
+- **Sigue:** Fase 0 de SiuMax Servic en `D:/Programación/siumax/negocios/servicios` (con propuesta y OK). Pendientes de antes sin cambios: subir 118–126 con aviso; instalador nuevo de la app de PC (ahora también para el sufijo `.comerc.siumax`).
 
 ---
 

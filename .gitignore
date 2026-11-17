@@ -27,3 +27,6 @@ dist-ssr
 # Credenciales del VPS (nunca subir a GitHub)
 .env.vps
 dist-siuhub
+
+# Carpetas viejas de worktrees (quedaron dentro del repo al mover la carpeta): no se suben
+.worktrees/
