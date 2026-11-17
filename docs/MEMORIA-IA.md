@@ -424,7 +424,10 @@ Conteos, Finanzas (caja actual), Ver historial, Utilidades y Ajustes. **Falta:**
   filtros en `grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full xl:w-auto`, cada select/fecha con
   `filtro-sobrio w-full sm:w-auto` y al final el botón `limpiar-sobrio` con `<FilterX size={16}/>`.
 - Paginación arriba Y abajo de la tabla: `paginacion-sobria` + `border-b`/`border-t`, texto `paginacion-sobria__texto`
-  ("Página X de Y") y flechas `paginacion-sobria__boton` con `aria-disabled`. **Sin filas no se dibuja.**
+  ("Página X de Y") y flechas `paginacion-sobria__boton` con `aria-disabled`. **Regla desde el 17/11: se dibuja
+  SIEMPRE**, aunque no haya filas y diga "Página 1 de 1" (el dueño lo aprobó; antes se ocultaba).(componente compartido
+  `src/components/PaginacionSobrio.tsx`: ids `btn-pag-${prefijo}-ant/sig` arriba y `btn-pag-bottom-${prefijo}-ant/sig`
+  abajo; admite ids propios para no romper secciones ya probadas como Salidas y Utilidades).
 - Tabla vacía: `<div className="vacio-sobrio"><Search size={32}/>No se registran … con esos parámetros.</div>`.
 - Margen lateral del contenido: `px-2 sm:px-3` (la tabla usa casi todo el ancho).
 - Las VENTANAS (modales) siguen con su borde 2 y sombra de 8 px: este estilo es para las secciones.
@@ -577,7 +580,8 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 ## 22. Migración Eco → Nego: dónde quedó (17/11/2026)
 
 - **Estado:** Fase 1 (inventario/respaldo), Fase 2 (mapeo) y **Fase 3 (carga de prueba en `siumax`) HECHAS**. Fase 4
-  **decidida pero NO empezada** (el dueño pidió esperar). Fase 5 (veredicto y paso oficial) pendiente.
+  **hecha SOLO EN PRUEBAS el 17/11** (33 PDF + 1 foto en el VPS, botones Ver/Adjuntar, 11/11; ver bitácora 164).
+  Fase 5 (veredicto y paso oficial) pendiente del OK del dueño.
 - **La Fase 3 cargó 7.328 filas** en `siumax` y se comprobó que cuadran. Reporte: `migracion-eco/reporte-carga.md`.
   Documento maestro y decisiones: `docs/MIGRACION-ECO-A-NEGO.md`. Paso a paso: bitácora 159–162.
 - **Herramientas:** `migracion-eco/etl.mjs` (lee Eco y genera el SQL) y `ai-scripts/migrar-eco.cjs` (`dry` = prueba en
@@ -585,8 +589,25 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
   `.env.ecosistema` / `.env.vps` (nunca a git).
 - **Fase 4 (archivos), decidida por el dueño:** guardar **en el VPS**, copiar **solo lo de compras** (33 PDF de factura
   + 1 foto), **comprimir** las fotos, y agregar en el detalle de **Compra** la opción de ver/adjuntar el PDF y las fotos.
-  **No empezar hasta su "empieza".**
+  **Ya hecha en pruebas (164); la pasada oficial sigue esperando su OK.**
 - **Regla que el dueño repite:** guardar **todo** en la memoria (bitácora, plan, conversaciones, memoria-IA) después de
   cada paso, para que si se borra la IA se sepa cuál fue lo último hecho.
+
+## 23. Paginación y teclado: errores que ya aparecieron (17/11/2026, bitácora 168)
+
+- **Dos handlers peleando por el mismo ↓:** al poner paginación en Herramientas/Vehículos, sus filas llevaron
+  `data-row="true"` y `role="button"`, y el listener global de `Inventario/index.tsx` (que recorre TODAS las filas
+  `data-row` de la pantalla) también movía el foco: desde la fila 0 el ↓ caía en la fila 2. **Arreglo:** llamar
+  `e.stopPropagation()` además de `e.preventDefault()` en los `onKeyDown` de las filas de esas dos tablas. Si se crea
+  otra tabla dentro de Inventario con `data-row="true"`, hacer lo mismo.
+- **↑ desde la primera fila:** en Salidas y Compras debe volver a la franja de paginación, no al buscador. En Compras
+  hay que `stopPropagation` en los extremos porque el panel tiene su propia grilla (`moverEnGrilla`).
+- **Franja siempre visible:** el dueño aprobó que se muestre aunque no haya filas ("Página 1 de 1"). Las secciones
+  vacías (Contratos, Taller, Pedidos) también deben mostrarla; no condicionar el render a `datos.length > 0`.
+- **Regresión de Encargos:** el 12/11 se decidió que Pedidos es de Comercio y Cotizaciones de los dos tipos. Si
+  `Encargos/index.tsx` deja `pestanas = ['cotizaciones','pedidos']` fijo, con solo Servicios sale la pestaña Pedidos.
+  Debe calcularse con `useTiposNegocio()`; `CabeceraEncargos` ya oculta las pestañas cuando solo hay una.
+- **Pruebas que miden estilo:** para tablas HTML (Salidas/Utilidades) hay que medir el `th`/`td`, no el `thead`/`tr`,
+  y el borde de la fila está en el `tr`. Para tablas vacías solo se pueden comparar ~5 medidas del marco; no exigir 18.
 
 

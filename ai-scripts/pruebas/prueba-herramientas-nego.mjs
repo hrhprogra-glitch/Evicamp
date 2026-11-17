@@ -57,7 +57,13 @@ try {
   await page.focus('#btn-guardar-herramienta'); await tecla('Enter'); await pausa(1800); await cerrarAviso();
   const fila = await sql(`select nombre, cantidad_total from herramientas where nombre = '${HERR}'`);
   ok('La herramienta se guarda en la base', fila === `${HERR}|3`, fila);
-  ok('Y sale en la tabla', await page.evaluate((t) => document.body.innerText.toUpperCase().includes(t), HERR));
+  // Con 10 filas por página la nueva herramienta cae en otra página: la buscamos con teclado.
+  await page.focus('#buscador-activos'); await page.keyboard.type(HERR); await pausa(1000);
+  ok('Y sale en la tabla (buscada con teclado)', await page.evaluate((t) => document.body.innerText.toUpperCase().includes(t), HERR));
+  // Dejamos el buscador limpio para las pruebas que siguen.
+  await page.focus('#buscador-activos');
+  await page.keyboard.down('Control'); await page.keyboard.press('a'); await page.keyboard.up('Control');
+  await page.keyboard.press('Backspace'); await pausa(500);
 
   // Historial de préstamos
   await page.focus('#btn-historial-prestamos'); await tecla('Enter'); await pausa(900);

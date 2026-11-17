@@ -7,6 +7,29 @@
 
 ---
 
+## 17/11/2026 (168) · OpenCode (Big Pickle) — Paginación siempre visible y tablas iguales a Inventario en las 6 secciones; arreglos de teclado
+- **Dueño:** aprobó el plan con *"Sí, empieza"*. Regla nueva: la franja de paginación se muestra **siempre**, aunque
+  diga "Página 1 de 1". No volver a preguntar por el estilo ni por ese plan.
+- **Hecho:** se creó `src/components/PaginacionSobrio.tsx` (franja siempre visible, ids propios, flechas ← → ↑ ↓ y
+  Enter) y se puso paginación en Herramientas, Vehículos, Compras, Contratos, Taller, Utilidades y Pedidos. Salidas,
+  Contratos, Taller y Utilidades se restilizaron con el molde exacto de Inventario > Productos (marco 1 px, cabecera
+  oscura, padding 16 px, filas de 79 px). Pedidos conserva `tab-encargos-pedidos`, `buscador-pedidos` y sus ids; ahora
+  tiene `tabla-pedidos-clientes` y paginación arriba y abajo. Utilidades conserva sus ids `btn-pag-*-utilidades`.
+- **Arreglos de teclado:** ↑ desde la primera fila vuelve a la paginación en Salidas y Compras; se agregó
+  `stopPropagation` en las filas de Herramientas y Vehículos porque el listener global de `Inventario/index.tsx`
+  también movía el foco con ↓ y saltaba de dos en dos. Encargos con **solo Servicios** ya no muestra la pestaña
+  Pedidos (regresión: Pedidos es de Comercio; el dueño lo había decidido el 12/11).
+- **Pruebas (teclado y sin internet):** paginación y estilo **29/29** (18 medidas idénticas en Salidas y Utilidades,
+  5 en Contratos y Taller por estar vacíos), Herramientas **13/13**, Coca Cola **17/17**, sidebar **9/9**, Fase 4
+  **11/11**, comparación de tablas **50/50**, Encargos **28/28**.
+- **Base limpia:** 36 compras | 34 archivos | 0 compras de prueba | 0 herramientas de prueba | 0 pedidos ni
+  cotizaciones de prueba. Se borró 1 cotización de prueba antigua (id 20, "PRUEBA AUTO CLIENTE EDIT", con respaldo
+  previo en la carpeta temporal). Tipo de negocio restaurado a `{comercio}`.
+- Compilado con 0 errores, `graphify update .` y desplegado **solo** con `node ai-scripts/deploy.cjs siumax`
+  (21 archivos). Sin Evicamp, sin push, sin pasada oficial ni Fase 5.
+
+---
+
 ## 17/11/2026 (167) · OpenCode (Big Pickle) — Tablas de Herramientas y Vehículos IGUALES a Inventario; se quitaron los cuadros de vehículos
 - **Dueño:** *"encontre otro error estetico en herramientos y vehiculos en vehiculos sale Flota de vehículos 1 unidades 1
   operativos Alertas SOAT 0 por vencer / vencidos ... Alertas Rev. Técnica 0 por vencer / vencidos"*; luego *"como tambien

@@ -20,6 +20,7 @@ import { usePermiso, useEmpleado, avisarSinPermiso } from '../../../utils/permis
 import { avisar, confirmar } from '../../../utils/dialogos';
 import { coincideBusqueda } from '../../../utils/busqueda';
 import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
+import { PaginacionSobrio } from '../../../components/PaginacionSobrio';
 import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import type { Product } from '../types';
 import { esDecimal, unidadDe as unidadDeProducto } from '../../../utils/unidades';
@@ -354,6 +355,8 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   // "Todas" de entrada (pedido del dueño, 13/11/2026)
   const [filtro, setFiltro] = useState<'PENDIENTE' | 'RECIBIDO' | 'TODAS'>('TODAS');
   const [busqueda, setBusqueda] = useState('');
+  // Paginación de la lista (franja siempre visible, como Inventario).
+  const [pagCompras, setPagCompras] = useState(1);
   const [editando, setEditando] = useState<Compra | 'nueva' | null>(null);
   const [recibiendo, setRecibiendo] = useState<Compra | null>(null);
   const [viendo, setViendo] = useState<Compra | null>(null); // detalle abierto (Enter sobre una lista)
@@ -415,6 +418,11 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   // Buscador: número de pedido, proveedor, quién la hizo o recibió, factura, fecha o un producto de la lista
   const visibles = compras.filter((c) => (filtro === 'TODAS' || c.estado === filtro) && coincideBusqueda(
     [`#${String(c.id).slice(-6)}`, c.proveedor, c.autor, c.recibido_por, c.documento, c.notas, fecha(c.created_at), ...c.compras_detalle.map((d) => d.product_name)], busqueda));
+  const COMPRAS_POR_PAGINA = 10;
+  const totalPagCompras = Math.max(1, Math.ceil(visibles.length / COMPRAS_POR_PAGINA));
+  const visiblesPaginados = visibles.slice((pagCompras - 1) * COMPRAS_POR_PAGINA, pagCompras * COMPRAS_POR_PAGINA);
+  useEffect(() => { setPagCompras(1); }, [filtro, busqueda]);
+
   const stockBajo = productos.filter((p) => p.unit !== 'CONSUMO' && Number(p.quantity) <= Number(p.minStock));
 
   const unidadPorId = useMemo(() => new Map(productos.map((p) => [String(p.id), unidadDe(p)])), [productos]);
@@ -588,16 +596,28 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
       {/* Listas en tabla; Enter abre el detalle */}
       {cargando ? (
         <div className="p-6 text-center text-xs font-black uppercase text-[var(--color-muted)]"><Loader2 className="inline animate-spin" size={16} /> Cargando...</div>
-      ) : visibles.length === 0 ? (
-        <div className="p-6 bg-white border-2 border-dashed border-[var(--color-border)] text-center text-xs font-black uppercase text-[var(--color-muted)]">
-          {busqueda ? `Ninguna lista coincide con "${busqueda}"${filtro !== 'TODAS' ? ` en ${nombreFiltro.toLowerCase()}` : ''}.`
-            : filtro === 'PENDIENTE' ? (soloRecibe ? 'No hay pedidos por recibir.' : 'No hay pedidos pendientes. Crea una lista con "Nueva lista".') : 'No hay listas aquí.'}
-        </div>
       ) : (
-        // Tabla (mismo estilo que Lotes): una fila por lista; ↑ ↓ para moverse, Enter abre el detalle
-        <div className="w-full overflow-x-auto custom-scrollbar tabla-marco">
-          <div className="min-w-[900px]">
-            <div className="tabla-cabecera grid grid-cols-12 gap-3 p-4">
+        <div className="tabla-marco flex flex-col">
+          <PaginacionSobrio
+            pagina={pagCompras}
+            totalPaginas={totalPagCompras}
+            onCambiar={setPagCompras}
+            prefijo="compras"
+            posicion="top"
+            selectorFilas="#tabla-compras [data-compra]"
+            idBuscador="buscador-compras"
+          />
+          <div className="w-full overflow-x-auto custom-scrollbar">
+            <div id="tabla-compras" className="min-w-[900px]">
+              {visibles.length === 0 ? (
+                <div className="vacio-sobrio">
+                  <Search size={32} />
+                  {busqueda ? `Ninguna lista coincide con "${busqueda}"${filtro !== 'TODAS' ? ` en ${nombreFiltro.toLowerCase()}` : ''}.`
+                    : filtro === 'PENDIENTE' ? (soloRecibe ? 'No hay pedidos por recibir.' : 'No hay pedidos pendientes. Crea una lista con "Nueva lista".') : 'No hay listas aquí.'}
+                </div>
+              ) : (
+                <>
+                  <div className="tabla-cabecera grid grid-cols-12 gap-3 p-4">
               <div className="col-span-2">Fecha / Pedido</div>
               <div className="col-span-3">Proveedor</div>
               <div className="col-span-1 text-center">Productos</div>
@@ -605,7 +625,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
               <div className="col-span-3">Recibido por / Factura</div>
               <div className="col-span-1 text-center">Estado</div>
             </div>
-            {visibles.map((c, n) => {
+            {visiblesPaginados.map((c, n) => {
               const recibida = c.estado === 'RECIBIDO';
               const colorEstado = c.estado === 'PENDIENTE' ? 'border-[var(--color-warning)] text-[var(--color-warning-dark)] bg-[var(--color-warning-bg)]'
                 : recibida ? 'border-[var(--color-success)] text-[var(--color-success)] bg-[var(--color-accent-bg)]'
@@ -615,7 +635,20 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
                 <div key={c.id} data-compra={c.id} role="button" tabIndex={0} data-nav={`${n + 1},0`}
                   aria-label={`Pedido ${String(c.id).slice(-6)} de ${c.proveedor || 'sin proveedor'}, ${c.estado}. Enter para ver el detalle`}
                   onClick={() => setViendo(c)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setViendo(c); } }}
+                  onKeyDown={(e) => {
+                    // En los extremos, las flechas llevan a la franja de paginación (no al buscador).
+                    if (e.key === 'ArrowUp' && n === 0) {
+                      e.preventDefault(); e.stopPropagation();
+                      document.getElementById('btn-pag-compras-sig')?.focus();
+                      return;
+                    }
+                    if (e.key === 'ArrowDown' && n === visiblesPaginados.length - 1) {
+                      e.preventDefault(); e.stopPropagation();
+                      document.getElementById('btn-pag-bottom-compras-ant')?.focus();
+                      return;
+                    }
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setViendo(c); }
+                  }}
                   className="grid grid-cols-12 gap-3 items-start px-4 py-3 border-b border-[var(--color-border)] text-sm cursor-pointer hover:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] focus:bg-[var(--color-accent-bg)]">
                   <div className="col-span-2">
                     <p className="font-black text-[var(--color-ink)]">{fecha(c.created_at)}</p>
@@ -638,7 +671,19 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
                 </div>
               );
             })}
+                </>
+              )}
+            </div>
           </div>
+          <PaginacionSobrio
+            pagina={pagCompras}
+            totalPaginas={totalPagCompras}
+            onCambiar={setPagCompras}
+            prefijo="compras"
+            posicion="bottom"
+            selectorFilas="#tabla-compras [data-compra]"
+            idBuscador="buscador-compras"
+          />
         </div>
       )}
 

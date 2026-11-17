@@ -7,6 +7,12 @@
 > Última actualización: 17/11/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
+- **17/11/2026 (168) — Paginación siempre visible y tablas iguales a Inventario:** nueva franja compartida
+  (`PaginacionSobrio.tsx`) en Herramientas, Vehículos, Compras, Contratos, Taller, Utilidades y Pedidos; se muestra
+  aunque diga "Página 1 de 1". Salidas, Contratos, Taller y Utilidades se restilizaron al molde de Inventario.
+  Arreglado el teclado (↑ a la paginación, salto doble en Herramientas/Vehículos) y la regresión de Encargos: con solo
+  Servicios ya no sale la pestaña Pedidos. Pruebas: **29/29, 13/13, 17/17, 9/9, 11/11, 50/50 y 28/28**. Base limpia
+  (36|34, 0 de prueba) y tipo `{comercio}`. Solo en Nego.
 - **17/11/2026 (167) — Tablas de Herramientas y Vehículos idénticas a Inventario:** mismo marco, cabecera oscura,
   columnas en 12, padding y **alto de fila de 79 px**; se quitaron los cuadros de "Flota de vehículos / Alertas SOAT /
   Alertas Rev. Técnica" (el dueño cambió de opinión: *"cambie de opinion los cuadros si borralos"*). Medido 50/50
@@ -115,6 +121,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Paginación siempre visible y tablas iguales a Inventario en 6 secciones** (franja aunque sea "Página 1 de 1"; Salidas, Contratos, Taller, Utilidades y Pedidos al molde) | **Aprobada con "Sí, empieza" y hecha solo en Nego (168): 29/29 de paginación/estilo, 13/13, 17/17, 9/9, 11/11, 50/50 y 28/28. Sin Evicamp, sin push, sin pasada oficial ni Fase 5** |
 | **Tablas de Herramientas y Vehículos iguales a Inventario** (estilo y tamaño; sin cuadros de resumen en Vehículos) | **Hecha y probada solo en Nego (167): 50/50 medidas idénticas, 13/13 con teclado y sin internet. No toca Evicamp** |
 | **Corrección: producto borrado en Nueva salida** (Coca Cola desactivado seguía saliendo; quitar un material lo devolvía al reabrir) | **Hecha y probada solo en Nego (166), 17/17 con teclado y sin internet. No toca Evicamp** |
 | **Corrección: selector del sidebar** (al abrir el menú va a la sesión abierta, no al primer botón) | **Hecha y probada solo en Nego (165), 9/9 con teclado y sin internet. No toca Evicamp** |

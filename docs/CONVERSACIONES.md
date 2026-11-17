@@ -1016,3 +1016,18 @@
   padding y mismo alto de fila). Se midieron 50/50 características idénticas con Puppeteer.
 - Pruebas con teclado y sin internet: tablas **13/13**, salida **17/17**, sidebar **9/9**, Fase 4 **11/11**; base limpia.
   Solo en Nego, sin Evicamp, sin push, sin pasada oficial ni Fase 5.
+
+
+## 17/11/2026 (paginación y estilo en 6 secciones)
+- El plan se presentó y el dueño dijo **"Sí, empieza"**. No volver a preguntar por el estilo ni por ese plan.
+- **Regla nueva que aprobó:** la franja de paginación se muestra **siempre**, aunque no haya datos suficientes y diga
+  "Página 1 de 1". Antes se ocultaba cuando no había filas.
+- Se puso paginación en Herramientas, Vehículos, Compras, Contratos, Taller, Utilidades y Pedidos; y se igualaron al
+  molde de Inventario > Productos las tablas de Salidas, Contratos, Taller y Utilidades (mismo marco, cabecera, padding
+  y alto de fila de 79 px). Pedidos quedó con su id `tabla-pedidos-clientes` y sus ids de siempre.
+- Al probar aparecieron tres fallos que se arreglaron: el ↓ saltaba de dos en Herramientas/Vehículos (el listener global
+  de Inventario peleaba con el de la fila), la ↑ de Salidas no volvía a la paginación, y con solo Servicios seguía
+  saliendo la pestaña Pedidos en Encargos (es de Comercio, decisión del 12/11).
+- Pruebas con teclado y sin internet: paginación/estilo **29/29**, Herramientas **13/13**, Coca Cola **17/17**,
+  sidebar **9/9**, Fase 4 **11/11**, tablas **50/50** y Encargos **28/28**. Base limpia y tipo `{comercio}`.
+- Sigue igual: solo Nego, sin Evicamp, sin push, sin pasada oficial ni Fase 5 sin aviso del dueño.

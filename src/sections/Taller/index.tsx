@@ -22,6 +22,8 @@ export const Taller: React.FC = () => {
 
   const [filtroEstado, setFiltroEstado] = useState<string>('TODOS');
   const [busqueda, setBusqueda] = useState<string>('');
+  // Paginación de la lista del taller (franja siempre visible).
+  const [pagTaller, setPagTaller] = useState(1);
   const [cargando, setCargando] = useState<boolean>(true);
 
   // Modales
@@ -153,6 +155,11 @@ export const Taller: React.FC = () => {
     });
   }, [ordenes, filtroEstado, busqueda]);
 
+  const TALLER_POR_PAGINA = 10;
+  const totalPagTaller = Math.max(1, Math.ceil(ordenesFiltradas.length / TALLER_POR_PAGINA));
+  const ordenesPaginadas = ordenesFiltradas.slice((pagTaller - 1) * TALLER_POR_PAGINA, pagTaller * TALLER_POR_PAGINA);
+  useEffect(() => { setPagTaller(1); }, [busqueda, filtroEstado]);
+
   return (
     <div className="flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono relative">
       {/* Cabecera, KPIs y Filtros */}
@@ -168,7 +175,10 @@ export const Taller: React.FC = () => {
       <div className="px-3 sm:px-4 lg:px-6 flex flex-col gap-4">
         {/* Tabla de órdenes */}
         <TablaTaller
-          ordenes={ordenesFiltradas}
+          ordenes={ordenesPaginadas}
+          pagina={pagTaller}
+          totalPaginas={totalPagTaller}
+          onCambiarPagina={setPagTaller}
           onSeleccionarOrden={(orden) => setOrdenDetalleId(orden.id)}
         />
       </div>

@@ -262,7 +262,6 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
   }, [productoSeleccionado, datosPaginados]);
 
   const focusPaginacionUtilidades = () => {
-    if (datosFiltrados.length === 0) return;
     const btnPrev = document.getElementById('btn-pag-prev-utilidades');
     const btnNext = document.getElementById('btn-pag-next-utilidades');
     if (btnPrev && btnPrev.getAttribute('aria-disabled') !== 'true') {
@@ -631,8 +630,8 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
 
       {/* MARCO DE LA TABLA */}
       <div className="tabla-marco flex flex-col">
-        {/* PAGINACIÓN SUPERIOR: sólo se muestra si hay registros */}
-        {datosFiltrados.length > 0 && paginacion('top')}
+        {/* PAGINACIÓN SUPERIOR: siempre visible, aunque sea "Página 1 de 1" */}
+        {paginacion('top')}
 
         {/* TABLA PRINCIPAL O ESTADO VACÍO */}
         {datosFiltrados.length === 0 ? (
@@ -645,14 +644,14 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
             <table id="tabla-analisis-productos" className="w-full text-left border-collapse md:min-w-[1000px]">
               <thead className="tabla-cabecera sticky top-0 z-10">
                 <tr>
-                  <th className="p-3 md:p-4">Producto / Ref</th>
+                  <th className="p-4">Producto / Ref</th>
                   <th className="hidden md:table-cell p-4 text-center">Stock Actual</th>
-                  <th className="p-2 md:p-4 text-center">U. Vendidas</th>
+                  <th className="p-4 text-center">U. Vendidas</th>
                   <th className="hidden md:table-cell p-4 text-right">Ingreso Cobrado</th>
                   <th className="hidden md:table-cell p-4 text-right">Costo Ventas</th>
                   <th className="hidden md:table-cell p-4 text-right">Mermas</th>
-                  <th className="p-2 md:p-4 text-right">Utilidad</th>
-                  <th className="p-2 md:p-4 text-center md:w-24">Margen</th>
+                  <th className="p-4 text-right">Utilidad</th>
+                  <th className="p-4 text-center md:w-24">Margen</th>
                 </tr>
               </thead>
               <tbody className="bg-[var(--color-surface)]">
@@ -662,10 +661,10 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                     data-row="true"
                     data-prod-id={prod.id}
                     {...clicConTeclado(() => abrirModalProducto(prod))}
-                    className="tabla-fila cursor-pointer group"
+                    className="tabla-fila h-[79px] cursor-pointer group"
                     title="Ver ventas de este producto (Enter o Clic)"
                   >
-                    <td className="p-2 md:p-3">
+                    <td className="p-4">
                       <p className="text-xs font-black text-[var(--color-ink)] uppercase mb-1">{prod.nombre}</p>
                       <div className="flex flex-wrap gap-1 md:gap-2">
                         <span className="text-[12px] font-black text-[var(--color-muted)] border border-[var(--color-border)] bg-[var(--color-bg-2)] px-2 py-0.5 rounded-none uppercase tracking-widest">{prod.categoria}</span>
@@ -680,43 +679,43 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
                       </div>
                     </td>
 
-                    <td className="hidden md:table-cell p-3 text-center">
+                    <td className="hidden md:table-cell p-4 text-center">
                       <span className="font-mono text-xs font-black text-[var(--color-ink)]">
                         {prod.stockActual} {prod.tipoControl}
                       </span>
                     </td>
 
-                    <td className="p-2 md:p-3 text-center">
+                    <td className="p-4 text-center">
                       <span className="font-mono text-xs font-black text-[var(--color-ink)]">
                         {prod.unidadesVendidas} {prod.tipoControl}
                       </span>
                     </td>
 
-                    <td className="hidden md:table-cell p-3 text-right">
+                    <td className="hidden md:table-cell p-4 text-right">
                       <span className="font-mono text-xs font-black text-[var(--color-ink)]">
                         S/ {formatearMonto(prod.ingresosTotales)}
                       </span>
                     </td>
 
-                    <td className="hidden md:table-cell p-3 text-right">
+                    <td className="hidden md:table-cell p-4 text-right">
                       <span className="font-mono text-xs font-black text-[var(--color-ink)]">
                         S/ {formatearMonto(prod.costoTotalVentas)}
                       </span>
                     </td>
 
-                    <td className="hidden md:table-cell p-3 text-right">
+                    <td className="hidden md:table-cell p-4 text-right">
                       <span className="font-mono text-xs font-black text-[var(--color-danger)]">
                         S/ {formatearMonto(prod.perdidaMerma)}
                       </span>
                     </td>
 
-                    <td className="p-2 md:p-3 text-right">
+                    <td className="p-4 text-right">
                       <span className={`font-mono text-xs font-black ${prod.utilidadReal >= 0 ? 'text-[var(--color-accent-shadow)]' : 'text-[var(--color-danger)]'}`}>
                         S/ {formatearMonto(prod.utilidadReal)}
                       </span>
                     </td>
 
-                    <td className="p-2 md:p-3 text-center">
+                    <td className="p-4 text-center">
                       <span className={`inline-block font-mono text-xs font-black px-2 py-0.5 border rounded-none ${
                         prod.margen >= 30 ? 'border-[var(--color-accent-shadow)] text-[var(--color-accent-shadow)] bg-[var(--color-accent-bg)]' :
                         prod.margen > 0 ? 'border-[var(--color-border)] text-[var(--color-ink)]' :
@@ -732,8 +731,8 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
           </div>
         )}
 
-        {/* PAGINACIÓN INFERIOR: sólo se muestra si hay registros */}
-        {datosFiltrados.length > 0 && paginacion('bottom')}
+        {/* PAGINACIÓN INFERIOR: siempre visible, aunque sea "Página 1 de 1" */}
+        {paginacion('bottom')}
       </div>
 
       {productoSeleccionado && (

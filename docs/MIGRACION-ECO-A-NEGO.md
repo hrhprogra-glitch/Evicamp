@@ -21,6 +21,14 @@
 
 **Estado:** Fase 1 ✅ (16/11) · Fase 2 ✅ (17/11) · Fase 3 ✅ cargada y comprobada (17/11) · Fase 4 ✅ **hecha SOLO EN PRUEBAS** (17/11, 11/11 con teclado y sin internet) · Fase 5 ⏸ pendiente del dueño.
 
+- **17/11/2026 (168), ya con los datos migrados:** la paginación se muestra **siempre**, aunque diga "Página 1 de 1"
+  (regla aprobada por el dueño), en Herramientas, Vehículos, Compras, Contratos, Taller, Utilidades y Pedidos; se creó
+  el componente compartido `PaginacionSobrio.tsx`. Salidas, Contratos, Taller y Utilidades se dejaron al molde exacto
+  de Inventario > Productos. Se arregló el teclado (↓ doble en Herramientas/Vehículos, ↑ a la paginación) y una
+  regresión: con solo Servicios, Encargos ya no muestra la pestaña Pedidos (es de Comercio). Pruebas con teclado y sin
+  internet: **29/29, 13/13, 17/17, 9/9, 11/11, 50/50 y 28/28**. No se cambió ningún dato migrado: la base quedó limpia
+  (36 compras, 34 archivos, 0 de prueba) y el tipo de negocio en `{comercio}`. Solo en Nego, sin pasada oficial.
+
 - **17/11/2026 (167), ya con los datos migrados:** las tablas de Herramientas y Vehículos (traídas de Eco en la Fase 3)
    se dejaron **idénticas a Inventario > Productos** en estilo y tamaño (50/50 medidas comprobadas, filas de 79 px) y se
    quitaron los cuadros de resumen de Vehículos, que el dueño pidió borrar tras cambiar de opinión. Probado con teclado

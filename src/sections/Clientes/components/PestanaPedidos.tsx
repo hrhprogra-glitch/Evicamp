@@ -6,8 +6,13 @@ import { traerTodo } from '../../../utils/traerTodo';
 import { coincideBusqueda } from '../../../utils/busqueda';
 import { useEmpleado } from '../../../utils/permisos';
 import { formatearMonto } from '../../../utils/formato';
+import { PaginacionSobrio } from '../../../components/PaginacionSobrio';
 
-export const PestanaPedidos: React.FC = () => {
+interface PestanaPedidosProps {
+  reloadTrigger?: number;
+}
+
+export const PestanaPedidos: React.FC<PestanaPedidosProps> = ({ reloadTrigger }) => {
   const empleado = useEmpleado();
   const [pedidos, setPedidos] = useState<PedidoCliente[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +25,8 @@ export const PestanaPedidos: React.FC = () => {
   const [metodoCobroSaldo, setMetodoCobroSaldo] = useState<'EFECTIVO' | 'YAPE' | 'TARJETA'>('EFECTIVO');
   const [procesandoAccion, setProcesandoAccion] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  // Paginación de pedidos/encargos (franja siempre visible, igual a Inventario).
+  const [pagPedidos, setPagPedidos] = useState(1);
 
   const cargarPedidos = async () => {
     setLoading(true);
@@ -61,7 +68,7 @@ export const PestanaPedidos: React.FC = () => {
 
   useEffect(() => {
     cargarPedidos();
-  }, []);
+  }, [reloadTrigger]);
 
   const pedidosFiltrados = useMemo(() => {
     return pedidos.filter((p) => {
@@ -71,8 +78,13 @@ export const PestanaPedidos: React.FC = () => {
     });
   }, [pedidos, search, filtroEstado]);
 
+  const PEDIDOS_POR_PAGINA = 10;
+  const totalPagPedidos = Math.max(1, Math.ceil(pedidosFiltrados.length / PEDIDOS_POR_PAGINA));
+  const pedidosPaginados = pedidosFiltrados.slice((pagPedidos - 1) * PEDIDOS_POR_PAGINA, pagPedidos * PEDIDOS_POR_PAGINA);
+
   useEffect(() => {
     setSelectedIndex(0);
+    setPagPedidos(1);
   }, [search, filtroEstado]);
 
   const cerrarDetallePedido = () => {
@@ -124,8 +136,8 @@ export const PestanaPedidos: React.FC = () => {
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (pedidosFiltrados.length > 0) {
-        const targetIdx = Math.min(selectedIndex, pedidosFiltrados.length - 1);
+      if (pedidosPaginados.length > 0) {
+        const targetIdx = Math.min(selectedIndex, pedidosPaginados.length - 1);
         const row = document.getElementById(`ped-row-${targetIdx}`) || document.getElementById('ped-row-0');
         row?.focus();
         row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -142,8 +154,8 @@ export const PestanaPedidos: React.FC = () => {
       }
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (pedidosFiltrados.length > 0) {
-        const targetIdx = Math.min(selectedIndex, pedidosFiltrados.length - 1);
+      if (pedidosPaginados.length > 0) {
+        const targetIdx = Math.min(selectedIndex, pedidosPaginados.length - 1);
         const row = document.getElementById(`ped-row-${targetIdx}`) || document.getElementById('ped-row-0');
         row?.focus();
         row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -170,8 +182,8 @@ export const PestanaPedidos: React.FC = () => {
       }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (pedidosFiltrados.length > 0) {
-        const targetIdx = Math.min(selectedIndex, pedidosFiltrados.length - 1);
+      if (pedidosPaginados.length > 0) {
+        const targetIdx = Math.min(selectedIndex, pedidosPaginados.length - 1);
         const row = document.getElementById(`ped-row-${targetIdx}`) || document.getElementById('ped-row-0');
         row?.focus();
         row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -188,11 +200,13 @@ export const PestanaPedidos: React.FC = () => {
   const handleRowKeyDown = (e: React.KeyboardEvent, idx: number, ped: PedidoCliente) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (idx < pedidosFiltrados.length - 1) {
+      if (idx < pedidosPaginados.length - 1) {
         setSelectedIndex(idx + 1);
         const next = document.getElementById(`ped-row-${idx + 1}`);
         next?.focus();
         next?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        document.getElementById('btn-pag-bottom-pedidos-clientes-ant')?.focus();
       }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
@@ -202,7 +216,7 @@ export const PestanaPedidos: React.FC = () => {
         prev?.focus();
         prev?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       } else {
-        document.getElementById('buscador-pedidos')?.focus();
+        document.getElementById('btn-pag-pedidos-clientes-sig')?.focus();
       }
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
@@ -223,7 +237,7 @@ export const PestanaPedidos: React.FC = () => {
       document.getElementById(`ped-row-${idx}`)?.focus();
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (idx < pedidosFiltrados.length - 1) {
+      if (idx < pedidosPaginados.length - 1) {
         setSelectedIndex(idx + 1);
         const nextBtn = document.getElementById(`btn-detalle-ped-${idx + 1}`);
         if (nextBtn) {
@@ -231,6 +245,8 @@ export const PestanaPedidos: React.FC = () => {
         } else {
           document.getElementById(`ped-row-${idx + 1}`)?.focus();
         }
+      } else {
+        document.getElementById('btn-pag-bottom-pedidos-clientes-ant')?.focus();
       }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
@@ -243,7 +259,7 @@ export const PestanaPedidos: React.FC = () => {
           document.getElementById(`ped-row-${idx - 1}`)?.focus();
         }
       } else {
-        document.getElementById('buscador-pedidos')?.focus();
+        document.getElementById('btn-pag-pedidos-clientes-sig')?.focus();
       }
     } else if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -787,16 +803,28 @@ export const PestanaPedidos: React.FC = () => {
       </div>
 
       {/* TABLA DE PEDIDOS */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar tabla-marco">
+      <div className="flex-1 overflow-y-auto custom-scrollbar tabla-marco flex flex-col">
         {loading ? (
           <div className="p-12 text-center text-xs font-bold text-[var(--color-muted)] uppercase tracking-widest">
             Cargando pedidos...
           </div>
-        ) : pedidosFiltrados.length === 0 ? (
-          <div className="vacio-sobrio"><Search size={32} />No se registran pedidos con esos parámetros.</div>
         ) : (
-          <div className="divide-y divide-[var(--color-border)]">
-            {pedidosFiltrados.map((ped, idx) => {
+          <>
+            <PaginacionSobrio
+              pagina={pagPedidos}
+              totalPaginas={totalPagPedidos}
+              onCambiar={setPagPedidos}
+              prefijo="pedidos-clientes"
+              posicion="top"
+              selectorFilas="#tabla-pedidos-clientes [data-row='true']"
+              idBuscador="buscador-pedidos"
+              idFocoIzquierda="btn-filtro-ped-TODOS"
+            />
+            <div id="tabla-pedidos-clientes" className="divide-y divide-[var(--color-border)]">
+            {pedidosFiltrados.length === 0 ? (
+              <div className="vacio-sobrio"><Search size={32} />No se registran pedidos con esos parámetros.</div>
+            ) : (
+            pedidosPaginados.map((ped, idx) => {
               const isSelected = selectedIndex === idx;
               const entregaDate = new Date(ped.fecha_entrega);
               const entregaStr = entregaDate.toLocaleDateString();
@@ -898,8 +926,19 @@ export const PestanaPedidos: React.FC = () => {
                   </div>
                 </div>
               );
-            })}
-          </div>
+            })
+            )}
+            </div>
+            <PaginacionSobrio
+              pagina={pagPedidos}
+              totalPaginas={totalPagPedidos}
+              onCambiar={setPagPedidos}
+              prefijo="pedidos-clientes"
+              posicion="bottom"
+              selectorFilas="#tabla-pedidos-clientes [data-row='true']"
+              idBuscador="buscador-pedidos"
+            />
+          </>
         )}
       </div>
 

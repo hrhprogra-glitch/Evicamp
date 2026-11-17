@@ -15,6 +15,8 @@ export const Contratos: React.FC = () => {
   const [pestana, setPestana] = useState<'contratos' | 'visitas' | 'cobros'>('contratos');
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('TODOS');
+  // Paginación de la pestaña Contratos (franja siempre visible).
+  const [pagContratos, setPagContratos] = useState(1);
 
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [visitas, setVisitas] = useState<VisitaContrato[]>([]);
@@ -130,6 +132,11 @@ export const Contratos: React.FC = () => {
     return perMatch || codigoMatch || tituloMatch || clienteMatch;
   });
 
+  const CONTRATOS_POR_PAGINA = 10;
+  const totalPagContratos = Math.max(1, Math.ceil(contratosFiltrados.length / CONTRATOS_POR_PAGINA));
+  const contratosPaginados = contratosFiltrados.slice((pagContratos - 1) * CONTRATOS_POR_PAGINA, pagContratos * CONTRATOS_POR_PAGINA);
+  useEffect(() => { setPagContratos(1); }, [busqueda, filtroEstado]);
+
   // Métricas
   const totalActivos = contratos.filter((c) => c.estado === 'ACTIVO').length;
   const deudaTotal = cobros.reduce((acc, c) => acc + Math.max(0, c.monto - (c.monto_pagado || 0)), 0);
@@ -156,7 +163,10 @@ export const Contratos: React.FC = () => {
           <div className="p-12 text-center text-[var(--color-muted)] text-xs">Cargando contratos...</div>
         ) : pestana === 'contratos' ? (
           <TablaContratos
-            contratos={contratosFiltrados}
+            contratos={contratosPaginados}
+            pagina={pagContratos}
+            totalPaginas={totalPagContratos}
+            onCambiarPagina={setPagContratos}
             onVerDetalle={(c) => setContratoDetalle(c)}
             onEditar={(c) => {
               setContratoEditar(c);

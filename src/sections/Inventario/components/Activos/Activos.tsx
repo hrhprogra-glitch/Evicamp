@@ -17,6 +17,9 @@ export const Activos: React.FC = () => {
   const [subtab, setSubtab] = useState<'HERRAMIENTAS' | 'VEHICULOS'>('HERRAMIENTAS');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  // Paginación (molde Inventario). Siempre se ve, aunque sea "Página 1 de 1".
+  const [paginaHerr, setPaginaHerr] = useState(1);
+  const [paginaVeh, setPaginaVeh] = useState(1);
 
   // Datos
   const [herramientas, setHerramientas] = useState<Herramienta[]>([]);
@@ -47,6 +50,11 @@ export const Activos: React.FC = () => {
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  useEffect(() => {
+    setPaginaHerr(1);
+    setPaginaVeh(1);
+  }, [searchQuery]);
 
   const cargarDatos = async () => {
     setLoading(true);
@@ -97,6 +105,13 @@ export const Activos: React.FC = () => {
       (v.trabajador_asignado_nombre && v.trabajador_asignado_nombre.toLowerCase().includes(q))
     );
   }, [vehiculos, searchQuery]);
+
+  // Paginación de 10 en 10 ( igual que el molde, con franja siempre visible )
+  const POR_PAGINA = 10;
+  const totalPaginasHerr = Math.max(1, Math.ceil(herramientasFiltradas.length / POR_PAGINA));
+  const totalPaginasVeh = Math.max(1, Math.ceil(vehiculosFiltrados.length / POR_PAGINA));
+  const herramientasPaginadas = herramientasFiltradas.slice((paginaHerr - 1) * POR_PAGINA, paginaHerr * POR_PAGINA);
+  const vehiculosPaginados = vehiculosFiltrados.slice((paginaVeh - 1) * POR_PAGINA, paginaVeh * POR_PAGINA);
 
   // Acciones Herramientas
   const handleEliminarHerramienta = async (h: Herramienta) => {
@@ -167,6 +182,16 @@ export const Activos: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              // ↓ baja a la paginación de arriba; desde ahí ↓ sigue a la primera fila.
+              if (e.key === 'ArrowDown') {
+                const id = subtab === 'HERRAMIENTAS' ? 'btn-pag-herramientas-sig' : 'btn-pag-vehiculos-sig';
+                if (document.getElementById(id)) {
+                  e.preventDefault();
+                  document.getElementById(id)?.focus();
+                }
+              }
+            }}
             placeholder={subtab === 'HERRAMIENTAS' ? 'Buscar herramienta por código, nombre o marca...' : 'Buscar vehículo por placa, marca o conductor...'}
             autoComplete="off"
           />
@@ -237,7 +262,10 @@ export const Activos: React.FC = () => {
       {/* CONTENIDO DE TABLA */}
       {subtab === 'HERRAMIENTAS' ? (
         <TablaHerramientas
-          herramientas={herramientasFiltradas}
+          herramientas={herramientasPaginadas}
+          pagina={paginaHerr}
+          totalPaginas={totalPaginasHerr}
+          onCambiarPagina={setPaginaHerr}
           onPrestar={(h) => {
             setHerramientaAPrestar(h);
             setModalPrestarOpen(true);
@@ -255,7 +283,10 @@ export const Activos: React.FC = () => {
         />
       ) : (
         <TablaVehiculos
-          vehiculos={vehiculosFiltrados}
+          vehiculos={vehiculosPaginados}
+          pagina={paginaVeh}
+          totalPaginas={totalPaginasVeh}
+          onCambiarPagina={setPaginaVeh}
           onMantenimiento={(v) => {
             setVehiculoAMant(v);
             setModalMantOpen(true);
