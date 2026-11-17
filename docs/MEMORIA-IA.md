@@ -610,4 +610,21 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - **Pruebas que miden estilo:** para tablas HTML (Salidas/Utilidades) hay que medir el `th`/`td`, no el `thead`/`tr`,
   y el borde de la fila está en el `tr`. Para tablas vacías solo se pueden comparar ~5 medidas del marco; no exigir 18.
 
+## 24. Tipo de negocio: no volver a Comercio y pruebas que restauran (17/11/2026, bitácora 169)
+- **El dueño probaba solo Servicios y veía cómo volvía a Comercio.** Causa: `leerTiposNegocio()` caía a `['comercio']`
+  y `App.tsx` relee cada 60 s y en `visibilitychange`. Además `cargarTiposNegocio()` pisaba la elección si la base
+  devolvía vacío/nulo/inválido. Arreglado con `parsearTiposNegocio` y sin forzar Comercio con valor vacío.
+- **Toda prueba que cambie `tipos_negocio` debe guardar el valor al empezar y devolverlo al terminar**, pase lo que pase.
+  Helper: `ai-scripts/pruebas/lib-tipo-negocio.mjs` (`tipoInicial`, `restaurarTipo`, `tipoActual`). Antes 9 pruebas
+  forzaban Comercio en el `finally` y por eso el dueño veía el cambio solo. No confundir esos `elegir(['comercio'])`
+  del cuerpo de la prueba (sí se necesitan para probar el menú de Comercio) con el del final (se debe quitar).
+- **Secuencias desincronizadas tras una migración:** si al guardar sale `duplicate key ... "_pkey"`, comparar
+  `max(id)` con `last_value` de la secuencia. En `salidas` estaban 374 vs 10; se arregló con `setval` y
+  `lock_timeout`. Es un dato de la base, no un error del código.
+- **Expectativas viejas en pruebas:** tras cambiar Encargos y las secciones de "Pronto" a reales, el menú incluye
+  `encargos`, Finanzas es Alt + 9 (no Alt + 0), Salidas/Taller abren de verdad, y Clientes tiene
+  `CLIENTES,CRÉDITOS` (más `TRABAJADORES` con Servicios). Actualizar la prueba, nunca los ids ni los atajos reales.
+- **Fuera de alcance, pendiente de OK:** contratos genera 0 visitas del mes (y no abre Insumos) y el taller no devuelve
+  el stock al quitar un repuesto. No tocar sin propuesta y OK del dueño.
+
 

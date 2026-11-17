@@ -7,10 +7,12 @@
 // Al final borra lo creado y deja el negocio en solo Comercio.
 // Uso: node ai-scripts/pruebas/prueba-cotizaciones-nego.mjs <carpeta tools con puppeteer-core>
 import { createRequire } from 'node:module'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
+import { tipoInicial, restaurarTipo, tipoActual } from './lib-tipo-negocio.mjs';
 const [tools] = process.argv.slice(2);
 const aqui = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(path.join(tools, 'x.js')); const puppeteer = require('puppeteer-core');
 process.loadEnvFile(path.join(aqui, '..', '..', '.env.vps'));
+const tiposAntes = await tipoInicial(); // 17/11: devolver la elección del dueño al terminar
 const reqP = createRequire(path.join(aqui, '..', '..', 'x.js'));
 const { NodeSSH } = reqP('node-ssh'); const { conexionVps } = reqP('./ai-scripts/vps.cjs');
 const sql = async (q) => { const s = new NodeSSH(); await s.connect(conexionVps); const r = await s.execCommand('runuser -u postgres -- psql -At -F "|" -d siumax', { stdin: q }); s.dispose(); if (r.stderr && /ERROR/.test(r.stderr)) throw new Error(r.stderr); return r.stdout.trim(); };
@@ -155,7 +157,7 @@ try {
   ok('Sin fallas en la prueba', false, e.message);
 } finally {
   ok('Sin errores en la página', errores.length === 0, errores.join(' | '));
-  try { for (let i = 0; i < 3; i++) { await page.keyboard.press('Escape'); await pausa(300); } await aceptar(500); await elegir(['comercio']); } catch { /* */ }
+  try { for (let i = 0; i < 3; i++) { await page.keyboard.press('Escape'); await pausa(300); } await aceptar(500); await restaurarTipo(tiposAntes); ok('Tipo de negocio restaurado a como estaba', (await tipoActual()) === tiposAntes, tiposAntes); } catch { /* */ }
   await nav.close();
   try {
     await sql(`create temp table c as select id, numero, trabajo_id from cotizaciones where cliente_nombre like '${CLI}%' or numero = 'COT-PRUEBA-${sello}';

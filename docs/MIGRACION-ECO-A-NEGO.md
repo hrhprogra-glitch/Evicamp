@@ -21,6 +21,14 @@
 
 **Estado:** Fase 1 ✅ (16/11) · Fase 2 ✅ (17/11) · Fase 3 ✅ cargada y comprobada (17/11) · Fase 4 ✅ **hecha SOLO EN PRUEBAS** (17/11, 11/11 con teclado y sin internet) · Fase 5 ⏸ pendiente del dueño.
 
+- **17/11/2026 (169), ya con los datos migrados:** el dueño está probando **solo Servicios** y pidió que se respete;
+  se arregló `tiposNegocio.ts` para que no vuelva a Comercio con valores vacíos y las 9 pruebas que cambiaban el tipo
+  ahora devuelven la elección inicial en vez de forzar Comercio. Nueva prueba **7/7** (60 s, visibilitychange, sin
+  internet). Se corrigió la secuencia `salidas_id_seq` (estaba en 10, máximo id 374) con `setval` y `lock_timeout`,
+  sin tocar los datos migrados. Tablas de Cotizaciones, Salidas, Compras y Utilidades al molde de Inventario.
+  Pruebas con teclado y sin internet: salidas **16/16**, stock **6/6**, paginación/estilo **29/29** y el resto OK.
+  Base final `{servicios}`. Solo en Nego, sin pasada oficial.
+
 - **17/11/2026 (168), ya con los datos migrados:** la paginación se muestra **siempre**, aunque diga "Página 1 de 1"
   (regla aprobada por el dueño), en Herramientas, Vehículos, Compras, Contratos, Taller, Utilidades y Pedidos; se creó
   el componente compartido `PaginacionSobrio.tsx`. Salidas, Contratos, Taller y Utilidades se dejaron al molde exacto

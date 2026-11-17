@@ -93,9 +93,9 @@ export const TabRentabilidad: React.FC<TabRentabilidadProps> = ({ items, busqued
       )}
 
       {/* Tabla Detallada */}
-      <div className="border border-[var(--color-border)] bg-[var(--color-surface)] overflow-x-auto">
+      <div className="tabla-marco overflow-x-auto">
         {itemsFiltrados.length === 0 ? (
-          <div className="vacio-sobrio p-12">
+          <div className="vacio-sobrio">
             <TrendingUp size={32} />
             <p className="text-xs font-black uppercase tracking-wider text-[var(--color-ink)]">
               No hay registros de rentabilidad en el período seleccionado
@@ -103,27 +103,27 @@ export const TabRentabilidad: React.FC<TabRentabilidadProps> = ({ items, busqued
           </div>
         ) : (
           <>
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[var(--color-ink)] text-white uppercase font-black border-b-2 border-[var(--color-ink)] tracking-widest text-[10px]">
+            <table className="w-full text-left border-collapse">
+              <thead className="tabla-cabecera">
                 <tr>
-                  <th className="py-2.5 px-3">Código</th>
-                  <th className="py-2.5 px-3">Tipo</th>
-                  <th className="py-2.5 px-3">Descripción / Trabajo</th>
-                  <th className="py-2.5 px-3">Cliente</th>
-                  <th className="py-2.5 px-3">Fecha</th>
-                  <th className="py-2.5 px-3 text-right">Ingreso Facturado</th>
-                  <th className="py-2.5 px-3 text-right">Costo Insumos</th>
-                  <th className="py-2.5 px-3 text-right">Utilidad Bruta</th>
-                  <th className="py-2.5 px-3 text-right">Margen</th>
+                  <th className="whitespace-nowrap p-4">Código</th>
+                  <th className="whitespace-nowrap p-4">Tipo</th>
+                  <th className="whitespace-nowrap p-4">Descripción / Trabajo</th>
+                  <th className="whitespace-nowrap p-4">Cliente</th>
+                  <th className="whitespace-nowrap p-4">Fecha</th>
+                  <th className="whitespace-nowrap p-4 text-right">Ingreso Facturado</th>
+                  <th className="whitespace-nowrap p-4 text-right">Costo Insumos</th>
+                  <th className="whitespace-nowrap p-4 text-right">Utilidad Bruta</th>
+                  <th className="whitespace-nowrap p-4 text-right">Margen</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--color-border)]">
+              <tbody className="bg-[var(--color-surface)]">
                 {itemsFiltrados.map((it) => (
-                  <tr key={`${it.tipo}-${it.id}`} data-fila-grafico="true" tabIndex={0} onKeyDown={teclaFila} className="hover:bg-[var(--color-bg)] focus:bg-[var(--color-accent-bg)] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-accent)] transition-colors text-[var(--color-ink)]">
-                    <td className="py-2.5 px-3 font-mono font-black whitespace-nowrap">
+                  <tr key={`${it.tipo}-${it.id}`} data-fila-grafico="true" tabIndex={0} onKeyDown={teclaFila} className="tabla-fila h-[79px] cursor-pointer">
+                    <td className="p-4 font-mono font-black whitespace-nowrap">
                       {it.codigo}
                     </td>
-                    <td className="py-2.5 px-3 whitespace-nowrap">
+                    <td className="p-4 whitespace-nowrap">
                       <span
                         className={`px-2 py-0.5 text-[9px] font-black uppercase border ${
                           it.tipo === 'OBRA'
@@ -138,25 +138,25 @@ export const TabRentabilidad: React.FC<TabRentabilidadProps> = ({ items, busqued
                         {it.tipo}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 font-bold">
+                    <td className="p-4 font-bold">
                       {it.nombre}
                     </td>
-                    <td className="py-2.5 px-3 text-[var(--color-muted)] font-bold">
+                    <td className="p-4 text-[var(--color-muted)] font-bold">
                       {it.cliente}
                     </td>
-                    <td className="py-2.5 px-3 text-[var(--color-muted)] font-mono whitespace-nowrap text-[11px] font-bold">
+                    <td className="p-4 text-[var(--color-muted)] font-mono whitespace-nowrap text-[11px] font-bold">
                       {verFechaLocal(it.fecha)}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-black whitespace-nowrap">
+                    <td className="p-4 text-right font-mono font-black whitespace-nowrap">
                       S/ {it.ingreso.toFixed(2)}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-black text-[var(--color-danger)] whitespace-nowrap">
+                    <td className="p-4 text-right font-mono font-black text-[var(--color-danger)] whitespace-nowrap">
                       S/ {it.costoMateriales.toFixed(2)}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-black text-[var(--color-success)] whitespace-nowrap">
+                    <td className="p-4 text-right font-mono font-black text-[var(--color-success)] whitespace-nowrap">
                       S/ {it.utilidad.toFixed(2)}
                     </td>
-                    <td className="py-2.5 px-3 text-right whitespace-nowrap font-mono font-black text-[var(--color-ink)]">
+                    <td className="p-4 text-right whitespace-nowrap font-mono font-black text-[var(--color-ink)]">
                       {it.margen.toFixed(1)}%
                     </td>
                   </tr>

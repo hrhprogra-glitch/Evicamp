@@ -63,11 +63,11 @@ export const HeaderSalidas: React.FC<HeaderSalidasProps> = ({
   return (
     <div className="flex flex-col gap-4 font-mono">
       {/* CABECERA (como Inventario y Clientes): título, cuadros de conteo y botón a la derecha */}
-      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-wrap justify-between items-center gap-4 shrink-0">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 lg:gap-8 min-w-0 max-w-full">
+      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-3 sm:py-4 flex flex-wrap justify-between items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3 sm:gap-6 min-w-0 max-w-full flex-wrap">
           {/* Título de la Sección */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] rounded-none shrink-0">
+            <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[2px_2px_0_0_var(--color-accent)] rounded-none shrink-0">
               <Truck size={20} className="text-[var(--color-accent)]" />
             </div>
             <h1 className="text-xl lg:text-2xl font-black text-[var(--color-ink)] uppercase tracking-widest whitespace-nowrap">
@@ -75,19 +75,19 @@ export const HeaderSalidas: React.FC<HeaderSalidasProps> = ({
             </h1>
           </div>
 
-          {/* Cuadros de conteo al lado del título */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full md:w-auto">
+          {/* Cuadros de conteo limpios y compactos */}
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             {cuadros.map((q) => (
-              <div key={q.label} className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] px-3 py-1.5 text-center min-w-[90px] lg:min-w-[110px]">
-                <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: q.color }}>{q.label}</p>
-                <p className="text-lg font-black leading-tight" style={{ color: q.color }}>{q.valor}</p>
+              <div key={q.label} className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] px-2.5 py-1 text-center min-w-[75px] sm:min-w-[90px]">
+                <p className="text-[9px] font-black uppercase tracking-wider" style={{ color: q.color }}>{q.label}</p>
+                <p className="text-base sm:text-lg font-black leading-tight" style={{ color: q.color }}>{q.valor}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Botón de Acción a la Derecha */}
-        <div className="flex flex-wrap items-center gap-2 max-w-full min-w-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             id="btn-nueva-salida"
             type="button"
@@ -96,63 +96,62 @@ export const HeaderSalidas: React.FC<HeaderSalidasProps> = ({
               if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('buscador-salidas')?.focus(); }
             }}
             style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
-            className="boton-cabecera px-3 sm:px-4 lg:px-6 py-3 lg:py-4 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none flex-1 sm:flex-initial"
+            className="boton-cabecera px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none whitespace-nowrap"
           >
             <Plus size={16} /> Nueva salida
           </button>
         </div>
       </div>
 
-      {/* SUB-BARRA: Buscador y filtros de tipo y estado */}
-      <div className="px-3 sm:px-4 lg:px-6 flex flex-col gap-4">
-        {/* Buscador Sobrio y Filtro de Estado */}
-        <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
-          <div className="buscador-sobrio flex-1 shrink-0">
-            <div className="buscador-sobrio__icono"><Search size={18} /></div>
-            <input
-              id="buscador-salidas"
-              type="text"
-              autoComplete="off"
-              spellCheck={false}
-              data-lpignore="true"
-              value={busqueda}
-              onChange={(e) => onBusquedaChange(e.target.value)}
-              onKeyDown={(e) => {
-                const input = e.currentTarget;
-                if (e.key === 'ArrowDown') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  bajarDesdeBarra();
-                } else if (e.key === 'ArrowUp') {
-                  e.preventDefault();
-                  document.getElementById('btn-nueva-salida')?.focus();
-                } else if (e.key === 'ArrowRight' && input.selectionEnd === input.value.length) {
-                  e.preventDefault();
-                  document.getElementById('filtro-tipo-salidas')?.focus();
-                }
-              }}
-              placeholder="BUSCAR CÓDIGO, CLIENTE, LO QUE SE ATIENDE, DIRECCIÓN O TÉCNICO..."
-            />
-            {busqueda && (
-              <div className="buscador-sobrio__match">
-                <button
-                  type="button"
-                  className="buscador-sobrio__borrar"
-                  onClick={() => onBusquedaChange('')}
-                  title="Borrar búsqueda"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            )}
-          </div>
+      {/* SUB-BARRA: Buscador y filtros de tipo y estado en una fila limpia */}
+      <div className="px-3 sm:px-4 lg:px-6 flex flex-col xl:flex-row gap-2.5 sm:gap-3 items-stretch xl:items-center justify-between shrink-0">
+        <div className="buscador-sobrio w-full xl:flex-1 shrink-0">
+          <div className="buscador-sobrio__icono"><Search size={18} /></div>
+          <input
+            id="buscador-salidas"
+            type="text"
+            autoComplete="off"
+            spellCheck={false}
+            data-lpignore="true"
+            value={busqueda}
+            onChange={(e) => onBusquedaChange(e.target.value)}
+            onKeyDown={(e) => {
+              const input = e.currentTarget;
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                bajarDesdeBarra();
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                document.getElementById('btn-nueva-salida')?.focus();
+              } else if (e.key === 'ArrowRight' && input.selectionEnd === input.value.length) {
+                e.preventDefault();
+                document.getElementById('filtro-tipo-salidas')?.focus();
+              }
+            }}
+            placeholder="BUSCAR CÓDIGO, CLIENTE, LO QUE SE ATIENDE, DIRECCIÓN O TÉCNICO..."
+          />
+          {busqueda && (
+            <div className="buscador-sobrio__match">
+              <button
+                type="button"
+                className="buscador-sobrio__borrar"
+                onClick={() => onBusquedaChange('')}
+                title="Borrar búsqueda"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+        </div>
 
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full xl:w-auto shrink-0">
           <select
             id="filtro-tipo-salidas"
             value={filtroTipo}
             onChange={(e) => onFiltroTipoChange(e.target.value as TipoSalida | 'TODOS')}
             onKeyDown={teclasFiltro}
-            className="filtro-sobrio w-full md:w-auto"
+            className="filtro-sobrio w-full sm:w-auto"
           >
             <option value="TODOS">TODOS LOS TIPOS</option>
             <option value="SERVICIO">SERVICIOS</option>
@@ -164,7 +163,7 @@ export const HeaderSalidas: React.FC<HeaderSalidasProps> = ({
             value={filtroEstado}
             onChange={(e) => onFiltroEstadoChange(e.target.value as EstadoSalida | 'TODOS')}
             onKeyDown={teclasFiltro}
-            className="filtro-sobrio w-full md:w-auto"
+            className="filtro-sobrio w-full sm:w-auto"
           >
             <option value="TODOS">TODOS LOS ESTADOS</option>
             <option value="EN_PROCESO">EN PROCESO</option>

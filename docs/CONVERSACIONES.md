@@ -1031,3 +1031,19 @@
 - Pruebas con teclado y sin internet: paginación/estilo **29/29**, Herramientas **13/13**, Coca Cola **17/17**,
   sidebar **9/9**, Fase 4 **11/11**, tablas **50/50** y Encargos **28/28**. Base limpia y tipo `{comercio}`.
 - Sigue igual: solo Nego, sin Evicamp, sin push, sin pasada oficial ni Fase 5 sin aviso del dueño.
+
+## 17/11/2026 (se respeta solo Servicios)
+- El dueño está probando **solo Servicios** y pidió que se respete: *"no quiero que se mantenga comercio, estoy probando
+  servicios"*. Aprobó con **"Sí, empieza"** corregir el tipo y las 4 tablas. No volver a preguntar por el estilo ni
+  por ese plan.
+- Se encontró la causa de que volviera a Comercio: al leer el tipo con valores vacíos caía a `['comercio']` y la app
+  vuelve a leer cada 60 s y al volver a la pestaña. Ya no se fuerza Comercio y las pruebas devuelven la elección real
+  en vez de dejar la base en Comercio.
+- Salidas fallaba por un dato, no por el código: la numeración de IDs estaba desincronizada (secuencia en 10, máximo
+  374). Se corrigió con respaldo y `lock_timeout`; salidas volvió a pasar 16/16.
+- Tablas de Cotizaciones, Salidas, Compras y Utilidades de Servicios quedaron iguales a Inventario > Productos.
+  Pruebas con teclado y sin internet: nueva de tipo **7/7**, salidas **16/16**, stock **6/6**, paginación **29/29**
+  y el resto OK. Base final `{servicios}`.
+- Quedaron dos hallazgos **sin arreglar** por estar fuera de lo aprobado: contratos genera 0 visitas del mes y al
+  quitar un repuesto del taller el stock no vuelve. Hay que mostrar la propuesta y esperar el OK antes de tocarlos.
+- Solo Nego; sin Evicamp, sin push, sin pasada oficial ni Fase 5.

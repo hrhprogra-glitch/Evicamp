@@ -2,10 +2,12 @@
 // cambian según Ajustes → Tipo de negocio. Al final deja el negocio como estaba (solo Comercio).
 // Uso: node ai-scripts/pruebas/prueba-secciones-por-tipo.mjs <carpeta tools con puppeteer-core>
 import { createRequire } from 'node:module'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
+import { tipoInicial, restaurarTipo, tipoActual } from './lib-tipo-negocio.mjs';
 const [tools] = process.argv.slice(2);
 const aqui = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(path.join(tools, 'x.js')); const puppeteer = require('puppeteer-core');
 process.loadEnvFile(path.join(aqui, '..', '..', '.env.vps'));
+const tiposAntes = await tipoInicial(); // 17/11: devolver la elección del dueño al terminar
 const res = []; const ok = (n, c, x = '') => res.push(`${c ? 'OK ' : 'MAL'} ${n}${x !== '' ? ' — ' + x : ''}`);
 const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
 const nav = await puppeteer.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', headless: true, defaultViewport: { width: 1366, height: 860 } });
@@ -33,7 +35,7 @@ const elegir = async (tipos) => {
   }
   await page.focus('#btn-guardar-tipo-negocio'); await tecla('Enter'); await pausa(1500); await cerrarAviso();
 };
-const COMERCIO = 'pos,clientes,inventario,conteos,finanzas,utilidades,configuracion';
+const COMERCIO = 'pos,clientes,encargos,inventario,conteos,finanzas,utilidades,configuracion';
 
 try {
   await page.goto('https://nego.siumax.duckdns.org', { waitUntil: 'networkidle2' });
@@ -54,13 +56,13 @@ try {
 
   // 3. Comercio + Servicios
   await elegir(['comercio', 'servicios']);
-  ok('Comercio + Servicios: aparecen Agenda, Salidas, Contratos, Taller y Cotizaciones al instante',
-    (await menu()) === 'pos,clientes,agenda,salidas,contratos,taller,cotizaciones,inventario,conteos,finanzas,utilidades,configuracion', await menu());
-  ok('Atajos en el orden del menú: Agenda con Alt + 3, Finanzas con Alt + 0', (await titulo('agenda')) === 'Agenda (Alt + 3)' && (await titulo('finanzas')) === 'Finanzas (Alt + 0)', `${await titulo('agenda')} · ${await titulo('finanzas')}`);
+  ok('Comercio + Servicios: aparecen Agenda, Salidas, Contratos, Taller y Encargos al instante',
+    (await menu()) === 'pos,clientes,encargos,agenda,salidas,contratos,taller,inventario,conteos,finanzas,utilidades,configuracion', await menu());
+  ok('Atajos en el orden del menú: Agenda con Alt + 3, Finanzas con Alt + 9', (await titulo('agenda')) === 'Agenda (Alt + 3)' && (await titulo('finanzas')) === 'Finanzas (Alt + 9)', `${await titulo('agenda')} · ${await titulo('finanzas')}`);
   await alt('Digit4');
-  ok('Alt + 4 abre Salidas ("Pronto", con el selector en el aviso)', (await foco()) === 'pronto-salidas', await foco());
+  ok('Alt + 4 abre Salidas con el selector en el buscador', (await foco()) === 'buscador-salidas', await foco());
   await page.click('#sidebar-btn-taller'); await pausa(1200);
-  ok('Clic en Taller abre su aviso "Pronto"', !!(await page.$('#pronto-taller')));
+  ok('Clic en Taller abre Taller (ya no dice "Pronto")', !!(await page.$('#btn-nueva-orden-taller')) && !(await page.$('#pronto-taller')));
 
   // 4. Usuarios: permisos y roles de servicios
   await page.evaluate(() => document.getElementById('sidebar-btn-configuracion')?.click()); await pausa(1200);
@@ -73,7 +75,7 @@ try {
 
   // 5. Solo Servicios: sin Caja ni Finanzas
   await elegir(['servicios']);
-  ok('Solo Servicios: sin Caja ni Finanzas', (await menu()) === 'clientes,agenda,salidas,contratos,taller,cotizaciones,inventario,conteos,utilidades,configuracion', await menu());
+  ok('Solo Servicios: sin Caja ni Finanzas', (await menu()) === 'clientes,encargos,agenda,salidas,contratos,taller,inventario,conteos,utilidades,configuracion', await menu());
   await alt('Digit1'); ok('Alt + 1 abre Clientes', !!(await page.$('#buscador-clientes')), await foco());
   await page.reload({ waitUntil: 'networkidle2' }); await pausa(3000);
   ok('Después de recargar: sigue sin Caja y abre en otra sección (no en Caja)', !(await page.$('#sidebar-btn-pos')) && !(await page.$('#buscador-global-pos')), await menu());
@@ -90,6 +92,7 @@ try {
   ok('Sin fallas en la prueba', false, e.message);
 } finally {
   ok('Sin errores en la página', errores.length === 0, errores.join(' | '));
+  try { await restaurarTipo(tiposAntes); ok('Tipo de negocio restaurado a como estaba', (await tipoActual()) === tiposAntes, tiposAntes); } catch { /* */ }
   console.log(res.join('\n'));
   await nav.close();
 }

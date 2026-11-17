@@ -2,10 +2,12 @@
 // negocio en "Comercio + Servicios" (el caso con más pestañas). Al final deja el negocio en solo Comercio.
 // Uso: node ai-scripts/pruebas/medir-cabeceras-nego.mjs <carpeta tools con puppeteer-core>
 import { createRequire } from 'node:module'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
+import { tipoInicial, restaurarTipo, tipoActual } from './lib-tipo-negocio.mjs';
 const [tools] = process.argv.slice(2);
 const aqui = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(path.join(tools, 'x.js')); const puppeteer = require('puppeteer-core');
 process.loadEnvFile(path.join(aqui, '..', '..', '.env.vps'));
+const tiposAntes = await tipoInicial(); // 17/11: devolver la elección del dueño al terminar
 const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
 const nav = await puppeteer.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', headless: true, defaultViewport: { width: 1920, height: 950 } });
 const page = await nav.newPage(); const errores = []; page.on('pageerror', (e) => errores.push(e.message));
@@ -56,7 +58,7 @@ try {
     }
   }
 } catch (e) { salida.push('FALLA ' + e.message); }
-try { await page.setViewport({ width: 1920, height: 950 }); await elegir(['comercio']); } catch { /* */ }
+try { await page.setViewport({ width: 1920, height: 950 }); await restaurarTipo(tiposAntes); const tf = await tipoActual(); salida.push(`${tf === tiposAntes ? 'OK ' : 'MAL'} Tipo de negocio restaurado a como estaba — ${tf}`); } catch { /* */ }
 salida.push(`errores de página: ${errores.length}`);
 console.log(salida.join('\n'));
 await nav.close();

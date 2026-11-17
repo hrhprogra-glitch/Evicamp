@@ -95,10 +95,17 @@ export const TIPOS_NEGOCIO: TipoNegocio[] = [
   },
 ];
 
-// Los tipos guardados en empresa_config.tipos_negocio (si no hay nada guardado, es Comercio)
-export const leerTiposNegocio = (valor: unknown): IdTipoNegocio[] => {
+// Convierte el valor guardado en empresa_config.tipos_negocio a una lista válida. NO decide el tipo:
+// devuelve [] si el valor viene vacío, nulo o en un formato que no entendemos (17/11/2026).
+const parsearTiposNegocio = (valor: unknown): IdTipoNegocio[] => {
   const ids = new Set(TIPOS_NEGOCIO.map((t) => t.id));
-  const lista = Array.isArray(valor) ? valor.filter((v): v is IdTipoNegocio => ids.has(v as IdTipoNegocio)) : [];
+  return Array.isArray(valor) ? valor.filter((v): v is IdTipoNegocio => ids.has(v as IdTipoNegocio)) : [];
+};
+
+// Para quien necesita un tipo por defecto (primer arranque, sin nada guardado en el navegador): Comercio,
+// como siempre. OJO: no usar esto al releer la base, porque pisaba la elección del dueño (Servicios).
+export const leerTiposNegocio = (valor: unknown): IdTipoNegocio[] => {
+  const lista = parsearTiposNegocio(valor);
   return lista.length ? lista : ['comercio'];
 };
 
@@ -126,7 +133,11 @@ export const cargarTiposNegocio = async () => {
   try {
     const { data, error } = await supabase.from('empresa_config').select('tipos_negocio').order('id').limit(1).maybeSingle();
     if (error) return; // sin la columna o sin internet: se queda con lo recordado
-    fijarTiposNegocio(leerTiposNegocio(data?.tipos_negocio));
+    const delServidor = parsearTiposNegocio(data?.tipos_negocio);
+    // Si la base devuelve vacío, nulo o algo que no entendemos, NO cambiamos nada: conservamos la elección
+    // guardada en el navegador. Antes caía a Comercio y cada minuto (o al volver a la pestaña) pisaba Servicios.
+    if (!delServidor.length) return;
+    fijarTiposNegocio(delServidor);
   } catch { /* sin internet */ }
 };
 

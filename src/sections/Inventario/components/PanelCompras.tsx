@@ -649,7 +649,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
                     }
                     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setViendo(c); }
                   }}
-                  className="grid grid-cols-12 gap-3 items-start px-4 py-3 border-b border-[var(--color-border)] text-sm cursor-pointer hover:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] focus:bg-[var(--color-accent-bg)]">
+                  className="tabla-fila grid grid-cols-12 gap-3 items-center min-h-[79px] p-4 cursor-pointer hover:bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-ink)] focus:bg-[var(--color-accent-bg)]">
                   <div className="col-span-2">
                     <p className="font-black text-[var(--color-ink)]">{fecha(c.created_at)}</p>
                     <p className="text-[11px] font-bold text-[var(--color-muted)] uppercase">#{String(c.id).slice(-6)}{c.autor ? ` · ${c.autor}` : ''}</p>

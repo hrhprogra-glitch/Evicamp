@@ -65,7 +65,7 @@ export const TablaSalidas: React.FC<TablaSalidasProps> = ({
   };
 
   return (
-    <div className="tabla-marco flex flex-col font-mono text-xs">
+    <div className="tabla-marco flex flex-col font-mono">
       {/* Misma franja que Inventario. Se conservan los id de arriba que ya usaban las pruebas. */}
       <PaginacionSobrio
         pagina={paginaActual}
@@ -90,14 +90,14 @@ export const TablaSalidas: React.FC<TablaSalidasProps> = ({
             <table className="w-full text-left border-collapse">
               <thead className="tabla-cabecera sticky top-0 z-10">
                 <tr>
-                  <th className="p-4">Código / Tipo</th>
-                  <th className="p-4">Fecha</th>
-                  <th className="p-4">Cliente / Destino</th>
-                  <th className="p-4">Lo que se atiende</th>
-                  <th className="p-4">Personal Asignado</th>
-                  <th className="p-4 text-center">Items</th>
-                  <th className="p-4 text-center">Estado</th>
-                  <th className="p-4 text-center">Acciones</th>
+                  <th className="whitespace-nowrap p-4">Código / Tipo</th>
+                  <th className="whitespace-nowrap p-4">Fecha</th>
+                  <th className="whitespace-nowrap p-4">Cliente / Destino</th>
+                  <th className="whitespace-nowrap p-4">Lo que se atiende</th>
+                  <th className="whitespace-nowrap p-4">Personal Asignado</th>
+                  <th className="whitespace-nowrap p-4 text-center">Items</th>
+                  <th className="whitespace-nowrap p-4 text-center">Estado</th>
+                  <th className="whitespace-nowrap p-4 text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody className="bg-[var(--color-surface)]">

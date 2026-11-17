@@ -7,6 +7,39 @@
 
 ---
 
+## 17/11/2026 (169) · OpenCode (Big Pickle) — Se respeta solo Servicios y las pruebas devuelven la elección del dueño
+- **Dueño:** está probando **solo Servicios** en Nego y pidió que se respete: *"no quiero que se mantenga comercio, estoy
+  probando servicios"*. Aprobó con **"Sí, empieza"** corregir el tipo y las 4 tablas. **No volver a preguntar** por el
+  estilo ni por ese plan.
+- **Causa (por qué volvía a Comercio):** `leerTiposNegocio()` caía a `['comercio']` y `App.tsx` vuelve a leer cada 60 s
+  y en `visibilitychange`. Además `cargarTiposNegocio()` sobrescribía la elección cuando la base devolvía vacío, nulo o
+  inválido. Arreglado en `src/utils/tiposNegocio.ts`: nuevo `parsearTiposNegocio` y la carga ya no fuerza Comercio con
+  valor vacío.
+- **Tablas:** Cotizaciones, Salidas, Compras y las 4 tablas de Utilidades de Servicios quedaron al molde de
+  Inventario > Productos. Medición final: Productos = Herramientas = Compras = Salidas = Cotizaciones =
+  Util-técnicos = Util-materiales; solo Util-rentabilidad tiene la fila de 81 px vs 79 px y Util-cobranzas no se pudo
+  medir porque estaba vacía. Paginación siempre visible.
+- **Dato, no código:** `prueba-salidas-nego.mjs` fallaba con `duplicate key value violates unique constraint
+  "salidas_pkey"`: la secuencia estaba en 10 y el máximo id en 374. Corregido con `setval` (374/374), con
+  `lock_timeout` y respaldo del valor previo. Se agregó a la prueba el aviso del guardado para diagnosticar esto
+  en el futuro.
+- **Pruebas (teclado y sin internet):** se creó `lib-tipo-negocio.mjs` y 9 pruebas ahora guardan y devuelven el tipo
+  inicial en vez de forzar Comercio. Nueva `prueba-tipo-servicios-no-revierte.mjs` **7/7** (base `{servicios}`, al
+  entrar, al volver a la pestaña, tras 60 s, sin internet y base final). Salidas **16/16**, salida con stock **6/6**,
+  paginación/estilo **29/29**, y secciones por tipo, Clientes, Herramientas, Utilidades, Calendario, Encargos,
+  Agenda/Taller, Contratos, Cotizaciones, Enter y medición de cabeceras, todas OK.
+- **Expectativas actualizadas (sin tocar ids ni atajos reales):** el menú incluye `encargos`; Finanzas es **Alt + 9**
+  (no Alt + 0); Salidas y Taller ya abren de verdad (no dicen "Pronto"); Clientes tiene **CLIENTES, CRÉDITOS**
+  (más TRABAJADORES con Servicios).
+- **Hallazgos fuera de alcance, SIN arreglar (falta OK del dueño):** `prueba-contratos-nego.mjs` marca 3 MAL
+  (genera 0 visitas del mes → no abre Insumos) y `prueba-agenda-taller-nego.mjs` 1 MAL (al quitar un repuesto de la
+  orden el stock no vuelve). No son del tipo de negocio ni de tablas; se dejan para su revisión.
+- **Base final verificada:** `{servicios}`. Código compilado y desplegado antes con
+  `node ai-scripts/deploy.cjs siumax` (21 archivos); estos cambios son solo pruebas y documentación. Sin Evicamp,
+  sin push, sin pasada oficial ni Fase 5.
+
+---
+
 ## 17/11/2026 (168) · OpenCode (Big Pickle) — Paginación siempre visible y tablas iguales a Inventario en las 6 secciones; arreglos de teclado
 - **Dueño:** aprobó el plan con *"Sí, empieza"*. Regla nueva: la franja de paginación se muestra **siempre**, aunque
   diga "Página 1 de 1". No volver a preguntar por el estilo ni por ese plan.

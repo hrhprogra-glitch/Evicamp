@@ -15,6 +15,7 @@ const sello = String(Date.now()).slice(-6); const CLI = `PRUEBA AUTO STOCK ${sel
 const prod = (await sql(`SELECT id, name, quantity FROM products WHERE is_active = 1 AND coalesce(quantity,0) >= 2 ORDER BY id LIMIT 1`)).split('|');
 const [pid, pnombre, qAntes] = [prod[0], prod[1], Number(prod[2])];
 const lotesAntes = await sql(`SELECT id, quantity FROM batches WHERE product_id = ${pid} ORDER BY id`);
+const tiposAntes = await sql('select tipos_negocio from empresa_config limit 1'); // 17/11: restaurar la elección del dueño
 await sql(`INSERT INTO customers (id, name, activo, created_at, is_synced) VALUES (${980000 + Number(sello) % 9000}, '${CLI}', true, now(), 1); INSERT INTO trabajadores (nombre, cargo, estado) VALUES ('${TRAB}', 'TECNICO', 'ACTIVO'); UPDATE empresa_config SET tipos_negocio = '{comercio,servicios}';`);
 const nav = await puppeteer.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', headless: true, defaultViewport: { width: 1366, height: 860 } });
 const page = await nav.newPage(); const errores = []; page.on('pageerror', (e) => errores.push(e.message));
@@ -45,7 +46,8 @@ finally {
   // Dejar todo como estaba
   const restaurarLotes = lotesAntes ? lotesAntes.split('\n').map((l) => { const [id, q] = l.split('|'); return `UPDATE batches SET quantity = ${q} WHERE id = ${id};`; }).join(' ') : '';
   await sql(`DELETE FROM salidas WHERE customer_id IN (SELECT id FROM customers WHERE name = '${CLI}'); DELETE FROM customers WHERE name = '${CLI}'; DELETE FROM trabajadores WHERE nombre = '${TRAB}';
-    UPDATE products SET quantity = ${qAntes} WHERE id = ${pid}; ${restaurarLotes} UPDATE empresa_config SET tipos_negocio = '{comercio}';`);
+    UPDATE products SET quantity = ${qAntes} WHERE id = ${pid}; ${restaurarLotes} UPDATE empresa_config SET tipos_negocio = '${tiposAntes}';`);
   ok('Stock y lotes devueltos a como estaban', Number(await sql(`SELECT quantity FROM products WHERE id = ${pid}`)) === qAntes && (await sql(`SELECT id, quantity FROM batches WHERE product_id = ${pid} ORDER BY id`)) === lotesAntes);
+  ok('Tipo de negocio restaurado a como estaba', (await sql('select tipos_negocio from empresa_config limit 1')) === tiposAntes, tiposAntes);
   console.log(res.join('\n'));
 }

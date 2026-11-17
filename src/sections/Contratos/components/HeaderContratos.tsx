@@ -72,11 +72,11 @@ export const HeaderContratos: React.FC<HeaderContratosProps> = ({
   return (
     <div className="flex flex-col gap-4 font-mono">
       {/* CABECERA (como Salidas y Taller): título, cuadros de conteo y botón a la derecha */}
-      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-wrap justify-between items-center gap-4 shrink-0">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 lg:gap-8 min-w-0 max-w-full">
+      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-3 sm:py-4 flex flex-wrap justify-between items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3 sm:gap-6 min-w-0 max-w-full flex-wrap">
           {/* Título de la Sección */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] rounded-none shrink-0">
+            <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[2px_2px_0_0_var(--color-accent)] rounded-none shrink-0">
               <Repeat size={20} className="text-[var(--color-accent)]" />
             </div>
             <h1 className="text-xl lg:text-2xl font-black text-[var(--color-ink)] uppercase tracking-widest whitespace-nowrap">
@@ -85,18 +85,18 @@ export const HeaderContratos: React.FC<HeaderContratosProps> = ({
           </div>
 
           {/* Cuadros de conteo al lado del título */}
-          <div className="grid grid-cols-3 gap-2 w-full md:w-auto">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             {cuadros.map((q) => (
-              <div key={q.label} title={q.ayuda} className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] px-3 py-1.5 text-center min-w-[90px] lg:min-w-[110px]">
-                <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: q.color }}>{q.label}</p>
-                <p className="text-lg font-black leading-tight whitespace-nowrap" style={{ color: q.color }}>{q.valor}</p>
+              <div key={q.label} title={q.ayuda} className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] px-2.5 py-1 text-center min-w-[75px] sm:min-w-[90px]">
+                <p className="text-[9px] font-black uppercase tracking-wider" style={{ color: q.color }}>{q.label}</p>
+                <p className="text-base sm:text-lg font-black leading-tight whitespace-nowrap" style={{ color: q.color }}>{q.valor}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Botón de Acción a la Derecha */}
-        <div className="flex flex-wrap items-center gap-2 max-w-full min-w-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             id="btn-nuevo-contrato"
             type="button"
@@ -108,16 +108,16 @@ export const HeaderContratos: React.FC<HeaderContratosProps> = ({
               }
             }}
             style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
-            className="boton-cabecera px-3 sm:px-4 lg:px-6 py-3 lg:py-4 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none flex-1 sm:flex-initial"
+            className="boton-cabecera px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none whitespace-nowrap"
           >
             <Plus size={16} /> Nuevo contrato
           </button>
         </div>
       </div>
 
-      {/* SUB-BARRA: Buscador, lista de vista y lista de estado */}
-      <div className="px-3 sm:px-4 lg:px-6 flex flex-col md:flex-row gap-3 items-stretch md:items-center">
-        <div className="buscador-sobrio flex-1 shrink-0">
+      {/* SUB-BARRA: Buscador, lista de vista y lista de estado en una fila limpia */}
+      <div className="px-3 sm:px-4 lg:px-6 flex flex-col xl:flex-row gap-2.5 sm:gap-3 items-stretch xl:items-center justify-between shrink-0">
+        <div className="buscador-sobrio w-full xl:flex-1 shrink-0">
           <div className="buscador-sobrio__icono"><Search size={18} /></div>
           <input
             id="buscador-contratos"
@@ -164,33 +164,35 @@ export const HeaderContratos: React.FC<HeaderContratosProps> = ({
           )}
         </div>
 
-        <select
-          id="filtro-vista-contratos"
-          value={pestana}
-          onChange={(e) => onCambiarPestana(e.target.value as Vista)}
-          onKeyDown={teclasFiltro('buscador-contratos', pestana === 'contratos' ? 'filtro-estado-contratos' : null)}
-          className="filtro-sobrio w-full md:w-auto"
-        >
-          {VISTAS.map((v) => (
-            <option key={v.id} value={v.id}>{v.label.toUpperCase()}</option>
-          ))}
-        </select>
-
-        {/* El estado solo filtra los contratos (las visitas y los cobros no lo usan) */}
-        {pestana === 'contratos' && (
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full xl:w-auto shrink-0">
           <select
-            id="filtro-estado-contratos"
-            value={filtroEstado}
-            onChange={(e) => onFiltroEstadoChange(e.target.value)}
-            onKeyDown={teclasFiltro('filtro-vista-contratos', null)}
-            className="filtro-sobrio w-full md:w-auto"
+            id="filtro-vista-contratos"
+            value={pestana}
+            onChange={(e) => onCambiarPestana(e.target.value as Vista)}
+            onKeyDown={teclasFiltro('buscador-contratos', pestana === 'contratos' ? 'filtro-estado-contratos' : null)}
+            className="filtro-sobrio w-full sm:w-auto"
           >
-            <option value="TODOS">TODOS LOS ESTADOS</option>
-            <option value="ACTIVO">ACTIVOS</option>
-            <option value="PAUSADO">PAUSADOS</option>
-            <option value="FINALIZADO">FINALIZADOS</option>
+            {VISTAS.map((v) => (
+              <option key={v.id} value={v.id}>{v.label.toUpperCase()}</option>
+            ))}
           </select>
-        )}
+
+          {/* El estado solo filtra los contratos (las visitas y los cobros no lo usan) */}
+          {pestana === 'contratos' && (
+            <select
+              id="filtro-estado-contratos"
+              value={filtroEstado}
+              onChange={(e) => onFiltroEstadoChange(e.target.value)}
+              onKeyDown={teclasFiltro('filtro-vista-contratos', null)}
+              className="filtro-sobrio w-full sm:w-auto"
+            >
+              <option value="TODOS">TODOS LOS ESTADOS</option>
+              <option value="ACTIVO">ACTIVOS</option>
+              <option value="PAUSADO">PAUSADOS</option>
+              <option value="FINALIZADO">FINALIZADOS</option>
+            </select>
+          )}
+        </div>
       </div>
     </div>
   );

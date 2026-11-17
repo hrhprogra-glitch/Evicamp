@@ -3,10 +3,12 @@
 // en su sitio (regla de Nego). Crea datos "PRUEBA AUTO ...", al final los borra y deja el negocio en solo Comercio.
 // Uso: node ai-scripts/pruebas/prueba-agenda-taller-nego.mjs <carpeta tools con puppeteer-core>
 import { createRequire } from 'node:module'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
+import { tipoInicial, restaurarTipo, tipoActual } from './lib-tipo-negocio.mjs';
 const [tools] = process.argv.slice(2);
 const aqui = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(path.join(tools, 'x.js')); const puppeteer = require('puppeteer-core');
 process.loadEnvFile(path.join(aqui, '..', '..', '.env.vps'));
+const tiposAntes = await tipoInicial(); // 17/11: devolver la elección del dueño al terminar
 const reqP = createRequire(path.join(aqui, '..', '..', 'x.js'));
 const { NodeSSH } = reqP('node-ssh'); const { conexionVps } = reqP('./ai-scripts/vps.cjs');
 const sql = async (q) => { const s = new NodeSSH(); await s.connect(conexionVps); const r = await s.execCommand('runuser -u postgres -- psql -At -F "|" -d siumax', { stdin: q }); s.dispose(); if (r.stderr && /ERROR/.test(r.stderr)) throw new Error(r.stderr); return r.stdout.trim(); };
@@ -158,7 +160,7 @@ try {
   ok('Sin fallas en la prueba', false, e.message);
 } finally {
   ok('Sin errores en la página', errores.length === 0, errores.join(' | '));
-  try { for (let i = 0; i < 3; i++) { await page.keyboard.press('Escape'); await pausa(300); } await cerrarAviso(); await elegir(['comercio']); } catch { /* */ }
+  try { for (let i = 0; i < 3; i++) { await page.keyboard.press('Escape'); await pausa(300); } await cerrarAviso(); await restaurarTipo(tiposAntes); ok('Tipo de negocio restaurado a como estaba', (await tipoActual()) === tiposAntes, tiposAntes); } catch { /* */ }
   await nav.close();
   try {
     await sql(`create temp table o as select codigo from taller_ordenes where tipo_equipo ilike '%${sello}%';

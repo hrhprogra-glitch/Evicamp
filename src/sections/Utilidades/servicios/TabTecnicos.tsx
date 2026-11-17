@@ -90,53 +90,53 @@ export const TabTecnicos: React.FC<TabTecnicosProps> = ({ tecnicos, busqueda = '
       )}
 
       {/* Tabla Detallada por Técnico */}
-      <div className="border border-[var(--color-border)] bg-[var(--color-surface)] overflow-x-auto">
+      <div className="tabla-marco overflow-x-auto">
         {tecnicosOrdenados.length === 0 ? (
-          <div className="vacio-sobrio p-12">
+          <div className="vacio-sobrio">
             <Users size={32} />
             <p className="text-xs font-black uppercase tracking-wider text-[var(--color-ink)]">
               No se encontraron registros de técnicos activos en el período
             </p>
           </div>
         ) : (
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[var(--color-ink)] text-white uppercase font-black border-b-2 border-[var(--color-ink)] tracking-widest text-[10px]">
+          <table className="w-full text-left border-collapse">
+            <thead className="tabla-cabecera">
               <tr>
-                <th className="py-2.5 px-3">Técnico / Trabajador</th>
-                <th className="py-2.5 px-3">Especialidad / Cargo</th>
-                <th className="py-2.5 px-3 text-center">Asignados Agenda</th>
-                <th className="py-2.5 px-3 text-center">Completados</th>
-                <th className="py-2.5 px-3 text-center">En Seguimiento</th>
-                <th className="py-2.5 px-3 text-center">Salidas a Obras</th>
-                <th className="py-2.5 px-3 text-center">Visitas Contratos</th>
-                <th className="py-2.5 px-3 text-right">Efectividad</th>
+                <th className="whitespace-nowrap p-4">Técnico / Trabajador</th>
+                <th className="whitespace-nowrap p-4">Especialidad / Cargo</th>
+                <th className="whitespace-nowrap p-4 text-center">Asignados Agenda</th>
+                <th className="whitespace-nowrap p-4 text-center">Completados</th>
+                <th className="whitespace-nowrap p-4 text-center">En Seguimiento</th>
+                <th className="whitespace-nowrap p-4 text-center">Salidas a Obras</th>
+                <th className="whitespace-nowrap p-4 text-center">Visitas Contratos</th>
+                <th className="whitespace-nowrap p-4 text-right">Efectividad</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--color-border)]">
+            <tbody className="bg-[var(--color-surface)]">
               {tecnicosOrdenados.map((t) => (
-                <tr key={t.id} data-fila-grafico="true" tabIndex={0} onKeyDown={teclaFila} className="hover:bg-[var(--color-bg)] focus:bg-[var(--color-accent-bg)] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-accent)] transition-colors text-[var(--color-ink)]">
-                  <td className="py-2.5 px-3 font-black whitespace-nowrap">
+                <tr key={t.id} data-fila-grafico="true" tabIndex={0} onKeyDown={teclaFila} className="tabla-fila h-[79px] cursor-pointer">
+                  <td className="p-4 font-black whitespace-nowrap">
                     {t.nombre}
                   </td>
-                  <td className="py-2.5 px-3 text-[var(--color-muted)] font-bold whitespace-nowrap">
+                  <td className="p-4 text-[var(--color-muted)] font-bold whitespace-nowrap">
                     {t.cargo || 'Técnico de Servicios'}
                   </td>
-                  <td className="py-2.5 px-3 text-center font-mono font-bold text-[var(--color-muted)]">
+                  <td className="p-4 text-center font-mono font-bold text-[var(--color-muted)]">
                     {t.trabajosAsignados}
                   </td>
-                  <td className="py-2.5 px-3 text-center font-mono font-black text-[var(--color-success)]">
+                  <td className="p-4 text-center font-mono font-black text-[var(--color-success)]">
                     {t.trabajosCompletados}
                   </td>
-                  <td className="py-2.5 px-3 text-center font-mono font-bold text-[var(--color-warning-dark)]">
+                  <td className="p-4 text-center font-mono font-bold text-[var(--color-warning-dark)]">
                     {t.trabajosSeguimiento}
                   </td>
-                  <td className="py-2.5 px-3 text-center font-mono font-bold text-[var(--color-muted)]">
+                  <td className="p-4 text-center font-mono font-bold text-[var(--color-muted)]">
                     {t.salidasParticipadas}
                   </td>
-                  <td className="py-2.5 px-3 text-center font-mono font-black text-[var(--color-accent-shadow)]">
+                  <td className="p-4 text-center font-mono font-black text-[var(--color-accent-shadow)]">
                     {t.visitasRealizadas}
                   </td>
-                  <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                  <td className="p-4 text-right whitespace-nowrap">
                     <span
                       className={`font-mono font-black px-2 py-0.5 text-[10px] border uppercase ${
                         t.eficiencia >= 80

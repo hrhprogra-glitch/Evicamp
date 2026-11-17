@@ -16,6 +16,7 @@ const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
 const sello = String(Date.now()).slice(-6);
 const CLI = `PRUEBA AUTO CLIENTE ENCARGO ${sello}`;
+const tiposAntes = await sql('select tipos_negocio from empresa_config limit 1'); // 17/11: restaurar la elección del dueño
 
 // Entrar (en modo celular el teclado simulado vaciaba el usuario: se llena como lo haría React)
 const entrar = async (page) => {
@@ -130,6 +131,9 @@ try {
 } catch (e) {
   ok('Sin fallas en la prueba', false, e.message);
 } finally {
-  try { await sql(`delete from cotizaciones where numero = 'COT-E${sello}'; delete from pedidos_clientes where numero = 'PED-E${sello}';`); } catch (e) { res.push('MAL limpieza — ' + e.message); }
+  try {
+    await sql(`delete from cotizaciones where numero = 'COT-E${sello}'; delete from pedidos_clientes where numero = 'PED-E${sello}'; update empresa_config set tipos_negocio = '${tiposAntes}';`);
+    ok('Tipo de negocio restaurado a como estaba', (await sql('select tipos_negocio from empresa_config limit 1')) === tiposAntes, tiposAntes);
+  } catch (e) { res.push('MAL limpieza — ' + e.message); }
   console.log(res.join('\n'));
 }

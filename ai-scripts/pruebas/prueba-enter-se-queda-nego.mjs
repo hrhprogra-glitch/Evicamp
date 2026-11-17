@@ -3,10 +3,12 @@
 // Al final deja el negocio en solo Comercio.
 // Uso: node ai-scripts/pruebas/prueba-enter-se-queda-nego.mjs <carpeta tools con puppeteer-core>
 import { createRequire } from 'node:module'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
+import { tipoInicial, restaurarTipo, tipoActual } from './lib-tipo-negocio.mjs';
 const [tools] = process.argv.slice(2);
 const aqui = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(path.join(tools, 'x.js')); const puppeteer = require('puppeteer-core');
 process.loadEnvFile(path.join(aqui, '..', '..', '.env.vps'));
+const tiposAntes = await tipoInicial(); // 17/11: devolver la elección del dueño al terminar
 const res = []; const ok = (n, c, x = '') => res.push(`${c ? 'OK ' : 'MAL'} ${n}${x !== '' ? ' — ' + x : ''}`);
 const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
 const nav = await puppeteer.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', headless: true, defaultViewport: { width: 1366, height: 860 } });
@@ -88,7 +90,7 @@ try {
   ok('Sin fallas en la prueba', false, e.message);
 } finally {
   ok('Sin errores en la página', errores.length === 0, errores.join(' | '));
-  try { await page.keyboard.press('Escape'); await pausa(400); await cerrarAviso(); await page.keyboard.press('Escape'); await pausa(400); await cerrarAviso(); await elegir(['comercio']); } catch { /* */ }
+  try { await page.keyboard.press('Escape'); await pausa(400); await cerrarAviso(); await page.keyboard.press('Escape'); await pausa(400); await cerrarAviso(); await restaurarTipo(tiposAntes); ok('Tipo de negocio restaurado a como estaba', (await tipoActual()) === tiposAntes, tiposAntes); } catch { /* */ }
   await nav.close();
   console.log(res.join('\n'));
 }

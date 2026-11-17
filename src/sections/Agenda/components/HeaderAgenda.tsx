@@ -96,11 +96,11 @@ export const HeaderAgenda: React.FC<HeaderAgendaProps> = ({
   return (
     <div className="flex flex-col gap-4 font-mono">
       {/* CABECERA: título, pestañas de vista, métricas SUBIDAS, y botón a la derecha */}
-      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-3 sm:py-4 flex flex-wrap justify-between items-center gap-4 shrink-0">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 lg:gap-6 min-w-0 max-w-full">
+      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-3 sm:py-4 flex flex-wrap justify-between items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3 sm:gap-6 min-w-0 max-w-full flex-wrap">
           {/* Título de la Sección */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[4px_4px_0_0_var(--color-accent)] rounded-none shrink-0">
+            <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[2px_2px_0_0_var(--color-accent)] rounded-none shrink-0">
               <CalendarIcon size={20} className="text-[var(--color-accent)]" />
             </div>
             <h1 className="text-xl lg:text-2xl font-black text-[var(--color-ink)] uppercase tracking-widest whitespace-nowrap">
@@ -109,7 +109,7 @@ export const HeaderAgenda: React.FC<HeaderAgendaProps> = ({
           </div>
 
           {/* PESTAÑAS SOBRIAS: Selector de Vistas */}
-          <div role="tablist" aria-label="Vistas Agenda" className="pestanas-sobrias flex min-w-0 w-full md:w-auto">
+          <div role="tablist" aria-label="Vistas Agenda" className="pestanas-sobrias flex min-w-0">
             {VISTAS.map((v, idx) => (
               <button
                 key={v.id}
@@ -137,7 +137,7 @@ export const HeaderAgenda: React.FC<HeaderAgendaProps> = ({
                     enfocar('buscador-agenda');
                   }
                 }}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer border-l-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${
+                className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all rounded-none cursor-pointer border-l-2 border-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] ${
                   vista === v.id
                     ? 'bg-[var(--color-ink)] text-[var(--color-accent)]'
                     : 'text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-bg)]'
@@ -148,56 +148,48 @@ export const HeaderAgenda: React.FC<HeaderAgendaProps> = ({
             ))}
           </div>
 
-          {/* CUADROS DE CONTEO SUBIDOS (Total Trabajos, Pendientes, Volver a ir, Completados) */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 w-full md:w-auto">
-            <div className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] px-2.5 py-1 flex items-center justify-between gap-2 min-w-[85px] lg:min-w-[95px]">
-              <div>
-                <span className="text-[9px] uppercase font-bold text-[var(--color-muted)] block tracking-wider">
-                  Total
-                </span>
-                <span className="text-base font-black text-[var(--color-ink)] leading-tight">
-                  {metricas.total}
-                </span>
-              </div>
+          {/* CUADROS DE CONTEO LIMPIOS Y COMPACTOS */}
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <div className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] px-2.5 py-1 text-center min-w-[70px]">
+              <span className="text-[9px] uppercase font-bold text-[var(--color-muted)] block tracking-wider">
+                Total
+              </span>
+              <span className="text-base font-black text-[var(--color-ink)] leading-tight">
+                {metricas.total}
+              </span>
             </div>
 
-            <div className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] px-2.5 py-1 flex items-center justify-between gap-2 min-w-[95px] lg:min-w-[105px]">
-              <div>
-                <span className="text-[9px] uppercase font-bold text-amber-700 block tracking-wider flex items-center gap-1">
-                  <Clock size={10} /> Pendientes
-                </span>
-                <span className="text-base font-black text-amber-900 leading-tight">
-                  {metricas.pendientes}
-                </span>
-              </div>
+            <div className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] px-2.5 py-1 text-center min-w-[85px]">
+              <span className="text-[9px] uppercase font-bold text-amber-700 block tracking-wider flex items-center justify-center gap-1">
+                <Clock size={10} /> Pendientes
+              </span>
+              <span className="text-base font-black text-amber-900 leading-tight">
+                {metricas.pendientes}
+              </span>
             </div>
 
-            <div className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] px-2.5 py-1 flex items-center justify-between gap-2 min-w-[95px] lg:min-w-[105px]">
-              <div>
-                <span className="text-[9px] uppercase font-bold text-blue-700 block tracking-wider flex items-center gap-1">
-                  <RotateCcw size={10} /> Volver a ir
-                </span>
-                <span className="text-base font-black text-blue-900 leading-tight">
-                  {metricas.seguimiento}
-                </span>
-              </div>
+            <div className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] px-2.5 py-1 text-center min-w-[85px]">
+              <span className="text-[9px] uppercase font-bold text-blue-700 block tracking-wider flex items-center justify-center gap-1">
+                <RotateCcw size={10} /> Volver a ir
+              </span>
+              <span className="text-base font-black text-blue-900 leading-tight">
+                {metricas.seguimiento}
+              </span>
             </div>
 
-            <div className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] px-2.5 py-1 flex items-center justify-between gap-2 min-w-[95px] lg:min-w-[105px]">
-              <div>
-                <span className="text-[9px] uppercase font-bold text-emerald-700 block tracking-wider flex items-center gap-1">
-                  <CheckCircle size={10} /> Completados
-                </span>
-                <span className="text-base font-black text-emerald-900 leading-tight">
-                  {metricas.completados}
-                </span>
-              </div>
+            <div className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] px-2.5 py-1 text-center min-w-[85px]">
+              <span className="text-[9px] uppercase font-bold text-emerald-700 block tracking-wider flex items-center justify-center gap-1">
+                <CheckCircle size={10} /> Completados
+              </span>
+              <span className="text-base font-black text-emerald-900 leading-tight">
+                {metricas.completados}
+              </span>
             </div>
           </div>
         </div>
 
         {/* Botón de Acción a la Derecha */}
-        <div className="flex flex-wrap items-center gap-2 max-w-full min-w-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             id="btn-nuevo-trabajo"
             type="button"
@@ -212,7 +204,7 @@ export const HeaderAgenda: React.FC<HeaderAgendaProps> = ({
               }
             }}
             style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
-            className="boton-cabecera px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none flex-1 sm:flex-initial"
+            className="boton-cabecera px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none whitespace-nowrap"
           >
             <Plus size={16} /> Nuevo trabajo
           </button>
@@ -220,7 +212,7 @@ export const HeaderAgenda: React.FC<HeaderAgendaProps> = ({
       </div>
 
       {/* SUB-BARRA: BUSCADOR Y FILTRO A LA IZQUIERDA, NAVEGACIÓN DE FECHA A LA DERECHA */}
-      <div className="px-3 sm:px-4 lg:px-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div className="px-3 sm:px-4 lg:px-6 flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 shrink-0">
         {/* IZQUIERDA: Buscador Sobrio y Filtro de Estado */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <div className="buscador-sobrio flex-1 max-w-md">
@@ -345,7 +337,7 @@ export const HeaderAgenda: React.FC<HeaderAgendaProps> = ({
         </div>
 
         {/* DERECHA: Navegación temporal de fechas y cambio de fecha */}
-        <div className="flex items-center gap-1.5 flex-wrap justify-end shrink-0">
+        <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap justify-end shrink-0">
           <button
             id="btn-fecha-anterior"
             type="button"

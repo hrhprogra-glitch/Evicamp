@@ -3,10 +3,12 @@
 // de tienda. Al final borra lo creado y deja el negocio en solo Comercio.
 // Uso: node ai-scripts/pruebas/prueba-clientes-servicios.mjs <carpeta tools con puppeteer-core>
 import { createRequire } from 'node:module'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
+import { tipoInicial, restaurarTipo, tipoActual } from './lib-tipo-negocio.mjs';
 const [tools] = process.argv.slice(2);
 const aqui = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(path.join(tools, 'x.js')); const puppeteer = require('puppeteer-core');
 process.loadEnvFile(path.join(aqui, '..', '..', '.env.vps'));
+const tiposAntes = await tipoInicial(); // 17/11: devolver la elección del dueño al terminar
 const reqP = createRequire(path.join(aqui, '..', '..', 'x.js'));
 const { NodeSSH } = reqP('node-ssh'); const { conexionVps } = reqP('./ai-scripts/vps.cjs');
 const sql = async (q) => { const s = new NodeSSH(); await s.connect(conexionVps); const r = await s.execCommand('runuser -u postgres -- psql -At -F "|" -d siumax', { stdin: q }); s.dispose(); if (r.stderr && /ERROR/.test(r.stderr)) throw new Error(r.stderr); return r.stdout.trim(); };
@@ -40,11 +42,11 @@ try {
 
   // 0. Solo Comercio: Clientes igual que siempre
   await elegir(['comercio']); await abrirClientes();
-  ok('Solo Comercio: pestañas de siempre (sin Trabajadores)', (await pestanas()) === 'CLIENTES,CRÉDITOS,COTIZACIONES,PEDIDOS', await pestanas());
+  ok('Solo Comercio: pestañas de siempre (sin Trabajadores)', (await pestanas()) === 'CLIENTES,CRÉDITOS', await pestanas());
 
   // 1. Comercio + Servicios
   await elegir(['comercio', 'servicios']); await abrirClientes();
-  ok('Con Servicios: aparece la pestaña Trabajadores', (await pestanas()) === 'CLIENTES,CRÉDITOS,COTIZACIONES,PEDIDOS,TRABAJADORES', await pestanas());
+  ok('Con Servicios: aparece la pestaña Trabajadores', (await pestanas()) === 'CLIENTES,CRÉDITOS,TRABAJADORES', await pestanas());
   // Trabajadores
   await page.focus('#tab-clientes-trabajadores'); await tecla('Enter'); await pausa(1200);
   ok('Enter en Trabajadores abre la pestaña con el selector en su buscador', (await foco()) === 'buscador-trabajadores', await foco());
@@ -107,7 +109,7 @@ try {
   ok('Sin fallas en la prueba', false, e.message);
 } finally {
   ok('Sin errores en la página', errores.length === 0, errores.join(' | '));
-  try { await elegir(['comercio']); } catch { /* */ }
+  try { await restaurarTipo(tiposAntes); ok('Tipo de negocio restaurado a como estaba', (await tipoActual()) === tiposAntes, tiposAntes); } catch { /* */ }
   await nav.close();
   await sql(`delete from bienes_cliente where customer_id in (select id from customers where name = '${NOMBRE}'); delete from customers where name = '${NOMBRE}'; delete from trabajadores where nombre = '${TRAB}';`);
   console.log(res.join('\n'));

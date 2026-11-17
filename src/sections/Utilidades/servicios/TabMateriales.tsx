@@ -76,9 +76,9 @@ export const TabMateriales: React.FC<TabMaterialesProps> = ({ materiales, busque
       )}
 
       {/* Tabla de Insumos */}
-      <div className="border border-[var(--color-border)] bg-[var(--color-surface)] overflow-x-auto">
+      <div className="tabla-marco overflow-x-auto">
         {filtrados.length === 0 ? (
-          <div className="vacio-sobrio p-12">
+          <div className="vacio-sobrio">
             <Package size={32} />
             <p className="text-xs font-black uppercase tracking-wider text-[var(--color-ink)]">
               No se han consumido insumos ni materiales en el período seleccionado
@@ -86,36 +86,36 @@ export const TabMateriales: React.FC<TabMaterialesProps> = ({ materiales, busque
           </div>
         ) : (
           <>
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[var(--color-ink)] text-white uppercase font-black border-b-2 border-[var(--color-ink)] tracking-widest text-[10px]">
+            <table className="w-full text-left border-collapse">
+              <thead className="tabla-cabecera">
                 <tr>
-                  <th className="py-2.5 px-3">Insumo / Material</th>
-                  <th className="py-2.5 px-3 text-center">Unidad</th>
-                  <th className="py-2.5 px-3 text-right">En salidas y taller</th>
-                  <th className="py-2.5 px-3 text-right">En contratos</th>
-                  <th className="py-2.5 px-3 text-right">Total Consumido</th>
-                  <th className="py-2.5 px-3 text-right">Costo Total Valorizado</th>
+                  <th className="whitespace-nowrap p-4">Insumo / Material</th>
+                  <th className="whitespace-nowrap p-4 text-center">Unidad</th>
+                  <th className="whitespace-nowrap p-4 text-right">En salidas y taller</th>
+                  <th className="whitespace-nowrap p-4 text-right">En contratos</th>
+                  <th className="whitespace-nowrap p-4 text-right">Total Consumido</th>
+                  <th className="whitespace-nowrap p-4 text-right">Costo Total Valorizado</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--color-border)]">
+              <tbody className="bg-[var(--color-surface)]">
                 {filtrados.map((m) => (
-                  <tr key={m.productoId} data-fila-grafico="true" tabIndex={0} onKeyDown={teclaFila} className="hover:bg-[var(--color-bg)] focus:bg-[var(--color-accent-bg)] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-accent)] transition-colors text-[var(--color-ink)]">
-                    <td className="py-2.5 px-3 font-black">
+                  <tr key={m.productoId} data-fila-grafico="true" tabIndex={0} onKeyDown={teclaFila} className="tabla-fila h-[79px] cursor-pointer">
+                    <td className="p-4 font-black">
                       {m.nombre}
                     </td>
-                    <td className="py-2.5 px-3 text-center text-[var(--color-muted)] font-mono font-bold text-[11px]">
+                    <td className="p-4 text-center text-[var(--color-muted)] font-mono font-bold text-[11px]">
                       {m.unidad}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-bold text-[var(--color-muted)]">
+                    <td className="p-4 text-right font-mono font-bold text-[var(--color-muted)]">
                       {m.usadoEnObras > 0 ? m.usadoEnObras.toFixed(2) : '-'}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-bold text-[var(--color-muted)]">
+                    <td className="p-4 text-right font-mono font-bold text-[var(--color-muted)]">
                       {m.usadoEnContratos > 0 ? m.usadoEnContratos.toFixed(2) : '-'}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-black text-[var(--color-ink)]">
+                    <td className="p-4 text-right font-mono font-black text-[var(--color-ink)]">
                       {m.cantidadConsumida.toFixed(2)}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-black text-[var(--color-accent-shadow)]">
+                    <td className="p-4 text-right font-mono font-black text-[var(--color-accent-shadow)]">
                       S/ {m.costoTotal.toFixed(2)}
                     </td>
                   </tr>

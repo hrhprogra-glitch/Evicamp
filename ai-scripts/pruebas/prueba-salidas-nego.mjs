@@ -21,6 +21,7 @@ const sello = String(Date.now()).slice(-6);
 const NOMBRE_CLI = `PRUEBA AUTO CLIENTE ${sello}`;
 const NOMBRE_TRAB = `PRUEBA AUTO TECNICO ${sello}`;
 const NOMBRE_MAT = `PRUEBA AUTO VALVULA ${sello}`;
+const tiposAntes = await sql('select tipos_negocio from empresa_config limit 1'); // 17/11: restaurar la elección del dueño
 
 try {
   // Pre-crear cliente y trabajador de prueba en la base para la salida
@@ -84,6 +85,9 @@ try {
 
   // Confirmar salida
   await page.focus('#btn-guardar-salida'); await tecla('Enter'); await pausa(1500);
+  const avisoGuardar = await page.evaluate(() => document.getElementById('dialogo-sistema-texto')?.innerText || '');
+  const modalSigueAbierto = await page.evaluate(() => !!document.getElementById('modal-nueva-salida-container'));
+  ok('Salida guardada y modal cerrado', !modalSigueAbierto, avisoGuardar || `foco=${await activo()}`);
   if ((await activo()) === 'dialogo-sistema-aceptar') {
     await tecla('Enter'); await pausa(1000);
   }
@@ -141,7 +145,8 @@ try {
   try {
     await sql(`DELETE FROM salidas WHERE customer_id IN (SELECT id FROM customers WHERE name = '${NOMBRE_CLI}');
       DELETE FROM customers WHERE name = '${NOMBRE_CLI}'; DELETE FROM trabajadores WHERE nombre = '${NOMBRE_TRAB}';
-      UPDATE empresa_config SET tipos_negocio = '{comercio}';`);
+      UPDATE empresa_config SET tipos_negocio = '${tiposAntes}';`);
+    ok('Tipo de negocio restaurado a como estaba', (await sql('select tipos_negocio from empresa_config limit 1')) === tiposAntes, tiposAntes);
   } catch (e) { res.push('MAL No se pudieron borrar los datos de prueba: ' + e.message); }
   console.log(res.join('\n'));
 }

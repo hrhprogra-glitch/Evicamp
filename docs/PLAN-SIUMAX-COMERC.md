@@ -7,6 +7,11 @@
 > Última actualización: 17/11/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
+- **17/11/2026 (169) — Se respeta solo Servicios y las pruebas devuelven la elección del dueño:** `tiposNegocio.ts` ya
+  no cae a Comercio con valores vacíos; 9 pruebas guardan y restauran el tipo inicial en vez de forzar Comercio.
+  Nueva prueba **7/7** (al entrar, visibilitychange, tras 60 s, sin internet y base final). Tablas de Cotizaciones,
+  Salidas, Compras y Utilidades al molde; secuencia `salidas_id_seq` corregida (374/374). Base final `{servicios}`.
+  Sin Evicamp, sin push, sin pasada oficial ni Fase 5.
 - **17/11/2026 (168) — Paginación siempre visible y tablas iguales a Inventario:** nueva franja compartida
   (`PaginacionSobrio.tsx`) en Herramientas, Vehículos, Compras, Contratos, Taller, Utilidades y Pedidos; se muestra
   aunque diga "Página 1 de 1". Salidas, Contratos, Taller y Utilidades se restilizaron al molde de Inventario.
@@ -121,6 +126,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Que se respete el tipo de negocio elegido (solo Servicios) y tablas al molde** | **Aprobada con "Sí, empieza" y hecha solo en Nego (169): 7/7, 16/16, 6/6, 29/29 y el resto de pruebas OK; base `{servicios}`. Sin Evicamp, sin push, sin pasada oficial ni Fase 5** |
 | **Paginación siempre visible y tablas iguales a Inventario en 6 secciones** (franja aunque sea "Página 1 de 1"; Salidas, Contratos, Taller, Utilidades y Pedidos al molde) | **Aprobada con "Sí, empieza" y hecha solo en Nego (168): 29/29 de paginación/estilo, 13/13, 17/17, 9/9, 11/11, 50/50 y 28/28. Sin Evicamp, sin push, sin pasada oficial ni Fase 5** |
 | **Tablas de Herramientas y Vehículos iguales a Inventario** (estilo y tamaño; sin cuadros de resumen en Vehículos) | **Hecha y probada solo en Nego (167): 50/50 medidas idénticas, 13/13 con teclado y sin internet. No toca Evicamp** |
 | **Corrección: producto borrado en Nueva salida** (Coca Cola desactivado seguía saliendo; quitar un material lo devolvía al reabrir) | **Hecha y probada solo en Nego (166), 17/17 con teclado y sin internet. No toca Evicamp** |

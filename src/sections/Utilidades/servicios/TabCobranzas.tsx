@@ -79,39 +79,39 @@ export const TabCobranzas: React.FC<TabCobranzasProps> = ({ cuentas, busqueda, f
       </div>
 
       {/* Tabla de Cobranzas */}
-      <div className="border border-[var(--color-border)] bg-[var(--color-surface)] overflow-x-auto">
+      <div className="tabla-marco overflow-x-auto">
         {filtradas.length === 0 ? (
-          <div className="vacio-sobrio p-12">
+          <div className="vacio-sobrio">
             <CheckCircle size={32} className="text-[var(--color-success)]" />
             <p className="text-xs font-black uppercase tracking-wider text-[var(--color-ink)]">
               ¡No hay cuentas pendientes por cobrar en este período!
             </p>
           </div>
         ) : (
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[var(--color-ink)] text-white uppercase font-black border-b-2 border-[var(--color-ink)] tracking-widest text-[10px]">
+          <table className="w-full text-left border-collapse">
+            <thead className="tabla-cabecera">
               <tr>
-                <th className="py-2.5 px-3">Código</th>
-                <th className="py-2.5 px-3">Origen</th>
-                <th className="py-2.5 px-3">Cliente</th>
-                <th className="py-2.5 px-3">Emisión</th>
-                <th className="py-2.5 px-3">Vencimiento</th>
-                <th className="py-2.5 px-3 text-right">Total Inicial</th>
-                <th className="py-2.5 px-3 text-right">Pagado / Adelanto</th>
-                <th className="py-2.5 px-3 text-right">Saldo Deuda</th>
-                <th className="py-2.5 px-3 text-center">Estado</th>
+                <th className="whitespace-nowrap p-4">Código</th>
+                <th className="whitespace-nowrap p-4">Origen</th>
+                <th className="whitespace-nowrap p-4">Cliente</th>
+                <th className="whitespace-nowrap p-4">Emisión</th>
+                <th className="whitespace-nowrap p-4">Vencimiento</th>
+                <th className="whitespace-nowrap p-4 text-right">Total Inicial</th>
+                <th className="whitespace-nowrap p-4 text-right">Pagado / Adelanto</th>
+                <th className="whitespace-nowrap p-4 text-right">Saldo Deuda</th>
+                <th className="whitespace-nowrap p-4 text-center">Estado</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--color-border)]">
+            <tbody className="bg-[var(--color-surface)]">
               {filtradas.map((c) => {
                 const esVencido = c.fechaVencimiento && c.fechaVencimiento < hoyStr;
 
                 return (
-                  <tr key={`${c.tipo}-${c.id}`} data-fila-grafico="true" tabIndex={0} onKeyDown={teclaFila} className="hover:bg-[var(--color-bg)] focus:bg-[var(--color-accent-bg)] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--color-accent)] transition-colors text-[var(--color-ink)]">
-                    <td className="py-2.5 px-3 font-mono font-black whitespace-nowrap">
+                  <tr key={`${c.tipo}-${c.id}`} data-fila-grafico="true" tabIndex={0} onKeyDown={teclaFila} className="tabla-fila h-[79px] cursor-pointer">
+                    <td className="p-4 font-mono font-black whitespace-nowrap">
                       {c.codigo}
                     </td>
-                    <td className="py-2.5 px-3 whitespace-nowrap">
+                    <td className="p-4 whitespace-nowrap">
                       <span
                         className={`px-2 py-0.5 text-[9px] font-black uppercase border ${
                           c.tipo === 'CONTRATO'
@@ -124,13 +124,13 @@ export const TabCobranzas: React.FC<TabCobranzasProps> = ({ cuentas, busqueda, f
                         {c.tipo}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 font-bold">
+                    <td className="p-4 font-bold">
                       {c.cliente}
                     </td>
-                    <td className="py-2.5 px-3 text-[var(--color-muted)] font-mono whitespace-nowrap text-[11px] font-bold">
+                    <td className="p-4 text-[var(--color-muted)] font-mono whitespace-nowrap text-[11px] font-bold">
                       {verFechaLocal(c.fechaEmision)}
                     </td>
-                    <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[11px] font-bold">
+                    <td className="p-4 whitespace-nowrap font-mono text-[11px] font-bold">
                       {c.fechaVencimiento ? (
                         <span className={esVencido ? 'text-[var(--color-danger)] font-black' : 'text-[var(--color-muted)]'}>
                           {verFechaLocal(c.fechaVencimiento)} {esVencido ? '(Vencido)' : ''}
@@ -139,16 +139,16 @@ export const TabCobranzas: React.FC<TabCobranzasProps> = ({ cuentas, busqueda, f
                         <span className="text-[var(--color-muted)]">Sin plazo</span>
                       )}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-bold whitespace-nowrap text-[var(--color-muted)]">
+                    <td className="p-4 text-right font-mono font-bold whitespace-nowrap text-[var(--color-muted)]">
                       S/ {c.total.toFixed(2)}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-black text-[var(--color-success)] whitespace-nowrap">
+                    <td className="p-4 text-right font-mono font-black text-[var(--color-success)] whitespace-nowrap">
                       S/ {c.pagado.toFixed(2)}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-black text-[var(--color-danger)] whitespace-nowrap">
+                    <td className="p-4 text-right font-mono font-black text-[var(--color-danger)] whitespace-nowrap">
                       S/ {c.saldo.toFixed(2)}
                     </td>
-                    <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                    <td className="p-4 text-center whitespace-nowrap">
                       <span
                         className={`px-2 py-0.5 text-[9px] font-black uppercase border ${
                           esVencido
