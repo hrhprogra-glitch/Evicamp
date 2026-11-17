@@ -66,7 +66,7 @@ try {
 
   // Vehículos
   await page.focus('#btn-subtab-vehiculos'); await tecla('Enter'); await pausa(1200);
-  ok('Vehículos: sus cuadros y botones', (await page.evaluate(() => document.body.innerText.toUpperCase().includes('ALERTAS SOAT'))) && (await hay('#btn-nuevo-vehiculo')));
+  ok('Vehículos: su tabla y botones (sin cuadros de resumen)', (await hay('#tabla-vehiculos-activos')) && (await hay('#btn-nuevo-vehiculo')) && !(await page.evaluate(() => document.body.innerText.toUpperCase().includes('ALERTAS SOAT'))));
   await page.screenshot({ path: path.join(aqui, 'captura-herramientas-nego.png') });
 
   // Solo Comercio otra vez: la pestaña guardada vuelve a Productos

@@ -174,6 +174,16 @@
 - **Autorizar con la clave del admin necesita internet** (decidido; no volver a proponerlo).
 
 ## 6. Errores que ya se cometieron (NO repetir)
+0b. **Creer que una tabla "parecida" a Inventario está lista, y medir solo el padding** (17/11/2026): el dueño pide que
+    sea **idéntica en estilo y tamaño**, no parecida. Comparar con `getComputedStyle` en el navegador: marco 1 px, fondo
+    blanco, sin sombra ni radio, cabecera `#1E293B` con letra blanca 14 px / peso 900 / espaciado 2,8 px / padding
+    16 px, filas padding 16 px y borde inferior 1 px. **El alto de fila de Inventario es 79 px** (lo marca la celda
+    "Inversión" de 46 px + 32 px de padding + 1 px de borde); las tablas nuevas sin ese contenido quedaban en 71 px y
+    hubo que fijar `min-h-[79px]`. Medir siempre las 3 tablas juntas antes de dar por terminado.
+0c. **Borrar o no borrar un bloque que el dueño dijo "no quiero quitalo" sin confirmar justo antes** (17/11/2026): el
+    dueño primero pidió quitar los cuadros de vehículos, luego dijo *"eso no quiero quitalo"* y al preguntarle eligió
+    dejarlos; después cambió de opinión (*"cambie de opinion los cuadros si borralos"*). Si el contexto trae señales
+    contrarias sobre borrar contenido, **preguntar una sola vez y esperar**; no dar por hecho la versión más reciente.
 0a. **Traer productos sin filtrar `is_active` en un buscador, y dejar un borrador viejo en `localStorage`** (17/11/2026):
     el dueño borra un producto en Inventario (`is_active = 0`) y ese producto seguía saliendo en Nueva salida; además, al
     quitar el último material con la basura el borrador no se borraba y el material reaparecía al reabrir. Todo buscador

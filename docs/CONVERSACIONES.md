@@ -1003,3 +1003,16 @@
   queda vacío. El `COCA COLA ORIGINAL 500ML` (activo) sigue saliendo, que es lo correcto. No se tocó la base.
 - **Prueba con teclado y sin internet: 17/17.** La del sidebar sigue 9/9 y la Fase 4 11/11 (base limpia). Sin
   Evicamp, sin push, sin pasada oficial ni Fase 5 sin aviso del dueño.
+
+## 17/11/2026 (tablas de Herramientas y Vehículos)
+- El dueño reportó: *"encontre otro error estetico en herramientos y vehiculos en vehiculos sale Flota de vehículos 1
+  unidades 1 operativos Alertas SOAT 0 por vencer / vencidos Vencen en 30 días o menos Alertas Rev. Técnica 0 por vencer
+  / vencidos Requieren inspección"*.
+- Dijo *"eso no quiero quitalo"* (los cuadros), pidió *"como tambien en la tabla no se parece al de inventario corrige
+  eso"* y fijó la regla: *"ya anote como me gusta que esten las tablas tiene que ser igual al de inventario esteticamente
+  como de tamaño"*. Al confirmarle, eligió dejar los cuadros; más tarde cambió de opinión: *"cambie de opinion los cuadros
+  si borralos"*. Se borraron.
+- Las tablas se rehicieron con el molde de Inventario (sin bordes gruesos, cabecera oscura, botones de icono, mismo
+  padding y mismo alto de fila). Se midieron 50/50 características idénticas con Puppeteer.
+- Pruebas con teclado y sin internet: tablas **13/13**, salida **17/17**, sidebar **9/9**, Fase 4 **11/11**; base limpia.
+  Solo en Nego, sin Evicamp, sin push, sin pasada oficial ni Fase 5.

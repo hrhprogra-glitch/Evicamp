@@ -21,6 +21,11 @@
 
 **Estado:** Fase 1 ✅ (16/11) · Fase 2 ✅ (17/11) · Fase 3 ✅ cargada y comprobada (17/11) · Fase 4 ✅ **hecha SOLO EN PRUEBAS** (17/11, 11/11 con teclado y sin internet) · Fase 5 ⏸ pendiente del dueño.
 
+- **17/11/2026 (167), ya con los datos migrados:** las tablas de Herramientas y Vehículos (traídas de Eco en la Fase 3)
+   se dejaron **idénticas a Inventario > Productos** en estilo y tamaño (50/50 medidas comprobadas, filas de 79 px) y se
+   quitaron los cuadros de resumen de Vehículos, que el dueño pidió borrar tras cambiar de opinión. Probado con teclado
+   y sin internet: 13/13. No se cambió ningún dato migrado; la base sigue con 36 compras y 34 archivos, 0 de prueba.
+
 - **17/11/2026 (166), ya con los datos migrados:** un producto dado de baja en Inventario (`COCA COLA`, `SKU-456382`,
   `is_active = 0`) seguía saliendo en Nueva salida. Se arregló el filtro del catálogo y el borrador local; **17/17** con
   teclado y sin internet. No se cambió ningún dato de la base migrada (519 productos: 512 activos, 7 borrados).

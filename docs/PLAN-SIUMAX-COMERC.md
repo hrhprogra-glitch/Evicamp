@@ -7,6 +7,10 @@
 > Última actualización: 17/11/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
+- **17/11/2026 (167) — Tablas de Herramientas y Vehículos idénticas a Inventario:** mismo marco, cabecera oscura,
+  columnas en 12, padding y **alto de fila de 79 px**; se quitaron los cuadros de "Flota de vehículos / Alertas SOAT /
+  Alertas Rev. Técnica" (el dueño cambió de opinión: *"cambie de opinion los cuadros si borralos"*). Medido 50/50
+  idéntico; probado con teclado y sin internet (13/13, salida 17/17, sidebar 9/9, Fase 4 11/11). Solo en Nego.
 - **17/11/2026 (166) — Arreglado el Coca Cola borrado en Nueva salida:** el catálogo del modal ahora trae solo
   productos activos (`is_active = 1`) y, cuando se quitan todos los materiales, se borra el borrador guardado para que
   no reaparezcan al reabrir. Probado con teclado y sin internet: **17/17**; siguen bien el sidebar (**9/9**) y la
@@ -111,6 +115,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Tablas de Herramientas y Vehículos iguales a Inventario** (estilo y tamaño; sin cuadros de resumen en Vehículos) | **Hecha y probada solo en Nego (167): 50/50 medidas idénticas, 13/13 con teclado y sin internet. No toca Evicamp** |
 | **Corrección: producto borrado en Nueva salida** (Coca Cola desactivado seguía saliendo; quitar un material lo devolvía al reabrir) | **Hecha y probada solo en Nego (166), 17/17 con teclado y sin internet. No toca Evicamp** |
 | **Corrección: selector del sidebar** (al abrir el menú va a la sesión abierta, no al primer botón) | **Hecha y probada solo en Nego (165), 9/9 con teclado y sin internet. No toca Evicamp** |
 | **Migración Eco → Nego, Fase 4: PDF y fotos de compras** (33 PDF + 1 foto comprimida en el VPS, botones Ver/Adjuntar en el detalle de Compra) | **Aprobada y hecha solo en pruebas (164), 11/11 con teclado y sin internet. Falta la revisión del dueño. NO pasada oficial ni Evicamp sin su aviso** |

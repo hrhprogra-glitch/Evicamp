@@ -7,6 +7,31 @@
 
 ---
 
+## 17/11/2026 (167) · OpenCode (Big Pickle) — Tablas de Herramientas y Vehículos IGUALES a Inventario; se quitaron los cuadros de vehículos
+- **Dueño:** *"encontre otro error estetico en herramientos y vehiculos en vehiculos sale Flota de vehículos 1 unidades 1
+  operativos Alertas SOAT 0 por vencer / vencidos ... Alertas Rev. Técnica 0 por vencer / vencidos"*; luego *"como tambien
+  en la tabla no se parece al de inventario corrige eso"* y *"ya anote como me gusta que esten las tablas tiene que ser
+  igual al de inventario esteticamente como de tamaño"*. Sobre los cuadros dijo primero *"eso no quiero quitalo"*, los
+  dejé, y después cambió de opinión: *"cambie de opinion los cuadros si borralos"*.
+- **Hecho:** se rehicieron `TablaHerramientas.tsx` y `TablaVehiculos.tsx` con el molde exacto de
+  `TablaProductos.tsx`: `tabla-marco`, cabecera oscura `tabla-cabecera`, filas `grid-cols-12`, `p-3 md:p-4`, borde
+  inferior fino, sin rayas verticales gruesas, sin sombras y sin esquinas redondeadas. Botones de fila como iconos
+  grises que toman color al pasar el foco (como Inventario). Etiquetas con los tokens del sistema. Se conservaron
+  todos los `id` y el teclado ↑/↓/Enter; Enter sobre un botón de la fila ya no abre también la edición.
+- **Cuadros:** borrado el bloque de "Flota de vehículos / Alertas SOAT / Alertas Rev. Técnica" y sus variables
+  (`totalVeh`, `vehOperativos`, `vehConAlertaSoat`, `vehConAlertaRev`, `hoy`) en `Activos.tsx`, y los iconos que ya no
+  se usaban. La prueba `prueba-herramientas-nego.mjs` ya no busca "ALERTAS SOAT": verifica la tabla y los botones.
+- **Medido con Puppeteer a 1366 px:** marco 1 px gris, fondo blanco, sin sombra, radio 0; cabecera `#1E293B`, letra
+  blanca 14 px, peso 900, espaciado 2,8 px, padding 16 px; filas padding 16 px, borde inferior 1 px, **alto 79 px**
+  en las tres tablas. **50/50 comparaciones idénticas** (antes las nuevas medían 71 px: se ajustó con `min-h-[79px]`).
+- **Pruebas (teclado y sin internet):** tablas y teclado **13/13**, comparación visual **50/50**, salida/Coca Cola
+  **17/17**, sidebar **9/9**, Fase 4 **11/11**. Base limpia: **36 compras | 34 archivos | 0 de prueba |
+  0 herramientas de prueba**. El tipo de negocio quedó restaurado a solo Comercio.
+- Compilado con 0 errores, `graphify update .` y desplegado **solo** con `node ai-scripts/deploy.cjs siumax`. Sin
+  Evicamp, sin push, sin pasada oficial ni Fase 5.
+
+---
+
 ## 17/11/2026 (166) · OpenCode (Big Pickle) — Arreglado: el producto Coca Cola borrado seguía saliendo en Nueva salida
 - **Dueño:** *"encontre otro error cuando entro a nueva salida sale un producto coca cola pero a pesar que lo borre o
   reseto sigue apareciendo revisa eso"*.

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Wrench, Car, Plus, HandHelping, Search, AlertTriangle, CheckCircle2, History } from 'lucide-react';
+import { Wrench, Car, Plus, HandHelping, Search, History } from 'lucide-react';
 import { supabase } from '../../../../db/supabase';
 import { avisar, usePermiso, avisarSinPermiso } from '../../../../utils/permisos';
 import { confirmar } from '../../../../utils/dialogos';
@@ -98,29 +98,6 @@ export const Activos: React.FC = () => {
     );
   }, [vehiculos, searchQuery]);
 
-  // Métricas
-
-  const totalVeh = vehiculos.length;
-  const vehOperativos = vehiculos.filter((v) => v.estado === 'OPERATIVO').length;
-
-  // Alertas SOAT y Rev Técnica (vencen en <= 30 días o ya vencidos)
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
-
-  const vehConAlertaSoat = vehiculos.filter((v) => {
-    if (!v.vencimiento_soat) return false;
-    const f = new Date(v.vencimiento_soat + 'T00:00:00');
-    const diff = Math.ceil((f.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-    return diff <= 30;
-  });
-
-  const vehConAlertaRev = vehiculos.filter((v) => {
-    if (!v.vencimiento_revision_tecnica) return false;
-    const f = new Date(v.vencimiento_revision_tecnica + 'T00:00:00');
-    const diff = Math.ceil((f.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-    return diff <= 30;
-  });
-
   // Acciones Herramientas
   const handleEliminarHerramienta = async (h: Herramienta) => {
     if (!puedeEditar) { avisarSinPermiso('eliminar herramientas'); return; }
@@ -159,28 +136,6 @@ export const Activos: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-5 font-mono text-[var(--color-ink)]">
-      {/* TARJETAS DE MÉTRICAS: solo en Vehículos (las de Herramientas se quitaron el 12/11/2026, pedido del dueño) */}
-      {subtab === 'VEHICULOS' && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {/* Mismo estilo que las tarjetas de Utilidades. El cuadro "Mantenimientos" se quitó: repetía el botón "Mantenimiento". */}
-          <div className="tarjeta-sobria p-4 bg-[var(--color-surface)]">
-            <span className="text-[10px] font-black uppercase tracking-wider text-[var(--color-muted)]">Flota de vehículos</span>
-            <div className="text-xl font-black mt-0.5 text-[var(--color-ink)]">{totalVeh} unidades</div>
-            <span className="text-[10px] font-bold text-[var(--color-muted)]">{vehOperativos} operativos</span>
-          </div>
-          <div className="tarjeta-sobria p-4 bg-[var(--color-surface)]">
-            <span className={`text-[10px] font-black uppercase tracking-wider ${vehConAlertaSoat.length > 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-success)]'}`}>Alertas SOAT</span>
-            <div className={`text-xl font-black mt-0.5 ${vehConAlertaSoat.length > 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-ink)]'}`}>{vehConAlertaSoat.length} por vencer / vencidos</div>
-            <span className="text-[10px] font-bold text-[var(--color-muted)]">Vencen en 30 días o menos</span>
-          </div>
-          <div className="tarjeta-sobria p-4 bg-[var(--color-surface)]">
-            <span className={`text-[10px] font-black uppercase tracking-wider ${vehConAlertaRev.length > 0 ? 'text-[var(--color-warning)]' : 'text-[var(--color-success)]'}`}>Alertas Rev. Técnica</span>
-            <div className={`text-xl font-black mt-0.5 ${vehConAlertaRev.length > 0 ? 'text-[var(--color-warning)]' : 'text-[var(--color-ink)]'}`}>{vehConAlertaRev.length} por vencer / vencidos</div>
-            <span className="text-[10px] font-bold text-[var(--color-muted)]">Requieren inspección</span>
-          </div>
-        </div>
-      )}
-
       {/* CONTROLES Y SUB-PESTAÑAS */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         {/* Switch Sub-pestañas */}

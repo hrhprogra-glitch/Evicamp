@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wrench, HandHelping, History, Edit2, Trash2, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { Search, HandHelping, History, Edit2, Trash2, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 import type { Herramienta } from './types';
 
 interface TablaHerramientasProps {
@@ -10,6 +10,8 @@ interface TablaHerramientasProps {
   onEliminar: (h: Herramienta) => void;
 }
 
+// Mismo molde que Inventario > Productos (SiuMax Sobrio): tabla-marco, cabecera oscura,
+// filas en grid-cols-12 con p-3 md:p-4 y separador fino. Sin bordes gruesos ni sombras.
 export const TablaHerramientas: React.FC<TablaHerramientasProps> = ({
   herramientas,
   onPrestar,
@@ -18,6 +20,8 @@ export const TablaHerramientas: React.FC<TablaHerramientasProps> = ({
   onEliminar,
 }) => {
   const handleKeyDownRow = (e: React.KeyboardEvent, index: number, h: Herramienta) => {
+    // Enter en un botón de la fila debe hacer solo la acción del botón, no abrir la edición.
+    if (e.key === 'Enter' && e.target !== e.currentTarget) return;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       const next = document.getElementById(`fila-herr-${index + 1}`);
@@ -38,119 +42,143 @@ export const TablaHerramientas: React.FC<TablaHerramientasProps> = ({
 
   if (herramientas.length === 0) {
     return (
-      <div className="p-8 border border-[var(--color-border)] bg-[var(--color-surface)] text-center font-mono">
-        <Wrench size={32} className="mx-auto mb-2 text-neutral-400" />
-        <p className="font-bold text-sm">No se encontraron herramientas registradas.</p>
-        <p className="text-xs text-neutral-500 mt-1">Usa el botón "+ Nueva Herramienta" para registrar una.</p>
+      <div className="tabla-marco">
+        <div className="vacio-sobrio">
+          <Search size={32} />
+          No se registran herramientas con esos parámetros.
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="border border-[var(--color-border)] bg-[var(--color-surface)] overflow-x-auto font-mono text-xs">
-      <table className="w-full text-left border-collapse">
-        <thead className="bg-[var(--color-surface)] border-b-2 border-[var(--color-ink)] font-black uppercase text-[11px] tracking-wider">
-          <tr>
-            <th className="p-3 border-r-2 border-[var(--color-ink)]">Código</th>
-            <th className="p-3 border-r-2 border-[var(--color-ink)]">Nombre y Marca</th>
-            <th className="p-3 border-r-2 border-[var(--color-ink)]">Categoría</th>
-            <th className="p-3 border-r-2 border-[var(--color-ink)] text-center">Total</th>
-            <th className="p-3 border-r-2 border-[var(--color-ink)] text-center">En Uso</th>
-            <th className="p-3 border-r-2 border-[var(--color-ink)] text-center">Disponibles</th>
-            <th className="p-3 border-r-2 border-[var(--color-ink)] text-center">Estado</th>
-            <th className="p-3 text-right">Acciones</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y-2 divide-[var(--color-ink)]">
+    <div id="tabla-herramientas-activos" className="tabla-marco w-full overflow-x-auto custom-scrollbar">
+      <div className="md:min-w-[960px]">
+        <div className="tabla-cabecera hidden md:grid grid-cols-12 p-4 items-center">
+          <div className="col-span-2">Código</div>
+          <div className="col-span-3">Nombre y Marca</div>
+          <div className="col-span-2">Categoría</div>
+          <div className="col-span-1 text-center">Total</div>
+          <div className="col-span-1 text-center">En Uso</div>
+          <div className="col-span-1 text-center">Disponibles</div>
+          <div className="col-span-1 text-center">Estado</div>
+          <div className="col-span-1 text-center">Acciones</div>
+        </div>
+
+        <div>
           {herramientas.map((h, idx) => {
             const disponibles = Math.max(0, h.cantidad_total - h.cantidad_en_uso);
+            const estadoClase =
+              h.estado === 'OPERATIVO'
+                ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent)] border-[var(--color-accent)]'
+                : h.estado === 'EN_MANTENIMIENTO'
+                ? 'bg-[var(--color-warning-bg)] text-[var(--color-warning)] border-[var(--color-warning)]'
+                : 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger)]';
+
             return (
-              <tr
+              <div
                 key={h.id}
                 id={`fila-herr-${idx}`}
                 tabIndex={0}
                 onKeyDown={(e) => handleKeyDownRow(e, idx, h)}
-                className="hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 focus:bg-amber-100/50 dark:focus:bg-amber-950/40 focus:outline-none transition-colors"
+                className="grid grid-cols-12 items-center min-h-[79px] p-3 md:p-4 border-b border-[var(--color-border)] hover:bg-[var(--color-bg)] focus:outline-none focus-visible:bg-[var(--color-bg-2)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-ink)] transition-colors"
               >
-                <td className="p-3 border-r-2 border-[var(--color-ink)] font-bold">
-                  {h.codigo || <span className="text-neutral-400">—</span>}
-                </td>
-                <td className="p-3 border-r-2 border-[var(--color-ink)]">
-                  <div className="font-black text-sm">{h.nombre}</div>
-                  <div className="text-[11px] text-neutral-500">
+                {/* Código */}
+                <div className="col-span-2 pr-2 min-w-0">
+                  <span className="inline-block bg-[var(--color-bg-2)] px-2 py-1 border border-[var(--color-border)] text-sm font-black text-[var(--color-ink)] rounded-none truncate max-w-full" title={h.codigo || undefined}>
+                    {h.codigo || '—'}
+                  </span>
+                </div>
+
+                {/* Nombre y Marca */}
+                <div className="col-span-3 pr-2 min-w-0 flex flex-col gap-1">
+                  <p className="font-black text-sm uppercase text-[var(--color-ink)] leading-tight truncate" title={h.nombre}>
+                    {h.nombre}
+                  </p>
+                  <span className="text-[10px] font-bold text-[var(--color-muted)] uppercase truncate">
                     {[h.marca, h.modelo, h.serie ? `S/N: ${h.serie}` : null].filter(Boolean).join(' · ') || 'Sin datos adicionales'}
-                  </div>
-                </td>
-                <td className="p-3 border-r-2 border-[var(--color-ink)] font-bold uppercase">
-                  {h.categoria}
-                </td>
-                <td className="p-3 border-r-2 border-[var(--color-ink)] text-center font-bold">
+                  </span>
+                </div>
+
+                {/* Categoría */}
+                <div className="col-span-2 pr-2 min-w-0">
+                  <span className="inline-block text-[10px] font-black text-white bg-[var(--color-ink)] px-2 py-0.5 tracking-widest rounded-none uppercase truncate max-w-full">
+                    {h.categoria}
+                  </span>
+                </div>
+
+                {/* Total */}
+                <div className="col-span-1 text-center font-bold text-sm text-[var(--color-ink)]">
                   {h.cantidad_total}
-                </td>
-                <td className="p-3 border-r-2 border-[var(--color-ink)] text-center font-bold text-amber-600">
+                </div>
+
+                {/* En Uso */}
+                <div className="col-span-1 text-center font-bold text-sm text-[var(--color-warning)]">
                   {h.cantidad_en_uso}
-                </td>
-                <td className="p-3 border-r-2 border-[var(--color-ink)] text-center font-black text-emerald-600 text-sm">
-                  {disponibles}
-                </td>
-                <td className="p-3 border-r-2 border-[var(--color-ink)] text-center">
-                  <span
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-black uppercase border ${
-                      h.estado === 'OPERATIVO'
-                        ? 'bg-emerald-100 text-emerald-900 border-emerald-600'
-                        : h.estado === 'EN_MANTENIMIENTO'
-                        ? 'bg-amber-100 text-amber-900 border-amber-600'
-                        : 'bg-red-100 text-red-900 border-red-600'
-                    }`}
-                  >
+                </div>
+
+                {/* Disponibles */}
+                <div className="col-span-1 text-center">
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 border font-black text-xs uppercase tracking-widest rounded-none ${
+                    disponibles > 0
+                      ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent)] border-[var(--color-accent)]'
+                      : 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger)]'
+                  }`}>
+                    {disponibles}
+                  </span>
+                </div>
+
+                {/* Estado */}
+                <div className="col-span-1 text-center">
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 border font-black text-[10px] uppercase tracking-widest rounded-none ${estadoClase}`}>
                     {h.estado === 'OPERATIVO' && <CheckCircle2 size={11} />}
                     {h.estado === 'EN_MANTENIMIENTO' && <AlertTriangle size={11} />}
                     {h.estado === 'DE_BAJA' && <XCircle size={11} />}
                     {h.estado}
                   </span>
-                </td>
-                <td className="p-3 text-right">
-                  <div className="flex items-center justify-end gap-1.5">
-                    <button
-                      id={`btn-prestar-herr-${h.id}`}
-                      onClick={() => onPrestar(h)}
-                      disabled={disponibles <= 0}
-                      title="Prestar a trabajador"
-                      className="p-1.5 bg-blue-600 text-white border border-[var(--color-ink)] hover:bg-blue-700 disabled:opacity-30 cursor-pointer"
-                    >
-                      <HandHelping size={14} />
-                    </button>
-                    <button
-                      id={`btn-historial-herr-${h.id}`}
-                      onClick={() => onHistorial(h)}
-                      title="Historial de préstamos"
-                      className="p-1.5 bg-neutral-200 dark:bg-neutral-800 text-[var(--color-ink)] border border-[var(--color-ink)] hover:bg-neutral-300 cursor-pointer"
-                    >
-                      <History size={14} />
-                    </button>
-                    <button
-                      id={`btn-editar-herr-${h.id}`}
-                      onClick={() => onEditar(h)}
-                      title="Editar herramienta"
-                      className="p-1.5 bg-neutral-200 dark:bg-neutral-800 text-[var(--color-ink)] border border-[var(--color-ink)] hover:bg-neutral-300 cursor-pointer"
-                    >
-                      <Edit2 size={14} />
-                    </button>
-                    <button
-                      id={`btn-eliminar-herr-${h.id}`}
-                      onClick={() => onEliminar(h)}
-                      title="Eliminar herramienta"
-                      className="p-1.5 bg-red-100 text-red-700 border border-red-400 hover:bg-red-200 cursor-pointer"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                </div>
+
+                {/* Acciones */}
+                <div className="col-span-1 flex items-center justify-center gap-3">
+                  <button
+                    id={`btn-prestar-herr-${h.id}`}
+                    onClick={(e) => { e.stopPropagation(); onPrestar(h); }}
+                    disabled={disponibles <= 0}
+                    title="Prestar a trabajador"
+                    className="text-[#94A3B8] hover:text-[#3B82F6] focus:text-[#3B82F6] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] p-1 transition-colors cursor-pointer disabled:opacity-30"
+                  >
+                    <HandHelping size={16} />
+                  </button>
+                  <button
+                    id={`btn-historial-herr-${h.id}`}
+                    onClick={(e) => { e.stopPropagation(); onHistorial(h); }}
+                    title="Historial de préstamos"
+                    className="text-[#94A3B8] hover:text-[var(--color-info)] focus:text-[var(--color-info)] focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] p-1 transition-colors cursor-pointer"
+                  >
+                    <History size={16} />
+                  </button>
+                  <button
+                    id={`btn-editar-herr-${h.id}`}
+                    onClick={(e) => { e.stopPropagation(); onEditar(h); }}
+                    title="Editar herramienta"
+                    className="text-[#94A3B8] hover:text-[var(--color-success)] focus:text-[var(--color-success)] focus:outline-none focus:ring-2 focus:ring-[var(--color-success)] p-1 transition-colors cursor-pointer"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                  <button
+                    id={`btn-eliminar-herr-${h.id}`}
+                    onClick={(e) => { e.stopPropagation(); onEliminar(h); }}
+                    title="Eliminar herramienta"
+                    className="text-[#94A3B8] hover:text-red-500 focus:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 p-1 transition-colors cursor-pointer"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
             );
           })}
-        </tbody>
-      </table>
+        </div>
+      </div>
     </div>
   );
 };
