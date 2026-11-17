@@ -1062,3 +1062,14 @@
   en Nego, con respaldo y `lock_timeout`) y se reforzó la prueba del Taller sin tocar la lógica de stock.
 - Pruebas con teclado y sin internet: Contratos todo OK (30/30), Taller todo OK (42/42); base final `{servicios}`.
   No se desplegó frontend porque no cambió código de la app. Sin Evicamp, sin push, sin pasada oficial ni Fase 5.
+
+## 17/11/2026 (salidas pendientes en Agenda, propuesta esperando el OK)
+- El dueño dijo: *"perfecto ahora en agendas deberia salir las salidas pendientes como las finalizadas me entiendes ?"*.
+- Se le preguntó qué quería decir "pendientes" y eligió **Salidas en proceso** (`EN_PROCESO`), no trabajos sin salida,
+  no salidas sin trabajo y no pendientes de sin internet.
+- Se investigó sin cambiar código: toda salida nueva nace `EN_PROCESO` (`fn_registrar_salida`), se vincula al trabajo
+  con `agenda_trabajos.salida_id`, y hoy el detalle del trabajo dice "Salida de materiales generada" igual para la salida
+  en proceso que para la finalizada; la tarjeta no muestra nada de la salida.
+- Propuesta entregada: mostrar el estado de la salida en la Agenda (etiqueta amarilla de pendiente en tarjeta y detalle,
+  verde para finalizada), sin tocar ids, atajos, estilo, stock ni Taller, con prueba nueva de teclado y sin internet.
+- El dueño todavía no dice "empieza": **no se cambió código ni se desplegó nada**.

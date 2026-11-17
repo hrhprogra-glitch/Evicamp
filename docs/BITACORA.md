@@ -7,6 +7,22 @@
 
 ---
 
+## 17/11/2026 (172) · OpenCode (Big Pickle) — Pedido nuevo: salidas pendientes en Agenda; propuesta esperando el OK del dueño
+- **Dueño:** *"perfecto ahora en agendas deberia salir las salidas pendientes como las finalizadas me entiendes ?"*.
+  Preguntó qué quería decir "pendientes" y eligió **Salidas en proceso** (`EN_PROCESO`), no trabajos sin salida ni
+  salidas sin trabajo.
+- **Investigado sin cambiar código:** `fn_registrar_salida` siempre crea la salida como `EN_PROCESO` y devuelve su id;
+  `handleSalidaCreada` vincula ese id a `agenda_trabajos.salida_id`. Hoy `ModalDetalleTrabajo` muestra el mismo aviso
+  verde ("Salida de materiales generada") tanto si la salida está en proceso como si está finalizada, y la tarjeta del
+  trabajo no muestra ningún aviso de salida. Por eso no se distingue en Agenda cuáles siguen pendientes.
+- **Propuesta entregada (esperando "empieza"):** traer el estado de la salida con el trabajo; etiqueta amarilla
+  "Salida pendiente" en la tarjeta y en el detalle cuando esté `EN_PROCESO`, y mantener el aviso verde para
+  `FINALIZADO`; conservar ids, atajos, estilo SiuMax Sobrio, stock y Taller sin cambios; prueba nueva con teclado y
+  sin internet. Sin SQL, sin Evicamp, sin push, sin pasada oficial ni Fase 5.
+- No se cambió código ni se desplegó nada. Base sin tocar (`{servicios}`).
+
+---
+
 ## 17/11/2026 (171) · OpenCode (Big Pickle) — Arregladas las visitas de Contratos y reforzada la prueba del Taller
 - **Dueño:** dijo **"empieza"** a la propuesta de los 2 fallos nuevos.
 - **Contratos (arreglado):** `fn_generar_visitas_contrato` ahora arma primero la lista de fechas y, si el contrato

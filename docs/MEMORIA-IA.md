@@ -634,4 +634,15 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
   No se cambió la lógica de stock. Lección: antes de culpar al trigger, comparar valores numéricos y esperar a que
   termine la operación; una prueba puede dar un MAL falso por formato o por tiempo.
 
+## 25. Agenda y salidas: cómo se vinculan (17/11/2026, bitácora 172)
+- `fn_registrar_salida` **siempre inserta `estado = 'EN_PROCESO'`** y devuelve `{id, codigo}`. Desde Agenda,
+  `handleSalidaCreada` guarda ese id en `agenda_trabajos.salida_id` (hay FK a `salidas(id) ON DELETE SET NULL`).
+- Ojo con el significado: "salida pendiente" para el dueño es **`EN_PROCESO`**, no "trabajo sin salida", no "salida
+  sin trabajo" y no "pendiente de subir por sin internet". Preguntar siempre cuál de los cuatro cases puede ser.
+- Hoy `ModalDetalleTrabajo` muestra el mismo aviso verde para cualquier `salida_id` (no mira el estado) y
+  `TarjetaTrabajo` no muestra ningún aviso de salida. Para distinguir pendiente de finalizada hay que traer
+  `salida:salidas(id, codigo, estado)` en el `select` de `Agenda/index.tsx` y usarlo en tarjeta y detalle.
+- El color de Salidas para `EN_PROCESO` es **ámbar** (`bg-amber-100 ... border-amber-300`) y para `FINALIZADO` es
+  **verde esmeralda**; mantener ese lenguaje visual y `rounded-none` (SiuMax Sobrio).
+
 
