@@ -21,6 +21,12 @@
 - **Dato para la Fase 2:** las 4 tablas de piscinas están vacías; en Eco las piscinas parecen estar en
   `activos`/`contactos`. `sync_*` es técnica (sincronización), no dato de negocio.
 - **Memoria:** detalle y plan de fases en `docs/MIGRACION-ECO-A-NEGO.md`.
+- **Arreglo técnico (necesario para poder commitear):** `git status` fallaba con
+  `fatal: not a git repository: D:/Programación/siumax/comercio/.git/worktrees/finanzas-historial`. Causa: 4 carpetas
+  viejas de worktrees quedaron dentro del repo y estaban registradas como gitlinks (`160000`) en el índice. Se quitaron
+  del índice con `git update-index --force-remove` (sin borrar archivos) y `.worktrees/` se agregó a `.gitignore`.
+  Los commits apuntados siguen alcanzables desde `main`; no se perdió nada. Detalle en `docs/MEMORIA-IA.md` (sección 19).
+  Las carpetas físicas siguen en el disco: se pueden borrar cuando el dueño lo diga.
 - **Siguiente:** Fase 2, comparar y mapear cada tabla de Eco con las tablas de Nego (sin cargar nada todavía).
   Esperando el "empieza" del dueño.
 

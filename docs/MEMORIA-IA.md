@@ -473,4 +473,27 @@ En ventanas grandes (`max-w-4xl` o más) como `ModalGrupo.tsx`:
 - En pruebas con Puppeteer: al cambiar de vista de PC a celular con `page.setViewport({ width: 390, height: 844 })`, NO alternar `isMobile: true` en caliente porque Chromium recarga la página automáticamente y reinicia `App.tsx` a la vista inicial (`pos`).
 - Al editar archivos desde la IA: hacer siempre todos los cambios de un mismo archivo en **un solo paso** (una sola llamada de edición por archivo) para evitar que el editor del dueño muestre conflicto de guardado (*"El contenido del archivo en el disco es más reciente"*) si tiene esas pestañas abiertas.
 
+## 19. Git: "fatal: not a git repository" al correr `git status` (16/11/2026)
+
+**Síntoma:** en `negocios/comercio`, `git log`, `git rev-parse` y `git ls-files` funcionaban, pero **`git status`
+fallaba siempre** con:
+`fatal: not a git repository: D:/Programación/siumax/comercio/.git/worktrees/finanzas-historial`
+(una ruta vieja, de cuando el repo estaba en `siumax/comercio` antes de moverse a `siumax/negocios/comercio`).
+
+**Causa:** las 4 carpetas viejas de worktrees (`.worktrees/finanzas-historial`, `pruebas-aisladas`, `reportes-search`,
+`todo-junto`) quedaron **dentro del repo** y en algún momento se agregaron al control de versiones: están en el índice y en
+el commit como **gitlinks** (`git ls-files -s .worktrees` muestra modo `160000`). Cada una tiene un archivo `.git` con
+`gitdir: D:/Programación/siumax/comercio/.git/worktrees/<nombre>` (ruta vieja, ya inexistente). Al calcular el estado,
+git entra a esos "submódulos", no encuentra su gitdir y muere. Por eso `status` falla pero `log`/`ls-files` no.
+
+**Solución aplicada:** quitar esas 4 entradas del índice sin borrar archivos, con
+`git update-index --force-remove ".worktrees/<nombre>"` (con `git rm --cached` NO funciona: también intenta entrar al
+submódulo y falla), y agregar `.worktrees/` a `.gitignore`. Los 4 commits a los que apuntaban
+(`fd00063`, `7f96f78`, `bd8c81e`, `65e45cf`) siguen existiendo y son alcanzables desde `main`, así que no se perdió nada.
+Las carpetas físicas siguen en el disco; se pueden borrar cuando el dueño lo diga.
+
+**Regla para el futuro:** nunca dejar carpetas de worktrees dentro de la carpeta del repo, ni hacer `git add -A` con
+worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `git ls-files -s` en busca de entradas
+`160000` que no correspondan.
+
 
