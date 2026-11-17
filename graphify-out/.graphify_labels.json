@@ -95,6 +95,5 @@
   "164": "migrar-dominio.sh",
   "170": "update.cjs",
   "172": "ajustar-conexiones.sh",
-  "176": "fix-pill-debug.cjs",
   "177": "fix-syntax-error.cjs"
 }

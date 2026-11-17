@@ -18,9 +18,9 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1794536419.215464,
-    "seen": 1794537463.334802,
-    "ast_hash": "b6c09952119bee3722969cc43d7856cf",
+    "mtime": 1794685786.7395048,
+    "seen": 1794877997.648609,
+    "ast_hash": "50d06aa5cb195ada4000a3d6648e3cee",
     "semantic_hash": ""
   },
   "src/db/supabase.ts": {
@@ -174,9 +174,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/index.tsx": {
-    "mtime": 1794548442.5774071,
-    "seen": 1794549056.8837235,
-    "ast_hash": "a081efff6de148ad15e37950ea50e8b9",
+    "mtime": 1794685786.657605,
+    "seen": 1794877997.6488218,
+    "ast_hash": "39d8ff93f71ae1677998f562632e84a7",
     "semantic_hash": ""
   },
   "src/sections/Inventario/types.ts": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1794666007.1045268,
-    "seen": 1794666019.259997,
-    "ast_hash": "fc228e09be3fa3d233c0f0ed75e4d33a",
+    "mtime": 1794877973.7602012,
+    "seen": 1794877997.6490245,
+    "ast_hash": "5b9e7803b6310e00e299c189bd6a26c1",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1794666007.1090345,
-    "seen": 1794666019.2599978,
-    "ast_hash": "887e5b1b279915cd2f711e852a576794",
+    "mtime": 1794877737.5418353,
+    "seen": 1794877997.6490257,
+    "ast_hash": "6b2cd130ec141a9873dfee978610fd9d",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1794596632.0480456,
-    "seen": 1794596641.9843085,
-    "ast_hash": "de9d91bd2f652714046b218bd67dc64d",
+    "mtime": 1794877970.921293,
+    "seen": 1794877997.649027,
+    "ast_hash": "7e156392b666682ccf7739b9dfd60f34",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1794666007.1070342,
-    "seen": 1794666019.2600002,
-    "ast_hash": "ef06c139405bd5fba3b4f8e386abde2b",
+    "mtime": 1794877742.020577,
+    "seen": 1794877997.6490302,
+    "ast_hash": "afbd49b6015cf83f0af0f5938fc3be43",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2088,9 +2088,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-fase4-evicamp.cjs": {
-    "mtime": 1793289284.1591537,
-    "seen": 1793296973.0699527,
-    "ast_hash": "4d79adc4c8d3b7377e3b62cc86859b54",
+    "mtime": 1794869171.0526938,
+    "seen": 1794877997.6482966,
+    "ast_hash": "44ef03b5354c06ff5796a51f0ab074da",
     "semantic_hash": ""
   },
   "servidor/sql/deshacer-fase4-3.sql": {
@@ -2100,9 +2100,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-fase4-3-evicamp.cjs": {
-    "mtime": 1793300327.11364,
-    "seen": 1793302715.32767,
-    "ast_hash": "f2cfaea11728c7300f727248a2a130a6",
+    "mtime": 1794869171.0526938,
+    "seen": 1794877997.6482925,
+    "ast_hash": "7883b990e053d33bf689b570fc50dfc1",
     "semantic_hash": ""
   },
   "servidor/sql/deshacer-fase4-completa.sql": {
@@ -2112,9 +2112,9 @@
     "semantic_hash": ""
   },
   "src/sections/Clientes/components/PestanaPedidos.tsx": {
-    "mtime": 1794536391.591713,
-    "seen": 1794537463.3348706,
-    "ast_hash": "5edf0955200f4cf022f7838d98846321",
+    "mtime": 1794685786.9189367,
+    "seen": 1794877997.6486776,
+    "ast_hash": "18a00e1d97980c45ef25ce7aa7a33168",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/ModalCotizacionPOS.tsx": {
@@ -2130,15 +2130,15 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-fase3-siumax.cjs": {
-    "mtime": 1793325977.5717235,
-    "seen": 1793331636.362379,
-    "ast_hash": "bb5313f4df8ad06f3775d5f24dc6d785",
+    "mtime": 1794869171.0526938,
+    "seen": 1794877997.6482906,
+    "ast_hash": "67e0db28546430d4a27d9be0e369b63b",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-fase4-completa-evicamp.cjs": {
-    "mtime": 1793321368.249908,
-    "seen": 1793324961.3546865,
-    "ast_hash": "aae5928e222e7ab0fb25193fcbdba3e9",
+    "mtime": 1794869171.0526938,
+    "seen": 1794877997.6482944,
+    "ast_hash": "83cbde10493618bea39006097aadb908",
     "semantic_hash": ""
   },
   "servidor/sql/deshacer-fase3.sql": {
@@ -2148,15 +2148,15 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-fase3-evicamp.cjs": {
-    "mtime": 1793325977.5712173,
-    "seen": 1793331636.3623772,
-    "ast_hash": "05f90d4d8755ace58bc3e99141a974f2",
+    "mtime": 1794869171.0526938,
+    "seen": 1794877997.648288,
+    "ast_hash": "629d6b4d61bfc9342ca9e65e23ddc12f",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-fase6-cambios-siumax.cjs": {
-    "mtime": 1793465971.8796718,
-    "seen": 1793466099.875449,
-    "ast_hash": "99a7df597e258addf62aac42c6f27855",
+    "mtime": 1794869171.0526938,
+    "seen": 1794877997.6482983,
+    "ast_hash": "f154f73058e779b1de853afccc7c2cb4",
     "semantic_hash": ""
   },
   "servidor/sql/deshacer-fase6-cambios-garantias.sql": {
@@ -2178,15 +2178,15 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-fase6-evicamp.cjs": {
-    "mtime": 1793465971.8806722,
-    "seen": 1793466099.8754513,
-    "ast_hash": "96bc8c86293e8454e14cf975fc86efa9",
+    "mtime": 1794869171.0526938,
+    "seen": 1794877997.6483002,
+    "ast_hash": "9fc5f043b5fbe1a58f437dd52b0e2386",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-fase7-siumax.cjs": {
-    "mtime": 1793485941.6407337,
-    "seen": 1793490589.4621062,
-    "ast_hash": "41d3483c7e8f166d5fe8e72d4a8096e2",
+    "mtime": 1794869171.061205,
+    "seen": 1794877997.6483035,
+    "ast_hash": "8a656e14311b3d05219726a0ee4fae2c",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-fase7-ui.mjs": {
@@ -2232,15 +2232,15 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-fase7-evicamp.cjs": {
-    "mtime": 1793485941.6321397,
-    "seen": 1793490589.4621046,
-    "ast_hash": "cfb55f67cec22a12ed061d6b435212aa",
+    "mtime": 1794869171.061205,
+    "seen": 1794877997.6483018,
+    "ast_hash": "422c6c76fa237900d160f07d8fa9e7ee",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-fase8-siumax.cjs": {
-    "mtime": 1793488503.855278,
-    "seen": 1793490589.4621074,
-    "ast_hash": "64df90399fb954d849d95bd4fc5ab96b",
+    "mtime": 1794869171.061205,
+    "seen": 1794877997.6483054,
+    "ast_hash": "724bbfa08bbbecc71ae84d5a6c3ba227",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-fase8-backend.mjs": {
@@ -2544,27 +2544,27 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/ver-clientes.mjs": {
-    "mtime": 1794436614.2530286,
-    "seen": 1794507021.6958742,
-    "ast_hash": "0ccf7a74791c0f1b0c205efdd1e744e7",
+    "mtime": 1794869171.0269227,
+    "seen": 1794877997.6483333,
+    "ast_hash": "16e05e0d1094030c8e360daaf5b5763a",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/ver-conteos.mjs": {
-    "mtime": 1794436614.2530286,
-    "seen": 1794507021.6958761,
-    "ast_hash": "b1cb20f6bbee1b7843b2da1d505cccb6",
+    "mtime": 1794869171.0269227,
+    "seen": 1794877997.6483357,
+    "ast_hash": "ee195208e576c6120a17c248015ca13c",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/ver-finanzas.mjs": {
-    "mtime": 1794436614.2530286,
-    "seen": 1794507021.6958778,
-    "ast_hash": "eb81b767f4fc53d2255d262304c8fc84",
+    "mtime": 1794869171.0516882,
+    "seen": 1794877997.648337,
+    "ast_hash": "f466eabc83405decb813045cc64f7aea",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/ver-inventario.mjs": {
-    "mtime": 1794436614.254029,
-    "seen": 1794507021.6958795,
-    "ast_hash": "d8b922136a97ec4389c2ec605cfd1ae5",
+    "mtime": 1794869171.0516882,
+    "seen": 1794877997.648338,
+    "ast_hash": "36255b238865b78db7561fe9bd3813a0",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/LEEME.md": {
@@ -2574,39 +2574,39 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/ver-utilidades.mjs": {
-    "mtime": 1794436614.254029,
-    "seen": 1794507021.6958828,
-    "ast_hash": "de7b9146e6aba18982f2e4d9c8149ee3",
+    "mtime": 1794869171.0516882,
+    "seen": 1794877997.6483421,
+    "ast_hash": "0c876c89debba28a2d6ccf325f91856e",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/ver-ajustes.mjs": {
-    "mtime": 1794436614.252029,
-    "seen": 1794507021.6958706,
-    "ast_hash": "aa9b7d852a0882d146cc303c22c2161b",
+    "mtime": 1794869171.0269227,
+    "seen": 1794877997.6483295,
+    "ast_hash": "225c5ced756f51b6b484f37f89387c1c",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/ver-pos.mjs": {
-    "mtime": 1794436614.254029,
-    "seen": 1794507021.695881,
-    "ast_hash": "07ba202b507ae3de834104bda905f3ed",
+    "mtime": 1794869171.0516882,
+    "seen": 1794877997.6483402,
+    "ast_hash": "4300477b4cee1f32f4ec659e965d0502",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/ver-clientes-cabecera.mjs": {
-    "mtime": 1794436614.2530286,
-    "seen": 1794507021.6958725,
-    "ast_hash": "8e564840e3206fbaaec2d3b72de2c1bf",
+    "mtime": 1794869171.0269227,
+    "seen": 1794877997.6483314,
+    "ast_hash": "991ead1ff5c4082b5439c2af564d8234",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-botones-grupos-clientes.mjs": {
-    "mtime": 1794548764.6587758,
-    "seen": 1794549056.88347,
-    "ast_hash": "3c6e5ff9e8d2e2a386fcef514274be5a",
+    "mtime": 1794869171.0622046,
+    "seen": 1794877997.6483583,
+    "ast_hash": "8f835ab3e55f444aa09575479a2f7390",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/revisar-tamanos.mjs": {
-    "mtime": 1794436614.2387283,
-    "seen": 1794507021.6958654,
-    "ast_hash": "1977d6522d1fb5cdcca4385a7ccfd953",
+    "mtime": 1794869171.0259228,
+    "seen": 1794877997.648324,
+    "ast_hash": "5ed5c107760acb37f770f7e4eaf3add6",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/revisar-ventanas-caja.mjs": {
@@ -2616,9 +2616,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/revisar-ventanas.mjs": {
-    "mtime": 1794436614.252029,
-    "seen": 1794507021.6958687,
-    "ast_hash": "9d9b2d5d05b421f7ac5fe325fc8e4083",
+    "mtime": 1794869171.0269227,
+    "seen": 1794877997.6483276,
+    "ast_hash": "6162e8cb0b6c1d1d35b85014ef382c93",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/estilo/revisar-selector.mjs": {
@@ -2658,21 +2658,21 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-selector-cierre-submodal.mjs": {
-    "mtime": 1794548764.7210245,
-    "seen": 1794549056.8835247,
-    "ast_hash": "43cda2a17c0b718be828588b81c06209",
+    "mtime": 1794869171.0732043,
+    "seen": 1794877997.6484675,
+    "ast_hash": "8030ce8576424d40ade1f3c37a2b0171",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/ver-modal-grupo.mjs": {
-    "mtime": 1794548764.7320478,
-    "seen": 1794549056.8835413,
-    "ast_hash": "b22780e0b47c0f09f53e64ba7440353e",
+    "mtime": 1794869171.0747068,
+    "seen": 1794877997.6484976,
+    "ast_hash": "31135f3f7b529ff6214bd68a9c408768",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/ver-modal-ticket-sunat.mjs": {
-    "mtime": 1794548764.7320478,
-    "seen": 1794549056.8835423,
-    "ast_hash": "9f786d01139eaa61d1c22781e3d501a3",
+    "mtime": 1794869171.0747068,
+    "seen": 1794877997.6484993,
+    "ast_hash": "aebc2691bf049dc2c1eeec1df1a41ba0",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/calcularAnalisis.ts": {
@@ -2748,9 +2748,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-escaner-celular.mjs": {
-    "mtime": 1794548764.6945353,
-    "seen": 1794549056.883491,
-    "ast_hash": "371a14e52d82bcbea97ca7360c125ad1",
+    "mtime": 1794869171.0712044,
+    "seen": 1794877997.6483984,
+    "ast_hash": "49c0f319a3ac61b4a596920daabea0c7",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-tipo-negocio.mjs": {
@@ -2934,9 +2934,9 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/HeaderSalidas.tsx": {
-    "mtime": 1794524203.5337174,
-    "seen": 1794524736.4787228,
-    "ast_hash": "2201d2c2b2982d788207b8701bf18ee5",
+    "mtime": 1794685787.154015,
+    "seen": 1794877997.6488752,
+    "ast_hash": "6ced4028e1ca5d6e0bb037c94bb416cc",
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalDetalleSalida.tsx": {
@@ -2988,9 +2988,9 @@
     "semantic_hash": ""
   },
   "src/sections/Agenda/components/HeaderAgenda.tsx": {
-    "mtime": 1794529348.0440986,
-    "seen": 1794530287.1043303,
-    "ast_hash": "9b5efa5e82426bd9a79c96216dba67a0",
+    "mtime": 1794685786.820001,
+    "seen": 1794877997.6486354,
+    "ast_hash": "76b88e26ca31f86370e0f591dcf46573",
     "semantic_hash": ""
   },
   "src/sections/Agenda/components/ModalDetalleTrabajo.tsx": {
@@ -3042,9 +3042,9 @@
     "semantic_hash": ""
   },
   "src/sections/Taller/components/HeaderTaller.tsx": {
-    "mtime": 1794529348.048111,
-    "seen": 1794530287.104537,
-    "ast_hash": "4b8ddba6aa1ab089bd5eed628ecae5d4",
+    "mtime": 1794685787.1828942,
+    "seen": 1794877997.6488874,
+    "ast_hash": "c8d0220904019390461ce093998cdacc",
     "semantic_hash": ""
   },
   "src/sections/Taller/components/ModalDetalleOrden.tsx": {
@@ -3114,9 +3114,9 @@
     "semantic_hash": ""
   },
   "src/sections/Contratos/components/HeaderContratos.tsx": {
-    "mtime": 1794532350.1462948,
-    "seen": 1794533562.888953,
-    "ast_hash": "2d116a2e0322a0b47d12950d19375636",
+    "mtime": 1794685786.9878397,
+    "seen": 1794877997.6487255,
+    "ast_hash": "84f21acf3cfc807f8478168c9b55a31c",
     "semantic_hash": ""
   },
   "src/sections/Contratos/components/ModalDetalleContrato.tsx": {
@@ -3330,9 +3330,9 @@
     "semantic_hash": ""
   },
   "src/sections/Encargos/index.tsx": {
-    "mtime": 1794536386.5557423,
-    "seen": 1794537463.3349452,
-    "ast_hash": "be6b252d2b530d9ed46cfc9e94ba4d23",
+    "mtime": 1794685787.1144874,
+    "seen": 1794877997.6487577,
+    "ast_hash": "b3c61f6675c5a35b29384c0d644eb0dd",
     "semantic_hash": ""
   },
   "src/sections/Punto-de-venta/components/AvisosEncargos.tsx": {
@@ -3435,6 +3435,18 @@
     "mtime": 1794665863.3886147,
     "seen": 1794666019.2596438,
     "ast_hash": "7bac44e7fe4aec481a1c552a9438db38",
+    "semantic_hash": ""
+  },
+  "src/sections/Encargos/components/ModalNuevoPedido.tsx": {
+    "mtime": 1794685787.081467,
+    "seen": 1794877997.6487563,
+    "ast_hash": "254d04b1f444844f9ad202a444748982",
+    "semantic_hash": ""
+  },
+  "docs/MIGRACION-ECO-A-NEGO.md": {
+    "mtime": 1794877698.04109,
+    "seen": 1794877997.6490285,
+    "ast_hash": "b9e44912ad0d726d9191da3177fb64b4",
     "semantic_hash": ""
   }
 }
