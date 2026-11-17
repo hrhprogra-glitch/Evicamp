@@ -7,6 +7,10 @@
 > Última actualización: 17/11/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
+- **17/11/2026 (165) — Arreglado el sidebar:** al abrir el menú con Tab, el selector volvía al **primer botón** en vez de
+  a la sesión abierta (pasaba tras recargar, porque `currentView` se reiniciaba en `'pos'`). `App.tsx` ahora recuerda la
+  sesión al recargar y usa la misma sesión corregida que el sidebar. Probado con teclado y sin internet: **9/9**; la
+  Fase 4 sigue **11/11**. Solo en Nego.
 - **17/11/2026 (164) — Fase 4 de la migración Eco → Nego HECHA SOLO EN PRUEBAS (nego.siumax.duckdns.org):** 33 PDF + 1
   foto comprimida en el VPS; 34 enlaces en `compras.archivos` (base `siumax`, con respaldo previo); el detalle de Compra
   ya tiene **Ver factura / Ver foto** y **Adjuntar PDF o foto**. Probado con teclado y sin internet: **11/11**.
@@ -103,6 +107,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Corrección: selector del sidebar** (al abrir el menú va a la sesión abierta, no al primer botón) | **Hecha y probada solo en Nego (165), 9/9 con teclado y sin internet. No toca Evicamp** |
 | **Migración Eco → Nego, Fase 4: PDF y fotos de compras** (33 PDF + 1 foto comprimida en el VPS, botones Ver/Adjuntar en el detalle de Compra) | **Aprobada y hecha solo en pruebas (164), 11/11 con teclado y sin internet. Falta la revisión del dueño. NO pasada oficial ni Evicamp sin su aviso** |
 | **Combos y recetas en el botón Producir** (nombre → productos que usa → combo o receta → precio y categoría → guardar y "¿producir ahora?"; lista para producir/cambiar; se QUITA "Tipo de producto y composición" de Nuevo producto y al editar uno existente sale el botón "Cambiar sus productos en Producir") | **✅ En siumax (112) y en Evicamp, clientes y GitHub (114)** |
 | **Utilidades › Gráficos y detalles** (tablero de ganancias/pérdidas: estado de resultados, punto de equilibrio, ABC, rotación, GMROI, merma, cartera) | **Aprobado 05/11. ✅ En siumax (106) y en Evicamp, clientes y GitHub (107). Pendiente: revisión del dueño** |

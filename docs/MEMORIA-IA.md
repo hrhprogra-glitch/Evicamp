@@ -174,6 +174,11 @@
 - **Autorizar con la clave del admin necesita internet** (decidido; no volver a proponerlo).
 
 ## 6. Errores que ya se cometieron (NO repetir)
+0. **Inicializar `currentView` en `'pos'` fijo y guardarlo en `evicamp_last_view` al cargar** (17/11/2026): en Nego no
+   existe la sesión Caja, así que al recargar se perdía la sesión real; `App` buscaba `sidebar-btn-pos`, no lo encontraba
+   y el selector del sidebar caía en el primer botón. Además `SideBar` usa `vista` (sesión corregida) y `App` usaba
+   `currentViewRef` sin corregir: dos efectos peleaban por el foco. Leer siempre la sesión guardada al iniciar y
+   sincronizar `currentViewRef` con la sesión realmente visible.
 1. **Responder en inglés.** El dueño no entiende. Siempre en español.
 2. **Subir a Evicamp o GitHub sin un aviso nuevo**, tras un "súbelo" anterior. Siempre preguntar.
 3. **Saltarse graphify** antes de leer código. El dueño lo exige.

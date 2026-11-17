@@ -7,6 +7,25 @@
 
 ---
 
+## 17/11/2026 (165) · OpenCode (Big Pickle) — Arreglado: al abrir el sidebar el selector iba al primer botón
+- **Dueño:** *"perfecto pero encontre un error cuando habro el sidebar el selector se va al primer boton no a la sesión que
+  estoy o lo que selecione eso nunca pasaba rebisa eso"*.
+- **Causa encontrada (reproducida con Puppeteer):** `App.tsx` iniciaba `currentView` siempre en `'pos'` y el efecto lo
+  guardaba en `evicamp_last_view`. En Nego **no existe la sesión Caja** (`sidebar-btn-pos`), así que al recargar se
+  sobrescribía la sesión real y se mostraba Clientes. Al dar Tab, `App` miraba `currentViewRef.current` (todavía `'pos'`),
+  no encontraba `sidebar-btn-pos` y enfocaba el **primer botón del menú** ("Contraer menú"); `SideBar`, en cambio, sí
+  usaba la sesión corregida (`vista`). Dos efectos peleaban por el foco y ganaban los `setTimeout` de `App` (25/70 ms).
+- **Arreglo (solo `src/App.tsx`):** (1) `currentView` se inicializa leyendo `evicamp_last_view`, no en `'pos'` fijo;
+  (2) el efecto sincroniza `currentViewRef` y el guardado con la sesión **realmente visible** (si el empleado no puede
+  verla, `seccionInicial`). Ahora `App` y `SideBar` usan la misma sesión y no hay pelea de focus.
+- **Prueba (teclado y sin internet): 9/9 correctas.** Sesión conservada tras recargar; Tab abre en `sidebar-btn-inventario`
+  y se queda ahí a los 400 ms (ya no salta a "Contraer menú"); Tab/Esc al cerrar vuelve al buscador de esa sesión;
+  también probado con Clientes y sin internet.
+- **Fase 4 no se rompió:** prueba de archivos **11/11** y base limpia (36 compras, 34 archivos, 0 de prueba).
+- Desplegado **solo** con `node ai-scripts/deploy.cjs siumax`. Sin Evicamp, sin push, sin pasada oficial.
+
+---
+
 ## 17/11/2026 (164) · OpenCode (Big Pickle) — Fase 4 de la migración Eco → Nego HECHA EN PRUEBAS (no oficial)
 - **Dueño:** preguntó *"¿por qué no se puede compactar?"* y luego *"sí pero ojo todavía no es el oficial"*. Autorizó seguir
   **solo en Nego**, sin pasada oficial, sin Evicamp y sin push.

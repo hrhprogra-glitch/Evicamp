@@ -981,3 +981,13 @@
   **Ver factura / Ver foto** y **Adjuntar PDF o foto**; desplegado solo en `nego.siumax.duckdns.org`.
 - **Prueba con teclado y sin internet:** 11/11 correctas (PDF y foto se abren, adjuntar funciona y el selector vuelve).
 - **Sigue:** el dueño revisa en Nego. La pasada oficial y la Fase 5 esperan su aviso.
+
+## 17/11/2026 (error del sidebar, corregido en pruebas)
+- El dueño reportó: *"perfecto pero encontre un error cuando habro el sidebar el selector se va al primer boton no a la
+  sesión que estoy o lo que selecione eso nunca pasaba rebisa eso"*.
+- **No era de la Fase 4**, pero apareció al revisarla. Se reproducía **después de recargar**: `currentView` volvía a
+  `'pos'` (sesión que Nego no tiene) y se guardaba como última sesión; el atajo de Tab buscaba `sidebar-btn-pos`, no lo
+  hallaba y dejaba el selector en el primer botón del menú.
+- **Corregido en `src/App.tsx`:** la sesión se lee de `evicamp_last_view` al iniciar y `currentViewRef` se sincroniza con
+  la sesión visible. Desplegado solo en Nego, **9/9** con teclado y sin internet; Fase 4 sigue **11/11**.
+- Sigue igual: sin Evicamp, sin push, sin pasada oficial ni Fase 5 sin aviso.

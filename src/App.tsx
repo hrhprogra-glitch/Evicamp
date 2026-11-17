@@ -89,15 +89,24 @@ export const App: React.FC = () => {
   }, []);
 
   const [isLoading, setIsLoading] = useState(true);
-  const [currentView, setCurrentView] = useState<string>('pos');
+  // Al recargar, volver a la sesión que estaba abierta (antes siempre se empezaba en 'pos' y se sobrescribía
+  // "evicamp_last_view"). Si ya no es válida, más abajo se corrige a la primera permitida.
+  const [currentView, setCurrentView] = useState<string>(() => {
+    try { return localStorage.getItem('evicamp_last_view') || 'pos'; } catch { return 'pos'; }
+  });
   useTiposNegocio(); // al cambiar el tipo de negocio en Ajustes se vuelve a dibujar (menú, atajos, sección abierta)
   const currentViewRef = useRef(currentView);
   useEffect(() => {
-    currentViewRef.current = currentView;
-    // La sección abierta, para devolver el foco a su elemento principal después de un aviso
-    // (navegacionSesion.ts la lee; sin esto siempre creía estar en Caja)
-    try { localStorage.setItem('evicamp_last_view', currentView); } catch { /* sin almacenamiento */ }
-  }, [currentView]);
+    // La sesión REALMENTE visible: si el empleado no puede verla (o no es de su tipo de negocio), App muestra
+    // 'seccionInicial'. El sidebar recibe esa corrección vía `vista`, pero el atajo de Tab y la restauración
+    // de foco leían `currentViewRef` sin corregir: buscaban `sidebar-btn-pos`, no lo encontraban y el selector
+    // terminaba en el PRIMER botón del menú (17/11/2026). Ahora los dos usan la misma sesión.
+    const visible = empleado && !puedeVerSeccion(empleado.permisos, currentView)
+      ? seccionInicial(empleado.permisos)
+      : currentView;
+    currentViewRef.current = visible;
+    try { localStorage.setItem('evicamp_last_view', visible); } catch { /* sin almacenamiento */ }
+  }, [currentView, empleado]);
   // El menú lateral guarda su estado en localStorage.
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
     const guardado = localStorage.getItem('evicamp_sidebar_open');
@@ -407,7 +416,7 @@ export const App: React.FC = () => {
           </span>
         </header>
 
-        <section className={`${vista === 'pos' ? 'p-0' : 'p-2'} flex-1 min-w-0 overflow-y-auto overflow-x-hidden`}>
+        <section className="p-0 flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
           {renderCurrentView()}
         </section>
       </main>
