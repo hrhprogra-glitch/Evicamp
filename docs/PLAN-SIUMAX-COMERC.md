@@ -7,6 +7,9 @@
 > Última actualización: 17/11/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
+- **17/11/2026 (173) — Dueño dejó en espera lo de salidas pendientes en Agenda:** dijo *"mejor olvidalo ya tengo otra dia
+  para eso"*. No se implementó nada, no se probó nada y no se desplegó nada. La propuesta sigue guardada (172) por si la
+  pide otro día; no adelantarla. Sin Evicamp, sin push, sin pasada oficial ni Fase 5.
 - **17/11/2026 (172) — Salidas pendientes en Agenda: propuesta esperando el OK:** el dueño pidió que las salidas
   `EN_PROCESO` se vean en Agenda como las finalizadas. Hoy el detalle del trabajo muestra el mismo aviso verde para
   ambas y la tarjeta no muestra nada. Propuesta: traer el estado de la salida, etiqueta amarilla para pendiente en

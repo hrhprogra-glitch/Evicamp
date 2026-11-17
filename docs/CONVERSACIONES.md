@@ -1073,3 +1073,5 @@
 - Propuesta entregada: mostrar el estado de la salida en la Agenda (etiqueta amarilla de pendiente en tarjeta y detalle,
   verde para finalizada), sin tocar ids, atajos, estilo, stock ni Taller, con prueba nueva de teclado y sin internet.
 - El dueño todavía no dice "empieza": **no se cambió código ni se desplegó nada**.
+- Después de ver la propuesta dijo: *"mejor olvidalo ya tengo otra dia para eso"*. **Queda en espera, sin hacer.**
+  No volver a preguntar ni a adelantar el cambio; solo retomarlo si el dueño lo pide en otro momento.

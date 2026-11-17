@@ -7,6 +7,16 @@
 
 ---
 
+## 17/11/2026 (173) · OpenCode (Big Pickle) — Dueño dejó en espera lo de salidas pendientes en Agenda
+- **Dueño:** *"mejor olvidalo ya tengo otra dia para eso"*, después de ver la propuesta del punto 172.
+- **Decisión:** NO implementar nada de ese pedido hoy. No se tocó código, no se corrió ninguna prueba, no se desplegó
+  nada y no se cambió la base. La propuesta queda guardada en la bitácora 172 y en `CONVERSACIONES.md` para retomarla
+  otro día; **no volver a preguntar por ella ni adelantarla sin que el dueño lo pida de nuevo**.
+- Sigue igual: solo Nego, sin Evicamp, sin push, sin pasada oficial ni Fase 5. Base sin verificar de nuevo (última
+  verificada `{servicios}` en el paso 171).
+
+---
+
 ## 17/11/2026 (172) · OpenCode (Big Pickle) — Pedido nuevo: salidas pendientes en Agenda; propuesta esperando el OK del dueño
 - **Dueño:** *"perfecto ahora en agendas deberia salir las salidas pendientes como las finalizadas me entiendes ?"*.
   Preguntó qué quería decir "pendientes" y eligió **Salidas en proceso** (`EN_PROCESO`), no trabajos sin salida ni

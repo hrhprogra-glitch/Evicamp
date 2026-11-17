@@ -644,5 +644,7 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
   `salida:salidas(id, codigo, estado)` en el `select` de `Agenda/index.tsx` y usarlo en tarjeta y detalle.
 - El color de Salidas para `EN_PROCESO` es **ámbar** (`bg-amber-100 ... border-amber-300`) y para `FINALIZADO` es
   **verde esmeralda**; mantener ese lenguaje visual y `rounded-none` (SiuMax Sobrio).
+- **Decisión del dueño (17/11, bitácora 173):** *"mejor olvidalo ya tengo otra dia para eso"*. El cambio quedó **en
+  espera, no aprobado**. No preguntar otra vez ni adelantarlo; solo hacerlo si él lo pide en otro momento.
 
 
