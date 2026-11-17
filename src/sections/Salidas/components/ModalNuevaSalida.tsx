@@ -204,6 +204,17 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       } catch (e) {
         console.error('Error guardando borrador:', e);
       }
+    } else {
+      // Si el dueño quita todos los materiales (u otros datos), el borrador viejo ya no sirve:
+      // borrarlo también, o el material reaparece al volver a abrir (17/11/2026).
+      try {
+        if (localStorage.getItem(CLAVE_BORRADOR_SALIDA)) {
+          localStorage.removeItem(CLAVE_BORRADOR_SALIDA);
+          setTieneBorrador(false);
+        }
+      } catch (e) {
+        console.error('Error limpiando borrador vacío:', e);
+      }
     }
   }, [isOpen, tipo, customerId, bienId, direccion, ubicacion, fecha, observaciones, trabajadoresSeleccionados, items, salidaRaiz, datosIniciales]);
 
@@ -233,8 +244,9 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       const [resCli, resTrab, resProd] = await Promise.all([
         supabase.from('customers').select('id, name, dni, ruc, direccion').eq('activo', true).order('name'),
         supabase.from('trabajadores').select('id, nombre, cargo').eq('estado', 'ACTIVO').order('nombre'),
-        // Sin la foto (image_url pesa mucho: MEMORIA-IA 63) y en bloques, para no cortarse en 1.000 productos
-        traerTodo(() => supabase.from('products').select('id, name, code, unit, quantity, cost_price, image_path').order('name').order('id')),
+        // Sin la foto (image_url pesa mucho: MEMORIA-IA 63) y en bloques, para no cortarse en 1.000 productos.
+        // Solo activos: los borrados en Inventario quedan con is_active = 0 y no deben salir aquí (17/11/2026).
+        traerTodo(() => supabase.from('products').select('id, name, code, unit, quantity, cost_price, image_path').eq('is_active', 1).order('name').order('id')),
       ]);
 
       if (resCli.data) {

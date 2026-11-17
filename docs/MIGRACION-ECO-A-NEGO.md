@@ -21,6 +21,10 @@
 
 **Estado:** Fase 1 ✅ (16/11) · Fase 2 ✅ (17/11) · Fase 3 ✅ cargada y comprobada (17/11) · Fase 4 ✅ **hecha SOLO EN PRUEBAS** (17/11, 11/11 con teclado y sin internet) · Fase 5 ⏸ pendiente del dueño.
 
+- **17/11/2026 (166), ya con los datos migrados:** un producto dado de baja en Inventario (`COCA COLA`, `SKU-456382`,
+  `is_active = 0`) seguía saliendo en Nueva salida. Se arregló el filtro del catálogo y el borrador local; **17/17** con
+  teclado y sin internet. No se cambió ningún dato de la base migrada (519 productos: 512 activos, 7 borrados).
+
 - El respaldo incluye los esquemas `public`, `auth`, `storage` y `realtime` de Supabase. **Contiene datos sensibles**
   (usuarios/tokens): no compartirlo ni subirlo a git.
 - Conexión: pooler de Supabase, base `postgres`, **solo lectura** en esta fase.

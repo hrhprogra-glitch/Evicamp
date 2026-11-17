@@ -174,6 +174,12 @@
 - **Autorizar con la clave del admin necesita internet** (decidido; no volver a proponerlo).
 
 ## 6. Errores que ya se cometieron (NO repetir)
+0a. **Traer productos sin filtrar `is_active` en un buscador, y dejar un borrador viejo en `localStorage`** (17/11/2026):
+    el dueño borra un producto en Inventario (`is_active = 0`) y ese producto seguía saliendo en Nueva salida; además, al
+    quitar el último material con la basura el borrador no se borraba y el material reaparecía al reabrir. Todo buscador
+    de productos debe filtrar activos (`.eq('is_active', 1)` o `is_active !== 0`, como Inventario/Caja) y el autoguardado
+    debe **quitar** la clave del borrador cuando ya no queda ningún dato que guardar. "Limpiar borrador" por sí solo no
+    arregla un catálogo mal filtrado: hay que revisar las dos cosas.
 0. **Inicializar `currentView` en `'pos'` fijo y guardarlo en `evicamp_last_view` al cargar** (17/11/2026): en Nego no
    existe la sesión Caja, así que al recargar se perdía la sesión real; `App` buscaba `sidebar-btn-pos`, no lo encontraba
    y el selector del sidebar caía en el primer botón. Además `SideBar` usa `vista` (sesión corregida) y `App` usaba

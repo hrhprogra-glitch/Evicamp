@@ -7,6 +7,10 @@
 > Última actualización: 17/11/2026.
 
 ## ▶ DÓNDE ESTAMOS AHORA (actualizar después de cada paso)
+- **17/11/2026 (166) — Arreglado el Coca Cola borrado en Nueva salida:** el catálogo del modal ahora trae solo
+  productos activos (`is_active = 1`) y, cuando se quitan todos los materiales, se borra el borrador guardado para que
+  no reaparezcan al reabrir. Probado con teclado y sin internet: **17/17**; siguen bien el sidebar (**9/9**) y la
+  Fase 4 (**11/11**). Solo en Nego.
 - **17/11/2026 (165) — Arreglado el sidebar:** al abrir el menú con Tab, el selector volvía al **primer botón** en vez de
   a la sesión abierta (pasaba tras recargar, porque `currentView` se reiniciaba en `'pos'`). `App.tsx` ahora recuerda la
   sesión al recargar y usa la misma sesión corregida que el sidebar. Probado con teclado y sin internet: **9/9**; la
@@ -107,6 +111,7 @@
 ## ▶ PROPUESTAS Y SU ESTADO (actualizar cuando cambien)
 | Propuesta | Estado |
 |---|---|
+| **Corrección: producto borrado en Nueva salida** (Coca Cola desactivado seguía saliendo; quitar un material lo devolvía al reabrir) | **Hecha y probada solo en Nego (166), 17/17 con teclado y sin internet. No toca Evicamp** |
 | **Corrección: selector del sidebar** (al abrir el menú va a la sesión abierta, no al primer botón) | **Hecha y probada solo en Nego (165), 9/9 con teclado y sin internet. No toca Evicamp** |
 | **Migración Eco → Nego, Fase 4: PDF y fotos de compras** (33 PDF + 1 foto comprimida en el VPS, botones Ver/Adjuntar en el detalle de Compra) | **Aprobada y hecha solo en pruebas (164), 11/11 con teclado y sin internet. Falta la revisión del dueño. NO pasada oficial ni Evicamp sin su aviso** |
 | **Combos y recetas en el botón Producir** (nombre → productos que usa → combo o receta → precio y categoría → guardar y "¿producir ahora?"; lista para producir/cambiar; se QUITA "Tipo de producto y composición" de Nuevo producto y al editar uno existente sale el botón "Cambiar sus productos en Producir") | **✅ En siumax (112) y en Evicamp, clientes y GitHub (114)** |

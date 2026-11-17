@@ -991,3 +991,15 @@
 - **Corregido en `src/App.tsx`:** la sesión se lee de `evicamp_last_view` al iniciar y `currentViewRef` se sincroniza con
   la sesión visible. Desplegado solo en Nego, **9/9** con teclado y sin internet; Fase 4 sigue **11/11**.
 - Sigue igual: sin Evicamp, sin push, sin pasada oficial ni Fase 5 sin aviso.
+
+## 17/11/2026 (error del Coca Cola en Nueva salida, corregido en pruebas)
+- El dueño reportó: *"encontre otro error cuando entro a nueva salida sale un producto coca cola pero a pesar que lo
+  borre o reseto sigue apareciendo revisa eso"*.
+- Había **dos causas**: el `COCA COLA` (código `SKU-456382`) estaba borrado en Inventario (`is_active = 0`) pero el
+  modal de Nueva salida no filtraba los borrados; y al quitar un material con la basura, el borrador de `localStorage`
+  seguía guardado y el material volvía a aparecer al reabrir. "Limpiar borrador" sí funcionaba, pero la lista del
+  catálogo seguía mostrando el producto borrado.
+- **Arreglado solo en Nego:** Nueva salida trae únicamente productos activos y borra el borrador cuando el formulario
+  queda vacío. El `COCA COLA ORIGINAL 500ML` (activo) sigue saliendo, que es lo correcto. No se tocó la base.
+- **Prueba con teclado y sin internet: 17/17.** La del sidebar sigue 9/9 y la Fase 4 11/11 (base limpia). Sin
+  Evicamp, sin push, sin pasada oficial ni Fase 5 sin aviso del dueño.

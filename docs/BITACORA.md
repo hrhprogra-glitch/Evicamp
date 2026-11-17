@@ -7,6 +7,27 @@
 
 ---
 
+## 17/11/2026 (166) · OpenCode (Big Pickle) — Arreglado: el producto Coca Cola borrado seguía saliendo en Nueva salida
+- **Dueño:** *"encontre otro error cuando entro a nueva salida sale un producto coca cola pero a pesar que lo borre o
+  reseto sigue apareciendo revisa eso"*.
+- **Causa 1 (catálogo):** en la base de Nego quedó `COCA COLA` (id 8, código `SKU-456382`) con `is_active = 0` porque lo
+  borraron en Inventario. `ModalNuevaSalida.tsx` traía **todos** los productos, sin filtrar los borrados (Inventario,
+  Caja, Cotizaciones y Pedidos sí los filtran). Reproducido con Puppeteer: salía ese producto "AGOTADO" junto al
+  `COCA COLA ORIGINAL 500ML` que sí está activo.
+- **Causa 2 (borrador):** al quitar el material con la basura, `localStorage.siumax_servic_borrador_salida` conservaba
+  el borrador anterior; al volver a abrir Nueva salida, el material reaparecía en la tabla. La prueba formal lo detectó
+  (16/17) aunque "Limpiar borrador" sí funcionaba.
+- **Arreglo (solo `src/sections/Salidas/components/ModalNuevaSalida.tsx`):** (1) la consulta de productos lleva
+  `.eq('is_active', 1)`; (2) cuando el formulario queda sin datos, el efecto de autoguardado **borra** el borrador
+  guardado en vez de dejar el viejo. No se tocó la base: siguen 519 productos (512 activos, 7 borrados).
+- **Prueba (teclado y sin internet): 17/17 correctas.** No sale el producto borrado, sí el activo; ↓/Enter y la regla 7
+  siguen; quitar el material y limpiar el borrador ya no lo devuelve al reabrir. La prueba de fotos de salida sigue
+  bien y el sidebar **9/9**, Fase 4 **11/11** (base limpia: 36|34|34, 0 archivos de prueba).
+- Compilado con 0 errores y desplegado **solo** con `node ai-scripts/deploy.cjs siumax`. Sin Evicamp, sin push, sin
+  pasada oficial ni Fase 5.
+
+---
+
 ## 17/11/2026 (165) · OpenCode (Big Pickle) — Arreglado: al abrir el sidebar el selector iba al primer botón
 - **Dueño:** *"perfecto pero encontre un error cuando habro el sidebar el selector se va al primer boton no a la sesión que
   estoy o lo que selecione eso nunca pasaba rebisa eso"*.
