@@ -186,8 +186,12 @@ export const activarFlechasEspaciales = () => {
       if (!ambito) return;
       const destino = masCercano(origen, e.key as Flecha, ambito);
       if (!destino) return;
-      destino.focus();
-      destino.scrollIntoView({ block: 'nearest' });
+      // Ventanas marcadas con data-evitar-scroll-foco (Agenda en celular, 18/11/2026): el foco se mueve igual con
+      // las flechas, pero no forzamos scrollIntoView. Con el teclado virtual abierto ese scroll hacía que la vista
+      // "subiera" justo cuando el trabajador intentaba bajar. El navegador ya deja visible el campo enfocado.
+      const evitarScroll = !!destino.closest('[data-evitar-scroll-foco]');
+      destino.focus({ preventScroll: evitarScroll });
+      if (!evitarScroll) destino.scrollIntoView({ block: 'nearest' });
       if (destino instanceof HTMLInputElement && TEXTO.includes(destino.type)) destino.select();
     }, 0);
   };
@@ -202,7 +206,7 @@ export const activarFlechasEspaciales = () => {
     if (performance.now() > g.hasta || !sigueAhi || ventanasAbiertas().length !== g.ventanas) { guardiaEnter = null; return; }
     if (!g.ventana.contains(destino) || !destino.matches(ES_CAMPO_O_BOTON)) return;   // otra ventana o una lista que se abrió
     if (destino.closest('[role="listbox"], [role="option"], [role="menu"]')) return;
-    setTimeout(() => { if (origen.isConnected && !origen.disabled) origen.focus(); }, 0);
+    setTimeout(() => { if (origen.isConnected && !origen.disabled) origen.focus({ preventScroll: !!origen.closest('[data-evitar-scroll-foco]') }); }, 0);
   };
   window.addEventListener('keydown', alTeclearPrimero, true);
   document.addEventListener('keydown', alTeclear);

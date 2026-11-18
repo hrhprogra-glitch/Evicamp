@@ -105,7 +105,11 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
       setTrabajadoresSeleccionados([]);
     }
 
+    // En celular/tablet (pantalla táctil) NO abrir el teclado al entrar: eso hacía que el navegador hiciera scroll
+    // apenas se abría la ventana y el trabajador sintiera que "intenta bajar y como que sube". En PC se mantiene
+    // el foco automático para seguir trabajando solo con teclado.
     setTimeout(() => {
+      if (window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768) return;
       document.getElementById('input-titulo-trabajo')?.focus();
     }, 60);
   }, [isOpen, trabajoEditar, fechaInicial]);
@@ -240,9 +244,9 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm font-mono"
+      className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm font-mono"
     >
-      <div className="ventana-sobria bg-[var(--color-surface)] border-2 border-[var(--color-ink)] w-full max-w-2xl flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(90dvh/var(--ui-zoom))] overflow-hidden">
+      <div className="ventana-sobria bg-[var(--color-surface)] border-2 border-[var(--color-ink)] w-full h-[100dvh] sm:h-auto max-w-2xl flex flex-col max-h-[100dvh] sm:max-h-[calc(90dvh/var(--ui-zoom))] overflow-hidden">
         {/* Cabecera SiuMax Sobrio */}
         <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3 min-w-0">
@@ -274,11 +278,13 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
           id="form-nuevo-trabajo"
           onSubmit={handleGuardar}
           noValidate
-          className="flex-1 overflow-y-auto p-4 flex flex-col gap-3"
+          data-evitar-scroll-foco
+          data-evitar-foco-auto
+          className="flex-1 overflow-y-auto p-4 sm:p-4 flex flex-col gap-4 sm:gap-3"
         >
           {/* Título */}
           <div>
-            <label className="block text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
+            <label className="block text-xs sm:text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
               Título del Trabajo *
             </label>
             <input
@@ -288,14 +294,14 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
               onChange={(e) => setTitulo(e.target.value)}
               onKeyDown={(e) => handleEnterKey(e, 'select-cliente-trabajo')}
               placeholder="Ej. Mantenimiento de piscina, Revisión de bomba, Instalación..."
-              className="w-full px-2.5 py-1.5 text-xs border border-[var(--color-border)] bg-[var(--color-bg)] font-bold text-[var(--color-ink)] rounded-none outline-none focus:border-[var(--color-accent)]"
+              className="w-full p-3 sm:px-2.5 sm:py-1.5 text-base sm:text-xs min-h-[48px] sm:min-h-0 border border-[var(--color-border)] bg-[var(--color-bg)] font-bold text-[var(--color-ink)] rounded-none outline-none focus:border-[var(--color-accent)]"
             />
           </div>
 
           {/* Cliente y Lo que se atiende */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
+              <label className="block text-xs sm:text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
                 Cliente (Opcional)
               </label>
               <select
@@ -303,7 +309,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
                 value={customerId}
                 onChange={(e) => handleCambioCliente(e.target.value ? Number(e.target.value) : '')}
                 onKeyDown={(e) => handleEnterKey(e, 'select-bien-trabajo')}
-                className="w-full px-2 py-1.5 text-xs border border-[var(--color-border)] bg-[var(--color-bg)] font-mono text-[var(--color-ink)] rounded-none cursor-pointer outline-none focus:border-[var(--color-accent)]"
+                className="w-full p-3 sm:px-2 sm:py-1.5 text-base sm:text-xs min-h-[48px] sm:min-h-0 border border-[var(--color-border)] bg-[var(--color-bg)] font-mono text-[var(--color-ink)] rounded-none cursor-pointer outline-none focus:border-[var(--color-accent)]"
               >
                 <option value="">-- Sin cliente asignado --</option>
                 {clientes.map((c) => (
@@ -315,7 +321,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
+              <label className="block text-xs sm:text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
                 Lo que se atiende (Bien)
               </label>
               <select
@@ -324,7 +330,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
                 onChange={(e) => handleCambioBien(e.target.value ? Number(e.target.value) : '')}
                 disabled={!customerId}
                 onKeyDown={(e) => handleEnterKey(e, 'input-direccion-trabajo')}
-                className="w-full px-2 py-1.5 text-xs border border-[var(--color-border)] bg-[var(--color-bg)] font-mono text-[var(--color-ink)] rounded-none cursor-pointer outline-none focus:border-[var(--color-accent)] disabled:bg-slate-100 disabled:text-slate-400"
+                className="w-full p-3 sm:px-2 sm:py-1.5 text-base sm:text-xs min-h-[48px] sm:min-h-0 border border-[var(--color-border)] bg-[var(--color-bg)] font-mono text-[var(--color-ink)] rounded-none cursor-pointer outline-none focus:border-[var(--color-accent)] disabled:bg-slate-100 disabled:text-slate-400"
               >
                 <option value="">-- Seleccionar bien / piscina / equipo --</option>
                 {bienesCliente.map((b) => (
@@ -339,7 +345,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
           {/* Dirección y Ubicación (Maps) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
+              <label className="block text-xs sm:text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
                 Dirección / Lugar
               </label>
               <input
@@ -349,12 +355,12 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
                 onChange={(e) => setDireccion(e.target.value)}
                 onKeyDown={(e) => handleEnterKey(e, 'input-ubicacion-trabajo')}
                 placeholder="Av. Principal 123, Urb..."
-                className="w-full px-2.5 py-1.5 text-xs border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-ink)] rounded-none outline-none focus:border-[var(--color-accent)]"
+                className="w-full p-3 sm:px-2.5 sm:py-1.5 text-base sm:text-xs min-h-[48px] sm:min-h-0 border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-ink)] rounded-none outline-none focus:border-[var(--color-accent)]"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
+              <label className="block text-xs sm:text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
                 Link de Google Maps
               </label>
               <input
@@ -364,7 +370,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
                 onChange={(e) => setUbicacion(e.target.value)}
                 onKeyDown={(e) => handleEnterKey(e, 'input-fecha-trabajo')}
                 placeholder="https://maps.google.com/..."
-                className="w-full px-2.5 py-1.5 text-xs border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-ink)] rounded-none outline-none focus:border-[var(--color-accent)]"
+                className="w-full p-3 sm:px-2.5 sm:py-1.5 text-base sm:text-xs min-h-[48px] sm:min-h-0 border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-ink)] rounded-none outline-none focus:border-[var(--color-accent)]"
               />
             </div>
           </div>
@@ -372,7 +378,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
           {/* Fecha, Hora Inicio, Hora Fin */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
+              <label className="block text-xs sm:text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
                 Fecha *
               </label>
               <input
@@ -381,12 +387,12 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
                 value={fecha}
                 onChange={(e) => setFecha(e.target.value)}
                 onKeyDown={(e) => handleEnterKey(e, 'input-hora-inicio-trabajo')}
-                className="w-full px-2 py-1.5 text-xs border border-[var(--color-border)] bg-[var(--color-bg)] font-bold text-[var(--color-ink)] rounded-none cursor-pointer outline-none focus:border-[var(--color-accent)]"
+                className="w-full p-3 sm:px-2 sm:py-1.5 text-base sm:text-xs min-h-[48px] sm:min-h-0 border border-[var(--color-border)] bg-[var(--color-bg)] font-bold text-[var(--color-ink)] rounded-none cursor-pointer outline-none focus:border-[var(--color-accent)]"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
+              <label className="block text-xs sm:text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
                 Hora Inicio
               </label>
               <input
@@ -395,12 +401,12 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
                 value={horaInicio}
                 onChange={(e) => setHoraInicio(e.target.value)}
                 onKeyDown={(e) => handleEnterKey(e, 'input-hora-fin-trabajo')}
-                className="w-full px-2 py-1.5 text-xs border border-[var(--color-border)] bg-[var(--color-bg)] font-bold text-[var(--color-ink)] rounded-none cursor-pointer outline-none focus:border-[var(--color-accent)]"
+                className="w-full p-3 sm:px-2 sm:py-1.5 text-base sm:text-xs min-h-[48px] sm:min-h-0 border border-[var(--color-border)] bg-[var(--color-bg)] font-bold text-[var(--color-ink)] rounded-none cursor-pointer outline-none focus:border-[var(--color-accent)]"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
+              <label className="block text-xs sm:text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
                 Hora Fin
               </label>
               <input
@@ -409,7 +415,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
                 value={horaFin}
                 onChange={(e) => setHoraFin(e.target.value)}
                 onKeyDown={(e) => handleEnterKey(e, 'select-prioridad-trabajo')}
-                className="w-full px-2 py-1.5 text-xs border border-[var(--color-border)] bg-[var(--color-bg)] font-bold text-[var(--color-ink)] rounded-none cursor-pointer outline-none focus:border-[var(--color-accent)]"
+                className="w-full p-3 sm:px-2 sm:py-1.5 text-base sm:text-xs min-h-[48px] sm:min-h-0 border border-[var(--color-border)] bg-[var(--color-bg)] font-bold text-[var(--color-ink)] rounded-none cursor-pointer outline-none focus:border-[var(--color-accent)]"
               />
             </div>
           </div>
@@ -417,7 +423,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
           {/* Prioridad y Estado */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
+              <label className="block text-xs sm:text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
                 Prioridad
               </label>
               <select
@@ -425,7 +431,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
                 value={prioridad}
                 onChange={(e) => setPrioridad(e.target.value as PrioridadTrabajo)}
                 onKeyDown={(e) => handleEnterKey(e, 'select-estado-trabajo')}
-                className="w-full px-2 py-1.5 text-xs border border-[var(--color-border)] bg-[var(--color-bg)] font-bold text-[var(--color-ink)] rounded-none cursor-pointer outline-none focus:border-[var(--color-accent)]"
+                className="w-full p-3 sm:px-2 sm:py-1.5 text-base sm:text-xs min-h-[48px] sm:min-h-0 border border-[var(--color-border)] bg-[var(--color-bg)] font-bold text-[var(--color-ink)] rounded-none cursor-pointer outline-none focus:border-[var(--color-accent)]"
               >
                 <option value="BAJA">Baja</option>
                 <option value="NORMAL">Normal</option>
@@ -435,7 +441,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
+              <label className="block text-xs sm:text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
                 Estado
               </label>
               <select
@@ -443,7 +449,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
                 value={estado}
                 onChange={(e) => setEstado(e.target.value as EstadoTrabajo)}
                 onKeyDown={(e) => handleEnterKey(e, 'input-descripcion-trabajo')}
-                className="w-full px-2 py-1.5 text-xs border border-[var(--color-border)] bg-[var(--color-bg)] font-bold text-[var(--color-ink)] rounded-none cursor-pointer outline-none focus:border-[var(--color-accent)]"
+                className="w-full p-3 sm:px-2 sm:py-1.5 text-base sm:text-xs min-h-[48px] sm:min-h-0 border border-[var(--color-border)] bg-[var(--color-bg)] font-bold text-[var(--color-ink)] rounded-none cursor-pointer outline-none focus:border-[var(--color-accent)]"
               >
                 <option value="PENDIENTE">Pendiente</option>
                 <option value="SEGUIMIENTO">Volver a ir (Seguimiento)</option>
@@ -455,7 +461,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
 
           {/* Técnicos Asignados (multi-select rápido con botones/chips) */}
           <div>
-            <label className="block text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
+            <label className="block text-xs sm:text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
               Técnicos Asignados
             </label>
             <div className="flex flex-wrap gap-1.5 p-2 bg-[var(--color-bg)] border border-[var(--color-border)] min-h-[44px]">
@@ -472,7 +478,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
                       type="button"
                       id={`chip-trabajador-${t.id}`}
                       onClick={() => toggleTrabajador(t.id)}
-                      className={`px-2.5 py-1 text-xs font-bold uppercase transition-colors cursor-pointer rounded-none border ${
+                      className={`px-3 py-2 sm:px-2.5 sm:py-1 text-sm sm:text-xs font-bold uppercase transition-colors cursor-pointer rounded-none border min-h-[44px] sm:min-h-0 ${
                         seleccionado
                           ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]'
                           : 'bg-white text-[var(--color-ink)] border-[var(--color-border)] hover:bg-slate-100'
@@ -489,7 +495,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
 
           {/* Descripción */}
           <div>
-            <label className="block text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
+            <label className="block text-xs sm:text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
               Descripción del Trabajo
             </label>
             <textarea
@@ -498,13 +504,13 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
               value={descripcion}
               onChange={(e) => setDescripcion(e.target.value)}
               placeholder="Detalles sobre lo que se debe realizar en la visita..."
-              className="w-full px-2.5 py-1.5 text-xs border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-ink)] rounded-none outline-none focus:border-[var(--color-accent)]"
+              className="w-full p-3 sm:px-2.5 sm:py-1.5 text-base sm:text-xs min-h-[48px] sm:min-h-0 border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-ink)] rounded-none outline-none focus:border-[var(--color-accent)]"
             />
           </div>
 
           {/* Notas Internas */}
           <div>
-            <label className="block text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
+            <label className="block text-xs sm:text-[11px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-1">
               Notas Internas
             </label>
             <textarea
@@ -513,7 +519,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
               value={notas}
               onChange={(e) => setNotas(e.target.value)}
               placeholder="Instrucciones para los técnicos, materiales requeridos, etc..."
-              className="w-full px-2.5 py-1.5 text-xs border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-ink)] rounded-none outline-none focus:border-[var(--color-accent)]"
+              className="w-full p-3 sm:px-2.5 sm:py-1.5 text-base sm:text-xs min-h-[48px] sm:min-h-0 border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-ink)] rounded-none outline-none focus:border-[var(--color-accent)]"
             />
           </div>
         </form>
@@ -525,7 +531,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
             type="button"
             onClick={onClose}
             disabled={guardando}
-            className="px-4 py-2 border border-[var(--color-border)] bg-white text-xs font-bold uppercase text-[var(--color-ink)] hover:bg-slate-200 cursor-pointer rounded-none"
+            className="px-4 py-3 sm:py-2 min-h-[48px] sm:min-h-0 border border-[var(--color-border)] bg-white text-sm sm:text-xs font-bold uppercase text-[var(--color-ink)] hover:bg-slate-200 cursor-pointer rounded-none"
           >
             Cancelar
           </button>
@@ -534,7 +540,7 @@ export const ModalNuevoTrabajo: React.FC<ModalNuevoTrabajoProps> = ({
             type="button"
             onClick={handleGuardar}
             disabled={guardando}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] text-white text-xs font-black uppercase border border-[var(--color-accent-dark)] cursor-pointer rounded-none active:scale-[0.98]"
+            className="flex items-center gap-1.5 px-4 py-3 sm:py-2 min-h-[48px] sm:min-h-0 bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] text-white text-sm sm:text-xs font-black uppercase border border-[var(--color-accent-dark)] cursor-pointer rounded-none active:scale-[0.98]"
           >
             <Save size={15} />
             {guardando ? 'Guardando...' : trabajoEditar ? 'Actualizar Trabajo' : 'Guardar Trabajo'}

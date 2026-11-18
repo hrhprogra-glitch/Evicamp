@@ -71,6 +71,14 @@ export const TerminalBusqueda: React.FC<Props> = ({
   }, [puedeVerFiados]);
   // 🔥 NUEVO: Estado para saber qué producto está seleccionado con las flechas
   const [selectedIndex, setSelectedIndex] = useState(0);
+  // Celular (18/11/2026): cuando el trabajador toca o desliza los resultados, el teclado debe guardarse y el
+  // "imán" del buscador no debe volver a abrirlo. En PC no cambia nada (no hay teclado virtual).
+  const resultadosTocados = React.useRef(false);
+
+  const ocultarTeclado = () => {
+    resultadosTocados.current = true;
+    (document.activeElement as HTMLElement | null)?.blur?.();
+  };
 
   // MOTOR DE BÚSQUEDA ULTRARRÁPIDO
   const filteredProducts = searchQuery.trim() === '' 
@@ -133,7 +141,10 @@ export const TerminalBusqueda: React.FC<Props> = ({
     const enforceFocus = () => {
       // Ignorar si hay modales abiertos
       if (document.querySelector('[role="dialog"]')) return;
-      
+      // El trabajador tocó/deslizó los resultados en el celular: no devolver el foco al buscador
+      // (eso reabría el teclado y le tapaba la vista). Se rearma al volver a tocar el buscador.
+      if (resultadosTocados.current) return;
+
       const activeTag = document.activeElement?.tagName;
       // Si estamos en otro input (ej. cantidad/precio), no robamos el foco
       if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'BUTTON' || activeTag === 'A') return;
@@ -378,6 +389,7 @@ export const TerminalBusqueda: React.FC<Props> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onFocus={() => { resultadosTocados.current = false; }}
                 autoComplete="off"
                 spellCheck={false}
                 autoCorrect="off"
@@ -390,12 +402,30 @@ export const TerminalBusqueda: React.FC<Props> = ({
               titulo="Escanear producto con la cámara del celular"
               className="w-10 h-10 !px-0 !border-0 !border-l-2 !border-[var(--color-ink)]"
             />
+            {/* Botón de respaldo para esconder el teclado del celular si vuelve a aparecer. Solo en celular. */}
+            <button
+              id="btn-listo-teclado-pos"
+              type="button"
+              onClick={ocultarTeclado}
+              title="Guardar el teclado del celular"
+              data-evitar-iman-teclado
+              className="solo-celular-escaner shrink-0 w-10 h-10 flex items-center justify-center bg-[var(--color-ink)] text-white font-black text-xs border-l-2 border-[var(--color-ink)] cursor-pointer rounded-none"
+            >
+              ✓
+            </button>
           </div>
         </div>
       </div>
 
-      {/* ÁREA DE RESULTADOS */}
-      <div className="flex-1 min-w-0 w-full p-2 sm:p-3 overflow-y-auto custom-scrollbar flex flex-col bg-[var(--color-bg)]">
+      {/* ÁREA DE RESULTADOS: al tocar o deslizar se guarda el teclado del celular; el imán del buscador
+          ya no lo reabre (18/11/2026). Con mouse/teclado en PC no cambia nada. */}
+      <div
+        id="resultados-caja"
+        data-evitar-iman-teclado
+        onTouchStart={ocultarTeclado}
+        onScroll={() => { if (window.matchMedia('(pointer: coarse)').matches) ocultarTeclado(); }}
+        className="flex-1 min-w-0 w-full p-2 sm:p-3 overflow-y-auto custom-scrollbar flex flex-col bg-[var(--color-bg)]"
+      >
         {searchQuery.trim() === '' ? (
           // ESTADO 1: ESPERANDO BÚSQUEDA
           <div className="border border-dashed border-[var(--color-muted)] flex-1 flex flex-col items-center justify-center text-center p-3 lg:p-4 bg-[var(--color-surface)] rounded-none">

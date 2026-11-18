@@ -5,6 +5,8 @@ import { fotoDeCache, sincronizarFotosFaltantes } from '../../../utils/cacheFoto
 import { traerTodo } from '../../../utils/traerTodo';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar } from '../../../utils/dialogos';
+import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
+import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import type { TipoSalida, Salida } from '../types';
 
 interface ModalNuevaSalidaProps {
@@ -13,7 +15,9 @@ interface ModalNuevaSalidaProps {
   datosIniciales?: {
     tipo?: TipoSalida;
     customerId?: number | '';
-    bienId?: number | '';
+    bienId?: number | '' | 'otro';
+    clienteLibre?: string;
+    bienLibre?: string;
     direccion?: string;
     ubicacion?: string;
     trabajadoresIds?: number[];
@@ -63,7 +67,11 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   // Form State
   const [tipo, setTipo] = useState<TipoSalida>('SERVICIO');
   const [customerId, setCustomerId] = useState<number | ''>('');
-  const [bienId, setBienId] = useState<number | ''>('');
+  // Nombres libres (pedido del dueño 18/11): si el cliente o lo que se atiende no está en la lista, se escribe aquí y
+  // se guarda dentro de observaciones como nota (la salida necesita un cliente y un bien de la base por FK).
+  const [clienteLibre, setClienteLibre] = useState('');
+  const [bienId, setBienId] = useState<number | '' | 'otro'>('');
+  const [bienLibre, setBienLibre] = useState('');
   const [direccion, setDireccion] = useState('');
   const [ubicacion, setUbicacion] = useState('');
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
@@ -120,7 +128,9 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       if (salidaRaiz) {
         setTipo(salidaRaiz.tipo);
         setCustomerId(salidaRaiz.customer_id);
+        setClienteLibre('');
         setBienId(salidaRaiz.bien_id || '');
+        setBienLibre('');
         setDireccion(salidaRaiz.direccion || '');
         setUbicacion(salidaRaiz.ubicacion || '');
         setObservaciones(`Continuación de ${salidaRaiz.codigo}`);
@@ -132,7 +142,9 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       } else if (datosIniciales) {
         setTipo(datosIniciales.tipo || 'SERVICIO');
         setCustomerId(datosIniciales.customerId || '');
+        setClienteLibre(datosIniciales.clienteLibre || '');
         setBienId(datosIniciales.bienId || '');
+        setBienLibre(datosIniciales.bienLibre || '');
         setDireccion(datosIniciales.direccion || '');
         setUbicacion(datosIniciales.ubicacion || '');
         setObservaciones(datosIniciales.observaciones || '');
@@ -150,7 +162,9 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
             if (b) {
               if (b.tipo) setTipo(b.tipo);
               if (b.customerId) setCustomerId(b.customerId);
+              if (b.clienteLibre) setClienteLibre(b.clienteLibre);
               if (b.bienId) setBienId(b.bienId);
+              if (b.bienLibre) setBienLibre(b.bienLibre);
               if (b.direccion) setDireccion(b.direccion);
               if (b.ubicacion) setUbicacion(b.ubicacion);
               if (b.fecha) setFecha(b.fecha);
@@ -168,7 +182,9 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
           // Reset limpio
           setTipo('SERVICIO');
           setCustomerId('');
+          setClienteLibre('');
           setBienId('');
+          setBienLibre('');
           setDireccion('');
           setUbicacion('');
           setObservaciones('');
@@ -190,7 +206,9 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       const dataBorrador = {
         tipo,
         customerId,
+        clienteLibre,
         bienId,
+        bienLibre,
         direccion,
         ubicacion,
         fecha,
@@ -216,7 +234,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         console.error('Error limpiando borrador vacío:', e);
       }
     }
-  }, [isOpen, tipo, customerId, bienId, direccion, ubicacion, fecha, observaciones, trabajadoresSeleccionados, items, salidaRaiz, datosIniciales]);
+  }, [isOpen, tipo, customerId, clienteLibre, bienId, bienLibre, direccion, ubicacion, fecha, observaciones, trabajadoresSeleccionados, items, salidaRaiz, datosIniciales]);
 
   const limpiarBorrador = () => {
     try {
@@ -224,7 +242,9 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     } catch {}
     setTipo('SERVICIO');
     setCustomerId('');
+    setClienteLibre('');
     setBienId('');
+    setBienLibre('');
     setDireccion('');
     setUbicacion('');
     setObservaciones('');
@@ -268,14 +288,14 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     }
   };
 
-  // Cargar bienes cuando cambia el cliente
+  // Cargar bienes cuando cambia el cliente (18/11/2026: antes solo traía los ACTIVO y por eso salía una sola opción;
+  // ahora salen TODOS los bienes del cliente, con su estado, para que el trabajador pueda elegir).
   useEffect(() => {
     if (customerId) {
       supabase
         .from('bienes_cliente')
         .select('*')
         .eq('customer_id', customerId)
-        .eq('estado', 'ACTIVO')
         .then(({ data }: { data: any }) => {
           setBienes(data || []);
           if (data && data.length > 0 && !bienId) {
@@ -344,8 +364,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         document.getElementById('input-cant-item-externo')?.focus();
         return;
       }
+      // El material nuevo entra ARRIBA (pedido del dueño 18/11/2026), no abajo de la lista.
       setItems((prev) => [
-        ...prev,
         {
           product_id: null,
           descripcion: descExterno.trim().toUpperCase(),
@@ -354,6 +374,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
           costo_unitario: parseFloat(costoExterno) || 0,
           es_externo: true,
         },
+        ...prev,
       ]);
       setDescExterno('');
       setCantItem('1');
@@ -379,19 +400,18 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       }
 
       setItems((prev) => {
-        // Si ya existe el producto en la lista, sumar cantidad (tipo POS / SUNAT)
+        // Si ya existe el producto, sumar cantidad y SUBIRLO a la primera fila; si es nuevo, entra arriba.
+        // (pedido del dueño 18/11/2026: "cuando agrego un producto se agrega desde abajo debe ingresarse desde arriba")
         const idxExistente = prev.findIndex((it) => it.product_id === prodAAgregar.id);
         if (idxExistente !== -1) {
-          const actualizados = [...prev];
-          const actual = actualizados[idxExistente];
-          actualizados[idxExistente] = {
+          const actual = prev[idxExistente];
+          const actualizado = {
             ...actual,
             cantidad: Number((actual.cantidad + c).toFixed(4)),
           };
-          return actualizados;
+          return [actualizado, ...prev.filter((_, i) => i !== idxExistente)];
         } else {
           return [
-            ...prev,
             {
               product_id: prodAAgregar.id,
               descripcion: prodAAgregar.name,
@@ -400,6 +420,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               costo_unitario: Number(prodAAgregar.cost_price || 0),
               es_externo: false,
             },
+            ...prev,
           ];
         }
       });
@@ -441,6 +462,18 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     } else if (e.key === 'Escape') {
       setBusquedaProd('');
       setProdSeleccionado(null);
+    }
+  };
+
+  // Cámara del celular: same código que la Caja, 100 % sin internet.
+  const handleScanCamara = (codigo: string) => {
+    const p = buscarProductoPorCodigo(productos as any[], codigo);
+    if (p) {
+      seleccionarProducto(p);
+    } else {
+      setBusquedaProd(codigo);
+      setProdSeleccionado(null);
+      setTimeout(() => inputBuscarRef.current?.focus(), 30);
     }
   };
 
@@ -499,16 +532,23 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       return;
     }
 
+    // Los nombres que no están en la lista se guardan como nota (el dueño pidió "al menos como nota"): la base
+    // exige un cliente y un bien registrados por ser llaves foráneas, pero el nombre real queda en observaciones.
+    const notasLibres: string[] = [];
+    if (clienteLibre.trim()) notasLibres.push(`CLIENTE: ${clienteLibre.trim().toUpperCase()}`);
+    if (bienLibre.trim()) notasLibres.push(`ATIENDE: ${bienLibre.trim().toUpperCase()}`);
+    const obsFinal = [observaciones.trim(), ...notasLibres].filter(Boolean).join(' | ');
+
     setGuardando(true);
     try {
       const payload = {
         tipo,
         customer_id: Number(customerId),
-        bien_id: bienId ? Number(bienId) : null,
+        bien_id: bienId && bienId !== 'otro' ? Number(bienId) : null,
         direccion: direccion.trim(),
         ubicacion: ubicacion.trim(),
         fecha,
-        observaciones: observaciones.trim(),
+        observaciones: obsFinal,
         salida_raiz_id: salidaRaiz ? salidaRaiz.id : null,
         usuario: 'Usuario',
         trabajadores: trabajadoresSeleccionados.map((tid, idx) => ({
@@ -559,7 +599,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     };
     window.addEventListener('keydown', handleGlobalKey);
     return () => window.removeEventListener('keydown', handleGlobalKey);
-  }, [isOpen, customerId, trabajadoresSeleccionados, items, tipo, bienId, direccion, ubicacion, fecha, observaciones, salidaRaiz]);
+  }, [isOpen, customerId, clienteLibre, bienId, bienLibre, trabajadoresSeleccionados, items, tipo, direccion, ubicacion, fecha, observaciones, salidaRaiz]);
 
   if (!isOpen) return null;
 
@@ -633,7 +673,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                 value={customerId}
                 onChange={(e) => setCustomerId(e.target.value ? Number(e.target.value) : '')}
                 onKeyDown={(e) => handleKeyDownForm(e, 'select-cliente-salida')}
-                className="w-full p-2 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] rounded-none"
+                className="w-full p-2 min-h-[44px] sm:min-h-0 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] rounded-none"
                 required
               >
                 <option value="">-- SELECCIONAR CLIENTE --</option>
@@ -643,6 +683,16 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                   </option>
                 ))}
               </select>
+              <input
+                id="input-cliente-libre-salida"
+                type="text"
+                value={clienteLibre}
+                onChange={(e) => setClienteLibre(e.target.value)}
+                onKeyDown={(e) => handleKeyDownForm(e, 'input-cliente-libre-salida')}
+                placeholder="Si no está en la lista, escribe aquí el nombre"
+                title="El nombre se guarda como nota; elige un cliente registrado como referencia"
+                className="w-full p-2 min-h-[44px] sm:min-h-0 mt-1 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] rounded-none"
+              />
             </div>
 
             <div>
@@ -652,18 +702,34 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               <select
                 id="select-bien-salida"
                 value={bienId}
-                onChange={(e) => setBienId(e.target.value ? Number(e.target.value) : '')}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setBienId(v === 'otro' ? 'otro' : v ? Number(v) : '');
+                }}
                 onKeyDown={(e) => handleKeyDownForm(e, 'select-bien-salida')}
                 disabled={!customerId}
-                className="w-full p-2 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] disabled:opacity-50 rounded-none"
+                className="w-full p-2 min-h-[44px] sm:min-h-0 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] disabled:opacity-50 rounded-none"
               >
                 <option value="">-- GENERAL / NO ESPECÍFICO --</option>
                 {bienes.map((b) => (
                   <option key={b.id} value={b.id}>
-                    {b.nombre} ({b.tipo})
+                    {b.nombre} ({b.tipo}){b.estado && b.estado !== 'ACTIVO' ? ` [${b.estado}]` : ''}
                   </option>
                 ))}
+                <option value="otro">OTRO: escribir el nombre</option>
               </select>
+              {bienId === 'otro' && (
+                <input
+                  id="input-bien-libre-salida"
+                  type="text"
+                  value={bienLibre}
+                  onChange={(e) => setBienLibre(e.target.value)}
+                  onKeyDown={(e) => handleKeyDownForm(e, 'input-bien-libre-salida')}
+                  placeholder="Nombre de lo que se atiende"
+                  title="El nombre se guarda como nota"
+                  className="w-full p-2 min-h-[44px] sm:min-h-0 mt-1 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] rounded-none"
+                />
+              )}
             </div>
           </div>
 
@@ -820,10 +886,11 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                 </div>
               </div>
             ) : (
-              /* Renglón Rápido tipo SUNAT / Pistola de Códigos */
+              /* Renglón Rápido tipo SUNAT / Pistola de Códigos. En celular el buscador se queda fijo arriba
+                  mientras se baja por las sugerencias y los materiales (pedido del dueño 18/11/2026). */
               <div className="space-y-2">
-                <div className="flex gap-2 items-center">
-                  <div className="relative flex-1">
+                <div className="sticky top-0 z-10 bg-[var(--color-bg)] py-1 -mx-1 px-1 flex gap-2 items-center">
+                  <div className="relative flex-1 min-w-0">
                     <input
                       ref={inputBuscarRef}
                       id="input-buscar-producto-salida"
@@ -834,14 +901,21 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                         setProdSeleccionado(null);
                       }}
                       onKeyDown={handleKeyDownBuscador}
-                      placeholder="Escribe nombre o escanea código de barras del producto..."
-                      className="w-full p-2.5 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] uppercase font-bold pr-8 outline-none rounded-none bg-[var(--color-surface)]"
+                      placeholder="Escribe nombre o escanea código del producto..."
+                      className="w-full p-3 sm:p-2.5 min-h-[48px] sm:min-h-0 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] uppercase font-bold pr-8 outline-none rounded-none bg-[var(--color-surface)]"
                       autoComplete="off"
                     />
                     <Search size={16} className="absolute right-2.5 top-3 text-[var(--color-muted)]" />
                   </div>
 
-                  <div className="w-28">
+                  <BotonEscanerCelular
+                    id="btn-escaner-salida"
+                    variante="compacto"
+                    titulo="Escanear código del producto con la cámara"
+                    onScan={handleScanCamara}
+                  />
+
+                  <div className="w-20 sm:w-28 shrink-0">
                     <input
                       ref={inputCantRef}
                       id="input-cant-item-salida"
@@ -851,7 +925,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                       value={cantItem}
                       onChange={(e) => setCantItem(e.target.value)}
                       onKeyDown={handleKeyDownCant}
-                      className="w-full p-2.5 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] font-black text-center outline-none rounded-none bg-[var(--color-surface)]"
+                      className="w-full p-3 sm:p-2.5 min-h-[48px] sm:min-h-0 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] font-black text-center outline-none rounded-none bg-[var(--color-surface)]"
                       placeholder="Cant."
                     />
                   </div>
@@ -860,9 +934,9 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                     id="btn-agregar-material-salida"
                     type="button"
                     onClick={handleAgregarItem}
-                    className="px-4 py-2.5 bg-[var(--color-ink)] text-white font-black uppercase flex items-center gap-1.5 hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] cursor-pointer rounded-none shrink-0"
+                    className="px-3 sm:px-4 py-3 sm:py-2.5 min-h-[48px] sm:min-h-0 bg-[var(--color-ink)] text-white font-black uppercase flex items-center gap-1.5 hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] cursor-pointer rounded-none shrink-0"
                   >
-                    <Plus size={16} /> Agregar (Enter)
+                    <Plus size={16} /> <span className="hidden sm:inline">Agregar (Enter)</span><span className="sm:hidden">+</span>
                   </button>
                 </div>
 

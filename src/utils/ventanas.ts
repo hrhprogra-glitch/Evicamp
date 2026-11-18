@@ -214,6 +214,10 @@ export const recordarSeleccionEnVentanas = (fallbackRestaurar?: () => void) => {
     if (estaImprimiendo()) return;
     const v = ventanaSuperior();
     if (!v) return;
+    // Ventanas que lo piden (Agenda en celular, 18/11/2026): no les ponemos el foco solos en su primer campo.
+    // El trabajador decidió abrir el título cuando quiera; si lo enfocamos, el teclado virtual se abre y la vista
+    // "sube" justo cuando intenta bajar. En PC sigue igual (no hay teclado virtual).
+    if (v.querySelector('[data-evitar-foco-auto]')) return;
     const a = document.activeElement as HTMLElement | null;
     if (a && a !== document.body && (v.contains(a) || a.tagName === 'IFRAME')) return;
     const guardado = enVentana.get(v);

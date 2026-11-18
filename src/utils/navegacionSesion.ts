@@ -10,6 +10,8 @@ export const restaurarFocoSesion = (view?: string): boolean => {
   // se queda en la ventana (si ya está dentro, no se toca)
   const arriba = ventanaSuperior();
   if (arriba) {
+    // Ventanas con foco automático desactivado (Agenda en celular): no les robamos el selector.
+    if (arriba.querySelector('[data-evitar-foco-auto]')) return false;
     if (arriba.contains(document.activeElement)) return true;
     const primero = enfocablesDe(arriba)[0];
     if (primero) { primero.focus(); return true; }

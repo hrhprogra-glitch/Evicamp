@@ -144,7 +144,10 @@ export const App: React.FC = () => {
       }, 60);
     };
 
-    const handleGlobalClick = () => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      // Tocar/deslizar los resultados de Caja en el celular guarda el teclado (18/11/2026): el imán general
+      // de la App no debe devolver el foco al buscador y volver a abrirlo.
+      if ((e.target as HTMLElement | null)?.closest?.('[data-evitar-iman-teclado]')) return;
       setTimeout(() => {
         if (!hayVentanaAbierta() && (!document.activeElement || document.activeElement === document.body)) {
           programarRestauracionFoco(currentViewRef.current);
