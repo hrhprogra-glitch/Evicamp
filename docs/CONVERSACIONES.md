@@ -1099,3 +1099,14 @@
   internet: 48 correctas, 0 fallos, 1 tabla sin datos (Cobranzas). `build` limpio y despliegue solo en Nego. Sin
   Evicamp, sin push, sin pasada oficial ni Fase 5; SQL y base intactos.
 - El pedido de salidas pendientes en Agenda sigue en espera; no se retomó ni se volvió a preguntar por él.
+
+## 18/11/2026 (salida rápida, teclado de Caja y nombres libres — propuesta esperando el OK)
+- El dueño pidió, en dos mensajes seguidos:
+  1. *"mejoraremos la salida perfecto que paso con lo que se atiende porque solo hay una opción"*.
+  2. *"tambien en cliente si no esta el cliente que pueda poner cualquier nombre al menos como nota"*.
+  3. *"cuando agrego un producto se agrega desde abajo debe ingresarse desde arriba"*.
+  4. *"en caja me di cuenta que cuando presiono adentro para mover y ver el producto el teclado de las letras de celular no se guarda sigue ahi tapandome la visión"*.
+  5. *"en el registro de salida es muy pequeño el espacio tenemos que lograr que todo el ingreso o busqueda de producto sea rápido desde el celular tablet laptop o pc dame un plan porque en eso nos enfocaremos ... tengo una visión quiero que los trabajadores entren en el dispositivo e interactuen con el sistema para que todo este rápido"*.
+- Se investigó con graphify y se explicó: "Lo que se atiende" sale con una sola opción porque solo se traen los bienes `ACTIVO` y se elige el primero; si el cliente no está registrado, su nombre solo puede ir en la nota porque la salida necesita un cliente de la base; el producto nuevo se agrega al final de la lista; en Caja el foco vuelve al buscador y el teclado del celular no se cierra.
+- Plan propuesto (esperando respuesta): 1) nombres libres de cliente y de "lo que se atiende" como nota + producto nuevo arriba; 2) Caja sin teclado estorbando al tocar/desplazar; 3) Salida rápida adaptable a los 4 tamaños de pantalla, con buscador arriba, fotos y botón de cámara; 4) opcionalmente lo mismo en Cotizaciones/Agenda/Taller; 5) pruebas con teclado y sin internet, docs, commit local y despliegue solo en Nego.
+- Sin Evicamp, sin push, sin pasada oficial ni Fase 5. No se cambió código ni la base.

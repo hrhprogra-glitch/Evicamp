@@ -677,4 +677,12 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Ojo con las pruebas: `innerText` de la franja sale en **mayúsculas y con acento** (`PÁGINA 1 DE 9`); usar regex
   `/P[AÁ]GINA\s+\d+\s+DE\s+\d+/i`. Cobranzas está vacía en Nego: esperar filas ahí dará "sin datos", no un fallo.
 
+## 28. Visión del dueño: trabajadores usando el sistema desde su dispositivo (18/11/2026, bitácora 176)
+- El dueño quiere que los trabajadores **entren en el sistema desde celular/tablet/laptop/PC y trabajen rápido**; por eso el foco ahora es que buscar y registrar productos sea rápido y que nada tape la vista.
+- **Caja, teclado del celular:** en `TerminalBusqueda.tsx` el área de resultados (`overflow-y-auto`) no quita el foco al buscador (`#buscador-global-pos`) y además `handleGlobalClick → enforceFocus` lo vuelve a enfocar 50 ms después de cada clic. Solución: hacer `blur()` al tocar/desplazar los resultados y excluir esa zona del imán de foco; el usuario con teclado no debe notar cambio. Botón de respaldo "✓ Listo" para esconder el teclado.
+- **Salida, nombres libres:** `fn_registrar_salida` exige `customer_id` (RAISE si es NULL) y `bienes_cliente.customer_id` es FK. Un cliente o "bien" que no esté registrado **no se puede inventar en esas columnas sin tocar SQL**: se guarda el nombre escrito dentro de `observaciones` como nota (el dueño aceptó "al menos como nota"). `ModalNuevaCotizacion.tsx` ya tiene el patrón "Cliente casual / fuera de la lista" + campo de nombre libre para copiar.
+- **Salida, una sola opción:** `ModalNuevaSalida.tsx` filtra `bienes_cliente` por `estado = ACTIVO` y auto-selecciona `data[0]`; si el cliente tiene un solo bien, sale una sola opción. Para dar más opciones sin migrar datos: traer todos los bienes del cliente (mostrando MANTENIMIENTO/BAJA) y agregar "Otro: escribir el nombre" como nota.
+- **Salida, orden:** `handleAgregarItem` usa `setItems(prev => [...prev, ...])`; para que entre arriba hay que anteponer (`[nuevo, ...prev]`) y, si el producto ya estaba, subirlo a la primera fila. Aplica igual a producto de inventario y a material externo.
+- **Ojo con el escáner de cámara:** ya existe `BotonEscanerCelular` y se usa en Caja; en Nueva salida todavía no está. Al agregarlo, hay que usar `buscarProductoPorCodigo` igual que en los otros buscadores para que funcione 100 % sin internet.
+
 
