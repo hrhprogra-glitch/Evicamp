@@ -418,7 +418,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   // Buscador: número de pedido, proveedor, quién la hizo o recibió, factura, fecha o un producto de la lista
   const visibles = compras.filter((c) => (filtro === 'TODAS' || c.estado === filtro) && coincideBusqueda(
     [`#${String(c.id).slice(-6)}`, c.proveedor, c.autor, c.recibido_por, c.documento, c.notas, fecha(c.created_at), ...c.compras_detalle.map((d) => d.product_name)], busqueda));
-  const COMPRAS_POR_PAGINA = 10;
+  const COMPRAS_POR_PAGINA = 50;
   const totalPagCompras = Math.max(1, Math.ceil(visibles.length / COMPRAS_POR_PAGINA));
   const visiblesPaginados = visibles.slice((pagCompras - 1) * COMPRAS_POR_PAGINA, pagCompras * COMPRAS_POR_PAGINA);
   useEffect(() => { setPagCompras(1); }, [filtro, busqueda]);

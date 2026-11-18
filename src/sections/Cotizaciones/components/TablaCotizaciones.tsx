@@ -6,27 +6,48 @@ import { FileText } from 'lucide-react';
 import type { Cotizacion } from '../types';
 import { CLASE_ESTADO, simbolo, verFecha } from '../types';
 import { formatearMonto } from '../../../utils/formato';
+import { PaginacionSobrio } from '../../../components/PaginacionSobrio';
 
 interface Props {
-  cotizaciones: Cotizacion[];
+  cotizaciones: Cotizacion[];     // solo las filas de la página actual
+  total: number;                 // total de cotizaciones encontradas
+  pagina: number;
+  totalPaginas: number;
+  onCambiarPagina: (pagina: number) => void;
   conBien: boolean;               // columna "Lo que se atiende" (con Talleres y servicios)
   onVerDetalle: (c: Cotizacion) => void;
 }
 
-export const TablaCotizaciones: React.FC<Props> = ({ cotizaciones, conBien, onVerDetalle }) => {
-  if (cotizaciones.length === 0) {
-    return (
-      <div className="tabla-marco flex flex-col">
+export const TablaCotizaciones: React.FC<Props> = ({
+  cotizaciones,
+  total,
+  pagina,
+  totalPaginas,
+  onCambiarPagina,
+  conBien,
+  onVerDetalle,
+}) => {
+  const selectorFilas = "#tabla-cotizaciones [data-fila-coti='true']";
+
+  return (
+    <div className="tabla-marco flex flex-col font-mono">
+      <PaginacionSobrio
+        pagina={pagina}
+        totalPaginas={totalPaginas}
+        onCambiar={onCambiarPagina}
+        prefijo="cotizaciones"
+        posicion="top"
+        selectorFilas={selectorFilas}
+        idBuscador="buscador-cotizaciones"
+      />
+      {cotizaciones.length === 0 ? (
         <div className="vacio-sobrio">
           <FileText size={32} />
           <p className="text-xs font-black uppercase tracking-wider text-[var(--color-ink)] mt-2">No se encontraron cotizaciones</p>
           <p className="text-[11px] font-bold text-[var(--color-muted)] mt-1">Crea una con "Nueva cotización" (o desde la Caja) o cambia la búsqueda.</p>
         </div>
-      </div>
-    );
-  }
-  return (
-    <div className="tabla-marco flex flex-col font-mono">
+      ) : (
+        <>
       <div className="w-full overflow-x-auto custom-scrollbar">
         <table className="w-full text-left border-collapse" id="tabla-cotizaciones">
           <thead className="tabla-cabecera sticky top-0 z-10">
@@ -56,7 +77,9 @@ export const TablaCotizaciones: React.FC<Props> = ({ cotizaciones, conBien, onVe
                     if (e.key === 'Enter') { e.preventDefault(); onVerDetalle(c); }
                     else if (e.key === 'ArrowDown') {
                       e.preventDefault();
-                      (e.currentTarget.nextElementSibling as HTMLElement | null)?.focus();
+                      const sig = e.currentTarget.nextElementSibling as HTMLElement | null;
+                      if (sig) sig.focus();
+                      else document.getElementById('btn-pag-bottom-cotizaciones-ant')?.focus();
                     } else if (e.key === 'ArrowUp') {
                       e.preventDefault();
                       const ant = e.currentTarget.previousElementSibling as HTMLElement | null;
@@ -91,10 +114,21 @@ export const TablaCotizaciones: React.FC<Props> = ({ cotizaciones, conBien, onVe
           </tbody>
         </table>
       </div>
-      <div className="p-4 border-t border-[var(--color-border)] text-[10px] font-bold text-[var(--color-muted)] uppercase flex justify-between">
-        <span>↑ ↓ para moverse · Enter abre la cotización</span>
-        <span>{cotizaciones.length} cotización(es)</span>
-      </div>
+          <div className="p-4 border-t border-[var(--color-border)] text-[10px] font-bold text-[var(--color-muted)] uppercase flex justify-between">
+            <span>↑ ↓ para moverse · Enter abre la cotización</span>
+            <span>{total} cotización(es)</span>
+          </div>
+        </>
+      )}
+      <PaginacionSobrio
+        pagina={pagina}
+        totalPaginas={totalPaginas}
+        onCambiar={onCambiarPagina}
+        prefijo="cotizaciones"
+        posicion="bottom"
+        selectorFilas={selectorFilas}
+        idBuscador="buscador-cotizaciones"
+      />
     </div>
   );
 };

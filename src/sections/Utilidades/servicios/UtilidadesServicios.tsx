@@ -233,13 +233,32 @@ export const UtilidadesServicios: React.FC<Props> = ({ pestana, onCambiarPestana
         {cargando ? (
           <div className="p-12 text-center text-[var(--color-muted)] text-sm">Calculando…</div>
         ) : pestana === 'rentabilidad' ? (
-          <TabRentabilidad items={itemsRentabilidad} busqueda={busqueda} filtroTipo={filtroTipoRentabilidad} />
+          // La key reinicia la paginación al cambiar búsqueda, filtro o período
+          <TabRentabilidad
+            key={`${periodo}-${fechaDesde}-${fechaHasta}-${busqueda}-${filtroTipoRentabilidad}`}
+            items={itemsRentabilidad}
+            busqueda={busqueda}
+            filtroTipo={filtroTipoRentabilidad}
+          />
         ) : pestana === 'tecnicos' ? (
-          <TabTecnicos tecnicos={itemsTecnicos} busqueda={busqueda} />
+          <TabTecnicos
+            key={`${periodo}-${fechaDesde}-${fechaHasta}-${busqueda}`}
+            tecnicos={itemsTecnicos}
+            busqueda={busqueda}
+          />
         ) : pestana === 'materiales' ? (
-          <TabMateriales materiales={itemsMateriales} busqueda={busqueda} />
+          <TabMateriales
+            key={`${periodo}-${fechaDesde}-${fechaHasta}-${busqueda}`}
+            materiales={itemsMateriales}
+            busqueda={busqueda}
+          />
         ) : (
-          <TabCobranzas cuentas={itemsCobranzas} busqueda={busqueda} filtroTipo={filtroTipoCobranzas} />
+          <TabCobranzas
+            key={`${busqueda}-${filtroTipoCobranzas}`}
+            cuentas={itemsCobranzas}
+            busqueda={busqueda}
+            filtroTipo={filtroTipoCobranzas}
+          />
         )}
       </div>
     </div>

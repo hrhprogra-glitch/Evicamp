@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { Users } from 'lucide-react';
 import { ModalDetalleFila } from '../../../components/ModalDetalleFila';
+import { PaginacionSobrio } from '../../../components/PaginacionSobrio';
 import type { ItemTecnico } from './types';
 
 interface TabTecnicosProps {
@@ -11,9 +12,16 @@ interface TabTecnicosProps {
   busqueda?: string;
 }
 
+// Paginación SiuMax Sobrio: 50 filas por página, igual que el resto de Nego (18/11/2026)
+const POR_PAGINA = 50;
+
 // Filas: ↑ ↓ se mueven entre filas; ↑ desde la primera sube al buscador de la cabecera (Nego 3h)
-const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>, abrir: () => void) => {
-  if (e.key === 'ArrowDown') { e.preventDefault(); (e.currentTarget.nextElementSibling as HTMLElement | null)?.focus(); }
+const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>, abrir: () => void, idAbajo: string) => {
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    const sig = e.currentTarget.nextElementSibling as HTMLElement | null;
+    if (sig) sig.focus(); else document.getElementById(idAbajo)?.focus();
+  }
   else if (e.key === 'ArrowUp') {
     e.preventDefault();
     const ant = e.currentTarget.previousElementSibling as HTMLElement | null;
@@ -24,6 +32,7 @@ const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>, abrir: () => voi
 
 export const TabTecnicos: React.FC<TabTecnicosProps> = ({ tecnicos, busqueda = '' }) => {
   const [detalle, setDetalle] = useState<ItemTecnico | null>(null);
+  const [pagina, setPagina] = useState(1);
   const tecnicosFiltrados = tecnicos.filter((t) => {
     if (!busqueda.trim()) return true;
     const q = busqueda.toLowerCase().trim();
@@ -37,6 +46,10 @@ export const TabTecnicos: React.FC<TabTecnicosProps> = ({ tecnicos, busqueda = '
   const tecnicosOrdenados = [...tecnicosFiltrados].sort(
     (a, b) => b.trabajosCompletados + b.visitasRealizadas - (a.trabajosCompletados + a.visitasRealizadas)
   );
+
+  const totalPaginas = Math.max(1, Math.ceil(tecnicosOrdenados.length / POR_PAGINA));
+  const tecnicosPaginados = tecnicosOrdenados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  const selectorFilas = "#tabla-tecnicos [data-fila-grafico='true']";
 
   const maxCompletados = Math.max(
     ...tecnicos.map((t) => t.trabajosCompletados + t.visitasRealizadas),
@@ -93,7 +106,17 @@ export const TabTecnicos: React.FC<TabTecnicosProps> = ({ tecnicos, busqueda = '
       )}
 
       {/* Tabla Detallada por Técnico */}
-      <div className="tabla-marco overflow-x-auto">
+      <div className="tabla-marco flex flex-col">
+        <PaginacionSobrio
+          pagina={pagina}
+          totalPaginas={totalPaginas}
+          onCambiar={setPagina}
+          prefijo="tecnicos"
+          posicion="top"
+          selectorFilas={selectorFilas}
+          idBuscador="buscador-reporte-tecnicos"
+        />
+        <div className="overflow-x-auto">
         {tecnicosOrdenados.length === 0 ? (
           <div className="vacio-sobrio">
             <Users size={32} />
@@ -102,7 +125,7 @@ export const TabTecnicos: React.FC<TabTecnicosProps> = ({ tecnicos, busqueda = '
             </p>
           </div>
         ) : (
-          <table className="w-full text-left border-collapse">
+          <table id="tabla-tecnicos" className="w-full text-left border-collapse">
             <thead className="tabla-cabecera">
               <tr>
                 <th className="whitespace-nowrap p-4">Técnico / Trabajador</th>
@@ -116,13 +139,13 @@ export const TabTecnicos: React.FC<TabTecnicosProps> = ({ tecnicos, busqueda = '
               </tr>
             </thead>
             <tbody className="bg-[var(--color-surface)]">
-              {tecnicosOrdenados.map((t) => (
+              {tecnicosPaginados.map((t) => (
                 <tr
                   key={t.id}
                   data-fila-grafico="true"
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => teclaFila(e, () => setDetalle(t))}
+                  onKeyDown={(e) => teclaFila(e, () => setDetalle(t), 'btn-pag-bottom-tecnicos-ant')}
                   onClick={() => setDetalle(t)}
                   title="Presione Enter o haga clic para ver el detalle"
                   className="tabla-fila h-[79px] cursor-pointer"
@@ -166,6 +189,16 @@ export const TabTecnicos: React.FC<TabTecnicosProps> = ({ tecnicos, busqueda = '
             </tbody>
           </table>
         )}
+        </div>
+        <PaginacionSobrio
+          pagina={pagina}
+          totalPaginas={totalPaginas}
+          onCambiar={setPagina}
+          prefijo="tecnicos"
+          posicion="bottom"
+          selectorFilas={selectorFilas}
+          idBuscador="buscador-reporte-tecnicos"
+        />
       </div>
 
       {detalle && (

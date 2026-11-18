@@ -18,7 +18,7 @@ interface Props {
 export const TablaMovimientos: React.FC<Props> = ({ movimientos, onDelete, onVerTicket, onAnularTicket, onCambiarProducto, idsAnulando }) => {
   const esAdmin = usePermiso('sistema_acceso_total');
   // Paginación como Inventario (25 por página); vuelve a la 1 si cambia la lista (filtros)
-  const POR_PAGINA = 25;
+  const POR_PAGINA = 50;
   const [pagina, setPagina] = useState(1);
   const totalPaginas = Math.max(1, Math.ceil(movimientos.length / POR_PAGINA));
   const paginaReal = Math.min(pagina, totalPaginas);

@@ -1086,3 +1086,16 @@
 - Prueba con teclado y sin internet: 12 correctas, 0 fallos; Cobranzas, Visitas y Cobros están vacías en Nego y se
   marcan "sin datos". `build` limpio y despliegue solo en Nego. Sin Evicamp, sin push, sin pasada oficial ni Fase 5.
 - El pedido de salidas pendientes en Agenda sigue en espera; no se retomó.
+
+## 18/11/2026 (todas las tablas a 50 filas por página)
+- El dueño pidió: *"quiero que todos sean 50 tanto como comercio y servicios"*.
+- Se le mostró el inventario de tamaños: ya eran 50 Productos, Lotes, Clientes, Fiados, Estado de cuenta, Proveedores,
+  Conteos y Análisis; estaban en 10 Herramientas, Vehículos, Compras, Pedidos, Contratos y Taller; en 15 Salidas; en 20
+  Historial de cajas y en 25 Movimientos de Finanzas. Cotizaciones, Usuarios y las cuatro pestañas de Utilidades de
+  servicios no tenían paginación.
+- Se propuso: 1) subir a 50 los ocho tamaños anteriores, 2) conservar ids, atajos, flechas, clic/detalle y la franja
+  siempre visible, 3) agregar paginación de 50 a Cotizaciones, Usuarios y Utilidades de servicios. El dueño dijo **"si"**.
+- Hecho solo en Nego con `PaginacionSobrio`; búsqueda, filtro o período vuelven a la página 1. Prueba con teclado y sin
+  internet: 48 correctas, 0 fallos, 1 tabla sin datos (Cobranzas). `build` limpio y despliegue solo en Nego. Sin
+  Evicamp, sin push, sin pasada oficial ni Fase 5; SQL y base intactos.
+- El pedido de salidas pendientes en Agenda sigue en espera; no se retomó ni se volvió a preguntar por él.

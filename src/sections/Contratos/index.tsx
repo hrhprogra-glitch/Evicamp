@@ -132,7 +132,7 @@ export const Contratos: React.FC = () => {
     return perMatch || codigoMatch || tituloMatch || clienteMatch;
   });
 
-  const CONTRATOS_POR_PAGINA = 10;
+  const CONTRATOS_POR_PAGINA = 50;
   const totalPagContratos = Math.max(1, Math.ceil(contratosFiltrados.length / CONTRATOS_POR_PAGINA));
   const contratosPaginados = contratosFiltrados.slice((pagContratos - 1) * CONTRATOS_POR_PAGINA, pagContratos * CONTRATOS_POR_PAGINA);
   useEffect(() => { setPagContratos(1); }, [busqueda, filtroEstado]);

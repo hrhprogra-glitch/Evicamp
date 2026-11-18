@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { Package } from 'lucide-react';
 import { ModalDetalleFila } from '../../../components/ModalDetalleFila';
+import { PaginacionSobrio } from '../../../components/PaginacionSobrio';
 import type { ItemMaterialTop } from './types';
 
 interface TabMaterialesProps {
@@ -11,9 +12,16 @@ interface TabMaterialesProps {
   busqueda: string;
 }
 
+// Paginación SiuMax Sobrio: 50 filas por página, igual que el resto de Nego (18/11/2026)
+const POR_PAGINA = 50;
+
 // Filas: ↑ ↓ se mueven entre filas; ↑ desde la primera sube al buscador de la cabecera (Nego 3h)
-const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>, abrir: () => void) => {
-  if (e.key === 'ArrowDown') { e.preventDefault(); (e.currentTarget.nextElementSibling as HTMLElement | null)?.focus(); }
+const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>, abrir: () => void, idAbajo: string) => {
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    const sig = e.currentTarget.nextElementSibling as HTMLElement | null;
+    if (sig) sig.focus(); else document.getElementById(idAbajo)?.focus();
+  }
   else if (e.key === 'ArrowUp') {
     e.preventDefault();
     const ant = e.currentTarget.previousElementSibling as HTMLElement | null;
@@ -24,12 +32,17 @@ const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>, abrir: () => voi
 
 export const TabMateriales: React.FC<TabMaterialesProps> = ({ materiales, busqueda }) => {
   const [detalle, setDetalle] = useState<ItemMaterialTop | null>(null);
+  const [pagina, setPagina] = useState(1);
   const filtrados = materiales.filter((m) =>
     m.nombre.toLowerCase().includes(busqueda.toLowerCase().trim())
   );
 
   const top10 = [...filtrados].slice(0, 10);
   const maxCosto = top10.length > 0 ? Math.max(...top10.map((m) => m.costoTotal), 1) : 1;
+
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / POR_PAGINA));
+  const paginados = filtrados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  const selectorFilas = "#tabla-materiales [data-fila-grafico='true']";
 
   const totalCosto = filtrados.reduce((s, m) => s + m.costoTotal, 0);
 
@@ -79,7 +92,17 @@ export const TabMateriales: React.FC<TabMaterialesProps> = ({ materiales, busque
       )}
 
       {/* Tabla de Insumos */}
-      <div className="tabla-marco overflow-x-auto">
+      <div className="tabla-marco flex flex-col">
+        <PaginacionSobrio
+          pagina={pagina}
+          totalPaginas={totalPaginas}
+          onCambiar={setPagina}
+          prefijo="materiales"
+          posicion="top"
+          selectorFilas={selectorFilas}
+          idBuscador="buscador-reporte-materiales"
+        />
+        <div className="overflow-x-auto">
         {filtrados.length === 0 ? (
           <div className="vacio-sobrio">
             <Package size={32} />
@@ -89,7 +112,7 @@ export const TabMateriales: React.FC<TabMaterialesProps> = ({ materiales, busque
           </div>
         ) : (
           <>
-            <table className="w-full text-left border-collapse">
+            <table id="tabla-materiales" className="w-full text-left border-collapse">
               <thead className="tabla-cabecera">
                 <tr>
                   <th className="whitespace-nowrap p-4">Insumo / Material</th>
@@ -101,13 +124,13 @@ export const TabMateriales: React.FC<TabMaterialesProps> = ({ materiales, busque
                 </tr>
               </thead>
               <tbody className="bg-[var(--color-surface)]">
-                {filtrados.map((m) => (
+                {paginados.map((m) => (
                   <tr
                     key={m.productoId}
                     data-fila-grafico="true"
                     role="button"
                     tabIndex={0}
-                    onKeyDown={(e) => teclaFila(e, () => setDetalle(m))}
+                    onKeyDown={(e) => teclaFila(e, () => setDetalle(m), 'btn-pag-bottom-materiales-ant')}
                     onClick={() => setDetalle(m)}
                     title="Presione Enter o haga clic para ver el detalle"
                     className="tabla-fila h-[79px] cursor-pointer"
@@ -146,6 +169,16 @@ export const TabMateriales: React.FC<TabMaterialesProps> = ({ materiales, busque
             </div>
           </>
         )}
+        </div>
+        <PaginacionSobrio
+          pagina={pagina}
+          totalPaginas={totalPaginas}
+          onCambiar={setPagina}
+          prefijo="materiales"
+          posicion="bottom"
+          selectorFilas={selectorFilas}
+          idBuscador="buscador-reporte-materiales"
+        />
       </div>
 
       {detalle && (

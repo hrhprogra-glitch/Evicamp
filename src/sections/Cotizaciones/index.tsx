@@ -13,6 +13,7 @@ import { HeaderCotizaciones } from './components/HeaderCotizaciones';
 import { TablaCotizaciones } from './components/TablaCotizaciones';
 import { ModalNuevaCotizacion } from './components/ModalNuevaCotizacion';
 import { ModalDetalleCotizacion } from './components/ModalDetalleCotizacion';
+import { PaginacionSobrio } from '../../components/PaginacionSobrio';
 
 interface Props {
   onNavigatePOS?: () => void;
@@ -30,6 +31,10 @@ export const Cotizaciones: React.FC<Props> = ({ onNavigatePOS, pedirNueva = 0 })
   const [filtroEstado, setFiltroEstado] = useState('TODOS');
   const [nueva, setNueva] = useState<{ coti: Cotizacion | null; detalles?: CotizacionItem[] } | null>(null);
   const [detalle, setDetalle] = useState<Cotizacion | null>(null);
+
+  // Paginación SiuMax Sobrio: 50 filas por página, igual que el resto de Nego (18/11/2026)
+  const POR_PAGINA = 50;
+  const [pagina, setPagina] = useState(1);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -57,19 +62,36 @@ export const Cotizaciones: React.FC<Props> = ({ onNavigatePOS, pedirNueva = 0 })
     coincideBusqueda([c.numero, c.cliente_nombre, c.cliente_documento, c.cliente_telefono, c.observaciones, c.bien?.nombre], busqueda),
   ), [cotizaciones, filtroEstado, busqueda]);
 
+  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / POR_PAGINA));
+  const paginadas = useMemo(
+    () => filtradas.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA),
+    [filtradas, pagina],
+  );
+
+  // Cambiar búsqueda o filtro vuelve a la página 1 (y nunca queda una página vacía)
+  const cambiarBusqueda = (v: string) => { setBusqueda(v); setPagina(1); };
+  const cambiarFiltro = (v: string) => { setFiltroEstado(v); setPagina(1); };
+  useEffect(() => {
+    setPagina((p) => Math.min(p, Math.max(1, Math.ceil(filtradas.length / POR_PAGINA))));
+  }, [filtradas.length]);
+
   // Al cerrar una ventana, el selector vuelve a la fila de esa cotización (o a "Nueva cotización")
   const volverA = (id?: number) => setTimeout(() => {
-    const fila = id ? document.getElementById(`fila-coti-${id}`) : null;
-    (fila || document.getElementById('btn-nueva-cotizacion'))?.focus();
+    const idx = id ? filtradas.findIndex((c) => c.id === id) : -1;
+    if (idx >= 0) setPagina(Math.floor(idx / POR_PAGINA) + 1);
+    setTimeout(() => {
+      const fila = id ? document.getElementById(`fila-coti-${id}`) : null;
+      (fila || document.getElementById('btn-nueva-cotizacion'))?.focus();
+    }, 80);
   }, 80);
 
   return (
     <div className="flex flex-col gap-4 p-0 w-full font-mono relative">
       <HeaderCotizaciones
         busqueda={busqueda}
-        onBusquedaChange={setBusqueda}
+        onBusquedaChange={cambiarBusqueda}
         filtroEstado={filtroEstado}
-        onFiltroEstadoChange={setFiltroEstado}
+        onFiltroEstadoChange={cambiarFiltro}
         cotizaciones={cotizaciones}
         encontradas={filtradas.length}
       />
@@ -77,7 +99,15 @@ export const Cotizaciones: React.FC<Props> = ({ onNavigatePOS, pedirNueva = 0 })
         {cargando ? (
           <div className="p-12 text-center text-[var(--color-muted)] text-sm">Cargando cotizaciones…</div>
         ) : (
-          <TablaCotizaciones cotizaciones={filtradas} conBien={conServicios} onVerDetalle={setDetalle} />
+          <TablaCotizaciones
+            cotizaciones={paginadas}
+            total={filtradas.length}
+            pagina={pagina}
+            totalPaginas={totalPaginas}
+            onCambiarPagina={setPagina}
+            conBien={conServicios}
+            onVerDetalle={setDetalle}
+          />
         )}
       </div>
 

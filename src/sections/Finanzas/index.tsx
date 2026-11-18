@@ -81,7 +81,7 @@ export const Finanzas: React.FC = () => {
   const [totalPaginas, setTotalPaginas] = useState(1);
   const [fechaDesde, setFechaDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
-  const ITEMS_POR_PAGINA = 20;
+  const ITEMS_POR_PAGINA = 50;
 
   const cargarHistorial = async (page = 1, desde = fechaDesde, hasta = fechaHasta) => {
     let query = supabase

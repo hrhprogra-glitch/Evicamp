@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import { ModalDetalleFila } from '../../../components/ModalDetalleFila';
+import { PaginacionSobrio } from '../../../components/PaginacionSobrio';
 import type { ItemCuentaPorCobrar } from './types';
 import { verFechaLocal } from './types';
 
@@ -13,9 +14,16 @@ interface TabCobranzasProps {
   filtroTipo: string;
 }
 
+// Paginación SiuMax Sobrio: 50 filas por página, igual que el resto de Nego (18/11/2026)
+const POR_PAGINA = 50;
+
 // Filas: ↑ ↓ se mueven entre filas; ↑ desde la primera sube al buscador de la cabecera (Nego 3h)
-const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>, abrir: () => void) => {
-  if (e.key === 'ArrowDown') { e.preventDefault(); (e.currentTarget.nextElementSibling as HTMLElement | null)?.focus(); }
+const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>, abrir: () => void, idAbajo: string) => {
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    const sig = e.currentTarget.nextElementSibling as HTMLElement | null;
+    if (sig) sig.focus(); else document.getElementById(idAbajo)?.focus();
+  }
   else if (e.key === 'ArrowUp') {
     e.preventDefault();
     const ant = e.currentTarget.previousElementSibling as HTMLElement | null;
@@ -26,6 +34,7 @@ const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>, abrir: () => voi
 
 export const TabCobranzas: React.FC<TabCobranzasProps> = ({ cuentas, busqueda, filtroTipo }) => {
   const [detalle, setDetalle] = useState<ItemCuentaPorCobrar | null>(null);
+  const [pagina, setPagina] = useState(1);
   // Hoy en la hora local (antes en UTC: de noche ya era 'mañana')
   const ahora = new Date();
   const hoyStr = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`;
@@ -40,6 +49,10 @@ export const TabCobranzas: React.FC<TabCobranzasProps> = ({ cuentas, busqueda, f
     }
     return true;
   });
+
+  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / POR_PAGINA));
+  const paginadas = filtradas.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  const selectorFilas = "#tabla-cobranzas [data-fila-grafico='true']";
 
   const totalPorCobrar = filtradas.reduce((s, c) => s + c.saldo, 0);
   const totalVencido = filtradas
@@ -82,7 +95,17 @@ export const TabCobranzas: React.FC<TabCobranzasProps> = ({ cuentas, busqueda, f
       </div>
 
       {/* Tabla de Cobranzas */}
-      <div className="tabla-marco overflow-x-auto">
+      <div className="tabla-marco flex flex-col">
+        <PaginacionSobrio
+          pagina={pagina}
+          totalPaginas={totalPaginas}
+          onCambiar={setPagina}
+          prefijo="cobranzas"
+          posicion="top"
+          selectorFilas={selectorFilas}
+          idBuscador="buscador-reporte-cobranzas"
+        />
+        <div className="overflow-x-auto">
         {filtradas.length === 0 ? (
           <div className="vacio-sobrio">
             <CheckCircle size={32} className="text-[var(--color-success)]" />
@@ -91,7 +114,7 @@ export const TabCobranzas: React.FC<TabCobranzasProps> = ({ cuentas, busqueda, f
             </p>
           </div>
         ) : (
-          <table className="w-full text-left border-collapse">
+          <table id="tabla-cobranzas" className="w-full text-left border-collapse">
             <thead className="tabla-cabecera">
               <tr>
                 <th className="whitespace-nowrap p-4">Código</th>
@@ -106,7 +129,7 @@ export const TabCobranzas: React.FC<TabCobranzasProps> = ({ cuentas, busqueda, f
               </tr>
             </thead>
             <tbody className="bg-[var(--color-surface)]">
-              {filtradas.map((c) => {
+              {paginadas.map((c) => {
                 const esVencido = c.fechaVencimiento && c.fechaVencimiento < hoyStr;
 
                 return (
@@ -115,7 +138,7 @@ export const TabCobranzas: React.FC<TabCobranzasProps> = ({ cuentas, busqueda, f
                     data-fila-grafico="true"
                     role="button"
                     tabIndex={0}
-                    onKeyDown={(e) => teclaFila(e, () => setDetalle(c))}
+                    onKeyDown={(e) => teclaFila(e, () => setDetalle(c), 'btn-pag-bottom-cobranzas-ant')}
                     onClick={() => setDetalle(c)}
                     title="Presione Enter o haga clic para ver el detalle"
                     className="tabla-fila h-[79px] cursor-pointer"
@@ -177,6 +200,16 @@ export const TabCobranzas: React.FC<TabCobranzasProps> = ({ cuentas, busqueda, f
             </tbody>
           </table>
         )}
+        </div>
+        <PaginacionSobrio
+          pagina={pagina}
+          totalPaginas={totalPaginas}
+          onCambiar={setPagina}
+          prefijo="cobranzas"
+          posicion="bottom"
+          selectorFilas={selectorFilas}
+          idBuscador="buscador-reporte-cobranzas"
+        />
       </div>
 
       {detalle && (

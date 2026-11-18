@@ -6,6 +6,7 @@ import { supabase } from '../../../db/supabase';
 import { useEmpleado } from '../../../utils/permisos';
 import { leerToken } from '../../../utils/sesion';
 import { confirmar } from '../../../utils/dialogos';
+import { PaginacionSobrio } from '../../../components/PaginacionSobrio';
 
 export const TablaUsuarios: React.FC = () => {
   const [usuarios, setUsuarios] = useState<Empleado[]>([]);
@@ -14,6 +15,9 @@ export const TablaUsuarios: React.FC = () => {
   const [usuarioEditando, setUsuarioEditando] = useState<Empleado | null>(null);
   const [busqueda, setBusqueda] = useState('');
   const [filtroRol, setFiltroRol] = useState('TODOS');
+  // Paginación SiuMax Sobrio: 50 filas por página, igual que el resto de Nego (18/11/2026)
+  const POR_PAGINA = 50;
+  const [pagina, setPagina] = useState(1);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const ultimoUsuarioIdRef = useRef<string | null>(null);
   const yo = useEmpleado(); // el empleado con la sesión abierta (no puede borrarse a sí mismo)
@@ -50,6 +54,16 @@ export const TablaUsuarios: React.FC = () => {
   });
 
   const rolesUnicos = Array.from(new Set(usuarios.map(u => u.rol))).filter(Boolean);
+
+  const totalPaginas = Math.max(1, Math.ceil(usuariosFiltrados.length / POR_PAGINA));
+  const usuariosPaginados = usuariosFiltrados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+
+  // Cambiar búsqueda o filtro vuelve a la página 1 (y nunca queda una página vacía)
+  const cambiarBusqueda = (v: string) => { setBusqueda(v); setPagina(1); };
+  const cambiarFiltro = (v: string) => { setFiltroRol(v); setPagina(1); };
+  useEffect(() => {
+    setPagina((p) => Math.min(p, Math.max(1, Math.ceil(usuariosFiltrados.length / POR_PAGINA))));
+  }, [usuariosFiltrados.length]);
 
   const focusPrimerRegistro = () => {
     const rows = Array.from(document.querySelectorAll('#tabla-usuarios-ajustes tr[data-row="true"]')) as HTMLElement[];
@@ -90,15 +104,20 @@ export const TablaUsuarios: React.FC = () => {
       cargarUsuarios();
     }
     setTimeout(() => {
-      if (ultimoUsuarioIdRef.current) {
-        const row = document.querySelector(`#tabla-usuarios-ajustes tr[data-user-id="${ultimoUsuarioIdRef.current}"]`) as HTMLElement;
-        if (row) {
-          row.focus();
-          row.scrollIntoView({ block: 'nearest' });
-          return;
+      const id = ultimoUsuarioIdRef.current;
+      const idx = id ? usuariosFiltrados.findIndex((u) => u.id === id) : -1;
+      if (idx >= 0) setPagina(Math.floor(idx / POR_PAGINA) + 1);
+      setTimeout(() => {
+        if (id) {
+          const row = document.querySelector(`#tabla-usuarios-ajustes tr[data-user-id="${id}"]`) as HTMLElement;
+          if (row) {
+            row.focus();
+            row.scrollIntoView({ block: 'nearest' });
+            return;
+          }
         }
-      }
-      searchInputRef.current?.focus();
+        searchInputRef.current?.focus();
+      }, 80);
     }, 50);
   };
 
@@ -192,8 +211,8 @@ export const TablaUsuarios: React.FC = () => {
             rows[rowIndex + 1].focus();
             rows[rowIndex + 1].scrollIntoView({ block: 'nearest' });
           } else {
-            // Tope inferior en la última fila
-            rows[rows.length - 1].focus();
+            // Última fila: baja a la franja de paginación (siempre visible)
+            document.getElementById('btn-pag-bottom-usuarios-ajustes-ant')?.focus();
           }
         } else if (e.key === 'ArrowUp') {
           e.preventDefault();
@@ -268,11 +287,11 @@ export const TablaUsuarios: React.FC = () => {
             type="text"
             placeholder="BUSCAR EMPLEADO POR NOMBRE O EMAIL..."
             value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
+            onChange={(e) => cambiarBusqueda(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Escape') {
                 e.preventDefault();
-                setBusqueda('');
+                cambiarBusqueda('');
                 return;
               }
               if (e.key === 'ArrowUp') {
@@ -307,12 +326,12 @@ export const TablaUsuarios: React.FC = () => {
                 type="button"
                 title="Borrar búsqueda"
                 className="buscador-sobrio__borrar"
-                onClick={() => { setBusqueda(''); searchInputRef.current?.focus(); }}
+                onClick={() => { cambiarBusqueda(''); searchInputRef.current?.focus(); }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
                     e.preventDefault();
                     e.stopPropagation();
-                    setBusqueda('');
+                    cambiarBusqueda('');
                     searchInputRef.current?.focus();
                   } else if (e.key === 'ArrowLeft') {
                     e.preventDefault();
@@ -348,7 +367,7 @@ export const TablaUsuarios: React.FC = () => {
           <select
             id="filtro-rol-usuarios-ajustes"
             value={filtroRol}
-            onChange={(e) => setFiltroRol(e.target.value)}
+            onChange={(e) => cambiarFiltro(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'ArrowUp') {
                 e.preventDefault();
@@ -410,7 +429,17 @@ export const TablaUsuarios: React.FC = () => {
       </div>
 
       {/* MARCO DE LA TABLA */}
-      <div className="tabla-marco overflow-x-auto min-h-[200px]">
+      <div className="tabla-marco flex flex-col min-h-[200px]">
+        <PaginacionSobrio
+          pagina={pagina}
+          totalPaginas={totalPaginas}
+          onCambiar={setPagina}
+          prefijo="usuarios-ajustes"
+          posicion="top"
+          selectorFilas="#tabla-usuarios-ajustes tr[data-row='true']"
+          idBuscador="buscador-usuarios-ajustes"
+        />
+        <div className="overflow-x-auto">
         {loading ? (
           <div className="flex flex-col items-center justify-center p-12 gap-4">
             <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
@@ -432,7 +461,7 @@ export const TablaUsuarios: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-[var(--color-surface)]">
-              {usuariosFiltrados.map((usuario) => (
+              {usuariosPaginados.map((usuario) => (
                 <tr
                   key={usuario.id}
                   data-row="true"
@@ -501,6 +530,16 @@ export const TablaUsuarios: React.FC = () => {
             </tbody>
           </table>
         )}
+        </div>
+        <PaginacionSobrio
+          pagina={pagina}
+          totalPaginas={totalPaginas}
+          onCambiar={setPagina}
+          prefijo="usuarios-ajustes"
+          posicion="bottom"
+          selectorFilas="#tabla-usuarios-ajustes tr[data-row='true']"
+          idBuscador="buscador-usuarios-ajustes"
+        />
       </div>
 
       {/* MODAL */}

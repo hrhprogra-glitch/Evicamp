@@ -155,7 +155,7 @@ export const Taller: React.FC = () => {
     });
   }, [ordenes, filtroEstado, busqueda]);
 
-  const TALLER_POR_PAGINA = 10;
+  const TALLER_POR_PAGINA = 50;
   const totalPagTaller = Math.max(1, Math.ceil(ordenesFiltradas.length / TALLER_POR_PAGINA));
   const ordenesPaginadas = ordenesFiltradas.slice((pagTaller - 1) * TALLER_POR_PAGINA, pagTaller * TALLER_POR_PAGINA);
   useEffect(() => { setPagTaller(1); }, [busqueda, filtroEstado]);

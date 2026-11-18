@@ -22,7 +22,7 @@ export const Salidas: React.FC = () => {
 
   // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
-  const ITEMS_POR_PAGINA = 15;
+  const ITEMS_POR_PAGINA = 50;
 
   const fetchSalidas = async () => {
     setLoading(true);

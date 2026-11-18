@@ -7,6 +7,26 @@
 
 ---
 
+## 18/11/2026 (175) · OpenCode (Big Pickle) — Todas las tablas de Nego a 50 filas por página
+- **Dueño:** *"quiero que todos sean 50 tanto como comercio y servicios"*. Se le mostró el inventario de tamaños de página
+  y aprobó con *"si"*, incluido el punto 3: poner paginación de 50 también a Cotizaciones, Usuarios y a las cuatro
+  pestañas de Utilidades de servicios.
+- **Hecho (solo Nego):** 8 tablas que ya paginaban pasaron de 10/15/20/25 a **50**: Herramientas, Compras, Pedidos,
+  Contratos, Taller, Salidas, Historial de cajas y Movimientos de Finanzas. Cotizaciones, Usuarios (Ajustes) y
+  Rentabilidad / Técnicos / Materiales / Cobranzas ahora usan la franja compartida `PaginacionSobrio` (arriba y abajo,
+  siempre visible) con 50 filas por página; al cambiar búsqueda, filtro o período vuelven a la página 1.
+- **Sin tocar:** ids (`fila-coti-${id}`, `data-fila-grafico`, `buscador-cotizaciones`, flechas), atajos, clic/Enter que
+  abre detalle, botones internos, estilo SiuMax Sobrio sin esquinas redondeadas, SQL ni la base.
+- **Prueba nueva:** `ai-scripts/pruebas/prueba-paginacion-50.mjs`, con teclado y sin servicios externos: **48 correctas,
+  0 fallos, 1 sin datos en Nego** (Cobranzas está vacía). 50 filas reales comprobadas en Cotizaciones (2 páginas),
+  Rentabilidad (9), Materiales (18), Herramientas (2) y Salidas. Con teclado: ↓ desde la última fila baja a la paginación,
+  → y Enter cambian de página, Enter en la fila abre el detalle. `npm run build` limpio.
+- **Desplegado solo en Nego** con `node ai-scripts/deploy.cjs siumax` (21 archivos). Sin Evicamp, sin push, sin pasada
+  oficial ni Fase 5. Base sin verificar de nuevo (última `{servicios}`).
+- **No hecho:** el pedido pospuesto de salidas pendientes en Agenda sigue en espera; no se retomó.
+
+---
+
 ## 17/11/2026 (174) · OpenCode (Big Pickle) — Clic en cualquier fila abre el detalle, como Inventario > Productos
 - **Dueño:** *"agrega eso cuando le hago click a la tabla debe abrirse como en inventario en producto eso tiene que pasar en todas las tablas"*; aprobado con *"hazlo"*.
 - **Hecho (solo Nego):** se aplicó el molde de Inventario > Productos (clic o Enter en la fila → abre detalle) a las tablas que no lo tenían:

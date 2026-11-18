@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { TrendingUp } from 'lucide-react';
 import { ModalDetalleFila } from '../../../components/ModalDetalleFila';
+import { PaginacionSobrio } from '../../../components/PaginacionSobrio';
 import type { ItemRentabilidad } from './types';
 import { verFechaLocal } from './types';
 
@@ -13,9 +14,16 @@ interface TabRentabilidadProps {
   filtroTipo: string;
 }
 
+// Paginación SiuMax Sobrio: 50 filas por página, igual que el resto de Nego (18/11/2026)
+const POR_PAGINA = 50;
+
 // Filas: ↑ ↓ se mueven entre filas; ↑ desde la primera sube al buscador de la cabecera (Nego 3h)
-const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>, abrir: () => void) => {
-  if (e.key === 'ArrowDown') { e.preventDefault(); (e.currentTarget.nextElementSibling as HTMLElement | null)?.focus(); }
+const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>, abrir: () => void, idAbajo: string) => {
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    const sig = e.currentTarget.nextElementSibling as HTMLElement | null;
+    if (sig) sig.focus(); else document.getElementById(idAbajo)?.focus();
+  }
   else if (e.key === 'ArrowUp') {
     e.preventDefault();
     const ant = e.currentTarget.previousElementSibling as HTMLElement | null;
@@ -26,6 +34,7 @@ const teclaFila = (e: React.KeyboardEvent<HTMLTableRowElement>, abrir: () => voi
 
 export const TabRentabilidad: React.FC<TabRentabilidadProps> = ({ items, busqueda, filtroTipo }) => {
   const [detalle, setDetalle] = useState<ItemRentabilidad | null>(null);
+  const [pagina, setPagina] = useState(1);
   const itemsFiltrados = items.filter((it) => {
     if (filtroTipo !== 'TODOS' && it.tipo !== filtroTipo) return false;
     if (busqueda.trim()) {
@@ -37,6 +46,10 @@ export const TabRentabilidad: React.FC<TabRentabilidadProps> = ({ items, busqued
     }
     return true;
   });
+
+  const totalPaginas = Math.max(1, Math.ceil(itemsFiltrados.length / POR_PAGINA));
+  const itemsPaginados = itemsFiltrados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  const selectorFilas = "#tabla-rentabilidad [data-fila-grafico='true']";
 
   const totalIngreso = itemsFiltrados.reduce((s, it) => s + it.ingreso, 0);
   const totalCosto = itemsFiltrados.reduce((s, it) => s + it.costoMateriales, 0);
@@ -96,7 +109,17 @@ export const TabRentabilidad: React.FC<TabRentabilidadProps> = ({ items, busqued
       )}
 
       {/* Tabla Detallada */}
-      <div className="tabla-marco overflow-x-auto">
+      <div className="tabla-marco flex flex-col">
+        <PaginacionSobrio
+          pagina={pagina}
+          totalPaginas={totalPaginas}
+          onCambiar={setPagina}
+          prefijo="rentabilidad"
+          posicion="top"
+          selectorFilas={selectorFilas}
+          idBuscador="buscador-reporte-rentabilidad"
+        />
+        <div className="overflow-x-auto">
         {itemsFiltrados.length === 0 ? (
           <div className="vacio-sobrio">
             <TrendingUp size={32} />
@@ -106,7 +129,7 @@ export const TabRentabilidad: React.FC<TabRentabilidadProps> = ({ items, busqued
           </div>
         ) : (
           <>
-            <table className="w-full text-left border-collapse">
+            <table id="tabla-rentabilidad" className="w-full text-left border-collapse">
               <thead className="tabla-cabecera">
                 <tr>
                   <th className="whitespace-nowrap p-4">Código</th>
@@ -121,13 +144,13 @@ export const TabRentabilidad: React.FC<TabRentabilidadProps> = ({ items, busqued
                 </tr>
               </thead>
               <tbody className="bg-[var(--color-surface)]">
-                {itemsFiltrados.map((it) => (
+                {itemsPaginados.map((it) => (
                   <tr
                     key={`${it.tipo}-${it.id}`}
                     data-fila-grafico="true"
                     role="button"
                     tabIndex={0}
-                    onKeyDown={(e) => teclaFila(e, () => setDetalle(it))}
+                    onKeyDown={(e) => teclaFila(e, () => setDetalle(it), 'btn-pag-bottom-rentabilidad-ant')}
                     onClick={() => setDetalle(it)}
                     title="Presione Enter o haga clic para ver el detalle"
                     className="tabla-fila h-[79px] cursor-pointer"
@@ -189,6 +212,16 @@ export const TabRentabilidad: React.FC<TabRentabilidadProps> = ({ items, busqued
             </div>
           </>
         )}
+        </div>
+        <PaginacionSobrio
+          pagina={pagina}
+          totalPaginas={totalPaginas}
+          onCambiar={setPagina}
+          prefijo="rentabilidad"
+          posicion="bottom"
+          selectorFilas={selectorFilas}
+          idBuscador="buscador-reporte-rentabilidad"
+        />
       </div>
 
       {detalle && (

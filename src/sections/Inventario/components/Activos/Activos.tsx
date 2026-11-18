@@ -107,7 +107,7 @@ export const Activos: React.FC = () => {
   }, [vehiculos, searchQuery]);
 
   // Paginación de 10 en 10 ( igual que el molde, con franja siempre visible )
-  const POR_PAGINA = 10;
+  const POR_PAGINA = 50;
   const totalPaginasHerr = Math.max(1, Math.ceil(herramientasFiltradas.length / POR_PAGINA));
   const totalPaginasVeh = Math.max(1, Math.ceil(vehiculosFiltrados.length / POR_PAGINA));
   const herramientasPaginadas = herramientasFiltradas.slice((paginaHerr - 1) * POR_PAGINA, paginaHerr * POR_PAGINA);

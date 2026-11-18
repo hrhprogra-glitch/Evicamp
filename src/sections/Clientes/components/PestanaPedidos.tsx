@@ -78,7 +78,7 @@ export const PestanaPedidos: React.FC<PestanaPedidosProps> = ({ reloadTrigger })
     });
   }, [pedidos, search, filtroEstado]);
 
-  const PEDIDOS_POR_PAGINA = 10;
+  const PEDIDOS_POR_PAGINA = 50;
   const totalPagPedidos = Math.max(1, Math.ceil(pedidosFiltrados.length / PEDIDOS_POR_PAGINA));
   const pedidosPaginados = pedidosFiltrados.slice((pagPedidos - 1) * PEDIDOS_POR_PAGINA, pagPedidos * PEDIDOS_POR_PAGINA);
 

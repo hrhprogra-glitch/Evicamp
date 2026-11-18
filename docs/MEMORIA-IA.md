@@ -662,4 +662,19 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Si el detalle se abre dentro de otro modal, la pila de `useCerrarConEscape.ts` hace que Escape cierre primero el de
   arriba; por eso el modal nuevo usa ese hook y no un `useEffect` propio de Escape.
 
+## 27. Todas las tablas a 50 filas por página (18/11/2026, bitácora 175)
+- El dueño quiere **50 filas por página en TODAS las tablas de Nego**, tanto en Comercio como en Servicios. Si una tabla
+  ya paginaba con otro número, solo se cambia la constante; si no paginaba, se agrega `PaginacionSobrio` arriba y abajo.
+- `src/components/PaginacionSobrio.tsx` dibuja la franja **siempre** (aunque sea "Página 1 de 1") y ya resuelve las
+  flechas: en la franja de arriba ↓ va a la primera fila; en la de abajo ↑ va a la última; ←/→ cambian de flecha y
+  Enter/Espacio cambia de página. No hace falta reimplementar ese teclado en cada tabla.
+- Al agregar paginación hay que: (1) slicear las filas en la pantalla, (2) volver a la página 1 cuando cambie búsqueda,
+  filtro o período, (3) conectar la última fila con la franja de abajo en `ArrowDown` y (4) mantener los ids y el
+  `↑` de la primera fila al buscador. En Cotizaciones el id `fila-coti-${id}` y el foco al volver de un modal se
+  recalculan con la página que contiene ese id.
+- En Utilidades de servicios, las pestañas se montan con una `key` que incluye búsqueda, filtro, período y fechas:
+  así cualquier cambio reinicia la página sin `useEffect` extra.
+- Ojo con las pruebas: `innerText` de la franja sale en **mayúsculas y con acento** (`PÁGINA 1 DE 9`); usar regex
+  `/P[AÁ]GINA\s+\d+\s+DE\s+\d+/i`. Cobranzas está vacía en Nego: esperar filas ahí dará "sin datos", no un fallo.
+
 
