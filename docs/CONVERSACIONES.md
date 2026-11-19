@@ -1160,3 +1160,10 @@
 - Se cambió **únicamente** el administrador de la base `ecosistema` (el mismo de siempre, `be9159d6-…`): correo nuevo, clave nueva y sesiones anteriores borradas. No se tocó Nego, Evicamp, el Panel ni los otros dos administradores.
 - La prueba del sitio oficial dejó de usar `admin@siumax.com` y la clave de Nego: ahora toma las credenciales de `.env.vps` con nombres propios del sitio. Volvió a dar **29/29, 0 fallos** con teclado y sin internet en 390/768/1366/1920.
 - La clave quedó solo en `.env.vps` (no se sube a git). No se escribió en bitácora, plan, conversaciones, memoria ni commits. Sin deploy y sin push. El pedido de salidas pendientes en Agenda sigue pospuesto; no se volvió a mencionar.
+
+## 18/11/2026 (apariencia Océano predeterminada — fase 185)
+- El dueño dijo: *"perfecto pero quiero que este como predeterminado el oceano"* y, al preguntarle a qué se refería, aclaró: *"la apariencia"*.
+- Se le mostraron opciones antes de tocar código. Eligió **"Solo sitio oficial"** (no Nego ni Evicamp) y **"Respetar lo elegido"** (si un dispositivo ya guardó otro tema, no se le cambia).
+- Se hizo que al abrir `ecosistema123.duckdns.org` sin tema guardado se vea **Océano** desde el primer fotograma. El resto de los sitios siguen abriendo en Clásico. En Ajustes > Apariencia, Océano aparece marcado como «Por defecto» solo en el sitio oficial, con una nota que explica que se respeta la elección previa.
+- Se desplegó solo en el sitio oficial y se repusieron sus iconos (el `dist` compartido trae los de Nego). Prueba oficial: **31/31, 0 fallos**, incluidas las dos comprobaciones nuevas de tema, con teclado y sin internet en 390/768/1366/1920. Evicamp, Panel y `nego.siumax` siguen respondiendo igual.
+- Sin tocar la base, las credenciales ni otros clientes. Sin push. El pedido de salidas pendientes en Agenda sigue pospuesto; no se volvió a preguntar por él.

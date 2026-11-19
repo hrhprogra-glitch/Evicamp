@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Palette, CheckCircle2, Monitor } from 'lucide-react';
 import { leerTamanoInterfaz, guardarTamanoInterfaz, type TamanoInterfaz } from '../../../utils/tamanoInterfaz';
-
-type Tema = 'classic' | 'monochrome' | 'oceano' | 'atardecer' | 'bosque' | 'rosa';
+import { leerTema, TEMA_PREDETERMINADO, type Tema } from '../../../utils/tema';
 
 // Cada tema (salvo Clásico y Monocromático, que son casos especiales) solo necesita
 // decir qué 4 colores mostrar en su muestra y qué atributo data-theme aplicar.
 const TEMAS: { id: Tema; nombre: string; descripcion: string; swatches: string[] }[] = [
-  { id: 'classic', nombre: 'Tema Clásico', descripcion: 'Colores vibrantes e indicadores visuales dinámicos (Por defecto).', swatches: ['#1E293B', '#10B981', '#F59E0B', '#EF4444'] },
+  { id: 'classic', nombre: 'Tema Clásico', descripcion: 'Colores vibrantes e indicadores visuales dinámicos.', swatches: ['#1E293B', '#10B981', '#F59E0B', '#EF4444'] },
   { id: 'monochrome', nombre: 'Modo Oscuro', descripcion: 'Negro carbón, grafito y gris acero con acentos clásicos, descanso total para la vista.', swatches: ['#0B0F17', '#111827', '#10B981', '#64748B'] },
   { id: 'oceano', nombre: 'Océano', descripcion: 'Azules fríos y relajados, ideal para jornadas largas.', swatches: ['#0F2942', '#0EA5E9', '#F59E0B', '#EF4444'] },
   { id: 'atardecer', nombre: 'Atardecer', descripcion: 'Naranjas y tonos cálidos, cálido y energético.', swatches: ['#3B2317', '#F97316', '#F59E0B', '#EF4444'] },
@@ -16,13 +15,12 @@ const TEMAS: { id: Tema; nombre: string; descripcion: string; swatches: string[]
 ];
 
 export const ThemeSwitcher: React.FC = () => {
-  const [theme, setTheme] = useState<Tema>('classic');
+  const [theme, setTheme] = useState<Tema>(leerTema());
   const [tamano, setTamano] = useState<TamanoInterfaz>(leerTamanoInterfaz());
   const cambiarTamano = (t: TamanoInterfaz) => { setTamano(t); guardarTamanoInterfaz(t); };
 
   useEffect(() => {
-    const savedTheme = (localStorage.getItem('gestorpro_theme') || 'classic') as Tema;
-    setTheme(savedTheme);
+    setTheme(leerTema());
   }, []);
 
   const changeTheme = (newTheme: Tema) => {
@@ -42,7 +40,7 @@ export const ThemeSwitcher: React.FC = () => {
   // 🧲 Autofoco inicial en el tema activo
   useEffect(() => {
     const timer = setTimeout(() => {
-      const activeBtn = document.getElementById(`btn-tema-${theme}`) || document.getElementById('btn-tema-classic');
+      const activeBtn = document.getElementById(`btn-tema-${leerTema()}`) || document.getElementById('btn-tema-classic');
       activeBtn?.focus();
     }, 60);
     return () => clearTimeout(timer);
@@ -97,6 +95,9 @@ export const ThemeSwitcher: React.FC = () => {
       </div>
 
       <p className="text-sm text-[var(--color-muted)] mb-6 font-bold">Selecciona el tema visual para el sistema. Este ajuste se aplicará en todas las ventanas, paneles flotantes y subsesiones del programa.</p>
+      {TEMA_PREDETERMINADO !== 'classic' && (
+        <p className="text-xs text-[var(--color-muted)] mb-4 font-bold">En este sitio el tema inicial es {TEMA_PREDETERMINADO === 'oceano' ? 'Océano' : TEMA_PREDETERMINADO}. Si ya elegiste otro, se respeta tu elección.</p>
+      )}
 
       <div id="panel-temas-ajustes" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
         {TEMAS.map((t, index) => (
@@ -159,7 +160,7 @@ export const ThemeSwitcher: React.FC = () => {
                 <div key={i} className="h-6 flex-1 border border-[var(--color-border)]" style={{ backgroundColor: hex }}></div>
               ))}
             </div>
-            <p className="text-xs text-[var(--color-muted)] font-bold">{t.descripcion}</p>
+            <p className="text-xs text-[var(--color-muted)] font-bold">{t.descripcion}{t.id === TEMA_PREDETERMINADO ? ' (Por defecto)' : ''}</p>
           </button>
         ))}
       </div>

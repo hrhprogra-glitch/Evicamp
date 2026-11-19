@@ -20,8 +20,12 @@
     <script>
       (function() {
         try {
-          var tema = localStorage.getItem('gestorpro_theme');
-          if (tema === 'monochrome') {
+          // El sitio oficial de ECO SISTEMAS URH arranca en Océano; los demás, en Clásico.
+          // Si el dispositivo ya eligió un tema, esa elección se respeta.
+          var esOficial = /^(www\.)?ecosistema123\.duckdns\.org$/i.test(location.hostname);
+          window.SIUMAX_TEMA_PREDETERMINADO = esOficial ? 'oceano' : 'classic';
+          var tema = localStorage.getItem('gestorpro_theme') || window.SIUMAX_TEMA_PREDETERMINADO;
+          if (tema === 'monochrome' || tema === 'dark') {
             document.documentElement.classList.add('theme-monochrome');
             document.documentElement.setAttribute('data-theme', 'dark');
           } else if (tema && tema !== 'classic') {

@@ -32,6 +32,16 @@ try {
   await page.goto(SITIO, { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario', { timeout: 20000 });
 
+  // --- Apariencia: Océano solo como tema inicial del sitio oficial ---
+  const temaInicial = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+  ok('Tema Océano por defecto en el sitio oficial', temaInicial === 'oceano', `data-theme=${temaInicial}`);
+  await page.evaluate(() => localStorage.setItem('gestorpro_theme', 'classic'));
+  await page.reload({ waitUntil: 'networkidle2' });
+  ok('Tema ya elegido se respeta (Clásico)', await page.evaluate(() => document.documentElement.getAttribute('data-theme') === null));
+  await page.evaluate(() => localStorage.removeItem('gestorpro_theme'));
+  await page.reload({ waitUntil: 'networkidle2' });
+  await page.waitForSelector('#input-login-usuario', { timeout: 20000 });
+
   // --- Logo y ausencia de cobro en el login ---
   const lLogin = await logoInfo();
   ok('Login: logo de la empresa visible', !!lLogin && lLogin.cargado, lLogin ? `ancho ${lLogin.ancho}px` : 'sin logo');

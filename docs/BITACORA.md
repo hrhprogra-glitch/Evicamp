@@ -7,6 +7,15 @@
 
 ---
 
+## 18/11/2026 (185) · OpenCode (Big Pickle) — Apariencia Océano predeterminada SOLO en el sitio oficial: HECHA y desplegada
+- **Dueño:** *"perfecto pero quiero que este como predeterminado el oceano"*, aclarado como *"la apariencia"*. Preguntado con opciones, eligió **"Solo sitio oficial"** y **"Respetar lo elegido"**.
+- **Investigado sin tocar nada (graphify + lectura):** el tema se decide en el `<script>` de `index.html` (antes del primer dibujo, para que no haya destello), se vuelve a aplicar en el `useEffect` de `App.tsx` y se recuerda por dispositivo en `localStorage.gestorpro_theme`. `ThemeSwitcher.tsx` muestra la marca «(Por defecto)» y enfoca el botón del tema activo.
+- **Hecho:** nuevo `src/utils/tema.ts` que centraliza cuál es el tema inicial; `index.html` detecta el dominio `ecosistema123.duckdns.org` y define `window.SIUMAX_TEMA_PREDETERMINADO = 'oceano'` (los demás dominios siguen en `classic`). `App.tsx` y `ThemeSwitcher.tsx` usan esa misma fuente. Si el dispositivo ya guardó **cualquier** tema (incluso Clásico o Modo Oscuro), se respeta y no se sobrescribe. En Ajustes > Apariencia, la etiqueta «(Por defecto)» y la nota explicativa salen en Océano solo en el sitio oficial; el autofoco va al tema realmente activo.
+- **Pruebas:** `npm run build` limpio. Despliegue **solo en ecosistema** (21 archivos) y reposición de los 5 iconos con `bash /opt/siuhub/ecosistema-iconos.sh`. `prueba-sitio-ecosistema.mjs` ampliada con 2 comprobaciones nuevas: abre con `data-theme="oceano"` y, si se guarda Clásico, se respeta. Resultado **31/31, 0 fallos** con teclado y sin internet en 390/768/1366/1920. Evicamp 200, Panel 200, `nego.siumax` 200 y su HTML sigue sin el default de Océano.
+- **Sin tocar:** Nego, Evicamp, base de datos, credenciales ni push. Si más adelante se despliega Nego con este código, seguirá abriendo en Clásico porque el dominio no coincide.
+
+---
+
 ## 18/11/2026 (184) · OpenCode (Big Pickle) — Administrador del sitio oficial con correo de ecosistema: HECHO
 - **Dueño:** pidió la clave nueva (la que él indicó) y recordó que el usuario **no es de siumax**: tiene que ser `admin@ecosistema.com`. El valor de la clave no se escribe acá; vive solo en `.env.vps`.
 - **Investigado sin tocar nada:** `fn_login` compara `empleados.email` **exacto** y `password_hash` con bcrypt (`crypt(p_password, e.password_hash)`). El campo viejo `password` no interviene en el login: solo se usa para mandar la clave nueva a las funciones `fn_crear_empleado` / `fn_editar_empleado`. El administrador a cambiar es `be9159d6-e270-4ea5-9353-d90dd22f41ab`.

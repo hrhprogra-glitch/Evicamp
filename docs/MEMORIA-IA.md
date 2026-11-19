@@ -742,4 +742,11 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Al cambiar la clave, borrar también las `sesiones` de ese empleado: los tokens antiguos siguen siendo válidos 30 días y si no se borran parece que "la clave vieja aún funciona".
 - Las credenciales del sitio oficial viven en `.env.vps` como `ECOSISTEMA_ADMIN_USUARIO` y `ECOSISTEMA_ADMIN_CLAVE`; las de Nego siguen en `SIUMAX_ADMIN_*`. La prueba `prueba-sitio-ecosistema.mjs` las lee de ahí y falla temprano si faltan, para no entrar con la cuenta de otro sitio por accidente. **Nunca poner los valores en docs, pruebas ni commits.**
 
+## 38. Tema predeterminado distinto por sitio (18/11/2026, bitácora 185)
+- El tema se decide en **tres puntos** y hay que mantenerlos de acuerdo: el `<script>` de `index.html` (define el color antes del primer dibujo, evita el destello), el `useEffect` de `App.tsx` (lo reaplica al cargar la app) y `ThemeSwitcher.tsx` (marca y enfoca el tema activo). La fuente única es `src/utils/tema.ts`.
+- `index.html` no puede importar TypeScript: por eso calcula el dominio y deja `window.SIUMAX_TEMA_PREDETERMINADO`. El módulo TS lo lee y cae a `classic` si no existe (por ejemplo, en pruebas locales). No duplicar la lista de dominios en el TS.
+- **Predeterminado ≠ obligatorio:** `leerTema()` devuelve `localStorage.gestorpro_theme` si existe, aunque sea `classic`. El dueño eligió expresamente respetar lo que cada dispositivo ya eligió. Nunca borrar ni reescribir esa clave para "forzar" el tema nuevo.
+- Como el `dist` es compartido, el cambio llega a todos los sitios que se desplieguen; el dominio es lo que lo limita. Por eso se desplegó **solo en ecosistema**: Nego sigue con su build anterior y, aunque se desplegara después, su hostname no coincide y seguiría en Clásico. Verificar siempre con `fetch` del HTML que el sitio ajeno no contenga el dominio oficial en su script.
+- Tras cualquier deploy de `ecosistema`, correr `bash /opt/siuhub/ecosistema-iconos.sh`; si no, el logo vuelve al de Nego (el build compartido sobrescribe los 5 iconos).
+
   

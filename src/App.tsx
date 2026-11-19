@@ -23,6 +23,7 @@ import { Utilidades } from './sections/Utilidades';
 import Configuraciones from './sections/Configuraciones';
 import { TiendaWeb } from './sections/TiendaWeb';
 import { aplicarTamanoInterfaz, leerTamanoInterfaz } from './utils/tamanoInterfaz';
+import { leerTema } from './utils/tema';
 import { AlertaYape } from './layout/AlertaYape';
 import { AvisoSuscripcion } from './layout/AvisoSuscripcion';
 import { BarraConexion } from './layout/BarraConexion';
@@ -264,13 +265,13 @@ export const App: React.FC = () => {
   // Valida la sesión al abrir la app, cada minuto y al volver a la pestaña.
   // Si el empleado fue desactivado o borrado, o le cambiaron los permisos, se aplica enseguida.
   useEffect(() => {
-    // Aplicar tema guardado al cargar
-      const temaGuardado = localStorage.getItem('gestorpro_theme');
-      if (temaGuardado === 'monochrome' || temaGuardado === 'dark') {
+    // Aplicar el tema elegido (o el predeterminado de este sitio) al cargar
+      const tema = leerTema();
+      if (tema === 'monochrome' || (tema as string) === 'dark') {
         document.documentElement.classList.add('theme-monochrome');
         document.documentElement.setAttribute('data-theme', 'dark');
-      } else if (temaGuardado && temaGuardado !== 'classic') {
-        document.documentElement.setAttribute('data-theme', temaGuardado);
+      } else if (tema !== 'classic') {
+        document.documentElement.setAttribute('data-theme', tema);
       }
     aplicarTamanoInterfaz(leerTamanoInterfaz()); // tamaño elegido en Ajustes > Apariencia
 
