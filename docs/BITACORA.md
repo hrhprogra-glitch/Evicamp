@@ -7,6 +7,14 @@
 
 ---
 
+## 19/11/2026 (186) · OpenCode (Big Pickle) — El nombre de arriba dice ECO SISTEMAS URH en el sitio oficial: HECHO y desplegado
+- **Dueño:** *"perfecto pero tambien arriba dice siumax nego tiene que decir ecosistema"*. Verificado con el navegador: el título de la pestaña decía `SiuMax Nego`. Preguntado qué texto exacto quería, eligió **`ECO SISTEMAS URH`**.
+- **Hecho SOLO para el dominio oficial:** `index.html` detecta `ecosistema123.duckdns.org` y cambia el `<title>`, el meta `apple-mobile-web-app-title` y el enlace del manifiesto PWA. Se agregó `public/manifest-ecosistema.json` con nombre corto/largo `ECO SISTEMAS URH` (mismo logo, sin tocar el de Nego). `public/offline.html` también dice `ECO SISTEMAS URH - Sin conexión` solo en ese dominio. El menú usa `NOMBRE_SITIO` como respaldo antes de que llegue el nombre de la base, para que nunca parpadee «SIUMAX NEGO». Nego y Evicamp siguen con su nombre de siempre.
+- **Pruebas:** build limpio, despliegue **solo en ecosistema** (22 archivos, el nuevo manifiesto incluido) y reposición de los 5 iconos. `prueba-sitio-ecosistema.mjs` ampliada con 4 comprobaciones nuevas: título, nombre de app instalada, ruta del manifiesto y nombre dentro del manifiesto. Resultado **35/35, 0 fallos** con teclado y sin internet en 390/768/1366/1920. Los 4 sitios siguen 200; el HTML de Nego no contiene el dominio oficial.
+- **Sin tocar:** base, credenciales, Evicamp, Panel ni push. Sigue pendiente la confirmación visual del logo que pidió el dueño en 183.
+
+---
+
 ## 18/11/2026 (185) · OpenCode (Big Pickle) — Apariencia Océano predeterminada SOLO en el sitio oficial: HECHA y desplegada
 - **Dueño:** *"perfecto pero quiero que este como predeterminado el oceano"*, aclarado como *"la apariencia"*. Preguntado con opciones, eligió **"Solo sitio oficial"** y **"Respetar lo elegido"**.
 - **Investigado sin tocar nada (graphify + lectura):** el tema se decide en el `<script>` de `index.html` (antes del primer dibujo, para que no haya destello), se vuelve a aplicar en el `useEffect` de `App.tsx` y se recuerda por dispositivo en `localStorage.gestorpro_theme`. `ThemeSwitcher.tsx` muestra la marca «(Por defecto)» y enfoca el botón del tema activo.

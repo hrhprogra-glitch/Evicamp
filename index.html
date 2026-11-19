@@ -24,6 +24,14 @@
           // Si el dispositivo ya eligió un tema, esa elección se respeta.
           var esOficial = /^(www\.)?ecosistema123\.duckdns\.org$/i.test(location.hostname);
           window.SIUMAX_TEMA_PREDETERMINADO = esOficial ? 'oceano' : 'classic';
+          window.SIUMAX_NOMBRE_SITIO = esOficial ? 'ECO SISTEMAS URH' : 'SiuMax Nego';
+          if (esOficial) {
+            document.title = window.SIUMAX_NOMBRE_SITIO;
+            var apple = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+            if (apple) apple.setAttribute('content', window.SIUMAX_NOMBRE_SITIO);
+            var manifest = document.querySelector('link[rel="manifest"]');
+            if (manifest) manifest.setAttribute('href', '/manifest-ecosistema.json');
+          }
           var tema = localStorage.getItem('gestorpro_theme') || window.SIUMAX_TEMA_PREDETERMINADO;
           if (tema === 'monochrome' || tema === 'dark') {
             document.documentElement.classList.add('theme-monochrome');

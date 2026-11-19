@@ -15,6 +15,7 @@ import { puedeVerSeccion, tienePermiso, useEmpleado } from '../utils/permisos';
 import { seccionDelNegocio, useTiposNegocio, type IdTipoNegocio } from '../utils/tiposNegocio';
 import { cerrarSesion } from '../utils/sesion';
 import { programarRestauracionFoco } from '../utils/navegacionSesion';
+import { NOMBRE_SITIO } from '../utils/tema';
 
 interface SideBarProps {
   isOpen: boolean;
@@ -78,7 +79,7 @@ export const teclaAtajo = (id: string, tipos?: IdTipoNegocio[]) => {
 const AUTO_OCULTAR_MS = 8000;
 
 export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigate, onClose, onToggle, permisos }) => {
-  const [empresaData, setEmpresaData] = useState({ nombre: 'SIUMAX NEGO', logo: logoEvicamp });
+  const [empresaData, setEmpresaData] = useState({ nombre: NOMBRE_SITIO, logo: logoEvicamp });
   const puedeInstalar = usePuedeInstalar();
   const hayInstaladorPC = useHayInstaladorPC();
 
@@ -278,7 +279,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, currentView, onNavigat
         const { data, error } = await supabase.from('empresa_config').select('nombre_empresa, logo_url').limit(1).single();
         if (data && !error) {
           setEmpresaData({
-            nombre: data.nombre_empresa || 'SIUMAX NEGO',
+            nombre: data.nombre_empresa || NOMBRE_SITIO,
             logo: data.logo_url || logoEvicamp
           });
         }

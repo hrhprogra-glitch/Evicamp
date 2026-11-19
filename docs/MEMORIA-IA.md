@@ -749,4 +749,11 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Como el `dist` es compartido, el cambio llega a todos los sitios que se desplieguen; el dominio es lo que lo limita. Por eso se desplegó **solo en ecosistema**: Nego sigue con su build anterior y, aunque se desplegara después, su hostname no coincide y seguiría en Clásico. Verificar siempre con `fetch` del HTML que el sitio ajeno no contenga el dominio oficial en su script.
 - Tras cualquier deploy de `ecosistema`, correr `bash /opt/siuhub/ecosistema-iconos.sh`; si no, el logo vuelve al de Nego (el build compartido sobrescribe los 5 iconos).
 
+## 39. Nombre visible distinto por sitio (19/11/2026, bitácora 186)
+- «Arriba» para el dueño es el **título de la pestaña del navegador**, no el menú: comprobarlo con `document.title` antes de suponer dónde está el texto. En el sitio oficial debe decir `ECO SISTEMAS URH` (sin `S.A.C.`); en Nego sigue `SiuMax Nego`.
+- `index.html` es el único lugar que decide el nombre por dominio y lo deja en `window.SIUMAX_NOMBRE_SITIO`. El bundle lo lee desde `src/utils/tema.ts` (`NOMBRE_SITIO`) para el respaldo del menú; no repetir la lista de dominios en los componentes.
+- El nombre aparece en cuatro sitios distintos y hay que revisarlos todos: `<title>`, `meta[name="apple-mobile-web-app-title"]`, el `<link rel="manifest">` y el propio archivo de manifiesto. Por eso se creó `public/manifest-ecosistema.json` en vez de editar el `manifest.json` compartido: así Nego no cambia aunque se despliegue con este código.
+- `public/offline.html` tiene su propio `<title>` y texto; lleva un script que solo cambia el nombre cuando el hostname es el oficial. Es un archivo estático compartido, pero el cambio es inofensivo en los demás dominios.
+- El service worker incluye automáticamente los archivos nuevos de `public/` en su lista (`vite.config.ts` recorre `dist`), así que el manifiesto nuevo queda disponible sin internet tras el primer deploy.
+
   

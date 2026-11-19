@@ -5,8 +5,13 @@ export type Tema = 'classic' | 'monochrome' | 'oceano' | 'atardecer' | 'bosque' 
 declare global {
   interface Window {
     SIUMAX_TEMA_PREDETERMINADO?: Tema;
+    SIUMAX_NOMBRE_SITIO?: string;
   }
 }
+
+// El nombre visible lo pone index.html según el dominio; acá solo se consume.
+export const NOMBRE_SITIO = window.SIUMAX_NOMBRE_SITIO || 'SiuMax Nego';
+export const ES_SITIO_OFICIAL = NOMBRE_SITIO === 'ECO SISTEMAS URH';
 
 const TEMAS_VALIDOS: Tema[] = ['classic', 'monochrome', 'oceano', 'atardecer', 'bosque', 'rosa'];
 const indicado = window.SIUMAX_TEMA_PREDETERMINADO;

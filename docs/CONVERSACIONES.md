@@ -1167,3 +1167,9 @@
 - Se hizo que al abrir `ecosistema123.duckdns.org` sin tema guardado se vea **Océano** desde el primer fotograma. El resto de los sitios siguen abriendo en Clásico. En Ajustes > Apariencia, Océano aparece marcado como «Por defecto» solo en el sitio oficial, con una nota que explica que se respeta la elección previa.
 - Se desplegó solo en el sitio oficial y se repusieron sus iconos (el `dist` compartido trae los de Nego). Prueba oficial: **31/31, 0 fallos**, incluidas las dos comprobaciones nuevas de tema, con teclado y sin internet en 390/768/1366/1920. Evicamp, Panel y `nego.siumax` siguen respondiendo igual.
 - Sin tocar la base, las credenciales ni otros clientes. Sin push. El pedido de salidas pendientes en Agenda sigue pospuesto; no se volvió a preguntar por él.
+
+## 19/11/2026 (nombre del sitio oficial — fase 186)
+- El dueño dijo: *"perfecto pero tambien arriba dice siumax nego tiene que decir ecosistema"*. Se comprobó en el navegador que el título de la pestaña era `SiuMax Nego`.
+- Preguntado por el texto exacto, eligió **`ECO SISTEMAS URH`** (el mismo nombre que sale en el login, sin el `S.A.C.`).
+- Se cambió **solo en el sitio oficial**: el título de la pestaña, el nombre que se ve al instalar la app y el manifiesto PWA (archivo nuevo `manifest-ecosistema.json`, con el mismo logo). La pantalla «Sin conexión» y el respaldo del menú también dicen `ECO SISTEMAS URH` en ese dominio. Nego y Evicamp conservan su nombre.
+- Desplegado solo en ecosistema (22 archivos y iconos repuestos). Prueba oficial: **35/35, 0 fallos**, incluidas 4 comprobaciones nuevas del nombre, con teclado y sin internet en 390/768/1366/1920. Los cuatro sitios siguen respondiendo 200. Sin base, sin credenciales y sin push. El pedido de salidas pendientes en Agenda sigue pospuesto; no se volvió a mencionar.

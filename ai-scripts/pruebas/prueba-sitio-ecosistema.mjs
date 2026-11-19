@@ -42,6 +42,20 @@ try {
   await page.reload({ waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario', { timeout: 20000 });
 
+  // --- Nombre visible arriba: Ya no debe decir SiuMax Nego ---
+  const nombrePagina = await page.evaluate(() => ({
+    titulo: document.title,
+    apple: document.querySelector('meta[name="apple-mobile-web-app-title"]')?.content,
+    manifest: document.querySelector('link[rel="manifest"]')?.getAttribute('href'),
+  }));
+  ok('Título de la pestaña dice ECO SISTEMAS URH', nombrePagina.titulo === 'ECO SISTEMAS URH', nombrePagina.titulo);
+  ok('Nombre de la app instalada dice ECO SISTEMAS URH', nombrePagina.apple === 'ECO SISTEMAS URH');
+  ok('Manifiesto PWA propio del sitio oficial', nombrePagina.manifest === '/manifest-ecosistema.json', nombrePagina.manifest);
+  const nombreManifest = await page.evaluate(async () => {
+    try { const r = await fetch('/manifest-ecosistema.json'); const j = await r.json(); return j.name; } catch { return null; }
+  });
+  ok('Manifiesto PWA con el nombre correcto', nombreManifest === 'ECO SISTEMAS URH', nombreManifest || 'sin manifiesto');
+
   // --- Logo y ausencia de cobro en el login ---
   const lLogin = await logoInfo();
   ok('Login: logo de la empresa visible', !!lLogin && lLogin.cargado, lLogin ? `ancho ${lLogin.ancho}px` : 'sin logo');
