@@ -126,11 +126,21 @@ try {
         return !!nota && !!input && nota.parentElement === input.parentElement;
       }));
       ok(`Salida ${t.nombre}: se cierra el desplegable al registrar la nota`, !(await existe('#resultados-cliente-salida')));
-      // El dueño pidió que el selector NO se quede atrapado: antes un setTimeout devolvía el foco al buscador.
+      // 191: al elegir nota el selector baja a Dirección (no hay cliente aún) y la vista se desplaza para verlo.
+      const trasNota = await foco();
+      ok(`Salida ${t.nombre}: al elegir nota el foco baja a Dirección`,
+        trasNota === 'input-direccion-salida', trasNota || 'sin foco');
+      ok(`Salida ${t.nombre}: Dirección queda visible al elegir nota`, await page.evaluate(() => {
+        const el = document.querySelector('#input-direccion-salida');
+        if (!el) return false;
+        const r = el.getBoundingClientRect();
+        return r.top >= 0 && r.bottom <= window.innerHeight;
+      }));
+      // Y con ↓ no debe volver al buscador (arreglo de la fase 189).
       await page.keyboard.press('ArrowDown');
       await pausa(250);
-      const trasNota = await foco();
-      ok(`Salida ${t.nombre}: el foco NO vuelve al buscador tras la nota`, trasNota !== 'buscar-cliente-salida', trasNota || 'sin foco');
+      const trasFlechaNota = await foco();
+      ok(`Salida ${t.nombre}: el foco NO vuelve al buscador tras la nota`, trasFlechaNota !== 'buscar-cliente-salida', trasFlechaNota || 'sin foco');
       await reescribir('#buscar-cliente-salida', ''); // vaciar quita la nota, sin botón
       await pausa(150);
       ok(`Salida ${t.nombre}: al vaciar el buscador se quita la nota`, !(await existe('#nota-cliente-salida')));
@@ -157,8 +167,16 @@ try {
         const valorCli = await page.$eval('#buscar-cliente-salida', (el) => el.value);
         ok(`Salida ${t.nombre}: Enter elige el cliente y cierra el desplegable`,
           valorCli.trim().length > 0 && !(await existe('#resultados-cliente-salida')), valorCli);
-        ok(`Salida ${t.nombre}: foco sigue en el buscador de cliente`,
-          (await foco()) === 'buscar-cliente-salida', await foco());
+        // 191: al elegir cliente el foco baja a "Lo que se atiende" y la vista se desplaza para que se vea.
+        const trasElegir = await foco();
+        ok(`Salida ${t.nombre}: al elegir cliente el foco baja a Lo que se atiende`,
+          trasElegir === 'select-bien-salida', trasElegir || 'sin foco');
+        ok(`Salida ${t.nombre}: Lo que se atiende queda visible al elegir cliente`, await page.evaluate(() => {
+          const el = document.querySelector('#select-bien-salida');
+          if (!el) return false;
+          const r = el.getBoundingClientRect();
+          return r.top >= 0 && r.bottom <= window.innerHeight;
+        }));
         // 189: con la lista cerrada, ↓ debe bajar al siguiente campo (no quedarse en el buscador).
         await page.keyboard.press('ArrowDown');
         await pausa(200);

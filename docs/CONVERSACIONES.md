@@ -1198,3 +1198,9 @@
 - Como el dueño eligió «Todo el cuadro del buscador» como lo que no le gustaba, se le preguntó cómo lo quería y eligió **«Como un campo normal»** (sin icono negro, mismo borde que Tipo de trabajo y Dirección).
 - Se cambió solo el aspecto del cuadro: se quitó el bloque negro de la lupa y el input tomó el borde y el fondo de los campos del formulario; la nota sigue dentro del mismo bloque, pegada debajo. No cambiaron la lista flotante, la opción de registrar, los ids, el teclado ni el guardado.
 - Resultado en Nego: **131/131, 0 fallos**, con teclado y sin internet en 390/768/1366/1920. El push a GitHub lo hace él. Sin tocar base, otros sitios ni credenciales. El pedido de salidas pendientes en Agenda sigue pospuesto; no se volvió a mencionar.
+
+## 19/11/2026 (salto al elegir del desplegable — fase 191)
+- El dueño confirmó el diseño: *"me gusta esta mejor"* (campo normal sin icono negro).
+- Luego dijo: *"otra cosa: cuando selecciono lo que hay adentro del desplegable no se va abajo, se mantiene ahí, o sea no puedo ver lo que continúa la selección"*.
+- Se le preguntó adónde debía ir el selector al elegir y eligió **«Al campo que siga y que se vea»**: al elegir cliente a «Lo que se atiende»; si eligió nota (sin cliente aún) a «Dirección», con la pantalla desplazada para que se vea.
+- Se implementó el salto con espera al render (el select de «Lo que se atiende» está deshabilitado hasta tener cliente) y `scrollIntoView`. Resultado en Nego: **143/143, 0 fallos**, con teclado y sin internet en 390/768/1366/1920. El push a GitHub lo hace él. Sin tocar base, otros sitios ni credenciales. El pedido de salidas pendientes en Agenda sigue pospuesto; no se volvió a mencionar.

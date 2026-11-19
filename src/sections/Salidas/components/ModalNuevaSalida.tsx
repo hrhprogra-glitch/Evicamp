@@ -580,6 +580,18 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     }
   };
 
+  // 191 (dueño 19/11/2026): al elegir una opción el selector BAJA al campo siguiente y la vista se desplaza
+  // para que se vea lo que continúa. Se espera un instante a que React termine el render: "Lo que se atiende"
+  // está deshabilitado hasta que haya customerId, y un campo deshabilitado no puede recibir el foco.
+  const bajarAlCampoSiguiente = (id: string) => {
+    setTimeout(() => {
+      const destino = document.getElementById(id) as HTMLElement | null;
+      if (!destino || (destino as HTMLInputElement).disabled) return;
+      destino.focus({ preventScroll: true });
+      destino.scrollIntoView({ block: 'nearest' });
+    }, 30);
+  };
+
   // Buscador de cliente: Enter o clic elige la sugerencia; el id queda para la base y el nombre se ve en el cuadro.
   const elegirCliente = (c: any) => {
     setCustomerId(Number(c.id));
@@ -587,6 +599,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     setClienteListaAbierta(false);
     setIndiceCliente(0);
     // La nota se conserva: la salida sigue necesitando un cliente registrado como referencia (llave foránea).
+    // Con cliente registrado, "Lo que se atiende" ya está habilitado: el selector baja ahí.
+    bajarAlCampoSiguiente('select-bien-salida');
   };
 
   // Última opción del desplegable: registra el nombre escrito como nota. NO crea un cliente en la base.
@@ -596,7 +610,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     setClienteLibre(nombre);
     setClienteListaAbierta(false);
     setIndiceCliente(0);
-    // Antes se devolvía el foco al buscador con un setTimeout: eso lo dejaba "atrapado" (dueño, 19/11/2026).
+    // Sin cliente registrado "Lo que se atiende" sigue deshabilitado, así que el selector baja a "Dirección".
+    bajarAlCampoSiguiente('input-direccion-salida');
   };
 
   const handleKeyDownBuscarCliente = (e: React.KeyboardEvent<HTMLInputElement>) => {

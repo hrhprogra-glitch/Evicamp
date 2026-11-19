@@ -782,4 +782,12 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - «Campo normal» aquí significa quitar el bloque negro con la lupa y usar las mismas clases de borde/fondo que los demás campos (`border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] bg-[var(--color-surface)]`), sin bajar la altura mínima en celular (legibilidad). La nota se pinta como hermana del input con `border-x-2 border-b-2` para seguir pareciendo parte del mismo cuadro.
 - Al comparar estilos en pruebas, **no medir un campo enfocado**: `focus:border-[var(--color-ink)]` lo pone oscuro y parece que no coincide. Tampoco comparar fondo contra un campo sin clase `bg-*`: es transparente (`rgba(0,0,0,0)`) aunque se vea blanco. Comparar solo el borde contra otro campo sin enfocar.
 
+## 44. Elegir en un desplegable debe mover el foco al campo siguiente (19/11/2026, bitácora 191)
+- Cerrar la lista y resetear el índice **no basta**: si no se enfoca otro campo, el selector se queda en el buscador y el dueño siente que «no puede ver lo que continúa». La fase 189 arregló solo los bordes con ↓/↑; faltaba la elección misma (Enter o clic).
+- Helper reutilizable: `setTimeout(30)` → `document.getElementById(id)` → comprobar `!disabled` → `focus({ preventScroll: true })` → `scrollIntoView({ block: 'nearest' })`. El `preventScroll` evita un doble salto; el `block: 'nearest'` es el mismo criterio que usa `flechasEspaciales.ts`.
+- **Esperar al render antes de enfocar**: `#select-bien-salida` lleva `disabled={!customerId}`; si se enfoca en el mismo evento en que se hace `setCustomerId`, el campo todavía está deshabilitado y `.focus()` no hace nada. Por eso el `setTimeout`, no por costumbre.
+- Si la elección es solo una nota (sin cliente), el select de «Lo que se atiende» sigue deshabilitado: el destino es «Dirección». Enfocar un deshabilitado falla silenciosamente y parece que el arreglo no funciona.
+- El buscador lleva `data-permitir-salto-enter`, así que el guardia de la Regla 9 (`alEnfocar` en `flechasEspaciales.ts`) no devuelve el foco al origen. Quitar ese atributo rompería el salto.
+- En la prueba, comprobar el id destino **y** que el campo queda dentro de `window.innerHeight`; si solo se comprueba el foco, un `focus` sin scroll puede dejar el campo fuera de la vista y el dueño seguirá quejándose.
+
   
