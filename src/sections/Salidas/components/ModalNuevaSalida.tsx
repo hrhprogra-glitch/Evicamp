@@ -793,37 +793,33 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               {/* data-permitir-salto-enter: el Enter de este buscador lo atiende la pantalla (como en Caja) y la
                   Regla 9 del teclado no devuelve el foco al campo de origen (flechasEspaciales.ts). */}
               <div data-permitir-salto-enter data-evitar-iman-teclado>
-                <div ref={cajaBuscarClienteRef} className="border-2 border-[var(--color-ink)] bg-white rounded-none">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 flex items-center justify-center bg-[var(--color-ink)] text-white shrink-0 rounded-none">
-                      <Search size={20} />
-                    </div>
-                    <input
-                      ref={inputBuscarClienteRef}
-                      id="buscar-cliente-salida"
-                      type="text"
-                      value={busquedaCliente}
-                      onChange={(e) => {
-                        const texto = e.target.value;
-                        setBusquedaCliente(texto);
-                        if (!texto.trim()) setClienteLibre(''); // al vaciar el buscador se quita la nota
-                        setClienteListaAbierta(true);
-                        setIndiceCliente(0);
-                      }}
-                      onFocus={() => setClienteListaAbierta(true)}
-                      onKeyDown={handleKeyDownBuscarCliente}
-                      placeholder="ESCRIBE NOMBRE, DNI O RUC DEL CLIENTE"
-                      title="Escribe y elige un cliente, o registra el nombre como nota desde la lista"
-                      className="w-full p-2 sm:p-2.5 min-h-[48px] sm:min-h-[44px] uppercase font-bold outline-none bg-transparent"
-                      autoComplete="off"
-                    />
-                  </div>
-                  {/* La nota vive DENTRO del cuadro del buscador: no hay botón ni campo aparte (pedido del dueño 19/11). */}
+                {/* 190: el dueño eligió «campo normal»: sin icono negro, mismo borde y fondo que los otros campos.
+                    La nota queda pegada debajo del campo, dentro del mismo bloque, sin botón ni campo aparte. */}
+                <div ref={cajaBuscarClienteRef} className="rounded-none">
+                  <input
+                    ref={inputBuscarClienteRef}
+                    id="buscar-cliente-salida"
+                    type="text"
+                    value={busquedaCliente}
+                    onChange={(e) => {
+                      const texto = e.target.value;
+                      setBusquedaCliente(texto);
+                      if (!texto.trim()) setClienteLibre(''); // al vaciar el buscador se quita la nota
+                      setClienteListaAbierta(true);
+                      setIndiceCliente(0);
+                    }}
+                    onFocus={() => setClienteListaAbierta(true)}
+                    onKeyDown={handleKeyDownBuscarCliente}
+                    placeholder="ESCRIBE NOMBRE, DNI O RUC DEL CLIENTE"
+                    title="Escribe y elige un cliente, o registra el nombre como nota desde la lista"
+                    className="w-full p-2 sm:p-2.5 min-h-[48px] sm:min-h-[44px] border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] rounded-none"
+                    autoComplete="off"
+                  />
                   {clienteLibre.trim() && (
                     <div
                       id="nota-cliente-salida"
                       title="Este nombre se guarda como nota en la salida; no crea un cliente en la base"
-                      className="w-full px-2 py-1 border-t border-[var(--color-border)] text-[10px] font-black uppercase text-[var(--color-muted)] truncate"
+                      className="w-full px-2 py-1 border-x-2 border-b-2 border-[var(--color-border)] text-[10px] font-black uppercase text-[var(--color-muted)] truncate rounded-none"
                     >
                       NOTA: {clienteLibre.trim().toUpperCase()}
                     </div>

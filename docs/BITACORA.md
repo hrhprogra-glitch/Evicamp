@@ -7,6 +7,14 @@
 
 ---
 
+## 19/11/2026 (190) · OpenCode (Big Pickle) — Buscador de cliente como CAMPO NORMAL, sin icono negro: HECHO y probado SOLO en Nego
+- **Dueño:** al preguntarle cómo quería el cuadro del buscador (dijo que no le gustaba *"todo el cuadro"*), eligió **«Como un campo normal»**: sin icono negro, un recuadro sencillo con borde, igual a Tipo de trabajo y Dirección.
+- **Hecho en `ModalNuevaSalida.tsx`:** se quitó el bloque `w-10 h-10 bg-[var(--color-ink)]` con la lupa dentro del cuadro del cliente (la lupa del buscador de productos sigue intacta). El input lleva ahora las mismas clases de borde/fondo de los campos del formulario (`border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] bg-[var(--color-surface)]`), conservando `min-h-[48px] sm:min-h-[44px]` para que siga siendo legible en el celular. La nota se pinta pegada debajo del campo (`border-x-2 border-b-2`), dentro del mismo bloque: sigue sin botón ni campo aparte. La capa flotante, los ids, el teclado y el guardado no cambiaron.
+- **Pruebas:** build limpio, despliegue **solo en Nego** (22 archivos, JS `index-DMmszJdF.js`, CSS `index-C1yYHPFF.css`). La prueba adaptiva agrega una comprobación por tamaño: sin `svg` dentro del cuadro y mismo color de borde que otro campo sin enfocar; se ajusta la de «nota dentro del cuadro» porque ahora input y nota son hermanos. Resultado **131/131, 0 fallos, 0 sin datos** con teclado y sin internet en 390/768/1366/1920. Los 4 fallos intermedios fueron de la **prueba**: comparaba contra un campo enfocado (borde oscuro) y contra otro con fondo transparente; corregidas las comparaciones, pasó todo.
+- **Sin tocar:** ecosistema123, Evicamp, siumax, Panel, base, credenciales ni push. Sigue en pruebas; el dueño actualiza los otros sitios desde el Panel. Pendientes: la confirmación visual del logo (183) y el pedido pospuesto de salidas pendientes en Agenda.
+
+---
+
 ## 19/11/2026 (189) · OpenCode (Big Pickle) — El selector ya no se queda atrapado en el buscador de cliente: HECHO y probado SOLO en Nego
 - **Dueño:** *"otra cosa el diseño no me gusta como; también el selector se queda atrapado en el buscador, arregla eso"*. Preguntado qué parte del diseño no le gusta, eligió **«Todo el cuadro del buscador»**; queda pendiente saber cómo lo quiere (esta fase solo arregla el teclado). Confirmó el arreglo con **"Sí, empieza"**.
 - **Causas comprobadas:** (1) `handleKeyDownBuscarCliente` hacía `preventDefault()` en ↑↓ siempre que la lista estaba abierta, así que las flechas se consumían recorriendo sugerencias y nunca bajaban al siguiente campo; (2) `elegirClienteNota` devolvía el foco al input con un `setTimeout(30)` aunque el usuario hubiera pulsado ↓. La prueba anterior daba por bueno que el foco "siguiera en el buscador", justo lo que el dueño rechaza.

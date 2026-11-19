@@ -82,6 +82,23 @@ try {
       ok(`Salida ${t.nombre}: buscador de cliente legible`, buscarCli.alto >= 44 && buscarCli.fuente >= 14,
         `alto ${Math.round(buscarCli.alto)}, fuente ${buscarCli.fuente}`);
       ok(`Salida ${t.nombre}: Enter propio en el buscador de cliente`, buscarCli.permiteEnter);
+      // 190: campo normal, sin el bloque negro de la lupa, con el mismo borde que los demás campos.
+      const estiloCli = await page.evaluate(() => {
+        const input = document.querySelector('#buscar-cliente-salida');
+        // Comparar contra un campo que NO esté enfocado: el enfocado muestra el borde oscuro del focus.
+        const otro = document.querySelector('#input-direccion-salida');
+        if (!input || !otro) return null;
+        return {
+          svgs: input.parentElement.querySelectorAll('svg').length,
+          borde: getComputedStyle(input).borderTopColor,
+          bordeOtro: getComputedStyle(otro).borderTopColor,
+          fondo: getComputedStyle(input).backgroundColor,
+          fondoOtro: getComputedStyle(otro).backgroundColor,
+        };
+      });
+      ok(`Salida ${t.nombre}: buscador sin icono negro (campo normal)`,
+        !!estiloCli && estiloCli.svgs === 0 && estiloCli.borde === estiloCli.bordeOtro,
+        estiloCli ? `sin iconos=${estiloCli.svgs === 0}, borde=${estiloCli.borde}` : 'sin datos');
 
       // Posición de referencia ANTES de abrir la lista: si la capa flota, no debe moverse ni un píxel.
       const campoAntes = await page.$eval('#select-bien-salida', (el) => el.getBoundingClientRect().top);
@@ -106,7 +123,7 @@ try {
       ok(`Salida ${t.nombre}: la nota queda DENTRO del cuadro del buscador`, await page.evaluate(() => {
         const nota = document.querySelector('#nota-cliente-salida');
         const input = document.querySelector('#buscar-cliente-salida');
-        return !!nota && !!input && nota.parentElement === input.parentElement.parentElement;
+        return !!nota && !!input && nota.parentElement === input.parentElement;
       }));
       ok(`Salida ${t.nombre}: se cierra el desplegable al registrar la nota`, !(await existe('#resultados-cliente-salida')));
       // El dueño pidió que el selector NO se quede atrapado: antes un setTimeout devolvía el foco al buscador.

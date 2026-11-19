@@ -1193,3 +1193,8 @@
 - Preguntado qué parte del diseño no le gusta, eligió **«Todo el cuadro del buscador»**. Como no precisó cómo lo quiere, queda pendiente una propuesta concreta; no se cambió el diseño en esta fase.
 - Del teclado dijo *"Sí, empieza"* a la propuesta: ↓ en la última opción baja al siguiente campo y ↑ en la primera sube, sin devolver el foco al registrar la nota.
 - Resultado en Nego: **127/127, 0 fallos**, con teclado y sin internet en 390/768/1366/1920. En celular ↓ baja a «Lo que se atiende» y en tablet/laptop/PC a «Dirección» (los tres campos están en la misma fila): las dos cosas son correctas según las reglas del selector. El push a GitHub lo hace él. Sin tocar base, otros sitios ni credenciales. El pedido de salidas pendientes en Agenda sigue pospuesto; no se volvió a mencionar.
+
+## 19/11/2026 (diseño del cuadro — fase 190)
+- Como el dueño eligió «Todo el cuadro del buscador» como lo que no le gustaba, se le preguntó cómo lo quería y eligió **«Como un campo normal»** (sin icono negro, mismo borde que Tipo de trabajo y Dirección).
+- Se cambió solo el aspecto del cuadro: se quitó el bloque negro de la lupa y el input tomó el borde y el fondo de los campos del formulario; la nota sigue dentro del mismo bloque, pegada debajo. No cambiaron la lista flotante, la opción de registrar, los ids, el teclado ni el guardado.
+- Resultado en Nego: **131/131, 0 fallos**, con teclado y sin internet en 390/768/1366/1920. El push a GitHub lo hace él. Sin tocar base, otros sitios ni credenciales. El pedido de salidas pendientes en Agenda sigue pospuesto; no se volvió a mencionar.

@@ -777,4 +777,9 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Ojo con los `setTimeout(() => input.focus(), 30)` tras elegir una opción: aunque el usuario haya pulsado ↓ justo después, el temporizador devuelve el foco y parece que el teclado no funciona. Quitarlos.
 - En la prueba no fijar un id único como destino de ↓: con `grid-cols-3` los campos «Tipo de trabajo / Cliente / Lo que se atiende» están en la misma fila en tablet y PC, así que ↓ baja a «Dirección», mientras que en celular (una columna) baja a «Lo que se atiende». Comprobar que el foco **sale del buscador** y cae en otro campo del formulario, no un id concreto.
 
+## 43. «No me gusta el diseño» hay que convertirlo en una opción concreta (19/11/2026, bitácora 190)
+- El dueño dijo primero *"el diseño no me gusta como"* y, al preguntar qué parte, eligió «Todo el cuadro del buscador». Aun así eso no bastaba para cambiar código: dio una lista de opciones visuales y eligió **«Como un campo normal»**. Ante un feedback vago de diseño, ofrecer 3–4 opciones concretas en vez de adivinar.
+- «Campo normal» aquí significa quitar el bloque negro con la lupa y usar las mismas clases de borde/fondo que los demás campos (`border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] bg-[var(--color-surface)]`), sin bajar la altura mínima en celular (legibilidad). La nota se pinta como hermana del input con `border-x-2 border-b-2` para seguir pareciendo parte del mismo cuadro.
+- Al comparar estilos en pruebas, **no medir un campo enfocado**: `focus:border-[var(--color-ink)]` lo pone oscuro y parece que no coincide. Tampoco comparar fondo contra un campo sin clase `bg-*`: es transparente (`rgba(0,0,0,0)`) aunque se vea blanco. Comparar solo el borde contra otro campo sin enfocar.
+
   
