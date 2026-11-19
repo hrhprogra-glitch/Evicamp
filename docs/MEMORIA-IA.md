@@ -795,6 +795,11 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Un `useEffect` que rellena un campo desde el catálogo (por ejemplo nombre del cliente a partir de `customerId`) es un imán silencioso: aunque limpies el texto, si el id sigue ahí y el catálogo cambia, el nombre vuelve. Para que un borrado sea definitivo hay que limpiar **la referencia** (`customerId`) y la copia persistida, no solo el texto.
 - Guardar el texto visible (`busquedaCliente`) en el borrador y hacerlo mandar sobre `clienteLibre` evita que un nombre escrito a secas se pierda al recargar, y que una nota vieja resucite. En la carga: si el texto guardado está vacío, no recuperar ni cliente ni nota.
 - Probar con **recarga real** (`page.reload`) y reabrir el modal. Las pruebas que solo cierran/abren el modal no detectan este bug, porque el estado de React se conserva; el defecto solo aparece al reconstruir el estado desde localStorage.
-- El mismo helpersirve para tres casos: nombre escrito y borrado, nombre escrito y no borrado, cliente elegido y borrado. Los tres deben pasar en los cuatro tamaños.
+- El mismo helper sirve para tres casos: nombre escrito y borrado, nombre escrito y no borrado, cliente elegido y borrado. Los tres deben pasar en los cuatro tamaños.
+
+## 46. Un desplegable con resaltado debe desplazarse solo (19/11/2026, bitácora 193)
+- Mover el índice resaltado con ↑↓ **no basta** cuando la lista tiene `max-h-* overflow-y-auto`: si la opción activa cae fuera del área visible, el dueño dice que «no puede ver lo que seleccionó». Falta `scrollIntoView({ block: 'nearest' })` sobre el botón activo en un `useEffect` de `[indice, listaAbierta, total]`.
+- En `ModalNuevaSalida` el buscador de productos ya lo hacía (línea 117) pero la capa flotante de clientes, no. Al copiar patrones entre dos buscadores de la misma pantalla, revisar los dos: uno puede quedar sin scroll.
+- La comprobación de la prueba debe medir `scrollTop` **antes y después** de varias flechas (15 ↓ sobre 61 opciones) y verificar que el elemento con `aria-selected="true"` queda dentro del `getBoundingClientRect()` de la lista. Probar solo el índice o el foco no detecta este defecto.
 
   

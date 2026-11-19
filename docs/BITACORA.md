@@ -7,6 +7,15 @@
 
 ---
 
+## 19/11/2026 (193) · OpenCode (Big Pickle) — El desplegable se desplaza al bajar con flechas y se ve la opción elegida: HECHO y probado SOLO en Nego
+- **Dueño:** *"ya quedó, pero lo que quiero es el desplegable: cuando selecciono el nombre y bajo no se baja, como que se mantiene ahí, no puedo ver lo que selecciono; eso pasa en el desplegable"*. Se refiere a la **lista flotante**, no al salto al campo siguiente (fase 191) ni al borrador (192), que ya están bien.
+- **Causa:** la capa flotante tiene `max-h-60 overflow-y-auto` y hasta 60 clientes. `handleKeyDownBuscarCliente` movía `indiceCliente` con ↑↓ y pintaba el resaltado en negro, pero **no existía ningún `scrollIntoView`** para `sugerencia-cliente-${indiceCliente}` (el buscador de productos sí lo tiene, línea 117). Al bajar de las primeras 8 opciones visibles, el resaltado seguía abajo y la lista se quedaba arriba: no se veía lo seleccionado.
+- **Hecho en `ModalNuevaSalida.tsx`:** nuevo `useEffect` que, con la lista abierta, hace `scrollIntoView({ block: 'nearest' })` en `#sugerencia-cliente-${indiceCliente}` o en `#sugerencia-cliente-nota` cuando cambia el índice. Mismo criterio de scroll que ya usa el sistema; no cambia ids, colores, teclado, foco ni guardado.
+- **Pruebas:** build limpio, despliegue **solo en Nego** (22 archivos, JS `index-BFgfLRui.js`). La prueba adaptiva agrega por tamaño: lista larga de 61 opciones, 15 ↓ seguidos, comprobación de que `scrollTop` sube de 0 y de que el botón con `aria-selected="true"` queda dentro del área visible de la lista. Resultado **167/167, 0 fallos, 0 sin datos** con teclado y sin internet en 390/768/1366/1920. El scroll fue 0→414 (celular), 0→470 (tablet) y 0→433 (laptop/PC); la opción visible fue `ALVARO DE LOS RIOS` en los cuatro.
+- **Sin tocar:** ecosistema123, Evicamp, siumax, Panel, base, credenciales ni push. Sigue en pruebas; el dueño actualiza los otros sitios desde el Panel. Pendientes: la confirmación visual del logo (183) y el pedido pospuesto de salidas pendientes en Agenda.
+
+---
+
 ## 19/11/2026 (192) · OpenCode (Big Pickle) — Borrador del buscador de cliente: si lo borras se borra, si no se mantiene: HECHO y probado SOLO en Nego
 - **Dueño:** *"encontré un error: ingresé un nombre pero a pesar que lo borré o receté la página se mantiene ese nombre"*. Preguntado, aclaró que lo veía en el buscador de cliente, que lo borró con el teclado, y la regla que quiere: **"si lo borro que se borre, si no lo borre que se mantenga, nada más"**.
 - **Causa:** el auto-guardado escribía `customerId` y `clienteLibre` pero no el texto del buscador. Al borrar el input con teclado se limpiaba `clienteLibre` (nota), pero **no** `customerId` ni la copia del borrador; además, al reabrir, el efecto que rellena el nombre desde el catálogo (`useEffect` de `customerId`/`clientes`) volvía a poner el nombre. Así reaparecía tras cerrar/recargar aunque el dueño lo hubiera borrado.

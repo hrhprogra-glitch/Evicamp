@@ -169,6 +169,16 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     };
   }, [clienteListaAbierta, clientesFiltrados.length, busquedaCliente]);
 
+  // 193 (dueño 19/11/2026): al recorrer el desplegable con ↑↓, la opción resaltada tiene que verse.
+  // La capa flotante tiene scroll propio (max-h-60); sin esto el resaltado baja pero la lista se queda arriba.
+  useEffect(() => {
+    if (!clienteListaAbierta) return;
+    const id = indiceCliente < clientesFiltrados.length
+      ? `sugerencia-cliente-${indiceCliente}`
+      : 'sugerencia-cliente-nota';
+    document.getElementById(id)?.scrollIntoView({ block: 'nearest' });
+  }, [indiceCliente, clienteListaAbierta, clientesFiltrados.length]);
+
   // Si el borrador o "Continuar" ya traía cliente registrado, mostrar su nombre en el cuadro en cuanto llegue el catálogo.
   useEffect(() => {
     if (!customerId || busquedaCliente.trim()) return;

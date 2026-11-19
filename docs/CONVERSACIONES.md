@@ -1210,3 +1210,9 @@
 - Preguntado, respondió que el nombre aparecía **en el buscador de cliente**, que lo borró **con el teclado**, y dio la regla exacta: **"si lo borro que se borre, si no lo borre que se mantenga, nada más"**.
 - Se corrigió el auto-guardado del borrador: ahora guarda el texto del buscador; si está vacío limpia cliente y nota para que no reaparezca, y si no se borró conserva el nombre tal cual. No cambiaron la lista flotante, el teclado, el foco ni el guardado en la base.
 - Resultado en Nego: **155/155, 0 fallos**, con recargas reales, teclado y sin internet en 390/768/1366/1920. El push a GitHub lo hace él. Sin tocar base, otros sitios ni credenciales. El pedido de salidas pendientes en Agenda sigue pospuesto; no se volvió a mencionar.
+
+## 19/11/2026 (scroll del desplegable — fase 193)
+- El dueño dijo: *"ya quedó, pero lo que quiero es el desplegable: cuando selecciono el nombre y bajo no se baja, como que se mantiene ahí, no puedo ver lo que selecciono; eso pasa en el desplegable"*.
+- No se refería al salto al campo siguiente (191) ni al borrador (192), sino a la **lista flotante**: al recorrer con flechas el resaltado bajaba pero la lista no se desplazaba.
+- Se agregó el scroll de la opción activa dentro de la capa, sin cambiar el aspecto ni las reglas del teclado.
+- Resultado en Nego: **167/167, 0 fallos**, con 15 ↓ seguidos, teclado y sin internet en 390/768/1366/1920. El push a GitHub lo hace él. Sin tocar base, otros sitios ni credenciales. El pedido de salidas pendientes en Agenda sigue pospuesto; no se volvió a mencionar.

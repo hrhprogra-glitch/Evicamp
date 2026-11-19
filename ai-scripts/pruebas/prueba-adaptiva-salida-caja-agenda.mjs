@@ -279,6 +279,31 @@ try {
       ok(`Salida ${t.nombre}: cliente elegido y borrado NO reaparece al recargar`,
         (await page.$eval('#buscar-cliente-salida', (el) => el.value)) === '',
         await page.$eval('#buscar-cliente-salida', (el) => el.value));
+
+      // 193: al bajar con flechas por una lista larga, la lista se desplaza y la opción resaltada se ve.
+      await reescribir('#buscar-cliente-salida', 'a');
+      await pausa(350);
+      const totalSug = (await page.$$('#resultados-cliente-salida [id^="sugerencia-cliente-"]')).length;
+      ok(`Salida ${t.nombre}: lista larga para probar el scroll`, totalSug > 10, `${totalSug} opciones`);
+      const scrollAntes = await page.$eval('#resultados-cliente-salida', (el) => el.scrollTop);
+      for (let i = 0; i < 15; i++) {
+        await page.keyboard.press('ArrowDown');
+        await pausa(60);
+      }
+      await pausa(200);
+      const estadoLista = await page.evaluate(() => {
+        const lista = document.querySelector('#resultados-cliente-salida');
+        const sel = lista?.querySelector('[aria-selected="true"]');
+        if (!lista || !sel) return null;
+        const l = lista.getBoundingClientRect();
+        const s = sel.getBoundingClientRect();
+        return { scrollTop: lista.scrollTop, dentro: s.top >= l.top - 1 && s.bottom <= l.bottom + 1, texto: sel.innerText.trim() };
+      });
+      ok(`Salida ${t.nombre}: la lista se desplaza al bajar con flechas`,
+        !!estadoLista && estadoLista.scrollTop > scrollAntes,
+        estadoLista ? `scroll ${scrollAntes} → ${estadoLista.scrollTop}` : 'sin datos');
+      ok(`Salida ${t.nombre}: la opción resaltada se ve`,
+        !!estadoLista && estadoLista.dentro, estadoLista?.texto || 'sin datos');
       await cerrar();
     } catch (e) {
       ok(`Salida ${t.nombre}`, false, e.message.slice(0, 110));
