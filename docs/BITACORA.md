@@ -7,6 +7,15 @@
 
 ---
 
+## 19/11/2026 (192) · OpenCode (Big Pickle) — Borrador del buscador de cliente: si lo borras se borra, si no se mantiene: HECHO y probado SOLO en Nego
+- **Dueño:** *"encontré un error: ingresé un nombre pero a pesar que lo borré o receté la página se mantiene ese nombre"*. Preguntado, aclaró que lo veía en el buscador de cliente, que lo borró con el teclado, y la regla que quiere: **"si lo borro que se borre, si no lo borre que se mantenga, nada más"**.
+- **Causa:** el auto-guardado escribía `customerId` y `clienteLibre` pero no el texto del buscador. Al borrar el input con teclado se limpiaba `clienteLibre` (nota), pero **no** `customerId` ni la copia del borrador; además, al reabrir, el efecto que rellena el nombre desde el catálogo (`useEffect` de `customerId`/`clientes`) volvía a poner el nombre. Así reaparecía tras cerrar/recargar aunque el dueño lo hubiera borrado.
+- **Hecho en `ModalNuevaSalida.tsx`:** el borrador ahora guarda `busquedaCliente` y manda sobre lo que se VE. Al cargar, si el nombre guardado está vacío se recupera vacío y se limpian `customerId` y `clienteLibre`; si tiene texto se mantiene tal como se dejó (escrito a secas o registrado como nota). Al guardar, un buscador vacío guarda referencias vacías. Al `onChange` del buscador, vaciar el texto limpia también `customerId`. `limpiarBorrador()` ya borraba todo; queda igual. Cambios solo de estado/persistencia; sin tocar lista flotante, teclado, foco, ids ni base.
+- **Pruebas:** build limpio, despliegue **solo en Nego** (22 archivos, JS `index-BvoKuQ3E.js`). La prueba adaptiva agrega por tamaño y con teclado/recarga real: nombre escrito y borrado no reaparece; nombre escrito y no borrado se mantiene; cliente elegido y borrado no reaparece. Resultado **155/155, 0 fallos, 0 sin datos** con teclado y sin internet en 390/768/1366/1920.
+- **Sin tocar:** ecosistema123, Evicamp, siumax, Panel, base, credenciales ni push. Sigue en pruebas; el dueño actualiza los otros sitios desde el Panel. Pendientes: la confirmación visual del logo (183) y el pedido pospuesto de salidas pendientes en Agenda.
+
+---
+
 ## 19/11/2026 (191) · OpenCode (Big Pickle) — Al elegir del desplegable el selector baja al campo siguiente y se ve: HECHO y probado SOLO en Nego
 - **Dueño:** *"me gusta esta mejor, pero otra cosa: cuando selecciono lo que hay adentro del desplegable no se va abajo, se mantiene ahí, o sea no puedo ver lo que continúa la selección"*. Aprobó el destino **«Al campo que siga y que se vea»**: al elegir cliente ir a «Lo que se atiende»; si eligió nota (sin cliente aún) ir a «Dirección», con desplazamiento de pantalla.
 - **Causa:** `elegirCliente()` y `elegirClienteNota()` cerraban la lista y resetaban el índice, pero no movían el foco: se quedaba en el buscador. La fase 189 solo arregló el ↓ en los bordes de la lista, no la elección misma.

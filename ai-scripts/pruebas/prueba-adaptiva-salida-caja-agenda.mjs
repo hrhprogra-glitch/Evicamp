@@ -29,6 +29,18 @@ const irA = async (id) => {
   await pausa(800);
 };
 
+// Recargar la página (Igual que hace el dueño) y volver a abrir Nueva salida, solo con teclado.
+const reabrirSalida = async () => {
+  await page.reload({ waitUntil: 'networkidle2' });
+  await page.waitForSelector('#sidebar-btn-salidas', { timeout: 20000 });
+  await pausa(700);
+  await irA('sidebar-btn-salidas');
+  await page.focus('#btn-nueva-salida');
+  await page.keyboard.press('Enter');
+  await page.waitForSelector('#modal-nueva-salida-container', { timeout: 8000 });
+  await pausa(300);
+};
+
 // Borrar un campo y escribir otro texto usando solo teclado (así se comprueba la Regla 9 de verdad).
 const reescribir = async (sel, texto) => {
   await page.click(sel);
@@ -145,6 +157,24 @@ try {
       await pausa(150);
       ok(`Salida ${t.nombre}: al vaciar el buscador se quita la nota`, !(await existe('#nota-cliente-salida')));
 
+      // 192: regla del dueño — «si lo borro que se borre, si no lo borre que se mantenga nada más».
+      await reescribir('#buscar-cliente-salida', 'NOMBRE QUE SE BORRA');
+      await pausa(250);
+      await reescribir('#buscar-cliente-salida', '');
+      await pausa(250);
+      await reabrirSalida();
+      ok(`Salida ${t.nombre}: el nombre borrado con teclado NO reaparece al recargar`,
+        (await page.$eval('#buscar-cliente-salida', (el) => el.value)) === '',
+        await page.$eval('#buscar-cliente-salida', (el) => el.value));
+      await reescribir('#buscar-cliente-salida', 'NOMBRE QUE SE MANTIENE');
+      await pausa(250);
+      await reabrirSalida();
+      ok(`Salida ${t.nombre}: el nombre NO borrado sí se mantiene al recargar`,
+        (await page.$eval('#buscar-cliente-salida', (el) => el.value)) === 'NOMBRE QUE SE MANTIENE',
+        await page.$eval('#buscar-cliente-salida', (el) => el.value));
+      await reescribir('#buscar-cliente-salida', ''); // dejar limpio para las pruebas siguientes
+      await pausa(200);
+
       ok(`Salida ${t.nombre}: botón de cámara`, await existe('#btn-escaner-salida'));
       ok(`Salida ${t.nombre}: opción "Otro" en lo que se atiende`,
         await page.$eval('#select-bien-salida', (el) => Array.from(el.options).some((o) => o.value === 'otro')));
@@ -242,6 +272,13 @@ try {
       } catch (e) {
         res.push(`➖ Salida ${t.nombre}: orden de producto no probado (${e.message.slice(0, 60)})`);
       }
+      // 192: si eligió cliente registrado y luego borra el nombre, tampoco debe volver al recargar.
+      await reescribir('#buscar-cliente-salida', '');
+      await pausa(250);
+      await reabrirSalida();
+      ok(`Salida ${t.nombre}: cliente elegido y borrado NO reaparece al recargar`,
+        (await page.$eval('#buscar-cliente-salida', (el) => el.value)) === '',
+        await page.$eval('#buscar-cliente-salida', (el) => el.value));
       await cerrar();
     } catch (e) {
       ok(`Salida ${t.nombre}`, false, e.message.slice(0, 110));

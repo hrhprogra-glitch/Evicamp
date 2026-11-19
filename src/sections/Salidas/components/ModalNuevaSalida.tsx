@@ -220,10 +220,19 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
             const b = JSON.parse(borradorGuardado);
             if (b) {
               if (b.tipo) setTipo(b.tipo);
-              if (b.customerId) setCustomerId(b.customerId);
-              if (b.clienteLibre) {
-                setClienteLibre(b.clienteLibre);
-                setBusquedaCliente(b.clienteLibre); // el borrador traía una nota: se ve dentro del buscador
+              // 192 (dueño 19/11/2026): manda lo que se VE en el buscador. Si el dueño borró el nombre,
+              // el borrador guarda busquedaCliente='' y NO se recupera ni cliente ni nota (no reaparece).
+              // Si no lo borró, se mantiene tal como lo dejó: escrito a secas o registrado como nota.
+              const nombreGuardado = typeof b.busquedaCliente === 'string'
+                ? b.busquedaCliente
+                : (b.clienteLibre || ''); // borradores anteriores a esta fase
+              setBusquedaCliente(nombreGuardado);
+              if (nombreGuardado.trim()) {
+                if (b.customerId) setCustomerId(b.customerId);
+                if (b.clienteLibre) setClienteLibre(b.clienteLibre);
+              } else {
+                setCustomerId('');
+                setClienteLibre('');
               }
               if (b.bienId) setBienId(b.bienId);
               if (b.bienLibre) setBienLibre(b.bienLibre);
@@ -264,11 +273,15 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   // Auto-guardado en tiempo real en localStorage (Regla: "Que se guarde todo")
   useEffect(() => {
     if (!isOpen || salidaRaiz || datosIniciales) return;
-    if (customerId || items.length > 0 || direccion || observaciones || trabajadoresSeleccionados.length > 0) {
+    // 192: el nombre escrito también se guarda, para que se mantenga si no lo borra. Si lo borró, se guarda
+    // vacío y sin referencias, para que no reaparezca al recargar (ni el efecto del cliente lo vuelva a poner).
+    const sinNombre = !busquedaCliente.trim();
+    if (customerId || busquedaCliente.trim() || items.length > 0 || direccion || observaciones || trabajadoresSeleccionados.length > 0) {
       const dataBorrador = {
         tipo,
-        customerId,
-        clienteLibre,
+        customerId: sinNombre ? '' : customerId,
+        clienteLibre: sinNombre ? '' : clienteLibre,
+        busquedaCliente,
         bienId,
         bienLibre,
         direccion,
@@ -296,7 +309,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         console.error('Error limpiando borrador vacío:', e);
       }
     }
-  }, [isOpen, tipo, customerId, clienteLibre, bienId, bienLibre, direccion, ubicacion, fecha, observaciones, trabajadoresSeleccionados, items, salidaRaiz, datosIniciales]);
+  }, [isOpen, tipo, customerId, clienteLibre, busquedaCliente, bienId, bienLibre, direccion, ubicacion, fecha, observaciones, trabajadoresSeleccionados, items, salidaRaiz, datosIniciales]);
 
   const limpiarBorrador = () => {
     try {
@@ -819,7 +832,10 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                     onChange={(e) => {
                       const texto = e.target.value;
                       setBusquedaCliente(texto);
-                      if (!texto.trim()) setClienteLibre(''); // al vaciar el buscador se quita la nota
+                      if (!texto.trim()) {
+                        setClienteLibre(''); // al vaciar el buscador se quita la nota
+                        setCustomerId(''); // y el cliente de referencia: si no, el nombre vuelve al recargar
+                      }
                       setClienteListaAbierta(true);
                       setIndiceCliente(0);
                     }}

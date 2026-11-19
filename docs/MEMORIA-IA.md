@@ -790,4 +790,11 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - El buscador lleva `data-permitir-salto-enter`, así que el guardia de la Regla 9 (`alEnfocar` en `flechasEspaciales.ts`) no devuelve el foco al origen. Quitar ese atributo rompería el salto.
 - En la prueba, comprobar el id destino **y** que el campo queda dentro de `window.innerHeight`; si solo se comprueba el foco, un `focus` sin scroll puede dejar el campo fuera de la vista y el dueño seguirá quejándose.
 
+## 45. Borrador: «si lo borro que se borre, si no lo borre que se mantenga» (19/11/2026, bitácora 192)
+- El dueño no distingue entre «borrar el input» y «limpiar el borrador guardado»: para él, borrar el texto con el teclado debe borrar también la copia persistida, o el nombre vuelve al recargar. Guardar «todo» no puede ganarle a lo que el usuario ve en el campo.
+- Un `useEffect` que rellena un campo desde el catálogo (por ejemplo nombre del cliente a partir de `customerId`) es un imán silencioso: aunque limpies el texto, si el id sigue ahí y el catálogo cambia, el nombre vuelve. Para que un borrado sea definitivo hay que limpiar **la referencia** (`customerId`) y la copia persistida, no solo el texto.
+- Guardar el texto visible (`busquedaCliente`) en el borrador y hacerlo mandar sobre `clienteLibre` evita que un nombre escrito a secas se pierda al recargar, y que una nota vieja resucite. En la carga: si el texto guardado está vacío, no recuperar ni cliente ni nota.
+- Probar con **recarga real** (`page.reload`) y reabrir el modal. Las pruebas que solo cierran/abren el modal no detectan este bug, porque el estado de React se conserva; el defecto solo aparece al reconstruir el estado desde localStorage.
+- El mismo helpersirve para tres casos: nombre escrito y borrado, nombre escrito y no borrado, cliente elegido y borrado. Los tres deben pasar en los cuatro tamaños.
+
   
