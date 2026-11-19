@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Truck, X, Plus, Trash2, Search, Check, RotateCcw, Zap, Package } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { fotoDeCache, sincronizarFotosFaltantes } from '../../../utils/cacheFotos';
@@ -128,6 +129,11 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   const inputBuscarRef = useRef<HTMLInputElement>(null);
   const inputCantRef = useRef<HTMLInputElement>(null);
   const inputBuscarClienteRef = useRef<HTMLInputElement>(null);
+  // La lista de clientes se dibuja como capa flotante (portal) sobre el modal: no ocupa espacio y no la recorta
+  // el overflow-y-auto del formulario. El dueño pidió que aparezca "como encima", sin mover nada (19/11/2026).
+  const cajaBuscarClienteRef = useRef<HTMLDivElement>(null);
+  const listaClientesRef = useRef<HTMLDivElement>(null);
+  const [posListaCliente, setPosListaCliente] = useState({ top: 0, left: 0, width: 0 });
 
   // Clientes que salen en el desplegable; coincideBusqueda tolera tildes y mayúsculas, como en Caja.
   const clientesFiltrados = useMemo(() => {
@@ -135,6 +141,34 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     const base = q ? clientes.filter((c) => coincideBusqueda([c.name, c.dni, c.ruc], q)) : clientes;
     return base.slice(0, 60);
   }, [clientes, busquedaCliente]);
+
+  // Anclar la capa al cuadro de búsqueda. Se recalcula al abrir, al cambiar el número de sugerencias,
+  // al redimensionar y al desplazarse (incluido el scroll interior del modal: addEventListener con capture).
+  useLayoutEffect(() => {
+    if (!clienteListaAbierta || !clientesFiltrados.length) return;
+    const actualizar = () => {
+      const caja = cajaBuscarClienteRef.current;
+      if (!caja) return;
+      const r = caja.getBoundingClientRect();
+      const alto = listaClientesRef.current?.offsetHeight || 240;
+      const cabeAbajo = window.innerHeight - r.bottom >= alto + 8;
+      const cabeArriba = r.top >= alto + 8;
+      const arriba = !cabeAbajo && cabeArriba;
+      const deseado = arriba ? r.top - alto - 4 : r.bottom + 4;
+      setPosListaCliente({
+        top: Math.max(8, Math.min(deseado, window.innerHeight - alto - 8)),
+        left: r.left,
+        width: r.width,
+      });
+    };
+    actualizar();
+    window.addEventListener('resize', actualizar);
+    window.addEventListener('scroll', actualizar, true);
+    return () => {
+      window.removeEventListener('resize', actualizar);
+      window.removeEventListener('scroll', actualizar, true);
+    };
+  }, [clienteListaAbierta, clientesFiltrados.length]);
 
   // Si el borrador o "Continuar" ya traía cliente registrado, mostrar su nombre en el cuadro en cuanto llegue el catálogo.
   useEffect(() => {
@@ -740,7 +774,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               {/* data-permitir-salto-enter: el Enter de este buscador lo atiende la pantalla (como en Caja) y la
                   Regla 9 del teclado no devuelve el foco al campo de origen (flechasEspaciales.ts). */}
               <div data-permitir-salto-enter data-evitar-iman-teclado>
-                <div className="flex items-center border-2 border-[var(--color-ink)] bg-white rounded-none">
+                <div ref={cajaBuscarClienteRef} className="flex items-center border-2 border-[var(--color-ink)] bg-white rounded-none">
                   <div className="w-10 h-10 flex items-center justify-center bg-[var(--color-ink)] text-white shrink-0 rounded-none">
                     <Search size={20} />
                   </div>
@@ -762,11 +796,21 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                     autoComplete="off"
                   />
                 </div>
-                {clienteListaAbierta && busquedaCliente.trim() && clientesFiltrados.length > 0 && (
+                {/* Capa flotante: se dibuja en document.body para no empujar el formulario ni que la recorte
+                    el scroll del modal. Mantiene los mismos ids, colores y manejo de teclado de siempre. */}
+                {clienteListaAbierta && busquedaCliente.trim() && clientesFiltrados.length > 0 && createPortal(
                   <div
+                    ref={listaClientesRef}
                     id="resultados-cliente-salida"
                     role="listbox"
-                    className="border-2 border-t-0 border-[var(--color-ink)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)] max-h-60 overflow-y-auto"
+                    style={{
+                      position: 'fixed',
+                      top: posListaCliente.top,
+                      left: posListaCliente.left,
+                      width: posListaCliente.width,
+                      zIndex: 60,
+                    }}
+                    className="border-2 border-[var(--color-ink)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)] max-h-60 overflow-y-auto"
                   >
                     {clientesFiltrados.map((c, idx) => (
                       <button
@@ -785,7 +829,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                         {c.name} {c.dni || c.ruc ? `(${c.dni || c.ruc})` : ''}
                       </button>
                     ))}
-                  </div>
+                  </div>,
+                  document.body
                 )}
               </div>
               <button

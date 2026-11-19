@@ -1173,3 +1173,10 @@
 - Preguntado por el texto exacto, eligió **`ECO SISTEMAS URH`** (el mismo nombre que sale en el login, sin el `S.A.C.`).
 - Se cambió **solo en el sitio oficial**: el título de la pestaña, el nombre que se ve al instalar la app y el manifiesto PWA (archivo nuevo `manifest-ecosistema.json`, con el mismo logo). La pantalla «Sin conexión» y el respaldo del menú también dicen `ECO SISTEMAS URH` en ese dominio. Nego y Evicamp conservan su nombre.
 - Desplegado solo en ecosistema (22 archivos y iconos repuestos). Prueba oficial: **35/35, 0 fallos**, incluidas 4 comprobaciones nuevas del nombre, con teclado y sin internet en 390/768/1366/1920. Los cuatro sitios siguen respondiendo 200. Sin base, sin credenciales y sin push. El pedido de salidas pendientes en Agenda sigue pospuesto; no se volvió a mencionar.
+
+## 19/11/2026 (desplegable flotante de cliente — fase 187)
+- El dueño dijo: *"el buscador de cliente tiene un defecto cuando escribo sale el desplegable pero se mueve todo no es que esté como encima"*.
+- Se le propuso sacar la lista del flujo del formulario para que flote sobre él, conservando ids, flechas, Enter, Escape, foco y estilo. Primero eligió «solo sitio oficial», pero corrigió: *"no no primero en la prueba y luego en el sitio oficial"*.
+- Después precisó el orden de trabajo: *"como con evicamp primero lo pruebo en la prueba y luego actualizo evicamp, ecosistema y siumax para mis clientes en el panel de control cuando creo"*. Por eso **solo se desplegó en Nego** (sitio de pruebas). Los otros sitios quedan para que él los actualice desde el Panel al crear clientes.
+- También dijo *"y lo subo en github"*: el push lo hace **él**; yo dejé el commit local.
+- Resultado de la prueba en Nego: **103/103, 0 fallos**, con teclado y sin internet en 390/768/1366/1920. Se comprueba que la lista es una capa fija, que no mueve el botón de «Cliente no registrado», que queda anclada al cuadro del buscador y que tapa el contenido de abajo. Sin tocar base, otros sitios ni credenciales. El pedido de salidas pendientes en Agenda sigue pospuesto; no se volvió a mencionar.

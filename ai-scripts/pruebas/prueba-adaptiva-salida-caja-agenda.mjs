@@ -96,6 +96,8 @@ try {
         await page.$eval('#select-bien-salida', (el) => Array.from(el.options).some((o) => o.value === 'otro')));
 
       // Elegir cliente solo con teclado: escribir, bajar con flecha y Enter (como en Caja).
+      // Posición del botón ANTES de abrir la lista: si la capa flota, no debe moverse ni un píxel.
+      const botonAntes = await page.$eval('#btn-cliente-no-registrado-salida', (el) => el.getBoundingClientRect().top);
       let sugerenciasCli = [];
       for (const letra of ['a', 'e', 'o', 's', 'i']) {
         await reescribir('#buscar-cliente-salida', letra);
@@ -105,6 +107,41 @@ try {
       }
       ok(`Salida ${t.nombre}: desplegable muestra clientes`, sugerenciasCli.length > 0, `${sugerenciasCli.length} sugerencias`);
       if (sugerenciasCli.length) {
+        // 187: la lista debe flotar ENCIMA del formulario, anclada al buscador y sin desplazar nada.
+        const capa = await page.evaluate(() => {
+          const lista = document.querySelector('#resultados-cliente-salida');
+          const input = document.querySelector('#buscar-cliente-salida');
+          const boton = document.querySelector('#btn-cliente-no-registrado-salida');
+          if (!lista || !input || !boton) return null;
+          const l = lista.getBoundingClientRect();
+          const i = input.getBoundingClientRect();
+          // La capa se ancla al CUADRO de búsqueda (icono + input), que es más ancho que el input solo.
+          const c = input.parentElement.getBoundingClientRect();
+          const b = boton.getBoundingClientRect();
+          return {
+            posicion: getComputedStyle(lista).position,
+            enElCuerpo: lista.parentElement === document.body,
+            listaTop: l.top, listaBottom: l.bottom, listaLeft: l.left, listaRight: l.right,
+            inputBottom: i.bottom, cajaLeft: c.left, cajaRight: c.right,
+            botonTop: b.top,
+          };
+        });
+        ok(`Salida ${t.nombre}: desplegable flota como capa`,
+          !!capa && capa.posicion === 'fixed' && capa.enElCuerpo,
+          capa ? `${capa.posicion}, en body=${capa.enElCuerpo}` : 'sin capa');
+        ok(`Salida ${t.nombre}: desplegable NO mueve el formulario`,
+          !!capa && Math.abs(capa.botonTop - botonAntes) <= 2,
+          capa ? `botón antes ${Math.round(botonAntes)}, después ${Math.round(capa.botonTop)}` : 'sin capa');
+        ok(`Salida ${t.nombre}: desplegable anclado al buscador`,
+          !!capa && Math.abs(capa.listaLeft - capa.cajaLeft) <= 2 && Math.abs(capa.listaRight - capa.cajaRight) <= 2,
+          capa ? `lista ${Math.round(capa.listaLeft)}-${Math.round(capa.listaRight)}, cuadro ${Math.round(capa.cajaLeft)}-${Math.round(capa.cajaRight)}` : 'sin capa');
+        ok(`Salida ${t.nombre}: desplegable nace justo debajo del buscador`,
+          !!capa && capa.listaTop >= capa.inputBottom - 2 && capa.listaTop <= capa.inputBottom + 12,
+          capa ? `buscador abajo ${Math.round(capa.inputBottom)}, lista arriba ${Math.round(capa.listaTop)}` : 'sin capa');
+        ok(`Salida ${t.nombre}: desplegable tapa lo que viene debajo`,
+          !!capa && capa.listaBottom > capa.botonTop,
+          capa ? `lista abajo ${Math.round(capa.listaBottom)}, botón ${Math.round(capa.botonTop)}` : 'sin capa');
+
         await page.keyboard.press('ArrowDown');
         await pausa(120);
         await page.keyboard.press('Enter');
