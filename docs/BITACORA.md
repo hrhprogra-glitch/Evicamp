@@ -7,6 +7,19 @@
 
 ---
 
+## 18/11/2026 (180) · OpenCode (Big Pickle) — Nueva salida vuelve a ventana flotante, ahora por pasos (1 datos → 2 productos): HECHO, probado y desplegado solo en Nego
+- **Dueño:** rechazó la 179 (*"no me gusto ya se esta bien vuelve a como era antes una ventana flotante"*) y pidió *"sera por pasos primero ingresa los datos luego ingresa los productos"*, con el ingreso de productos *"como el de la caja en celular como en la pc"*. Ante la duda de alcance respondió **"Sí, celular y PC (Recomendado)"**. Aprobó la propuesta con **"empieza"**.
+- **Hecho (solo Nego, sin SQL ni base):**
+  - **Se descartan 179 y 178.** `ModalNuevaSalida.tsx` se restauró desde `fc1aae3` (base limpia con las mejoras de 177) y `Salidas/index.tsx` vuelve a mostrar siempre cabecera y tabla, con el modal montado como capa `fixed inset-0` encima. No quedan `modo="sesion"`, `sub-sesion-nueva-salida`, `esMovil`, apartados ni botones "Volver".
+  - **Ventana flotante por 2 pasos:** stepper clicable `1 Datos → 2 Productos` (`btn-paso-datos-salida`, `btn-paso-productos-salida`) con el pasito "Paso 1 de 2…". El paso 1 lleva tipo, cliente, nombre libre, bien/nombre libre, dirección, fecha, trabajadores y observaciones. El paso 2 lleva el buscador, material externo y la tabla editable de materiales. Pie con **Siguiente: Productos ›**, **‹ Atrás** y **Confirmar Salida (F10)**. F10/Ctrl+Enter valida datos y pasa al 2 desde el paso 1; guarda desde el 2.
+  - **Buscador tipo Caja en celular y PC:** Enter o clic sobre la sugerencia agrega directo (antes había que dar Enter en cantidad), con foto y stock, icono `Search`, cámara `btn-escaner-salida`, producto nuevo arriba y foco de vuelta al buscador. El bloque lleva `data-permitir-salto-enter` para que la Regla 9 no robe el Enter; `flechasEspaciales.ts` ya respetaba esa marca. El buscador mide al menos 44 px también en laptop/PC.
+  - Conservados: nombres libres como nota, producto nuevo arriba, cámara sin internet, borrador, guardado con `fn_registrar_salida`, ids, flechas, Escape, paginación de 50 y estilo SiuMax Sobrio sin esquinas. Al cerrar, el foco vuelve a `btn-nueva-salida`.
+- **Prueba:** `prueba-adaptiva-salida-caja-agenda.mjs` reescrita para ventana flotante + 2 pasos + buscador tipo Caja: **113 comprobaciones, 0 fallos, 0 sin datos/no probadas** en 390/768/1366/1920. Dos vueltas: en la primera fallaron el foco del stepper (espera de render en la prueba) y el paso 2 en tablet/PC (el borrador ya traía trabajador y el clic lo desmarcaba); ambos corregidos. `npm run build` limpio.
+- **Desplegado solo en Nego** con `node ai-scripts/deploy.cjs siumax` (21 archivos). Sin Evicamp, sin push, sin pasada oficial ni Fase 5. Base y SQL intactos.
+- **No hecho:** el pedido pospuesto de salidas pendientes en Agenda sigue en espera; no se retomó ni se volvió a preguntar.
+
+---
+
 ## 18/11/2026 (179) · OpenCode (Big Pickle) — Celular de Nueva salida partido en tres apartados grandes: HECHO, probado y desplegado solo en Nego
 - **Dueño:** *"no me gusto en celular tambien se sigue viendo apretado mas con el buscador se ve pequeño nisiquiera ves lo que escribes sabes que podriamos probar lo que se hecho en caja hizo un apartado del buscador y otro de llenado de caja podriamos hacer lo mismo un apartado para el buscador otro donde se guardara y otro para llenar datos asi muy rápido a ver hazlo"*. El **"hazlo"** es el OK explícito: no hizo falta volver a pedir permiso.
 - **Hecho (solo Nego, sin SQL ni base):**
