@@ -772,4 +772,9 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Al vaciar el input hay que limpiar la nota (`setClienteLibre('')`), y al restaurar un borrador hay que poner la nota también en `busquedaCliente` para que se vea en el cuadro. Si se quita un estado (`modoClienteLibre`), buscar todas sus referencias antes de compilar: quedó un `setModoClienteLibre` en el `useEffect` de apertura y dio `TS2552`.
 - Si el dueño dice que «sigue moviendo todo», **medir antes de suponer**: puede estar mirando otro dominio con build antiguo. Comparar el JS servido (`/assets/index-*.js`) y la posición del campo antes/después en cada sitio. En Nego el arreglo ya funcionaba; el defecto estaba en ecosistema123, que no se desplegó a petición del dueño.
 
+## 42. «El selector se queda atrapado» en un buscador con desplegable (19/11/2026, bitácora 189)
+- Un desplegable de sugerencias que hace `preventDefault()` en ↑↓ **siempre** que está abierto deja al selector encerrado: las flechas globales de `flechasEspaciales.ts` nunca reciben la tecla. La salida correcta es en los **bordes** de la lista: ↓ en la última opción y ↑ en la primera cierran la lista y **no** frenan la tecla, para que el módulo global mueva el foco como en cualquier otro campo.
+- Ojo con los `setTimeout(() => input.focus(), 30)` tras elegir una opción: aunque el usuario haya pulsado ↓ justo después, el temporizador devuelve el foco y parece que el teclado no funciona. Quitarlos.
+- En la prueba no fijar un id único como destino de ↓: con `grid-cols-3` los campos «Tipo de trabajo / Cliente / Lo que se atiende» están en la misma fila en tablet y PC, así que ↓ baja a «Dirección», mientras que en celular (una columna) baja a «Lo que se atiende». Comprobar que el foco **sale del buscador** y cae en otro campo del formulario, no un id concreto.
+
   

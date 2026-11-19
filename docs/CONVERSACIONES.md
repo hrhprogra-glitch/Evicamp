@@ -1187,3 +1187,9 @@
 - Precisó el diseño: *"tiene que funcionar así: si escribo un nombre que no está registrado, que se permita registrarlo, nomas que no salga un botón o algo; sería como un buscador desplegable de cliente y registro de nombre que no está registrado como nota"*.
 - Se le propuso un solo buscador con la opción de registrar como nota dentro de la lista, sin botón ni campo extra, y aprobó con **"Sí, empieza"**. También eligió **no crear el cliente en la base**: el nombre se guarda como nota en observaciones; la salida necesita un cliente registrado de referencia por llave foránea.
 - Resultado en Nego: **115/115, 0 fallos**, con teclado y sin internet en 390/768/1366/1920. El push a GitHub lo hace él. Sin tocar base, otros sitios ni credenciales. El pedido de salidas pendientes en Agenda sigue pospuesto; no se volvió a mencionar.
+
+## 19/11/2026 (selector atrapado y diseño del cuadro — fase 189)
+- El dueño dijo: *"otra cosa el diseño no me gusta como; también el selector se queda atrapado en el buscador, arregla eso"*.
+- Preguntado qué parte del diseño no le gusta, eligió **«Todo el cuadro del buscador»**. Como no precisó cómo lo quiere, queda pendiente una propuesta concreta; no se cambió el diseño en esta fase.
+- Del teclado dijo *"Sí, empieza"* a la propuesta: ↓ en la última opción baja al siguiente campo y ↑ en la primera sube, sin devolver el foco al registrar la nota.
+- Resultado en Nego: **127/127, 0 fallos**, con teclado y sin internet en 390/768/1366/1920. En celular ↓ baja a «Lo que se atiende» y en tablet/laptop/PC a «Dirección» (los tres campos están en la misma fila): las dos cosas son correctas según las reglas del selector. El push a GitHub lo hace él. Sin tocar base, otros sitios ni credenciales. El pedido de salidas pendientes en Agenda sigue pospuesto; no se volvió a mencionar.

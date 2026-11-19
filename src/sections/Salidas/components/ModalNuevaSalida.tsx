@@ -596,7 +596,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     setClienteLibre(nombre);
     setClienteListaAbierta(false);
     setIndiceCliente(0);
-    setTimeout(() => inputBuscarClienteRef.current?.focus(), 30);
+    // Antes se devolvía el foco al buscador con un setTimeout: eso lo dejaba "atrapado" (dueño, 19/11/2026).
   };
 
   const handleKeyDownBuscarCliente = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -604,11 +604,23 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     const total = clientesFiltrados.length + (hayTexto ? 1 : 0); // el +1 es «Registrar como nota»
     const lista = clienteListaAbierta && total > 0;
     if (e.key === 'ArrowDown' && lista) {
-      e.preventDefault();
-      setIndiceCliente((prev) => (prev + 1) % total);
+      if (indiceCliente < total - 1) {
+        e.preventDefault();
+        setIndiceCliente(indiceCliente + 1);
+      } else {
+        // Borde de la lista: cerrarla y NO frenar la tecla, para que las flechas globales bajen al campo siguiente.
+        // Si se hiciera preventDefault aquí, el selector se quedaría siempre dentro del buscador.
+        setClienteListaAbierta(false);
+        setIndiceCliente(0);
+      }
     } else if (e.key === 'ArrowUp' && lista) {
-      e.preventDefault();
-      setIndiceCliente((prev) => (prev - 1 + total) % total);
+      if (indiceCliente > 0) {
+        e.preventDefault();
+        setIndiceCliente(indiceCliente - 1);
+      } else {
+        setClienteListaAbierta(false);
+        setIndiceCliente(0);
+      }
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (lista) {

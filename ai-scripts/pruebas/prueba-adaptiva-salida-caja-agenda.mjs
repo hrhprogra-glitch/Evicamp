@@ -109,7 +109,11 @@ try {
         return !!nota && !!input && nota.parentElement === input.parentElement.parentElement;
       }));
       ok(`Salida ${t.nombre}: se cierra el desplegable al registrar la nota`, !(await existe('#resultados-cliente-salida')));
-      ok(`Salida ${t.nombre}: foco sigue en el buscador tras registrar la nota`, (await foco()) === 'buscar-cliente-salida', await foco());
+      // El dueño pidió que el selector NO se quede atrapado: antes un setTimeout devolvía el foco al buscador.
+      await page.keyboard.press('ArrowDown');
+      await pausa(250);
+      const trasNota = await foco();
+      ok(`Salida ${t.nombre}: el foco NO vuelve al buscador tras la nota`, trasNota !== 'buscar-cliente-salida', trasNota || 'sin foco');
       await reescribir('#buscar-cliente-salida', ''); // vaciar quita la nota, sin botón
       await pausa(150);
       ok(`Salida ${t.nombre}: al vaciar el buscador se quita la nota`, !(await existe('#nota-cliente-salida')));
@@ -138,6 +142,23 @@ try {
           valorCli.trim().length > 0 && !(await existe('#resultados-cliente-salida')), valorCli);
         ok(`Salida ${t.nombre}: foco sigue en el buscador de cliente`,
           (await foco()) === 'buscar-cliente-salida', await foco());
+        // 189: con la lista cerrada, ↓ debe bajar al siguiente campo (no quedarse en el buscador).
+        await page.keyboard.press('ArrowDown');
+        await pausa(200);
+        // En celular el campo de abajo es "Lo que se atiende"; en tablet/PC va a "Dirección" porque
+        // esos tres campos están en la misma fila. Lo que se comprueba es que SALE del buscador.
+        const trasFlecha = await foco();
+        ok(`Salida ${t.nombre}: ↓ baja del buscador al siguiente campo`,
+          trasFlecha !== 'buscar-cliente-salida' && /^(select|input)-/.test(trasFlecha), trasFlecha);
+        // Y con la lista ABIERTA: desde la última opción, ↓ la cierra y baja al campo siguiente.
+        await reescribir('#buscar-cliente-salida', 'ZZZ Sin Cliente');
+        await pausa(250);
+        ok(`Salida ${t.nombre}: lista con una sola opción abierta`, await existe('#resultados-cliente-salida'));
+        await page.keyboard.press('ArrowDown');
+        await pausa(250);
+        const trasBorde = await foco();
+        ok(`Salida ${t.nombre}: ↓ desde la última opción baja al siguiente campo`,
+          !(await existe('#resultados-cliente-salida')) && trasBorde !== 'buscar-cliente-salida' && /^(select|input)-/.test(trasBorde), trasBorde);
       } else {
         ok(`Salida ${t.nombre}: Enter elige el cliente`, false, 'sin sugerencias para probar');
       }
