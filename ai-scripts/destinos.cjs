@@ -1,6 +1,7 @@
 // Dónde se publica SiuMax. Un solo código y UNA sola compilación (dist/) para todos:
 // el sistema usa la API de su propio link, así que no hay que compilar por cliente.
 //  - evicamp / siuhub: tienen su propia carpeta web en el VPS.
+//  - ecosistema: sitio oficial de ECO SISTEMAS URH (cliente especial, sin cobro), dominio propio.
 //  - clientes nuevos (<slug>.comerc.siumax.duckdns.org): comparten /var/www/siuhub-app/html,
 //    así que actualizar esa carpeta actualiza a todos de una vez.
 const path = require('path');
@@ -18,6 +19,12 @@ const SITIOS = {
     url: 'https://comerc.siumax.duckdns.org',   // siumax.duckdns.org es el Panel de Control desde el 06/11/2026
     localDir: dist,
     remoteDir: '/var/www/siuhub/html',
+  },
+  ecosistema: {   // cliente oficial ECO SISTEMAS URH: dominio propio, NO paga (como Evicamp)
+    nombre: 'ECO SISTEMAS URH (ecosistema)',
+    url: 'https://ecosistema123.duckdns.org',
+    localDir: dist,
+    remoteDir: '/var/www/ecosistema123/html',
   },
   clientes: {
     nombre: 'Clientes SiuMax (copia compartida)',
