@@ -70,9 +70,10 @@ try {
       await page.waitForSelector('#modal-nueva-salida-container', { timeout: 8000 });
       await pausa(300);
 
-      // 182: el cliente ya no es un select, es un buscador desplegable con un botón para nombre no registrado.
+      // 187: un solo buscador hace las dos cosas: sugerencias y registro del nombre como nota, sin botón ni campo aparte.
       ok(`Salida ${t.nombre}: buscador desplegable de cliente`, await existe('#buscar-cliente-salida'));
-      ok(`Salida ${t.nombre}: botón "+ Cliente no registrado"`, await existe('#btn-cliente-no-registrado-salida'));
+      ok(`Salida ${t.nombre}: NO hay botón de cliente no registrado`, !(await existe('#btn-cliente-no-registrado-salida')));
+      ok(`Salida ${t.nombre}: NO hay campo de nombre aparte`, !(await existe('#input-cliente-libre-salida')));
       const buscarCli = await page.$eval('#buscar-cliente-salida', (el) => ({
         alto: el.getBoundingClientRect().height,
         fuente: parseFloat(getComputedStyle(el).fontSize),
@@ -81,67 +82,53 @@ try {
       ok(`Salida ${t.nombre}: buscador de cliente legible`, buscarCli.alto >= 44 && buscarCli.fuente >= 14,
         `alto ${Math.round(buscarCli.alto)}, fuente ${buscarCli.fuente}`);
       ok(`Salida ${t.nombre}: Enter propio en el buscador de cliente`, buscarCli.permiteEnter);
-      ok(`Salida ${t.nombre}: campo libre oculto hasta pulsar el botón`, !(await existe('#input-cliente-libre-salida')));
-      await page.click('#btn-cliente-no-registrado-salida');
-      await pausa(200);
-      ok(`Salida ${t.nombre}: botón abre el campo de nombre libre`, await existe('#input-cliente-libre-salida'));
-      await reescribir('#input-cliente-libre-salida', 'CLIENTE PRUEBA');
-      await pausa(120);
-      const libre = await page.$eval('#input-cliente-libre-salida', (el) => el.value);
-      ok(`Salida ${t.nombre}: se puede escribir el nombre no registrado`, libre.toUpperCase().includes('CLIENTE PRUEBA'), libre);
-      await reescribir('#input-cliente-libre-salida', ''); // no dejar el nombre de prueba en el borrador
+
+      // Posición de referencia ANTES de abrir la lista: si la capa flota, no debe moverse ni un píxel.
+      const campoAntes = await page.$eval('#select-bien-salida', (el) => el.getBoundingClientRect().top);
+
+      // --- Registrar un nombre nuevo COMO NOTA desde la misma lista (sin botón) ---
+      await reescribir('#buscar-cliente-salida', 'ZZZZ CLIENTE SIN REGISTRO');
+      await pausa(350);
+      ok(`Salida ${t.nombre}: opción de registrar nota dentro del desplegable`, await existe('#sugerencia-cliente-nota'));
+      ok(`Salida ${t.nombre}: la lista flota como capa fija`, await page.evaluate(() => {
+        const l = document.querySelector('#resultados-cliente-salida');
+        return !!l && getComputedStyle(l).position === 'fixed' && l.parentElement === document.body;
+      }));
+      ok(`Salida ${t.nombre}: la lista NO mueve el formulario`, await page.evaluate((antes) => {
+        const campo = document.querySelector('#select-bien-salida').getBoundingClientRect();
+        return Math.abs(campo.top - antes) <= 2;
+      }, campoAntes));
+      await page.keyboard.press('Enter');
+      await pausa(250);
+      ok(`Salida ${t.nombre}: Enter registra la nota`, await existe('#nota-cliente-salida'));
+      const notaTexto = await page.$eval('#nota-cliente-salida', (el) => el.innerText);
+      ok(`Salida ${t.nombre}: la nota muestra el nombre escrito`, /ZZZZ CLIENTE SIN REGISTRO/i.test(notaTexto), notaTexto);
+      ok(`Salida ${t.nombre}: la nota queda DENTRO del cuadro del buscador`, await page.evaluate(() => {
+        const nota = document.querySelector('#nota-cliente-salida');
+        const input = document.querySelector('#buscar-cliente-salida');
+        return !!nota && !!input && nota.parentElement === input.parentElement.parentElement;
+      }));
+      ok(`Salida ${t.nombre}: se cierra el desplegable al registrar la nota`, !(await existe('#resultados-cliente-salida')));
+      ok(`Salida ${t.nombre}: foco sigue en el buscador tras registrar la nota`, (await foco()) === 'buscar-cliente-salida', await foco());
+      await reescribir('#buscar-cliente-salida', ''); // vaciar quita la nota, sin botón
+      await pausa(150);
+      ok(`Salida ${t.nombre}: al vaciar el buscador se quita la nota`, !(await existe('#nota-cliente-salida')));
 
       ok(`Salida ${t.nombre}: botón de cámara`, await existe('#btn-escaner-salida'));
       ok(`Salida ${t.nombre}: opción "Otro" en lo que se atiende`,
         await page.$eval('#select-bien-salida', (el) => Array.from(el.options).some((o) => o.value === 'otro')));
 
-      // Elegir cliente solo con teclado: escribir, bajar con flecha y Enter (como en Caja).
-      // Posición del botón ANTES de abrir la lista: si la capa flota, no debe moverse ni un píxel.
-      const botonAntes = await page.$eval('#btn-cliente-no-registrado-salida', (el) => el.getBoundingClientRect().top);
+      // Elegir cliente registrado solo con teclado: escribir, bajar con flecha y Enter (como en Caja).
       let sugerenciasCli = [];
       for (const letra of ['a', 'e', 'o', 's', 'i']) {
         await reescribir('#buscar-cliente-salida', letra);
         await pausa(280);
-        sugerenciasCli = await page.$$('[id^="sugerencia-cliente-"]');
-        if (sugerenciasCli.length) break;
+        sugerenciasCli = await page.$$('#resultados-cliente-salida [id^="sugerencia-cliente-"]');
+        if (sugerenciasCli.length > 1) break;
       }
-      ok(`Salida ${t.nombre}: desplegable muestra clientes`, sugerenciasCli.length > 0, `${sugerenciasCli.length} sugerencias`);
-      if (sugerenciasCli.length) {
-        // 187: la lista debe flotar ENCIMA del formulario, anclada al buscador y sin desplazar nada.
-        const capa = await page.evaluate(() => {
-          const lista = document.querySelector('#resultados-cliente-salida');
-          const input = document.querySelector('#buscar-cliente-salida');
-          const boton = document.querySelector('#btn-cliente-no-registrado-salida');
-          if (!lista || !input || !boton) return null;
-          const l = lista.getBoundingClientRect();
-          const i = input.getBoundingClientRect();
-          // La capa se ancla al CUADRO de búsqueda (icono + input), que es más ancho que el input solo.
-          const c = input.parentElement.getBoundingClientRect();
-          const b = boton.getBoundingClientRect();
-          return {
-            posicion: getComputedStyle(lista).position,
-            enElCuerpo: lista.parentElement === document.body,
-            listaTop: l.top, listaBottom: l.bottom, listaLeft: l.left, listaRight: l.right,
-            inputBottom: i.bottom, cajaLeft: c.left, cajaRight: c.right,
-            botonTop: b.top,
-          };
-        });
-        ok(`Salida ${t.nombre}: desplegable flota como capa`,
-          !!capa && capa.posicion === 'fixed' && capa.enElCuerpo,
-          capa ? `${capa.posicion}, en body=${capa.enElCuerpo}` : 'sin capa');
-        ok(`Salida ${t.nombre}: desplegable NO mueve el formulario`,
-          !!capa && Math.abs(capa.botonTop - botonAntes) <= 2,
-          capa ? `botón antes ${Math.round(botonAntes)}, después ${Math.round(capa.botonTop)}` : 'sin capa');
-        ok(`Salida ${t.nombre}: desplegable anclado al buscador`,
-          !!capa && Math.abs(capa.listaLeft - capa.cajaLeft) <= 2 && Math.abs(capa.listaRight - capa.cajaRight) <= 2,
-          capa ? `lista ${Math.round(capa.listaLeft)}-${Math.round(capa.listaRight)}, cuadro ${Math.round(capa.cajaLeft)}-${Math.round(capa.cajaRight)}` : 'sin capa');
-        ok(`Salida ${t.nombre}: desplegable nace justo debajo del buscador`,
-          !!capa && capa.listaTop >= capa.inputBottom - 2 && capa.listaTop <= capa.inputBottom + 12,
-          capa ? `buscador abajo ${Math.round(capa.inputBottom)}, lista arriba ${Math.round(capa.listaTop)}` : 'sin capa');
-        ok(`Salida ${t.nombre}: desplegable tapa lo que viene debajo`,
-          !!capa && capa.listaBottom > capa.botonTop,
-          capa ? `lista abajo ${Math.round(capa.listaBottom)}, botón ${Math.round(capa.botonTop)}` : 'sin capa');
-
+      ok(`Salida ${t.nombre}: desplegable muestra clientes`, sugerenciasCli.length > 1, `${sugerenciasCli.length} opciones`);
+      if (sugerenciasCli.length > 1) {
+        ok(`Salida ${t.nombre}: opción de nota también con coincidencias`, await existe('#sugerencia-cliente-nota'));
         await page.keyboard.press('ArrowDown');
         await pausa(120);
         await page.keyboard.press('Enter');

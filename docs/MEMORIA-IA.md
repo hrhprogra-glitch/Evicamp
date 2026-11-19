@@ -765,4 +765,11 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Al comparar en pruebas, medir el **cuadro** (`input.parentElement`), no el input. Mi primera versión de la prueba comparó contra el input y dio 4 fallos falsos (lista 26-364 vs input 68-362) aunque el arreglo era correcto.
 - Orden de trabajo del dueño: **primero desplegar y probar en Nego**, y después **él actualiza Evicamp, ecosistema y siumax desde el Panel cuando crea clientes**. No desplegar esos sitios ni hacer push por iniciativa propia; él sube a GitHub.
 
+## 41. Un solo buscador, sin botón de «cliente no registrado» (19/11/2026, bitácora 188)
+- Cuando el dueño dice *"todo dentro del buscador"*, quiere **desaparecer el botón y el campo aparte**, no solo recolocarlos. La opción de registrar el nombre debe vivir como una opción más del desplegable (`#sugerencia-cliente-nota`), al final, y se elige con clic o con ↑↓ + Enter.
+- El recorrido de flechas debe contar también esa opción: `total = clientesFiltrados.length + 1` cuando hay texto. Si se deja `clientesFiltrados.length`, Enter nunca puede registrar la nota.
+- La nota elegida se muestra **dentro del cuadro** del buscador (`#nota-cliente-salida`, hijo del mismo borde que contiene el icono y el input) y se guarda como `CLIENTE: <NOMBRE>` en observaciones. No crea cliente en la base: la FK `customer_id` sigue obligatoria, así que el aviso al guardar debe pedir un cliente registrado de referencia.
+- Al vaciar el input hay que limpiar la nota (`setClienteLibre('')`), y al restaurar un borrador hay que poner la nota también en `busquedaCliente` para que se vea en el cuadro. Si se quita un estado (`modoClienteLibre`), buscar todas sus referencias antes de compilar: quedó un `setModoClienteLibre` en el `useEffect` de apertura y dio `TS2552`.
+- Si el dueño dice que «sigue moviendo todo», **medir antes de suponer**: puede estar mirando otro dominio con build antiguo. Comparar el JS servido (`/assets/index-*.js`) y la posición del campo antes/después en cada sitio. En Nego el arreglo ya funcionaba; el defecto estaba en ecosistema123, que no se desplegó a petición del dueño.
+
   
