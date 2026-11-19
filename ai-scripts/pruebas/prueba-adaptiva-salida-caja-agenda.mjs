@@ -1,4 +1,5 @@
-// Prueba adaptiva (18/11/2026, bitácora 176): salida rápida, teclado de Caja y Agenda en celular.
+// Prueba adaptiva (18/11/2026, fase 182): buscador desplegable de cliente y botón de cliente no registrado en
+// Nueva salida, además del teclado de Caja y la Agenda en celular.
 // Se corre contra el sitio de pruebas Nego, con teclado y sin servicios externos. Solo Nego: sin Evicamp, sin SQL.
 // Tamaños: 390 (celular), 768 (tablet), 1366 y 1920 (laptop/PC).
 // Uso: node ai-scripts/pruebas/prueba-adaptiva-salida-caja-agenda.mjs
@@ -26,6 +27,16 @@ const irA = async (id) => {
   await page.focus(`#${id}`);
   await page.keyboard.press('Enter');
   await pausa(800);
+};
+
+// Borrar un campo y escribir otro texto usando solo teclado (así se comprueba la Regla 9 de verdad).
+const reescribir = async (sel, texto) => {
+  await page.click(sel);
+  await page.keyboard.down('Control');
+  await page.keyboard.press('a');
+  await page.keyboard.up('Control');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.type(texto);
 };
 
 const tam = [
@@ -59,17 +70,53 @@ try {
       await page.waitForSelector('#modal-nueva-salida-container', { timeout: 8000 });
       await pausa(300);
 
-      ok(`Salida ${t.nombre}: nombre libre de cliente`, await existe('#input-cliente-libre-salida'));
+      // 182: el cliente ya no es un select, es un buscador desplegable con un botón para nombre no registrado.
+      ok(`Salida ${t.nombre}: buscador desplegable de cliente`, await existe('#buscar-cliente-salida'));
+      ok(`Salida ${t.nombre}: botón "+ Cliente no registrado"`, await existe('#btn-cliente-no-registrado-salida'));
+      const buscarCli = await page.$eval('#buscar-cliente-salida', (el) => ({
+        alto: el.getBoundingClientRect().height,
+        fuente: parseFloat(getComputedStyle(el).fontSize),
+        permiteEnter: !!el.closest('[data-permitir-salto-enter]'),
+      }));
+      ok(`Salida ${t.nombre}: buscador de cliente legible`, buscarCli.alto >= 44 && buscarCli.fuente >= 14,
+        `alto ${Math.round(buscarCli.alto)}, fuente ${buscarCli.fuente}`);
+      ok(`Salida ${t.nombre}: Enter propio en el buscador de cliente`, buscarCli.permiteEnter);
+      ok(`Salida ${t.nombre}: campo libre oculto hasta pulsar el botón`, !(await existe('#input-cliente-libre-salida')));
+      await page.click('#btn-cliente-no-registrado-salida');
+      await pausa(200);
+      ok(`Salida ${t.nombre}: botón abre el campo de nombre libre`, await existe('#input-cliente-libre-salida'));
+      await reescribir('#input-cliente-libre-salida', 'CLIENTE PRUEBA');
+      await pausa(120);
+      const libre = await page.$eval('#input-cliente-libre-salida', (el) => el.value);
+      ok(`Salida ${t.nombre}: se puede escribir el nombre no registrado`, libre.toUpperCase().includes('CLIENTE PRUEBA'), libre);
+      await reescribir('#input-cliente-libre-salida', ''); // no dejar el nombre de prueba en el borrador
+
       ok(`Salida ${t.nombre}: botón de cámara`, await existe('#btn-escaner-salida'));
       ok(`Salida ${t.nombre}: opción "Otro" en lo que se atiende`,
         await page.$eval('#select-bien-salida', (el) => Array.from(el.options).some((o) => o.value === 'otro')));
 
-      // El selector de "lo que se atiende" está deshabilitado hasta elegir cliente: elegimos el primero.
-      const primerCliente = await page.$eval('#select-cliente-salida', (el) => {
-        const op = Array.from(el.options).find((o) => o.value && !o.disabled);
-        return op ? op.value : '';
-      });
-      if (primerCliente) await page.select('#select-cliente-salida', primerCliente);
+      // Elegir cliente solo con teclado: escribir, bajar con flecha y Enter (como en Caja).
+      let sugerenciasCli = [];
+      for (const letra of ['a', 'e', 'o', 's', 'i']) {
+        await reescribir('#buscar-cliente-salida', letra);
+        await pausa(280);
+        sugerenciasCli = await page.$$('[id^="sugerencia-cliente-"]');
+        if (sugerenciasCli.length) break;
+      }
+      ok(`Salida ${t.nombre}: desplegable muestra clientes`, sugerenciasCli.length > 0, `${sugerenciasCli.length} sugerencias`);
+      if (sugerenciasCli.length) {
+        await page.keyboard.press('ArrowDown');
+        await pausa(120);
+        await page.keyboard.press('Enter');
+        await pausa(250);
+        const valorCli = await page.$eval('#buscar-cliente-salida', (el) => el.value);
+        ok(`Salida ${t.nombre}: Enter elige el cliente y cierra el desplegable`,
+          valorCli.trim().length > 0 && !(await existe('#resultados-cliente-salida')), valorCli);
+        ok(`Salida ${t.nombre}: foco sigue en el buscador de cliente`,
+          (await foco()) === 'buscar-cliente-salida', await foco());
+      } else {
+        ok(`Salida ${t.nombre}: Enter elige el cliente`, false, 'sin sugerencias para probar');
+      }
       await pausa(300);
       await page.select('#select-bien-salida', 'otro');
       await pausa(200);

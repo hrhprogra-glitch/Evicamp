@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Truck, X, Plus, Trash2, Search, Check, RotateCcw, Zap, Package } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { fotoDeCache, sincronizarFotosFaltantes } from '../../../utils/cacheFotos';
@@ -7,6 +7,7 @@ import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar } from '../../../utils/dialogos';
 import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
+import { coincideBusqueda } from '../../../utils/busqueda';
 import type { TipoSalida, Salida } from '../types';
 
 interface ModalNuevaSalidaProps {
@@ -67,6 +68,12 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   // Form State
   const [tipo, setTipo] = useState<TipoSalida>('SERVICIO');
   const [customerId, setCustomerId] = useState<number | ''>('');
+  // Buscador desplegable de cliente (fase 182): escribes nombre, DNI o RUC y eliges de la lista. El botón de abajo
+  // abre el nombre libre para clientes no registrados, que se guarda como nota en observaciones.
+  const [busquedaCliente, setBusquedaCliente] = useState('');
+  const [clienteListaAbierta, setClienteListaAbierta] = useState(false);
+  const [indiceCliente, setIndiceCliente] = useState(0);
+  const [modoClienteLibre, setModoClienteLibre] = useState(false);
   // Nombres libres (pedido del dueño 18/11): si el cliente o lo que se atiende no está en la lista, se escribe aquí y
   // se guarda dentro de observaciones como nota (la salida necesita un cliente y un bien de la base por FK).
   const [clienteLibre, setClienteLibre] = useState('');
@@ -120,10 +127,29 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
 
   const inputBuscarRef = useRef<HTMLInputElement>(null);
   const inputCantRef = useRef<HTMLInputElement>(null);
+  const inputBuscarClienteRef = useRef<HTMLInputElement>(null);
+
+  // Clientes que salen en el desplegable; coincideBusqueda tolera tildes y mayúsculas, como en Caja.
+  const clientesFiltrados = useMemo(() => {
+    const q = busquedaCliente.trim();
+    const base = q ? clientes.filter((c) => coincideBusqueda([c.name, c.dni, c.ruc], q)) : clientes;
+    return base.slice(0, 60);
+  }, [clientes, busquedaCliente]);
+
+  // Si el borrador o "Continuar" ya traía cliente registrado, mostrar su nombre en el cuadro en cuanto llegue el catálogo.
+  useEffect(() => {
+    if (!customerId || busquedaCliente.trim()) return;
+    const cli = clientes.find((c) => c.id === Number(customerId));
+    if (cli) setBusquedaCliente(cli.name || '');
+  }, [clientes, customerId]);
 
   // Cargar datos al abrir
   useEffect(() => {
     if (isOpen) {
+      setBusquedaCliente('');
+      setClienteListaAbierta(false);
+      setIndiceCliente(0);
+      setModoClienteLibre(false);
       cargarCatalogos();
       if (salidaRaiz) {
         setTipo(salidaRaiz.tipo);
@@ -143,6 +169,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         setTipo(datosIniciales.tipo || 'SERVICIO');
         setCustomerId(datosIniciales.customerId || '');
         setClienteLibre(datosIniciales.clienteLibre || '');
+        if (datosIniciales.clienteLibre) setModoClienteLibre(true);
         setBienId(datosIniciales.bienId || '');
         setBienLibre(datosIniciales.bienLibre || '');
         setDireccion(datosIniciales.direccion || '');
@@ -162,7 +189,10 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
             if (b) {
               if (b.tipo) setTipo(b.tipo);
               if (b.customerId) setCustomerId(b.customerId);
-              if (b.clienteLibre) setClienteLibre(b.clienteLibre);
+              if (b.clienteLibre) {
+                setClienteLibre(b.clienteLibre);
+                setModoClienteLibre(true); // el borrador traía un nombre libre: volver a mostrar su campo
+              }
               if (b.bienId) setBienId(b.bienId);
               if (b.bienLibre) setBienLibre(b.bienLibre);
               if (b.direccion) setDireccion(b.direccion);
@@ -242,6 +272,10 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     } catch {}
     setTipo('SERVICIO');
     setCustomerId('');
+    setBusquedaCliente('');
+    setClienteListaAbierta(false);
+    setIndiceCliente(0);
+    setModoClienteLibre(false);
     setClienteLibre('');
     setBienId('');
     setBienLibre('');
@@ -255,7 +289,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     setTieneBorrador(false);
     avisar('Borrador limpiado. Formulario listo desde cero.');
     setTimeout(() => {
-      document.getElementById('select-cliente-salida')?.focus();
+      inputBuscarClienteRef.current?.focus();
     }, 50);
   };
 
@@ -515,11 +549,46 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     }
   };
 
+  // Buscador de cliente: Enter o clic elige la sugerencia; el id queda para la base y el nombre se ve en el cuadro.
+  const elegirCliente = (c: any) => {
+    setCustomerId(Number(c.id));
+    setBusquedaCliente(c.name || `${c.dni || ''} ${c.ruc || ''}`.trim());
+    setClienteListaAbierta(false);
+    setIndiceCliente(0);
+    if (!clienteLibre.trim()) setModoClienteLibre(false);
+  };
+
+  const handleKeyDownBuscarCliente = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const lista = clienteListaAbierta && clientesFiltrados.length > 0;
+    if (e.key === 'ArrowDown' && lista) {
+      e.preventDefault();
+      setIndiceCliente((prev) => (prev + 1) % clientesFiltrados.length);
+    } else if (e.key === 'ArrowUp' && lista) {
+      e.preventDefault();
+      setIndiceCliente((prev) => (prev - 1 + clientesFiltrados.length) % clientesFiltrados.length);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      // Como en Caja: Enter elige la sugerencia señalada (o la primera).
+      if (lista) elegirCliente(clientesFiltrados[indiceCliente] || clientesFiltrados[0]);
+    } else if (e.key === 'Escape') {
+      setClienteListaAbierta(false);
+    }
+  };
+
+  // El botón de cliente no registrado solo abre el campo de nombre libre; NO crea un cliente en la base.
+  const abrirClienteLibre = () => {
+    setModoClienteLibre(true);
+    setClienteListaAbierta(false);
+    setTimeout(() => document.getElementById('input-cliente-libre-salida')?.focus(), 30);
+  };
+
   // Guardar la salida (RPC en backend)
   const handleGuardarSalida = async () => {
     if (!customerId) {
-      avisar('Selecciona el cliente');
-      document.getElementById('select-cliente-salida')?.focus();
+      avisar(clienteLibre.trim()
+        ? 'Escribe el nombre del cliente y elige un cliente de la lista como referencia'
+        : 'Busca y elige un cliente, o pulsa "+ Cliente no registrado" para escribir el nombre');
+      inputBuscarClienteRef.current?.focus();
       return;
     }
     if (trabajadoresSeleccionados.length === 0) {
@@ -668,31 +737,78 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               <label className="block font-black uppercase text-[var(--color-ink)] mb-1">
                 Cliente *
               </label>
-              <select
-                id="select-cliente-salida"
-                value={customerId}
-                onChange={(e) => setCustomerId(e.target.value ? Number(e.target.value) : '')}
-                onKeyDown={(e) => handleKeyDownForm(e, 'select-cliente-salida')}
-                className="w-full p-2 min-h-[44px] sm:min-h-0 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] rounded-none"
-                required
+              {/* data-permitir-salto-enter: el Enter de este buscador lo atiende la pantalla (como en Caja) y la
+                  Regla 9 del teclado no devuelve el foco al campo de origen (flechasEspaciales.ts). */}
+              <div data-permitir-salto-enter data-evitar-iman-teclado>
+                <div className="flex items-center border-2 border-[var(--color-ink)] bg-white rounded-none">
+                  <div className="w-10 h-10 flex items-center justify-center bg-[var(--color-ink)] text-white shrink-0 rounded-none">
+                    <Search size={20} />
+                  </div>
+                  <input
+                    ref={inputBuscarClienteRef}
+                    id="buscar-cliente-salida"
+                    type="text"
+                    value={busquedaCliente}
+                    onChange={(e) => {
+                      setBusquedaCliente(e.target.value);
+                      setClienteListaAbierta(true);
+                      setIndiceCliente(0);
+                    }}
+                    onFocus={() => setClienteListaAbierta(true)}
+                    onKeyDown={handleKeyDownBuscarCliente}
+                    placeholder="ESCRIBE NOMBRE, DNI O RUC DEL CLIENTE"
+                    title="Escribe y elige un cliente con Enter, flechas o clic"
+                    className="w-full p-2 sm:p-2.5 min-h-[48px] sm:min-h-[44px] uppercase font-bold outline-none bg-transparent"
+                    autoComplete="off"
+                  />
+                </div>
+                {clienteListaAbierta && busquedaCliente.trim() && clientesFiltrados.length > 0 && (
+                  <div
+                    id="resultados-cliente-salida"
+                    role="listbox"
+                    className="border-2 border-t-0 border-[var(--color-ink)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)] max-h-60 overflow-y-auto"
+                  >
+                    {clientesFiltrados.map((c, idx) => (
+                      <button
+                        key={c.id}
+                        id={`sugerencia-cliente-${idx}`}
+                        type="button"
+                        role="option"
+                        aria-selected={idx === indiceCliente}
+                        onClick={() => elegirCliente(c)}
+                        className={`w-full text-left p-2 font-bold uppercase text-xs cursor-pointer rounded-none ${
+                          idx === indiceCliente
+                            ? 'bg-[var(--color-ink)] text-white'
+                            : 'hover:bg-black/5 text-[var(--color-ink)]'
+                        }`}
+                      >
+                        {c.name} {c.dni || c.ruc ? `(${c.dni || c.ruc})` : ''}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button
+                id="btn-cliente-no-registrado-salida"
+                type="button"
+                onClick={abrirClienteLibre}
+                title="El nombre se guarda como nota; la salida sigue necesitando un cliente registrado como referencia"
+                className="w-full mt-1 px-2 py-2 min-h-[44px] border-2 border-[var(--color-border)] font-black uppercase text-[11px] tracking-wider hover:border-[var(--color-ink)] cursor-pointer rounded-none"
               >
-                <option value="">-- SELECCIONAR CLIENTE --</option>
-                {clientes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} {c.dni || c.ruc ? `(${c.dni || c.ruc})` : ''}
-                  </option>
-                ))}
-              </select>
-              <input
-                id="input-cliente-libre-salida"
-                type="text"
-                value={clienteLibre}
-                onChange={(e) => setClienteLibre(e.target.value)}
-                onKeyDown={(e) => handleKeyDownForm(e, 'input-cliente-libre-salida')}
-                placeholder="Si no está en la lista, escribe aquí el nombre"
-                title="El nombre se guarda como nota; elige un cliente registrado como referencia"
-                className="w-full p-2 min-h-[44px] sm:min-h-0 mt-1 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] rounded-none"
-              />
+                + Cliente no registrado (como nota)
+              </button>
+              {modoClienteLibre && (
+                <input
+                  id="input-cliente-libre-salida"
+                  type="text"
+                  value={clienteLibre}
+                  onChange={(e) => setClienteLibre(e.target.value)}
+                  onKeyDown={(e) => handleKeyDownForm(e, 'input-cliente-libre-salida')}
+                  placeholder="Escribe aquí el nombre del cliente no registrado"
+                  title="El nombre se guarda como nota; elige un cliente registrado como referencia"
+                  className="w-full p-2 min-h-[44px] sm:min-h-0 mt-1 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] rounded-none"
+                />
+              )}
             </div>
 
             <div>

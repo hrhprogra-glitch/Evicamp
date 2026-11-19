@@ -135,8 +135,11 @@ export const activarFlechasEspaciales = () => {
       el.click();
       return;
     }
-    // Regla 9: Enter en un campo de una ventana → vigilar que el selector no pase al siguiente cuadro
-    if (e.key === 'Enter' && !e.shiftKey && esCampoDeTexto(el)) {
+    // Regla 9: Enter en un campo de una ventana → vigilar que el selector no pase al siguiente cuadro.
+    // Excepción (fase 182): el buscador desplegable de cliente de Nueva salida atiende su propio Enter para elegir
+    // una sugerencia; si la regla devolviera el foco, no se podría elegir cliente con teclado. Los campos que atienden
+    // su Enter llevan data-permitir-salto-enter y se respeta su salto.
+    if (e.key === 'Enter' && !e.shiftKey && esCampoDeTexto(el) && !el.closest('[data-permitir-salto-enter]')) {
       const v = ventanaSuperior();
       guardiaEnter = v && v.contains(el) ? { origen: el, ventana: v, ventanas: ventanasAbiertas().length, hasta: performance.now() + 400 } : null;
     }

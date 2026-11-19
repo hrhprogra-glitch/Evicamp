@@ -7,6 +7,19 @@
 
 ---
 
+## 18/11/2026 (182) · OpenCode (Big Pickle) — Buscador desplegable de cliente y botón de cliente no registrado en Nueva salida: HECHO, probado y desplegado solo en Nego
+- **Dueño:** *"el ingreso de cliente sera un buscador desplegable como tambien si el nombre de cliente no esta registrado que permita ingresarlo como nota agrega un botón"*. Se mostró la propuesta (buscador con teclado, botón `+ Cliente no registrado (como nota)`, referencia registrada para la FK, prueba en cuatro tamaños, docs y commit sin push) y aprobó con **"empieza"**.
+- **Hecho (solo Nego, sin SQL ni base):**
+  - **`ModalNuevaSalida.tsx`:** el `<select id="select-cliente-salida">` se cambió por el buscador `buscar-cliente-salida` con icono `Search`. Al escribir nombre, DNI o RUC salen hasta 60 coincidencias en `resultados-cliente-salida` (`sugerencia-cliente-${idx}`). Se elige con **↑ ↓ + Enter** o con **clic**; el foco se queda en el cuadro para seguir. Usa `coincideBusqueda` (tolerante a tildes), el mismo estilo sobrio sin esquinas y campos de 48 px en celular / 44 px en tablet, laptop y PC. Al elegir cliente siguen cargando sus bienes y su dirección como antes.
+  - **Botón `btn-cliente-no-registrado-salida`:** al pulsarlo aparece el campo `input-cliente-libre-salida` (antes siempre visible) y recibe el foco. El nombre escrito se sigue guardando como `CLIENTE: NOMBRE` dentro de `observaciones`. El botón **no crea clientes en la base**: como la salida exige un cliente registrado por FK, si no hay uno elegido se pide escoger uno de la lista solo como referencia.
+  - Borrador, "Continuar", F10, flechas, cámara, producto nuevo arriba, nombres libres del bien, paginación y estilo quedan intactos. Al elegir un cliente de la lista no se borra un nombre libre ya escrito.
+  - **`flechasEspaciales.ts`:** se volvió a agregar la excepción `data-permitir-salto-enter` (se había perdido al restaurar 177 en la fase 181) para que la Regla 9 no devuelva el foco y el Enter del buscador elija la sugerencia.
+- **Prueba:** `prueba-adaptiva-salida-caja-agenda.mjs` ampliada: comprueba el buscador, que el campo libre esté oculto hasta pulsar el botón, que se pueda escribir el nombre, que salgan sugerencias y que **↓ + Enter elija el cliente y cierre el desplegable**, en 390/768/1366/1920. Resultado: **83 comprobaciones, 0 fallos, 0 sin datos/no probadas**. `npm run build` limpio.
+- **Desplegado solo en Nego** con `node ai-scripts/deploy.cjs siumax` (21 archivos). Sin Evicamp, sin push, sin pasada oficial ni Fase 5. SQL y base intactos.
+- **No hecho:** el pedido pospuesto de salidas pendientes en Agenda sigue en espera; no se retomó ni se volvió a preguntar.
+
+---
+
 ## 18/11/2026 (181) · OpenCode (Big Pickle) — Volvemos al comienzo: se descartan 178, 179 y 180 y Nueva salida queda como en 177 (HECHO, probado y desplegado solo en Nego)
 - **Dueño:** después de ver la fase 180 dijo *"no me gusto dejalo como estaba antes"*. Ante la duda de cuál "antes", se le preguntó y eligió **"Ventana flotante original (177)"**, y añadió **"desde el comienzo"**. Es decir: sin pasos, sin sub sesión y sin tres apartados.
 - **Hecho (solo Nego, sin SQL ni base):**
