@@ -61,7 +61,6 @@ try {
 
       // 178: debe ser una sub sesión grande dentro de Salidas, no una ventana flotante ni una lista debajo.
       const formaSesion = await page.$eval('#modal-nueva-salida-container', (el) => {
-        const grilla = el.querySelector('[data-grilla-salida="true"]');
         const envoltorio = document.getElementById('sub-sesion-nueva-salida');
         return {
           flotante: !!el.closest('.fixed.inset-0'),
@@ -70,7 +69,6 @@ try {
           maxH: getComputedStyle(el).maxHeight,
           ancho: el.getBoundingClientRect().width,
           anchoDisponible: envoltorio ? envoltorio.getBoundingClientRect().width : 0,
-          columnas: grilla ? getComputedStyle(grilla).gridTemplateColumns.split(' ').filter(Boolean).length : 0,
         };
       });
       ok(`Salida ${t.nombre}: sub sesión, no ventana flotante`,
@@ -78,67 +76,167 @@ try {
       ok(`Salida ${t.nombre}: ancho completo sin alto máximo`,
         formaSesion.ancho >= formaSesion.anchoDisponible - 4 && (formaSesion.maxH === 'none' || formaSesion.maxH === ''),
         `ancho ${Math.round(formaSesion.ancho)} de ${Math.round(formaSesion.anchoDisponible)} disponibles, maxH ${formaSesion.maxH}`);
-      const columnasEsperadas = t.w < 768 ? 1 : t.w < 1280 ? 2 : 3;
-      ok(`Salida ${t.nombre}: ${columnasEsperadas} columna(s) amplia(s)`,
-        formaSesion.columnas === columnasEsperadas, `columnas ${formaSesion.columnas}`);
       ok(`Salida ${t.nombre}: botones Volver arriba y abajo`,
         (await existe('#btn-volver-lista-salida')) && (await existe('#btn-volver-lista-footer-salida')));
-
-      ok(`Salida ${t.nombre}: nombre libre de cliente`, await existe('#input-cliente-libre-salida'));
-      ok(`Salida ${t.nombre}: botón de cámara`, await existe('#btn-escaner-salida'));
-      ok(`Salida ${t.nombre}: opción "Otro" en lo que se atiende`,
-        await page.$eval('#select-bien-salida', (el) => Array.from(el.options).some((o) => o.value === 'otro')));
-
-      // El selector de "lo que se atiende" está deshabilitado hasta elegir cliente: elegimos el primero.
-      const primerCliente = await page.$eval('#select-cliente-salida', (el) => {
-        const op = Array.from(el.options).find((o) => o.value && !o.disabled);
-        return op ? op.value : '';
-      });
-      if (primerCliente) await page.select('#select-cliente-salida', primerCliente);
-      await pausa(300);
-      await page.select('#select-bien-salida', 'otro');
-      await pausa(200);
-      ok(`Salida ${t.nombre}: aparece el nombre libre de lo que se atiende`, await existe('#input-bien-libre-salida'));
-      await page.select('#select-bien-salida', '');
 
       const estilo = await page.$eval('#modal-nueva-salida-container', (el) => ({
         radius: getComputedStyle(el).borderTopLeftRadius,
       }));
       ok(`Salida ${t.nombre}: estilo sobrio sin esquinas`, estilo.radius === '0px', estilo.radius);
 
-      const buscador = await page.$eval('#input-buscar-producto-salida', (el) => ({
-        minH: parseFloat(getComputedStyle(el).minHeight) || 0,
-        sticky: getComputedStyle(el.parentElement?.parentElement || el).position,
-      }));
-      if (celular) ok(`Salida ${t.nombre}: buscador grande y fijo arriba`, buscador.minH >= 44 && buscador.sticky === 'sticky', `minH ${buscador.minH}, ${buscador.sticky}`);
-      else ok(`Salida ${t.nombre}: buscador presente`, true, `minH ${buscador.minH}`);
+      if (celular) {
+        /* ===== FASE 179: tres apartados grandes, buscador legible y tarjetas de materiales ===== */
+        const focoAlAbrir = await foco();
+        ok('Salida celular: abre con el foco en el buscador', focoAlAbrir === 'input-buscar-producto-salida', focoAlAbrir);
 
-      // Producto nuevo entra arriba: escribir, Enter para elegir, Enter en cantidad para agregar
-      try {
-        const nominal = await page.$eval('#input-buscar-producto-salida', (el) => el.placeholder.length > 0);
-        if (nominal) {
-          await page.focus('#input-buscar-producto-salida');
-          await page.keyboard.type('a');
-          await pausa(400);
-          const sugerencias = await page.$$('[id^="sugerencia-salida-"]');
-          if (sugerencias.length) {
-            const nombre = await sugerencias[0].evaluate((el) => el.innerText.split('\n')[0].trim());
-            await page.keyboard.press('Enter');
-            await pausa(200);
-            await page.focus('#input-cant-item-salida');
-            await page.keyboard.press('Enter');
-            await pausa(300);
-            const primera = await page.$eval('table[data-tabla-campos] tbody tr:first-child td:nth-child(3)', (el) => el.innerText.trim());
-            ok(`Salida ${t.nombre}: producto nuevo entra arriba`, primera.toUpperCase().includes(nombre.toUpperCase().slice(0, 8)), `${primera} vs ${nombre}`);
-            // Quitar el material para no dejar datos en el borrador
-            await page.click('table[data-tabla-campos] tbody tr:first-child td:last-child button');
-            await pausa(200);
-          } else {
-            res.push(`➖ Salida ${t.nombre}: sin sugerencias con "a", orden no probado`);
+        const apartados = await page.evaluate(() => ({
+          buscar: !!document.getElementById('apartado-buscar-salida'),
+          materialesBoton: !!document.getElementById('btn-apartado-materiales-salida'),
+          datosBoton: !!document.getElementById('btn-apartado-datos-salida'),
+          activo: document.querySelector('[data-apartado-activo="true"]')?.id || '',
+          datosPresente: !!document.getElementById('apartado-datos-salida'),
+        }));
+        ok('Salida celular: tres apartados con stepper',
+          apartados.buscar && apartados.materialesBoton && apartados.datosBoton && apartados.activo === 'btn-apartado-buscar-salida');
+        ok('Salida celular: solo se muestra el apartado activo', !apartados.datosPresente);
+
+        const buscador = await page.$eval('#input-buscar-producto-salida', (el) => {
+          const caja = el.getBoundingClientRect();
+          const cont = document.getElementById('apartado-buscar-salida').getBoundingClientRect();
+          const camara = document.getElementById('btn-escaner-salida');
+          const cant = document.getElementById('input-cant-item-salida');
+          return {
+            ancho: caja.width,
+            anchoCont: cont.width,
+            alto: caja.height,
+            fuente: parseFloat(getComputedStyle(el).fontSize),
+            mismoRenglonCamara: camara ? camara.parentElement === el.parentElement : true,
+            mismoRenglonCant: cant ? cant.parentElement === el.parentElement : true,
+          };
+        });
+        ok('Salida celular: buscador a todo el ancho',
+          buscador.ancho >= buscador.anchoCont - 40, `${Math.round(buscador.ancho)} de ${Math.round(buscador.anchoCont)}`);
+        ok('Salida celular: buscador grande y legible',
+          buscador.alto >= 48 && buscador.fuente >= 15, `alto ${Math.round(buscador.alto)}, fuente ${buscador.fuente}`);
+        ok('Salida celular: cámara y cantidad en otro renglón',
+          !buscador.mismoRenglonCamara && !buscador.mismoRenglonCant);
+
+        // Producto nuevo entra arriba: escribir, Enter para elegir, Enter en cantidad para agregar.
+        try {
+          const nominal = await page.$eval('#input-buscar-producto-salida', (el) => el.placeholder.length > 0);
+          if (nominal) {
+            await page.focus('#input-buscar-producto-salida');
+            await page.keyboard.type('a');
+            await pausa(400);
+            const sugerencias = await page.$$('[id^="sugerencia-salida-"]');
+            if (sugerencias.length) {
+              const nombre = await sugerencias[0].evaluate((el) => el.innerText.split('\n')[0].trim());
+              await page.keyboard.press('Enter');
+              await pausa(200);
+              await page.focus('#input-cant-item-salida');
+              await page.keyboard.press('Enter');
+              await pausa(300);
+              ok('Salida celular: Enter agrega sin salir del buscador',
+                await existe('#apartado-buscar-salida') && (await foco()) === 'input-buscar-producto-salida', await foco());
+
+              await page.click('#btn-apartado-materiales-salida');
+              await pausa(250);
+              const tarjeta = await page.$eval('[data-material-card]', (el) => ({
+                nombre: el.getAttribute('data-material-nombre') || '',
+                alto: el.getBoundingClientRect().height,
+                ancho: el.getBoundingClientRect().width,
+                cont: document.getElementById('apartado-materiales-salida').getBoundingClientRect().width,
+              }));
+              ok('Salida celular: materiales en tarjetas grandes',
+                !!tarjeta.nombre && tarjeta.alto >= 90 && tarjeta.ancho >= tarjeta.cont - 20,
+                `${tarjeta.nombre} · ${Math.round(tarjeta.ancho)}x${Math.round(tarjeta.alto)}`);
+              ok('Salida celular: producto nuevo entra arriba',
+                tarjeta.nombre.toUpperCase().includes(nombre.toUpperCase().slice(0, 8)), `${tarjeta.nombre} vs ${nombre}`);
+              await page.click('[data-material-card] button[title="Quitar material"]');
+              await pausa(200);
+            } else {
+              res.push('➖ Salida celular: sin sugerencias con "a", orden no probado');
+            }
           }
+        } catch (e) {
+          res.push(`➖ Salida celular: tarjetas no probadas (${e.message.slice(0, 180)})`);
         }
-      } catch (e) {
-        res.push(`➖ Salida ${t.nombre}: orden de producto no probado (${e.message.slice(0, 180)})`);
+
+        await page.click('#btn-apartado-datos-salida');
+        await pausa(250);
+        ok('Salida celular: stepper abre el apartado Datos', await existe('#apartado-datos-salida'));
+        const columnas = await page.$eval('[data-grilla-salida="true"]', (el) =>
+          getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length);
+        ok('Salida celular: datos en una sola columna', columnas === 1, `columnas ${columnas}`);
+        ok('Salida celular: nombre libre de cliente', await existe('#input-cliente-libre-salida'));
+        ok('Salida celular: opción "Otro" en lo que se atiende',
+          await page.$eval('#select-bien-salida', (el) => Array.from(el.options).some((o) => o.value === 'otro')));
+        const campoDatos = await page.$eval('#select-cliente-salida', (el) => ({
+          alto: el.getBoundingClientRect().height,
+          fuente: parseFloat(getComputedStyle(el).fontSize),
+        }));
+        ok('Salida celular: campos de datos grandes', campoDatos.alto >= 48 && campoDatos.fuente >= 14,
+          `alto ${Math.round(campoDatos.alto)}, fuente ${campoDatos.fuente}`);
+        await page.click('#btn-apartado-buscar-salida');
+        await pausa(200);
+        ok('Salida celular: vuelve al apartado Buscar', await existe('#apartado-buscar-salida'));
+      } else {
+        /* ===== FASE 178: tablet, laptop y PC quedan como estaban ===== */
+        const columnas = await page.$eval('[data-grilla-salida="true"]', (el) =>
+          getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length);
+        const columnasEsperadas = t.w < 1280 ? 2 : 3;
+        ok(`Salida ${t.nombre}: ${columnasEsperadas} columna(s) amplia(s)`,
+          columnas === columnasEsperadas, `columnas ${columnas}`);
+        ok(`Salida ${t.nombre}: nombre libre de cliente`, await existe('#input-cliente-libre-salida'));
+        ok(`Salida ${t.nombre}: botón de cámara`, await existe('#btn-escaner-salida'));
+        ok(`Salida ${t.nombre}: opción "Otro" en lo que se atiende`,
+          await page.$eval('#select-bien-salida', (el) => Array.from(el.options).some((o) => o.value === 'otro')));
+
+        // El selector de "lo que se atiende" está deshabilitado hasta elegir cliente: elegimos el primero.
+        const primerCliente = await page.$eval('#select-cliente-salida', (el) => {
+          const op = Array.from(el.options).find((o) => o.value && !o.disabled);
+          return op ? op.value : '';
+        });
+        if (primerCliente) await page.select('#select-cliente-salida', primerCliente);
+        await pausa(300);
+        await page.select('#select-bien-salida', 'otro');
+        await pausa(200);
+        ok(`Salida ${t.nombre}: aparece el nombre libre de lo que se atiende`, await existe('#input-bien-libre-salida'));
+        await page.select('#select-bien-salida', '');
+
+        const buscador = await page.$eval('#input-buscar-producto-salida', (el) => ({
+          minH: parseFloat(getComputedStyle(el).minHeight) || 0,
+          sticky: getComputedStyle(el.parentElement?.parentElement || el).position,
+        }));
+        ok(`Salida ${t.nombre}: buscador presente`, true, `minH ${buscador.minH}, ${buscador.sticky}`);
+
+        // Producto nuevo entra arriba: escribir, Enter para elegir, Enter en cantidad para agregar
+        try {
+          const nominal = await page.$eval('#input-buscar-producto-salida', (el) => el.placeholder.length > 0);
+          if (nominal) {
+            await page.focus('#input-buscar-producto-salida');
+            await page.keyboard.type('a');
+            await pausa(400);
+            const sugerencias = await page.$$('[id^="sugerencia-salida-"]');
+            if (sugerencias.length) {
+              const nombre = await sugerencias[0].evaluate((el) => el.innerText.split('\n')[0].trim());
+              await page.keyboard.press('Enter');
+              await pausa(200);
+              await page.focus('#input-cant-item-salida');
+              await page.keyboard.press('Enter');
+              await pausa(300);
+              const primera = await page.$eval('table[data-tabla-campos] tbody tr:first-child td:nth-child(3)', (el) => el.innerText.trim());
+              ok(`Salida ${t.nombre}: producto nuevo entra arriba`, primera.toUpperCase().includes(nombre.toUpperCase().slice(0, 8)), `${primera} vs ${nombre}`);
+              // Quitar el material para no dejar datos en el borrador
+              await page.click('table[data-tabla-campos] tbody tr:first-child td:last-child button');
+              await pausa(200);
+            } else {
+              res.push(`➖ Salida ${t.nombre}: sin sugerencias con "a", orden no probado`);
+            }
+          }
+        } catch (e) {
+          res.push(`➖ Salida ${t.nombre}: orden de producto no probado (${e.message.slice(0, 180)})`);
+        }
       }
       await page.keyboard.press('Escape');
       await pausa(400);

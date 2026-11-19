@@ -68,6 +68,23 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   onSuccess,
 }) => {
   const esSesion = modo === 'sesion';
+  // Fase 179 (18/11/2026): en celular, dentro de la sub sesión, el formulario se parte en tres apartados grandes
+  // (Buscar / Materiales / Datos) para que el buscador se vea completo y no quede apretado en una sola fila.
+  // Tablet, laptop y PC siguen exactamente igual que en la fase 178.
+  const [esMovil, setEsMovil] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+  );
+  const [apartadoActivo, setApartadoActivo] = useState<'buscar' | 'materiales' | 'datos'>('buscar');
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const cambiar = (e: MediaQueryListEvent) => setEsMovil(e.matches);
+    if (typeof mq.addEventListener === 'function') {
+      mq.addEventListener('change', cambiar);
+      return () => mq.removeEventListener('change', cambiar);
+    }
+    (mq as any).addListener(cambiar);
+    return () => (mq as any).removeListener(cambiar);
+  }, []);
   useCerrarConEscape(isOpen, onClose);
 
   // Form State
@@ -200,10 +217,13 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         }
       }
       setTimeout(() => {
-        document.getElementById('select-tipo-salida')?.focus();
+        // En celular el primer campo útil es el buscador (fase 179); si enfocáramos "Tipo de trabajo" abajo,
+        // el teclado virtual empujaría la vista y el trabajador no vería lo que escribe.
+        const id = esMovil && esSesion ? 'input-buscar-producto-salida' : 'select-tipo-salida';
+        document.getElementById(id)?.focus();
       }, 50);
     }
-  }, [isOpen, salidaRaiz, datosIniciales]);
+  }, [isOpen, salidaRaiz, datosIniciales, esMovil, esSesion]);
 
   // Auto-guardado en tiempo real en localStorage (Regla: "Que se guarde todo")
   useEffect(() => {
@@ -263,6 +283,12 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     setTimeout(() => {
       document.getElementById('select-cliente-salida')?.focus();
     }, 50);
+  };
+
+  // Fase 179: en celular, llevar al trabajador al apartado donde está el campo que falta, sin perder lo ya escrito.
+  const irAApartado = (apartado: 'buscar' | 'materiales' | 'datos', enfocar?: string) => {
+    setApartadoActivo(apartado);
+    if (enfocar) setTimeout(() => document.getElementById(enfocar)?.focus(), 60);
   };
 
   const cargarCatalogos = async () => {
@@ -525,16 +551,19 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   const handleGuardarSalida = async () => {
     if (!customerId) {
       avisar('Selecciona el cliente');
-      document.getElementById('select-cliente-salida')?.focus();
+      if (esMovil && esSesion) irAApartado('datos', 'select-cliente-salida');
+      else document.getElementById('select-cliente-salida')?.focus();
       return;
     }
     if (trabajadoresSeleccionados.length === 0) {
       avisar('Asigna al menos un trabajador a la salida');
+      if (esMovil && esSesion) irAApartado('datos');
       return;
     }
     if (items.length === 0) {
       avisar('Agrega al menos un material o repuesto a la salida');
-      inputBuscarRef.current?.focus();
+      if (esMovil && esSesion) irAApartado('buscar', 'input-buscar-producto-salida');
+      else inputBuscarRef.current?.focus();
       return;
     }
 
@@ -611,6 +640,571 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
 
   const totalUnidades = items.reduce((acc, it) => acc + it.cantidad, 0);
   const totalCosto = items.reduce((acc, it) => acc + it.cantidad * it.costo_unitario, 0);
+
+  /* ==========================================================================================
+     FASE 179 — DISEÑO EXCLUSIVO DE CELULAR DENTRO DE LA SUB SESIÓN
+     Tres apartados grandes (Buscar / Materiales / Datos) como en Caja:
+       1) Buscar: buscador a TODO el ancho y con letra grande; cámara, cantidad y Agregar en otro renglón.
+       2) Materiales: tarjetas grandes en vez de la tabla comprimida; cantidad con botones -/+.
+       3) Datos: cliente, bien, dirección, fecha, personal y observaciones, uno debajo del otro.
+     El stepper de arriba permite saltar de uno a otro sin bajar por toda la página.
+     Tablet, laptop y PC siguen con el layout de la fase 178 (más abajo, sin tocar).
+     ========================================================================================== */
+  if (esSesion && esMovil) {
+    const clsBotonApartado =
+      'min-h-[52px] px-1 py-2 border-2 border-[var(--color-ink)] font-black uppercase tracking-wide text-[11px] sm:text-xs cursor-pointer rounded-none flex flex-col items-center justify-center gap-0.5 transition-colors';
+    const clsCampo =
+      'w-full p-3 sm:p-4 min-h-[52px] text-base sm:text-lg border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] rounded-none';
+
+    return (
+      <div
+        id="sub-sesion-nueva-salida"
+        data-dialogo-sistema="sub-sesion-salidas"
+        data-evitar-iman-teclado="true"
+        className="w-full font-mono"
+      >
+        <div
+          id="modal-nueva-salida-container"
+          data-evitar-foco-auto="true"
+          className="ventana-sobria bg-[var(--color-surface)] w-full border-2 border-[var(--color-ink)] flex flex-col"
+        >
+          {/* Cabecera compacta para celular */}
+          <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera px-3 py-3 flex items-center justify-between gap-2 shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="ventana-cabecera__icono"><Truck size={20} /></div>
+              <div className="min-w-0">
+                <h2 className="ventana-cabecera__titulo truncate">
+                  {salidaRaiz ? `Continuar ${salidaRaiz.codigo}` : 'Punto de Salida'}
+                </h2>
+                <p className="ventana-cabecera__subtitulo truncate">
+                  {tieneBorrador && !salidaRaiz ? '✓ Borrador guardado · ' : ''}F10 o Ctrl+Enter para Guardar
+                </p>
+              </div>
+            </div>
+            <button
+              id="btn-volver-lista-salida"
+              type="button"
+              onClick={onClose}
+              title="Volver a la lista de salidas (Escape)"
+              className="shrink-0 px-3 py-2 border-2 border-[var(--color-border)] bg-[var(--color-surface)] font-black uppercase hover:border-[var(--color-ink)] cursor-pointer rounded-none text-[11px]"
+            >
+              ← Lista
+            </button>
+          </div>
+
+          {/* Stepper: se queda arriba para cambiar de apartado con un toque */}
+          <div className="sticky top-0 z-20 grid grid-cols-3 gap-1.5 bg-[var(--color-bg)] p-2 border-b-2 border-[var(--color-ink)]">
+            <button
+              id="btn-apartado-buscar-salida"
+              type="button"
+              data-apartado-activo={apartadoActivo === 'buscar' ? 'true' : undefined}
+              aria-pressed={apartadoActivo === 'buscar'}
+              onClick={() => irAApartado('buscar', 'input-buscar-producto-salida')}
+              className={`${clsBotonApartado} ${apartadoActivo === 'buscar' ? 'bg-[var(--color-ink)] text-white' : 'bg-[var(--color-surface)] text-[var(--color-ink)]'}`}
+            >
+              <span className="text-sm">⌕</span><span>1 · Buscar</span>
+            </button>
+            <button
+              id="btn-apartado-materiales-salida"
+              type="button"
+              data-apartado-activo={apartadoActivo === 'materiales' ? 'true' : undefined}
+              aria-pressed={apartadoActivo === 'materiales'}
+              onClick={() => setApartadoActivo('materiales')}
+              className={`${clsBotonApartado} ${apartadoActivo === 'materiales' ? 'bg-[var(--color-ink)] text-white' : 'bg-[var(--color-surface)] text-[var(--color-ink)]'}`}
+            >
+              <span className="text-sm">▤</span><span>2 · Materiales ({items.length})</span>
+            </button>
+            <button
+              id="btn-apartado-datos-salida"
+              type="button"
+              data-apartado-activo={apartadoActivo === 'datos' ? 'true' : undefined}
+              aria-pressed={apartadoActivo === 'datos'}
+              onClick={() => setApartadoActivo('datos')}
+              className={`${clsBotonApartado} ${apartadoActivo === 'datos' ? 'bg-[var(--color-ink)] text-white' : 'bg-[var(--color-surface)] text-[var(--color-ink)]'}`}
+            >
+              <span className="text-sm">✎</span><span>3 · Datos</span>
+            </button>
+          </div>
+
+          <div className="p-3 space-y-3">
+            {/* ---------------- 1) APARTADO BUSCAR ---------------- */}
+            {apartadoActivo === 'buscar' && (
+              <section id="apartado-buscar-salida" data-permitir-salto-enter="true" className="border-2 border-[var(--color-ink)] bg-[var(--color-bg)] p-3 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-border)] pb-2">
+                  <div className="flex items-center gap-2">
+                    <Zap size={18} className="text-[var(--color-accent)]" />
+                    <h3 className="font-black uppercase tracking-wider text-sm text-[var(--color-ink)]">
+                      Buscar material o repuesto
+                    </h3>
+                  </div>
+                  {tieneBorrador && !salidaRaiz && (
+                    <button
+                      type="button"
+                      onClick={limpiarBorrador}
+                      title="Borrar borrador guardado y empezar en blanco"
+                      className="flex items-center gap-1 text-[11px] text-[var(--color-muted)] hover:text-red-600 font-bold uppercase cursor-pointer"
+                    >
+                      <RotateCcw size={12} /> Limpiar borrador
+                    </button>
+                  )}
+                </div>
+
+                <label className="flex items-center gap-2 cursor-pointer font-bold text-xs sm:text-sm min-h-[36px]">
+                  <input
+                    id="check-material-externo-salida"
+                    type="checkbox"
+                    checked={esExterno}
+                    onChange={(e) => setEsExterno(e.target.checked)}
+                    className="w-5 h-5 rounded-none accent-[var(--color-ink)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)]"
+                  />
+                  <span>Material fuera de almacén</span>
+                </label>
+
+                {esExterno ? (
+                  <div className="space-y-2">
+                    <input
+                      ref={inputBuscarRef}
+                      id="input-desc-material-externo"
+                      type="text"
+                      value={descExterno}
+                      onChange={(e) => setDescExterno(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
+                      placeholder="Descripción del material..."
+                      className={clsCampo}
+                      autoComplete="off"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={unidadExterno}
+                        onChange={(e) => setUnidadExterno(e.target.value)}
+                        placeholder="Unidad (UNID, M, KG)"
+                        className={clsCampo}
+                      />
+                      <input
+                        id="input-cant-item-externo"
+                        type="number"
+                        step="any"
+                        value={cantItem}
+                        onChange={(e) => setCantItem(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') { e.preventDefault(); handleAgregarItem(); }
+                        }}
+                        placeholder="Cantidad"
+                        className={`${clsCampo} text-center`}
+                      />
+                    </div>
+                    <button
+                      id="btn-agregar-item-externo"
+                      type="button"
+                      onClick={handleAgregarItem}
+                      className="w-full min-h-[54px] bg-[var(--color-ink)] text-white font-black uppercase text-base flex items-center justify-center gap-2 hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] cursor-pointer rounded-none"
+                    >
+                      <Plus size={18} /> Agregar material
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {/* Renglón 1: el buscador SOLO, a todo el ancho y con letra grande. */}
+                    <div className="relative">
+                      <input
+                        ref={inputBuscarRef}
+                        id="input-buscar-producto-salida"
+                        type="text"
+                        value={busquedaProd}
+                        onChange={(e) => {
+                          setBusquedaProd(e.target.value);
+                          setProdSeleccionado(null);
+                        }}
+                        onKeyDown={handleKeyDownBuscador}
+                        placeholder="Escribe el nombre o escanea el código..."
+                        className={`${clsCampo} pr-12`}
+                        autoComplete="off"
+                      />
+                      <Search size={22} className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
+                    </div>
+
+                    {/* Renglón 2: cámara, cantidad y Agregar, cada uno con su espacio. */}
+                    <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-center">
+                      <BotonEscanerCelular
+                        id="btn-escaner-salida"
+                        variante="compacto"
+                        titulo="Escanear código del producto con la cámara"
+                        onScan={handleScanCamara}
+                      />
+                      <input
+                        ref={inputCantRef}
+                        id="input-cant-item-salida"
+                        type="number"
+                        step="any"
+                        min="0.001"
+                        value={cantItem}
+                        onChange={(e) => setCantItem(e.target.value)}
+                        onKeyDown={handleKeyDownCant}
+                        placeholder="Cant."
+                        className={`${clsCampo} text-center px-1`}
+                      />
+                      <button
+                        id="btn-agregar-material-salida"
+                        type="button"
+                        onClick={handleAgregarItem}
+                        className="min-h-[52px] px-3 bg-[var(--color-ink)] text-white font-black uppercase text-xs flex items-center justify-center gap-1.5 hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] cursor-pointer rounded-none"
+                      >
+                        <Plus size={18} /> Agregar
+                      </button>
+                    </div>
+
+                    {/* Sugerencias (mismo teclado de siempre: ↑ ↓ eligen, Enter pasa a cantidad) */}
+                    {prodsFiltrados.length > 0 && !prodSeleccionado && (
+                      <div className="border-2 border-[var(--color-ink)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)] max-h-[45dvh] overflow-y-auto">
+                        {prodsFiltrados.map((p, idx) => {
+                          const activo = idx === indiceSugerencia;
+                          return (
+                            <div
+                              key={p.id}
+                              id={`sugerencia-salida-${idx}`}
+                              onClick={() => seleccionarProducto(p)}
+                              className={`p-3 cursor-pointer flex items-center gap-3 transition-colors ${activo ? 'bg-[var(--color-accent)] text-[var(--color-ink)]' : 'hover:bg-[var(--color-bg)]'}`}
+                            >
+                              <FotoMiniatura src={fotoProducto(p.id, p.image_path)} tamano="w-16 h-16" nombre={p.name} />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-base font-black uppercase leading-tight text-[var(--color-ink)] break-words">{p.name}</p>
+                                <p className="mt-1 text-[11px] font-bold flex flex-wrap items-center gap-2 text-[var(--color-muted)]">
+                                  {p.code && <span className="px-1 py-0.5 bg-black/10 border border-black/20 text-[var(--color-ink)]">{p.code}</span>}
+                                  <span>{p.unit || 'UNID'} · S/ {Number(p.cost_price || 0).toFixed(2)}</span>
+                                  <span className={p.quantity <= 0 ? 'text-[var(--color-error)] font-black' : ''}>
+                                    {p.quantity <= 0 ? 'AGOTADO' : `Stock: ${p.quantity}`}
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {prodSeleccionado && (
+                      <div className="p-2 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-between gap-2">
+                        <span className="text-[var(--color-ink)] flex items-center gap-2 min-w-0 text-xs font-bold">
+                          <FotoMiniatura src={fotoProducto(prodSeleccionado.id, prodSeleccionado.image_path)} tamano="w-10 h-10" nombre={prodSeleccionado.name} />
+                          <span className="truncate">✓ <strong className="uppercase">{prodSeleccionado.name}</strong></span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProdSeleccionado(null);
+                            setBusquedaProd('');
+                            inputBuscarRef.current?.focus();
+                          }}
+                          className="shrink-0 text-[11px] text-red-600 underline font-bold cursor-pointer"
+                        >
+                          Cambiar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {items.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setApartadoActivo('materiales')}
+                    className="w-full min-h-[48px] border-2 border-[var(--color-ink)] bg-[var(--color-surface)] font-black uppercase text-xs hover:bg-[var(--color-ink)] hover:text-white cursor-pointer rounded-none"
+                  >
+                    Ver {items.length} material(es) agregado(s) →
+                  </button>
+                )}
+              </section>
+            )}
+
+            {/* ---------------- 2) APARTADO MATERIALES ---------------- */}
+            {apartadoActivo === 'materiales' && (
+              <section id="apartado-materiales-salida" className="space-y-3">
+                <div className="flex items-center justify-between gap-2 border-2 border-[var(--color-ink)] bg-[var(--color-ink)] text-white p-3">
+                  <h3 className="font-black uppercase tracking-wider text-sm">
+                    Materiales agregados ({items.length})
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => irAApartado('buscar', 'input-buscar-producto-salida')}
+                    className="px-3 py-2 min-h-[40px] bg-[var(--color-surface)] text-[var(--color-ink)] font-black uppercase text-[11px] cursor-pointer rounded-none"
+                  >
+                    + Agregar más
+                  </button>
+                </div>
+
+                {items.length > 0 ? (
+                  <div className="space-y-2" data-tabla-campos>
+                    {items.map((it, idx) => (
+                      <div
+                        key={idx}
+                        data-material-card
+                        data-material-nombre={it.descripcion}
+                        className="border-2 border-[var(--color-ink)] bg-[var(--color-surface)] p-3 space-y-3"
+                      >
+                        <div className="flex items-start gap-3">
+                          <FotoMiniatura
+                            src={it.es_externo ? '' : fotoProducto(it.product_id, productos.find((p) => p.id === it.product_id)?.image_path)}
+                            tamano="w-16 h-16"
+                            nombre={it.descripcion}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-base font-black uppercase leading-tight break-words">{it.descripcion}</p>
+                            {it.es_externo && (
+                              <span className="inline-block mt-1 text-[9px] bg-amber-100 text-amber-800 px-1 py-0.5 border border-amber-300 font-black">EXTERNO</span>
+                            )}
+                            <p className="mt-1 text-[11px] font-bold text-[var(--color-muted)]">
+                              {it.unidad} · S/ {it.costo_unitario.toFixed(2)} c/u
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleEliminarItem(idx)}
+                            title="Quitar material"
+                            className="shrink-0 w-11 h-11 flex items-center justify-center text-red-600 border-2 border-[var(--color-border)] hover:border-red-600 cursor-pointer rounded-none"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2 border-t border-[var(--color-border)] pt-2">
+                          <button
+                            type="button"
+                            onClick={() => handlePasoCantidad(idx, -1)}
+                            title="Restar 1"
+                            className="w-12 h-12 shrink-0 flex items-center justify-center border-2 border-[var(--color-border)] hover:bg-[var(--color-ink)] hover:text-white font-mono font-black text-xl cursor-pointer rounded-none"
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            step="any"
+                            min="0.001"
+                            value={it.cantidad}
+                            onChange={(e) => handleModificarCantidad(idx, parseFloat(e.target.value))}
+                            className="flex-1 min-w-0 p-2 min-h-[48px] text-lg text-center font-black border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none rounded-none bg-[var(--color-surface)]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handlePasoCantidad(idx, 1)}
+                            title="Sumar 1"
+                            className="w-12 h-12 shrink-0 flex items-center justify-center border-2 border-[var(--color-border)] hover:bg-[var(--color-ink)] hover:text-white font-mono font-black text-xl cursor-pointer rounded-none"
+                          >
+                            +
+                          </button>
+                          <span className="shrink-0 text-right font-black text-sm w-24">
+                            S/ {(it.cantidad * it.costo_unitario).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="bg-[var(--color-ink)] text-white p-3 flex flex-wrap items-center justify-between gap-1 font-black text-xs">
+                      <span>TOTAL: {items.length} material(es)</span>
+                      <span>{totalUnidades} unid. · S/ {totalCosto.toFixed(2)}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center border-2 border-dashed border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)] space-y-3">
+                    <p className="font-bold uppercase text-xs">Aún no hay materiales agregados</p>
+                    <button
+                      type="button"
+                      onClick={() => irAApartado('buscar', 'input-buscar-producto-salida')}
+                      className="px-4 py-3 min-h-[48px] bg-[var(--color-ink)] text-white font-black uppercase text-xs cursor-pointer rounded-none"
+                    >
+                      Ir a buscar materiales →
+                    </button>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* ---------------- 3) APARTADO DATOS ---------------- */}
+            {apartadoActivo === 'datos' && (
+              <section id="apartado-datos-salida" className="space-y-3" data-grilla-salida="true">
+                <div className="border-2 border-[var(--color-ink)] bg-[var(--color-ink)] text-white p-3">
+                  <h3 className="font-black uppercase tracking-wider text-sm">Datos de la salida</h3>
+                </div>
+
+                <div className="space-y-3 border-2 border-[var(--color-border)] bg-[var(--color-surface)] p-3">
+                  <div>
+                    <label className="block font-black uppercase text-[var(--color-ink)] mb-1 text-xs">Tipo de Trabajo *</label>
+                    <select
+                      id="select-tipo-salida"
+                      value={tipo}
+                      onChange={(e) => setTipo(e.target.value as TipoSalida)}
+                      onKeyDown={(e) => handleKeyDownForm(e, 'select-tipo-salida')}
+                      className={`${clsCampo} min-h-[54px]`}
+                    >
+                      <option value="SERVICIO">SERVICIO (MANTENIMIENTO / PUNTUAL)</option>
+                      <option value="OBRA">OBRA (INSTALACIÓN / PROYECTO)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-black uppercase text-[var(--color-ink)] mb-1 text-xs">Cliente *</label>
+                    <select
+                      id="select-cliente-salida"
+                      value={customerId}
+                      onChange={(e) => setCustomerId(e.target.value ? Number(e.target.value) : '')}
+                      onKeyDown={(e) => handleKeyDownForm(e, 'select-cliente-salida')}
+                      className={`${clsCampo} min-h-[54px]`}
+                      required
+                    >
+                      <option value="">-- SELECCIONAR CLIENTE --</option>
+                      {clientes.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} {c.dni || c.ruc ? `(${c.dni || c.ruc})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      id="input-cliente-libre-salida"
+                      type="text"
+                      value={clienteLibre}
+                      onChange={(e) => setClienteLibre(e.target.value)}
+                      onKeyDown={(e) => handleKeyDownForm(e, 'input-cliente-libre-salida')}
+                      placeholder="Si no está en la lista, escribe aquí el nombre"
+                      title="El nombre se guarda como nota; elige un cliente registrado como referencia"
+                      className={`${clsCampo} mt-2`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-black uppercase text-[var(--color-ink)] mb-1 text-xs">Lo que se atiende</label>
+                    <select
+                      id="select-bien-salida"
+                      value={bienId}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setBienId(v === 'otro' ? 'otro' : v ? Number(v) : '');
+                      }}
+                      onKeyDown={(e) => handleKeyDownForm(e, 'select-bien-salida')}
+                      disabled={!customerId}
+                      className={`${clsCampo} min-h-[54px] disabled:opacity-50`}
+                    >
+                      <option value="">-- GENERAL / NO ESPECÍFICO --</option>
+                      {bienes.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.nombre} ({b.tipo}){b.estado && b.estado !== 'ACTIVO' ? ` [${b.estado}]` : ''}
+                        </option>
+                      ))}
+                      <option value="otro">OTRO: escribir el nombre</option>
+                    </select>
+                    {bienId === 'otro' && (
+                      <input
+                        id="input-bien-libre-salida"
+                        type="text"
+                        value={bienLibre}
+                        onChange={(e) => setBienLibre(e.target.value)}
+                        onKeyDown={(e) => handleKeyDownForm(e, 'input-bien-libre-salida')}
+                        placeholder="Nombre de lo que se atiende"
+                        title="El nombre se guarda como nota"
+                        className={`${clsCampo} mt-2`}
+                      />
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block font-black uppercase text-[var(--color-muted)] mb-1 text-xs">Dirección / Lugar de la obra</label>
+                    <input
+                      id="input-direccion-salida"
+                      type="text"
+                      value={direccion}
+                      onChange={(e) => setDireccion(e.target.value)}
+                      onKeyDown={(e) => handleKeyDownForm(e, 'input-direccion-salida')}
+                      placeholder="Ej. Urb. Las Flores Mz. B Lt. 4"
+                      className={clsCampo}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-black uppercase text-[var(--color-ink)] mb-1 text-xs">Fecha de Salida *</label>
+                    <input
+                      id="input-fecha-salida"
+                      type="date"
+                      value={fecha}
+                      onChange={(e) => setFecha(e.target.value)}
+                      onKeyDown={(e) => handleKeyDownForm(e, 'input-fecha-salida')}
+                      className={`${clsCampo} min-h-[54px]`}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-black uppercase text-[var(--color-ink)] mb-1 text-xs">Personal Técnico Asignado *</label>
+                    <div className="flex flex-wrap gap-2 p-2 border-2 border-[var(--color-border)] bg-[var(--color-bg)]">
+                      {trabajadores.length === 0 ? (
+                        <span className="text-[var(--color-muted)] text-xs">No hay trabajadores activos registrados</span>
+                      ) : (
+                        trabajadores.map((t) => {
+                          const sel = trabajadoresSeleccionados.includes(t.id);
+                          return (
+                            <button
+                              key={t.id}
+                              type="button"
+                              onClick={() => toggleTrabajador(t.id)}
+                              className={`min-h-[44px] px-3 py-2 text-[11px] font-bold uppercase cursor-pointer border flex items-center gap-1.5 transition-colors rounded-none ${
+                                sel
+                                  ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]'
+                                  : 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-border)] hover:border-[var(--color-ink)]'
+                              }`}
+                            >
+                              {sel && <Check size={14} className="text-[var(--color-accent)]" />}
+                              <span>{t.nombre}</span>
+                              {t.cargo && <span className="text-[9px] opacity-75">({t.cargo})</span>}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-black uppercase text-[var(--color-muted)] mb-1 text-xs">Observaciones / Instrucciones</label>
+                    <input
+                      id="input-observaciones-salida"
+                      type="text"
+                      value={observaciones}
+                      onChange={(e) => setObservaciones(e.target.value)}
+                      placeholder="Ej. Llevar escalera de 4 metros..."
+                      className={clsCampo}
+                    />
+                  </div>
+                </div>
+              </section>
+            )}
+          </div>
+
+          {/* Footer fijo abajo con el resumen y Guardar siempre a la vista */}
+          <div className="bg-[var(--color-bg)] p-3 border-t-2 border-[var(--color-ink)] space-y-2 shrink-0">
+            <p className="text-[11px] font-bold text-[var(--color-muted)] text-center">
+              {items.length} material(es) listo(s) · {totalUnidades} unidad(es) · S/ {totalCosto.toFixed(2)}
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                id="btn-volver-lista-footer-salida"
+                type="button"
+                onClick={onClose}
+                title="Volver a la lista de salidas (Escape)"
+                className="min-h-[52px] px-2 border-2 border-[var(--color-border)] bg-[var(--color-surface)] font-black uppercase text-[11px] hover:bg-black/5 cursor-pointer rounded-none"
+              >
+                ← Volver
+              </button>
+              <button
+                id="btn-guardar-salida"
+                type="button"
+                disabled={guardando}
+                onClick={handleGuardarSalida}
+                title="Guardar salida de inmediato (F10 o Ctrl+Enter)"
+                className="min-h-[52px] px-2 bg-[var(--color-ink)] text-white font-black uppercase text-[11px] tracking-wide hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] cursor-pointer shadow-[3px_3px_0_0_var(--color-ink)] active:translate-x-0.5 active:translate-y-0.5 rounded-none disabled:opacity-60"
+              >
+                {guardando ? 'Guardando...' : 'Confirmar (F10)'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

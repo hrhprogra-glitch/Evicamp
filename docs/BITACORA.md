@@ -7,6 +7,21 @@
 
 ---
 
+## 18/11/2026 (179) · OpenCode (Big Pickle) — Celular de Nueva salida partido en tres apartados grandes: HECHO, probado y desplegado solo en Nego
+- **Dueño:** *"no me gusto en celular tambien se sigue viendo apretado mas con el buscador se ve pequeño nisiquiera ves lo que escribes sabes que podriamos probar lo que se hecho en caja hizo un apartado del buscador y otro de llenado de caja podriamos hacer lo mismo un apartado para el buscador otro donde se guardara y otro para llenar datos asi muy rápido a ver hazlo"*. El **"hazlo"** es el OK explícito: no hizo falta volver a pedir permiso.
+- **Hecho (solo Nego, sin SQL ni base):**
+  - `ModalNuevaSalida.tsx` detecta celular dentro de la sub sesión con `matchMedia('(max-width: 767px)')` (con listener por si giran el equipo) y devuelve **un layout propio solo cuando `esSesion && esMovil`**. Tablet, laptop y PC siguen con el layout de la fase 178 sin tocar una línea.
+  - **Tres apartados con stepper fijo arriba:** `1 · Buscar`, `2 · Materiales (n)` y `3 · Datos`, con ids `btn-apartado-*-salida` y secciones `apartado-*-salida`. Solo se muestra el activo; el stepper permite saltar de uno a otro con un toque.
+  - **Buscar:** el buscador quedó **solo en su renglón**, a todo el ancho y con letra grande (medido 310 px de 338, alto 54, fuente 17). Cámara, cantidad y **Agregar** pasaron a un segundo renglón. La cámara sigue siendo la de siempre, sin internet. Material externo y "Limpiar borrador" también caben completos.
+  - **Materiales:** en vez de la tabla comprimida, ahora son **tarjetas grandes** (`data-material-card` / `data-material-nombre`) con foto, nombre, botones −/+ de 48 px, cantidad editable y subtotal; el total general va al final.
+  - **Datos:** cliente, bien, dirección, fecha, personal y observaciones uno debajo del otro (`data-grilla-salida="true"`, 1 columna, campos de 54 px y fuente 17). El guardar y el resumen quedan fijos abajo.
+  - Conservados: ids, F10/Ctrl+Enter/Escape, flechas, `data-permitir-salto-enter` (ahora cubre todo el apartado Buscar), borrador, cámara sin internet, guardado con `fn_registrar_salida`, paginación de 50 y estilo SiuMax Sobrio sin esquinas. Al abrir en celular el foco va al **buscador**, no a "Tipo de trabajo". Si falta cliente, trabajador o material al guardar, el propio formulario salta al apartado correcto.
+- **Prueba:** `ai-scripts/pruebas/prueba-adaptiva-salida-caja-agenda.mjs` ampliada: **85 comprobaciones, 0 fallos, 0 sin datos/no probadas** en 390/768/1366/1920. En 390 mide el ancho y la letra del buscador, comprueba que cámara y cantidad están en otro renglón, verifica las tres secciones y el stepper, agrega un producto con Enter y lo ve como tarjeta, y navega entre apartados. En 768+ siguen intactas las comprobaciones de la fase 178. `npm run build` limpio; borrado el script temporal de capturas.
+- **Desplegado solo en Nego** con `node ai-scripts/deploy.cjs siumax` (21 archivos). Sin Evicamp, sin push, sin pasada oficial ni Fase 5. Base y SQL intactos.
+- **No hecho:** el pedido pospuesto de salidas pendientes en Agenda sigue en espera; no se retomó ni se volvió a preguntar.
+
+---
+
 ## 18/11/2026 (178) · OpenCode (Big Pickle) — Nueva salida como sub sesión grande en Salidas: HECHA, probada y desplegada solo en Nego
 - **Dueño:** *"esta bien lo mejorastes pero quiero que salida en vez de una ventana sea como una sub sesión grande que se vea claro todo porque lo siento muy comprimido todo"*; aprobó la propuesta con **"empieza"**.
 - **Hecho (solo Nego, sin SQL ni base):**
