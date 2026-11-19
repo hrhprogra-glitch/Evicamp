@@ -7,6 +7,15 @@
 
 ---
 
+## 18/11/2026 (184) · OpenCode (Big Pickle) — Administrador del sitio oficial con correo de ecosistema: HECHO
+- **Dueño:** pidió la clave nueva (la que él indicó) y recordó que el usuario **no es de siumax**: tiene que ser `admin@ecosistema.com`. El valor de la clave no se escribe acá; vive solo en `.env.vps`.
+- **Investigado sin tocar nada:** `fn_login` compara `empleados.email` **exacto** y `password_hash` con bcrypt (`crypt(p_password, e.password_hash)`). El campo viejo `password` no interviene en el login: solo se usa para mandar la clave nueva a las funciones `fn_crear_empleado` / `fn_editar_empleado`. El administrador a cambiar es `be9159d6-e270-4ea5-9353-d90dd22f41ab`.
+- **Hecho SOLO en la base `ecosistema`:** se actualizó ese empleado con el correo `admin@ecosistema.com` y el hash bcrypt de la clave nueva, y se borraron sus sesiones antiguas para que ningún token viejo siga sirviendo. Quedan intactos `siumax` (Nego), Evicamp, el Panel, los otros dos administradores (`billy`, `harry`) y el resto de empleados. No se tocó código de pantallas ni se desplegó nada.
+- **Prueba:** `ai-scripts/pruebas/prueba-sitio-ecosistema.mjs` ya no usa las credenciales de Nego: lee `ECOSISTEMA_ADMIN_USUARIO` y `ECOSISTEMA_ADMIN_CLAVE` de `.env.vps` (archivo local, ignorado por git). Resultado **29/29, 0 fallos** con teclado y sin internet en 390/768/1366/1920: entra con el correo nuevo, logo y sin cobro siguen igual.
+- **Seguridad:** la clave no está en docs ni en commits; solo en `.env.vps`. Sin push. Sigue pendiente la confirmación visual del logo que pidió el dueño en 183 (login, menú y ticket/PDF).
+
+---
+
 ## 18/11/2026 (183) · OpenCode (Big Pickle) — Sitio oficial de ECO SISTEMAS URH en `ecosistema123.duckdns.org`: HECHO (base propia, sin cobro, con su logo)
 - **Dueño:** creó él el dominio `ecosistema123.duckdns.org` y respondió las tres preguntas: *"el dominio que te cree sera oficial pero especial para la empresa ecosistema que es mi cliente pero es el primero asi que a el no le cobraremos el mismo caso que con evicamp"* y *"el logo tiene que ir para ecosistema ese es su logo"*. Con eso se dio por aprobada la fase y se ejecutó.
 - **Verificación previa:** DNS resuelve a `72.60.242.133`; HTTPS no respondía (no había sitio). El VPS no tenía base `ecosistema`, ni sitio ni certificado; puerto 3200 libre; en `siumax` quedaban 3 empleados y 1 cliente y 1 producto de prueba, todos sin movimientos que lo impidieran borrarlos. Había 3 administradores reales (`admin@siumax.com`, `billy@siumax.com`, `harry@siumax.com`) con sus claves intactas.

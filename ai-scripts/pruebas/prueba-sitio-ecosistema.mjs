@@ -7,6 +7,9 @@ try { puppeteer = require('puppeteer-core'); } catch { puppeteer = require('D:/P
 process.loadEnvFile('D:/Programación/siumax/negocios/comercio/.env.vps');
 
 const SITIO = 'https://ecosistema123.duckdns.org';
+const USUARIO = process.env.ECOSISTEMA_ADMIN_USUARIO;
+const CLAVE = process.env.ECOSISTEMA_ADMIN_CLAVE;
+if (!USUARIO || !CLAVE) throw new Error('Faltan las credenciales del sitio oficial en .env.vps');
 const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
 const res = [];
 const ok = (n, c, x = '') => res.push(`${c ? '✅' : '❌'} ${n}${x !== '' ? ' — ' + x : ''}`);
@@ -44,9 +47,9 @@ try {
 
   // --- Login solo con teclado ---
   await page.focus('#input-login-usuario');
-  await page.keyboard.type('admin@siumax.com');
+  await page.keyboard.type(USUARIO);
   await page.focus('#input-login-password');
-  await page.keyboard.type(process.env.SIUMAX_ADMIN_CLAVE);
+  await page.keyboard.type(CLAVE);
   await page.keyboard.press('Enter');
   await page.waitForSelector('#sidebar-btn-inventario', { timeout: 25000 });
   await pausa(1000);

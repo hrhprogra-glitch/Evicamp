@@ -736,4 +736,10 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - **Cliente sin cobro = dos cosas:** no servir `/suscripcion.json` (404) **y** no agregarlo a `/opt/siuhub/clientes.tsv` (si no, el Panel lo ve y podría cobrarle). Es la misma idea que Evicamp.
 - **Prueba nueva guardada:** `ai-scripts/pruebas/prueba-sitio-ecosistema.mjs` verifica logo (con y sin internet), 404 de suscripción, ausencia de aviso/botón de pago y navegación con Enter en 390/768/1366/1920. 29/29. La prueba adaptiva de la fase 182 también pasó 83/83 apuntando al sitio nuevo. Ojo al armar aserciones de "sin aviso de plan": buscar por texto `vence` da **falso positivo** porque el menú de Inventario tiene "Vencimientos"; usar selectores concretos (`[role="alert"]` y `button[aria-label*="Pagar plan"]`).
 
+## 37. Cambiar la clave del sitio oficial sin tocar Nego (18/11/2026, bitácora 184)
+- `fn_login` compara `empleados.email` **exacto** (minúsculas) y `password_hash` con `crypt(p_password, e.password_hash)`. Para cambiar correo y clave de un usuario hay que actualizar **esas dos columnas** en la base correcta. El campo antiguo `password` no valida el login: se usa solo para pasar la clave nueva a `fn_crear_empleado` / `fn_editar_empleado`, así que no hace falta tocarlo.
+- **Una base por sitio = un administrador distinto.** El sitio oficial usa la base `ecosistema` y su administrador es `admin@ecosistema.com`; Nego usa `siumax` y `admin@siumax.com`. Un `UPDATE` sin `-d ecosistema` cambiaría el usuario equivocado. Siempre confirmar la base en el comando y comprobar después con el login del sitio correspondiente.
+- Al cambiar la clave, borrar también las `sesiones` de ese empleado: los tokens antiguos siguen siendo válidos 30 días y si no se borran parece que "la clave vieja aún funciona".
+- Las credenciales del sitio oficial viven en `.env.vps` como `ECOSISTEMA_ADMIN_USUARIO` y `ECOSISTEMA_ADMIN_CLAVE`; las de Nego siguen en `SIUMAX_ADMIN_*`. La prueba `prueba-sitio-ecosistema.mjs` las lee de ahí y falla temprano si faltan, para no entrar con la cuenta de otro sitio por accidente. **Nunca poner los valores en docs, pruebas ni commits.**
+
   

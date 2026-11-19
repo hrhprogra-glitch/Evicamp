@@ -1153,3 +1153,10 @@
 - Se ejecutó sin tocar nada ajeno: base `ecosistema` con copia limpia de los datos de Eco (se quitaron solo 1 cliente, 1 producto y 3 empleados de prueba), datos reales de la empresa, logo en `empresa_config` y en los 5 iconos, API propia en el puerto 3200 con la misma seguridad de sesión, sitio HTTPS con certificado propio y **sin `/suscripcion.json`** (devuelve 404). Tampoco se agregó al registro del Panel, para que nunca salga a cobrar.
 - Resultado de pruebas: **83/83** de teclado y **29/29** de logo/sin internet/sin plan en 390/768/1366/1920. Evicamp, Panel, `/actualizaciones/` y `nego.siumax` siguen respondiendo igual. Sin push.
 - **Sigue pendiente:** que el dueño mire el sitio y confirme visualmente que el logo se ve bien (este modelo no puede ver imágenes), sobre todo en una pantalla de ticket/PDF. No volver a preguntar por el pedido de salidas pendientes en Agenda.
+
+## 18/11/2026 (cambio de administrador del sitio oficial — fase 184)
+- El dueño pidió poner la clave que él indicó y recordó que el usuario **no es el de siumax**, sino `admin@ecosistema.com`. Es decir, **la clave nueva y el correo con el nombre del cliente**, no el usuario de Nego. El valor de la clave no se escribe acá; vive solo en `.env.vps`.
+- Se revisó la función de entrada (`fn_login`): compara el correo escrito tal cual y la clave con bcrypt guardada en `password_hash`; el campo antiguo `password` solo se usa al crear o editar usuarios, no para entrar.
+- Se cambió **únicamente** el administrador de la base `ecosistema` (el mismo de siempre, `be9159d6-…`): correo nuevo, clave nueva y sesiones anteriores borradas. No se tocó Nego, Evicamp, el Panel ni los otros dos administradores.
+- La prueba del sitio oficial dejó de usar `admin@siumax.com` y la clave de Nego: ahora toma las credenciales de `.env.vps` con nombres propios del sitio. Volvió a dar **29/29, 0 fallos** con teclado y sin internet en 390/768/1366/1920.
+- La clave quedó solo en `.env.vps` (no se sube a git). No se escribió en bitácora, plan, conversaciones, memoria ni commits. Sin deploy y sin push. El pedido de salidas pendientes en Agenda sigue pospuesto; no se volvió a mencionar.
