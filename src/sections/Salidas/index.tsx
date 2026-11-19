@@ -15,10 +15,12 @@ export const Salidas: React.FC = () => {
   const [filtroTipo, setFiltroTipo] = useState<TipoSalida | 'TODOS'>('TODOS');
   const [filtroEstado, setFiltroEstado] = useState<EstadoSalida | 'TODOS'>('TODOS');
 
-  // Modales
+  // Modales / sub sesión
   const [modalNuevoOpen, setModalNuevoOpen] = useState(false);
   const [salidaParaContinuar, setSalidaParaContinuar] = useState<Salida | null>(null);
   const [salidaSeleccionada, setSalidaSeleccionada] = useState<Salida | null>(null);
+  // De dónde se abrió la sub sesión, para devolver el selector al botón o a la fila correcta (178).
+  const [origenSubSesion, setOrigenSubSesion] = useState<{ tipo: 'boton' } | { tipo: 'fila'; codigo: string }>({ tipo: 'boton' });
 
   // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
@@ -165,63 +167,87 @@ export const Salidas: React.FC = () => {
 
   const handleNuevaSalida = () => {
     setSalidaParaContinuar(null);
+    setOrigenSubSesion({ tipo: 'boton' });
     setModalNuevoOpen(true);
   };
 
   const handleContinuarSalida = (salida: Salida) => {
     setSalidaParaContinuar(salida);
+    setOrigenSubSesion({ tipo: 'fila', codigo: salida.codigo || '' });
     setModalNuevoOpen(true);
+  };
+
+  // Al volver de la sub sesión, el selector regresa a quien la abrió. El botón y la tabla se vuelven a montar
+  // después de cerrar, por eso se busca con un pequeño espera; si la fila ya no está, cae al botón/buscador.
+  const cerrarSubSesion = () => {
+    setModalNuevoOpen(false);
+    setSalidaParaContinuar(null);
+    const origen = origenSubSesion;
+    setTimeout(() => {
+      let destino: HTMLElement | null = null;
+      if (origen.tipo === 'fila' && origen.codigo) {
+        destino = Array.from(document.querySelectorAll<HTMLElement>('[data-fila-salida="true"]'))
+          .find((fila) => fila.innerText.includes(origen.codigo)) || null;
+      }
+      if (!destino) destino = document.getElementById('btn-nueva-salida');
+      (destino || document.getElementById('buscador-salidas'))?.focus();
+    }, 120);
   };
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono relative">
-      <HeaderSalidas
-        busqueda={busqueda}
-        onBusquedaChange={(val) => {
-          setBusqueda(val);
-          setPaginaActual(1);
-        }}
-        filtroTipo={filtroTipo}
-        onFiltroTipoChange={(t) => {
-          setFiltroTipo(t);
-          setPaginaActual(1);
-        }}
-        filtroEstado={filtroEstado}
-        onFiltroEstadoChange={(st) => {
-          setFiltroEstado(st);
-          setPaginaActual(1);
-        }}
-        onNuevaSalida={handleNuevaSalida}
-        metricas={metricas}
-      />
-
-      <div className="px-3 sm:px-4 lg:px-6 flex flex-col gap-4">
-        <TablaSalidas
-          salidas={salidasPaginadas}
-          onVerDetalle={(salida) => setSalidaSeleccionada(salida)}
-          paginaActual={paginaActual}
-          totalPaginas={totalPaginas}
-          onCambiarPagina={(pag) => setPaginaActual(pag)}
-        />
-      </div>
-
-      {/* Modal Nueva / Continuar Salida */}
-      {modalNuevoOpen && (
-        <ModalNuevaSalida
-          isOpen={modalNuevoOpen}
-          salidaRaiz={salidaParaContinuar}
-          onClose={() => {
-            setModalNuevoOpen(false);
-            setSalidaParaContinuar(null);
+      {/* En la sub sesión grande se ocultan la cabecera y la tabla: todo el espacio es para el formulario. */}
+      {!modalNuevoOpen && (
+        <HeaderSalidas
+          busqueda={busqueda}
+          onBusquedaChange={(val) => {
+            setBusqueda(val);
+            setPaginaActual(1);
           }}
-          onSuccess={() => {
-            fetchSalidas();
+          filtroTipo={filtroTipo}
+          onFiltroTipoChange={(t) => {
+            setFiltroTipo(t);
+            setPaginaActual(1);
           }}
+          filtroEstado={filtroEstado}
+          onFiltroEstadoChange={(st) => {
+            setFiltroEstado(st);
+            setPaginaActual(1);
+          }}
+          onNuevaSalida={handleNuevaSalida}
+          metricas={metricas}
         />
       )}
 
+      {!modalNuevoOpen && (
+        <div className="px-3 sm:px-4 lg:px-6 flex flex-col gap-4">
+          <TablaSalidas
+            salidas={salidasPaginadas}
+            onVerDetalle={(salida) => setSalidaSeleccionada(salida)}
+            paginaActual={paginaActual}
+            totalPaginas={totalPaginas}
+            onCambiarPagina={(pag) => setPaginaActual(pag)}
+          />
+        </div>
+      )}
+
+      {/* Nueva / Continuar Salida como sub sesión grande dentro de la sección (178). */}
+      {modalNuevoOpen && (
+        <div className="px-3 sm:px-4 lg:px-6 pb-6">
+          <ModalNuevaSalida
+            isOpen={modalNuevoOpen}
+            modo="sesion"
+            salidaRaiz={salidaParaContinuar}
+            onClose={cerrarSubSesion}
+            onSuccess={() => {
+              fetchSalidas();
+            }}
+          />
+        </div>
+      )}
+
       {/* Modal Detalle Salida */}
-      {salidaSeleccionada && (
+      {!modalNuevoOpen && salidaSeleccionada && (
         <ModalDetalleSalida
           salida={salidaSeleccionada}
           isOpen={!!salidaSeleccionada}

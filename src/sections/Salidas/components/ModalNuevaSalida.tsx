@@ -11,6 +11,10 @@ import type { TipoSalida, Salida } from '../types';
 
 interface ModalNuevaSalidaProps {
   isOpen: boolean;
+  // 18/11/2026 (178): el dueño pidió que "Nueva salida" deje de ser una ventana flotante y sea una sub sesión
+  // grande dentro de Salidas. `modal` conserva el comportamiento de siempre; `sesion` dibuja el mismo formulario
+  // a todo el ancho, sin alto máximo y con el scroll normal de la página.
+  modo?: 'modal' | 'sesion';
   salidaRaiz?: Salida | null;
   datosIniciales?: {
     tipo?: TipoSalida;
@@ -57,11 +61,13 @@ const CLAVE_BORRADOR_SALIDA = 'siumax_servic_borrador_salida';
 
 export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   isOpen,
+  modo = 'modal',
   salidaRaiz,
   datosIniciales,
   onClose,
   onSuccess,
 }) => {
+  const esSesion = modo === 'sesion';
   useCerrarConEscape(isOpen, onClose);
 
   // Form State
@@ -607,10 +613,22 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   const totalCosto = items.reduce((acc, it) => acc + it.cantidad * it.costo_unitario, 0);
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
+    <div
+      id={esSesion ? 'sub-sesion-nueva-salida' : undefined}
+      // Se marca como "ventana del sistema" para que Tab no abra el sidebar y las flechas no se salgan de la
+      // sub sesión, pero sin capa flotante: es contenido de la sección Salidas (178).
+      data-dialogo-sistema={esSesion ? 'sub-sesion-salidas' : undefined}
+      data-evitar-iman-teclado={esSesion ? 'true' : undefined}
+      className={esSesion ? 'w-full font-mono' : 'fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono'}
+    >
       <div
         id="modal-nueva-salida-container"
-        className="ventana-sobria bg-[var(--color-surface)] w-full max-w-5xl border-2 border-[var(--color-ink)] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(90dvh/var(--ui-zoom))] overflow-hidden"
+        data-evitar-foco-auto={esSesion ? 'true' : undefined}
+        className={`ventana-sobria bg-[var(--color-surface)] w-full border-2 border-[var(--color-ink)] flex flex-col ${
+          esSesion
+            ? ''
+            : 'max-w-5xl max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(90dvh/var(--ui-zoom))] overflow-hidden'
+        }`}
       >
         {/* Cabecera SiuMax Sobrio */}
         <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between shrink-0">
@@ -623,7 +641,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                 {salidaRaiz ? `Continuar Salida (${salidaRaiz.codigo})` : 'Punto de Salida a Obra / Servicio'}
               </h2>
               <p className="ventana-cabecera__subtitulo">
-                Registro rápido de materiales y asignación técnica
+                Registro rápido de materiales y asignación técnica{esSesion ? ' · F10 o Ctrl+Enter para Guardar' : ''}
               </p>
             </div>
           </div>
@@ -633,21 +651,39 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                 ✓ Borrador auto-guardado
               </span>
             )}
-            <button
-              id="btn-cerrar-modal-nueva-salida"
-              onClick={onClose}
-              className="ventana-cerrar"
-              title="Cerrar (Escape)"
-            >
-              <X size={18} />
-            </button>
+            {esSesion ? (
+              <button
+                id="btn-volver-lista-salida"
+                type="button"
+                onClick={onClose}
+                title="Volver a la lista de salidas (Escape)"
+                className="px-3 sm:px-4 py-2 border-2 border-[var(--color-border)] bg-[var(--color-surface)] font-black uppercase hover:border-[var(--color-ink)] cursor-pointer rounded-none text-xs sm:text-sm"
+              >
+                ← Volver a la lista
+              </button>
+            ) : (
+              <button
+                id="btn-cerrar-modal-nueva-salida"
+                onClick={onClose}
+                className="ventana-cerrar"
+                title="Cerrar (Escape)"
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Contenido con Scroll */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 font-mono text-xs space-y-4">
+        {/* Contenido: en sub sesión no hay scroll propio; baja la página completa y hay más espacio y letra. */}
+        <div className={esSesion
+          ? 'p-4 sm:p-6 lg:p-8 text-sm sm:text-base space-y-5'
+          : 'p-4 sm:p-6 overflow-y-auto flex-1 font-mono text-xs space-y-4'
+        }>
           {/* Fila 1: Tipo y Cliente */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div
+            data-grilla-salida={esSesion ? 'true' : undefined}
+            className={`grid grid-cols-1 ${esSesion ? 'md:grid-cols-2 xl:grid-cols-3' : 'sm:grid-cols-3'} gap-3`}
+          >
             <div>
               <label className="block font-black uppercase text-[var(--color-ink)] mb-1">
                 Tipo de Trabajo *
@@ -734,8 +770,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
           </div>
 
           {/* Fila 2: Dirección y Fecha */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="sm:col-span-2">
+          <div className={`grid grid-cols-1 ${esSesion ? 'md:grid-cols-2 xl:grid-cols-3' : 'sm:grid-cols-3'} gap-3`}>
+            <div className={esSesion ? 'md:col-span-2' : 'sm:col-span-2'}>
               <label className="block font-black uppercase text-[var(--color-muted)] mb-1">
                 Dirección / Lugar de la obra
               </label>
@@ -836,8 +872,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
 
             {esExterno ? (
               /* Entrada de Material Externo */
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center">
-                <div className="sm:col-span-2">
+              <div className={`grid grid-cols-1 ${esSesion ? 'md:grid-cols-5' : 'sm:grid-cols-5'} gap-2 items-center`}>
+                <div className={esSesion ? 'md:col-span-2' : 'sm:col-span-2'}>
                   <input
                     id="input-desc-material-externo"
                     type="text"
@@ -889,7 +925,10 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               /* Renglón Rápido tipo SUNAT / Pistola de Códigos. En celular el buscador se queda fijo arriba
                   mientras se baja por las sugerencias y los materiales (pedido del dueño 18/11/2026). */
               <div className="space-y-2">
-                <div className="sticky top-0 z-10 bg-[var(--color-bg)] py-1 -mx-1 px-1 flex gap-2 items-center">
+                <div
+                  data-permitir-salto-enter={esSesion ? 'true' : undefined}
+                  className={`sticky ${esSesion ? 'top-2' : 'top-0'} z-10 bg-[var(--color-bg)] py-1 -mx-1 px-1 flex gap-2 items-center`}
+                >
                   <div className="relative flex-1 min-w-0">
                     <input
                       ref={inputBuscarRef}
@@ -942,7 +981,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
 
                 {/* Lista flotante de sugerencias con flechas teclado */}
                 {prodsFiltrados.length > 0 && !prodSeleccionado && (
-                  <div className="border-2 border-[var(--color-ink)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)] max-h-72 overflow-y-auto">
+                  <div className={`border-2 border-[var(--color-ink)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)] ${esSesion ? 'max-h-96' : 'max-h-72'} overflow-y-auto`}>
                     {prodsFiltrados.map((p, idx) => {
                       const activo = idx === indiceSugerencia;
                       return (
@@ -1135,19 +1174,31 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="bg-[var(--color-bg)] p-3 sm:p-4 border-t-2 border-[var(--color-ink)] flex flex-wrap justify-between items-center gap-2 shrink-0">
+        {/* Footer: en sub sesión queda al final de la página, con el mismo botón de volver que arriba. */}
+        <div className={`bg-[var(--color-bg)] p-3 sm:p-4 border-t-2 border-[var(--color-ink)] flex flex-wrap justify-between items-center gap-2 ${esSesion ? '' : 'shrink-0'}`}>
           <span className="text-[11px] font-bold text-[var(--color-muted)]">
             {items.length} material(es) listo(s) · {totalUnidades} unidad(es) en total
           </span>
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border-2 border-[var(--color-border)] font-black uppercase hover:bg-black/5 cursor-pointer rounded-none"
-            >
-              Cancelar (Esc)
-            </button>
+            {esSesion ? (
+              <button
+                id="btn-volver-lista-footer-salida"
+                type="button"
+                onClick={onClose}
+                title="Volver a la lista de salidas (Escape)"
+                className="px-4 py-2 border-2 border-[var(--color-border)] bg-[var(--color-surface)] font-black uppercase hover:bg-black/5 cursor-pointer rounded-none"
+              >
+                ← Volver a la lista
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border-2 border-[var(--color-border)] font-black uppercase hover:bg-black/5 cursor-pointer rounded-none"
+              >
+                Cancelar (Esc)
+              </button>
+            )}
             <button
               id="btn-guardar-salida"
               type="button"

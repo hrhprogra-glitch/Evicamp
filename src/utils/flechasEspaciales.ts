@@ -135,8 +135,11 @@ export const activarFlechasEspaciales = () => {
       el.click();
       return;
     }
-    // Regla 9: Enter en un campo de una ventana → vigilar que el selector no pase al siguiente cuadro
-    if (e.key === 'Enter' && !e.shiftKey && esCampoDeTexto(el)) {
+    // Regla 9: Enter en un campo de una ventana → vigilar que el selector no pase al siguiente cuadro.
+    // Excepción (18/11/2026, sub sesión de Salidas): el registro rápido de materiales SÍ cambia a propósito del
+    // buscador a la cantidad y de la cantidad de vuelta al buscador; si la regla lo devuelve, no se puede registrar
+    // con teclado. Esos campos llevan data-permitir-salto-enter y se respeta su salto.
+    if (e.key === 'Enter' && !e.shiftKey && esCampoDeTexto(el) && !el.closest('[data-permitir-salto-enter]')) {
       const v = ventanaSuperior();
       guardiaEnter = v && v.contains(el) ? { origen: el, ventana: v, ventanas: ventanasAbiertas().length, hasta: performance.now() + 400 } : null;
     }

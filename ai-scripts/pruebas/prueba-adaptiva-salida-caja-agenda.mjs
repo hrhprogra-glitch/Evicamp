@@ -1,4 +1,4 @@
-// Prueba adaptiva (18/11/2026, bitácora 176): salida rápida, teclado de Caja y Agenda en celular.
+// Prueba adaptiva (18/11/2026, bitácoras 176 y 178): Nueva salida como sub sesión grande, teclado de Caja y Agenda en celular.
 // Se corre contra el sitio de pruebas Nego, con teclado y sin servicios externos. Solo Nego: sin Evicamp, sin SQL.
 // Tamaños: 390 (celular), 768 (tablet), 1366 y 1920 (laptop/PC).
 // Uso: node ai-scripts/pruebas/prueba-adaptiva-salida-caja-agenda.mjs
@@ -59,6 +59,31 @@ try {
       await page.waitForSelector('#modal-nueva-salida-container', { timeout: 8000 });
       await pausa(300);
 
+      // 178: debe ser una sub sesión grande dentro de Salidas, no una ventana flotante ni una lista debajo.
+      const formaSesion = await page.$eval('#modal-nueva-salida-container', (el) => {
+        const grilla = el.querySelector('[data-grilla-salida="true"]');
+        const envoltorio = document.getElementById('sub-sesion-nueva-salida');
+        return {
+          flotante: !!el.closest('.fixed.inset-0'),
+          subSesion: !!envoltorio,
+          listaVisible: !!document.getElementById('btn-nueva-salida') || !!document.getElementById('tabla-salidas-lista'),
+          maxH: getComputedStyle(el).maxHeight,
+          ancho: el.getBoundingClientRect().width,
+          anchoDisponible: envoltorio ? envoltorio.getBoundingClientRect().width : 0,
+          columnas: grilla ? getComputedStyle(grilla).gridTemplateColumns.split(' ').filter(Boolean).length : 0,
+        };
+      });
+      ok(`Salida ${t.nombre}: sub sesión, no ventana flotante`,
+        formaSesion.subSesion && !formaSesion.flotante && !formaSesion.listaVisible);
+      ok(`Salida ${t.nombre}: ancho completo sin alto máximo`,
+        formaSesion.ancho >= formaSesion.anchoDisponible - 4 && (formaSesion.maxH === 'none' || formaSesion.maxH === ''),
+        `ancho ${Math.round(formaSesion.ancho)} de ${Math.round(formaSesion.anchoDisponible)} disponibles, maxH ${formaSesion.maxH}`);
+      const columnasEsperadas = t.w < 768 ? 1 : t.w < 1280 ? 2 : 3;
+      ok(`Salida ${t.nombre}: ${columnasEsperadas} columna(s) amplia(s)`,
+        formaSesion.columnas === columnasEsperadas, `columnas ${formaSesion.columnas}`);
+      ok(`Salida ${t.nombre}: botones Volver arriba y abajo`,
+        (await existe('#btn-volver-lista-salida')) && (await existe('#btn-volver-lista-footer-salida')));
+
       ok(`Salida ${t.nombre}: nombre libre de cliente`, await existe('#input-cliente-libre-salida'));
       ok(`Salida ${t.nombre}: botón de cámara`, await existe('#btn-escaner-salida'));
       ok(`Salida ${t.nombre}: opción "Otro" en lo que se atiende`,
@@ -113,9 +138,39 @@ try {
           }
         }
       } catch (e) {
-        res.push(`➖ Salida ${t.nombre}: orden de producto no probado (${e.message.slice(0, 60)})`);
+        res.push(`➖ Salida ${t.nombre}: orden de producto no probado (${e.message.slice(0, 180)})`);
       }
-      await cerrar();
+      await page.keyboard.press('Escape');
+      await pausa(400);
+      ok(`Salida ${t.nombre}: Escape vuelve a la lista`,
+        !(await existe('#modal-nueva-salida-container')) && (await existe('#btn-nueva-salida')));
+      ok(`Salida ${t.nombre}: foco al volver`, (await foco()) === 'btn-nueva-salida', await foco());
+
+      // El botón "← Volver a la lista" debe hacer lo mismo que Escape.
+      await page.focus('#btn-nueva-salida');
+      await page.keyboard.press('Enter');
+      await page.waitForSelector('#btn-volver-lista-salida', { timeout: 8000 });
+      await page.click('#btn-volver-lista-salida');
+      await pausa(400);
+      ok(`Salida ${t.nombre}: botón Volver regresa a la lista`,
+        !(await existe('#modal-nueva-salida-container')) && (await existe('#btn-nueva-salida')));
+
+      // El flujo "Continuar" del detalle debe entrar a la misma sub sesión grande (se comprueba una vez, en PC).
+      if (t.w >= 1920) {
+        const fila = await page.$('[data-fila-salida="true"]');
+        if (fila) {
+          await fila.focus();
+          await page.keyboard.press('Enter');
+          await page.waitForSelector('#btn-continuar-salida', { timeout: 8000 });
+          await page.click('#btn-continuar-salida');
+          await page.waitForSelector('#sub-sesion-nueva-salida', { timeout: 8000 });
+          ok('Salida PC: Continuar abre la sub sesión', await existe('#modal-nueva-salida-container'));
+          await page.keyboard.press('Escape');
+          await pausa(400);
+          ok('Salida PC: Continuar vuelve a la lista',
+            !(await existe('#modal-nueva-salida-container')) && (await existe('#btn-nueva-salida')));
+        }
+      }
     } catch (e) {
       ok(`Salida ${t.nombre}`, false, e.message.slice(0, 110));
       await cerrar();
