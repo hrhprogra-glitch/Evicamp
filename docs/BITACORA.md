@@ -7,6 +7,14 @@
 
 ---
 
+## 18/11/2026 (178) · OpenCode (Big Pickle) — Pedido nuevo: "Nueva salida" debe ser una sub sesión grande, no una ventana; propuesta esperando el OK
+- **Dueño:** *"esta bien lo mejorastes pero quiero que salida en vez de una ventana sea como una sub sesión grande que se vea claro todo porque lo siento muy comprimido todo"*.
+- **Investigado sin cambiar código (graphify + lectura):** `Salidas/index.tsx` muestra la cabecera y la tabla, y cuando `modalNuevoOpen` es true monta `ModalNuevaSalida` como capa `fixed inset-0` con `max-w-5xl` y `max-h-[calc(90dvh/var(--ui-zoom))]`; todo el formulario se mete en ese rectángulo con scroll interno, de ahí la sensación de "comprimido". El botón `btn-nueva-salida` está en `HeaderSalidas.tsx` y el flujo "Continuar" cierra el detalle y abre el mismo modal. La lógica, ids, guardado, borrador y cámara viven en `ModalNuevaSalida.tsx`, así que se puede reutilizar sin tocar SQL ni la base.
+- **Propuesta (esperando "empieza"):** 1) agregar `modo="sesion"` a `ModalNuevaSalida` para que, en vez de flotar, se dibuje como **contenido de la sección Salidas** (se ocultan la cabecera y la tabla mientras estás dentro); 2) cabecera propia grande con título, botón **"← Volver a la lista"** y aviso de F10/Ctrl+Enter para Guardar; 3) sin `max-h` ni scroll de ventana: ancho completo y scroll normal de página, con columnas amplias (1 en celular, 2 en tablet, 3 en PC) y la tabla de materiales a todo el ancho; 4) al volver (botón o Escape) se recupera el foco en `btn-nueva-salida` o en la fila desde la que se pulsó "Continuar"; 5) mantener ids, atajos, flechas, cámara, borrador, paginación de 50, estilo SiuMax Sobrio y el guardado igual; 6) actualizar la prueba adaptiva para comprobar que ya no hay capa flotante, que ocupa todo el ancho, que Escape/Volver regresan a la lista y que sigue funcionando en 390/768/1366/1920; luego docs, `graphify update .`, commit local y despliegue solo en Nego.
+- **Sin tocar de momento:** código, SQL, base, Evicamp, push, pasada oficial ni Fase 5. El pedido pospuesto de salidas pendientes en Agenda sigue en espera; no se retomó.
+
+---
+
 ## 18/11/2026 (177) · OpenCode (Big Pickle) — Salida rápida, teclado de Caja y Agenda adaptiva: HECHO, probado y desplegado solo en Nego
 - **Dueño:** aprobó el plan consolidado con un **"si"**. No hizo falta volver a pedir OK.
 - **Hecho (solo Nego, sin SQL ni base):**
