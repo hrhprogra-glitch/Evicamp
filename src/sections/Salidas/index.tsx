@@ -213,8 +213,6 @@ export const Salidas: React.FC = () => {
           onClose={() => {
             setModalNuevoOpen(false);
             setSalidaParaContinuar(null);
-            // Al cerrar la ventana flotante, el selector vuelve al botón que la abrió (teclado primero).
-            setTimeout(() => document.getElementById('btn-nueva-salida')?.focus(), 50);
           }}
           onSuccess={() => {
             fetchSalidas();

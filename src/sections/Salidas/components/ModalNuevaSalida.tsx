@@ -96,6 +96,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
 
   // Inputs para agregar item (modo SUNAT)
   const [busquedaProd, setBusquedaProd] = useState('');
+  const [prodSeleccionado, setProdSeleccionado] = useState<any | null>(null);
   const [indiceSugerencia, setIndiceSugerencia] = useState(0);
   // Cuando llegan fotos nuevas a la memoria, volver a dibujar las miniaturas
   const [, setFotosVersion] = useState(0);
@@ -116,9 +117,6 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
 
   const [guardando, setGuardando] = useState(false);
   const [tieneBorrador, setTieneBorrador] = useState(false);
-  // Ventana flotante por pasos (fase 180, pedido del dueño 18/11/2026): primero los datos, luego los productos.
-  // Aplica igual en celular y en PC.
-  const [paso, setPaso] = useState<'datos' | 'productos'>('datos');
 
   const inputBuscarRef = useRef<HTMLInputElement>(null);
   const inputCantRef = useRef<HTMLInputElement>(null);
@@ -126,7 +124,6 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   // Cargar datos al abrir
   useEffect(() => {
     if (isOpen) {
-      setPaso('datos'); // cada apertura empieza en el paso 1
       cargarCatalogos();
       if (salidaRaiz) {
         setTipo(salidaRaiz.tipo);
@@ -254,6 +251,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     setTrabajadoresSeleccionados([]);
     setItems([]);
     setBusquedaProd('');
+    setProdSeleccionado(null);
     setTieneBorrador(false);
     avisar('Borrador limpiado. Formulario listo desde cero.');
     setTimeout(() => {
@@ -339,35 +337,17 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     setIndiceSugerencia(0);
   }, [busquedaProd]);
 
-  // Igual que en la Caja: Enter o clic sobre una sugerencia agrega el producto directo a la salida.
-  // La cantidad se toma del cuadro Cant. (1 por defecto) y el foco vuelve al buscador para seguir.
-  const agregarProductoDirecto = (p: any) => {
-    const c = parseFloat(cantItem);
-    const cant = isNaN(c) || c <= 0 ? 1 : c;
-    setItems((prev) => {
-      // Producto nuevo arriba; si ya estaba, suma cantidad y también sube (pedido del dueño 18/11/2026).
-      const idxExistente = prev.findIndex((it) => it.product_id === p.id);
-      if (idxExistente !== -1) {
-        const actual = prev[idxExistente];
-        const actualizado = { ...actual, cantidad: Number((actual.cantidad + cant).toFixed(4)) };
-        return [actualizado, ...prev.filter((_, i) => i !== idxExistente)];
+  // Selección rápida de producto
+  const seleccionarProducto = (p: any) => {
+    setProdSeleccionado(p);
+    setBusquedaProd(p.name);
+    // Salto directo a cantidad con todo el texto seleccionado
+    setTimeout(() => {
+      if (inputCantRef.current) {
+        inputCantRef.current.focus();
+        inputCantRef.current.select();
       }
-      return [
-        {
-          product_id: p.id,
-          descripcion: p.name,
-          unidad: p.unit || 'UNID',
-          cantidad: cant,
-          costo_unitario: Number(p.cost_price || 0),
-          es_externo: false,
-        },
-        ...prev,
-      ];
-    });
-    setBusquedaProd('');
-    setCantItem('1');
-    setIndiceSugerencia(0);
-    setTimeout(() => inputBuscarRef.current?.focus(), 30);
+    }, 30);
   };
 
   // Agregar item a la tabla (con teclado o clic)
@@ -403,8 +383,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         document.getElementById('input-desc-material-externo')?.focus();
       }, 50);
     } else {
-      let prodAAgregar: any = null;
-      if (prodsFiltrados.length > 0) {
+      let prodAAgregar = prodSeleccionado;
+      if (!prodAAgregar && prodsFiltrados.length > 0) {
         prodAAgregar = prodsFiltrados[indiceSugerencia] || prodsFiltrados[0];
       }
       if (!prodAAgregar) {
@@ -412,7 +392,48 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         inputBuscarRef.current?.focus();
         return;
       }
-      agregarProductoDirecto(prodAAgregar);
+      const c = parseFloat(cantItem);
+      if (isNaN(c) || c <= 0) {
+        avisar('Cantidad inválida');
+        inputCantRef.current?.focus();
+        return;
+      }
+
+      setItems((prev) => {
+        // Si ya existe el producto, sumar cantidad y SUBIRLO a la primera fila; si es nuevo, entra arriba.
+        // (pedido del dueño 18/11/2026: "cuando agrego un producto se agrega desde abajo debe ingresarse desde arriba")
+        const idxExistente = prev.findIndex((it) => it.product_id === prodAAgregar.id);
+        if (idxExistente !== -1) {
+          const actual = prev[idxExistente];
+          const actualizado = {
+            ...actual,
+            cantidad: Number((actual.cantidad + c).toFixed(4)),
+          };
+          return [actualizado, ...prev.filter((_, i) => i !== idxExistente)];
+        } else {
+          return [
+            {
+              product_id: prodAAgregar.id,
+              descripcion: prodAAgregar.name,
+              unidad: prodAAgregar.unit || 'UNID',
+              cantidad: c,
+              costo_unitario: Number(prodAAgregar.cost_price || 0),
+              es_externo: false,
+            },
+            ...prev,
+          ];
+        }
+      });
+
+      // Limpiar y devolver el foco inmediatamente al buscador para el siguiente producto
+      setProdSeleccionado(null);
+      setBusquedaProd('');
+      setCantItem('1');
+      setTimeout(() => {
+        if (inputBuscarRef.current) {
+          inputBuscarRef.current.focus();
+        }
+      }, 30);
     }
   };
 
@@ -420,7 +441,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   const handleKeyDownBuscador = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // ↑ ↓ eligen en la lista solo si está abierta; si no, mueven el selector a los campos de arriba / abajo
     // (antes se quedaban siempre en el buscador: dueño, 13/11/2026)
-    const listaAbierta = prodsFiltrados.length > 0;
+    const listaAbierta = prodsFiltrados.length > 0 && !prodSeleccionado;
     if (e.key === 'ArrowDown' && listaAbierta) {
       e.preventDefault();
       setIndiceSugerencia((prev) => (prev + 1) % prodsFiltrados.length);
@@ -429,12 +450,18 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       setIndiceSugerencia((prev) => (prev - 1 + prodsFiltrados.length) % prodsFiltrados.length);
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      // Como en la Caja: Enter agrega directo el producto señalado (o el primero).
       if (prodsFiltrados.length > 0) {
-        agregarProductoDirecto(prodsFiltrados[indiceSugerencia] || prodsFiltrados[0]);
+        const itemElegido = prodsFiltrados[indiceSugerencia] || prodsFiltrados[0];
+        seleccionarProducto(itemElegido);
+      } else if (prodSeleccionado) {
+        if (inputCantRef.current) {
+          inputCantRef.current.focus();
+          inputCantRef.current.select();
+        }
       }
     } else if (e.key === 'Escape') {
       setBusquedaProd('');
+      setProdSeleccionado(null);
     }
   };
 
@@ -442,9 +469,10 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   const handleScanCamara = (codigo: string) => {
     const p = buscarProductoPorCodigo(productos as any[], codigo);
     if (p) {
-      agregarProductoDirecto(p); // la cámara agrega igual que Enter en la Caja
+      seleccionarProducto(p);
     } else {
       setBusquedaProd(codigo);
+      setProdSeleccionado(null);
       setTimeout(() => inputBuscarRef.current?.focus(), 30);
     }
   };
@@ -485,32 +513,6 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     if (e.key === 'Enter') {
       e.preventDefault();
     }
-  };
-
-  // Validación del paso 1. Se usa tanto para "Siguiente" como para F10 desde los datos.
-  const validarDatos = (): boolean => {
-    if (!customerId) {
-      avisar('Selecciona el cliente');
-      document.getElementById('select-cliente-salida')?.focus();
-      return false;
-    }
-    if (trabajadoresSeleccionados.length === 0) {
-      avisar('Asigna al menos un trabajador a la salida');
-      return false;
-    }
-    if (!fecha) {
-      avisar('Selecciona la fecha de salida');
-      document.getElementById('input-fecha-salida')?.focus();
-      return false;
-    }
-    return true;
-  };
-
-  // Pasar del paso 1 (datos) al paso 2 (productos). El foco cae en el buscador, como en la Caja.
-  const irSiguiente = () => {
-    if (!validarDatos()) return;
-    setPaso('productos');
-    setTimeout(() => inputBuscarRef.current?.focus(), 60);
   };
 
   // Guardar la salida (RPC en backend)
@@ -592,14 +594,12 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     const handleGlobalKey = (e: KeyboardEvent) => {
       if (e.key === 'F10' || (e.ctrlKey && e.key === 'Enter')) {
         e.preventDefault();
-        // En el paso 1, F10 valida los datos y abre el paso 2; en el paso 2 guarda la salida.
-        if (paso === 'datos') irSiguiente();
-        else handleGuardarSalida();
+        handleGuardarSalida();
       }
     };
     window.addEventListener('keydown', handleGlobalKey);
     return () => window.removeEventListener('keydown', handleGlobalKey);
-  }, [isOpen, paso, customerId, clienteLibre, bienId, bienLibre, trabajadoresSeleccionados, items, tipo, direccion, ubicacion, fecha, observaciones, salidaRaiz]);
+  }, [isOpen, customerId, clienteLibre, bienId, bienLibre, trabajadoresSeleccionados, items, tipo, direccion, ubicacion, fecha, observaciones, salidaRaiz]);
 
   if (!isOpen) return null;
 
@@ -644,44 +644,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
           </div>
         </div>
 
-        {/* Pasos de la ventana flotante (fase 180): 1 Datos → 2 Productos. Se ve igual en celular y PC. */}
-        <div data-pasos-salida className="px-4 sm:px-6 pt-3 flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            id="btn-paso-datos-salida"
-            onClick={() => setPaso('datos')}
-            className={`flex items-center gap-2 px-3 py-2 min-h-[44px] border-2 font-black uppercase text-[11px] tracking-wider cursor-pointer rounded-none ${
-              paso === 'datos'
-                ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]'
-                : 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-border)] hover:border-[var(--color-ink)]'
-            }`}
-          >
-            <span className={`w-5 h-5 flex items-center justify-center border ${paso === 'datos' ? 'border-white' : 'border-[var(--color-border)]'}`}>1</span>
-            Datos
-          </button>
-          <span className={`h-0.5 flex-1 ${paso === 'productos' ? 'bg-[var(--color-ink)]' : 'bg-[var(--color-border)]'}`} />
-          <button
-            type="button"
-            id="btn-paso-productos-salida"
-            onClick={irSiguiente}
-            className={`flex items-center gap-2 px-3 py-2 min-h-[44px] border-2 font-black uppercase text-[11px] tracking-wider cursor-pointer rounded-none ${
-              paso === 'productos'
-                ? 'bg-[var(--color-ink)] text-white border-[var(--color-ink)]'
-                : 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-border)] hover:border-[var(--color-ink)]'
-            }`}
-          >
-            <span className={`w-5 h-5 flex items-center justify-center border ${paso === 'productos' ? 'border-white' : 'border-[var(--color-border)]'}`}>2</span>
-            Productos
-          </button>
-        </div>
-        <div className="px-4 sm:px-6 pt-2 text-[10px] font-bold text-[var(--color-muted)] uppercase shrink-0">
-          Paso {paso === 'datos' ? '1 de 2 · Datos de la salida' : '2 de 2 · Materiales y productos'}
-        </div>
-
         {/* Contenido con Scroll */}
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 font-mono text-xs space-y-4">
-          {paso === 'datos' && (
-            <>
           {/* Fila 1: Tipo y Cliente */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
@@ -816,7 +780,6 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                   return (
                     <button
                       key={t.id}
-                      data-trabajador-salida={t.id}
                       type="button"
                       onClick={() => toggleTrabajador(t.id)}
                       className={`px-2.5 py-1 text-[11px] font-bold uppercase cursor-pointer border flex items-center gap-1.5 transition-colors rounded-none ${
@@ -834,11 +797,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               )}
             </div>
           </div>
-            </>
-          )}
 
-          {paso === 'productos' && (
-            <>
           {/* Fila 4: REGISTRO RÁPIDO DE MATERIALES (TIPO SUNAT) */}
           <div className="border-2 border-[var(--color-ink)] p-3 bg-[var(--color-bg)] space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-border)] pb-2">
@@ -928,26 +887,25 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               </div>
             ) : (
               /* Renglón Rápido tipo SUNAT / Pistola de Códigos. En celular el buscador se queda fijo arriba
-                  mientras se baja por las sugerencias y los materiales (pedido del dueño 18/11/2026).
-                  data-permitir-salto-enter: el Enter lo atiende la pantalla (como en Caja) y la Regla 9 del
-                  teclado no devuelve el foco al campo de origen (flechasEspaciales.ts). */
-              <div className="space-y-2" data-permitir-salto-enter data-evitar-iman-teclado>
+                  mientras se baja por las sugerencias y los materiales (pedido del dueño 18/11/2026). */
+              <div className="space-y-2">
                 <div className="sticky top-0 z-10 bg-[var(--color-bg)] py-1 -mx-1 px-1 flex gap-2 items-center">
-                  <div className="flex-1 relative flex items-center border-2 border-[var(--color-ink)] bg-white rounded-none z-10">
-                    <div className="w-10 h-10 flex items-center justify-center bg-[var(--color-ink)] text-white shrink-0 rounded-none">
-                      <Search size={20} />
-                    </div>
+                  <div className="relative flex-1 min-w-0">
                     <input
                       ref={inputBuscarRef}
                       id="input-buscar-producto-salida"
                       type="text"
                       value={busquedaProd}
-                      onChange={(e) => setBusquedaProd(e.target.value)}
+                      onChange={(e) => {
+                        setBusquedaProd(e.target.value);
+                        setProdSeleccionado(null);
+                      }}
                       onKeyDown={handleKeyDownBuscador}
-                      placeholder="ESCANEAS AQUÍ, O ESCRIBES NOMBRE/CÓDIGO (Presiona Enter)"
-                      className="w-full p-3 sm:p-2.5 min-h-[48px] sm:min-h-[44px] uppercase font-bold outline-none bg-transparent"
+                      placeholder="Escribe nombre o escanea código del producto..."
+                      className="w-full p-3 sm:p-2.5 min-h-[48px] sm:min-h-0 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] uppercase font-bold pr-8 outline-none rounded-none bg-[var(--color-surface)]"
                       autoComplete="off"
                     />
+                    <Search size={16} className="absolute right-2.5 top-3 text-[var(--color-muted)]" />
                   </div>
 
                   <BotonEscanerCelular
@@ -967,7 +925,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                       value={cantItem}
                       onChange={(e) => setCantItem(e.target.value)}
                       onKeyDown={handleKeyDownCant}
-                      className="w-full p-3 sm:p-2.5 min-h-[48px] sm:min-h-[44px] border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] font-black text-center outline-none rounded-none bg-[var(--color-surface)]"
+                      className="w-full p-3 sm:p-2.5 min-h-[48px] sm:min-h-0 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] font-black text-center outline-none rounded-none bg-[var(--color-surface)]"
                       placeholder="Cant."
                     />
                   </div>
@@ -983,15 +941,15 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                 </div>
 
                 {/* Lista flotante de sugerencias con flechas teclado */}
-                {prodsFiltrados.length > 0 && (
-                  <div id="resultados-salida" className="border-2 border-[var(--color-ink)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)] max-h-72 overflow-y-auto">
+                {prodsFiltrados.length > 0 && !prodSeleccionado && (
+                  <div className="border-2 border-[var(--color-ink)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)] max-h-72 overflow-y-auto">
                     {prodsFiltrados.map((p, idx) => {
                       const activo = idx === indiceSugerencia;
                       return (
                         <div
                           key={p.id}
                           id={`sugerencia-salida-${idx}`}
-                          onClick={() => agregarProductoDirecto(p)}
+                          onClick={() => seleccionarProducto(p)}
                           className={`p-2 cursor-pointer flex items-center gap-3 transition-colors ${
                             activo
                               ? 'bg-[var(--color-accent)] text-[var(--color-ink)]'
@@ -1026,6 +984,25 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                   </div>
                 )}
 
+                {prodSeleccionado && (
+                  <div className="p-1.5 bg-[var(--color-accent-bg)] border border-[var(--color-accent)] flex justify-between items-center gap-2 text-xs font-bold">
+                    <span className="text-[var(--color-ink)] flex items-center gap-2 min-w-0">
+                      <FotoMiniatura src={fotoProducto(prodSeleccionado.id, prodSeleccionado.image_path)} tamano="w-10 h-10" nombre={prodSeleccionado.name} />
+                      <span>✓ Seleccionado: <strong className="uppercase">{prodSeleccionado.name}</strong> (Stock: {prodSeleccionado.quantity} {prodSeleccionado.unit})</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProdSeleccionado(null);
+                        setBusquedaProd('');
+                        inputBuscarRef.current?.focus();
+                      }}
+                      className="text-[10px] text-red-600 underline cursor-pointer"
+                    >
+                      Cambiar
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1141,11 +1118,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               </div>
             )}
           </div>
-            </>
-          )}
 
-          {paso === 'datos' && (
-            <>
           {/* Fila 5: Observaciones */}
           <div>
             <label className="block font-black uppercase text-[var(--color-muted)] mb-1">
@@ -1160,8 +1133,6 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               className="w-full p-2 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase rounded-none"
             />
           </div>
-            </>
-          )}
         </div>
 
         {/* Footer */}
@@ -1170,44 +1141,22 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
             {items.length} material(es) listo(s) · {totalUnidades} unidad(es) en total
           </span>
           <div className="flex gap-2">
-            {paso === 'datos' ? (
-              <button
-                id="btn-siguiente-salida-datos"
-                type="button"
-                onClick={irSiguiente}
-                title="Validar los datos e ingresar a los productos (F10)"
-                className="px-6 py-2 min-h-[44px] bg-[var(--color-ink)] text-white font-black uppercase tracking-wider hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] cursor-pointer rounded-none"
-              >
-                Siguiente: Productos ›
-              </button>
-            ) : (
-              <>
-                <button
-                  id="btn-atras-salida-productos"
-                  type="button"
-                  onClick={() => setPaso('datos')}
-                  className="px-4 py-2 min-h-[44px] border-2 border-[var(--color-border)] font-black uppercase hover:bg-black/5 cursor-pointer rounded-none"
-                >
-                  ‹ Atrás
-                </button>
-                <button
-                  id="btn-guardar-salida"
-                  type="button"
-                  disabled={guardando}
-                  onClick={handleGuardarSalida}
-                  title="Guardar salida de inmediato (F10 o Ctrl+Enter)"
-                  className="px-6 py-2 min-h-[44px] bg-[var(--color-ink)] text-white font-black uppercase tracking-wider hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] cursor-pointer shadow-[3px_3px_0_0_var(--color-ink)] active:translate-x-0.5 active:translate-y-0.5 rounded-none"
-                >
-                  {guardando ? 'Guardando...' : 'Confirmar Salida (F10)'}
-                </button>
-              </>
-            )}
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 min-h-[44px] border-2 border-[var(--color-border)] font-black uppercase hover:bg-black/5 cursor-pointer rounded-none"
+              className="px-4 py-2 border-2 border-[var(--color-border)] font-black uppercase hover:bg-black/5 cursor-pointer rounded-none"
             >
               Cancelar (Esc)
+            </button>
+            <button
+              id="btn-guardar-salida"
+              type="button"
+              disabled={guardando}
+              onClick={handleGuardarSalida}
+              title="Guardar salida de inmediato (F10 o Ctrl+Enter)"
+              className="px-6 py-2 bg-[var(--color-ink)] text-white font-black uppercase tracking-wider hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] cursor-pointer shadow-[3px_3px_0_0_var(--color-ink)] active:translate-x-0.5 active:translate-y-0.5 rounded-none"
+            >
+              {guardando ? 'Guardando...' : 'Confirmar Salida (F10)'}
             </button>
           </div>
         </div>
