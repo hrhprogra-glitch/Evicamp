@@ -722,4 +722,10 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - **Prueba con teclado de verdad:** para limpiar y reescribir un campo en Puppeteer usar Ctrl+A + Backspace + `type()`; asignar `el.value` directamente no actualiza el estado de React. Probar que el foco sigue en el buscador tras elegir y que el desplegable se cierra, además de que el campo libre esté oculto hasta pulsar el botón.
 - Resultado: **83/83, 0 fallos** en 390/768/1366/1920; `build` limpio; despliegue solo en Nego (21 archivos). Sin Evicamp, sin push, sin pasada oficial ni Fase 5; SQL y base intactos. El pedido de salidas pendientes en Agenda sigue en espera; no volver a preguntar por él.
 
+## 35. Dominio nuevo y logo de cliente (18/11/2026, bitácora 183 — propuesta, no ejecutada)
+- Un dominio DuckDNS **no se crea con los scripts del proyecto**: hay que darlo de alta en la cuenta de DuckDNS del dueño (apuntando al IP del VPS) o tener el token en `.env.vps`. Revisado: `.env.vps` solo tiene VPS, Panel, Mercado Pago y contraseñas de Nego; **no hay token de DuckDNS**. No inventar uno ni pedirlo por chat: si hace falta, que el dueño lo ponga él en `.env.vps`.
+- Para un dominio propio de cliente conviene **sitio + base + API propios** (como hace `nuevo-cliente.sh`), no apuntar al sitio de pruebas `nego.siumax`. Respaldo de Nginx antes y verificar después que Evicamp, el Panel, `/actualizaciones/` y `nego.siumax` siguen respondiendo.
+- El logo visible en login/menú/tickets no vive en el código: se lee de `empresa_config.logo_url` (`Login.tsx`, `SideBar.tsx`, `PanelCompras.tsx`, `TicketImprimible.tsx`). Los iconos de pestaña/PWA están en `public/icons/` y se declaran en `index.html` (`favicon-32.png`, `apple-touch-icon.png`, `manifest.json`). Cambiar uno no cambia el otro: hay que hacer las dos cosas si el dueño quiere "el logo en todo".
+- Este modelo no puede ver imágenes; si el dueño manda un PNG, copiarlo tal cual y decirle explícitamente que no se pudo revisar visualmente. Para cambios de logo conviene confirmar con él que el archivo es el correcto antes de tocar la base.
+
   
