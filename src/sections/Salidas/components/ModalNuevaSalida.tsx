@@ -9,6 +9,8 @@ import { avisar } from '../../../utils/dialogos';
 import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import { coincideBusqueda } from '../../../utils/busqueda';
+import { VistaPreviaSalida } from './VistaPreviaSalida';
+import { useEmpresaComprobante } from '../empresa';
 import type { TipoSalida, Salida } from '../types';
 
 interface ModalNuevaSalidaProps {
@@ -64,7 +66,12 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   onClose,
   onSuccess,
 }) => {
-  useCerrarConEscape(isOpen, onClose);
+  // La salida recién guardada se muestra en la vista previa; la empresa da logo y nombre al comprobante.
+  const [salidaParaPrevia, setSalidaParaPrevia] = useState<Salida | null>(null);
+  const empresa = useEmpresaComprobante();
+
+  // 194: con la vista previa abierta, Escape la cierra a ella (no el formulario de atrás).
+  useCerrarConEscape(isOpen && !salidaParaPrevia, onClose);
 
   // Form State
   const [tipo, setTipo] = useState<TipoSalida>('SERVICIO');
@@ -737,9 +744,73 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       } catch {}
       setTieneBorrador(false);
 
+      // 194: la salida ya quedó guardada. En vez de cerrar de golpe, se arma el comprobante con lo que el
+      // formulario tiene en pantalla y sale la vista previa para elegir impresión, descarga o WhatsApp.
+      const clienteElegido = clientes.find((c) => String(c.id) === String(customerId));
+      const bienElegido = bienes.find((b) => String(b.id) === String(bienId));
+      const idSalida = Number(data?.id || 0);
+      const salidaArmada: Salida = {
+        id: idSalida,
+        codigo: String(data?.codigo || ''),
+        tipo,
+        customer_id: Number(customerId),
+        customer: clienteElegido ? {
+          id: Number(clienteElegido.id),
+          name: String(clienteElegido.name || ''),
+          dni: clienteElegido.dni || null,
+          ruc: clienteElegido.ruc || null,
+          telefono: clienteElegido.telefono || null,
+          direccion: clienteElegido.direccion || null,
+        } : undefined,
+        bien_id: bienId && bienId !== 'otro' ? Number(bienId) : null,
+        bien: bienElegido ? {
+          id: Number(bienElegido.id),
+          nombre: String(bienElegido.nombre || ''),
+          tipo: String(bienElegido.tipo || ''),
+          direccion: bienElegido.direccion || null,
+          ubicacion: bienElegido.ubicacion || null,
+        } : undefined,
+        direccion,
+        ubicacion,
+        fecha,
+        estado: 'EN_PROCESO',
+        salida_raiz_id: salidaRaiz?.id || null,
+        salida_raiz_codigo: salidaRaiz?.codigo || null,
+        observaciones: obsFinal,
+        usuario: 'Usuario',
+        created_at: new Date().toISOString(),
+        trabajadores: trabajadoresSeleccionados.map((tid, idx) => {
+          const t = trabajadores.find((x) => String(x.id) === String(tid));
+          return {
+            id: idx + 1,
+            salida_id: idSalida,
+            trabajador_id: Number(tid),
+            rol: idx === 0 ? 'RESPONSABLE' : 'AYUDANTE',
+            trabajador: t ? {
+              id: Number(t.id),
+              nombre: String(t.nombre || ''),
+              cargo: t.cargo || null,
+              telefono: t.telefono || null,
+              dni: t.dni || null,
+            } : undefined,
+          };
+        }),
+        items: items.map((it, idx) => ({
+          id: idx + 1,
+          salida_id: idSalida,
+          product_id: it.product_id,
+          descripcion: it.descripcion,
+          unidad: it.unidad,
+          cantidad: it.cantidad,
+          cantidad_devuelta: 0,
+          costo_unitario: it.costo_unitario || 0,
+          es_externo: !!it.es_externo,
+        })),
+      };
+
       avisar(`Salida ${data?.codigo || ''} registrada con éxito. Materiales descontados del almacén.`);
       onSuccess(data);
-      onClose();
+      setSalidaParaPrevia(salidaArmada);
     } catch (err: any) {
       console.error('Error registrando salida:', err);
       avisar(err.message || 'Error al guardar la salida');
@@ -767,6 +838,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   const totalCosto = items.reduce((acc, it) => acc + it.cantidad * it.costo_unitario, 0);
 
   return (
+    <>
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
       <div
         id="modal-nueva-salida-container"
@@ -1387,6 +1459,14 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         </div>
       </div>
     </div>
+    {salidaParaPrevia && (
+      <VistaPreviaSalida
+        salida={salidaParaPrevia}
+        empresa={empresa}
+        onCerrar={() => { setSalidaParaPrevia(null); onClose(); }}
+      />
+    )}
+    </>
   );
 };
 

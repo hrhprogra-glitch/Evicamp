@@ -1,10 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Truck, X, Printer, RotateCcw, Plus, CheckCircle, AlertTriangle, MapPin, User, Calendar } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
-import { useImprimir } from '../../../utils/impresion';
 import { avisar, confirmar } from '../../../utils/dialogos';
-import { ComprobanteSalida } from './ComprobanteSalida';
+import { VistaPreviaSalida } from './VistaPreviaSalida';
+import { useEmpresaComprobante } from '../empresa';
 import { ModalDevolucion } from './ModalDevolucion';
 import type { Salida } from '../types';
 
@@ -28,9 +28,9 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
   const [modalDevolucionOpen, setModalDevolucionOpen] = useState(false);
   const [procesando, setProcesando] = useState(false);
 
-  // Impresión
-  const printRef = useRef<HTMLDivElement>(null);
-  const handlePrint = useImprimir(printRef, `Vale-${salida.codigo}`);
+  // 194: el botón de imprimir abre la misma vista previa de las salidas nuevas (ticket, hoja, PDF y WhatsApp).
+  const [vistaPreviaOpen, setVistaPreviaOpen] = useState(false);
+  const empresa = useEmpresaComprobante();
 
   if (!isOpen) return null;
 
@@ -250,10 +250,10 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
               <button
                 id="btn-imprimir-salida"
                 type="button"
-                onClick={handlePrint}
+                onClick={() => setVistaPreviaOpen(true)}
                 className="px-4 py-2 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] font-black uppercase text-xs flex items-center gap-1.5 hover:bg-[var(--color-ink)] hover:text-white cursor-pointer"
               >
-                <Printer size={16} /> Imprimir Vale
+                <Printer size={16} /> Imprimir / Enviar vale
               </button>
 
               {salida.estado !== 'CANCELADO' && (
@@ -320,10 +320,10 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
         </div>
       </div>
 
-      {/* Comprobante Oculto para Impresión */}
-      <div className="hidden print:block">
-        <ComprobanteSalida ref={printRef} salida={salida} />
-      </div>
+      {/* Vista previa del comprobante (hoja, ticket, PDF y WhatsApp) */}
+      {vistaPreviaOpen && (
+        <VistaPreviaSalida salida={salida} empresa={empresa} onCerrar={() => setVistaPreviaOpen(false)} />
+      )}
 
       {/* Modal Devolución */}
       {modalDevolucionOpen && (
