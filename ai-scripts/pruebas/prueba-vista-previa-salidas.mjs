@@ -1,6 +1,6 @@
 // Prueba de la fase 194: vista previa del comprobante de salida al guardar y en salidas ya ingresadas.
-// Hoja A4 / ticket 80 mm, descargar PDF, WhatsApp (app conectada + Web), impresión y teclado.
-// Ojo: las flechas SOLO mueven el selector; Enter es el que elige el formato (regla 7/8 del dueño).
+// Ticket 80 mm por predeterminado (hoja A4 al elegirla), descargar PDF, WhatsApp (app conectada + Web), impresión y teclado.
+// Ningún formato lleva firma (pedido del dueño). Ojo: las flechas SOLO mueven el selector; Enter elige el formato.
 // Solo Nego, con teclado, en 390/768/1366/1920 y con una parte final SIN internet (modo offline).
 // Uso: node ai-scripts/pruebas/prueba-vista-previa-salidas.mjs
 import { createRequire } from 'node:module';
@@ -74,7 +74,7 @@ try {
     // y luego un Enter de más los desmarca. Se borra antes de abrir el formulario.
     await page.evaluate(() => {
       localStorage.removeItem('siumax_servic_borrador_salida');
-      localStorage.removeItem('salidas_formato_impresion'); // la vista previa recuerda hoja/ticket; cada tamaño arranca en hoja
+      localStorage.removeItem('salidas_formato_impresion'); // la vista previa recuerda hoja/ticket; cada tamaño arranca en ticket
     });
 
     try {
@@ -145,13 +145,23 @@ try {
       for (const id of ids) ok(`${pref}: botón ${id}`, await existe(`#${id}`));
 
       const src0 = await page.$eval('[data-vista-previa-salida] iframe', (el) => el.srcdoc);
-      ok(`${pref}: la hoja A4 se ve con el vale y el logo`, /size: A4/.test(src0) && /VALE DE SALIDA/.test(src0) && /<img/.test(src0));
+      ok(`${pref}: abre en ticket 80 mm por predeterminado`, /size: 80mm/.test(src0) && /Vale de salida/i.test(src0) && /<img/.test(src0));
+      ok(`${pref}: el ticket NO lleva firma`, !/Responsable técnico/i.test(src0) && !/Recibido \/ conforme/i.test(src0));
       const codigo = (encabezado.match(/[A-Z]+-?\d+/) || [''])[0];
       ok(`${pref}: el comprobante trae el código de la salida`, codigo.length > 0 && src0.includes(codigo), codigo);
 
-      // Teclado: → solo mueve el selector a Ticket (regla del dueño), Enter sí escoge el formato,
-      // ↓ baja al pie, Esc cierra la previa y el formulario.
-      await enfocarId('btn-formato-salida-HOJA');
+      // Teclado: ← solo mueve el selector a Hoja (regla del dueño), Enter sí escoge el formato;
+      // → vuelve a Ticket, ↓ baja al pie, Esc cierra la previa y el formulario.
+      await enfocarId('btn-formato-salida-TICKET');
+      await page.keyboard.press('ArrowLeft');
+      await pausa(250);
+      ok(`${pref}: ← mueve el selector a Hoja`, (await foco()) === 'btn-formato-salida-HOJA', await foco());
+      await page.keyboard.press('Enter');
+      await pausa(350);
+      const hojaOn = await page.$eval('#btn-formato-salida-HOJA', (el) => el.getAttribute('aria-pressed'));
+      const srcHoja = await page.$eval('[data-vista-previa-salida] iframe', (el) => el.srcdoc);
+      ok(`${pref}: Enter escoge hoja A4`, hojaOn === 'true' && /size: A4/.test(srcHoja));
+      ok(`${pref}: la hoja A4 NO lleva firma`, !/Responsable técnico/i.test(srcHoja) && !/Recibido \/ conforme/i.test(srcHoja));
       await page.keyboard.press('ArrowRight');
       await pausa(250);
       ok(`${pref}: → mueve el selector a Ticket`, (await foco()) === 'btn-formato-salida-TICKET', await foco());
@@ -159,7 +169,7 @@ try {
       await pausa(350);
       const ticketOn = await page.$eval('#btn-formato-salida-TICKET', (el) => el.getAttribute('aria-pressed'));
       const src1 = await page.$eval('[data-vista-previa-salida] iframe', (el) => el.srcdoc);
-      ok(`${pref}: Enter escoge ticket 80 mm`, ticketOn === 'true' && /size: 80mm/.test(src1));
+      ok(`${pref}: Enter vuelve a ticket 80 mm`, ticketOn === 'true' && /size: 80mm/.test(src1));
       ok(`${pref}: el ticket es para el trabajador`, /para el trabajador/i.test(await page.$eval('[data-vista-previa-salida]', (el) => el.innerText)));
       await page.keyboard.press('ArrowDown');
       await pausa(250);
@@ -214,7 +224,7 @@ try {
     await page.keyboard.press('Enter');
     await abrirVistaPrevia();
     ok('Sin internet: abre la vista previa de una salida ingresada', await existe('[data-vista-previa-salida]'));
-    // Puede abrir en ticket (el formato se recuerda de la iteración anterior) y ahí dice "Vale de salida".
+    // Abre en ticket por predeterminado (y el formato elegido se recuerda); ahí dice "Vale de salida".
     ok('Sin internet: se ve el comprobante con el logo guardado',
       /VALE DE SALIDA/i.test(await page.$eval('[data-vista-previa-salida] iframe', (el) => el.srcdoc)));
     const descargas = 'C:/Users/User/AppData/Local/Temp/opencode/descargas-fase194';

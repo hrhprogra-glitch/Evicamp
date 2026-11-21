@@ -108,8 +108,6 @@ td { padding: 7px 8px; border-bottom: 1px solid #ddd; vertical-align: top; }
 .n { text-align: right; white-space: nowrap; }
 tr { page-break-inside: avoid; }
 .nota { margin-top: 14px; padding: 8px 10px; border: 1px solid #ccc; }
-.firmas { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 46px; text-align: center; font-size: 11px; }
-.firmas div { border-top: 2px solid #1e293b; padding-top: 6px; font-weight: 700; }
 .pie { margin-top: 22px; color: #888; font-size: 10px; text-align: center; }
 </style></head><body>
 <div class="cab"><div class="marca"><img src="${esc(new URL(empresa.logo, location.href).href)}" alt="Logo"><h1>${esc(empresa.nombre)}</h1></div>
@@ -118,7 +116,6 @@ tr { page-break-inside: avoid; }
 ${pers ? `<h2>Personal asignado</h2><ul>${pers}</ul>` : ''}
 <h2>Materiales / repuestos</h2><table><thead><tr><th class="n">Cant.</th><th>Unidad</th><th>Descripción</th></tr></thead><tbody>${filas || '<tr><td colspan="3">Sin materiales</td></tr>'}</tbody></table>
 ${salida.observaciones ? `<div class="nota"><b>Observaciones:</b> ${esc(salida.observaciones)}</div>` : ''}
-<div class="firmas"><div>Responsable técnico</div><div>Recibido / conforme</div></div>
 <div class="pie">Generado el ${esc(new Date().toLocaleString('es-PE'))} · SiuMax Nego</div>
 </body></html>`;
 };
@@ -144,8 +141,6 @@ h2 { font-size: 11px; text-transform: uppercase; margin: 8px 0 2px; }
 .item .nom { font-weight: 700; text-transform: uppercase; }
 .fila { display: flex; justify-content: space-between; gap: 6px; }
 .nota { margin-top: 8px; border: 1px solid #000; padding: 4px; }
-.firmas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; text-align: center; font-size: 10px; }
-.firmas div { border-top: 1px solid #000; padding-top: 4px; }
 .pie { margin-top: 10px; text-align: center; font-size: 10px; }
 </style></head><body>
 <div class="cab"><img src="${esc(new URL(empresa.logo, location.href).href)}" alt=""><h1>${esc(empresa.nombre)}</h1>
@@ -154,7 +149,6 @@ h2 { font-size: 11px; text-transform: uppercase; margin: 8px 0 2px; }
 ${pers ? `<h2>Personal asignado</h2>${pers}` : ''}
 <h2>Materiales / repuestos</h2>${items || '<div>Sin materiales</div>'}
 ${salida.observaciones ? `<div class="nota">OBS: ${esc(salida.observaciones)}</div>` : ''}
-<div class="firmas"><div>Responsable técnico</div><div>Recibido / conforme</div></div>
 <div class="pie">${esc(new Date().toLocaleString('es-PE'))}<br>SiuMax Nego</div>
 </body></html>`;
 };
@@ -260,8 +254,9 @@ export const VistaPreviaSalida: React.FC<Props> = ({ salida, empresa, onCerrar }
   const cuerpo = useRef<HTMLDivElement>(null);
   const marco = useRef<HTMLIFrameElement>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
+  // El dueño quiere el ticket por predeterminado (hoja A4 sigue disponible si la elige).
   const [formato, setFormato] = useState<Formato>(() => {
-    try { return localStorage.getItem(CLAVE_FORMATO) === 'TICKET' ? 'TICKET' : 'HOJA'; } catch { return 'HOJA'; }
+    try { return localStorage.getItem(CLAVE_FORMATO) === 'HOJA' ? 'HOJA' : 'TICKET'; } catch { return 'TICKET'; }
   });
 
   const elegirFormato = (f: Formato) => {

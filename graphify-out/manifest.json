@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1795223057.3699076,
-    "seen": 1795223090.4753633,
-    "ast_hash": "70e01374e16c4a329b3a90b511e1d3d3",
+    "mtime": 1795224058.4748101,
+    "seen": 1795224079.6660235,
+    "ast_hash": "eedfcaee8a36f61a8b9eb1cd12c5d1b5",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795223057.3699076,
-    "seen": 1795223090.4753642,
-    "ast_hash": "f282e29e730eec848657c3a096c45fc5",
+    "mtime": 1795224058.4748101,
+    "seen": 1795224079.666025,
+    "ast_hash": "dcc79b3d73ef05e5fbc1af1e71cd6fe6",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795223057.3699076,
-    "seen": 1795223090.4753652,
-    "ast_hash": "164b6738f2e88b41562fa4c90b73e00e",
+    "mtime": 1795224058.4748101,
+    "seen": 1795224079.6660264,
+    "ast_hash": "aba616bb5918f17be33e7f44475de9af",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795223075.0217452,
-    "seen": 1795223090.4753668,
-    "ast_hash": "1abe220b5bf27fd3bcfe9e04c80e2b26",
+    "mtime": 1795224064.5718918,
+    "seen": 1795224079.6660304,
+    "ast_hash": "5d5e6bcbfb2f551edeb96da93f532e40",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -3528,15 +3528,15 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-vista-previa-salidas.mjs": {
-    "mtime": 1795222811.6310203,
-    "seen": 1795223090.4750602,
-    "ast_hash": "e4d61d137fa337756cb9bae4949e6f45",
+    "mtime": 1795223842.0778673,
+    "seen": 1795224079.6649954,
+    "ast_hash": "2d0ca64f1f866f4297f5f0de804f5ad6",
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/VistaPreviaSalida.tsx": {
-    "mtime": 1795221916.0802028,
-    "seen": 1795223090.4752793,
-    "ast_hash": "1d99c3b1512f51998b3ddd13815af5dc",
+    "mtime": 1795223814.306007,
+    "seen": 1795224079.665621,
+    "ast_hash": "bd792eb60e76e217d75028021df41602",
     "semantic_hash": ""
   },
   "src/sections/Salidas/empresa.ts": {

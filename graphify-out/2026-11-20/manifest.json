@@ -2004,27 +2004,27 @@
     "semantic_hash": ""
   },
   "docs/BITACORA.md": {
-    "mtime": 1795111490.9853601,
-    "seen": 1795111536.7348304,
-    "ast_hash": "57616cba60f00fe184c22a0a97dad431",
+    "mtime": 1795223057.3699076,
+    "seen": 1795223090.4753633,
+    "ast_hash": "70e01374e16c4a329b3a90b511e1d3d3",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795111501.8274577,
-    "seen": 1795111536.7348323,
-    "ast_hash": "d7f4089c75b20736df72135577ac4743",
+    "mtime": 1795223057.3699076,
+    "seen": 1795223090.4753642,
+    "ast_hash": "f282e29e730eec848657c3a096c45fc5",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795111512.794511,
-    "seen": 1795111536.7348344,
-    "ast_hash": "f4cffeb73874dc5f2865b0c41eb32386",
+    "mtime": 1795223057.3699076,
+    "seen": 1795223090.4753652,
+    "ast_hash": "164b6738f2e88b41562fa4c90b73e00e",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795111496.2397394,
-    "seen": 1795111536.7348387,
-    "ast_hash": "914dce82a4c532e5e9e95c302ac04f06",
+    "mtime": 1795223075.0217452,
+    "seen": 1795223090.4753668,
+    "ast_hash": "1abe220b5bf27fd3bcfe9e04c80e2b26",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2940,9 +2940,9 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalDetalleSalida.tsx": {
-    "mtime": 1794524203.5337174,
-    "seen": 1794524736.4787235,
-    "ast_hash": "a76a09ec4e5af5406bf87566784168ec",
+    "mtime": 1795221998.7108755,
+    "seen": 1795223090.4752753,
+    "ast_hash": "60345bd9df7153411db46c69a0640d1c",
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalDevolucion.tsx": {
@@ -2952,9 +2952,9 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalNuevaSalida.tsx": {
-    "mtime": 1795111314.2732527,
-    "seen": 1795111536.734634,
-    "ast_hash": "1d1d02017cbb7e361d49ce3e11a3a1cc",
+    "mtime": 1795222027.8853366,
+    "seen": 1795223090.4752774,
+    "ast_hash": "b65e80a8f6ac9351279afc87ab50ab13",
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/TablaSalidas.tsx": {
@@ -3525,6 +3525,24 @@
     "mtime": 1795064456.392466,
     "seen": 1795064626.4556692,
     "ast_hash": "b019582113a6f8eae3eafcc0bd10e3bb",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-vista-previa-salidas.mjs": {
+    "mtime": 1795222811.6310203,
+    "seen": 1795223090.4750602,
+    "ast_hash": "e4d61d137fa337756cb9bae4949e6f45",
+    "semantic_hash": ""
+  },
+  "src/sections/Salidas/components/VistaPreviaSalida.tsx": {
+    "mtime": 1795221916.0802028,
+    "seen": 1795223090.4752793,
+    "ast_hash": "1d99c3b1512f51998b3ddd13815af5dc",
+    "semantic_hash": ""
+  },
+  "src/sections/Salidas/empresa.ts": {
+    "mtime": 1795222034.1569154,
+    "seen": 1795223090.4752803,
+    "ast_hash": "c3be44276ec7293fc56607baa7841102",
     "semantic_hash": ""
   }
 }
