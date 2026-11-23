@@ -8,6 +8,13 @@
 
 ---
 
+## 23/11/2026 — PUNTO AL DÍA (lo último de la Caja en Nego)
+- El dueño pidió: *"pon todo en la memoria y guarda todo lo que hicimos para siempre estar al día"*.
+- **214 (propia):** vuelta al comienzo, commit local `ff9a933`, sin push. Desplegada con bundles `index-BFssEZh6.css` / `index-BqBmmYfE.js`.
+- **215 (ajena, SIN commit):** otra IA desplegó después la vista previa de Caja = impresión, margen del ticket y letra de Salida. Hoy el sitio sirve **`index-Cnjs-E2Y.css` / `index-BX-k9rmP.js`**, pendiente de que el dueño la revise. No atribuirla ni incluirla en commits propios.
+- **Regla fija:** "el comienzo" = respaldo `2301848e…`, con 8 fallos viejos del selector de empleado de Salidas que **no se arreglan por iniciativa propia**.
+- Detalle completo en la sección 60 al final de esta memoria.
+
 ## 0. ⭐ Memoria principal y cambio de plan (17/11/2026) — LEER PRIMERO
 - **El dueño decidió: todo será un solo sistema, SiuMax Nego (`negosiumax`).** Comerc y Servic pasan a ser
   **referencia histórica**. Fuente de verdad: `D:/Programación/siumax/CLAUDE.md`. Si otra IA dice que la memoria está
@@ -897,6 +904,15 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Ojo: `git diff` contra el respaldo muestra 45 diferencias, pero **no todas son de la estética**: 35 son WIP ajeno. Restaurar de más es tan malo como restaurar de menos. Verificar siempre con `hashes-iniciales.txt` al final.
 - El respaldo **no es un estado perfecto**: la prueba original da 188 comprobaciones, 8 fallos y 4 sin datos. Los 8 fallos son del selector de empleado de Salidas (en el `ModalNuevaSalida.tsx` del respaldo, `empleados_publico` y `products` están intercambiados en el `Promise.all`; la pasada 204 lo arregló después). Cuando el dueño pida "al comienzo", hay que devolver ese estado **con sus fallos** y avisarle, no arreglarlo por iniciativa propia.
 - Al reaplicar el WIP ajeno con `git stash pop` pueden salir conflictos si ese WIP se apoyaba en código de las pasadas revertidas (aquí pasó en el `handlePrint` de Caja y en el encabezado de `TerminalBusqueda`). Resolverlos a favor del trabajo ajeno, agregando los imports/`ref` que necesite para que siga compilando, y dejarlos **sin commitear**. El deploy se compila desde el `HEAD` limpio, no desde ese árbol de trabajo.
+
+## 60. Puesta al día de memoria (23/11/2026, pedido del dueño)
+- El dueño pidió dejar **todo guardado y al día** para que otra IA pueda seguir sin preguntar. Esto resume el estado final de las pasadas 213, 214 y 215.
+- **213 (propia, commit `f3f7bbe`):** prueba de estilo azul eléctrico en Caja, solo en Nego, con bundles `index-cWWmYyiI.css` / `index-BMpblSY3.js`. Regresión 208/208, 0 fallos. **Rechazada** por el dueño: *"no me gusto vuelvo al comienzo"*.
+- **214 (propia, commit local `ff9a933`, sin push):** vuelta al respaldo original `2301848e34930e04e405e9ff4dfee20b2863139e`. Solo 10 archivos de `src` más la prueba adaptiva, verificados con `hashes-iniciales.txt`. Vuelve `ModalNombreEspera.tsx`. WIP ajeno de 35 archivos intacto; los 3 con WIP encima se guardaron con `git stash` y se reaplicaron con conflictos resueltos a favor del trabajo ajeno, sin commitear. Build limpio desde el HEAD de la 214 (worktree aparte, sin WIP), bundle `index-BFssEZh6.css` / `index-BqBmmYfE.js`, deploy solo Nego (22 archivos). En vivo: sin `caja-estilo-neon`, sí `input-nombre-espera`. Prueba original: **188 comprobaciones, 8 fallos, 4 sin datos**; los 8 son viejos del selector de empleado de Salidas y **no se arreglaron** porque el pedido fue volver al comienzo, no reparar Salidas.
+- **215 (ajena, SIN commit, pendiente de revisión del dueño):** vista previa de Caja = mismo HTML de impresión (`generarTicketVentaHtml` dentro de un `iframe`), `padding: 3mm 4mm 5mm 6mm` en el HTML del ticket para el corte izquierdo en ticketera 80 mm, y Salida vuelve a `Courier New` en negrita. Tocó `Punto-de-venta/index.tsx`, `Punto-de-venta/components/TicketImprimible.tsx` y `Salidas/components/VistaPreviaSalida.tsx`. Desplegada solo en Nego; bundles en vivo **`index-Cnjs-E2Y.css` / `index-BX-k9rmP.js`**. Trae aparejada la entrada 215 de `docs/BITACORA.md`, también sin commitear: **no hacer `git add docs/BITACORA.md`** en un commit propio.
+- **Cómo no confundirse:** si el sitio sirve `index-BFssEZh6.css` / `index-BqBmmYfE.js`, está en el comienzo (214); si sirve `index-Cnjs-E2Y.css` / `index-BX-k9rmP.js`, está con la 215 de otra IA. Consultar siempre el `index.html` en vivo con `curl` antes de dar por hecho un estado.
+- **Commits propios hasta hoy:** 214 = `ff9a933` (HEAD local), 213 = `f3f7bbe`, 212 = `a8678ef`, 211-bis = `0c2fdd1`, 211 = `9a1f95e`. Sin push en ninguno.
+- Esta puesta al día es solo documentación: no se tocó código, ni Evicamp, ecosistema, base ni credenciales.
 
 
   

@@ -1353,3 +1353,10 @@
 - **Mensaje listo para el dueño:**
   > Listo, ya volví al comienzo en Nego. Entrá a `https://nego.siumax.duckdns.org` y mirá **Caja**: quedó como era antes de que empezáramos a cambiar la estética, con la ventana para nombrar el espera como antes. Yo corrí las pruebas con teclado y sin internet: la Caja pasó bien. Quedaron 8 fallos viejos del selector de empleado en **Salidas**, que ya existían en ese estado original; no los toqué porque pediste volver al comienzo. No toqué Evicamp ni ecosistema y no subí nada a GitHub.
 
+## 23/11/2026 (puesta al día de memoria, pedido del dueño)
+- El dueño pidió: *"pon todo en la memoria y guarda todo lo que hicimos para siempre estar al dia"*.
+- Se dejó escrito que la **214** propia quedó en el commit local `ff9a933` (sin push) y se desplegó con bundles `index-BFssEZh6.css` / `index-BqBmmYfE.js`.
+- También se aclaró que la **215** es trabajo de **otra IA**: está sin commit y pendiente de que el dueño la revise, y hoy el sitio sirve `index-Cnjs-E2Y.css` / `index-BX-k9rmP.js`. No se le atribuyó ni se metió en un commit propio.
+- Queda fija la regla: "el comienzo" es el respaldo original `2301848e…`, con 8 fallos viejos del selector de empleado de Salidas que no se arreglan por iniciativa propia.
+- No se tocó código, Evicamp, ecosistema, base ni credenciales; no se hizo push.
+
