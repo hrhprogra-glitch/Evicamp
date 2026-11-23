@@ -36,20 +36,11 @@ const COMPROBANTES: { id: TipoComprobante; nombre: string }[] = [
   { id: 'BOLETA', nombre: 'Boleta' },
   { id: 'FACTURA', nombre: 'Factura' },
 ];
-// Colores propios (como Efectivo/Yape/Tarjeta): gris = interna, naranja = boleta, rojo = factura
+// Molde sobrio: el botón va blanco con borde fino; el color queda solo en el punto y en la línea de la pestaña elegida.
 const COLOR_COMPROBANTE: Record<TipoComprobante, { normal: string; elegido: string }> = {
-  NOTA: {
-    normal: 'bg-white text-[var(--color-muted)] border-[var(--color-muted)] hover:bg-[var(--color-muted)] hover:text-white',
-    elegido: 'bg-[var(--color-muted)] text-white border-[var(--color-muted)]',
-  },
-  BOLETA: {
-    normal: 'bg-white text-[var(--color-warning-dark)] border-[var(--color-warning-dark)] hover:bg-[var(--color-warning-dark)] hover:text-white',
-    elegido: 'bg-[var(--color-warning-dark)] text-white border-[var(--color-warning-dark)]',
-  },
-  FACTURA: {
-    normal: 'bg-white text-[var(--color-danger-dark)] border-[var(--color-danger-dark)] hover:bg-[var(--color-danger-dark)] hover:text-white',
-    elegido: 'bg-[var(--color-danger-dark)] text-white border-[var(--color-danger-dark)]',
-  },
+  NOTA: { normal: 'bg-[var(--color-muted)]', elegido: 'bg-[var(--color-muted)]' },
+  BOLETA: { normal: 'bg-[var(--color-warning-dark)]', elegido: 'bg-[var(--color-warning-dark)]' },
+  FACTURA: { normal: 'bg-[var(--color-danger)]', elegido: 'bg-[var(--color-danger)]' },
 };
 
 export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSeleccionado, facturacion, onConfirm }) => {
@@ -301,7 +292,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
       if (faltante > 0 && isCreatingNew && clienteNombre.trim() !== '') {
         const exists = clientesDb.some(c => (c.nombre || c.name || '').toUpperCase() === clienteNombre.toUpperCase() || (clienteDni && c.dni === clienteDni));
         if (exists) {
-            alert("⚠️ Error: Ya existe un cliente en el directorio con este Nombre o DNI.");
+            alert("Error: Ya existe un cliente en el directorio con este Nombre o DNI.");
             return;
         }
         
@@ -357,13 +348,13 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
   // Panel de crédito/fiado: en celular va dentro de la ventana de pago, debajo;
   // desde tablet es una ventana aparte que sale al lado izquierdo de la de pago.
   const panelFiado = (
-        <div className="border-2 border-[var(--color-warning)] bg-[var(--color-warning-bg)] p-3 flex flex-col gap-3 shrink-0 min-w-0 rounded-none">
+        <div className="tabla-marco p-3 flex flex-col gap-3 shrink-0 min-w-0 rounded-none">
           
           {/* CABECERA DE FIADOS CON BOTÓN DE SWITCH TÉCNICO */}
-          <div className="flex items-center justify-between border-b-2 border-[var(--color-warning-border)] pb-2">
+          <div className="flex items-center justify-between border-b-2 border-[var(--color-ink)] pb-2">
             <div className="flex items-center gap-2">
-              <UserPlus size={18} className="text-[var(--color-warning)]" />
-              <span className="text-xs font-black text-[var(--color-warning-dark)] uppercase tracking-widest">Crédito / Fiado</span>
+              <UserPlus size={18} className="text-[var(--color-accent-shadow)]" />
+              <span className="text-xs font-black text-[var(--color-ink)] uppercase tracking-widest">Crédito / Fiado</span>
             </div>
 
             {!isCreatingNew ? (
@@ -381,7 +372,8 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                   if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
                   if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
                 }}
-                className="flex items-center gap-1 bg-[var(--color-accent)] text-white px-3 py-1.5 text-[12px] font-black uppercase border-2 border-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] hover:border-[var(--color-accent-dark)] transition-colors rounded-none shadow-[2px_2px_0_0_var(--color-accent-shadow)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] cursor-pointer focus:ring-2 focus:ring-black focus:outline-none"
+                style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+                className="boton-cabecera flex items-center gap-1 px-3 py-1.5 text-[12px] font-black uppercase cursor-pointer focus:outline-none"
               >
                 <Plus size={14}/> Nuevo Cliente
               </button>
@@ -399,7 +391,8 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                   if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
                   if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
                 }}
-                className="flex items-center gap-1 bg-[var(--color-danger)] text-white px-3 py-1.5 text-[12px] font-black uppercase border-2 border-[var(--color-danger)] hover:bg-[var(--color-danger-dark)] hover:border-[var(--color-danger-dark)] transition-colors rounded-none shadow-[2px_2px_0_0_#991B1B] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] cursor-pointer focus:ring-2 focus:ring-black focus:outline-none"
+                style={{ '--icono': 'var(--color-danger)' } as React.CSSProperties}
+                className="boton-cabecera flex items-center gap-1 px-3 py-1.5 text-[12px] font-black uppercase cursor-pointer focus:outline-none"
               >
                 <X size={14}/> Cancelar Nuevo
               </button>
@@ -410,9 +403,9 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
           {!isCreatingNew ? (
             // MODO 1: BUSCADOR DESPLEGABLE DE CLIENTES EXISTENTES
             <div className="space-y-1 relative">
-              <label className="text-[12px] font-black text-[var(--color-warning-text)] uppercase">Buscar Cliente Existente *</label>
+              <label className="text-[12px] font-black text-[var(--color-muted)] uppercase">Buscar Cliente Existente *</label>
               <div 
-                className="flex items-center justify-between border-2 border-[var(--color-warning-border)] bg-white p-2 cursor-text transition-colors rounded-none focus-within:border-[var(--color-warning)]"
+                className="flex items-center justify-between border border-[var(--color-border)] bg-[var(--color-surface)] p-2 cursor-text transition-colors rounded-none focus-within:border-[var(--color-ink)]"
                 {...clicConTeclado(() => setIsDropdownOpen(true))}
               >
                 <input
@@ -441,7 +434,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                   }}
                   className="w-full text-xs font-black uppercase outline-none bg-transparent text-[var(--color-ink)] placeholder-[var(--color-subtle)]"
                 />
-                <button type="button" onClick={(e) => { e.stopPropagation(); setIsDropdownOpen(!isDropdownOpen); }} className="text-[var(--color-warning-dark)] hover:text-[var(--color-warning-text)] px-1 cursor-pointer">
+                <button type="button" onClick={(e) => { e.stopPropagation(); setIsDropdownOpen(!isDropdownOpen); }} className="text-[var(--color-muted)] hover:text-[var(--color-ink)] px-1 cursor-pointer">
                   {isDropdownOpen ? <X size={16} /> : <ChevronDown size={16} />}
                 </button>
               </div>
@@ -449,18 +442,18 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
               {clienteNombre && (
                 <div className="text-[11px] font-bold text-[var(--color-ink)] flex flex-wrap gap-2 items-center pt-1">
                   {clienteActual?.dias_plazo != null && (
-                    <span className="bg-white/80 px-1.5 py-0.5 border border-[var(--color-warning-border)]">
+                    <span className="bg-[var(--color-surface)] px-1.5 py-0.5 border border-[var(--color-border)]">
                       Plazo: <strong>{clienteActual.dias_plazo} días</strong>
                     </span>
                   )}
                   {deudaPendiente > 0.05 && (
-                    <span className="bg-white/80 px-1.5 py-0.5 border border-[var(--color-warning-border)]">
+                    <span className="bg-[var(--color-surface)] px-1.5 py-0.5 border border-[var(--color-border)]">
                       Deuda actual: <strong className="text-[var(--color-danger)]">S/ {formatearMonto(deudaPendiente)}</strong>
                     </span>
                   )}
                   {tieneDeudaVencida && (
-                    <span className="bg-[var(--color-danger)] text-white px-1.5 py-0.5 font-black uppercase tracking-wider text-[10px]">
-                      ⚠ Tiene deudas vencidas
+                    <span className="bg-[var(--color-surface)] text-[var(--color-danger)] px-1.5 py-0.5 font-black uppercase tracking-wider text-[10px] border border-[var(--color-border)]">
+                      Deudas vencidas
                     </span>
                   )}
                 </div>
@@ -468,7 +461,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
 
               {/* LISTA DESPLEGABLE CONECTADA A LA BASE DE DATOS */}
               {isDropdownOpen && searchCliente.trim() !== '' && (
-                <div className="absolute z-50 top-[100%] left-0 w-full mt-1 bg-[var(--color-surface)] border-2 border-[var(--color-border)] shadow-[4px_4px_0_0_var(--color-ink)] max-h-48 overflow-y-auto custom-scrollbar rounded-none">
+                <div className="tabla-marco absolute z-50 top-[100%] left-0 w-full mt-1 bg-[var(--color-surface)] max-h-48 overflow-y-auto custom-scrollbar rounded-none">
                   {clientesDb.filter(c => coincideBusqueda([c.nombre, c.name, c.dni, c.telefono], searchCliente)).length === 0 ? (
                     <div className="p-4 text-xs font-black uppercase text-[var(--color-muted)] text-center bg-[var(--color-bg)]">
                       NO SE ENCONTRARON CLIENTES
@@ -481,7 +474,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                           key={c.id}
                           id={`fiado-list-item-${index}`}
                           tabIndex={0}
-                          className="p-3 text-[13px] font-black uppercase text-[var(--color-ink)] hover:bg-[var(--color-warning)] hover:text-[#030712] focus:bg-[var(--color-warning)] focus:text-[#030712] focus:outline-none cursor-pointer border-b border-[var(--color-border)] last:border-0 transition-colors flex justify-between items-center rounded-none"
+                          className="tabla-fila p-3 text-[13px] font-black uppercase text-[var(--color-ink)] focus:outline-none cursor-pointer border-b border-[var(--color-border)] last:border-0 transition-colors flex justify-between items-center rounded-none"
                           onKeyDown={(e) => {
                              if (e.key === 'ArrowDown') {
                                e.preventDefault();
@@ -523,9 +516,9 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
             </div>
           ) : (
             // MODO 2: CREACIÓN MANUAL DE CLIENTE (CUADROS PUROS)
-            <div className="space-y-3 bg-[#FEF3C7] p-3 border-2 border-[var(--color-warning-border)] rounded-none">
+            <div className="space-y-3 bg-[var(--color-bg)] p-3 border border-[var(--color-border)] rounded-none">
               <div className="space-y-1">
-                <label className="text-[12px] font-black text-[var(--color-warning-text)] uppercase">Nombre del Nuevo Cliente *</label>
+                <label className="text-[12px] font-black text-[var(--color-muted)] uppercase">Nombre del Nuevo Cliente *</label>
                 <input 
                   id="fiado-nombre"
                   type="text" 
@@ -539,12 +532,12 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                     if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('fiado-dni')?.focus(); }
                     if (e.key === 'Delete') { e.preventDefault(); if ((e.target as HTMLInputElement).value === '') onClose(); else setClienteNombre(''); }
                   }}
-                  className="w-full bg-white border-2 border-[var(--color-warning-border)] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-warning)] rounded-none"
+                  className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-ink)] rounded-none"
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-[12px] font-bold text-[var(--color-warning-text)] uppercase">DNI (Opcional)</label>
+                  <label className="text-[12px] font-bold text-[var(--color-muted)] uppercase">DNI (Opcional)</label>
                   <input 
                     id="fiado-dni"
                     type="text" 
@@ -559,11 +552,11 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                       if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('fiado-celular')?.focus(); }
                       if (e.key === 'Delete') { e.preventDefault(); if ((e.target as HTMLInputElement).value === '') onClose(); else setClienteDni(''); }
                     }}
-                    className="w-full bg-white border-2 border-[var(--color-warning-border)] p-2 text-xs font-bold text-[var(--color-ink)] outline-none focus:border-[var(--color-warning)] rounded-none"
+                    className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] p-2 text-xs font-bold text-[var(--color-ink)] outline-none focus:border-[var(--color-ink)] rounded-none"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[12px] font-bold text-[var(--color-warning-text)] uppercase">Celular (Opcional)</label>
+                  <label className="text-[12px] font-bold text-[var(--color-muted)] uppercase">Celular (Opcional)</label>
                   <input 
                     id="fiado-celular"
                     type="text" 
@@ -578,7 +571,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                       if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('fiado-dni')?.focus(); }
                       if (e.key === 'Delete') { e.preventDefault(); if ((e.target as HTMLInputElement).value === '') onClose(); else setClienteTelefono(''); }
                     }}
-                    className="w-full bg-white border-2 border-[var(--color-warning-border)] p-2 text-xs font-bold text-[var(--color-ink)] outline-none focus:border-[var(--color-warning)] rounded-none"
+                    className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] p-2 text-xs font-bold text-[var(--color-ink)] outline-none focus:border-[var(--color-ink)] rounded-none"
                   />
                 </div>
               </div>
@@ -586,11 +579,11 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
           )}
 
           {/* FECHA VENCIMIENTO (APLICA PARA AMBOS MODOS) */}
-          <div className="space-y-1.5 mt-1 pt-2 border-t-2 border-[var(--color-warning-border)]">
+          <div className="space-y-1.5 mt-1 pt-2 border-t-2 border-[var(--color-ink)]">
             <div className="flex items-center justify-between gap-1 flex-wrap">
               <label 
                 htmlFor="fiado-fecha" 
-                className="text-[12px] font-black text-[var(--color-warning-text)] uppercase flex items-center gap-1 cursor-pointer"
+                className="text-[12px] font-black text-[var(--color-muted)] uppercase flex items-center gap-1 cursor-pointer"
                 onClick={(e) => {
                    e.preventDefault();
                    document.getElementById('fiado-fecha')?.focus();
@@ -609,7 +602,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                     tabIndex={-1}
                     onClick={() => setFechaVencimiento(calcularFechaVencimiento(d))}
                     title={`Poner fecha a ${d} días`}
-                    className="px-1.5 py-0.5 text-[10px] font-black uppercase border border-[var(--color-warning-border)] bg-white hover:bg-[var(--color-warning)] text-[var(--color-ink)] cursor-pointer"
+                    className="px-1.5 py-0.5 text-[10px] font-black uppercase border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-bg)] text-[var(--color-ink)] cursor-pointer"
                   >
                     +{d}d
                   </button>
@@ -633,7 +626,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                  if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('cobro-btn-confirm')?.focus(); }
                  if (e.key === 'Delete') { e.preventDefault(); if ((e.target as HTMLInputElement).value === '') onClose(); else setFechaVencimiento(''); }
               }}
-              className="w-full bg-white border-2 border-[var(--color-warning-border)] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-warning)] rounded-none cursor-pointer"
+              className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] p-2 text-xs font-black text-[var(--color-ink)] uppercase outline-none focus:border-[var(--color-ink)] rounded-none cursor-pointer"
             />
           </div>
 
@@ -642,7 +635,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
 
   return (
     <div role="dialog" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4 font-mono">
-      <div className="ventana-sobria relative bg-white w-full max-w-md border-2 border-[var(--color-ink)] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
+      <div className="ventana-sobria relative bg-[var(--color-surface)] w-full max-w-md border-2 border-[var(--color-ink)] flex flex-col max-h-[calc(var(--alto-pantalla)*0.94)] sm:max-h-[calc(var(--alto-pantalla)*0.9)]">
         {/* Ventana de fiado (tablet/PC): pegada al lado derecho de la ventana de pago, en
             posición absoluta (relativa a esta misma ventana) para que NUNCA la mueva ni la
             recentre al aparecer/desaparecer — antes las dos se centraban juntas como grupo,
@@ -656,13 +649,13 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
             onTransitionEnd={(e) => { if (e.target === e.currentTarget && e.propertyName === 'width') setFiadoAbierto(faltante > 0); }}
             className={`absolute top-0 left-full ml-2 pb-2 transition-[width,opacity] duration-300 ease-out motion-reduce:transition-none ${faltante > 0 && (fiadoAbierto || window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'overflow-visible' : 'overflow-hidden'} ${faltante > 0 ? 'w-[calc(23rem+8px)] opacity-100' : 'w-0 opacity-0'}`}
           >
-            <div className={`bg-white w-[23rem] border-2 border-[var(--color-ink)] shadow-[8px_8px_0_0_var(--color-ink)] p-3 transition-transform duration-300 ease-out motion-reduce:transition-none ${faltante > 0 ? 'translate-x-0' : '-translate-x-16'}`}>
+            <div className="bg-[var(--color-surface)] w-[23rem] border-2 border-[var(--color-ink)] p-3">
               {panelFiado}
             </div>
           </div>
         )}
 
-        <div className="ventana-cabecera bg-[var(--color-accent)] text-[var(--color-ink)] px-4 py-2 flex items-center justify-between border-b-2 border-[var(--color-ink)] shrink-0">
+        <div className="ventana-cabecera bg-[var(--color-bg)] text-[var(--color-ink)] px-4 py-2 flex items-center justify-between border-b-2 border-[var(--color-ink)] shrink-0">
           <h2 className="ventana-cabecera__titulo text-lg font-black uppercase tracking-widest flex items-center gap-2">
             <Calculator size={20} /> Pago Mixto
           </h2>
@@ -680,7 +673,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
               if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-confirm')?.focus(); }
               if (e.key === 'Delete') { e.preventDefault(); onClose(); }
             }}
-            className="ventana-cerrar hover:text-white focus:text-white focus:bg-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer p-1"
+            className="ventana-cerrar hover:text-[var(--color-ink)] focus:text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-colors cursor-pointer p-1"
           >
             <X size={20} strokeWidth={3} />
           </button>
@@ -689,9 +682,9 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
         <div className="p-3 bg-[var(--color-bg)] flex flex-col gap-2 overflow-y-auto custom-scrollbar">
           {/* COLUMNA DE PAGO */}
           <div className="flex flex-col gap-2 w-full">
-          <div className="bg-[var(--color-ink)] text-white p-3 [@media(max-height:820px)]:py-1.5 text-center border-2 border-[var(--color-ink)] shadow-inner relative shrink-0">
-            <p className="text-[12px] font-bold text-[var(--color-subtle)] uppercase tracking-[0.2em] mb-1">Total a Pagar</p>
-            <p className="text-2xl sm:text-4xl [@media(max-height:820px)]:text-2xl font-black text-white">S/ {formatearMonto(total)}</p>
+          <div className="tarjeta-sobria bg-[var(--color-surface)] text-[var(--color-ink)] p-3 [@media(max-height:820px)]:py-1.5 text-center border border-[var(--color-border)] relative shrink-0">
+            <p className="text-[12px] font-bold text-[var(--color-muted)] uppercase tracking-[0.2em] mb-1">Total a Pagar</p>
+            <p className="text-2xl sm:text-4xl [@media(max-height:820px)]:text-2xl font-black text-[var(--color-ink)]">S/ {formatearMonto(total)}</p>
           </div>
 
           <div className="flex gap-2 shrink-0">
@@ -699,22 +692,22 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
               if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
               if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('btn-exacto-yape')?.focus(); }
               if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('pago-efectivo')?.focus(); }
-            }} className="flex-1 bg-white border-2 border-[var(--color-accent)] text-[var(--color-accent)] font-black text-[12px] uppercase py-2 [@media(max-height:820px)]:py-1 hover:bg-[var(--color-accent)] hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]">Exacto Efectivo</button>
+            }} style={{ '--icono': 'var(--color-accent)' } as React.CSSProperties} className="boton-cabecera flex-1 flex items-center justify-center gap-1 font-black text-[12px] uppercase py-2 [@media(max-height:820px)]:py-1 cursor-pointer focus:outline-none"><Banknote size={14}/> Exacto Efectivo</button>
             <button id="btn-exacto-yape" onClick={() => pagoExacto('YAPE')} onKeyDown={(e) => {
               if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
               if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('btn-exacto-efectivo')?.focus(); }
               if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('btn-exacto-tarjeta')?.focus(); }
               if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('pago-yape')?.focus(); }
-            }} className="flex-1 bg-white border-2 border-[var(--color-purple)] text-[var(--color-purple)] font-black text-[12px] uppercase py-2 [@media(max-height:820px)]:py-1 hover:bg-[var(--color-purple)] hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]">Exacto Yape</button>
+            }} style={{ '--icono': 'var(--color-purple)' } as React.CSSProperties} className="boton-cabecera flex-1 flex items-center justify-center gap-1 font-black text-[12px] uppercase py-2 [@media(max-height:820px)]:py-1 cursor-pointer focus:outline-none"><Smartphone size={14}/> Exacto Yape</button>
             <button id="btn-exacto-tarjeta" onClick={() => pagoExacto('TARJETA')} onKeyDown={(e) => {
               if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('cobro-btn-close')?.focus(); }
               if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('btn-exacto-yape')?.focus(); }
               if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('pago-tarjeta')?.focus(); }
-            }} className="flex-1 bg-white border-2 border-[var(--color-info)] text-[var(--color-info)] font-black text-[12px] uppercase py-2 [@media(max-height:820px)]:py-1 hover:bg-[var(--color-info)] hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)]">Exacto Tarjeta</button>
+            }} style={{ '--icono': 'var(--color-info)' } as React.CSSProperties} className="boton-cabecera flex-1 flex items-center justify-center gap-1 font-black text-[12px] uppercase py-2 [@media(max-height:820px)]:py-1 cursor-pointer focus:outline-none"><CreditCard size={14}/> Exacto Tarjeta</button>
           </div>
 
           <div className="flex flex-col gap-2 shrink-0">
-            <div className="flex items-center justify-between bg-white border-2 border-[var(--color-border)] p-2 [@media(max-height:820px)]:py-0.5 focus-within:border-[var(--color-accent)] transition-colors">
+            <div className="tabla-marco flex items-center justify-between p-2 [@media(max-height:820px)]:py-0.5 focus-within:border-[var(--color-ink)] transition-colors">
               <div className="flex items-center gap-2 font-black text-[var(--color-ink)] uppercase text-[12px]">
                 <Banknote size={16} className="text-[var(--color-accent)]"/> Efectivo
               </div>
@@ -750,7 +743,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                 />
               </div>
             </div>
-            <div className="flex items-center justify-between bg-white border-2 border-[var(--color-border)] p-2 [@media(max-height:820px)]:py-0.5 focus-within:border-[var(--color-purple)] transition-colors">
+            <div className="tabla-marco flex items-center justify-between p-2 [@media(max-height:820px)]:py-0.5 focus-within:border-[var(--color-ink)] transition-colors">
               <div className="flex items-center gap-2 font-black text-[var(--color-ink)] uppercase text-[12px]">
                 <Smartphone size={16} className="text-[var(--color-purple)]"/> Yape
               </div>
@@ -781,12 +774,12 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                        else setMontoYape('');
                     }
                   }} 
-                  className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[var(--color-ink)] focus:bg-[#F3E8FF]" 
+                  className="w-full bg-transparent p-1 pl-6 text-base font-black text-right outline-none text-[var(--color-ink)] focus:bg-[var(--color-bg)]" 
                   placeholder="0.00" 
                 />
               </div>
             </div>
-            <div className="flex items-center justify-between bg-white border-2 border-[var(--color-border)] p-2 [@media(max-height:820px)]:py-0.5 focus-within:border-[var(--color-info)] transition-colors">
+            <div className="tabla-marco flex items-center justify-between p-2 [@media(max-height:820px)]:py-0.5 focus-within:border-[var(--color-ink)] transition-colors">
               <div className="flex items-center gap-2 font-black text-[var(--color-ink)] uppercase text-[12px]">
                 <CreditCard size={16} className="text-[var(--color-info)]"/> Tarjeta
               </div>
@@ -827,11 +820,11 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
 
           {/* FASE 11.3: COMPROBANTE */}
           {facturacion && (
-            <div className="bg-white border-2 border-[var(--color-ink)] p-2 flex flex-col gap-2 shrink-0">
+            <div className="tabla-marco p-2 flex flex-col gap-2 shrink-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[12px] font-black uppercase tracking-widest text-[var(--color-ink)]">Comprobante</span>
                 {facturacion.modo !== 'REAL' && (
-                  <span className="text-[10px] font-black uppercase px-1.5 py-0.5 bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] border border-[var(--color-warning-border)]">
+                  <span className="text-[10px] font-black uppercase px-1.5 py-0.5 bg-[var(--color-bg)] text-[var(--color-muted)] border border-[var(--color-border)]">
                     Modo {facturacion.modo === 'SIMULADO' ? 'simulado' : 'prueba'}: sin valor ante SUNAT
                   </span>
                 )}
@@ -852,11 +845,13 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                       else if (e.key === 'ArrowDown') ir(compTipo !== 'NOTA' ? 'cobro-doc-num' : 'cobro-btn-imprimir');
                       else if (e.key === 'Delete') { e.preventDefault(); onClose(); }
                     }}
-                    className={`flex-1 py-2 border-2 text-[12px] font-black uppercase cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:ring-offset-1 ${
-                      COLOR_COMPROBANTE[c.id][compTipo === c.id ? 'elegido' : 'normal']
-                    }`}
+                    className="boton-cabecera flex-1 flex flex-col items-center justify-center gap-1 py-2 text-[12px] font-black uppercase cursor-pointer focus:outline-none"
                   >
-                    {c.nombre}
+                    <span className="flex items-center gap-1.5">
+                      <span className={`w-2 h-2 ${COLOR_COMPROBANTE[c.id][compTipo === c.id ? 'elegido' : 'normal']}`} />
+                      {c.nombre}
+                    </span>
+                    <span className={`h-0.5 w-8 ${compTipo === c.id ? 'bg-[var(--color-accent)]' : 'bg-transparent'}`} />
                   </button>
                 ))}
               </div>
@@ -890,7 +885,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                         else if (e.key === 'ArrowLeft' && i === 1 && e.currentTarget.selectionStart === 0) ir(campos[0][0]);
                         else if (e.key === 'Delete') { e.preventDefault(); if ((e.target as HTMLInputElement).value === '') onClose(); else cambiar(''); }
                       }}
-                      className={`${i === 2 ? 'col-span-2 ' : ''}w-full bg-white border-2 border-[var(--color-border)] p-1.5 text-xs font-black uppercase text-[var(--color-ink)] outline-none focus:border-[var(--color-ink)] rounded-none`}
+                      className={`${i === 2 ? 'col-span-2 ' : ''}w-full bg-[var(--color-surface)] border border-[var(--color-border)] p-1.5 text-xs font-black uppercase text-[var(--color-ink)] outline-none focus:border-[var(--color-ink)] rounded-none`}
                     />
                   ))}
                 </div>
@@ -908,18 +903,18 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
 
         {/* RESUMEN FIJO: siempre visible (en la TV la zona de arriba se desplaza) */}
         <div className="px-3 py-2 bg-[var(--color-bg)] border-t-2 border-[var(--color-border)] flex flex-col gap-2 shrink-0">
-        <div className="bg-white border-2 border-[var(--color-border)] px-3 py-2 flex flex-col gap-1 [@media(max-height:820px)]:flex-row [@media(max-height:820px)]:items-center [@media(max-height:820px)]:justify-between [@media(max-height:820px)]:gap-4 shrink-0">
+        <div className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] px-3 py-2 flex flex-col gap-1 [@media(max-height:820px)]:flex-row [@media(max-height:820px)]:items-center [@media(max-height:820px)]:justify-between [@media(max-height:820px)]:gap-4 shrink-0">
           <div className="flex justify-between items-center gap-2 text-[12px] font-black uppercase text-[var(--color-muted)]">
             <span>Ingresado:</span>
             <span>S/ {formatearMonto(totalIngresado)}</span>
           </div>
           {faltante > 0 ? (
-            <div className="flex justify-between items-center border-t-2 border-dashed border-[var(--color-border)] pt-1 [@media(max-height:820px)]:border-t-0 [@media(max-height:820px)]:pt-0 [@media(max-height:820px)]:gap-3">
+            <div className="flex justify-between items-center border-t border-[var(--color-border)] pt-1 [@media(max-height:820px)]:border-t-0 [@media(max-height:820px)]:pt-0 [@media(max-height:820px)]:gap-3">
               <span className="text-[12px] font-black uppercase text-[var(--color-warning)]">Falta cobrar:</span>
               <span className="text-lg font-black text-[var(--color-warning)]">S/ {formatearMonto(faltante)}</span>
             </div>
           ) : (
-            <div className="flex justify-between items-center border-t-2 border-dashed border-[var(--color-border)] pt-1 [@media(max-height:820px)]:border-t-0 [@media(max-height:820px)]:pt-0 [@media(max-height:820px)]:gap-3">
+            <div className="flex justify-between items-center border-t border-[var(--color-border)] pt-1 [@media(max-height:820px)]:border-t-0 [@media(max-height:820px)]:pt-0 [@media(max-height:820px)]:gap-3">
               <span className="text-[12px] font-black uppercase text-[var(--color-info)]">Vuelto:</span>
               <span className="text-xl font-black text-[var(--color-info)]">S/ {formatearMonto(vuelto)}</span>
             </div>
@@ -927,7 +922,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
         </div>
 
         {digitalExcedeTotal && (
-          <div role="alert" className="border-2 border-[var(--color-danger)] bg-[var(--color-danger-bg)] text-[#B91C1C] p-2 text-[12px] font-black uppercase shrink-0">
+          <div role="alert" className="border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-danger)] p-2 text-[12px] font-black uppercase shrink-0">
             Yape y tarjeta no pueden superar el total; el vuelto solo sale del efectivo.
           </div>
         )}
@@ -952,7 +947,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
               if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('cobro-btn-confirm')?.focus(); }
               if (e.key === 'Enter') { e.preventDefault(); setImprimirBoleta(!imprimirBoleta); }
             }}
-            className={`w-12 h-6 flex items-center border-2 border-[var(--color-ink)] rounded-none p-1 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:ring-offset-1 ${
+            className={`w-12 h-6 flex items-center border border-[var(--color-border)] rounded-none p-1 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] focus:ring-offset-1 ${
               imprimirBoleta ? 'bg-[var(--color-ink)]' : 'bg-[var(--color-surface)]'
             }`}
           >
@@ -960,7 +955,7 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
           </button>
         </div>
 
-        <div className="px-4 py-3 [@media(max-height:820px)]:py-2 bg-white border-t-2 border-[var(--color-ink)] shrink-0">
+        <div className="px-4 py-3 [@media(max-height:820px)]:py-2 bg-[var(--color-surface)] border-t-2 border-[var(--color-ink)] shrink-0">
           <button 
             id="cobro-btn-confirm"
             onClick={handleCobrar}
@@ -976,13 +971,10 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
               if (e.key === 'Delete') { e.preventDefault(); onClose(); }
             }}
             disabled={!puedeConfirmar || isProcessing}
-            className={`w-full py-3 [@media(max-height:820px)]:py-2 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all shadow-[4px_4px_0_0_var(--color-ink)] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] focus:outline-none focus:ring-4 focus:ring-[var(--color-ink)] ${
-              (!puedeConfirmar || isProcessing) ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-70' :
-              faltante > 0 ? 'bg-[var(--color-warning)] text-[var(--color-ink)] cursor-pointer' : 'bg-[var(--color-ink)] text-white hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] cursor-pointer'
-            }`}
+            style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+            className="boton-cabecera w-full py-3 [@media(max-height:820px)]:py-2 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
-            {/* ⚡ Respuesta inmediata: Solo cambia el ícono mientras procesa */}
-            {isProcessing ? <CheckCircle2 size={20} className="animate-ping" /> : <CheckCircle2 size={20} />}
+            <CheckCircle2 size={20} />
             <span>{isProcessing ? 'GUARDANDO...' : (faltante > 0 ? `FIAR S/ ${formatearMonto(faltante)}` : facturacion && compTipo !== 'NOTA' ? `CONFIRMAR Y EMITIR ${compTipo}` : 'CONFIRMAR PAGO')}</span>
           </button>
         </div>

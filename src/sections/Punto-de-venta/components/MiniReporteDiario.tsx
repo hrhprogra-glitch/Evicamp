@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { flechasCaja } from '../tecladoCaja';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../../db/supabase';
-import { Eye, EyeOff, BarChart3, X, Clock, Receipt, Coins, Smartphone, CreditCard, BookOpen, HandCoins } from 'lucide-react';
+import { Eye, EyeOff, BarChart3, X, Clock, Receipt, Coins, Smartphone, CreditCard, BookOpen, HandCoins, Search } from 'lucide-react';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { traerTodo } from '../../../utils/traerTodo';
 import { formatearMonto } from '../../../utils/formato';
@@ -137,13 +137,13 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
 
   const modalContent = isModalOpen ? createPortal(
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999] flex items-center justify-center p-2 sm:p-8 animate-fade-in font-mono">
-      <div className="ventana-sobria bg-white border-4 border-[var(--color-ink)] w-full max-w-6xl flex flex-col h-[calc(var(--alto-pantalla)*0.9)] rounded-none">
+      <div className="ventana-sobria bg-[var(--color-surface)] border-2 border-[var(--color-ink)] w-full max-w-6xl flex flex-col h-[calc(var(--alto-pantalla)*0.9)] rounded-none">
         
-        <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-ink)] text-white p-4 sm:p-6 flex justify-between items-center gap-3 shrink-0">
+        <div style={{ '--icono': 'var(--color-danger)' } as React.CSSProperties} className="ventana-cabecera bg-[var(--color-bg)] text-[var(--color-ink)] p-4 sm:p-6 flex justify-between items-center gap-3 border-b-2 border-[var(--color-ink)] shrink-0">
           <h2 className="ventana-cabecera__titulo font-black uppercase tracking-widest text-sm sm:text-xl flex items-center gap-3">
-            <Receipt size={28} className="text-[var(--color-accent)]" /> Rendimiento de Caja Actual
+            <Receipt size={28} className="text-[var(--color-accent-shadow)]" /> Rendimiento de Caja Actual
           </h2>
-          <button onClick={() => setIsModalOpen(false)} className="ventana-cerrar hover:text-[var(--color-danger)] transition-colors cursor-pointer bg-white/10 p-2 hover:bg-white/20">
+          <button onClick={() => setIsModalOpen(false)} className="boton-cabecera ventana-cerrar p-2 cursor-pointer">
             <X size={32} strokeWidth={3} />
           </button>
         </div>
@@ -152,28 +152,28 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 lg:h-full min-h-0">
             
             <div className="flex flex-col gap-4 sm:gap-6 lg:overflow-y-auto custom-scrollbar lg:pr-4 min-h-0">
-              <div className="bg-[var(--color-ink)] p-5 sm:p-8 text-center border-4 border-[var(--color-ink)] shrink-0 shadow-[8px_8px_0_0_var(--color-line-light)]">
-                <p className="text-[var(--color-subtle)] text-xs font-black uppercase tracking-widest mb-2">Total Ingresado a Caja (Ventas + Abonos)</p>
-                <p className="text-2xl sm:text-4xl sm:text-6xl lg:text-7xl font-black text-white mt-2 drop-shadow-lg break-all">S/ {formatearMonto(totales.totalReal)}</p>
+              <div className="tarjeta-sobria bg-[var(--color-surface)] p-5 sm:p-8 text-center border border-[var(--color-border)] shrink-0">
+                <p className="text-[var(--color-muted)] text-xs font-black uppercase tracking-widest mb-2">Total Ingresado a Caja (Ventas + Abonos)</p>
+                <p className="text-2xl sm:text-4xl sm:text-6xl lg:text-7xl font-black text-[var(--color-ink)] mt-2 break-all">S/ {formatearMonto(totales.totalReal)}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 sm:gap-5 shrink-0">
-                <div className="bg-white border-4 border-[var(--color-border)] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_var(--color-border)]">
+                <div className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] p-3 sm:p-5 flex flex-col items-center text-center min-w-0">
                   <Coins size={32} className="text-[var(--color-accent)] mb-2" />
                   <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">Efectivo Físico</span>
                   <span className="text-lg sm:text-3xl font-black text-[var(--color-ink)] mt-1 break-all">S/ {formatearMonto(totales.efectivo)}</span>
                 </div>
-                <div className="bg-white border-4 border-[var(--color-border)] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_var(--color-border)]">
+                <div className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] p-3 sm:p-5 flex flex-col items-center text-center min-w-0">
                   <Smartphone size={32} className="text-[var(--color-purple)] mb-2" />
                   <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">Yape / Plin / Transf.</span>
                   <span className="text-lg sm:text-3xl font-black text-[var(--color-ink)] mt-1 break-all">S/ {formatearMonto((totales.yape + totales.transferencia))}</span>
                 </div>
-                <div className="bg-white border-4 border-[var(--color-border)] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_var(--color-border)]">
+                <div className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] p-3 sm:p-5 flex flex-col items-center text-center min-w-0">
                   <CreditCard size={32} className="text-[var(--color-info)] mb-2" />
                   <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">Tarjeta (POS)</span>
                   <span className="text-lg sm:text-3xl font-black text-[var(--color-ink)] mt-1 break-all">S/ {formatearMonto(totales.tarjeta)}</span>
                 </div>
-                <div className="bg-white border-4 border-[var(--color-border)] p-3 sm:p-5 flex flex-col items-center text-center min-w-0 shadow-[6px_6px_0_0_var(--color-border)]">
+                <div className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] p-3 sm:p-5 flex flex-col items-center text-center min-w-0">
                   <BookOpen size={32} className="text-[var(--color-danger)] mb-2" />
                   <span className="text-[12px] font-black text-[var(--color-muted)] uppercase tracking-widest">Deuda (Fiados Emitidos)</span>
                   <span className="text-lg sm:text-3xl font-black text-[var(--color-ink)] mt-1 break-all">S/ {formatearMonto(totales.fiado)}</span>
@@ -181,13 +181,13 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
               </div>
             </div>
 
-            <div className="border-4 border-[var(--color-border)] bg-white flex flex-col min-h-[300px] lg:h-full lg:min-h-0 shadow-[8px_8px_0_0_var(--color-border)]">
-              <div className="bg-[var(--color-bg)] border-b-4 border-[var(--color-border)] p-5 shrink-0 flex justify-between items-center">
+            <div className="tabla-marco border border-[var(--color-border)] bg-[var(--color-surface)] flex flex-col min-h-[300px] lg:h-full lg:min-h-0">
+              <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] p-5 shrink-0 flex justify-between items-center">
                 <h3 className="text-base font-black text-[var(--color-ink)] uppercase tracking-widest">Desglose Movimientos ({ventasHoy.length})</h3>
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 min-h-0">
                 {ventasHoy.length > 0 ? ventasHoy.map((v) => (
-                  <div key={v.id} className="flex justify-between items-center gap-3 p-3 sm:p-5 border-2 border-[var(--color-border)] hover:border-[var(--color-ink)] bg-white hover:bg-[var(--color-bg)] transition-all">
+                  <div key={v.id} className="tabla-fila flex justify-between items-center gap-3 p-3 sm:p-5 border-b border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-bg)]">
                     <div className="flex flex-col">
                       <span className="text-sm font-black text-[var(--color-muted)] flex items-center gap-2">
                         <Clock size={16}/> {new Date(v.hora).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}
@@ -201,7 +201,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
                     </span>
                   </div>
                 )) : (
-                  <div className="text-center p-6 sm:p-12 text-lg font-bold text-[var(--color-subtle)]">Caja vacía. Aún no hay ventas.</div>
+                  <div className="vacio-sobrio"><Search size={32}/> Caja vacía. Aún no hay ventas.</div>
                 )}
               </div>
             </div>
@@ -215,13 +215,13 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
 
   return (
     <>
-      <div className="bg-white border-2 border-[var(--color-ink)] shrink-0 font-mono flex flex-col">
-        <div className="bg-[var(--color-ink)] text-white px-3 py-1.5 flex justify-between items-center">
+      <div className="tabla-marco bg-[var(--color-surface)] border border-[var(--color-border)] shrink-0 font-mono flex flex-col">
+        <div className="bg-[var(--color-bg)] text-[var(--color-ink)] px-3 py-1.5 flex justify-between items-center border-b-2 border-[var(--color-ink)]">
           <div className="flex items-center gap-2">
             <button 
               id="btn-caja-actual-pos" type="button" onKeyDown={flechasCaja('btn-caja-actual-pos')}
               onMouseDown={(e) => e.preventDefault()} onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 hover:text-[var(--color-accent)] transition-colors cursor-pointer"
+              className="flex items-center gap-2 hover:text-[var(--color-accent-shadow)] transition-colors cursor-pointer"
               title="Ver Historial del Día"
             >
               <BarChart3 size={18} />
@@ -230,7 +230,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
             <button
               id="btn-monto-caja-pos" type="button" onKeyDown={flechasCaja('btn-monto-caja-pos')}
               onMouseDown={(e) => e.preventDefault()} onClick={() => setIsVisible(!isVisible)}
-              className="text-base font-black text-[var(--color-accent)] ml-1 hover:brightness-125 transition-all cursor-pointer"
+              className="text-base font-black text-[var(--color-ink)] ml-1 hover:text-[var(--color-accent-shadow)] transition-colors cursor-pointer"
               title="Mostrar/Ocultar Montos"
             >
               {isVisible ? `S/ ${formatearMonto(totales.totalReal)}` : 'S/ ***.**'}
@@ -239,7 +239,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
           <button 
             id="btn-ojo-caja-pos" type="button" title="Mostrar/Ocultar Montos (Shift+E)" onKeyDown={flechasCaja('btn-ojo-caja-pos')}
             onMouseDown={(e) => e.preventDefault()} onClick={() => setIsVisible(!isVisible)}
-            className="text-[var(--color-subtle)] hover:text-white transition-colors cursor-pointer px-2"
+            className="text-[var(--color-muted)] hover:text-[var(--color-ink)] transition-colors cursor-pointer px-2"
           >
             {isVisible ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
@@ -248,7 +248,7 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
         <button 
           id="btn-montos-caja-pos" type="button" onKeyDown={flechasCaja('btn-montos-caja-pos')}
           onMouseDown={(e) => e.preventDefault()} onClick={() => setIsVisible(!isVisible)}
-          className="grid grid-cols-4 divide-x-2 divide-[var(--color-border)] bg-[var(--color-bg)] min-w-0 w-full hover:bg-[var(--color-surface)] transition-colors cursor-pointer"
+          className="tabla-fila grid grid-cols-4 divide-x divide-[var(--color-border)] bg-[var(--color-surface)] min-w-0 w-full hover:bg-[var(--color-bg)] transition-colors cursor-pointer"
           title="Mostrar/Ocultar Montos"
         >
           <div className="px-1 py-1 flex flex-col items-center justify-center text-center min-w-0">
@@ -256,15 +256,15 @@ export const MiniReporteDiario: React.FC<Props> = ({ refreshTrigger }) => {
             <span className="text-xs font-black text-[var(--color-ink)]">{isVisible ? `S/ ${totales.efectivo.toFixed(1)}` : '***'}</span>
           </div>
           <div className="px-1 py-1 flex flex-col items-center justify-center text-center min-w-0">
-            <span className="text-[12px] font-black text-[var(--color-purple)] uppercase leading-tight">Yape/Plin</span>
+            <span className="text-[12px] font-black text-[var(--color-muted)] uppercase leading-tight">Yape/Plin</span>
             <span className="text-xs font-black text-[var(--color-ink)]">{isVisible ? `S/ ${(totales.yape + totales.transferencia).toFixed(1)}` : '***'}</span>
           </div>
           <div className="px-1 py-1 flex flex-col items-center justify-center text-center min-w-0">
-            <span className="text-[12px] font-black text-[var(--color-info)] uppercase leading-tight">Tarjeta</span>
+            <span className="text-[12px] font-black text-[var(--color-muted)] uppercase leading-tight">Tarjeta</span>
             <span className="text-xs font-black text-[var(--color-ink)]">{isVisible ? `S/ ${totales.tarjeta.toFixed(1)}` : '***'}</span>
           </div>
           <div className="px-1 py-1 flex flex-col items-center justify-center text-center min-w-0">
-            <span className="text-[12px] font-black text-[var(--color-danger)] uppercase leading-tight">Fiados</span>
+            <span className="text-[12px] font-black text-[var(--color-muted)] uppercase leading-tight">Fiados</span>
             <span className="text-xs font-black text-[var(--color-ink)]">{isVisible ? `S/ ${totales.fiado.toFixed(1)}` : '***'}</span>
           </div>
         </button>
