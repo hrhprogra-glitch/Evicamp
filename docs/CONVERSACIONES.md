@@ -1250,3 +1250,11 @@
 - Se desplegó el mismo código del login corto en el sitio oficial y se repusieron los iconos del cliente después del deploy.
 - Prueba en cuatro tamaños, con teclado y sin internet: **40/40, 0 fallos**. Entra escribiendo solo `admin`, entra el correo completo, los dos usuarios borrados ya no entran, y el logo, el tema Océano y la ausencia de cobro siguen igual.
 - Evicamp, el Panel y Nego siguen respondiendo. Sin Supabase, sin push. Todavía no se cargaron los datos reales: eso es la Fase 2 de la limpieza y espera su OK.
+
+## 23/11/2026 (carga de datos y usuarios nuevos en ecosistema)
+- El dueño dijo: *"perfecto ahora sube los datos a ecosistema y creame 2 usuarios de contraseña billy@ecosistema.com y john@ecosistema.com la contraseña para ambos que sea admin123"*.
+- Se Actualizó el snapshot del Supabase (solo lectura), se filtró el SQL para que **no** vuelvan los usuarios viejos con dominio `siumax.com`, y se cargó todo en `ecosistema` con respaldo previo y una sola transacción. Los conteos cuadran exactamente con el resumen; la empresa y su RUC siguen iguales.
+- Se crearon `billy@ecosistema.com` y `john@ecosistema.com` con la misma clave acordada para ambos. No se escribió la clave en ningún archivo ni documento.
+- Como el dueño no indicó los roles, se tomaron los del sistema original: **billy Administrador** (acceso total) y **john Técnico** (permisos de campo/taller). Si quiere otros permisos, se ajustan.
+- Prueba con teclado y sin internet en 390/768/1366/1920: **48/48, 0 fallos**. Los dos usuarios entran por correo completo y escribiendo solo su nombre, ven los datos cargados y pueden seguir trabajando sin internet. Logo, tema y ausencia de cobro siguen bien; los cuatro sitios responden 200.
+- Sin tocar Evicamp, el Panel, Nego ni el Supabase de origen. Sin push. La carga en la base de pruebas `siumax` queda para cuando el dueño la pida.

@@ -799,6 +799,12 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Probar con **recarga real** (`page.reload`) y reabrir el modal. Las pruebas que solo cierran/abren el modal no detectan este bug, porque el estado de React se conserva; el defecto solo aparece al reconstruir el estado desde localStorage.
 - El mismo helper sirve para tres casos: nombre escrito y borrado, nombre escrito y no borrado, cliente elegido y borrado. Los tres deben pasar en los cuatro tamaños.
 
+## 50. Cargar la migración Eco en ecosistema sin traer usuarios ajenos (23/11/2026, bitácora 199)
+- `migracion-eco/etl.mjs` siempre regenera `carga-nego.sql` con **3 líneas de usuarios** (`UPDATE harry@…`, `INSERT billy@siumax.com`, `INSERT jhon@siumax.com`) que usan `crypt(:'clave_usuarios', …)`. Antes de aplicar ese SQL en `ecosistema` hay que quitar esas 3 líneas y su comentario; si no, psql pide la variable y vuelven correos del dominio de pruebas. Las referencias a esos UUID en `migracion_eco_log` son texto, no FK: se pueden dejar.
+- El helper `migracion-eco/filtrar-para-ecosistema.mjs` hace ese filtro y avisa si quedó `siumax.com` o `clave_usuarios`. El script `ai-scripts/cargar-datos-ecosistema.cjs` se niega a aplicar un SQL que contenga esas cadenas.
+- `fn_login` compara `password_hash = crypt(p_password, password_hash)`; la receta de `servidor/nuevo-cliente.sh` (`crypt(:'clave', gen_salt('bf'))`) es la correcta. Para no escribir la clave en archivos, mandarla por `stdin` a un `read -r CLAVE` y pasarla a psql con `-v clave="$CLAVE"`.
+- PostgREST del sitio oficial lee la base `ecosistema` (`/etc/postgrest/clientes/ecosistema.conf`) y exige `x-sesion`; por eso un `curl` sin sesión da 401 aunque los datos estén cargados. Para comprobar datos, entrar por la UI y esperar: justo después del login la lista dice "CARGANDO..." y parece vacía; a los ~3 s aparecen los clientes. Una aserción sobre `innerText` hecha demasiado pronto da falso fallo.
+
 ## 49. Iconos del sitio oficial tras un deploy (23/11/2026, bitácora 198)
 - Los iconos del cliente no están en la raíz sino en `/var/www/ecosistema123/html/icons/`. El script `/opt/siuhub/ecosistema-iconos.sh` copia `/opt/siuhub/ecosistema-logo.png` a los 5 nombres y hace `chown`. Verificar con `md5sum /var/www/ecosistema123/html/icons/icon-192.png /opt/siuhub/ecosistema-logo.png`: deben coincidir.
 - El helper `ai-scripts/restaurar-iconos-ecosistema.cjs` hace las dos cosas (reponer y comparar MD5) para no olvidarlo después de cada `node ai-scripts/deploy.cjs ecosistema`.

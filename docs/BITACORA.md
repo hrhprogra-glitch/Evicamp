@@ -7,6 +7,17 @@
 
 ---
 
+## 23/11/2026 (199) · OpenCode (Big Pickle) — Datos reales cargados en ecosistema y dos usuarios nuevos
+- **Dueño:** *"perfecto ahora sube los datos a ecosistema y creame 2 usuarios de contraseña billy@ecosistema.com y john@ecosistema.com la contraseña para ambos que sea admin123"*.
+- **Datos:** se volvió a correr `migracion-eco/etl.mjs` (solo lectura del Supabase, 23/11 15:55) y se guardó el snapshot anterior como `carga-nego-20261117.sql` / `resumen-carga-20261117.txt`. De `carga-nego.sql` se generó **`migracion-eco/carga-ecosistema.sql`** quitando las 4 líneas de usuarios (evita reintroducir `billy@jhon@siumax.com` y la variable de clave). El old snapshot queda disponible para rollback.
+- **Aplicación:** respaldo `/root/backups/ecosistema-antes-carga-datos-20261123155706.dump`; SQL ejecutado en una sola transacción con `lock_timeout = '30s'`. Conteos **idénticos** al resumen: 1 tienda, 34 categorías, 16 proveedores, 503 clientes, 16 trabajadores, 511 productos, 614 lotes, 37 compras / 157 detalles, 1.742 movimientos, 53 herramientas, 1 vehículo, 1 mantenimiento, 29 préstamos, 392 salidas / 2.892 ítems / 412 trabajadores, 62 cotizaciones / 195 detalles / 43 pagos y 7.713 filas de log. Empleados seguía en 1 y `empresa_config` intacta (ECO SISTEMAS URH S.A.C., RUC 20502059751).
+- **Usuarios:** respaldo `/root/backups/ecosistema-antes-usuarios-20261123155832.dump`; creados **`billy@ecosistema.com`** (Administrador, acceso total) y **`john@ecosistema.com`** (Técnico, permisos del proyecto original). Ambos con la clave acordada, verificada con `password_hash = crypt(...)`. La clave entra por stdin como variable de psql: no quedó en archivos, docs ni historial. Se usaron los mismos UUID del ETL para que cuadre el log de migración. Quedan 3 empleados en total (admin, billy y john).
+- **Prueba nueva `prueba-usuarios-nuevos-ecosistema.mjs`:** **48/48, 0 fallos**, teclado real y sin internet en 390/768/1366/1920: cada usuario entra con el correo completo y escribiendo solo su nombre, ve los 503 clientes cargados, sigue trabajando sin internet, y el logo del cliente y el 404 de `suscripcion.json` siguen bien. Evicamp, Panel, Nego y ecosistema responden 200.
+- **Sin tocar:** Evicamp, el Panel, Nego, el Supabase (fuente solo de lectura), credenciales ni push. No hubo deploy, así que no hacía falta reponer iconos.
+- **Nota para la próxima IA:** los roles de billy y john se eligieron según los usuarios originales del ETL porque el dueño no los especificó; si quiere cambiarlos, decirlo. La carga en la base de pruebas `siumax` sigue pendiente.
+
+---
+
 ## 23/11/2026 (198) · OpenCode (Big Pickle) — Fase B: login corto y un solo administrador en ecosistema (sitio oficial)
 - **Dueño:** *"perfecto haz la fase b"* — aprobó ejecutar en el sitio oficial lo mismo que ya estaba probado en Nego.
 - **Base `ecosistema`:** respaldo `/root/backups/ecosistema-antes-quitar-admins-20261123154334.dump`. Se borraron las sesiones y los empleados `billy@siumax.com` y `harry@siumax.com`. Queda **solo `admin@ecosistema.com`**, con la misma clave. `empresa_config` sigue igual: **ECO SISTEMAS URH S.A.C.**, RUC **20502059751**.
