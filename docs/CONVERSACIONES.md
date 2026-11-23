@@ -1264,3 +1264,12 @@
 - Se le explicó el alcance (solo quitar el margen horizontal de contenedores y cabeceras, sin tocar botones, celdas ni el estilo sobrio; las ventanas emergentes quedan igual) y confirmó con: **"si aplicado a todo"**.
 - Se aplicó en 20 archivos de `src/sections/`, se comprobó con el medidor y un escáner de **todas** las pestañas (0 elementos con margen) y se hicieron regresiones con teclado y sin internet. Desplegado solo en Nego.
 - Se le preguntó si lo llevábamos al sitio oficial (ecosistema) y decidió: **"Déjalo solo en Nego"**. No se desplegó en ecosistema ni en Evicamp; si más adelante lo pide, se aplica el mismo cambio y se reponen los iconos con MD5 verificado. Sin base y sin push.
+
+## 23/11/2026 (poblado de la base de pruebas siumax con +50 registros por sesión)
+- El dueño observó que la única tabla que muestra todo de golpe es Inventario y que en las demás tablas hay que arrastrar al costado para ver completo lo que muestran.
+- Pidió poblar primero la base de pruebas `siumax` con ~50 registros por sesión para poder revisar bien las tablas, ya que estaba vacía tras la limpieza. Confirmó con **"empieza"**.
+- Se respaldó la base `siumax` (`siumax-antes-carga-datos-20261123163407.dump`, 1.2 MB).
+- Se cargaron los datos reales de Eco-Sistemas (504 clientes, 513 productos, 614 lotes, 392 salidas, 63 cotizaciones, 53 herramientas, 37 compras).
+- Se generaron datos complementarios realistas para completar a 50+ registros en cada sesión: 50 órdenes de taller, 50 contratos, 50 pedidos, 13 vehículos y 50 mermas/conteos.
+- Verificación en `nego.siumax.duckdns.org`: todas las sesiones cargadas con éxito y respuesta 200. Prueba de scroll a 1080px confirmó el diagnóstico: Inventario y Clientes caben al 100%, mientras que Encargos, Salidas, Contratos y Taller desbordan entre 73px y 181px requiriendo arrastre horizontal.
+

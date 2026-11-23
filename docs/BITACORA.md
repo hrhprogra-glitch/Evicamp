@@ -7,6 +7,21 @@
 
 ---
 
+## 23/11/2026 (201) · Antigravity — Base de pruebas `siumax` poblada con datos reales y +50 registros por sesión
+- **Dueño:** *"si pero antes quiero que tambien ingreses datos unos 50 datos para cada sesión para verlo bien ya que ahora no tiene ningun datos en negosiumax que es donde hacemos pruebas"*. Aprobado con **"empieza"**.
+- **Respaldo previo:** `/root/backups/siumax-antes-carga-datos-20261123163407.dump` (1.2 MB, `pg_dump -Fc`).
+- **Datos base Eco-Sistemas cargados en `siumax`:** 504 clientes, 513 productos, 614 lotes, 392 salidas (con 2.892 ítems y 412 trabajadores), 63 cotizaciones, 53 herramientas, 37 compras, 34 categorías, 16 proveedores, 16 trabajadores.
+- **Datos complementarios generados (+50 por sesión):**
+  - **Taller (`taller_ordenes`):** 50 órdenes con equipos reales (bombas de agua, tableros de control, sopladoras, generadores), fallas, técnicos y estados válidos (`RECIBIDO`, `DIAGNOSTICO`, `PRESUPUESTADO`, `EN_PROCESO`, `LISTO`, `ENTREGADO`).
+  - **Contratos (`contratos`):** 50 contratos de mantenimiento con clientes reales, montos mensuales, frecuencias y estados (`ACTIVO`, `PAUSADO`, `FINALIZADO`).
+  - **Pedidos (`pedidos_clientes` y `pedido_detalles`):** 50 pedidos con detalles, adelantos y saldos.
+  - **Vehículos (`vehiculos`):** 13 vehículos con placas, marcas, kilometraje, SOAT y revisión técnica.
+  - **Conteos (`waste`):** 50 registros de mermas y ajustes de inventario con motivos y pérdidas calculadas.
+- **Verificación:** en `nego.siumax.duckdns.org`, navegación por todas las sesiones responde 200 y muestra todas las tablas pobladas con más de 50 filas de datos. Prueba automatizada `revisar-scroll-tablas.mjs` a 1080px confirmó el diagnóstico del dueño: Inventario entra al 100% sin scroll, mientras que Encargos (sobran 116px), Salidas (sobran 178px), Contratos (sobran 73px) y Taller (sobran 181px) se desbordan horizontalmente.
+- **Sin tocar:** `ecosistema` (sigue intacto), Evicamp, credenciales ni push.
+
+---
+
 ## 23/11/2026 (200) · OpenCode (Big Pickle) — Tablas y buscadores pegados al borde en TODAS las sesiones, solo Nego
 - **Dueño:** vio que en Clientes la tabla y el buscador estaban pegados al borde y que las demás sesiones tenían margen a los lados; pidió aplicar lo mismo a todo. Confirmó con **"si aplicado a todo"**.
 - **Cambio:** se quitó solo el margen horizontal (padding en X) de contenedores, cabeceras y pestañas que envuelven tablas y buscadores en 20 archivos de `src/sections/`. Se conservaron los paddings internos de botones y celdas y el espacio vertical (en Ajustes `p-2 sm:p-4` → `py-2 sm:py-4`). Sin tocar el estilo sobrio ni las esquinas. Las tablas dentro de ventanas emergentes se dejaron como estaban (no se pegan al borde de la pantalla).
