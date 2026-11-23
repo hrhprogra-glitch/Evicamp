@@ -1286,3 +1286,11 @@
 - Se generaron datos complementarios realistas para completar a 50+ registros en cada sesión: 50 órdenes de taller, 50 contratos, 50 pedidos, 13 vehículos y 50 mermas/conteos.
 - Verificación en `nego.siumax.duckdns.org`: todas las sesiones cargadas con éxito y respuesta 200. Prueba de scroll a 1080px confirmó el diagnóstico: Inventario y Clientes caben al 100%, mientras que Encargos, Salidas, Contratos y Taller desbordan entre 73px y 181px requiriendo arrastre horizontal.
 
+## 23/11/2026 (empleado responsable en las salidas)
+- El dueño pidió agregar en Nueva salida un selector de empleado, con nombre en el comprobante y posibilidad de cambiarlo después de guardar.
+- Respondió las 5 preguntas: **1)** todos los usuarios que hay (se tomó **todos los activos**); **2)** por defecto quien ingresa (*"entro como admin y como predeterminado admin pues"*); **3)** obligatorio elegir; **4)** el nombre **sí debe salir** en el comprobante o ticket; **5)** **sí se debe poder cambiar** después de guardar la salida.
+- No se creó ningún usuario nuevo: en la base de pruebas `siumax` solo hay un activo (Administrador SiuHub). Para probar el cambio se usaría una salida ya guardada con otro empleado y se dejaría el dato original al final.
+- Se hizo y se desplegó **solo en Nego**. Prueba adaptiva 188/188 con teclado y sin internet en 390/768/1366/1920. Sin ecosistema, sin Evicamp, sin base y sin push.
+- El dueño avisó que tiene **"otra cosa mas pero cuando termines te lo dire te hare preguntas"**: esperar a que lo diga, no adelantarse.
+- Se detectó un problema aparte en la base de pruebas: la secuencia `salidas_id_seq` está en 3 y ya hay salidas hasta el id 392, así que no se puede guardar ninguna salida nueva. **No se tocó la base**: hace falta el OK del dueño (con respaldo) para arreglarla.
+

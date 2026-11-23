@@ -61,6 +61,7 @@ const moverEnGrilla = (e: React.KeyboardEvent, contenedor: HTMLElement | null) =
 
 const datosSalida = (salida: Salida): [string, string][] => [
   ['Cliente', salida.customer?.name || 'NO REGISTRADO'],
+  ...(salida.usuario ? [['Empleado responsable', salida.usuario] as [string, string]] : []),
   ...(salida.customer?.dni || salida.customer?.ruc ? [['Documento', String(salida.customer.dni || salida.customer.ruc)] as [string, string]] : []),
   ['Fecha', fechaTexto(salida.fecha)],
   ['Tipo', salida.tipo],

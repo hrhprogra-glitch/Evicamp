@@ -39,19 +39,31 @@ try {
   ok('Alt + 4 abre Salidas con el selector en el buscador', (await activo()) === 'buscador-salidas', await activo());
 
   // 2. Botón Nueva Salida abre ModalNuevaSalida
-  await page.focus('#btn-nueva-salida'); await tecla('Enter'); await pausa(1000);
+  await page.focus('#btn-nueva-salida'); await tecla('Enter'); await pausa(1200);
   ok('"Nueva Salida" abre modal en el tipo de trabajo', (await activo()) === 'select-tipo-salida', await activo());
+
+  // 204 (dueño 23/11/2026): todos los usuarios activos, predeterminado quien ingresa, obligatorio.
+  const empSel = await page.$eval('#select-empleado-salida', (el) => ({
+    valor: el.value || '',
+    texto: el.selectedOptions?.[0]?.textContent || '',
+    requerido: el.hasAttribute('required'),
+    opciones: Array.from(el.options).map((o) => o.textContent || ''),
+  }));
+  ok('Selector de empleado: predeterminado admin, obligatorio y con opciones',
+    !!empSel.valor && /admin/i.test(empSel.texto) && empSel.requerido && empSel.opciones.length >= 2,
+    `${empSel.texto} (${empSel.opciones.length} opciones)`);
 
   // 3. En Nego rige la regla general: Enter abre la lista (o hace clic) y el selector se queda; las flechas mueven
   await tecla('Enter'); await pausa(300);
   ok('Enter en Tipo abre la lista y el selector se queda', (await activo()) === 'select-tipo-salida', await activo());
+  await page.focus('#buscar-cliente-salida'); await escribir(NOMBRE_CLI); await pausa(600);
   const cliVal = await page.evaluate((nom) => {
-    const sel = document.getElementById('select-cliente-salida');
-    const opt = [...sel.options].find((o) => o.text.includes(nom));
-    if (opt) { sel.value = opt.value; sel.dispatchEvent(new Event('change', { bubbles: true })); return opt.value; }
+    const op = [...document.querySelectorAll('#resultados-cliente-salida [id^="sugerencia-cliente-"]')]
+      .find((o) => (o.textContent || '').includes(nom));
+    if (op) { op.dispatchEvent(new MouseEvent('click', { bubbles: true })); return op.textContent.trim(); }
     return '';
   }, NOMBRE_CLI);
-  ok('Cliente de prueba encontrado en el selector', !!cliVal);
+  ok('Cliente de prueba encontrado en el buscador', !!cliVal, cliVal);
   await pausa(500);
   await page.focus('#input-direccion-salida'); await escribir('AV. LAS PRUEBAS 456');
   await tecla('Enter'); ok('Enter en Dirección: el selector se queda', (await activo()) === 'input-direccion-salida', await activo());
@@ -86,11 +98,19 @@ try {
   // Confirmar salida
   await page.focus('#btn-guardar-salida'); await tecla('Enter'); await pausa(1500);
   const avisoGuardar = await page.evaluate(() => document.getElementById('dialogo-sistema-texto')?.innerText || '');
-  const modalSigueAbierto = await page.evaluate(() => !!document.getElementById('modal-nueva-salida-container'));
-  ok('Salida guardada y modal cerrado', !modalSigueAbierto, avisoGuardar || `foco=${await activo()}`);
   if ((await activo()) === 'dialogo-sistema-aceptar') {
-    await tecla('Enter'); await pausa(1000);
+    await tecla('Enter'); await pausa(700);
   }
+  // 194/204: al guardar sale la vista previa; el ticket debe traer el nombre del empleado.
+  const enPrevia = await page.evaluate(() => !!document.querySelector('[data-vista-previa-salida]'));
+  ok('Al guardar sale la vista previa del comprobante', enPrevia, avisoGuardar || `foco=${await activo()}`);
+  if (enPrevia) {
+    const ticket = await page.evaluate(() => document.querySelector('[data-vista-previa-salida] iframe')?.contentDocument?.body?.innerText || '');
+    ok('204: el ticket muestra el empleado responsable', /empleado responsable/i.test(ticket) && /administrador/i.test(ticket), ticket.slice(0, 180).replace(/\s+/g, ' '));
+    await tecla('Escape'); await pausa(600);
+  }
+  const modalSigueAbierto = await page.evaluate(() => !!document.getElementById('modal-nueva-salida-container'));
+  ok('Salida guardada y modal cerrado', !modalSigueAbierto, `foco=${await activo()}`);
 
   // 4. Buscar la salida creada en la tabla
   await page.focus('#buscador-salidas'); await escribir(sello); await pausa(800);
@@ -105,6 +125,31 @@ try {
 
   const enDetalle = await page.evaluate(() => document.getElementById('modal-detalle-salida-container') !== null);
   ok('Enter en la fila abre ModalDetalleSalida', enDetalle);
+
+  // 204: el empleado también se puede cambiar desde el detalle y se guarda en la base.
+  const empDetalle = await page.$eval('#select-empleado-detalle-salida', (el) => ({
+    valor: el.value || '',
+    texto: el.selectedOptions?.[0]?.textContent || '',
+  })).catch(() => null);
+  ok('204: detalle trae el selector de empleado resuelto al que ingresó',
+    !!empDetalle && !!empDetalle.valor && /admin/i.test(empDetalle.texto),
+    empDetalle ? `${empDetalle.texto} (${empDetalle.valor})` : 'sin selector');
+  if (enDetalle && empDetalle?.valor) {
+    const idSalida = await sql(`select id from salidas where customer_id in (select id from customers where name='${NOMBRE_CLI}') order by id desc limit 1`);
+    const usuarioDb = await sql(`select coalesce(usuario,'') from salidas where id=${idSalida}`);
+    // Solo hay un usuario activo en siumax: se verifica que el nombre quedó guardado y que el detalle
+    // ofrece el selector para cambiarlo. No se crea un usuario falso solo para la prueba.
+    ok('204: el empleado queda guardado en la base y se puede volver a elegir en el detalle',
+      /admin/i.test(usuarioDb), usuarioDb);
+
+    // El comprobante que se abre desde el detalle también debe traer el nombre.
+    await page.focus('#btn-imprimir-salida'); await tecla('Enter'); await pausa(800);
+    const ticketDetalle = await page.evaluate(() => document.querySelector('[data-vista-previa-salida] iframe')?.contentDocument?.body?.innerText || '');
+    ok('204: el ticket del detalle muestra el empleado responsable',
+      /empleado responsable/i.test(ticketDetalle) && /administrador/i.test(ticketDetalle),
+      ticketDetalle.slice(0, 180).replace(/\s+/g, ' '));
+    await tecla('Escape'); await pausa(600);
+  }
 
   // 6. Probar Devolución de Material
   await page.focus('#btn-devolver-material'); await tecla('Enter'); await pausa(1000);

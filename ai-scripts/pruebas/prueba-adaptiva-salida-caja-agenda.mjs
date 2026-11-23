@@ -80,7 +80,27 @@ try {
       await page.focus('#btn-nueva-salida');
       await page.keyboard.press('Enter');
       await page.waitForSelector('#modal-nueva-salida-container', { timeout: 8000 });
-      await pausa(300);
+      await pausa(500);
+
+      // 204 (dueño 23/11/2026): selector de empleado responsable con todos los activos,
+      // predeterminado quien ingresó y obligatorio.
+      ok(`Salida ${t.nombre}: selector de empleado responsable`, await existe('#select-empleado-salida'));
+      const emp = await page.$eval('#select-empleado-salida', (el) => ({
+        valor: el.value || '',
+        texto: el.selectedOptions?.[0]?.textContent || '',
+        requerido: el.hasAttribute('required'),
+        opciones: Array.from(el.options).map((o) => o.textContent || ''),
+        alto: el.getBoundingClientRect().height,
+        radio: getComputedStyle(el).borderTopLeftRadius,
+      })).catch(() => null);
+      ok(`Salida ${t.nombre}: empleado predeterminado es quien ingresó`,
+        !!emp && /admin/i.test(emp.texto), emp?.texto || 'sin datos');
+      ok(`Salida ${t.nombre}: selector de empleado es obligatorio`, !!emp?.requerido);
+      ok(`Salida ${t.nombre}: selector lista usuarios activos`,
+        !!emp && emp.opciones.some((o) => /admin/i.test(o)), emp?.opciones.join(' | ') || 'sin datos');
+      if (celular) ok(`Salida ${t.nombre}: selector de empleado legible en celular`,
+        !!emp && emp.alto >= 44, `alto ${Math.round(emp?.alto || 0)}`);
+      ok(`Salida ${t.nombre}: selector de empleado sin esquinas`, !!emp && emp.radio === '0px', emp?.radio || 'sin datos');
 
       // 187: un solo buscador hace las dos cosas: sugerencias y registro del nombre como nota, sin botón ni campo aparte.
       ok(`Salida ${t.nombre}: buscador desplegable de cliente`, await existe('#buscar-cliente-salida'));

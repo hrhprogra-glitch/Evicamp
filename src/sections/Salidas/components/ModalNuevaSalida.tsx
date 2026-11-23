@@ -6,6 +6,7 @@ import { fotoDeCache, sincronizarFotosFaltantes } from '../../../utils/cacheFoto
 import { traerTodo } from '../../../utils/traerTodo';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar } from '../../../utils/dialogos';
+import { useEmpleado } from '../../../utils/permisos';
 import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import { coincideBusqueda } from '../../../utils/busqueda';
@@ -54,6 +55,7 @@ let _cacheCatalogosServic: {
   clientes?: any[];
   trabajadores?: any[];
   productos?: any[];
+  empleados?: any[];
   timestamp?: number;
 } = {};
 
@@ -91,6 +93,14 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
   const [observaciones, setObservaciones] = useState('');
   const [trabajadoresSeleccionados, setTrabajadoresSeleccionados] = useState<number[]>([]);
+
+  // 204 (dueño 23/11/2026): todos los usuarios activos, el que entró viene por defecto, obligatorio,
+  // con el nombre en el comprobante y cambiable después en el detalle de la salida.
+  const yo = useEmpleado();
+  const [empleadoId, setEmpleadoId] = useState<string>('');
+  const [empleados, setEmpleados] = useState<any[]>(_cacheCatalogosServic.empleados || []);
+  const empleadoNombre = empleados.find((e) => String(e.id) === String(empleadoId))?.nombre
+    || (String(empleadoId) === String(yo?.id) ? yo?.nombre || '' : '');
 
   // Listas de apoyo
   const [clientes, setClientes] = useState<any[]>(_cacheCatalogosServic.clientes || []);
@@ -199,6 +209,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       setBusquedaCliente('');
       setClienteListaAbierta(false);
       setIndiceCliente(0);
+      setEmpleadoId(yo?.id || '');
       cargarCatalogos();
       if (salidaRaiz) {
         setTipo(salidaRaiz.tipo);
@@ -256,6 +267,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               if (b.direccion) setDireccion(b.direccion);
               if (b.ubicacion) setUbicacion(b.ubicacion);
               if (b.fecha) setFecha(b.fecha);
+              if (b.empleadoId) setEmpleadoId(b.empleadoId);
               if (b.observaciones) setObservaciones(b.observaciones);
               if (Array.isArray(b.trabajadoresSeleccionados)) setTrabajadoresSeleccionados(b.trabajadoresSeleccionados);
               if (Array.isArray(b.items) && b.items.length > 0) {
@@ -285,7 +297,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         document.getElementById('select-tipo-salida')?.focus();
       }, 50);
     }
-  }, [isOpen, salidaRaiz, datosIniciales]);
+  }, [isOpen, salidaRaiz, datosIniciales, yo?.id]);
 
   // Auto-guardado en tiempo real en localStorage (Regla: "Que se guarde todo")
   useEffect(() => {
@@ -306,6 +318,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         fecha,
         observaciones,
         trabajadoresSeleccionados,
+        empleadoId,
         items,
       };
       try {
@@ -326,7 +339,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         console.error('Error limpiando borrador vacío:', e);
       }
     }
-  }, [isOpen, tipo, customerId, clienteLibre, busquedaCliente, bienId, bienLibre, direccion, ubicacion, fecha, observaciones, trabajadoresSeleccionados, items, salidaRaiz, datosIniciales]);
+  }, [isOpen, tipo, customerId, clienteLibre, busquedaCliente, bienId, bienLibre, direccion, ubicacion, fecha, observaciones, trabajadoresSeleccionados, empleadoId, items, salidaRaiz, datosIniciales]);
 
   const limpiarBorrador = () => {
     try {
@@ -344,6 +357,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     setUbicacion('');
     setObservaciones('');
     setTrabajadoresSeleccionados([]);
+    setEmpleadoId(yo?.id || '');
     setItems([]);
     setBusquedaProd('');
     setProdSeleccionado(null);
@@ -356,12 +370,14 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
 
   const cargarCatalogos = async () => {
     try {
-      const [resCli, resTrab, resProd] = await Promise.all([
+      const [resCli, resTrab, resProd, resEmp] = await Promise.all([
         supabase.from('customers').select('id, name, dni, ruc, direccion').eq('activo', true).order('name'),
         supabase.from('trabajadores').select('id, nombre, cargo').eq('estado', 'ACTIVO').order('nombre'),
         // Sin la foto (image_url pesa mucho: MEMORIA-IA 63) y en bloques, para no cortarse en 1.000 productos.
         // Solo activos: los borrados en Inventario quedan con is_active = 0 y no deben salir aquí (17/11/2026).
         traerTodo(() => supabase.from('products').select('id, name, code, unit, quantity, cost_price, image_path').eq('is_active', 1).order('name').order('id')),
+        // 204: el cuarto lugar corresponde a resEmp; si se pone antes, productos y empleados se intercambian.
+        supabase.from('empleados_publico').select('id, nombre, email, rol, estado').eq('estado', 'ACTIVO').order('nombre'),
       ]);
 
       if (resCli.data) {
@@ -376,6 +392,10 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         setProductos(resProd.data);
         _cacheCatalogosServic.productos = resProd.data;
         void sincronizarFotosFaltantes(resProd.data); // baja solo las fotos que aún no están en la PC
+      }
+      if (resEmp.data) {
+        setEmpleados(resEmp.data);
+        _cacheCatalogosServic.empleados = resEmp.data;
       }
       _cacheCatalogosServic.timestamp = Date.now();
     } catch (err) {
@@ -689,6 +709,11 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       inputBuscarClienteRef.current?.focus();
       return;
     }
+    if (!empleadoId || !empleadoNombre.trim()) {
+      avisar('Elige el empleado responsable de la salida');
+      document.getElementById('select-empleado-salida')?.focus();
+      return;
+    }
     if (trabajadoresSeleccionados.length === 0) {
       avisar('Asigna al menos un trabajador a la salida');
       return;
@@ -717,7 +742,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         fecha,
         observaciones: obsFinal,
         salida_raiz_id: salidaRaiz ? salidaRaiz.id : null,
-        usuario: 'Usuario',
+        usuario: empleadoNombre,
         trabajadores: trabajadoresSeleccionados.map((tid, idx) => ({
           trabajador_id: tid,
           rol: idx === 0 ? 'RESPONSABLE' : 'AYUDANTE',
@@ -777,7 +802,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         salida_raiz_id: salidaRaiz?.id || null,
         salida_raiz_codigo: salidaRaiz?.codigo || null,
         observaciones: obsFinal,
-        usuario: 'Usuario',
+        usuario: empleadoNombre,
         created_at: new Date().toISOString(),
         trabajadores: trabajadoresSeleccionados.map((tid, idx) => {
           const t = trabajadores.find((x) => String(x.id) === String(tid));
@@ -1061,6 +1086,31 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               >
               </input>
             </div>
+          </div>
+
+          {/* Fila 2b: Empleado responsable (dueño 23/11/2026) */}
+          <div>
+            <label htmlFor="select-empleado-salida" className="block font-black uppercase text-[var(--color-ink)] mb-1">
+              Empleado responsable *
+            </label>
+            <select
+              id="select-empleado-salida"
+              value={empleadoId}
+              onChange={(e) => setEmpleadoId(e.target.value)}
+              onKeyDown={(e) => handleKeyDownForm(e, 'select-empleado-salida')}
+              required
+              className="w-full p-2 min-h-[44px] sm:min-h-0 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] rounded-none"
+            >
+              <option value="">-- ELIGE AL EMPLEADO --</option>
+              {empleados.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.nombre}{e.email ? ` (${e.email})` : ''}
+                </option>
+              ))}
+            </select>
+            <p className="text-[10px] text-[var(--color-muted)] mt-1">
+              Predeterminado: quien ingresó. Puedes cambiarlo después en el detalle de la salida.
+            </p>
           </div>
 
           {/* Fila 3: Trabajadores Asignados */}

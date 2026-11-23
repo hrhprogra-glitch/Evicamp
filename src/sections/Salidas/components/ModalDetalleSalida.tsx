@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Truck, X, Printer, RotateCcw, Plus, CheckCircle, AlertTriangle, MapPin, User, Calendar } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
@@ -28,6 +28,60 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
   const [modalDevolucionOpen, setModalDevolucionOpen] = useState(false);
   const [procesando, setProcesando] = useState(false);
 
+  // 204 (dueño 23/11/2026): el empleado responsable también se puede cambiar después de guardar.
+  const [empleados, setEmpleados] = useState<any[]>([]);
+  const [empleadoValor, setEmpleadoValor] = useState(salida.usuario || '');
+  const [guardandoEmpleado, setGuardandoEmpleado] = useState(false);
+  const empleadoNombre = empleados.find((e) => String(e.id) === String(empleadoValor))?.nombre
+    || empleadoValor || '';
+
+  useEffect(() => {
+    setEmpleadoValor(salida.usuario || '');
+  }, [salida.id, salida.usuario]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let vivo = true;
+    supabase
+      .from('empleados_publico')
+      .select('id, nombre, email, rol, estado')
+      .eq('estado', 'ACTIVO')
+      .order('nombre')
+      .then(({ data }: { data: any[] | null }) => {
+        if (!vivo || !data) return;
+        setEmpleados(data);
+        const coincide = data.find(
+          (e) => String(e.nombre || '').trim().toLowerCase() === String(salida.usuario || '').trim().toLowerCase()
+        );
+        if (coincide) setEmpleadoValor(String(coincide.id));
+      });
+    return () => { vivo = false; };
+  }, [isOpen, salida.id, salida.usuario]);
+
+  const guardarEmpleado = async (valor: string) => {
+    const nombre = empleados.find((e) => String(e.id) === String(valor))?.nombre || valor;
+    if (!nombre.trim()) {
+      avisar('Elige un empleado');
+      return;
+    }
+    setGuardandoEmpleado(true);
+    try {
+      const { error } = await supabase
+        .from('salidas')
+        .update({ usuario: nombre })
+        .eq('id', salida.id);
+      if (error) throw error;
+      await onReload();
+    } catch (err: any) {
+      console.error('Error al cambiar empleado:', err);
+      avisar(err.message || 'No se pudo cambiar el empleado');
+      setEmpleadoValor(salida.usuario || '');
+    } finally {
+      setGuardandoEmpleado(false);
+      setTimeout(() => document.getElementById('select-empleado-detalle-salida')?.focus(), 60);
+    }
+  };
+
   // 194: el botón de imprimir abre la misma vista previa de las salidas nuevas (ticket, hoja, PDF y WhatsApp).
   const [vistaPreviaOpen, setVistaPreviaOpen] = useState(false);
   const empresa = useEmpresaComprobante();
@@ -47,7 +101,7 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
       const { error } = await supabase.rpc('fn_cambiar_estado_salida', {
         p_salida_id: salida.id,
         p_nuevo_estado: nuevoEstado,
-        p_usuario: 'Usuario',
+        p_usuario: empleadoNombre,
       });
 
       if (error) throw error;
@@ -139,6 +193,36 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
                 <p className="text-[11px] mt-0.5">
                   <span className="font-black">Fecha:</span> {salida.fecha}
                 </p>
+                {/* 204 (dueño 23/11/2026): cambiar al empleado responsable después de guardar */}
+                <div className="mt-2">
+                  <label htmlFor="select-empleado-detalle-salida" className="block font-black uppercase text-[var(--color-ink)] mb-1">
+                    Empleado responsable *
+                  </label>
+                  <select
+                    id="select-empleado-detalle-salida"
+                    value={empleadoValor}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setEmpleadoValor(v);
+                      void guardarEmpleado(v);
+                    }}
+                    disabled={guardandoEmpleado}
+                    className="w-full p-2 min-h-[44px] sm:min-h-0 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] rounded-none disabled:opacity-50"
+                  >
+                    {!empleadoValor && <option value="">-- ELIGE AL EMPLEADO --</option>}
+                    {empleadoValor && !empleados.some((e) => String(e.id) === String(empleadoValor)) && (
+                      <option value={empleadoValor}>{empleadoValor} (anterior)</option>
+                    )}
+                    {empleados.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.nombre}{e.email ? ` (${e.email})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-[var(--color-muted)] mt-1">
+                    Cambia el responsable y se guarda al instante. Sale en el comprobante.
+                  </p>
+                </div>
                 {salida.salida_raiz_codigo && (
                   <p className="text-[11px] mt-0.5 text-blue-700 font-bold">
                     Continuación de: {salida.salida_raiz_codigo}
@@ -322,7 +406,7 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
 
       {/* Vista previa del comprobante (hoja, ticket, PDF y WhatsApp) */}
       {vistaPreviaOpen && (
-        <VistaPreviaSalida salida={salida} empresa={empresa} onCerrar={() => setVistaPreviaOpen(false)} />
+        <VistaPreviaSalida salida={{ ...salida, usuario: empleadoNombre }} empresa={empresa} onCerrar={() => setVistaPreviaOpen(false)} />
       )}
 
       {/* Modal Devolución */}

@@ -45,6 +45,8 @@ export const precargarParaSinInternet = () => {
         supabase.from('compras').select('*, compras_detalle(*)').order('created_at', { ascending: false }).limit(200),
         // Ajustes > Datos de la empresa (src/sections/Configuraciones/components/FormularioEmpresa.tsx)
         supabase.from('empresa_config').select('*').limit(1).single(),
+        // Salidas > selector de empleado responsable (ModalNuevaSalida y ModalDetalleSalida, fase 204)
+        supabase.from('empleados_publico').select('id, nombre, email, rol, estado').eq('estado', 'ACTIVO').order('nombre'),
       ]);
     } catch { hecha = false; /* se reintenta la próxima vez que abra */ }
     void precargarFinanzas();

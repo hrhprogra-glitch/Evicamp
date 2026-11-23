@@ -42,6 +42,9 @@ export const ComprobanteSalida = forwardRef<HTMLDivElement, ComprobanteSalidaPro
         {/* Cliente y Destino */}
         <div className="border-b border-black pb-2 mb-2 space-y-0.5 text-[11px]">
           <p><span className="font-black">CLIENTE:</span> {salida.customer?.name || 'NO REGISTRADO'}</p>
+          {salida.usuario && (
+            <p><span className="font-black">EMPLEADO:</span> {salida.usuario}</p>
+          )}
           {(salida.customer?.dni || salida.customer?.ruc) && (
             <p><span className="font-black">DOC:</span> {salida.customer?.dni || salida.customer?.ruc}</p>
           )}
