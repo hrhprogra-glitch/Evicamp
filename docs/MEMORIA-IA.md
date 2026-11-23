@@ -799,6 +799,10 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Probar con **recarga real** (`page.reload`) y reabrir el modal. Las pruebas que solo cierran/abren el modal no detectan este bug, porque el estado de React se conserva; el defecto solo aparece al reconstruir el estado desde localStorage.
 - El mismo helper sirve para tres casos: nombre escrito y borrado, nombre escrito y no borrado, cliente elegido y borrado. Los tres deben pasar en los cuatro tamaños.
 
+## 49. Iconos del sitio oficial tras un deploy (23/11/2026, bitácora 198)
+- Los iconos del cliente no están en la raíz sino en `/var/www/ecosistema123/html/icons/`. El script `/opt/siuhub/ecosistema-iconos.sh` copia `/opt/siuhub/ecosistema-logo.png` a los 5 nombres y hace `chown`. Verificar con `md5sum /var/www/ecosistema123/html/icons/icon-192.png /opt/siuhub/ecosistema-logo.png`: deben coincidir.
+- El helper `ai-scripts/restaurar-iconos-ecosistema.cjs` hace las dos cosas (reponer y comparar MD5) para no olvidarlo después de cada `node ai-scripts/deploy.cjs ecosistema`.
+
 ## 48. Login corto por sitio (23/11/2026, bitácora 197)
 - `normalizarEmail` tenía un dominio histórico `@gestorpro.com`; por eso escribir solo `admin` no entraba en Nego ni en ecosistema. La corrección decide el dominio por `window.location.hostname`: `ecosistema*` → `@ecosistema.com`, `nego.*` → `@siumax.com`, el resto conserva `@gestorpro.com` para no romper Evicamp ni los clientes. Los correos completos nunca se tocan.
 - Quitar administradores es un borrado: primero respaldo, luego borrar `sesiones` de esos ids y después los `empleados` (FK `sesiones -> empleados`, `trabajadores -> empleados`). Mantener la clave del admin que queda.

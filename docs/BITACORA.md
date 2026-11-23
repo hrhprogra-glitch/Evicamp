@@ -7,6 +7,16 @@
 
 ---
 
+## 23/11/2026 (198) · OpenCode (Big Pickle) — Fase B: login corto y un solo administrador en ecosistema (sitio oficial)
+- **Dueño:** *"perfecto haz la fase b"* — aprobó ejecutar en el sitio oficial lo mismo que ya estaba probado en Nego.
+- **Base `ecosistema`:** respaldo `/root/backups/ecosistema-antes-quitar-admins-20261123154334.dump`. Se borraron las sesiones y los empleados `billy@siumax.com` y `harry@siumax.com`. Queda **solo `admin@ecosistema.com`**, con la misma clave. `empresa_config` sigue igual: **ECO SISTEMAS URH S.A.C.**, RUC **20502059751**.
+- **Despliegue:** mismo JS que en Nego (`index-BqlUehWh.js`, 22 archivos) desplegado **solo en ecosistema**. Después se corrió `bash /opt/siuhub/ecosistema-iconos.sh` para reponer los 5 iconos; el MD5 del icono y del logo guardado coincide (`c159d2165b6f67ea8c6126f1b49bf4d7`).
+- **Prueba nueva `prueba-login-corto-ecosistema.mjs`:** **40/40, 0 fallos**, teclado real y sin internet en 390/768/1366/1920 — placeholder `admin`, título ECO SISTEMAS URH, tema Océano, logo del cliente visible, `suscripcion.json` 404, entra escribiendo solo `admin`, entra con el correo completo, `billy` y `harry` ya no entran, y la sesión aguanta sin internet.
+- **Otros sitios:** Evicamp 200, Panel (`siumax.duckdns.org`) 200 y Nego 200. Sin tocar el Supabase, sin credenciales nuevas y sin push.
+- **Sigue pendiente:** la carga de los datos reales del Supabase (Fase 2 de la limpieza, bitácora 196), que el dueño aún no ha autorizado, y la confirmación visual del logo que él debe hacer.
+
+---
+
 ## 23/11/2026 (197) · OpenCode (Big Pickle) — Fase A: login corto y un solo administrador en Nego (pruebas)
 - **Dueño:** *"perfecto haremos un ajuste en el login primero en pruebas ahi tengo 3 usuarios admin solo quiero que quede admin@siumax.com nada mas y en ecosistema los mismo pero que quede admin@siumax.com pero ojo quiero que cambies el siumax por ecosistema.com y en el login no necesitan poner todo solo el nombre osea admin y la contraseña"*. Aprobado con **"empieza"**.
 - **Base `siumax`:** respaldo `/root/backups/siumax-antes-quitar-admins-20261123152942.dump`. Se borraron las sesiones y los empleados `billy@siumax.com` y `harry@siumax.com`. Queda **solo `admin@siumax.com`**, con la misma clave.

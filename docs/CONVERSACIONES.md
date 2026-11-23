@@ -1243,3 +1243,10 @@
 - En ecosistema aún no se toca nada: cuando se apruebe la Fase B quedará **solo `admin@ecosistema.com`** (el dueño pidió cambiar `siumax` por `ecosistema.com`).
 - El login ahora acepta escribir solo `admin` y completa el dominio del sitio; el correo completo sigue sirviendo. Desplegado primero solo en pruebas, como pidió.
 - Prueba con teclado y sin internet en cuatro tamaños: **24/24, 0 fallos**. Sin Evicamp, sin Panel, sin Supabase, sin push.
+
+## 23/11/2026 (ajuste del login, fase B en el sitio oficial)
+- El dueño dijo *"perfecto haz la fase b"* y se ejecutó lo aprobado en ecosistema.
+- Quedó **solo `admin@ecosistema.com`**; se borraron `billy` y `harry` con sus sesiones, previo respaldo. La empresa sigue siendo ECO SISTEMAS URH S.A.C. con RUC 20502059751, y la clave de admin no se tocó.
+- Se desplegó el mismo código del login corto en el sitio oficial y se repusieron los iconos del cliente después del deploy.
+- Prueba en cuatro tamaños, con teclado y sin internet: **40/40, 0 fallos**. Entra escribiendo solo `admin`, entra el correo completo, los dos usuarios borrados ya no entran, y el logo, el tema Océano y la ausencia de cobro siguen igual.
+- Evicamp, el Panel y Nego siguen respondiendo. Sin Supabase, sin push. Todavía no se cargaron los datos reales: eso es la Fase 2 de la limpieza y espera su OK.
