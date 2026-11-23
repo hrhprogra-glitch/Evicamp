@@ -1328,4 +1328,5 @@
 - Se compiló en una copia limpia desde el último commit, metiendo solo esos dos archivos (el trabajo sin commitear de otra IA quedó fuera) y se desplegó **solo en Nego**. Bundle en vivo `index-DsO4TJkO.css` / `index-Cu334UzO.js`.
 - Pruebas: adaptiva **196/196, 0 fallos, 0 sin datos** con teclado y sin internet en celular, tablet, laptop y PC. Además se revisaron los estilos reales en el sitio: botones y tarjetas con fondo blanco, borde fino, sin sombra y sin esquinas.
 - Sigue igual el punto de regreso exacto guardado al empezar. Falta que el dueño revise en Nego: si le gusta avisa para subirlo; si no, se rehace o se vuelve al commit anterior. Sin Evicamp, sin ecosistema, sin base, sin credenciales y sin push.
+- Minutos después el dueño pegó una pantalla de error “File not found” (de nginx, en varios idiomas). Se revisó Nego por completo: respondía 200, los 404 del log eran de `ecosistema123.duckdns.org`, y otro agente había desplegado encima a las 19:56 con un bundle nuevo que igual conservaba el cambio sobrio. No se tocó nada. El dueño avisó: *“ya logre imprimirlo asi que ntp”*. Queda cerrado.
 
