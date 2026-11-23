@@ -26,7 +26,7 @@ const sesiones = ['clientes', 'encargos', 'agenda', 'salidas', 'contratos', 'tal
         const area = document.querySelector('main section') || document.querySelector('main');
         const a = area.getBoundingClientRect();
         const out = [];
-        for (const sel of ['.tabla-marco', '.buscador-sobrio']) {
+        for (const sel of ['.tabla-marco', '.buscador-sobrio', '#caja-buscador-inventario']) {
           for (const e of document.querySelectorAll(sel)) {
             const r = e.getBoundingClientRect();
             if (r.width === 0 || r.height === 0) continue;
@@ -59,13 +59,13 @@ const sesiones = ['clientes', 'encargos', 'agenda', 'salidas', 'contratos', 'tal
       if (!(await page.$(btn))) { console.log(`${id}: sin botón`); continue; }
       await page.focus(btn); await page.keyboard.press('Enter'); await pausa(1600);
       let malos = await medir(id);
-      const pestanas = await page.evaluate(() => Array.from(document.querySelectorAll('[role="tab"], [id^="tab-"]'))
+      const pestanas = await page.evaluate(() => Array.from(document.querySelectorAll('[role="tab"], [id^="tab-"], [id^="btn-tab-"], [id^="btn-subtab-"]'))
         .filter((e) => e.getClientRects().length && !e.getAttribute('aria-disabled'))
         .map((e) => e.id || e.getAttribute('aria-controls') || e.textContent.trim().slice(0, 30)));
       const vistas = [...new Set(pestanas)].slice(0, 14);
       for (const p of vistas) {
         const encontrado = await page.evaluate((nombre) => {
-          const cand = Array.from(document.querySelectorAll('[role="tab"], [id^="tab-"]'));
+          const cand = Array.from(document.querySelectorAll('[role="tab"], [id^="tab-"], [id^="btn-tab-"], [id^="btn-subtab-"]'));
           const e = cand.find((x) => x.id === nombre || x.getAttribute('aria-controls') === nombre || x.textContent.trim().slice(0, 30) === nombre);
           if (!e) return false;
           e.click();

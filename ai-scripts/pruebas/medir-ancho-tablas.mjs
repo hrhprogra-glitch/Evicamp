@@ -35,7 +35,7 @@ try {
         const r = e.getBoundingClientRect();
         return { izq: Math.round(r.left - a.left), der: Math.round(a.right - r.right), ancho: Math.round(r.width) };
       };
-      return { area: Math.round(a.width), buscador: medir('.buscador-sobrio'), tabla: medir('.tabla-marco'), tablaBruta: medir('table') };
+      return { area: Math.round(a.width), buscador: medir('.buscador-sobrio, #caja-buscador-inventario'), tabla: medir('.tabla-marco'), tablaBruta: medir('table') };
     });
     console.log(`${id.padEnd(14)} área=${m.area}  buscador=${JSON.stringify(m.buscador)}  tabla=${JSON.stringify(m.tabla)}  <table>=${JSON.stringify(m.tablaBruta)}`);
   }

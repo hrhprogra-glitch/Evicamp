@@ -70,10 +70,10 @@ export const FiltrosInventario: React.FC<Props> = ({
   };
 
   return (
-    <div className="flex flex-col xl:flex-row gap-3 sm:gap-4 px-2 sm:px-3 shrink-0 items-stretch xl:items-center justify-between">
+    <div className="flex flex-col xl:flex-row gap-3 sm:gap-4 shrink-0 items-stretch xl:items-center justify-between">
 
       {/* BARRA DE BÚSQUEDA (Toma el espacio restante; en columna no usa flex-1 porque perdería su alto) */}
-      <div className="w-full xl:flex-1 h-12 sm:h-14 shrink-0 flex border border-[var(--color-border)] bg-[var(--color-surface)] focus-within:border-[var(--color-ink)] focus-within:ring-2 focus-within:ring-[var(--color-ink)] transition-all group shadow-sm">
+      <div id="caja-buscador-inventario" className="w-full xl:flex-1 h-12 sm:h-14 shrink-0 flex border border-[var(--color-border)] bg-[var(--color-surface)] focus-within:border-[var(--color-ink)] focus-within:ring-2 focus-within:ring-[var(--color-ink)] transition-all group shadow-sm">
         <div className="w-12 sm:w-14 h-full flex items-center justify-center bg-[var(--color-bg-2)] border-r border-[var(--color-border)] text-[var(--color-muted)] group-focus-within:bg-[var(--color-ink)] group-focus-within:text-[var(--color-success)] group-focus-within:border-[var(--color-ink)] transition-colors shrink-0">
           <Search size={18} />
         </div>

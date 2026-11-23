@@ -1265,6 +1265,13 @@
 - Se aplicó en 20 archivos de `src/sections/`, se comprobó con el medidor y un escáner de **todas** las pestañas (0 elementos con margen) y se hicieron regresiones con teclado y sin internet. Desplegado solo en Nego.
 - Se le preguntó si lo llevábamos al sitio oficial (ecosistema) y decidió: **"Déjalo solo en Nego"**. No se desplegó en ecosistema ni en Evicamp; si más adelante lo pide, se aplica el mismo cambio y se reponen los iconos con MD5 verificado. Sin base y sin push.
 
+## 23/11/2026 (buscador de Inventario pegado al borde y revisión completa)
+- El dueño dijo: *"perfecto bien echo pero en inventarios el buscador no esta pegado a los extremos as ese arreglo y revisa bien que todo esta bien"*.
+- Se encontró la causa: en Inventario (Productos y Lotes) el cuadro del buscador tenía 12 px de margen y, además, el medidor no lo estaba revisando porque ese buscador no usa la clase `buscador-sobrio` ni el id que se medía. El verificador tampoco miraba las pestañas propias de Inventario: por eso no se había detectado antes.
+- Se quitó el margen y se arregló el buscador de Herramientas/Vehículos, que venía después de las subtabs. Se corrigieron los medidores para que midan el cuadro del buscador y todas las pestañas, y se dejó un escáner amplio como prueba permanente.
+- Revisión: 0 elementos con margen en las 11 sesiones y sus pestañas, en 390/768/1366/1920. Pruebas con teclado y sin internet: paginación 48/48 y salida/Caja/Agenda 167/167, sin fallos. Quedan fallos **antiguos de datos** en Contratos y Taller (el consumo de insumos/repuestos choca con una clave foránea de tienda); no son del ancho y la base no se tocó.
+- Desplegado solo en Nego. Sin ecosistema, sin Evicamp, sin base y sin push. Hay trabajo ajeno sin commitear de otra IA en `PanelCompras.tsx`: no se tocó ni se incluyó en el commit.
+
 ## 23/11/2026 (poblado de la base de pruebas siumax con +50 registros por sesión)
 - El dueño observó que la única tabla que muestra todo de golpe es Inventario y que en las demás tablas hay que arrastrar al costado para ver completo lo que muestran.
 - Pidió poblar primero la base de pruebas `siumax` con ~50 registros por sesión para poder revisar bien las tablas, ya que estaba vacía tras la limpieza. Confirmó con **"empieza"**.

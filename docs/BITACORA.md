@@ -7,6 +7,16 @@
 
 ---
 
+## 23/11/2026 (202) · OpenCode (Big Pickle) — Buscador de Inventario pegado al borde y revisión completa del ancho
+- **Dueño:** *"perfecto bien echo pero en inventarios el buscador no esta pegado a los extremos as ese arreglo y revisa bien que todo esta bien"*.
+- **Causa encontrada:** `FiltrosInventario.tsx` tenía `px-2 sm:px-3` (12 px en escritorio) en el contenedor de la barra de búsqueda. Además, el medidor solo miraba `.buscador-sobrio`, y el buscador de Inventario usa otro id y otro cuadro: por eso la medición anterior decía `buscador=null` y no lo vimos. El verificador tampoco reconocía las pestañas `btn-tab-` / `btn-subtab-` de Inventario, así que ese punto ciego ocultó el problema.
+- **Cambio:** se quitó el margen horizontal y se puso `id="caja-buscador-inventario"` al **cuadro** del buscador (no al input, que lleva su icono y padding internos, normales). En Herramientas/Vehículos se puso el buscador primero en la fila, antes de las subtabs, sin tocar ids ni atajos. Se ampliaron `medir-ancho-tablas.mjs` y `verificar-ancho-tablas.cjs` y se agregó `verificar-ancho-buscadores.cjs` como prueba permanente (escáner amplio de buscadores y tablas).
+- **Verificación:** `verificar-ancho-tablas.cjs` → **0 elementos con margen** en 11 sesiones y sus pestañas (Inventario ahora revisa 4). Diagnóstico en 390/768/1366/1920 → `#caja-buscador-inventario izq=0, der=0`. Escáner amplio → ningún buscador con margen; los avisos de tabla son el borde de 1 px del marco, no margen real.
+- **Regresiones con teclado y sin internet:** paginación **48/48, 0 fallos**; adaptiva de salida/Caja/Agenda **167/167, 0 fallos** en 390/768/1366/1920; Encargos y Herramientas sin fallos. Contratos y Agenda/Taller siguen con fallos **antiguos de datos** (FK `inventory_movements_store_id_fkey` al consumir insumos/repuestos, salida generada desde Agenda y un cobro); no son del ancho ni del teclado. La base no se tocó.
+- **Estado:** desplegado **solo en Nego** (22 archivos; JS `index-C0z0xLud.js`, CSS `index-PbPDyvWN.css`). Sin ecosistema, sin Evicamp, sin base y sin push. Trabajo ajeno: Antigravity commiteó `463ed05` (datos en `siumax`) y dejó WIP sin commitear en `PanelCompras.tsx`; ese archivo **no** se tocó ni se incluyó en el commit, aunque el bundle del deploy lo compiló.
+
+---
+
 ## 23/11/2026 (201) · Antigravity — Base de pruebas `siumax` poblada con datos reales y +50 registros por sesión
 - **Dueño:** *"si pero antes quiero que tambien ingreses datos unos 50 datos para cada sesión para verlo bien ya que ahora no tiene ningun datos en negosiumax que es donde hacemos pruebas"*. Aprobado con **"empieza"**.
 - **Respaldo previo:** `/root/backups/siumax-antes-carga-datos-20261123163407.dump` (1.2 MB, `pg_dump -Fc`).

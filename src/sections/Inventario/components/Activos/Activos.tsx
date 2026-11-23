@@ -153,27 +153,7 @@ export const Activos: React.FC = () => {
     <div className="flex flex-col gap-5 font-mono text-[var(--color-ink)]">
       {/* CONTROLES Y SUB-PESTAÑAS */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-        {/* Switch Sub-pestañas */}
-        <div className="pestanas-sobrias flex shrink-0">
-          <button
-            id="btn-subtab-herramientas"
-            onClick={() => setSubtab('HERRAMIENTAS')}
-            data-activa={subtab === 'HERRAMIENTAS'}
-            className="flex items-center gap-2 px-4 h-12 font-black text-xs uppercase tracking-wider cursor-pointer"
-          >
-            <Wrench size={14} /> Herramientas ({herramientas.length})
-          </button>
-          <button
-            id="btn-subtab-vehiculos"
-            onClick={() => setSubtab('VEHICULOS')}
-            data-activa={subtab === 'VEHICULOS'}
-            className="flex items-center gap-2 px-4 h-12 font-black text-xs uppercase tracking-wider cursor-pointer"
-          >
-            <Car size={14} /> Vehículos ({vehiculos.length})
-          </button>
-        </div>
-
-        {/* Buscador */}
+        {/* Buscador (primero, pegado al borde como en Clientes y Compras) */}
         <div className="buscador-sobrio flex-1">
           <div className="buscador-sobrio__icono"><Search size={18} /></div>
           <input
@@ -195,6 +175,26 @@ export const Activos: React.FC = () => {
             placeholder={subtab === 'HERRAMIENTAS' ? 'Buscar herramienta por código, nombre o marca...' : 'Buscar vehículo por placa, marca o conductor...'}
             autoComplete="off"
           />
+        </div>
+
+        {/* Switch Sub-pestañas */}
+        <div className="pestanas-sobrias flex shrink-0">
+          <button
+            id="btn-subtab-herramientas"
+            onClick={() => setSubtab('HERRAMIENTAS')}
+            data-activa={subtab === 'HERRAMIENTAS'}
+            className="flex items-center gap-2 px-4 h-12 font-black text-xs uppercase tracking-wider cursor-pointer"
+          >
+            <Wrench size={14} /> Herramientas ({herramientas.length})
+          </button>
+          <button
+            id="btn-subtab-vehiculos"
+            onClick={() => setSubtab('VEHICULOS')}
+            data-activa={subtab === 'VEHICULOS'}
+            className="flex items-center gap-2 px-4 h-12 font-black text-xs uppercase tracking-wider cursor-pointer"
+          >
+            <Car size={14} /> Vehículos ({vehiculos.length})
+          </button>
         </div>
 
         {/* Botones de Acción rápida */}
