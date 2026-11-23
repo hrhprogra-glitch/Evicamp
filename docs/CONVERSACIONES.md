@@ -1295,3 +1295,10 @@
 - Se detectó un problema aparte en la base de pruebas: la secuencia `salidas_id_seq` está en 3 y ya hay salidas hasta el id 392, así que no se puede guardar ninguna salida nueva. **No se tocó la base**: hace falta el OK del dueño (con respaldo) para arreglarla.
 - Al preguntarle, autorizó: *"Sí, arregla con respaldo"*. Se respaldó `siumax` y se dejó la secuencia en 392/392 con `setval`, solo en la base de pruebas; sin ecosistema, sin Evicamp y sin push.
 
+## 23/11/2026 (estética de la Caja, solo en Nego)
+- El dueño pidió mejorar la estética de la Caja y aclaró que el cambio y la revisión son solo en el sitio de pruebas: *"de donde hago pruebas que es nego siumax"*.
+- Pidió además un punto de regreso: *"as un punto de regreso si no me gusta me gustaria volver al comienzo"* y precisó *"volver al estado actual antes de empezar me refiero a eso"*. Se guardó un respaldo exacto en `D:/Programación/siumax/respaldos-estetica-caja/2026-11-23-inicio/` con `COMO-VOLVER.txt` y hashes, antes de tocar código.
+- Se hizo un ajuste conservador "SiuMax Sobrio" en la pantalla principal de Caja: sin anillos ni sombras difusas, sin emojis en etiquetas, selección nítida y colores del tema. Ids y teclado sin cambios; modales y MiniReporteDiario no se tocaron en esta pasada.
+- Compilación aislada porque hay trabajo ajeno sin terminar que no compila; ese WIP no se tocó. Despliegue **solo en Nego**. Regresión con teclado **188/188, 0 fallos**.
+- Queda pendiente la revisión del dueño en Nego: si le gusta avisará para subirlo; si no, se ejecuta el regreso exacto o se rehace. Sin ecosistema, sin Evicamp, sin base, sin credenciales y sin push.
+
