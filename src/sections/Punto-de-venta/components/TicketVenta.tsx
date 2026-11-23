@@ -194,14 +194,14 @@ export const TicketVenta: React.FC<Props> = ({
           if (buscador) buscador.focus();
         }
       }}
-      className="w-full h-full flex flex-col bg-[var(--color-surface)] border-2 border-[var(--color-ink)] shrink-0 relative overflow-hidden"
+      className="w-full h-full flex flex-col tabla-marco shrink-0 relative overflow-hidden"
     >
       
-      {/* ENCABEZADO TICKET CON BOTÓN DE PAUSAR */}
-      <div className="bg-[var(--color-ink)] text-white px-3 py-1.5 sm:px-4 flex items-center justify-between shrink-0 border-b-2 border-[var(--color-ink)]">
+      {/* ENCABEZADO TICKET: mismo molde sobrio que Inventario > Productos */}
+      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex items-center justify-between shrink-0">
         <div className="flex flex-col">
-          <h2 className="text-sm font-black uppercase tracking-widest flex items-center gap-2 text-[var(--color-accent)]">
-            <ShoppingCart size={18} /> Caja Actual
+          <h2 className="text-xl lg:text-2xl font-black text-[var(--color-ink)] uppercase tracking-widest whitespace-nowrap flex items-center gap-2">
+            <ShoppingCart size={20} className="text-[var(--color-accent)]" /> Caja Actual
             {clienteSeleccionado?.esMayorista && (
               <span className="bg-[var(--color-warning)] text-[var(--color-ink)] text-[10px] px-1.5 py-0.5 font-black border border-[var(--color-ink)]" title="Cliente Mayorista">
                 MAYORISTA
@@ -220,7 +220,7 @@ export const TicketVenta: React.FC<Props> = ({
             onClick={holdCurrentCart}
             onKeyDown={flechasCaja('btn-pausar-ticket')}
             disabled={cart.length === 0}
-            className="h-7 flex items-center justify-center px-3 gap-1 bg-[var(--color-warning)] text-[var(--color-ink)] border-2 border-[var(--color-warning)] hover:bg-[var(--color-surface)] hover:border-[var(--color-surface)] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
+            className="boton-cabecera h-7 flex items-center justify-center px-3 gap-1 border-2 border-[var(--color-ink)] text-[var(--color-warning-dark)] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
             title="Pausar y Guardar Ticket (Shift+Q)"
           >
             <Pause size={14} fill="currentColor" /> <span className="text-[12px] font-black uppercase">Espera</span>
@@ -229,7 +229,7 @@ export const TicketVenta: React.FC<Props> = ({
             id="btn-vaciar-ticket"
             onClick={() => setCart([])}
             onKeyDown={flechasCaja('btn-vaciar-ticket')}
-            className="w-7 h-7 flex items-center justify-center bg-[var(--color-danger)] text-[var(--color-surface)] border-2 border-[var(--color-danger)] hover:bg-[var(--color-surface)] hover:text-[var(--color-danger)] transition-colors cursor-pointer" 
+            className="boton-cabecera w-7 h-7 flex items-center justify-center border-2 border-[var(--color-ink)] text-[var(--color-danger)] transition-colors cursor-pointer" 
             title="Vaciar Ticket (Shift+W)"
           >
             <Trash2 size={14} />
@@ -239,7 +239,7 @@ export const TicketVenta: React.FC<Props> = ({
 
       {/* NUEVA BARRA: TICKETS EN ESPERA (Aparece solo si hay tickets guardados) */}
       {heldCarts.length > 0 && (
-        <div id="held-carts-container" className="bg-[var(--color-bg)] p-2 flex gap-2 overflow-x-auto border-b-2 border-[var(--color-ink)] shrink-0 custom-scrollbar">
+        <div id="held-carts-container" className="bg-[var(--color-bg)] p-2 flex gap-2 overflow-x-auto border-b border-[var(--color-border)] shrink-0 custom-scrollbar">
           {heldCarts.map((item, i) => {
             const held = Array.isArray(item) ? { cart: item, nombre: `T-${i + 1}` } : item;
             const nombreMostrar = held.nombre || `T-${i + 1}`;
@@ -249,10 +249,8 @@ export const TicketVenta: React.FC<Props> = ({
                 key={i} 
                 id={`btn-held-${i}`}
                 onClick={() => restoreCart(i)}
-                className={`border-2 px-2.5 py-1 text-[11px] font-black uppercase flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-                  activeTabIndex === i 
-                    ? 'bg-[var(--color-accent)] text-[var(--color-ink)] border-[var(--color-ink)] shadow-[inset_0_0_0_2px_var(--color-ink)]'
-                    : 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-ink)] hover:bg-[var(--color-bg)]'
+                className={`boton-cabecera border-2 border-[var(--color-ink)] px-2.5 py-2 text-[10px] lg:text-xs font-black uppercase flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTabIndex === i ? 'shadow-[inset_0_0_0_2px_var(--color-ink)]' : ''
                 }`}
                 title="Recuperar Ticket"
               >
@@ -264,7 +262,7 @@ export const TicketVenta: React.FC<Props> = ({
       )}
 
       {/* LISTA DE ITEMS DEL TICKET */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-[var(--color-surface)] px-2 pb-2 pt-1 flex flex-col relative border-b-2 border-[var(--color-ink)]">
+      <div className="flex-1 overflow-y-auto custom-scrollbar bg-[var(--color-surface)] px-2 pb-2 pt-1 flex flex-col relative border-b border-[var(--color-border)]">
         <div className="grid grid-cols-12 gap-2 text-xs font-black text-[var(--color-muted)] uppercase tracking-widest border-b-2 border-[var(--color-border)] pb-1 mb-1">
           <div className="col-span-3 text-center">Cant.</div>
           <div className="col-span-5">Descripción</div>
@@ -287,7 +285,7 @@ export const TicketVenta: React.FC<Props> = ({
                   setSelectedIndex(index); // 🛡️ SELECCIÓN AL CLIC EN LA FILA
                   setColIndex(0);
                 })}
-                className={`grid grid-cols-12 gap-2 text-xs font-bold border-b border-[var(--color-line-light)] pb-2 pt-2 items-center px-1 rounded-none transition-colors cursor-pointer ${
+                className={`tabla-fila grid grid-cols-12 gap-2 text-xs font-bold pb-2 pt-2 items-center px-1 rounded-none cursor-pointer ${
                   index === selectedIndex 
                     ? 'bg-[var(--color-surface)]' 
                     : 'bg-transparent'
@@ -448,10 +446,8 @@ export const TicketVenta: React.FC<Props> = ({
             }
           }}
           disabled={cart.length === 0}
-          className={`w-full py-2 border-2 border-[var(--color-ink)] font-black text-sm uppercase tracking-[0.1em] flex items-center justify-center gap-2 focus:outline-none focus-visible:shadow-[0_0_0_2px_var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer ${
-            selectedIndex === cart.length 
-              ? 'bg-[var(--color-ink)] text-[var(--color-accent)] shadow-[inset_0_0_0_2px_var(--color-accent)]' 
-              : 'bg-[var(--color-accent)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-accent)]'
+          className={`boton-cabecera w-full py-3 border-2 border-[var(--color-ink)] text-[10px] lg:text-xs font-black uppercase tracking-normal sm:tracking-wider flex items-center justify-center gap-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer ${
+            selectedIndex === cart.length ? 'shadow-[inset_0_0_0_2px_var(--color-ink)]' : ''
           }`}
         >
           <Banknote size={18} /> Proceder al Pago (F4)
@@ -464,7 +460,7 @@ export const TicketVenta: React.FC<Props> = ({
             onClick={onCotizar}
             onKeyDown={flechasCaja('btn-pos-cotizacion')}
             disabled={cart.length === 0}
-            className="py-1.5 px-2 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] hover:bg-[var(--color-bg)] focus:outline-none focus-visible:shadow-[0_0_0_2px_var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
+            className="boton-cabecera py-3 px-2 border-2 border-[var(--color-ink)] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
             title="Guardar como Cotización / Proforma (F7)"
           >
             <FileText size={13} className="text-[var(--color-info)]" /> Cotización (F7)
@@ -475,7 +471,7 @@ export const TicketVenta: React.FC<Props> = ({
             onClick={onPedido}
             onKeyDown={flechasCaja('btn-pos-pedido')}
             disabled={cart.length === 0}
-            className="py-1.5 px-2 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] hover:bg-[var(--color-bg)] focus:outline-none focus-visible:shadow-[0_0_0_2px_var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
+            className="boton-cabecera py-3 px-2 border-2 border-[var(--color-ink)] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed font-black text-[10px] lg:text-xs uppercase tracking-normal sm:tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
             title="Guardar como Pedido por Encargo (F8)"
           >
             <Package size={13} className="text-[var(--color-warning-dark)]" /> Pedido (F8)

@@ -266,25 +266,23 @@ export const TerminalBusqueda: React.FC<Props> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] relative rounded-none">
-      {/* Barra superior de acento (Plano Técnico) */}
-      <div className="h-2 w-full bg-[var(--color-accent)] shrink-0 rounded-none"></div>
-
-      {/* HEADER DE BÚSQUEDA TIPO TERMINAL */}
-      <div className="bg-[var(--color-surface)] px-3 py-2 sm:px-4 border-b border-[var(--color-border)] shrink-0 rounded-none">
+    <div className="flex-1 flex flex-col min-w-0 tabla-marco relative rounded-none">
+      {/* HEADER DE BÚSQUEDA: mismo molde sobrio que Inventario > Productos */}
+      <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 shrink-0 rounded-none">
         {/* Fila 1: título, usuario, hora y Cliente. Fila 2: avisos (Por cobrar, Cotizaciones, Pedidos): en el celular
             tres botones iguales; desde tablet en línea a la derecha; en PC grande (2xl) todo en UNA fila. */}
         <div className="flex flex-col 2xl:flex-row 2xl:items-center 2xl:justify-between gap-2 mb-2">
         <div className="flex flex-wrap items-center justify-between gap-2 min-w-0 2xl:flex-1">
-          <div className="shrink-0">
-            <h1 className="text-sm sm:text-base font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2 whitespace-nowrap">
-              <ScanLine className="text-[var(--color-ink)]" size={18} /> Punto de Venta
-            </h1>
+          <div className="shrink-0 flex items-center gap-3">
+            <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center rounded-none shrink-0">
+              <ScanLine size={20} className="text-[var(--color-accent)]" />
+            </div>
+            <h1 className="text-xl lg:text-2xl font-black text-[var(--color-ink)] uppercase tracking-widest whitespace-nowrap">Punto de Venta</h1>
           </div>
           
           <div className="flex flex-wrap items-center justify-end gap-2 lg:gap-3 min-w-0">
             <div className="hidden md:flex items-center min-w-0 border border-[var(--color-border)] pl-2 pr-3 py-1 bg-[var(--color-surface)]">
-              <div className="h-2 w-2 bg-[var(--color-accent)] animate-pulse mr-2"></div>
+              <div className="h-2 w-2 bg-[var(--color-accent)] mr-2"></div>
               <span className="text-xs font-black text-[var(--color-ink)] uppercase tracking-[0.1em] truncate">
                 ID: <span className="text-[var(--color-muted)]">{userEmail.split('@')[0]}</span>
               </span>
@@ -302,11 +300,11 @@ export const TerminalBusqueda: React.FC<Props> = ({
                   onClick={onAbrirElegirCliente}
                   onKeyDown={flechasCaja('btn-pos-header-cliente')}
                   title="Elegir o cambiar cliente para esta venta (F3 o clic)"
-                  className={`flex items-center whitespace-nowrap border-2 border-[var(--color-ink)] px-2 sm:px-3 py-1 text-[12px] font-black uppercase tracking-widest bg-[var(--color-surface)] text-[var(--color-ink)] hover:bg-[var(--color-bg)] hover:border-[var(--color-accent)] transition-colors cursor-pointer ${
+                  className={`boton-cabecera flex items-center whitespace-nowrap border-2 border-[var(--color-ink)] px-1 sm:px-3 2xl:px-4 py-3 text-[10px] lg:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-colors cursor-pointer ${
                     clienteSeleccionado && onLimpiarCliente ? 'border-r-0' : ''
                   }`}
                 >
-                  <Users size={13} className="mr-1.5 text-[var(--color-ink)]" />
+                  <Users size={16} className="mr-1.5" />
                   {clienteSeleccionado ? (
                     <span className="flex items-center gap-1.5">
                       {clienteSeleccionado.esMayorista && (
@@ -333,7 +331,7 @@ export const TerminalBusqueda: React.FC<Props> = ({
                     onClick={onLimpiarCliente}
                     onKeyDown={flechasCaja('btn-limpiar-cliente-pos')}
                     title="Quitar cliente (Shift+F3 o clic en ✕)"
-                    className="border-2 border-[var(--color-ink)] bg-[var(--color-surface)] hover:bg-[var(--color-danger)] hover:text-[var(--color-surface)] px-2 py-1 text-[var(--color-muted)] transition-colors cursor-pointer flex items-center justify-center"
+                    className="boton-cabecera border-2 border-[var(--color-ink)] px-1 sm:px-3 py-3 text-[var(--color-muted)] transition-colors cursor-pointer flex items-center justify-center"
                   >
                     <X size={13} />
                   </button>
@@ -353,13 +351,13 @@ export const TerminalBusqueda: React.FC<Props> = ({
                 onKeyDown={flechasCaja('btn-por-cobrar-pos')}
                 onClick={() => { try { sessionStorage.setItem('clientes_pestana', 'CREDITOS'); } catch { /* sin almacenamiento */ } onNavigate?.('clientes'); }}
                 title={fiadosCount > 0 ? 'Hay deudas pendientes por cobrar' : 'Nadie tiene deudas pendientes'}
-                className={`flex items-center justify-center shrink-0 whitespace-nowrap border-2 px-1.5 sm:px-3 py-1.5 sm:py-1 text-[11px] sm:text-[12px] font-black uppercase tracking-normal sm:tracking-widest transition-all cursor-pointer rounded-none ${
+                className={`boton-cabecera flex items-center justify-center shrink-0 whitespace-nowrap border-2 border-[var(--color-ink)] px-1 sm:px-3 2xl:px-4 py-3 text-[10px] lg:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-colors cursor-pointer ${
                   fiadosCount > 0
-                    ? 'border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] hover:bg-[var(--color-warning)] hover:text-[var(--color-surface)]'
-                    : 'border-[var(--color-accent)] bg-[var(--color-accent-bg)] text-[var(--color-accent-dark)] hover:bg-[var(--color-accent)] hover:text-[var(--color-surface)]'
+                    ? 'text-[var(--color-warning-dark)]'
+                    : 'text-[var(--color-accent-dark)]'
                 }`}
               >
-                {fiadosCount > 0 ? <AlertTriangle size={12} className="mr-1.5 sm:mr-2" /> : <CheckCircle2 size={12} className="mr-1.5 sm:mr-2" />}
+                {fiadosCount > 0 ? <AlertTriangle size={14} className="mr-1.5 sm:mr-2" /> : <CheckCircle2 size={14} className="mr-1.5 sm:mr-2" />}
                 <span className="sm:hidden">Cobrar:&nbsp;</span><span className="hidden sm:inline">Por cobrar:&nbsp;</span>{fiadosCount}
               </button>
             )}
@@ -376,31 +374,31 @@ export const TerminalBusqueda: React.FC<Props> = ({
         </div>
 
         <div className="flex gap-3">
-          {/* Estricto diseño monocrático, sin sombras difuminadas ni redondeos */}
-          <div className="group flex-1 relative flex items-center border-2 border-[var(--color-ink)] bg-[var(--color-surface)] rounded-none z-10 focus-within:shadow-[0_0_0_2px_var(--color-ink)]">
-            <div className="w-10 h-10 flex items-center justify-center bg-[var(--color-bg-2)] text-[var(--color-muted)] shrink-0 rounded-none group-focus-within:bg-[var(--color-ink)] group-focus-within:text-[var(--color-success)]">
-              <Search size={20} />
-            </div>
-            <div className="flex flex-col flex-1 px-4 relative">
-              <input id="buscador-global-pos"
-                type="text" 
-                autoFocus
-                placeholder="ESCANEAS AQUÍ, O ESCRIBES NOMBRE/CÓDIGO (Presiona Enter)" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onFocus={() => { resultadosTocados.current = false; }}
-                autoComplete="off"
-                spellCheck={false}
-                autoCorrect="off"
-                className="w-full h-10 bg-transparent text-base font-black text-[var(--color-ink)] uppercase outline-none placeholder:text-[var(--color-subtle)] rounded-none"
-              />
-            </div>
+          <div className="buscador-sobrio w-full shrink-0">
+            <div className="buscador-sobrio__icono"><Search size={18} /></div>
+            <input id="buscador-global-pos"
+              type="text" 
+              autoFocus
+              placeholder="ESCANEAS AQUÍ, O ESCRIBES NOMBRE/CÓDIGO (Presiona Enter)" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => { resultadosTocados.current = false; }}
+              autoComplete="off"
+              spellCheck={false}
+              autoCorrect="off"
+            />
+            {searchQuery.trim() !== '' && (
+              <div className="buscador-sobrio__match">
+                <span className="buscador-sobrio__conteo">{filteredProducts.length} MATCH</span>
+                <button type="button" tabIndex={-1} className="buscador-sobrio__borrar" title="Borrar búsqueda" onClick={() => setSearchQuery('')}><X size={14} /></button>
+              </div>
+            )}
             <BotonEscanerCelular
               id="btn-escaner-pos"
               onScan={handleScanCamara}
               titulo="Escanear producto con la cámara del celular"
-              className="w-10 h-10 !px-0 !border-0 !border-l-2 !border-[var(--color-ink)]"
+              className="w-10 h-full !px-0 !border-0 !border-l !border-[var(--color-border)]"
             />
             {/* Botón de respaldo para esconder el teclado del celular si vuelve a aparecer. Solo en celular. */}
             <button
@@ -409,7 +407,7 @@ export const TerminalBusqueda: React.FC<Props> = ({
               onClick={ocultarTeclado}
               title="Guardar el teclado del celular"
               data-evitar-iman-teclado
-              className="solo-celular-escaner shrink-0 w-10 h-10 flex items-center justify-center bg-[var(--color-ink)] text-[var(--color-surface)] font-black text-xs border-l-2 border-[var(--color-ink)] cursor-pointer rounded-none"
+              className="solo-celular-escaner shrink-0 w-10 h-full flex items-center justify-center bg-[var(--color-ink)] text-[var(--color-success)] font-black text-xs border-l border-[var(--color-border)] cursor-pointer rounded-none"
             >
               ✓
             </button>
@@ -428,21 +426,15 @@ export const TerminalBusqueda: React.FC<Props> = ({
       >
         {searchQuery.trim() === '' ? (
           // ESTADO 1: ESPERANDO BÚSQUEDA
-          <div className="border border-[var(--color-border)] flex-1 flex flex-col items-center justify-center text-center p-3 lg:p-4 bg-[var(--color-surface)] rounded-none">
-            <Package size={48} className="text-[var(--color-border)] mb-4" />
-            <h2 className="text-sm font-black text-[var(--color-muted)] uppercase tracking-widest mb-2">Área de Trabajo</h2>
-            <p className="text-[12px] font-bold text-[var(--color-subtle)] uppercase tracking-widest max-w-sm">
-              Sistema a la espera de identificador (SKU, EAN-13 o Texto).
-            </p>
+          <div className="vacio-sobrio flex-1">
+            <Search size={32} />
+            <span>Área de Trabajo · sistema a la espera de identificador (SKU, EAN-13 o texto).</span>
           </div>
         ) : filteredProducts.length === 0 ? (
           // ESTADO 2: SIN RESULTADOS
-          <div className="border border-[var(--color-border)] flex-1 flex flex-col items-center justify-center text-center p-3 lg:p-4 bg-[var(--color-surface)] rounded-none">
-            <Package size={48} className="text-[var(--color-border)] mb-4" />
-            <h2 className="text-sm font-black text-[var(--color-muted)] uppercase tracking-widest mb-2">Registro Inexistente</h2>
-            <p className="text-[12px] font-bold text-[var(--color-subtle)] uppercase tracking-widest max-w-sm">
-              Verifique la integridad del código en la base de datos.
-            </p>
+          <div className="vacio-sobrio flex-1">
+            <Search size={32} />
+            <span>No se registran productos con esos parámetros. Verifique el código.</span>
           </div>
         ) : (
           // ESTADO 3: MOSTRAR RESULTADOS
@@ -460,15 +452,11 @@ export const TerminalBusqueda: React.FC<Props> = ({
                   tabIndex={-1} // Evita que reciba el foco nativo con el Tab
                   onClick={() => !estaAgotado && onAddToCart({ ...prod, unit: esConsumo ? 'CONSUMO' : prod.unit })}
                   disabled={estaAgotado}
-                  className={`p-2 sm:p-2.5 text-left flex flex-col min-w-0 rounded-none border-2 focus:outline-none
-                    ${isSelected ? 'border-[var(--color-accent)] bg-[var(--color-accent-bg)] shadow-[inset_0_0_0_2px_var(--color-accent)] z-10' : ''}
+                  className={`tarjeta-sobria p-2 sm:p-2.5 text-left flex flex-col min-w-0 rounded-none focus:outline-none transition-colors
+                    ${isSelected ? 'bg-[var(--color-bg-2)] shadow-[inset_0_0_0_2px_var(--color-ink)] z-10' : ''}
                     ${estaAgotado 
-                      ? 'bg-[var(--color-surface)] border-[var(--color-border)] opacity-40 cursor-not-allowed' 
-                      : esConsumo
-                        ? 'bg-[var(--color-warning-bg)] border-[var(--color-warning)] cursor-pointer hover:border-[var(--color-ink)]'
-                        : esDecimal(prod)
-                          ? 'bg-[var(--color-info-bg)] border-[var(--color-info)] cursor-pointer hover:border-[var(--color-ink)]'
-                          : 'bg-[var(--color-surface)] border-[var(--color-border)] cursor-pointer hover:border-[var(--color-ink)]'
+                      ? 'opacity-40 cursor-not-allowed' 
+                      : 'cursor-pointer hover:bg-[var(--color-bg)]'
                     }
                   `}
                 >
@@ -494,7 +482,7 @@ export const TerminalBusqueda: React.FC<Props> = ({
                         estaAgotado
                           ? 'text-[var(--color-muted)] bg-[var(--color-bg)] border border-[var(--color-border)]'
                           : esDecimal(prod)
-                            ? 'text-[var(--color-info)] bg-[var(--color-info-bg-2)] border border-[var(--color-info)]'
+                            ? 'text-[var(--color-info-dark)] bg-[var(--color-info-bg)] border border-[var(--color-border)]'
                             : 'text-[var(--color-ink)] bg-[var(--color-bg)] border border-[var(--color-border)]'
                       }`}>
                         {prod.quantity > 0
@@ -510,13 +498,7 @@ export const TerminalBusqueda: React.FC<Props> = ({
                     {(() => {
                       const img = (prod as any).image_url || fotoDeCache(prod.id) || (prod as any).image_path || '';
                       const valida = img.startsWith('http') || img.startsWith('data:');
-                      const marcoColor = esConsumo
-                        ? 'border-[var(--color-warning)]/40 bg-[var(--color-warning-bg)]'
-                        : esDecimal(prod)
-                          ? 'border-[var(--color-info)]/40 bg-[var(--color-info-bg-2)]'
-                          : prod.tipoCompuesto === 'COMBO'
-                            ? 'border-[var(--color-warning)] bg-[var(--color-warning-bg)]'
-                            : 'border-[var(--color-border)] bg-[var(--color-bg)]';
+                      const marcoColor = 'border-[var(--color-border)] bg-[var(--color-bg)]';
 
                       return (
                         <div className={`flex-1 min-h-0 flex items-center justify-center border ${marcoColor} overflow-hidden ${estaAgotado ? 'grayscale' : ''}`}>

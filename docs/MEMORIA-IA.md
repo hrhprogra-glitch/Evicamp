@@ -80,9 +80,7 @@
 - **Orden de los links (desde el 06/11/2026, `servidor/ordenar-links.sh`):** `siumax.duckdns.org` = Panel de Control;
   `<tipo>.siumax.duckdns.org` = pruebas de cada sistema; `<negocio>.<tipo>.siumax.duckdns.org` = clientes. `panel.siumax`
   ya NO existe. `evi.siumax.duckdns.org` es EviDiary (proyecto aparte del dueño, `D:\Programación\evi`): no tocarlo.
-- **siumax** es el sistema de pruebas: **`comerc.siumax.duckdns.org`** (base `siumax`, API 3001, carpeta `/var/www/siuhub/html`,
-  nginx `sites-available/comerc`), usuario `admin@siumax.com`. La clave está en `.env.vps` (`SIUMAX_ADMIN_CLAVE`).
-  En los scripts se sigue llamando `siumax` (también acepta `comerc`): `deploy.cjs siumax`.
+- **Nego/SiuMax de pruebas (donde el dueño revisa TODO en celular y PC antes de aprobar):** **`nego.siumax.duckdns.org` / `comerc.siumax.duckdns.org`** (base `siumax`, API 3001, carpeta `/var/www/siuhub/html`, nginx `sites-available/comerc`), usuario `admin@siumax.com`. La clave está en `.env.vps` (`SIUMAX_ADMIN_CLAVE`). **Cada cambio visual/tabla se prueba aquí primero; no confundir con Evicamp ni ecosistema.** En scripts se llama `siumax` (también acepta `comerc`): `deploy.cjs siumax`.
 - **Pruebas de SiuMax Servic:** `servic.siumax.duckdns.org` (por ahora solo una página "en preparación", `/var/www/servic/html`).
 - **Clientes nuevos:** `<slug>.comerc.siumax.duckdns.org`, cada uno con su base `cli_<slug>`. Al 06/11/2026 no hay ninguno.
 - **Panel de control:** `siumax.duckdns.org` (`servidor/panel/panel.py`; nginx `sites-available/siuhub-panel`).
@@ -858,5 +856,12 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Ojo con el orden de los commits: un build intermedio que no incluía 204/205 dio 8 fallos en la prueba adaptiva (el selector de empleado). Siempre verificar en vivo el nombre del bundle (`curl` al index y `link[rel=stylesheet]`) y correr la regresión **después** del deploy; un "0 fallos" anterior no prueba el bundle actual.
 - Para estética sobria en Caja: selection con `shadow-[inset_0_0_0_2px_var(--color-accent)]`, sin `ring-*`, sin `shadow-xl`, sin `scale`/`translate`, sin `border-dashed`, sin emojis en etiquetas y sin `bg-white`/`text-white` fijos (usar `--color-surface`). Verificar con estilos calculados (`getComputedStyle`) porque el modelo no siempre puede ver las capturas PNG.
 - El script de deploy propio (`deploy-solo-nego.cjs`) necesita `createRequire` apuntando a `package.json` del proyecto para encontrar `node-ssh` cuando está en la carpeta temporal. Nunca usar `deploy.cjs` sin argumento: por defecto publica en Evicamp.
+
+## 54. `git worktree`, no backup viejo, para compilar con WIP ajeno (23/11/2026, bitácora 208)
+- El dueño revisa que la estética sea **idéntica** a las otras sesiones, no parecida. Si dice *"cambia la estética a la que ya vamos llevando"*, copia el molde de **Inventario > Productos** con las clases compartidas de `src/index.css` (`tabla-marco`, `tabla-fila`, `boton-cabecera`, `buscador-sobrio`, `vacio-sobrio`, `tarjeta-sobria`); no te quedes en quitar sombras y emojis.
+- El respaldo del "punto de regreso" sirve para **volver**, no para **compilar**. Restaurar desde él los archivos ajenos modificados puede traer una versión anterior a commits ya hechos: aquí revirtió el arreglo de `empleados_publico` de la bitácora 204 y el selector de Salida salió vacío (12 fallos). Para compilar sin el WIP ajeno, usa `git worktree add --detach <temp> HEAD`, junta `node_modules` con un junction y copia **solo los archivos propios** encima. Verifica con `git -C <worktree> status --short -- src` que aparezcan solo esos archivos.
+- Un fallo en una prueba después del deploy puede venir del código que **sí** desplegaste, no de tu cambio: compara siempre el bundle en vivo y lee el mensaje del fallo. Aquí 8 fallos eran del commit 204 revertido por el backup y 4 quedaron del WIP ajeno (prueba 207 + fix de Enter en `ModalNuevaSalida.tsx`), que no se incluyó por regla. Documentar la diferencia evita que otra IA "corrija" trabajo ajeno.
+- Si `graphify update .` termina con warnings de BOM en `tsconfig.app.json` o de `lecciones-aprendidas.md`, el grafo igual se actualiza; revisa la última línea (*"Code graph updated"*) antes de darlo por hecho.
+- Otra IA puede desplegar en Nego mientras tú estás documentando (aquí a las 14:10). Antes de dar el parte final, vuelve a leer el bundle del HTML en vivo y repite la regresión: si el cambio propio sigue presente, **no re(despliegues) para "ganar"**: reporta el estado final y deja el WIP ajeno intacto.
 
   

@@ -1302,3 +1302,15 @@
 - Compilación aislada porque hay trabajo ajeno sin terminar que no compila; ese WIP no se tocó. Despliegue **solo en Nego**. Regresión con teclado **188/188, 0 fallos**.
 - Queda pendiente la revisión del dueño en Nego: si le gusta avisará para subirlo; si no, se ejecuta el regreso exacto o se rehace. Sin ecosistema, sin Evicamp, sin base, sin credenciales y sin push.
 
+## 23/11/2026 (aclaración de la estética de la Caja: molde de Inventario)
+- El dueño vio la pasada anterior y preguntó: *"a ver lo que tenias que hacer era cambiar la estetica a la estetica que ya vamos llevando a cada sesión no ??? eso hicistes no ??"*. Quedó claro que no era solo quitar anillos/sombras: había que copiar el molde sobrio de **Inventario > Productos**.
+- Se le propuso reaplicar ese molde en los mismos 3 archivos de Caja (cabecera con ícono y título grandes, botones y buscador sobrios, tarjetas y ticket con el mismo marco), conservando ids, teclado y lógica, con el mismo punto de regreso exacto. El dueño respondió **"si"**.
+- Se hizo y se desplegó **solo en Nego**. El primer build mezcló un respaldo anterior a los commits 204/205 y revirtió el selector de empleado de Salida (12 fallos); se rehízo desde `HEAD` con solo los 3 archivos de Caja, sin incluir el WIP ajeno. Bundle final CSS `index-BtfrmhG0.css`, JS `index-4I2N0oaS.js`.
+- Regresión: el deploy propio dio **196 comprobaciones, 4 fallos** (del WIP ajeno del selector de empleado, no incluido por regla). A las 14:10 otra IA desplegó ese WIP en Nego; en vivo la Caja sigue con el molde nuevo y la regresión final quedó **196/196, 0 fallos, 0 sin datos**. Sigue pendiente la revisión del dueño; si no le gusta, se ejecuta `COMO-VOLVER.txt`. Sin push.
+
+## 23/11/2026 (tablas en celular como Inventario, solo pruebas Nego/siumax)
+- El dueño pidió que **todas las sesiones/tablas** (menos Inventario) se vean en celular como `Inventario > Productos`: todos los datos visibles, sin arrastre horizontal. Mencionó que seguía viéndose mal en clientes, taller, conteos, finanzas, utilidades, ajustes en tiendas/sucursales y gestión de usuarios.
+- Aclaró que **Nego/siumax es donde hace las pruebas** y pidió dejarlo claro en memoria. También preguntó por qué seguía viéndose igual: los cambios estaban solo en local, no desplegados.
+- Dio OK explícito para subir a pruebas: *"subelo ahora para revisar antes de subirlo a evicamp y ecosistema"*.
+- Se corrigieron errores que bloqueaban build (`TablaConteos.tsx` con `</div>` extra; `TablaFiados.tsx` con `active` fuera de scope), se compiló y se desplegó **solo a pruebas** con `node ai-scripts/deploy.cjs siumax`. Sin Evicamp, sin ecosistema, sin push, sin commit. Queda pendiente la revisión del dueño en celular en `nego.siumax.duckdns.org`.
+
