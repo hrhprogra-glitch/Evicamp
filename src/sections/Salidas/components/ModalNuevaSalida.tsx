@@ -373,11 +373,10 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       const [resCli, resTrab, resProd, resEmp] = await Promise.all([
         supabase.from('customers').select('id, name, dni, ruc, direccion').eq('activo', true).order('name'),
         supabase.from('trabajadores').select('id, nombre, cargo').eq('estado', 'ACTIVO').order('nombre'),
+        supabase.from('empleados_publico').select('id, nombre, email, rol, estado').eq('estado', 'ACTIVO').order('nombre'),
         // Sin la foto (image_url pesa mucho: MEMORIA-IA 63) y en bloques, para no cortarse en 1.000 productos.
         // Solo activos: los borrados en Inventario quedan con is_active = 0 y no deben salir aquí (17/11/2026).
         traerTodo(() => supabase.from('products').select('id, name, code, unit, quantity, cost_price, image_path').eq('is_active', 1).order('name').order('id')),
-        // 204: el cuarto lugar corresponde a resEmp; si se pone antes, productos y empleados se intercambian.
-        supabase.from('empleados_publico').select('id, nombre, email, rol, estado').eq('estado', 'ACTIVO').order('nombre'),
       ]);
 
       if (resCli.data) {
@@ -623,13 +622,11 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Reglas 7/8/9: en un desplegable Enter ABRE la lista y el selector se queda en el campo; en los demás campos
-  // Enter es como un clic y no pasa al siguiente. flechasEspaciales.ts abre el <select> si nadie frenó el Enter
-  // (23/11/2026, dueño: "cuando lo selecciono y hago enter no me despliega").
+  // Regla 9 de SiuMax: Enter es como un clic, el selector se queda en el campo
   const handleKeyDownForm = (e: React.KeyboardEvent<HTMLElement>, _id?: string) => {
-    if (e.key !== 'Enter') return;
-    if (e.target instanceof HTMLSelectElement) return; // dejar que se despliegue la lista nativa
-    e.preventDefault();
+    if (e.key === 'Enter') {
+      e.preventDefault();
+    }
   };
 
   // 191 (dueño 19/11/2026): al elegir una opción el selector BAJA al campo siguiente y la vista se desplaza

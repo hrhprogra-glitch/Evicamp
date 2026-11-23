@@ -63,13 +63,13 @@ export const AvisosEncargos: React.FC<Props> = ({ conPedidos, onAbrir }) => {
         onClick={() => onAbrir(pestana)}
         title={enAlerta ? aviso : `${n.total} ${nombre.toLowerCase()} por atender`}
         aria-label={`${nombre}: ${n.total}${enAlerta ? ` (${n.alerta} para hoy)` : ''}`}
-        className={`boton-cabecera flex items-center justify-center shrink-0 whitespace-nowrap border-2 border-[var(--color-ink)] px-1 sm:px-3 2xl:px-4 py-3 text-[10px] lg:text-xs font-black uppercase tracking-normal sm:tracking-wider transition-colors cursor-pointer ${
+        className={`flex items-center justify-center shrink-0 whitespace-nowrap border-2 px-1.5 sm:px-3 py-1.5 sm:py-1 text-[11px] sm:text-[12px] font-black uppercase tracking-normal sm:tracking-widest transition-all cursor-pointer rounded-none ${
           enAlerta
-            ? 'text-[var(--color-warning-dark)]'
-            : 'text-[var(--color-ink)]'
+            ? 'border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-[var(--color-warning-dark)] hover:bg-[var(--color-warning)] hover:text-white animate-pulse'
+            : 'border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-ink)]'
         }`}
       >
-        {enAlerta ? <AlertTriangle size={14} className="mr-1.5 sm:mr-2" /> : <Icono size={14} className="mr-1.5 sm:mr-2" />}
+        {enAlerta ? <AlertTriangle size={12} className="mr-1.5 sm:mr-2" /> : <Icono size={12} className="mr-1.5 sm:mr-2" />}
         <span className="sm:hidden">{corto}:&nbsp;</span>
         <span className="hidden sm:inline">{nombre}:&nbsp;</span>
         <span>{n.total}</span>

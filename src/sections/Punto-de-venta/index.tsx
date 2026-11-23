@@ -4,7 +4,7 @@ import type { CartItem, Cliente, HeldCart } from './types';
 import type { Product } from '../Inventario/types';
 import { useRef } from 'react';
 import { Wallet, Printer, X, Users } from 'lucide-react';
-import { imprimirEnTicketera } from '../../utils/impresion';
+import { useImprimir } from '../../utils/impresion';
 import { useEmpleado, usePermiso } from '../../utils/permisos';
 import { conAutorizacion } from '../../utils/autorizacion';
 import { esDecimal, unidadDe } from '../../utils/unidades';
@@ -17,8 +17,9 @@ import { TicketVenta } from './components/TicketVenta';
 import { ModalCobro } from './components/ModalCobro';
 import { ModalBalanza } from './components/ModalBalanza';
 import { ModalPrecioConsumo } from './components/ModalPrecioConsumo';
-import { TicketImprimible, generarTicketVentaHtml, type DatosEmpresa } from './components/TicketImprimible';
+import { TicketImprimible } from './components/TicketImprimible';
 import { ModalElegirClientePOS } from './components/ModalElegirClientePOS';
+import { ModalNombreEspera } from './components/ModalNombreEspera';
 import { ModalCotizacionPOS } from './components/ModalCotizacionPOS';
 import { ModalPedidoPOS } from './components/ModalPedidoPOS';
 import { avisarCambioEncargos } from './components/AvisosEncargos';
@@ -55,6 +56,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
     return guardado ? JSON.parse(guardado) : null;
   });
   const [isClienteModalOpen, setIsClienteModalOpen] = useState(false);
+  const [isEsperaModalOpen, setIsEsperaModalOpen] = useState(false);
   const [isCotizacionModalOpen, setIsCotizacionModalOpen] = useState(false);
   const [isPedidoModalOpen, setIsPedidoModalOpen] = useState(false);
 
@@ -124,10 +126,15 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       }
 
       // 🛡️ ATAJOS GLOBALES RÁPIDOS (CON SHIFT/MAYÚS)
-      // 212 (dueño 23/11/2026): Shift+Q crea el ticket en espera directo, sin ventana de nombre.
       if (e.key.toLowerCase() === 'q' && e.shiftKey) {
         e.preventDefault();
-        holdCurrentCart();
+        if (cart.length > 0) {
+          if (heldCarts.length >= 5) {
+            alert("Límite máximo: Tienes 5 tickets en espera. Termina alguno antes de guardar otro.");
+            return;
+          }
+          setIsEsperaModalOpen(true);
+        }
         return;
       }
       if (e.key.toLowerCase() === 'w' && e.shiftKey) {
@@ -400,32 +407,9 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
   const [isPrecioModalOpen, setIsPrecioModalOpen] = useState(false); // <-- NUEVO
   const [selectedConsumoProduct, setSelectedConsumoProduct] = useState<Product | null>(null); // <-- NUEVO
   const componentRef = useRef<HTMLDivElement>(null);
-  const printFrameRef = useRef<HTMLIFrameElement>(null);
 
-  // Imprime como Salidas: HTML propio y aislado (no el componente de pantalla), manteniendo el diseño/letra de Caja.
-  const handlePrint = async () => {
-    if (!ultimaVenta) return;
-    let empresa: DatosEmpresa = {};
-    try {
-      const { data } = await supabase.from('empresa_config').select('*').limit(1).single();
-      if (data) empresa = data as DatosEmpresa;
-    } catch { /* usa datos vacíos si no hay conexión */ }
-
-    const html = generarTicketVentaHtml({ ...ultimaVenta, empresa });
-    const titulo = ultimaVenta.nroBoleta || 'Ticket de Venta';
-    const r = await imprimirEnTicketera(html, titulo);
-    if (r) {
-      if (!r.ok) alert(`No se pudo imprimir: ${r.motivo}\n\nRevisa que la impresora esté encendida y elegida en el menú de la app.`);
-      return;
-    }
-    const frame = printFrameRef.current;
-    if (frame?.contentWindow) {
-      frame.srcdoc = html;
-      frame.onload = () => {
-        setTimeout(() => frame.contentWindow?.print(), 120);
-      };
-    }
-  };
+  // En la app de escritorio imprime directo; en el navegador abre la ventana de impresión
+  const handlePrint = useImprimir(componentRef, 'Boleta de Venta');
 
   // 🔥 NUEVO: ATAJOS DE TECLADO GLOBALES (F2, F3, F4, ESCAPE)
   useEffect(() => {
@@ -437,6 +421,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         setIsPrecioModalOpen(false);
         setIsVistaPreviaOpen(false);
         setIsClienteModalOpen(false);
+        setIsEsperaModalOpen(false);
         setIsCotizacionModalOpen(false);
         setIsPedidoModalOpen(false);
         setSelectedWeightProduct(null);
@@ -462,7 +447,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           }
           return;
         }
-        if (!isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
+        if (!isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isEsperaModalOpen && !isClienteModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
           setIsClienteModalOpen(true);
         }
         return;
@@ -472,7 +457,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       if (e.key === 'F2' || e.key === 'F4') {
         e.preventDefault(); // Evita el comportamiento por defecto del navegador web
         // Solo abrimos la ventana de pago si hay algo en el carrito y no hay otros modales encima
-        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
+        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isEsperaModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
           setIsCobroModalOpen(true);
         }
       }
@@ -480,7 +465,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       // 5. F7: Guardar como Cotización / Proforma
       if (e.key === 'F7') {
         e.preventDefault();
-        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
+        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isEsperaModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
           setIsCotizacionModalOpen(true);
         }
       }
@@ -488,7 +473,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       // 6. F8: Guardar como Pedido por Encargo
       if (e.key === 'F8') {
         e.preventDefault();
-        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
+        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isEsperaModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
           setIsPedidoModalOpen(true);
         }
       }
@@ -496,7 +481,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
 
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [cart, heldCarts, clienteSeleccionado, isCobroModalOpen, isBalanzaModalOpen, isPrecioModalOpen, isVistaPreviaOpen, isClienteModalOpen, isCotizacionModalOpen, isPedidoModalOpen]);
+  }, [cart.length, isCobroModalOpen, isBalanzaModalOpen, isPrecioModalOpen, isVistaPreviaOpen, isClienteModalOpen, isEsperaModalOpen, isCotizacionModalOpen, isPedidoModalOpen]);
 
   // 1. CARGAR PRODUCTOS AL ABRIR LA VENTANA
   const fetchProducts = useCallback(async () => {
@@ -889,30 +874,29 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       });
     });
   };
-  // 4. PONER TICKET EN ESPERA DIRECTO (212: sin ventana para poner nombre)
+  // 4. NUEVO: PONER TICKET EN ESPERA (Guardar Caja con Nombre)
   const holdCurrentCart = () => {
-    if (cart.length === 0) return;
-    if (heldCarts.length >= 5) {
-      alert("Límite máximo: Tienes 5 tickets en espera. Termina alguno antes de guardar otro.");
-      return;
+    if (cart.length > 0) {
+      if (heldCarts.length >= 5) {
+        alert("Límite máximo: Tienes 5 tickets en espera. Termina alguno antes de guardar otro.");
+        return;
+      }
+      setIsEsperaModalOpen(true);
     }
-    handleConfirmarEspera();
   };
 
-  // El nombre se pone solo: el del cliente si hay uno elegido, si no T-1, T-2...
-  const handleConfirmarEspera = () => {
+  const handleConfirmarEspera = (nombre: string) => {
     const nuevoHeld: HeldCart = {
       cart,
       cliente: clienteSeleccionado,
-      nombre: (clienteSeleccionado?.nombre || '').trim() || `T-${heldCarts.length + 1}`,
+      nombre: nombre.trim() || clienteSeleccionado?.nombre || `T-${heldCarts.length + 1}`,
       timestamp: Date.now()
     };
     setHeldCarts(prev => [...prev, nuevoHeld]);
     setCart([]);
     setClienteSeleccionado(null);
     setActiveTabIndex(-1);
-    // En celular/tablet el buscador está en el panel Productos: volver ahí para seguir vendiendo con teclado.
-    setVistaMovil('productos');
+    setIsEsperaModalOpen(false);
     setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
   };
 
@@ -1202,7 +1186,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           setSelectedIndex(-1);
         }
       }}
-      className={`caja-estilo-neon flex flex-col lg:flex-row h-full w-full bg-transparent font-mono gap-2 lg:gap-0 relative ${hasOpenSession === false ? 'pt-20 sm:pt-16' : ''}`}
+      className={`flex flex-col lg:flex-row h-full w-full bg-transparent font-mono gap-2 lg:gap-0 relative ${hasOpenSession === false ? 'pt-20 sm:pt-16' : ''}`}
     >
       
       {/* BARRA DE ADVERTENCIA - MODO CONSULTA */}
@@ -1388,8 +1372,6 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
               </div>
             </div>
 
-            <iframe ref={printFrameRef} title="Imprimir ticket" className="absolute w-0 h-0 border-0 opacity-0 pointer-events-none" tabIndex={-1} aria-hidden="true" />
-
             {/* BOTONES */}
             {/* Selector: ← → entre los dos botones, Enter activa el elegido */}
             <div
@@ -1436,6 +1418,19 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         }}
         onClose={() => {
           setIsClienteModalOpen(false);
+          setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
+        }}
+      />
+
+      {/* MODAL PAUSAR TICKET CON NOMBRE (Shift+Q) */}
+      <ModalNombreEspera
+        isOpen={isEsperaModalOpen}
+        defaultNombre={clienteSeleccionado ? clienteSeleccionado.nombre : `Ticket ${heldCarts.length + 1}`}
+        total={Math.round(cart.reduce((acc, item) => acc + item.subtotal, 0) * 100) / 100}
+        itemsCount={cart.length}
+        onConfirm={handleConfirmarEspera}
+        onClose={() => {
+          setIsEsperaModalOpen(false);
           setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
         }}
       />

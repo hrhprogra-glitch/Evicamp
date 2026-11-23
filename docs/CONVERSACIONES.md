@@ -1346,3 +1346,10 @@
 - **Mensaje listo para el dueño:**
   > Listo, ya puse la otra estética en Nego. Entrá a `https://nego.siumax.duckdns.org`, andá a **Caja** y mirá el cambio: ahora es azul eléctrico, con el total más destacado y las tarjetas con más color. Seguí probando el teclado, el cobro, el fiado y sin internet: las pruebas salieron 208/208 sin fallos. Todo quedó solo en Nego. Si no te gusta, decime y lo devuelvo como era **al comienzo**, como pediste. No toqué Evicamp ni ecosistema y no subí nada a GitHub.
 
+## 23/11/2026 (vuelta al comienzo, solo en Nego)
+- El dueño respondió: *"no me gusto vuelvo al comienzo"*.
+- Se tomó como la instrucción literal ya acordada: restaurar el respaldo original del 23/11 (`2301848e34930e04e405e9ff4dfee20b2863139e`), sin usar los commits 211, 212 ni 213 como punto de regreso.
+- Se volvieron a poner los archivos originales de Caja y de Salidas, se restauró la ventana para ponerle nombre al espera y la prueba adaptiva original. El trabajo sin commitear de otra IA (impresión de tickets) se guardó y se volvió a aplicar encima, sin incluirlo en el commit.
+- **Mensaje listo para el dueño:**
+  > Listo, ya volví al comienzo en Nego. Entrá a `https://nego.siumax.duckdns.org` y mirá **Caja**: quedó como era antes de que empezáramos a cambiar la estética, con la ventana para nombrar el espera como antes. Yo corrí las pruebas con teclado y sin internet: la Caja pasó bien. Quedaron 8 fallos viejos del selector de empleado en **Salidas**, que ya existían en ese estado original; no los toqué porque pediste volver al comienzo. No toqué Evicamp ni ecosistema y no subí nada a GitHub.
+
