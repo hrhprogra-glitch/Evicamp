@@ -1293,4 +1293,5 @@
 - Se hizo y se desplegó **solo en Nego**. Prueba adaptiva 188/188 con teclado y sin internet en 390/768/1366/1920. Sin ecosistema, sin Evicamp, sin base y sin push.
 - El dueño avisó que tiene **"otra cosa mas pero cuando termines te lo dire te hare preguntas"**: esperar a que lo diga, no adelantarse.
 - Se detectó un problema aparte en la base de pruebas: la secuencia `salidas_id_seq` está en 3 y ya hay salidas hasta el id 392, así que no se puede guardar ninguna salida nueva. **No se tocó la base**: hace falta el OK del dueño (con respaldo) para arreglarla.
+- Al preguntarle, autorizó: *"Sí, arregla con respaldo"*. Se respaldó `siumax` y se dejó la secuencia en 392/392 con `setval`, solo en la base de pruebas; sin ecosistema, sin Evicamp y sin push.
 
