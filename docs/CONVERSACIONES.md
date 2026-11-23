@@ -1338,3 +1338,11 @@
 - **Mensaje listo para el dueño:**
   > Listo, ya quedó en Nego. Entrá a `https://nego.siumax.duckdns.org` con `admin@siumax.com` (la clave sigue en `.env.vps`). Armá un ticket y apretá el botón **Espera** (o **Shift+Q**): ahora crea el punto de espera directo, sin preguntar ningún nombre. El nombre lo pone el sistema solo. Para recuperarlo, andá a la pestaña de esperas y elegí el ticket. Probá también **sin internet** en celular, tablet, laptop y PC. Yo ya corrí las pruebas: 208/208, sin fallos. Todo quedó solo en Nego: no toqué Evicamp ni ecosistema y no subí nada a GitHub.
 
+## 23/11/2026 (prueba de otro estilo en la Caja, solo en Nego)
+- El dueño dijo: *"no me gusto la estetica de caja quiero que pruebes con otro si ese no me gusto ya vuelvelo como era antes osea en el comienzo ahi te dire si me gusto o no pero haz la prueba con otro estilo"*.
+- Se tomó como una prueba visual, no como un cambio de funcionamiento. Se eligió un estilo claramente distinto al sobrio: **azul eléctrico de tablero**, con cabeceras azul marino y franja ámbar, total a cobrar destacado, tarjetas de producto con acento azul y botones oscuros con ícono ámbar. Sin esquinas redondeadas.
+- Solo se tocaron 2 archivos propios: el contenedor de Punto de Venta (`index.tsx`) recibió la clase `caja-estilo-neon`, y `src/index.css` recibió un bloque aislado al final. No se cambiaron ids, teclado, cobro, fiado, comprobante ni el modo sin internet. El trabajo sin commitear de otra IA quedó fuera.
+- Build limpio desde el `HEAD` actual (`a8678ef`) en un worktree aparte; deploy **solo en Nego**. Bundle en vivo `index-cWWmYyiI.css` / `index-BMpblSY3.js`. Regresión adaptiva **208/208, 0 fallos, 0 sin datos** con teclado y sin internet en celular, tablet, laptop y PC. Sin Evicamp, sin ecosistema, sin base, sin credenciales y sin push.
+- **Mensaje listo para el dueño:**
+  > Listo, ya puse la otra estética en Nego. Entrá a `https://nego.siumax.duckdns.org`, andá a **Caja** y mirá el cambio: ahora es azul eléctrico, con el total más destacado y las tarjetas con más color. Seguí probando el teclado, el cobro, el fiado y sin internet: las pruebas salieron 208/208 sin fallos. Todo quedó solo en Nego. Si no te gusta, decime y lo devuelvo como era **al comienzo**, como pediste. No toqué Evicamp ni ecosistema y no subí nada a GitHub.
+

@@ -4,7 +4,7 @@ import type { CartItem, Cliente, HeldCart } from './types';
 import type { Product } from '../Inventario/types';
 import { useRef } from 'react';
 import { Wallet, Printer, X, Users } from 'lucide-react';
-import { useImprimir } from '../../utils/impresion';
+import { imprimirEnTicketera } from '../../utils/impresion';
 import { useEmpleado, usePermiso } from '../../utils/permisos';
 import { conAutorizacion } from '../../utils/autorizacion';
 import { esDecimal, unidadDe } from '../../utils/unidades';
@@ -17,7 +17,7 @@ import { TicketVenta } from './components/TicketVenta';
 import { ModalCobro } from './components/ModalCobro';
 import { ModalBalanza } from './components/ModalBalanza';
 import { ModalPrecioConsumo } from './components/ModalPrecioConsumo';
-import { TicketImprimible } from './components/TicketImprimible';
+import { TicketImprimible, generarTicketVentaHtml, type DatosEmpresa } from './components/TicketImprimible';
 import { ModalElegirClientePOS } from './components/ModalElegirClientePOS';
 import { ModalCotizacionPOS } from './components/ModalCotizacionPOS';
 import { ModalPedidoPOS } from './components/ModalPedidoPOS';
@@ -400,9 +400,32 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
   const [isPrecioModalOpen, setIsPrecioModalOpen] = useState(false); // <-- NUEVO
   const [selectedConsumoProduct, setSelectedConsumoProduct] = useState<Product | null>(null); // <-- NUEVO
   const componentRef = useRef<HTMLDivElement>(null);
+  const printFrameRef = useRef<HTMLIFrameElement>(null);
 
-  // En la app de escritorio imprime directo; en el navegador abre la ventana de impresión
-  const handlePrint = useImprimir(componentRef, 'Boleta de Venta');
+  // Imprime como Salidas: HTML propio y aislado (no el componente de pantalla), manteniendo el diseño/letra de Caja.
+  const handlePrint = async () => {
+    if (!ultimaVenta) return;
+    let empresa: DatosEmpresa = {};
+    try {
+      const { data } = await supabase.from('empresa_config').select('*').limit(1).single();
+      if (data) empresa = data as DatosEmpresa;
+    } catch { /* usa datos vacíos si no hay conexión */ }
+
+    const html = generarTicketVentaHtml({ ...ultimaVenta, empresa });
+    const titulo = ultimaVenta.nroBoleta || 'Ticket de Venta';
+    const r = await imprimirEnTicketera(html, titulo);
+    if (r) {
+      if (!r.ok) alert(`No se pudo imprimir: ${r.motivo}\n\nRevisa que la impresora esté encendida y elegida en el menú de la app.`);
+      return;
+    }
+    const frame = printFrameRef.current;
+    if (frame?.contentWindow) {
+      frame.srcdoc = html;
+      frame.onload = () => {
+        setTimeout(() => frame.contentWindow?.print(), 120);
+      };
+    }
+  };
 
   // 🔥 NUEVO: ATAJOS DE TECLADO GLOBALES (F2, F3, F4, ESCAPE)
   useEffect(() => {
@@ -1179,7 +1202,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           setSelectedIndex(-1);
         }
       }}
-      className={`flex flex-col lg:flex-row h-full w-full bg-transparent font-mono gap-2 lg:gap-0 relative ${hasOpenSession === false ? 'pt-20 sm:pt-16' : ''}`}
+      className={`caja-estilo-neon flex flex-col lg:flex-row h-full w-full bg-transparent font-mono gap-2 lg:gap-0 relative ${hasOpenSession === false ? 'pt-20 sm:pt-16' : ''}`}
     >
       
       {/* BARRA DE ADVERTENCIA - MODO CONSULTA */}
@@ -1364,6 +1387,8 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
                 />
               </div>
             </div>
+
+            <iframe ref={printFrameRef} title="Imprimir ticket" className="absolute w-0 h-0 border-0 opacity-0 pointer-events-none" tabIndex={-1} aria-hidden="true" />
 
             {/* BOTONES */}
             {/* Selector: ← → entre los dos botones, Enter activa el elegido */}

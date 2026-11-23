@@ -883,5 +883,12 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Una regresión puede fallar por datos y arreglarse sola: una corrida dio 1 fallo y 1 «sin datos» en Salida laptop (tabla no encontrada y un cliente borrado que reapareció); repetir sin cambiar nada dio **208/208**. Repite antes de tocar código por un fallo aislado.
 - En celular/tablet el `innerText` de los botones del panel sale en mayúsculas (`PRODUCTOS`, `TICKET\n1\nS/ 0.00`). Para encontrar el botón con `startsWith` hay que comparar `.trim().toLowerCase().startsWith(n.toLowerCase())`; si no, la prueba cree que el panel no existe y el botón de Espera queda fuera de pantalla.
 
+## 58. Estilo alternativo de Caja: capa única, reversible y sin tocar lógica (23/11/2026, bitácora 213)
+- Cuando el dueño dice *"no me gustó la estética, probá con otro"* y además fija el regreso *"como era al comienzo"*, no hay que adivinar varios estilos ni preguntar otra vez: él ya autorizó la prueba. Conviene elegir **uno distinto y concreto**, decir cuál se probó y dejar la puerta abierta a su revisión.
+- La forma más segura de cambiar mucho aspecto sin romper Caja fue **una clase en el contenedor + un bloque CSS al final de `src/index.css`**, no editar los 5 componentes. Así se conservan ids, manejadores de teclado, lógica de cobro/fiado/comprobante y el modo sin internet; el WIP ajeno en `TerminalBusqueda.tsx`/`TicketImprimible.tsx` queda fuera.
+- El bloque redefine variables `--color-*` **solo dentro de `.caja-estilo-neon`** y luego ajusta cabeceras, total, tarjetas y botones. Ojo con las reglas globales de `src/index.css`: `.boton-cabecera`, `.tarjeta-sobria`, `.tabla-marco` y `html:root ... :focus-visible` usan `!important`; para ganar hay que usar selectores más específicos (por ejemplo `html:root .caja-estilo-neon .boton-cabecera:focus-visible`) y mantener el foco visible.
+- Antes de desplegar, limpiar `dist` del proyecto real: `putDirectory` **sube pero no borra** archivos viejos. Si no, quedan bundles anteriores en el VPS aunque el `index.html` apunte al nuevo.
+- Si el dueño rechaza este estilo, **"el comienzo" no es el commit 211 ni el 212**: es el respaldo original `D:/Programación/siumax/respaldos-estetica-caja/2026-11-23-inicio/` con HEAD `2301848e34930e04e405e9ff4dfee20b2863139e`. Para quitar solo la prueba alcanza con borrar la clase y el bloque CSS; para volver al comienzo hay que seguir `COMO-VOLVER.txt` completo.
+
 
   
