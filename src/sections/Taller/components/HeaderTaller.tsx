@@ -88,7 +88,7 @@ export const HeaderTaller: React.FC<Props> = ({
       </div>
 
       {/* SUB-BARRA: Buscador y filtro de estado en una fila limpia */}
-      <div className="px-3 sm:px-4 lg:px-6 flex flex-col xl:flex-row gap-2.5 sm:gap-3 items-stretch xl:items-center justify-between shrink-0">
+      <div className="flex flex-col xl:flex-row gap-2.5 sm:gap-3 items-stretch xl:items-center justify-between shrink-0">
         {/* Buscador Sobrio */}
         <div className="buscador-sobrio w-full xl:flex-1 shrink-0">
           <div className="buscador-sobrio__icono"><Search size={18} /></div>

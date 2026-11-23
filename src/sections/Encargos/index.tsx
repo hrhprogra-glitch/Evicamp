@@ -77,7 +77,7 @@ export const Encargos: React.FC<{ onNavigatePOS?: () => void }> = ({ onNavigateP
       {activa === 'cotizaciones' ? (
         <Cotizaciones onNavigatePOS={onNavigatePOS} pedirNueva={pedirNueva} />
       ) : (
-        <div className="px-3 sm:px-4 lg:px-6 pb-6 flex flex-col">
+        <div className="pb-6 flex flex-col">
           <PestanaPedidos reloadTrigger={reloadPedidos} />
         </div>
       )}

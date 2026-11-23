@@ -38,7 +38,7 @@ export const HeaderCotizaciones: React.FC<Props> = ({ busqueda, onBusquedaChange
   };
 
   return (
-    <div className="px-3 sm:px-4 lg:px-6 flex flex-col gap-3 font-mono">
+    <div className="flex flex-col gap-3 font-mono">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {cuadros.map((q) => (
           <div key={q.label} className="tarjeta-sobria bg-[var(--color-surface)] border border-[var(--color-border)] px-3 py-2">

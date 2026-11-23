@@ -212,7 +212,7 @@ export const HeaderAgenda: React.FC<HeaderAgendaProps> = ({
       </div>
 
       {/* SUB-BARRA: BUSCADOR Y FILTRO A LA IZQUIERDA, NAVEGACIÓN DE FECHA A LA DERECHA */}
-      <div className="px-3 sm:px-4 lg:px-6 flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 shrink-0">
+      <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 shrink-0">
         {/* IZQUIERDA: Buscador Sobrio y Filtro de Estado */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <div className="buscador-sobrio flex-1 max-w-md">

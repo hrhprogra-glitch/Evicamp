@@ -124,7 +124,7 @@ export const Utilidades = () => {
         pestanas={<PestanasUtilidades activa="productos" conComercio={conComercio} conServicios={conServicios} onCambiar={cambiarPestana} idDerecha="btn-tops-utilidades" idAbajo="buscador-global-utilidades" />}
       />
 
-      <div className="flex flex-col gap-4 sm:gap-6 px-2 sm:px-3">
+      <div className="flex flex-col gap-4 sm:gap-6">
         <TarjetasResumen
           ingresos={globalIngresos}
           costos={globalCostos}

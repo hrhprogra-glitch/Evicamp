@@ -984,7 +984,7 @@ export const Finanzas: React.FC = () => {
       </div>
 
       {vistaActual === 'HISTORIAL' ? (
-        <div className="flex flex-col px-2 sm:px-3">
+        <div className="flex flex-col">
           <TablaHistorial 
             filtros={(limpiarBusqueda) => <FiltroFechas onFilter={handleFilterChange} onLimpiar={limpiarBusqueda} />}
             historialCajas={historialCajas} 
@@ -1004,7 +1004,7 @@ export const Finanzas: React.FC = () => {
           />
         </div>
       ) : sessionActiva && superMetricas ? (
-        <div className="flex flex-col gap-4 sm:gap-6 pb-8 px-2 sm:px-3">
+        <div className="flex flex-col gap-4 sm:gap-6 pb-8">
 
           {veMontos ? (
           <div className="flex flex-col xl:flex-row gap-4 sm:gap-6 shrink-0">
@@ -1325,7 +1325,7 @@ export const Finanzas: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="vacio-sobrio mx-2 sm:mx-3 tabla-marco">
+        <div className="vacio-sobrio tabla-marco">
            <Wallet size={64} />
            <h2 className="text-[var(--color-ink)] font-black text-sm uppercase tracking-widest">Caja cerrada</h2>
         </div>

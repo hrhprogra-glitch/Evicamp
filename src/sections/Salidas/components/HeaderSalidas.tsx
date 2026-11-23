@@ -104,7 +104,7 @@ export const HeaderSalidas: React.FC<HeaderSalidasProps> = ({
       </div>
 
       {/* SUB-BARRA: Buscador y filtros de tipo y estado en una fila limpia */}
-      <div className="px-3 sm:px-4 lg:px-6 flex flex-col xl:flex-row gap-2.5 sm:gap-3 items-stretch xl:items-center justify-between shrink-0">
+      <div className="flex flex-col xl:flex-row gap-2.5 sm:gap-3 items-stretch xl:items-center justify-between shrink-0">
         <div className="buscador-sobrio w-full xl:flex-1 shrink-0">
           <div className="buscador-sobrio__icono"><Search size={18} /></div>
           <input

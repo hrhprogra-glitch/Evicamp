@@ -158,7 +158,7 @@ export const Contratos: React.FC = () => {
         metricas={{ totalActivos, deudaTotal, visitasPendientes }}
       />
 
-      <div className="px-3 sm:px-4 lg:px-6 flex-1 overflow-y-auto min-h-0">
+      <div className="flex-1 overflow-y-auto min-h-0">
         {cargando ? (
           <div className="p-12 text-center text-[var(--color-muted)] text-xs">Cargando contratos...</div>
         ) : pestana === 'contratos' ? (

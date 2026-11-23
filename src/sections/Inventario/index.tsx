@@ -833,7 +833,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
         onClearFilters={handleClearFilters}
       />}
 
-      <div className="px-2 sm:px-3 flex flex-col relative pb-3 sm:pb-6 lg:pb-8">
+      <div className="flex flex-col relative pb-3 sm:pb-6 lg:pb-8">
         <div className={`${vistaActiva === 'PRODUCTOS' ? 'flex flex-col' : 'hidden'}`}>
           {/* PASAMOS LOS DATOS PAGINADOS A LA TABLA */}
           <TablaProductos 

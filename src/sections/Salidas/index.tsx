@@ -195,7 +195,7 @@ export const Salidas: React.FC = () => {
         metricas={metricas}
       />
 
-      <div className="px-3 sm:px-4 lg:px-6 flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <TablaSalidas
           salidas={salidasPaginadas}
           onVerDetalle={(salida) => setSalidaSeleccionada(salida)}

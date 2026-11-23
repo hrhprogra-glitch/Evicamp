@@ -136,7 +136,7 @@ export const HeaderServicios: React.FC<HeaderServiciosProps> = ({
       </div>
 
       {/* SUB-BARRA: Tarjetas Métricas + Fila Única (Buscador, Filtro y Fecha/Período) */}
-      <div className="px-3 sm:px-4 lg:px-6 flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         {/* Tarjetas Métricas Sobrias */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {/* Ingresos Generados */}

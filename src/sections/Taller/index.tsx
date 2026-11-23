@@ -172,7 +172,7 @@ export const Taller: React.FC = () => {
         onNuevaOrden={() => setModalNuevaAbierto(true)}
       />
 
-      <div className="px-3 sm:px-4 lg:px-6 flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         {/* Tabla de órdenes */}
         <TablaTaller
           ordenes={ordenesPaginadas}

@@ -799,6 +799,13 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Probar con **recarga real** (`page.reload`) y reabrir el modal. Las pruebas que solo cierran/abren el modal no detectan este bug, porque el estado de React se conserva; el defecto solo aparece al reconstruir el estado desde localStorage.
 - El mismo helper sirve para tres casos: nombre escrito y borrado, nombre escrito y no borrado, cliente elegido y borrado. Los tres deben pasar en los cuatro tamaños.
 
+## 51. Tablas pegadas al borde: medir, no adivinar, y revisar también las pestañas (23/11/2026, bitácora 200)
+- Para dejar una tabla pegada al borde como Clientes no basta con quitar el padding del contenedor principal: hay **encabezados y pestañas propios** (`Header*`, `Filtros*`, `vacio-sobrio`, etc.) que vuelven a meter 24 o 12 px. Clientes no los tiene, por eso era el único en 0.
+- El medidor simple de sesiones no ve las pestañas. Hay que recorrerlas con un escáner y, cuando aparezca un margen, subir por los padres del elemento (`paddingLeft`, `marginLeft`) para encontrar el contenedor exacto, en vez de ir tanteando clases a ciegas.
+- Quitar padding **solo en X**: donde era `p-2 sm:p-4`, usar `py-2 sm:py-4` para conservar el espacio vertical. No tocar paddings internos de botones ni de celdas, ni las tablas dentro de ventanas emergentes.
+- Al editar solo clases de Tailwind, el **CSS no cambia** (las clases se siguen usando en otros lados) pero el **JS sí cambia** por el hash del build: no alarmarse si el "JS nuevo" no trae el CSS nuevo. Verificar siempre el resultado en pantalla, no por el nombre del archivo.
+- Un fallo de prueba por "0 clientes", "sin tienda", id duplicado o una FK que impide borrar, es estado de la base de pruebas, **no** un problema del ancho. No limpiar ni cargar datos sin permiso.
+
 ## 50. Cargar la migración Eco en ecosistema sin traer usuarios ajenos (23/11/2026, bitácora 199)
 - `migracion-eco/etl.mjs` siempre regenera `carga-nego.sql` con **3 líneas de usuarios** (`UPDATE harry@…`, `INSERT billy@siumax.com`, `INSERT jhon@siumax.com`) que usan `crypt(:'clave_usuarios', …)`. Antes de aplicar ese SQL en `ecosistema` hay que quitar esas 3 líneas y su comentario; si no, psql pide la variable y vuelven correos del dominio de pruebas. Las referencias a esos UUID en `migracion_eco_log` son texto, no FK: se pueden dejar.
 - El helper `migracion-eco/filtrar-para-ecosistema.mjs` hace ese filtro y avisa si quedó `siumax.com` o `clave_usuarios`. El script `ai-scripts/cargar-datos-ecosistema.cjs` se niega a aplicar un SQL que contenga esas cadenas.

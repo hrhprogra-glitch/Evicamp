@@ -1258,3 +1258,9 @@
 - Como el dueño no indicó los roles, se tomaron los del sistema original: **billy Administrador** (acceso total) y **john Técnico** (permisos de campo/taller). Si quiere otros permisos, se ajustan.
 - Prueba con teclado y sin internet en 390/768/1366/1920: **48/48, 0 fallos**. Los dos usuarios entran por correo completo y escribiendo solo su nombre, ven los datos cargados y pueden seguir trabajando sin internet. Logo, tema y ausencia de cobro siguen bien; los cuatro sitios responden 200.
 - Sin tocar Evicamp, el Panel, Nego ni el Supabase de origen. Sin push. La carga en la base de pruebas `siumax` queda para cuando el dueño la pida.
+
+## 23/11/2026 (tablas y buscadores pegados al borde en todo Nego)
+- El dueño vio que en Clientes la tabla y el buscador estaban pegados al borde, mientras en las otras sesiones había margen a los lados, y pidió que se aplicara lo mismo a todo.
+- Se le explicó el alcance (solo quitar el margen horizontal de contenedores y cabeceras, sin tocar botones, celdas ni el estilo sobrio; las ventanas emergentes quedan igual) y confirmó con: **"si aplicado a todo"**.
+- Se aplicó en 20 archivos de `src/sections/`, se comprobó con el medidor y un escáner de **todas** las pestañas (0 elementos con margen) y se hicieron regresiones con teclado y sin internet. Desplegado solo en Nego.
+- Se le preguntó si lo llevábamos al sitio oficial (ecosistema) y decidió: **"Déjalo solo en Nego"**. No se desplegó en ecosistema ni en Evicamp; si más adelante lo pide, se aplica el mismo cambio y se reponen los iconos con MD5 verificado. Sin base y sin push.

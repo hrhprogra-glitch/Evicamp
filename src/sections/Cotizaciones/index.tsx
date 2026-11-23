@@ -95,7 +95,7 @@ export const Cotizaciones: React.FC<Props> = ({ onNavigatePOS, pedirNueva = 0 })
         cotizaciones={cotizaciones}
         encontradas={filtradas.length}
       />
-      <div className="px-3 sm:px-4 lg:px-6 pb-6">
+      <div className="pb-6">
         {cargando ? (
           <div className="p-12 text-center text-[var(--color-muted)] text-sm">Cargando cotizaciones…</div>
         ) : (

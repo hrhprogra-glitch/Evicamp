@@ -348,7 +348,7 @@ export const Agenda: React.FC = () => {
         metricas={metricas}
       />
 
-      <div className="px-3 sm:px-4 lg:px-6 flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         {loading ? (
           <div className="p-12 text-center text-xs text-[var(--color-muted)] uppercase">
             Cargando agenda...

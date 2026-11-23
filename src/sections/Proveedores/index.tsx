@@ -266,7 +266,7 @@ export const Proveedores: React.FC<Props> = ({ onNavigate }) => {
         />
       )}
 
-      <div className="px-3 lg:px-4 flex-1 flex flex-col min-h-[calc(var(--alto-pantalla)*0.5)] relative pb-8">
+      <div className="flex-1 flex flex-col min-h-[calc(var(--alto-pantalla)*0.5)] relative pb-8">
         
         {/* VISTA PROVEEDORES */}
         <div className={`flex-1 min-h-0 flex-col ${vistaActiva === 'PROVEEDORES' ? 'flex' : 'hidden'}`}>

@@ -229,7 +229,7 @@ export const UtilidadesServicios: React.FC<Props> = ({ pestana, onCambiarPestana
         filtroTipo={pestana === 'cobranzas' ? filtroTipoCobranzas : filtroTipoRentabilidad}
         onFiltroTipoChange={(v) => (pestana === 'cobranzas' ? setFiltroTipoCobranzas(v) : setFiltroTipoRentabilidad(v))}
       />
-      <div className="px-3 sm:px-4 lg:px-6 flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         {cargando ? (
           <div className="p-12 text-center text-[var(--color-muted)] text-sm">Calculando…</div>
         ) : pestana === 'rentabilidad' ? (

@@ -491,7 +491,7 @@ export const Conteos: React.FC = () => {
         }}
       />
 
-      <div className="px-2 sm:px-3 flex flex-col relative pb-8">
+      <div className="flex flex-col relative pb-8">
         {loading && filteredMermas.length === 0 ? (
           <div className="absolute inset-0 bg-[var(--color-surface)]/85 backdrop-blur-sm z-50 flex items-center justify-center">
   <div className="flex flex-col items-center gap-4">

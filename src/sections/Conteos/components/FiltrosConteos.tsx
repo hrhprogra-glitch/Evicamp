@@ -67,7 +67,7 @@ export const FiltrosConteos: React.FC<Props> = ({
 
   // Como Inventario: buscador grande a la izquierda y los filtros (de la misma altura) a la derecha
   return (
-    <div className="flex flex-col xl:flex-row gap-3 sm:gap-4 px-2 sm:px-3 shrink-0 items-stretch xl:items-center justify-between">
+    <div className="flex flex-col xl:flex-row gap-3 sm:gap-4 shrink-0 items-stretch xl:items-center justify-between">
       <div className="buscador-sobrio w-full xl:flex-1 shrink-0">
         <div className="buscador-sobrio__icono"><Search size={18} /></div>
         <input
