@@ -1265,6 +1265,12 @@
 - Se aplicó en 20 archivos de `src/sections/`, se comprobó con el medidor y un escáner de **todas** las pestañas (0 elementos con margen) y se hicieron regresiones con teclado y sin internet. Desplegado solo en Nego.
 - Se le preguntó si lo llevábamos al sitio oficial (ecosistema) y decidió: **"Déjalo solo en Nego"**. No se desplegó en ecosistema ni en Evicamp; si más adelante lo pide, se aplica el mismo cambio y se reponen los iconos con MD5 verificado. Sin base y sin push.
 
+## 23/11/2026 (clave foránea del stock arreglada en la base de pruebas)
+- El dueño preguntó qué era la clave foránea y si era necesario; con la explicación simple dijo: *"entiendo arregla eso"*.
+- Se confirmó que la base de pruebas `siumax` solo tenía la tienda id 2 y que los movimientos de stock usan el id 1 por defecto: por eso fallaban los consumos.
+- Con respaldo previo se restauró la tienda id 1 usando el INSERT que ya trae el SQL del proyecto. Contratos y Taller vuelven a descontar stock y lotes.
+- Solo en `siumax`. No se tocó ecosistema ni Evicamp, no se borró nada y no se hizo push.
+
 ## 23/11/2026 (buscador de Inventario pegado al borde y revisión completa)
 - El dueño dijo: *"perfecto bien echo pero en inventarios el buscador no esta pegado a los extremos as ese arreglo y revisa bien que todo esta bien"*.
 - Se encontró la causa: en Inventario (Productos y Lotes) el cuadro del buscador tenía 12 px de margen y, además, el medidor no lo estaba revisando porque ese buscador no usa la clase `buscador-sobrio` ni el id que se medía. El verificador tampoco miraba las pestañas propias de Inventario: por eso no se había detectado antes.

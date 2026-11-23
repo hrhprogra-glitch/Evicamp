@@ -7,6 +7,16 @@
 
 ---
 
+## 23/11/2026 (203) · OpenCode (Big Pickle) — Tienda principal id 1 restaurada en `siumax` (clave foránea del stock)
+- **Dueño:** preguntó qué era la clave foránea y si hacía falta; con la explicación simple dijo *"entiendo arregla eso"*.
+- **Causa:** la Fase 1 (196) truncó también `stores` (no estaba en la lista de tablas conservadas) y la carga de datos (201) solo recreó la tienda id 2 "Principal" (ECO-01). El SQL del proyecto crea la tienda id 1 "Tienda Principal" y pone `store_id bigint DEFAULT 1` en `inventory_movements`, `batches`, `sales` y `cash_sessions`, pero ese INSERT no se volvió a ejecutar tras la limpieza. Al consumir insumos (Contratos) o repuestos (Taller), el movimiento se creaba con `store_id=1` y Postgres lo rechazaba con `inventory_movements_store_id_fkey`.
+- **Diagnóstico (solo lectura):** `stores` tenía solo `2|Principal|ECO-01|f|t`; el default de `store_id` era `1`; 0 movimientos con tienda 1 de 1.742 totales.
+- **Arreglo:** respaldo previo `/root/backups/siumax-antes-tienda-id1-20261123180724.dump` y el mismo INSERT condicional de `servidor/sql/seguridad-sesion.sql:2276-2280`. Quedaron `1|Tienda Principal|T01|t|t` y `2|Principal|ECO-01|f|t`. **Solo en `siumax`**; no se tocó `ecosistema` ni Evicamp y no se borró nada.
+- **Verificación:** Contratos → consumo registrado, stock 93→92 y costo guardado. Taller → repuesto baja stock y lotes 93|90→92|89, al quitarlo vuelve, total y cobro cuadran. Quedan dos avisos viejos ajenos a esta clave: un aserto de lotes en la prueba de Contratos (el lote sí bajó 90→89) y "Generar salida" en Agenda.
+- **Nota:** el primer respaldo falló (`postgres` no puede escribir en `/root/backups`; root hace la redirección) y el primer INSERT falló por saltos de línea literales en un `-c`; corregido, el INSERT es idempotente. Scripts temporales borrados.
+
+---
+
 ## 23/11/2026 (202) · OpenCode (Big Pickle) — Buscador de Inventario pegado al borde y revisión completa del ancho
 - **Dueño:** *"perfecto bien echo pero en inventarios el buscador no esta pegado a los extremos as ese arreglo y revisa bien que todo esta bien"*.
 - **Causa encontrada:** `FiltrosInventario.tsx` tenía `px-2 sm:px-3` (12 px en escritorio) en el contenedor de la barra de búsqueda. Además, el medidor solo miraba `.buscador-sobrio`, y el buscador de Inventario usa otro id y otro cuadro: por eso la medición anterior decía `buscador=null` y no lo vimos. El verificador tampoco reconocía las pestañas `btn-tab-` / `btn-subtab-` de Inventario, así que ese punto ciego ocultó el problema.

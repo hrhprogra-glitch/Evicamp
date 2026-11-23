@@ -812,6 +812,12 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - `fn_login` compara `password_hash = crypt(p_password, password_hash)`; la receta de `servidor/nuevo-cliente.sh` (`crypt(:'clave', gen_salt('bf'))`) es la correcta. Para no escribir la clave en archivos, mandarla por `stdin` a un `read -r CLAVE` y pasarla a psql con `-v clave="$CLAVE"`.
 - PostgREST del sitio oficial lee la base `ecosistema` (`/etc/postgrest/clientes/ecosistema.conf`) y exige `x-sesion`; por eso un `curl` sin sesión da 401 aunque los datos estén cargados. Para comprobar datos, entrar por la UI y esperar: justo después del login la lista dice "CARGANDO..." y parece vacía; a los ~3 s aparecen los clientes. Una aserción sobre `innerText` hecha demasiado pronto da falso fallo.
 
+## 51. La limpieza de bases también vació `stores` (23/11/2026, bitácora 203)
+- Tras la Fase 1 (196) no existe la tienda id 1 en `siumax`; la carga de datos (201) solo insertó la id 2 de Eco. Como `inventory_movements.store_id`, `batches.store_id`, `sales.store_id` y `cash_sessions.store_id` tienen `DEFAULT 1`, cualquier consumo de insumos/repuestos fallaba con `inventory_movements_store_id_fkey`.
+- El SQL del proyecto ya trae el arreglo en `servidor/sql/seguridad-sesion.sql:2276-2280`: INSERT condicional de la tienda id 1. Si se vuelve a limpiar una base, ejecutarlo otra vez (o conservar `stores` entre las tablas).
+- En el VPS, `sudo -u postgres pg_dump -f /root/backups/...` da Permission denied: `/root/backups` lo escribe root. Patrón que funciona: `sudo sh -c "sudo -u postgres pg_dump -Fc -d siumax > /root/backups/archivo.dump"`.
+- Al mandar SQL con `psql -c` desde Node, `JSON.stringify` convierte los saltos de línea en `\n` literales y psql da error de sintaxis: poner la sentencia en UNA sola línea.
+
 ## 50. Medir el cuadro del buscador, no el input, y revisar TODAS las pestañas (23/11/2026, bitácora 202)
 - Al medir "buscadores pegados al borde", hay que medir el **cuadro completo** (`.buscador-sobrio`, o el `id` propio si no usa esa clase), no el `<input>`. El input lleva icono y `pl-3/pr-3` internos: medirlo da 49 px de margen aunque el cuadro esté en `izq=0` y sea falso aviso. En Inventario el cuadro es `#caja-buscador-inventario` y el input `buscador-global-inventario`.
 - Si el medidor solo mira `.buscador-sobrio`, un buscador con otro marco queda como `buscador=null` y **parece que no existe**: eso pasó en Inventario y por eso se le escapó al arreglo general (200). Un `null` en el medidor es una señal de alerta, no de "no aplica".
