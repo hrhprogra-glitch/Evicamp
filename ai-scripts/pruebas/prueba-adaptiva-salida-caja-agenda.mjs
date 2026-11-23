@@ -102,6 +102,38 @@ try {
         !!emp && emp.alto >= 44, `alto ${Math.round(emp?.alto || 0)}`);
       ok(`Salida ${t.nombre}: selector de empleado sin esquinas`, !!emp && emp.radio === '0px', emp?.radio || 'sin datos');
 
+      // 207 (dueño 23/11/2026): Enter debe desplegar la lista del empleado y dejar el selector en el campo.
+      // Se cuenta la llamada a showPicker (sin abrir de verdad la lista nativa) para no afectar lo que sigue.
+      await page.evaluate(() => {
+        const proto = HTMLSelectElement.prototype;
+        window.__enterEmpleado = { frenado: null, llamadas: 0, original: proto.showPicker || null };
+        if (proto.showPicker) {
+          proto.showPicker = function () { window.__enterEmpleado.llamadas++; };
+        }
+        const registrar = (e) => {
+          if (e.key === 'Enter' && e.target?.id === 'select-empleado-salida') {
+            window.__enterEmpleado.frenado = e.defaultPrevented;
+            document.removeEventListener('keydown', registrar);
+          }
+        };
+        document.addEventListener('keydown', registrar);
+      });
+      await page.focus('#select-empleado-salida');
+      await page.keyboard.press('Enter');
+      await pausa(150);
+      const enterEmp = await page.evaluate(() => {
+        const r = window.__enterEmpleado;
+        const proto = HTMLSelectElement.prototype;
+        if (r.original) proto.showPicker = r.original; else delete proto.showPicker;
+        return { frenado: r.frenado, llamadas: r.llamadas, soporta: !!r.original };
+      });
+      ok(`Salida ${t.nombre}: Enter despliega el selector de empleado`,
+        enterEmp.frenado === false && (!enterEmp.soporta || enterEmp.llamadas > 0),
+        `frenado=${enterEmp.frenado}, showPicker=${enterEmp.llamadas}`);
+      ok(`Salida ${t.nombre}: Enter deja el selector en el empleado`, (await foco()) === 'select-empleado-salida', await foco());
+      // La regla 9 vigila el foco 400 ms tras el Enter: esperar a que termine antes de tocar otro campo.
+      await pausa(500);
+
       // 187: un solo buscador hace las dos cosas: sugerencias y registro del nombre como nota, sin botón ni campo aparte.
       ok(`Salida ${t.nombre}: buscador desplegable de cliente`, await existe('#buscar-cliente-salida'));
       ok(`Salida ${t.nombre}: NO hay botón de cliente no registrado`, !(await existe('#btn-cliente-no-registrado-salida')));

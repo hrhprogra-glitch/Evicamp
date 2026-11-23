@@ -623,11 +623,13 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Regla 9 de SiuMax: Enter es como un clic, el selector se queda en el campo
+  // Reglas 7/8/9: en un desplegable Enter ABRE la lista y el selector se queda en el campo; en los demás campos
+  // Enter es como un clic y no pasa al siguiente. flechasEspaciales.ts abre el <select> si nadie frenó el Enter
+  // (23/11/2026, dueño: "cuando lo selecciono y hago enter no me despliega").
   const handleKeyDownForm = (e: React.KeyboardEvent<HTMLElement>, _id?: string) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-    }
+    if (e.key !== 'Enter') return;
+    if (e.target instanceof HTMLSelectElement) return; // dejar que se despliegue la lista nativa
+    e.preventDefault();
   };
 
   // 191 (dueño 19/11/2026): al elegir una opción el selector BAJA al campo siguiente y la vista se desplaza
