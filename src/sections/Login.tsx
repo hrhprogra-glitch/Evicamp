@@ -179,7 +179,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 }}
                 required
                 className="w-full border-2 border-[var(--color-border)] bg-white px-4 py-4 text-sm font-bold text-[var(--color-ink)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-0 transition-colors rounded-none placeholder:text-[var(--color-line-light)]"
-                placeholder="INGRESE SU ID..."
+                placeholder="admin"
               />
             </div>
 

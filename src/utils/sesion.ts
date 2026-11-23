@@ -14,10 +14,19 @@ export interface EmpleadoSesion {
   permisos: Partial<PermisosUsuario>;
 }
 
-// Los correos se guardan y comparan en minúsculas; escribir solo "admin" completa @gestorpro.com
+// Los correos se guardan y comparan en minúsculas. Escribir solo "admin" completa el dominio del sitio:
+// @siumax.com en las pruebas (nego.siumax), @ecosistema.com en el sitio oficial del cliente.
+// Los correos completos siguen funcionando igual. En los demás sitios se mantiene el dominio histórico.
 export const normalizarEmail = (texto: string) => {
   const limpio = texto.trim().toLowerCase();
-  return limpio.includes('@') ? limpio : `${limpio}@gestorpro.com`;
+  if (limpio.includes('@')) return limpio;
+  const host = typeof window !== 'undefined' ? window.location.hostname : '';
+  const dominio = host.startsWith('ecosistema')
+    ? 'ecosistema.com'
+    : host.startsWith('nego.')
+      ? 'siumax.com'
+      : 'gestorpro.com';
+  return `${limpio}@${dominio}`;
 };
 
 // Exportado: ModalUsuario.tsx lo necesita para mandar el token a las funciones

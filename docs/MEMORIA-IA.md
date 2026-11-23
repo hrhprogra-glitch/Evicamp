@@ -799,6 +799,11 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Probar con **recarga real** (`page.reload`) y reabrir el modal. Las pruebas que solo cierran/abren el modal no detectan este bug, porque el estado de React se conserva; el defecto solo aparece al reconstruir el estado desde localStorage.
 - El mismo helper sirve para tres casos: nombre escrito y borrado, nombre escrito y no borrado, cliente elegido y borrado. Los tres deben pasar en los cuatro tamaños.
 
+## 48. Login corto por sitio (23/11/2026, bitácora 197)
+- `normalizarEmail` tenía un dominio histórico `@gestorpro.com`; por eso escribir solo `admin` no entraba en Nego ni en ecosistema. La corrección decide el dominio por `window.location.hostname`: `ecosistema*` → `@ecosistema.com`, `nego.*` → `@siumax.com`, el resto conserva `@gestorpro.com` para no romper Evicamp ni los clientes. Los correos completos nunca se tocan.
+- Quitar administradores es un borrado: primero respaldo, luego borrar `sesiones` de esos ids y después los `empleados` (FK `sesiones -> empleados`, `trabajadores -> empleados`). Mantener la clave del admin que queda.
+- En la prueba de login, el texto de error de `Login.tsx` es **"CREDENCIALES INVÁLIDAS O CUENTA INACTIVA."**, no "incorrectos": una aserción con `/incorrectos/i` da falso fallo. Para probar "sin internet" conviene **no recargar** (la página offline cae en `chrome-error` y `localStorage` queda inaccesible): poner offline, esperar y navegar dentro de la SPA. Para escenarios con distinto usuario, usar `nav.createBrowserContext()` por escenario en vez de limpiar `localStorage` a mitad de prueba.
+
 ## 47. Limpieza de bases en dos fases (23/11/2026, bitácora 196)
 - El dueño pidió **dos fases** para un borrado grande: primero limpiar y dejar que él revise; después, con su OK, cargar los datos reales. No juntar las dos aunque él diga "antes de subir los reales": la revisión intermedia es parte del pedido.
 - "Mantener la cuenta admin como siempre" significa **no borrar los empleados con `rol='Administrador'` ni sus sesiones**, además de `empresa_config` (RUC/logo), `facturacion_config` y `cpe_correlativos`. El resto de tablas se trunca. Ojo con el FK `trabajadores -> empleados` y `sesiones -> empleados`: hay que borrar las sesiones de los no administradores antes de borrar esos empleados, o truncar `trabajadores` primero.

@@ -1235,3 +1235,11 @@
 - **Fase 1 ejecutada:** respaldo de ambas bases en el VPS y limpieza total de las tablas de negocio, conservando las cuentas administradoras (y sus sesiones) y la configuración de empresa. El dueño va a revisar; recién con su OK se ejecuta la **Fase 2** (carga de los datos reales del Supabase).
 - **Contraseñas:** no se escribieron en el chat ni en los docs por la regla de seguridad. Se le indicó dónde abrirlas él mismo: `.env.vps` (`SIUMAX_ADMIN_CLAVE` con `admin@siumax.com`, y `ECOSISTEMA_ADMIN_USUARIO` / `ECOSISTEMA_ADMIN_CLAVE`). Siguen iguales.
 - Sin Evicamp, sin Panel, sin Supabase, sin push.
+
+## 23/11/2026 (ajuste del login, fase A en pruebas)
+- El dueño pidió: *"haremos un ajuste en el login primero en pruebas ahi tengo 3 usuarios admin solo quiero que quede admin@siumax.com nada mas y en ecosistema los mismo pero que quede admin@siumax.com pero ojo quiero que cambies el siumax por ecosistema.com y en el login no necesitan poner todo solo el nombre osea admin y la contraseña asi se ahorra tiempo al ingresar usuarios"*.
+- Se le propuso hacerlo en dos fases y respondió **"empieza"**.
+- En Nego ya quedó **solo `admin@siumax.com`**; se borraron `billy` y `harry`. La clave de `admin` no se tocó.
+- En ecosistema aún no se toca nada: cuando se apruebe la Fase B quedará **solo `admin@ecosistema.com`** (el dueño pidió cambiar `siumax` por `ecosistema.com`).
+- El login ahora acepta escribir solo `admin` y completa el dominio del sitio; el correo completo sigue sirviendo. Desplegado primero solo en pruebas, como pidió.
+- Prueba con teclado y sin internet en cuatro tamaños: **24/24, 0 fallos**. Sin Evicamp, sin Panel, sin Supabase, sin push.

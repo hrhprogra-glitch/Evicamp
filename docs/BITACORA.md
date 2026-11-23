@@ -7,6 +7,16 @@
 
 ---
 
+## 23/11/2026 (197) · OpenCode (Big Pickle) — Fase A: login corto y un solo administrador en Nego (pruebas)
+- **Dueño:** *"perfecto haremos un ajuste en el login primero en pruebas ahi tengo 3 usuarios admin solo quiero que quede admin@siumax.com nada mas y en ecosistema los mismo pero que quede admin@siumax.com pero ojo quiero que cambies el siumax por ecosistema.com y en el login no necesitan poner todo solo el nombre osea admin y la contraseña"*. Aprobado con **"empieza"**.
+- **Base `siumax`:** respaldo `/root/backups/siumax-antes-quitar-admins-20261123152942.dump`. Se borraron las sesiones y los empleados `billy@siumax.com` y `harry@siumax.com`. Queda **solo `admin@siumax.com`**, con la misma clave.
+- **Código:** `normalizarEmail` completaba el dominio viejo `@gestorpro.com`, por eso escribir `admin` fallaba. Ahora completa **`@siumax.com` en `nego.siumax`** y **`@ecosistema.com` en `ecosistema123`**; el correo completo sigue funcionando y los demás sitios mantienen `@gestorpro.com`. El placeholder del login ahora dice `admin`.
+- **Verificación:** `npx tsc -b` limpio y despliegue **solo en Nego** (22 archivos, JS `index-BqlUehWh.js`). Prueba nueva `prueba-login-corto-nego.mjs`: **24/24, 0 fallos**, con teclado y sin internet en 390/768/1366/1920 — entra escribiendo solo `admin`, entra con el correo completo, `billy` y `harry` ya no entran, y la sesión sigue andando sin internet.
+- **Sin tocar:** ecosistema (sigue con sus 3 administradores y el código anterior), Evicamp, Panel, Supabase, credenciales ni push.
+- **Siguiente (Fase B, espera la aprobación del dueño):** en `ecosistema` dejar solo `admin@ecosistema.com` (borrar `billy` y `harry`) y desplegar ahí el mismo código, reponiendo el logo después del deploy como manda la memoria.
+
+---
+
 ## 23/11/2026 (196) · OpenCode (Big Pickle) — Fase 1 de la limpieza: bases `siumax` y `ecosistema` vaciadas, con respaldo y admin intacto
 - **Dueño:** *"si pero dividelo en dos fases el primero borra todo reviso y cuando este todo bien sube los datos reales pero ojo quiero mantengas la cuenta admin como siempre y me pasas las contraseñas del admin de nego siumax y ecosistema"*. Confirmó borrar todo en las dos bases, **en dos fases**: ahora solo limpiar; cargar los datos reales del Supabase después de su revisión.
 - **Contraseñas:** por la regla de seguridad no se pegaron en el chat ni en docs; están en `negocios/comercio/.env.vps` (`SIUMAX_ADMIN_CLAVE` con usuario fijo `admin@siumax.com`, y `ECOSISTEMA_ADMIN_USUARIO` / `ECOSISTEMA_ADMIN_CLAVE`). No se modificaron ni se mostraron.
