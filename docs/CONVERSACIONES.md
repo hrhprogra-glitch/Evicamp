@@ -1227,3 +1227,11 @@
 - El dueño aprobó la vista previa: *"perfecto bien echo pero por predeterminado que este el ticket tambien en hoja A4 quita lo de la firma no es necesario"*.
 - Pidió dos cosas: **que abra en ticket por predeterminado** y **que se quite la firma**. Como el ticket es lo que se ve al entrar, se quitaron «Responsable técnico» y «Recibido / conforme» tanto del ticket como de la hoja A4. La hoja sigue disponible con su botón y se recuerda si la elige.
 - Resultado en Nego: **119/119, 0 fallos**, sin errores JS, en 390/768/1366/1920; regresión **167/167, 0 fallos**. El push a GitHub lo hace él. Sin tocar base, otros sitios ni credenciales. El pedido de salidas pendientes en Agenda sigue pospuesto; no se volvió a mencionar.
+
+## 23/11/2026 (limpieza para subir los datos reales — fase 1)
+- El dueño preguntó si teníamos la información del Supabase donde están todos los datos de ECO SISTEMAS URH S.A.C. Se le confirmó que está en `.env.ecosistema` (solo lectura), con respaldo del 16/11 en `D:\Programación\siumax\respaldo-ecosistema-2026-11-16.sql`, y que el sitio oficial ya tenía los datos migrados del 18/11.
+- Pidió: *"quiero que borres los datos de siumax el de nego siumax donde hacemos las pruebas y el ecosistemas antes de subir los reales"*. Como borra datos, se pidió confirmación del alcance antes de tocar nada.
+- Confirmó con un cambio: *"perfecto pero dividelo en dos fases el primero borra todo reviso y cuando este todo bien sube los datos reales pero ojo quiero mantengas la cuenta admin como siempre y me pasas las contraseñas del admin de nego siumax y ecosistema"*.
+- **Fase 1 ejecutada:** respaldo de ambas bases en el VPS y limpieza total de las tablas de negocio, conservando las cuentas administradoras (y sus sesiones) y la configuración de empresa. El dueño va a revisar; recién con su OK se ejecuta la **Fase 2** (carga de los datos reales del Supabase).
+- **Contraseñas:** no se escribieron en el chat ni en los docs por la regla de seguridad. Se le indicó dónde abrirlas él mismo: `.env.vps` (`SIUMAX_ADMIN_CLAVE` con `admin@siumax.com`, y `ECOSISTEMA_ADMIN_USUARIO` / `ECOSISTEMA_ADMIN_CLAVE`). Siguen iguales.
+- Sin Evicamp, sin Panel, sin Supabase, sin push.

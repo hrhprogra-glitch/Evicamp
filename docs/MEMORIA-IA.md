@@ -799,6 +799,13 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Probar con **recarga real** (`page.reload`) y reabrir el modal. Las pruebas que solo cierran/abren el modal no detectan este bug, porque el estado de React se conserva; el defecto solo aparece al reconstruir el estado desde localStorage.
 - El mismo helper sirve para tres casos: nombre escrito y borrado, nombre escrito y no borrado, cliente elegido y borrado. Los tres deben pasar en los cuatro tamaños.
 
+## 47. Limpieza de bases en dos fases (23/11/2026, bitácora 196)
+- El dueño pidió **dos fases** para un borrado grande: primero limpiar y dejar que él revise; después, con su OK, cargar los datos reales. No juntar las dos aunque él diga "antes de subir los reales": la revisión intermedia es parte del pedido.
+- "Mantener la cuenta admin como siempre" significa **no borrar los empleados con `rol='Administrador'` ni sus sesiones**, además de `empresa_config` (RUC/logo), `facturacion_config` y `cpe_correlativos`. El resto de tablas se trunca. Ojo con el FK `trabajadores -> empleados` y `sesiones -> empleados`: hay que borrar las sesiones de los no administradores antes de borrar esos empleados, o truncar `trabajadores` primero.
+- En `.env.vps` **no existe** `SIUMAX_ADMIN_USUARIO`: el usuario de Nego es fijo `admin@siumax.com` y solo está `SIUMAX_ADMIN_CLAVE`. Para el sitio oficial sí están `ECOSISTEMA_ADMIN_USUARIO` y `ECOSISTEMA_ADMIN_CLAVE`. Nunca imprimir estos valores.
+- Al armar helper de `psql` desde Node, llevar **`-tA`** (o `-tAc`): sin esas banderas la salida trae encabezado y el nombre de columna (`tablename`) se toma como si fuera una tabla y el TRUNCATE falla. El error apareció antes de borrar nada; por eso el respaldo se hizo dos veces y no hubo daño.
+- Las contraseñas son del dueño, pero la regla prohibe compartir `.env.vps`: responder con la **ruta y los nombres de variable**, nunca con los valores.
+
 ## 46. Un desplegable con resaltado debe desplazarse solo (19/11/2026, bitácora 193)
 - Mover el índice resaltado con ↑↓ **no basta** cuando la lista tiene `max-h-* overflow-y-auto`: si la opción activa cae fuera del área visible, el dueño dice que «no puede ver lo que seleccionó». Falta `scrollIntoView({ block: 'nearest' })` sobre el botón activo en un `useEffect` de `[indice, listaAbierta, total]`.
 - En `ModalNuevaSalida` el buscador de productos ya lo hacía (línea 117) pero la capa flotante de clientes, no. Al copiar patrones entre dos buscadores de la misma pantalla, revisar los dos: uno puede quedar sin scroll.

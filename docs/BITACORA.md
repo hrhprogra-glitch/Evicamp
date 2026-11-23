@@ -7,6 +7,17 @@
 
 ---
 
+## 23/11/2026 (196) · OpenCode (Big Pickle) — Fase 1 de la limpieza: bases `siumax` y `ecosistema` vaciadas, con respaldo y admin intacto
+- **Dueño:** *"si pero dividelo en dos fases el primero borra todo reviso y cuando este todo bien sube los datos reales pero ojo quiero mantengas la cuenta admin como siempre y me pasas las contraseñas del admin de nego siumax y ecosistema"*. Confirmó borrar todo en las dos bases, **en dos fases**: ahora solo limpiar; cargar los datos reales del Supabase después de su revisión.
+- **Contraseñas:** por la regla de seguridad no se pegaron en el chat ni en docs; están en `negocios/comercio/.env.vps` (`SIUMAX_ADMIN_CLAVE` con usuario fijo `admin@siumax.com`, y `ECOSISTEMA_ADMIN_USUARIO` / `ECOSISTEMA_ADMIN_CLAVE`). No se modificaron ni se mostraron.
+- **Respaldo primero:** `/root/backups/siumax-antes-limpieza-20261123152155..dump` y `/root/backups/ecosistema-antes-limpieza-20261123152155..dump` (1,2 MB cada uno, `pg_dump -Fc`).
+- **Hecho:** 51 de 56 tablas truncadas en cada base con `lock_timeout`, dentro de una transacción; se borraron los empleados no administradores (5 en `siumax`, 2 en `ecosistema`) y sus sesiones. Antes: 493/492 clientes, 519/518 productos, 390/374 salidas y 7.328 filas de log en cada una. Después: **0 en todas las tablas de negocio**.
+- **Conservado igual:** los 3 administradores de cada base (`admin@siumax.com`, `billy@siumax.com`, `harry@siumax.com` / `admin@ecosistema.com`, `billy@siumax.com`, `harry@siumax.com`), sus sesiones, `empresa_config` (1 fila con RUC y logo), `facturacion_config` y `cpe_correlativos`.
+- **Verificación:** ambos sitios responden 200, la API sin sesión devuelve 401 y el login con la cuenta admin da **OK** en los dos. Sin tocar Evicamp, el Panel, `/actualizaciones/`, el Supabase ni hacer push.
+- **Siguiente (Fase 2, espera la revisión y el OK del dueño):** cargar los datos reales del Supabase con el mapeo de la migración en ambas bases y volver a probar. Scripts nuevos en `ai-scripts/`: `inspeccionar-bases-limpieza.cjs`, `inspeccionar-fks-limpieza.cjs`, `limpiar-bases-fase1.cjs` y `verificar-fase1.cjs`.
+
+---
+
 ## 20/11/2026 (195) · OpenCode (Big Pickle) — Ticket por predeterminado y sin firma en el comprobante: HECHO y probado SOLO en Nego
 - **Dueño:** *"perfecto bien echo pero por predeterminado que este el ticket tambien en hoja A4 quita lo de la firma no es necesario"*. Aprobó la fase 194 y pidió dos ajustes: la vista previa debe abrir en **ticket**, y se quita lo de la firma. Como el ticket es lo que se ve al entrar, se quitaron «Responsable técnico» y «Recibido / conforme» en **los dos formatos** (ticket y hoja A4).
 - **Hecho en `VistaPreviaSalida.tsx`:** el estado inicial ahora es `TICKET` cuando no hay preferencia guardada; si el dueño eligió hoja antes, se sigue recordando (`salidas_formato_impresion`, sin cambiar la clave). Se borraron las reglas CSS `.firmas` y los dos bloques de firmas del ticket y de la hoja. No cambian ids, flechas, Enter, Escape, impresión, PDF ni WhatsApp.
