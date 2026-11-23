@@ -19,7 +19,6 @@ import { ModalBalanza } from './components/ModalBalanza';
 import { ModalPrecioConsumo } from './components/ModalPrecioConsumo';
 import { TicketImprimible } from './components/TicketImprimible';
 import { ModalElegirClientePOS } from './components/ModalElegirClientePOS';
-import { ModalNombreEspera } from './components/ModalNombreEspera';
 import { ModalCotizacionPOS } from './components/ModalCotizacionPOS';
 import { ModalPedidoPOS } from './components/ModalPedidoPOS';
 import { avisarCambioEncargos } from './components/AvisosEncargos';
@@ -56,7 +55,6 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
     return guardado ? JSON.parse(guardado) : null;
   });
   const [isClienteModalOpen, setIsClienteModalOpen] = useState(false);
-  const [isEsperaModalOpen, setIsEsperaModalOpen] = useState(false);
   const [isCotizacionModalOpen, setIsCotizacionModalOpen] = useState(false);
   const [isPedidoModalOpen, setIsPedidoModalOpen] = useState(false);
 
@@ -126,15 +124,10 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       }
 
       // 🛡️ ATAJOS GLOBALES RÁPIDOS (CON SHIFT/MAYÚS)
+      // 212 (dueño 23/11/2026): Shift+Q crea el ticket en espera directo, sin ventana de nombre.
       if (e.key.toLowerCase() === 'q' && e.shiftKey) {
         e.preventDefault();
-        if (cart.length > 0) {
-          if (heldCarts.length >= 5) {
-            alert("Límite máximo: Tienes 5 tickets en espera. Termina alguno antes de guardar otro.");
-            return;
-          }
-          setIsEsperaModalOpen(true);
-        }
+        holdCurrentCart();
         return;
       }
       if (e.key.toLowerCase() === 'w' && e.shiftKey) {
@@ -421,7 +414,6 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         setIsPrecioModalOpen(false);
         setIsVistaPreviaOpen(false);
         setIsClienteModalOpen(false);
-        setIsEsperaModalOpen(false);
         setIsCotizacionModalOpen(false);
         setIsPedidoModalOpen(false);
         setSelectedWeightProduct(null);
@@ -447,7 +439,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
           }
           return;
         }
-        if (!isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isEsperaModalOpen && !isClienteModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
+        if (!isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
           setIsClienteModalOpen(true);
         }
         return;
@@ -457,7 +449,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       if (e.key === 'F2' || e.key === 'F4') {
         e.preventDefault(); // Evita el comportamiento por defecto del navegador web
         // Solo abrimos la ventana de pago si hay algo en el carrito y no hay otros modales encima
-        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isEsperaModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
+        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
           setIsCobroModalOpen(true);
         }
       }
@@ -465,7 +457,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       // 5. F7: Guardar como Cotización / Proforma
       if (e.key === 'F7') {
         e.preventDefault();
-        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isEsperaModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
+        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
           setIsCotizacionModalOpen(true);
         }
       }
@@ -473,7 +465,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       // 6. F8: Guardar como Pedido por Encargo
       if (e.key === 'F8') {
         e.preventDefault();
-        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isEsperaModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
+        if (cart.length > 0 && !isCobroModalOpen && !isBalanzaModalOpen && !isPrecioModalOpen && !isVistaPreviaOpen && !isClienteModalOpen && !isCotizacionModalOpen && !isPedidoModalOpen) {
           setIsPedidoModalOpen(true);
         }
       }
@@ -481,7 +473,7 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
 
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [cart.length, isCobroModalOpen, isBalanzaModalOpen, isPrecioModalOpen, isVistaPreviaOpen, isClienteModalOpen, isEsperaModalOpen, isCotizacionModalOpen, isPedidoModalOpen]);
+  }, [cart, heldCarts, clienteSeleccionado, isCobroModalOpen, isBalanzaModalOpen, isPrecioModalOpen, isVistaPreviaOpen, isClienteModalOpen, isCotizacionModalOpen, isPedidoModalOpen]);
 
   // 1. CARGAR PRODUCTOS AL ABRIR LA VENTANA
   const fetchProducts = useCallback(async () => {
@@ -874,29 +866,30 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
       });
     });
   };
-  // 4. NUEVO: PONER TICKET EN ESPERA (Guardar Caja con Nombre)
+  // 4. PONER TICKET EN ESPERA DIRECTO (212: sin ventana para poner nombre)
   const holdCurrentCart = () => {
-    if (cart.length > 0) {
-      if (heldCarts.length >= 5) {
-        alert("Límite máximo: Tienes 5 tickets en espera. Termina alguno antes de guardar otro.");
-        return;
-      }
-      setIsEsperaModalOpen(true);
+    if (cart.length === 0) return;
+    if (heldCarts.length >= 5) {
+      alert("Límite máximo: Tienes 5 tickets en espera. Termina alguno antes de guardar otro.");
+      return;
     }
+    handleConfirmarEspera();
   };
 
-  const handleConfirmarEspera = (nombre: string) => {
+  // El nombre se pone solo: el del cliente si hay uno elegido, si no T-1, T-2...
+  const handleConfirmarEspera = () => {
     const nuevoHeld: HeldCart = {
       cart,
       cliente: clienteSeleccionado,
-      nombre: nombre.trim() || clienteSeleccionado?.nombre || `T-${heldCarts.length + 1}`,
+      nombre: (clienteSeleccionado?.nombre || '').trim() || `T-${heldCarts.length + 1}`,
       timestamp: Date.now()
     };
     setHeldCarts(prev => [...prev, nuevoHeld]);
     setCart([]);
     setClienteSeleccionado(null);
     setActiveTabIndex(-1);
-    setIsEsperaModalOpen(false);
+    // En celular/tablet el buscador está en el panel Productos: volver ahí para seguir vendiendo con teclado.
+    setVistaMovil('productos');
     setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
   };
 
@@ -1418,19 +1411,6 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
         }}
         onClose={() => {
           setIsClienteModalOpen(false);
-          setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
-        }}
-      />
-
-      {/* MODAL PAUSAR TICKET CON NOMBRE (Shift+Q) */}
-      <ModalNombreEspera
-        isOpen={isEsperaModalOpen}
-        defaultNombre={clienteSeleccionado ? clienteSeleccionado.nombre : `Ticket ${heldCarts.length + 1}`}
-        total={Math.round(cart.reduce((acc, item) => acc + item.subtotal, 0) * 100) / 100}
-        itemsCount={cart.length}
-        onConfirm={handleConfirmarEspera}
-        onClose={() => {
-          setIsEsperaModalOpen(false);
           setTimeout(() => document.getElementById('buscador-global-pos')?.focus(), 50);
         }}
       />

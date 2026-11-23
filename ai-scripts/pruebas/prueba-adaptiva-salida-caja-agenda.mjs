@@ -395,6 +395,80 @@ try {
         await pausa(150);
         ok(`Caja ${t.nombre}: al volver al buscador el imán funciona`, (await foco()) === 'buscador-global-pos', await foco());
       }
+
+      // 212 (dueño 23/11/2026): crear un punto de espera sin que salga la ventana para ponerle nombre.
+      // Se prueba por teclado el botón Espera y el atajo Shift+Q; el nombre lo pone el sistema solo.
+      const filasTicket = () => page.$$eval('[data-fila-ticket]', (els) => els.length);
+      const totalEsperas = () => page.$$eval('#held-carts-container > button', (els) => els.length);
+      // En celular/tablet la Caja tiene dos paneles: Productos y Ticket. Se cambia con Enter, como el dueño.
+      const panel = async (nombre) => {
+        if (t.w >= 1024) return;
+        const puesto = await page.evaluate((n) => {
+          const b = [...document.querySelectorAll('button')].find((el) => (el.innerText || '').trim().toLowerCase().startsWith(n.toLowerCase()));
+          if (!b) return false;
+          b.focus();
+          return true;
+        }, nombre);
+        if (puesto) { await page.keyboard.press('Enter'); await pausa(250); }
+      };
+      const ponerProducto = async () => {
+        await panel('Productos');
+        if (await filasTicket() > 0) return true;
+        for (const letra of ['a', 'e', 'i', 'o', 'u', '1', '2']) {
+          await page.focus('#buscador-global-pos');
+          await page.keyboard.down('Control'); await page.keyboard.press('a'); await page.keyboard.up('Control');
+          await page.keyboard.press('Backspace');
+          await page.keyboard.type(letra);
+          await pausa(450);
+          await page.keyboard.press('Enter');
+          await pausa(300);
+          if (await filasTicket() > 0) return true;
+        }
+        return false;
+      };
+      const estadoEspera = () => page.evaluate(() => ({
+        dialog: [...document.querySelectorAll('[role="dialog"], [aria-modal="true"]')].some((el) => el.getClientRects().length > 0),
+        inputNombre: !!document.getElementById('input-nombre-espera'),
+        esperas: document.querySelectorAll('#held-carts-container > button').length,
+        filas: document.querySelectorAll('[data-fila-ticket]').length,
+        foco: document.activeElement?.id || '',
+      }));
+      const recuperarYVaciar = async (indice) => {
+        await panel('Ticket');
+        await page.focus(`#btn-held-${indice}`);
+        await page.keyboard.press('Enter');
+        await pausa(250);
+        await page.keyboard.down('Shift'); await page.keyboard.press('w'); await page.keyboard.up('Shift');
+        await pausa(200);
+        await panel('Productos');
+      };
+
+      const esperasAntes = await totalEsperas();
+      if (!(await ponerProducto())) {
+        ok(`Caja ${t.nombre}: crear espera sin ventana`, false, 'no hay producto con stock para probar');
+      } else {
+        await panel('Ticket');
+        await page.focus('#btn-pausar-ticket');
+        await page.keyboard.press('Enter');
+        await pausa(350);
+        const estadoBoton = await estadoEspera();
+        ok(`Caja ${t.nombre}: botón Espera crea el punto sin ventana`,
+          !estadoBoton.dialog && !estadoBoton.inputNombre && estadoBoton.esperas === esperasAntes + 1 && estadoBoton.filas === 0,
+          JSON.stringify(estadoBoton));
+        ok(`Caja ${t.nombre}: tras crear el espera el foco vuelve al buscador`,
+          estadoBoton.foco === 'buscador-global-pos', estadoBoton.foco);
+        await recuperarYVaciar(esperasAntes);
+
+        await ponerProducto();
+        await page.focus('#buscador-global-pos');
+        await page.keyboard.down('Shift'); await page.keyboard.press('q'); await page.keyboard.up('Shift');
+        await pausa(350);
+        const estadoAtajo = await estadoEspera();
+        ok(`Caja ${t.nombre}: Shift+Q crea el punto sin ventana`,
+          !estadoAtajo.dialog && !estadoAtajo.inputNombre && estadoAtajo.esperas === esperasAntes + 1 && estadoAtajo.filas === 0,
+          JSON.stringify(estadoAtajo));
+        await recuperarYVaciar(esperasAntes);
+      }
     } catch (e) {
       ok(`Caja ${t.nombre}`, false, e.message.slice(0, 110));
     }

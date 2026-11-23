@@ -81,8 +81,32 @@ try {
   for (const [w, h] of TAMANOS) {
     await page.setViewport({ width: w, height: h }); await pausa(700);
     await page.evaluate(() => document.getElementById('sidebar-btn-pos')?.click()); await pausa(1500);
-    for (const [nombre, id] of [['cobro', 'btn-proceder-pago'], ['cliente', 'btn-pos-header-cliente'], ['espera', 'btn-pausar-ticket'], ['cotizacion', 'btn-pos-cotizacion'], ['pedido', 'btn-pos-pedido']]) {
+    for (const [nombre, id] of [['cobro', 'btn-proceder-pago'], ['cliente', 'btn-pos-header-cliente'], ['cotizacion', 'btn-pos-cotizacion'], ['pedido', 'btn-pos-pedido']]) {
       await probar(w, h, nombre, clic(id));
+    }
+    // 212: el botón Espera ya NO abre ventana; crea el punto directo. Se recupera después para no acumular esperas.
+    const puedePausar = await page.evaluate(() => {
+      const b = document.getElementById('btn-pausar-ticket');
+      if (!b || b.disabled) return false;
+      b.focus();
+      return true;
+    });
+    if (!puedePausar) informe.push(`·  ${w}x${h} espera-directo: no hay producto en el ticket`);
+    else {
+      await page.keyboard.press('Enter');
+      await pausa(450);
+      const estado = await page.evaluate(() => ({
+        dialog: [...document.querySelectorAll('[role="dialog"], [aria-modal="true"]')].some((el) => el.getClientRects().length > 0),
+        inputNombre: !!document.getElementById('input-nombre-espera'),
+        esperas: document.querySelectorAll('#held-carts-container > button').length,
+        filas: document.querySelectorAll('[data-fila-ticket]').length,
+      }));
+      if (estado.dialog || estado.inputNombre || estado.esperas === 0 || estado.filas > 0) {
+        informe.push(`❌ ${w}x${h} espera-directo: ${JSON.stringify(estado)}`);
+        await page.screenshot({ path: `${DIR}/caja-espera-directo-${w}.png` });
+      } else informe.push(`✅ ${w}x${h} espera-directo`);
+      await page.evaluate(() => document.getElementById('btn-held-0')?.click());
+      await pausa(300);
     }
     await page.evaluate(() => document.getElementById('sidebar-btn-finanzas')?.click()); await pausa(3000);
     await probar(w, h, 'nuevo-movimiento', clic('btn-nuevo-movimiento'));

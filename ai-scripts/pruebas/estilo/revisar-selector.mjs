@@ -25,7 +25,7 @@ const CASOS = [
   ['Caja', 'pos', null, null],
   ['Caja › Cobro', 'pos', null, 'btn-proceder-pago'],
   ['Caja › Cliente', 'pos', null, 'btn-pos-header-cliente'],
-  ['Caja › Espera', 'pos', null, 'btn-pausar-ticket'],
+  // 212: Caja › Espera ya no es una ventana: el botón crea el punto directo, se prueba en la adaptiva.
   ['Caja › Cotización', 'pos', null, 'btn-pos-cotizacion'],
   ['Caja › Pedido', 'pos', null, 'btn-pos-pedido'],
   ['Clientes', 'clientes', null, null],

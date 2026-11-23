@@ -17,7 +17,7 @@ const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
 const VENTANAS = [
   ['cobro', 'pos', null, ['btn-proceder-pago']],
   ['cliente-pos', 'pos', null, ['btn-pos-header-cliente']],
-  ['espera', 'pos', null, ['btn-pausar-ticket']],
+  // 212: el botón de Espera ya no abre ventana (crea el punto directo), por eso no va en esta lista.
   ['cotizacion-pos', 'pos', null, ['btn-pos-cotizacion']],
   ['pedido-pos', 'pos', null, ['btn-pos-pedido']],
   ['caja-del-dia', 'pos', null, ['btn-caja-actual-pos']],

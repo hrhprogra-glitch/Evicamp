@@ -876,5 +876,12 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Ojo: `.boton-cabecera` de `src/index.css` tiene `background`, `border`, `box-shadow` y `transform` con `!important`; un `shadow-[inset_...]` añadido al mismo botón **no se ve**. Para marcar la opción elegida usa un hijo con línea de color (como en los botones de comprobante), no una sombra.
 - Las regresiones adaptivas pueden pasar sin abrir el modal de cobro: además de ellas, verifica con `getComputedStyle` los elementos nuevos (fondo, borde, sombra, radio y transform) y confirma en el HTML en vivo el nombre del bundle. Aquí 196/196 y estilos calculados: botones/tarjetas blancos, borde 1 px, `box-shadow: none`, `border-radius: 0`, `transform: none`.
 
+## 57. Otra IA puede commitear mientras compilas: parte siempre del HEAD actual (23/11/2026, bitácora 212)
+- El número de bitácora no es fijo: mientras se hacía el espera directo, otra sesión tomó la 211 (cobro sobrio) y dejó un commit nuevo. Antes de numerar, mira `git log -3` y busca el número en `docs/`; si ya está usado, sigue con el siguiente (aquí 212) y cambia también los comentarios del código y de las pruebas.
+- **Nunca compiles desde un hash guardado a mano.** El worktree se creó desde `3dbb99a` (visto al empezar) y, al desplegar, el sitio perdió el cobro sobrio que otra IA había commiteado en `9a1f95e` mientras trabajábamos. La regla es `git worktree add --detach <temp> HEAD` justo antes de compilar, y confirmar `git -C <temp> rev-parse --short HEAD`. Con WIP ajeno en el proyecto real, el worktree limpio es la única forma de incluir lo ya commiteado sin arrastrar lo que no está.
+- Para detectar un revert así, compara **marcadores de texto del bundle**, no solo su nombre: «Deudas vencidas» estaba ausente en el bundle viejo y presente en el nuevo; «input-nombre-espera» al revés. Un mismo código fuente produce el mismo hash, así que si el bundle servido coincide con el compilado, el deploy fue correcto.
+- Una regresión puede fallar por datos y arreglarse sola: una corrida dio 1 fallo y 1 «sin datos» en Salida laptop (tabla no encontrada y un cliente borrado que reapareció); repetir sin cambiar nada dio **208/208**. Repite antes de tocar código por un fallo aislado.
+- En celular/tablet el `innerText` de los botones del panel sale en mayúsculas (`PRODUCTOS`, `TICKET\n1\nS/ 0.00`). Para encontrar el botón con `startsWith` hay que comparar `.trim().toLowerCase().startsWith(n.toLowerCase())`; si no, la prueba cree que el panel no existe y el botón de Espera queda fuera de pantalla.
+
 
   
