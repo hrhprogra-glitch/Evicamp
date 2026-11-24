@@ -370,7 +370,9 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
 
   const cargarCatalogos = async () => {
     try {
-      const [resCli, resTrab, resProd, resEmp] = await Promise.all([
+      // 24/11/2026 (220): los nombres siguen el ORDEN de las consultas para que empleados y productos
+      // no se vuelvan a intercambiar (eso hizo que el desplegable saliera grande y vacío en el sitio).
+      const [resCli, resTrab, resEmpleados, resProductos] = await Promise.all([
         supabase.from('customers').select('id, name, dni, ruc, direccion').eq('activo', true).order('name'),
         supabase.from('trabajadores').select('id, nombre, cargo').eq('estado', 'ACTIVO').order('nombre'),
         supabase.from('empleados_publico').select('id, nombre, email, rol, estado').eq('estado', 'ACTIVO').order('nombre'),
@@ -387,14 +389,14 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         setTrabajadores(resTrab.data);
         _cacheCatalogosServic.trabajadores = resTrab.data;
       }
-      if (resProd.data) {
-        setProductos(resProd.data);
-        _cacheCatalogosServic.productos = resProd.data;
-        void sincronizarFotosFaltantes(resProd.data); // baja solo las fotos que aún no están en la PC
+      if (resProductos.data) {
+        setProductos(resProductos.data);
+        _cacheCatalogosServic.productos = resProductos.data;
+        void sincronizarFotosFaltantes(resProductos.data); // baja solo las fotos que aún no están en la PC
       }
-      if (resEmp.data) {
-        setEmpleados(resEmp.data);
-        _cacheCatalogosServic.empleados = resEmp.data;
+      if (resEmpleados.data) {
+        setEmpleados(resEmpleados.data);
+        _cacheCatalogosServic.empleados = resEmpleados.data;
       }
       _cacheCatalogosServic.timestamp = Date.now();
     } catch (err) {

@@ -1367,3 +1367,9 @@
 - Se hizo un bloque centralizado al final de `src/index.css` (variables compartidas y reglas para cabeceras y datos). En Salidas, 3 filas con mucho texto se cortaban con la letra nueva: se cambió su altura fija por un mínimo, solo en esa tabla y en pantallas grandes.
 - Medido después en Nego: todas las tablas de sesión y de ventana quedaron en 14–15 px; la paginación sigue en 10 px, igual que en Inventario. Revisión en 1366×900 y 390×844: 0 desbordes y 0 filas cortadas.
 - Deploy solo a Nego (`index-BeqeeMQO.css` / `index-hrvuvns5.js`). Sin Evicamp, sin ecosistema, sin base, sin credenciales y sin push. Falta que el dueño lo mire con Ctrl+F5.
+
+## 24/11/2026 (desplegable de empleado en Nueva salida, solo Nego)
+- El dueño pidió arreglar que el desplegable de «Empleado responsable» saliera grande y vacío. Pidió mantener **Enter para abrir**, **flechas y Enter para elegir**, **quien ingresa por defecto** y **cambio después en el detalle**; solo Nego, sin tocar ids, colores, botones ni lógica, y con explicación en español simple.
+- Al mirar el sitio se vio que servía un JavaScript viejo/de otro trabajo con **empleados y productos cruzados**: 513 productos entraban al desplegable y por eso no se veía texto. La base sí tenía al empleado correcto, así que no se tocó la base.
+- Se renombraron las variables en `ModalNuevaSalida.tsx` para que el nombre coincida con el orden de las consultas y se volvió a desplegar solo Nego. Ahora salen 2 opciones (la de elegir y `Administrador SiuHub (admin@siumax.com)`) y viene marcado quien entró.
+- Queda que el dueño lo mire con Ctrl+F5. En la prueba automática sin ventana, la flecha abajo saca el foco del campo porque el navegador sin interfaz no abre la lista nativa; se le pidió confirmar en su navegador antes de cambiar la regla de flechas. Sin push, sin Evicamp.

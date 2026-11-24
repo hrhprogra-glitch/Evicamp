@@ -7,6 +7,15 @@
 
 ---
 
+## 24/11/2026 (220) · OpenCode (Big Pickle) — Desplegable de empleado arreglado en Nueva salida (solo Nego)
+
+- **Dueño pidió:** arreglar que en **Nueva salida** el desplegable de «Empleado responsable» saliera grande y vacío. Pidió conservar que Enter abra la lista, que flechas y Enter elijan, que venga por defecto quien ingresa y que se pueda cambiar después en el detalle. Solo Nego, sitio de pruebas; sin tocar ids, colores, botones ni lógica.
+- **Causa encontrada:** no era la base ni la vista `empleados_publico` (sí devuelve 1 usuario activo: `Administrador SiuHub`). El sitio servía un JavaScript desplegado (`index-CEaqKh-L.js`) donde en `cargarCatalogos` los resultados estaban cruzados: `ye.data` (empleados) se guardaba como productos y `Be.data` (productos) como empleados. Por eso el desplegable traía **513 productos** con el texto vacío. El código fuente y los commits ya tenían el orden correcto; el error estaba en el bundle publicado.
+- **Cambio mínimo (`src/sections/Salidas/components/ModalNuevaSalida.tsx`):** renombrar las variables del `Promise.all` según el orden real de las consultas (`resCli`, `resTrab`, `resEmpleados`, `resProductos`) y usar esos mismos nombres al guardar cada lista. No se cambió ningún id, estilo, botón ni regla de teclado.
+- **Verificación:** `npm run build` OK y deploy solo Nego con `node ai-scripts/deploy.cjs siumax` (31 archivos). En vivo quedaron **`index-BeqeeMQO.css` / `index-Bg54mEgM.js`**; el bundle nuevo trae `Be.data → productos` y `ye.data → empleados`. Prueba de solo lectura en el sitio: el selector tiene **2 opciones** (`-- ELIGE AL EMPLEADO --` y `Administrador SiuHub (admin@siumax.com)`), el valor inicial es el del usuario que entró y Enter deja el foco en `select-empleado-salida`.
+- **Punto a revisar por el dueño:** en la prueba automática sin interfaz, al apretar ArrowDown el foco pasa al siguiente botón porque `showPicker()` no abre una lista nativa real en ese modo. No se cambió `src/utils/flechasEspaciales.ts`: hay que confirmar en el navegador de él si las flechas resaltan dentro de la lista abierta.
+- **Estado:** WIP ajeno intacto (incluido `.siumax-print-area` en el CSS servido). Commit local selectivo, sin push. Sin Evicamp, sin ecosistema, sin base y sin credenciales. Falta que el dueño revise con Ctrl+F5.
+
 ## 24/11/2026 (219) · OpenCode (Big Pickle) — Misma letra en todas las tablas y en las ventanas (solo Nego)
 
 - **Dueño pidió:** *"quiero que todas las sesiones respeten ese tamaño porque algunas sesiones tiene letras pequeñas en la tabla que no se ve bien"*. Dijo que mire el tamaño de **Inventario** y de las **ventanas flotantes**. Decidió: **solo sesiones chicas** (Encargos/Cotizaciones, Salidas, Contratos, Taller y Finanzas), **también las tablas dentro de las ventanas**, y **solo Nego, sitio de pruebas**.
