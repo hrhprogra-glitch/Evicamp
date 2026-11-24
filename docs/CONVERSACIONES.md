@@ -1430,3 +1430,8 @@
 - Decidió que **Eliminar** borre la salida y devuelva automáticamente todo el stock que aún no se había devuelto.
 - Se hizo solo en Nego: detalle reescrito, 5 funciones nuevas en la base de pruebas con respaldo (dejando de lado Evicamp y los demás sitios), y deploy junto con el arreglo de letra del análisis de la pasada 225.
 - En vivo quedó `index-Bu0LLh2p.js` / `index-oL8QgGmu.css`. Verificado: botones en una fila en celular, tablet, laptop y PC; teclado y sin internet OK (17/17); devolución múltiple y borrado con devolución de stock OK. Falta que el dueño lo mire con **Ctrl+F5**. Sin push.
+
+## 24/11/2026 (ajustes pedidos al revisar el detalle de Salida, esperando OK)
+- El dueño revisó la pasada 226 y dijo: *"perfecto pero no puedo eliminar los productos que agregue otra cosa mas el devolver que sea una ventana flotante mejor y el estilo del detalle de la salida tiene que ser igua al de nueva salida"*.
+- Entendido: quiere **1)** poder quitar los materiales que agregó en el detalle (con devolución de stock de lo que aún no se devolvió), **2)** que «Devolver» abra una **ventana flotante** en vez de la tabla metida en el detalle, y **3)** que el detalle se vea **igual a «Nueva salida»** (mismos colores, tablas, botones y cabecera SiuMax Sobrio).
+- Se muestra la propuesta y se espera el **«empieza»** del dueño. Sin cambios de código, SQL ni despliegue todavía.
