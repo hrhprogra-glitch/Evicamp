@@ -8,6 +8,12 @@
 
 ---
 
+## 24/11/2026 — PUNTO AL DÍA (pedido 228: detalle solo para ver, edición en «Continuar salida»)
+- El dueño revisó la 227 y primero pidió traer materiales al continuar, pasar la tabla editable del detalle a Nueva salida y poder poner fecha + trabajador al devolver. Después aclaró: *"ya no quiero que se pueda editar en detalle de salida eso ya lo hace continuar salida"*.
+- Regla nueva para la 228: el **detalle queda solo para ver y usar botones**; la edición (cliente, bien, dirección, ubicación, fecha, nota, responsable, trabajadores y materiales) pasa a **«Continuar salida»**, que abre Nueva salida con los materiales copiados y la tabla editable con X. El dueño confirmó que esa salida nueva **descuenta stock otra vez**.
+- En **Devolver**: fecha y trabajador editables; sin trabajador elegido queda en blanco.
+- **Antes de construir:** mostrar este detalle y esperar el **«empieza»**. No se hizo código, SQL, base ni deploy. Detalle en `CONVERSACIONES.md` y `BITACORA.md`.
+
 ## 24/11/2026 — PUNTO AL DÍA (detalle de Salida con X para quitar y Devolver flotante, solo Nego)
 - El dueño revisó la 226 y pidió: *"no puedo eliminar los productos que agregue otra cosa mas el devolver que sea una ventana flotante mejor y el estilo del detalle de la salida tiene que ser igua al de nueva salida"*. Aprobó la propuesta con **«si empieza»**.
 - **227 (propia, HECHA):** X en todas las filas (quita el material y devuelve al almacén lo pendiente con la RPC `fn_quitar_material_salida`); «Devolver» abre una ventana flotante con todos los materiales y un solo botón; detalle con el mismo estilo `ventana-sobria` / `max-w-5xl` / botones cuadrados que `ModalNuevaSalida`. Base `siumax` con respaldo y `lock_timeout`, sin reiniciar la API.

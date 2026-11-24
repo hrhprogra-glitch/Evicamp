@@ -1446,3 +1446,11 @@
 - El dueño dijo: *"A VER ME DI CUENTA QUE HAY CONTINUAR SALIDA PORQUE PUEDO EDITAR EN EL DETALLE SI CUANDO CONTINUO SALDRA CON LOS PRODUCTOS QUE YA ESTAN REGISTRADOS OTRA COSA MAS TE DIJE QUE EL ESTILO DEL DETALLE DE SALIDA ME GUSTO Y QUIERO QUE LA NUEVA SALIDA TENGA EL ESTILO DEL DETALLE DE SALIDA Y A LA HORA DE DEVOLVER TIENE QUE DARME LA OPCIÓN DE PONER LA FECHA Y QUIEN TRABAJADOR LO DEVOLVIO"*.
 - Entendido, en tres puntos: **1)** revisar qué hace «Continuar salida» ahora que todo se edita en el detalle (¿sale con los productos ya registrados? ¿sigue teniendo sentido el botón?), **2)** pasar el estilo que le gustó del **detalle** a **Nueva salida**, y **3)** en la ventana de devoluciones poder elegir la **fecha** y el **trabajador que devolvió**.
 - Se investiga el código y se muestra propuesta; se espera el **«empieza»** del dueño. Sin cambios de código, SQL ni despliegue todavía.
+
+## 24/11/2026 (aclaración del dueño antes de la 228, esperando OK)
+- El dueño añadió: *"OTRA COSA Mas ya no quiero que se pueda editar en detalle de salida eso ya lo hace continuar salida"*.
+- Esto cambia lo decidido antes: el **detalle de salida queda solo para ver y usar botones**. Se quitan los campos editables y las **X** de materiales; siguen **Imprimir/Enviar vale, Continuar, Finalizar o Reactivar, Eliminar, Devolver materiales** y la **X** de cierre.
+- La **edición pasa a «Continuar salida»**: abre «Nueva salida» con los productos ya registrados copiados y con la **tabla editable del detalle** (filas con X). El dueño confirmó que al guardar esa continuación **se descuenta el almacén otra vez**, porque es una salida nueva; la salida original queda igual.
+- En **Devolver** se pueden elegir la **fecha** y el **trabajador que devolvió**; si no se elige trabajador, queda en blanco.
+- Todo lo que hacía la edición del detalle queda cubierto: cambiar cliente, bien, dirección, ubicación, fecha, nota, responsable, trabajadores y materiales se hace desde «Continuar salida»; devolver sigue en su ventana flotante.
+- Queda esperando el **«empieza»** del dueño. Sin código, SQL, base ni despliegue todavía.

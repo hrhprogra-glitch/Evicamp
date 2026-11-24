@@ -7,6 +7,13 @@
 
 ---
 
+## 24/11/2026 (228, pedido) · OpenCode (Big Pickle) — Detalle solo para ver, edición en «Continuar salida» y fecha/trabajador al devolver (esperando OK)
+
+- El dueño dijo: *"OTRA COSA Mas ya no quiero que se pueda editar en detalle de salida eso ya lo hace continuar salida"*. Con esto cambia la decisión anterior: el detalle **ya no se edita**.
+- Decisiones confirmadas con el dueño antes de tocar nada: **1)** el detalle queda solo para ver y usar botones (Imprimir/Enviar vale, Continuar, Finalizar o Reactivar, Eliminar, Devolver materiales y la X de cierre); se quitan campos editables y las X de materiales; **2)** «Continuar salida» abre Nueva salida con los materiales ya registrados copiados y con la tabla editable del detalle (filas con X), y al guardar **se descuenta el almacén otra vez** porque es una salida nueva; **3)** en la ventana de devoluciones se pueden elegir la **fecha** y el **trabajador que devolvió** (si no se elige, queda en blanco).
+- Lo que hacía la edición del detalle no se pierde: pasar a «Continuar salida» permite cambiar cliente, bien, dirección, ubicación, fecha, nota, responsable, trabajadores y materiales; las devoluciones siguen en su ventana flotante.
+- **No se tocó código, SQL, base ni despliegue.** Falta el **«empieza»** del dueño. Sin Evicamp, ecosistema, credenciales ni push.
+
 ## 24/11/2026 (227) · OpenCode (Big Pickle) — Quitar materiales con devolución de stock, Devolver en ventana flotante y detalle con estilo de Nueva salida (solo Nego)
 
 - **El dueño pidió:** *"perfecto pero no puedo eliminar los productos que agregue otra cosa mas el devolver que sea una ventana flotante mejor y el estilo del detalle de la salida tiene que ser igua al de nueva salida"*. Dio el **«si empieza»**.
