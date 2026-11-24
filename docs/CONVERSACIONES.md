@@ -1435,3 +1435,9 @@
 - El dueño revisó la pasada 226 y dijo: *"perfecto pero no puedo eliminar los productos que agregue otra cosa mas el devolver que sea una ventana flotante mejor y el estilo del detalle de la salida tiene que ser igua al de nueva salida"*.
 - Entendido: quiere **1)** poder quitar los materiales que agregó en el detalle (con devolución de stock de lo que aún no se devolvió), **2)** que «Devolver» abra una **ventana flotante** en vez de la tabla metida en el detalle, y **3)** que el detalle se vea **igual a «Nueva salida»** (mismos colores, tablas, botones y cabecera SiuMax Sobrio).
 - Se muestra la propuesta y se espera el **«empieza»** del dueño. Sin cambios de código, SQL ni despliegue todavía.
+
+## 24/11/2026 (227, hecha) — Ajustes al detalle de Salida aceptados con «si empieza»
+- El dueño aprobó la propuesta con: **«si empieza»**.
+- Se hizo en Nego: **X en todas las filas** de materiales; al quitar uno se pide confirmación y **vuelve al almacén** lo que aún no se había devuelto (función RPC nueva en la base de pruebas, con respaldo). **«Devolver materiales»** abre una **ventana flotante** encima del detalle con todos los materiales en filas, cantidad editable, monto y un solo botón; se cierra con la X o Escape y funciona con Tab/Enter. El detalle quedó con la **misma cabecera, colores, tablas y botones cuadrados** que «Nueva salida».
+- Verificado con teclado, sin internet y en 390/768/1366/1920; botones en una sola fila; prueba real de stock (agregar → devolver parte → quitar) OK; 29/29 comprobaciones de interfaz y 0 errores JavaScript.
+- En vivo quedaron `index-DxUWIDB0.js` / `index-BkExumB9.css`. Falta que el dueño lo mire con **Ctrl+F5**. Sin Evicamp, credenciales ni push.

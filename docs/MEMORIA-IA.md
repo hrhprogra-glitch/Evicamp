@@ -8,6 +8,11 @@
 
 ---
 
+## 24/11/2026 — PUNTO AL DÍA (detalle de Salida con X para quitar y Devolver flotante, solo Nego)
+- El dueño revisó la 226 y pidió: *"no puedo eliminar los productos que agregue otra cosa mas el devolver que sea una ventana flotante mejor y el estilo del detalle de la salida tiene que ser igua al de nueva salida"*. Aprobó la propuesta con **«si empieza»**.
+- **227 (propia, HECHA):** X en todas las filas (quita el material y devuelve al almacén lo pendiente con la RPC `fn_quitar_material_salida`); «Devolver» abre una ventana flotante con todos los materiales y un solo botón; detalle con el mismo estilo `ventana-sobria` / `max-w-5xl` / botones cuadrados que `ModalNuevaSalida`. Base `siumax` con respaldo y `lock_timeout`, sin reiniciar la API.
+- Desplegado **solo Nego**: bundles en vivo `index-DxUWIDB0.js` / `index-BkExumB9.css`. Prueba real de stock OK e interfaz **29/29** con teclado, sin internet y 390/768/1366/1920. Detalle completo en la **sección 69** al final de esta memoria. Falta revisión del dueño con **Ctrl+F5**. Sin Evicamp, ecosistema, credenciales ni push.
+
 ## 24/11/2026 — PUNTO AL DÍA (la nota ya basta en Nueva salida, solo Nego)
 - El dueño pidió: *"solo debe registrar la nota, no debe hacerme escoger un cliente ya creado, me entiendes??"* y luego dio el **«empieza»**.
 - **224 (propia, HECHA):** commit local `70c7faf`, sin push. En la base de pruebas `siumax` se creó el cliente interno `CLIENTE NO REGISTRADO (NOTA)`, id **`990001`**, `activo=false` (respaldo y `lock_timeout`). En `ModalNuevaSalida.tsx`, «REGISTRAR COMO NOTA» pone ese id por detrás y ya no pide cliente de la lista; el nombre sigue guardándose como `CLIENTE: <NOMBRE>` y sale en el comprobante. No se tocó `fn_registrar_salida`.
@@ -1000,6 +1005,14 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Otras trampas de la prueba de interfaz: cargar `.env.vps` con `process.loadEnvFile`; insertar `customers` y `trabajadores` **antes** de `fn_registrar_salida` (FK); cerrar paréntesis en la consulta de `salida_devoluciones`; y al limpiar usar `fn_eliminar_salida` en vez de `DELETE` directo para recuperar stock si la prueba se cortó.
 - En Nego **no existe el rol `authenticated`**: ponerlo en los `GRANT` da `role "authenticated" does not exist`. Los permisos nuevos se dieron solo a `anon`. Respaldo, `lock_timeout` y `NOTIFY pgrst, 'reload schema'`; **nunca reiniciar la API**.
 - Antes de sobrescribir `ModalDetalleSalida.tsx`, revisar el WIP ajeno: here solo agregaba la sección «Devoluciones registradas», que quedó incluida en la reescritura. Compilar siempre desde un worktree limpio cuando el árbol principal tenga WIP ajeno; conservar el CSS de impresión que ya estaba en vivo.
+
+## 69. Quitar materiales, Devolver flotante y estilo de Nueva salida (24/11/2026, bitácora 227)
+- **Quitar ≠ editar cantidad:** `fn_editar_salida` **no borra** ítems que falten en el JSON (para no dañar lo que se carga aparte). Por eso hace falta una RPC propia `fn_quitar_material_salida(salida, item, usuario)`: calcula `cantidad - cantidad_devuelta`, llama a `fn_devolver_stock_salida` solo si queda algo y luego `DELETE` del ítem. Bloquear la salida con `FOR UPDATE` y repetir la comprobación de pertenencia del ítem.
+- `salida_devoluciones` tiene FK `salida_item_id ... ON DELETE CASCADE`: la fila de devolución desaparece con el ítem, pero el `inventory_movements` con `operation_type='DEVOLUCION'` **queda**. Es correcto: el movimiento es el histórico real del almacén; la prueba debe medir `sum(change_amount)` en movimientos, no contar devoluciones.
+- **Trampa grave de la interfaz:** un `<button type="submit" form="...">` **fuera** del form + un `onClick={onConfirmar}` hace que la acción se ejecute **dos veces** (click y submit). La primera prueba registró 4 devoluciones / 6 unidades en vez de 2 / 3. Regla: **un solo camino** (o `onClick` con `type="button`, o `type="submit"` con `onSubmit` en el form), y además un guardia `if (procesando) return;` al inicio de la acción.
+- Para ventanas sobre ventanas, `useCerrarConEscape` mantiene una **pila**: Escape cierra solo la de arriba. La ventana flotante de devoluciones se renderiza como **hermana** del contenedor del detalle (no dentro de `overflow-hidden`) con `z-[60]` frente al `z-50` del detalle; así no se recorta y el historial de atrás sigue visible.
+- **Igualar estilo no es "parecido":** copiar literalmente de `ModalNuevaSalida` las clases `ventana-sobria`, `max-w-5xl`, `border-2 border-[var(--color-ink)]`, cabecera `ventana-cabecera` con `px-4 sm:px-6 py-3 sm:py-4`, cuerpo `p-4 sm:p-6` y footer `bg-[var(--color-bg)] p-3 sm:p-4 border-t-2`. Medir `getComputedStyle(boton).borderRadius === '0px'` en los cuatro tamaños. Mantener `h-10` y `flex-nowrap` en el footer para no romper la fila única.
+- En la prueba de interfaz, los botones por fila llevan id `btn-quitar-material-detalle-${idx}`; la X abre un `confirmar()` (se cierra con Enter en `#dialogo-sistema-aceptar`) y después viene un `avisar()` que también hay que cerrar. Si quedan avisos en la cola, el siguiente `page.focus()` parece no funcionar: son los diálogos, no el código.
 
 
   

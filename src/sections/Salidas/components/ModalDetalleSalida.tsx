@@ -5,6 +5,7 @@ import { traerTodo } from '../../../utils/traerTodo';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar, confirmar } from '../../../utils/dialogos';
 import { VistaPreviaSalida } from './VistaPreviaSalida';
+import { ModalDevolucionesSalida } from './ModalDevolucionesSalida';
 import { useEmpresaComprobante } from '../empresa';
 import type { Salida, SalidaItem } from '../types';
 
@@ -74,6 +75,7 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
 
   const [procesando, setProcesando] = useState(false);
   const [vistaPreviaOpen, setVistaPreviaOpen] = useState(false);
+  const [devolucionesOpen, setDevolucionesOpen] = useState(false);
   const empresa = useEmpresaComprobante();
 
   // Refs para guardar siempre el último valor, aunque llegue una recarga en medio.
@@ -104,7 +106,7 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
       itemsRef.current = lista;
       const cant: Record<number, string> = {};
       lista.forEach((m) => {
-        cant[Number(m.id)] = String(Math.max(0, Number(m.cantidad || 0) - Number(m.cantidad_devuelta || 0)));
+        cant[Number(m.id)] = '';
       });
       setDevolver(cant);
     }
@@ -127,7 +129,7 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
     itemsRef.current = it;
     const cant: Record<number, string> = {};
     it.forEach((m) => {
-      cant[Number(m.id)] = String(Math.max(0, Number(m.cantidad || 0) - Number(m.cantidad_devuelta || 0)));
+      cant[Number(m.id)] = '';
     });
     setDevolver(cant);
 
@@ -272,7 +274,49 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
     await guardar(undefined, undefined, next);
   };
 
+  const quitarMaterial = async (idx: number) => {
+    const m = itemsRef.current[idx];
+    if (!m) return;
+    if (!m.id) {
+      const next = itemsRef.current.filter((_, i) => i !== idx);
+      itemsRef.current = next;
+      setMateriales(next);
+      return;
+    }
+    const pendiente = Math.max(0, Number(m.cantidad || 0) - Number(m.cantidad_devuelta || 0));
+    const seguro = await confirmar(
+      `¿Quitar "${m.descripcion}" del detalle? ${
+        pendiente > 0
+          ? `Se devolverán ${pendiente} ${m.unidad} al almacén.`
+          : 'No hay stock pendiente por devolver.'
+      }`
+    );
+    if (!seguro) return;
+    setProcesando(true);
+    try {
+      const { error } = await supabase.rpc('fn_quitar_material_salida', {
+        p_salida_id: salida.id,
+        p_item_id: Number(m.id),
+        p_usuario: cabRef.current.usuario || 'Sistema',
+      });
+      if (error) throw error;
+      avisar(
+        pendiente > 0
+          ? `Material quitado y ${pendiente} ${m.unidad} devueltos al almacén.`
+          : 'Material quitado del detalle.'
+      );
+      await sincronizarHijos(salida.id);
+      await onReload();
+    } catch (err: any) {
+      console.error('Error quitando el material:', err);
+      avisar(err.message || 'No se pudo quitar el material');
+    } finally {
+      setProcesando(false);
+    }
+  };
+
   const confirmarDevoluciones = async () => {
+    if (procesando) return;
     const pendientes = itemsRef.current
       .filter((m) => Number(devolver[Number(m.id)] || 0) > 0)
       .map((m) => ({ item_id: Number(m.id), cantidad: Number(devolver[Number(m.id)]) }));
@@ -298,6 +342,7 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
       });
       if (error) throw error;
       avisar('Devolución registrada. El stock volvió al almacén.');
+      setDevolucionesOpen(false);
       await sincronizarHijos(salida.id);
       await onReload();
     } catch (err: any) {
@@ -366,17 +411,17 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
   };
 
   const inputCls = 'w-full p-2 min-h-[40px] sm:min-h-0 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] rounded-none disabled:opacity-50';
-  const labelCls = 'block font-black uppercase text-[var(--color-ink)] mb-1 text-[10px]';
+  const labelCls = 'block font-black uppercase text-[var(--color-ink)] mb-1';
 
   return (
     <>
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
         <div
           id="modal-detalle-salida-container"
-          className="ventana-sobria bg-[var(--color-surface)] w-full max-w-6xl border-2 border-[var(--color-ink)] flex flex-col max-h-[calc(96dvh/var(--ui-zoom))] overflow-hidden"
+          className="ventana-sobria bg-[var(--color-surface)] w-full max-w-5xl border-2 border-[var(--color-ink)] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(90dvh/var(--ui-zoom))] overflow-hidden"
         >
           {/* Cabecera SiuMax Sobrio */}
-          <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera px-4 sm:px-6 py-2 sm:py-3 flex items-center justify-between shrink-0">
+          <div style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties} className="ventana-cabecera px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3 min-w-0">
               <div className="ventana-cabecera__icono"><Truck size={20} /></div>
               <div>
@@ -400,7 +445,7 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
           </div>
 
           {/* Contenido con Scroll */}
-          <div className="p-3 sm:p-5 overflow-y-auto custom-scrollbar flex-1 font-mono text-xs space-y-4">
+          <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 font-mono text-xs space-y-4">
             {/* Datos principales: una o dos filas, todo editable */}
             <div className="border-2 border-[var(--color-border)] bg-[var(--color-bg)] p-3">
               <p className="font-black uppercase text-[var(--color-ink)] mb-2 flex items-center gap-2">
@@ -664,18 +709,13 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
                           S/ {(Math.max(0, Number(m.cantidad || 0) - Number(m.cantidad_devuelta || 0)) * Number(m.costo_unitario || 0)).toFixed(2)}
                         </td>
                         <td className="p-1 text-center">
-                          {!m.id && (
-                            <button
-                              type="button"
-                              title="Quitar material nuevo"
-                              onClick={() => {
-                                const next = itemsRef.current.filter((_, i) => i !== idx);
-                                itemsRef.current = next;
-                                setMateriales(next);
-                              }}
-                              className="px-1 text-rose-700 font-black cursor-pointer"
-                            ><X size={14} /></button>
-                          )}
+                          <button
+                            id={`btn-quitar-material-detalle-${idx}`}
+                            type="button"
+                            title={m.id ? 'Quitar material y devolver el stock pendiente' : 'Quitar material nuevo'}
+                            onClick={() => void quitarMaterial(idx)}
+                            className="px-1 text-rose-700 font-black cursor-pointer"
+                          ><X size={14} /></button>
                         </td>
                       </tr>
                     ))}
@@ -746,92 +786,20 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
               </div>
             </div>
 
-            {/* Devoluciones: todos los materiales visibles con cantidad y monto al costado */}
+            {/* Devoluciones: se abren en una ventana flotante */}
             <div>
               <div className="flex items-center justify-between mb-1 gap-2 flex-wrap">
                 <p className="font-black uppercase text-[var(--color-ink)] flex items-center gap-2">
-                  <RotateCcw size={14} /> Devolver materiales (todos a la vez)
+                  <RotateCcw size={14} /> Devoluciones
                 </p>
                 <button
-                  id="btn-devolver-material"
+                  id="btn-abrir-devoluciones"
                   type="button"
-                  onClick={() => document.getElementById('input-devolver-0')?.focus()}
-                  className="px-3 py-1 border border-[var(--color-ink)] font-black uppercase text-[10px] cursor-pointer"
+                  onClick={() => setDevolucionesOpen(true)}
+                  className="px-3 py-1 border-2 border-[var(--color-ink)] font-black uppercase text-xs cursor-pointer hover:bg-[var(--color-ink)] hover:text-white"
                 >
-                  Ir a cantidades a devolver
+                  Devolver materiales
                 </button>
-              </div>
-              <div className="border-2 border-[var(--color-border)] bg-[var(--color-surface)] overflow-x-auto custom-scrollbar">
-                <table className="w-full text-left text-[11px]">
-                  <thead className="bg-[var(--color-ink)] text-white font-black uppercase">
-                    <tr>
-                      <th className="p-2">Material</th>
-                      <th className="p-2 w-20 text-center">Unidad</th>
-                      <th className="p-2 w-20 text-right">Salida</th>
-                      <th className="p-2 w-20 text-right">Devuelto</th>
-                      <th className="p-2 w-24 text-right">A devolver</th>
-                      <th className="p-2 w-28 text-right">Monto a devolver</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--color-border)]">
-                    {materiales.length === 0 && (
-                      <tr><td colSpan={6} className="p-4 text-center text-[var(--color-muted)]">No hay materiales para devolver</td></tr>
-                    )}
-                    {materiales.map((m, idx) => {
-                      const pendiente = Math.max(0, Number(m.cantidad || 0) - Number(m.cantidad_devuelta || 0));
-                      const cantDev = Number(devolver[Number(m.id)] || 0);
-                      return (
-                        <tr key={m.id || `dev-${idx}`} className="hover:bg-black/5">
-                          <td className="p-2 font-bold uppercase">{m.descripcion}</td>
-                          <td className="p-2 text-center">{m.unidad}</td>
-                          <td className="p-2 text-right font-bold">{Number(m.cantidad || 0)}</td>
-                          <td className="p-2 text-right font-bold text-amber-700">{Number(m.cantidad_devuelta || 0)}</td>
-                          <td className="p-1">
-                            <input
-                              id={`input-devolver-${idx}`}
-                              type="number"
-                              step="any"
-                              min="0"
-                              max={pendiente}
-                              value={devolver[Number(m.id)] ?? ''}
-                              disabled={pendiente <= 0}
-                              onChange={(e) => setDevolver((d) => ({ ...d, [Number(m.id)]: e.target.value }))}
-                              className={`${inputCls} text-right`}
-                              placeholder={pendiente > 0 ? `Máx ${pendiente}` : '—'}
-                            />
-                          </td>
-                          <td className="p-2 text-right font-black text-emerald-800">
-                            S/ {(cantDev * Number(m.costo_unitario || 0)).toFixed(2)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              <div className="flex flex-wrap items-end gap-2 mt-2">
-                <div className="flex-1 min-w-[200px]">
-                  <label className={labelCls} htmlFor="input-motivo-devolucion-detalle">Motivo de la devolución</label>
-                  <input
-                    id="input-motivo-devolucion-detalle"
-                    type="text"
-                    value={motivoDev}
-                    onChange={(e) => setMotivoDev(e.target.value)}
-                    className={inputCls}
-                  />
-                </div>
-                <button
-                  id="btn-confirmar-devolucion"
-                  type="button"
-                  disabled={procesando}
-                  onClick={() => void confirmarDevoluciones()}
-                  className="px-4 py-2 bg-[var(--color-ink)] text-white font-black uppercase cursor-pointer disabled:opacity-50"
-                >
-                  Confirmar devoluciones
-                </button>
-                <p className="w-full text-[10px] text-[var(--color-muted)]">
-                  Los productos ya vienen con su cantidad pendiente. Cambia solo lo que no se devuelve y confirma.
-                </p>
               </div>
 
               {/* Historial de devoluciones ya registradas */}
@@ -874,7 +842,7 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
 
           {/* Footer: TODOS los botones en UNA sola fila, también en 390 px. No hay botón Cerrar (está la X).
               Misma altura en todos para que nunca se vean "en dos filas" por diferencia de 2 px. */}
-          <div className="bg-[var(--color-bg)] p-2 sm:p-3 border-t-2 border-[var(--color-ink)] flex flex-nowrap items-center overflow-x-auto custom-scrollbar shrink-0">
+          <div className="bg-[var(--color-bg)] p-3 sm:p-4 border-t-2 border-[var(--color-ink)] flex flex-nowrap items-center overflow-x-auto custom-scrollbar shrink-0">
             <div className="flex flex-nowrap items-center gap-1.5 sm:gap-2 ml-auto shrink-0">
               <button
                 id="btn-imprimir-salida"
@@ -947,6 +915,22 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Devoluciones: ventana flotante sobre el detalle */}
+      {devolucionesOpen && (
+        <ModalDevolucionesSalida
+          isOpen={devolucionesOpen}
+          codigo={salida.codigo}
+          materiales={materiales}
+          devolver={devolver}
+          setDevolver={setDevolver}
+          motivoDev={motivoDev}
+          setMotivoDev={setMotivoDev}
+          procesando={procesando}
+          onConfirmar={() => void confirmarDevoluciones()}
+          onClose={() => setDevolucionesOpen(false)}
+        />
+      )}
 
       {/* Vista previa del comprobante (hoja, ticket, PDF y WhatsApp) */}
       {vistaPreviaOpen && (

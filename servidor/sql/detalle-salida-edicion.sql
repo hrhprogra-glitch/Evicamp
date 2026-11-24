@@ -13,7 +13,8 @@ AS $$
     WHEN p_ruta = '/trabajadores' THEN ARRAY['trabajadores_editar']
     WHEN p_ruta IN ('/salidas', '/salida_trabajadores', '/salida_items', '/salida_devoluciones') THEN ARRAY['salidas_ver']
     WHEN p_ruta IN ('/rpc/fn_registrar_salida', '/rpc/fn_registrar_devolucion', '/rpc/fn_cambiar_estado_salida',
-                    '/rpc/fn_editar_salida', '/rpc/fn_eliminar_salida', '/rpc/fn_registrar_devoluciones_lote') THEN ARRAY['salidas_crear']
+                    '/rpc/fn_editar_salida', '/rpc/fn_eliminar_salida', '/rpc/fn_registrar_devoluciones_lote',
+                    '/rpc/fn_quitar_material_salida') THEN ARRAY['salidas_crear']
     WHEN p_ruta IN ('/herramientas', '/herramientas_prestamos', '/vehiculos', '/vehiculos_mantenimientos') THEN ARRAY['herramientas_ver']
     WHEN p_ruta IN ('/rpc/fn_prestar_herramienta', '/rpc/fn_devolver_herramienta') THEN ARRAY['herramientas_crear']
     WHEN p_ruta IN ('/agenda_trabajos', '/agenda_trabajadores') THEN ARRAY['agenda_ver']
@@ -320,8 +321,49 @@ BEGIN
 END;
 $function$;
 
+-- Quitar un material del detalle y devolver al almacén lo que aún no se devolvió.
+-- La fila de devolución que deja fn_devolver_stock_salida se borra en cascada con el item;
+-- el movimiento de stock queda registrado igualmente.
+CREATE OR REPLACE FUNCTION public.fn_quitar_material_salida(
+  p_salida_id bigint,
+  p_item_id bigint,
+  p_usuario text DEFAULT 'Sistema'
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_salida record;
+  v_item record;
+  v_restante numeric;
+BEGIN
+  SELECT * INTO v_salida FROM public.salidas WHERE id = p_salida_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Salida no encontrada.'; END IF;
+  IF v_salida.estado = 'CANCELADO' THEN
+    RAISE EXCEPTION 'No se puede quitar material de una salida cancelada.';
+  END IF;
+
+  SELECT * INTO v_item FROM public.salida_items
+  WHERE id = p_item_id AND salida_id = p_salida_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'El material no pertenece a esta salida.'; END IF;
+
+  v_restante := greatest(0, coalesce(v_item.cantidad, 0) - coalesce(v_item.cantidad_devuelta, 0));
+  IF v_restante > 0 THEN
+    PERFORM public.fn_devolver_stock_salida(
+      p_salida_id, p_item_id, v_restante, 'Material quitado del detalle', p_usuario
+    );
+  END IF;
+
+  DELETE FROM public.salida_items WHERE id = p_item_id;
+  RETURN jsonb_build_object('success', true, 'item_id', p_item_id, 'devuelto', v_restante);
+END;
+$function$;
+
 GRANT EXECUTE ON FUNCTION public.fn_editar_salida(bigint, jsonb, text) TO anon;
 GRANT EXECUTE ON FUNCTION public.fn_eliminar_salida(bigint, text) TO anon;
 GRANT EXECUTE ON FUNCTION public.fn_registrar_devoluciones_lote(bigint, jsonb, text, text) TO anon;
+GRANT EXECUTE ON FUNCTION public.fn_quitar_material_salida(bigint, bigint, text) TO anon;
 GRANT EXECUTE ON FUNCTION public.fn_descontar_stock_salida(bigint, bigint, numeric, text, text, text) TO anon;
 GRANT EXECUTE ON FUNCTION public.fn_devolver_stock_salida(bigint, bigint, numeric, text, text) TO anon;
