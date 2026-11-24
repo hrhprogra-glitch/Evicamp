@@ -1360,6 +1360,26 @@
 - Queda fija la regla: "el comienzo" es el respaldo original `2301848e…`, con 8 fallos viejos del selector de empleado de Salidas que no se arreglan por iniciativa propia.
 - No se tocó código, Evicamp, ecosistema, base ni credenciales; no se hizo push.
 
+
+## 23/11/2026 (impresión Caja/Salida arreglada, solo Nego)
+- El dueño pidió copiar el método de impresión de `D:\Programación\eco-sistema` y aplicarlo tal cual en Caja y Salida de Nego.
+- Se revisó eco-sistema: en Salidas usa `@page { size: 80mm auto; margin: 3mm; }`, ticket con `padding: 4px 6px` en impresión y área oculta `.printArea` con `window.print()`. Ventas no tenía ticket térmico POS igual a Nego.
+- Hubo varios intentos: printArea portal (quitó productos, se revirtió), hack 72mm con margen izquierdo 3mm (borroso/corte, se revirtió). Al final se dejó: HTML de ticket con valores eco-sistema (`margin 3mm`, `padding 4px 6px`, Courier New 12px negrita, `table-layout: fixed`) y Caja imprime con iframe dinámico de tamaño real 80mm; Salida sigue con su iframe visible que ya funcionaba. También se corrigió la vista previa Hoja A4 de Salida para que no se vea alargada (`max-w-[210mm] mx-auto`).
+- El dueño confirmó: "ahora si imprimio completo no toques nada dejalo como esta y guarda como lo hicistes en la memoria para nunca sufrir asi". Se guardó en `docs/MEMORIA-IA.md` sección 61 y en bitácora 217. Todo solo en Nego/siumax; sin push/Evicamp/ecosistema.
+
+## 23/11/2026 (tickets Caja/Salida: logo, orden y letra clara, solo Nego)
+- El dueño pidió: en Caja no sale el logo, agregarlo; en Salida sí sale pero no le gusta el orden del ticket; el tamaño de letra debe ser igual para ambos y verse claro, no borroso.
+- Se propuso orden nuevo para ticket de Salida y el dueño confirmó ("si hazlo").
+- Se aplicó: logo con fallback SiuMax y URL absoluta en impresión; ticket de Salida reordenado (código, tipo, fecha, cliente/datos, bien/empleado, materiales, personal, observaciones, pie); ambos tickets 80mm con base 12px Courier New negrita negra, mínimo 11px, sin grises débiles. No se tocó la configuración de impresión que ya funcionaba.
+- Desplegado solo a Nego/siumax (bundle `index-bh8l-pfi.css` / `index-DOOUAeaX.js`). Sin commit/push/Evicamp.
+
+## 23/11/2026 (centrado ticket 80mm Epson TM-T20IV, confirmado)
+- Problema: en tickets 80mm de Caja y Salida, la cabecera salía corrida a la derecha en impresión física (PDF se veía bien). También hubo doble ventana de impresión en Chrome.
+- Se probaron varias hipótesis: quitar `letter-spacing`, quitar `max-width/margin auto` del body, inline styles, tabla `align=center`. No bastó. Pruebas diagnósticas: sin logo y con logo SVG salían centradas; con logo PNG real salía corrida en papel y centrada en PDF. Incluso logo PNG pequeño/optimizado/B/N y logo de ecosistema salían corridos en papel.
+- La prueba que salió centrada en papel fue el **estilo tipo ecosistema**: fuente `ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace`, cabecera con `display:flex; flex-direction:column; align-items:center; text-align:center;`, logo simple `52x52`, sin tablas envolviendo la cabecera, sin filtros CSS complejos.
+- Con OK del dueño (“sí, aplícalo”) se aplicó a Caja (`generarTicketVentaHtml`) y Salida (`ticketHtml`), manteniendo datos/orden. Logo se optimiza en canvas (máx. 240px) a data URL PNG pequeño con caché y fallback al logo local.
+- Dueño confirmó: “sale centrado y muestra el t80 -v2”. Se quitó la marca `T80-V2`. Desplegado solo en Nego. **Regla:** no quitar este formato; cada vez que se toque impresión 80mm revisar `MEMORIA-IA.md` sección 61.
+
 ## 24/11/2026 (letra igual en todas las tablas y en las ventanas, solo Nego)
 - El dueño pidió: *"quiero que todas las sesiones respeten ese tamaño porque algunas sesiones tiene letras pequeñas en la tabla que no se ve bien con en las ventanas flotantes"*. Como referencia dijo el tamaño de **Inventario** y de las **ventanas flotantes**.
 - Se midió antes de proponer: Inventario y ventanas usan 14–15 px (escala compartida `--text-xs` / `--text-sm`); las sesiones chicas usaban tamaños fijos de 9–11 px.
@@ -1396,3 +1416,10 @@
 - En `ModalNuevaSalida.tsx`, al elegir «REGISTRAR COMO NOTA» el sistema pone ese id por detrás. Para el dueño no cambia nada: sigue viendo solo su nota y el nombre se guarda en observaciones como `CLIENTE: <NOMBRE>`. Ya no aparece el aviso que pedía elegir un cliente de la lista.
 - Se desplegó **solo Nego**; en vivo se verificó el bundle `index-25yvKBon.js` / `index-DFRVNc6v.css`. Probado con teclado en celular, tablet, laptop y PC, y también con el navegador sin internet. Guardado de prueba: **SAL-1547**, con `customer_id=990001`, nota `CLIENTE: ZZZ NOTA DIAG 224` y el nombre escrito en el comprobante.
 - Sin Evicamp, ecosistema, credenciales ni push. Falta que el dueño lo mire con **Ctrl+F5**.
+
+## 24/11/2026 (tamaño de letra del análisis igualado, pendiente OK de deploy)
+- El dueño pidió que la letra del análisis de salidas se vea como Inventario y como las ventanas flotantes. Se midió antes de tocar: los datos del análisis estaban en 14 px y en Inventario en 15 px; las cabeceras ya estaban bien en 14 px. Las pestañas miden 10 px igual que en Clientes (estándar del sistema), así que no se cambiaron.
+- Se arregló con un solo bloque de CSS al final del bloque de tablas compartidas, sin tocar pestañas, botones, colores, ids ni teclado. Después de medir quedó en 14 px cabecera / 15 px datos en análisis, detalle, Productos de Utilidades e Inventario.
+- Se comprobó que no hubiera desbordes en 12 vistas, en PC y celular: 0 desbordes. También se probó con teclado y sin internet: las pestañas cambian con flechas y Enter, se entra al detalle, se salta a la salida y el botón “Volver a Utilidades” regresa al análisis.
+- Se encontró y corrigió un detalle: al volver desde Salidas, el detalle se volvía a abrir. Ya quedó arreglado en el build local.
+- **No se desplegó.** Nego sigue con el bundle anterior porque otra sesión desplegó encima antes. Falta que el dueño diga: **“OK, despliega a Nego”**. Sin Ecosistema, Evicamp, BD ni push.
