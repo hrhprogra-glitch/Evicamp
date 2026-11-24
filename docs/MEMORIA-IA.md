@@ -8,6 +8,12 @@
 
 ---
 
+## 24/11/2026 — Devoluciones históricas de ecosistema (pregunta del dueño, no tocar)
+- Si el dueño pregunta por «todas las devoluciones de ecosistema»: **están todas**. Comparar contra `/var/lib/postgresql/respaldo-ecosistema-antes-salidas-228-*.dump`: **1213** filas en `salida_devoluciones`, total `5188.726`, **259** salidas con devoluciones, **2910** items y **395** salidas, idénticos antes y después de la 228.
+- El SQL `detalle-salida-edicion.sql` **no borra devoluciones**: solo `ADD COLUMN IF NOT EXISTS trabajador_id` + índice + funciones nuevas. La columna nueva quedó **NULL en las 1213 históricas** (vienen de la migración con `usuario='Migración Supabase'`); **no rellenar nombres inventados**. Las devoluciones nuevas sí guardan fecha y trabajador.
+- Para comprobarlo sin escribir: `diagnostico-devoluciones-ecosistema.cjs` (respaldo vs producción), `diag-fk-devoluciones-ecosistema.cjs`, `diag-codigos-devoluciones.cjs` y `ver-devoluciones-ecosistema.mjs` (**6/6** con `SAL-MIG-00243`, 21 filas con «Devuelto»). Ojo: el buscador de salidas necesita **dos ArrowDown** antes de Enter (con uno no abre); es fallo del guion, no del sistema.
+- `src/sections/Salidas/index.tsx` trae `devoluciones:salida_devoluciones(*, trabajador:trabajadores(id, nombre))`; si esa consulta fallase, el `catch` reintenta sin devoluciones y la pantalla las ocultaría. Al tocar Salidas, verificar siempre que la respuesta de la API incluya `"devoluciones"`.
+
 ## ⚠️ REGLA PERMANENTE — Ecosistema es AZUL, no verde (24/11/2026)
 - **NO CAMBIAR NI “CORREGIR”:** el dueño decidió que el sitio oficial `ecosistema123.duckdns.org` tiene una diferencia permanente: en el **Modo Oscuro** su acento es **azul Océano `#0EA5E9`**, no verde esmeralda `#10B981`, porque el color de su empresa es azul. Nego y Evicamp **sí** siguen con verde. Esta diferencia es querida, **no es un error**: no la “arregles” ni la copies a otros sitios.
 - Cómo está hecho (no desarmar): `index.html` agrega la clase `sitio-ecosistema` solo si el hostname es `ecosistema123.duckdns.org`; al final de `src/index.css` hay un bloque con el encabezado **«DIFERENCIA PERMANENTE SOLO DEL SITIO OFICIAL ECOSISTEMA»** que aplica el azul solo con `html.sitio-ecosistema.theme-monochrome` / `html.sitio-ecosistema[data-theme="dark"]` (variables de acento, marca, éxito y focos/anillos en azul); `ThemeSwitcher.tsx` usa `ES_SITIO_OFICIAL` para que la muestra del Modo Oscuro también salga azul. El resto de colores (negro `#0B0F17`, grafito `#111827`, grises, rojo, ámbar) y el arranque en Océano quedan intactos.

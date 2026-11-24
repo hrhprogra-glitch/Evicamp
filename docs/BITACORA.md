@@ -7,6 +7,14 @@
 
 ---
 
+## 24/11/2026 (pregunta por las devoluciones de ecosistema) · OpenCode (Big Pickle) — Solo lectura, nada perdido
+
+- El dueño preguntó: *"una pregunta que paso con todas las devoluciones de ecosistema ???"*. Se revisó **solo lectura**, sin tocar base ni sitio.
+- **Respuesta con datos:** en ecosistema hay **1213 devoluciones de Salidas**, exactamente las mismas que en el respaldo anterior a la 228; total devuelto **5188.726**, **259 salidas** con devoluciones, **2910 items** y **395 salidas** (idénticos en producción y en el respaldo). El SQL de la 228 solo `ADD COLUMN IF NOT EXISTS trabajador_id` + índice + funciones nuevas; **no borra ni modifica filas de `salida_devoluciones`**.
+- **Lo que sí cambió:** la columna nueva `trabajador_id` quedó **vacía en las 1213 devoluciones históricas** (vinieron de la migración con usuario `Migración Supabase` y no se sabe quién las hizo; no se inventó ningún nombre). Las devoluciones nuevas sí permiten elegir fecha y trabajador. Eso es lo que puede verse «distinto», no una pérdida.
+- **Comprobado en pantalla:** la API devuelve el bloque `devoluciones` (HTTP 200) y al abrir `SAL-MIG-00243` con teclado, la ventana de Devolver muestra **21 filas con su columna «Devuelto»** (21/21 con valores). Prueba `ver-devoluciones-ecosistema.mjs` **6/6**, sin errores JS.
+- Guiones nuevos de diagnóstico (solo lectura): `diagnostico-devoluciones-ecosistema.cjs`, `diag-fk-devoluciones-ecosistema.cjs`, `diag-codigos-devoluciones.cjs`. Commit local sin push.
+
 ## 24/11/2026 (Modo Oscuro azul SOLO en ecosistema) · OpenCode (Big Pickle) — Diferencia permanente
 
 - El dueño pidió: *"solo para ecosistema ... que el modo oscuro reemplaces el verde esmeralda por el oceano azul nada mas el resto de los colores tal cual ... solo para ecosistema ... anotes en la memoria y permanente que ecosistema tiene esa diferencia porque su color de empresa es de ese color y no el verde y por eso no lo cambie"*.

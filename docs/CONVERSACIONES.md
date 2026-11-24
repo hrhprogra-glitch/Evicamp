@@ -1483,3 +1483,9 @@
 - El dueño decidió: *"solo para ecosistema tenga el color de oceano azul osea que el modo oscuro reemplaces el verde esmeraldo por el oceano azul nada mas el resto de los colores tal cual pero ojo solo para ecosistema ... anotes en la memoria y permanente que ecosistema tiene esa diferencia porque su color de empresa es de ese color y no el verde y por eso no lo cambie pero el resto de la actualización o codigo normal"*.
 - Se aplicó: clase `sitio-ecosistema` solo en el dominio oficial, bloque CSS permanente que cambia el acento/focos a `#0EA5E9` en el Modo Oscuro, y muestra del selector en azul. Nada más: negros, grises, rojo, ámbar y los otros temas siguen igual; Nego y Evicamp siguen verdes.
 - Desplegado solo ecosistema (22 archivos + iconos oficiales). Pruebas: **15/15** nuevas y regresión **35/35** + **11/11**, con login real, teclado, sin internet y 390/768/1366/1920. Commit local, sin push. Falta revisión del dueño con **Ctrl+F5**.
+
+## 24/11/2026 (pregunta por las devoluciones de ecosistema)
+- El dueño preguntó: *"una pregunta que paso con todas las devoluciones de ecosistema ???"*.
+- Se comparó producción contra los dos respaldos de la 228: **1213 devoluciones antes y después**, mismo total devuelto (5188.726), mismas 259 salidas, mismos 2910 items y 395 salidas. El SQL solo agregó `trabajador_id` (índice y funciones), no borró filas.
+- Lo que puede verse distinto: el trabajador de las devoluciones históricas está en blanco porque ese campo no existía antes y provienen de la migración (`Migración Supabase`); no se inventó ningún nombre. Las nuevas sí permiten elegir trabajador y fecha.
+- Verificado en pantalla con login real: la API trae `devoluciones` y `SAL-MIG-00243` muestra sus 21 devoluciones con valores en «Devuelto» (**6/6**). No se cambió nada; commit local sin push.

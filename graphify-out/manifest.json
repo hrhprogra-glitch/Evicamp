@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795548692.3211837,
-    "seen": 1795548732.1596293,
-    "ast_hash": "f32e6c92a6667b2e2d72584a38455b0e",
+    "mtime": 1795548980.4796498,
+    "seen": 1795549024.2497485,
+    "ast_hash": "47943e0698fa2d366b2fe04fa5ab3aa5",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795548702.34141,
-    "seen": 1795548732.159631,
-    "ast_hash": "460c5283021bc015120513a4de79d991",
+    "mtime": 1795548991.1407802,
+    "seen": 1795549024.2497528,
+    "ast_hash": "416b54a09a2ab1be66bceaae2173b94d",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795548713.481941,
-    "seen": 1795548732.1596322,
-    "ast_hash": "1b5e1e4e6b852e7381a91089ee132431",
+    "mtime": 1795548997.3526547,
+    "seen": 1795549024.249756,
+    "ast_hash": "cf957f6c908101d3f15ce69dc2808813",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795548697.2599936,
-    "seen": 1795548732.1596897,
-    "ast_hash": "d30fdac6e28abaab251980502fc86c21",
+    "mtime": 1795548985.5594535,
+    "seen": 1795549024.2499623,
+    "ast_hash": "612287d4441e136f8254f48f11d89385",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -3897,6 +3897,30 @@
     "mtime": 1795548606.8619661,
     "seen": 1795548732.140882,
     "ast_hash": "1411ae2d198ed6d4509b2eb6a8dd7b5f",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/diag-codigos-devoluciones.cjs": {
+    "mtime": 1795548899.8815272,
+    "seen": 1795549024.1772761,
+    "ast_hash": "9afe9864434c387502cdbc79892000d0",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/diag-fk-devoluciones-ecosistema.cjs": {
+    "mtime": 1795548881.8070867,
+    "seen": 1795549024.1772838,
+    "ast_hash": "4e8a5d465d9e530cdc38664dd89c1026",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/diagnostico-devoluciones-ecosistema.cjs": {
+    "mtime": 1795548852.982506,
+    "seen": 1795549024.1774104,
+    "ast_hash": "b0b07dbe611b0caa5d7b0e6c7390700e",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/ver-devoluciones-ecosistema.mjs": {
+    "mtime": 1795548953.6917615,
+    "seen": 1795549024.1939716,
+    "ast_hash": "80e992b31f5700a382f1efa387c3d32f",
     "semantic_hash": ""
   }
 }
