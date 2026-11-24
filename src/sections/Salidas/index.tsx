@@ -43,7 +43,7 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
           ),
           items:salida_items(*)
         `;
-    const selectConDevoluciones = `${selectBase}, devoluciones:salida_devoluciones(*)`;
+    const selectConDevoluciones = `${selectBase}, devoluciones:salida_devoluciones(*, trabajador:trabajadores(id, nombre))`;
     try {
       let { data, error } = await supabase
         .from('salidas')
@@ -274,7 +274,7 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
                 `;
               let { data, error } = await supabase
                 .from('salidas')
-                .select(`${base}, devoluciones:salida_devoluciones(*)`)
+                .select(`${base}, devoluciones:salida_devoluciones(*, trabajador:trabajadores(id, nombre))`)
                 .eq('id', salidaSeleccionada.id)
                 .single();
               if (error && /salida_devoluciones|relation|schema cache/i.test(error.message || '')) {

@@ -41,6 +41,9 @@ export interface SalidaDevolucion {
   fecha: string;
   motivo?: string | null;
   usuario?: string | null;
+  // 228: fecha elegida y trabajador que devolvió (puede quedar en blanco).
+  trabajador_id?: number | null;
+  trabajador?: { id: number; nombre: string } | null;
   created_at?: string;
 }
 

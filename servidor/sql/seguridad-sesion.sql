@@ -3774,9 +3774,15 @@ CREATE TABLE IF NOT EXISTS public.salida_devoluciones (
   fecha timestamptz NOT NULL DEFAULT now(),
   motivo text,
   usuario text,
+  -- 228: quién trabajador devolvió (opcional; en blanco si no se elige).
+  trabajador_id bigint REFERENCES public.trabajadores (id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_salida_devoluciones_salida ON public.salida_devoluciones (salida_id);
+-- Para bases ya creadas antes de la 228.
+ALTER TABLE public.salida_devoluciones
+  ADD COLUMN IF NOT EXISTS trabajador_id bigint REFERENCES public.trabajadores (id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_salida_devoluciones_trabajador ON public.salida_devoluciones (trabajador_id);
 
 GRANT ALL ON public.salidas TO anon;
 GRANT ALL ON public.salida_trabajadores TO anon;
@@ -3936,7 +3942,9 @@ CREATE OR REPLACE FUNCTION public.fn_registrar_devolucion(
   p_item_id bigint,
   p_cantidad numeric,
   p_motivo text,
-  p_usuario text DEFAULT 'Sistema'
+  p_usuario text DEFAULT 'Sistema',
+  p_fecha timestamptz DEFAULT NULL,
+  p_trabajador_id bigint DEFAULT NULL
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -3997,14 +4005,17 @@ BEGIN
   END IF;
 
   INSERT INTO public.salida_devoluciones (
-    salida_id, salida_item_id, product_id, batch_id, cantidad, motivo, usuario
+    salida_id, salida_item_id, product_id, batch_id, cantidad, fecha, motivo, usuario, trabajador_id
   ) VALUES (
-    p_salida_id, p_item_id, v_item.product_id, v_item.batch_id, p_cantidad, p_motivo, p_usuario
+    p_salida_id, p_item_id, v_item.product_id, v_item.batch_id, p_cantidad,
+    coalesce(p_fecha, now()), p_motivo, p_usuario, p_trabajador_id
   );
 
   RETURN jsonb_build_object('success', true, 'cantidad_devuelta', v_item.cantidad_devuelta + p_cantidad);
 END;
 $function$;
+
+GRANT EXECUTE ON FUNCTION public.fn_registrar_devolucion(bigint, bigint, numeric, text, text, timestamptz, bigint) TO anon;
 
 CREATE OR REPLACE FUNCTION public.fn_cambiar_estado_salida(
   p_salida_id bigint,

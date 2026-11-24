@@ -29,6 +29,90 @@ AS $$
   END;
 $$;
 
+-- 228 (dueño 24/11/2026): al devolver se puede elegir la fecha y el trabajador que devolvió.
+-- La columna es opcional: si no se elige trabajador queda en blanco; si no se pone fecha, queda now().
+ALTER TABLE public.salida_devoluciones
+  ADD COLUMN IF NOT EXISTS trabajador_id bigint REFERENCES public.trabajadores (id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_salida_devoluciones_trabajador ON public.salida_devoluciones (trabajador_id);
+
+-- Misma función de seguridad-sesion.sql, con los dos datos nuevos al final (opcionales).
+CREATE OR REPLACE FUNCTION public.fn_registrar_devolucion(
+  p_salida_id bigint,
+  p_item_id bigint,
+  p_cantidad numeric,
+  p_motivo text,
+  p_usuario text DEFAULT 'Sistema',
+  p_fecha timestamptz DEFAULT NULL,
+  p_trabajador_id bigint DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_salida record;
+  v_item record;
+  v_stock numeric;
+  v_lote_id bigint;
+BEGIN
+  IF p_cantidad <= 0 THEN
+    RAISE EXCEPTION 'La cantidad devuelta debe ser mayor a 0.';
+  END IF;
+
+  SELECT * INTO v_salida FROM public.salidas WHERE id = p_salida_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Salida no encontrada.'; END IF;
+
+  SELECT * INTO v_item FROM public.salida_items WHERE id = p_item_id AND salida_id = p_salida_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Item de salida no encontrado.'; END IF;
+
+  IF p_cantidad > (v_item.cantidad - v_item.cantidad_devuelta) THEN
+    RAISE EXCEPTION 'No puedes devolver más de lo que salió (Disponible: %).', (v_item.cantidad - v_item.cantidad_devuelta);
+  END IF;
+
+  UPDATE public.salida_items
+  SET cantidad_devuelta = cantidad_devuelta + p_cantidad
+  WHERE id = p_item_id;
+
+  -- Reincorporar stock si no es externo
+  IF NOT v_item.es_externo AND v_item.product_id IS NOT NULL THEN
+    SELECT coalesce(quantity, 0) INTO v_stock FROM public.products WHERE id = v_item.product_id FOR UPDATE;
+
+    v_lote_id := v_item.batch_id;
+    IF v_lote_id IS NOT NULL THEN
+      UPDATE public.batches SET quantity = coalesce(quantity, 0) + p_cantidad WHERE id = v_lote_id;
+    ELSE
+      SELECT id INTO v_lote_id FROM public.batches
+      WHERE product_id = v_item.product_id AND coalesce(is_active, 1) <> 0
+      ORDER BY created_at DESC, id DESC LIMIT 1;
+
+      IF v_lote_id IS NOT NULL THEN
+        UPDATE public.batches SET quantity = coalesce(quantity, 0) + p_cantidad WHERE id = v_lote_id;
+      END IF;
+    END IF;
+
+    UPDATE public.products SET quantity = coalesce(quantity, 0) + p_cantidad WHERE id = v_item.product_id;
+
+    INSERT INTO public.inventory_movements (
+      batch_id, product_id, product_name, change_amount, previous_quantity, new_quantity,
+      operation_type, reason, notes, created_at, "user", is_synced
+    ) VALUES (
+      v_lote_id, v_item.product_id, v_item.descripcion, p_cantidad, v_stock, v_stock + p_cantidad,
+      'DEVOLUCION', 'Devolución de Salida ' || v_salida.codigo, coalesce(p_motivo, 'Material no utilizado'), now(), p_usuario, 1
+    );
+  END IF;
+
+  INSERT INTO public.salida_devoluciones (
+    salida_id, salida_item_id, product_id, batch_id, cantidad, fecha, motivo, usuario, trabajador_id
+  ) VALUES (
+    p_salida_id, p_item_id, v_item.product_id, v_item.batch_id, p_cantidad,
+    coalesce(p_fecha, now()), p_motivo, p_usuario, p_trabajador_id
+  );
+
+  RETURN jsonb_build_object('success', true, 'cantidad_devuelta', v_item.cantidad_devuelta + p_cantidad);
+END;
+$function$;
+
 -- Descontar stock de un producto (FIFO o lote elegido). Igual que fn_registrar_salida.
 CREATE OR REPLACE FUNCTION public.fn_descontar_stock_salida(
   p_product_id bigint,
@@ -289,11 +373,14 @@ END;
 $function$;
 
 -- Confirmar varias devoluciones de una sola vez en la misma transacción.
+-- 228: la fecha y el trabajador vienen de la ventana flotante; cada fila puede traer los suyos.
 CREATE OR REPLACE FUNCTION public.fn_registrar_devoluciones_lote(
   p_salida_id bigint,
   p_devoluciones jsonb,
   p_motivo text DEFAULT 'Sobrante de trabajo no utilizado',
-  p_usuario text DEFAULT 'Sistema'
+  p_usuario text DEFAULT 'Sistema',
+  p_fecha timestamptz DEFAULT NULL,
+  p_trabajador_id bigint DEFAULT NULL
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -312,7 +399,9 @@ BEGIN
     IF v_item_id IS NOT NULL AND v_cant > 0 THEN
       PERFORM public.fn_registrar_devolucion(
         p_salida_id, v_item_id, v_cant,
-        coalesce(NULLIF(v_elem->>'motivo', ''), p_motivo), p_usuario
+        coalesce(NULLIF(v_elem->>'motivo', ''), p_motivo), p_usuario,
+        coalesce(NULLIF(v_elem->>'fecha', '')::timestamptz, p_fecha),
+        coalesce(NULLIF(v_elem->>'trabajador_id', '')::bigint, p_trabajador_id)
       );
       v_total := v_total + 1;
     END IF;
@@ -363,7 +452,12 @@ $function$;
 
 GRANT EXECUTE ON FUNCTION public.fn_editar_salida(bigint, jsonb, text) TO anon;
 GRANT EXECUTE ON FUNCTION public.fn_eliminar_salida(bigint, text) TO anon;
-GRANT EXECUTE ON FUNCTION public.fn_registrar_devoluciones_lote(bigint, jsonb, text, text) TO anon;
 GRANT EXECUTE ON FUNCTION public.fn_quitar_material_salida(bigint, bigint, text) TO anon;
 GRANT EXECUTE ON FUNCTION public.fn_descontar_stock_salida(bigint, bigint, numeric, text, text, text) TO anon;
 GRANT EXECUTE ON FUNCTION public.fn_devolver_stock_salida(bigint, bigint, numeric, text, text) TO anon;
+-- 228: las firmas nuevas (con fecha y trabajador) dejan sin uso las viejas, para que
+-- las llamadas con 5/4 argumentos sigan funcionando pero guarden los datos nuevos.
+GRANT EXECUTE ON FUNCTION public.fn_registrar_devolucion(bigint, bigint, numeric, text, text, timestamptz, bigint) TO anon;
+GRANT EXECUTE ON FUNCTION public.fn_registrar_devoluciones_lote(bigint, jsonb, text, text, timestamptz, bigint) TO anon;
+DROP FUNCTION IF EXISTS public.fn_registrar_devolucion(bigint, bigint, numeric, text, text);
+DROP FUNCTION IF EXISTS public.fn_registrar_devoluciones_lote(bigint, jsonb, text, text);

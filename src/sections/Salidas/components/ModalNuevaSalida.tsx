@@ -232,7 +232,16 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         if (salidaRaiz.trabajadores) {
           setTrabajadoresSeleccionados(salidaRaiz.trabajadores.map((t) => t.trabajador_id));
         }
-        setItems([]);
+        // 228 (dueño 24/11/2026): «Continuar salida» trae los materiales ya registrados
+        // a la tabla editable de esta ventana (se pueden cambiar o quitar con la X antes de guardar).
+        setItems((salidaRaiz.items || []).map((it) => ({
+          product_id: it.product_id ?? null,
+          descripcion: it.descripcion,
+          unidad: it.unidad,
+          cantidad: Number(it.cantidad) || 0,
+          costo_unitario: Number(it.costo_unitario) || 0,
+          es_externo: !!it.es_externo,
+        })));
         setTieneBorrador(false);
       } else if (datosIniciales) {
         setTipo(datosIniciales.tipo || 'SERVICIO');

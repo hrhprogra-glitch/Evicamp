@@ -19,6 +19,12 @@ interface ModalDevolucionesSalidaProps {
   setDevolver: React.Dispatch<React.SetStateAction<Record<number, string>>>;
   motivoDev: string;
   setMotivoDev: (valor: string) => void;
+  // 228: fecha y trabajador que devolvió (se envían a la base con la devolución).
+  fechaDev: string;
+  setFechaDev: (valor: string) => void;
+  trabajadorDev: string;
+  setTrabajadorDev: (valor: string) => void;
+  trabajadoresCatalogo: any[];
   procesando: boolean;
   onConfirmar: () => void;
   onClose: () => void;
@@ -33,6 +39,11 @@ export const ModalDevolucionesSalida: React.FC<ModalDevolucionesSalidaProps> = (
   setDevolver,
   motivoDev,
   setMotivoDev,
+  fechaDev,
+  setFechaDev,
+  trabajadorDev,
+  setTrabajadorDev,
+  trabajadoresCatalogo,
   procesando,
   onConfirmar,
   onClose,
@@ -80,6 +91,38 @@ export const ModalDevolucionesSalida: React.FC<ModalDevolucionesSalidaProps> = (
         </div>
 
         <form id="form-devoluciones-flotante" onSubmit={(e) => { e.preventDefault(); onConfirmar(); }} className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 font-mono text-xs space-y-4">
+          {/* 228: el dueño puede poner la fecha y decir qué trabajador devolvió. */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-black uppercase text-[var(--color-ink)] mb-1" htmlFor="input-fecha-devolucion-flotante">
+                Fecha de la devolución
+              </label>
+              <input
+                id="input-fecha-devolucion-flotante"
+                type="date"
+                value={fechaDev}
+                onChange={(e) => setFechaDev(e.target.value)}
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <label className="block font-black uppercase text-[var(--color-ink)] mb-1" htmlFor="select-trabajador-devolucion-flotante">
+                Trabajador que devolvió
+              </label>
+              <select
+                id="select-trabajador-devolucion-flotante"
+                value={trabajadorDev}
+                onChange={(e) => setTrabajadorDev(e.target.value)}
+                className={inputCls}
+              >
+                <option value="">-- NO ESPECIFICAR --</option>
+                {trabajadoresCatalogo.map((t) => (
+                  <option key={t.id} value={t.id}>{t.nombre}{t.cargo ? ` (${t.cargo})` : ''}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className="border-2 border-[var(--color-border)] bg-[var(--color-surface)] overflow-x-auto custom-scrollbar">
             <table className="w-full text-left text-[11px]">
               <thead className="bg-[var(--color-ink)] text-white font-black uppercase">
@@ -154,7 +197,7 @@ export const ModalDevolucionesSalida: React.FC<ModalDevolucionesSalidaProps> = (
 
         <div className="bg-[var(--color-bg)] p-3 sm:p-4 border-t-2 border-[var(--color-ink)] flex flex-wrap items-center justify-between gap-2 shrink-0">
           <span className="text-[11px] font-bold text-[var(--color-muted)]">
-            Escribe la cantidad y confirma. El stock vuelve al almacén.
+            Elige fecha y trabajador (opcional), escribe la cantidad y confirma. El stock vuelve al almacén.
           </span>
           <button
             id="btn-confirmar-devolucion"
