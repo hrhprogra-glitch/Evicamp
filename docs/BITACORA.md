@@ -7,6 +7,14 @@
 
 ---
 
+## 24/11/2026 (Modo Oscuro azul SOLO en ecosistema) · OpenCode (Big Pickle) — Diferencia permanente
+
+- El dueño pidió: *"solo para ecosistema ... que el modo oscuro reemplaces el verde esmeralda por el oceano azul nada mas el resto de los colores tal cual ... solo para ecosistema ... anotes en la memoria y permanente que ecosistema tiene esa diferencia porque su color de empresa es de ese color y no el verde y por eso no lo cambie"*.
+- **Cambio mínimo y aislado (3 archivos):** `index.html` pone la clase `sitio-ecosistema` solo cuando el dominio es `ecosistema123.duckdns.org` (antes de que dibuje React, sin destello); `src/index.css` lleva al final un bloque marcado como **permanente** que, solo con esa clase + `theme-monochrome`/`data-theme="dark"`, cambia `--color-accent`, `--color-brand-accent`, `--color-success` y los anillos/focos de verde `#10B981` a azul Océano `#0EA5E9`; `ThemeSwitcher.tsx` usa `ES_SITIO_OFICIAL` para que la muestra del Modo Oscuro también sea azul. **Negros `#0B0F17`, grafito `#111827`, grises, rojo, ámbar, Océano inicial y los demás temas quedan igual.** Nego y Evicamp no llevan la clase y siguen verdes.
+- **Despliegue:** solo ecosistema, desde el worktree limpio (el repo principal tiene WIP ajeno). 22 archivos y `restaurar-iconos-ecosistema.cjs` después (MD5 `c159d216…`). En vivo: **`index-CyoheJiL.js` / `index-7PuKcEZ3.css`**. Nego y Evicamp siguen con `index-Bp6aQKRr.js` / `index-BzLRfRHr.css`. No se tocó la base ni la API.
+- **Pruebas nuevas:** `verificar-tema-oscuro-ecosistema.mjs` **15/15** con login real y teclado: arranque Océano, muestra azul, variables azules, resto de colores intacto, foco con Tab azul, 390/768/1366/1920, sin internet, Nego verde y 0 errores JS. Regresión: `prueba-sitio-ecosistema.mjs` **35/35** y `verificar-228-ecosistema.mjs` **11/11**.
+- Commit local **sin push** (el dueño no lo pidió en este momento). Falta su revisión visual con **Ctrl+F5** en ecosistema.
+
 ## 24/11/2026 (pregunta sobre el tema oscuro) · OpenCode (Big Pickle) — Solo lectura, sin cambios
 
 - El dueño preguntó: *"una pregunta el modo oscuro de ecosistema tiene color verde?"*. Se revisó con `graphify query` y lectura de `index.html`, `src/utils/tema.ts`, `src/sections/Configuraciones/components/ThemeSwitcher.tsx` y `src/index.css`. **No se tocó código, base, sitio ni credenciales.**

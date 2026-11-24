@@ -1478,3 +1478,8 @@
 - El dueño preguntó: *"una pregunta el modo oscuro de ecosistema tiene color verde?"*.
 - Se revisó solo lectura: `graphify query`, `index.html`, `src/utils/tema.ts`, `ThemeSwitcher.tsx` y `src/index.css`. Respuesta: **sí**, el «Modo Oscuro» (`monochrome`) lleva verde esmeralda `#10B981` como acento; es el mismo verde de siempre, no lo cambió la 228. ecosistema entra en Océano (azul) y el oscuro se aplica si se elige en Configuraciones (se guarda en `gestorpro_theme`).
 - No se cambió nada del sistema, la base ni el sitio; no se hizo push. Sigue pendiente la revisión con **Ctrl+F5**.
+
+## 24/11/2026 (Modo Oscuro azul solo en ecosistema — diferencia permanente)
+- El dueño decidió: *"solo para ecosistema tenga el color de oceano azul osea que el modo oscuro reemplaces el verde esmeraldo por el oceano azul nada mas el resto de los colores tal cual pero ojo solo para ecosistema ... anotes en la memoria y permanente que ecosistema tiene esa diferencia porque su color de empresa es de ese color y no el verde y por eso no lo cambie pero el resto de la actualización o codigo normal"*.
+- Se aplicó: clase `sitio-ecosistema` solo en el dominio oficial, bloque CSS permanente que cambia el acento/focos a `#0EA5E9` en el Modo Oscuro, y muestra del selector en azul. Nada más: negros, grises, rojo, ámbar y los otros temas siguen igual; Nego y Evicamp siguen verdes.
+- Desplegado solo ecosistema (22 archivos + iconos oficiales). Pruebas: **15/15** nuevas y regresión **35/35** + **11/11**, con login real, teclado, sin internet y 390/768/1366/1920. Commit local, sin push. Falta revisión del dueño con **Ctrl+F5**.

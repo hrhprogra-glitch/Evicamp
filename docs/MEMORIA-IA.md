@@ -8,6 +8,12 @@
 
 ---
 
+## ⚠️ REGLA PERMANENTE — Ecosistema es AZUL, no verde (24/11/2026)
+- **NO CAMBIAR NI “CORREGIR”:** el dueño decidió que el sitio oficial `ecosistema123.duckdns.org` tiene una diferencia permanente: en el **Modo Oscuro** su acento es **azul Océano `#0EA5E9`**, no verde esmeralda `#10B981`, porque el color de su empresa es azul. Nego y Evicamp **sí** siguen con verde. Esta diferencia es querida, **no es un error**: no la “arregles” ni la copies a otros sitios.
+- Cómo está hecho (no desarmar): `index.html` agrega la clase `sitio-ecosistema` solo si el hostname es `ecosistema123.duckdns.org`; al final de `src/index.css` hay un bloque con el encabezado **«DIFERENCIA PERMANENTE SOLO DEL SITIO OFICIAL ECOSISTEMA»** que aplica el azul solo con `html.sitio-ecosistema.theme-monochrome` / `html.sitio-ecosistema[data-theme="dark"]` (variables de acento, marca, éxito y focos/anillos en azul); `ThemeSwitcher.tsx` usa `ES_SITIO_OFICIAL` para que la muestra del Modo Oscuro también salga azul. El resto de colores (negro `#0B0F17`, grafito `#111827`, grises, rojo, ámbar) y el arranque en Océano quedan intactos.
+- Prueba que lo cubre: `ai-scripts/pruebas/verificar-tema-oscuro-ecosistema.mjs` (**15/15**). Si se toca el CSS de temas, correrla junto con `prueba-sitio-ecosistema.mjs` y `verificar-228-ecosistema.mjs`.
+- Aquí solo se despliega ecosistema con `node ai-scripts/deploy.cjs ecosistema` y **siempre** se corre `ai-scripts/restaurar-iconos-ecosistema.cjs` después; si no, el logo vuelve al de Nego.
+
 ## 24/11/2026 — Tema oscuro de ecosistema (solo aclaración)
 - Si el dueño pregunta por el verde del modo oscuro: **es intencional**. En `ThemeSwitcher.tsx` el «Modo Oscuro» es `monochrome` y sus muestras son `#0B0F17`, `#111827`, `#10B981` y `#64748B`; en `src/index.css`, `html.theme-monochrome, html[data-theme="dark"]` pone `--color-brand-accent: #10B981` y `--color-accent: #10B981`. No es un error ni un cambio reciente.
 - `index.html` decide el tema inicial por dominio: ecosistema = `oceano` (azul), los demás = `classic`. Si el dispositivo tiene `gestorpro_theme`, se respeta; para `monochrome`/`dark` se agregan la clase `theme-monochrome` y `data-theme="dark"`. Por eso en ecosistema el verde oscuro se ve recién después de elegir «Modo Oscuro» en Configuraciones.

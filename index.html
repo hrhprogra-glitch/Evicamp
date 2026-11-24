@@ -26,6 +26,8 @@
           window.SIUMAX_TEMA_PREDETERMINADO = esOficial ? 'oceano' : 'classic';
           window.SIUMAX_NOMBRE_SITIO = esOficial ? 'ECO SISTEMAS URH' : 'SiuMax Nego';
           if (esOficial) {
+            // Marca permanente del sitio oficial: solo aquí el Modo Oscuro usa azul en vez de verde.
+            document.documentElement.classList.add('sitio-ecosistema');
             document.title = window.SIUMAX_NOMBRE_SITIO;
             var apple = document.querySelector('meta[name="apple-mobile-web-app-title"]');
             if (apple) apple.setAttribute('content', window.SIUMAX_NOMBRE_SITIO);

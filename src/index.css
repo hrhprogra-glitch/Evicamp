@@ -1235,3 +1235,93 @@ main [data-row="true"] [class*="text-xs"],
 @media (min-width: 768px) {
   main #tabla-salidas-lista [data-row="true"] { height: auto !important; min-height: 79px !important; }
 }
+
+/* ==========================================================================
+   DIFERENCIA PERMANENTE SOLO DEL SITIO OFICIAL ECOSISTEMA (24/11/2026).
+   El color de la empresa es AZUL OCÉANO, no verde esmeralda. En el Modo Oscuro
+   se cambia SOLO el verde por azul #0EA5E9; negros, grises, rojo, ámbar y los
+   demás temas siguen tal cual. Nego y Evicamp NO llevan esta clase.
+   NO QUITAR NI COPIAR A OTROS SITIOS: es una diferencia pedida por el dueño.
+   ========================================================================== */
+html.sitio-ecosistema.theme-monochrome,
+html.sitio-ecosistema[data-theme="dark"] {
+  --color-brand-accent: #0EA5E9;
+  --color-accent: #0EA5E9;
+  --color-accent-rgb: 14, 165, 233;
+  --color-accent-dark: #0284C7;
+  --color-accent-dark-2: #0369A1;
+  --color-accent-shadow: #075985;
+  --color-accent-shadow-rgb: 7, 89, 133;
+  --color-accent-bg: #082F49;
+  --color-accent-bg-2: #0C4A6E;
+  --color-success: #0EA5E9;
+  --color-success-dark: #0284C7;
+  --color-success-bg: #082F49;
+}
+
+/* Anillos, focos y bordes del Modo Oscuro que tenían el verde escrito a mano. */
+html.sitio-ecosistema.theme-monochrome [class*="focus:ring-"]:focus,
+html.sitio-ecosistema[data-theme="dark"] [class*="focus:ring-"]:focus,
+html.sitio-ecosistema.theme-monochrome [class*="focus:ring-\[var\(--color-ink\)\]"]:focus,
+html.sitio-ecosistema[data-theme="dark"] [class*="focus:ring-\[var\(--color-ink\)\]"]:focus {
+  --tw-ring-color: #0EA5E9 !important;
+  --tw-ring-offset-color: #0B0F17 !important;
+}
+html.sitio-ecosistema.theme-monochrome .boton-cabecera:focus-visible,
+html.sitio-ecosistema[data-theme="dark"] .boton-cabecera:focus-visible {
+  border-color: #0EA5E9 !important;
+  box-shadow: 0 0 0 2px #0B0F17, 0 0 0 4px #0EA5E9, 0 0 12px rgba(14, 165, 233, 0.55) !important;
+  background-color: #162438 !important;
+  color: #FFFFFF !important;
+}
+html.sitio-ecosistema.theme-monochrome .boton-cabecera:focus-visible svg,
+html.sitio-ecosistema[data-theme="dark"] .boton-cabecera:focus-visible svg {
+  color: #0EA5E9 !important;
+}
+html.sitio-ecosistema.theme-monochrome button:focus-visible:not(.boton-cabecera):not(.tabla-fila),
+html.sitio-ecosistema[data-theme="dark"] button:focus-visible:not(.boton-cabecera):not(.tabla-fila),
+html.sitio-ecosistema.theme-monochrome a:focus-visible,
+html.sitio-ecosistema[data-theme="dark"] a:focus-visible,
+html.sitio-ecosistema.theme-monochrome select:focus-visible:not(.filtro-sobrio),
+html.sitio-ecosistema[data-theme="dark"] select:focus-visible:not(.filtro-sobrio),
+html.sitio-ecosistema.theme-monochrome [tabindex]:focus-visible:not(.tabla-fila):not([data-row="true"]):not(tr) {
+  outline: 2px solid #0EA5E9 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.45) !important;
+}
+html.sitio-ecosistema.theme-monochrome .tabla-fila:focus-visible,
+html.sitio-ecosistema[data-theme="dark"] .tabla-fila:focus-visible,
+html.sitio-ecosistema.theme-monochrome tr:focus-visible,
+html.sitio-ecosistema[data-theme="dark"] tr:focus-visible,
+html.sitio-ecosistema.theme-monochrome [data-row="true"]:focus-visible,
+html.sitio-ecosistema[data-theme="dark"] [data-row="true"]:focus-visible,
+html.sitio-ecosistema.theme-monochrome [role="button"]:not([role="option"]):not([data-cat-item]):not([data-lote-prod-item]):not([data-lote-prov-item]):focus-visible,
+html.sitio-ecosistema[data-theme="dark"] [role="button"]:not([role="option"]):not([data-cat-item]):not([data-lote-prod-item]):not([data-lote-prov-item]):focus-visible {
+  background-color: #162438 !important;
+  box-shadow: inset 4px 0 0 0 #0EA5E9, inset 0 0 0 1px #0EA5E9 !important;
+  outline: none !important;
+}
+html.sitio-ecosistema.theme-monochrome .pestanas-sobrias > button:focus-visible,
+html.sitio-ecosistema[data-theme="dark"] .pestanas-sobrias > button:focus-visible,
+html.sitio-ecosistema.theme-monochrome .pestanas-filtro > button:focus-visible,
+html.sitio-ecosistema[data-theme="dark"] .pestanas-filtro > button:focus-visible {
+  outline: none !important;
+  box-shadow: inset 0 0 0 2px #0EA5E9 !important;
+  color: #FFFFFF !important;
+  background-color: #162438 !important;
+}
+html.sitio-ecosistema.theme-monochrome .buscador-sobrio:focus-within,
+html.sitio-ecosistema[data-theme="dark"] .buscador-sobrio:focus-within,
+html.sitio-ecosistema.theme-monochrome .filtro-sobrio:focus,
+html.sitio-ecosistema[data-theme="dark"] .filtro-sobrio:focus,
+html.sitio-ecosistema.theme-monochrome .limpiar-sobrio:focus-visible,
+html.sitio-ecosistema[data-theme="dark"] .limpiar-sobrio:focus-visible {
+  border-color: #0EA5E9 !important;
+  box-shadow: 0 0 0 2px #0EA5E9, 0 0 10px rgba(14, 165, 233, 0.35) !important;
+}
+html.sitio-ecosistema.theme-monochrome .paginacion-sobria__boton:focus-visible,
+html.sitio-ecosistema[data-theme="dark"] .paginacion-sobria__boton:focus-visible {
+  outline: none !important;
+  border-color: #0EA5E9 !important;
+  box-shadow: 0 0 0 2px #0EA5E9, 0 0 8px rgba(14, 165, 233, 0.35) !important;
+}

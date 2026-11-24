@@ -378,10 +378,10 @@
     "semantic_hash": "3b2217d641a9d9056c76a17e25047522"
   },
   "index.html": {
-    "mtime": 1795064443.6637774,
-    "seen": 1795540202.7210102,
-    "ast_hash": "c50585672a02b65a046406f043b92027",
-    "semantic_hash": "c50585672a02b65a046406f043b92027"
+    "mtime": 1795548493.79161,
+    "seen": 1795548732.1597996,
+    "ast_hash": "965d4e70b4982f513a7b34b575a53c73",
+    "semantic_hash": ""
   },
   "public/vite.svg": {
     "mtime": 1786139595.6188755,
@@ -414,10 +414,10 @@
     "semantic_hash": "ef724f8826888528764f5509cbbc7f21"
   },
   "src/sections/Configuraciones/components/ThemeSwitcher.tsx": {
-    "mtime": 1795063080.1455648,
-    "seen": 1795540202.7206886,
-    "ast_hash": "3287115beaa2305f85c22c52b9e156d6",
-    "semantic_hash": "3287115beaa2305f85c22c52b9e156d6"
+    "mtime": 1795548504.8676856,
+    "seen": 1795548732.1485624,
+    "ast_hash": "a45f3693f285498712e31e5d7104f36b",
+    "semantic_hash": ""
   },
   "src/utils/SesionProvider.tsx": {
     "mtime": 1791332990.0259318,
@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795547769.59749,
-    "seen": 1795547827.9707785,
-    "ast_hash": "6ca7097bb77fc9f449d28ad2b93cd3b0",
+    "mtime": 1795548692.3211837,
+    "seen": 1795548732.1596293,
+    "ast_hash": "f32e6c92a6667b2e2d72584a38455b0e",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795547792.0911121,
-    "seen": 1795547827.9707832,
-    "ast_hash": "d6a6da40e9d67d55f416f1fe13dda389",
+    "mtime": 1795548702.34141,
+    "seen": 1795548732.159631,
+    "ast_hash": "460c5283021bc015120513a4de79d991",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795547798.7851114,
-    "seen": 1795547827.9707868,
-    "ast_hash": "a356d90d143e4ffedb5f26c118b677b5",
+    "mtime": 1795548713.481941,
+    "seen": 1795548732.1596322,
+    "ast_hash": "1b5e1e4e6b852e7381a91089ee132431",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795547774.8627622,
-    "seen": 1795547827.9710293,
-    "ast_hash": "fbe3b7290c786038cebf7355a8d99db3",
+    "mtime": 1795548697.2599936,
+    "seen": 1795548732.1596897,
+    "ast_hash": "d30fdac6e28abaab251980502fc86c21",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -3891,6 +3891,12 @@
     "mtime": 1795547728.233048,
     "seen": 1795547827.9074805,
     "ast_hash": "7c3f20c814189a40ee0e7ee12b54b642",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/verificar-tema-oscuro-ecosistema.mjs": {
+    "mtime": 1795548606.8619661,
+    "seen": 1795548732.140882,
+    "ast_hash": "1411ae2d198ed6d4509b2eb6a8dd7b5f",
     "semantic_hash": ""
   }
 }

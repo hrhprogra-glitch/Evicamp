@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Palette, CheckCircle2, Monitor } from 'lucide-react';
 import { leerTamanoInterfaz, guardarTamanoInterfaz, type TamanoInterfaz } from '../../../utils/tamanoInterfaz';
-import { leerTema, TEMA_PREDETERMINADO, type Tema } from '../../../utils/tema';
+import { leerTema, TEMA_PREDETERMINADO, ES_SITIO_OFICIAL, type Tema } from '../../../utils/tema';
 
 // Cada tema (salvo Clásico y Monocromático, que son casos especiales) solo necesita
 // decir qué 4 colores mostrar en su muestra y qué atributo data-theme aplicar.
+// DIFERENCIA PERMANENTE: ecosistema es azul, no verde; su muestra del Modo Oscuro
+// también lo es para que coincida con lo que se ve al aplicarlo. Nego y Evicamp siguen verdes.
+const ACENTO_OSCURO = ES_SITIO_OFICIAL ? '#0EA5E9' : '#10B981';
+
 const TEMAS: { id: Tema; nombre: string; descripcion: string; swatches: string[] }[] = [
   { id: 'classic', nombre: 'Tema Clásico', descripcion: 'Colores vibrantes e indicadores visuales dinámicos.', swatches: ['#1E293B', '#10B981', '#F59E0B', '#EF4444'] },
-  { id: 'monochrome', nombre: 'Modo Oscuro', descripcion: 'Negro carbón, grafito y gris acero con acentos clásicos, descanso total para la vista.', swatches: ['#0B0F17', '#111827', '#10B981', '#64748B'] },
+  { id: 'monochrome', nombre: 'Modo Oscuro', descripcion: 'Negro carbón, grafito y gris acero con acentos clásicos, descanso total para la vista.', swatches: ['#0B0F17', '#111827', ACENTO_OSCURO, '#64748B'] },
   { id: 'oceano', nombre: 'Océano', descripcion: 'Azules fríos y relajados, ideal para jornadas largas.', swatches: ['#0F2942', '#0EA5E9', '#F59E0B', '#EF4444'] },
   { id: 'atardecer', nombre: 'Atardecer', descripcion: 'Naranjas y tonos cálidos, cálido y energético.', swatches: ['#3B2317', '#F97316', '#F59E0B', '#EF4444'] },
   { id: 'bosque', nombre: 'Bosque', descripcion: 'Verdes profundos, natural y descansado para la vista.', swatches: ['#1A2E1F', '#16A34A', '#F59E0B', '#EF4444'] },
