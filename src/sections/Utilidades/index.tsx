@@ -25,9 +25,12 @@ export const Utilidades = () => {
   const tipos = useTiposNegocio();
   const conComercio = tipos.includes('comercio');
   const conServicios = tipos.includes('servicios');
+  // Utilidades muestra solo Productos (pedido del dueño, 24/11/2026).
+  const conComercioVista = true;
+  const conServiciosVista = false;
   // Pestaña elegida; si no es del tipo de negocio, la primera que sí lo sea (Productos con Comercio)
   const [pestanaElegida, setPestanaElegida] = useState<PestanaUtilidades | null>(pestanaGuardada);
-  const permitidas = pestanasDe(conComercio, conServicios).map((t) => t.id);
+  const permitidas = pestanasDe(conComercioVista, conServiciosVista).map((t) => t.id);
   const pestana: PestanaUtilidades = pestanaElegida && permitidas.includes(pestanaElegida) ? pestanaElegida : (permitidas[0] || 'productos');
   const cambiarPestana = (p: PestanaUtilidades) => {
     setPestanaElegida(p);
@@ -114,14 +117,14 @@ export const Utilidades = () => {
     : (globalIngresos - globalCostos - globalMermas - gastosCaja);
 
   if (!verProductos) {
-    return <UtilidadesServicios pestana={pestana} onCambiarPestana={cambiarPestana} conComercio={conComercio} />;
+    return <UtilidadesServicios pestana={pestana} onCambiarPestana={cambiarPestana} conComercio={conComercioVista} />;
   }
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6 pb-10 text-[var(--color-ink)] font-mono h-full bg-[var(--color-bg)] relative">
       <FiltrosUtilidades
         onToggleTops={() => setMostrarTablero(true)}
-        pestanas={<PestanasUtilidades activa="productos" conComercio={conComercio} conServicios={conServicios} onCambiar={cambiarPestana} idDerecha="btn-tops-utilidades" idAbajo="buscador-global-utilidades" />}
+        pestanas={<PestanasUtilidades activa="productos" conComercio={conComercioVista} conServicios={conServiciosVista} onCambiar={cambiarPestana} idDerecha="btn-tops-utilidades" idAbajo="buscador-global-utilidades" />}
       />
 
       <div className="flex flex-col gap-4 sm:gap-6">
