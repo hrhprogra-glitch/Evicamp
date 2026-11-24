@@ -7,7 +7,7 @@ const SQL = `
 DO $$
 DECLARE
   v_prod bigint; v_stock0 numeric; v_stock numeric;
-  v_salida bigint; v_item bigint; v_codigo text; v_n integer; v_sum numeric;
+  v_salida bigint; v_salida1 bigint; v_salida2 bigint; v_item bigint; v_codigo text; v_n integer; v_sum numeric;
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM public.customers WHERE id = 990001) THEN
     INSERT INTO public.customers (id,name,dni,activo,created_at,is_synced)
@@ -25,6 +25,7 @@ BEGIN
     'items', jsonb_build_array(jsonb_build_object(
       'product_id', v_prod, 'descripcion', 'ZZZ QUITAR 227', 'unidad', 'UNID',
       'cantidad', 2, 'costo_unitario', 1, 'es_externo', false))))->>'id')::bigint INTO v_salida;
+  v_salida1 := v_salida;
   SELECT codigo INTO v_codigo FROM public.salidas WHERE id = v_salida;
   SELECT id INTO v_item FROM public.salida_items WHERE salida_id = v_salida;
   SELECT coalesce(quantity, 0) INTO v_stock FROM public.products WHERE id = v_prod;
@@ -46,6 +47,7 @@ BEGIN
     'items', jsonb_build_array(jsonb_build_object(
       'product_id', v_prod, 'descripcion', 'ZZZ PARCIAL 227', 'unidad', 'UNID',
       'cantidad', 4, 'costo_unitario', 1, 'es_externo', false))))->>'id')::bigint INTO v_salida;
+  v_salida2 := v_salida;
   SELECT codigo INTO v_codigo FROM public.salidas WHERE id = v_salida;
   SELECT id INTO v_item FROM public.salida_items WHERE salida_id = v_salida;
   PERFORM public.fn_registrar_devoluciones_lote(v_salida, jsonb_build_array(
@@ -78,10 +80,14 @@ BEGIN
   IF v_stock <> v_stock0 - 5 THEN RAISE EXCEPTION 'FALLA 9: al editar quedó % y esperaba %', v_stock, v_stock0 - 5; END IF;
   RAISE NOTICE 'OK 3: editar cantidades sigue descontando y devolviendo stock';
 
-  -- Limpieza: borrar con RPC devuelve lo que aún quedaba pendiente.
+  -- Limpieza: borrar las 3 salidas de prueba con RPC (devuelve lo que aún quedara pendiente).
+  PERFORM public.fn_eliminar_salida(v_salida1, 'LIMPIEZA PRUEBA 227');
+  PERFORM public.fn_eliminar_salida(v_salida2, 'LIMPIEZA PRUEBA 227');
   PERFORM public.fn_eliminar_salida(v_salida, 'LIMPIEZA PRUEBA 227');
   SELECT coalesce(quantity, 0) INTO v_stock FROM public.products WHERE id = v_prod;
   IF v_stock <> v_stock0 THEN RAISE EXCEPTION 'FALLA 10: tras borrar quedó % y esperaba %', v_stock, v_stock0; END IF;
+  -- Los movimientos de stock son historia, pero los de esta prueba son ruido: se borran al final.
+  DELETE FROM public.inventory_movements WHERE "user" = 'PRUEBA 227';
   RAISE NOTICE 'PRUEBA 227 TERMINADA: TODO OK';
 END $$;
 `;
