@@ -8,6 +8,12 @@
 
 ---
 
+## 24/11/2026 — PUNTO AL DÍA (la nota ya basta en Nueva salida, solo Nego)
+- El dueño pidió: *"solo debe registrar la nota, no debe hacerme escoger un cliente ya creado, me entiendes??"* y luego dio el **«empieza»**.
+- **224 (propia, HECHA):** commit local `70c7faf`, sin push. En la base de pruebas `siumax` se creó el cliente interno `CLIENTE NO REGISTRADO (NOTA)`, id **`990001`**, `activo=false` (respaldo y `lock_timeout`). En `ModalNuevaSalida.tsx`, «REGISTRAR COMO NOTA» pone ese id por detrás y ya no pide cliente de la lista; el nombre sigue guardándose como `CLIENTE: <NOMBRE>` y sale en el comprobante. No se tocó `fn_registrar_salida`.
+- Desplegado **solo Nego**: bundles en vivo `index-25yvKBon.js` / `index-DFRVNc6v.css`. Probado con teclado en 390/768/1366/1920 y con navegador sin internet. Guardado de prueba **SAL-1547** (`customer_id=990001`, nota `ZZZ NOTA DIAG 224`). Queda esa salida de prueba en Nego por si el dueño quiere verla o borrarla.
+- Detalle completo en la **sección 66** al final de esta memoria. Falta revisión del dueño con **Ctrl+F5** en `https://nego.siumax.duckdns.org`. Sin Evicamp, ecosistema, credenciales ni push.
+
 ## 23/11/2026 — PUNTO AL DÍA (lo último de la Caja en Nego)
 - El dueño pidió: *"pon todo en la memoria y guarda todo lo que hicimos para siempre estar al día"*.
 - **214 (propia):** vuelta al comienzo, commit local `ff9a933`, sin push. Desplegada con bundles `index-BFssEZh6.css` / `index-BqBmmYfE.js`.
