@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795545313.3435304,
-    "seen": 1795545354.6141303,
-    "ast_hash": "781edc8f0870a3ecad6e5ece2ecd57d9",
+    "mtime": 1795547769.59749,
+    "seen": 1795547827.9707785,
+    "ast_hash": "6ca7097bb77fc9f449d28ad2b93cd3b0",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795545326.3936148,
-    "seen": 1795545354.6141317,
-    "ast_hash": "918705189d886c09a4e990f05d092d5a",
+    "mtime": 1795547792.0911121,
+    "seen": 1795547827.9707832,
+    "ast_hash": "d6a6da40e9d67d55f416f1fe13dda389",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795545332.6380527,
-    "seen": 1795545354.6141334,
-    "ast_hash": "a95fc1ae94bfdc22f4382202d9af1f81",
+    "mtime": 1795547798.7851114,
+    "seen": 1795547827.9707868,
+    "ast_hash": "a356d90d143e4ffedb5f26c118b677b5",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795545320.8903987,
-    "seen": 1795545354.6141925,
-    "ast_hash": "f0ee8b095d5a08f949d10b66351011a4",
+    "mtime": 1795547774.8627622,
+    "seen": 1795547827.9710293,
+    "ast_hash": "fbe3b7290c786038cebf7355a8d99db3",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -3873,6 +3873,24 @@
     "mtime": 1795545265.8799572,
     "seen": 1795545354.5953093,
     "ast_hash": "2ba4cfc3aec94171f29736af43b1e371",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/aplicar-salidas-228-ecosistema.cjs": {
+    "mtime": 1795547536.897511,
+    "seen": 1795547827.8904076,
+    "ast_hash": "354fbd977c5aa98d942bd911cd27b67b",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/estado-salidas-ecosistema.cjs": {
+    "mtime": 1795547296.9748406,
+    "seen": 1795547827.8912416,
+    "ast_hash": "7624db52131ec8b92c9b390cd1e2fa43",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/verificar-228-ecosistema.mjs": {
+    "mtime": 1795547728.233048,
+    "seen": 1795547827.9074805,
+    "ast_hash": "7c3f20c814189a40ee0e7ee12b54b642",
     "semantic_hash": ""
   }
 }

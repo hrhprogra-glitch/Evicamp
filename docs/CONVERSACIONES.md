@@ -1467,3 +1467,9 @@
 - Se probó **todo antes de subir**: salidas, devoluciones y eliminación. Stock **4/4**, eliminar desde el detalle **11/11**, detalle completo **30/30** con teclado, sin internet y 390/768/1366/1920. Se corrigieron fallos de los guiones de prueba (borrar sin internet, el usuario del movimiento y el Tab del login, que en este sistema abre el menú: se usa Enter/flechas), no del sistema.
 - En **Evicamp** se probó el SQL en una copia, se respaldó dos veces y se aplicó sin reiniciar la API (solo `NOTIFY pgrst`); verificadas tablas, RPC, permisos, 401 sin sesión y login sin avisos de pago ni errores JS (**11/11**). No hay credenciales de administrador de Evicamp en `.env.vps`: no se adivinaron.
 - Publicado en **Nego y Evicamp**: `index-Bp6aQKRr.js` / `index-BzLRfRHr.css`. El **push a GitHub** llegó a `origin/fase-11-sunat` (`a88002a`); `main` queda intacto sin confirmación. Falta su revisión con **Ctrl+F5** en los dos sitios.
+
+## 24/11/2026 (228 también en ecosistema, con OK del dueño)
+- El dueño preguntó *"y ecosistema??"* y aclaró: *"a ver lo puse en la memoria ecosistema ya tiene su base de datos solo es actualizarlo como envicamp y nego nada mas"*.
+- Se actualizó la base `ecosistema` **solo con lo de la 228**: primero en copia, luego con respaldo, `ON_ERROR_STOP`, `lock_timeout` y `NOTIFY pgrst`, sin reiniciar la API. El SQL completo no se aplicó porque choca con una tabla `notas_credito` de Compras que ecosistema tiene desde antes y no tiene que ver con Salidas. Se agregaron también la tienda principal y el cliente interno de las notas, para quedar igual que Nego y Evicamp.
+- Se desplegó el sitio oficial (22 archivos) y se repusieron sus iconos. Verificado: API 401 sin sesión, bundles nuevos, sin cobro y pruebas **35/35** + **11/11** con login real del sitio, teclado, sin internet y 390/768/1366/1920. Las claves se leen de `.env.vps` y nunca se muestran.
+- Falta que el dueño revise `https://ecosistema123.duckdns.org` con **Ctrl+F5**.

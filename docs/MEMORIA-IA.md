@@ -8,6 +8,12 @@
 
 ---
 
+## 24/11/2026 — PUNTO AL DÍA (228 también en ecosistema, sitio oficial)
+- El dueño dio el OK para ecosistema: *"ya tiene su base de datos solo es actualizarlo como envicamp y nego nada mas"*.
+- **Aprendizaje importante:** el `seguridad-sesion.sql` completo **no se puede aplicar a ecosistema**: esa base tiene una tabla `notas_credito` de **Compras** (`uuid`, `entrada_id`, `numero_factura_proveedor`) distinta de la de SUNAT (`sale_id`) de Nego/Evicamp, y el SQL se detiene creando un índice. Para cambios de Salidas basta **`detalle-salida-edicion.sql`**, que es repetible y trae toda la 228. No aplicar SQL ajeno «porque sí».
+- **Aprendizaje importante:** al hacer `pg_dump`/`pg_restore` de ecosistema, fallan 3 FK porque `stores` está vacía pero hay filas que apuntan a la tienda 2. Son errores históricos conocidos; en la copia se permiten solo esos 3 y cualquier otro error aborta.
+- **ecosistema (HECHO):** base con respaldo y `lock_timeout`, solo el SQL de Salidas, tienda principal y cliente interno `990001`; sin reiniciar la API. Deploy de 22 archivos y **siempre** correr `restaurar-iconos-ecosistema.cjs` después, si no el logo vuelve al de Nego. Sitio en vivo con `index-Bp6aQKRr.js` / `index-BzLRfRHr.css`, API 401 y `suscripcion.json` 404. Pruebas **35/35** y **11/11** con login real (credenciales de `.env.vps`, nunca impresas). Falta revisión del dueño con Ctrl+F5.
+
 ## 24/11/2026 — PUNTO AL DÍA (228 subida completa: pruebas, Evicamp y GitHub)
 - El dueño autorizó subir la 228 a **Evicamp, Nego y GitHub**, pero pidió probar antes salidas, devoluciones y eliminación. Todo pasó: stock **4/4**, eliminar **11/11**, interfaz **30/30** y login de Evicamp **11/11**, con teclado, sin internet y 390/768/1366/1920.
 - **Aprendizaje importante:** en este sistema **Tab abre el menú lateral** con prioridad absoluta; para pasar de usuario a clave en el login se usa **Enter o flechas**, no Tab. Un guion que pruebe Tab como si fuera navegación de campos da un falso fallo.

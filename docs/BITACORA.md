@@ -7,6 +7,17 @@
 
 ---
 
+## 24/11/2026 (228 también en ecosistema) · OpenCode (Big Pickle) — Base y sitio oficial actualizados
+
+- El dueño preguntó *"y ecosistema??"* y aclaró: *"lo puse en la memoria ecosistema ya tiene su base de datos solo es actualizarlo como envicamp y nego nada mas"*. Es el OK explícito para actualizar también el sitio oficial. No se tocó nada más.
+- **Antes:** base `ecosistema` con 462 clientes, 511 productos, 395 salidas y 3 empleados; tablas de salidas presentes pero sin `trabajador_id` y con las firmas viejas de las devoluciones. Solo faltaban los cambios de la 228.
+- **Problema encontrado en el ensayo (producción intacta):** aplicar `seguridad-sesion.sql` completo se detiene en `notas_credito`: ecosistema tiene una tabla **de Compras** (`uuid`, `entrada_id`, `numero_factura_proveedor`) distinta de la de SUNAT (`sale_id`) que tienen Nego y Evicamp. No tiene nada que ver con Salidas. Por eso se aplicó **solo `detalle-salida-edicion.sql`**, que trae toda la 228 (columna, firmas nuevas, RPC de editar/eliminar/quitar/devolver y permisos). La copia también dio 3 errores históricos de FK al restaurar (`stores` está vacía pero hay filas que apuntan a la tienda 2); se permitieron **solo esos tres**, igual que en producción.
+- **Respalds:** `/var/lib/postgresql/respaldo-ecosistema-antes-salidas-228-2026-11-24T19-11-44-625Z.dump` y `...-19-12-22-411Z.dump`. `ON_ERROR_STOP`, `lock_timeout=5s` y `NOTIFY pgrst, 'reload schema'`; **no se reinició la API**. Se agregaron de forma repetible la tienda principal id 1 y el cliente interno `990001` (clientes `462 → 463`), igual que en Nego y Evicamp.
+- **Verificado en la base:** `trabajador_id`, las dos firmas nuevas con 7/6 argumentos, las 5 RPC nuevas, `execute anon=true`, permiso `{salidas_crear}` y sin pérdida de clientes/productos/salidas/empleados. API sin sesión: **401**.
+- **Sitio:** `node ai-scripts/deploy.cjs ecosistema` desde el worktree limpio, 22 archivos, y después `restaurar-iconos-ecosistema.cjs` (MD5 `c159d216…` coincide con el logo oficial). En vivo: **`index-Bp6aQKRr.js` / `index-BzLRfRHr.css`**; `suscripcion.json` sigue 404 y el tema Océano sigue intacto.
+- **Pruebas:** `prueba-sitio-ecosistema.mjs` **35/35** (logo, sin cobro, teclado y sin internet en 390/768/1366/1920) y `verificar-228-ecosistema.mjs` **11/11** con login real de `admin@ecosistema.com` (clave leída de `.env.vps`, nunca mostrada): detalle solo lectura, 0 campos, 6 botones en una fila, cuadrados, sin internet y 0 errores JS. El `desbordes=1` a 390 px es el mismo que en Nego y no se cambió código por eso.
+- Falta solo la revisión visual del dueño con **Ctrl+F5** en `https://ecosistema123.duckdns.org`.
+
 ## 24/11/2026 (228, subida completa) · OpenCode (Big Pickle) — Probado, subido a Nego y Evicamp y llevado a GitHub
 
 - El dueño pidió: *"perfecto ahroa subelo a evicamp y siumax y mi github pero antes as prueba de salidas devoluciones eliminación de salidas todo as prueba de todo envio todo antes de subir si encuentras errores arreglalos"*. Autorizó **push a GitHub** en este momento; no se tocó `main` ni el ecosistema.
