@@ -7,6 +7,13 @@
 
 ---
 
+## 24/11/2026 (pregunta sobre el tema oscuro) · OpenCode (Big Pickle) — Solo lectura, sin cambios
+
+- El dueño preguntó: *"una pregunta el modo oscuro de ecosistema tiene color verde?"*. Se revisó con `graphify query` y lectura de `index.html`, `src/utils/tema.ts`, `src/sections/Configuraciones/components/ThemeSwitcher.tsx` y `src/index.css`. **No se tocó código, base, sitio ni credenciales.**
+- Respuesta: **sí**. El «Modo Oscuro» (`monochrome`) usa verde esmeralda **`#10B981`** como acento (`--color-brand-accent` y `--color-accent`), además del verde de «éxito». Es el mismo verde del tema Clásico y **viene de antes**, no es cambio de la 228.
+- ecosistema **arranca en Océano** (azul), no en modo oscuro: `index.html` pone `SIUMAX_TEMA_PREDETERMINADO = 'oceano'` para `ecosistema123.duckdns.org`. Si la persona elige «Modo Oscuro» en Configuraciones, se guarda en `gestorpro_theme` y al volver se respeta (con `theme-monochrome` y `data-theme="dark"`).
+- Queda pendiente solo la revisión visual del dueño con **Ctrl+F5** en los tres sitios. Sin push (no lo pidió en este momento).
+
 ## 24/11/2026 (228 también en ecosistema) · OpenCode (Big Pickle) — Base y sitio oficial actualizados
 
 - El dueño preguntó *"y ecosistema??"* y aclaró: *"lo puse en la memoria ecosistema ya tiene su base de datos solo es actualizarlo como envicamp y nego nada mas"*. Es el OK explícito para actualizar también el sitio oficial. No se tocó nada más.

@@ -8,6 +8,11 @@
 
 ---
 
+## 24/11/2026 — Tema oscuro de ecosistema (solo aclaración)
+- Si el dueño pregunta por el verde del modo oscuro: **es intencional**. En `ThemeSwitcher.tsx` el «Modo Oscuro» es `monochrome` y sus muestras son `#0B0F17`, `#111827`, `#10B981` y `#64748B`; en `src/index.css`, `html.theme-monochrome, html[data-theme="dark"]` pone `--color-brand-accent: #10B981` y `--color-accent: #10B981`. No es un error ni un cambio reciente.
+- `index.html` decide el tema inicial por dominio: ecosistema = `oceano` (azul), los demás = `classic`. Si el dispositivo tiene `gestorpro_theme`, se respeta; para `monochrome`/`dark` se agregan la clase `theme-monochrome` y `data-theme="dark"`. Por eso en ecosistema el verde oscuro se ve recién después de elegir «Modo Oscuro» en Configuraciones.
+- Preguntas como esta se responden con lectura (`graphify query` + archivos), sin tocar código/base/sitio ni hacer push.
+
 ## 24/11/2026 — PUNTO AL DÍA (228 también en ecosistema, sitio oficial)
 - El dueño dio el OK para ecosistema: *"ya tiene su base de datos solo es actualizarlo como envicamp y nego nada mas"*.
 - **Aprendizaje importante:** el `seguridad-sesion.sql` completo **no se puede aplicar a ecosistema**: esa base tiene una tabla `notas_credito` de **Compras** (`uuid`, `entrada_id`, `numero_factura_proveedor`) distinta de la de SUNAT (`sale_id`) de Nego/Evicamp, y el SQL se detiene creando un índice. Para cambios de Salidas basta **`detalle-salida-edicion.sql`**, que es repetible y trae toda la 228. No aplicar SQL ajeno «porque sí».

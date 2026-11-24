@@ -1473,3 +1473,8 @@
 - Se actualizó la base `ecosistema` **solo con lo de la 228**: primero en copia, luego con respaldo, `ON_ERROR_STOP`, `lock_timeout` y `NOTIFY pgrst`, sin reiniciar la API. El SQL completo no se aplicó porque choca con una tabla `notas_credito` de Compras que ecosistema tiene desde antes y no tiene que ver con Salidas. Se agregaron también la tienda principal y el cliente interno de las notas, para quedar igual que Nego y Evicamp.
 - Se desplegó el sitio oficial (22 archivos) y se repusieron sus iconos. Verificado: API 401 sin sesión, bundles nuevos, sin cobro y pruebas **35/35** + **11/11** con login real del sitio, teclado, sin internet y 390/768/1366/1920. Las claves se leen de `.env.vps` y nunca se muestran.
 - Falta que el dueño revise `https://ecosistema123.duckdns.org` con **Ctrl+F5**.
+
+## 24/11/2026 (pregunta sobre el modo oscuro de ecosistema)
+- El dueño preguntó: *"una pregunta el modo oscuro de ecosistema tiene color verde?"*.
+- Se revisó solo lectura: `graphify query`, `index.html`, `src/utils/tema.ts`, `ThemeSwitcher.tsx` y `src/index.css`. Respuesta: **sí**, el «Modo Oscuro» (`monochrome`) lleva verde esmeralda `#10B981` como acento; es el mismo verde de siempre, no lo cambió la 228. ecosistema entra en Océano (azul) y el oscuro se aplica si se elige en Configuraciones (se guarda en `gestorpro_theme`).
+- No se cambió nada del sistema, la base ni el sitio; no se hizo push. Sigue pendiente la revisión con **Ctrl+F5**.
