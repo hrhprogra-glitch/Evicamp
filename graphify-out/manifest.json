@@ -2004,9 +2004,9 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795541403.546479,
-    "seen": 1795541487.991691,
-    "ast_hash": "464eaa2c3d52400534c61153ba52a3d6",
+    "mtime": 1795541654.733532,
+    "seen": 1795541684.9676452,
+    "ast_hash": "64133d04400160b1333a135b86e96996",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
@@ -3822,9 +3822,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-stock-detalle-227.cjs": {
-    "mtime": 1795541074.4051208,
-    "seen": 1795541487.935402,
-    "ast_hash": "fd64ecd09c175c5fa61d46916f5a32bc",
+    "mtime": 1795541616.7987156,
+    "seen": 1795541684.9104548,
+    "ast_hash": "bcbca3ccba11344f5ad360c8c83585a3",
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalDevolucionesSalida.tsx": {
