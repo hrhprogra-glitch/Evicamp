@@ -7,6 +7,15 @@
 
 ---
 
+## 24/11/2026 (221) · OpenCode (Big Pickle) — Fecha en el filtro de Salidas y diagnóstico de las devoluciones (solo Nego)
+
+- **Dueño pidió:** *"ya no muestra las devoluciones"* en la **tabla de Salidas** (la marquita `dev.`) y *"en el filtro agrega la fecha para poder ver salidas de otros días"*. Decidió **una fecha y TODAS**: por defecto se ven todos los días. Solo Nego, sin tocar teclado, ids, colores, botones ni la lógica de devoluciones.
+- **Devoluciones (no se borró por el cambio de hoy):** diagnóstico de solo lectura en el sitio en vivo: la consulta de Salidas trae **393 filas**, con **0** salidas con `devoluciones` y **0** ítems con `cantidad_devuelta > 0`. Consultas directas a `salida_devoluciones?select=*` y a `salida_items?...cantidad_devuelta=gt.0` dan estado 200 con **0 filas**. Los bundles anteriores y nuevos tienen los mismos marcadores («Registrar Devolución», «Devoluciones registradas», `salida_devoluciones`, `dev.`). No se tocó `TablaSalidas.tsx` ni `ModalDetalleSalida.tsx`; falta que el dueño recuerde una salida con devolución para revisar ese caso concreto.
+- **Cambio (2 archivos propios):** `src/sections/Salidas/components/HeaderSalidas.tsx` agrega `filtroFecha` / `onFiltroFechaChange`, un `input type="date"` con id `filtro-fecha-salidas` y el botón **TODAS** (`btn-filtro-fecha-todas`), integrados en la fila `BARRA` y con Enter que abre el calendario. `src/sections/Salidas/index.tsx` guarda la fecha (`''` = todos), filtra por `String(s.fecha || '').slice(0, 10)` y vuelve a la página 1 al cambiarla.
+- **Verificación en vivo (solo lectura):** con `2026-11-23` bajó de **50 a 4 filas**; **TODAS** devolvió a **50**; Enter abrió el calendario y dejó el foco en el campo. Con el calendario **cerrado**, ↓ baja, ↑ va a «Nueva salida», ← → recorren los filtros y la fecha **no cambia**; con el calendario **abierto**, las flechas navegan dentro del calendario (comportamiento nativo correcto para elegir día).
+- **Deploy:** el árbol principal no compila por WIP ajeno (`AnalisisSalidasProductos.tsx`, no tocado), así que se compiló en un worktree limpio con solo los 2 TSX propios y el CSS de impresión que ya estaba en vivo. Nuestro deploy dejó `index-DFRVNc6v.css` / `index-CZhhIneO.js`. Después otra IA desplegó el árbol completo; el sitio sirve **`index-BEC4TPfN.css` / `index-CImqQUqO.js`** y se comprobó que ese bundle trae el filtro nuevo y el código de devoluciones. No se volvió a desplegar para no pisar su trabajo.
+- **Estado:** commit local selectivo, sin push; sin Evicamp, ecosistema, base ni credenciales. Falta que el dueño revise con Ctrl+F5 y, si recuerda una devolución antigua, diga qué salida/fecha para mirarla.
+
 ## 24/11/2026 (220) · OpenCode (Big Pickle) — Desplegable de empleado arreglado en Nueva salida (solo Nego)
 
 - **Dueño pidió:** arreglar que en **Nueva salida** el desplegable de «Empleado responsable» saliera grande y vacío. Pidió conservar que Enter abra la lista, que flechas y Enter elijan, que venga por defecto quien ingresa y que se pueda cambiar después en el detalle. Solo Nego, sitio de pruebas; sin tocar ids, colores, botones ni lógica.

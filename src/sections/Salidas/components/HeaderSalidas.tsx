@@ -12,6 +12,8 @@ interface HeaderSalidasProps {
   onFiltroTipoChange: (tipo: TipoSalida | 'TODOS') => void;
   filtroEstado: EstadoSalida | 'TODOS';
   onFiltroEstadoChange: (estado: EstadoSalida | 'TODOS') => void;
+  filtroFecha: string;
+  onFiltroFechaChange: (fecha: string) => void;
   onNuevaSalida: () => void;
   metricas: {
     total: number;
@@ -22,7 +24,7 @@ interface HeaderSalidasProps {
 }
 
 // Fila de la sub-barra que se recorre con ← →
-const BARRA = ['buscador-salidas', 'filtro-tipo-salidas', 'filtro-estado-salidas'];
+const BARRA = ['buscador-salidas', 'filtro-tipo-salidas', 'filtro-estado-salidas', 'filtro-fecha-salidas', 'btn-filtro-fecha-todas'];
 
 // Bajar desde la sub-barra: paginación de arriba o la primera fila
 const bajarDesdeBarra = () => {
@@ -34,13 +36,21 @@ const bajarDesdeBarra = () => {
 };
 
 // Teclas de los filtros: las flechas solo mueven el selector (no cambian la opción); Enter o Espacio abren la lista
-const teclasFiltro = (e: React.KeyboardEvent<HTMLSelectElement>) => {
+const teclasFiltro = (e: React.KeyboardEvent<HTMLSelectElement | HTMLInputElement>) => {
   const i = BARRA.indexOf(e.currentTarget.id);
   if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById(BARRA[Math.min(i + 1, BARRA.length - 1)])?.focus(); }
   else if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById(BARRA[Math.max(i - 1, 0)])?.focus(); }
   else if (e.key === 'ArrowDown') { e.preventDefault(); bajarDesdeBarra(); }
   else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-nueva-salida')?.focus(); }
   else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); try { e.currentTarget.showPicker(); } catch { /* sin lista */ } }
+};
+
+// En la fecha, ← → sirven para moverse dentro del calendario (día/mes/año), como manda la regla global.
+// Arriba/abajo y Enter sí siguen la costumbre de la barra de filtros.
+const teclasFecha = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (e.key === 'ArrowDown') { e.preventDefault(); bajarDesdeBarra(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('btn-nueva-salida')?.focus(); }
+  else if (e.key === 'Enter') { e.preventDefault(); try { e.currentTarget.showPicker(); } catch { /* sin calendario */ } }
 };
 
 export const HeaderSalidas: React.FC<HeaderSalidasProps> = ({
@@ -50,6 +60,8 @@ export const HeaderSalidas: React.FC<HeaderSalidasProps> = ({
   onFiltroTipoChange,
   filtroEstado,
   onFiltroEstadoChange,
+  filtroFecha,
+  onFiltroFechaChange,
   onNuevaSalida,
   metricas,
 }) => {
@@ -66,7 +78,7 @@ export const HeaderSalidas: React.FC<HeaderSalidasProps> = ({
       <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-3 sm:py-4 flex flex-wrap justify-between items-center gap-3 shrink-0">
         <div className="flex items-center gap-3 sm:gap-6 min-w-0 max-w-full flex-wrap">
           {/* Título de la Sección */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="hidden lg:flex items-center gap-3 shrink-0">
             <div className="w-10 h-10 bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent)] flex items-center justify-center shadow-[2px_2px_0_0_var(--color-accent)] rounded-none shrink-0">
               <Truck size={20} className="text-[var(--color-accent)]" />
             </div>
@@ -170,6 +182,28 @@ export const HeaderSalidas: React.FC<HeaderSalidasProps> = ({
             <option value="FINALIZADO">FINALIZADAS</option>
             <option value="CANCELADO">CANCELADAS</option>
           </select>
+
+          {/* 24/11/2026 (221): fecha para ver salidas de otros días; TODAS deja la fecha vacía */}
+          <div className="flex items-center gap-1 w-full sm:w-auto">
+            <input
+              id="filtro-fecha-salidas"
+              type="date"
+              value={filtroFecha}
+              onChange={(e) => onFiltroFechaChange(e.target.value)}
+              onKeyDown={teclasFecha}
+              title="Filtrar salidas por fecha"
+              className="filtro-sobrio w-full sm:w-auto"
+            />
+            <button
+              id="btn-filtro-fecha-todas"
+              type="button"
+              onClick={() => onFiltroFechaChange('')}
+              title="Ver salidas de todos los días"
+              className="boton-cabecera px-2 py-2 font-black text-[10px] uppercase tracking-widest rounded-none cursor-pointer h-[2.75rem]"
+            >
+              TODAS
+            </button>
+          </div>
         </div>
       </div>
     </div>

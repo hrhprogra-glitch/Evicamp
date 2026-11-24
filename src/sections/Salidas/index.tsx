@@ -14,6 +14,8 @@ export const Salidas: React.FC = () => {
   const [busqueda, setBusqueda] = useState('');
   const [filtroTipo, setFiltroTipo] = useState<TipoSalida | 'TODOS'>('TODOS');
   const [filtroEstado, setFiltroEstado] = useState<EstadoSalida | 'TODOS'>('TODOS');
+  // 221: fecha elegida en la barra; vacío = TODAS (no se oculta ningún día)
+  const [filtroFecha, setFiltroFecha] = useState('');
 
   // Modales
   const [modalNuevoOpen, setModalNuevoOpen] = useState(false);
@@ -26,10 +28,7 @@ export const Salidas: React.FC = () => {
 
   const fetchSalidas = async () => {
     setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('salidas')
-        .select(`
+    const selectBase = `
           *,
           customer:customers(id, name, dni, ruc, telefono, direccion),
           bien:bienes_cliente(id, nombre, tipo, direccion, ubicacion),
@@ -38,8 +37,20 @@ export const Salidas: React.FC = () => {
             trabajador:trabajadores(id, nombre, cargo, telefono, dni)
           ),
           items:salida_items(*)
-        `)
+        `;
+    const selectConDevoluciones = `${selectBase}, devoluciones:salida_devoluciones(*)`;
+    try {
+      let { data, error } = await supabase
+        .from('salidas')
+        .select(selectConDevoluciones)
         .order('id', { ascending: false });
+
+      // Compatibilidad: si la tabla de devoluciones no existe en alguna BD, reintentar sin ella.
+      if (error && /salida_devoluciones|relation|schema cache/i.test(error.message || '')) {
+        const retry = await supabase.from('salidas').select(selectBase).order('id', { ascending: false });
+        data = retry.data as any;
+        error = retry.error as any;
+      }
 
       if (error) throw error;
       setSalidas((data as any[]) || []);
@@ -117,6 +128,7 @@ export const Salidas: React.FC = () => {
     return salidas.filter((s) => {
       if (filtroTipo !== 'TODOS' && s.tipo !== filtroTipo) return false;
       if (filtroEstado !== 'TODOS' && s.estado !== filtroEstado) return false;
+      if (filtroFecha && String(s.fecha || '').slice(0, 10) !== filtroFecha) return false;
       if (busqueda.trim()) {
         const q = busqueda.toLowerCase().trim();
         const matchCodigo = s.codigo?.toLowerCase().includes(q);
@@ -134,7 +146,7 @@ export const Salidas: React.FC = () => {
       }
       return true;
     });
-  }, [salidas, filtroTipo, filtroEstado, busqueda]);
+  }, [salidas, filtroTipo, filtroEstado, filtroFecha, busqueda]);
 
   // Métricas (cuadros de la cabecera)
   const metricas = useMemo(() => {
@@ -191,6 +203,11 @@ export const Salidas: React.FC = () => {
           setFiltroEstado(st);
           setPaginaActual(1);
         }}
+        filtroFecha={filtroFecha}
+        onFiltroFechaChange={(f) => {
+          setFiltroFecha(f);
+          setPaginaActual(1);
+        }}
         onNuevaSalida={handleNuevaSalida}
         metricas={metricas}
       />
@@ -229,9 +246,7 @@ export const Salidas: React.FC = () => {
           onReload={async () => {
             fetchSalidas();
             if (salidaSeleccionada) {
-              const { data } = await supabase
-                .from('salidas')
-                .select(`
+              const base = `
                   *,
                   customer:customers(id, name, dni, ruc, telefono, direccion),
                   bien:bienes_cliente(id, nombre, tipo, direccion, ubicacion),
@@ -240,9 +255,17 @@ export const Salidas: React.FC = () => {
                     trabajador:trabajadores(id, nombre, cargo, telefono, dni)
                   ),
                   items:salida_items(*)
-                `)
+                `;
+              let { data, error } = await supabase
+                .from('salidas')
+                .select(`${base}, devoluciones:salida_devoluciones(*)`)
                 .eq('id', salidaSeleccionada.id)
                 .single();
+              if (error && /salida_devoluciones|relation|schema cache/i.test(error.message || '')) {
+                const retry = await supabase.from('salidas').select(base).eq('id', salidaSeleccionada.id).single();
+                data = retry.data as any;
+                error = retry.error as any;
+              }
               if (data) setSalidaSeleccionada(data as any);
             }
           }}
