@@ -3666,6 +3666,12 @@ ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS persona_contacto text;
 ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS notas text;
 ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS activo boolean NOT NULL DEFAULT true;
 
+-- 224 (24/11/2026): cliente interno invisible para las Salidas registradas solo como nota.
+--ativo=false evita que aparezca en el buscador; el nombre real se guarda en observaciones como CLIENTE: <NOMBRE>.
+INSERT INTO public.customers (id, name, activo)
+VALUES (990001, 'CLIENTE NO REGISTRADO (NOTA)', false)
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, activo = false;
+
 -- Lo que se atiende de cada cliente (generaliza "Piscinas" de Eco-Sistema): piscina, jardín, vehículo, equipo...
 -- Tiene su propia dirección y ubicación (puede no ser la del cliente). Lo usarán Salidas, Agenda, Contratos y Taller.
 CREATE TABLE IF NOT EXISTS public.bienes_cliente (

@@ -61,6 +61,10 @@ let _cacheCatalogosServic: {
 
 const CLAVE_BORRADOR_SALIDA = 'siumax_servic_borrador_salida';
 
+// 224 (dueño 24/11/2026): cliente interno invisible (activo=false) que se usa como referencia cuando el nombre
+// se registra solo como nota. No aparece en el desplegable; el nombre real sigue yendo en observaciones.
+const ID_CLIENTE_NOTA = 990001;
+
 export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   isOpen,
   salidaRaiz,
@@ -199,9 +203,14 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   // Si el borrador o "Continuar" ya traía cliente registrado, mostrar su nombre en el cuadro en cuanto llegue el catálogo.
   useEffect(() => {
     if (!customerId || busquedaCliente.trim()) return;
-    const cli = clientes.find((c) => c.id === Number(customerId));
-    if (cli) setBusquedaCliente(cli.name || '');
-  }, [clientes, customerId]);
+    const cli = clientes.find((c) => String(c.id) === String(customerId));
+    if (cli) {
+      setBusquedaCliente(cli.name || '');
+    } else if (String(customerId) === String(ID_CLIENTE_NOTA) && clienteLibre.trim()) {
+      // El cliente interno no está en el catálogo (activo=false): se muestra el nombre escrito en la nota.
+      setBusquedaCliente(clienteLibre.trim());
+    }
+  }, [clientes, customerId, clienteLibre]);
 
   // Cargar datos al abrir
   useEffect(() => {
@@ -227,7 +236,10 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         setTieneBorrador(false);
       } else if (datosIniciales) {
         setTipo(datosIniciales.tipo || 'SERVICIO');
-        setCustomerId(datosIniciales.customerId || '');
+        setCustomerId(
+          datosIniciales.customerId
+            || (datosIniciales.clienteLibre?.trim() ? ID_CLIENTE_NOTA : '')
+        );
         setClienteLibre(datosIniciales.clienteLibre || '');
         if (datosIniciales.clienteLibre) setBusquedaCliente(datosIniciales.clienteLibre);
         setBienId(datosIniciales.bienId || '');
@@ -256,7 +268,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                 : (b.clienteLibre || ''); // borradores anteriores a esta fase
               setBusquedaCliente(nombreGuardado);
               if (nombreGuardado.trim()) {
-                if (b.customerId) setCustomerId(b.customerId);
+                // 224: borradores anteriores guardaron la nota sin customerId; se les asigna el cliente interno.
+                setCustomerId(b.customerId || ID_CLIENTE_NOTA);
                 if (b.clienteLibre) setClienteLibre(b.clienteLibre);
               } else {
                 setCustomerId('');
@@ -649,20 +662,22 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     setBusquedaCliente(c.name || `${c.dni || ''} ${c.ruc || ''}`.trim());
     setClienteListaAbierta(false);
     setIndiceCliente(0);
-    // La nota se conserva: la salida sigue necesitando un cliente registrado como referencia (llave foránea).
+    // La nota se conserva: si el dueño elige un cliente real después, ese id manda; el nombre sigue en la nota.
     // Con cliente registrado, "Lo que se atiende" ya está habilitado: el selector baja ahí.
     bajarAlCampoSiguiente('select-bien-salida');
   };
 
-  // Última opción del desplegable: registra el nombre escrito como nota. NO crea un cliente en la base.
+  // Última opción del desplegable: registra el nombre escrito como nota y le pone el cliente interno invisible
+  // como referencia para que la base acepte la salida. No crea un cliente nuevo ni lo muestra en la lista.
   const elegirClienteNota = () => {
     const nombre = busquedaCliente.trim();
     if (!nombre) return;
+    setCustomerId(ID_CLIENTE_NOTA);
     setClienteLibre(nombre);
     setClienteListaAbierta(false);
     setIndiceCliente(0);
-    // Sin cliente registrado "Lo que se atiende" sigue deshabilitado, así que el selector baja a "Dirección".
-    bajarAlCampoSiguiente('input-direccion-salida');
+    // 224: con la referencia interna ya puesta, "Lo que se atiende" está habilitado y el selector baja ahí.
+    bajarAlCampoSiguiente('select-bien-salida');
   };
 
   const handleKeyDownBuscarCliente = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -705,7 +720,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   const handleGuardarSalida = async () => {
     if (!customerId) {
       avisar(clienteLibre.trim()
-        ? 'La nota ya está registrada; elige un cliente de la lista como referencia para guardar la salida'
+        ? 'Registra el nombre como nota desde la lista para guardar la salida'
         : 'Busca y elige un cliente, o escribe el nombre y elige «Registrar como nota» en la lista');
       inputBuscarClienteRef.current?.focus();
       return;
@@ -772,7 +787,11 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
 
       // 194: la salida ya quedó guardada. En vez de cerrar de golpe, se arma el comprobante con lo que el
       // formulario tiene en pantalla y sale la vista previa para elegir impresión, descarga o WhatsApp.
-      const clienteElegido = clientes.find((c) => String(c.id) === String(customerId));
+      // El cliente interno no está en el catálogo (activo=false): en el comprobante se muestra el nombre escrito.
+      const clienteElegido = clientes.find((c) => String(c.id) === String(customerId))
+        || (clienteLibre.trim() && String(customerId) === String(ID_CLIENTE_NOTA)
+          ? { id: ID_CLIENTE_NOTA, name: clienteLibre.trim().toUpperCase() }
+          : null);
       const bienElegido = bienes.find((b) => String(b.id) === String(bienId));
       const idSalida = Number(data?.id || 0);
       const salidaArmada: Salida = {

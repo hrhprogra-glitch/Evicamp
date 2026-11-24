@@ -1390,3 +1390,9 @@
 - El dueño respondió: *"ya pero eso no debe ser asi solo debe registrar la nota no debe hacerme escoger un cliente ya creado me entiendes??"*. Sí se entendió: no quiere ver ni elegir ningún cliente de la lista cuando solo va a dejar un nombre como nota.
 - Se le propuso (sin ejecutar): crear en Nego un cliente interno `CLIENTE NO REGISTRADO (NOTA)` con id fijo `990001` y `activo = false` para que no salga en el desplegable, y que al elegir «REGISTRAR COMO NOTA» el sistema lo use automáticamente como referencia. El nombre escrito seguirá guardándose en observaciones como `CLIENTE: <NOMBRE>`. No se tocaría la función de la base, los ids visibles, colores, teclado ni devoluciones.
 - Queda esperando el **«empieza»**. No se tocó código, base, Evicamp ni credenciales; no se desplegó ni se hizo push.
+
+## 24/11/2026 (la nota ya basta, HECHO en Nego)
+- El dueño dijo **«empieza»** a la propuesta. Se creó en la base de pruebas `siumax` el cliente interno `CLIENTE NO REGISTRADO (NOTA)`, id `990001`, `activo=false`, con respaldo previo y `lock_timeout`. El mismo `INSERT` idempotente quedó en `servidor/sql/seguridad-sesion.sql`.
+- En `ModalNuevaSalida.tsx`, al elegir «REGISTRAR COMO NOTA» el sistema pone ese id por detrás. Para el dueño no cambia nada: sigue viendo solo su nota y el nombre se guarda en observaciones como `CLIENTE: <NOMBRE>`. Ya no aparece el aviso que pedía elegir un cliente de la lista.
+- Se desplegó **solo Nego**; en vivo se verificó el bundle `index-25yvKBon.js` / `index-DFRVNc6v.css`. Probado con teclado en celular, tablet, laptop y PC, y también con el navegador sin internet. Guardado de prueba: **SAL-1547**, con `customer_id=990001`, nota `CLIENTE: ZZZ NOTA DIAG 224` y el nombre escrito en el comprobante.
+- Sin Evicamp, ecosistema, credenciales ni push. Falta que el dueño lo mire con **Ctrl+F5**.

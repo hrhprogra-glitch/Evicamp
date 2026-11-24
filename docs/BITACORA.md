@@ -7,6 +7,16 @@
 
 ---
 
+## 24/11/2026 (224) · OpenCode (Big Pickle) — La nota ya basta para guardar Salida, sin elegir cliente creado (solo Nego)
+
+- **Dueño dio el OK:** *"empieza"* a la propuesta de la 223. Quiere: escribir nombre → **REGISTRAR COMO NOTA** → Guardar, sin escoger cliente de la lista.
+- **Base de pruebas `siumax`:** respaldo previo `/root/backups/siumax-antes-cliente-nota-20261124150937.dump`, transacción con `SET LOCAL lock_timeout = '5s'` e `INSERT ... ON CONFLICT (id) DO UPDATE` del cliente interno `CLIENTE NO REGISTRADO (NOTA)`, **id fijo 990001, `activo=false`** (no sale en el buscador). Verificado: 505 clientes en total, fila 990001 inactiva. No se tocó `fn_registrar_salida`.
+- **Código:** en `ModalNuevaSalida.tsx` se agregó `ID_CLIENTE_NOTA = 990001`; `elegirClienteNota` lo asigna automáticamente y baja el foco a «Lo que se atiende» (antes quedaba deshabilitado); borradores y `datosIniciales` con nota sin id reciben el mismo cliente; la vista previa usa el **nombre escrito** en vez de `NO REGISTRADO`. El aviso viejo que pedía «elegir un cliente de la lista como referencia» se cambió por uno que pide registrar la nota. En `servidor/sql/seguridad-sesion.sql` quedó el mismo `INSERT` idempotente.
+- **Deploy:** compilación limpia en `C:/Users/User/AppData/Local/Temp/opencode/nego-fix-221` (sin el WIP ajeno que impide compilar en el árbol principal), `node ai-scripts/deploy.cjs siumax`, 22 archivos. En vivo se verificó que el sitio sirve **`index-25yvKBon.js` / `index-DFRVNc6v.css`**, iguales a los generados. El CSS coincide con el que estaba en vivo (conserva la impresión).
+- **Pruebas:** con teclado en **390/768/1366/1920** aparece solo la opción de nota, se registra con Enter, la nota se ve, «Lo que se atiende» queda habilitado y el foco baja ahí. Igual con el navegador **sin internet** (catálogo en memoria). Guardado real de prueba: **SAL-1547**, `customer_id=990001`, observaciones **`CLIENTE: ZZZ NOTA DIAG 224`**, comprobante con ese nombre y aviso de éxito. Queda una salida de prueba en Nego, identificada con `ZZZ`.
+- **Nota para el turno siguiente:** el primer robot dejó 4 fallos por su propia prueba (no supo cerrar el aviso que va dentro de la página ni encontró la etiqueta del trabajador porque el texto sale en MAYÚSCULAS); con esos dos ajustes el guardado pasó. No eran fallos del cambio.
+- Sin Evicamp, ecosistema, credenciales ni push; ids visibles, colores, botones, teclado, devoluciones y modo sin internet intactos. Falta que el dueño lo revise con **Ctrl+F5**.
+
 ## 24/11/2026 (223) · OpenCode (Big Pickle) — El dueño aclara que la nota debe bastar: propuesta esperando el OK
 
 - **Dueño:** *"ya pero eso no debe ser así, solo debe registrar la nota, no debe hacerme escoger un cliente ya creado, me entiendes??"*. No acepta la regla anterior de «cliente de referencia».
