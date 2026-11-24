@@ -2004,28 +2004,28 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795539657.3630846,
-    "seen": 1795540202.7209995,
-    "ast_hash": "953f4d6d157854cb636a95ddb331d1e2",
-    "semantic_hash": "953f4d6d157854cb636a95ddb331d1e2"
+    "mtime": 1795541403.546479,
+    "seen": 1795541487.991691,
+    "ast_hash": "464eaa2c3d52400534c61153ba52a3d6",
+    "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795539657.372127,
-    "seen": 1795540202.7210007,
-    "ast_hash": "834f122d95c67f740b1896436f7c4d84",
-    "semantic_hash": "834f122d95c67f740b1896436f7c4d84"
+    "mtime": 1795541421.083428,
+    "seen": 1795541487.9916954,
+    "ast_hash": "9ab6ebbdc258e41e06b4acd6475b8a5f",
+    "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795539657.372127,
-    "seen": 1795540202.7210023,
-    "ast_hash": "1f1f5d96b0fb768652676c0d8d3a5f9a",
-    "semantic_hash": "1f1f5d96b0fb768652676c0d8d3a5f9a"
+    "mtime": 1795541437.6171768,
+    "seen": 1795541487.991699,
+    "ast_hash": "66902c0728b643487a750de9f8aa5fe0",
+    "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795539657.4041789,
-    "seen": 1795540202.7210052,
-    "ast_hash": "08b6adc234c0949e6b3ee2dbfddff6dc",
-    "semantic_hash": "08b6adc234c0949e6b3ee2dbfddff6dc"
+    "mtime": 1795541414.7680538,
+    "seen": 1795541487.9919949,
+    "ast_hash": "a201eabb8562798f8437b5b4f2b5a105",
+    "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
     "mtime": 1794548764.6587758,
@@ -2934,10 +2934,10 @@
     "semantic_hash": "a73c921d7df94ab9452faaab8f4bc53e"
   },
   "src/sections/Salidas/components/ModalDetalleSalida.tsx": {
-    "mtime": 1795539135.1985464,
-    "seen": 1795540202.7208452,
-    "ast_hash": "d4c7e0b78f997db7bcff8010200414dd",
-    "semantic_hash": "d4c7e0b78f997db7bcff8010200414dd"
+    "mtime": 1795541238.982602,
+    "seen": 1795541487.9719913,
+    "ast_hash": "3a618d41bc1ff91d86fc821f27b2c9dc",
+    "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalDevolucion.tsx": {
     "mtime": 1794524203.5337174,
@@ -3776,14 +3776,14 @@
   "ai-scripts/ecosistema-supabase-devoluciones-full.json": {
     "mtime": 1795496427.5380533,
     "seen": 1795540202.7199996,
-    "ast_hash": "2bd707cac6f189d14b9dd69b9a767fbb",
-    "semantic_hash": "2bd707cac6f189d14b9dd69b9a767fbb"
+    "ast_hash": "",
+    "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-detalle-salida-nego.cjs": {
-    "mtime": 1795538705.569151,
-    "seen": 1795540202.720205,
-    "ast_hash": "c126670e28976ea4ec15e1bb11dfc7b0",
-    "semantic_hash": "c126670e28976ea4ec15e1bb11dfc7b0"
+    "mtime": 1795540907.2758641,
+    "seen": 1795541487.9191744,
+    "ast_hash": "cc372462210d803f606b92471b99177d",
+    "semantic_hash": ""
   },
   "ai-scripts/pruebas/diagnostico-detalle-226.mjs": {
     "mtime": 1795539302.977184,
@@ -3810,9 +3810,27 @@
     "semantic_hash": "a00f0f1d0da876778a027f1b395426cb"
   },
   "servidor/sql/detalle-salida-edicion.sql": {
-    "mtime": 1795538731.2246952,
-    "seen": 1795540202.7205937,
-    "ast_hash": "1f7bed3a1340893e4c97cebf8af29724",
-    "semantic_hash": "1f7bed3a1340893e4c97cebf8af29724"
+    "mtime": 1795540725.923764,
+    "seen": 1795541487.9485514,
+    "ast_hash": "718faa0efd401f6382f3305181248938",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-detalle-salida-227.mjs": {
+    "mtime": 1795541058.9898784,
+    "seen": 1795541487.9276493,
+    "ast_hash": "aa8c5523a5a33d02fa6cdca75c023505",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/prueba-stock-detalle-227.cjs": {
+    "mtime": 1795541074.4051208,
+    "seen": 1795541487.935402,
+    "ast_hash": "fd64ecd09c175c5fa61d46916f5a32bc",
+    "semantic_hash": ""
+  },
+  "src/sections/Salidas/components/ModalDevolucionesSalida.tsx": {
+    "mtime": 1795541233.5980656,
+    "seen": 1795541487.9721434,
+    "ast_hash": "bebac91ed65521b8ebe8fb9cb44b54ae",
+    "semantic_hash": ""
   }
 }
