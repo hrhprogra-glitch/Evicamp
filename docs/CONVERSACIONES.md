@@ -1360,3 +1360,10 @@
 - Queda fija la regla: "el comienzo" es el respaldo original `2301848e…`, con 8 fallos viejos del selector de empleado de Salidas que no se arreglan por iniciativa propia.
 - No se tocó código, Evicamp, ecosistema, base ni credenciales; no se hizo push.
 
+## 24/11/2026 (letra igual en todas las tablas y en las ventanas, solo Nego)
+- El dueño pidió: *"quiero que todas las sesiones respeten ese tamaño porque algunas sesiones tiene letras pequeñas en la tabla que no se ve bien con en las ventanas flotantes"*. Como referencia dijo el tamaño de **Inventario** y de las **ventanas flotantes**.
+- Se midió antes de proponer: Inventario y ventanas usan 14–15 px (escala compartida `--text-xs` / `--text-sm`); las sesiones chicas usaban tamaños fijos de 9–11 px.
+- El dueño eligió las 3 opciones: **"Solo sesiones chicas (Recomendado)"**, **"Sí, también las de las ventanas"** y **"Solo Nego, sitio de pruebas (Recomendado)"**. Pidió además **no tocar ids, teclado, colores, botones ni lógica**, y explicar en español simple.
+- Se hizo un bloque centralizado al final de `src/index.css` (variables compartidas y reglas para cabeceras y datos). En Salidas, 3 filas con mucho texto se cortaban con la letra nueva: se cambió su altura fija por un mínimo, solo en esa tabla y en pantallas grandes.
+- Medido después en Nego: todas las tablas de sesión y de ventana quedaron en 14–15 px; la paginación sigue en 10 px, igual que en Inventario. Revisión en 1366×900 y 390×844: 0 desbordes y 0 filas cortadas.
+- Deploy solo a Nego (`index-BeqeeMQO.css` / `index-hrvuvns5.js`). Sin Evicamp, sin ecosistema, sin base, sin credenciales y sin push. Falta que el dueño lo mire con Ctrl+F5.

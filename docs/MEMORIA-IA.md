@@ -914,5 +914,10 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - **Commits propios hasta hoy:** 214 = `ff9a933` (HEAD local), 213 = `f3f7bbe`, 212 = `a8678ef`, 211-bis = `0c2fdd1`, 211 = `9a1f95e`. Sin push en ninguno.
 - Esta puesta al día es solo documentación: no se tocó código, ni Evicamp, ecosistema, base ni credenciales.
 
-
-  
+## 62. Letra de tablas: medir antes, arreglar en un solo bloque de CSS (24/11/2026, bitácora 219)
+- El dueño quiere **la misma letra en todas las tablas**, con Inventario y las ventanas flotantes como referencia. No basta con "verla bien": hay que **medir en vivo** (`getComputedStyle().fontSize`) y proponer un número concreto antes de tocar. Aquí la escala compartida es `--text-xs` (14 px, cabeceras) y `--text-sm` (15 px, datos), definida en `src/index.css`.
+- La causa de las tablas chicas no era el tema ni el zoom: eran clases fijas `text-[8px]`…`text-[12px]` escritas en los componentes. No hay que editar decenas de TSX: un bloque al final de `src/index.css` con variables `--text-tabla-cabecera` / `--text-tabla-dato` y selectores `main .tabla-cabecera`, `main [data-row="true"]` y `.ventana-sobria` resuelve el cambio sin tocar ids, teclado ni lógica.
+- **Punto ciego encontrado:** dentro de las ventanas hay tablas sin `.tabla-cabecera` ni `data-row`. El tamaño puede estar en `<thead>`, en `<th>`/`<td>` **o en la propia `<table>`** (ej. `className="w-full text-left text-[11px]"` en el detalle de Salidas). Hay que cubrir los 3 sitios; si no, la medición sigue dando 11/12 px aunque el bloque "parezca" aplicado. El medidor debe mirar `th` y `td` calculados, no solo buscar clases.
+- **Ojo con las alturas fijas:** al subir la letra, las filas con `md:h-[79px]` (Salidas) pueden cortar contenido. Antes de atribuirlo al cambio, comparar `scrollHeight` con la letra vieja inyectada por devtools. Aquí ya había 1 px de corte antes y 3 filas pasaron a 85–87 px; se cambió la altura por `min-height: 79px` **solo en `#tabla-salidas-lista` y dentro de `@media (min-width: 768px)`**, no en todas las tablas.
+- La paginación (`PaginacionSobrio`) queda en 10 px en **todas** las sesiones, incluso en Inventario: no es un olvido y no se debe "arreglar".
+- Verificación mínima antes de dar por hecho: medición de frecuencias por sesión, revisión de `scrollWidth - clientWidth` y de `scrollHeight > clientHeight` en PC y celular, y medición de `th`/`td` dentro de ventanas abiertas. No dar por bueno un selector sin medir su resultado calculado.

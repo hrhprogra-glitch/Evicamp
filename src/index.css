@@ -1149,3 +1149,55 @@ html:root .filtro-sobrio:focus, html:root .buscador-sobrio:focus-within { outlin
 .tablero-graficos { --g-ventas: #2a78d6; --g-resta: #eb6834; --g-ganancia: #1baf7a; --g-perdida: var(--color-danger); --g-rejilla: #E2E8F0; }
 html[data-theme="dark"] .tablero-graficos, html.theme-monochrome .tablero-graficos {
   --g-ventas: #3987e5; --g-resta: #d95926; --g-ganancia: #199e70; --g-rejilla: #1F2937; }
+
+/* ===== LETRA IGUAL EN TODAS LAS TABLAS (pedido del dueño 24/11/2026) =====
+   Inventario > Productos y las ventanas flotantes usan la escala compartida del sistema:
+   text-xs = 14 px (cabeceras y etiquetas) y text-sm = 15 px (datos). Otras sesiones tenían
+   tamaños FIJOS de 8 a 12 px, que no crecen con esa escala y se ven chicos al lado de las
+   ventanas. Este bloque solo iguala esos tamaños fijos dentro de tablas (de sesión y de
+   ventanas). No toca ids, teclado, colores, botones ni alturas de fila. */
+:root {
+  --text-tabla-cabecera: var(--text-xs);
+  --text-tabla-dato: var(--text-sm);
+}
+main .tabla-cabecera :is([class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"]),
+main .tabla-cabecera:is([class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"]) {
+  font-size: var(--text-tabla-cabecera) !important;
+}
+main [data-row="true"] :is([class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"]),
+main [data-row="true"]:is([class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"]) {
+  font-size: var(--text-tabla-dato) !important;
+}
+.ventana-sobria .tabla-cabecera :is([class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"]),
+.ventana-sobria .tabla-cabecera:is([class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"]) {
+  font-size: var(--text-tabla-cabecera) !important;
+}
+.ventana-sobria [data-row="true"] :is([class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"]),
+.ventana-sobria [data-row="true"]:is([class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"]) {
+  font-size: var(--text-tabla-dato) !important;
+}
+/* Algunas ventanas (detalle de cotización, cobros y visitas) no usan las clases compartidas
+   y ponen el tamaño directo en <thead>/<th>/<td>. Se mira la etiqueta para no dejarlas chicas. */
+.ventana-sobria :is(thead, th) :is([class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"]),
+.ventana-sobria :is(thead, th):is([class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"]) {
+  font-size: var(--text-tabla-cabecera) !important;
+}
+.ventana-sobria :is(tbody, tr, td) :is([class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"]),
+.ventana-sobria :is(tbody, tr, td):is([class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"]) {
+  font-size: var(--text-tabla-dato) !important;
+}
+/* Y cuando el tamaño fijo está puesto en la propia <table> (detalle de salidas, ticket),
+   los datos lo heredan y solo la cabecera se baja a 14 px. */
+.ventana-sobria table:is([class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"]) {
+  font-size: var(--text-tabla-dato) !important;
+}
+.ventana-sobria table:is([class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"]) :is(thead, th) {
+  font-size: var(--text-tabla-cabecera) !important;
+}
+
+/* Salidas: con la letra nueva, 3 filas con mucho texto necesitan un poco más de alto.
+   Se cambia la altura fija por un mínimo solo en esa tabla (en pantallas grandes)
+   para que el contenido no se corte. No toca ids, teclado ni lógica. */
+@media (min-width: 768px) {
+  main #tabla-salidas-lista [data-row="true"] { height: auto !important; min-height: 79px !important; }
+}
