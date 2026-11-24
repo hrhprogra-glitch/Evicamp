@@ -13,7 +13,7 @@
 - **Aprendizaje importante:** en este sistema **Tab abre el menú lateral** con prioridad absoluta; para pasar de usuario a clave en el login se usa **Enter o flechas**, no Tab. Un guion que pruebe Tab como si fuera navegación de campos da un falso fallo.
 - **Aprendizaje importante:** `fn_eliminar_salida` guarda el movimiento con el **usuario de la sesión** (`Administrador SiuHub`), no con el `p_usuario` pasado; para localizar o limpiar movimientos de prueba hay que filtrar por `reason='Devolución de Salida <código>'`.
 - **Evicamp:** los dos SQL (`seguridad-sesion.sql` y `detalle-salida-edicion.sql`) se ensayaron primero en una **copia** de `postgres`; solo después se respaldó y aplicó en producción con `ON_ERROR_STOP` + `lock_timeout`, sin reiniciar la API. Evicamp no tenía ninguna tabla de salidas y ahora las tiene con las mismas RPC y permisos que Nego. Sin credenciales de admin de Evicamp en `.env.vps`: no inventar claves para probar login real.
-- Bundles en vivo en los dos sitios: **`index-Bp6aQKRr.js` / `index-BzLRfRHr.css`**. Push autorizado solo a `fase-11-sunat`; no tocar `main`. Detalle completo en la bitácora de arriba.
+- Bundles en vivo en los dos sitios: **`index-Bp6aQKRr.js` / `index-BzLRfRHr.css`**. Push confirmado solo a `origin/fase-11-sunat` (`a88002a`); no tocar `main`. Detalle completo en la bitácora de arriba.
 
 ## 24/11/2026 — PUNTO AL DÍA (pedido 228: detalle solo para ver, edición en «Continuar salida»)
 - El dueño revisó la 227 y primero pidió traer materiales al continuar, pasar la tabla editable del detalle a Nueva salida y poder poner fecha + trabajador al devolver. Después aclaró: *"ya no quiero que se pueda editar en detalle de salida eso ya lo hace continuar salida"*.
