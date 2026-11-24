@@ -2,7 +2,7 @@
 // Cabecera de Salidas en estilo SiuMax Sobrio
 
 import React from 'react';
-import { Truck, Plus, Search, X } from 'lucide-react';
+import { Truck, Plus, Search, X, ArrowLeft } from 'lucide-react';
 import type { TipoSalida, EstadoSalida } from '../types';
 
 interface HeaderSalidasProps {
@@ -21,6 +21,7 @@ interface HeaderSalidasProps {
     finalizadas: number;
     canceladas: number;
   };
+  onVolver?: () => void;
 }
 
 // Fila de la sub-barra que se recorre con ← →
@@ -64,6 +65,7 @@ export const HeaderSalidas: React.FC<HeaderSalidasProps> = ({
   onFiltroFechaChange,
   onNuevaSalida,
   metricas,
+  onVolver,
 }) => {
   // Cuadros de conteo, pequeños y en la cabecera (el dueño los quiere arriba, sin ocupar una fila)
   const cuadros = [
@@ -100,6 +102,16 @@ export const HeaderSalidas: React.FC<HeaderSalidasProps> = ({
 
         {/* Botón de Acción a la Derecha */}
         <div className="flex items-center gap-2 shrink-0">
+          {onVolver && (
+            <button
+              id="btn-volver-utilidades-desde-salidas"
+              type="button"
+              onClick={onVolver}
+              className="boton-cabecera px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none whitespace-nowrap"
+            >
+              <ArrowLeft size={16} /> Volver a Utilidades
+            </button>
+          )}
           <button
             id="btn-nueva-salida"
             type="button"

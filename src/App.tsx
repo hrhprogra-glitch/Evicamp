@@ -95,6 +95,7 @@ export const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<string>(() => {
     try { return localStorage.getItem('evicamp_last_view') || 'pos'; } catch { return 'pos'; }
   });
+  const [navState, setNavState] = useState<any>(null);
   useTiposNegocio(); // al cambiar el tipo de negocio en Ajustes se vuelve a dibujar (menú, atajos, sección abierta)
   const currentViewRef = useRef(currentView);
   useEffect(() => {
@@ -354,12 +355,12 @@ export const App: React.FC = () => {
       case 'finanzas': // <--- CONECTAMOS LA PANTALLA DE FINANZAS
         return <Finanzas />;
       case 'utilidades':
-        return <Utilidades />;
+        return <Utilidades onNavigate={handleNavigate} vistaInicial={navState?.utilidadesTab} />;
       case 'configuracion': // <--- AÑADE ESTO
         return <Configuraciones />;
       // Talleres y servicios: se están trayendo desde SiuMax Servic (pasos 3e a 3h)
       case 'salidas':
-        return <Salidas />;
+        return <Salidas salidaIdInicial={navState?.salidaId} onVolver={navState?.volverA ? () => handleNavigate(navState.volverA, { utilidadesTab: navState.volverTab, salidaId: undefined }) : undefined} />;
       case 'agenda':
         return <Agenda />;
       case 'taller':
@@ -378,8 +379,9 @@ export const App: React.FC = () => {
   };
 
   // En pantallas menores a 1024px (tablet/celular), al elegir un módulo se cierra el menú deslizable
-  function handleNavigate(view: string) {
+  function handleNavigate(view: string, state?: any) {
     if (!puedeVerSeccion(empleado?.permisos, view)) return;
+    setNavState(state ?? null);
     setCurrentView(view);
     if (window.innerWidth < 1024) setIsSidebarOpen(false);
   }
@@ -405,7 +407,7 @@ export const App: React.FC = () => {
         <BarraConexion />
 
         {/* BARRA SUPERIOR SOLO EN TABLET/CELULAR: en esas pantallas el menú está oculto y este botón lo abre */}
-        <header className="lg:hidden shrink-0 h-11 flex items-center gap-3 px-2 bg-[var(--color-ink)] border-b-2 border-[var(--color-accent)] font-mono">
+        <header className="lg:hidden shrink-0 h-11 grid grid-cols-[auto_1fr_auto] items-center px-2 bg-[var(--color-ink)] border-b-2 border-[var(--color-accent)] font-mono">
           <button
             onClick={toggleSidebar}
             aria-label="Abrir menú de sesiones"
@@ -415,9 +417,10 @@ export const App: React.FC = () => {
             <Menu size={18} />
             <span className="text-xs font-black uppercase tracking-widest">Menú</span>
           </button>
-          <span className="text-xs font-black uppercase tracking-[0.15em] text-[var(--color-accent)] truncate">
+          <span className="text-xs font-black uppercase tracking-[0.15em] text-[var(--color-accent)] text-center truncate px-2">
             {NOMBRES_SESIONES[vista] || vista}
           </span>
+          <div className="w-[76px]" aria-hidden="true" />
         </header>
 
         <section className="p-0 flex-1 min-w-0 overflow-y-auto overflow-x-hidden">

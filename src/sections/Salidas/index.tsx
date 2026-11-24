@@ -6,7 +6,12 @@ import { ModalNuevaSalida } from './components/ModalNuevaSalida';
 import { ModalDetalleSalida } from './components/ModalDetalleSalida';
 import type { Salida, TipoSalida, EstadoSalida } from './types';
 
-export const Salidas: React.FC = () => {
+interface SalidasProps {
+  salidaIdInicial?: number;
+  onVolver?: () => void;
+}
+
+export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) => {
   const [salidas, setSalidas] = useState<Salida[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -64,6 +69,16 @@ export const Salidas: React.FC = () => {
   useEffect(() => {
     fetchSalidas();
   }, []);
+
+  const salidaInicialAbierta = useRef(false);
+  useEffect(() => {
+    if (salidaInicialAbierta.current || !salidaIdInicial || loading) return;
+    const encontrada = salidas.find((s) => Number(s.id) === Number(salidaIdInicial));
+    if (encontrada) {
+      setSalidaSeleccionada(encontrada);
+      salidaInicialAbierta.current = true;
+    }
+  }, [salidas, salidaIdInicial, loading]);
 
   // Autofoco inicial en el buscador de salidas
   useEffect(() => {
@@ -210,6 +225,7 @@ export const Salidas: React.FC = () => {
         }}
         onNuevaSalida={handleNuevaSalida}
         metricas={metricas}
+        onVolver={onVolver}
       />
 
       <div className="flex flex-col gap-4">

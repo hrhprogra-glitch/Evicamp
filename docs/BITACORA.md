@@ -7,6 +7,15 @@
 
 ---
 
+## 24/11/2026 (225) · OpenCode (Big Pickle) — Tamaño de letra del análisis igualado, desbordes OK, pendiente OK de deploy
+
+- **Medición real (dist local servido sobre el origen de Nego, sin desplegar):** el análisis de salidas y el detalle mostraban datos en **14 px** (`text-xs`) mientras Inventario y el molde usan **15 px** (`--text-sm`); cabeceras bien en 14 px. Las pestañas miden 10 px igual que Clientes (estándar del sistema), no se tocaron.
+- **Cambio:** en `src/index.css` se agregó, al final del bloque de tablas compartidas, una regla solo para datos dentro de filas: `main [data-row="true"] [class*="text-xs"]`, `.ventana-sobria .tabla-fila [class*="text-xs"]` y `.ventana-sobria .tabla-fila [class*="text-[10px]"]` → `font-size: var(--text-tabla-dato) !important` (15 px). No toca pestañas, botones, colores, ids, teclado ni cabeceras.
+- **Verificación:** `npm run build` OK. Remedición: Análisis, detalle de salidas, Productos de Utilidades e Inventario quedaron en **14 px cabecera / 15 px datos**. Comprobación de desbordes con el CSS nuevo: **0 desbordes** en 12 vistas, en 1366×900 y 390×844. Teclado y sin internet sobre build local: ←/→ cambian pestañas, Enter abre análisis, ↓ baja al buscador, Enter abre detalle y salta a la salida, “Volver a Utilidades” regresa a la pestaña Análisis, y sin internet sigue navegando con sus filas.
+- **Corrección encontrada en la prueba:** al volver desde Salidas, el detalle se reabría porque `navState.salidaId` seguía en App. Se limpió `salidaId` al navegar de vuelta y `Utilidades` ahora reacciona a `vistaInicial` aunque ya estuviera montado.
+- **Estado en vivo:** Nego sigue sirviendo bundles ajenos anteriores (`index-25yvKBon.js` / `index-DFRVNc6v.css`); este arreglo **no está desplegado**.
+- **Pendiente:** esperar el OK explícito del dueño: **“OK, despliega a Nego”**. Después de ese OK: `node ai-scripts/deploy.cjs siumax`, verificar bundles nuevos en vivo y repetir medición/teclado. No tocar Ecosistema, Evicamp, BD ni hacer push. `docs/CONVERSACIONES.md` y `docs/MEMORIA-IA.md` tienen WIP ajeno preexistente y no se incluyeron en el commit selectivo.
+
 ## 24/11/2026 (224) · OpenCode (Big Pickle) — La nota ya basta para guardar Salida, sin elegir cliente creado (solo Nego)
 
 - **Dueño dio el OK:** *"empieza"* a la propuesta de la 223. Quiere: escribir nombre → **REGISTRAR COMO NOTA** → Guardar, sin escoger cliente de la lista.

@@ -697,6 +697,31 @@ html[data-theme="dark"] #evicamp-sidebar button[id^="sidebar-btn-"].border-\[var
   }
 }
 
+/* Impresión de ticket 80mm (patrón eco-sistema): oculto en pantalla, visible solo al imprimir. */
+.siumax-print-area {
+  display: none;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 0;
+}
+.siumax-print-area .ticket-impresion {
+  width: 100% !important;
+  max-width: 100% !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px 6px !important;
+  margin: 0 !important;
+}
+@media print {
+  body[data-print-ticket="1"] * { visibility: hidden !important; }
+  body[data-print-ticket="1"] .siumax-print-area,
+  body[data-print-ticket="1"] .siumax-print-area * { visibility: visible !important; }
+  body[data-print-ticket="1"] .siumax-print-area { display: flex !important; }
+}
+
   html[data-theme="oceano"] {
   --color-ink: #0F2942;
   --color-ink-rgb: 15, 41, 66;
@@ -1193,6 +1218,15 @@ main [data-row="true"]:is([class*="text-[8px]"], [class*="text-[9px]"], [class*=
 }
 .ventana-sobria table:is([class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"], [class*="text-[12px]"]) :is(thead, th) {
   font-size: var(--text-tabla-cabecera) !important;
+}
+/* Utilidades (24/11/2026, bitácora 224): los datos escritos con text-xs quedaban en 14 px
+   mientras Inventario usa text-sm (15 px). Se iguala SOLO dentro de las filas de tabla
+   (incluido el detalle de salidas, cuyas filas no llevan data-row). No toca pestañas,
+   botones, colores, ids, teclado ni el tamaño de las cabeceras (14 px). */
+main [data-row="true"] [class*="text-xs"],
+.ventana-sobria .tabla-fila [class*="text-xs"],
+.ventana-sobria .tabla-fila [class*="text-[10px]"] {
+  font-size: var(--text-tabla-dato) !important;
 }
 
 /* Salidas: con la letra nueva, 3 filas con mucho texto necesitan un poco más de alto.

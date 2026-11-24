@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { BarChart3, Truck } from 'lucide-react';
 
 import { FiltrosUtilidades } from './components/FiltrosUtilidades';
 import { TarjetasResumen } from './components/TarjetasResumen';
 import { TablaAnalisisProductos } from './components/TablaAnalisisProductos';
 import { TableroGanancias } from './components/TableroGanancias';
+import { AnalisisSalidasProductos } from './components/AnalisisSalidasProductos';
 import { calcularAnalisis } from './calcularAnalisis';
 
 import type { AnalisisProducto, StatsFiltro } from './types';
@@ -21,7 +23,12 @@ const pestanaGuardada = (): PestanaUtilidades | null => {
   try { return (sessionStorage.getItem('utilidades_pestana') as PestanaUtilidades) || null; } catch { return null; }
 };
 
-export const Utilidades = () => {
+interface UtilidadesProps {
+  onNavigate?: (view: string, state?: any) => void;
+  vistaInicial?: 'productos' | 'salidas';
+}
+
+export const Utilidades = ({ onNavigate, vistaInicial }: UtilidadesProps) => {
   const tipos = useTiposNegocio();
   const conComercio = tipos.includes('comercio');
   const conServicios = tipos.includes('servicios');
@@ -53,7 +60,12 @@ export const Utilidades = () => {
   const [ingresosTotalesExactos, setIngresosTotalesExactos] = useState<number>(() => tieneCacheInicial ? cacheUtilidadesMemoria!.ingresoTotal : 0);
   const [isLoading, setIsLoading] = useState(false);
   const [mostrarTablero, setMostrarTablero] = useState(false);
+  const [vista, setVista] = useState<'productos' | 'salidas'>(vistaInicial === 'salidas' ? 'salidas' : 'productos');
   const [statsFiltro, setStatsFiltro] = useState<StatsFiltro>({ ingresos: 0, costos: 0, mermas: 0, hayFiltros: false });
+
+  useEffect(() => {
+    if (vistaInicial) setVista(vistaInicial);
+  }, [vistaInicial]);
 
   const filtrarHoy = () => { setFechaInicio(hoyStr); setFechaFin(hoyStr); };
   const filtrarSemana = () => { setFechaInicio(haceNDiasPeru(7)); setFechaFin(hoyStr); };
@@ -120,43 +132,78 @@ export const Utilidades = () => {
     return <UtilidadesServicios pestana={pestana} onCambiarPestana={cambiarPestana} conComercio={conComercioVista} />;
   }
 
+  const tabsVista: { id: 'productos' | 'salidas'; label: string; Icono: typeof BarChart3; buscador: string }[] = [
+    { id: 'productos', label: 'Productos', Icono: BarChart3, buscador: 'buscador-global-utilidades' },
+    { id: 'salidas', label: 'Análisis de salidas', Icono: Truck, buscador: 'buscador-analisis-salidas' },
+  ];
+  const ir = (id: string) => document.getElementById(id)?.focus();
+  const pestanasVista = (
+    <div role="tablist" aria-label="Utilidades" className="pestanas-sobrias flex min-w-0 w-full md:w-auto">
+      {tabsVista.map(({ id, label, Icono, buscador }, i) => (
+        <button
+          key={id}
+          id={`btn-tab-util-${id}`}
+          role="tab"
+          aria-selected={vista === id}
+          data-activa={vista === id}
+          type="button"
+          onClick={() => setVista(id)}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowRight') { e.preventDefault(); ir(i < tabsVista.length - 1 ? `btn-tab-util-${tabsVista[i + 1].id}` : 'btn-tops-utilidades'); }
+            else if (e.key === 'ArrowLeft') { e.preventDefault(); if (i > 0) ir(`btn-tab-util-${tabsVista[i - 1].id}`); }
+            else if (e.key === 'ArrowDown') { e.preventDefault(); ir(buscador); }
+            else if (e.key === 'ArrowUp') e.preventDefault();
+          }}
+          className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 2xl:px-4 py-2.5 lg:py-3 text-[10px] sm:text-xs font-black uppercase tracking-wider whitespace-nowrap rounded-none cursor-pointer"
+        >
+          <Icono size={14} />
+          <span>{label}</span>
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-4 sm:gap-6 pb-10 text-[var(--color-ink)] font-mono h-full bg-[var(--color-bg)] relative">
       <FiltrosUtilidades
         onToggleTops={() => setMostrarTablero(true)}
-        pestanas={<PestanasUtilidades activa="productos" conComercio={conComercioVista} conServicios={conServiciosVista} onCambiar={cambiarPestana} idDerecha="btn-tops-utilidades" idAbajo="buscador-global-utilidades" />}
+        pestanas={pestanasVista}
       />
 
-      <div className="flex flex-col gap-4 sm:gap-6">
-        <TarjetasResumen
-          ingresos={globalIngresos}
-          costos={globalCostos}
-          mermas={globalMermas}
-          gastosOperativos={gastosCaja}
-          utilidad={globalUtilidad}
-          filtrado={statsFiltro.hayFiltros}
-        />
-
-        {/* La tabla permanece siempre montada (aunque esté cargando) para no perder
-            la categoría, rotación, búsqueda y página que el usuario ya eligió. */}
-        <div className="relative">
-          {isLoading && analisisCompleto.length === 0 && (
-            <div className="absolute inset-0 bg-[var(--color-surface)]/85 backdrop-blur-sm z-50 flex items-center justify-center">
-              <div className="flex flex-col items-center gap-4">
-                <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
-                <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest font-mono">Cargando...</span>
-              </div>
-            </div>
-          )}
-          <TablaAnalisisProductos
-            datos={analisisCompleto}
-            fechaInicio={fechaInicio} fechaFin={fechaFin}
-            setFechaInicio={setFechaInicio} setFechaFin={setFechaFin}
-            limpiarFechas={limpiarFiltros}
-            onStatsFiltradasChange={setStatsFiltro}
+      {vista === 'salidas' ? (
+        <AnalisisSalidasProductos onNavigate={onNavigate} />
+      ) : (
+        <div className="flex flex-col gap-4 sm:gap-6">
+          <TarjetasResumen
+            ingresos={globalIngresos}
+            costos={globalCostos}
+            mermas={globalMermas}
+            gastosOperativos={gastosCaja}
+            utilidad={globalUtilidad}
+            filtrado={statsFiltro.hayFiltros}
           />
+
+          {/* La tabla permanece siempre montada (aunque esté cargando) para no perder
+              la categoría, rotación, búsqueda y página que el usuario ya eligió. */}
+          <div className="relative">
+            {isLoading && analisisCompleto.length === 0 && (
+              <div className="absolute inset-0 bg-[var(--color-surface)]/85 backdrop-blur-sm z-50 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-8 h-8 border-4 border-[var(--color-border)] border-t-[var(--color-ink)] animate-spin rounded-full"></div>
+                  <span className="text-[12px] font-black text-[var(--color-ink)] uppercase tracking-widest font-mono">Cargando...</span>
+                </div>
+              </div>
+            )}
+            <TablaAnalisisProductos
+              datos={analisisCompleto}
+              fechaInicio={fechaInicio} fechaFin={fechaFin}
+              setFechaInicio={setFechaInicio} setFechaFin={setFechaFin}
+              limpiarFechas={limpiarFiltros}
+              onStatsFiltradasChange={setStatsFiltro}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 05/11/2026: "Top 5 rentables" pasó a ser "Gráficos y detalles" (tablero de ganancias y pérdidas) */}
       {mostrarTablero && (
