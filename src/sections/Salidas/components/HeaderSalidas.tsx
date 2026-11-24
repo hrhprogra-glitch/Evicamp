@@ -2,7 +2,7 @@
 // Cabecera de Salidas en estilo SiuMax Sobrio
 
 import React from 'react';
-import { Truck, Plus, Search, X, ArrowLeft } from 'lucide-react';
+import { Truck, Plus, Search, X, ArrowLeft, FilterX } from 'lucide-react';
 import type { TipoSalida, EstadoSalida } from '../types';
 
 interface HeaderSalidasProps {
@@ -195,7 +195,7 @@ export const HeaderSalidas: React.FC<HeaderSalidasProps> = ({
             <option value="CANCELADO">CANCELADAS</option>
           </select>
 
-          {/* 24/11/2026 (221): fecha para ver salidas de otros días; TODAS deja la fecha vacía */}
+          {/* 24/11/2026 (221): fecha para ver salidas de otros días; el botón limpiador deja la fecha vacía */}
           <div className="flex items-center gap-1 w-full sm:w-auto">
             <input
               id="filtro-fecha-salidas"
@@ -211,9 +211,9 @@ export const HeaderSalidas: React.FC<HeaderSalidasProps> = ({
               type="button"
               onClick={() => onFiltroFechaChange('')}
               title="Ver salidas de todos los días"
-              className="boton-cabecera px-2 py-2 font-black text-[10px] uppercase tracking-widest rounded-none cursor-pointer h-[2.75rem]"
+              className="limpiar-sobrio"
             >
-              TODAS
+              <FilterX size={16} />
             </button>
           </div>
         </div>

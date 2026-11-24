@@ -7,6 +7,15 @@
 
 ---
 
+## 24/11/2026 (URGENTE: devoluciones visibles + icono limpiador en Salidas de ecosistema) · OpenCode (Big Pickle) — Hecho y desplegado
+
+- El dueño pidió: *"agregues las devoluciones de ecosistema es urgente porque mi cliente está asustado porque se borra meses de devoluciones ... el limpiador de filtro era un icono se cambio por todas quiero que vuelva ser el icono de limpiador de filtros todo eso esta en salidas"*.
+- **Causa del susto:** las 1213 devoluciones nunca se borraron (ya se comprobó contra los respaldos), pero **la marquita `dev.` que aparecía en la lista de Salidas no estaba en el bundle desplegado en ecosistema**: el worktree limpio tenía un `TablaSalidas.tsx` anterior que saltaba de «Personal» a «Items» sin la marquita. El detalle sí las mostraba, pero en la lista no había señal.
+- **Cambios mínimos (2 archivos):** en el worktree se agregó la marquita `dev.` en la celda de Items (mismo código que ya存在 en el working copy del repo principal, sin arrastrar su rediseño ajeno); en `HeaderSalidas.tsx` el botón «TODAS» volvió al icono `FilterX` con clase `limpiar-sobrio`, conservando `btn-filtro-fecha-todas`, su `title` y su función de limpiar la fecha. Se copió ese Header al repo principal para el commit.
+- **Deploy:** solo ecosistema desde el worktree limpio, 22 archivos y `restaurar-iconos-ecosistema.cjs` después (MD5 `c159d216…`). En vivo **`index-CWCMTGCK.js` / `index-CtGZbGlg.css`**. Nego y Evicamp siguen con `index-Bp6aQKRr.js` / `index-BzLRfRHr.css`. No se tocó la base ni la API.
+- **Pruebas nuevas:** `verificar-devoluciones-y-limpiador-ecosistema.mjs` **12/12** con login real y teclado: icono sin texto, marquita en 31 salidas, `SAL-MIG-00243` = «21 DEV.», Enter en el limpiador borra la fecha (50 → 6 → 50 filas), 390/768/1366/1920, sin internet y 0 errores JS. Regresiones: tema azul **14/14**, sitio **35/35**, devoluciones del detalle **6/6**, 228 **11/11** (variante `verificar-228-ecosistema-sin-ssh.mjs` porque la VPS rechazó SSH en ese momento).
+- Commit local **sin push**. Falta que el dueño revise con **Ctrl+F5** en ecosistema.
+
 ## 24/11/2026 (pregunta por las devoluciones de ecosistema) · OpenCode (Big Pickle) — Solo lectura, nada perdido
 
 - El dueño preguntó: *"una pregunta que paso con todas las devoluciones de ecosistema ???"*. Se revisó **solo lectura**, sin tocar base ni sitio.

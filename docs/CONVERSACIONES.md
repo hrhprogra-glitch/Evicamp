@@ -1489,3 +1489,8 @@
 - Se comparó producción contra los dos respaldos de la 228: **1213 devoluciones antes y después**, mismo total devuelto (5188.726), mismas 259 salidas, mismos 2910 items y 395 salidas. El SQL solo agregó `trabajador_id` (índice y funciones), no borró filas.
 - Lo que puede verse distinto: el trabajador de las devoluciones históricas está en blanco porque ese campo no existía antes y provienen de la migración (`Migración Supabase`); no se inventó ningún nombre. Las nuevas sí permiten elegir trabajador y fecha.
 - Verificado en pantalla con login real: la API trae `devoluciones` y `SAL-MIG-00243` muestra sus 21 devoluciones con valores en «Devuelto» (**6/6**). No se cambió nada; commit local sin push.
+
+## 24/11/2026 (URGENTE: agregar devoluciones y devolver el icono limpiador en Salidas)
+- El dueño dijo: *"perfecto quiero que agregues las devoluciones de ecosistema es urgente porque mi cliente esta asustado porque se borra meses de devoluciones otra cosa mas el limpiador de filtro era un icono se cambio por todas quiero que vuelva ser el icono de limpiador de filtros todo eso esta en salidas"*.
+- Se le explicó y se comprobó: las devoluciones **no se borraron**; lo que pasó es que **la marquita `dev.` de la lista de Salidas no estaba en el sitio desplegado**. Se restauró esa marquita y se cambió el botón «TODAS» por el icono de limpiador de filtros `FilterX`.
+- Desplegado solo ecosistema, con sus iconos oficiales; Nego y Evicamp no se tocaron. Pruebas: **12/12** del pedido y regresiones **14/14**, **35/35**, **6/6** y **11/11**, con login real, teclado, sin internet y 390/768/1366/1920. Commit local, sin push. Falta su revisión con **Ctrl+F5**.

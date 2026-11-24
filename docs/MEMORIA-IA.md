@@ -8,6 +8,15 @@
 
 ---
 
+## 24/11/2026 — Salidas ecosistema: marquita `dev.` y limpiador FilterX (URGENTE, ya hecho)
+- Si el dueño dice que «se borran meses de devoluciones» en Salidas: **no se borraron**. Antes de tocar la base, revisa si la **marquita `dev.` aparece en la lista** (`TablaSalidas.tsx`, celda de Items). El 24/11 el bundle desplegado en ecosistema venía de un worktree con `TablaSalidas.tsx` anterior y no la tenía; por eso el cliente se asustó, aunque el detalle sí mostraba las devoluciones.
+- La marquita se pone con `s.devoluciones?.length || items con cantidad_devuelta > 0` y el texto `N dev.`. **Ojo:** el repo principal tiene WIP ajeno en `TablaSalidas.tsx` (rediseño responsive). No copies ese archivo completo al worktree: edita SOLO la celda de Items en el worktree limpio.
+- El limpiador de fecha es `id="btn-filtro-fecha-todas"`, `title="Ver salidas de todos los días"`, clase **`limpiar-sobrio`** y contenido **`<FilterX size={16}/>`**, nunca la palabra «TODAS». No cambiar el id ni la función `onFiltroFechaChange('')` (teclado/ids ya probados).
+- **lucide-react actual dibuja `FilterX` con la clase `lucide-funnel-x`** (antes `lucide-filter-x`). En pruebas, acepta ambos; no cambies el componente porque el nombre de clase haya cambiado.
+- Para cambiar un `input type="date"` controlado por React en puppeteer, usa el setter nativo (`Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(...)`) y dispara `input`/`change`; asignar `input.value` directamente NO actualiza el estado y la prueba dará un falso fallo. `innerText` de la marquita sale en MAYÚSCULAS por CSS (`21 DEV.`).
+- Pruebas: `verificar-devoluciones-y-limpiador-ecosistema.mjs` (**12/12**), `verificar-tema-oscuro-ecosistema.mjs` (**14/14**), `prueba-sitio-ecosistema.mjs` (**35/35**), `ver-devoluciones-ecosistema.mjs` (**6/6**) y `verificar-228-ecosistema-sin-ssh.mjs` (**11/11**). Si la VPS rechaza SSH («All configured authentication methods failed»), usa la variante sin SSH en vez de insistir.
+- Deploy solo ecosistema (`node ai-scripts/deploy.cjs ecosistema`) y siempre `node ai-scripts/restaurar-iconos-ecosistema.cjs` después.
+
 ## 24/11/2026 — Devoluciones históricas de ecosistema (pregunta del dueño, no tocar)
 - Si el dueño pregunta por «todas las devoluciones de ecosistema»: **están todas**. Comparar contra `/var/lib/postgresql/respaldo-ecosistema-antes-salidas-228-*.dump`: **1213** filas en `salida_devoluciones`, total `5188.726`, **259** salidas con devoluciones, **2910** items y **395** salidas, idénticos antes y después de la 228.
 - El SQL `detalle-salida-edicion.sql` **no borra devoluciones**: solo `ADD COLUMN IF NOT EXISTS trabajador_id` + índice + funciones nuevas. La columna nueva quedó **NULL en las 1213 históricas** (vienen de la migración con `usuario='Migración Supabase'`); **no rellenar nombres inventados**. Las devoluciones nuevas sí guardan fecha y trabajador.

@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795548980.4796498,
-    "seen": 1795549024.2497485,
-    "ast_hash": "47943e0698fa2d366b2fe04fa5ab3aa5",
+    "mtime": 1795549620.197409,
+    "seen": 1795549658.1413321,
+    "ast_hash": "07b92ca6a120b7e5af7b32b08fd2d5ac",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795548991.1407802,
-    "seen": 1795549024.2497528,
-    "ast_hash": "416b54a09a2ab1be66bceaae2173b94d",
+    "mtime": 1795549631.7587142,
+    "seen": 1795549658.1413336,
+    "ast_hash": "fd8b84ca77f661c95c8008cf9f6a1c73",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795548997.3526547,
-    "seen": 1795549024.249756,
-    "ast_hash": "cf957f6c908101d3f15ce69dc2808813",
+    "mtime": 1795549639.9298165,
+    "seen": 1795549658.1413352,
+    "ast_hash": "f6565e360c187a511be68d08de2dd51f",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795548985.5594535,
-    "seen": 1795549024.2499623,
-    "ast_hash": "612287d4441e136f8254f48f11d89385",
+    "mtime": 1795549625.9205265,
+    "seen": 1795549658.1413944,
+    "ast_hash": "a6a314d31f997643fd25707a860212bd",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2928,10 +2928,10 @@
     "semantic_hash": "a3e1b41d197051f7286ef98fb079101d"
   },
   "src/sections/Salidas/components/HeaderSalidas.tsx": {
-    "mtime": 1795531958.39312,
-    "seen": 1795540202.7208438,
-    "ast_hash": "a73c921d7df94ab9452faaab8f4bc53e",
-    "semantic_hash": "a73c921d7df94ab9452faaab8f4bc53e"
+    "mtime": 1795549250.8341622,
+    "seen": 1795549658.1359246,
+    "ast_hash": "09c7b0f4df9311695d996bdfa237261e",
+    "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalDetalleSalida.tsx": {
     "mtime": 1795544211.033515,
@@ -3921,6 +3921,18 @@
     "mtime": 1795548953.6917615,
     "seen": 1795549024.1939716,
     "ast_hash": "80e992b31f5700a382f1efa387c3d32f",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/verificar-228-ecosistema-sin-ssh.mjs": {
+    "mtime": 1795549573.6648905,
+    "seen": 1795549658.1221066,
+    "ast_hash": "a6bbbac763484ac82c1c4ccf430204f6",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/verificar-devoluciones-y-limpiador-ecosistema.mjs": {
+    "mtime": 1795549370.374811,
+    "seen": 1795549658.1222801,
+    "ast_hash": "04b24381bf511051767004a81e43880b",
     "semantic_hash": ""
   }
 }
