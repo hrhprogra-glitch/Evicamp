@@ -7,6 +7,14 @@
 
 ---
 
+## 24/11/2026 (222) · OpenCode (Big Pickle) — Aviso al guardar Salida con nombre registrado como nota: diagnóstico, sin cambio de código
+
+- **Dueño dijo:** *"perfecto encontre errores cuando ingreso una salida me sale que debo volver a registrarlo como nota pero ya lo registre eso hace que no pueda registrar ninguna salida"*.
+- **Mensaje exacto encontrado** en `src/sections/Salidas/components/ModalNuevaSalida.tsx` (función `handleGuardarSalida`): *"La nota ya está registrada; elige un cliente de la lista como referencia para guardar la salida"*. No es un mensaje nuevo ni se disparó por el filtro de fecha; sale solo al apretar **Guardar** cuando hay `clienteLibre` pero no hay `customerId`.
+- **Causa:** la nota **no crea cliente** en la base. `fn_registrar_salida` exige `customer_id` y la columna es llave foránea, así que el sistema necesita un cliente registrado **de referencia** aunque el nombre real vaya en la nota. Esto quedó acordado con el dueño en las fases 182 y 188 y está en `docs/MEMORIA-IA.md` (secciones 40/41): **no quitar esa validación sin su OK**.
+- **Verificación en vivo (solo lectura, Nego):** el desplegable trae **504 clientes activos** y la opción «+ REGISTRAR … COMO NOTA». Al elegir la nota aparece `NOTA: ...` y «Lo que se atiende» queda deshabilitado; al elegir después cualquier cliente de la lista, **la nota se conserva** y «Lo que se atiende» se habilita. Con eso el guardado ya puede seguir. No se guardó ninguna salida de prueba.
+- **No se cambió código, base, SQL, EVs ni credenciales; no se desplegó ni se hizo push.** Falta la respuesta del dueño: si quiere que **solo con la nota** se pueda guardar, hay que proponer antes un cliente genérico de referencia en la base y cambiar la regla aprobada.
+
 ## 24/11/2026 (221) · OpenCode (Big Pickle) — Fecha en el filtro de Salidas y diagnóstico de las devoluciones (solo Nego)
 
 - **Dueño pidió:** *"ya no muestra las devoluciones"* en la **tabla de Salidas** (la marquita `dev.`) y *"en el filtro agrega la fecha para poder ver salidas de otros días"*. Decidió **una fecha y TODAS**: por defecto se ven todos los días. Solo Nego, sin tocar teclado, ids, colores, botones ni la lógica de devoluciones.

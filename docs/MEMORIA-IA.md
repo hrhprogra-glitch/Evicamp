@@ -936,5 +936,12 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Otra IA desplegó encima después de nuestro deploy. El bundle final en vivo pasó a `index-BEC4TPfN.css` / `index-CImqQUqO.js` y **sí traía el filtro**. Regla: antes de dar por hecho qué bundle está sirviendo Nego, leer el `index.html` en vivo y buscar marcadores; si otro agente desplegó después, **no redeployar solo para "recuperar" nuestros bundles**.
 - El árbol principal no compilaba por `src/sections/Utilidades/components/AnalisisSalidasProductos.tsx` (WIP ajeno, sin commitear). No se tocó: se compiló en un worktree limpio copiando solo los 2 TSX propios y `src/index.css` (para conservar `.siumax-print-area`, que ya estaba en vivo). Commit selectivo, sin push.
 
+## 65. El aviso «elige un cliente de referencia» no es un error nuevo (24/11/2026, bitácora 222)
+- Mensaje exacto: *"La nota ya está registrada; elige un cliente de la lista como referencia para guardar la salida"*, en `handleGuardarSalida` de `ModalNuevaSalida.tsx`. El dueño lo leyó como *"debo volver a registrarlo como nota"*, pero dice lo contrario: la nota **ya está**; lo que falta es un `customerId`.
+- **No quitar esta validación para \"hacer más fácil\" el alta.** `fn_registrar_salida` hace RAISE si `customer_id` es NULL y la columna es FK (sección 40). El dueño aprobó en 182/188 que el nombre no registrado se guarde solo como `CLIENTE: ...` en observaciones, sin crear cliente. Cualquier cambio para que solo la nota baste implica **proponer antes** un cliente genérico de referencia y tocar base/SQL: esperar OK explícito.
+- Orden correcto para el dueño: escribir el nombre → elegir «+ REGISTRAR … COMO NOTA» → **sin borrar el nombre**, volver a abrir el buscador y elegir cualquier cliente de la lista → completar trabajador/materiales → Guardar. Verificado en vivo: la nota se conserva (`NOTA: ...`) y `#select-bien-salida` deja de estar deshabilitado.
+- Ojo con `onChange` del buscador: solo limpia `clienteLibre`/`customerId` cuando el texto queda **vacío**. Cambiar el texto por un cliente real no borra la nota; borrar todo sí. En Nego hay **504 clientes activos**, así que siempre hay referencia disponible.
+- Este diagnóstico fue solo lectura: no se cambió código, no se guardó salida de prueba, no se desplegó y no se hizo push. Si el dueño insiste en que solo con nota se guarde, mostrar la propuesta y esperar el «empieza».
+
 
   

@@ -1379,3 +1379,9 @@
 - Preguntado, aclaró que las devoluciones que extraña son **la marquita `dev.` en la tabla de Salidas**, y eligió el filtro **«Una fecha y TODAS»** (por defecto se ven todos los días). Pidió explicación simple y no tocar lo que ya funcionaba.
 - Se revisó el sitio en vivo: las devoluciones **no se borraron por el cambio de hoy**. Hay 393 salidas, pero la base no tiene ninguna fila en `salida_devoluciones` ni ítems devueltos; el código y los bundles viejos/nuevos traen los mismos marcadores de devolución. Se le pidió que recuerde una salida o fecha con devolución para mirarla.
 - Se agregó una casilla de fecha y el botón **TODAS** en la barra de filtros de Salidas. Verificado: al elegir `2026-11-23` bajó de 50 a 4 salidas; **TODAS** devuelve a 50; Enter abre el calendario; con el calendario cerrado las flechas solo mueven el selector y no cambian la fecha. Solo Nego, sin Evicamp ni push. Falta que lo revise con Ctrl+F5.
+
+## 24/11/2026 (aviso al guardar Salida con nota, solo diagnóstico)
+- El dueño avisó: *"cuando ingreso una salida me sale que debo volver a registrarlo como nota pero ya lo registre eso hace que no pueda registrar ninguna salida"*.
+- Se encontró el mensaje exacto en `ModalNuevaSalida.tsx`: *"La nota ya está registrada; elige un cliente de la lista como referencia para guardar la salida"*. Sale al apretar Guardar cuando ya se registró el nombre como nota, pero no se eligió ningún cliente registrado.
+- Se le explicó que la nota no crea cliente: la base exige un cliente de referencia por llave foránea (regla acordada en 182/188). En vivo se comprobó que al elegir cualquier cliente de la lista **después** de la nota, el nombre escrito se mantiene en la nota y el formulario ya permite guardar.
+- No se tocó código, base ni se desplegó; sin Evicamp ni push. Queda que el dueño diga si quiere mantener esta regla o si quiere que se proponga un cambio para que solo con la nota se pueda guardar.
