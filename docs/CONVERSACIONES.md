@@ -1454,3 +1454,10 @@
 - En **Devolver** se pueden elegir la **fecha** y el **trabajador que devolvió**; si no se elige trabajador, queda en blanco.
 - Todo lo que hacía la edición del detalle queda cubierto: cambiar cliente, bien, dirección, ubicación, fecha, nota, responsable, trabajadores y materiales se hace desde «Continuar salida»; devolver sigue en su ventana flotante.
 - Queda esperando el **«empieza»** del dueño. Sin código, SQL, base ni despliegue todavía.
+
+## 24/11/2026 (228 terminada, solo Nego)
+- El dueño dijo **«empieza»** y se hizo lo aprobado. El detalle de salida quedó **solo para ver y usar botones**: se fue todo campo editable y la X de materiales; siguen Imprimir/Enviar vale, Continuar, Finalizar o Reactivar, Eliminar, Devolver materiales y la X de cierre. Arriba avisa que es solo lectura y que para cambiar datos o materiales se usa «Continuar salida».
+- «Continuar salida» abre Nueva salida con los materiales ya registrados **copiados en la tabla editable**: se puede cambiar cantidad y quitar materiales con la X, y al guardar se crea una **salida nueva** ligada a la original (`salida_raiz_id`) que **descuenta el almacén otra vez**; la salida original queda igual.
+- En «Devolver materiales» ahora hay **fecha** y **trabajador que devolvió**; si no se elige trabajador queda en blanco. El historial del detalle muestra ese trabajador.
+- Base `siumax` con respaldo previo, columna y firmas nuevas con valores por defecto (las llamadas viejas siguen funcionando), `lock_timeout`, `NOTIFY pgrst, 'reload schema'`; no se reinició la API. Prueba real de stock y **30/30** de interfaz con teclado, sin internet y 390/768/1366/1920.
+- Desplegado **solo Nego**: `index-Bp6aQKRr.js` / `index-BzLRfRHr.css`. Falta que el dueño lo mire con **Ctrl+F5**. Sin Evicamp, ecosistema, credenciales ni push.
