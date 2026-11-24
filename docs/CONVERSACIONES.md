@@ -1461,3 +1461,9 @@
 - En «Devolver materiales» ahora hay **fecha** y **trabajador que devolvió**; si no se elige trabajador queda en blanco. El historial del detalle muestra ese trabajador.
 - Base `siumax` con respaldo previo, columna y firmas nuevas con valores por defecto (las llamadas viejas siguen funcionando), `lock_timeout`, `NOTIFY pgrst, 'reload schema'`; no se reinició la API. Prueba real de stock y **30/30** de interfaz con teclado, sin internet y 390/768/1366/1920.
 - Desplegado **solo Nego**: `index-Bp6aQKRr.js` / `index-BzLRfRHr.css`. Falta que el dueño lo mire con **Ctrl+F5**. Sin Evicamp, ecosistema, credenciales ni push.
+
+## 24/11/2026 (228, subida completa a Nego, Evicamp y GitHub)
+- El dueño dijo: *"perfecto ahroa subelo a evicamp y siumax y mi github pero antes as prueba de salidas devoluciones eliminación de salidas todo as prueba de todo envio todo antes de subir si encuentras errores arreglalos"*.
+- Se probó **todo antes de subir**: salidas, devoluciones y eliminación. Stock **4/4**, eliminar desde el detalle **11/11**, detalle completo **30/30** con teclado, sin internet y 390/768/1366/1920. Se corrigieron fallos de los guiones de prueba (borrar sin internet, el usuario del movimiento y el Tab del login, que en este sistema abre el menú: se usa Enter/flechas), no del sistema.
+- En **Evicamp** se probó el SQL en una copia, se respaldó dos veces y se aplicó sin reiniciar la API (solo `NOTIFY pgrst`); verificadas tablas, RPC, permisos, 401 sin sesión y login sin avisos de pago ni errores JS (**11/11**). No hay credenciales de administrador de Evicamp en `.env.vps`: no se adivinaron.
+- Publicado en **Nego y Evicamp**: `index-Bp6aQKRr.js` / `index-BzLRfRHr.css`. El dueño autorizó el **push a GitHub** de la rama `fase-11-sunat`; `main` queda intacto sin confirmación. Falta su revisión con **Ctrl+F5** en los dos sitios.
