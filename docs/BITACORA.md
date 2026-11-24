@@ -7,6 +7,13 @@
 
 ---
 
+## 24/11/2026 (223) · OpenCode (Big Pickle) — El dueño aclara que la nota debe bastar: propuesta esperando el OK
+
+- **Dueño:** *"ya pero eso no debe ser así, solo debe registrar la nota, no debe hacerme escoger un cliente ya creado, me entiendes??"*. No acepta la regla anterior de «cliente de referencia».
+- **Entendido:** quiere escribir el nombre, elegir «REGISTRAR COMO NOTA» y **poder guardar la salida sin elegir ningún cliente de la lista**. El nombre real debe quedar solo en la nota (`CLIENTE: ...` en observaciones).
+- **Propuesta (NO ejecutada):** crear en **Nego** un cliente interno `CLIENTE NO REGISTRADO (NOTA)` con id fijo `990001` y `activo = false` (para que no salga en el desplegable), con respaldo previo y `lock_timeout`; en `ModalNuevaSalida.tsx`, al elegir la nota asignar automáticamente ese id como referencia y dejar la nota intacta. No se tocaría `fn_registrar_salida`, ni ids visibles, colores, teclado, devoluciones ni otros sitios. Pruebas con teclado y sin internet en 390/768/1366/1920, deploy solo Nego, docs y commit local sin push.
+- **Estado:** esperando el **«empieza»** del dueño. No se tocó código, base, Evicamp ni credenciales; no se desplegó ni se hizo push.
+
 ## 24/11/2026 (222) · OpenCode (Big Pickle) — Aviso al guardar Salida con nombre registrado como nota: diagnóstico, sin cambio de código
 
 - **Dueño dijo:** *"perfecto encontre errores cuando ingreso una salida me sale que debo volver a registrarlo como nota pero ya lo registre eso hace que no pueda registrar ninguna salida"*.

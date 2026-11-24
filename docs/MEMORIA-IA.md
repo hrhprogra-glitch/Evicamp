@@ -942,6 +942,7 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Orden correcto para el dueño: escribir el nombre → elegir «+ REGISTRAR … COMO NOTA» → **sin borrar el nombre**, volver a abrir el buscador y elegir cualquier cliente de la lista → completar trabajador/materiales → Guardar. Verificado en vivo: la nota se conserva (`NOTA: ...`) y `#select-bien-salida` deja de estar deshabilitado.
 - Ojo con `onChange` del buscador: solo limpia `clienteLibre`/`customerId` cuando el texto queda **vacío**. Cambiar el texto por un cliente real no borra la nota; borrar todo sí. En Nego hay **504 clientes activos**, así que siempre hay referencia disponible.
 - Este diagnóstico fue solo lectura: no se cambió código, no se guardó salida de prueba, no se desplegó y no se hizo push. Si el dueño insiste en que solo con nota se guarde, mostrar la propuesta y esperar el «empieza».
+- **El dueño insistió (24/11, bitácora 223): quiere que la nota baste y no tener que elegir cliente creado.** La propuesta es un cliente interno `CLIENTE NO REGISTRADO (NOTA)` con id fijo `990001` y `activo = false` en Nego, asignado automáticamente por `elegirClienteNota`. No han dado el «empieza»: **no ejecutar todavía**. Ojo: no conviene usar un cliente real como referencia silenciosa porque ensucia los reportes por cliente; por eso el cliente debe ser propio e inactivo para el desplegable.
 
 
   

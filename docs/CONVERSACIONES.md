@@ -1385,3 +1385,8 @@
 - Se encontró el mensaje exacto en `ModalNuevaSalida.tsx`: *"La nota ya está registrada; elige un cliente de la lista como referencia para guardar la salida"*. Sale al apretar Guardar cuando ya se registró el nombre como nota, pero no se eligió ningún cliente registrado.
 - Se le explicó que la nota no crea cliente: la base exige un cliente de referencia por llave foránea (regla acordada en 182/188). En vivo se comprobó que al elegir cualquier cliente de la lista **después** de la nota, el nombre escrito se mantiene en la nota y el formulario ya permite guardar.
 - No se tocó código, base ni se desplegó; sin Evicamp ni push. Queda que el dueño diga si quiere mantener esta regla o si quiere que se proponga un cambio para que solo con la nota se pueda guardar.
+
+## 24/11/2026 (la nota debe bastar, propuesta esperando OK)
+- El dueño respondió: *"ya pero eso no debe ser asi solo debe registrar la nota no debe hacerme escoger un cliente ya creado me entiendes??"*. Sí se entendió: no quiere ver ni elegir ningún cliente de la lista cuando solo va a dejar un nombre como nota.
+- Se le propuso (sin ejecutar): crear en Nego un cliente interno `CLIENTE NO REGISTRADO (NOTA)` con id fijo `990001` y `activo = false` para que no salga en el desplegable, y que al elegir «REGISTRAR COMO NOTA» el sistema lo use automáticamente como referencia. El nombre escrito seguirá guardándose en observaciones como `CLIENTE: <NOMBRE>`. No se tocaría la función de la base, los ids visibles, colores, teclado ni devoluciones.
+- Queda esperando el **«empieza»**. No se tocó código, base, Evicamp ni credenciales; no se desplegó ni se hizo push.
