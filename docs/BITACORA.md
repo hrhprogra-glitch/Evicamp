@@ -7,6 +7,17 @@
 
 ---
 
+## 24/11/2026 (PASE A TODOS: código en Nego, Evicamp y ecosistema + push) · OpenCode (Big Pickle) — HECHO
+
+- El dueño pidió: *"pues actualizalo a todos entonces ya para la proxima si modificas codigo primero nego siumax y luego subelo a todos eso es para que todos esten siempre actualizados"*. Con ese OK se cumplieron las dos partes: **se actualizó a todos y se subió a GitHub**.
+- Worktree limpio `pase-todos` desde `fase-11-sunat`, con los commits de código portados (`2e79ad0`, `265752f`). WIP ajeno del repo principal intacto. `tsc --noEmit` y `npm run build` OK.
+- **Sin cambios de base:** solo lectura confirmó que los 5 productos de metro (100282, 100298, 100313, 100315, 100322) **solo existen en ecosistema**; Nego (513 productos) y Evicamp (1296) tienen 0 unidades «Metro». No se escribió en ninguna base de producción.
+- **Despliegue en orden (el que pidió el dueño):** Nego → Evicamp → ecosistema, con destino explícito (`deploy.cjs siumax|evicamp|ecosistema`), 22 archivos por sitio. Iconos oficiales repuestos después (`c159d216…`). En vivo, los 3 sitios sirven **`index-A3_4Ri3U.js` / `index-Cf4OlVIC.css`**; antes Nego y Evicamp seguían con la 228. Nunca se llamó a `deploy.cjs` sin argumento.
+- **Pruebas** con teclado, sin internet y 390/768/1366/1920: ecosistema **25/25** + marquita/limpiador **12/12** + tema azul **14/14** + sitio **35/35** + devoluciones **6/6** + 228 **11/11**; Nego **20/20** con la nueva `verificar-6-cambios-nego.mjs`; Evicamp login **11/11** sin cobro; 0 errores JS en todos.
+- **Push:** `c53f160..265752f  pase-todos -> fase-11-sunat`. No se tocó `main`. La prueba vieja `prueba-salidas-nego.mjs` sigue fallando por selectores de la interfaz anterior (228): no es regresión de este pase, usar la nueva.
+- **Regla nueva anotada en `MEMORIA-IA.md`:** de ahora en adelante, todo cambio de código se hace primero en Nego/Siumax y luego se sube a todos (Nego, Evicamp, ecosistema y GitHub), para que todos estén siempre actualizados. Sigue vigente el OK explícito del dueño para Evicamp/GitHub en cada tanda.
+- Falta la revisión visual del dueño con **Ctrl+F5** en los 3 sitios.
+
 ## 24/11/2026 (aclaración del alcance: qué se cambió y qué no) · OpenCode (Big Pickle) — Solo respuesta
 
 - El dueño preguntó si se cambió código de ecosistema y si se hizo primero en Nego/Siumax y luego se subió a Evicamp, a su GitHub y a ecosistema.

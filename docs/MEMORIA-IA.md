@@ -8,6 +8,20 @@
 
 ---
 
+## ⚠️ REGLA PERMANENTE (24/11/2026) — Flujo de código: primero Nego, luego TODOS
+- El dueño pidió: *"ya para la proxima si modificas codigo primero nego siumax y luego subelo a todos eso es para que todos esten siempre actualizados"*. **De ahora en adelante, cada cambio de código se despliega primero en Nego/Siumax (pruebas) y, una vez revisado, se sube a TODOS: Nego, Evicamp, ecosistema y GitHub**, para que ningún sitio se quede atrás.
+- Esta regla **no borra** la de siempre: Evicamp y GitHub requieren que el dueño lo autorice **en ese momento**; Nego es el sitio de pruebas. En esta tanda sí lo autorizó con *"actualizalo a todos entonces"*.
+- Forma segura (aprendida hoy): los 3 sitios comparten el mismo `dist/`, compilado **una vez** desde un worktree limpio. Publicar con destino explícito: `node ai-scripts/deploy.cjs siumax`, `... evicamp`, `... ecosistema`; **nunca** `deploy.cjs` sin argumento (por defecto publica en Evicamp). Después de ecosistema, **siempre** `node ai-scripts/restaurar-iconos-ecosistema.cjs` (si no, el logo vuelve al de Nego). `deploy.cjs todos` también toca la carpeta compartida de clientes: usar solo si el dueño dice «todos los clientes».
+- Los bundles se publican igual en los 3 sitios; la diferencia del azul de ecosistema va por dominio (`sitio-ecosistema`), no por bundle distinto: no «corregir» esa diferencia permanente.
+
+## 24/11/2026 — PASE A TODOS: 6 cambios + equivalencia 500 M en Nego, Evicamp y ecosistema, con push
+- El dueño pidió: *"pues actualizalo a todos entonces ya para la proxima si modificas codigo primero nego siumax y luego subelo a todos"*. Con ese OK se publicó **el mismo código** en los 3 sitios y se hizo **push a `origin/fase-11-sunat`**. **No se tocó `main`.**
+- Worktree limpio `pase-todos` desde `fase-11-sunat`, con los 2 commits de código portados (`2e79ad0` = 6 cambios, `265752f` = equivalencia desde Inventario). El repo principal quedó intacto con su WIP ajeno. Se compiló una vez (`tsc --noEmit` + `npm run build` OK) y se publicó en este orden: **Nego → Evicamp → ecosistema** (22 archivos por sitio) + iconos repuestos (MD5 `c159d216…`). Bundle en vivo en los 3: **`index-A3_4Ri3U.js` / `index-Cf4OlVIC.css`** (antes Nego y Evicamp tenían la 228 `index-Bp6aQKRr.js`).
+- **No hubo cambios de base en Nego ni Evicamp:** se consultó solo lectura y ninguno de los 5 productos de metro existe ahí (0 productos con unidad «Metro» en `siumax` y en `postgres`). La corrección de las 5 filas sigue siendo **solo ecosistema**. No se inventaron datos ni se escribió en bases de producción.
+- Pruebas con teclado, sin internet y 390/768/1366/1920: ecosistema **25/25**, marquita/limpiador **12/12**, tema azul **14/14**, sitio **35/35**, devoluciones del detalle **6/6**, 228 sin SSH **11/11**; Nego **20/20** (prueba nueva `verificar-6-cambios-nego.mjs`, adaptada a sus propios datos porque no tiene productos de metro); Evicamp login **11/11** sin avisos de pago. 0 errores JS.
+- Push confirmado: `c53f160..265752f  pase-todos -> fase-11-sunat`. La prueba antigua `prueba-salidas-nego.mjs` falla por selectores de la interfaz anterior (228), **no** por este cambio: para Nego usar la nueva.
+- Falta solo la revisión visual del dueño en los 3 sitios con **Ctrl+F5**.
+
 ## 24/11/2026 — Inventario es la fuente de la unidad: 5 productos de metro ya son UND = 500 M
 - Si Salidas sigue mostrando «Metro», **corrige el producto en Inventario**, no solo la etiqueta del componente. Los 5 afectados son los ids 100282, 100298, 100313, 100315, 100322: antes `unit='Metro'`, `weight_unit='Metro'`, `ref_unit='Metro'`, `ref_qty=1`, con el rollo (100/400/500) solo en `unit_weight`/el nombre.
 - Con OK del dueño (**«Sí, empieza»**) se guardó respaldo de las filas completas y se hizo un `PATCH` de **solo esas 5 filas**: `unit='UND'`, `weight_unit='UND'`, `ref_unit='METRO'`, `ref_qty=500`, `unit_weight='500.00'`. Respaldo: `C:/Users/User/AppData/Local/Temp/opencode/respaldo-productos-metro-2026-11-24.json`. **Nunca** tocar stock, precios, lotes ni historial para arreglar una etiqueta.
