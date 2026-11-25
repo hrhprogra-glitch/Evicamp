@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795574307.7827387,
-    "seen": 1795574366.6511989,
-    "ast_hash": "3871203b02739424aeae808a75bb0007",
+    "mtime": 1795577204.1767125,
+    "seen": 1795577248.098766,
+    "ast_hash": "005631a276feba29fb210058cfd50a56",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795574328.590835,
-    "seen": 1795574366.6512003,
-    "ast_hash": "d60a85f9d5d9560c4ebc23b6fccf0d0e",
+    "mtime": 1795577215.9224176,
+    "seen": 1795577248.098767,
+    "ast_hash": "a31b1c8398ae537baf650517d37cb31f",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795574341.6404703,
-    "seen": 1795574366.6512012,
-    "ast_hash": "231db3e0e4ebe2424a5bcc9a54dc9925",
+    "mtime": 1795577223.0903034,
+    "seen": 1795577248.0987682,
+    "ast_hash": "7d171da7c9ce8e432bb8984daaa64ab7",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795574321.2712538,
-    "seen": 1795574366.6512034,
-    "ast_hash": "06d7e0c642538bc540a6556c62403204",
+    "mtime": 1795577209.2397945,
+    "seen": 1795577248.0987706,
+    "ast_hash": "e1508d8b11f7d03c82dee1d402e1a2c4",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -3840,15 +3840,51 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-cambios-ecosistema.mjs": {
-    "mtime": 1795574166.2278712,
-    "seen": 1795574366.6508305,
-    "ast_hash": "93f3c99bab60361fdc669ad0e8b98d25",
+    "mtime": 1795577033.4640684,
+    "seen": 1795577248.098383,
+    "ast_hash": "5f2fe84023aa74d3b91c836fe68ae552",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-flechas-y-buscador-nego.mjs": {
     "mtime": 1795573920.886089,
     "seen": 1795574366.6508348,
     "ast_hash": "3ca818cbb61234b1fea720be375563d6",
+    "semantic_hash": ""
+  },
+  "ai-scripts/patch-stock-metros-ecosistema.cjs": {
+    "mtime": 1795576969.3280146,
+    "seen": 1795577248.0981476,
+    "ast_hash": "b3f5ed541ae4afa0fc2e67a449a37b7a",
+    "semantic_hash": ""
+  },
+  "ai-scripts/tmp-clientes-dominios.cjs": {
+    "mtime": 1795577134.0399933,
+    "seen": 1795577248.098415,
+    "ast_hash": "e76b91206fd65812ba4749fe05ec6934",
+    "semantic_hash": ""
+  },
+  "ai-scripts/tmp-columnas-detalle.cjs": {
+    "mtime": 1795576853.1628475,
+    "seen": 1795577248.098416,
+    "ast_hash": "51703733ed85834ea0cd35b89d1b1e73",
+    "semantic_hash": ""
+  },
+  "ai-scripts/tmp-conteos-cadenas.cjs": {
+    "mtime": 1795576835.3028297,
+    "seen": 1795577248.0984175,
+    "ast_hash": "ea984c4b144e8ed45e3b15e873767ec2",
+    "semantic_hash": ""
+  },
+  "ai-scripts/tmp-inspeccionar-cadenas.cjs": {
+    "mtime": 1795576819.0427878,
+    "seen": 1795577248.0984185,
+    "ast_hash": "2c3838a4ee846a08565d598e0dcf29a5",
+    "semantic_hash": ""
+  },
+  "ai-scripts/tmp-inspeccionar-conversion.cjs": {
+    "mtime": 1795576996.3895428,
+    "seen": 1795577248.0984194,
+    "ast_hash": "63b6f1eaba5179d42062aac33abee35c",
     "semantic_hash": ""
   }
 }

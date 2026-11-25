@@ -1620,9 +1620,9 @@
     "semantic_hash": "31e456f9cf86dd70d2e0ab9d39d0c813"
   },
   "src/utils/presentaciones.ts": {
-    "mtime": 1795573852.2631495,
-    "seen": 1795574366.6511674,
-    "ast_hash": "e63016de84eeb91fedd10e9f185f466a",
+    "mtime": 1795580104.6340437,
+    "seen": 1795582565.3810327,
+    "ast_hash": "66799c63cf6424a5b67a4e87f5f1e3a9",
     "semantic_hash": ""
   },
   "src/sections/Conteos/components/FiltrosConteos.tsx": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795577204.1767125,
-    "seen": 1795577248.098766,
-    "ast_hash": "005631a276feba29fb210058cfd50a56",
+    "mtime": 1795582386.6055627,
+    "seen": 1795582565.3810625,
+    "ast_hash": "d80805e15eeb190c9d3fe688a1d91504",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795577215.9224176,
-    "seen": 1795577248.098767,
-    "ast_hash": "a31b1c8398ae537baf650517d37cb31f",
+    "mtime": 1795582440.1075878,
+    "seen": 1795582565.3810635,
+    "ast_hash": "685507d1335d1204146b2ee2ada5c08e",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795577223.0903034,
-    "seen": 1795577248.0987682,
-    "ast_hash": "7d171da7c9ce8e432bb8984daaa64ab7",
+    "mtime": 1795582423.5174568,
+    "seen": 1795582565.3810644,
+    "ast_hash": "e54f69a054ebcd687a3e1bd0ab4fed4c",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795577209.2397945,
-    "seen": 1795577248.0987706,
-    "ast_hash": "e1508d8b11f7d03c82dee1d402e1a2c4",
+    "mtime": 1795582393.2742403,
+    "seen": 1795582565.3810666,
+    "ast_hash": "f78562703b79d026c19c0d82a25f7173",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2946,9 +2946,9 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalNuevaSalida.tsx": {
-    "mtime": 1795573902.1972964,
-    "seen": 1795574366.651096,
-    "ast_hash": "5096a000b60722d61d3639a366364eaf",
+    "mtime": 1795578545.3780549,
+    "seen": 1795582565.3809626,
+    "ast_hash": "1a267a8ef57504a88f86ef8b56bb2bcc",
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/TablaSalidas.tsx": {
@@ -3840,9 +3840,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-cambios-ecosistema.mjs": {
-    "mtime": 1795577033.4640684,
-    "seen": 1795577248.098383,
-    "ast_hash": "5f2fe84023aa74d3b91c836fe68ae552",
+    "mtime": 1795580121.7751195,
+    "seen": 1795582565.3807094,
+    "ast_hash": "617bebbf468935035aa6374b14b094f1",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-flechas-y-buscador-nego.mjs": {
@@ -3857,34 +3857,16 @@
     "ast_hash": "b3f5ed541ae4afa0fc2e67a449a37b7a",
     "semantic_hash": ""
   },
-  "ai-scripts/tmp-clientes-dominios.cjs": {
-    "mtime": 1795577134.0399933,
-    "seen": 1795577248.098415,
-    "ast_hash": "e76b91206fd65812ba4749fe05ec6934",
+  "ai-scripts/pruebas/verificar-generales-devoluciones.cjs": {
+    "mtime": 1795582236.4326692,
+    "seen": 1795582565.3807156,
+    "ast_hash": "db18af39007a8f2573a05f75e5040d6b",
     "semantic_hash": ""
   },
-  "ai-scripts/tmp-columnas-detalle.cjs": {
-    "mtime": 1795576853.1628475,
-    "seen": 1795577248.098416,
-    "ast_hash": "51703733ed85834ea0cd35b89d1b1e73",
-    "semantic_hash": ""
-  },
-  "ai-scripts/tmp-conteos-cadenas.cjs": {
-    "mtime": 1795576835.3028297,
-    "seen": 1795577248.0984175,
-    "ast_hash": "ea984c4b144e8ed45e3b15e873767ec2",
-    "semantic_hash": ""
-  },
-  "ai-scripts/tmp-inspeccionar-cadenas.cjs": {
-    "mtime": 1795576819.0427878,
-    "seen": 1795577248.0984185,
-    "ast_hash": "2c3838a4ee846a08565d598e0dcf29a5",
-    "semantic_hash": ""
-  },
-  "ai-scripts/tmp-inspeccionar-conversion.cjs": {
-    "mtime": 1795576996.3895428,
-    "seen": 1795577248.0984194,
-    "ast_hash": "63b6f1eaba5179d42062aac33abee35c",
+  "servidor/sql/corregir-default-store-inventario.sql": {
+    "mtime": 1795582220.0101192,
+    "seen": 1795582565.3807802,
+    "ast_hash": "4d7a55cd87bc486ddd37e411de10a902",
     "semantic_hash": ""
   }
 }
