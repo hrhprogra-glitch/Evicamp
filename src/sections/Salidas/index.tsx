@@ -60,7 +60,7 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
       }
 
       if (error) throw error;
-      // Las notas llevan el nombre escrito en observaciones; el cliente interno solo es referencia.
+      // Las notas llevan el nombre escrito en observaciones; el cliente interno solo es una referencia.
       setSalidas(((data as any[]) || []).map(conNombreClienteNota));
     } catch (err) {
       console.error('Error cargando salidas:', err);
@@ -208,6 +208,8 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
           onSuccess={() => {
             fetchSalidas();
           }}
+          salidas={salidas}
+          onReload={fetchSalidas}
         />
       )}
 
