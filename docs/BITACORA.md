@@ -7,6 +7,14 @@
 
 ---
 
+## 25/11/2026 (borrar por completo la cantidad en Nueva salida) · OpenCode (Big Pickle) — ARREGLADO EN CÓDIGO, PRUEBA PENDIENTE TRAS COLISIÓN DE DEPLOY
+
+- **Dueño:** *"en la salida no puedo borrar la cantidad cuando se ingresa el producto … ejemplo 25 lo quiero borrar pero solo borro el 5 y no el 2 porque sucede eso ?"*. Preguntó la causa; se le explicó y autorizó el arreglo con **«si»**, primero en Nego.
+- **Causa confirmada en vivo (solo lectura):** en la fila del producto, el primer Backspace de `25` dejaba `2` y **guardaba** ese `2` en el item; el segundo Backspace dejaba el texto vacío pero el sistema ignoraba una cantidad vacía o `<= 0`, así que el item seguía valiendo `2`. Al salir del campo se soltaba el texto temporal y reaparecía el `2`. El campo de arriba (`cantItem`) sí borraba completo.
+- **Cambio mínimo en `ModalNuevaSalida.tsx`:** se conserva el texto mientras se edita (incluso vacío); solo se guarda un número válido, y si se sale con el campo vacío se repone la cantidad que había **al entrar** (25), no el `2` intermedio. Enter confirma sin pelear con la regla 9 del teclado (el foco vuelve al campo de origen, es su comportamiento normal). Sin tocar ids, estilo, botones `−/+`, teclado ni lógica de guardado.
+- **Prueba nueva:** `ai-scripts/pruebas/verificar-cantidad-salida.mjs` (no guarda salidas) comprueba borrado `25 → 2 → vacío`, reposición a `25`, escribir `7`, Enter con `9`, botones `−/+` y el campo de arriba, en 1366×768 y 390×844, con 0 errores JS.
+- **Colisión detectada:** el deploy propio a Nego (`index-CrDD9EXm.js`) pasó la prueba **22/22**, pero a las 14:17 hora local otro trabajo (`f7a2a92`/`19aedcb`, nota de Salidas subida a todos) desplegó desde el repo principal con WIP que **revertía** `cantidadEditando`; Nego volvió al bug (comprobado: al salir del campo reaparece `2`). El repo principal tiene WIP ajeno: **no se tocó**. Siguiente paso: integrar los commits ajenos ya subidos (`origin/fase-11-sunat` en `19aedcb`) en la rama propia, republicar Nego con **ambos** cambios y repetir la prueba. Sin pase a los demás sitios ni push hasta el OK del dueño.
+
 ## 25/11/2026 (Salidas en PC pequeña: pase a Evicamp, ecosistema, panel de clientes y GitHub) · OpenCode (Big Pickle) — HECHO EN LOS CUATRO SITIOS Y SUBIDO
 
 - **Dueño:** *"tienes que actualizarlo a evicamp y ecosistema y github y panel para mis clientes que pagan"*. Ese OK cubre los cuatro destinos y GitHub en la misma tanda, sin pedir otro permiso para el push.

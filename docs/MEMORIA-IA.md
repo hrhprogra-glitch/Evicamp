@@ -8,6 +8,11 @@
 
 ---
 
+## 25/11/2026 — Cantidad de Salidas: no guardar el borrado intermedio, y cuidado con el WIP ajeno al desplegar
+- El campo de cantidad **de la fila** (no el de arriba) guardaba cada pulsación: borrar `25` dejaba `2` y guardaba ese `2`; borrar el resto se ignoraba porque la cantidad no puede ser `<= 0`. Al perder el foco se reponía el valor guardado (`2`). Arreglo: conservar el texto, incluso vacío, mientras se edita; guardar solo números válidos y reponer el valor de entrada al salir. Regla útil: **no guardes un estado intermedio del usuariocomo si fuera definitivo**.
+- La regla 9 del teclado (`flechasEspaciales.ts`) devuelve el foco al campo de origen tras Enter. No pelear con `blur()`: si Enter debe confirmar, confirmar el valor y dejar que el foco vuelva solo. Una prueba que exija «Enter sale del campo» está mal planteada en este proyecto.
+- Otra IA desplegó Nego a los pocos minutos desde el repo principal, cuyo WIP **revertía** el arreglo (el bundle servido pasó de `CrDD9EXm` a `DyfpQR9q`). Antes de dar por bueno un deploy, **comparar `index.html` en vivo con `dist/index.html`** y repetir la prueba; y si hay commits ajenos nuevos en `origin/fase-11-sunat`, integrarlos antes de republicar para no quitarle arreglos al dueño.
+
 ## 25/11/2026 — Salidas en pantallas pequeñas: medir antes, aislar el worktree y verificar el bundle servido
 - El dueño pide **adaptar a distintos tamaños de pantalla**, no hacer scroll horizontal. En 1366 px la lista medía **1547 px** y `VER`/`ESTADO` quedaban fuera; en 1920 px entraba. Medir con Puppeteer antes de cambiar CSS evita adivinar anchos.
 - El repo principal tiene **WIP ajeno en `TablaSalidas.tsx`**: no sobrescribirlo. Se trabajó en un worktree nuevo desde `d0d4549` (commit del bundle que servía Nego), con `node_modules` junction y copia conocida de `.env.vps` (MD5 corto `BBF98048CC`); la del repo principal (`8562F26AD7`) no autentica.

@@ -1615,3 +1615,10 @@
 - **Despliegue:** build OK; el primer deploy fue sobrescrito por otro trabajo que subió el bundle viejo, se detectó y se repitió. Nego sirve **`index-CJhKMreh.js` / `index-D74V8jBk.css`**.
 - **Prueba:** **51 OK, 0 fallos** en 390/768/1024/1280/1366/1920, con teclado (↓↓, Enter, Escape), sin internet y 0 errores JS.
 - **Estado en ese momento:** el dueño debía revisar Nego con **Ctrl+F5**; ecosistema, Evicamp y GitHub esperaban su OK (llegó después, ver entrada siguiente).
+
+## 25/11/2026 (el dueño pregunta por qué no se puede borrar completa la cantidad)
+- **Dueño:** *"en la salida no puedo borrar la cantidad cuando se ingresa el producto no puedo borrar completo la cantidad ejemplo 25 lo quiero borrar pero solo borro el 5 y no el 2 porque sucede eso ?"*.
+- Se respondió la causa en español simple (el primer borrado guardaba el `2`; el segundo se ignoraba por ser vacío; al salir del campo el `2` reaparecía) y se propuso conservar el campo vacío mientras se edita y reponer la cantidad original al salir. **Dueño: «si»**, primero en Nego.
+- Hecho en el worktree aislado `salidas-pantalla-pc`, con prueba nueva `verificar-cantidad-salida.mjs` que no guarda salidas. El primer deploy propio pasó la prueba, pero otro trabajo desplegó Nego después desde el repo principal (commits `f7a2a92` y `19aedcb`, nota de Salidas) y su WIP revirtió el arreglo; se detectó al repetir la prueba (ahora `al salir vuelve 2`). pendiente de integrar esos commits y republicar.
+- El foco **no sale** del campo al dar Enter: es la regla 9 del teclado SiuMax (vuelve al campo de origen), no un defecto. La prueba lo respeta y comprueba el guardado con el botón `+` (9 → 10).
+- Sin OK aún para pasar el arreglo a Evicamp, ecosistema, panel de clientes ni GitHub.
