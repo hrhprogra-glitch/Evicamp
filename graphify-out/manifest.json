@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795586208.1846538,
-    "seen": 1795586289.6947486,
-    "ast_hash": "1ec00ed3b402f25a6e164dae5364eb90",
+    "mtime": 1795587098.7288258,
+    "seen": 1795587149.5329065,
+    "ast_hash": "edd9e2eb160e248c9ade33aefb76f2d4",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795586237.5287778,
-    "seen": 1795586289.6947503,
-    "ast_hash": "06a54caa9d7e77caeff394a615403991",
+    "mtime": 1795587114.534777,
+    "seen": 1795587149.532908,
+    "ast_hash": "afbb317cf0dcb7c855ed0518740e98cc",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795586259.6553936,
-    "seen": 1795586289.6947517,
-    "ast_hash": "b4c6f6a4cf7ebe4a69b33bd3c5c0f969",
+    "mtime": 1795587125.546405,
+    "seen": 1795587149.5329094,
+    "ast_hash": "a7f249a51df807c73a4198ae895e1ecf",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795586226.1517208,
-    "seen": 1795586289.6947548,
-    "ast_hash": "5bf496b1ca7a212eabd93efe3c9326a8",
+    "mtime": 1795587105.853262,
+    "seen": 1795587149.5329125,
+    "ast_hash": "e17cd7d40d5610ca1b48f20fd46241de",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -3885,6 +3885,12 @@
     "mtime": 1795584806.8008468,
     "seen": 1795585384.9975061,
     "ast_hash": "734369cf94af50dff15d7d22e4e8770c",
+    "semantic_hash": ""
+  },
+  "servidor/sql/crear-vista-empleados-publico.sql": {
+    "mtime": 1795586875.8516266,
+    "seen": 1795587149.532516,
+    "ast_hash": "e7a3ab5bf82ca87d3a68e66b0c8740af",
     "semantic_hash": ""
   }
 }

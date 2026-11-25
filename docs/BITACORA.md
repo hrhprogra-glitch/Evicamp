@@ -7,6 +7,16 @@
 
 ---
 
+## 25/11/2026 (Gestión de Usuarios no mostraba nadie en ecosistema) · OpenCode (Big Pickle) — CORREGIDO EN LA BASE, SIN PUSH
+
+- **Dueño:** *"me di cuenta de algo preocupante en gestion de usuario no sale ningun usuario como podre controlar al resto siendo el admin soluciona eso urgente"*. Su pedido urgente se tomó como OK para corregir la base de ecosistema; **no** autorizó push ni despliegue.
+- **Diagnóstico sin escribir nada:** la pantalla (`TablaUsuarios.tsx`) lee `empleados_publico`. En ecosistema la API devolvía **HTTP 404** `relation "public.empleados_publico" does not exist`; en Nego devolvía 200 con 1 fila. La tabla `empleados` sí tenía usuarios: **3 en ecosistema** (`billy` Administrador, `jhon` Técnico y `admin@ecosistema.com` Administrador). No faltaban usuarios: faltaba la vista que los muestra.
+- **Revisión de las otras bases (solo lectura):** `siumax` (Nego, 1 empleado), `postgres` (Evicamp, 2), `servic` (1) y `siudemo` (2) sí tienen la vista; `evidiary` y `creditaltoque` no tienen tabla `empleados`. **Solo ecosistema necesitaba el cambio.** En Nego no hay «al resto»: ahí únicamente existe `admin@siumax.com`.
+- **Corrección:** nuevo `servidor/sql/crear-vista-empleados-publico.sql` (vista sin `password`/`password_hash`). Aplicado solo en ecosistema con respaldo previo `/var/lib/postgresql/respaldo-ecosistema-antes-vista-usuarios-2026-11-25T06-08-21-098Z.dump`, `SET lock_timeout='5s'`, `GRANT SELECT ... TO anon, web_anon` y `NOTIFY pgrst, 'reload schema'`. Salida: `VISTA LISTA: 7` y `USUARIOS QUE VERÁ LA PANTALLA: 3`. **Sin reiniciar la API, sin tocar código ni desplegar.**
+- **Verificación en pantalla real:** ecosistema muestra **3 filas** (billy, jhon, Administrador SiuHub) con API **HTTP 200**; Nego sigue con 1 fila. Las tres RPC (`fn_crear_empleado`, `fn_editar_empleado`, `fn_eliminar_empleado`) existen con `EXECUTE` para `anon` en `siumax`, `ecosistema` y `postgres`.
+- **Prueba de escritura sin dejar rastro:** con la sesión real del administrador, dentro de `BEGIN; … ROLLBACK;` se editó `jhon`, se borró y se creó un usuario temporal; las tres funciones respondieron bien. Después del rollback siguen los **3 usuarios originales** y no quedó el temporal. Ojo para futuras pruebas: `fn_editar_empleado` y `fn_eliminar_empleado` devuelven **boolean**; `fn_crear_empleado` devuelve el **uuid** del usuario nuevo.
+- **Estado:** docs y grafo actualizados y commit local de la corrección. **Sin push** (no hay OK nuevo para GitHub). Falta pedirle al dueño que revise con **Ctrl+F5** en ecosistema y que diga si el aviso incluía también Nego; para crear usuarios nuevos allí hace falta su lista, roles y claves.
+
 ## 25/11/2026 (X para borrar devoluciones: pase a ecosistema, Evicamp y clientes + push) · OpenCode (Big Pickle) — HECHO, PROBADO Y SUBIDO
 
 - **Dueño:** *"sube todo"* después de ver la X en Nego. Con ese OK se autorizaron ecosistema, Evicamp, el panel de clientes y el push a GitHub; no hizo falta pedir otro permiso para el push.

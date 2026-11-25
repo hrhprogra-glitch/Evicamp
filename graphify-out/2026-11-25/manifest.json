@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795585284.3206244,
-    "seen": 1795585384.9978821,
-    "ast_hash": "f2660455b650d9b3e2ac120ed921cbf1",
+    "mtime": 1795586208.1846538,
+    "seen": 1795586289.6947486,
+    "ast_hash": "1ec00ed3b402f25a6e164dae5364eb90",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795585354.0258563,
-    "seen": 1795585384.9978833,
-    "ast_hash": "d486491cdc8d9125f4c543bdb8d36e0b",
+    "mtime": 1795586237.5287778,
+    "seen": 1795586289.6947503,
+    "ast_hash": "06a54caa9d7e77caeff394a615403991",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795585361.4931018,
-    "seen": 1795585384.997885,
-    "ast_hash": "22b1205e696e07eb93ce5a65f9a45cfe",
+    "mtime": 1795586259.6553936,
+    "seen": 1795586289.6947517,
+    "ast_hash": "b4c6f6a4cf7ebe4a69b33bd3c5c0f969",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795585328.8365705,
-    "seen": 1795585384.997888,
-    "ast_hash": "8a40b430c27c23aa8d6ffb8bccc45f6c",
+    "mtime": 1795586226.1517208,
+    "seen": 1795586289.6947548,
+    "ast_hash": "5bf496b1ca7a212eabd93efe3c9326a8",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -3840,9 +3840,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-cambios-ecosistema.mjs": {
-    "mtime": 1795580121.7751195,
-    "seen": 1795582565.3807094,
-    "ast_hash": "617bebbf468935035aa6374b14b094f1",
+    "mtime": 1795585915.680731,
+    "seen": 1795586289.6942382,
+    "ast_hash": "ae9e1eaaf9cda239227962c555418fe7",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-flechas-y-buscador-nego.mjs": {
@@ -3870,15 +3870,15 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-eliminar-devolucion.cjs": {
-    "mtime": 1795584944.3174973,
-    "seen": 1795585384.9973917,
-    "ast_hash": "c28f588daa9bd7cff740f495a81015ea",
+    "mtime": 1795585842.7953944,
+    "seen": 1795586289.6942427,
+    "ast_hash": "91f280f111e285f054536b08ce054e6a",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-x-devolucion-nego.mjs": {
-    "mtime": 1795585069.6656888,
-    "seen": 1795585384.9974022,
-    "ast_hash": "9277fdf61de1a313bfd18a19ae7ec0b2",
+    "mtime": 1795586031.795772,
+    "seen": 1795586289.6942527,
+    "ast_hash": "fe3510bb2d6c39b299e4a41f9972c983",
     "semantic_hash": ""
   },
   "servidor/sql/eliminar-devolucion-salida.sql": {
