@@ -5,6 +5,7 @@ import { TablaSalidas } from './components/TablaSalidas';
 import { ModalNuevaSalida } from './components/ModalNuevaSalida';
 import { ModalDetalleSalida } from './components/ModalDetalleSalida';
 import type { Salida, TipoSalida, EstadoSalida } from './types';
+import { coincideBusqueda } from '../../utils/busqueda';
 
 interface SalidasProps {
   salidaIdInicial?: number;
@@ -88,55 +89,10 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
     return () => clearTimeout(t);
   }, []);
 
-  // Manejo de teclado entre buscador, paginación y tabla
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (modalNuevoOpen || salidaSeleccionada) return;
-
-      if (e.key === 'ArrowDown') {
-        const active = document.activeElement;
-        if (active?.id === 'buscador-salidas') {
-          e.preventDefault();
-          const pagBtn = document.getElementById('btn-pagina-ant-salidas-arriba');
-          pagBtn?.focus();
-        } else if (
-          active?.id === 'btn-pagina-ant-salidas-arriba' ||
-          active?.id === 'btn-pagina-sig-salidas-arriba'
-        ) {
-          e.preventDefault();
-          const primeraFila = document.querySelector('[data-fila-salida="true"]') as HTMLElement | null;
-          primeraFila?.focus();
-        } else if (active?.getAttribute('data-fila-salida') === 'true') {
-          e.preventDefault();
-          const siguienteFila = active.nextElementSibling as HTMLElement | null;
-          if (siguienteFila && siguienteFila.getAttribute('data-fila-salida') === 'true') {
-            siguienteFila.focus();
-          }
-        }
-      } else if (e.key === 'ArrowUp') {
-        const active = document.activeElement;
-        if (active?.getAttribute('data-fila-salida') === 'true') {
-          const anteriorFila = active.previousElementSibling as HTMLElement | null;
-          if (anteriorFila && anteriorFila.getAttribute('data-fila-salida') === 'true') {
-            e.preventDefault();
-            anteriorFila.focus();
-          } else {
-            e.preventDefault();
-            document.getElementById('btn-pagina-ant-salidas-arriba')?.focus();
-          }
-        } else if (
-          active?.id === 'btn-pagina-ant-salidas-arriba' ||
-          active?.id === 'btn-pagina-sig-salidas-arriba'
-        ) {
-          e.preventDefault();
-          document.getElementById('buscador-salidas')?.focus();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [modalNuevoOpen, salidaSeleccionada]);
+  // (24/11/2026) Antes había aquí un listener global que también movía el foco entre filas.
+  // La fila ya lo hace en TablaSalidas.tsx y, como el foco cambiaba antes de que este listener
+  // recibiera la tecla, bajaba (y subía) DOBLE. Cada control mueve el selector una sola vez:
+  // la sub-barra en HeaderSalidas, la paginación en PaginacionSobrio y las filas en TablaSalidas.
 
   // Filtrado
   const salidasFiltradas = useMemo(() => {
@@ -145,19 +101,19 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
       if (filtroEstado !== 'TODOS' && s.estado !== filtroEstado) return false;
       if (filtroFecha && String(s.fecha || '').slice(0, 10) !== filtroFecha) return false;
       if (busqueda.trim()) {
-        const q = busqueda.toLowerCase().trim();
-        const matchCodigo = s.codigo?.toLowerCase().includes(q);
-        const matchCliente = s.customer?.name?.toLowerCase().includes(q);
-        const matchDoc = (s.customer?.dni || s.customer?.ruc)?.toLowerCase().includes(q);
-        const matchBien = s.bien?.nombre?.toLowerCase().includes(q);
-        const matchDir = s.direccion?.toLowerCase().includes(q);
-        const matchTrab = (s.trabajadores || []).some((t) =>
-          t.trabajador?.nombre?.toLowerCase().includes(q)
-        );
-        const matchItems = (s.items || []).some((it) =>
-          it.descripcion?.toLowerCase().includes(q)
-        );
-        return matchCodigo || matchCliente || matchDoc || matchBien || matchDir || matchTrab || matchItems;
+        // Mismo buscador flexible que el detalle y Devolver: ignora tildes, mayúsculas,
+        // espacios de más y encuentra palabras aunque estén en otro orden.
+        const campos: (string | null | undefined)[] = [
+          s.codigo,
+          s.customer?.name,
+          s.customer?.dni,
+          s.customer?.ruc,
+          s.bien?.nombre,
+          s.direccion,
+          ...(s.trabajadores || []).map((t) => t.trabajador?.nombre),
+          ...(s.items || []).map((it) => it.descripcion),
+        ];
+        return coincideBusqueda(campos, busqueda);
       }
       return true;
     });

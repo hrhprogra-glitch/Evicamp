@@ -38,27 +38,29 @@ export const TablaSalidas: React.FC<TablaSalidasProps> = ({
   };
 
   const alTeclearFila = (e: React.KeyboardEvent, idx: number, s: Salida) => {
+    // 24/11/2026: esta fila es la ÚNICA que mueve el selector entre filas. Antes un listener
+    // global de la pantalla volvía a moverlo y bajaba/subía doble. stopPropagation evita que
+    // cualquier teclado general vuelva a actuar sobre la misma tecla.
     if (e.key === 'Enter') {
       e.preventDefault();
+      e.stopPropagation();
       onVerDetalle(s);
     } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      e.stopPropagation();
       const sig = e.currentTarget.nextElementSibling as HTMLElement | null;
       if (sig && sig.getAttribute('data-fila-salida') === 'true') {
-        e.preventDefault();
         sig.focus();
       } else {
-        e.preventDefault();
-        e.stopPropagation();
         document.getElementById('btn-pag-bottom-salidas-ant')?.focus();
       }
     } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      e.stopPropagation();
       const ant = e.currentTarget.previousElementSibling as HTMLElement | null;
       if (ant && ant.getAttribute('data-fila-salida') === 'true') {
-        e.preventDefault();
         ant.focus();
       } else if (idx === 0) {
-        e.preventDefault();
-        e.stopPropagation();
         document.getElementById('btn-pagina-sig-salidas-arriba')?.focus();
       }
     }
@@ -80,7 +82,7 @@ export const TablaSalidas: React.FC<TablaSalidasProps> = ({
       />
 
       <div className="w-full overflow-x-auto custom-scrollbar">
-        <div className="min-w-[1000px]" id="tabla-salidas-lista">
+        <div className="min-w-[1080px]" id="tabla-salidas-lista">
           {salidas.length === 0 ? (
             <div className="vacio-sobrio">
               <Search size={32} />
@@ -96,6 +98,7 @@ export const TablaSalidas: React.FC<TablaSalidasProps> = ({
                   <th className="whitespace-nowrap p-4">Lo que se atiende</th>
                   <th className="whitespace-nowrap p-4">Personal Asignado</th>
                   <th className="whitespace-nowrap p-4 text-center">Items</th>
+                  <th className="whitespace-nowrap p-4 text-center">Devoluciones</th>
                   <th className="whitespace-nowrap p-4 text-center">Estado</th>
                   <th className="whitespace-nowrap p-4 text-center">Acciones</th>
                 </tr>
@@ -150,12 +153,17 @@ export const TablaSalidas: React.FC<TablaSalidasProps> = ({
                     </td>
                     <td className="p-4 text-center">
                       <span className="font-black">{s.items?.length || 0}</span>
-                      {/* Devoluciones visibles en la lista: sin esta marquita el cliente cree que se borraron meses. */}
-                      {((s.devoluciones?.length || 0) > 0 || (s.items || []).some((it) => Number(it.cantidad_devuelta) > 0)) && (
-                        <span className="block text-[9px] font-bold text-amber-700 uppercase" title="Tiene devoluciones registradas">
-                          {s.devoluciones?.length || (s.items || []).filter((it) => Number(it.cantidad_devuelta) > 0).length} dev.
-                        </span>
-                      )}
+                    </td>
+                    <td className="p-4 text-center">
+                      {/* 24/11: las devoluciones van en su propia columna, no debajo de Ítems. */}
+                      {(() => {
+                        const cant = (s.devoluciones?.length || 0) || (s.items || []).filter((it) => Number(it.cantidad_devuelta) > 0).length;
+                        return cant > 0 ? (
+                          <span className="font-black text-amber-700 uppercase" title="Tiene devoluciones registradas">{cant} dev.</span>
+                        ) : (
+                          <span className="text-[var(--color-muted)]">-</span>
+                        );
+                      })()}
                     </td>
                     <td className="p-4 text-center">{getEstadoBadge(s.estado)}</td>
                     <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>

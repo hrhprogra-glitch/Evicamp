@@ -130,13 +130,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   const claveItem = (it: { product_id?: number | null; descripcion?: string }, idx: number) =>
     it.product_id != null ? `p${it.product_id}` : `d${it.descripcion || idx}`;
 
-  // Equivalencia «1 UND = N M» del producto en Inventario (ref_qty/ref_unit), no texto fijo.
-  const equivalenciaDeProducto = (p: any): number => {
-    const ref = String(p?.ref_unit || '').toUpperCase().trim();
-    if (!/^(M|METRO|METROS|MTR|MT|ML)$/.test(ref)) return 0;
-    const metros = Number(p?.ref_qty) > 1 ? Number(p.ref_qty) : Number(p?.unit_weight || 0);
-    return metros > 1 ? Math.round(metros * 1000) / 1000 : 0;
-  };
+  // 24/11/2026: se quitó «1 UND = N M». La unidad del producto ya es la real (manguera = M)
+  // y el rollo se elige como presentación en Opciones avanzadas.
 
   // Inputs para agregar item (modo SUNAT)
   const [busquedaProd, setBusquedaProd] = useState('');
@@ -416,7 +411,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         supabase.from('empleados_publico').select('id, nombre, email, rol, estado').eq('estado', 'ACTIVO').order('nombre'),
         // Sin la foto (image_url pesa mucho: MEMORIA-IA 63) y en bloques, para no cortarse en 1.000 productos.
         // Solo activos: los borrados en Inventario quedan con is_active = 0 y no deben salir aquí (17/11/2026).
-        traerTodo(() => supabase.from('products').select('id, name, code, unit, quantity, cost_price, image_path, ref_unit, ref_qty, unit_weight').eq('is_active', 1).order('name').order('id')),
+        traerTodo(() => supabase.from('products').select('id, name, code, unit, quantity, cost_price, image_path').eq('is_active', 1).order('name').order('id')),
       ]);
 
       if (resCli.data) {
@@ -475,15 +470,13 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     );
   };
 
-  // Filtro de productos
-  const termino = busquedaProd.trim().toLowerCase();
+  // Filtro de productos (24/11/2026): usa el buscador flexible del sistema, que tolera
+  // tildes, mayúsculas, espacios de más y palabras separadas. Antes un `includes` simple
+  // hacía que no apareciera un producto con el nombre casi igual.
+  const termino = busquedaProd.trim();
   const prodsFiltrados = termino
     ? productos
-        .filter(
-          (p) =>
-            (p.name && p.name.toLowerCase().includes(termino)) ||
-            (p.code && p.code.toLowerCase().includes(termino))
-        )
+        .filter((p) => coincideBusqueda([p.name, p.code], termino))
         .slice(0, 8)
     : [];
 
@@ -1438,7 +1431,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                             </span>
                           )}
                         </td>
-                        <td className="p-2 text-center font-bold"><UnidadMaterial unidad={it.unidad} equivalenciaM={equivalenciaDeProducto(productos.find((p) => Number(p.id) === Number(it.product_id)))} /></td>
+                        <td className="p-2 text-center font-bold"><UnidadMaterial unidad={it.unidad} /></td>
                         <td className="p-2">
                           {/* Edición directa en la fila (se puede borrar y escribir + botones -/+) */}
                           <div className="flex items-center justify-center gap-1">

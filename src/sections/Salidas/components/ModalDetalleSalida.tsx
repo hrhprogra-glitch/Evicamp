@@ -42,8 +42,6 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
   useCerrarConEscape(isOpen, onClose);
 
   const [materiales, setMateriales] = useState<MaterialVista[]>([]);
-  // Equivalencia «1 UND = N M» leída de Inventario (products.ref_qty), por producto.
-  const [equivalencias, setEquivalencias] = useState<Record<number, number>>({});
   // Buscador del detalle: filtra SOLO los materiales que ya tiene esta salida (dueño 24/11/2026).
   const [buscarMaterial, setBuscarMaterial] = useState('');
   const [devolver, setDevolver] = useState<Record<number, string>>({});
@@ -61,27 +59,8 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
   const materialesRef = useRef(materiales);
   materialesRef.current = materiales;
 
-  /**
-   * Dueño 24/11/2026: la equivalencia de metros ya NO va escrita en el texto de Salidas, la tiene
-   * el producto en Inventario (ref_qty/ref_unit). Solo se muestra si el producto dice que su
-   * referencia es metro y trae más de 1; el resto de productos siguen con su unidad normal.
-   */
-  const cargarEquivalencias = async (lista: MaterialVista[]) => {
-    const ids = [...new Set(lista.map((m) => Number(m.product_id)).filter((n) => Number.isFinite(n) && n > 0))];
-    if (ids.length === 0) { setEquivalencias({}); return; }
-    const { data } = await supabase
-      .from('products')
-      .select('id, ref_unit, ref_qty, unit_weight')
-      .in('id', ids);
-    const mapa: Record<number, number> = {};
-    (data || []).forEach((p: any) => {
-      const ref = String(p.ref_unit || '').toUpperCase().trim();
-      if (!/^(M|METRO|METROS|MTR|MT|ML)$/.test(ref)) return;
-      const metros = Number(p.ref_qty) > 1 ? Number(p.ref_qty) : Number(p.unit_weight || 0);
-      if (metros > 1) mapa[Number(p.id)] = Math.round(metros * 1000) / 1000;
-    });
-    setEquivalencias(mapa);
-  };
+  // 24/11/2026: se quitó la carga de equivalencias «1 UND = N M». La unidad ya viene del producto
+  // (manguera = M) y el rollo vive en presentaciones; Salidas solo muestra la unidad real.
 
   const sincronizarMateriales = async (id: number) => {
     const { data, error } = await supabase
@@ -93,7 +72,6 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
     const lista = data as MaterialVista[];
     setMateriales(lista);
     materialesRef.current = lista;
-    void cargarEquivalencias(lista);
     const cant: Record<number, string> = {};
     lista.forEach((m) => { cant[Number(m.id)] = ''; });
     setDevolver(cant);
@@ -104,7 +82,6 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
     const it = (salida.items || []) as MaterialVista[];
     setMateriales(it);
     materialesRef.current = it;
-    void cargarEquivalencias(it);
     const cant: Record<number, string> = {};
     it.forEach((m) => { cant[Number(m.id)] = ''; });
     setDevolver(cant);
@@ -393,7 +370,7 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
                             {m.descripcion}
                             {m.es_externo && <span className="ml-2 text-[9px] text-amber-700 font-black">EXTERNO</span>}
                           </td>
-                          <td className="p-2 text-center"><UnidadMaterial unidad={m.unidad} equivalenciaM={equivalencias[Number(m.product_id)]} /></td>
+                          <td className="p-2 text-center"><UnidadMaterial unidad={m.unidad} /></td>
                           <td className="p-2 text-right font-bold">{Number(m.cantidad || 0)}</td>
                           <td className="p-2 text-right font-bold text-amber-700">{Number(m.cantidad_devuelta || 0) || '-'}</td>
                           <td className="p-2 text-right font-bold">{pendiente}</td>
@@ -451,7 +428,7 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
                               <tr key={d.id || idx}>
                                 <td className="p-1">{d.fecha ? new Date(d.fecha).toLocaleString('es-PE') : '-'}</td>
                                 <td className="p-1 font-bold uppercase">{item?.descripcion || `Item #${d.salida_item_id}`}</td>
-                                <td className="p-1 text-right font-black text-amber-700">{d.cantidad} <UnidadMaterial unidad={item?.unidad} equivalenciaM={equivalencias[Number(item?.product_id)]} /></td>
+                                <td className="p-1 text-right font-black text-amber-700">{d.cantidad} <UnidadMaterial unidad={item?.unidad} /></td>
                                 <td className="p-1 uppercase">{nomTrab || '—'}</td>
                                 <td className="p-1 uppercase">{d.motivo || '-'}</td>
                                 <td className="p-1 uppercase">{d.usuario || '-'}</td>
@@ -547,7 +524,6 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
           isOpen={devolucionesOpen}
           codigo={salida.codigo}
           materiales={materiales}
-          equivalencias={equivalencias}
           devolver={devolver}
           setDevolver={setDevolver}
           motivoDev={motivoDev}

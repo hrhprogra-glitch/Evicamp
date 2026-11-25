@@ -7,6 +7,19 @@
 
 ---
 
+## 24/11/2026 (tanda final: flechas, buscadores, Devoluciones y mangueras) · OpenCode (Big Pickle) — TODO HECHO Y SUBIDO
+
+- El dueño reportó el salto doble con las flechas y que el buscador de producto no encontraba nombres con tilde o un espacio de más. Confirmó **«Sí, empieza»** y pidió después: *"en la tabla de salidas quiero que pongas devoluciones como una nueva columna no quiero que ste abajo de los intems"*.
+- **Flecha doble:** `TablaSalidas.tsx` movía el foco y el listener global de `Salidas/index.tsx` lo movía otra vez. Se quitó ese listener y la fila manda sola con `stopPropagation`. Sub-barra y paginación conservan sus ids y su teclado.
+- **Buscadores:** `ModalNuevaSalida.tsx` y el buscador general de `Salidas/index.tsx` pasaron de `toLowerCase()+includes` a `coincideBusqueda` (tildes, mayúsculas, espacios de más, palabras separadas). El detalle y Devolver ya la usaban.
+- **Devoluciones:** columna propia entre Ítems y Estado (número + «dev.» o «-»); se quitó la marquita debajo de Ítems y el ancho mínimo pasó a 1080 px.
+- **Mangueras (decisiones del dueño):** unidad base **Metro (`M`, SUNAT `MTR`)**; se quitó definitivamente «1 UND = 500 M»; rollo según el **nombre** (100MT: 100282/100298/100432, 400MT: 100313/100315, 500MT: 100322); no hay precio, así que se permiten presentaciones con **S/ 0.00**; «paquetes» era solo un ejemplo, no se creó ninguno. Cantidades, stock e historial **intactos**.
+- **Base (solo ecosistema):** respaldo de las 6 filas y de los 510 productos, `SET lock_timeout='5s'` y una transacción con 6 `UPDATE`. Se limpiaron `ref_unit/ref_qty/unit_weight`, se pusieron `unit='M'`, `sunat_unit_code='MTR'` y `presentaciones=[{"unidad":"ROLLO","factor":100|400|500,"precio":0}]`. Script `ai-scripts/patch-mangueras-ecosistema.cjs` (modos `backup` y `apply`). Respaldo: `respaldo-productos-mangueras-ecosistema-2026-11-24-antes.json`.
+- **Código:** `UnidadMaterial.tsx` muestra solo la unidad real; se quitaron las equivalencias de `ModalDetalleSalida`, `ModalDevolucionesSalida` y `ModalNuevaSalida`; `presentacionesValidas` acepta `precio >= 0`.
+- **Orden pedido por el dueño:** primero Nego, luego la base en ecosistema, verificado todo, y recién después el pase a ecosistema, Evicamp y el panel de clientes que pagan. Destinos explícitos (`deploy.cjs siumax|ecosistema|evicamp|clientes`) y, tras ecosistema, iconos repuestos (`c159d216…`). Bundle único en vivo en Nego, ecosistema, Evicamp y clientes: **`index-BAV_WNoL.js`**. Nunca se llamó a `deploy.cjs` sin argumento.
+- **Pruebas:** Nego **23/23** (`verificar-flechas-y-buscador-nego.mjs`) y ecosistema **19/19** (`verificar-cambios-ecosistema.mjs`), con teclado, sin internet y en 390/768/1366/1920; 0 errores JS. En ecosistema se comprobó en vivo: unidad `M`, `SUNAT: MTR`, `ROLLO x100` a `S/ 0.00`, sin «1 UND = 500 M», columna Devoluciones, una flecha = una fila y búsqueda «manguera  ciega».
+- **Commit y push autorizados por el dueño** en esta tanda a `origin/fase-11-sunat`. `main` intacto. Falta solo la revisión visual del dueño con **Ctrl+F5** en los sitios.
+
 ## 24/11/2026 (PASE A TODOS: código en Nego, Evicamp y ecosistema + push) · OpenCode (Big Pickle) — HECHO
 
 - El dueño pidió: *"pues actualizalo a todos entonces ya para la proxima si modificas codigo primero nego siumax y luego subelo a todos eso es para que todos esten siempre actualizados"*. Con ese OK se cumplieron las dos partes: **se actualizó a todos y se subió a GitHub**.

@@ -7,7 +7,8 @@ import { unidadDe } from './unidades';
 
 export interface Presentacion { unidad: string; factor: number; precio: number; barcode?: string | null }
 
-/** Las válidas (unidad entera distinta de UND, trae 2 o más, precio mayor que 0), sin repetir unidad + factor. */
+/** Las válidas (unidad entera distinta de UND, trae 2 o más, precio 0 o mayor), sin repetir unidad + factor.
+ *  24/11/2026: el dueño confirmó que aún no hay precios, así que S/ 0.00 también se muestra. */
 export const presentacionesValidas = (lista: unknown): Presentacion[] => {
   if (!Array.isArray(lista)) return [];
   const vistas = new Set<string>();
@@ -15,7 +16,7 @@ export const presentacionesValidas = (lista: unknown): Presentacion[] => {
   for (const e of lista as Presentacion[]) {
     const unidad = String(e?.unidad || '').toUpperCase(); const factor = Number(e?.factor); const precio = Number(e?.precio);
     const u = unidadDe({ unit: unidad });
-    if (u.tipo !== 'ENTERA' || u.corto === 'UND' || u.corto !== unidad || !(factor >= 2) || !(precio > 0)) continue;
+    if (u.tipo !== 'ENTERA' || u.corto === 'UND' || u.corto !== unidad || !(factor >= 2) || !(precio >= 0)) continue;
     const clave = `${unidad}x${factor}`;
     if (vistas.has(clave)) continue;
     vistas.add(clave);
