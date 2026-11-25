@@ -7,6 +7,16 @@
 
 ---
 
+## 24/11/2026 (Inventario corregido: los 5 productos de metro ya son UND = 500 M) · OpenCode (Big Pickle) — HECHO, desplegado y probado
+
+- El dueño insistió: *"pero tienes que corregirlo en el inventario para que esos productos salgan bien en salidas !!1"*. Con su **«Sí, empieza (Recommended)»** se corrigió el origen en ecosistema, no solo la etiqueta de Salidas.
+- **Antes:** los 5 productos tenían `unit='Metro'`, `weight_unit='Metro'`, `ref_unit='Metro'`, `ref_qty=1` y el tamaño del rollo (100/400/500) solo en `unit_weight`/el nombre. Se guardó respaldo de las 5 filas completas en `C:/Users/User/AppData/Local/Temp/opencode/respaldo-productos-metro-2026-11-24.json` antes de escribir.
+- **Después (solo esas 5 filas de `products`):** ids **100282, 100298, 100313, 100315, 100322** con `unit='UND'`, `weight_unit='UND'`, `ref_unit='METRO'`, `ref_qty=500` y `unit_weight='500.00'`. **No se tocaron** el stock (3.27 / 0.5 / 2.7025 / 2.4625 / 2.86), precios, las 39 líneas históricas de salidas (siguen diciendo `Metro`), los 59 items, los 7 lotes ni las 1213 devoluciones.
+- **Código (commit local `a856573`):** `UnidadMaterial.tsx` acepta `equivalenciaM` y la lee de `products.ref_qty/ref_unit`; `ModalDetalleSalida.tsx` y `ModalDevolucionesSalida.tsx` cargan la equivalencia por `product_id`; `ModalNuevaSalida.tsx` pide esos campos en el select y muestra la nota al agregar el producto. Queda el texto fijo «1 UND = 500 M» solo como respaldo para salidas anteriores al cambio.
+- **Deploy:** solo ecosistema, 22 archivos y siempre `restaurar-iconos-ecosistema.cjs` después (MD5 `c159d216…`). En vivo **`index-CNDCe1Qi.js` / `index-CtGZbGlg.css`**; Nego y Evicamp intactos.
+- **Pruebas con login real, teclado, sin internet y 390/768/1366/1920:** `verificar-6-cambios-salidas.mjs` ampliada a **25/25** (los 5 UND/500 M, 0 productos con unidad «Metro» y stock sin multiplicar) y regresiones **12/12**, **14/14**, **35/35**, **6/6** y **11/11**. `tsc --noEmit` y `npm run build` OK.
+- Commits locales de código y documentos **sin push**. Falta la revisión visual del dueño con **Ctrl+F5** en ecosistema.
+
 ## 24/11/2026 (6 cambios en Salidas de ecosistema) · OpenCode (Big Pickle) — HECHO y desplegado
 
 - Con el **«Sí, empieza»** del dueño se ejecutaron los 5 puntos pedidos (6 comprobaciones). Decisiones suyas: los buscadores filtran **solo los materiales ya puestos en esa salida**; la cantidad se arregla al **ingresar un producto** (quiere borrar el `1` y escribir directo, sin + ni -); y en unidades eligió **solo etiqueta/equivalencia**, aplicando **1 UND = 500 M a todos los productos de metro** aunque el nombre diga 100MT/400MT. **No se multiplicaron cantidades, stock ni historial.**

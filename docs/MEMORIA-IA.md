@@ -8,6 +8,12 @@
 
 ---
 
+## 24/11/2026 — Inventario es la fuente de la unidad: 5 productos de metro ya son UND = 500 M
+- Si Salidas sigue mostrando «Metro», **corrige el producto en Inventario**, no solo la etiqueta del componente. Los 5 afectados son los ids 100282, 100298, 100313, 100315, 100322: antes `unit='Metro'`, `weight_unit='Metro'`, `ref_unit='Metro'`, `ref_qty=1`, con el rollo (100/400/500) solo en `unit_weight`/el nombre.
+- Con OK del dueño (**«Sí, empieza»**) se guardó respaldo de las filas completas y se hizo un `PATCH` de **solo esas 5 filas**: `unit='UND'`, `weight_unit='UND'`, `ref_unit='METRO'`, `ref_qty=500`, `unit_weight='500.00'`. Respaldo: `C:/Users/User/AppData/Local/Temp/opencode/respaldo-productos-metro-2026-11-24.json`. **Nunca** tocar stock, precios, lotes ni historial para arreglar una etiqueta.
+- `UnidadMaterial` recibe ahora `equivalenciaM`; la equivalencia se lee de `products.ref_qty/ref_unit` en `ModalDetalleSalida`, `ModalDevolucionesSalida` y `ModalNuevaSalida`. El texto fijo «1 UND = 500 M» queda **solo** como respaldo de las 39 líneas antiguas que aún traen `unidad='Metro'`: no se reescriben.
+- Comprobación rápida: `unit=ilike.*metro*` debe dar **0 productos**, y el stock de los 5 debe seguir en `3.27, 0.5, 2.7025, 2.4625, 2.86`. Esas 3 aserciones ya están en `verificar-6-cambios-salidas.mjs` (**25/25**); regresiones **12/12, 14/14, 35/35, 6/6, 11/11**. Deploy solo ecosistema + iconos; bundle `index-CNDCe1Qi.js`, sin push.
+
 ## 24/11/2026 — Salidas: 6 cambios hechos, y dos trampas de las pruebas
 - Con el OK del dueño, la equivalencia de metros es **solo etiqueta**: `UnidadMaterial.tsx` muestra `UND` + `1 UND = 500 M` para **M, METRO, METROS, MTR, MT y ML** (en vivo las devoluciones traían `METRO`, no `M`). Aplica a **todos** los de metro aunque el nombre diga 100MT/400MT, decisión expresa del dueño. **Nunca multiplicar cantidades, stock ni las 1213 devoluciones.**
 - La cantidad de «Nueva/Continuar salida» se arregla controlando el texto mientras se edita (`cantidadEditando` con clave por producto) y soltándolo en `onBlur`; así se puede borrar el `1` y escribir directo. El id queda `input-cantidad-item-p<product_id>` (o `d<descripcion>` si no hay producto).
