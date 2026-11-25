@@ -1620,10 +1620,10 @@
     "semantic_hash": "31e456f9cf86dd70d2e0ab9d39d0c813"
   },
   "src/utils/presentaciones.ts": {
-    "mtime": 1795571317.091745,
-    "seen": 1795571958.8986204,
-    "ast_hash": "81897d48cd9a1630ff964b5395b31142",
-    "semantic_hash": "81897d48cd9a1630ff964b5395b31142"
+    "mtime": 1795573852.2631495,
+    "seen": 1795574366.6511674,
+    "ast_hash": "e63016de84eeb91fedd10e9f185f466a",
+    "semantic_hash": ""
   },
   "src/sections/Conteos/components/FiltrosConteos.tsx": {
     "mtime": 1795571317.0320885,
@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795571857.6356516,
-    "seen": 1795571958.8986473,
-    "ast_hash": "76e4f0d681854bc90645fb4bf29d73c4",
+    "mtime": 1795574307.7827387,
+    "seen": 1795574366.6511989,
+    "ast_hash": "3871203b02739424aeae808a75bb0007",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795571927.290352,
-    "seen": 1795571958.8986483,
-    "ast_hash": "2414c36d3b5bcf512952aa14258193b4",
+    "mtime": 1795574328.590835,
+    "seen": 1795574366.6512003,
+    "ast_hash": "d60a85f9d5d9560c4ebc23b6fccf0d0e",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795571849.0990083,
-    "seen": 1795571958.898649,
-    "ast_hash": "821c9323adcdd48f5d4fbec73428ef4d",
+    "mtime": 1795574341.6404703,
+    "seen": 1795574366.6512012,
+    "ast_hash": "231db3e0e4ebe2424a5bcc9a54dc9925",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795571927.2893448,
-    "seen": 1795571958.8986511,
-    "ast_hash": "053610865dc1835eeebcc157c02de7c8",
+    "mtime": 1795574321.2712538,
+    "seen": 1795574366.6512034,
+    "ast_hash": "06d7e0c642538bc540a6556c62403204",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2934,9 +2934,9 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalDetalleSalida.tsx": {
-    "mtime": 1795571321.7671454,
-    "seen": 1795571958.898555,
-    "ast_hash": "b5d45a9133f459b4a5f65f20e8311f1f",
+    "mtime": 1795573879.1416228,
+    "seen": 1795574366.651093,
+    "ast_hash": "0965077fa347dff8f059f2a8180b483f",
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalDevolucion.tsx": {
@@ -2946,21 +2946,21 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalNuevaSalida.tsx": {
-    "mtime": 1795571321.7681453,
-    "seen": 1795571958.8985577,
-    "ast_hash": "7654d5ea0ca9ab0296808f244fdc0d07",
+    "mtime": 1795573902.1972964,
+    "seen": 1795574366.651096,
+    "ast_hash": "5096a000b60722d61d3639a366364eaf",
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/TablaSalidas.tsx": {
-    "mtime": 1795571321.6406376,
-    "seen": 1795571958.898559,
-    "ast_hash": "d98ac932fd88a6ee35c2b3ed835659d0",
+    "mtime": 1795573359.6339152,
+    "seen": 1795574366.651097,
+    "ast_hash": "667ede7454f2b9ee9a492f8bd534fcda",
     "semantic_hash": ""
   },
   "src/sections/Salidas/index.tsx": {
-    "mtime": 1795571317.0726826,
-    "seen": 1795571958.8985631,
-    "ast_hash": "d449a03e76678c493f8b36303ec9a2b9",
+    "mtime": 1795573175.4338677,
+    "seen": 1795574366.6511016,
+    "ast_hash": "7c9d80e97d1eee8c17ad4d06d39bb115",
     "semantic_hash": ""
   },
   "src/sections/Salidas/types.ts": {
@@ -3708,9 +3708,9 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalDevolucionesSalida.tsx": {
-    "mtime": 1795571321.7671454,
-    "seen": 1795571958.898557,
-    "ast_hash": "7b44c915da93b2ecdd2b1a00752036fa",
+    "mtime": 1795573889.3895798,
+    "seen": 1795574366.6510952,
+    "ast_hash": "1eddc8bf15e8a1a34711ab9d664989bb",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/aplicar-devoluciones-228-nego.cjs": {
@@ -3828,9 +3828,27 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/UnidadMaterial.tsx": {
-    "mtime": 1795571321.7681453,
-    "seen": 1795571958.89856,
-    "ast_hash": "104b7faf8178bdf70c4093259a06cdc6",
+    "mtime": 1795573852.2477603,
+    "seen": 1795574366.651098,
+    "ast_hash": "57c6569c2667419480e7f638c22f99ee",
+    "semantic_hash": ""
+  },
+  "ai-scripts/patch-mangueras-ecosistema.cjs": {
+    "mtime": 1795573982.9339204,
+    "seen": 1795574366.6505868,
+    "ast_hash": "bea6af95abcdb7422aacade43235e596",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/verificar-cambios-ecosistema.mjs": {
+    "mtime": 1795574166.2278712,
+    "seen": 1795574366.6508305,
+    "ast_hash": "93f3c99bab60361fdc669ad0e8b98d25",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/verificar-flechas-y-buscador-nego.mjs": {
+    "mtime": 1795573920.886089,
+    "seen": 1795574366.6508348,
+    "ast_hash": "3ca818cbb61234b1fea720be375563d6",
     "semantic_hash": ""
   }
 }

@@ -1,5 +1,6 @@
 // 24/11/2026 — Verificación en el sitio oficial (solo lectura: no guarda salidas ni productos):
 //  · manguera en unidad M con SUNAT MTR y rollo en Opciones avanzadas (precio 0.00 permitido),
+//  · STOCK EN METROS: sugerido 100322 = 1430 M y lista 100282 = 327 M,
 //  · sin texto «1 UND = 500 M», Devoluciones en columna propia, una flecha = una fila,
 //  · buscadores con tildes/espacios, sin internet y en 390/768/1366/1920.
 // Uso: node ai-scripts/pruebas/verificar-cambios-ecosistema.mjs <carpeta tools con puppeteer-core>
@@ -75,6 +76,10 @@ try {
   await escribirEn('#input-buscar-producto-salida', 'manguera  ciega');
   const mangs = await sugerencias();
   ok('Buscador de producto tolera espacio de más y minúsculas', mangs.total > 0, JSON.stringify(mangs));
+  ok('Sugerido de 100282 muestra el stock en metros (327 M)', /327(?:\.0+)?\s*M\b/.test(mangs.texto), JSON.stringify(mangs));
+  await escribirEn('#input-buscar-producto-salida', 'MANGUERA DE 16');
+  const m16 = await sugerencias();
+  ok('Sugerido de 100322 muestra los metros reales (1430 M)', /1430(?:\.0+)?\s*M\b/.test(m16.texto), JSON.stringify(m16));
   await tecla('Enter'); await pausa(300);
   const textoSalida = await page.evaluate(() => document.body.innerText);
   ok('NO aparece «1 UND = 500 M»', !/1\s*UND\s*=\s*\d+\s*M/i.test(textoSalida));
@@ -93,6 +98,7 @@ try {
   });
   ok('La lista de Inventario muestra la manguera', !!filaProd, String(filaProd));
   ok('La lista muestra la unidad M y el rollo en la fila', !!filaProd && /\bM\b/.test(filaProd) && /ROLLO\s*x\s*100/i.test(filaProd), String(filaProd));
+  ok('El stock de 100282 se muestra en metros reales (327 M)', !!filaProd && /327(?:\.0+)?\s*M\b/.test(filaProd), String(filaProd));
   await tecla('Enter'); await pausa(900);
   await page.waitForSelector('#select-unidad-peso-producto', { timeout: 15000 });
   const prod = await page.evaluate(() => ({

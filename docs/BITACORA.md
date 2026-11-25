@@ -7,6 +7,17 @@
 
 ---
 
+## 24/11/2026 (stock e historial a metros en ecosistema) · OpenCode (Big Pickle) — HECHO, PROBADO Y SUBIDO
+
+- El dueño vio el sugerido con `Stock: 3 M` y dijo: *"pero como que 3 metros carajo si estaba en unidad y dice 1 pero dice en el nombre 500 metros osea 3 son 1500 metros !!!!!"*, y después **«arregla todo eso»**.
+- Decisiones confirmadas: **pasar el stock a metros**, **los factores según el nombre** y **convertir también las 59 líneas de `salida_items`**. No se inventaron factores ni precios.
+- Solo lectura previa: filas de los 6 ids en `products` (6), `batches` (8), `inventory_movements` (91), `salida_devoluciones` (20) y `salida_items` (59); las demás tablas con `product_id` tienen 0 filas. `salida_items` no tiene `precio_unitario`: el campo monetario es `costo_unitario`.
+- **Respaldos:** `respaldo-conversion-metros-ecosistema-2026-11-24-{products,batches,salida_items,salida_devoluciones,inventory_movements}.ndjson` y `...-totales-antes.txt` (6+8+59+20+91 filas). Script nuevo `ai-scripts/patch-stock-metros-ecosistema.cjs` (modos `backup`/`apply`), con precheck del nombre y del estado para no aplicar dos veces.
+- **PATCH solo en ecosistema:** `SET lock_timeout='5s'` + una transacción con verificación `DO $$ … $$` dentro (si falla, rollback). Stock exacto: **327, 50, 1081, 985, 1430 y 300 M**. Se multiplicaron lotes, movimientos, devoluciones y cantidades de ítems; las 59 líneas quedaron con `unidad='M'`. Costos unitarios (`products.cost_price`, `batches.cost_unit`, `salida_items.costo_unitario`) divididos por el factor: totales monetarios **0 antes y 0 después**, `cost_total` intacto. `min_stock` también convertido. Sin escrituras en Nego ni Evicamp.
+- **Pruebas:** ecosistema **22/22** (`verificar-cambios-ecosistema.mjs` ampliado): sugerido de 100282 = `327 M`, de 100322 = `1430 M`, lista de Inventario = `327 M`; además Devoluciones en columna, una flecha = una fila, buscadores, sin «1 UND = 500 M», `M/MTR`, rollo a `S/ 0.00`, sin internet y 390/768/1366/1920; 0 errores JS. Nego **23/23** sin tocar código.
+- No hizo falta rebuild ni deploy: **solo cambió la base de ecosistema**. Bundle en vivo intacto **`index-BAV_WNoL.js`** en Nego, ecosistema, Evicamp y clientes (`/var/www/siuhub-app/html/index.html`). No hay clientes dados de alta aún en `clientes.tsv`, por eso el destino `clientes` se verificó en la carpeta compartida.
+- Docs y grafo actualizados; commit y push a `origin/fase-11-sunat` con `git push origin HEAD:fase-11-sunat`. `main` intacto. Falta solo la revisión visual del dueño con **Ctrl+F5**.
+
 ## 24/11/2026 (tanda final: flechas, buscadores, Devoluciones y mangueras) · OpenCode (Big Pickle) — TODO HECHO Y SUBIDO
 
 - El dueño reportó el salto doble con las flechas y que el buscador de producto no encontraba nombres con tilde o un espacio de más. Confirmó **«Sí, empieza»** y pidió después: *"en la tabla de salidas quiero que pongas devoluciones como una nueva columna no quiero que ste abajo de los intems"*.

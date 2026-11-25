@@ -8,6 +8,14 @@
 
 ---
 
+## 24/11/2026 — «3» nunca significa 3 M: stock e historial se convierten al factor del nombre
+- El dueño se enojó con razón: *"como que 3 metros carajo si estaba en unidad y dice 1 pero dice en el nombre 500 metros osea 3 son 1500 metros"*. Si el producto dice `(500MT)`, el `3` guardado son **3 rollos = 1500 M**, no 3 M. Con su «arregla todo eso» se convirtió **todo**, no solo la etiqueta.
+- Factores **según el nombre**, no un 500 genérico: `100282=100`, `100298=100`, `100313=400`, `100315=400`, `100322=500`, `100432=100`. Stock final: `327, 50, 1081, 985, 1430, 300 M`.
+- Antes de escribir, buscar **todas** las tablas con `product_id` y columnas de cantidad. En ecosistema solo había filas en `products` (6), `batches` (8), `inventory_movements` (`change_amount`, `previous_quantity`, `new_quantity`: 91), `salida_devoluciones` (`cantidad`: 20) y `salida_items` (`cantidad`, `cantidad_devuelta`: 59). Las demás están vacías. **`salida_items` no tiene `precio_unitario`**: la columna monetaria es `costo_unitario`.
+- Regla de oro: **multiplicar cantidades ⇒ dividir costos unitarios** (`products.cost_price`, `batches.cost_unit`, `salida_items.costo_unitario`) para no mover ningún total. `cost_total` de lotes se deja intacto. Poner `unidad='M'` en las 59 líneas. Revisar siempre totales antes/después.
+- Script `ai-scripts/patch-stock-metros-ecosistema.cjs`: modos `backup`/`apply`, precheck del nombre (regex `<factor>\s*M`) y del estado (viejo vs nuevo) para ser idempotente, `SET lock_timeout='5s'`, una transacción y un `DO $$ … $$` que hace rollback si falta algo. Si los productos ya están en metros, **no vuelve a escribir** (y ojo: en modo `apply` sobrescribe los respaldos, por eso no ejecutarlo dos veces).
+- Prueba en vivo ampliada: `verificar-cambios-ecosistema.mjs` **22/22** exige `327 M` en el sugerido de 100282, `1430 M` en el de 100322 y `327 M` en la lista de Inventario. Nego **23/23** sin cambio de código. Como solo cambió la base, **no hubo rebuild ni deploy**; el bundle `index-BAV_WNoL.js` sigue en Nego, ecosistema, Evicamp y clientes. Tras ecosistema, si se despliega código, reponer iconos (`c159d216…`).
+
 ## ⚠️ REGLA PERMANENTE (24/11/2026) — Flujo de código: primero Nego, luego TODOS
 - El dueño pidió: *"ya para la proxima si modificas codigo primero nego siumax y luego subelo a todos eso es para que todos esten siempre actualizados"*. **De ahora en adelante, cada cambio de código se despliega primero en Nego/Siumax (pruebas) y, una vez revisado, se sube a TODOS: Nego, Evicamp, ecosistema y GitHub**, para que ningún sitio se quede atrás.
 - Esta regla **no borra** la de siempre: Evicamp y GitHub requieren que el dueño lo autorice **en ese momento**; Nego es el sitio de pruebas. En esta tanda sí lo autorizó con *"actualizalo a todos entonces"*.
