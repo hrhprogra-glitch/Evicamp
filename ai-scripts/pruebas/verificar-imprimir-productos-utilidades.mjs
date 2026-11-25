@@ -78,7 +78,7 @@ try {
   await pausa(700);
   const v0 = await vista();
   ok('Sin internet carga los productos activos', v0.filas.length > 0, `${v0.filas.length} filas`);
-  ok('La vista previa trae las 5 columnas por defecto', v0.cabeceras.join('|') === 'CÓDIGO|NOMBRE|CATEGORÍA|STOCK|PRECIO', v0.cabeceras.join('|'));
+  ok('Por defecto trae Cant. a pedir y no Precio', v0.cabeceras.join('|') === 'CÓDIGO|NOMBRE|CATEGORÍA|STOCK|CANT. A PEDIR', v0.cabeceras.join('|'));
   ok('El encabezado dice LISTADO DE PRODUCTOS', /LISTADO DE PRODUCTOS/.test(v0.texto));
   const hojaEstilizada = await page.evaluate(() => {
     const d = document.querySelector('iframe[title="Vista previa del listado de productos"]')?.contentDocument;
@@ -90,26 +90,45 @@ try {
     return fs.length >= 2 && Math.abs(fs[0].getBoundingClientRect().top - fs[1].getBoundingClientRect().top) < 8;
   });
   ok('Categorías y columnas están en una sola fila', unaFila);
+  ok('No hay botón Cancelar (cierra la X)', !(await page.$('#btn-cancelar-imprimir-productos')));
+  const btnAcomodado = await page.evaluate(() => {
+    const b = document.getElementById('btn-imprimir-productos-hoja');
+    const fs = [...document.querySelectorAll('[role="dialog"] fieldset')];
+    const dialogo = document.querySelector('[role="dialog"]');
+    if (!b || fs.length < 2 || !dialogo) return false;
+    const rb = b.getBoundingClientRect();
+    const rf = fs[1].getBoundingClientRect();
+    const rd = dialogo.getBoundingClientRect();
+    return Math.abs(rb.bottom - rf.bottom) < 10 && rb.right <= rd.right + 1 && rb.width > 150;
+  });
+  ok('El botón Imprimir queda acomodado al final de la fila', btnAcomodado);
   await page.setOfflineMode(false);
 
-  // Quitar y volver a poner la columna Precio
+  // Precio empieza desmarcado; se puede marcar y volver a omitir.
+  ok('Precio viene desmarcado', !v0.cabeceras.includes('PRECIO') && !v0.celdasUltima.some((c) => /^\s*S\//.test(c)), v0.cabeceras.join('|'));
   await page.focus('#casilla-precio'); await tecla(' '); await pausa(600);
   const v1 = await vista();
-  ok('Se puede omitir Precio', !v1.cabeceras.includes('PRECIO') && !v1.celdasUltima.some((c) => /^\s*S\//.test(c)), v1.cabeceras.join('|'));
+  const idxPrecio = v1.cabeceras.indexOf('PRECIO');
+  ok('Se puede marcar Precio', idxPrecio >= 0 && v1.filas.some((f) => /^\s*S\//.test(f[idxPrecio] || '')), v1.cabeceras.join('|'));
   await tecla(' '); await pausa(600);
   const v2 = await vista();
-  ok('Precio vuelve al marcarlo', v2.cabeceras.includes('PRECIO'), v2.cabeceras.join('|'));
+  ok('Precio vuelve a omitirse', !v2.cabeceras.includes('PRECIO'), v2.cabeceras.join('|'));
 
-  // No se puede dejar sin ninguna columna
+  // No se puede dejar sin ninguna columna con datos (Cant. a pedir no cuenta).
+  await page.focus('#casilla-precio'); await tecla(' ');
+  await page.focus('#casilla-pedido'); await tecla(' ');
   for (const id of ['casilla-codigo', 'casilla-nombre', 'casilla-categoria', 'casilla-stock']) {
     await page.focus(`#${id}`); await tecla(' ');
   }
   await page.focus('#casilla-precio'); await tecla(' '); await pausa(500);
   const marcadas = await page.$$eval('input[data-columna]', (xs) => xs.filter((x) => x.checked).map((x) => x.id));
   ok('Siempre queda al menos una columna', marcadas.length === 1 && marcadas[0] === 'casilla-precio', marcadas.join(','));
+  // Volver al estado pedido por defecto: precio fuera, cantidad a pedir dentro.
   for (const id of ['casilla-codigo', 'casilla-nombre', 'casilla-categoria', 'casilla-stock']) {
     await page.focus(`#${id}`); await tecla(' ');
   }
+  await page.focus('#casilla-precio'); await tecla(' ');
+  await page.focus('#casilla-pedido'); await tecla(' ');
   await pausa(400);
 
   // Categorías con casillas: se elige cuáles se imprimen y cuáles no
@@ -133,13 +152,15 @@ try {
   ok('Se puede excluir una categoría', sinCat, `${v3b.filas.length} filas sin ${cat}`);
   await page.focus('#casilla-todas-categorias'); await tecla(' '); await pausa(500);
 
-  // Columna en blanco para anotar la cantidad a pedir (opcional)
-  await page.focus('#casilla-pedido'); await tecla(' '); await pausa(600);
+  // Columna en blanco para anotar la cantidad a pedir: viene marcada por defecto.
   const v4 = await vista();
-  ok('La columna CANT. A PEDIR aparece', v4.cabeceras.includes('CANT. A PEDIR'), v4.cabeceras.join('|'));
+  ok('CANT. A PEDIR viene marcada por defecto', v4.cabeceras.includes('CANT. A PEDIR'), v4.cabeceras.join('|'));
   ok('CANT. A PEDIR sale en blanco para escribir',
     v4.filas.length > 0 && v4.filas.every((f) => (f[f.length - 1] || '').trim() === ''));
+  await page.focus('#casilla-pedido'); await tecla(' '); await pausa(400);
+  ok('Se puede quitar CANT. A PEDIR', !(await vista()).cabeceras.includes('CANT. A PEDIR'));
   await tecla(' '); await pausa(400);
+  ok('CANT. A PEDIR vuelve al marcarla', (await vista()).cabeceras.includes('CANT. A PEDIR'));
 
   // El botón manda a imprimir SOLO la hoja (iframe), no toda la pantalla
   await page.evaluate(() => {

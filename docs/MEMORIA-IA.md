@@ -18,6 +18,10 @@
 - Publicar no basta: otra sesión (`e22050d`, nombre de nota en Salidas) desplegó de nuevo desde una rama sin mi botón y Nego sirvió `index-4DjJ7A18.js`. El dueño volvió a decir que no veía «Imprimir productos». **Comprobar en vivo con navegador los ids reales de los botones**, además de mirar el bundle en el JS.
 - Cada vez que aparezca un bundle nuevo, fusionar esa rama también (`git merge --no-ff`), conservar las tres entradas en docs y volver a compilar/probar. El bundle final con todo junto es `index-D4ichCYo.js` / `index-BvV_knbV.css`.
 
+## 25/11/2026 — Si hay X en la cabecera, no hace falta botón Cancelar
+- El dueño pidió quitar **Cancelar** porque la **X** ya cierra. Dejar un solo botón de acción (Imprimir / PDF), ancho y alineado con el final de la fila de controles, en vez de dos botones compitiendo al lado.
+- Defaults que eligió para la hoja de pedido: **`CANT. A PEDIR` marcado** y **`PRECIO` desmarcado**. La prueba debe reflejar el estado inicial real, no el de la versión anterior.
+
 ## 25/11/2026 — «Un lugar en blanco»: preguntar si es cantidad o dinero
 - El dueño pidió «un lugar para poner cuanto pediremos por este producto»; al preguntar eligió **CANTIDAD A PEDIR**, no monto a pagar. La columna opcional se deja vacía a propósito y **no cuenta como columna de datos** para la regla de «siempre queda al menos una».
 - Para elegir categorías pidió casillas con **todas marcadas por defecto**, no un selector único. `null` en el estado significa «todas»; al desmarcar una se materializa el conjunto. La casilla «Todas» vuelve a `null`.

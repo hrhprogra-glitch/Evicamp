@@ -47,7 +47,7 @@ export const ModalImprimirProductos: React.FC<Props> = ({ onClose }) => {
   // null = todas las categorías marcadas. Al desmarcar una se guarda el conjunto elegido.
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<Set<string> | null>(null);
   const [columnas, setColumnas] = useState<Columnas>({
-    codigo: true, nombre: true, categoria: true, stock: true, precio: true, pedido: false,
+    codigo: true, nombre: true, categoria: true, stock: true, precio: false, pedido: true,
   });
   const marco = useRef<HTMLIFrameElement>(null);
   const empresa = useEmpresaComprobante();
@@ -157,7 +157,7 @@ export const ModalImprimirProductos: React.FC<Props> = ({ onClose }) => {
     'casilla-todas-categorias',
     ...categorias.map((_, i) => `casilla-categoria-${i}`),
     'casilla-codigo', 'casilla-nombre', 'casilla-categoria', 'casilla-stock', 'casilla-precio', 'casilla-pedido',
-    'btn-imprimir-productos-hoja', 'btn-cancelar-imprimir-productos',
+    'btn-imprimir-productos-hoja',
   ], [categorias]);
 
   useEffect(() => {
@@ -279,7 +279,7 @@ tfoot td { background: #e8e8e8; font-weight: bold; }
         </div>
 
         <div className="p-3 sm:p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3 min-h-0">
-          {/* Una sola fila en pantallas anchas: categorías | columnas | total y botones. */}
+          {/* Una sola fila en pantallas anchas: categorías | columnas | total y botón de imprimir. */}
           <div className="flex flex-wrap items-stretch gap-3">
             <fieldset className="border-2 border-[var(--color-border)] p-3 flex-1 min-w-[240px]">
               <legend className="px-1 text-[10px] font-black uppercase tracking-widest text-[var(--color-muted)]">Categorías a imprimir</legend>
@@ -320,14 +320,10 @@ tfoot td { background: #e8e8e8; font-weight: bold; }
               <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-muted)]">
                 {cargando ? 'Cargando productos…' : `${filtrados.length} producto(s) para imprimir`}
               </p>
-              <div className="flex flex-wrap justify-end gap-2">
-                <button id="btn-cancelar-imprimir-productos" type="button" onClick={cerrar}
-                  className="boton-cabecera bg-[var(--color-surface)] text-[var(--color-ink)] px-4 py-3 text-xs">Cancelar</button>
-                <button id="btn-imprimir-productos-hoja" type="button" onClick={imprimir} disabled={cargando || filtrados.length === 0}
-                  className="boton-cabecera bg-[var(--color-ink)] text-[var(--color-accent)] px-4 py-3 text-xs disabled:opacity-50">
-                  <Printer size={16} /> Imprimir / PDF
-                </button>
-              </div>
+              <button id="btn-imprimir-productos-hoja" type="button" onClick={imprimir} disabled={cargando || filtrados.length === 0}
+                className="boton-cabecera w-full justify-center bg-[var(--color-ink)] text-[var(--color-accent)] px-4 py-3 text-xs disabled:opacity-50">
+                <Printer size={16} /> Imprimir / PDF
+              </button>
             </div>
           </div>
 
