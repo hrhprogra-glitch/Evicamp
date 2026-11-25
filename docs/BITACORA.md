@@ -9,6 +9,7 @@
 
 ## 25/11/2026 (Imprimir productos en Utilidades: botón al lado de «Gráficos y detalles», solo Nego) · OpenCode (Big Pickle) — HECHO Y PROBADO, SIN PUSH
 
+- **Segunda sobrescritura:** después de publicar el bundle combinado, otra sesión (`fase-11-sunat`, commit `e22050d`, cambio «nombre de la nota en Salidas») desplegó **sin el botón** y Nego pasó a servir **`index-4DjJ7A18.js`**; el dueño volvió a decir que no lo veía. Comprobado en vivo con navegador: solo «Gráficos y detalles». Se fusionó también esa rama (`e22050d`) en `pase-todos`, conservando **los tres cambios** (impresión, Salidas PC y nombre de nota). Recompilado y republicado: bundle final **`index-D4ichCYo.js` / `index-BvV_knbV.css`** (22 archivos, solo Nego). Comprobado en vivo con navegador: en Utilidades aparecen **«Gráficos y detalles»** y **«Imprimir productos»**. Pruebas sobre el bundle publicado: **27/27** impresión, **51 OK / 0 fallos** Salidas PC y **66/66** nombre de nota, con teclado, sin internet, 390/768/1366/1920 y 0 errores JS.
 - **Causa real del bloqueo y solución:** no era fail2ban ni el puerto: el `.env.vps` local tenía un usuario/clave que ya no servían. El dueño entregó el acceso de root; con él SSH conectó de inmediato (`SSH_OK`, `uptime`). Se actualizó **solo localmente** `.env.vps` (archivo ignorado por git, **nunca versionar contraseñas**) y `deploy.cjs siumax` terminó bien: **22 archivos subidos** a Nego. Verificado en vivo: `index.html` sirve **`index-DRqv6GXc.js` / `index-BvV_knbV.css`** y el JS contiene `btn-imprimir-productos-utilidades` **y** `tabla-salidas-scroll` (los dos cambios juntos). Los 12 reintentos anteriores y el «ya desbaneé» quedaron como intentos fallidos; el cambio_real fue el acceso.
 
 - **El dueño no lo vio en Nego:** otra sesión había desplegado `ae2df04` (cambio de Salidas en PC) desde el commit anterior `d0d4549`, sin este botón, y sobrescribió el bundle `index-C9Qd50Qv.js` con **`index-CJhKMreh.js`**. Confirmado leyendo el JS en vivo (sin `btn-imprimir-productos-utilidades`). Se unieron las dos ramas (`salidas-pantalla-pc` + `pase-todos`) conservando ambos cambios y se rehízo el build: bundle combinado **`index-DRqv6GXc.js` / `index-BvV_knbV.css`**. Los primeros intentos fallaron por credenciales VPS viejas; con el acceso de root que dio el dueño se publicó el bundle combinado. **Ya está visible en Nego.**
@@ -124,6 +125,28 @@
 - **Push:** `c53f160..265752f  pase-todos -> fase-11-sunat`. No se tocó `main`. La prueba vieja `prueba-salidas-nego.mjs` sigue fallando por selectores de la interfaz anterior (228): no es regresión de este pase, usar la nueva.
 - **Regla nueva anotada en `MEMORIA-IA.md`:** de ahora en adelante, todo cambio de código se hace primero en Nego/Siumax y luego se sube a todos (Nego, Evicamp, ecosistema y GitHub), para que todos estén siempre actualizados. Sigue vigente el OK explícito del dueño para Evicamp/GitHub en cada tanda.
 - Falta la revisión visual del dueño con **Ctrl+F5** en los 3 sitios.
+
+## 25/11/2026 (continuación: Nego ya subido y verificado) · OpenCode (Big Pickle)
+
+- El dueño dijo **«subelo»**. El puerto 22 volvió a responder y `node ai-scripts/deploy.cjs siumax` subió **22 archivos** a Nego desde el worktree limpio `nombre-nota-nego`. Sin Evicamp, ecosistema, base ni push.
+- Apareció un bundle ajeno **dos veces** (`index-BeIFa2v-.js` y después `index-DRqv6GXc.js`) que **no contenía** el marcador del helper. Se volvió a subir el propio en cada ocasión y en vivo quedó **`index-4DjJ7A18.js` / `index-Cf4OlVIC.css`**, con el texto `CLIENTE NO REGISTRADO (NOTA)` dentro del JS. Verificado por marcador, no solo por el nombre del archivo.
+- Prueba `verificar-nombre-nota-salidas.mjs` contra el sitio en vivo: **66/66**, sin errores de JavaScript, con teclado, sin internet y en 390/768/1366/1920. Tabla, buscador, detalle, comprobante y «Continuar salida» muestran el nombre de SAL-1547 y SAL-1548.
+- Regresión adaptiva de Salida/Caja/Agenda: **188 comprobaciones, 4 fallos**. Los 4 son el foco al elegir nota en **Nueva salida** (`select-bien-salida`), camino que este cambio no toca; quedan como hallazgo ajeno, sin modificarlo.
+- La verificación genérica antigua `verificar-deploy-nego.mjs` ya no aplica: espera `#tabla-analisis-salidas` y esa vista no está en el recorrido actual. No se cambió el guion.
+- Siguiente paso: que el dueño revise con **Ctrl+F5** en `nego.siumax.duckdns.org`. Si otro agente vuelve a subir su bundle, comprobar el marcador antes de darlo por perdido.
+
+---
+
+## 25/11/2026 (nombre de la nota en la tabla de Salidas) · OpenCode (Big Pickle) — Código listo; deploy bloqueado por SSH
+
+- El dueño se quejó: *"e notado que cuando registro una nota en salida osea pongo un nombre que no esta en clientes y que sea nota en la tabla no sale el nombre de la nota si no sale asi 'cliente no registrado (nota)'"*. Aprobó el trabajo con **«empeiza»**.
+- **Hecho solo en Nego, sin tocar la base:** nuevo `src/sections/Salidas/clienteNota.ts` (`ID_CLIENTE_NOTA = 990001`, `NOMBRE_CLIENTE_NOTA = 'CLIENTE NO REGISTRADO (NOTA)'`) que lee la **última** etiqueta `CLIENTE:` de `observaciones`. `Salidas/index.tsx` aplica `conNombreClienteNota` al cargar la lista y al abrir el detalle; `ModalNuevaSalida.tsx` conserva `clienteLibre` al «Continuar salida» de una nota. Tabla, detalle, comprobante, buscador y Continuar usan ese mismo nombre en memoria. **No** se cambiaron `TablaSalidas.tsx`, `VistaPreviaSalida.tsx`, observaciones, ids ni stock: WIP ajeno intacto.
+- `npx tsc --noEmit` OK en el repo principal y en el worktree limpio. `npm run build` OK: bundles generados **`index-4DjJ7A18.js` / `index-Cf4OlVIC.css`**.
+- Prueba nueva `ai-scripts/pruebas/verificar-nombre-nota-salidas.mjs`: solo lectura, **teclado**, **sin internet** y 390/768/1366/1920; revisa SAL-1547 y SAL-1548 en tabla, buscador, detalle, comprobante y Continuar. `node --check` OK. La pasada de línea base contra el bundle anterior dio **14/42**, esperado: el buscador no encontraba las notas y Continuar no traía el nombre. Se ajustó para buscar primero por código y luego por nombre (hay un cliente registrado con nombre igual). **Con el bundle nuevo pasó 66/66** (ver entrada de arriba).
+- **Deploy resuelto más tarde en la misma tarde:** los 3 primeros intentos fallaron por handshake/timeout y `Test-NetConnection ... -Port 22` dio **False**; el dueño dijo **«subelo»**, el puerto volvió a responder y la subida terminó con **22 archivos** (ver entrada de arriba). Sin Evicamp, ecosistema ni push.
+- Queda la revisión visual del dueño con **Ctrl+F5**. Commit local solo de los archivos propios y los 4 documentos; sin push.
+
+---
 
 ## 24/11/2026 (aclaración del alcance: qué se cambió y qué no) · OpenCode (Big Pickle) — Solo respuesta
 

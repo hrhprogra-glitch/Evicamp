@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795620154.1727948,
-    "seen": 1795620229.4836202,
-    "ast_hash": "4097667caa1cec49553fd4d416693b35",
+    "mtime": 1795624648.601548,
+    "seen": 1795624723.8054152,
+    "ast_hash": "048e7e3b766236c5d088ecc70442efa0",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795620182.0019507,
-    "seen": 1795620229.4836214,
-    "ast_hash": "a5e809dac8e1c20e2ac1651a546ecc9a",
+    "mtime": 1795624704.7822115,
+    "seen": 1795624723.8054168,
+    "ast_hash": "46976148d52116a958f7d2a4358f26b4",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795620173.2759013,
-    "seen": 1795620229.483623,
-    "ast_hash": "824dcbc1fb260347077db21b63923b15",
+    "mtime": 1795624684.623487,
+    "seen": 1795624723.8054175,
+    "ast_hash": "0d843a6f1b0f336a6322c766b663d947",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795620200.3508286,
-    "seen": 1795620229.4836257,
-    "ast_hash": "e1dd2db744a7be20e410a313c75118a1",
+    "mtime": 1795624668.7927232,
+    "seen": 1795624723.8054194,
+    "ast_hash": "28a86772491061f773619243a3a72c17",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2952,9 +2952,9 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/TablaSalidas.tsx": {
-    "mtime": 1795573359.6339152,
-    "seen": 1795574366.651097,
-    "ast_hash": "667ede7454f2b9ee9a492f8bd534fcda",
+    "mtime": 1795620711.9437625,
+    "seen": 1795621107.2104862,
+    "ast_hash": "d34f245f08ea8600df1a66cfb8698930",
     "semantic_hash": ""
   },
   "src/sections/Salidas/index.tsx": {
@@ -3903,6 +3903,12 @@
     "mtime": 1795620019.222978,
     "seen": 1795620229.483523,
     "ast_hash": "965f679447284761c973af3cf4175111",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/verificar-salidas-pantalla-pc.mjs": {
+    "mtime": 1795620711.9101446,
+    "seen": 1795621107.2102487,
+    "ast_hash": "e14b00711007a78a81878f9d27040f20",
     "semantic_hash": ""
   }
 }

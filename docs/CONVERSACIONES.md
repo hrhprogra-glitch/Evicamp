@@ -1607,6 +1607,7 @@
 - **Prueba real 27/27** con teclado, sin internet y 390/768/1366/1920, 0 errores JS: 513 productos activos, 35 categorías, se puede quitar Precio, filtrar por categoría e imprimir solo la hoja A4. Se corrigió que, tras imprimir, Escape no cerraba porque el foco se quedaba dentro del iframe.
 - **Sin OK aún** para ecosistema, Evicamp, clientes ni GitHub; sin push. Queda pedirle que revise con **Ctrl+F5** en Nego y que envíe la lista o capturas de «muchos errores» para atenderlos después.
 - **Dueño (después del aviso de SSH):** eligió *"Ya desbaneé / reinicié SSH (Recommended)"*. Volví a probar: `client-timeout` y puerto 22 cerrado desde esta IP (`8.242.229.19`); HTTP/HTTPS siguen bien. Le pedí que confirme desde la consola del proveedor. Después entregó las credenciales de root y los comandos `scp ... chown ... systemctl restart nginx`, indicando usar ese acceso. Con root, SSH conectó al primer intento: **el problema eran las credenciales viejas de `.env.vps`, no fail2ban ni el puerto**.
+- **Dueño (otra vez):** *"no me sale para imprimir en utilidades en que parte esta ??"*. Otra sesión (`e22050d`) había vuelto a desplegar sin el botón y Nego servía `index-4DjJ7A18.js`. Verificado en vivo: solo «Gráficos y detalles». Se fusionó esa rama, se recompiló y se publicó `index-D4ichCYo.js`; comprobado en el navegador que ya aparecen ambos botones, con 27/27 + 51 OK + 66/66. Le respondí la ubicación exacta: Utilidades → fila de arriba, a la derecha de «Gráficos y detalles».
 - **Dueño (después):** *"que hiciste no lo puedo ver en nego siumax no aparece"*. Comprobado en vivo: el sitio servía `index-CJhKMreh.js`, desplegado por otra sesión desde un commit anterior, y el JS no contenía el id del botón. No era caché: mi bundle había sido sobrescrito. Se fusionaron ambos cambios (impresión de productos + Salidas en PC), se recompiló y quedó el bundle combinado **`index-DRqv6GXc.js` / `index-BvV_knbV.css`**. El redeploy había fallado por credenciales viejas; con el acceso de root del dueño se publicó el bundle combinado (**22 archivos, solo Nego**). Verificado en vivo y con pruebas: **27/27** de impresión y **51 OK / 0 fallos** de Salidas en PC. **Ya está visible en Nego**, en Utilidades al lado de «Gráficos y detalles». Sigo sin push ni otros sitios.
 
 ## 25/11/2026 (Salidas no cabía en pantallas de PC pequeñas)
@@ -1617,3 +1618,14 @@
 - **Despliegue:** build OK; el primer deploy fue sobrescrito por otro trabajo que subió el bundle viejo, se detectó y se repitió. Nego sirve **`index-CJhKMreh.js` / `index-D74V8jBk.css`**.
 - **Prueba:** **51 OK, 0 fallos** en 390/768/1024/1280/1366/1920, con teclado (↓↓, Enter, Escape), sin internet y 0 errores JS.
 - **Queda pendiente:** el dueño debe revisar Nego con **Ctrl+F5**. Ecosistema **no se tocó**: hace falta su OK explícito para desplegar allí y reponer iconos. Sin Evicamp, sin GitHub.
+
+## 25/11/2026 (el nombre de la nota debe verse en la tabla de Salidas)
+- **Dueño:** *"e notado que cuando registro una nota en salida osea pongo un nombre que no esta en clientes y que sea nota en la tabla no sale el nombre de la nota si no sale asi 'cliente no registrado (nota)'"*.
+- **Dueño:** **«empeiza»**. Antes se le propuso corregir la presentación al cargar las salidas, sin tocar la base ni los componentes que tienen trabajo ajeno sin commitear.
+- Hecho: el nombre escrito se lee de `observaciones` y se aplica en memoria a la tabla, el buscador, el detalle, el comprobante y el «Continuar salida». El cliente interno 990001 sigue igual; no se crean clientes ni se cambian observaciones. Solo Nego.
+- Se le avisa con claridad: el código compila y el build salió bien, pero el VPS rechazó el deploy porque el puerto 22 está cerrado. El sitio HTTPS sigue sirviendo el bundle anterior, así que **todavía no ve el cambio**. Sin Evicamp, ecosistema ni push. Falta que se levante SSH o autorice otra forma de subir el bundle.
+
+## 25/11/2026 (el dueño dice «subelo»)
+- **Dueño:** **«subelo»**. El puerto 22 volvió a responder y se subió solo Nego: 22 archivos, sin Evicamp, ecosistema, base ni push.
+- Primero se vio un bundle ajeno sin el cambio; se volvió a subir y en vivo quedó **`index-4DjJ7A18.js` / `index-Cf4OlVIC.css`**, confirmado por el texto del helper dentro del JS. La prueba nueva pasó **66/66** con teclado, sin internet y en 390/768/1366/1920.
+- Falta que el dueño revise con **Ctrl+F5** en `nego.siumax.duckdns.org`. La regresión adaptiva sigue con 4 fallos viejos del foco en Nueva salida, que no se tocaron.
