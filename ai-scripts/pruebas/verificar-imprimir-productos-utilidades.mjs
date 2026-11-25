@@ -90,6 +90,19 @@ try {
     return !!img && !!d?.querySelector('.cabecera .marca') && (img.src || '').length > 0 && img.naturalWidth > 0;
   });
   ok('La hoja lleva el logo de la empresa en la cabecera', logoEnCabecera);
+  const cabeceraConEspacio = await page.evaluate(() => {
+    const d = document.querySelector('iframe[title="Vista previa del listado de productos"]')?.contentDocument;
+    const c = d?.querySelector('.cabecera');
+    const marca = d?.querySelector('.marca');
+    const titulo = d?.querySelector('.titulo');
+    if (!c || !marca || !titulo) return false;
+    const e = getComputedStyle(c);
+    const izquierda = parseFloat(e.paddingLeft || '0');
+    const derecha = parseFloat(e.paddingRight || '0');
+    const hueco = titulo.getBoundingClientRect().left - marca.getBoundingClientRect().right;
+    return izquierda >= 10 && derecha >= 10 && hueco >= 12;
+  });
+  ok('Logo, título, categorías y fecha no están pegados a los bordes', cabeceraConEspacio);
   const hojaEstilizada = await page.evaluate(() => {
     const d = document.querySelector('iframe[title="Vista previa del listado de productos"]')?.contentDocument;
     return !!(d?.querySelector('.cabecera') && d?.querySelector('.pie') && /@page/.test(d?.styleSheets?.[0]?.cssRules ? [...d.styleSheets[0].cssRules].map((r) => r.cssText).join('') : ''));

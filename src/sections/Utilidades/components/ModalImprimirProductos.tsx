@@ -219,12 +219,12 @@ export const ModalImprimirProductos: React.FC<Props> = ({ onClose }) => {
 * { box-sizing: border-box; }
 html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 html, body { margin: 0; background: #fff; color: #111; font-family: Arial, Helvetica, sans-serif; font-size: 10px; }
-.cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-top: 5px solid #111; border-bottom: 1px solid #111; padding: 10px 0 8px; margin-bottom: 12px; }
-.marca { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; border-top: 5px solid #111; border-bottom: 1px solid #111; padding: 12px 14px 10px; margin-bottom: 12px; }
+.marca { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .logo { width: 52px; height: 42px; object-fit: contain; object-position: left center; }
 .empresa { font-size: 14px; font-weight: 800; letter-spacing: .5px; }
 .empresa small { display: block; font-size: 9px; font-weight: normal; margin-top: 2px; }
-.titulo { text-align: right; }
+.titulo { text-align: right; line-height: 1.35; }
 .titulo strong { font-size: 15px; letter-spacing: 1.5px; }
 .titulo div { font-size: 9px; margin-top: 3px; }
 table { width: 100%; border-collapse: collapse; table-layout: fixed; border-top: 3px double #111; }
