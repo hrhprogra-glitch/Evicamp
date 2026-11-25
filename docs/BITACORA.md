@@ -7,6 +7,18 @@
 
 ---
 
+## 25/11/2026 (nombre escrito en una nota de Salidas: Nego, Evicamp, ecosistema, panel y GitHub) · OpenCode (Big Pickle) — HECHO EN TODOS Y SUBIDO
+
+- El dueño se quejó: *"e notado que cuando registro una nota en salida osea pongo un nombre que no esta en clientes y que sea nota en la tabla no sale el nombre de la nota si no sale asi 'cliente no registrado (nota)'"*. Aprobó con **«empeiza»**, autorizó la subida con **«subelo»** y cerró con **«perfecto subelo a siumax, evicamp y ecosistema y panel de contro y mi github»**.
+- **Código:** nuevo `src/sections/Salidas/clienteNota.ts` (`ID_CLIENTE_NOTA = 990001`, `NOMBRE_CLIENTE_NOTA = 'CLIENTE NO REGISTRADO (NOTA)'`) que lee la **última** etiqueta `CLIENTE:` de `observaciones`. `Salidas/index.tsx` aplica `conNombreClienteNota` al cargar lista y detalle; `ModalNuevaSalida.tsx` conserva `clienteLibre` al continuar una nota. Solo presentación en memoria: **sin base, sin `TablaSalidas.tsx`, sin `VistaPreviaSalida.tsx`** y sin tocar el WIP ajeno. `npx tsc --noEmit` y build OK: **`index-4DjJ7A18.js` / `index-Cf4OlVIC.css`**.
+- **Despliegue:** con destino explícito, **22 archivos por sitio** en **Nego, Evicamp y ecosistema**; los iconos del oficial se repusieron con `restaurar-iconos-ecosistema.cjs` (md5 **`c159d2165b6f67ea8c6126f1b49bf4d7`**). En Nego otro agente sobrescribió dos veces (`index-BeIFa2v-.js` y `index-DRqv6GXc.js`) sin el marcador; se volvió a subir y quedó el bundle propio. `comerc.siumax.duckdns.org` dio error SSL/TLS al verificar, pero el sitio que revisa el dueño es `nego.siumax.duckdns.org`.
+- **Panel de control:** `node ai-scripts/cliente.cjs nego` hizo respaldo del panel y de Nginx, reinició el servicio y dejó **OK** en: Nego abre, API pide sesión, Panel abre, actualizaciones de la app de PC, Evicamp y EviDiary, y **«Panel con la versión de Nego»**. **No** se usó `cliente.cjs panel`, para no reconfigurar Mercado Pago. `https://siumax.duckdns.org/` responde **200** con el link de Nego.
+- **Verificación:** marcador `CLIENTE NO REGISTRADO (NOTA)` dentro del JS servido en los tres sitios, no solo el nombre del archivo. Prueba nueva `verificar-nombre-nota-salidas.mjs`: **66/66**, solo lectura, con teclado, sin internet y en 390/768/1366/1920; tabla, buscador, detalle, comprobante y «Continuar salida» muestran el nombre de SAL-1547 y SAL-1548. Regresión adaptiva **188 comprobaciones, 4 fallos**, los 4 del foco al elegir nota en **Nueva salida** (`select-bien-salida`), camino no tocado. La prueba genérica vieja `verificar-deploy-nego.mjs` ya no aplica (espera `#tabla-analisis-salidas`).
+- **GitHub:** commit limpio **`f7a2a92`** sobre `c82e400` desde la rama `fase-11-sunat-nota`, push **`c82e400..f7a2a92 HEAD -> fase-11-sunat`**, sin arrastrar el WIP ajeno y sin tocar `main`. La documentación de esta tanda se agregó directamente sobre la rama publicada: los documentos del repo principal eran de la rama anterior y habrían sobrescrito entradas nuevas de otros agentes.
+- El repo principal se alineó con `git fetch origin` + `git reset --mixed origin/fase-11-sunat`, sin tocar el Working Tree (WIP ajeno intacto). Falta solo la revisión visual del dueño con **Ctrl+F5**.
+
+---
+
 ## 25/11/2026 (Salidas en PC pequeña: pase a Evicamp, ecosistema, panel de clientes y GitHub) · OpenCode (Big Pickle) — HECHO EN LOS CUATRO SITIOS Y SUBIDO
 
 - **Dueño:** *"tienes que actualizarlo a evicamp y ecosistema y github y panel para mis clientes que pagan"*. Ese OK cubre los cuatro destinos y GitHub en la misma tanda, sin pedir otro permiso para el push.
